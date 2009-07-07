@@ -3832,8 +3832,19 @@ TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
     for (i = 0; i < exit->numStackSlots; i++)
         JS_ASSERT(map[i] != TT_JSVAL);
 #endif
-    import(ti, inner_sp_ins, exit->numStackSlots, exit->numGlobalSlots,
-           exit->calldepth, getFullTypeMap(exit));
+    /* bug 502604 - It is illegal to extend from the outer typemap without first extending from the
+     * inner. Make a new typemap here.
+     */
+    TypeMap fullMap;
+    fullMap.add(getStackTypeMap(exit), exit->numStackSlots);
+    fullMap.add(getGlobalTypeMap(exit), exit->numGlobalSlots);
+    TreeInfo* innerTree = (TreeInfo*)exit->from->root->vmprivate;
+    if (exit->numGlobalSlots < innerTree->nGlobalTypes()) {
+        fullMap.add(innerTree->globalTypeMap() + exit->numGlobalSlots,
+                    innerTree->nGlobalTypes() - exit->numGlobalSlots);
+    }
+    import(ti, inner_sp_ins, exit->numStackSlots, fullMap.length() - exit->numStackSlots,
+           exit->calldepth, fullMap.data());
 
     /* Restore sp and rp to their original values (we still have them in a register). */
     if (callDepth > 0) {
@@ -4653,9 +4664,32 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
             fullMap.add(getStackTypeMap(e2), e2->numStackSlots);
             stackSlots = fullMap.length();
             fullMap.add(getGlobalTypeMap(e2), e2->numGlobalSlots);
-            if (e1->numGlobalSlots >= e2->numGlobalSlots) {
-                fullMap.add(getGlobalTypeMap(e1) + e2->numGlobalSlots,
-                            e1->numGlobalSlots - e2->numGlobalSlots);
+            if (e2->numGlobalSlots < e1->numGlobalSlots) {
+                /*
+                 * Watch out for an extremely rare case (bug 502714). The sequence of events is:
+                 * 
+                 * 1) Inner tree compiles not knowing about global X (which has type A).
+                 * 2) Inner tree learns about global X and specializes it to a different type
+                 *    (type B).
+                 * 3) Outer tree records inner tree with global X as type A, exiting as B.
+                 * 4) Outer tree now has a nesting guard with typeof(X)=B.
+                 * 5) Inner tree takes its original exit that does not know about X.
+                 * 
+                 * In this case, the nesting guard fails, and now it is illegal to use the nested
+                 * typemap entry for X. The correct entry is in the inner guard's TreeInfo,
+                 * analogous to the solution for bug 476653.
+                 */
+                TreeInfo* innerTree = (TreeInfo*)e2->from->root->vmprivate;
+                unsigned slots = e2->numGlobalSlots;
+                if (innerTree->nGlobalTypes() > slots) {
+                    unsigned addSlots = JS_MIN(innerTree->nGlobalTypes() - slots,
+                                               e1->numGlobalSlots - slots);
+                    fullMap.add(innerTree->globalTypeMap() + e2->numGlobalSlots, addSlots);
+                    slots += addSlots;
+                }
+                if (slots < e1->numGlobalSlots)
+                    fullMap.add(getGlobalTypeMap(e1) + slots, e1->numGlobalSlots - slots);
+                JS_ASSERT(slots == e1->numGlobalSlots);
             }
             ngslots = e1->numGlobalSlots;
             typeMap = fullMap.data();
