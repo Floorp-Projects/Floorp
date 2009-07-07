@@ -23,3 +23,5 @@ fails == border-breaking-004-cols.xhtml border-breaking-002-cols.ref.xhtml
 == abspos-breaking-000.xhtml abspos-breaking-000.ref.xhtml
 == abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml
 == abspos-breaking-002.xhtml abspos-breaking-000.ref.xhtml
+== resize-reflow-000.html resize-reflow-000.ref.html
+== resize-reflow-001.html resize-reflow-001.ref.html

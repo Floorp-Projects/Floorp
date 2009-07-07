@@ -591,7 +591,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     // content from its next sibling. (Note that it might be the last
     // column, but not be the last child because the desired number of columns
     // has changed.)
-    PRBool skipIncremental = !(GetStateBits() & NS_FRAME_IS_DIRTY)
+    PRBool skipIncremental = !aReflowState.ShouldReflowAllKids()
       && !NS_SUBTREE_DIRTY(child)
       && child->GetNextSibling()
       && !(aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1)
@@ -906,6 +906,16 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
 
   // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
+
+  // Our children depend on our height if we have a fixed height.
+  if (aReflowState.ComputedHeight() != NS_AUTOHEIGHT) {
+    NS_ASSERTION(aReflowState.ComputedHeight() != NS_INTRINSICSIZE,
+                 "Unexpected mComputedHeight");
+    AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+  }
+  else {
+    RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+  }
 
   //------------ Handle Incremental Reflow -----------------
 
