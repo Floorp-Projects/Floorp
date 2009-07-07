@@ -96,7 +96,6 @@ function InputHandler() {
   window.addEventListener("mouseup", this, true);
   window.addEventListener("mousemove", this, true);
   window.addEventListener("click", this, true);
-  window.addEventListener("mouseout", this, true);
 
   let stack = document.getElementById("browser-container");
   stack.addEventListener("DOMMouseScroll", this, true);
