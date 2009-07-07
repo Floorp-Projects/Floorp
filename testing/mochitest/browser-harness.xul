@@ -322,7 +322,7 @@
       setStatus("Done.");
     }
   ]]></script>
-  <button id="runTestsButton" onclick="runTests();" label="Run All Tests"/>
+  <button id="runTestsButton" oncommand="runTests();" label="Run All Tests"/>
   <label id="status"/>
   <scrollbox flex="1" style="overflow: auto" align="stretch">
     <div id="results" xmlns="http://www.w3.org/1999/xhtml" flex="1"/>
