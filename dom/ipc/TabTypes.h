@@ -1,6 +1,8 @@
 #ifndef mozilla_tabs_TabTypes_h
 #define mozilla_tabs_TabTypes_h
 
+#include "base/basictypes.h"
+
 #ifdef XP_WIN
 #include <windows.h>
 

@@ -8,8 +8,11 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsThreadUtils.h"
+
+#ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
+#endif
 
 using namespace mozilla::tabs;
 
@@ -35,14 +38,24 @@ TabChild::Answerinit(const MagicWindowHandle& parentWidget)
 {
     printf("creating %d!\n", NS_IsMainThread());
 
+#ifdef MOZ_WIDGET_GTK2
     gtk_init(NULL, NULL);
+#endif
 
     nsCOMPtr<nsIWebBrowser> webBrowser(do_CreateInstance(NS_WEBBROWSER_CONTRACTID));
 
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
 
+
+#ifdef MOZ_WIDGET_GTK2
     GtkWidget* win = gtk_plug_new((GdkNativeWindow)parentWidget);
     gtk_widget_show(win);
+#elif defined(XP_WIN)
+    HWND win = parentWidget;
+#else
+#error You lose!
+#endif
+
     baseWindow->InitWindow(win, 0, 0, 0, 0, 0);
 
     nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(baseWindow));
@@ -69,10 +82,10 @@ TabChild::AnswerloadURL(const String& uri)
 }
 
 nsresult
-TabChild::Answermove(const uint32_t& x,
-                     const uint32_t& y,
-                     const uint32_t& width,
-                     const uint32_t& height)
+TabChild::Answermove(const PRUint32& x,
+                     const PRUint32& y,
+                     const PRUint32& width,
+                     const PRUint32& height)
 {
     printf("[TabChild] MOVE to (x,y)=(%ud, %ud), (w,h)= (%ud, %ud)\n",
            x, y, width, height);
