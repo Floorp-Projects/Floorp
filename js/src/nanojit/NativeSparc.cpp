@@ -257,16 +257,16 @@ namespace nanojit
             evict(rr);
 
         if (hi->isconst()) {
-            STW32(L0, d+4, FP);
-            SET32(hi->imm32(), L0);
+            STW32(L2, d+4, FP);
+            SET32(hi->imm32(), L2);
         } else {
             Register rh = findRegFor(hi, GpRegs);
             STW32(rh, d+4, FP);
         }
 
         if (lo->isconst()) {
-            STW32(L0, d, FP);
-            SET32(lo->imm32(), L0);
+            STW32(L2, d, FP);
+            SET32(lo->imm32(), L2);
         } else {
             // okay if r gets recycled.
             Register rl = findRegFor(lo, GpRegs);
@@ -281,8 +281,8 @@ namespace nanojit
     {
         underrunProtect(24);
         if (i->isop(LIR_alloc)) {
-            ADD(FP, L0, r);
-            SET32(disp(resv), L0);
+            ADD(FP, L2, r);
+            SET32(disp(resv), L2);
             verbose_only(if (_verbose) {
                 outputf("        remat %s size %d", _thisfrag->lirbuf->names->formatRef(i), i->size());
             })
@@ -313,8 +313,8 @@ namespace nanojit
             {
                 Register rb = getBaseReg(base, dr, GpRegs);
                 int c = value->imm32();
-                STW32(L0, dr, rb);
-                SET32(c, L0);
+                STW32(L2, dr, rb);
+                SET32(c, L2);
             }
         else
             {
@@ -392,10 +392,10 @@ namespace nanojit
                 // if a constant 64-bit value just store it now rather than
                 // generating a pointless store/load/store sequence
                 Register rb = findRegFor(base, GpRegs);
-                STW32(L0, dr+4, rb);
-                SET32(value->imm64_0(), L0);
-                STW32(L0, dr, rb);
-                SET32(value->imm64_1(), L0);
+                STW32(L2, dr+4, rb);
+                SET32(value->imm64_0(), L2);
+                STW32(L2, dr, rb);
+                SET32(value->imm64_1(), L2);
                 return;
             }
 
@@ -562,8 +562,8 @@ namespace nanojit
                 }
                 else if (!rhs->isQuad()) {
                     Register r = getBaseReg(lhs, c, GpRegs);
-                    SUBCC(r, L0, G0);
-                    SET32(c, L0);
+                    SUBCC(r, L2, G0);
+                    SET32(c, L2);
                 }
             }
         else
@@ -650,8 +650,8 @@ namespace nanojit
             // add alloc+const, use lea
             Register rr = prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->imm32();
-            ADD(FP, L0, rr);
-            SET32(d, L0);
+            ADD(FP, L2, rr);
+            SET32(d, L2);
         }
 
         Register rr = prepResultReg(ins, allow);
@@ -692,24 +692,24 @@ namespace nanojit
             {
                 int c = rhs->imm32();
                 if (op == LIR_add || op == LIR_addp) {
-                    ADDCC(rr, L0, rr); 
+                    ADDCC(rr, L2, rr); 
                 } else if (op == LIR_sub) {
-                    SUBCC(rr, L0, rr); 
+                    SUBCC(rr, L2, rr); 
                 } else if (op == LIR_and)
-                    AND(rr, L0, rr);
+                    AND(rr, L2, rr);
                 else if (op == LIR_or)
-                    OR(rr, L0, rr);
+                    OR(rr, L2, rr);
                 else if (op == LIR_xor)
-                    XOR(rr, L0, rr);
+                    XOR(rr, L2, rr);
                 else if (op == LIR_lsh)
-                    SLL(rr, L0, rr);
+                    SLL(rr, L2, rr);
                 else if (op == LIR_rsh)
-                    SRA(rr, L0, rr);
+                    SRA(rr, L2, rr);
                 else if (op == LIR_ush)
-                    SRL(rr, L0, rr);
+                    SRL(rr, L2, rr);
                 else
                     NanoAssertMsg(0, "Unsupported");
-                SET32(c, L0);
+                SET32(c, L2);
             }
 
         if ( rr != ra ) 
