@@ -662,6 +662,7 @@ class TraceRecorder : public avmplus::GCObject {
     bool bbinary(nanojit::LOpcode op);
     void demote(jsval& v, jsdouble result);
 
+    inline nanojit::LIns* map(nanojit::LIns *obj_ins);
     JS_REQUIRES_STACK bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins,
                                          nanojit::LIns*& ops_ins, size_t op_offset = 0);
     JS_REQUIRES_STACK JSRecordingStatus test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
