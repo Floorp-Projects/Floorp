@@ -76,7 +76,11 @@
 
 #else // CHROMIUM_MOZILLA_BUILD
 
+#if defined(OS_WIN)
+#define WCHAR_T_IS_UTF16
+#else
 #define WCHAR_T_IS_UTF32
+#endif
 
 #endif // CHROMIUM_MOZILLA_BUILD
 
