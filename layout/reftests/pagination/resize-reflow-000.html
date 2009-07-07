@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Resize Reflow Test</title>
+</head>
+<body>
+
+<div style="-moz-column-width: 12em;
+            border: silver solid;
+            width: 30em" id="outer">
+x <div style="border: dotted;
+              background: aqua;
+              color: gray;">
+        blah<br>
+        blah<br>
+        blah<br>
+        blah
+  </div>
+</div>
+
+<script>
+document.body.offsetWidth;
+n = document.getElementById("outer").firstChild;
+n.data = ' ';
+</script>
+
+</body>
+</html>
