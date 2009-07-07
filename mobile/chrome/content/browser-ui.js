@@ -251,6 +251,11 @@ var BrowserUI = {
     bookmarks.height = windowH;
     bookmarks.width = windowW;
 
+    // select list UI
+    let selectlist = document.getElementById("select-container");
+    selectlist.height = windowH;
+    selectlist.width = windowW;
+
     // tools panel
     let panel = document.getElementById("panel-container");
     panel.height = windowH;
@@ -846,16 +851,6 @@ var SelectHelper = {
     }
 
     this._panel = document.getElementById("select-container");
-
-    let toolbar = document.getElementById("toolbar-main");
-    let top = parseInt(toolbar.top) + toolbar.boxObject.height;
-    if (top < 0)
-      top = 0;
-
-    this._panel.top = top + 20;
-    this._panel.left = 20;
-    this._panel.width = window.innerWidth - 40;
-    this._panel.height = window.innerHeight - (top + 40);
     this._panel.hidden = false;
 
     this._list.focus();

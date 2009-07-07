@@ -620,8 +620,16 @@ richpref {
 
 /* select popup ------------------------------------------------------------ */
 #select-container {
+  padding: 3.6mm; /* half row spacing */
+}
+
+#select-container-inner {
   border: 0.5mm solid #36373b;
-  -moz-border-radius: 1.0mm;
+  -moz-border-top-colors: #fff #36373b;
+  -moz-border-right-colors: #fff #36373b;
+  -moz-border-left-colors: #fff #36373b;
+  -moz-border-bottom-colors: #fff #36373b;
+  -moz-border-radius: 1mm;
   padding-top: 1.1mm; /* core spacing */
 }
 
