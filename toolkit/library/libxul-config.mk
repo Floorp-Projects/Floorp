@@ -99,7 +99,12 @@ STATIC_LIBS += \
   chromium_s \
   $(NULL)
 
+ifeq (Linux,$(OS_ARCH))
 OS_LIBS += -lrt
+endif
+ifeq (WINNT,$(OS_ARCH))
+OS_LIBS += psapi.lib
+endif
 endif
 
 STATIC_LIBS += \
