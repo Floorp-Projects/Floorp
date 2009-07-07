@@ -42,8 +42,8 @@ from ipdl.type import TypeCheck
 
 from ipdl.cxx.cgen import CxxCodeGen
 
-def parse(specstring, filename='<stdin>'):
-    return Parser().parse(specstring, filename)
+def parse(specstring, filename='/stdin', includedirs=[ ]):
+    return Parser().parse(specstring, os.path.abspath(filename), includedirs)
 
 def typecheck(ast, errout=sys.stderr):
     '''Returns True iff |ast| is well typed.  Print errors to |errout| if

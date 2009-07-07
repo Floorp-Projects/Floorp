@@ -44,6 +44,8 @@ def log(minv, fmt, *args):
 op = optparse.OptionParser(usage='ipdl.py [options] IPDLfiles...')
 op.add_option('-d', '--output-dir', dest='outputdir', default='.',
               help='Directory in which to put generated headers')
+op.add_option('-I', '--include', dest='includedirs', action='append',
+              help='Additional directory to search for included protocol specifications')
 op.add_option('-v', '--verbose', dest='verbosity', default=1, action='count',
               help='Verbose logging (specify -vv or -vvv for very verbose logging)')
 op.add_option('-q', '--quiet', dest='verbosity', action='store_const', const=0,
@@ -52,6 +54,7 @@ op.add_option('-q', '--quiet', dest='verbosity', action='store_const', const=0,
 options, files = op.parse_args()
 _verbosity = options.verbosity
 codedir = options.outputdir
+includedirs = [ os.path.abspath(incdir) for incdir in options.includedirs ]
 
 if not len(files):
     op.error("No IPDL files specified")
@@ -72,7 +75,7 @@ for f in files:
     specstring = fd.read()
     fd.close()
 
-    ast = ipdl.parse(specstring, filename)
+    ast = ipdl.parse(specstring, filename, includedirs=includedirs)
 
     allprotocols.append,('%sProtocolMsgStart' % ast.protocol.name)
 

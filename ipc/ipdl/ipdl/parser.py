@@ -59,15 +59,17 @@ class Parser:
     def __init__(self, debug=0):
         self.debug = debug
         self.filename = None
+        self.includedirs = None
         self.loc = None         # not always up to date
         self.lexer = None
         self.parser = None
         self.tu = TranslationUnit()
 
-    def parse(self, input, filename):
-        realpath = os.path.abspath(filename)
-        if realpath in Parser.parsed:
-            return Parser.parsed[realpath].tu
+    def parse(self, input, filename, includedirs):
+        assert os.path.isabs(filename)
+
+        if filename in Parser.parsed:
+            return Parser.parsed[filename].tu
 
         self.lexer = lex.lex(debug=self.debug,
                              optimize=not self.debug,
@@ -78,9 +80,10 @@ class Parser:
                                 tabmodule="ipdl_yacctab",
                                 outputdir=_thisdir)
         self.filename = filename
-        self.tu.filename = realpath
+        self.includedirs = includedirs
+        self.tu.filename = filename
 
-        Parser.parsed[realpath] = self
+        Parser.parsed[filename] = self
         Parser.parseStack.append(Parser.current)
         Parser.current = self
 
@@ -89,6 +92,15 @@ class Parser:
 
         Parser.current = Parser.parseStack.pop()
         return ast
+
+    def resolveIncludePath(self, filepath):
+        '''Return the absolute path from which the possibly partial
+|filepath| should be read, or |None| if |filepath| can't be located.'''
+        for incdir in self.includedirs +[ '' ]:
+            realpath = os.path.join(incdir, filepath)
+            if os.path.isfile(realpath):
+                return realpath
+        return None
 
     # returns a GCC-style string representation of the include stack.
     # e.g.,
@@ -205,9 +217,14 @@ def p_ProtocolIncludeStmt(p):
     """ProtocolIncludeStmt : INCLUDE PROTOCOL STRING"""
     loc = locFromTok(p, 1)
     Parser.current.loc = loc
-
     inc = ProtocolInclude(loc, p[3])
-    inc.tu = Parser().parse(open(inc.file).read(), inc.file)
+
+    path = Parser.current.resolveIncludePath(inc.file)
+    if path is None:
+        print >>sys.stderr, "error: can't locate protocol include file `%s'"% (inc.file)
+        inc.tu = TranslationUnit()
+    else:
+        inc.tu = Parser().parse(open(path).read(), path, Parser.current.includedirs)
     p[0] = inc
 
 def p_UsingStmt(p):
