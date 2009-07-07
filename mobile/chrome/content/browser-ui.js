@@ -664,7 +664,7 @@ var BookmarkHelper = {
     this._editor.setAttribute("ui", "manage");
     this._editor.setAttribute("title", title);
     this._editor.setAttribute("uri", aURI.spec);
-    this._editor.setAttribute("tags", tags.join(" "));
+    this._editor.setAttribute("tags", tags.join(", "));
     this._editor.setAttribute("onmove", "FolderPicker.show(this);");
     this._editor.setAttribute("onclose", "BookmarkHelper.close()");
     document.getElementById("bookmark-form").appendChild(this._editor);
