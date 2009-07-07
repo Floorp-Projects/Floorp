@@ -44,7 +44,7 @@ def _protocolIncludeGuard(p, pname):
     return _joinProtocolNamespacesName('_', p, pname) +'_h'
 
 def _protocolHeaderFilename(p, pname):
-    return _joinProtocolNamespacesName(os.path.sep, p, pname)+ '.h'
+    return _joinProtocolNamespacesName('/', p, pname)+ '.h'
 
 def _protocolHeaderName(pname):
     return pname +'Protocol'
