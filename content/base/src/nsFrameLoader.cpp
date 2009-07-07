@@ -89,10 +89,12 @@
 
 #include "TabParent.h"
 
+#ifdef MOZ_WIDGET_GTK2
 #include "mozcontainer.h"
 
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
+#endif
 
 using namespace mozilla;
 using namespace mozilla::tabs;
@@ -1102,6 +1104,18 @@ nsFrameLoader::TryNewProcess()
   // FIXME check that this widget has the size and position we expect for
   // this iframe?
 
+  nsPresContext* presContext = ourFrame->PresContext();
+
+#ifdef XP_WIN
+  HWND parentwin =
+    static_cast<HWND>(w->GetNativeData(NS_NATIVE_WINDOW));
+
+  mChildProcess = new TabParent(parentwin);
+  mChildProcess->Move(0, 0,
+                      presContext->AppUnitsToDevPixels(ourFrame->GetSize().width),
+                      presContext->AppUnitsToDevPixels(ourFrame->GetSize().height));
+                      
+#elif defined(MOZ_WIDGET_GTK2)
   GdkWindow* parent_win =
     static_cast<GdkWindow*>(w->GetNativeData(NS_NATIVE_WINDOW));
   
@@ -1118,7 +1132,6 @@ nsFrameLoader::TryNewProcess()
   gtk_widget_realize(socket);
 
   // set the child window's size and position
-  nsPresContext* presContext = ourFrame->PresContext();
   GtkAllocation alloc;
   alloc.x = 0;                  // setting position doesn't look necessary
   alloc.y = 0;
@@ -1133,6 +1146,10 @@ nsFrameLoader::TryNewProcess()
   mChildProcess = new TabParent(id);
 
   mChildProcess->Move(0, 0, alloc.width, alloc.height);
+
+#else
+#error TODO for this platform
+#endif
 
   return PR_TRUE;
 }

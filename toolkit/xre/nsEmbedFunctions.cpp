@@ -200,8 +200,12 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
   if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS")) {
+#ifdef OS_POSIX
       printf("\n\nCHILDCHILDCHILDCHILD\n  debug me @%d\n\n", getpid());
       sleep(30);
+#elif defined(OS_WIN)
+      Sleep(30000);
+#endif
   }
 
   base::AtExitManager exitManager;
