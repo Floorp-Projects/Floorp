@@ -941,12 +941,6 @@
             if (evt.target != this.contentDocument)
               return;
 
-            var i = 0;
-            for ( ; i < this.parentNode.parentNode.childNodes.length; i++) {
-              if (this.parentNode.parentNode.childNodes[i].firstChild == this)
-                break;
-            }
-
             var tabBrowser = this.parentNode.parentNode.parentNode.parentNode;
 
             var tab = document.getAnonymousElementByAttribute(tabBrowser, "linkedpanel", this.parentNode.id);
