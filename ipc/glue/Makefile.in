@@ -64,7 +64,6 @@ EXPORTS_mozilla/ipc =				\
   $(NULL)
 
 ENABLE_CXX_EXCEPTIONS = 1
-DEFINES += -DNO_NSPR_10_SUPPORT=1
 
 REQUIRES += \
   string \
