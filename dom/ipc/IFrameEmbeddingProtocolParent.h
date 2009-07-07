@@ -76,10 +76,10 @@ public:
     }
 
     nsresult Callmove(
-                const uint32_t& x,
-                const uint32_t& y,
-                const uint32_t& width,
-                const uint32_t& height)
+                const PRUint32& x,
+                const PRUint32& y,
+                const PRUint32& width,
+                const PRUint32& height)
     {
         Message __reply;
         Message* __msg;

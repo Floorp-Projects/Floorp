@@ -6,6 +6,7 @@
 #ifndef mozilla_plugins_NPAPIProtocol_h
 #define mozilla_plugins_NPAPIProtocol_h
 
+#include "base/basictypes.h"
 #include "nscore.h"
 #include "IPC/IPCMessageUtils.h"
 #include "mozilla/ipc/MessageTypes.h"
