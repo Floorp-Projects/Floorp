@@ -26,10 +26,10 @@ public:
 
     virtual nsresult Answerinit(const MagicWindowHandle& parentWidget);
     virtual nsresult AnswerloadURL(const String& uri);
-    virtual nsresult Answermove(const uint32_t& x,
-                                const uint32_t& y,
-                                const uint32_t& width,
-                                const uint32_t& height);
+    virtual nsresult Answermove(const PRUint32& x,
+                                const PRUint32& y,
+                                const PRUint32& width,
+                                const PRUint32& height);
 
 private:
     MagicWindowHandle mWidget;

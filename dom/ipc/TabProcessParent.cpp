@@ -38,7 +38,9 @@ bool TabProcessParent::Launch()
     cmdLine.AppendSwitchWithValue(switches::kProcessChannelID, channel_id());
 
     base::ProcessHandle process;
-#if defined(OS_POSIX)
+#if defined(OS_WIN)
+    base::LaunchApp(cmdLine, false, false, &process);
+#elif defined(OS_POSIX)
     base::LaunchApp(cmdLine.argv(), mFileMap, false, &process);
 #else
 #error Loser
