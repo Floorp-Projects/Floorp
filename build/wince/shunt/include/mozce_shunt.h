@@ -130,6 +130,7 @@ unsigned int ExpandEnvironmentStringsW(const unsigned short* lpSrc,
 unsigned short * _wgetcwd(unsigned short* dir, unsigned long size);
 unsigned short *_wfullpath( unsigned short *absPath, const unsigned short *relPath, unsigned long maxLength );
 int _unlink(const char *filename );
+int _wchdir(const unsigned short* path);
   
 /* The time stuff should be defined here, but it can't be because it
    is already defined in time.h.
