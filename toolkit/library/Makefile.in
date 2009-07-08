@@ -269,6 +269,9 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell uuid ole32 oleaut32 Ws2 ddra
 ifdef WINCE_WINDOWS_MOBILE
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, cellcore)
 endif
+ifdef HAS_OGLES
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, libGLESv2 libEGL)
+endif
 endif
 
 
