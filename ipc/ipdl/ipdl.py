@@ -44,7 +44,8 @@ def log(minv, fmt, *args):
 op = optparse.OptionParser(usage='ipdl.py [options] IPDLfiles...')
 op.add_option('-d', '--output-dir', dest='outputdir', default='.',
               help='Directory in which to put generated headers')
-op.add_option('-I', '--include', dest='includedirs', action='append',
+op.add_option('-I', '--include', dest='includedirs', default=[ ],
+              action='append',
               help='Additional directory to search for included protocol specifications')
 op.add_option('-v', '--verbose', dest='verbosity', default=1, action='count',
               help='Verbose logging (specify -vv or -vvv for very verbose logging)')
