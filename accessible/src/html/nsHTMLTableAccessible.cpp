@@ -74,11 +74,33 @@ nsHyperTextAccessibleWrap(aDomNode, aShell)
 
 // nsAccessible
 
-/* unsigned long getRole (); */
 nsresult
 nsHTMLTableCellAccessible::GetRoleInternal(PRUint32 *aResult)
 {
   *aResult = nsIAccessibleRole::ROLE_CELL;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLTableCellAccessible::GetStateInternal(PRUint32 *aState,
+                                            PRUint32 *aExtraState)
+{
+  nsresult rv= nsHyperTextAccessibleWrap::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mWeakShell);
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  NS_ASSERTION(frame, "No frame for valid cell accessible!");
+
+  if (frame) {
+    *aState |= nsIAccessibleStates::STATE_SELECTABLE;
+    PRBool isSelected = PR_FALSE;
+    frame->GetSelected(&isSelected);
+    if (isSelected)
+      *aState |= nsIAccessibleStates::STATE_SELECTED;
+  }
+
   return NS_OK;
 }
 
