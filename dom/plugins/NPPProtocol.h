@@ -20,9 +20,12 @@ namespace NPPProtocol {
 
 
 enum State {
+    StateStart = 0,
+    StateError,
+    StateLast
 };
 
-enum NPPProtocolMsgType {
+enum MessageType {
     NPPProtocolStart = NPPProtocolMsgStart << 12,
     NPPProtocolPreStart = (NPPProtocolMsgStart << 12) - 1,
     Msg_NPP_SetWindow__ID,
@@ -33,6 +36,7 @@ enum NPPProtocolMsgType {
     Reply_NPN_GetValue__ID,
     NPPProtocolEnd
 };
+
 class Msg_NPP_SetWindow :
     public IPC::Message
 {

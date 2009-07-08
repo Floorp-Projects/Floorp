@@ -20,9 +20,12 @@ namespace NPAPIProtocol {
 
 
 enum State {
+    StateStart = 0,
+    StateError,
+    StateLast
 };
 
-enum NPAPIProtocolMsgType {
+enum MessageType {
     NPAPIProtocolStart = NPAPIProtocolMsgStart << 12,
     NPAPIProtocolPreStart = (NPAPIProtocolMsgStart << 12) - 1,
     Msg_NP_Initialize__ID,
@@ -33,6 +36,7 @@ enum NPAPIProtocolMsgType {
     Reply_NPPDestructor__ID,
     NPAPIProtocolEnd
 };
+
 class Msg_NP_Initialize :
     public IPC::Message
 {

@@ -148,7 +148,7 @@ tokens = [
 
 t_COLONCOLON = '::'
 
-literals = '(){}[];,~'
+literals = '(){}[];:,~'
 t_ignore = ' \f\t\v'
 
 def t_linecomment(t):
@@ -175,7 +175,7 @@ def t_STRING(t):
 
 def t_error(t):
     includeStackStr = Parser.includeStackString()
-    raise Exception, '%s%s: lexically invalid characters %s'% (
+    raise Exception, '%s%s: error: lexically invalid characters %s'% (
         includeStackStr, Loc(Parser.current.filename, t.lineno), str(t))
 
 ##-----------------------------------------------------------------------------
@@ -319,10 +319,49 @@ def p_MessageOutParams(p):
     else:
         p[0] = p[3]
 
+##--------------------
+## State machine
+
 def p_TransitionStmts(p):
-    """TransitionStmts : """
-    # FIXME/cjones: impl
-    p[0] = [ ]
+    """TransitionStmts : TransitionStmts TransitionStmt
+                       | TransitionStmt
+                       | """
+    if 3 == len(p):
+        p[1].append(p[2])
+        p[0] = p[1]
+    elif 2 == len(p):
+        p[0] = [ p[1] ]
+    else:
+        p[0] = [ ]
+
+def p_TransitionStmt(p):
+    """TransitionStmt : State ':' Transitions"""
+    p[0] = TransitionStmt(locFromTok(p, 1), p[1], p[3])
+
+def p_Transitions(p):
+    """Transitions : Transitions Transition
+                   | Transition"""
+    if 3 == len(p):
+        p[1].append(p[2])
+        p[0] = p[1]
+    else:
+        p[0] = [ p[1] ]
+
+def p_Transition(p):
+    """Transition : Trigger MessageId GOTO State ';'"""
+    loc, trigger = p[1]
+    p[0] = Transition(loc, trigger, p[2], p[4])
+
+def p_Trigger(p):
+    """Trigger : SEND
+               | RECV
+               | CALL
+               | ANSWER"""
+    p[0] = [ locFromTok(p, 1), Transition.nameToTrigger(p[1]) ]
+
+def p_State(p):
+    """State : ID"""
+    p[0] = State(locFromTok(p, 1), p[1])
 
 ##--------------------
 ## Minor stuff
@@ -394,5 +433,5 @@ def p_QualifiedID(p):
 
 def p_error(t):
     includeStackStr = Parser.includeStackString()
-    raise Exception, '%s%s: syntax error near "%s"'% (
+    raise Exception, '%s%s: error: bad syntax near "%s"'% (
         includeStackStr, Loc(Parser.current.filename, t.lineno), t.value)

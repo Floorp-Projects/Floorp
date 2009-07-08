@@ -16,9 +16,12 @@ namespace IFrameEmbeddingProtocol {
 
 
 enum State {
+    StateStart = 0,
+    StateError,
+    StateLast
 };
 
-enum IFrameEmbeddingProtocolMsgType {
+enum MessageType {
     IFrameEmbeddingProtocolStart = IFrameEmbeddingProtocolMsgStart << 12,
     IFrameEmbeddingProtocolPreStart = (IFrameEmbeddingProtocolMsgStart << 12) - 1,
     Msg_init__ID,
@@ -29,6 +32,7 @@ enum IFrameEmbeddingProtocolMsgType {
     Reply_move__ID,
     IFrameEmbeddingProtocolEnd
 };
+
 class Msg_init :
     public IPC::Message
 {
