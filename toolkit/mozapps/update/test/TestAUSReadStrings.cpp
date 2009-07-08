@@ -59,7 +59,6 @@
 #endif
 #endif
 
-#include <stdio.h>
 #include <string.h>
 
 #include "updater/resource.h"
@@ -67,10 +66,12 @@
 #include "updater/readstrings.h"
 #include "updater/errors.h"
 
+#include "TestHarness.h"
+
 #ifndef MAXPATHLEN
 # ifdef PATH_MAX
 #  define MAXPATHLEN PATH_MAX
-# elif defined(_MAX_PATH)
+# elif defined(MAX_PATH)
 #  define MAXPATHLEN MAX_PATH
 # elif defined(_MAX_PATH)
 #  define MAXPATHLEN _MAX_PATH
@@ -82,7 +83,6 @@
 #endif
 
 #define TEST_NAME "Updater ReadStrings"
-#define UNEXPECTED_FAIL_PREFIX "*** TEST-UNEXPECTED-FAIL"
 
 int NS_main(int argc, NS_tchar **argv)
 {
@@ -95,8 +95,7 @@ int NS_main(int argc, NS_tchar **argv)
 
   NS_tchar *slash = NS_tstrrchr(argv[0], PATH_SEPARATOR_CHAR);
   if (!slash) {
-    printf("%s | %s | unable to find platform specific path separator\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME);
+    fail("%s | unable to find platform specific path separator (check 1)", TEST_NAME);
     return 20;
   }
 
@@ -113,8 +112,7 @@ int NS_main(int argc, NS_tchar **argv)
                                   "\xE6\xB8\xAC\xE8\xA9\xA6 " \
                                   "\xE6\xB5\x8B\xE8\xAF\x95") != 0) {
       rv = 21;
-      printf("%s | %s Title ini value incorrect | Test 2\n",
-             UNEXPECTED_FAIL_PREFIX, TEST_NAME);
+      fail("%s | Title ini value incorrect (check 3)", TEST_NAME);
     }
 
     if (strcmp(testStrings.info, "Info Test - \xD0\x98\xD1\x81\xD0\xBF\xD1\x8B" \
@@ -124,13 +122,11 @@ int NS_main(int argc, NS_tchar **argv)
                                  "\xE6\xB8\xAC\xE8\xA9\xA6 " \
                                  "\xE6\xB5\x8B\xE8\xAF\x95\xE2\x80\xA6") != 0) {
       rv = 22;
-      printf("%s | %s Info ini value incorrect | Test 2\n",
-             UNEXPECTED_FAIL_PREFIX, TEST_NAME);
+      fail("%s | Info ini value incorrect (check 4)", TEST_NAME);
     }
   }
   else {
-    printf("%s | %s ReadStrings returned %i | Test 2\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
+    fail("%s | ReadStrings returned %i (check 2)", TEST_NAME, retval);
     rv = 23;
   }
 
@@ -140,8 +136,7 @@ int NS_main(int argc, NS_tchar **argv)
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 24;
-    printf("%s | %s ReadStrings returned %i | Test 3\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
+    fail("%s | ReadStrings returned %i (check 5)", TEST_NAME, retval);
   }
 
   // Test failure when the ini file exists with Title and without Info in the
@@ -150,8 +145,7 @@ int NS_main(int argc, NS_tchar **argv)
   retval = ReadStrings(inifile, &testStrings);
   if (retval != PARSE_ERROR) {
     rv = 25;
-    printf("%s | %s ReadStrings returned %i | Test 4\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME, retval);
+    fail("%s | ReadStrings returned %i (check 6)", TEST_NAME, retval);
   }
 
   // Test failure when the ini file doesn't exist
@@ -159,15 +153,14 @@ int NS_main(int argc, NS_tchar **argv)
   retval = ReadStrings(inifile, &testStrings);
   if (retval != READ_ERROR) {
     rv = 26;
-    printf("%s | %s ini file doesn't exist | Test 5\n",
-           UNEXPECTED_FAIL_PREFIX, TEST_NAME);
+    fail("%s | ini file doesn't exist (check 7)", TEST_NAME);
   }
 
 
   if (rv == 0) {
-    printf("*** TEST-PASS | %s | all tests passed\n", TEST_NAME);
+    printf("TEST-PASS | %s | all checks passed\n", TEST_NAME);
   } else {
-    printf("*** TEST-FAIL | %s | some tests failed\n", TEST_NAME);
+    fail("%s | %i out of 7 checks failed", TEST_NAME, gFailCount);
   }
 
   return rv;
