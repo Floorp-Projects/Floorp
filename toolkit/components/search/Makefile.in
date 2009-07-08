@@ -51,7 +51,7 @@ XPIDLSRCS = nsIBrowserSearchService.idl
 EXTRA_PP_COMPONENTS = nsSearchService.js \
 	nsSearchSuggestions.js
 
-ifneq (,$(BUILD_OFFICIAL)$(MOZILLA_OFFICIAL))
+ifdef MOZILLA_OFFICIAL
 DEFINES += -DOFFICIAL_BUILD=1
 endif
 
