@@ -136,7 +136,7 @@ nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* 
   PRUnichar litChar;
   while (litChar = *litPtr) {
     NS_ASSERTION(!(litChar >= 'A' && litChar <= 'Z'), "Literal isn't in lower case.");
-    if (strPtr = end) {
+    if (strPtr == end) {
       return PR_FALSE;
     }
     PRUnichar strChar = *strPtr;
