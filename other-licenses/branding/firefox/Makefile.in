@@ -44,8 +44,10 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/background.png $(DIST)/branding/background.png
 	cp $(srcdir)/disk.icns $(DIST)/branding/disk.icns
 endif
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	cp $(srcdir)/firefox.ico  $(DIST)/branding/app.ico
+endif
+ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/branding.nsi     $(DIST)/branding/branding.nsi
 	cp $(srcdir)/wizHeader.bmp    $(DIST)/branding/wizHeader.bmp
 	cp $(srcdir)/wizHeaderRTL.bmp $(DIST)/branding/wizHeaderRTL.bmp
