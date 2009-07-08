@@ -200,9 +200,6 @@ namespace nanojit
         : hasLoop(0)
         , _frago(frago)
         , _gc(frago->core()->gc)
-        , _labels(_gc)
-        , _patches(_gc)
-        , pending_lives(_gc)
 		, config(frago->core()->config)
 	{
         AvmCore *core = frago->core();
@@ -294,7 +291,6 @@ namespace nanojit
 		// readies for a brand spanking new code generation pass.
 		registerResetAll();
 		arReset();
-        pending_lives.clear();
 	}
 
 	NIns* Assembler::pageAlloc(bool exitPage)
@@ -809,8 +805,6 @@ namespace nanojit
 
         _epilogue = genEpilogue();
 		_branchStateMap = branchStateMap;
-        _labels.clear();
-        _patches.clear();
 
 		verbose_only( outputAddr=true; )
 		verbose_only( asm_output("[epilogue]"); )
@@ -888,18 +882,21 @@ namespace nanojit
 		verbose_only(_frago->_stats.compiles++; )
 		verbose_only(_frago->_stats.totalCompiles++; )
 		_inExit = false;	
-        gen(prev, loopJumps);
+
+        LabelStateMap labels(_gc);
+        NInsMap patches(_gc);
+        gen(prev, loopJumps, labels, patches);
 		frag->loopEntry = _nIns;
 		//frag->outbound = core->config.tree_opt? _latestGuard : 0;
 		//nj_dprintf("assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 
         if (!error()) {
 		    // patch all branches
-		    while(!_patches.isEmpty())
+            while (!patches.isEmpty())
 		    {
-			    NIns* where = _patches.lastKey();
-			    LInsp targ = _patches.removeLast();
-                LabelState *label = _labels.get(targ);
+                NIns* where = patches.lastKey();
+                LInsp targ = patches.removeLast();
+                LabelState *label = labels.get(targ);
 			    NIns* ntarg = label->addr;
                 if (ntarg) {
 				    nPatchBranch(where,ntarg);
@@ -1119,13 +1116,16 @@ namespace nanojit
 #define countlir_call()
 #endif
 
-	void Assembler::gen(LirFilter* reader,  NInsList& loopJumps)
+    void Assembler::gen(LirFilter* reader,  NInsList& loopJumps, LabelStateMap& labels,
+                        NInsMap& patches)
 	{
 		// trace must end with LIR_x, LIR_loop, LIR_ret, or LIR_xtbl
 		NanoAssert(reader->pos()->isop(LIR_x) ||
 		           reader->pos()->isop(LIR_loop) ||
 		           reader->pos()->isop(LIR_ret) ||
 				   reader->pos()->isop(LIR_xtbl));
+
+        InsList pending_lives(_gc);
 		 
 		for (LInsp ins = reader->read(); !ins->isop(LIR_start) && !error(); ins = reader->read())
 		{
@@ -1349,7 +1349,7 @@ namespace nanojit
 				{
                     countlir_jmp();
 					LInsp to = ins->getTarget();
-                    LabelState *label = _labels.get(to);
+                    LabelState *label = labels.get(to);
                     // the jump is always taken so whatever register state we
                     // have from downstream code, is irrelevant to code before
                     // this jump.  so clear it out.  we will pick up register
@@ -1363,16 +1363,16 @@ namespace nanojit
                     else {
                         // backwards jump
                         hasLoop = true;
-                        handleLoopCarriedExprs();
+                        handleLoopCarriedExprs(pending_lives);
                         if (!label) {
                             // save empty register state at loop header
-                            _labels.add(to, 0, _allocator);
+                            labels.add(to, 0, _allocator);
                         }
                         else {
                             intersectRegisterState(label->regs);
                         }
                         JMP(0);
-    					_patches.put(_nIns, to);
+                        patches.put(_nIns, to);
                     }
 					break;
 				}
@@ -1383,7 +1383,7 @@ namespace nanojit
                     countlir_jcc();
 					LInsp to = ins->getTarget();
 					LIns* cond = ins->oprnd1();
-                    LabelState *label = _labels.get(to);
+                    LabelState *label = labels.get(to);
                     if (label && label->addr) {
                         // forward jump to known label.  need to merge with label's register state.
                         unionRegisterState(label->regs);
@@ -1392,28 +1392,28 @@ namespace nanojit
                     else {
                         // back edge.
                         hasLoop = true;
-                        handleLoopCarriedExprs();
+                        handleLoopCarriedExprs(pending_lives);
                         if (!label) {
                             // evict all registers, most conservative approach.
                             evictRegs(~_allocator.free);
-                            _labels.add(to, 0, _allocator);
+                            labels.add(to, 0, _allocator);
                         } 
                         else {
                             // evict all registers, most conservative approach.
                             intersectRegisterState(label->regs);
                         }
                         NIns *branch = asm_branch(op == LIR_jf, cond, 0, false);
-			            _patches.put(branch,to);
+                        patches.put(branch,to);
                     }
 					break;
 				}					
 				case LIR_label:
 				{
                     countlir_label();
-                    LabelState *label = _labels.get(ins);
+                    LabelState *label = labels.get(ins);
                     if (!label) {
                         // label seen first, normal target of forward jump, save addr & allocator
-    					_labels.add(ins, _nIns, _allocator);
+                        labels.add(ins, _nIns, _allocator);
                     }
                     else {
                         // we're at the top of a loop
@@ -1582,7 +1582,7 @@ namespace nanojit
             findSpecificRegFor(param1, argRegs[param1->paramArg()]);
     }
     
-    void Assembler::handleLoopCarriedExprs()
+    void Assembler::handleLoopCarriedExprs(InsList& pending_lives)
     {
         // ensure that exprs spanning the loop are marked live at the end of the loop
         reserveSavedRegs();
@@ -2038,10 +2038,6 @@ namespace nanojit
     }
 
     LabelStateMap::~LabelStateMap() {
-        clear();
-    }
-
-    void LabelStateMap::clear() {
         LabelState *st;
 
         while (!labels.isEmpty()) {
