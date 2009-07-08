@@ -149,6 +149,13 @@ _cairo_ddraw_print_ddraw_error (const char *context, HRESULT hr)
 #define CAIRO_DDRAW_OGL_SCRATCH_VBO_SIZE          4096
 #define CAIRO_DDRAW_OGL_SCRATCH_IBO_SIZE          1024
 
+static uint32_t   _cairo_ddraw_ogl_surface_count = 0;
+static EGLDisplay _cairo_ddraw_egl_dpy = EGL_NO_DISPLAY;
+static EGLContext _cairo_ddraw_egl_dummy_ctx = EGL_NO_CONTEXT;
+static EGLSurface _cairo_ddraw_egl_dummy_surface = EGL_NO_SURFACE;
+
+static cairo_status_t _cairo_ddraw_ogl_init(void);
+
 static cairo_status_t
 _cairo_ddraw_egl_error (const char *context)
 {
@@ -403,8 +410,49 @@ _cairo_ddraw_surface_reset_clipper (cairo_ddraw_surface_t *surface)
 
     return CAIRO_STATUS_SUCCESS;
 }
+#ifdef CAIRO_DDRAW_USE_GL
+#define CAIRO_DDRAW_API_ENTRY_STATUS                                  \
+    do {                                                              \
+	int status;                                                   \
+	if (status = _cairo_ddraw_ogl_make_current())		      \
+	    return (status);					      \
+    } while (0)
+#define CAIRO_DDRAW_API_ENTRY_VOID do {                               \
+	int status;                                                   \
+	if (status = _cairo_ddraw_ogl_make_current())		      \
+	    return;						      \
+    } while (0)
+#define CAIRO_DDRAW_API_ENTRY_SURFACE				      \
+    do {				                              \
+	int status;                                                   \
+	if (status = _cairo_ddraw_ogl_make_current())		      \
+	    return (_cairo_surface_create_in_error (status));         \
+    } while (0)
+#else
+#define CAIRO_DDRAW_API_ENTRY_STATUS do {} while (0)
+#define CAIRO_DDRAW_API_ENTRY_VOID  do {} while (0)
+#define CAIRO_DDRAW_API_ENTRY_SURFACE do {} while (0)
+#endif
 
 #ifdef CAIRO_DDRAW_USE_GL
+static inline cairo_status_t
+_cairo_ddraw_ogl_make_current()
+{
+    /* we haven't started GL yet so don't worry about make current */
+    if ( 0 == _cairo_ddraw_ogl_surface_count ) return CAIRO_STATUS_SUCCESS;
+
+    if(!eglMakeCurrent (_cairo_ddraw_egl_dpy,
+			_cairo_ddraw_egl_dummy_surface,
+			_cairo_ddraw_egl_dummy_surface,
+			_cairo_ddraw_egl_dummy_ctx)){
+	EGLint status = eglGetError();
+
+	/*XXX make pretty */
+	_cairo_ddraw_log ("eglMakeCurrent returned EGL error code 0x%x\n", status);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+    return CAIRO_STATUS_SUCCESS;
+}
 
 static inline void
 _cairo_ddraw_ogl_flush (cairo_ddraw_surface_t *surface)
@@ -448,6 +496,7 @@ _cairo_ddraw_surface_flush (void *abstract_surface)
 {
     cairo_ddraw_surface_t *surface = abstract_surface;
 
+    CAIRO_DDRAW_API_ENTRY_STATUS;
 #ifdef CAIRO_DDRAW_USE_GL
     _cairo_ddraw_ogl_flush (surface);
 #endif
@@ -470,6 +519,8 @@ _cairo_ddraw_surface_create_similar (void * abstract_surface,
     cairo_ddraw_surface_t * orig_surface =
 	(cairo_ddraw_surface_t *) abstract_surface;
     cairo_surface_t * surface;
+
+    CAIRO_DDRAW_API_ENTRY_SURFACE;
 
     surface =
 	cairo_ddraw_surface_create (orig_surface->lpdd,
@@ -508,6 +559,8 @@ _cairo_ddraw_surface_clone_similar (void * abstract_surface,
     int dststride;
     int lines;
     int bytes;
+
+    CAIRO_DDRAW_API_ENTRY_STATUS;
 
     if (src->backend == ddraw_surface->base.backend) {
 	/* return a reference */
@@ -619,12 +672,6 @@ _cairo_ddraw_surface_clone_similar (void * abstract_surface,
  *
  * You also need support for some EGL and GL extensions...
  */
-
-
-static uint32_t   _cairo_ddraw_ogl_surface_count = 0;
-static EGLDisplay _cairo_ddraw_egl_dpy = EGL_NO_DISPLAY;
-static EGLContext _cairo_ddraw_egl_dummy_ctx = EGL_NO_CONTEXT;
-static EGLSurface _cairo_ddraw_egl_dummy_surface = EGL_NO_SURFACE;
 
 #define LIST_EXTENSIONS(_) \
     _(PFNGLMAPBUFFEROESPROC, glMapBufferOES) \
@@ -1692,7 +1739,7 @@ static const EGLint _cairo_ddraw_ogl_context_attribs[] = {
 
 
 static cairo_status_t
-_cairo_ddraw_ogl_init(void)
+_cairo_ddraw_ogl_init()
 {
     EGLint num_configs;
     static const EGLint config_attribs[] = {
@@ -2165,6 +2212,8 @@ _cairo_ddraw_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     cairo_ddraw_ogl_font_t * font =
 	(cairo_ddraw_ogl_font_t *) scaled_font->surface_private;
 
+    CAIRO_DDRAW_API_ENTRY_VOID;
+
     if (font) {
 	if (font->glyph_cache) {
 	    cairo_surface_destroy ((cairo_surface_t *) font->glyph_cache);
@@ -2187,6 +2236,7 @@ _cairo_ddraw_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
     cairo_ddraw_ogl_font_t * font = scaled_font->surface_private;
     cairo_ddraw_ogl_glyph_t * glyph = scaled_glyph->surface_private;
 
+    CAIRO_DDRAW_API_ENTRY_VOID;
     assert (font);
 
     if (glyph) {
@@ -2326,6 +2376,8 @@ _cairo_ddraw_surface_show_glyphs (void		         *abstract_dst,
 	MAX_SCRATCH_COUNT (sizeof (cairo_ddraw_ogl_glyph_quad_t),
 			   sizeof (cairo_ddraw_ogl_glyph_idx_t))
     };
+
+    CAIRO_DDRAW_API_ENTRY_STATUS;
 
     assert (num_glyphs);
 
@@ -2563,6 +2615,8 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 	CAIRO_DDRAW_OGL_TEXTURE_UNUSED;
     cairo_ddraw_ogl_texture_type_t src_tex_type;
 
+    CAIRO_DDRAW_API_ENTRY_STATUS;
+
     /*XXX TODO - emulate hard textures with shader magic */
 
     if (op == CAIRO_OPERATOR_DEST)
@@ -2611,7 +2665,7 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
     default:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
- 
+
     glBindBuffer (GL_ARRAY_BUFFER, vbo);
     CHECK_OGL_ERROR ("glBindBuffer vbo");
 
@@ -2849,6 +2903,8 @@ _cairo_ddraw_surface_finish (void *abstract_surface)
     cairo_ddraw_surface_t *surface = abstract_surface;
     ULONG count;
 
+    CAIRO_DDRAW_API_ENTRY_STATUS;
+
     if (surface->image)
 	cairo_surface_destroy (surface->image);
 
@@ -2891,6 +2947,8 @@ _cairo_ddraw_surface_acquire_source_image (void                    *abstract_sur
     cairo_ddraw_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
+    CAIRO_DDRAW_API_ENTRY_STATUS;
+
     if (surface->root != surface)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -2916,6 +2974,8 @@ _cairo_ddraw_surface_acquire_dest_image (void                    *abstract_surfa
 {
     cairo_ddraw_surface_t *surface = abstract_surface;
     cairo_status_t status;
+
+    CAIRO_DDRAW_API_ENTRY_STATUS;
 
 #ifdef CAIRO_DDRAW_USE_GL
     _cairo_ddraw_ogl_flush (surface);
@@ -2996,6 +3056,8 @@ cairo_ddraw_surface_create (LPDIRECTDRAW lpdd,
     HRESULT hr;
     DDSURFACEDESC ddsd;
     cairo_status_t status;
+
+    CAIRO_DDRAW_API_ENTRY_SURFACE;
 
     if (format != CAIRO_FORMAT_ARGB32 &&
 	format != CAIRO_FORMAT_RGB24 &&
@@ -3301,6 +3363,8 @@ _cairo_ddraw_surface_fill_rectangles (void			*abstract_surface,
 	FILL_BATCH_SIZE =
 	CAIRO_DDRAW_OGL_SCRATCH_VBO_SIZE / sizeof (cairo_ddraw_ogl_line_t)
     };
+
+    CAIRO_DDRAW_API_ENTRY_STATUS;
 
     if (surface->base.content == CAIRO_CONTENT_COLOR)
 	op = _cairo_ddraw_ogl_op_downgrade[op];
