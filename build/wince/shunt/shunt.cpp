@@ -115,10 +115,21 @@ int errno = 0;
 
 unsigned short * _wgetcwd(unsigned short * dir, unsigned long size)
 {
+  if (!dir)
+    return 0;
+  unsigned short tmp[MAX_PATH] = {0};
+  GetEnvironmentVariableW(L"CWD", tmp, size);
+  if (tmp && tmp[0]) {
+    if (wcslen(tmp) > size)
+      return 0;
+    wcscpy(dir, tmp);
+    return dir;
+  }
   unsigned long i;
   GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
   for (i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
   dir[i + 1] = TCHAR('\0');
+  SetEnvironmentVariableW(L"CWD", dir);
   return dir;
 }
 
@@ -148,6 +159,10 @@ unsigned short *_wfullpath( unsigned short *absPath, const unsigned short *relPa
 #endif
   }
   return NULL;
+}
+
+int _wchdir(const WCHAR* path) {
+  return SetEnvironmentVariableW(L"CWD", path);
 }
 
 int _unlink(const char *filename)
