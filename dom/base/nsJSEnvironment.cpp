@@ -157,7 +157,9 @@ static PRLogModuleInfo* gJSDiagnostics;
 // When higher probability MaybeCC is used, the number of sDelayedCCollectCount
 // is multiplied with this number.
 #define NS_PROBABILITY_MULTIPLIER   3
-// Cycle collector should never run more often than this value
+// Cycle collector is never called more often than every NS_MIN_CC_INTERVAL
+// milliseconds. Exceptions are low memory situation and memory pressure
+// notification.
 #define NS_MIN_CC_INTERVAL          10000 // ms
 // If previous cycle collection collected more than this number of objects,
 // the next collection will happen somewhat soon.
@@ -227,8 +229,8 @@ static nsIUnicodeDecoder *gDecoder;
 // NS_CC_SOFT_LIMIT_INACTIVE (current notification is user-interaction-inactive)
 // MaybeCC is called with aHigherParameter set to PR_TRUE, otherwise PR_FALSE.
 //
-// When moving from active state to inactive, nsJSContext::CC() is called
-// unless the timer related to page load is active.
+// When moving from active state to inactive, nsJSContext::IntervalCC() is
+// called unless the timer related to page load is active.
 
 class nsUserActivityObserver : public nsIObserver
 {
@@ -263,7 +265,7 @@ nsUserActivityObserver::Observe(nsISupports* aSubject, const char* aTopic,
     if (sUserIsActive) {
       sUserIsActive = PR_FALSE;
       if (!sGCTimer) {
-        nsJSContext::CC();
+        nsJSContext::IntervalCC();
         return NS_OK;
       }
     }
@@ -3578,16 +3580,7 @@ nsJSContext::MaybeCC(PRBool aHigherProbability)
       ((sCCSuspectChanges > NS_MIN_SUSPECT_CHANGES &&
         GetGCRunsSinceLastCC() > NS_MAX_GC_COUNT) ||
        (sCCSuspectChanges > NS_MAX_SUSPECT_CHANGES))) {
-    if ((PR_Now() - sPreviousCCTime) >=
-        PRTime(NS_MIN_CC_INTERVAL * PR_USEC_PER_MSEC)) {
-      nsJSContext::CC();
-      return PR_TRUE;
-    }
-#ifdef DEBUG_smaug
-    else {
-      printf("Running CC was delayed because of NS_MIN_CC_INTERVAL.\n");
-    }
-#endif
+    return IntervalCC();
   }
   return PR_FALSE;
 }
@@ -3599,8 +3592,23 @@ nsJSContext::CCIfUserInactive()
   if (sUserIsActive) {
     MaybeCC(PR_TRUE);
   } else {
-    CC();
+    IntervalCC();
   }
+}
+
+//static
+PRBool
+nsJSContext::IntervalCC()
+{
+  if ((PR_Now() - sPreviousCCTime) >=
+      PRTime(NS_MIN_CC_INTERVAL * PR_USEC_PER_MSEC)) {
+    nsJSContext::CC();
+    return PR_TRUE;
+  }
+#ifdef DEBUG_smaug
+  printf("Running CC was delayed because of NS_MIN_CC_INTERVAL.\n");
+#endif
+  return PR_FALSE;
 }
 
 // static
