@@ -1140,12 +1140,22 @@ NS_METHOD nsWindow::Show(PRBool bState)
       if (!wasVisible && mWindowType == eWindowType_toplevel) {
         switch (mSizeMode) {
 #ifdef WINCE
+          case nsSizeMode_Fullscreen:
+            ::SetForegroundWindow(mWnd);
+            ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
+            MakeFullScreen(TRUE);
+            break;
+
           case nsSizeMode_Maximized :
             ::SetForegroundWindow(mWnd);
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
           // use default for nsSizeMode_Minimized on Windows CE
 #else
+          case nsSizeMode_Fullscreen:
+            ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
+            break;
+
           case nsSizeMode_Maximized :
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
@@ -1497,6 +1507,10 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
     int mode;
 
     switch (aMode) {
+      case nsSizeMode_Fullscreen :
+        mode = SW_MAXIMIZE;
+        break;
+
       case nsSizeMode_Maximized :
         mode = SW_MAXIMIZE;
         break;
@@ -2301,6 +2315,27 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::MakeFullScreen(PRBool aFullScreen)
+{
+#if WINCE
+  RECT rc;
+  if (aFullScreen) {
+    SetForegroundWindow(mWnd);
+    SHFullScreen(mWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON);
+    SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+  }
+  else {
+    SHFullScreen(mWnd, SHFS_SHOWTASKBAR | SHFS_SHOWSTARTICON);
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, FALSE);
+  }
+  MoveWindow(mWnd, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, TRUE);
+  return NS_OK;
+#else
+  return nsBaseWidget::MakeFullScreen(aFullScreen);
+#endif
 }
 
 /**************************************************************
@@ -4124,6 +4159,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #else
           *aRetValue = 0;
 #endif
+          if (mSizeMode == nsSizeMode_Fullscreen)
+            MakeFullScreen(TRUE);
         }
       }
       break;
@@ -4283,7 +4320,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         else
           event.mSizeMode = nsSizeMode_Normal;
 #else
-        event.mSizeMode = nsSizeMode_Normal;
+        event.mSizeMode = mSizeMode;
 #endif
         InitEvent(event);
 
