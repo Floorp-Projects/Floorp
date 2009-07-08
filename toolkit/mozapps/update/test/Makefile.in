@@ -64,6 +64,7 @@ INI_TEST_FILES = \
 
 LOCAL_INCLUDES += \
   -I$(srcdir) \
+  -I$(topsrcdir)/xpcom/tests \
   -I$(topsrcdir)/toolkit/mozapps/update/src \
   $(NULL)
 
