@@ -66,6 +66,7 @@ namespace nanojit
                 op == LIR_loop ||
                 op == LIR_label ||
                 op == LIR_live ||
+                op == LIR_start ||
                 ins->isRet()) {
                 return false;
             }
@@ -77,7 +78,7 @@ namespace nanojit
 		LInsp read() {
 			for (;;) {
 				LInsp i = in->read();
-				if (!i || i->isGuard() || i->isBranch()
+				if (i->isGuard() || i->isBranch()
 					|| (i->isCall() && !i->isCse())
 					|| !ignoreInstruction(i))
 					return i;
@@ -115,7 +116,7 @@ namespace nanojit
 
 		LInsp read() {
 			LInsp i = in->read();
-			if (!i) {
+			if (i->isop(LIR_start)) {
 				flush();
 				return i;
 			}
@@ -181,8 +182,6 @@ namespace nanojit
 		LInsp read() 
 		{
 			LInsp i = in->read();
-			if (!i)
-				return i;
 			const char* str = _names->formatIns(i);
 			char* cpy = (char*)_gc->Alloc(strlen(str) + 1,  0/*AllocFlags*/);
 			strcpy(cpy, str);
@@ -1128,7 +1127,7 @@ namespace nanojit
 		           reader->pos()->isop(LIR_ret) ||
 				   reader->pos()->isop(LIR_xtbl));
 		 
-		for (LInsp ins = reader->read(); ins != 0 && !error(); ins = reader->read())
+		for (LInsp ins = reader->read(); !ins->isop(LIR_start) && !error(); ins = reader->read())
 		{
 			LOpcode op = ins->opcode();			
 			switch(op)

@@ -349,9 +349,8 @@ namespace nanojit
     // Reads the next non-skip instruction.
 	LInsp LirReader::read()	
 	{
+        NanoAssert(_i);
 		LInsp cur = _i;
-		if (!cur)
-			return 0;
         uintptr_t i = uintptr_t(cur);
         LOpcode iop = ((LInsp)i)->opcode();
 
@@ -398,7 +397,9 @@ namespace nanojit
                     break;
 
                 case LIR_start:
-                    _i = 0;  // this means the next call to this method will return 0
+                    // Once we hit here, this method shouldn't be called again.
+                    // The assertion at the top of this method checks this.
+                    _i = 0;
                     return cur;
             }
             iop = ((LInsp)i)->opcode();
@@ -1028,8 +1029,6 @@ namespace nanojit
 		for (;;) 
 		{
 			LInsp i = in->read();
-			if (!i)
-				return i;
 			if (i->isStore())
 			{
 				LInsp base = i->oprnd2();
@@ -1502,7 +1501,7 @@ namespace nanojit
         int total = 0;
         if (frag->lirbuf->state)
             live.add(frag->lirbuf->state, r.pos());
-		for (LInsp i = r.read(); i != 0; i = r.read())
+		for (LInsp i = r.read(); !i->isop(LIR_start); i = r.read())
 		{
             total++;
 
@@ -1961,10 +1960,8 @@ namespace nanojit
 	LInsp CseReader::read()
 	{
 		LInsp i = in->read();
-		if (i) {
-			if (i->isCse())
-				exprs->replace(i);
-		}
+        if (i->isCse())
+            exprs->replace(i);
 		return i;
 	}
 
