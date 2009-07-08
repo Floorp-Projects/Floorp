@@ -254,7 +254,8 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     JSScope* scope = OBJ_SCOPE(obj);
     uint32 slot;
     if (scope->object == obj) {
-        JS_ASSERT(!SCOPE_HAS_PROPERTY(scope, sprop));
+        if (sprop == scope->lastProp || SCOPE_HAS_PROPERTY(scope, sprop))
+            goto exit_trace;
     } else {
         scope = js_GetMutableScope(cx, obj);
         if (!scope)
