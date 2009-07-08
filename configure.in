@@ -242,6 +242,11 @@ case "$target" in
                         The path to the Windows CE SDK],
     WINCE_SDK_DIR=$withval)
 
+    MOZ_ARG_WITH_STRING(ogles-sdk,
+    [  --with-ogles-sdk=OGLES_SDK_DIR
+                        The path to the OGLES SDK],
+    OGLES_SDK_DIR=$withval)
+
     dnl Default to Windows Mobile components enabled
     WINCE_WINDOWS_MOBILE=1
 
@@ -268,7 +273,7 @@ case "$target" in
 
     _pwdw=`pwd -W`
     _pwd=`pwd`
-    make WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
+    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
 
     CC="$_pwd/dist/sdk/bin/arm-wince-gcc"
     CXX="$_pwd/dist/sdk/bin/arm-wince-gcc"
@@ -7626,19 +7631,36 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
         if test -z "$WINCE"; then
-           WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
-           DDRAW_SURFACE_FEATURE=
+            WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
         else
-           WIN32_FONT_FEATURE=
+            WIN32_FONT_FEATURE=
         fi
 
         AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
         if test -z "$HAS_DDRAW"; then
-          AC_MSG_WARN([DirectDraw ddraw.h header not found or it's missing DDLOCK_WAITNOTBUSY, disabling DirectDraw surface.  If you have an older SDK (such as the CE5 SDK), try copying in ddraw.lib and ddraw.h from the WM6 SDK.])
-           DDRAW_SURFACE_FEATURE=
+            AC_MSG_WARN([DirectDraw ddraw.h header not found or it's missing DDLOCK_WAITNOTBUSY, disabling DirectDraw surface.  If you have an older SDK (such as the CE5 SDK), try copying in ddraw.lib and ddraw.h from the WM6 SDK.])
+            DDRAW_SURFACE_FEATURE=
         else
-          DDRAW_SURFACE_FEATURE="#define CAIRO_HAS_DDRAW_SURFACE 1"
+            DDRAW_SURFACE_FEATURE="#define CAIRO_HAS_DDRAW_SURFACE 1"
         fi
+
+        if test -z "$OGLES_SDK_DIR"; then
+            OGLES_SURFACE_FEATURE=
+        else
+            AC_TRY_COMPILE([
+              #include <EGL/egl.h>
+              #include <EGL/eglext.h>
+              #include <GLES2/gl2.h>
+              #include <GLES2/gl2ext.h>
+            ], [ EGLDisplay _cairo_ddraw_egl_dpy = EGL_NO_DISPLAY;], HAS_OGLES=1, HAS_OGLES=)
+            if test -z "$HAS_OGLES"; then
+              AC_MSG_WARN([OpenGL ES2 headers not found, disabling OpenGL acceleration surfaces.])
+              OGLES_SURFACE_FEATURE=
+            else
+              OGLES_SURFACE_FEATURE="#define CAIRO_DDRAW_USE_GL 1"
+            fi
+        fi
+
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
@@ -7659,6 +7681,7 @@ if test "$MOZ_TREE_CAIRO"; then
     fi
     AC_SUBST(MOZ_ENABLE_CAIRO_FT)
     AC_SUBST(CAIRO_FT_CFLAGS)
+    AC_SUBST(HAS_OGLES)
 
     if test "$MOZ_DEBUG"; then
       SANITY_CHECKING_FEATURE="#define CAIRO_DO_SANITY_CHECKING 1"
@@ -7678,6 +7701,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(XCB_SURFACE_FEATURE)
     AC_SUBST(WIN32_SURFACE_FEATURE)
     AC_SUBST(DDRAW_SURFACE_FEATURE)
+    AC_SUBST(OGLES_SURFACE_FEATURE)    
     AC_SUBST(OS2_SURFACE_FEATURE)
     AC_SUBST(BEOS_SURFACE_FEATURE)
     AC_SUBST(DIRECTFB_SURFACE_FEATURE)
@@ -8119,6 +8143,7 @@ AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
 AC_SUBST(WINCE)
 AC_SUBST(WINCE_SDK_DIR)
+AC_SUBST(OGLES_SDK_DIR)
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
