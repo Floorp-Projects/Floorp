@@ -105,7 +105,7 @@ public:
     gfxASurface* ThebesSurface() {
         if (mOptSurface)
             return mOptSurface;
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined(WINCE)
         if (mWinSurface)
             return mWinSurface;
 #elif defined(XP_MACOSX)
@@ -161,7 +161,7 @@ protected:
     PRPackedBool mSinglePixel;
     PRPackedBool mFormatChanged;
     PRPackedBool mNeverUseDeviceSurface;
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
     PRPackedBool mIsDDBSurface;
 #endif
 
@@ -169,7 +169,7 @@ protected:
 
     nsRefPtr<gfxImageSurface> mImageSurface;
     nsRefPtr<gfxASurface> mOptSurface;
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined(WINCE)
     nsRefPtr<gfxWindowsSurface> mWinSurface;
 #elif defined(XP_MACOSX)
     nsRefPtr<gfxQuartzImageSurface> mQuartzSurface;

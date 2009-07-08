@@ -39,6 +39,10 @@
 #ifndef GFX_WINDOWS_PLATFORM_H
 #define GFX_WINDOWS_PLATFORM_H
 
+#if defined(WINCE)
+#define MOZ_FT2_FONTS 1
+#endif
+
 #include "gfxFontUtils.h"
 #include "gfxWindowsSurface.h"
 #ifdef MOZ_FT2_FONTS
@@ -67,6 +71,32 @@ public:
 
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxImageFormat imageFormat);
+
+    enum RenderMode {
+        /* Use GDI and windows surfaces */
+        RENDER_GDI = 0,
+
+        /* Use 32bpp image surfaces and call StretchDIBits */
+        RENDER_IMAGE_STRETCH32,
+
+        /* Use 32bpp image surfaces, and do 32->24 conversion before calling StretchDIBits */
+        RENDER_IMAGE_STRETCH24,
+
+        /* Use DirectDraw on Windows CE */
+        RENDER_DDRAW,
+
+        /* Use 24bpp image surfaces, with final DirectDraw 16bpp blt on Windows CE */
+        RENDER_IMAGE_DDRAW16,
+
+        /* Use DirectDraw with OpenGL on Windows CE */
+        RENDER_DDRAW_GL,
+
+        /* max */
+        RENDER_MODE_MAX
+    };
+
+    RenderMode GetRenderMode() { return mRenderMode; }
+    void SetRenderMode(RenderMode rmode) { mRenderMode = rmode; }
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
@@ -132,6 +162,9 @@ private:
     void AppendFacesFromFontFile(const PRUnichar *aFileName);
     void FindFonts();
 #endif
+
+protected:
+    RenderMode mRenderMode;
 
 private:
     void Init();
