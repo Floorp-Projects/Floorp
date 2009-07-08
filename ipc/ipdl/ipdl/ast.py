@@ -84,6 +84,17 @@ class Visitor:
         for outParam in md.outParams:
             outParam.accept(self)
 
+    def visitTransitionStmt(self, ts):
+        ts.state.accept(self)
+        for trans in ts.transitions:
+            trans.accept(self)
+
+    def visitTransition(self, t):
+        t.toState.accept(self)
+
+    def visitState(self, s):
+        pass
+
     def visitParam(self, decl):
         pass
 
@@ -151,31 +162,57 @@ class UsingStmt(Node):
     def __init__(self, loc, cxxTypeSpec):
         Node.__init__(self, loc)
         self.type = cxxTypeSpec
-        
+
 # "singletons"
 class ASYNC:
-    pretty = 'Async'
+    pretty = 'async'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def __str__(cls):  return cls.pretty
 class RPC:
-    pretty = 'Rpc'
+    pretty = 'rpc'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def __str__(cls):  return cls.pretty
 class SYNC:
-    pretty = 'Sync'
+    pretty = 'sync'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def __str__(cls):  return cls.pretty
 
 class INOUT:
-    pretty = 'InOut'
+    pretty = 'inout'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def __str__(cls):  return cls.pretty
 class IN:
+    pretty = 'in'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def __str__(cls):  return cls.pretty
     @staticmethod
-    def pretty(ss): return _prettyTable['In'][ss.pretty]
+    def prettySS(cls, ss): return _prettyTable['in'][ss.pretty]
 class OUT:
+    pretty = 'out'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def __str__(cls):  return cls.pretty
     @staticmethod
-    def pretty(ss): return _prettyTable['Out'][ss.pretty]
+    def pretty(ss): return _prettyTable['out'][ss.pretty]
 
 _prettyTable = {
-    'In'  : { 'Async': 'AsyncRecv',
-             'Sync': 'SyncRecv',
-             'Rpc': 'RpcAnswer' },
-    'Out' : { 'Async': 'AsyncSend',
-              'Sync': 'SyncSend',
-              'Rpc': 'RpcCall' }
+    IN  : { 'async': 'AsyncRecv',
+            'sync': 'SyncRecv',
+            'rpc': 'RpcAnswer' },
+    OUT : { 'async': 'AsyncSend',
+            'sync': 'SyncSend',
+            'rpc': 'RpcCall' }
     # inout doesn't make sense here
 }
 
@@ -234,6 +271,45 @@ class MessageDecl(Node):
 
     def hasReply(self):
         return self.sendSemantics is SYNC or self.sendSemantics is RPC
+
+class TransitionStmt(Node):
+    def __init__(self, loc, state, transitions):
+        Node.__init__(self, loc)
+        self.state = state
+        self.transitions = transitions
+
+class Transition(Node):
+    def __init__(self, loc, trigger, msg, toState):
+        Node.__init__(self, loc)
+        self.trigger = trigger
+        self.msg = msg
+        self.toState = toState
+
+    @staticmethod
+    def nameToTrigger(name):
+        return { 'send': SEND, 'recv': RECV, 'call': CALL, 'answer': ANSWER }[name]
+
+class SEND:
+    pretty = 'send'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+class RECV:
+    pretty = 'recv'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+class CALL:
+    pretty = 'call'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+class ANSWER:
+    pretty = 'answer'
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+
+class State(Node):
+    def __init__(self, loc, name):
+        Node.__init__(self, loc)
+        self.name = name
 
 class Param(Node):
     def __init__(self, loc, typespec, name):

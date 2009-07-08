@@ -86,7 +86,7 @@ public:
                 if (!(IFrameEmbeddingProtocol::Msg_init::Read(&(msg), &(parentWidget)))) {
                     return MsgPayloadError;
                 }
-                if (Answerinit(parentWidget)) {
+                if (NS_FAILED(Answerinit(parentWidget))) {
                     return MsgValueError;
                 }
 
@@ -101,7 +101,7 @@ public:
                 if (!(IFrameEmbeddingProtocol::Msg_loadURL::Read(&(msg), &(uri)))) {
                     return MsgPayloadError;
                 }
-                if (AnswerloadURL(uri)) {
+                if (NS_FAILED(AnswerloadURL(uri))) {
                     return MsgValueError;
                 }
 
@@ -119,7 +119,7 @@ public:
                 if (!(IFrameEmbeddingProtocol::Msg_move::Read(&(msg), &(x), &(y), &(width), &(height)))) {
                     return MsgPayloadError;
                 }
-                if (Answermove(x, y, width, height)) {
+                if (NS_FAILED(Answermove(x, y, width, height))) {
                     return MsgValueError;
                 }
 

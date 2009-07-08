@@ -108,7 +108,7 @@ public:
                 if (!(NPPProtocol::Msg_NPN_GetValue::Read(&(msg), &(key)))) {
                     return MsgPayloadError;
                 }
-                if (AnswerNPN_GetValue(key, &(value))) {
+                if (NS_FAILED(AnswerNPN_GetValue(key, &(value)))) {
                     return MsgValueError;
                 }
 
