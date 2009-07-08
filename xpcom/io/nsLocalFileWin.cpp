@@ -121,10 +121,30 @@ private:
     nsAString::const_iterator mStartOfCurrentDrive;
     nsAString::const_iterator mEndOfDrivesString;
 };
+#endif
 
 //----------------------------------------------------------------------------
 // short cut resolver
 //----------------------------------------------------------------------------
+#ifdef WINCE
+class ShortcutResolver
+{
+public:
+    ShortcutResolver() {};
+    // nonvirtual since we're not subclassed
+    ~ShortcutResolver() {};
+
+    nsresult Init() { return NS_OK; }; // nothing to do
+    nsresult Resolve(const WCHAR* in, WCHAR* out);
+};
+
+// |out| must be an allocated buffer of size MAX_PATH
+nsresult
+ShortcutResolver::Resolve(const WCHAR* in, WCHAR* out)
+{
+    return SHGetShortcutTarget(in, out, MAX_PATH) ? NS_OK : NS_ERROR_FAILURE;
+}
+#else // not WINCE
 class ShortcutResolver
 {
 public:
@@ -218,6 +238,7 @@ ShortcutResolver::Resolve(const WCHAR* in, WCHAR* out)
         return NS_ERROR_FAILURE;
     return NS_OK;
 }
+#endif
 
 static ShortcutResolver * gResolver = nsnull;
 
@@ -235,8 +256,6 @@ static void NS_DestroyShortcutResolver()
     delete gResolver;
     gResolver = nsnull;
 }
-
-#endif
 
 
 //-----------------------------------------------------------------------------
@@ -797,7 +816,6 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 nsresult
 nsLocalFile::ResolveShortcut()
 {
-#ifndef WINCE
     // we can't do anything without the resolver
     if (!gResolver)
         return NS_ERROR_FAILURE;
@@ -815,9 +833,6 @@ nsLocalFile::ResolveShortcut()
     mResolvedPath.SetLength(len);
 
     return rv;
-#else
-    return NS_OK;
-#endif
 }
 
 // Resolve any shortcuts and stat the resolved path. After a successful return
@@ -3075,18 +3090,14 @@ nsLocalFile::GetHashCode(PRUint32 *aResult)
 void
 nsLocalFile::GlobalInit()
 {
-#ifndef WINCE
     nsresult rv = NS_CreateShortcutResolver();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Shortcut resolver could not be created");
-#endif
 }
 
 void
 nsLocalFile::GlobalShutdown()
 {
-#ifndef WINCE
     NS_DestroyShortcutResolver();
-#endif
 }
 
 #ifndef WINCE
