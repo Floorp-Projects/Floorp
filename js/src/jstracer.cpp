@@ -246,6 +246,7 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define INS_CONSTPTR(p)     addName(lir->insImmPtr(p), #p)
 #define INS_CONSTFUNPTR(p)  addName(lir->insImmPtr(JS_FUNC_TO_DATA_PTR(void*, p)), #p)
 #define INS_CONSTWORD(v)    addName(lir->insImmPtr((void *) v), #v)
+#define INS_VOID()          INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))
 
 using namespace avmplus;
 using namespace nanojit;
@@ -1252,6 +1253,14 @@ public:
     }
 };
 
+/*
+ * Visit the values in the given JSStackFrame that the tracer cares about. This visitor
+ * function is (implicitly) the primary definition of the native stack area layout. There
+ * are a few other independent pieces of code that must be maintained to assume the same
+ * layout. They are marked like this:
+ *
+ *   Duplicate native stack layout computation: see VisitFrameSlots header comment.
+ */
 template <typename Visitor>
 JS_REQUIRES_STACK static bool
 VisitFrameSlots(Visitor &visitor, unsigned depth, JSStackFrame *fp,
@@ -1266,6 +1275,9 @@ VisitFrameSlots(Visitor &visitor, unsigned depth, JSStackFrame *fp,
             if (!visitor.visitStackSlots(&fp->argv[-2], argSlots(fp) + 2, fp))
                 return false;
         }
+        visitor.setStackSlotKind("arguments");
+        if (!visitor.visitStackSlots(&fp->argsobj, 1, fp))
+            return false;
         visitor.setStackSlotKind("var");
         if (!visitor.visitStackSlots(fp->slots, fp->script->nfixed, fp))
             return false;
@@ -1414,10 +1426,11 @@ js_NativeStackSlots(JSContext *cx, unsigned callDepth)
     unsigned slots = 0;
     unsigned depth = callDepth;
     for (;;) {
+        /* Duplicate native stack layout computation: see VisitFrameSlots header comment. */
         unsigned operands = fp->regs->sp - StackBase(fp);
         slots += operands;
         if (fp->callee)
-            slots += fp->script->nfixed;
+            slots += fp->script->nfixed + 1 /*argsobj*/;
         if (depth-- == 0) {
             if (fp->callee)
                 slots += 2/*callee,this*/ + argSlots(fp);
@@ -1744,7 +1757,13 @@ TraceRecorder::isGlobal(jsval* p) const
             (size_t(p - globalObj->dslots) < (STOBJ_NSLOTS(globalObj) - JS_INITIAL_NSLOTS)));
 }
 
-/* Determine the offset in the native stack for a jsval we track */
+/* 
+ * Return the offset in the native stack for the given jsval. More formally,
+ * |p| must be the address of a jsval that is represented in the native stack
+ * area. The return value is the offset, from InterpState::stackBase, in bytes,
+ * where the native representation of |*p| is stored. To get the offset relative
+ * to InterpState::sp, subtract TreeInfo::nativeStackBase.
+ */
 JS_REQUIRES_STACK ptrdiff_t
 TraceRecorder::nativeStackOffset(jsval* p) const
 {
@@ -2264,6 +2283,9 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->callee) {
+                if (fp->argsobj)
+                    JS_SetPrivate(cx, JSVAL_TO_OBJECT(fp->argsobj), fp);
+
                 /*
                  * We might return from trace with a different callee object, but it still
                  * has to be the same JSFunction (FIXME: bug 471425, eliminate fp->callee).
@@ -4330,12 +4352,13 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
         newifp->hookData = NULL;
     }
 
+    /* Duplicate native stack layout computation: see VisitFrameSlots header comment. */
     // FIXME? we must count stack slots from caller's operand stack up to (but not including)
     // callee's, including missing arguments. Could we shift everything down to the caller's
     // fp->slots (where vars start) and avoid some of the complexity?
     return (fi.spdist - fp->down->script->nfixed) +
            ((fun->nargs > fp->argc) ? fun->nargs - fp->argc : 0) +
-           script->nfixed;
+           script->nfixed + 1/*argsobj*/;
 }
 
 static void
@@ -6369,16 +6392,26 @@ TraceRecorder::scopeChain() const
                         offsetof(JSStackFrame, scopeChain));
 }
 
-static inline bool
-FrameInRange(JSStackFrame* fp, JSStackFrame *target, unsigned callDepth)
+/*
+ * Return the frame of a call object if that frame is part of the current trace. |depthp| is an
+ * optional outparam: if it is non-null, it will be filled in with the depth of the call object's
+ * frame relevant to cx->fp.
+ */
+JS_REQUIRES_STACK JSStackFrame*
+TraceRecorder::frameIfInRange(JSObject* obj, unsigned* depthp) const
 {
-    while (fp != target) {
-        if (callDepth-- == 0)
-            return false;
+    JSStackFrame* ofp = (JSStackFrame*) JS_GetPrivate(cx, obj);
+    JSStackFrame* fp = cx->fp;
+    for (unsigned depth = 0; depth <= callDepth; ++depth) {
+        if (fp == ofp) {
+            if (depthp)
+                *depthp = depth;
+            return ofp;
+        }
         if (!(fp = fp->down))
-            return false;
+            break;
     }
-    return true;
+    return NULL;
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -6427,8 +6460,8 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
         ABORT_TRACE("deep abort from property lookup");
 
     if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
-        JSStackFrame* cfp = (JSStackFrame*) JS_GetPrivate(cx, obj);
-        if (cfp && FrameInRange(cx->fp, cfp, callDepth)) {
+        JSStackFrame* cfp = frameIfInRange(obj);
+        if (cfp) {
             JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
             uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
@@ -7887,11 +7920,15 @@ TraceRecorder::clearFrameSlotsFromCache()
     JSStackFrame* fp = cx->fp;
     jsval* vp;
     jsval* vpstop;
+    // Duplicate native stack layout computation: see VisitFrameSlots header comment.
+    // This doesn't do layout arithmetic, but it must clear out all the slots defined as
+    // imported by VisitFrameSlots.
     if (fp->callee) {
         vp = &fp->argv[-2];
         vpstop = &fp->argv[argSlots(fp)];
         while (vp < vpstop)
             nativeFrameTracker.set(vp++, (LIns*)0);
+        nativeFrameTracker.set(&fp->argsobj, (LIns*)0);
     }
     vp = &fp->slots[0];
     vpstop = &fp->slots[fp->script->nslots];
@@ -7920,8 +7957,11 @@ TraceRecorder::record_EnterFrame()
             debug_only_print0(LC_TMTracer, "----\n");
         }
     )
-    LIns* void_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
+    LIns* void_ins = INS_VOID();
 
+    // Duplicate native stack layout computation: see VisitFrameSlots header comment.
+    // This doesn't do layout arithmetic, but it must initialize in the tracker all the
+    // slots defined as imported by VisitFrameSlots.
     jsval* vp = &fp->argv[fp->argc];
     jsval* vpstop = vp + ptrdiff_t(fp->fun->nargs) - ptrdiff_t(fp->argc);
     while (vp < vpstop) {
@@ -7934,6 +7974,7 @@ TraceRecorder::record_EnterFrame()
     vpstop = vp + fp->script->nfixed;
     while (vp < vpstop)
         set(vp++, void_ins, true);
+    set(&fp->argsobj, INS_CONSTPTR(0), true);
     return JSRS_CONTINUE;
 }
 
@@ -8001,6 +8042,23 @@ TraceRecorder::record_JSOP_RETURN()
         return JSRS_STOP;
     }
 
+    // If we have created an |arguments| object for the frame, we must copy the argument
+    // values into the object as properties in case it is used after this frame returns.
+    if (cx->fp->argsobj) {
+        LIns* argsobj_ins = get(&cx->fp->argsobj);
+        LIns* length_ins = INS_CONST(cx->fp->argc);
+        LIns* callee_ins = get(&cx->fp->argv[-2]);
+        LIns* args_ins = lir->insAlloc(sizeof(jsval) * cx->fp->argc);
+        for (uintN i = 0; i < cx->fp->argc; ++i) {
+            LIns* arg_ins = get(&cx->fp->argv[i]);
+            box_jsval(cx->fp->argv[i], arg_ins);
+            lir->insStorei(arg_ins, args_ins, i * sizeof(jsval));
+        }
+        LIns* args[] = { args_ins, callee_ins, length_ins, argsobj_ins, cx_ins };
+        LIns* call_ins = lir->insCall(&js_PutArguments_ci, args);
+        guard(false, lir->ins_eq0(call_ins), STATUS_EXIT);
+    }
+
     /* If we inlined this function call, make the return value available to the caller code. */
     jsval& rval = stackval(-1);
     JSStackFrame *fp = cx->fp;
@@ -8051,15 +8109,15 @@ TraceRecorder::record_JSOP_IFNE()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_ARGUMENTS()
 {
-#if 1
-    ABORT_TRACE("can't trace arguments yet");
-#else
-    LIns* args[] = { cx_ins };
-    LIns* a_ins = lir->insCall(&js_Arguments_ci, args);
+    LIns* a_ins = get(&cx->fp->argsobj);
+    JSObject* global = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    LIns* global_ins = INS_CONSTPTR(global);
+    LIns* args[] = { a_ins, global_ins, cx_ins };
+    a_ins = lir->insCall(&js_Arguments_ci, args);
     guard(false, lir->ins_eq0(a_ins), OOM_EXIT);
     stack(0, a_ins);
+    set(&cx->fp->argsobj, a_ins);
     return JSRS_CONTINUE;
-#endif
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -9231,6 +9289,80 @@ TraceRecorder::record_JSOP_GETELEM()
         return call_imacro(call ? callelem_imacros.callprop : getelem_imacros.getprop);
     }
 
+    if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass) {
+        guardClass(obj, obj_ins, &js_ArgumentsClass, snapshot(MISMATCH_EXIT));
+
+        unsigned depth;
+        JSStackFrame* afp = frameIfInRange(obj, &depth);
+        if (afp) {
+            uintN int_idx = JSVAL_TO_INT(idx);
+            jsval* vp = &afp->argv[int_idx];
+            if (idx_ins->isconstq()) {
+                if (int_idx >= 0 && int_idx < afp->argc)
+                    v_ins = get(vp);
+                else
+                    v_ins = INS_VOID();
+            } else {
+                // If the index is not a constant expression, we generate LIR to load the value from
+                // the native stack area. The guard on js_ArgumentClass above ensures the up-to-date
+                // value has been written back to the native stack area.
+
+                idx_ins = makeNumberInt32(idx_ins);
+                if (int_idx >= 0 && int_idx < afp->argc) {
+                    JSTraceType type = getCoercedType(*vp);
+
+                    // Guard that the argument has the same type on trace as during recording.
+                    LIns* typemap_ins;
+                    if (callDepth == depth) {
+                        // In this case, we are in the same frame where the arguments object was created.
+                        // The entry type map is not necessarily up-to-date, so we capture a new type map
+                        // for this point in the code.
+                        unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
+                        if (stackSlots * sizeof(JSTraceType) > NJ_MAX_SKIP_PAYLOAD_SZB)
+                            ABORT_TRACE("|arguments| requires saving too much stack");
+                        JSTraceType* typemap = (JSTraceType*) lir->insSkip(stackSlots * sizeof(JSTraceType))->payload();
+                        DetermineTypesVisitor detVisitor(*this, typemap);
+                        VisitStackSlots(detVisitor, cx, 0);
+                        typemap_ins = INS_CONSTPTR(typemap + 2 /*callee,this*/);
+                    } else {
+                        // In this case, we are in a deeper frame from where the arguments object was
+                        // created. The type map at the point of the call out from the creation frame
+                        // is accurate.
+                        // Note: this relies on the assumption that we abort on setting an element of
+                        // an arguments object in any deeper frame.
+                        LIns* fip_ins = lir->insLoad(LIR_ldp, lirbuf->rp, (callDepth-depth)*sizeof(FrameInfo*));
+                        typemap_ins = lir->ins2(LIR_add, fip_ins, INS_CONST(sizeof(FrameInfo) + 2/*callee,this*/ * sizeof(JSTraceType)));
+                    }
+
+                    LIns* typep_ins = lir->ins2(LIR_add, typemap_ins, 
+                                                lir->ins2(LIR_mul, idx_ins, INS_CONST(sizeof(JSTraceType))));
+                    LIns* type_ins = lir->insLoad(LIR_ldcb, typep_ins, 0);
+                    guard(true,
+                          addName(lir->ins2(LIR_eq, type_ins, lir->insImm(type)),
+                                  "guard(type-stable upvar)"),
+                          BRANCH_EXIT);
+
+                    // Read the value out of the native stack area.
+                    guard(true, lir->ins2(LIR_ult, idx_ins, INS_CONST(afp->argc)), 
+                          snapshot(BRANCH_EXIT));
+                    size_t stackOffset = -treeInfo->nativeStackBase + nativeStackOffset(&afp->argv[0]);
+                    LIns* args_addr_ins = lir->ins2(LIR_add, lirbuf->sp, INS_CONST(stackOffset));
+                    LIns* argi_addr_ins = lir->ins2(LIR_add, args_addr_ins,
+                                                    lir->ins2(LIR_mul, idx_ins, INS_CONST(sizeof(double))));
+                    v_ins = stackLoad(argi_addr_ins, type);
+                } else {
+                    guard(false, lir->ins2(LIR_ult, idx_ins, INS_CONST(afp->argc)), 
+                          snapshot(BRANCH_EXIT));
+                    v_ins = INS_VOID();
+                }
+            }
+            JS_ASSERT(v_ins);
+            set(&lval, v_ins);
+            return JSRS_CONTINUE;
+        }
+        ABORT_TRACE("can't reach arguments object's frame");
+    }
+
     if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
         CHECK_STATUS(guardNotGlobalObject(obj, obj_ins));
 
@@ -9481,7 +9613,15 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
           addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
                   "guard(type-stable upvar)"),
           BRANCH_EXIT);
+    return stackLoad(outp, type);
+}
 
+/*
+ * Generate LIR to load a value from the native stack. This method ensures that the
+ * correct LIR load operator is used.
+ */
+LIns* TraceRecorder::stackLoad(LIns* base, uint8 type)
+{
     LOpcode loadOp;
     switch (type) {
       case TT_DOUBLE:
@@ -9503,7 +9643,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
         return NULL;
     }
 
-    LIns* result = lir->insLoad(loadOp, outp, 0);
+    LIns* result = lir->insLoad(loadOp, base, 0);
     if (type == TT_INT32)
         result = lir->ins1(LIR_i2f, result);
     return result;
@@ -9567,9 +9707,7 @@ TraceRecorder::guardCallee(jsval& callee)
 
     guard(true,
           lir->ins2(LIR_eq,
-                    lir->ins2(LIR_piand,
-                              stobj_get_fslot(callee_ins, JSSLOT_PRIVATE),
-                              INS_CONSTWORD(~JSVAL_INT)),
+                    stobj_get_private(callee_ins),
                     INS_CONSTPTR(OBJ_GET_PRIVATE(cx, callee_obj))),
           branchExit);
     guard(true,
@@ -9713,29 +9851,30 @@ TraceRecorder::record_JSOP_APPLY()
         aobj = JSVAL_TO_OBJECT(vp[3]);
         aobj_ins = get(&vp[3]);
 
-        /*
-         * We expect a dense array for the arguments (the other
-         * frequent case is the arguments object, but that we
-         * don't trace at the moment).
+        /* 
+         * We trace dense arrays and arguments objects. The code we generate for apply
+         * uses imacros to handle a specific number of arguments.
          */
-        if (!guardDenseArray(aobj, aobj_ins))
-            ABORT_TRACE("arguments parameter of apply is not a dense array");
+        if (OBJ_IS_DENSE_ARRAY(cx, aobj)) {
+            guardDenseArray(aobj, aobj_ins);
+            length = jsuint(aobj->fslots[JSSLOT_ARRAY_LENGTH]);
+            guard(true,
+                  lir->ins2i(LIR_eq,
+                             stobj_get_fslot(aobj_ins, JSSLOT_ARRAY_LENGTH),
+                             length),
+                  BRANCH_EXIT);
+        } else if (OBJ_GET_CLASS(cx, aobj) == &js_ArgumentsClass) {
+            guardClass(aobj, aobj_ins, &js_ArgumentsClass, snapshot(MISMATCH_EXIT));
+            JSStackFrame* afp = frameIfInRange(aobj);
+            if (!afp)
+                ABORT_TRACE("arguments object not in range");
+            length = afp->argc;
+        } else {
+            ABORT_TRACE("arguments parameter of apply is not a dense array or argments object");
+        }
 
-        /*
-         * We trace only apply calls with a certain number of arguments.
-         */
-        length = jsuint(aobj->fslots[JSSLOT_ARRAY_LENGTH]);
         if (length >= JS_ARRAY_LENGTH(apply_imacro_table))
             ABORT_TRACE("too many arguments to apply");
-
-        /*
-         * Make sure the array has the same length at runtime.
-         */
-        guard(true,
-              lir->ins2i(LIR_eq,
-                         stobj_get_fslot(aobj_ins, JSSLOT_ARRAY_LENGTH),
-                         length),
-              BRANCH_EXIT);
 
         return call_imacro(apply_imacro_table[length]);
     }
@@ -10010,8 +10149,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 sprop->id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
                 if (!guardClass(obj, obj_ins, &js_StringClass, snapshot(MISMATCH_EXIT)))
                     ABORT_TRACE("can't trace String.length on non-String objects");
-                LIns* str_ins = stobj_get_fslot(obj_ins, JSSLOT_PRIVATE);
-                str_ins = lir->ins2(LIR_piand, str_ins, INS_CONSTWORD(~JSVAL_TAGMASK));
+                LIns* str_ins = stobj_get_private(obj_ins, JSVAL_TAGMASK);
                 v_ins = lir->ins1(LIR_i2f, getStringLength(str_ins));
                 return JSRS_CONTINUE;
             }
@@ -10924,10 +11062,11 @@ TraceRecorder::record_JSOP_ARGSUB()
     JSStackFrame* fp = cx->fp;
     if (!(fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
         uintN slot = GET_ARGNO(fp->regs->pc);
-        if (slot < fp->fun->nargs && slot < fp->argc && !fp->argsobj) {
+        if (slot < fp->argc)
             stack(0, get(&cx->fp->argv[slot]));
-            return JSRS_CONTINUE;
-        }
+        else
+            stack(0, INS_VOID());
+        return JSRS_CONTINUE;
     }
     ABORT_TRACE("can't trace JSOP_ARGSUB hard case");
 }
@@ -11770,6 +11909,17 @@ TraceRecorder::record_JSOP_LENGTH()
 
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
+
+    if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass) {
+        guardClass(obj, obj_ins, &js_ArgumentsClass, snapshot(MISMATCH_EXIT));
+        JSStackFrame* afp = frameIfInRange(obj);
+        if (afp) {
+            LIns* v_ins = lir->ins1(LIR_i2f, INS_CONST(afp->argc));
+            set(&l, v_ins);
+            return JSRS_CONTINUE;
+        }
+    }
+
     LIns* v_ins;
     if (OBJ_IS_ARRAY(cx, obj)) {
         if (OBJ_IS_DENSE_ARRAY(cx, obj)) {

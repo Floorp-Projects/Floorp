@@ -395,11 +395,13 @@ js_BooleanOrUndefinedToString(JSContext *cx, int32 unboxed)
 JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanOrUndefinedToString, CONTEXT, INT32, 1, 1)
 
 JSObject* FASTCALL
-js_Arguments(JSContext* cx)
+js_Arguments(JSContext* cx, JSObject* parent, JSObject* cached)
 {
-    return NULL;
+    if (cached)
+        return cached;
+    return js_NewObject(cx, &js_ArgumentsClass, NULL, NULL, 0);
 }
-JS_DEFINE_CALLINFO_1(extern, OBJECT, js_Arguments, CONTEXT, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, OBJECT, 0, 0)
 
 JSObject* FASTCALL
 js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* parent)

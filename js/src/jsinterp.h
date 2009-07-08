@@ -71,7 +71,7 @@ struct JSStackFrame {
     jsbytecode      *imacpc;        /* null or interpreter macro call pc */
     jsval           *slots;         /* variables, locals and operand stack */
     JSObject        *callobj;       /* lazily created Call object */
-    JSObject        *argsobj;       /* lazily created arguments object */
+    jsval           argsobj;        /* lazily created arguments object, must be JSVAL_OBJECT */
     JSObject        *varobj;        /* variables object, where vars go */
     JSObject        *callee;        /* function or script object */
     JSScript        *script;        /* script being interpreted */
