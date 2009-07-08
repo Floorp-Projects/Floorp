@@ -1288,12 +1288,13 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     // CompareTreePosition uses placeholder hierarchy for out of flow frames,
     // so this will make out-of-flows respect the ordering of placeholders,
     // which is great because it takes care of anonymous content.
+    nsIFrame* insertionPoint = nsnull;
     if (!lastChild ||
         nsLayoutUtils::CompareTreePosition(lastChild, firstNewFrame, containingBlock) < 0) {
-      // no lastChild, or lastChild comes before the new children, so just append
-      rv = containingBlock->AppendFrames(aChildListName, firstNewFrame);
+      // no lastChild, or lastChild comes before the new children, so
+      // just insert after lastChild.
+      insertionPoint = lastChild;
     } else {
-      nsIFrame* insertionPoint = nsnull;
       // try the other children
       for (nsIFrame* f = firstChild; f != lastChild; f = f->GetNextSibling()) {
         PRInt32 compare =
@@ -1305,10 +1306,10 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
         }
         insertionPoint = f;
       }
-
-      rv = containingBlock->InsertFrames(aChildListName, insertionPoint,
-                                         firstNewFrame);
     }
+
+    rv = containingBlock->InsertFrames(aChildListName, insertionPoint,
+                                       firstNewFrame);
   }
   aFrameItems.childList = nsnull;
   // XXXbz And if NS_FAILED(rv), what?  I guess we need to clean up the list
