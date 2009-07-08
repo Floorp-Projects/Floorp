@@ -1371,7 +1371,23 @@ const char * BZ_API(BZ2_bzlibVersion)(void)
 #ifndef BZ_NO_STDIO
 /*---------------------------------------------------*/
 
-#if (defined(_WIN32) || defined(OS2) || defined(MSDOS)) && !defined(WINCE)
+#ifdef WINCE
+#ifndef setmode
+#define setmode _setmode
+#endif
+#ifndef O_BINARY
+#define O_BINARY _O_BINARY
+#endif
+static
+FILE * fdopen(int fd, const char *mode)
+{
+    wchar_t wMode[10];
+    MultiByteToWideChar(CP_ACP, 0, mode, -1, wMode, 10);
+    return _wfdopen((void*)fd, wMode);
+}
+#endif
+
+#if (defined(_WIN32) || defined(OS2) || defined(MSDOS))
 #   include <fcntl.h>
 #   include <io.h>
 #   define SET_BINARY_MODE(file) setmode(fileno(file),O_BINARY)
