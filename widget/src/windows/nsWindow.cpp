@@ -708,19 +708,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("mozilla.widget.disable-native-theme",
                                                  &temp)))
           gDisableNativeTheme = temp;
-
-        PRInt32 tempint;
-        if (NS_SUCCEEDED(prefBranch->GetIntPref("mozilla.widget.render-mode",
-                                                &tempint)))
-        {
-          if (tempint > 0 && tempint < RENDER_MODE_MAX) {
-#ifndef CAIRO_HAS_DDRAW_SURFACE
-            if (tempint == RENDER_DDRAW)
-              tempint = RENDER_IMAGE_STRETCH24;
-#endif
-            sRenderMode = (WinRenderMode) tempint;
-          }
-        }
       }
     }
   }

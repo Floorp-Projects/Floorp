@@ -60,7 +60,6 @@ CPPSRCS	+= 	gfxWindowsPlatform.cpp \
 		$(NULL)
 
 ifdef WINCE
-DEFINES += -DMOZ_FT2_FONTS
 CPPSRCS	+= gfxFT2Fonts.cpp \
 	   gfxDDrawSurface.cpp \
 	   $(NULL)

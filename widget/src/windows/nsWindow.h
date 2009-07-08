@@ -476,7 +476,7 @@ protected:
 
   // Graphics
   HDC                   mPaintDC; // only set during painting
-  static WinRenderMode  sRenderMode;
+
   static nsAutoPtr<PRUint8> sSharedSurfaceData;
   static gfxIntSize     sSharedSurfaceSize;
 
