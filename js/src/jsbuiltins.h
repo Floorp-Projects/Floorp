@@ -454,6 +454,7 @@ JS_DECLARE_CALLINFO(js_ArrayCompPush)
 
 /* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_AllocFlatClosure)
+JS_DECLARE_CALLINFO(js_PutArguments)
 
 /* Defined in jsnum.cpp. */
 JS_DECLARE_CALLINFO(js_NumberToString)

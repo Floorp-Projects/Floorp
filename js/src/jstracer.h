@@ -616,6 +616,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK jsval& stackval(int n) const;
 
     JS_REQUIRES_STACK nanojit::LIns* scopeChain() const;
+    JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
     JS_REQUIRES_STACK JSRecordingStatus activeCallOrGlobalSlot(JSObject* obj, jsval*& vp);
 
     JS_REQUIRES_STACK nanojit::LIns* arg(unsigned n);
@@ -623,6 +624,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK nanojit::LIns* var(unsigned n);
     JS_REQUIRES_STACK void var(unsigned n, nanojit::LIns* i);
     JS_REQUIRES_STACK nanojit::LIns* upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v);
+    nanojit::LIns* stackLoad(nanojit::LIns* addr, uint8 type);
     JS_REQUIRES_STACK nanojit::LIns* stack(int n);
     JS_REQUIRES_STACK void stack(int n, nanojit::LIns* i);
 
@@ -679,6 +681,11 @@ class TraceRecorder : public avmplus::GCObject {
                                    nanojit::LIns*& dslots_ins);
     nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
                                   nanojit::LIns*& dslots_ins);
+    nanojit::LIns* stobj_get_private(nanojit::LIns* obj_ins, jsval mask=JSVAL_INT) {
+        return lir->ins2(nanojit::LIR_piand,
+                         stobj_get_fslot(obj_ins, JSSLOT_PRIVATE),
+                         lir->insImmPtr((void*) ~mask));
+    }
     JSRecordingStatus native_set(nanojit::LIns* obj_ins, JSScopeProperty* sprop,
                                  nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
     JSRecordingStatus native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins,
