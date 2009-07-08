@@ -124,7 +124,7 @@ MarkArgDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
     size_t nbits, nbytes;
     jsbitmap *bitmap;
 
-    argsobj = fp->argsobj;
+    argsobj = JSVAL_TO_OBJECT(fp->argsobj);
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
     nbits = fp->argc;
     JS_ASSERT(slot < nbits);
@@ -165,7 +165,7 @@ ArgWasDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
     jsval bmapval, bmapint;
     jsbitmap *bitmap;
 
-    argsobj = fp->argsobj;
+    argsobj = JSVAL_TO_OBJECT(fp->argsobj);
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
     if (JSVAL_IS_VOID(bmapval))
         return JS_FALSE;
@@ -208,7 +208,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
         slot = (uintN) JSID_TO_INT(id);
         if (slot < fp->argc) {
             if (fp->argsobj && ArgWasDeleted(cx, fp, slot))
-                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
+                return OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(fp->argsobj), id, vp);
             *vp = fp->argv[slot];
         } else {
             /*
@@ -224,12 +224,12 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
              * undefined in *vp.
              */
             if (fp->argsobj)
-                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
+                return OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(fp->argsobj), id, vp);
         }
     } else {
         if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
             if (fp->argsobj && TEST_OVERRIDE_BIT(fp, ARGS_LENGTH))
-                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
+                return OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(fp->argsobj), id, vp);
             *vp = INT_TO_JSVAL((jsint) fp->argc);
         }
     }
@@ -252,7 +252,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         fp = fp->down;
 
     /* Create an arguments object for fp only if it lacks one. */
-    argsobj = fp->argsobj;
+    argsobj = JSVAL_TO_OBJECT(fp->argsobj);
     if (argsobj)
         return argsobj;
 
@@ -278,7 +278,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
     while ((parent = OBJ_GET_PARENT(cx, global)) != NULL)
         global = parent;
     STOBJ_SET_PARENT(argsobj, global);
-    fp->argsobj = argsobj;
+    fp->argsobj = OBJECT_TO_JSVAL(argsobj);
     return argsobj;
 }
 
@@ -298,7 +298,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
      * elements of argsobj.  Do this first, before clearing and freeing the
      * deleted argument slot bitmap, because args_enumerate depends on that.
      */
-    argsobj = fp->argsobj;
+    argsobj = JSVAL_TO_OBJECT(fp->argsobj);
     ok = args_enumerate(cx, argsobj);
 
     /*
@@ -723,6 +723,25 @@ args_enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
+JSBool JS_FASTCALL
+js_PutArguments(JSContext* cx, JSObject* argsobj, uint32 length, JSObject* callee, jsval* args)
+{
+    if (!js_DefineProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), 
+                           INT_TO_JSVAL(length), args_getProperty, args_setProperty, 0, NULL))
+        return JS_FALSE;
+    if (!js_DefineProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.calleeAtom), 
+                           OBJECT_TO_JSVAL(callee), args_getProperty, args_setProperty, 0, NULL))
+        return JS_FALSE;
+
+    for (uintN i = 0; i < length; ++i) {
+        if (!js_DefineProperty(cx, argsobj, INT_TO_JSID(i), args[i],
+                               args_getProperty, args_setProperty, 0, NULL))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+JS_DEFINE_CALLINFO_5(extern, BOOL, js_PutArguments, CONTEXT, OBJECT, UINT32, OBJECT, JSVALPTR, 0, 0)
+
 #if JS_HAS_GENERATORS
 /*
  * If a generator-iterator's arguments or call object escapes, it needs to
@@ -932,7 +951,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (fp->argsobj) {
         if (!TEST_OVERRIDE_BIT(fp, CALL_ARGUMENTS)) {
             STOBJ_SET_SLOT(callobj, JSSLOT_CALL_ARGUMENTS,
-                           OBJECT_TO_JSVAL(fp->argsobj));
+                           fp->argsobj);
         }
         ok &= js_PutArgsObject(cx, fp);
     }

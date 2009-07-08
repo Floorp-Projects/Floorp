@@ -1298,7 +1298,8 @@ have_fun:
      */
     frame.thisp = (JSObject *)vp[1];
     frame.varobj = NULL;
-    frame.callobj = frame.argsobj = NULL;
+    frame.callobj = NULL;
+    frame.argsobj = NULL;
     frame.script = script;
     frame.callee = funobj;
     frame.fun = fun;
@@ -1577,7 +1578,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.sharpArray = down->sharpArray;
         JS_ASSERT(script->nfixed == 0);
     } else {
-        frame.callobj = frame.argsobj = NULL;
+        frame.callobj = NULL;
+        frame.argsobj = NULL;
         obj = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
             while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)

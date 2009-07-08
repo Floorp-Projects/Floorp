@@ -6239,7 +6239,7 @@ js_DumpStackFrame(JSStackFrame *fp)
         }
         fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
         MaybeDumpObject("callobj", fp->callobj);
-        MaybeDumpObject("argsobj", fp->argsobj);
+        MaybeDumpObject("argsobj", JSVAL_TO_OBJECT(fp->argsobj));
         MaybeDumpObject("varobj", fp->varobj);
         MaybeDumpObject("this", fp->thisp);
         fprintf(stderr, "  rval: ");
