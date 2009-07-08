@@ -251,6 +251,7 @@
         </hbox>
       </hbox>
       <toolbarbutton id="tool-bookmarks" class="urlbar-button button-image" command="cmd_bookmarks"/>
+      <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
     </toolbar>
     <!-- end: Main Toolbar -->
 
@@ -416,7 +417,7 @@
         <toolbarbutton id="tool-bookmarks-manage" class="urlbar-button show-text button-dark" type="check" autocheck="true" label="&bookmarksManage.label;"
                        oncommand="BookmarkList.toggleManage();"/>
         <toolbarbutton id="tool-bookmarks-close" class="urlbar-button button-image" type="check" checked="true"
-                       oncommand="BookmarkList.close();"/>
+                       command="cmd_close"/>
       </hbox>
       <placelist id="bookmark-items" type="bookmarks" flex="1"
                  onmove="FolderPicker.show(this);"
@@ -427,7 +428,7 @@
       <hbox id="folder-header">
         <description flex="1">&foldersHeader.label;</description>
         <toolbarbutton id="tool-folders-close" class="urlbar-button button-image" type="check" checked="true"
-                       oncommand="FolderPicker.close()"/>
+                       command="cmd_close"/>
       </hbox>
       <placetree id="folder-items" type="bookmarks" mode="folders" flex="1" onselect="FolderPicker.moveItem();"/>
     </vbox>

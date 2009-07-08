@@ -115,6 +115,8 @@
           this.hidden = false;
           this._popupOpen = true;
 
+          BrowserUI.pushDialog(this);
+
           this.invalidate();
         ]]></body>
       </method>
@@ -129,6 +131,15 @@
 
           this.hidden = true;
           this._popupOpen = false;
+
+          BrowserUI.popDialog();
+        ]]></body>
+      </method>
+
+      <!-- Helper used by active dialog system -->
+      <method name="close">
+        <body><![CDATA[
+          this.closePopup();
         ]]></body>
       </method>
 

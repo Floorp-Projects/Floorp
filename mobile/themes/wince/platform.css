@@ -95,8 +95,8 @@ button:active {
 }
 
 toolbarbutton {
-  min-width: 7.2mm !important; /* primary button size */
-  min-height: 7.2mm !important; /* primary button size */
+  min-width: 8.5mm !important; /* primary button size */
+  min-height: 8.5mm !important; /* primary button size */
   -moz-appearance: none !important;
   margin: 0;
   padding: 0.25mm;
