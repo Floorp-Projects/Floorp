@@ -61,6 +61,10 @@ cairo_ddraw_surface_create_alias (cairo_surface_t *surface,
 cairo_public LPDIRECTDRAWSURFACE
 cairo_ddraw_surface_get_ddraw_surface (cairo_surface_t *surface);
 
+cairo_public cairo_surface_t *
+cairo_ddraw_surface_get_image (cairo_surface_t *surface);
+
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_DDRAW_SURFACE */
