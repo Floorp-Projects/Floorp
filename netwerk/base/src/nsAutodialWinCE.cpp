@@ -43,6 +43,7 @@
 
 #include "nsAutodialWinCE.h"
 
+#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -66,10 +67,18 @@ nsAutodial::Init()
   return NS_OK;
 }
 
-nsresult nsAutodial::DialDefault(const PRUnichar* /* hostName */)
+nsresult nsAutodial::DialDefault(const PRUnichar* hostName)
 {
 #ifdef WINCE_WINDOWS_MOBILE
   HANDLE connectionHandle;
+
+  // always use http://
+  nsString theURL;
+  theURL.Append(L"http://");
+  theURL.Append(hostName);
+  
+  GUID networkUID;
+  ConnMgrMapURL(theURL.get(), &networkUID, 0);
 
   // Make the connection to the new network
   CONNMGR_CONNECTIONINFO conn_info;
@@ -78,16 +87,28 @@ nsresult nsAutodial::DialDefault(const PRUnichar* /* hostName */)
   conn_info.cbSize      = sizeof(conn_info);
   conn_info.dwParams    = CONNMGR_PARAM_GUIDDESTNET;
   conn_info.dwPriority  = CONNMGR_PRIORITY_USERINTERACTIVE;
-  conn_info.guidDestNet = autodial_DestNetInternet;
+  conn_info.guidDestNet = networkUID;
   conn_info.bExclusive  = FALSE;
   conn_info.bDisabled   = FALSE;
-  
+  conn_info.dwFlags     = CONNMGR_FLAG_PROXY_HTTP | CONNMGR_FLAG_PROXY_WAP | 
+                          CONNMGR_FLAG_PROXY_SOCKS4 | CONNMGR_FLAG_PROXY_SOCKS5 |
+                          CONNMGR_FLAG_NO_ERROR_MSGS;
+
   DWORD status;
   HRESULT result = ConnMgrEstablishConnectionSync(&conn_info, 
                                                   &connectionHandle, 
                                                   60000,
                                                   &status);
-
+  
+  if (conn_info.guidDestNet != autodial_DestNetInternet &&
+      (result != S_OK || status != CONNMGR_STATUS_CONNECTED)) {
+    conn_info.guidDestNet = autodial_DestNetInternet;  
+    result = ConnMgrEstablishConnectionSync(&conn_info, 
+                                            &connectionHandle, 
+                                            60000,
+                                            &status);
+  }
+  
   if (result != S_OK || status != CONNMGR_STATUS_CONNECTED)
     return NS_ERROR_FAILURE;
 
