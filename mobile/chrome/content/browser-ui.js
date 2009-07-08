@@ -74,12 +74,12 @@ const kDefaultFavIconURL = "chrome://browser/skin/images/favicon-default-30.png"
 });
 
 var BrowserUI = {
-  _panel : null,
   _edit : null,
   _throbber : null,
   _autocompleteNavbuttons : null,
   _favicon : null,
   _faviconLink : null,
+  _dialogs: [],
 
   _titleChanged : function(aDocument) {
     var browser = Browser.selectedBrowser;
@@ -191,6 +191,40 @@ var BrowserUI = {
       this._edit.inputField.blur();
       this._edit.reallyClosePopup();
     }
+  },
+
+  _closeOrQuit: function _closeOrQuit() {
+    // Close active dialog, if we have one. If not then close the application.
+    let dialog = this.activeDialog;
+    if (dialog)
+      dialog.close();
+    else
+      CommandUpdater.doCommand("cmd_quit");
+  },
+
+  get activeDialog() {
+    // Return the topmost dialog
+    if (this._dialogs.length)
+      return this._dialogs[this._dialogs.length - 1];
+    return null;
+  },
+
+  pushDialog : function pushDialog(aDialog) {
+    // If we have a dialog push it on the stack and set the attr for CSS
+    if (aDialog) {
+      this._dialogs.push(aDialog);
+      document.getElementById("toolbar-main").setAttribute("dialog", "true")
+    }
+  },
+  
+  popDialog : function popDialog() {
+    // Passing null means we pop the topmost dialog
+    if (this._dialogs.length)
+      this._dialogs.pop();
+
+    // If no more dialogs are being displayed, remove the attr for CSS
+    if (!this._dialogs.length)
+      document.getElementById("toolbar-main").removeAttribute("dialog")
   },
 
   switchPane : function(id) {
@@ -611,7 +645,7 @@ var BrowserUI = {
         goQuitApplication();
         break;
       case "cmd_close":
-        close();
+        this._closeOrQuit();
         break;
       case "cmd_menu":
         break;
@@ -654,7 +688,7 @@ var BookmarkHelper = {
   _panel: null,
   _editor: null,
 
-  edit: function(aURI) {
+  edit: function BH_edit(aURI) {
     let itemId = PlacesUtils.getMostRecentBookmarkForURI(aURI);
     if (itemId == -1)
       return;
@@ -680,6 +714,7 @@ var BookmarkHelper = {
     this._panel = document.getElementById("bookmark-container");
     this._panel.top = (top < 0 ? 0 : top);
     this._panel.hidden = false;
+    BrowserUI.pushDialog(this);
 
     let self = this;
     setTimeout(function() {
@@ -690,18 +725,20 @@ var BookmarkHelper = {
     window.addEventListener("keypress", this, true);
   },
 
-  close: function() {
+  close: function BH_close() {
     window.removeEventListener("keypress", this, true);
     BrowserUI.updateStar();
 
-    if (this._editor.isEditing)
-      this._editor.stopEditing();
-    this._panel.hidden = true;
-
+    // Note: the _editor will have already saved the data, if needed, by the time
+    // this method is called, since this method is called via the "close" event.
     this._editor.parentNode.removeChild(this._editor);
+    this._editor = null;
+
+    this._panel.hidden = true;
+    BrowserUI.popDialog();
   },
 
-  handleEvent: function(aEvent) {
+  handleEvent: function BH_handleEvent(aEvent) {
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
       this.close();
   }
@@ -716,6 +753,7 @@ var BookmarkList = {
     this._panel.width = window.innerWidth;
     this._panel.height = window.innerHeight;
     this._panel.hidden = false;
+    BrowserUI.pushDialog(this);
 
     this._bookmarks = document.getElementById("bookmark-items");
     this._bookmarks.manageUI = false;
@@ -733,6 +771,7 @@ var BookmarkList = {
     this._bookmarks.blur();
 
     this._panel.hidden = true;
+    BrowserUI.popDialog();
   },
 
   toggleManage: function() {
@@ -759,10 +798,11 @@ var FolderPicker = {
 
   show: function(aControl) {
     this._panel = document.getElementById("folder-container");
-    this._panel.hidden = false;
     this._panel.width = window.innerWidth;
     this._panel.height = window.innerHeight;
-
+    this._panel.hidden = false;
+    BrowserUI.pushDialog(this);
+    
     this._control = aControl;
 
     let folders = document.getElementById("folder-items");
@@ -771,6 +811,7 @@ var FolderPicker = {
 
   close: function() {
     this._panel.hidden = true;
+    BrowserUI.popDialog();
   },
 
   moveItem: function() {
