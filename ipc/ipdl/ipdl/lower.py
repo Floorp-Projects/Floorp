@@ -97,7 +97,6 @@ class GenerateProtocolHeader(Visitor):
         for tdef in self.typedefs:
             scope.addstmt(tdef)
 
-
     def visitTranslationUnit(self, tu):
         f = self.file
 
@@ -160,20 +159,30 @@ class GenerateProtocolHeader(Visitor):
         ns.addstmt(cxx.Whitespace.NL)
         ns.addstmt(cxx.Whitespace.NL)
 
+        # state information
+        stateenum = cxx.TypeEnum('State')
+        for ts in p.transitionStmts:
+            ts.accept(self)
+            stateenum.addId(ts.state.decl._cxxname)
+        if len(p.transitionStmts):
+            startstate = p.transitionStmts[0].state.decl._cxxname
+        else:
+            startstate = '0'
+        stateenum.addId('StateStart', startstate)
+        stateenum.addId('StateError')
+        stateenum.addId('StateLast')
+
+        ns.addstmt(cxx.StmtDecl(cxx.Decl(stateenum, '')))
+        ns.addstmt(cxx.Whitespace.NL)
+
         # previsit the messages and stash away some common info used
         # several times later
         for md in p.messageDecls:
             md.accept(self)
 
-        # TODO
-        for ts in p.transitionStmts:
-            ts.accept(self)
-        ns.addstmt(cxx.StmtDecl(cxx.Decl(cxx.TypeEnum('State'), '')))
-        ns.addstmt(cxx.Whitespace.NL)
-
         # spit out message type enum and classes
         msgstart = self.pname +'MsgStart << 12'
-        msgenum = cxx.TypeEnum(self.pname +'MsgType')
+        msgenum = cxx.TypeEnum('MessageType')
         msgenum.addId(self.pname +'Start', msgstart)
         msgenum.addId(self.pname +'PreStart', '('+ msgstart +') - 1')
 
@@ -184,6 +193,7 @@ class GenerateProtocolHeader(Visitor):
 
         msgenum.addId(self.pname +'End')
         ns.addstmt(cxx.StmtDecl(cxx.Decl(msgenum, '')))
+        ns.addstmt(cxx.Whitespace.NL)
 
         for md in p.messageDecls:
             ns.addstmt(generateMessageClass(md, self.injectTypedefs))
@@ -230,6 +240,10 @@ class GenerateProtocolHeader(Visitor):
         if md.decl.type.hasReply():
             md._cxx.replyid = 'Reply_%s'% (md.decl.progname)
             md._cxx.nsreplyid = '%s::%s'% (self.pname, md._cxx.replyid)
+
+
+    def visitTransitionStmt(self, ts):
+        ts.state.decl._cxxname = 'State_%s__ID'% (ts.state.decl.progname)
 
 
 def generateMsgClass(md, clsname, params, typedefInjector):
@@ -334,11 +348,10 @@ def generateReplyClass(md, typedefInjector):
 
 ##-----------------------------------------------------------------------------
 _channelTable = {
-    'Async': [ 'mozilla', 'ipc', 'AsyncChannel' ],
-    'Sync': [ 'mozilla', 'ipc', 'SyncChannel' ],
-    'Rpc': [ 'mozilla', 'ipc', 'RPCChannel' ]
+    ASYNC: [ 'mozilla', 'ipc', 'AsyncChannel' ],
+    SYNC: [ 'mozilla', 'ipc', 'SyncChannel' ],
+    RPC: [ 'mozilla', 'ipc', 'RPCChannel' ]
 }
-
 
 class GenerateProtocolActorHeader(Visitor):
     def __init__(self, myside, otherside):
@@ -396,7 +409,7 @@ class GenerateProtocolActorHeader(Visitor):
         if p.decl.type.isManager():
             self.file.addthing(cxx.CppDirective('include', '"base/id_map.h"'))
 
-        channel = _channelTable[p.decl.type.sendSemantics.pretty]
+        channel = _channelTable[p.decl.type.sendSemantics]
         channelname = '::'.join(channel)
         channelfile = '/'.join(channel) +'.h'
         if p.decl.type.isToplevel():

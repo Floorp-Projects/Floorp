@@ -94,7 +94,7 @@ public:
                 if (!(NPPProtocol::Msg_NPP_SetWindow::Read(&(msg), &(window)))) {
                     return MsgPayloadError;
                 }
-                if (AnswerNPP_SetWindow(window, &(rv))) {
+                if (NS_FAILED(AnswerNPP_SetWindow(window, &(rv)))) {
                     return MsgValueError;
                 }
 
@@ -110,7 +110,7 @@ public:
                 if (!(NPPProtocol::Msg_NPP_GetValue::Read(&(msg), &(key)))) {
                     return MsgPayloadError;
                 }
-                if (AnswerNPP_GetValue(key, &(value))) {
+                if (NS_FAILED(AnswerNPP_GetValue(key, &(value)))) {
                     return MsgValueError;
                 }
 

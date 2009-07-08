@@ -105,7 +105,7 @@ public:
                 if (!(NPAPIProtocol::Msg_NP_Initialize::Read(&(msg)))) {
                     return MsgPayloadError;
                 }
-                if (AnswerNP_Initialize(&(rv))) {
+                if (NS_FAILED(AnswerNP_Initialize(&(rv)))) {
                     return MsgValueError;
                 }
 
@@ -154,7 +154,7 @@ public:
                 if (!(__a)) {
                     return MsgValueError;
                 }
-                if (NPPDestructor(__a, &(rv))) {
+                if (NS_FAILED(NPPDestructor(__a, &(rv)))) {
                     return MsgValueError;
                 }
                 Unregister(__ah.mChildId);

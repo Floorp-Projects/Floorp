@@ -32,7 +32,7 @@
 
 import sys
 
-from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, TypeSpec, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT
+from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, TypeSpec, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
 import ipdl.builtin as builtin
 
 class Type:
@@ -114,6 +114,8 @@ class GeneratedCxxType(CxxType):
 class IPDLType(Type):
     def isIPDL(self):  return True
     def isVisible(self): return True
+    def isState(self): return False
+    def isMessage(self): return False
     def isProtocol(self): return False
 
     def isAsync(self): return self.sendSemantics is ASYNC
@@ -129,6 +131,10 @@ class IPDLType(Type):
     def needsMoreJuiceThan(self, o):
         return (o.isAsync() and not self.isAsync()
                 or o.isSync() and self.isRpc())
+
+class StateType(IPDLType):
+    def __init__(self): pass
+    def isState(self): return True
 
 class MessageType(IPDLType):
     def __init__(self, sendSemantics, direction,
@@ -319,11 +325,11 @@ class GatherDecls(Visitor):
 
         # bit of a hack here --- we want the builtin |using|
         # statements to be added to the symbol table before anything
-        # else, but we also want them in the top-level translation
-        # unit's list of using stmts so that we can use them later
-        # down the pipe.  so we add them to the symbol table before
-        # anything else, and prepend them to the top-level TU after
-        # it's visited all its |using| decls
+        # else, but we also want them in the translation units' list
+        # of using stmts so that we can use them later down the pipe.
+        # so we add them to the symbol table before anything else, and
+        # prepend them to the TUs after visiting all their |using|
+        # decls
         if 1 == self.depth:
             for using in self.builtinUsing:
                 udecl = Decl(using.loc)
@@ -368,8 +374,7 @@ class GatherDecls(Visitor):
             using.accept(self)
 
         # (see long comment above)
-        if 1 == self.depth:
-            tu.using = self.builtinUsing + tu.using
+        tu.using = self.builtinUsing + tu.using
 
         # grab symbols in the protocol itself
         p.accept(self)
@@ -422,6 +427,15 @@ class GatherDecls(Visitor):
                         managed.loc,
                         "constructor and destructor declarations are required for managed protocol `%s' (managed by protocol `%s')",
                         mgdname, p.name))
+
+        # declare each state before decorating their mention
+        for trans in p.transitionStmts:
+            sdecl = Decl(trans.state.loc)
+            sdecl.progname = trans.state.name
+            sdecl.type = StateType()
+
+            self.symtab.declare(sdecl)
+            trans.state.decl = sdecl
 
         for trans in p.transitionStmts:
             trans.accept(self)
@@ -595,6 +609,38 @@ class GatherDecls(Visitor):
         md.protocolDecl = self.currentProtocolDecl
 
 
+    def visitTransition(self, t):
+        loc = t.loc
+
+        sname = t.toState.name
+        sdecl = self.symtab.lookup(sname)
+        if sdecl is None:
+            self.errors.append(
+                errormsg(loc, "state `%s' has not been declared", sname))
+        elif not sdecl.type.isState():
+            self.errors.append(
+                errormsg(
+                    loc,
+                    "`%s' should have state type, but instead has type `%s'",
+                    sname, sdecl.type.typename()))
+        else:
+            t.toState.decl = sdecl
+
+        mname = t.msg
+        mdecl = self.symtab.lookup(mname)
+        if mdecl is None:
+            self.errors.append(
+                errormsg(loc, "message `%s' has not been declared", mname))
+        elif not mdecl.type.isMessage():
+            self.errors.append(
+                errormsg(
+                    loc,
+                    "`%s' should have message type, but instead has type `%s'",
+                    mname, mdecl.type.typename()))
+        else:
+            t.msg = mdecl
+
+
 class CheckTypes(Visitor):
     def __init__(self, symtab, errors):
         self.symtab = symtab
@@ -693,3 +739,25 @@ class CheckTypes(Visitor):
                     "ctor/dtor for protocol `%s', which is not managed by protocol `%s'", 
                     mname[:-len('constructor')],
                     pname))
+
+
+    def visitTransition(self, t):
+        _YNC = [ ASYNC, SYNC ]
+
+        loc = t.loc
+        impliedDirection, impliedSems = {
+            SEND: [ OUT, _YNC ], RECV: [ IN, _YNC ],
+            CALL: [ OUT, RPC ],  ANSWER: [ IN, RPC ]
+         } [t.trigger]
+        
+        if (OUT is impliedDirection and t.msg.type.isIn()
+            or IN is impliedDirection and t.msg.type.isOut()
+            or _YNC is impliedSems and t.msg.type.isRpc()
+            or RPC is impliedSems and (not t.msg.type.isRpc())):
+            mtype = t.msg.type
+
+            self.errors.append(errormsg(
+                    loc, "%s %s message `%s' is not `%s'd",
+                    mtype.sendSemantics.pretty, mtype.direction.pretty,
+                    t.msg.progname,
+                    trigger))
