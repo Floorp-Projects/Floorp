@@ -192,7 +192,9 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32)
+endif
 
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 RCINCLUDE = splash.rc
 ifndef GNU_CC
 RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
@@ -323,7 +325,7 @@ endif
 export::
 ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	cp $(srcdir)/firefox.ico   $(DIST)/branding/firefox.ico
 	cp $(srcdir)/firefox.ico   $(DIST)/branding/app.ico
 	cp $(srcdir)/document.ico  $(DIST)/branding/document.ico
