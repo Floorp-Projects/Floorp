@@ -38,7 +38,6 @@
 #ifndef nsNPAPIPlugin_h_
 #define nsNPAPIPlugin_h_
 
-#include "nsIFactory.h"
 #include "nsIPlugin.h"
 #include "prlink.h"
 #include "npfunctions.h"
@@ -80,7 +79,6 @@ public:
   virtual ~nsNPAPIPlugin(void);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIFACTORY
   NS_DECL_NSIPLUGIN
 
   // Constructs and initializes an nsNPAPIPlugin object. A NULL file path

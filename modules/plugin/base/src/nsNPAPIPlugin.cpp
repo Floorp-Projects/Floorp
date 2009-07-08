@@ -264,7 +264,7 @@ nsNPAPIPlugin::CheckClassInitialized(void)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN callbacks initialized\n"));
 }
 
-NS_IMPL_ISUPPORTS2(nsNPAPIPlugin, nsIPlugin, nsIFactory)
+NS_IMPL_ISUPPORTS1(nsNPAPIPlugin, nsIPlugin)
 
 nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
                              NP_PLUGINSHUTDOWN aShutdown)
@@ -576,9 +576,8 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   return NS_OK;
 }
 
-nsresult
-nsNPAPIPlugin::CreateInstance(nsISupports *aOuter, const nsIID &aIID,
-                              void **aResult)
+NS_METHOD
+nsNPAPIPlugin::CreatePluginInstance(nsIPluginInstance **aResult)
 {
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
@@ -587,25 +586,12 @@ nsNPAPIPlugin::CreateInstance(nsISupports *aOuter, const nsIID &aIID,
 
   nsRefPtr<nsNPAPIPluginInstance> inst =
     new nsNPAPIPluginInstance(&fCallbacks, fLibrary);
-
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return inst->QueryInterface(aIID, aResult);
-}
-
-nsresult
-nsNPAPIPlugin::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.
+  NS_ADDREF(inst);
+  *aResult = static_cast<nsIPluginInstance*>(inst);
   return NS_OK;
-}
-
-NS_METHOD
-nsNPAPIPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID,
-                                    const char *aPluginMIMEType, void **aResult)
-{
-  return CreateInstance(aOuter, aIID, aResult);
 }
 
 nsresult
