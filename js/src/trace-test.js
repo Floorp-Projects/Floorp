@@ -4442,6 +4442,22 @@ delete h;
 delete a;
 delete f;
 
+function testRebranding2() {
+    // Same as testRebranding, but the object to be rebranded isn't the global.
+    var x = "FAIL";
+    function g(){}
+    function h(){ x = "ok"; }
+    var obj = {m: g};
+    var arr = [g, g, g, g, h];
+    for (var i = 0; i < 5; i++) {
+        obj.m = arr[i];
+        obj.m();
+    }
+    return x;
+}
+testRebranding2.expected = "ok";
+test(testRebranding2);
+
 function testLambdaCtor() {
     var a = [];
     for (var x = 0; x < RUNLOOP; ++x) {
