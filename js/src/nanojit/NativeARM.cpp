@@ -583,9 +583,10 @@ Assembler::nPatchBranch(NIns* at, NIns* target)
         // and reset at[1] for good measure
         at[1] = BKPT_insn;
     } else {
-        // at[0] should already hold the correct instruction, so we just need
-        // to update the target.
-        NanoAssert(at[0] == (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) ));
+        // Emit a branch to a pc-relative address, which we'll store right
+        // after this instruction
+        at[0] = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | (4) );
+        // the target address
         at[1] = (NIns)(target);
     }
     VALGRIND_DISCARD_TRANSLATIONS(at, 2*sizeof(NIns));
