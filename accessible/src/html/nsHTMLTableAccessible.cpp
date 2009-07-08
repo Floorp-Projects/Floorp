@@ -1299,46 +1299,44 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetDescription(nsAString& aDescription)
   return NS_OK;
 }
 
-PRBool nsHTMLTableAccessible::HasDescendant(const char *aTagName, PRBool aAllowEmpty)
+PRBool
+nsHTMLTableAccessible::HasDescendant(const nsAString& aTagName,
+                                     PRBool aAllowEmpty)
 {
   nsCOMPtr<nsIDOMElement> tableElt(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(tableElt, PR_FALSE);
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
-  nsAutoString tagName;
-  tagName.AssignWithConversion(aTagName);
-  tableElt->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
+  tableElt->GetElementsByTagName(aTagName, getter_AddRefs(nodeList));
   NS_ENSURE_TRUE(nodeList, PR_FALSE);
-  PRUint32 length;
-  nodeList->GetLength(&length);
-  
-  if (length == 1) {
-    // Make sure it's not the table itself
-    nsCOMPtr<nsIDOMNode> foundItem;
-    nodeList->Item(0, getter_AddRefs(foundItem));
-    if (foundItem == mDOMNode) {
-      return PR_FALSE;
-    }
-    if (!aAllowEmpty) {
-      // Make sure that the item we found has contents
-      // and either has multiple children or the
-      // found item is not a whitespace-only text node
-      nsCOMPtr<nsIContent> foundItemContent = do_QueryInterface(foundItem);
-      if (!foundItemContent) {
-        return PR_FALSE;
-      }
-      if (foundItemContent->GetChildCount() > 1) {
-        return PR_TRUE; // Treat multiple child nodes as non-empty
-      }
-      nsIContent *innerItemContent = foundItemContent->GetChildAt(0);
-      if (!innerItemContent || innerItemContent->TextIsOnlyWhitespace()) {
-        return PR_FALSE;
-      }
-    }
-    return PR_TRUE;
-  }
 
-  return length > 0;
+  nsCOMPtr<nsIDOMNode> foundItem;
+  nodeList->Item(0, getter_AddRefs(foundItem));
+  if (!foundItem)
+    return PR_FALSE;
+
+  if (aAllowEmpty)
+    return PR_TRUE;
+
+  // Make sure that the item we found has contents and either has multiple
+  // children or the found item is not a whitespace-only text node.
+  nsCOMPtr<nsIContent> foundItemContent = do_QueryInterface(foundItem);
+  if (foundItemContent->GetChildCount() > 1)
+    return PR_TRUE; // Treat multiple child nodes as non-empty
+
+  nsIContent *innerItemContent = foundItemContent->GetChildAt(0);
+  if (innerItemContent && !innerItemContent->TextIsOnlyWhitespace())
+    return PR_TRUE;
+
+  // If we found more than one node then return true not depending on
+  // aAllowEmpty flag.
+  // XXX it might be dummy but bug 501375 where we changed this addresses
+  // performance problems only. Note, currently 'aAllowEmpty' flag is used for
+  // caption element only. On another hand we create accessible object for
+  // the first entry of caption element (see
+  // nsHTMLTableAccessible::CacheChildren).
+  nodeList->Item(1, getter_AddRefs(foundItem));
+  return !!foundItem;
 }
 
 NS_IMETHODIMP
@@ -1395,11 +1393,14 @@ nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
   // Check for legitimate data table elements or attributes
   nsAutoString summary;
   if ((content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary, summary) && !summary.IsEmpty()) || 
-      HasDescendant("caption", PR_FALSE) || HasDescendant("th") || HasDescendant("thead") ||
-      HasDescendant("tfoot")   || HasDescendant("colgroup")) {
+      HasDescendant(NS_LITERAL_STRING("caption"), PR_FALSE) ||
+      HasDescendant(NS_LITERAL_STRING("th")) ||
+      HasDescendant(NS_LITERAL_STRING("thead")) ||
+      HasDescendant(NS_LITERAL_STRING("tfoot")) ||
+      HasDescendant(NS_LITERAL_STRING("colgroup"))) {
     RETURN_LAYOUT_ANSWER(PR_FALSE, "Has caption, summary, th, thead, tfoot or colgroup -- legitimate table structures");
   }
-  if (HasDescendant("table")) {
+  if (HasDescendant(NS_LITERAL_STRING("table"))) {
     RETURN_LAYOUT_ANSWER(PR_TRUE, "Has a nested table within it");
   }
   
@@ -1509,7 +1510,10 @@ nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
     RETURN_LAYOUT_ANSWER(PR_TRUE, "2-4 columns, 10 cells or less, non-bordered");
   }
 
-  if (HasDescendant("embed") || HasDescendant("object") || HasDescendant("applet") || HasDescendant("iframe")) {
+  if (HasDescendant(NS_LITERAL_STRING("embed")) ||
+      HasDescendant(NS_LITERAL_STRING("object")) ||
+      HasDescendant(NS_LITERAL_STRING("applet")) ||
+      HasDescendant(NS_LITERAL_STRING("iframe"))) {
     RETURN_LAYOUT_ANSWER(PR_TRUE, "Has no borders, and has iframe, object, applet or iframe, typical of advertisements");
   }
 

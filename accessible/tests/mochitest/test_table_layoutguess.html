@@ -35,6 +35,12 @@
       // table with caption
       testAbsentAttrs("table4", attr);
 
+      // table with empty caption
+      testAttrs("table4.2", attr, true);
+
+      // table with two captions
+      testAbsentAttrs("table4.3", attr);
+
       // table with th element
       testAbsentAttrs("table5", attr);
 
@@ -164,6 +170,23 @@
     <tr>
       <td>Cell1</td><td>cell2</td>
     </tr>
+  </table>
+
+  <!-- table with empty caption -->
+  <table id="table4.2">
+    <caption> </caption>
+    <tr>
+      <td>Cell1</td><td>cell2</td>
+    </tr>
+  </table>
+
+  <!-- table with two captions -->
+  <table id="table4.3">
+    <caption> </caption>
+    <tr>
+      <td>Cell1</td><td>cell2</td>
+    </tr>
+    <caption>a caption</caption>
   </table>
 
   <!-- table with th element -->
