@@ -3799,15 +3799,13 @@ function testAddAnyInconvertibleObject()
 {
   var count = 0;
   function toString() { ++count; if (count == 95) return {}; return "" + count; }
+  var o = {valueOf: undefined, toString: toString};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o = {valueOf: undefined, toString: toString};
         var q = 5 + o;
-    }
   }
   catch (e)
   {
@@ -3828,7 +3826,7 @@ testAddAnyInconvertibleObject.expected = "pass";
 testAddAnyInconvertibleObject.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testAddAnyInconvertibleObject);
 
@@ -3842,15 +3840,13 @@ function testAddInconvertibleObjectAny()
       return {};
     return "" + count;
   }
+  var o = {valueOf: undefined, toString: toString};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o = {valueOf: undefined, toString: toString};
         var q = o + 5;
-    }
   }
   catch (e)
   {
@@ -3871,7 +3867,7 @@ testAddInconvertibleObjectAny.expected = "pass";
 testAddInconvertibleObjectAny.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testAddInconvertibleObjectAny);
 
@@ -3879,18 +3875,16 @@ function testAddInconvertibleObjectInconvertibleObject()
 {
   var count1 = 0;
   function toString1() { ++count1; if (count1 == 95) return {}; return "" + count1; }
+  var o1 = {valueOf: undefined, toString: toString1};
   var count2 = 0;
   function toString2() { ++count2; if (count2 == 95) return {}; return "" + count2; }
+  var o2 = {valueOf: undefined, toString: toString2};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o1 = {valueOf: undefined, toString: toString1};
-        var o2 = {valueOf: undefined, toString: toString2};
         var q = o1 + o2;
-    }
   }
   catch (e)
   {
@@ -3913,7 +3907,7 @@ testAddInconvertibleObjectInconvertibleObject.expected = "pass";
 testAddInconvertibleObjectInconvertibleObject.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testAddInconvertibleObjectInconvertibleObject);
 
@@ -3921,15 +3915,13 @@ function testBitOrAnyInconvertibleObject()
 {
   var count = 0;
   function toString() { ++count; if (count == 95) return {}; return count; }
+  var o = {valueOf: undefined, toString: toString};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o = {valueOf: undefined, toString: toString};
         var q = 1 | o;
-    }
   }
   catch (e)
   {
@@ -3950,7 +3942,7 @@ testBitOrAnyInconvertibleObject.expected = "pass";
 testBitOrAnyInconvertibleObject.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testBitOrAnyInconvertibleObject);
 
@@ -3958,15 +3950,13 @@ function testBitOrInconvertibleObjectAny()
 {
   var count = 0;
   function toString() { ++count; if (count == 95) return {}; return count; }
+  var o = {valueOf: undefined, toString: toString};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o = {valueOf: undefined, toString: toString};
         var q = o | 1;
-    }
   }
   catch (e)
   {
@@ -3987,7 +3977,7 @@ testBitOrInconvertibleObjectAny.expected = "pass";
 testBitOrInconvertibleObjectAny.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testBitOrInconvertibleObjectAny);
 
@@ -3995,18 +3985,16 @@ function testBitOrInconvertibleObjectInconvertibleObject()
 {
   var count1 = 0;
   function toString1() { ++count1; if (count1 == 95) return {}; return count1; }
+  var o1 = {valueOf: undefined, toString: toString1};
   var count2 = 0;
   function toString2() { ++count2; if (count2 == 95) return {}; return count2; }
+  var o2 = {valueOf: undefined, toString: toString2};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o1 = {valueOf: undefined, toString: toString1};
-        var o2 = {valueOf: undefined, toString: toString2};
         var q = o1 | o2;
-    }
   }
   catch (e)
   {
@@ -4029,7 +4017,7 @@ testBitOrInconvertibleObjectInconvertibleObject.expected = "pass";
 testBitOrInconvertibleObjectInconvertibleObject.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testBitOrInconvertibleObjectInconvertibleObject);
 
