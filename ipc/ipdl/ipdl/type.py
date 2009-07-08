@@ -410,15 +410,27 @@ class GatherDecls(Visitor):
             msg.accept(self)
         del self.currentProtocolDecl
 
+        for managed in p.managesStmts:
+            mgdname = managed.name
+            ctordecl = self.symtab.lookup(mgdname +'Constructor')
+            dtordecl = self.symtab.lookup(mgdname +'Destructor')
+
+            if not(ctordecl and dtordecl
+                   and ctordecl.type.isCtor() and dtordecl.type.isDtor()):
+                self.errors.append(
+                    errormsg(
+                        managed.loc,
+                        "constructor and destructor declarations are required for managed protocol `%s' (managed by protocol `%s')",
+                        mgdname, p.name))
+
         for trans in p.transitionStmts:
             trans.accept(self)
 
-        # declare all the little C++ thingies that will be generated.
-
-        # they're not relevant to IPDL itself, but those ("invisible")
-        # symbols can clash with others in the IPDL spec, and we'd like
-        # to catch those before C++ compilers are allowed to obfuscate
-        # the error
+        # FIXME/cjones declare all the little C++ thingies that will
+        # be generated.  they're not relevant to IPDL itself, but
+        # those ("invisible") symbols can clash with others in the
+        # IPDL spec, and we'd like to catch those before C++ compilers
+        # are allowed to obfuscate the error
 
         self.symtab.exitScope(p)
 

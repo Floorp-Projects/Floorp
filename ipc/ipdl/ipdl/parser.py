@@ -99,7 +99,7 @@ class Parser:
         for incdir in self.includedirs +[ '' ]:
             realpath = os.path.join(incdir, filepath)
             if os.path.isfile(realpath):
-                return realpath
+                return os.path.abspath(realpath)
         return None
 
     # returns a GCC-style string representation of the include stack.
