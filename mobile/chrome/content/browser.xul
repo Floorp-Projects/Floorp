@@ -57,7 +57,7 @@
         windowtype="navigator:browser"
         title="&brandShortName;"
 #ifdef WINCE
-        sizemode="maximized"
+        sizemode="fullscreen"
 #elifdef MOZ_PLATFORM_HILDON
         sizemode="maximized"
 #else
