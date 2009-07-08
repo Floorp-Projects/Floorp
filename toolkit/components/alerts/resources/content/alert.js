@@ -142,6 +142,7 @@ function onAlertLoad()
   if (window.innerWidth == contentDim.width + 1)
     --window.innerWidth;
 
+#ifndef WINCE
   // Start with a 1px width/height, because 0 causes trouble with gtk1/2
   gCurrentSize = 1;
 
@@ -156,6 +157,7 @@ function onAlertLoad()
     gFinalSize = window.outerHeight;
     window.outerHeight = gCurrentSize;
   }
+#endif
 
   // Determine position
   var x = gOrigin & NS_ALERT_LEFT ? screen.availLeft :
@@ -171,7 +173,11 @@ function onAlertLoad()
 
   window.moveTo(x, y);
 
+#ifndef WINCE
   setTimeout(animateAlert, gSlideTime);
+#else
+  setTimeout(closeAlert, gOpenTime);
+#endif
 }
 
 function animate(step)
