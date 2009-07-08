@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  {0x2c155ed0, 0x3302, 0x4cff, \
-      {0x9d, 0xb3, 0xed, 0x0c, 0xcd, 0xfc, 0x50, 0x06 } }
+  { 0x46003091, 0x7f99, 0x420f, \
+  { 0x95, 0xbc, 0x28, 0xd7, 0xd5, 0x01, 0x5a, 0x41 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1148,6 +1148,14 @@ public:
   PRUint32 EventHandlingSuppressed() const { return mEventsSuppressed; }
 
   PRBool IsDNSPrefetchAllowed() const { return mAllowDNSPrefetch; }
+
+  /**
+   * Called by nsParser to preload images. Can be removed and code moved
+   * to nsPreloadURIs::PreloadURIs() in file nsParser.cpp whenever the
+   * parser-module is linked with gklayout-module.
+   */
+  virtual void MaybePreLoadImage(nsIURI* uri) = 0;
+
 protected:
   ~nsIDocument()
   {

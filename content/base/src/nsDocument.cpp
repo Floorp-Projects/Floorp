@@ -1780,6 +1780,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mPreloadingImages)
 
 #ifdef MOZ_SMIL
   // Traverse animation components
@@ -1823,6 +1824,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
   tmp->mParentDocument = nsnull;
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mPreloadingImages)
 
   // nsDocument has a pretty complex destructor, so we're going to
   // assume that *most* cycles you actually want to break somewhere
@@ -3863,6 +3866,9 @@ nsDocument::DispatchContentLoadedEvents()
   // If you add early returns from this method, make sure you're
   // calling UnblockOnload properly.
   
+  // Unpin references to preloaded images
+  mPreloadingImages.Clear();
+    
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
@@ -7485,6 +7491,34 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
   }
 }
 
+void
+nsDocument::MaybePreLoadImage(nsIURI* uri)
+{
+  // Early exit if the img is already present in the img-cache
+  // which indicates that the "real" load has already started and
+  // that we shouldn't preload it.
+  if (nsContentUtils::IsImageInCache(uri)) {
+    return;
+  }
+
+  // Image not in cache - trigger preload
+  nsCOMPtr<imgIRequest> request;
+  nsresult rv =
+    nsContentUtils::LoadImage(uri,
+                              this,
+                              NodePrincipal(),
+                              mDocumentURI, // uri of document used as referrer
+                              nsnull,       // no observer
+                              nsIRequest::LOAD_NORMAL,
+                              getter_AddRefs(request));
+
+  // Pin image-reference to avoid evicting it from the img-cache before
+  // the "real" load occurs. Unpinned in DispatchContentLoadedEvents and
+  // unlink
+  if (NS_SUCCEEDED(rv)) {
+    mPreloadingImages.AppendObject(request);
+  }
+}
 class nsDelayedEventDispatcher : public nsRunnable
 {
 public:
