@@ -35,32 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIFactory.idl"
+#include "nsISupports.idl"
 #include "nspluginroot.idl"
 
 %{C++
 #include "nsplugindefs.h"
 
-// {ffc63200-cf09-11d2-a5a0-bc8f7ad21dfc}
-#define NS_PLUGIN_CID \
-{ 0xffc63200, 0xcf09, 0x11d2, { 0xa5, 0xa0, 0xbc, 0x8f, 0x7a, 0xd2, 0x1d, 0xfc } }
-
-// Prefix for ContractID of all plugins
-#define NS_INLINE_PLUGIN_CONTRACTID_PREFIX "@mozilla.org/inline-plugin/"
+#define MOZ_PLUGIN_CONTRACTID \
+  "@mozilla.org/plugin/plugin;1"
 %}
 
-[uuid(df773070-0199-11d2-815b-006008119d7a)]
-interface nsIPlugin : nsIFactory
+interface nsIPluginInstance;
+
+[uuid(0937FB08-16E8-4365-BABF-88E09E4E33A4)]
+interface nsIPlugin : nsISupports
 {
   /**
    * Creates a new plugin instance, based on a MIME type. This
    * allows different impelementations to be created depending on
    * the specified MIME type.
    */
-  void createPluginInstance(in nsISupports aOuter, 
-                            in nsIIDRef aIID,
-                            in string aPluginMIMEType,
-                            [retval, iid_is(aIID)] out nsQIResult aResult);
+  void createPluginInstance(out nsIPluginInstance aResult);
 
   /**
    * Initializes the plugin and will be called before any new instances are
