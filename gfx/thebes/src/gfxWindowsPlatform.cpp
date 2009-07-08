@@ -63,8 +63,15 @@
 #include "gfxWindowsFonts.h"
 #endif
 
+/*XXX to get CAIRO_HAS_DDRAW_SURFACE */
+#include "cairo.h"
+
 #ifdef WINCE
 #include <shlwapi.h>
+
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+#include "gfxDDrawSurface.h"
+#endif
 #endif
 
 #include "gfxUserFontSet.h"
@@ -151,7 +158,11 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 #ifndef WINCE
     gfxASurface *surf = new gfxWindowsSurface(size, imageFormat);
 #else
+#ifdef CAIRO_HAS_DDRAW_SURFACE
+    gfxASurface *surf = new gfxDDrawSurface(NULL, size, imageFormat);
+#else
     gfxASurface *surf = new gfxImageSurface(size, imageFormat);
+#endif
 #endif
     NS_IF_ADDREF(surf);
     return surf;

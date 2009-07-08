@@ -69,6 +69,7 @@
 
 #define IDDCreateClipper(p,a,b,c)     DDCALL3(CreateClipper,p,a,b,c)
 #define IDDCreateSurface(p,a,b,c)     DDCALL3(CreateSurface,p,a,b,c)
+#define IDDSetCooperativeLevel(p,a,b) DDCALL2(SetCooperativeLevel,p,a,b)
 
 #define IDDCSetClipList(p,a,b)        DDCALL2(SetClipList,p,a,b)
 
@@ -87,6 +88,7 @@ static const cairo_surface_backend_t _cairo_ddraw_surface_backend;
 #undef CAIRO_DDRAW_LOG
 #undef CAIRO_DDRAW_LOG_TO_STORAGE
 #undef CAIRO_DDRAW_OGL_FONT_STATS
+#undef CAIRO_DDRAW_LOCK_TIMES
 
 static void _cairo_ddraw_log (const char *fmt, ...)
 {
@@ -104,7 +106,6 @@ static void _cairo_ddraw_log (const char *fmt, ...)
     va_start (ap, fmt);
     vfprintf (stderr, fmt, ap);
     va_end (ap);
-
 }
 
 /**
@@ -125,6 +126,52 @@ _cairo_ddraw_print_ddraw_error (const char *context, HRESULT hr)
 
     return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 }
+
+#ifdef CAIRO_DDRAW_LOCK_TIMES
+
+#define LIST_TIMERS(_) \
+_(lock) \
+_(unlock)\
+_(glfinish) \
+_(waitnative) \
+_(flush) \
+_(clone) \
+_(destroy) \
+_(growglyphcache) \
+_(addglyph) \
+_(acquiresrc) \
+_(acquiredst) \
+_(getddraw) \
+_(getimage) \
+_(swfill)
+
+#define DECLARE_TIMERS(tmr) \
+    static uint32_t _cairo_ddraw_timer_##tmr, _cairo_ddraw_timer_start_##tmr;
+LIST_TIMERS(DECLARE_TIMERS)
+#undef DECLARE_TIMERS
+
+static void
+_cairo_ddraw_dump_timers (void)
+{
+#define PRINT_TIMERS(tmr) \
+    _cairo_ddraw_log ("%20s: %10u\n", #tmr, _cairo_ddraw_timer_##tmr);
+    LIST_TIMERS(PRINT_TIMERS)
+#undef PRINT_TIMERS
+}
+
+#undef LIST_TIMERS
+
+#define START_TIMER(tmr) (_cairo_ddraw_timer_start_##tmr = GetTickCount ())
+#define END_TIMER(tmr) \
+    (_cairo_ddraw_timer_##tmr += GetTickCount () - \
+      _cairo_ddraw_timer_start_##tmr)
+
+#else /* CAIRO_DDRAW_LOCK_TIMES */
+
+#define START_TIMER(tmr)
+#define END_TIMER(tmr)
+
+#endif /* CAIRO_DDRAW_LOCK_TIMES */
 
 #ifdef CAIRO_DDRAW_USE_GL
 
@@ -331,9 +378,11 @@ _cairo_ddraw_surface_lock (cairo_ddraw_surface_t *surface)
 	return CAIRO_STATUS_SUCCESS;
 
     ddsd.dwSize = sizeof (ddsd);
+    START_TIMER(lock);
     if (FAILED(hr = IDDSLock (surface->lpdds, NULL, &ddsd,
 			      DDLOCK_WAITNOTBUSY, NULL)))
 	return _cairo_ddraw_print_ddraw_error ("_lock", hr);
+    END_TIMER(lock);
 
     assert (ddsd.lXPitch == (surface->format == CAIRO_FORMAT_A8 ? 1 : 4));
 
@@ -371,8 +420,10 @@ _cairo_ddraw_surface_unlock (cairo_ddraw_surface_t *surface)
     if (!root->locked)
 	return CAIRO_STATUS_SUCCESS;
 
+    START_TIMER(unlock);
     if (FAILED(hr = IDDSUnlock (root->lpdds, NULL)))
 	return _cairo_ddraw_print_ddraw_error ("_unlock", hr);
+    END_TIMER(unlock);
 
     root->locked = FALSE;
 
@@ -460,7 +511,9 @@ _cairo_ddraw_ogl_flush (cairo_ddraw_surface_t *surface)
     cairo_ddraw_surface_t * root = surface->root;
 
     if (root->dirty) {
-	glFinish ();
+ 	START_TIMER(glfinish);
+  	glFinish ();
+ 	END_TIMER(glfinish);
 	CHECK_OGL_ERROR ("glFinish");
 
 	root->dirty = FALSE;
@@ -473,16 +526,19 @@ _cairo_ddraw_ogl_reference (cairo_ddraw_surface_t *surface)
     cairo_ddraw_surface_t * root = surface->root;
 
     if (!root->dirty) {
-#if 0
-	eglWaitNative (EGL_EGL_CORE_NATIVE_ENGINE);
-#else
-	/* XXX our eglWaitNative is broken, do Lock() instead */
-	cairo_status_t status =
-	    _cairo_ddraw_surface_lock (surface);
-
-	if (status)
-	    return status;
-#endif
+ 	cairo_status_t status;
+ 	START_TIMER(waitnative);
+  #if 0
+  	eglWaitNative (EGL_EGL_CORE_NATIVE_ENGINE);
+ 	(void) status;
+  #else
+  	/* XXX our eglWaitNative is broken, do Lock() instead */
+ 	status = _cairo_ddraw_surface_lock (surface);
+  
+  	if (status)
+  	    return status;
+  #endif
+ 	END_TIMER(waitnative);
 	root->dirty = TRUE;
     }
 
@@ -495,13 +551,19 @@ static cairo_status_t
 _cairo_ddraw_surface_flush (void *abstract_surface)
 {
     cairo_ddraw_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
     CAIRO_DDRAW_API_ENTRY_STATUS;
-#ifdef CAIRO_DDRAW_USE_GL
-    _cairo_ddraw_ogl_flush (surface);
-#endif
 
-    return _cairo_ddraw_surface_unlock (surface);
+    START_TIMER(flush);
+  #ifdef CAIRO_DDRAW_USE_GL
+    _cairo_ddraw_ogl_flush (surface);
+  #endif
+
+    status = _cairo_ddraw_surface_unlock (surface);
+    END_TIMER(flush);
+ 
+    return status;
 }
 
 cairo_status_t
@@ -585,12 +647,14 @@ _cairo_ddraw_surface_clone_similar (void * abstract_surface,
 	 _cairo_surface_acquire_source_image (src, &image, &image_extra)))
 	goto FAIL;
 
+    START_TIMER(clone);
 #ifdef CAIRO_DDRAW_USE_GL
     _cairo_ddraw_ogl_flush (ddraw_surface);
 #endif
 
     if ((status = _cairo_ddraw_surface_lock (ddraw_surface)))
 	goto FAIL;
+    END_TIMER(clone);
 
     lines = height;
     dststride = cairo_image_surface_get_stride (ddraw_surface->image);
@@ -780,11 +844,10 @@ _cairo_ddraw_surface_bind_to_ogl (cairo_ddraw_surface_t *surface)
  *             1: solid mask
  *             2: pattern mask
  * bit 7:4     cairo operator
- * bit 8:      0: normal textures
- *             1: texture wrap emulation
- *                (using a single ubershader)
+ * bit 9:8     0: normal src textures
+ *             1: wrap src texture emulation
+ *             2: clamp src texture emulation
  *
- * XXX note that texure wrap emulation isn't done yet
  *
  * dst alpha matters, but we can convert the operator.
  *
@@ -810,14 +873,25 @@ typedef enum _cairo_ddraw_ogl_mask_type {
     CAIRO_DDRAW_OGL_MASK_A
 } cairo_ddraw_ogl_mask_type_t;
 
+typedef enum _cairo_ddraw_ogl_texemu_type {
+    CAIRO_DDRAW_OGL_TEXEMU_NONE,
+    CAIRO_DDRAW_OGL_TEXEMU_WRAP,
+    CAIRO_DDRAW_OGL_TEXEMU_BORDER
+} cairo_ddraw_ogl_texemu_type_t;
+
 #define MAKE_SHADER_ID(op, src, mask) \
     (((op) << 4) | (src) | ((mask) << 2))
-#define SHADER_OP(id) ((id) >> 4)
-#define SHADER_SRC(id) ((id) & 3)
+
+#define MAKE_EMU_SHADER_ID(op, src, mask, wrap) \
+    (MAKE_SHADER_ID(op, src, mask) | ((wrap) << 8))
+
+#define SHADER_SRC_EMU(id) ((id) >> 8)
+#define SHADER_OP(id) (((id) & 0xf0 ) >> 4)
+#define SHADER_SRC(id) ((id) & 0x3)
 #define SHADER_MASK(id) (((id) & 0xc) >> 2)
 
 #define CAIRO_DDRAW_OGL_NUM_VERTEX_SHADERS   4
-#define CAIRO_DDRAW_OGL_NUM_PROGRAMS        (14 << 4)
+#define CAIRO_DDRAW_OGL_NUM_PROGRAMS        (3 << 8)
 
 typedef struct _cairo_ddraw_ogl_program_info {
     GLuint prog_id;
@@ -1045,12 +1119,42 @@ _cairo_ddraw_ogl_load_program (int shader_id)
 	    else if (has_mask)
 		shader_src[i++] =
 		    "lowp vec4 mask = vec4(0.0, 0.0, 0.0, uniMaskColor);\n";
-	    if (has_src_tex)
-		shader_src[i++] =
-		    "lowp vec4 src = texture2D(sampSrc, varSrcCoord);\n";
-	    else if (has_src)
-		shader_src[i++] =
-		    "lowp vec4 src = uniSrcColor;\n";
+ 	    if (has_src_tex) {
+ 		cairo_bool_t fix_alpha =
+ 		    SHADER_SRC (shader_id) == CAIRO_DDRAW_OGL_SRC_RGB;
+ 		
+ 		switch (SHADER_SRC_EMU (shader_id)) {
+ 		case CAIRO_DDRAW_OGL_TEXEMU_NONE:
+ 		    shader_src[i++] =
+ 			"lowp vec4 src = texture2D(sampSrc, varSrcCoord);\n";
+ 		    if (fix_alpha)
+ 			shader_src[i++] =
+ 			    "src.a = 1.0;\n";
+ 		    break;
+ 		case CAIRO_DDRAW_OGL_TEXEMU_WRAP:
+ 		    shader_src[i++] =
+ 			"lowp vec4 src = texture2D(sampSrc, fract(varSrcCoord));\n";
+ 		    if (fix_alpha)
+ 			shader_src[i++] =
+ 			    "src.a = 1.0;\n";
+ 		    break;
+ 		case CAIRO_DDRAW_OGL_TEXEMU_BORDER:
+ 		    shader_src[i++] =
+ 			"lowp vec4 src = texture2D(sampSrc, varSrcCoord);\n";
+ 		    if (fix_alpha)
+ 			shader_src[i++] =
+ 			    "src.a = 1.0;\n";
+ 		    shader_src[i++] =
+ 			"lowp vec2 win = step(vec2(0.0), varSrcCoord) * step(varSrcCoord, vec2(1.0));\n"
+ 			"src *= win.s * win.t;\n";
+ 		    break;
+ 		default:
+ 		    assert (0);
+ 		    goto FAIL;
+ 		}
+ 	    } else if (has_src)
+  		shader_src[i++] =
+  		    "lowp vec4 src = uniSrcColor;\n";
 	    if (has_dst)
 		shader_src[i++] =
 		    "lowp vec4 dst = gl_LastFragColor;\n";
@@ -1117,7 +1221,7 @@ _cairo_ddraw_ogl_load_program (int shader_id)
 	    }
 	    if (has_mask)
 		shader_src[i++] =
-		    "gl_FragColor = mask.a * src + (1.0 - mask.a) * dst;}\n";
+		    "gl_FragColor = mask.a * blend + (1.0 - mask.a) * dst;}\n";
 	    else
 		shader_src[i++] =
 		    "gl_FragColor = blend;}\n";
@@ -1372,14 +1476,15 @@ typedef struct _cairo_ddraw_ogl_line {
 /* qualify textures by what we can do with the hardware */
 
 typedef enum {
-    CAIRO_DDRAW_OGL_TEXTURE_SUPPORTED,        /* can use as-is */
-    CAIRO_DDRAW_OGL_TEXTURE_UNUSED,           /* is solid */
-    CAIRO_DDRAW_OGL_TEXTURE_IGNORE_WRAP,      /* we don't cross an edge */
-    CAIRO_DDRAW_OGL_TEXTURE_CLAMP_IN_SHADER,  /* use a clamping shader */
-    CAIRO_DDRAW_OGL_TEXTURE_MIRROR_IN_SHADER, /* use a mirroring shader */
-    CAIRO_DDRAW_OGL_TEXTURE_WRAP_IN_SHADER,   /* use a wrapping shader */
-    CAIRO_DDRAW_OGL_TEXTURE_PAD_AND_WRAP,     /* need to pad texture */
-    CAIRO_DDRAW_OGL_TEXTURE_UNSUPPORTED,      /* no can do */
+    CAIRO_DDRAW_OGL_TEXTURE_SUPPORTED,         /* can use as-is */
+    CAIRO_DDRAW_OGL_TEXTURE_UNUSED,            /* is solid */
+    CAIRO_DDRAW_OGL_TEXTURE_IGNORE_WRAP,       /* we don't cross an edge */
+    CAIRO_DDRAW_OGL_TEXTURE_BORDER_IN_SHADER,  /* use a clamping shader */
+    CAIRO_DDRAW_OGL_TEXTURE_WRAP_IN_SHADER,    /* use a wrapping shader */
+    CAIRO_DDRAW_OGL_TEXTURE_MIRROR_IN_SHADER,  /* use a mirroring shader */
+    CAIRO_DDRAW_OGL_TEXTURE_BORDER_AND_BLEND,  /* need to lerp edges */
+    CAIRO_DDRAW_OGL_TEXTURE_PAD_AND_WRAP,      /* need to pad texture */
+    CAIRO_DDRAW_OGL_TEXTURE_UNSUPPORTED,       /* no can do */
 } cairo_ddraw_ogl_texture_type_t;
 
 static inline cairo_ddraw_ogl_texture_type_t
@@ -1443,7 +1548,9 @@ _cairo_ddraw_ogl_analyze_pattern (const cairo_pattern_t * pattern,
 	/* otherwise we need to do magic in the shader */
 	switch (pattern->extend) {
 	case CAIRO_EXTEND_NONE:
-	    return CAIRO_DDRAW_OGL_TEXTURE_CLAMP_IN_SHADER;
+	    if (pad)
+		return CAIRO_DDRAW_OGL_TEXTURE_BORDER_AND_BLEND;
+	    return CAIRO_DDRAW_OGL_TEXTURE_BORDER_IN_SHADER;
 	case CAIRO_EXTEND_REPEAT:
 	    if (pad)
 		return CAIRO_DDRAW_OGL_TEXTURE_PAD_AND_WRAP;
@@ -1460,18 +1567,13 @@ _cairo_ddraw_ogl_analyze_pattern (const cairo_pattern_t * pattern,
     return CAIRO_DDRAW_OGL_TEXTURE_UNSUPPORTED;
 }
 
-/*
- * XXX we need to handle special magic in the shaders if we can't natively do
- * the textures.  either we need to pass in the cookies from analyze_pattern
- * or we need to do the analysis here and pass it back (so we can pad, etc)
- */
-
 static cairo_int_status_t
 _cairo_ddraw_ogl_bind_program (cairo_ddraw_ogl_program_info_t ** info_ret,
 			       cairo_ddraw_surface_t * dst,
 			       const cairo_pattern_t * src,
 			       const cairo_pattern_t * mask,
 			       cairo_operator_t op,
+			       cairo_ddraw_ogl_texemu_type_t src_texemu,
 			       cairo_rectangle_int_t * src_extents,
 			       cairo_rectangle_int_t * mask_extents)
 {
@@ -1527,9 +1629,10 @@ _cairo_ddraw_ogl_bind_program (cairo_ddraw_ogl_program_info_t ** info_ret,
     } else
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    info = _cairo_ddraw_ogl_load_program (MAKE_SHADER_ID (op,
-							  src_type,
-							  mask_type));
+    info = _cairo_ddraw_ogl_load_program (MAKE_EMU_SHADER_ID (op,
+							      src_type,
+							      mask_type,
+							      src_texemu));
 
     if (info == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1837,11 +1940,6 @@ _cairo_ddraw_ogl_surface_create (cairo_ddraw_surface_t *surface)
 						    (EGLNativePixmapType) hdc,
 						    NULL);
 
-    if (FAILED(hr = IDDSReleaseDC (surface->lpdds, hdc))) {
-    	status = _cairo_ddraw_print_ddraw_error ("_ogl_surface_create", hr);
-	goto FAIL;
-    }
-
     if (egl_image == (GLeglImageOES) EGL_NO_IMAGE_KHR) {
 	status =_cairo_ddraw_egl_error ("_ogl_surface_create");
 	goto FAIL;
@@ -1874,6 +1972,10 @@ _cairo_ddraw_ogl_surface_create (cairo_ddraw_surface_t *surface)
 	status = _cairo_ddraw_egl_error ("_ogl_surface_create");
 	goto FAIL;
     }
+    if (FAILED(hr = IDDSReleaseDC (surface->lpdds, hdc))) {
+    	status = _cairo_ddraw_print_ddraw_error ("_ogl_surface_create", hr);
+	goto FAIL;
+    }
 
     egl_image = (GLeglImageOES) EGL_NO_IMAGE_KHR;
 
@@ -1886,7 +1988,6 @@ _cairo_ddraw_ogl_surface_create (cairo_ddraw_surface_t *surface)
     }
 
  FAIL:
-
     if (status && egl_image != (GLeglImageOES) EGL_NO_IMAGE_KHR)
 	_eglDestroyImageKHR (_cairo_ddraw_egl_dpy, egl_image);
 
@@ -1897,15 +1998,18 @@ static void
 _cairo_ddraw_ogl_surface_destroy (cairo_ddraw_surface_t *surface)
 {
     /* may not be necessary... */
+    START_TIMER(destroy);
     _cairo_ddraw_ogl_flush (surface);
+    END_TIMER(destroy);
 
     if (surface->gl_id) {
-	glDeleteTextures (1, &surface->gl_id);
-	CHECK_OGL_ERROR ("glDeleteTextures");
-
 	glDeleteFramebuffers (1, &surface->gl_id);
 	CHECK_OGL_ERROR ("glDeleteFramebuffers");
+
+	glDeleteTextures (1, &surface->gl_id);
+	CHECK_OGL_ERROR ("glDeleteTextures");
     }
+
 
     assert (_cairo_ddraw_ogl_surface_count);
     _cairo_ddraw_ogl_surface_count--;
@@ -2145,10 +2249,12 @@ _cairo_ddraw_ogl_add_glyph (cairo_ddraw_ogl_font_t * font,
 
 	    /* copy old surface */
 
+	    START_TIMER(growglyphcache);
 	    _cairo_ddraw_ogl_flush (font->glyph_cache);
 
 	    if ((status = _cairo_ddraw_surface_unlock (font->glyph_cache)))
 		return status;
+	    END_TIMER(growglyphcache);
 
 	    assert (!new_glyph_cache->locked &&
 		    !new_glyph_cache->has_clip_region &&
@@ -2173,10 +2279,12 @@ _cairo_ddraw_ogl_add_glyph (cairo_ddraw_ogl_font_t * font,
 	font->height = new_height;
     }
 
+    START_TIMER(addglyph);
     _cairo_ddraw_ogl_flush (font->glyph_cache);
 
     if ((status = _cairo_ddraw_surface_lock (font->glyph_cache)))
 	return status;
+    END_TIMER(addglyph);
 
     srcstride = image->stride;
     srcptr = image->data;
@@ -2237,6 +2345,7 @@ _cairo_ddraw_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
     cairo_ddraw_ogl_glyph_t * glyph = scaled_glyph->surface_private;
 
     CAIRO_DDRAW_API_ENTRY_VOID;
+
     assert (font);
 
     if (glyph) {
@@ -2611,6 +2720,7 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
     GLuint vbo = _cairo_ddraw_ogl_get_scratch_buffer ();
     GLsizei vbosize = offsetof (cairo_ddraw_ogl_quad_t, src);
     GLenum param;
+    cairo_ddraw_ogl_texemu_type_t src_texemu = CAIRO_DDRAW_OGL_TEXEMU_NONE;
     cairo_ddraw_ogl_texture_type_t mask_tex_type =
 	CAIRO_DDRAW_OGL_TEXTURE_UNUSED;
     cairo_ddraw_ogl_texture_type_t src_tex_type;
@@ -2621,6 +2731,16 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 
     if (op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
+
+    /* bail out for source copies that aren't ddraw surfaces) */
+    if (src->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	(((cairo_surface_pattern_t *) src)->surface->type 
+	 != CAIRO_SURFACE_TYPE_DDRAW)) {
+#ifdef CAIRO_DDRAW_DEBUG_VERBOSE
+	_cairo_ddraw_log ("composite of non ddraw surface %d,%d\n", width, height);
+#endif
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
     
     if (mask) {
 	mask_tex_type =
@@ -2641,6 +2761,10 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 	    mask_bbox = mask_extents;
 	    break;
 	default:
+#ifdef CAIRO_DDRAW_DEBUG_VERBOSE
+	    _cairo_ddraw_log ("composite: unhandled mask_tex_type %d\n",
+			      mask_tex_type);
+#endif
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
     }
@@ -2662,7 +2786,17 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 	/* need the whole texture */
 	src_bbox = src_extents;
 	break;
+    case CAIRO_DDRAW_OGL_TEXTURE_BORDER_IN_SHADER:
+	src_texemu = CAIRO_DDRAW_OGL_TEXEMU_BORDER;
+	break;
+    case CAIRO_DDRAW_OGL_TEXTURE_WRAP_IN_SHADER:
+	src_texemu = CAIRO_DDRAW_OGL_TEXEMU_WRAP;
+	break;
     default:
+#ifdef CAIRO_DDRAW_DEBUG_VERBOSE
+	_cairo_ddraw_log ("composite: unhandled src_tex_type %d\n",
+			  src_tex_type);
+#endif
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -2700,21 +2834,21 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 	    (src->filter == CAIRO_FILTER_NEAREST) ? GL_NEAREST :
 	    GL_LINEAR;
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
-	CHECK_OGL_ERROR ("glTexParameteri");
+	CHECK_OGL_ERROR ("glTexParameteri src filter");
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
-	CHECK_OGL_ERROR ("glTexParameteri");
+	CHECK_OGL_ERROR ("glTexParameteri src filter");
 
 	param =
-	    (src_tex_type ==
-	     CAIRO_DDRAW_OGL_TEXTURE_IGNORE_WRAP) ? GL_CLAMP_TO_EDGE :
+	    (src_tex_type !=
+	     CAIRO_DDRAW_OGL_TEXTURE_SUPPORTED) ? GL_CLAMP_TO_EDGE :
 	    (src->extend == CAIRO_EXTEND_PAD) ? GL_CLAMP_TO_EDGE :
 	    (src->extend == CAIRO_EXTEND_REPEAT) ? GL_REPEAT :
 	    (src->extend == CAIRO_EXTEND_REFLECT) ? GL_MIRRORED_REPEAT :
 	    GL_CLAMP_TO_EDGE;
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param);
-	CHECK_OGL_ERROR ("glTexParameteri");
+	CHECK_OGL_ERROR ("glTexParameteri src wrap");
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param);
-	CHECK_OGL_ERROR ("glTexParameteri");
+	CHECK_OGL_ERROR ("glTexParameteri src wrap");
 
 	status =
 	    _cairo_ddraw_surface_clone_similar (dst,
@@ -2767,21 +2901,21 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 	    (mask->filter == CAIRO_FILTER_NEAREST) ? GL_NEAREST :
 	    GL_LINEAR;
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
-	CHECK_OGL_ERROR ("glTexParameteri");
+	CHECK_OGL_ERROR ("glTexParameteri mask filter");
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
-	CHECK_OGL_ERROR ("glTexParameteri");
+	CHECK_OGL_ERROR ("glTexParameteri mask filter");
 
 	param =
-	    (mask_tex_type ==
-	     CAIRO_DDRAW_OGL_TEXTURE_IGNORE_WRAP) ? GL_CLAMP_TO_EDGE :
+	    (mask_tex_type !=
+	     CAIRO_DDRAW_OGL_TEXTURE_SUPPORTED) ? GL_CLAMP_TO_EDGE :
 	    (mask->extend == CAIRO_EXTEND_PAD) ? GL_CLAMP_TO_EDGE :
 	    (mask->extend == CAIRO_EXTEND_REPEAT) ? GL_REPEAT :
 	    (mask->extend == CAIRO_EXTEND_REFLECT) ? GL_MIRRORED_REPEAT :
 	    GL_CLAMP_TO_EDGE;
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, param);
-	CHECK_OGL_ERROR ("glTexParameteri");
+	CHECK_OGL_ERROR ("glTexParameteri mask wrap");
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, param);
-	CHECK_OGL_ERROR ("glTexParameteri");
+	CHECK_OGL_ERROR ("glTexParameteri mask wrap");
 
 	status =
 	    _cairo_ddraw_surface_clone_similar (dst,
@@ -2833,11 +2967,12 @@ _cairo_ddraw_surface_composite (cairo_operator_t	op,
 				       src,
 				       mask,
 				       op,
+				       src_texemu,
 				       &src_extents,
 				       &mask_extents);
 
     if (status)
-	return status;
+	goto FAIL;
 
     if (dst->has_clip_region) {
 	int offx = dst->extents.x + dst->origin.x;
@@ -2934,6 +3069,10 @@ _cairo_ddraw_surface_finish (void *abstract_surface)
 
 	if (surface->lpdd)
 	    count = IURelease (surface->lpdd);
+	
+#ifdef CAIRO_DDRAW_LOCK_TIMES
+	_cairo_ddraw_dump_timers ();
+#endif
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -2952,12 +3091,14 @@ _cairo_ddraw_surface_acquire_source_image (void                    *abstract_sur
     if (surface->root != surface)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    START_TIMER(acquiresrc);
 #ifdef CAIRO_DDRAW_USE_GL
     _cairo_ddraw_ogl_flush (surface);
 #endif
 
     if ((status = _cairo_ddraw_surface_lock (surface)))
 	return status;
+    END_TIMER(acquiresrc);
 
     *image_out = (cairo_image_surface_t *) surface->image;
     *image_extra = NULL;
@@ -2977,12 +3118,14 @@ _cairo_ddraw_surface_acquire_dest_image (void                    *abstract_surfa
 
     CAIRO_DDRAW_API_ENTRY_STATUS;
 
+    START_TIMER(acquiredst);
 #ifdef CAIRO_DDRAW_USE_GL
     _cairo_ddraw_ogl_flush (surface);
 #endif
 
     if ((status = _cairo_ddraw_surface_lock (surface)))
 	return status;
+    END_TIMER(acquiredst);
 
     if ((status = _cairo_ddraw_surface_set_image_clip (surface)))
 	return status;
@@ -3064,6 +3207,15 @@ cairo_ddraw_surface_create (LPDIRECTDRAW lpdd,
 	format != CAIRO_FORMAT_A8)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 
+    if (lpdd == NULL) {
+	if (FAILED(hr = DirectDrawCreate (NULL, &lpdd, NULL)) ||
+	    FAILED(hr = IDDSetCooperativeLevel (lpdd, NULL, DDSCL_NORMAL))) {
+	    status = _cairo_ddraw_print_ddraw_error ("_surface_create", hr);
+	    return _cairo_surface_create_in_error (status);
+	}
+    } else
+	IUAddRef (lpdd);
+
     surface = malloc (sizeof (cairo_ddraw_surface_t));
     if (surface == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -3090,6 +3242,7 @@ cairo_ddraw_surface_create (LPDIRECTDRAW lpdd,
 
     if (FAILED(hr = IDDCreateSurface (lpdd, &ddsd, &surface->lpdds, NULL))) {
 	status = _cairo_ddraw_print_ddraw_error ("_surface_create", hr);
+	IURelease(lpdd);
 	free (surface);
 	return _cairo_surface_create_in_error (status);
     }
@@ -3115,7 +3268,6 @@ cairo_ddraw_surface_create (LPDIRECTDRAW lpdd,
 
     _cairo_region_init (&surface->clip_region);
 
-    IUAddRef (lpdd);
     surface->lpdd = lpdd;
 
     surface->locked = FALSE;
@@ -3251,13 +3403,44 @@ cairo_ddraw_surface_get_ddraw_surface (cairo_surface_t *surface)
 
     _cairo_ddraw_surface_reset_clipper (ddraw_surf);
 
+    START_TIMER(getddraw);
 #ifdef CAIRO_DDRAW_USE_GL
     _cairo_ddraw_ogl_flush (ddraw_surf);
 #endif
 
     _cairo_ddraw_surface_unlock (ddraw_surf);
+    END_TIMER(getddraw);
 
     return ddraw_surf->lpdds;
+}
+
+/**
+ * cairo_ddraw_surface_get_image_surface:
+ * @surface: pointer to a DirectDraw surface
+ *
+ * Gets an image surface alias of @surface.
+ *
+ * Return value: the image surface.
+ **/
+cairo_surface_t *
+cairo_ddraw_surface_get_image (cairo_surface_t *surface)
+{
+    cairo_ddraw_surface_t * ddraw_surf = (cairo_ddraw_surface_t *) surface;
+
+    if (surface->type != CAIRO_SURFACE_TYPE_DDRAW)
+	return NULL;
+
+    _cairo_ddraw_surface_reset_clipper (ddraw_surf);
+
+    START_TIMER(getimage);
+#ifdef CAIRO_DDRAW_USE_GL
+    _cairo_ddraw_ogl_flush (ddraw_surf);
+#endif
+
+    _cairo_ddraw_surface_lock (ddraw_surf);
+    END_TIMER(getimage);
+
+    return ddraw_surf->image;
 }
 
 #ifdef CAIRO_DDRAW_FILL_ACCELERATION
@@ -3679,10 +3862,12 @@ _cairo_ddraw_surface_fill_rectangles (void			*abstract_surface,
 		    int dststride;
 		    int lines = clip_rect.height;
 		    
+		    START_TIMER(swfill);
 		    _cairo_ddraw_ogl_flush (surface);
 		    
 		    if ((status = _cairo_ddraw_surface_lock (surface)))
 			return status;
+		    END_TIMER(swfill);
 		    
 		    dststride = image->stride;
 		    dst = image->data + dststride * clip_rect.y +
@@ -3752,10 +3937,12 @@ _cairo_ddraw_surface_fill_rectangles (void			*abstract_surface,
 		int dststride;
 		int lines = height;
 		
+		START_TIMER(swfill);
 		_cairo_ddraw_ogl_flush (surface);
 		
 		if ((status = _cairo_ddraw_surface_lock (surface)))
 		    return status;
+		END_TIMER(swfill);
 		
 		dststride = image->stride;
 		dst = image->data + dststride * y + (x << byte_shift);
