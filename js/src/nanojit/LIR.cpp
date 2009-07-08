@@ -1017,8 +1017,8 @@ namespace nanojit
 
     using namespace avmplus;
 
-    StackFilter::StackFilter(LirFilter *in, GC *gc, LirBuffer *lirbuf, LInsp sp)
-        : LirFilter(in), gc(gc), lirbuf(lirbuf), sp(sp), top(0)
+    StackFilter::StackFilter(LirFilter *in, LirBuffer *lirbuf, LInsp sp)
+        : LirFilter(in), lirbuf(lirbuf), sp(sp), top(0)
     {}
 
     LInsp StackFilter::read()
@@ -1042,8 +1042,8 @@ namespace nanojit
                             if (stk.get(d) && stk.get(d-1)) {
                                 continue;
                             } else {
-                                stk.set(gc, d);
-                                stk.set(gc, d-1);
+                                stk.set(d);
+                                stk.set(d-1);
                             }
                         }
                         else {
@@ -1051,7 +1051,7 @@ namespace nanojit
                             if (stk.get(d))
                                 continue;
                             else
-                                stk.set(gc, d);
+                                stk.set(d);
                         }
                     }
                 }
@@ -1520,8 +1520,8 @@ namespace nanojit
         LiveTable live(gc);
         uint32_t exits = 0;
         LirReader br(frag->lastIns);
-        StackFilter sf(&br, gc, frag->lirbuf, frag->lirbuf->sp);
-        StackFilter r(&sf, gc, frag->lirbuf, frag->lirbuf->rp);
+        StackFilter sf(&br, frag->lirbuf, frag->lirbuf->sp);
+        StackFilter r(&sf, frag->lirbuf, frag->lirbuf->rp);
         int total = 0;
         if (frag->lirbuf->state)
             live.add(frag->lirbuf->state, r.pos());

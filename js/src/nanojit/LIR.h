@@ -1199,14 +1199,13 @@ namespace nanojit
 
     class StackFilter: public LirFilter
     {
-        GC *gc;
         LirBuffer *lirbuf;
         LInsp sp;
         avmplus::BitSet stk;
         int top;
         int getTop(LInsp br);
     public:
-        StackFilter(LirFilter *in, GC *gc, LirBuffer *lirbuf, LInsp sp);
+        StackFilter(LirFilter *in, LirBuffer *lirbuf, LInsp sp);
         virtual ~StackFilter() {}
         LInsp read();
     };
