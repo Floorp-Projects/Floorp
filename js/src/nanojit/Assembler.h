@@ -134,7 +134,6 @@ namespace nanojit
         {}
         ~LabelStateMap();
 
-        void clear();
         void add(LIns *label, NIns *addr, RegAlloc &regs);
         LabelState *get(LIns *);
     };
@@ -202,7 +201,8 @@ namespace nanojit
 
 		private:
 			
-			void		gen(LirFilter* toCompile, NInsList& loopJumps);
+            void        gen(LirFilter* toCompile, NInsList& loopJumps, LabelStateMap& labels,
+                            NInsMap& patches);
 			NIns*		genPrologue();
 			NIns*		genEpilogue();
 
@@ -258,10 +258,7 @@ namespace nanojit
 			AR			_activation;
 			RegAlloc	_allocator;
 
-			LabelStateMap	_labels; 
-			NInsMap		_patches;
 			bool		_inExit, vpad2[3];
-            InsList     pending_lives;
 
 			void		asm_cmp(LIns *cond);
 			void		asm_fcmp(LIns *cond);
@@ -307,7 +304,7 @@ namespace nanojit
             void        assignSavedRegs();
             void        reserveSavedRegs();
             void        assignParamRegs();
-            void        handleLoopCarriedExprs();
+            void        handleLoopCarriedExprs(InsList& pending_lives);
 			
 			// flag values for nMarkExecute
 			enum 
