@@ -719,6 +719,9 @@ nsThebesImage::Draw(gfxContext*        aContext,
 
     // Phew! Now we can actually draw this image
     aContext->NewPath();
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    pattern->SetFilter(gfxPattern::FILTER_FAST); 
+#endif
     aContext->SetPattern(pattern);
     aContext->Rectangle(fill);
     aContext->Fill();
