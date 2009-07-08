@@ -131,16 +131,37 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateFontList();
 
-    gfxWindowsPlatformPrefObserver *observer = new gfxWindowsPlatformPrefObserver();
-    if (observer) {
-        nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (pref) {
+    nsCOMPtr<nsIPrefBranch2> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+    if (pref) {
+        gfxWindowsPlatformPrefObserver *observer = new gfxWindowsPlatformPrefObserver();
+        if (observer) {
             pref->AddObserver("font.", observer, PR_FALSE);
             pref->AddObserver("font.name-list.", observer, PR_FALSE);
             pref->AddObserver("intl.accept_languages", observer, PR_FALSE);
             // don't bother unregistering.  We'll get shutdown after the pref service
-        } else {
-            delete observer;
+        }
+    }
+
+/* Pick the default render mode differently between
+ * desktop, Windows Mobile, and Windows CE.
+ */
+#if defined(WINCE_WINDOWS_MOBILE)
+    mRenderMode = RENDER_IMAGE_DDRAW16;
+#elif defined(WINCE)
+    mRenderMode = RENDER_DDRAW_GL;
+#else
+    mRenderMode = RENDER_GDI;
+#endif
+
+    PRInt32 rmode;
+    if (NS_SUCCEEDED(pref->GetIntPref("mozilla.widget.render-mode", &rmode))) {
+        if (rmode >= 0 || rmode < RENDER_MODE_MAX) {
+#ifndef CAIRO_HAS_DDRAW_SURFACE
+            if (rmode == RENDER_DDRAW || rmode == RENDER_DDRAW_GL)
+                rmode = RENDER_IMAGE_STRETCH24;
+#endif
+            mRenderMode = (RenderMode) rmode;
         }
     }
 }
@@ -155,16 +176,23 @@ already_AddRefed<gfxASurface>
 gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                            gfxASurface::gfxImageFormat imageFormat)
 {
-#ifndef WINCE
-    gfxASurface *surf = new gfxWindowsSurface(size, imageFormat);
-#else
+    gfxASurface *surf = nsnull;
+
 #ifdef CAIRO_HAS_DDRAW_SURFACE
-    gfxASurface *surf = new gfxDDrawSurface(NULL, size, imageFormat);
-#else
-    gfxASurface *surf = new gfxImageSurface(size, imageFormat);
+    if (mRenderMode == RENDER_DDRAW || mRenderMode == RENDER_DDRAW_GL)
+        surf = new gfxDDrawSurface(NULL, size, imageFormat);
 #endif
+
+#ifdef CAIRO_HAS_WIN32_SURFACE
+    if (mRenderMode == RENDER_GDI)
+        surf = new gfxWindowsSurface(size, imageFormat);
 #endif
+
+    if (surf == nsnull)
+        surf = new gfxImageSurface(size, imageFormat);
+
     NS_IF_ADDREF(surf);
+
     return surf;
 }
 
