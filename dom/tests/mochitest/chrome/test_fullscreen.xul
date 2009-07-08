@@ -17,9 +17,16 @@ SimpleTest.waitForExplicitFinish();
 
 newwindow = window.open("fullscreen.xul", "_blank","chrome,resizable=yes");
 
-function done(fullScreen)
+function done()
 {
-  ok(fullScreen, "window.fullScreen is true.");
+  // because we are cancelling the fullscreen event, it
+  // takes a bit for the fullScreen property to be set
+  setTimeout("complete()", 0);
+}
+
+function complete()
+{
+  ok(newwindow.fullScreen, "window.fullScreen is true.");
   newwindow.close();
   SimpleTest.finish();
 }
