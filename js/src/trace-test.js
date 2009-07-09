@@ -5332,6 +5332,59 @@ function testFewerGlobalsInInnerTree() {
 testFewerGlobalsInInnerTree.expected = "ok";
 test(testFewerGlobalsInInnerTree);
 
+function testMethodInit() {  // bug 503198
+    function o() { return 'o'; }
+    function k() { return 'k'; }
+
+    var x;
+    for (var i = 0; i < 10; i++)
+        x = {o: o, k: k};
+    return x.o() + x.k();
+}
+testMethodInit.expected = "ok";
+testMethodInit.jitstats = {
+  recorderStarted: 1,
+  traceCompleted: 1,
+  sideExitIntoInterpreter: 1
+};
+test(testMethodInit);
+
+function testMethodSet() {  // bug 503198
+    function o() { return 'o'; }
+    function k() { return 'k'; }
+
+    var x;
+    for (var i = 0; i < 10; i++) {
+        x = {};
+        x.o = o;
+        x.k = k;
+    }
+    return x.o() + x.k();
+}
+testMethodSet.expected = "ok";
+testMethodSet.jitstats = {
+  recorderStarted: 1,
+  traceCompleted: 1,
+  sideExitIntoInterpreter: 1
+};
+test(testMethodSet);
+
+function testMethodInitSafety() {
+    function f() { return 'fail'; }
+    function g() { return 'ok'; }
+
+    var s;
+    var arr = [f, f, f, f, g];
+    assertEq(arr.length > RUNLOOP, true);
+    for (var i = 0; i < arr.length; i++) {
+        var x = {m: arr[i]};
+        s = x.m();
+    }
+    return s;
+}
+testMethodInitSafety.expected = "ok";
+test(testMethodInitSafety);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
