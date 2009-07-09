@@ -96,7 +96,7 @@
 
   <binding id="richpref-bool" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
     <content>
-      <xul:hbox flex="1" class="prefbox">
+      <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
           <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
           <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
@@ -106,7 +106,7 @@
         <xul:hbox anonid="input-container">
           <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
         </xul:hbox>
-      </xul:hbox>
+      </xul:box>
       <xul:preferences>
         <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted" instantApply="true" onchange="prefChanged();"/>
       </xul:preferences>
@@ -119,7 +119,7 @@
 
   <binding id="richpref-boolint" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
     <content>
-      <xul:hbox flex="1" class="prefbox">
+      <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
           <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
           <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
@@ -129,7 +129,7 @@
         <xul:hbox anonid="input-container">
           <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
         </xul:hbox>
-      </xul:hbox>
+      </xul:box>
       <xul:preferences>
         <xul:preference anonid="pref" xbl:inherits="name=pref,inverted" type="int" instantApply="true" onchange="prefChanged();"/>
       </xul:preferences>
@@ -156,7 +156,7 @@
 
   <binding id="richpref-button" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
     <content>
-      <xul:hbox flex="1" class="prefbox">
+      <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
           <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
           <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
@@ -166,7 +166,7 @@
         <xul:hbox anonid="input-container">
           <children includes="button"/>
         </xul:hbox>
-      </xul:hbox>
+      </xul:box>
       <xul:preferences>
         <xul:preference anonid="pref" xbl:inherits="name=pref,inverted" type="bool"
                         instantApply="true" onchange="prefChanged();"/>
@@ -176,7 +176,7 @@
   
   <binding id="richpref-string" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
     <content>
-      <xul:hbox flex="1" class="prefbox">
+      <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
           <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
           <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
@@ -186,7 +186,7 @@
         <xul:hbox anonid="input-container">
           <xul:textbox xbl:inherits="disabled,type=inputtype" anonid="input" oninput="inputChanged();"/>
         </xul:hbox>
-      </xul:hbox>
+      </xul:box>
       <xul:preferences>
         <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted"
                         instantApply="true" onchange="prefChanged();"/>
