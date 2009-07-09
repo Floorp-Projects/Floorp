@@ -113,6 +113,7 @@ public:
     NS_ASSERTION(!mData, "oops");
     NS_ASSERTION(!mImportantData, "oops");
     aExpandedData->Compress(&mData, &mImportantData);
+    aExpandedData->AssertInitialState();
   }
 
   /**
@@ -129,6 +130,26 @@ public:
     aExpandedData->Expand(&mData, &mImportantData);
     NS_ASSERTION(!mData && !mImportantData,
                  "Expand didn't null things out");
+  }
+
+  /**
+   * Return a pointer to our current value for this property.  This only
+   * returns non-null if the property is set and it not !important.  This
+   * should only be called when not expanded.  Always returns null for
+   * shorthand properties.
+   */
+  void* SlotForValue(nsCSSProperty aProperty) {
+    NS_PRECONDITION(mData, "How did that happen?");
+    if (nsCSSProps::IsShorthand(aProperty)) {
+      return nsnull;
+    }
+
+    void* slot = mData->SlotForValue(aProperty);
+
+    NS_ASSERTION(!slot || !mImportantData ||
+                 !mImportantData->SlotForValue(aProperty),
+                 "Property both important and not?");
+    return slot;
   }
 
   /**
