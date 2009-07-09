@@ -332,7 +332,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 #ifndef WINCE
       idx = COLOR_HOTLIGHT;
 #else
-      idx = COLOR_HIGHLIGHTTEXT;
+      aColor = NS_RGB(0, 0, 0xee);
+      return NS_OK;
 #endif
       break;
     default:
