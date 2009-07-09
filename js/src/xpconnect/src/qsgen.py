@@ -1139,7 +1139,7 @@ def writeAttrStubs(f, customMethodCalls, attr):
                   + header.attributeNativeName(attr, True))
     writeQuickStub(f, customMethodCalls, attr, getterName)
     if attr.readonly:
-        setterName = 'xpc_qsReadOnlySetter'
+        setterName = 'js_GetterOnlyPropertyStub'
     else:
         setterName = (attr.iface.name + '_'
                       + header.attributeNativeName(attr, False))
