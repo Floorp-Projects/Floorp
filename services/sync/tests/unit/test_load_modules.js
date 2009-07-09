@@ -1,4 +1,4 @@
-const modules = ["async.js",
+const modules = [
                  "auth.js",
                  "base_records/collection.js",
                  "base_records/crypto.js",
@@ -37,7 +37,7 @@ const modules = ["async.js",
                  "type_records/prefs.js",
                  "type_records/tabs.js",
                  "util.js",
-                 "wrap.js"];
+];
 
 function run_test() {
   for each (let m in modules) {
