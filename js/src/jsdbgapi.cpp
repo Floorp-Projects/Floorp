@@ -395,8 +395,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
     if (!setter) {
         JS_LOCK_OBJ(cx, wp->object);
         scope = OBJ_SCOPE(wp->object);
-        found = (scope->object == wp->object &&
-                 SCOPE_GET_PROPERTY(scope, sprop->id));
+        found = (scope->object == wp->object && scope->lookup(sprop->id));
         JS_UNLOCK_SCOPE(cx, scope);
 
         /*
@@ -405,10 +404,8 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
          * the property attributes.
          */
         if (found) {
-            sprop = js_ChangeScopePropertyAttrs(cx, scope, sprop,
-                                                0, sprop->attrs,
-                                                sprop->getter,
-                                                wp->setter);
+            sprop = scope->change(cx, sprop, 0, sprop->attrs,
+                                  sprop->getter, wp->setter);
             if (!sprop)
                 ok = JS_FALSE;
         }
@@ -1361,9 +1358,9 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
         sprop = SCOPE_LAST_PROP(scope);
     } else {
         while ((sprop = sprop->parent) != NULL) {
-            if (!SCOPE_HAD_MIDDLE_DELETE(scope))
+            if (!scope->hadMiddleDelete())
                 break;
-            if (SCOPE_HAS_PROPERTY(scope, sprop))
+            if (scope->has(sprop))
                 break;
         }
     }
@@ -1469,7 +1466,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
         return JS_FALSE;
     i = 0;
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
-        if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
+        if (scope->hadMiddleDelete() && !scope->has(sprop))
             continue;
         if (!js_AddRoot(cx, &pd[i].id, NULL))
             goto bad;

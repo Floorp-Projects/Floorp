@@ -1527,7 +1527,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
         obj = stmt->blockObj;
         JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
         scope = OBJ_SCOPE(obj);
-        sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+        sprop = scope->lookup(ATOM_TO_JSID(atom));
         if (sprop) {
             JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
 

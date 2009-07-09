@@ -883,7 +883,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
          */
         if (!OBJ_IS_NATIVE(obj))
             return JS_TRUE;
-        if (SCOPE_HAS_INDEXED_PROPERTIES(OBJ_SCOPE(obj)))
+        if (OBJ_SCOPE(obj)->hadIndexedProperties())
             return JS_TRUE;
     }
     return JS_FALSE;
@@ -1244,8 +1244,8 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_ArrayClass);
 
     /* Create a native scope. */
-    JSScope *scope = js_NewScope(cx, &js_SlowArrayObjectOps,
-                                 &js_SlowArrayClass, obj);
+    JSScope *scope = JSScope::create(cx, &js_SlowArrayObjectOps,
+                                     &js_SlowArrayClass, obj);
     if (!scope)
         return JS_FALSE;
 
@@ -1270,9 +1270,8 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
             continue;
         }
 
-        sprop = js_AddScopeProperty(cx, scope, id, NULL, NULL,
-                                    i + JS_INITIAL_NSLOTS, JSPROP_ENUMERATE,
-                                    0, 0);
+        sprop = scope->add(cx, id, NULL, NULL, i + JS_INITIAL_NSLOTS,
+                           JSPROP_ENUMERATE, 0, 0);
         if (!sprop)
             goto out_bad;
     }
@@ -1298,7 +1297,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 
   out_bad:
-    js_DestroyScope(cx, scope);
+    JSScope::destroy(cx, scope);
     return JS_FALSE;
 }
 
