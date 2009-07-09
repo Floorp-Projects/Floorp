@@ -238,13 +238,6 @@ typedef struct JSInlineFrame {
 
 #define SHAPE_OVERFLOW_BIT      JS_BIT(32 - PCVCAP_TAGBITS)
 
-#ifndef JS_THREADSAFE
-# define js_GenerateShape(cx, gcLocked)    js_GenerateShape (cx)
-#endif
-
-extern uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked);
-
 struct JSPropCacheEntry {
     jsbytecode          *kpc;           /* pc if vcap tag is <= 1, else atom */
     jsuword             kshape;         /* key shape if pc, else obj for atom */

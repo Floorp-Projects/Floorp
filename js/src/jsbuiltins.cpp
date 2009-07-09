@@ -254,7 +254,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     JSScope* scope = OBJ_SCOPE(obj);
     uint32 slot;
     if (scope->object == obj) {
-        if (sprop == scope->lastProp || SCOPE_HAS_PROPERTY(scope, sprop))
+        if (sprop == scope->lastProp || scope->has(sprop))
             goto exit_trace;
     } else {
         scope = js_GetMutableScope(cx, obj);
@@ -277,17 +277,12 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
             }
         }
 
-        js_ExtendScopeShape(cx, scope, sprop);
-        ++scope->entryCount;
-        scope->lastProp = sprop;
+        scope->extend(cx, sprop);
     } else {
-        JSScopeProperty *sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
-                                                      sprop->getter,
-                                                      sprop->setter,
-                                                      SPROP_INVALID_SLOT,
-                                                      sprop->attrs,
-                                                      sprop->flags,
-                                                      sprop->shortid);
+        JSScopeProperty *sprop2 = scope->add(cx, sprop->id,
+                                             sprop->getter, sprop->setter,
+                                             SPROP_INVALID_SLOT, sprop->attrs,
+                                             sprop->flags, sprop->shortid);
         if (sprop2 != sprop)
             goto exit_trace;
     }
@@ -418,7 +413,7 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     if (!closure)
         return NULL;
 
-    js_HoldScope(OBJ_SCOPE(proto));
+    OBJ_SCOPE(proto)->hold();
     closure->map = proto->map;
     closure->classword = jsuword(&js_FunctionClass);
     closure->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);

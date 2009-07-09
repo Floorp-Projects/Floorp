@@ -4011,9 +4011,9 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
             jsval v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
             if (VALUE_IS_FUNCTION(cx, v)) {
                 found = true;
-                if (!SCOPE_IS_BRANDED(scope)) {
-                    js_MakeScopeShapeUnique(cx, scope);
-                    SCOPE_SET_BRANDED(scope);
+                if (!scope->branded()) {
+                    scope->brandingShapeChange(cx, sprop->slot, v);
+                    scope->setBranded();
                 }
             }
         }
@@ -9103,7 +9103,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     JSScope* scope = OBJ_SCOPE(obj);
 
     JS_ASSERT(scope->object == obj);
-    JS_ASSERT(SCOPE_HAS_PROPERTY(scope, sprop));
+    JS_ASSERT(scope->has(sprop));
 
     if (!isValidSlot(scope, sprop))
         return JSRS_STOP;
@@ -9114,7 +9114,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
      * separating functions into the trace-time type TT_FUNCTION will save the
      * day!
      */
-    if (SCOPE_IS_BRANDED(scope) && VALUE_IS_FUNCTION(cx, r))
+    if (scope->branded() && VALUE_IS_FUNCTION(cx, r))
         ABORT_TRACE("can't trace function-valued property set in branded scope");
 
     if (obj == globalObj) {
