@@ -1,0 +1,318 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Mobile Browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mark Finkle <mfinkle@mozilla.com>
+ *   Kantha Kanchiraju <kkanchir@sta.samsung.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+@media all and (min-device-width: 401px) {
+	
+/* main toolbar (URL bar) -------------------------------------------------- */
+#tool-bookmarks {
+  list-style-image: url("chrome://browser/skin/images/bookmarks-default-64.png");
+}
+
+#tool-bookmarks:hover:active {
+  list-style-image: url("chrome://browser/skin/images/bookmarks-active-64.png");
+}
+
+#tool-app-close {
+  min-height: 0 !important;
+  min-width: 0 !important;
+  margin-top: -40px; /* keep pixels */
+  list-style-image: url("chrome://browser/skin/images/fullscreen-close-40.png");
+}
+
+#toolbar-main[dialog="true"] #tool-app-close {
+  list-style-image: url("chrome://browser/skin/images/fullscreen-up-40.png");
+}
+
+/* URL bar cap buttons */
+#tool-go {
+  list-style-image: url("chrome://browser/skin/images/go-30.png");
+}
+
+#tool-reload {
+  list-style-image: url("chrome://browser/skin/images/reload-30.png");
+}
+
+#tool-stop {
+  list-style-image: url("chrome://browser/skin/images/stop-30.png");
+}
+
+
+/* URL bar ----------------------------------------------------------------- */
+/* creates the left endcap */
+#identity-box {
+  min-height: 64px;
+  min-width: 64px;
+  background: url("images/leftcap-default-64.png") top left no-repeat;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+#identity-box:hover:active {
+  background: url("images/leftcap-active-64.png");
+}
+
+/* add special color */
+#identity-box[mode="verifiedIdentity"] {
+  background: url("images/leftcapEV-default-64.png");
+}
+
+#identity-box[mode="verifiedIdentity"]:hover:active {
+  background: url("images/leftcapEV-active-64.png");
+}
+
+/* add special color */
+#identity-box[mode="verifiedDomain"] {
+  background: url("images/leftcapSSL-default-64.png");
+}
+
+#identity-box[mode="verifiedDomain"]:hover:active {
+  background: url("images/leftcapSSL-active-64.png");
+}
+
+#urlbar-throbber[loading] {
+  list-style-image: url("chrome://browser/skin/images/throbber.png");
+}
+
+#urlbar-favicon {
+  width: 30px;
+  height: 30px;
+}
+
+#urlbar-editarea {
+  min-height: 64px;
+  -moz-box-align: center;
+  padding: 0;
+  border-top: 1px solid #262629; /* keep pixels */
+  border-bottom: 3px solid #262629; /* keep pixels */
+  background: #fff;
+}
+
+/* make sure this endcap matches the other endcap */
+#urlbar-icons {
+  min-height: 64px;
+  min-width: 64px;
+  background: url("images/rightcap-default-64.png") top right no-repeat;
+  -moz-box-pack: center;
+}
+
+#urlbar-icons:hover:active {
+  background: url("images/rightcap-active-64.png");
+}
+
+/* right toolbar (browser controls) ---------------------------------------- */
+#tool-star {
+  list-style-image: url("chrome://browser/skin/images/bookmark-default-64.png");
+}
+
+#tool-star:hover:active {
+  list-style-image: url("chrome://browser/skin/images/bookmark-active-64.png");
+}
+
+#tool-star[starred="true"] {
+  list-style-image: url("chrome://browser/skin/images/bookmarked-default-64.png");
+}
+
+#tool-star[starred="true"]:hover:active {
+  list-style-image: url("chrome://browser/skin/images/bookmarked-active-64.png");
+}
+
+#tool-back {
+  list-style-image: url("chrome://browser/skin/images/back-default-64.png");
+}
+
+#tool-back:hover:active {
+  list-style-image: url("chrome://browser/skin/images/back-active-64.png");
+}
+
+#tool-back[disabled="true"],
+#tool-back[disabled="true"]:hover:active {
+  list-style-image: url("chrome://browser/skin/images/back-disabled-64.png");
+}
+
+#tool-forward {
+  list-style-image: url("chrome://browser/skin/images/forward-default-64.png");
+}
+
+#tool-forward:hover:active {
+  list-style-image: url("chrome://browser/skin/images/forward-active-64.png");
+}
+
+#tool-forward[disabled="true"],
+#tool-forward[disabled="true"]:hover:active {
+  list-style-image: url("chrome://browser/skin/images/forward-disabled-64.png");
+}
+
+/* button overflows off the right edge */
+#tool-panel-open {
+  list-style-image: url("chrome://browser/skin/images/settings-default-64.png");
+  margin-right: -40px; /* big number just to make sure the image overflows the edge */
+}
+
+/* button overflows off the left edge */
+#tool-panel-close {
+  list-style-image: url("chrome://browser/skin/images/settings-active-64.png");
+  margin-left: -40px; /* big number just to make sure the image overflows the edge */
+}
+
+/* "extras" panel UI   ----------------------------------------------------- */
+#tool-addons {
+  list-style-image: url("chrome://browser/skin/images/addons-default-64.png");
+}
+
+#tool-addons:hover:active,
+#tool-addons[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/addons-active-64.png");
+}
+
+#tool-downloads {
+  list-style-image: url("chrome://browser/skin/images/downloads-default-64.png");
+}
+
+#tool-downloads:hover:active,
+#tool-downloads[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/downloads-active-64.png");
+}
+
+#tool-preferences {
+  list-style-image: url("chrome://browser/skin/images/preferences-default-64.png");
+}
+
+#tool-preferences:hover:active,
+#tool-preferences[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/preferences-active-64.png");
+}
+
+#tool-console {
+  list-style-image: url("chrome://browser/skin/images/console-default-64.png");
+}
+
+#tool-console:hover:active,
+#tool-console[checked="true"] {
+  list-style-image: url("chrome://browser/skin/images/console-active-64.png");
+}
+
+/* URL List and autocomplete navigation popup ------------------------------ */
+#tool-bookmarks-close,
+#tool-folders-close {
+  min-height: 0 !important;
+  min-width: 0 !important;
+  margin-top: -40px; /* keep pixels */
+  list-style-image: url("chrome://browser/skin/images/fullscreen-up-40.png");
+}
+
+/* folders have a fixed image */
+.bookmark-folder-image {
+  list-style-image: url("chrome://browser/skin/images/folder-30.png");
+}
+
+.close-button {
+  -moz-appearance: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  list-style-image: url("chrome://browser/skin/images/close-30.png");
+}
+
+.tool-search {
+  list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
+}
+
+.ac-result-type-bookmark {
+  list-style-image: url("chrome://browser/skin/images/star-30.png");
+}
+
+.ac-result-type-tag {
+  list-style-image: url("chrome://browser/skin/images/tag-30.png");
+}
+
+.documenttab-close {
+  width: 28px;
+  height: 30px;
+  list-style-image: url("chrome://browser/skin/images/close-30.png");
+}
+
+#newtab-button {
+  list-style-image: url("images/newtab-default-64.png");
+}
+
+#newtab-button:hover:active {
+  list-style-image: url("images/newtab-active-64.png");
+}
+
+/* findbar   --------------------------------------------------------------- */
+findbar .findbar-closebutton {
+  list-style-image: url("chrome://browser/skin/images/close-30.png");
+}
+
+/* Popup Icons */
+#identity-popup-icon {
+  padding: 0;
+  list-style-image: url("chrome://browser/skin/images/identity-64.png");
+}
+
+#identity-container[mode="verifiedDomain"] > #identity-popup-icon {
+  list-style-image: url("chrome://browser/skin/images/identitySSL-64.png");
+}
+
+#identity-container[mode="verifiedIdentity"] > #identity-popup-icon {
+  list-style-image: url("chrome://browser/skin/images/identityEV-64.png");
+}
+
+#identity-popup-encryption-icon {
+  list-style-image: url("chrome://browser/skin/images/unlock-40.png");
+}
+
+#identity-container[mode="verifiedIdentity"] > vbox > #identity-popup-encryption-icon ,
+#identity-container[mode="verifiedDomain"] > vbox > #identity-popup-encryption-icon {
+  list-style-image: url("chrome://browser/skin/images/lock-40.png");
+}
+
+/* XXX should be a richlistitem */
+.prefbox {
+  padding: 0.25mm;
+  border-bottom: 0.05mm solid rgb(207,207,207);
+  min-height: 7.2mm; /* row size */
+  -moz-box-align: center;
+  -moz-box-orient: horizontal;
+}
+
+#select-list > option[selected="true"] > image {
+  list-style-image: url("chrome://browser/skin/images/check-30.png");
+}
+
+}
