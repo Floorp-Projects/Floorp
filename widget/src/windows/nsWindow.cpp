@@ -3683,7 +3683,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   static UINT vkKeyCached = 0; // caches VK code fon WM_KEYDOWN
   PRBool result = PR_FALSE;    // call the default nsWindow proc
   *aRetValue = 0;
-  nsPaletteInfo palInfo;
 
 #if !defined (WINCE_WINDOWS_MOBILE)
   static PRBool getWheelInfo = PR_TRUE;
@@ -4321,36 +4320,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       getWheelInfo = PR_TRUE;
 #endif
       OnSettingsChange(wParam, lParam);
-      break;
-
-    case WM_PALETTECHANGED:
-      if ((HWND)wParam == mWnd) {
-        // We caused the WM_PALETTECHANGED message so avoid realizing
-        // another foreground palette
-        result = PR_TRUE;
-        break;
-      }
-      // fall thru...
-
-    case WM_QUERYNEWPALETTE:      // this window is about to become active
-      mContext->GetPaletteInfo(palInfo);
-      if (palInfo.isPaletteDevice && palInfo.palette) {
-        HDC hDC = ::GetDC(mWnd);
-        HPALETTE hOldPal = ::SelectPalette(hDC, (HPALETTE)palInfo.palette, TRUE);
-
-        // Realize the drawing palette
-        int i = ::RealizePalette(hDC);
-
-#ifdef DEBUG
-        //printf("number of colors that changed=%d\n",i);
-#endif
-        // we should always invalidate.. because the lookup may have changed
-        ::InvalidateRect(mWnd, (LPRECT)NULL, TRUE);
-
-        ::ReleaseDC(mWnd, hDC);
-        *aRetValue = TRUE;
-      }
-      result = PR_TRUE;
       break;
 
 #ifndef WINCE
