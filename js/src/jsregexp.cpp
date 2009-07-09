@@ -2508,7 +2508,6 @@ GetNativeRegExp(JSContext* cx, JSRegExp* re)
         if (!CompileRegExpToNative(cx, re, fragment))
             return NULL;
     }
- ok:
     union { NIns *code; NativeRegExp func; } u;
     u.code = fragment->code();
     return u.func;

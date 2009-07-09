@@ -724,22 +724,26 @@ args_enumerate(JSContext *cx, JSObject *obj)
 }
 
 JSBool JS_FASTCALL
-js_PutArguments(JSContext* cx, JSObject* argsobj, uint32 length, JSObject* callee, jsval* args)
+js_PutArguments(JSContext *cx, JSObject *argsobj, uint32 length, JSObject *callee, jsval *args)
 {
-    if (!js_DefineProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), 
-                           INT_TO_JSVAL(length), args_getProperty, args_setProperty, 0, NULL))
-        return JS_FALSE;
-    if (!js_DefineProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.calleeAtom), 
-                           OBJECT_TO_JSVAL(callee), args_getProperty, args_setProperty, 0, NULL))
-        return JS_FALSE;
+    if (!js_DefineProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                           INT_TO_JSVAL(length), args_getProperty, args_setProperty, 0, NULL)) {
+        return false;
+    }
+    if (!js_DefineProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.calleeAtom),
+                           OBJECT_TO_JSVAL(callee), args_getProperty, args_setProperty, 0, NULL)) {
+        return false;
+    }
 
     for (uintN i = 0; i < length; ++i) {
         if (!js_DefineProperty(cx, argsobj, INT_TO_JSID(i), args[i],
-                               args_getProperty, args_setProperty, 0, NULL))
-            return JS_FALSE;
+                               args_getProperty, args_setProperty, 0, NULL)) {
+            return false;
+        }
     }
-    return JS_TRUE;
+    return true;
 }
+
 JS_DEFINE_CALLINFO_5(extern, BOOL, js_PutArguments, CONTEXT, OBJECT, UINT32, OBJECT, JSVALPTR, 0, 0)
 
 #if JS_HAS_GENERATORS
