@@ -438,16 +438,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // we want XUL popups to be able to overlap the task bar.
         aMetric = 1;
         break;
-    case eMetric_DragFullWindow:
-        // This will default to the Windows' default
-        // (on by default) on error.
-#ifndef WINCE
-        aMetric = GetSystemParam(SPI_GETDRAGFULLWINDOWS, 1);
-#else
-        aMetric = 1;
-#endif
-        break;
-
 #ifndef WINCE
     case eMetric_DragThresholdX:
         // The system metric is the number of pixels at which a drag should
