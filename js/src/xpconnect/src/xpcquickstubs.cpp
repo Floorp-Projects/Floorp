@@ -1152,14 +1152,6 @@ xpc_qsVariantToJsval(XPCCallContext &ccx,
     return JS_TRUE;
 }
 
-JSBool
-xpc_qsReadOnlySetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_GETTER_ONLY, NULL);
-    return JS_FALSE;
-}
-
 #ifdef DEBUG
 void
 xpc_qsAssertContextOK(JSContext *cx)
