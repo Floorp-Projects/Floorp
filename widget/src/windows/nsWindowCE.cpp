@@ -346,6 +346,10 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
     if (aMode == nsSizeMode_Normal)
       aMode = nsSizeMode_Maximized;
   }
+
+  // also on windows mobile, we never minimize.
+  if (aMode == nsSizeMode_Minimized)
+    return NS_OK;
 #endif
 
   // save the requested state
