@@ -64,6 +64,9 @@ _TEST_FILES =	\
 		bug113934_window.xul \
 		test_bug215405.xul \
 		bug215405_window.xul \
+		test_bug294258.xul \
+		bug294258_window.xul \
+		bug294258_testcase.html \
 		test_bug303267.xul \
 		bug303267.html \
 		bug303267_window.xul \
