@@ -1,0 +1,25 @@
+<html>
+<head>
+  <title>
+    bug303267.html
+    </title>
+  </head>
+<body onpageshow="showpageshowcount()">
+<script>
+var pageshowcount = 0;
+function showpageshowcount()
+{
+	pageshowcount++;
+	var div1 = document.getElementById("div1");
+	while (div1.firstChild)
+	{
+		div1.removeChild(div1.firstChild);
+	}
+	div1.appendChild(document.createTextNode(
+	  "pageshowcount: " + pageshowcount));
+}
+</script>
+<div id="div1">
+	</div>
+</body>
+</html>
