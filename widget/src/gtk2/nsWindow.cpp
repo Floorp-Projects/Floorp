@@ -526,10 +526,6 @@ nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
 void
 nsWindow::DispatchActivateEvent(void)
 {
-    NS_ASSERTION(mContainer || mIsDestroyed,
-                 "DispatchActivateEvent only intended for container windows");
-
-    // Embedding code deals with activation for its toplevel windows
     if (!mIsTopLevel)
         return;
 
@@ -1397,6 +1393,7 @@ nsWindow::SetFocus(PRBool aRaise)
         owningWindow->mContainerBlockFocus = PR_FALSE;
 
         gFocusWindow = this;
+        DispatchActivateEvent();
         return NS_OK;
     }
 
@@ -1425,7 +1422,12 @@ nsWindow::SetFocus(PRBool aRaise)
     IMESetFocus();
 #endif
 
-    LOGFOCUS(("  widget now has focus in SetFocus() [%p]\n",
+    LOGFOCUS(("  widget now has focus - dispatching events [%p]\n",
+              (void *)this));
+
+    DispatchActivateEvent();
+
+    LOGFOCUS(("  done dispatching events in SetFocus() [%p]\n",
               (void *)this));
 
     return NS_OK;
@@ -2746,7 +2748,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     nsWindow *containerWindow = GetContainerWindow();
     if (!gFocusWindow && containerWindow) {
         gFocusWindow = this;
-        containerWindow->DispatchActivateEvent();
+        DispatchActivateEvent();
     }
 
     PRBool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
