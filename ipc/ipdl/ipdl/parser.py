@@ -405,11 +405,23 @@ def p_ParamList(p):
         p[0] = p[1]
 
 def p_Param(p):
-    """Param : ID ID"""
+    """Param : Type ID"""
+    p[0] = Param(locFromTok(p, 1), p[1], p[2])
+
+def p_Type(p):
+    """Type : ActorType
+            | ID"""             # ID == CxxType; we forbid qnames here,
+                                # in favor of the |using| declaration
+    if isinstance(p[1], TypeSpec):
+        p[0] = p[1]
+    else:
+        loc = locFromTok(p, 1)
+        p[0] = TypeSpec(loc, QualifiedId(loc, p[1]))
+
+def p_ActorType(p):
+    """ActorType : ID ':' State"""
     loc = locFromTok(p, 1)
-    p[0] = Param(loc,
-                 TypeSpec(loc, QualifiedId(loc, p[1])),
-                 p[2])
+    p[0] = TypeSpec(loc, QualifiedId(loc, p[1]), state=p[3])
 
 ##--------------------
 ## C++ stuff
