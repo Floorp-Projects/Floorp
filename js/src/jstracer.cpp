@@ -9114,8 +9114,8 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
      * separating functions into the trace-time type TT_FUNCTION will save the
      * day!
      */
-    if (VALUE_IS_FUNCTION(cx, r))
-        ABORT_TRACE("can't trace function-valued property set");
+    if (SCOPE_IS_BRANDED(scope) && VALUE_IS_FUNCTION(cx, r))
+        ABORT_TRACE("can't trace function-valued property set in branded scope");
 
     if (obj == globalObj) {
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
