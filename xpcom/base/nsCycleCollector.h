@@ -92,6 +92,7 @@ NS_COM void nsCycleCollector_DEBUG_wasFreed(nsISupports *n);
 // Helpers for interacting with language-identified scripts
 
 NS_COM void nsCycleCollector_registerRuntime(PRUint32 langID, nsCycleCollectionLanguageRuntime *rt);
+NS_COM nsCycleCollectionLanguageRuntime * nsCycleCollector_getRuntime(PRUint32 langID);
 NS_COM void nsCycleCollector_forgetRuntime(PRUint32 langID);
 
 #endif // nsCycleCollector_h__
