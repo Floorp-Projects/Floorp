@@ -279,6 +279,9 @@
   </tooltip>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
+#ifdef WINCE
+           defaulticonsize="small" iconsize="small"
+#endif
            defaultmode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
@@ -506,12 +509,21 @@
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
-             fullscreentoolbar="true" mode="icons" iconsize="large"
+             fullscreentoolbar="true" mode="icons"
+#ifdef WINCE
+             iconsize="small" defaulticonsize="small"
+#else
+             iconsize="large"
+#endif
              customizable="true"
 #ifdef XP_MACOSX
              defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container"
 #else
+#ifdef WINCE
+             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,navigator-throbber,fullscreenflex,window-controls"
+#else
              defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,fullscreenflex,window-controls"
+#endif
 #endif
              context="toolbar-context-menu">
 #ifndef XP_MACOSX
@@ -540,6 +552,9 @@
              context="toolbar-context-menu"
              defaultset="personal-bookmarks"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
+#ifdef WINCE
+             collapsed="true"
+#endif
              customizable="true"/>
   </toolbox>
 
@@ -575,6 +590,9 @@
     <findbar browserid="content" id="FindToolbar"/>
   
     <statusbar class="chromeclass-status" id="status-bar"
+#ifdef WINCE
+               hidden="true"
+#endif
                ondrop="contentAreaDNDObserver.onDrop(event)">
       <statusbarpanel id="statusbar-display" label="" flex="1"/>
       <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
