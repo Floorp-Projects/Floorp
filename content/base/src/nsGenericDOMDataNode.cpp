@@ -91,7 +91,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
 
   nsIDocument* currentDoc = tmp->GetCurrentDoc();
   if (currentDoc && nsCCUncollectableMarker::InGeneration(
-                      currentDoc->GetMarkedCCGeneration())) {
+                      cb, currentDoc->GetMarkedCCGeneration())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 

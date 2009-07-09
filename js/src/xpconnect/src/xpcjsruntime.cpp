@@ -414,13 +414,13 @@ void XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
     JSContext *iter = nsnull, *acx;
     while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
     {
-#ifndef DEBUG_CC
-        // Only skip JSContexts with outstanding requests if DEBUG_CC is not
-        // defined, else we do want to know about all JSContexts to get better
-        // graphs and explanations.
-        if(nsXPConnect::GetXPConnect()->GetRequestDepth(acx) != 0)
+        // Only skip JSContexts with outstanding requests if the
+        // callback does not want all traces (a debug feature).
+        // Otherwise, we do want to know about all JSContexts to get
+        // better graphs and explanations.
+        if(!cb.WantAllTraces() &&
+           nsXPConnect::GetXPConnect()->GetRequestDepth(acx) != 0)
             continue;
-#endif
         cb.NoteRoot(nsIProgrammingLanguage::CPLUSPLUS, acx,
                     nsXPConnect::JSContextParticipant());
     }
