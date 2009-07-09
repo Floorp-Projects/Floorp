@@ -39,7 +39,7 @@
 /* General Update Manager Tests */
 
 function run_test() {
-  dump("Testing: removing an active update for a channel that is not valid" +
+  dump("Testing: removing an active update for a channel that is not valid " +
        "due to switching channels - bug 486275\n");
   removeUpdateDirsAndFiles();
   var defaults = getPrefBranch().QueryInterface(AUS_Ci.nsIPrefService).
