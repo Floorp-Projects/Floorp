@@ -785,15 +785,11 @@ endif
 ifdef NSINSTALL_BIN
 NSINSTALL	= $(CYGWIN_WRAPPER) $(NSINSTALL_BIN)
 else
-ifeq (WINNT,$(CROSS_COMPILE)$(OS_ARCH))
-NSINSTALL	= $(CYGWIN_WRAPPER) $(MOZ_TOOLS_DIR)/bin/nsinstall
-else
 ifeq (OS2,$(CROSS_COMPILE)$(OS_ARCH))
 NSINSTALL	= $(MOZ_TOOLS_DIR)/nsinstall
 else
 NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
 endif # OS2
-endif # WINNT
 endif # NSINSTALL_BIN
 
 
