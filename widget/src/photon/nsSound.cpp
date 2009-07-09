@@ -119,6 +119,7 @@ printf( "\n\n\nnsSound::PlaySystemSound aSoundAlias=%s\n\n",
   const char *soundfile;
 
   if( NS_IsMozAliasSound(aSoundAlias) ) {
+    NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
     if ( aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP) )
       soundfile = "/usr/share/mozilla/gotmail.wav";
     else
@@ -132,6 +133,21 @@ printf( "\n\n\nnsSound::PlaySystemSound aSoundAlias=%s\n\n",
   }
 
   const char* argv[] = { "/opt/Mozilla/mozilla/wave", soundfile, NULL };
+  PtSpawn( "/opt/Mozilla/mozilla/wave", ( const char ** ) argv,
+           NULL, NULL, child_exit, NULL, NULL );
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
+{
+  if (aEventId != EVENT_NEW_MAIL_RECIEVED) {
+    return NS_OK;
+  }
+
+  soundfile = "/usr/share/mozilla/gotmail.wav";
+  const char* argv[] = { "/opt/Mozilla/mozilla/wave",
+                         "/usr/share/mozilla/gotmail.wav", NULL };
   PtSpawn( "/opt/Mozilla/mozilla/wave", ( const char ** ) argv,
            NULL, NULL, child_exit, NULL, NULL );
 
