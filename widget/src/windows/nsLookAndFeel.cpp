@@ -662,15 +662,18 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
 /* virtual */
 PRUnichar nsLookAndFeel::GetPasswordCharacter()
 {
+#define UNICODE_BLACK_CIRCLE_CHAR 0x25cf
+#ifdef WINCE
+  return UNICODE_BLACK_CIRCLE_CHAR;
+#else
   static PRUnichar passwordCharacter = 0;
   if (!passwordCharacter) {
     passwordCharacter = '*';
-#ifndef WINCE
     if (nsUXThemeData::sIsXPOrLater)
-      passwordCharacter = 0x25cf;
-#endif
+      passwordCharacter = UNICODE_BLACK_CIRCLE_CHAR;
   }
   return passwordCharacter;
+#endif
 }
 
 #ifdef NS_DEBUG
