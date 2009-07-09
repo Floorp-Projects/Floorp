@@ -110,6 +110,7 @@ nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   if (NS_IsMozAliasSound(aSoundAlias)) {
+    NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
     // Mac doesn't have system sound settings for each user actions.
     return NS_OK;
   }
@@ -125,4 +126,11 @@ nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
+nsSound::PlayEventSound(PRUint32 aEventId)
+{
+  // Mac doesn't have system sound settings for each user actions.
+  return NS_OK;
 }

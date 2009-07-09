@@ -246,21 +246,52 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
     return NS_OK;
   }
 
-  // Win32 plays no sounds at NS_SYSSOUND_PROMPT_DIALOG and
-  // NS_SYSSOUND_SELECT_DIALOG.
-  const wchar_t *sound = nsnull;
+  NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
+
+  PRUint32 eventId;
   if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
-    sound = L"MailBeep";
+    eventId = EVENT_NEW_MAIL_RECIEVED;
   else if (aSoundAlias.Equals(NS_SYSSOUND_CONFIRM_DIALOG))
-    sound = L"SystemQuestion";
+    eventId = EVENT_CONFIRM_DIALOG_OPEN;
   else if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG))
-    sound = L"SystemExclamation";
+    eventId = EVENT_AELRT_DIALOG_OPEN;
   else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_EXECUTE))
-    sound = L"MenuCommand";
+    eventId = EVENT_MENU_EXECUTE;
   else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_POPUP))
-    sound = L"MenuPopup";
+    eventId = EVENT_MENU_POPUP;
   else
     return NS_OK;
+
+  return PlayEventSound(eventId);
+}
+
+NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
+{
+  PurgeLastSound();
+
+  const wchar_t *sound = nsnull;
+  switch (aEventId) {
+    case EVENT_NEW_MAIL_RECIEVED:
+      sound = L"MailBeep";
+      break;
+    case EVENT_AELRT_DIALOG_OPEN:
+      sound = L"SystemExclamation";
+      break;
+    case EVENT_CONFIRM_DIALOG_OPEN:
+      sound = L"SystemQuestion";
+      break;
+    case EVENT_MENU_EXECUTE:
+      sound = L"MenuCommand";
+      break;
+    case EVENT_MENU_POPUP:
+      sound = L"MenuPopup";
+      break;
+    default:
+      // Win32 plays no sounds at NS_SYSSOUND_PROMPT_DIALOG and
+      // NS_SYSSOUND_SELECT_DIALOG.
+      return NS_OK;
+  }
+  NS_ASSERTION(sound, "sound is null");
 
   nsCOMPtr<nsIRunnable> player = new nsSoundPlayer(this, sound);
   NS_ENSURE_TRUE(player, NS_ERROR_OUT_OF_MEMORY);
@@ -268,4 +299,3 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
-
