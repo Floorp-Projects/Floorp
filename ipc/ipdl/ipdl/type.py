@@ -37,13 +37,13 @@ import ipdl.builtin as builtin
 
 class Type:
     # Is this a C++ type?
-    def isCxx():
+    def isCxx(self):
         return False
     # Is this an IPDL type?
-    def isIPDL():
+    def isIPDL(self):
         return False
     # Can this type appear in IPDL programs?
-    def isVisible():
+    def isVisible(self):
         return False
     def isVoid(self):
         return False
@@ -117,6 +117,7 @@ class IPDLType(Type):
     def isState(self): return False
     def isMessage(self): return False
     def isProtocol(self): return False
+    def isActor(self): return False
 
     def isAsync(self): return self.sendSemantics is ASYNC
     def isSync(self): return self.sendSemantics is SYNC
@@ -189,6 +190,17 @@ class ProtocolType(IPDLType):
         return self.manager is not None
     def isToplevel(self):
         return not self.isManaged()
+
+class ActorType(IPDLType):
+    def __init__(self, protocol, state):
+        self.protocol = protocol
+        self.state = state
+    def isActor(self): return True
+
+    def name(self):
+        return self.protocol.name()
+    def fullname(self):
+        return self.protocol.fullname()
 
 ##--------------------
 _builtinloc = Loc('<builtin>', 0)
@@ -440,6 +452,37 @@ class GatherDecls(Visitor):
         for trans in p.transitionStmts:
             trans.accept(self)
 
+        # visit the message decls once more and resolve the state names
+        # attached to actor params and returns
+        def resolvestate(param):
+            loc = param.loc
+            statename = param.type.state.name
+            statedecl = self.symtab.lookup(statename)
+            if statedecl is None:
+                self.errors.append(
+                    errormsg(
+                        loc,
+                        "protocol `%s' does not have the state `%s'",
+                        param.type.protocol.name(),
+                        statename))
+            elif not statedecl.type.isState():
+                self.errors.append(
+                    errormsg(
+                        loc,
+                        "tag `%s' is supposed to be of state type, but is instead of type `%s'",
+                        statename,
+                        statedecl.type.typename()))
+            else:
+                param.type.state = statedecl
+
+        for msg in p.messageDecls:
+            for iparam in msg.inParams:
+                if iparam.type.isIPDL() and iparam.type.isActor():
+                    resolvestate(iparam)
+            for oparam in msg.outParams:
+                if oparam.type.isIPDL() and oparam.type.isActor():
+                    resolvestate(oparam)
+
         # FIXME/cjones declare all the little C++ thingies that will
         # be generated.  they're not relevant to IPDL itself, but
         # those ("invisible") symbols can clash with others in the
@@ -553,50 +596,43 @@ class GatherDecls(Visitor):
                               ctor=isctor, dtor=isdtor, cdtype=cdtype)
 
         # replace inparam Param nodes with proper Decls
+        def paramToDecl(param):
+            ptname = param.typespec.basename()
+            ploc = param.typespec.loc
+
+            ptdecl = self.symtab.lookup(ptname)
+
+            if ptdecl is None:
+                self.errors.append(
+                    errormsg(
+                        ploc,
+                        "argument typename `%s' of message `%s' has not been declared",
+                        ptname, msgname))
+                return None
+            else:
+                pdecl = Decl(ploc)
+                pdecl.progname = param.name
+                ptype = None
+                if ptdecl.type.isIPDL() and ptdecl.type.isProtocol():
+                    ptype = ActorType(ptdecl.type,
+                                      param.typespec.state)
+                else:
+                    ptype = ptdecl.type
+                pdecl.type = ptype
+
+                self.symtab.declare(pdecl)
+                return pdecl
+
         for i, inparam in enumerate(md.inParams):
-            inptname = inparam.typespec.basename()
-            inploc = inparam.typespec.loc
-
-            inptdecl = self.symtab.lookup(inptname)
-
-            if inptdecl is None:
-                self.errors.append(
-                    errormsg(
-                        inploc,
-                        "inparam typename `%s' of message `%s' has not been declared",
-                        inptname, msgname))
-            else:
-                inpdecl = Decl(inploc)
-                inpdecl.progname = inparam.name
-                inpdecl.type = inptdecl.type
-
-                self.symtab.declare(inpdecl)
-
-                msgtype.params.append(inpdecl.type)
-                md.inParams[i] = inpdecl
-
-        # replace outparam Param with proper Decls
+            pdecl = paramToDecl(inparam)
+            if pdecl is not None:
+                msgtype.params.append(pdecl.type)
+                md.inParams[i] = pdecl
         for i, outparam in enumerate(md.outParams):
-            outptname = outparam.typespec.basename()
-            outploc = outparam.typespec.loc
-
-            outptdecl = self.symtab.lookup(outptname)
-
-            if outptdecl is None:
-                self.errors.append(
-                    errormsg(
-                        outploc,
-                        "outparam typename `%s' of message `%s' has not been declared",
-                        outptname, msgname))
-            else:
-                outpdecl = Decl(outploc)
-                outpdecl.progname = outparam.name
-                outpdecl.type = outptdecl.type
-
-                self.symtab.declare(outpdecl)
-
-                msgtype.returns.append(outpdecl.type)
-                md.outParams[i] = outpdecl
+            pdecl = paramToDecl(outparam)
+            if pdecl is not None:
+                msgtype.returns.append(pdecl.type)
+                md.outParams[i] = pdecl
 
         self.symtab.exitScope(md)
 

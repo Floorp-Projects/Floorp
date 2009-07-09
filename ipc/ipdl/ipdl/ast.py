@@ -318,12 +318,16 @@ class Param(Node):
         self.typespec = typespec
 
 class TypeSpec(Node):
-    def __init__(self, loc, spec):
+    def __init__(self, loc, spec, state=None):
         Node.__init__(self, loc)
         self.spec = spec
+        self.state = state
 
     def basename(self):
         return self.spec.baseid
+
+    def isActor(self):
+        return self.state is not None
 
     def __str__(self):  return str(self.spec)
 
