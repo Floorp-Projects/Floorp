@@ -5706,6 +5706,15 @@ nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                                  nsRect*               aBounds,
                                                  nscolor               aBackstopColor)
 {
+  // We don't want to add an item for the canvas background color if the frame
+  // (sub)tree we are painting doesn't include any canvas frames. There isn't
+  // an easy way to check this directly, but if we check if the root of the
+  // (sub)tree we are painting is a canvas frame that should cover us in all
+  // cases (it will usually be a viewport frame when we have a canvas frame in
+  // the (sub)tree).
+  if (!nsCSSRendering::IsCanvasFrame(aFrame))
+    return NS_OK;
+
   nscolor bgcolor = NS_ComposeColors(aBackstopColor, mCanvasBackgroundColor);
   nsRect bounds = aBounds == nsnull ?
     nsRect(aBuilder.ToReferenceFrame(aFrame), aFrame->GetSize()) : *aBounds;
