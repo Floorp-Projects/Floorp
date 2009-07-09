@@ -488,6 +488,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   }
 
   if (NS_IsMozAliasSound(aSoundAlias)) {
+    NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
     // We don't have a default mail sound on OS/2, so just beep.
     if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
       Beep();
@@ -510,4 +511,15 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   rc = DosCloseEventSem(arg.hev);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
+{
+  // Just beep if MMPM isn't installed.
+  if (!sMMPMInstalled) {
+    return Beep();
+  }
+
+  // We don't have a default mail sound on OS/2, so just beep.
+  return aEventId == EVENT_NEW_MAIL_RECIEVED ? Beep() : NS_OK;
 }

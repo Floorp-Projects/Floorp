@@ -41,12 +41,15 @@
 
 interface nsIURL;
 
-[scriptable, uuid(B01ADAD7-D937-4738-8508-3BD5946BF9C8)]
+[scriptable, uuid(53FC43F2-26BC-46be-8E38-1BBA94806061)]
 interface nsISound : nsISupports
 {
   void play(in nsIURL aURL);
   /**
    * for playing system sounds
+   *
+   * NS_SYSSOUND_* params are obsolete. The new events will not be supported by
+   * this method.  You should use playEventSound method instaed.
    */
   void playSystemSound(in AString soundAlias);  
   void beep();
@@ -56,10 +59,31 @@ interface nsISound : nsISupports
     * The various methods on nsISound call Init() if they need to.
 	*/
   void init(); 
+
+  /**
+   * In some situations, playEventSound will be called.  Then, each
+   * implementations will play a system sound for the event if it's necessary.
+   *
+   * NOTE: Don't change these values because they are used in
+   * nsPIPromptService.idl. So, if they are changed, that makes big impact for
+   * the embedders.
+   */
+  const unsigned long EVENT_NEW_MAIL_RECIEVED           = 0;
+  const unsigned long EVENT_AELRT_DIALOG_OPEN           = 1;
+  const unsigned long EVENT_CONFIRM_DIALOG_OPEN         = 2;
+  const unsigned long EVENT_PROMPT_DIALOG_OPEN          = 3;
+  const unsigned long EVENT_SELECT_DIALOG_OPEN          = 4;
+  const unsigned long EVENT_MENU_EXECUTE                = 5;
+  const unsigned long EVENT_MENU_POPUP                  = 6;
+  void playEventSound(in unsigned long aEventId);
 };
 
 %{C++
 
+/**
+ * NS_SYSSOUND_* can be used for playSystemSound but they are obsolete.
+ * Use nsISound::playEventSound instead.
+ */
 #define NS_SYSSOUND_PREFIX          NS_LITERAL_STRING("_moz_")
 #define NS_SYSSOUND_MAIL_BEEP       NS_LITERAL_STRING("_moz_mailbeep")
 #define NS_SYSSOUND_ALERT_DIALOG    NS_LITERAL_STRING("_moz_alertdialog")
