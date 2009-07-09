@@ -1889,8 +1889,9 @@ SessionStoreService.prototype = {
     
     if (aTabs.length > 0) {
       // Determine if we can optimize & load visible tabs first
-      let maxVisibleTabs = Math.ceil(tabbrowser.tabContainer.mTabstrip.scrollClientSize /
-                                     aTabs[0].clientWidth);
+      let tabScrollBoxObject = tabbrowser.tabContainer.mTabstrip.scrollBoxObject;
+      let tabBoxObject = aTabs[0].boxObject;
+      let maxVisibleTabs = Math.ceil(tabScrollBoxObject.width / tabBoxObject.width);
 
       // make sure we restore visible tabs first, if there are enough
       if (maxVisibleTabs < aTabs.length && aSelectTab > 1) {

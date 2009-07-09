@@ -1189,13 +1189,16 @@
 
             this.mTabContainer.appendChild(t);
 
-            if (this.tabContainer.mTabstrip._isRTLScrollbox) {
+            if (document.defaultView
+                        .getComputedStyle(this.mTabContainer, "")
+                        .direction == "rtl") {
               /* In RTL UI, the tab is visually added to the left side of the
                * tabstrip. This means the tabstip has to be scrolled back in
                * order to make sure the same set of tabs is visible before and
                * after the new tab is added */
 
-              this.tabContainer.mTabstrip.scrollByPixels(this.mTabs[0].clientWidth);
+              this.mTabContainer.mTabstrip.scrollBoxObject
+                  .scrollBy(this.mTabContainer.firstChild.boxObject.width, 0);
             }
 
             // invalidate cache, because mTabContainer is about to change
@@ -1274,21 +1277,21 @@
               }
             }
 
-            this.tabContainer.adjustTabstrip();
+            // |setTimeout| here to ensure we're post reflow
+            var _delayedUpdate = function(aTabContainer) {
+              aTabContainer.adjustTabstrip();
 
-            // Do this asynchronically, as we don't know yet if the tab
-            // will be selected.
-            setTimeout(function (aTabContainer) {
               if (aTabContainer.selectedItem != t)
                 aTabContainer._notifyBackgroundTab(t);
-            }, 0, this.tabContainer);
 
-            // XXXmano: this is a temporary workaround for bug 345399
-            // We need to manually update the scroll buttons disabled state
-            // if a tab was inserted to the overflow area or removed from it
-            // without any scrolling and when the tabbar has already
-            // overflowed.
-            this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
+              // XXXmano: this is a temporary workaround to bug 343585
+              // We need to manually update the scroll buttons disabled state
+              // if a tab was inserted to the overflow area or removed from it
+              // without any scrolling and when the tabbar has already
+              // overflowed.
+              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
+            }
+            setTimeout(_delayedUpdate, 0, this.mTabContainer);
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -1496,12 +1499,15 @@
               while (this._removingTabs.length)
                 this._endRemoveTab([this._removingTabs[0], false]);
             } else if (!this._windowIsClosing) {
+              // see notes in addTab
+              function _delayedUpdate(aTabContainer) {
+                aTabContainer.adjustTabstrip();
+                aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
+              };
+              setTimeout(_delayedUpdate, 0, this.tabContainer);
+
               if (aNewTab && gURLBar)
                 gURLBar.focus();
-
-              this.tabContainer.adjustTabstrip();
-              // workaround for bug 345399
-              this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
             }
 
             // We're going to remove the tab and the browser now.
@@ -1965,9 +1971,8 @@
             var newIndex = this.getNewIndex(aEvent);
             var ib = this.mTabDropIndicatorBar;
             var ind = ib.firstChild;
-            var scrollRect = tabStrip.scrollClientRect;
-            var rect = this.getBoundingClientRect();
-            var minMargin = scrollRect.left - rect.left;
+            var tabStripBoxObject = tabStrip.scrollBoxObject;
+            var minMargin = tabStripBoxObject.x - this.boxObject.x;
             // make sure we don't place the tab drop indicator past the
             // edge, or the containing box will flex and stretch
             // the tab drop indicator bar, which will flex the url bar.  
@@ -1975,13 +1980,13 @@
             // just use first value if you can figure out how to get
             // the tab drop indicator to crop instead of flex and stretch
             // the tab drop indicator bar.
-            var maxMargin = Math.min(minMargin + scrollRect.width,
-                                     ib.getBoundingClientRect().right -
-                                     ind.clientWidth);
+            var maxMargin = Math.min(minMargin + tabStripBoxObject.width, 
+                                     ib.boxObject.x + ib.boxObject.width -
+                                     ind.boxObject.width);
             if (!ltr)
-              [minMargin, maxMargin] = [this.clientWidth - maxMargin,
-                                        this.clientWidth - minMargin];
-            var newMargin;
+              [minMargin, maxMargin] = [this.boxObject.width - maxMargin,
+                                        this.boxObject.width - minMargin];
+            var newMargin, tabBoxObject;
             if (pixelsToScroll) {
               // if we are scrolling, put the drop indicator at the edge
               // so that it doesn't jump while scrolling
@@ -1989,18 +1994,21 @@
             }
             else {
               if (newIndex == this.mTabs.length) {
-                let tabRect = this.mTabs[newIndex-1].getBoundingClientRect();
+                tabBoxObject =  this.mTabs[newIndex-1].boxObject;
                 if (ltr)
-                  newMargin = tabRect.right - rect.left;
+                  newMargin = tabBoxObject.screenX - this.boxObject.screenX
+                              + tabBoxObject.width;
                 else
-                  newMargin = rect.right - tabRect.left;
+                  newMargin = this.boxObject.screenX - tabBoxObject.screenX
+                              + this.boxObject.width;
               }
               else {
-                let tabRect = this.mTabs[newIndex].getBoundingClientRect();
+                tabBoxObject =  this.mTabs[newIndex].boxObject;
                 if (ltr)
-                  newMargin = tabRect.left - rect.left;
+                  newMargin = tabBoxObject.screenX - this.boxObject.screenX;
                 else
-                  newMargin = rect.right - tabRect.right;
+                  newMargin = this.boxObject.screenX - tabBoxObject.screenX
+                              + this.boxObject.width - tabBoxObject.width;
               }
               // ensure we never place the drop indicator beyond our limits
               if (newMargin < minMargin)
@@ -2231,7 +2239,7 @@
             this.mTabContainer.childNodes[i]._selected = false;
           }
           this.mCurrentTab._selected = true;
-          this.mTabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
+          this.mTabContainer.mTabstrip.scrollBoxObject.ensureElementIsVisible(this.mCurrentTab);
 
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("TabMove", true, false, window, oldPosition);
@@ -2790,7 +2798,7 @@
          this._scrollButtonDownBox.collapsed = false;
          this._scrollButtonDownBoxAnimate.collapsed = false;
 #endif
-         this.ensureElementIsVisible(tabs.selectedItem, false);
+         this.scrollBoxObject.ensureElementIsVisible(tabs.selectedItem);
       ]]></handler>
 
 #ifdef XP_MACOSX
@@ -2989,7 +2997,7 @@
             this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            let width = this.firstChild.clientWidth;
+            var width = this.firstChild.boxObject.width;
             // 0 width is an invalid value and indicates
             // an item without display, so ignore.
             if (width > this.mTabClipWidth || width == 0)
@@ -3034,9 +3042,15 @@
             // of the tabstrip, we need to ensure that we stay
             // completely scrolled to the right side
             var tabStrip = this.mTabstrip;
-            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >=
-                tabStrip.scrollSize)
+            var scrollPos = {};
+            tabStrip.scrollBoxObject.getPosition(scrollPos, {});
+            var scrolledSize = {};
+            tabStrip.scrollBoxObject.getScrolledSize(scrolledSize, {});
+
+            if (scrollPos.value + tabStrip.boxObject.width >=
+                scrolledSize.value) {
               tabStrip.scrollByPixels(-1);
+            }
           } catch (e) {}
         ]]></body>
       </method>
@@ -3100,26 +3114,30 @@
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
-          var scrollRect = this.mTabstrip.scrollClientRect;
-          var tab = aTab.getBoundingClientRect();
+          var tsbo = this.mTabstrip.scrollBoxObject;
+          var tsboStart = tsbo.screenX;
+          var tsboEnd = tsboStart + tsbo.width;
+
+          var ctbo = aTab.boxObject;
+          var ctboStart = ctbo.screenX;
+          var ctboEnd = ctboStart + ctbo.width;
 
           // Is the new tab already completely visible?
-          if (scrollRect.left <= tab.left && tab.right <= scrollRect.right)
+          if (tsboStart <= ctboStart && ctboEnd <= tsboEnd)
             return;
 
           if (this.mTabstrip.smoothScroll) {
-            let selected = this.selectedItem.getBoundingClientRect();
+            var selStart = this.selectedItem.boxObject.screenX;
+            var selEnd = selStart + this.selectedItem.boxObject.width;
 
             // Can we make both the new tab and the selected tab completely visible?
-            if (Math.max(tab.right - selected.left, selected.right - tab.left) <=
-                scrollRect.width) {
+            if (Math.max(ctboEnd - selStart, selEnd - ctboStart) <= tsbo.width) {
               this.mTabstrip.ensureElementIsVisible(aTab);
               return;
             }
 
             this.mTabstrip._smoothScrollByPixels(this.mTabstrip._isRTLScrollbox ?
-                                                 selected.right - scrollRect.right :
-                                                 selected.left - scrollRect.left);
+                                                 selEnd - tsboEnd : selStart - tsboStart);
           }
 
           // start the flash timer
