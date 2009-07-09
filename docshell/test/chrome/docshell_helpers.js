@@ -14,6 +14,7 @@ const NAV_NONE = 0;
 const NAV_BACK = 1;
 const NAV_FORWARD = 2;
 const NAV_URI = 3;
+const NAV_RELOAD = 4;
 
 var gExpectedEvents;         // an array of events which are expected to be 
                              // triggered by this navigation
@@ -83,6 +84,7 @@ function doPageNavigation(params) {
   // Parse the parameters.
   let back = params.back ? params.back : false;
   let forward = params.forward ? params.forward : false;
+  let reload = params.reload ? params.reload : false;
   let uri = params.uri ? params.uri : false;
   let eventsToListenFor = typeof(params.eventsToListenFor) != "undefined" ?
     params.eventsToListenFor : ["pageshow"];
@@ -98,8 +100,10 @@ function doPageNavigation(params) {
     throw "Can't specify both back and a uri";
   if (forward && uri)
     throw "Can't specify both forward and a uri";
-  if (!back && !forward && !uri)
-    throw "Must specify back or foward or uri";
+  if (reload && (forward || back || uri))
+    throw "Can't specify reload and another navigation type";
+  if (!back && !forward && !uri && !reload)
+    throw "Must specify back or foward or reload or uri";
   if (params.onNavComplete && eventsToListenFor.length == 0)
     throw "Can't use onNavComplete when eventsToListenFor == []";
   if (params.preventBFCache && eventsToListenFor.length == 0)
@@ -141,6 +145,10 @@ function doPageNavigation(params) {
   else if (uri) {
     gNavType = NAV_URI;
     TestWindow.getBrowser().loadURI(uri);
+  }
+  else if (reload) {
+    gNavType = NAV_RELOAD;
+    TestWindow.getBrowser().reload();
   }
   else {
     throw "No valid navigation type passed to doPageNavigation!";
