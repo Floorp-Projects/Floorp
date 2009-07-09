@@ -2307,7 +2307,7 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(PRBool aFullScreen)
 {
-#if WINCE
+#if WINCE_WINDOWS_MOBILE
   RECT rc;
   if (aFullScreen) {
     SetForegroundWindow(mWnd);
@@ -2319,10 +2319,12 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
     SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, FALSE);
   }
   MoveWindow(mWnd, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, TRUE);
-  return NS_OK;
-#else
-  return nsBaseWidget::MakeFullScreen(aFullScreen);
+
+  if (aFullScreen)
+    mSizeMode = nsSizeMode_Fullscreen;
 #endif
+
+  return nsBaseWidget::MakeFullScreen(aFullScreen);
 }
 
 /**************************************************************
