@@ -956,6 +956,7 @@ struct nsCycleCollector
 
     void RegisterRuntime(PRUint32 langID, 
                          nsCycleCollectionLanguageRuntime *rt);
+    nsCycleCollectionLanguageRuntime * GetRuntime(PRUint32 langID);
     void ForgetRuntime(PRUint32 langID);
 
     void SelectPurple(GCGraphBuilder &builder);
@@ -2007,6 +2008,14 @@ nsCycleCollector::RegisterRuntime(PRUint32 langID,
     mRuntimes[langID] = rt;
 }
 
+nsCycleCollectionLanguageRuntime *
+nsCycleCollector::GetRuntime(PRUint32 langID)
+{
+    if (langID > nsIProgrammingLanguage::MAX)
+        return nsnull;
+
+    return mRuntimes[langID];
+}
 
 void 
 nsCycleCollector::ForgetRuntime(PRUint32 langID)
@@ -3034,6 +3043,13 @@ nsCycleCollector_registerRuntime(PRUint32 langID,
         sCollector->RegisterRuntime(langID, rt);
 }
 
+nsCycleCollectionLanguageRuntime *
+nsCycleCollector_getRuntime(PRUint32 langID)
+{
+    if (sCollector)
+        sCollector->GetRuntime(langID);
+    return nsnull;
+}
 
 void 
 nsCycleCollector_forgetRuntime(PRUint32 langID)
