@@ -847,6 +847,36 @@ pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
 // base url for the wifi geolocation network provider
 pref("geo.wifi.uri", "https://www.google.com/loc/json");
 
+#ifdef WINCE
+
+// tweak awesomebar -- increase the delay until a search happens, and reduce
+// the amount of time spent waiting for a search result 
+pref("browser.urlbar.search.chunkSize", 100);
+pref("browser.urlbar.search.timeout", 500);
+pref("browser.urlbar.delay", 1000);
+
+// disable safe browsing, due to perf hit
+pref("browser.safebrowsing.enabled", false);
+
+// don't check for default browser
+pref("browser.shell.checkDefaultBrowser", false);
+
+// disable bfcache for memory
+pref("browser.sessionhistory.max_total_viewers", 0);
+
+// tweak default content sink prefs
+pref("content.sink.interactive_deflect_count", 10); /* default 0 */
+pref("content.sink.perf_deflect_count", 50); /* default 200 */
+pref("content.sink.interactive_parse_time", 5000); /* default 3000 */
+pref("content.sink.perf_parse_time", 150000); /* default 360000 */
+pref("content.sink.pending_event_mode", 0); /* default 1 */
+pref("content.sink.event_probe_rate", 1); /* default 1 */
+pref("content.sink.interactive_time", 750000); /* default 750000 */
+pref("content.sink.initial_perf_time", 500000); /* default 2000000 */
+pref("content.sink.enable_perf_mode", 0); /* default 0; 0 == switch, 1 == stay interactive, 2 == stay perf */
+
+#endif /* WINCE */
+
 // Whether to use a panel that looks like an OS X sheet for customization
 #ifdef XP_MACOSX
 pref("toolbar.customization.usesheet", true);
