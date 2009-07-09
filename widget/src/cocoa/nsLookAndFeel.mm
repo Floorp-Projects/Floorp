@@ -546,9 +546,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_SkipNavigatingDisabledMenuItem:
       aMetric = 1;
       break;
-    case eMetric_DragFullWindow:
-      aMetric = 1;
-      break;        
     case eMetric_DragThresholdX:
     case eMetric_DragThresholdY:
       aMetric = 4;
