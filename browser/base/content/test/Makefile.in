@@ -43,7 +43,8 @@ relativesrcdir  = browser/base/content/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	test_feed_discovery.html \
+_TEST_FILES = \
+		test_feed_discovery.html \
 		feed_discovery.html \
 		test_bug395533.html \
 		bug395533-data.txt \
@@ -63,7 +64,6 @@ _TEST_FILES =	test_feed_discovery.html \
 		$(NULL)
 
 # The following tests are disabled because they are unreliable:
-#   browser_bug321000.js is bug 474081
 #   browser_bug423833.js is bug 428712
 #   browser_sanitize-download-history.js is bug 432425
 #
@@ -71,7 +71,9 @@ _TEST_FILES =	test_feed_discovery.html \
 # back to the clear recent history dialog (santize.xul), if it ever is (bug
 # 480169)
 
-_BROWSER_FILES = browser_sanitize-timespans.js \
+_BROWSER_FILES = \
+                 browser_bug321000.js \
+                 browser_sanitize-timespans.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \
