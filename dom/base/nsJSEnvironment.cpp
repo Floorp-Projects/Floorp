@@ -3857,6 +3857,38 @@ ReportAllJSExceptionsPrefChangedCallback(const char* aPrefName, void* aClosure)
   return 0;
 }
 
+static int
+SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  PRInt32 highwatermark = nsContentUtils::GetIntPref(aPrefName, 32);
+
+  if (highwatermark >= 32) {
+    // There are two options of memory usage in tracemonkey. One is
+    // to use malloc() and the other is to use memory for GC. (E.g.
+    // js_NewGCThing()/RefillDoubleFreeList()).
+    // Let's limit the high water mark for the first one to 32MB,
+    // and second one to 0xffffffff.
+    JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
+                      32L * 1024L * 1024L);
+    JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,
+                      0xffffffff);
+  } else {
+    JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
+                      highwatermark * 1024L * 1024L);
+    JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES,
+                      highwatermark * 1024L * 1024L);
+  }
+  return 0;
+}
+
+static int
+SetMemoryGCFrequencyPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  PRInt32 triggerFactor = nsContentUtils::GetIntPref(aPrefName, 1600);
+  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_TRIGGER_FACTOR, triggerFactor);
+  return 0;
+}
+
 static JSPrincipals *
 ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
 {
@@ -3939,6 +3971,18 @@ nsJSRuntime::Init()
                                        nsnull);
   ReportAllJSExceptionsPrefChangedCallback("dom.report_all_js_exceptions",
                                            nsnull);
+
+  nsContentUtils::RegisterPrefCallback("javascript.options.mem.high_water_mark",
+                                       SetMemoryHighWaterMarkPrefChangedCallback,
+                                       nsnull);
+  SetMemoryHighWaterMarkPrefChangedCallback("javascript.options.mem.high_water_mark",
+                                            nsnull);
+
+  nsContentUtils::RegisterPrefCallback("javascript.options.mem.gc_frequency",
+                                       SetMemoryGCFrequencyPrefChangedCallback,
+                                       nsnull);
+  SetMemoryGCFrequencyPrefChangedCallback("javascript.options.mem.gc_frequency",
+                                          nsnull);
 
   nsCOMPtr<nsIObserverService> obs =
     do_GetService("@mozilla.org/observer-service;1", &rv);
