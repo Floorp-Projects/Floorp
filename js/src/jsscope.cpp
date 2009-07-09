@@ -93,7 +93,10 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
             newscope->freeslot = freeslot;
     }
     JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
-    js_DropScope(cx, scope, obj);
+    JS_ASSERT(scope->nrefs > 0);
+    JS_ATOMIC_DECREMENT(&scope->nrefs);
+    if (scope->nrefs == 0)
+        js_DestroyScope(cx, scope);
     return newscope;
 }
 
@@ -215,8 +218,12 @@ js_HoldScope(JSScope *scope)
 JSBool
 js_DropScope(JSContext *cx, JSScope *scope, JSObject *obj)
 {
+#ifdef JS_THREADSAFE
+    /* We are called from only js_ShareWaitingTitles and js_FinalizeObject. */
+    JS_ASSERT(!obj || CX_THREAD_IS_RUNNING_GC(cx));
+#endif
     JS_ASSERT(scope->nrefs > 0);
-    JS_ATOMIC_DECREMENT(&scope->nrefs);
+    --scope->nrefs;
 
     if (scope->nrefs == 0) {
         js_DestroyScope(cx, scope);
