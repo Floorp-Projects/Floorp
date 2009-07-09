@@ -2393,20 +2393,41 @@ static gint
 moz_gtk_tabpanels_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         GdkRectangle* cliprect, GtkTextDirection direction)
 {
-    /* We use gtk_paint_box_gap() to draw the tabpanels widget. gtk_paint_box()
-     * draws an all-purpose box, which a lot of themes render differently.
-     * A zero-width gap is still visible in most themes, so we hide it to the
-     * left (10px should be enough) */
+    /* We have three problems here:
+     * - Most engines draw gtk_paint_box differently to gtk_paint_box_gap, the
+     *   former implies there are no tabs, eg. Clearlooks.
+     * - Wanting a gap of width 0 doesn't actually guarantee a zero-width gap, eg.
+     *   Clearlooks.
+     * - Our old approach of a negative X position could cause rendering errors
+     *   on the box's corner, eg. themes using the Pixbuf engine.
+     */
     GtkStyle* style;
 
     ensure_tab_widget();
     gtk_widget_set_direction(gTabWidget, direction);
 
     style = gTabWidget->style;
-
     TSOffsetStyleGCs(style, rect->x, rect->y);
+
+    /* Our approach is as follows:
+     * - Draw the box in two passes. Pass in a clip rect to draw the left half of the
+     *   box, with the gap specified to the right outside the clip rect so that it is
+     *   not drawn.
+     * - The right half is drawn with the gap to the left outside the modified clip rect.
+     */
+    GdkRectangle halfClipRect;
+    if (!gdk_rectangle_intersect(rect, cliprect, &halfClipRect))
+      return MOZ_GTK_SUCCESS;
+
+    halfClipRect.width = (halfClipRect.width / 2) + 1;
     gtk_paint_box_gap(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-                      cliprect, gTabWidget, "notebook", rect->x, rect->y,
+                      &halfClipRect, gTabWidget, "notebook", rect->x, rect->y,
+                      rect->width, rect->height,
+                      GTK_POS_TOP, halfClipRect.width + 1, 0);
+
+    halfClipRect.x += halfClipRect.width;
+    gtk_paint_box_gap(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                      &halfClipRect, gTabWidget, "notebook", rect->x, rect->y,
                       rect->width, rect->height,
                       GTK_POS_TOP, -10, 0);
 
