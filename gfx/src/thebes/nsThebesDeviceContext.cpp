@@ -942,16 +942,6 @@ nsThebesDeviceContext::GetDepth(PRUint32& aDepth)
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
-{
-    aPaletteInfo.isPaletteDevice = PR_FALSE;
-    aPaletteInfo.sizePalette = 0;
-    aPaletteInfo.numReserved = 0;
-    aPaletteInfo.palette = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThebesDeviceContext::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
     aPixel = aColor;
