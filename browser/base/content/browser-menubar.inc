@@ -229,7 +229,11 @@
                           accesskey="&taskbarCmd.accesskey;"
                           type="checkbox"
                           command="cmd_toggleTaskbar"
+#ifndef WINCE
                           checked="true" />
+#else
+                          checked="false" />
+#endif
                 <menu id="viewSidebarMenuMenu"
                       label="&viewSidebarMenu.label;"
                       accesskey="&viewSidebarMenu.accesskey;">
