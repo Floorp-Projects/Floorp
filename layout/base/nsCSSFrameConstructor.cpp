@@ -1930,15 +1930,11 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
 // The term pseudo frame is being used instead of anonymous frame, since anonymous
 // frame has been used elsewhere to refer to frames that have generated content
 
-// aIncludeSpecial applies to captions, col groups, cols and cells.
-// These do not generate pseudo frame wrappers for foreign children.
-// In fact, colgroups never have any children that are not cols and
-// cols never have any children at all.
-
 static PRBool
 IsTableRelated(nsIAtom* aParentType)
 {
   return
+    nsGkAtoms::tableOuterFrame    == aParentType ||
     nsGkAtoms::tableFrame         == aParentType ||
     nsGkAtoms::tableRowGroupFrame == aParentType ||
     nsGkAtoms::tableRowFrame      == aParentType ||
