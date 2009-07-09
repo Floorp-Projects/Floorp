@@ -705,7 +705,7 @@ function start_httpserver(aRelativeDirName) {
 
   if (!dir.isDirectory())
     do_throw("A file instead of a directory was specified for nsHttpServer " +
-             "registerDirectory! path: " dir.path + "\n");
+             "registerDirectory! path: " + dir.path + "\n");
 
   do_load_httpd_js();
   gTestserver = new nsHttpServer();
