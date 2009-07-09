@@ -3685,7 +3685,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   *aRetValue = 0;
   nsPaletteInfo palInfo;
 
-#if !defined (WINCE)
+#if !defined (WINCE_WINDOWS_MOBILE)
   static PRBool getWheelInfo = PR_TRUE;
 #endif
 
@@ -4317,7 +4317,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 
     case WM_SETTINGCHANGE:
-#if !defined (WINCE)
+#if !defined (WINCE_WINDOWS_MOBILE)
       getWheelInfo = PR_TRUE;
 #endif
       OnSettingsChange(wParam, lParam);
@@ -4409,7 +4409,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 #endif
 
-#if !defined(WINCE)
+#if !defined (WINCE_WINDOWS_MOBILE)
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
     {
@@ -4873,7 +4873,7 @@ PRBool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
  * within the message case block. If returning true result should be returned
  * immediately (no more processing).
  */
-#if !defined(WINCE) // implemented in nsWindowCE
+#if !defined (WINCE_WINDOWS_MOBILE)
 PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& getWheelInfo, PRBool& result, LRESULT *aRetValue)
 {
   // Handle both flavors of mouse wheel events.
@@ -5063,7 +5063,7 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
   
   return PR_FALSE; // break;
 } 
-#endif // !defined(WINCE)
+#endif // !defined(WINCE_WINDOWS_MOBILE)
 
 static PRBool
 StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,

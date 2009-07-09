@@ -321,10 +321,12 @@ protected:
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
   PRBool                  OnPaintImageDDraw16();
 #endif // defined(CAIRO_HAS_DDRAW_SURFACE)
-#if !defined(WINCE)
+#if !defined(WINCE_WINDOWS_MOBILE)
   PRBool                  OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, 
                                        PRBool& result, PRBool& getWheelInfo,
                                        LRESULT *aRetValue);
+#endif // !defined(WINCE_WINDOWS_MOBILE)
+#if !defined(WINCE)
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
 #endif // !defined(WINCE)
 
