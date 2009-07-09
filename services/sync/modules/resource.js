@@ -50,6 +50,10 @@ Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/auth.js");
 
+// = RequestException =
+//
+// This function raises an exception through the call
+// stack for a failed network request.
 function RequestException(resource, action, request) {
   this._resource = resource;
   this._action = action;
@@ -67,12 +71,21 @@ RequestException.prototype = {
   }
 };
 
+// = Resource =
+//
+// Represents a remote network resource, identified by a URI.
 function Resource(uri) {
   this._init(uri);
 }
 Resource.prototype = {
   _logName: "Net.Resource",
 
+  // ** {{{ Resource.authenticator }}} **
+  //
+  // Getter and setter for the authenticator module
+  // responsible for this particular resource. The authenticator
+  // module may modify the headers to perform authentication
+  // while performing a request for the resource, for example.
   get authenticator() {
     if (this._authenticator)
       return this._authenticator;
@@ -83,6 +96,11 @@ Resource.prototype = {
     this._authenticator = value;
   },
 
+  // ** {{{ Resource.headers }}} **
+  //
+  // Getter for access to received headers after the request
+  // for the resource has been made, setter for headers to be included
+  // while making a request for the resource.
   get headers() {
     return this.authenticator.onRequest(this._headers);
   },
@@ -97,6 +115,9 @@ Resource.prototype = {
     }
   },
 
+  // ** {{{ Resource.uri }}} **
+  //
+  // URI representing this resource.
   get uri() {
     return this._uri;
   },
@@ -109,12 +130,18 @@ Resource.prototype = {
       this._uri = value;
   },
 
+  // ** {{{ Resource.spec }}} **
+  //
+  // Get the string representation of the URI.
   get spec() {
     if (this._uri)
       return this._uri.spec;
     return null;
   },
 
+  // ** {{{ Resource.data }}} **
+  //
+  // Get and set the data encapulated in the resource.
   _data: null,
   get data() this._data,
   set data(value) {
@@ -129,6 +156,11 @@ Resource.prototype = {
   get downloaded() this._downloaded,
   get dirty() this._dirty,
 
+  // ** {{{ Resource.filters }}} **
+  //
+  // Filters are used to perform pre and post processing on 
+  // requests made for resources. Use these methods to add,
+  // remove and clear filters applied to the resource.
   _filters: null,
   pushFilter: function Res_pushFilter(filter) {
     this._filters.push(filter);
@@ -149,19 +181,28 @@ Resource.prototype = {
     this._filters = [];
   },
 
+  // ** {{{ Resource._createRequest }}} **
+  //
+  // This method returns a new IO Channel for requests to be made
+  // through. It is never called directly, only {{{_request}}} uses it
+  // to obtain a request channel.
+  //
   _createRequest: function Res__createRequest() {
     this._lastChannel = Svc.IO.newChannel(this.spec, null, null).
       QueryInterface(Ci.nsIRequest);
+
     // Always validate the cache:
     let loadFlags = this._lastChannel.loadFlags;
     loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     this._lastChannel.loadFlags = loadFlags;
     this._lastChannel = this._lastChannel.QueryInterface(Ci.nsIHttpChannel);
-
+    
+    // Setup a callback to handle bad HTTPS certificates.
     this._lastChannel.notificationCallbacks = new badCertListener();
-
-    let headers = this.headers; // avoid calling the authorizer more than once
+    
+    // Avoid calling the authorizer more than once
+    let headers = this.headers; 
     for (let key in headers) {
       if (key == 'Authorization')
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
@@ -176,18 +217,31 @@ Resource.prototype = {
     this._lastProgress = Date.now();
   },
 
+  // ** {{{ Resource.filterUpload }}} **
+  //
+  // Apply pre-request filters. Currently, this is done before
+  // any PUT request.
   filterUpload: function Resource_filterUpload() {
     this._data = this._filters.reduce(function(data, filter) {
       return filter.beforePUT(data);
     }, this._data);
   },
 
+  // ** {{{ Resource.filterDownload }}} **
+  //
+  // Apply post-request filters. Currently, this done after
+  // any GET request.
   filterDownload: function Resource_filterDownload() {
     this._data = this._filters.reduceRight(function(data, filter) {
       return filter.afterGET(data);
     }, this._data);
   },
 
+  // ** {{{ Resource._request }}} **
+  //
+  // Perform a particular HTTP request on the resource. This method
+  // is never called directly, but is used by the high-level 
+  // {{{get}}}, {{{put}}}, {{{post}}} and {{delete}} methods.
   _request: function Res__request(action, data) {
     let iter = 0;
     let channel = this._createRequest();
@@ -195,6 +249,8 @@ Resource.prototype = {
     if ("undefined" != typeof(data))
       this._data = data;
 
+    // PUT and POST are trreated differently because 
+    // they have payload data.
     if ("PUT" == action || "POST" == action) {
       this.filterUpload();
       this._log.trace(action + " Body:\n" + this._data);
@@ -210,6 +266,8 @@ Resource.prototype = {
       channel.setUploadStream(stream, type, this._data.length);
     }
 
+    // Setup a channel listener so that the actual network operation
+    // is performed asynchronously.
     let [chanOpen, chanCb] = Sync.withCb(channel.asyncOpen, channel);
     let listener = new ChannelListener(chanCb, this._onProgress, this._log);
     channel.requestMethod = action;
@@ -242,23 +300,40 @@ Resource.prototype = {
     return this._data;
   },
 
+  // ** {{{ Resource.get }}} **
+  //
+  // Perform an asynchronous HTTP GET for this resource.
+  // onComplete will be called on completion of the request.
   get: function Res_get() {
     return this._request("GET");
   },
 
+  // ** {{{ Resource.get }}} **
+  //
+  // Perform a HTTP PUT for this resource.
   put: function Res_put(data) {
     return this._request("PUT", data);
   },
 
+  // ** {{{ Resource.post }}} **
+  //
+  // Perform a HTTP POST for this resource.
   post: function Res_post(data) {
     return this._request("POST", data);
   },
 
+  // ** {{{ Resource.delete }}} **
+  //
+  // Perform a HTTP DELETE for this resource.
   delete: function Res_delete() {
     return this._request("DELETE");
   }
 };
 
+// = ChannelListener =
+// 
+// This object implements the {{{nsIStreamListener}}} interface
+// and is called as the network operation proceeds.
 function ChannelListener(onComplete, onProgress, logger) {
   this._onComplete = onComplete;
   this._onProgress = onProgress;
@@ -291,11 +366,24 @@ ChannelListener.prototype = {
   }
 };
 
-/* Parses out single WBOs from a full dump */
+// = RecordParser =
+//
+// This object retrives single WBOs from a stream of incoming
+// JSON. This should be useful for performance optimizations
+// in cases where memory is low (on Fennec, for example).
+//
+// XXX: Note that this parser is currently not used because we
+// are yet to figure out the best way to integrate it with the
+// asynchronous nature of {{{ChannelListener}}}. Ed's work in the
+// Sync module will make this easier in the future.
 function RecordParser(data) {
   this._data = data;
 }
 RecordParser.prototype = {
+  // ** {{{ RecordParser.getNextRecord }}} **
+  //
+  // Returns a single WBO from the stream of JSON received
+  // so far.
   getNextRecord: function RecordParser_getNextRecord() {
     let start;
     let bCount = 0;
@@ -322,11 +410,23 @@ RecordParser.prototype = {
     return false;
   },
 
+  // ** {{{ RecordParser.append }}} **
+  //
+  // Appends data to the current internal buffer
+  // of received data by the parser. The buffer
+  // is continously processed as {{{getNextRecord}}}
+  // is called, so the caller need not keep a copy
+  // of the data passed to this function.
   append: function RecordParser_append(data) {
     this._data += data;
   }
 };
 
+// = JsonFilter =
+//
+// Currently, the only filter used in conjunction with 
+// {{{Resource.filters}}}. It simply encodes outgoing records
+// as JSON, and decodes incoming JSON into JS objects.
 function JsonFilter() {
   let level = "Debug";
   try { level = Utils.prefs.getCharPref("log.logger.network.jsonFilter"); }
@@ -346,6 +446,13 @@ JsonFilter.prototype = {
   }
 };
 
+// = badCertListener =
+//
+// We use this listener to ignore bad HTTPS
+// certificates and continue a request on a network
+// channel. Probably not a very smart thing to do,
+// but greatly simplifies debugging and is just very
+// convenient.
 function badCertListener() {
 }
 badCertListener.prototype = {

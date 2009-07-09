@@ -109,7 +109,7 @@ PasswordStore.prototype = {
     
     let logins = Svc.Login.searchLogins({}, prop);
     if (logins.length > 0) {
-      this._log.info(logins.length + " items matching " + id + " found.");
+      this._log.debug(logins.length + " items matching " + id + " found.");
       return logins[0];
     } else {
       this._log.trace("No items matching " + id + " found. Ignoring");
