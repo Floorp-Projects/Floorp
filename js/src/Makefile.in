@@ -240,9 +240,6 @@ AS_DASH_C_FLAG =
 ASFILES += jswince.asm
 endif
 
-ifdef DEBUG
-CPPSRCS += TraceTreeDrawer.cpp
-endif
 endif # ENABLE_JIT
 
 ifdef HAVE_DTRACE
