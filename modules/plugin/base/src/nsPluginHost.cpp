@@ -531,7 +531,7 @@ nsPluginInstanceTag * nsPluginInstanceTagList::find(const char * mimetype)
     if (!p->mInstance)
       continue;
 
-    nsMIMEType mt;
+    char* mt;
     nsresult rv = p->mInstance->GetMIMEType(&mt);
     if (NS_FAILED(rv))
       continue;
@@ -1101,7 +1101,7 @@ public:
   // nsINPAPIPluginStreamInfo interface
  
   NS_IMETHOD
-  GetContentType(nsMIMEType* result);
+  GetContentType(char **result);
 
   NS_IMETHOD
   IsSeekable(PRBool* result);
@@ -1127,7 +1127,7 @@ public:
   // local methods
 
   void
-  SetContentType(const nsMIMEType contentType);
+  SetContentType(const char* contentType);
 
   void
   SetSeekable(const PRBool seekable);
@@ -1293,7 +1293,7 @@ NS_IMPL_ISUPPORTS2(nsPluginStreamInfo, nsIPluginStreamInfo,
                    nsINPAPIPluginStreamInfo)
 
 NS_IMETHODIMP
-nsPluginStreamInfo::GetContentType(nsMIMEType* result)
+nsPluginStreamInfo::GetContentType(char **result)
 {
   *result = mContentType;
   return NS_OK;
@@ -1450,7 +1450,7 @@ nsPluginStreamInfo::SetStreamOffset(PRInt32 offset)
 }
 
 void
-nsPluginStreamInfo::SetContentType(const nsMIMEType contentType)
+nsPluginStreamInfo::SetContentType(const char* contentType)
 {
   if (mContentType != nsnull)
     PL_strfree(mContentType);

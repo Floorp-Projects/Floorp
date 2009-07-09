@@ -1852,7 +1852,7 @@ static const char*
 GetMIMEType(nsIPluginInstance *aPluginInstance)
 {
   if (aPluginInstance) {
-    nsMIMEType mime = NULL;
+    char* mime = nsnull;
     if (NS_SUCCEEDED(aPluginInstance->GetMIMEType(&mime)) && mime)
       return mime;
   }

@@ -338,7 +338,7 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
     return NS_ERROR_FAILURE;
 
   PRBool seekable;
-  nsMIMEType contentType;
+  char* contentType;
   PRUint16 streamType = NP_NORMAL;
   NPError error;
 
@@ -921,17 +921,17 @@ nsNPAPIPluginInstance::IsStarted(void)
   return mStarted;
 }
 
-NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstanceOwner* aOwner, const nsMIMEType aMIMEType)
+NS_IMETHODIMP nsNPAPIPluginInstance::Initialize(nsIPluginInstanceOwner* aOwner, const char* aMIMEType)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::Initialize this=%p\n",this));
 
   mOwner = aOwner;
 
   if (aMIMEType) {
-    mMIMEType = (nsMIMEType)PR_Malloc(PL_strlen(aMIMEType) + 1);
+    mMIMEType = (char*)PR_Malloc(PL_strlen(aMIMEType) + 1);
 
     if (mMIMEType)
-      PL_strcpy((char *)mMIMEType, aMIMEType);
+      PL_strcpy(mMIMEType, aMIMEType);
   }
 
   return InitializePlugin();
@@ -1123,7 +1123,7 @@ nsNPAPIPluginInstance::InitializePlugin()
   // backward compatible...
   
   nsPluginMode  mode;
-  nsMIMEType    mimetype;
+  char*         mimetype;
   NPError       error;
 
   GetMode(&mode);
@@ -1258,7 +1258,7 @@ nsNPAPIPluginInstance::NewStreamToPlugin(nsIPluginStreamListener** listener)
 }
 
 NS_IMETHODIMP
-nsNPAPIPluginInstance::NewStreamFromPlugin(nsMIMEType type, const char* target,
+nsNPAPIPluginInstance::NewStreamFromPlugin(const char* type, const char* target,
                                            nsIOutputStream* *result)
 {
   nsPluginStreamToFile* stream = new nsPluginStreamToFile(target, mOwner);
@@ -1783,7 +1783,7 @@ nsNPAPIPluginInstance::ForceRedraw()
 }
 
 NS_IMETHODIMP
-nsNPAPIPluginInstance::GetMIMEType(nsMIMEType *result)
+nsNPAPIPluginInstance::GetMIMEType(char* *result)
 {
   if (!mMIMEType)
     *result = "";
