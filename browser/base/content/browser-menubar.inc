@@ -88,6 +88,7 @@
                           accesskey="&sendPageCmd.accesskey;"
                           command="Browser:SendLink"/>
                 <menuseparator/>
+#ifndef WINCE
                 <menuitem id="menu_printSetup"
                           label="&printSetupCmd.label;"
                           accesskey="&printSetupCmd.accesskey;"
@@ -110,6 +111,7 @@
                           oncommand="BrowserImport();"/>
 #ifndef XP_MACOSX
                 <menuseparator/>
+#endif
 #endif
                 <menuitem id="goOfflineMenuitem"
                           label="&goOfflineCmd.label;"
