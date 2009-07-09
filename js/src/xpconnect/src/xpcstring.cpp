@@ -75,13 +75,20 @@ XPCStringConvert::ShutdownDOMStringFinalizer()
 
 // convert a readable to a JSString, copying string data
 // static
-JSString *
-XPCStringConvert::ReadableToJSString(JSContext *cx,
-                                     const nsAString &readable)
+jsval
+XPCStringConvert::ReadableToJSVal(JSContext *cx,
+                                  const nsAString &readable)
 {
     JSString *str;
 
     PRUint32 length = readable.Length();
+
+    JSAtom *atom;
+    if (length == 0 && (atom = cx->runtime->atomState.emptyAtom))
+    {
+        NS_ASSERTION(ATOM_IS_STRING(atom), "What kind of atom is this?");
+        return ATOM_KEY(atom);
+    }
 
     nsStringBuffer *buf = nsStringBuffer::FromString(readable);
     if (buf)
@@ -93,7 +100,7 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
             sDOMStringFinalizerIndex =
                     JS_AddExternalStringFinalizer(DOMStringFinalizer);
             if (sDOMStringFinalizerIndex == -1)
-                return NULL;
+                return JSVAL_NULL;
         }
 
         str = JS_NewExternalString(cx, 
@@ -111,14 +118,14 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
                                         (JS_malloc(cx, (length + 1) *
                                                       sizeof(jschar)));
         if (!chars)
-            return NULL;
+            return JSVAL_NULL;
 
         if (length && !CopyUnicodeTo(readable, 0,
                                      reinterpret_cast<PRUnichar *>(chars),
                                      length))
         {
             JS_free(cx, chars);
-            return NULL;
+            return JSVAL_NULL;
         }
 
         chars[length] = 0;
@@ -127,7 +134,7 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
         if (!str)
             JS_free(cx, chars);
     }
-    return str;
+    return STRING_TO_JSVAL(str);
 }
 
 // static
