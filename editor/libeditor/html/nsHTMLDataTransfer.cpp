@@ -2545,24 +2545,22 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 {
   if (!outFragNode || !outStartNode || !outEndNode) 
     return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
   nsCOMPtr<nsIDOMNode> contextAsNode, tmp;  
   nsresult res = NS_OK;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   GetDocument(getter_AddRefs(domDoc));
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  
   // if we have context info, create a fragment for that
-  nsAutoTArray<nsString, 32> tagStack;
-  nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
   nsCOMPtr<nsIDOMNode> contextLeaf, junk;
   if (!aContextStr.IsEmpty())
   {
-    res = ParseFragment(aContextStr, tagStack, doc, address_of(contextAsNode));
+    nsCOMPtr<nsIDOMDocumentFragment> df;
+    res = nsContentUtils::CreateContextualFragment(domDoc, aContextStr,
+                                                   PR_FALSE,
+                                                   getter_AddRefs(df));
     NS_ENSURE_SUCCESS(res, res);
+    contextAsNode = do_QueryInterface(df);
     NS_ENSURE_TRUE(contextAsNode, NS_ERROR_FAILURE);
 
     res = StripFormattingNodes(contextAsNode);
@@ -2576,13 +2574,12 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  // get the tagstack for the context
-  res = CreateTagStack(tagStack, contextLeaf);
+  nsCOMPtr<nsIDOMDocumentFragment> df;
+  res = nsContentUtils::CreateContextualFragment(contextLeaf, aInputString,
+                                                 PR_FALSE,
+                                                 getter_AddRefs(df));
   NS_ENSURE_SUCCESS(res, res);
-
-  // create fragment for pasted html
-  res = ParseFragment(aInputString, tagStack, doc, outFragNode);
-  NS_ENSURE_SUCCESS(res, res);
+  *outFragNode = df;
   NS_ENSURE_TRUE(*outFragNode, NS_ERROR_FAILURE);
 
   RemoveBodyAndHead(*outFragNode);
@@ -2638,84 +2635,6 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   GetLengthOfDOMNode(*outEndNode, (PRUint32&)*outEndOffset);
   return res;
 }
-
-
-nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
-                                     nsTArray<nsString> &aTagStack,
-                                     nsIDocument* aTargetDocument,
-                                     nsCOMPtr<nsIDOMNode> *outNode)
-{
-  // figure out if we are parsing full context or not
-  PRBool bContext = aTagStack.IsEmpty();
-
-  // create the parser to do the conversion.
-  nsresult res;
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &res);
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(parser, NS_ERROR_FAILURE);
-
-  // create the html fragment sink
-  nsCOMPtr<nsIContentSink> sink;
-  if (bContext)
-    sink = do_CreateInstance(NS_HTMLFRAGMENTSINK2_CONTRACTID);
-  else
-    sink = do_CreateInstance(NS_HTMLFRAGMENTSINK_CONTRACTID);
-
-  NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIFragmentContentSink> fragSink(do_QueryInterface(sink));
-  NS_ENSURE_TRUE(fragSink, NS_ERROR_FAILURE);
-
-  fragSink->SetTargetDocument(aTargetDocument);
-
-  // parse the fragment
-  parser->SetContentSink(sink);
-  if (bContext)
-    parser->Parse(aFragStr, (void*)0, NS_LITERAL_CSTRING("text/html"), PR_TRUE, eDTDMode_fragment);
-  else
-    parser->ParseFragment(aFragStr, 0, aTagStack, PR_FALSE, NS_LITERAL_CSTRING("text/html"), eDTDMode_quirks);
-  // get the fragment node
-  nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
-  res = fragSink->GetFragment(PR_TRUE, getter_AddRefs(contextfrag));
-  NS_ENSURE_SUCCESS(res, res);
-  *outNode = do_QueryInterface(contextfrag);
-  
-  return res;
-}
-
-nsresult nsHTMLEditor::CreateTagStack(nsTArray<nsString> &aTagStack, nsIDOMNode *aNode)
-{
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> node= aNode;
-  PRBool bSeenBody = PR_FALSE;
-  
-  while (node) 
-  {
-    if (nsTextEditUtils::IsBody(node))
-      bSeenBody = PR_TRUE;
-    nsCOMPtr<nsIDOMNode> temp = node;
-    PRUint16 nodeType;
-    
-    node->GetNodeType(&nodeType);
-    if (nsIDOMNode::ELEMENT_NODE == nodeType)
-    {
-      nsString* tagName = aTagStack.AppendElement();
-      NS_ENSURE_TRUE(tagName, NS_ERROR_OUT_OF_MEMORY);
-
-      node->GetNodeName(*tagName);
-      // printf("%s\n",NS_LossyConvertUTF16toASCII(tagName).get());
-    }
-
-    res = temp->GetParentNode(getter_AddRefs(node));
-    NS_ENSURE_SUCCESS(res, res);  
-  }
-  
-  if (!bSeenBody)
-  {
-      aTagStack.AppendElement(NS_LITERAL_STRING("BODY"));
-  }
-  return res;
-}
-
 
 nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                                 nsCOMArray<nsIDOMNode>& outNodeList,
