@@ -1,4 +1,5 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
+/* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -238,7 +239,7 @@ Assembler::genEpilogue()
     // nFragExit loads the guard record pointer into R2, but we need it in R0
     // so it must be moved here.
     MOV(R0,R2); // return GuardRecord*
-    
+
     return _nIns;
 }
 
@@ -564,7 +565,7 @@ Assembler::nPatchBranch(NIns* at, NIns* target)
 
     // Assert that the existing placeholder is not conditional.
     NanoAssert((at[0] & 0xf0000000) == COND_AL);
-    
+
     // We only have to patch unconditional branches, but these may take one of
     // the following patterns:
     //
@@ -574,7 +575,7 @@ Assembler::nPatchBranch(NIns* at, NIns* target)
     //  --- Long branch.
     //          LDR     PC, #lit
     //  lit:    #target
-    
+
     intptr_t offs = PC_OFFSET_FROM(target, at);
     if (isS24(offs>>2)) {
         // Emit a simple branch (B) in the first of the two available
@@ -735,7 +736,7 @@ Assembler::asm_load64(LInsp ins)
     Register rb = findRegFor(base, GpRegs);
     NanoAssert(IsGpReg(rb));
     freeRsrcOf(ins, false);
- 
+
     //output("--- load64: Finished register allocation.");
 
     if (AvmCore::config.vfp && rr != UnknownReg) {
@@ -1025,7 +1026,7 @@ Assembler::resetInstructionPointer()
 void
 Assembler::underrunProtect(int bytes)
 {
-    NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small"); 
+    NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small");
     intptr_t u = bytes + sizeof(PageHeader)/sizeof(NIns) + 8;
     if ( (samepage(_nIns,_nSlot) && (((intptr_t)_nIns-u) <= intptr_t(_nSlot+1))) ||
          (!samepage((intptr_t)_nIns-u,_nIns)) )
@@ -1583,13 +1584,13 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
 
     // Ensure that we got a sensible condition code.
     NanoAssert((cc != AL) && (cc != NV));
-    
+
     // Ensure that we don't hit floating-point LIR codes if VFP is disabled.
     NanoAssert(AvmCore::config.vfp || !fp_cond);
 
     // Emit a suitable branch instruction.
     B_cond(cc, targ);
-    
+
     // Store the address of the branch instruction so that we can return it.
     // asm_[f]cmp will move _nIns so we must do this now.
     NIns *at = _nIns;
@@ -1707,7 +1708,7 @@ Assembler::asm_cond(LInsp ins)
         case LIR_ule:   SET(r,LS);      break;
         case LIR_ugt:   SET(r,HI);      break;
         case LIR_uge:   SET(r,HS);      break;
-        default:        NanoAssert(0);  break; 
+        default:        NanoAssert(0);  break;
     }
     asm_cmp(ins);
 }
