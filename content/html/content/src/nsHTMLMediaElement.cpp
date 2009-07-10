@@ -225,7 +225,7 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel &&
       element &&
-      NS_SUCCEEDED(rv = mElement->InitializeDecoderForChannel(channel, getter_AddRefs(mNextListener))) &&
+      NS_SUCCEEDED(rv = element->InitializeDecoderForChannel(channel, getter_AddRefs(mNextListener))) &&
       mNextListener) {
     rv = mNextListener->OnStartRequest(aRequest, aContext);
   } else {
