@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek1.js"></script>
+  <script type="text/javascript" src="seek2.js"></script>
+  <script type="text/javascript" src="seek3.js"></script>
+  <script type="text/javascript" src="seek4.js"></script>
+  <script type="text/javascript" src="seek5.js"></script>
+  <script type="text/javascript" src="seek6.js"></script>
+  <script type="text/javascript" src="seek7.js"></script>
+  <script type="text/javascript" src="seek8.js"></script>
+  <script type="text/javascript" src="seek9.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var testNum = 0;
+var testsWaiting = 0;
+var videos = [];
+
+var tmpVid = document.createElement("video");
+function doNextFile() {
+  if (testNum >= gSeekTests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = gSeekTests[testNum];
+  ++testNum;
+
+  if (tmpVid.canPlayType(test.type) == "no") {
+    doNextFile();
+    return;
+  }
+
+  for (var i = 1; i <= 9; ++i) {
+    var v = document.createElement('video');
+    v.src = test.name;
+    document.body.appendChild(v);
+    var name = test.name + " seek test " + i;
+    var localIs = function(name) { return function(a, b, msg) {
+      is(a, b, name + ": " + msg);
+    }}();
+    var localOk = function(name) { return function(a, msg) {
+      ok(a, name + ": " + msg);
+    }}();
+    var localFinish = function() {
+      --testsWaiting;
+      if (testsWaiting == 0) {
+        for (var j = 0; j < videos.length; ++j) {
+          document.body.removeChild(videos[j]);
+        }
+        videos = [];
+        doNextFile();
+      }
+    };
+    window['test_seek' + i](v, test.duration/2, localIs, localOk, localFinish);
+    ++testsWaiting;
+  }
+}
+
+doNextFile();
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
