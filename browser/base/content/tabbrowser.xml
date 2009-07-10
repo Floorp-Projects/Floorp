@@ -2994,7 +2994,7 @@
             this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            let width = this.firstChild.clientWidth;
+            var width = this.firstChild.boxObject.width;
             // 0 width is an invalid value and indicates
             // an item without display, so ignore.
             if (width > this.mTabClipWidth || width == 0)
