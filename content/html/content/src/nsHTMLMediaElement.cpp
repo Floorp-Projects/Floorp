@@ -172,6 +172,12 @@ void nsHTMLMediaElement::QueueLoadFromSourceTask()
   NS_DispatchToMainThread(event);
 }
 
+/**
+ * There is a reference cycle involving this class: MediaLoadListener
+ * holds a reference to the nsHTMLMediaElement, which holds a reference
+ * to an nsIChannel, which holds a reference to this listener.
+ * We break the reference cycle in OnStartRequest by clearing mElement.
+ */
 class nsHTMLMediaElement::MediaLoadListener : public nsIStreamListener,
                                               public nsIChannelEventSink,
                                               public nsIInterfaceRequestor
@@ -200,40 +206,41 @@ NS_IMPL_ISUPPORTS4(nsHTMLMediaElement::MediaLoadListener, nsIRequestObserver,
 
 NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
+  // The element is only needed until we've had a chance to call
+  // InitializeDecoderForChannel. So make sure mElement is cleared here.
+  nsRefPtr<nsHTMLMediaElement> element;
+  element.swap(mElement);
+
   // Don't continue to load if the request failed or has been canceled.
   nsresult rv;
   nsresult status;
   rv = aRequest->GetStatus(&status);
   NS_ENSURE_SUCCESS(rv, rv);
   if (NS_FAILED(status)) {
-    if (mElement)
-      mElement->NotifyLoadError();
+    if (element)
+      element->NotifyLoadError();
     return status;
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (channel &&
-      mElement &&
+      element &&
       NS_SUCCEEDED(rv = mElement->InitializeDecoderForChannel(channel, getter_AddRefs(mNextListener))) &&
       mNextListener) {
     rv = mNextListener->OnStartRequest(aRequest, aContext);
   } else {
     // If InitializeDecoderForChannel() returned an error, fire a network
     // error.
-    if (NS_FAILED(rv) && !mNextListener && mElement) {
+    if (NS_FAILED(rv) && !mNextListener && element) {
       // Load failed, attempt to load the next candidate resource. If there
       // are none, this will trigger a MEDIA_ERR_NONE_SUPPORTED error.
-      mElement->NotifyLoadError();
+      element->NotifyLoadError();
     }
     // If InitializeDecoderForChannel did not return a listener (but may
     // have otherwise succeeded), we abort the connection since we aren't
     // interested in keeping the channel alive ourselves.
     rv = NS_BINDING_ABORTED;
   }
-
-  // The element is only needed until we've had a chance to call
-  // InitializeDecoderForChannel.
-  mElement = nsnull;
 
   return rv;
 }
