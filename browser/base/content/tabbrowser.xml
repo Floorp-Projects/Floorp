@@ -2236,7 +2236,7 @@
             this.mTabContainer.childNodes[i]._selected = false;
           }
           this.mCurrentTab._selected = true;
-          this.mTabContainer.mTabstrip.scrollBoxObject.ensureElementIsVisible(this.mCurrentTab);
+          this.mTabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
 
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("TabMove", true, false, window, oldPosition);
@@ -2795,7 +2795,7 @@
          this._scrollButtonDownBox.collapsed = false;
          this._scrollButtonDownBoxAnimate.collapsed = false;
 #endif
-         this.scrollBoxObject.ensureElementIsVisible(tabs.selectedItem);
+         this.ensureElementIsVisible(tabs.selectedItem, false);
       ]]></handler>
 
 #ifdef XP_MACOSX
@@ -2994,7 +2994,7 @@
             this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            var width = this.firstChild.boxObject.width;
+            let width = this.firstChild.clientWidth;
             // 0 width is an invalid value and indicates
             // an item without display, so ignore.
             if (width > this.mTabClipWidth || width == 0)
