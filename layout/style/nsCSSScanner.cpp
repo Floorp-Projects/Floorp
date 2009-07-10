@@ -36,6 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include <math.h>
 
 /* tokenization of CSS style sheets */
 
@@ -1071,12 +1072,40 @@ nsCSSScanner::ParseAtKeyword(PRInt32 aChar, nsCSSToken& aToken)
 PRBool
 nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
 {
-  nsString& ident = aToken.mIdent;
-  ident.SetLength(0);
+  NS_PRECONDITION(c == '.' || c == '+' || c == '-' || IsDigit(c),
+                  "Why did we get called?");
   PRBool gotDot = (c == '.');
   aToken.mHasSign = (c == '+' || c == '-');
-  if (c != '+') {
-    ident.Append(PRUnichar(c));
+
+  // Our sign.
+  PRInt32 sign = c == '-' ? -1 : 1;
+  // Absolute value of the integer part of the mantissa.  This is a double so
+  // we don't run into overflow issues for consumers that only care about our
+  // floating-point value while still being able to express the full PRInt32
+  // range for consumers who want integers.
+  double intPart = 0;
+  // Fractional part of the mantissa.  This is a double so that when we convert
+  // to float at the end we'll end up rounding to nearest float instead of
+  // truncating down (as we would if fracPart were a float and we just
+  // effectively lost the last several digits).
+  double fracPart = 0;
+  // Power of ten by which we need to divide our next digit; this is 1
+  // unless we're parsing the fractional part of the mantissa (so
+  // unless gotDot is true).
+  float divisor = 1;
+  // Absolute value of the power of 10 that we should multiply by (only
+  // relevant for numbers in scientific notation).  Has to be a signed integer,
+  // because multiplication of signed by unsigned converts the unsigned to
+  // signed, so if we plan to actually multiply by expSign...
+  PRInt32 exponent = 0;
+  // Sign of the exponent.
+  PRInt32 expSign = 1;
+  
+  if (gotDot) {
+    divisor = 10;
+  } else if (!aToken.mHasSign) {
+    // We got our first digit
+    intPart += (c - '0');
   }
 
   // Gather up characters that make up the number
@@ -1087,26 +1116,26 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
     if (!gotDot  && !gotE && (c == '.') &&
         IsDigit(Peek())) {
       gotDot = PR_TRUE;
+      divisor = 10;
 #ifdef MOZ_SVG
     } else if (!gotE && (c == 'e' || c == 'E')) {
       if (!IsSVGMode()) {
         break;
       }
       PRInt32 nextChar = Peek();
-      PRInt32 sign = 0;
+      PRInt32 expSignChar = 0;
       if (nextChar == '-' || nextChar == '+') {
-        sign = Read();
+        expSignChar = Read();
         nextChar = Peek();
       }
       if (IsDigit(nextChar)) {
         gotE = PR_TRUE;
-        if (sign) {
-          ident.Append(PRUnichar(c));
-          c = sign;
+        if (expSignChar == '-') {
+          expSign = -1;
         }
       } else {
-        if (sign) {
-          Pushback(sign);
+        if (expSignChar) {
+          Pushback(expSignChar);
         }
         break;
       }
@@ -1114,22 +1143,41 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
     } else if (!IsDigit(c)) {
       break;
     }
-    ident.Append(PRUnichar(c));
+    // else we have a digit; what we do with it depends on where we are
+    else if (gotE) {
+      exponent = 10*exponent + (c - '0');
+    } else if (gotDot) {
+      fracPart += (c - '0') / divisor;
+      divisor *= 10;
+    } else {
+      intPart = 10*intPart + (c - '0');
+    }
   }
 
-  // Convert number to floating point
   nsCSSTokenType type = eCSSToken_Number;
-  PRInt32 ec;
-  float value = ident.ToFloat(&ec);
 
   // Set mIntegerValid for all cases (except %, below) because we need
   // it for the "2n" in :nth-child(2n).
   aToken.mIntegerValid = PR_FALSE;
-  if (!gotDot && !gotE) {
-    aToken.mInteger = ident.ToInteger(&ec);
+
+  // Time to reassemble our number.
+  float value = float(sign * (intPart + fracPart));
+  if (gotE) {
+    // pow(), not powf(), because at least wince doesn't have the latter.
+    // And explicitly cast everything to doubles to avoid issues with
+    // overloaded pow() on Windows.
+    value *= pow(10.0, double(expSign * exponent));
+  } else if (!gotDot) {
+    if (intPart > PR_INT32_MAX) {
+      // Just clamp it.
+      intPart = PR_INT32_MAX;
+    }
+    aToken.mInteger = PRInt32(sign * intPart);
     aToken.mIntegerValid = PR_TRUE;
   }
-  ident.SetLength(0);
+
+  nsString& ident = aToken.mIdent;
+  ident.Truncate();
 
   // Look at character that terminated the number
   if (c >= 0) {
