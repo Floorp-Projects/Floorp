@@ -48,7 +48,7 @@ namespace nanojit
     }
 
     /**
-     * CodeList is a linked list of non-contigous blocks of code.  Clients use CodeList* 
+     * CodeList is a linked list of non-contigous blocks of code.  Clients use CodeList*
      * to point to a list, and each CodeList instance tracks a single contiguous
      * block of code.
      */
@@ -90,21 +90,21 @@ namespace nanojit
         bool contains(NIns* p) const  { return containsPtr(&code[0], end, p); }
     };
 
-	/**
-	 * Code memory allocator.
+    /**
+     * Code memory allocator.
      * Long lived manager for many code blocks,
      * manages interaction with an underlying code memory allocator,
      * setting page permissions, api's for allocating and freeing
      * individual blocks of code memory (for methods, stubs, or compiled
      * traces), and also static functions for managing lists of allocated
      * code.
-	 */
-	class CodeAlloc : public GCFinalizedObject
-	{
+     */
+    class CodeAlloc : public GCFinalizedObject
+    {
         static const size_t sizeofMinBlock = offsetof(CodeList, code);
         static const size_t minAllocSize = LARGEST_UNDERRUN_PROT;
 
-		GCHeap* heap;
+        GCHeap* heap;
         CodeList* heapblocks;
 
         /** remove one block from a list */
@@ -125,8 +125,8 @@ namespace nanojit
         /** find the beginning of the heapblock terminated by term */
         static CodeList* firstBlock(CodeList* term);
 
-	public:
-		CodeAlloc(GCHeap*);
+    public:
+        CodeAlloc(GCHeap*);
         ~CodeAlloc();
 
         /** allocate some memory for code, return pointers to the region. */
@@ -169,7 +169,7 @@ namespace nanojit
 
         /** return any completely empty pages */
         void sweep();
-	};
+    };
 }
 
 #endif // __nanojit_CodeAlloc__

@@ -1,4 +1,5 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
+/* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,48 +43,48 @@
 #undef MEMORY_INFO
 
 namespace nanojit
-{	
-	#ifdef FEATURE_NANOJIT
+{
+    #ifdef FEATURE_NANOJIT
 
-	using namespace avmplus;
+    using namespace avmplus;
 
-	static uint32_t calcSaneCacheSize(uint32_t in)
-	{
-		if (in < uint32_t(NJ_LOG2_PAGE_SIZE)) return NJ_LOG2_PAGE_SIZE;	// at least 1 page
-		if (in > 32) return 32;	// 4GB should be enough for anyone
-		return in;
-	}
+    static uint32_t calcSaneCacheSize(uint32_t in)
+    {
+        if (in < uint32_t(NJ_LOG2_PAGE_SIZE)) return NJ_LOG2_PAGE_SIZE;    // at least 1 page
+        if (in > 32) return 32;    // 4GB should be enough for anyone
+        return in;
+    }
 
-	/**
-	 * This is the main control center for creating and managing fragments.
-	 */
-	Fragmento::Fragmento(AvmCore* core, LogControl* logc, uint32_t cacheSizeLog2) 
-		:
+    /**
+     * This is the main control center for creating and managing fragments.
+     */
+    Fragmento::Fragmento(AvmCore* core, LogControl* logc, uint32_t cacheSizeLog2)
+        :
 #ifdef NJ_VERBOSE
-		  enterCounts(NULL),
-		  mergeCounts(NULL),
-		  labels(NULL),
+          enterCounts(NULL),
+          mergeCounts(NULL),
+          labels(NULL),
 #endif
-		  _frags(core->GetGC()),
-		  _freePages(core->GetGC(), 1024),
-		  _allocList(core->GetGC()),
-		  _gcHeap(NULL),
-		  _max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE)),
-		  _pagesGrowth(1)
-	{
+          _frags(core->GetGC()),
+          _freePages(core->GetGC(), 1024),
+          _allocList(core->GetGC()),
+          _gcHeap(NULL),
+          _max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE)),
+          _pagesGrowth(1)
+    {
 #ifdef _DEBUG
-		{
-			// XXX These belong somewhere else, but I can't find the
-			//     right location right now.
-			NanoStaticAssert((LIR_lt ^ 3) == LIR_ge);
-			NanoStaticAssert((LIR_le ^ 3) == LIR_gt);
-			NanoStaticAssert((LIR_ult ^ 3) == LIR_uge);
-			NanoStaticAssert((LIR_ule ^ 3) == LIR_ugt);
-			NanoStaticAssert((LIR_flt ^ 3) == LIR_fge);
-			NanoStaticAssert((LIR_fle ^ 3) == LIR_fgt);
+        {
+            // XXX These belong somewhere else, but I can't find the
+            //     right location right now.
+            NanoStaticAssert((LIR_lt ^ 3) == LIR_ge);
+            NanoStaticAssert((LIR_le ^ 3) == LIR_gt);
+            NanoStaticAssert((LIR_ult ^ 3) == LIR_uge);
+            NanoStaticAssert((LIR_ule ^ 3) == LIR_ugt);
+            NanoStaticAssert((LIR_flt ^ 3) == LIR_fge);
+            NanoStaticAssert((LIR_fle ^ 3) == LIR_fgt);
 
-			/* Opcodes must be strictly increasing without holes. */
-			uint32_t count = 0;
+            /* Opcodes must be strictly increasing without holes. */
+            uint32_t count = 0;
 #define OPDEF(op, number, operands, repkind) \
         NanoAssertMsg(LIR_##op == count++, "misnumbered opcode");
 #define OPDEF64(op, number, operands, repkind) \
@@ -91,55 +92,55 @@ namespace nanojit
 #include "LIRopcode.tbl"
 #undef OPDEF
 #undef OPDEF64
-		}
+        }
 #endif
 
 #ifdef MEMORY_INFO
-		_allocList.set_meminfo_name("Fragmento._allocList");
+        _allocList.set_meminfo_name("Fragmento._allocList");
 #endif
-		NanoAssert(_max_pages > _pagesGrowth); // shrink growth if needed 
-		_core = core;
-		GC *gc = core->GetGC();
-		_assm = NJ_NEW(gc, nanojit::Assembler)(this, logc);
-		verbose_only( enterCounts = NJ_NEW(gc, BlockHist)(gc); )
-		verbose_only( mergeCounts = NJ_NEW(gc, BlockHist)(gc); )
+        NanoAssert(_max_pages > _pagesGrowth); // shrink growth if needed
+        _core = core;
+        GC *gc = core->GetGC();
+        _assm = NJ_NEW(gc, nanojit::Assembler)(this, logc);
+        verbose_only( enterCounts = NJ_NEW(gc, BlockHist)(gc); )
+        verbose_only( mergeCounts = NJ_NEW(gc, BlockHist)(gc); )
 
-		memset(&_stats, 0, sizeof(_stats));
-	}
+        memset(&_stats, 0, sizeof(_stats));
+    }
 
-	Fragmento::~Fragmento()
-	{
+    Fragmento::~Fragmento()
+    {
         AllocEntry *entry;
 
-		clearFrags();
-        _frags.clear();		
-		_freePages.clear();
-		while( _allocList.size() > 0 )
-		{
-			//nj_dprintf("dealloc %x\n", (intptr_t)_allocList.get(_allocList.size()-1));
+        clearFrags();
+        _frags.clear();
+        _freePages.clear();
+        while( _allocList.size() > 0 )
+        {
+            //nj_dprintf("dealloc %x\n", (intptr_t)_allocList.get(_allocList.size()-1));
 #ifdef MEMORY_INFO
-			ChangeSizeExplicit("NanoJitMem", -1, _gcHeap->Size(_allocList.last()));
+            ChangeSizeExplicit("NanoJitMem", -1, _gcHeap->Size(_allocList.last()));
 #endif
             entry = _allocList.removeLast();
-			_gcHeap->Free( entry->page, entry->allocSize );
+            _gcHeap->Free( entry->page, entry->allocSize );
             NJ_DELETE(entry);
-		}
+        }
         NJ_DELETE(_assm);
 #if defined(NJ_VERBOSE)
         NJ_DELETE(enterCounts);
         NJ_DELETE(mergeCounts);
 #endif
-	}
+    }
 
-	void Fragmento::trackPages()
-	{
-		const uint32_t pageUse = _stats.pages - _freePages.size();
-		if (_stats.maxPageUse < pageUse)
-			_stats.maxPageUse = pageUse;
-	}
+    void Fragmento::trackPages()
+    {
+        const uint32_t pageUse = _stats.pages - _freePages.size();
+        if (_stats.maxPageUse < pageUse)
+            _stats.maxPageUse = pageUse;
+    }
 
-	Page* Fragmento::pageAlloc()
-	{
+    Page* Fragmento::pageAlloc()
+    {
         NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
         if (!_freePages.size()) {
             pagesGrow(_pagesGrowth);    // try to get more mem
@@ -147,34 +148,34 @@ namespace nanojit
                 _pagesGrowth <<= 1;
         }
 
-		trackPages();
-		Page* page = 0;
-		if (_freePages.size()) 
-			page = _freePages.removeLast();
-		return page;
-		}
-	
-	void Fragmento::pagesRelease(PageList& l)
-		{
-		_freePages.add(l);
-		l.clear();
-		NanoAssert(_freePages.size() <= _stats.pages);
-	}
-	
-	void Fragmento::pageFree(Page* page)
-	{ 
-		_freePages.add(page);
-		NanoAssert(_freePages.size() <= _stats.pages);
-	}
+        trackPages();
+        Page* page = 0;
+        if (_freePages.size())
+            page = _freePages.removeLast();
+        return page;
+        }
 
-	void Fragmento::pagesGrow(int32_t count)
-	{
-		NanoAssert(!_freePages.size());
-		MMGC_MEM_TYPE("NanojitFragmentoMem"); 
-		Page* memory = 0;
+    void Fragmento::pagesRelease(PageList& l)
+        {
+        _freePages.add(l);
+        l.clear();
+        NanoAssert(_freePages.size() <= _stats.pages);
+    }
+
+    void Fragmento::pageFree(Page* page)
+    {
+        _freePages.add(page);
+        NanoAssert(_freePages.size() <= _stats.pages);
+    }
+
+    void Fragmento::pagesGrow(int32_t count)
+    {
+        NanoAssert(!_freePages.size());
+        MMGC_MEM_TYPE("NanojitFragmentoMem");
+        Page* memory = 0;
         GC *gc = _core->GetGC();
-		if (_stats.pages < _max_pages)
-		{
+        if (_stats.pages < _max_pages)
+        {
             AllocEntry *entry;
 
             // make sure we don't grow beyond _max_pages
@@ -182,79 +183,79 @@ namespace nanojit
                 count = _max_pages - _stats.pages;
             if (count < 0)
                 count = 0;
-			// @todo nastiness that needs a fix'n
-			_gcHeap = gc->GetGCHeap();
-			NanoAssert(int32_t(NJ_PAGE_SIZE)<=_gcHeap->kNativePageSize);
-			
-			// convert _max_pages to gc page count 
-			int32_t gcpages = (count*NJ_PAGE_SIZE) / _gcHeap->kNativePageSize;
-			MMGC_MEM_TYPE("NanoJitMem"); 
-			memory = (Page*)_gcHeap->Alloc(gcpages);
+            // @todo nastiness that needs a fix'n
+            _gcHeap = gc->GetGCHeap();
+            NanoAssert(int32_t(NJ_PAGE_SIZE)<=_gcHeap->kNativePageSize);
+
+            // convert _max_pages to gc page count
+            int32_t gcpages = (count*NJ_PAGE_SIZE) / _gcHeap->kNativePageSize;
+            MMGC_MEM_TYPE("NanoJitMem");
+            memory = (Page*)_gcHeap->Alloc(gcpages);
 #ifdef MEMORY_INFO
-			ChangeSizeExplicit("NanoJitMem", 1, _gcHeap->Size(memory));
+            ChangeSizeExplicit("NanoJitMem", 1, _gcHeap->Size(memory));
 #endif
             NanoAssert((uintptr_t)memory == pageTop(memory));
-			//nj_dprintf("head alloc of %d at %x of %d pages using nj page size of %d\n", gcpages, (intptr_t)memory, (intptr_t)_gcHeap->kNativePageSize, NJ_PAGE_SIZE);
+            //nj_dprintf("head alloc of %d at %x of %d pages using nj page size of %d\n", gcpages, (intptr_t)memory, (intptr_t)_gcHeap->kNativePageSize, NJ_PAGE_SIZE);
 
             entry = NJ_NEW(gc, AllocEntry);
             entry->page = memory;
             entry->allocSize = gcpages;
             _allocList.add(entry);
 
-			_stats.pages += count;
-			Page* page = memory;
-			while(--count >= 0)
-			{
-				//nj_dprintf("Fragmento::pageGrow adding page %x ; %d\n", (unsigned)page, _freePages.size()+1);
-				_freePages.add(page++);
-			}
-			trackPages();
-		}
-	}
-	
-	// Clear the fragment. This *does not* remove the fragment from the
-	// map--the caller must take care of this.
-	void Fragmento::clearFragment(Fragment* f)
-	{
-		Fragment *peer = f->peer;
-		while (peer) {
-			Fragment *next = peer->peer;
-			peer->releaseTreeMem(this);
-			NJ_DELETE(peer);
-			peer = next;
-		}
-		f->releaseTreeMem(this);
-		NJ_DELETE(f);
-	}
+            _stats.pages += count;
+            Page* page = memory;
+            while(--count >= 0)
+            {
+                //nj_dprintf("Fragmento::pageGrow adding page %x ; %d\n", (unsigned)page, _freePages.size()+1);
+                _freePages.add(page++);
+            }
+            trackPages();
+        }
+    }
 
-	void Fragmento::clearFrags()
-	{
-		// reclaim any dangling native pages
-		_assm->pageReset();
+    // Clear the fragment. This *does not* remove the fragment from the
+    // map--the caller must take care of this.
+    void Fragmento::clearFragment(Fragment* f)
+    {
+        Fragment *peer = f->peer;
+        while (peer) {
+            Fragment *next = peer->peer;
+            peer->releaseTreeMem(this);
+            NJ_DELETE(peer);
+            peer = next;
+        }
+        f->releaseTreeMem(this);
+        NJ_DELETE(f);
+    }
+
+    void Fragmento::clearFrags()
+    {
+        // reclaim any dangling native pages
+        _assm->pageReset();
 
         while (!_frags.isEmpty()) {
             clearFragment(_frags.removeLast());
-		}
+        }
 
-		verbose_only( enterCounts->clear();)
-		verbose_only( mergeCounts->clear();)
-		verbose_only( _stats.flushes++ );
-		verbose_only( _stats.compiles = 0 );
-		//nj_dprintf("Fragmento.clearFrags %d free pages of %d\n", _stats.freePages, _stats.pages);
-	}
+        verbose_only( enterCounts->clear();)
+        verbose_only( mergeCounts->clear();)
+        verbose_only( _stats.flushes++ );
+        verbose_only( _stats.compiles = 0 );
+        //nj_dprintf("Fragmento.clearFrags %d free pages of %d\n", _stats.freePages, _stats.pages);
+    }
 
-	Assembler* Fragmento::assm()
-	{
-		return _assm;
-	}
+    Assembler* Fragmento::assm()
+    {
+        return _assm;
+    }
 
-	AvmCore* Fragmento::core()
-	{
-		return _core;
-	}
+    AvmCore* Fragmento::core()
+    {
+        return _core;
+    }
 
     Fragment* Fragmento::getAnchor(const void* ip)
-	{
+    {
         Fragment *f = newFrag(ip);
         Fragment *p = _frags.get(ip);
         if (p) {
@@ -273,40 +274,40 @@ namespace nanojit
         f->kind = LoopTrace;
         verbose_only( addLabel(f, "T", _frags.size()); )
         return f;
-	}
-	
+    }
+
     Fragment* Fragmento::getLoop(const void* ip)
-	{
+    {
         return _frags.get(ip);
-	}
+    }
 
 #ifdef NJ_VERBOSE
-	void Fragmento::addLabel(Fragment *f, const char *prefix, int id)
-	{
-		char fragname[20];
-		sprintf(fragname,"%s%d", prefix, id);
-		labels->add(f, sizeof(Fragment), 0, fragname);
-	}
+    void Fragmento::addLabel(Fragment *f, const char *prefix, int id)
+    {
+        char fragname[20];
+        sprintf(fragname,"%s%d", prefix, id);
+        labels->add(f, sizeof(Fragment), 0, fragname);
+    }
 #endif
 
-	Fragment *Fragmento::createBranch(SideExit* exit, const void* ip)
+    Fragment *Fragmento::createBranch(SideExit* exit, const void* ip)
     {
         Fragment *f = newBranch(exit->from, ip);
-		f->kind = BranchTrace;
-		f->treeBranches = f->root->treeBranches;
-		f->root->treeBranches = f;
+        f->kind = BranchTrace;
+        f->treeBranches = f->root->treeBranches;
+        f->root->treeBranches = f;
         return f;
     }
 
 #ifdef NJ_VERBOSE
-	struct fragstats {
-		int size;
-		uint64_t traceDur;
-		uint64_t interpDur;
-		int lir, lirbytes;
-	};
+    struct fragstats {
+        int size;
+        uint64_t traceDur;
+        uint64_t interpDur;
+        int lir, lirbytes;
+    };
 
-	void Fragmento::dumpFragStats(Fragment *f, int level, fragstats &stat)
+    void Fragmento::dumpFragStats(Fragment *f, int level, fragstats &stat)
     {
         char buf[50];
         sprintf(buf, "%*c%s", 1+level, ' ', labels->format(f));
@@ -322,32 +323,32 @@ namespace nanojit
         char cause[200];
         if (f->_token && strcmp(f->_token,"loop")==0)
             sprintf(cause,"%s %d", f->_token, f->xjumpCount);
-		else if (f->_token) {
-			if (f->eot_target) {
-				sprintf(cause,"%s %s", f->_token, labels->format(f->eot_target));
-			} else {
-	            strcpy(cause, f->_token);
-			}
-		}
+        else if (f->_token) {
+            if (f->eot_target) {
+                sprintf(cause,"%s %s", f->_token, labels->format(f->eot_target));
+            } else {
+                strcpy(cause, f->_token);
+            }
+        }
         else
             cause[0] = 0;
-        
+
         _assm->outputf("%-10s %7d %6d %6d %6d %4d %9llu %9llu %-12s %s", buf,
             called, f->guardCount, main, f->_native, f->compileNbr, f->traceTicks/1000, f->interpTicks/1000,
-			cause, labels->format(f->ip));
-        
-        stat.size += main;
-		stat.traceDur += f->traceTicks;
-		stat.interpDur += f->interpTicks;
-		stat.lir += f->_lir;
-		stat.lirbytes += f->_lirbytes;
+            cause, labels->format(f->ip));
 
-		for (Fragment *x = f->branches; x != 0; x = x->nextbranch)
-			if (x->kind != MergeTrace)
-	            dumpFragStats(x,level+1,stat);
+        stat.size += main;
+        stat.traceDur += f->traceTicks;
+        stat.interpDur += f->interpTicks;
+        stat.lir += f->_lir;
+        stat.lirbytes += f->_lirbytes;
+
         for (Fragment *x = f->branches; x != 0; x = x->nextbranch)
-			if (x->kind == MergeTrace)
-	            dumpFragStats(x,level+1,stat);
+            if (x->kind != MergeTrace)
+                dumpFragStats(x,level+1,stat);
+        for (Fragment *x = f->branches; x != 0; x = x->nextbranch)
+            if (x->kind == MergeTrace)
+                dumpFragStats(x,level+1,stat);
 
         if (f->isAnchor() && f->branches != 0) {
             _assm->output("");
@@ -358,63 +359,63 @@ namespace nanojit
         DurData(): frag(0), traceDur(0), interpDur(0), size(0) {}
         DurData(int): frag(0), traceDur(0), interpDur(0), size(0) {}
         DurData(Fragment* f, uint64_t td, uint64_t id, int32_t s)
-			: frag(f), traceDur(td), interpDur(id), size(s) {}
+            : frag(f), traceDur(td), interpDur(id), size(s) {}
         Fragment* frag;
         uint64_t traceDur;
         uint64_t interpDur;
-		int32_t size;
+        int32_t size;
     };
 
-	void Fragmento::dumpRatio(const char *label, BlockHist *hist)
-	{
-		int total=0, unique=0;
-		for (int i = 0, n=hist->size(); i < n; i++) {
-			const void * id = hist->keyAt(i);
-			int c = hist->get(id);
-			if (c > 1) {
-				//_assm->outputf("%d %X", c, id);
-				unique += 1;
-			}
-			else if (c == 1) {
-				unique += 1;
-			}
-			total += c;
-		}
-		_assm->outputf("%s total %d unique %d ratio %.1f%", label, total, unique, double(total)/unique);
-	}
+    void Fragmento::dumpRatio(const char *label, BlockHist *hist)
+    {
+        int total=0, unique=0;
+        for (int i = 0, n=hist->size(); i < n; i++) {
+            const void * id = hist->keyAt(i);
+            int c = hist->get(id);
+            if (c > 1) {
+                //_assm->outputf("%d %X", c, id);
+                unique += 1;
+            }
+            else if (c == 1) {
+                unique += 1;
+            }
+            total += c;
+        }
+        _assm->outputf("%s total %d unique %d ratio %.1f%", label, total, unique, double(total)/unique);
+    }
 
-	void Fragmento::dumpStats()
-	{
-		_assm->output("");
-		dumpRatio("inline", enterCounts);
-		dumpRatio("merges", mergeCounts);
-		_assm->outputf("abc %d il %d (%.1fx) abc+il %d (%.1fx)",
-			_stats.abcsize, _stats.ilsize, (double)_stats.ilsize/_stats.abcsize,
-			_stats.abcsize + _stats.ilsize,
-			double(_stats.abcsize+_stats.ilsize)/_stats.abcsize);
+    void Fragmento::dumpStats()
+    {
+        _assm->output("");
+        dumpRatio("inline", enterCounts);
+        dumpRatio("merges", mergeCounts);
+        _assm->outputf("abc %d il %d (%.1fx) abc+il %d (%.1fx)",
+            _stats.abcsize, _stats.ilsize, (double)_stats.ilsize/_stats.abcsize,
+            _stats.abcsize + _stats.ilsize,
+            double(_stats.abcsize+_stats.ilsize)/_stats.abcsize);
 
-		int32_t count = _frags.size();
-		int32_t pages =  _stats.pages;
-		int32_t maxPageUse =  _stats.maxPageUse;
-		int32_t free = _freePages.size();
-		int32_t flushes = _stats.flushes;
-		if (!count)
-		{
-			_assm->outputf("No fragments in cache, %d flushes", flushes);
+        int32_t count = _frags.size();
+        int32_t pages =  _stats.pages;
+        int32_t maxPageUse =  _stats.maxPageUse;
+        int32_t free = _freePages.size();
+        int32_t flushes = _stats.flushes;
+        if (!count)
+        {
+            _assm->outputf("No fragments in cache, %d flushes", flushes);
             return;
-		}
+        }
 
         _assm->outputf("\nFragment statistics");
-		_assm->outputf("  loop trees:     %d", count);
-		_assm->outputf("  flushes:        %d", flushes);
-		_assm->outputf("  compiles:       %d / %d", _stats.compiles, _stats.totalCompiles);
-		_assm->outputf("  used:           %dk / %dk", (pages-free)<<(NJ_LOG2_PAGE_SIZE-10), pages<<(NJ_LOG2_PAGE_SIZE-10));
-		_assm->outputf("  maxPageUse:     %dk", (maxPageUse)<<(NJ_LOG2_PAGE_SIZE-10));
-		_assm->output("\ntrace         calls guards   main native  gen   T-trace  T-interp");
+        _assm->outputf("  loop trees:     %d", count);
+        _assm->outputf("  flushes:        %d", flushes);
+        _assm->outputf("  compiles:       %d / %d", _stats.compiles, _stats.totalCompiles);
+        _assm->outputf("  used:           %dk / %dk", (pages-free)<<(NJ_LOG2_PAGE_SIZE-10), pages<<(NJ_LOG2_PAGE_SIZE-10));
+        _assm->outputf("  maxPageUse:     %dk", (maxPageUse)<<(NJ_LOG2_PAGE_SIZE-10));
+        _assm->output("\ntrace         calls guards   main native  gen   T-trace  T-interp");
 
-		avmplus::SortedMap<uint64_t, DurData, avmplus::LIST_NonGCObjects> durs(_core->gc);
-		uint64_t totaldur=0;
-		fragstats totalstat = { 0,0,0,0,0 };
+        avmplus::SortedMap<uint64_t, DurData, avmplus::LIST_NonGCObjects> durs(_core->gc);
+        uint64_t totaldur=0;
+        fragstats totalstat = { 0,0,0,0,0 };
         for (int32_t i=0; i<count; i++)
         {
             Fragment *f = _frags.at(i);
@@ -440,101 +441,101 @@ namespace nanojit
                 f = f->peer;
             }
         }
-		uint64_t totaltrace = totalstat.traceDur;
-		int totalsize = totalstat.size;
+        uint64_t totaltrace = totalstat.traceDur;
+        int totalsize = totalstat.size;
 
-		_assm->outputf("");
-		_assm->outputf("lirbytes %d / lir %d = %.1f bytes/lir", totalstat.lirbytes,
+        _assm->outputf("");
+        _assm->outputf("lirbytes %d / lir %d = %.1f bytes/lir", totalstat.lirbytes,
             totalstat.lir, double(totalstat.lirbytes)/totalstat.lir);
-		_assm->outputf("       trace         interp");
-		_assm->outputf("%9lld (%2d%%)  %9lld (%2d%%)",
-			totaltrace/1000, int(100.0*totaltrace/totaldur),
-			(totaldur-totaltrace)/1000, int(100.0*(totaldur-totaltrace)/totaldur));
-		_assm->outputf("");
-		_assm->outputf("trace      ticks            trace           interp           size");
-		for (int32_t i=durs.size()-1; i >= 0; i--) {
-			uint64_t bothDur = durs.keyAt(i);
-			DurData d = durs.get(bothDur);
-			int size = d.size;
-			_assm->outputf("%-4s %9lld (%2d%%)  %9lld (%2d%%)  %9lld (%2d%%)  %6d (%2d%%)  %s", 
-				labels->format(d.frag),
-				bothDur/1000, int(100.0*bothDur/totaldur),
-				d.traceDur/1000, int(100.0*d.traceDur/totaldur),
-				d.interpDur/1000, int(100.0*d.interpDur/totaldur),
-				size, int(100.0*size/totalsize),
-				labels->format(d.frag->ip));
-		}
+        _assm->outputf("       trace         interp");
+        _assm->outputf("%9lld (%2d%%)  %9lld (%2d%%)",
+            totaltrace/1000, int(100.0*totaltrace/totaldur),
+            (totaldur-totaltrace)/1000, int(100.0*(totaldur-totaltrace)/totaldur));
+        _assm->outputf("");
+        _assm->outputf("trace      ticks            trace           interp           size");
+        for (int32_t i=durs.size()-1; i >= 0; i--) {
+            uint64_t bothDur = durs.keyAt(i);
+            DurData d = durs.get(bothDur);
+            int size = d.size;
+            _assm->outputf("%-4s %9lld (%2d%%)  %9lld (%2d%%)  %9lld (%2d%%)  %6d (%2d%%)  %s",
+                labels->format(d.frag),
+                bothDur/1000, int(100.0*bothDur/totaldur),
+                d.traceDur/1000, int(100.0*d.traceDur/totaldur),
+                d.interpDur/1000, int(100.0*d.interpDur/totaldur),
+                size, int(100.0*size/totalsize),
+                labels->format(d.frag->ip));
+        }
 
-	}
+    }
 
-	void Fragmento::countBlock(BlockHist *hist, const void* ip)
-	{
-		int c = hist->count(ip);
-		if (_assm->_logc->lcbits & LC_Assembly)
-			_assm->outputf("++ %s %d", labels->format(ip), c);
-	}
+    void Fragmento::countBlock(BlockHist *hist, const void* ip)
+    {
+        int c = hist->count(ip);
+        if (_assm->_logc->lcbits & LC_Assembly)
+            _assm->outputf("++ %s %d", labels->format(ip), c);
+    }
 
-	void Fragmento::countIL(uint32_t il, uint32_t abc)
-	{
-		_stats.ilsize += il;
-		_stats.abcsize += abc;
-	}
-	
+    void Fragmento::countIL(uint32_t il, uint32_t abc)
+    {
+        _stats.ilsize += il;
+        _stats.abcsize += abc;
+    }
+
 #ifdef AVMPLUS_VERBOSE
-	void Fragmento::drawTrees(char *fileName) {
-		drawTraceTrees(this, this->_frags, this->_core, fileName);
-	}
+    void Fragmento::drawTrees(char *fileName) {
+        drawTraceTrees(this, this->_frags, this->_core, fileName);
+    }
 #endif
 #endif // NJ_VERBOSE
 
-	//
-	// Fragment
-	//
-	Fragment::Fragment(const void* _ip)
-		:
+    //
+    // Fragment
+    //
+    Fragment::Fragment(const void* _ip)
+        :
 #ifdef NJ_VERBOSE
-		  _called(0),
-		  _native(0),
-		  _exitNative(0),
-		  _lir(0),
-		  _lirbytes(0),
-		  _token(NULL),
-		  traceTicks(0),
-		  interpTicks(0),
-		  eot_target(NULL),
-		  sid(0),
-		  compileNbr(0),
+          _called(0),
+          _native(0),
+          _exitNative(0),
+          _lir(0),
+          _lirbytes(0),
+          _token(NULL),
+          traceTicks(0),
+          interpTicks(0),
+          eot_target(NULL),
+          sid(0),
+          compileNbr(0),
 #endif
-		  treeBranches(NULL),
-		  branches(NULL),
-		  nextbranch(NULL),
-		  anchor(NULL),
-		  root(NULL),
-		  parent(NULL),
-		  first(NULL),
-		  peer(NULL),
-		  lirbuf(NULL),
-		  lastIns(NULL),
-		  spawnedFrom(NULL),
-		  kind(LoopTrace),
-		  ip(_ip),
-		  guardCount(0),
-		  xjumpCount(0),
-		  recordAttempts(0),
-		  blacklistLevel(0),
-		  fragEntry(NULL),
-		  loopEntry(NULL),
-		  vmprivate(NULL),
-		  _code(NULL),
-		  _hits(0),
-		  _pages(NULL)
-	{
+          treeBranches(NULL),
+          branches(NULL),
+          nextbranch(NULL),
+          anchor(NULL),
+          root(NULL),
+          parent(NULL),
+          first(NULL),
+          peer(NULL),
+          lirbuf(NULL),
+          lastIns(NULL),
+          spawnedFrom(NULL),
+          kind(LoopTrace),
+          ip(_ip),
+          guardCount(0),
+          xjumpCount(0),
+          recordAttempts(0),
+          blacklistLevel(0),
+          fragEntry(NULL),
+          loopEntry(NULL),
+          vmprivate(NULL),
+          _code(NULL),
+          _hits(0),
+          _pages(NULL)
+    {
     }
 
-	Fragment::~Fragment()
-	{
-		onDestroy();
-		NanoAssert(_pages == 0);
+    Fragment::~Fragment()
+    {
+        onDestroy();
+        NanoAssert(_pages == 0);
     }
 
     void Fragment::blacklist()
@@ -545,65 +546,65 @@ namespace nanojit
 
     Fragment *Fragmento::newFrag(const void* ip)
     {
-		GC *gc = _core->gc;
+        GC *gc = _core->gc;
         Fragment *f = NJ_NEW(gc, Fragment)(ip);
-		f->blacklistLevel = 5;
+        f->blacklistLevel = 5;
         return f;
     }
 
-	Fragment *Fragmento::newBranch(Fragment *from, const void* ip)
-	{
-		Fragment *f = newFrag(ip);
-		f->anchor = from->anchor;
-		f->root = from->root;
+    Fragment *Fragmento::newBranch(Fragment *from, const void* ip)
+    {
+        Fragment *f = newFrag(ip);
+        f->anchor = from->anchor;
+        f->root = from->root;
         f->xjumpCount = from->xjumpCount;
-		/*// prepend
-		f->nextbranch = from->branches;
-		from->branches = f;*/
-		// append
-		if (!from->branches) {
-			from->branches = f;
-		} else {
-			Fragment *p = from->branches;
-			while (p->nextbranch != 0)
-				p = p->nextbranch;
-			p->nextbranch = f;
-		}
-		return f;
-	}
+        /*// prepend
+        f->nextbranch = from->branches;
+        from->branches = f;*/
+        // append
+        if (!from->branches) {
+            from->branches = f;
+        } else {
+            Fragment *p = from->branches;
+            while (p->nextbranch != 0)
+                p = p->nextbranch;
+            p->nextbranch = f;
+        }
+        return f;
+    }
 
-	void Fragment::releaseLirBuffer()
-	{
-		lastIns = 0;	
-	}
+    void Fragment::releaseLirBuffer()
+    {
+        lastIns = 0;
+    }
 
-	void Fragment::releaseCode(Fragmento* frago)
-	{
-		_code = 0;
-		while(_pages)
-		{
-			Page* next = _pages->next;
-			frago->pageFree(_pages);
-			_pages = next;
-		}
-	}
-	
-	void Fragment::releaseTreeMem(Fragmento* frago)
-	{
-		releaseLirBuffer();
-		releaseCode(frago);
-			
-		// now do it for all branches 
-		Fragment* branch = branches;
-		while(branch)
-		{
-			Fragment* next = branch->nextbranch;
-			branch->releaseTreeMem(frago);  // @todo safer here to recurse in case we support nested trees
+    void Fragment::releaseCode(Fragmento* frago)
+    {
+        _code = 0;
+        while(_pages)
+        {
+            Page* next = _pages->next;
+            frago->pageFree(_pages);
+            _pages = next;
+        }
+    }
+
+    void Fragment::releaseTreeMem(Fragmento* frago)
+    {
+        releaseLirBuffer();
+        releaseCode(frago);
+
+        // now do it for all branches
+        Fragment* branch = branches;
+        while(branch)
+        {
+            Fragment* next = branch->nextbranch;
+            branch->releaseTreeMem(frago);  // @todo safer here to recurse in case we support nested trees
             NJ_DELETE(branch);
-			branch = next;
-		}
-	}
-	#endif /* FEATURE_NANOJIT */
+            branch = next;
+        }
+    }
+    #endif /* FEATURE_NANOJIT */
 }
 
 

@@ -181,7 +181,7 @@ OPDEF(uge,      63, 2, Op2)     // unsigned integer greater-than-or-equal (0x3F 
 
 OPDEF64(2,          0, 2, Op2)      // wraps a pair of refs, for LIR_cmov or LIR_qcmov
 OPDEF64(file,       1, 2, Op1)      // source filename for debug symbols
-OPDEF64(line,       2, 2, Op1)      // source line number for debug symbols 
+OPDEF64(line,       2, 2, Op1)      // source line number for debug symbols
 OPDEF64(xbarrier,   3, 1, Op2)      // memory barrier;  doesn't exit, but flushes all values to the stack
 OPDEF64(xtbl,       4, 1, Op2)      // exit via indirect jump
 

@@ -1,34 +1,36 @@
-/* ***** BEGIN LICENSE BLOCK ***** 
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1 
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
+/* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Mozilla Public License Version 1.1 (the 
- * "License"); you may not use this file except in compliance with the License. You may obtain 
- * a copy of the License at http://www.mozilla.org/MPL/ 
- * 
- * Software distributed under the License is distributed on an "AS IS" basis, WITHOUT 
- * WARRANTY OF ANY KIND, either express or implied. See the License for the specific 
- * language governing rights and limitations under the License. 
- * 
- * The Original Code is [Open Source Virtual Machine.] 
- * 
- * The Initial Developer of the Original Code is Adobe System Incorporated.  Portions created 
- * by the Initial Developer are Copyright (C)[ 2004-2006 ] Adobe Systems Incorporated. All Rights 
- * Reserved. 
- * 
+ * The contents of this file are subject to the Mozilla Public License Version 1.1 (the
+ * "License"); you may not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis, WITHOUT
+ * WARRANTY OF ANY KIND, either express or implied. See the License for the specific
+ * language governing rights and limitations under the License.
+ *
+ * The Original Code is [Open Source Virtual Machine.]
+ *
+ * The Initial Developer of the Original Code is Adobe System Incorporated.  Portions created
+ * by the Initial Developer are Copyright (C)[ 2004-2006 ] Adobe Systems Incorporated. All Rights
+ * Reserved.
+ *
  * Contributor(s): Adobe AS3 Team
  *                 Andreas Gal <gal@mozilla.com>
  *                 Asko Tontti <atontti@cc.hut.fi>
- * 
- * Alternatively, the contents of this file may be used under the terms of either the GNU 
- * General Public License Version 2 or later (the "GPL"), or the GNU Lesser General Public 
- * License Version 2.1 or later (the "LGPL"), in which case the provisions of the GPL or the 
- * LGPL are applicable instead of those above. If you wish to allow use of your version of this 
- * file only under the terms of either the GPL or the LGPL, and not to allow others to use your 
- * version of this file under the terms of the MPL, indicate your decision by deleting provisions 
- * above and replace them with the notice and other provisions required by the GPL or the 
- * LGPL. If you do not delete the provisions above, a recipient may use your version of this file 
- * under the terms of any one of the MPL, the GPL or the LGPL. 
- * 
+ *
+ * Alternatively, the contents of this file may be used under the terms of either the GNU
+ * General Public License Version 2 or later (the "GPL"), or the GNU Lesser General Public
+ * License Version 2.1 or later (the "LGPL"), in which case the provisions of the GPL or the
+ * LGPL are applicable instead of those above. If you wish to allow use of your version of this
+ * file only under the terms of either the GPL or the LGPL, and not to allow others to use your
+ * version of this file under the terms of the MPL, indicate your decision by deleting provisions
+ * above and replace them with the notice and other provisions required by the GPL or the
+ * LGPL. If you do not delete the provisions above, a recipient may use your version of this file
+ * under the terms of any one of the MPL, the GPL or the LGPL.
+ *
  ***** END LICENSE BLOCK ***** */
 
 #ifndef avm_h___
@@ -88,7 +90,7 @@ void NanoAssertFail();
 #endif
 
 #define AvmAssert(x) assert(x)
-#define AvmAssertMsg(x, y) 
+#define AvmAssertMsg(x, y)
 #define AvmDebugLog(x) printf x
 
 #if defined(AVMPLUS_IA32)
@@ -155,10 +157,10 @@ static __inline__ unsigned long long rdtsc(void)
 struct JSContext;
 
 namespace avmplus {
-    
+
     class GC;
-    
-    class GCObject 
+
+    class GCObject
     {
     public:
         inline void*
@@ -166,29 +168,29 @@ namespace avmplus {
         {
             return calloc(1, size);
         }
-        
+
         static void operator delete (void *gcObject)
         {
-            free(gcObject); 
+            free(gcObject);
         }
     };
-    
+
     #define MMGC_SUBCLASS_DECL : public avmplus::GCObject
-    
+
     class GCFinalizedObject : public GCObject
     {
     public:
         static void operator delete (void *gcObject)
         {
-            free(gcObject); 
+            free(gcObject);
         }
     };
-    
+
     class GCHeap
     {
     public:
         int32_t kNativePageSize;
-    
+
         GCHeap()
         {
     #if defined _SC_PAGE_SIZE
@@ -197,31 +199,31 @@ namespace avmplus {
             kNativePageSize = 4096; // @todo: what is this?
     #endif
         }
-        
+
         inline void*
-        Alloc(uint32_t pages) 
+        Alloc(uint32_t pages)
         {
     #ifdef XP_WIN
-            return VirtualAlloc(NULL, 
+            return VirtualAlloc(NULL,
                                 pages * kNativePageSize,
-                                MEM_COMMIT | MEM_RESERVE, 
+                                MEM_COMMIT | MEM_RESERVE,
                                 PAGE_EXECUTE_READWRITE);
     #elif defined AVMPLUS_UNIX
             /**
              * Don't use normal heap with mprotect+PROT_EXEC for executable code.
              * SELinux and friends don't allow this.
              */
-            return mmap(NULL, 
+            return mmap(NULL,
                         pages * kNativePageSize,
                         PROT_READ | PROT_WRITE | PROT_EXEC,
                         MAP_PRIVATE | MAP_ANON,
                         -1,
                         0);
     #else
-            return valloc(pages * kNativePageSize); 
+            return valloc(pages * kNativePageSize);
     #endif
         }
-        
+
         inline void
         Free(void* p, uint32_t pages)
         {
@@ -229,32 +231,32 @@ namespace avmplus {
             VirtualFree(p, 0, MEM_RELEASE);
     #elif defined AVMPLUS_UNIX
             #if defined SOLARIS
-            munmap((char*)p, pages * kNativePageSize); 
+            munmap((char*)p, pages * kNativePageSize);
             #else
-            munmap(p, pages * kNativePageSize); 
+            munmap(p, pages * kNativePageSize);
             #endif
     #else
             free(p);
     #endif
         }
-        
+
     };
-    
-    class GC 
+
+    class GC
     {
         static GCHeap heap;
-        
+
     public:
-		/**
-		* flags to be passed as second argument to alloc
-		*/
-		enum AllocFlags
-		{
-			kZero=1,
-			kContainsPointers=2,
-			kFinalize=4,
-			kRCObject=8
-		};
+        /**
+        * flags to be passed as second argument to alloc
+        */
+        enum AllocFlags
+        {
+            kZero=1,
+            kContainsPointers=2,
+            kFinalize=4,
+            kRCObject=8
+        };
 
         static inline void*
         Alloc(uint32_t bytes, int flags=kZero)
@@ -264,13 +266,13 @@ namespace avmplus {
           else
             return malloc(bytes);
         }
-    
+
         static inline void
         Free(void* p)
         {
             free(p);
         }
-        
+
         static inline GCHeap*
         GetGCHeap()
         {
@@ -292,7 +294,7 @@ namespace avmplus {
     };
 
     typedef class String AvmString;
-    
+
     class StringNullTerminatedUTF8
     {
         const char* cstr;
@@ -330,7 +332,7 @@ namespace avmplus {
             show_stats = 1;
 #endif
         }
-        
+
         uint32_t tree_opt:1;
         uint32_t quiet_opt:1;
         uint32_t verbose:1;
@@ -340,7 +342,7 @@ namespace avmplus {
         uint32_t show_stats:1;
 
 #if defined (AVMPLUS_IA32)
-	// Whether or not we can use SSE2 instructions and conditional moves.
+    // Whether or not we can use SSE2 instructions and conditional moves.
         bool sse2;
         bool use_cmov;
 #endif
@@ -409,8 +411,8 @@ namespace avmplus {
         }
 
     };
-    
-    class AvmConsole 
+
+    class AvmConsole
     {
     public:
         AvmConsole& operator<<(const char* s)
@@ -425,7 +427,7 @@ namespace avmplus {
     public:
         AvmInterpreter interp;
         AvmConsole console;
-        
+
         static Config config;
         static GC* gc;
         static String* k_str[];
@@ -437,14 +439,14 @@ namespace avmplus {
             return config.sse2;
         }
 #endif
-        
+
         static inline bool
         use_cmov()
         {
 #ifdef AVMPLUS_IA32
             return config.use_cmov;
 #else
-	    return true;
+        return true;
 #endif
         }
 
@@ -461,7 +463,7 @@ namespace avmplus {
         }
 
         static inline GC*
-        GetGC() 
+        GetGC()
         {
             return gc;
         }
@@ -483,19 +485,19 @@ namespace avmplus {
         {
         }
     };
-    
+
     /**
      * The List<T> template implements a simple List, which can
      * be templated to support different types.
-     * 
-     * Elements can be added to the end, modified in the middle, 
+     *
+     * Elements can be added to the end, modified in the middle,
      * but no holes are allowed.  That is for set(n, v) to work
      * size() > n
      *
      * Note that [] operators are provided and you can violate the
      * set properties using these operators, if you want a real
      * list dont use the [] operators, if you want a general purpose
-     * array use the [] operators.  
+     * array use the [] operators.
      */
 
     enum ListElementType {
@@ -508,13 +510,13 @@ namespace avmplus {
     class List
     {
     public:
-        enum { kInitialCapacity = 128 };        
+        enum { kInitialCapacity = 128 };
 
         List(GC *_gc, uint32_t _capacity=kInitialCapacity) : data(NULL), len(0), capacity(0)
         {
             ensureCapacity(_capacity);
         }
-        
+
         ~List()
         {
             //clear();
@@ -530,19 +532,19 @@ namespace avmplus {
         }
 
         const T *getData() const { return data; }
-        
+
         // 'this' steals the guts of 'that' and 'that' gets reset.
         void FASTCALL become(List& that)
         {
             this->destroy();
-                
+
             this->data = that.data;
             this->len = that.len;
-	    this->capacity = that.capacity;
-            
+        this->capacity = that.capacity;
+
             that.data = 0;
             that.len = 0;
-	    that.capacity = 0;
+        that.capacity = 0;
         }
         uint32_t FASTCALL add(T value)
         {
@@ -552,23 +554,23 @@ namespace avmplus {
             wb(len++, value);
             return len-1;
         }
-        
+
         inline bool isEmpty() const
         {
             return len == 0;
         }
-        
+
         inline uint32_t size() const
         {
             return len;
         }
-        
+
         inline T get(uint32_t index) const
         {
             AvmAssert(index < len);
             return *(T*)(data + index);
         }
-        
+
         void FASTCALL set(uint32_t index, T value)
         {
             AvmAssert(index < capacity);
@@ -579,7 +581,7 @@ namespace avmplus {
             AvmAssert(len <= capacity);
             wb(index, value);
         }
-        
+
         void add(const List<T, kElementType>& l)
         {
             ensureCapacity(len+l.size());
@@ -602,22 +604,22 @@ namespace avmplus {
                     return i;
             return -1;
         }
-        
+
         int FASTCALL lastIndexOf(T value) const
         {
             for(int32_t i=len-1; i>=0; i--)
                 if (get(i) == value)
                     return i;
             return -1;
-        }   
-        
+        }
+
         inline T last() const
         {
             return get(len-1);
         }
-        
-        T FASTCALL removeLast()  
-        { 
+
+        T FASTCALL removeLast()
+        {
             if(isEmpty())
                 return undef_list_val();
             T t = get(len-1);
@@ -625,15 +627,15 @@ namespace avmplus {
             len--;
             return t;
         }
-    
+
         inline T operator[](uint32_t index) const
         {
             AvmAssert(index < capacity);
             return get(index);
         }
-        
+
         void FASTCALL ensureCapacity(uint32_t cap)
-        {           
+        {
             if (cap > capacity) {
                 if (data == NULL) {
                     data = (T*)calloc(1, factor(cap));
@@ -644,7 +646,7 @@ namespace avmplus {
                 capacity = cap;
             }
         }
-        
+
         void FASTCALL insert(uint32_t index, T value, uint32_t count = 1)
         {
             AvmAssert(index <= len);
@@ -664,7 +666,7 @@ namespace avmplus {
             len--;
             return old;
         }
-    
+
     private:
         void FASTCALL grow()
         {
@@ -677,17 +679,17 @@ namespace avmplus {
                 newMax = curMax * 3/2;
             else
                 newMax = curMax * 2;
-        
+
             ensureCapacity(newMax);
         }
-        
+
         void arraycopy(const T* src, int srcStart, T* dst, int dstStart, int nbr)
         {
             // we have 2 cases, either closing a gap or opening it.
             if ((src == dst) && (srcStart > dstStart) )
             {
                 for(int i=0; i<nbr; i++)
-                    dst[i+dstStart] = src[i+srcStart];  
+                    dst[i+dstStart] = src[i+srcStart];
             }
             else
             {
@@ -697,17 +699,17 @@ namespace avmplus {
         }
 
         inline void do_wb_nongc(T* slot, T value)
-        {   
+        {
             *slot = value;
         }
 
         inline void do_wb_gc(GCObject** slot, const GCObject** value)
-        {   
+        {
             *slot = (GCObject*)*value;
         }
 
         void FASTCALL wb(uint32_t index, T value)
-        {   
+        {
             AvmAssert(index < capacity);
             AvmAssert(data != NULL);
             T* slot = &data[index];
@@ -719,7 +721,7 @@ namespace avmplus {
         //  for (uint32_t u = index; u < index_end; ++u)
         //      wb(u, value);
         void FASTCALL wbzm(uint32_t index, uint32_t index_end, T value)
-        {   
+        {
             AvmAssert(index < capacity);
             AvmAssert(index_end <= capacity);
             AvmAssert(index < index_end);
@@ -728,7 +730,7 @@ namespace avmplus {
             for (  ; index < index_end; ++index, ++slot)
                 do_wb_nongc(slot, value);
         }
-        
+
         inline uint32_t factor(uint32_t index) const
         {
             return index * sizeof(T);
@@ -738,7 +740,7 @@ namespace avmplus {
         {
             memset(data + _first, 0, factor(_count));
         }
-        
+
         // stuff that needs specialization based on the type
         static inline T undef_list_val();
 
@@ -756,19 +758,19 @@ namespace avmplus {
     };
 
     // stuff that needs specialization based on the type
-    template<typename T, ListElementType kElementType> 
+    template<typename T, ListElementType kElementType>
     /* static */ inline T List<T, kElementType>::undef_list_val() { return T(0); }
 
     /**
      * The SortedMap<K,T> template implements an object that
      * maps keys to values.   The keys are sorted
-     * from smallest to largest in the map. Time of operations 
-     * is as follows: 
-     *   put() is O(1) if the key is higher than any existing 
+     * from smallest to largest in the map. Time of operations
+     * is as follows:
+     *   put() is O(1) if the key is higher than any existing
      *         key; O(logN) if the key already exists,
-     *         and O(N) otherwise. 
+     *         and O(N) otherwise.
      *   get() is an O(logN) binary search.
-     * 
+     *
      * no duplicates are allowed.
      */
     template <class K, class T, ListElementType valType>
@@ -776,7 +778,7 @@ namespace avmplus {
     {
     public:
         enum { kInitialCapacity= 64 };
-        
+
         SortedMap(GC* gc, int _capacity=kInitialCapacity)
           : keys(gc, _capacity), values(gc, _capacity)
         {
@@ -786,27 +788,27 @@ namespace avmplus {
         {
             return keys.size() == 0;
         }
-        
+
         int size() const
         {
             return keys.size();
         }
-        
+
         void clear()
         {
             keys.clear();
             values.clear();
         }
-        
+
         void destroy()
         {
             keys.destroy();
             values.destroy();
         }
-        
+
         T put(K k, T v)
         {
-            if (keys.size() == 0 || k > keys.last()) 
+            if (keys.size() == 0 || k > keys.last())
             {
                 keys.add(k);
                 values.add(v);
@@ -814,7 +816,7 @@ namespace avmplus {
             }
             else
             {
-                int i = find(k);        
+                int i = find(k);
                 if (i >= 0)
                 {
                     T old = values[i];
@@ -832,13 +834,13 @@ namespace avmplus {
                 }
             }
         }
-        
+
         T get(K k) const
         {
             int i = find(k);
             return i >= 0 ? values[i] : 0;
         }
-        
+
         bool get(K k, T& v) const
         {
             int i = find(k);
@@ -849,19 +851,19 @@ namespace avmplus {
             }
             return false;
         }
-        
+
         bool containsKey(K k) const
         {
             int i = find(k);
             return (i >= 0) ? true : false;
         }
-        
+
         T remove(K k)
         {
             int i = find(k);
             return removeAt(i);
         }
-        
+
         T removeAt(int i)
         {
             T old = values.removeAt(i);
@@ -877,7 +879,7 @@ namespace avmplus {
         K firstKey() const  { return isEmpty() ? 0 : keys[0]; }
         K lastKey() const   { return isEmpty() ? 0 : keys[keys.size()-1]; }
 
-        // iterator 
+        // iterator
         T   at(int i) const { return values[i]; }
         K   keyAt(int i) const { return keys[i]; }
 
@@ -888,7 +890,7 @@ namespace avmplus {
     protected:
         List<K, LIST_NonGCObjects> keys;
         List<T, valType> values;
-        
+
         int find(K k) const
         {
             int lo = 0;
@@ -910,19 +912,19 @@ namespace avmplus {
     };
 
     #define GCSortedMap SortedMap
-    
+
     /**
-     * Bit vectors are an efficent method of keeping True/False information 
-     * on a set of items or conditions. Class BitSet provides functions 
+     * Bit vectors are an efficent method of keeping True/False information
+     * on a set of items or conditions. Class BitSet provides functions
      * to manipulate individual bits in the vector.
      *
      * Since most vectors are rather small an array of longs is used by
      * default to house the value of the bits.  If more bits are needed
-     * then an array is allocated dynamically outside of this object. 
-     * 
+     * then an array is allocated dynamically outside of this object.
+     *
      * This object is not optimized for a fixed sized bit vector
      * it instead allows for dynamically growing the bit vector.
-     */ 
+     */
     class BitSet
     {
         public:
@@ -934,7 +936,7 @@ namespace avmplus {
                 capacity = kDefaultCapacity;
                 reset();
             }
-            
+
             ~BitSet()
             {
                 if (capacity > kDefaultCapacity)
@@ -996,13 +998,13 @@ namespace avmplus {
             // Grow the array until at least newCapacity big
             void grow(GC *gc, int newCapacity)
             {
-                // create vector that is 2x bigger than requested 
+                // create vector that is 2x bigger than requested
                 newCapacity *= 2;
                 //MEMTAG("BitVector::Grow - long[]");
                 long* newBits = (long*)calloc(1, newCapacity * sizeof(long));
                 //memset(newBits, 0, newCapacity * sizeof(long));
 
-                // copy the old one 
+                // copy the old one
                 if (capacity > kDefaultCapacity)
                     for(int i=0; i<capacity; i++)
                         newBits[i] = bits.ptr[i];
@@ -1018,7 +1020,7 @@ namespace avmplus {
                 capacity = newCapacity;
             }
 
-            // by default we use the array, but if the vector 
+            // by default we use the array, but if the vector
             // size grows beyond kDefaultCapacity we allocate
             // space dynamically.
             int capacity;
