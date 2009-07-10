@@ -2992,7 +2992,7 @@
             this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            if (this.firstChild.clientWidth > this.mTabClipWidth)
+            if (this.firstChild.getBoundingClientRect().width > this.mTabClipWidth)
               this.setAttribute("closebuttons", "alltabs");
             else
               this.setAttribute("closebuttons", "activetab");
