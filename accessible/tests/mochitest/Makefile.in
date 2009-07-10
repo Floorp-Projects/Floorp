@@ -76,6 +76,7 @@ _TEST_FILES =\
 		test_aria_role_equation.html \
 		test_aria_role_grid.html \
 		test_aria_roles.html \
+		test_aria_roles.xul \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
 	$(warning   test_childAtPoint.html temporarily disabled) \
