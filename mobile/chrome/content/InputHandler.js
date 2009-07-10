@@ -439,11 +439,24 @@ ChromeInputModule.prototype = {
 function KineticData(owner) {
   this._owner = owner;
   this._kineticTimer = null;
+
+  try {
+    this._updateInterval = gPrefService.getIntPref("browser.ui.kinetic.updateInterval");
+    // In preferences this value is an int.  We divide so that it can be between 0 and 1;
+    this._emaAlpha = gPrefService.getIntPref("browser.ui.kinetic.ema.alphaValue") / 10;
+    // In preferences this value is an int.  We divide so that it can be a percent.
+    this._decelerationRate = gPrefService.getIntPref("browser.ui.kinetic.decelerationRate") / 100;
+  }
+  catch (e) { 
+    this._updateInterval = 33;
+    this._emaAlpha = .8;
+    this._decelerationRate = .15;
+  };
+
   this.reset();
 }
 
 KineticData.prototype = {
-  /* const */ _updateInterval : 33, // this would put us at roughly 30fps
 
   reset: function reset() {
     if (this._kineticTimer != null) {
@@ -466,34 +479,31 @@ KineticData.prototype = {
       notify: function kineticTimerCallback(timer) {
         let self = this._self;
 
-        const decelerationRate = 0.15;
-
         // dump("             speeds: " + self._speedX + " " + self._speedY + "\n");
 
         if (self._speedX == 0 && self._speedY == 0) {
           self.endKinetic();
           return;
-        } else {
-          let dx = Math.round(self._speedX * self._updateInterval);
-          let dy = Math.round(self._speedY * self._updateInterval);
-          // dump("dx, dy: " + dx + " " + dy + "\n");
-
-          let panned = self._owner._dragBy(dx, dy);
-          if (!panned) {
-            self.endKinetic();
-            return;
-          }
         }
-
+        let dx = Math.round(self._speedX * self._updateInterval);
+        let dy = Math.round(self._speedY * self._updateInterval);
+        // dump("dx, dy: " + dx + " " + dy + "\n");
+  
+        let panned = self._owner._dragBy(dx, dy);
+        if (!panned) {
+          self.endKinetic();
+          return;
+        }
+        
         if (self._speedX < 0) {
-          self._speedX = Math.min(self._speedX + decelerationRate, 0);
+          self._speedX = Math.min(self._speedX + self._decelerationRate, 0);
         } else if (self._speedX > 0) {
-          self._speedX = Math.max(self._speedX - decelerationRate, 0);
+          self._speedX = Math.max(self._speedX - self._decelerationRate, 0);
         }
         if (self._speedY < 0) {
-          self._speedY = Math.min(self._speedY + decelerationRate, 0);
+          self._speedY = Math.min(self._speedY + self._decelerationRate, 0);
         } else if (self._speedY > 0) {
-          self._speedY = Math.max(self._speedY - decelerationRate, 0);
+          self._speedY = Math.max(self._speedY - self._decelerationRate, 0);
         }
 
         if (self._speedX == 0 && self._speedY == 0)
@@ -513,12 +523,13 @@ KineticData.prototype = {
     let mb = this.momentumBuffer;
     let mblen = this.momentumBuffer.length;
 
-    // If we don't have at least 2 events we can't really do kinetic panning
+    // If we don't have at least 2 events do not do kinetic panning
     if (mblen < 2)
       return false;
 
-    let tempX = 0;
-    let tempY = 0;
+    function ema(currentSpeed, lastSpeed, alpha) {
+      return alpha * currentSpeed + (1 - alpha) * lastSpeed;
+    };
 
     // build arrays of each movement's speed in pixels/ms
     let prev = mb[0];
@@ -526,15 +537,12 @@ KineticData.prototype = {
       let me = mb[i];
 
       let timeDiff = me.t - prev.t;
-      tempX += (me.sx - prev.sx) / timeDiff;
-      tempY += (me.sy - prev.sy) / timeDiff;
+      
+      this._speedX = ema( ((me.sx - prev.sx) / timeDiff), this._speedX, this._emaAlpha);
+      this._speedY = ema( ((me.sy - prev.sy) / timeDiff), this._speedY, this._emaAlpha);
 
       prev = me;
     }
-
-    // average the speeds out (this could probably be a bit smarter)
-    this._speedX = tempX / mblen;
-    this._speedY = tempY / mblen;
 
     // fire off our kinetic timer which will do all the work
     this._startKineticTimer();
@@ -585,9 +593,8 @@ KineticData.prototype = {
 
     if (mbLength > 0) {
       let mbLast = this.momentumBuffer[mbLength - 1];
-      if ((mbLast.sx == sx && mbLast.sy == sy) || mbLast.t == now) {
-	return;
-      }
+      if ((mbLast.sx == sx && mbLast.sy == sy) || mbLast.t == now)
+        return;
     }
 
     this.momentumBuffer.push({'t': now, 'sx' : sx, 'sy' : sy});

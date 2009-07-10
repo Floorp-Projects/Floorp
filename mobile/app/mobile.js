@@ -317,3 +317,8 @@ pref("dom.max_script_run_time", 20);
 
 // JS error console
 pref("browser.console.showInPanel", false);
+
+// kinetic tweakables
+pref("browser.ui.kinetic.updateInterval", 33);
+pref("browser.ui.kinetic.ema.alphaValue", 8);
+pref("browser.ui.kinetic.decelerationRate", 15);
