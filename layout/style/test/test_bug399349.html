@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=363146
+-->
+<head>
+  <title>Test for Bug 363146</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=399349">Mozilla Bug 399349</a>
+
+<!-- Test parsing of integer numbers -->
+<div id="Aone" style="width:100px; height:400px; top:-100px; left: -200px;position:relative;"></div>
+
+<!-- Test parsing of float numbers -->
+<div id="Atwo" style="width:150.2px; height:450.25px; top:-150.2px; left: -450.25px;position:relative;"></div>
+<div id="Athree" style="width:.1px; height:0.3px; top:-0.1px; left:-0.3px;position:relative;"></div>
+<div id="Afour" style="width:+100.017px; height:+400.017px; top:-.117px; left: -.217px;position:relative;"></div>
+
+<!-- Test parsing of long fractions -->
+<div id="Afive" style="width:+2345.0000000000000000000000000000000000001px; height:+456.000000000000000000000000000001px;
+                       top:-2123.000000000000000000000000000000000001px; left:-6543.99999999999999999999999999999999px;
+                       position:relative;"></div>
+
+<!-- Force parsing of long numbers (>9 digits), if they are zero's. Note css itself can't handle large numers -->
+<div id="Asix" style="width:+000000000012px; height:+000000000037.456788px;
+                       top:-000000000023px; left:-000000000044.456788px;
+                       position:relative;"></div>
+
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var a1 = window.getComputedStyle(document.getElementById("Aone"), "");
+is(a1.width, "100px");
+is(a1.height, "400px");
+is(a1.top, "-100px");
+is(a1.left, "-200px");
+
+var a2 = window.getComputedStyle(document.getElementById("Atwo"), "");
+is(a2.width, "150.2px");
+is(a2.height, "450.25px");
+is(a2.top, "-150.2px");
+is(a2.left, "-450.25px");
+
+var a3 = window.getComputedStyle(document.getElementById("Athree"), "");
+is(a3.width, "0.1px");
+is(a3.height, "0.3px");
+is(a3.top, "-0.1px");
+is(a3.left, "-0.3px");
+
+var a4 = window.getComputedStyle(document.getElementById("Afour"), "");
+is(a4.width, "100.017px");
+is(a4.height, "400.017px");
+is(a4.top, "-0.116667px");
+is(a4.left, "-0.216667px");
+
+var a5 = window.getComputedStyle(document.getElementById("Afive"), "");
+is(a5.width, "2345px");
+is(a5.height, "456px");
+is(a5.top, "-2123px");
+is(a5.left, "-6544px");
+
+var a6 = window.getComputedStyle(document.getElementById("Asix"), "");
+is(a6.width, "12px");
+is(a6.height, "37.45px");
+is(a6.top, "-23px");
+is(a6.left, "-44.45px");
+
+</script>
+
+</script>
+</pre>
+</body>
+</html>

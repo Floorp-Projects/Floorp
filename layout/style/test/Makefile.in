@@ -93,6 +93,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug391034.html \
 		test_bug391221.html \
 		test_bug397427.html \
+		test_bug399349.html \
 		test_bug401046.html \
 		test_bug405818.html \
 		test_bug412901.html \
