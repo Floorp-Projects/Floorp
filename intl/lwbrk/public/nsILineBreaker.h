@@ -77,7 +77,6 @@ NS_IsSpace(PRUnichar u)
 {
   return u == 0x0020 ||                  // SPACE
          u == 0x0009 ||                  // CHARACTER TABULATION
-         u == 0x000A ||                  // LINE FEED
          u == 0x000D ||                  // CARRIAGE RETURN
          (0x2000 <= u && u <= 0x2006) || // EN QUAD, EM QUAD, EN SPACE,
                                          // EM SPACE, THREE-PER-EM SPACE,
