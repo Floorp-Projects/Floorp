@@ -1729,6 +1729,7 @@ tabbrowser > tabbox > tabpanels {
 .tabs-alltabs-button:hover {
   -moz-image-region: rect(0, 44px, 20px, 22px);
 }
+.tabs-alltabs-button[open="true"],
 .tabs-alltabs-button:hover:active {
   -moz-image-region: rect(0, 66px, 20px, 44px);
 }

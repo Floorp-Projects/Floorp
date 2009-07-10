@@ -1301,6 +1301,14 @@ tabpanels {
   margin: 2px 0 1px;
 }
 
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
+  margin-bottom: -2px;
+}
+
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-icon {
+  display: none;
+}
+
 /* Sidebar */
 #sidebar-box .tabs-closebutton {
   margin-bottom: 0px !important;
