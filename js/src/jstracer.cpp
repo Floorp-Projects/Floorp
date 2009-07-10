@@ -6566,7 +6566,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         r = v0 / v1;
         break;
     case LIR_fmod:
-        if (v1 == 0)
+        if (v0 < 0 || v1 == 0 || (s1->isconstq() && v1 < 0))
             goto out;
         r = js_dmod(v0, v1);
         break;
@@ -6610,6 +6610,8 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * As long the modulus is zero, the result is an integer.
          */
         guard(true, lir->ins_eq0(lir->ins1(LIR_mod, result)), exit);
+        /* Don't lose a -0 */
+        guard(false, lir->ins_eq0(result), exit);
         break;
       case LIR_fmod: {
         if (d0->isconst() && d1->isconst())
@@ -6633,7 +6635,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * If the result is zero, we must exit if the lhs is negative since
          * the result is -0 in this case, which is not in the integer domain.
          */
-        guard(false, lir->ins2i(LIR_lt, result, 0), exit);
+        guard(false, lir->ins2i(LIR_lt, d1, 0), exit);
         branch->setTarget(lir->ins0(LIR_label));
         break;
       }
