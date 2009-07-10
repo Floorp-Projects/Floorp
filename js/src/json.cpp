@@ -578,11 +578,12 @@ InitializeGap(JSContext *cx, jsval space, JSStringBuffer *sb)
         return WriteStringGap(cx, space, sb);
 
     if (JSVAL_IS_NUMBER(space)) {
-        uint32 i;
-        if (!JS_ValueToECMAUint32(cx, space, &i))
-            return JS_FALSE;
-
-        js_RepeatChar(sb, jschar(' '), i);
+        jsdouble d = JSVAL_IS_INT(space)
+                     ? JSVAL_TO_INT(space)
+                     : js_DoubleToInteger(*JSVAL_TO_DOUBLE(space));
+        d = JS_MIN(10, d);
+        if (d >= 1)
+            js_RepeatChar(sb, jschar(' '), uint32(d));
 
         if (!STRING_BUFFER_OK(sb)) {
             JS_ReportOutOfMemory(cx);
