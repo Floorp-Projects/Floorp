@@ -280,6 +280,9 @@ BookmarksStore.prototype = {
       this._log.debug(" -> creating separator");
       newId = this._bms.insertSeparator(parentId, record.sortindex);
       break;
+    case "item":
+      this._log.debug(" -> got a generic places item.. do nothing?");
+      break;
     default:
       this._log.error("_create: Unknown item type: " + record.type);
       break;
