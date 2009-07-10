@@ -1286,11 +1286,6 @@ statusbarpanel#statusbar-display {
   border-top: none;
 }
 
-#security-button {
-  min-width: 20px;
-  -moz-box-direction: reverse;
-}
-
 #security-button[level="high"],
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure.png");
@@ -1298,11 +1293,6 @@ statusbarpanel#statusbar-display {
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-
-/* XXXsw prevent margins of a value-less label from shifting the image */
-#security-button > label:not([value]) {
-  display: none;
 }
 
 #page-report-button {
