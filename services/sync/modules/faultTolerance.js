@@ -64,7 +64,7 @@ FTService.prototype = {
 
   onException: function FTS_onException(exception) {
     this._lastException = exception;
-    this._log.debug("\n" + Utils.stackTrace(exception));
+    this._log.debug(Utils.stackTrace(exception));
     return true; // continue sync if thrown by a sync engine
   }
 };
