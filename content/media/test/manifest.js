@@ -14,7 +14,9 @@ var gSmallTests = [
 // Put files of the same type together in this list so if something crashes
 // we have some idea of which backend is responsible.
 var gPlayTests = [
-  // file is truncated
+  // 8-bit samples
+  { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0 },
+  // 8-bit samples, file is truncated
   { name:"r11025_u8_c1_trunc.wav", type:"audio/x-wav", duration:1.8 },
   // file has trailing non-PCM data
   { name:"r11025_s16_c1_trailing.wav", type:"audio/x-wav", duration:1.0 },
