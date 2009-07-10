@@ -37,6 +37,13 @@ var gErrorTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// These are files that have nontrivial duration and are useful for seeking within.
+var gSeekTests = [
+  { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
+  { name:"seek.ogv", type:"video/ogg", duration:3.966 },
+  { name:"bogus.duh", type:"bogus/duh", duration:123 }
+];
+
 function checkMetadata(msg, e, test) {
   if (test.width) {
     is(e.videoWidth, test.width, msg + " video width");
