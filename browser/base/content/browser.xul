@@ -601,7 +601,7 @@
       <statusbarpanel id="download-monitor" class="statusbarpanel-iconic-text"
                       tooltiptext="&downloadMonitor2.tooltip;" hidden="true"
                       command="Tools:Downloads"/>
-      <statusbarpanel id="security-button" class="statusbarpanel-iconic-text"
+      <statusbarpanel id="security-button" class="statusbarpanel-iconic"
                       hidden="true"
                       onclick="if (event.button == 0 &amp;&amp; event.detail == 1) displaySecurityInfo();"/>
       <statusbarpanel id="page-report-button" type="menu"
