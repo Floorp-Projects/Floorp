@@ -75,8 +75,10 @@ PlacesItem.prototype = {
         return Livemark;
       case "separator":
         return BookmarkSeparator;
+      case "item":
+        return PlacesItem;
     }
-    throw "Unknown places item object type";
+    throw "Unknown places item object type: " + type;
   },
 
   __proto__: CryptoWrapper.prototype,
@@ -84,8 +86,8 @@ PlacesItem.prototype = {
 
   _PlacesItem_init: function BmkItemRec_init(uri) {
     this._CryptoWrap_init(uri);
-    this.cleartext = {
-    };
+    this.cleartext = {};
+    this.type = "item";
   },
 };
 
