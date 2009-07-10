@@ -1568,6 +1568,21 @@ tabpanels {
   -moz-image-region: rect(0, 28px, 20px, 14px);
 }
 
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-icon {
+  list-style-image: url("chrome://browser/skin/mainwindow-dropdown-arrow.png");
+  margin: 5px 0 4px;
+  -moz-image-region: rect(0, 13px, 11px, 0);
+}
+
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+.tabs-alltabs-button[type="menu"]:hover:active > .toolbarbutton-icon,
+.tabs-alltabs-button[type="menu"][open="true"] > .toolbarbutton-icon {
+  -moz-image-region: rect(0, 26px, 11px, 13px);
+}
+
 .tabs-alltabs-box-animate {
   margin-top: 2px;
   margin-bottom: 4px;
