@@ -192,5 +192,61 @@ private:
 
 } // namespace plugins
 } // namespace mozilla
+#if 0
+
+//-----------------------------------------------------------------------------
+// Skeleton implementation of abstract actor class
+
+// Header file contents
+class ActorImpl :
+    public NPAPIProtocolChild
+{
+    virtual nsresult AnswerNP_Initialize(NPError* rv);
+    virtual NPPProtocolChild* NPPConstructor(
+                const String& aMimeType,
+                const uint16_t& aMode,
+                const StringArray& aNames,
+                const StringArray& aValues,
+                NPError* rv);
+    virtual nsresult NPPDestructor(
+                NPPProtocolChild* __a,
+                NPError* rv);
+    ActorImpl();
+    virtual ~ActorImpl();
+};
+
+
+// C++ file contents
+nsresult ActorImpl::AnswerNP_Initialize(NPError* rv)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NPPProtocolChild* ActorImpl::NPPConstructor(
+            const String& aMimeType,
+            const uint16_t& aMode,
+            const StringArray& aNames,
+            const StringArray& aValues,
+            NPError* rv)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult ActorImpl::NPPDestructor(
+            NPPProtocolChild* __a,
+            NPError* rv)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+ActorImpl::ActorImpl()
+{
+}
+
+ActorImpl::~ActorImpl()
+{
+}
+
+#endif // if 0
 
 #endif // ifndef mozilla_plugins_NPAPIProtocolChild_h
