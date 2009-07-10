@@ -239,17 +239,130 @@ pluginGetEdge(InstanceData* instanceData, RectEdge edge)
   return NPTEST_INT32_ERROR;
 }
 
+static BOOL
+getWindowRegion(HWND wnd, HRGN rgn)
+{
+  if (::GetWindowRgn(wnd, rgn) != ERROR)
+    return TRUE;
+
+  RECT clientRect;
+  if (!::GetClientRect(wnd, &clientRect))
+    return FALSE;
+  return ::SetRectRgn(rgn, 0, 0, clientRect.right, clientRect.bottom);
+}
+
+static RGNDATA*
+computeClipRegion(InstanceData* instanceData)
+{
+  HWND wnd = (HWND)instanceData->window.window;
+  HRGN rgn = ::CreateRectRgn(0, 0, 0, 0);
+  if (!rgn)
+    return NULL;
+  HRGN ancestorRgn = ::CreateRectRgn(0, 0, 0, 0);
+  if (!ancestorRgn) {
+    ::DeleteObject(rgn);
+    return NULL;
+  }
+  if (!getWindowRegion(wnd, rgn)) {
+    ::DeleteObject(ancestorRgn);
+    ::DeleteObject(rgn);
+    return NULL;
+  }
+
+  HWND ancestor = wnd;
+  for (;;) {
+    ancestor = ::GetAncestor(ancestor, GA_PARENT);
+    if (!ancestor || ancestor == ::GetDesktopWindow()) {
+      ::DeleteObject(ancestorRgn);
+
+      DWORD size = ::GetRegionData(rgn, 0, NULL);
+      if (!size) {
+        ::DeleteObject(rgn);
+        return NULL;
+      }
+
+      HANDLE heap = ::GetProcessHeap();
+      RGNDATA* data = static_cast<RGNDATA*>(::HeapAlloc(heap, 0, size));
+      if (!data) {
+        ::DeleteObject(rgn);
+        return NULL;
+      }
+      DWORD result = ::GetRegionData(rgn, size, data);
+      ::DeleteObject(rgn);
+      if (!result) {
+        ::HeapFree(heap, 0, data);
+        return NULL;
+      }
+
+      return data;
+    }
+
+    if (!getWindowRegion(ancestor, ancestorRgn)) {
+      ::DeleteObject(ancestorRgn);
+      ::DeleteObject(rgn);
+      return 0;
+    }
+
+    POINT pt = { 0, 0 };
+    ::MapWindowPoints(ancestor, wnd, &pt, 1);
+    if (::OffsetRgn(ancestorRgn, pt.x, pt.y) == ERROR ||
+        ::CombineRgn(rgn, rgn, ancestorRgn, RGN_AND) == ERROR) {
+      ::DeleteObject(ancestorRgn);
+      ::DeleteObject(rgn);
+      return 0;
+    }
+  }
+}
+
 int32_t
 pluginGetClipRegionRectCount(InstanceData* instanceData)
 {
-  return 1;
+  RGNDATA* data = computeClipRegion(instanceData);
+  if (!data)
+    return NPTEST_INT32_ERROR;
+
+  int32_t result = data->rdh.nCount;
+  ::HeapFree(::GetProcessHeap(), 0, data);
+  return result;
+}
+
+static int32_t
+addOffset(LONG coord, int32_t offset)
+{
+  if (offset == NPTEST_INT32_ERROR)
+    return NPTEST_INT32_ERROR;
+  return coord + offset;
 }
 
 int32_t
 pluginGetClipRegionRectEdge(InstanceData* instanceData, 
     int32_t rectIndex, RectEdge edge)
 {
-  return pluginGetEdge(instanceData, edge);
+  RGNDATA* data = computeClipRegion(instanceData);
+  if (!data)
+    return NPTEST_INT32_ERROR;
+
+  HANDLE heap = ::GetProcessHeap();
+  if (rectIndex >= int32_t(data->rdh.nCount)) {
+    ::HeapFree(heap, 0, data);
+    return NPTEST_INT32_ERROR;
+  }
+
+  RECT rect = reinterpret_cast<RECT*>(data->Buffer)[rectIndex];
+  ::HeapFree(heap, 0, data);
+
+  switch (edge) {
+  case EDGE_LEFT:
+    return addOffset(rect.left, pluginGetEdge(instanceData, EDGE_LEFT));
+  case EDGE_TOP:
+    return addOffset(rect.top, pluginGetEdge(instanceData, EDGE_TOP));
+  case EDGE_RIGHT:
+    return addOffset(rect.right, pluginGetEdge(instanceData, EDGE_LEFT));
+  case EDGE_BOTTOM:
+    return addOffset(rect.bottom, pluginGetEdge(instanceData, EDGE_TOP));
+  }
+
+  return NPTEST_INT32_ERROR;
 }
 
 /* windowless plugin events */
