@@ -106,16 +106,7 @@ for (var i = 0; i < gSmallTests.length; ++i) {
   // captured in the closure and we don't end up getting the value 'test'
   // had in the last iteration of the loop. I blame Brendan.
   var check = function(test) { return function (e) {
-    if (test.width) {
-      is(e.videoWidth, test.width, "video width " + e.currentSrc);
-    }
-    if (test.height) {
-      is(e.videoHeight, test.height, "video height " + e.currentSrc);
-    }
-    if (test.duration) {
-      ok(Math.abs(e.duration - test.duration) < 0.1,
-         "duration " + e.currentSrc + " should be around " + test.duration);
-    }
+    checkMetadata(test.name, e, test);
   }}(test);
 
   var otherType = type.match(/^video\//) ? "audio/x-wav" : "video/ogg";

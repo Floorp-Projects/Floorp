@@ -43,6 +43,29 @@ relativesrcdir  = content/media/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+# Media tests should be backend independent, i.e., not conditioned on
+# MOZ_OGG, MOZ_WAVE etc. (The only exception is the can_play_type tests,
+# which necessarily depend on the backend(s) configured.) As far as possible,
+# each test should work with any resource type. This makes it
+# easy to add new backends and reduces the amount of test duplication.
+
+# For each supported backend, resources that can be played by that backend
+# should be added to the lists in manifest.js. Media tests that aren't
+# testing for a bug in handling a specific resource type should pick one of
+# the lists in manifest.js and run the test for each resource in the list
+# that is supported in the current build (the canPlayType API is useful
+# for this).
+
+# To test whether a valid resource can simply be played through correctly,
+# and optionally that its metadata is read correctly, just
+# add it to gPlayTests in manifest.js. To test whether an invalid
+# resource correctly throws an error (and does not cause a crash or hang),
+# just add it to gErrorTests in manifest.js.
+
+# To test for a specific bug in handling a specific resource type,
+# make the test first check canPlayType for the type, and if it's not
+# supported, just do ok(true, "Type not supported") and stop the test.
+
 _TEST_FILES = \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
@@ -58,6 +81,8 @@ _TEST_FILES = \
 		test_media_selection.html \
 		test_networkState.html \
 		test_paused.html \
+		test_playback.html \
+		test_playback_errors.html \
 		test_readyState.html \
 		test_seek2.html \
 		test_volume.html \
@@ -86,7 +111,8 @@ _TEST_FILES += \
 		r16000_u8_c1_list.wav \
 		$(NULL)
 
-# These tests need to be converted to be backend-independent
+# These tests need to be converted to be backend-independent. This list
+# is deprecated, do not add to it.
 ifdef MOZ_OGG
 _TEST_FILES += \
 		dynamic_redirect.sjs \
@@ -95,9 +121,7 @@ _TEST_FILES += \
 		test_audio1.html \
 		test_audio2.html \
 		test_bug448534.html \
-		test_bug461281.html \
 		test_bug468190.html \
-		test_bug482461.html \
 		test_bug493187.html \
 		test_bug495145.html \
 		test_bug495300.html \
@@ -166,7 +190,8 @@ _TEST_FILES += \
 		$(NULL)
 endif
 
-# These tests need to be converted to be backend-independent
+# These tests need to be converted to be backend-independent. This list
+# is deprecated, do not add to it.
 ifdef MOZ_WAVE
 _TEST_FILES += \
 		test_bug463162.xhtml \
@@ -179,7 +204,6 @@ _TEST_FILES += \
 		test_wav_8bit.html \
 		test_wav_ended1.html \
 		test_wav_ended2.html \
-		test_wav_list.html \
 		test_wav_onloadedmetadata.html \
 		test_wav_seek1.html \
 		test_wav_seek3.html \
@@ -192,8 +216,6 @@ _TEST_FILES += \
 		test_wav_seek_then_play.html \
 		test_wav_timeupdate1.html \
 		test_wav_timeupdate2.html \
-		test_wav_trailing.html \
-		test_wav_trunc.html \
 		test_wav_trunc_seek.html \
 		$(NULL)
 # Disabled since we don't play Wave files standalone, for now
