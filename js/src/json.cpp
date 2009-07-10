@@ -227,7 +227,8 @@ public:
 
     ~StringifyContext()
     {
-        js_FinishStringBuffer(&gap);
+        if (STRING_BUFFER_OK(&gap))
+            js_FinishStringBuffer(&gap);
     }
 
     JSONWriteCallback callback;
