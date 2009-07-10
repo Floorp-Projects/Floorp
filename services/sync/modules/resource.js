@@ -253,7 +253,7 @@ Resource.prototype = {
     // they have payload data.
     if ("PUT" == action || "POST" == action) {
       this.filterUpload();
-      this._log.trace(action + " Body:\n" + this._data);
+      this._log.trace(action + " Body: " + this._data);
 
       let type = ('Content-Type' in this._headers)?
         this._headers['Content-Type'] : 'text/plain';
@@ -276,7 +276,7 @@ Resource.prototype = {
     if (!channel.requestSucceeded) {
       this._log.debug(action + " request failed (" + channel.responseStatus + ")");
       if (this._data)
-        this._log.debug("Error response: \n" + this._data);
+        this._log.debug("Error response: " + this._data);
       throw new RequestException(this, action, channel);
 
     } else {
@@ -291,7 +291,7 @@ Resource.prototype = {
         break;
       case "GET":
       case "POST":
-        this._log.trace(action + " Body:\n" + this._data);
+        this._log.trace(action + " Body: " + this._data);
         this.filterDownload();
         break;
       }
