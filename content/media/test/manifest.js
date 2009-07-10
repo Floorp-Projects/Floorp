@@ -46,6 +46,13 @@ var gSeekTests = [
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 
+// These are files suitable for using with a "new Audio" constructor.
+var gAudioTests = [
+  { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
+  { name:"sound.ogg", type:"audio/ogg" },
+  { name:"bogus.duh", type:"bogus/duh", duration:123 }
+];
+
 function checkMetadata(msg, e, test) {
   if (test.width) {
     is(e.videoWidth, test.width, msg + " video width");
