@@ -76,9 +76,11 @@ function getVisibleMenuItems(aMenu) {
             else
                 accessKeys[key] = item.id
             items.push(item.id);
+            items.push(!item.disabled);
         } else if (item.nodeName == "menuseparator") {
             ok(true, "--- seperator id is " + item.id);
             items.push("---");
+            items.push(null);
         } else if (item.nodeName == "menu") {
             ok(item.id, "child menu #" + i + " has an ID");
             ok(key, "menu has an access key");
@@ -87,9 +89,11 @@ function getVisibleMenuItems(aMenu) {
             else
                 accessKeys[key] = item.id
             items.push(item.id);
+            items.push(!item.disabled);
             // Add a dummy item to that the indexes in checkMenu are the same
             // for expectedItems and actualItems.
             items.push([]);
+            items.push(null);
         } else {
             ok(false, "child #" + i + " of menu ID " + aMenu.id +
                       " has an unknown type (" + item.nodeName + ")");
@@ -105,24 +109,37 @@ function checkContextMenu(expectedItems) {
 
 /*
  * checkMenu - checks to see if the specified <menupopup> contains the
- * expected items, as specified by an array of element IDs. To check the
- * contents of a submenu, include a nested array after the expected <menu> ID.
- * For example: ["foo, "submenu", ["sub1", "sub2"], "bar"]
+ * expected items and state.
+ * expectedItems is a array of (1) item IDs and (2) a boolean specifying if
+ * the item is enabled or not (or null to ignore it). Submenus can be checked
+ * by providing a nested array entry after the expected <menu> ID.
+ * For example: ["blah", true,              // item enabled
+ *               "submenu", null,           // submenu
+ *                   ["sub1", true,         // submenu contents
+ *                    "sub2", false], null, // submenu contents
+ *               "lol", false]              // item disabled
  * 
  */
 function checkMenu(menu, expectedItems) {
     var actualItems = getVisibleMenuItems(menu);
     //ok(false, "Items are: " + actualItems);
-    for (var i = 0; i < expectedItems.length; i++) {
-        if (expectedItems[i] instanceof Array) {
+    for (var i = 0; i < expectedItems.length; i+=2) {
+        var actualItem   = actualItems[i];
+        var actualEnabled = actualItems[i + 1];
+        var expectedItem = expectedItems[i];
+        var expectedEnabled = expectedItems[i + 1];
+        if (expectedItem instanceof Array) {
             ok(true, "Checking submenu...");
-            var menuID = expectedItems[i - 1]; // The last item was the menu ID.
+            var menuID = expectedItems[i - 2]; // The last item was the menu ID.
             var submenu = menu.getElementsByAttribute("id", menuID)[0];
             ok(submenu && submenu.nodeName == "menu", "got expected submenu element");
-            checkMenu(submenu.menupopup, expectedItems[i]);
+            checkMenu(submenu.menupopup, expectedItem);
         } else {
-            is(actualItems[i], expectedItems[i],
-               "checking item #" + i + " (" + expectedItems[i] + ")");
+            is(actualItem, expectedItem,
+               "checking item #" + i/2 + " (" + expectedItem + ") name");
+            if (expectedEnabled != null)
+                is(actualEnabled, expectedEnabled,
+                   "checking item #" + i/2 + " (" + expectedItem + ") enabled state");
         }
     }
     // Could find unexpected extra items at the end...
@@ -150,136 +167,166 @@ function runTest(testNum) {
 
     case 2:
         // Context menu for plain text
-        checkContextMenu(["context-back",
-                          "context-forward",
-                          "context-reload",
-                          "context-stop",
-                          "---",
-                          "context-bookmarkpage",
-                          "context-savepage",
-                          "context-sendpage",
-                          "---",
-                          "context-viewbgimage",
-                          "context-selectall",
-                          "---",
-                          "context-viewsource",
-                          "context-viewinfo"]);
+        checkContextMenu(["context-back",         false,
+                          "context-forward",      false,
+                          "context-reload",       true,
+                          "context-stop",         false,
+                          "---",                  null,
+                          "context-bookmarkpage", true,
+                          "context-savepage",     true,
+                          "context-sendpage",     true,
+                          "---",                  null,
+                          "context-viewbgimage",  false,
+                          "context-selectall",    true,
+                          "---",                  null,
+                          "context-viewsource",   true,
+                          "context-viewinfo",     true]);
         closeContextMenu()
         openContextMenuFor(link); // Invoke context menu for next test.
         break;
 
     case 3:
         // Context menu for text link
-        checkContextMenu(["context-openlink",
-                          "context-openlinkintab",
-                          "---",
-                          "context-bookmarklink",
-                          "context-savelink",
-                          "context-sendlink",
-                          "context-copylink",
-                          "---",
-                          "context-metadata"]);
+        checkContextMenu(["context-openlink",      true,
+                          "context-openlinkintab", true,
+                          "---",                   null,
+                          "context-bookmarklink",  true,
+                          "context-savelink",      true,
+                          "context-sendlink",      true,
+                          "context-copylink",      true,
+                          "---",                   null,
+                          "context-metadata",      true]);
         closeContextMenu()
         openContextMenuFor(mailto); // Invoke context menu for next test.
         break;
 
     case 4:
         // Context menu for text mailto-link
-        checkContextMenu(["context-copyemail",
-                          "---",
-                          "context-metadata"]);
+        checkContextMenu(["context-copyemail", true,
+                          "---",               null,
+                          "context-metadata",  true]);
         closeContextMenu()
         openContextMenuFor(input); // Invoke context menu for next test.
         break;
 
     case 5:
         // Context menu for text input field
-        checkContextMenu(["context-undo",
-                          "---",
-                          "context-cut",
-                          "context-copy",
-                          "context-paste",
-                          "context-delete",
-                          "---",
-                          "context-selectall",
-                          "---",
-                          "spell-check-enabled"]);
+        checkContextMenu(["context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         false,
+                          "context-copy",        false,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      false,
+                          "---",                 null,
+                          "context-selectall",   true,
+                          "---",                 null,
+                          "spell-check-enabled", true]);
         closeContextMenu()
         openContextMenuFor(img); // Invoke context menu for next test.
         break;
 
     case 6:
         // Context menu for an image
-        checkContextMenu(["context-viewimage",
-                          "context-copyimage-contents",
-                          "context-copyimage",
-                          "---",
-                          "context-saveimage",
-                          "context-sendimage",
-                          "context-setDesktopBackground",
-                          "context-blockimage",
-                          "---",
-                          "context-metadata"]);
+        checkContextMenu(["context-viewimage",            true,
+                          "context-copyimage-contents",   true,
+                          "context-copyimage",            true,
+                          "---",                          null,
+                          "context-saveimage",            true,
+                          "context-sendimage",            true,
+                          "context-setDesktopBackground", true,
+                          "context-blockimage",           true,
+                          "---",                          null,
+                          "context-metadata",             true]);
         closeContextMenu();
         openContextMenuFor(canvas); // Invoke context menu for next test.
         break;
 
     case 7:
         // Context menu for a canvas
-        checkContextMenu(["context-viewimage",
-                          "context-saveimage",
-                          "context-bookmarkpage",
-                          "context-selectall"]);
+        checkContextMenu(["context-viewimage",    true,
+                          "context-saveimage",    true,
+                          "context-bookmarkpage", true,
+                          "context-selectall",    true]);
         closeContextMenu();
-        openContextMenuFor(video); // Invoke context menu for next test.
+        openContextMenuFor(video_ok); // Invoke context menu for next test.
         break;
 
     case 8:
-        // Context menu for a video
-        checkContextMenu(["context-media-play",
-                          "context-media-mute",
-                          "context-media-showcontrols",
-                          "---",
-                          "context-viewvideo",
-                          "context-copyvideourl",
-                          "---",
-                          "context-savevideo",
-                          "context-sendvideo"]);
+        // Context menu for a video (with a VALID media source)
+        checkContextMenu(["context-media-play",         true,
+                          "context-media-mute",         true,
+                          "context-media-showcontrols", true,
+                          "---",                        null,
+                          "context-viewvideo",          true,
+                          "context-copyvideourl",       true,
+                          "---",                        null,
+                          "context-savevideo",          true,
+                          "context-sendvideo",          true]);
+        closeContextMenu();
+        openContextMenuFor(video_bad); // Invoke context menu for next test.
+        break;
+
+    case 9:
+        // Context menu for a video (with a INVALID media source)
+        checkContextMenu(["context-media-play",         false,
+                          "context-media-mute",         false,
+                          "context-media-showcontrols", false,
+                          "---",                        null,
+                          "context-viewvideo",          true,
+                          "context-copyvideourl",       true,
+                          "---",                        null,
+                          "context-savevideo",          true,
+                          "context-sendvideo",          true]);
+        closeContextMenu();
+        openContextMenuFor(video_bad2); // Invoke context menu for next test.
+        break;
+
+    case 10:
+        // Context menu for a video (with a INVALID media source)
+        checkContextMenu(["context-media-play",         false,
+                          "context-media-mute",         false,
+                          "context-media-showcontrols", false,
+                          "---",                        null,
+                          "context-viewvideo",          false,
+                          "context-copyvideourl",       false,
+                          "---",                        null,
+                          "context-savevideo",          false,
+                          "context-sendvideo",          false]);
         closeContextMenu();
         openContextMenuFor(iframe); // Invoke context menu for next test.
         break;
 
-    case 9:
+    case 11:
         // Context menu for an iframe
-        checkContextMenu(["context-back",
-                          "context-forward",
-                          "context-reload",
-                          "context-stop",
-                          "---",
-                          "context-bookmarkpage",
-                          "context-savepage",
-                          "context-sendpage",
-                          "---",
-                          "context-viewbgimage",
-                          "context-selectall",
-                          "---",
-                          "frame",
-                              ["context-showonlythisframe",
-                               "context-openframe",
-                               "context-openframeintab",
-                               "---",
-                               "context-reloadframe",
-                               "---",
-                               "context-bookmarkframe",
-                               "context-saveframe",
-                               "---",
-                               "context-printframe",
-                               "---",
-                               "context-viewframesource",
-                               "context-viewframeinfo"],
-                          "---",
-                          "context-viewsource",
-                          "context-viewinfo"]);
+        checkContextMenu(["context-back",         false,
+                          "context-forward",      false,
+                          "context-reload",       true,
+                          "context-stop",         false,
+                          "---",                  null,
+                          "context-bookmarkpage", true,
+                          "context-savepage",     true,
+                          "context-sendpage",     true,
+                          "---",                  null,
+                          "context-viewbgimage",  false,
+                          "context-selectall",    true,
+                          "---",                  null,
+                          "frame",                null,
+                              ["context-showonlythisframe", true,
+                               "context-openframe",         true,
+                               "context-openframeintab",    true,
+                               "---",                       null,
+                               "context-reloadframe",       true,
+                               "---",                       null,
+                               "context-bookmarkframe",     true,
+                               "context-saveframe",         true,
+                               "---",                       null,
+                               "context-printframe",        true,
+                               "---",                       null,
+                               "context-viewframesource",   true,
+                               "context-viewframeinfo",     true], null,
+                          "---",                  null,
+                          "context-viewsource",   true,
+                          "context-viewinfo",     true]);
         closeContextMenu();
 
         subwindow.close();
@@ -327,7 +374,9 @@ function startTest() {
     input  = subwindow.document.getElementById("test-input");
     img    = subwindow.document.getElementById("test-image");
     canvas = subwindow.document.getElementById("test-canvas");
-    video  = subwindow.document.getElementById("test-video");
+    video_ok   = subwindow.document.getElementById("test-video-ok");
+    video_bad  = subwindow.document.getElementById("test-video-bad");
+    video_bad2 = subwindow.document.getElementById("test-video-bad2");
     iframe = subwindow.document.getElementById("test-iframe");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
