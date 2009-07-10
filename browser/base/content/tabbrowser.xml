@@ -1274,21 +1274,21 @@
               }
             }
 
-            // |setTimeout| here to ensure we're post reflow
-            var _delayedUpdate = function(aTabContainer) {
-              aTabContainer.adjustTabstrip();
+            this.tabContainer.adjustTabstrip();
 
+            // Do this asynchronically, as we don't know yet if the tab
+            // will be selected.
+            setTimeout(function (aTabContainer) {
               if (aTabContainer.selectedItem != t)
                 aTabContainer._notifyBackgroundTab(t);
+            }, 0, this.tabContainer);
 
-              // XXXmano: this is a temporary workaround to bug 343585
-              // We need to manually update the scroll buttons disabled state
-              // if a tab was inserted to the overflow area or removed from it
-              // without any scrolling and when the tabbar has already
-              // overflowed.
-              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
-            }
-            setTimeout(_delayedUpdate, 0, this.mTabContainer);
+            // XXXmano: this is a temporary workaround for bug 345399
+            // We need to manually update the scroll buttons disabled state
+            // if a tab was inserted to the overflow area or removed from it
+            // without any scrolling and when the tabbar has already
+            // overflowed.
+            this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -1496,15 +1496,12 @@
               while (this._removingTabs.length)
                 this._endRemoveTab([this._removingTabs[0], false]);
             } else if (!this._windowIsClosing) {
-              // see notes in addTab
-              function _delayedUpdate(aTabContainer) {
-                aTabContainer.adjustTabstrip();
-                aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
-              };
-              setTimeout(_delayedUpdate, 0, this.tabContainer);
-
               if (aNewTab && gURLBar)
                 gURLBar.focus();
+
+              this.tabContainer.adjustTabstrip();
+              // workaround for bug 345399
+              this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
             }
 
             // We're going to remove the tab and the browser now.
