@@ -136,5 +136,29 @@ private:
 };
 
 
+#if 0
+
+//-----------------------------------------------------------------------------
+// Skeleton implementation of abstract actor class
+
+// Header file contents
+class ActorImpl :
+    public IFrameEmbeddingProtocolParent
+{
+    ActorImpl();
+    virtual ~ActorImpl();
+};
+
+
+// C++ file contents
+ActorImpl::ActorImpl()
+{
+}
+
+ActorImpl::~ActorImpl()
+{
+}
+
+#endif // if 0
 
 #endif // ifndef IFrameEmbeddingProtocolParent_h

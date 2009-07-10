@@ -133,5 +133,39 @@ private:
 
 } // namespace plugins
 } // namespace mozilla
+#if 0
+
+//-----------------------------------------------------------------------------
+// Skeleton implementation of abstract actor class
+
+// Header file contents
+class ActorImpl :
+    public NPPProtocolParent
+{
+    virtual nsresult AnswerNPN_GetValue(
+                const String& key,
+                String* value);
+    ActorImpl();
+    virtual ~ActorImpl();
+};
+
+
+// C++ file contents
+nsresult ActorImpl::AnswerNPN_GetValue(
+            const String& key,
+            String* value)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+ActorImpl::ActorImpl()
+{
+}
+
+ActorImpl::~ActorImpl()
+{
+}
+
+#endif // if 0
 
 #endif // ifndef mozilla_plugins_NPPProtocolParent_h

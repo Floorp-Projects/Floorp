@@ -688,6 +688,15 @@ class GenerateProtocolActorHeader(Visitor):
         self.ns.addstmt(cxx.Whitespace.NL)
         self.ns.addstmt(cxx.Whitespace.NL)
 
+        # generate skeleton implementation of abstract actor class
+        self.file.addthing(cxx.CppDirective('if', '0'))
+
+        genskeleton = GenerateSkeletonImpl()
+        genskeleton.fromclass(cls)
+        [ self.file.addthing(thing) for thing in genskeleton.stuff ]
+
+        self.file.addthing(cxx.CppDirective('endif', '// if 0'))
+
 
     def visitMessageDecl(self, md):
         # TODO special handling of constructor messages
@@ -1038,3 +1047,61 @@ class GenerateProtocolChildHeader(GenerateProtocolActorHeader):
 
     def receivesMessage(self, md):
         return md.decl.type.isInout() or md.decl.type.isOut()
+
+
+class GenerateSkeletonImpl(cxx.Visitor):
+    def __init__(self, name='ActorImpl'):
+        self.name = name
+        self.stuff = [ ]
+        self.cls = None
+        self.methodimpls = [ ]
+
+    def fromclass(self, cls):
+        cls.accept(self)
+        self.stuff.append(cxx.Whitespace('''
+//-----------------------------------------------------------------------------
+// Skeleton implementation of abstract actor class
+
+'''))
+        self.stuff.append(cxx.Whitespace('// Header file contents\n'))
+        self.stuff.append(self.cls)
+
+        self.stuff.append(cxx.Whitespace.NL)
+        self.stuff.append(cxx.Whitespace('\n// C++ file contents\n'))
+        self.stuff.extend(self.methodimpls)
+
+    def visitClass(self, cls):
+        self.cls = cxx.Class(self.name, inherits=[ cxx.Inherit(cls.name) ])
+        cxx.Visitor.visitClass(self, cls)
+
+    def visitMethodDecl(self, md):
+        if not md.pure:
+            return
+        decl = deepcopy(md)
+        decl.pure = 0
+        impl = cxx.MethodDefn(cxx.MethodDecl(self.implname(md.name),
+                                             params=md.params,
+                                             ret=md.ret))
+        impl.addstmt(cxx.StmtReturn(cxx.ExprVar('NS_ERROR_NOT_IMPLEMENTED')))
+
+        self.cls.addstmt(cxx.StmtDecl(decl))
+        self.addmethodimpl(impl)
+
+    def visitConstructorDecl(self, cd):
+        self.cls.addstmt(cxx.StmtDecl(cxx.ConstructorDecl(self.name)))
+        self.addmethodimpl(
+            cxx.ConstructorDefn(cxx.ConstructorDecl(self.implname(self.name))))
+        
+    def visitDestructorDecl(self, dd):
+        self.cls.addstmt(
+            cxx.StmtDecl(cxx.DestructorDecl(self.name, virtual=1)))
+        # FIXME/cjones: hack!
+        self.addmethodimpl(
+            cxx.DestructorDefn(cxx.ConstructorDecl(self.implname('~' +self.name))))
+
+    def addmethodimpl(self, impl):
+        self.methodimpls.append(impl)
+        self.methodimpls.append(cxx.Whitespace.NL)
+
+    def implname(self, method):
+        return self.name +'::'+ method

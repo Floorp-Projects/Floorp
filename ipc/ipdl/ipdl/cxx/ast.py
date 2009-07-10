@@ -62,17 +62,20 @@ class Visitor:
 
     def visitTypedef(self, tdef):
         tdef.fromtype.accept(self)
-        tdef.tottype.accept(self)
+        tdef.totype.accept(self)
 
     def visitDecl(self, decl):
         decl.type.accept(self)
 
     def visitClass(self, cls):
-        for viz, parent in cls.inherits:
-            parent.accept(self)
+        for inherit in cls.inherits:
+            inherit.accept(self)
         self.visitBlock(cls)
 
     def visitInherit(self, inh):
+        pass
+
+    def visitFriendClassDecl(self, fcd):
         pass
 
     def visitMethodDecl(self, meth):
@@ -101,6 +104,9 @@ class Visitor:
         dd.decl.accept(self)
         self.visitBlock(dd)
 
+    def visitExprLiteral(self, l):
+        pass
+
     def visitExprVar(self, v):
         pass
 
@@ -116,6 +122,9 @@ class Visitor:
 
     def visitExprDeref(self, ed):
         self.visitExprPrefixUnop(ed)
+
+    def visitExprCast(self, ec):
+        ec.expr.accept(self)
 
     def visitExprSelect(self, es):
         es.obj.accept(self)
@@ -152,6 +161,12 @@ class Visitor:
 
     def visitDefaultLabel(self, dl):
         pass
+
+    def visitStmtIf(self, si):
+        si.cond.accept(self)
+        si.ifb.accept(self)
+        if si.elseb is not None:
+            si.elseb.accept(self)
 
     def visitStmtSwitch(self, ss):
         ss.expr.accept(self)
@@ -268,7 +283,7 @@ class Class(Block):
 
         Block.__init__(self)
         self.name = name
-        self.inherits = inherits # array of (viz, Type) pairs
+        self.inherits = inherits
         self.interface = interface
         self.abstract = abstract
         self.final = final
