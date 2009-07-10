@@ -580,7 +580,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 JSFunction *fun;
                 JSScript *script;
                 JSBool injectFrame;
-                uintN nslots;
+                uintN nslots, slotsStart;
                 jsval smallv[5];
                 jsval *argv;
                 JSStackFrame frame;
@@ -599,7 +599,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     script = NULL;
                 }
 
-                nslots = 2;
+                slotsStart = nslots = 2;
                 injectFrame = JS_TRUE;
                 if (fun) {
                     nslots += FUN_MINARGS(fun);
@@ -607,7 +607,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                         nslots += fun->u.n.extra;
                         injectFrame = !(fun->flags & JSFUN_FAST_NATIVE);
                     }
+
+                    slotsStart = nslots;
                 }
+                if (script)
+                    nslots += script->nslots;
 
                 if (injectFrame) {
                     if (nslots <= JS_ARRAY_LENGTH(smallv)) {
@@ -633,6 +637,8 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     frame.argv = argv + 2;
                     frame.down = js_GetTopStackFrame(cx);
                     frame.scopeChain = OBJ_GET_PARENT(cx, closure);
+                    if (script && script->nslots)
+                        frame.slots = argv + slotsStart;
                     if (script) {
                         JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
                         regs.pc = script->code + script->length
