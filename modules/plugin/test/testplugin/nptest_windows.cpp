@@ -211,24 +211,29 @@ pluginGetEdge(InstanceData* instanceData, RectEdge edge)
   if (!instanceData || !instanceData->hasWidget)
     return NPTEST_INT32_ERROR;
 
-  HWND hWnd = GetAncestor((HWND)instanceData->window.window, GA_ROOT);
-
-  if (!hWnd)
-    return NPTEST_INT32_ERROR;
-
+  // Get the plugin client rect in screen coordinates
   RECT rect = {0};
-  GetClientRect((HWND)instanceData->window.window, &rect);
-  MapWindowPoints((HWND)instanceData->window.window, hWnd, (LPPOINT)&rect, 2);
+  if (!::GetClientRect((HWND)instanceData->window.window, &rect))
+    return NPTEST_INT32_ERROR;
+  ::MapWindowPoints((HWND)instanceData->window.window, NULL, (LPPOINT)&rect, 2);
+
+  // Get the toplevel window frame rect in screen coordinates
+  HWND rootWnd = ::GetAncestor((HWND)instanceData->window.window, GA_ROOT);
+  if (!rootWnd)
+    return NPTEST_INT32_ERROR;
+  RECT rootRect;
+  if (!::GetWindowRect(rootWnd, &rootRect))
+    return NPTEST_INT32_ERROR;
 
   switch (edge) {
   case EDGE_LEFT:
-    return rect.left;
+    return rect.left - rootRect.left;
   case EDGE_TOP:
-    return rect.top;
+    return rect.top - rootRect.top;
   case EDGE_RIGHT:
-    return rect.right;
+    return rect.right - rootRect.left;
   case EDGE_BOTTOM:
-    return rect.bottom;
+    return rect.bottom - rootRect.top;
   }
 
   return NPTEST_INT32_ERROR;

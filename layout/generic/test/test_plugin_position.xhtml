@@ -51,12 +51,6 @@ function runTests() {
     return;
   }
 
-  if (navigator.platform.indexOf("Win") >= 0) {
-    todo(false, "Windows does not support windowed plugins (yet)");
-    SimpleTest.finish();
-    return;
-  }
-
   var bounds = h1.getBoundingClientRect();
   windowFrameX = h1.boxObject.screenX - bounds.left - window.screenX;
   windowFrameY = h1.boxObject.screenY - bounds.top - window.screenY;
