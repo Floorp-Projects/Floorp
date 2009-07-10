@@ -1,14 +1,5 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Wave Media test: seek test 1</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-</head>
-<body>
-<pre id="test">
-<script class="testbody" type="text/javascript">
+function test_seek1(v, seekTime, is, ok, finish) {
+
 var startPassed = false;
 var endPassed = false;
 var seekFlagStart = false;
@@ -19,7 +10,6 @@ var completed = false;
 function startTest() {
   if (completed)
     return false;
-  var v = document.getElementById('v');
   ok(!v.seeking, "seeking should default to false");
   try {
     v.seeking = 1;
@@ -31,7 +21,7 @@ function startTest() {
   ok(readonly, "seeking should be readonly");
 
   v.play();
-  v.currentTime=0.5;
+  v.currentTime=seekTime;
   seekFlagStart = v.seeking;
   return false;
 }
@@ -39,8 +29,6 @@ function startTest() {
 function seekStarted() {
   if (completed)
     return false;
-
-  var v = document.getElementById('v');
   v.pause();
   startPassed = true;
   return false;
@@ -50,9 +38,11 @@ function seekEnded() {
   if (completed)
     return false;
 
-  var v = document.getElementById('v');
   var t = v.currentTime;
-  ok(t >= 0.4 && t <= 0.6, "Video currentTime should be around 0.5: " + t);
+  // Since we were playing, and we only paused asynchronously, we can't be
+  // sure that we paused before the seek finished, so we may have played
+  // ahead arbitrarily far.
+  ok(t >= seekTime - 0.1, "Video currentTime should be around " + seekTime + ": " + t);
   v.play();
   endPassed = true;
   seekFlagEnd = v.seeking;
@@ -68,19 +58,13 @@ function playbackEnded() {
   ok(endPassed, "seeked event");
   ok(seekFlagStart, "seeking flag on start should be true");
   ok(!seekFlagEnd, "seeking flag on end should be false");
-  SimpleTest.finish();
+  finish();
   return false;
 }
 
-SimpleTest.waitForExplicitFinish();
-</script>
-</pre>
-<audio id='v'
-       onended='return playbackEnded();'
-       onloadedmetadata='return startTest();'
-       onseeking='return seekStarted();'
-       onseeked='return seekEnded();'>
-  <source type='audio/x-wav' src='r11025_s16_c1.wav'>
-</audio>
-</body>
-</html>
+v.addEventListener("ended", playbackEnded, false);
+v.addEventListener("loadedmetadata", startTest, false);
+v.addEventListener("seeking", seekStarted, false);
+v.addEventListener("seeked", seekEnded, false);
+
+}
