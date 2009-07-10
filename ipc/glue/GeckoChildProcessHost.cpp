@@ -38,17 +38,19 @@
 
 #include "base/command_line.h"
 #include "base/path_service.h"
+#include "base/string_util.h"
 #include "chrome/common/chrome_switches.h"
 
 using mozilla::ipc::GeckoChildProcessHost;
 
-GeckoChildProcessHost::GeckoChildProcessHost(ProcessType type)
-: ChildProcessHost(type)
+GeckoChildProcessHost::GeckoChildProcessHost(GeckoChildProcessType aProcessType)
+  : ChildProcessHost(RENDER_PROCESS), // FIXME/cjones: we should own this enum
+    mProcessType(aProcessType)
 {
 }
 
 bool
-GeckoChildProcessHost::Init()
+GeckoChildProcessHost::Launch(std::vector<std::wstring> aExtraOpts)
 {
   if (!CreateChannel()) {
     return false;
@@ -58,21 +60,26 @@ GeckoChildProcessHost::Init()
     FilePath::FromWStringHack(CommandLine::ForCurrentProcess()->program());
   exePath = exePath.DirName();
 
-#if defined(OS_WIN)
-  exePath = exePath.AppendASCII("mozilla-runtime.exe");
-  // no fd mapping necessary
-#elif defined(OS_POSIX)
-  exePath = exePath.AppendASCII("mozilla-runtime");
+  exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
 
+  // remap the IPC socket fd to a well-known int, as the OS does for
+  // STDOUT_FILENO, for example
+#if defined(OS_POSIX)
   int srcChannelFd, dstChannelFd;
   channel().GetClientFileDescriptorMapping(&srcChannelFd, &dstChannelFd);
   mFileMap.push_back(std::pair<int,int>(srcChannelFd, dstChannelFd));
-#else
-#error Bad!
 #endif
 
   CommandLine cmdLine(exePath.ToWStringHack());
   cmdLine.AppendSwitchWithValue(switches::kProcessChannelID, channel_id());
+
+  for (std::vector<std::wstring>::iterator it = aExtraOpts.begin();
+       it != aExtraOpts.end();
+       ++it) {
+    cmdLine.AppendLooseValue((*it).c_str());
+  }
+
+  cmdLine.AppendLooseValue(UTF8ToWide(XRE_ChildProcessTypeToString(mProcessType)));
 
   base::ProcessHandle process;
 #if defined(OS_WIN)

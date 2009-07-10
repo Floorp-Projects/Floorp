@@ -43,23 +43,26 @@
 #include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
 
+#include "nsXULAppAPI.h"        // for GeckoChildProcessType
+
 namespace mozilla {
 namespace ipc {
 
 class GeckoChildProcessHost : public ChildProcessHost
 {
 public:
-  GeckoChildProcessHost(ProcessType type=RENDER_PROCESS);
+  GeckoChildProcessHost(GeckoChildProcessType aProcessType=GeckoChildProcess_Default);
 
-  bool Init();
+  bool Launch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
 
+  // FIXME/cjones: these should probably disappear
   virtual void OnMessageReceived(const IPC::Message& aMsg);
   virtual void OnChannelError();
 
   virtual bool CanShutdown() { return true; }
 
 protected:
-
+  GeckoChildProcessType mProcessType;
   FilePath mProcessPath;
 
 #if defined(OS_POSIX)

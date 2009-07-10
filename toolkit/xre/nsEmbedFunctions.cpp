@@ -190,10 +190,34 @@ XRE_TermEmbedding()
   delete gDirServiceProvider;
 }
 
+const char*
+XRE_ChildProcessTypeToString(GeckoChildProcessType aProcessType)
+{
+  return (aProcessType < GeckoChildProcess_End) ?
+    kGeckoChildProcessTypeString[aProcessType] : nsnull;
+}
+
+GeckoChildProcessType
+XRE_StringToChildProcessType(const char* aProcessTypeString)
+{
+  for (int i = 0;
+       i < (int) NS_ARRAY_LENGTH(kGeckoChildProcessTypeString);
+       ++i) {
+    const char* procString = kGeckoChildProcessTypeString[i];
+    if (!procString) {
+      return GeckoChildProcess_Invalid;
+    }
+    if (!strcmp(procString, aProcessTypeString)) {
+      return static_cast<GeckoChildProcessType>(i);
+    }
+  }
+  NS_NOTREACHED("error");
+}
+
 nsresult
 XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
-                     const char* aMainThreadClass)
+                     GeckoChildProcessType aProcess)
 {
   NS_ENSURE_ARG_MIN(aArgc, 1);
   NS_ENSURE_ARG_POINTER(aArgv);
@@ -215,14 +239,21 @@ XRE_InitChildProcess(int aArgc,
   {
     GeckoThread* mainThread;
 
-    if (!aMainThreadClass)
+    switch (aProcess) {
+    case GeckoChildProcess_Default:
       mainThread = new GeckoThread();
-    else if (!strcmp("PluginThreadChild", aMainThreadClass))
+      break;
+
+    case GeckoChildProcess_Plugin:
       mainThread = new PluginThreadChild();
-    else if (!strcmp("TabThread", aMainThreadClass))
+      break;
+
+    case GeckoChildProcess_Tab:
       mainThread = new TabThread();
-    else {
-        NS_RUNTIMEABORT("Unknown main thread class");
+      break;
+
+    default:
+      NS_RUNTIMEABORT("Unknown main thread class");
     }
 
     ChildProcess process(mainThread);
@@ -330,7 +361,7 @@ class CreateChildProcess : public Task
 public:
   virtual void Run() {
     GeckoChildProcessHost* host = new GeckoChildProcessHost();
-    if (!host->Init()) {
+    if (!host->Launch()) {
       delete host;
     }
     // ChildProcessHost deletes itself once the child process exits, on windows
