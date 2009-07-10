@@ -46,12 +46,16 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
+		manifest.js \
 		test_autobuffer.html \
 		test_autoplay.html \
 		test_can_play_type.html \
 		test_constants.html \
 		test_controls.html \
 		test_currentTime.html \
+		test_decoder_disable.html \
+		test_load.html \
+		test_media_selection.html \
 		test_networkState.html \
 		test_paused.html \
 		test_readyState.html \
@@ -60,6 +64,29 @@ _TEST_FILES = \
 		use_large_cache.js \
 		$(NULL)
 
+# Ogg sample files
+_TEST_FILES += \
+		320x240.ogv \
+		320x240.allow-origin.ogv \
+		320x240.allow-origin.ogv^headers^ \
+		bug461281.ogg \
+		bug482461.ogv \
+		seek.ogv \
+		small-shot.ogg \
+		sound.ogg \
+		$(NULL)
+		
+# Wave sample files
+_TEST_FILES += \
+		big.wav \
+		r11025_s16_c1.wav \
+		r11025_s16_c1_trailing.wav \
+		r11025_u8_c1.wav \
+		r11025_u8_c1_trunc.wav \
+		r16000_u8_c1_list.wav \
+		$(NULL)
+
+# These tests need to be converted to be backend-independent
 ifdef MOZ_OGG
 _TEST_FILES += \
 		dynamic_redirect.sjs \
@@ -75,7 +102,6 @@ _TEST_FILES += \
 		test_bug495145.html \
 		test_bug495300.html \
 		test_bug495319.html \
-		test_can_play_type_ogg.html \
 		test_closing_connections.html \
 		test_contentDuration1.html \
 		test_contentDuration2.html \
@@ -100,11 +126,6 @@ _TEST_FILES += \
 		test_standalone.html \
 		test_timeupdate1.html \
 		test_timeupdate2.html \
-		320x240.ogv \
-		320x240.allow-origin.ogv \
-		320x240.allow-origin.ogv^headers^ \
-		bug461281.ogg \
-		bug482461.ogv \
 		redirect.sjs \
 		contentDuration1.sjs \
 		contentDuration2.sjs \
@@ -112,17 +133,12 @@ _TEST_FILES += \
 		contentDuration4.sjs \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
-		seek.ogv \
-		small-shot.ogg \
-		sound.ogg \
 		$(NULL)
-
 # These tests disabled until we figure out random failures.
 # Bug 492821:
 # test_videoDocumentTitle.html
 # Bug 493692:
 # test_autobuffer2.html
-
 ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
 # figure out the random failures. See bug 475369.
@@ -138,20 +154,25 @@ _TEST_FILES += \
 		test_timeupdate3.html \
 		$(NULL)
 endif
+endif
+
+ifdef MOZ_OGG
+_TEST_FILES += \
+		test_can_play_type_ogg.html \
+		$(NULL)
 else
 _TEST_FILES += \
 		test_can_play_type_no_ogg.html \
 		$(NULL)
 endif
 
+# These tests need to be converted to be backend-independent
 ifdef MOZ_WAVE
 _TEST_FILES += \
-		big.wav \
 		test_bug463162.xhtml \
 		test_bug465498.html \
 		test_bug468190_wav.html \
 		test_bug495145_wav.html \
-		test_can_play_type_wave.html \
 		test_paused_after_ended.html \
 		test_progress2.html \
 		test_progress4.html \
@@ -174,30 +195,20 @@ _TEST_FILES += \
 		test_wav_trailing.html \
 		test_wav_trunc.html \
 		test_wav_trunc_seek.html \
-		r11025_s16_c1.wav \
-		r11025_s16_c1_trailing.wav \
-		r11025_u8_c1.wav \
-		r11025_u8_c1_trunc.wav \
-		r16000_u8_c1_list.wav \
+		$(NULL)
+# Disabled since we don't play Wave files standalone, for now
+#		test_wav_standalone.html
+#		test_audioDocumentTitle.html
+endif
+
+ifdef MOZ_WAVE
+_TEST_FILES += \
+		test_can_play_type_wave.html \
 		$(NULL)
 else
 _TEST_FILES += \
 		test_can_play_type_no_wave.html \
 		$(NULL)
-endif
-
-# Disabled since we don't play Wave files standalone, for now
-#		test_wav_standalone.html
-#		test_audioDocumentTitle.html
-
-ifdef MOZ_OGG
-ifdef MOZ_WAVE
-_TEST_FILES += \
-		test_decoder_disable.html \
-		test_load.html \
-		test_media_selection.html \
-		$(NULL)
-endif
 endif
 
 libs:: $(_TEST_FILES)
