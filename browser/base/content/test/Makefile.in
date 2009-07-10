@@ -51,6 +51,7 @@ _TEST_FILES = \
 		test_contextmenu.html \
 		subtst_contextmenu.html \
 		ctxmenu-image.png \
+		video.ogg \
 		test_offlineNotification.html \
 		offlineChild.html \
 		offlineChild.cacheManifest \
