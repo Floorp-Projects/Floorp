@@ -177,7 +177,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     gid = FT_Get_Char_Index(face, '0');
     if (gid) {
         FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
-        mMetrics->zeroOrAveCharWidth = face->glyph->metrics.width * xScale;
+        mMetrics->zeroOrAveCharWidth = face->glyph->metrics.horiAdvance * xScale;
     } else {
          // this font doesn't have a '0'
          mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
