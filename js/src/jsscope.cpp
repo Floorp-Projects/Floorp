@@ -246,7 +246,7 @@ JSScope::drop(JSContext *cx, JSObject *obj)
     --nrefs;
 
     if (nrefs == 0) {
-        delete this;
+        destroy(cx, this);
         return false;
     }
     if (object == obj)
