@@ -128,7 +128,7 @@ namespace nanojit
         if (verbose)
             avmplus::AvmLog("free %p-%p %d\n", start, end, (int)blk->size());
 
-		AvmAssert(!blk->isFree); 
+        AvmAssert(!blk->isFree);
 
         // coalesce
         if (blk->lower && blk->lower->isFree) {
@@ -185,20 +185,20 @@ extern "C" void __clear_cache(char *BEG, char *END);
 #endif
 
 #ifdef AVMPLUS_SPARC
-extern  "C"	void sync_instruction_memory(caddr_t v, u_int len);
+extern  "C"    void sync_instruction_memory(caddr_t v, u_int len);
 #endif
 
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
     // intel chips have dcache/icache interlock
-	void CodeAlloc::flushICache(CodeList* &)
+    void CodeAlloc::flushICache(CodeList* &)
     {}
 
 #elif defined NANOJIT_ARM && defined UNDER_CE
     // on arm/winmo, just flush the whole icache
     // fixme: why?
-	void CodeAlloc::flushICache(CodeList* &) {
-		// just flush all of it
-		FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
+    void CodeAlloc::flushICache(CodeList* &) {
+        // just flush all of it
+        FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
     }
 
 #elif defined AVMPLUS_MAC && defined NANOJIT_PPC
@@ -208,19 +208,19 @@ extern  "C"	void sync_instruction_memory(caddr_t v, u_int len);
     extern "C" void sys_dcache_flush(const void*, size_t len);
 
     // mac 64bit requires 10.5 so use that api
-	void CodeAlloc::flushICache(CodeList* &blocks) {
+    void CodeAlloc::flushICache(CodeList* &blocks) {
         for (CodeList *b = blocks; b != 0; b = b->next) {
             void *start = b->start();
             size_t bytes = b->size();
             sys_dcache_flush(start, bytes);
             sys_icache_invalidate(start, bytes);
-		}
+        }
     }
 #  else
     // mac ppc 32 could be 10.0 or later
     // uses MakeDataExecutable() from Carbon api, OSUtils.h
     // see http://developer.apple.com/documentation/Carbon/Reference/Memory_Manag_nt_Utilities/Reference/reference.html#//apple_ref/c/func/MakeDataExecutable
-	void CodeAlloc::flushICache(CodeList* &blocks) {
+    void CodeAlloc::flushICache(CodeList* &blocks) {
         for (CodeList *b = blocks; b != 0; b = b->next)
             MakeDataExecutable(b->start(), b->size());
     }
@@ -228,17 +228,17 @@ extern  "C"	void sync_instruction_memory(caddr_t v, u_int len);
 
 #elif defined AVMPLUS_SPARC
     // fixme: sync_instruction_memory is a solaris api, test for solaris not sparc
-	void CodeAlloc::flushICache(CodeList* &blocks) {
+    void CodeAlloc::flushICache(CodeList* &blocks) {
         for (CodeList *b = blocks; b != 0; b = b->next)
-			sync_instruction_memory((char*)b->start(), b->size());
+            sync_instruction_memory((char*)b->start(), b->size());
     }
 
 #elif defined AVMPLUS_UNIX
-    // fixme: __clear_cache is a libgcc feature, test for libgcc or gcc 
-	void CodeAlloc::flushICache(CodeList* &blocks) {
+    // fixme: __clear_cache is a libgcc feature, test for libgcc or gcc
+    void CodeAlloc::flushICache(CodeList* &blocks) {
         for (CodeList *b = blocks; b != 0; b = b->next) {
-			__clear_cache((char*)b->start(), (char*)b->start()+b->size());
-		}
+            __clear_cache((char*)b->start(), (char*)b->start()+b->size());
+        }
     }
 #endif // AVMPLUS_MAC && NANOJIT_PPC
 
@@ -261,7 +261,7 @@ extern  "C"	void sync_instruction_memory(caddr_t v, u_int len);
         terminator->end = 0; // this is how we identify the terminator
         terminator->isFree = false;
         debug_only(sanity_check();)
-        
+
         // add terminator to heapblocks list so we can track whole blocks
         addBlock(heapblocks, terminator);
         return b;
