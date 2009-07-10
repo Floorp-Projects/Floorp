@@ -142,5 +142,55 @@ private:
 };
 
 
+#if 0
+
+//-----------------------------------------------------------------------------
+// Skeleton implementation of abstract actor class
+
+// Header file contents
+class ActorImpl :
+    public IFrameEmbeddingProtocolChild
+{
+    virtual nsresult Answerinit(const MagicWindowHandle& parentWidget);
+    virtual nsresult AnswerloadURL(const String& uri);
+    virtual nsresult Answermove(
+                const PRUint32& x,
+                const PRUint32& y,
+                const PRUint32& width,
+                const PRUint32& height);
+    ActorImpl();
+    virtual ~ActorImpl();
+};
+
+
+// C++ file contents
+nsresult ActorImpl::Answerinit(const MagicWindowHandle& parentWidget)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult ActorImpl::AnswerloadURL(const String& uri)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult ActorImpl::Answermove(
+            const PRUint32& x,
+            const PRUint32& y,
+            const PRUint32& width,
+            const PRUint32& height)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+ActorImpl::ActorImpl()
+{
+}
+
+ActorImpl::~ActorImpl()
+{
+}
+
+#endif // if 0
 
 #endif // ifndef IFrameEmbeddingProtocolChild_h
