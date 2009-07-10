@@ -1406,10 +1406,6 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 
 /* ----- SECURITY DISPLAY ----- */
 
-#security-button {
-  -moz-box-direction: reverse;
-}
-
 #security-button[level="high"] ,
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure-statusbar.png");

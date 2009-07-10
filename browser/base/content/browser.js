@@ -4156,7 +4156,6 @@ var XULBrowserWindow = {
 
   // Properties used to cache security state used to update the UI
   _state: null,
-  _host: undefined,
   _tooltipText: null,
   _hostChanged: false, // onLocationChange will flip this bit
 
@@ -4181,11 +4180,13 @@ var XULBrowserWindow = {
     }
     this._state = aState;
 
+#ifdef DEBUG
     try {
       this._host = gBrowser.contentWindow.location.host;
     } catch(ex) {
       this._host = null;
     }
+#endif
 
     this._hostChanged = false;
     this._tooltipText = gBrowser.securityUI.tooltipText
@@ -4200,17 +4201,14 @@ var XULBrowserWindow = {
                               wpl.STATE_SECURE_MED |
                               wpl.STATE_SECURE_LOW;
     var level;
-    var setHost = false;
 
     switch (this._state & wpl_security_bits) {
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH:
         level = "high";
-        setHost = true;
         break;
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_MED:
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_LOW:
         level = "low";
-        setHost = true;
         break;
       case wpl.STATE_IS_BROKEN:
         level = "broken";
@@ -4230,11 +4228,6 @@ var XULBrowserWindow = {
       if (gURLBar)
         gURLBar.removeAttribute("level");
     }
-
-    if (setHost && this._host)
-      this.securityButton.setAttribute("label", this._host);
-    else
-      this.securityButton.removeAttribute("label");
 
     this.securityButton.setAttribute("tooltiptext", this._tooltipText);
 
