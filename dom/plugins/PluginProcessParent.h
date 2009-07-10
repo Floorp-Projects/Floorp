@@ -83,7 +83,6 @@ public:
     }
 
 private:
-    static const char* kPluginProcessName;
     std::string mPluginFilePath;
 
     DISALLOW_EVIL_CONSTRUCTORS(PluginProcessParent);

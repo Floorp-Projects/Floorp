@@ -53,7 +53,6 @@ EXPORTS_IPC =					\
   IPCMessageUtils.h 				\
   $(NULL)
 
-# FIXME/cjones: "ChromeThread" is a misnomer
 EXPORTS_mozilla/ipc =				\
   GeckoChildProcessHost.h			\
   GeckoThread.h 				\
@@ -65,13 +64,6 @@ EXPORTS_mozilla/ipc =				\
 
 ENABLE_CXX_EXCEPTIONS = 1
 
-REQUIRES += \
-  string \
-  widget \
-  xpcom \
-  xulapp \
-  $(NULL)
-
 CPPSRCS += \
   GeckoChildProcessHost.cpp \
   GeckoThread.cpp \
@@ -81,7 +73,8 @@ CPPSRCS += \
   StringUtil.cpp \
   $(NULL)
 
-#  ChromeThread.cpp \
+include $(topsrcdir)/ipc/app/defs.mk
+DEFINES += -DMOZ_CHILD_PROCESS_NAME="\"$(MOZ_CHILD_PROCESS_NAME)\""
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
