@@ -44,6 +44,7 @@
     <implementation>
       <destructor><![CDATA[
         this._stopSmoothScroll();
+        this._scrollTarget = null;
       ]]></destructor>
 
       <field name="_scrollbox">
@@ -241,8 +242,10 @@
             }
 
             self.scrollByPixels(distance);
-            if (!scrollAmounts.length)
+            if (!scrollAmounts.length) {
               self._stopSmoothScroll();
+              self._scrollTarget = null;
+            }
           }
 
           // amountToScroll: total distance to scroll
@@ -389,8 +392,11 @@
 
       <method name="_stopSmoothScroll">
         <body><![CDATA[
-          if (this._isScrolling) {
+          if (this._smoothScrollTimer) {
             clearInterval(this._smoothScrollTimer);
+            this._smoothScrollTimer = 0;
+          }
+          if (this._isScrolling) {
             this._isScrolling = 0;
             this._scrollTarget = null;
           }
