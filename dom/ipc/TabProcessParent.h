@@ -10,16 +10,11 @@ namespace mozilla {
 namespace tabs {
 
 class TabProcessParent
-    : private mozilla::ipc::GeckoChildProcessHost
+    : public mozilla::ipc::GeckoChildProcessHost
 {
 public:
     TabProcessParent();
     ~TabProcessParent();
-
-    /**
-     * Asynchronously launch the plugin process.
-     */
-    bool Launch();
 
     IPC::Channel* GetChannel() {
         return channelp();
@@ -34,8 +29,6 @@ public:
     }
 
 private:
-    static char const *const kTabProcessName;
-
     DISALLOW_EVIL_CONSTRUCTORS(TabProcessParent);
 };
 
