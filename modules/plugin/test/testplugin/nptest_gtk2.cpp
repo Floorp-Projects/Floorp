@@ -38,6 +38,7 @@
 #include <gdk/gdk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#include <X11/extensions/shape.h>
 #endif
 #include <gtk/gtk.h>
 
@@ -334,6 +335,34 @@ int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
   return NPTEST_INT32_ERROR;
 }
 
+#ifdef MOZ_X11
+static void intersectWithShapeRects(Display* display, Window window,
+                                    int kind, GdkRegion* region)
+{
+  int count, order;
+  XRectangle* shapeRects =
+    XShapeGetRectangles(display, window, kind, &count, &order);
+  if (!shapeRects)
+    return;
+
+  GdkRegion* shapeRegion = gdk_region_new();
+  if (!shapeRegion) {
+    XFree(shapeRects);
+    return;
+  }
+
+  for (int i = 0; i < count; ++i) {
+    XRectangle* r = &shapeRects[i];
+    GdkRectangle rect = { r->x, r->y, r->width, r->height };
+    gdk_region_union_with_rect(shapeRegion, &rect);
+  }
+  XFree(shapeRects);
+
+  gdk_region_intersect(region, shapeRegion);
+  gdk_region_destroy(shapeRegion);
+}
+#endif
+
 static GdkRegion* computeClipRegion(InstanceData* instanceData)
 {
   if (!instanceData->hasWidget)
@@ -374,13 +403,15 @@ static GdkRegion* computeClipRegion(InstanceData* instanceData)
       return 0;
     }
 
-    GdkRectangle windowRect = { -pluginX, -pluginY, width, height };
+    GdkRectangle windowRect = { 0, 0, width, height };
     GdkRegion* windowRgn = gdk_region_rectangle(&windowRect);
     if (!windowRgn) {
       gdk_region_destroy(region);
       return 0;
     }
-    gdk_region_intersect(region, windowRgn);
+    intersectWithShapeRects(display, window, ShapeBounding, windowRgn);
+    intersectWithShapeRects(display, window, ShapeClip, windowRgn);
+    gdk_region_offset(windowRgn, -pluginX, -pluginY);
     gdk_region_destroy(windowRgn);
 
     // Stop now if we've reached the toplevel. Stopping here means
