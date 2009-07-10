@@ -1571,8 +1571,11 @@ tabpanels {
 
 .tabs-alltabs-button > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
-  margin: 6px 0 4px;
-  -moz-image-region: auto;
+  -moz-image-region: rect(0, 14px, 20px, 0);
+}
+
+.tabs-alltabs-button:hover:active > .toolbarbutton-icon {
+  -moz-image-region: rect(0, 28px, 20px, 14px);
 }
 
 .tabs-alltabs-box-animate {
