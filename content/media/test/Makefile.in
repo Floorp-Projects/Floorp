@@ -70,6 +70,15 @@ _TEST_FILES = \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
 		manifest.js \
+		seek1.js \
+		seek2.js \
+		seek3.js \
+		seek4.js \
+		seek5.js \
+		seek6.js \
+		seek7.js \
+		seek8.js \
+		seek9.js \
 		test_autobuffer.html \
 		test_autoplay.html \
 		test_can_play_type.html \
@@ -84,6 +93,7 @@ _TEST_FILES = \
 		test_playback.html \
 		test_playback_errors.html \
 		test_readyState.html \
+		test_seek.html \
 		test_seek2.html \
 		test_volume.html \
 		use_large_cache.js \
@@ -167,14 +177,6 @@ ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
 # figure out the random failures. See bug 475369.
 _TEST_FILES += \
-		test_seek1.html \
-		test_seek3.html \
-		test_seek4.html \
-		test_seek5.html \
-		test_seek6.html \
-		test_seek7.html \
-		test_seek8.html \
-		test_seek9.html \
 		test_timeupdate3.html \
 		$(NULL)
 endif
@@ -205,15 +207,6 @@ _TEST_FILES += \
 		test_wav_ended1.html \
 		test_wav_ended2.html \
 		test_wav_onloadedmetadata.html \
-		test_wav_seek1.html \
-		test_wav_seek3.html \
-		test_wav_seek4.html \
-		test_wav_seek5.html \
-		test_wav_seek6.html \
-		test_wav_seek7.html \
-		test_wav_seek8.html \
-		test_wav_seek_past_end.html \
-		test_wav_seek_then_play.html \
 		test_wav_timeupdate1.html \
 		test_wav_timeupdate2.html \
 		test_wav_trunc_seek.html \
