@@ -71,6 +71,7 @@
 #include "jsstr.h"
 #include "jsstaticcheck.h"
 #include "jstracer.h"
+#include "jslibmath.h"
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
@@ -4057,11 +4058,7 @@ js_Interpret(JSContext *cx)
             if (d2 == 0) {
                 STORE_OPND(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
             } else {
-#ifdef XP_WIN
-              /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-              if (!(JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)))
-#endif
-                d = fmod(d, d2);
+                d = js_fmod(d, d2);
                 STORE_NUMBER(cx, -1, d);
             }
           END_CASE(JSOP_MOD)

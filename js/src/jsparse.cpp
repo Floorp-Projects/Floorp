@@ -77,6 +77,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsstaticcheck.h"
+#include "jslibmath.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -8475,11 +8476,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
         if (d2 == 0) {
             d = *cx->runtime->jsNaN;
         } else {
-#if defined(XP_WIN)
-          /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-          if (!(JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)))
-#endif
-            d = fmod(d, d2);
+            d = js_fmod(d, d2);
         }
         break;
 
