@@ -51,6 +51,8 @@ enum IPCMessageStart {
 
   IFrameEmbeddingProtocolMsgStart,
 
+  TestShellProtocolMsgStart,
+
   LastMsgIndex
 };
 

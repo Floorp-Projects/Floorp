@@ -11,10 +11,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla platform.
+# The Original Code is Mozilla IPCShell.
 #
 # The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
+#   Ben Turner <bent.mozilla@gmail.com>.
 # Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -34,14 +34,42 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ..
+DEPTH = ../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += chromium glue testshell
-TOOL_DIRS = app
+MODULE = ipcshell
+PROGRAM = $(MODULE)$(BIN_SUFFIX)
+ENABLE_CXX_EXCEPTIONS = 1
 
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+
+CPPSRCS = \
+  TestShellApp.cpp \
+  $(NULL)
+
+LIBS = \
+  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+  $(LIBXUL_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NSPR_LIBS) \
+  $(DEPTH)/ipc/testshell/ipcshell_s.$(LIB_SUFFIX) \
+  $(NULL)
+
+NSDISTMODE = copy
+
+include $(topsrcdir)/config/config.mk
+
+ifdef _MSC_VER
+ifdef WINCE
+WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
+else
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
+endif
+
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
