@@ -753,7 +753,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     } else {
         if (!js_ValueToStringId(cx, idval, &propid))
             return JS_FALSE;
-        CHECK_FOR_STRING_INDEX(propid);
+        propid = js_CheckForStringIndex(propid);
     }
 
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))

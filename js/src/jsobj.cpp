@@ -3470,10 +3470,41 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     }
 }
 
+
+/* JSVAL_INT_MAX as a string */
+#define JSVAL_INT_MAX_STRING "1073741823"
+
+/*
+ * Convert string indexes that convert to int jsvals as ints to save memory.
+ * Care must be taken to use this macro every time a property name is used, or
+ * else double-sets, incorrect property cache misses, or other mistakes could
+ * occur.
+ */
 jsid
-js_CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
-                       JSBool negative)
+js_CheckForStringIndex(jsid id)
 {
+    if (!JSID_IS_ATOM(id))
+        return id;
+
+    JSAtom *atom = JSID_TO_ATOM(id);
+    JSString *str = ATOM_TO_STRING(atom);
+    const jschar *s = str->flatChars();
+    jschar ch = *s;
+
+    JSBool negative = (ch == '-');
+    if (negative)
+        ch = *++s;
+
+    if (!JS7_ISDEC(ch))
+        return id;
+
+    size_t n = str->flatLength() - negative;
+    if (n > sizeof(JSVAL_INT_MAX_STRING) - 1)
+        return id;
+
+    const jschar *cp = s;
+    const jschar *end = s + n;
+
     jsuint index = JS7_UNDEC(*cp++);
     jsuint oldIndex = 0;
     jsuint c = 0;
@@ -3493,12 +3524,14 @@ js_CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
      */
     if (cp != end || (negative && index == 0))
         return id;
+
     if (oldIndex < JSVAL_INT_MAX / 10 ||
         (oldIndex == JSVAL_INT_MAX / 10 && c <= (JSVAL_INT_MAX % 10))) {
         if (negative)
             index = 0 - index;
         id = INT_TO_JSID((jsint)index);
     }
+
     return id;
 }
 
@@ -3578,7 +3611,7 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
         sprop = NULL;
     } else {
         /* Convert string indices to integers if appropriate. */
-        CHECK_FOR_STRING_INDEX(id);
+        id = js_CheckForStringIndex(id);
         sprop = scope->add(cx, id, getter, setter, slot, attrs, flags, shortid);
     }
     JS_UNLOCK_OBJ(cx, obj);
@@ -3650,7 +3683,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     js_LeaveTraceIfGlobalObject(cx, obj);
 
     /* Convert string indices to integers if appropriate. */
-    CHECK_FOR_STRING_INDEX(id);
+    id = js_CheckForStringIndex(id);
 
 #if JS_HAS_GETTER_SETTER
     /*
@@ -3794,7 +3827,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     JSBool ok;
 
     /* Convert string indices to integers if appropriate. */
-    CHECK_FOR_STRING_INDEX(id);
+    id = js_CheckForStringIndex(id);
 
     /* Search scopes starting with obj and following the prototype link. */
     start = obj;
@@ -4251,7 +4284,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
 
     JS_ASSERT_IF(cacheResult, !JS_ON_TRACE(cx));
     /* Convert string indices to integers if appropriate. */
-    CHECK_FOR_STRING_INDEX(id);
+    id = js_CheckForStringIndex(id);
 
     aobj = js_GetProtoIfDenseArray(cx, obj);
     protoIndex = js_LookupPropertyWithFlags(cx, aobj, id, cx->resolveFlags,
@@ -4405,7 +4438,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
         JS_ASSERT_NOT_ON_TRACE(cx);
 
     /* Convert string indices to integers if appropriate. */
-    CHECK_FOR_STRING_INDEX(id);
+    id = js_CheckForStringIndex(id);
 
     /*
      * We peek at OBJ_SCOPE(obj) without locking obj. Any race means a failure
@@ -4674,7 +4707,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     *rval = JSVAL_TRUE;
 
     /* Convert string indices to integers if appropriate. */
-    CHECK_FOR_STRING_INDEX(id);
+    id = js_CheckForStringIndex(id);
 
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
         return JS_FALSE;
