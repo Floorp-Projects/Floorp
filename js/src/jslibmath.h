@@ -65,5 +65,22 @@ extern double js_copysign(double, double);
 #define js_copysign copysign
 #endif
 
+/* Consistency wrapper for platform deviations in fmod() */
+static inline double
+js_fmod(double d, double d2)
+{
+#ifdef XP_WIN
+    /*
+     * Workaround MS fmod bug where 42 % (1/0) => NaN, not 42.
+     * Workaround MS fmod bug where -0 % -N => 0, not -0.
+     */
+    if ((JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)) ||
+        (d == 0 && JSDOUBLE_IS_FINITE(d2))) {
+        return d;
+    }
+#endif
+    return fmod(d, d2);
+}
+
 #endif /* _LIBMATH_H */
 

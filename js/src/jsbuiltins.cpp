@@ -48,6 +48,7 @@
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsiter.h"
+#include "jsnum.h"
 #include "jslibmath.h"
 #include "jsmath.h"
 #include "jsnum.h"
@@ -83,15 +84,7 @@ js_dmod(jsdouble a, jsdouble b)
         u.s.lo = 0xffffffff;
         return u.d;
     }
-    jsdouble r;
-#ifdef XP_WIN
-    /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-    if (JSDOUBLE_IS_FINITE(a) && JSDOUBLE_IS_INFINITE(b))
-        r = a;
-    else
-#endif
-        r = fmod(a, b);
-    return r;
+    return js_fmod(a, b);
 }
 JS_DEFINE_CALLINFO_2(extern, DOUBLE, js_dmod, DOUBLE, DOUBLE, 1, 1)
 
