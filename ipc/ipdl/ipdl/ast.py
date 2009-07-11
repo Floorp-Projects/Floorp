@@ -204,7 +204,7 @@ class OUT:
     @classmethod
     def __str__(cls):  return cls.pretty
     @staticmethod
-    def pretty(ss): return _prettyTable['out'][ss.pretty]
+    def prettySS(ss): return _prettyTable['out'][ss.pretty]
 
 _prettyTable = {
     IN  : { 'async': 'AsyncRecv',
