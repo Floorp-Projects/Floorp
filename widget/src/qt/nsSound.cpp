@@ -407,6 +407,6 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 
 NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
 {
-    return aEventId == EVENT_NEW_MAIL_RECIEVED ? Beep() : NS_OK;
+    return aEventId == EVENT_NEW_MAIL_RECEIVED ? Beep() : NS_OK;
 }
 

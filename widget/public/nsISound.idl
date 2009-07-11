@@ -41,7 +41,7 @@
 
 interface nsIURL;
 
-[scriptable, uuid(53FC43F2-26BC-46be-8E38-1BBA94806061)]
+[scriptable, uuid(86B75B05-DB60-4c3e-97A7-82B363A41A01)]
 interface nsISound : nsISupports
 {
   void play(in nsIURL aURL);
@@ -68,8 +68,8 @@ interface nsISound : nsISupports
    * nsPIPromptService.idl. So, if they are changed, that makes big impact for
    * the embedders.
    */
-  const unsigned long EVENT_NEW_MAIL_RECIEVED           = 0;
-  const unsigned long EVENT_AELRT_DIALOG_OPEN           = 1;
+  const unsigned long EVENT_NEW_MAIL_RECEIVED           = 0;
+  const unsigned long EVENT_ALERT_DIALOG_OPEN           = 1;
   const unsigned long EVENT_CONFIRM_DIALOG_OPEN         = 2;
   const unsigned long EVENT_PROMPT_DIALOG_OPEN          = 3;
   const unsigned long EVENT_SELECT_DIALOG_OPEN          = 4;
