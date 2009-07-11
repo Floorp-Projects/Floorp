@@ -796,4 +796,4 @@ class CheckTypes(Visitor):
                     loc, "%s %s message `%s' is not `%s'd",
                     mtype.sendSemantics.pretty, mtype.direction.pretty,
                     t.msg.progname,
-                    trigger))
+                    t.trigger.pretty))

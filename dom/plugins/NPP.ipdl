@@ -15,10 +15,12 @@ rpc protocol NPP
 
     // manages NPStream;
 
-    rpc out NPP_SetWindow(NPWindow window) returns (NPError rv);
+child:
+    rpc NPP_SetWindow(NPWindow window) returns (NPError rv);
+    rpc NPP_GetValue(String key) returns (String value);
 
-    rpc out NPP_GetValue(String key) returns (String value);
-    rpc in NPN_GetValue(String key) returns (String value);
+parent:
+    rpc NPN_GetValue(String key) returns (String value);
 };
 
 } // namespace plugins
