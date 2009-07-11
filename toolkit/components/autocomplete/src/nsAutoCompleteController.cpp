@@ -194,7 +194,7 @@ nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
+nsAutoCompleteController::HandleText()
 {
   if (!mInput) {
     // Stop all searches in case they are async.
@@ -254,12 +254,6 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
   } else
     mBackspaced = PR_FALSE;
 
-  if (mRowCount == 0)
-    // XXX Handle the case where we have no results because of an ignored prefix.
-    // This is just a hack. I have no idea what I'm doing. Hewitt, fix this the right
-    // way when you get a chance. -dwh
-    ClearResults();
-
   mSearchString = newValue;
 
   // Don't search if the value is empty
@@ -268,18 +262,7 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
     return NS_OK;
   }
 
-  if (aIgnoreSelection) {
-    StartSearchTimer();
-  } else {
-    // Kick off the search only if the cursor is at the end of the textbox
-  PRInt32 selectionStart;
-  input->GetSelectionStart(&selectionStart);
-  PRInt32 selectionEnd;
-  input->GetSelectionEnd(&selectionEnd);
-
-  if (selectionStart == selectionEnd && selectionStart == (PRInt32) mSearchString.Length())
-    StartSearchTimer();
-  }
+  StartSearchTimer();
 
   return NS_OK;
 }
@@ -379,7 +362,7 @@ nsAutoCompleteController::HandleEndComposition()
   SetSearchString(EmptyString());
   if (!value.IsEmpty()) {
     // Show the popup with a filtered result set
-    HandleText(PR_TRUE);
+    HandleText();
   } else if (forceOpenPopup) {
     PRBool cancel;
     HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
@@ -561,7 +544,7 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
   input->GetPopupOpen(&isOpen);
   if (!isOpen || mRowCount <= 0) {
     // Nothing left to delete, proceed as normal
-    HandleText(PR_FALSE);
+    HandleText();
     return NS_OK;
   }
 
@@ -1019,7 +1002,8 @@ nsAutoCompleteController::StartSearch()
       PRUint16 searchResult;
       result->GetSearchResult(&searchResult);
       if (searchResult != nsIAutoCompleteResult::RESULT_SUCCESS &&
-          searchResult != nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING)
+          searchResult != nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING &&
+          searchResult != nsIAutoCompleteResult::RESULT_NOMATCH)
         result = nsnull;
     }
 
