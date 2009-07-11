@@ -140,6 +140,7 @@ reserved = set((
         'rpc',
         'send',
         'share',
+        'state',
         'sync',
         'transfer',
         'using'))
@@ -371,8 +372,8 @@ def p_TransitionStmtsNonEmpty(p):
         p[0] = [ p[1] ]
 
 def p_TransitionStmt(p):
-    """TransitionStmt : State ':' Transitions"""
-    p[0] = TransitionStmt(locFromTok(p, 1), p[1], p[3])
+    """TransitionStmt : STATE State Transitions"""
+    p[0] = TransitionStmt(locFromTok(p, 1), p[2], p[3])
 
 def p_Transitions(p):
     """Transitions : Transitions Transition
