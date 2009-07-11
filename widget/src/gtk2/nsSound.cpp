@@ -482,13 +482,13 @@ NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
     }
 
     switch (aEventId) {
-        case EVENT_AELRT_DIALOG_OPEN:
+        case EVENT_ALERT_DIALOG_OPEN:
             ca_context_play(ctx, 0, "event.id", "dialog-warning", NULL);
             break;
         case EVENT_CONFIRM_DIALOG_OPEN:
             ca_context_play(ctx, 0, "event.id", "dialog-question", NULL);
             break;
-        case EVENT_NEW_MAIL_RECIEVED:
+        case EVENT_NEW_MAIL_RECEIVED:
             ca_context_play(ctx, 0, "event.id", "message-new-email", NULL);
             break;
         case EVENT_MENU_EXECUTE:
@@ -510,11 +510,11 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
         NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
         PRUint32 eventId;
         if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG))
-            eventId = EVENT_AELRT_DIALOG_OPEN;
+            eventId = EVENT_ALERT_DIALOG_OPEN;
         else if (aSoundAlias.Equals(NS_SYSSOUND_CONFIRM_DIALOG))
             eventId = EVENT_CONFIRM_DIALOG_OPEN;
         else if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
-            eventId = EVENT_NEW_MAIL_RECIEVED;
+            eventId = EVENT_NEW_MAIL_RECEIVED;
         else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_EXECUTE))
             eventId = EVENT_MENU_EXECUTE;
         else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_POPUP))
