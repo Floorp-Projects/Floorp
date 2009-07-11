@@ -38,9 +38,9 @@ endif
 # manager when it installs an extension via a file in the <profile>/extensions/
 # directory that contains the path to the extension.
 ifeq ($(os), WINNT)
-extensiondir = $(subst /,\,$(shell pwd -W))\$(native_topsrcdir)
+extensiondir = $(subst /,\,$(shell pwd -W))\$(native_topsrcdir)\dist\stage
 else
-extensiondir = `pwd`/$(topsrcdir)
+extensiondir = `pwd`/$(topsrcdir)/dist/stage
 endif
 
 # A command that installs the extension into the profile when the harness
