@@ -36,9 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 // This test makes sure that SSL sites load correctly after leaving the
-// Private Browsing mode (bug 463256).
-
-// This test is disabled until we figure why it fails intermittently (bug 486640).
+// Private Browsing mode (bug 463256 and bug 496335).
 
 function test() {
   // initialization
@@ -78,3 +76,5 @@ function test() {
   }, true);
   browser.contentWindow.location = kTestURL;
 
+  waitForExplicitFinish();
+}
