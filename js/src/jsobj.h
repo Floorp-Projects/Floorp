@@ -581,34 +581,8 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
 extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
-/* JSVAL_INT_MAX as a string */
-#define JSVAL_INT_MAX_STRING "1073741823"
-
-/*
- * Convert string indexes that convert to int jsvals as ints to save memory.
- * Care must be taken to use this macro every time a property name is used, or
- * else double-sets, incorrect property cache misses, or other mistakes could
- * occur.
- */
-#define CHECK_FOR_STRING_INDEX(id)                                            \
-    JS_BEGIN_MACRO                                                            \
-        if (JSID_IS_ATOM(id)) {                                               \
-            JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
-            JSString *str_ = ATOM_TO_STRING(atom_);                           \
-            const jschar *s_ = str_->flatChars();                             \
-            JSBool negative_ = (*s_ == '-');                                  \
-            if (negative_) s_++;                                              \
-            if (JS7_ISDEC(*s_)) {                                             \
-                size_t n_ = str_->flatLength() - negative_;                   \
-                if (n_ <= sizeof(JSVAL_INT_MAX_STRING) - 1)                   \
-                    id = js_CheckForStringIndex(id, s_, s_ + n_, negative_);  \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
-
 extern jsid
-js_CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
-                       JSBool negative);
+js_CheckForStringIndex(jsid id);
 
 /*
  * js_PurgeScopeChain does nothing if obj is not itself a prototype or parent
