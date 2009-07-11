@@ -424,6 +424,7 @@ enum GeckoChildProcessType {
 
   GeckoChildProcess_Plugin,
   GeckoChildProcess_Tab,
+  GeckoChildProcess_TestShell,
 
   GeckoChildProcess_End,
   GeckoChildProcess_Invalid = GeckoChildProcess_End
@@ -433,7 +434,7 @@ static const char* const kGeckoChildProcessTypeString[] = {
   "default",
   "plugin",
   "tab",
-  0
+  "testshell"
 };
 
 XRE_API(const char*,
@@ -455,7 +456,8 @@ XRE_API(nsresult,
                                 MainFunction aMainFunction,
                                 void* aMainFunctionExtraData))
 
-XRE_API(nsresult,
-        XRE_LaunchChildProcess, ())
+XRE_API(int,
+        XRE_RunTestShell, (int aArgc,
+                           char* aArgv[]))
 
 #endif // _nsXULAppAPI_h__

@@ -56,6 +56,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
+#include "nsAutoRef.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsStaticComponents.h"
 #include "nsString.h"
@@ -70,6 +71,11 @@
 #include "mozilla/plugins/PluginThreadChild.h"
 #include "TabThread.h"
 
+#include "mozilla/ipc/TestShellParent.h"
+#include "mozilla/ipc/TestShellThread.h"
+#include "mozilla/ipc/XPCShellEnvironment.h"
+#include "mozilla/Monitor.h"
+
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::ipc::GeckoThread;
@@ -77,6 +83,12 @@ using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::plugins::PluginThreadChild;
 using mozilla::tabs::TabThread;
+using mozilla::ipc::TestShellParent;
+using mozilla::ipc::TestShellThread;
+using mozilla::ipc::XPCShellEnvironment;
+
+using mozilla::Monitor;
+using mozilla::MonitorAutoEnter;
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -203,15 +215,11 @@ XRE_StringToChildProcessType(const char* aProcessTypeString)
   for (int i = 0;
        i < (int) NS_ARRAY_LENGTH(kGeckoChildProcessTypeString);
        ++i) {
-    const char* procString = kGeckoChildProcessTypeString[i];
-    if (!procString) {
-      return GeckoChildProcess_Invalid;
-    }
-    if (!strcmp(procString, aProcessTypeString)) {
+    if (!strcmp(kGeckoChildProcessTypeString[i], aProcessTypeString)) {
       return static_cast<GeckoChildProcessType>(i);
     }
   }
-  NS_NOTREACHED("error");
+  return GeckoChildProcess_Invalid;
 }
 
 nsresult
@@ -237,7 +245,7 @@ XRE_InitChildProcess(int aArgc,
   MessageLoopForIO mainMessageLoop;
 
   {
-    GeckoThread* mainThread;
+    ChildThread* mainThread;
 
     switch (aProcess) {
     case GeckoChildProcess_Default:
@@ -250,6 +258,10 @@ XRE_InitChildProcess(int aArgc,
 
     case GeckoChildProcess_Tab:
       mainThread = new TabThread();
+      break;
+
+    case GeckoChildProcess_TestShell:
+      mainThread = new TestShellThread();
       break;
 
     default:
@@ -359,25 +371,141 @@ namespace {
 class CreateChildProcess : public Task
 {
 public:
+  CreateChildProcess(Monitor* aMonitor,
+                     IPC::Channel** aChannelPtr)
+  : mMonitor(aMonitor),
+    mChannelPtr(aChannelPtr)
+  {
+    NS_ASSERTION(aMonitor, "Null ptr!");
+  }
+
   virtual void Run() {
-    GeckoChildProcessHost* host = new GeckoChildProcessHost();
-    if (!host->Launch()) {
-      delete host;
+    GeckoChildProcessHost* host =
+      new GeckoChildProcessHost(GeckoChildProcess_TestShell);
+    if (host) {
+      if (!host->Launch()) {
+        delete host;
+      }
+      // ChildProcessHost deletes itself once the child process exits, on
+      // windows at least...
+      *mChannelPtr = host->GetChannel();
     }
-    // ChildProcessHost deletes itself once the child process exits, on windows
-    // at least...
+
+    MonitorAutoEnter ae(*mMonitor);
+    mMonitor->Notify();
+  }
+
+private:
+  Monitor* mMonitor;
+  IPC::Channel** mChannelPtr;
+};
+
+class QuitRunnable : public nsRunnable
+{
+public:
+  NS_IMETHOD Run() {
+    nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
+    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
+
+    return appShell->Exit();
   }
 };
 
-} /* anonymous namespace */
-
-nsresult
-XRE_LaunchChildProcess()
+NS_SPECIALIZE_TEMPLATE
+class nsAutoRefTraits<XPCShellEnvironment> :
+  public nsPointerRefTraits<XPCShellEnvironment>
 {
+public:
+  void Release(XPCShellEnvironment* aEnv) {
+    XPCShellEnvironment::DestroyEnvironment(aEnv);
+  }
+};
+
+IPC::Channel*
+LaunchTestShellChildProcess()
+{
+  Monitor mon("LaunchChildProcess monitor");
+
+  IPC::Channel* channel = nsnull;
+
+  CreateChildProcess* creator = new CreateChildProcess(&mon, &channel);
+  NS_ENSURE_TRUE(creator, nsnull);
+
   MessageLoop* ioLoop = 
       BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
-  NS_ENSURE_TRUE(ioLoop, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(ioLoop, nsnull);
 
-  ioLoop->PostTask(FROM_HERE, new CreateChildProcess());
-  return NS_OK;
+  {
+    MonitorAutoEnter ae(mon);
+
+    ioLoop->PostTask(FROM_HERE, creator);
+    mon.Wait();
+  }
+
+  return channel;
+}
+
+int
+TestShellMain(int argc, char** argv)
+{
+  // Make sure we quit when we exit this function.
+  nsIRunnable* quitRunnable = new QuitRunnable();
+  NS_ENSURE_TRUE(quitRunnable, 1);
+
+  nsresult rv = NS_DispatchToCurrentThread(quitRunnable);
+  NS_ENSURE_SUCCESS(rv, 1);
+
+  nsAutoRef<XPCShellEnvironment> env(XPCShellEnvironment::CreateEnvironment());
+  NS_ENSURE_TRUE(env, 1);
+
+  IPC::Channel* channel = LaunchTestShellChildProcess();
+  NS_ENSURE_TRUE(channel, 1);
+
+  TestShellParent testShellParent;
+  if (!testShellParent.Open(channel)) {
+    NS_WARNING("Failed to open channel!");
+    return 1;
+  }
+
+  if (!env->DefineSendCommand(&testShellParent)) {
+    NS_WARNING("DefineChildObject failed!");
+    return 1;
+  }
+
+  const char* filename = argc > 1 ? argv[1] : nsnull;
+  env->Process(filename);
+
+  return env->ExitCode();
+}
+
+struct TestShellData {
+  int* result;
+  int argc;
+  char** argv;
+};
+
+void
+TestShellMainWrapper(void* aData)
+{
+  NS_ASSERTION(aData, "Don't give me a null pointer!");
+  TestShellData& testShellData = *static_cast<TestShellData*>(aData);
+
+  *testShellData.result =
+    TestShellMain(testShellData.argc, testShellData.argv);
+}
+
+} /* anonymous namespace */
+
+int
+XRE_RunTestShell(int aArgc, char* aArgv[])
+{
+    int result;
+
+    TestShellData data = { &result, aArgc, aArgv };
+
+    nsresult rv =
+      XRE_InitParentProcess(aArgc, aArgv, TestShellMainWrapper, &data);
+    NS_ENSURE_SUCCESS(rv, 1);
+
+    return result;
 }
