@@ -36,6 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+stage_dir=../dist/stage
+
 sdkdir ?= ${MOZSDKDIR}
 ifeq ($(sdkdir),)
   $(warning No 'sdkdir' variable given)
@@ -47,7 +49,13 @@ endif
 
 all: build
 
-.PHONY: build
+.PHONY: build crypto rebuild_all
+
+crypto:
+	$(MAKE) -C src install
 
 build: 
-	$(MAKE) -C src install
+	cp -R -v platform $(stage_dir)
+	cp -R -v components $(stage_dir)
+
+rebuild_all: crypto build
