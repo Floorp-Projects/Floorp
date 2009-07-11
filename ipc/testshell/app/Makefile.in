@@ -56,7 +56,6 @@ LIBS = \
   $(LIBXUL_LIBS) \
   $(MOZ_JS_LIBS) \
   $(NSPR_LIBS) \
-  $(DEPTH)/ipc/testshell/ipcshell_s.$(LIB_SUFFIX) \
   $(NULL)
 
 NSDISTMODE = copy
