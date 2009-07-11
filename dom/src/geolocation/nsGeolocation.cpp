@@ -214,8 +214,10 @@ NS_IMETHODIMP
 nsGeolocationRequest::GetRequestingURI(nsIURI * *aRequestingURI)
 {
   NS_ENSURE_ARG_POINTER(aRequestingURI);
-  *aRequestingURI = mLocator->GetURI();
-  NS_IF_ADDREF(*aRequestingURI);
+
+  nsCOMPtr<nsIURI> uri = mLocator->GetURI();
+  uri.forget(aRequestingURI);
+
   return NS_OK;
 }
 
@@ -223,8 +225,10 @@ NS_IMETHODIMP
 nsGeolocationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow)
 {
   NS_ENSURE_ARG_POINTER(aRequestingWindow);
-  *aRequestingWindow = mLocator->GetOwner();
-  NS_IF_ADDREF(*aRequestingWindow);
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mLocator->GetOwner());
+  window.forget(aRequestingWindow);
+
   return NS_OK;
 }
 
@@ -578,7 +582,7 @@ nsGeolocation::nsGeolocation(nsIDOMWindow* aContentDom)
   // Remember the window
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContentDom);
   if (window)
-    mOwner = window->GetCurrentInnerWindow();
+    mOwner = do_GetWeakReference(window->GetCurrentInnerWindow());
 
   // Grab the uri of the document
   nsCOMPtr<nsIDOMDocument> domdoc;
@@ -614,7 +618,6 @@ nsGeolocation::Shutdown()
     mService->RemoveLocator(this);
 
   mService = nsnull;
-  mOwner = nsnull;
   mURI = nsnull;
 }
 
@@ -750,20 +753,21 @@ nsGeolocation::ClearWatch(PRInt32 aWatchId)
 PRBool
 nsGeolocation::OwnerStillExists()
 {
-  if (!mOwner)
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
+
+  if (!window)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMWindowInternal> domWindow(mOwner);
-  if (domWindow)
+  if (window)
   {
     PRBool closed = PR_FALSE;
-    domWindow->GetClosed(&closed);
+    window->GetClosed(&closed);
     if (closed)
       return PR_FALSE;
   }
 
-  nsPIDOMWindow* outer = mOwner->GetOuterWindow();
-  if (!outer || outer->GetCurrentInnerWindow() != mOwner)
+  nsPIDOMWindow* outer = window->GetOuterWindow();
+  if (!outer || outer->GetCurrentInnerWindow() != window)
     return PR_FALSE;
 
   return PR_TRUE;
