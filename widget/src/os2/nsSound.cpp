@@ -521,5 +521,5 @@ NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
   }
 
   // We don't have a default mail sound on OS/2, so just beep.
-  return aEventId == EVENT_NEW_MAIL_RECIEVED ? Beep() : NS_OK;
+  return aEventId == EVENT_NEW_MAIL_RECEIVED ? Beep() : NS_OK;
 }
