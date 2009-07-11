@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla IPCShell.
  *
  * The Initial Developer of the Original Code is
  *   Ben Turner <bent.mozilla@gmail.com>.
@@ -21,7 +19,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,33 +34,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXPCOM.h"
-#include "nsXULAppAPI.h"
+#include "TestShellThread.h"
 
+#include "XPCShellEnvironment.h"
 
-// FIXME/cjones testing
-#if !defined(OS_WIN)
-#include <unistd.h>
-#endif
+#include "base/message_loop.h"
 
-#ifdef XP_WIN
-#include <windows.h>
-// we want a wmain entry point
-#include "nsWindowsWMain.cpp"
-#endif
+using mozilla::ipc::TestShellThread;
+using mozilla::ipc::XPCShellEnvironment;
 
-int
-main(int argc, char* argv[])
+TestShellThread::TestShellThread()
+: mXPCShell(nsnull)
 {
-#if 0
-    MessageBox(NULL, L"Hi", L"Hi", MB_OK);
-#endif
 
-    GeckoChildProcessType proctype =
-        XRE_StringToChildProcessType(argv[argc - 1]);
+}
 
-    nsresult rv = XRE_InitChildProcess(argc - 1, argv, proctype);
-    NS_ENSURE_SUCCESS(rv, 1);
+TestShellThread::~TestShellThread()
+{
 
-    return 0;
+}
+
+void
+TestShellThread::Init()
+{
+    GeckoThread::Init();
+    mXPCShell = XPCShellEnvironment::CreateEnvironment();
+    if (mXPCShell) {
+        if (mTestShellChild.Open(channel(), owner_loop())) {
+            mTestShellChild.SetXPCShell(mXPCShell);
+        }
+    }
+}
+
+void
+TestShellThread::CleanUp()
+{
+    GeckoThread::CleanUp();
+    if (mXPCShell) {
+        XPCShellEnvironment::DestroyEnvironment(mXPCShell);
+        mTestShellChild.Close();
+    }
 }

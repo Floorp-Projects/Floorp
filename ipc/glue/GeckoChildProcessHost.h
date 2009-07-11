@@ -61,6 +61,10 @@ public:
 
   virtual bool CanShutdown() { return true; }
 
+  IPC::Channel* GetChannel() {
+    return channelp();
+  }
+
 protected:
   GeckoChildProcessType mProcessType;
   FilePath mProcessPath;
