@@ -40,7 +40,6 @@
 /*
  * JS math package.
  */
-#include "jslibmath.h"
 #include <stdlib.h>
 #include "jstypes.h"
 #include "jsstdint.h"
@@ -54,6 +53,7 @@
 #include "jslock.h"
 #include "jsmath.h"
 #include "jsnum.h"
+#include "jslibmath.h"
 #include "jsobj.h"
 
 extern jsdouble js_NaN;
