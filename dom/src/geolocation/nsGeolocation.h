@@ -119,10 +119,12 @@ public:
   void AddLocator(nsGeolocation* locator);
   void RemoveLocator(nsGeolocation* locator);
 
+  PRBool IsBetterPosition(nsIDOMGeoPosition* aPosition);
+
   void SetCachedPosition(nsIDOMGeoPosition* aPosition);
   nsIDOMGeoPosition* GetCachedPosition();
 
-  // Returns true if there is a geolocation provider registered.
+  // Returns true if there is at least one geolocation provider.
   PRBool   HasGeolocationProvider();
 
   // Find and startup a geolocation device (gps, nmea, etc.)
@@ -147,10 +149,10 @@ private:
   PRInt32 mTimeout;
 
   // The object providing geo location information to us.
-  nsCOMPtr<nsIGeolocationProvider> mProvider;
+  nsCOMArray<nsIGeolocationProvider> mProviders;
 
   // mGeolocators are not owned here.  Their constructor
-  // addes them to this list, and their destructor removes
+  // adds them to this list, and their destructor removes
   // them from this list.
   nsTArray<nsGeolocation*> mGeolocators;
 
