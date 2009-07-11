@@ -86,6 +86,8 @@ _TEST_FILES =	\
 		bug364461_window.xul \
 		test_bug396519.xul \
 		bug396519_window.xul \
+		test_bug396649.xul \
+		bug396649_window.xul \
 		test_bug428288.html \
 		test_bug449778.xul \
 		bug449778_window.xul \
