@@ -152,9 +152,11 @@ FormAutoComplete.prototype = {
 
         let result = null;
 
-        if (aPreviousResult) {
+        if (aPreviousResult &&
+                aSearchString.substr(0, aPreviousResult.searchString.length) == aPreviousResult.searchString) {
             this.log("Using previous autocomplete result");
             result = aPreviousResult;
+            result.wrappedJSObject.searchString = aSearchString;
 
             // We have a list of results for a shorter search string, so just
             // filter them further based on the new search string.
@@ -261,6 +263,12 @@ FormAutoCompleteResult.prototype = {
     _checkIndexBounds : function (index) {
         if (index < 0 || index >= this.entries.length)
             throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
+    },
+
+    // Allow autoCompleteSearch to get at the JS object so it can
+    // modify some readonly properties for internal use.
+    get wrappedJSObject() {
+        return this;
     },
 
     // Interfaces from idl...
