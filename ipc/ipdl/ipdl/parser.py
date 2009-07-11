@@ -64,6 +64,7 @@ class Parser:
         self.lexer = None
         self.parser = None
         self.tu = TranslationUnit()
+        self.direction = None
 
     def parse(self, input, filename, includedirs):
         assert os.path.isabs(filename)
@@ -88,7 +89,7 @@ class Parser:
         Parser.current = self
 
         ast = self.parser.parse(input=input, lexer=self.lexer,
-                                 debug=self.debug)
+                                debug=self.debug)
 
         Parser.current = Parser.parseStack.pop()
         return ast
@@ -124,15 +125,15 @@ def locFromTok(p, num):
 reserved = set((
         'answer',
         'async',
+        'both',
         'call',
+        'child',
         'goto',
-        'in',
         'include',
-        'inout',
         'manager',
         'manages',
         'namespace',
-        'out',
+        'parent',
         'protocol',
         'recv',
         'returns',
@@ -276,19 +277,49 @@ def p_ManagesStmt(p):
     p[0] = ManagesStmt(locFromTok(p, 1), p[2])
 
 def p_MessageDecls(p):
-    """MessageDecls : MessageDecls MessageDecl ';'
-                    | MessageDecl ';'"""
-    if 3 == len(p):
+    """MessageDecls : MessageDecls MessageDeclThing
+                    | MessageDeclThing"""
+    if 2 == len(p):
         p[0] = [ p[1] ]
     else:
         p[1].append(p[2])
         p[0] = p[1]
 
+def p_MessageDeclThing(p):
+    """MessageDeclThing : MessageDirectionLabel ':' MessageDecl ';'
+                        | MessageDecl ';'"""
+    if 3 == len(p):
+        p[0] = p[1]
+    else:
+        p[0] = p[3]
+
+def p_MessageDirectionLabel(p):
+    """MessageDirectionLabel : PARENT
+                             | CHILD
+                             | BOTH"""
+    if p[1] == 'parent':
+        Parser.current.direction = IN
+    elif p[1] == 'child':
+        Parser.current.direction = OUT
+    elif p[1] == 'both':
+        Parser.current.direction = INOUT
+    else:
+        assert 0
+
 def p_MessageDecl(p):
-    """MessageDecl : SendSemanticsQual DirectionQual MessageBody"""
-    msg = p[3]
-    msg.sendSemantics = p[1]
-    msg.direction = p[2]
+    """MessageDecl : SendSemanticsQual MessageBody
+                   | MessageBody"""
+    if Parser.current.direction is None:
+        p_error(p[1])
+
+    if 2 == len(p):
+        msg = p[1]
+        msg.sendSemantics = ASYNC
+    else:
+        msg = p[2]
+        msg.sendSemantics = p[1]
+
+    msg.direction = Parser.current.direction
     p[0] = msg
 
 def p_MessageBody(p):
@@ -323,16 +354,21 @@ def p_MessageOutParams(p):
 ## State machine
 
 def p_TransitionStmts(p):
-    """TransitionStmts : TransitionStmts TransitionStmt
-                       | TransitionStmt
+    """TransitionStmts : TransitionStmtsNonEmpty
                        | """
+    if 2 == len(p):
+        p[0] = p[1]
+    else:
+        p[0] = [ ]
+
+def p_TransitionStmtsNonEmpty(p):
+    """TransitionStmtsNonEmpty : TransitionStmtsNonEmpty TransitionStmt
+                               | TransitionStmt"""
     if 3 == len(p):
         p[1].append(p[2])
         p[0] = p[1]
     elif 2 == len(p):
         p[0] = [ p[1] ]
-    else:
-        p[0] = [ ]
 
 def p_TransitionStmt(p):
     """TransitionStmt : State ':' Transitions"""
@@ -368,27 +404,11 @@ def p_State(p):
 def p_SendSemanticsQual(p):
     """SendSemanticsQual : ASYNC
                          | RPC
-                         | SYNC
-                         | """
-    if 1 == len(p):
-        p[0] = ASYNC
-        return
-
+                         | SYNC"""
     s = p[1]
     if 'async' == s: p[0] = ASYNC
     elif 'rpc' == s: p[0] = RPC
     elif 'sync'== s: p[0] = SYNC
-    else:
-        assert 0
-
-def p_DirectionQual(p):
-    """DirectionQual : IN
-                     | INOUT
-                     | OUT"""
-    s = p[1]
-    if 'in' == s:  p[0] = IN
-    elif 'inout' == s:  p[0] = INOUT
-    elif 'out' == s:  p[0] = OUT
     else:
         assert 0
 

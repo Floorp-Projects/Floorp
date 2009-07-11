@@ -13,14 +13,14 @@ rpc protocol NPAPI
     manages NPP;
 //    manages NPObject;
 
-    rpc out NP_Initialize() returns (NPError rv);
+child:
+    rpc NP_Initialize() returns (NPError rv);
 
-
-    rpc out NPP(String aMimeType,
+    rpc NPP(String aMimeType,
                 uint16_t aMode,
                 StringArray aNames,
                 StringArray aValues) returns (NPError rv);
-    rpc out ~NPP() returns (NPError rv);
+    rpc ~NPP() returns (NPError rv);
 
 //    rpc in TradeNPPsForSomeReason(NPP n) returns (NPP n2);
 };
