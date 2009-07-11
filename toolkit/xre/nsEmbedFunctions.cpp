@@ -366,6 +366,16 @@ XRE_InitParentProcess(int aArgc,
   return NS_OK;
 }
 
+NS_SPECIALIZE_TEMPLATE
+class nsAutoRefTraits<XPCShellEnvironment> :
+  public nsPointerRefTraits<XPCShellEnvironment>
+{
+public:
+  void Release(XPCShellEnvironment* aEnv) {
+    XPCShellEnvironment::DestroyEnvironment(aEnv);
+  }
+};
+
 namespace {
 
 class CreateChildProcess : public Task
@@ -408,16 +418,6 @@ public:
     NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
 
     return appShell->Exit();
-  }
-};
-
-NS_SPECIALIZE_TEMPLATE
-class nsAutoRefTraits<XPCShellEnvironment> :
-  public nsPointerRefTraits<XPCShellEnvironment>
-{
-public:
-  void Release(XPCShellEnvironment* aEnv) {
-    XPCShellEnvironment::DestroyEnvironment(aEnv);
   }
 };
 
