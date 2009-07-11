@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="298622Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 298622 test">
+
+  <script type="application/javascript"
+    src=
+  "chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+    // Global variable that holds a reference to the find bar.
+    var gFindBar;
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Enter a string in the find bar's search field, by issuing
+    // a series of key events to it.
+    //
+    function enterStringIntoFindField(aString) {
+      for (var i=0; i < aString.length; i++) {
+        var event = document.createEvent("KeyEvents");
+        event.initKeyEvent("keypress", true, true, null, false, false,
+                           false, false, 0, aString.charCodeAt(i));
+        gFindBar._findField.inputField.dispatchEvent(event);
+      }
+    }
+
+    ////
+    // Generator function for test steps for bug 298622:  
+    // Find should work correctly on a page loaded from the
+    // bfcache.
+    //
+    function testIterator()
+    {
+      // Make sure bfcache is on.
+      enableBFCache(true);
+      
+      // Load a test page which contains some text to be found.
+      doPageNavigation({
+        uri: "data:text/html,<html><head><title>test1</title></head>" +
+             "<body>find this!</body></html>",
+        onNavComplete: nextTest
+      });
+      yield;
+
+      // Load a second, dummy page, verifying that the original
+      // page gets stored in the bfcache.
+      doPageNavigation({
+        uri: getHttpUrl("generic.html"),
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "test1",
+                            persisted: true },
+                          { type: "pageshow",
+                            title: "generic page" } ],
+        onNavComplete: nextTest
+      });
+      yield;
+      
+      // Search for some text that's on the second page (but not on
+      // the first page), and verify that it can be found.
+      gFindBar = document.getElementById("FindToolbar");
+      document.getElementById("cmd_find").doCommand();
+      ok(!gFindBar.hidden, "failed to open findbar");
+      enterStringIntoFindField("A generic page");
+      ok(TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+         "a generic page",
+         "find failed on second page loaded");
+
+      // Go back to the original page and verify it's loaded from the
+      // bfcache.
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: ["pageshow"],
+        expectedEvents: [ { type: "pageshow",
+                            title: "test1",
+                            persisted: true } ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      // Search for some text that's on the original page (but not
+      // the dummy page loaded above), and verify that it can 
+      // be found.
+      gFindBar = document.getElementById("FindToolbar");
+      document.getElementById("cmd_find").doCommand();
+      ok(!gFindBar.hidden, "failed to open findbar");
+      enterStringIntoFindField("find this");
+      ok(TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+         "find this",
+         "find failed on page loaded from bfcache");
+      
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+    
+  ]]></script>
+
+  <commandset>
+    <command id="cmd_find"
+     oncommand="document.getElementById('FindToolbar').onFindCommand();"/>
+  </commandset>
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>
