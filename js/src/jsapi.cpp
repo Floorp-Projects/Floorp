@@ -3143,7 +3143,7 @@ LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp, JSProperty **propp)
 {
     JSAutoResolveFlags rf(cx, flags);
-    CHECK_FOR_STRING_INDEX(id);
+    id = js_CheckForStringIndex(id);
     return OBJ_LOOKUP_PROPERTY(cx, obj, id, objp, propp);
 }
 
