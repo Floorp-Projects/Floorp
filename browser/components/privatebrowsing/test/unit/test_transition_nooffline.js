@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This tests the private browsing service to make sure it switches the offline
-// status as expected (see bug 463256).
+// This tests the private browsing service to make sure it no longer switches
+// the offline status (see bug 463256).
 
 function run_test_on_service() {
   // initialization
@@ -59,15 +59,11 @@ function run_test_on_service() {
 
   // enter the private browsing mode, and wait for the about:pb page to load
   pb.privateBrowsingEnabled = true;
-  do_check_eq(observer.events.length, 2);
-  do_check_eq(observer.events[0], "offline");
-  do_check_eq(observer.events[1], "online");
+  do_check_eq(observer.events.length, 0);
 
   // leave the private browsing mode, and wait for the SSL page to load again
   pb.privateBrowsingEnabled = false;
-  do_check_eq(observer.events.length, 4);
-  do_check_eq(observer.events[2], "offline");
-  do_check_eq(observer.events[3], "online");
+  do_check_eq(observer.events.length, 0);
 
   os.removeObserver(observer, "network:offline-status-changed", false);
   prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
