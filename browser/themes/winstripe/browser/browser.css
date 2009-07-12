@@ -1286,11 +1286,6 @@ statusbarpanel#statusbar-display {
   border-top: none;
 }
 
-#security-button {
-  min-width: 20px;
-  -moz-box-direction: reverse;
-}
-
 #security-button[level="high"],
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure.png");
@@ -1298,11 +1293,6 @@ statusbarpanel#statusbar-display {
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-
-/* XXXsw prevent margins of a value-less label from shifting the image */
-#security-button > label:not([value]) {
-  display: none;
 }
 
 #page-report-button {
@@ -1571,8 +1561,26 @@ tabpanels {
 
 .tabs-alltabs-button > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
-  margin: 6px 0 4px;
-  -moz-image-region: auto;
+  -moz-image-region: rect(0, 14px, 20px, 0);
+}
+
+.tabs-alltabs-button:hover:active > .toolbarbutton-icon {
+  -moz-image-region: rect(0, 28px, 20px, 14px);
+}
+
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-icon {
+  list-style-image: url("chrome://browser/skin/mainwindow-dropdown-arrow.png");
+  margin: 5px 0 4px;
+  -moz-image-region: rect(0, 13px, 11px, 0);
+}
+
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+.tabs-alltabs-button[type="menu"]:hover:active > .toolbarbutton-icon,
+.tabs-alltabs-button[type="menu"][open="true"] > .toolbarbutton-icon {
+  -moz-image-region: rect(0, 26px, 11px, 13px);
 }
 
 .tabs-alltabs-box-animate {
@@ -1586,6 +1594,20 @@ tabpanels {
 
 stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
   background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png");
+}
+
+/* All tabs menupopup */
+.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.alltabs-item[selected="true"] {
+  font-weight: bold;
+}
+
+.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
 /* Tabstrip close button */

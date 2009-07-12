@@ -44,10 +44,10 @@
 struct nsSize;
 
 
-// {EE288A5F-B98B-4105-B4AE-884F21588A92}
+// {3fd2930f-1040-4d08-b638-0b3f134e6b6f}
 #define NS_ILOOKANDFEEL_IID \
-{ 0xee288a5f, 0xb98b, 0x4105, \
-    { 0xb4, 0xae, 0x88, 0x4f, 0x21, 0x58, 0x8a, 0x92 } }
+{ 0xc23ca876, 0x6ecf, 0x49c6, \
+    { 0xb2, 0xb4, 0x5b, 0xe5, 0x16, 0xb5, 0x0e, 0x28 } }
 
 class nsILookAndFeel: public nsISupports {
 public:
@@ -216,7 +216,6 @@ public:
     eMetric_SubmenuDelay,                                 // delay before submenus open
     eMetric_MenusCanOverlapOSBar,                         // can popups overlap menu/task bar?
     eMetric_SkipNavigatingDisabledMenuItem,               // skip navigating to disabled menu item?
-    eMetric_DragFullWindow,                               // show window contents while dragging?
     eMetric_DragThresholdX,                               // begin a drag if the mouse is moved further than the threshold while the button is down
     eMetric_DragThresholdY,
     eMetric_UseAccessibilityTheme,                        // Accessibility theme being used?

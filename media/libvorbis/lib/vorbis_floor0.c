@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: floor backend 0 implementation
- last mod: $Id: floor0.c 13293 2007-07-24 00:09:47Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
@@ -108,8 +108,8 @@ static vorbis_info_floor *floor0_unpack (vorbis_info *vi,oggpack_buffer *opb){
    linear block and mapping sizes */
 
 static void floor0_map_lazy_init(vorbis_block      *vb,
-				 vorbis_info_floor *infoX,
-				 vorbis_look_floor0 *look){
+                                 vorbis_info_floor *infoX,
+                                 vorbis_look_floor0 *look){
   if(!look->linearmap[vb->W]){
     vorbis_dsp_state   *vd=vb->vd;
     vorbis_info        *vi=vd->vi;
@@ -132,7 +132,7 @@ static void floor0_map_lazy_init(vorbis_block      *vb,
     look->linearmap[W]=_ogg_malloc((n+1)*sizeof(**look->linearmap));
     for(j=0;j<n;j++){
       int val=floor( toBARK((info->rate/2.f)/n*j) 
-		     *scale); /* bark numbers represent band edges */
+                     *scale); /* bark numbers represent band edges */
       if(val>=look->ln)val=look->ln-1; /* guard against the approximation */
       look->linearmap[W][j]=val;
     }
@@ -142,7 +142,7 @@ static void floor0_map_lazy_init(vorbis_block      *vb,
 }
 
 static vorbis_look_floor *floor0_look(vorbis_dsp_state *vd,
-				      vorbis_info_floor *i){
+                                      vorbis_info_floor *i){
   vorbis_info_floor0 *info=(vorbis_info_floor0 *)i;
   vorbis_look_floor0 *look=_ogg_calloc(1,sizeof(*look));
   look->m=info->order;
@@ -176,10 +176,10 @@ static void *floor0_inverse1(vorbis_block *vb,vorbis_look_floor *i){
       float *lsp=_vorbis_block_alloc(vb,sizeof(*lsp)*(look->m+b->dim+1));
             
       for(j=0;j<look->m;j+=b->dim)
-	if(vorbis_book_decodev_set(b,lsp+j,&vb->opb,b->dim)==-1)goto eop;
+        if(vorbis_book_decodev_set(b,lsp+j,&vb->opb,b->dim)==-1)goto eop;
       for(j=0;j<look->m;){
-	for(k=0;k<b->dim;k++,j++)lsp[j]+=last;
-	last=lsp[j-1];
+        for(k=0;k<b->dim;k++,j++)lsp[j]+=last;
+        last=lsp[j-1];
       }
       
       lsp[look->m]=amp;
@@ -191,7 +191,7 @@ static void *floor0_inverse1(vorbis_block *vb,vorbis_look_floor *i){
 }
 
 static int floor0_inverse2(vorbis_block *vb,vorbis_look_floor *i,
-			   void *memo,float *out){
+                           void *memo,float *out){
   vorbis_look_floor0 *look=(vorbis_look_floor0 *)i;
   vorbis_info_floor0 *info=look->vi;
   
@@ -203,10 +203,10 @@ static int floor0_inverse2(vorbis_block *vb,vorbis_look_floor *i,
 
     /* take the coefficients back to a spectral envelope curve */
     vorbis_lsp_to_curve(out,
-			look->linearmap[vb->W],
-			look->n[vb->W],
-			look->ln,
-			lsp,look->m,amp,(float)info->ampdB);
+                        look->linearmap[vb->W],
+                        look->n[vb->W],
+                        look->ln,
+                        lsp,look->m,amp,(float)info->ampdB);
     return(1);
   }
   memset(out,0,sizeof(*out)*look->n[vb->W]);
@@ -214,7 +214,7 @@ static int floor0_inverse2(vorbis_block *vb,vorbis_look_floor *i,
 }
 
 /* export hooks */
-vorbis_func_floor floor0_exportbundle={
+const vorbis_func_floor floor0_exportbundle={
   NULL,&floor0_unpack,&floor0_look,&floor0_free_info,
   &floor0_free_look,&floor0_inverse1,&floor0_inverse2
 };

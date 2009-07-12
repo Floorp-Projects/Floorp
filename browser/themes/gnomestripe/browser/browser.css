@@ -1109,11 +1109,6 @@ statusbarpanel#statusbar-display {
   -moz-padding-start: 0;
 }
 
-#security-button {
-  min-width: 20px;
-  -moz-box-direction: reverse;
-}
-
 #security-button[level="high"],
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure.png");
@@ -1121,11 +1116,6 @@ statusbarpanel#statusbar-display {
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-
-/* XXXsw prevent margins of a value-less label from shifting the image */
-#security-button > label:not([value]) {
-  display: none;
 }
 
 #page-report-button {
@@ -1309,6 +1299,28 @@ tabpanels {
 .tabs-alltabs-button > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
   margin: 2px 0 1px;
+}
+
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
+  margin-bottom: -2px;
+}
+
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-icon {
+  display: none;
+}
+
+/* All tabs menupopup */
+.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.alltabs-item[selected="true"] {
+  font-weight: bold;
+}
+
+.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
 /* Sidebar */

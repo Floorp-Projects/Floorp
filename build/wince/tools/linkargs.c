@@ -23,7 +23,12 @@ void checkLinkArgs(int* k, int* s, int* i, int* j, char** args, char** argv) {
 void addLinkArgs(int k, int s, int *i, int *j, char** args, char** argv) {
   args[(*i)++] = "/LIBPATH:\"" WCE_LIB "\"";
   args[(*i)++] = "/LIBPATH:\"" WCE_CRT "\"";
+  args[(*i)++] = "/LIBPATH:\"" ATL_LIB "\"";
+  args[(*i)++] = "/LIBPATH:\"" OGLES_SDK_LIB "\"";
   args[(*i)++] = "/NODEFAULTLIB";
+
+  args[(*i)++] = "/MAP";
+  args[(*i)++] = "/MAPINFO:EXPORTS";
 
 #ifdef HAVE_SHUNT   // simple test to see if we're in configure or not
   if(getenv("NO_SHUNT") == NULL) {

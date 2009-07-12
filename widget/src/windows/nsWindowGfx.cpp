@@ -58,6 +58,7 @@
 #include "nsIRegion.h"
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
+#include "gfxWindowsPlatform.h"
 #include "nsGfxCIID.h"
 #include "gfxContext.h"
 #include "nsIRenderingContext.h"
@@ -94,11 +95,10 @@ extern "C" {
 
 nsAutoPtr<PRUint8>  nsWindow::sSharedSurfaceData;
 gfxIntSize          nsWindow::sSharedSurfaceSize;
-WinRenderMode       nsWindow::sRenderMode         = DEFAULT_RENDER_MODE;
 
 /**************************************************************
  *
- * SECTION: globals variables.
+ * SECTION: global variables.
  *
  **************************************************************/
 
@@ -124,6 +124,12 @@ static NS_DEFINE_IID(kRenderingContextCID,        NS_RENDERING_CONTEXT_CID);
  **
  **************************************************************
  **************************************************************/
+
+static PRBool
+IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
+{
+  return gfxWindowsPlatform::GetPlatform()->GetRenderMode() == rmode;
+}
 
 void
 nsWindowGfx::AddRECTToRegion(const RECT& aRect, nsIRegion* aRegion)
@@ -195,8 +201,7 @@ nsWindowGfx::InitDDraw()
 
   // We do not use the cairo ddraw surface for IMAGE_DDRAW16.  Instead, we
   // use an 24bpp image surface, convert that to 565, then blit using ddraw.
-  if (nsWindow::sRenderMode != RENDER_IMAGE_DDRAW16)
-  {
+  if (!IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_DDRAW16)) {
     gfxIntSize screen_size(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     gpDDSurf = new gfxDDrawSurface(glpDD, screen_size, gfxASurface::ImageFormatRGB24);
     if (!gpDDSurf) {
@@ -253,7 +258,7 @@ void nsWindow::SetUpForPaint(HDC aHDC)
 PRBool nsWindow::OnPaint(HDC aDC)
 {
 #ifdef CAIRO_HAS_DDRAW_SURFACE
-  if (sRenderMode == RENDER_IMAGE_DDRAW16) {
+  if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_DDRAW16)) {
     return OnPaintImageDDraw16();
   }
 #endif
@@ -363,7 +368,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
 #if defined(MOZ_XUL)
     // don't support transparency for non-GDI rendering, for now
-    if (sRenderMode == RENDER_GDI && eTransparencyTransparent == mTransparencyMode) {
+    if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) && eTransparencyTransparent == mTransparencyMode) {
       if (mTransparentSurface == nsnull)
         SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
       targetSurface = mTransparentSurface;
@@ -372,7 +377,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
     nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
     if (!targetSurface &&
-        sRenderMode == RENDER_GDI)
+        IsRenderMode(gfxWindowsPlatform::RENDER_GDI))
     {
       targetSurfaceWin = new gfxWindowsSurface(hDC);
       targetSurface = targetSurfaceWin;
@@ -381,12 +386,13 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #ifdef CAIRO_HAS_DDRAW_SURFACE
     nsRefPtr<gfxDDrawSurface> targetSurfaceDDraw;
     if (!targetSurface &&
-        sRenderMode == RENDER_DDRAW)
+        (IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW) ||
+         IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW_GL)))
     {
       if (!glpDD) {
         if (!nsWindowGfx::InitDDraw()) {
           NS_WARNING("DirectDraw init failed; falling back to RENDER_IMAGE_STRETCH24");
-          sRenderMode = RENDER_IMAGE_STRETCH24;
+          gfxWindowsPlatform::GetPlatform()->SetRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24);
           goto DDRAW_FAILED;
         }
       }
@@ -405,8 +411,8 @@ PRBool nsWindow::OnPaint(HDC aDC)
 DDRAW_FAILED:
     nsRefPtr<gfxImageSurface> targetSurfaceImage;
     if (!targetSurface &&
-        (sRenderMode == RENDER_IMAGE_STRETCH32 ||
-         sRenderMode == RENDER_IMAGE_STRETCH24))
+        (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
+         IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)))
     {
       if (!sSharedSurfaceData) {
         sSharedSurfaceSize.height = GetSystemMetrics(SM_CYSCREEN);
@@ -440,7 +446,7 @@ DDRAW_FAILED:
     }
 
     if (!targetSurface) {
-      NS_ERROR("Invalid sRenderMode!");
+      NS_ERROR("Invalid RenderMode!");
       return NS_ERROR_FAILURE;
     }
 
@@ -452,7 +458,7 @@ DDRAW_FAILED:
 #endif
 
     // don't need to double buffer with anything but GDI
-    if (sRenderMode == RENDER_GDI) {
+    if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
 # if defined(MOZ_XUL) && !defined(WINCE)
       if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
         thebesContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
@@ -496,7 +502,7 @@ DDRAW_FAILED:
 #endif
 
 #ifdef MOZ_XUL
-    if (sRenderMode == RENDER_GDI &&
+    if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) &&
         eTransparencyTransparent == mTransparencyMode) {
       // Data from offscreen drawing surface was copied to memory bitmap of transparent
       // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
@@ -505,13 +511,15 @@ DDRAW_FAILED:
     } else
 #endif
     if (result) {
-      if (sRenderMode == RENDER_GDI) {
+      if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
         // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
         // this, and we'll just end up painting with black.
         thebesContext->PopGroupToSource();
         thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
         thebesContext->Paint();
-      } else if (sRenderMode == RENDER_DDRAW) {
+      } else if (IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW) ||
+                 IsRenderMode(gfxWindowsPlatform::RENDER_DDRAW_GL))
+      {
 #ifdef CAIRO_HAS_DDRAW_SURFACE
         // blit with direct draw
         HRESULT hr = glpDDClipper->SetHWnd(0, mWnd);
@@ -535,8 +543,8 @@ DDRAW_FAILED:
           DDError("SetHWnd", hr);
 #endif
 #endif
-      } else if (sRenderMode == RENDER_IMAGE_STRETCH24 ||
-                 sRenderMode == RENDER_IMAGE_STRETCH32) 
+      } else if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24) ||
+                 IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32)) 
       {
         gfxIntSize surfaceSize = targetSurfaceImage->GetSize();
 
@@ -550,7 +558,7 @@ DDRAW_FAILED:
         bi.biBitCount = 32;
         bi.biCompression = BI_RGB;
 
-        if (sRenderMode == RENDER_IMAGE_STRETCH24) {
+        if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)) {
           // On Windows CE/Windows Mobile, 24bpp packed-pixel sources
           // seem to be far faster to blit than 32bpp (see bug 484864).
           // So, convert the bits to 24bpp by stripping out the unused

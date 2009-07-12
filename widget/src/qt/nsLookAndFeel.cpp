@@ -328,7 +328,6 @@ static const char *metricToString[] = {
     "eMetric_SubmenuDelay",
     "eMetric_MenusCanOverlapOSBar",
     "eMetric_SkipNavigatingDisabledMenuItem",
-    "eMetric_DragFullWindow",
     "eMetric_DragThresholdX",
     "eMetric_DragThresholdY",
     "eMetric_UseAccessibilityTheme",
@@ -466,10 +465,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
 
     case eMetric_MenusCanOverlapOSBar:
       // we want XUL popups to be able to overlap the task bar.
-      aMetric = 1;
-      break;
-
-    case eMetric_DragFullWindow:
       aMetric = 1;
       break;
 

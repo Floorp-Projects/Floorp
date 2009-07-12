@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="360511Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 360511 test">
+
+  <script type="application/javascript"
+          src=
+  "chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug 360511:  
+    // Fragment uri's in session history should be restored correctly
+    // upon back navigation.
+    //
+    function testIterator()
+    {
+      // Case 1: load a page containing a fragment link; the page should be 
+      // stored in the bfcache.
+      // Case 2: load a page containing a fragment link; the page should NOT 
+      // be stored in the bfcache.
+      for (var i = 1; i < 3; i++)
+      {
+        var url = "bug360511_case" + i + ".html";
+        doPageNavigation( {
+          uri: getHttpUrl(url),
+          onNavComplete: nextTest,
+          preventBFCache: i != 1
+        } );
+        yield;
+      
+        // Store the original url for later comparison.
+        var originalUrl = TestWindow.getBrowser().currentURI.spec;
+        var originalDocLocation = TestWindow.getDocument().location.href;
+        
+        // Verify we're at the top of the page.
+        is(TestWindow.getWindow().scrollY, 0, 
+          "Page initially has a non-zero scrollY property");
+      
+        // Click the on the fragment link in the browser, and use setTimeout 
+        // to give the event a chance to be processed.
+        var event = TestWindow.getDocument().createEvent('MouseEvent');
+        event.initMouseEvent("click", true, true, TestWindow.getWindow(), 0,
+          0, 0, 0, 0,
+          false, false, false, false, 0, null);
+        TestWindow.getDocument().getElementById("link1").dispatchEvent(event);
+        setTimeout(nextTest, 0);
+        yield;
+
+        // Store the fragment url for later comparison.
+        var fragmentUrl = TestWindow.getBrowser().currentURI.spec;
+        var fragDocLocation = TestWindow.getDocument().location.href;
+        
+        // Verify we're no longer at the top of the page.
+        ok(TestWindow.getWindow().scrollY > 0,
+          "We're at the top of the page but we should be at the bottom");
+      
+        // Now navigate to any other page
+        var expectedPageTitle = "bug360511 case " + i;
+        doPageNavigation( {
+          uri: getHttpUrl("generic.html"),
+          eventsToListenFor: ["pagehide", "pageshow"],
+          expectedEvents: [ {type: "pagehide", title: expectedPageTitle,
+                             persisted: i == 1},
+                            {type: "pageshow"} ],
+          onNavComplete: nextTest
+        } );
+        yield;
+      
+        // Go back
+        doPageNavigation( {
+          back: true,
+          eventsToListenFor: ["pageshow"],
+          expectedEvents: [ {type: "pageshow", title: expectedPageTitle, 
+                             persisted: i == 1} ],
+          onNavComplete: nextTest
+        } );
+        yield;
+      
+        // Verify the current url is the fragment url
+        is(TestWindow.getBrowser().currentURI.spec, fragmentUrl, 
+          "current url is not the previous fragment url");
+        is(TestWindow.getDocument().location.href, fragDocLocation,
+          "document.location is not the previous fragment url");
+        
+        // Go back again.  Since we're just going from a fragment url to 
+        // parent url, no pageshow event is fired, so don't wait for any 
+        // events.  Rather, just wait for the page's scrollY property to 
+        // change.
+        var originalScrollY = TestWindow.getWindow().scrollY;
+        doPageNavigation( {
+          back: true,
+          eventsToListenFor: []
+        } );
+        waitForTrue( 
+          function() {
+            return (TestWindow.getWindow().scrollY != originalScrollY);
+          }, 
+          function() {
+            setTimeout(nextTest, 0);
+          }, 20);      
+        yield;
+      
+        // Verify the current url is the original url without fragment
+        is(TestWindow.getBrowser().currentURI.spec, originalUrl, 
+          "current url is not the original url");
+        is(TestWindow.getDocument().location.href, originalDocLocation,
+          "document.location is not the original url");
+      }
+                      
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+    
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

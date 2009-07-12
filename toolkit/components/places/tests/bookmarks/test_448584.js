@@ -121,7 +121,11 @@ function run_test() {
     var sql = "UPDATE moz_bookmarks SET fk = 1337 WHERE id = ?1";
     var stmt = mDBConn.createStatement(sql);
     stmt.bindUTF8StringParameter(0, aTest._itemId);
-    stmt.execute();
+    try {
+      stmt.execute();
+    } finally {
+      stmt.finalize();
+    }
   });
 
   // export json to file

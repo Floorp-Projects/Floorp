@@ -1777,7 +1777,17 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   PRBool selfDirty = (GetStateBits() & NS_FRAME_IS_DIRTY) ||
                      (aState.mReflowState.mFlags.mVResize &&
                       (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT));
-  
+
+  // Reflow our last line if our availableHeight has increased
+  // so that we (and our last child) pull up content as necessary
+  if (aState.mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE
+      && GetNextInFlow() && aState.mReflowState.availableHeight > mRect.height) {
+    line_iterator lastLine = end_lines();
+    if (lastLine != begin_lines()) {
+      --lastLine;
+      lastLine->MarkDirty();
+    }
+  }
     // the amount by which we will slide the current line if it is not
     // dirty
   nscoord deltaY = 0;

@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="396649Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 396649 test">
+
+  <script type="application/javascript"
+          src=
+  "chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+    
+    // Maximum number of entries in the bfcache for this session history.
+    // This number is hardcoded in docshell code.  In the test, we'll
+    // navigate through enough pages so that we hit one that's been
+    // evicted from the bfcache because it's farther from the current
+    // page than this number.
+    const MAX_BFCACHE_PAGES = 3;
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug 396649:  Content
+    // viewers should be evicted from bfcache when going back if more
+    // than MAX_BFCACHE_PAGES from the current index.
+    //
+    function testIterator()
+    {
+      // Make sure bfcache is on.
+      enableBFCache(true);
+      
+      // Load enough pages so that the first loaded is eviced from
+      // the bfcache, since it is greater the MAX_BFCACHE_PAGES from
+      // the current position in the session history. Verify all
+      // of the pages are initially stored in the bfcache when
+      // they're unloaded.
+      for (var i = 0; i <= MAX_BFCACHE_PAGES + 1; i++) {
+        doPageNavigation( {
+           uri: "data:text/html,<!DOCTYPE html><html>" + 
+                "<head><title>bug396649 page" + i + 
+                "</title></head>" +
+                "<body>" + 
+                "test page " + i +
+                "</body></html>",
+           eventsToListenFor: ["pageshow", "pagehide"],
+           expectedEvents: [ { type: "pagehide",
+                               title: i == 0 ? 
+                                 undefined : "bug396649 page" + (i-1),
+                               persisted: true },
+                             { type: "pageshow", 
+                               title: "bug396649 page" + i } ],
+           onNavComplete: nextTest 
+          } );
+        yield;
+      }
+            
+      // Go back to the first page, one page at a time.  The first 
+      // MAX_BFCACHE_PAGES pages loaded via back should come from the bfcache, 
+      // the last should not, since it should have been evicted during the 
+      // previous navigation sequence.  Verify all pages are initially stored
+      // in the bfcache when they're unloaded.
+      for (i = MAX_BFCACHE_PAGES + 1; i > 0; i--) {
+        doPageNavigation( {
+          back: true,
+          eventsToListenFor: ["pageshow", "pagehide"],
+          expectedEvents: [ { type: "pagehide",
+                              title: "bug396649 page" + i,
+                              persisted: true },
+                            { type: "pageshow", 
+                              title: "bug396649 page" + (i - 1),
+                              persisted: i > 1 } ],
+          onNavComplete: nextTest
+        } );
+        yield;
+      }
+      
+      // Traverse history forward now.  Again, the first MAX_BFCACHE_PAGES
+      // pages should come from the bfcache, the last should not,
+      // since it should have been evicted during the backwards
+      // traversal above.  Verify all pages are initially stored
+      // in the bfcache when they're unloaded.
+      for (i = 1; i <= MAX_BFCACHE_PAGES + 1; i++) {
+        doPageNavigation( {
+          forward: true,
+          eventsToListenFor: ["pageshow", "pagehide"],
+          expectedEvents: [ { type: "pagehide",
+                              title: "bug396649 page" + (i-1),
+                              persisted: true },
+                            { type: "pageshow", 
+                              title: "bug396649 page" + i,
+                              persisted: i < MAX_BFCACHE_PAGES + 1 } ],
+          onNavComplete: nextTest
+        } );
+        yield;
+      }
+      
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+    
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

@@ -637,7 +637,7 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
     if (mPopupType == ePopupTypeMenu) {
       nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
       if (sound)
-        sound->PlaySystemSound(NS_SYSSOUND_MENU_POPUP);
+        sound->PlayEventSound(nsISound::EVENT_MENU_POPUP);
     }
   }
 

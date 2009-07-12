@@ -2147,6 +2147,7 @@ MicrosummaryResource.prototype = {
     this._iframe.docShell.allowMetaRedirects = false;
     this._iframe.docShell.allowSubframes = false;
     this._iframe.docShell.allowImages = false;
+    this._iframe.docShell.allowDNSPrefetch = false;
   
     var parseHandler = {
       _self: this,

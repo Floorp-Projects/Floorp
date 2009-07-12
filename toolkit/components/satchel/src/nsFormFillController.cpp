@@ -667,7 +667,7 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
     mController->HandleDelete(&cancel);
     break;
   case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
-    mController->HandleText(PR_FALSE);
+    mController->HandleText();
     break;
 #else
   case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
@@ -678,7 +678,7 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
       if (isShift)
         mController->HandleDelete(&cancel);
       else
-        mController->HandleText(PR_FALSE);
+        mController->HandleText();
 
       break;
     }
@@ -787,7 +787,7 @@ nsFormFillController::Input(nsIDOMEvent* aEvent)
   if (mSuppressOnInput || !mController || !mFocusedInput)
     return NS_OK;
 
-  return mController->HandleText(PR_FALSE);
+  return mController->HandleText();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -829,7 +829,7 @@ nsFormFillController::MouseDown(nsIDOMEvent* aMouseEvent)
   if (value.Length() > 0) {
     // Show the popup with a filtered result set
     mController->SetSearchString(EmptyString());
-    mController->HandleText(PR_TRUE);
+    mController->HandleText();
   } else {
     // Show the popup with the complete result set.  Can't use HandleText()
     // because it doesn't display the popup if the input is blank.

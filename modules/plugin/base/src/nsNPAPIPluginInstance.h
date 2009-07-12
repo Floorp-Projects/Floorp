@@ -164,7 +164,7 @@ public:
 private:
   nsTArray<PopupControlState> mPopupStates;
 
-  nsMIMEType mMIMEType;
+  char* mMIMEType;
 
   // Weak pointer to the owner. The owner nulls this out (by calling
   // InvalidateOwner()) when it's no longer our owner.

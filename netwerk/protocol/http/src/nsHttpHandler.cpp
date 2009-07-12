@@ -661,7 +661,7 @@ nsHttpHandler::InitUserAgentComponents()
 #elif defined(WINCE)
     OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
     if (GetVersionEx(&info)) {
-        char *buf = PR_smprintf("Windows CE %ld.%ld",
+        char *buf = PR_smprintf("WindowsCE %ld.%ld",
                                 info.dwMajorVersion,
                                 info.dwMinorVersion);
         if (buf) {

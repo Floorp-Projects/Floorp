@@ -178,7 +178,7 @@ MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
     nsCOMPtr<nsIPluginInstance> inst;
     win->GetPluginInstance(inst);
     if (inst) {
-      nsMIMEType mimetype = nsnull;
+      char* mimetype = nsnull;
       inst->GetMIMEType(&mimetype);
       if (mimetype) {
         if (!strcmp(mimetype, "application/x-shockwave-flash"))

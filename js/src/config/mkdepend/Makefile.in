@@ -44,9 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 USE_STATIC_LIBS = 1
 
-# undefine (as best we can, thanks gmake!) so we don't need build_number
-MOZILLA_OFFICIAL =
-BUILD_OFFICIAL   =
 MODULE		 = mkdepend
 HOST_PROGRAM	 = mkdepend$(BIN_SUFFIX)
 ifdef GNU_CC

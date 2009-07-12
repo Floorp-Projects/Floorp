@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: single-block PCM synthesis
- last mod: $Id: synthesis.c 13293 2007-07-24 00:09:47Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
@@ -83,7 +83,7 @@ int vorbis_synthesis(vorbis_block *vb,ogg_packet *op){
   type=ci->map_type[ci->mode_param[mode]->mapping];
 
   return(_mapping_P[type]->inverse(vb,ci->map_param[ci->mode_param[mode]->
-						   mapping]));
+                                                   mapping]));
 }
 
 /* used to track pcm position without actually performing decode.
