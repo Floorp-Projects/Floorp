@@ -65,11 +65,7 @@ interface nsILocalFile : nsIFile
      *  initWith[Native]Path
      *
      *  This function will initialize the nsILocalFile object.  Any
-     *  internal state information will be reset.  
-     *
-     *  NOTE: This function has a known bug on the macintosh and
-     *  other OSes which do not represent file locations as paths.
-     *  If you do use this function, be very aware of this problem!
+     *  internal state information will be reset.
      *
      *   @param filePath       
      *       A string which specifies a full file path to a 
