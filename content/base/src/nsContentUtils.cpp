@@ -179,6 +179,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIConsoleService.h"
 
 #include "mozAutoDocUpdate.h"
+#include "imgICache.h"
 #include "jsinterp.h"
 
 const char kLoadAsData[] = "loadAsData";
@@ -200,6 +201,7 @@ nsIXTFService *nsContentUtils::sXTFService = nsnull;
 nsIPrefBranch *nsContentUtils::sPrefBranch = nsnull;
 nsIPref *nsContentUtils::sPref = nsnull;
 imgILoader *nsContentUtils::sImgLoader;
+imgICache *nsContentUtils::sImgCache;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsDataHashtable<nsISupportsHashKey, EventNameMapping>* nsContentUtils::sEventTable = nsnull;
 nsIStringBundleService *nsContentUtils::sStringBundleService;
@@ -330,6 +332,10 @@ nsContentUtils::Init()
   if (NS_FAILED(rv)) {
     // no image loading for us.  Oh, well.
     sImgLoader = nsnull;
+    sImgCache = nsnull;
+  } else {
+    if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
+      sImgCache = nsnull;
   }
 
   sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
@@ -893,6 +899,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sXTFService);
 #endif
   NS_IF_RELEASE(sImgLoader);
+  NS_IF_RELEASE(sImgCache);
   NS_IF_RELEASE(sPrefBranch);
   NS_IF_RELEASE(sPref);
 #ifdef IBMBIDI
@@ -2381,6 +2388,19 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
       NS_FAILED(rv) ? nsIContentPolicy::REJECT_REQUEST : decision;
   }
   return NS_FAILED(rv) ? PR_FALSE : NS_CP_ACCEPTED(decision);
+}
+
+// static
+PRBool
+nsContentUtils::IsImageInCache(nsIURI* aURI)
+{
+    if (!sImgCache) return PR_FALSE;
+
+    // If something unexpected happened we return false, otherwise if props
+    // is set, the image is cached and we return true
+    nsCOMPtr<nsIProperties> props;
+    nsresult rv = sImgCache->FindEntryProperties(aURI, getter_AddRefs(props));
+    return (NS_SUCCEEDED(rv) && props);
 }
 
 // static

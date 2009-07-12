@@ -14,11 +14,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450930
 <div id="display">
   <div id="d" style="width:400px; height:200px;"></div>
   <iframe id="iframe" style="width:400px; height:200px;"
-   src="data:text/html,&lt;div id='d'&gt;Hello&lt;/div&gt;&lt;div style='margin-top:500px' id='d2'&gt;Hello&lt;/div>"></iframe>
+   src="data:text/html,&lt;div id='d'&gt;&lt;span style='margin-left:3px;'&gt;Hello&lt;/span&gt;
+        &lt;/div&gt;&lt;div style='margin-top:500px' id='d2'&gt;
+        &lt;span style='margin-left:3px;'&gt;Goodbye&lt;/span&gt;&lt;/div>"></iframe>
   <svg:svg style="width:410px; height:210px;" id="svg">
     <svg:foreignObject width="100%" height="100%">
       <iframe id="iframe2" style="width:400px; height:200px;"
-       src="data:text/html,&lt;div id='d'&gt;Hello&lt;/div&gt;&lt;div style='margin-top:500px' id='d2'&gt;Hello&lt;/div>"></iframe>
+       src="data:text/html,&lt;div id='d'&gt;&lt;span style='margin-left:3px;'&gt;Hello&lt;/span&gt;
+            &lt;/div&gt;&lt;div style='margin-top:500px' id='d2'&gt;
+            &lt;span style='margin-left:3px;'&gt;Goodbye&lt;/span&gt;&lt;/div>"></iframe>
     </svg:foreignObject>
   </svg:svg>
 </div>

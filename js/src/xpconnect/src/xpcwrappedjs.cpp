@@ -57,17 +57,18 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     nsXPCWrappedJS *tmp = Downcast(s);
 
     nsrefcnt refcnt = tmp->mRefCnt.get();
-#ifdef DEBUG_CC
-    char name[72];
-    if (tmp->GetClass())
-      JS_snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)",
-                  tmp->GetClass()->GetInterfaceName());
-    else
-      JS_snprintf(name, sizeof(name), "nsXPCWrappedJS");
-    cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS), name);
-#else
-    cb.DescribeNode(RefCounted, refcnt);
-#endif
+    if (cb.WantDebugInfo()) {
+        char name[72];
+        if (tmp->GetClass())
+            JS_snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)",
+                        tmp->GetClass()->GetInterfaceName());
+        else
+            JS_snprintf(name, sizeof(name), "nsXPCWrappedJS");
+        cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS), name);
+    } else {
+        cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS),
+                        "nsXPCWrappedJS");
+    }
 
     // nsXPCWrappedJS keeps its own refcount artificially at or above 1, see the
     // comment above nsXPCWrappedJS::AddRef.

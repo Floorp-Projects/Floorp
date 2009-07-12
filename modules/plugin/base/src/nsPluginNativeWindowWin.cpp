@@ -225,7 +225,7 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   // Flash will need special treatment later
   if (win->mPluginType == nsPluginType_Unknown) {
     if (inst) {
-      nsMIMEType mimetype = nsnull;
+      char* mimetype = nsnull;
       inst->GetMIMEType(&mimetype);
       if (mimetype) { 
         if (!strcmp(mimetype, "application/x-shockwave-flash"))

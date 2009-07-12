@@ -40,6 +40,8 @@
 #include "nsIDOMWindow.h"
 #include "nsDOMClassInfo.h"
 #include "nsComponentManagerUtils.h"
+#include "nsICategoryManager.h"
+#include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
@@ -214,8 +216,10 @@ NS_IMETHODIMP
 nsGeolocationRequest::GetRequestingURI(nsIURI * *aRequestingURI)
 {
   NS_ENSURE_ARG_POINTER(aRequestingURI);
-  *aRequestingURI = mLocator->GetURI();
-  NS_IF_ADDREF(*aRequestingURI);
+
+  nsCOMPtr<nsIURI> uri = mLocator->GetURI();
+  uri.forget(aRequestingURI);
+
   return NS_OK;
 }
 
@@ -223,8 +227,10 @@ NS_IMETHODIMP
 nsGeolocationRequest::GetRequestingWindow(nsIDOMWindow * *aRequestingWindow)
 {
   NS_ENSURE_ARG_POINTER(aRequestingWindow);
-  *aRequestingWindow = mLocator->GetOwner();
-  NS_IF_ADDREF(*aRequestingWindow);
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mLocator->GetOwner());
+  window.forget(aRequestingWindow);
+
   return NS_OK;
 }
 
@@ -375,19 +381,53 @@ nsGeolocationService::nsGeolocationService()
   if (sGeoEnabled == PR_FALSE)
     return;
 
-  mProvider = do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
-  
+  nsCOMPtr<nsIGeolocationProvider> provider = do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
+  if (provider)
+    mProviders.AppendObject(provider);
+
+
+  // look up any providers that were registered via the category manager
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
+  if (!catMan)
+    return;
+
+  nsCOMPtr<nsISimpleEnumerator> geoproviders;
+  catMan->EnumerateCategory("geolocation-provider", getter_AddRefs(geoproviders));
+  if (geoproviders) {
+
+    PRBool hasMore;
+    while (NS_SUCCEEDED(geoproviders->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> elem;
+      geoproviders->GetNext(getter_AddRefs(elem));
+
+      nsCOMPtr<nsISupportsCString> elemString = do_QueryInterface(elem);
+      
+      nsCAutoString name;
+      elemString->GetData(name);
+
+      nsXPIDLCString spec;
+      catMan->GetCategoryEntry("geolocation-provider", name.get(), getter_Copies(spec));
+
+      provider = do_GetService(spec);
+      if (provider)
+        mProviders.AppendObject(provider);
+    }
+  }
+
+  // we should move these providers outside of this file! dft
+
   // if NS_MAEMO_LOCATION, see if we should try the MAEMO location provider
 #ifdef NS_MAEMO_LOCATION
-  if (!mProvider)
-    mProvider = new MaemoLocationProvider();
+  provider = new MaemoLocationProvider();
+  if (provider)
+    mProviders.AppendObject(provider);
 #endif
 
   // if WINCE, see if we should try the WINCE location provider
 #ifdef WINCE_WINDOWS_MOBILE
-  if (!mProvider){
-    mProvider = new WinMobileLocationProvider();
-  }
+  provider = new WinMobileLocationProvider();
+  if (provider)
+    mProviders.AppendObject(provider);
 #endif
 }
 
@@ -437,11 +477,93 @@ nsGeolocationService::Observe(nsISupports* aSubject,
 NS_IMETHODIMP
 nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
 {
+  // here we have to determine this aSomewhere is a "better"
+  // position than any previously recv'ed.
+
+  if (!IsBetterPosition(aSomewhere))
+    return NS_OK;
+
+  SetCachedPosition(aSomewhere);
+
   for (PRUint32 i = 0; i< mGeolocators.Length(); i++)
     mGeolocators[i]->Update(aSomewhere);
   return NS_OK;
 }
 
+PRBool
+nsGeolocationService::IsBetterPosition(nsIDOMGeoPosition *aSomewhere)
+{
+  if (!aSomewhere)
+    return PR_FALSE;
+
+  nsRefPtr<nsGeolocationService> geoService = nsGeolocationService::GetInstance();
+  if (!geoService)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMGeoPosition> lastPosition = geoService->GetCachedPosition();
+  if (!lastPosition)
+    return PR_TRUE;
+  
+  nsresult rv;
+  DOMTimeStamp oldTime;
+  rv = lastPosition->GetTimestamp(&oldTime);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  nsCOMPtr<nsIDOMGeoPositionCoords> coords;
+  lastPosition->GetCoords(getter_AddRefs(coords));
+  if (!coords)
+    return PR_FALSE;
+
+  double oldAccuracy;
+  rv = coords->GetAccuracy(&oldAccuracy);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  double oldLat, oldLon;
+  rv = coords->GetLongitude(&oldLon);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  rv = coords->GetLatitude(&oldLat);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+
+  DOMTimeStamp newTime;
+  rv = aSomewhere->GetTimestamp(&newTime);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  aSomewhere->GetCoords(getter_AddRefs(coords));
+  if (!coords)
+    return PR_FALSE;
+
+  double newAccuracy;
+  rv = coords->GetAccuracy(&newAccuracy);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  double newLat, newLon;
+  rv = coords->GetLongitude(&newLon);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  rv = coords->GetLatitude(&newLat);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  // check to see if there has been a large movement
+  double delta = fabs(newLat - oldLat) + fabs(newLon + oldLon);
+
+  // Convert to meters. 1 second of arc of latitude (or longitude at the
+  // equator) is 1 nautical mile or 1852m.
+  delta *= 60 * 1852;
+
+  // The threshold is when the distance between the two positions exceeds the
+  // worse (larger value) of the two accuracies.
+  double max_accuracy = PR_MAX(oldAccuracy, newAccuracy);
+  if (delta > max_accuracy)
+    return PR_TRUE;
+
+  // check to see if the aSomewhere position is more accurate
+  if (oldAccuracy >= newAccuracy)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
 
 void
 nsGeolocationService::SetCachedPosition(nsIDOMGeoPosition* aPosition)
@@ -458,7 +580,7 @@ nsGeolocationService::GetCachedPosition()
 PRBool
 nsGeolocationService::HasGeolocationProvider()
 {
-  return (mProvider != nsnull);
+  return mProviders.Count() > 0;
 }
 
 nsresult
@@ -467,16 +589,26 @@ nsGeolocationService::StartDevice()
   if (sGeoEnabled == PR_FALSE)
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (!mProvider)
+  if (!HasGeolocationProvider())
     return NS_ERROR_NOT_AVAILABLE;
   
   // if we have one, start it up.
-  nsresult rv = mProvider->Startup();
+
+  // Start them up!
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  for (PRUint32 i = mProviders.Count() - 1; i != PRUint32(-1); --i) {
+    // If any provder gets started without error, go ahead
+    // and proceed without error
+    nsresult temp = mProviders[i]->Startup();
+    if (NS_SUCCEEDED(temp)) {
+      rv = NS_OK;
+
+      mProviders[i]->Watch(this);
+    }
+  }
+  
   if (NS_FAILED(rv)) 
     return NS_ERROR_NOT_AVAILABLE;
-  
-  // lets monitor it for any changes.
-  mProvider->Watch(this);
   
   // we do not want to keep the geolocation devices online
   // indefinitely.  Close them down after a reasonable period of
@@ -502,8 +634,8 @@ nsGeolocationService::SetDisconnectTimer()
 void 
 nsGeolocationService::StopDevice()
 {
-  if (mProvider) {
-    mProvider->Shutdown();
+  for (PRUint32 i = mProviders.Count() - 1; i != PRUint32(-1); --i) {
+    mProviders[i]->Shutdown();
   }
 
   if(mDisconnectTimer) {
@@ -578,7 +710,7 @@ nsGeolocation::nsGeolocation(nsIDOMWindow* aContentDom)
   // Remember the window
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContentDom);
   if (window)
-    mOwner = window->GetCurrentInnerWindow();
+    mOwner = do_GetWeakReference(window->GetCurrentInnerWindow());
 
   // Grab the uri of the document
   nsCOMPtr<nsIDOMDocument> domdoc;
@@ -614,7 +746,6 @@ nsGeolocation::Shutdown()
     mService->RemoveLocator(this);
 
   mService = nsnull;
-  mOwner = nsnull;
   mURI = nsnull;
 }
 
@@ -651,12 +782,6 @@ nsGeolocation::Update(nsIDOMGeoPosition *aSomewhere)
     return;
 
   mUpdateInProgress = PR_TRUE;
-
-  if (aSomewhere)
-  {
-    nsRefPtr<nsGeolocationService> geoService = nsGeolocationService::GetInstance();
-    geoService->SetCachedPosition(aSomewhere);
-  }
 
   if (!OwnerStillExists())
   {
@@ -750,20 +875,21 @@ nsGeolocation::ClearWatch(PRInt32 aWatchId)
 PRBool
 nsGeolocation::OwnerStillExists()
 {
-  if (!mOwner)
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
+
+  if (!window)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMWindowInternal> domWindow(mOwner);
-  if (domWindow)
+  if (window)
   {
     PRBool closed = PR_FALSE;
-    domWindow->GetClosed(&closed);
+    window->GetClosed(&closed);
     if (closed)
       return PR_FALSE;
   }
 
-  nsPIDOMWindow* outer = mOwner->GetOuterWindow();
-  if (!outer || outer->GetCurrentInnerWindow() != mOwner)
+  nsPIDOMWindow* outer = window->GetOuterWindow();
+  if (!outer || outer->GetCurrentInnerWindow() != window)
     return PR_FALSE;
 
   return PR_TRUE;

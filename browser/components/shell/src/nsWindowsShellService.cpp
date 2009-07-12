@@ -86,7 +86,11 @@
 #define REG_FAILED(val) \
   (val != ERROR_SUCCESS)
 
+#ifndef WINCE
 NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
+#else
+NS_IMPL_ISUPPORTS1(nsWindowsShellService, nsIShellService)
+#endif
 
 static nsresult
 OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
@@ -105,6 +109,33 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 
   return NS_OK;
 }
+
+#ifdef WINCE
+static nsresult
+OpenKeyForWriting(HKEY aStartKey, const nsAString& aKeyName, HKEY* aKey)
+{
+  const nsString &flatName = PromiseFlatString(aKeyName);
+
+  DWORD dwDisp = 0;
+  DWORD res = ::RegCreateKeyExW(aStartKey, flatName.get(), 0, NULL,
+                                0, KEY_READ | KEY_WRITE, NULL, aKey,
+                                &dwDisp);
+  switch (res) {
+  case ERROR_SUCCESS:
+    break;
+  case ERROR_ACCESS_DENIED:
+    return NS_ERROR_FILE_ACCESS_DENIED;
+  case ERROR_FILE_NOT_FOUND:
+    res = ::RegCreateKeyExW(aStartKey, flatName.get(), 0, NULL,
+                            0, KEY_READ | KEY_WRITE, NULL, aKey,
+                            NULL);
+    if (res != ERROR_SUCCESS)
+      return NS_ERROR_FILE_ACCESS_DENIED;
+  }
+
+  return NS_OK;
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Default Browser Registry Settings
@@ -181,30 +212,52 @@ typedef struct {
   char* valueData;
 } SETTING;
 
+#ifndef WINCE
 #define APP_REG_NAME L"Firefox"
+#define CLS_HTML "FirefoxHTML"
+#define CLS_URL "FirefoxURL"
+#define VAL_OPEN "\"%APPPATH%\" -requestPending -osint -url \"%1\""
+#define VAL_FILE_ICON "%APPPATH%,1"
+#else
+#define VAL_OPEN "\"%APPPATH%\" -osint -url \"%1\""
+#define VAL_FILE_ICON "%APPPATH%,-2"
+#endif
+
 #define DI "\\DefaultIcon"
 #define SOP "\\shell\\open\\command"
 
-#define CLS_HTML "FirefoxHTML"
-#define CLS_URL "FirefoxURL"
-#define VAL_FILE_ICON "%APPPATH%,1"
-#define VAL_OPEN "\"%APPPATH%\" -requestPending -osint -url \"%1\""
 
 #define MAKE_KEY_NAME1(PREFIX, MID) \
   PREFIX MID
 
 // The DefaultIcon registry key value should never be used when checking if
-// Firefox is the default browser since other applications (e.g. MS Office) may
-// modify the DefaultIcon registry key value to add Icon Handlers.
-// see http://msdn2.microsoft.com/en-us/library/aa969357.aspx for more info.
+// Firefox is the default browser for file handlers since other applications
+// (e.g. MS Office) may modify the DefaultIcon registry key value to add Icon
+// Handlers. see http://msdn2.microsoft.com/en-us/library/aa969357.aspx for
+// more info.
 static SETTING gSettings[] = {
-  // File Extension Class - as of 1.8.1.2 the value for VAL_OPEN is also checked
-  // for CLS_HTML since Firefox should also own opeing local files when set as
-  // the default browser.
+#ifndef WINCE
+  // File Handler Class
   { MAKE_KEY_NAME1(CLS_HTML, SOP), "", VAL_OPEN },
 
   // Protocol Handler Class - for Vista and above
   { MAKE_KEY_NAME1(CLS_URL, SOP), "", VAL_OPEN },
+#else
+  { MAKE_KEY_NAME1("FTP", DI), "", VAL_FILE_ICON },
+  { MAKE_KEY_NAME1("FTP", SOP), "", VAL_OPEN },
+
+  // File handlers for Windows CE
+  { MAKE_KEY_NAME1("bmpfile", DI), "", VAL_FILE_ICON },
+  { MAKE_KEY_NAME1("bmpfile", SOP), "", VAL_OPEN },
+  { MAKE_KEY_NAME1("giffile", DI), "", VAL_FILE_ICON },
+  { MAKE_KEY_NAME1("giffile", SOP), "", VAL_OPEN },
+  { MAKE_KEY_NAME1("jpegfile", DI), "", VAL_FILE_ICON },
+  { MAKE_KEY_NAME1("jpegfile", SOP), "", VAL_OPEN },
+  { MAKE_KEY_NAME1("pngfile", DI), "", VAL_FILE_ICON },
+  { MAKE_KEY_NAME1("pngfile", SOP), "", VAL_OPEN },
+  { MAKE_KEY_NAME1("htmlfile", DI), "", VAL_FILE_ICON },
+  { MAKE_KEY_NAME1("htmlfile", SOP), "", VAL_OPEN },
+#endif
 
   // Protocol Handlers
   { MAKE_KEY_NAME1("HTTP", DI),    "", VAL_FILE_ICON },
@@ -213,6 +266,7 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME1("HTTPS", SOP),  "", VAL_OPEN }
 };
 
+#ifndef WINCE
 PRBool
 nsWindowsShellService::IsDefaultBrowserVista(PRBool* aIsDefaultBrowser)
 {
@@ -236,6 +290,7 @@ nsWindowsShellService::IsDefaultBrowserVista(PRBool* aIsDefaultBrowser)
 #endif  
   return PR_FALSE;
 }
+#endif
 
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
@@ -295,10 +350,12 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
     }
   }
 
+#ifndef WINCE
   // Only check if Firefox is the default browser on Vista if the previous
   // checks show that Firefox is the default browser.
   if (*aIsDefaultBrowser)
     IsDefaultBrowserVista(aIsDefaultBrowser);
+#endif
 
   return NS_OK;
 }
@@ -306,6 +363,7 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 {
+#ifndef WINCE
   nsresult rv;
   nsCOMPtr<nsIProperties> directoryService = 
     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
@@ -342,9 +400,90 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
 
   CloseHandle(pi.hProcess);
   CloseHandle(pi.hThread);
+#else
+  SETTING* settings;
+  SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
+
+  PRUnichar exePath[MAX_BUF];
+  if (!::GetModuleFileNameW(0, exePath, MAX_BUF))
+    return NS_ERROR_FAILURE;
+
+  nsAutoString appLongPath(exePath);
+
+  // The .png registry key isn't present by default so also add Content Type.
+  SetRegKey(NS_LITERAL_STRING(".png"), EmptyString(),
+            NS_LITERAL_STRING("pngfile"));
+  SetRegKey(NS_LITERAL_STRING(".png"), NS_LITERAL_STRING("Content Type"),
+            NS_LITERAL_STRING("image/png"));
+
+  // Set these keys to their default value for a clean install in case another
+  // app has changed these keys.
+  SetRegKey(NS_LITERAL_STRING(".htm"), EmptyString(),
+            NS_LITERAL_STRING("htmlfile"));
+  SetRegKey(NS_LITERAL_STRING(".html"), EmptyString(),
+            NS_LITERAL_STRING("htmlfile"));
+  SetRegKey(NS_LITERAL_STRING(".bmp"), EmptyString(),
+            NS_LITERAL_STRING("bmpfile"));
+  SetRegKey(NS_LITERAL_STRING(".gif"), EmptyString(),
+            NS_LITERAL_STRING("giffile"));
+  SetRegKey(NS_LITERAL_STRING(".jpe"), EmptyString(),
+            NS_LITERAL_STRING("jpegfile"));
+  SetRegKey(NS_LITERAL_STRING(".jpg"), EmptyString(),
+            NS_LITERAL_STRING("jpegfile"));
+  SetRegKey(NS_LITERAL_STRING(".jpeg"), EmptyString(),
+            NS_LITERAL_STRING("jpegfile"));
+
+  for (settings = gSettings; settings < end; ++settings) {
+    NS_ConvertUTF8toUTF16 dataLongPath(settings->valueData);
+    NS_ConvertUTF8toUTF16 key(settings->keyName);
+    NS_ConvertUTF8toUTF16 value(settings->valueName);
+    PRInt32 offset = dataLongPath.Find("%APPPATH%");
+    dataLongPath.Replace(offset, 9, appLongPath);
+    SetRegKey(key, value, dataLongPath);
+  }
+  // On Windows CE RegFlushKey can negatively impact performance if there are a
+  // lot of pending writes to the HKEY_CLASSES_ROOT registry hive but it is
+  // necessary to save the values in the case where the user performs a hard
+  // power off of the device.
+  ::RegFlushKey(HKEY_CLASSES_ROOT);
+#endif
 
   return NS_OK;
 }
+
+#ifdef WINCE
+void
+nsWindowsShellService::SetRegKey(const nsString& aKeyName,
+                                 const nsString& aValueName,
+                                 const nsString& aValue)
+{
+  PRUnichar buf[MAX_BUF];
+  DWORD len = sizeof buf;
+
+  HKEY theKey;
+  nsresult rv = OpenKeyForWriting(HKEY_CLASSES_ROOT, aKeyName, &theKey);
+  if (NS_FAILED(rv))
+    return;
+
+  // Get the current value.
+  DWORD res = ::RegQueryValueExW(theKey, PromiseFlatString(aValueName).get(),
+                                 NULL, NULL, (LPBYTE)buf, &len);
+
+  // Set the new value if it doesn't exist or it is different than the current
+  // value.
+  nsAutoString current(buf);
+  if (REG_FAILED(res) || !current.Equals(aValue)) {
+    const nsString &flatValue = PromiseFlatString(aValue);
+
+    ::RegSetValueExW(theKey, PromiseFlatString(aValueName).get(),
+                     0, REG_SZ, (const BYTE *)flatValue.get(),
+                     (flatValue.Length() + 1) * sizeof(PRUnichar));
+  }
+
+  // Close the key we opened.
+  ::RegCloseKey(theKey);
+}
+#endif
 
 NS_IMETHODIMP
 nsWindowsShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
@@ -715,6 +854,7 @@ nsWindowsShellService::SetDesktopBackgroundColor(PRUint32 aColor)
   return NS_OK;
 }
 
+#ifndef WINCE
 NS_IMETHODIMP
 nsWindowsShellService::GetUnreadMailCount(PRUint32* aCount)
 {
@@ -774,6 +914,7 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
   ::RegCloseKey(mailKey);
   return PR_FALSE;
 }
+#endif
 
 NS_IMETHODIMP
 nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication,

@@ -450,7 +450,9 @@ void nsAutoMonitor::Exit()
     }
     (void) PR_SetThreadPrivate(LockStackTPI, mDown);
 #endif
-    PRStatus status = PR_ExitMonitor(mMonitor);
+    // Split 'status' init to avoid an "unused variable" compiler warning.
+    PRStatus status;
+    status = PR_ExitMonitor(mMonitor);
     NS_ASSERTION(status == PR_SUCCESS, "PR_ExitMonitor failed");
     mLockCount -= 1;
 }
@@ -477,7 +479,9 @@ void nsAutoCMonitor::Exit()
 #ifdef DEBUG
     (void) PR_SetThreadPrivate(LockStackTPI, mDown);
 #endif
-    PRStatus status = PR_CExitMonitor(mLockObject);
+    // Split 'status' init to avoid an "unused variable" compiler warning.
+    PRStatus status;
+    status = PR_CExitMonitor(mLockObject);
     NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
     mLockCount -= 1;
 }

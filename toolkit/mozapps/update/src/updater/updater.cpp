@@ -120,7 +120,7 @@ void LaunchChild(int argc, char **argv);
 #ifndef MAXPATHLEN
 # ifdef PATH_MAX
 #  define MAXPATHLEN PATH_MAX
-# elif defined(_MAX_PATH)
+# elif defined(MAX_PATH)
 #  define MAXPATHLEN MAX_PATH
 # elif defined(_MAX_PATH)
 #  define MAXPATHLEN _MAX_PATH

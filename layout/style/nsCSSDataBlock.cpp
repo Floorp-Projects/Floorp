@@ -347,6 +347,9 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 const void*
 nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
 {
+    NS_PRECONDITION(!nsCSSProps::IsShorthand(aProperty),
+                    "Don't call for shorthands");
+
     // If we have no data for this struct, then return immediately.
     // This optimization should make us return most of the time, so we
     // have to worry much less (although still some) about the speed of

@@ -107,7 +107,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       testTableIndexes("tableinsane4", idxes);
 
       //////////////////////////////////////////////////////////////////////////
-      // tableinsane4 (just a crazy table)
+      // tableinsane5 (just a crazy table)
       idxes = [
         [ 0,  1,  2, -1, -1],
         [-1, -1, -1, -1, -1],
@@ -117,6 +117,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
         [ 6, 10,  9, 11, 12]
       ];
       testTableIndexes("tableinsane5", idxes);
+
+      //////////////////////////////////////////////////////////////////////////
+      // tableinsane6 (overlapping cells, mad table)
+      idxes = [
+        [ 0,  1,  2, -1, -1],
+        [-1, -1, -1, -1, -1],
+        [ 3,  4,  5, -1, -1],
+        [ 6,  6,  7, -1, -1],
+        [ 8,  9,  7, -1, -1],
+        [ 10, 9,  7, 11, 12]
+      ];
+      testTableIndexes("tableinsane6", idxes);
 
       SimpleTest.finish();
     }
@@ -357,6 +369,40 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       </tr>
 
     </tbody>
+
+  <table border="1" id="tableinsane6" >
+    <caption>overlapping cells</caption>
+    <thead>
+      <tr>
+        <th>header cell 0</th>
+        <th>header cell 1</th>
+        <th>header cell 2</th>
+      </tr>
+    </thead>
+    <tbody><tr></tr></tbody>
+    <tbody></tbody>
+    <tbody></tbody>
+    <tbody>
+      <tr>
+        <td>3</td>
+        <td>4</td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <td colspan="2">6</td>
+        <td rowspan="0">7</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td rowspan="0">9</td>
+      </tr>
+      <tr>
+        <td colspan="3">10</td>
+        <td>11</td>
+        <td>12</td>
+      </tr>
+    </tbody>
+  </table>
 
 </body>
 </html>

@@ -78,6 +78,19 @@ LPDIRECTDRAWSURFACE gfxDDrawSurface::GetDDSurface()
     return cairo_ddraw_surface_get_ddraw_surface(CairoSurface());
 }
 
+already_AddRefed<gfxImageSurface>
+gfxDDrawSurface::GetImageSurface()
+{
+    cairo_surface_t *isurf = cairo_ddraw_surface_get_image(CairoSurface());
+    if (!isurf)
+        return nsnull;
+
+    nsRefPtr<gfxASurface> asurf = gfxASurface::Wrap(isurf);
+    gfxImageSurface *imgsurf = (gfxImageSurface*) asurf.get();
+    NS_ADDREF(imgsurf);
+    return imgsurf;
+}
+
 nsresult gfxDDrawSurface::BeginPrinting(const nsAString& aTitle,
                                           const nsAString& aPrintToFileName)
 {

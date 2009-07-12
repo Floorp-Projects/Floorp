@@ -3,43 +3,21 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
+var gLoggingEnabled = false;
+
 function nowInSeconds()
 {
     return Date.now() / 1000;
 }
 
 function LOG(aMsg) {
-    //aMsg = ("*** WIFI GEO: " + aMsg);
-    //Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
-}
 
-function getAccessTokenForURL(url)
-{
-    // check to see if we have an access token:
-    var accessToken = "";
-    
-    try {
-        var prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-
-        var accessTokenPrefName = "geo.wifi.access_token." + url;
-        accessToken = prefService.getCharPref(accessTokenPrefName);
-        
-        // check to see if it has expired
-        var accessTokenDate = prefService.getIntPref(accessTokenPrefName + ".time");
-        
-        var accessTokenInterval = 1209600;  /* seconds in 2 weeks */
-        try {
-            accessTokenInterval = prefService.getIntPref("geo.wifi.access_token.recycle_interval");
-        } catch (e) {}
-        
-        if (nowInSeconds() - accessTokenDate > accessTokenInterval)
-            accessToken = "";
+    if (gLoggingEnabled)
+    {
+        aMsg = ("*** WIFI GEO: " + aMsg);
+        Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
+        dump(aMsg);
     }
-    catch (e) {
-        accessToken = "";
-        LOG("Error: "+ e);
-    }
-    return accessToken;
 }
 
 function WifiGeoCoordsObject(lat, lon, acc) {
@@ -102,13 +80,21 @@ WifiGeoPositionObject.prototype = {
     timestamp: 0,
 };
 
-function WifiGeoPositionProvider() {};
+function WifiGeoPositionProvider() {
+    this.prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).QueryInterface(Ci.nsIPrefService);
+    try {
+        gLoggingEnabled = this.prefService.getBoolPref("geo.wifi.logging.enabled");
+    } catch (e) {}
+};
+
 WifiGeoPositionProvider.prototype = {
     classDescription: "A component that returns a geolocation based on WIFI",
     classID:          Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
     contractID:       "@mozilla.org/geolocation/provider;1",
     QueryInterface:   XPCOMUtils.generateQI([Ci.nsIGeolocationProvider, Ci.nsIWifiListener, Ci.nsITimerCallback]),
-  
+
+    prefService:     null,
+
     provider_url:    null,
     wifi_service:    null,
     timer:           null,
@@ -117,9 +103,8 @@ WifiGeoPositionProvider.prototype = {
     observe: function (aSubject, aTopic, aData) {
         if (aTopic == "private-browsing") {
             if (aData == "enter" || aData == "exit") {
-                let psvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
                 try {
-                    let branch = psvc.getBranch("geo.wifi.access_token.");
+                    let branch = this.prefService.getBranch("geo.wifi.access_token.");
                     branch.deleteBranch("");
                 } catch (e) {}
             }
@@ -129,8 +114,7 @@ WifiGeoPositionProvider.prototype = {
     startup:         function() {
         LOG("startup called");
 
-        var prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-        this.provider_url = prefService.getCharPref("geo.wifi.uri");
+        this.provider_url = this.prefService.getCharPref("geo.wifi.uri");
         LOG("provider url = " + this.provider_url);
 
         // if we don't see anything in 5 seconds, kick of one IP geo lookup.
@@ -179,12 +163,37 @@ WifiGeoPositionProvider.prototype = {
         os.removeObserver(this, "private-browsing");
     },
 
+    getAccessTokenForURL: function(url)
+    {
+        // check to see if we have an access token:
+        var accessToken = "";
+        
+        try {
+            var accessTokenPrefName = "geo.wifi.access_token." + url;
+            accessToken = this.prefService.getCharPref(accessTokenPrefName);
+            
+            // check to see if it has expired
+            var accessTokenDate = this.prefService.getIntPref(accessTokenPrefName + ".time");
+            
+            var accessTokenInterval = 1209600;  /* seconds in 2 weeks */
+            try {
+                accessTokenInterval = this.prefService.getIntPref("geo.wifi.access_token.recycle_interval");
+            } catch (e) {}
+            
+            if (nowInSeconds() - accessTokenDate > accessTokenInterval)
+                accessToken = "";
+        }
+        catch (e) {
+            accessToken = "";
+            LOG("Error: "+ e);
+        }
+        return accessToken;
+    },
+
     onChange: function(accessPoints) {
 
         LOG("onChange called");
         this.hasSeenWiFi = true;
-
-        var prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
         // send our request to a wifi geolocation network provider:
         var xhr = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
@@ -237,7 +246,7 @@ WifiGeoPositionProvider.prototype = {
             update.update(newLocation);
         };
 
-        var accessToken = getAccessTokenForURL(this.provider_url);
+        var accessToken = this.getAccessTokenForURL(this.provider_url);
 
         var request = {
             version: "1.1.0",

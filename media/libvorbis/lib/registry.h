@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: registry for time, floor, res backends and channel mappings
- last mod: $Id: registry.h 13293 2007-07-24 00:09:47Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
@@ -25,8 +25,8 @@
 #define VI_RESB 3
 #define VI_MAPB 1
 
-extern vorbis_func_floor     *_floor_P[];
-extern vorbis_func_residue   *_residue_P[];
-extern vorbis_func_mapping   *_mapping_P[];
+extern const vorbis_func_floor     *const _floor_P[];
+extern const vorbis_func_residue   *const _residue_P[];
+extern const vorbis_func_mapping   *const _mapping_P[];
 
 #endif

@@ -63,7 +63,7 @@ interface nsIPluginInstance : nsISupports
      * @param aMime - the mime type for the instance
      * @result      - NS_OK if this operation was successful
      */
-    void initialize(in nsIPluginInstanceOwner aOwner, in nsMIMEType aMIMEType);
+    void initialize(in nsIPluginInstanceOwner aOwner, in string aMIMEType);
 
     /**
      * Called to instruct the plugin instance to start. This will be
@@ -120,7 +120,7 @@ interface nsIPluginInstance : nsISupports
      * @param aResult - the resulting output stream
      * @result        - NS_OK if this operation was successful
      */
-    void newStreamFromPlugin(in nsMIMEType aType, in string aTarget, out nsIOutputStream aResult);
+    void newStreamFromPlugin(in string aType, in string aTarget, out nsIOutputStream aResult);
 
     /**
      * Called to instruct the plugin instance to print itself to a printer.
@@ -181,7 +181,7 @@ interface nsIPluginInstance : nsISupports
      * @param aMIMEType - resulting MIME type
      * @result          - NS_OK if this operation was successful
      */
-    readonly attribute nsMIMEType MIMEType;
+    readonly attribute string MIMEType;
 
     /**
      * Get the JavaScript context to this plugin instance.

@@ -110,6 +110,11 @@ extern "C" {
 #   define JS_GC_USE_MMAP 1
 #  endif
 #  include <windows.h>
+# elif defined(__SYMBIAN32__)
+// Symbian's OpenC has mmap (and #defines _POSIX_MAPPED_FILES), but
+// doesn't implement MAP_ANON.  If we have MOZ_MEMORY, then we can use
+// posix_memalign; we've defined HAS_POSIX_MEMALIGN above.  Otherwise,
+// we overallocate.
 # else
 #  if defined(XP_UNIX) || defined(XP_BEOS)
 #   include <unistd.h>

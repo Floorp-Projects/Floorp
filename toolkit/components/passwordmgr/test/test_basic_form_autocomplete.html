@@ -67,6 +67,13 @@ Login Manager test: multiple login autocomplete
     <input  type="password"   name="pword">
     <button type="submit">Submit</button>
   </form>
+
+  <!-- test autocomplete dropdown -->
+  <form id="form9" action="http://autocomplete5" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
 </div>
 
 <pre id="test">
@@ -128,6 +135,19 @@ var login6B = new nsLoginInfo(
 var login7  = new nsLoginInfo(
     "http://localhost:8888", "http://autocomplete4", null,
     "form8user", "form8pass", "uname", "pword");
+
+var login8A = new nsLoginInfo(
+    "http://localhost:8888", "http://autocomplete5", null,
+    "form9userAB", "form9pass", "uname", "pword");
+
+var login8B = new nsLoginInfo(
+    "http://localhost:8888", "http://autocomplete5", null,
+    "form9userAAB", "form9pass", "uname", "pword");
+
+// login8C is added later
+var login8C = new nsLoginInfo(
+    "http://localhost:8888", "http://autocomplete5", null,
+    "form9userAABz", "form9pass", "uname", "pword");
 // try/catch in case someone runs the tests manually, twice.
 try {
     pwmgr.addLogin(login0);
@@ -139,6 +159,8 @@ try {
     pwmgr.addLogin(login6A);
     pwmgr.addLogin(login6B);
     pwmgr.addLogin(login7);
+    pwmgr.addLogin(login8A);
+    pwmgr.addLogin(login8B);
 } catch (e) {
     ok(false, "addLogin threw: " + e);
 }
@@ -613,6 +635,41 @@ function runTest(testNum) {
         checkACForm("", "");
         pwmgr.removeLogin(login7);
 
+        testNum = 699;
+        break;
+
+    case 700:
+        // Turn our attention to form9 to test the dropdown - bug 497541
+        uname = $_(9, "uname");
+        pword = $_(9, "pword");
+        sendString("form9userAB", uname);
+        break;
+
+    case 701:
+        checkACForm("form9userAB", "");
+        uname.focus();
+        doKey("left");
+        sendChar("A", uname);
+        break;
+
+    case 702:
+        // check dropdown is updated after inserting "A"
+        checkACForm("form9userAAB", "");
+        checkMenuEntries(["form9userAAB"]);
+        doKey("down");
+        doKey("return");
+        checkACForm("form9userAAB", "form9pass");
+        break;
+
+    case 703:
+        pwmgr.addLogin(login8C);
+        sendChar("z", uname);
+        break;
+
+    case 704:
+        // check that empty results are cached - bug 496466
+        checkMenuEntries([]);
+
         SimpleTest.finish();
         return;
 
@@ -626,7 +683,42 @@ function runTest(testNum) {
 }
 
 
+function checkMenuEntries(expectedValues) {
+    var actualValues = getMenuEntries();
+    is(actualValues.length, expectedValues.length, "Checking length of expected menu");
+    for (var i = 0; i < expectedValues.length; i++)
+        is(actualValues[i], expectedValues[i], "Checking menu entry #"+i);
+}
+
+var autocompletePopup;
+function getMenuEntries() {
+    var entries = [];
+
+    // Could perhaps pull values directly from the controller, but it seems
+    // more reliable to test the values that are actually in the tree?
+    var column = autocompletePopup.tree.columns[0];
+    var numRows = autocompletePopup.tree.view.rowCount;
+    for (var i = 0; i < numRows; i++) {
+        entries.push(autocompletePopup.tree.view.getValueAt(i, column));
+    }
+    return entries;
+}
+
 function startTest() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var Ci = Components.interfaces;
+    chromeWin = window
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow)
+                    .QueryInterface(Ci.nsIDOMChromeWindow);
+    // shouldn't reach into browser internals like this and
+    // shouldn't assume ID is consistent across products
+    autocompletePopup = chromeWin.document.getElementById("PopupAutoComplete");
+    ok(autocompletePopup, "Got autocomplete popup");
     runTest(1);
 }
 

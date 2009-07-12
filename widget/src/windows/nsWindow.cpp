@@ -708,19 +708,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
         if (NS_SUCCEEDED(prefBranch->GetBoolPref("mozilla.widget.disable-native-theme",
                                                  &temp)))
           gDisableNativeTheme = temp;
-
-        PRInt32 tempint;
-        if (NS_SUCCEEDED(prefBranch->GetIntPref("mozilla.widget.render-mode",
-                                                &tempint)))
-        {
-          if (tempint > 0 && tempint < RENDER_MODE_MAX) {
-#ifndef CAIRO_HAS_DDRAW_SURFACE
-            if (tempint == RENDER_DDRAW)
-              tempint = RENDER_IMAGE_STRETCH24;
-#endif
-            sRenderMode = (WinRenderMode) tempint;
-          }
-        }
       }
     }
   }
@@ -1140,12 +1127,22 @@ NS_METHOD nsWindow::Show(PRBool bState)
       if (!wasVisible && mWindowType == eWindowType_toplevel) {
         switch (mSizeMode) {
 #ifdef WINCE
+          case nsSizeMode_Fullscreen:
+            ::SetForegroundWindow(mWnd);
+            ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
+            MakeFullScreen(TRUE);
+            break;
+
           case nsSizeMode_Maximized :
             ::SetForegroundWindow(mWnd);
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
           // use default for nsSizeMode_Minimized on Windows CE
 #else
+          case nsSizeMode_Fullscreen:
+            ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
+            break;
+
           case nsSizeMode_Maximized :
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
             break;
@@ -1497,6 +1494,10 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
     int mode;
 
     switch (aMode) {
+      case nsSizeMode_Fullscreen :
+        mode = SW_MAXIMIZE;
+        break;
+
       case nsSizeMode_Maximized :
         mode = SW_MAXIMIZE;
         break;
@@ -2301,6 +2302,29 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::MakeFullScreen(PRBool aFullScreen)
+{
+#if WINCE_WINDOWS_MOBILE
+  RECT rc;
+  if (aFullScreen) {
+    SetForegroundWindow(mWnd);
+    SHFullScreen(mWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON);
+    SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+  }
+  else {
+    SHFullScreen(mWnd, SHFS_SHOWTASKBAR | SHFS_SHOWSTARTICON);
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, FALSE);
+  }
+  MoveWindow(mWnd, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, TRUE);
+
+  if (aFullScreen)
+    mSizeMode = nsSizeMode_Fullscreen;
+#endif
+
+  return nsBaseWidget::MakeFullScreen(aFullScreen);
 }
 
 /**************************************************************
@@ -3661,9 +3685,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   static UINT vkKeyCached = 0; // caches VK code fon WM_KEYDOWN
   PRBool result = PR_FALSE;    // call the default nsWindow proc
   *aRetValue = 0;
-  nsPaletteInfo palInfo;
 
-#if !defined (WINCE)
+#if !defined (WINCE_WINDOWS_MOBILE)
   static PRBool getWheelInfo = PR_TRUE;
 #endif
 
@@ -4124,6 +4147,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #else
           *aRetValue = 0;
 #endif
+          if (mSizeMode == nsSizeMode_Fullscreen)
+            MakeFullScreen(TRUE);
         }
       }
       break;
@@ -4283,7 +4308,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         else
           event.mSizeMode = nsSizeMode_Normal;
 #else
-        event.mSizeMode = nsSizeMode_Normal;
+        event.mSizeMode = mSizeMode;
 #endif
         InitEvent(event);
 
@@ -4293,40 +4318,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 
     case WM_SETTINGCHANGE:
-#if !defined (WINCE)
+#if !defined (WINCE_WINDOWS_MOBILE)
       getWheelInfo = PR_TRUE;
 #endif
       OnSettingsChange(wParam, lParam);
-      break;
-
-    case WM_PALETTECHANGED:
-      if ((HWND)wParam == mWnd) {
-        // We caused the WM_PALETTECHANGED message so avoid realizing
-        // another foreground palette
-        result = PR_TRUE;
-        break;
-      }
-      // fall thru...
-
-    case WM_QUERYNEWPALETTE:      // this window is about to become active
-      mContext->GetPaletteInfo(palInfo);
-      if (palInfo.isPaletteDevice && palInfo.palette) {
-        HDC hDC = ::GetDC(mWnd);
-        HPALETTE hOldPal = ::SelectPalette(hDC, (HPALETTE)palInfo.palette, TRUE);
-
-        // Realize the drawing palette
-        int i = ::RealizePalette(hDC);
-
-#ifdef DEBUG
-        //printf("number of colors that changed=%d\n",i);
-#endif
-        // we should always invalidate.. because the lookup may have changed
-        ::InvalidateRect(mWnd, (LPRECT)NULL, TRUE);
-
-        ::ReleaseDC(mWnd, hDC);
-        *aRetValue = TRUE;
-      }
-      result = PR_TRUE;
       break;
 
 #ifndef WINCE
@@ -4385,7 +4380,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 #endif
 
-#if !defined(WINCE)
+#if !defined (WINCE_WINDOWS_MOBILE)
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
     {
@@ -4849,7 +4844,7 @@ PRBool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
  * within the message case block. If returning true result should be returned
  * immediately (no more processing).
  */
-#if !defined(WINCE) // implemented in nsWindowCE
+#if !defined (WINCE_WINDOWS_MOBILE)
 PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& getWheelInfo, PRBool& result, LRESULT *aRetValue)
 {
   // Handle both flavors of mouse wheel events.
@@ -5039,7 +5034,7 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
   
   return PR_FALSE; // break;
 } 
-#endif // !defined(WINCE)
+#endif // !defined(WINCE_WINDOWS_MOBILE)
 
 static PRBool
 StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
@@ -6354,6 +6349,7 @@ HWND nsWindow::GetTopLevelHWND(HWND aWnd, PRBool aStopOnDialogOrPopup)
 {
   HWND curWnd = aWnd;
   HWND topWnd = NULL;
+  HWND upWnd = NULL;
 
   while (curWnd) {
     topWnd = curWnd;
@@ -6367,7 +6363,20 @@ HWND nsWindow::GetTopLevelHWND(HWND aWnd, PRBool aStopOnDialogOrPopup)
         break;
     }
 
-    curWnd = ::GetParent(curWnd); // Parent or owner (if has no parent)
+    upWnd = ::GetParent(curWnd); // Parent or owner (if has no parent)
+
+#ifdef WINCE
+    // For dialog windows, we want just the parent, not the owner.
+    // For other/popup windows, we want to find the first owner/parent
+    // that's a dialog and/or has an owner.
+    if (upWnd && ::GetWindow(curWnd, GW_OWNER) == upWnd) {
+      DWORD_PTR style = ::GetWindowLongPtrW(curWnd, GWL_STYLE);
+      if ((style & WS_DLGFRAME) != 0)
+        break;
+    }
+#endif
+
+    curWnd = upWnd;
   }
 
   return topWnd;

@@ -460,7 +460,7 @@ tests.push({
 
 tests.push({
   name: "D.4",
-  desc: "Move orphan items to unsorted folde",
+  desc: "Move orphan items to unsorted folder",
 
   _orphanBookmarkId: null,
   _orphanSeparatorId: null,
@@ -1081,7 +1081,7 @@ tests.push({
   _separatorId: null,
 
   setup: function() {
-  // use valid api calls to create a bunch of items
+    // use valid api calls to create a bunch of items
     hs.addVisit(this._uri1, Date.now() * 1000, null,
                 hs.TRANSITION_TYPED, false, 0);
     hs.addVisit(this._uri2, Date.now() * 1000, null,
@@ -1156,6 +1156,12 @@ os.addObserver(observer, FINISHED_MAINTANANCE_NOTIFICATION_TOPIC, false);
 
 // main
 function run_test() {
+  // Force initialization of the bookmarks hash. This test could cause
+  // it to go out of sync due to direct queries on the database.
+  hs.addVisit(uri("http://force.bookmarks.hash"), Date.now() * 1000, null,
+              hs.TRANSITION_TYPED, false, 0);
+  do_check_false(bs.isBookmarked(uri("http://force.bookmarks.hash")));
+
   // Get current bookmarks max ID for cleanup
   stmt = mDBConn.createStatement("SELECT MAX(id) FROM moz_bookmarks");
   stmt.executeStep();

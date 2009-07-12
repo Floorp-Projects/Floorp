@@ -70,6 +70,7 @@ fh.addEntry("field1", "value4");
 fh.addEntry("field2", "value1");
 fh.addEntry("field3", "a");
 fh.addEntry("field3", "aa");
+fh.addEntry("field3", "aaz");
 fh.addEntry("field3", "aa\xe6"); // 0xae == latin ae pair (0xc6 == AE)
 fh.addEntry("field3", "az");
 fh.addEntry("field3", "z");
@@ -410,17 +411,53 @@ function runTest(testNum) {
     /* Test filtering as characters are typed. */
 
     case 200:
-        checkMenuEntries(["a", "aa", "aa\xe6", "az"]);
+        checkMenuEntries(["a", "aa", "aaz", "aa\xe6", "az"]);
         sendChar("a", input);
         break;
 
     case 201:
-        checkMenuEntries(["aa", "aa\xe6"]);
+        checkMenuEntries(["aa", "aaz", "aa\xe6"]);
         sendChar("\xc6", input);
         break;
 
     case 202:
         checkMenuEntries(["aa\xe6"]);
+        doKey("back_space");
+        break;
+
+    case 203:
+        checkMenuEntries(["aa", "aaz", "aa\xe6"]);
+        doKey("back_space");
+        break;
+
+    case 204:
+        checkMenuEntries(["a", "aa", "aaz", "aa\xe6", "az"]);
+        sendChar("z", input);
+        break;
+
+    case 205:
+        checkMenuEntries(["az"]);
+        doKey("left");
+        sendChar("a", input);
+        break;
+
+    case 206:
+        checkMenuEntries(["aaz"]);
+        fh.addEntry("field3", "aazq");
+        doKey("right");
+        sendChar("q", input);
+        break;
+
+    case 207:
+        // check that results were cached
+        checkMenuEntries([]);
+        fh.addEntry("field3", "aazqq");
+        sendChar("q", input);
+        break;
+
+    case 208:
+        // check that empty results were cached - bug 496466
+        checkMenuEntries([]);
         doKey("escape");
 
         SimpleTest.finish();

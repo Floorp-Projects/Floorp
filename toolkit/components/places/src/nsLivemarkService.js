@@ -654,7 +654,12 @@ LivemarkLoadListener.prototype = {
     this._processor.listener = this;
     this._processor.parseAsync(null, channel.URI);
 
-    this._processor.onStartRequest(aRequest, aContext);
+    try {
+      this._processor.onStartRequest(aRequest, aContext);
+    }
+    catch (ex) {
+      Components.utils.reportError("Livemark Service: feed processor received an invalid channel for " + channel.URI.spec);
+    }
   },
 
   /**
@@ -662,11 +667,16 @@ LivemarkLoadListener.prototype = {
    */
   onStopRequest: function LLL_onStopRequest(aRequest, aContext, aStatus) {
     if (!Components.isSuccessCode(aStatus)) {
-      // Something went wrong, try to load again in a bit
-      this._setResourceTTL(ERROR_EXPIRATION);
       this._isAborted = true;
-      MarkLivemarkLoadFailed(this._livemark.folderId);
       this._livemark.locked = false;
+      var lmService = Cc[LS_CONTRACTID].getService(Ci.nsILivemarkService);
+      // One of the reasons we could abort a request is when a livemark is
+      // removed, in such a case the livemark itemId would already be invalid.
+      if (lmService.isLivemark(this._livemark.folderId)) {
+        // Something went wrong, try to load again in a bit
+        this._setResourceTTL(ERROR_EXPIRATION);
+        MarkLivemarkLoadFailed(this._livemark.folderId);
+      }
       return;
     }
     // Set an expiration on the livemark, for reloading the data

@@ -64,10 +64,30 @@ _TEST_FILES =	\
 		bug113934_window.xul \
 		test_bug215405.xul \
 		bug215405_window.xul \
+		test_bug293235.xul \
+		bug293235_window.xul \
+		bug293235.html \
+		bug293235_p2.html \
+		test_bug294258.xul \
+		bug294258_window.xul \
+		bug294258_testcase.html \
+		test_bug298622.xul \
+		bug298622_window.xul \
+		test_bug303267.xul \
+		bug303267.html \
+		bug303267_window.xul \
+		test_bug321671.xul \
+		bug321671_window.xul \
+		test_bug360511.xul \
+		bug360511_window.xul \
+		bug360511_case1.html \
+		bug360511_case2.html \
 		test_bug364461.xul \
 		bug364461_window.xul \
 		test_bug396519.xul \
 		bug396519_window.xul \
+		test_bug396649.xul \
+		bug396649_window.xul \
 		test_bug428288.html \
 		test_bug449778.xul \
 		bug449778_window.xul \

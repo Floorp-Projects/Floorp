@@ -375,7 +375,6 @@ public:
 #ifdef XP_MACOSX
   NPDrawingModel GetDrawingModel();
   WindowRef FixUpPluginWindow(PRInt32 inPaintState);
-  void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent);
   // Set a flag that (if true) indicates the plugin port info has changed and
   // SetWindow() needs to be called.
   void SetPluginPortChanged(PRBool aState) { mPluginPortChanged = aState; }
@@ -1852,7 +1851,7 @@ static const char*
 GetMIMEType(nsIPluginInstance *aPluginInstance)
 {
   if (aPluginInstance) {
-    nsMIMEType mime = NULL;
+    char* mime = nsnull;
     if (NS_SUCCEEDED(aPluginInstance->GetMIMEType(&mime)) && mime)
       return mime;
   }
@@ -3141,27 +3140,6 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
   return drawingModel;
 }
 
-void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent)
-{
-  InitializeEventRecord(&aMacEvent);
-  switch (anEvent.message) {
-    case NS_FOCUS_CONTENT: 
-      aMacEvent.what = nsPluginEventType_GetFocusEvent;
-      break;
-
-    case NS_BLUR_CONTENT:
-      aMacEvent.what = nsPluginEventType_LoseFocusEvent;
-      break;
-
-    case NS_MOUSE_MOVE:
-    case NS_MOUSE_ENTER:
-      if (origEvent)
-        aMacEvent = *origEvent;
-      aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
-      break;
-  }
-}
-
 // Currently (on OS X in Cocoa widgets) any changes made as a result of
 // calling GetPluginPort() are immediately reflected in the nsPluginWindow
 // structure that has been passed to the plugin via SetWindow().  This is
@@ -3254,7 +3232,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
       EventRecord scrollEvent;
       InitializeEventRecord(&scrollEvent);
-      scrollEvent.what = nsPluginEventType_ScrollingBeginsEvent;
+      scrollEvent.what = NPEventType_ScrollingBeginsEvent;
 
       WindowRef window = FixUpPluginWindow(ePluginPaintDisable);
       if (window) {
@@ -3277,7 +3255,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
       EventRecord scrollEvent;
       InitializeEventRecord(&scrollEvent);
-      scrollEvent.what = nsPluginEventType_ScrollingEndsEvent;
+      scrollEvent.what = NPEventType_ScrollingEndsEvent;
 
       WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
       if (window) {
@@ -3884,15 +3862,15 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   if (mWidget) {
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-      EventRecord macEvent;
-      EventRecord* event = (EventRecord*)anEvent.nativeMsg;
-      if ((event == NULL) || (event->what == nullEvent)  || 
-          (anEvent.message == NS_FOCUS_CONTENT)          || 
-          (anEvent.message == NS_BLUR_CONTENT)           || 
-          (anEvent.message == NS_MOUSE_MOVE)             ||
-          (anEvent.message == NS_MOUSE_ENTER)) {
-        GUItoMacEvent(anEvent, event, macEvent);
-        event = &macEvent;
+      EventRecord carbonEvent;
+      void* event = anEvent.nativeMsg;
+      if (!event || (static_cast<EventRecord*>(event)->what == nullEvent)) {
+        InitializeEventRecord(&carbonEvent);
+        if (anEvent.message == NS_FOCUS_CONTENT || anEvent.message == NS_BLUR_CONTENT) {
+          carbonEvent.what = (anEvent.message == NS_FOCUS_CONTENT) ?
+                                NPEventType_GetFocusEvent : NPEventType_LoseFocusEvent;
+        }
+        event = &carbonEvent;
       }
 
       if (anEvent.message == NS_FOCUS_CONTENT) {
@@ -3905,7 +3883,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
       PRBool eventHandled = PR_FALSE;
       WindowRef window = FixUpPluginWindow(ePluginPaintIgnore);
       if (window) {
-        nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(window) };
+        nsPluginEvent pluginEvent = { (EventRecord*)event, nsPluginPlatformWindowRef(window) };
         mInstance->HandleEvent(&pluginEvent, &eventHandled);
       }
 

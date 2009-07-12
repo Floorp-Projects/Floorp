@@ -58,7 +58,6 @@
 #include "nsWeakReference.h"
 #include "nsThreadUtils.h"
 #include "nsTArray.h"
-#include "nsIFactory.h"
 
 class nsNPAPIPlugin;
 class nsIComponentManager;
@@ -198,7 +197,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINHOST
-  NS_DECL_NSIFACTORY
   NS_DECL_NSIOBSERVER
 
   NS_IMETHOD
