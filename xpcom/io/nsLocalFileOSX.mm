@@ -68,7 +68,7 @@
 #include <stdlib.h>
 #include <utime.h>
 
-#define CHECK_mBaseURL()                        \
+#define CHECK_INIT()                            \
     PR_BEGIN_MACRO                              \
         if (!mBaseURL)                          \
             return NS_ERROR_NOT_INITIALIZED;    \
@@ -356,8 +356,7 @@ NS_IMETHODIMP nsLocalFile::AppendNative(const nsACString& aNode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Check we are correctly initialized.
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   nsACString::const_iterator start, end;
   aNode.BeginReading(start);
@@ -387,7 +386,7 @@ NS_IMETHODIMP nsLocalFile::Normalize()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   // CFURL doesn't doesn't seem to resolve paths containing relative
   // components, so we'll nick the stdlib code from nsLocalFileUnix
@@ -432,8 +431,7 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
   if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
     return NS_ERROR_FILE_UNKNOWN_TYPE;
 
-  // Check we are correctly initialized.
-  CHECK_mBaseURL();
+  CHECK_INIT();
   
   nsTArray<nsString> nonExtantNodes;
   CFURLRef pathURLRef = mBaseURL;
@@ -528,7 +526,7 @@ NS_IMETHODIMP nsLocalFile::GetNativeLeafName(nsACString& aNativeLeafName)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   nsresult rv = NS_ERROR_FAILURE;
   CFStringRef leafStrRef = ::CFURLCopyLastPathComponent(mBaseURL);
@@ -545,7 +543,7 @@ NS_IMETHODIMP nsLocalFile::SetNativeLeafName(const nsACString& aNativeLeafName)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   nsresult rv = NS_ERROR_FAILURE;
   CFURLRef parentURLRef = ::CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, mBaseURL);
@@ -600,7 +598,7 @@ NS_IMETHODIMP nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString&
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   StFollowLinksState followLinks(*this, PR_FALSE);
 
@@ -686,7 +684,7 @@ NS_IMETHODIMP nsLocalFile::Remove(PRBool recursive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   // if we're a symlink, never remove target
   StFollowLinksState followLinks(*this, PR_FALSE);
@@ -737,7 +735,7 @@ NS_IMETHODIMP nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 {
   NS_ENSURE_ARG_POINTER(aPermissions);
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   struct STAT buf;
   nsresult rv = FillStatBufferInternal(&buf);
@@ -750,7 +748,7 @@ NS_IMETHODIMP nsLocalFile::GetPermissions(PRUint32 *aPermissions)
 
 NS_IMETHODIMP nsLocalFile::SetPermissions(PRUint32 aPermissions)
 {
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   nsCAutoString path;
   nsresult rv = GetPathInternal(path);
@@ -866,7 +864,7 @@ NS_IMETHODIMP nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 
 NS_IMETHODIMP nsLocalFile::SetFileSize(PRInt64 aFileSize)
 {
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   nsCAutoString path;
   nsresult rv = GetPathInternal(path);
@@ -882,7 +880,7 @@ NS_IMETHODIMP nsLocalFile::SetFileSize(PRInt64 aFileSize)
 
 NS_IMETHODIMP nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSizeOfLink)
 {
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NS_ENSURE_ARG_POINTER(aFileSizeOfLink);
   
@@ -902,7 +900,7 @@ NS_IMETHODIMP nsLocalFile::GetTarget(nsAString& aTarget)
 
 NS_IMETHODIMP nsLocalFile::GetNativeTarget(nsACString& aNativeTarget)
 {
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   PRBool isSymLink = PR_FALSE;
   nsresult rv = IsSymlink(&isSymLink);
@@ -944,7 +942,7 @@ NS_IMETHODIMP nsLocalFile::GetNativePath(nsACString& aNativePath)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   nsresult rv = NS_ERROR_FAILURE;
   CFStringRef pathStrRef = ::CFURLCopyFileSystemPath(mBaseURL, kCFURLPOSIXPathStyle);
@@ -976,7 +974,7 @@ NS_IMETHODIMP nsLocalFile::IsWritable(PRBool *_retval)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -993,7 +991,7 @@ NS_IMETHODIMP nsLocalFile::IsWritable(PRBool *_retval)
 
 NS_IMETHODIMP nsLocalFile::IsReadable(PRBool *_retval)
 {
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -1010,8 +1008,7 @@ NS_IMETHODIMP nsLocalFile::IsExecutable(PRBool *_retval)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Check we are correctly initialized.
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -1103,7 +1100,7 @@ NS_IMETHODIMP nsLocalFile::IsSymlink(PRBool *_retval)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NS_ENSURE_ARG(_retval);
   *_retval = PR_FALSE;
@@ -1163,8 +1160,7 @@ NS_IMETHODIMP nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 
 NS_IMETHODIMP nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
-  // Check we are correctly initialized.
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -1196,8 +1192,7 @@ NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nsnull;
 
-  // Check we are correctly initialized.
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   // If it can be determined without error that a file does not
   // have a parent, return nsnull for the parent and NS_OK as the result.
@@ -1387,7 +1382,7 @@ NS_IMETHODIMP nsLocalFile::OpenANSIFileDesc(const char *mode, FILE **_retval)
 
 NS_IMETHODIMP nsLocalFile::Load(PRLibrary **_retval)
 {
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NS_ENSURE_ARG_POINTER(_retval);
 
@@ -1638,7 +1633,7 @@ NS_IMETHODIMP nsLocalFile::GetCFURL(CFURLRef *_retval)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   if (mFollowLinks) {
     nsCAutoString nativePath;
@@ -1678,7 +1673,7 @@ NS_IMETHODIMP nsLocalFile::GetFSSpec(FSSpec *_retval)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG_POINTER(_retval);
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef);
@@ -1720,7 +1715,7 @@ NS_IMETHODIMP nsLocalFile::GetFileType(OSType *aFileType)
 
   NS_ENSURE_ARG_POINTER(aFileType);
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
   
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1742,7 +1737,7 @@ NS_IMETHODIMP nsLocalFile::SetFileType(OSType aFileType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   NSDictionary* dict = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:aFileType] forKey:NSFileHFSTypeCode];
@@ -1759,7 +1754,7 @@ NS_IMETHODIMP nsLocalFile::GetFileCreator(OSType *aFileCreator)
 
   NS_ENSURE_ARG_POINTER(aFileCreator);
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1781,7 +1776,7 @@ NS_IMETHODIMP nsLocalFile::SetFileCreator(OSType aFileCreator)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   NSDictionary* dict = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:aFileCreator] forKey:NSFileHFSCreatorCode];
@@ -1990,7 +1985,7 @@ nsresult nsLocalFile::GetFSRefInternal(FSRef& aFSRef)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   return (::CFURLGetFSRef(mBaseURL, &aFSRef) ? NS_OK : NS_ERROR_FAILURE);
 
@@ -2001,7 +1996,7 @@ nsresult nsLocalFile::GetPathInternal(nsACString& path)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   CFURLRef urlRef;
   nsresult rv = GetCFURL(&urlRef);
@@ -2027,7 +2022,7 @@ nsresult nsLocalFile::CopyInternal(nsIFile* aParentDir,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   StFollowLinksState srcFollowState(*this, followLinks);
 
@@ -2085,7 +2080,7 @@ nsresult nsLocalFile::CopyInternal(nsIFile* aParentDir,
 
 nsresult nsLocalFile::FillStatBufferInternal(struct STAT *statBuffer)
 {
-  CHECK_mBaseURL();
+  CHECK_INIT();
 
   char path[PATH_MAX] = "";
   Boolean gotPath = ::CFURLGetFileSystemRepresentation(mBaseURL, true, (UInt8*)path, PATH_MAX);
