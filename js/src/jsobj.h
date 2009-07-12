@@ -572,14 +572,21 @@ extern JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                    JSObject *parent, uintN argc, jsval *argv);
 
-extern void
-js_FinalizeObject(JSContext *cx, JSObject *obj);
-
 extern JSBool
 js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
 
 extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
+
+static inline void
+js_FreeSlots(JSContext *cx, JSObject *obj)
+{
+    if (obj->dslots) {
+        JS_ASSERT((uint32)obj->dslots[-1] > JS_INITIAL_NSLOTS);
+        JS_free(cx, obj->dslots - 1);
+        obj->dslots = NULL;
+    }
+}
 
 extern jsid
 js_CheckForStringIndex(jsid id);

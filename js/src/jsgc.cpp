@@ -3246,6 +3246,31 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
     }
 }
 
+static void
+FinalizeObject(JSContext *cx, JSObject *obj)
+{
+    /* Cope with stillborn objects that have no map. */
+    if (!obj->map)
+        return;
+
+    if (JS_UNLIKELY(cx->debugHooks->objectHook != NULL)) {
+        cx->debugHooks->objectHook(cx, obj, JS_FALSE,
+                                   cx->debugHooks->objectHookData);
+    }
+
+    /* Finalize obj first, in case it needs map and slots. */
+    STOBJ_GET_CLASS(obj)->finalize(cx, obj);
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
+        jsdtrace_object_finalize(obj);
+#endif
+
+    if (JS_LIKELY(OBJ_IS_NATIVE(obj)))
+        OBJ_SCOPE(obj)->drop(cx, obj);
+    js_FreeSlots(cx, obj);
+}
+
 /*
  * The gckind flag bit GC_LOCK_HELD indicates a call from js_NewGCThing with
  * rt->gcLock already held, so the lock should be kept on return.
@@ -3582,7 +3607,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                         type = flags & GCF_TYPEMASK;
                         switch (type) {
                           case GCX_OBJECT:
-                            js_FinalizeObject(cx, (JSObject *) thing);
+                            FinalizeObject(cx, (JSObject *) thing);
                             break;
                           case GCX_DOUBLE:
                             /* Do nothing. */

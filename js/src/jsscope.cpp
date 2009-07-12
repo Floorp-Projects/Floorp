@@ -228,32 +228,6 @@ JSScope::destroy(JSContext *cx, JSScope *scope)
     JS_free(cx, scope);
 }
 
-void
-JSScope::hold()
-{
-    JS_ASSERT(nrefs >= 0);
-    JS_ATOMIC_INCREMENT(&nrefs);
-}
-
-bool
-JSScope::drop(JSContext *cx, JSObject *obj)
-{
-#ifdef JS_THREADSAFE
-    /* We are called from only js_ShareWaitingTitles and js_FinalizeObject. */
-    JS_ASSERT(!obj || CX_THREAD_IS_RUNNING_GC(cx));
-#endif
-    JS_ASSERT(nrefs > 0);
-    --nrefs;
-
-    if (nrefs == 0) {
-        destroy(cx, this);
-        return false;
-    }
-    if (object == obj)
-        object = NULL;
-    return true;
-}
-
 #ifdef JS_DUMP_PROPTREE_STATS
 typedef struct JSScopeStats {
     jsrefcount          searches;
