@@ -198,14 +198,12 @@ function UpdateBackForwardCommands(aWebNavigation) {
  * Click-and-Hold implementation for the Back and Forward buttons
  * XXXmano: should this live in toolbarbutton.xml?
  */
-function ClickAndHoldMouseDownCallback(aButton)
-{
+function ClickAndHoldMouseDownCallback(aButton) {
   aButton.open = true;
   gClickAndHoldTimer = null;
 }
 
-function ClickAndHoldMouseDown(aEvent)
-{
+function ClickAndHoldMouseDown(aEvent) {
   /**
    * 1. Only left click starts the click and hold timer.
    * 2. Exclude the dropmarker area. This is done by excluding
@@ -223,49 +221,35 @@ function ClickAndHoldMouseDown(aEvent)
     setTimeout(ClickAndHoldMouseDownCallback, 500, aEvent.currentTarget);
 }
 
-function MayStopClickAndHoldTimer(aEvent)
-{
+function MayStopClickAndHoldTimer(aEvent) {
   // Note passing null here is a no-op
   clearTimeout(gClickAndHoldTimer);
 }
 
-function ClickAndHoldStopEvent(aEvent)
-{
+function ClickAndHoldStopEvent(aEvent) {
   if (aEvent.originalTarget.localName != "menuitem" &&
       aEvent.currentTarget.open)
     aEvent.stopPropagation();
 }
 
-function SetClickAndHoldHandlers()
-{
-  function _addClickAndHoldListenersOnElement(aElm)
-  {
-    aElm.addEventListener("mousedown",
-                          ClickAndHoldMouseDown,
-                          false);
-    aElm.addEventListener("mouseup",
-                          MayStopClickAndHoldTimer,
-                          false);
-    aElm.addEventListener("mouseout",
-                          MayStopClickAndHoldTimer,
-                          false);
-    
+function SetClickAndHoldHandlers() {
+  function _addClickAndHoldListenersOnElement(aElm) {
+    aElm.addEventListener("mousedown", ClickAndHoldMouseDown, false);
+    aElm.addEventListener("mouseup", MayStopClickAndHoldTimer, false);
+    aElm.addEventListener("mouseout", MayStopClickAndHoldTimer, false);
+
     // don't propagate onclick and oncommand events after
     // click-and-hold opened the drop-down menu
-    aElm.addEventListener("command",
-                          ClickAndHoldStopEvent,
-                          true);  
-    aElm.addEventListener("click",
-                          ClickAndHoldStopEvent,
-                          true);  
+    aElm.addEventListener("command", ClickAndHoldStopEvent, true);
+    aElm.addEventListener("click", ClickAndHoldStopEvent, true);
   }
 
   // Bug 414797: Clone the dropmarker's menu into both the back and
   // the forward buttons.
   var unifiedButton = document.getElementById("unified-back-forward-button");
-  if (unifiedButton && !unifiedButton._clickHandlersAttached)  {
+  if (unifiedButton && !unifiedButton._clickHandlersAttached) {
     var popup = document.getElementById("back-forward-dropmarker")
-                       .firstChild.cloneNode(true);
+                        .firstChild.cloneNode(true);
     var backButton = document.getElementById("back-button");
     backButton.setAttribute("type", "menu-button");
     backButton.appendChild(popup);
