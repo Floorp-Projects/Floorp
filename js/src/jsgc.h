@@ -348,6 +348,16 @@ js_AddAsGCBytes(JSContext *cx, size_t sz);
 extern void
 js_RemoveAsGCBytes(JSRuntime* rt, size_t sz);
 
+/*
+ * Free the chars held by str when it is finalized by the GC. When type is
+ * less then zero, it denotes an internal string. Otherwise it denotes the
+ * type of the external string allocated with JS_NewExternalString.
+ *
+ * This function always needs rt but can live with null cx.
+ */
+extern void
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx);
+
 #ifdef DEBUG_notme
 #define JS_GCMETER 1
 #endif
