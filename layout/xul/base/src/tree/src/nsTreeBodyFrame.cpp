@@ -1351,18 +1351,8 @@ nsTreeBodyFrame::CheckTextForBidi(nsAutoString& aText)
   // We could check to see whether the prescontext already has bidi enabled,
   // but usually it won't, so it's probably faster to avoid the call to
   // GetPresContext() when it's not needed.
-  const PRUnichar* text = aText.get();
-  PRUint32 length = aText.Length();
-  PRUint32 i;
-  for (i = 0; i < length; ++i) {
-    PRUnichar ch = text[i];
-    // To simplify things, anything that could be a surrogate or RTL
-    // presentation form is covered just by testing >= 0xD800). It's fine to
-    // enable bidi in rare cases where it actually isn't needed.
-    if (ch >= 0xD800 || IS_IN_BMP_RTL_BLOCK(ch)) {
-      PresContext()->SetBidiEnabled();
-      break;
-    }
+  if (HasRTLChars(aText)) {
+    PresContext()->SetBidiEnabled();
   }
 }
 
