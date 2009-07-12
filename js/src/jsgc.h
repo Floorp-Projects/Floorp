@@ -284,9 +284,9 @@ typedef struct JSGCChunkInfo JSGCChunkInfo;
 
 struct JSGCArenaList {
     JSGCArenaInfo   *last;          /* last allocated GC arena */
-    uint16          lastCount;      /* number of allocated things in the last
+    uint32          lastCount;      /* number of allocated things in the last
                                        arena */
-    uint16          thingSize;      /* size of things to allocate on this list
+    uint32          thingSize;      /* size of things to allocate on this list
                                      */
     JSGCThing       *freeList;      /* list of free GC things */
 };

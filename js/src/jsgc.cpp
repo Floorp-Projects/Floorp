@@ -1090,10 +1090,9 @@ InitGCArenaLists(JSRuntime *rt)
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
         arenaList = &rt->gcArenaList[i];
         thingSize = GC_FREELIST_NBYTES(i);
-        JS_ASSERT((size_t)(uint16)thingSize == thingSize);
         arenaList->last = NULL;
-        arenaList->lastCount = (uint16) THINGS_PER_ARENA(thingSize);
-        arenaList->thingSize = (uint16) thingSize;
+        arenaList->lastCount = THINGS_PER_ARENA(thingSize);
+        arenaList->thingSize = thingSize;
         arenaList->freeList = NULL;
     }
     rt->gcDoubleArenaList.first = NULL;
@@ -2011,12 +2010,13 @@ testReservedObjects:
         maxFreeThings = thingsLimit - arenaList->lastCount;
         if (maxFreeThings > MAX_THREAD_LOCAL_THINGS)
             maxFreeThings = MAX_THREAD_LOCAL_THINGS;
+        uint32 lastCount = arenaList->lastCount;
         while (maxFreeThings != 0) {
             --maxFreeThings;
 
-            tmpflagp = THING_FLAGP(a, arenaList->lastCount);
+            tmpflagp = THING_FLAGP(a, lastCount);
             tmpthing = FLAGP_TO_THING(tmpflagp, nbytes);
-            arenaList->lastCount++;
+            lastCount++;
             tmpthing->flagp = tmpflagp;
             *tmpflagp = GCF_FINAL;    /* signifying that thing is free */
 
@@ -2024,6 +2024,7 @@ testReservedObjects:
             lastptr = &tmpthing->next;
         }
         *lastptr = NULL;
+        arenaList->lastCount = lastCount;
 #endif
         break;
     }
@@ -3620,7 +3621,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                  */
                 freeList = arenaList->freeList;
                 if (a == arenaList->last)
-                    arenaList->lastCount = (uint16) indexLimit;
+                    arenaList->lastCount = indexLimit;
                 *ap = a->prev;
                 a->prev = emptyArenas;
                 emptyArenas = a;
