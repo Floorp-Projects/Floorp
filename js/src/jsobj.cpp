@@ -2855,16 +2855,6 @@ bad:
     goto out;
 }
 
-static void
-FreeSlots(JSContext *cx, JSObject *obj)
-{
-    if (obj->dslots) {
-        JS_ASSERT((uint32)obj->dslots[-1] > JS_INITIAL_NSLOTS);
-        JS_free(cx, obj->dslots - 1);
-        obj->dslots = NULL;
-    }
-}
-
 #define SLOTS_TO_DYNAMIC_WORDS(nslots)                                        \
   (JS_ASSERT((nslots) > JS_INITIAL_NSLOTS), (nslots) + 1 - JS_INITIAL_NSLOTS)
 
@@ -2916,7 +2906,7 @@ js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
              *
              *   nslots <= (JS_INITIAL_NSLOTS + JSSLOT_FREE) / 2
              */
-            FreeSlots(cx, obj);
+            js_FreeSlots(cx, obj);
         }
         return JS_TRUE;
     }
@@ -3403,31 +3393,6 @@ bad:
     cx->weakRoots.newborn[GCX_OBJECT] = NULL;
     obj = NULL;
     goto out;
-}
-
-void
-js_FinalizeObject(JSContext *cx, JSObject *obj)
-{
-    /* Cope with stillborn objects that have no map. */
-    if (!obj->map)
-        return;
-
-    if (cx->debugHooks->objectHook) {
-        cx->debugHooks->objectHook(cx, obj, JS_FALSE,
-                                   cx->debugHooks->objectHookData);
-    }
-
-    /* Finalize obj first, in case it needs map and slots. */
-    STOBJ_GET_CLASS(obj)->finalize(cx, obj);
-
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
-        jsdtrace_object_finalize(obj);
-#endif
-
-    if (OBJ_IS_NATIVE(obj))
-        OBJ_SCOPE(obj)->drop(cx, obj);
-    FreeSlots(cx, obj);
 }
 
 /* XXXbe if one adds props, deletes earlier props, adds more, the last added

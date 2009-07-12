@@ -224,8 +224,29 @@ struct JSScope {
     static JSScope *create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj);
     static void destroy(JSContext *cx, JSScope *scope);
 
-    void hold();
-    bool drop(JSContext *cx, JSObject *obj);
+    inline void hold()
+    {
+        JS_ASSERT(nrefs >= 0);
+        JS_ATOMIC_INCREMENT(&nrefs);
+    }
+
+    inline bool drop(JSContext *cx, JSObject *obj)
+    {
+#ifdef JS_THREADSAFE
+        /* We are called from only js_ShareWaitingTitles and js_FinalizeObject. */
+        JS_ASSERT(!obj || CX_THREAD_IS_RUNNING_GC(cx));
+#endif
+        JS_ASSERT(nrefs > 0);
+        --nrefs;
+
+        if (nrefs == 0) {
+            destroy(cx, this);
+            return false;
+        }
+        if (object == obj)
+            object = NULL;
+        return true;
+    }
 
     JSScopeProperty *lookup(jsid id);
     bool has(JSScopeProperty *sprop);
