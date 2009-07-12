@@ -647,10 +647,8 @@ IsMarkedDouble(JSGCArenaInfo *a, uint32 index)
  * The maximum number of things to put on the local free list by taking
  * several things from the global free list or from the tail of the last
  * allocated arena to amortize the cost of rt->gcLock.
- *
- * We use number 8 based on benchmarks from bug 312238.
  */
-#define MAX_THREAD_LOCAL_THINGS 8
+#define MAX_THREAD_LOCAL_THINGS 64
 
 #endif
 
