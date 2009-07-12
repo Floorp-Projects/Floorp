@@ -826,8 +826,9 @@ public:
 
   /**
    * Add a solid color item to the bottom of aList with frame aFrame and
-   * bounds aBounds. If aBounds is null (the default) then the bounds
-   * will be derived from the frame. aBackstopColor is composed behind
+   * bounds aBounds. Checks first if this needs to be done by checking if
+   * aFrame is a canvas frame. If aBounds is null (the default) then the
+   * bounds will be derived from the frame. aBackstopColor is composed behind
    * the background color of the canvas, it is transparent by default.
    */
   virtual nsresult AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,

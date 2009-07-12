@@ -181,9 +181,6 @@ static const char *kPluginRegistryVersion = "0.11";
 // The minimum registry version we know how to read
 static const char *kMinimumRegistryVersion = "0.9";
 
-// CID's && IID's
-static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
@@ -534,7 +531,7 @@ nsPluginInstanceTag * nsPluginInstanceTagList::find(const char * mimetype)
     if (!p->mInstance)
       continue;
 
-    nsMIMEType mt;
+    char* mt;
     nsresult rv = p->mInstance->GetMIMEType(&mt);
     if (NS_FAILED(rv))
       continue;
@@ -1104,7 +1101,7 @@ public:
   // nsINPAPIPluginStreamInfo interface
  
   NS_IMETHOD
-  GetContentType(nsMIMEType* result);
+  GetContentType(char **result);
 
   NS_IMETHOD
   IsSeekable(PRBool* result);
@@ -1130,7 +1127,7 @@ public:
   // local methods
 
   void
-  SetContentType(const nsMIMEType contentType);
+  SetContentType(const char* contentType);
 
   void
   SetSeekable(const PRBool seekable);
@@ -1296,7 +1293,7 @@ NS_IMPL_ISUPPORTS2(nsPluginStreamInfo, nsIPluginStreamInfo,
                    nsINPAPIPluginStreamInfo)
 
 NS_IMETHODIMP
-nsPluginStreamInfo::GetContentType(nsMIMEType* result)
+nsPluginStreamInfo::GetContentType(char **result)
 {
   *result = mContentType;
   return NS_OK;
@@ -1453,7 +1450,7 @@ nsPluginStreamInfo::SetStreamOffset(PRInt32 offset)
 }
 
 void
-nsPluginStreamInfo::SetContentType(const nsMIMEType contentType)
+nsPluginStreamInfo::SetContentType(const char* contentType)
 {
   if (mContentType != nsnull)
     PL_strfree(mContentType);
@@ -2934,20 +2931,6 @@ NS_IMETHODIMP nsPluginHost::FindProxyForURL(const char* url, char* *result)
   return res;
 }
 
-NS_IMETHODIMP nsPluginHost::CreateInstance(nsISupports *aOuter,
-                                           REFNSIID aIID,
-                                           void **aResult)
-{
-  NS_NOTREACHED("how'd I get here?");
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP nsPluginHost::LockFactory(PRBool aLock)
-{
-  NS_NOTREACHED("how'd I get here?");
-  return NS_ERROR_UNEXPECTED;
-}
-
 NS_IMETHODIMP nsPluginHost::Init()
 {
   return NS_OK;
@@ -3580,7 +3563,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
 
-  GetPluginFactory(mimetype, getter_AddRefs(plugin));
+  GetPlugin(mimetype, getter_AddRefs(plugin));
 
   if (plugin) {
 #if defined(XP_WIN) && !defined(WINCE)
@@ -3601,7 +3584,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
       }
     }
 #endif
-    result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)getter_AddRefs(instance));
+    result = plugin->CreatePluginInstance(getter_AddRefs(instance));
 
 #if defined(XP_WIN) && !defined(WINCE)
     if (!firstJavaPlugin && restoreOrigDir) {
@@ -3657,12 +3640,11 @@ nsPluginHost::SetUpDefaultPluginInstance(const char *aMimeType,
   if (!aURL)
     return NS_ERROR_FAILURE;
 
-  GetPluginFactory("*", getter_AddRefs(plugin));
+  GetPlugin("*", getter_AddRefs(plugin));
 
   nsresult result = NS_ERROR_OUT_OF_MEMORY;
   if (plugin)
-    result = plugin->CreateInstance(NULL, kIPluginInstanceIID,
-                                    getter_AddRefs(instance));
+    result = plugin->CreatePluginInstance(getter_AddRefs(instance));
   if (NS_FAILED(result))
     return result;
 
@@ -4019,7 +4001,7 @@ static nsresult ConvertToNative(nsIUnicodeEncoder *aEncoder,
 }
 
 static nsresult CreateNPAPIPlugin(const nsPluginTag *aPluginTag,
-                                  nsIPlugin **aOutNPAPIPlugnin)
+                                  nsIPlugin **aOutNPAPIPlugin)
 {
   nsresult rv;
   nsCOMPtr <nsIPlatformCharset> pcs =
@@ -4046,10 +4028,10 @@ static nsresult CreateNPAPIPlugin(const nsPluginTag *aPluginTag,
 
   return nsNPAPIPlugin::CreatePlugin(fullPath.get(),
                                      aPluginTag->mLibrary,
-                                     aOutNPAPIPlugnin);
+                                     aOutNPAPIPlugin);
 }
 
-NS_IMETHODIMP nsPluginHost::GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
+NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin)
 {
   nsresult rv = NS_ERROR_FAILURE;
   *aPlugin = NULL;
@@ -4064,7 +4046,7 @@ NS_IMETHODIMP nsPluginHost::GetPluginFactory(const char *aMimeType, nsIPlugin** 
   if (pluginTag) {
     rv = NS_OK;
     PLUGIN_LOG(PLUGIN_LOG_BASIC,
-    ("nsPluginHost::GetPluginFactory Begin mime=%s, plugin=%s\n",
+    ("nsPluginHost::GetPlugin Begin mime=%s, plugin=%s\n",
     aMimeType, pluginTag->mFileName.get()));
 
 #ifdef NS_DEBUG
@@ -4106,7 +4088,7 @@ NS_IMETHODIMP nsPluginHost::GetPluginFactory(const char *aMimeType, nsIPlugin** 
   }
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("nsPluginHost::GetPluginFactory End mime=%s, rv=%d, plugin=%p name=%s\n",
+  ("nsPluginHost::GetPlugin End mime=%s, rv=%d, plugin=%p name=%s\n",
   aMimeType, rv, *aPlugin,
   (pluginTag ? pluginTag->mFileName.get() : "(not found)")));
 

@@ -41,7 +41,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(6F08D134-8536-4B28-B456-D150FBAA66A9)]
+[scriptable, uuid(46a86173-0ab5-44b2-ab51-722cb3db1b60)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -82,7 +82,7 @@ interface nsIAutoCompleteController : nsISupports
    * means of changing the text value, including typing a character, backspacing, deleting, or
    * pasting in an entirely new value.
    */
-  void handleText(in boolean aIgnoreSelection);
+  void handleText();
 
   /*
    * Notify the controller that the user wishes to enter the current text. If

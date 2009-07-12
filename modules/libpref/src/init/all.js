@@ -541,6 +541,12 @@ pref("javascript.options.strict",           false);
 pref("javascript.options.relimit",          false);
 pref("javascript.options.jit.content",      true);
 pref("javascript.options.jit.chrome",       false);
+// This preference limits the memory usage of javascript.
+// If you want to change these values for your device,
+// please find Bug 417052 comment 17 and Bug 456721
+// Comment 32.
+pref("javascript.options.mem.high_water_mark", 32);
+pref("javascript.options.mem.gc_frequency",   1600);
 
 // advanced prefs
 pref("security.enable_java",                true);

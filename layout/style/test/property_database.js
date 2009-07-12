@@ -1248,8 +1248,8 @@ var gCSSProperties = {
 		/* no subproperties */
 		/* XXX testing auto has prerequisites */
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "1px", "2em", "5%" ],
-		invalid_values: []
+		other_values: [ "1px", "2em", "5%", ".5px", "+32px", "+.789px", "-.328px", "+0.56px", "-0.974px", "237px", "-289px", "-056px", "1987.45px", "-84.32px" ],
+		invalid_values: [ "..25px", ".+5px", ".px", "-.px", "++5px", "-+4px", "+-3px", "--7px", "+-.6px", "-+.5px", "++.7px", "--.4px" ]
 	},
 	"margin-right": {
 		domProp: "marginRight",
@@ -1770,7 +1770,7 @@ var gCSSProperties = {
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
 		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
-		invalid_values: [ "none" ]
+		invalid_values: [ "none", "-2px" ]
 	},
 	"word-spacing": {
 		domProp: "wordSpacing",

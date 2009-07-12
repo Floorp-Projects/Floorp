@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nspluginroot.idl"
-#include "nsIFactory.idl"
+#include "nsISupports.idl"
 #include "nsIPluginInstanceOwner.idl"
 #include "nsIStreamListener.idl"
 #include "nsIStringStream.idl"
@@ -65,8 +65,8 @@ interface nsIPluginStreamListener;
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(A2D6DC70-7456-4422-A9F6-D96F46868C0B)]
-interface nsIPluginHost : nsIFactory
+[scriptable, uuid(23E8FD98-A625-4B08-BE1A-F7CC18A5B106)]
+interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
 
@@ -83,7 +83,7 @@ interface nsIPluginHost : nsIFactory
    */
   void reloadPlugins(in boolean reloadPages);
 
-  [noscript] nsIPlugin getPluginFactory(in string aMimeType);
+  [noscript] nsIPlugin getPlugin(in string aMimeType);
 
   [noscript] void instantiateEmbeddedPlugin(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 

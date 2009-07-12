@@ -343,8 +343,13 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
   // on windows mobile, dialogs and top level windows are full screen
   // This is partly due to the lack of a GetWindowPlacement.
   if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel) {
-    aMode = nsSizeMode_Maximized;
+    if (aMode == nsSizeMode_Normal)
+      aMode = nsSizeMode_Maximized;
   }
+
+  // also on windows mobile, we never minimize.
+  if (aMode == nsSizeMode_Minimized)
+    return NS_OK;
 #endif
 
   // save the requested state
@@ -353,6 +358,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
     int mode;
 
     switch (aMode) {
+      case nsSizeMode_Fullscreen :
       case nsSizeMode_Maximized :
         mode = SW_MAXIMIZE;
         break;

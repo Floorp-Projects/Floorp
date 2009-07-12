@@ -595,9 +595,11 @@ LoginManager.prototype = {
 
         var result = null;
 
-        if (aPreviousResult) {
+        if (aPreviousResult &&
+                aSearchString.substr(0, aPreviousResult.searchString.length) == aPreviousResult.searchString) {
             this.log("Using previous autocomplete result");
             result = aPreviousResult;
+            result.wrappedJSObject.searchString = aSearchString;
 
             // We have a list of results for a shorter search string, so just
             // filter them further based on the new search string.
@@ -1318,6 +1320,12 @@ UserAutoCompleteResult.prototype = {
 
     // private
     logins : null,
+
+    // Allow autoCompleteSearch to get at the JS object so it can
+    // modify some readonly properties for internal use.
+    get wrappedJSObject() {
+        return this;
+    },
 
     // Interfaces from idl...
     searchString : null,

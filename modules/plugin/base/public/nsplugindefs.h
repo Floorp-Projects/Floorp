@@ -114,8 +114,6 @@ RCDATA NS_INFO_ProductName       { "NPAVI32 Dynamic Link Library\0" }
 ////////////////////////////////////////////////////////////////////////////////
 // Structures and definitions
 
-typedef const char*     nsMIMEType;
-
 struct nsByteRange {
     PRInt32             offset; 	/* negative offset means from the end */
     PRUint32            length;
@@ -337,22 +335,6 @@ struct nsPluginEvent {
     XEvent      event;
 #else
     void        *event;
-#endif
-};
-
-/*
- *  Non-standard event types that can be passed to HandleEvent
- *  (These need to be kept in sync with the events defined in npapi.h.)
- */
-enum nsPluginEventType {
-#ifdef XP_MACOSX
-    nsPluginEventType_GetFocusEvent = (osEvt + 16),
-    nsPluginEventType_LoseFocusEvent,
-    nsPluginEventType_AdjustCursorEvent,
-    nsPluginEventType_MenuCommandEvent,
-    nsPluginEventType_ClippingChangedEvent,
-    nsPluginEventType_ScrollingBeginsEvent = 1000,
-    nsPluginEventType_ScrollingEndsEvent
 #endif
 };
 

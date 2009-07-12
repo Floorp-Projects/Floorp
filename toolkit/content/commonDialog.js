@@ -231,11 +231,11 @@ function commonDialogOnLoad()
 
   // play sound
   try {
-    var sound = gCommonDialogParam.GetString(13);
+    var sound = gCommonDialogParam.GetInt(7);
     if (sound) {
       Cc["@mozilla.org/sound;1"]
         .createInstance(Ci.nsISound)
-        .playSystemSound(sound);
+        .playEventSound(sound);
     }
   } catch (e) { }
 }

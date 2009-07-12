@@ -1143,42 +1143,21 @@ NS_IMETHODIMP nsLocalFile::Clone(nsIFile **_retval)
 
 NS_IMETHODIMP nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 {
-  return EqualsInternal(inFile, _retval);
-}
-
-nsresult
-nsLocalFile::EqualsInternal(nsISupports* inFile, PRBool *_retval)
-{
+  NS_ENSURE_ARG(inFile);
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
-  
-  nsCOMPtr<nsILocalFileMac> inMacFile(do_QueryInterface(inFile));
-  if (!inFile)
-    return NS_OK;
-    
-  nsLocalFile* inLF =
-      static_cast<nsLocalFile*>((nsILocalFileMac*) inMacFile);
 
-  // If both exist, compare FSRefs
-  FSRef thisFSRef, inFSRef;
-  nsresult rv1 = GetFSRefInternal(thisFSRef);
-  nsresult rv2 = inLF->GetFSRefInternal(inFSRef);
-  if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2)) {
-    *_retval = (thisFSRef == inFSRef);
-    return NS_OK;
-  }
-  // If one exists and the other doesn't, not equal  
-  if (rv1 != rv2)
-    return NS_OK;
-    
-  // Arg, we have to get their paths and compare
-  nsCAutoString thisPath, inPath;
-  if (NS_FAILED(GetNativePath(thisPath)))
-    return NS_ERROR_FAILURE;
-  if (NS_FAILED(inMacFile->GetNativePath(inPath)))
-    return NS_ERROR_FAILURE;
-  *_retval = thisPath.Equals(inPath);
-  
+  nsCAutoString inPath;
+  nsresult rv = inFile->GetNativePath(inPath);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCAutoString thisPath;
+  rv = GetNativePath(thisPath);
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = !strcmp(inPath.get(), thisPath.get());
   return NS_OK;
 }
 
@@ -2150,7 +2129,13 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
 NS_IMETHODIMP
 nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
 {
-  return EqualsInternal(aOther, aResult);
+  nsCOMPtr<nsIFile> otherFile(do_QueryInterface(aOther));
+  if (!otherFile) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+  return Equals(otherFile, aResult);
 }
 
 NS_IMETHODIMP

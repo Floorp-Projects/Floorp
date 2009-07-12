@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: bitrate tracking and management
- last mod: $Id: bitrate.c 13293 2007-07-24 00:09:47Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
@@ -91,7 +91,7 @@ int vorbis_bitrate_addblock(vorbis_block *vb){
        buffer the packet to keep the code path clean */
     
     if(bm->vb)return(-1); /* one has been submitted without
-			     being claimed */
+                             being claimed */
     bm->vb=vb;
     return(0);
   }
@@ -117,15 +117,15 @@ int vorbis_bitrate_addblock(vorbis_block *vb){
 
     if(bm->avg_reservoir+(this_bits-avg_target_bits)>desired_fill){
       while(choice>0 && this_bits>avg_target_bits &&
-	    bm->avg_reservoir+(this_bits-avg_target_bits)>desired_fill){
-	choice--;
-	this_bits=oggpack_bytes(vbi->packetblob[choice])*8;
+            bm->avg_reservoir+(this_bits-avg_target_bits)>desired_fill){
+        choice--;
+        this_bits=oggpack_bytes(vbi->packetblob[choice])*8;
       }
     }else if(bm->avg_reservoir+(this_bits-avg_target_bits)<desired_fill){
       while(choice+1<PACKETBLOBS && this_bits<avg_target_bits &&
-	    bm->avg_reservoir+(this_bits-avg_target_bits)<desired_fill){
-	choice++;
-	this_bits=oggpack_bytes(vbi->packetblob[choice])*8;
+            bm->avg_reservoir+(this_bits-avg_target_bits)<desired_fill){
+        choice++;
+        this_bits=oggpack_bytes(vbi->packetblob[choice])*8;
       }
     }
 
@@ -143,9 +143,9 @@ int vorbis_bitrate_addblock(vorbis_block *vb){
     /* do we need to force the bitrate up? */
     if(this_bits<min_target_bits){
       while(bm->minmax_reservoir-(min_target_bits-this_bits)<0){
-	choice++;
-	if(choice>=PACKETBLOBS)break;
-	this_bits=oggpack_bytes(vbi->packetblob[choice])*8;
+        choice++;
+        if(choice>=PACKETBLOBS)break;
+        this_bits=oggpack_bytes(vbi->packetblob[choice])*8;
       }
     }
   }
@@ -155,9 +155,9 @@ int vorbis_bitrate_addblock(vorbis_block *vb){
     /* do we need to force the bitrate down? */
     if(this_bits>max_target_bits){
       while(bm->minmax_reservoir+(this_bits-max_target_bits)>bi->reservoir_bits){
-	choice--;
-	if(choice<0)break;
-	this_bits=oggpack_bytes(vbi->packetblob[choice])*8;
+        choice--;
+        if(choice<0)break;
+        this_bits=oggpack_bytes(vbi->packetblob[choice])*8;
       }
     }
   }
@@ -201,19 +201,19 @@ int vorbis_bitrate_addblock(vorbis_block *vb){
     }else{
       /* inbetween; we want to take reservoir toward but not past desired_fill */
       if(bm->minmax_reservoir>desired_fill){
-	if(max_target_bits>0){ /* logical bulletproofing against initialization state */
-	  bm->minmax_reservoir+=(this_bits-max_target_bits);
-	  if(bm->minmax_reservoir<desired_fill)bm->minmax_reservoir=desired_fill;
-	}else{
-	  bm->minmax_reservoir=desired_fill;
-	}
+        if(max_target_bits>0){ /* logical bulletproofing against initialization state */
+          bm->minmax_reservoir+=(this_bits-max_target_bits);
+          if(bm->minmax_reservoir<desired_fill)bm->minmax_reservoir=desired_fill;
+        }else{
+          bm->minmax_reservoir=desired_fill;
+        }
       }else{
-	if(min_target_bits>0){ /* logical bulletproofing against initialization state */
-	  bm->minmax_reservoir+=(this_bits-min_target_bits);
-	  if(bm->minmax_reservoir>desired_fill)bm->minmax_reservoir=desired_fill;
-	}else{
-	  bm->minmax_reservoir=desired_fill;
-	}
+        if(min_target_bits>0){ /* logical bulletproofing against initialization state */
+          bm->minmax_reservoir+=(this_bits-min_target_bits);
+          if(bm->minmax_reservoir>desired_fill)bm->minmax_reservoir=desired_fill;
+        }else{
+          bm->minmax_reservoir=desired_fill;
+        }
       }
     }
   }

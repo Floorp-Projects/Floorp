@@ -117,6 +117,10 @@ nsMenuX::~nsMenuX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // Prevent the icon object from outliving us.
+  if (mIcon)
+    mIcon->Destroy();
+
   RemoveAll();
 
   [mNativeMenu setDelegate:nil];

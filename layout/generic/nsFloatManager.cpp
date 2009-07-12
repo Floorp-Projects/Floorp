@@ -170,7 +170,10 @@ nsFloatManager::GetFlowArea(nscoord aYOffset, BandInfoType aInfoType,
 
   nscoord bottom;
   if (aHeight == nscoord_MAX) {
-    NS_ASSERTION(aInfoType == BAND_FROM_POINT, "bad height");
+    // This warning (and the two below) are possible to hit on pages
+    // with really large objects.
+    NS_WARN_IF_FALSE(aInfoType == BAND_FROM_POINT,
+                     "bad height");
     bottom = nscoord_MAX;
   } else {
     bottom = top + aHeight;

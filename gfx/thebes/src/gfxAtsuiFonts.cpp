@@ -483,6 +483,28 @@ gfxAtsuiFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
     aExtents->SetTightGlyphExtents(aGlyphID, bounds);
 }
 
+gfxFont::RunMetrics
+gfxAtsuiFont::Measure(gfxTextRun *aTextRun,
+                      PRUint32 aStart, PRUint32 aEnd,
+                      BoundingBoxType aBoundingBoxType,
+                      gfxContext *aRefContext,
+                      Spacing *aSpacing)
+{
+    gfxFont::RunMetrics metrics =
+        gfxFont::Measure(aTextRun, aStart, aEnd,
+                         aBoundingBoxType, aRefContext, aSpacing);
+
+    // if aBoundingBoxType is not TIGHT_HINTED_OUTLINE_EXTENTS then we need to add
+    // a pixel column each side of the bounding box in case of antialiasing "bleed"
+    if (aBoundingBoxType != TIGHT_HINTED_OUTLINE_EXTENTS &&
+        metrics.mBoundingBox.size.width > 0) {
+        metrics.mBoundingBox.pos.x -= aTextRun->GetAppUnitsPerDevUnit();
+        metrics.mBoundingBox.size.width += aTextRun->GetAppUnitsPerDevUnit()*2;
+    }
+
+    return metrics;
+}
+
 PRBool 
 gfxAtsuiFont::HasMirroringInfo()
 {

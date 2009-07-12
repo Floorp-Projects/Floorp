@@ -3847,13 +3847,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 static PLDHashOperator
 TraverseBookmarkFolderObservers(nsTrimInt64HashKey::KeyType aKey,
-                                nsNavHistoryResult::FolderObserverList*& aData,
-                                void* aUserArg)
+                                nsNavHistoryResult::FolderObserverList* &aData,
+                                void *aClosure)
 {
   nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
-  PRUint32 i, count = aData->Length();
-  for (i = 0; i < count; ++i) {
+    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+  for (PRUint32 i = 0; i < aData->Length(); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
                                        "mBookmarkFolderObservers value[i]");
     nsNavHistoryResultNode* node = aData->ElementAt(i);
@@ -3862,10 +3861,24 @@ TraverseBookmarkFolderObservers(nsTrimInt64HashKey::KeyType aKey,
   return PL_DHASH_NEXT;
 }
 
+static PLDHashOperator
+TraversePropertyBags(nsISupportsHashKey::KeyType aKey,
+                     nsCOMPtr<nsIWritablePropertyBag> &aData,
+                     void *aClosure)
+{
+  nsCycleCollectionTraversalCallback* cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mPropertyBags key");
+  cb->NoteXPCOMChild(aKey);
+
+  return PL_DHASH_NEXT;
+}
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResult)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRootNode, nsINavHistoryContainerResultNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mView)
   tmp->mBookmarkFolderObservers.Enumerate(&TraverseBookmarkFolderObservers, &cb);
+  tmp->mPropertyBags.Enumerate(&TraversePropertyBags, &cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mAllBookmarksObservers, nsNavHistoryQueryResultNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mHistoryObservers, nsNavHistoryQueryResultNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
