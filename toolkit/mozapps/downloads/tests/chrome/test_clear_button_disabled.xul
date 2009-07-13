@@ -108,6 +108,7 @@ function runTest()
   let testObs = {
     observe: function(aSubject, aTopic, aData) {
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       let doc = win.document;
       let searchbox = doc.getElementById("searchbox");
       let clearButton = doc.getElementById("clearListButton");

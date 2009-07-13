@@ -179,6 +179,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       // Send the enter key to Download Manager to retry the download
       synthesizeKey("VK_ENTER", {}, win);
       os.removeObserver(testObs, DLMGR_UI_DONE);
