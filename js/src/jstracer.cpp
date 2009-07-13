@@ -3250,7 +3250,7 @@ class SlotMap : public SlotVisitorBase
      *                          before recording began. Caller can go through slot list and mark
      *                          such slots as undemotable.
      */
-    TypeConsensus
+    JS_REQUIRES_STACK TypeConsensus
     checkTypes(TreeInfo* ti)
     {
         if (ti->typeMap.length() < slotOffset || length() != ti->typeMap.length() - slotOffset)
@@ -3276,7 +3276,7 @@ class SlotMap : public SlotVisitorBase
         slots.add(SlotInfo(vp, isNumber(*vp) && isPromoteInt(mRecorder.get(vp))));
     }
 
-    void
+    JS_REQUIRES_STACK void
     markUndemotes()
     {
         for (unsigned i = 0; i < length(); i++) {
@@ -3285,7 +3285,7 @@ class SlotMap : public SlotVisitorBase
         }
     }
 
-    virtual void
+    JS_REQUIRES_STACK virtual void
     adjustTypes()
     {
         for (unsigned i = 0; i < length(); i++) {
@@ -3368,7 +3368,7 @@ class DefaultSlotMap : public SlotMap
 JS_REQUIRES_STACK TypeConsensus
 TraceRecorder::selfTypeStability(SlotMap& slotMap)
 {
-    debug_only_printf(LC_TMTracer, "Checking type stability against self=%p\n", fragment);
+    debug_only_printf(LC_TMTracer, "Checking type stability against self=%p\n", (void*)fragment);
     TypeConsensus consensus = slotMap.checkTypes(treeInfo);
 
     /* Best case: loop jumps back to its own header */
@@ -3397,7 +3397,7 @@ TraceRecorder::peerTypeStability(SlotMap& slotMap, VMFragment** pPeer)
     for (; peer != NULL; peer = (VMFragment*)peer->peer) {
         if (!peer->vmprivate || peer == fragment)
             continue;
-        debug_only_printf(LC_TMTracer, "Checking type stability against peer=%p\n", peer);
+        debug_only_printf(LC_TMTracer, "Checking type stability against peer=%p\n", (void*)peer);
         TypeConsensus consensus = slotMap.checkTypes((TreeInfo*)peer->vmprivate);
         if (consensus == TypeConsensus_Okay) {
             *pPeer = peer;
