@@ -87,13 +87,8 @@ CPPSRCS = \
           nsMaybeWeakPtr.cpp \
           nsMorkHistoryImporter.cpp \
           nsPlacesModule.cpp \
+          SQLFunctions.cpp \
           $(NULL)
-
-ifdef MOZ_XUL
-CPPSRCS += \
-          nsNavHistoryAutoComplete.cpp \
-          $(NULL)
-endif
 
 EXTRA_DSO_LDOPTS += \
 	$(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX) \
@@ -103,10 +98,18 @@ EXTRA_DSO_LDOPTS += \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
-EXTRA_PP_COMPONENTS = nsLivemarkService.js \
-                      nsTaggingService.js \
-                      nsPlacesDBFlush.js \
-                      $(NULL)
+EXTRA_PP_COMPONENTS = \
+  nsLivemarkService.js \
+  nsTaggingService.js \
+  $(NULL)
+
+EXTRA_COMPONENTS = \
+  nsPlacesDBFlush.js \
+  $(NULL)
+
+ifdef MOZ_XUL
+EXTRA_COMPONENTS += nsPlacesAutoComplete.js
+endif
 
 EXTRA_JS_MODULES = \
   utils.js \
