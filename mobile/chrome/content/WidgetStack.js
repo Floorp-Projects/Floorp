@@ -94,7 +94,6 @@ function wsBorder(t, l, b, r) {
 }
 
 wsBorder.prototype = {
-  _t: 0, _l: 0, _b: 0, _r: 0,
 
   get left() { return this._l; },
   get right() { return this._r; },
@@ -128,7 +127,6 @@ function wsRect(x, y, w, h) {
 }
 
 wsRect.prototype = {
-  _l: 0, _t: 0, _b: 0, _r: 0,
 
   get x() { return this._l; },
   get y() { return this._t; },
@@ -270,11 +268,69 @@ wsRect.prototype = {
     return xok && yok;
   },
 
-  round: function(scale) {
+  /**
+   * Similar to (and most code stolen from) intersect().  A restriction
+   * is an intersection, but this modifies the receiving object instead
+   * of returning a new rect.
+   */
+  restrictTo: function restrictTo(r2) {
+    let xmost1 = this._r;
+    let xmost2 = r2._r;
+
+    let x = Math.max(this._l, r2._l);
+
+    let temp = Math.min(xmost1, xmost2);
+    if (temp <= x)
+      throw "Intersection is empty but rects cannot be empty";
+
+    let width = temp - x;
+
+    let ymost1 = this._b;
+    let ymost2 = r2._b;
+    let y = Math.max(this._t, r2._t);
+
+    temp = Math.min(ymost1, ymost2);
+    if (temp <= y)
+      throw "Intersection is empty but rects cannot be empty";
+
+    let height = temp - y;
+
+    return this.setRect(x, y, width, height);
+  },
+
+  /**
+   * Similar to (and most code stolen from) union().  An extension is a
+   * union (in our sense of the term, not the common set-theoretic sense),
+   * but this modifies the receiving object instead of returning a new rect.
+   * Effectively, this rectangle is expanded minimally to contain all of the
+   * other rect.  "Expanded minimally" means that the rect may shrink if
+   * given a strict subset rect as the argument.
+   */
+  expandToContain: function extendTo(rect) {
+    let l = Math.min(this._l, rect._l);
+    let r = Math.max(this._r, rect._r);
+    let t = Math.min(this._t, rect._t);
+    let b = Math.max(this._b, rect._b);
+
+    return this.setRect(l, t, r-l, b-t);
+  },
+
+  round: function round(scale) {
+    if (!scale) scale = 1;
+
     this._l = Math.floor(this._l * scale) / scale;
     this._t = Math.floor(this._t * scale) / scale;
     this._r = Math.ceil(this._r * scale) / scale;
     this._b = Math.ceil(this._b * scale) / scale;
+  },
+
+  scale: function scale(xscl, yscl) {
+    this._l *= xscl;
+    this._r *= xscl;
+    this._t *= yscl;
+    this._b *= yscl;
+
+    return this;
   }
 };
 
@@ -776,7 +832,7 @@ WidgetStack.prototype = {
 
     this._skipViewportUpdates--;
     if (this._skipViewportUpdates)
-      return
+      return;
 
     let boundsSizeChanged =
       this._startViewportBoundsString != this._viewportBounds.toString();
@@ -894,14 +950,18 @@ WidgetStack.prototype = {
     if (!this._viewport || !this._viewportUpdateHandler || this._skipViewportUpdates)
       return;
 
+    let vwb = this._viewportBounds.clone();
+
     let vwib = this._viewport.viewportInnerBounds.clone();
+
+    let vis = this.viewportVisibleRect;
 
     vwib.left += this._viewport.offsetLeft;
     vwib.top += this._viewport.offsetTop;
     vwib.right += this._viewport.offsetRight;
     vwib.bottom += this._viewport.offsetBottom;
 
-    this._viewportUpdateHandler.apply(window, [vwib, boundsChanged]);
+    this._viewportUpdateHandler.apply(window, [vwb, vwib, vis, boundsChanged]);
   },
 
   _dragCoordsFromClient: function (cx, cy, t) {
