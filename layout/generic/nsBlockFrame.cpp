@@ -973,104 +973,65 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_MergeReflowStatusInto(&state.mReflowStatus, ocStatus);
 
-  // If the block is complete, put continued floats in the closest ancestor 
-  // block that uses the same float manager and leave the block complete; this 
-  // allows subsequent lines on the page to be impacted by floats. If the 
-  // block is incomplete or there is no ancestor using the same float manager, 
-  // put continued floats at the beginning of the first overflow line.
+  // If the block is complete put continued floats at the beginning
+  // of the first overflow line.
   if (state.mOverflowPlaceholders.NotEmpty()) {
     NS_ASSERTION(aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE,
                  "Somehow we failed to fit all content, even though we have unlimited space!");
-    if (NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
-      // find the nearest block ancestor that uses the same float manager
-      for (const nsHTMLReflowState* ancestorRS = aReflowState.parentReflowState; 
-           ancestorRS; 
-           ancestorRS = ancestorRS->parentReflowState) {
-        nsIFrame* ancestor = ancestorRS->frame;
-        if (nsLayoutUtils::GetAsBlock(ancestor) &&
-            aReflowState.mFloatManager == ancestorRS->mFloatManager) {
-          // Put the continued floats in ancestor since it uses the same float manager
-          nsFrameList* ancestorPlace =
-            ((nsBlockFrame*)ancestor)->GetOverflowPlaceholders();
-          // The ancestor should have this list, since it's being reflowed. But maybe
-          // it isn't because of reflow roots or something.
-          if (ancestorPlace) {
-            for (nsIFrame* f = state.mOverflowPlaceholders.FirstChild();
-                 f; f = f->GetNextSibling()) {
-              NS_ASSERTION(IsContinuationPlaceholder(f),
-                           "Overflow placeholders must be continuation placeholders");
-              ReparentFrame(f, this, ancestorRS->frame);
-              nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
-              mFloats.RemoveFrame(oof);
-              ReparentFrame(oof, this, ancestorRS->frame);
-              // Clear the next-sibling in case the frame wasn't in mFloats
-              oof->SetNextSibling(nsnull);
-              // Do not put the float into any child frame list, because
-              // placeholders in the overflow-placeholder block-state list
-              // don't keep their out of flows in a child frame list.
-            }
-            ancestorPlace->AppendFrames(nsnull, state.mOverflowPlaceholders.FirstChild());
-            state.mOverflowPlaceholders.SetFrames(nsnull);
-            break;
-          }
+    state.mOverflowPlaceholders.SortByContentOrder();
+    PRInt32 numOverflowPlace = state.mOverflowPlaceholders.GetLength();
+    nsLineBox* newLine =
+      state.NewLineBox(state.mOverflowPlaceholders.FirstChild(),
+                       numOverflowPlace, PR_FALSE);
+    if (newLine) {
+      nsLineList* overflowLines = GetOverflowLines();
+      if (overflowLines) {
+        // Need to put the overflow placeholders' floats into our
+        // overflow-out-of-flows list, since the overflow placeholders are
+        // going onto our overflow line list. Put them last, because that's
+        // where the placeholders are going.
+        nsFrameList floats;
+        nsIFrame* lastFloat = nsnull;
+        for (nsIFrame* f = state.mOverflowPlaceholders.FirstChild();
+             f; f = f->GetNextSibling()) {
+          NS_ASSERTION(IsContinuationPlaceholder(f),
+                       "Overflow placeholders must be continuation placeholders");
+          nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
+          // oof is not currently in any child list
+          floats.InsertFrames(nsnull, lastFloat, oof);
+          lastFloat = oof;
         }
-      }
-    }
-    if (!state.mOverflowPlaceholders.IsEmpty()) {
-      state.mOverflowPlaceholders.SortByContentOrder();
-      PRInt32 numOverflowPlace = state.mOverflowPlaceholders.GetLength();
-      nsLineBox* newLine =
-        state.NewLineBox(state.mOverflowPlaceholders.FirstChild(),
-                         numOverflowPlace, PR_FALSE);
-      if (newLine) {
-        nsLineList* overflowLines = GetOverflowLines();
-        if (overflowLines) {
-          // Need to put the overflow placeholders' floats into our
-          // overflow-out-of-flows list, since the overflow placeholders are
-          // going onto our overflow line list. Put them last, because that's
-          // where the placeholders are going.
-          nsFrameList floats;
-          nsIFrame* lastFloat = nsnull;
-          for (nsIFrame* f = state.mOverflowPlaceholders.FirstChild();
-               f; f = f->GetNextSibling()) {
-            NS_ASSERTION(IsContinuationPlaceholder(f),
-                         "Overflow placeholders must be continuation placeholders");
-            nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
-            // oof is not currently in any child list
-            floats.InsertFrames(nsnull, lastFloat, oof);
-            lastFloat = oof;
-          }
 
-          // Put the new placeholders *last* in the overflow lines
-          // because they might have previnflows in the overflow lines.
-          nsIFrame* lastChild = overflowLines->back()->LastChild();
-          lastChild->SetNextSibling(state.mOverflowPlaceholders.FirstChild());
-          // Create a new line as the last line and put the
-          // placeholders there
-          overflowLines->push_back(newLine);
+        // Put the new placeholders *last* in the overflow lines
+        // because they might have previnflows in the overflow lines.
+        nsIFrame* lastChild = overflowLines->back()->LastChild();
+        lastChild->SetNextSibling(state.mOverflowPlaceholders.FirstChild());
+        // Create a new line as the last line and put the
+        // placeholders there
+        overflowLines->push_back(newLine);
 
-          nsAutoOOFFrameList oofs(this);
-          oofs.mList.AppendFrames(nsnull, floats.FirstChild());
-        }
-        else {
-          mLines.push_back(newLine);
-          nsLineList::iterator nextToLastLine = ----end_lines();
-          PushLines(state, nextToLastLine);
-        }
-        state.mOverflowPlaceholders.SetFrames(nsnull);
+        nsAutoOOFFrameList oofs(this);
+        oofs.mList.AppendFrames(nsnull, floats.FirstChild());
       }
-      state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-      NS_FRAME_SET_INCOMPLETE(state.mReflowStatus);
+      else {
+        mLines.push_back(newLine);
+        nsLineList::iterator nextToLastLine = ----end_lines();
+        PushLines(state, nextToLastLine);
+      }
+      state.mOverflowPlaceholders.SetFrames(nsnull);
     }
+    state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+    if (NS_FRAME_IS_COMPLETE(state.mReflowStatus))
+      NS_FRAME_SET_OVERFLOW_INCOMPLETE(state.mReflowStatus);
   }
 
-  if (NS_FRAME_IS_NOT_COMPLETE(state.mReflowStatus)) {
+  if (!NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
     if (GetOverflowLines()) {
       state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
     }
 
 #ifdef DEBUG_kipp
-    ListTag(stdout); printf(": block is not complete\n");
+    ListTag(stdout); printf(": block is not fully complete\n");
 #endif
   }
 
@@ -1590,7 +1551,8 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       // way we are here.
       if (line->IsBlock() ||
           line->HasFloats() ||
-          (line != mLines.back() && !line->HasBreakAfter()) ||
+          ((line != mLines.back() || GetNextInFlow()) // not the last line
+           && !line->HasBreakAfter()) ||
           line->ResizeReflowOptimizationDisabled() ||
           line->IsImpactedByFloat() ||
           (line->mBounds.XMost() > newAvailWidth)) {
@@ -3311,7 +3273,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       }
       else {
         // None of the block fits. Determine the correct reflow status.
-        if (aLine == mLines.front()) {
+        if (aLine == mLines.front() && !GetPrevInFlow()) {
           // If it's our very first line then we need to be pushed to
           // our parents next-in-flow. Therefore, return break-before
           // status for our reflow status.
@@ -4542,11 +4504,6 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
   // most one frame for a given piece of content is in our normal
   // child list, by pushing all but the first placeholder to our
   // overflow placeholders list.
-  // 
-  // One problem we have to deal with is that some of these
-  // continuation placeholders may have been donated to us by a
-  // descendant block that was complete. We need to push them down to
-  // a lower block if possible.
   //
   // We keep the lists ordered so that prev in flows come before their
   // next in flows. We do not worry about properly ordering the
@@ -4590,9 +4547,9 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
             NS_ASSERTION(IsContinuationPlaceholder(f),
                          "Line frames should all be continuation placeholders");
             next = f->GetNextSibling();
+            f->SetNextSibling(nsnull);
             nsIFrame* fpif = f->GetPrevInFlow();
             nsIFrame* oof = f->GetOutOfFlowFrame();
-            
             // Take this out of mFloats for now. We may put it back later in
             // this function
 #ifdef DEBUG
@@ -4611,53 +4568,12 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
               // mOverflowPlaceholders do not keep their floats in any child list
               lastOP = f;
             } else {
-              if (fpif->GetParent() == prevBlock) {
-                keepPlaceholders.InsertFrame(nsnull, lastKP, f);
-                keepOutOfFlows.InsertFrame(nsnull, lastKOOF, oof);
-                lastKP = f;
-                lastKOOF = oof;
-              } else {
-                // Ok, now we're in the tough situation where some child
-                // of prevBlock was complete and pushed its overflow
-                // placeholders up to prevBlock's overflow. We might be
-                // able to find a more appropriate parent for f somewhere
-                // down in our descendants.
-                NS_ASSERTION(nsLayoutUtils::IsProperAncestorFrame(prevBlock, fpif),
-                             "bad prev-in-flow ancestor chain");
-                // Find the first ancestor of f's prev-in-flow that has a next in flow
-                // that can contain the float.
-                // That next in flow should become f's parent.
-                nsIFrame* fpAncestor;
-                for (fpAncestor = fpif->GetParent();
-                     !fpAncestor->GetNextInFlow() || !fpAncestor->IsFloatContainingBlock();
-                     fpAncestor = fpAncestor->GetParent())
-                  ;
-                if (fpAncestor == prevBlock) {
-                  // We're still the best parent.
-                  keepPlaceholders.InsertFrame(nsnull, lastKP, f);
-                  keepOutOfFlows.InsertFrame(nsnull, lastKOOF, oof);
-                  lastKP = f;
-                  lastKOOF = oof;
-                } else {
-                  // Just put it at the front of
-                  // fpAncestor->GetNextInFlow()'s lines.
-                  nsLineBox* newLine = aState.NewLineBox(f, 1, PR_FALSE);
-                  if (newLine) {
-                    nsBlockFrame* target =
-                      static_cast<nsBlockFrame*>(fpAncestor->GetNextInFlow());
-                    if (!target->mLines.empty()) {
-                      f->SetNextSibling(target->mLines.front()->mFirstChild);
-                    } else {
-                      f->SetNextSibling(nsnull);
-                    }
-                    target->mLines.push_front(newLine);
-                    ReparentFrame(f, this, target);
-
-                    target->mFloats.InsertFrame(nsnull, nsnull, oof);
-                    ReparentFrame(oof, this, target);
-                  }
-                }
-              }
+              NS_ASSERTION(fpif->GetParent() == prevBlock,
+                           "Block has placeholders that don't belong to it.");
+              keepPlaceholders.InsertFrame(nsnull, lastKP, f);
+              keepOutOfFlows.InsertFrame(nsnull, lastKOOF, oof);
+              lastKP = f;
+              lastKOOF = oof;
             }
           }
           aState.FreeLineBox(line);
@@ -5917,10 +5833,6 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       (NS_UNCONSTRAINEDSIZE == availSpace.height))
     aReflowStatus = NS_FRAME_COMPLETE;
 
-  //XXXfr Floats can't be overflow incomplete yet
-  if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aReflowStatus))
-    NS_FRAME_SET_INCOMPLETE(aReflowStatus);
-  
   if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
     // Float is now complete, so delete the placeholder's next in
     // flows, if any; their floats (which are this float's continuations)
