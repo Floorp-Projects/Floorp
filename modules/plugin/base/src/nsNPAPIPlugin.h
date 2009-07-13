@@ -76,7 +76,7 @@ class nsNPAPIPlugin : public nsIPlugin
 public:
   nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
                 NP_PLUGINSHUTDOWN aShutdown);
-  virtual ~nsNPAPIPlugin(void);
+  virtual ~nsNPAPIPlugin();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGIN
@@ -104,7 +104,7 @@ protected:
 
   NP_PLUGINSHUTDOWN fShutdownEntry;
 
-  // The browser-side callbacks that a 4.x-style plugin calls.
+  // Browser-side callbacks that the plugin calls.
   static NPNetscapeFuncs CALLBACKS;
 };
 
