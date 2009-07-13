@@ -1304,13 +1304,13 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      * By default the trigger factor gets maximum possible value. This
      * means that GC will not be triggered by growth of GC memory (gcBytes).
      */
-    rt->gcTriggerFactor = (uint32) -1;
+    rt->SetGCTriggerFactor((uint32) -1);
 
     /*
      * The assigned value prevents GC from running when GC memory is too low
      * (during JS engine start).
      */
-    rt->gcLastBytes = 8192;
+    rt->SetGCLastBytes(8192);
 
     METER(memset(&rt->gcStats, 0, sizeof rt->gcStats));
     return JS_TRUE;
@@ -1796,6 +1796,22 @@ EnsureLocalFreeList(JSContext *cx)
 
 #endif
 
+void
+JSRuntime::SetGCTriggerFactor(uint32 factor)
+{
+    JS_ASSERT(factor >= 100);
+
+    gcTriggerFactor = factor;
+    SetGCLastBytes(gcLastBytes);
+}
+
+void
+JSRuntime::SetGCLastBytes(size_t lastBytes)
+{
+    gcLastBytes = lastBytes;
+    gcTriggerBytes = lastBytes * gcTriggerFactor / 100;
+}
+
 static JS_INLINE bool
 IsGCThresholdReached(JSRuntime *rt)
 {
@@ -1810,7 +1826,7 @@ IsGCThresholdReached(JSRuntime *rt)
      * the gcBytes value is close to zero at the JS engine start.
      */
     return rt->gcMallocBytes >= rt->gcMaxMallocBytes ||
-           rt->gcBytes / rt->gcTriggerFactor >= rt->gcLastBytes / 100;
+           rt->gcBytes >= rt->gcTriggerBytes;
 }
 
 void *
@@ -3842,7 +3858,7 @@ out:
         goto restart;
     }
 
-    rt->gcLastBytes = rt->gcBytes;
+    rt->SetGCLastBytes(rt->gcBytes);
   done_running:
     rt->gcLevel = 0;
     rt->gcRunning = JS_FALSE;
