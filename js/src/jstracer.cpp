@@ -309,7 +309,6 @@ js_InitJITLogController ( void )
     if (strstr(tmf, "readlir"))     bits |= LC_ReadLIR;
     if (strstr(tmf, "aftersf_sp"))  bits |= LC_AfterSF_SP;
     if (strstr(tmf, "aftersf_rp"))  bits |= LC_AfterSF_RP;
-    if (strstr(tmf, "afterdeadf"))  bits |= LC_AfterDeadF;
     if (strstr(tmf, "regalloc"))    bits |= LC_RegAlloc;
     if (strstr(tmf, "assembly"))    bits |= LC_Assembly;
     if (strstr(tmf, "nocodeaddrs")) bits |= LC_NoCodeAddrs;
@@ -317,7 +316,7 @@ js_InitJITLogController ( void )
     if (strstr(tmf, "full")) {
         bits |= LC_TMMinimal | LC_TMTracer | LC_TMRecorder | LC_TMPatcher | LC_TMAbort |
                 LC_TMAbort   | LC_TMStats  | LC_TMRegexp   | LC_Liveness  | LC_ReadLIR |
-                LC_AfterSF_SP | LC_AfterSF_RP | LC_AfterDeadF | LC_RegAlloc | LC_Assembly;
+                LC_AfterSF_SP | LC_AfterSF_RP | LC_RegAlloc | LC_Assembly;
     }
 
     js_LogController.lcbits = bits;
@@ -347,7 +346,6 @@ js_InitJITLogController ( void )
     printf("   readlir      show LIR as it enters the reader pipeline\n");
     printf("   aftersf_sp   show LIR after StackFilter(sp)\n");
     printf("   aftersf_rp   show LIR after StackFilter(rp)\n");
-    printf("   afterdeadf   show LIR after DeadCodeFilter\n");
     printf("   regalloc     show regalloc details\n");
     printf("   assembly     show final aggregated assembly code\n");
     printf("   nocodeaddrs  don't show code addresses in assembly listings\n");
