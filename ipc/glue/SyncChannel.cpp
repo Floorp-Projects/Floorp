@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/SyncChannel.h"
 #include "mozilla/ipc/GeckoThread.h"
 
 #include "nsDebug.h"
@@ -45,95 +45,75 @@
 using mozilla::MutexAutoLock;
 
 template<>
-struct RunnableMethodTraits<mozilla::ipc::RPCChannel>
+struct RunnableMethodTraits<mozilla::ipc::SyncChannel>
 {
-    static void RetainCallee(mozilla::ipc::RPCChannel* obj) { }
-    static void ReleaseCallee(mozilla::ipc::RPCChannel* obj) { }
+    static void RetainCallee(mozilla::ipc::SyncChannel* obj) { }
+    static void ReleaseCallee(mozilla::ipc::SyncChannel* obj) { }
 };
 
 namespace mozilla {
 namespace ipc {
 
-
 bool
-RPCChannel::Call(Message* msg, Message* reply)
+SyncChannel::Send(Message* msg, Message* reply)
 {
-    NS_PRECONDITION(msg->is_rpc(), "can only Call() RPC messages here");
+    NS_PRECONDITION(msg->is_sync(), "can only Send() sync messages here");
 
-    mMutex.Lock();
+    MutexAutoLock lock(mMutex);
 
     mChannelState = ChannelWaiting;
-
-    mPending.push(*msg);
-    AsyncChannel::Send(msg);
+    mPendingReply = msg->type() + 1;
+    /*assert*/AsyncChannel::Send(msg);
 
     while (1) {
-        // here we're waiting for something to happen.  it may either:
-        //  (1) a reply to an outstanding message
-        //  (2) a recursive call from the other side
+        // here we're waiting for something to happen.  it may be either:
+        //  (1) the reply we're waiting for (mPendingReply)
         // or
-        //  (3) any other message
+        //  (2) any other message
+        //
+        // In case (1), we return this reply back to the caller.
+        // In case (2), we defer processing of the message until our reply
+        // comes back.
         mCvar.Wait();
 
-        Message recvd = mPending.top();
-        mPending.pop();
-
-        if (!recvd.is_rpc()) {
-            SyncChannel::OnDispatchMessage(recvd);
-            // FIXME/cjones: error handling
-        }
-        // RPC reply message
-        else if (recvd.is_reply()) {
-            NS_ASSERTION(0 < mPending.size(), "invalid RPC stack");
-
-            const Message& pending = mPending.top();
-            if (recvd.type() != (pending.type()+1)) {
-                // FIXME/cjones: handle error
-                NS_ASSERTION(0, "somebody's misbehavin'");
-            }
-
-            // we received a reply to our most recent message.  pop this
-            // frame and return the reply
-            mPending.pop();
-            *reply = recvd;
+        if (mRecvd.is_reply() && mPendingReply == mRecvd.type()) {
+            // case (1)
+            mPendingReply = 0;
+            *reply = mRecvd;
 
             if (!WaitingForReply()) {
                 mChannelState = ChannelIdle;
             }
 
-            mMutex.Unlock();
             return true;
         }
-        // RPC in-call
         else {
-            mMutex.Unlock();
-
-            // someone called in to us from the other side.  handle the call
-            OnDispatchMessage(recvd);
-            // FIXME/cjones: error handling
-
-            mMutex.Lock();
+            // case (2)
+            NS_ASSERTION(!mRecvd.is_reply(), "can't process replies here");
+            // post a task to our own event loop
+            mWorkerLoop->PostTask(
+                FROM_HERE,
+                NewRunnableMethod(this, &SyncChannel::OnDispatchMessage, mRecvd));
         }
     }
-
-    delete msg;
-
-    return true;
 }
 
 void
-RPCChannel::OnDispatchMessage(const Message& call)
+SyncChannel::OnDispatchMessage(const Message& msg)
 {
-    if (!call.is_rpc()) {
-        return SyncChannel::OnDispatchMessage(call);
+    NS_ASSERTION(!msg.is_reply(), "can't process replies here");
+    NS_ASSERTION(!msg.is_rpc(), "sync or async only here");
+
+    if (!msg.is_sync()) {
+        return AsyncChannel::OnDispatchMessage(msg);
     }
 
     Message* reply;
-    switch (static_cast<Listener*>(mListener)->OnCallReceived(call, reply)) {
+    switch (static_cast<Listener*>(mListener)->OnMessageReceived(msg, reply)) {
     case Listener::MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this,
-                                            &RPCChannel::OnSendReply,
+                                            &SyncChannel::OnSendReply,
                                             reply));
         return;
 
@@ -157,22 +137,36 @@ RPCChannel::OnDispatchMessage(const Message& call)
 //
 
 void
-RPCChannel::OnMessageReceived(const Message& msg)
+SyncChannel::OnMessageReceived(const Message& msg)
 {
     MutexAutoLock lock(mMutex);
 
-    if (0 == mPending.size()) {
+    if (ChannelIdle == mChannelState) {
         // wake up the worker, there's work to do
-        mWorkerLoop->PostTask(FROM_HERE,
-                              NewRunnableMethod(this,
-                                                &RPCChannel::OnDispatchMessage,
-                                                msg));
+        if (msg.is_sync()) {
+            mWorkerLoop->PostTask(
+                FROM_HERE,
+                NewRunnableMethod(this, &SyncChannel::OnDispatchMessage, msg));
+        }
+        else {
+            return AsyncChannel::OnMessageReceived(msg);
+        }
     }
-    else {
+    else if (ChannelWaiting == mChannelState) {
         // let the worker know something new has happened
-        mPending.push(msg);
+        mRecvd = msg;
         mCvar.Notify();
     }
+    else {
+        // FIXME/cjones: could reach here in error conditions.  impl me
+        NOTREACHED();
+    }
+}
+
+void
+SyncChannel::OnSendReply(Message* aReply)
+{
+    mTransport->Send(aReply);
 }
 
 
