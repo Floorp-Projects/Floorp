@@ -49,13 +49,12 @@
 
 #include "nsISupports.h"
 #include "nsPresContext.h" // for nsCompatability
-#include "nsILinkHandler.h"
 #include "nsString.h"
 #include "nsChangeHint.h"
+#include "nsIContent.h"
 
 class nsIStyleSheet;
 class nsPresContext;
-class nsIContent;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsRuleWalker;
