@@ -131,6 +131,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       let doc = win.document;
 
       let richlistbox = doc.getElementById("downloadView");

@@ -108,6 +108,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
 
       // Now we can run our tests
       for each (let t in testFuncs)

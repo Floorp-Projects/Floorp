@@ -173,6 +173,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       let doc = win.document;
       dm.addListener(new bug413985obs(win));
 
