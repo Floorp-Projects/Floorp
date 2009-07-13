@@ -39,7 +39,7 @@
 #ifndef dom_plugins_NPPInstanceParent_h
 #define dom_plugins_NPPInstanceParent_h 1
 
-#include "NPPProtocolParent.h"
+#include "mozilla/plugins/NPPProtocolParent.h"
 
 #include "npfunctions.h"
 

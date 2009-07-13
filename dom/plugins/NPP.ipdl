@@ -1,7 +1,7 @@
 include protocol "NPAPI.ipdl";
 //include protocol "NPStream.ipdl";
 
-include "PluginMessageUtils.h";
+include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
 using NPWindow;
