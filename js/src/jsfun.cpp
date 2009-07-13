@@ -77,6 +77,8 @@
 # include "jsxdrapi.h"
 #endif
 
+#include "jsatominlines.h"
+
 /* Generic function/call/arguments tinyids -- also reflected bit numbers. */
 enum {
     CALL_ARGUMENTS  = -1,       /* predefined arguments local variable */

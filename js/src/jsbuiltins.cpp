@@ -59,6 +59,8 @@
 #include "jsbuiltins.h"
 #include "jstracer.h"
 
+#include "jsatominlines.h"
+
 using namespace avmplus;
 using namespace nanojit;
 
