@@ -41,7 +41,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += chromium glue testshell
+DIRS += ipdl chromium glue testshell
 TOOL_DIRS = app
 
 include $(topsrcdir)/config/rules.mk

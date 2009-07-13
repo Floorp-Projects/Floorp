@@ -43,18 +43,7 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 
-// Used by chrome code, we override this here and #ifdef theirs out. See the
-// comments in chrome/common/ipc_message_utils.h for info about this enum.
-enum IPCMessageStart {
-  NPAPIProtocolMsgStart = 0,
-  NPPProtocolMsgStart = 0,
-
-  IFrameEmbeddingProtocolMsgStart,
-
-  TestShellProtocolMsgStart,
-
-  LastMsgIndex
-};
+#include "IPCMessageStart.h"
 
 COMPILE_ASSERT(LastMsgIndex <= 16, need_to_update_IPC_MESSAGE_MACRO);
 

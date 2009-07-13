@@ -1,0 +1,3 @@
+IPDLSRCS = \
+  IFrameEmbedding.ipdl \
+  $(NULL)
