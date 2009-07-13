@@ -52,9 +52,6 @@ EXPORTS_NAMESPACES = mozilla/ipc
 EXPORTS_mozilla/ipc = \
   TestShellChild.h \
   TestShellParent.h \
-  TestShellProtocol.h \
-  TestShellProtocolChild.h \
-  TestShellProtocolParent.h \
   TestShellThread.h \
   XPCShellEnvironment.h \
   $(NULL)

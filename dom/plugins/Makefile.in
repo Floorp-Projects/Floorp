@@ -54,14 +54,8 @@ EXPORTS_mozilla =				\
 EXPORTS_mozilla/plugins =			\
   NPAPIPluginChild.h				\
   NPAPIPluginParent.h				\
-  NPAPIProtocol.h				\
-  NPAPIProtocolChild.h				\
-  NPAPIProtocolParent.h				\
   NPPInstanceChild.h				\
   NPPInstanceParent.h				\
-  NPPProtocol.h					\
-  NPPProtocolChild.h				\
-  NPPProtocolParent.h				\
   PluginMessageUtils.h				\
   PluginProcessParent.h				\
   PluginThreadChild.h				\
