@@ -471,21 +471,6 @@ nsTableOuterFrame::GetMargin(nsPresContext*           aPresContext,
   aMargin = childRS.mComputedMargin;
 }
 
-static
-nscoord CalcAutoMargin(nscoord aAutoMargin,
-                       nscoord aOppositeMargin,
-                       nscoord aContainBlockSize,
-                       nscoord aFrameSize)
-{
-  nscoord margin;
-  if (NS_AUTOMARGIN == aOppositeMargin) 
-    margin = (aContainBlockSize - aFrameSize) / 2;
-  else {
-    margin = aContainBlockSize - aFrameSize - aOppositeMargin;
-  }
-  return PR_MAX(0, margin);
-}
-
 static nsSize
 GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
 {

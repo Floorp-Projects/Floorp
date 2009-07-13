@@ -181,7 +181,7 @@ interface nsIPluginInstance : nsISupports
      * @param aMIMEType - resulting MIME type
      * @result          - NS_OK if this operation was successful
      */
-    readonly attribute string MIMEType;
+    void getMIMEType([const, shared] out string aValue);
 
     /**
      * Get the JavaScript context to this plugin instance.
