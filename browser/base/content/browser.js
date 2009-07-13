@@ -338,22 +338,21 @@ const gPopupBlockerObserver = {
     // it.
     if (!gBrowser.pageReport.reported) {
       if (gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
-        var bundle_browser = document.getElementById("bundle_browser");
         var brandBundle = document.getElementById("bundle_brand");
         var brandShortName = brandBundle.getString("brandShortName");
         var message;
         var popupCount = gBrowser.pageReport.length;
 #ifdef XP_WIN
-        var popupButtonText = bundle_browser.getString("popupWarningButton");
-        var popupButtonAccesskey = bundle_browser.getString("popupWarningButton.accesskey");
+        var popupButtonText = gNavigatorBundle.getString("popupWarningButton");
+        var popupButtonAccesskey = gNavigatorBundle.getString("popupWarningButton.accesskey");
 #else
-        var popupButtonText = bundle_browser.getString("popupWarningButtonUnix");
-        var popupButtonAccesskey = bundle_browser.getString("popupWarningButtonUnix.accesskey");
+        var popupButtonText = gNavigatorBundle.getString("popupWarningButtonUnix");
+        var popupButtonAccesskey = gNavigatorBundle.getString("popupWarningButtonUnix.accesskey");
 #endif
         if (popupCount > 1)
-          message = bundle_browser.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
+          message = gNavigatorBundle.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
         else
-          message = bundle_browser.getFormattedString("popupWarning", [brandShortName]);
+          message = gNavigatorBundle.getFormattedString("popupWarning", [brandShortName]);
 
         var notificationBox = gBrowser.getNotificationBox();
         var notification = notificationBox.getNotificationWithValue("popup-blocked");
@@ -395,7 +394,6 @@ const gPopupBlockerObserver = {
 
   fillPopupList: function (aEvent)
   {
-    var bundle_browser = document.getElementById("bundle_browser");
     // XXXben - rather than using |currentURI| here, which breaks down on multi-framed sites
     //          we should really walk the pageReport and create a list of "allow for <host>"
     //          menuitems for the common subset of hosts present in the report, this will
@@ -410,18 +408,17 @@ const gPopupBlockerObserver = {
     try {
       blockedPopupAllowSite.removeAttribute("hidden");
 
-      var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                        .getService(this._kIPM);
+      var pm = Cc["@mozilla.org/permissionmanager;1"].getService(this._kIPM);
       if (pm.testPermission(uri, "popup") == this._kIPM.ALLOW_ACTION) {
         // Offer an item to block popups for this site, if a whitelist entry exists
         // already for it.
-        var blockString = bundle_browser.getFormattedString("popupBlock", [uri.host]);
+        let blockString = gNavigatorBundle.getFormattedString("popupBlock", [uri.host]);
         blockedPopupAllowSite.setAttribute("label", blockString);
         blockedPopupAllowSite.setAttribute("block", "true");
       }
       else {
         // Offer an item to allow popups for this site
-        var allowString = bundle_browser.getFormattedString("popupAllow", [uri.host]);
+        let allowString = gNavigatorBundle.getFormattedString("popupAllow", [uri.host]);
         blockedPopupAllowSite.setAttribute("label", allowString);
         blockedPopupAllowSite.removeAttribute("block");
       }
@@ -463,8 +460,8 @@ const gPopupBlockerObserver = {
         foundUsablePopupURI = true;
 
         var menuitem = document.createElement("menuitem");
-        var label = bundle_browser.getFormattedString("popupShowPopupPrefix",
-                                                      [popupURIspec]);
+        var label = gNavigatorBundle.getFormattedString("popupShowPopupPrefix",
+                                                        [popupURIspec]);
         menuitem.setAttribute("label", label);
         menuitem.setAttribute("popupWindowURI", popupURIspec);
         menuitem.setAttribute("popupWindowFeatures", pageReport[i].popupWindowFeatures);
@@ -489,9 +486,9 @@ const gPopupBlockerObserver = {
     var showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
     blockedPopupDontShowMessage.setAttribute("checked", !showMessage);
     if (aEvent.target.localName == "popup")
-      blockedPopupDontShowMessage.setAttribute("label", bundle_browser.getString("popupWarningDontShowFromMessage"));
+      blockedPopupDontShowMessage.setAttribute("label", gNavigatorBundle.getString("popupWarningDontShowFromMessage"));
     else
-      blockedPopupDontShowMessage.setAttribute("label", bundle_browser.getString("popupWarningDontShowFromStatusbar"));
+      blockedPopupDontShowMessage.setAttribute("label", gNavigatorBundle.getString("popupWarningDontShowFromStatusbar"));
   },
 
   showBlockedPopup: function (aEvent)
@@ -591,7 +588,6 @@ const gXPInstallObserver = {
   observe: function (aSubject, aTopic, aData)
   {
     var brandBundle = document.getElementById("bundle_brand");
-    var browserBundle = document.getElementById("bundle_browser");
     switch (aTopic) {
     case "xpinstall-install-blocked":
       var installInfo = aSubject.QueryInterface(Components.interfaces.nsIXPIInstallInfo);
@@ -607,16 +603,16 @@ const gXPInstallObserver = {
         if (!gPrefService.getBoolPref("xpinstall.enabled")) {
           notificationName = "xpinstall-disabled"
           if (gPrefService.prefIsLocked("xpinstall.enabled")) {
-            messageString = browserBundle.getString("xpinstallDisabledMessageLocked");
+            messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
             buttons = [];
           }
           else {
-            messageString = browserBundle.getFormattedString("xpinstallDisabledMessage",
-                                                             [brandShortName, host]);
+            messageString = gNavigatorBundle.getFormattedString("xpinstallDisabledMessage",
+                                                                [brandShortName, host]);
 
             buttons = [{
-              label: browserBundle.getString("xpinstallDisabledButton"),
-              accessKey: browserBundle.getString("xpinstallDisabledButton.accesskey"),
+              label: gNavigatorBundle.getString("xpinstallDisabledButton"),
+              accessKey: gNavigatorBundle.getString("xpinstallDisabledButton.accesskey"),
               popup: null,
               callback: function editPrefs() {
                 gPrefService.setBoolPref("xpinstall.enabled", true);
@@ -627,12 +623,12 @@ const gXPInstallObserver = {
         }
         else {
           notificationName = "xpinstall"
-          messageString = browserBundle.getFormattedString("xpinstallPromptWarning",
-                                                           [brandShortName, host]);
+          messageString = gNavigatorBundle.getFormattedString("xpinstallPromptWarning",
+                                                              [brandShortName, host]);
 
           buttons = [{
-            label: browserBundle.getString("xpinstallPromptAllowButton"),
-            accessKey: browserBundle.getString("xpinstallPromptAllowButton.accesskey"),
+            label: gNavigatorBundle.getString("xpinstallPromptAllowButton"),
+            accessKey: gNavigatorBundle.getString("xpinstallPromptAllowButton.accesskey"),
             popup: null,
             callback: function() {
               var mgr = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
@@ -3161,10 +3157,9 @@ function FillHistoryMenu(aParent) {
   if (end == count)
     start = Math.max(count - MAX_HISTORY_MENU_ITEMS, 0);
 
-  var bundle_browser = document.getElementById("bundle_browser");
-  var tooltipBack = bundle_browser.getString("tabHistory.goBack");
-  var tooltipCurrent = bundle_browser.getString("tabHistory.current");
-  var tooltipForward = bundle_browser.getString("tabHistory.goForward");
+  var tooltipBack = gNavigatorBundle.getString("tabHistory.goBack");
+  var tooltipCurrent = gNavigatorBundle.getString("tabHistory.current");
+  var tooltipForward = gNavigatorBundle.getString("tabHistory.goForward");
 
   for (var j = end - 1; j >= start; j--) {
     let item = document.createElement("menuitem");
@@ -5453,19 +5448,17 @@ var OfflineApps = {
     var notificationBox = gBrowser.getNotificationBox(aBrowser);
     var notification = notificationBox.getNotificationWithValue("offline-app-usage");
     if (!notification) {
-      var bundle_browser = document.getElementById("bundle_browser");
-
       var buttons = [{
-          label: bundle_browser.getString("offlineApps.manageUsage"),
-          accessKey: bundle_browser.getString("offlineApps.manageUsageAccessKey"),
+          label: gNavigatorBundle.getString("offlineApps.manageUsage"),
+          accessKey: gNavigatorBundle.getString("offlineApps.manageUsageAccessKey"),
           callback: OfflineApps.manage
         }];
 
       var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
       const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-      var message = bundle_browser.getFormattedString("offlineApps.usage",
-                                                      [ aURI.host,
-                                                        warnQuota / 1024 ]);
+      var message = gNavigatorBundle.getFormattedString("offlineApps.usage",
+                                                        [ aURI.host,
+                                                          warnQuota / 1024 ]);
 
       notificationBox.appendNotification(message, "offline-app-usage",
                                          "chrome://browser/skin/Info.png",
@@ -5559,33 +5552,31 @@ var OfflineApps = {
     if (notification) {
       notification.documents.push(aContentWindow.document);
     } else {
-      var bundle_browser = document.getElementById("bundle_browser");
-
       var buttons = [{
-        label: bundle_browser.getString("offlineApps.allow"),
-        accessKey: bundle_browser.getString("offlineApps.allowAccessKey"),
+        label: gNavigatorBundle.getString("offlineApps.allow"),
+        accessKey: gNavigatorBundle.getString("offlineApps.allowAccessKey"),
         callback: function() {
           for (var i = 0; i < notification.documents.length; i++) {
             OfflineApps.allowSite(notification.documents[i]);
           }
         }
       },{
-        label: bundle_browser.getString("offlineApps.never"),
-        accessKey: bundle_browser.getString("offlineApps.neverAccessKey"),
+        label: gNavigatorBundle.getString("offlineApps.never"),
+        accessKey: gNavigatorBundle.getString("offlineApps.neverAccessKey"),
         callback: function() {
           for (var i = 0; i < notification.documents.length; i++) {
             OfflineApps.disallowSite(notification.documents[i]);
           }
         }
       },{
-        label: bundle_browser.getString("offlineApps.notNow"),
-        accessKey: bundle_browser.getString("offlineApps.notNowAccessKey"),
+        label: gNavigatorBundle.getString("offlineApps.notNow"),
+        accessKey: gNavigatorBundle.getString("offlineApps.notNowAccessKey"),
         callback: function() { /* noop */ }
       }];
 
       const priority = notificationBox.PRIORITY_INFO_LOW;
-      var message = bundle_browser.getFormattedString("offlineApps.available",
-                                                      [ host ]);
+      var message = gNavigatorBundle.getFormattedString("offlineApps.available",
+                                                        [ host ]);
       notification =
         notificationBox.appendNotification(message, notificationID,
                                            "chrome://browser/skin/Info.png",
@@ -6319,21 +6310,17 @@ var gIdentityHandler = {
   _lastLocation : null,
 
   // smart getters
-  get _stringBundle () {
-    delete this._stringBundle;
-    return this._stringBundle = document.getElementById("bundle_browser");
-  },
   get _staticStrings () {
     delete this._staticStrings;
     this._staticStrings = {};
     this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
-      encryption_label: this._stringBundle.getString("identity.encrypted")
+      encryption_label: gNavigatorBundle.getString("identity.encrypted")
     };
     this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
-      encryption_label: this._stringBundle.getString("identity.encrypted")
+      encryption_label: gNavigatorBundle.getString("identity.encrypted")
     };
     this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
-      encryption_label: this._stringBundle.getString("identity.unencrypted")
+      encryption_label: gNavigatorBundle.getString("identity.unencrypted")
     };
     return this._staticStrings;
   },
@@ -6378,6 +6365,11 @@ var gIdentityHandler = {
   get _identityIconLabel () {
     delete this._identityIconLabel;
     return this._identityIconLabel = document.getElementById("identity-icon-label");
+  },
+  get _overrideService () {
+    delete this._overrideService;
+    return this._overrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                     .getService(Ci.nsICertOverrideService);
   },
 
   /**
@@ -6524,15 +6516,10 @@ var gIdentityHandler = {
       if (lookupHost.indexOf(':') < 0)
         lookupHost += ":443";
 
-      // Cache the override service the first time we need to check it
-      if (!this._overrideService)
-        this._overrideService = Components.classes["@mozilla.org/security/certoverride;1"]
-                                          .getService(Components.interfaces.nsICertOverrideService);
-
       // Verifier is either the CA Org, for a normal cert, or a special string
       // for certs that are trusted because of a security exception.
-      var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
-                                                          [iData.caOrg]);
+      var tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
+                                                        [iData.caOrg]);
       
       // Check whether this site is a security exception. XPConnect does the right
       // thing here in terms of converting _lastLocation.port from string to int, but
@@ -6541,21 +6528,21 @@ var gIdentityHandler = {
       if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname, 
                                                     (this._lastLocation.port || 443),
                                                     iData.cert, {}, {}))
-        tooltip = this._stringBundle.getString("identity.identified.verified_by_you");
+        tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
       // If it's identified, then we can populate the dialog with credentials
       iData = this.getIdentityData();  
-      tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
-                                                      [iData.caOrg]);
+      tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
+                                                    [iData.caOrg]);
       if (iData.country)
-        icon_label = this._stringBundle.getFormattedString("identity.identified.title_with_country",
-                                                           [iData.subjectOrg, iData.country]);
+        icon_label = gNavigatorBundle.getFormattedString("identity.identified.title_with_country",
+                                                         [iData.subjectOrg, iData.country]);
       else
         icon_label = iData.subjectOrg;
     }
     else {
-      tooltip = this._stringBundle.getString("identity.unknown.tooltip");
+      tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
       icon_label = "";
     }
     
@@ -6586,7 +6573,7 @@ var gIdentityHandler = {
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
       var host = this.getEffectiveHost();
-      var owner = this._stringBundle.getString("identity.ownerUnknown2");
+      var owner = gNavigatorBundle.getString("identity.ownerUnknown2");
       verifier = this._identityBox.tooltipText;
       supplemental = "";
     }
@@ -6601,8 +6588,8 @@ var gIdentityHandler = {
       if (iData.city)
         supplemental += iData.city + "\n";        
       if (iData.state && iData.country)
-        supplemental += this._stringBundle.getFormattedString("identity.identified.state_and_country",
-                                                              [iData.state, iData.country]);
+        supplemental += gNavigatorBundle.getFormattedString("identity.identified.state_and_country",
+                                                            [iData.state, iData.country]);
       else if (iData.state) // State only
         supplemental += iData.state;
       else if (iData.country) // Country only
@@ -6694,10 +6681,8 @@ let DownloadMonitorPanel = {
     this._panel = document.getElementById("download-monitor");
 
     // Cache the status strings
-    let (bundle = document.getElementById("bundle_browser")) {
-      this._activeStr = bundle.getString("activeDownloads");
-      this._pausedStr = bundle.getString("pausedDownloads");
-    }
+    this._activeStr = gNavigatorBundle.getString("activeDownloads");
+    this._pausedStr = gNavigatorBundle.getString("pausedDownloads");
 
     gDownloadMgr.addListener(this);
     this._listening = true;
