@@ -161,6 +161,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       let doc = win.document;
 
       let stmt = db.createStatement("SELECT COUNT(*) FROM moz_downloads");

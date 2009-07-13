@@ -125,6 +125,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       let $ = function(aId) win.document.getElementById(aId);
       let downloadView = $("downloadView");
       let searchbox = $("searchbox");
