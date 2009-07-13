@@ -321,7 +321,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mDeferredPositioner   = nsnull;
   mOldIMC               = nsnull;
   mNativeDragTarget     = nsnull;
-  mIsDestroying         = PR_FALSE;
+  mInDtor               = PR_FALSE;
   mIsVisible            = PR_FALSE;
   mHas3DBorder          = PR_FALSE;
   mIsInMouseCapture     = PR_FALSE;
@@ -384,30 +384,14 @@ nsWindow::nsWindow() : nsBaseWidget()
 
 nsWindow::~nsWindow()
 {
-  mIsDestroying = PR_TRUE;
-  if (sCurrentWindow == this) {
-    sCurrentWindow = nsnull;
-  }
+  mInDtor = PR_TRUE;
 
-  MouseTrailer* mtrailer = nsToolkit::gMouseTrailer;
-  if (mtrailer) {
-    if (mtrailer->GetMouseTrailerWindow() == mWnd)
-      mtrailer->DestroyTimer();
-
-    if (mtrailer->GetCaptureWindow() == mWnd)
-      mtrailer->SetCaptureWindow(nsnull);
-  }
-
-  // If the widget was released without calling Destroy() then the native
-  // window still exists, and we need to destroy it
-  if (NULL != mWnd) {
+  // If the widget was released without calling Destroy() then the native window still
+  // exists, and we need to destroy it. This will also result in a call to OnDestroy.
+  //
+  // XXX How could this happen???
+  if (NULL != mWnd)
     Destroy();
-  }
-
-  if (mCursor == -1) {
-    // A successfull SetCursor call will destroy the custom cursor, if it's ours
-    SetCursor(eCursor_standard);
-  }
 
   sInstanceCount--;
 
@@ -475,76 +459,6 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
   return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
                               aContext, aAppShell, aToolkit, aInitData,
                               aParent));
-}
-
-// Close this nsWindow
-NS_METHOD nsWindow::Destroy()
-{
-  // Switch to the "main gui thread" if necessary... This method must
-  // be executed on the "gui thread"...
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  if (toolkit != nsnull && !toolkit->IsGuiThread()) {
-    MethodInfo info(this, nsWindow::DESTROY);
-    toolkit->CallMethod(&info);
-    return NS_ERROR_FAILURE;
-  }
-
-  // disconnect from the parent
-  if (!mIsDestroying) {
-    nsBaseWidget::Destroy();
-  }
-
-  // just to be safe. If we're going away and for some reason we're still
-  // the rollup widget, rollup and turn off capture.
-  if ( this == sRollupWidget ) {
-    if ( sRollupListener )
-      sRollupListener->Rollup(nsnull, nsnull);
-    CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
-  }
-
-  EnableDragDrop(PR_FALSE);
-
-  // destroy the HWND
-  if (mWnd) {
-    // prevent the widget from causing additional events
-    mEventCallback = nsnull;
-
-    // if IME is disabled, restore it.
-    if (mOldIMC) {
-      mOldIMC = ::ImmAssociateContext(mWnd, mOldIMC);
-      NS_ASSERTION(!mOldIMC, "Another IMC was associated");
-    }
-
-    HICON icon;
-    icon = (HICON) ::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM) 0);
-    if (icon)
-      ::DestroyIcon(icon);
-
-    icon = (HICON) ::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM) 0);
-    if (icon)
-      ::DestroyIcon(icon);
-
-#ifdef MOZ_XUL
-    if (eTransparencyTransparent == mTransparencyMode)
-    {
-      SetupTranslucentWindowMemoryBitmap(eTransparencyOpaque);
-
-    }
-#endif
-
-    VERIFY(::DestroyWindow(mWnd));
-
-    mWnd = NULL;
-    //our windows can be subclassed by
-    //others and these nameless, faceless others
-    //may not let us know about WM_DESTROY. so,
-    //if OnDestroy() didn't get called, just call
-    //it now. MMP
-    if (PR_FALSE == mOnDestroyCalled)
-      OnDestroy();
-  }
-
-  return NS_OK;
 }
 
 // Allow Derived classes to modify the height that is passed
@@ -729,6 +643,45 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
     mGesture.InitWinGestureSupport(mWnd);
   }
 #endif // !defined(WINCE)
+
+  return NS_OK;
+}
+
+// Close this nsWindow
+NS_METHOD nsWindow::Destroy()
+{
+  // WM_DESTROY has already fired, we're done.
+  if (nsnull == mWnd)
+    return NS_OK;
+
+  // Switch to the "main gui thread" if necessary. Destroy() must be executed on the
+  // "gui thread".
+  nsToolkit* toolkit = (nsToolkit *)mToolkit;
+  if (toolkit != nsnull && !toolkit->IsGuiThread()) {
+    MethodInfo info(this, nsWindow::DESTROY);
+    toolkit->CallMethod(&info);
+    return NS_ERROR_FAILURE;
+  }
+
+  // During the destruction of all of our children, make sure we don't get deleted.
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  // The DestroyWindow function destroys the specified window. The function sends WM_DESTROY
+  // and WM_NCDESTROY messages to the window to deactivate it and remove the keyboard focus
+  // from it. The function also destroys the window's menu, flushes the thread message queue,
+  // destroys timers, removes clipboard ownership, and breaks the clipboard viewer chain (if
+  // the window is at the top of the viewer chain).
+  //
+  // If the specified window is a parent or owner window, DestroyWindow automatically destroys
+  // the associated child or owned windows when it destroys the parent or owner window. The
+  // function first destroys child or owned windows, and then it destroys the parent or owner
+  // window.
+  VERIFY(::DestroyWindow(mWnd));
+  
+  // Our windows can be subclassed which may prevent us receiving WM_DESTROY. If OnDestroy()
+  // didn't get called, call it now.
+  if (PR_FALSE == mOnDestroyCalled)
+    OnDestroy();
 
   return NS_OK;
 }
@@ -1038,7 +991,8 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
   }
 
   if (mWnd) {
-    ::SetParent(mWnd, nsnull);
+    // If we have no parent, SetParent should return the desktop.
+    VERIFY(::SetParent(mWnd, nsnull));
   }
 
   return NS_OK;
@@ -1061,7 +1015,7 @@ nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
   // If this widget has already been destroyed, pretend we have no parent.
   // This corresponds to code in Destroy which removes the destroyed
   // widget from its parent's child list.
-  if (mIsDestroying || mOnDestroyCalled)
+  if (mInDtor || mOnDestroyCalled)
     return nsnull;
 
 
@@ -1084,7 +1038,7 @@ nsWindow* nsWindow::GetParentWindow(PRBool aIncludeOwner)
       if (widget) {
         // If the widget is in the process of being destroyed then
         // do NOT return it
-        if (widget->mIsDestroying) {
+        if (widget->mInDtor) {
           widget = nsnull;
         }
       }
@@ -3346,12 +3300,12 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
 
       if (rect.Contains(event.refPoint)) {
         if (sCurrentWindow == NULL || sCurrentWindow != this) {
-          if ((nsnull != sCurrentWindow) && (!sCurrentWindow->mIsDestroying)) {
+          if ((nsnull != sCurrentWindow) && (!sCurrentWindow->mInDtor)) {
             LPARAM pos = sCurrentWindow->lParamToClient(lParamToScreen(lParam));
             sCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam, pos);
           }
           sCurrentWindow = this;
-          if (!mIsDestroying) {
+          if (!mInDtor) {
             LPARAM pos = sCurrentWindow->lParamToClient(lParamToScreen(lParam));
             sCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER, wParam, pos);
           }
@@ -3561,7 +3515,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   // deleted during processing. yes, it's a double hack, since someWindow
   // is not really an interface.
   nsCOMPtr<nsISupports> kungFuDeathGrip;
-  if (!someWindow->mIsDestroying) // not if we're in the destructor!
+  if (!someWindow->mInDtor) // not if we're in the destructor!
     kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)someWindow);
 
   // Re-direct a tab change message destined for its parent window to the
@@ -5472,44 +5426,103 @@ nsWindow::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifie
   }
 }
 
-// OnDestroy
+// WM_DESTROY event handler
 void nsWindow::OnDestroy()
 {
   mOnDestroyCalled = PR_TRUE;
 
+  // Make sure we don't get destroyed in the process of tearing down.
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+  
+  // Dispatch the NS_DESTROY event. Must be called before mEventCallback is cleared.
+  if (!mInDtor)
+    DispatchStandardEvent(NS_DESTROY);
+
+  // Prevent the widget from sending additional events.
+  mEventCallback = nsnull;
+
+  // Free our subclass and clear |this| stored in the window props. We will no longer
+  // receive events from Windows after this point.
   SubclassWindow(FALSE);
 
-  // We have to destroy the native drag target before we null out our
-  // window pointer
+  // Once mEventCallback is cleared and the subclass is reset, sCurrentWindow can be
+  // cleared. (It's used in tracking windows for mouse events.)
+  if (sCurrentWindow == this)
+    sCurrentWindow = nsnull;
+
+  // Disconnects us from our parent, will call our GetParent().
+  nsBaseWidget::Destroy();
+
+  // Release references to children, device context, toolkit, and app shell.
+  nsBaseWidget::OnDestroy();
+  
+  // Clear our native parent handle.
+  // XXX Windows will take care of this in the proper order, and SetParent(nsnull)'s
+  // remove child on the parent already took place in nsBaseWidget's Destroy call above.
+  //SetParent(nsnull);
+
+  // We have to destroy the native drag target before we null out our window pointer.
   EnableDragDrop(PR_FALSE);
 
-  mWnd = NULL;
-
-  // free GDI objects
-  if (mBrush) {
-    VERIFY(::DeleteObject(mBrush));
-    mBrush = NULL;
+  // If we're going away and for some reason we're still the rollup widget, rollup and
+  // turn off capture.
+  if ( this == sRollupWidget ) {
+    if ( sRollupListener )
+      sRollupListener->Rollup(nsnull, nsnull);
+    CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
   }
 
-  // if we were in the middle of deferred window positioning then
-  // free the memory for the multiple-window position structure
+  // If IME is disabled, restore it.
+  if (mOldIMC) {
+    mOldIMC = ::ImmAssociateContext(mWnd, mOldIMC);
+    NS_ASSERTION(!mOldIMC, "Another IMC was associated");
+  }
+
+  // Turn off mouse trails if enabled.
+  MouseTrailer* mtrailer = nsToolkit::gMouseTrailer;
+  if (mtrailer) {
+    if (mtrailer->GetMouseTrailerWindow() == mWnd)
+      mtrailer->DestroyTimer();
+
+    if (mtrailer->GetCaptureWindow() == mWnd)
+      mtrailer->SetCaptureWindow(nsnull);
+  }
+
+  // If we were in the middle of deferred window positioning then free the memory for the
+  // multiple-window position structure.
   if (mDeferredPositioner) {
     VERIFY(::EndDeferWindowPos(mDeferredPositioner));
     mDeferredPositioner = NULL;
   }
 
-  // release references to children, device context, toolkit, and app shell
-  nsBaseWidget::OnDestroy();
-
-  // dispatch the event
-  if (!mIsDestroying) {
-    // dispatching of the event may cause the reference count to drop to 0
-    // and result in this object being destroyed. To avoid that, add a reference
-    // and then release it after dispatching the event
-    AddRef();
-    DispatchStandardEvent(NS_DESTROY);
-    Release();
+  // Free GDI window class objects
+  if (mBrush) {
+    VERIFY(::DeleteObject(mBrush));
+    mBrush = NULL;
   }
+
+  // Free app icon resources.
+  HICON icon;
+  icon = (HICON) ::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM) 0);
+  if (icon)
+    ::DestroyIcon(icon);
+
+  icon = (HICON) ::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM) 0);
+  if (icon)
+    ::DestroyIcon(icon);
+
+  // Destroy any custom cursor resources.
+  if (mCursor == -1)
+    SetCursor(eCursor_standard);
+
+#ifdef MOZ_XUL
+  // Reset transparency
+  if (eTransparencyTransparent == mTransparencyMode)
+    SetupTranslucentWindowMemoryBitmap(eTransparencyOpaque);
+#endif
+
+  // Clear the main HWND.
+  mWnd = NULL;
 }
 
 // OnMove
@@ -5741,7 +5754,7 @@ already_AddRefed<nsIAccessible> nsWindow::GetRootAccessible()
 {
   nsWindow::sIsAccessibilityOn = TRUE;
 
-  if (mIsDestroying || mOnDestroyCalled || mWindowType == eWindowType_invisible) {
+  if (mInDtor || mOnDestroyCalled || mWindowType == eWindowType_invisible) {
     return nsnull;
   }
 
