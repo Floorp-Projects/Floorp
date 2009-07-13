@@ -77,6 +77,9 @@ for f in files:
     fd.close()
 
     ast = ipdl.parse(specstring, filename, includedirs=includedirs)
+    if ast is None:
+        print >>sys.stderr, 'Specification could not be parsed.'
+        sys.exit(1)
 
     allprotocols.append,('%sProtocolMsgStart' % ast.protocol.name)
 

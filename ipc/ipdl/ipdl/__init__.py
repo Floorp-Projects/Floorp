@@ -42,11 +42,13 @@ from ipdl.type import TypeCheck
 
 from ipdl.cxx.cgen import CxxCodeGen
 
-def parse(specstring, filename='/stdin', includedirs=[ ]):
-    return Parser().parse(specstring, os.path.abspath(filename), includedirs)
+def parse(specstring, filename='/stdin', includedirs=[ ], errout=sys.stderr):
+    '''Return an IPDL AST if parsing was successful.  Print errors to |errout|
+    if it is not.'''
+    return Parser().parse(specstring, os.path.abspath(filename), includedirs, errout)
 
 def typecheck(ast, errout=sys.stderr):
-    '''Returns True iff |ast| is well typed.  Print errors to |errout| if
+    '''Return True iff |ast| is well typed.  Print errors to |errout| if
     it is not.'''
     return TypeCheck().check(ast, errout)
 
