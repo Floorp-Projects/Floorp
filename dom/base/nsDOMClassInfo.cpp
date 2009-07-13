@@ -175,6 +175,7 @@
 #include "nsIDOMRect.h"
 #include "nsIDOMRGBColor.h"
 #include "nsIDOMNSRGBAColor.h"
+#include "nsDOMCSSAttrDeclaration.h"
 
 // XBL related includes.
 #include "nsIXBLService.h"
@@ -10039,6 +10040,31 @@ nsCSSValueListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 
 // CSSStyleDeclaration helper
+
+NS_IMETHODIMP
+nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                            JSObject *globalObj, JSObject **parentObj)
+{
+  nsWrapperCache* cache = nsnull;
+  CallQueryInterface(nativeObj, &cache);
+  if (!cache) {
+    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
+  }
+
+  nsICSSDeclaration *declaration = static_cast<nsICSSDeclaration*>(nativeObj);
+  nsISupports *native_parent = declaration->GetParentObject();
+  if (!native_parent) {
+    return NS_ERROR_FAILURE;
+  }
+
+  jsval v;
+  nsresult rv = WrapNative(cx, globalObj, native_parent, &v);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *parentObj = JSVAL_TO_OBJECT(v);
+
+  return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
+}
 
 nsresult
 nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
