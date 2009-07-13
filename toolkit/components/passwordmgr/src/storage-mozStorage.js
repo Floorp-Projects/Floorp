@@ -1015,8 +1015,13 @@ LoginManagerStorage_mozStorage.prototype = {
 
             // Wrap in a transaction for better performance.
             this._dbConnection.beginTransaction();
-            for each (let login in logins)
-                this._addLogin(login, true);
+            for each (let login in logins) {
+                try {
+                    this._addLogin(login, true);
+                } catch (e) {
+                    this.log("_importLegacySignons failed to add login: " + e);
+                }
+            }
             let disabledHosts = legacy.getAllDisabledHosts({});
             for each (let hostname in disabledHosts)
                 this.setLoginSavingEnabled(hostname, false);
