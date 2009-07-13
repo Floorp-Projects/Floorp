@@ -72,6 +72,7 @@ class Parser:
         self.parser = None
         self.tu = TranslationUnit()
         self.direction = None
+        self.errout = None
 
     def parse(self, input, filename, includedirs, errout):
         assert os.path.isabs(filename)
@@ -90,6 +91,7 @@ class Parser:
         self.filename = filename
         self.includedirs = includedirs
         self.tu.filename = filename
+        self.errout = errout
 
         Parser.parsed[filename] = self
         Parser.parseStack.append(Parser.current)
@@ -238,7 +240,7 @@ def p_ProtocolIncludeStmt(p):
         raise ParseError(loc, "can't locate protocol include file `%s'"% (
                 inc.file))
     
-    inc.tu = Parser().parse(open(path).read(), path, Parser.current.includedirs)
+    inc.tu = Parser().parse(open(path).read(), path, Parser.current.includedirs, Parser.current.errout)
     p[0] = inc
 
 def p_UsingStmt(p):
