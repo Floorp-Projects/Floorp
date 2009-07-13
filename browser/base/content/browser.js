@@ -65,12 +65,7 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-
-const MAX_HISTORY_MENU_ITEMS = 15;
-
-// We use this once, for Clear Private Data
-const GLUE_CID = "@mozilla.org/browser/browserglue;1";
+const nsIWebNavigation = Ci.nsIWebNavigation;
 
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
@@ -3153,21 +3148,20 @@ function FillHistoryMenu(aParent) {
 
   var webNav = getWebNavigation();
   var sessionHistory = webNav.sessionHistory;
-  var bundle_browser = document.getElementById("bundle_browser");
 
   var count = sessionHistory.count;
-  var index = sessionHistory.index;
-  var end;
-
   if (count <= 1) // don't display the popup for a single item
     return false;
 
+  const MAX_HISTORY_MENU_ITEMS = 15;
+  var index = sessionHistory.index;
   var half_length = Math.floor(MAX_HISTORY_MENU_ITEMS / 2);
   var start = Math.max(index - half_length, 0);
-  end = Math.min(start == 0 ? MAX_HISTORY_MENU_ITEMS : index + half_length + 1, count);
+  var end = Math.min(start == 0 ? MAX_HISTORY_MENU_ITEMS : index + half_length + 1, count);
   if (end == count)
     start = Math.max(count - MAX_HISTORY_MENU_ITEMS, 0);
 
+  var bundle_browser = document.getElementById("bundle_browser");
   var tooltipBack = bundle_browser.getString("tabHistory.goBack");
   var tooltipCurrent = bundle_browser.getString("tabHistory.current");
   var tooltipForward = bundle_browser.getString("tabHistory.goForward");
@@ -4407,8 +4401,9 @@ nsBrowserAccess.prototype =
         if (!window.document.documentElement.getAttribute("chromehidden"))
           win = window;
         else {
-          var browserGlue = Cc[GLUE_CID].getService(Ci.nsIBrowserGlue);
-          win = browserGlue.getMostRecentBrowserWindow();
+          win = Cc["@mozilla.org/browser/browserglue;1"]
+                  .getService(Ci.nsIBrowserGlue)
+                  .getMostRecentBrowserWindow();
           needToFocusWin = true;
         }
 
