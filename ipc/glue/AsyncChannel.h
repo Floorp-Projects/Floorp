@@ -1,6 +1,7 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+ */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -36,61 +37,96 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ipc_glue_RPCChannel_h
-#define ipc_glue_RPCChannel_h 1
+#ifndef ipc_glue_AsyncChannel_h
+#define ipc_glue_AsyncChannel_h 1
 
-// FIXME/cjones probably shouldn't depend on this
-#include <stack>
-
-#include "mozilla/ipc/SyncChannel.h"
+#include "base/basictypes.h"
+#include "base/message_loop.h"
+#include "chrome/common/ipc_channel.h"
 
 namespace mozilla {
 namespace ipc {
 //-----------------------------------------------------------------------------
 
-class RPCChannel : public SyncChannel
+class AsyncChannel : public IPC::Channel::Listener
 {
-public:
-    class Listener : public SyncChannel::Listener
-    {
-    public:
-        virtual ~Listener() { }
-        virtual Result OnMessageReceived(const Message& aMessage) = 0;
-        virtual Result OnMessageReceived(const Message& aMessage,
-                                         Message*& aReply) = 0;
-        virtual Result OnCallReceived(const Message& aMessage,
-                                      Message*& aReply) = 0;
+protected:
+    enum ChannelState {
+        ChannelClosed,
+        ChannelOpening,
+        ChannelIdle,            // => connected
+        ChannelWaiting,         // => connected
+        ChannelError
     };
 
-    RPCChannel(Listener* aListener) :
-        SyncChannel(aListener)
+public:
+    typedef IPC::Channel Transport;
+    typedef IPC::Message Message;
+
+    class /*NS_INTERFACE_CLASS*/ Listener
+    {
+    public:
+        enum Result {
+            MsgProcessed,
+            MsgNotKnown,
+            MsgNotAllowed,
+            MsgPayloadError,
+            MsgRouteError,
+            MsgValueError,
+        };
+
+        virtual ~Listener() { }
+        virtual Result OnMessageReceived(const Message& aMessage) = 0;
+    };
+
+    AsyncChannel(Listener* aListener) :
+        mTransport(0),
+        mListener(aListener),
+        mChannelState(ChannelClosed),
+        mIOLoop(),
+        mWorkerLoop()
     {
     }
 
-    virtual ~RPCChannel()
+    virtual ~AsyncChannel()
     {
-        // FIXME/cjones: impl
+        if (mTransport)
+            Close();
+        mTransport = 0;
     }
 
-    // Make an RPC to the other side of the channel
-    bool Call(Message* msg, Message* reply);
+    // Open  from the perspective of the RPC layer; the transport
+    // should already be connected, or ready to connect.
+    bool Open(Transport* aTransport, MessageLoop* aIOLoop=0);
+    
+    // Close from the perspective of the RPC layer; leaves the
+    // underlying transport channel open, however.
+    void Close();
 
-    // Override the SyncChannel handler so we can dispatch RPC messages
+    // Asynchronously send a message to the other side of the channel
+    bool Send(Message* msg);
+
+    // Implement the IPC::Channel::Listener interface
     virtual void OnMessageReceived(const Message& msg);
+    virtual void OnChannelConnected(int32 peer_pid);
+    virtual void OnChannelError();
 
-private:
-    // Executed on worker thread
-    virtual bool WaitingForReply() {
-        mMutex.AssertCurrentThreadOwns();
-        return mPending.size() > 0 || SyncChannel::WaitingForReply();
-    }
+protected:
+    // Additional methods that execute on the worker thread
+    void OnDispatchMessage(const Message& aMsg);
 
-    void OnDispatchMessage(const Message& msg);
+    // Additional methods that execute on the IO thread
+    void OnChannelOpened();
+    void OnSend(Message* aMsg);
 
-    std::stack<Message> mPending;
+    Transport* mTransport;
+    Listener* mListener;
+    ChannelState mChannelState;
+    MessageLoop* mIOLoop;       // thread where IO happens
+    MessageLoop* mWorkerLoop;   // thread where work is done
 };
 
 
 } // namespace ipc
 } // namespace mozilla
-#endif  // ifndef ipc_glue_RPCChannel_h
+#endif  // ifndef ipc_glue_AsyncChannel_h

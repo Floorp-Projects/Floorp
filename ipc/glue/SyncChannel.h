@@ -1,6 +1,7 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+ */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -36,61 +37,80 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ipc_glue_RPCChannel_h
-#define ipc_glue_RPCChannel_h 1
+#ifndef ipc_glue_SyncChannel_h
+#define ipc_glue_SyncChannel_h 1
 
-// FIXME/cjones probably shouldn't depend on this
-#include <stack>
+#include <queue>
 
-#include "mozilla/ipc/SyncChannel.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/ipc/AsyncChannel.h"
 
 namespace mozilla {
 namespace ipc {
 //-----------------------------------------------------------------------------
 
-class RPCChannel : public SyncChannel
+class SyncChannel : public AsyncChannel
 {
+protected:
+    typedef mozilla::CondVar CondVar;
+    typedef mozilla::Mutex Mutex;
+    typedef uint16 MessageId;
+    typedef std::queue<Message> MessageQueue;
+
 public:
-    class Listener : public SyncChannel::Listener
+    class /*NS_INTERFACE_CLASS*/ Listener :
+        public AsyncChannel::Listener
     {
     public:
         virtual ~Listener() { }
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
         virtual Result OnMessageReceived(const Message& aMessage,
                                          Message*& aReply) = 0;
-        virtual Result OnCallReceived(const Message& aMessage,
-                                      Message*& aReply) = 0;
     };
 
-    RPCChannel(Listener* aListener) :
-        SyncChannel(aListener)
+    SyncChannel(Listener* aListener) :
+        AsyncChannel(aListener),
+        mMutex("mozilla.ipc.SyncChannel.mMutex"),
+        mCvar(mMutex, "mozilla.ipc.SyncChannel.mCvar")
     {
     }
 
-    virtual ~RPCChannel()
+    virtual ~SyncChannel()
     {
         // FIXME/cjones: impl
     }
 
-    // Make an RPC to the other side of the channel
-    bool Call(Message* msg, Message* reply);
-
-    // Override the SyncChannel handler so we can dispatch RPC messages
-    virtual void OnMessageReceived(const Message& msg);
-
-private:
-    // Executed on worker thread
-    virtual bool WaitingForReply() {
-        mMutex.AssertCurrentThreadOwns();
-        return mPending.size() > 0 || SyncChannel::WaitingForReply();
+    
+    bool Send(Message* msg) {
+        return AsyncChannel::Send(msg);
     }
 
-    void OnDispatchMessage(const Message& msg);
+    // Synchronously send |msg| (i.e., wait for |reply|)
+    bool Send(Message* msg, Message* reply);
 
-    std::stack<Message> mPending;
+    // Override the AsyncChannel handler so we can dispatch sync messages
+    virtual void OnMessageReceived(const Message& msg);
+
+protected:
+    // Executed on the worker thread
+    virtual bool WaitingForReply() {
+        mMutex.AssertCurrentThreadOwns();
+        return mPendingReply != 0;
+    }
+
+    void OnDispatchMessage(const Message& aMsg);
+
+    // Executed on the IO thread.
+    void OnSendReply(Message* msg);
+
+    Mutex mMutex;
+    CondVar mCvar;
+    MessageId mPendingReply;
+    Message mRecvd;
 };
 
 
 } // namespace ipc
 } // namespace mozilla
-#endif  // ifndef ipc_glue_RPCChannel_h
+#endif  // ifndef ipc_glue_SyncChannel_h

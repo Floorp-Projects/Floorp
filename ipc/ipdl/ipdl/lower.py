@@ -827,9 +827,24 @@ class GenerateProtocolActorHeader(Visitor):
                     cxx.ExprCall(cxx.ExprSelect(msgvar, '->', 'set_routing_id'),
                                  [ route ])))
 
+            if md.decl.type.isAsync():
+                sendmethod = 'Send'
+            elif md.decl.type.isSync():
+                sendmethod = 'Send'
+                impl.addstmt(cxx.StmtExpr(
+                        cxx.ExprCall(cxx.ExprSelect(msgvar, '->', 'set_sync'),
+                                     [ ])))
+            elif md.decl.type.isRpc():
+                sendmethod = 'Call'
+                impl.addstmt(cxx.StmtExpr(
+                        cxx.ExprCall(cxx.ExprSelect(msgvar, '->', 'set_rpc'),
+                                     [ ])))
+            else:
+                assert 0
+
             sendcall = cxx.ExprCall(
                 cxx.ExprSelect(
-                    cxx.ExprVar('mChannel'), self.channelsel, 'Call'),
+                    cxx.ExprVar('mChannel'), self.channelsel, sendmethod),
                 [ msgvar ])
             if hasreply:
                 sendcall.args.append(cxx.ExprAddrOf(replyvar))
@@ -1017,6 +1032,17 @@ class GenerateProtocolActorHeader(Visitor):
                 block.addstmt(cxx.StmtExpr(cxx.ExprCall(
                             cxx.ExprSelect(replyvar, '->', 'set_reply'),
                             [ ])))
+
+                if md.decl.type.isSync():
+                    block.addstmt(cxx.StmtExpr(cxx.ExprCall(
+                            cxx.ExprSelect(replyvar, '->', 'set_sync'),
+                            [ ])))
+                elif md.decl.type.isRpc():
+                    block.addstmt(cxx.StmtExpr(cxx.ExprCall(
+                            cxx.ExprSelect(replyvar, '->', 'set_rpc'),
+                            [ ])))
+                else:
+                    assert 0
 
             block.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgProcessed')))
 
