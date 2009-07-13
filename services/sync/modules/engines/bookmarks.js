@@ -200,8 +200,7 @@ BookmarksStore.prototype = {
       this._log.debug(" -> -> title is " + record.title);
       newId = this._bms.insertBookmark(parentId, uri, record.sortindex,
                                        record.title);
-      this._ts.untagURI(uri, null);
-      this._ts.tagURI(uri, record.tags);
+      this._tagURI(uri, record.tags);
       this._bms.setKeywordForBookmark(newId, record.keyword);
       if (record.description) {
         this._ans.setItemAnnotation(newId, "bookmarkProperties/description",
@@ -361,13 +360,9 @@ BookmarksStore.prototype = {
       case "bmkUri":
         this._bms.changeBookmarkURI(itemId, Utils.makeURI(val));
         break;
-      case "tags": {
-        // filter out null/undefined/empty tags
-        let tags = val.filter(function(t) t);
-        let tagsURI = this._bms.getBookmarkURI(itemId);
-        this._ts.untagURI(tagsURI, null);
-        this._ts.tagURI(tagsURI, tags);
-      } break;
+      case "tags":
+        this._tagURI(this._bms.getBookmarkURI(itemId), val);
+        break;
       case "keyword":
         this._bms.setKeywordForBookmark(itemId, val);
         break;
@@ -616,6 +611,18 @@ BookmarksStore.prototype = {
     }
 
     return items;
+  },
+  
+  _tagURI: function BStore_tagURI(bmkURI, tags) {
+    // Filter out any null/undefined/empty tags
+    tags = tags.filter(function(t) t);
+
+    // Temporarily tag a dummy uri to preserve tag ids when untagging
+    let dummyURI = Utils.makeURI("about:weave");
+    this._ts.tagURI(dummyURI, tags);
+    this._ts.untagURI(bmkURI, null);
+    this._ts.tagURI(bmkURI, tags);
+    this._ts.untagURI(dummyURI, null);
   },
 
   getAllIDs: function BStore_getAllIDs() {
