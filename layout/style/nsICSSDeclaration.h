@@ -84,6 +84,8 @@ public:
    */
   NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aValue) = 0;
+
+  virtual nsISupports *GetParentObject() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
