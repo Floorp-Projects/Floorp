@@ -18,6 +18,10 @@
 #include "base/ref_counted.h"
 #endif
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+#define IPC_MESSAGE_ENABLE_RPC
+#endif
+
 namespace base {
 class FileDescriptor;
 }
@@ -76,6 +80,13 @@ class Message : public Pickle {
   bool is_sync() const {
     return (header()->flags & SYNC_BIT) != 0;
   }
+
+#if defined(IPC_MESSAGE_ENABLE_RPC)
+  // True if this is a synchronous message.
+  bool is_rpc() const {
+    return (header()->flags & RPC_BIT) != 0;
+  }
+#endif
 
   // Set this on a reply to a synchronous message.
   void set_reply() {
@@ -196,7 +207,9 @@ class Message : public Pickle {
   bool dont_log() const { return dont_log_; }
 #endif
 
+#if !defined(CHROMIUM_MOZILLA_BUILD)
  protected:
+#endif
   friend class Channel;
   friend class MessageReplyDeserializer;
   friend class SyncMessage;
@@ -204,6 +217,16 @@ class Message : public Pickle {
   void set_sync() {
     header()->flags |= SYNC_BIT;
   }
+
+#if defined(IPC_MESSAGE_ENABLE_RPC)
+  void set_rpc() {
+    header()->flags |= RPC_BIT;
+  }
+#endif
+
+#if defined(CHROMIUM_MOZILLA_BUILD)
+ protected:
+#endif
 
   // flags
   enum {
@@ -214,6 +237,9 @@ class Message : public Pickle {
     UNBLOCK_BIT     = 0x0020,
     PUMPING_MSGS_BIT= 0x0040,
     HAS_SENT_TIME_BIT = 0x0080,
+#if defined(IPC_MESSAGE_ENABLE_RPC)
+    RPC_BIT        = 0x0100,
+#endif
   };
 
 #pragma pack(push, 2)

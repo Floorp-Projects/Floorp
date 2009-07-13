@@ -54,23 +54,27 @@ EXPORTS_IPC =					\
   $(NULL)
 
 EXPORTS_mozilla/ipc =				\
+  AsyncChannel.h				\
   GeckoChildProcessHost.h			\
   GeckoThread.h 				\
   MessageTypes.h 				\
   ProtocolUtils.h				\
   RPCChannel.h					\
+  SyncChannel.h					\
   ScopedXREEmbed.h				\
   $(NULL)
 
 ENABLE_CXX_EXCEPTIONS = 1
 
-CPPSRCS += \
-  GeckoChildProcessHost.cpp \
-  GeckoThread.cpp \
-  MessagePump.cpp \
-  RPCChannel.cpp \
-  ScopedXREEmbed.cpp \
-  StringUtil.cpp \
+CPPSRCS +=					\
+  AsyncChannel.cpp				\
+  GeckoChildProcessHost.cpp			\
+  GeckoThread.cpp				\
+  MessagePump.cpp				\
+  RPCChannel.cpp				\
+  ScopedXREEmbed.cpp				\
+  StringUtil.cpp				\
+  SyncChannel.cpp				\
   $(NULL)
 
 include $(topsrcdir)/ipc/app/defs.mk
