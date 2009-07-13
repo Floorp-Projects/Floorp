@@ -85,6 +85,7 @@ _TEST_FILES = 	findbar_window.xul \
 		test_autocomplete4.xul \
 		test_keys.xul \
 		window_keys.xul \
+		test_showcaret.xul \
 		$(NULL)
 
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to
