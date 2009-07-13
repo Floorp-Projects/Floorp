@@ -98,7 +98,7 @@ class Parser:
         try:
             ast = self.parser.parse(input=input, lexer=self.lexer,
                                     debug=self.debug)
-        except Exception, p:
+        except ParseError, p:
             print >>errout, p
             return None
 
@@ -384,8 +384,8 @@ def p_TransitionStmtsNonEmpty(p):
         p[0] = [ p[1] ]
 
 def p_TransitionStmt(p):
-    """TransitionStmt : STATE State Transitions"""
-    p[0] = TransitionStmt(locFromTok(p, 1), p[2], p[3])
+    """TransitionStmt : STATE State ':' Transitions"""
+    p[0] = TransitionStmt(locFromTok(p, 1), p[2], p[4])
 
 def p_Transitions(p):
     """Transitions : Transitions Transition
