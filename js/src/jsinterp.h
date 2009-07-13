@@ -71,7 +71,7 @@ struct JSStackFrame {
     jsbytecode      *imacpc;        /* null or interpreter macro call pc */
     jsval           *slots;         /* variables, locals and operand stack */
     JSObject        *callobj;       /* lazily created Call object */
-    JSObject        *argsobj;       /* lazily created arguments object */
+    jsval           argsobj;        /* lazily created arguments object, must be JSVAL_OBJECT */
     JSObject        *varobj;        /* variables object, where vars go */
     JSObject        *callee;        /* function or script object */
     JSScript        *script;        /* script being interpreted */
@@ -237,13 +237,6 @@ typedef struct JSInlineFrame {
 #define PCVCAP_SHAPE(t)         ((t) >> PCVCAP_TAGBITS)
 
 #define SHAPE_OVERFLOW_BIT      JS_BIT(32 - PCVCAP_TAGBITS)
-
-#ifndef JS_THREADSAFE
-# define js_GenerateShape(cx, gcLocked)    js_GenerateShape (cx)
-#endif
-
-extern uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked);
 
 struct JSPropCacheEntry {
     jsbytecode          *kpc;           /* pc if vcap tag is <= 1, else atom */
