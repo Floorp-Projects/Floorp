@@ -136,11 +136,11 @@ protected:
   // A pointer to the plugin's callback functions. This information
   // is actually stored in the plugin class (<b>nsPluginClass</b>),
   // and is common for all plugins of the class.
-  NPPluginFuncs* fCallbacks;
+  NPPluginFuncs* mCallbacks;
 
   // The structure used to communicate between the plugin instance and
   // the browser.
-  NPP_t fNPP;
+  NPP_t mNPP;
 
 #ifdef XP_MACOSX
   NPDrawingModel mDrawingModel;
@@ -148,17 +148,16 @@ protected:
 
   // these are used to store the windowless properties
   // which the browser will later query
-  PRPackedBool  mWindowless;
-  PRPackedBool  mTransparent;
-  PRPackedBool  mStarted;
-  PRPackedBool  mCached;
-  PRPackedBool  mIsJavaPlugin;
-  PRPackedBool  mWantsAllNetworkStreams;
+  PRPackedBool mWindowless;
+  PRPackedBool mTransparent;
+  PRPackedBool mStarted;
+  PRPackedBool mCached;
+  PRPackedBool mWantsAllNetworkStreams;
 
 public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
   PRPackedBool mInPluginInitCall;
-  PRLibrary* fLibrary;
+  PRLibrary* mLibrary;
   nsInstanceStream *mStreams;
 
 private:

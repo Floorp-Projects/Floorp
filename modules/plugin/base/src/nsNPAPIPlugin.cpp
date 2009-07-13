@@ -334,7 +334,7 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
   fLibrary = aLibrary;
 }
 
-nsNPAPIPlugin::~nsNPAPIPlugin(void)
+nsNPAPIPlugin::~nsNPAPIPlugin()
 {
   // reset the callbacks list
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
