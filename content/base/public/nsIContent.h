@@ -61,10 +61,17 @@ class nsIDocShell;
 class nsISMILAttr;
 #endif // MOZ_SMIL
 
+enum nsLinkState {
+  eLinkState_Unknown    = 0,
+  eLinkState_Unvisited  = 1,
+  eLinkState_Visited    = 2, 
+  eLinkState_NotLink    = 3
+};
+
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x08dadcc4, 0x057a, 0x4b8d, \
-  { 0x89, 0x43, 0x30, 0x0e, 0x61, 0xc6, 0x9d, 0x36 } }
+{ 0x4aaa38b8, 0x6bc1, 0x4d01, \
+  { 0xb6, 0x3d, 0xcd, 0x11, 0xc0, 0x84, 0x56, 0x9e } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -597,6 +604,40 @@ public:
    * XXXjwatt: IMO IsInteractiveLink would be a better name.
    */
   virtual PRBool IsLink(nsIURI** aURI) const = 0;
+
+  /**
+   * Get the cached state of the link.  If the state is unknown, 
+   * return eLinkState_Unknown.
+   *
+   * @return The cached link state of the link.
+   */
+  virtual nsLinkState GetLinkState() const
+  {
+    return eLinkState_NotLink;
+  }
+
+  /**
+   * Set the cached state of the link.
+   *
+   * @param aState The cached link state of the link.
+   */
+  virtual void SetLinkState(nsLinkState aState)
+  {
+    NS_ASSERTION(aState == eLinkState_NotLink,
+                 "Need to override SetLinkState?");
+  }
+
+  /**
+    * Get a pointer to the full href URI (fully resolved and canonicalized,
+    * since it's an nsIURI object) for link elements.
+    *
+    * @return A pointer to the URI or null if the element is not a link or it
+    *         has no HREF attribute.
+    */
+  virtual already_AddRefed<nsIURI> GetHrefURI() const
+  {
+    return nsnull;
+  }
 
   /**
    * Give this element a chance to fire links that should be fired
