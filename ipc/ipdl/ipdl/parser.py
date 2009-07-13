@@ -46,6 +46,13 @@ _thisdir, _ = os.path.split(_getcallerpath())
 
 ##-----------------------------------------------------------------------------
 
+class ParseError(Exception):
+    def __init__(self, loc, fmt, *args):
+        self.loc = loc
+        self.error = ('%s: error: %s'% (loc, fmt)) % args
+    def __str__(self):
+        return self.error
+
 class Parser:
     # when we reach an |include protocol "foo.ipdl";| statement, we need to
     # save the current parser state and create a new one.  this "stack" is
@@ -66,7 +73,7 @@ class Parser:
         self.tu = TranslationUnit()
         self.direction = None
 
-    def parse(self, input, filename, includedirs):
+    def parse(self, input, filename, includedirs, errout):
         assert os.path.isabs(filename)
 
         if filename in Parser.parsed:
@@ -88,8 +95,12 @@ class Parser:
         Parser.parseStack.append(Parser.current)
         Parser.current = self
 
-        ast = self.parser.parse(input=input, lexer=self.lexer,
-                                debug=self.debug)
+        try:
+            ast = self.parser.parse(input=input, lexer=self.lexer,
+                                    debug=self.debug)
+        except Exception, p:
+            print >>errout, p
+            return None
 
         Parser.current = Parser.parseStack.pop()
         return ast
@@ -177,8 +188,9 @@ def t_STRING(t):
 
 def t_error(t):
     includeStackStr = Parser.includeStackString()
-    raise Exception, '%s%s: error: lexically invalid characters %s'% (
-        includeStackStr, Loc(Parser.current.filename, t.lineno), str(t))
+    raise ParseError(
+        Loc(Parser.current.filename, t.lineno),
+        "%s: lexically invalid characters `%s'"% (includeStackStr, t.value))
 
 ##-----------------------------------------------------------------------------
 
@@ -223,10 +235,10 @@ def p_ProtocolIncludeStmt(p):
 
     path = Parser.current.resolveIncludePath(inc.file)
     if path is None:
-        print >>sys.stderr, "error: can't locate protocol include file `%s'"% (inc.file)
-        inc.tu = TranslationUnit()
-    else:
-        inc.tu = Parser().parse(open(path).read(), path, Parser.current.includedirs)
+        raise ParseError(loc, "can't locate protocol include file `%s'"% (
+                inc.file))
+    
+    inc.tu = Parser().parse(open(path).read(), path, Parser.current.includedirs)
     p[0] = inc
 
 def p_UsingStmt(p):
@@ -466,5 +478,6 @@ def p_QualifiedID(p):
 
 def p_error(t):
     includeStackStr = Parser.includeStackString()
-    raise Exception, '%s%s: error: bad syntax near "%s"'% (
-        includeStackStr, Loc(Parser.current.filename, t.lineno), t.value)
+    raise ParseError(
+        Loc(Parser.current.filename, t.lineno),
+        "%s: bad syntax near `%s'"% (includeStackStr, t.value))
