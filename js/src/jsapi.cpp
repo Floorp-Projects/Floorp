@@ -92,6 +92,8 @@
 #include "jsxml.h"
 #endif
 
+#include "jsatominlines.h"
+
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
 #else

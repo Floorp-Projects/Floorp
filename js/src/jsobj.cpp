@@ -90,6 +90,8 @@
 #include "jsdtracef.h"
 #endif
 
+#include "jsatominlines.h"
+
 #include "jsautooplen.h"
 
 #ifdef JS_THREADSAFE

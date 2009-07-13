@@ -63,6 +63,8 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 
+#include "jsatominlines.h"
+
 #include "jsautooplen.h"
 
 typedef struct JSTrap {
