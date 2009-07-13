@@ -81,6 +81,8 @@
 #include "jsxml.h"
 #endif
 
+#include "jsatominlines.h"
+
 #include "jsautooplen.h"
 
 /* jsinvoke_cpp___ indicates inclusion from jsinvoke.cpp. */
