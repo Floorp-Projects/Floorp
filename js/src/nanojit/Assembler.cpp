@@ -58,35 +58,6 @@ namespace nanojit
 {
     int UseSoftfloat = 0;
 
-    class DeadCodeFilter: public LirFilter
-    {
-        bool ignoreInstruction(LInsp ins)
-        {
-            LOpcode op = ins->opcode();
-            if (ins->isStore() ||
-                op == LIR_loop ||
-                op == LIR_label ||
-                op == LIR_live ||
-                op == LIR_start ||
-                ins->isRet()) {
-                return false;
-            }
-            return !ins->resv()->used;
-        }
-
-    public:
-        DeadCodeFilter(LirFilter *in) : LirFilter(in) {}
-        LInsp read() {
-            for (;;) {
-                LInsp i = in->read();
-                if (i->isGuard() || i->isBranch()
-                    || (i->isCall() && !i->isCse())
-                    || !ignoreInstruction(i))
-                    return i;
-            }
-        }
-    };
-
 #ifdef NJ_VERBOSE
     class VerboseBlockReader: public LirFilter
     {
@@ -821,8 +792,7 @@ namespace nanojit
         verbose_only(
         ReverseLister *pp_init = NULL,
                       *pp_after_sf1 = NULL,
-                      *pp_after_sf2 = NULL,
-                      *pp_after_dead = NULL;
+                      *pp_after_sf2 = NULL;
         )
 
         // set up backwards pipeline: assembler -> StackFilter -> LirReader
@@ -858,18 +828,8 @@ namespace nanojit
 
         verbose_only( if (_logc->lcbits & LC_AfterSF_RP) {
         pp_after_sf2 = new ReverseLister(prev, gc, frag->lirbuf->names, _logc,
-                                         "After StoreFilter(rp)");
+                                         "After StoreFilter(rp) (final LIR)");
         prev = pp_after_sf2;
-        })
-
-        // DEAD CODE FILTER
-        DeadCodeFilter deadfilter(prev);
-        prev = &deadfilter;
-
-        verbose_only( if (_logc->lcbits & LC_AfterDeadF) {
-        pp_after_dead = new ReverseLister(prev, gc, frag->lirbuf->names, _logc,
-                                          "After DeadFilter == Final LIR");
-        prev = pp_after_dead;
         })
 
         // end of pipeline
@@ -920,8 +880,7 @@ namespace nanojit
         if (pp_init)       delete pp_init;
         if (pp_after_sf1)  delete pp_after_sf1;
         if (pp_after_sf2)  delete pp_after_sf2;
-        if (pp_after_dead) delete pp_after_dead;
-           )
+        )
     }
 
     void Assembler::endAssembly(Fragment* frag, NInsList& loopJumps)
@@ -1128,8 +1087,49 @@ namespace nanojit
 
         InsList pending_lives(_gc);
 
-        for (LInsp ins = reader->read(); !ins->isop(LIR_start) && !error(); ins = reader->read())
+        for (LInsp ins = reader->read(); !ins->isop(LIR_start) && !error();
+                                         ins = reader->read())
         {
+            /* What's going on here: we're visiting all the LIR nodes
+               in the buffer, working strictly backwards in
+               buffer-order, and generating machine instructions for
+               them as we go.
+
+               But we're not visiting all of them, only the ones that
+               made it through the filter pipeline that we're reading
+               from.  For each visited node, we first determine
+               whether it's actually necessary, and if not skip it.
+               Otherwise we fall into the big switch, which calls a
+               target-specific routine to generate the required
+               instructions.
+   
+               For each node, we need to decide whether we need to
+               generate any code.  This is a rather subtle part of the
+               generation algorithm.
+ 
+               There are two categories:
+ 
+               "statement" nodes -- ones with side effects.  Anything
+               that could change control flow or the state of memory.
+               These we must absolutely retain.  That accounts for the
+               first part of the following disjunction for 'required'.
+ 
+               The rest are "value" nodes, which compute a value based
+               only on the operands to the node (and, in the case of
+               loads, the state of memory).  It's safe to omit these
+               if the value(s) computed are not used later.  Since
+               we're visiting nodes in reverse order, if some
+               previously visited (viz, later in the buffer ordering)
+               node uses the value computed by this node, then this
+               node will already have a register assigned to hold that
+               value.  Hence we can consult the reservation to detect
+               whether the value is in fact used.  That's the second
+               part of the disjunction.
+            */
+            bool required = ins->isStmt() || ins->resv()->used;
+            if (!required)
+                continue;
+ 
             LOpcode op = ins->opcode();
             switch(op)
             {
