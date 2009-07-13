@@ -260,7 +260,7 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
 
     if (mEntries[mTail].mElement->GetOwnerDoc()) {
       nsCOMPtr<nsIURI> hrefURI;
-      mEntries[mTail].mElement->GetHrefURIForAnchors(getter_AddRefs(hrefURI));
+      hrefURI = mEntries[mTail].mElement->GetHrefURIForAnchors();
       if (hrefURI)
         hrefURI->GetAsciiHost(hostName);
       

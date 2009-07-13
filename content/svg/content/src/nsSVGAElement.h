@@ -71,9 +71,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsILink
-  NS_IMETHOD GetLinkState(nsLinkState &aState);
-  NS_IMETHOD SetLinkState(nsLinkState aState);
-  NS_IMETHOD GetHrefURI(nsIURI** aURI);
   NS_IMETHOD LinkAdded() { return NS_OK; }
   NS_IMETHOD LinkRemoved() { return NS_OK; }
 
@@ -81,6 +78,9 @@ public:
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
+  virtual nsLinkState GetLinkState() const;
+  virtual void SetLinkState(nsLinkState aState);
+  virtual already_AddRefed<nsIURI> GetHrefURI() const;
 
 protected:
 
