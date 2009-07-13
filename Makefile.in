@@ -68,7 +68,9 @@ ifdef MOZ_MEMORY
 tier_base_dirs += memory/jemalloc
 endif
 
+ifdef COMPILE_ENVIRONMENT
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
+endif
 
 TIERS += testharness
 
