@@ -150,7 +150,6 @@
     <key id="key_pageDown" keycode="VK_DOWN" command="cmd_scrollPageDown" modifiers="shift"/>
 
     <!-- misc -->
-    <key id="key_close" key="w" modifiers="accel" command="cmd_close"/>
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
@@ -158,8 +157,8 @@
     <key id="key_zoomout" keycode="VK_F8" command="cmd_zoomout"/>
 
     <!-- tabs -->
-    <key id="key_newTab" key="T" modifiers="accel" command="cmd_newTab"/>
-    <key id="key_closeTab" key="W" modifiers="accel" command="cmd_closeTab"/>
+    <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_closeTab" key="w" modifiers="accel" command="cmd_closeTab"/>
 
     <!-- find -->
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
