@@ -975,10 +975,16 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
     return;
 
   // don't allow focus to be placed in docshells or descendants of docshells
-  // that are being destroyed
+  // that are being destroyed. Also, ensure that the page hasn't been
+  // unloaded. The prevents content from being refocused during an unload event.
   nsCOMPtr<nsIDocShell> newDocShell = newWindow->GetDocShell();
   nsCOMPtr<nsIDocShell> docShell = newDocShell;
   while (docShell) {
+    PRBool inUnload;
+    docShell->GetIsInUnload(&inUnload);
+    if (inUnload)
+      return;
+
     PRBool beingDestroyed;
     docShell->IsBeingDestroyed(&beingDestroyed);
     if (beingDestroyed)
