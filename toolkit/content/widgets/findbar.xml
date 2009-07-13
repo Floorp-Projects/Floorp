@@ -363,6 +363,8 @@
         }
       })]]></field>
 
+      <field name="_destroyed">false</field>
+
       <constructor><![CDATA[
         // These elements are accessed frequently and are therefore cached
         this._findField = this.getElement("findbar-textbox");
@@ -403,27 +405,40 @@
       ]]></constructor>
 
       <destructor><![CDATA[
-        // It is possible that the findbar may be destroyed before any
-        // documents it is listening to (see nsIEditActionListener code below).
-        // Thus, to avoid leaking, if we are listening to any editors, unhook
-        // ourselves now, and remove our cached copies
-        if (this._editors) {
-          for (var x = this._editors.length - 1; x >= 0; --x)
-            this._unhookListenersAtIndex(x);
-        }
-
-        this.browser = null;
-
-        var prefsvc =
-          Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch2);
-        prefsvc.removeObserver("accessibility.typeaheadfind",
-                               this._observer);
-        prefsvc.removeObserver("accessibility.typeaheadfind.linksonly",
-                               this._observer);
-        prefsvc.removeObserver("accessibility.typeaheadfind.casesensitive",
-                               this._observer);
+        this.destroy();
       ]]></destructor>
+
+      <!-- This is necessary because the destructor isn't called when
+           we are removed from a document that is not destroyed. This
+           needs to be explicitly called in this case -->
+      <method name="destroy">
+        <body><![CDATA[
+          if (this._destroyed)
+            return;
+          this._destroyed = true;
+
+          // It is possible that the findbar may be destroyed before any
+          // documents it is listening to (see nsIEditActionListener code below).
+          // Thus, to avoid leaking, if we are listening to any editors, unhook
+          // ourselves now, and remove our cached copies
+          if (this._editors) {
+            for (var x = this._editors.length - 1; x >= 0; --x)
+              this._unhookListenersAtIndex(x);
+          }
+
+          this.browser = null;
+
+          var prefsvc =
+            Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch2);
+          prefsvc.removeObserver("accessibility.typeaheadfind",
+                                 this._observer);
+          prefsvc.removeObserver("accessibility.typeaheadfind.linksonly",
+                                 this._observer);
+          prefsvc.removeObserver("accessibility.typeaheadfind.casesensitive",
+                                 this._observer);
+        ]]></body>
+      </method>
 
       <method name="_setFindCloseTimeout">
         <body><![CDATA[
