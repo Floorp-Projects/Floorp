@@ -139,8 +139,16 @@ var Browser = {
     }
     window.addEventListener("resize", resizeHandler, false);
 
-    function viewportHandler(bounds, boundsSizeChanged) {
-      self._canvasBrowser.viewportHandler(bounds, boundsSizeChanged);
+    function viewportHandler(viewportBoundsRect,
+                             viewportInnerBoundsRect,
+                             viewportVisibleRect,
+                             boundsSizeChanged) {
+
+      self._canvasBrowser.viewportHandler(viewportBoundsRect,
+                                          viewportInnerBoundsRect,
+                                          viewportVisibleRect,
+                                          boundsSizeChanged);
+      
     }
     ws.setViewportHandler(viewportHandler);
 

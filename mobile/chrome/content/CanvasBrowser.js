@@ -193,7 +193,7 @@ CanvasBrowser.prototype = {
   // or a flush operation on the queue. XXX need tochanged justone to
   // be based on time taken..ie do as many paints as we can <200ms
   // returns true if q is cleared
-  flushRegion: function flushRegion(viewingBoundsOnly) {
+/*  flushRegion: function flushRegion(viewingBoundsOnly) {
     let rgn = this._rgnPage;
 
     let drawls = [];
@@ -284,14 +284,14 @@ CanvasBrowser.prototype = {
     }
     // should get a way to figure out when there are no more valid rects left, and clear q
     ctx.restore();
-  },
+ },
 
   clearRegion: function clearRegion() {
     // once all of the rectangles have been subtracted
     // region ends up in a funny state unless it's reset
     this._rgnPage.setToRect(0,0,0,0);
   },
-
+*/
   startLoading: function startLoading() {
     this._maxRight = 0;
     this._maxBottom = 0;
@@ -300,13 +300,15 @@ CanvasBrowser.prototype = {
   },
 
   endLoading: function endLoading() {
+    dump("*** done loading\n");
+
     this._pageLoading = false;
     this._lazyWidthChanged = false;
     this._lazyHeightChanged = false;
     this.zoomToPage();
     // flush the region, to reduce startPanning delay
     // and to avoid getting a black border in tab thumbnail
-    this.flushRegion();
+    this._criticalRegionPaint();
 
     if (this._drawTimeout) {
       clearTimeout(this._drawTimeout);
@@ -317,58 +319,53 @@ CanvasBrowser.prototype = {
   // flush outstanding dirty rects,
   // switch to unoptimized painting mode during panning
   startPanning: function startPanning() {
-    this.flushRegion();
+    this._criticalRegionPaint();
 
     // do not delay paints as that causes displaced painting bugs
     this._isPanning = true;
   },
 
   endPanning: function endPanning() {
-    this.flushRegion();
+    this._criticalRegionPaint();
 
     this._isPanning = false;
   },
 
-  viewportHandler: function viewportHandler(bounds, boundsSizeChanged) {
+  // This is the callback fired by WidgetStack whenever the viewport
+  // changes somehow.
+  viewportHandler: function viewportHandler(viewportBoundsRect,
+                                            viewportInnerBoundsRect,
+                                            viewportVisibleRect,
+                                            boundsSizeChanged) {
     this._isPanning = false;
-    let pageBounds = bounds.clone();
-    let visibleBounds = ws.viewportVisibleRect;
+
+    this._viewportRect = viewportBoundsRect;
+    this._canvasCoordsInViewport = [viewportInnerBoundsRect.x, viewportInnerBoundsRect.y];
+    this._visibleRect = viewportVisibleRect;
 
     // do not floor top/left, or the blit below will be off
-    pageBounds.top = this._screenToPage(pageBounds.top);
-    pageBounds.left = this._screenToPage(pageBounds.left);
-    pageBounds.bottom = Math.ceil(this._screenToPage(pageBounds.bottom));
-    pageBounds.right = Math.ceil(this._screenToPage(pageBounds.right));
+    //pageBounds.top = this._screenToPage(pageBounds.top);
+    //pageBounds.left = this._screenToPage(pageBounds.left);
+    //pageBounds.bottom = Math.ceil(this._screenToPage(pageBounds.bottom));
+    //pageBounds.right = Math.ceil(this._screenToPage(pageBounds.right));
 
-    visibleBounds.top = Math.max(0, this._screenToPage(visibleBounds.top));
-    visibleBounds.left = Math.max(0, this._screenToPage(visibleBounds.left));
-    visibleBounds.bottom = Math.ceil(this._screenToPage(visibleBounds.bottom));
-    visibleBounds.right = Math.ceil(this._screenToPage(visibleBounds.right));
+    //visibleBounds.top = Math.max(0, this._screenToPage(visibleBounds.top));
+    //visibleBounds.left = Math.max(0, this._screenToPage(visibleBounds.left));
+    //visibleBounds.bottom = Math.ceil(this._screenToPage(visibleBounds.bottom));
+    //visibleBounds.right = Math.ceil(this._screenToPage(visibleBounds.right));
 
-    // if the page is being panned, flush the queue, so things blit correctly
-    // this avoids incorrect offsets due to a change in _pageBounds.x/y
-    // should probably check that (visibleBounds|pageBounds).(x|y) actually changed
     if (boundsSizeChanged) {
-      this.clearRegion();
+
       // since we are going to repaint the whole browser
       // any outstanding paint events will cause redundant draws
       this.contentDOMWindowUtils.clearMozAfterPaintEvents();
-    } else
-      this.flushRegion();
+      this._redrawRects([this._viewportRect.clone()]);
 
-    this._visibleBounds = visibleBounds;
-    this._pageBounds = pageBounds;
-
-    let dx = this._screenX - bounds.x;
-    let dy = this._screenY - bounds.y;
-    this._screenX = bounds.x;
-    this._screenY = bounds.y;
-
-    if (boundsSizeChanged) {
-      this._redrawRects([pageBounds]);
-      return;
+    } else {
+      this._criticalRegionPaint();
     }
 
+/*
     // deal with repainting
     // we don't need to do anything if the source and destination are the same
     if (!dx && !dy) {
@@ -495,8 +492,10 @@ CanvasBrowser.prototype = {
         let contentW = self._maxRight;
         let [canvasW, ] = self.canvasDimensions;
 
-        if (contentW > canvasW)
-          this.zoomLevel = canvasW / contentW;
+        if (contentW > canvasW) {
+          this._safeSetSoomLevel(canvasW / contentW); // XXX using 'this' instead of 'self'.  This shouldn't work?
+          Browser.updateViewportSize();
+        }
 
         self._lazyWidthChanged = false;
       } else if (self._lazyHeightChanged) {
@@ -533,7 +532,7 @@ CanvasBrowser.prototype = {
     if (flushNow) {
       resizeAndPaint(this);
     }
-  },
+  },*/
 
   _clampZoomLevel: function _clampZoomLevel(aZoomLevel) {
     const min = 0.2;
@@ -542,8 +541,12 @@ CanvasBrowser.prototype = {
     return Math.min(Math.max(min, aZoomLevel), max);
   },
 
+  _safeSetZoomLevel: function _safeSetZoomLevel(zl) {
+    this._zoomLevel = this._clampZoomLevel(zl);
+  },
+
   set zoomLevel(val) {
-    this._zoomLevel = this._clampZoomLevel(val);
+    this._safeSetZoomLevel(val);
     Browser.updateViewportSize();
   },
 
@@ -588,7 +591,7 @@ CanvasBrowser.prototype = {
 
     let elRect = this._getPagePosition(aElement);
     let elWidth = elRect.width;
-    let visibleViewportWidth = this._pageToScreen(this._visibleBounds.width);
+    let visibleViewportWidth = this._visibleRect.width;
     /* Try to set zoom-level such that once zoomed element is as wide
      *  as the visible viewport */
     let zoomLevel = visibleViewportWidth / (elWidth + (2 * margin));
@@ -648,12 +651,15 @@ CanvasBrowser.prototype = {
     let [scrollX, scrollY] = this.contentScrollValues;
     let r = aElement.getBoundingClientRect();
 
-    return {
-      width: r.width,
-      height: r.height,
-      x: r.left + scrollX,
-      y: r.top + scrollY
-    };
+    return new wsRect(r.left + scrollX,
+                      r.top + scrollY,
+                      r.width, r.height);
+    //return {
+    //  width: r.width,
+    //  height: r.height,
+    //  x: r.left + scrollX,
+    //  y: r.top + scrollY
+    //};
   },
 
   /* Given a set of client coordinates (relative to the app window),
@@ -664,9 +670,10 @@ CanvasBrowser.prototype = {
     // Need to adjust for the deckbrowser not being at 0,0
     // (e.g. due to other browser UI)
 
+    let [canvasX, canvasY] = this._canvasCoordsInViewport;
     let canvasRect = this._canvas.getBoundingClientRect();
-    let clickOffsetX = this._screenToPage(aClientX - canvasRect.left) + this._pageBounds.x;
-    let clickOffsetY = this._screenToPage(aClientY - canvasRect.top) + this._pageBounds.y;
+    let clickOffsetX = this._screenToPage(aClientX - canvasRect.left + canvasX);
+    let clickOffsetY = this._screenToPage(aClientY - canvasRect.top + canvasY);
 
     // Take scroll offset into account to return coordinates relative to the viewport
     let [scrollX, scrollY] = this.contentScrollValues;
