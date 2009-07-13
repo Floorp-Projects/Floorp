@@ -113,7 +113,7 @@ function ensure_results(aSearch, aExpected)
       let value = controller.getValueAt(i);
       let comment = controller.getCommentAt(i);
 
-      print("Looking for " + value + ", " + comment + " in expected results...");
+      print("Looking for '" + value + "', '" + comment + "' in expected results...");
       let j;
       for (j = 0; j < aExpected.length; j++) {
         // Skip processed expected results
@@ -126,6 +126,7 @@ function ensure_results(aSearch, aExpected)
         title = kTitles[title];
         if (tags && appendTags)
           title += " \u2013 " + tags.map(function(aTag) kTitles[aTag]);
+        print("Checking against expected '" + uri + "', '" + title + "'...");
 
         // Got a match on both uri and title?
         if (uri == value && title == comment) {
@@ -138,10 +139,12 @@ function ensure_results(aSearch, aExpected)
 
       // We didn't hit the break, so we must have not found it
       if (j == aExpected.length)
-        do_throw("Didn't find the current result (" + value + ", " + comment + ") in expected: " + aExpected);
+        do_throw("Didn't find the current result ('" + value + "', '" + comment + "') in expected: " + aExpected);
     }
 
     // Make sure we have the right number of results
+    print("Expecting " + aExpected.length + " results; got " +
+          controller.matchCount + " results");
     do_check_eq(controller.matchCount, aExpected.length);
 
     // If we expect results, make sure we got matches
@@ -156,7 +159,7 @@ function ensure_results(aSearch, aExpected)
     do_test_finished();
   };
 
-  print("Searching for.. " + aSearch);
+  print("Searching for.. '" + aSearch + "'");
   controller.startSearch(aSearch);
 }
 

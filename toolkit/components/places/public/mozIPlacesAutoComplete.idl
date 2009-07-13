@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * vim: sw=2 ts=2 sts=2
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,7 +13,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Storage code.
+ * The Original Code is Places code
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
@@ -37,30 +37,74 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_storage_h_
-#define mozilla_storage_h_
+#include "nsISupports.idl"
 
-////////////////////////////////////////////////////////////////////////////////
-//// Public Interfaces
+/**
+ * This interface provides some constants used by the Places AutoComplete
+ * search provider.
+ */
+[scriptable, uuid(a5ae8332-333c-412a-bb02-a35df8247714)]
+interface mozIPlacesAutoComplete : nsISupports
+{
+  //////////////////////////////////////////////////////////////////////////////
+  //// Matching Constants
 
-#include "mozIStorageAggregateFunction.h"
-#include "mozIStorageConnection.h"
-#include "mozIStorageError.h"
-#include "mozIStorageFunction.h"
-#include "mozIStoragePendingStatement.h"
-#include "mozIStorageProgressHandler.h"
-#include "mozIStorageResultSet.h"
-#include "mozIStorageRow.h"
-#include "mozIStorageService.h"
-#include "mozIStorageStatement.h"
-#include "mozIStorageStatementCallback.h"
+  /**
+   * Match anywhere in each searchable term.
+   */
+  const long MATCH_ANYWHERE = 0;
 
-////////////////////////////////////////////////////////////////////////////////
-//// Native Language Helpers
+  /**
+   * Match first on word boundaries, and if we do not get enough results, then
+   * match anywhere in each searchable term.
+   */
+  const long MATCH_BOUNDARY_ANYWHERE = 1;
 
-#include "mozStorageHelper.h"
-#include "mozStorageCID.h"
+  /**
+   * Match on word boundaries in each searchable term.
+   */
+  const long MATCH_BOUNDARY = 2;
 
-#include "mozilla/storage/Variant.h"
+  /**
+   * Match only the beginning of each search term.
+   */
+  const long MATCH_BEGINNING = 3;
 
-#endif // mozilla_storage_h_
+  //////////////////////////////////////////////////////////////////////////////
+  //// Search Behavior Constants
+
+  /**
+   * Search through history.
+   */
+  const long BEHAVIOR_HISTORY = 1 << 0;
+
+  /**
+   * Search though bookmarks.
+   */
+  const long BEHAVIOR_BOOKMARK = 1 << 1;
+
+  /**
+   * Search through tags.
+   */
+  const long BEHAVIOR_TAG = 1 << 2;
+
+  /**
+   * Search the title of pages.
+   */
+  const long BEHAVIOR_TITLE = 1 << 3;
+
+  /**
+   * Search the URL of pages.
+   */
+  const long BEHAVIOR_URL = 1 << 4;
+
+  /**
+   * Search for typed pages.
+   */
+  const long BEHAVIOR_TYPED = 1 << 5;
+
+  /**
+   * Search javascript: URLs.
+   */
+  const long BEHAVIOR_JAVASCRIPT = 1 << 6;
+};
