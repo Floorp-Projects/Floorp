@@ -219,14 +219,14 @@ struct JSScope {
     bool changeTable(JSContext *cx, int change);
     void reportReadOnlyScope(JSContext *cx);
     JSScopeProperty **searchTable(jsid id, bool adding);
-    JSScopeProperty **search(jsid id, bool adding);
+    inline JSScopeProperty **search(jsid id, bool adding);
 
   public:
     static JSScope *create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj);
     static void destroy(JSContext *cx, JSScope *scope);
 
-    void hold();
-    bool drop(JSContext *cx, JSObject *obj);
+    inline void hold();
+    inline bool drop(JSContext *cx, JSObject *obj);
 
     JSScopeProperty *lookup(jsid id);
     bool has(JSScopeProperty *sprop);
