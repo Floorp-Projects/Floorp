@@ -110,26 +110,6 @@ js_GetGCStringRuntime(JSString *str);
 #define GC_POKE(cx, oldval) ((cx)->runtime->gcPoke = JSVAL_IS_GCTHING(oldval))
 #endif
 
-/*
- * Write barrier macro monitoring property update from oldval to newval in
- * scope->object.
- *
- * Since oldval is used only for the branded scope case, and the oldval actual
- * argument expression is typically not used otherwise by callers, performance
- * benefits if oldval is *not* evaluated into a callsite temporary variable,
- * and instead passed to GC_WRITE_BARRIER for conditional evaluation (we rely
- * on modern compilers to do a good CSE job). Yay, C macros.
- */
-#define GC_WRITE_BARRIER(cx,scope,oldval,newval)                              \
-    JS_BEGIN_MACRO                                                            \
-        if (SCOPE_IS_BRANDED(scope) &&                                        \
-            (oldval) != (newval) &&                                           \
-            (VALUE_IS_FUNCTION(cx,oldval) || VALUE_IS_FUNCTION(cx,newval))) { \
-            js_MakeScopeShapeUnique(cx, scope);                               \
-        }                                                                     \
-        GC_POKE(cx, oldval);                                                  \
-    JS_END_MACRO
-
 extern JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes);
 
@@ -304,9 +284,9 @@ typedef struct JSGCChunkInfo JSGCChunkInfo;
 
 struct JSGCArenaList {
     JSGCArenaInfo   *last;          /* last allocated GC arena */
-    uint16          lastCount;      /* number of allocated things in the last
+    uint32          lastCount;      /* number of allocated things in the last
                                        arena */
-    uint16          thingSize;      /* size of things to allocate on this list
+    uint32          thingSize;      /* size of things to allocate on this list
                                      */
     JSGCThing       *freeList;      /* list of free GC things */
 };
@@ -367,6 +347,16 @@ js_AddAsGCBytes(JSContext *cx, size_t sz);
 
 extern void
 js_RemoveAsGCBytes(JSRuntime* rt, size_t sz);
+
+/*
+ * Free the chars held by str when it is finalized by the GC. When type is
+ * less then zero, it denotes an internal string. Otherwise it denotes the
+ * type of the external string allocated with JS_NewExternalString.
+ *
+ * This function always needs rt but can live with null cx.
+ */
+extern void
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx);
 
 #ifdef DEBUG_notme
 #define JS_GCMETER 1

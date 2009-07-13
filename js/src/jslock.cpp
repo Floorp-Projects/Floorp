@@ -52,7 +52,7 @@
 #include "jscntxt.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
-#include "jsfun.h"      /* for VALUE_IS_FUNCTION used by *_WRITE_BARRIER */
+#include "jsfun.h"      /* for VALUE_IS_FUNCTION from LOCKED_OBJ_WRITE_SLOT */
 #include "jslock.h"
 #include "jsscope.h"
 #include "jsstr.h"
@@ -607,7 +607,7 @@ ClaimTitle(JSTitle *title, JSContext *cx)
          * non-null test, and avoid double-insertion bugs.
          */
         if (!title->u.link) {
-            js_HoldScope(TITLE_TO_SCOPE(title));
+            TITLE_TO_SCOPE(title)->hold();
             title->u.link = rt->titleSharingTodo;
             rt->titleSharingTodo = title;
         }
@@ -683,13 +683,13 @@ js_ShareWaitingTitles(JSContext *cx)
         title->u.link = NULL;       /* null u.link for sanity ASAP */
 
         /*
-         * If js_DropScope returns false, we held the last ref to scope. The
+         * If JSScope::drop returns false, we held the last ref to scope. The
          * waiting thread(s) must have been killed, after which the GC
          * collected the object that held this scope.  Unlikely, because it
          * requires that the GC ran (e.g., from an operation callback)
          * during this request, but possible.
          */
-        if (js_DropScope(cx, TITLE_TO_SCOPE(title), NULL)) {
+        if (TITLE_TO_SCOPE(title)->drop(cx, NULL)) {
             FinishSharingTitle(cx, title); /* set ownercx = NULL */
             shared = true;
         }
@@ -739,7 +739,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      * an earlier request.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
-        (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
+        (scope->sealed() && scope->object == obj) ||
         (title->ownercx && ClaimTitle(title, cx))) {
         return STOBJ_GET_SLOT(obj, slot);
     }
@@ -834,9 +834,9 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
      * an earlier request.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
-        (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
+        (scope->sealed() && scope->object == obj) ||
         (title->ownercx && ClaimTitle(title, cx))) {
-        LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
+        LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
         return;
     }
 
@@ -846,7 +846,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (NativeCompareAndSwap(&tl->owner, 0, me)) {
         if (scope == OBJ_SCOPE(obj)) {
-            LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
+            LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
@@ -860,13 +860,13 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
             js_Dequeue(tl);
     }
     else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
+        LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
         return;
     }
 #endif
 
     js_LockObj(cx, obj);
-    LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, v);
+    LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
 
     /*
      * Same drill as above, in js_GetSlotThreadSafe.
@@ -1398,7 +1398,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
     for (;;) {
         scope = OBJ_SCOPE(obj);
         title = &scope->title;
-        if (SCOPE_IS_SEALED(scope) && scope->object == obj &&
+        if (scope->sealed() && scope->object == obj &&
             !cx->lockedSealedTitle) {
             cx->lockedSealedTitle = title;
             return;
@@ -1512,7 +1512,7 @@ js_SetScopeInfo(JSScope *scope, const char *file, int line)
     JSTitle *title = &scope->title;
     if (!title->ownercx) {
         jsrefcount count = title->u.count;
-        JS_ASSERT_IF(!SCOPE_IS_SEALED(scope), count > 0);
+        JS_ASSERT_IF(!scope->sealed(), count > 0);
         JS_ASSERT(count <= 4);
         title->file[count - 1] = file;
         title->line[count - 1] = line;

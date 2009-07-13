@@ -369,15 +369,16 @@ struct JSRuntime {
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     jsrefcount          gcKeepAtoms;
-    uint32              gcBytes;
-    uint32              gcLastBytes;
-    uint32              gcMaxBytes;
-    uint32              gcMaxMallocBytes;
+    size_t              gcBytes;
+    size_t              gcLastBytes;
+    size_t              gcMaxBytes;
+    size_t              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcLevel;
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
     uint32              gcTriggerFactor;
+    size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
 
     /*
@@ -529,8 +530,8 @@ struct JSRuntime {
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
-     * The propertyRemovals counter is incremented for every js_ClearScope,
-     * and for each js_RemoveScopeProperty that frees a slot in an object.
+     * The propertyRemovals counter is incremented for every JSScope::clear,
+     * and for each JSScope::remove method call that frees a slot in an object.
      * See js_NativeGet and js_NativeSet in jsobj.c.
      */
     JSDHashTable        propertyTreeHash;
@@ -682,6 +683,9 @@ struct JSRuntime {
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
 #endif
+
+    void SetGCTriggerFactor(uint32 factor);
+    void SetGCLastBytes(size_t lastBytes);
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
