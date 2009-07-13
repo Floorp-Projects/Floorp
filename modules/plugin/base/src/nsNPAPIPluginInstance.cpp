@@ -1122,7 +1122,7 @@ nsNPAPIPluginInstance::InitializePlugin()
   // backward compatible...
   
   nsPluginMode  mode;
-  char*         mimetype;
+  const char*   mimetype;
   NPError       error;
 
   GetMode(&mode);
@@ -1780,7 +1780,7 @@ nsNPAPIPluginInstance::ForceRedraw()
 }
 
 NS_IMETHODIMP
-nsNPAPIPluginInstance::GetMIMEType(char* *result)
+nsNPAPIPluginInstance::GetMIMEType(const char* *result)
 {
   if (!mMIMEType)
     *result = "";
