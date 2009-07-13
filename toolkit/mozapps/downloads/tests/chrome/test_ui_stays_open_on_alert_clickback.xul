@@ -92,6 +92,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
 
       // Note:  This test will not be valid if the download list is built
       //        synchronously in Startup in downloads.js
