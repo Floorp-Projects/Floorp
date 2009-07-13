@@ -218,35 +218,15 @@ struct JSScope {
     bool createTable(JSContext *cx, bool report);
     bool changeTable(JSContext *cx, int change);
     void reportReadOnlyScope(JSContext *cx);
+    JSScopeProperty **searchTable(jsid id, bool adding);
     JSScopeProperty **search(jsid id, bool adding);
 
   public:
     static JSScope *create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj);
     static void destroy(JSContext *cx, JSScope *scope);
 
-    inline void hold()
-    {
-        JS_ASSERT(nrefs >= 0);
-        JS_ATOMIC_INCREMENT(&nrefs);
-    }
-
-    inline bool drop(JSContext *cx, JSObject *obj)
-    {
-#ifdef JS_THREADSAFE
-        /* We are called from only js_ShareWaitingTitles and js_FinalizeObject. */
-        JS_ASSERT(!obj || CX_THREAD_IS_RUNNING_GC(cx));
-#endif
-        JS_ASSERT(nrefs > 0);
-        --nrefs;
-
-        if (nrefs == 0) {
-            destroy(cx, this);
-            return false;
-        }
-        if (object == obj)
-            object = NULL;
-        return true;
-    }
+    void hold();
+    bool drop(JSContext *cx, JSObject *obj);
 
     JSScopeProperty *lookup(jsid id);
     bool has(JSScopeProperty *sprop);
@@ -421,6 +401,61 @@ JSScope::has(JSScopeProperty *sprop)
 
 extern uint32
 js_GenerateShape(JSContext *cx, bool gcLocked);
+
+#ifdef JS_DUMP_PROPTREE_STATS
+# define METER(x)       JS_ATOMIC_INCREMENT(&js_scope_stats.x)
+#else
+# define METER(x)       /* nothing */
+#endif
+
+inline JSScopeProperty **
+JSScope::search(jsid id, bool adding)
+{
+    JSScopeProperty *sprop, **spp;
+
+    METER(searches);
+    if (!table) {
+        /* Not enough properties to justify hashing: search from lastProp. */
+        JS_ASSERT(!hadMiddleDelete());
+        for (spp = &lastProp; (sprop = *spp); spp = &sprop->parent) {
+            if (sprop->id == id) {
+                METER(hits);
+                return spp;
+            }
+        }
+        METER(misses);
+        return spp;
+    }
+    return searchTable(id, adding);
+}
+
+#undef METER
+
+inline void
+JSScope::hold()
+{
+    JS_ASSERT(nrefs >= 0);
+    JS_ATOMIC_INCREMENT(&nrefs);
+}
+
+inline bool
+JSScope::drop(JSContext *cx, JSObject *obj)
+{
+#ifdef JS_THREADSAFE
+    /* We are called from only js_ShareWaitingTitles and js_FinalizeObject. */
+    JS_ASSERT(!obj || CX_THREAD_IS_RUNNING_GC(cx));
+#endif
+    JS_ASSERT(nrefs > 0);
+    --nrefs;
+
+    if (nrefs == 0) {
+        destroy(cx, this);
+        return false;
+    }
+    if (object == obj)
+        object = NULL;
+    return true;
+}
 
 inline void
 JSScope::extend(JSContext *cx, JSScopeProperty *sprop)

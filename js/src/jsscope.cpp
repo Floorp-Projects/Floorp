@@ -278,26 +278,14 @@ JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
 #define SCOPE_HASH2(hash0,log2,shift)   ((((hash0) << (log2)) >> (shift)) | 1)
 
 JSScopeProperty **
-JSScope::search(jsid id, bool adding)
+JSScope::searchTable(jsid id, bool adding)
 {
     JSHashNumber hash0, hash1, hash2;
     int sizeLog2;
     JSScopeProperty *stored, *sprop, **spp, **firstRemoved;
     uint32 sizeMask;
 
-    METER(searches);
-    if (!table) {
-        /* Not enough properties to justify hashing: search from lastProp. */
-        JS_ASSERT(!hadMiddleDelete());
-        for (spp = &lastProp; (sprop = *spp); spp = &sprop->parent) {
-            if (sprop->id == id) {
-                METER(hits);
-                return spp;
-            }
-        }
-        METER(misses);
-        return spp;
-    }
+    JS_ASSERT(table);
 
     /* Compute the primary hash address. */
     METER(hashes);
