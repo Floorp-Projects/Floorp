@@ -354,6 +354,14 @@ check::
 		$(srcdir)/trace-test.js
 endif
 
+DIST_GARBAGE = config.cache config.log config.status \
+   config/myrules.mk config/myconfig.mk \
+   unallmakefiles js-config js-config.h mozilla-config.h
+
+distclean::
+	cat unallmakefiles | $(XARGS) rm -f
+	rm -f $(DIST_GARBAGE)
+
 # our build system doesn't handle subdir srcs very gracefully today
 export::
 	mkdir -p nanojit
