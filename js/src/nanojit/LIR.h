@@ -681,6 +681,20 @@ namespace nanojit
             return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
         }
 
+        // Return true if removal of 'ins' from a LIR fragment could
+        // possibly change the behaviour of that fragment, even if any
+        // value computed by 'ins' is not used later in the fragment.
+        // In other words, can 'ins' possible alter control flow or memory?
+        // Note, this assumes that loads will never fault and hence cannot
+        // affect the control flow.
+        bool isStmt() {
+            return isGuard() || isBranch() ||
+                   (isCall() && !isCse()) ||
+                   isStore() ||
+                   isop(LIR_loop) || isop(LIR_label) || isop(LIR_live) ||
+                   isRet();
+        }
+
         void setTarget(LIns* t);
         LIns* getTarget();
 

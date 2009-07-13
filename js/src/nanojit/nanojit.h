@@ -268,11 +268,10 @@ namespace nanojit {
            and below, so that callers can use bits 16 and above for
            themselves. */
         // TODO: add entries for the writer pipeline
-        LC_Liveness    = 1<<7, // (show LIR liveness analysis)
-        LC_ReadLIR     = 1<<6, // As read from LirBuffer
-        LC_AfterSF_SP  = 1<<5, // After StackFilter(sp)
-        LC_AfterSF_RP  = 1<<4, // After StackFilter(rp)
-        LC_AfterDeadF  = 1<<3, // After DeadFilter
+        LC_Liveness    = 1<<6, // (show LIR liveness analysis)
+        LC_ReadLIR     = 1<<5, // As read from LirBuffer
+        LC_AfterSF_SP  = 1<<4, // After StackFilter(sp)
+        LC_AfterSF_RP  = 1<<3, // After StackFilter(rp)
         LC_RegAlloc    = 1<<2, // stuff to do with reg alloc
         LC_Assembly    = 1<<1, // final assembly
         LC_NoCodeAddrs = 1<<0  // (don't show code addresses on asm output)
