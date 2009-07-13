@@ -5195,10 +5195,18 @@ LeaveTree(InterpState& state, VMSideExit* lr)
              * but we have it now. Box it.
              */
             JSTraceType* typeMap = getStackTypeMap(innermost);
+
+            /*
+             * If there's a tree call around the point that we deep exited at,
+             * then state.sp and state.rp were restored to their original
+             * values before the tree call and sp might be less than deepBailSp,
+             * which we sampled when we were told to deep bail.
+             */
+            JS_ASSERT(state.deepBailSp >= state.stackBase && state.sp <= state.deepBailSp);
             NativeToValue(cx,
                           cx->fp->regs->sp[-1],
                           typeMap[innermost->numStackSlots - 1],
-                          (jsdouble *) state.sp + innermost->sp_adj / sizeof(jsdouble) - 1);
+                          (jsdouble *) state.deepBailSp + innermost->sp_adj / sizeof(jsdouble) - 1);
         }
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         if (tm->prohibitFlush && --tm->prohibitFlush == 0 && tm->needFlush)
@@ -6226,7 +6234,10 @@ js_DeepBail(JSContext *cx)
     debug_only_print0(LC_TMTracer, "Deep bail.\n");
     LeaveTree(*tracecx->interpState, tracecx->bailExit);
     tracecx->bailExit = NULL;
-    tracecx->interpState->builtinStatus |= JSBUILTIN_BAILED;
+
+    InterpState* state = tracecx->interpState;
+    state->builtinStatus |= JSBUILTIN_BAILED;
+    state->deepBailSp = state->sp;
 }
 
 JS_REQUIRES_STACK jsval&
