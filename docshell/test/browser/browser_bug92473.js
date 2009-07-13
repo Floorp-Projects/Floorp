@@ -25,15 +25,17 @@ function testContent(text) {
 }
 
 function afterOpen() {
+    testPage.events.removeListener("load", afterOpen);
+    testPage.events.addListener("load", afterChangeCharset);
     /* Test that the content on load is the expected wrong decoding */
     testContent(wrongText);
 
     /* Force the page encoding to Shift_JIS */
     SetForcedCharset("Shift_JIS");
-    setTimeout(afterChangeCharset, 3000);
 }
   
 function afterChangeCharset() {
+    testPage.events.removeListener("load", afterChangeCharset);
     /* test that the content is decoded correctly */
     testContent(rightText);
     testPage.close();
@@ -42,9 +44,10 @@ function afterChangeCharset() {
 
 function test() {
   var activeWin = Application.activeWindow;
-  testPage = activeWin.open(url("chrome://mochikit/content/browser/docshell/test/browser/test-form_sjis.html"));
+  testPage = activeWin.open(url("about:blank"));
+  testPage.events.addListener("load", afterOpen);
+  testPage.load(url("chrome://mochikit/content/browser/docshell/test/browser/test-form_sjis.html"));
   testPage.focus();
 
   waitForExplicitFinish();
-  setTimeout(afterOpen, 1000);
 }
