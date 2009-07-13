@@ -1567,8 +1567,8 @@ LoginManagerStorage_mozStorage.prototype = {
         }
 
         // Finalize all statements to free memory, avoid errors later
-        for (let i = 0; i < this._dbStmts.length; i++)
-            this._dbStmts[i].finalize();
+        for each (let stmt in this._dbStmts)
+            stmt.finalize();
         this._dbStmts = [];
 
         // Close the connection, ignore 'already closed' error
