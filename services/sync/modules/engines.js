@@ -341,7 +341,7 @@ SyncEngine.prototype = {
     while ((item = newitems.iter.next())) {
       this._lowMemCheck();
       try {
-        item.decrypt(ID.get('WeaveCryptoID').password);
+        item.decrypt(ID.get("WeaveCryptoID"));
         if (this._reconcile(item)) {
           count.applied++;
           this._applyIncoming(item);
@@ -466,7 +466,7 @@ SyncEngine.prototype = {
         // skip getting siblings of already processed and deleted records
         if (!out.deleted && !(out.id in meta))
           this._store.createMetaRecords(out.id, meta);
-        out.encrypt(ID.get('WeaveCryptoID').password);
+        out.encrypt(ID.get("WeaveCryptoID"));
         up.pushData(JSON.parse(out.serialize())); // FIXME: inefficient
         Sync.sleep(0);
       }
