@@ -20,11 +20,11 @@ function check_wave(v, enabled) {
   check("audio/wave; codecs=\"0, 1\"", "maybe");
 
   // Unsupported Wave codecs
-  check("audio/wave; codecs=2", "no");
-  check("audio/wave; codecs=xyz,0", "no");
-  check("audio/wave; codecs=0,xyz", "no");
-  check("audio/wave; codecs=\"xyz, 1\"", "no");
+  check("audio/wave; codecs=2", "");
+  check("audio/wave; codecs=xyz,0", "");
+  check("audio/wave; codecs=0,xyz", "");
+  check("audio/wave; codecs=\"xyz, 1\"", "");
   // empty codec names
-  check("audio/wave; codecs=,", "no");
-  check("audio/wave; codecs=\"0, 1,\"", "no");
+  check("audio/wave; codecs=,", "");
+  check("audio/wave; codecs=\"0, 1,\"", "");
 }

@@ -41,7 +41,7 @@ function runRangeTest()
      "It should be possible to select text node even if the node is not in DOM.");
   hadException = false;
   try {
-    r.insertNode(document.createTextNode('5'));
+    range.insertNode(document.createTextNode('5'));
   } catch (ex) {
     hadException = true;
   }
