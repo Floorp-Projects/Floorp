@@ -643,9 +643,9 @@ assemble(istream &in,
     map<string,LIns*> labels;
     map<string,pair<LOpcode,size_t> > op_map;
 
-#define OPDEF(op, number, args, repkind, isStmt) \
+#define OPDEF(op, number, args, repkind) \
     op_map[#op] = make_pair(LIR_##op, args);
-#define OPDEF64(op, number, args, repkind, isStmt) \
+#define OPDEF64(op, number, args, repkind) \
     op_map[#op] = make_pair(LIR_##op, args);
 #include "nanojit/LIRopcode.tbl"
 #undef OPDEF
