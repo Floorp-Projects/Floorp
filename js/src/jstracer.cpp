@@ -2214,7 +2214,7 @@ struct UpvarVarTraits {
     }
 
     static uint32 native_slot(uint32 argc, int32 slot) {
-        return 2 /*callee,this*/ + argc + slot;
+        return 3 /*callee,this,arguments*/ + argc + slot;
     }
 };
 
