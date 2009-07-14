@@ -12,6 +12,8 @@
 #   - DOM interfaces:
 #    * Section 6.2 of http://www.w3.org/TR/smil-animation/
 #    * Animation-related bits of http://www.w3.org/TR/SVG/struct.html#DOMInterfaces
+#   - Some more "anim-retarget" tests, with attributeType being changed/cleared.
+#     (after we've got support for SVG/SMIL animation of CSS properties)
 
 # animation sort-order tests
 include sort/reftest.list
@@ -57,6 +59,22 @@ fails == anim-fillopacity-1.svg anim-standard-ref.svg    # non-length-numeric va
 == anim-height-interp-4.svg anim-height-interp-4-ref.svg
 == anim-height-interp-5.svg anim-height-interp-5-ref.svg
 == anim-height-interp-6.svg anim-height-interp-6-ref.svg
+
+== anim-remove-1.svg anim-standard-ref.svg
+== anim-remove-2.svg anim-standard-ref.svg
+== anim-remove-3.svg anim-standard-ref.svg
+== anim-remove-4.svg anim-standard-ref.svg
+== anim-remove-5.svg anim-standard-ref.svg
+== anim-remove-6.svg anim-standard-ref.svg
+== anim-remove-7.svg anim-standard-ref.svg
+== anim-retarget-1.svg anim-standard-ref.svg
+== anim-retarget-2.svg anim-standard-ref.svg
+fails == anim-retarget-3.svg anim-standard-ref.svg # href support
+== anim-retarget-4.svg anim-standard-ref.svg
+fails == anim-retarget-5.svg anim-standard-ref.svg # href support
+fails == anim-retarget-6.svg anim-standard-ref.svg # href support
+fails == anim-retarget-7.svg anim-standard-ref.svg # href support
+== anim-retarget-8.svg anim-standard-ref.svg
 
 fails == anim-strokecolor-1.svg anim-standard-ref.svg # color support
 fails == anim-strokewidth-1.svg anim-standard-ref.svg # color support
