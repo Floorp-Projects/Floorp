@@ -107,6 +107,7 @@ function test()
       obs.removeObserver(testObs, DLMGR_UI_DONE);
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       let defaultTitle = win.document.documentElement.getAttribute("statictitle");
       is(win.document.title, defaultTitle,
         "The downloads window title is correct outside of the private browsing mode");
