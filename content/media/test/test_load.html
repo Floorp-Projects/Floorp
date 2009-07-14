@@ -174,7 +174,7 @@ function nextTest() {
   gTestNum++;
   
   createMedia(type.match(/^audio\//) ? "audio" : "video");
-  if (gMedia.canPlayType(type) == "no") {
+  if (!gMedia.canPlayType(type)) {
     // Unsupported type, skip to next test
     nextTest();
     return;
