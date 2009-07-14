@@ -1,4 +1,5 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
+/* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -107,7 +108,7 @@ typedef enum {
 
     FirstFloatReg = 16,
     LastFloatReg = 22,
-        
+
     FirstReg = 0,
     LastReg = 22,   // This excludes D7 from the register allocator.
     UnknownReg = 31,
@@ -135,7 +136,7 @@ typedef enum {
     GT = 0xC, // Greater Than
     LE = 0xD, // Less or Equal
     AL = 0xE, // ALways
- 
+
     // Note that condition code NV is unpredictable on ARMv3 and ARMv4, and has
     // special meaning for ARMv5 onwards. As such, it should never be used in
     // an instruction encoding unless the special (ARMv5+) meaning is required.
@@ -250,7 +251,7 @@ typedef enum {
 #define END_NATIVE_CODE(x)                      \
     (x) = (dictwordp*)_nIns; }
 
-// BX 
+// BX
 #define BX(_r)  do {                                                    \
         underrunProtect(4);                                             \
         NanoAssert(IsGpReg(_r));                                        \
@@ -477,7 +478,7 @@ enum {
 // MOVS _d, _r, LSL #(_imm & 0x1f)
 // _d = _r << (_imm & 0x1f)
 #define LSLi(_d, _r, _imm) ALUr_shi(AL, mov, 1, _d, 0, _r, LSL_imm, (_imm & 0x1f))
-                    
+
 // TST
 #define TST(_l,_r)      ALUr(AL, tst, 1, 0, _l, _r)
 #define TSTi(_d,_imm)   ALUi(AL, tst, 1, 0, _d, _imm)
@@ -670,13 +671,13 @@ enum {
 
 // used for testing result of an FP compare on x86; not used on arm.
 // JP = comparison  false
-#define JP(t)   do {NanoAssert(0); B_cond(NE,t); asm_output("jp 0x%08x",t); } while(0) 
+#define JP(t)   do {NanoAssert(0); B_cond(NE,t); asm_output("jp 0x%08x",t); } while(0)
 
 // JNP = comparison true
 #define JNP(t)  do {NanoAssert(0); B_cond(EQ,t); asm_output("jnp 0x%08x",t); } while(0)
 
 
-// MOV(cond) _r, #1 
+// MOV(cond) _r, #1
 // MOV(!cond) _r, #0
 #define SET(_r,_cond) do {                                              \
     ConditionCode _opp = OppositeCond(_cond);                           \

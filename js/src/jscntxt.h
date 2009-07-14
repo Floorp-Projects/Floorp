@@ -529,8 +529,8 @@ struct JSRuntime {
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
-     * The propertyRemovals counter is incremented for every js_ClearScope,
-     * and for each js_RemoveScopeProperty that frees a slot in an object.
+     * The propertyRemovals counter is incremented for every JSScope::clear,
+     * and for each JSScope::remove method call that frees a slot in an object.
      * See js_NativeGet and js_NativeSet in jsobj.c.
      */
     JSDHashTable        propertyTreeHash;

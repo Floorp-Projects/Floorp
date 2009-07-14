@@ -1934,7 +1934,7 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
     i = 0;
     scope = OBJ_SCOPE(obj);
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
-        if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
+        if (scope->hadMiddleDelete() && !scope->has(sprop))
             continue;
         fprintf(fp, "%3u %p ", i, (void *)sprop);
 

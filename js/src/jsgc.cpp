@@ -82,6 +82,10 @@
 #include "jsxml.h"
 #endif
 
+#ifdef INCLUDE_MOZILLA_DTRACE
+#include "jsdtracef.h"
+#endif
+
 /*
  * Check if posix_memalign is available.
  */
@@ -647,10 +651,8 @@ IsMarkedDouble(JSGCArenaInfo *a, uint32 index)
  * The maximum number of things to put on the local free list by taking
  * several things from the global free list or from the tail of the last
  * allocated arena to amortize the cost of rt->gcLock.
- *
- * We use number 8 based on benchmarks from bug 312238.
  */
-#define MAX_THREAD_LOCAL_THINGS 8
+#define MAX_THREAD_LOCAL_THINGS 64
 
 #endif
 
@@ -1090,10 +1092,9 @@ InitGCArenaLists(JSRuntime *rt)
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
         arenaList = &rt->gcArenaList[i];
         thingSize = GC_FREELIST_NBYTES(i);
-        JS_ASSERT((size_t)(uint16)thingSize == thingSize);
         arenaList->last = NULL;
-        arenaList->lastCount = (uint16) THINGS_PER_ARENA(thingSize);
-        arenaList->thingSize = (uint16) thingSize;
+        arenaList->lastCount = THINGS_PER_ARENA(thingSize);
+        arenaList->thingSize = thingSize;
         arenaList->freeList = NULL;
     }
     rt->gcDoubleArenaList.first = NULL;
@@ -2011,12 +2012,13 @@ testReservedObjects:
         maxFreeThings = thingsLimit - arenaList->lastCount;
         if (maxFreeThings > MAX_THREAD_LOCAL_THINGS)
             maxFreeThings = MAX_THREAD_LOCAL_THINGS;
+        uint32 lastCount = arenaList->lastCount;
         while (maxFreeThings != 0) {
             --maxFreeThings;
 
-            tmpflagp = THING_FLAGP(a, arenaList->lastCount);
+            tmpflagp = THING_FLAGP(a, lastCount);
             tmpthing = FLAGP_TO_THING(tmpflagp, nbytes);
-            arenaList->lastCount++;
+            lastCount++;
             tmpthing->flagp = tmpflagp;
             *tmpflagp = GCF_FINAL;    /* signifying that thing is free */
 
@@ -2024,6 +2026,7 @@ testReservedObjects:
             lastptr = &tmpthing->next;
         }
         *lastptr = NULL;
+        arenaList->lastCount = lastCount;
 #endif
         break;
     }
@@ -2887,7 +2890,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
     if (fp->argsobj)
-        JS_CALL_OBJECT_TRACER(trc, fp->argsobj, "arguments");
+        JS_CALL_OBJECT_TRACER(trc, JSVAL_TO_OBJECT(fp->argsobj), "arguments");
     if (fp->varobj)
         JS_CALL_OBJECT_TRACER(trc, fp->varobj, "variables");
     if (fp->script) {
@@ -3245,6 +3248,96 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
             js_DestroyScript(cx, script);
         }
     }
+}
+
+static void
+js_FinalizeObject(JSContext *cx, JSObject *obj)
+{
+    /* Cope with stillborn objects that have no map. */
+    if (!obj->map)
+        return;
+
+    if (JS_UNLIKELY(cx->debugHooks->objectHook != NULL)) {
+        cx->debugHooks->objectHook(cx, obj, JS_FALSE,
+                                   cx->debugHooks->objectHookData);
+    }
+
+    /* Finalize obj first, in case it needs map and slots. */
+    STOBJ_GET_CLASS(obj)->finalize(cx, obj);
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
+        jsdtrace_object_finalize(obj);
+#endif
+
+    if (JS_LIKELY(OBJ_IS_NATIVE(obj)))
+        OBJ_SCOPE(obj)->drop(cx, obj);
+    js_FreeSlots(cx, obj);
+}
+
+static JSStringFinalizeOp str_finalizers[GCX_NTYPES - GCX_EXTERNAL_STRING] = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+
+intN
+js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
+                                 JSStringFinalizeOp newop)
+{
+    uintN i;
+
+    for (i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
+        if (str_finalizers[i] == oldop) {
+            str_finalizers[i] = newop;
+            return (intN) i;
+        }
+    }
+    return -1;
+}
+
+/*
+ * cx is NULL when we are called from js_FinishAtomState to force the
+ * finalization of the permanently interned strings.
+ */
+void
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
+{
+    jschar *chars;
+    JSBool valid;
+    JSStringFinalizeOp finalizer;
+
+    JS_RUNTIME_UNMETER(rt, liveStrings);
+    if (str->isDependent()) {
+        /* A dependent string can not be external and must be valid. */
+        JS_ASSERT(type < 0);
+        JS_ASSERT(str->dependentBase());
+        JS_RUNTIME_UNMETER(rt, liveDependentStrings);
+        valid = JS_TRUE;
+    } else {
+        /* A stillborn string has null chars, so is not valid. */
+        chars = str->flatChars();
+        valid = (chars != NULL);
+        if (valid) {
+            if (IN_UNIT_STRING_SPACE_RT(rt, chars)) {
+                JS_ASSERT(rt->unitStrings[*chars] == str);
+                JS_ASSERT(type < 0);
+                rt->unitStrings[*chars] = NULL;
+            } else if (type < 0) {
+                free(chars);
+            } else {
+                JS_ASSERT((uintN) type < JS_ARRAY_LENGTH(str_finalizers));
+                finalizer = str_finalizers[type];
+                if (finalizer) {
+                    /*
+                     * Assume that the finalizer for the permanently interned
+                     * string knows how to deal with null context.
+                     */
+                    finalizer(cx, str);
+                }
+            }
+        }
+    }
+    if (valid && str->isDeflated())
+        js_PurgeDeflatedStringCache(rt, str);
 }
 
 /*
@@ -3620,7 +3713,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                  */
                 freeList = arenaList->freeList;
                 if (a == arenaList->last)
-                    arenaList->lastCount = (uint16) indexLimit;
+                    arenaList->lastCount = indexLimit;
                 *ap = a->prev;
                 a->prev = emptyArenas;
                 emptyArenas = a;
