@@ -286,7 +286,7 @@ nsHTMLImageAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 
   nsCOMPtr<nsIContent> link(do_QueryInterface(domNode));
   if (link)
-    *aURI = link->GetHrefURI();
+    *aURI = link->GetHrefURI().get();
 
   return NS_OK;
 }
