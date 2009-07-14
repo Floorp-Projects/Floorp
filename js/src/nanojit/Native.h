@@ -1,4 +1,5 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
+/* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -57,25 +58,25 @@
 
 namespace nanojit {
     const size_t NJ_PAGE_SIZE = 1 << NJ_LOG2_PAGE_SIZE;
-	
+
     class Fragment;
     struct SideExit;
-	struct SwitchInfo;
-    
-    struct GuardRecord 
+    struct SwitchInfo;
+
+    struct GuardRecord
     {
         void* jmp;
         GuardRecord* next;
         SideExit* exit;
     };
-    
+
     struct SideExit
     {
         GuardRecord* guards;
         Fragment* from;
         Fragment* target;
-		SwitchInfo* switchInfo;
-        
+        SwitchInfo* switchInfo;
+
         void addGuard(GuardRecord* gr)
         {
             NanoAssert(gr->next == NULL);
@@ -86,40 +87,40 @@ namespace nanojit {
     };
 }
 
-	#ifdef NJ_STACK_GROWTH_UP
-		#define stack_direction(n)   n
-	#else
-		#define stack_direction(n)  -n
-	#endif
-	
-	#define isSPorFP(r)		( (r)==SP || (r)==FP )
+    #ifdef NJ_STACK_GROWTH_UP
+        #define stack_direction(n)   n
+    #else
+        #define stack_direction(n)  -n
+    #endif
 
-	#if defined(_MSC_VER) && _MSC_VER < 1400
-		static void asm_output(const char *f, ...) {}
-		#define gpn(r)					regNames[(r)]
-		#define fpn(r)					regNames[(r)]
-	#elif defined(NJ_VERBOSE)
-		#define asm_output(...) do { \
-			counter_increment(native); \
-			if (_logc->lcbits & LC_Assembly) { \
-				outline[0]='\0'; \
-				if (outputAddr) \
+    #define isSPorFP(r)        ( (r)==SP || (r)==FP )
+
+    #if defined(_MSC_VER) && _MSC_VER < 1400
+        static void asm_output(const char *f, ...) {}
+        #define gpn(r)                    regNames[(r)]
+        #define fpn(r)                    regNames[(r)]
+    #elif defined(NJ_VERBOSE)
+        #define asm_output(...) do { \
+            counter_increment(native); \
+            if (_logc->lcbits & LC_Assembly) { \
+                outline[0]='\0'; \
+                if (outputAddr) \
                    sprintf(outline, "%010lx   ", (unsigned long)_nIns); \
-				else \
+                else \
                    memset(outline, (int)' ', 10+3); \
-				sprintf(&outline[13], ##__VA_ARGS__); \
-				Assembler::outputAlign(outline, 35); \
-				RegAlloc::formatRegisters(_allocator, outline, _thisfrag); \
-				Assembler::output_asm(outline); \
-				outputAddr=(_logc->lcbits & LC_NoCodeAddrs) ? false : true;	\
-			} \
-		} while (0) /* no semi */ 
-		#define gpn(r)					regNames[(r)] 
-		#define fpn(r)					regNames[(r)] 
-	#else
-		#define asm_output(...)
-		#define gpn(r)		
-		#define fpn(r)		
-	#endif /* NJ_VERBOSE */
+                sprintf(&outline[13], ##__VA_ARGS__); \
+                Assembler::outputAlign(outline, 35); \
+                RegAlloc::formatRegisters(_allocator, outline, _thisfrag); \
+                Assembler::output_asm(outline); \
+                outputAddr=(_logc->lcbits & LC_NoCodeAddrs) ? false : true;    \
+            } \
+        } while (0) /* no semi */
+        #define gpn(r)                    regNames[(r)]
+        #define fpn(r)                    regNames[(r)]
+    #else
+        #define asm_output(...)
+        #define gpn(r)
+        #define fpn(r)
+    #endif /* NJ_VERBOSE */
 
 #endif // __nanojit_Native__

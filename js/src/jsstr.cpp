@@ -2607,14 +2607,6 @@ js_InitDeflatedStringCache(JSRuntime *rt)
     return JS_TRUE;
 }
 
-#define UNIT_STRING_SPACE(sp)    ((jschar *) ((sp) + UNIT_STRING_LIMIT))
-#define UNIT_STRING_SPACE_RT(rt) UNIT_STRING_SPACE((rt)->unitStrings)
-
-#define IN_UNIT_STRING_SPACE(sp,cp)                                           \
-    ((size_t)((cp) - UNIT_STRING_SPACE(sp)) < 2 * UNIT_STRING_LIMIT)
-#define IN_UNIT_STRING_SPACE_RT(rt,cp)                                        \
-    IN_UNIT_STRING_SPACE((rt)->unitStrings, cp)
-
 JSString *
 js_GetUnitStringForChar(JSContext *cx, jschar c)
 {
@@ -2884,71 +2876,6 @@ js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str)
         JS_HashTableRawRemove(rt->deflatedStringCache, hep, he);
     }
     JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
-}
-
-static JSStringFinalizeOp str_finalizers[GCX_NTYPES - GCX_EXTERNAL_STRING] = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-};
-
-intN
-js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
-                                 JSStringFinalizeOp newop)
-{
-    uintN i;
-
-    for (i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
-        if (str_finalizers[i] == oldop) {
-            str_finalizers[i] = newop;
-            return (intN) i;
-        }
-    }
-    return -1;
-}
-
-/*
- * cx is NULL when we are called from js_FinishAtomState to force the
- * finalization of the permanently interned strings.
- */
-void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
-{
-    jschar *chars;
-    JSBool valid;
-    JSStringFinalizeOp finalizer;
-
-    JS_RUNTIME_UNMETER(rt, liveStrings);
-    if (str->isDependent()) {
-        /* A dependent string can not be external and must be valid. */
-        JS_ASSERT(type < 0);
-        JS_ASSERT(str->dependentBase());
-        JS_RUNTIME_UNMETER(rt, liveDependentStrings);
-        valid = JS_TRUE;
-    } else {
-        /* A stillborn string has null chars, so is not valid. */
-        chars = str->flatChars();
-        valid = (chars != NULL);
-        if (valid) {
-            if (IN_UNIT_STRING_SPACE_RT(rt, chars)) {
-                JS_ASSERT(rt->unitStrings[*chars] == str);
-                JS_ASSERT(type < 0);
-                rt->unitStrings[*chars] = NULL;
-            } else if (type < 0) {
-                free(chars);
-            } else {
-                JS_ASSERT((uintN) type < JS_ARRAY_LENGTH(str_finalizers));
-                finalizer = str_finalizers[type];
-                if (finalizer) {
-                    /*
-                     * Assume that the finalizer for the permanently interned
-                     * string knows how to deal with null context.
-                     */
-                    finalizer(cx, str);
-                }
-            }
-        }
-    }
-    if (valid && str->isDeflated())
-        js_PurgeDeflatedStringCache(rt, str);
 }
 
 JS_FRIEND_API(const char *)

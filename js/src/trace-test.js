@@ -3799,15 +3799,13 @@ function testAddAnyInconvertibleObject()
 {
   var count = 0;
   function toString() { ++count; if (count == 95) return {}; return "" + count; }
+  var o = {valueOf: undefined, toString: toString};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o = {valueOf: undefined, toString: toString};
         var q = 5 + o;
-    }
   }
   catch (e)
   {
@@ -3828,7 +3826,7 @@ testAddAnyInconvertibleObject.expected = "pass";
 testAddAnyInconvertibleObject.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testAddAnyInconvertibleObject);
 
@@ -3842,15 +3840,13 @@ function testAddInconvertibleObjectAny()
       return {};
     return "" + count;
   }
+  var o = {valueOf: undefined, toString: toString};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o = {valueOf: undefined, toString: toString};
         var q = o + 5;
-    }
   }
   catch (e)
   {
@@ -3871,7 +3867,7 @@ testAddInconvertibleObjectAny.expected = "pass";
 testAddInconvertibleObjectAny.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testAddInconvertibleObjectAny);
 
@@ -3879,18 +3875,16 @@ function testAddInconvertibleObjectInconvertibleObject()
 {
   var count1 = 0;
   function toString1() { ++count1; if (count1 == 95) return {}; return "" + count1; }
+  var o1 = {valueOf: undefined, toString: toString1};
   var count2 = 0;
   function toString2() { ++count2; if (count2 == 95) return {}; return "" + count2; }
+  var o2 = {valueOf: undefined, toString: toString2};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o1 = {valueOf: undefined, toString: toString1};
-        var o2 = {valueOf: undefined, toString: toString2};
         var q = o1 + o2;
-    }
   }
   catch (e)
   {
@@ -3913,7 +3907,7 @@ testAddInconvertibleObjectInconvertibleObject.expected = "pass";
 testAddInconvertibleObjectInconvertibleObject.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testAddInconvertibleObjectInconvertibleObject);
 
@@ -3921,15 +3915,13 @@ function testBitOrAnyInconvertibleObject()
 {
   var count = 0;
   function toString() { ++count; if (count == 95) return {}; return count; }
+  var o = {valueOf: undefined, toString: toString};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o = {valueOf: undefined, toString: toString};
         var q = 1 | o;
-    }
   }
   catch (e)
   {
@@ -3950,7 +3942,7 @@ testBitOrAnyInconvertibleObject.expected = "pass";
 testBitOrAnyInconvertibleObject.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testBitOrAnyInconvertibleObject);
 
@@ -3958,15 +3950,13 @@ function testBitOrInconvertibleObjectAny()
 {
   var count = 0;
   function toString() { ++count; if (count == 95) return {}; return count; }
+  var o = {valueOf: undefined, toString: toString};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o = {valueOf: undefined, toString: toString};
         var q = o | 1;
-    }
   }
   catch (e)
   {
@@ -3987,7 +3977,7 @@ testBitOrInconvertibleObjectAny.expected = "pass";
 testBitOrInconvertibleObjectAny.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testBitOrInconvertibleObjectAny);
 
@@ -3995,18 +3985,16 @@ function testBitOrInconvertibleObjectInconvertibleObject()
 {
   var count1 = 0;
   function toString1() { ++count1; if (count1 == 95) return {}; return count1; }
+  var o1 = {valueOf: undefined, toString: toString1};
   var count2 = 0;
   function toString2() { ++count2; if (count2 == 95) return {}; return count2; }
+  var o2 = {valueOf: undefined, toString: toString2};
 
   var threw = false;
   try
   {
     for (var i = 0; i < 100; i++)
-    {
-        var o1 = {valueOf: undefined, toString: toString1};
-        var o2 = {valueOf: undefined, toString: toString2};
         var q = o1 | o2;
-    }
   }
   catch (e)
   {
@@ -4029,7 +4017,7 @@ testBitOrInconvertibleObjectInconvertibleObject.expected = "pass";
 testBitOrInconvertibleObjectInconvertibleObject.jitstats = {
   recorderStarted: 1,
   recorderAborted: 0,
-  sideExitIntoInterpreter: 93
+  sideExitIntoInterpreter: 3
 };
 test(testBitOrInconvertibleObjectInconvertibleObject);
 
@@ -4441,6 +4429,44 @@ delete g;
 delete h;
 delete a;
 delete f;
+
+function testRebranding2() {
+    // Same as testRebranding, but the object to be rebranded isn't the global.
+    var x = "FAIL";
+    function g(){}
+    function h(){ x = "ok"; }
+    var obj = {m: g};
+    var arr = [g, g, g, g, h];
+    assertEq(arr.length > RUNLOOP, true);
+    for (var i = 0; i < 5; i++) {
+        obj.m = arr[i];
+        obj.m();
+    }
+    return x;
+}
+testRebranding2.expected = "ok";
+test(testRebranding2);
+
+function testBug502914() {
+    // Assigning a non-function to a function-valued property on trace should
+    // bump the shape.
+    function f1() {}
+    function C() {}
+    var x = C.prototype = {m: f1};
+    x.m();  // brand scope
+    var arr = [new C, new C, new C, x];
+    try {
+        for (var i = 0; i < 4; i++) {
+            arr[i].m = 12;
+            x.m();  // should throw last time through
+        }
+    } catch (exc) {
+        return exc.constructor.name;
+    }
+    return "no exception";
+}
+testBug502914.expected = "TypeError";
+test(testBug502914);
 
 function testLambdaCtor() {
     var a = [];
@@ -5305,6 +5331,80 @@ function testFewerGlobalsInInnerTree() {
 }
 testFewerGlobalsInInnerTree.expected = "ok";
 test(testFewerGlobalsInInnerTree);
+
+function testMethodInit() {  // bug 503198
+    function o() { return 'o'; }
+    function k() { return 'k'; }
+
+    var x;
+    for (var i = 0; i < 10; i++)
+        x = {o: o, k: k};
+    return x.o() + x.k();
+}
+testMethodInit.expected = "ok";
+testMethodInit.jitstats = {
+  recorderStarted: 1,
+  traceCompleted: 1,
+  sideExitIntoInterpreter: 1
+};
+test(testMethodInit);
+
+function testMethodSet() {  // bug 503198
+    function o() { return 'o'; }
+    function k() { return 'k'; }
+
+    var x;
+    for (var i = 0; i < 10; i++) {
+        x = {};
+        x.o = o;
+        x.k = k;
+    }
+    return x.o() + x.k();
+}
+testMethodSet.expected = "ok";
+testMethodSet.jitstats = {
+  recorderStarted: 1,
+  traceCompleted: 1,
+  sideExitIntoInterpreter: 1
+};
+test(testMethodSet);
+
+function testMethodInitSafety() {
+    function f() { return 'fail'; }
+    function g() { return 'ok'; }
+
+    var s;
+    var arr = [f, f, f, f, g];
+    assertEq(arr.length > RUNLOOP, true);
+    for (var i = 0; i < arr.length; i++) {
+        var x = {m: arr[i]};
+        s = x.m();
+    }
+    return s;
+}
+testMethodInitSafety.expected = "ok";
+test(testMethodInitSafety);
+
+function testModuloWithNegative1() {
+    var v = 0;
+    for (var i = 0; i < 2; ++i) {
+        c = v;
+        v -= 1;
+        for (var j = 0; j < 2; ++j)
+            c %= -1;
+    }
+    return 1/c;
+}
+testModuloWithNegative1.expected = -Infinity;
+test(testModuloWithNegative1);
+
+function testDivisionWithNegative1() {
+    for (var i = 3; i >= 0; --i)
+        c = i / -1;
+    return 1/c;
+}
+testDivisionWithNegative1.expected = -Infinity;
+test(testDivisionWithNegative1);
 
 /*****************************************************************************
  *                                                                           *

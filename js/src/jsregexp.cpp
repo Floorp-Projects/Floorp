@@ -2090,43 +2090,107 @@ class RegExpNativeCompiler {
 
     LIns* compileFlatSingleChar(jschar ch, LIns* pos, LInsList& fails) 
     {
-        /* 
-         * Fast case-insensitive test for ASCII letters: convert text
-         * char to lower case by bit-or-ing in 32 and compare.
-         */
-        JSBool useFastCI = JS_FALSE;
-        jschar ch2 = ch;              /* 2nd char to test for if ci */
+        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
+        fails.add(to_fail);
+        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
+
+        // Extra characters that need to be compared against when doing folding.
+        struct extra {
+            jschar ch;
+            LIns   *match;
+        };
+        extra extras[5];
+        int   nextras = 0;
+
         if (cs->flags & JSREG_FOLD) {
-            if ((L'A' <= ch && ch <= L'Z') || (L'a' <= ch && ch <= L'z')) {
-                ch |= 32;
-                ch2 = ch;
-                useFastCI = JS_TRUE;
-            } else if (JS_TOLOWER(ch) != ch) {
-                ch2 = JS_TOLOWER(ch);
-                ch = JS_TOUPPER(ch);
+            ch = JS_TOUPPER(ch);
+            jschar lch = JS_TOLOWER(ch);
+
+            if (ch != lch) {
+                if (L'A' <= ch && ch <= L'Z') {
+                    // Fast conversion of text character to lower case by OR-ing with 32.
+                    text_ch = lir->ins2(LIR_or, text_ch, lir->insImm(32));
+                    // These ASCII letters have 2 lower-case forms. We put the ASCII one in
+                    // |extras| so it is tested first, because we expect that to be the common
+                    // case. Note that the code points of the non-ASCII forms both have the
+                    // 32 bit set, so it is OK to compare against the OR-32-converted text char.
+                    ch = lch;
+                    if (ch == L'i') {
+                        extras[nextras++].ch = ch;
+                        ch = 0x131;
+                    } else if (ch == L's') {
+                        extras[nextras++].ch = ch;
+                        ch = 0x17f;
+                    }
+                    goto gen;
+                } else if (0x01c4 <= ch && ch <= 0x1e60) {
+                    // The following group of conditionals handles characters that have 1 or 2
+                    // lower-case forms in addition to JS_TOLOWER(ch).
+                    if (ch <= 0x1f1) {                 // DZ,LJ,NJ
+                        if (ch == 0x01c4) {
+                            extras[nextras++].ch = 0x01c5;
+                        } else if (ch == 0x01c7) {
+                            extras[nextras++].ch = 0x01c8;
+                        } else if (ch == 0x01ca) {
+                            extras[nextras++].ch = 0x01cb;
+                        } else if (ch == 0x01f1) {
+                            extras[nextras++].ch = 0x01f2;
+                        }
+                    } else if (ch < 0x0392) {          // no extra lower-case forms in this range
+                    } else if (ch <= 0x03a6) {         // Greek
+                        if (ch == 0x0392) {
+                            extras[nextras++].ch = 0x03d0;
+                        } else if (ch == 0x0395) {
+                            extras[nextras++].ch = 0x03f5;
+                        } else if (ch == 0x0398) {
+                            extras[nextras++].ch = 0x03d1;
+                        } else if (ch == 0x0399) {
+                            extras[nextras++].ch = 0x0345;
+                            extras[nextras++].ch = 0x1fbe;
+                        } else if (ch == 0x039a) {
+                            extras[nextras++].ch = 0x03f0;
+                        } else if (ch == 0x039c) {
+                            extras[nextras++].ch = 0xb5;
+                        } else if (ch == 0x03a0) {
+                            extras[nextras++].ch = 0x03d6;
+                        } else if (ch == 0x03a1) {
+                            extras[nextras++].ch = 0x03f1;
+                        } else if (ch == 0x03a3) {
+                            extras[nextras++].ch = 0x03c2;
+                        } else if (ch == 0x03a6) {
+                            extras[nextras++].ch = 0x03d5;
+                        }
+                    } else if (ch == 0x1e60) {         // S with dot above
+                        extras[nextras++].ch = 0x1e9b;
+                    }
+                }
+
+                extras[nextras++].ch = lch;
             }
         }
 
-        LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
-        fails.add(to_fail);
-        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
-        LIns* comp_ch = useFastCI ? 
-            lir->ins2(LIR_or, text_ch, lir->insImm(32)) : 
-            text_ch;
-        if (ch == ch2) {
-            fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch)), 0));
-        } else {
-            LIns* to_ok = lir->insBranch(LIR_jt, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch)), 0);
-            fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_ch, lir->insImm(ch2)), 0));
-            if (!targetCurrentPoint(to_ok))
+    gen:
+        for (int i = 0; i < nextras; ++i) {
+            LIns *test = lir->ins2(LIR_eq, text_ch, lir->insImm(extras[i].ch));
+            LIns *branch = lir->insBranch(LIR_jt, test, 0);
+            extras[i].match = branch;
+        }
+            
+        fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, text_ch, lir->insImm(ch)), 0));
+
+        for (int i = 0; i < nextras; ++i) {
+            if (!targetCurrentPoint(extras[i].match))
                 return NULL;
         }
-
         return lir->ins2(LIR_piadd, pos, lir->insImm(2));
     }
 
-    LIns* compileFlatDoubleChar(jschar ch1, jschar ch2, LIns* pos, 
-                                LInsList& fails) 
+    JS_INLINE bool hasCases(jschar ch) 
+    {
+        return JS_TOLOWER(ch) != JS_TOUPPER(ch);
+    }
+
+    LIns* compileFlatDoubleChar(jschar ch1, jschar ch2, LIns* pos, LInsList& fails)
     {
 #ifdef IS_BIG_ENDIAN
         uint32 word = (ch1 << 16) | ch2;
@@ -2140,9 +2204,11 @@ class RegExpNativeCompiler {
         JSBool useFastCI = JS_FALSE;
         union { jschar c[2]; uint32 i; } mask;
         if (cs->flags & JSREG_FOLD) {
-            JSBool mask1 = (L'A' <= ch1 && ch1 <= L'Z') || (L'a' <= ch1 && ch1 <= L'z');
-            JSBool mask2 = (L'A' <= ch2 && ch2 <= L'Z') || (L'a' <= ch2 && ch2 <= L'z');
-            if ((!mask1 && JS_TOLOWER(ch1) != ch1) || (!mask2 && JS_TOLOWER(ch2) != ch2)) {
+            jschar uch1 = JS_TOUPPER(ch1);
+            jschar uch2 = JS_TOUPPER(ch2);
+            JSBool mask1 = (L'A' <= uch1 && uch1 <= L'Z' && uch1 != L'I' && uch1 != L'S');
+            JSBool mask2 = (L'A' <= uch2 && uch2 <= L'Z' && uch2 != L'I' && uch2 != L'S');
+            if ((!mask1 && hasCases(ch1)) || (!mask2 && hasCases(ch2))) {
                 pos = compileFlatSingleChar(ch1, pos, fails);
                 if (!pos) return NULL;
                 return compileFlatSingleChar(ch2, pos, fails);
@@ -2159,7 +2225,7 @@ class RegExpNativeCompiler {
 
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, lir->ins2(LIR_sub, cpend, lir->insImm(2))), 0);
         fails.add(to_fail);
-        LIns* text_word = lir->insLoad(LIR_ld, pos, lir->insImm(0));
+        LIns* text_word = lir->insLoad(LIR_ld, pos, 0);
         LIns* comp_word = useFastCI ?
             lir->ins2(LIR_or, text_word, lir->insImm(mask.i)) :
             text_word;
@@ -2193,7 +2259,7 @@ class RegExpNativeCompiler {
 
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
         fails.add(to_fail);
-        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, lir->insImm(0));
+        LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
         fails.add(lir->insBranch(LIR_jf, lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)), 0));
         LIns* byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
         LIns* bitmap = lir->insImmPtr(bitmapData);
@@ -2508,7 +2574,6 @@ GetNativeRegExp(JSContext* cx, JSRegExp* re)
         if (!CompileRegExpToNative(cx, re, fragment))
             return NULL;
     }
- ok:
     union { NIns *code; NativeRegExp func; } u;
     u.code = fragment->code();
     return u.func;

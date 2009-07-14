@@ -5404,7 +5404,7 @@ ReconstructImacroPCStack(JSContext *cx, JSScript *script,
     JS_ASSERT(fp->imacpc);
     intN pcdepth = ReconstructPCStack(cx, script, fp->imacpc, pcstack);
     if (pcdepth < 0)
-        return uintN(pcdepth);
+        return pcdepth;
     return SimulateImacroCFG(cx, script, pcdepth, imacstart, target, pcstack);
 }
 

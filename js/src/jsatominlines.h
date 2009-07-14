@@ -22,7 +22,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   IBM Corp.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,49 +37,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _LIBMATH_H
-#define _LIBMATH_H
+#ifndef jsatom_inlines_h___
+#define jsatom_inlines_h___
 
-#include <math.h>
-#include "jsversion.h"
+#include "jsatom.h"
+#include "jsnum.h"
+
+JS_BEGIN_EXTERN_C
 
 /*
- * Use system provided math routines.
+ * Convert v to an atomized string and wrap it as an id.
  */
-
-/* The right copysign function is not always named the same thing. */
-#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-#define js_copysign __builtin_copysign
-#elif defined WINCE
-#define js_copysign _copysign
-#elif defined _WIN32
-#if _MSC_VER < 1400
-/* Try to work around apparent _copysign bustage in VC6 and VC7. */
-#define js_copysign js_copysign
-extern double js_copysign(double, double);
-#else
-#define js_copysign _copysign
-#endif
-#else
-#define js_copysign copysign
-#endif
-
-/* Consistency wrapper for platform deviations in fmod() */
-static inline double
-js_fmod(double d, double d2)
+static inline JSBool
+js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
 {
-#ifdef XP_WIN
+    JSString *str;
+    JSAtom *atom;
+
     /*
-     * Workaround MS fmod bug where 42 % (1/0) => NaN, not 42.
-     * Workaround MS fmod bug where -0 % -N => 0, not -0.
+     * Optimize for the common case where v is an already-atomized string. The
+     * comment in jsstr.h before JSString::flatSetAtomized explains why this is
+     * thread-safe. The extra rooting via lastAtom (which would otherwise be
+     * done in js_js_AtomizeString) ensures the caller that the resulting id at
+     * is least weakly rooted.
      */
-    if ((JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)) ||
-        (d == 0 && JSDOUBLE_IS_FINITE(d2))) {
-        return d;
+    if (JSVAL_IS_STRING(v)) {
+        str = JSVAL_TO_STRING(v);
+        if (str->isAtomized()) {
+            cx->weakRoots.lastAtom = v;
+            *idp = ATOM_TO_JSID((JSAtom *) v);
+            return JS_TRUE;
+        }
+    } else {
+        str = js_ValueToString(cx, v);
+        if (!str)
+            return JS_FALSE;
     }
-#endif
-    return fmod(d, d2);
+    atom = js_AtomizeString(cx, str, 0);
+    if (!atom)
+        return JS_FALSE;
+    *idp = ATOM_TO_JSID(atom);
+    return JS_TRUE;
 }
 
-#endif /* _LIBMATH_H */
+static inline JSBool
+js_Int32ToId(JSContext* cx, int32 index, jsid* id)
+{
+    if (index <= JSVAL_INT_MAX) {
+        *id = INT_TO_JSID(index);
+        return JS_TRUE;
+    }
+    JSString* str = js_NumberToString(cx, index);
+    if (!str)
+        return JS_FALSE;
+    return js_ValueToStringId(cx, STRING_TO_JSVAL(str), id);
+}
 
+JS_END_EXTERN_C
+
+#endif /* jsatom_inlines_h___ */

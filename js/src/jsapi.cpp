@@ -92,6 +92,8 @@
 #include "jsxml.h"
 #endif
 
+#include "jsatominlines.h"
+
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
 #else
@@ -1614,7 +1616,7 @@ AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom)
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
-    sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+    sprop = scope->lookup(ATOM_TO_JSID(atom));
     JS_UNLOCK_SCOPE(cx, scope);
     return sprop != NULL;
 }
@@ -2938,7 +2940,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
 #endif
 
     /* Nothing to do if obj's scope is already sealed. */
-    if (SCOPE_IS_SEALED(scope))
+    if (scope->sealed())
         return JS_TRUE;
 
     /* XXX Enumerate lazy properties now, as they can't be added later. */
@@ -2951,8 +2953,8 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     JS_LOCK_OBJ(cx, obj);
     scope = js_GetMutableScope(cx, obj);
     if (scope) {
-        SCOPE_SET_SEALED(scope);
-        js_MakeScopeShapeUnique(cx, scope);
+        scope->sealingShapeChange(cx);
+        scope->setSealed();
     }
     JS_UNLOCK_OBJ(cx, obj);
     if (!scope)
@@ -3143,7 +3145,7 @@ LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                    JSObject **objp, JSProperty **propp)
 {
     JSAutoResolveFlags rf(cx, flags);
-    CHECK_FOR_STRING_INDEX(id);
+    id = js_CheckForStringIndex(id);
     return OBJ_LOOKUP_PROPERTY(cx, obj, id, objp, propp);
 }
 
@@ -3411,7 +3413,7 @@ AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
 
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
-    *foundp = (scope->object == obj && SCOPE_GET_PROPERTY(scope, id));
+    *foundp = (scope->object == obj && scope->lookup(id));
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
@@ -4173,8 +4175,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         while (sprop &&
                (!(sprop->attrs & JSPROP_ENUMERATE) ||
                 (sprop->flags & SPROP_IS_ALIAS) ||
-                (SCOPE_HAD_MIDDLE_DELETE(scope) &&
-                 !SCOPE_HAS_PROPERTY(scope, sprop)))) {
+                (scope->hadMiddleDelete() && !scope->has(sprop)))) {
             sprop = sprop->parent;
         }
 
