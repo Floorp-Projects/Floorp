@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="go()">
+  <!-- In this test, we retarget an in-progress animation from one target to
+       another.  We verify that animation effects are removed from the old
+       target and are applied to the new target. -->
+  <script>
+    function go() {
+      // Seek animation before we start tweaking things, to make sure we've
+      // already started sampling it.
+      document.documentElement.setCurrentTime(0.5);
+
+      var anim = document.getElementById("anim");
+      anim.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#redRect");
+      setTimeAndSnapshot(1, false);
+    }
+  </script>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect id="redRect" x="15" y="15" width="200" height="250" fill="red"/>
+  <rect id="blueRect" x="15" y="15" width="200" height="200" fill="blue"/>
+  <animate id="anim" xlink:href="#blueRect" attributeName="height"
+           begin="0s" dur="2s" by="-100" fill="freeze"/>
+</svg>
