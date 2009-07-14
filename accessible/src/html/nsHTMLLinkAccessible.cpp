@@ -179,7 +179,7 @@ nsHTMLLinkAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
   nsCOMPtr<nsIContent> link(do_QueryInterface(mDOMNode));
   NS_ENSURE_STATE(link);
 
-  *aURI = link->GetHrefURI();
+  *aURI = link->GetHrefURI().get();
   return NS_OK;
 }
 
