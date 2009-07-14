@@ -40,6 +40,8 @@
 
 #include "nsXPCOM.h"
 
+#include "nsRegion.h"
+
 #if defined(OS_WIN)
 #include <objbase.h>
 #endif
@@ -63,6 +65,8 @@ GeckoThread::Init()
   // Certain plugins, such as flash, steal the unhandled exception filter
   // thus we never get crash reports when they fault. This call fixes it.
   message_loop()->set_exception_restoration(true);
+
+  nsRegion::MigrateToCurrentThread();
 
   NS_LogInit();
   mXREEmbed.Start();
