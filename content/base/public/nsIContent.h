@@ -64,7 +64,7 @@ class nsISMILAttr;
 enum nsLinkState {
   eLinkState_Unknown    = 0,
   eLinkState_Unvisited  = 1,
-  eLinkState_Visited    = 2, 
+  eLinkState_Visited    = 2,
   eLinkState_NotLink    = 3
 };
 
