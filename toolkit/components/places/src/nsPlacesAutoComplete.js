@@ -989,8 +989,8 @@ nsPlacesAutoComplete.prototype = {
    */
   _hasBehavior: function PAC_hasBehavior(aType)
   {
-    let behavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_" + aType.toUpperCase()];
-    return (this._behavior & behavior);
+    return (this._behavior &
+            Ci.mozIPlacesAutoComplete["BEHAVIOR_" + aType.toUpperCase()]);
   },
 
   /**
@@ -1001,8 +1001,8 @@ nsPlacesAutoComplete.prototype = {
    */
   _setBehavior: function PAC_setBehavior(aType)
   {
-    let behavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_" + aType.toUpperCase()];
-    this._behavior |= behavior;
+    this._behavior |=
+      Ci.mozIPlacesAutoComplete["BEHAVIOR_" + aType.toUpperCase()];
   },
 
   /**
