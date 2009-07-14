@@ -1,0 +1,3 @@
+IPDLSRCS = \
+  Test.ipdl \
+  $(NULL)
