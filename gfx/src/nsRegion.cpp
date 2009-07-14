@@ -102,7 +102,7 @@ class RgnRectMemoryAllocator
 #elif defined (DEBUG)
   struct _ {
     _() { mThread = PR_CurrentThread(); }
-      void* GetThread() { return mThread; }
+    void* GetThread() { return mThread; }
     void* mThread;
   } _mOwningThread;
 
@@ -146,7 +146,7 @@ public:
 
 #if defined(DEBUG)
   void SetOwningThread(void* aOwningThread) {
-      _mOwningThread.mThread = aOwningThread;
+    _mOwningThread.mThread = aOwningThread;
   }
 #endif
 };
