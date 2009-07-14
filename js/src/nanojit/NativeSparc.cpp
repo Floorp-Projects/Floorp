@@ -86,7 +86,7 @@ namespace nanojit
         frameSize = BIT_ROUND_UP(frameSize, 8);
 
         verbose_only( verbose_outputf("        %p:",_nIns); )
-            verbose_only( verbose_output("        patch entry:"); )
+        verbose_only( asm_output("        patch entry:"); )
             NIns *patchEntry = _nIns;
         if (frameSize <= 4096)
             SAVEI(SP, (-frameSize), SP);
@@ -150,7 +150,7 @@ namespace nanojit
         uint32_t argc = call->get_sizes(sizes);
 
         NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));
-        verbose_only(if (_verbose)
+        verbose_only(if (_logc->lcbits & LC_Assembly)
                      outputf("        %p:", _nIns);
                      )
         CALL(call);
@@ -285,7 +285,7 @@ namespace nanojit
         if (i->isop(LIR_alloc)) {
             ADD(FP, L2, r);
             SET32(disp(resv), L2);
-            verbose_only(if (_verbose) {
+            verbose_only(if (_logc->lcbits & LC_RegAlloc) {
                 outputf("        remat %s size %d", _thisfrag->lirbuf->names->formatRef(i), i->size());
             })
                 }
@@ -302,7 +302,7 @@ namespace nanojit
             } else {
                 LDSW32(FP, d, r);
             }
-            verbose_only(if (_verbose) {
+            verbose_only(if (_logc->lcbits & LC_RegAlloc) {
                 outputf("        restore %s", _thisfrag->lirbuf->names->formatRef(i));
             })
                 }
@@ -581,7 +581,8 @@ namespace nanojit
     {
         (void)ins;
         JMP_long_placeholder(); // jump to SOT
-        verbose_only( if (_verbose && _outputCache) { _outputCache->removeLast(); outputf("         jmp   SOT"); } );
+        verbose_only( if ((_logc->lcbits & LC_Assembly) && _outputCache) {
+                          _outputCache->removeLast(); outputf("         jmp   SOT"); } );
 
         loopJumps.add(_nIns);
 
