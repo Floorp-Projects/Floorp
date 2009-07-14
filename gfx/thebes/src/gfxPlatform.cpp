@@ -71,6 +71,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 
+#include "nsRegion.h"
+
 gfxPlatform *gPlatform = nsnull;
 
 // These two may point to the same profile
@@ -181,6 +183,8 @@ gfxPlatform::Init()
 #endif
     if (!gPlatform)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    nsRegion::MigrateToCurrentThread();
 
     nsresult rv;
 

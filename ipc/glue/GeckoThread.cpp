@@ -66,8 +66,6 @@ GeckoThread::Init()
   // thus we never get crash reports when they fault. This call fixes it.
   message_loop()->set_exception_restoration(true);
 
-  nsRegion::MigrateToCurrentThread();
-
   NS_LogInit();
   mXREEmbed.Start();
 }
