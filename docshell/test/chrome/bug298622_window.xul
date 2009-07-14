@@ -78,7 +78,7 @@
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
       enterStringIntoFindField("A generic page");
-      ok(TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+      is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "a generic page",
          "find failed on second page loaded");
 
@@ -101,7 +101,7 @@
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
       enterStringIntoFindField("find this");
-      ok(TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+      is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "find this",
          "find failed on page loaded from bfcache");
       
