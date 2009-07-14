@@ -7305,10 +7305,7 @@ public:
 
     // Throw away the cached link state so it gets refetched by the style
     // system      
-    nsCOMPtr<nsILink> link = do_QueryInterface(aContent);
-    if (link) {
-      link->SetLinkState(eLinkState_Unknown);
-    }
+    aContent->SetLinkState(eLinkState_Unknown);
     contentVisited.AppendObject(aContent);
   }
 };

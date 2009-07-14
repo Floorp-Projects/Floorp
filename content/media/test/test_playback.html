@@ -34,7 +34,7 @@ function startTests() {
     var v = document.createElement('video');
     var test = gPlayTests[testIndex];
     ++testIndex;
-    if (v.canPlayType(test.type) == "no")
+    if (!v.canPlayType(test.type))
       continue;
 
     v.src = test.name;

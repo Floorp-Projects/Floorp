@@ -1380,7 +1380,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
        content; content = content->GetParent()) {
     nsCOMPtr<nsILink> link(do_QueryInterface(content));
     if (link) {
-      link->GetHrefURI(aHref);
+      *aHref = content->GetHrefURI().get();
       status = (*aHref != nsnull);
 
       nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));

@@ -69,8 +69,7 @@ public:
 
   static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
 
-  static PRBool IsHTMLLink(nsIContent *aContent, nsIAtom *aTag,
-                           nsILinkHandler *aLinkHandler,
+  static PRBool IsHTMLLink(nsIContent *aContent, nsILinkHandler *aLinkHandler,
                            nsLinkState *aState);
   static PRBool IsLink(nsIContent *aContent, nsILinkHandler *aLinkHandler,
                        nsLinkState *aState);
