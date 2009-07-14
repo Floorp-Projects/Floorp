@@ -40,7 +40,6 @@
 /*
  * Portable double to alphanumeric string and back converters.
  */
-#include "jslibmath.h"
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsdtoa.h"
@@ -49,6 +48,7 @@
 #include "jsprvtd.h"
 #include "jsnum.h"
 #include "jsbit.h"
+#include "jslibmath.h"
 
 #ifdef JS_THREADSAFE
 #include "jslock.h"
