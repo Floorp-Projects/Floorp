@@ -44,6 +44,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/ext/Observers.js");
+Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -354,6 +355,7 @@ SyncEngine.prototype = {
 	this._log.error("Could not process incoming record: " +
 			Utils.exceptionStr(e));
       }
+      Sync.sleep(0);
     }
     if (this.lastSync < this._lastSyncTmp)
         this.lastSync = this._lastSyncTmp;
@@ -466,6 +468,7 @@ SyncEngine.prototype = {
           this._store.createMetaRecords(out.id, meta);
         out.encrypt(ID.get('WeaveCryptoID').password);
         up.pushData(JSON.parse(out.serialize())); // FIXME: inefficient
+        Sync.sleep(0);
       }
 
       this._store.cache.enabled = true;
