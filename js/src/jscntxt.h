@@ -369,16 +369,15 @@ struct JSRuntime {
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     jsrefcount          gcKeepAtoms;
-    size_t              gcBytes;
-    size_t              gcLastBytes;
-    size_t              gcMaxBytes;
-    size_t              gcMaxMallocBytes;
+    uint32              gcBytes;
+    uint32              gcLastBytes;
+    uint32              gcMaxBytes;
+    uint32              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcLevel;
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
     uint32              gcTriggerFactor;
-    size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
 
     /*
@@ -683,9 +682,6 @@ struct JSRuntime {
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
 #endif
-
-    void SetGCTriggerFactor(uint32 factor);
-    void SetGCLastBytes(size_t lastBytes);
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
