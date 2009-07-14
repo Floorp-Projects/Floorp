@@ -113,7 +113,7 @@ OPDEF(ji,       23,-1, None, 0) // indirect jump (currently not implemented)
  */
 
 OPDEF(int,      24, 0, I,    0) // constant 32-bit integer
-OPDEF(cmov,     25, 3, Op3,  0) // conditional move: cmov(cond,iftrue,iffalse)
+OPDEF(cmov,     25, 2, Op2,  0) // conditional move (op1=cond, op2=LIR_2(iftrue,iffalse))
 #if defined(NANOJIT_64BIT)
 OPDEF(callh,    26,-1, None, 0) // unused on 64-bit machines
 #else
@@ -185,8 +185,7 @@ OPDEF(ugt,      61, 2, Op2,  0) // unsigned integer greater-than          (0x3D 
 OPDEF(ule,      62, 2, Op2,  0) // unsigned integer less-than-or-equal    (0x3E 0011 1110)
 OPDEF(uge,      63, 2, Op2,  0) // unsigned integer greater-than-or-equal (0x3F 0011 1111)
 
-OPDEF64(__0b,    0,-1, None, 0)
-
+OPDEF64(2,       0, 2, Op2,  0) // wraps a pair of refs, for LIR_cmov or LIR_qcmov
 OPDEF64(file,    1, 2, Op1,  0) // source filename for debug symbols
 OPDEF64(line,    2, 2, Op1,  0) // source line number for debug symbols 
 OPDEF64(xbarrier,3, 1, Op2,  1) // memory barrier;  doesn't exit, but flushes all values to the stack
@@ -223,7 +222,7 @@ OPDEF64(__23b,  23,-1, None, 0)
 // this marker are subject to CSE.
 
 OPDEF64(quad,  LIR_int,  0, I64, 0) // 64-bit (quad) constant value
-OPDEF64(qcmov, LIR_cmov, 3, Op3, 0) // 64-bit conditional move
+OPDEF64(qcmov, LIR_cmov, 2, Op2, 0) // 64-bit conditional move
 
 OPDEF64(__26b,  26,-1, None, 0)
 OPDEF64(__27b,  27,-1, None, 0)
