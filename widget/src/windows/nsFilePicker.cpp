@@ -106,7 +106,7 @@ nsFilePicker::~nsFilePicker()
 //
 //-------------------------------------------------------------------------
 
-#ifndef WINCE
+#ifndef WINCE_WINDOWS_MOBILE
 int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
   if (uMsg == BFFM_INITIALIZED)
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
   mUnicodeFile.Truncate();
 
-#ifndef WINCE
+#ifndef WINCE_WINDOWS_MOBILE
 
   if (mMode == modeGetFolder) {
     PRUnichar dirBuffer[MAX_PATH+1];
@@ -189,7 +189,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     }
   }
   else 
-#endif // WINCE
+#endif // WINCE_WINDOWS_MOBILE
   {
 
     OPENFILENAMEW ofn;
