@@ -909,8 +909,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
       mPresContext ? mPresContext->GetLinkHandler() : nsnull;
     if (mIsHTMLContent && mHasAttributes) {
       // check if it is an HTML Link
-      if(nsStyleUtil::IsHTMLLink(aContent, mContentTag, linkHandler,
-                                 &mLinkState)) {
+      if(nsStyleUtil::IsHTMLLink(aContent, linkHandler, &mLinkState)) {
         mIsLink = PR_TRUE;
       }
     } 

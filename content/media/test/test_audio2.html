@@ -16,7 +16,7 @@ var testsWaiting = 0;
 var tmpAudio = new Audio();
 for (var i = 0; i < gAudioTests.length; ++i) {
   var test = gAudioTests[i];
-  if (tmpAudio.canPlayType(test.type) == "no")
+  if (!tmpAudio.canPlayType(test.type))
     continue;
 
   var a1 = new Audio(test.name);
