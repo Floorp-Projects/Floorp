@@ -7682,16 +7682,26 @@ TraceRecorder::getThis(LIns*& this_ins)
      * global object obtained throught the scope chain.
      */
     JSObject* obj = js_GetWrappedObject(cx, JSVAL_TO_OBJECT(thisv));
-    OBJ_TO_INNER_OBJECT(cx, obj);
+    JSObject* inner = obj;
+    OBJ_TO_INNER_OBJECT(cx, inner);
     if (!obj)
         return JSRS_ERROR;
 
-    JS_ASSERT(original == thisv || original == OBJECT_TO_JSVAL(obj));
-    this_ins = lir->ins_choose(lir->ins2(LIR_eq,
-                                         this_ins,
-                                         INS_CONSTPTR(obj)),
-                               INS_CONSTPTR(JSVAL_TO_OBJECT(thisv)),
-                               this_ins);
+    JS_ASSERT(original == thisv ||
+              original == OBJECT_TO_JSVAL(inner) ||
+              original == OBJECT_TO_JSVAL(obj));
+
+    // If the returned this object is the unwrapped inner or outer object,
+    // then we need to use the wrapped outer object.
+    LIns* is_inner = lir->ins2(LIR_eq, this_ins, INS_CONSTPTR(inner));
+    LIns* is_outer = lir->ins2(LIR_eq, this_ins, INS_CONSTPTR(obj));
+    LIns* wrapper = INS_CONSTPTR(JSVAL_TO_OBJECT(thisv));
+
+    this_ins = lir->ins_choose(is_inner,
+                               wrapper,
+                               lir->ins_choose(is_outer,
+                                               wrapper,
+                                               this_ins));
 
     return JSRS_CONTINUE;
 }
