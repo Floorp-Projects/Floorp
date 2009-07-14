@@ -24,12 +24,12 @@ public:
 
     bool Init(MessageLoop* aIOLoop, IPC::Channel* aChannel);
 
-    virtual nsresult Answerinit(const MagicWindowHandle& parentWidget);
-    virtual nsresult AnswerloadURL(const String& uri);
-    virtual nsresult Answermove(const PRUint32& x,
-                                const PRUint32& y,
-                                const PRUint32& width,
-                                const PRUint32& height);
+    virtual nsresult Recvinit(const MagicWindowHandle& parentWidget);
+    virtual nsresult RecvloadURL(const String& uri);
+    virtual nsresult Recvmove(const PRUint32& x,
+                              const PRUint32& y,
+                              const PRUint32& width,
+                              const PRUint32& height);
 
 private:
     MagicWindowHandle mWidget;

@@ -29,7 +29,7 @@ TabParent::TabParent(MagicWindowHandle parentWidget)
 
     Open(mSubprocess.GetChannel());
 
-    Callinit(parentWidget);
+    Sendinit(parentWidget);
 }
 
 TabParent::~TabParent()
@@ -50,13 +50,13 @@ TabParent::LoadURL(nsIURI* aURI)
     nsCString spec;
     aURI->GetSpec(spec);
 
-    CallloadURL(spec.get());
+    SendloadURL(spec.get());
 }
 
 void
 TabParent::Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height)
 {
-    Callmove(x, y, width, height);
+    Sendmove(x, y, width, height);
 }
 
 } // namespace tabs
