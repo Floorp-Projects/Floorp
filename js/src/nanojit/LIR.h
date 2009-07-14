@@ -59,9 +59,9 @@ namespace nanojit
         // flags; upper bits reserved
         LIR64    = 0x40,            // result is double or quad
 
-#define OPDEF(op, number, args, repkind, isStmt) \
+#define OPDEF(op, number, args, repkind) \
         LIR_##op = (number),
-#define OPDEF64(op, number, args, repkind, isStmt) \
+#define OPDEF64(op, number, args, repkind) \
         LIR_##op = ((number) | LIR64),
 #include "LIRopcode.tbl"
         LIR_sentinel
@@ -680,7 +680,20 @@ namespace nanojit
         bool isBranch() const {
             return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
         }
-        bool isStmt();
+
+        // Return true if removal of 'ins' from a LIR fragment could
+        // possibly change the behaviour of that fragment, even if any
+        // value computed by 'ins' is not used later in the fragment.
+        // In other words, can 'ins' possible alter control flow or memory?
+        // Note, this assumes that loads will never fault and hence cannot
+        // affect the control flow.
+        bool isStmt() {
+            return isGuard() || isBranch() ||
+                   (isCall() && !isCse()) ||
+                   isStore() ||
+                   isop(LIR_loop) || isop(LIR_label) || isop(LIR_live) ||
+                   isRet();
+        }
 
         void setTarget(LIns* t);
         LIns* getTarget();

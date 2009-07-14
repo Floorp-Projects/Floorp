@@ -670,7 +670,7 @@ void nsTableFrame::RemoveCol(nsTableColGroupFrame* aColGroupFrame,
   if (aRemoveFromCellMap) {
     nsTableCellMap* cellMap = GetCellMap();
     if (cellMap) {
-      CreateAnonymousColFrames(1, eColAnonymousCell, PR_TRUE);
+      AppendAnonymousColFrames(1);
     }
   }
   // for now, just bail and recalc all of the collapsing borders
@@ -711,13 +711,9 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
 }
 
 void
-nsTableFrame::CreateAnonymousColFrames(PRInt32         aNumColsToAdd,
-                                       nsTableColType  aColType,
-                                       PRBool          aDoAppend,
-                                       nsIFrame*       aPrevColIn)
+nsTableFrame::AppendAnonymousColFrames(PRInt32 aNumColsToAdd)
 {
-  NS_PRECONDITION(aColType != eColAnonymousCol, "Shouldn't happen");
-  
+  nsTableColFrame* prevCol = nsnull;
   // get the last col group frame
   nsTableColGroupFrame* colGroupFrame = nsnull;
   nsIFrame* childFrame = mColGroups.FirstChild();
@@ -728,37 +724,27 @@ nsTableFrame::CreateAnonymousColFrames(PRInt32         aNumColsToAdd,
     childFrame = childFrame->GetNextSibling();
   }
 
-  nsTableColGroupType lastColGroupType = eColGroupContent; 
-  nsTableColGroupType newColGroupType  = eColGroupContent; 
-  if (colGroupFrame) {
-    lastColGroupType = colGroupFrame->GetColType();
-  }
-  if (eColAnonymousCell == aColType) {
-    if (eColGroupAnonymousCell != lastColGroupType) {
-      newColGroupType = eColGroupAnonymousCell;
-    }
+  if (colGroupFrame &&
+      (colGroupFrame->GetColType() == eColGroupAnonymousCell)) {
+    prevCol =
+      static_cast<nsTableColFrame*> (colGroupFrame->GetChildList().LastChild());
   }
   else {
-    NS_ASSERTION(PR_FALSE, "CreateAnonymousColFrames called incorrectly");
-    return;
-  }
-
-  if (eColGroupContent != newColGroupType) {
-    PRInt32 colIndex = (colGroupFrame) ? colGroupFrame->GetStartColumnIndex() + colGroupFrame->GetColCount()
-                                       : 0;
-    colGroupFrame = CreateAnonymousColGroupFrame(newColGroupType);
+    PRInt32 colIndex = (colGroupFrame) ?
+                        colGroupFrame->GetStartColumnIndex() +
+                        colGroupFrame->GetColCount() : 0;
+    colGroupFrame = CreateAnonymousColGroupFrame(eColGroupAnonymousCell);
     if (!colGroupFrame) {
       return;
     }
-    mColGroups.AppendFrame(this, colGroupFrame); // add the new frame to the child list
+    // add the new frame to the child list
+    mColGroups.AppendFrame(this, colGroupFrame);
     colGroupFrame->SetStartColumnIndex(colIndex);
   }
-
-  nsIFrame* prevCol = (aDoAppend) ? colGroupFrame->GetChildList().LastChild() : aPrevColIn;
-
   nsIFrame* firstNewFrame;
-  CreateAnonymousColFrames(colGroupFrame, aNumColsToAdd, aColType,
+  CreateAnonymousColFrames(colGroupFrame, aNumColsToAdd, eColAnonymousCell,
                            PR_TRUE, prevCol, &firstNewFrame);
+
 }
 
 // XXX this needs to be moved to nsCSSFrameConstructor
@@ -850,7 +836,7 @@ nsTableFrame::MatchCellMapToColCache(nsTableCellMap* aCellMap)
   PRInt32 numColsToAdd = numColsInMap - numColsInCache;
   if (numColsToAdd > 0) {
     // this sets the child list, updates the col cache and cell map
-    CreateAnonymousColFrames(numColsToAdd, eColAnonymousCell, PR_TRUE); 
+    AppendAnonymousColFrames(numColsToAdd);
   }
   if (numColsToAdd < 0) {
     PRInt32 numColsNotRemoved = DestroyAnonymousColFrames(-numColsToAdd);
@@ -2489,8 +2475,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
     PRInt32 numAnonymousColsToAdd = GetColCount() - mColFrames.Length();
     if (numAnonymousColsToAdd > 0) {
       // this sets the child list, updates the col cache and cell map
-      CreateAnonymousColFrames(numAnonymousColsToAdd,
-                               eColAnonymousCell, PR_TRUE);
+      AppendAnonymousColFrames(numAnonymousColsToAdd);
     }
 
   } else {
