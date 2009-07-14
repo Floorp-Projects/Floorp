@@ -99,7 +99,7 @@ for (var i = 0; i < gSmallTests.length; ++i) {
   var src = test.name;
   var type = test.type;
 
-  if (tmpVid.canPlayType(type) == "no")
+  if (!tmpVid.canPlayType(type))
     continue;
 
   // The following nested function hack is to ensure that 'test' is correctly
