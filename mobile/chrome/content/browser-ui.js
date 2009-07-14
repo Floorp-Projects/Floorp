@@ -298,20 +298,21 @@ var BrowserUI = {
 
   init : function() {
     this._edit = document.getElementById("urlbar-edit");
-    this._edit.addEventListener("click", this, false);
     this._edit.addEventListener("keypress", this, true);
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
     this._autocompleteNavbuttons = document.getElementById("autocomplete_navbuttons");
 
+    document.getElementById("urlbar-editarea").addEventListener("click", this, false);
+
+    document.getElementById("tabs").addEventListener("TabSelect", this, true);
+
     // XXX these really want to listen whatever is the current browser, not any browser
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("DOMTitleChanged", this, true);
     browsers.addEventListener("DOMLinkAdded", this, true);
     browsers.addEventListener("UIShowSelect", this, false, true);
-
-    document.getElementById("tabs").addEventListener("TabSelect", this, true);
 
     ExtensionsView.init();
     DownloadsView.init();
