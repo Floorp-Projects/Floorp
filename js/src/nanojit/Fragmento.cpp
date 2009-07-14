@@ -85,10 +85,10 @@ namespace nanojit
 
             /* Opcodes must be strictly increasing without holes. */
             uint32_t count = 0;
-#define OPDEF(op, number, operands, repkind) \
+#define OPDEF(op, number, operands, repkind, isStmt) \
         NanoAssertMsg(LIR_##op == count++, "misnumbered opcode");
-#define OPDEF64(op, number, operands, repkind) \
-        OPDEF(op, number, operands, repkind)
+#define OPDEF64(op, number, operands, repkind, isStmt) \
+        OPDEF(op, number, operands, repkind, isStmt)
 #include "LIRopcode.tbl"
 #undef OPDEF
 #undef OPDEF64
