@@ -424,6 +424,8 @@ enum GeckoChildProcessType {
 
   GeckoChildProcess_Plugin,
   GeckoChildProcess_Tab,
+
+  GeckoChildProcess_TestHarness,
   GeckoChildProcess_TestShell,
 
   GeckoChildProcess_End,
@@ -459,5 +461,9 @@ XRE_API(nsresult,
 XRE_API(int,
         XRE_RunTestShell, (int aArgc,
                            char* aArgv[]))
+
+XRE_API(int,
+        XRE_RunIPCTestHarness, (int aArgc,
+                                char* aArgv[]))
 
 #endif // _nsXULAppAPI_h__

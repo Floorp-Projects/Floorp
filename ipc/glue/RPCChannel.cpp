@@ -58,6 +58,10 @@ namespace ipc {
 bool
 RPCChannel::Call(Message* msg, Message* reply)
 {
+    NS_ASSERTION(ChannelIdle == mChannelState
+                 || ChannelWaiting == mChannelState,
+                 "trying to Send() to a channel not yet open");
+
     NS_PRECONDITION(msg->is_rpc(), "can only Call() RPC messages here");
 
     mMutex.Lock();

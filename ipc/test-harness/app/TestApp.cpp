@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla IPC.
+ * The Original Code is Mozilla IPCShell.
  *
  * The Initial Developer of the Original Code is
  *   Ben Turner <bent.mozilla@gmail.com>.
@@ -34,55 +34,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __IPC_GLUE_GECKOCHILDPROCESSHOST_H__
-#define __IPC_GLUE_GECKOCHILDPROCESSHOST_H__
+#include "nsXULAppAPI.h"
 
-#include "base/file_path.h"
-#include "base/process_util.h"
-#include "base/scoped_ptr.h"
-#include "base/waitable_event.h"
-#include "chrome/common/child_process_host.h"
-
-#include "nsXULAppAPI.h"        // for GeckoChildProcessType
-
-namespace mozilla {
-namespace ipc {
-
-class GeckoChildProcessHost : public ChildProcessHost
-{
-public:
-  GeckoChildProcessHost(GeckoChildProcessType aProcessType=GeckoChildProcess_Default);
-
-  bool Launch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
-
-  // FIXME/cjones: these should probably disappear
-  virtual void OnChannelConnected(int32 peer_pid);
-  virtual void OnMessageReceived(const IPC::Message& aMsg);
-  virtual void OnChannelError();
-
-  virtual bool CanShutdown() { return true; }
-
-  IPC::Channel* GetChannel() {
-    return channelp();
-  }
-
-  base::WaitableEvent* GetShutDownEvent() {
-    return GetProcessEvent();
-  }
-
-protected:
-  GeckoChildProcessType mProcessType;
-  FilePath mProcessPath;
-
-#if defined(OS_POSIX)
-  base::file_handle_mapping_vector mFileMap;
+#if defined(XP_WIN)
+#include <windows.h>
+#include "nsWindowsWMain.cpp"
 #endif
 
-private:
-  DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
-};
-
-} /* namespace ipc */
-} /* namespace mozilla */
-
-#endif /* __IPC_GLUE_GECKOCHILDPROCESSHOST_H__ */
+int
+main(int argc, char* argv[])
+{
+    return XRE_RunIPCTestHarness(argc, argv);
+}

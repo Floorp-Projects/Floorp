@@ -95,9 +95,25 @@ GeckoChildProcessHost::Launch(std::vector<std::wstring> aExtraOpts)
   }
   SetHandle(process);
 
+  // FIXME/cjones: should have the option for sync/async launch.
+  // however, since most clients already expect this launch to be 
+  // synchronous wrt the channel connecting, we'll hack a bit here.
+  // (at least we're on the IO thread and not blocking main ...)
+  MessageLoop* loop = MessageLoop::current();
+  bool old_state = loop->NestableTasksAllowed();
+  loop->SetNestableTasksAllowed(true);
+  // spin the loop until OnChannelConnected() comes in, which will Quit() us
+  loop->Run();
+  loop->SetNestableTasksAllowed(old_state);
+
   return true;
 }
 
+void
+GeckoChildProcessHost::OnChannelConnected(int32 peer_pid)
+{
+    MessageLoop::current()->Quit();
+}
 void
 GeckoChildProcessHost::OnMessageReceived(const IPC::Message& aMsg)
 {

@@ -1,0 +1,40 @@
+namespace mozilla {
+namespace test {
+
+sync protocol Test
+{
+both:
+    sync Ping() returns (int status);
+
+parent:
+    GetValue(String key);
+    GetValues(StringArray keys);
+    sync SetValue(String key, String val) returns (bool ok);
+
+child:
+    TellValue(String key, String val);
+    TellValues(StringArray keys, StringArray vals);
+
+state START:
+    recv Ping goto START;
+    send Ping goto START;
+
+    recv SetValue goto HAVE_VALUES;
+
+state HAVE_VALUES:
+    recv Ping goto HAVE_VALUES;
+    send Ping goto HAVE_VALUES;
+
+    recv SetValue goto HAVE_VALUES;
+
+    recv GetValue goto TELLING_VALUE;
+    recv GetValues goto TELLING_VALUES;
+
+state TELLING_VALUE:
+    send TellValue goto HAVE_VALUES;
+state TELLING_VALUES:
+    send TellValues goto HAVE_VALUES;
+};
+
+} // namespace test
+} // namespace mozilla

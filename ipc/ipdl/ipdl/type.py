@@ -477,10 +477,10 @@ class GatherDecls(Visitor):
 
         for msg in p.messageDecls:
             for iparam in msg.inParams:
-                if iparam.type.isIPDL() and iparam.type.isActor():
+                if iparam.type and iparam.type.isIPDL() and iparam.type.isActor():
                     resolvestate(iparam)
             for oparam in msg.outParams:
-                if oparam.type.isIPDL() and oparam.type.isActor():
+                if oparam.type and oparam.type.isIPDL() and oparam.type.isActor():
                     resolvestate(oparam)
 
         # FIXME/cjones declare all the little C++ thingies that will
@@ -628,11 +628,15 @@ class GatherDecls(Visitor):
             if pdecl is not None:
                 msgtype.params.append(pdecl.type)
                 md.inParams[i] = pdecl
+            else:
+                md.inParams[i].type = None
         for i, outparam in enumerate(md.outParams):
             pdecl = paramToDecl(outparam)
             if pdecl is not None:
                 msgtype.returns.append(pdecl.type)
                 md.outParams[i] = pdecl
+            else:
+                md.outParams[i].type = None
 
         self.symtab.exitScope(md)
 

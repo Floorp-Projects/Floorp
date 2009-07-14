@@ -57,6 +57,10 @@ namespace ipc {
 bool
 SyncChannel::Send(Message* msg, Message* reply)
 {
+    NS_ASSERTION(ChannelIdle == mChannelState
+                 || ChannelWaiting == mChannelState,
+                 "trying to Send() to a channel not yet open");
+
     NS_PRECONDITION(msg->is_sync(), "can only Send() sync messages here");
 
     MutexAutoLock lock(mMutex);

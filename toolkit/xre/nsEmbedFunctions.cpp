@@ -74,6 +74,9 @@
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/TestShellThread.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
+#include "mozilla/test/TestParent.h"
+#include "mozilla/test/TestProcessParent.h"
+#include "mozilla/test/TestThreadChild.h"
 #include "mozilla/Monitor.h"
 
 using mozilla::ipc::BrowserProcessSubThread;
@@ -86,6 +89,10 @@ using mozilla::tabs::TabThread;
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellThread;
 using mozilla::ipc::XPCShellEnvironment;
+
+using mozilla::test::TestParent;
+using mozilla::test::TestProcessParent;
+using mozilla::test::TestThreadChild;
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoEnter;
@@ -258,6 +265,10 @@ XRE_InitChildProcess(int aArgc,
 
     case GeckoChildProcess_Tab:
       mainThread = new TabThread();
+      break;
+
+    case GeckoChildProcess_TestHarness:
+      mainThread = new TestThreadChild();
       break;
 
     case GeckoChildProcess_TestShell:
@@ -508,4 +519,48 @@ XRE_RunTestShell(int aArgc, char* aArgv[])
     NS_ENSURE_SUCCESS(rv, 1);
 
     return result;
+}
+
+//-----------------------------------------------------------------------------
+// TestHarness
+
+static void
+IPCTestHarnessMain(TestProcessParent* subprocess)
+{
+    TestParent parent;
+
+    parent.Open(subprocess->GetChannel());
+    parent.DoStuff();
+}
+
+static void
+IPCTestHarnessLaunchSubprocess(TestProcessParent* subprocess,
+                               MessageLoop* mainLoop)
+{
+    bool launched = subprocess->Launch();
+    NS_ASSERTION(launched, "can't launch subprocess");
+    mainLoop->PostTask(FROM_HERE,
+                       NewRunnableFunction(IPCTestHarnessMain, subprocess));
+}
+
+static void
+IPCTestHarnessPostLaunchSubprocessTask(void* data)
+{
+    TestProcessParent* subprocess = new TestProcessParent();
+    MessageLoop* ioLoop = 
+        BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+    ioLoop->PostTask(FROM_HERE,
+                     NewRunnableFunction(IPCTestHarnessLaunchSubprocess,
+                                         subprocess,
+                                         MessageLoop::current()));
+}
+
+int
+XRE_RunIPCTestHarness(int aArgc, char* aArgv[])
+{
+    nsresult rv =
+        XRE_InitParentProcess(
+            aArgc, aArgv, IPCTestHarnessPostLaunchSubprocessTask, NULL);
+    NS_ENSURE_SUCCESS(rv, 1);
+    return 0;
 }
