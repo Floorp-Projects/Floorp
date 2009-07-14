@@ -136,7 +136,6 @@ struct JSTempVectorImpl<T, true>
         T *newbuf = reinterpret_cast<T *>(realloc(vec.mBegin, bytes));
         if (!newbuf) {
             js_ReportOutOfMemory(vec.mCx);
-            free(vec.mBegin);
             return false;
         }
         vec.mEnd = newbuf + (vec.mEnd - vec.mBegin);

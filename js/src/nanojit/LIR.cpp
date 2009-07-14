@@ -52,9 +52,9 @@ namespace nanojit
     #ifdef FEATURE_NANOJIT
 
     const uint8_t operandCount[] = {
-#define OPDEF(op, number, operands, repkind) \
+#define OPDEF(op, number, operands, repkind, isStmt) \
         operands,
-#define OPDEF64(op, number, operands, repkind) \
+#define OPDEF64(op, number, operands, repkind, isStmt) \
         operands,
 #include "LIRopcode.tbl"
 #undef OPDEF
@@ -62,35 +62,47 @@ namespace nanojit
         0
     };
 
-    const uint8_t repKinds[] = {
-#define OPDEF(op, number, operands, repkind) \
+    const uint8_t repKind[] = {
+#define OPDEF(op, number, operands, repkind, isStmt) \
         LRK_##repkind,
-#define OPDEF64(op, number, operands, repkind) \
-        OPDEF(op, number, operands, repkind)
+#define OPDEF64(op, number, operands, repkind, isStmt) \
+        LRK_##repkind,
 #include "LIRopcode.tbl"
 #undef OPDEF
 #undef OPDEF64
         0
     };
 
-        const uint8_t insSizes[] = {
-#define OPDEF(op, number, operands, repkind) \
-            sizeof(LIns##repkind),
-#define OPDEF64(op, number, operands, repkind) \
-            OPDEF(op, number, operands, repkind)
+    const uint8_t insSize[] = {
+#define OPDEF(op, number, operands, repkind, isStmt) \
+        sizeof(LIns##repkind),
+#define OPDEF64(op, number, operands, repkind, isStmt) \
+        sizeof(LIns##repkind),
 #include "LIRopcode.tbl"
 #undef OPDEF
 #undef OPDEF64
-            0
-        };
+        0
+    };
+
+    // This isn't called 'isStmt' because there's a function of that name.
+    const uint8_t isStmtArray[] = {
+#define OPDEF(op, number, operands, repkind, isStmt) \
+        isStmt,
+#define OPDEF64(op, number, operands, repkind, isStmt) \
+        isStmt,
+#include "LIRopcode.tbl"
+#undef OPDEF
+#undef OPDEF64
+        0
+    };
 
     // LIR verbose specific
     #ifdef NJ_VERBOSE
 
     const char* lirNames[] = {
-#define OPDEF(op, number, operands, repkind) \
+#define OPDEF(op, number, operands, repkind, isStmt) \
         #op,
-#define OPDEF64(op, number, operands, repkind) \
+#define OPDEF64(op, number, operands, repkind, isStmt) \
         #op,
 #include "LIRopcode.tbl"
 #undef OPDEF
@@ -376,7 +388,7 @@ namespace nanojit
             switch (iop)
             {
                 default:
-                    i -= insSizes[((LInsp)i)->opcode()];
+                    i -= insSize[((LInsp)i)->opcode()];
                     break;
 
 #if defined NANOJIT_64BIT
@@ -427,53 +439,53 @@ namespace nanojit
     }
 
     bool LIns::isLInsOp0() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_Op0 == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_Op0 == repKind[opcode()];
     }
 
     bool LIns::isLInsOp1() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_Op1 == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_Op1 == repKind[opcode()];
     }
 
     bool LIns::isLInsOp2() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_Op2 == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_Op2 == repKind[opcode()];
     }
 
     bool LIns::isLInsLd() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_Ld == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_Ld == repKind[opcode()];
     }
 
     bool LIns::isLInsSti() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_Sti == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_Sti == repKind[opcode()];
     }
 
     bool LIns::isLInsSk() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_Sk == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_Sk == repKind[opcode()];
     }
 
     bool LIns::isLInsC() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_C == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_C == repKind[opcode()];
     }
 
     bool LIns::isLInsP() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_P == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_P == repKind[opcode()];
     }
 
     bool LIns::isLInsI() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_I == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_I == repKind[opcode()];
     }
 
     bool LIns::isLInsI64() const {
-        NanoAssert(LRK_None != repKinds[opcode()]);
-        return LRK_I64 == repKinds[opcode()];
+        NanoAssert(LRK_None != repKind[opcode()]);
+        return LRK_I64 == repKind[opcode()];
     }
 
     bool LIns::isCmp() const {
@@ -518,6 +530,11 @@ namespace nanojit
     bool LIns::isCse() const
     {
         return nanojit::isCseOpcode(opcode()) || (isCall() && callInfo()->_cse);
+    }
+
+    bool LIns::isStmt()
+    {
+        return 1 == isStmtArray[opcode()];
     }
 
     void LIns::setTarget(LInsp label)
