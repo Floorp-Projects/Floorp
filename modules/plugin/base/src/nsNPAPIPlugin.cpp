@@ -334,7 +334,7 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
   fLibrary = aLibrary;
 }
 
-nsNPAPIPlugin::~nsNPAPIPlugin(void)
+nsNPAPIPlugin::~nsNPAPIPlugin()
 {
   // reset the callbacks list
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
@@ -2476,6 +2476,9 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
   return NPERR_NO_ERROR;
 }
 
+// We need extern "C" here because it has a function pointer as an argument.
+// See Bug 501889.
+PR_BEGIN_EXTERN_C
 uint32_t NP_CALLBACK
 _scheduletimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID))
 {
@@ -2485,6 +2488,7 @@ _scheduletimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)
 
   return inst->ScheduleTimer(interval, repeat, timerFunc);
 }
+PR_END_EXTERN_C
 
 void NP_CALLBACK
 _unscheduletimer(NPP instance, uint32_t timerID)

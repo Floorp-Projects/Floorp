@@ -83,6 +83,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
 
       // Put in a value to clear out
       let search = win.document.getElementById("searchbox");

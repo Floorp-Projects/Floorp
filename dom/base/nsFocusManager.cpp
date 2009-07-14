@@ -975,10 +975,16 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
     return;
 
   // don't allow focus to be placed in docshells or descendants of docshells
-  // that are being destroyed
+  // that are being destroyed. Also, ensure that the page hasn't been
+  // unloaded. The prevents content from being refocused during an unload event.
   nsCOMPtr<nsIDocShell> newDocShell = newWindow->GetDocShell();
   nsCOMPtr<nsIDocShell> docShell = newDocShell;
   while (docShell) {
+    PRBool inUnload;
+    docShell->GetIsInUnload(&inUnload);
+    if (inUnload)
+      return;
+
     PRBool beingDestroyed;
     docShell->IsBeingDestroyed(&beingDestroyed);
     if (beingDestroyed)
@@ -1630,9 +1636,37 @@ nsFocusManager::RaiseWindow(nsPIDOMWindow* aWindow)
 {
   // don't raise windows that are already raised or are in the process of
   // being lowered
-  if (aWindow == mActiveWindow || aWindow == mWindowBeingLowered)
+  if (!aWindow || aWindow == mActiveWindow || aWindow == mWindowBeingLowered)
     return;
 
+#ifdef XP_WIN
+  // Windows would rather we focus the child widget, otherwise, the toplevel
+  // widget will always end up being focused. Fortunately, focusing the child
+  // widget will also have the effect of raising the window this widget is in.
+  // But on other platforms, we can just focus the toplevel widget to raise
+  // the window.
+  nsCOMPtr<nsPIDOMWindow> childWindow;
+  GetFocusedDescendant(aWindow, PR_TRUE, getter_AddRefs(childWindow));
+  if (!childWindow)
+    childWindow = aWindow;
+
+  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+  if (!docShell)
+    return;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell)
+    return;
+
+  nsIViewManager* vm = presShell->GetViewManager();
+  if (vm) {
+    nsCOMPtr<nsIWidget> widget;
+    vm->GetWidget(getter_AddRefs(widget));
+    if (widget)
+      widget->SetFocus(PR_TRUE);
+  }
+#else
   nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(aWindow);
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = do_QueryInterface(webnav);
   if (treeOwnerAsWin) {
@@ -1641,6 +1675,7 @@ nsFocusManager::RaiseWindow(nsPIDOMWindow* aWindow)
     if (widget)
       widget->SetFocus(PR_TRUE);
   }
+#endif
 }
 
 void

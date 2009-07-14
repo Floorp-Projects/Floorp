@@ -1,0 +1,23 @@
+<html><head><title>Firefox 3.5 crash</title>
+
+<script language=JavaScript>
+
+function escapeData(data){
+   var escData='';
+   for(var i=0;i<data.length;i++) {
+      var c=data.charAt(i);
+      if( c==' ') c = escape(c);
+      escData+=c;
+    }
+    return escData;
+}
+
+var a = ["a", "a  ", "a", "a "]
+
+var html = "";
+for (i=0;i<a.length;i++){
+    html += escapeData("a")+escapeData(a[i])
+}
+</script>
+</body></html>
+

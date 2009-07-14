@@ -641,16 +641,16 @@ PRBool IsBidiControl(PRUint32 aChar)
   return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffffe)==LRM_CHAR);
 }
 
-PRBool HasRTLChars(nsAString& aString)
+PRBool HasRTLChars(const nsAString& aString)
 {
+// This is used to determine whether to enable bidi if a string has 
+// right-to-left characters. To simplify things, anything that could be a
+// surrogate or RTL presentation form is covered just by testing >= 0xD800).
+// It's fine to enable bidi in rare cases where it actually isn't needed.
   PRInt32 length = aString.Length();
   for (PRInt32 i = 0; i < length; i++) {
-    if ((UCS2_CHAR_IS_BIDI(aString.CharAt(i)) ) ||
-        ((NS_IS_HIGH_SURROGATE(aString.CharAt(i))) &&
-         (++i < length) &&
-         (NS_IS_LOW_SURROGATE(aString.CharAt(i))) &&
-         (UTF32_CHAR_IS_BIDI(SURROGATE_TO_UCS4(aString.CharAt(i-1),
-                                               aString.CharAt(i)))))) {
+    PRUnichar ch = aString.CharAt(i);
+    if (ch >= 0xD800 || IS_IN_BMP_RTL_BLOCK(ch)) {
       return PR_TRUE;
     }
   }

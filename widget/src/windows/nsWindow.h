@@ -417,7 +417,7 @@ protected:
   HBRUSH                mBrush;
   PRPackedBool          mIsTopWidgetWindow;
   PRPackedBool          mHas3DBorder;
-  PRPackedBool          mIsDestroying;
+  PRPackedBool          mInDtor;
   PRPackedBool          mIsVisible;
   PRPackedBool          mIsInMouseCapture;
   PRPackedBool          mInWheelProcessing;

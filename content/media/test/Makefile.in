@@ -95,11 +95,18 @@ _TEST_FILES = \
 		test_playback.html \
 		test_playback_errors.html \
 		test_readyState.html \
-		test_seek.html \
 		test_seek2.html \
 		test_volume.html \
 		use_large_cache.js \
 		$(NULL)
+
+ifneq ($(OS_ARCH),WINNT)
+# These tests are disabled on windows until we
+# figure out the random failures. See bug 475369.
+_TEST_FILES += \
+		test_seek.html \
+		$(NULL)
+endif
 
 # Ogg sample files
 _TEST_FILES += \
