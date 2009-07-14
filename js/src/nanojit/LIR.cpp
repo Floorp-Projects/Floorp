@@ -1221,7 +1221,7 @@ namespace nanojit
             case LIR_ldq:
             case LIR_ldqc:
                 return
-                    (a->oprnd1() == a->oprnd2() && a->disp() == b->disp() ? true : false );
+                    (a->oprnd1() == b->oprnd1() && a->disp() == b->disp() ? true : false );
 
             default:
             {
