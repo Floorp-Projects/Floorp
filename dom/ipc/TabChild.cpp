@@ -34,7 +34,7 @@ TabChild::Init(MessageLoop* aIOLoop, IPC::Channel* aChannel)
 }
 
 nsresult
-TabChild::Answerinit(const MagicWindowHandle& parentWidget)
+TabChild::Recvinit(const MagicWindowHandle& parentWidget)
 {
     printf("creating %d!\n", NS_IsMainThread());
 
@@ -66,13 +66,14 @@ TabChild::Answerinit(const MagicWindowHandle& parentWidget)
     baseWindow->SetVisibility(PR_TRUE);
 
     mWebNav = do_QueryInterface(webBrowser);
-    
+
     // TODObz: create and embed a window!
-    return NS_ERROR_NOT_IMPLEMENTED;
+    //return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 nsresult
-TabChild::AnswerloadURL(const String& uri)
+TabChild::RecvloadURL(const String& uri)
 {
     printf("loading %s, %d\n", uri.c_str(), NS_IsMainThread());
 
@@ -82,7 +83,7 @@ TabChild::AnswerloadURL(const String& uri)
 }
 
 nsresult
-TabChild::Answermove(const PRUint32& x,
+TabChild::Recvmove(const PRUint32& x,
                      const PRUint32& y,
                      const PRUint32& width,
                      const PRUint32& height)
