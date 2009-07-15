@@ -52,6 +52,8 @@ struct RunnableMethodTraits<mozilla::ipc::AsyncChannel>
 namespace mozilla {
 namespace ipc {
 
+// XXX work around bug in name resolution in MSVC8
+typedef mozilla::ipc::AsyncChannel::Listener Listener;
 
 bool
 AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
