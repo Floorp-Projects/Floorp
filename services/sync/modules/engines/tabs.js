@@ -127,6 +127,7 @@ function TabStore() {
 }
 TabStore.prototype = {
   __proto__: Store.prototype,
+  name: "tabs",
   _logName: "Tabs.Store",
   _filePath: "meta/tabSets",
   _remoteClients: {},
@@ -342,6 +343,7 @@ function TabTracker() {
 }
 TabTracker.prototype = {
   __proto__: Tracker.prototype,
+  name: "tabs",
   _logName: "TabTracker",
   file: "tab_tracker",
 

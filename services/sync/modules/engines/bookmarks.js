@@ -95,6 +95,7 @@ function BookmarksStore() {
 }
 BookmarksStore.prototype = {
   __proto__: Store.prototype,
+  name: "bookmarks",
   _logName: "BStore",
 
   __bms: null,
@@ -708,6 +709,7 @@ function BookmarksTracker() {
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
+  name: "bookmarks",
   _logName: "BmkTracker",
   file: "bookmarks",
 
