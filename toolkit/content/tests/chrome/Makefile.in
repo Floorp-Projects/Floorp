@@ -98,7 +98,7 @@ _TEST_FILES += test_autocomplete.xul
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-_TEST_FILES += 	test_cursorsnap.xul \
+_TEST_FILES += 	$(warning test_cursorsnap.xul temporarily disabled) \
 		window_cursorsnap_dialog.xul \
 		window_cursorsnap_wizard.xul
 endif
