@@ -65,6 +65,7 @@ const INITIAL_THRESHOLD = 75;
 const THRESHOLD_DECREMENT_STEP = 25;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -949,6 +950,9 @@ WeaveSvc.prototype = {
           this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));
         }
       }
+
+      // XXX Bug 504125 Wait a while after wiping so that the DELETEs replicate
+      Sync.sleep(5000);
     }))(),
 
   /**
