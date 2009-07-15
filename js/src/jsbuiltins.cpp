@@ -390,7 +390,7 @@ js_Arguments(JSContext* cx, JSObject* parent, JSObject* cached)
 {
     if (cached)
         return cached;
-    return js_NewObject(cx, &js_ArgumentsClass, NULL, NULL, 0);
+    return js_NewObject(cx, &js_ArgumentsClass, NULL, NULL);
 }
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, OBJECT, 0, 0)
 
@@ -404,7 +404,7 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     JSFunction *fun = (JSFunction*) funobj;
     JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
 
-    JSObject* closure = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    JSObject* closure = js_NewGCObject(cx, GCX_OBJECT);
     if (!closure)
         return NULL;
 

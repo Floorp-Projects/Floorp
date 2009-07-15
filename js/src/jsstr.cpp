@@ -2742,7 +2742,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
         return NULL;
     }
 
-    str = (JSString *) js_NewGCThing(cx, GCX_STRING, sizeof(JSString));
+    str = js_NewGCString(cx, GCX_STRING);
     if (!str)
         return NULL;
     str->initFlat(chars, length);
@@ -2776,7 +2776,7 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
         return js_NewStringCopyN(cx, base->chars() + start, length);
     }
 
-    ds = (JSString *)js_NewGCThing(cx, GCX_STRING, sizeof(JSString));
+    ds = js_NewGCString(cx, GCX_STRING);
     if (!ds)
         return NULL;
     if (start == 0)
