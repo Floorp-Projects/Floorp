@@ -288,11 +288,18 @@ namespace MMgc {
 
 #define MMGC_MEM_TYPE(x)
 
+extern void VMPI_setPageProtection(void *address,
+                                   size_t size,
+                                   bool executableFlag,
+                                   bool writeableFlag);
+
 namespace avmplus {
 
     using namespace MMgc;
 
     typedef int FunctionID;
+
+    extern void AvmLog(char const *msg, ...);
 
     class String
     {

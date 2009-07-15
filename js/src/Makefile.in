@@ -216,6 +216,8 @@ VPATH		+= $(srcdir)/nanojit
 INSTALLED_HEADERS += \
 		jsbuiltins.h    \
 		Assembler.h     \
+		Allocator.h     \
+		CodeAlloc.h     \
 		LIR.h		\
 		avmplus.h	\
 		Fragmento.h	\
@@ -228,6 +230,8 @@ INSTALLED_HEADERS += \
 CPPSRCS += \
 		jstracer.cpp \
 		Assembler.cpp  \
+		Allocator.cpp  \
+		CodeAlloc.cpp  \
 		Fragmento.cpp  \
 		LIR.cpp        \
 		RegAlloc.cpp   \
