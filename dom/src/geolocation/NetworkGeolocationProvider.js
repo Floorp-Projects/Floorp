@@ -20,6 +20,37 @@ function LOG(aMsg) {
     }
 }
 
+function WifiGeoAddressObject(streetNumber, street, premises, city, county, region, country, countryCode, postalCode) {
+
+  this.streetNumber = streetNumber;
+  this.street       = street;
+  this.premises     = premises;
+  this.city         = city;
+  this.county       = county;
+  this.region       = region;
+  this.country      = country;
+  this.countryCode  = countryCode;
+  this.postalCode   = postalCode;
+}
+
+WifiGeoAddressObject.prototype = {
+
+    QueryInterface:   XPCOMUtils.generateQI([Ci.nsIDOMGeoPositionAddress, Ci.nsIClassInfo]),
+
+    getInterfaces: function(countRef) {
+        var interfaces = [Ci.nsIDOMGeoPositionAddress, Ci.nsIClassInfo, Ci.nsISupports];
+        countRef.value = interfaces.length;
+        return interfaces;
+    },
+
+    getHelperForLanguage: function(language) null,
+    contractID: "",
+    classDescription: "wifi geo position address object",
+    classID: null,
+    implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: Ci.nsIClassInfo.DOM_OBJECT,
+};
+
 function WifiGeoCoordsObject(lat, lon, acc) {
     this.latitude = lat;
     this.longitude = lon;
@@ -53,8 +84,9 @@ WifiGeoCoordsObject.prototype = {
     speed: 0,
 };
 
-function WifiGeoPositionObject(lat, lon, acc) {
+function WifiGeoPositionObject(lat, lon, acc, streetNumber, street, premises, city, county, region, county, countryCode, postalCode) {
     this.coords = new WifiGeoCoordsObject(lat, lon, acc);
+    this.address = new WifiGeoAddressObject(streetNumber, street, premises, city, county, region, county, countryCode, postalCode);
     this.timestamp = Date.now();
 };
 
@@ -240,7 +272,16 @@ WifiGeoPositionProvider.prototype = {
 
             var newLocation = new WifiGeoPositionObject(response.location.latitude,
                                                         response.location.longitude,
-                                                        response.location.accuracy);
+                                                        response.location.accuracy,
+                                                        response.location.address.street_number,
+                                                        response.location.address.street,
+                                                        response.location.address.premises,
+                                                        response.location.address.city,
+                                                        response.location.address.county,
+                                                        response.location.address.region,
+                                                        response.location.address.county, 
+                                                        response.location.address.country_code,
+                                                        response.location.address.postal_code);
 
             var update = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationUpdate);
             update.update(newLocation);
@@ -250,7 +291,7 @@ WifiGeoPositionProvider.prototype = {
 
         var request = {
             version: "1.1.0",
-//          request_address: true,
+            request_address: true,
         };
 
         if (accessToken != "")
