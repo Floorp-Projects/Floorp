@@ -97,8 +97,6 @@ namespace nanojit
 #endif
     };
 
-    class Fragmento;
-
     // error codes
     enum AssmError
     {
@@ -171,7 +169,7 @@ namespace nanojit
             LogControl* _logc;
             #endif
 
-            Assembler(Fragmento* frago, LogControl* logc);
+            Assembler(CodeAlloc* codeAlloc, AvmCore* core, LogControl* logc);
             ~Assembler() {}
 
             void        assemble(Fragment* frag, NInsList& loopJumps);
@@ -186,12 +184,9 @@ namespace nanojit
 #endif
             AssmError   error()    { return _err; }
             void        setError(AssmError e) { _err = e; }
-            void        pageReset();
-            int32_t        codeBytes();
-            Page*        handoverPages(bool exitPages=false);
+            void        reset();
 
             debug_only ( void        pageValidate(); )
-            debug_only ( bool        onPage(NIns* where, bool exitPages=false); )
 
             // support calling out from a fragment ; used to debug the jit
             debug_only( void        resourceConsistencyCheck(); )
@@ -199,6 +194,7 @@ namespace nanojit
 
             Stats        _stats;
             int hasLoop;
+            CodeList*   codeList;                   // finished blocks of code.
 
         private:
 
@@ -233,9 +229,7 @@ namespace nanojit
             void        resetInstructionPointer();
             void        recordStartingInstructionPointer();
 
-            NIns*        pageAlloc(bool exitPage=false);
-            void        pagesFree(Page*& list);
-            void        internalReset();
+            void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip);
             bool        canRemat(LIns*);
 
             Reservation* getresv(LIns *x) {
@@ -243,17 +237,19 @@ namespace nanojit
                 return r->used ? r : 0;
             }
 
-            DWB(Fragmento*)        _frago;
+            AvmCore             *core;
+            DWB(CodeAlloc*)     _codeAlloc;
             avmplus::GC*        _gc;
             DWB(Fragment*)        _thisfrag;
             RegAllocMap*        _branchStateMap;
+
+            NIns        *codeStart, *codeEnd;       // current block we're adding code to
+            NIns        *exitStart, *exitEnd;       // current block for exit stubs
 
             NIns*        _nIns;            // current native instruction
             NIns*        _nExitIns;        // current instruction in exit fragment page
             NIns*        _startingIns;    // starting location of code compilation for error handling
             NIns*       _epilogue;
-            Page*        _nativePages;    // list of NJ_PAGE_SIZE pages that have been alloc'd
-            Page*        _nativeExitPages; // list of pages that have been allocated for exit code
             AssmError    _err;            // 0 = means assemble() appears ok, otherwise it failed
 
             AR            _activation;
@@ -307,19 +303,10 @@ namespace nanojit
             void        assignParamRegs();
             void        handleLoopCarriedExprs(InsList& pending_lives);
 
-            // flag values for nMarkExecute
-            enum
-            {
-                PAGE_READ = 0x0,    // here only for clarity: all permissions include READ
-                PAGE_WRITE = 0x01,
-                PAGE_EXEC = 0x02
-            };
-
             // platform specific implementation (see NativeXXX.cpp file)
             void        nInit(AvmCore *);
             Register    nRegisterAllocFromSet(int32_t set);
             void        nRegisterResetAll(RegAlloc& a);
-            void        nMarkExecute(Page* page, int flags);
             NIns*        nPatchBranch(NIns* branch, NIns* location);
             void        nFragExit(LIns* guard);
 
