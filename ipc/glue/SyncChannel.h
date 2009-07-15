@@ -59,7 +59,8 @@ protected:
     typedef std::queue<Message> MessageQueue;
 
 public:
-    class /*NS_INTERFACE_CLASS*/ SyncListener : public AsyncChannel::Listener
+    class /*NS_INTERFACE_CLASS*/ SyncListener : 
+        public AsyncChannel::AsyncListener
     {
     public:
         virtual ~SyncListener() { }
