@@ -2585,7 +2585,7 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
       default:
         JS_ASSERT(key == JSGC_TRIGGER_FACTOR);
         JS_ASSERT(value >= 100);
-        rt->gcTriggerFactor = value;
+        rt->setGCTriggerFactor(value);
         return;
     }
 }
