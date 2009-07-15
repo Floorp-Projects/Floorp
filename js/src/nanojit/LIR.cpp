@@ -294,7 +294,7 @@ namespace nanojit
         size = (size+3)>>2; // # of required 32bit words
         LInsI* insI = (LInsI*)_buf->makeRoom(sizeof(LInsI));
         LIns*  ins  = insI->getLIns();
-        ins->initLInsI(LIR_alloc, size);
+        ins->initLInsI(LIR_ialloc, size);
         return ins;
     }
 
@@ -779,7 +779,7 @@ namespace nanojit
             LIns* t;
             switch (v) {
             case LIR_add:
-            case LIR_addp:
+            case LIR_iaddp:
             case LIR_mul:
             case LIR_fadd:
             case LIR_fmul:
@@ -845,7 +845,7 @@ namespace nanojit
             if (c == 0) {
                 switch (v) {
                 case LIR_add:
-                case LIR_addp:
+                case LIR_iaddp:
                 case LIR_or:
                 case LIR_xor:
                 case LIR_sub:
@@ -1691,7 +1691,7 @@ namespace nanojit
                 break;
             }
 
-            case LIR_alloc: {
+            case LIR_ialloc: {
                 sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], i->size());
                 break;
             }
@@ -1722,7 +1722,7 @@ namespace nanojit
                 break;
             }
 
-            case LIR_param: {
+            case LIR_iparam: {
                 uint32_t arg = i->paramArg();
                 if (!i->paramKind()) {
                     if (arg < sizeof(Assembler::argRegs)/sizeof(Assembler::argRegs[0])) {
@@ -1781,7 +1781,7 @@ namespace nanojit
                 break;
 
             case LIR_add:
-            case LIR_addp:
+            case LIR_iaddp:
             case LIR_sub:
              case LIR_mul:
             case LIR_div:
