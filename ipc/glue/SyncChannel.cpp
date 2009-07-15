@@ -54,9 +54,6 @@ struct RunnableMethodTraits<mozilla::ipc::SyncChannel>
 namespace mozilla {
 namespace ipc {
 
-// XXX work around bug in name resolution in MSVC8
-typedef mozilla::ipc::SyncChannel::Listener Listener;
-
 bool
 SyncChannel::Send(Message* msg, Message* reply)
 {
@@ -117,18 +114,18 @@ SyncChannel::OnDispatchMessage(const Message& msg)
 
     Message* reply;
     switch (static_cast<Listener*>(mListener)->OnMessageReceived(msg, reply)) {
-    case Listener::MsgProcessed:
+    case MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this,
                                             &SyncChannel::OnSendReply,
                                             reply));
         return;
 
-    case Listener::MsgNotKnown:
-    case Listener::MsgNotAllowed:
-    case Listener::MsgPayloadError:
-    case Listener::MsgRouteError:
-    case Listener::MsgValueError:
+    case MsgNotKnown:
+    case MsgNotAllowed:
+    case MsgPayloadError:
+    case MsgRouteError:
+    case MsgValueError:
         // FIXME/cjones: error handling; OnError()?
         return;
 
