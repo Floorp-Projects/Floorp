@@ -919,7 +919,7 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     /* If not constructing, replace obj with a new Script object. */
     if (!JS_IsConstructing(cx)) {
-        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
 

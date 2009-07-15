@@ -1836,11 +1836,10 @@ IsGCThresholdReached(JSRuntime *rt)
            rt->gcBytes >= rt->gcTriggerBytes;
 }
 
-void *
-js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
+template <class T> static JS_INLINE T*
+NewGCThing(JSContext *cx, uintN flags)
 {
     JSRuntime *rt;
-    uintN flindex;
     bool doGC;
     JSGCThing *thing;
     uint8 *flagp;
@@ -1863,8 +1862,9 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 
     JS_ASSERT((flags & GCF_TYPEMASK) != GCX_DOUBLE);
     rt = cx->runtime;
-    nbytes = JS_ROUNDUP(nbytes, sizeof(JSGCThing));
-    flindex = GC_FREELIST_INDEX(nbytes);
+    size_t nbytes = sizeof(T);
+    JS_ASSERT(JS_ROUNDUP(nbytes, sizeof(JSGCThing)) == nbytes);
+    uintN flindex = GC_FREELIST_INDEX(nbytes);
 
     /* Updates of metering counters here may not be thread-safe. */
     METER(astats = &cx->runtime->gcStats.arenaStats[flindex]);
@@ -2098,7 +2098,7 @@ testReservedObjects:
     if (gcLocked)
         JS_UNLOCK_GC(rt);
 #endif
-    return thing;
+    return (T*)thing;
 
 fail:
 #ifdef JS_THREADSAFE
@@ -2108,6 +2108,26 @@ fail:
     METER(astats->fail++);
     js_ReportOutOfMemory(cx);
     return NULL;
+}
+
+extern JSObject* js_NewGCObject(JSContext *cx, uintN flags)
+{
+    return NewGCThing<JSObject>(cx, flags);
+}
+
+extern JSString* js_NewGCString(JSContext *cx, uintN flags)
+{
+    return NewGCThing<JSString>(cx, flags);
+}
+
+extern JSFunction* js_NewGCFunction(JSContext *cx, uintN flags)
+{
+    return NewGCThing<JSFunction>(cx, flags);
+}
+
+extern JSXML* js_NewGCXML(JSContext *cx, uintN flags)
+{
+    return NewGCThing<JSXML>(cx, flags);
 }
 
 static JSGCDoubleCell *
@@ -2303,7 +2323,7 @@ js_ReserveObjects(JSContext *cx, size_t nobjects)
     JSObject *&head = JS_TRACE_MONITOR(cx).reservedObjects;
     size_t i = head ? JSVAL_TO_INT(head->fslots[1]) : 0;
     while (i < nobjects) {
-        JSObject *obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+        JSObject *obj = js_NewGCObject(cx, GCX_OBJECT);
         if (!obj)
             return JS_FALSE;
         memset(obj, 0, sizeof(JSObject));
