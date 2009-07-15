@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="go()">
+  <!-- In this test, we change an animation element's "by" attribute to an
+       invalid value. We verify that animation effects are removed from the
+       previously-targeted attribute. -->
+  <script>
+    function go() {
+      // Seek animation before we start tweaking things, to make sure we've
+      // already started sampling it.
+      document.documentElement.setCurrentTime(2.0);
+
+      var anim = document.getElementById("anim");
+      anim.setAttributeNS(null, "by", "invalid value that can't be added");
+      setTimeAndSnapshot(2.5, false);
+    }
+  </script>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect x="15" y="15" width="200" height="200" fill="blue">
+    <animate id="anim" attributeName="x"
+             begin="0s" dur="2s" by="100" fill="freeze"/>
+  </rect>
+</svg>

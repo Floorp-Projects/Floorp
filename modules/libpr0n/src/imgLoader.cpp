@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,8 +45,7 @@
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
 #include "nsICachingChannel.h"
-#include "nsIObserverService.h"
-#include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
@@ -175,6 +175,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
                                 nsIURI *aInitialDocumentURI,
                                 nsIURI *aReferringURI,
                                 nsILoadGroup *aLoadGroup,
+                                const nsCString& aAcceptHeader,
                                 nsLoadFlags aLoadFlags)
 {
   nsresult rv;
@@ -213,7 +214,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   newHttpChannel = do_QueryInterface(*aResult);
   if (newHttpChannel) {
     newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                     NS_LITERAL_CSTRING("image/png,image/*;q=0.8,*/*;q=0.5"),
+                                     aAcceptHeader,
                                      PR_FALSE);
 
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal = do_QueryInterface(newHttpChannel);
@@ -510,7 +511,7 @@ imgCacheQueue imgLoader::sChromeCacheQueue;
 PRFloat64 imgLoader::sCacheTimeWeight;
 PRUint32 imgLoader::sCacheMaxSize;
 
-NS_IMPL_ISUPPORTS4(imgLoader, imgILoader, nsIContentSniffer, imgICache, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS5(imgLoader, imgILoader, nsIContentSniffer, imgICache, nsISupportsWeakReference, nsIObserver)
 
 imgLoader::imgLoader()
 {
@@ -598,8 +599,47 @@ nsresult imgLoader::InitCache()
     sCacheMaxSize = cachesize;
   else
     sCacheMaxSize = 5 * 1024 * 1024;
- 
+
   return NS_OK;
+}
+
+nsresult imgLoader::Init()
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv); 
+  if (NS_FAILED(rv))
+    return rv;
+
+  ReadAcceptHeaderPref(prefs);
+
+  prefs->AddObserver("image.http.accept", this, PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+imgLoader::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+{
+  NS_ASSERTION(strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0,
+               "invalid topic received");
+
+  if (strcmp(NS_ConvertUTF16toUTF8(aData).get(), "image.http.accept") == 0) {
+    nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
+    ReadAcceptHeaderPref(prefs);
+  }
+  return NS_OK;
+}
+
+void imgLoader::ReadAcceptHeaderPref(nsIPrefBranch *aBranch)
+{
+  NS_ASSERTION(aBranch, "Pref branch is null");
+
+  nsXPIDLCString accept;
+  nsresult rv = aBranch->GetCharPref("image.http.accept", getter_Copies(accept));
+  if (NS_SUCCEEDED(rv))
+    mAcceptHeader = accept;
+  else
+    mAcceptHeader = "image/png,image/*;q=0.8,*/*;q=0.5";
 }
 
 /* void clearCache (in boolean chrome); */
@@ -860,6 +900,7 @@ PRBool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                          aInitialDocumentURI,
                          aReferrerURI,
                          aLoadGroup,
+                         mAcceptHeader,
                          aLoadFlags);
     if (NS_FAILED(rv)) {
       return PR_FALSE;
@@ -1263,6 +1304,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
                          aInitialDocumentURI,
                          aReferrerURI,
                          aLoadGroup,
+                         mAcceptHeader,
                          requestFlags);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;

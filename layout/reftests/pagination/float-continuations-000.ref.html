@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<style type="text/css">
+
+.multicol {
+  margin: 1em;
+  border: solid silver;
+  width: 500px;
+  -moz-column-width: 100px;
+  -moz-column-gap: 0;
+  height: 100px;
+  position: relative;
+}
+
+#clear {
+  top: 50px;
+  border-top: 4px solid orange;
+  width: 100%;
+  position: absolute;
+  z-index: -1;
+}
+
+.float {
+  border: aqua 30px;
+  border-style: none solid;
+  height: 300px;
+}
+
+.pad {
+  padding-top: 50px;
+}
+</style>
+
+<body>
+
+<div class="multicol">
+  <div id="clear"></div>
+  <div class="pad"></div>
+  <div class="float">&nbsp;</div>
+</div>

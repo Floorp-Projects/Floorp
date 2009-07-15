@@ -442,16 +442,6 @@ xpc_qsVariantToJsval(XPCCallContext &ccx,
                      uintN paramNum,
                      jsval *rval);
 
-/**
- * Use this as the setter for readonly attributes. (The IDL readonly
- * keyword does not map to JSPROP_READONLY. Semantic mismatch.)
- *
- * Always fails, with the same error as setting a property that has
- * JSPROP_GETTER but not JSPROP_SETTER.
- */
-JSBool
-xpc_qsReadOnlySetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-
 #ifdef DEBUG
 void
 xpc_qsAssertContextOK(JSContext *cx);

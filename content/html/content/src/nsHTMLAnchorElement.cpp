@@ -99,9 +99,6 @@ public:
   NS_DECL_NSIDOMNSHTMLANCHORELEMENT2
 
   // nsILink
-  NS_IMETHOD GetLinkState(nsLinkState &aState);
-  NS_IMETHOD SetLinkState(nsLinkState aState);
-  NS_IMETHOD GetHrefURI(nsIURI** aURI);
   NS_IMETHOD LinkAdded() { return NS_OK; }
   NS_IMETHOD LinkRemoved() { return NS_OK; }
 
@@ -119,6 +116,9 @@ public:
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
+  virtual nsLinkState GetLinkState() const;
+  virtual void SetLinkState(nsLinkState aState);
+  virtual already_AddRefed<nsIURI> GetHrefURI() const;
 
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
@@ -422,24 +422,22 @@ nsHTMLAnchorElement::SetPing(const nsAString& aValue)
   return SetAttr(kNameSpaceID_None, nsGkAtoms::ping, aValue, PR_TRUE);
 }
 
-NS_IMETHODIMP
-nsHTMLAnchorElement::GetLinkState(nsLinkState &aState)
+nsLinkState
+nsHTMLAnchorElement::GetLinkState() const
 {
-  aState = mLinkState;
-  return NS_OK;
+  return mLinkState;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLAnchorElement::SetLinkState(nsLinkState aState)
 {
   mLinkState = aState;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLAnchorElement::GetHrefURI(nsIURI** aURI)
+already_AddRefed<nsIURI>
+nsHTMLAnchorElement::GetHrefURI() const
 {
-  return GetHrefURIForAnchors(aURI);
+  return GetHrefURIForAnchors();
 }
 
 nsresult

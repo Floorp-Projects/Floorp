@@ -1547,40 +1547,36 @@ function initializeSanitizer()
    * a) User has customized any privacy.item prefs
    * b) privacy.sanitize.sanitizeOnShutdown is set
    */
-  (function() {
-    var prefService = Cc["@mozilla.org/preferences-service;1"].
-                      getService(Ci.nsIPrefService);
-    if (!prefService.getBoolPref("privacy.sanitize.migrateFx3Prefs")) {
-      var itemBranch = prefService.getBranch("privacy.item.");
-      var itemCount = { value: 0 };
-      var itemArray = itemBranch.getChildList("", itemCount);
+  if (!gPrefService.getBoolPref("privacy.sanitize.migrateFx3Prefs")) {
+    let itemBranch = gPrefService.getBranch("privacy.item.");
+    let itemCount = { value: 0 };
+    let itemArray = itemBranch.getChildList("", itemCount);
 
-      // See if any privacy.item prefs are set
-      var doMigrate = itemArray.some(function (name) itemBranch.prefHasUserValue(name));
-      // Or if sanitizeOnShutdown is set
-      if (!doMigrate)
-        doMigrate = prefService.getBoolPref("privacy.sanitize.sanitizeOnShutdown");
+    // See if any privacy.item prefs are set
+    let doMigrate = itemArray.some(function (name) itemBranch.prefHasUserValue(name));
+    // Or if sanitizeOnShutdown is set
+    if (!doMigrate)
+      doMigrate = gPrefService.getBoolPref("privacy.sanitize.sanitizeOnShutdown");
 
-      if (doMigrate) {
-        var cpdBranch = prefService.getBranch("privacy.cpd.");
-        var clearOnShutdownBranch = prefService.getBranch("privacy.clearOnShutdown.");
-        itemArray.forEach(function (name) {
-          try {
-            // don't migrate password or offlineApps clearing in the CRH dialog since
-            // there's no UI for those anymore. They default to false. bug 497656
-            if (name != "passwords" && name != "offlineApps")
-              cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
-            clearOnShutdownBranch.setBoolPref(name, itemBranch.getBoolPref(name));
-          }
-          catch(e) {
-            Components.utils.reportError("Exception thrown during privacy pref migration: " + e);
-          }
-        });
-      }
-
-      prefService.setBoolPref("privacy.sanitize.migrateFx3Prefs", true);
+    if (doMigrate) {
+      let cpdBranch = gPrefService.getBranch("privacy.cpd.");
+      let clearOnShutdownBranch = gPrefService.getBranch("privacy.clearOnShutdown.");
+      itemArray.forEach(function (name) {
+        try {
+          // don't migrate password or offlineApps clearing in the CRH dialog since
+          // there's no UI for those anymore. They default to false. bug 497656
+          if (name != "passwords" && name != "offlineApps")
+            cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
+          clearOnShutdownBranch.setBoolPref(name, itemBranch.getBoolPref(name));
+        }
+        catch(e) {
+          Cu.reportError("Exception thrown during privacy pref migration: " + e);
+        }
+      });
     }
-  })();
+
+    gPrefService.setBoolPref("privacy.sanitize.migrateFx3Prefs", true);
+  }
 }
 
 function gotoHistoryIndex(aEvent)

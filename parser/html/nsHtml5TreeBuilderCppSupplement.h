@@ -92,7 +92,6 @@ nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
 nsIContent*
 nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes)
 {
-  // XXX recheck http://mxr.mozilla.org/mozilla-central/source/content/base/src/nsDocument.cpp#6660
   nsIContent* newContent;
   nsCOMPtr<nsINodeInfo> nodeInfo = parser->GetNodeInfoManager()->GetNodeInfo(aName, nsnull, aNamespace);
   NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
@@ -299,12 +298,16 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId,
   nsCOMPtr<nsIDOMDocumentType> docType;
   nsAutoString voidString;
   voidString.SetIsVoid(PR_TRUE);
-  NS_NewDOMDocumentType(getter_AddRefs(docType), parser->GetNodeInfoManager(), nsnull,
-                             aName, nsnull, nsnull, *aPublicId, *aSystemId,
-                             voidString);
-//  if (NS_FAILED(rv) || !docType) {
-//    return rv;
-//  }
+  NS_NewDOMDocumentType(getter_AddRefs(docType),
+                        parser->GetNodeInfoManager(),
+                        nsnull,
+                        aName,
+                        nsnull,
+                        nsnull,
+                        *aPublicId,
+                        *aSystemId,
+                        voidString);
+  NS_ASSERTION(docType, "Doctype creation failed.");
   nsCOMPtr<nsIContent> content = do_QueryInterface(docType);
   NS_ASSERTION(content, "doctype isn't content?");
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -401,7 +404,7 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   }
   // we now have only HTML
   // Some HTML nodes need DoneAddingChildren() called to initialize
-  // properly (eg form state restoration).
+  // properly (e.g. form state restoration).
   // XXX expose ElementName group here and do switch
   if (aName == nsHtml5Atoms::select ||
         aName == nsHtml5Atoms::textarea ||

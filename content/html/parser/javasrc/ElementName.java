@@ -59,13 +59,13 @@ public final class ElementName
         if (index < 0) {
             return new ElementName(Portability.newLocalNameFromBuffer(buf, offset, length));
         } else {
-            ElementName rv = ElementName.ELEMENT_NAMES[index];
-            @Local String name = rv.name;
+            ElementName elementName = ElementName.ELEMENT_NAMES[index];
+            @Local String name = elementName.name;
             if (!Portability.localEqualsBuffer(name, buf, offset, length)) {
                 return new ElementName(Portability.newLocalNameFromBuffer(buf,
                         offset, length));                
             }
-            return rv;
+            return elementName;
         }
     }
 
@@ -266,8 +266,8 @@ public final class ElementName
 //                return "UL_OR_OL_OR_DL";
 //            case TreeBuilder.IFRAME:
 //                return "IFRAME";
-//  case TreeBuilder.NOEMBED:
-//  return "NOEMBED";
+//            case TreeBuilder.NOEMBED:
+//                return "NOEMBED";
 //            case TreeBuilder.EMBED_OR_IMG:
 //                return "EMBED_OR_IMG";
 //            case TreeBuilder.AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR:

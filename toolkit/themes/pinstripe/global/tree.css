@@ -269,11 +269,13 @@ treecol[dragging="true"] {
   color: ThreeDHighlight !important;
 }
 
-treecol[insertafter="true"] {
+tree[chromedir="ltr"] treecol[insertafter="true"],
+tree[chromedir="rtl"] treecol[insertbefore="true"] {
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
 }
 
-treecol[insertbefore="true"] {
+tree[chromedir="rtl"] treecol[insertafter="true"],
+tree[chromedir="ltr"] treecol[insertbefore="true"] {
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
 }
 

@@ -683,11 +683,11 @@ public abstract class MetaScanner {
         if (candidateEncoding == null) {
             return false;
         }
-        boolean rv = tryCharset(candidateEncoding);
+        boolean success = tryCharset(candidateEncoding);
         Portability.releaseString(candidateEncoding);
         contentIndex = -1;
         charsetIndex = -1;
-        return rv;
+        return success;
     }
     
     protected abstract boolean tryCharset(String encoding) throws SAXException;
