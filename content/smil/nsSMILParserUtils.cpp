@@ -223,7 +223,7 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
     SkipWsp(start, end);
     if (start == end)
       break;
-    
+
     if (*start++ != ';') {
       rv = NS_ERROR_FAILURE;
       break;
@@ -238,7 +238,7 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
 nsresult
 nsSMILParserUtils::ParseValues(const nsAString& aSpec,
                                const nsISMILAnimationElement* aSrcElement,
-                               const nsISMILAttr& aAttribute, 
+                               const nsISMILAttr& aAttribute,
                                nsTArray<nsSMILValue>& aValuesArray)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -275,7 +275,7 @@ nsSMILParserUtils::ParseValues(const nsAString& aSpec,
     ++substr_end;
 
     nsSMILValue newValue;
-    rv = aAttribute.ValueFromString(Substring(start, substr_end), 
+    rv = aAttribute.ValueFromString(Substring(start, substr_end),
                                     aSrcElement, newValue);
     if (NS_FAILED(rv))
       break;
@@ -305,7 +305,7 @@ nsSMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
   spec.EndReading(end);
 
   SkipWsp(start, end);
-  
+
   if (start != end)
   {
     if (ConsumeSubstring(start, end, "indefinite")) {
@@ -343,7 +343,7 @@ nsSMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
 
 nsresult
 nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
-                                   nsSMILTimeValue* aResult, 
+                                   nsSMILTimeValue* aResult,
                                    PRUint32 aFlags,   // = 0
                                    PRBool* aIsMedia)  // = nsnull
 {
@@ -568,7 +568,7 @@ nsSMILParserUtils::ParseMetricMultiplicand(nsACString::const_iterator& aSpec,
 
   size_t len = aEnd.get() - aSpec.get();
   nsACString::const_iterator spec(aSpec);
-  
+
   if (len) {
     switch (*spec++)
     {
