@@ -136,7 +136,7 @@ nsSMILCompositor::ComposeAttribute()
       changed = PR_TRUE;
     }
     */
-    
+
     if (curAnimFunc->WillReplace()) {
       --i;
       break;
@@ -165,7 +165,7 @@ nsSMILCompositor::ComposeAttribute()
   nsresult rv = smilAttr->SetAnimValue(resultValue);
   if (NS_FAILED(rv)) {
     NS_WARNING("nsISMILAttr::SetAnimValue failed");
-  } 
+  }
 }
 
 void

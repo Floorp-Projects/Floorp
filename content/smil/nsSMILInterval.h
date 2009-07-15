@@ -45,7 +45,7 @@
 //
 // This class is essentially a structure consisting of a begin and end time. It
 // is used for representing the current interval and also for storing past
-// intervals for the purpose of hyperlinking back in time. 
+// intervals for the purpose of hyperlinking back in time.
 //
 // For an overview of how this class is related to other SMIL time classes see
 // the documentstation in nsSMILTimeValue.h
