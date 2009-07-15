@@ -34,10 +34,11 @@ pref("extensions.weave.log.logger.async", "Debug");
 pref("extensions.weave.log.logger.authenticator", "Debug");
 pref("extensions.weave.log.logger.network.resources", "Debug");
 pref("extensions.weave.log.logger.engine.bookmarks", "Debug");
+pref("extensions.weave.log.logger.engine.clients", "Debug");
 pref("extensions.weave.log.logger.engine.forms", "Debug");
 pref("extensions.weave.log.logger.engine.history", "Debug");
+pref("extensions.weave.log.logger.engine.passwords", "Debug");
 pref("extensions.weave.log.logger.engine.tabs", "Debug");
-pref("extensions.weave.log.logger.engine.clients", "Debug");
 pref("extensions.weave.log.logger.authenticator", "Debug");
 
 pref("extensions.weave.network.numRetries", 2);

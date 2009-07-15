@@ -94,6 +94,7 @@ function FormStore() {
 }
 FormStore.prototype = {
   __proto__: Store.prototype,
+  name: "forms",
   _logName: "FormStore",
   _formItems: null,
 
@@ -215,6 +216,7 @@ function FormTracker() {
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
+  name: "forms",
   _logName: "FormTracker",
   file: "form",
   

@@ -218,6 +218,7 @@ ClientStore.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   // Store.prototype Attributes
 
+  name: "clients",
   _logName: "Clients.Store",
 
   //////////////////////////////////////////////////////////////////////////////
@@ -271,6 +272,7 @@ function ClientTracker() {
 }
 ClientTracker.prototype = {
   __proto__: Tracker.prototype,
+  name: "clients",
   _logName: "ClientTracker",
   file: "clients",
   get score() 100 // always sync

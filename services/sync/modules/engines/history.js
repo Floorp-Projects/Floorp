@@ -107,6 +107,7 @@ function HistoryStore() {
 }
 HistoryStore.prototype = {
   __proto__: Store.prototype,
+  name: "history",
   _logName: "HistStore",
 
   get _hsvc() {
@@ -456,6 +457,7 @@ function HistoryTracker() {
 }
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
+  name: "history",
   _logName: "HistoryTracker",
   file: "history",
 

@@ -171,13 +171,9 @@ Engine.prototype = {
   },
 
   _init: function Engine__init() {
-    let levelPref = "log.logger.engine." + this.name;
-    let level = "Debug";
-    try { level = Utils.prefs.getCharPref(levelPref); }
-    catch (e) { /* ignore unset prefs */ }
-
     this._notify = Utils.notify("weave:engine:");
     this._log = Log4Moz.repository.getLogger("Engine." + this.logName);
+    let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
     this._log.level = Log4Moz.Level[level];
 
     this._tracker; // initialize tracker to load previously changed IDs
