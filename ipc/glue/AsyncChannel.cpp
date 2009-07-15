@@ -52,9 +52,6 @@ struct RunnableMethodTraits<mozilla::ipc::AsyncChannel>
 namespace mozilla {
 namespace ipc {
 
-// XXX work around bug in name resolution in MSVC8
-typedef mozilla::ipc::AsyncChannel::Listener Listener;
-
 bool
 AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
 {
@@ -122,14 +119,14 @@ AsyncChannel::OnDispatchMessage(const Message& msg)
     NS_ASSERTION(!(msg.is_sync() || msg.is_rpc()), "async dispatch only");
 
     switch (mListener->OnMessageReceived(msg)) {
-    case Listener::MsgProcessed:
+    case MsgProcessed:
         return;
 
-    case Listener::MsgNotKnown:
-    case Listener::MsgNotAllowed:
-    case Listener::MsgPayloadError:
-    case Listener::MsgRouteError:
-    case Listener::MsgValueError:
+    case MsgNotKnown:
+    case MsgNotAllowed:
+    case MsgPayloadError:
+    case MsgRouteError:
+    case MsgValueError:
         // FIXME/cjones: error handling; OnError()?
         return;
 
