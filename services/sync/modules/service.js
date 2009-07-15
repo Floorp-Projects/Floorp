@@ -609,11 +609,11 @@ WeaveSvc.prototype = {
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
 
-    this._log.debug("Min supported storage version is " + MIN_SERVER_STORAGE_VERSION);
+    this._log.debug("Local storage version is " + STORAGE_VERSION);
     this._log.debug("Remote storage version is " + remoteVersion);
 
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
-        Svc.Version.compare(MIN_SERVER_STORAGE_VERSION, remoteVersion) > 0) {
+        Svc.Version.compare(STORAGE_VERSION, remoteVersion) > 0) {
 
       // abort the server wipe if the GET status was anything other than 404 or 200
       let status = Records.lastResource.lastChannel.responseStatus;
@@ -628,7 +628,7 @@ WeaveSvc.prototype = {
         this._log.info("No metadata record, server wipe needed");
       if (meta && !meta.payload.syncID)
         this._log.warn("No sync id, server wipe needed");
-      if (Svc.Version.compare(MIN_SERVER_STORAGE_VERSION, remoteVersion) > 0)
+      if (Svc.Version.compare(STORAGE_VERSION, remoteVersion) > 0)
         this._log.info("Server storage version no longer supported, server wipe needed");
 
       if (!this._keyGenEnabled) {
@@ -915,8 +915,8 @@ WeaveSvc.prototype = {
 
     this._log.debug("Uploading new metadata record");
     meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
-    this._log.debug("Setting meta payload storage version to " + WEAVE_VERSION);
-    meta.payload.storageVersion = WEAVE_VERSION;
+    this._log.debug("Setting meta payload storage version to " + STORAGE_VERSION);
+    meta.payload.storageVersion = STORAGE_VERSION;
     meta.payload.syncID = Clients.syncID;
     let res = new Resource(meta.uri);
     res.put(meta.serialize());
