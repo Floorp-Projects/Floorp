@@ -493,7 +493,7 @@ let Utils = {
   jsonLoad: function Utils_jsonLoad(filePath, that, callback) {
     filePath = "weave/" + filePath + ".json";
     if (that._log)
-      that._log.debug("Loading json from disk: " + filePath);
+      that._log.trace("Loading json from disk: " + filePath);
 
     let file = Utils.getProfileFile(filePath);
     if (!file.exists())
@@ -525,7 +525,7 @@ let Utils = {
   jsonSave: function Utils_jsonSave(filePath, that, callback) {
     filePath = "weave/" + filePath + ".json";
     if (that._log)
-      that._log.debug("Saving json to disk: " + filePath);
+      that._log.trace("Saving json to disk: " + filePath);
 
     let file = Utils.getProfileFile({ autoCreate: true, path: filePath });
     let json = typeof callback == "function" ? callback.call(that) : callback;

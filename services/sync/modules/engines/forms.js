@@ -47,6 +47,7 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+Cu.import("resource://weave/base_records/collection.js");
 Cu.import("resource://weave/type_records/forms.js");
 
 function FormEngine() {
@@ -67,9 +68,15 @@ FormEngine.prototype = {
   },
 
   /* Wipe cache when sync finishes */
-  _syncFinish: function FormEngine__syncFinish() {
+  _syncFinish: function FormEngine__syncFinish(error) {
     this._store.clearFormCache();
-    SyncEngine.prototype._syncFinish.call(this);
+    
+    // Only leave 1 month's worth of form history
+    this._tracker.resetScore();
+    let coll = new Collection(this.engineURL, this._recordObj);
+    coll.older = this.lastSync - 2592000; // 60*60*24*30
+    coll.full = 0;
+    coll.delete();
   },
   
   _recordLike: function SyncEngine__recordLike(a, b) {
@@ -87,6 +94,7 @@ function FormStore() {
 }
 FormStore.prototype = {
   __proto__: Store.prototype,
+  name: "forms",
   _logName: "FormStore",
   _formItems: null,
 
@@ -111,7 +119,18 @@ FormStore.prototype = {
   },
   
   get _formStatement() {
-    let stmnt = this._formDB.createStatement("SELECT * FROM moz_formhistory");
+    // This is essentially:
+    // SELECT * FROM moz_formhistory ORDER BY 1.0 * (lastUsed - minLast) /
+    // (maxLast - minLast) * timesUsed / minTimes DESC LIMIT 200
+    let stmnt = this._formDB.createStatement(
+        "SELECT * FROM moz_formhistory ORDER BY 1.0 * (lastUsed - \
+        (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) / \
+        ((SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed DESC LIMIT 1) - \
+        (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) * \
+        timesUsed / (SELECT timesUsed FROM moz_formhistory ORDER BY timesUsed DESC LIMIT 1) \
+        DESC LIMIT 200"
+    );
+    
     this.__defineGetter__("_formStatement", function() stmnt);
     return stmnt;
   },
@@ -197,6 +216,7 @@ function FormTracker() {
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
+  name: "forms",
   _logName: "FormTracker",
   file: "form",
   

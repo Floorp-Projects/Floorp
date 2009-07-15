@@ -77,6 +77,7 @@ function PasswordStore() {
 }
 PasswordStore.prototype = {
   __proto__: Store.prototype,
+  name: "passwords",
   _logName: "PasswordStore",
 
   _nsLoginInfo: null,
@@ -215,6 +216,7 @@ function PasswordTracker() {
 PasswordTracker.prototype = {
   __proto__: Tracker.prototype,
   _logName: "PasswordTracker",
+  name: "passwords",
   file: "password",
 
   _init: function PasswordTracker_init() {

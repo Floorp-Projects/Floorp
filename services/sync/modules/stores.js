@@ -69,6 +69,8 @@ Store.prototype = {
 
   _init: function Store__init() {
     this._log = Log4Moz.repository.getLogger("Store." + this._logName);
+    let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
+    this._log.level = Log4Moz.Level[level];
   },
 
   applyIncoming: function Store_applyIncoming(record) {

@@ -59,7 +59,7 @@ const WEAVE_VERSION = "@weave_version@";
 // last client version's server storage this version supports
 // e.g. if set to the current version, this client will wipe the server
 // data stored by any older client
-const MIN_SERVER_STORAGE_VERSION = "@weave_version@";
+const MIN_SERVER_STORAGE_VERSION = "@storage_version@";
 
 const PREFS_BRANCH = "extensions.weave.";
 

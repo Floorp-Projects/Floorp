@@ -16,11 +16,11 @@ pref("extensions.weave.syncOnQuit.enabled", true);
 
 pref("extensions.weave.engine.bookmarks", true);
 //pref("extensions.weave.engine.cookies", false);
-pref("extensions.weave.engine.forms", false);
+pref("extensions.weave.engine.forms", true);
 pref("extensions.weave.engine.history", true);
 //pref("extensions.weave.engine.input", false);
 pref("extensions.weave.engine.passwords", true);
-pref("extensions.weave.engine.prefs", false);
+pref("extensions.weave.engine.prefs", true);
 pref("extensions.weave.engine.tabs", true);
 
 pref("extensions.weave.log.appender.console", "Warn");
@@ -34,10 +34,11 @@ pref("extensions.weave.log.logger.async", "Debug");
 pref("extensions.weave.log.logger.authenticator", "Debug");
 pref("extensions.weave.log.logger.network.resources", "Debug");
 pref("extensions.weave.log.logger.engine.bookmarks", "Debug");
+pref("extensions.weave.log.logger.engine.clients", "Debug");
 pref("extensions.weave.log.logger.engine.forms", "Debug");
 pref("extensions.weave.log.logger.engine.history", "Debug");
+pref("extensions.weave.log.logger.engine.passwords", "Debug");
 pref("extensions.weave.log.logger.engine.tabs", "Debug");
-pref("extensions.weave.log.logger.engine.clients", "Debug");
 pref("extensions.weave.log.logger.authenticator", "Debug");
 
 pref("extensions.weave.network.numRetries", 2);

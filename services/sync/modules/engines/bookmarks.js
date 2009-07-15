@@ -95,6 +95,7 @@ function BookmarksStore() {
 }
 BookmarksStore.prototype = {
   __proto__: Store.prototype,
+  name: "bookmarks",
   _logName: "BStore",
 
   __bms: null,
@@ -180,7 +181,43 @@ BookmarksStore.prototype = {
     return this._getItemIdForGUID(id) > 0;
   },
 
+  _preprocess: function BStore_preprocess(record) {
+    switch (record.type) {
+      case "query": {
+        // Convert the query uri if necessary
+        if (record.bmkUri == null || record.folderName == null)
+          break;
+
+        // Tag something so that the tag exists
+        let tag = record.folderName;
+        let dummyURI = Utils.makeURI("about:weave#BStore_preprocess");
+        this._ts.tagURI(dummyURI, [tag]);
+
+        // Look for the id of the tag (that might have just been added)
+        let tags = this._getNode(this._bms.tagsFolder);
+        if (!(tags instanceof Ci.nsINavHistoryQueryResultNode))
+          break;
+
+        tags.containerOpen = true;
+        for (let i = 0; i < tags.childCount; i++) {
+          let child = tags.getChild(i);
+          // Found the tag, so fix up the query to use the right id
+          if (child.title == tag) {
+            this._log.debug("query folder: " + tag + " = " + child.itemId);
+            record.bmkUri = record.bmkUri.replace(/([:&]folder=)\d+/, "$1" +
+              child.itemId);
+            break;
+          }
+        }
+        break;
+      }
+    }
+  },
+
   create: function BStore_create(record) {
+    // Modify the record if necessary
+    this._preprocess(record);
+
     let newId;
     let parentId = this._getItemIdForGUID(record.parentid);
 
@@ -191,6 +228,7 @@ BookmarksStore.prototype = {
 
     switch (record.type) {
     case "bookmark":
+    case "query":
     case "microsummary": {
       this._log.debug(" -> creating bookmark \"" + record.title + "\"");
       let uri = Utils.makeURI(record.bmkUri);
@@ -200,8 +238,7 @@ BookmarksStore.prototype = {
       this._log.debug(" -> -> title is " + record.title);
       newId = this._bms.insertBookmark(parentId, uri, record.sortindex,
                                        record.title);
-      this._ts.untagURI(uri, null);
-      this._ts.tagURI(uri, record.tags);
+      this._tagURI(uri, record.tags);
       this._bms.setKeywordForBookmark(newId, record.keyword);
       if (record.description) {
         this._ans.setItemAnnotation(newId, "bookmarkProperties/description",
@@ -332,6 +369,9 @@ BookmarksStore.prototype = {
   },
 
   update: function BStore_update(record) {
+    // Modify the record if necessary
+    this._preprocess(record);
+
     let itemId = this._getItemIdForGUID(record.id);
 
     if (record.id in kSpecialIds) {
@@ -361,13 +401,9 @@ BookmarksStore.prototype = {
       case "bmkUri":
         this._bms.changeBookmarkURI(itemId, Utils.makeURI(val));
         break;
-      case "tags": {
-        // filter out null/undefined/empty tags
-        let tags = val.filter(function(t) t);
-        let tagsURI = this._bms.getBookmarkURI(itemId);
-        this._ts.untagURI(tagsURI, null);
-        this._ts.tagURI(tagsURI, tags);
-      } break;
+      case "tags":
+        this._tagURI(this._bms.getBookmarkURI(itemId), val);
+        break;
       case "keyword":
         this._bms.setKeywordForBookmark(itemId, val);
         break;
@@ -503,18 +539,35 @@ BookmarksStore.prototype = {
 
     switch (this._bms.getItemType(placeId)) {
     case this._bms.TYPE_BOOKMARK:
+      let bmkUri = this._bms.getBookmarkURI(placeId).spec;
       if (this._ms && this._ms.hasMicrosummary(placeId)) {
         record = new BookmarkMicsum();
         let micsum = this._ms.getMicrosummary(placeId);
         record.generatorUri = micsum.generator.uri.spec; // breaks local generators
         record.staticTitle = this._getStaticTitle(placeId);
+      }
+      else {
+        if (bmkUri.search(/^place:/) == 0) {
+          record = new BookmarkQuery();
 
-      } else {
-        record = new Bookmark();
+          // Get the actual tag name instead of the local itemId
+          let folder = bmkUri.match(/[:&]folder=(\d+)/);
+          try {
+            // There might not be the tag yet when creating on a new client
+            if (folder != null) {
+              folder = folder[1];
+              record.folderName = this._bms.getItemTitle(folder);
+              this._log.debug("query id: " + folder + " = " + record.folderName);
+            }
+          }
+          catch(ex) {}
+        }
+        else
+          record = new Bookmark();
         record.title = this._bms.getItemTitle(placeId);
       }
 
-      record.bmkUri = this._bms.getBookmarkURI(placeId).spec;
+      record.bmkUri = bmkUri;
       record.tags = this._getTags(record.bmkUri);
       record.keyword = this._bms.getKeywordForBookmark(placeId);
       record.description = this._getDescription(placeId);
@@ -617,6 +670,18 @@ BookmarksStore.prototype = {
 
     return items;
   },
+  
+  _tagURI: function BStore_tagURI(bmkURI, tags) {
+    // Filter out any null/undefined/empty tags
+    tags = tags.filter(function(t) t);
+
+    // Temporarily tag a dummy uri to preserve tag ids when untagging
+    let dummyURI = Utils.makeURI("about:weave#BStore_tagURI");
+    this._ts.tagURI(dummyURI, tags);
+    this._ts.untagURI(bmkURI, null);
+    this._ts.tagURI(bmkURI, tags);
+    this._ts.untagURI(dummyURI, null);
+  },
 
   getAllIDs: function BStore_getAllIDs() {
     let items = {};
@@ -644,6 +709,7 @@ function BookmarksTracker() {
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
+  name: "bookmarks",
   _logName: "BmkTracker",
   file: "bookmarks",
 

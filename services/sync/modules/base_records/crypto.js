@@ -151,7 +151,7 @@ CryptoMeta.prototype = {
       throw "keyring doesn't contain a key for " + pubkeyUri;
 
     return this._unwrappedKey = Svc.Crypto.unwrapSymmetricKey(wrapped_key,
-      privkey.keyData, passphrase, privkey.salt, privkey.iv);
+      privkey.keyData, passphrase.password, privkey.salt, privkey.iv);
   },
 
   addKey: function CryptoMeta_addKey(new_pubkey, privkey, passphrase) {
