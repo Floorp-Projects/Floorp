@@ -36,14 +36,17 @@
 
 
 #include "domstubs.idl"
-#include "nsIDOMGeoPositionCoords.idl"
-#include "nsIDOMGeoPositionAddress.idl"
 
-[scriptable, uuid(23E5269F-4DD7-41C4-B52A-75918694C2DE)]
-interface nsIDOMGeoPosition : nsISupports
+[scriptable, uuid(98808DEB-C8E4-422C-BA97-08BF2031464C)]
+interface nsIDOMGeoPositionAddress : nsISupports
 {
-  readonly attribute DOMTimeStamp timestamp;
-  readonly attribute nsIDOMGeoPositionCoords coords;
-  readonly attribute nsIDOMGeoPositionAddress address;
-
+  readonly attribute string streetNumber;
+  readonly attribute string street;
+  readonly attribute string premises;
+  readonly attribute string city;
+  readonly attribute string county;
+  readonly attribute string region;
+  readonly attribute string country;
+  readonly attribute string countryCode;
+  readonly attribute string postalCode;
 };
