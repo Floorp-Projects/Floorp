@@ -495,6 +495,18 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
 {
   nsCOMPtr<nsIContent> target = do_QueryInterface(aTargetNode);
   NS_ASSERTION(target, "Target did not QI to nsIContent");
+
+  nsIDocument* doc = target->GetOwnerDoc();
+  NS_ENSURE_TRUE(doc, NS_ERROR_NOT_AVAILABLE);
+  
+  nsIURI* uri = doc->GetDocumentURI();
+  NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
+
+  Initialize(doc, uri, nsnull, nsnull);
+
+  // Initialize() doesn't deal with base URI
+  mDocumentBaseURI = doc->GetBaseURI();
+
   mTreeBuilder->setFragmentContext(aContextLocalName, aContextNamespace, target, aQuirks);
   mFragmentMode = PR_TRUE;
   mCanInterruptParser = PR_FALSE;
@@ -1359,15 +1371,9 @@ nsHtml5Parser::Initialize(nsIDocument* aDoc,
                           nsISupports* aContainer,
                           nsIChannel* aChannel)
 {
-  MOZ_TIMER_DEBUGLOG(("Reset and start: nsXMLContentSink::Init(), this=%p\n",
-                      this));
-  MOZ_TIMER_RESET(mWatch);
-  MOZ_TIMER_START(mWatch);
   nsresult rv = nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
   aDoc->AddObserver(this);
-  MOZ_TIMER_DEBUGLOG(("Stop: nsXMLContentSink::Init()\n"));
-  MOZ_TIMER_STOP(mWatch);
   return NS_OK;
 }
 
