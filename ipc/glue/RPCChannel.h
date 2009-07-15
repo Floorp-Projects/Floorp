@@ -51,16 +51,17 @@ namespace ipc {
 class RPCChannel : public SyncChannel
 {
 public:
-    class Listener : public SyncChannel::Listener
+    class RPCListener : public SyncChannel::Listener
     {
     public:
-        virtual ~Listener() { }
+        virtual ~RPCListener() { }
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
         virtual Result OnMessageReceived(const Message& aMessage,
                                          Message*& aReply) = 0;
         virtual Result OnCallReceived(const Message& aMessage,
                                       Message*& aReply) = 0;
     };
+    typedef RPCListener Listener;
 
     RPCChannel(Listener* aListener) :
         SyncChannel(aListener)

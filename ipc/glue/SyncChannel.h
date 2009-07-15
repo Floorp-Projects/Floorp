@@ -59,15 +59,15 @@ protected:
     typedef std::queue<Message> MessageQueue;
 
 public:
-    class /*NS_INTERFACE_CLASS*/ Listener :
-        public AsyncChannel::Listener
+    class /*NS_INTERFACE_CLASS*/ SyncListener : public AsyncChannel::Listener
     {
     public:
-        virtual ~Listener() { }
+        virtual ~SyncListener() { }
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
         virtual Result OnMessageReceived(const Message& aMessage,
                                          Message*& aReply) = 0;
     };
+    typedef SyncListener Listener;
 
     SyncChannel(Listener* aListener) :
         AsyncChannel(aListener),

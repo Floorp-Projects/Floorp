@@ -75,12 +75,13 @@ public:
     typedef IPC::Channel Transport;
     typedef IPC::Message Message;
 
-    class /*NS_INTERFACE_CLASS*/ Listener
+    class /*NS_INTERFACE_CLASS*/ AsyncListener
     {
     public:
-        virtual ~Listener() { }
+        virtual ~AsyncListener() { }
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
     };
+    typedef AsyncListener Listener;
 
     AsyncChannel(Listener* aListener) :
         mTransport(0),
