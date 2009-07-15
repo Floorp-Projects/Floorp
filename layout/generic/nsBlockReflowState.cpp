@@ -457,7 +457,6 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
     while (fc) {
       nsIFrame* floatFrame = fc->mPlaceholder->GetOutOfFlowFrame();
       if (aDeltaY != 0) {
-        fc->mRegion.y += aDeltaY;
         nsPoint p = floatFrame->GetPosition();
         floatFrame->SetPosition(nsPoint(p.x, p.y + aDeltaY));
         nsContainerFrame::PositionFrameView(floatFrame);
@@ -471,12 +470,13 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
         printf("RecoverFloats: txy=%d,%d (%d,%d) ",
                tx, ty, mFloatManagerX, mFloatManagerY);
         nsFrame::ListTag(stdout, floatFrame);
+        nsRect region = nsFloatManager::GetRegionFor(floatFrame);
         printf(" aDeltaY=%d region={%d,%d,%d,%d}\n",
-               aDeltaY, fc->mRegion.x, fc->mRegion.y,
-               fc->mRegion.width, fc->mRegion.height);
+               aDeltaY, region.x, region.y, region.width, region.height);
       }
 #endif
-      mFloatManager->AddFloat(floatFrame, fc->mRegion);
+      mFloatManager->AddFloat(floatFrame,
+                              nsFloatManager::GetRegionFor(floatFrame));
       fc = fc->Next();
     }
   } else if (aLine->IsBlock()) {
@@ -787,7 +787,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   const nsStyleDisplay* floatDisplay = floatFrame->GetStyleDisplay();
 
   // The float's old region, so we can propagate damage.
-  nsRect oldRegion = aFloatCache->mRegion;
+  nsRect oldRegion = nsFloatManager::GetRegionFor(floatFrame);
 
   // Enforce CSS2 9.5.1 rule [2], i.e., make sure that a float isn't
   // ``above'' another float that preceded it in the flow.
@@ -807,9 +807,13 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
                "Float frame has wrong parent");
 
   // Reflow the float
-  nsMargin floatMargin;
+  nsMargin floatMargin; // computed margin
   mBlock->ReflowFloat(*this, floatAvailableSpace.mRect, placeholder,
                       floatMargin, aReflowStatus);
+  if (placeholder->GetPrevInFlow())
+    floatMargin.top = 0;
+  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus))
+    floatMargin.bottom = 0;
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
@@ -934,66 +938,6 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
     floatY = 0;
   }
 
-  // Place the float in the float manager
-  // if the float split, then take up all of the vertical height 
-  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && 
-      (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
-    floatSize.height = PR_MAX(floatSize.height, mContentArea.height - floatY);
-  }
-
-  nsRect region(floatX, floatY, floatSize.width, floatSize.height);
-  
-  // Don't send rectangles with negative margin-box width or height to
-  // the float manager; it can't deal with them.
-  if (region.width < 0) {
-    // Preserve the right margin-edge for left floats and the left
-    // margin-edge for right floats
-    if (NS_STYLE_FLOAT_LEFT == floatDisplay->mFloats) {
-      region.x = region.XMost();
-    }
-    region.width = 0;
-  }
-  if (region.height < 0) {
-    region.height = 0;
-  }
-#ifdef DEBUG
-  nsresult rv =
-#endif
-  mFloatManager->AddFloat(floatFrame, region);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "bad float placement");
-
-  // Save away the floats region in the spacemanager, after making
-  // it relative to the containing block's frame instead of relative
-  // to the spacemanager translation (which is inset by the
-  // border+padding).
-  // XXX Maybe RecoverFloats should calc/add in the borderPadding itself?
-  // It's kind of confusing to have the spacemanager translation be different
-  // depending on what stage of reflow we're in.
-  aFloatCache->mRegion = region +
-                         nsPoint(borderPadding.left, borderPadding.top);
-
-  // If the float's dimensions have changed, note the damage in the
-  // float manager.
-  if (aFloatCache->mRegion != oldRegion) {
-    // XXXwaterson conservative: we could probably get away with noting
-    // less damage; e.g., if only height has changed, then only note the
-    // area into which the float has grown or from which the float has
-    // shrunk.
-    nscoord top = NS_MIN(region.y, oldRegion.y);
-    nscoord bottom = NS_MAX(region.YMost(), oldRegion.YMost());
-    mFloatManager->IncludeInDamage(top, bottom);
-  }
-
-#ifdef NOISY_FLOATMANAGER
-  nscoord tx, ty;
-  mFloatManager->GetTranslation(tx, ty);
-  nsFrame::ListTag(stdout, mBlock);
-  printf(": FlowAndPlaceFloat: AddFloat: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
-         tx, ty, mFloatManagerX, mFloatManagerY,
-         aFloatCache->mRegion.x, aFloatCache->mRegion.y,
-         aFloatCache->mRegion.width, aFloatCache->mRegion.height);
-#endif
-
   // Calculate the actual origin of the float frame's border rect
   // relative to the parent block; floatX/Y must be converted from space-manager
   // coordinates to parent coordinates, and the margin must be added in
@@ -1016,6 +960,46 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
 
   // XXX Floats should really just get invalidated here if necessary
   mFloatCombinedArea.UnionRect(combinedArea, mFloatCombinedArea);
+
+  // Place the float in the float manager
+  // calculate region
+  nsRect region = nsFloatManager::CalculateRegionFor(floatFrame, floatMargin);
+  // if the float split, then take up all of the vertical height
+  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) &&
+      (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
+    region.height = PR_MAX(region.height, mContentArea.height - floatY);
+  }
+#ifdef DEBUG
+  nsresult rv =
+#endif
+  // spacemanager translation is inset by the border+padding.
+  mFloatManager->AddFloat(floatFrame,
+                          region - nsPoint(borderPadding.left, borderPadding.top));
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "bad float placement");
+  // store region
+  rv = nsFloatManager::StoreRegionFor(floatFrame, region);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "float region storage failed");
+
+  // If the float's dimensions have changed, note the damage in the
+  // float manager.
+  if (region != oldRegion) {
+    // XXXwaterson conservative: we could probably get away with noting
+    // less damage; e.g., if only height has changed, then only note the
+    // area into which the float has grown or from which the float has
+    // shrunk.
+    nscoord top = NS_MIN(region.y, oldRegion.y) - borderPadding.top;
+    nscoord bottom = NS_MAX(region.YMost(), oldRegion.YMost()) - borderPadding.left;
+    mFloatManager->IncludeInDamage(top, bottom);
+  }
+
+#ifdef NOISY_FLOATMANAGER
+  nscoord tx, ty;
+  mFloatManager->GetTranslation(tx, ty);
+  nsFrame::ListTag(stdout, mBlock);
+  printf(": FlowAndPlaceFloat: AddFloat: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
+         tx, ty, mFloatManagerX, mFloatManagerY,
+         region.x, region.y, region.width, region.height);
+#endif
 
   // Now restore mY
   mY = saveY;
