@@ -288,6 +288,11 @@ namespace MMgc {
 
 #define MMGC_MEM_TYPE(x)
 
+#define VMPI_strlen strlen
+#define VMPI_strcat strcat
+#define VMPI_strcpy strcpy
+#define VMPI_sprintf sprintf
+
 extern void VMPI_setPageProtection(void *address,
                                    size_t size,
                                    bool executableFlag,
