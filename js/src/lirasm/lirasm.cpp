@@ -767,13 +767,13 @@ assemble(istream &in,
                                 labels, line);
             break;
 
-        case LIR_param:
+        case LIR_iparam:
             need(toks, 2, line);
             ins = lir->insParam(imm(toks[0]),
                                 imm(toks[1]));
             break;
 
-        case LIR_alloc:
+        case LIR_ialloc:
             need(toks, 1, line);
             ins = lir->insAlloc(imm(toks[0]));
             break;

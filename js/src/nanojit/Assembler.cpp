@@ -255,7 +255,7 @@ namespace nanojit
      * they can just be recalculated w/out any inputs.
      */
     bool Assembler::canRemat(LIns *i) {
-        return i->isconst() || i->isconstq() || i->isop(LIR_alloc);
+        return i->isconst() || i->isconstq() || i->isop(LIR_ialloc);
     }
 
     void Assembler::internalReset()
@@ -403,7 +403,7 @@ namespace nanojit
             Reservation *r = getresv(ins);
             NanoAssert(r != 0);
             if (r->arIndex) {
-                if (ins->isop(LIR_alloc)) {
+                if (ins->isop(LIR_ialloc)) {
                     int j=i+1;
                     for (int n = i + (ins->size()>>2); j < n; j++) {
                         NanoAssert(ar.entry[j]==ins);
@@ -495,7 +495,7 @@ namespace nanojit
 
     Register Assembler::getBaseReg(LIns *i, int &d, RegisterMask allow)
     {
-        if (i->isop(LIR_alloc)) {
+        if (i->isop(LIR_ialloc)) {
             d += findMemFor(i);
             return FP;
         } else {
@@ -505,7 +505,7 @@ namespace nanojit
 
     Register Assembler::findRegFor(LIns* i, RegisterMask allow)
     {
-        if (i->isop(LIR_alloc)) {
+        if (i->isop(LIR_ialloc)) {
             // never allocate a reg for this w/out stack space too
             findMemFor(i);
         }
@@ -597,7 +597,7 @@ namespace nanojit
     {
         int d = disp(resv);
         Register rr = resv->reg;
-        bool quad = i->opcode() == LIR_param || i->isQuad();
+        bool quad = i->opcode() == LIR_iparam || i->isQuad();
         verbose_only( if (d && (_logc->lcbits & LC_RegAlloc)) {
                          outputForEOL("  <= spill %s",
                                       _thisfrag->lirbuf->names->formatRef(i)); } )
@@ -1176,7 +1176,7 @@ namespace nanojit
 
                 // allocate some stack space.  the value of this instruction
                 // is the address of the stack space.
-                case LIR_alloc: {
+                case LIR_ialloc: {
                     countlir_alloc();
                     Reservation *resv = getresv(ins);
                     NanoAssert(resv->arIndex != 0);
@@ -1211,7 +1211,7 @@ namespace nanojit
                     break;
                 }
 #endif
-                case LIR_param:
+                case LIR_iparam:
                 {
                     countlir_param();
                     asm_param(ins);
@@ -1278,7 +1278,7 @@ namespace nanojit
 #endif
 
                 case LIR_add:
-                case LIR_addp:
+                case LIR_iaddp:
                 case LIR_sub:
                 case LIR_mul:
                 case LIR_and:
@@ -1663,7 +1663,7 @@ namespace nanojit
     uint32_t Assembler::arReserve(LIns* l)
     {
         //verbose_only(printActivationState());
-        int32_t size = l->isop(LIR_alloc) ? (l->size()>>2) : l->isQuad() ? 2 : sizeof(intptr_t)>>2;
+        int32_t size = l->isop(LIR_ialloc) ? (l->size()>>2) : l->isQuad() ? 2 : sizeof(intptr_t)>>2;
         AR &ar = _activation;
         const int32_t tos = ar.tos;
         int32_t start = ar.lowwatermark;

@@ -396,7 +396,7 @@ namespace nanojit
         LIns* getLIns() { return (LIns*)&ins; };
     };
 
-    // Used for LIR_param.
+    // Used for LIR_iparam.
     class LInsP
     {
     private:
@@ -411,7 +411,7 @@ namespace nanojit
         LIns* getLIns() { return (LIns*)&ins; };
     };
 
-    // Used for LIR_int and LIR_alloc.
+    // Used for LIR_int and LIR_ialloc.
     class LInsI
     {
     private:
@@ -556,7 +556,7 @@ namespace nanojit
         }
         void initLInsP(int32_t arg, int32_t kind) {
             lastWord.clear();
-            lastWord.opcode = LIR_param;
+            lastWord.opcode = LIR_iparam;
             NanoAssert(isU8(arg) && isU8(kind));
             toLInsP()->arg = arg;
             toLInsP()->kind = kind;
@@ -591,8 +591,8 @@ namespace nanojit
         }
 
         inline LOpcode opcode()    const { return lastWord.opcode; }
-        inline uint8_t paramArg()  const { NanoAssert(isop(LIR_param)); return toLInsP()->arg; }
-        inline uint8_t paramKind() const { NanoAssert(isop(LIR_param)); return toLInsP()->kind; }
+        inline uint8_t paramArg()  const { NanoAssert(isop(LIR_iparam)); return toLInsP()->arg; }
+        inline uint8_t paramKind() const { NanoAssert(isop(LIR_iparam)); return toLInsP()->kind; }
         inline int32_t imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
         inline int32_t imm64_0()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_0; }
         inline int32_t imm64_1()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_1; }
@@ -602,7 +602,7 @@ namespace nanojit
         void*          payload()   const;
         inline Page*   page()            { return (Page*) alignTo(this,NJ_PAGE_SIZE); }
         inline int32_t size()      const {
-            NanoAssert(isop(LIR_alloc));
+            NanoAssert(isop(LIR_ialloc));
             return toLInsI()->imm32 << 2;
         }
 
