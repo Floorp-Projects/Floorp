@@ -54,6 +54,8 @@ struct RunnableMethodTraits<mozilla::ipc::RPCChannel>
 namespace mozilla {
 namespace ipc {
 
+// XXX work around bug in name resolution in MSVC8
+typedef mozilla::ipc::RPCChannel::Listener Listener;
 
 bool
 RPCChannel::Call(Message* msg, Message* reply)
