@@ -95,7 +95,6 @@ namespace nanojit
 
     struct GuardRecord;
     struct SideExit;
-    struct Page;
 
     enum AbiKind {
         ABI_FASTCALL,
@@ -494,7 +493,13 @@ namespace nanojit
     private:
         // Last word: fields shared by all LIns kinds.  The reservation fields
         // are read/written during assembly.
+        union {
         Reservation lastWord;
+            // force sizeof(LIns)==8 and 8-byte alignment on 64-bit machines.
+            // this is necessary because sizeof(Reservation)==4 and we want all
+            // instances of LIns to be pointer-aligned.
+            void* dummy;
+        };
 
         // LIns-to-LInsXYZ converters.
         LInsOp0* toLInsOp0() const { return (LInsOp0*)( uintptr_t(this+1) - sizeof(LInsOp0) ); }
@@ -660,7 +665,6 @@ namespace nanojit
         double         imm64f()    const;
         Reservation*   resv()            { return &lastWord; }
         void*          payload()   const;
-        inline Page*   page()            { return (Page*) alignTo(this,NJ_PAGE_SIZE); }
         inline int32_t size()      const {
             NanoAssert(isop(LIR_ialloc));
             return toLInsI()->imm32 << 2;
@@ -847,20 +851,6 @@ namespace nanojit
     };
 
 
-    // Each page has a header;  the rest of it holds code.
-    #define NJ_PAGE_CODE_AREA_SZB       (NJ_PAGE_SIZE - sizeof(PageHeader))
-
-    // The first instruction on a page is always a start instruction, or a
-    // payload-less skip instruction linking to the previous page.  The
-    // biggest possible instruction would take up the entire rest of the page.
-    #define NJ_MAX_LINS_SZB             (NJ_PAGE_CODE_AREA_SZB - sizeof(LInsSk))
-
-    // The maximum skip payload size is determined by the maximum instruction
-    // size.  We require that a skip's payload be adjacent to the skip LIns
-    // itself.
-    #define NJ_MAX_SKIP_PAYLOAD_SZB     (NJ_MAX_LINS_SZB - sizeof(LInsSk))
-
-
 #ifdef NJ_VERBOSE
     extern const char* lirNames[];
 
@@ -869,6 +859,7 @@ namespace nanojit
      */
     class LabelMap MMGC_SUBCLASS_DECL
     {
+        Allocator& allocator;
         class Entry MMGC_SUBCLASS_DECL
         {
         public:
@@ -884,7 +875,7 @@ namespace nanojit
         void formatAddr(const void *p, char *buf);
     public:
         avmplus::AvmCore *core;
-        LabelMap(avmplus::AvmCore *);
+        LabelMap(avmplus::AvmCore *, Allocator& allocator);
         ~LabelMap();
         void add(const void *p, size_t size, size_t align, const char *name);
         void add(const void *p, size_t size, size_t align, avmplus::String*);
@@ -895,6 +886,8 @@ namespace nanojit
 
     class LirNameMap MMGC_SUBCLASS_DECL
     {
+        Allocator& allocator;
+
         template <class Key>
         class CountMap: public avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects> {
         public:
@@ -924,8 +917,9 @@ namespace nanojit
         void formatImm(int32_t c, char *buf);
     public:
 
-        LirNameMap(GC *gc, LabelMap *r)
-            : lircounts(gc),
+        LirNameMap(GC *gc, Allocator& allocator, LabelMap *r)
+            : allocator(allocator),
+            lircounts(gc),
             funccounts(gc),
             names(gc),
             labels(r)
@@ -1095,13 +1089,10 @@ namespace nanojit
     class LirBuffer : public GCFinalizedObject
     {
         public:
-            DWB(Fragmento*)        _frago;
-            LirBuffer(Fragmento* frago);
-            virtual ~LirBuffer();
+            LirBuffer(Allocator&);
+            ~LirBuffer();
             void        clear();
-            void        rewind();
             uintptr_t   makeRoom(size_t szB);   // make room for an instruction
-            bool        outOMem() { return _noMem != 0; }
 
             debug_only (void validate() const;)
             verbose_only(DWB(LirNameMap*) names;)
@@ -1121,14 +1112,32 @@ namespace nanojit
             LInsp savedRegs[NumSavedRegs];
             bool explicitSavedRegs;
 
-        protected:
-            Page*        pageAlloc();
-            void        moveToNewPage(uintptr_t addrOfLastLInsOnCurrentPage);
+            /** each chunk is just a raw area of LIns instances, with no header
+                and no more than 8-byte alignment.  The chunk size is somewhat arbitrary
+                as long as it's well larger than 2*sizeof(LInsSk) */
+            static const size_t CHUNK_SZB = 8000;
 
-            PageList    _pages;
-            Page*        _nextPage; // allocated in preperation of a needing to growing the buffer
-            uintptr_t   _unused;    // next unused instruction slot
-            int            _noMem;        // set if ran out of memory when writing to buffer
+            /** the first instruction on a chunk is always a start instruction, or a
+             *  payload-less skip instruction linking to the previous chunk.  The biggest
+             *  possible instruction would take up the entire rest of the chunk. */
+            static const size_t MAX_LINS_SZB = CHUNK_SZB - sizeof(LInsSk);
+
+            /** the maximum skip payload size is determined by the maximum instruction
+             *  size.  We require that a skip's payload be adjacent to the skip LIns
+             *  itself. */
+            static const size_t MAX_SKIP_PAYLOAD_SZB = MAX_LINS_SZB - sizeof(LInsSk);
+
+        protected:
+            friend class LirBufWriter;
+
+            /** get CHUNK_SZB more memory for LIR instructions */
+            void        chunkAlloc();
+            void        moveToNewChunk(uintptr_t addrOfLastLInsOnCurrentChunk);
+
+            Allocator&  _allocator;
+            uintptr_t   _unused;   // next unused instruction slot in the current LIR chunk
+            uintptr_t   _limit;    // one past the last usable byte of the current LIR chunk
+            size_t      _bytesAllocated;
     };
 
     class LirBufWriter : public LirWriter
@@ -1193,7 +1202,7 @@ namespace nanojit
 
     class Assembler;
 
-    void compile(Assembler *assm, Fragment *frag);
+    void compile(Fragmento *frago, Assembler *assm, Fragment *frag);
     verbose_only(void live(GC *gc, LirBuffer *lirbuf);)
 
     class StackFilter: public LirFilter
