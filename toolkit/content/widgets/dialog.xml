@@ -158,9 +158,11 @@
         <body>
         <![CDATA[
           function focusInit() {
+            const dialog = document.documentElement;
+            const defaultButton = dialog.getButton(dialog.defaultButton);
             // give focus to the first focusable element in the dialog
             if (!document.commandDispatcher.focusedElement) {
-              document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+              document.commandDispatcher.advanceFocusIntoSubtree(dialog);
               var focusedElt = document.commandDispatcher.focusedElement;
               if (focusedElt) {
                 if (focusedElt.localName == 'tab') {
@@ -174,14 +176,17 @@
                 }
 #ifndef XP_MACOSX
                 else {
-                  const dialog = document.documentElement;
-                  const defaultButton = dialog.getButton(dialog.defaultButton);
                   if (focusedElt.hasAttribute("dlgtype") && focusedElt != defaultButton)
                     defaultButton.focus();
                 }
 #endif
               }
             }
+
+            try {
+              if (defaultButton)
+                window.notifyDefaultButtonLoaded(defaultButton);
+            } catch (e) { }
           }
 
           // Give focus after onload completes, see bug 103197.
