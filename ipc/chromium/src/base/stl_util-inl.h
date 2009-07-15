@@ -267,8 +267,8 @@ void STLDeleteValues(T *v) {
 
 template<class STLContainer> class STLElementDeleter {
  public:
-  STLElementDeleter<STLContainer>(STLContainer *ptr) : container_ptr_(ptr) {}
-  ~STLElementDeleter<STLContainer>() { STLDeleteElements(container_ptr_); }
+  STLElementDeleter(STLContainer *ptr) : container_ptr_(ptr) {}
+  ~STLElementDeleter() { STLDeleteElements(container_ptr_); }
  private:
   STLContainer *container_ptr_;
 };
@@ -278,8 +278,8 @@ template<class STLContainer> class STLElementDeleter {
 
 template<class STLContainer> class STLValueDeleter {
  public:
-  STLValueDeleter<STLContainer>(STLContainer *ptr) : container_ptr_(ptr) {}
-  ~STLValueDeleter<STLContainer>() { STLDeleteValues(container_ptr_); }
+  STLValueDeleter(STLContainer *ptr) : container_ptr_(ptr) {}
+  ~STLValueDeleter() { STLDeleteValues(container_ptr_); }
  private:
   STLContainer *container_ptr_;
 };
