@@ -93,7 +93,7 @@ public:
 
   // Adds the given animation function to this Compositor's list of functions
   void AddAnimationFunction(nsSMILAnimationFunction* aFunc);
-  
+
   // Composes the attribute's current value with the list of animation
   // functions, and assigns the resulting value to this compositor's target
   // attribute

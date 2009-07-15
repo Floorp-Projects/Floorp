@@ -300,7 +300,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     nsresult rv = NS_ERROR_FAILURE;
 
     // First let the animation function try to parse it...
-    PRBool foundMatch = 
+    PRBool foundMatch =
       AnimationFunction().SetAttr(aAttribute, aValue, aResult, &rv);
 
     // ... and if that didn't recognize the attribute, let the timed element
@@ -308,7 +308,7 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     if (!foundMatch) {
       foundMatch = mTimedElement.SetAttr(aAttribute, aValue, aResult, &rv);
     }
-    
+
     if (foundMatch) {
       AnimationNeedsResample();
       if (NS_FAILED(rv)) {

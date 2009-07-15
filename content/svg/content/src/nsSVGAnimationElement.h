@@ -59,7 +59,7 @@ protected:
   nsresult Init();
 
 public:
-  // interfaces:  
+  // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGANIMATIONELEMENT
   NS_DECL_NSIDOMELEMENTTIMECONTROL

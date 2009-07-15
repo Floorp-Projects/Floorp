@@ -43,7 +43,7 @@
 
 //----------------------------------------------------------------------
 // nsSMILTimeContainer
-// 
+//
 // Common base class for a time base that can be paused, resumed, and sampled.
 //
 class nsSMILTimeContainer

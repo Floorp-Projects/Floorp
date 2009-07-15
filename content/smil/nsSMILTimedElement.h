@@ -60,7 +60,7 @@ class nsSMILTimedElement
 public:
   nsSMILTimedElement();
 
-  /** 
+  /**
    * Methods for supporting the nsIDOMElementTimeControl interface.
    */
 
@@ -92,7 +92,7 @@ public:
   nsresult EndElementAt(double aOffsetSeconds,
                         const nsSMILTimeContainer* aContainer);
 
-  /** 
+  /**
    * Methods for supporting the nsSVGAnimationElement interface.
    */
 
@@ -130,7 +130,7 @@ public:
     return mSimpleDur;
   }
 
-  /** 
+  /**
    * Internal SMIL methods
    */
 
