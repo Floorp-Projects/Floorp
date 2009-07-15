@@ -42,7 +42,6 @@
 
 #include "nsGkAtoms.h"
 #include "nsILinkHandler.h"
-#include "nsILink.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
@@ -429,55 +428,40 @@ GetLinkStateFromURI(nsIURI* aURI, nsIContent* aContent,
 }
 
 /*static*/
-PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag,
+PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent,
                                nsILinkHandler *aLinkHandler,
                                nsLinkState *aState)
 {
-  NS_ASSERTION(aContent && aState, "null arg in IsHTMLLink");
+  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eHTML),
+               "Only use this function with HTML elements");
+  NS_ASSERTION(aState, "null arg in IsHTMLLink");
 
-  // check for:
-  //  - HTML ANCHOR with valid HREF
-  //  - HTML LINK with valid HREF
-  //  - HTML AREA with valid HREF
+  nsLinkState linkState = aContent->GetLinkState();
+  if (linkState == eLinkState_Unknown) {
+    // if it is an anchor, area or link then check the href attribute
+    // make sure this anchor has a link even if we are not testing state
+    // if there is no link, then this anchor is not really a linkpseudo.
+    // bug=23209
 
-  PRBool result = PR_FALSE;
+    nsCOMPtr<nsIURI> hrefURI = aContent->GetHrefURI();
 
-  if ((aTag == nsGkAtoms::a) ||
-      (aTag == nsGkAtoms::link) ||
-      (aTag == nsGkAtoms::area)) {
-
-    nsCOMPtr<nsILink> link( do_QueryInterface(aContent) );
-    // In XML documents, this can be null.
-    if (link) {
-      nsLinkState linkState;
-      link->GetLinkState(linkState);
-      if (linkState == eLinkState_Unknown) {
-        // if it is an anchor, area or link then check the href attribute
-        // make sure this anchor has a link even if we are not testing state
-        // if there is no link, then this anchor is not really a linkpseudo.
-        // bug=23209
-
-        nsCOMPtr<nsIURI> hrefURI;
-        link->GetHrefURI(getter_AddRefs(hrefURI));
-
-        if (hrefURI) {
-          linkState = GetLinkStateFromURI(hrefURI, aContent, aLinkHandler);
-        } else {
-          linkState = eLinkState_NotLink;
-        }
-        if (linkState != eLinkState_NotLink && aContent->IsInDoc()) {
-          aContent->GetCurrentDoc()->AddStyleRelevantLink(aContent, hrefURI);
-        }
-        link->SetLinkState(linkState);
-      }
-      if (linkState != eLinkState_NotLink) {
-        *aState = linkState;
-        result = PR_TRUE;
-      }
+    if (hrefURI) {
+      linkState = GetLinkStateFromURI(hrefURI, aContent, aLinkHandler);
+    } else {
+      linkState = eLinkState_NotLink;
     }
+    if (linkState != eLinkState_NotLink && aContent->IsInDoc()) {
+      aContent->GetCurrentDoc()->AddStyleRelevantLink(aContent, hrefURI);
+    }
+    aContent->SetLinkState(linkState);
+  }
+  if (linkState == eLinkState_NotLink) {
+    return PR_FALSE;
   }
 
-  return result;
+  *aState = linkState;
+
+  return PR_TRUE;
 }
 
 /*static*/

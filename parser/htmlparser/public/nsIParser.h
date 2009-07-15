@@ -98,8 +98,8 @@ enum eParserDocType {
 #define kCharsetFromBookmarks           6
 #define kCharsetFromAutoDetection       7 
 #define kCharsetFromHintPrevDoc         8 
-#define kCharsetFromMetaPrescan         9 // this one and above: HTML5 Tentative
-#define kCharsetFromMetaTag            10 // this one and below: HTML5 Confident
+#define kCharsetFromMetaPrescan         9 // this one and smaller: HTML5 Tentative
+#define kCharsetFromMetaTag            10 // this one and greater: HTML5 Confident
 #define kCharsetFromByteOrderMark      11
 #define kCharsetFromChannel            12 
 #define kCharsetFromOtherComponent     13

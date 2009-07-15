@@ -108,6 +108,14 @@ nsSVGTransformSMILAttr::GetBaseValue() const
   return val;
 }
 
+void
+nsSVGTransformSMILAttr::ClearAnimValue()
+{
+  mVal->WillModify(nsISVGValue::mod_other);
+  mVal->mAnimVal = nsnull;
+  mVal->DidModify(nsISVGValue::mod_other);
+}
+
 nsresult
 nsSVGTransformSMILAttr::SetAnimValue(const nsSMILValue& aValue)
 {

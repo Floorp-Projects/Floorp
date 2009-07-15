@@ -262,6 +262,32 @@ nsSMILAnimationController::StopTimer()
 //----------------------------------------------------------------------
 // Sample-related methods and callbacks
 
+PR_CALLBACK PLDHashOperator
+RemoveCompositorFromTable(nsSMILCompositor* aCompositor,
+                          void* aData)
+{
+  nsSMILCompositorTable* lastCompositorTable =
+    static_cast<nsSMILCompositorTable*>(aData); 
+  lastCompositorTable->RemoveEntry(aCompositor->GetKey());
+  return PL_DHASH_NEXT;
+}
+
+PR_CALLBACK PLDHashOperator
+DoClearAnimationEffects(nsSMILCompositor* aCompositor,
+                        void* /*aData*/)
+{
+  aCompositor->ClearAnimationEffects();
+  return PL_DHASH_NEXT;
+}
+
+PR_CALLBACK PLDHashOperator
+DoComposeAttribute(nsSMILCompositor* aCompositor,
+                   void* /*aData*/)
+{
+  aCompositor->ComposeAttribute();
+  return PL_DHASH_NEXT;
+}
+
 void
 nsSMILAnimationController::DoSample()
 {
@@ -322,17 +348,19 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 
   // STEP 3: Remove animation effects from any no-longer-animated elems/attrs
   if (mLastCompositorTable) {
-    // XXX Remove animation effects from no-longer-animated elements
-    //  * For each compositor in current sample's hash table:
-    //    - Remove entry from *prev sample's* hash table
-    //  * For any entries still remaining in prev sample's hash table:
-    //    - Remove animation from that entry's attribute.
-    //      (For nsSVGLength2, set anim val = base val.  For CSS attribs,
-    //      just clear the relevant chunk of OverrideStyle)
+    // * For each compositor in current sample's hash table, remove entry from
+    // prev sample's hash table -- we don't need to clear animation
+    // effects of those compositors, since they're still being animated.
+    currentCompositorTable->EnumerateEntries(RemoveCompositorFromTable,
+                                             mLastCompositorTable);
+
+    // * For each entry that remains in prev sample's hash table (i.e. for
+    // every target that's no longer animated), clear animation effects.
+    mLastCompositorTable->EnumerateEntries(DoClearAnimationEffects, nsnull);
   }
 
   // STEP 4: Compose currently-animated attributes.
-  nsSMILCompositor::ComposeAttributes(*currentCompositorTable);
+  currentCompositorTable->EnumerateEntries(DoComposeAttribute, nsnull);
 
   // Update last compositor table
   mLastCompositorTable = currentCompositorTable.forget();

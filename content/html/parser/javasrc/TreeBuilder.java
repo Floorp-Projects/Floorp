@@ -2903,15 +2903,15 @@ public abstract class TreeBuilder<T> implements TokenHandler {
                     }
             }
         }
-        String rv = null;
+        String charset = null;
         if (start != -1) {
             if (end == -1) {
                 end = buffer.length;
             }
-            rv = Portability.newStringFromBuffer(buffer, start, end - start);
+            charset = Portability.newStringFromBuffer(buffer, start, end - start);
         }
         Portability.releaseArray(buffer);
-        return rv;
+        return charset;
     }
 
     private void checkMetaCharset(HtmlAttributes attributes)

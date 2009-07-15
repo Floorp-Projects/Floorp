@@ -63,9 +63,9 @@ nsHtml5Portability::newEmptyString()
 nsString*
 nsHtml5Portability::newStringFromLiteral(const char* literal)
 {
-  nsString* rv = new nsString();
-  rv->AssignASCII(literal);
-  return rv;
+  nsString* str = new nsString();
+  str->AssignASCII(literal);
+  return str;
 }
 
 jArray<PRUnichar,PRInt32>
@@ -74,18 +74,18 @@ nsHtml5Portability::newCharArrayFromLocal(nsIAtom* local)
   nsAutoString temp;
   local->ToString(temp);
   PRInt32 len = temp.Length();
-  jArray<PRUnichar,PRInt32> rv = jArray<PRUnichar,PRInt32>(len);
-  memcpy(rv, temp.BeginReading(), len * sizeof(PRUnichar));
-  return rv;
+  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(len);
+  memcpy(arr, temp.BeginReading(), len * sizeof(PRUnichar));
+  return arr;
 }
 
 jArray<PRUnichar,PRInt32>
 nsHtml5Portability::newCharArrayFromString(nsString* string)
 {
   PRInt32 len = string->Length();
-  jArray<PRUnichar,PRInt32> rv = jArray<PRUnichar,PRInt32>(len);
-  memcpy(rv, string->BeginReading(), len * sizeof(PRUnichar));
-  return rv;
+  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(len);
+  memcpy(arr, string->BeginReading(), len * sizeof(PRUnichar));
+  return arr;
 }
 
 void
@@ -134,7 +134,7 @@ nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* 
   const PRUnichar* strPtr = string->BeginReading();
   const PRUnichar* end = string->EndReading();
   PRUnichar litChar;
-  while (litChar = *litPtr) {
+  while ((litChar = *litPtr)) {
     NS_ASSERTION(!(litChar >= 'A' && litChar <= 'Z'), "Literal isn't in lower case.");
     if (strPtr == end) {
       return PR_FALSE;
@@ -173,13 +173,13 @@ nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
 jArray<PRUnichar,PRInt32>
 nsHtml5Portability::isIndexPrompt()
 {
-  // Yeah, this whole method is uncool
-  char* literal = "This is a searchable index. Insert your search keywords here: ";
-  jArray<PRUnichar,PRInt32> rv = jArray<PRUnichar,PRInt32>(62);
+  // XXX making this localizable is bug 500631
+  const char* literal = "This is a searchable index. Insert your search keywords here: ";
+  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(62);
   for (PRInt32 i = 0; i < 62; ++i) {
-    rv[i] = literal[i];
+    arr[i] = literal[i];
   }
-  return rv;
+  return arr;
 }
 
 void

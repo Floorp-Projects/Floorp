@@ -59,7 +59,7 @@ import org.xml.sax.SAXParseException;
  * can be configured to treat these conditions as fatal or to coerce the infoset
  * to something that XML 1.0 allows.
  * 
- * @version $Id: Tokenizer.java 555 2009-06-25 07:17:28Z hsivonen $
+ * @version $Id: Tokenizer.java 565 2009-07-03 14:40:35Z hsivonen $
  * @author hsivonen
  */
 public class Tokenizer implements Locator {
@@ -72,113 +72,117 @@ public class Tokenizer implements Locator {
 
     public static final int PLAINTEXT = 3;
 
-    private static final int TAG_OPEN = 49;
+    private static final int TAG_OPEN = 4;
 
-    private static final int CLOSE_TAG_OPEN_PCDATA = 50;
+    private static final int CLOSE_TAG_OPEN_PCDATA = 5;
 
-    private static final int TAG_NAME = 58;
+    private static final int TAG_NAME = 6;
 
-    private static final int BEFORE_ATTRIBUTE_NAME = 4;
+    private static final int BEFORE_ATTRIBUTE_NAME = 7;
 
-    private static final int ATTRIBUTE_NAME = 5;
+    private static final int ATTRIBUTE_NAME = 8;
 
-    private static final int AFTER_ATTRIBUTE_NAME = 6;
+    private static final int AFTER_ATTRIBUTE_NAME = 9;
 
-    private static final int BEFORE_ATTRIBUTE_VALUE = 7;
+    private static final int BEFORE_ATTRIBUTE_VALUE = 10;
 
-    private static final int ATTRIBUTE_VALUE_DOUBLE_QUOTED = 8;
+    private static final int ATTRIBUTE_VALUE_DOUBLE_QUOTED = 11;
 
-    private static final int ATTRIBUTE_VALUE_SINGLE_QUOTED = 9;
+    private static final int ATTRIBUTE_VALUE_SINGLE_QUOTED = 12;
 
-    private static final int ATTRIBUTE_VALUE_UNQUOTED = 10;
+    private static final int ATTRIBUTE_VALUE_UNQUOTED = 13;
 
-    private static final int AFTER_ATTRIBUTE_VALUE_QUOTED = 11;
+    private static final int AFTER_ATTRIBUTE_VALUE_QUOTED = 14;
 
-    private static final int BOGUS_COMMENT = 12;
+    private static final int BOGUS_COMMENT = 15;
 
-    private static final int MARKUP_DECLARATION_OPEN = 13;
+    private static final int MARKUP_DECLARATION_OPEN = 16;
 
-    private static final int DOCTYPE = 14;
+    private static final int DOCTYPE = 17;
 
-    private static final int BEFORE_DOCTYPE_NAME = 15;
+    private static final int BEFORE_DOCTYPE_NAME = 18;
 
-    private static final int DOCTYPE_NAME = 16;
+    private static final int DOCTYPE_NAME = 19;
 
-    private static final int AFTER_DOCTYPE_NAME = 17;
+    private static final int AFTER_DOCTYPE_NAME = 20;
 
-    private static final int BEFORE_DOCTYPE_PUBLIC_IDENTIFIER = 18;
+    private static final int BEFORE_DOCTYPE_PUBLIC_IDENTIFIER = 21;
 
-    private static final int DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED = 19;
+    private static final int DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED = 22;
 
-    private static final int DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED = 20;
+    private static final int DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED = 23;
 
-    private static final int AFTER_DOCTYPE_PUBLIC_IDENTIFIER = 21;
+    private static final int AFTER_DOCTYPE_PUBLIC_IDENTIFIER = 24;
 
-    private static final int BEFORE_DOCTYPE_SYSTEM_IDENTIFIER = 22;
+    private static final int BEFORE_DOCTYPE_SYSTEM_IDENTIFIER = 25;
 
-    private static final int DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED = 23;
+    private static final int DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED = 26;
 
-    private static final int DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED = 24;
+    private static final int DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED = 27;
 
-    private static final int AFTER_DOCTYPE_SYSTEM_IDENTIFIER = 25;
+    private static final int AFTER_DOCTYPE_SYSTEM_IDENTIFIER = 28;
 
-    private static final int BOGUS_DOCTYPE = 26;
+    private static final int BOGUS_DOCTYPE = 29;
 
-    private static final int COMMENT_START = 27;
+    private static final int COMMENT_START = 30;
 
-    private static final int COMMENT_START_DASH = 28;
+    private static final int COMMENT_START_DASH = 31;
 
-    private static final int COMMENT = 29;
+    private static final int COMMENT = 32;
 
-    private static final int COMMENT_END_DASH = 30;
+    private static final int COMMENT_END_DASH = 33;
 
-    private static final int COMMENT_END = 31;
+    private static final int COMMENT_END = 34;
 
-    private static final int CLOSE_TAG_OPEN_NOT_PCDATA = 32;
+    private static final int COMMENT_END_SPACE = 35;
 
-    private static final int MARKUP_DECLARATION_HYPHEN = 33;
+    private static final int COMMENT_END_BANG = 36;
 
-    private static final int MARKUP_DECLARATION_OCTYPE = 34;
+    private static final int CLOSE_TAG_OPEN_NOT_PCDATA = 37;
 
-    private static final int DOCTYPE_UBLIC = 35;
+    private static final int MARKUP_DECLARATION_HYPHEN = 38;
 
-    private static final int DOCTYPE_YSTEM = 36;
+    private static final int MARKUP_DECLARATION_OCTYPE = 39;
 
-    private static final int CONSUME_CHARACTER_REFERENCE = 37;
+    private static final int DOCTYPE_UBLIC = 40;
 
-    private static final int CONSUME_NCR = 38;
+    private static final int DOCTYPE_YSTEM = 41;
 
-    private static final int CHARACTER_REFERENCE_LOOP = 39;
+    private static final int CONSUME_CHARACTER_REFERENCE = 42;
 
-    private static final int HEX_NCR_LOOP = 41;
+    private static final int CONSUME_NCR = 43;
 
-    private static final int DECIMAL_NRC_LOOP = 42;
+    private static final int CHARACTER_REFERENCE_LOOP = 44;
 
-    private static final int HANDLE_NCR_VALUE = 43;
+    private static final int HEX_NCR_LOOP = 45;
 
-    private static final int SELF_CLOSING_START_TAG = 44;
+    private static final int DECIMAL_NRC_LOOP = 46;
 
-    private static final int CDATA_START = 45;
+    private static final int HANDLE_NCR_VALUE = 47;
 
-    private static final int CDATA_SECTION = 46;
+    private static final int SELF_CLOSING_START_TAG = 48;
 
-    private static final int CDATA_RSQB = 47;
+    private static final int CDATA_START = 49;
 
-    private static final int CDATA_RSQB_RSQB = 48;
+    private static final int CDATA_SECTION = 50;
 
-    private static final int TAG_OPEN_NON_PCDATA = 51;
+    private static final int CDATA_RSQB = 51;
 
-    private static final int ESCAPE_EXCLAMATION = 52;
+    private static final int CDATA_RSQB_RSQB = 52;
 
-    private static final int ESCAPE_EXCLAMATION_HYPHEN = 53;
+    private static final int TAG_OPEN_NON_PCDATA = 53;
 
-    private static final int ESCAPE = 54;
+    private static final int ESCAPE_EXCLAMATION = 54;
 
-    private static final int ESCAPE_HYPHEN = 55;
+    private static final int ESCAPE_EXCLAMATION_HYPHEN = 55;
 
-    private static final int ESCAPE_HYPHEN_HYPHEN = 56;
+    private static final int ESCAPE = 56;
 
-    private static final int BOGUS_COMMENT_HYPHEN = 57;
+    private static final int ESCAPE_HYPHEN = 57;
+
+    private static final int ESCAPE_HYPHEN_HYPHEN = 58;
+
+    private static final int BOGUS_COMMENT_HYPHEN = 59;
 
     /**
      * Magic value for UTF-16 operations.
@@ -461,15 +465,14 @@ public class Tokenizer implements Locator {
     private boolean shouldSuspend;
 
     protected boolean confident;
-    
+
     private int line;
 
     // [NOCPP[
 
     protected LocatorImpl ampersandLocation;
 
-    public Tokenizer(TokenHandler tokenHandler,
-            boolean newAttributesEachTime) {
+    public Tokenizer(TokenHandler tokenHandler, boolean newAttributesEachTime) {
         this.tokenHandler = tokenHandler;
         this.encodingDeclarationHandler = null;
         this.newAttributesEachTime = newAttributesEachTime;
@@ -560,7 +563,8 @@ public class Tokenizer implements Locator {
     public void setContentNonXmlCharPolicy(
             XmlViolationPolicy contentNonXmlCharPolicy) {
         if (contentNonXmlCharPolicy != XmlViolationPolicy.ALLOW) {
-            throw new IllegalArgumentException("Must use ErrorReportingTokenizer to set contentNonXmlCharPolicy to non-ALLOW.");
+            throw new IllegalArgumentException(
+                    "Must use ErrorReportingTokenizer to set contentNonXmlCharPolicy to non-ALLOW.");
         }
     }
 
@@ -686,7 +690,7 @@ public class Tokenizer implements Locator {
     public void setLineNumber(int line) {
         this.line = line;
     }
-    
+
     // start Locator impl
 
     /**
@@ -722,7 +726,6 @@ public class Tokenizer implements Locator {
     // end Locator impl
 
     // end public API
-
 
     public void notifyAboutMetaBoundary() {
         metaBoundaryPassed = true;
@@ -929,7 +932,7 @@ public class Tokenizer implements Locator {
 
     // ]NOCPP]
 
-    private void adjustDoubleHyphenAndAppendToLongStrBuf(char c)
+    private void adjustDoubleHyphenAndAppendToLongStrBufAndErr(char c)
             throws SAXException {
         errConsecutiveHyphens();
         // [NOCPP[
@@ -1007,11 +1010,14 @@ public class Tokenizer implements Locator {
 
     /**
      * Emits the current comment token.
-     * @param pos TODO
+     * 
+     * @param pos
+     *            TODO
      * 
      * @throws SAXException
      */
-    private void emitComment(int provisionalHyphens, int pos) throws SAXException {
+    private void emitComment(int provisionalHyphens, int pos)
+            throws SAXException {
         // [NOCPP[
         if (wantsComments) {
             // ]NOCPP]
@@ -1030,12 +1036,16 @@ public class Tokenizer implements Locator {
 
     /**
      * Flushes coalesced character tokens.
-     * @param buf TODO
-     * @param pos TODO
+     * 
+     * @param buf
+     *            TODO
+     * @param pos
+     *            TODO
      * 
      * @throws SAXException
      */
-    protected void flushChars(@NoLength char[] buf, int pos) throws SAXException {
+    protected void flushChars(@NoLength char[] buf, int pos)
+            throws SAXException {
         if (pos > cstart) {
             tokenHandler.characters(buf, cstart, pos - cstart);
         }
@@ -1128,7 +1138,8 @@ public class Tokenizer implements Locator {
         // }
     }
 
-    private int emitCurrentTagToken(boolean selfClosing, int pos) throws SAXException {
+    private int emitCurrentTagToken(boolean selfClosing, int pos)
+            throws SAXException {
         cstart = pos + 1;
         maybeErrSlashInEndTag(selfClosing);
         stateSave = Tokenizer.DATA;
@@ -1265,7 +1276,7 @@ public class Tokenizer implements Locator {
     }
 
     // ]NOCPP]
-    
+
     protected void startErrorReporting() throws SAXException {
 
     }
@@ -1351,7 +1362,8 @@ public class Tokenizer implements Locator {
          * meaning. (The rest of the array is garbage and should not be
          * examined.)
          */
-        pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState, buffer.getEnd());
+        pos = stateLoop(state, c, pos, buffer.getBuffer(), false, returnState,
+                buffer.getEnd());
         if (pos == buffer.getEnd()) {
             // exiting due to end of buffer
             buffer.setStart(pos);
@@ -1363,8 +1375,8 @@ public class Tokenizer implements Locator {
 
     // WARNING When editing this, makes sure the bytecode length shown by javap
     // stays under 8000 bytes!
-    private int stateLoop(int state, char c, int pos, @NoLength char[] buf, boolean reconsume, int returnState, int endPos)
-            throws SAXException {
+    private int stateLoop(int state, char c, int pos, @NoLength char[] buf,
+            boolean reconsume, int returnState, int endPos) throws SAXException {
         stateloop: for (;;) {
             switch (state) {
                 case DATA:
@@ -1678,10 +1690,12 @@ public class Tokenizer implements Locator {
                                 // fall thru
                             case '\"':
                             case '\'':
+                            case '<':
                             case '=':
                                 /*
                                  * U+0022 QUOTATION MARK (") U+0027 APOSTROPHE
-                                 * (') U+003D EQUALS SIGN (=) Parse error.
+                                 * (') U+003C LESS-THAN SIGN (<) U+003D EQUALS
+                                 * SIGN (=) Parse error.
                                  */
                                 errBadCharBeforeAttributeNameOrNull(c);
                                 /*
@@ -1788,11 +1802,12 @@ public class Tokenizer implements Locator {
                                 // fall thru
                             case '\"':
                             case '\'':
+                            case '<':
                                 /*
                                  * U+0022 QUOTATION MARK (") U+0027 APOSTROPHE
-                                 * (') Parse error.
+                                 * (') U+003C LESS-THAN SIGN (<) Parse error.
                                  */
-                                errQuoteInAttributeNameOrNull(c);
+                                errQuoteOrLtInAttributeNameOrNull(c);
                                 /*
                                  * Treat it as per the "anything else" entry
                                  * below.
@@ -1893,11 +1908,12 @@ public class Tokenizer implements Locator {
                             case '\u0000':
                                 c = '\uFFFD';
                                 // fall thru
+                            case '<':
                             case '=':
                                 /*
                                  * U+003D EQUALS SIGN (=) Parse error.
                                  */
-                                errEqualsInUnquotedAttributeOrNull(c);
+                                errLtOrEqualsInUnquotedAttributeOrNull(c);
                                 /*
                                  * Treat it as per the "anything else" entry
                                  * below.
@@ -2150,7 +2166,7 @@ public class Tokenizer implements Locator {
                                  * U+0022 QUOTATION MARK (") U+0027 APOSTROPHE
                                  * (') U+003D EQUALS SIGN (=) Parse error.
                                  */
-                                errWarnUnquotedAttributeValOrNull(c);
+                                errUnquotedAttributeValOrNull(c);
                                 /*
                                  * Treat it as per the "anything else" entry
                                  * below.
@@ -2231,7 +2247,8 @@ public class Tokenizer implements Locator {
                                 // fall thru
                             case '\"':
                             case '\'':
-                                errQuoteInAttributeNameOrNull(c);
+                            case '<':
+                                errQuoteOrLtInAttributeNameOrNull(c);
                                 /*
                                  * Treat it as per the "anything else" entry
                                  * below.
@@ -2593,7 +2610,7 @@ public class Tokenizer implements Locator {
                     }
                     // FALLTHRU DON'T REORDER
                 case COMMENT_END:
-                    for (;;) {
+                    commentendloop: for (;;) {
                         if (++pos == endPos) {
                             break stateloop;
                         }
@@ -2620,18 +2637,37 @@ public class Tokenizer implements Locator {
                                  * Append a U+002D HYPHEN-MINUS (-) character to
                                  * the comment token's data.
                                  */
-                                adjustDoubleHyphenAndAppendToLongStrBuf(c);
+                                adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
                                 /*
                                  * Stay in the comment end state.
                                  */
                                 continue;
+                            case ' ':
+                            case '\t':
+                            case '\u000C':
+                                /*
+                                 * Parse error. Append two U+002D HYPHEN-MINUS
+                                 * (-) characters and the input character to the
+                                 * comment token's data. Switch to the comment
+                                 * end space state.
+                                 */
+                                adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
+                                state = Tokenizer.COMMENT_END_SPACE;
+                                break commentendloop;
+                            // continue stateloop;
                             case '\r':
                                 adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn();
-                                state = Tokenizer.COMMENT;
+                                state = Tokenizer.COMMENT_END_SPACE;
                                 break stateloop;
                             case '\n':
                                 adjustDoubleHyphenAndAppendToLongStrBufLineFeed();
-                                state = Tokenizer.COMMENT;
+                                state = Tokenizer.COMMENT_END_SPACE;
+                                break commentendloop;
+                            // continue stateloop;
+                            case '!':
+                                errHyphenHyphenBang();
+                                appendLongStrBuf(c);
+                                state = Tokenizer.COMMENT_END_BANG;
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
@@ -2642,7 +2678,137 @@ public class Tokenizer implements Locator {
                                  * and the input character to the comment
                                  * token's data.
                                  */
-                                adjustDoubleHyphenAndAppendToLongStrBuf(c);
+                                adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
+                                /*
+                                 * Switch to the comment state.
+                                 */
+                                state = Tokenizer.COMMENT;
+                                continue stateloop;
+                        }
+                    }
+                case COMMENT_END_SPACE:
+                    for (;;) {
+                        if (++pos == endPos) {
+                            break stateloop;
+                        }
+                        c = checkChar(buf, pos);
+                        /*
+                         * Comment end space state
+                         * 
+                         * Consume the next input character:
+                         */
+                        switch (c) {
+                            case '>':
+                                /*
+                                 * U+003E GREATER-THAN SIGN (>) Emit the comment
+                                 * token.
+                                 */
+                                emitComment(0, pos);
+                                /*
+                                 * Switch to the data state.
+                                 */
+                                state = Tokenizer.DATA;
+                                continue stateloop;
+                            case '-':
+                                /*
+                                 * U+002D HYPHEN-MINUS (-) Switch to the comment
+                                 * end dash state.
+                                 */
+                                appendLongStrBuf(c);
+                                /*
+                                 * Switch to the comment end dash state.
+                                 */
+                                state = Tokenizer.COMMENT_END_DASH;
+                                continue stateloop;
+                            case ' ':
+                            case '\t':
+                            case '\u000C':
+                                /*
+                                 * U+0009 CHARACTER TABULATION U+000A LINE FEED
+                                 * (LF) U+000C FORM FEED (FF) U+0020 SPACE
+                                 * Append the input character to the comment
+                                 * token's data. Stay in the comment end space
+                                 * state.
+                                 */
+                                appendLongStrBuf(c);
+                                continue;
+                            case '\r':
+                                appendLongStrBufCarriageReturn();
+                                break stateloop;
+                            case '\n':
+                                appendLongStrBufLineFeed();
+                                continue;
+                            case '\u0000':
+                                c = '\uFFFD';
+                                // fall thru
+                            default:
+                                /*
+                                 * Anything else Append the input character to
+                                 * the comment token's data. Switch to the
+                                 * comment state.
+                                 */
+                                appendLongStrBuf(c);
+                                /*
+                                 * Switch to the comment state.
+                                 */
+                                state = Tokenizer.COMMENT;
+                                continue stateloop;
+                        }
+                    }
+                    // XXX reorder point
+                case COMMENT_END_BANG:
+                    for (;;) {
+                        if (++pos == endPos) {
+                            break stateloop;
+                        }
+                        c = checkChar(buf, pos);
+                        /*
+                         * Comment end bang state
+                         * 
+                         * Consume the next input character:
+                         */
+                        switch (c) {
+                            case '>':
+                                /*
+                                 * U+003E GREATER-THAN SIGN (>) Emit the comment
+                                 * token.
+                                 */
+                                emitComment(3, pos);
+                                /*
+                                 * Switch to the data state.
+                                 */
+                                state = Tokenizer.DATA;
+                                continue stateloop;
+                            case '-':
+                                /*
+                                 * Append two U+002D HYPHEN-MINUS (-) characters
+                                 * and a U+0021 EXCLAMATION MARK (!) character
+                                 * to the comment token's data.
+                                 */
+                                appendLongStrBuf(c);
+                                /*
+                                 * Switch to the comment end dash state.
+                                 */
+                                state = Tokenizer.COMMENT_END_DASH;
+                                continue stateloop;
+                            case '\r':
+                                appendLongStrBufCarriageReturn();
+                                break stateloop;
+                            case '\n':
+                                appendLongStrBufLineFeed();
+                                continue;
+                            case '\u0000':
+                                c = '\uFFFD';
+                                // fall thru
+                            default:
+                                /*
+                                 * Anything else Append two U+002D HYPHEN-MINUS
+                                 * (-) characters, a U+0021 EXCLAMATION MARK (!)
+                                 * character, and the input character to the
+                                 * comment token's data. Switch to the comment
+                                 * state.
+                                 */
+                                appendLongStrBuf(c);
                                 /*
                                  * Switch to the comment state.
                                  */
@@ -4594,7 +4760,7 @@ public class Tokenizer implements Locator {
                                      * self-closing start tag state.
                                      */
                                     state = Tokenizer.SELF_CLOSING_START_TAG;
-                                    continue stateloop;                  
+                                    continue stateloop;
                                 default:
                                     // [NOCPP[
                                     errWarnLtSlashInRcdata();
@@ -4603,9 +4769,10 @@ public class Tokenizer implements Locator {
                                             Tokenizer.LT_SOLIDUS, 0, 2);
                                     emitStrBuf();
                                     if (c == '\u0000') {
-                                        emitReplacementCharacter(buf, pos);                                        
+                                        emitReplacementCharacter(buf, pos);
                                     } else {
-                                        cstart = pos; // don't drop the character
+                                        cstart = pos; // don't drop the
+                                                      // character
                                     }
                                     state = returnState;
                                     continue stateloop;
@@ -4756,12 +4923,8 @@ public class Tokenizer implements Locator {
         }
         flushChars(buf, pos);
         /*
-        if (prevCR && pos != endPos) {
-            // why is this needed?
-            pos--;
-            col--;
-        }
-        */
+         * if (prevCR && pos != endPos) { // why is this needed? pos--; col--; }
+         */
         // Save locals
         stateSave = state;
         returnStateSave = returnState;
@@ -4775,14 +4938,16 @@ public class Tokenizer implements Locator {
         forceQuirks = false;
     }
 
-    @Inline private void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn() throws SAXException {
+    @Inline private void adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn()
+            throws SAXException {
         silentCarriageReturn();
-        adjustDoubleHyphenAndAppendToLongStrBuf('\n');
+        adjustDoubleHyphenAndAppendToLongStrBufAndErr('\n');
     }
 
-    @Inline private void adjustDoubleHyphenAndAppendToLongStrBufLineFeed() throws SAXException {
+    @Inline private void adjustDoubleHyphenAndAppendToLongStrBufLineFeed()
+            throws SAXException {
         silentLineFeed();
-        adjustDoubleHyphenAndAppendToLongStrBuf('\n');
+        adjustDoubleHyphenAndAppendToLongStrBufAndErr('\n');
     }
 
     @Inline private void appendLongStrBufLineFeed() {
@@ -4804,20 +4969,22 @@ public class Tokenizer implements Locator {
         ++line;
     }
 
-    private void emitCarriageReturn(@NoLength char[] buf, int pos) throws SAXException {
+    private void emitCarriageReturn(@NoLength char[] buf, int pos)
+            throws SAXException {
         silentCarriageReturn();
         flushChars(buf, pos);
         tokenHandler.characters(Tokenizer.LF, 0, 1);
         cstart = Integer.MAX_VALUE;
     }
 
-    private void emitReplacementCharacter(@NoLength char[] buf, int pos) throws SAXException {
+    private void emitReplacementCharacter(@NoLength char[] buf, int pos)
+            throws SAXException {
         silentCarriageReturn();
         flushChars(buf, pos);
         tokenHandler.characters(Tokenizer.REPLACEMENT_CHARACTER, 0, 1);
         cstart = Integer.MAX_VALUE;
     }
-    
+
     private void rememberAmpersandLocation(char add) {
         additional = add;
         // [NOCPP[
@@ -5068,6 +5235,7 @@ public class Tokenizer implements Locator {
                     break eofloop;
                 case COMMENT_START:
                 case COMMENT:
+                case COMMENT_END_SPACE:
                     /*
                      * EOF Parse error.
                      */
@@ -5091,6 +5259,14 @@ public class Tokenizer implements Locator {
                     errEofInComment();
                     /* Emit the comment token. */
                     emitComment(1, 0);
+                    /*
+                     * Reconsume the EOF character in the data state.
+                     */
+                    break eofloop;
+                case COMMENT_END_BANG:
+                    errEofInComment();
+                    /* Emit the comment token. */
+                    emitComment(3, 0);
                     /*
                      * Reconsume the EOF character in the data state.
                      */
@@ -5419,7 +5595,8 @@ public class Tokenizer implements Locator {
         Portability.releaseString(systemIdentifier);
     }
 
-    @Inline protected char checkChar(@NoLength char[] buf, int pos) throws SAXException {
+    @Inline protected char checkChar(@NoLength char[] buf, int pos)
+            throws SAXException {
         return buf[pos];
     }
 
@@ -5522,7 +5699,6 @@ public class Tokenizer implements Locator {
     public boolean isInDataState() {
         return (stateSave == DATA);
     }
-    
 
     protected void errGarbageAfterLtSlash() throws SAXException {
     }
@@ -5560,8 +5736,7 @@ public class Tokenizer implements Locator {
     protected void errBogusComment() throws SAXException {
     }
 
-    protected void errWarnUnquotedAttributeValOrNull(char c)
-            throws SAXException {
+    protected void errUnquotedAttributeValOrNull(char c) throws SAXException {
     }
 
     protected void errSlashNotFollowedByGt() throws SAXException {
@@ -5577,7 +5752,7 @@ public class Tokenizer implements Locator {
             throws SAXException {
     }
 
-    protected void errEqualsInUnquotedAttributeOrNull(char c)
+    protected void errLtOrEqualsInUnquotedAttributeOrNull(char c)
             throws SAXException {
     }
 
@@ -5613,7 +5788,7 @@ public class Tokenizer implements Locator {
     protected void errQuoteBeforeAttributeName(char c) throws SAXException {
     }
 
-    protected void errQuoteInAttributeNameOrNull(char c) throws SAXException {
+    protected void errQuoteOrLtInAttributeNameOrNull(char c) throws SAXException {
     }
 
     protected void errExpectedPublicId() throws SAXException {
@@ -5696,10 +5871,14 @@ public class Tokenizer implements Locator {
     protected void errMissingSpaceBeforeDoctypeName() throws SAXException {
     }
 
+    protected void errHyphenHyphenBang() throws SAXException {
+    }
+
     /**
      * Sets the encodingDeclarationHandler.
      * 
-     * @param encodingDeclarationHandler the encodingDeclarationHandler to set
+     * @param encodingDeclarationHandler
+     *            the encodingDeclarationHandler to set
      */
     public void setEncodingDeclarationHandler(
             EncodingDeclarationHandler encodingDeclarationHandler) {
