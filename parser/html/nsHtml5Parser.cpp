@@ -65,50 +65,10 @@ static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 //-------------- Begin ParseContinue Event Definition ------------------------
 /*
-The parser can be explicitly interrupted by passing a return value of
-NS_ERROR_HTMLPARSER_INTERRUPTED from BuildModel on the DTD. This will cause
+The parser can be explicitly interrupted by calling Suspend(). This will cause
 the parser to stop processing and allow the application to return to the event
-loop. The data which was left at the time of interruption will be processed
-the next time OnDataAvailable is called. If the parser has received its final
-chunk of data then OnDataAvailable will no longer be called by the networking
-module, so the parser will schedule a nsHtml5ParserContinueEvent which will call
+loop. The parser will schedule a nsHtml5ParserContinueEvent which will call
 the parser to process the remaining data after returning to the event loop.
-If the parser is interrupted while processing the remaining data it will
-schedule another ParseContinueEvent. The processing of data followed by
-scheduling of the continue events will proceed until either:
-  1) All of the remaining data can be processed without interrupting
-  2) The parser has been cancelled.
-This capability is currently used in CNavDTD and nsHTMLContentSink. The
-nsHTMLContentSink is notified by CNavDTD when a chunk of tokens is going to be
-processed and when each token is processed. The nsHTML content sink records
-the time when the chunk has started processing and will return
-NS_ERROR_HTMLPARSER_INTERRUPTED if the token processing time has exceeded a
-threshold called max tokenizing processing time. This allows the content sink
-to limit how much data is processed in a single chunk which in turn gates how
-much time is spent away from the event loop. Processing smaller chunks of data
-also reduces the time spent in subsequent reflows.
-This capability is most apparent when loading large documents. If the maximum
-token processing time is set small enough the application will remain
-responsive during document load.
-A side-effect of this capability is that document load is not complete when
-the last chunk of data is passed to OnDataAvailable since  the parser may have
-been interrupted when the last chunk of data arrived. The document is complete
-when all of the document has been tokenized and there aren't any pending
-nsHtml5ParserContinueEvents. This can cause problems if the application assumes
-that it can monitor the load requests to determine when the document load has
-been completed. This is what happens in Mozilla. The document is considered
-completely loaded when all of the load requests have been satisfied. To delay
-the document load until all of the parsing has been completed the
-nsHTMLContentSink adds a dummy parser load request which is not removed until
-the nsHTMLContentSink's DidBuildModel is called. The CNavDTD will not call
-DidBuildModel until the final chunk of data has been passed to the parser
-through the OnDataAvailable and there aren't any pending
-nsHtml5ParserContineEvents.
-Currently the parser is ignores requests to be interrupted during the
-processing of script.  This is because a document.write followed by JavaScript
-calls to manipulate the DOM may fail if the parser was interrupted during the
-document.write.
-For more details @see bugzilla bug 76722
 */
 class nsHtml5ParserContinueEvent : public nsRunnable
 {
@@ -127,8 +87,11 @@ public:
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHtml5Parser)
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHtml5Parser)                                              \
-  NS_INTERFACE_TABLE_INHERITED3(nsHtml5Parser, nsIParser, nsIStreamListener, nsIContentSink)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHtml5Parser) \
+  NS_INTERFACE_TABLE_INHERITED3(nsHtml5Parser, 
+                                nsIParser, 
+                                nsIStreamListener, 
+                                nsIContentSink)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsContentSink)
 
 NS_IMPL_ADDREF_INHERITED(nsHtml5Parser, nsContentSink)
@@ -152,10 +115,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHtml5Parser, nsContentSink)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsHtml5Parser::nsHtml5Parser()
-  : mRequest(nsnull),
-    mObserver(nsnull),
-    mUnicodeDecoder(nsnull),
-    mFirstBuffer(new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE)), // XXX allocate elsewhere for fragment parser?
+  : mFirstBuffer(new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE)),
+    // XXX avoid allocating the buffer at all for fragment parser?
     mLastBuffer(mFirstBuffer),
     mTreeBuilder(new nsHtml5TreeBuilder(this)),
     mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
@@ -166,7 +127,7 @@ nsHtml5Parser::nsHtml5Parser()
 
 nsHtml5Parser::~nsHtml5Parser()
 {
-  while(mFirstBuffer) {
+  while (mFirstBuffer) {
      nsHtml5UTF16Buffer* old = mFirstBuffer;
      mFirstBuffer = mFirstBuffer->next;
      delete old;
@@ -203,7 +164,8 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetContentSink(nsIContentSink* aSink)
 {
-  NS_ASSERTION(aSink == static_cast<nsIContentSink*> (this), "Attempt to set a foreign sink.");
+  NS_ASSERTION(aSink == static_cast<nsIContentSink*> (this), 
+               "Attempt to set a foreign sink.");
 }
 
 NS_IMETHODIMP_(nsIContentSink*)
@@ -227,7 +189,8 @@ nsHtml5Parser::SetCommand(const char* aCommand)
 NS_IMETHODIMP_(void)
 nsHtml5Parser::SetCommand(eParserCommands aParserCommand)
 {
-  NS_ASSERTION(aParserCommand == eViewNormal, "Parser command was not eViewNormal.");
+  NS_ASSERTION(aParserCommand == eViewNormal, 
+               "Parser command was not eViewNormal.");
 }
 
 NS_IMETHODIMP_(void)
@@ -320,7 +283,8 @@ nsHtml5Parser::Parse(nsIURI* aURL, // legacy parameter; ignored
   mObserver = aObserver;
   mRootContextKey = aKey;
   mCanInterruptParser = PR_TRUE;
-  NS_PRECONDITION((mLifeCycle == NOT_STARTED), "Tried to start parse without initializing the parser properly.");
+  NS_PRECONDITION(mLifeCycle == NOT_STARTED, 
+                  "Tried to start parse without initializing the parser properly.");
   return NS_OK;
 }
 
@@ -331,7 +295,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
                      PRBool aLastCall,
                      nsDTDMode aMode) // ignored
 {
-  NS_PRECONDITION((!mFragmentMode), "Document.write called in fragment mode!");
+  NS_PRECONDITION(!mFragmentMode, "Document.write called in fragment mode!");
   // Return early if the parser has processed EOF
   switch (mLifeCycle) {
     case TERMINATED:
@@ -385,10 +349,8 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
             // XXX is the tail insertion and script exec in the wrong order?
             WillInterruptImpl();
             break;
-          } else {
-            // Ignore suspensions
-            continue;
           }
+          // Ignore suspension requests
         }
       }
     }
@@ -396,8 +358,8 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     mUninterruptibleDocWrite = PR_FALSE;
 
     if (buffer->hasMore()) {
-      // If we got here, the buffer wasn't parse synchronously to completion
-      // and it's tail needs to go into the chain of pending buffers.
+      // If we got here, the buffer wasn't parsed synchronously to completion
+      // and its tail needs to go into the chain of pending buffers.
       // The script is identified by aKey. If there's nothing in the buffer
       // chain for that key, we'll insert at the head of the queue.
       // When the script leaves something in the queue, a zero-length
@@ -560,37 +522,37 @@ nsHtml5Parser::CancelParsingEvents()
 void
 nsHtml5Parser::Reset()
 {
-    mNeedsCharsetSwitch = PR_FALSE;
-    mLastWasCR = PR_FALSE;
-    mFragmentMode = PR_FALSE;
-    mBlocked = PR_FALSE;
-    mSuspending = PR_FALSE;
-    mLifeCycle = NOT_STARTED;
-    mScriptElement = nsnull;
-    mUninterruptibleDocWrite = PR_FALSE;
-    mRootContextKey = nsnull;
-    mRequest = nsnull;
-    mObserver = nsnull;
-    mContinueEvent = nsnull;  // weak ref
-    // encoding-related stuff
-    mCharsetSource = kCharsetUninitialized;
-    mCharset.Assign("");
-    mPendingCharset.Assign("");
-    mUnicodeDecoder = nsnull;
-    mSniffingBuffer = nsnull;
-    mSniffingLength = 0;
-    mBomState = BOM_SNIFFING_NOT_STARTED;
-    mMetaScanner = nsnull;
-    // Portable parser objects
-    while (mFirstBuffer->next) {
-      nsHtml5UTF16Buffer* oldBuf = mFirstBuffer;
-      mFirstBuffer = mFirstBuffer->next;
-      delete oldBuf;
-    }
-    mFirstBuffer->setStart(0);
-    mFirstBuffer->setEnd(0);
+  mNeedsCharsetSwitch = PR_FALSE;
+  mLastWasCR = PR_FALSE;
+  mFragmentMode = PR_FALSE;
+  mBlocked = PR_FALSE;
+  mSuspending = PR_FALSE;
+  mLifeCycle = NOT_STARTED;
+  mScriptElement = nsnull;
+  mUninterruptibleDocWrite = PR_FALSE;
+  mRootContextKey = nsnull;
+  mRequest = nsnull;
+  mObserver = nsnull;
+  mContinueEvent = nsnull;  // weak ref
+  // encoding-related stuff
+  mCharsetSource = kCharsetUninitialized;
+  mCharset.Truncate();
+  mPendingCharset.Truncate();
+  mUnicodeDecoder = nsnull;
+  mSniffingBuffer = nsnull;
+  mSniffingLength = 0;
+  mBomState = BOM_SNIFFING_NOT_STARTED;
+  mMetaScanner = nsnull;
+  // Portable parser objects
+  while (mFirstBuffer->next) {
+    nsHtml5UTF16Buffer* oldBuf = mFirstBuffer;
+    mFirstBuffer = mFirstBuffer->next;
+    delete oldBuf;
+  }
+  mFirstBuffer->setStart(0);
+  mFirstBuffer->setEnd(0);
 #ifdef DEBUG
-    mStreamListenerState = eNone;
+  mStreamListenerState = eNone;
 #endif
 }
 
@@ -616,21 +578,22 @@ nsHtml5Parser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   mStreamListenerState = eOnStart;
 #endif
   mRequest = aRequest;
-  nsresult rv = NS_OK;
-  if (mCharsetSource >= kCharsetFromChannel) {
-    nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
-    NS_ENSURE_SUCCESS(rv, rv);
-    mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
+  
+  if (mCharsetSource < kCharsetFromChannel) {
+    // we aren't ready to commit to an encoding yet
+    // leave converter uninstantiated for now
+    return NS_OK;
   }
-  return rv;
+  
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  mUnicodeDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Recover);
+  return NS_OK;
 }
 
-/**
- *  This is called by the networking library once the last block of data
- *  has been collected from the net.
- */
 nsresult
 nsHtml5Parser::OnStopRequest(nsIRequest* aRequest,
                              nsISupports* aContext,
@@ -642,8 +605,8 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest,
   if (!mUnicodeDecoder) {
     PRUint32 writeCount;
     rv = FinalizeSniffing(nsnull, 0, &writeCount, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
   switch (mLifeCycle) {
     case TERMINATED:
       break;
@@ -669,7 +632,7 @@ nsHtml5Parser::OnStopRequest(nsIRequest* aRequest,
   if (mObserver) {
     mObserver->OnStopRequest(aRequest, aContext, status);
   }
-  return rv;
+  return NS_OK;
 }
 
 // nsIStreamListener method:
@@ -703,8 +666,8 @@ nsHtml5Parser::OnDataAvailable(nsIRequest* aRequest,
                                PRUint32 aLength)
 {
   mTreeBuilder->MaybeFlush();
-  NS_PRECONDITION((eOnStart == mStreamListenerState ||
-                   eOnDataAvail == mStreamListenerState),
+  NS_PRECONDITION(eOnStart == mStreamListenerState ||
+                  eOnDataAvail == mStreamListenerState,
             "Error: OnStartRequest() must be called before OnDataAvailable()");
   NS_ASSERTION(mRequest == aRequest, "Got data on wrong stream.");
   PRUint32 totalRead;
@@ -723,35 +686,40 @@ nsHtml5Parser::internalEncodingDeclaration(nsString* aEncoding)
   if (mCharsetSource >= kCharsetFromMetaTag) { // this threshold corresponds to "confident" in the HTML5 spec
     return;
   }
-  nsresult res = NS_OK;
-  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res));
-  if (NS_FAILED(res)) {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
+  if (NS_FAILED(rv)) {
     return;
   }
   nsCAutoString newEncoding;
   CopyUTF16toUTF8(*aEncoding, newEncoding);
   PRBool eq;
-  res = calias->Equals(newEncoding, mCharset, &eq);
-  if (NS_FAILED(res)) {
+  rv = calias->Equals(newEncoding, mCharset, &eq);
+  if (NS_FAILED(rv)) {
     return;
   }
   if (eq) {
-    mCharsetSource = kCharsetFromMetaTag; // just becoming confident
+    mCharsetSource = kCharsetFromMetaTag; // become confident
     return;
   }
+  
   // XXX check HTML5 non-IANA aliases here
+
   // The encodings are different. We want to reparse.
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest,&res));
-    if (NS_SUCCEEDED(res)) {
-      nsCAutoString method;
-      httpChannel->GetRequestMethod(method);
-      if (!method.EqualsLiteral("GET")) {
-        return; // Can't reparse.
-        // XXX does Necko have a way to renavigate POST, etc. without hitting
-        // the network?
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    nsCAutoString method;
+    httpChannel->GetRequestMethod(method);
+    // XXX does Necko have a way to renavigate POST, etc. without hitting
+    // the network?
+    if (!method.EqualsLiteral("GET")) {
+      // This is the old Gecko behavior but the spec disagrees.
+      // Don't reparse on POST.
+      return;
     }
   }
-  // we are still want to reparse
+  
+  // we still want to reparse
   mNeedsCharsetSwitch = PR_TRUE;
   mPendingCharset.Assign(newEncoding);
 }
@@ -788,7 +756,7 @@ nsHtml5Parser::WillParse()
 NS_IMETHODIMP
 nsHtml5Parser::WillBuildModel(nsDTDMode aDTDMode)
 {
-  NS_NOTREACHED("No one shuld call this");
+  NS_NOTREACHED("No one should call this");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -853,7 +821,7 @@ nsHtml5Parser::SetDocumentCharset(nsACString& aCharset)
     nsCOMPtr<nsIContentViewer> cv;
     mDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) {
-       muCV = do_QueryInterface(cv);
+      muCV = do_QueryInterface(cv);
     } else {
       // in this block of code, if we get an error result, we return
       // it but if we get a null pointer, that's perfectly legal for
@@ -922,7 +890,7 @@ nsHtml5Parser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const PRUint
   NS_ENSURE_SUCCESS(rv, rv);
   rv = convManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
   if (rv == NS_ERROR_UCONV_NOCONV) {
-    mCharset.Assign("windows-1252"); // lower case the raw form
+    mCharset.Assign("windows-1252"); // lower case is the raw form
     mCharsetSource = kCharsetFromWeakDocTypeDefault;
     rv = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
     SetDocumentCharset(mCharset);
@@ -986,15 +954,19 @@ nsHtml5Parser::FinalizeSniffing(const PRUint8* aFromSegment, // can be null
     AppendUTF16toUTF8(detectorName, detectorContractID);
     nsCOMPtr<nsICharsetDetector> detector = do_CreateInstance(detectorContractID.get());
     if (detector) {
-      detector->Init(this);
+      nsresult rv = detector->Init(this);
+      NS_ENSURE_SUCCESS(rv, rv);
       PRBool dontFeed = PR_FALSE;
       if (mSniffingBuffer) {
-        detector->DoIt((const char*)mSniffingBuffer.get(), mSniffingLength, &dontFeed);
+        rv = detector->DoIt((const char*)mSniffingBuffer.get(), mSniffingLength, &dontFeed);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
       if (!dontFeed && aFromSegment) {
-        detector->DoIt((const char*)aFromSegment, aCountToSniffingLimit, &dontFeed);
+        rv = detector->DoIt((const char*)aFromSegment, aCountToSniffingLimit, &dontFeed);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
-      detector->Done();
+      rv = detector->Done();
+      NS_ENSURE_SUCCESS(rv, rv);
       // fall thru; callback may have changed charset
     } else {
       NS_ERROR("Could not instantiate charset detector.");
@@ -1037,25 +1009,25 @@ nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
         break;
       case SEEN_UTF_16_LE_FIRST_BYTE:
         if (aFromSegment[i] == 0xFE) {
-            rv = SetupDecodingFromBom("UTF-16", "UTF-16LE"); // upper case the raw form
-            NS_ENSURE_SUCCESS(rv, rv);
-            PRUint32 count = aCount - (i + 1);
-            rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
-            NS_ENSURE_SUCCESS(rv, rv);
-            *aWriteCount = writeCount + (i + 1);
-            return rv;
+          rv = SetupDecodingFromBom("UTF-16", "UTF-16LE"); // upper case is the raw form
+          NS_ENSURE_SUCCESS(rv, rv);
+          PRUint32 count = aCount - (i + 1);
+          rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
+          NS_ENSURE_SUCCESS(rv, rv);
+          *aWriteCount = writeCount + (i + 1);
+          return rv;
         }
         mBomState = BOM_SNIFFING_OVER;
         break;
       case SEEN_UTF_16_BE_FIRST_BYTE:
         if (aFromSegment[i] == 0xFF) {
-            rv = SetupDecodingFromBom("UTF-16", "UTF-16BE"); // upper case the raw form
-            NS_ENSURE_SUCCESS(rv, rv);
-            PRUint32 count = aCount - (i + 1);
-            rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
-            NS_ENSURE_SUCCESS(rv, rv);
-            *aWriteCount = writeCount + (i + 1);
-            return rv;
+          rv = SetupDecodingFromBom("UTF-16", "UTF-16BE"); // upper case is the raw form
+          NS_ENSURE_SUCCESS(rv, rv);
+          PRUint32 count = aCount - (i + 1);
+          rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
+          NS_ENSURE_SUCCESS(rv, rv);
+          *aWriteCount = writeCount + (i + 1);
+          return rv;
         }
         mBomState = BOM_SNIFFING_OVER;
         break;
@@ -1068,13 +1040,13 @@ nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
         break;
       case SEEN_UTF_8_SECOND_BYTE:
         if (aFromSegment[i] == 0xBF) {
-            rv = SetupDecodingFromBom("UTF-8", "UTF-8"); // upper case the raw form
-            NS_ENSURE_SUCCESS(rv, rv);
-            PRUint32 count = aCount - (i + 1);
-            rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
-            NS_ENSURE_SUCCESS(rv, rv);
-            *aWriteCount = writeCount + (i + 1);
-            return rv;
+          rv = SetupDecodingFromBom("UTF-8", "UTF-8"); // upper case is the raw form
+          NS_ENSURE_SUCCESS(rv, rv);
+          PRUint32 count = aCount - (i + 1);
+          rv = WriteStreamBytes(aFromSegment + (i + 1), count, &writeCount);
+          NS_ENSURE_SUCCESS(rv, rv);
+          *aWriteCount = writeCount + (i + 1);
+          return rv;
         }
         mBomState = BOM_SNIFFING_OVER;
         break;
@@ -1084,9 +1056,11 @@ nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
   }
   // if we get here, there either was no BOM or the BOM sniffing isn't complete yet
   bom_loop_end:
+  
   if (!mMetaScanner) {
     mMetaScanner = new nsHtml5MetaScanner();
   }
+  
   if (mSniffingLength + aCount >= NS_HTML5_PARSER_SNIFFING_BUFFER_SIZE) {
     // this is the last buffer
     PRUint32 countToSniffingLimit = NS_HTML5_PARSER_SNIFFING_BUFFER_SIZE - mSniffingLength;
@@ -1102,6 +1076,7 @@ nsHtml5Parser::SniffStreamBytes(const PRUint8* aFromSegment,
     }
     return FinalizeSniffing(aFromSegment, aCount, aWriteCount, countToSniffingLimit);
   }
+
   // not the last buffer
   nsHtml5ByteReadable readable(aFromSegment, aFromSegment + aCount);
   mMetaScanner->sniff(&readable, getter_AddRefs(mUnicodeDecoder), mCharset);
@@ -1128,20 +1103,25 @@ nsHtml5Parser::WriteStreamBytes(const PRUint8* aFromSegment,
 {
   // mLastBuffer always points to a buffer of the size NS_HTML5_PARSER_READ_BUFFER_SIZE.
   if (mLastBuffer->getEnd() == NS_HTML5_PARSER_READ_BUFFER_SIZE) {
-      mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE));
+    mLastBuffer = (mLastBuffer->next = new nsHtml5UTF16Buffer(NS_HTML5_PARSER_READ_BUFFER_SIZE));
   }
   PRUint32 totalByteCount = 0;
   for (;;) {
     PRInt32 end = mLastBuffer->getEnd();
     PRInt32 byteCount = aCount - totalByteCount;
     PRInt32 utf16Count = NS_HTML5_PARSER_READ_BUFFER_SIZE - end;
+
     NS_ASSERTION(utf16Count, "Trying to convert into a buffer with no free space!");
+
     nsresult convResult = mUnicodeDecoder->Convert((const char*)aFromSegment, &byteCount, mLastBuffer->getBuffer() + end, &utf16Count);
+
     end += utf16Count;
     mLastBuffer->setEnd(end);
     totalByteCount += byteCount;
     aFromSegment += byteCount;
+
     NS_ASSERTION(mLastBuffer->getEnd() <= NS_HTML5_PARSER_READ_BUFFER_SIZE, "The Unicode decoder wrote too much data.");
+
     if (NS_FAILED(convResult)) {
       if (totalByteCount < aCount) { // mimicking nsScanner even though this seems wrong
         ++totalByteCount;
@@ -1270,10 +1250,8 @@ nsHtml5Parser::ParseUntilSuspend()
         WillInterruptImpl();
         return;
       }
-      continue;
-    } else {
-      continue;
     }
+    continue;
   }
 }
 
@@ -1288,8 +1266,8 @@ nsHtml5Parser::PerformCharsetSwitch()
   }
 #ifndef DONT_INFORM_WEBSHELL
   // ask the webshellservice to load the URL
-  if (NS_FAILED( rv = wss->SetRendering(PR_FALSE) )) {
-    // XXX nisheeth, uncomment the following two line to see the reent problem
+  if (NS_FAILED(rv = wss->SetRendering(PR_FALSE))) {
+    // do nothing and fall thru
   } else if (NS_FAILED(rv = wss->StopDocumentLoad())) {
     rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
   } else if (NS_FAILED(rv = wss->ReloadDocument(mPendingCharset.get(), kCharsetFromMetaTag))) {
@@ -1298,7 +1276,7 @@ nsHtml5Parser::PerformCharsetSwitch()
     rv = NS_ERROR_HTMLPARSER_STOPPARSING; // We're reloading a new document...stop loading the current.
   }
 #endif
-   //if our reload request is not accepted, we should tell parser to go on
+  // if our reload request is not accepted, we should tell parser to go on
   if (rv != NS_ERROR_HTMLPARSER_STOPPARSING)
     rv = NS_ERROR_HTMLPARSER_CONTINUE;
   return rv;
@@ -1345,7 +1323,8 @@ nsHtml5Parser::ExecuteScript()
 void
 nsHtml5Parser::MaybePostContinueEvent()
 {
-  NS_PRECONDITION((mLifeCycle != TERMINATED), "Tried to post continue event when the parser is done.");
+  NS_PRECONDITION(mLifeCycle != TERMINATED, 
+                  "Tried to post continue event when the parser is done.");
   if (mContinueEvent) {
     return; // we already have a pending event
   }
@@ -1353,9 +1332,9 @@ nsHtml5Parser::MaybePostContinueEvent()
   // broken when the event fires.
   nsCOMPtr<nsIRunnable> event = new nsHtml5ParserContinueEvent(this);
   if (NS_FAILED(NS_DispatchToCurrentThread(event))) {
-      NS_WARNING("failed to dispatch parser continuation event");
+    NS_WARNING("failed to dispatch parser continuation event");
   } else {
-      mContinueEvent = event;
+    mContinueEvent = event;
   }
 }
 
@@ -1409,8 +1388,8 @@ nsHtml5Parser::UpdateStyleSheet(nsIContent* aElement)
     ssle->SetEnableUpdates(PR_TRUE);
     PRBool willNotify;
     PRBool isAlternate;
-    nsresult result = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
-    if (NS_SUCCEEDED(result) && willNotify && !isAlternate) {
+    nsresult rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
+    if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
       ++mPendingSheetCount;
       mScriptLoader->AddExecuteBlocker();
     }
