@@ -969,9 +969,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
       (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
     region.height = PR_MAX(region.height, mContentArea.height - floatY);
   }
-#ifdef DEBUG
   nsresult rv =
-#endif
   // spacemanager translation is inset by the border+padding.
   mFloatManager->AddFloat(floatFrame,
                           region - nsPoint(borderPadding.left, borderPadding.top));
