@@ -860,25 +860,21 @@ namespace nanojit
     class LabelMap MMGC_SUBCLASS_DECL
     {
         Allocator& allocator;
-        class Entry MMGC_SUBCLASS_DECL
+        class Entry
         {
         public:
-            Entry(int) : name(0), size(0), align(0) {}
-            Entry(avmplus::String *n, size_t s, size_t a) : name(n),size(s),align(a) {}
-            ~Entry();
-            DRCWB(avmplus::String*) name;
+            Entry(char *n, size_t s, size_t a) : name(n),size(s),align(a) {}
+            char* name;
             size_t size:29, align:3;
         };
-        avmplus::SortedMap<const void*, Entry*, avmplus::LIST_GCObjects> names;
+        avmplus::SortedMap<const void*, Entry*, avmplus::LIST_NonGCObjects> names;
         bool addrs, pad[3];
         char buf[1000], *end;
         void formatAddr(const void *p, char *buf);
     public:
-        avmplus::AvmCore *core;
         LabelMap(avmplus::AvmCore *, Allocator& allocator);
         ~LabelMap();
         void add(const void *p, size_t size, size_t align, const char *name);
-        void add(const void *p, size_t size, size_t align, avmplus::String*);
         const char *dup(const char *);
         const char *format(const void *p);
         void clear();
@@ -904,15 +900,13 @@ namespace nanojit
         CountMap<int> lircounts;
         CountMap<const CallInfo *> funccounts;
 
-        class Entry MMGC_SUBCLASS_DECL
+        class Entry
         {
         public:
-            Entry(int) : name(0) {}
-            Entry(avmplus::String *n) : name(n) {}
-            ~Entry();
-            DRCWB(avmplus::String*) name;
+            Entry(char* n) : name(n) {}
+            char* name;
         };
-        avmplus::SortedMap<LInsp, Entry*, avmplus::LIST_GCObjects> names;
+        avmplus::SortedMap<LInsp, Entry*, avmplus::LIST_NonGCObjects> names;
         LabelMap *labels;
         void formatImm(int32_t c, char *buf);
     public:
@@ -924,10 +918,8 @@ namespace nanojit
             names(gc),
             labels(r)
         {}
-        ~LirNameMap();
 
         void addName(LInsp i, const char *s);
-        bool addName(LInsp i, avmplus::String *s);
         void copyName(LInsp i, const char *s, int suffix);
         const char *formatRef(LIns *ref);
         const char *formatIns(LInsp i);
