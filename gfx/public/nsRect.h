@@ -160,7 +160,8 @@ struct NS_GFX nsRect {
     return x == aRect.x && y == aRect.y &&
            width == aRect.width && height == aRect.height;
   }
-  
+
+  // Arithmetic with nsPoints
   nsRect  operator+(const nsPoint& aPoint) const {
     return nsRect(x + aPoint.x, y + aPoint.y, width, height);
   }
@@ -169,6 +170,12 @@ struct NS_GFX nsRect {
   }
   nsRect& operator+=(const nsPoint& aPoint) {x += aPoint.x; y += aPoint.y; return *this;}
   nsRect& operator-=(const nsPoint& aPoint) {x -= aPoint.x; y -= aPoint.y; return *this;}
+
+  // Arithmetic with nsMargins
+  /**
+   * Return nsMargin m such that if m = rectA - rectB, rectB.Inflate(m) == rectA
+   */
+  nsMargin operator-(const nsRect& aRect) const;
 
   // Scale by aScale, converting coordinates to integers so that the result
   // is the smallest integer-coordinate rectangle containing the unrounded result

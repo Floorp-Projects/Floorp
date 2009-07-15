@@ -173,6 +173,17 @@ void nsRect::Deflate(const nsMargin &aMargin)
   height = PR_MAX(0, height - aMargin.TopBottom());
 }
 
+// Find difference between rects as an nsMargin
+nsMargin nsRect::operator-(const nsRect& aRect) const
+{
+  nsMargin margin;
+  margin.left = aRect.x - x;
+  margin.right = XMost() - aRect.XMost();
+  margin.top = aRect.y - y;
+  margin.bottom = YMost() - aRect.YMost();
+  return margin;
+}
+
 // scale the rect but round to smallest containing rect
 nsRect& nsRect::ScaleRoundOut(float aScale) 
 {
