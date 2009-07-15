@@ -318,8 +318,8 @@
 
       <vbox id="permList" flex="1">
         <vbox>
-          <label value="&permImage;" control="permImageGroup imageRadioGroup"/>
-          <hbox id="permImageGroup" role="group">
+          <label id="permImageLabel" value="&permImage;" control="imageRadioGroup"/>
+          <hbox role="group" aria-labelledby="permImageLabel">
             <checkbox id="imageDef" command="cmd_imageDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
             <radiogroup id="imageRadioGroup" orient="horizontal">
@@ -329,8 +329,8 @@
           </hbox>
         </vbox>
         <vbox>
-          <label value="&permPopup;" control="permPopupGroup popupRadioGroup"/>
-          <hbox id="permPopupGroup" role="group">
+          <label id="permPopupLabel" value="&permPopup;" control="popupRadioGroup"/>
+          <hbox role="group" aria-labelledby="permPopupLabel">
             <checkbox id="popupDef" command="cmd_popupDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
             <radiogroup id="popupRadioGroup" orient="horizontal">
@@ -340,8 +340,8 @@
           </hbox>
         </vbox>
         <vbox>
-          <label value="&permCookie;" control="permCookieGroup cookieRadioGroup"/>
-          <hbox id="permCookieGroup" role="group">
+          <label id="permCookieLabel" value="&permCookie;" control="cookieRadioGroup"/>
+          <hbox role="group" aria-labelledby="permCookieLabel">
             <checkbox id="cookieDef" command="cmd_cookieDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
             <radiogroup id="cookieRadioGroup" orient="horizontal">
@@ -352,8 +352,8 @@
           </hbox>
         </vbox>
         <vbox>
-          <label value="&permInstall;" control="permInstallGroup installRadioGroup"/>
-          <hbox id="permInstallGroup" role="group">
+          <label id="permInstallLabel" value="&permInstall;" control="installRadioGroup"/>
+          <hbox role="group" aria-labelledby="permInstallLabel">
             <checkbox id="installDef" command="cmd_installDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
             <radiogroup id="installRadioGroup" orient="horizontal">
@@ -364,8 +364,8 @@
         </vbox>
 
         <vbox>
-          <label value="&permGeo;" control="permGeoGroup geoRadioGroup"/>
-          <hbox id="permGeoGroup" role="group">
+          <label id="permGeoLabel" value="&permGeo;" control="geoRadioGroup"/>
+          <hbox role="group" aria-labelledby="permGeoLabel">
             <checkbox id="geoDef" command="cmd_geoDef" label="&permAskAlways;"/>
             <spacer flex="1"/>
             <radiogroup id="geoRadioGroup" orient="horizontal">

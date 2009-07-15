@@ -399,8 +399,8 @@ nsContextMenu.prototype = {
   initMediaPlayerItems: function() {
     var onMedia = (this.onVideo || this.onAudio);
     // Several mutually exclusive items... play/pause, mute/unmute, show/hide
-    this.showItem("context-media-play",  onMedia && this.target.paused);
-    this.showItem("context-media-pause", onMedia && !this.target.paused);
+    this.showItem("context-media-play",  onMedia && (this.target.paused || this.target.ended));
+    this.showItem("context-media-pause", onMedia && !this.target.paused && !this.target.ended);
     this.showItem("context-media-mute",   onMedia && !this.target.muted);
     this.showItem("context-media-unmute", onMedia && this.target.muted);
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls)

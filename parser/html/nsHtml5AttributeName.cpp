@@ -57,41 +57,41 @@
 nsIAtom** 
 nsHtml5AttributeName::SVG_DIFFERENT(nsIAtom* name, nsIAtom* camel)
 {
-  nsIAtom** rv = new nsIAtom*[4];
-  rv[0] = name;
-  rv[1] = name;
-  rv[2] = camel;
-  return rv;
+  nsIAtom** arr = new nsIAtom*[4];
+  arr[0] = name;
+  arr[1] = name;
+  arr[2] = camel;
+  return arr;
 }
 
 nsIAtom** 
 nsHtml5AttributeName::MATH_DIFFERENT(nsIAtom* name, nsIAtom* camel)
 {
-  nsIAtom** rv = new nsIAtom*[4];
-  rv[0] = name;
-  rv[1] = camel;
-  rv[2] = name;
-  return rv;
+  nsIAtom** arr = new nsIAtom*[4];
+  arr[0] = name;
+  arr[1] = camel;
+  arr[2] = name;
+  return arr;
 }
 
 nsIAtom** 
 nsHtml5AttributeName::COLONIFIED_LOCAL(nsIAtom* name, nsIAtom* suffix)
 {
-  nsIAtom** rv = new nsIAtom*[4];
-  rv[0] = name;
-  rv[1] = suffix;
-  rv[2] = suffix;
-  return rv;
+  nsIAtom** arr = new nsIAtom*[4];
+  arr[0] = name;
+  arr[1] = suffix;
+  arr[2] = suffix;
+  return arr;
 }
 
 nsIAtom** 
 nsHtml5AttributeName::SAME_LOCAL(nsIAtom* name)
 {
-  nsIAtom** rv = new nsIAtom*[4];
-  rv[0] = name;
-  rv[1] = name;
-  rv[2] = name;
-  return rv;
+  nsIAtom** arr = new nsIAtom*[4];
+  arr[0] = name;
+  arr[1] = name;
+  arr[2] = name;
+  return arr;
 }
 
 nsHtml5AttributeName* 
@@ -102,12 +102,12 @@ nsHtml5AttributeName::nameByBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 lengt
   if (index < 0) {
     return nsHtml5AttributeName::createAttributeName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
   } else {
-    nsHtml5AttributeName* rv = nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
-    nsIAtom* name = rv->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
+    nsHtml5AttributeName* attributeName = nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
+    nsIAtom* name = attributeName->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
     if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
       return nsHtml5AttributeName::createAttributeName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length));
     }
-    return rv;
+    return attributeName;
   }
 }
 

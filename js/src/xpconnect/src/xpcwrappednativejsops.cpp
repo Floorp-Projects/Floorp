@@ -171,8 +171,12 @@ static JSBool
 XPC_WN_Shared_ToSource(JSContext *cx, JSObject *obj,
                        uintN argc, jsval *argv, jsval *vp)
 {
-    static const char empty[] = "{}";
-    *vp = STRING_TO_JSVAL(JS_NewStringCopyN(cx, empty, sizeof(empty)-1));
+    static const char empty[] = "({})";
+    JSString *str = JS_NewStringCopyN(cx, empty, sizeof(empty)-1);
+    if(!str)
+        return JS_FALSE;
+    *vp = STRING_TO_JSVAL(str);
+
     return JS_TRUE;
 }
 

@@ -109,64 +109,64 @@ public final class AttributeName
     private static final boolean[] ALL_NO_NCNAME = { false, false, false, false };
 
     private static @QName String[] COMPUTE_QNAME(String[] local, String[] prefix) {
-        @QName String[] rv = new String[4];
-        for (int i = 0; i < rv.length; i++) {
+        @QName String[] arr = new String[4];
+        for (int i = 0; i < arr.length; i++) {
             if (prefix[i] == null) {
-                rv[i] = local[i];
+                arr[i] = local[i];
             } else {
-                rv[i] = (prefix[i] + ':' + local[i]).intern();
+                arr[i] = (prefix[i] + ':' + local[i]).intern();
             }
         }
-        return rv;
+        return arr;
     }
 
     // ]NOCPP]
 
     private static @NoLength @Local String[] SVG_DIFFERENT(@Local String name,
             @Local String camel) {
-        @NoLength @Local String[] rv = new String[4];
-        rv[0] = name;
-        rv[1] = name;
-        rv[2] = camel;
+        @NoLength @Local String[] arr = new String[4];
+        arr[0] = name;
+        arr[1] = name;
+        arr[2] = camel;
         // [NOCPP[
-        rv[3] = name;
+        arr[3] = name;
         // ]NOCPP]
-        return rv;
+        return arr;
     }
 
     private static @NoLength @Local String[] MATH_DIFFERENT(@Local String name,
             @Local String camel) {
-        @NoLength @Local String[] rv = new String[4];
-        rv[0] = name;
-        rv[1] = camel;
-        rv[2] = name;
+        @NoLength @Local String[] arr = new String[4];
+        arr[0] = name;
+        arr[1] = camel;
+        arr[2] = name;
         // [NOCPP[
-        rv[3] = name;
+        arr[3] = name;
         // ]NOCPP]
-        return rv;
+        return arr;
     }
 
     private static @NoLength @Local String[] COLONIFIED_LOCAL(
             @Local String name, @Local String suffix) {
-        @NoLength @Local String[] rv = new String[4];
-        rv[0] = name;
-        rv[1] = suffix;
-        rv[2] = suffix;
+        @NoLength @Local String[] arr = new String[4];
+        arr[0] = name;
+        arr[1] = suffix;
+        arr[2] = suffix;
         // [NOCPP[
-        rv[3] = name;
+        arr[3] = name;
         // ]NOCPP]
-        return rv;
+        return arr;
     }
 
     private static @NoLength @Local String[] SAME_LOCAL(@Local String name) {
-        @NoLength @Local String[] rv = new String[4];
-        rv[0] = name;
-        rv[1] = name;
-        rv[2] = name;
+        @NoLength @Local String[] arr = new String[4];
+        arr[0] = name;
+        arr[1] = name;
+        arr[2] = name;
         // [NOCPP[
-        rv[3] = name;
+        arr[3] = name;
         // ]NOCPP]
-        return rv;
+        return arr;
     }
 
     /**
@@ -200,8 +200,8 @@ public final class AttributeName
             // ]NOCPP]
             );
         } else {
-            AttributeName rv = AttributeName.ATTRIBUTE_NAMES[index];
-            @Local String name = rv.getLocal(AttributeName.HTML);
+            AttributeName attributeName = AttributeName.ATTRIBUTE_NAMES[index];
+            @Local String name = attributeName.getLocal(AttributeName.HTML);
             if (!Portability.localEqualsBuffer(name, buf, offset, length)) {
                 return AttributeName.createAttributeName(
                         Portability.newLocalNameFromBuffer(buf, offset, length)
@@ -210,7 +210,7 @@ public final class AttributeName
                 // ]NOCPP]
                 );
             }
-            return rv;
+            return attributeName;
         }
     }
 

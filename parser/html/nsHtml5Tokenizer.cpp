@@ -284,7 +284,7 @@ nsHtml5Tokenizer::appendSecondHyphenToBogusComment()
 }
 
 void 
-nsHtml5Tokenizer::adjustDoubleHyphenAndAppendToLongStrBuf(PRUnichar c)
+nsHtml5Tokenizer::adjustDoubleHyphenAndAppendToLongStrBufAndErr(PRUnichar c)
 {
 
   appendLongStrBuf(c);
@@ -652,6 +652,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             }
             case '\"':
             case '\'':
+            case '<':
             case '=':
             default: {
               if (c >= 'A' && c <= 'Z') {
@@ -713,6 +714,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             }
             case '\"':
             case '\'':
+            case '<':
             default: {
               if (c >= 'A' && c <= 'Z') {
                 c += 0x20;
@@ -771,6 +773,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             case '\0': {
               c = 0xfffd;
             }
+            case '<':
             case '=':
             default: {
               clearLongStrBufAndAppendCurrentC(c);
@@ -984,6 +987,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             }
             case '\"':
             case '\'':
+            case '<':
             default: {
               addAttributeWithoutValue();
               if (c >= 'A' && c <= 'Z') {
@@ -1256,24 +1260,116 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
               goto stateloop;
             }
             case '-': {
-              adjustDoubleHyphenAndAppendToLongStrBuf(c);
+              adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
               continue;
+            }
+            case ' ':
+            case '\t':
+            case '\f': {
+              adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
+              state = NS_HTML5TOKENIZER_COMMENT_END_SPACE;
+              goto commentendloop_end;
             }
             case '\r': {
               adjustDoubleHyphenAndAppendToLongStrBufCarriageReturn();
-              state = NS_HTML5TOKENIZER_COMMENT;
+              state = NS_HTML5TOKENIZER_COMMENT_END_SPACE;
               goto stateloop_end;
             }
             case '\n': {
               adjustDoubleHyphenAndAppendToLongStrBufLineFeed();
-              state = NS_HTML5TOKENIZER_COMMENT;
+              state = NS_HTML5TOKENIZER_COMMENT_END_SPACE;
+              goto commentendloop_end;
+            }
+            case '!': {
+
+              appendLongStrBuf(c);
+              state = NS_HTML5TOKENIZER_COMMENT_END_BANG;
               goto stateloop;
             }
             case '\0': {
               c = 0xfffd;
             }
             default: {
-              adjustDoubleHyphenAndAppendToLongStrBuf(c);
+              adjustDoubleHyphenAndAppendToLongStrBufAndErr(c);
+              state = NS_HTML5TOKENIZER_COMMENT;
+              goto stateloop;
+            }
+          }
+        }
+        commentendloop_end: ;
+      }
+      case NS_HTML5TOKENIZER_COMMENT_END_SPACE: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
+          switch(c) {
+            case '>': {
+              emitComment(0, pos);
+              state = NS_HTML5TOKENIZER_DATA;
+              goto stateloop;
+            }
+            case '-': {
+              appendLongStrBuf(c);
+              state = NS_HTML5TOKENIZER_COMMENT_END_DASH;
+              goto stateloop;
+            }
+            case ' ':
+            case '\t':
+            case '\f': {
+              appendLongStrBuf(c);
+              continue;
+            }
+            case '\r': {
+              appendLongStrBufCarriageReturn();
+              goto stateloop_end;
+            }
+            case '\n': {
+              appendLongStrBufLineFeed();
+              continue;
+            }
+            case '\0': {
+              c = 0xfffd;
+            }
+            default: {
+              appendLongStrBuf(c);
+              state = NS_HTML5TOKENIZER_COMMENT;
+              goto stateloop;
+            }
+          }
+        }
+      }
+      case NS_HTML5TOKENIZER_COMMENT_END_BANG: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
+          switch(c) {
+            case '>': {
+              emitComment(3, pos);
+              state = NS_HTML5TOKENIZER_DATA;
+              goto stateloop;
+            }
+            case '-': {
+              appendLongStrBuf(c);
+              state = NS_HTML5TOKENIZER_COMMENT_END_DASH;
+              goto stateloop;
+            }
+            case '\r': {
+              appendLongStrBufCarriageReturn();
+              goto stateloop_end;
+            }
+            case '\n': {
+              appendLongStrBufLineFeed();
+              continue;
+            }
+            case '\0': {
+              c = 0xfffd;
+            }
+            default: {
+              appendLongStrBuf(c);
               state = NS_HTML5TOKENIZER_COMMENT;
               goto stateloop;
             }
@@ -2941,7 +3037,8 @@ nsHtml5Tokenizer::eof()
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_COMMENT_START:
-      case NS_HTML5TOKENIZER_COMMENT: {
+      case NS_HTML5TOKENIZER_COMMENT:
+      case NS_HTML5TOKENIZER_COMMENT_END_SPACE: {
 
         emitComment(0, 0);
         goto eofloop_end;
@@ -2955,6 +3052,11 @@ nsHtml5Tokenizer::eof()
       case NS_HTML5TOKENIZER_COMMENT_START_DASH: {
 
         emitComment(1, 0);
+        goto eofloop_end;
+      }
+      case NS_HTML5TOKENIZER_COMMENT_END_BANG: {
+
+        emitComment(3, 0);
         goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_DOCTYPE:

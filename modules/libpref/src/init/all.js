@@ -2737,6 +2737,9 @@ pref("image.cache.size", 5242880);
 // Size is given a weight of 1000 - timeweight.
 pref("image.cache.timeweight", 500);
 
+// The default Accept header sent for images loaded over HTTP(S)
+pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
+
 #ifdef XP_WIN
 #ifndef WINCE
 // The default TCP send window on Windows is too small, and autotuning only occurs on receive
