@@ -655,7 +655,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   PRBool aReset,
                                   nsIContentSink* aSink)
 {
-  PRBool loadAsHtml5 = nsHtml5Module::Enabled;
+  PRBool loadAsHtml5 = nsHtml5Module::sEnabled;
   if (aSink) {
     loadAsHtml5 = PR_FALSE;
   }
@@ -672,7 +672,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     loadAsHtml5 = PR_FALSE;
   }
   
-  if (!(contentType.Equals("text/html") && aCommand && !nsCRT::strcmp(aCommand, "view"))) {
+  if (!(contentType.EqualsLiteral("text/html") && aCommand && !nsCRT::strcmp(aCommand, "view"))) {
     loadAsHtml5 = PR_FALSE;
   }
 #ifdef DEBUG
@@ -941,7 +941,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     nsCOMPtr<nsIContentSink> sink;
 
     if (aSink) {
-      NS_ASSERTION((!loadAsHtml5), "Panic: We are loading as HTML5 and someone tries to set an external sink!");
+      NS_ASSERTION(!loadAsHtml5, "Panic: We are loading as HTML5 and someone tries to set an external sink!");
       sink = aSink;
     } else {
       if (IsXHTML()) {
@@ -1805,7 +1805,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  PRBool loadAsHtml5 = nsHtml5Module::Enabled;
+  PRBool loadAsHtml5 = nsHtml5Module::sEnabled;
 
   nsresult rv = NS_OK;
 

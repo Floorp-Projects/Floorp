@@ -76,9 +76,11 @@ public final class HtmlAttributes implements Attributes {
     public HtmlAttributes(int mode) {
         this.mode = mode;
         this.length = 0;
-        this.names = new AttributeName[5]; // covers 98.3% of elements
-                                            // according to
-        // Hixie
+        /*
+         * The length of 5 covers covers 98.3% of elements
+         * according to Hixie
+         */
+        this.names = new AttributeName[5];
         this.values = new String[5];
 
         // [NOCPP[
