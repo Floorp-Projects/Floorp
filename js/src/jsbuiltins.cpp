@@ -308,7 +308,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 
     JSObject* obj2;
     JSProperty* prop;
-    if (!js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
+    if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
         return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
     if (prop)
         OBJ_DROP_PROPERTY(cx, obj2, prop);
