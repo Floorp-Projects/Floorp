@@ -116,6 +116,13 @@ nsDisplayXULTreeColSplitterTarget::HitTest(nsDisplayListBuilder* aBuilder,
   else if (nsPresContext::CSSPixelsToAppUnits(4) > pt.x)
     left = PR_TRUE;
 
+  // Swap left and right for RTL trees in order to find the correct splitter
+  if (mFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+    PRBool tmp = left;
+    left = right;
+    right = tmp;
+  }
+
   if (left || right) {
     // We are a header. Look for the correct splitter.
     nsFrameList frames(mFrame->GetParent()->GetFirstChild(nsnull));
