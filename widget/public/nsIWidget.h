@@ -100,10 +100,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// 3d277f04-93f4-4384-9fdc-e1e2d1fc4e33
+// {a395289d-b344-42c3-ae7e-34d64282b6e0}
 #define NS_IWIDGET_IID \
-{ 0x3d277f04, 0x93f4, 0x4384, \
- { 0x9f, 0xdc, 0xe1, 0xe2, 0xd1, 0xfc, 0x4e, 0x33 } }
+{ 0xa395289d, 0xb344, 0x42c3, \
+  { 0xae, 0x7e, 0x34, 0xd6, 0x42, 0x82, 0xb6, 0xe0 } }
 
 /*
  * Window shadow styles
@@ -1063,6 +1063,12 @@ class nsIWidget : public nsISupports {
      * Selection has changed in the focused node
      */
     NS_IMETHOD OnIMESelectionChange(void) = 0;
+
+    /*
+     * Call this method when a dialog is opened which has a default button.
+     * The button's rectangle should be supplied in aButtonRect.
+     */ 
+    NS_IMETHOD OnDefaultButtonLoaded(const nsIntRect &aButtonRect) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
