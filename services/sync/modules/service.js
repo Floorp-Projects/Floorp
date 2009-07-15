@@ -646,9 +646,9 @@ WeaveSvc.prototype = {
                        "consistency.");
       else // 200
         this._log.info("Server data wiped to ensure consistency after client " +
-                       "upgrade (" + remoteVersion + " -> " + WEAVE_VERSION + ")");
+                       "upgrade (" + remoteVersion + " -> " + STORAGE_VERSION + ")");
 
-    } else if (Svc.Version.compare(remoteVersion, WEAVE_VERSION) > 0) {
+    } else if (Svc.Version.compare(remoteVersion, STORAGE_VERSION) > 0) {
       this._setSyncFailure(VERSION_OUT_OF_DATE);
       this._log.warn("Server data is of a newer Weave version, this client " +
                      "needs to be upgraded.  Aborting sync.");
