@@ -3346,7 +3346,7 @@ js_Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* If called without new, replace obj with a new Array object. */
     if (!JS_IsConstructing(cx)) {
-        obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -3381,7 +3381,7 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     JS_ASSERT(OBJ_IS_ARRAY(cx, proto));
 
     JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
     if (!obj)
         return NULL;
 
@@ -3442,7 +3442,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector, JSBool holey)
     JSTempValueRooter tvr;
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_ArrayClass, NULL, NULL);
     if (!obj)
         return NULL;
 
@@ -3459,7 +3459,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector, JSBool holey)
 JSObject *
 js_NewSlowArrayObject(JSContext *cx)
 {
-    JSObject *obj = js_NewObject(cx, &js_SlowArrayClass, NULL, NULL, 0);
+    JSObject *obj = js_NewObject(cx, &js_SlowArrayClass, NULL, NULL);
     if (obj)
         obj->fslots[JSSLOT_ARRAY_LENGTH] = 0;
     return obj;

@@ -998,7 +998,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
         }
 #endif
         obj = js_NewObjectWithGivenProto(cx, &js_NoSuchMethodClass,
-                                         NULL, NULL, 0);
+                                         NULL, NULL);
         if (!obj) {
             ok = JS_FALSE;
             goto out;
@@ -1877,7 +1877,7 @@ js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
                 clasp = fun2->u.n.clasp;
         }
     }
-    obj = js_NewObject(cx, clasp, proto, parent, 0);
+    obj = js_NewObject(cx, clasp, proto, parent);
     if (!obj)
         return JS_FALSE;
 
@@ -4960,8 +4960,7 @@ js_Interpret(JSContext *cx)
                                         JSVAL_IS_OBJECT(rval)
                                         ? JSVAL_TO_OBJECT(rval)
                                         : NULL,
-                                        OBJ_GET_PARENT(cx, obj),
-                                        0);
+                                        OBJ_GET_PARENT(cx, obj));
                     if (!obj2)
                         goto error;
                     vp[1] = OBJECT_TO_JSVAL(obj2);
@@ -6372,7 +6371,7 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
             obj = (i == JSProto_Array)
                   ? js_NewArrayObject(cx, 0, NULL)
-                  : js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
+                  : js_NewObject(cx, &js_ObjectClass, NULL, NULL);
             if (!obj)
                 goto error;
             PUSH_OPND(OBJECT_TO_JSVAL(obj));

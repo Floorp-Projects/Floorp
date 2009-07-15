@@ -2650,8 +2650,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     CHECK_REQUEST(cx);
     JS_ASSERT((uintN) type < (uintN) (GCX_NTYPES - GCX_EXTERNAL_STRING));
 
-    str = (JSString *) js_NewGCThing(cx, (uintN) type + GCX_EXTERNAL_STRING,
-                                     sizeof(JSString));
+    str = js_NewGCString(cx, (uintN) type + GCX_EXTERNAL_STRING);
     if (!str)
         return NULL;
     str->initFlat(chars, length);
@@ -2896,7 +2895,7 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObject(cx, clasp, proto, parent, 0);
+    return js_NewObject(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2906,7 +2905,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, 0);
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3064,7 +3063,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    nobj = js_NewObject(cx, clasp, proto, obj, 0);
+    nobj = js_NewObject(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
     if (!DefineProperty(cx, obj, name, OBJECT_TO_JSVAL(nobj), NULL, NULL, attrs,
@@ -4109,7 +4108,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     JSIdArray *ida;
 
     CHECK_REQUEST(cx);
-    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj, 0);
+    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
         return NULL;
 
@@ -4822,12 +4821,12 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
 
     CHECK_REQUEST(cx);
     if (!script)
-        return js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
+        return js_NewObject(cx, &js_ScriptClass, NULL, NULL);
 
     JS_ASSERT(!script->u.object);
 
     JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
-    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
     if (obj) {
         JS_SetPrivate(cx, obj, script);
         script->u.object = obj;

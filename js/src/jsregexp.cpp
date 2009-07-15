@@ -4644,7 +4644,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         return JS_FALSE;
     }
     if (xdr->mode == JSXDR_DECODE) {
-        obj = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL, 0);
+        obj = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         STOBJ_CLEAR_PARENT(obj);
@@ -5012,7 +5012,7 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* Otherwise, replace obj with a new RegExp object. */
-        obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
 
@@ -5068,7 +5068,7 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
         return NULL;
-    obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
     if (!obj || !JS_SetPrivate(cx, obj, re)) {
         js_DestroyRegExp(cx, re);
         obj = NULL;
@@ -5085,7 +5085,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent)
     JSRegExp *re;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
-    clone = js_NewObject(cx, &js_RegExpClass, NULL, parent, 0);
+    clone = js_NewObject(cx, &js_RegExpClass, NULL, parent);
     if (!clone)
         return NULL;
     re = (JSRegExp *) JS_GetPrivate(cx, obj);
