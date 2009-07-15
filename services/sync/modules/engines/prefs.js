@@ -229,7 +229,6 @@ PrefTracker.prototype = {
   
   _init: function PrefTracker__init() {
     this.__proto__.__proto__._init.call(this);
-    this._log.debug("PrefTracker initializing!");
     this._prefs.addObserver("", this, false);   
   },
   
