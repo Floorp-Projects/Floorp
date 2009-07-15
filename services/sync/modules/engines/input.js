@@ -50,6 +50,7 @@ function InputEngine(pbeId) {
   this._init(pbeId);
 }
 InputEngine.prototype = {
+  get enabled() null, // XXX force disabled in-case the pref was somehow set
   __proto__: SyncEngine.prototype,
 
   get name() { return "input"; },

@@ -79,6 +79,7 @@ function PrefStore() {
 }
 PrefStore.prototype = {
   __proto__: Store.prototype,
+  name: "prefs",
   _logName: "PrefStore",
 
   get _prefs() {
@@ -204,6 +205,7 @@ function PrefTracker() {
 }
 PrefTracker.prototype = {
   __proto__: Tracker.prototype,
+  name: "prefs",
   _logName: "PrefTracker",
   file: "prefs",
   
@@ -227,7 +229,6 @@ PrefTracker.prototype = {
   
   _init: function PrefTracker__init() {
     this.__proto__.__proto__._init.call(this);
-    this._log.debug("PrefTracker initializing!");
     this._prefs.addObserver("", this, false);   
   },
   

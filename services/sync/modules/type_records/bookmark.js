@@ -34,8 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['PlacesItem', 'Bookmark', 'BookmarkFolder', 'BookmarkMicsum',
-                          'Livemark', 'BookmarkSeparator'];
+const EXPORTED_SYMBOLS = ["PlacesItem", "Bookmark", "BookmarkFolder",
+  "BookmarkMicsum", "BookmarkQuery", "Livemark", "BookmarkSeparator"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -69,6 +69,8 @@ PlacesItem.prototype = {
         return Bookmark;
       case "microsummary":
         return BookmarkMicsum;
+      case "query":
+        return BookmarkQuery;
       case "folder":
         return BookmarkFolder;
       case "livemark":
@@ -123,6 +125,21 @@ BookmarkMicsum.prototype = {
 };
 
 Utils.deferGetSet(BookmarkMicsum, "cleartext", ["generatorUri", "staticTitle"]);
+
+function BookmarkQuery(uri) {
+  this._BookmarkQuery_init(uri);
+}
+BookmarkQuery.prototype = {
+  __proto__: Bookmark.prototype,
+  _logName: "Record.BookmarkQuery",
+
+  _BookmarkQuery_init: function BookmarkQuery_init(uri) {
+    this._Bookmark_init(uri);
+    this.type = "query";
+  },
+};
+
+Utils.deferGetSet(BookmarkQuery, "cleartext", ["folderName"]);
 
 function BookmarkFolder(uri) {
   this._BookmarkFolder_init(uri);

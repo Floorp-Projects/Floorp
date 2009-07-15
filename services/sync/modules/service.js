@@ -706,9 +706,9 @@ WeaveSvc.prototype = {
         this._log.info("Server data wiped to ensure consistency due to missing keys");
       }
 
-      let pass = ID.get("WeaveCryptoID").getPassword();
-      if (pass) {
-        let keys = PubKeys.createKeypair(pass, PubKeys.defaultKeyUri,
+      let passphrase = ID.get("WeaveCryptoID");
+      if (passphrase.getPassword()) {
+        let keys = PubKeys.createKeypair(passphrase, PubKeys.defaultKeyUri,
                                          PrivKeys.defaultKeyUri);
         try {
           PubKeys.uploadKeypair(keys);
