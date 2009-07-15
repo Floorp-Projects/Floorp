@@ -51,7 +51,8 @@ namespace ipc {
 class RPCChannel : public SyncChannel
 {
 public:
-    class RPCListener : public SyncChannel::Listener
+    class /*NS_INTERFACE_CLASS*/ RPCListener :
+        public SyncChannel::SyncListener
     {
     public:
         virtual ~RPCListener() { }
