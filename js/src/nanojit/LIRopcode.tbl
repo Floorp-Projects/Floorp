@@ -77,11 +77,11 @@ OPDEF(unused5,   5,-1, None)
 OPDEF(unused6,   6,-1, None)
 
 /* non-pure operations */
-OPDEF(addp,      7, 2, Op2)     // integer addition for temporary pointer calculations
-OPDEF(param,     8, 0, P)       // load a parameter
+OPDEF(iaddp,     7, 2, Op2)     // 32-bit integer addition for temporary pointer calculations
+OPDEF(iparam,    8, 0, P)       // load a parameter (32-bit register or stack location)
 OPDEF(unused9,   9,-1, None)
 OPDEF(ld,       10, 1, Ld)      // 32-bit load
-OPDEF(alloc,    11, 0, I)       // alloca some stack space
+OPDEF(ialloc,   11, 0, I)       // alloca some stack space
 OPDEF(sti,      12, 2, Sti)     // 32-bit store
 OPDEF(ret,      13, 1, Op1)     // return a word-sized value
 OPDEF(live,     14, 1, Op1)     // extend live range of reference

@@ -373,7 +373,7 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
                     if (argRes->reg == UnknownReg) {
                         // load it into the arg reg
                         int d = findMemFor(arg);
-                        if (arg->isop(LIR_alloc)) {
+                        if (arg->isop(LIR_ialloc)) {
                             asm_add_imm(r, FP, d);
                         } else {
                             LDR(r, FP, d);
@@ -393,7 +393,7 @@ Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd)
         } else {
             int d = findMemFor(arg);
             STR_preindex(IP, SP, -4);
-            if (arg->isop(LIR_alloc)) {
+            if (arg->isop(LIR_ialloc)) {
                 asm_add_imm(IP, FP, d);
             } else {
                 LDR(IP, FP, d);
@@ -616,7 +616,7 @@ Assembler::hint(LIns* i, RegisterMask allow /* = ~0 */)
         prefer = rmask(R0);
     else if (op == LIR_callh)
         prefer = rmask(R1);
-    else if (op == LIR_param)
+    else if (op == LIR_iparam)
         prefer = rmask(imm2register(i->paramArg()));
 
     if (_allocator.free & allow & prefer)
@@ -646,7 +646,7 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
 {
     Reservation *rA, *rB;
     Register ra, rb;
-    if (base->isop(LIR_alloc)) {
+    if (base->isop(LIR_ialloc)) {
         rb = FP;
         dr += findMemFor(base);
         ra = findRegFor(value, GpRegs);
@@ -661,7 +661,7 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
 void
 Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 {
-    if (i->isop(LIR_alloc)) {
+    if (i->isop(LIR_ialloc)) {
         asm_add_imm(r, FP, disp(resv));
     } else if (IsFpReg(r)) {
         NanoAssert(AvmCore::config.vfp);
@@ -1739,7 +1739,7 @@ Assembler::asm_arith(LInsp ins)
             rb = findRegFor(rhs, allow);
         }
         allow &= ~rmask(rb);
-    } else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
+    } else if ((op == LIR_add||op == LIR_iaddp) && lhs->isop(LIR_ialloc) && rhs->isconst()) {
         // add alloc+const, rr wants the address of the allocated space plus a constant
         Register rr = prepResultReg(ins, allow);
         int d = findMemFor(lhs) + rhs->imm32();
@@ -1759,7 +1759,7 @@ Assembler::asm_arith(LInsp ins)
         if (lhs == rhs)
             rb = ra;
 
-        if (op == LIR_add || op == LIR_addp)
+        if (op == LIR_add || op == LIR_iaddp)
             ADDs(rr, ra, rb, 1);
         else if (op == LIR_sub)
             SUB(rr, ra, rb);
@@ -1784,7 +1784,7 @@ Assembler::asm_arith(LInsp ins)
             NanoAssertMsg(0, "Unsupported");
     } else {
         int c = rhs->imm32();
-        if (op == LIR_add || op == LIR_addp)
+        if (op == LIR_add || op == LIR_iaddp)
             ADDi(rr, ra, c);
         else if (op == LIR_sub)
             SUBi(rr, ra, c);
