@@ -44,9 +44,21 @@
 #include "base/message_loop.h"
 #include "chrome/common/ipc_channel.h"
 
+
+//-----------------------------------------------------------------------------
+namespace {
+enum Result {
+    MsgProcessed,
+    MsgNotKnown,
+    MsgNotAllowed,
+    MsgPayloadError,
+    MsgRouteError,
+    MsgValueError,
+};
+} // namespace {
+
 namespace mozilla {
 namespace ipc {
-//-----------------------------------------------------------------------------
 
 class AsyncChannel : public IPC::Channel::Listener
 {
@@ -66,15 +78,6 @@ public:
     class /*NS_INTERFACE_CLASS*/ Listener
     {
     public:
-        enum Result {
-            MsgProcessed,
-            MsgNotKnown,
-            MsgNotAllowed,
-            MsgPayloadError,
-            MsgRouteError,
-            MsgValueError,
-        };
-
         virtual ~Listener() { }
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
     };

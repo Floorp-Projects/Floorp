@@ -54,9 +54,6 @@ struct RunnableMethodTraits<mozilla::ipc::RPCChannel>
 namespace mozilla {
 namespace ipc {
 
-// XXX work around bug in name resolution in MSVC8
-typedef mozilla::ipc::RPCChannel::Listener Listener;
-
 bool
 RPCChannel::Call(Message* msg, Message* reply)
 {
@@ -136,18 +133,18 @@ RPCChannel::OnDispatchMessage(const Message& call)
 
     Message* reply;
     switch (static_cast<Listener*>(mListener)->OnCallReceived(call, reply)) {
-    case Listener::MsgProcessed:
+    case MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this,
                                             &RPCChannel::OnSendReply,
                                             reply));
         return;
 
-    case Listener::MsgNotKnown:
-    case Listener::MsgNotAllowed:
-    case Listener::MsgPayloadError:
-    case Listener::MsgRouteError:
-    case Listener::MsgValueError:
+    case MsgNotKnown:
+    case MsgNotAllowed:
+    case MsgPayloadError:
+    case MsgRouteError:
+    case MsgValueError:
         // FIXME/cjones: error handling; OnError()?
         return;
 
