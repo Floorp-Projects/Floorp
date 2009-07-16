@@ -914,6 +914,9 @@ WeaveSvc.prototype = {
     this._log.info("Client metadata wiped, deleting server data");
     this.wipeServer();
 
+    // XXX Bug 504125 Wait a while after wiping so that the DELETEs replicate
+    Sync.sleep(2000);
+
     this._log.debug("Uploading new metadata record");
     meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
     this._log.debug("Setting meta payload storage version to " + STORAGE_VERSION);
@@ -950,9 +953,6 @@ WeaveSvc.prototype = {
           this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));
         }
       }
-
-      // XXX Bug 504125 Wait a while after wiping so that the DELETEs replicate
-      Sync.sleep(5000);
     }))(),
 
   /**
