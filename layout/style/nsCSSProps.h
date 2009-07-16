@@ -60,6 +60,9 @@
 #define CSS_PROPERTY_APPLIES_TO_FIRST_LINE        (1<<3)
 #define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE \
   (CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_APPLIES_TO_FIRST_LINE)
+// Note that 'background-color' is ignored differently from the other
+// properties that have this set, but that's just special-cased.
+#define CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED (1<<4)
 
 class nsCSSProps {
 public:

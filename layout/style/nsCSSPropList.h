@@ -292,8 +292,8 @@ CSS_PROP_BACKENDONLY(azimuth, azimuth, Azimuth, 0, Aural, mAzimuth, eCSSType_Val
 CSS_PROP_SHORTHAND(background, background, Background, 0)
 CSS_PROP_BACKGROUND(background-attachment, background_attachment, BackgroundAttachment, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackAttachment, eCSSType_ValueList, kBackgroundAttachmentKTable)
 CSS_PROP_BACKGROUND(-moz-background-clip, _moz_background_clip, MozBackgroundClip, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackClip, eCSSType_ValueList, kBackgroundClipKTable)
-CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mBackColor, eCSSType_Value, nsnull)
-CSS_PROP_BACKGROUND(background-image, background_image, BackgroundImage, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackImage, eCSSType_ValueList, nsnull)
+CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Color, mBackColor, eCSSType_Value, nsnull)
+CSS_PROP_BACKGROUND(background-image, background_image, BackgroundImage, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Color, mBackImage, eCSSType_ValueList, nsnull)
 CSS_PROP_BACKGROUND(-moz-background-inline-policy, _moz_background_inline_policy, MozBackgroundInlinePolicy, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mBackInlinePolicy, eCSSType_Value, kBackgroundInlinePolicyKTable)
 CSS_PROP_BACKGROUND(-moz-background-origin, _moz_background_origin, MozBackgroundOrigin, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackOrigin, eCSSType_ValueList, kBackgroundOriginKTable)
 CSS_PROP_BACKGROUND(background-position, background_position, BackgroundPosition, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Color, mBackPosition, eCSSType_ValuePairList, kBackgroundPositionKTable)
@@ -301,8 +301,8 @@ CSS_PROP_BACKGROUND(background-repeat, background_repeat, BackgroundRepeat, CSS_
 CSS_PROP_DISPLAY(-moz-binding, binding, MozBinding, 0, Display, mBinding, eCSSType_Value, nsnull) // XXX bug 3935
 CSS_PROP_SHORTHAND(border, border, Border, 0)
 CSS_PROP_SHORTHAND(border-bottom, border_bottom, BorderBottom, 0)
-CSS_PROP_BORDER(border-bottom-color, border_bottom_color, BorderBottomColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColor.mBottom, eCSSType_Value, kBorderColorKTable)
-CSS_PROP_BORDER(-moz-border-bottom-colors, border_bottom_colors, MozBorderBottomColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColors.mBottom, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(border-bottom-color, border_bottom_color, BorderBottomColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderColor.mBottom, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(-moz-border-bottom-colors, border_bottom_colors, MozBorderBottomColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderColors.mBottom, eCSSType_ValueList, nsnull)
 CSS_PROP_BORDER(border-bottom-style, border_bottom_style, BorderBottomStyle, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderStyle.mBottom, eCSSType_Value, kBorderStyleKTable)  // on/off will need reflow
 CSS_PROP_BORDER(border-bottom-width, border_bottom_width, BorderBottomWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderWidth.mBottom, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_TABLEBORDER(border-collapse, border_collapse, BorderCollapse, 0, Table, mBorderCollapse, eCSSType_Value, kBorderCollapseKTable)
@@ -324,11 +324,11 @@ CSS_PROP_BORDER(-moz-border-image, border_image, MozBorderImage, CSS_PROPERTY_AP
 CSS_PROP_SHORTHAND(border-left, border_left, BorderLeft, 0)
 CSS_PROP_SHORTHAND(border-left-color, border_left_color, BorderLeftColor, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(border-left-color-value, border_left_color_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColor.mLeft, eCSSType_Value, kBorderColorKTable)
-CSS_PROP_BORDER(border-left-color-ltr-source, border_left_color_ltr_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_BORDER(border-left-color-rtl-source, border_left_color_rtl_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-color-value, border_left_color_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderColor.mLeft, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(border-left-color-ltr-source, border_left_color_ltr_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_DIRECTIONAL_SOURCE | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderLeftColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-color-rtl-source, border_left_color_rtl_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_DIRECTIONAL_SOURCE | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderLeftColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
-CSS_PROP_BORDER(-moz-border-left-colors, border_left_colors, MozBorderLeftColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColors.mLeft, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(-moz-border-left-colors, border_left_colors, MozBorderLeftColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderColors.mLeft, eCSSType_ValueList, nsnull)
 CSS_PROP_SHORTHAND(border-left-style, border_left_style, BorderLeftStyle, 0) // on/off will need reflow
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-left-style-value, border_left_style_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderStyle.mLeft, eCSSType_Value, kBorderStyleKTable)
@@ -344,11 +344,11 @@ CSS_PROP_BORDER(border-left-width-rtl-source, border_left_width_rtl_source, X, C
 CSS_PROP_SHORTHAND(border-right, border_right, BorderRight, 0)
 CSS_PROP_SHORTHAND(border-right-color, border_right_color, BorderRightColor, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_BORDER(border-right-color-value, border_right_color_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColor.mRight, eCSSType_Value, kBorderColorKTable)
-CSS_PROP_BORDER(border-right-color-ltr-source, border_right_color_ltr_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_BORDER(border-right-color-rtl-source, border_right_color_rtl_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-color-value, border_right_color_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderColor.mRight, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(border-right-color-ltr-source, border_right_color_ltr_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_DIRECTIONAL_SOURCE | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderRightColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-color-rtl-source, border_right_color_rtl_source, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_DIRECTIONAL_SOURCE | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderRightColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
-CSS_PROP_BORDER(-moz-border-right-colors, border_right_colors, MozBorderRightColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColors.mRight, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(-moz-border-right-colors, border_right_colors, MozBorderRightColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderColors.mRight, eCSSType_ValueList, nsnull)
 CSS_PROP_SHORTHAND(border-right-style, border_right_style, BorderRightStyle, 0) // on/off will need reflow
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-right-style-value, border_right_style_value, X, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderStyle.mRight, eCSSType_Value, kBorderStyleKTable)
@@ -377,8 +377,8 @@ CSS_PROP_BORDER(border-start-width-value, border_start_width_value, X, CSS_PROPE
 #endif
 CSS_PROP_SHORTHAND(border-style, border_style, BorderStyle, 0)  // on/off will need reflow
 CSS_PROP_SHORTHAND(border-top, border_top, BorderTop, 0)
-CSS_PROP_BORDER(border-top-color, border_top_color, BorderTopColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColor.mTop, eCSSType_Value, kBorderColorKTable)
-CSS_PROP_BORDER(-moz-border-top-colors, border_top_colors, MozBorderTopColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderColors.mTop, eCSSType_ValueList, nsnull)
+CSS_PROP_BORDER(border-top-color, border_top_color, BorderTopColor, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderColor.mTop, eCSSType_Value, kBorderColorKTable)
+CSS_PROP_BORDER(-moz-border-top-colors, border_top_colors, MozBorderTopColors, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mBorderColors.mTop, eCSSType_ValueList, nsnull)
 CSS_PROP_BORDER(border-top-style, border_top_style, BorderTopStyle, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderStyle.mTop, eCSSType_Value, kBorderStyleKTable)  // on/off will need reflow
 CSS_PROP_BORDER(border-top-width, border_top_width, BorderTopWidth, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER, Margin, mBorderWidth.mTop, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_SHORTHAND(border-width, border_width, BorderWidth, 0)
@@ -388,12 +388,12 @@ CSS_PROP_POSITION(-moz-box-sizing, box_sizing, MozBoxSizing, 0, Position, mBoxSi
 CSS_PROP_TABLEBORDER(caption-side, caption_side, CaptionSide, 0, Table, mCaptionSide, eCSSType_Value, kCaptionSideKTable)
 CSS_PROP_DISPLAY(clear, clear, Clear, 0, Display, mClear, eCSSType_Value, kClearKTable)
 CSS_PROP_DISPLAY(clip, clip, Clip, 0, Display, mClip, eCSSType_Rect, nsnull)
-CSS_PROP_COLOR(color, color, Color, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Color, mColor, eCSSType_Value, nsnull)
+CSS_PROP_COLOR(color, color, Color, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Color, mColor, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-count, _moz_column_count, MozColumnCount, 0, Column, mColumnCount, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-width, _moz_column_width, MozColumnWidth, 0, Column, mColumnWidth, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-gap, _moz_column_gap, MozColumnGap, 0, Column, mColumnGap, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(-moz-column-rule, _moz_column_rule, MozColumnRule, 0)
-CSS_PROP_COLUMN(-moz-column-rule-color, _moz_column_rule_color, MozColumnRuleColor, 0, Column, mColumnRuleColor, eCSSType_Value, nsnull)
+CSS_PROP_COLUMN(-moz-column-rule-color, _moz_column_rule_color, MozColumnRuleColor, CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Column, mColumnRuleColor, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-rule-style, _moz_column_rule_style, MozColumnRuleStyle, 0, Column, mColumnRuleStyle, eCSSType_Value, kBorderStyleKTable)
 CSS_PROP_COLUMN(-moz-column-rule-width, _moz_column_rule_width, MozColumnRuleWidth, 0, Column, mColumnRuleWidth, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_CONTENT(content, content, Content, 0, Content, mContent, eCSSType_ValueList, kContentKTable)
@@ -460,7 +460,7 @@ CSS_PROP_POSITION(min-width, min_width, MinWidth, 0, Position, mMinWidth, eCSSTy
 CSS_PROP_DISPLAY(opacity, opacity, Opacity, 0, Display, mOpacity, eCSSType_Value, nsnull) // XXX bug 3935
 CSS_PROP_BACKENDONLY(orphans, orphans, Orphans, 0, Breaks, mOrphans, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(outline, outline, Outline, 0)
-CSS_PROP_OUTLINE(outline-color, outline_color, OutlineColor, 0, Margin, mOutlineColor, eCSSType_Value, kOutlineColorKTable)
+CSS_PROP_OUTLINE(outline-color, outline_color, OutlineColor, CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Margin, mOutlineColor, eCSSType_Value, kOutlineColorKTable)
 CSS_PROP_OUTLINE(outline-style, outline_style, OutlineStyle, 0, Margin, mOutlineStyle, eCSSType_Value, kBorderStyleKTable)
 CSS_PROP_OUTLINE(outline-width, outline_width, OutlineWidth, 0, Margin, mOutlineWidth, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_OUTLINE(outline-offset, outline_offset, OutlineOffset, 0, Margin, mOutlineOffset, eCSSType_Value, nsnull)
