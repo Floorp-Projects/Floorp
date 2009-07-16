@@ -66,12 +66,6 @@ public:
 
   nsPlaceholderFrame* mPlaceholder;     // nsPlaceholderFrame
 
-  // Region in the spacemanager impacted by this float; the
-  // coordinates are relative to the containing block frame. The
-  // region includes the margins around the float, but doesn't
-  // include the relative offsets.
-  nsRect mRegion;
-
 protected:
   nsFloatCache* mNext;
 

@@ -131,7 +131,7 @@ namespace nanojit
 
     const uint32_t MAXARGS = 8;
 
-    #if defined(_MSC_VER) && _MSC_VER < 1400
+    #ifdef MOZ_NO_VARADIC_MACROS
         static void NanoAssertMsgf(bool a,const char *f,...) {}
         static void NanoAssertMsg(bool a,const char *m) {}
         static void NanoAssert(bool a) {}
@@ -180,7 +180,7 @@ namespace nanojit
 #define NJ_PROFILE 1
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER < 1400
+#ifdef MOZ_NO_VARADIC_MACROS
     #include <stdio.h>
     #define verbose_outputf            if (_logc->lcbits & LC_Assembly) \
                                         Assembler::outputf

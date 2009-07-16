@@ -64,6 +64,8 @@ _BROWSER_TEST_FILES = \
 	browser_394759_privatebrowsing.js \
 	browser_408470.js \
 	browser_408470_sample.html \
+	browser_423132.js \
+	browser_423132_sample.html \
 	browser_447951.js \
 	browser_447951_sample.html \
 	browser_448741.js \

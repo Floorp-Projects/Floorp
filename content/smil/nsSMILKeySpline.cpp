@@ -40,7 +40,7 @@
 
 #define NEWTON_ITERATIONS   4
 
-const double nsSMILKeySpline::kSampleStepSize = 
+const double nsSMILKeySpline::kSampleStepSize =
                                         1.0 / double(kSplineTableSize - 1);
 
 nsSMILKeySpline::nsSMILKeySpline(double aX1,
@@ -78,7 +78,8 @@ nsSMILKeySpline::CalcBezier(double aT,
                             double aA1,
                             double aA2)
 {
-  return A(aA1, aA2) * pow(aT,3) + B(aA1, aA2)*aT*aT + C(aA1) * aT;
+  // use Horner's scheme to evaluate the Bezier polynomial
+  return ((A(aA1, aA2)*aT + B(aA1, aA2))*aT + C(aA1))*aT;
 }
 
 /*static*/ double
@@ -86,7 +87,7 @@ nsSMILKeySpline::GetSlope(double aT,
                           double aA1,
                           double aA2)
 {
-  double denom = (3.0 * A(aA1, aA2)*aT*aT + 2.0 * B(aA1, aA2) * aT + C(aA1)); 
+  double denom = (3.0 * A(aA1, aA2)*aT*aT + 2.0 * B(aA1, aA2) * aT + C(aA1));
   return (denom == 0.0) ? 0.0 : 1.0 / denom;
 }
 
@@ -102,7 +103,7 @@ nsSMILKeySpline::GetTForX(double aX) const
   // to converge to a good accuracy. By taking an initial guess in this way we
   // only need 3~4 iterations depending on the size of the table.
   for (i = 0; i < kSplineTableSize - 2 && mSampleValues[i] < aX; ++i);
-  double currentT = 
+  double currentT =
     double(i) * kSampleStepSize + (aX - mSampleValues[i]) * kSampleStepSize;
 
   // Refine with Newton-Raphson iteration

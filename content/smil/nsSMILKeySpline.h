@@ -80,7 +80,7 @@ private:
   {
     return 1.0 - 3.0 * aA2 + 3.0 * aA1;
   }
-  
+
   static double
   B(double aA1, double aA2)
   {

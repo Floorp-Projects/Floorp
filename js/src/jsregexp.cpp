@@ -4324,19 +4324,6 @@ out:
 
 /************************************************************************/
 
-#define REGEXP_PROP_ATTRS     (JSPROP_PERMANENT | JSPROP_SHARED)
-#define RO_REGEXP_PROP_ATTRS  (REGEXP_PROP_ATTRS | JSPROP_READONLY)
-
-static JSPropertySpec regexp_props[] = {
-    {"source",     REGEXP_SOURCE,      RO_REGEXP_PROP_ATTRS,0,0},
-    {"global",     REGEXP_GLOBAL,      RO_REGEXP_PROP_ATTRS,0,0},
-    {"ignoreCase", REGEXP_IGNORE_CASE, RO_REGEXP_PROP_ATTRS,0,0},
-    {"lastIndex",  REGEXP_LAST_INDEX,  REGEXP_PROP_ATTRS,0,0},
-    {"multiline",  REGEXP_MULTILINE,   RO_REGEXP_PROP_ATTRS,0,0},
-    {"sticky",     REGEXP_STICKY,      RO_REGEXP_PROP_ATTRS,0,0},
-    {0,0,0,0,0}
-};
-
 static JSBool
 regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -4404,6 +4391,25 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
     return ok;
 }
+
+#define REGEXP_PROP_ATTRS     (JSPROP_PERMANENT | JSPROP_SHARED)
+#define RO_REGEXP_PROP_ATTRS  (REGEXP_PROP_ATTRS | JSPROP_READONLY)
+
+#define G regexp_getProperty
+#define S regexp_setProperty
+
+static JSPropertySpec regexp_props[] = {
+    {"source",     REGEXP_SOURCE,      RO_REGEXP_PROP_ATTRS,G,S},
+    {"global",     REGEXP_GLOBAL,      RO_REGEXP_PROP_ATTRS,G,S},
+    {"ignoreCase", REGEXP_IGNORE_CASE, RO_REGEXP_PROP_ATTRS,G,S},
+    {"lastIndex",  REGEXP_LAST_INDEX,  REGEXP_PROP_ATTRS,G,S},
+    {"multiline",  REGEXP_MULTILINE,   RO_REGEXP_PROP_ATTRS,G,S},
+    {"sticky",     REGEXP_STICKY,      RO_REGEXP_PROP_ATTRS,G,S},
+    {0,0,0,0,0}
+};
+
+#undef G
+#undef S
 
 /*
  * RegExp class static properties and their Perl counterparts:
@@ -4683,7 +4689,7 @@ JSClass js_RegExpClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     JS_PropertyStub,    JS_PropertyStub,
-    regexp_getProperty, regexp_setProperty,
+    JS_PropertyStub,    JS_PropertyStub,
     JS_EnumerateStub,   JS_ResolveStub,
     JS_ConvertStub,     regexp_finalize,
     NULL,               NULL,
