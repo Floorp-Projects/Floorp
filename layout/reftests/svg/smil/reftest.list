@@ -69,16 +69,25 @@ fails == anim-fillopacity-1.svg anim-standard-ref.svg    # non-length-numeric va
 == anim-remove-7.svg anim-standard-ref.svg
 == anim-retarget-1.svg anim-standard-ref.svg
 == anim-retarget-2.svg anim-standard-ref.svg
-fails == anim-retarget-3.svg anim-standard-ref.svg # href support
+== anim-retarget-3.svg anim-standard-ref.svg
 == anim-retarget-4.svg anim-standard-ref.svg
-fails == anim-retarget-5.svg anim-standard-ref.svg # href support
-fails == anim-retarget-6.svg anim-standard-ref.svg # href support
-fails == anim-retarget-7.svg anim-standard-ref.svg # href support
+== anim-retarget-5.svg anim-standard-ref.svg
+== anim-retarget-6.svg anim-standard-ref.svg
+== anim-retarget-7.svg anim-standard-ref.svg
 == anim-retarget-8.svg anim-standard-ref.svg
 
 fails == anim-strokecolor-1.svg anim-standard-ref.svg # color support
 fails == anim-strokewidth-1.svg anim-standard-ref.svg # color support
-fails == anim-targethref-1.svg anim-standard-ref.svg  # href support
+
+== anim-targethref-1.svg anim-standard-ref.svg
+== anim-targethref-2.svg anim-standard-ref.svg
+== anim-targethref-3.svg anim-standard-ref.svg
+== anim-targethref-4.svg anim-standard-ref.svg
+== anim-targethref-5.svg anim-standard-ref.svg
+== anim-targethref-6.svg anim-standard-ref.svg
+== anim-targethref-7.svg anim-standard-ref.svg
+== anim-targethref-8.svg anim-standard-ref.svg
+== anim-targethref-9.svg anim-standard-ref.svg
 
 == anim-width-done-1a.svg anim-standard-ref.svg
 == anim-width-done-1b.svg anim-standard-ref.svg
