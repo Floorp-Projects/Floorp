@@ -716,8 +716,8 @@ str_toSource(JSContext *cx, uintN argc, jsval *vp)
 
 #endif /* JS_HAS_TOSOURCE */
 
-static JSBool
-str_toString(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     return js_GetPrimitiveThis(cx, vp, &js_StringClass, vp);
 }
@@ -2399,7 +2399,7 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 }
 #endif
 
-JS_DEFINE_TRCINFO_1(str_toString,
+JS_DEFINE_TRCINFO_1(js_str_toString,
     (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,                        1, 1)))
 JS_DEFINE_TRCINFO_1(str_charAt,
     (3, (extern, STRING_RETRY,      js_String_getelem, CONTEXT, THIS_STRING, INT32,           1, 1)))
@@ -2420,9 +2420,10 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Java-like methods. */
-    JS_TN(js_toString_str,     str_toString,          0,JSFUN_THISP_STRING, str_toString_trcinfo),
-    JS_FN(js_valueOf_str,      str_toString,          0,JSFUN_THISP_STRING),
-    JS_FN(js_toJSON_str,       str_toString,          0,JSFUN_THISP_STRING),
+    JS_TN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING,
+          js_str_toString_trcinfo),
+    JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_THISP_STRING),
+    JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
