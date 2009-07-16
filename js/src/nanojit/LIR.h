@@ -51,6 +51,8 @@
  */
 namespace nanojit
 {
+    using namespace MMgc;
+
     enum LOpcode
 #if defined(_MSC_VER) && _MSC_VER >= 1400
           : unsigned
@@ -715,7 +717,7 @@ namespace nanojit
     class Fragmento;    // @todo remove this ; needed for minbuild for some reason?!?  Should not be compiling this code at all
 
     // make it a GCObject so we can explicitly delete it early
-    class LirWriter : public avmplus::GCObject
+    class LirWriter : public GCObject
     {
     public:
         LirWriter *out;
@@ -833,7 +835,7 @@ namespace nanojit
         template <class Key>
         class CountMap: public avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects> {
         public:
-            CountMap(avmplus::GC*gc) : avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects>(gc) {}
+            CountMap(GC*gc) : avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects>(gc) {}
             int add(Key k) {
                 int c = 1;
                 if (containsKey(k)) {
@@ -859,7 +861,7 @@ namespace nanojit
         void formatImm(int32_t c, char *buf);
     public:
 
-        LirNameMap(avmplus::GC *gc, LabelMap *r)
+        LirNameMap(GC *gc, LabelMap *r)
             : lircounts(gc),
             funccounts(gc),
             names(gc),
@@ -882,7 +884,7 @@ namespace nanojit
         DWB(LirNameMap*) names;
         LogControl* logc;
     public:
-        VerboseWriter(avmplus::GC *gc, LirWriter *out,
+        VerboseWriter(GC *gc, LirWriter *out,
                       LirNameMap* names, LogControl* logc)
             : LirWriter(out), code(gc), names(names), logc(logc)
         {}
@@ -977,7 +979,7 @@ namespace nanojit
 
         LInsp *m_list; // explicit WB's are used, no DWB needed.
         uint32_t m_used, m_cap;
-        avmplus::GC* m_gc;
+        GC* m_gc;
 
         static uint32_t FASTCALL hashcode(LInsp i);
         uint32_t FASTCALL find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap);
@@ -986,7 +988,7 @@ namespace nanojit
 
     public:
 
-        LInsHashSet(avmplus::GC* gc);
+        LInsHashSet(GC* gc);
         ~LInsHashSet();
         LInsp find32(int32_t a, uint32_t &i);
         LInsp find64(uint64_t a, uint32_t &i);
@@ -1010,7 +1012,7 @@ namespace nanojit
     {
     public:
         LInsHashSet exprs;
-        CseFilter(LirWriter *out, avmplus::GC *gc);
+        CseFilter(LirWriter *out, GC *gc);
         LIns* insImm(int32_t imm);
         LIns* insImmq(uint64_t q);
         LIns* ins0(LOpcode v);
@@ -1021,7 +1023,7 @@ namespace nanojit
         LIns* insGuard(LOpcode op, LInsp cond, LIns *x);
     };
 
-    class LirBuffer : public avmplus::GCFinalizedObject
+    class LirBuffer : public GCFinalizedObject
     {
         public:
             DWB(Fragmento*)        _frago;
@@ -1122,18 +1124,18 @@ namespace nanojit
     class Assembler;
 
     void compile(Assembler *assm, Fragment *frag);
-    verbose_only(void live(avmplus::GC *gc, LirBuffer *lirbuf);)
+    verbose_only(void live(GC *gc, LirBuffer *lirbuf);)
 
     class StackFilter: public LirFilter
     {
-        avmplus::GC *gc;
+        GC *gc;
         LirBuffer *lirbuf;
         LInsp sp;
         avmplus::BitSet stk;
         int top;
         int getTop(LInsp br);
     public:
-        StackFilter(LirFilter *in, avmplus::GC *gc, LirBuffer *lirbuf, LInsp sp);
+        StackFilter(LirFilter *in, GC *gc, LirBuffer *lirbuf, LInsp sp);
         virtual ~StackFilter() {}
         LInsp read();
     };
@@ -1154,7 +1156,7 @@ namespace nanojit
         LInsHashSet exprs;
         void clear(LInsp p);
     public:
-        LoadFilter(LirWriter *out, avmplus::GC *gc)
+        LoadFilter(LirWriter *out, GC *gc)
             : LirWriter(out), exprs(gc) { }
 
         LInsp ins0(LOpcode);
