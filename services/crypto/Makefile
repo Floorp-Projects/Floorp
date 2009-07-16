@@ -275,8 +275,7 @@ clean:
           $(cpp_objects) $(cpp_objects_i386) $(cpp_objects_ppc) \
           $(idl_typelib) $(idl_headers) $(target:=.res) fake.lib fake.exp WeaveCrypto.rc
 
-substitute  := perl -p -e 's/@([^@]+)@/defined $$ENV{$$1} ? $$ENV{$$1} : $$&/ge'
-
+substitute = perl -p -e 's/@([^@]+)@/defined $$ENV{$$1} ? $$ENV{$$1} : $$&/ge'
 subst:
 	$(substitute) WeaveCrypto.rc.in > WeaveCrypto.rc
 
