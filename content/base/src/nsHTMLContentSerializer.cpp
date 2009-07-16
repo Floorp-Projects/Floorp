@@ -69,6 +69,7 @@
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
 #include "nsHtml5Module.h"
+#include "nsIHTMLDocument.h"
 
 static const char kMozStr[] = "moz";
 
@@ -101,7 +102,6 @@ nsHTMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
   return NS_OK;
 }
 
-#include "nsIHTMLDocument.h"
 void 
 nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                              nsIDOMElement *aOriginalElement,
@@ -126,7 +126,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   if (!caseSensitive) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
     if (htmlDoc) {
-      loopForward = nsHtml5Module::Enabled;
+      loopForward = nsHtml5Module::sEnabled;
     }
   }
   PRInt32 index, limit, step;

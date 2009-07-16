@@ -188,8 +188,8 @@ nsSMILAnimationFunction::SampleAt(nsSMILTime aSampleTime,
                                   const nsSMILTimeValue& aSimpleDuration,
                                   PRUint32 aRepeatIteration)
 {
-  if (mHasChanged || mLastValue || mSampleTime != aSampleTime || 
-      mSimpleDuration.CompareTo(aSimpleDuration) || 
+  if (mHasChanged || mLastValue || mSampleTime != aSampleTime ||
+      mSimpleDuration.CompareTo(aSimpleDuration) ||
       mRepeatIteration != aRepeatIteration) {
     mHasChanged = PR_TRUE;
   }
@@ -250,12 +250,12 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
   // (Otherwise, we're probably just frozen.)
   if (mIsActive) {
     NS_ENSURE_TRUE(mSampleTime >= 0,);
-    NS_ENSURE_TRUE(mSimpleDuration.IsResolved() || 
+    NS_ENSURE_TRUE(mSimpleDuration.IsResolved() ||
                    mSimpleDuration.IsIndefinite(),);
   }
 
   nsSMILValue result(aResult.mType);
-  
+
   if (mSimpleDuration.IsIndefinite() ||
       (HasAttr(nsGkAtoms::values) && values.Length() == 1)) {
 
@@ -339,7 +339,7 @@ nsSMILAnimationFunction::WillReplace() const
    * here we return false for to animation as it builds on the underlying value
    * unless its a frozen to animation.
    */
-  return !(IsAdditive() || IsToAnimation()) || 
+  return !(IsAdditive() || IsToAnimation()) ||
     (IsToAnimation() && mIsFrozen && !mHasChanged);
 }
 
@@ -371,7 +371,7 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
     return NS_ERROR_FAILURE;
   }
 
-  if ((!IsToAnimation() && aValues.Length() < 2) || 
+  if ((!IsToAnimation() && aValues.Length() < 2) ||
       (IsToAnimation()  && aValues.Length() != 1)) {
     NS_ERROR("Unexpected number of values.");
     return NS_ERROR_FAILURE;
@@ -411,7 +411,7 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
       (PRUint32) floor(simpleProgress * (aValues.Length()));
     aResult = aValues[index];
     return NS_OK;
-  } 
+  }
 
   // Get the normalised progress between adjacent values
   double intervalProgress;
@@ -423,7 +423,7 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
     intervalProgress = simpleProgress;
     ScaleIntervalProgress(intervalProgress, 0, 1);
   } else {
-    if (GetCalcMode() == CALC_PACED) { 
+    if (GetCalcMode() == CALC_PACED) {
       rv = ComputePacedPosition(aValues, simpleProgress, intervalProgress,
                                 from, to);
       NS_ENSURE_SUCCESS(rv,rv);
@@ -588,7 +588,7 @@ nsSMILAnimationFunction::ScaleSimpleProgress(double& aProgress)
     return;
   }
 
-  aProgress = (i + (aProgress - intervalStart) / intervalLength) * 
+  aProgress = (i + (aProgress - intervalStart) / intervalLength) *
          1.0 / double(numTimes - 1);
 }
 
@@ -607,7 +607,7 @@ nsSMILAnimationFunction::ScaleIntervalProgress(double& aProgress,
   if (!HasAttr(nsGkAtoms::keySplines))
     return;
 
-  NS_ASSERTION(aIntervalIndex >= 0 && 
+  NS_ASSERTION(aIntervalIndex >= 0 &&
                aIntervalIndex < (PRUint32)mKeySplines.Length(),
                "Invalid interval index.");
   NS_ASSERTION(aNumIntervals >= 1, "Invalid number of intervals.");
@@ -656,7 +656,7 @@ nsSMILAnimationFunction::ParseAttr(nsIAtom* aAttName,
 {
   nsAutoString attValue;
   if (GetAttr(aAttName, attValue)) {
-    nsresult rv = 
+    nsresult rv =
       aSMILAttr.ValueFromString(attValue, mAnimationElement, aResult);
     if (NS_FAILED(rv))
       return PR_FALSE;
@@ -740,14 +740,14 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
   CheckKeySplines(result.Length());
 
   result.SwapElements(aResult);
-  
+
   return NS_OK;
 }
 
 inline PRBool
 nsSMILAnimationFunction::IsToAnimation() const
 {
-  return !HasAttr(nsGkAtoms::values) && 
+  return !HasAttr(nsGkAtoms::values) &&
          HasAttr(nsGkAtoms::to) &&
          !HasAttr(nsGkAtoms::from);
 }
@@ -894,7 +894,7 @@ nsSMILAnimationFunction::SetAccumulate(const nsAString& aAccumulate,
                                        nsAttrValue& aResult)
 {
   mHasChanged = PR_TRUE;
-  PRBool parseResult = 
+  PRBool parseResult =
     aResult.ParseEnumValue(aAccumulate, sAccumulateTable, PR_TRUE);
   SET_FLAG(mErrorFlags, BF_ACCUMULATE, !parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;
@@ -912,7 +912,7 @@ nsSMILAnimationFunction::SetAdditive(const nsAString& aAdditive,
                                      nsAttrValue& aResult)
 {
   mHasChanged = PR_TRUE;
-  PRBool parseResult 
+  PRBool parseResult
     = aResult.ParseEnumValue(aAdditive, sAdditiveTable, PR_TRUE);
   SET_FLAG(mErrorFlags, BF_ADDITIVE, !parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;
@@ -930,7 +930,7 @@ nsSMILAnimationFunction::SetCalcMode(const nsAString& aCalcMode,
                                      nsAttrValue& aResult)
 {
   mHasChanged = PR_TRUE;
-  PRBool parseResult 
+  PRBool parseResult
     = aResult.ParseEnumValue(aCalcMode, sCalcModeTable, PR_TRUE);
   SET_FLAG(mErrorFlags, BF_CALC_MODE, !parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;

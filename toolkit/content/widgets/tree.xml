@@ -209,25 +209,35 @@
         <parameter name="aThresh"/>
         <parameter name="aPos"/>
         <body><![CDATA[
-          if (aPos) aPos.value = "before";
+          var isRTL = document.defaultView.getComputedStyle(this, "")
+                              .direction == "rtl";
 
+          if (aPos)
+            aPos.value = isRTL ? "after" : "before";
+
+          var columns = [];
           var col = this.columns.getFirstColumn();
-          var lastCol = null;
+          while (col) {
+            columns.push(col);
+            col = col.getNext();
+          }
+          if (isRTL)
+            columns.reverse();
           var currentX = this.boxObject.x;
           var adjustedX = aX + this.treeBoxObject.horizontalPosition;
-          while (col) {
+          for (var i = 0; i < columns.length; ++i) {
+            col = columns[i];
             var cw = col.element.boxObject.width;
             if (cw > 0) {
               currentX += cw;
               if (currentX - (cw * aThresh) > adjustedX)
                 return col.element;
             }
-            lastCol = col;
-            col = col.getNext();
           }
 
-          if (aPos) aPos.value = "after";
-          return lastCol.element;
+          if (aPos)
+            aPos.value = isRTL ? "before" : "after";
+          return columns.pop().element;
         ]]></body>
       </method>
 

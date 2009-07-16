@@ -5862,15 +5862,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   }
 
   // Capture the margin information for the caller
-  const nsMargin& m = floatRS.mComputedMargin;
-  aFloatMargin.top = brc.GetTopMargin();
-  aFloatMargin.right = m.right;
-  // Only last in flows get a bottom margin
-  if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
-    brc.GetCarriedOutBottomMargin().Include(m.bottom);
-  }
-  aFloatMargin.bottom = brc.GetCarriedOutBottomMargin().get();
-  aFloatMargin.left = m.left;
+  aFloatMargin = floatRS.mComputedMargin; // float margins don't collapse
 
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
 

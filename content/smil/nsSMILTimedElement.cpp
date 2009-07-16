@@ -185,7 +185,7 @@ nsSMILTimedElement::GetStartTime() const
   if (!startTime.IsResolved()) {
     startTime.SetIndefinite();
   }
-  
+
   return startTime;
 }
 
@@ -237,7 +237,7 @@ nsSMILTimedElement::SampleAt(nsSMILTime aDocumentTime)
         nsSMILTimeValue beginAfter;
         beginAfter.SetMillis(LL_MININT);
 
-        mElementState = 
+        mElementState =
          (NS_SUCCEEDED(GetNextInterval(beginAfter, PR_TRUE, mCurrentInterval)))
          ? STATE_WAITING
          : STATE_POSTACTIVE;
@@ -262,7 +262,7 @@ nsSMILTimedElement::SampleAt(nsSMILTime aDocumentTime)
         CheckForEarlyEnd(docTime);
         if (mCurrentInterval.mEnd.CompareTo(docTime) <= 0) {
           nsSMILInterval newInterval;
-          mElementState = 
+          mElementState =
             (NS_SUCCEEDED(GetNextInterval(mCurrentInterval.mEnd,
                                           PR_FALSE,
                                           newInterval)))
@@ -442,7 +442,7 @@ nsSMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec)
   nsSMILTimeValue duration;
   PRBool isMedia;
   nsresult rv;
-  
+
   rv = nsSMILParserUtils::ParseClockValue(aDurSpec, &duration,
           nsSMILParserUtils::kClockValueAllowIndefinite, &isMedia);
 
@@ -450,7 +450,7 @@ nsSMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec)
     mSimpleDur.SetIndefinite();
     return NS_ERROR_FAILURE;
   }
-  
+
   if (duration.IsResolved() && duration.GetMillis() == 0L) {
     mSimpleDur.SetIndefinite();
     return NS_ERROR_FAILURE;
@@ -487,7 +487,7 @@ nsSMILTimedElement::SetMin(const nsAString& aMinSpec)
   nsSMILTimeValue duration;
   PRBool isMedia;
   nsresult rv;
-  
+
   rv = nsSMILParserUtils::ParseClockValue(aMinSpec, &duration, 0, &isMedia);
 
   if (isMedia) {
@@ -498,7 +498,7 @@ nsSMILTimedElement::SetMin(const nsAString& aMinSpec)
     mMin.SetMillis(0L);
     return NS_ERROR_FAILURE;
   }
-  
+
   if (duration.GetMillis() < 0L) {
     mMin.SetMillis(0L);
     return NS_ERROR_FAILURE;
@@ -523,7 +523,7 @@ nsSMILTimedElement::SetMax(const nsAString& aMaxSpec)
   nsSMILTimeValue duration;
   PRBool isMedia;
   nsresult rv;
-  
+
   rv = nsSMILParserUtils::ParseClockValue(aMaxSpec, &duration,
           nsSMILParserUtils::kClockValueAllowIndefinite, &isMedia);
 
@@ -534,7 +534,7 @@ nsSMILTimedElement::SetMax(const nsAString& aMaxSpec)
     mMax.SetIndefinite();
     return NS_ERROR_FAILURE;
   }
-  
+
   if (duration.IsResolved() && duration.GetMillis() <= 0L) {
     mMax.SetIndefinite();
     return NS_ERROR_FAILURE;
@@ -557,7 +557,7 @@ nsresult
 nsSMILTimedElement::SetRestart(const nsAString& aRestartSpec)
 {
   nsAttrValue temp;
-  PRBool parseResult 
+  PRBool parseResult
     = temp.ParseEnumValue(aRestartSpec, sRestartModeTable, PR_TRUE);
   mRestartMode = parseResult
                ? nsSMILRestartMode(temp.GetEnumValue())
@@ -577,7 +577,7 @@ nsresult
 nsSMILTimedElement::SetRepeatCount(const nsAString& aRepeatCountSpec)
 {
   nsSMILRepeatCount newRepeatCount;
-  nsresult rv = 
+  nsresult rv =
     nsSMILParserUtils::ParseRepeatCount(aRepeatCountSpec, newRepeatCount);
 
   if (NS_SUCCEEDED(rv)) {
@@ -587,7 +587,7 @@ nsSMILTimedElement::SetRepeatCount(const nsAString& aRepeatCountSpec)
   }
 
   UpdateCurrentInterval();
-    
+
   return rv;
 }
 
@@ -611,7 +611,7 @@ nsSMILTimedElement::SetRepeatDur(const nsAString& aRepeatDurSpec)
     mRepeatDur.SetUnresolved();
     return NS_ERROR_FAILURE;
   }
-  
+
   mRepeatDur = duration;
   UpdateCurrentInterval();
 
@@ -631,7 +631,7 @@ nsSMILTimedElement::SetFillMode(const nsAString& aFillModeSpec)
   PRUint16 previousFillMode = mFillMode;
 
   nsAttrValue temp;
-  PRBool parseResult = 
+  PRBool parseResult =
     temp.ParseEnumValue(aFillModeSpec, sFillModeTable, PR_TRUE);
   mFillMode = parseResult
             ? nsSMILFillMode(temp.GetEnumValue())
@@ -665,7 +665,7 @@ nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
 {
   nsRefPtr<nsSMILTimeValueSpec> spec;
   SMILTimeValueSpecList& timeSpecsList = aIsBegin ? mBeginSpecs : mEndSpecs;
-  nsTArray<nsSMILInstanceTime>& instancesList 
+  nsTArray<nsSMILInstanceTime>& instancesList
     = aIsBegin ? mBeginInstances : mEndInstances;
 
   timeSpecsList.Clear();
@@ -712,7 +712,7 @@ nsSMILTimedElement::GetNextInterval(const nsSMILTimeValue& aBeginAfter,
 {
   static nsSMILTimeValue zeroTime;
   zeroTime.SetMillis(0L);
-  
+
   nsSMILTimeValue beginAfter = aBeginAfter;
   nsSMILTimeValue tempBegin;
   nsSMILTimeValue tempEnd;
@@ -751,7 +751,7 @@ nsSMILTimedElement::GetNextInterval(const nsSMILTimeValue& aBeginAfter,
 
       tempEnd = CalcActiveEnd(tempBegin, indefiniteEnd);
     } else {
-      // 
+      //
       // Start searching from the beginning again.
       //
       endPos = 0;
@@ -760,9 +760,9 @@ nsSMILTimedElement::GetNextInterval(const nsSMILTimeValue& aBeginAfter,
                                               endPos, tempEnd);
 
       if ((!aFirstInterval && tempEnd.CompareTo(aBeginAfter) == 0) ||
-          (aFirstInterval && tempEnd.CompareTo(tempBegin) == 0 && 
+          (aFirstInterval && tempEnd.CompareTo(tempBegin) == 0 &&
            endPos <= endMaxPos)) {
-        endFound = 
+        endFound =
           GetNextGreaterOrEqual(mEndInstances, tempBegin, endPos, tempEnd);
       }
 
@@ -772,12 +772,12 @@ nsSMILTimedElement::GetNextInterval(const nsSMILTimeValue& aBeginAfter,
         if (mEndHasEventConditions || mEndInstances.Length() == 0) {
           tempEnd.SetUnresolved();
         } else {
-          // 
+          //
           // This is a little counter-intuitive but according to SMILANIM, if
           // all the ends are before the begin, we _don't_ just assume an
           // infinite end, it's actually a bad interval. ASV however will just
           // use an infinite end.
-          // 
+          //
           return NS_ERROR_FAILURE;
         }
       }
@@ -928,7 +928,7 @@ nsSMILTimedElement::ActiveTimeToSimpleTime(nsSMILTime aActiveTime,
   if (mSimpleDur.IsIndefinite() || mSimpleDur.GetMillis() == 0L) {
     aRepeatIteration = 0;
     result = aActiveTime;
-  } else {    
+  } else {
     result = aActiveTime % mSimpleDur.GetMillis();
     aRepeatIteration = (PRUint32)(aActiveTime / mSimpleDur.GetMillis());
   }
@@ -960,8 +960,8 @@ nsSMILTimedElement::CheckForEarlyEnd(const nsSMILTimeValue& aDocumentTime)
   while (GetNextGreaterOrEqual(mBeginInstances, mCurrentInterval.mBegin,
                                position, nextBegin)
          && nextBegin.CompareTo(mCurrentInterval.mBegin) == 0);
-        
-  if (nextBegin.IsResolved() && 
+
+  if (nextBegin.IsResolved() &&
       nextBegin.CompareTo(mCurrentInterval.mBegin) > 0 &&
       nextBegin.CompareTo(mCurrentInterval.mEnd) < 0 &&
       nextBegin.CompareTo(aDocumentTime) <= 0) {
@@ -1027,7 +1027,7 @@ nsSMILTimedElement::SampleSimpleTime(nsSMILTime aActiveTime)
 {
   if (mClient) {
     PRUint32 repeatIteration;
-    nsSMILTime simpleTime = 
+    nsSMILTime simpleTime =
       ActiveTimeToSimpleTime(aActiveTime, repeatIteration);
     mClient->SampleAt(simpleTime, mSimpleDur, repeatIteration);
   }
@@ -1043,10 +1043,10 @@ nsSMILTimedElement::SampleFillValue()
     return;
 
   PRUint32 repeatIteration;
-  nsSMILTime activeTime = 
+  nsSMILTime activeTime =
     mCurrentInterval.mEnd.GetMillis() - mCurrentInterval.mBegin.GetMillis();
 
-  nsSMILTime simpleTime = 
+  nsSMILTime simpleTime =
     ActiveTimeToSimpleTime(activeTime, repeatIteration);
 
   if (simpleTime == 0L) {

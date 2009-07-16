@@ -3607,9 +3607,9 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   PRBool bCaseSensitive = document->IsCaseSensitive();
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
-  PRBool bHTML = htmlDoc && !bCaseSensitive;
+  PRBool isHTML = htmlDoc && !bCaseSensitive;
 
-  if (bHTML && nsHtml5Module::Enabled) {
+  if (isHTML && nsHtml5Module::sEnabled) {
     // See if the document has a cached fragment parser. nsHTMLDocument is the
     // only one that should really have one at the moment.
     nsCOMPtr<nsIParser> parser = document->GetFragmentParser();
@@ -3734,7 +3734,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIContentSink> contentsink = parser->GetContentSink();
   if (contentsink) {
     // Make sure it's the correct type.
-    if (bHTML) {
+    if (isHTML) {
       nsCOMPtr<nsIHTMLContentSink> htmlsink = do_QueryInterface(contentsink);
       sink = do_QueryInterface(htmlsink);
     }
@@ -3747,7 +3747,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   if (!sink) {
     // Either there was no cached content sink or it was the wrong type. Make a
     // new one.
-    if (bHTML) {
+    if (isHTML) {
       rv = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
     } else {
       rv = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
@@ -3779,7 +3779,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   }
 
   rv = parser->ParseFragment(aFragment, nsnull, tagStack,
-                             !bHTML, contentType, mode);
+                             !isHTML, contentType, mode);
   if (NS_SUCCEEDED(rv)) {
     rv = sink->GetFragment(aWillOwnFragment, aReturn);
   }

@@ -55,6 +55,12 @@ _TEST_FILES = 	test_bug399925.html \
                 test_bug490949.html \
                 bug490949-iframe.html \
                 bug490949.sjs \
+                test_bug496292.html \
+                bug496292-iframe-ref.html \
+                bug496292-iframe-1.html \
+                bug496292-iframe-2.html \
+                bug496292-1.sjs \
+                bug496292-2.sjs \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

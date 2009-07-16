@@ -71,6 +71,9 @@ include floats/reftest.list
 # font-face
 include font-face/reftest.list
 
+# font matching
+include font-matching/reftest.list
+
 # forms
 include forms/reftest.list
 
