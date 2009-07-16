@@ -1122,6 +1122,12 @@ static struct OCSPDefaultResponders myDefaultOCSPResponders[] = {
     "CN=GlobalSign Extended Validation CA,O=GlobalSign,OU=Extended Validation CA",
     nsnull, "NLH5yYxrNUTMCGkK7uOjuVy/FuA=", nsnull,
     "http://ocsp.globalsign.com/ExtendedSSL"
+  },
+  /* Trustwave */
+  {
+    "CN=SecureTrust CA,O=SecureTrust Corporation,C=US",
+    nsnull, "QjK2FvoE/f5dS3rD/fdMQB1aQ68=", nsnull,
+    "http://ocsp.trustwave.com"
   }
 };
 
