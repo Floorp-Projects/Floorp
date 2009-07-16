@@ -43,6 +43,8 @@ include $(DEPTH)/config/autoconf.mk
 
 OS_CXXFLAGS := $(filter-out -fshort-wchar,$(OS_CXXFLAGS))
 
+OS_CXXFLAGS += -fno-inline
+
 LIBRARY_NAME = chromium_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
