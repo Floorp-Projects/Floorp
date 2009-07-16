@@ -1106,6 +1106,22 @@ static struct OCSPDefaultResponders myDefaultOCSPResponders[] = {
     "CN=Network Solutions EV SSL CA,O=Network Solutions L.L.C.,C=US",
     nsnull, "tk6FnYQfGx3UUolOB5Yt+d7xj8w=", nsnull,
     "http://ocsp.netsolssl.com"
+  },
+  /* GlobalSign */
+  {
+    "CN=GlobalSign Root CA,OU=Root CA,O=GlobalSign nv-sa,C=BE",
+    nsnull, "YHtmGkUNl8qJUC99BM00qP/8/Us=", nsnull,
+    "http://ocsp.globalsign.com/ExtendedSSLCACross"
+  },
+  {
+    "CN=GlobalSign,O=GlobalSign,OU=GlobalSign Root CA - R2",
+    nsnull, "m+IHV2ccHsBqBt5ZtJot39wZhi4=", nsnull,
+    "http://ocsp.globalsign.com/ExtendedSSLCA"
+  },
+  {
+    "CN=GlobalSign Extended Validation CA,O=GlobalSign,OU=Extended Validation CA",
+    nsnull, "NLH5yYxrNUTMCGkK7uOjuVy/FuA=", nsnull,
+    "http://ocsp.globalsign.com/ExtendedSSL"
   }
 };
 
