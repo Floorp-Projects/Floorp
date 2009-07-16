@@ -266,6 +266,7 @@ endif
 endif # WINNT
 ifeq ($(OS_ARCH),WINCE)
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell uuid ole32 oleaut32 Ws2 ddraw)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, ceosutil libcmt comsuppw)
 ifdef WINCE_WINDOWS_MOBILE
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, cellcore)
 endif

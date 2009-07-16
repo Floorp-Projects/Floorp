@@ -4575,7 +4575,6 @@ case "$target_os" in
         if test -z "$GNU_CC"; then 
             XPC_IDISPATCH_SUPPORT=1
             MOZ_NO_ACTIVEX_SUPPORT=
-            MOZ_ACTIVEX_SCRIPTING_SUPPORT=1
         fi
         ;;
 esac
@@ -6074,11 +6073,11 @@ MOZ_ARG_DISABLE_BOOL(activex,
     MOZ_NO_ACTIVEX_SUPPORT= )
 AC_SUBST(MOZ_NO_ACTIVEX_SUPPORT)
 
-MOZ_ARG_DISABLE_BOOL(activex-scripting,
-[  --disable-activex-scripting
-                          Disable building of ActiveX scripting support (win32)],
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=,
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1)
+MOZ_ARG_ENABLE_BOOL(activex-scripting,
+[  --enable-activex-scripting
+                          Enable building of ActiveX scripting support (win32)],
+    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1,
+    MOZ_ACTIVEX_SCRIPTING_SUPPORT=)
 AC_SUBST(MOZ_ACTIVEX_SCRIPTING_SUPPORT)
 
 if test -n "$MOZ_NO_ACTIVEX_SUPPORT" -a -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT";

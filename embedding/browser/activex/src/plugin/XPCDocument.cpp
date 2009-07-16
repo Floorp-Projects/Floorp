@@ -57,6 +57,10 @@
 //
 // Neither Visual C++ 6.0 or 7.0 ship with this interface.
 //
+#ifdef WINCE
+#define USE_HTIFACE
+#endif
+
 #ifdef USE_HTIFACE
 #include <htiface.h>
 #endif
@@ -939,7 +943,27 @@ public:
         mData(NULL),
         mUseTarget(NULL)
     {
+#ifdef MOZ_FLASH_ACTIVEX_PATCH
+        // HACK+TODO:
+        //
+        // AddRef()ing here causes leaking the MozAxPlugin's
+        // PrefObserver() because IEDocument() itself leaks.
+        // CControlSite::Attach() adds references to this object that
+        // aren't countered; most likely in the
+        // DoVerb(OLEIVERB_INPLACEACTIVATE) call. Maybe it results in a
+        // circular reference but the rest of the problem happens inside
+        // ATL and COM, so good luck with that.
+        //
+        // Sadly, I have no time to debug the original problem
+        // throughoutly but leaking pref observers visibly causes XUL to
+        // crash upon exit. XUL tries to release the stale pref observer
+        // after npmozax.dll has long since been unloaded. Note that a
+        // callback to IEDocument after unloading npmozax.dll would also
+        // crash but that doesn't seem to happen after tearing down the
+        // plugin instance itself. -Simo
+#else
         MozAxPlugin::AddRef();
+#endif
     }
 
     HRESULT Init(PluginInstanceData *pData)
@@ -1009,7 +1033,11 @@ public:
         {
             mWindow->Release();
         }
+#ifdef MOZ_FLASH_ACTIVEX_PATCH
+        // HACK+TODO: See IEDocument::IEDocument()
+#else
         MozAxPlugin::Release();
+#endif
     }
 
 BEGIN_COM_MAP(IEDocument)
