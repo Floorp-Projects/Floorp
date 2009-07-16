@@ -179,6 +179,13 @@ nsGeoPosition::GetCoords(nsIDOMGeoPositionCoords * *aCoords)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGeoPosition::GetAddress(nsIDOMGeoPositionAddress** aAddress)
+{
+  *aAddress = nsnull;
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS2(WinMobileLocationProvider, nsIGeolocationProvider, nsITimerCallback)
 
 WinMobileLocationProvider::WinMobileLocationProvider():
