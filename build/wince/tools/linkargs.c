@@ -30,6 +30,12 @@ void addLinkArgs(int k, int s, int *i, int *j, char** args, char** argv) {
   args[(*i)++] = "/MAP";
   args[(*i)++] = "/MAPINFO:EXPORTS";
 
+  if (getenv("LOCK_DLLS") != NULL) {
+    // lock our dlls in memory
+    args[(*i)++] = "/SECTION:.text,\!P";
+    args[(*i)++] = "/SECTION:.rdata,\!P";
+  }
+
 #ifdef HAVE_SHUNT   // simple test to see if we're in configure or not
   if(getenv("NO_SHUNT") == NULL) {
     args[(*i)++] = "/LIBPATH:\"" SHUNT_LIB "\"";
