@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=466409
+-->
+<head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=466409">Mozilla Bug 466409</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="testframe"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 466409 **/
+
+
+function setUniversalDetector(detector)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefBranch);
+
+  var olddetector = pref.getCharPref("intl.charset.detector");
+  pref.setCharPref("intl.charset.detector", detector);
+  return olddetector;
+}
+
+SimpleTest.waitForExplicitFinish();
+var testframe = document.getElementById('testframe');
+
+testframe.onload = function ()
+  {
+    setUniversalDetector(olddetector);
+    ok(true, "page loaded successfully");
+    SimpleTest.finish();
+  };
+
+var olddetector = setUniversalDetector("universal_charset_detector");
+testframe.src = "bug466409-page.html";
+
+</script>
+</pre>
+</body>
+</html>

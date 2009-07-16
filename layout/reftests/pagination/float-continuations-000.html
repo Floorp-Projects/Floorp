@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<style type="text/css">
+
+.multicol {
+  margin: 1em;
+  border: solid silver;
+  width: 500px;
+  -moz-column-width: 100px;
+  -moz-column-gap: 0;
+  height: 100px;
+}
+
+div {
+  margin: 2px 0;
+  border: 2px white;
+  border-style: solid none;
+}
+
+.float {
+  float: right;
+  margin: 44px 0;
+  width: 15px;
+  background: aqua;
+  border-color: aqua;
+  height: 296px;
+}
+
+#float0 {
+  float: left;
+  width: 30px;
+  margin-right: 5px;
+  margin-bottom: 0;
+}
+
+#float1 {
+  margin-left: -15px;
+  margin-right: -5px;
+  position: relative;
+  right: 5px;
+}
+#float2 {
+  margin-left: 5px;
+  margin-right: 15px;
+}
+
+#clear {
+  clear: left;
+  border: 2px solid orange;
+}
+
+#c1 {
+  height: 142px;
+}
+
+#c2 {
+  border-bottom: none;
+}
+
+#c3 {
+  height: 100px;
+  border-bottom: 4px solid orange;
+}
+#c4 {
+  height: 192px;
+  border-bottom: 4px solid orange;
+}
+
+hr {
+  border: solid orange 20px;
+  border-style: none solid;
+  height: 4px;
+  margin: 0 -5px;
+  padding: 0;
+  position: relative;
+  z-index: 20;
+}
+
+#c2 > hr {
+  margin-top: 44px;
+}
+</style>
+
+<body onload="var f = document.getElementById('float0');
+              f.style.height = '20px';
+              document.body.offsetHeight;
+              f.style.height = '900px';
+              document.body.offsetHeight;
+              f.style.height = '';
+              document.body.offsetHeight;
+              var c = document.getElementById('c2');
+              c.style.height = '900px';
+              document.body.offsetHeight;
+              c.style.height = '';
+">
+
+<div class="multicol">
+  <div id="c1">
+    <div id="c2">
+      <div class="float" id="float0"></div>
+      <div class="float" id="float1"></div>
+      <div class="float" id="float2"></div>
+      <hr>
+    </div>
+  </div>
+  <div id="c3"><hr><div id="clear"></div></div>
+  <div id="c4"></div>
+</div>

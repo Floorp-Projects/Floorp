@@ -167,6 +167,8 @@
 #include "nsFocusManager.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
+#include "nsIDOMXULControlElement.h"
+#include "nsIFrame.h"
 #endif
 
 #include "plbase64.h"
@@ -3773,6 +3775,19 @@ nsGlobalWindow::GetMainWidget()
   }
 
   return widget;
+}
+
+nsIWidget*
+nsGlobalWindow::GetNearestWidget()
+{
+  nsIDocShell* docShell = GetDocShell();
+  NS_ENSURE_TRUE(docShell, nsnull);
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, nsnull);
+  nsIFrame* rootFrame = presShell->GetRootFrame();
+  NS_ENSURE_TRUE(rootFrame, nsnull);
+  return rootFrame->GetView()->GetNearestWidget(nsnull);
 }
 
 NS_IMETHODIMP
@@ -8916,6 +8931,51 @@ nsGlobalChromeWindow::SetBrowserDOMWindow(nsIBrowserDOMWindow *aBrowserWindow)
 
   mBrowserDOMWindow = aBrowserWindow;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
+{
+#ifdef MOZ_XUL
+  NS_ENSURE_ARG(aDefaultButton);
+
+  // Don't snap to a disabled button.
+  nsCOMPtr<nsIDOMXULControlElement> xulControl =
+                                      do_QueryInterface(aDefaultButton);
+  NS_ENSURE_TRUE(xulControl, NS_ERROR_FAILURE);
+  PRBool disabled;
+  nsresult rv = xulControl->GetDisabled(&disabled);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (disabled)
+    return NS_OK;
+
+  // Get the button rect in screen coordinates.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aDefaultButton));
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  nsIDocument *doc = content->GetCurrentDoc();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  nsIPresShell *shell = doc->GetPrimaryShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+  nsIntRect buttonRect = frame->GetScreenRect();
+
+  // Get the widget rect in screen coordinates.
+  nsIWidget *widget = GetNearestWidget();
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+  nsIntRect widgetRect;
+  rv = widget->GetScreenBounds(widgetRect);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Convert the buttonRect coordinates from screen to the widget.
+  buttonRect -= widgetRect.TopLeft();
+  rv = widget->OnDefaultButtonLoaded(buttonRect);
+  if (rv == NS_ERROR_NOT_IMPLEMENTED)
+    return NS_OK;
+  return rv;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 // nsGlobalModalWindow implementation

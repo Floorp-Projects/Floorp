@@ -790,9 +790,9 @@ namespace nanojit
 
         // Used for debug printing, if needed
         verbose_only(
-        ReverseLister *pp_init = NULL,
-                      *pp_after_sf1 = NULL,
-                      *pp_after_sf2 = NULL;
+        ReverseLister *pp_init = NULL;
+        ReverseLister *pp_after_sf1 = NULL;
+        ReverseLister *pp_after_sf2 = NULL;
         )
 
         // set up backwards pipeline: assembler -> StackFilter -> LirReader

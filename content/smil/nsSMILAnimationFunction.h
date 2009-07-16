@@ -174,7 +174,7 @@ public:
    * operations by only composing those animation that will affect the final
    * result.
    */
- 
+
   /**
    * Indicates if the animation is currently active. Inactive animations will
    * not contribute to the composed result.
@@ -183,7 +183,7 @@ public:
    */
   PRBool IsActive() const
   {
-    /* 
+    /*
      * - Frozen animations should be considered active for the purposes of
      * compositing.
      * - This function does not assume that our nsSMILValues (by/from/to/values)
@@ -323,7 +323,7 @@ protected:
   PRPackedBool                  mHasChanged;
 
   nsSMILTime                    mBeginTime; // document time
-  
+
   // The owning animation element. This is used for sorting based on document
   // position and for fetching attribute values stored in the element.
   // Raw pointer is OK here, because this nsSMILAnimationFunction can't outlive

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="go()">
+  <!-- In this test, we change an animation element's "attributeType" attribute
+       to "CSS", which invalidates a completed, frozen animation (since in SVG,
+       there's no CSS property that matches the attributeName that we're
+       animating, "x").  We verify that animation effects are removed from the
+       previously-targeted attribute. -->
+  <script>
+    function go() {
+      // Seek animation before we start tweaking things, to make sure we've
+      // already started sampling it.
+      document.documentElement.setCurrentTime(2.0);
+
+      var anim = document.getElementById("anim");
+      anim.setAttributeNS(null, "attributeType", "CSS");
+      setTimeAndSnapshot(2.5, false);
+    }
+  </script>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect x="15" y="15" width="200" height="200" fill="blue">
+    <animate id="anim" attributeName="x"
+             begin="0s" dur="2s" by="100" fill="freeze"/>
+  </rect>
+</svg>

@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>CSS 2.1: Font matching algorithm</title>
+		<link rel="author" title="L. David Baron" href="http://dbaron.org/" />
+		<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/" />
+		<link rel="help" href="http://www.w3.org/TR/CSS21/fonts.html#algorithm" />
+		<meta name="assert" content="That the 'UA-dependent default 'font-family'' described in step (5) does not vary based on the ancestor's font-family property." />
+	</head>
+	<body>
+
+<div style="font-family: Arial, Helvetica, sans-serif">
+  <div style="font-family: FontDoesNotExist">
+    Every line of text in this page should be in the same font.
+  </div>
+</div>
+
+<div style="font-family: Arial, Helvetica">
+  <div style="font-family: FontDoesNotExist">
+    Every line of text in this page should be in the same font.
+  </div>
+</div>
+
+<div style="font-family: Arial">
+  <div style="font-family: FontDoesNotExist">
+    Every line of text in this page should be in the same font.
+  </div>
+</div>
+
+<div style="font-family: Times New Roman, Times, serif">
+  <div style="font-family: FontDoesNotExist">
+    Every line of text in this page should be in the same font.
+  </div>
+</div>
+
+<div style="font-family: Times New Roman, Times">
+  <div style="font-family: FontDoesNotExist">
+    Every line of text in this page should be in the same font.
+  </div>
+</div>
+
+<div style="font-family: Times New Roman">
+  <div style="font-family: FontDoesNotExist">
+    Every line of text in this page should be in the same font.
+  </div>
+</div>
+
+<div style="font-family: Courier New, Courier, monospace">
+  <div style="font-family: FontDoesNotExist">
+    Every line of text in this page should be in the same font.
+  </div>
+</div>
+
+<div style="font-family: Verdana">
+  <div style="font-family: FontDoesNotExist">
+    Every line of text in this page should be in the same font.
+  </div>
+</div>
+
+	</body>
+</html>
