@@ -105,7 +105,7 @@ ifeq (Linux,$(OS_ARCH))
 OS_LIBS += -lrt
 endif
 ifeq (WINNT,$(OS_ARCH))
-OS_LIBS += psapi.lib
+OS_LIBS += psapi.lib dbghelp.lib
 endif
 endif
 
