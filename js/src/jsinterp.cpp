@@ -6216,12 +6216,14 @@ js_Interpret(JSContext *cx)
                 if (!parent)
                     goto error;
 
-                /* If re-parenting, push a clone of the function object. */
-                if (OBJ_GET_PARENT(cx, obj) != parent) {
-                    obj = js_CloneFunctionObject(cx, fun, parent);
-                    if (!obj)
-                        goto error;
-                }
+                /*
+                 * FIXME: bug 471214, Cloning here even when the compiler saw
+                 * the right parent is wasteful but we don't fully support
+                 * joined function objects, yet.
+                 */
+                obj = js_CloneFunctionObject(cx, fun, parent);
+                if (!obj)
+                    goto error;
             }
 
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
