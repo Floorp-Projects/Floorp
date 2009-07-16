@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="text/javascript">
+    // generate an enormous random number...
+    var r = Math.floor(Math.random() * Math.pow(2, 62)).toString();
+
+    // ... and use it to set a randomly named cookie
+    document.cookie = r + "=value; path=/ohai";
+  </script>
+<body>
+</body>
+</html>

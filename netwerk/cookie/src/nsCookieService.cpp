@@ -139,6 +139,7 @@ struct nsListIter
 {
   nsListIter() {}
 
+  explicit
   nsListIter(nsCookieEntry *aEntry)
    : entry(aEntry)
    , prev(nsnull)
@@ -2167,6 +2168,35 @@ nsCookieService::CountCookiesFromHost(const nsACString &aHost,
   
   *aCountFromHost = CountCookiesFromHostInternal(aHost, data);
   return NS_OK;
+}
+
+// get an enumerator of cookies stored by a particular host. this is provided by the
+// nsICookieManager2 interface.
+NS_IMETHODIMP
+nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
+                                    nsISimpleEnumerator **aEnumerator)
+{
+  nsCOMArray<nsICookie> cookieList(mMaxCookiesPerHost);
+  nsCAutoString hostWithDot(NS_LITERAL_CSTRING(".") + aHost);
+  PRInt64 currentTime = PR_Now() / PR_USEC_PER_SEC;
+
+  const char *currentDot = hostWithDot.get();
+  const char *nextDot = currentDot + 1;
+  do {
+    nsCookieEntry *entry = mHostTable->GetEntry(currentDot);
+    for (nsListIter iter(entry); iter.current; ++iter) {
+      // only append non-expired cookies
+      if (iter.current->Expiry() > currentTime)
+        cookieList.AppendObject(iter.current);
+    }
+
+    currentDot = nextDot;
+    if (currentDot)
+      nextDot = strchr(currentDot + 1, '.');
+
+  } while (currentDot);
+
+  return NS_NewArrayEnumerator(aEnumerator, cookieList);
 }
 
 // find an exact cookie specified by host, name, and path that hasn't expired.

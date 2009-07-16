@@ -76,7 +76,7 @@
 #include <windows.h>
 #endif
 
-#if defined(DEBUG) || defined(_MSC_VER) && _MSC_VER < 1400
+#if defined(DEBUG) || defined(MOZ_NO_VARADIC_MACROS)
 #if !defined _DEBUG
 #define _DEBUG
 #endif

@@ -7,11 +7,13 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="run()">
-<p id="display"><iframe id="iframe" src="about:blank"></iframe></p>
+<p id="display"><iframe id="iframe" src="about:blank"></iframe><iframe id="cloneiframe" src="about:blank"></iframe></p>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+
+var cloneiframe;
 
 function run() {
 
@@ -19,16 +21,13 @@ function run() {
     var ifwin = iframe.contentWindow;
     var ifdoc = iframe.contentDocument;
 
-    function setup_style() {
-        var style_elem = ifdoc.createElement("style");
-        style_elem.setAttribute("type", "text/css");
-        ifdoc.getElementsByTagName("head")[0].appendChild(style_elem);
-        var style_text = ifdoc.createTextNode("");
-        style_elem.appendChild(style_text);
-        return style_text;
-    }
+    cloneiframe = document.getElementById("cloneiframe");
 
-    var style_text = setup_style();
+    var style_elem = ifdoc.createElement("style");
+    style_elem.setAttribute("type", "text/css");
+    ifdoc.getElementsByTagName("head")[0].appendChild(style_elem);
+    var style_text = ifdoc.createTextNode("");
+    style_elem.appendChild(style_text);
 
     var gCounter = 0;
 
@@ -104,6 +103,52 @@ function run() {
 
         ifdoc.body.innerHTML = "";
         style_text.data = "";
+
+        // And now test that when we clone the style sheet, we end up
+        // with the same selector (serializes to same string, and
+        // matches the same things).
+        zi = ++gCounter;
+        var style_sheet = "data:text/css," +
+            escape(namespaces + selector + "{ z-index: " + zi + " }");
+        var style_sheet_link =
+            "<link rel='stylesheet' href='" + style_sheet + "'>";
+        var html_doc = "<!DOCTYPE HTML>" +
+                       style_sheet_link + style_sheet_link +
+                       "<body>" + body_contents;
+        var docurl = "data:text/html," + escape(html_doc);
+        defer_clonedoc_tests(docurl, function() {
+            var clonedoc = cloneiframe.contentDocument;
+            var clonewin = cloneiframe.contentWindow;
+            var links = clonedoc.getElementsByTagName("link");
+            // cause a clone
+            links[1].sheet.insertRule("#nonexistent { color: purple}", idx + 1);
+            // remove the uncloned sheet
+            links[0].parentNode.removeChild(links[0]);
+
+            var should_match = match_fn(clonedoc);
+            var should_not_match = notmatch_fn(clonedoc);
+
+            if (should_match.length + should_not_match.length == 0) {
+                ok(false, "nothing to check");
+            }
+
+            for (var i = 0; i < should_match.length; ++i) {
+                var e = should_match[i];
+                is(clonewin.getComputedStyle(e, "").zIndex, zi,
+                   "element in " + body_contents + " matched clone of " +
+                   selector);
+            }
+            for (var i = 0; i < should_not_match.length; ++i) {
+                var e = should_not_match[i];
+                is(clonewin.getComputedStyle(e, "").zIndex, "auto",
+                   "element in " + body_contents + " did not match clone of " +
+                   selector);
+            }
+
+            var ser3 = links[0].sheet.cssRules[idx].selectorText;
+            is(ser3, ser1,
+               "selector " + selector + " serializes correctly after cloning");
+        });
     }
 
     function should_serialize_to(selector, serialization)
@@ -117,14 +162,55 @@ function run() {
 
     function test_parseable(selector)
     {
-        var zi = ++gCounter;
         ifdoc.body.innerHTML = "<p></p>";
+
+        var zi = ++gCounter;
         style_text.data = "p, " + selector + "{ z-index: " + zi + " }";
         var should_match = ifdoc.getElementsByTagName("p")[0];
         is(ifwin.getComputedStyle(should_match, "").zIndex, zi,
            "selector " + selector + " was parsed");
+
+        // Test that it serializes to something that is also parseable.
+        var ser1 = style_elem.sheet.cssRules[0].selectorText;
+        zi = ++gCounter;
+        style_text.data = ser1 + "{ z-index: " + zi + " }";
+        is(ifwin.getComputedStyle(should_match, "").zIndex, zi,
+           "serialization " + ser1 + " of selector p, " + selector +
+           " was parsed");
+        var ser2 = style_elem.sheet.cssRules[0].selectorText;
+        is(ser2, ser1,
+           "parse+serialize of selector " + selector + " is idempotent");
+
         ifdoc.body.innerHTML = "";
         style_text.data = "";
+
+        // Test that it clones to the same thing it serializes to.
+        zi = ++gCounter;
+        var style_sheet = "data:text/css," +
+                          escape("p, " + selector + "{ z-index: " + zi + " }");
+        var style_sheet_link =
+            "<link rel='stylesheet' href='" + style_sheet + "'>";
+        var html_doc = "<!DOCTYPE HTML>" +
+                       style_sheet_link + style_sheet_link +
+                       "<p></p>";
+        var docurl = "data:text/html," + escape(html_doc);
+
+        defer_clonedoc_tests(docurl, function() {
+            var clonedoc = cloneiframe.contentDocument;
+            var clonewin = cloneiframe.contentWindow;
+            var links = clonedoc.getElementsByTagName("link");
+            // cause a clone
+            links[1].sheet.insertRule("#nonexistent { color: purple}", 0);
+            // remove the uncloned sheet
+            links[0].parentNode.removeChild(links[0]);
+
+            should_match = clonedoc.getElementsByTagName("p")[0];
+            is(clonewin.getComputedStyle(should_match, "").zIndex, zi,
+               "selector " + selector + " was cloned correctly");
+            var ser3 = links[0].sheet.cssRules[1].selectorText;
+            is(ser3, ser1,
+               "selector " + selector + " serializes correctly after cloning");
+        });
     }
 
     function test_balanced_unparseable(selector)
@@ -513,8 +599,8 @@ function run() {
                           xul_default_ns);
     test_selector_in_html("html|a", single_a, set_single, empty_set,
                           xul_default_ns + html_ns);
-	// Type selectors inside :not() bring in default namespaces, but
-	// non-type selectors don't.
+    // Type selectors inside :not() bring in default namespaces, but
+    // non-type selectors don't.
     test_selector_in_html("*|a:not(*)", single_a, set_single, empty_set,
                           xul_default_ns);
     test_selector_in_html("*|a:not(a)", single_a, set_single, empty_set,
@@ -546,7 +632,36 @@ function run() {
     test_selector_in_html("html|a:not(*|a)", single_a, empty_set, set_single,
                           xul_default_ns + html_ns);
 
-    SimpleTest.finish();
+    run_deferred_tests();
+}
+
+var deferred_tests = [];
+
+function defer_clonedoc_tests(docurl, onloadfunc)
+{
+    deferred_tests.push( { docurl: docurl, onloadfunc: onloadfunc } );
+}
+
+function run_deferred_tests()
+{
+    if (deferred_tests.length == 0) {
+        SimpleTest.finish();
+        return;
+    }
+
+    cloneiframe.onload = deferred_tests_onload;
+    cloneiframe.src = deferred_tests[0].docurl;
+}
+
+function deferred_tests_onload(event)
+{
+    if (event.target != cloneiframe)
+        return;
+
+    deferred_tests[0].onloadfunc();
+    deferred_tests.shift();
+
+    run_deferred_tests();
 }
 
 </script>
