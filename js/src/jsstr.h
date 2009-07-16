@@ -732,6 +732,9 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval);
 
 extern JSBool
+js_str_toString(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
 js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
                        JSString *repstr, jsval *vp);
 
