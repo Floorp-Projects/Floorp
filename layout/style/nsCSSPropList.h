@@ -514,7 +514,7 @@ CSS_PROP_TABLE(table-layout, table_layout, TableLayout, 0, Table, mLayout, eCSST
 CSS_PROP_TEXT(text-align, text_align, TextAlign, 0, Text, mTextAlign, eCSSType_Value, kTextAlignKTable)
 CSS_PROP_TEXTRESET(text-decoration, text_decoration, TextDecoration, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mDecoration, eCSSType_Value, kTextDecorationKTable)
 CSS_PROP_TEXT(text-indent, text_indent, TextIndent, 0, Text, mTextIndent, eCSSType_Value, nsnull)
-CSS_PROP_TEXT(text-shadow, text_shadow, TextShadow, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS, Text, mTextShadow, eCSSType_ValueList, nsnull)
+CSS_PROP_TEXT(text-shadow, text_shadow, TextShadow, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE | CSS_PROPERTY_VALUE_LIST_USES_COMMAS | CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED, Text, mTextShadow, eCSSType_ValueList, nsnull)
 CSS_PROP_TEXT(text-transform, text_transform, TextTransform, CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE, Text, mTextTransform, eCSSType_Value, kTextTransformKTable)
 CSS_PROP_DISPLAY(-moz-transform, _moz_transform, MozTransform, 0, Display, mTransform, eCSSType_ValueList, kDisplayKTable)
 CSS_PROP_DISPLAY(-moz-transform-origin, _moz_transform_origin, MozTransformOrigin, 0, Display, mTransformOrigin, eCSSType_ValuePair, kBackgroundPositionKTable)
