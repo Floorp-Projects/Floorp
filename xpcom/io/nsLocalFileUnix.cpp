@@ -86,6 +86,13 @@
 #include "nsIGnomeVFSService.h"
 #endif
 
+#ifdef MOZ_PLATFORM_HILDON
+#include <glib.h>
+#include <hildon-uri.h>
+#include <hildon-mime.h>
+#include <libosso.h>
+#endif
+
 #include "nsNativeCharsetUtils.h"
 #include "nsTraceRefcntImpl.h"
 
@@ -1654,11 +1661,30 @@ NS_IMETHODIMP
 nsLocalFile::Launch()
 {
 #ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_PLATFORM_HILDON
+    const PRInt32 kHILDON_SUCCESS = 1;
+    DBusError err;
+    dbus_error_init(&err);
+
+    DBusConnection *connection = dbus_bus_get(DBUS_BUS_SESSION, &err);
+    if (dbus_error_is_set(&err)) {
+      dbus_error_free(&err);
+      return NS_ERROR_FAILURE;
+    }
+
+    if (nsnull == connection)
+      return NS_ERROR_FAILURE;
+
+    if (hildon_mime_open_file(connection, mPath.get()) != kHILDON_SUCCESS)
+      return NS_ERROR_FAILURE;
+    return NS_OK;
+#else
     nsCOMPtr<nsIGnomeVFSService> vfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
     if (!vfs)
         return NS_ERROR_FAILURE;
 
     return vfs->ShowURIForInput(mPath);
+#endif
 #else
     return NS_ERROR_FAILURE;
 #endif
