@@ -53,7 +53,7 @@ class nsIDocument;
 
 //----------------------------------------------------------------------
 // nsSMILAnimationController
-// 
+//
 // The animation controller maintains the animation timer and determines the
 // sample times and sample rate for all SMIL animations in a document. There is
 // at most one animation controller per nsDocument so that frame-rate tuning can
@@ -74,7 +74,7 @@ public:
   virtual void Pause(PRUint32 aType);
   virtual void Resume(PRUint32 aType);
   virtual nsSMILTime GetParentTime() const;
-  
+
   // Methods for registering and enumerating animation elements
   void RegisterAnimationElement(nsISMILAnimationElement* aAnimationElement);
   void UnregisterAnimationElement(nsISMILAnimationElement* aAnimationElement);
@@ -118,7 +118,7 @@ protected:
     TimeContainerHashtable* mActiveContainers;
     nsSMILCompositorTable*  mCompositorTable;
   };
-  
+
   // Factory methods
   friend nsSMILAnimationController*
   NS_NewSMILAnimationController(nsIDocument* aDoc);
@@ -159,14 +159,14 @@ protected:
   AnimationElementHashtable  mAnimationElementTable;
   TimeContainerHashtable     mChildContainerTable;
   PRPackedBool               mResampleNeeded;
-  
+
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it
   nsIDocument* mDocument;
 
   // Contains compositors used in our last sample.  We keep this around
   // so we can detect when an element/attribute used to be animated,
-  // but isn't anymore for some reason. (e.g. if its <animate> element is 
+  // but isn't anymore for some reason. (e.g. if its <animate> element is
   // removed or retargeted)
   nsAutoPtr<nsSMILCompositorTable> mLastCompositorTable;
 };

@@ -163,7 +163,7 @@ public:
     void            clear();
 };
 
-#ifdef JS_JIT_SPEW
+#if defined(JS_JIT_SPEW) || defined(MOZ_NO_VARADIC_MACROS)
 
 enum LC_TMBits {
     /* Output control bits for all non-Nanojit code.  Only use bits 16
@@ -176,6 +176,16 @@ enum LC_TMBits {
     LC_TMStats    = 1<<21,
     LC_TMRegexp   = 1<<22
 };
+
+#endif
+
+#ifdef MOZ_NO_VARADIC_MACROS
+
+#define debug_only_stmt(action)            /* */
+static void debug_only_printf(int mask, const char *fmt, ...) {}
+#define debug_only_print0(mask, str)       /* */
+
+#elif defined(JS_JIT_SPEW)
 
 // Top level logging controller object.
 extern nanojit::LogControl js_LogController;
@@ -228,8 +238,7 @@ public:
     }
 };
 
-
-#if defined(_MSC_VER) || (defined(__GNUC__) && __GNUC__ >= 4)
+#if defined(_MSC_VER) && _MSC_VER >= 1400 || (defined(__GNUC__) && __GNUC__ >= 4)
 #define USE_TRACE_TYPE_ENUM
 #endif
 
@@ -246,7 +255,7 @@ public:
  * this requirement is correctly enforced by these compilers.
  */
 enum JSTraceType_
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && _MSC_VER >= 1400
 : int8_t
 #endif
 {

@@ -85,7 +85,7 @@ nsSMILAnimationController::~nsSMILAnimationController()
 
 nsSMILAnimationController* NS_NewSMILAnimationController(nsIDocument* aDoc)
 {
-  nsSMILAnimationController* animationController = 
+  nsSMILAnimationController* animationController =
     new nsSMILAnimationController();
   NS_ENSURE_TRUE(animationController, nsnull);
 
@@ -241,7 +241,7 @@ nsSMILAnimationController::StartTimer()
   // Run the first sample manually
   Sample();
 
-  // 
+  //
   // XXX Make this self-tuning. Sounds like control theory to me and not
   // something I'm familiar with.
   //
@@ -267,7 +267,7 @@ RemoveCompositorFromTable(nsSMILCompositor* aCompositor,
                           void* aData)
 {
   nsSMILCompositorTable* lastCompositorTable =
-    static_cast<nsSMILCompositorTable*>(aData); 
+    static_cast<nsSMILCompositorTable*>(aData);
   lastCompositorTable->RemoveEntry(aCompositor->GetKey());
   return PL_DHASH_NEXT;
 }
@@ -312,7 +312,7 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 
   // STEP 2: (i)  Sample the timed elements AND
   //         (ii) Create a table of compositors
-  // 
+  //
   // (i) Here we sample the timed elements (fetched from the
   // nsISMILAnimationElements) which determine from the active time if the
   // element is active and what its simple time etc. is. This information is
@@ -331,7 +331,7 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   // save iterating over the animation elements twice.
 
   // Create the compositor table
-  nsAutoPtr<nsSMILCompositorTable> 
+  nsAutoPtr<nsSMILCompositorTable>
     currentCompositorTable(new nsSMILCompositorTable());
   if (!currentCompositorTable)
     return;
@@ -371,12 +371,12 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 /*static*/ PR_CALLBACK PLDHashOperator
 nsSMILAnimationController::SampleTimeContainer(TimeContainerPtrKey* aKey,
                                                void* aData)
-{ 
+{
   NS_ENSURE_TRUE(aKey, PL_DHASH_NEXT);
   NS_ENSURE_TRUE(aKey->GetKey(), PL_DHASH_NEXT);
   NS_ENSURE_TRUE(aData, PL_DHASH_NEXT);
 
-  SampleTimeContainerParams* params = 
+  SampleTimeContainerParams* params =
     static_cast<SampleTimeContainerParams*>(aData);
 
   nsSMILTimeContainer* container = aKey->GetKey();
@@ -441,7 +441,7 @@ nsSMILAnimationController::AddAnimationToCompositorTable(
     return;
 
   nsSMILCompositor* result = aCompositorTable->PutEntry(key);
-  
+
   // Add this animationElement's animation function to the compositor's list of
   // animation functions.
   result->AddAnimationFunction(&aElement->AnimationFunction());
@@ -506,7 +506,7 @@ nsSMILAnimationController::AddChild(nsSMILTimeContainer& aChild)
   if (!mPauseState && mChildContainerTable.Count() == 1) {
     StartTimer();
   }
-    
+
   return NS_OK;
 }
 

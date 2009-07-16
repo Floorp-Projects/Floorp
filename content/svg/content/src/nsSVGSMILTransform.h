@@ -101,9 +101,9 @@ public:
       mParams[i] = aParams[i];
     }
   }
-    
+
   TransformType mTransformType;
-  
+
   float mParams[6];
 };
 
