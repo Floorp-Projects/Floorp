@@ -861,6 +861,7 @@ pref("browser.urlbar.delay", 1000);
 
 // disable safe browsing, due to perf hit
 pref("browser.safebrowsing.enabled", false);
+pref("browser.safebrowsing.malware.enabled", false);
 
 // don't check for default browser
 pref("browser.shell.checkDefaultBrowser", false);
