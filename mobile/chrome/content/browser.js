@@ -1110,6 +1110,9 @@ var HelperAppDialog = {
     this._launcher = aLauncher;
     document.getElementById("helperapp-target").value = this._launcher.suggestedFileName;
 
+    if (!this._launcher.MIMEInfo.hasDefaultHandler)
+      document.getElementById("helperapp-open").disabled = true;
+      
     let toolbar = document.getElementById("toolbar-main");
     let top = toolbar.top + toolbar.boxObject.height;
     let container = document.getElementById("helperapp-container");
