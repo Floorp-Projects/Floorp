@@ -41,6 +41,7 @@
 
 #include "nsSVGElement.h"
 #include "nsAutoPtr.h"
+#include "nsReferencedElement.h"
 #include "nsIDOMSVGAnimationElement.h"
 #include "nsIDOMElementTimeControl.h"
 #include "nsISMILAnimationElement.h"
@@ -59,8 +60,11 @@ protected:
   nsresult Init();
 
 public:
-  // interfaces:  
+  // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSVGAnimationElement,
+                                           nsSVGAnimationElementBase)
   NS_DECL_NSIDOMSVGANIMATIONELEMENT
   NS_DECL_NSIDOMELEMENTTIMECONTROL
 
@@ -91,6 +95,30 @@ public:
   virtual nsSMILTimeContainer* GetTimeContainer();
 
 protected:
+  void UpdateHrefTarget(nsIContent* aNodeForContext,
+                        const nsAString& aHrefStr);
+
+  class TargetReference : public nsReferencedElement {
+  public:
+    TargetReference(nsSVGAnimationElement* aAnimationElement) :
+      mAnimationElement(aAnimationElement) {}
+  protected:
+    // We need to be notified when target changes, in order to request a
+    // sample (which will clear animation effects from old target and apply
+    // them to the new target).
+    virtual void ContentChanged(nsIContent* aFrom, nsIContent* aTo) {
+      nsReferencedElement::ContentChanged(aFrom, aTo);
+      mAnimationElement->AnimationNeedsResample();
+    }
+
+    // We need to override IsPersistent to get persistent tracking (beyond the
+    // first time the target changes)
+    virtual PRBool IsPersistent() { return PR_TRUE; }
+  private:
+    nsSVGAnimationElement* const mAnimationElement;
+  };
+
+  TargetReference      mHrefTarget;
   nsSMILTimedElement   mTimedElement;
   nsSMILTimeContainer* mTimedDocumentRoot;
 };

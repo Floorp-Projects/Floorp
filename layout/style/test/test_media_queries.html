@@ -38,10 +38,12 @@ function run() {
 
   function should_apply(q) {
     ok(query_applies(q), q + " should apply");
+    test_serialization(q, true, true);
   }
 
   function should_not_apply(q) {
     ok(!query_applies(q), q + " should not apply");
+    test_serialization(q, true, false);
   }
 
   /*
@@ -69,6 +71,7 @@ function run() {
 
   function query_should_be_parseable(q) {
     ok(query_is_parseable(q), "query " + q + " should be parseable");
+    test_serialization(q, false, false);
   }
 
   function query_should_not_be_parseable(q) {
@@ -86,11 +89,26 @@ function run() {
   function expression_should_be_parseable(e) {
     ok(expression_is_parseable(e),
        "expression " + e + " should be parseable");
+    test_serialization("all and (" + e + ")", false, false);
   }
 
   function expression_should_not_be_parseable(e) {
     ok(!expression_is_parseable(e),
        "expression " + e + " should not be parseable");
+  }
+
+  function test_serialization(q, test_application, should_apply) {
+    style.setAttribute("media", q);
+    var ser1 = style.sheet.media.mediaText;
+    isnot(ser1, "", "serialization of '" + q + "' should not be empty");
+    style.setAttribute("media", ser1);
+    var ser2 = style.sheet.media.mediaText;
+    is(ser2, ser1, "parse+serialize of '" + q + "' should be idempotent");
+    if (test_application) {
+      var applies = body_cs.getPropertyValue("text-decoration") == "underline";
+      is(applies, should_apply,
+         "Media query '" + q + "' should apply after serialize + reparse");
+    }
   }
 
   // The no-type syntax doesn't mix with the not and only keywords.
@@ -276,7 +294,9 @@ function run() {
   }
 
   var is_monochrome = query_applies("all and (min-monochrome: 1)");
+  test_serialization("all and (min-monochrome: 1)", true, is_monochrome);
   var is_color = query_applies("all and (min-color: 1)");
+  test_serialization("all and (min-color: 1)", true, is_color);
   isnot(is_monochrome, is_color, "should be either monochrome or color");
 
   function depth_query(prefix, depth) {
