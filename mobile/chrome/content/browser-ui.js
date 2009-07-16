@@ -95,6 +95,25 @@ var BrowserUI = {
     this._edit.value = caption;
   },
 
+  /*
+   * Dispatched by window.close() to allow us to turn window closes into tabs
+   * closes.
+   */
+  _domWindowClose: function (aEvent) {
+    if (!aEvent.isTrusted)
+      return;
+
+    // Find the relevant tab, and close it.
+    let browsers = Browser.browsers;
+    for (let i = 0; i < browsers.length; i++) {
+      if (browsers[i].contentWindow == aEvent.target) {
+        Browser.closeTab(Browser.getTabAtIndex(i));
+        aEvent.preventDefault();
+        break;
+      }
+    }
+  },
+
   _linkAdded : function(aEvent) {
     let link = aEvent.originalTarget;
     if (!link || !link.href)
@@ -308,11 +327,14 @@ var BrowserUI = {
 
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
 
-    // XXX these really want to listen whatever is the current browser, not any browser
     let browsers = document.getElementById("browsers");
+    browsers.addEventListener("DOMWindowClose", this, true);
+    browsers.addEventListener("UIShowSelect", this, false, true);
+
+    // XXX these really want to listen to only the the current browser
     browsers.addEventListener("DOMTitleChanged", this, true);
     browsers.addEventListener("DOMLinkAdded", this, true);
-    browsers.addEventListener("UIShowSelect", this, false, true);
+
 
     ExtensionsView.init();
     DownloadsView.init();
@@ -534,6 +556,9 @@ var BrowserUI = {
         break;
       case "DOMLinkAdded":
         this._linkAdded(aEvent);
+        break;
+      case "DOMWindowClose":
+        this._domWindowClose(aEvent);
         break;
       case "UIShowSelect":
         SelectHelper.show(aEvent.target);
