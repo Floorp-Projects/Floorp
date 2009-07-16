@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Application Update..
  *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is
+ * Brad Lassey <blassey@mozilla.com>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,27 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef PROGRESSUI_H__
-#define PROGRESSUI_H__
+#ifndef UPDATER_WINCE_H
+#define UPDATER_WINCE_H
 
-#if defined(XP_WIN)
-  typedef unsigned short NS_tchar;
-  #define NS_main wmain
-#else
-  typedef char NS_tchar;
-  #define NS_main main
+#define _S_IFDIR    0040000 /* stat, is a directory */
+#define _S_IFREG    0100000 /* stat, is a normal file */
+#define _S_IREAD    0000400 /* stat, can read */
+#define _S_IWRITE   0000200 /* stat, can write */
+#define _S_IEXEC    0000100
+
+#define BUFSIZ 1024
+#define _putenv putenv
+
+struct stat {
+  unsigned short st_mode;
+  size_t st_size;
+  time_t st_ctime;
+  time_t st_atime;
+  time_t st_mtime;
+};
+int remove(const char* path);
+int chmod(const char* path, unsigned int mode);
+int fstat(FILE* handle, struct stat* buff);
+int stat(const char* path, struct stat* buf);
+int _mkdir(const char* path);
+int access(const char* path, int amode);
+int _waccess(const WCHAR* path, int amode);
+int _wremove(const WCHAR* wpath);
+
 #endif
-
-// Called to perform any initialization of the widget toolkit
-int InitProgressUI(int *argc, NS_tchar ***argv);
-
-// Called on the main thread at startup
-int ShowProgressUI();
-
-// May be called from any thread
-void QuitProgressUI();
-
-// May be called from any thread: progress is a number between 0 and 100
-void UpdateProgressUI(float progress);
-
-#endif  // PROGRESSUI_H__
