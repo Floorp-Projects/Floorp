@@ -24,8 +24,6 @@ BROWSER_APP_FILES = \
 	default32.png \
 	default48.png \
 	mozicon128.png \
-	mozicon16.xpm \
-	mozicon50.xpm \
 	firefox.ico \
 	document.ico \
 	$(NULL)
