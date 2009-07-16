@@ -24,6 +24,7 @@
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Brett Wilson <brettw@gmail.com>
  *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Drew Willcoxon <adw@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,10 +43,12 @@
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
 #include "prinit.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
+#include "nsCollationCID.h"
 #include "nsEmbedCID.h"
 #include "mozStoragePrivateHelpers.h"
+#include "nsILocale.h"
+#include "nsILocaleService.h"
 #include "nsIXPConnect.h"
 #include "nsIObserverService.h"
 
@@ -118,6 +121,11 @@ Service::getXPConnect()
   return xpc.forget();
 }
 
+Service::Service()
+: mMutex("Service::mMutex")
+{
+}
+
 Service::~Service()
 {
   // Shutdown the sqlite3 API.  Warn if shutdown did not turn out okay, but
@@ -127,7 +135,6 @@ Service::~Service()
     NS_WARNING("sqlite3 did not shutdown cleanly.");
 
   gService = nsnull;
-  ::PR_DestroyLock(mLock);
 }
 
 void
@@ -139,9 +146,6 @@ Service::shutdown()
 nsresult
 Service::initialize()
 {
-  mLock = ::PR_NewLock();
-  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
-
   // Disable memory allocation statistic collection, improving performance.
   // This must be done prior to a call to sqlite3_initialize to have any
   // effect.
@@ -157,7 +161,7 @@ Service::initialize()
     return convertResultCode(rc);
 
   // This makes multiple connections to the same database share the same pager
-  // cache.  We do not need to lock here with mLock because this function is
+  // cache.  We do not need to lock here with mMutex because this function is
   // only ever called from Service::GetSingleton, which will only
   // call this function once, and will not return until this function returns.
   // (It does not matter where this is called relative to sqlite3_initialize.)
@@ -175,6 +179,69 @@ Service::initialize()
   // We cache XPConnect for our language helpers.
   (void)CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
   return NS_OK;
+}
+
+int
+Service::localeCompareStrings(const nsAString &aStr1,
+                              const nsAString &aStr2,
+                              PRInt32 aComparisonStrength)
+{
+  // The implementation of nsICollation.CompareString() is platform-dependent.
+  // On Linux it's not thread-safe.  It may not be on Windows and OS X either,
+  // but it's more difficult to tell.  We therefore synchronize this method.
+  MutexAutoLock mutex(mMutex);
+
+  nsICollation *coll = getLocaleCollation();
+  if (!coll) {
+    NS_ERROR("Storage service has no collation");
+    return 0;
+  }
+
+  PRInt32 res;
+  nsresult rv = coll->CompareString(aComparisonStrength, aStr1, aStr2, &res);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Collation compare string failed");
+    return 0;
+  }
+
+  return res;
+}
+
+nsICollation *
+Service::getLocaleCollation()
+{
+  mMutex.AssertCurrentThreadOwns();
+
+  if (mLocaleCollation)
+    return mLocaleCollation;
+
+  nsCOMPtr<nsILocaleService> svc(do_GetService(NS_LOCALESERVICE_CONTRACTID));
+  if (!svc) {
+    NS_WARNING("Could not get locale service");
+    return nsnull;
+  }
+
+  nsCOMPtr<nsILocale> appLocale;
+  nsresult rv = svc->GetApplicationLocale(getter_AddRefs(appLocale));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Could not get application locale");
+    return nsnull;
+  }
+
+  nsCOMPtr<nsICollationFactory> collFact =
+    do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
+  if (!collFact) {
+    NS_WARNING("Could not create collation factory");
+    return nsnull;
+  }
+
+  rv = collFact->CreateCollation(appLocale, getter_AddRefs(mLocaleCollation));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Could not create collation");
+    return nsnull;
+  }
+
+  return mLocaleCollation;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +295,7 @@ Service::OpenDatabase(nsIFile *aDatabaseFile,
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock mutex(mMutex);
     nsresult rv = msc->initialize(aDatabaseFile);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -252,7 +319,7 @@ Service::OpenUnsharedDatabase(nsIFile *aDatabaseFile,
   // without affecting the caches currently in use by other connections.
   nsresult rv;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock mutex(mMutex);
     int rc = ::sqlite3_enable_shared_cache(0);
     if (rc != SQLITE_OK)
       return convertResultCode(rc);
