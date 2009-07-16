@@ -4291,7 +4291,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         // forget the scroll position of the page.  Note that we need to check the
         // toplevel window, because child windows seem to go to 0x0 on minimize.
         HWND toplevelWnd = GetTopLevelHWND(mWnd);
-        if (!newWidth && !newHeight && IsIconic(toplevelWnd)) {
+        if (mWnd == toplevelWnd && IsIconic(toplevelWnd)) {
           result = PR_FALSE;
           break;
         }
