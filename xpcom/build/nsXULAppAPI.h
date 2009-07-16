@@ -448,7 +448,7 @@ XRE_API(GeckoChildProcessType,
 XRE_API(nsresult,
         XRE_InitChildProcess, (int aArgc,
                                char* aArgv[],
-                               GeckoChildProcessType aProcess=GeckoChildProcess_Default))
+                               GeckoChildProcessType aProcess))
 
 typedef void (*MainFunction)(void* aData);
 
