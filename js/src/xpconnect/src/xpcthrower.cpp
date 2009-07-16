@@ -352,6 +352,7 @@ XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";
     msg = format;
+#ifndef WINCE
     if(exception)
     {
         msg += static_cast<const char *>
@@ -392,7 +393,13 @@ XPCThrower::ThrowCOMError(JSContext* cx, unsigned long COMErrorCode,
             msg.AppendInt(static_cast<PRUint32>(COMErrorCode), 16);
         }
     }
-    
+
+#else
+    // No error object, so just report the result
+    msg += "COM Error Result = ";
+    msg.AppendInt(static_cast<PRUint32>(COMErrorCode), 16);
+#endif
+
     XPCThrower::BuildAndThrowException(cx, rv, msg.get());
 }
 

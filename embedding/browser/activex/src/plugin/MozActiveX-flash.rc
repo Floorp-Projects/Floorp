@@ -1,7 +1,13 @@
 //Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
+#if OSARCH != WINCE
 #include "winresrc.h"
+#else
+#include <dlgs.h>
+#include <winbase.h>
+#include <commctrl.h>
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
@@ -57,18 +63,18 @@ BEGIN
         BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
-            VALUE "FileDescription", "Mozilla ActiveX control and plugin module\0"
-            VALUE "FileExtents", "*.ocx|*.ocx\0"
-            VALUE "FileOpenName", "ActiveX (*.ocx)|ActiveX (*.ocx)|Adobe Flash Movie (*.swf)|Adobe Flash Movie (*.swf)\0"
-            VALUE "FileVersion", "1, 0, 0, 4\0"
+            VALUE "FileDescription", "Shockwave Flash 9.0 r83\0"
+            VALUE "FileExtents", "*.ocx|*.ocx|*.swf|*.flv\0"
+            VALUE "FileOpenName", "ActiveX (*.ocx)|ActiveX (*.ocx)|Adobe Flash Movie (*.swf)|Adobe Flash Video (*.flv)\0"
+            VALUE "FileVersion", "9, 0, 83, 0\0"
             VALUE "InternalName", "NPMOZAX\0"
-            VALUE "LegalCopyright", "Copyright 1999\0"
+            VALUE "LegalCopyright", "Copyright 1999, 2009\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "MIMEType", "application/x-oleobject|application/oleobject|application/x-shockwave-flash|application/x-shockwave-flash\0"
             VALUE "OriginalFilename", "NPMOZAX.DLL\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "Mozilla ActiveX control and plugin support\0"
-            VALUE "ProductVersion", "1, 0, 0, 4\0"
+            VALUE "ProductName", "Shockwave Flash\0"
+            VALUE "ProductVersion", "9, 0, 83, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END

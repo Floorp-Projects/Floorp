@@ -41,6 +41,9 @@
 
 #include <mshtml.h>
 
+/* this is all kinds of awesome; SHANDLE_PTR is in some basetsd.h but not others */
+typedef long SHANDLE_PTR;
+
 #include "nsIWebNavigation.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
