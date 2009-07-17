@@ -24,7 +24,7 @@ endif
 _PROFILE_DIR = $(TARGET_DEPTH)/_profile/pgo
 _SYMBOLS_PATH = $(TARGET_DIST)/crashreporter-symbols
 
-ABSOLUTE_TOPSRCDIR = $(call core_abspath,$(topsrcdir))
+ABSOLUTE_TOPSRCDIR = $(call core_abspath,$(MOZILLA_DIR))
 _CERTS_SRC_DIR = $(ABSOLUTE_TOPSRCDIR)/build/pgo/certs
 
 AUTOMATION_PPARGS = 	\
@@ -65,10 +65,10 @@ AUTOMATION_PPARGS += -DIS_DEBUG_BUILD=0
 endif
 
 $(CURDIR)/automationutils.py:
-	$(INSTALL) $(topsrcdir)/build/automationutils.py .
+	$(INSTALL) $(MOZILLA_DIR)/build/automationutils.py .
 
-automation.py: $(topsrcdir)/build/automation.py.in $(topsrcdir)/build/automation-build.mk $(CURDIR)/automationutils.py
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+automation.py: $(MOZILLA_DIR)/build/automation.py.in $(MOZILLA_DIR)/build/automation-build.mk $(CURDIR)/automationutils.py
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
 GARBAGE += automation.py $(CURDIR)/automationutils.py
