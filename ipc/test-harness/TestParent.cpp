@@ -5,16 +5,20 @@ using mozilla::test::TestParent;
 void
 TestParent::DoStuff()
 {
-    int ping;
-    SendPing(&ping);
-
-    printf("[TestParent] child replied to ping with status code %d\n", ping);
+    puts("[TestParent] pinging child ...");
+    SendPing();
 }
 
 // C++ file contents
-nsresult TestParent::RecvPing(int* status)
+nsresult TestParent::RecvPing()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult TestParent::RecvPong(const int& status)
+{
+    printf("[TestParent] child replied to ping with status code %d\n", status);
+    return NS_OK;
 }
 
 nsresult TestParent::RecvGetValue(const String& key)

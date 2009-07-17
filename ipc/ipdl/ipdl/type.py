@@ -791,10 +791,110 @@ class CheckTypes(TcheckVisitor):
 class CheckStateMachine(TcheckVisitor):
     def __init__(self, symtab, errors):
         TcheckVisitor.__init__(self, symtab, errors)
+        self.p = None
 
     def visitProtocol(self, p):
+        self.p = p
         self.checkReachability(p)
+        for ts in p.transitionStmts:
+            ts.accept(self)
 
+    def visitTransitionStmt(self, ts):
+        # We want to disallow "race conditions" in protocols.  These
+        # can occur when a protocol state machine has triggers of
+        # opposite direction from the same state.  That means that,
+        # e.g., the parent could send the child a message at the exact
+        # instance the child sends the parent a message.  One of those
+        # messages would (probably) violate the state machine and
+        # cause the child to be terminated.  It's obviously very nice
+        # if we can forbid this at the level of IPDL state machines,
+        # rather than resorting to static or dynamic checking of C++
+        # implementation code.
+        #
+        # An easy way to avoid this problem in IPDL is to only allow
+        # "unidirectional" protocol states; that is, from each state,
+        # only send or only recv triggers are allowed.  This approach
+        # is taken by the Singularity project's "contract-based
+        # message channels."  However, this is a bit of a notational
+        # burden.
+        #
+        # IPDL's solution is to allow allow the IPDL programmer to
+        # define "commutative transitions," that is, pairs of
+        # transitions (A, B) that can happen in either order: first A
+        # then B, or first B then A.  So instead of checking state
+        # unidirectionality, we instead do the following two checks.
+        #
+        #   *Rule 1*: from a state S, all sync triggers must be of the same
+        # "direction," i.e. only |send| or only |recv|
+        #
+        # (Pairs of sync messages can't commute, because otherwise
+        # deadlock can occur from simultaneously in-flight sync
+        # requests.)
+        #
+        #   *Rule 2*: the "Diamond Rule".
+        #   from a state S,
+        #     for any pair of triggers t1 and t2,
+        #         where t1 and t2 have opposite direction,
+        #         and t1 transitions to state T1 and t2 to T2,
+        #       then the following must be true:
+        #         T2 allows the trigger t1, transitioning to state U
+        #         T1 allows the trigger t2, transitioning to state U"""
+        #
+        # This is a more formal way of expressing "it doesn't matter
+        # in which order the triggers t1 and t2 occur / are processed."
+        syncdirection = None
+        syncok = True
+        for trans in ts.transitions:
+            if not trans.msg.type.isSync(): continue
+            if syncdirection is None:
+                syncdirection = trans.trigger.direction()
+            elif syncdirection is not trans.trigger.direction():
+                self.error(
+                    trans.loc,
+                    "sync trigger at state `%s' in protocol `%s' has different direction from earlier sync trigger at same state",
+                    ts.state.name, self.p.name)
+                syncok = False
+        # don't check the Diamond Rule if Rule 1 doesn't hold
+        if not syncok:
+            return
+
+        def triggerTarget(S, t):
+            '''Return the state transitioned to from state |S|
+upon trigger |t|, or None if |t| is not a trigger in |S|.'''
+            for trans in self.p.states[S].transitions:
+                if t.trigger is trans.trigger and t.msg is trans.msg:
+                    return trans.toState
+            return None
+
+        ntrans = len(ts.transitions)
+        for i, t1 in enumerate(ts.transitions):
+            for j in xrange(i+1, ntrans):
+                t2 = ts.transitions[j]
+                # if the triggers have the same direction, they can't race,
+                # since only one endpoint can initiate either (and delivery
+                # is in-order)
+                if t1.trigger.direction() == t2.trigger.direction():
+                    continue
+
+                T1 = t1.toState
+                T2 = t2.toState
+
+                U1 = triggerTarget(T1, t2)
+                U2 = triggerTarget(T2, t1)
+
+                if U1 is None or U1 != U2:
+                    self.error(
+                        t2.loc,
+                        "trigger `%s' potentially races (does not commute) with `%s' at state `%s' in protocol `%s'",
+                        t1.msg.progname, t2.msg.progname,
+                        ts.state.name, self.p.name)
+                    # don't report more than one Diamond Rule
+                    # violation per state. there may be O(n^2) total,
+                    # way too many for a human to parse
+                    #
+                    # XXX/cjones: could set a limit on #printed and stop after
+                    # that limit ...
+                    return
 
     def checkReachability(self, p):
         visited = set()         # set(State)
