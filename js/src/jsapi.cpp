@@ -4360,7 +4360,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         uint32 nslots = JSSLOT_FREE(&js_FunctionClass);
         JS_ASSERT(nslots == JS_INITIAL_NSLOTS);
         nslots += js_FunctionClass.reserveSlots(cx, clone);
-        if (!js_ReallocSlots(cx, clone, nslots, JS_TRUE))
+        if (!js_AllocSlots(cx, clone, nslots))
             return NULL;
 
         JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);

@@ -968,7 +968,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         JS_LOCK_OBJ(cx, callobj);
         n += JS_INITIAL_NSLOTS;
         if (n > STOBJ_NSLOTS(callobj))
-            ok &= js_ReallocSlots(cx, callobj, n, JS_TRUE);
+            ok &= js_GrowSlots(cx, callobj, n);
         scope = OBJ_SCOPE(callobj);
         if (ok) {
             memcpy(callobj->dslots, fp->argv, fun->nargs * sizeof(jsval));
@@ -2516,7 +2516,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     uint32 nslots = JSSLOT_FREE(&js_FunctionClass);
     JS_ASSERT(nslots == JS_INITIAL_NSLOTS);
     nslots += fun_reserveSlots(cx, closure);
-    if (!js_ReallocSlots(cx, closure, nslots, JS_TRUE))
+    if (!js_GrowSlots(cx, closure, nslots))
         return NULL;
 
     return closure;

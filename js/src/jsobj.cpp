@@ -2049,7 +2049,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto,
     /* Let JSScope::create set freeslot so as to reserve slots. */
     JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
     if (scope->freeslot > JS_INITIAL_NSLOTS &&
-        !js_ReallocSlots(cx, obj, scope->freeslot, JS_TRUE)) {
+        !js_AllocSlots(cx, obj, scope->freeslot)) {
         JSScope::destroy(cx, scope);
         goto bad;
     }
@@ -2609,7 +2609,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     if (normalUnwind && count > 1) {
         --count;
         JS_LOCK_OBJ(cx, obj);
-        if (!js_ReallocSlots(cx, obj, JS_INITIAL_NSLOTS + count, JS_TRUE))
+        if (!js_AllocSlots(cx, obj, JS_INITIAL_NSLOTS + count))
             normalUnwind = JS_FALSE;
         else
             memcpy(obj->dslots, fp->slots + depth + 1, count * sizeof(jsval));
@@ -2984,125 +2984,105 @@ bad:
 #define DYNAMIC_WORDS_TO_SLOTS(words)                                         \
   (JS_ASSERT((words) > 1), (words) - 1 + JS_INITIAL_NSLOTS)
 
-JSBool
-js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
-                JSBool exactAllocation)
-{
-    jsval *old, *slots;
-    uint32 oslots, nwords, owords, log, i;
 
+bool
+js_AllocSlots(JSContext *cx, JSObject *obj, size_t nslots)
+{
+    JS_ASSERT(!obj->dslots);
+    JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
+
+    jsval* slots;
+    slots = (jsval*) JS_malloc(cx, SLOTS_TO_DYNAMIC_WORDS(nslots) * sizeof(jsval));
+    if (!slots)
+        return true;
+
+    *slots++ = nslots;
+    /* clear the newly allocated cells. */
+    for (jsuint n = JS_INITIAL_NSLOTS; n < nslots; ++n)
+        slots[n - JS_INITIAL_NSLOTS] = JSVAL_VOID;
+    obj->dslots = slots;
+
+    return true;
+}
+
+bool
+js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
+{
     /*
      * Minimal number of dynamic slots to allocate.
      */
-#define MIN_DYNAMIC_WORDS 4
+    const size_t MIN_DYNAMIC_WORDS = 4;
 
     /*
      * The limit to switch to linear allocation strategy from the power of 2
      * growth no to waste too much memory.
      */
-#define LINEAR_GROWTH_STEP JS_BIT(16)
+    const size_t LINEAR_GROWTH_STEP = JS_BIT(16);
 
-    old = obj->dslots;
-    if (nslots <= JS_INITIAL_NSLOTS) {
-        if (old &&
-            (exactAllocation ||
-             SLOTS_TO_DYNAMIC_WORDS((uint32)old[-1]) != MIN_DYNAMIC_WORDS ||
-             nslots <= (JS_INITIAL_NSLOTS +
-                        JSSLOT_FREE(STOBJ_GET_CLASS(obj))) / 2)) {
-            /*
-             * We do not want to free dynamic slots when allocation is a hint,
-             * we reached minimal allocation and almost all fixed slots are
-             * used. It avoids allocating dynamic slots again when properties
-             * are added to the object.
-             *
-             * If there were no private or reserved slots, the condition to
-             * free the slots would be
-             *
-             *   nslots <= JS_INITIAL_NSLOTS / 2
-             *
-             * but to account for never removed slots before JSSLOT_FREE(class)
-             * we need to subtract it from the slot counts which gives
-             *
-             *   nslots - JSSLOT_FREE <= (JS_INITIAL_NSLOTS - JSSLOT_FREE) / 2
-             *
-             * or
-             *
-             *   nslots <= (JS_INITIAL_NSLOTS + JSSLOT_FREE) / 2
-             */
-            js_FreeSlots(cx, obj);
-        }
+    /* If we are allocating fslots, there is nothing to do. */
+    if (nslots <= JS_INITIAL_NSLOTS)
         return JS_TRUE;
-    }
 
-    oslots = (old) ? (uint32)*--old : JS_INITIAL_NSLOTS;
-    nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
+    size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
 
-    if (nslots > oslots) {
-        if (!exactAllocation) {
-            /*
-             * Round up nslots so the number of bytes in dslots array is power
-             * of 2 to ensure exponential grouth.
-             */
-            if (nwords <= MIN_DYNAMIC_WORDS) {
-                nwords = MIN_DYNAMIC_WORDS;
-            } else if (nwords < LINEAR_GROWTH_STEP) {
-                JS_CEILING_LOG2(log, nwords);
-                nwords = JS_BIT(log);
-            } else {
-                nwords = JS_ROUNDUP(nwords, LINEAR_GROWTH_STEP);
-            }
-        }
-        slots = (jsval *)JS_realloc(cx, old, nwords * sizeof(jsval));
-        if (!slots)
-            return JS_FALSE;
+    /*
+     * Round up nslots so the number of bytes in dslots array is power
+     * of 2 to ensure exponential grouth.
+     */
+    uintN log;
+    if (nwords <= MIN_DYNAMIC_WORDS) {
+        nwords = MIN_DYNAMIC_WORDS;
+    } else if (nwords < LINEAR_GROWTH_STEP) {
+        JS_CEILING_LOG2(log, nwords);
+        nwords = JS_BIT(log);
     } else {
-        JS_ASSERT(nslots < oslots);
-        if (!exactAllocation) {
-            owords = DYNAMIC_WORDS_TO_SLOTS(oslots);
-            if (owords <= MIN_DYNAMIC_WORDS)
-                return JS_TRUE;
-            if (owords < LINEAR_GROWTH_STEP * 2) {
-                /*
-                 * Shrink only if 1/4 of slots are left and we need to grow
-                 * the array at least twice to reach the current capacity. It
-                 * prevents frequent capacity growth/shrinking when slots are
-                 * often removed and added.
-                 */
-                if (nwords > owords / 4)
-                    return JS_TRUE;
-                JS_CEILING_LOG2(log, nwords);
-                nwords = JS_BIT(log);
-                if (nwords < MIN_DYNAMIC_WORDS)
-                    nwords = MIN_DYNAMIC_WORDS;
-            } else {
-                /*
-                 * Shrink only if we free at least 2 linear allocation
-                 * segments, to prevent growth/shrinking resonance.
-                 */
-                if (nwords > owords - LINEAR_GROWTH_STEP * 2)
-                    return JS_TRUE;
-                nwords = JS_ROUNDUP(nwords, LINEAR_GROWTH_STEP);
-            }
-        }
-
-        /* We avoid JS_realloc not to report a failed shrink attempt. */
-        slots = (jsval *)realloc(old, nwords * sizeof(jsval));
-        if (!slots)
-            slots = old;
+        nwords = JS_ROUNDUP(nwords, LINEAR_GROWTH_STEP);
     }
-
     nslots = DYNAMIC_WORDS_TO_SLOTS(nwords);
-    *slots++ = (jsval)nslots;
+
+    /*
+     * If nothing was allocated yet, treat it as initial allocation (but with
+     * the exponential growth algorithm applied).
+     */
+    jsval* slots = obj->dslots;
+    if (!slots)
+        return js_AllocSlots(cx, obj, nslots);
+
+    size_t oslots = size_t(slots[-1]);
+
+    slots = (jsval*) JS_realloc(cx, slots - 1, nwords * sizeof(jsval));
+    *slots++ = nslots;
     obj->dslots = slots;
 
-    /* If we're extending an allocation, initialize free slots. */
-    for (i = oslots; i < nslots; i++)
+    /* Initialize the additional slots we added. */
+    JS_ASSERT(nslots > oslots);
+    for (size_t i = oslots; i < nslots; i++)
         slots[i - JS_INITIAL_NSLOTS] = JSVAL_VOID;
 
-    return JS_TRUE;
+    return true;
+}
 
-#undef LINEAR_GROWTH_STEP
-#undef MIN_DYNAMIC_WORDS
+void
+js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
+{
+    jsval* slots = obj->dslots;
+
+    /* Nothing to shrink? */
+    if (!slots)
+        return;
+
+    JS_ASSERT(size_t(slots[-1]) > JS_INITIAL_NSLOTS);
+    JS_ASSERT(nslots <= size_t(slots[-1]));
+
+    if (nslots <= JS_INITIAL_NSLOTS) {
+        JS_free(cx, slots - 1);
+        obj->dslots = NULL;
+    } else {
+        size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
+        slots = (jsval*) JS_realloc(cx, slots - 1, nwords * sizeof(jsval));
+        *slots++ = nslots;
+        obj->dslots = slots;
+    }
 }
 
 extern JSBool
@@ -3408,7 +3388,7 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
     }
 
     if (scope->freeslot >= STOBJ_NSLOTS(obj) &&
-        !js_ReallocSlots(cx, obj, scope->freeslot + 1, JS_FALSE)) {
+        !js_GrowSlots(cx, obj, scope->freeslot + 1)) {
         return JS_FALSE;
     }
 
@@ -3425,12 +3405,8 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 
     JSScope *scope = OBJ_SCOPE(obj);
     LOCKED_OBJ_SET_SLOT(obj, slot, JSVAL_VOID);
-    if (scope->freeslot == slot + 1) {
+    if (scope->freeslot == slot + 1)
         scope->freeslot = slot;
-
-        /* When shrinking, js_ReallocSlots always returns true. */
-        js_ReallocSlots(cx, obj, slot, JS_FALSE);
-    }
 }
 
 
@@ -5785,6 +5761,13 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     }
 
     if (traceScope) {
+        if (IS_GC_MARKING_TRACER(trc)) {
+            /* Check whether we should shrink the object's slots. */
+            size_t slots = scope->freeslot;
+            if (STOBJ_NSLOTS(obj) != slots)
+                js_ShrinkSlots(cx, obj, slots);
+        }
+
 #ifdef JS_DUMP_SCOPE_METERS
         MeterEntryCount(scope->entryCount);
 #endif
@@ -5917,7 +5900,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         if (clasp->reserveSlots)
             nslots += clasp->reserveSlots(cx, obj);
         JS_ASSERT(slot < nslots);
-        if (!js_ReallocSlots(cx, obj, nslots, JS_TRUE)) {
+        if (!js_AllocSlots(cx, obj, nslots)) {
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
