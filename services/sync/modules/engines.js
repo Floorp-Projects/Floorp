@@ -297,6 +297,9 @@ SyncEngine.prototype = {
       meta.addUnwrappedKey(pubkey, symkey);
       let res = new Resource(meta.uri);
       res.put(meta.serialize());
+
+      // Cache the cryto meta that we just put on the server
+      CryptoMetas.set(meta.uri, meta);
     }
 
     // first sync special case: upload all items
