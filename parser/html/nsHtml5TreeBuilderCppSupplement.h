@@ -505,7 +505,9 @@ void
 nsHtml5TreeBuilder::DoUnlink()
 {
   nsHtml5TreeBuilder* tmp = this;
-  mFlushTimer->Cancel();
+  if (mFlushTimer) {
+    mFlushTimer->Cancel();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFlushTimer);
   NS_IF_RELEASE(contextNode);
   NS_IF_RELEASE(formPointer);
