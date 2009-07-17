@@ -655,7 +655,13 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
         ra = rA->reg;
         rb = rB->reg;
     }
-    STR(ra, rb, dr);
+
+    if (!isS12(dr)) {
+        STR(ra, IP, 0);
+        asm_add_imm(IP, rb, dr);
+    } else {
+        STR(ra, rb, dr);
+    }
 }
 
 void
