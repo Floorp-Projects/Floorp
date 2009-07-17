@@ -385,6 +385,11 @@ pref("general.warnOnAboutConfig",                 false);
 pref("javascript.options.showInConsole",          false);
 #endif
 
+#ifdef WINCE
+// Set the threshold higher to avoid some slow script warnings
+pref("dom.max_script_run_time",                   20);
+#endif
+
 // Make the status bar reliably present and unaffected by pages
 pref("dom.disable_window_open_feature.status",    true);
 // This is the pref to control the location bar, change this to true to 
