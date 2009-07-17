@@ -43,8 +43,6 @@ include $(DEPTH)/config/autoconf.mk
 
 OS_CXXFLAGS := $(filter-out -fshort-wchar,$(OS_CXXFLAGS))
 
-OS_CXXFLAGS += -fno-inline
-
 LIBRARY_NAME = chromium_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
@@ -69,6 +67,12 @@ vpath %.mm \
   $(srcdir)/src/base \
   $(srcdir)/src/chrome/common \
   $(NULL)
+
+# TODO: remove this hack when we switch to GCC 4.3! GCC 4.1
+# instantiates template declarations in wrapped system headers with
+# the wrong visibility, which is causing the Linux tinderboxen to die in
+# std::string internals.
+VISIBILITY_FLAGS=
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
