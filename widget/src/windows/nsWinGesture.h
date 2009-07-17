@@ -192,7 +192,6 @@ class nsWinGesture
 {
 public:
   nsWinGesture();
-  ~nsWinGesture();
 
 public:
   PRBool InitWinGestureSupport(HWND hWnd);
@@ -247,7 +246,6 @@ private:
 
   // Delay load info 
   PRBool InitLibrary();
-  void ShutdownLibrary();
 
   static HMODULE sLibraryHandle;
   static const PRUnichar kGestureLibraryName[];
