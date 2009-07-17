@@ -5359,10 +5359,21 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       DispatchKeyEvent(NS_KEY_PRESS, uniChar, &altArray,
                        keyCode, nsnull, aModKeyState, extraFlags);
     }
-  } else
-#endif
+  } else {
     DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, DOMKeyCode, nsnull, aModKeyState,
                      extraFlags);
+  }
+#else
+  {
+    UINT unichar = ::MapVirtualKey(virtualKeyCode, MAPVK_VK_TO_CHAR);
+    // Check for dead characters or no mapping
+    if (unichar & 0x80) {
+      return noDefault;
+    }
+    DispatchKeyEvent(NS_KEY_PRESS, unichar, nsnull, DOMKeyCode, nsnull, aModKeyState,
+                     extraFlags);
+  }
+#endif
 
   return noDefault;
 }
