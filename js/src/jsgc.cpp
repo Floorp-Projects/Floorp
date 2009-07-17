@@ -1875,7 +1875,7 @@ NewGCThing(JSContext *cx, uintN flags)
     JS_ASSERT(cx->thread);
     freeLists = cx->gcLocalFreeLists;
     thing = freeLists->array[flindex];
-    localMallocBytes = cx->thread->gcMallocBytes;
+    localMallocBytes = JS_THREAD_DATA(cx)->gcMallocBytes;
     if (thing && rt->gcMaxMallocBytes - rt->gcMallocBytes > localMallocBytes) {
         flagp = thing->flagp;
         freeLists->array[flindex] = thing->next;
@@ -1888,7 +1888,7 @@ NewGCThing(JSContext *cx, uintN flags)
 
     /* Transfer thread-local counter to global one. */
     if (localMallocBytes != 0) {
-        cx->thread->gcMallocBytes = 0;
+        JS_THREAD_DATA(cx)->gcMallocBytes = 0;
         if (rt->gcMaxMallocBytes - rt->gcMallocBytes < localMallocBytes)
             rt->gcMallocBytes = rt->gcMaxMallocBytes;
         else
@@ -3936,18 +3936,4 @@ out:
             goto restart_at_beginning;
         }
     }
-}
-
-void
-js_UpdateMallocCounter(JSContext *cx, size_t nbytes)
-{
-    uint32 *pbytes, bytes;
-
-#ifdef JS_THREADSAFE
-    pbytes = &cx->thread->gcMallocBytes;
-#else
-    pbytes = &cx->runtime->gcMallocBytes;
-#endif
-    bytes = *pbytes;
-    *pbytes = ((uint32)-1 - bytes <= nbytes) ? (uint32)-1 : bytes + nbytes;
 }
