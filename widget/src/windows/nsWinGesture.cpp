@@ -76,11 +76,6 @@ nsWinGesture::nsWinGesture() :
   mPixelScrollOverflow = 0;
 }
 
-nsWinGesture::~nsWinGesture()
-{
-  ShutdownLibrary();
-}
-
 /* Load and shutdown */
 
 PRBool nsWinGesture::InitLibrary()
@@ -145,12 +140,6 @@ PRBool nsWinGesture::InitLibrary()
 
   return PR_TRUE;
 #endif
-}
-
-void nsWinGesture::ShutdownLibrary()
-{
-  getGestureInfo         = nsnull;
-  beginPanningFeedback   = nsnull;
 }
 
 #define GCOUNT 5
