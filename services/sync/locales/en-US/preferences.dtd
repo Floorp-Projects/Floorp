@@ -70,7 +70,7 @@
 <!ENTITY resetClientDataButton.description  "Delete all locally stored bookmarks and history data">
 
 <!ENTITY eraseServerDataButton.label        "Erase Server Data...">
-<!ENTITY eraseServerDataButton.description  "Erase all data on the server and send local data">
+<!ENTITY eraseServerDataButton.description  "Erase all data on the server">
 
 <!ENTITY logsCaption.label                  "Logs">
 <!ENTITY openActivityLogButton.label        "Open...">
