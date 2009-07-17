@@ -132,7 +132,6 @@ import xpidl
 import header
 import os, re
 import sys
-import sets
 
 # === Preliminaries
 
@@ -1357,7 +1356,7 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
     make_targets.append(filename)
 
     f = open(filename, 'w')
-    filesIncluded = sets.Set()
+    filesIncluded = set()
 
     def includeType(type):
         type = unaliasType(type)
@@ -1398,7 +1397,7 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
         for iface in interfaces:
             resulttypes.extend(writeIncludesForInterface(iface))
         f.write("\n\n")
-        writeResultXPCInterfacesArray(f, conf, sets.ImmutableSet(resulttypes))
+        writeResultXPCInterfacesArray(f, conf, frozenset(resulttypes))
         for iface in interfaces:
             writeStubsForInterface(f, conf.customMethodCalls, iface)
         writeDefiner(f, conf, interfaces)
