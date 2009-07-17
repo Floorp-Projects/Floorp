@@ -44,8 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 
-ifndef WINCE
-# Sadly, the code here is too smart for the WinCE compiler's brain
+ifneq (,$(filter-out WINCE SYMBIAN,$(OS_ARCH)))
+# Sadly, the code here is too smart for the WinCE/Symbian compiler's brain
 PROGRAM		= xpidl$(BIN_SUFFIX)
 SDK_BINARY  = $(PROGRAM)
 endif
