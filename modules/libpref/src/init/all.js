@@ -2758,6 +2758,7 @@ pref("network.tcp.sendbuffer", 131072);
 
 #ifdef WINCE
 pref("mozilla.widget.disable-native-theme", true);
+pref("gfx.color_management.mode", 0);
 #endif
 
 // Enable/Disable the geolocation API for content
