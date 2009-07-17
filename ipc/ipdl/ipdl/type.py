@@ -216,13 +216,6 @@ builtinUsing = [ makeBuiltinUsing(t) for t in builtin.Types ]
 builtinIncludes = [ CxxInclude(_builtinloc, f) for f in builtin.Includes ]
 
 ##--------------------
-def errormsg(loc, fmt, *args):
-    while not isinstance(loc, Loc):
-        if loc is None:  loc = Loc.NONE
-        else:            loc = loc.loc
-    return '%s: error: %s'% (str(loc), fmt % args)
-
-
 class SymbolTable:
     def __init__(self, errors):
         self.errors = errors
@@ -281,7 +274,7 @@ class SymbolTable:
         if decl.fullname:  tryadd(decl.fullname)
 
 
-class TypeCheck(Visitor):
+class TypeCheck:
     '''This pass sets the .type attribute of every AST node.  For some
 nodes, the type is meaningless and it is set to "VOID."  This pass
 also sets the .decl attribute of AST nodes for which that is relevant;
@@ -297,21 +290,26 @@ With this information, it finally type checks the AST.'''
         self.symtab = SymbolTable(self.errors)
 
     def check(self, tu, errout=sys.stderr):
+        def runpass(tcheckpass):
+            tu.accept(tcheckpass)
+            if len(self.errors):
+                self.reportErrors(errout)
+                return False
+            return True
+
         tu.cxxIncludes = builtinIncludes + tu.cxxIncludes
 
         # tag each relevant node with "decl" information, giving type, name,
         # and location of declaration
-        tu.accept(GatherDecls(builtinUsing, self.symtab, self.errors))
-        if len(self.errors):
-            # no point in checking types if we couldn't even resolve symbols
-            self.reportErrors(errout)
+        if not runpass(GatherDecls(builtinUsing, self.symtab, self.errors)):
             return False
 
         # now that the nodes have decls, type checking is much easier.
-        tu.accept(CheckTypes(self.symtab, self.errors))
-        if (len(self.errors)):
-            # no point in later passes if type checking fails
-            self.reportErrors(errout)
+        if not runpass(CheckTypes(self.symtab, self.errors)):
+            return False
+
+        if (tu.protocol.startState is not None
+            and not runpass(CheckStateMachine(self.symtab, self.errors))):
             return False
 
         return True
@@ -321,11 +319,30 @@ With this information, it finally type checks the AST.'''
             print >>errout, error
 
 
-class GatherDecls(Visitor):
-    def __init__(self, builtinUsing, symtab, errors):
-        self.builtinUsing = builtinUsing
+class TcheckVisitor(Visitor):
+    def __init__(self, symtab, errors):
         self.symtab = symtab
         self.errors = errors
+
+    def error(self, loc, fmt, *args):
+        while not isinstance(loc, Loc):
+            if loc is None:  loc = Loc.NONE
+            else:            loc = loc.loc
+        self.errors.append('%s: error: %s'% (str(loc), fmt % args))
+
+    def declare(self, loc, type, shortname=None, fullname=None, progname=None):
+        d = Decl(loc)
+        d.type = type
+        d.progname = progname
+        d.shortname = shortname
+        d.fullname = fullname
+        self.symtab.declare(d)
+        return d
+
+class GatherDecls(TcheckVisitor):
+    def __init__(self, builtinUsing, symtab, errors):
+        TcheckVisitor.__init__(self, symtab, errors)
+        self.builtinUsing = builtinUsing
         self.depth = 0
 
     def visitTranslationUnit(self, tu):
@@ -344,14 +361,14 @@ class GatherDecls(Visitor):
         # decls
         if 1 == self.depth:
             for using in self.builtinUsing:
-                udecl = Decl(using.loc)
-                udecl.shortname = using.type.basename()
                 fullname = str(using.type)
-                if udecl.shortname != fullname:
-                    udecl.fullname = fullname
-                udecl.type = BuiltinCxxType(using.type.spec)
-                self.symtab.declare(udecl)
-                using.decl = udecl
+                if using.type.basename() == fullname:
+                    fullname = None
+                using.decl = self.declare(
+                    loc=using.loc,
+                    type=BuiltinCxxType(using.type.spec),
+                    shortname=using.type.basename(),
+                    fullname=fullname)
 
         p = tu.protocol
 
@@ -359,20 +376,17 @@ class GatherDecls(Visitor):
         # both the namespace and non-namespaced name in the global scope.
         # try to figure out something better; maybe a type-neutral |using|
         # that works for C++ and protocol types?
-        pdecl = Decl(p.loc)
-        pdecl.shortname = p.name
-
-        fullname = QualifiedId(p.loc, p.name,
-                               [ ns.namespace for ns in p.namespaces ])
-        if len(fullname.quals):
-            pdecl.fullname = str(fullname)
-
-        pdecl.type = ProtocolType(fullname, p.sendSemantics)
-        pdecl.body = p
-        self.symtab.declare(pdecl)
-
-        p.decl = pdecl
-        p.type = pdecl.type
+        qname = QualifiedId(p.loc, p.name,
+                            [ ns.namespace for ns in p.namespaces ])
+        if 0 == len(qname.quals):
+            fullname = None
+        else:
+            fullname = str(qname)
+        p.decl = self.declare(
+            loc=p.loc,
+            type=ProtocolType(qname, p.sendSemantics),
+            shortname=p.name,
+            fullname=fullname)
 
         # make sure we have decls for all dependent protocols
         for pinc in tu.protocolIncludes:
@@ -400,15 +414,14 @@ class GatherDecls(Visitor):
         pi.tu.accept(self)
 
     def visitUsingStmt(self, using):
-        decl = Decl(using.loc)
-        decl.shortname = using.type.basename()
         fullname = str(using.type)
-        if decl.shortname != fullname:
-            decl.fullname = fullname
-        decl.type = ImportedCxxType(using.type.spec)
-        self.symtab.declare(decl)
-        using.decl = decl
-
+        if using.type.basename() == fullname:
+            fullname = None
+        using.decl = self.declare(
+            loc=using.loc,
+            type=ImportedCxxType(using.type.spec),
+            shortname=using.type.basename(),
+            fullname=fullname)
 
     def visitProtocol(self, p):
         # protocol scope
@@ -434,20 +447,23 @@ class GatherDecls(Visitor):
 
             if not(ctordecl and dtordecl
                    and ctordecl.type.isCtor() and dtordecl.type.isDtor()):
-                self.errors.append(
-                    errormsg(
-                        managed.loc,
-                        "constructor and destructor declarations are required for managed protocol `%s' (managed by protocol `%s')",
-                        mgdname, p.name))
+                self.error(
+                    managed.loc,
+                    "constructor and destructor declarations are required for managed protocol `%s' (managed by protocol `%s')",
+                    mgdname, p.name)
 
+        p.states = { }
+        if len(p.transitionStmts):
+            p.startState = p.transitionStmts[0]
+        else:
+            p.startState = None
         # declare each state before decorating their mention
         for trans in p.transitionStmts:
-            sdecl = Decl(trans.state.loc)
-            sdecl.progname = trans.state.name
-            sdecl.type = StateType()
-
-            self.symtab.declare(sdecl)
-            trans.state.decl = sdecl
+            p.states[trans.state] = trans
+            trans.state.decl = self.declare(
+                loc=trans.state.loc,
+                type=StateType(),
+                progname=trans.state.name)
 
         for trans in p.transitionStmts:
             trans.accept(self)
@@ -459,19 +475,17 @@ class GatherDecls(Visitor):
             statename = param.type.state.name
             statedecl = self.symtab.lookup(statename)
             if statedecl is None:
-                self.errors.append(
-                    errormsg(
-                        loc,
-                        "protocol `%s' does not have the state `%s'",
-                        param.type.protocol.name(),
-                        statename))
+                self.error(
+                    loc,
+                    "protocol `%s' does not have the state `%s'",
+                    param.type.protocol.name(),
+                    statename)
             elif not statedecl.type.isState():
-                self.errors.append(
-                    errormsg(
-                        loc,
-                        "tag `%s' is supposed to be of state type, but is instead of type `%s'",
-                        statename,
-                        statedecl.type.typename()))
+                self.error(
+                    loc,
+                    "tag `%s' is supposed to be of state type, but is instead of type `%s'",
+                    statename,
+                    statedecl.type.typename())
             else:
                 param.type.state = statedecl
 
@@ -501,17 +515,15 @@ class GatherDecls(Visitor):
         loc = mgr.loc
 
         if mgrdecl is None:
-            self.errors.append(
-                errmsg(
-                    loc,
-                    "protocol `%s' referenced as |manager| of `%s' has not been declared",
-                    mgrname, pname))
+            self.error(
+                loc,
+                "protocol `%s' referenced as |manager| of `%s' has not been declared",
+                mgrname, pname)
         elif not isinstance(mgrdecl.type, ProtocolType):
-            self.errors.append(
-                errmsg(
-                    loc,
-                    "entity `%s' referenced as |manager| of `%s' is not of `protocol' type; instead it is of type `%s'",
-                    mgrname, pname, mgrdecl.type.typename()))
+            self.error(
+                loc,
+                "entity `%s' referenced as |manager| of `%s' is not of `protocol' type; instead it is of type `%s'",
+                mgrname, pname, mgrdecl.type.typename())
         else:
             assert pdecl.type.manager is None
             mgr.decl = mgrdecl
@@ -527,17 +539,14 @@ class GatherDecls(Visitor):
         loc = mgs.loc
 
         if mgsdecl is None:
-            self.errors.append(
-                errormsg(
-                    loc,
-                    "protocol `%s', managed by `%s', has not been declared",
-                    mgsname, pdeclname))
+            self.error(loc,
+                       "protocol `%s', managed by `%s', has not been declared",
+                       mgsname, pdeclname)
         elif not isinstance(mgsdecl.type, ProtocolType):
-            self.errors.append(
-                errormsg(
-                    loc,
-                    "%s declares itself managing a non-`protocol' entity `%s' of type `%s'",
-                    pdeclname, mgsname, mgsdecl.type.typename()))
+            self.error(
+                loc,
+                "%s declares itself managing a non-`protocol' entity `%s' of type `%s'",
+                pdeclname, mgsname, mgsdecl.type.typename())
         else:
             mgs.decl = mgsdecl
             pdecl.type.manages.append(mgsdecl.type)
@@ -557,17 +566,10 @@ class GatherDecls(Visitor):
 
             decl = self.symtab.lookup(msgname)
             if decl is None:
-                self.errors.append(
-                    errormsg(
-                        loc,
-                        "type `%s' has not been declared",
-                        msgname))
+                self.error(loc, "type `%s' has not been declared", msgname)
             elif not decl.type.isProtocol():
-                self.errors.append(
-                    errormsg(
-                        loc,
-                        "destructor for non-protocol type `%s'",
-                        msgname))
+                self.error(loc, "destructor for non-protocol type `%s'",
+                           msgname)
             else:
                 msgname += 'Destructor'
                 isdtor = True
@@ -581,11 +583,8 @@ class GatherDecls(Visitor):
             isctor = True
             cdtype = decl.type
         elif decl is not None:
-            self.errors.append(
-                errormsg(
-                    loc,
-                    "message name `%s' already declared as `%s'",
-                    msgname, decl.type.typename()))
+            self.error(loc, "message name `%s' already declared as `%s'",
+                       msgname, decl.type.typename())
             # if we error here, no big deal; move on to find more
         decl = None
 
@@ -603,25 +602,21 @@ class GatherDecls(Visitor):
             ptdecl = self.symtab.lookup(ptname)
 
             if ptdecl is None:
-                self.errors.append(
-                    errormsg(
-                        ploc,
-                        "argument typename `%s' of message `%s' has not been declared",
-                        ptname, msgname))
+                self.error(
+                    ploc,
+                    "argument typename `%s' of message `%s' has not been declared",
+                    ptname, msgname)
                 return None
             else:
-                pdecl = Decl(ploc)
-                pdecl.progname = param.name
-                ptype = None
                 if ptdecl.type.isIPDL() and ptdecl.type.isProtocol():
                     ptype = ActorType(ptdecl.type,
                                       param.typespec.state)
                 else:
                     ptype = ptdecl.type
-                pdecl.type = ptype
-
-                self.symtab.declare(pdecl)
-                return pdecl
+                return self.declare(
+                    loc=ploc,
+                    type=ptype,
+                    progname=param.name)
 
         for i, inparam in enumerate(md.inParams):
             pdecl = paramToDecl(inparam)
@@ -640,12 +635,10 @@ class GatherDecls(Visitor):
 
         self.symtab.exitScope(md)
 
-        decl = Decl(loc)
-        decl.progname = msgname
-        decl.type = msgtype
-
-        self.symtab.declare(decl)
-        md.decl = decl
+        md.decl = self.declare(
+            loc=loc,
+            type=msgtype,
+            progname=msgname)
         md.protocolDecl = self.currentProtocolDecl
 
 
@@ -655,36 +648,31 @@ class GatherDecls(Visitor):
         sname = t.toState.name
         sdecl = self.symtab.lookup(sname)
         if sdecl is None:
-            self.errors.append(
-                errormsg(loc, "state `%s' has not been declared", sname))
+            self.error(loc, "state `%s' has not been declared", sname)
         elif not sdecl.type.isState():
-            self.errors.append(
-                errormsg(
-                    loc,
-                    "`%s' should have state type, but instead has type `%s'",
-                    sname, sdecl.type.typename()))
+            self.error(
+                loc, "`%s' should have state type, but instead has type `%s'",
+                sname, sdecl.type.typename())
         else:
             t.toState.decl = sdecl
 
         mname = t.msg
         mdecl = self.symtab.lookup(mname)
         if mdecl is None:
-            self.errors.append(
-                errormsg(loc, "message `%s' has not been declared", mname))
+            self.error(loc, "message `%s' has not been declared", mname)
         elif not mdecl.type.isMessage():
-            self.errors.append(
-                errormsg(
-                    loc,
-                    "`%s' should have message type, but instead has type `%s'",
-                    mname, mdecl.type.typename()))
+            self.error(
+                loc,
+                "`%s' should have message type, but instead has type `%s'",
+                mname, mdecl.type.typename())
         else:
             t.msg = mdecl
 
+##-----------------------------------------------------------------------------
 
-class CheckTypes(Visitor):
+class CheckTypes(TcheckVisitor):
     def __init__(self, symtab, errors):
-        self.symtab = symtab
-        self.errors = errors
+        TcheckVisitor.__init__(self, symtab, errors)
         self.visited = set()
 
     def visitProtocolInclude(self, inc):
@@ -700,11 +688,10 @@ class CheckTypes(Visitor):
         mgrtype = ptype.manager
         if mgrtype is not None and ptype.needsMoreJuiceThan(mgrtype):
             mgrname = p.manager.decl.shortname
-            self.errors.append(errormsg(
-                    p.decl.loc,
-                    "protocol `%s' requires more powerful send semantics than its manager `%s' provides",
-                    pname,
-                    mgrname))
+            self.error(
+                p.decl.loc,
+                "protocol `%s' requires more powerful send semantics than its manager `%s' provides",
+                pname, mgrname)
 
         return Visitor.visitProtocol(self, p)
         
@@ -727,10 +714,10 @@ class CheckTypes(Visitor):
 
         # check that the "managed" protocol agrees
         if mgstype.manager is not ptype:
-            self.errors.append(errormsg(
-                    loc,
-                    "|manages| declaration in protocol `%s' does not match any |manager| declaration in protocol `%s'",
-                    pname, mgsname))
+            self.error(
+                loc,
+                "|manages| declaration in protocol `%s' does not match any |manager| declaration in protocol `%s'",
+                pname, mgsname)
 
 
     def visitManagerStmt(self, mgr):
@@ -747,10 +734,10 @@ class CheckTypes(Visitor):
 
         # check that the "manager" protocol agrees
         if not mgrtype.isManagerOf(ptype):
-            self.errors.append(errormsg(
-                    loc,
-                    "|manager| declaration in protocol `%s' does not match any |manages| declaration in protocol `%s'",
-                    pname, mgrname))
+            self.error(
+                loc,
+                "|manager| declaration in protocol `%s' does not match any |manages| declaration in protocol `%s'",
+                pname, mgrname)
 
 
     def visitMessageDecl(self, md):
@@ -760,25 +747,22 @@ class CheckTypes(Visitor):
         loc = md.decl.loc
 
         if mtype.needsMoreJuiceThan(ptype):
-            self.errors.append(errormsg(
-                    loc,
-                    "message `%s' requires more powerful send semantics than its protocol `%s' provides",
-                    mname,
-                    pname))
+            self.error(
+                loc,
+                "message `%s' requires more powerful send semantics than its protocol `%s' provides",
+                mname, pname)
 
         if mtype.isAsync() and len(mtype.returns):
             # XXX/cjones could modify grammar to disallow this ...
-            self.errors.append(errormsg(
-                    loc,
-                    "asynchronous message `%s' requests returned values",
-                    mname))
+            self.error(loc,
+                       "asynchronous message `%s' declares return values",
+                       mname)
 
         if (mtype.isCtor() or mtype.isDtor()) and not ptype.isManagerOf(mtype.constructedType()):
-            self.errors.append(errormsg(
-                    loc,
-                    "ctor/dtor for protocol `%s', which is not managed by protocol `%s'", 
-                    mname[:-len('constructor')],
-                    pname))
+            self.error(
+                loc,
+                "ctor/dtor for protocol `%s', which is not managed by protocol `%s'", 
+                mname[:-len('constructor')], pname)
 
 
     def visitTransition(self, t):
@@ -796,8 +780,33 @@ class CheckTypes(Visitor):
             or RPC is impliedSems and (not t.msg.type.isRpc())):
             mtype = t.msg.type
 
-            self.errors.append(errormsg(
-                    loc, "%s %s message `%s' is not `%s'd",
-                    mtype.sendSemantics.pretty, mtype.direction.pretty,
-                    t.msg.progname,
-                    t.trigger.pretty))
+            self.error(
+                loc, "%s %s message `%s' is not `%s'd",
+                mtype.sendSemantics.pretty, mtype.direction.pretty,
+                t.msg.progname,
+                t.trigger.pretty)
+
+##-----------------------------------------------------------------------------
+
+class CheckStateMachine(TcheckVisitor):
+    def __init__(self, symtab, errors):
+        TcheckVisitor.__init__(self, symtab, errors)
+
+    def visitProtocol(self, p):
+        self.checkReachability(p)
+
+
+    def checkReachability(self, p):
+        visited = set()         # set(State)
+        def explore(ts):
+            if ts.state in visited:
+                return
+            visited.add(ts.state)
+            for outedge in ts.transitions:
+                explore(p.states[outedge.toState])
+        
+        explore(p.startState)
+        for ts in p.transitionStmts:
+            if ts.state not in visited:
+                self.error(ts.loc, "unreachable state `%s' in protocol `%s'",
+                           ts.state.name, p.name)
