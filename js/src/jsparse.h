@@ -418,6 +418,9 @@ struct JSParseNode {
 #define PND_FUNARG     0x100            /* downward or upward funarg usage */
 #define PND_BOUND      0x200            /* bound to a stack or global slot */
 
+/* Flags to propagate from uses to definition. */
+#define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_FUNARG)
+
 /* PN_LIST pn_xflags bits. */
 #define PNX_STRCAT      0x01            /* TOK_PLUS list has string term */
 #define PNX_CANTFOLD    0x02            /* TOK_PLUS list has unfoldable term */
