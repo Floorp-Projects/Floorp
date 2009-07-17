@@ -794,6 +794,13 @@ WeaveSvc.prototype = {
    */
   sync: function WeaveSvc_sync(fullSync)
     this._catch(this._lock(this._notify("sync", "", function() {
+
+    // Skip this incremental sync if the user has been active recently
+    if (!fullSync && Svc.Idle.idleTime < 30000) {
+      this._log.debug("Skipped sync because the user was active.");
+      return;
+    }
+
     fullSync = true; // not doing thresholds yet
 
     // Use thresholds to determine what to sync only if it's not a full sync
