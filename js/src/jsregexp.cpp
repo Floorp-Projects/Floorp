@@ -3044,7 +3044,7 @@ class RegExpNativeCompiler {
         exit->re_flags = re->flags;
         exit->re_length = re_length;
         memcpy(exit->re_chars, re_chars, re_length * sizeof(jschar));
-        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
+        fragment->lastIns = lir->insGuard(LIR_loop, NULL, skip);
         return guard;
     }
 

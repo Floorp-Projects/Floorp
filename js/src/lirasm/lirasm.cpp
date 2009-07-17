@@ -581,7 +581,7 @@ endFragment(const Pipeline &writer,
     memset(exit, 0, sizeof(VMSideExit));
     exit->guards = NULL;
     exit->from = exit->target = frag;
-    frag->lastIns = writer.lir->insGuard(LIR_loop, writer.lir->insImm(1), exitIns);
+    frag->lastIns = writer.lir->insGuard(LIR_loop, NULL, exitIns);
 
     ::compile(fragmento->assm(), frag);
 
