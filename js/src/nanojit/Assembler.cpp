@@ -1590,6 +1590,12 @@ namespace nanojit
         for (int i=0, n=pending_lives.size(); i < n; i++) {
             findMemFor(pending_lives[i]);
         }
+        /*
+         * TODO: I'm not positive, but I think the following line needs to be
+         * added, otherwise the pending_lives will build up and never get
+         * cleared.
+         */
+        pending_lives.clear();
     }
 
     void Assembler::arFree(uint32_t idx)
