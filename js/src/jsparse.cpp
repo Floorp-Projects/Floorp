@@ -1270,7 +1270,7 @@ Define(JSParseNode *pn, JSAtom *atom, JSTreeContext *tc, bool let = false)
             while ((pnu = *pnup) != NULL && pnu->pn_blockid >= start) {
                 JS_ASSERT(pnu->pn_used);
                 pnu->pn_lexdef = (JSDefinition *) pn;
-                pn->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+                pn->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
                 pnup = &pnu->pn_link;
             }
 
@@ -1386,9 +1386,9 @@ MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *t
         JS_ASSERT(pnu->pn_used);
         JS_ASSERT(!pnu->pn_defn);
         pnu->pn_lexdef = (JSDefinition *) pn;
-        pn->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+        pn->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
     }
-    pn->pn_dflags |= dn->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+    pn->pn_dflags |= dn->pn_dflags & PND_USE2DEF_FLAGS;
     pn->dn_uses = dn;
 
     dn->pn_defn = false;
@@ -4335,7 +4335,7 @@ RebindLets(JSParseNode *pn, JSTreeContext *tc)
                     JSDefinition *dn = ALE_DEFN(ale);
                     dn->pn_type = TOK_NAME;
                     dn->pn_op = JSOP_NOP;
-                    dn->pn_dflags |= pn->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+                    dn->pn_dflags |= pn->pn_dflags & PND_USE2DEF_FLAGS;
                 }
                 LinkUseToDef(pn, ALE_DEFN(ale), tc);
             }
@@ -6403,7 +6403,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                         JSParseNode *pnu;
                         while ((pnu = *pnup) != NULL && pnu->pn_pos >= root->pn_pos) {
                             pnu->pn_lexdef = dn2;
-                            dn2->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+                            dn2->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
                             pnup = &pnu->pn_link;
                         }
                         dn2->dn_uses = dn->dn_uses;
