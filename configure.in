@@ -5313,6 +5313,13 @@ dnl ========================================================
 dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
 MOZ_IPC=1
+
+case "${target}" in
+powerpc-apple-darwin*)
+    MOZ_IPC=
+    ;;
+esac
+
 MOZ_ARG_DISABLE_BOOL(ipc,
 [  --disable-ipc           Disable IPC supports for tabs and plugins],
     MOZ_IPC=,
