@@ -139,8 +139,8 @@ endif
 testxpcobjdir = $(DEPTH)/_tests/xpcshell
 
 # Test file installation
-ifdef NSINSTALL_BIN
-# nsinstall in moztools can't recursively copy directories, so use nsinstall.py
+ifeq (WINNT,$(HOST_OS_ARCH))
+# Windows nsinstall can't recursively copy directories, so use nsinstall.py
 TEST_INSTALLER = $(PYTHON) $(topsrcdir)/config/nsinstall.py
 else
 TEST_INSTALLER = $(INSTALL)
