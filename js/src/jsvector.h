@@ -203,12 +203,12 @@ class JSTempVector
     size_t capacity() const { return mCapacity - mBegin; }
     bool empty() const      { return mBegin == mEnd; }
 
-    T &operator[](int i) {
+    T &operator[](size_t i) {
         JS_ASSERT(!mInProgress && i < size());
         return mBegin[i];
     }
 
-    const T &operator[](int i) const {
+    const T &operator[](size_t i) const {
         JS_ASSERT(!mInProgress && i < size());
         return mBegin[i];
     }

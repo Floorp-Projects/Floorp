@@ -4798,6 +4798,27 @@ const jschar js_uriUnescaped_ucstr[] =
      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
      '-', '_', '.', '!', '~', '*', '\'', '(', ')', 0};
 
+/*
+ * This table allows efficient testing for the regular expression \w which is
+ * defined by ECMA-262 15.10.2.6 to be [0-9A-Z_a-z].
+ */
+const bool js_alnum[] = {
+/*       0      1      2      3      4      5      5      7      8      9      */
+/*  0 */ false, false, false, false, false, false, false, false, false, false,
+/*  1 */ false, false, false, false, false, false, false, false, false, false,
+/*  2 */ false, false, false, false, false, false, false, false, false, false,
+/*  3 */ false, false, false, false, false, false, false, false, false, false,
+/*  4 */ false, false, false, false, false, false, false, false, true,  true,
+/*  5 */ true,  true,  true,  true,  true,  true,  true,  true,  false, false,
+/*  6 */ false, false, false, false, false, true,  true,  true,  true,  true,
+/*  7 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+/*  8 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+/*  9 */ true,  false, false, false, false, true,  false, true,  true,  true,
+/* 10 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+/* 11 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+/* 12 */ true,  true,  true,  false, false, false, false, false
+};
+
 #define URI_CHUNK 64U
 
 /* Concatenate jschars onto the buffer */
