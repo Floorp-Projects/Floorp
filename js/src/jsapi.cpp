@@ -1847,7 +1847,7 @@ JS_malloc(JSContext *cx, size_t nbytes)
         JS_ReportOutOfMemory(cx);
         return NULL;
     }
-    js_UpdateMallocCounter(cx, nbytes);
+    cx->updateMallocCounter(nbytes);
 
     return p;
 }
@@ -1862,7 +1862,7 @@ JS_realloc(JSContext *cx, void *p, size_t nbytes)
         return NULL;
     }
     if (!orig)
-        js_UpdateMallocCounter(cx, nbytes);
+        cx->updateMallocCounter(nbytes);
     return p;
 }
 
