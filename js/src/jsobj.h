@@ -575,14 +575,20 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
 extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
+extern bool
+js_AllocSlots(JSContext *cx, JSObject *obj, size_t nslots);
+
+extern bool
+js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots);
+
+extern void
+js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots);
+
 static inline void
 js_FreeSlots(JSContext *cx, JSObject *obj)
 {
-    if (obj->dslots) {
-        JS_ASSERT((uint32)obj->dslots[-1] > JS_INITIAL_NSLOTS);
-        JS_free(cx, obj->dslots - 1);
-        obj->dslots = NULL;
-    }
+    if (obj->dslots)
+        js_ShrinkSlots(cx, obj, 0);
 }
 
 extern jsid
