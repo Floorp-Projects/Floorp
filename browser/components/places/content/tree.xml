@@ -760,7 +760,7 @@
             orientation = Ci.nsITreeView.DROP_ON;
           }
 
-          return this.view.canDrop(row.value, orientation);
+          return this.view.canDrop(row.value, orientation, aEvent.dataTransfer);
         ]]></body>
       </method>
       
@@ -769,8 +769,8 @@
         <parameter name="aEvent"/>
         <parameter name="aFlavour"/>
         <parameter name="aDragSession"/>
-        <body><![CDATA[      
-          if (!this.canDrop(aEvent, aDragSession))
+        <body><![CDATA[
+          if (!this.canDrop(aEvent, aDragSession, aEvent.dataTransfer))
             aEvent.dataTransfer.effectAllowed = "none";
         ]]></body>
       </method>
