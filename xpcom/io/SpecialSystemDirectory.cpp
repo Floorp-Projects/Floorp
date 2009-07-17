@@ -178,8 +178,15 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
 {
 #ifdef WINCE
 #define SHGetSpecialFolderPathW SHGetSpecialFolderPath
+
+#ifndef WINCE_WINDOWS_MOBILE
+    if (folder == CSIDL_APPDATA || folder == CSIDL_LOCAL_APPDATA)
+        folder = CSIDL_PROFILE;
 #endif
-    WCHAR path[MAX_PATH + 2];
+#endif
+
+    WCHAR path_orig[MAX_PATH + 3];
+    WCHAR *path = path_orig+1;
     HRESULT result = SHGetSpecialFolderPathW(NULL, path, folder, true);
 
     if (!SUCCEEDED(result))
@@ -192,6 +199,15 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
         path[len]   = L'\\';
         path[++len] = L'\0';
     }
+
+#if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
+    // sometimes CSIDL_PROFILE shows up without a root slash
+    if (folder == CSIDL_PROFILE && path[0] != '\\') {
+        path_orig[0] = '\\';
+        path = path_orig;
+        len++;
+    }
+#endif
 
     return NS_NewLocalFile(nsDependentString(path, len), PR_TRUE, aFile);
 }
