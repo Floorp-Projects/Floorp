@@ -94,27 +94,16 @@ function wsBorder(t, l, b, r) {
 }
 
 wsBorder.prototype = {
-  _t: 0, _l: 0, _b: 0, _r: 0,
-
-  get left() { return this._l; },
-  get right() { return this._r; },
-  get top() { return this._t; },
-  get bottom() { return this._b; },
-
-  set left(v) { this._l = v; },
-  set right(v) { this._r = v; },
-  set top(v) { this._t = v; },
-  set bottom(v) { this._b = v; },
 
   setBorder: function (t, l, b, r) {
-    this._t = t;
-    this._l = l;
-    this._b = b;
-    this._r = r;
+    this.top = t;
+    this.left = l;
+    this.bottom = b;
+    this.right = r;
   },
 
   toString: function () {
-    return "[l:" + this._l + ",t:" + this._t + ",r:" + this._r + ",b:" + this._b + "]";
+    return "[l:" + this.left + ",t:" + this.top + ",r:" + this.right + ",b:" + this.bottom + "]";
   }
 };
 
@@ -124,94 +113,103 @@ wsBorder.prototype = {
  * Rectangle class, with both x/y/w/h and t/l/b/r accessors.
  */
 function wsRect(x, y, w, h) {
-  this.setRect(x, y, w, h);
+  this.left = x;
+  this.top = y;
+  this.right = x+w;
+  this.bottom = y+h;
 }
 
 wsRect.prototype = {
-  _l: 0, _t: 0, _b: 0, _r: 0,
 
-  get x() { return this._l; },
-  get y() { return this._t; },
-  get width() { return this._r - this._l; },
-  get height() { return this._b - this._t; },
+  get x() { return this.left; },
+  get y() { return this.top; },
+  get width() { return this.right - this.left; },
+  get height() { return this.bottom - this.top; },
   set x(v) {
-    let diff = this._l - v;
-    this._l = v;
-    this._r -= diff;
+    let diff = this.left - v;
+    this.left = v;
+    this.right -= diff;
   },
   set y(v) {
-    let diff = this._t - v;
-    this._t = v;
-    this._b -= diff;
+    let diff = this.top - v;
+    this.top = v;
+    this.bottom -= diff;
   },
-  set width(v) { this._r = this._l + v; },
-  set height(v) { this._b = this._t + v; },
-
-  get left() { return this._l; },
-  get right() { return this._r; },
-  get top() { return this._t; },
-  get bottom() { return this._b; },
-
-  set left(v) { this._l = v; },
-  set right(v) { this._r = v; },
-  set top(v) { this._t = v; },
-  set bottom(v) { this._b = v; },
+  set width(v) { this.right = this.left + v; },
+  set height(v) { this.bottom = this.top + v; },
 
   setRect: function(x, y, w, h) {
-    this._l = x;
-    this._t = y;
-    this._r = x+w;
-    this._b = y+h;
+    this.left = x;
+    this.top = y;
+    this.right = x+w;
+    this.bottom = y+h;
 
     return this;
   },
 
   setBounds: function(t, l, b, r) {
-    this._t = t;
-    this._l = l;
-    this._b = b;
-    this._r = r;
+    this.top = t;
+    this.left = l;
+    this.bottom = b;
+    this.right = r;
 
     return this;
   },
 
-  clone: function() {
-    return new wsRect(this._l, this._t, this.width, this.height);
+  equals: function equals(r) {
+    return (r != null       &&
+            this.top == r.top &&
+            this.left == r.left &&
+            this.bottom == r.bottom &&
+            this.right == r.right);
+  },
+
+  clone: function clone() {
+    return new wsRect(this.left, this.top, this.right - this.left, this.bottom - this.top);
+  },
+
+  center: function center() {
+    return [this.left + (this.right - this.left) / 2,
+            this.top + (this.bottom - this.top) / 2];
+  },
+
+  centerRounded: function centerRounded() {
+    return this.center().map(Math.round);
   },
 
   copyFrom: function(r) {
-    this._t = r._t;
-    this._l = r._l;
-    this._b = r._b;
-    this._r = r._r;
+    this.top = r.top;
+    this.left = r.left;
+    this.bottom = r.bottom;
+    this.right = r.right;
 
     return this;
   },
 
   copyFromTLBR: function(r) {
-    this._l = r.left;
-    this._t = r.top;
-    this._r = r.right;
-    this._b = r.bottom;
+    this.left = r.left;
+    this.top = r.top;
+    this.right = r.right;
+    this.bottom = r.bottom;
 
     return this;
   },
 
   translate: function(x, y) {
-    this._l += x;
-    this._r += x;
-    this._t += y;
-    this._b += y;
+    this.left += x;
+    this.right += x;
+    this.top += y;
+    this.bottom += y;
 
     return this;
   },
 
   // return a new wsRect that is the union of that one and this one
   union: function(rect) {
-    let l = Math.min(this._l, rect._l);
-    let r = Math.max(this._r, rect._r);
-    let t = Math.min(this._t, rect._t);
-    let b = Math.max(this._b, rect._b);
+    let l = Math.min(this.left, rect.left);
+    let r = Math.max(this.right, rect.right);
+    let t = Math.min(this.top, rect.top);
+    let b = Math.max(this.bottom, rect.bottom);
 
     return new wsRect(l, t, r-l, b-t);
   },
@@ -221,25 +219,25 @@ wsRect.prototype = {
   },
 
   expandBy: function(b) {
-    this._l += b.left;
-    this._r += b.right;
-    this._t += b.top;
-    this._b += b.bottom;
+    this.left += b.left;
+    this.right += b.right;
+    this.top += b.top;
+    this.bottom += b.bottom;
     return this;
   },
 
   contains: function(other) {
-    return !!(other._l >= this._l &&
-              other._r <= this._r &&
-              other._t >= this._t &&
-              other._b <= this._b);
+    return !!(other.left >= this.left &&
+              other.right <= this.right &&
+              other.top >= this.top &&
+              other.bottom <= this.bottom);
   },
 
   intersect: function(r2) {
-    let xmost1 = this._r;
-    let xmost2 = r2._r;
+    let xmost1 = this.right;
+    let xmost2 = r2.right;
 
-    let x = Math.max(this._l, r2._l);
+    let x = Math.max(this.left, r2.left);
 
     let temp = Math.min(xmost1, xmost2);
     if (temp <= x)
@@ -247,9 +245,9 @@ wsRect.prototype = {
 
     let width = temp - x;
 
-    let ymost1 = this._b;
-    let ymost2 = r2._b;
-    let y = Math.max(this._t, r2._t);
+    let ymost1 = this.bottom;
+    let ymost2 = r2.bottom;
+    let y = Math.max(this.top, r2.top);
 
     temp = Math.min(ymost1, ymost2);
     if (temp <= y)
@@ -261,20 +259,80 @@ wsRect.prototype = {
   },
 
   intersects: function(other) {
-    let xok = (other._l > this._l && other._l < this._r) ||
-      (other._r > this._l && other._r < this._r) ||
-      (other._l <= this._l && other._r >= this._r);
-    let yok = (other._t > this._t && other._t < this._b) ||
-      (other._b > this._t && other._b < this._b) ||
-      (other._t <= this._t && other._b >= this._b);
+    let xok = (other.left > this.left && other.left < this.right) ||
+      (other.right > this.left && other.right < this.right) ||
+      (other.left <= this.left && other.right >= this.right);
+    let yok = (other.top > this.top && other.top < this.bottom) ||
+      (other.bottom > this.top && other.bottom < this.bottom) ||
+      (other.top <= this.top && other.bottom >= this.bottom);
     return xok && yok;
   },
 
-  round: function(scale) {
-    this._l = Math.floor(this._l * scale) / scale;
-    this._t = Math.floor(this._t * scale) / scale;
-    this._r = Math.ceil(this._r * scale) / scale;
-    this._b = Math.ceil(this._b * scale) / scale;
+  /**
+   * Similar to (and most code stolen from) intersect().  A restriction
+   * is an intersection, but this modifies the receiving object instead
+   * of returning a new rect.
+   */
+  restrictTo: function restrictTo(r2) {
+    let xmost1 = this.right;
+    let xmost2 = r2.right;
+
+    let x = Math.max(this.left, r2.left);
+
+    let temp = Math.min(xmost1, xmost2);
+    if (temp <= x)
+      throw "Intersection is empty but rects cannot be empty";
+
+    let width = temp - x;
+
+    let ymost1 = this.bottom;
+    let ymost2 = r2.bottom;
+    let y = Math.max(this.top, r2.top);
+
+    temp = Math.min(ymost1, ymost2);
+    if (temp <= y)
+      throw "Intersection is empty but rects cannot be empty";
+
+    let height = temp - y;
+
+    return this.setRect(x, y, width, height);
+  },
+
+  /**
+   * Similar to (and most code stolen from) union().  An extension is a
+   * union (in our sense of the term, not the common set-theoretic sense),
+   * but this modifies the receiving object instead of returning a new rect.
+   * Effectively, this rectangle is expanded minimally to contain all of the
+   * other rect.  "Expanded minimally" means that the rect may shrink if
+   * given a strict subset rect as the argument.
+   */
+  expandToContain: function extendTo(rect) {
+    let l = Math.min(this.left, rect.left);
+    let r = Math.max(this.right, rect.right);
+    let t = Math.min(this.top, rect.top);
+    let b = Math.max(this.bottom, rect.bottom);
+
+    return this.setRect(l, t, r-l, b-t);
+  },
+
+  round: function round(scale) {
+    if (!scale) scale = 1;
+
+    this.left = Math.floor(this.left * scale) / scale;
+    this.top = Math.floor(this.top * scale) / scale;
+    this.right = Math.ceil(this.right * scale) / scale;
+    this.bottom = Math.ceil(this.bottom * scale) / scale;
+
+    return this;
+  },
+
+  scale: function scale(xscl, yscl) {
+    this.left *= xscl;
+    this.right *= xscl;
+    this.top *= yscl;
+    this.bottom *= yscl;
+
+    return this;
   }
 };
 
@@ -776,7 +834,7 @@ WidgetStack.prototype = {
 
     this._skipViewportUpdates--;
     if (this._skipViewportUpdates)
-      return
+      return;
 
     let boundsSizeChanged =
       this._startViewportBoundsString != this._viewportBounds.toString();
@@ -894,14 +952,18 @@ WidgetStack.prototype = {
     if (!this._viewport || !this._viewportUpdateHandler || this._skipViewportUpdates)
       return;
 
+    let vwb = this._viewportBounds.clone();
+
     let vwib = this._viewport.viewportInnerBounds.clone();
+
+    let vis = this.viewportVisibleRect;
 
     vwib.left += this._viewport.offsetLeft;
     vwib.top += this._viewport.offsetTop;
     vwib.right += this._viewport.offsetRight;
     vwib.bottom += this._viewport.offsetBottom;
 
-    this._viewportUpdateHandler.apply(window, [vwib, boundsChanged]);
+    this._viewportUpdateHandler.apply(window, [vwb, vwib, vis, boundsChanged]);
   },
 
   _dragCoordsFromClient: function (cx, cy, t) {

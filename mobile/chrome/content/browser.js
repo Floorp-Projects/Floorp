@@ -59,7 +59,190 @@ function getBrowser() {
 const kDefaultTextZoom = 1.2;
 const kDefaultBrowserWidth = 1024;
 
-var ws = null;
+let endl = '\n';
+
+function debug() {
+  let bv = Browser._browserView;
+  let tc = bv._tileManager._tileCache;
+  let scrollbox = document.getElementById("scrollbox")
+		.boxObject
+		.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+
+  let w = {};
+  let h = {};
+  scrollbox.getScrolledSize(w, h);
+  let container = document.getElementById("tile_container");
+  let [x, y] = getScrollboxPosition();
+  let [w, h] = [w.value, h.value];
+  if (bv) {
+    dump('----------------------DEBUG!-------------------------\n');
+    dump(bv._browserViewportState.toString() + endl);
+
+    dump(endl);
+
+    let cr = bv._tileManager._criticalRect;
+    dump('criticalRect from BV: ' + (cr ? cr.toString() : null) + endl);
+    dump('visibleRect from BV : ' + bv._visibleRect.toString() + endl);
+    dump('visibleRect from foo: ' + scrollboxToViewportRect(getVisibleRect()) + endl);
+
+    dump('batch depth:          ' + bv._batchOps.length + endl);
+
+    dump(endl);
+
+    dump('container width,height from BV: ' + bv._container.style.width + ', '
+                                            + bv._container.style.height + endl);
+    dump('container width,height via DOM: ' + container.style.width + ', '
+                                            + container.style.height + endl);
+
+    dump(endl);
+
+    dump('scrollbox position    : ' + x + ', ' + y + endl);
+    dump('scrollbox scrolledsize: ' + w + ', ' + h + endl);
+
+    dump(endl);
+
+    dump('tilecache capacity: ' + bv._tileManager._tileCache.getCapacity() + endl);
+    dump('tilecache size    : ' + bv._tileManager._tileCache.size          + endl);
+    dump('tilecache numFree : ' + bv._tileManager._tileCache.numFree       + endl);
+    dump('tilecache iBound  : ' + bv._tileManager._tileCache.iBound        + endl);
+    dump('tilecache jBound  : ' + bv._tileManager._tileCache.jBound        + endl);
+
+    dump('-----------------------------------------------------\n');
+  }
+}
+
+
+function debugTile(i, j) {
+  let bv = Browser._browserView;
+  let tc = bv._tileManager._tileCache;
+  let t  = tc.getTile(i, j);
+
+  dump('------ DEBUGGING TILE (' + i + ',' + j + ') --------\n');
+
+  dump('in bounds: ' + tc.inBounds(i, j) + endl);
+  dump('occupied : ' + tc._isOccupied(i, j) + endl);
+  if (t)
+  {
+  dump('toString : ' + t.toString(true) + endl);
+  dump('free     : ' + t.free + endl);
+  dump('dirtyRect: ' + t._dirtyTileCanvasRect + endl);
+
+  let len = tc._tilePool.length;
+  for (let k = 0; k < len; ++k)
+    if (tc._tilePool[k] === t)
+      dump('found in tilePool at index ' + k + endl);
+  }
+
+  dump('------------------------------------\n');
+}
+
+function onKeyPress(e) {
+  let bv = Browser._browserView;
+
+  if (!e.ctrlKey)
+    return;
+
+  const a = 97;   // debug all critical tiles
+  const c = 99;   // set tilecache capacity
+  const d = 100;  // debug dump
+  const f = 102;  // run noop() through forEachIntersectingRect (for timing)
+  const i = 105;  // toggle info click mode
+  const l = 108;  // restart lazy crawl
+  const m = 109;  // fix mouseout
+  const t = 116;  // debug given list of tiles separated by space
+
+  switch (e.charCode) {
+  case d:
+    debug();
+
+    break;
+  case l:
+    bv._tileManager.restartLazyCrawl(bv._tileManager._criticalRect);
+
+    break;
+  case c:
+    let cap = parseInt(window.prompt('new capacity'));
+    bv._tileManager._tileCache.setCapacity(cap);
+
+    break;
+  case f:
+    let noop = function noop() { for (let i = 0; i < 10; ++i); };
+    bv._tileManager._tileCache.forEachIntersectingRect(bv._tileManager._criticalRect,
+                                                       false, noop, window);
+    
+    break;
+  case t:
+    let ijstrs = window.prompt('row,col plz').split(' ');
+    for each (let ijstr in ijstrs) {
+      let [i, j] = ijstr.split(',').map(function (x) parseInt(x));
+      debugTile(i, j);
+    }
+
+    break;
+  case a:
+    let cr = bv._tileManager._criticalRect;
+    dump('>>>>>> critical rect is ' + (cr ? cr.toString() : cr) + endl);
+    if (cr) {
+      let starti = cr.left  >> kTileExponentWidth;
+      let endi   = cr.right >> kTileExponentWidth;
+
+      let startj = cr.top    >> kTileExponentHeight;
+      let endj   = cr.bottom >> kTileExponentHeight;
+
+      for (var jj = startj; jj <= endj; ++jj)
+        for (var ii = starti; ii <= endi; ++ii)
+          debugTile(ii, jj);
+    }
+
+    break;
+  case i:
+    window.infoMode = !window.infoMode;
+    break;
+  case m:
+    onMouseUp();
+    break;
+  default:
+    break;
+  }
+}
+
+
+
+function getScrollboxPosition() {
+  let scrollbox = document.getElementById("scrollbox")
+		.boxObject
+		.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+  let x = {};
+  let y = {};
+  scrollbox.getPosition(x, y);
+  return [x.value, y.value];
+}
+
+function getVisibleRect() {
+  let w = window.innerWidth;
+  let h = window.innerHeight;
+
+  let [x, y] = getScrollboxPosition();
+
+  return new wsRect(x, y, w, h);
+}
+
+function scrollboxToViewportRect(rect) {
+  let leftbar  = document.getElementById("tabs-container");
+  let rightbar = document.getElementById("browser-controls");
+  let topbar   = document.getElementById("toolbar-main");
+
+  let leftbarcr = leftbar.getBoundingClientRect();
+  let topbarcr  = topbar.getBoundingClientRect();
+
+  let xtrans = -leftbarcr.width;
+  let ytrans = -topbarcr.height;
+
+  rect.translate(xtrans, ytrans);
+
+  return rect;
+}
+
 var ih = null;
 
 var Browser = {
@@ -74,15 +257,11 @@ var Browser = {
   startup: function() {
     var self = this;
 
-    // initalize the CanvasBrowser
-    this._canvasBrowser = new CanvasBrowser(document.getElementById("browser-canvas"));
-
-    // initialize the WidgetStack
-    let browserContainer = document.getElementById("browser-container");
-    ws = new WidgetStack(browserContainer);
+    let container = document.getElementById("tile_container");
+    let bv = this._browserView = new BrowserView(container, scrollboxToViewportRect(getVisibleRect()));
 
     // during startup a lot of viewportHandler calls happen due to content and window resizes
-    ws.beginUpdateBatch();
+    bv.beginBatchOperation();
 
     function panHandler(vr, dx, dy) {
       if (dx) {
@@ -104,9 +283,10 @@ var Browser = {
       self.windowUtils.processUpdates();
     }
 
-    ws.setPanHandler(panHandler);
+    //ws.setPanHandler(panHandler);
 
     function resizeHandler(e) {
+
       if (e.target != window)
         return;
 
@@ -115,15 +295,12 @@ var Browser = {
       if (maximize && w > screen.width)
         return;
 
+      bv.beginBatchOperation();
+
       let h = window.innerHeight;
 
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
-
-      // Resize our container...
-      let containerStyle = browserContainer.style;
-      containerStyle.width = containerStyle.maxWidth = w + "px";
-      containerStyle.height = containerStyle.maxHeight = h + "px";
 
       // Resize the browsers...
       let browsers = Browser.browsers;
@@ -135,14 +312,11 @@ var Browser = {
         }
       }
 
-      ws.updateSize(w, h);
+      bv.setVisibleRect(scrollboxToViewportRect(getVisibleRect()));
+      bv.zoomToPage();
+      bv.commitBatchOperation();
     }
     window.addEventListener("resize", resizeHandler, false);
-
-    function viewportHandler(bounds, boundsSizeChanged) {
-      self._canvasBrowser.viewportHandler(bounds, boundsSizeChanged);
-    }
-    ws.setViewportHandler(viewportHandler);
 
     // initialize input handling
     ih = new InputHandler();
@@ -182,7 +356,6 @@ var Browser = {
     browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
 
     /* Initialize Spatial Navigation */
-    var canvasBrowser = this.canvasBrowser;
     function panCallback(aElement) {
       if (!aElement)
         return;
@@ -247,10 +420,13 @@ var Browser = {
       gPrefService.clearUserPref("temporary.disablePlugins");
       this.setPluginState(true);
     }
+
+
+    bv.commitBatchOperation();
   },
 
   shutdown: function() {
-    this._canvasBrowser.setCurrentBrowser(null);
+    this._browserView.setBrowser(null, false);
 
     BrowserUI.uninit();
 
@@ -261,18 +437,6 @@ var Browser = {
     window.controllers.removeController(BrowserUI);
   },
 
-  updateViewportSize: function() {
-    var [w, h] = this._canvasBrowser._effectiveContentAreaDimensions.map(Math.ceil);
-
-    if (!this._currentViewportBounds ||
-        w != this._currentViewportBounds.width ||
-        h != this._currentViewportBounds.height) {
-      this._currentViewportBounds = {width: w, height: h};
-      let bounds = { top: 0, left: 0, right: Math.max(800, w), bottom: Math.max(480, h) };
-      ws.setViewportBounds(bounds);
-    }
-  },
-
   setPluginState: function(enabled)
   {
     var phs = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
@@ -281,13 +445,48 @@ var Browser = {
       plugins[i].disabled = !enabled;
   },
 
-  get canvasBrowser() {
-    return this._canvasBrowser;
-  },
-
   get browsers() {
     return this._browsers;
   },
+
+  startLoading: function() {
+    debugger;
+
+    if (this._pageLoading)
+      throw "!@@!#!";
+
+    this._pageLoading = true;
+
+    function resizeAndPaint(self) {
+      debugger;
+
+      // !!! --- RESIZE HACK BEGIN -----
+      self._browserView.simulateMozAfterSizeChange();
+      // !!! --- RESIZE HACK END -----
+
+      self._browserView.zoomToPage();
+      self._browserView.commitBatchOperation();
+
+      if (self._pageLoading) {
+	// kick ourselves off 2s later while we're still loading
+	self._browserView.beginBatchOperation();
+	self._loadingTimeout = setTimeout(resizeAndPaint, 2000, self);
+      } else {
+	delete self._loadingTimeout;
+      }
+    }
+
+    if (!this._loadingTimeout) {
+      this._browserView.beginBatchOperation();
+      this._loadingTimeout = setTimeout(resizeAndPaint, 2000, this);
+    }
+
+  },
+
+  endLoading: function() {
+    this._pageLoading = false;
+  },
+
 
   /**
    * Return the currently active <browser> object
@@ -312,16 +511,17 @@ var Browser = {
 
   addTab: function(uri, bringFront) {
     let newTab = new Tab();
-    newTab.create(uri);
     this._tabs.push(newTab);
     this._browsers.push(newTab.browser);
+
+    if (bringFront)
+      this.selectedTab = newTab;
+
+    newTab.load(uri);
 
     let event = document.createEvent("Events");
     event.initEvent("TabOpen", true, false);
     newTab.chromeTab.dispatchEvent(event);
-
-    if (bringFront)
-      this.selectedTab = newTab;
 
     return newTab;
   },
@@ -362,6 +562,8 @@ var Browser = {
   },
 
   set selectedTab(tab) {
+    let bv = this._browserView;
+
     if (tab instanceof XULElement)
       tab = this.getTabFromChrome(tab);
 
@@ -371,8 +573,8 @@ var Browser = {
     let firstTab = this._selectedTab == null;
     this._selectedTab = tab;
 
-    ws.beginUpdateBatch();
-    this._canvasBrowser.setCurrentBrowser(this.selectedBrowser, firstTab);
+    bv.beginBatchOperation();
+    this._browserView.setBrowser(this.selectedBrowser, true);
     document.getElementById("tabs").selectedItem = tab.chromeTab;
 
     if (!firstTab) {
@@ -392,7 +594,7 @@ var Browser = {
       event.initEvent("TabSelect", true, false);
       tab.chromeTab.dispatchEvent(event);
     }
-    ws.endUpdateBatch(true);
+    bv.commitBatchOperation(true);
   },
 
   supportsCommand: function(cmd) {
@@ -1222,10 +1424,10 @@ ProgressController.prototype = {
   },
 
   _networkStart: function() {
+    debugger;
     this._tab.setLoading(true);
-
     if (Browser.selectedBrowser == this.browser) {
-      Browser.canvasBrowser.startLoading();
+      Browser.startLoading();
       BrowserUI.update(TOOLBARSTATE_LOADING);
 
       // We increase the default text size to make the text more readable when
@@ -1239,15 +1441,15 @@ ProgressController.prototype = {
     this._tab.setLoading(false);
 
     if (Browser.selectedBrowser == this.browser) {
-      Browser.canvasBrowser.endLoading();
+      Browser.endLoading();
       BrowserUI.update(TOOLBARSTATE_LOADED);
       this.browser.docShell.isOffScreenBrowser = true;
       if (Browser._isStartup) {
         // force the urlbar into position
-        ws.panTo(0, -BrowserUI.toolbarH);
+        //ws.panTo(0, -BrowserUI.toolbarH);
 
         // now we can set the viewport to a real size and draw the page
-        ws.endUpdateBatch();
+        //ws.endUpdateBatch();
         Browser._isStartup = false;
       }
     }
@@ -1319,6 +1521,7 @@ ProgressController.prototype = {
 
 
 function Tab() {
+  this.create();
 }
 
 Tab.prototype = {
@@ -1345,12 +1548,18 @@ Tab.prototype = {
     this._loading = b;
   },
 
-  create: function(uri) {
+  load: function(uri) {
+    dump("cb set src\n");
+    this._browser.setAttribute("src", uri);
+    dump("cb set src\n");
+  },
+
+  create: function() {
     this._chromeTab = document.createElement("richlistitem");
     this._chromeTab.setAttribute("type", "documenttab");
     document.getElementById("tabs").addTab(this._chromeTab);
 
-    this._createBrowser(uri);
+    this._createBrowser();
   },
 
   destroy: function() {
@@ -1359,21 +1568,21 @@ Tab.prototype = {
     this._chromeTab = null;
   },
 
-  _createBrowser: function(uri) {
+  _createBrowser: function() {
     if (this._browser)
       throw "Browser already exists";
 
     // Create the browser using the current width the dynamically size the height
     let scaledHeight = kDefaultBrowserWidth * (window.innerHeight / window.innerWidth);
     let browser = this._browser = document.createElement("browser");
+
     browser.setAttribute("style", "overflow: hidden; visibility: hidden; width: " + kDefaultBrowserWidth + "px; height: " + scaledHeight + "px;");
     browser.setAttribute("type", "content");
-    browser.setAttribute("src", uri);
 
     // Attach the popup contextmenu
-    let canvas = document.getElementById("browser-canvas");
-    browser.setAttribute("contextmenu", canvas.getAttribute("contextmenu"));
-    let autocompletepopup = canvas.getAttribute("autocompletepopup");
+    let container = document.getElementById("tile_container");
+    browser.setAttribute("contextmenu", container.getAttribute("contextmenu"));
+    let autocompletepopup = container.getAttribute("autocompletepopup");
     if (autocompletepopup)
       browser.setAttribute("autocompletepopup", autocompletepopup);
 
