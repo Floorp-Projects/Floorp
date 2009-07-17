@@ -65,6 +65,13 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   font-weight: bold;
 }
 
+%ifdef MOZ_WIDGET_GTK2
+/* Bookmarks override the "images-in-menus" metric in xul.css */
+.bookmark-item > .menu-iconic-left {
+  visibility: inherit;
+}
+%endif
+
 #editBMPanel_tagsSelector {
   /* override default listbox width from xul.css */
   width: auto;
