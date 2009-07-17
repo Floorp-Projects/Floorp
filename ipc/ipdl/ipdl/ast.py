@@ -310,6 +310,12 @@ class State(Node):
     def __init__(self, loc, name):
         Node.__init__(self, loc)
         self.name = name
+    def __eq__(self, o):
+        return isinstance(o, State) and o.name == self.name
+    def __hash__(self):
+        return hash(repr(self))
+    def __repr__(self): return '<State %r>'% (self.name)
+    def __str__(self): return '<State %s>'% (self.name)
 
 class Param(Node):
     def __init__(self, loc, typespec, name):
@@ -356,5 +362,3 @@ class Decl(Node):
         self.loc = loc
         self.type = None
         self.scope = None
-
-
