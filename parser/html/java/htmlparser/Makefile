@@ -39,6 +39,4 @@
 SVN_BASE=http://svn.versiondude.net/whattf/htmlparser/trunk
 
 sync:: \
-; rm -rf src && \
-  svn co $(SVN_BASE)/src/nu/validator/htmlparser/impl src && \
-  find src -name .svn | xargs rm -rf
+; ../sync-src.sh $(SVN_BASE)/src/nu/validator/htmlparser/impl
