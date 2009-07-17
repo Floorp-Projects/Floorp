@@ -4,7 +4,8 @@ namespace test {
 sync protocol Test
 {
 both:
-    sync Ping() returns (int status);
+    Ping();
+    Pong(int status);
 
 parent:
     GetValue(String key);
@@ -16,14 +17,14 @@ child:
     TellValues(StringArray keys, StringArray vals);
 
 state START:
-    recv Ping goto START;
     send Ping goto START;
+    recv Pong goto START;
 
     recv SetValue goto HAVE_VALUES;
 
 state HAVE_VALUES:
-    recv Ping goto HAVE_VALUES;
     send Ping goto HAVE_VALUES;
+    recv Pong goto HAVE_VALUES;
 
     recv SetValue goto HAVE_VALUES;
 
@@ -31,8 +32,15 @@ state HAVE_VALUES:
     recv GetValues goto TELLING_VALUES;
 
 state TELLING_VALUE:
+    send Ping goto TELLING_VALUE;
+    recv Pong goto TELLING_VALUE;
+
     send TellValue goto HAVE_VALUES;
+
 state TELLING_VALUES:
+    send Ping goto TELLING_VALUES;
+    recv Pong goto TELLING_VALUES;
+
     send TellValues goto HAVE_VALUES;
 };
 

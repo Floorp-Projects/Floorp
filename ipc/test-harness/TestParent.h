@@ -7,7 +7,8 @@ namespace test {
 class TestParent :
     public TestProtocolParent
 {
-    virtual nsresult RecvPing(int* status);
+    virtual nsresult RecvPing();
+    virtual nsresult RecvPong(const int& status);
     virtual nsresult RecvGetValue(const String& key);
     virtual nsresult RecvGetValues(const StringArray& keys);
     virtual nsresult RecvSetValue(

@@ -8,7 +8,8 @@ class TestChild :
     public TestProtocolChild
 {
 protected:
-    virtual nsresult RecvPing(int* status);
+    virtual nsresult RecvPing();
+    virtual nsresult RecvPong(const int& status);
     virtual nsresult RecvTellValue(
                 const String& key,
                 const String& val);
