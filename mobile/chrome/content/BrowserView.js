@@ -634,9 +634,9 @@ BrowserView.prototype = {
   _appendTile: function _appendTile(tile) {
     let canvas = tile.getContentImage();
 
-    canvas.style.position = "absolute";
-    canvas.style.left = tile.x + "px";
-    canvas.style.top  = tile.y + "px";
+    //canvas.style.position = "absolute";
+    //canvas.style.left = tile.x + "px";
+    //canvas.style.top  = tile.y + "px";
 
     // XXX The above causes a trace abort, and this function is called back in the tight
     // render-heavy loop in TileManager, so even though what we do below isn't so proper
@@ -646,7 +646,7 @@ BrowserView.prototype = {
     // But this also overwrites some style already set on the canvas in Tile constructor.
     // Hack fail...
     //
-    //canvas.setAttribute("style", "position: absolute; left: " + tile.boundRect.left + "px; " + "top: " + tile.boundRect.top + "px;");
+    canvas.setAttribute("style", "position: absolute; left: " + tile.boundRect.left + "px; " + "top: " + tile.boundRect.top + "px;");
 
     this._container.appendChild(canvas);
 
