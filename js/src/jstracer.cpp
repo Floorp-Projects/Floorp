@@ -4204,6 +4204,10 @@ js_TrashTree(JSContext* cx, Fragment* f)
     unsigned length = ti->dependentTrees.length();
     for (unsigned n = 0; n < length; ++n)
         js_TrashTree(cx, data[n]);
+    data = ti->linkedTrees.data();
+    length = ti->linkedTrees.length();
+    for (unsigned n = 0; n < length; ++n)
+        js_TrashTree(cx, data[n]);
     delete ti;
     JS_ASSERT(!f->code() && !f->vmprivate);
 }
