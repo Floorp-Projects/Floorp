@@ -307,7 +307,7 @@ BrowserView.prototype = {
     if (!bvs)
       return;
 
-    let newZL = clampZoomLevel(zl);
+    let newZL = BrowserView.Util.clampZoomLevel(zl);
 
     if (newZL != bvs.zoomLevel) {
       let browserW = this.viewportToBrowser(bvs.viewportRect.right);
