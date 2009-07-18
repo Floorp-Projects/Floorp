@@ -77,8 +77,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/extensions.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/downloads.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/console.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/WidgetStack.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/CanvasBrowser.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/Util.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/InputHandler.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/TileManager.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/BrowserView.js"/>

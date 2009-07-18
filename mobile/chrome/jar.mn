@@ -26,6 +26,7 @@ browser.jar:
   content/TileManager.js               (content/TileManager.js)
   content/CanvasBrowser.js             (content/CanvasBrowser.js)
   content/InputHandler.js              (content/InputHandler.js)
+  content/Util.js                      (content/Util.js)
   content/extensions.js                (content/extensions.js)
   content/downloads.js                 (content/downloads.js)
   content/console.js                   (content/console.js)
