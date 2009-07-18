@@ -107,11 +107,13 @@ TileManager.prototype = {
                                                         boundsSizeChanged,
                                                         dirtyAll) {
     // !!! --- DEBUG BEGIN -----
+    /*
     dump("***vphandler***\n");
     dump(viewportRect.toString() + "\n");
     dump((criticalRect ? criticalRect.toString() : "null") + "\n");
     dump(boundsSizeChanged + "\n");
     dump(dirtyAll + "\n***************\n");
+    */
     // !!! --- DEBUG END -------
 
     let tc = this._tileCache;
@@ -178,9 +180,9 @@ TileManager.prototype = {
       let visited = {};
       let evictGuard = null;
       if (create) {
-	      evictGuard = function evictGuard(tile) {
-	        return !visited[tile.toString()];
-	      };
+	evictGuard = function evictGuard(tile) {
+	  return !visited[tile.toString()];
+	};
       }
 
       let starti = rect.left  >> kTileExponentWidth;
@@ -193,44 +195,44 @@ TileManager.prototype = {
       let tc = this._tileCache;
 
       for (var j = startj; j <= endj; ++j) {
-	      for (var i = starti; i <= endi; ++i) {
-	        // 'this' for getTile needs to be tc
-	        //tile = this.getTile(i, j, create, evictGuard);
-	        //if (!tc.inBounds(i, j)) {
-	        if (0 <= i && 0 <= j && i <= tc.iBound && j <= tc.jBound) {
-	          //return null;
-	          break;
-	        }
+	for (var i = starti; i <= endi; ++i) {
+	  // 'this' for getTile needs to be tc
+	  //tile = this.getTile(i, j, create, evictGuard);
+	  //if (!tc.inBounds(i, j)) {
+	  if (0 <= i && 0 <= j && i <= tc.iBound && j <= tc.jBound) {
+	    //return null;
+	    break;
+	  }
 
-	        tile = null;
+	  tile = null;
 
-	        //if (tc._isOccupied(i, j)) {
-	        if (!!(tc._tiles[i] && tc._tiles[i][j])) {
-	          tile = tc._tiles[i][j];
-	        } else if (create) {
-	          // NOTE: create is false here
-	          tile = tc._createTile(i, j, evictionGuard);
-	          if (tile) tile.markDirty();
-	        }
+	  //if (tc._isOccupied(i, j)) {
+	  if (!!(tc._tiles[i] && tc._tiles[i][j])) {
+	    tile = tc._tiles[i][j];
+	  } else if (create) {
+	    // NOTE: create is false here
+	    tile = tc._createTile(i, j, evictionGuard);
+	    if (tile) tile.markDirty();
+	  }
 
-	        if (tile) {
-	          visited[tile.toString()] = true;
-	          //fn.call(thisObj, tile);
-	          //function appendNonDirtyTile(tile) {
-	          //if (!tile.isDirty())
-	          if (!tile._dirtyTileCanvas) {
-	            //this._appendTileSafe(tile);
-	            if (!tile._appended) {
-		            let astart = Date.now();
-		            this._appendTile(tile);
-		            tile._appended = true;
-		            let aend = Date.now();
-		            dump("append: " + (aend - astart) + "\n");
-	            }
-	          }
-	          //}
-	        }
+	  if (tile) {
+	    visited[tile.toString()] = true;
+	    //fn.call(thisObj, tile);
+	    //function appendNonDirtyTile(tile) {
+	    //if (!tile.isDirty())
+	    if (!tile._dirtyTileCanvas) {
+	      //this._appendTileSafe(tile);
+	      if (!tile._appended) {
+		let astart = Date.now();
+		this._appendTile(tile);
+		tile._appended = true;
+		let aend = Date.now();
+		dump("append: " + (aend - astart) + "\n");
 	      }
+	    }
+	    //}
+	  }
+	}
       }
     }
 
@@ -821,7 +823,7 @@ TileManager.Tile.prototype = {
     ctx.drawWindow(sourceContent,
                    rect.left, rect.top,
                    rect.right - rect.left, rect.bottom - rect.top,
-                   "grey",
+                   "white",
                    (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
 
     ctx.restore();

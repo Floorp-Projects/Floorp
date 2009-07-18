@@ -48,11 +48,11 @@ function getScrollboxFromElement(elem) {
   while (elem.parentNode) {
     try {
       if ("scrollBoxObject" in elem && elem.scrollBoxObject) {
-        scrollbox = elem.scrollBoxObject;
+        scrollbox = elem;
         break;
       }
-      else if (elem.boxObject) {
-        scrollbox = elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+      else if (elem.boxObject && elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject)) {
+        scrollbox = elem;
         break;
       }
     }
@@ -61,6 +61,20 @@ function getScrollboxFromElement(elem) {
     }
     elem = elem.parentNode;
   }
+  return scrollbox;
+}
+
+function getScrollBoxObjectFromElement(elem) {
+  // check element for scrollable interface, if not found check parent until we get to root
+  let scrollbox = null;
+
+  try {
+    if ("scrollBoxObject" in elem && elem.scrollBoxObject)
+      scrollbox = elem.scrollBoxObject;
+    else if (elem.boxObject)
+      scrollbox = elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+  } catch (e) {}
+
   return scrollbox;
 }
 
@@ -254,7 +268,7 @@ function ChromeInputModule(owner, browserCanvas) {
   this._owner = owner;
   this._browserCanvas = browserCanvas;
   this._dragData = new DragData(this, 50, 200);
-  this._targetScrollbox = null;
+  this._targetScrollFunction = null;
   this._clickEvents = [];
 }
 
@@ -278,7 +292,7 @@ ChromeInputModule.prototype = {
    */
   cancelPending: function cancelPending() {
     this._dragData.reset();
-    this._targetScrollbox = null;
+    this._targetScrollFunction = null;
   },
 
   // called from DragData.setDragStart only
@@ -293,9 +307,9 @@ ChromeInputModule.prototype = {
   _dragStop: function _dragStop(sX, sY) {
     let dragData = this._dragData;
     [sX, sY] = dragData.lockMouseMove(sX, sY);
-    if (this._targetScrollbox)
-      this._targetScrollbox.scrollBy(dragData.sX - sX, dragData.sY - sY);
-    this._targetScrollbox = null;
+    if (this._targetScrollFunction)
+      this._targetScrollFunction.call(null, dragData.sX - sX, dragData.sY - sY);
+    this._targetScrollFunction = null;
   },
 
   _dragMove: function _dragMove(sX, sY) {
@@ -304,8 +318,9 @@ ChromeInputModule.prototype = {
       this._clickEvents = [];
 
     [sX, sY] = dragData.lockMouseMove(sX, sY);
-    if (this._targetScrollbox)
-      this._targetScrollbox.scrollBy(dragData.sX - sX, dragData.sY - sY);
+
+    if (this._targetScrollFunction)
+      this._targetScrollFunction.call(null, dragData.sX - sX, dragData.sY - sY);
     dragData.setDragPosition(sX, sY);
   },
 
@@ -320,9 +335,21 @@ ChromeInputModule.prototype = {
 
     let dragData = this._dragData;
 
-    this._targetScrollbox = getScrollboxFromElement(aEvent.target);
-    if (!this._targetScrollbox)
+    let targetScrollbox = getScrollboxFromElement(aEvent.target);
+    if (!targetScrollbox)
       return;
+
+    if (targetScrollbox.scrollByFunc) {
+      this._targetScrollFunction = targetScrollbox.scrollByFunc;
+    } else {
+      let targetScrollBoxObject = getScrollBoxObjectFromElement(targetScrollbox);
+      if (!targetScrollBoxObject)
+	return;
+
+      this._targetScrollFunction = function defaultScrollFunction(dx, dy) {
+	targetScrollBoxObject.scrollBy(dx, dy);
+      }
+    }
 
     // absorb the event for the scrollable XUL element and make all future events grabbed too
     this._owner.grab(this);
@@ -344,7 +371,7 @@ ChromeInputModule.prototype = {
 
   _onMouseUp: function _onMouseUp(aEvent) {
     // only process if original mousedown was on a scrollable element
-    if (!this._targetScrollbox)
+    if (!this._targetScrollFunction)
       return;
 
     aEvent.stopPropagation();
@@ -373,7 +400,7 @@ ChromeInputModule.prototype = {
       this._owner.suppressNextClick();
     }
 
-    this._targetScrollbox = null;
+    this._targetScrollFunction = null;
     this._owner.ungrab(this);
   },
 
@@ -381,7 +408,7 @@ ChromeInputModule.prototype = {
     let dragData = this._dragData;
 
     // only process if original mousedown was on a scrollable element
-    if (!this._targetScrollbox)
+    if (!this._targetScrollFunction)
       return;
 
     aEvent.stopPropagation();
@@ -399,6 +426,7 @@ ChromeInputModule.prototype = {
       return;
 
     [sX, sY] = dragData.lockMouseMove(sX, sY);
+
     this._dragMove(sX, sY);
   },
 
