@@ -1,6 +1,21 @@
 namespace mozilla {
 namespace test {
 
+//-----------------------------------------------------------------------------
+// "Hello world" example
+protocol Test
+{
+child:
+    Hello();
+
+parent:
+    World();
+};
+
+
+//-----------------------------------------------------------------------------
+// Example solution to exercise
+/*
 sync protocol Test
 {
 both:
@@ -43,6 +58,9 @@ state TELLING_VALUES:
 
     send TellValues goto HAVE_VALUES;
 };
+//
+*/
 
 } // namespace test
 } // namespace mozilla
+

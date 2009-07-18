@@ -3,6 +3,28 @@
 using mozilla::test::TestChild;
 
 // C++ file contents
+TestChild::TestChild()
+{
+}
+
+TestChild::~TestChild()
+{
+}
+
+#if 1
+//-----------------------------------------------------------------------------
+// "Hello world" example
+nsresult TestChild::RecvHello()
+{
+    puts("[TestChild] Hello, ");
+    SendWorld();
+    return NS_OK;
+}
+
+
+#elif 0
+//-----------------------------------------------------------------------------
+// Example solution to exercise
 nsresult TestChild::RecvPing()
 {
     return SendPong(42);
@@ -26,11 +48,4 @@ nsresult TestChild::RecvTellValues(
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-TestChild::TestChild()
-{
-}
-
-TestChild::~TestChild()
-{
-}
+#endif
