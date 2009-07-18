@@ -212,6 +212,7 @@ Util.Rect.prototype = {
   },
 
   intersects: function(other) {
+    if (!other) debugger;
     let xok = (other.left > this.left && other.left < this.right) ||
       (other.right > this.left && other.right < this.right) ||
       (other.left <= this.left && other.right >= this.right);
@@ -441,6 +442,7 @@ wsRect.prototype = {
   },
 
   intersects: function(other) {
+    if (!other) debugger;
     let xok = (other.left > this.left && other.left < this.right) ||
       (other.right > this.left && other.right < this.right) ||
       (other.left <= this.left && other.right >= this.right);
