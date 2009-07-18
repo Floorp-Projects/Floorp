@@ -40,11 +40,10 @@
 
 let Ci = Components.interfaces;
 
+const kBrowserViewZoomLevelMin = 0.2;
+const kBrowserViewZoomLevelMax = 4.0;
+const kBrowserViewZoomLevelPrecision = 10000;
 
-function BrowserView(container, visibleRect) {
-  Util.bindAll(this);
-  this.init(container, visibleRect);
-}
 
 /**
  * A BrowserView maintains state of the viewport (browser, zoom level,
@@ -133,9 +132,10 @@ function BrowserView(container, visibleRect) {
  * hopefully no one but us will touch.  See BrowserView.Util.getViewportStateFromBrowser()
  * for the property name.
  */
-const kBrowserViewZoomLevelMin = 0.2;
-const kBrowserViewZoomLevelMax = 4.0;
-const kBrowserViewZoomLevelPrecision = 10000;
+function BrowserView(container, visibleRect) {
+  Util.bindAll(this);
+  this.init(container, visibleRect);
+}
 
 
 // -----------------------------------------------------------
@@ -250,14 +250,6 @@ BrowserView.prototype = {
     this._renderMode = 0;
     this._tileManager = new TileManager(this._appendTile, this._removeTile, this);
     this.setVisibleRect(visibleRect);
-
-    // !!! --- RESIZE HACK BEGIN -----
-    // remove this eventually
-    this._resizeHack = {
-      maxSeenW: 0,
-      maxSeenH: 0
-    };
-    // !!! --- RESIZE HACK END -------
   },
 
   setVisibleRect: function setVisibleRect(r) {
@@ -483,12 +475,6 @@ BrowserView.prototype = {
     let [scrollX, scrollY] = BrowserView.Util.getContentScrollValues(browser);
     let clientRects = ev.clientRects;
 
-    // !!! --- RESIZE HACK BEGIN -----
-    // remove this, cf explanation in loop below
-    let hack = this._resizeHack;
-    let hackSizeChanged = false;
-    // !!! --- RESIZE HACK END -------
-
     let rects = [];
     // loop backwards to avoid xpconnect penalty for .length
     for (let i = clientRects.length - 1; i >= 0; --i) {
@@ -503,32 +489,18 @@ BrowserView.prototype = {
       if (r.right < 0 || r.bottom < 0)
         continue;
 
-      // !!! --- RESIZE HACK BEGIN -----
-      // remove this.  this is where we make 'lazy' calculations
-      // that hint at a browser size change and fake the size change
-      // event dispach
-      if (r.right > hack.maxW) {
-        hack.maxW = rect.right;
-        hackSizeChanged = true;
-      }
-      if (r.bottom > hack.maxH) {
-        hack.maxH = rect.bottom;
-        hackSizeChanged = true;
-      }
-      // !!! --- RESIZE HACK END -------
-
       try {
         r.restrictTo(vs.viewportRect);
         rects.push(r);
-      } catch(ex) { dump("fail:(\n"); }
+      } catch(ex) { dump("fail\n"); }
     }
 
     tm.dirtyRects(rects, this.isRendering());
   },
 
   // !!! --- RESIZE HACK BEGIN -----
-  simulateMozAfterSizeChange: function simulateMozAfterSizeChange(width, height) {
-    let [w, h] = getBrowserDimensions(this._browser);
+  simulateMozAfterSizeChange: function simulateMozAfterSizeChange() {
+    let [w, h] = BrowserView.Util.getBrowserDimensions(this._browser);
     let ev = document.createEvent("MouseEvents");
     ev.initMouseEvent("FakeMozAfterSizeChange", false, false, window, 0, w, h, 0, 0, false, false, false, false, 0, null);
     this._browser.dispatchEvent(ev);
@@ -643,21 +615,14 @@ BrowserView.prototype = {
     let bvs = this._browserViewportState;
     let vis = this._visibleRect;
 
-    // !!! --- RESIZE HACK BEGIN -----
-    // We want to uncomment this for perf, but we can't with the hack in place
-    // because the mozAfterPaint gives us rects that we use to create the
-    // fake mozAfterResize event, so we can't just clear things.
-    /*
-    if (dirtyAll) {
-      // We're about to mark the entire viewport dirty, so we can clear any
-      // queued afterPaint events that will cause redundant draws
-      BrowserView.Util.getBrowserDOMWindowUtils(this._browser).clearMozAfterPaintEvents();
-    }
-    */
-    // !!! --- RESIZE HACK END -------
-
     if (bvs) {
       BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
+
+      if (dirtyAll) {
+        // We're about to mark the entire viewport dirty, so we can clear any
+        // queued afterPaint events that will cause redundant draws
+        BrowserView.Util.getBrowserDOMWindowUtils(this._browser).clearMozAfterPaintEvents();
+      }
 
       this._tileManager.viewportChangeHandler(bvs.viewportRect,
                                               BrowserView.Util.visibleRectToCriticalRect(vis, bvs),
@@ -676,7 +641,11 @@ BrowserView.prototype = {
     // XXX The above causes a trace abort, and this function is called back in the tight
     // render-heavy loop in TileManager, so even though what we do below isn't so proper
     // and takes longer on the Platform/C++ emd, it's better than causing a trace abort
-    // in our tight loop. :/
+    // in our tight loop.
+    //
+    // But this also overwrites some style already set on the canvas in Tile constructor.
+    // Hack fail...
+    //
     //canvas.setAttribute("style", "position: absolute; left: " + tile.boundRect.left + "px; " + "top: " + tile.boundRect.top + "px;");
 
     this._container.appendChild(canvas);
