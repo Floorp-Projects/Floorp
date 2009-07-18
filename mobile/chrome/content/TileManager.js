@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Roy Frostig <rfrostig@mozilla.com>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,30 +41,11 @@
 const kXHTMLNamespaceURI  = "http://www.w3.org/1999/xhtml";
 
 // base-2 exponent for width, height of a single tile.
-const kTileExponentWidth  = 6;
-const kTileExponentHeight = 6;
+const kTileExponentWidth  = 7;
+const kTileExponentHeight = 7;
 const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^7 = 128
 const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^7 = 128
-const kLazyRoundTimeCap = 500;    // millis
-
-
-function bind(f, thisObj) {
-  return function() {
-    return f.apply(thisObj, arguments);
-  };
-}
-
-function bindSome(instance, methodNames) {
-  for each (let methodName in methodNames)
-    if (methodName in instance)
-      instance[methodName] = bind(instance[methodName], instance);
-}
-
-function bindAll(instance) {
-  for (let key in instance)
-    if (instance[key] instanceof Function)
-      instance[key] = bind(instance[key], instance);
-}
+const kTileLazyRoundTimeCap = 500;    // millis
 
 
 /**
@@ -95,10 +77,6 @@ function TileManager(appendTile, removeTile, browserView) {
   // in the sense that it must be rendered as soon as it becomes dirty
   this._criticalRect = null;
 
-  // Current <browser> DOM element, holding the content we wish to render.
-  // This is null when no browser is attached
-  this._browser = null;
-
   // if we have an outstanding paint timeout, its value is stored here
   // for cancelling when we end page loads
   //this._drawTimeout = 0;
@@ -122,8 +100,6 @@ function TileManager(appendTile, removeTile, browserView) {
 
 TileManager.prototype = {
 
-  setBrowser: function setBrowser(b) { this._browser = b; },
-
   // This is the callback fired by our client whenever the viewport
   // changed somehow (or didn't change but someone asked it to update).
   viewportChangeHandler: function viewportChangeHandler(viewportRect,
@@ -133,7 +109,7 @@ TileManager.prototype = {
     // !!! --- DEBUG BEGIN -----
     dump("***vphandler***\n");
     dump(viewportRect.toString() + "\n");
-    dump((criticalRect ? criticalRect.toString() : "null") + "\n");
+    dump(criticalRect.toString() + "\n");
     dump(boundsSizeChanged + "\n");
     dump(dirtyAll + "\n***************\n");
     // !!! --- DEBUG END -------
@@ -180,7 +156,6 @@ TileManager.prototype = {
   },
 
   beginCriticalMove: function beginCriticalMove(destCriticalRect) {
-    let start = Date.now();
     function appendNonDirtyTile(tile) {
       if (!tile.isDirty())
         this._appendTileSafe(tile);
@@ -188,18 +163,9 @@ TileManager.prototype = {
 
     if (destCriticalRect)
       this._tileCache.forEachIntersectingRect(destCriticalRect, false, appendNonDirtyTile, this);
-    let end = Date.now();
-    dump("start: " + (end-start) + "\n")
   },
 
-  beginCriticalMove2: function beginCriticalMove(destCriticalRect) {
-  /*
-  function appendNonDirtyTile(tile) {
-    if (!tile.isDirty())
-      this._appendTileSafe(tile);
-  }
-  */
-
+  beginCriticalMoveUnrolled: function beginCriticalMoveUnrolled(destCriticalRect) {
     let start = Date.now();
 
     if (destCriticalRect) {
@@ -212,9 +178,9 @@ TileManager.prototype = {
       let visited = {};
       let evictGuard = null;
       if (create) {
-	evictGuard = function evictGuard(tile) {
-	  return !visited[tile.toString()];
-	};
+	      evictGuard = function evictGuard(tile) {
+	        return !visited[tile.toString()];
+	      };
       }
 
       let starti = rect.left  >> kTileExponentWidth;
@@ -227,85 +193,73 @@ TileManager.prototype = {
       let tc = this._tileCache;
 
       for (var j = startj; j <= endj; ++j) {
-	for (var i = starti; i <= endi; ++i) {
+	      for (var i = starti; i <= endi; ++i) {
+	        // 'this' for getTile needs to be tc
+	        //tile = this.getTile(i, j, create, evictGuard);
+	        //if (!tc.inBounds(i, j)) {
+	        if (0 <= i && 0 <= j && i <= tc.iBound && j <= tc.jBound) {
+	          //return null;
+	          break;
+	        }
 
-	  // 'this' for getTile needs to be tc
+	        tile = null;
 
-	  //tile = this.getTile(i, j, create, evictGuard);
-	  //if (!tc.inBounds(i, j)) {
-	  if (0 <= i && 0 <= j && i <= tc.iBound && j <= tc.jBound) {
-	    //return null;
-	    break;
-	  }
+	        //if (tc._isOccupied(i, j)) {
+	        if (!!(tc._tiles[i] && tc._tiles[i][j])) {
+	          tile = tc._tiles[i][j];
+	        } else if (create) {
+	          // NOTE: create is false here
+	          tile = tc._createTile(i, j, evictionGuard);
+	          if (tile) tile.markDirty();
+	        }
 
-	  tile = null;
-
-	  //if (tc._isOccupied(i, j)) {
-	  if (!!(tc._tiles[i] && tc._tiles[i][j])) {
-	    tile = tc._tiles[i][j];
-	  } else if (create) {
-	    // NOTE: create is false here
-	    tile = tc._createTile(i, j, evictionGuard);
-	    if (tile) tile.markDirty();
-	  }
-
-	  if (tile) {
-	    visited[tile.toString()] = true;
-	    //fn.call(thisObj, tile);
-	    //function appendNonDirtyTile(tile) {
-	    //if (!tile.isDirty())
-	    if (!tile._dirtyTileCanvas) {
-	      //this._appendTileSafe(tile);
-	      if (!tile._appended) {
-		let astart = Date.now();
-		this._appendTile(tile);
-		tile._appended = true;
-		let aend = Date.now();
-		dump("append: " + (aend - astart) + "\n");
+	        if (tile) {
+	          visited[tile.toString()] = true;
+	          //fn.call(thisObj, tile);
+	          //function appendNonDirtyTile(tile) {
+	          //if (!tile.isDirty())
+	          if (!tile._dirtyTileCanvas) {
+	            //this._appendTileSafe(tile);
+	            if (!tile._appended) {
+		            let astart = Date.now();
+		            this._appendTile(tile);
+		            tile._appended = true;
+		            let aend = Date.now();
+		            dump("append: " + (aend - astart) + "\n");
+	            }
+	          }
+	          //}
+	        }
 	      }
-	    }
-	    //}
-	  }
-	}
       }
     }
 
     let end = Date.now();
-    dump("start: " + (end-start) + "\n")
+    dump("start: " + (end-start) + "\n");
   },
 
   endCriticalMove: function endCriticalMove(destCriticalRect, doCriticalPaint) {
-    let start = Date.now();
-
     let tc = this._tileCache;
     let cr = this._criticalRect;
 
-    let dcr = destCriticalRect;
-
+    let dcr = destCriticalRect; // XXX help the closure upval analyser with a local let
     let f = function releaseOldTile(tile) {
-      // release old tile
       if (!tile.boundRect.intersects(dcr))
         tc.releaseTile(tile);
-    }
+    };
 
     if (cr)
       tc.forEachIntersectingRect(cr, false, f, this);
 
-    if (dcr)
-      this._holdRect(destCriticalRect);
+    this._holdRect(destCriticalRect);
 
     if (cr)
       cr.copyFrom(destCriticalRect);
     else
       this._criticalRect = cr = destCriticalRect;
 
-    let crpstart = Date.now();
     if (doCriticalPaint)
       this.criticalRectPaint();
-    dump(" crp: " + (Date.now() - crpstart) + "\n");
-
-    let end = Date.now();
-    dump("end: " + (end - start) + "\n");
   },
 
   restartLazyCrawl: function restartLazyCrawl(startRectOrQueue) {
@@ -351,7 +305,7 @@ TileManager.prototype = {
 
   _renderTile: function _renderTile(tile) {
     if (tile.isDirty())
-      tile.render(this._browser, this._browserView);
+      tile.render(this._browserView);
   },
 
   _appendTileSafe: function _appendTileSafe(tile) {
@@ -406,7 +360,7 @@ TileManager.prototype = {
     let start = Date.now();
     let comeAgain = true;
 
-    while ((Date.now() - start) <= kLazyRoundTimeCap) {
+    while ((Date.now() - start) <= kTileLazyRoundTimeCap) {
       let tile = self._crawler.next();
 
       if (!tile) {
@@ -594,7 +548,6 @@ TileManager.TileCache.prototype = {
 
     } else {
       // assert: nTiles == capacity
-      dump("\nevicting\n");
       tile = this._evictTile(evictionGuard);
       if (tile)
         this._reassignTile(tile, i, j);
@@ -750,7 +703,7 @@ TileManager.Tile = function Tile(i, j) {
   this._canvas.setAttribute("width", String(kTileWidth));
   this._canvas.setAttribute("height", String(kTileHeight));
   this._canvas.setAttribute("moz-opaque", "true");
-  this._canvas.style.border = "1px solid red";
+  //this._canvas.style.border = "1px solid red";
 
   this.init(i, j);  // defines more properties, cf below
 };
@@ -846,7 +799,7 @@ TileManager.Tile.prototype = {
    * to render, as this will cause the entire tile to re-render in the
    * case that it is not dirty.
    */
-  render: function render(browser, browserView) {
+  render: function render(browserView) {
     if (!this.isDirty())
       this.markDirty();
 
@@ -856,20 +809,17 @@ TileManager.Tile.prototype = {
     let y = rect.top - this.boundRect.top;
 
     browserView.viewportToBrowserRect(rect);
-    //rect.round(); // snap outward to get whole "pixel" (in browser coords)
 
+    let sourceContent = browserView._contentWindow;
     let ctx = this._canvas.getContext("2d");
     ctx.save();
 
     browserView.browserToViewportCanvasContext(ctx);
 
     ctx.translate(x, y);
-
-    let cw = browserView._contentWindow;
-    //let cw = browser.contentWindow;
-    ctx.drawWindow(cw,
+    ctx.drawWindow(sourceContent,
                    rect.left, rect.top,
-                   rect.right - rect.left, rect.bottom - rect.top,
+                   rect.width, rect.height,
                    "grey",
                    (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
 
@@ -924,7 +874,7 @@ TileManager.CrawlIterator = function CrawlIterator(tileCache, startRect) {
   // filters the tiles we've already reused once from being considered victims
   // for reuse when we ask the tile cache to create a new tile
   let visited = this._visited;
-  this._notVisited = function(tile) { return !visited[tile]; };
+  this._notVisited = function(tile) { return !visited[tile.toString()]; };
 
   // a generator that generates tile indices corresponding to tiles intersecting
   // the boundary of an expanding rectangle
@@ -1011,7 +961,7 @@ TileManager.CrawlIterator.prototype = {
     }
 
     if (tile) {
-      this._visited[tile] = true;
+      this._visited[tile.toString()] = true;
     } else {
       this.becomeQueue();
       return this.next();
