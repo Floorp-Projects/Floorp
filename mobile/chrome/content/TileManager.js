@@ -152,12 +152,16 @@ TileManager.prototype = {
 
     if (cr) {
       let [ctrx, ctry] = cr.centerRounded();
+      let start = Date.now();
       this.recenterEvictionQueue(ctrx, ctry);
+      dump("  center: " + (Date.now() - start) + "\n");
+      start = Date.now();
       this._renderAppendHoldRect(cr);
+      dump("  render: " + (Date.now() - start) + "\n");
     }
   },
 
-  beginCriticalMove: function beginCriticalMove(destCriticalRect) {
+  beginCriticalMove2: function beginCriticalMove(destCriticalRect) {
     function appendNonDirtyTile(tile) {
       if (!tile.isDirty())
         this._appendTileSafe(tile);
@@ -167,7 +171,7 @@ TileManager.prototype = {
       this._tileCache.forEachIntersectingRect(destCriticalRect, false, appendNonDirtyTile, this);
   },
 
-  beginCriticalMoveUnrolled: function beginCriticalMoveUnrolled(destCriticalRect) {
+  beginCriticalMove: function beginCriticalMoveUnrolled(destCriticalRect) {
     let start = Date.now();
 
     if (destCriticalRect) {
@@ -250,19 +254,24 @@ TileManager.prototype = {
         tc.releaseTile(tile);
     };
 
+    let start = Date.now();
     if (cr)
       tc.forEachIntersectingRect(cr, false, f, this);
-
+    dump(" release: " + (Date.now() - start) + "\n");
+    start = Date.now();
     if (destCriticalRect)
       this._holdRect(destCriticalRect);
+    dump(" hold: " + (Date.now() - start) + "\n");
 
     if (cr)
       cr.copyFrom(destCriticalRect);
     else
       this._criticalRect = cr = destCriticalRect;
 
+    start = Date.now();
     if (doCriticalPaint)
       this.criticalRectPaint();
+    dump(" paint: " + (Date.now() - start) + "\n");
   },
 
   restartLazyCrawl: function restartLazyCrawl(startRectOrQueue) {
@@ -352,6 +361,7 @@ TileManager.prototype = {
       this._tileCache.holdTile(tile);
     }
 
+    debugger;
     this._tileCache.forEachIntersectingRect(rect, true, renderAppendHoldTile, this);
   },
 

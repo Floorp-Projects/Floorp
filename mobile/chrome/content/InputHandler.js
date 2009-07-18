@@ -301,6 +301,10 @@ ChromeInputModule.prototype = {
 
     dragData.setDragStart(sX, sY);
 
+
+    // XXX
+    Browser._browserView.pauseRendering();
+
     [sX, sY] = dragData.lockAxis(sX, sY);
   },
 
@@ -310,6 +314,10 @@ ChromeInputModule.prototype = {
     if (this._targetScrollFunction)
       this._targetScrollFunction.call(null, dragData.sX - sX, dragData.sY - sY);
     this._targetScrollFunction = null;
+
+
+    // XXX
+    Browser._browserView.resumeRendering();
   },
 
   _dragMove: function _dragMove(sX, sY) {
