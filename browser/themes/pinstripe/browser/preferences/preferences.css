@@ -180,13 +180,17 @@ caption {
   -moz-box-align: center;
 }
 
-#popupPolicyRow, #enableSoftwareInstallRow, #enableImagesRow {
+#popupPolicyRow,
+#enableSoftwareInstallRow,
+#enableImagesRow {
   margin-bottom: 4px !important;
   padding-bottom: 4px !important;
   border-bottom: 1px solid #ccc;
 }
 
-#browserUseCurrent, #browserUseBookmark, #browserUseBlank {
+#browserUseCurrent,
+#browserUseBookmark,
+#browserUseBlank {
   margin-top: 10px;
 }
 
