@@ -352,6 +352,11 @@ _channelTable = {
     SYNC: [ 'mozilla', 'ipc', 'SyncChannel' ],
     RPC: [ 'mozilla', 'ipc', 'RPCChannel' ]
 }
+_listenerTable = {
+    ASYNC: 'AsyncListener',
+    SYNC: 'SyncListener',
+    RPC: 'RPCListener',
+}
 
 class GenerateProtocolActorHeader(Visitor):
     def __init__(self, myside, otherside):
@@ -410,6 +415,7 @@ class GenerateProtocolActorHeader(Visitor):
             self.file.addthing(cxx.CppDirective('include', '"base/id_map.h"'))
 
         channel = _channelTable[p.decl.type.sendSemantics]
+        channellistener = _listenerTable[p.decl.type.sendSemantics]
         channelname = '::'.join(channel)
         channelfile = '/'.join(channel) +'.h'
         if p.decl.type.isToplevel():
@@ -436,7 +442,8 @@ class GenerateProtocolActorHeader(Visitor):
         self.ns.addstmt(cxx.Whitespace.NL)
         self.ns.addstmt(cxx.Whitespace.NL)
 
-        inherits = [ cxx.Inherit(channelname +'::Listener') ]
+        channellistener = channelname +'::'+ channellistener
+        inherits = [ cxx.Inherit(channellistener) ]
         if p.decl.type.isManager():
             inherits.append(cxx.Inherit('mozilla::ipc::IProtocolManager'))
         cls = cxx.Class(self.clsname, inherits=inherits, abstract=True)
@@ -481,6 +488,8 @@ class GenerateProtocolActorHeader(Visitor):
                                 cxx.Type('Message')))
         cls.addstmt(cxx.Typedef(cxx.Type(channelname),
                                 cxx.Type('Channel')))
+        cls.addstmt(cxx.Typedef(cxx.Type(channellistener),
+                                cxx.Type('ChannelListener')))
         cls.addstmt(cxx.Whitespace.NL)
         
         # TODO manager param to constructor, when protocol is managed
@@ -574,7 +583,7 @@ class GenerateProtocolActorHeader(Visitor):
             routeif = cxx.StmtIf(cxx.ExprBinary(
                     cxx.ExprVar('MSG_ROUTING_CONTROL'), '!=', routevar))
             routeif.ifb.addstmt(cxx.StmtDecl(cxx.Decl(
-                        cxx.Type('Channel::Listener', ptr=1), '__routed')))
+                        cxx.Type('ChannelListener', ptr=1), '__routed')))
             routedvar = cxx.ExprVar('__routed')
             routeif.ifb.addstmt(cxx.StmtExpr(cxx.ExprAssn(
                         routedvar,
@@ -622,14 +631,14 @@ class GenerateProtocolActorHeader(Visitor):
             register = cxx.MethodDefn(
                 cxx.MethodDecl(
                     'Register',
-                    [ cxx.Decl(cxx.Type('Channel::Listener', ptr=1), 'aRouted') ],
+                    [ cxx.Decl(cxx.Type('ChannelListener', ptr=1), 'aRouted') ],
                     ret=cxx.Type('int32'),
                     virtual=1))
             lookup = cxx.MethodDefn(
                 cxx.MethodDecl(
                     'Lookup',
                     [ cxx.Decl(cxx.Type('int32'), 'aId') ],
-                    ret=cxx.Type('Channel::Listener', ptr=1),
+                    ret=cxx.Type('ChannelListener', ptr=1),
                     virtual=1))
             unregister = cxx.MethodDefn(
                 cxx.MethodDecl(
@@ -677,7 +686,7 @@ class GenerateProtocolActorHeader(Visitor):
         cls.addstmt(cxx.StmtDecl(cxx.Decl(channeltype, 'mChannel')))
         if p.decl.type.isToplevel() and p.decl.type.isManager():
             cls.addstmt(cxx.StmtDecl(cxx.Decl(
-                        cxx.Type('IDMap<Channel::Listener>'), 'mActorMap')))
+                        cxx.Type('IDMap<ChannelListener>'), 'mActorMap')))
         else:
             cls.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('int'), 'mId')))
             cls.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('int'), 'mPeerId')))

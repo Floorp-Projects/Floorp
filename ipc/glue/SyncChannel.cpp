@@ -113,7 +113,7 @@ SyncChannel::OnDispatchMessage(const Message& msg)
     }
 
     Message* reply;
-    switch (static_cast<Listener*>(mListener)->OnMessageReceived(msg, reply)) {
+    switch (static_cast<SyncListener*>(mListener)->OnMessageReceived(msg, reply)) {
     case MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this,
