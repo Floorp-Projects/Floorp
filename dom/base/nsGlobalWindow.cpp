@@ -139,7 +139,7 @@
 #include "nsIWebBrowserFind.h"  // For window.find()
 #include "nsIWebContentHandlerRegistrar.h"
 #include "nsIWindowMediator.h"  // For window.find()
-#include "nsIComputedDOMStyle.h"
+#include "nsComputedDOMStyle.h"
 #include "nsIEntropyCollector.h"
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
@@ -207,7 +207,6 @@
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
-nsIFactory *nsGlobalWindow::sComputedDOMStyleFactory   = nsnull;
 nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
@@ -803,7 +802,6 @@ nsGlobalWindow::~nsGlobalWindow()
 void
 nsGlobalWindow::ShutDown()
 {
-  NS_IF_RELEASE(sComputedDOMStyleFactory);
   NS_IF_RELEASE(sGlobalStorageList);
 
   if (gDumpFile && gDumpFile != stdout) {
@@ -6899,27 +6897,14 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
     return NS_OK;
   }
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIComputedDOMStyle> compStyle;
-
-  if (!sComputedDOMStyleFactory) {
-    rv = CallGetClassObject("@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1",
-                            &sComputedDOMStyleFactory);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv =
-    sComputedDOMStyleFactory->CreateInstance(nsnull,
-                                             NS_GET_IID(nsIComputedDOMStyle),
-                                             getter_AddRefs(compStyle));
-
+  nsRefPtr<nsComputedDOMStyle> compStyle;
+  nsresult rv = NS_NewComputedDOMStyle(aElt, aPseudoElt, presShell,
+                                       getter_AddRefs(compStyle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = compStyle->Init(aElt, aPseudoElt, presShell);
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aReturn = compStyle.forget().get();
 
-  return compStyle->QueryInterface(NS_GET_IID(nsIDOMCSSStyleDeclaration),
-                                   (void **) aReturn);
+  return NS_OK;
 }
 
 //*****************************************************************************

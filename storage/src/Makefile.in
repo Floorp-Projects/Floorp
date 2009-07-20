@@ -85,6 +85,7 @@ CPPSRCS = \
   mozStoragePrivateHelpers.cpp \
   mozStorageBindingParamsArray.cpp \
   mozStorageBindingParams.cpp \
+  SQLCollations.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \

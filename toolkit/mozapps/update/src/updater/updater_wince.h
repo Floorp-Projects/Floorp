@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +11,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Application Update..
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Brad Lassey <blassey@mozilla.com>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,32 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* DOM object returned from element.getComputedStyle() */
+#ifndef UPDATER_WINCE_H
+#define UPDATER_WINCE_H
 
-#ifndef nsIComputedDOMStyle_h___
-#define nsIComputedDOMStyle_h___
+#define _S_IFDIR    0040000 /* stat, is a directory */
+#define _S_IFREG    0100000 /* stat, is a normal file */
+#define _S_IREAD    0000400 /* stat, can read */
+#define _S_IWRITE   0000200 /* stat, can write */
+#define _S_IEXEC    0000100
 
-#include "nsICSSDeclaration.h"
+#define BUFSIZ 1024
+#define _putenv putenv
 
-class nsIDOMElement;
-class nsIPresShell;
-
-#define NS_ICOMPUTEDDOMSTYLE_IID \
- { 0x5f0197a1, 0xa873, 0x44e5, \
-    {0x96, 0x31, 0xac, 0xd6, 0xca, 0xb4, 0xf1, 0xe0 } }
-
-class nsIComputedDOMStyle : public nsICSSDeclaration
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICOMPUTEDDOMSTYLE_IID)
-
-  NS_IMETHOD Init(nsIDOMElement *aElement, const nsAString& aPseudoElt,
-                  nsIPresShell *aPresShell) = 0;
+struct stat {
+  unsigned short st_mode;
+  size_t st_size;
+  time_t st_ctime;
+  time_t st_atime;
+  time_t st_mtime;
 };
+int remove(const char* path);
+int chmod(const char* path, unsigned int mode);
+int fstat(FILE* handle, struct stat* buff);
+int stat(const char* path, struct stat* buf);
+int _mkdir(const char* path);
+int access(const char* path, int amode);
+int _waccess(const WCHAR* path, int amode);
+int _wremove(const WCHAR* wpath);
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIComputedDOMStyle, NS_ICOMPUTEDDOMSTYLE_IID)
-
-nsresult 
-NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle);
-
-#endif /* nsIComputedDOMStyle_h___ */
+#endif

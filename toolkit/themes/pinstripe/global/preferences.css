@@ -45,6 +45,7 @@
 
 prefwindow {
   padding: 0;
+  font: -moz-dialog !important;
 }
 
 prefpane {
@@ -53,4 +54,41 @@ prefpane {
 
 prefwindow[type="child"] > prefpane {
   padding: 0;
+}
+
+.prefWindow-dlgbuttons {
+  margin: 0 12px 8px;
+  padding-top: 0 !important;
+}
+
+.paneSelector {
+  font: message-box;
+  padding: 1px 4px;
+  -moz-appearance: -moz-mac-unified-toolbar;
+  margin: 0;
+}
+
+radio[pane] {
+  border: solid transparent;
+  border-width: 0 2px;
+  padding: 5px 4px 3px;
+  margin: 0;
+  -moz-appearance: none;
+  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
+}
+
+radio[pane]:active:hover {
+  text-shadow: none;
+}
+
+radio[pane][selected="true"] {
+  -moz-border-image: url("chrome://global/skin/icons/panebutton-active.png") 0 2 repeat stretch;
+}
+
+prefwindow:not([active]) radio[pane][selected="true"] {
+  -moz-border-image: url("chrome://global/skin/icons/panebutton-inactive.png") 0 2 repeat stretch;
+}
+
+.paneButtonLabel {
+  margin: 0 !important;
 }

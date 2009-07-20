@@ -884,26 +884,45 @@ nsXREDirProvider::DoShutdown()
 static nsresult
 GetShellFolderPath(int folder, nsAString& _retval)
 {
+  PRUnichar* buf;
+  PRUint32 bufLength = _retval.GetMutableData(&buf, MAXPATHLEN + 3);
+  NS_ENSURE_TRUE(bufLength >= (MAXPATHLEN + 3), NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = NS_OK;
+
+#if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
+  if (folder == CSIDL_APPDATA || folder == CSIDL_LOCAL_APPDATA)
+    folder = CSIDL_PROFILE;
+
+  BOOL ok = SHGetSpecialFolderPath(NULL, buf, folder, true);
+  if (!ok) {
+    _retval.SetLength(0);
+    return NS_ERROR_FAILURE;
+  }
+
+  buf[bufLength - 1] = L'\0';
+  _retval.SetLength(wcslen(buf));
+
+  // sometimes CSIDL_PROFILE shows up without a root slash
+  if (folder == CSIDL_PROFILE && buf[0] != '\\') {
+    _retval.Insert('\\', 0);
+  }
+#else
   LPITEMIDLIST pItemIDList = NULL;
 
-  PRUnichar* buf;
-  PRUint32 bufLength = _retval.GetMutableData(&buf, MAXPATHLEN);
-  NS_ENSURE_TRUE(bufLength >= MAXPATHLEN, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv;
   if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)) &&
       SHGetPathFromIDListW(pItemIDList, buf)) {
     // We're going to use wcslen (wcsnlen not available in msvc7.1) so make
     // sure to null terminate.
     buf[bufLength - 1] = L'\0';
     _retval.SetLength(wcslen(buf));
-    rv = NS_OK;
   } else {
     _retval.SetLength(0);
     rv = NS_ERROR_NOT_AVAILABLE;
   }
 
   CoTaskMemFree(pItemIDList);
+#endif
 
   return rv;
 }
