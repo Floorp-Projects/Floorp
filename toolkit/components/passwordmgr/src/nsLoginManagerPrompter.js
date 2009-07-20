@@ -50,18 +50,42 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
  * Invoked by NS_NewAuthPrompter2()
  * [embedding/components/windowwatcher/src/nsPrompt.cpp]
  */
-function LoginManagerPromptFactory() {}
+function LoginManagerPromptFactory() {
+    var observerService = Cc["@mozilla.org/observer-service;1"].
+                          getService(Ci.nsIObserverService);
+    observerService.addObserver(this, "quit-application-granted", true);
+}
 
 LoginManagerPromptFactory.prototype = {
 
     classDescription : "LoginManagerPromptFactory",
     contractID : "@mozilla.org/passwordmanager/authpromptfactory;1",
     classID : Components.ID("{749e62f4-60ae-4569-a8a2-de78b649660e}"),
-    QueryInterface : XPCOMUtils.generateQI([Ci.nsIPromptFactory]),
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+    _asyncPrompts : {},
+    _asyncPromptInProgress : false,
+
+    observe : function (subject, topic, data) {
+        if (topic == "quit-application-granted") {
+            var asyncPrompts = this._asyncPrompts;
+            this._asyncPrompts = {};
+            for each (var asyncPrompt in asyncPrompts) {
+                for each (var consumer in asyncPrompt.consumers) {
+                    if (consumer.callback) {
+                        this.log("Canceling async auth prompt callback " + consumer.callback);
+                        try {
+                          consumer.callback.onAuthCancelled(consumer.context, true);
+                        } catch (e) { /* Just ignore exceptions from the callback */ }
+                    }
+                }
+            }
+        }
+    },
 
     getPrompt : function (aWindow, aIID) {
         var prompt = new LoginManagerPrompter().QueryInterface(aIID);
-        prompt.init(aWindow);
+        prompt.init(aWindow, this);
         return prompt;
     }
 }; // end of LoginManagerPromptFactory implementation
@@ -98,6 +122,7 @@ LoginManagerPrompter.prototype = {
                                             Ci.nsIAuthPrompt2,
                                             Ci.nsILoginManagerPrompter]),
 
+    _factory       : null,
     _window        : null,
     _debug         : false, // mirrors signon.debug
 
@@ -163,6 +188,14 @@ LoginManagerPrompter.prototype = {
             this.__ioService = Cc["@mozilla.org/network/io-service;1"].
                                getService(Ci.nsIIOService);
         return this.__ioService;
+    },
+
+    __threadManager: null,
+    get _threadManager() {
+        if (!this.__threadManager)
+            this.__threadManager = Cc["@mozilla.org/thread-manager;1"].
+                                   getService(Ci.nsIThreadManager);        
+        return this.__threadManager;
     },
 
 
@@ -556,10 +589,114 @@ LoginManagerPrompter.prototype = {
         return ok;
     },
 
-    asyncPromptAuth : function () {
-        return NS_ERROR_NOT_IMPLEMENTED;
+    asyncPromptAuth : function (aChannel, aCallback, aContext, aLevel, aAuthInfo) {
+        var cancelable = null;
+
+        try {
+            this.log("===== asyncPromptAuth called =====");
+
+            // If the user submits a login but it fails, we need to remove the
+            // notification bar that was displayed. Conveniently, the user will
+            // be prompted for authentication again, which brings us here.
+            var notifyBox = this._getNotifyBox();
+            if (notifyBox)
+                this._removeLoginNotifications(notifyBox);
+
+            cancelable = this._newAsyncPromptConsumer(aCallback, aContext);
+
+            var [hostname, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
+
+            var hashKey = aLevel + "|" + hostname + "|" + httpRealm;
+            this.log("Async prompt key = " + hashKey);
+            var asyncPrompt = this._factory._asyncPrompts[hashKey];
+            if (asyncPrompt) {
+                this.log("Prompt bound to an existing one in the queue, callback = " + aCallback);
+                asyncPrompt.consumers.push(cancelable);
+                return cancelable;
+            }
+
+            this.log("Adding new prompt to the queue, callback = " + aCallback);
+            asyncPrompt = {
+                consumers: [cancelable],
+                channel: aChannel,
+                authInfo: aAuthInfo,
+                level: aLevel
+            }
+
+            this._factory._asyncPrompts[hashKey] = asyncPrompt;
+            this._doAsyncPrompt();
+        }
+        catch (e) {
+            Components.utils.reportError("LoginManagerPrompter: " +
+                "asyncPromptAuth: " + e + "\nFalling back to promptAuth\n");
+            // Fail the prompt operation to let the consumer fall back
+            // to synchronous promptAuth method
+            throw e;
+        }
+
+        return cancelable;
     },
 
+    _doAsyncPrompt : function() {
+        if (this._factory._asyncPromptInProgress) {
+            this.log("_doAsyncPrompt bypassed, already in progress");
+            return;
+        }
+
+        // Find the first prompt key we have in the queue
+        var hashKey = null;
+        for (hashKey in this._factory._asyncPrompts)
+            break;
+
+        if (!hashKey) {
+            this.log("_doAsyncPrompt:run bypassed, no prompts in the queue");
+            return;
+        }
+
+        this._factory._asyncPromptInProgress = true;
+
+        var self = this;
+        var runnable = {
+            run : function() {
+                var ok = false;
+                var prompt = self._factory._asyncPrompts[hashKey];
+                try {
+                    self.log("_doAsyncPrompt:run - performing the prompt for '" + hashKey + "'");
+                    ok = self.promptAuth(
+                        prompt.channel,
+                        prompt.level,
+                        prompt.authInfo
+                    );
+                } catch (e) {
+                    Components.utils.reportError("LoginManagerPrompter: " +
+                        "_doAsyncPrompt:run: " + e + "\n");
+                }
+
+                delete self._factory._asyncPrompts[hashKey];
+                self._factory._asyncPromptInProgress = false;
+
+                for each (var consumer in prompt.consumers) {
+                    if (!consumer.callback)
+                        // Not having a callback means that consumer didn't provide it
+                        // or canceled the notification
+                        continue;
+
+                    self.log("Calling back to " + consumer.callback + " ok=" + ok);
+                    try {
+                        if (ok)
+                            consumer.callback.onAuthAvailable(consumer.context, prompt.authInfo);
+                        else
+                            consumer.callback.onAuthCancelled(consumer.context, true);
+                    } catch (e) { /* Throw away exceptions caused by callback */ }
+                }
+                self._doAsyncPrompt();
+            }
+        }
+
+        this._threadManager.mainThread.dispatch(runnable, 
+                                                Ci.nsIThread.DISPATCH_NORMAL);
+        this.log("_doAsyncPrompt:run dispatched");
+    },
 
 
 
@@ -572,8 +709,9 @@ LoginManagerPrompter.prototype = {
      * init
      *
      */
-    init : function (aWindow) {
+    init : function (aWindow, aFactory) {
         this._window = aWindow;
+        this._factory = aFactory || null;
 
         var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                          getService(Ci.nsIPrefService).getBranch("signon.");
@@ -1218,6 +1356,19 @@ LoginManagerPrompter.prototype = {
             aAuthInfo.username = username;
         }
         aAuthInfo.password = password;
+    },
+
+    _newAsyncPromptConsumer : function(aCallback, aContext) {
+        return {
+            QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+            callback: aCallback,
+            context: aContext,
+            cancel: function() {
+                this.callback.onAuthCancelled(this.context, false);
+                this.callback = null;
+                this.context = null;
+            }
+        }
     }
 
 }; // end of LoginManagerPrompter implementation
