@@ -132,7 +132,7 @@ RPCChannel::OnDispatchMessage(const Message& call)
     }
 
     Message* reply;
-    switch (static_cast<Listener*>(mListener)->OnCallReceived(call, reply)) {
+    switch (static_cast<RPCListener*>(mListener)->OnCallReceived(call, reply)) {
     case MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this,
