@@ -62,3 +62,4 @@ patch -p3 < bug487519.patch
 patch -p3 < bug498815.patch
 patch -p3 < bug498824.patch
 patch -p3 < bug496529.patch
+patch -p3 < bug499519.patch
