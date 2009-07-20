@@ -172,7 +172,7 @@ JSScope::createTable(JSContext *cx, bool report)
             JS_ReportOutOfMemory(cx);
         return false;
     }
-    js_UpdateMallocCounter(cx, JS_BIT(sizeLog2) * sizeof(JSScopeProperty *));
+    cx->updateMallocCounter(JS_BIT(sizeLog2) * sizeof(JSScopeProperty *));
 
     hashShift = JS_DHASH_BITS - sizeLog2;
     for (sprop = lastProp; sprop; sprop = sprop->parent) {

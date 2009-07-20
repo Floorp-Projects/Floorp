@@ -156,7 +156,7 @@ static __inline__ unsigned long long rdtsc(void)
 
 struct JSContext;
 
-namespace avmplus {
+namespace MMgc {
 
     class GC;
 
@@ -279,6 +279,7 @@ namespace avmplus {
             return &heap;
         }
     };
+}
 
 #define DWB(x) x
 #define DRCWB(x) x
@@ -286,6 +287,10 @@ namespace avmplus {
 #define WBRC(gc, container, addr, value) do { *(addr) = (value); } while(0)
 
 #define MMGC_MEM_TYPE(x)
+
+namespace avmplus {
+
+    using namespace MMgc;
 
     typedef int FunctionID;
 
