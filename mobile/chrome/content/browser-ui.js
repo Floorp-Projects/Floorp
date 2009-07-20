@@ -232,7 +232,7 @@ var BrowserUI = {
     // If we have a dialog push it on the stack and set the attr for CSS
     if (aDialog) {
       this._dialogs.push(aDialog);
-      document.getElementById("toolbar-main").setAttribute("dialog", "true")
+      document.getElementById("toolbar-main").setAttribute("dialog", "true");
     }
   },
   
@@ -243,7 +243,7 @@ var BrowserUI = {
 
     // If no more dialogs are being displayed, remove the attr for CSS
     if (!this._dialogs.length)
-      document.getElementById("toolbar-main").removeAttribute("dialog")
+      document.getElementById("toolbar-main").removeAttribute("dialog");
   },
 
   switchPane : function(id) {
