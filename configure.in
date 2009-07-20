@@ -2885,7 +2885,24 @@ else
     AC_MSG_RESULT(no)
 fi
 
-AC_LANG_C
+AC_LANG_CPLUSPLUS
+
+dnl Check for usable char16_t (2 bytes, unsigned)
+dnl (we might not need the unsignedness check anymore)
+AC_CACHE_CHECK(for usable char16_t (2 bytes, unsigned),
+    ac_cv_have_usable_char16_t,
+    [AC_TRY_COMPILE([$configure_static_assert_macros],
+                    [CONFIGURE_STATIC_ASSERT(sizeof(char16_t) == 2);
+                     CONFIGURE_STATIC_ASSERT(char16_t(-1) > char16_t(0));
+                     CONFIGURE_STATIC_ASSERT(sizeof((u"hello")[0]) == 2);
+                     CONFIGURE_STATIC_ASSERT(sizeof(u'a') == 2);
+                     CONFIGURE_STATIC_ASSERT(u'\xFFFF' > u'\x0')],
+                    ac_cv_have_usable_char16_t="yes",
+                    ac_cv_have_usable_char16_t="no")])
+if test "$ac_cv_have_usable_char16_t" = "yes"; then
+    AC_DEFINE(HAVE_CPP_CHAR16_T)
+    HAVE_CPP_CHAR16_T=1
+fi
 
 dnl Check for usable wchar_t (2 bytes, unsigned)
 dnl (we really don't need the unsignedness check anymore)
@@ -2902,15 +2919,13 @@ AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
 if test "$ac_cv_have_usable_wchar_v2" = "yes"; then
     AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
     HAVE_CPP_2BYTE_WCHAR_T=1
-else
+elif test "$ac_cv_have_usable_char16_t" != "yes"; then
 dnl This is really gcc-only
 dnl Do this test using CXX only since some versions of gcc
 dnl 2.95-2.97 have a signed wchar_t in c++ only and some versions
 dnl only have short-wchar support for c++.
 dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
 
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
     _SAVE_CXXFLAGS=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS -fshort-wchar"
 
@@ -2930,8 +2945,9 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
     else    
         CXXFLAGS=$_SAVE_CXXFLAGS
     fi
-    AC_LANG_RESTORE
 fi
+
+AC_LANG_C
 
 dnl Check for .hidden assembler directive and visibility attribute.
 dnl Borrowed from glibc configure.in
@@ -8392,6 +8408,7 @@ HAVE_CPP_2BYTE_WCHAR_T
 HAVE_CPP_ACCESS_CHANGING_USING
 HAVE_CPP_AMBIGUITY_RESOLVING_USING
 HAVE_CPP_BOOL
+HAVE_CPP_CHAR16_T
 HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_CPP_EXPLICIT
 HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX

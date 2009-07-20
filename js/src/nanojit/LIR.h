@@ -51,6 +51,8 @@
  */
 namespace nanojit
 {
+    using namespace MMgc;
+
     enum LOpcode
 #if defined(_MSC_VER) && _MSC_VER >= 1400
           : unsigned
@@ -278,6 +280,7 @@ namespace nanojit
         LRK_Op0,
         LRK_Op1,
         LRK_Op2,
+        LRK_Op3,
         LRK_Ld,
         LRK_Sti,
         LRK_Sk,
@@ -321,6 +324,24 @@ namespace nanojit
     {
     private:
         friend class LIns;
+
+        LIns*       oprnd_2;
+
+        LIns*       oprnd_1;
+
+        void*       ins;
+
+    public:
+        LIns* getLIns() { return (LIns*)&ins; };
+    };
+
+    // 3-operand form.  Used for conditional moves.
+    class LInsOp3
+    {
+    private:
+        friend class LIns;
+
+        LIns*       oprnd_3;
 
         LIns*       oprnd_2;
 
@@ -396,7 +417,7 @@ namespace nanojit
         LIns* getLIns() { return (LIns*)&ins; };
     };
 
-    // Used for LIR_param.
+    // Used for LIR_iparam.
     class LInsP
     {
     private:
@@ -411,7 +432,7 @@ namespace nanojit
         LIns* getLIns() { return (LIns*)&ins; };
     };
 
-    // Used for LIR_int and LIR_alloc.
+    // Used for LIR_int and LIR_ialloc.
     class LInsI
     {
     private:
@@ -458,6 +479,7 @@ namespace nanojit
         LInsOp0* toLInsOp0() const { return (LInsOp0*)( uintptr_t(this+1) - sizeof(LInsOp0) ); }
         LInsOp1* toLInsOp1() const { return (LInsOp1*)( uintptr_t(this+1) - sizeof(LInsOp1) ); }
         LInsOp2* toLInsOp2() const { return (LInsOp2*)( uintptr_t(this+1) - sizeof(LInsOp2) ); }
+        LInsOp3* toLInsOp3() const { return (LInsOp3*)( uintptr_t(this+1) - sizeof(LInsOp3) ); }
         LInsLd*  toLInsLd()  const { return (LInsLd* )( uintptr_t(this+1) - sizeof(LInsLd ) ); }
         LInsSti* toLInsSti() const { return (LInsSti*)( uintptr_t(this+1) - sizeof(LInsSti) ); }
         LInsSk*  toLInsSk()  const { return (LInsSk* )( uintptr_t(this+1) - sizeof(LInsSk ) ); }
@@ -477,6 +499,7 @@ namespace nanojit
             NanoStaticAssert(sizeof(LInsOp0) == 1*sizeof(void*));
             NanoStaticAssert(sizeof(LInsOp1) == 2*sizeof(void*));
             NanoStaticAssert(sizeof(LInsOp2) == 3*sizeof(void*));
+            NanoStaticAssert(sizeof(LInsOp3) == 4*sizeof(void*));
             NanoStaticAssert(sizeof(LInsLd)  == 3*sizeof(void*));
             NanoStaticAssert(sizeof(LInsSti) == 4*sizeof(void*));
             NanoStaticAssert(sizeof(LInsSk)  == 2*sizeof(void*));
@@ -489,18 +512,22 @@ namespace nanojit
             NanoStaticAssert(sizeof(LInsI64) == 3*sizeof(void*));
         #endif
 
-            // oprnd_1 must be in the same position in LIns{Op1,Op2,Ld,Sti}
+            // oprnd_1 must be in the same position in LIns{Op1,Op2,Op3,Ld,Sti}
             // because oprnd1() is used for all of them.
             NanoStaticAssert( (offsetof(LInsOp1, ins) - offsetof(LInsOp1, oprnd_1)) ==
                               (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) );
             NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) ==
+                              (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_1)) );
+            NanoStaticAssert( (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_1)) ==
                               (offsetof(LInsLd,  ins) - offsetof(LInsLd,  oprnd_1)) );
             NanoStaticAssert( (offsetof(LInsLd,  ins) - offsetof(LInsLd,  oprnd_1)) ==
                               (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_1)) );
 
-            // oprnd_2 must be in the same position in LIns{Op2,Sti}
+            // oprnd_2 must be in the same position in LIns{Op2,Op3,Sti}
             // because oprnd2() is used for both of them.
             NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_2)) ==
+                              (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) );
+            NanoStaticAssert( (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) ==
                               (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_2)) );
         }
 
@@ -522,6 +549,14 @@ namespace nanojit
             toLInsOp2()->oprnd_1 = oprnd1;
             toLInsOp2()->oprnd_2 = oprnd2;
             NanoAssert(isLInsOp2());
+        }
+        void initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3) {
+            lastWord.clear();
+            lastWord.opcode = opcode;
+            toLInsOp3()->oprnd_1 = oprnd1;
+            toLInsOp3()->oprnd_2 = oprnd2;
+            toLInsOp3()->oprnd_3 = oprnd3;
+            NanoAssert(isLInsOp3());
         }
         void initLInsLd(LOpcode opcode, LIns* val, int32_t d) {
             lastWord.clear();
@@ -556,7 +591,7 @@ namespace nanojit
         }
         void initLInsP(int32_t arg, int32_t kind) {
             lastWord.clear();
-            lastWord.opcode = LIR_param;
+            lastWord.opcode = LIR_iparam;
             NanoAssert(isU8(arg) && isU8(kind));
             toLInsP()->arg = arg;
             toLInsP()->kind = kind;
@@ -577,12 +612,16 @@ namespace nanojit
         }
 
         LIns* oprnd1() const {
-            NanoAssert(isLInsOp1() || isLInsOp2() || isLInsLd() || isLInsSti());
+            NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSti());
             return toLInsOp2()->oprnd_1;
         }
         LIns* oprnd2() const {
-            NanoAssert(isLInsOp2() || isLInsSti());
+            NanoAssert(isLInsOp2() || isLInsOp3() || isLInsSti());
             return toLInsOp2()->oprnd_2;
+        }
+        LIns* oprnd3() const {
+            NanoAssert(isLInsOp3());
+            return toLInsOp3()->oprnd_3;
         }
 
         LIns* prevLIns() const {
@@ -591,8 +630,8 @@ namespace nanojit
         }
 
         inline LOpcode opcode()    const { return lastWord.opcode; }
-        inline uint8_t paramArg()  const { NanoAssert(isop(LIR_param)); return toLInsP()->arg; }
-        inline uint8_t paramKind() const { NanoAssert(isop(LIR_param)); return toLInsP()->kind; }
+        inline uint8_t paramArg()  const { NanoAssert(isop(LIR_iparam)); return toLInsP()->arg; }
+        inline uint8_t paramKind() const { NanoAssert(isop(LIR_iparam)); return toLInsP()->kind; }
         inline int32_t imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
         inline int32_t imm64_0()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_0; }
         inline int32_t imm64_1()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_1; }
@@ -602,7 +641,7 @@ namespace nanojit
         void*          payload()   const;
         inline Page*   page()            { return (Page*) alignTo(this,NJ_PAGE_SIZE); }
         inline int32_t size()      const {
-            NanoAssert(isop(LIR_alloc));
+            NanoAssert(isop(LIR_ialloc));
             return toLInsI()->imm32 << 2;
         }
 
@@ -639,6 +678,7 @@ namespace nanojit
         bool isLInsOp0() const;
         bool isLInsOp1() const;
         bool isLInsOp2() const;
+        bool isLInsOp3() const;
         bool isLInsSti() const;
         bool isLInsLd()  const;
         bool isLInsSk()  const;
@@ -715,7 +755,7 @@ namespace nanojit
     class Fragmento;    // @todo remove this ; needed for minbuild for some reason?!?  Should not be compiling this code at all
 
     // make it a GCObject so we can explicitly delete it early
-    class LirWriter : public avmplus::GCObject
+    class LirWriter : public GCObject
     {
     public:
         LirWriter *out;
@@ -732,6 +772,9 @@ namespace nanojit
         }
         virtual LInsp ins2(LOpcode v, LIns* a, LIns* b) {
             return out->ins2(v, a, b);
+        }
+        virtual LInsp ins3(LOpcode v, LIns* a, LIns* b, LIns* c) {
+            return out->ins3(v, a, b, c);
         }
         virtual LInsp insGuard(LOpcode v, LIns *c, LIns *x) {
             return out->insGuard(v, c, x);
@@ -833,7 +876,7 @@ namespace nanojit
         template <class Key>
         class CountMap: public avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects> {
         public:
-            CountMap(avmplus::GC*gc) : avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects>(gc) {}
+            CountMap(GC*gc) : avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects>(gc) {}
             int add(Key k) {
                 int c = 1;
                 if (containsKey(k)) {
@@ -859,7 +902,7 @@ namespace nanojit
         void formatImm(int32_t c, char *buf);
     public:
 
-        LirNameMap(avmplus::GC *gc, LabelMap *r)
+        LirNameMap(GC *gc, LabelMap *r)
             : lircounts(gc),
             funccounts(gc),
             names(gc),
@@ -882,7 +925,7 @@ namespace nanojit
         DWB(LirNameMap*) names;
         LogControl* logc;
     public:
-        VerboseWriter(avmplus::GC *gc, LirWriter *out,
+        VerboseWriter(GC *gc, LirWriter *out,
                       LirNameMap* names, LogControl* logc)
             : LirWriter(out), code(gc), names(names), logc(logc)
         {}
@@ -930,7 +973,10 @@ namespace nanojit
             return isRetOpcode(v) ? add_flush(out->ins1(v, a)) : add(out->ins1(v, a));
         }
         LIns* ins2(LOpcode v, LInsp a, LInsp b) {
-            return v == LIR_2 ? out->ins2(v,a,b) : add(out->ins2(v, a, b));
+            return add(out->ins2(v, a, b));
+        }
+        LIns* ins3(LOpcode v, LInsp a, LInsp b, LInsp c) {
+            return add(out->ins3(v, a, b, c));
         }
         LIns* insCall(const CallInfo *call, LInsp args[]) {
             return add_flush(out->insCall(call, args));
@@ -963,6 +1009,7 @@ namespace nanojit
         ExprFilter(LirWriter *out) : LirWriter(out) {}
         LIns* ins1(LOpcode v, LIns* a);
         LIns* ins2(LOpcode v, LIns* a, LIns* b);
+        LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c);
         LIns* insGuard(LOpcode, LIns *cond, LIns *);
         LIns* insBranch(LOpcode, LIns *cond, LIns *target);
     };
@@ -977,7 +1024,7 @@ namespace nanojit
 
         LInsp *m_list; // explicit WB's are used, no DWB needed.
         uint32_t m_used, m_cap;
-        avmplus::GC* m_gc;
+        GC* m_gc;
 
         static uint32_t FASTCALL hashcode(LInsp i);
         uint32_t FASTCALL find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap);
@@ -985,13 +1032,13 @@ namespace nanojit
         void FASTCALL grow();
 
     public:
-
-        LInsHashSet(avmplus::GC* gc);
+        LInsHashSet(GC* gc);
         ~LInsHashSet();
         LInsp find32(int32_t a, uint32_t &i);
         LInsp find64(uint64_t a, uint32_t &i);
         LInsp find1(LOpcode v, LInsp a, uint32_t &i);
         LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &i);
+        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &i);
         LInsp findLoad(LOpcode v, LInsp a, int32_t b, uint32_t &i);
         LInsp findcall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &i);
         LInsp add(LInsp i, uint32_t k);
@@ -1002,6 +1049,7 @@ namespace nanojit
         static uint32_t FASTCALL hashimmq(uint64_t);
         static uint32_t FASTCALL hash1(LOpcode v, LInsp);
         static uint32_t FASTCALL hash2(LOpcode v, LInsp, LInsp);
+        static uint32_t FASTCALL hash3(LOpcode v, LInsp, LInsp, LInsp);
         static uint32_t FASTCALL hashLoad(LOpcode v, LInsp, int32_t);
         static uint32_t FASTCALL hashcall(const CallInfo *call, uint32_t argc, LInsp args[]);
     };
@@ -1010,18 +1058,19 @@ namespace nanojit
     {
     public:
         LInsHashSet exprs;
-        CseFilter(LirWriter *out, avmplus::GC *gc);
+        CseFilter(LirWriter *out, GC *gc);
         LIns* insImm(int32_t imm);
         LIns* insImmq(uint64_t q);
         LIns* ins0(LOpcode v);
         LIns* ins1(LOpcode v, LInsp);
         LIns* ins2(LOpcode v, LInsp, LInsp);
+        LIns* ins3(LOpcode v, LInsp, LInsp, LInsp);
         LIns* insLoad(LOpcode op, LInsp cond, int32_t d);
         LIns* insCall(const CallInfo *call, LInsp args[]);
         LIns* insGuard(LOpcode op, LInsp cond, LIns *x);
     };
 
-    class LirBuffer : public avmplus::GCFinalizedObject
+    class LirBuffer : public GCFinalizedObject
     {
         public:
             DWB(Fragmento*)        _frago;
@@ -1075,6 +1124,7 @@ namespace nanojit
             LInsp    ins0(LOpcode op);
             LInsp    ins1(LOpcode op, LInsp o1);
             LInsp    ins2(LOpcode op, LInsp o1, LInsp o2);
+            LInsp    ins3(LOpcode op, LInsp o1, LInsp o2, LInsp o3);
             LInsp    insParam(int32_t i, int32_t kind);
             LInsp    insImm(int32_t imm);
             LInsp    insImmq(uint64_t imm);
@@ -1122,18 +1172,18 @@ namespace nanojit
     class Assembler;
 
     void compile(Assembler *assm, Fragment *frag);
-    verbose_only(void live(avmplus::GC *gc, LirBuffer *lirbuf);)
+    verbose_only(void live(GC *gc, LirBuffer *lirbuf);)
 
     class StackFilter: public LirFilter
     {
-        avmplus::GC *gc;
+        GC *gc;
         LirBuffer *lirbuf;
         LInsp sp;
         avmplus::BitSet stk;
         int top;
         int getTop(LInsp br);
     public:
-        StackFilter(LirFilter *in, avmplus::GC *gc, LirBuffer *lirbuf, LInsp sp);
+        StackFilter(LirFilter *in, GC *gc, LirBuffer *lirbuf, LInsp sp);
         virtual ~StackFilter() {}
         LInsp read();
     };
@@ -1154,7 +1204,7 @@ namespace nanojit
         LInsHashSet exprs;
         void clear(LInsp p);
     public:
-        LoadFilter(LirWriter *out, avmplus::GC *gc)
+        LoadFilter(LirWriter *out, GC *gc)
             : LirWriter(out), exprs(gc) { }
 
         LInsp ins0(LOpcode);

@@ -1822,8 +1822,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
     }
 
     OBJ_SCOPE(blockObj)->freeslot = JSSLOT_FREE(&js_BlockClass);
-    js_ReallocSlots(cx, blockObj, JSSLOT_FREE(&js_BlockClass), JS_TRUE);
-    return true;
+    return js_GrowSlots(cx, blockObj, JSSLOT_FREE(&js_BlockClass));
 }
 
 /*

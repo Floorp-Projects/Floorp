@@ -1,0 +1,492 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Test for Async Auth Prompt</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="prompt_common.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+    <script class="testbody" type="text/javascript">
+        SimpleTest.waitForExplicitFinish();
+
+        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+
+        // Class monitoring number of open dialog windows
+        // It checks there is always open just a single dialog per application
+        function dialogMonitor() {
+            var observerService = Cc["@mozilla.org/observer-service;1"].           
+                                  getService(Ci.nsIObserverService);
+            observerService.addObserver(this, "domwindowopened", false);
+            observerService.addObserver(this, "domwindowclosed", false);
+        }
+
+        dialogMonitor.prototype = {
+            windowsOpen : new Array(),
+            windowsRegistered : 0,
+
+            QueryInterface : function (iid) {
+                const interfaces = [Ci.nsIObserver,
+                                                        Ci.nsISupports];
+
+                if (!interfaces.some( function(v) { return iid.equals(v) } ))
+                        throw Components.results.NS_ERROR_NO_INTERFACE;
+                return this;
+            },
+
+            observe: function(subject, topic, data) {
+                netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+                if (topic === "domwindowopened") {
+                    var win = subject.QueryInterface(Ci.nsIDOMWindow);
+                    this.windowsOpen.push(win);
+                    ok(this.windowsOpen.length == 1, "Didn't open more then one dialog at a time");
+                    this.windowsRegistered++;
+                    return;
+                }
+                if (topic === "domwindowclosed") {
+                    var win = subject.QueryInterface(Ci.nsIDOMWindow);
+                    for (p in this.windowsOpen)
+                        if (win == this.windowsOpen[p]) {
+                            this.windowsOpen.splice(p, 1);
+                            break;
+                        }
+                    return;
+                }
+            },
+
+            shutdown: function() {
+                netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+                var observerService = Cc["@mozilla.org/observer-service;1"].          
+                                      getService(Ci.nsIObserverService);
+                observerService.removeObserver(this, "domwindowopened");
+                observerService.removeObserver(this, "domwindowclosed");
+            },
+
+            reset: function() {
+                while (this.windowsOpen.length)
+                    this.windowsOpen.shift();
+                this.windowsRegistered = 0;
+            }
+        }
+
+        var monitor = new dialogMonitor();
+
+        var pwmgr, logins = [];
+
+        function initLogins() {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+            pwmgr = Cc["@mozilla.org/login-manager;1"].
+                            getService(Ci.nsILoginManager);
+
+            function addLogin(host, realm, user, pass) {
+                var login = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                                        createInstance(Ci.nsILoginInfo);
+                login.init(host, null, realm, user, pass, "", "");
+                pwmgr.addLogin(login);
+                logins.push(login);
+            }
+
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm",
+                     "proxy_user", "proxy_pass");
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm2",
+                     "proxy_user2", "proxy_pass2");
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm3",
+                     "proxy_user3", "proxy_pass3");
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm4",
+                     "proxy_user4", "proxy_pass4");
+            addLogin("moz-proxy://127.0.0.1:8888", "proxy_realm5",
+                     "proxy_user5", "proxy_pass5");
+            addLogin("http://example.com", "mochirealm",
+                     "user1name", "user1pass");
+            addLogin("http://example.org", "mochirealm2",
+                     "user2name", "user2pass");
+            addLogin("http://example.com", "mochirealm3",
+                     "user3name", "user3pass");
+            addLogin("http://example.com", "mochirealm4",
+                     "user4name", "user4pass");
+            addLogin("http://example.com", "mochirealm5",
+                     "user5name", "user5pass");
+            addLogin("http://example.com", "mochirealm6",
+                     "user6name", "user6pass");
+        }
+
+        function finishTest() {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+            ok(true, "finishTest removing testing logins...");
+            for (i in logins)
+                pwmgr.removeLogin(logins[i]);
+
+            var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                                        getService(Ci.nsIHttpAuthManager);
+            authMgr.clearAll();
+
+            monitor.shutdown();
+            SimpleTest.finish();
+        }
+
+
+        // --------------- Test loop spin ----------------
+        var testNum = 1;
+        var iframe1;
+        var iframe2a;
+        var iframe2b;
+        window.onload = function () {
+            iframe1 = document.getElementById("iframe1");
+            iframe2a = document.getElementById("iframe2a");
+            iframe2b = document.getElementById("iframe2b");
+            iframe1.onload = onFrameLoad;
+            iframe2a.onload = onFrameLoad;
+            iframe2b.onload = onFrameLoad;
+
+            initLogins();
+            doTest(testNum);
+        }
+
+        var expectedLoads;
+        var expectedDialogs;
+        function onFrameLoad()
+        {
+            if (--expectedLoads == 0) {
+                netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+                // All pages expected to load has loaded, continue with the next test
+                ok(true, "Expected frames loaded");
+
+                doCheck(testNum);
+                monitor.reset();
+
+                testNum++;
+                doTest(testNum);
+            }
+        }
+
+        function doTest(testNum)
+        {
+            var exampleCom = "http://example.com/tests/toolkit/components/passwordmgr/test/";
+            var exampleOrg = "http://example.org/tests/toolkit/components/passwordmgr/test/";
+            
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+            switch (testNum)
+            {
+            case 1:
+                // Load through a single proxy with authentication required 3 different
+                // pages, first with one login, other two with their own different login.
+                // We expect to show just a single dialog for proxy authentication and
+                // then two dialogs to authenticate to login 1 and then login 2.
+                ok(true, "doTest testNum 1");
+                expectedLoads = 3;
+                expectedDialogs = 3;
+                iframe1.src = exampleCom + "authenticate.sjs?"+
+                    "r=1&"+
+                    "user=user1name&"+
+                    "pass=user1pass&"+
+                    "realm=mochirealm&"+
+                    "proxy_user=proxy_user&"+
+                    "proxy_pass=proxy_pass&"+
+                    "proxy_realm=proxy_realm";
+                iframe2a.src = exampleOrg + "authenticate.sjs?"+
+                    "r=2&"+
+                    "user=user2name&"+
+                    "pass=user2pass&"+
+                    "realm=mochirealm2&"+
+                    "proxy_user=proxy_user&"+
+                    "proxy_pass=proxy_pass&"+
+                    "proxy_realm=proxy_realm";
+                iframe2b.src = exampleOrg + "authenticate.sjs?"+
+                    "r=3&"+
+                    "user=user2name&"+
+                    "pass=user2pass&"+
+                    "realm=mochirealm2&"+
+                    "proxy_user=proxy_user&"+
+                    "proxy_pass=proxy_pass&"+
+                    "proxy_realm=proxy_realm";
+                break;
+
+            case 2:
+                // Load an iframe with 3 subpages all requiring the same login through
+                // anuthenticated proxy. We expect 2 dialogs, proxy authentication
+                // and web authentication.
+                ok(true, "doTest testNum 2");
+                expectedLoads = 3;
+                expectedDialogs = 2;
+                iframe1.src = exampleCom + "subtst_prompt_async.html";
+                iframe2a.src = "about:blank";
+                iframe2b.src = "about:blank";
+                break;
+
+            case 3:
+                // Load in the iframe page through unauthenticated proxy
+                // and discard the proxy authentication. We expect to see
+                // unauthenticated page content and just a single dialog.
+                ok(true, "doTest testNum 3");
+                expectedLoads = 1;
+                expectedDialogs = 1;
+                iframe1.src = exampleCom + "authenticate.sjs?"+
+                    "user=user4name&"+
+                    "pass=user4pass&"+
+                    "realm=mochirealm4&"+
+                    "proxy_user=proxy_user3&"+
+                    "proxy_pass=proxy_pass3&"+
+                    "proxy_realm=proxy_realm3";
+                break;
+
+            case 4:
+                // Reload the frame from previous step and pass the proxy authentication
+                // but cancel the WWW authentication. We should get the proxy=ok and WWW=fail
+                // content as a result.
+                ok(true, "doTest testNum 4");
+                expectedLoads = 1;
+                expectedDialogs = 2;
+                iframe1.contentDocument.location.reload();
+                break;
+
+            case 5:
+                // Same as the previous two steps but let the server generate
+                // huge content load to check http channel is capable to handle
+                // case when auth dialog is canceled or accepted before unauthenticated
+                // content data is load from the server. (This would be better to
+                // implement using delay of server response).
+                ok(true, "doTest testNum 5");
+                expectedLoads = 1;
+                expectedDialogs = 1;
+                iframe1.src = exampleCom + "authenticate.sjs?"+
+                    "user=user5name&"+
+                    "pass=user5pass&"+
+                    "realm=mochirealm5&"+
+                    "proxy_user=proxy_user4&"+
+                    "proxy_pass=proxy_pass4&"+
+                    "proxy_realm=proxy_realm4&"+
+                    "huge=1";
+                break;
+
+            case 6:
+                // Reload the frame from the previous step and let the proxy
+                // authentication pass but WWW fail. We expect two dialogs
+                // and an unathentiocated page content load.
+                ok(true, "doTest testNum 6");
+                expectedLoads = 1;
+                expectedDialogs = 2;
+                iframe1.contentDocument.location.reload();
+                break;
+
+            case 7:
+                // Reload again and let pass all authentication dialogs.
+                // Check we get the authenticated content not broken by
+                // the unauthenticated content.
+                ok(true, "doTest testNum 7");
+                expectedLoads = 1;
+                expectedDialogs = 1;
+                iframe1.contentDocument.location.reload();
+                break;
+
+            case 8:
+                // Check we proccess all challenges sent by server when
+                // user cancels prompts
+                ok(true, "doTest testNum 8");
+                expectedLoads = 1;
+                expectedDialogs = 5;
+                iframe1.src = exampleCom + "authenticate.sjs?"+
+                    "user=user6name&"+
+                    "pass=user6pass&"+
+                    "realm=mochirealm6&"+
+                    "proxy_user=proxy_user5&"+
+                    "proxy_pass=proxy_pass5&"+
+                    "proxy_realm=proxy_realm5&"+
+                    "huge=1&"+
+                    "multiple=3";
+                break;
+
+            case 9:
+                finishTest();
+                return;
+            }
+
+            startCallbackTimer();
+        }
+
+        function handleDialog(doc, testNum)
+        {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+            var dialog        = doc.getElementById("commonDialog");
+
+            switch (testNum)
+            {
+                case 1:
+                case 2:
+                    dialog.acceptDialog();
+                    break;
+
+                case 3:
+                    dialog.cancelDialog();
+                    break;
+
+                case 4:
+                    if (expectedDialogs == 2)
+                        dialog.acceptDialog();
+                    else
+                        dialog.cancelDialog();
+                    break;
+
+                case 5:
+                    dialog.cancelDialog();
+                    break;
+
+                case 6:
+                    if (expectedDialogs == 2)
+                        dialog.acceptDialog();
+                    else
+                        dialog.cancelDialog();
+                    break;
+
+                case 7:
+                    dialog.acceptDialog();
+                    break;
+
+                case 8:
+                    if (expectedDialogs == 3 || expectedDialogs == 1)
+                        dialog.acceptDialog();
+                    else
+                        dialog.cancelDialog();
+                    break;
+
+                default:
+                    ok(false, "Unhandled testNum "+testNum+" in handleDialog");
+            }
+
+            if (--expectedDialogs > 0)
+                startCallbackTimer();
+        }
+
+        function doCheck(testNum)
+        {
+            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+            switch (testNum)
+            {
+                case 1:
+                    ok(true, "doCheck testNum 1");
+                    is(monitor.windowsRegistered, 3, "Registered 3 open dialogs");
+                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
+                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+
+                    var authok2a = iframe2a.contentDocument.getElementById("ok").textContent;
+                    var proxyok2a = iframe2a.contentDocument.getElementById("proxy").textContent;
+
+                    var authok2b = iframe2b.contentDocument.getElementById("ok").textContent;
+                    var proxyok2b = iframe2b.contentDocument.getElementById("proxy").textContent;
+
+                    is(authok1, "PASS", "WWW Authorization OK, frame1");
+                    is(authok2a, "PASS", "WWW Authorization OK, frame2a");
+                    is(authok2b, "PASS", "WWW Authorization OK, frame2b");
+                    is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+                    is(proxyok2a, "PASS", "Proxy Authorization OK, frame2a");
+                    is(proxyok2b, "PASS", "Proxy Authorization OK, frame2b");
+                    break;
+
+                case 2:
+                    is(monitor.windowsRegistered, 2, "Registered 2 open dialogs");
+                    ok(true, "doCheck testNum 2");
+
+                    function checkIframe(frame) {
+                        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+                        var authok = frame.contentDocument.getElementById("ok").textContent;
+                        var proxyok = frame.contentDocument.getElementById("proxy").textContent;
+
+                        is(authok, "PASS", "WWW Authorization OK, " + frame.id);
+                        is(proxyok, "PASS", "Proxy Authorization OK, " + frame.id);
+                    }
+
+                    checkIframe(iframe1.contentDocument.getElementById("iframe1"));
+                    checkIframe(iframe1.contentDocument.getElementById("iframe2"));
+                    checkIframe(iframe1.contentDocument.getElementById("iframe3"));
+                    break;
+
+                case 3:
+                    ok(true, "doCheck testNum 3");
+                    is(monitor.windowsRegistered, 1, "Registered 1 open dialog");
+                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
+                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+
+                    is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
+                    is(proxyok1, "FAIL", "Proxy Authorization FAILED, frame1");
+                    break;
+
+                case 4:
+                    ok(true, "doCheck testNum 4");
+                    is(monitor.windowsRegistered, 2, "Registered 2 open dialogs");
+                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
+                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+
+                    is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
+                    is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+                    break;
+
+                case 5:
+                    ok(true, "doCheck testNum 5");
+                    is(monitor.windowsRegistered, 1, "Registered 1 open dialog");
+                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
+                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+                    var footnote = iframe1.contentDocument.getElementById("footnote").textContent;
+
+                    is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
+                    is(proxyok1, "FAIL", "Proxy Authorization FAILED, frame1");
+                    is(footnote, "This is a footnote after the huge content fill",
+                        "Footnote present and loaded completely");
+                    break;
+
+                case 6:
+                    ok(true, "doCheck testNum 6");
+                    is(monitor.windowsRegistered, 2, "Registered 2 open dialogs");
+                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
+                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+                    var footnote = iframe1.contentDocument.getElementById("footnote").textContent;
+
+                    is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
+                    is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+                    is(footnote, "This is a footnote after the huge content fill",
+                        "Footnote present and loaded completely");
+                    break;
+
+                case 7:
+                    ok(true, "doCheck testNum 7");
+                    is(monitor.windowsRegistered, 1, "Registered 1 open dialogs");
+                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
+                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+                    var footnote = iframe1.contentDocument.getElementById("footnote").textContent;
+
+                    is(authok1, "PASS", "WWW Authorization OK, frame1");
+                    is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+                    is(footnote, "This is a footnote after the huge content fill",
+                        "Footnote present and loaded completely");
+                    break;
+
+                case 8:
+                    ok(true, "doCheck testNum 8");
+                    is(monitor.windowsRegistered, 5, "Registered 5 open dialogs");
+                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
+                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+                    var footnote = iframe1.contentDocument.getElementById("footnote").textContent;
+
+                    is(authok1, "PASS", "WWW Authorization OK, frame1");
+                    is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+                    is(footnote, "This is a footnote after the huge content fill",
+                        "Footnote present and loaded completely");
+                    break;
+
+                default:
+                    ok(false, "Unhandled testNum "+testNum+" in doCheck");
+            }
+        }
+
+    </script>
+</head>
+<body>
+    <iframe id="iframe1"></iframe>
+    <iframe id="iframe2a"></iframe>
+    <iframe id="iframe2b"></iframe>
+</body>
+</html>

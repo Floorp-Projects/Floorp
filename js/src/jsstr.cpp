@@ -716,8 +716,8 @@ str_toSource(JSContext *cx, uintN argc, jsval *vp)
 
 #endif /* JS_HAS_TOSOURCE */
 
-static JSBool
-str_toString(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     return js_GetPrimitiveThis(cx, vp, &js_StringClass, vp);
 }
@@ -2399,7 +2399,7 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 }
 #endif
 
-JS_DEFINE_TRCINFO_1(str_toString,
+JS_DEFINE_TRCINFO_1(js_str_toString,
     (2, (extern, STRING_RETRY,      String_p_toString, CONTEXT, THIS,                        1, 1)))
 JS_DEFINE_TRCINFO_1(str_charAt,
     (3, (extern, STRING_RETRY,      js_String_getelem, CONTEXT, THIS_STRING, INT32,           1, 1)))
@@ -2420,9 +2420,10 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Java-like methods. */
-    JS_TN(js_toString_str,     str_toString,          0,JSFUN_THISP_STRING, str_toString_trcinfo),
-    JS_FN(js_valueOf_str,      str_toString,          0,JSFUN_THISP_STRING),
-    JS_FN(js_toJSON_str,       str_toString,          0,JSFUN_THISP_STRING),
+    JS_TN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING,
+          js_str_toString_trcinfo),
+    JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_THISP_STRING),
+    JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
@@ -2742,7 +2743,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
         return NULL;
     }
 
-    str = (JSString *) js_NewGCThing(cx, GCX_STRING, sizeof(JSString));
+    str = js_NewGCString(cx, GCX_STRING);
     if (!str)
         return NULL;
     str->initFlat(chars, length);
@@ -2776,7 +2777,7 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
         return js_NewStringCopyN(cx, base->chars() + start, length);
     }
 
-    ds = (JSString *)js_NewGCThing(cx, GCX_STRING, sizeof(JSString));
+    ds = js_NewGCString(cx, GCX_STRING);
     if (!ds)
         return NULL;
     if (start == 0)
@@ -4796,6 +4797,27 @@ const jschar js_uriUnescaped_ucstr[] =
      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
      '-', '_', '.', '!', '~', '*', '\'', '(', ')', 0};
+
+/*
+ * This table allows efficient testing for the regular expression \w which is
+ * defined by ECMA-262 15.10.2.6 to be [0-9A-Z_a-z].
+ */
+const bool js_alnum[] = {
+/*       0      1      2      3      4      5      5      7      8      9      */
+/*  0 */ false, false, false, false, false, false, false, false, false, false,
+/*  1 */ false, false, false, false, false, false, false, false, false, false,
+/*  2 */ false, false, false, false, false, false, false, false, false, false,
+/*  3 */ false, false, false, false, false, false, false, false, false, false,
+/*  4 */ false, false, false, false, false, false, false, false, true,  true,
+/*  5 */ true,  true,  true,  true,  true,  true,  true,  true,  false, false,
+/*  6 */ false, false, false, false, false, true,  true,  true,  true,  true,
+/*  7 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+/*  8 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+/*  9 */ true,  false, false, false, false, true,  false, true,  true,  true,
+/* 10 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+/* 11 */ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,
+/* 12 */ true,  true,  true,  false, false, false, false, false
+};
 
 #define URI_CHUNK 64U
 

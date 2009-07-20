@@ -1094,6 +1094,7 @@ JSAtomList::add(JSCompiler *jsc, JSAtom *atom, AddHow how)
              * with the given key.
              */
             if (how == HOIST && ale->entry.next) {
+                JS_ASSERT(*hep == &ale->entry);
                 *hep = ale->entry.next;
                 ale->entry.next = NULL;
                 do {
