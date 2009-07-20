@@ -189,19 +189,13 @@ function run_test() {
 
   /*
    * TEST 3 tests that:
-   *     hashchange is not dispatched if the current document readyState is
-   *     not "complete".
+   *     hashchange is dispatched if the current document readyState is
+   *     not "complete" (bug 504837).
    */
-  enableIframeLoadCallback();
   frameCw.document.location = "file_bug385434_3.html";
   yield;
-  noEventExpected("Hashchange shouldn't fire if the document " +
-                  "hasn't finished loading.");
-
-  longWait();
-  yield;
-  noEventExpected("Hashchange shouldn't fire after longWait() if " +
-                  "the document hasn't finished loading.");
+  eventExpected("Hashchange should fire even if the document " +
+                "hasn't finished loading.");
 
   /*
    * TEST 4 tests that if we
