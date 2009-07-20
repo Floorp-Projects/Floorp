@@ -68,11 +68,14 @@ function debug() {
 		.boxObject
 		.QueryInterface(Components.interfaces.nsIScrollBoxObject);
 
+  let x = {};
+  let y = {};
   let w = {};
   let h = {};
+  scrollbox.getPosition(x, y);
   scrollbox.getScrolledSize(w, h);
-  let container = document.getElementById("tile_container");
-  let [x, y] = getScrollboxPosition();
+  let container = document.getElementById("tile-container");
+  let [x, y] = [x.value, y.value];
   let [w, h] = [w.value, h.value];
   if (bv) {
     dump('----------------------DEBUG!-------------------------\n');
@@ -83,7 +86,7 @@ function debug() {
     let cr = bv._tileManager._criticalRect;
     dump('criticalRect from BV: ' + (cr ? cr.toString() : null) + endl);
     dump('visibleRect from BV : ' + bv._visibleRect.toString() + endl);
-    dump('visibleRect from foo: ' + scrollboxToViewportRect(getVisibleRect()) + endl);
+    dump('visibleRect from foo: ' + getVisibleRect() + endl);
 
     dump('batch depth:          ' + bv._batchOps.length + endl);
 
@@ -98,6 +101,13 @@ function debug() {
 
     dump('scrollbox position    : ' + x + ', ' + y + endl);
     dump('scrollbox scrolledsize: ' + w + ', ' + h + endl);
+
+
+    let sb = document.getElementById("scrollbox");
+    dump('container location:     ' + Math.round(container.getBoundingClientRect().left) + " " +
+                                      Math.round(container.getBoundingClientRect().top) + endl);
+
+
 
     dump(endl);
 
@@ -149,9 +159,13 @@ function onKeyPress(e) {
   const i = 105;  // toggle info click mode
   const l = 108;  // restart lazy crawl
   const m = 109;  // fix mouseout
+  const r = 114;  // reset visible rect
   const t = 116;  // debug given list of tiles separated by space
 
   switch (e.charCode) {
+  case r:
+    bv.setVisibleRect(getVisibleRect());
+
   case d:
     debug();
 
@@ -206,47 +220,22 @@ function onKeyPress(e) {
   }
 }
 
-
-
-function getScrollboxPosition() {
-  let scrollbox = document.getElementById("scrollbox")
-		.boxObject
-		.QueryInterface(Components.interfaces.nsIScrollBoxObject);
-  let x = {};
-  let y = {};
-  scrollbox.getPosition(x, y);
-  return [x.value, y.value];
-}
-
+// Return the visible rect in terms of the tile container
 function getVisibleRect() {
+  let container = document.getElementById("tile-container");
+  let containerBCR = container.getBoundingClientRect();
+
+  let x = Math.round(-containerBCR.left);
+  let y = Math.round(-containerBCR.top);
   let w = window.innerWidth;
   let h = window.innerHeight;
 
-  let [x, y] = getScrollboxPosition();
-
   return new wsRect(x, y, w, h);
-}
-
-function scrollboxToViewportRect(rect) {
-  let leftbar  = document.getElementById("tabs-container");
-  let rightbar = document.getElementById("browser-controls");
-  let topbar   = document.getElementById("toolbar-main");
-
-  let leftbarcr = leftbar.getBoundingClientRect();
-  let topbarcr  = topbar.getBoundingClientRect();
-
-  let xtrans = -leftbarcr.width;
-  let ytrans = -topbarcr.height;
-
-  rect.translate(xtrans, ytrans);
-
-  return rect;
 }
 
 var ih = null;
 
 var Browser = {
-  _canvasBrowser : null,
   _tabs : [],
   _browsers : [],
   _selectedTab : null,
@@ -257,8 +246,8 @@ var Browser = {
   startup: function() {
     var self = this;
 
-    let container = document.getElementById("tile_container");
-    let bv = this._browserView = new BrowserView(container, scrollboxToViewportRect(getVisibleRect()));
+    let container = document.getElementById("tile-container");
+    let bv = this._browserView = new BrowserView(container, getVisibleRect());
 
     let scrollbox = document.getElementById("scrollbox");
     let scrollBoxObject = scrollbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
@@ -291,9 +280,6 @@ var Browser = {
           BrowserUI.showToolbar();
         }
       }
-
-      // move checkerboard
-      browserContainer.style.backgroundPosition = -vr.left + "px " + -vr.top + "px";
 
       // this is really only necessary for maemo, where we don't
       // always repaint fast enough.
@@ -329,7 +315,7 @@ var Browser = {
         }
       }
 
-      bv.setVisibleRect(scrollboxToViewportRect(getVisibleRect()));
+      bv.setVisibleRect(getVisibleRect());
       bv.zoomToPage();
       bv.commitBatchOperation();
     }
@@ -377,7 +363,7 @@ var Browser = {
       if (!aElement)
         return;
 
-      canvasBrowser.ensureElementIsVisible(aElement);
+      //canvasBrowser.ensureElementIsVisible(aElement);
     }
     // Init it with the "browsers" element, which will receive keypress events
     // for all of our <browser>s
@@ -1595,7 +1581,7 @@ Tab.prototype = {
     browser.setAttribute("type", "content");
 
     // Attach the popup contextmenu
-    let container = document.getElementById("tile_container");
+    let container = document.getElementById("tile-container");
     browser.setAttribute("contextmenu", container.getAttribute("contextmenu"));
     let autocompletepopup = container.getAttribute("autocompletepopup");
     if (autocompletepopup)
@@ -1673,6 +1659,7 @@ Tab.prototype = {
     if (!this._browser)
       return;
 
+    // XXX draw from the tiles in to the source
     let srcCanvas = (Browser.selectedBrowser == this._browser) ? document.getElementById("browser-canvas") : null;
     this._chromeTab.updateThumbnail(this._browser, srcCanvas);
   }

@@ -40,7 +40,7 @@
 @import url("chrome://browser/skin/browser-low.css");
 
 /* browser area -------------------------------------------------- */
-#browser-container {
+#tile-container {
   background-image: url("chrome://browser/content/checkerboard.png");
 }
 

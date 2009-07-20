@@ -181,7 +181,7 @@
 
 
 
-  <scrollbox id="scrollbox" style="-moz-box-orient: vertical; overflow: scroll;" flex="1">
+  <scrollbox id="scrollbox" style="-moz-box-orient: vertical; overflow: scroll;" top="0" left="0" flex="1">
     <!-- Main Toolbar -->
     <toolbar id="toolbar-main" class="panel-dark" style="width: 800px;">
       <hbox id="urlbar-container" flex="1">
@@ -228,7 +228,7 @@
 
       <!-- Content Area -->
       <box>
-        <html:div id="tile_container" style="position: relative; width: 800px; height: 480px; overflow: -moz-hidden-unscrollable;"
+        <html:div id="tile-container" style="position: relative; width: 800px; height: 480px; overflow: -moz-hidden-unscrollable;"
                   onnewtab="CommandUpdater.doCommand('cmd_newTab');"/> <!-- do we want this new tab thing? -->
       </box>
 
@@ -243,13 +243,6 @@
       </vbox>
     </hbox>
   </scrollbox>
-
-  <box>
-    <html:div style="position: relative; overflow: hidden; max-width: 0px; max-height: 0px; visibility: hidden;">
-      <html:div id="browsers" style="position: absolute;"/>
-    </html:div>
-  </box>
-
 
   <stack>
     <notificationbox id="notifications" top="0" left="0"/>
@@ -450,5 +443,12 @@
       </vbox>
     </hbox>
   </stack>
+
+
+  <box>
+    <html:div style="position: relative; overflow: hidden; max-width: 0px; max-height: 0px; visibility: hidden;">
+      <html:div id="browsers" style="position: absolute;"/>
+    </html:div>
+  </box>
 
 </window>

@@ -112,7 +112,7 @@ function InputHandler() {
   window.addEventListener("click", this, true);
   window.addEventListener("DOMMouseScroll", this, true);
 
-  let browserCanvas = document.getElementById("tile_container");
+  let browserCanvas = document.getElementById("tile-container");
   browserCanvas.addEventListener("keydown", this, true);
   browserCanvas.addEventListener("keyup", this, true);
 
@@ -190,9 +190,10 @@ InputHandler.prototype = {
  * Drag Data is used by both chrome and content input modules
  */
 
-function DragData(owner, dragRadius, dragStartTimeoutLength) {
+function DragData(owner, dragRadius, dragger, dragStartTimeoutLength) {
   this._owner = owner;
   this._dragRadius = dragRadius;
+  this._dragger = dragger;
   this.reset();
 }
 
@@ -314,7 +315,6 @@ ChromeInputModule.prototype = {
     if (this._targetScrollFunction)
       this._targetScrollFunction.call(null, dragData.sX - sX, dragData.sY - sY);
     this._targetScrollFunction = null;
-
 
     // XXX
     Browser._browserView.resumeRendering();

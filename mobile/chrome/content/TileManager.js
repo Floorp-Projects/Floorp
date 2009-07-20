@@ -361,7 +361,6 @@ TileManager.prototype = {
       this._tileCache.holdTile(tile);
     }
 
-    debugger;
     this._tileCache.forEachIntersectingRect(rect, true, renderAppendHoldTile, this);
   },
 
