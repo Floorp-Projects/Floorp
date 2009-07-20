@@ -819,6 +819,8 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
           return si->mThreadData->mSSLResultRemainingBytes;
         }
 
+        nsSSLIOLayerHelpers::rememberTolerantSite(si->mFd, si);
+
         PRInt32 return_amount = NS_MIN(amount, si->mThreadData->mSSLResultRemainingBytes);
 
         si->mThreadData->mSSLResultRemainingBytes -= return_amount;
