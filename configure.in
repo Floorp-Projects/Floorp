@@ -5333,6 +5333,10 @@ if test -n "$MOZ_IPC" -a -z "$MOZ_ENABLE_LIBXUL"; then
     AC_MSG_ERROR([--enable-ipc requires --enable-libxul])
 fi
 
+if test -n "$MOZ_IPC"; then
+    AC_DEFINE(MOZ_IPC)
+fi
+
 AC_SUBST(MOZ_IPC)
 
 dnl ========================================================

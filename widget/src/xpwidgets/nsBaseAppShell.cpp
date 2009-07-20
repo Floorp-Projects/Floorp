@@ -41,7 +41,9 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 
+#ifdef MOZ_IPC
 #include "base/message_loop.h"
+#endif
 
 // When processing the next thread event, the appshell may process native
 // events (if not in performance mode), which can result in suppressing the
@@ -166,9 +168,16 @@ nsBaseAppShell::Run(void)
   NS_ENSURE_STATE(!mRunning);  // should not call Run twice
   mRunning = PR_TRUE;
 
-  MessageLoop::current()->Run();
+  nsIThread *thread = NS_GetCurrentThread();
 
-  NS_ProcessPendingEvents(NS_GetCurrentThread());
+#ifdef MOZ_IPC
+  MessageLoop::current()->Run();
+#else
+  while (!mExiting)
+    NS_ProcessNextEvent(thread);
+#endif
+
+  NS_ProcessPendingEvents(thread);
 
   mRunning = PR_FALSE;
   return NS_OK;
@@ -177,9 +186,11 @@ nsBaseAppShell::Run(void)
 NS_IMETHODIMP
 nsBaseAppShell::Exit(void)
 {
+#ifdef MOZ_IPC
   if (mRunning && !mExiting) {
     MessageLoop::current()->Quit();
   }
+#endif
   mExiting = PR_TRUE;
   return NS_OK;
 }

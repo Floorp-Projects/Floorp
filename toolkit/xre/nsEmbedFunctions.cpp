@@ -41,12 +41,6 @@
 
 #include "prenv.h"
 
-#include "base/at_exit.h"
-#include "base/command_line.h"
-#include "base/message_loop.h"
-#include "base/thread.h"
-#include "chrome/common/child_process.h"
-
 #include "nsIAppShell.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIDirectoryService.h"
@@ -63,6 +57,13 @@
 #include "nsThreadUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsXREDirProvider.h"
+
+#ifdef MOZ_IPC
+#include "base/at_exit.h"
+#include "base/command_line.h"
+#include "base/message_loop.h"
+#include "base/thread.h"
+#include "chrome/common/child_process.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/GeckoThread.h"
@@ -96,6 +97,7 @@ using mozilla::test::TestThreadChild;
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoEnter;
+#endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -229,6 +231,7 @@ XRE_StringToChildProcessType(const char* aProcessTypeString)
   return GeckoChildProcess_Invalid;
 }
 
+#ifdef MOZ_IPC
 nsresult
 XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
@@ -546,3 +549,4 @@ XRE_RunIPCTestHarness(int aArgc, char* aArgv[])
     NS_ENSURE_SUCCESS(rv, 1);
     return 0;
 }
+#endif

@@ -87,7 +87,12 @@
 #include "nsThreadUtils.h"
 #include "nsIView.h"
 
+#ifdef MOZ_IPC
 #include "TabParent.h"
+
+using namespace mozilla;
+using namespace mozilla::tabs;
+#endif
 
 #ifdef MOZ_WIDGET_GTK2
 #include "mozcontainer.h"
@@ -95,9 +100,6 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 #endif
-
-using namespace mozilla;
-using namespace mozilla::tabs;
 
 class nsAsyncDocShellDestroyer : public nsRunnable
 {
@@ -209,6 +211,7 @@ nsFrameLoader::ReallyStartLoading()
 {
   NS_ENSURE_STATE(mURIToLoad && mOwnerContent && mOwnerContent->IsInDoc());
 
+#ifdef MOZ_IPC
   if (!mTriedNewProcess) {
     TryNewProcess();
     mTriedNewProcess = PR_TRUE;
@@ -219,6 +222,7 @@ nsFrameLoader::ReallyStartLoading()
     mChildProcess->LoadURL(mURIToLoad);
     return NS_OK;
   }
+#endif
   
   // Just to be safe, recheck uri.
   nsresult rv = CheckURILoad(mURIToLoad);
@@ -1035,6 +1039,7 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   return NS_OK;
 }
 
+#ifdef MOZ_IPC
 PRBool
 nsFrameLoader::TryNewProcess()
 {
@@ -1153,3 +1158,4 @@ nsFrameLoader::TryNewProcess()
 
   return PR_TRUE;
 }
+#endif

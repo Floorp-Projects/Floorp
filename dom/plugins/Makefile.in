@@ -44,12 +44,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = dom
 
-EXPORTS_NAMESPACES = mozilla mozilla/plugins
+EXPORTS_NAMESPACES = mozilla
 
 EXPORTS_mozilla =				\
   SharedLibrary.h				\
   SharedPRLibrary.h				\
   $(NULL)
+
+ifdef MOZ_IPC
+
+EXPORTS_NAMESPACES = mozilla mozilla/plugins
 
 EXPORTS_mozilla/plugins =			\
   NPAPIPluginChild.h				\
@@ -78,11 +82,12 @@ CPPSRCS =					\
   $(NULL)
 
 LOCAL_INCLUDES =				\
-  -I$(topsrcdir)/ipc/chromium/			\
   -I$(topsrcdir)/modules/plugin/base/public/	\
   -I$(topsrcdir)/modules/plugin/base/src/	\
   $(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
+endif
+
 include $(topsrcdir)/config/rules.mk
