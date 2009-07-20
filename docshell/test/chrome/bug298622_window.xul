@@ -71,6 +71,10 @@
         onNavComplete: nextTest
       });
       yield;
+
+      // Make sure we unsuppress painting before continuing
+      SimpleTest.executeSoon(nextTest)
+      yield;
       
       // Search for some text that's on the second page (but not on
       // the first page), and verify that it can be found.
