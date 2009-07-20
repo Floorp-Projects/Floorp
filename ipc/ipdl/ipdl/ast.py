@@ -293,18 +293,26 @@ class SEND:
     pretty = 'send'
     @classmethod
     def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def direction(cls): return OUT
 class RECV:
     pretty = 'recv'
     @classmethod
     def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def direction(cls): return IN
 class CALL:
     pretty = 'call'
     @classmethod
     def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def direction(cls): return OUT
 class ANSWER:
     pretty = 'answer'
     @classmethod
     def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def direction(cls): return IN
 
 class State(Node):
     def __init__(self, loc, name):
@@ -314,6 +322,8 @@ class State(Node):
         return isinstance(o, State) and o.name == self.name
     def __hash__(self):
         return hash(repr(self))
+    def __ne__(self, o):
+        return not (self == o)
     def __repr__(self): return '<State %r>'% (self.name)
     def __str__(self): return '<State %s>'% (self.name)
 
