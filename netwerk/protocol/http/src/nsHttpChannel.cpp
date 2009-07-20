@@ -83,6 +83,7 @@
 #include "nsAuthInformationHolder.h"
 #include "nsICacheService.h"
 #include "nsDNSPrefetch.h"
+#include "nsNetSegmentUtils.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -125,6 +126,7 @@ nsHttpChannel::nsHttpChannel()
     , mTransactionReplaced(PR_FALSE)
     , mUploadStreamHasHeaders(PR_FALSE)
     , mAuthRetryPending(PR_FALSE)
+    , mProxyAuth(PR_FALSE)
     , mSuppressDefensiveAuth(PR_FALSE)
     , mResuming(PR_FALSE)
     , mInitedCacheEntry(PR_FALSE)
@@ -3117,13 +3119,13 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
     }
 
     const char *challenges;
-    PRBool proxyAuth = (httpStatus == 407);
+    mProxyAuth = (httpStatus == 407);
 
-    nsresult rv = PrepareForAuthentication(proxyAuth);
+    nsresult rv = PrepareForAuthentication(mProxyAuth);
     if (NS_FAILED(rv))
         return rv;
 
-    if (proxyAuth) {
+    if (mProxyAuth) {
         // only allow a proxy challenge if we have a proxy server configured.
         // otherwise, we could inadvertantly expose the user's proxy
         // credentials to an origin server.  We could attempt to proceed as
@@ -3148,12 +3150,24 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
     NS_ENSURE_TRUE(challenges, NS_ERROR_UNEXPECTED);
 
     nsCAutoString creds;
-    rv = GetCredentials(challenges, proxyAuth, creds);
-    if (NS_FAILED(rv))
+    rv = GetCredentials(challenges, mProxyAuth, creds);
+    if (rv == NS_ERROR_IN_PROGRESS)  {
+        // authentication prompt has been invoked and result
+        // is expected asynchronously
+        mAuthRetryPending = PR_TRUE;
+        // suspend the transaction pump to stop receiving the
+        // unauthenticated content data. We will throw that data
+        // away when user provides credentials or resume the pump
+        // when user refuses to authenticate.
+        LOG(("Suspending the transaction, asynchronously prompting for credentials"));
+        mTransactionPump->Suspend();
+        return NS_OK;
+    }
+    else if (NS_FAILED(rv))
         LOG(("unable to authenticate\n"));
     else {
         // set the authentication credentials
-        if (proxyAuth)
+        if (mProxyAuth)
             mRequestHead.SetHeader(nsHttp::Proxy_Authorization, creds);
         else
             mRequestHead.SetHeader(nsHttp::Authorization, creds);
@@ -3280,6 +3294,15 @@ nsHttpChannel::GetCredentials(const char *challenges,
 
                 break;
             }
+            else if (rv == NS_ERROR_IN_PROGRESS) {
+                // authentication prompt has been invoked and result is
+                // expected asynchronously, save current challenge being
+                // processed and all remaining challenges to use later in
+                // OnAuthAvailable and now immediately return
+                mCurrentChallenge = challenge;
+                mRemainingChallenges = eol ? eol+1 : nsnull;
+                return rv;
+            }
 
             // reset the auth type and continuation state
             NS_IF_RELEASE(*currentContinuationState);
@@ -3297,6 +3320,43 @@ nsHttpChannel::GetCredentials(const char *challenges,
     }
 
     return rv;
+}
+
+nsresult
+nsHttpChannel::GetAuthorizationMembers(PRBool proxyAuth,
+                                       nsCSubstring& scheme,
+                                       const char*& host,
+                                       PRInt32& port,
+                                       nsCSubstring& path,
+                                       nsHttpAuthIdentity*& ident,
+                                       nsISupports**& continuationState)
+{
+    if (proxyAuth) {
+        NS_ASSERTION (mConnectionInfo->UsingHttpProxy(), "proxyAuth is true, but no HTTP proxy is configured!");
+
+        host = mConnectionInfo->ProxyHost();
+        port = mConnectionInfo->ProxyPort();
+        ident = &mProxyIdent;
+        scheme.AssignLiteral("http");
+
+        continuationState = &mProxyAuthContinuationState;
+    }
+    else {
+        host = mConnectionInfo->Host();
+        port = mConnectionInfo->Port();
+        ident = &mIdent;
+
+        nsresult rv;
+        rv = GetCurrentPath(path);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mURI->GetScheme(scheme);
+        if (NS_FAILED(rv)) return rv;
+
+        continuationState = &mAuthContinuationState;
+    }
+
+    return NS_OK;
 }
 
 nsresult
@@ -3340,35 +3400,16 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
     PRBool identFromURI = PR_FALSE;
     nsISupports **continuationState;
 
-    if (proxyAuth) {
-        NS_ASSERTION (mConnectionInfo->UsingHttpProxy(), "proxyAuth is true, but no HTTP proxy is configured!");
+    rv = GetAuthorizationMembers(proxyAuth, scheme, host, port, path, ident, continuationState);
+    if (NS_FAILED(rv)) return rv;
 
-        host = mConnectionInfo->ProxyHost();
-        port = mConnectionInfo->ProxyPort();
-        ident = &mProxyIdent;
-        scheme.AssignLiteral("http");
-
-        continuationState = &mProxyAuthContinuationState;
-    }
-    else {
-        host = mConnectionInfo->Host();
-        port = mConnectionInfo->Port();
-        ident = &mIdent;
-
-        rv = GetCurrentPath(path);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mURI->GetScheme(scheme);
-        if (NS_FAILED(rv)) return rv;
-
+    if (!proxyAuth) {
         // if this is the first challenge, then try using the identity
         // specified in the URL.
         if (mIdent.IsEmpty()) {
             GetIdentityFromURI(authFlags, mIdent);
             identFromURI = !mIdent.IsEmpty();
         }
-
-        continuationState = &mAuthContinuationState;
     }
 
     //
@@ -3622,23 +3663,163 @@ nsHttpChannel::PromptForIdentity(PRUint32    level,
                                   nsDependentCString(authType));
     if (!holder)
         return NS_ERROR_OUT_OF_MEMORY;
-    PRBool retval = PR_FALSE;
-    rv = authPrompt->PromptAuth(this,
-                                level,
-                                holder, &retval);
-    if (NS_FAILED(rv))
-        return rv;
+
+    rv = authPrompt->AsyncPromptAuth(this, this, nsnull, level, holder,
+                     getter_AddRefs(mAsyncPromptAuthCancelable));
+
+    if (NS_SUCCEEDED(rv)) {
+        // indicate using this error code that authentication prompt
+        // result is expected asynchronously
+        rv = NS_ERROR_IN_PROGRESS;
+    }
+    else {
+        // Fall back to synchronous prompt
+        PRBool retval = PR_FALSE;
+        rv = authPrompt->PromptAuth(this, level, holder, &retval);
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (!retval)
+            rv = NS_ERROR_ABORT;
+        else
+            holder->SetToHttpAuthIdentity(authFlags, ident);
+    }
 
     // remember that we successfully showed the user an auth dialog
     if (!proxyAuth)
         mSuppressDefensiveAuth = PR_TRUE;
 
-    if (!retval)
-        rv = NS_ERROR_ABORT;
-    else
-        holder->SetToHttpAuthIdentity(authFlags, ident);
-  
     return rv;
+}
+
+NS_IMETHODIMP nsHttpChannel::OnAuthAvailable(nsISupports *aContext,
+                                             nsIAuthInformation *aAuthInfo)
+{
+    LOG(("nsHttpChannel::OnAuthAvailable [this=%x]", this));
+    mAsyncPromptAuthCancelable = nsnull;
+
+    nsresult rv;
+
+    const char *host;
+    PRInt32 port;
+    nsHttpAuthIdentity *ident;
+    nsCAutoString path, scheme;
+    nsISupports **continuationState;
+    rv = GetAuthorizationMembers(mProxyAuth, scheme, host, port, path, ident, continuationState);
+    if (NS_FAILED(rv))
+        OnAuthCancelled(aContext, PR_FALSE);
+
+    nsCAutoString realm;
+    ParseRealm(mCurrentChallenge.get(), realm);
+
+    nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
+    nsHttpAuthEntry *entry = nsnull;
+    authCache->GetAuthEntryForDomain(scheme.get(), host, port, realm.get(), &entry);
+
+    nsCOMPtr<nsISupports> sessionStateGrip;
+    if (entry)
+        sessionStateGrip = entry->mMetaData;
+
+    nsAuthInformationHolder* holder =
+            static_cast<nsAuthInformationHolder*>(aAuthInfo);
+    ident->Set(holder->Domain().get(),
+               holder->User().get(),
+               holder->Password().get());
+
+    nsCAutoString unused;
+    nsCOMPtr<nsIHttpAuthenticator> auth;
+    rv = GetAuthenticator(mCurrentChallenge.get(), unused, getter_AddRefs(auth));
+    if (NS_FAILED(rv)) {
+        NS_ASSERTION(PR_FALSE, "GetAuthenticator failed");
+        OnAuthCancelled(aContext, PR_TRUE);
+        return NS_OK;
+    }
+
+    nsXPIDLCString creds;
+    rv = GenCredsAndSetEntry(auth, mProxyAuth,
+                             scheme.get(), host, port, path.get(),
+                             realm.get(), mCurrentChallenge.get(), *ident, sessionStateGrip,
+                             getter_Copies(creds));
+
+    mCurrentChallenge.Truncate();
+    if (NS_FAILED(rv)) {
+        OnAuthCancelled(aContext, PR_TRUE);
+        return NS_OK;
+    }
+
+    return ContinueOnAuthAvailable(creds);
+}
+
+NS_IMETHODIMP nsHttpChannel::OnAuthCancelled(nsISupports *aContext, 
+                                             PRBool userCancel)
+{
+    LOG(("nsHttpChannel::OnAuthCancelled [this=%x]", this));
+    mAsyncPromptAuthCancelable = nsnull;
+    if (userCancel) {
+        if (!mRemainingChallenges.IsEmpty()) {
+            // there are still some challenges to process, do so
+            nsresult rv;
+
+            nsCAutoString creds;
+            rv = GetCredentials(mRemainingChallenges.get(), mProxyAuth, creds);
+            if (NS_SUCCEEDED(rv)) {
+                // GetCredentials loaded the credentials from the cache or
+                // some other way in a synchronous manner, process those
+                // credentials now
+                mRemainingChallenges.Truncate();
+                return ContinueOnAuthAvailable(creds);
+            }
+            else if (rv == NS_ERROR_IN_PROGRESS) {
+                // GetCredentials successfully queued another authprompt for
+                // a challenge from the list, we are now waiting for the user
+                // to provide the credentials
+                return NS_OK;
+            }
+
+            // otherwise, we failed...
+        }
+
+        mRemainingChallenges.Truncate();
+
+        // ensure call of OnStartRequest of the current listener here,
+        // it would not be called otherwise at all
+        nsresult rv = CallOnStartRequest();
+
+        // drop mAuthRetryPending flag and resume the transaction
+        // this resumes load of the unauthenticated content data
+        mAuthRetryPending = PR_FALSE;
+        LOG(("Resuming the transaction, user cancelled the auth dialog"));
+        mTransactionPump->Resume();
+
+        if (NS_FAILED(rv))
+            mTransactionPump->Cancel(rv);
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::ContinueOnAuthAvailable(const nsCSubstring& creds)
+{
+    if (mProxyAuth)
+        mRequestHead.SetHeader(nsHttp::Proxy_Authorization, creds);
+    else
+        mRequestHead.SetHeader(nsHttp::Authorization, creds);
+
+    // drop our remaining list of challenges.  We don't need them, because we
+    // have now authenticated against a challenge and will be sending that
+    // information to the server (or proxy).  If it doesn't accept our
+    // authentication it'll respond with failure and resend the challenge list
+    mRemainingChallenges.Truncate();
+
+    // setting mAuthRetryPending flag and resuming the transaction
+    // triggers process of throwing away the unauthenticated data already
+    // coming from the network
+    mAuthRetryPending = PR_TRUE;
+    LOG(("Resuming the transaction, we got credentials from user"));
+    mTransactionPump->Resume();
+
+    return NS_OK;
 }
 
 PRBool
@@ -3896,6 +4077,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
     NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIAuthPromptCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
@@ -3943,6 +4125,8 @@ nsHttpChannel::Cancel(nsresult status)
         mTransactionPump->Cancel(status);
     if (mCachePump)
         mCachePump->Cancel(status);
+    if (mAsyncPromptAuthCancelable)
+        mAsyncPromptAuthCancelable->Cancel(status);
     return NS_OK;
 }
 
@@ -4973,8 +5157,14 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // keep the connection around after the transaction is finished.
         //
         nsRefPtr<nsAHttpConnection> conn;
-        if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION))
+        if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION)) {
             conn = mTransaction->Connection();
+            // This is so far a workaround to fix leak when reusing unpersistent
+            // connection for authentication retry. See bug 459620 comment 4
+            // for details.
+            if (conn && !conn->IsPersistent())
+                conn = nsnull;
+        }
 
         // at this point, we're done with the transaction
         NS_RELEASE(mTransaction);
