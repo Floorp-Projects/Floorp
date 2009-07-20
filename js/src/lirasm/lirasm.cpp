@@ -638,7 +638,7 @@ LirasmAssembler::endFragment()
     memset(exit, 0, sizeof(SideExit));
     exit->guards = NULL;
     exit->from = exit->target = mFragment;
-    mFragment->lastIns = mLir->insGuard(LIR_loop, NULL, exitIns);
+    mFragment->lastIns = mLir->insGuard(LIR_loop, mLir->insImm(1), exitIns);
 
     ::compile(mParent->mFragmento->assm(), mFragment);
 
