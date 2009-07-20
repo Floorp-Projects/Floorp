@@ -45,6 +45,7 @@
 #include "xrecore.h"
 #include "nsXPCOM.h"
 #include "nsISupports.h"
+#include "prlog.h"
 
 /**
  * Application-specific data needed to start the apprunner.
@@ -419,7 +420,7 @@ XRE_API(void,
         XRE_FreeAppData, (nsXREAppData *aAppData))
 
 enum GeckoChildProcessType {
-  GeckoChildProcess_Default,
+  GeckoChildProcess_Default = 0,
 
   GeckoChildProcess_Plugin,
   GeckoChildProcess_Tab,
@@ -435,8 +436,14 @@ static const char* const kGeckoChildProcessTypeString[] = {
   "default",
   "plugin",
   "tab",
+  "testharness",
   "testshell"
 };
+
+PR_STATIC_ASSERT(sizeof(kGeckoChildProcessTypeString) /
+                 sizeof(kGeckoChildProcessTypeString[0]) ==
+                 GeckoChildProcess_End);
+
 
 XRE_API(const char*,
         XRE_ChildProcessTypeToString, (GeckoChildProcessType aProcessType))
