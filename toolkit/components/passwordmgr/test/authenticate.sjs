@@ -11,13 +11,16 @@ function handleRequest(request, response)
 
 function reallyHandleRequest(request, response) {
   var match;
-  var requestAuth = true;
+  var requestAuth = true, requestProxyAuth = true;
 
   // Allow the caller to drive how authentication is processed via the query.
   // Eg, http://localhost:8888/authenticate.sjs?user=foo&realm=bar
   var query = request.queryString;
 
   var expected_user = "", expected_pass = "", realm = "mochitest";
+  var proxy_expected_user = "", proxy_expected_pass = "", proxy_realm = "mochi-proxy";
+  var huge = false;
+  var authHeaderCount = 1;
   // user=xxx
   match = /user=([^&]*)/.exec(query);
   if (match)
@@ -32,6 +35,31 @@ function reallyHandleRequest(request, response) {
   match = /realm=([^&]*)/.exec(query);
   if (match)
     realm = match[1];
+
+  // proxy_user=xxx
+  match = /proxy_user=([^&]*)/.exec(query);
+  if (match)
+    proxy_expected_user = match[1];
+
+  // proxy_pass=xxx
+  match = /proxy_pass=([^&]*)/.exec(query);
+  if (match)
+    proxy_expected_pass = match[1];
+
+  // proxy_realm=xxx
+  match = /proxy_realm=([^&]*)/.exec(query);
+  if (match)
+    proxy_realm = match[1];
+
+  // huge=1
+  match = /huge=1/.exec(query);
+  if (match)
+    huge = true;
+
+  // multiple=1
+  match = /multiple=([^&]*)/.exec(query);
+  if (match)
+    authHeaderCount = match[1]+0;
 
 
   // Look for an authentication header, if any, in the request.
@@ -56,16 +84,40 @@ function reallyHandleRequest(request, response) {
     actual_pass = match[2];
   } 
 
+  var proxy_actual_user = "", proxy_actual_pass = "";
+  if (request.hasHeader("Proxy-Authorization")) {
+    authHeader = request.getHeader("Proxy-Authorization");
+    match = /Basic (.+)/.exec(authHeader);
+    if (match.length != 2)
+        throw "Couldn't parse auth header: " + authHeader;
+
+    var userpass = base64ToString(match[1]); // no atob() :-(
+    match = /(.*):(.*)/.exec(userpass);
+    if (match.length != 3)
+        throw "Couldn't decode auth header: " + userpass;
+    proxy_actual_user = match[1];
+    proxy_actual_pass = match[2];
+  }
+
   // Don't request authentication if the credentials we got were what we
   // expected.
   if (expected_user == actual_user &&
-      expected_pass == actual_pass) {
-      requestAuth = false;
+    expected_pass == actual_pass) {
+    requestAuth = false;
+  }
+  if (proxy_expected_user == proxy_actual_user &&
+    proxy_expected_pass == proxy_actual_pass) {
+    requestProxyAuth = false;
   }
 
-  if (requestAuth) {
+  if (requestProxyAuth) {
+    response.setStatusLine("1.0", 407, "Proxy authentication required");
+    for (i = 0; i < authHeaderCount; ++i)
+      response.setHeader("Proxy-Authenticate", "basic realm=\"" + proxy_realm + "\"", true);
+  } else if (requestAuth) {
     response.setStatusLine("1.0", 401, "Authentication required");
-    response.setHeader("WWW-Authenticate", "basic realm=\"" + realm + "\"", false);
+    for (i = 0; i < authHeaderCount; ++i)
+      response.setHeader("WWW-Authenticate", "basic realm=\"" + realm + "\"", true);
   } else {
     response.setStatusLine("1.0", 200, "OK");
   }
@@ -73,9 +125,20 @@ function reallyHandleRequest(request, response) {
   response.setHeader("Content-Type", "application/xhtml+xml", false);
   response.write("<html xmlns='http://www.w3.org/1999/xhtml'>");
   response.write("<p>Login: <span id='ok'>" + (requestAuth ? "FAIL" : "PASS") + "</span></p>\n");
+  response.write("<p>Proxy: <span id='proxy'>" + (requestProxyAuth ? "FAIL" : "PASS") + "</span></p>\n");
   response.write("<p>Auth: <span id='auth'>" + authHeader + "</span></p>\n");
   response.write("<p>User: <span id='user'>" + actual_user + "</span></p>\n");
   response.write("<p>Pass: <span id='pass'>" + actual_pass + "</span></p>\n");
+
+  if (huge) {
+    response.write("<div style='display: none'>");
+    for (i = 0; i < 100000; i++) {
+      response.write("123456789\n");
+    }
+    response.write("</div>");
+    response.write("<span id='footnote'>This is a footnote after the huge content fill</span>");
+  }
+
   response.write("</html>");
 }
 
