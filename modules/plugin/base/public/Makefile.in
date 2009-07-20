@@ -52,7 +52,6 @@ EXPORTS		= \
 		nsDefaultPlugin.h \
 		nsPluginNativeWindow.h \
 		nsPluginsCID.h \
-		nsIPluginInstanceInternal.h \
 		$(NULL)
 
 SDK_HEADERS	 = \
@@ -70,11 +69,9 @@ XPIDLSRCS 	= \
 		nsIHTTPHeaderListener.idl \
 		nsIPluginTag.idl \
 		nsIPluginTagInfo.idl \
-		nsIPluginTagInfo2.idl \
 		nsIPluginInputStream.idl \
 		nsIPluginStreamListener.idl \
 		nsIPluginInstance.idl \
-		nsPIPluginHost.idl \
 		nsIPluginHost.idl \
 		nsIPluginDocument.idl \
 		$(NULL)

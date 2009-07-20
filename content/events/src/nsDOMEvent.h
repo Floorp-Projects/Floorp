@@ -77,6 +77,7 @@ public:
     eDOMEvents_load,
     eDOMEvents_beforeunload,
     eDOMEvents_unload,
+    eDOMEvents_hashchange,
     eDOMEvents_abort,
     eDOMEvents_error,
     eDOMEvents_submit,

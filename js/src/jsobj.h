@@ -281,15 +281,34 @@ STOBJ_GET_CLASS(const JSObject* obj)
  * that may contain a function reference already, or where the new value is a
  * function ref, and the object's scope may be branded with a property cache
  * structural type capability that distinguishes versions of the object with
- * and without the function property. Instead use LOCKED_OBJ_WRITE_BARRIER or
- * a fast inline equivalent (JSOP_SETNAME/JSOP_SETPROP cases in jsinterp.c).
+ * and without the function property. Instead use LOCKED_OBJ_WRITE_SLOT or a
+ * fast inline equivalent (JSOP_SETNAME/JSOP_SETPROP cases in jsinterp.cpp).
+ */
+#define LOCKED_OBJ_WRITE_SLOT(cx,obj,slot,newval)                             \
+    JS_BEGIN_MACRO                                                            \
+        LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, newval);                      \
+        LOCKED_OBJ_SET_SLOT(obj, slot, newval);                               \
+    JS_END_MACRO
+
+/*
+ * Write barrier macro monitoring property update for slot in obj from its old
+ * value to newval.
+ *
+ * NB: obj must be locked, and remains locked after the calls to this macro.
  */
 #define LOCKED_OBJ_WRITE_BARRIER(cx,obj,slot,newval)                          \
     JS_BEGIN_MACRO                                                            \
         JSScope *scope_ = OBJ_SCOPE(obj);                                     \
-        JS_ASSERT(scope_->object == (obj));                                   \
-        GC_WRITE_BARRIER(cx, scope_, LOCKED_OBJ_GET_SLOT(obj, slot), newval); \
-        LOCKED_OBJ_SET_SLOT(obj, slot, newval);                               \
+        JS_ASSERT(scope_->object == obj);                                     \
+        if (scope_->branded()) {                                              \
+            jsval oldval_ = LOCKED_OBJ_GET_SLOT(obj, slot);                   \
+            if (oldval_ != (newval) &&                                        \
+                (VALUE_IS_FUNCTION(cx, oldval_) ||                            \
+                 VALUE_IS_FUNCTION(cx, newval))) {                            \
+                scope_->methodShapeChange(cx, slot, newval);                  \
+            }                                                                 \
+        }                                                                     \
+        GC_POKE(cx, oldval);                                                  \
     JS_END_MACRO
 
 #define LOCKED_OBJ_GET_PROTO(obj) \
@@ -321,7 +340,7 @@ STOBJ_GET_CLASS(const JSObject* obj)
     JS_BEGIN_MACRO                                                            \
         OBJ_CHECK_SLOT(obj, slot);                                            \
         if (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->title.ownercx == cx)        \
-            LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, value);                   \
+            LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, value);                      \
         else                                                                  \
             js_SetSlotThreadSafe(cx, obj, slot, value);                       \
     JS_END_MACRO
@@ -347,8 +366,7 @@ STOBJ_GET_CLASS(const JSObject* obj)
 #else   /* !JS_THREADSAFE */
 
 #define OBJ_GET_SLOT(cx,obj,slot)       LOCKED_OBJ_GET_SLOT(obj,slot)
-#define OBJ_SET_SLOT(cx,obj,slot,value) LOCKED_OBJ_WRITE_BARRIER(cx,obj,slot, \
-                                                                 value)
+#define OBJ_SET_SLOT(cx,obj,slot,value) LOCKED_OBJ_WRITE_SLOT(cx,obj,slot,value)
 
 #endif /* !JS_THREADSAFE */
 
@@ -554,43 +572,24 @@ extern JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                    JSObject *parent, uintN argc, jsval *argv);
 
-extern void
-js_FinalizeObject(JSContext *cx, JSObject *obj);
-
 extern JSBool
 js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
 
 extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
-/* JSVAL_INT_MAX as a string */
-#define JSVAL_INT_MAX_STRING "1073741823"
-
-/*
- * Convert string indexes that convert to int jsvals as ints to save memory.
- * Care must be taken to use this macro every time a property name is used, or
- * else double-sets, incorrect property cache misses, or other mistakes could
- * occur.
- */
-#define CHECK_FOR_STRING_INDEX(id)                                            \
-    JS_BEGIN_MACRO                                                            \
-        if (JSID_IS_ATOM(id)) {                                               \
-            JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
-            JSString *str_ = ATOM_TO_STRING(atom_);                           \
-            const jschar *s_ = str_->flatChars();                             \
-            JSBool negative_ = (*s_ == '-');                                  \
-            if (negative_) s_++;                                              \
-            if (JS7_ISDEC(*s_)) {                                             \
-                size_t n_ = str_->flatLength() - negative_;                   \
-                if (n_ <= sizeof(JSVAL_INT_MAX_STRING) - 1)                   \
-                    id = js_CheckForStringIndex(id, s_, s_ + n_, negative_);  \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
+static inline void
+js_FreeSlots(JSContext *cx, JSObject *obj)
+{
+    if (obj->dslots) {
+        JS_ASSERT((uint32)obj->dslots[-1] > JS_INITIAL_NSLOTS);
+        JS_free(cx, obj->dslots - 1);
+        obj->dslots = NULL;
+    }
+}
 
 extern jsid
-js_CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
-                       JSBool negative);
+js_CheckForStringIndex(jsid id);
 
 /*
  * js_PurgeScopeChain does nothing if obj is not itself a prototype or parent
@@ -639,8 +638,6 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                   JSProperty **propp);
 
-#ifdef __cplusplus /* FIXME: bug 442399 removes this LiveConnect requirement. */
-
 /*
  * Flags for the defineHow parameter of js_DefineNativeProperty.
  */
@@ -652,7 +649,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp,
                         uintN defineHow = 0);
-#endif
 
 /*
  * Unlike js_DefineProperty, propp must be non-null. On success, and if id was
@@ -863,6 +859,9 @@ JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
 JS_FRIEND_API(void) js_DumpStackFrame(JSStackFrame *fp);
 #endif
+
+extern uintN
+js_InferFlags(JSContext *cx, uintN defaultFlags);
 
 JS_END_EXTERN_C
 

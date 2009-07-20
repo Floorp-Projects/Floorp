@@ -142,10 +142,19 @@ class nsXHREventTarget : public nsDOMEventTargetHelper,
                          public nsWrapperCache
 {
 public:
-  virtual ~nsXHREventTarget() {}
+  virtual ~nsXHREventTarget();
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXHREventTarget,
-                                           nsDOMEventTargetHelper)
+
+  class NS_CYCLE_COLLECTION_INNERCLASS
+    : public NS_CYCLE_COLLECTION_CLASSNAME(nsDOMEventTargetHelper)
+  {
+    NS_IMETHOD RootAndUnlinkJSObjects(void *p);
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(nsXHREventTarget,
+                                                  nsDOMEventTargetHelper)
+    NS_IMETHOD_(void) Trace(void *p, TraceCallback cb, void *closure);
+  };
+  NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
+
   NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
   NS_FORWARD_NSIDOMNSEVENTTARGET(nsDOMEventTargetHelper::)

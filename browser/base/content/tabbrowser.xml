@@ -941,12 +941,6 @@
             if (evt.target != this.contentDocument)
               return;
 
-            var i = 0;
-            for ( ; i < this.parentNode.parentNode.childNodes.length; i++) {
-              if (this.parentNode.parentNode.childNodes[i].firstChild == this)
-                break;
-            }
-
             var tabBrowser = this.parentNode.parentNode.parentNode.parentNode;
 
             var tab = document.getAnonymousElementByAttribute(tabBrowser, "linkedpanel", this.parentNode.id);
@@ -1195,16 +1189,13 @@
 
             this.mTabContainer.appendChild(t);
 
-            if (document.defaultView
-                        .getComputedStyle(this.mTabContainer, "")
-                        .direction == "rtl") {
+            if (this.tabContainer.mTabstrip._isRTLScrollbox) {
               /* In RTL UI, the tab is visually added to the left side of the
                * tabstrip. This means the tabstip has to be scrolled back in
                * order to make sure the same set of tabs is visible before and
                * after the new tab is added */
 
-              this.mTabContainer.mTabstrip.scrollBoxObject
-                  .scrollBy(this.mTabContainer.firstChild.boxObject.width, 0);
+              this.tabContainer.mTabstrip.scrollByPixels(this.mTabs[0].clientWidth);
             }
 
             // invalidate cache, because mTabContainer is about to change
@@ -1283,21 +1274,21 @@
               }
             }
 
-            // |setTimeout| here to ensure we're post reflow
-            var _delayedUpdate = function(aTabContainer) {
-              aTabContainer.adjustTabstrip();
+            this.tabContainer.adjustTabstrip();
 
+            // Do this asynchronically, as we don't know yet if the tab
+            // will be selected.
+            setTimeout(function (aTabContainer) {
               if (aTabContainer.selectedItem != t)
                 aTabContainer._notifyBackgroundTab(t);
+            }, 0, this.tabContainer);
 
-              // XXXmano: this is a temporary workaround to bug 343585
-              // We need to manually update the scroll buttons disabled state
-              // if a tab was inserted to the overflow area or removed from it
-              // without any scrolling and when the tabbar has already
-              // overflowed.
-              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
-            }
-            setTimeout(_delayedUpdate, 0, this.mTabContainer);
+            // XXXmano: this is a temporary workaround for bug 345399
+            // We need to manually update the scroll buttons disabled state
+            // if a tab was inserted to the overflow area or removed from it
+            // without any scrolling and when the tabbar has already
+            // overflowed.
+            this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -1505,15 +1496,12 @@
               while (this._removingTabs.length)
                 this._endRemoveTab([this._removingTabs[0], false]);
             } else if (!this._windowIsClosing) {
-              // see notes in addTab
-              function _delayedUpdate(aTabContainer) {
-                aTabContainer.adjustTabstrip();
-                aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
-              };
-              setTimeout(_delayedUpdate, 0, this.tabContainer);
-
               if (aNewTab && gURLBar)
                 gURLBar.focus();
+
+              this.tabContainer.adjustTabstrip();
+              // workaround for bug 345399
+              this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
             }
 
             // We're going to remove the tab and the browser now.
@@ -1977,8 +1965,9 @@
             var newIndex = this.getNewIndex(aEvent);
             var ib = this.mTabDropIndicatorBar;
             var ind = ib.firstChild;
-            var tabStripBoxObject = tabStrip.scrollBoxObject;
-            var minMargin = tabStripBoxObject.x - this.boxObject.x;
+            var scrollRect = tabStrip.scrollClientRect;
+            var rect = this.getBoundingClientRect();
+            var minMargin = scrollRect.left - rect.left;
             // make sure we don't place the tab drop indicator past the
             // edge, or the containing box will flex and stretch
             // the tab drop indicator bar, which will flex the url bar.  
@@ -1986,13 +1975,13 @@
             // just use first value if you can figure out how to get
             // the tab drop indicator to crop instead of flex and stretch
             // the tab drop indicator bar.
-            var maxMargin = Math.min(minMargin + tabStripBoxObject.width, 
-                                     ib.boxObject.x + ib.boxObject.width -
-                                     ind.boxObject.width);
+            var maxMargin = Math.min(minMargin + scrollRect.width, 
+                                     ib.getBoundingClientRect().right -
+                                     ind.clientWidth);
             if (!ltr)
-              [minMargin, maxMargin] = [this.boxObject.width - maxMargin,
-                                        this.boxObject.width - minMargin];
-            var newMargin, tabBoxObject;
+              [minMargin, maxMargin] = [this.clientWidth - maxMargin,
+                                        this.clientWidth - minMargin];
+            var newMargin;
             if (pixelsToScroll) {
               // if we are scrolling, put the drop indicator at the edge
               // so that it doesn't jump while scrolling
@@ -2000,21 +1989,18 @@
             }
             else {
               if (newIndex == this.mTabs.length) {
-                tabBoxObject =  this.mTabs[newIndex-1].boxObject;
+                let tabRect = this.mTabs[newIndex-1].getBoundingClientRect();
                 if (ltr)
-                  newMargin = tabBoxObject.screenX - this.boxObject.screenX
-                              + tabBoxObject.width;
+                  newMargin = tabRect.right - rect.left;
                 else
-                  newMargin = this.boxObject.screenX - tabBoxObject.screenX
-                              + this.boxObject.width;
+                  newMargin = rect.right - tabRect.left;
               }
               else {
-                tabBoxObject =  this.mTabs[newIndex].boxObject;
+                let tabRect = this.mTabs[newIndex].getBoundingClientRect();
                 if (ltr)
-                  newMargin = tabBoxObject.screenX - this.boxObject.screenX;
+                  newMargin = tabRect.left - rect.left;
                 else
-                  newMargin = this.boxObject.screenX - tabBoxObject.screenX
-                              + this.boxObject.width - tabBoxObject.width;
+                  newMargin = rect.right - tabRect.right;
               }
               // ensure we never place the drop indicator beyond our limits
               if (newMargin < minMargin)
@@ -2245,7 +2231,7 @@
             this.mTabContainer.childNodes[i]._selected = false;
           }
           this.mCurrentTab._selected = true;
-          this.mTabContainer.mTabstrip.scrollBoxObject.ensureElementIsVisible(this.mCurrentTab);
+          this.mTabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
 
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("TabMove", true, false, window, oldPosition);
@@ -2804,7 +2790,7 @@
          this._scrollButtonDownBox.collapsed = false;
          this._scrollButtonDownBoxAnimate.collapsed = false;
 #endif
-         this.scrollBoxObject.ensureElementIsVisible(tabs.selectedItem);
+         this.ensureElementIsVisible(tabs.selectedItem, false);
       ]]></handler>
 
 #ifdef XP_MACOSX
@@ -3003,10 +2989,7 @@
             this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            var width = this.firstChild.boxObject.width;
-            // 0 width is an invalid value and indicates
-            // an item without display, so ignore.
-            if (width > this.mTabClipWidth || width == 0)
+            if (this.firstChild.getBoundingClientRect().width > this.mTabClipWidth)
               this.setAttribute("closebuttons", "alltabs");
             else
               this.setAttribute("closebuttons", "activetab");
@@ -3048,15 +3031,9 @@
             // of the tabstrip, we need to ensure that we stay
             // completely scrolled to the right side
             var tabStrip = this.mTabstrip;
-            var scrollPos = {};
-            tabStrip.scrollBoxObject.getPosition(scrollPos, {});
-            var scrolledSize = {};
-            tabStrip.scrollBoxObject.getScrolledSize(scrolledSize, {});
-
-            if (scrollPos.value + tabStrip.boxObject.width >=
-                scrolledSize.value) {
+            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >=
+                tabStrip.scrollSize)
               tabStrip.scrollByPixels(-1);
-            }
           } catch (e) {}
         ]]></body>
       </method>
@@ -3077,6 +3054,11 @@
           }
         ]]></body>
       </method>
+
+      <field name="mAllTabsPopup">
+        document.getAnonymousElementByAttribute(this, 
+                                                "anonid", "alltabs-popup");
+      </field>
 
       <field name="mAllTabsBoxAnimate">
         document.getAnonymousElementByAttribute(this, 
@@ -3120,30 +3102,26 @@
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
-          var tsbo = this.mTabstrip.scrollBoxObject;
-          var tsboStart = tsbo.screenX;
-          var tsboEnd = tsboStart + tsbo.width;
-
-          var ctbo = aTab.boxObject;
-          var ctboStart = ctbo.screenX;
-          var ctboEnd = ctboStart + ctbo.width;
+          var scrollRect = this.mTabstrip.scrollClientRect;
+          var tab = aTab.getBoundingClientRect();
 
           // Is the new tab already completely visible?
-          if (tsboStart <= ctboStart && ctboEnd <= tsboEnd)
+          if (scrollRect.left <= tab.left && tab.right <= scrollRect.right)
             return;
 
           if (this.mTabstrip.smoothScroll) {
-            var selStart = this.selectedItem.boxObject.screenX;
-            var selEnd = selStart + this.selectedItem.boxObject.width;
+            let selected = this.selectedItem.getBoundingClientRect();
 
             // Can we make both the new tab and the selected tab completely visible?
-            if (Math.max(ctboEnd - selStart, selEnd - ctboStart) <= tsbo.width) {
+            if (Math.max(tab.right - selected.left, selected.right - tab.left) <=
+                scrollRect.width) {
               this.mTabstrip.ensureElementIsVisible(aTab);
               return;
             }
 
             this.mTabstrip._smoothScrollByPixels(this.mTabstrip._isRTLScrollbox ?
-                                                 selEnd - tsboEnd : selStart - tsboStart);
+                                                 selected.right - scrollRect.right :
+                                                 selected.left - scrollRect.left);
           }
 
           // start the flash timer
@@ -3270,6 +3248,7 @@
 
     <implementation>
       <field name="mOverCloseButton">false</field>
+      <field name="mCorrespondingMenuitem">null</field>
     </implementation>
 
     <handlers>
@@ -3308,6 +3287,215 @@
       <handler event="mouseup">
         this.style.MozUserFocus = '';
       </handler>
+    </handlers>
+  </binding>
+
+  <binding id="tabbrowser-alltabs-popup"
+           extends="chrome://global/content/bindings/popup.xml#popup">
+    <implementation implements="nsIDOMEventListener">
+      <field name="_xulWindow">
+        null
+      </field>
+
+      <constructor><![CDATA[
+        // We cannot cache the XULBrowserWindow object itself since it might
+        // be set after this binding is constructed.
+        try {
+          this._xulWindow = 
+            window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIWebNavigation)
+                  .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                  .treeOwner
+                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIXULWindow);
+        }
+        catch(ex) { }
+      ]]></constructor>
+
+      <method name="_menuItemOnCommand">
+        <parameter name="aEvent"/>
+
+        <body><![CDATA[
+          var tabcontainer = document.getBindingParent(this);
+          tabcontainer.selectedItem = aEvent.target.tab;
+        ]]></body>
+      </method>
+
+      <method name="_tabOnAttrModified">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var menuItem = aEvent.target.mCorrespondingMenuitem;
+          if (menuItem) {
+            var attrName = aEvent.attrName;
+            switch (attrName) {
+              case "label":
+              case "crop":
+              case "busy":
+              case "image":
+              case "selected":
+                if (aEvent.attrChange == aEvent.REMOVAL)
+                  menuItem.removeAttribute(attrName);
+                else
+                  menuItem.setAttribute(attrName, aEvent.newValue);
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="_tabOnTabClose">
+        <parameter name="aEvent"/>
+
+        <body><![CDATA[
+          var menuItem = aEvent.target.mCorrespondingMenuitem;
+          if (menuItem)
+            this.removeChild(menuItem);
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!aEvent.isTrusted)
+            return;
+
+          switch (aEvent.type) {
+            case "command":
+              this._menuItemOnCommand(aEvent);
+              break;
+            case "DOMAttrModified":
+              this._tabOnAttrModified(aEvent);
+              break;
+            case "TabClose":
+              this._tabOnTabClose(aEvent);
+              break;
+            case "TabOpen":
+              this._createTabMenuItem(aEvent.originalTarget);
+              break;
+            case "scroll":
+              this._updateTabsVisibilityStatus();
+              break;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_updateTabsVisibilityStatus">
+        <body><![CDATA[
+          var tabContainer = document.getBindingParent(this);
+          // We don't want menu item decoration unless there is overflow.
+          if (tabContainer.getAttribute("overflow") != "true")
+            return;
+
+          var tabstripBO = tabContainer.mTabstrip.scrollBoxObject;
+          for (var i = 0; i < this.childNodes.length; i++) {
+            var curTabBO = this.childNodes[i].tab.boxObject;
+            if (curTabBO.screenX >= tabstripBO.screenX &&
+                curTabBO.screenX + curTabBO.width <= tabstripBO.screenX + tabstripBO.width)
+              this.childNodes[i].setAttribute("tabIsVisible", "true"); 
+            else
+              this.childNodes[i].removeAttribute("tabIsVisible");
+          }
+        ]]></body>
+
+      </method>
+
+      <method name="_createTabMenuItem">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          var menuItem = document.createElementNS(
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
+            "menuitem");
+
+          menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
+
+          menuItem.setAttribute("label", aTab.label);
+          menuItem.setAttribute("crop", aTab.getAttribute("crop"));
+          menuItem.setAttribute("image", aTab.getAttribute("image"));
+
+          if (aTab.hasAttribute("busy"))
+            menuItem.setAttribute("busy", aTab.getAttribute("busy"));
+          if (aTab.selected)
+            menuItem.setAttribute("selected", "true");
+
+          // Keep some attributes of the menuitem in sync with its
+          // corresponding tab (e.g. the tab label)
+          aTab.mCorrespondingMenuitem = menuItem;
+          aTab.addEventListener("DOMAttrModified", this, false);
+          aTab.addEventListener("TabClose", this, false);
+          menuItem.tab = aTab;
+          menuItem.addEventListener("command", this, false);
+
+          this.appendChild(menuItem);
+          return menuItem;
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="popupshowing">
+
+      <![CDATA[
+        // set up the menu popup
+        var tabcontainer = document.getBindingParent(this);
+        var tabs = tabcontainer.childNodes;
+
+        // Listen for changes in the tab bar.
+        var tabbrowser = document.getBindingParent(tabcontainer);
+        tabbrowser.addEventListener("TabOpen", this, false);
+        tabcontainer.mTabstrip.addEventListener("scroll", this, false);
+
+        // if an animation is in progress and the user
+        // clicks on the "all tabs" button, stop the animation
+        tabcontainer._stopAnimation();
+
+        for (var i = 0; i < tabs.length; i++) {
+          this._createTabMenuItem(tabs[i]);
+        }
+        this._updateTabsVisibilityStatus();
+      ]]></handler>
+
+      <handler event="popuphiding">
+      <![CDATA[
+        // clear out the menu popup and remove the listeners
+        while (this.hasChildNodes()) {
+          var menuItem = this.lastChild;
+          menuItem.removeEventListener("command", this, false);
+          menuItem.tab.removeEventListener("DOMAttrModified", this, false);
+          menuItem.tab.removeEventListener("TabClose", this, false);
+          menuItem.tab.mCorrespondingMenuitem = null;
+          this.removeChild(menuItem);
+        }
+        var tabcontainer = document.getBindingParent(this);
+        tabcontainer.mTabstrip.removeEventListener("scroll", this, false);
+        document.getBindingParent(tabcontainer).removeEventListener("TabOpen", this, false);
+      ]]></handler>
+
+      <handler event="DOMMenuItemActive">
+      <![CDATA[
+        if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
+          return;
+
+        var tab = event.target.tab;
+        if (tab) {
+          var statusText = tab.linkedBrowser.currentURI.spec;
+          if (statusText == "about:blank") {
+            // XXXhack: Passing a space here (and not "")
+            // to make sure the the browser implementation would
+            // still consider it a hovered link.
+            statusText = " ";
+          }
+
+          this._xulWindow.XULBrowserWindow.setOverLink(statusText, null);
+        }
+      ]]></handler>
+
+      <handler event="DOMMenuItemInactive">
+      <![CDATA[
+        if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
+          return;
+
+        this._xulWindow.XULBrowserWindow.setOverLink("", null);
+      ]]></handler>
+
     </handlers>
   </binding>
 

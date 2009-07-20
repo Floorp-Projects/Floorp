@@ -1406,10 +1406,6 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 
 /* ----- SECURITY DISPLAY ----- */
 
-#security-button {
-  -moz-box-direction: reverse;
-}
-
 #security-button[level="high"] ,
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure-statusbar.png");
@@ -1733,6 +1729,7 @@ tabbrowser > tabbox > tabpanels {
 .tabs-alltabs-button:hover {
   -moz-image-region: rect(0, 44px, 20px, 22px);
 }
+.tabs-alltabs-button[type="menu"][open="true"],
 .tabs-alltabs-button:hover:active {
   -moz-image-region: rect(0, 66px, 20px, 44px);
 }
@@ -1745,6 +1742,7 @@ tabbrowser > tabbox > tabpanels {
   background-color: rgba(0,0,0,0.20);
 }
 
+.tabs-alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker,
 .tabs-alltabs-button > .toolbarbutton-text {
   display: none;
 }
@@ -1761,6 +1759,20 @@ tabbrowser > tabbox > tabpanels {
   opacity: 0.0;
 }
 
+/* All Tabs Menupopup */
+.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/tree/item.png");
+}
+
+.alltabs-item[selected="true"] {
+  font-weight: bold;
+}
+
+.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
+}
+
+/* Tabstrip close button */
 .tabs-closebutton {
   -moz-padding-end: 4px;
   list-style-image: url("chrome://global/skin/icons/closetab.png");

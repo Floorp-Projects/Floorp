@@ -330,12 +330,11 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     break;
 
                 if(!p->IsVoid()) {
-                    JSString *str =
-                        XPCStringConvert::ReadableToJSString(cx, *p);
+                    jsval str = XPCStringConvert::ReadableToJSVal(cx, *p);
                     if(!str)
                         return JS_FALSE;
 
-                    *d = STRING_TO_JSVAL(str);
+                    *d = str;
                 }
 
                 // *d is defaulted to JSVAL_NULL so no need to set it
@@ -1113,6 +1112,47 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         if(!xpcscope)
             return JS_FALSE;
 
+        if(!cache)
+            CallQueryInterface(src, &cache);
+        JSObject *flat;
+        if(cache)
+        {
+            flat = cache->GetWrapper();
+            if(!dest)
+            {
+                if(!flat)
+                {
+                    jsval slim;
+                    if(ConstructSlimWrapper(ccx, src, cache, Interface,
+                                            xpcscope, &slim))
+                    {
+                        *d = slim;
+                        return JS_TRUE;
+                    }
+
+                    // Even if ConstructSlimWrapper returns JS_FALSE it might
+                    // have created a wrapper (while calling the PreCreate
+                    // hook). In that case we need to fall through because we
+                    // either have a slim wrapper that needs to be morphed or
+                    // we have an XPCWrappedNative.
+                    flat = cache->GetWrapper();
+                }
+                else if(!IS_WRAPPER_CLASS(STOBJ_GET_CLASS(flat)))
+                {
+                    JSObject* global = JS_GetGlobalForObject(ccx, flat);
+                    if(global == xpcscope->GetGlobalJSObject())
+                    {
+                        *d = OBJECT_TO_JSVAL(flat);
+                        return JS_TRUE;
+                    }
+                }
+            }
+        }
+        else
+        {
+            flat = nsnull;
+        }
+
         AutoMarkingNativeInterfacePtr iface(ccx, Interface);
         if(!iface && iid)
         {
@@ -1124,13 +1164,20 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         nsresult rv;
         XPCWrappedNative* wrapper;
         nsRefPtr<XPCWrappedNative> strongWrapper;
-        if(!cache)
-            CallQueryInterface(src, &cache);
-        if(cache &&
-           (wrapper = static_cast<XPCWrappedNative*>(cache->GetWrapper())))
+        if(!flat)
         {
+            rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope, iface,
+                                                cache, isGlobal,
+                                                getter_AddRefs(strongWrapper));
+
+            wrapper = strongWrapper;
+        }
+        else if(IS_WRAPPER_CLASS(STOBJ_GET_CLASS(flat)))
+        {
+            wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(flat));
+
             // If asked to return the wrapper we'll return a strong reference,
-            // otherwise we'll just return its JSObject in rval (which should be
+            // otherwise we'll just return its JSObject in d (which should be
             // rooted in that case).
             if(dest)
                 strongWrapper = wrapper;
@@ -1141,10 +1188,14 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         }
         else
         {
-            rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope, iface,
-                                                cache, isGlobal,
-                                                getter_AddRefs(strongWrapper));
+            NS_ASSERTION(IS_SLIM_WRAPPER(flat),
+                         "What kind of wrapper is this?");
+            SLIM_LOG(("***** morphing from XPCConvert::NativeInterface2JSObject"
+                      "(%p)\n",
+                      static_cast<nsISupports*>(xpc_GetJSPrivate(flat))));
 
+            rv = XPCWrappedNative::Morph(ccx, flat, iface, cache,
+                                         getter_AddRefs(strongWrapper));
             wrapper = strongWrapper;
         }
 
@@ -1153,7 +1204,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         if(NS_SUCCEEDED(rv) && wrapper)
         {
             uint32 flags = 0;
-            JSObject *flat = wrapper->GetFlatJSObject();
+            flat = wrapper->GetFlatJSObject();
             jsval v = OBJECT_TO_JSVAL(flat);
 
             JSBool sameOrigin;

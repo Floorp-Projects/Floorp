@@ -71,6 +71,7 @@
 #include "jsstr.h"
 #include "jsstaticcheck.h"
 #include "jstracer.h"
+#include "jslibmath.h"
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
@@ -80,32 +81,12 @@
 #include "jsxml.h"
 #endif
 
+#include "jsatominlines.h"
+
 #include "jsautooplen.h"
 
 /* jsinvoke_cpp___ indicates inclusion from jsinvoke.cpp. */
 #if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
-
-uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked)
-{
-    JSRuntime *rt;
-    uint32 shape;
-
-    rt = cx->runtime;
-    shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
-    JS_ASSERT(shape != 0);
-    if (shape >= SHAPE_OVERFLOW_BIT) {
-        /*
-         * FIXME bug 440834: The shape id space has overflowed. Currently we
-         * cope badly with this and schedule the GC on the every call. But
-         * first we make sure that increments from other threads would not
-         * have a chance to wrap around shapeGen to zero.
-         */
-        rt->shapeGen = SHAPE_OVERFLOW_BIT;
-        js_TriggerGC(cx, gcLocked);
-    }
-    return shape;
-}
 
 JS_REQUIRES_STACK JSPropCacheEntry *
 js_FillPropertyCache(JSContext *cx, JSObject *obj,
@@ -138,7 +119,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
      */
     scope = OBJ_SCOPE(pobj);
     JS_ASSERT(scope->object == pobj);
-    if (!SCOPE_HAS_PROPERTY(scope, sprop)) {
+    if (!scope->has(sprop)) {
         PCMETER(cache->oddfills++);
         return JS_NO_PROP_CACHE_FILL;
     }
@@ -148,8 +129,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
      * and setter hooks can change the prototype chain using JS_SetPrototype
      * after js_LookupPropertyWithFlags has returned the nominal protoIndex,
      * we have to validate protoIndex if it is non-zero. If it is zero, then
-     * we know thanks to the SCOPE_HAS_PROPERTY test above, and from the fact
-     * that obj == pobj, that protoIndex is invariant.
+     * we know thanks to the scope->has test above, combined with the fact that
+     * obj == pobj, that protoIndex is invariant.
      *
      * The scopeIndex can't be wrong. We require JS_SetParent calls to happen
      * before any running script might consult a parent-linked scope chain. If
@@ -202,52 +183,43 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         /*
          * Check for a prototype "plain old method" callee computation. What
          * is a plain old method? It's a function-valued property with stub
-         * getter and setter, so get of a function is idempotent and set is
-         * transparent.
+         * getter, so get of a function is idempotent.
          */
-        if (cs->format & JOF_CALLOP) {
-            if (SPROP_HAS_STUB_GETTER(sprop) &&
-                SPROP_HAS_VALID_SLOT(sprop, scope)) {
-                jsval v;
+        if ((cs->format & JOF_CALLOP) &&
+            SPROP_HAS_STUB_GETTER(sprop) &&
+            SPROP_HAS_VALID_SLOT(sprop, scope)) {
+            jsval v;
 
-                v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
-                if (VALUE_IS_FUNCTION(cx, v)) {
-                    /*
-                     * Great, we have a function-valued prototype property
-                     * where the getter is JS_PropertyStub. The type id in
-                     * pobj's scope does not evolve with changes to property
-                     * values, however.
-                     *
-                     * So here, on first cache fill for this method, we brand
-                     * the scope with a new shape and set the SCOPE_BRANDED
-                     * flag. Once this scope flag is set, any write that adds
-                     * or deletes a function-valued plain old property in
-                     * scope->object will result in shape being regenerated.
-                     */
-                    if (!SCOPE_IS_BRANDED(scope)) {
-                        PCMETER(cache->brandfills++);
+            v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+            if (VALUE_IS_FUNCTION(cx, v)) {
+                /*
+                 * Great, we have a function-valued prototype property where
+                 * the getter is JS_PropertyStub. The type id in pobj's scope
+                 * does not evolve with changes to property values, however.
+                 *
+                 * So here, on first cache fill for this method, we brand the
+                 * scope with a new shape and set the SCOPE_BRANDED flag. Once
+                 * this scope flag is set, any write that adds or deletes a
+                 * function-valued plain old property in scope->object will
+                 * result in shape being regenerated.
+                 */
+                if (!scope->branded()) {
+                    PCMETER(cache->brandfills++);
 #ifdef DEBUG_notme
-                        fprintf(stderr,
+                    fprintf(stderr,
                             "branding %p (%s) for funobj %p (%s), shape %lu\n",
                             pobj, LOCKED_OBJ_GET_CLASS(pobj)->name,
                             JSVAL_TO_OBJECT(v),
-                            JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx,
-                                                 JSVAL_TO_OBJECT(v))),
+                            JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
                             OBJ_SHAPE(obj));
 #endif
-                        js_MakeScopeShapeUnique(cx, scope);
-                        if (js_IsPropertyCacheDisabled(cx)) {
-                            /*
-                             * js_GenerateShape could not recover from
-                             * rt->shapeGen's overflow.
-                             */
-                            return JS_NO_PROP_CACHE_FILL;
-                        }
-                        SCOPE_SET_BRANDED(scope);
-                    }
-                    vword = JSVAL_OBJECT_TO_PCVAL(v);
-                    break;
+                    scope->brandingShapeChange(cx, sprop->slot, v);
+                    if (js_IsPropertyCacheDisabled(cx))  /* check for rt->shapeGen overflow */
+                        return JS_NO_PROP_CACHE_FILL;
+                    scope->setBranded();
                 }
+                vword = JSVAL_OBJECT_TO_PCVAL(v);
+                break;
             }
         }
 
@@ -458,8 +430,8 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 #ifdef DEBUG
         jsid id = ATOM_TO_JSID(atom);
 
-        CHECK_FOR_STRING_INDEX(id);
-        JS_ASSERT(SCOPE_GET_PROPERTY(OBJ_SCOPE(pobj), id));
+        id = js_CheckForStringIndex(id);
+        JS_ASSERT(OBJ_SCOPE(pobj)->lookup(id));
         JS_ASSERT(OBJ_SCOPE(pobj)->object == pobj);
 #endif
         *pobjp = pobj;
@@ -612,7 +584,7 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
     jsval *sp;
 
     JS_ASSERT(nslots != 0);
-    js_LeaveTrace(cx);
+    JS_ASSERT_NOT_ON_TRACE(cx);
 
     if (!cx->stackPool.first.next) {
         int64 *timestamp;
@@ -1151,7 +1123,6 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         /*
          * XXX this makes no sense -- why convert to function if clasp->call?
          * XXX better to call that hook without converting
-         * XXX the only thing that needs fixing is liveconnect
          *
          * FIXME bug 408416: try converting to function, for API compatibility
          * if there is a call op defined.
@@ -1308,7 +1279,8 @@ have_fun:
      */
     frame.thisp = (JSObject *)vp[1];
     frame.varobj = NULL;
-    frame.callobj = frame.argsobj = NULL;
+    frame.callobj = NULL;
+    frame.argsobj = NULL;
     frame.script = script;
     frame.callee = funobj;
     frame.fun = fun;
@@ -1448,6 +1420,17 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     JSBool ok;
 
     js_LeaveTrace(cx);
+
+#ifdef JS_TRACER
+    /*
+     * The JIT requires that the scope chain here is equal to its global
+     * object. Disable the JIT for this call if this condition is not true.
+     */
+    uint32 oldOptions = cx->options;
+    if ((oldOptions & JSOPTION_JIT) && obj != JS_GetGlobalForObject(cx, obj))
+        cx->options &= ~JSOPTION_JIT;
+#endif
+
     invokevp = js_AllocStack(cx, 2 + argc, &mark);
     if (!invokevp)
         return JS_FALSE;
@@ -1477,6 +1460,13 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     }
 
     js_FreeStack(cx, mark);
+
+#ifdef JS_TRACER
+    /* Possibly re-enable JIT, if disabled above. */
+    if (oldOptions & JSOPTION_JIT)
+        cx->options |= JSOPTION_JIT;
+#endif
+
     return ok;
 }
 
@@ -1536,15 +1526,12 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
 #ifdef JS_TRACER
     /* 
-     * The JIT requires that the scope chain here is equal to
-     * its global object. Disable the JIT for this call if this 
-     * condition is not true. 
+     * The JIT requires that the scope chain here is equal to its global
+     * object. Disable the JIT for this call if this condition is not true.
      */
     uint32 oldOptions = cx->options;
-    if ((oldOptions & JSOPTION_JIT) &&
-        chain != JS_GetGlobalForObject(cx, chain)) {
+    if ((oldOptions & JSOPTION_JIT) && chain != JS_GetGlobalForObject(cx, chain))
         cx->options &= ~JSOPTION_JIT;
-    }
 #endif
 
 #ifdef INCLUDE_MOZILLA_DTRACE
@@ -1572,7 +1559,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.sharpArray = down->sharpArray;
         JS_ASSERT(script->nfixed == 0);
     } else {
-        frame.callobj = frame.argsobj = NULL;
+        frame.callobj = NULL;
+        frame.argsobj = NULL;
         obj = chain;
         if (cx->options & JSOPTION_VAROBJFIX) {
             while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
@@ -1673,7 +1661,8 @@ out:
 
 #ifdef JS_TRACER
     /* Possibly re-enable JIT, if disabled above. */
-    cx->options = oldOptions;
+    if (oldOptions & JSOPTION_JIT)
+        cx->options |= JSOPTION_JIT;
 #endif
 
     return ok;
@@ -1686,7 +1675,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     JSObject *obj2;
     JSProperty *prop;
     uintN oldAttrs, report;
-    JSBool isFunction;
+    bool isFunction;
     jsval value;
     const char *type, *name;
 
@@ -1735,6 +1724,10 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
         /* The property must be dropped already. */
         JS_ASSERT(!prop);
         report = JSREPORT_WARNING | JSREPORT_STRICT;
+
+#ifdef __GNUC__
+        isFunction = false;     /* suppress bogus gcc warnings */
+#endif
     } else {
         /* We allow redeclaring some non-readonly properties. */
         if (((oldAttrs | attrs) & JSPROP_READONLY) == 0) {
@@ -2597,7 +2590,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         jsval v;
         JS_ASSERT(PCVAL_IS_OBJECT(entry->vword));
         JS_ASSERT(entry->vword != PCVAL_NULL);
-        JS_ASSERT(SCOPE_IS_BRANDED(OBJ_SCOPE(pobj)));
+        JS_ASSERT(OBJ_SCOPE(pobj)->branded());
         JS_ASSERT(SPROP_HAS_STUB_GETTER(sprop));
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
         v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
@@ -3629,7 +3622,7 @@ js_Interpret(JSContext *cx)
         if (SPROP_HAS_STUB_SETTER(sprop) &&                                   \
             (sprop)->slot != SPROP_INVALID_SLOT) {                            \
             /* Fast path for, e.g., Object instance properties. */            \
-            LOCKED_OBJ_WRITE_BARRIER(cx, obj, (sprop)->slot, *vp);            \
+            LOCKED_OBJ_WRITE_SLOT(cx, obj, (sprop)->slot, *vp);               \
         } else {                                                              \
             if (!js_NativeSet(cx, obj, sprop, vp))                            \
                 goto error;                                                   \
@@ -4067,11 +4060,7 @@ js_Interpret(JSContext *cx)
             if (d2 == 0) {
                 STORE_OPND(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
             } else {
-#ifdef XP_WIN
-              /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-              if (!(JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)))
-#endif
-                d = fmod(d, d2);
+                d = js_fmod(d, d2);
                 STORE_NUMBER(cx, -1, d);
             }
           END_CASE(JSOP_MOD)
@@ -4667,31 +4656,39 @@ js_Interpret(JSContext *cx)
                     PCMETER(cache->pctestentry = entry);
                     PCMETER(cache->tests++);
                     PCMETER(cache->settests++);
-                    if (entry->kpc == regs.pc &&
-                        entry->kshape == kshape &&
-                        PCVCAP_SHAPE(entry->vcap) == rt->protoHazardShape) {
-                        JS_ASSERT(PCVCAP_TAG(entry->vcap) == 0);
-
+                    if (entry->kpc == regs.pc && entry->kshape == kshape) {
+                        JS_ASSERT(PCVCAP_TAG(entry->vcap) <= 1);
                         if (JS_LOCK_OBJ_IF_SHAPE(cx, obj, kshape)) {
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+                            JS_ASSERT_IF(!(sprop->attrs & JSPROP_SHARED),
+                                         PCVCAP_TAG(entry->vcap) == 0);
 
                             JSScope *scope = OBJ_SCOPE(obj);
-                            JS_ASSERT(!SCOPE_IS_SEALED(scope));
+                            JS_ASSERT(!scope->sealed());
 
                             /*
                              * Fastest path: check whether the cached sprop is
-                             * already in scope and call NATIVE_GET and break
+                             * already in scope and call NATIVE_SET and break
                              * to get out of the do-while(0). But we can call
-                             * NATIVE_GET only if obj owns scope or sprop is
+                             * NATIVE_SET only if obj owns scope or sprop is
                              * shared.
                              */
                             bool checkForAdd;
-                            if (scope->object == obj ||
-                                (sprop->attrs & JSPROP_SHARED)) {
-                                if (sprop == scope->lastProp ||
-                                    SCOPE_HAS_PROPERTY(scope, sprop)) {
+                            if (sprop->attrs & JSPROP_SHARED) {
+                                if (PCVCAP_TAG(entry->vcap) == 0 ||
+                                    ((obj2 = OBJ_GET_PROTO(cx, obj)) &&
+                                     OBJ_IS_NATIVE(obj2) &&
+                                     OBJ_SHAPE(obj2) == PCVCAP_SHAPE(entry->vcap))) {
+                                    goto fast_set_propcache_hit;
+                                }
+
+                                /* The cache entry doesn't apply. vshape mismatch. */
+                                checkForAdd = false;
+                            } else if (scope->object == obj) {
+                                if (sprop == scope->lastProp || scope->has(sprop)) {
+                                  fast_set_propcache_hit:
                                     PCMETER(cache->pchits++);
                                     PCMETER(cache->setpchits++);
                                     NATIVE_SET(cx, obj, sprop, entry, &rval);
@@ -4701,8 +4698,7 @@ js_Interpret(JSContext *cx)
                                 checkForAdd =
                                     !(sprop->attrs & JSPROP_SHARED) &&
                                     sprop->parent == scope->lastProp &&
-                                    !SCOPE_HAD_MIDDLE_DELETE(scope);
-
+                                    !scope->hadMiddleDelete();
                             } else {
                                 scope = js_GetMutableScope(cx, obj);
                                 if (!scope) {
@@ -4751,7 +4747,7 @@ js_Interpret(JSContext *cx)
                                  * If this obj's number of reserved slots
                                  * differed, or if something created a hash
                                  * table for scope, we must pay the price of
-                                 * js_AddScopeProperty.
+                                 * JSScope::addProperty.
                                  *
                                  * If slot does not match the cached sprop's
                                  * slot, update the cache entry in the hope
@@ -4760,14 +4756,10 @@ js_Interpret(JSContext *cx)
                                  */
                                 if (slot != sprop->slot || scope->table) {
                                     JSScopeProperty *sprop2 =
-                                        js_AddScopeProperty(cx, scope,
-                                                            sprop->id,
-                                                            sprop->getter,
-                                                            sprop->setter,
-                                                            slot,
-                                                            sprop->attrs,
-                                                            sprop->flags,
-                                                            sprop->shortid);
+                                        scope->add(cx, sprop->id,
+                                                   sprop->getter, sprop->setter,
+                                                   slot, sprop->attrs,
+                                                   sprop->flags, sprop->shortid);
                                     if (!sprop2) {
                                         js_FreeSlot(cx, obj, slot);
                                         JS_UNLOCK_SCOPE(cx, scope);
@@ -4782,14 +4774,10 @@ js_Interpret(JSContext *cx)
                                     }
                                     sprop = sprop2;
                                 } else {
-                                    js_ExtendScopeShape(cx, scope, sprop);
-                                    ++scope->entryCount;
-                                    scope->lastProp = sprop;
+                                    scope->extend(cx, sprop);
                                 }
 
-                                GC_WRITE_BARRIER(cx, scope,
-                                                 LOCKED_OBJ_GET_SLOT(obj, slot),
-                                                 rval);
+                                LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
                                 TRACE_2(SetPropHit, entry, sprop);
                                 LOCKED_OBJ_SET_SLOT(obj, slot, rval);
                                 JS_UNLOCK_SCOPE(cx, scope);
@@ -4821,7 +4809,7 @@ js_Interpret(JSContext *cx)
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
-                            JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj2)));
+                            JS_ASSERT(!OBJ_SCOPE(obj2)->sealed());
                             NATIVE_SET(cx, obj, sprop, entry, &rval);
                         }
                         JS_UNLOCK_OBJ(cx, obj2);
@@ -5875,7 +5863,7 @@ js_Interpret(JSContext *cx)
             } else {
                 slot = JSVAL_TO_INT(lval);
                 JS_LOCK_OBJ(cx, obj);
-                LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
+                LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, rval);
                 JS_UNLOCK_OBJ(cx, obj);
             }
           END_SET_CASE(JSOP_SETGVAR)
@@ -6424,7 +6412,7 @@ js_Interpret(JSContext *cx)
 
                 JS_LOCK_OBJ(cx, obj);
                 scope = OBJ_SCOPE(obj);
-                JS_ASSERT(!SCOPE_IS_SEALED(scope));
+                JS_ASSERT(!scope->sealed());
                 kshape = scope->shape;
                 cache = &JS_PROPERTY_CACHE(cx);
                 entry = &cache->table[PROPERTY_CACHE_HASH_PC(regs.pc, kshape)];
@@ -6464,7 +6452,7 @@ js_Interpret(JSContext *cx)
                     /*
                      * Detect a repeated property name and force a miss to
                      * share the strict warning code and cope with complexity
-                     * managed by js_AddScopeProperty.
+                     * managed by JSScope::addProperty.
                      */
                     if (sprop->parent != scope->lastProp)
                         goto do_initprop_miss;
@@ -6474,9 +6462,8 @@ js_Interpret(JSContext *cx)
                      * obj, not a proto-property, and there cannot have been
                      * any deletions of prior properties.
                      */
-                    JS_ASSERT(!SCOPE_HAD_MIDDLE_DELETE(scope));
-                    JS_ASSERT(!scope->table ||
-                              !SCOPE_HAS_PROPERTY(scope, sprop));
+                    JS_ASSERT(!scope->hadMiddleDelete());
+                    JS_ASSERT_IF(scope->table, !scope->has(sprop));
 
                     slot = sprop->slot;
                     JS_ASSERT(slot == scope->freeslot);
@@ -6494,10 +6481,10 @@ js_Interpret(JSContext *cx)
                               scope->shape == scope->lastProp->shape);
                     if (scope->table) {
                         JSScopeProperty *sprop2 =
-                            js_AddScopeProperty(cx, scope, sprop->id,
-                                                sprop->getter, sprop->setter,
-                                                slot, sprop->attrs,
-                                                sprop->flags, sprop->shortid);
+                            scope->add(cx, sprop->id,
+                                       sprop->getter, sprop->setter,
+                                       slot, sprop->attrs,
+                                       sprop->flags, sprop->shortid);
                         if (!sprop2) {
                             js_FreeSlot(cx, obj, slot);
                             JS_UNLOCK_SCOPE(cx, scope);
@@ -6511,9 +6498,7 @@ js_Interpret(JSContext *cx)
                         scope->lastProp = sprop;
                     }
 
-                    GC_WRITE_BARRIER(cx, scope,
-                                     LOCKED_OBJ_GET_SLOT(obj, slot),
-                                     rval);
+                    LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
                     TRACE_2(SetPropHit, entry, sprop);
                     LOCKED_OBJ_SET_SLOT(obj, slot, rval);
                     JS_UNLOCK_SCOPE(cx, scope);

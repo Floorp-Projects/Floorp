@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="303267Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 303267 test">
+
+  <script type="application/javascript"  
+  src="chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug 303267:  When a page is 
+    // displayed from the bfcache, the script globals should
+    // remain intact from the page's initial load.
+    //
+    function testIterator()
+    {
+      // Load an initial test page which should be saved in the bfcache.
+      var navData = {
+        uri: getHttpUrl("bug303267.html"),
+        eventsToListenFor: ["pageshow"],
+        expectedEvents: [ {type: "pageshow", title: "bug303267.html"} ],
+        onNavComplete: nextTest
+      };
+      doPageNavigation(navData);
+      yield;
+      
+      // Save the HTML of the test page for later comparison.
+      var originalHTML = getInnerHTMLById("div1");
+
+      // Load a second test page.  The first test page's pagehide event should
+      // have the .persisted property set to true, indicating that it was 
+      // stored in the bfcache.
+      navData = {
+        uri: "data:text/html,<html><head><title>page2</title></head>" +
+             "<body>bug303267, page2</body></html>",
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ {type: "pagehide", 
+                           title: "bug303267.html", 
+                           persisted: true},
+                          {type: "pageshow", 
+                           title: "page2"} ],
+        onNavComplete: nextTest
+      };
+      doPageNavigation(navData);
+      yield;
+      
+      // Go back.  Verify that the pageshow event for the original test page 
+      // had a .persisted property of true, indicating that it came from the 
+      // bfcache.
+      navData = {
+        back: true,
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ {type: "pagehide", 
+                           title: "page2"},
+                          {type: "pageshow", 
+                           title: "bug303267.html", 
+                           persisted: true} ],
+        onNavComplete: nextTest
+      };
+      doPageNavigation(navData);
+      yield;
+      
+      // After going back, if showpagecount() could access a global variable
+      // and change the test div's innerHTML, then we pass.  Otherwise, it
+      // threw an exception and the following test will fail.
+      var newHTML = getInnerHTMLById("div1");
+      isnot(originalHTML, 
+        newHTML, "HTML not updated on pageshow; javascript broken?");
+
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+
+    ////
+    // Return the innerHTML of a particular element in the content document.
+    //
+    function getInnerHTMLById(id) {
+      return TestWindow.getDocument().getElementById(id).innerHTML;
+    }
+    
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

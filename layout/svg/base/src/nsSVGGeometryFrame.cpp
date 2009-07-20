@@ -233,17 +233,22 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext)
 }
 
 PRBool
+nsSVGGeometryFrame::HasStroke(gfxContext *aContext)
+{
+  return GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None && 
+         GetStrokeWidth() > 0;
+}
+
+void
 nsSVGGeometryFrame::SetupCairoStrokeGeometry(gfxContext *aContext)
 {
-  const nsStyleSVG* style = GetStyleSVG();
-  if (style->mStroke.mType == eStyleSVGPaintType_None)
-    return PR_FALSE;
-  
   float width = GetStrokeWidth();
   if (width <= 0)
-    return PR_FALSE;
+    return;
   aContext->SetLineWidth(width);
 
+  const nsStyleSVG* style = GetStyleSVG();
+  
   switch (style->mStrokeLinecap) {
   case NS_STYLE_STROKE_LINECAP_BUTT:
     aContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
@@ -269,15 +274,12 @@ nsSVGGeometryFrame::SetupCairoStrokeGeometry(gfxContext *aContext)
     aContext->SetLineJoin(gfxContext::LINE_JOIN_BEVEL);
     break;
   }
-
-  return PR_TRUE;
 }
 
-PRBool
+void
 nsSVGGeometryFrame::SetupCairoStrokeHitGeometry(gfxContext *aContext)
 {
-  if (!SetupCairoStrokeGeometry(aContext))
-    return PR_FALSE;
+  SetupCairoStrokeGeometry(aContext);
 
   gfxFloat *dashArray;
   PRUint32 count;
@@ -286,14 +288,15 @@ nsSVGGeometryFrame::SetupCairoStrokeHitGeometry(gfxContext *aContext)
     aContext->SetDash(dashArray, count, GetStrokeDashoffset());
     delete [] dashArray;
   }
-  return PR_TRUE;
 }
 
 PRBool
 nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
 {
-  if (!SetupCairoStrokeHitGeometry(aContext))
+  if (!HasStroke(aContext)) {
     return PR_FALSE;
+  }
+  SetupCairoStrokeHitGeometry(aContext);
 
   const nsStyleSVG* style = GetStyleSVG();
   float opacity = MaybeOptimizeOpacity(style->mStrokeOpacity);

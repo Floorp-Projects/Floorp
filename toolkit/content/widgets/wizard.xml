@@ -324,6 +324,13 @@
               // give focus to the first focusable element in the dialog
               if (!document.commandDispatcher.focusedElement)
                 document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+
+              try {
+                var button =
+                      document.documentElement._wizardButtons.defaultButton;
+                if (button)
+                  window.notifyDefaultButtonLoaded(button);
+              } catch (e) { }
             };
 
           // Give focus after onload completes, see bug 103197.
@@ -581,6 +588,21 @@
           }
         ]]></body>
       </method>
+
+      <property name="defaultButton" readonly="true">
+        <getter><![CDATA[
+          const kXULNS =
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var buttons = this._wizardButtonDeck.selectedPanel
+                            .getElementsByTagNameNS(kXULNS, "button");
+          for (var i = 0; i < buttons.length; i++) {
+            if (buttons[i].getAttribute("default") == "true" &&
+                !buttons[i].hidden && !buttons[i].disabled)
+              return buttons[i];
+          }
+          return null;
+        ]]></getter>
+      </property>
     </implementation>
   </binding>
 #endif

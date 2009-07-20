@@ -88,6 +88,7 @@
                           accesskey="&sendPageCmd.accesskey;"
                           command="Browser:SendLink"/>
                 <menuseparator/>
+#ifndef WINCE
                 <menuitem id="menu_printSetup"
                           label="&printSetupCmd.label;"
                           accesskey="&printSetupCmd.accesskey;"
@@ -110,6 +111,7 @@
                           oncommand="BrowserImport();"/>
 #ifndef XP_MACOSX
                 <menuseparator/>
+#endif
 #endif
                 <menuitem id="goOfflineMenuitem"
                           label="&goOfflineCmd.label;"
@@ -227,7 +229,11 @@
                           accesskey="&taskbarCmd.accesskey;"
                           type="checkbox"
                           command="cmd_toggleTaskbar"
+#ifndef WINCE
                           checked="true" />
+#else
+                          checked="false" />
+#endif
                 <menu id="viewSidebarMenuMenu"
                       label="&viewSidebarMenu.label;"
                       accesskey="&viewSidebarMenu.accesskey;">

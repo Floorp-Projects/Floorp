@@ -944,6 +944,11 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   const PRUnichar* str = aAltText.get();
   PRInt32          strLen = aAltText.Length();
   nscoord          y = aRect.y;
+
+  if (!aPresContext->BidiEnabled() && HasRTLChars(aAltText)) {
+    aPresContext->SetBidiEnabled();
+  }
+
   // Always show the first line, even if we have to clip it below
   PRBool firstLine = PR_TRUE;
   while ((strLen > 0) && (firstLine || (y + maxDescent) < aRect.YMost())) {
@@ -1375,7 +1380,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
        content; content = content->GetParent()) {
     nsCOMPtr<nsILink> link(do_QueryInterface(content));
     if (link) {
-      link->GetHrefURI(aHref);
+      *aHref = content->GetHrefURI().get();
       status = (*aHref != nsnull);
 
       nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));

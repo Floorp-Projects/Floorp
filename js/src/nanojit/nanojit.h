@@ -1,4 +1,5 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
+/* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,42 +61,42 @@
 #endif
 
 /*
-	If we're using MMGC, using operator delete on a GCFinalizedObject is problematic:
-	in particular, calling it from inside a dtor is risky because the dtor for the sub-object
-	might already have been called, wrecking its vtable and ending up in the wrong version
-	of operator delete (the global version rather than the class-specific one). Calling GC::Free
-	directly is fine (since it ignores the vtable), so we macro-ize to make the distinction.
-	
-	macro-ization of operator new isn't strictly necessary, but is done to bottleneck both
-	sides of the new/delete pair to forestall future needs.
+    If we're using MMGC, using operator delete on a GCFinalizedObject is problematic:
+    in particular, calling it from inside a dtor is risky because the dtor for the sub-object
+    might already have been called, wrecking its vtable and ending up in the wrong version
+    of operator delete (the global version rather than the class-specific one). Calling GC::Free
+    directly is fine (since it ignores the vtable), so we macro-ize to make the distinction.
+
+    macro-ization of operator new isn't strictly necessary, but is done to bottleneck both
+    sides of the new/delete pair to forestall future needs.
 */
 #ifdef MMGC_API
-	
-	// separate overloads because GCObject and GCFinalizedObjects have different dtors 
-	// (GCFinalizedObject's is virtual, GCObject's is not)
-	inline void mmgc_delete(GCObject* o)
-	{
-		GC* g = GC::GetGC(o); 
-		if (g->Collecting()) 
-			g->Free(o); 
-		else 
-			delete o; 
-	}
 
-	inline void mmgc_delete(GCFinalizedObject* o)
-	{
-		GC* g = GC::GetGC(o); 
-		if (g->Collecting()) 
-			g->Free(o); 
-		else 
-			delete o; 
-	}
+    // separate overloads because GCObject and GCFinalizedObjects have different dtors
+    // (GCFinalizedObject's is virtual, GCObject's is not)
+    inline void mmgc_delete(GCObject* o)
+    {
+        GC* g = GC::GetGC(o);
+        if (g->Collecting())
+            g->Free(o);
+        else
+            delete o;
+    }
 
-	#define NJ_NEW(gc, cls)			new (gc) cls
-	#define NJ_DELETE(obj)			do { mmgc_delete(obj); } while (0)
+    inline void mmgc_delete(GCFinalizedObject* o)
+    {
+        GC* g = GC::GetGC(o);
+        if (g->Collecting())
+            g->Free(o);
+        else
+            delete o;
+    }
+
+    #define NJ_NEW(gc, cls)            new (gc) cls
+    #define NJ_DELETE(obj)            do { mmgc_delete(obj); } while (0)
 #else
-	#define NJ_NEW(gc, cls)			new (gc) cls
-	#define NJ_DELETE(obj)			do { delete obj; } while (0)
+    #define NJ_NEW(gc, cls)            new (gc) cls
+    #define NJ_DELETE(obj)            do { delete obj; } while (0)
 #endif
 
 // Embed no-op macros that let Valgrind work with the JIT.
@@ -107,71 +108,71 @@
 #else
 #  define VALGRIND_DISCARD_TRANSLATIONS(addr, szB)
 #endif
- 
+
 namespace nanojit
 {
-	/**
-	 * -------------------------------------------
-	 * START AVM bridging definitions
-	 * -------------------------------------------
-	 */
-	class Fragment;
-	class LIns;
-	struct SideExit;
-	class RegAlloc;
-	struct Page;
-	typedef avmplus::AvmCore AvmCore;
-	typedef avmplus::OSDep OSDep;
-	typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
-	typedef avmplus::SortedMap<SideExit*,RegAlloc*,avmplus::LIST_GCObjects> RegAllocMap;
-	typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>	InsList;
-	typedef avmplus::List<char*, avmplus::LIST_GCObjects> StringList;
-	typedef avmplus::List<Page*,avmplus::LIST_NonGCObjects>	PageList;
+    /**
+     * -------------------------------------------
+     * START AVM bridging definitions
+     * -------------------------------------------
+     */
+    class Fragment;
+    class LIns;
+    struct SideExit;
+    class RegAlloc;
+    struct Page;
+    typedef avmplus::AvmCore AvmCore;
+    typedef avmplus::OSDep OSDep;
+    typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
+    typedef avmplus::SortedMap<SideExit*,RegAlloc*,avmplus::LIST_GCObjects> RegAllocMap;
+    typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>    InsList;
+    typedef avmplus::List<char*, avmplus::LIST_GCObjects> StringList;
+    typedef avmplus::List<Page*,avmplus::LIST_NonGCObjects>    PageList;
 
     const uint32_t MAXARGS = 8;
 
-	#if defined(_MSC_VER) && _MSC_VER < 1400
-		static void NanoAssertMsgf(bool a,const char *f,...) {}
-		static void NanoAssertMsg(bool a,const char *m) {}
-		static void NanoAssert(bool a) {}
-	#elif defined(_DEBUG)
-		
-		#define __NanoAssertMsgf(a, file_, line_, f, ...)  \
-			if (!(a)) { \
-				fprintf(stderr, "Assertion failed: " f "%s (%s:%d)\n", __VA_ARGS__, #a, file_, line_); \
-				NanoAssertFail(); \
-			}
-			
-		#define _NanoAssertMsgf(a, file_, line_, f, ...)   __NanoAssertMsgf(a, file_, line_, f, __VA_ARGS__)
+    #ifdef MOZ_NO_VARADIC_MACROS
+        static void NanoAssertMsgf(bool a,const char *f,...) {}
+        static void NanoAssertMsg(bool a,const char *m) {}
+        static void NanoAssert(bool a) {}
+    #elif defined(_DEBUG)
 
-		#define NanoAssertMsgf(a,f,...)   do { __NanoAssertMsgf(a, __FILE__, __LINE__, f ": ", __VA_ARGS__); } while (0)
-		#define NanoAssertMsg(a,m)        do { __NanoAssertMsgf(a, __FILE__, __LINE__, "\"%s\": ", m); } while (0)
-		#define NanoAssert(a)             do { __NanoAssertMsgf(a, __FILE__, __LINE__, "%s", ""); } while (0)
-	#else
-		#define NanoAssertMsgf(a,f,...)   do { } while (0) /* no semi */
-		#define NanoAssertMsg(a,m)        do { } while (0) /* no semi */
-		#define NanoAssert(a)             do { } while (0) /* no semi */
-	#endif
+        #define __NanoAssertMsgf(a, file_, line_, f, ...)  \
+            if (!(a)) { \
+                fprintf(stderr, "Assertion failed: " f "%s (%s:%d)\n", __VA_ARGS__, #a, file_, line_); \
+                NanoAssertFail(); \
+            }
 
-	/*
-	 * Sun Studio C++ compiler has a bug
-	 * "sizeof expression not accepted as size of array parameter"
-	 * The bug number is 6688515. It is not public yet.
-	 * Turn off this assert for Sun Studio until this bug is fixed.
-	 */
-	#ifdef __SUNPRO_CC
-		#define NanoStaticAssert(condition)
-	#else
-		#define NanoStaticAssert(condition) \
-			extern void nano_static_assert(int arg[(condition) ? 1 : -1])
-	#endif
+        #define _NanoAssertMsgf(a, file_, line_, f, ...)   __NanoAssertMsgf(a, file_, line_, f, __VA_ARGS__)
+
+        #define NanoAssertMsgf(a,f,...)   do { __NanoAssertMsgf(a, __FILE__, __LINE__, f ": ", __VA_ARGS__); } while (0)
+        #define NanoAssertMsg(a,m)        do { __NanoAssertMsgf(a, __FILE__, __LINE__, "\"%s\": ", m); } while (0)
+        #define NanoAssert(a)             do { __NanoAssertMsgf(a, __FILE__, __LINE__, "%s", ""); } while (0)
+    #else
+        #define NanoAssertMsgf(a,f,...)   do { } while (0) /* no semi */
+        #define NanoAssertMsg(a,m)        do { } while (0) /* no semi */
+        #define NanoAssert(a)             do { } while (0) /* no semi */
+    #endif
+
+    /*
+     * Sun Studio C++ compiler has a bug
+     * "sizeof expression not accepted as size of array parameter"
+     * The bug number is 6688515. It is not public yet.
+     * Turn off this assert for Sun Studio until this bug is fixed.
+     */
+    #ifdef __SUNPRO_CC
+        #define NanoStaticAssert(condition)
+    #else
+        #define NanoStaticAssert(condition) \
+            extern void nano_static_assert(int arg[(condition) ? 1 : -1])
+    #endif
 
 
-	/**
-	 * -------------------------------------------
-	 * END AVM bridging definitions
-	 * -------------------------------------------
-	 */
+    /**
+     * -------------------------------------------
+     * END AVM bridging definitions
+     * -------------------------------------------
+     */
 }
 
 #ifdef AVMPLUS_VERBOSE
@@ -179,53 +180,49 @@ namespace nanojit
 #define NJ_PROFILE 1
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER < 1400
-	#include <stdio.h>
-	#define verbose_output						if (verbose_enabled()) Assembler::output
-	#define verbose_outputf						if (verbose_enabled()) Assembler::outputf
-	#define verbose_enabled()					(_verbose)
-	#define verbose_only(x)						x
+#ifdef MOZ_NO_VARADIC_MACROS
+    #include <stdio.h>
+    #define verbose_outputf            if (_logc->lcbits & LC_Assembly) \
+                                        Assembler::outputf
+    #define verbose_only(x)            x
 #elif defined(NJ_VERBOSE)
-	#include <stdio.h>
-	#define verbose_output						if (verbose_enabled()) Assembler::output
-	#define verbose_outputf						if (verbose_enabled()) Assembler::outputf
-	#define verbose_enabled()					(_verbose)
-	#define verbose_only(...)					__VA_ARGS__
+    #include <stdio.h>
+    #define verbose_outputf            if (_logc->lcbits & LC_Assembly) \
+                                        Assembler::outputf
+    #define verbose_only(...)        __VA_ARGS__
 #else
-	#define verbose_output
-	#define verbose_outputf
-	#define verbose_enabled()
-	#define verbose_only(...)
+    #define verbose_outputf
+    #define verbose_only(...)
 #endif /*NJ_VERBOSE*/
 
 #ifdef _DEBUG
-	#define debug_only(x)			x
+    #define debug_only(x)            x
 #else
-	#define debug_only(x)
+    #define debug_only(x)
 #endif /* DEBUG */
 
 #ifdef NJ_PROFILE
-	#define counter_struct_begin()  struct {
-	#define counter_struct_end()	} _stats;
-	#define counter_define(x) 		int32_t x
-	#define counter_value(x)		_stats.x
-	#define counter_set(x,v)		(counter_value(x)=(v))
-	#define counter_adjust(x,i)		(counter_value(x)+=(int32_t)(i))
-	#define counter_reset(x)		counter_set(x,0)
-	#define counter_increment(x)	counter_adjust(x,1)
-	#define counter_decrement(x)	counter_adjust(x,-1)
-	#define profile_only(x)			x
+    #define counter_struct_begin()  struct {
+    #define counter_struct_end()    } _stats;
+    #define counter_define(x)         int32_t x
+    #define counter_value(x)        _stats.x
+    #define counter_set(x,v)        (counter_value(x)=(v))
+    #define counter_adjust(x,i)        (counter_value(x)+=(int32_t)(i))
+    #define counter_reset(x)        counter_set(x,0)
+    #define counter_increment(x)    counter_adjust(x,1)
+    #define counter_decrement(x)    counter_adjust(x,-1)
+    #define profile_only(x)            x
 #else
-	#define counter_struct_begin()
-	#define counter_struct_end()
-	#define counter_define(x) 		
-	#define counter_value(x)
-	#define counter_set(x,v)
-	#define counter_adjust(x,i)
-	#define counter_reset(x)
-	#define counter_increment(x)	
-	#define counter_decrement(x)	
-	#define profile_only(x)	
+    #define counter_struct_begin()
+    #define counter_struct_end()
+    #define counter_define(x)
+    #define counter_value(x)
+    #define counter_set(x,v)
+    #define counter_adjust(x,i)
+    #define counter_reset(x)
+    #define counter_increment(x)
+    #define counter_decrement(x)
+    #define profile_only(x)
 #endif /* NJ_PROFILE */
 
 #define isS8(i)  ( int32_t(i) == int8_t(i) )
@@ -234,8 +231,8 @@ namespace nanojit
 #define isU16(i) ( int32_t(i) == uint16_t(i) )
 #define isS24(i) ( ((int32_t(i)<<8)>>8) == (i) )
 
-#define alignTo(x,s)		((((uintptr_t)(x)))&~(((uintptr_t)s)-1))
-#define alignUp(x,s)		((((uintptr_t)(x))+(((uintptr_t)s)-1))&~(((uintptr_t)s)-1))
+#define alignTo(x,s)        ((((uintptr_t)(x)))&~(((uintptr_t)s)-1))
+#define alignUp(x,s)        ((((uintptr_t)(x))+(((uintptr_t)s)-1))&~(((uintptr_t)s)-1))
 
 #define pageTop(x)          ( alignTo(x,NJ_PAGE_SIZE) )
 #define pageDataStart(x)    ( alignTo(x,NJ_PAGE_SIZE) + sizeof(PageHeader) )
@@ -243,11 +240,18 @@ namespace nanojit
 #define samepage(x,y)       ( pageTop(x) == pageTop(y) )
 
 
-/* Debug printing stuff.  All Nanojit debug printing should be routed
-   through this function.  Don't use ad-hoc calls to printf,
-   fprintf(stderr, ...) etc. */
+// -------------------------------------------------------------------
+// START debug-logging definitions
+// -------------------------------------------------------------------
 
-#if defined(NJ_VERBOSE)
+/* Debug printing stuff.  All Nanojit and jstracer debug printing
+   should be routed through LogControl::printf.  Don't use
+   ad-hoc calls to printf, fprintf(stderr, ...) etc.
+
+   Similarly, don't use ad-hoc getenvs etc to decide whether or not to
+   print debug output.  Instead consult the relevant control bit in
+   LogControl::lcbits in the LogControl object you are supplied with.
+*/
 
 # if defined(__GNUC__)
 # define PRINTF_CHECK(x, y) __attribute__((format(__printf__, x, y)))
@@ -255,10 +259,40 @@ namespace nanojit
 # define PRINTF_CHECK(x, y)
 # endif
 
-/* is in LIR.cpp */
-void nj_dprintf( const char* format, ... ) PRINTF_CHECK(1,2);
+namespace nanojit {
 
-#endif /* NJ_VERBOSE */
+    // LogControl, a class for controlling and routing debug output
+
+    enum LC_Bits {
+        /* Output control bits for Nanojit code.  Only use bits 15
+           and below, so that callers can use bits 16 and above for
+           themselves. */
+        // TODO: add entries for the writer pipeline
+        LC_Liveness    = 1<<6, // (show LIR liveness analysis)
+        LC_ReadLIR     = 1<<5, // As read from LirBuffer
+        LC_AfterSF_SP  = 1<<4, // After StackFilter(sp)
+        LC_AfterSF_RP  = 1<<3, // After StackFilter(rp)
+        LC_RegAlloc    = 1<<2, // stuff to do with reg alloc
+        LC_Assembly    = 1<<1, // final assembly
+        LC_NoCodeAddrs = 1<<0  // (don't show code addresses on asm output)
+    };
+
+    class LogControl
+    {
+    public:
+        // All Nanojit and jstracer printing should be routed through
+        // this function.
+        void printf( const char* format, ... ) PRINTF_CHECK(2,3);
+
+        // An OR of LC_Bits values, indicating what should be output
+        uint32_t lcbits;
+    };
+
+}
+
+// -------------------------------------------------------------------
+// END debug-logging definitions
+// -------------------------------------------------------------------
 
 
 
@@ -267,7 +301,6 @@ void nj_dprintf( const char* format, ... ) PRINTF_CHECK(1,2);
 #include "RegAlloc.h"
 #include "Fragmento.h"
 #include "Assembler.h"
-#include "TraceTreeDrawer.h"
 
 #endif // FEATURE_NANOJIT
 #endif // __nanojit_h__

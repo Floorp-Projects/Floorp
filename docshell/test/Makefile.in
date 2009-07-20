@@ -72,6 +72,11 @@ _TEST_FILES = \
 		test_bug402210.html \
 		test_bug475636.html \
 		file_bug475636.sjs \
+		test_bug385434.html \
+		file_bug385434_1.html \
+		file_bug385434_2.html \
+		file_bug385434_3.html \
+		file_bug385434_4.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

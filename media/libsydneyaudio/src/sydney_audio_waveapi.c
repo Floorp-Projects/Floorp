@@ -421,19 +421,24 @@ int openAudio(sa_stream_t *s) {
   if (supported == MMSYSERR_NOERROR) { // audio device opened sucessfully 
     status = waveOutOpen((LPHWAVEOUT)&(s->hWaveOut), WAVE_MAPPER, &wfx, 
 	  (DWORD_PTR)waveOutProc, (DWORD_PTR)s, CALLBACK_FUNCTION);
-    HANDLE_WAVE_ERROR(status, "opening audio device for playback");
-		printf("Audio device sucessfully opened\n");
+    if (status != MMSYSERR_NOERROR) {
+      freeBlocks(s->waveBlocks);
+      s->waveBlocks = NULL;
+      HANDLE_WAVE_ERROR(status, "opening audio device for playback");
+    }
   } 
   else if (supported == WAVERR_BADFORMAT) {
-    printf("Requested format not supported...\n");
-	  // clean up the memory
-	  freeBlocks(s->waveBlocks);
+    printf("Requested format not supported.\n");
+    // clean up the memory
+    freeBlocks(s->waveBlocks);
+    s->waveBlocks = NULL;
     return SA_ERROR_NOT_SUPPORTED;
   } 
   else {
-    printf("Error opening default audio device. Exiting...\n");
-	  // clean up the memory
-	  freeBlocks(s->waveBlocks);
+    printf("Error opening default audio device.\n");
+    // clean up the memory
+    freeBlocks(s->waveBlocks);
+    s->waveBlocks = NULL;
     return SA_ERROR_SYSTEM;
   }
   // create notification for data written to a device
@@ -459,22 +464,26 @@ int closeAudio(sa_stream_t * s) {
     result = getSAErrorCode(status);
   }
   
-  /* wait for all blocks to complete */  
-  while(s->waveFreeBlockCount < BLOCK_COUNT) {
-    Sleep(10);
+  if (s->waveBlocks) {
+    /* wait for all blocks to complete */  
+    while(s->waveFreeBlockCount < BLOCK_COUNT) {
+      Sleep(10);
+    }
+
+    /* unprepare any blocks that are still prepared */  
+    for(i = 0; i < s->waveFreeBlockCount; i++) {
+      if(s->waveBlocks[i].dwFlags & WHDR_PREPARED) {
+	status = waveOutUnprepareHeader(s->hWaveOut, &(s->waveBlocks[i]), sizeof(WAVEHDR));
+	if (status != MMSYSERR_NOERROR) {
+	  result = getSAErrorCode(status);
+	}
+      }
+    }    
+
+    freeBlocks(s->waveBlocks);  
+    s->waveBlocks = NULL;
   }
 
-  /* unprepare any blocks that are still prepared */  
-  for(i = 0; i < s->waveFreeBlockCount; i++) {
-    if(s->waveBlocks[i].dwFlags & WHDR_PREPARED) {
-      status = waveOutUnprepareHeader(s->hWaveOut, &(s->waveBlocks[i]), sizeof(WAVEHDR));
-      if (status != MMSYSERR_NOERROR) {
-        result = getSAErrorCode(status);
-      }
-    }
-  }    
-
-  freeBlocks(s->waveBlocks);  
   status = waveOutClose(s->hWaveOut);    
   if (status != MMSYSERR_NOERROR) {
     result = getSAErrorCode(status);
@@ -482,7 +491,6 @@ int closeAudio(sa_stream_t * s) {
 
   DeleteCriticalSection(&(s->waveCriticalSection));
   CloseHandle(s->callbackEvent);
-  printf("[audio] audio resources cleanup completed\n");
   
   return result;
 }

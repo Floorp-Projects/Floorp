@@ -121,6 +121,7 @@ function test()
         return;
 
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.focus();
       let doc = win.document;
 
       // Note: This also tests the ordering of the display

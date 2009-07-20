@@ -1,4 +1,5 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
+/* vi: set ts=4 sw=4 expandtab: (add to ~/.vimrc: set modeline modelines=5) */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -107,7 +108,7 @@ typedef enum {
 
     FirstFloatReg = 16,
     LastFloatReg = 22,
-        
+
     FirstReg = 0,
     LastReg = 22,   // This excludes D7 from the register allocator.
     UnknownReg = 31,
@@ -121,7 +122,9 @@ typedef enum {
     EQ = 0x0, // Equal
     NE = 0x1, // Not Equal
     CS = 0x2, // Carry Set (or HS)
+    HS = 0x2,
     CC = 0x3, // Carry Clear (or LO)
+    LO = 0x3,
     MI = 0x4, // MInus
     PL = 0x5, // PLus
     VS = 0x6, // oVerflow Set
@@ -133,9 +136,18 @@ typedef enum {
     GT = 0xC, // Greater Than
     LE = 0xD, // Less or Equal
     AL = 0xE, // ALways
+
+    // Note that condition code NV is unpredictable on ARMv3 and ARMv4, and has
+    // special meaning for ARMv5 onwards. As such, it should never be used in
+    // an instruction encoding unless the special (ARMv5+) meaning is required.
     NV = 0xF  // NeVer
 } ConditionCode;
 #define IsCond(_cc) (((_cc) & 0xf) == (_cc))
+
+// Bit 0 of the condition code can be flipped to obtain the opposite condition.
+// However, this won't work for AL because its opposite — NV — has special
+// meaning.
+#define OppositeCond(cc)  ((ConditionCode)((unsigned int)(cc)^0x1))
 
 typedef int RegisterMask;
 typedef struct _FragInfo {
@@ -183,7 +195,7 @@ verbose_only( extern const char* shiftNames[]; )
 #define DECLARE_PLATFORM_ASSEMBLER()                                    \
     const static Register argRegs[4], retRegs[2];                       \
     void LD32_nochk(Register r, int32_t imm);                           \
-    void BL(NIns*);                                                     \
+    void BranchWithLink(NIns*);                                         \
     void JMP_far(NIns*);                                                \
     void B_cond_chk(ConditionCode, NIns*, bool);                        \
     void underrunProtect(int bytes);                                    \
@@ -196,10 +208,10 @@ verbose_only( extern const char* shiftNames[]; )
     void asm_ldr_chk(Register d, Register b, int32_t off, bool chk);    \
     void asm_ld_imm(Register d, int32_t imm);                           \
     void asm_arg(ArgSize sz, LInsp arg, Register& r, int& stkd);        \
+    uint32_t CountLeadingZeroes(uint32_t data);                         \
     int* _nSlot;                                                        \
-    int* _startingSlot;                                                \
+    int* _startingSlot;                                                 \
     int* _nExitSlot;
-
 
 //nj_dprintf("jmp_l_n count=%d, nins=%X, %X = %X\n", (_c), nins, _nIns, ((intptr_t)(nins+(_c))-(intptr_t)_nIns - 4) );
 
@@ -239,7 +251,7 @@ typedef enum {
 #define END_NATIVE_CODE(x)                      \
     (x) = (dictwordp*)_nIns; }
 
-// BX 
+// BX
 #define BX(_r)  do {                                                    \
         underrunProtect(4);                                             \
         NanoAssert(IsGpReg(_r));                                        \
@@ -466,7 +478,7 @@ enum {
 // MOVS _d, _r, LSL #(_imm & 0x1f)
 // _d = _r << (_imm & 0x1f)
 #define LSLi(_d, _r, _imm) ALUr_shi(AL, mov, 1, _d, 0, _r, LSL_imm, (_imm & 0x1f))
-                    
+
 // TST
 #define TST(_l,_r)      ALUr(AL, tst, 1, 0, _l, _r)
 #define TSTi(_d,_imm)   ALUi(AL, tst, 1, 0, _d, _imm)
@@ -492,7 +504,6 @@ enum {
 #define MOVHS(dr,sr) MOV_cond(HS, dr, sr) // Equivalent to MOVCS
 #define MOVCS(dr,sr) MOV_cond(CS, dr, sr) // Equivalent to MOVHS
 #define MOVVC(dr,sr) MOV_cond(VC, dr, sr) // overflow clear
-#define MOVNC(dr,sr) MOV_cond(CC, dr, sr) // carry clear
 
 // _d = [_b+off]
 #define LDR(_d,_b,_off)        asm_ldr_chk(_d,_b,_off,1)
@@ -655,45 +666,27 @@ enum {
 #define JNGE(t) B_cond(LT,t)
 #define JG(t)   B_cond(GT,t)
 #define JNG(t)  B_cond(LE,t)
-#define JC(t)   B_cond(CS,t)
-#define JNC(t)  B_cond(CC,t)
 #define JO(t)   B_cond(VS,t)
 #define JNO(t)  B_cond(VC,t)
 
 // used for testing result of an FP compare on x86; not used on arm.
 // JP = comparison  false
-#define JP(t)   do {NanoAssert(0); B_cond(NE,t); asm_output("jp 0x%08x",t); } while(0) 
+#define JP(t)   do {NanoAssert(0); B_cond(NE,t); asm_output("jp 0x%08x",t); } while(0)
 
 // JNP = comparison true
 #define JNP(t)  do {NanoAssert(0); B_cond(EQ,t); asm_output("jnp 0x%08x",t); } while(0)
 
 
-// MOV(EQ) _r, #1 
-// EOR(NE) _r, _r
-#define SET(_r,_cond,_opp) do {                                         \
+// MOV(cond) _r, #1
+// MOV(!cond) _r, #0
+#define SET(_r,_cond) do {                                              \
+    ConditionCode _opp = OppositeCond(_cond);                           \
     underrunProtect(8);                                                 \
-    *(--_nIns) = (NIns)( (_opp<<28) | (1<<21) | ((_r)<<16) | ((_r)<<12) | (_r) ); \
+    *(--_nIns) = (NIns)( ( _opp<<28) | (0x3A<<20) | ((_r)<<12) | (0) ); \
     *(--_nIns) = (NIns)( (_cond<<28) | (0x3A<<20) | ((_r)<<12) | (1) ); \
-    asm_output("mov%s %s, #1", condNames[_cond], gpn(r), gpn(r));       \
-    asm_output("eor%s %s, %s", condNames[_opp], gpn(r), gpn(r));        \
+    asm_output("mov%s %s, #1", condNames[_cond], gpn(_r));              \
+    asm_output("mov%s %s, #0", condNames[_opp], gpn(_r));               \
     } while (0)
-
-
-#define SETE(r)     SET(r,EQ,NE)
-#define SETL(r)     SET(r,LT,GE)
-#define SETLE(r)    SET(r,LE,GT)
-#define SETG(r)     SET(r,GT,LE)
-#define SETGE(r)    SET(r,GE,LT)
-#define SETB(r)     SET(r,CC,CS)
-#define SETBE(r)    SET(r,LS,HI)
-#define SETAE(r)    SET(r,CS,CC)
-#define SETA(r)     SET(r,HI,LS)
-#define SETO(r)     SET(r,VS,LS)
-#define SETC(r)     SET(r,CS,LS)
-
-// This zero-extends a reg that has been set using one of the SET macros,
-// but is a NOOP on ARM/Thumb
-#define MOVZX8(r,r2)
 
 // Load and sign extend a 16-bit value into a reg
 #define MOVSX(_d,_off,_b) do {                                          \

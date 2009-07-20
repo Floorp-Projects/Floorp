@@ -68,6 +68,13 @@
 
 #define MapVirtualKeyEx(a,b,c)  MapVirtualKey(a,b)
 
+#ifndef WINCE_WINDOWS_MOBILE
+// Aliases to make nsFilePicker work.
+#define BROWSEINFOW             BROWSEINFO
+#define BFFM_SETSELECTIONW      BFFM_SETSELECTION
+#define SHBrowseForFolderW(a)   SHBrowseForFolder(a)
+#endif
+
 // No-ops for non-existent ce global apis.
 inline void FlashWindow(HWND window, BOOL ignore){}
 inline int  GetMessageTime() {return 0;}
@@ -81,6 +88,7 @@ public:
   static void ToggleSoftKB(PRBool show);
   static void CreateSoftKeyMenuBar(HWND wnd);
   static void NotifySoftKbObservers();
+  static TriStateBool sShowSIPButton;
 #endif
 };
 

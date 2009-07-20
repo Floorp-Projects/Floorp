@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="go()">
+  <!-- In this test, we delete an <animate> node while its animation is in
+     progress. We verify that animation effects are removed from its former
+     target. -->
+  <script>
+    function go() {
+      // Seek animation before we start tweaking things, to make sure we've
+      // already started sampling it.
+      document.documentElement.setCurrentTime(0.5);
+
+      var anim = document.getElementById("anim");
+      anim.parentNode.removeChild(anim);
+      setTimeAndSnapshot(1, false);
+    }
+  </script>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect id="blueRect" x="15" y="15" width="200" height="200" fill="blue"/>
+  <animate id="anim" xlink:href="#blueRect" attributeName="height"
+           begin="0s" dur="2s" by="-100" fill="freeze"/>
+</svg>

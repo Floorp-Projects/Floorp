@@ -252,7 +252,6 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
         return PR_FALSE;
     }
 
-    // Add additional plugins dirs
     // No error checking here since this is optional in some embeddings
     
     // Add the GRE's component directory to searchPath if the 
@@ -277,7 +276,6 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     }
 
     (void)AppendFromDirServiceList(NS_XPCOM_COMPONENT_DIR_LIST, searchPath);
-    (void)AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
 
     NS_ADDREF(*aPath = searchPath);
     return PR_TRUE;
@@ -635,8 +633,12 @@ IndexOfDirectoryOfFile(nsISupportsArray* aSearchPath, nsILocalFile* aFile)
             aSearchPath->QueryElementAt(i, NS_GET_IID(nsIFile), 
                                         getter_AddRefs(current));
             NS_ASSERTION(current, "broken search path! bad element");
+            // nsIFile::Equals basically compares path strings so normalize
+            // before the comparison.
+            parent->Normalize();
+            current->Normalize();
             PRBool same;
-            if(NS_SUCCEEDED(parent->Equals(current, &same)) && same)
+            if (NS_SUCCEEDED(parent->Equals(current, &same)) && same)
                 return (int) i;
         }
     }

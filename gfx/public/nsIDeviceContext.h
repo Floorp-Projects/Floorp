@@ -173,17 +173,6 @@ const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Sur
 { 0x40aebd88, 0xa82b, 0x48b0, \
   { 0x8a, 0x44, 0xbe, 0x51, 0x51, 0x00, 0x64, 0xa7 } }
 
-//a cross platform way of specifying a native palette handle
-typedef void * nsPalette;
-
-  //structure used to return information about a device's palette capabilities
-  struct nsPaletteInfo {
-     PRPackedBool  isPaletteDevice;
-     PRUint16      sizePalette;  // number of entries in the palette
-     PRUint16      numReserved;  // number of reserved palette entries
-     nsPalette     palette;      // native palette handle
-  };
-
   typedef enum {
     eSystemFont_Caption,         // css2
     eSystemFont_Icon,
@@ -376,11 +365,6 @@ public:
    * Return the bit depth of the device.
    */
   NS_IMETHOD GetDepth(PRUint32& aDepth) = 0;
-
-  /**
-   * Returns information about the device's palette capabilities.
-   */
-  NS_IMETHOD GetPaletteInfo(nsPaletteInfo& aPaletteInfo) = 0;
 
   /**
    * Get the size of the displayable area of the output device

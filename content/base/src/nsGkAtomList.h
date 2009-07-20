@@ -637,6 +637,7 @@ GK_ATOM(ondrop, "ondrop")
 GK_ATOM(onerror, "onerror")
 GK_ATOM(onfocus, "onfocus")
 GK_ATOM(onget, "onget")
+GK_ATOM(onhashchange, "onhashchange")
 GK_ATOM(oninput, "oninput")
 GK_ATOM(onkeydown, "onkeydown")
 GK_ATOM(onkeypress, "onkeypress")
@@ -1641,6 +1642,7 @@ GK_ATOM(boxMetricsProperty, "BoxMetricsProperty") // nsBoxLayoutMetrics*
 GK_ATOM(changeListProperty, "ChangeListProperty") // void*
 GK_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
 GK_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
+GK_ATOM(floatRegionProperty, "FloatRegionProperty") // nsRect*
 GK_ATOM(generatedContent, "GeneratedContentProperty")  // nsCOMArray<nsIContent>*
 #ifdef MOZ_MATHML
 GK_ATOM(HTMLReflowMetricsProperty, "HTMLReflowMetricsProperty") // nsHTMLReflowMetrics*

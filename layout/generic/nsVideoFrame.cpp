@@ -479,7 +479,7 @@ nsVideoFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aModType)
 {
-  if (aAttribute == nsGkAtoms::poster) {
+  if (aAttribute == nsGkAtoms::poster && HasVideoElement()) {
     nsresult res = UpdatePosterSource(PR_TRUE);
     NS_ENSURE_SUCCESS(res,res);
   }

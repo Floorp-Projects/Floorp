@@ -105,7 +105,7 @@ enum eNPPStreamTypeInternal {
 
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 
-// Static stub functions that are exported to the 4.x plugin as entry
+// Static stub functions that are exported to the plugin as entry
 // points via the CALLBACKS variable.
 PR_BEGIN_EXTERN_C
 
@@ -260,6 +260,8 @@ nsNPAPIPlugin::CheckClassInitialized(void)
   CALLBACKS.getvalueforurl = ((NPN_GetValueForURLPtr)_getvalueforurl);
   CALLBACKS.setvalueforurl = ((NPN_SetValueForURLPtr)_setvalueforurl);
   CALLBACKS.getauthenticationinfo = ((NPN_GetAuthenticationInfoPtr)_getauthenticationinfo);
+  CALLBACKS.scheduletimer = ((NPN_ScheduleTimerPtr)_scheduletimer);
+  CALLBACKS.unscheduletimer = ((NPN_UnscheduleTimerPtr)_unscheduletimer);
 
   if (!sPluginThreadAsyncCallLock)
     sPluginThreadAsyncCallLock = nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
@@ -269,7 +271,7 @@ nsNPAPIPlugin::CheckClassInitialized(void)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN callbacks initialized\n"));
 }
 
-NS_IMPL_ISUPPORTS2(nsNPAPIPlugin, nsIPlugin, nsIFactory)
+NS_IMPL_ISUPPORTS1(nsNPAPIPlugin, nsIPlugin)
 
 nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, 
                              SharedLibrary* aLibrary,
@@ -341,7 +343,7 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
   fLibrary = aLibrary;
 }
 
-nsNPAPIPlugin::~nsNPAPIPlugin(void)
+nsNPAPIPlugin::~nsNPAPIPlugin()
 {
   // reset the callbacks list
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
@@ -595,37 +597,22 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   return NS_OK;
 }
 
-nsresult
-nsNPAPIPlugin::CreateInstance(nsISupports *aOuter, const nsIID &aIID,
-                           void **aResult)
+NS_METHOD
+nsNPAPIPlugin::CreatePluginInstance(nsIPluginInstance **aResult)
 {
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
   *aResult = NULL;
 
-  // XXX This is suspicuous!
   nsRefPtr<nsNPAPIPluginInstance> inst =
-    new nsNPAPIPluginInstance(&fCallbacks, fPRLibrary);
-
+    new nsNPAPIPluginInstance(&fCallbacks, fLibrary);
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return inst->QueryInterface(aIID, aResult);
-}
-
-nsresult
-nsNPAPIPlugin::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.
+  NS_ADDREF(inst);
+  *aResult = static_cast<nsIPluginInstance*>(inst);
   return NS_OK;
-}
-
-NS_METHOD
-nsNPAPIPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID,
-                                    const char *aPluginMIMEType, void **aResult)
-{
-  return CreateInstance(aOuter, aIID, aResult);
 }
 
 nsresult
@@ -764,7 +751,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
       (strncmp(relativeURL, "ftp:", 4) != 0)) {
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
-    const char *name = nsPluginHostImpl::GetPluginName(inst);
+    const char *name = nsPluginHost::GetPluginName(inst);
 
     if (name && strstr(name, "Adobe") && strstr(name, "Acrobat")) {
       return NPERR_NO_ERROR;
@@ -1945,13 +1932,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
-  case NPNVserviceManager:
-  case NPNVDOMElement:
-  case NPNVDOMWindow: {
-    // we no longer hand out any XPCOM objects
-    return NPERR_GENERIC_ERROR;
-  }
-
   case NPNVToolkit: {
 #ifdef MOZ_WIDGET_GTK2
     *((NPNToolkitType*)result) = NPNVGtk2;
@@ -2033,6 +2013,41 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 #endif
 
+  // we no longer hand out any XPCOM objects, except on WINCE,
+  // where it's needed for the ActiveX shunt that makes Flash
+  // work until we get an NPAPI plugin there.
+#ifdef WINCE
+  case NPNVDOMWindow: {
+    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
+    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
+
+    nsIDOMWindow *domWindow = inst->GetDOMWindow().get();
+
+    if (domWindow) {
+      // Pass over ownership of domWindow to the caller.
+      (*(nsIDOMWindow**)result) = domWindow;
+      return NPERR_NO_ERROR;
+    }
+
+    return NPERR_GENERIC_ERROR;
+  }
+
+  case NPNVDOMElement: {
+    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
+    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
+
+    nsCOMPtr<nsIDOMElement> e;
+    inst->GetDOMElement(getter_AddRefs(e));
+    if (e) {
+      NS_ADDREF(*(nsIDOMElement**)result = e.get());
+      return NPERR_NO_ERROR;
+    }
+
+    return NPERR_GENERIC_ERROR;
+  }
+#endif /* WINCE */
+
+  case NPNVserviceManager: // old XPCOM object, no longer supported
   default:
     return NPERR_GENERIC_ERROR;
   }
@@ -2440,7 +2455,7 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
         return NPERR_GENERIC_ERROR;
 
       nsCOMPtr<nsIPrompt> prompt;
-      nsPluginHostImpl::GetPrompt(nsnull, getter_AddRefs(prompt));
+      nsPluginHost::GetPrompt(nsnull, getter_AddRefs(prompt));
 
       char *cookie = (char*)value;
       char c = cookie[len];
@@ -2507,6 +2522,30 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
   *plen = *password ? pwd8.Length() : 0;
 
   return NPERR_NO_ERROR;
+}
+
+// We need extern "C" here because it has a function pointer as an argument.
+// See Bug 501889.
+PR_BEGIN_EXTERN_C
+uint32_t NP_CALLBACK
+_scheduletimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID))
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return 0;
+
+  return inst->ScheduleTimer(interval, repeat, timerFunc);
+}
+PR_END_EXTERN_C
+
+void NP_CALLBACK
+_unscheduletimer(NPP instance, uint32_t timerID)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return;
+
+  inst->UnscheduleTimer(timerID);
 }
 
 void

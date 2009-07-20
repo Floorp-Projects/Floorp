@@ -45,8 +45,8 @@ class nsIURI;
 
 // IID for the nsILink interface
 #define NS_ILINK_IID    \
-{ 0x0c212bc4, 0xfcd7, 0x479d,  \
-  { 0x8c, 0x3f, 0x3b, 0xe8, 0xe6, 0x78, 0x74, 0x50 } }
+{ 0x6f374a11, 0x212d, 0x47d6, \
+  { 0x94, 0xd1, 0xe6, 0x7c, 0x23, 0x4d, 0x34, 0x99 } }
 
 /**
  * This interface allows SelectorMatches to get the canonical
@@ -60,31 +60,9 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINK_IID)
 
   /**
-   * Get the cached state of the link.  If the state is unknown, 
-   * return eLinkState_Unknown.
-   *
-   * @param aState [out] The cached link state of the link.
-   * @return NS_OK
+   * GetLinkState/SetLinkState/GetHrefURI were moved to nsIContent.
+   * @see nsIContent
    */
-  NS_IMETHOD GetLinkState(nsLinkState &aState) = 0;
-
-  /**
-   * Set the cached state of the link.
-   *
-   * @param aState The cached link state of the link.
-   * @return NS_OK
-   */
-  NS_IMETHOD SetLinkState(nsLinkState aState) = 0;
-
-  /**
-    * Get a pointer to the fully href URI (fully resolved and canonicalized,
-    * since it's an nsIURI object).
-    *
-    * @param aURI [out] A pointer to be filled in with a pointer to the URI
-    *             If the element has no HREF attribute, it is set to nsnull.
-    * @return NS_OK if the out pointer is filled in (possibly with nsnull)
-    */
-  NS_IMETHOD GetHrefURI(nsIURI** aURI) = 0;
 
   /**
    * Dispatch a LinkAdded event to the chrome event handler for this document.

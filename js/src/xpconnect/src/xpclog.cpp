@@ -126,3 +126,28 @@ XPC_Log_Clear_Indent()
 }
 
 #endif
+
+#ifdef DEBUG_slimwrappers
+void
+LogSlimWrapperWillMorph(JSContext *cx, JSObject *obj, const char *propname,
+                        const char *functionName)
+{
+    if(obj && IS_SLIM_WRAPPER(obj))
+    {
+        printf("***** morphing from %s", functionName);
+        if(propname)
+            printf(" for %s", propname);
+        printf(" (%p, %p)\n", obj,
+               static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
+        xpc_DumpJSStack(cx, JS_FALSE, JS_FALSE, JS_FALSE);
+    }
+}
+
+void
+LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj, const char *reason)
+{
+    printf("***** refusing to create slim wrapper, reason: %s (%p)\n",
+           reason, obj);
+    xpc_DumpJSStack(cx, JS_FALSE, JS_FALSE, JS_FALSE);
+}
+#endif

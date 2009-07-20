@@ -416,7 +416,6 @@ linux/version.h
 list
 List.h
 Lists.h
-LiveConnectManagerTests.h
 LListBox.h
 LListener.h
 LMenuBar.h
@@ -1012,6 +1011,7 @@ bzlib.h
 #endif
 #ifdef MOZ_PLATFORM_HILDON
 hildon-uri.h
+hildon-mime.h
 #endif
 #ifdef NS_OSSO
 libosso.h

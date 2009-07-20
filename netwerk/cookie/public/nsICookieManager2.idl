@@ -44,7 +44,7 @@ interface nsIFile;
  * Additions to the frozen nsICookieManager
  */
 
-[scriptable, uuid(5047cab4-9cb2-4927-a4ab-77422bc3bc67)]
+[scriptable, uuid(d1e9e50f-b78b-4e3b-a474-f3cbca59b013)]
 interface nsICookieManager2 : nsICookieManager
 {
   /**
@@ -109,6 +109,24 @@ interface nsICookieManager2 : nsICookieManager
    * @return the number of cookies found.
    */
   unsigned long countCookiesFromHost(in ACString aHost);
+
+  /**
+   * Returns an enumerator of cookies that would be returned to a given host,
+   * ignoring the cookie flags isDomain, isSecure, and isHttpOnly. Thus, for a
+   * host "weather.yahoo.com", host or domain cookies for "weather.yahoo.com"
+   * and "yahoo.com" would be returned, while a cookie for "my.weather.yahoo.com"
+   * would not.
+   *
+   * @param aHost
+   *        the host string to look for, e.g. "google.com". this should consist
+   *        of only the host portion of a URI, and should not contain a leading
+   *        dot, a port, etc.
+   *
+   * @return an nsISimpleEnumerator of nsICookie2 objects.
+   *
+   * @see countCookiesFromHost
+   */
+  nsISimpleEnumerator getCookiesFromHost(in ACString aHost);
 
   /**
    * Import an old-style cookie file. Imported cookies will be added to the

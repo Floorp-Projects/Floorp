@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,6 +41,8 @@
 
 #include "nsCycleCollectionParticipant.h"
 
+struct JSObject;
+
 typedef PRUptrdiff PtrBits;
 
 #define NS_WRAPPERCACHE_IID \
@@ -63,72 +66,43 @@ public:
   }
   ~nsWrapperCache()
   {
-    if (PreservingWrapper()) {
-      GetWrapper()->Release();
-    }
+    NS_ASSERTION(!PreservingWrapper(),
+                 "Destroying cache with a preserved wrapper!");
   }
 
-  /**
-   * This method returns an nsIXPConnectWrappedNative, but we want to avoid
-   * including nsIXPConnect, because we don't want to make everyone require
-   * JS and XPConnect.
-   */
-  nsISupports* GetWrapper() const
+  JSObject* GetWrapper() const
   {
-    return reinterpret_cast<nsISupports*>(mWrapperPtrBits & ~kWrapperBitMask);
+    return reinterpret_cast<JSObject*>(mWrapperPtrBits & ~kWrapperBitMask);
   }
 
-  /**
-   * This method takes an nsIXPConnectWrappedNative, but we want to avoid
-   * including nsIXPConnect, because we don't want to make everyone require
-   * JS and XPConnect.
-   */
-  void SetWrapper(nsISupports* aWrapper)
+  void SetWrapper(JSObject* aWrapper)
   {
-    NS_ASSERTION(!mWrapperPtrBits, "Already have a wrapper!");
+    NS_ASSERTION(!PreservingWrapper(), "Clearing a preserved wrapper!");
     mWrapperPtrBits = reinterpret_cast<PtrBits>(aWrapper);
   }
 
   void ClearWrapper()
   {
-    if (PreservingWrapper()) {
-      GetWrapper()->Release();
-    }
+    NS_ASSERTION(!PreservingWrapper(), "Clearing a preserved wrapper!");
     mWrapperPtrBits = 0;
   }
 
-  void PreserveWrapper()
+  void SetPreservingWrapper(PRBool aPreserve)
   {
-    NS_ASSERTION(mWrapperPtrBits, "No wrapper to preserve?");
-    if (!PreservingWrapper()) {
-      NS_ADDREF(reinterpret_cast<nsISupports*>(mWrapperPtrBits));
+    if(aPreserve) {
       mWrapperPtrBits |= WRAPPER_BIT_PRESERVED;
     }
-  }
-
-  void ReleaseWrapper()
-  {
-    if (PreservingWrapper()) {
-      nsISupports* wrapper = GetWrapper();
-      mWrapperPtrBits = reinterpret_cast<PtrBits>(wrapper);
-      NS_RELEASE(wrapper);
+    else {
+      mWrapperPtrBits &= ~WRAPPER_BIT_PRESERVED;
     }
   }
 
-  void TraverseWrapper(nsCycleCollectionTraversalCallback &cb)
-  {
-    if (PreservingWrapper()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mWrapper");
-      cb.NoteXPCOMChild(GetWrapper());
-    }
-  }
-
-private:
   PRBool PreservingWrapper()
   {
     return mWrapperPtrBits & WRAPPER_BIT_PRESERVED;
   }
 
+private:
   enum { WRAPPER_BIT_PRESERVED = 1 << 0 };
   enum { kWrapperBitMask = 0x1 };
 

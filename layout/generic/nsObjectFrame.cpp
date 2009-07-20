@@ -74,7 +74,6 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsIPluginInstance.h"
 #include "nsIPluginTagInfo.h"
-#include "nsIPluginTagInfo2.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
 #include "nsIEventListener.h"
@@ -127,7 +126,6 @@
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
 #include "nsPluginNativeWindow.h"
-#include "nsPIPluginHost.h"
 #include "nsIPluginDocument.h"
 
 #include "nsThreadUtils.h"
@@ -234,7 +232,7 @@ public:
 
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
-                              public nsIPluginTagInfo2,
+                              public nsIPluginTagInfo,
                               public nsIEventListener,
                               public nsITimerCallback,
                               public nsIDOMMouseListener,
@@ -242,7 +240,6 @@ class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIDOMKeyListener,
                               public nsIDOMFocusListener,
                               public nsIScrollPositionListener
-
 {
 public:
   nsPluginInstanceOwner();
@@ -286,8 +283,6 @@ public:
                            const char*const*& values);
 
   NS_IMETHOD GetAttribute(const char* name, const char* *result);
-
-  //nsIPluginTagInfo2 interface
 
   NS_IMETHOD GetTagType(nsPluginTagType *result);
 
@@ -380,7 +375,6 @@ public:
 #ifdef XP_MACOSX
   NPDrawingModel GetDrawingModel();
   WindowRef FixUpPluginWindow(PRInt32 inPaintState);
-  void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent);
   // Set a flag that (if true) indicates the plugin port info has changed and
   // SetWindow() needs to be called.
   void SetPluginPortChanged(PRBool aState) { mPluginPortChanged = aState; }
@@ -423,10 +417,8 @@ public:
   const char* GetPluginName()
   {
     if (mInstance && mPluginHost) {
-      nsCOMPtr<nsPIPluginHost> piPluginHost = do_QueryInterface(mPluginHost);
       const char* name = NULL;
-      if (NS_SUCCEEDED(piPluginHost->GetPluginName(mInstance, &name)) &&
-          name)
+      if (NS_SUCCEEDED(mPluginHost->GetPluginName(mInstance, &name)) && name)
         return name;
     }
     return "";
@@ -1859,7 +1851,7 @@ static const char*
 GetMIMEType(nsIPluginInstance *aPluginInstance)
 {
   if (aPluginInstance) {
-    nsMIMEType mime = NULL;
+    const char* mime = nsnull;
     if (NS_SUCCEEDED(aPluginInstance->GetMIMEType(&mime)) && mime)
       return mime;
   }
@@ -2189,9 +2181,8 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   // create nsPluginNativeWindow object, it is derived from nsPluginWindow
   // struct and allows to manipulate native window procedure
   nsCOMPtr<nsIPluginHost> ph = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
-  if (pph)
-    pph->NewPluginNativeWindow(&mPluginWindow);
+  if (ph)
+    ph->NewPluginNativeWindow(&mPluginWindow);
   else
     mPluginWindow = nsnull;
 
@@ -2260,9 +2251,8 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 
   // clean up plugin native window object
   nsCOMPtr<nsIPluginHost> ph = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  nsCOMPtr<nsPIPluginHost> pph(do_QueryInterface(ph));
-  if (pph) {
-    pph->DeletePluginNativeWindow(mPluginWindow);
+  if (ph) {
+    ph->DeletePluginNativeWindow(mPluginWindow);
     mPluginWindow = nsnull;
   }
 
@@ -2281,7 +2271,6 @@ NS_IMPL_RELEASE(nsPluginInstanceOwner)
 NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo2)
   NS_INTERFACE_MAP_ENTRY(nsIEventListener)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
@@ -3151,27 +3140,6 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
   return drawingModel;
 }
 
-void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent)
-{
-  InitializeEventRecord(&aMacEvent);
-  switch (anEvent.message) {
-    case NS_FOCUS_CONTENT: 
-      aMacEvent.what = nsPluginEventType_GetFocusEvent;
-      break;
-
-    case NS_BLUR_CONTENT:
-      aMacEvent.what = nsPluginEventType_LoseFocusEvent;
-      break;
-
-    case NS_MOUSE_MOVE:
-    case NS_MOUSE_ENTER:
-      if (origEvent)
-        aMacEvent = *origEvent;
-      aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
-      break;
-  }
-}
-
 // Currently (on OS X in Cocoa widgets) any changes made as a result of
 // calling GetPluginPort() are immediately reflected in the nsPluginWindow
 // structure that has been passed to the plugin via SetWindow().  This is
@@ -3264,7 +3232,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
       EventRecord scrollEvent;
       InitializeEventRecord(&scrollEvent);
-      scrollEvent.what = nsPluginEventType_ScrollingBeginsEvent;
+      scrollEvent.what = NPEventType_ScrollingBeginsEvent;
 
       WindowRef window = FixUpPluginWindow(ePluginPaintDisable);
       if (window) {
@@ -3287,7 +3255,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
       EventRecord scrollEvent;
       InitializeEventRecord(&scrollEvent);
-      scrollEvent.what = nsPluginEventType_ScrollingEndsEvent;
+      scrollEvent.what = NPEventType_ScrollingEndsEvent;
 
       WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
       if (window) {
@@ -3894,15 +3862,15 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   if (mWidget) {
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-      EventRecord macEvent;
-      EventRecord* event = (EventRecord*)anEvent.nativeMsg;
-      if ((event == NULL) || (event->what == nullEvent)  || 
-          (anEvent.message == NS_FOCUS_CONTENT)          || 
-          (anEvent.message == NS_BLUR_CONTENT)           || 
-          (anEvent.message == NS_MOUSE_MOVE)             ||
-          (anEvent.message == NS_MOUSE_ENTER)) {
-        GUItoMacEvent(anEvent, event, macEvent);
-        event = &macEvent;
+      EventRecord carbonEvent;
+      void* event = anEvent.nativeMsg;
+      if (!event || (static_cast<EventRecord*>(event)->what == nullEvent)) {
+        InitializeEventRecord(&carbonEvent);
+        if (anEvent.message == NS_FOCUS_CONTENT || anEvent.message == NS_BLUR_CONTENT) {
+          carbonEvent.what = (anEvent.message == NS_FOCUS_CONTENT) ?
+                                NPEventType_GetFocusEvent : NPEventType_LoseFocusEvent;
+        }
+        event = &carbonEvent;
       }
 
       if (anEvent.message == NS_FOCUS_CONTENT) {
@@ -3915,7 +3883,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
       PRBool eventHandled = PR_FALSE;
       WindowRef window = FixUpPluginWindow(ePluginPaintIgnore);
       if (window) {
-        nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(window) };
+        nsPluginEvent pluginEvent = { (EventRecord*)event, nsPluginPlatformWindowRef(window) };
         mInstance->HandleEvent(&pluginEvent, &eventHandled);
       }
 

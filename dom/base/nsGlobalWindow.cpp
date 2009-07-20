@@ -62,6 +62,7 @@
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsContentUtils.h"
 
 // Other Classes
 #include "nsIEventListenerManager.h"
@@ -72,7 +73,6 @@
 #include "nsICachingChannel.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
-#include "nsPIPluginHost.h"
 #include "nsGeolocation.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
@@ -139,7 +139,7 @@
 #include "nsIWebBrowserFind.h"  // For window.find()
 #include "nsIWebContentHandlerRegistrar.h"
 #include "nsIWindowMediator.h"  // For window.find()
-#include "nsIComputedDOMStyle.h"
+#include "nsComputedDOMStyle.h"
 #include "nsIEntropyCollector.h"
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
@@ -149,7 +149,6 @@
 #include "nsIContentViewer.h"
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
-#include "nsIFullScreen.h"
 #include "nsIScriptError.h"
 #include "nsIScriptEventManager.h" // For GetInterface()
 #include "nsIConsoleService.h"
@@ -168,6 +167,8 @@
 #include "nsFocusManager.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
+#include "nsIDOMXULControlElement.h"
+#include "nsIFrame.h"
 #endif
 
 #include "plbase64.h"
@@ -206,7 +207,6 @@
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
-nsIFactory *nsGlobalWindow::sComputedDOMStyleFactory   = nsnull;
 nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
@@ -802,7 +802,6 @@ nsGlobalWindow::~nsGlobalWindow()
 void
 nsGlobalWindow::ShutDown()
 {
-  NS_IF_RELEASE(sComputedDOMStyleFactory);
   NS_IF_RELEASE(sGlobalStorageList);
 
   if (gDumpFile && gDumpFile != stdout) {
@@ -1018,7 +1017,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalWindow,
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   if (tmp->mDoc && nsCCUncollectableMarker::InGeneration(
-                     tmp->mDoc->GetMarkedCCGeneration())) {
+                     cb, tmp->mDoc->GetMarkedCCGeneration())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -2112,29 +2111,6 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       langCtx = mScriptContexts[NS_STID_INDEX(lang_id)];
       if (langCtx)
         langCtx->ClearScope(mScriptGlobals[NS_STID_INDEX(lang_id)], PR_TRUE);
-    }
-
-    // if we are closing the window while in full screen mode, be sure
-    // to restore os chrome
-    if (mFullScreen) {
-      // only restore OS chrome if the closing window was active
-      nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (fm) {
-        nsCOMPtr<nsIDOMWindow> activeWindow;
-        fm->GetActiveWindow(getter_AddRefs(activeWindow));
-
-        nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
-        nsCOMPtr<nsIDocShellTreeItem> rootItem;
-        treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-        nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(rootItem);
-        if (rootWin == activeWindow) {
-          nsCOMPtr<nsIFullScreen> fullScreen =
-            do_GetService("@mozilla.org/browser/fullscreen;1");
-
-          if (fullScreen)
-            fullScreen->ShowAllOSChrome();
-        }
-      }
     }
 
     ClearControllers();
@@ -3799,6 +3775,19 @@ nsGlobalWindow::GetMainWidget()
   return widget;
 }
 
+nsIWidget*
+nsGlobalWindow::GetNearestWidget()
+{
+  nsIDocShell* docShell = GetDocShell();
+  NS_ENSURE_TRUE(docShell, nsnull);
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, nsnull);
+  nsIFrame* rootFrame = presShell->GetRootFrame();
+  NS_ENSURE_TRUE(rootFrame, nsnull);
+  return rootFrame->GetView()->GetNearestWidget(nsnull);
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
 {
@@ -3836,8 +3825,6 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
   // dispatch a "fullscreen" DOM event so that XUL apps can
   // respond visually if we are kicked into full screen mode
   if (!DispatchCustomEvent("fullscreen")) {
-    // event handlers can prevent us from going into full-screen mode
-
     return NS_OK;
   }
 
@@ -5800,9 +5787,9 @@ nsGlobalWindow::InitJavaProperties()
   mDidInitJavaProperties = PR_TRUE;
 
   // Check whether the plugin supports NPRuntime, if so, init through
-  // it, else use liveconnect.
+  // it.
 
-  nsCOMPtr<nsPIPluginHost> host(do_GetService("@mozilla.org/plugin/host;1"));
+  nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   if (!host) {
     return;
   }
@@ -6592,20 +6579,6 @@ nsGlobalWindow::GetLocation(nsIDOMLocation ** aLocation)
 void
 nsGlobalWindow::ActivateOrDeactivate(PRBool aActivate)
 {
-  // if the window is deactivated while in full screen mode,
-  // restore OS chrome, and hide it again upon re-activation
-  nsGlobalWindow* outer = GetOuterWindowInternal();
-  if (outer && outer->mFullScreen) {
-    nsCOMPtr<nsIFullScreen> fullScreen =
-      do_GetService("@mozilla.org/browser/fullscreen;1");
-    if (fullScreen) {
-      if (aActivate)
-        fullScreen->HideAllOSChrome();
-      else
-        fullScreen->ShowAllOSChrome();
-    }
-  }
-
   // Set / unset the "active" attribute on the documentElement
   // of the top level window
   nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
@@ -6791,6 +6764,39 @@ nsGlobalWindow::PageHidden()
   mNeedsFocus = PR_TRUE;
 }
 
+nsresult
+nsGlobalWindow::DispatchAsyncHashchange()
+{
+  FORWARD_TO_INNER(DispatchAsyncHashchange, (), NS_OK);
+
+  nsIDocument::ReadyState readyState = mDoc->GetReadyStateEnum();
+
+  // We only queue up the event if the ready state is currently "complete"
+  if (readyState != nsIDocument::READYSTATE_COMPLETE)
+      return NS_OK;
+
+  nsCOMPtr<nsIRunnable> event =
+    NS_NEW_RUNNABLE_METHOD(nsGlobalWindow, this, FireHashchange);
+   
+  return NS_DispatchToCurrentThread(event);
+}
+
+nsresult
+nsGlobalWindow::FireHashchange()
+{
+  NS_ENSURE_TRUE(IsInnerWindow(), NS_ERROR_FAILURE);
+
+  // Don't do anything if the window is frozen.
+  if (IsFrozen())
+      return NS_OK;
+
+  // Dispatch the hashchange event, which doesn't bubble and isn't cancelable,
+  // to the outer window.
+  return nsContentUtils::DispatchTrustedEvent(mDoc, GetOuterWindow(),
+                                              NS_LITERAL_STRING("hashchange"),
+                                              PR_FALSE, PR_FALSE);
+}
+
 // Find an nsICanvasFrame under aFrame.  Only search the principal
 // child lists.  aFrame must be non-null.
 static nsICanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
@@ -6891,27 +6897,14 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
     return NS_OK;
   }
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIComputedDOMStyle> compStyle;
-
-  if (!sComputedDOMStyleFactory) {
-    rv = CallGetClassObject("@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1",
-                            &sComputedDOMStyleFactory);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv =
-    sComputedDOMStyleFactory->CreateInstance(nsnull,
-                                             NS_GET_IID(nsIComputedDOMStyle),
-                                             getter_AddRefs(compStyle));
-
+  nsRefPtr<nsComputedDOMStyle> compStyle;
+  nsresult rv = NS_NewComputedDOMStyle(aElt, aPseudoElt, presShell,
+                                       getter_AddRefs(compStyle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = compStyle->Init(aElt, aPseudoElt, presShell);
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aReturn = compStyle.forget().get();
 
-  return compStyle->QueryInterface(NS_GET_IID(nsIDOMCSSStyleDeclaration),
-                                   (void **) aReturn);
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -8768,6 +8761,9 @@ nsGlobalChromeWindow::GetWindowState(PRUint16* aWindowState)
     case nsSizeMode_Maximized:
       *aWindowState = nsIDOMChromeWindow::STATE_MAXIMIZED;
       break;
+    case nsSizeMode_Fullscreen:
+      *aWindowState = nsIDOMChromeWindow::STATE_FULLSCREEN;
+      break;
     case nsSizeMode_Normal:
       *aWindowState = nsIDOMChromeWindow::STATE_NORMAL;
       break;
@@ -8798,16 +8794,8 @@ nsGlobalChromeWindow::Minimize()
   nsCOMPtr<nsIWidget> widget = GetMainWidget();
   nsresult rv = NS_OK;
 
-  if (widget) {
-    // minimize doesn't send deactivate events on windows,
-    // so we need to forcefully restore the os chrome
-    nsCOMPtr<nsIFullScreen> fullScreen =
-      do_GetService("@mozilla.org/browser/fullscreen;1");
-    if (fullScreen)
-      fullScreen->ShowAllOSChrome();
-
+  if (widget)
     rv = widget->SetSizeMode(nsSizeMode_Minimized);
-  }
 
   return rv;
 }
@@ -8928,6 +8916,51 @@ nsGlobalChromeWindow::SetBrowserDOMWindow(nsIBrowserDOMWindow *aBrowserWindow)
 
   mBrowserDOMWindow = aBrowserWindow;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
+{
+#ifdef MOZ_XUL
+  NS_ENSURE_ARG(aDefaultButton);
+
+  // Don't snap to a disabled button.
+  nsCOMPtr<nsIDOMXULControlElement> xulControl =
+                                      do_QueryInterface(aDefaultButton);
+  NS_ENSURE_TRUE(xulControl, NS_ERROR_FAILURE);
+  PRBool disabled;
+  nsresult rv = xulControl->GetDisabled(&disabled);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (disabled)
+    return NS_OK;
+
+  // Get the button rect in screen coordinates.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aDefaultButton));
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  nsIDocument *doc = content->GetCurrentDoc();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  nsIPresShell *shell = doc->GetPrimaryShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+  nsIntRect buttonRect = frame->GetScreenRect();
+
+  // Get the widget rect in screen coordinates.
+  nsIWidget *widget = GetNearestWidget();
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+  nsIntRect widgetRect;
+  rv = widget->GetScreenBounds(widgetRect);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Convert the buttonRect coordinates from screen to the widget.
+  buttonRect -= widgetRect.TopLeft();
+  rv = widget->OnDefaultButtonLoaded(buttonRect);
+  if (rv == NS_ERROR_NOT_IMPLEMENTED)
+    return NS_OK;
+  return rv;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 // nsGlobalModalWindow implementation

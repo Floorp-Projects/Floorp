@@ -216,7 +216,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void)initTSMDocument;
 @end
 
-
 #pragma mark -
 
 // Key code constants
@@ -306,7 +305,6 @@ enum
   kDownArrowKeyCode       = 0x7D
 };
 
-
 /* Convenience routines to go from a gecko rect to cocoa NSRects and back
  *
  * Gecko rects (nsRect) contain an origin (x,y) in a coordinate
@@ -317,7 +315,6 @@ enum
  * If a Cocoa rect is from a flipped view, there is no need to
  * convert coordinate systems.
  */
-
 
 static inline void
 GeckoRectToNSRect(const nsIntRect & inGeckoRect, NSRect & outCocoaRect)
@@ -353,7 +350,6 @@ FlipCocoaScreenCoordinate(NSPoint &inPoint)
 {  
   inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
 }
-  
 
 static PRUint32
 UnderlineAttributeToTextRangeType(PRUint32 aUnderlineStyle, NSRange selRange)
@@ -397,7 +393,6 @@ UnderlineAttributeToTextRangeType(PRUint32 aUnderlineStyle, NSRange selRange)
   return attr;
 }
 
-
 static PRUint32
 CountRanges(NSAttributedString *aString)
 {
@@ -421,7 +416,6 @@ CountRanges(NSAttributedString *aString)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
-
 
 static void
 ConvertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSRange selRange, PRUint32 inCount, nsTextRange* aRanges)
@@ -455,7 +449,6 @@ ConvertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSR
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 static void
 FillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, NSRange markRange, NSRange selRange)
 {
@@ -475,7 +468,6 @@ FillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, N
 }
 
 #pragma mark -
-
 
 nsChildView::nsChildView() : nsBaseWidget()
 , mView(nsnull)
@@ -534,7 +526,6 @@ nsChildView::nsChildView() : nsBaseWidget()
   }
 }
 
-
 nsChildView::~nsChildView()
 {
   // notify the children that we're gone
@@ -557,9 +548,7 @@ nsChildView::~nsChildView()
   TearDownView(); // Safe if called twice.
 }
 
-
 NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIPluginWidget)
-
 
 // Utility method for implementing both Create(nsIWidget ...)
 // and Create(nsNativeWidget...)
@@ -639,7 +628,6 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // Creates the appropriate child view. Override to create something other than
 // our |ChildView| object. Autoreleases, so caller must retain.
 NSView*
@@ -651,7 +639,6 @@ nsChildView::CreateCocoaView(NSRect inFrame)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
-
 
 void nsChildView::TearDownView()
 {
@@ -691,7 +678,6 @@ void nsChildView::TearDownView()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // create a nsChildView
 NS_IMETHODIMP nsChildView::Create(nsIWidget *aParent,
                       const nsIntRect &aRect,
@@ -704,7 +690,6 @@ NS_IMETHODIMP nsChildView::Create(nsIWidget *aParent,
   return(StandardCreate(aParent, aRect, aHandleEventFunction, aContext,
                         aAppShell, aToolkit, aInitData, nsnull));
 }
-
 
 // Creates a main nsChildView using a native widget (an NSView)
 NS_IMETHODIMP nsChildView::Create(nsNativeWidget aNativeParent,
@@ -719,7 +704,6 @@ NS_IMETHODIMP nsChildView::Create(nsNativeWidget aNativeParent,
   return(StandardCreate(nsnull, aRect, aHandleEventFunction, aContext,
                         aAppShell, aToolkit, aInitData, aNativeParent));
 }
-
 
 NS_IMETHODIMP nsChildView::Destroy()
 {
@@ -745,9 +729,7 @@ NS_IMETHODIMP nsChildView::Destroy()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 #pragma mark -
-
 
 #if 0
 static void PrintViewHierarchy(NSView *view)
@@ -758,8 +740,6 @@ static void PrintViewHierarchy(NSView *view)
   }
 }
 #endif
-
-
 
 // Return native data according to aDataType
 void* nsChildView::GetNativeData(PRUint32 aDataType)
@@ -830,12 +810,22 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       if ([mView isKindOfClass:[ChildView class]])
         [(ChildView*)mView setIsPluginView:YES];
 
-      mPluginPort.cgPort.context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-
       NSWindow* window = [mView nativeWindow];
       if (window) {
+        // [NSGraphicsContext currentContext] is supposed to "return the
+        // current graphics context of the current thread."  But sometimes
+        // (when called while mView isn't focused for drawing) it returns a
+        // graphics context for the wrong window.  [window graphicsContext]
+        // (which "provides the graphics context associated with the window
+        // for the current thread") seems always to return the "right"
+        // graphics context.  See bug 500130.
+        mPluginPort.cgPort.context = (CGContextRef)
+          [[window graphicsContext] graphicsPort];
         WindowRef topLevelWindow = (WindowRef)[window windowRef];
         mPluginPort.cgPort.window = topLevelWindow;
+      } else {
+        mPluginPort.cgPort.context = nil;
+        mPluginPort.cgPort.window = nil;
       }
 
       retVal = (void*)&mPluginPort;
@@ -859,7 +849,6 @@ nsTransparencyMode nsChildView::GetTransparencyMode()
   NS_OBJC_END_TRY_ABORT_BLOCK;
   return eTransparencyOpaque;
 }
-
 
 // This is called by nsContainerFrame on the root widget for all window types
 // except popup windows (when nsCocoaWindow::SetTransparencyMode is used instead).
@@ -885,7 +874,6 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // This is called by nsContainerFrame on the root widget for all window types
 // except popup windows (when nsCocoaWindow::SetWindowShadowStyle is used instead).
 NS_IMETHODIMP nsChildView::SetWindowShadowStyle(PRInt32 aStyle)
@@ -906,7 +894,6 @@ NS_IMETHODIMP nsChildView::SetWindowShadowStyle(PRInt32 aStyle)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
 {
@@ -930,7 +917,6 @@ NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 void nsChildView::HidePlugin()
 {
   NS_ASSERTION(mIsPluginView, "HidePlugin called on non-plugin view");
@@ -949,7 +935,6 @@ void nsChildView::HidePlugin()
     }
   }
 }
-
 
 static void HideChildPluginViews(NSView* aView)
 {
@@ -972,7 +957,6 @@ static void HideChildPluginViews(NSView* aView)
     }
   }
 }
-
 
 // Hide or show this component
 NS_IMETHODIMP nsChildView::Show(PRBool aState)
@@ -1040,12 +1024,10 @@ nsChildView::GetParent(void)
   return mParentWidget;
 }
 
-
 NS_IMETHODIMP nsChildView::Enable(PRBool aState)
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
 {
@@ -1054,7 +1036,6 @@ NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
    *aState = PR_TRUE;
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
@@ -1068,7 +1049,6 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // Override to set the cursor on the mac
 NS_IMETHODIMP nsChildView::SetCursor(nsCursor aCursor)
 {
@@ -1081,7 +1061,6 @@ NS_IMETHODIMP nsChildView::SetCursor(nsCursor aCursor)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // implement to fix "hidden virtual function" warning
 NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
                                       PRUint32 aHotspotX, PRUint32 aHotspotY)
@@ -1089,9 +1068,7 @@ NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
   return nsBaseWidget::SetCursor(aCursor, aHotspotX, aHotspotY);
 }
 
-
 #pragma mark -
-
 
 // Get this component dimension
 NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
@@ -1099,7 +1076,6 @@ NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
   aRect = mBounds;
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsChildView::SetBounds(const nsIntRect &aRect)
 {
@@ -1117,13 +1093,11 @@ NS_IMETHODIMP nsChildView::SetBounds(const nsIntRect &aRect)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsChildView::ConstrainPosition(PRBool aAllowSlop,
                                              PRInt32 *aX, PRInt32 *aY)
 {
   return NS_OK;
 }
-
 
 // Move this component, aX and aY are in the parent widget coordinate system
 NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
@@ -1150,7 +1124,6 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1174,7 +1147,6 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
@@ -1214,7 +1186,6 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsChildView::BeginResizingChildren(void)
 {
   return NS_OK;
@@ -1225,7 +1196,6 @@ NS_IMETHODIMP nsChildView::EndResizingChildren(void)
 {
   return NS_OK;
 }
-
 
 static const PRInt32 resizeIndicatorWidth = 15;
 static const PRInt32 resizeIndicatorHeight = 15;
@@ -1248,7 +1218,6 @@ PRBool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
   }
   return PR_TRUE;
 }
-
 
 // In QuickDraw mode the coordinate system used here should be that of the
 // browser window's content region (defined as everything but the 22-pixel
@@ -1310,7 +1279,6 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 NS_IMETHODIMP nsChildView::StartDrawPlugin()
 {
@@ -1384,7 +1352,6 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP nsChildView::EndDrawPlugin()
 {
   NS_ASSERTION(mIsPluginView, "EndDrawPlugin must only be called on a plugin widget");
@@ -1394,7 +1361,6 @@ NS_IMETHODIMP nsChildView::EndDrawPlugin()
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsChildView::SetPluginInstanceOwner(nsIPluginInstanceOwner* aInstanceOwner)
 {
   mPluginInstanceOwner = aInstanceOwner;
@@ -1402,13 +1368,11 @@ NS_IMETHODIMP nsChildView::SetPluginInstanceOwner(nsIPluginInstanceOwner* aInsta
   return NS_OK;
 }
 
-
 void nsChildView::LiveResizeStarted()
 {
   // XXX todo. Use this to disable Java async redraw during resize
   mLiveResizeInProgress = PR_TRUE;
 }
-
 
 void nsChildView::LiveResizeEnded()
 {
@@ -1503,7 +1467,6 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // First argument has to be an NSMenu representing the application's top-level
 // menu bar. The returned item is *not* retained.
 static NSMenuItem* NativeMenuItemWithLocation(NSMenu* menubar, NSString* locationString)
@@ -1538,7 +1501,6 @@ static NSMenuItem* NativeMenuItemWithLocation(NSMenu* menubar, NSString* locatio
   return nil;
 }
 
-
 // Used for testing native menu system structure and event handling.
 NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString)
 {
@@ -1561,7 +1523,6 @@ NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 // Used for testing native menu system structure and event handling.
 NS_IMETHODIMP nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString)
@@ -1586,9 +1547,7 @@ NS_IMETHODIMP nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 #pragma mark -
-
 
 #ifdef INVALIDATE_DEBUGGING
 
@@ -1638,7 +1597,6 @@ static void blinkRgn(RgnHandle rgn)
 
 #endif
 
-
 // Invalidate this component's visible area
 NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
 {
@@ -1663,7 +1621,6 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 // Invalidate this component's visible area
 NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous)
@@ -1693,7 +1650,6 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchron
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // Validate the widget
 NS_IMETHODIMP nsChildView::Validate()
 {
@@ -1705,13 +1661,11 @@ NS_IMETHODIMP nsChildView::Validate()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 {
   // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
   return (color8 << 8) | color8;  /* (color8 * 257) == (color8 * 0x0101) */
 }
-
 
 // Dummy impl, meant to be overridden
 PRBool
@@ -1719,7 +1673,6 @@ nsChildView::OnPaint(nsPaintEvent &event)
 {
   return PR_TRUE;
 }
-
 
 // The OS manages repaints well enough on its own, so we don't have to
 // flush them out here.  In other words, the OS will automatically call
@@ -1730,9 +1683,7 @@ NS_IMETHODIMP nsChildView::Update()
   return NS_OK;
 }
 
-
 #pragma mark -
-
 
 // Scroll the bits of a view and its children
 // FIXME: I'm sure the invalidating can be optimized, just no time now.
@@ -1873,7 +1824,6 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // Invokes callback and ProcessEvent methods on Event Listener object
 NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
@@ -1886,7 +1836,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
 
   aStatus = nsEventStatus_eIgnore;
 
-  nsCOMPtr<nsIWidget> kungFuDeathGrip(mParentWidget ? mParentWidget : this);
+  nsCOMPtr<nsIWidget> kungFuDeathGrip = do_QueryInterface(mParentWidget ? mParentWidget : this);
   if (mParentWidget) {
     nsWindowType type;
     mParentWidget->GetWindowType(type);
@@ -1910,7 +1860,6 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   return NS_OK;
 }
 
-
 PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
 {
   nsEventStatus status;
@@ -1918,9 +1867,7 @@ PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
   return ConvertStatus(status);
 }
 
-
 #pragma mark -
-
 
 PRBool nsChildView::ReportDestroyEvent()
 {
@@ -1928,7 +1875,6 @@ PRBool nsChildView::ReportDestroyEvent()
   event.time = PR_IntervalNow();
   return DispatchWindowEvent(event);
 }
-
 
 PRBool nsChildView::ReportMoveEvent()
 {
@@ -1938,7 +1884,6 @@ PRBool nsChildView::ReportMoveEvent()
   moveEvent.time       = PR_IntervalNow();
   return DispatchWindowEvent(moveEvent);
 }
-
 
 PRBool nsChildView::ReportSizeEvent()
 {
@@ -1950,9 +1895,7 @@ PRBool nsChildView::ReportSizeEvent()
   return DispatchWindowEvent(sizeEvent);
 }
 
-
 #pragma mark -
-
 
 //    Return the offset between this child view and the screen.
 //    @return       -- widget origin in screen coordinates
@@ -1980,7 +1923,6 @@ nsIntPoint nsChildView::WidgetToScreenOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0,0));
 }
 
-
 NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener, 
                                                PRBool aDoCapture, 
                                                PRBool aConsumeRollupEvent)
@@ -1989,13 +1931,11 @@ NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener,
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
 {
   // child views don't have titles
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 {
@@ -2058,7 +1998,6 @@ PRBool nsChildView::HasPendingInputEvent()
 
 #pragma mark -
 
-
 // Force Input Method Editor to commit the uncommitted input
 // Note that this and other IME methods don't necessarily
 // get called on the same ChildView that input is going through.
@@ -2072,7 +2011,6 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   return NS_OK;
 }
 
-
 // 'open' means that it can take non-ASCII chars
 NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
 {
@@ -2084,7 +2022,6 @@ NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
   return NS_OK;
 }
 
-
 // 'open' means that it can take non-ASCII chars
 NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
 {
@@ -2095,7 +2032,6 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
   *aState = nsTSMManager::GetIMEOpenState();
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
 {
@@ -2123,7 +2059,6 @@ NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsChildView::GetIMEEnabled(PRUint32* aState)
 {
 #ifdef DEBUG_IME
@@ -2139,7 +2074,6 @@ NS_IMETHODIMP nsChildView::GetIMEEnabled(PRUint32* aState)
   return NS_OK;
 }
 
-
 // Destruct and don't commit the IME composition string.
 NS_IMETHODIMP nsChildView::CancelIMEComposition()
 {
@@ -2150,7 +2084,6 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
   nsTSMManager::CancelIME();
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
                                               PRBool* aLEDState)
@@ -2180,9 +2113,7 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 #pragma mark -
-
 
 gfxASurface*
 nsChildView::GetThebesSurface()
@@ -2193,7 +2124,6 @@ nsChildView::GetThebesSurface()
 
   return mTempThebesSurface;
 }
-
 
 NS_IMETHODIMP
 nsChildView::BeginSecureKeyboardInput()
@@ -2208,7 +2138,6 @@ nsChildView::BeginSecureKeyboardInput()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP
 nsChildView::EndSecureKeyboardInput()
 {
@@ -2221,7 +2150,6 @@ nsChildView::EndSecureKeyboardInput()
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
 
 #ifdef ACCESSIBILITY
 void
@@ -2249,19 +2177,15 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-
 #pragma mark -
 
-
 @implementation ChildView
-
 
 // globalDragPboard is non-null during native drag sessions that did not originate
 // in our native NSView (it is set in |draggingEntered:|). It is unset when the
 // drag session ends for this view, either with the mouse exiting or when a drop
 // occurs in this view.
 NSPasteboard* globalDragPboard = nil;
-
 
 // gLastDragView and gLastDragEvent are only non-null during calls to |mouseDragged:|
 // in our native NSView. They are used to communicate information to the drag service
@@ -2270,7 +2194,6 @@ NSPasteboard* globalDragPboard = nil;
 // is on the stack.
 NSView* gLastDragView = nil;
 NSEvent* gLastDragEvent = nil;
-
 
 + (void)initialize
 {
@@ -2291,7 +2214,6 @@ NSEvent* gLastDragEvent = nil;
     initialized = YES;
   }
 }
-
 
 // initWithFrame:geckoChild:
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild
@@ -2353,7 +2275,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 - (void)dealloc
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2378,7 +2299,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)widgetDestroyed
 {
   nsTSMManager::OnDestroyView(self);
@@ -2390,13 +2310,11 @@ NSEvent* gLastDragEvent = nil;
   NS_IF_RELEASE(mDragService);
 }
 
-
 // mozView method, return our gecko child view widget. Note this does not AddRef.
 - (nsIWidget*) widget
 {
   return static_cast<nsIWidget*>(mGeckoChild);
 }
-
 
 // mozView method, get the window that this view is associated with
 - (NSWindow*)nativeWindow
@@ -2412,14 +2330,12 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 // mozView method, set the NSWindow that this view is associated with (even when
 // not in the view hierarchy).
 - (void)setNativeWindow:(NSWindow*)aWindow
 {
   mWindow = aWindow;
 }
-
 
 - (void)systemMetricsChanged
 {
@@ -2430,7 +2346,6 @@ NSEvent* gLastDragEvent = nil;
   mGeckoChild->DispatchWindowEvent(guiEvent);
 }
 
-
 - (void)setNeedsPendingDisplay
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2440,7 +2355,6 @@ NSEvent* gLastDragEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 - (void)setNeedsPendingDisplayInRect:(NSRect)invalidRect
 {
@@ -2453,7 +2367,6 @@ NSEvent* gLastDragEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // Clears the queue of any pending invalides
 - (void)processPendingRedraws
@@ -2476,7 +2389,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (NSString*)description
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -2485,7 +2397,6 @@ NSEvent* gLastDragEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
-
 
 // Find the nearest scrollable view for this ChildView
 // (recall that views are not refcounted)
@@ -2525,7 +2436,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
-
 // set the closed hand cursor and record the starting scroll positions
 - (void) startHandScroll:(NSEvent*)theEvent
 {
@@ -2547,7 +2457,6 @@ NSEvent* gLastDragEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // update the scroll position based on the new mouse coordinates
 - (void) updateHandScroll:(NSEvent*)theEvent
@@ -2575,7 +2484,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // Return true if the correct modifiers are pressed to perform hand scrolling.
 + (BOOL) areHandScrollModifiers:(unsigned int)modifiers
 {
@@ -2585,7 +2493,6 @@ NSEvent* gLastDragEvent = nil;
   return (modifiers & NSDeviceIndependentModifierFlagsMask) ==
       (NSAlphaShiftKeyMask | NSCommandKeyMask | NSAlternateKeyMask);
 }
-
 
 // If the user is pressing the hand scroll modifiers, then set
 // the hand scroll cursor.
@@ -2619,7 +2526,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // reset the scroll flag and cursor
 - (void) stopHandScroll:(NSEvent*)theEvent
 {
@@ -2630,7 +2536,6 @@ NSEvent* gLastDragEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // When smooth scrolling is turned on on panther, the parent of a scrollbar (which
 // I guess they assume is a NSScrollView) gets called with this method. I have no
@@ -2645,7 +2550,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0.0);
 }
 
-
 // Make the origin of this view the topLeft corner (gecko origin) rather
 // than the bottomLeft corner (standard cocoa origin).
 - (BOOL)isFlipped
@@ -2653,18 +2557,15 @@ NSEvent* gLastDragEvent = nil;
   return YES;
 }
 
-
 - (void)setTransparent:(BOOL)transparent
 {
   mIsTransparent = transparent;
 }
 
-
 - (BOOL)isOpaque
 {
   return !mIsTransparent;
 }
-
 
 -(void)setIsPluginView:(BOOL)aIsPlugin
 {
@@ -2676,7 +2577,6 @@ NSEvent* gLastDragEvent = nil;
 {
   return mIsPluginView;
 }
-
 
 - (BOOL)childViewHasPlugin
 {
@@ -2694,7 +2594,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-
 - (void)sendFocusEvent:(PRUint32)eventType
 {
   if (!mGeckoChild)
@@ -2706,14 +2605,12 @@ NSEvent* gLastDragEvent = nil;
   mGeckoChild->DispatchEvent(&focusGuiEvent, status);
 }
 
-
 // We accept key and mouse events, so don't keep passing them up the chain. Allow
 // this to be a 'focussed' widget for event dispatch
 - (BOOL)acceptsFirstResponder
 {
   return YES;
 }
-
 
 - (void)viewWillMoveToWindow:(NSWindow *)newWindow
 {
@@ -2727,7 +2624,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)viewWillStartLiveResize
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2740,7 +2636,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)viewDidEndLiveResize
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2752,7 +2647,6 @@ NSEvent* gLastDragEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // Needed to deal with the consequences of calling [NSCell
 // drawWithFrame:inView:] with a ChildView object as the inView parameter
@@ -2768,7 +2662,6 @@ NSEvent* gLastDragEvent = nil;
 {
   return nil;
 }
-
 
 - (void)scrollRect:(NSRect)aRect by:(NSSize)offset
 {
@@ -2789,12 +2682,10 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (BOOL)mouseDownCanMoveWindow
 {
   return NO;
 }
-
 
 - (void)lockFocus
 {
@@ -2808,7 +2699,6 @@ NSEvent* gLastDragEvent = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // Limit shadow invalidation to 10 times per second.
 static const PRInt32 sShadowInvalidationInterval = 100;
@@ -2832,7 +2722,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   }
 }
 
-
 - (void)invalidateShadow
 {
   if (!mWindow || !mNeedsShadowInvalidation)
@@ -2841,14 +2730,12 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   mNeedsShadowInvalidation = NO;
 }
 
-
 - (BOOL)isPaintingSuppressed
 {
   NSWindow* win = [self window];
   return ([win isKindOfClass:[ToolbarWindow class]] &&
           [(ToolbarWindow*)win isPaintingSuppressed]);
 }
-
 
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
@@ -2959,14 +2846,12 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // Allows us to turn off setting up the clip region
 // before each drawRect. We already clip within gecko.
 - (BOOL)wantsDefaultClipping
 {
   return NO;
 }
-
 
 #if USE_CLICK_HOLD_CONTEXTMENU
 //
@@ -3003,7 +2888,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 #endif
-
 
 // We sometimes need to reroute events when there is a rollup widget and the
 // event isn't targeted at it.
@@ -3085,7 +2969,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-
 // If we've just created a non-native context menu, we need to mark it as
 // such and let the OS (and other programs) know when it opens and closes
 // (this is how the OS knows to close other programs' context menus when
@@ -3117,7 +3000,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // Returns true if the event should no longer be processed, false otherwise.
 // This does not return whether or not anything was rolled up.
@@ -3181,7 +3063,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-
 /*
  * XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
  * rotateWithEvent, and endGestureWithEvent methods are part of a
@@ -3227,7 +3108,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)beginGestureWithEvent:(NSEvent *)anEvent
 {
   NS_ASSERTION(mGestureState == eGestureState_None, "mGestureState should be eGestureState_None");
@@ -3239,7 +3119,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   mCumulativeMagnification = 0;
   mCumulativeRotation = 0.0;
 }
-
 
 - (void)magnifyWithEvent:(NSEvent *)anEvent
 {
@@ -3281,7 +3160,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 - (void)rotateWithEvent:(NSEvent *)anEvent
 {
@@ -3329,7 +3207,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 - (void)endGestureWithEvent:(NSEvent *)anEvent
 {
@@ -3388,7 +3265,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 - (void)mouseDown:(NSEvent*)theEvent
 {
@@ -3458,7 +3334,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)mouseUp:(NSEvent *)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -3495,7 +3370,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // sends a mouse enter or exit event into gecko
 static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
@@ -3538,7 +3412,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsEventStatus_eIgnore);
 }
-
 
 - (void)mouseMoved:(NSEvent*)theEvent
 {
@@ -3665,7 +3538,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)mouseDragged:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -3709,7 +3581,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)rightMouseDown:(NSEvent *)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -3748,7 +3619,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -3779,7 +3649,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)rightMouseDragged:(NSEvent*)theEvent
 {
   if (![self ensureCorrectMouseEventTarget:theEvent])
@@ -3796,7 +3665,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   // the widget.
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
-
 
 - (void)otherMouseDown:(NSEvent *)theEvent
 {
@@ -3823,7 +3691,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)otherMouseUp:(NSEvent *)theEvent
 {
   if (!mGeckoChild)
@@ -3835,7 +3702,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
-
 
 - (void)otherMouseDragged:(NSEvent*)theEvent
 {
@@ -3850,7 +3716,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   // the widget.
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
-
 
 // Handle an NSScrollWheel event for a single axis only.
 -(void)scrollWheel:(NSEvent*)theEvent forAxis:(enum nsMouseScrollEvent::nsMouseScrollFlags)inAxis
@@ -3978,7 +3843,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 -(void)scrollWheel:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4002,7 +3866,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
@@ -4042,7 +3905,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 - (NSMenu*)contextMenu
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -4055,7 +3917,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
-
 
 static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outChar)
 {
@@ -4086,7 +3947,6 @@ static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outCh
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_FALSE);
 }
-
 
 static void ConvertCocoaKeyEventToCarbonEvent(NSEvent* cocoaEvent, EventRecord& pluginEvent, PRUint32 keyType = 0)
 {
@@ -4187,7 +4047,6 @@ static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
     }
 }
 
-
 static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, NSString* characters)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -4283,7 +4142,6 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-
 static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 {
   PRBool  isSpecial;
@@ -4348,7 +4206,6 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   return isSpecial;
 }
 
-
 static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 {
   // this is not character inputting event, simply.
@@ -4361,7 +4218,6 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   // ASCII chars should be inputted without ctrl/alt/command keys
   return !aEvent.isControl && !aEvent.isAlt && !aEvent.isMeta;
 }
-
 
 // Basic conversion for cocoa to gecko events, common to all conversions.
 // Note that it is OK for inEvent to be nil.
@@ -4388,7 +4244,6 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent toGeckoEvent:(nsInputEvent*)outGeckoEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4406,7 +4261,6 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 #define CHARCODE_MASK_1 0x00FF0000
 #define CHARCODE_MASK_2 0x000000FF
@@ -4870,7 +4724,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 // Called from PluginKeyEventsHandler() (a handler for Carbon TSM events) to
 // process a Carbon key event for the currently focused plugin.  Both Unicode
 // characters and "Mac encoding characters" (in the MBCS or "multibyte
@@ -4948,7 +4801,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (nsIntRect)sendCompositionEvent:(PRInt32) aEventType
 {
 #ifdef DEBUG_IME
@@ -4967,7 +4819,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   mGeckoChild->DispatchWindowEvent(event);
   return event.theReply.mCursorPosition;
 }
-
 
 - (void)sendTextEvent:(PRUnichar*) aBuffer 
                       attributedString:(NSAttributedString*) aString  
@@ -4994,12 +4845,10 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     delete [] textEvent.rangeArray;
 }
 
-
 #pragma mark -
 // NSTextInput implementation
 
 #define MAX_BUFFER_SIZE 32
-
 
 - (void)insertText:(id)insertString
 {
@@ -5109,12 +4958,10 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)insertNewline:(id)sender
 {
   [self insertText:@"\n"];
 }
-
 
 - (void) doCommandBySelector:(SEL)aSelector
 {
@@ -5129,7 +4976,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 - (void) setMarkedText:(id)aString selectedRange:(NSRange)selRange
 {
@@ -5197,7 +5043,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void) unmarkText
 {
 #if DEBUG_IME
@@ -5207,7 +5052,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   nsTSMManager::CommitIME();
 }
 
-
 - (BOOL) hasMarkedText
 {
 #if DEBUG_IME
@@ -5216,7 +5060,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #endif
   return (mMarkedRange.location != NSNotFound) && (mMarkedRange.length != 0);
 }
-
 
 - (long) conversationIdentifier
 {
@@ -5235,7 +5078,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #endif
   return (long)textContent.mReply.mContentsRoot;
 }
-
 
 - (NSAttributedString *) attributedSubstringFromRange:(NSRange)theRange
 {
@@ -5266,7 +5108,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 - (NSRange) markedRange
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -5284,7 +5125,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRange(0, 0));
 }
-
 
 - (NSRange) selectedRange
 {
@@ -5310,7 +5150,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRange(0, 0));
 }
-
 
 - (NSRect) firstRectForCharacterRange:(NSRange)theRange
 {
@@ -5370,7 +5209,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRect(0.0, 0.0, 0.0, 0.0));
 }
 
-
 - (unsigned int)characterIndexForPoint:(NSPoint)thePoint
 {
 #if DEBUG_IME
@@ -5381,7 +5219,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   // To implement this, we'd have to grovel in text frames looking at text offsets.
   return 0;
 }
-
 
 - (NSArray*) validAttributesForMarkedText
 {
@@ -5398,9 +5235,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 #pragma mark -
-
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent
 {
@@ -5596,7 +5431,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   nsTSMManager::InitTSMDocument(focusedView);
 }
 
-
 // Create a TSM document for use with plugins, so that we can support IME in
 // them.  Once it's created, if need be (re)activate it.  Some plugins (e.g.
 // the Flash plugin running in Camino) don't create their own TSM document --
@@ -5627,7 +5461,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   }
 }
 
-
 - (void)keyDown:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -5655,7 +5488,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 static BOOL keyUpAlreadySentKeyDown = NO;
 
@@ -5780,7 +5612,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -5872,7 +5703,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
-
 
 - (void)flagsChanged:(NSEvent*)theEvent
 {
@@ -5976,7 +5806,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-
 - (void)viewsWindowDidBecomeKey
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -6002,7 +5831,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 - (void)viewsWindowDidResignKey
 {
   if (!mGeckoChild)
@@ -6012,7 +5840,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   [self sendFocusEvent:NS_DEACTIVATE];
 }
-
 
 // If the call to removeFromSuperview isn't delayed from nsChildView::
 // TearDownView(), the NSView hierarchy might get changed during calls to
@@ -6033,13 +5860,10 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 #pragma mark -
-
 
 // drag'n'drop stuff
 #define kDragServiceContractID "@mozilla.org/widget/dragservice;1"
-
 
 // This is a utility function used by NSView drag event methods
 // to send events. It contains all of the logic needed for Gecko
@@ -6133,7 +5957,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -6156,7 +5979,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSDragOperationNone);
 }
 
-
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
 {
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView draggingUpdated: entered\n"));
@@ -6164,7 +5986,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   BOOL handled = [self doDragAction:NS_DRAGDROP_OVER sender:sender];
   return handled ? NSDragOperationGeneric : NSDragOperationNone;
 }
-
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
 {
@@ -6175,7 +5996,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_IF_RELEASE(mDragService);
 }
 
-
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
@@ -6183,7 +6003,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_IF_RELEASE(mDragService);
   return handled;
 }
-
 
 // NSDraggingSource
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
@@ -6235,7 +6054,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // NSDraggingSource
 // this is just implemented so we comply with the NSDraggingSource informal protocol
@@ -6307,7 +6125,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 #pragma mark -
 
 // Support for the "Services" menu. We currently only support sending strings
@@ -6350,7 +6167,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
-
 
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard
                              types:(NSArray *)types
@@ -6411,7 +6227,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-
 // Called if the service wants us to replace the current selection. We do
 // not currently support replacing the current selection so just return NO.
 - (BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard
@@ -6419,9 +6234,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   return NO;
 }
 
-
 #pragma mark -
-
 
 #ifdef ACCESSIBILITY
 
@@ -6552,9 +6365,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
 @end
 
-
 #pragma mark -
-
 
 void
 nsTSMManager::OnDestroyView(NSView<mozView>* aDestroyingView)
@@ -6567,13 +6378,11 @@ nsTSMManager::OnDestroyView(NSView<mozView>* aDestroyingView)
   }
 }
 
-
 PRBool
 nsTSMManager::GetIMEOpenState()
 {
   return GetScriptManagerVariable(smKeyScript) != smRoman ? PR_TRUE : PR_FALSE;
 }
-
 
 static const NSString* GetCurrentIMELanguage()
 {
@@ -6602,7 +6411,6 @@ static const NSString* GetCurrentIMELanguage()
                                       kOurTISPropertyInputSourceLanguages));
   return static_cast<const NSString*>(CFArrayGetValueAtIndex(langs, 0));
 }
-
 
 void
 nsTSMManager::InitTSMDocument(NSView<mozView>* aViewForCaret)
@@ -6645,7 +6453,6 @@ nsTSMManager::InitTSMDocument(NSView<mozView>* aViewForCaret)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 void
 nsTSMManager::StartComposing(NSView<mozView>* aComposingView)
 {
@@ -6655,7 +6462,6 @@ nsTSMManager::StartComposing(NSView<mozView>* aComposingView)
   NS_ASSERTION(::TSMGetActiveDocument() == sDocumentID,
                "We didn't initialize the TSMDocument");
 }
-
 
 void
 nsTSMManager::UpdateComposing(NSString* aComposingString)
@@ -6668,7 +6474,6 @@ nsTSMManager::UpdateComposing(NSString* aComposingString)
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 void
 nsTSMManager::EndComposing()
@@ -6684,7 +6489,6 @@ nsTSMManager::EndComposing()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 void
 nsTSMManager::EnableIME(PRBool aEnable)
 {
@@ -6694,7 +6498,6 @@ nsTSMManager::EnableIME(PRBool aEnable)
   sIsIMEEnabled = aEnable;
 }
 
-
 void
 nsTSMManager::SetIMEOpenState(PRBool aOpen)
 {
@@ -6703,7 +6506,6 @@ nsTSMManager::SetIMEOpenState(PRBool aOpen)
   CommitIME();
   KeyScript(aOpen ? smKeySwapScript : smKeyRoman);
 }
-
 
 #define ENABLE_ROMAN_KYBDS_ONLY -23
 void
@@ -6715,7 +6517,6 @@ nsTSMManager::SetRomanKeyboardsOnly(PRBool aRomanOnly)
   KeyScript(aRomanOnly ? ENABLE_ROMAN_KYBDS_ONLY : smKeyEnableKybds);
   sIsRomanKeyboardsOnly = aRomanOnly;
 }
-
 
 void
 nsTSMManager::KillComposing()
@@ -6730,7 +6531,6 @@ nsTSMManager::KillComposing()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 void
 nsTSMManager::CommitIME()
@@ -6751,7 +6551,6 @@ nsTSMManager::CommitIME()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 void
 nsTSMManager::CancelIME()
@@ -6775,7 +6574,6 @@ nsTSMManager::CancelIME()
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 // Target for text services events sent as the result of calls made to
 // TSMProcessRawKeyEvent() in [ChildView keyDown:] (above) when a plugin has

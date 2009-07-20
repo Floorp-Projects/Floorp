@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Find Selection test code
+   -
+   - The Initial Developer of the Original Code is
+   - Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>.
+   - Portions created by the Initial Developer are Copyright (C) 2009
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=263683
+-->
+
+<head>
+  <title>Test for Bug 263683</head>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body onload="onLoad();" onunload="onUnload();">
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=263683">
+    Mozilla Bug 263683
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <pre id="test">
+    <script type="application/javascript">
+
+      /** Test for Bug 263683 **/
+    
+      SimpleTest.waitForExplicitFinish();
+
+      var userSetBG = false;
+      var userValueBG = null;
+      var prefNameBG = "ui.textHighlightBackground";
+      var userSetFG = false;
+      var userValueFG = null;
+      var prefNameFG = "ui.textHighlightForeground";
+
+      function onLoad() {
+        // Request security privileges
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+        // Get pref branch.
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+
+        // Check to see if this pref has a user-set value. If so, store it
+        userSetFG = prefs.prefHasUserValue(prefNameFG);
+        userSetBG = prefs.prefHasUserValue(prefNameBG);
+
+        if (userSetFG)
+          userValueFG = prefs.getCharPref(prefNameFG);
+        if (userSetBG)
+          userValueBG = prefs.getCharPref(prefNameBG);
+
+        // Set pref to test colour used in reference file
+        prefs.setCharPref(prefNameBG, "#EF0FFF");
+        prefs.setCharPref(prefNameFG, "#FFFFFF");
+
+        var textToSelect = document.getElementById("selecttext");
+
+        // Take a snapshot now. This will be used to check that removing the
+        // ranges removes the highlighting correctly
+        var noHighlight = snapshotWindow(window);
+
+        // Get docshell
+        var docShell =
+          window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIWebNavigation)
+                .QueryInterface(Components.interfaces.nsIDocShell);
+
+        // Get selection controller from docshell
+        var controller =
+          docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsISelectionDisplay)
+                  .QueryInterface(Components.interfaces.nsISelectionController);
+
+        // Get selection
+        var findSelection = controller.getSelection(controller.SELECTION_FIND);
+
+        // Lastly add range
+        var range = document.createRange();
+        range.selectNodeContents(textToSelect);
+        findSelection.addRange(range);
+
+        // Take a snapshot of the highlighting
+        var highlighted = snapshotWindow(window);
+
+        // Clear the highlighting, and take another snapshot
+        findSelection.removeAllRanges();
+        var removedHighlight = snapshotWindow(window);
+
+        // Manually "highlight" the text so we can check the rendering
+        textToSelect.style.backgroundColor="#EF0FFF";
+        textToSelect.style.color="#FFFFFF";
+        var manualHighlight = snapshotWindow(window);
+
+        // Test 1: Did the highlighting render correctly?
+        var res = compareSnapshots(highlighted, manualHighlight, true);
+        ok(res[0], "SELECTION_FIND highlighting renders correctly");
+
+        // Test 2: Does removing the ranges from the SELECTION_FIND selection
+        // work as expected?
+        res = compareSnapshots(removedHighlight, noHighlight, true);
+        ok(res[0], "Removing ranges from FIND_SELECTION works correctly");
+
+        SimpleTest.finish();
+      }
+
+      function onUnload() {
+        // Restore any user values for ui.textHighlight* preferences
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+        // Get the pref branch
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+ 
+        prefs.clearUserPref(prefNameFG);
+        prefs.clearUserPref(prefNameBG);
+
+        if (userSetFG)
+          prefs.setCharPref(prefNameFG, userValueFG);
+
+        if (userSetBG)
+          prefs.setCharPref(prefNameBG, userValueBG);
+ 
+      }
+
+    </script>
+  </pre>
+
+  <p><span id="selecttext">Text to be selected</span></p>
+</body>
+</html>

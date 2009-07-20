@@ -661,11 +661,8 @@ if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
 
-MOZ_PATH_PROGS(NSINSTALL_BIN, nsinstall )
 if test -z "$COMPILE_ENVIRONMENT"; then
-if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
-fi
 fi
 AC_SUBST(NSINSTALL_BIN)
 
@@ -5030,8 +5027,6 @@ AC_SUBST(MOZ_APP_VERSION)
 AC_SUBST(MOZ_PKG_SPECIAL)
 
 AC_SUBST(MOZILLA_OFFICIAL)
-AC_SUBST(BUILD_OFFICIAL)
-AC_SUBST(MOZ_MILESTONE_RELEASE)
 
 dnl win32 options
 AC_SUBST(MOZ_DEBUG_SYMBOLS)

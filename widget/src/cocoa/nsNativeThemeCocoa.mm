@@ -670,7 +670,6 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 static const CellRenderSettings pushButtonSettings = {
   {
     NSMakeSize(0, 16), // mini
@@ -695,7 +694,6 @@ static const CellRenderSettings pushButtonSettings = {
     }
   }
 };
-
 
 // The height at which we start doing square buttons instead of rounded buttons
 // Rounded buttons look bad if drawn at a height greater than 26, so at that point
@@ -737,7 +735,6 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
@@ -817,7 +814,6 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 static const CellRenderSettings dropdownSettings = {
   {
     NSMakeSize(0, 16), // mini
@@ -842,7 +838,6 @@ static const CellRenderSettings dropdownSettings = {
     }
   }
 };
-
 
 static const CellRenderSettings editableMenulistSettings = {
   {
@@ -869,7 +864,6 @@ static const CellRenderSettings editableMenulistSettings = {
   }
 };
 
-
 void
 nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
                                  PRInt32 inState, PRBool aIsEditable, nsIFrame* aFrame)
@@ -889,7 +883,6 @@ nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
- 
 
 void
 nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKind,
@@ -915,7 +908,6 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 void
 nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
@@ -968,7 +960,6 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
                                  PRBool inIsIndeterminate, PRBool inIsHorizontal,
@@ -998,7 +989,6 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 void
 nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect,
                                  nsIFrame* aFrame)
@@ -1017,7 +1007,6 @@ nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 void
 nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
@@ -1055,11 +1044,9 @@ nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 #define NATURAL_MINI_TAB_BUTTON_HEIGHT    17
 #define NATURAL_SMALL_TAB_BUTTON_HEIGHT   20
 #define NATURAL_REGULAR_TAB_BUTTON_HEIGHT 23
-
 
 void
 nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
@@ -1142,14 +1129,12 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, HIRect inBoxRect,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 static inline UInt8
 ConvertToPressState(PRInt32 aButtonState, UInt8 aPressState)
 {
   // If the button is pressed, return the press state passed in. Otherwise, return 0.
   return ((aButtonState & NS_EVENT_STATE_ACTIVE) && (aButtonState & NS_EVENT_STATE_HOVER)) ? aPressState : 0;
 }
-
 
 void 
 nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, PRInt32 aButtonStates[])
@@ -1177,7 +1162,6 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, PRInt32 aButtonSta
     aButtonStates[attrIndex] = currentState;
   }
 }
-
 
 // Both of the following sets of numbers were derived by loading the testcase in
 // bmo bug 380185 in Safari and observing its behavior for various heights of scrollbar.
@@ -1261,7 +1245,6 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 void
 nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame)
 {
@@ -1329,7 +1312,6 @@ nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRec
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 nsIFrame*
 nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
 {
@@ -1342,7 +1324,6 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
   // We return null if we can't find a parent scrollbar frame
   return scrollbarFrame;
 }
-
 
 void
 nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
@@ -1391,12 +1372,10 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-
 struct GreyGradientInfo {
   float startGrey;
   float endGrey;
 };
-
 
 static void GreyGradientCallback(void* aInfo, const float* aIn, float* aOut)
 {
@@ -1407,7 +1386,6 @@ static void GreyGradientCallback(void* aInfo, const float* aIn, float* aOut)
   aOut[2] = result;
   aOut[3] = 1.0f;
 }
-
 
 static void DrawGreyGradient(CGContextRef cgContext, const HIRect& rect,
                              float startGrey, float endGrey)
@@ -1431,7 +1409,6 @@ static void DrawGreyGradient(CGContextRef cgContext, const HIRect& rect,
   CGContextRestoreGState(cgContext);
   CGShadingRelease(shading);
 }
-
 
 void
 nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
@@ -1460,7 +1437,6 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
@@ -1882,7 +1858,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 nsIntMargin
 nsNativeThemeCocoa::RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame)
 {
@@ -1891,7 +1866,6 @@ nsNativeThemeCocoa::RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame)
 
   return aMargin;
 }
-
 
 static const nsIntMargin kAquaDropdownBorder(5, 1, 22, 2);
 static const nsIntMargin kAquaComboboxBorder(4, 3, 20, 3);
@@ -1997,7 +1971,6 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 // Return PR_FALSE here to indicate that CSS padding values should be used. There is
 // no reason to make a distinction between padding and border values, just specify
 // whatever values you want in GetWidgetBorder and only use this to return PR_TRUE
@@ -2022,7 +1995,6 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
   }
   return PR_FALSE;
 }
-
 
 PRBool
 nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
@@ -2056,7 +2028,6 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
 
   return PR_FALSE;
 }
-
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
@@ -2266,7 +2237,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP
 nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                      nsIAtom* aAttribute, PRBool* aShouldRepaint)
@@ -2322,7 +2292,6 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsNativeThemeCocoa::ThemeChanged()
 {
@@ -2330,7 +2299,6 @@ nsNativeThemeCocoa::ThemeChanged()
   // and Mac OS X doesn't have themes.
   return NS_OK;
 }
-
 
 PRBool 
 nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
@@ -2420,7 +2388,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
   return PR_FALSE;
 }
 
-
 PRBool
 nsNativeThemeCocoa::WidgetIsContainer(PRUint8 aWidgetType)
 {
@@ -2435,7 +2402,6 @@ nsNativeThemeCocoa::WidgetIsContainer(PRUint8 aWidgetType)
   }
   return PR_TRUE;
 }
-
 
 PRBool
 nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)

@@ -387,6 +387,11 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     js_InitRegExpStatics(cx);
     JS_ASSERT(cx->resolveFlags == 0);
 
+    if (!js_InitContextBusyArrayTable(cx)) {
+        FreeContext(cx);
+        return NULL;
+    }
+
 #ifdef JS_THREADSAFE
     if (!js_InitContextThread(cx)) {
         FreeContext(cx);
@@ -741,6 +746,12 @@ FreeContext(JSContext *cx)
         JSArgumentFormatMap *temp = map;
         map = map->next;
         JS_free(cx, temp);
+    }
+
+    /* Destroy the busy array table. */
+    if (cx->busyArrayTable) {
+        JS_HashTableDestroy(cx->busyArrayTable);
+        cx->busyArrayTable = NULL;
     }
 
     /* Destroy the resolve recursion damper. */

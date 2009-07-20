@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500931
+-->
+<window title="Mozilla Bug 500931"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=500931"
+     target="_blank">Mozilla Bug 500931</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  /** Test for Bug 500931 **/
+
+  function go() {
+    var ifr = document.getElementById("ifr");
+    var doc = ifr.contentDocument;
+    ok(doc.toString().indexOf("XPCNativeWrapper") >= 0, "doc is an XPCNativeWrapper");
+    var weak = Components.utils.getWeakReference(doc);
+    ok(weak.get().toString().indexOf("XPCNativeWrapper") >= 0, "weak reference returns a wrapper");
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  ]]></script>
+  <iframe type="content"
+          src="http://example.org/tests/js/src/xpconnect/tests/mochitest/bug500931_helper.html"
+          onload="go()"
+          id="ifr">
+  </iframe>
+</window>

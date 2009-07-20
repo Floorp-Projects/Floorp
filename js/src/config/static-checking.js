@@ -56,37 +56,28 @@ function hasAttribute(c, attrname)
 
   return false;
 }
-function process_function(f, stmts)
+
+const forward_functions = [
+  'process_type',
+  'process_tree_type',
+  'process_decl',
+  'process_tree_decl',
+  'process_function',
+  'process_tree',
+  'process_cp_pre_genericize',
+  'input_end'
+];
+
+function setup_forwarding(n)
 {
-  for each (let module in modules)
-    if (module.hasOwnProperty('process_function'))
-      module.process_function(f, stmts);
+  this[n] = function() {
+    for each (let module in modules) {
+      if (module.hasOwnProperty(n)) {
+        module[n].apply(this, arguments);
+      }
+    }
+  }
 }
 
-function process_tree(fndecl)
-{
-  for each (let module in modules)
-    if (module.hasOwnProperty('process_tree'))
-      module.process_tree(fndecl);
-}
-
-function process_decl(decl)
-{
-  for each (let module in modules)
-    if (module.hasOwnProperty('process_decl'))
-      module.process_decl(decl);
-}
-
-function process_cp_pre_genericize(fndecl)
-{
-  for each (let module in modules)
-    if (module.hasOwnProperty('process_cp_pre_genericize'))
-      module.process_cp_pre_genericize(fndecl);
-}
-
-function input_end()
-{
-  for each (let module in modules)
-    if (module.hasOwnProperty('input_end'))
-      module.input_end();
-}
+for each (let n in forward_functions)
+  setup_forwarding(n);

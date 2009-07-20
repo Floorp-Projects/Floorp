@@ -35,22 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * nsIPluginTagInfo
- *
- * @status DEPRECATED
- *
- * Originally published XPCOM Plugin API is now deprecated
- * Developers are welcome to use NPAPI, please refer to:
- * http://mozilla.org/projects/plugins/
- */
-
 #include "nsISupports.idl"
 #include "nspluginroot.idl"
 
 %{C++
 #include "nsplugindefs.h"
+
+enum nsPluginTagType {
+  nsPluginTagType_Unknown,
+  nsPluginTagType_Embed,
+  nsPluginTagType_Object,
+  nsPluginTagType_Applet
+};
 %}
+
+native nsPluginTagType(nsPluginTagType);
 
 interface nsIDOMElement;
 
@@ -60,7 +59,7 @@ interface nsIDOMElement;
  * Some day this might get superseded by a DOM API.
  */
 
-[uuid(5f1ec1d0-019b-11d2-815b-006008119d7a)]
+[uuid(6D827DF5-B5CD-416C-85CB-3CDD05C7AED1)]
 interface nsIPluginTagInfo : nsISupports
 {
   /**
@@ -76,14 +75,95 @@ interface nsIPluginTagInfo : nsISupports
                      in constCharStarConstStar aNames,
                      in constCharStarConstStar aValues);
 
-    /**
-     * Gets the value for the named attribute.
-     *
+  /**
+   * Gets the value for the named attribute.
+   *
    * @param aName   - the name of the attribute to find
    * @param aResult - the resulting attribute
-     * @result - NS_OK if this operation was successful, NS_ERROR_FAILURE if
-     * this operation failed. result is set to NULL if the attribute is not found
-     * else to the found value.
-     */
+   * @result - NS_OK if this operation was successful, NS_ERROR_FAILURE if
+   * this operation failed. result is set to NULL if the attribute is not found
+   * else to the found value.
+   */
   void getAttribute(in string aName, out constCharPtr aResult);
+
+  /**
+   * Get the type of the HTML tag that was used ot instantiate this
+   * plugin.  Currently supported tags are EMBED, OBJECT and APPLET.
+   */
+  readonly attribute nsPluginTagType tagType;
+
+  /**
+   * Get the complete text of the HTML tag that was used to instantiate this plugin.
+   */
+  void getTagText(out constCharPtr aTagText);
+
+  /**
+   * Get a ptr to the paired list of parameter names and values,
+   * returns the length of the array.
+   *
+   * Each name or value is a null-terminated string.
+   */
+  void getParameters(in PRUint16Ref aCount,
+                     in constCharStarConstStar aNames,
+                     in constCharStarConstStar aValues);
+
+  /**
+   * Get the value for the named parameter.  Returns null
+   * if the parameter was not set.
+   *
+   * @param aName   - name of the parameter
+   * @param aResult - parameter value
+   * @result        - NS_OK if this operation was successful
+   */
+  void getParameter(in string aName, out constCharPtr aResult);
+
+  /**
+   * Get the document base
+   */
+  void getDocumentBase(out constCharPtr aDocumentBase);
+    
+  /**
+   * Return an encoding whose name is specified in:
+   * http://java.sun.com/products/jdk/1.1/docs/guide/intl/intl.doc.html#25303
+   */
+  void getDocumentEncoding(out constCharPtr aDocumentEncoding);
+
+  /**
+   * Get object alignment
+   */
+  void getAlignment(out constCharPtr aElignment);
+
+  /**
+   * Get object width
+   */
+  readonly attribute unsigned long width;
+
+  /**
+   * Get object height
+   */
+  readonly attribute unsigned long height;
+
+  /**
+   * Get border vertical space
+   */
+  readonly attribute unsigned long borderVertSpace;
+
+  /**
+   * Get border horizontal space
+   */
+  readonly attribute unsigned long borderHorizSpace;
+
+  /**
+   * Returns a unique id for the current document containing plugin
+   */
+  readonly attribute unsigned long uniqueID;
+
+  /**
+   * Returns the DOM element corresponding to the tag which references
+   * this plugin in the document.
+   *
+   * @param aDOMElement - resulting DOM element
+   * @result - NS_OK if this operation was successful
+   */
+  readonly attribute nsIDOMElement DOMElement;
 };

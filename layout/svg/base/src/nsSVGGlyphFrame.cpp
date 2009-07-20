@@ -462,9 +462,10 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
   tmpCtx->Multiply(matrix);
 
-  PRBool hasStroke = SetupCairoStrokeGeometry(tmpCtx);
-
-  if (!hasStroke && GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
+  PRBool hasStroke = HasStroke(tmpCtx);
+  if (hasStroke) {
+    SetupCairoStrokeGeometry(tmpCtx);
+  } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
     return NS_OK;
   }
 

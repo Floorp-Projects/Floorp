@@ -1,0 +1,27 @@
+<!--
+Inner frame for test of bug 385434.
+https://bugzilla.mozilla.org/show_bug.cgi?id=385434
+-->
+<html>
+<head>
+  <script type="application/javascript">
+    // Notify our parent if we have a hashchange and once we're done loading.
+    window.addEventListener("hashchange", parent.onIframeHashchange, false);
+    window.addEventListener("load", parent.onIframeLoad, false);
+  
+    // This shouldn't trigger a hashchange, because we haven't finished loading
+    // the document.
+    window.location.hash = "1";
+
+    window.addEventListener("DOMContentLoaded", function() {
+      // This also shouldn't trigger a hashchange, becuase the readystate is
+      // "interactive", not "complete" during DOMContentLoaded.
+      window.location.hash = "2";
+    }, false);
+  
+  </script>
+</head>
+
+<body>
+</body>
+</html>

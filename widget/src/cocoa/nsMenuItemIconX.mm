@@ -40,7 +40,6 @@
  * Retrieves and displays icons in native menu items on Mac OS X.
  */
 
-
 #include "nsMenuItemIconX.h"
 
 #include "nsObjCExceptions.h"
@@ -73,12 +72,10 @@ static const PRUint32 kIconBitsPerPixel = kIconBitsPerComponent *
 static const PRUint32 kIconBytesPerRow = kIconWidth * kIconBitsPerPixel / 8;
 static const PRUint32 kIconBytes = kIconBytesPerRow * kIconHeight;
 
-
 static void
 PRAllocCGFree(void* aInfo, const void* aData, size_t aSize) {
   free((void*)aData);
 }
-
 
 NS_IMPL_ISUPPORTS2(nsMenuItemIconX, imgIContainerObserver, imgIDecoderObserver)
 
@@ -94,13 +91,24 @@ nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem,
   //  printf("Creating icon for menu item %d, menu %d, native item is %d\n", aMenuItem, aMenu, aNativeMenuItem);
 }
 
-
 nsMenuItemIconX::~nsMenuItemIconX()
 {
   if (mIconRequest)
     mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
 }
 
+// Called from mMenuObjectX's destructor, to prevent us from outliving it
+// (as might otherwise happen if calls to our imgIDecoderObserver methods
+// are still outstanding).  mMenuObjectX owns our nNativeMenuItem.
+void nsMenuItemIconX::Destroy()
+{
+  if (mIconRequest) {
+    mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
+    mIconRequest = nsnull;
+  }
+  mMenuObject = nsnull;
+  mNativeMenuItem = nil;
+}
 
 nsresult
 nsMenuItemIconX::SetupIcon()
@@ -128,10 +136,12 @@ nsMenuItemIconX::SetupIcon()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 nsresult
 nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 {
+  if (!mMenuObject)
+    return NS_ERROR_FAILURE;
+
   // Mac native menu items support having both a checkmark and an icon
   // simultaneously, but this is unheard of in the cross-platform toolkit,
   // seemingly because the win32 theme is unable to cope with both at once.
@@ -208,7 +218,6 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   return NS_OK;
 }
 
-
 nsresult
 nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 {
@@ -266,11 +275,9 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 //
 // imgIContainerObserver
 //
-
 
 NS_IMETHODIMP
 nsMenuItemIconX::FrameChanged(imgIContainer*  aContainer,
@@ -280,11 +287,9 @@ nsMenuItemIconX::FrameChanged(imgIContainer*  aContainer,
   return NS_OK;
 }
 
-
 //
 // imgIDecoderObserver
 //
-
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnStartRequest(imgIRequest* aRequest)
@@ -292,13 +297,11 @@ nsMenuItemIconX::OnStartRequest(imgIRequest* aRequest)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsMenuItemIconX::OnStartDecode(imgIRequest* aRequest)
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnStartContainer(imgIRequest*   aRequest,
@@ -307,13 +310,11 @@ nsMenuItemIconX::OnStartContainer(imgIRequest*   aRequest,
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsMenuItemIconX::OnStartFrame(imgIRequest* aRequest, gfxIImageFrame* aFrame)
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnDataAvailable(imgIRequest*     aRequest,
@@ -322,7 +323,6 @@ nsMenuItemIconX::OnDataAvailable(imgIRequest*     aRequest,
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
@@ -335,6 +335,8 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   // Only support one frame.
   if (mLoadedIcon)
     return NS_OK;
+
+  if (!mNativeMenuItem) return NS_ERROR_FAILURE;
 
   nsCOMPtr<gfxIImageFrame> frame = aFrame;
   nsCOMPtr<nsIImage> image = do_GetInterface(frame);
@@ -456,14 +458,12 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-
 NS_IMETHODIMP
 nsMenuItemIconX::OnStopContainer(imgIRequest*   aRequest,
                                 imgIContainer* aContainer)
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnStopDecode(imgIRequest*     aRequest,
@@ -472,7 +472,6 @@ nsMenuItemIconX::OnStopDecode(imgIRequest*     aRequest,
 {
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsMenuItemIconX::OnStopRequest(imgIRequest* aRequest,

@@ -168,7 +168,7 @@ HRESULT CControlEventSink::SubscribeToEvents(IUnknown *pControl)
     DWORD dwCookie = 0;
     if (!ccp ||
         FAILED(ccp->FindConnectionPoint(m_EventIID, &cp)) ||
-        FAILED(cp->Advise(this, &m_dwEventCookie)))
+        FAILED(cp->Advise(this, &dwCookie)))
     {
         return E_FAIL;
     }

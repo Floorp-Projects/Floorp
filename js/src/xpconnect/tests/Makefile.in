@@ -53,7 +53,7 @@ REQUIRES	= xpconnect \
 		  xpconnect_tests \
 		  $(NULL)
 
-DIRS		= idl mochitest
+DIRS		= idl mochitest chrome
 
 ifndef MOZ_ENABLE_LIBXUL
 DIRS += components

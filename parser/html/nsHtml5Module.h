@@ -47,7 +47,7 @@ class nsHtml5Module
     static void ReleaseStatics();
     static already_AddRefed<nsIParser> NewHtml5Parser();
     static nsresult Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer, nsIChannel* aChannel);
-    static PRBool Enabled;
+    static PRBool sEnabled;
 #ifdef DEBUG
   private:
     static PRBool sNsHtml5ModuleInitialized;
