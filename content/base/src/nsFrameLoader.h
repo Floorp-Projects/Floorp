@@ -52,24 +52,29 @@
 
 class nsIContent;
 class nsIURI;
+
+#ifdef MOZ_IPC
 namespace mozilla {
   namespace tabs {
     class TabParent;
   }
 }
+#endif
 
 class nsFrameLoader : public nsIFrameLoader
 {
 public:
-  nsFrameLoader(nsIContent *aOwner) :
-    mOwnerContent(aOwner),
-    mDepthTooGreat(PR_FALSE),
-    mIsTopLevelContent(PR_FALSE),
-    mDestroyCalled(PR_FALSE),
-    mNeedsAsyncDestroy(PR_FALSE),
-    mInSwap(PR_FALSE),
-    mChildProcess(nsnull),
-    mTriedNewProcess(PR_FALSE)
+  nsFrameLoader(nsIContent *aOwner)
+    : mOwnerContent(aOwner)
+    , mDepthTooGreat(PR_FALSE)
+    , mIsTopLevelContent(PR_FALSE)
+    , mDestroyCalled(PR_FALSE) 
+    , mNeedsAsyncDestroy(PR_FALSE)
+    , mInSwap(PR_FALSE)
+#ifdef MOZ_IPC
+    , mChildProcess(nsnull)
+    , mTriedNewProcess(PR_FALSE)
+#endif
   {}
 
   ~nsFrameLoader() {
@@ -97,8 +102,10 @@ private:
   NS_HIDDEN_(void) GetURL(nsString& aURL);
   nsresult CheckURILoad(nsIURI* aURI);
 
+#ifdef MOZ_IPC
   // True means new process started; nothing else to do
   PRBool TryNewProcess();
+#endif
 
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
@@ -109,9 +116,11 @@ private:
   PRPackedBool mNeedsAsyncDestroy : 1;
   PRPackedBool mInSwap : 1;
 
+#ifdef MOZ_IPC
   // XXX leaking
   mozilla::tabs::TabParent* mChildProcess;
   PRBool mTriedNewProcess;
+#endif
 };
 
 #endif

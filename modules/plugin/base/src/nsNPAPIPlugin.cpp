@@ -89,10 +89,12 @@
 #include "nsICookieService.h"
 
 #include "mozilla/SharedPRLibrary.h"
-#include "mozilla/plugins/NPAPIPluginParent.h"
-
 using mozilla::SharedPRLibrary;
+
+#ifdef MOZ_IPC
+#include "mozilla/plugins/NPAPIPluginParent.h"
 using mozilla::plugins::NPAPIPluginParent;
+#endif
 
 static PRLock *sPluginThreadAsyncCallLock = nsnull;
 static PRCList sPendingAsyncCalls = PR_INIT_STATIC_CLIST(&sPendingAsyncCalls);
@@ -305,9 +307,9 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
   memset((void*) &np_callbacks, 0, sizeof(np_callbacks));
   np_callbacks.size = sizeof(np_callbacks);
 
-  fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
-  NP_GETENTRYPOINTS pfnGetEntryPoints = (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
-  NP_PLUGININIT pfnInitialize = (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
+  fShutdownEntry = (NP_PLUGINSHUTDOWN)aLibrary->FindSymbol("NP_Shutdown");
+  NP_GETENTRYPOINTS pfnGetEntryPoints = (NP_GETENTRYPOINTS)aLibrary->FindSymbol("NP_GetEntryPoints");
+  NP_PLUGININIT pfnInitialize = (NP_PLUGININIT)aLibrary->FindSymbol("NP_Initialize");
   if (!pfnGetEntryPoints || !pfnInitialize || !fShutdownEntry) {
     NS_WARNING("Not all necessary functions exposed by plugin, it will not load.");
     return;
@@ -373,10 +375,14 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   callbacks.size = sizeof(callbacks);
 
   SharedLibrary* pluginLib;
+#ifdef MOZ_IPC
   if (PR_GetEnv("DISABLE_OOP_PLUGINS") || !aFilePath)
     pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
   else
     pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
+#else
+  pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
+#endif
 
   NP_PLUGINSHUTDOWN pfnShutdown =
     (NP_PLUGINSHUTDOWN) pluginLib->FindFunctionSymbol("NP_Shutdown");
@@ -414,10 +420,14 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 
 #ifdef XP_WIN
   SharedLibrary* pluginLib;
+#ifdef MOZ_IPC
   if (PR_GetEnv("DISABLE_OOP_PLUGINS") || !aFilePath)
     pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
   else
     pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
+#else
+  pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
+#endif
 
   // Note: on Windows, we must use the fCallback because plugins may
   // change the function table. The Shockwave installer makes changes
@@ -539,7 +549,16 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   nsPluginFile pluginFile(pluginPath);
   pluginRefNum = pluginFile.OpenPluginResource();
 
-  nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, aLibrary, nsnull);
+  SharedLibrary* pluginLib;
+#ifdef MOZ_IPC
+  if (PR_GetEnv("DISABLE_OOP_PLUGINS") || !aFilePath)
+    pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
+  else
+    pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
+#else
+  pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
+#endif
+  nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, pluginLib, aLibrary, nsnull);
   ::UseResFile(appRefNum);
   if (!plugin)
     return NS_ERROR_OUT_OF_MEMORY;

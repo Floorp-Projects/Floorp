@@ -79,11 +79,11 @@ DIRS += \
   base \
   src \
   locales \
+  plugins \
   $(NULL)
 
 ifdef MOZ_IPC
 DIRS += \
-  plugins \
   ipc \
   $(NULL)
 endif
