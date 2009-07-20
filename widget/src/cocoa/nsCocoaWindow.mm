@@ -161,16 +161,20 @@ nsCocoaWindow::~nsCocoaWindow()
 
   // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
   // have nsChildView children.  'kid' is an nsChildView object if and only if
-  // its 'type' is 'eWindowType_child'.
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+  // its 'type' is 'eWindowType_child'.  childView->ResetParent() can change
+  // our list of children while it's being iterated, so the way we iterate the
+  // list must allow for this.
+  for (nsIWidget* kid = mLastChild; kid;) {
     nsWindowType kidType;
     kid->GetWindowType(kidType);
     if (kidType == eWindowType_child) {
       nsChildView* childView = static_cast<nsChildView*>(kid);
+      kid = kid->GetPrevSibling();
       childView->ResetParent();
     } else {
       nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
       childWindow->mParent = nsnull;
+      kid = kid->GetPrevSibling();
     }
   }
 
@@ -779,22 +783,8 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // the NSApplication class (in header files generated using class-dump).
       // This workaround was "borrowed" from the Java Embedding Plugin (which
       // uses it for a different purpose).
-      if (mWindowType == eWindowType_popup) {
+      if (mWindowType == eWindowType_popup)
         [NSApp _removeWindowFromCache:mWindow];
-        // Apple's focus ring APIs sometimes clip themselves when they draw under
-        // other windows. Redraw the window that was likely under the popup to
-        // get focus rings to draw correctly. Sometimes the window is not properly
-        // the parent of the popup, so we can't just tell the parent to redraw.
-        // We only have this problem on 10.4. See bug 417124.
-        if (!nsToolkit::OnLeopardOrLater()) {
-          NSWindow* keyWindow = [NSApp keyWindow];
-          if (keyWindow)
-            [keyWindow display];
-          NSWindow* mainWindow = [NSApp mainWindow];
-          if (mainWindow && mainWindow != keyWindow)
-            [mainWindow display];          
-        }
-      }
 
       // it's very important to turn off mouse moved events when hiding a window, otherwise
       // the windows' tracking rects will interfere with each other. (bug 356528)

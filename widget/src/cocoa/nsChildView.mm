@@ -528,9 +528,12 @@ nsChildView::nsChildView() : nsBaseWidget()
 
 nsChildView::~nsChildView()
 {
-  // notify the children that we're gone
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+  // Notify the children that we're gone.  childView->ResetParent() can change
+  // our list of children while it's being iterated, so the way we iterate the
+  // list must allow for this.
+  for (nsIWidget* kid = mLastChild; kid;) {
     nsChildView* childView = static_cast<nsChildView*>(kid);
+    kid = kid->GetPrevSibling();
     childView->ResetParent();
   }
 
