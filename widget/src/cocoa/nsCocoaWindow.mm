@@ -161,16 +161,20 @@ nsCocoaWindow::~nsCocoaWindow()
 
   // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
   // have nsChildView children.  'kid' is an nsChildView object if and only if
-  // its 'type' is 'eWindowType_child'.
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+  // its 'type' is 'eWindowType_child'.  childView->ResetParent() can change
+  // our list of children while it's being iterated, so the way we iterate the
+  // list must allow for this.
+  for (nsIWidget* kid = mLastChild; kid;) {
     nsWindowType kidType;
     kid->GetWindowType(kidType);
     if (kidType == eWindowType_child) {
       nsChildView* childView = static_cast<nsChildView*>(kid);
+      kid = kid->GetPrevSibling();
       childView->ResetParent();
     } else {
       nsCocoaWindow* childWindow = static_cast<nsCocoaWindow*>(kid);
       childWindow->mParent = nsnull;
+      kid = kid->GetPrevSibling();
     }
   }
 
