@@ -62,9 +62,8 @@ public:
         virtual Result OnCallReceived(const Message& aMessage,
                                       Message*& aReply) = 0;
     };
-    typedef RPCListener Listener;
 
-    RPCChannel(Listener* aListener) :
+    RPCChannel(RPCListener* aListener) :
         SyncChannel(aListener)
     {
     }

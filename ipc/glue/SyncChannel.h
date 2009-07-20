@@ -68,9 +68,8 @@ public:
         virtual Result OnMessageReceived(const Message& aMessage,
                                          Message*& aReply) = 0;
     };
-    typedef SyncListener Listener;
 
-    SyncChannel(Listener* aListener) :
+    SyncChannel(SyncListener* aListener) :
         AsyncChannel(aListener),
         mMutex("mozilla.ipc.SyncChannel.mMutex"),
         mCvar(mMutex, "mozilla.ipc.SyncChannel.mCvar")

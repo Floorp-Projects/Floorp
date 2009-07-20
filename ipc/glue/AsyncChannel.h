@@ -81,9 +81,8 @@ public:
         virtual ~AsyncListener() { }
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
     };
-    typedef AsyncListener Listener;
 
-    AsyncChannel(Listener* aListener) :
+    AsyncChannel(AsyncListener* aListener) :
         mTransport(0),
         mListener(aListener),
         mChannelState(ChannelClosed),
@@ -124,7 +123,7 @@ protected:
     void OnSend(Message* aMsg);
 
     Transport* mTransport;
-    Listener* mListener;
+    AsyncListener* mListener;
     ChannelState mChannelState;
     MessageLoop* mIOLoop;       // thread where IO happens
     MessageLoop* mWorkerLoop;   // thread where work is done
