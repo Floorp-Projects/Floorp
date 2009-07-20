@@ -3607,7 +3607,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
     }
 
     if (!stable) {
-        fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+        fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(exit));
 
         /*
          * If we didn't find a type stable peer, we compile the loop anyway and
@@ -3639,7 +3639,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
         }
     } else {
         exit->target = fragment->root;
-        fragment->lastIns = lir->insGuard(LIR_loop, NULL, createGuardRecord(exit));
+        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), createGuardRecord(exit));
     }
     compile(tm);
 
@@ -3766,7 +3766,7 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
     }
 
     fragment->lastIns =
-        lir->insGuard(LIR_x, NULL, createGuardRecord(snapshot(LOOP_EXIT)));
+        lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(snapshot(LOOP_EXIT)));
     compile(tm);
 
     if (tm->fragmento->assm()->error() != nanojit::None)
@@ -4058,7 +4058,7 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
             "%s: %s %s -> pc=%p imacpc=%p sp%+ld rp%+ld",
             formatRef(i),
             lirNames[i->opcode()],
-            i->oprnd1() ? formatRef(i->oprnd1()) : "",
+            i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
             (void *)x->pc,
             (void *)x->imacpc,
             (long int)x->sp_adj,
@@ -8582,7 +8582,7 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
 
         // Tell nanojit not to discard or defer stack writes before this call.
         LIns* guardRec = createGuardRecord(exit);
-        lir->insGuard(LIR_xbarrier, NULL, guardRec);
+        lir->insGuard(LIR_xbarrier, guardRec, guardRec);
     }
 
     LIns* res_ins = lir->insCall(known->builtin, args);
@@ -10263,7 +10263,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
                                                           dslots_ins,
                                                           -(int)sizeof(jsval))),
                                    NULL);
-        lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+        lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(exit));
         LIns* label = lir->ins0(LIR_label);
         if (br1)
             br1->setTarget(label);
