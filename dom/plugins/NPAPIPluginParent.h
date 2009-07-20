@@ -51,7 +51,6 @@
 
 #include "base/string_util.h"
 
-#include "mozilla/Monitor.h"
 #include "mozilla/SharedLibrary.h"
 #include "mozilla/plugins/NPAPIProtocol.h"
 #include "mozilla/plugins/NPAPIProtocolParent.h"
@@ -111,8 +110,6 @@ public:
                                      PRLibrary* aLibrary);
 
 private:
-    void LaunchSubprocess();
-
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
     // Implement the module-level functions from NPAPI; these are
@@ -476,8 +473,6 @@ private:
     const char* mFilePath;
     PluginProcessParent mSubprocess;
     const NPNetscapeFuncs* mNPNIface;
-
-    mozilla::Monitor mMonitor;
 
     // NPObject interface
 
