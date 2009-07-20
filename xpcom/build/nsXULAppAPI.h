@@ -418,7 +418,6 @@ XRE_API(nsresult,
 XRE_API(void,
         XRE_FreeAppData, (nsXREAppData *aAppData))
 
-
 enum GeckoChildProcessType {
   GeckoChildProcess_Default,
 

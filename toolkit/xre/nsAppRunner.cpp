@@ -207,6 +207,7 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
 
+#ifdef MOZ_IPC
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/message_loop.h"
@@ -215,6 +216,7 @@
 
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoThread;
+#endif
 
 // on x86 linux, the current builds of some popular plugins (notably
 // flashplayer and real) expect a few builtin symbols from libgcc
@@ -2950,10 +2952,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   MOZ_SPLASHSCREEN_UPDATE(20);
 
+#ifdef MOZ_IPC
   // Set up chromium libs
   base::AtExitManager exitManager;
   CommandLine::Init(gArgc, gArgv);
   MessageLoopForUI mainMessageLoop;
+#endif
 
   {
     nsXREDirProvider dirProvider;
@@ -3412,6 +3416,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                return NS_ERROR_FAILURE;
              }
 #endif
+#ifdef MOZ_IPC
             scoped_ptr<base::Thread> ipcThread(
               new BrowserProcessSubThread(BrowserProcessSubThread::IO));
             base::Thread::Options options;
@@ -3420,6 +3425,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
               NS_ERROR("Failed to create chromium's IO thread!");
               return NS_ERROR_FAILURE;
             }
+#endif
 
             NS_TIMELINE_ENTER("appStartup->Run");
             rv = appStartup->Run();
