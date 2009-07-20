@@ -906,7 +906,7 @@ namespace nanojit
                     // so assert in debug builds.
                     NanoAssertMsg(0, "Constantly false guard detected");
 #endif
-                    return out->insGuard(LIR_x, NULL, x);
+                    return out->insGuard(LIR_x, out->insImm(1), x);
                 }
             }
             else {
