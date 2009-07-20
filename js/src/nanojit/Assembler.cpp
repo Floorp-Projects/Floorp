@@ -1544,7 +1544,8 @@ namespace nanojit
         underrunProtect(si->count * sizeof(NIns*) + 20);
         _nIns = reinterpret_cast<NIns*>(uintptr_t(_nIns) & ~(sizeof(NIns*) - 1));
         for (uint32_t i = 0; i < si->count; ++i) {
-            *(--_nIns) = (NIns)target;
+            _nIns = (NIns*) (((uint8*) _nIns) - sizeof(NIns*));
+            *(NIns**) _nIns = target;
         }
         si->table = (NIns**) _nIns;
     }
