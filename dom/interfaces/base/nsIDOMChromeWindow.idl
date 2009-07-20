@@ -39,13 +39,15 @@
 #include "domstubs.idl"
 
 interface nsIBrowserDOMWindow;
+interface nsIDOMElement;
 
-[scriptable, uuid(77a20f5a-68ad-41d3-97ac-6ff721512908)]
+[scriptable, uuid(09b86cbd-9784-4fe4-9be6-70b9bbca3a9c)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;
   const unsigned short STATE_MINIMIZED = 2;
   const unsigned short STATE_NORMAL = 3;
+  const unsigned short STATE_FULLSCREEN = 4;
 
   readonly attribute unsigned short              windowState;
 
@@ -65,4 +67,10 @@ interface nsIDOMChromeWindow : nsISupports
   void                      maximize();
   void                      minimize();
   void                      restore();
+
+  /**
+   * Notify a default button is loaded on a dialog or a wizard.
+   * defaultButton is the default button.
+   */
+  void notifyDefaultButtonLoaded(in nsIDOMElement defaultButton);
 };

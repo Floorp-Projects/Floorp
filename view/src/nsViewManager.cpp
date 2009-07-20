@@ -1053,18 +1053,15 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           nsRect damRect =
             damIntRect.ToAppUnits(mContext->AppUnitsPerDevPixel());
 
-          nsIWidget* widget = view->GetNearestWidget(nsnull);
-          if (widget && widget->GetTransparencyMode() == eTransparencyOpaque) {
-            nsCOMPtr<nsIRenderingContext> context = event->renderingContext;
-            if (!context)
-              context = CreateRenderingContext(*view);
+          nsCOMPtr<nsIRenderingContext> context = event->renderingContext;
+          if (!context)
+            context = CreateRenderingContext(*view);
 
-            if (context)
-              mObserver->PaintDefaultBackground(view, context, damRect);
-            else
-              NS_WARNING("nsViewManager: no rc for default refresh");
-          }
-        
+          if (context)
+            mObserver->PaintDefaultBackground(view, context, damRect);
+          else
+            NS_WARNING("nsViewManager: no rc for default refresh");        
+
           // Clients like the editor can trigger multiple
           // reflows during what the user perceives as a single
           // edit operation, so it disables view manager

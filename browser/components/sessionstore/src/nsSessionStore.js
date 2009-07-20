@@ -1507,17 +1507,12 @@ SessionStoreService.prototype = {
   _updateCookieHosts: function sss_updateCookieHosts(aWindow) {
     var hosts = this._windows[aWindow.__SSi]._hosts = {};
     
-    // get all possible subdomain levels for a given URL
-    var _this = this;
+    // get the domain for each URL
     function extractHosts(aEntry) {
-      if (/^https?:\/\/(?:[^@\/\s]+@)?([\w.-]+)/.test(aEntry.url) &&
-        !hosts[RegExp.$1] && _this._checkPrivacyLevel(_this._getURIFromString(aEntry.url).schemeIs("https"))) {
-        var host = RegExp.$1;
-        var ix;
-        for (ix = host.indexOf(".") + 1; ix; ix = host.indexOf(".", ix) + 1) {
-          hosts[host.substr(ix)] = true;
+      if (/^https?:\/\/(?:[^@\/\s]+@)?([\w.-]+)/.test(aEntry.url)) {
+        if (!hosts[RegExp.$1] && _this._checkPrivacyLevel(_this._getURIFromString(aEntry.url).schemeIs("https"))) {
+          hosts[RegExp.$1] = true;
         }
-        hosts[host] = true;
       }
       else if (/^file:\/\/([^\/]*)/.test(aEntry.url)) {
         hosts[RegExp.$1] = true;
@@ -1526,7 +1521,8 @@ SessionStoreService.prototype = {
         aEntry.children.forEach(extractHosts);
       }
     }
-    
+
+    var _this = this;
     this._windows[aWindow.__SSi].tabs.forEach(function(aTabData) { aTabData.entries.forEach(extractHosts); });
   },
 
@@ -1536,36 +1532,60 @@ SessionStoreService.prototype = {
    *        array of Window references
    */
   _updateCookies: function sss_updateCookies(aWindows) {
-    var cookiesEnum = Cc["@mozilla.org/cookiemanager;1"].
-                      getService(Ci.nsICookieManager).enumerator;
+    function addCookieToHash(aHash, aHost, aPath, aName, aCookie) {
+      // lazily build up a 3-dimensional hash, with
+      // aHost, aPath, and aName as keys
+      if (!aHash[aHost])
+        aHash[aHost] = {};
+      if (!aHash[aHost][aPath])
+        aHash[aHost][aPath] = {};
+      if (!aHash[aHost][aPath][aName])
+        aHash[aHost][aPath][aName] = {};
+
+      aHash[aHost][aPath][aName] = aCookie;
+    }
+
+    var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
     // collect the cookies per window
     for (var i = 0; i < aWindows.length; i++)
       aWindows[i].cookies = [];
-    
+
+    var jscookies = {};
+    var _this = this;
     // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
     var MAX_EXPIRY = Math.pow(2, 62);
-    while (cookiesEnum.hasMoreElements()) {
-      var cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
-      if (cookie.isSession && this._checkPrivacyLevel(cookie.isSecure)) {
-        var jscookie = null;
-        aWindows.forEach(function(aWindow) {
-          if (aWindow._hosts && aWindow._hosts[cookie.rawHost]) {
-            // serialize the cookie when it's first needed
-            if (!jscookie) {
-              jscookie = { host: cookie.host, value: cookie.value };
+    aWindows.forEach(function(aWindow) {
+      for (var host in aWindow._hosts) {
+        var list = cm.getCookiesFromHost(host);
+        while (list.hasMoreElements()) {
+          var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
+          if (cookie.isSession && _this._checkPrivacyLevel(cookie.isSecure)) {
+            // use the cookie's host, path, and name as keys into a hash,
+            // to make sure we serialize each cookie only once
+            var isInHash = false;
+            try {
+              if (jscookies[cookie.host][cookie.path][cookie.name])
+                isInHash = true;
+            } catch (e) {
+              // not in hash yet
+            }
+            if (!isInHash) {
+              var jscookie = { "host": cookie.host, "value": cookie.value };
               // only add attributes with non-default values (saving a few bits)
               if (cookie.path) jscookie.path = cookie.path;
               if (cookie.name) jscookie.name = cookie.name;
               if (cookie.isSecure) jscookie.secure = true;
               if (cookie.isHttpOnly) jscookie.httponly = true;
               if (cookie.expiry < MAX_EXPIRY) jscookie.expiry = cookie.expiry;
+
+              addCookieToHash(jscookies, cookie.host, cookie.path, cookie.name, jscookie);
             }
-            aWindow.cookies.push(jscookie);
+            aWindow.cookies.push(jscookies[cookie.host][cookie.path][cookie.name]);
           }
-        });
+        }
       }
-    }
-    
+    });
+
     // don't include empty cookie sections
     for (i = 0; i < aWindows.length; i++)
       if (aWindows[i].cookies.length == 0)
@@ -1889,9 +1909,8 @@ SessionStoreService.prototype = {
     
     if (aTabs.length > 0) {
       // Determine if we can optimize & load visible tabs first
-      let tabScrollBoxObject = tabbrowser.tabContainer.mTabstrip.scrollBoxObject;
-      let tabBoxObject = aTabs[0].boxObject;
-      let maxVisibleTabs = Math.ceil(tabScrollBoxObject.width / tabBoxObject.width);
+      let maxVisibleTabs = Math.ceil(tabbrowser.tabContainer.mTabstrip.scrollClientSize /
+                                     aTabs[0].clientWidth);
 
       // make sure we restore visible tabs first, if there are enough
       if (maxVisibleTabs < aTabs.length && aSelectTab > 1) {
@@ -2582,6 +2601,7 @@ SessionStoreService.prototype = {
   _getWindowDimension: function sss_getWindowDimension(aWindow, aAttribute) {
     if (aAttribute == "sizemode") {
       switch (aWindow.windowState) {
+      case aWindow.STATE_FULLSCREEN:
       case aWindow.STATE_MAXIMIZED:
         return "maximized";
       case aWindow.STATE_MINIMIZED:

@@ -65,9 +65,9 @@
 #include "nsClipboard.h"
 #include "nsBidiKeyboard.h"
 #include "nsDragService.h"
-#include "nsHTMLFormatConverter.h"
-#include "nsTransferable.h"
 #endif
+#include "nsTransferable.h"
+#include "nsHTMLFormatConverter.h"
 
 #ifdef NS_PRINTING
 #include "nsDeviceContextSpecWin.h"
@@ -86,9 +86,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 
-#ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+#ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -151,6 +151,14 @@ static const nsModuleComponentInfo components[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
+  { "Transferable",
+    NS_TRANSFERABLE_CID,
+    "@mozilla.org/widget/transferable;1",
+    nsTransferableConstructor },
+  { "HTML Format Converter",
+    NS_HTMLFORMATCONVERTER_CID,
+    "@mozilla.org/widget/htmlformatconverter;1",
+    nsHTMLFormatConverterConstructor },
 
 #ifndef WINCE
   { "Drag Service",
@@ -161,14 +169,6 @@ static const nsModuleComponentInfo components[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-  { "Transferable",
-    NS_TRANSFERABLE_CID,
-    "@mozilla.org/widget/transferable;1",
-    nsTransferableConstructor },
-  { "HTML Format Converter",
-    NS_HTMLFORMATCONVERTER_CID,
-    "@mozilla.org/widget/htmlformatconverter;1",
-    nsHTMLFormatConverterConstructor },
 #endif
 
 #ifdef NS_PRINTING

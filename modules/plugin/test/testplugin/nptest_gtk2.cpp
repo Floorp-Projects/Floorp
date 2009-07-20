@@ -297,84 +297,162 @@ int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
   GdkWindow* plugWnd = plug->window;
   if (!plugWnd)
     return NPTEST_INT32_ERROR;
-  // XXX This only works because Gecko uses GdkWindows everywhere!
-  GdkWindow* toplevelWnd = gdk_window_get_toplevel(plugWnd);
-  if (!toplevelWnd)
+
+  GdkWindow* toplevelGdk = 0;
+#ifdef MOZ_X11
+  Window toplevel = 0;
+  NPN_GetValue(instanceData->npp, NPNVnetscapeWindow, &toplevel);
+  if (!toplevel)
+    return NPTEST_INT32_ERROR;
+  toplevelGdk = gdk_window_foreign_new(toplevel);
+#endif
+  if (!toplevelGdk)
     return NPTEST_INT32_ERROR;
 
-  gint plugScreenX, plugScreenY;
-  gdk_window_get_origin(plugWnd, &plugScreenX, &plugScreenY);
-  gint toplevelFrameX, toplevelFrameY;
-  gdk_window_get_root_origin(toplevelWnd, &toplevelFrameX, &toplevelFrameY);
-  gint width, height;
-  gdk_drawable_get_size(GDK_DRAWABLE(plugWnd), &width, &height);
+  GdkRectangle toplevelFrameExtents;
+  gdk_window_get_frame_extents(toplevelGdk, &toplevelFrameExtents);
+  g_object_unref(toplevelGdk);
+
+  gint pluginWidth, pluginHeight;
+  gdk_drawable_get_size(GDK_DRAWABLE(plugWnd), &pluginWidth, &pluginHeight);
+  gint pluginOriginX, pluginOriginY;
+  gdk_window_get_origin(plugWnd, &pluginOriginX, &pluginOriginY);
+  gint pluginX = pluginOriginX - toplevelFrameExtents.x;
+  gint pluginY = pluginOriginY - toplevelFrameExtents.y;
 
   switch (edge) {
   case EDGE_LEFT:
-    return plugScreenX - toplevelFrameX;
+    return pluginX;
   case EDGE_TOP:
-    return plugScreenY - toplevelFrameY;
+    return pluginY;
   case EDGE_RIGHT:
-    return plugScreenX + width - toplevelFrameX;
+    return pluginX + pluginWidth;
   case EDGE_BOTTOM:
-    return plugScreenY + height - toplevelFrameY;
+    return pluginY + pluginHeight;
   }
+
   return NPTEST_INT32_ERROR;
+}
+
+static GdkRegion* computeClipRegion(InstanceData* instanceData)
+{
+  if (!instanceData->hasWidget)
+    return 0;
+
+  GtkWidget* plug = instanceData->platformData->plug;
+  if (!plug)
+    return 0;
+  GdkWindow* plugWnd = plug->window;
+  if (!plugWnd)
+    return 0;
+
+  gint plugWidth, plugHeight;
+  gdk_drawable_get_size(GDK_DRAWABLE(plugWnd), &plugWidth, &plugHeight);
+  GdkRectangle pluginRect = { 0, 0, plugWidth, plugHeight };
+  GdkRegion* region = gdk_region_rectangle(&pluginRect);
+  if (!region)
+    return 0;
+
+  int pluginX = 0, pluginY = 0;
+
+#ifdef MOZ_X11
+  Display* display = GDK_WINDOW_XDISPLAY(plugWnd);
+  Window window = GDK_WINDOW_XWINDOW(plugWnd);
+
+  Window toplevel = 0;
+  NPN_GetValue(instanceData->npp, NPNVnetscapeWindow, &toplevel);
+  if (!toplevel)
+    return 0;
+
+  for (;;) {
+    Window root;
+    int x, y;
+    unsigned int width, height, border_width, depth;
+    if (!XGetGeometry(display, window, &root, &x, &y, &width, &height,
+                      &border_width, &depth)) {
+      gdk_region_destroy(region);
+      return 0;
+    }
+
+    GdkRectangle windowRect = { -pluginX, -pluginY, width, height };
+    GdkRegion* windowRgn = gdk_region_rectangle(&windowRect);
+    if (!windowRgn) {
+      gdk_region_destroy(region);
+      return 0;
+    }
+    gdk_region_intersect(region, windowRgn);
+    gdk_region_destroy(windowRgn);
+
+    // Stop now if we've reached the toplevel. Stopping here means
+    // clipping performed by the toplevel window is taken into account.
+    if (window == toplevel)
+      break;
+
+    Window parent;
+    Window* children;
+    unsigned int nchildren;
+    if (!XQueryTree(display, window, &root, &parent, &children, &nchildren)) {
+      gdk_region_destroy(region);
+      return 0;
+    }
+    XFree(children);
+
+    pluginX += x;
+    pluginY += y;
+
+    window = parent;
+  }
+#endif
+  // pluginX and pluginY are now relative to the toplevel. Make them
+  // relative to the window frame top-left.
+  GdkWindow* toplevelGdk = gdk_window_foreign_new(window);
+  if (!toplevelGdk)
+    return 0;
+  GdkRectangle toplevelFrameExtents;
+  gdk_window_get_frame_extents(toplevelGdk, &toplevelFrameExtents);
+  gint toplevelOriginX, toplevelOriginY;
+  gdk_window_get_origin(toplevelGdk, &toplevelOriginX, &toplevelOriginY);
+  g_object_unref(toplevelGdk);
+
+  pluginX += toplevelOriginX - toplevelFrameExtents.x;
+  pluginY += toplevelOriginY - toplevelFrameExtents.y;
+
+  gdk_region_offset(region, pluginX, pluginY);
+  return region;
 }
 
 int32_t pluginGetClipRegionRectCount(InstanceData* instanceData)
 {
-  if (!instanceData->hasWidget)
+  GdkRegion* region = computeClipRegion(instanceData);
+  if (!region)
     return NPTEST_INT32_ERROR;
-  // XXX later we'll want to support XShape and be able to return a
-  // complex region here
-  return 1;
+
+  GdkRectangle* rects;
+  gint nrects;
+  gdk_region_get_rectangles(region, &rects, &nrects);
+  gdk_region_destroy(region);
+  g_free(rects);
+  return nrects;
 }
 
 int32_t pluginGetClipRegionRectEdge(InstanceData* instanceData, 
     int32_t rectIndex, RectEdge edge)
 {
-  if (!instanceData->hasWidget)
+  GdkRegion* region = computeClipRegion(instanceData);
+  if (!region)
     return NPTEST_INT32_ERROR;
 
-  GtkWidget* plug = instanceData->platformData->plug;
-  if (!plug)
+  GdkRectangle* rects;
+  gint nrects;
+  gdk_region_get_rectangles(region, &rects, &nrects);
+  gdk_region_destroy(region);
+  if (rectIndex >= nrects) {
+    g_free(rects);
     return NPTEST_INT32_ERROR;
-  GdkWindow* plugWnd = plug->window;
-  if (!plugWnd)
-    return NPTEST_INT32_ERROR;
-  // XXX This only works because Gecko uses GdkWindows everywhere!
-  GdkWindow* toplevelWnd = gdk_window_get_toplevel(plugWnd);
-  if (!toplevelWnd)
-    return NPTEST_INT32_ERROR;
-
-  gint width, height;
-  gdk_drawable_get_size(GDK_DRAWABLE(plugWnd), &width, &height);
-
-  GdkRectangle rect = { 0, 0, width, height };
-  GdkWindow* wnd = plugWnd;
-  while (wnd != toplevelWnd) {
-    gint x, y;
-    gdk_window_get_position(wnd, &x, &y);
-    rect.x += x;
-    rect.y += y;
-
-    // XXX This only works because Gecko uses GdkWindows everywhere!
-    GdkWindow* parent = gdk_window_get_parent(wnd);
-    gint parentWidth, parentHeight;
-    gdk_drawable_get_size(GDK_DRAWABLE(parent), &parentWidth, &parentHeight);
-    GdkRectangle parentRect = { 0, 0, parentWidth, parentHeight };
-    gdk_rectangle_intersect(&rect, &parentRect, &rect);
-    wnd = parent;
   }
 
-  gint toplevelFrameX, toplevelFrameY;
-  gdk_window_get_root_origin(toplevelWnd, &toplevelFrameX, &toplevelFrameY);
-  gint toplevelOriginX, toplevelOriginY;
-  gdk_window_get_origin(toplevelWnd, &toplevelOriginX, &toplevelOriginY);
-
-  rect.x += toplevelOriginX - toplevelFrameX;
-  rect.y += toplevelOriginY - toplevelFrameY;
+  GdkRectangle rect = rects[rectIndex];
+  g_free(rects);
 
   switch (edge) {
   case EDGE_LEFT:

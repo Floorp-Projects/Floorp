@@ -131,20 +131,26 @@ nsIFrame* nsSplittableFrame::GetLastContinuation() const
 #ifdef DEBUG
 PRBool nsSplittableFrame::IsInPrevContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2)
 {
-  while (aFrame1) {
+  PRInt32 iterations = 0;
+  while (aFrame1 && iterations < 10) {
+    // Bail out after 10 iterations so we don't bog down debug builds too much
     if (aFrame1 == aFrame2)
       return PR_TRUE;
     aFrame1 = aFrame1->GetPrevContinuation();
+    ++iterations;
   }
   return PR_FALSE;
 }
 
 PRBool nsSplittableFrame::IsInNextContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2)
 {
-  while (aFrame1) {
+  PRInt32 iterations = 0;
+  while (aFrame1 && iterations < 10) {
+    // Bail out after 10 iterations so we don't bog down debug builds too much
     if (aFrame1 == aFrame2)
       return PR_TRUE;
     aFrame1 = aFrame1->GetNextContinuation();
+    ++iterations;
   }
   return PR_FALSE;
 }

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="go()">
+  <!-- In this test, we change an animation element's "attributeName"
+       attribute, which retargets a completed, frozen animation from one
+       attribute to another.  We verify that animation effects are removed from
+       the old attribute and are applied to the new one. -->
+  <script>
+    function go() {
+      // Seek animation before we start tweaking things, to make sure we've
+      // already started sampling it.
+      document.documentElement.setCurrentTime(2.0);
+
+      var anim = document.getElementById("anim");
+      anim.setAttributeNS(null, "attributeName", "height");
+      setTimeAndSnapshot(2.5, false);
+    }
+  </script>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect x="15" y="15" width="200" height="100" fill="blue">
+    <animate id="anim" attributeName="x"
+             begin="0s" dur="2s" by="100" fill="freeze"/>
+  </rect>
+</svg>

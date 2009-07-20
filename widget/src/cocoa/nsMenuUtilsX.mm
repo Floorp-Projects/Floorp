@@ -81,7 +81,6 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
   }
 }
 
-
 NSString* nsMenuUtilsX::GetTruncatedCocoaLabel(const nsString& itemLabel)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -103,7 +102,6 @@ NSString* nsMenuUtilsX::GetTruncatedCocoaLabel(const nsString& itemLabel)
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
-
 
 PRUint8 nsMenuUtilsX::GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute)
 {
@@ -129,7 +127,6 @@ PRUint8 nsMenuUtilsX::GeckoModifiersForNodeAttribute(const nsString& modifiersAt
   return modifiers;
 }
 
-
 unsigned int nsMenuUtilsX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
 {
   unsigned int macModifiers = 0;
@@ -146,7 +143,6 @@ unsigned int nsMenuUtilsX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
   return macModifiers;
 }
 
-
 nsMenuBarX* nsMenuUtilsX::GetHiddenWindowMenuBar()
 {
   nsIWidget* hiddenWindowWidgetNoCOMPtr = nsCocoaUtils::GetHiddenWindowWidget();
@@ -155,7 +151,6 @@ nsMenuBarX* nsMenuUtilsX::GetHiddenWindowMenuBar()
   else
     return nsnull;
 }
-
 
 // It would be nice if we could localize these edit menu names.
 NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem()
@@ -216,7 +211,6 @@ NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem()
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-
 PRBool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent)
 {
   return (inContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
@@ -224,7 +218,6 @@ PRBool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent)
           inContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::collapsed,
                                  nsWidgetAtoms::_true, eCaseMatters));
 }
-
 
 // Determines how many items are visible among the siblings in a menu that are
 // before the given child. This will not count the application menu.

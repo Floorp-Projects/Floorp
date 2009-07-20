@@ -494,6 +494,15 @@ nsSVGLength2::SMILLength::GetBaseValue() const
   return val;
 }
 
+void
+nsSVGLength2::SMILLength::ClearAnimValue()
+{
+  if (mVal->mIsAnimated) {
+    mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
+    mVal->mIsAnimated = PR_FALSE;
+  }  
+}
+
 nsresult
 nsSVGLength2::SMILLength::SetAnimValue(const nsSMILValue& aValue)
 {

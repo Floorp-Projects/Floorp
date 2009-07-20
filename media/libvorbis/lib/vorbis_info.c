@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: maintain the info structure, info <-> header packets
- last mod: $Id: info.c 13293 2007-07-24 00:09:47Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
@@ -32,6 +32,9 @@
 #include "misc.h"
 #include "os.h"
 
+#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.2.2"
+#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20090624"
+
 /* helpers */
 static int ilog2(unsigned int v){
   int ret=0;
@@ -43,7 +46,7 @@ static int ilog2(unsigned int v){
   return(ret);
 }
 
-static void _v_writestring(oggpack_buffer *o,char *s, int bytes){
+static void _v_writestring(oggpack_buffer *o,const char *s, int bytes){
 
   while(bytes--){
     oggpack_write(o,*s++,8);
@@ -60,11 +63,11 @@ void vorbis_comment_init(vorbis_comment *vc){
   memset(vc,0,sizeof(*vc));
 }
 
-void vorbis_comment_add(vorbis_comment *vc,char *comment){
+void vorbis_comment_add(vorbis_comment *vc,const char *comment){
   vc->user_comments=_ogg_realloc(vc->user_comments,
-			    (vc->comments+2)*sizeof(*vc->user_comments));
+                            (vc->comments+2)*sizeof(*vc->user_comments));
   vc->comment_lengths=_ogg_realloc(vc->comment_lengths,
-      			    (vc->comments+2)*sizeof(*vc->comment_lengths));
+                                  (vc->comments+2)*sizeof(*vc->comment_lengths));
   vc->comment_lengths[vc->comments]=strlen(comment);
   vc->user_comments[vc->comments]=_ogg_malloc(vc->comment_lengths[vc->comments]+1);
   strcpy(vc->user_comments[vc->comments], comment);
@@ -72,7 +75,7 @@ void vorbis_comment_add(vorbis_comment *vc,char *comment){
   vc->user_comments[vc->comments]=NULL;
 }
 
-void vorbis_comment_add_tag(vorbis_comment *vc, char *tag, char *contents){
+void vorbis_comment_add_tag(vorbis_comment *vc, const char *tag, const char *contents){
   char *comment=alloca(strlen(tag)+strlen(contents)+2); /* +2 for = and \0 */
   strcpy(comment, tag);
   strcat(comment, "=");
@@ -92,7 +95,7 @@ static int tagcompare(const char *s1, const char *s2, int n){
   return 0;
 }
 
-char *vorbis_comment_query(vorbis_comment *vc, char *tag, int count){
+char *vorbis_comment_query(vorbis_comment *vc, const char *tag, int count){
   long i;
   int found = 0;
   int taglen = strlen(tag)+1; /* +1 for the = we append */
@@ -104,16 +107,16 @@ char *vorbis_comment_query(vorbis_comment *vc, char *tag, int count){
   for(i=0;i<vc->comments;i++){
     if(!tagcompare(vc->user_comments[i], fulltag, taglen)){
       if(count == found)
-	/* We return a pointer to the data, not a copy */
-      	return vc->user_comments[i] + taglen;
+        /* We return a pointer to the data, not a copy */
+              return vc->user_comments[i] + taglen;
       else
-	found++;
+        found++;
     }
   }
   return NULL; /* didn't find anything */
 }
 
-int vorbis_comment_query_count(vorbis_comment *vc, char *tag){
+int vorbis_comment_query_count(vorbis_comment *vc, const char *tag){
   int i,count=0;
   int taglen = strlen(tag)+1; /* +1 for the = we append */
   char *fulltag = alloca(taglen+1);
@@ -131,9 +134,9 @@ int vorbis_comment_query_count(vorbis_comment *vc, char *tag){
 void vorbis_comment_clear(vorbis_comment *vc){
   if(vc){
     long i;
-    if (vc->user_comments) {
+    if(vc->user_comments){
       for(i=0;i<vc->comments;i++)
-	if(vc->user_comments[i])_ogg_free(vc->user_comments[i]);
+        if(vc->user_comments[i])_ogg_free(vc->user_comments[i]);
       _ogg_free(vc->user_comments);
     }
     if(vc->comment_lengths)_ogg_free(vc->comment_lengths);
@@ -166,32 +169,32 @@ void vorbis_info_clear(vorbis_info *vi){
 
     for(i=0;i<ci->maps;i++) /* unpack does the range checking */
       if(ci->map_param[i]) /* this may be cleaning up an aborted
-			      unpack, in which case the below type
-			      cannot be trusted */
-	_mapping_P[ci->map_type[i]]->free_info(ci->map_param[i]);
+                              unpack, in which case the below type
+                              cannot be trusted */
+        _mapping_P[ci->map_type[i]]->free_info(ci->map_param[i]);
 
     for(i=0;i<ci->floors;i++) /* unpack does the range checking */
       if(ci->floor_param[i]) /* this may be cleaning up an aborted
-				unpack, in which case the below type
-				cannot be trusted */
-	_floor_P[ci->floor_type[i]]->free_info(ci->floor_param[i]);
+                                unpack, in which case the below type
+                                cannot be trusted */
+        _floor_P[ci->floor_type[i]]->free_info(ci->floor_param[i]);
     
     for(i=0;i<ci->residues;i++) /* unpack does the range checking */
       if(ci->residue_param[i]) /* this may be cleaning up an aborted
-				  unpack, in which case the below type
-				  cannot be trusted */
-	_residue_P[ci->residue_type[i]]->free_info(ci->residue_param[i]);
+                                  unpack, in which case the below type
+                                  cannot be trusted */
+        _residue_P[ci->residue_type[i]]->free_info(ci->residue_param[i]);
     
     for(i=0;i<ci->books;i++){
       if(ci->book_param[i]){
-	/* knows if the book was not alloced */
-	vorbis_staticbook_destroy(ci->book_param[i]);
+        /* knows if the book was not alloced */
+        vorbis_staticbook_destroy(ci->book_param[i]);
       }
       if(ci->fullbooks)
-	vorbis_book_clear(ci->fullbooks+i);
+        vorbis_book_clear(ci->fullbooks+i);
     }
     if(ci->fullbooks)
-	_ogg_free(ci->fullbooks);
+        _ogg_free(ci->fullbooks);
     
     for(i=0;i<ci->psys;i++)
       _vi_psy_free(ci->psy_param[i]);
@@ -238,21 +241,25 @@ static int _vorbis_unpack_info(vorbis_info *vi,oggpack_buffer *opb){
 static int _vorbis_unpack_comment(vorbis_comment *vc,oggpack_buffer *opb){
   int i;
   int vendorlen=oggpack_read(opb,32);
-  if(vendorlen<0||vendorlen>opb->storage)goto err_out;
+  if(vendorlen<0)goto err_out;
+  if(vendorlen+8>opb->storage)goto err_out;
   vc->vendor=_ogg_calloc(vendorlen+1,1);
   _v_readstring(opb,vc->vendor,vendorlen);
-  vc->comments=oggpack_read(opb,32);
-  if(vc->comments<0||vc->comments>(LONG_MAX>>2)||vc->comments<<2>opb->storage)goto err_out;
+  i=oggpack_read(opb,32);
+  if(i<0)goto err_out;
+  if(4*i+oggpack_bytes(opb)>opb->storage)goto err_out;
+  vc->comments=i;
   vc->user_comments=_ogg_calloc(vc->comments+1,sizeof(*vc->user_comments));
   vc->comment_lengths=_ogg_calloc(vc->comments+1, sizeof(*vc->comment_lengths));
-	    
+            
   for(i=0;i<vc->comments;i++){
     int len=oggpack_read(opb,32);
-    if(len<0||len>opb->storage)goto err_out;
-	vc->comment_lengths[i]=len;
+    if(len<0)goto err_out;
+    if(len+oggpack_bytes(opb)>opb->storage)goto err_out;
+    vc->comment_lengths[i]=len;
     vc->user_comments[i]=_ogg_calloc(len+1,1);
     _v_readstring(opb,vc->user_comments[i],len);
-  }	  
+  }          
   if(oggpack_read(opb,1)!=1)goto err_out; /* EOP check */
 
   return(0);
@@ -385,42 +392,42 @@ int vorbis_synthesis_headerin(vorbis_info *vi,vorbis_comment *vc,ogg_packet *op)
       memset(buffer,0,6);
       _v_readstring(&opb,buffer,6);
       if(memcmp(buffer,"vorbis",6)){
-	/* not a vorbis header */
-	return(OV_ENOTVORBIS);
+        /* not a vorbis header */
+        return(OV_ENOTVORBIS);
       }
       switch(packtype){
       case 0x01: /* least significant *bit* is read first */
-	if(!op->b_o_s){
-	  /* Not the initial packet */
-	  return(OV_EBADHEADER);
-	}
-	if(vi->rate!=0){
-	  /* previously initialized info header */
-	  return(OV_EBADHEADER);
-	}
+        if(!op->b_o_s){
+          /* Not the initial packet */
+          return(OV_EBADHEADER);
+        }
+        if(vi->rate!=0){
+          /* previously initialized info header */
+          return(OV_EBADHEADER);
+        }
 
-	return(_vorbis_unpack_info(vi,&opb));
+        return(_vorbis_unpack_info(vi,&opb));
 
       case 0x03: /* least significant *bit* is read first */
-	if(vi->rate==0){
-	  /* um... we didn't get the initial header */
-	  return(OV_EBADHEADER);
-	}
+        if(vi->rate==0){
+          /* um... we didn't get the initial header */
+          return(OV_EBADHEADER);
+        }
 
-	return(_vorbis_unpack_comment(vc,&opb));
+        return(_vorbis_unpack_comment(vc,&opb));
 
       case 0x05: /* least significant *bit* is read first */
-	if(vi->rate==0 || vc->vendor==NULL){
-	  /* um... we didn;t get the initial header or comments yet */
-	  return(OV_EBADHEADER);
-	}
+        if(vi->rate==0 || vc->vendor==NULL){
+          /* um... we didn;t get the initial header or comments yet */
+          return(OV_EBADHEADER);
+        }
 
-	return(_vorbis_unpack_books(vi,&opb));
+        return(_vorbis_unpack_books(vi,&opb));
 
       default:
-	/* Not a valid vorbis header type */
-	return(OV_EBADHEADER);
-	break;
+        /* Not a valid vorbis header type */
+        return(OV_EBADHEADER);
+        break;
       }
     }
   }
@@ -454,8 +461,7 @@ static int _vorbis_pack_info(oggpack_buffer *opb,vorbis_info *vi){
 }
 
 static int _vorbis_pack_comment(oggpack_buffer *opb,vorbis_comment *vc){
-  char temp[]="Xiph.Org libVorbis I 20070622";
-  int bytes = strlen(temp);
+  int bytes = strlen(ENCODE_VENDOR_STRING);
 
   /* preamble */  
   oggpack_write(opb,0x03,8);
@@ -463,8 +469,8 @@ static int _vorbis_pack_comment(oggpack_buffer *opb,vorbis_comment *vc){
 
   /* vendor */
   oggpack_write(opb,bytes,32);
-  _v_writestring(opb,temp, bytes);
-  
+  _v_writestring(opb,ENCODE_VENDOR_STRING, bytes);
+
   /* comments */
 
   oggpack_write(opb,vc->comments,32);
@@ -472,10 +478,10 @@ static int _vorbis_pack_comment(oggpack_buffer *opb,vorbis_comment *vc){
     int i;
     for(i=0;i<vc->comments;i++){
       if(vc->user_comments[i]){
-	oggpack_write(opb,vc->comment_lengths[i],32);
-	_v_writestring(opb,vc->user_comments[i], vc->comment_lengths[i]);
+        oggpack_write(opb,vc->comment_lengths[i],32);
+        _v_writestring(opb,vc->user_comments[i], vc->comment_lengths[i]);
       }else{
-	oggpack_write(opb,0,32);
+        oggpack_write(opb,0,32);
       }
     }
   }
@@ -541,7 +547,7 @@ err_out:
 } 
 
 int vorbis_commentheader_out(vorbis_comment *vc,
-    				      ogg_packet *op){
+                                          ogg_packet *op){
 
   oggpack_buffer opb;
 
@@ -561,10 +567,10 @@ int vorbis_commentheader_out(vorbis_comment *vc,
 }
 
 int vorbis_analysis_headerout(vorbis_dsp_state *v,
-			      vorbis_comment *vc,
-			      ogg_packet *op,
-			      ogg_packet *op_comm,
-			      ogg_packet *op_code){
+                              vorbis_comment *vc,
+                              ogg_packet *op,
+                              ogg_packet *op_comm,
+                              ogg_packet *op_code){
   int ret=OV_EIMPL;
   vorbis_info *vi=v->vi;
   oggpack_buffer opb;
@@ -644,4 +650,8 @@ double vorbis_granule_time(vorbis_dsp_state *v,ogg_int64_t granulepos){
   if(granulepos>=0)
     return((double)granulepos/v->vi->rate);
   return(-1);
+}
+
+const char *vorbis_version_string(void){
+  return GENERAL_VENDOR_STRING;
 }

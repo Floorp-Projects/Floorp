@@ -108,28 +108,16 @@ SHIP_DIST  = $(MOZ_DEPTH)/dist/$(OBJDIR)
 SHIP_DIR   = $(SHIP_DIST)/SHIP
 
 SHIP_LIBS      = libjs.$(SO_SUFFIX) libjs.a
-ifdef JS_LIVECONNECT
-  SHIP_LIBS   += libjsj.$(SO_SUFFIX) libjsj.a
-endif
 ifeq ($(OS_ARCH), WINNT)
   SHIP_LIBS    = js32.dll js32.lib
-  ifdef JS_LIVECONNECT
-    SHIP_LIBS += jsj.dll jsj.lib
-  endif
 endif
 SHIP_LIBS     += $(LCJAR)
 SHIP_LIBS     := $(addprefix $(SHIP_DIST)/lib/, $(SHIP_LIBS))
 
 SHIP_INCS      = js*.h prmjtime.h resource.h *.msg *.tbl
-ifdef JS_LIVECONNECT
-  SHIP_INCS   += netscape*.h nsC*.h nsI*.h
-endif
 SHIP_INCS     := $(addprefix $(SHIP_DIST)/include/, $(SHIP_INCS))
 
 SHIP_BINS      = js
-ifdef JS_LIVECONNECT
-  SHIP_BINS   += lcshell
-endif
 ifeq ($(OS_ARCH), WINNT)
   SHIP_BINS   := $(addsuffix .exe, $(SHIP_BINS))
 endif

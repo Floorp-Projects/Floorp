@@ -179,6 +179,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIConsoleService.h"
 
 #include "mozAutoDocUpdate.h"
+#include "imgICache.h"
 #include "jsinterp.h"
 
 const char kLoadAsData[] = "loadAsData";
@@ -200,6 +201,7 @@ nsIXTFService *nsContentUtils::sXTFService = nsnull;
 nsIPrefBranch *nsContentUtils::sPrefBranch = nsnull;
 nsIPref *nsContentUtils::sPref = nsnull;
 imgILoader *nsContentUtils::sImgLoader;
+imgICache *nsContentUtils::sImgCache;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsDataHashtable<nsISupportsHashKey, EventNameMapping>* nsContentUtils::sEventTable = nsnull;
 nsIStringBundleService *nsContentUtils::sStringBundleService;
@@ -330,6 +332,10 @@ nsContentUtils::Init()
   if (NS_FAILED(rv)) {
     // no image loading for us.  Oh, well.
     sImgLoader = nsnull;
+    sImgCache = nsnull;
+  } else {
+    if (NS_FAILED(CallGetService("@mozilla.org/image/cache;1", &sImgCache )))
+      sImgCache = nsnull;
   }
 
   sPtrsToPtrsToRelease = new nsTArray<nsISupports**>();
@@ -402,6 +408,7 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onload,                        { NS_LOAD, EventNameType_All }},
     { &nsGkAtoms::onunload,                      { NS_PAGE_UNLOAD,
                                                  (EventNameType_HTMLXUL | EventNameType_SVGSVG) }},
+    { &nsGkAtoms::onhashchange,                  { NS_HASHCHANGE, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onbeforeunload,                { NS_BEFORE_PAGE_UNLOAD, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onabort,                       { NS_IMAGE_ABORT,
                                                  (EventNameType_HTMLXUL | EventNameType_SVGSVG) }},
@@ -892,6 +899,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sXTFService);
 #endif
   NS_IF_RELEASE(sImgLoader);
+  NS_IF_RELEASE(sImgCache);
   NS_IF_RELEASE(sPrefBranch);
   NS_IF_RELEASE(sPref);
 #ifdef IBMBIDI
@@ -2383,6 +2391,19 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 }
 
 // static
+PRBool
+nsContentUtils::IsImageInCache(nsIURI* aURI)
+{
+    if (!sImgCache) return PR_FALSE;
+
+    // If something unexpected happened we return false, otherwise if props
+    // is set, the image is cached and we return true
+    nsCOMPtr<nsIProperties> props;
+    nsresult rv = sImgCache->FindEntryProperties(aURI, getter_AddRefs(props));
+    return (NS_SUCCEEDED(rv) && props);
+}
+
+// static
 nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                           nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
@@ -3586,9 +3607,9 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   PRBool bCaseSensitive = document->IsCaseSensitive();
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
-  PRBool bHTML = htmlDoc && !bCaseSensitive;
+  PRBool isHTML = htmlDoc && !bCaseSensitive;
 
-  if (bHTML && nsHtml5Module::Enabled) {
+  if (isHTML && nsHtml5Module::sEnabled) {
     // See if the document has a cached fragment parser. nsHTMLDocument is the
     // only one that should really have one at the moment.
     nsCOMPtr<nsIParser> parser = document->GetFragmentParser();
@@ -3713,7 +3734,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIContentSink> contentsink = parser->GetContentSink();
   if (contentsink) {
     // Make sure it's the correct type.
-    if (bHTML) {
+    if (isHTML) {
       nsCOMPtr<nsIHTMLContentSink> htmlsink = do_QueryInterface(contentsink);
       sink = do_QueryInterface(htmlsink);
     }
@@ -3726,7 +3747,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   if (!sink) {
     // Either there was no cached content sink or it was the wrong type. Make a
     // new one.
-    if (bHTML) {
+    if (isHTML) {
       rv = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
     } else {
       rv = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
@@ -3758,7 +3779,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   }
 
   rv = parser->ParseFragment(aFragment, nsnull, tagStack,
-                             !bHTML, contentType, mode);
+                             !isHTML, contentType, mode);
   if (NS_SUCCEEDED(rv)) {
     rv = sink->GetFragment(aWillOwnFragment, aReturn);
   }

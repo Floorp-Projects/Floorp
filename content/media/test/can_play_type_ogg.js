@@ -16,7 +16,7 @@ function check_ogg(v, enabled) {
   check("video/ogg; codecs=theora", "probably");
 
   // Unsupported Ogg codecs
-  check("video/ogg; codecs=xyz", "no");
-  check("video/ogg; codecs=xyz,vorbis", "no");
-  check("video/ogg; codecs=vorbis,xyz", "no");
+  check("video/ogg; codecs=xyz", "");
+  check("video/ogg; codecs=xyz,vorbis", "");
+  check("video/ogg; codecs=vorbis,xyz", "");
 }

@@ -214,7 +214,7 @@ typedef enum nsCharType nsCharType;
    * Give an nsString.
    * @return PR_TRUE if the string contains right-to-left characters
    */
-  PRBool HasRTLChars(nsAString& aString);
+  PRBool HasRTLChars(const nsAString& aString);
 
 // --------------------------------------------------
 // IBMBIDI 

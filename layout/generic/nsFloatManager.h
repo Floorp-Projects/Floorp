@@ -80,6 +80,29 @@ public:
 
   static void Shutdown();
 
+  /**
+   * Get float region stored on the frame. (Defaults to mRect if it's
+   * not there.) The float region is the area impacted by this float;
+   * the coordinates are relative to the containing block frame.
+   */
+  static nsRect GetRegionFor(nsIFrame* aFloatFrame);
+  /**
+   * Calculate the float region for this frame using aMargin and the
+   * frame's mRect. The region includes the margins around the float,
+   * but doesn't include the relative offsets.
+   * Note that if the frame is or has a continuation, aMargin's top
+   * and/or bottom must be zeroed by the caller.
+   */
+  static nsRect CalculateRegionFor(nsIFrame* aFloatFrame,
+                                   const nsMargin& aMargin);
+  /**
+   * Store the float region on the frame. The region is stored
+   * as a delta against the mRect, so repositioning the frame will
+   * also reposition the float region.
+   */
+  static nsresult StoreRegionFor(nsIFrame* aFloat,
+                                 nsRect&   aRegion);
+
   // Structure that stores the current state of a frame manager for
   // Save/Restore purposes.
   struct SavedState;

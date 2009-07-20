@@ -52,7 +52,6 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
-#include "nsIComputedDOMStyle.h"
 #include "nsIContentIterator.h"
 #include "nsIContentSerializer.h"
 #include "nsIController.h"
@@ -517,7 +516,6 @@ MAKE_CTOR(CreateXHTMLParanoidFragmentSink,nsIFragmentContentSink,      NS_NewXHT
 MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSanitizingHTMLSerializer)
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
-MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewComputedDOMStyle)
 #ifdef MOZ_XUL
 MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXULSortService)
 // NS_NewXULContentBuilder
@@ -1234,11 +1232,6 @@ static const nsModuleComponentInfo gComponents[] = {
     nsNoDataProtocolContentPolicyConstructor,
     RegisterNoDataProtocolContentPolicy,
     UnregisterNoDataProtocolContentPolicy },
-
-  { "DOM CSS Computed Style Declaration",
-    NS_COMPUTEDDOMSTYLE_CID,
-    "@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1",
-    CreateComputedDOMStyle },
 
   { "XUL Controllers",
     NS_XULCONTROLLERS_CID,

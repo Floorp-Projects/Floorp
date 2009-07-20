@@ -43,39 +43,106 @@ relativesrcdir  = content/media/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+# Media tests should be backend independent, i.e., not conditioned on
+# MOZ_OGG, MOZ_WAVE etc. (The only exception is the can_play_type tests,
+# which necessarily depend on the backend(s) configured.) As far as possible,
+# each test should work with any resource type. This makes it
+# easy to add new backends and reduces the amount of test duplication.
+
+# For each supported backend, resources that can be played by that backend
+# should be added to the lists in manifest.js. Media tests that aren't
+# testing for a bug in handling a specific resource type should pick one of
+# the lists in manifest.js and run the test for each resource in the list
+# that is supported in the current build (the canPlayType API is useful
+# for this).
+
+# To test whether a valid resource can simply be played through correctly,
+# and optionally that its metadata is read correctly, just
+# add it to gPlayTests in manifest.js. To test whether an invalid
+# resource correctly throws an error (and does not cause a crash or hang),
+# just add it to gErrorTests in manifest.js.
+
+# To test for a specific bug in handling a specific resource type,
+# make the test first check canPlayType for the type, and if it's not
+# supported, just do ok(true, "Type not supported") and stop the test.
+
 _TEST_FILES = \
 		can_play_type_ogg.js \
 		can_play_type_wave.js \
+		manifest.js \
+		seek1.js \
+		seek2.js \
+		seek3.js \
+		seek4.js \
+		seek5.js \
+		seek6.js \
+		seek7.js \
+		seek8.js \
+		seek9.js \
+		test_audio1.html \
+		test_audio2.html \
 		test_autobuffer.html \
 		test_autoplay.html \
 		test_can_play_type.html \
 		test_constants.html \
 		test_controls.html \
 		test_currentTime.html \
+		test_decoder_disable.html \
+		test_load.html \
+		test_media_selection.html \
 		test_networkState.html \
 		test_paused.html \
+		test_playback.html \
+		test_playback_errors.html \
 		test_readyState.html \
 		test_seek2.html \
 		test_volume.html \
 		use_large_cache.js \
 		$(NULL)
 
+ifneq ($(OS_ARCH),WINNT)
+# These tests are disabled on windows until we
+# figure out the random failures. See bug 475369.
+_TEST_FILES += \
+		test_seek.html \
+		$(NULL)
+endif
+
+# Ogg sample files
+_TEST_FILES += \
+		320x240.ogv \
+		320x240.allow-origin.ogv \
+		320x240.allow-origin.ogv^headers^ \
+		bug461281.ogg \
+		bug482461.ogv \
+		seek.ogv \
+		small-shot.ogg \
+		sound.ogg \
+		$(NULL)
+		
+# Wave sample files
+_TEST_FILES += \
+		big.wav \
+		r11025_s16_c1.wav \
+		r11025_s16_c1_trailing.wav \
+		r11025_u8_c1.wav \
+		r11025_u8_c1_trunc.wav \
+		r16000_u8_c1_list.wav \
+		$(NULL)
+
+# These tests need to be converted to be backend-independent. This list
+# is deprecated, do not add to it.
 ifdef MOZ_OGG
 _TEST_FILES += \
 		dynamic_redirect.sjs \
 		test_access_control.html \
 		file_access_controls.html \
-		test_audio1.html \
-		test_audio2.html \
 		test_bug448534.html \
-		test_bug461281.html \
 		test_bug468190.html \
-		test_bug482461.html \
 		test_bug493187.html \
 		test_bug495145.html \
 		test_bug495300.html \
 		test_bug495319.html \
-		test_can_play_type_ogg.html \
 		test_closing_connections.html \
 		test_contentDuration1.html \
 		test_contentDuration2.html \
@@ -100,11 +167,6 @@ _TEST_FILES += \
 		test_standalone.html \
 		test_timeupdate1.html \
 		test_timeupdate2.html \
-		320x240.ogv \
-		320x240.allow-origin.ogv \
-		320x240.allow-origin.ogv^headers^ \
-		bug461281.ogg \
-		bug482461.ogv \
 		redirect.sjs \
 		contentDuration1.sjs \
 		contentDuration2.sjs \
@@ -112,92 +174,62 @@ _TEST_FILES += \
 		contentDuration4.sjs \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
-		seek.ogv \
-		small-shot.ogg \
-		sound.ogg \
 		$(NULL)
-
 # These tests disabled until we figure out random failures.
 # Bug 492821:
 # test_videoDocumentTitle.html
 # Bug 493692:
 # test_autobuffer2.html
-
 ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
 # figure out the random failures. See bug 475369.
 _TEST_FILES += \
-		test_seek1.html \
-		test_seek3.html \
-		test_seek4.html \
-		test_seek5.html \
-		test_seek6.html \
-		test_seek7.html \
-		test_seek8.html \
-		test_seek9.html \
 		test_timeupdate3.html \
 		$(NULL)
 endif
+endif
+
+ifdef MOZ_OGG
+_TEST_FILES += \
+		test_can_play_type_ogg.html \
+		$(NULL)
 else
 _TEST_FILES += \
 		test_can_play_type_no_ogg.html \
 		$(NULL)
 endif
 
+# These tests need to be converted to be backend-independent. This list
+# is deprecated, do not add to it.
 ifdef MOZ_WAVE
 _TEST_FILES += \
-		big.wav \
 		test_bug463162.xhtml \
 		test_bug465498.html \
 		test_bug468190_wav.html \
 		test_bug495145_wav.html \
-		test_can_play_type_wave.html \
 		test_paused_after_ended.html \
 		test_progress2.html \
 		test_progress4.html \
-		test_wav_8bit.html \
 		test_wav_ended1.html \
 		test_wav_ended2.html \
-		test_wav_list.html \
 		test_wav_onloadedmetadata.html \
-		test_wav_seek1.html \
-		test_wav_seek3.html \
-		test_wav_seek4.html \
-		test_wav_seek5.html \
-		test_wav_seek6.html \
-		test_wav_seek7.html \
-		test_wav_seek8.html \
-		test_wav_seek_past_end.html \
-		test_wav_seek_then_play.html \
 		test_wav_timeupdate1.html \
 		test_wav_timeupdate2.html \
-		test_wav_trailing.html \
-		test_wav_trunc.html \
 		test_wav_trunc_seek.html \
-		r11025_s16_c1.wav \
-		r11025_s16_c1_trailing.wav \
-		r11025_u8_c1.wav \
-		r11025_u8_c1_trunc.wav \
-		r16000_u8_c1_list.wav \
+		$(NULL)
+# Disabled since we don't play Wave files standalone, for now
+#		test_wav_standalone.html
+#		test_audioDocumentTitle.html
+endif
+
+ifdef MOZ_WAVE
+_TEST_FILES += \
+		test_can_play_type_wave.html \
 		$(NULL)
 else
 _TEST_FILES += \
 		test_can_play_type_no_wave.html \
 		$(NULL)
-endif
-
-# Disabled since we don't play Wave files standalone, for now
-#		test_wav_standalone.html
-#		test_audioDocumentTitle.html
-
-ifdef MOZ_OGG
-ifdef MOZ_WAVE
-_TEST_FILES += \
-		test_decoder_disable.html \
-		test_load.html \
-		test_media_selection.html \
-		$(NULL)
-endif
 endif
 
 libs:: $(_TEST_FILES)

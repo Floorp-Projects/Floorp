@@ -93,18 +93,22 @@ public:
 
   // Adds the given animation function to this Compositor's list of functions
   void AddAnimationFunction(nsSMILAnimationFunction* aFunc);
-  
-  // Calls ComposeAttribute() on each nsSMILCompositor in the given hashset
-  static void ComposeAttributes(nsSMILCompositorTable& aCompositorTable);
+
+  // Composes the attribute's current value with the list of animation
+  // functions, and assigns the resulting value to this compositor's target
+  // attribute
+  void ComposeAttribute();
+
+  // Clears animation effects on my target attribute
+  void ClearAnimationEffects();
 
   // Cycle-collection support
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
 
  private:
-  // Composes the attribute's current value with the list of animation
-  // functions, and assigns the resulting value to this compositor's target
-  // attribute.
-  void ComposeAttribute();
+  // Create a nsISMILAttr for my target, on the heap.  Caller is responsible
+  // for deallocating the returned object.
+  nsISMILAttr* CreateSMILAttr();
 
   // Static callback methods
   PR_STATIC_CALLBACK(PLDHashOperator) DoComposeAttribute(

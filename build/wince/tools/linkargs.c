@@ -23,7 +23,18 @@ void checkLinkArgs(int* k, int* s, int* i, int* j, char** args, char** argv) {
 void addLinkArgs(int k, int s, int *i, int *j, char** args, char** argv) {
   args[(*i)++] = "/LIBPATH:\"" WCE_LIB "\"";
   args[(*i)++] = "/LIBPATH:\"" WCE_CRT "\"";
+  args[(*i)++] = "/LIBPATH:\"" ATL_LIB "\"";
+  args[(*i)++] = "/LIBPATH:\"" OGLES_SDK_LIB "\"";
   args[(*i)++] = "/NODEFAULTLIB";
+
+  args[(*i)++] = "/MAP";
+  args[(*i)++] = "/MAPINFO:EXPORTS";
+
+  if (getenv("LOCK_DLLS") != NULL) {
+    // lock our dlls in memory
+    args[(*i)++] = "/SECTION:.text,\!P";
+    args[(*i)++] = "/SECTION:.rdata,\!P";
+  }
 
 #ifdef HAVE_SHUNT   // simple test to see if we're in configure or not
   if(getenv("NO_SHUNT") == NULL) {

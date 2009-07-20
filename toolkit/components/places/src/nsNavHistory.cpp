@@ -53,6 +53,7 @@
 #include "nsPlacesTables.h"
 #include "nsPlacesIndexes.h"
 #include "nsPlacesTriggers.h"
+#include "nsPlacesMacros.h"
 
 #include "nsIArray.h"
 #include "nsTArray.h"
@@ -444,7 +445,9 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mNumVisitsForFrecency(10),
                                mTagsFolder(-1),
                                mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED),
-                               mDatabaseStatus(DATABASE_STATUS_OK)
+                               mDatabaseStatus(DATABASE_STATUS_OK),
+                               mCanNotify(true),
+                               mCacheObservers("history-observers")
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -2902,7 +2905,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   PRUint32 added = 0;
   if (!hidden && aTransitionType != TRANSITION_EMBED &&
                  aTransitionType != TRANSITION_DOWNLOAD) {
-    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
                         OnVisit(aURI, *aVisitID, aTime, aSessionID,
                                 referringVisitID, aTransitionType, &added));
   }
@@ -3898,12 +3901,15 @@ PlacesSQLQueryBuilder::OrderBy()
   switch(mSortingMode)
   {
     case nsINavHistoryQueryOptions::SORT_BY_NONE:
-      // If this is an URI bookmarks query the sorting could change based on the
+      // If this is an URI query the sorting could change based on the
       // sync status of disk and temp tables, we must ensure sorting does not
       // change between queries.
-      if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
-          mResultType == nsINavHistoryQueryOptions::RESULTS_AS_URI)
-        mQueryString += NS_LITERAL_CSTRING(" ORDER BY b.id ASC ");
+      if (mResultType == nsINavHistoryQueryOptions::RESULTS_AS_URI) {
+        if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+          mQueryString += NS_LITERAL_CSTRING(" ORDER BY b.id ASC ");
+        else if (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
+          mQueryString += NS_LITERAL_CSTRING(" ORDER BY h.id ASC ");
+      }
       break;
     case nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING:
     case nsINavHistoryQueryOptions::SORT_BY_TITLE_DESCENDING:
@@ -4283,7 +4289,7 @@ nsNavHistory::BeginUpdateBatch()
     if (mBatchHasTransaction)
       mDBConn->BeginTransaction();
 
-    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
                         OnBeginUpdateBatch())
   }
   return NS_OK;
@@ -4297,7 +4303,8 @@ nsNavHistory::EndUpdateBatch()
     if (mBatchHasTransaction)
       mDBConn->CommitTransaction();
     mBatchHasTransaction = PR_FALSE;
-    ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnEndUpdateBatch())
+    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
+                        OnEndUpdateBatch())
   }
   return NS_OK;
 }
@@ -4604,15 +4611,16 @@ nsNavHistory::RemovePage(nsIURI *aURI)
   NS_ENSURE_ARG(aURI);
 
   // Before we remove, we have to notify our observers!
-  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
-                      OnBeforeDeleteURI(aURI))
+  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                      nsINavHistoryObserver, OnBeforeDeleteURI(aURI))
 
   nsIURI** URIs = &aURI;
   nsresult rv = RemovePages(URIs, 1, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Notify our observers that the URI has been removed.
-  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnDeleteURI(aURI))
+  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                      nsINavHistoryObserver, OnDeleteURI(aURI))
   return NS_OK;
 }
 
@@ -4972,7 +4980,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
 
   // notify observers, finish transaction first
   transaction.Commit();
-  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
                       OnPageChanged(aURI,
                                     nsINavHistoryObserver::ATTRIBUTE_HIDDEN,
                                     EmptyString()))
@@ -5631,7 +5639,7 @@ NS_IMETHODIMP
 nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
                                   PRBool aWholeEntry)
 {
-  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
                       OnPageExpired(aURI, aVisitTime, aWholeEntry));
   return NS_OK;
 }
@@ -6880,6 +6888,14 @@ nsNavHistory::BookmarkIdToResultNode(PRInt64 aBookmarkId, nsNavHistoryQueryOptio
   return RowToResult(stmt, aOptions, aResult);
 }
 
+void
+nsNavHistory::SendPageChangedNotification(nsIURI* aURI, PRUint32 aWhat,
+                                          const nsAString& aValue)
+{
+  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
+                      OnPageChanged(aURI, aWhat, aValue));
+}
+
 // nsNavHistory::TitleForDomain
 //
 //    This computes the title for a given domain. Normally, this is just the
@@ -7009,11 +7025,10 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // observers (have to check first if it's bookmarked)
-  ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
+  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
                       OnTitleChanged(aURI, aTitle))
 
   return NS_OK;
-
 }
 
 nsresult

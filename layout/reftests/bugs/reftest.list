@@ -226,7 +226,6 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 240536-resizer-ltr.xul 240536-resizer-rt
 == 261826-1.xul 261826-1-ref.xul
 == 262151-1.html 262151-1-ref.html
 == 262998-1.html 262998-1-ref.html
-#== 263683-1.html 263683-1-ref.html
 == 267353-1.html 267353-1-ref.html
 == 271747-1a.html 271747-1-ref.html
 == 271747-1b.html 271747-1-ref.html
@@ -1276,3 +1275,6 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 495385-5.html 495385-5-ref.html
 == 498228-1.xul 498228-1-ref.xul
 == 496032-1.html 496032-1-ref.html
+== 502795-1.html 502795-1-ref.html
+== 503364-1a.html 503364-1-ref.html
+== 503364-1b.html 503364-1-ref.html

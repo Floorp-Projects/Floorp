@@ -152,6 +152,14 @@
 #include <process.h>
 #endif
 
+#ifdef DEBUG_CC
+#define IF_DEBUG_CC_PARAM(_p) , _p
+#define IF_DEBUG_CC_ONLY_PARAM(_p) _p
+#else
+#define IF_DEBUG_CC_PARAM(_p)
+#define IF_DEBUG_CC_ONLY_PARAM(_p)
+#endif
+
 #define DEFAULT_SHUTDOWN_COLLECTIONS 5
 #ifdef DEBUG_CC
 #define SHUTDOWN_COLLECTIONS(params) params.mShutdownCollections
@@ -956,6 +964,7 @@ struct nsCycleCollector
 
     void RegisterRuntime(PRUint32 langID, 
                          nsCycleCollectionLanguageRuntime *rt);
+    nsCycleCollectionLanguageRuntime * GetRuntime(PRUint32 langID);
     void ForgetRuntime(PRUint32 langID);
 
     void SelectPurple(GCGraphBuilder &builder);
@@ -1288,21 +1297,15 @@ public:
     NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root);
 
 private:
-#ifdef DEBUG_CC
     NS_IMETHOD_(void) DescribeNode(CCNodeType type, nsrefcnt refCount,
                                    size_t objSz, const char *objName);
-#else
-    NS_IMETHOD_(void) DescribeNode(CCNodeType type, nsrefcnt refCount);
-#endif
     NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *child,
                                nsCycleCollectionParticipant* participant);
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
     NS_IMETHOD_(void) NoteNativeChild(void *child,
                                      nsCycleCollectionParticipant *participant);
     NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
-#ifdef DEBUG_CC
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name);
-#endif
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
@@ -1314,6 +1317,11 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
     if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nsnull,
                            sizeof(PtrToNodeEntry), 32768))
         mPtrToNodeMap.ops = nsnull;
+#ifdef DEBUG_CC
+    // Do we need to set these all the time?
+    mFlags |= nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO |
+              nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
+#endif
 }
 
 GCGraphBuilder::~GCGraphBuilder()
@@ -1328,6 +1336,9 @@ GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant
                        )
 {
     PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
+    if (!e)
+        return nsnull;
+
     PtrInfo *result;
     if (!e->mNode) {
         // New entry.
@@ -1403,12 +1414,8 @@ GCGraphBuilder::NoteRoot(PRUint32 langID, void *root,
 }
 
 NS_IMETHODIMP_(void)
-#ifdef DEBUG_CC
 GCGraphBuilder::DescribeNode(CCNodeType type, nsrefcnt refCount,
                              size_t objSz, const char *objName)
-#else
-GCGraphBuilder::DescribeNode(CCNodeType type, nsrefcnt refCount)
-#endif
 {
 #ifdef DEBUG_CC
     mCurrPi->mBytes = objSz;
@@ -1516,13 +1523,13 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     ++childPi->mInternalRefs;
 }
 
-#ifdef DEBUG_CC
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteNextEdgeName(const char* name)
 {
+#ifdef DEBUG_CC
     mNextEdgeName = name;
-}
 #endif
+}
 
 static PRBool
 AddPurpleRoot(GCGraphBuilder &builder, nsISupports *root)
@@ -2007,6 +2014,14 @@ nsCycleCollector::RegisterRuntime(PRUint32 langID,
     mRuntimes[langID] = rt;
 }
 
+nsCycleCollectionLanguageRuntime *
+nsCycleCollector::GetRuntime(PRUint32 langID)
+{
+    if (langID > nsIProgrammingLanguage::MAX)
+        return nsnull;
+
+    return mRuntimes[langID];
+}
 
 void 
 nsCycleCollector::ForgetRuntime(PRUint32 langID)
@@ -3034,6 +3049,13 @@ nsCycleCollector_registerRuntime(PRUint32 langID,
         sCollector->RegisterRuntime(langID, rt);
 }
 
+nsCycleCollectionLanguageRuntime *
+nsCycleCollector_getRuntime(PRUint32 langID)
+{
+    if (sCollector)
+        sCollector->GetRuntime(langID);
+    return nsnull;
+}
 
 void 
 nsCycleCollector_forgetRuntime(PRUint32 langID)

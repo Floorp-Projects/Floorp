@@ -756,7 +756,7 @@ public:
   {
   }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsGenericElement)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsGenericElement)
 
 protected:
   /**

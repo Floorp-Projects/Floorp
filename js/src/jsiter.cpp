@@ -730,7 +730,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     }
     gen->frame.argsobj = fp->argsobj;
     if (fp->argsobj) {
-        JS_SetPrivate(cx, fp->argsobj, &gen->frame);
+        JS_SetPrivate(cx, JSVAL_TO_OBJECT(fp->argsobj), &gen->frame);
         fp->argsobj = NULL;
     }
 

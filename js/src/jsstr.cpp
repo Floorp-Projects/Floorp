@@ -73,6 +73,7 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jsbit.h"
+#include "jsvector.h"
 
 #define JSSTRDEP_RECURSION_LIMIT        100
 
@@ -246,35 +247,36 @@ js_MakeStringImmutable(JSContext *cx, JSString *str)
 static JSString *
 ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
 {
-    JSObject *obj;
-    JSString *str;
-
     if (arg >= argc)
         return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     vp += 2 + arg;
 
-    if (JSVAL_IS_OBJECT(*vp)) {
-        obj = JSVAL_TO_OBJECT(*vp);
-        if (!obj)
-            return ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
-        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_STRING, vp))
-            return NULL;
+    if (!JSVAL_IS_PRIMITIVE(*vp) &&
+        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(*vp), JSTYPE_STRING, vp)) {
+        return NULL;
     }
-    if (JSVAL_IS_STRING(*vp))
-        return JSVAL_TO_STRING(*vp);
-    if (JSVAL_IS_INT(*vp)) {
-        str = js_NumberToString(cx, JSVAL_TO_INT(*vp));
-    } else if (JSVAL_IS_DOUBLE(*vp)) {
-        str = js_NumberToString(cx, *JSVAL_TO_DOUBLE(*vp));
+
+    JSString *str;
+    if (JSVAL_IS_STRING(*vp)) {
+        str = JSVAL_TO_STRING(*vp);
     } else if (JSVAL_IS_BOOLEAN(*vp)) {
-        return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[
+        str = ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[
                                   JSVAL_TO_BOOLEAN(*vp)? 1 : 0]);
-    } else {
-        JS_ASSERT(JSVAL_IS_VOID(*vp));
-        return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
+    } else if (JSVAL_IS_NULL(*vp)) {
+        str = ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
+    } else if (JSVAL_IS_VOID(*vp)) {
+        str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     }
-    if (str)
-        *vp = STRING_TO_JSVAL(str);
+    else {
+        if (JSVAL_IS_INT(*vp)) {
+            str = js_NumberToString(cx, JSVAL_TO_INT(*vp));
+        } else {
+            JS_ASSERT(JSVAL_IS_DOUBLE(*vp));
+            str = js_NumberToString(cx, *JSVAL_TO_DOUBLE(*vp));
+        }
+        if (str)
+            *vp = STRING_TO_JSVAL(str);
+    }
     return str;
 }
 
@@ -1287,9 +1289,18 @@ typedef struct GlobData {
                                           does not pass to caller */
 #define GLOBAL_REGEXP   0x10    /* out: regexp had the 'g' flag */
 
+typedef JSBool (*GlobFunc)(JSContext *cx, jsint count, GlobData *data);
+typedef JSBool (JS_REQUIRES_STACK *RedGlobFunc)(JSContext *cx, jsint count, GlobData *data);
+
+static inline JS_IGNORE_STACK GlobFunc
+globfunc_stack_cast(RedGlobFunc f)
+{
+    return f;
+}
+
 static JSBool
 match_or_replace(JSContext *cx,
-                 JSBool (*glob)(JSContext *cx, jsint count, GlobData *data),
+                 GlobFunc glob,
                  void (*destroy)(JSContext *cx, GlobData *data),
                  GlobData *data, uintN argc, jsval *vp)
 {
@@ -1543,7 +1554,7 @@ interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
     return NULL;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 {
     JSString *repstr;
@@ -1558,6 +1569,8 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         jsval *invokevp, *sp;
         void *mark;
         JSBool ok;
+
+        js_LeaveTrace(cx);
 
         /*
          * Save the regExpStatics from the current regexp, since they may be
@@ -1743,7 +1756,7 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     return JS_TRUE;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 str_replace(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *lambda;
@@ -1762,7 +1775,7 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
     return js_StringReplaceHelper(cx, argc, lambda, repstr, vp);
 }
 
-JSBool JS_REQUIRES_STACK
+JSBool
 js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
                        JSString *repstr, jsval *vp)
 {
@@ -1794,8 +1807,8 @@ js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
     rdata.index = 0;
     rdata.leftIndex = 0;
 
-    ok = match_or_replace(cx, replace_glob, replace_destroy, &rdata.base,
-                          argc, vp);
+    ok = match_or_replace(cx, globfunc_stack_cast(replace_glob),
+                          replace_destroy, &rdata.base, argc, vp);
     if (!ok)
         return JS_FALSE;
 
@@ -2594,14 +2607,6 @@ js_InitDeflatedStringCache(JSRuntime *rt)
     return JS_TRUE;
 }
 
-#define UNIT_STRING_SPACE(sp)    ((jschar *) ((sp) + UNIT_STRING_LIMIT))
-#define UNIT_STRING_SPACE_RT(rt) UNIT_STRING_SPACE((rt)->unitStrings)
-
-#define IN_UNIT_STRING_SPACE(sp,cp)                                           \
-    ((size_t)((cp) - UNIT_STRING_SPACE(sp)) < 2 * UNIT_STRING_LIMIT)
-#define IN_UNIT_STRING_SPACE_RT(rt,cp)                                        \
-    IN_UNIT_STRING_SPACE((rt)->unitStrings, cp)
-
 JSString *
 js_GetUnitStringForChar(JSContext *cx, jschar c)
 {
@@ -2873,71 +2878,6 @@ js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str)
     JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
 }
 
-static JSStringFinalizeOp str_finalizers[GCX_NTYPES - GCX_EXTERNAL_STRING] = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-};
-
-intN
-js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
-                                 JSStringFinalizeOp newop)
-{
-    uintN i;
-
-    for (i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
-        if (str_finalizers[i] == oldop) {
-            str_finalizers[i] = newop;
-            return (intN) i;
-        }
-    }
-    return -1;
-}
-
-/*
- * cx is NULL when we are called from js_FinishAtomState to force the
- * finalization of the permanently interned strings.
- */
-void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
-{
-    jschar *chars;
-    JSBool valid;
-    JSStringFinalizeOp finalizer;
-
-    JS_RUNTIME_UNMETER(rt, liveStrings);
-    if (str->isDependent()) {
-        /* A dependent string can not be external and must be valid. */
-        JS_ASSERT(type < 0);
-        JS_ASSERT(str->dependentBase());
-        JS_RUNTIME_UNMETER(rt, liveDependentStrings);
-        valid = JS_TRUE;
-    } else {
-        /* A stillborn string has null chars, so is not valid. */
-        chars = str->flatChars();
-        valid = (chars != NULL);
-        if (valid) {
-            if (IN_UNIT_STRING_SPACE_RT(rt, chars)) {
-                JS_ASSERT(rt->unitStrings[*chars] == str);
-                JS_ASSERT(type < 0);
-                rt->unitStrings[*chars] = NULL;
-            } else if (type < 0) {
-                free(chars);
-            } else {
-                JS_ASSERT((uintN) type < JS_ARRAY_LENGTH(str_finalizers));
-                finalizer = str_finalizers[type];
-                if (finalizer) {
-                    /*
-                     * Assume that the finalizer for the permanently interned
-                     * string knows how to deal with null context.
-                     */
-                    finalizer(cx, str);
-                }
-            }
-        }
-    }
-    if (valid && str->isDeflated())
-        js_PurgeDeflatedStringCache(rt, str);
-}
-
 JS_FRIEND_API(const char *)
 js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun)
 {
@@ -2955,16 +2895,13 @@ js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun)
 JS_FRIEND_API(JSString *)
 js_ValueToString(JSContext *cx, jsval v)
 {
-    JSObject *obj;
     JSString *str;
 
-    if (JSVAL_IS_OBJECT(v)) {
-        obj = JSVAL_TO_OBJECT(v);
-        if (!obj)
-            return ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
-        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_STRING, &v))
-            return NULL;
+    if (!JSVAL_IS_PRIMITIVE(v) &&
+        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v)) {
+        return NULL;
     }
+
     if (JSVAL_IS_STRING(v)) {
         str = JSVAL_TO_STRING(v);
     } else if (JSVAL_IS_INT(v)) {
@@ -2973,10 +2910,48 @@ js_ValueToString(JSContext *cx, jsval v)
         str = js_NumberToString(cx, *JSVAL_TO_DOUBLE(v));
     } else if (JSVAL_IS_BOOLEAN(v)) {
         str = js_BooleanToString(cx, JSVAL_TO_BOOLEAN(v));
+    } else if (JSVAL_IS_NULL(v)) {
+        str = ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
     } else {
         str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     }
     return str;
+}
+
+static inline JSBool
+pushAtom(JSAtom *atom, JSTempVector<jschar> &buf)
+{
+    JSString *str = ATOM_TO_STRING(atom);
+    const jschar *chars;
+    size_t length;
+    str->getCharsAndLength(chars, length);
+    return buf.pushBack(chars, chars + length);
+}
+
+/* This function implements E-262-3 section 9.8, toString. */
+JS_FRIEND_API(JSBool)
+js_ValueToStringBuffer(JSContext *cx, jsval v, JSTempVector<jschar> &buf)
+{
+    if (!JSVAL_IS_PRIMITIVE(v) &&
+        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v)) {
+        return JS_FALSE;
+    }
+
+    if (JSVAL_IS_STRING(v)) {
+        JSString *str = JSVAL_TO_STRING(v);
+        const jschar *chars;
+        size_t length;
+        str->getCharsAndLength(chars, length);
+        return buf.pushBack(chars, chars + length);
+    }
+    if (JSVAL_IS_NUMBER(v))
+        return js_NumberValueToStringBuffer(cx, v, buf);
+    if (JSVAL_IS_BOOLEAN(v))
+        return js_BooleanToStringBuffer(cx, JSVAL_TO_BOOLEAN(v), buf);
+    if (JSVAL_IS_NULL(v))
+        return pushAtom(cx->runtime->atomState.nullAtom, buf);
+    JS_ASSERT(JSVAL_IS_VOID(v));
+    return pushAtom(cx->runtime->atomState.typeAtoms[JSTYPE_VOID], buf);
 }
 
 JS_FRIEND_API(JSString *)

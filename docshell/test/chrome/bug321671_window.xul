@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="321671Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 321671 test">
+
+  <script type="application/javascript"
+    src=
+  "chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+    
+    // Maximum number of entries in the bfcache for this session history.
+    // This number is hardcoded in docshell code.  In the test, we'll
+    // navigate through enough pages so that we hit one that's been
+    // evicted from the bfcache because it's farther from the current
+    // page than this number.
+    const MAX_BFCACHE_PAGES = 3;
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+
+    ////
+    // Generator function for test steps for bug 321671:  Scroll position 
+    // should be retained when moving backwards and forwards through pages 
+    // when bfcache is enabled.
+    //
+    function testIterator()
+    {
+      // Variable to hold the scroll positions of the test pages.
+      var scrollPositions = [];
+      
+      // Make sure bfcache is on.
+      enableBFCache(true);
+      
+      // Load enough test pages that so the first one is evicted from the
+      // bfcache, scroll down on each page, and save the 
+      // current scroll position before continuing.  Verify that each
+      // page we're navigating away from is initially put into the bfcache.
+      for (var i = 0; i <= MAX_BFCACHE_PAGES + 1; i++) {
+        doPageNavigation( {
+           uri: "data:text/html,<html><head><title>bug321671 page" + (i + 1) + 
+                "</title></head>" +
+                "<body><table border='1' width='300' height='1000'>" + 
+                "<tbody><tr><td>" +
+                " page " + (i + 1) + ": foobar foobar foobar foobar " +
+                "</td></tr></tbody></table> " +
+                "</body></html>",
+           eventsToListenFor: ["pageshow", "pagehide"],
+           expectedEvents: [ { type: "pagehide",
+                               persisted: true,
+                               title: i == 0 ? 
+                                 undefined : "bug321671 page" + i },
+                             { type: "pageshow", 
+                               title: "bug321671 page" + (i + 1) } ],
+           onNavComplete: nextTest 
+          } );
+        yield;
+
+        is(TestWindow.getWindow().scrollY, 0, 
+          "Page initially has non-zero scrollY position");
+        TestWindow.getWindow().scrollByLines(10 + (2*i));
+        ok(TestWindow.getWindow().scrollY > 0,
+          "Page has zero scrollY position after scrolling");
+        scrollPositions[i] = TestWindow.getWindow().scrollY; 
+      }
+      
+      // Go back to the first page, one page at a time.  For each 'back' 
+      // action, verify that its vertical scroll position is restored 
+      // correctly.  Verify that the last page in the sequence
+      // does not come from the bfcache.  Again verify that all pages 
+      // that we navigate away from are initially
+      // stored in the bfcache.
+      for (i = MAX_BFCACHE_PAGES + 1; i > 0; i--) {
+        doPageNavigation( {
+          back: true,
+          eventsToListenFor: ["pageshow", "pagehide"],
+          expectedEvents: [ { type: "pagehide",
+                              title: "bug321671 page" + (i+1),
+                              persisted: true }, 
+                            { type: "pageshow", 
+                              title: "bug321671 page" + i,
+                              persisted: i > 1 } ],
+          onNavComplete: nextTest
+        } );
+        yield;
+        
+        is(TestWindow.getWindow().scrollY, scrollPositions[i-1], 
+          "Scroll position not restored while going back!");
+      }
+      
+      // Traverse history forward now, and verify scroll position is still 
+      // restored.  Similar to the backward traversal, verify that all
+      // but the last page in the sequence comes from the bfcache.  Also 
+      // verify that all of the pages get stored in the bfcache when we 
+      // navigate away from them.
+      for (i = 1; i <= MAX_BFCACHE_PAGES + 1; i++) {
+        doPageNavigation( {
+          forward: true,
+          eventsToListenFor: ["pageshow", "pagehide"],
+          expectedEvents: [ { type: "pagehide", 
+                              persisted: true, 
+                              title: "bug321671 page" + i },
+                            { type: "pageshow", 
+                              persisted: i < MAX_BFCACHE_PAGES + 1,
+                              title: "bug321671 page" + (i + 1) } ],
+          onNavComplete: nextTest
+        } );
+        yield;
+        
+        is(TestWindow.getWindow().scrollY, scrollPositions[i],
+          "Scroll position not restored while going forward!");
+      }
+      
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+    
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

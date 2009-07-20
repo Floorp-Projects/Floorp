@@ -41,9 +41,6 @@
 """A parser for cross-platform IDL (XPIDL) files."""
 
 import sys, os.path, re
-
-sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
-                             'other-licenses', 'ply'))
 from ply import lex, yacc
 
 """A type conforms to the following pattern:

@@ -1288,12 +1288,13 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     // CompareTreePosition uses placeholder hierarchy for out of flow frames,
     // so this will make out-of-flows respect the ordering of placeholders,
     // which is great because it takes care of anonymous content.
+    nsIFrame* insertionPoint = nsnull;
     if (!lastChild ||
         nsLayoutUtils::CompareTreePosition(lastChild, firstNewFrame, containingBlock) < 0) {
-      // no lastChild, or lastChild comes before the new children, so just append
-      rv = containingBlock->AppendFrames(aChildListName, firstNewFrame);
+      // no lastChild, or lastChild comes before the new children, so
+      // just insert after lastChild.
+      insertionPoint = lastChild;
     } else {
-      nsIFrame* insertionPoint = nsnull;
       // try the other children
       for (nsIFrame* f = firstChild; f != lastChild; f = f->GetNextSibling()) {
         PRInt32 compare =
@@ -1305,10 +1306,10 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
         }
         insertionPoint = f;
       }
-
-      rv = containingBlock->InsertFrames(aChildListName, insertionPoint,
-                                         firstNewFrame);
     }
+
+    rv = containingBlock->InsertFrames(aChildListName, insertionPoint,
+                                       firstNewFrame);
   }
   aFrameItems.childList = nsnull;
   // XXXbz And if NS_FAILED(rv), what?  I guess we need to clean up the list
@@ -1929,15 +1930,11 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
 // The term pseudo frame is being used instead of anonymous frame, since anonymous
 // frame has been used elsewhere to refer to frames that have generated content
 
-// aIncludeSpecial applies to captions, col groups, cols and cells.
-// These do not generate pseudo frame wrappers for foreign children.
-// In fact, colgroups never have any children that are not cols and
-// cols never have any children at all.
-
 static PRBool
 IsTableRelated(nsIAtom* aParentType)
 {
   return
+    nsGkAtoms::tableOuterFrame    == aParentType ||
     nsGkAtoms::tableFrame         == aParentType ||
     nsGkAtoms::tableRowGroupFrame == aParentType ||
     nsGkAtoms::tableRowFrame      == aParentType ||
@@ -5532,16 +5529,15 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
     // We don't do it for content that may have XBL anonymous siblings,
     // because they make it difficult to correctly create the frame
     // due to dynamic changes.
+    // We don't do it for text that's not a line participant (i.e. SVG text).
     if (AtLineBoundary(aIter) &&
         !styleContext->GetStyleText()->NewlineIsSignificant() &&
         aIter.List()->ParentHasNoXBLChildren() &&
         !(aState.mAdditionalStateBits & NS_FRAME_GENERATED_CONTENT) &&
+        (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&
         item.IsWhitespace())
       return NS_OK;
 
-    // XXXroc Right now if you start with whitespace and then start adding chars
-    // (e.g. while editing) we reframe on every change, which seems dumb.
-    // Maybe we should use another flag here, or something.
     return ConstructTextFrame(item.mFCData, aState, item.mContent,
                               adjParentFrame, styleContext,
                               aFrameItems);

@@ -71,6 +71,7 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
+#include "jsvector.h"
 
 static JSBool
 num_isNaN(JSContext *cx, uintN argc, jsval *vp)
@@ -859,6 +860,41 @@ JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d)
 {
     return NumberToStringWithBase(cx, d, 10);
+}
+
+JSBool JS_FASTCALL
+js_NumberValueToStringBuffer(JSContext *cx, jsval v, JSTempVector<jschar> &buf)
+{
+    /* Convert to C-string. */
+    static const size_t arrSize = DTOSTR_STANDARD_BUFFER_SIZE;
+    char arr[arrSize];
+    const char *cstr;
+    if (JSVAL_IS_INT(v)) {
+        cstr = IntToCString(JSVAL_TO_INT(v), 10, arr, arrSize);
+    } else {
+        JS_ASSERT(JSVAL_IS_DOUBLE(v));
+        cstr = JS_dtostr(arr, arrSize, DTOSTR_STANDARD, 0, *JSVAL_TO_DOUBLE(v));
+    }
+    if (!cstr)
+        return JS_FALSE;
+
+    /*
+     * Inflate to jschar string.  The input C-string characters are < 127, so
+     * even if jschars are UTF-8, all chars should map to one jschar.
+     */
+    size_t cstrlen = strlen(cstr);
+    JS_ASSERT(cstrlen < arrSize);
+    size_t sizeBefore = buf.size();
+    if (!buf.growBy(cstrlen))
+        return JS_FALSE;
+    jschar *appendBegin = buf.begin() + sizeBefore;
+#ifdef DEBUG
+    size_t oldcstrlen = cstrlen;
+    JSBool ok =
+#endif
+        js_InflateStringToBuffer(cx, cstr, cstrlen, appendBegin, &cstrlen);
+    JS_ASSERT(ok && cstrlen == oldcstrlen);
+    return JS_TRUE;
 }
 
 jsdouble

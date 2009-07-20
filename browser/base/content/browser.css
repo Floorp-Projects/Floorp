@@ -65,6 +65,13 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   font-weight: bold;
 }
 
+%ifdef MOZ_WIDGET_GTK2
+/* Bookmarks override the "images-in-menus" metric in xul.css */
+.bookmark-item > .menu-iconic-left {
+  visibility: inherit;
+}
+%endif
+
 #editBMPanel_tagsSelector {
   /* override default listbox width from xul.css */
   width: auto;
@@ -102,12 +109,6 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 #identity-popup-content-box.unknownIdentity > #identity-popup-content-owner ,
 #identity-popup-content-box.verifiedIdentity > #identity-popup-connectedToLabel2 ,
 #identity-popup-content-box.verifiedDomain > #identity-popup-connectedToLabel2 {
-  display: none;
-}
-
-
-/* Bug 483950 - Hide domain name in status bar pending removal */
-#security-button > label {
   display: none;
 }
 

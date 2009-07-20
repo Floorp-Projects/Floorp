@@ -149,7 +149,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   if (NS_FAILED(rv))
     return rv;
 
-  aBoundElement->PreserveWrapper();
+  nsContentUtils::PreserveWrapper(aBoundElement, aBoundElement);
 
   wrapper.swap(*aScriptObjectHolder);
   

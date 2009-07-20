@@ -84,6 +84,7 @@ pref("offline-apps.quota.warn",        51200);
 pref("browser.sessionhistory.max_total_viewers", -1);
 
 pref("ui.use_native_colors", true);
+pref("ui.use_native_popup_windows", false);
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
 pref("browser.display.use_system_colors",   false);
@@ -540,6 +541,12 @@ pref("javascript.options.strict",           false);
 pref("javascript.options.relimit",          false);
 pref("javascript.options.jit.content",      true);
 pref("javascript.options.jit.chrome",       false);
+// This preference limits the memory usage of javascript.
+// If you want to change these values for your device,
+// please find Bug 417052 comment 17 and Bug 456721
+// Comment 32.
+pref("javascript.options.mem.high_water_mark", 32);
+pref("javascript.options.mem.gc_frequency",   1600);
 
 // advanced prefs
 pref("security.enable_java",                true);
@@ -1205,23 +1212,32 @@ pref("font.minimum-size.x-unicode", 0);
 pref("font.minimum-size.x-user-def", 0);
 
 #ifdef XP_WIN
+
+// On Windows CE, Arial sometimes isn't available;
+// so we'll use Tahoma instead
+#ifdef WINCE
+#define WINDOWS_SANS_SERIF_FONT Tahoma
+#else
+#define WINDOWS_SANS_SERIF_FONT Arial
+#endif
+
 pref("font.name.serif.ar", "Times New Roman");
-pref("font.name.sans-serif.ar", "Arial");
+#expand pref("font.name.sans-serif.ar", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.ar", "Courier New");
 pref("font.name.cursive.ar", "Comic Sans MS");
 
 pref("font.name.serif.el", "Times New Roman");
-pref("font.name.sans-serif.el", "Arial");
+#expand pref("font.name.sans-serif.el", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.el", "Courier New");
 pref("font.name.cursive.el", "Comic Sans MS");
 
 pref("font.name.serif.he", "Narkisim");
-pref("font.name.sans-serif.he", "Arial");
+#expand pref("font.name.sans-serif.he", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.he", "Fixed Miriam Transparent");
 pref("font.name.cursive.he", "Guttman Yad");
 pref("font.name-list.serif.he", "Narkisim, David");
 pref("font.name-list.monospace.he", "Fixed Miriam Transparent, Miriam Fixed, Rod, Courier New");
-pref("font.name-list.cursive.he", "Guttman Yad, Ktav, Arial");
+#expand pref("font.name-list.cursive.he", "Guttman Yad, Ktav, __WINDOWS_SANS_SERIF_FONT__");
 
 pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
 pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
@@ -1246,32 +1262,32 @@ pref("font.name.monospace.th", "Tahoma");
 pref("font.name.cursive.th", "Tahoma");
 
 pref("font.name.serif.tr", "Times New Roman");
-pref("font.name.sans-serif.tr", "Arial");
+#expand pref("font.name.sans-serif.tr", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.tr", "Courier New");
 pref("font.name.cursive.tr", "Comic Sans MS");
 
 pref("font.name.serif.x-baltic", "Times New Roman");
-pref("font.name.sans-serif.x-baltic", "Arial");
+#expand pref("font.name.sans-serif.x-baltic", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.x-baltic", "Courier New");
 pref("font.name.cursive.x-baltic", "Comic Sans MS");
 
 pref("font.name.serif.x-central-euro", "Times New Roman");
-pref("font.name.sans-serif.x-central-euro", "Arial");
+#expand pref("font.name.sans-serif.x-central-euro", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.x-central-euro", "Courier New");
 pref("font.name.cursive.x-central-euro", "Comic Sans MS");
 
 pref("font.name.serif.x-cyrillic", "Times New Roman");
-pref("font.name.sans-serif.x-cyrillic", "Arial");
+#expand pref("font.name.sans-serif.x-cyrillic", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.x-cyrillic", "Courier New");
 pref("font.name.cursive.x-cyrillic", "Comic Sans MS");
 
 pref("font.name.serif.x-unicode", "Times New Roman");
-pref("font.name.sans-serif.x-unicode", "Arial");
+#expand pref("font.name.sans-serif.x-unicode", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.x-unicode", "Courier New");
 pref("font.name.cursive.x-unicode", "Comic Sans MS");
 
 pref("font.name.serif.x-western", "Times New Roman");
-pref("font.name.sans-serif.x-western", "Arial");
+#expand pref("font.name.sans-serif.x-western", "__WINDOWS_SANS_SERIF_FONT__");
 pref("font.name.monospace.x-western", "Courier New");
 pref("font.name.cursive.x-western", "Comic Sans MS");
 
@@ -1285,7 +1301,7 @@ pref("font.name-list.monospace.zh-CN", "MS Song, SimSun");
 // Per Taiwanese users' demand. They don't want to use TC fonts for
 // rendering Latin letters. (bug 88579)
 pref("font.name.serif.zh-TW", "Times New Roman"); 
-pref("font.name.sans-serif.zh-TW", "Arial"); 
+#expand pref("font.name.sans-serif.zh-TW", "__WINDOWS_SANS_SERIF_FONT__"); 
 pref("font.name.monospace.zh-TW", "細明體");  // MingLiU
 pref("font.name-list.serif.zh-TW", "PMingLiu, MingLiU"); 
 pref("font.name-list.sans-serif.zh-TW", "PMingLiU, MingLiU");
@@ -1294,7 +1310,7 @@ pref("font.name-list.monospace.zh-TW", "MingLiU");
 // hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs 
 // Hong Kong users have the same demand about glyphs for Latin letters (bug 88579) 
 pref("font.name.serif.zh-HK", "Times New Roman"); 
-pref("font.name.sans-serif.zh-HK", "Arial"); 
+#expand pref("font.name.sans-serif.zh-HK", "__WINDOWS_SANS_SERIF_FONT__"); 
 pref("font.name.monospace.zh-HK", "細明體_HKSCS"); 
 pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU"); 
 pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");  
@@ -2729,6 +2745,9 @@ pref("image.cache.size", 5242880);
 // A weight, from 0-1000, to place on time when comparing to size.
 // Size is given a weight of 1000 - timeweight.
 pref("image.cache.timeweight", 500);
+
+// The default Accept header sent for images loaded over HTTP(S)
+pref("image.http.accept", "image/png,image/*;q=0.8,*/*;q=0.5");
 
 #ifdef XP_WIN
 #ifndef WINCE

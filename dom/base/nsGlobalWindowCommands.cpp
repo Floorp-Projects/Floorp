@@ -242,12 +242,9 @@ nsSelectMoveScrollCommand::DoSelectCommand(const char *aCommandName, nsIDOMWindo
   selCont->GetCaretEnabled(&caretOn);
 
   // We allow the caret to be moved with arrow keys on any window for which
-  // the caret is enabled. In particular, this includes caret-browsing mode,
-  // but we refer to this mode again in the test condition for readability.
-  if (caretOn) {
-    // XXXndeakin P3 perhaps this should be cached
-    if (nsContentUtils::GetBoolPref("accessibility.browsewithcaret"))
-      return DoCommandBrowseWithCaretOn(aCommandName, aWindow, selCont);
+  // the caret is enabled. In particular, this includes caret-browsing mode.
+  if (caretOn || nsContentUtils::GetBoolPref("accessibility.browsewithcaret")) {
+    return DoCommandBrowseWithCaretOn(aCommandName, aWindow, selCont);
   }
 
   return DoCommandBrowseWithCaretOff(aCommandName, selCont);

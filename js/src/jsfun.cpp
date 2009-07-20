@@ -77,6 +77,8 @@
 # include "jsxdrapi.h"
 #endif
 
+#include "jsatominlines.h"
+
 /* Generic function/call/arguments tinyids -- also reflected bit numbers. */
 enum {
     CALL_ARGUMENTS  = -1,       /* predefined arguments local variable */
@@ -124,7 +126,7 @@ MarkArgDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
     size_t nbits, nbytes;
     jsbitmap *bitmap;
 
-    argsobj = fp->argsobj;
+    argsobj = JSVAL_TO_OBJECT(fp->argsobj);
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
     nbits = fp->argc;
     JS_ASSERT(slot < nbits);
@@ -165,7 +167,7 @@ ArgWasDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
     jsval bmapval, bmapint;
     jsbitmap *bitmap;
 
-    argsobj = fp->argsobj;
+    argsobj = JSVAL_TO_OBJECT(fp->argsobj);
     (void) JS_GetReservedSlot(cx, argsobj, 0, &bmapval);
     if (JSVAL_IS_VOID(bmapval))
         return JS_FALSE;
@@ -208,7 +210,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
         slot = (uintN) JSID_TO_INT(id);
         if (slot < fp->argc) {
             if (fp->argsobj && ArgWasDeleted(cx, fp, slot))
-                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
+                return OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(fp->argsobj), id, vp);
             *vp = fp->argv[slot];
         } else {
             /*
@@ -224,12 +226,12 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
              * undefined in *vp.
              */
             if (fp->argsobj)
-                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
+                return OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(fp->argsobj), id, vp);
         }
     } else {
         if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
             if (fp->argsobj && TEST_OVERRIDE_BIT(fp, ARGS_LENGTH))
-                return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
+                return OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(fp->argsobj), id, vp);
             *vp = INT_TO_JSVAL((jsint) fp->argc);
         }
     }
@@ -252,7 +254,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         fp = fp->down;
 
     /* Create an arguments object for fp only if it lacks one. */
-    argsobj = fp->argsobj;
+    argsobj = JSVAL_TO_OBJECT(fp->argsobj);
     if (argsobj)
         return argsobj;
 
@@ -278,7 +280,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
     while ((parent = OBJ_GET_PARENT(cx, global)) != NULL)
         global = parent;
     STOBJ_SET_PARENT(argsobj, global);
-    fp->argsobj = argsobj;
+    fp->argsobj = OBJECT_TO_JSVAL(argsobj);
     return argsobj;
 }
 
@@ -298,7 +300,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
      * elements of argsobj.  Do this first, before clearing and freeing the
      * deleted argument slot bitmap, because args_enumerate depends on that.
      */
-    argsobj = fp->argsobj;
+    argsobj = JSVAL_TO_OBJECT(fp->argsobj);
     ok = args_enumerate(cx, argsobj);
 
     /*
@@ -723,6 +725,29 @@ args_enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
+JSBool JS_FASTCALL
+js_PutArguments(JSContext *cx, JSObject *argsobj, uint32 length, JSObject *callee, jsval *args)
+{
+    if (!js_DefineProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                           INT_TO_JSVAL(length), args_getProperty, args_setProperty, 0, NULL)) {
+        return false;
+    }
+    if (!js_DefineProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.calleeAtom),
+                           OBJECT_TO_JSVAL(callee), args_getProperty, args_setProperty, 0, NULL)) {
+        return false;
+    }
+
+    for (uintN i = 0; i < length; ++i) {
+        if (!js_DefineProperty(cx, argsobj, INT_TO_JSID(i), args[i],
+                               args_getProperty, args_setProperty, 0, NULL)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+JS_DEFINE_CALLINFO_5(extern, BOOL, js_PutArguments, CONTEXT, OBJECT, UINT32, OBJECT, JSVALPTR, 0, 0)
+
 #if JS_HAS_GENERATORS
 /*
  * If a generator-iterator's arguments or call object escapes, it needs to
@@ -784,7 +809,7 @@ JSClass js_DeclEnvClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
 {
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_CallClass ||
@@ -803,6 +828,8 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
          * still has an active stack frame associated with it.
          */
         if (fun->needsWrapper()) {
+            js_LeaveTrace(cx);
+
             JSStackFrame *fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
             if (fp) {
                 JSObject *wrapper = WrapEscapingClosure(cx, fp, funobj, fun);
@@ -820,7 +847,7 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
     return true;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 CalleeGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     return CheckForEscapingClosure(cx, obj, vp);
@@ -930,7 +957,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (fp->argsobj) {
         if (!TEST_OVERRIDE_BIT(fp, CALL_ARGUMENTS)) {
             STOBJ_SET_SLOT(callobj, JSSLOT_CALL_ARGUMENTS,
-                           OBJECT_TO_JSVAL(fp->argsobj));
+                           fp->argsobj);
         }
         ok &= js_PutArgsObject(cx, fp);
     }
@@ -1929,7 +1956,7 @@ fun_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
-JS_REQUIRES_STACK JSBool
+JSBool
 js_fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
@@ -1937,6 +1964,8 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
     void *mark;
     JSBool ok;
+
+    js_LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &vp[1]))
@@ -1988,7 +2017,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 }
 
-JS_REQUIRES_STACK JSBool
+JSBool
 js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj, *aobj;
@@ -2003,6 +2032,8 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
         /* Will get globalObject as 'this' and no other arguments. */
         return js_fun_call(cx, argc, vp);
     }
+
+    js_LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &vp[1]))

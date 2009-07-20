@@ -7,3 +7,4 @@ cp $1/src/*.c src/
 cp $1/AUTHORS ./AUTHORS
 patch -p4 <pause-resume.patch
 patch -p4 <include-CoreServices.patch
+patch -p3 <bug495794_closeAudio.patch

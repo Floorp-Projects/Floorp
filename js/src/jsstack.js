@@ -35,9 +35,10 @@ MapFactory.use_injective = true;
  */
 const RED = 'JS_REQUIRES_STACK';
 const TURN_RED = 'JS_FORCES_STACK';
+const IGNORE_ERRORS = 'JS_IGNORE_STACK';
 
 function attrs(tree) {
-  let a = DECL_P(tree) ? DECL_ATTRIBUTES(tree) : TYPE_ATTRIBUTES(TREE_TYPE(tree));
+  let a = DECL_P(tree) ? DECL_ATTRIBUTES(tree) : TYPE_ATTRIBUTES(tree);
   return translate_attributes(a);
 }
 
@@ -53,6 +54,47 @@ function hasUserAttribute(tree, attrname) {
   return false;
 }
 
+function process_tree_type(d)
+{
+  let t = dehydra_convert(d);
+  if (t.isFunction)
+    return;
+
+  if (t.typedef !== undefined)
+    if (isRed(TYPE_NAME(d)))
+      error("Typedef declaration is annotated JS_REQUIRES_STACK: the annotation should be on the type itself", t.loc);
+  
+  if (hasAttribute(t, RED)) {
+    error("Non-function is annotated JS_REQUIRES_STACK", t.loc);
+    return;
+  }
+  
+  for (let st = t; st !== undefined && st.isPointer; st = st.type) {
+    if (hasAttribute(st, RED)) {
+      error("Non-function is annotated JS_REQUIRES_STACK", t.loc);
+      return;
+    }
+    
+    if (st.parameters)
+      return;
+  }
+}
+
+function process_tree_decl(d)
+{
+  // For VAR_DECLs, walk the DECL_INITIAL looking for bad assignments
+  if (TREE_CODE(d) != VAR_DECL)
+    return;
+  
+  let i = DECL_INITIAL(d);
+  if (!i)
+    return;
+  
+  assignCheck(i, TREE_TYPE(d), function() { return location_of(d); });
+
+  functionPointerWalk(i, d);
+}
+
 /*
  * x is an expression or decl.  These functions assume that 
  */
@@ -61,6 +103,9 @@ function isTurnRed(x) { return hasUserAttribute(x, TURN_RED); }
 
 function process_tree(fndecl)
 {
+  if (hasUserAttribute(fndecl, IGNORE_ERRORS))
+    return;
+
   if (!(isRed(fndecl) || isTurnRed(fndecl))) {
     // Ordinarily a user of ESP runs the analysis, then generates output based
     // on the results.  But in our case (a) we need sub-basic-block resolution,
@@ -73,6 +118,8 @@ function process_tree(fndecl)
     if (a.hasRed)
       a.run();
   }
+  
+  functionPointerCheck(fndecl);
 }
 
 function RedGreenCheck(fndecl, trace) {
@@ -115,7 +162,7 @@ function RedGreenCheck(fndecl, trace) {
           }
           
           for (let i = stack.length - 1; i >= 0; --i) {
-            loc = location_of(stack[i]);
+            let loc = location_of(stack[i]);
             if (loc !== undefined)
               return loc;
           }
@@ -142,6 +189,23 @@ function RedGreenCheck(fndecl, trace) {
                               getLocation(false)];
                 self.hasRed = true;
               } else if (isTurnRed(callee)) {
+                isn.turnRed = true;
+              }
+            }
+            else {
+              let fntype = TREE_CHECK(
+                TREE_TYPE( // the function type
+                  TREE_TYPE( // the function pointer type
+                    CALL_EXPR_FN(t)
+                  )
+                ),
+                FUNCTION_TYPE, METHOD_TYPE);
+              if (isRed(fntype)) {
+                isn.redInfo = ["cannot call JS_REQUIRES_STACK function pointer",
+                               getLocation(false)];
+                self.hasRed = true;
+              }
+              else if (isTurnRed(fntype)) {
                 isn.turnRed = true;
               }
             }
@@ -172,7 +236,8 @@ RedGreenCheck.prototype.flowState = function(isn, state) {
   //  warning("(Remove the workaround in jsstack.js and recompile to get a JS stack trace.)",
   //          location_of(isn));
   //}
-  let green = (state.get(this._state_var_decl) != 1);
+  let stackState = state.get(this._state_var_decl);
+  let green = stackState != 1 && stackState != ESP.NOT_REACHED;
   let redInfo = isn.redInfo;
   if (green && redInfo) {
     error(redInfo[0], redInfo[1]);
@@ -185,3 +250,124 @@ RedGreenCheck.prototype.flowState = function(isn, state) {
     state.assignValue(this._state_var_decl, 1, isn);
 };
 
+function followTypedefs(type)
+{
+  while (type.typedef !== undefined)
+    type = type.typedef;
+  return type;
+}
+
+function assignCheck(source, destType, locfunc)
+{
+  if (TREE_CODE(destType) != POINTER_TYPE)
+    return;
+    
+  let destCode = TREE_CODE(TREE_TYPE(destType));
+  if (destCode != FUNCTION_TYPE && destCode != METHOD_TYPE)
+    return;
+  
+  if (isRed(TREE_TYPE(destType)))
+    return;
+
+  while (TREE_CODE(source) == NOP_EXPR)
+    source = source.operands()[0];
+  
+  // The destination is a green function pointer
+
+  if (TREE_CODE(source) == ADDR_EXPR) {
+    let sourcefn = source.operands()[0];
+    
+    // oddly enough, SpiderMonkey assigns the address of something that's not
+    // a function to a function pointer as part of the API! See JS_TN
+    if (TREE_CODE(sourcefn) != FUNCTION_DECL)
+      return;
+    
+    if (isRed(sourcefn))
+      error("Assigning non-JS_REQUIRES_STACK function pointer from JS_REQUIRES_STACK function " + dehydra_convert(sourcefn).name, locfunc());
+  }
+  else {
+    let sourceType = TREE_TYPE(TREE_TYPE(source).tree_check(POINTER_TYPE));
+    switch (TREE_CODE(sourceType)) {
+      case FUNCTION_TYPE:
+      case METHOD_TYPE:
+        if (isRed(sourceType))
+          error("Assigning non-JS_REQUIRES_STACK function pointer from JS_REQUIRES_STACK function pointer", locfunc());
+        break;
+    }
+  }
+}
+
+/**
+ * A type checker which verifies that a red function pointer is never converted
+ * to a green function pointer.
+ */
+
+function functionPointerWalk(t, baseloc)
+{
+  walk_tree(t, function(t, stack) {
+    function getLocation(skiptop) {
+      if (!skiptop) {
+        let loc = location_of(t);
+        if (loc !== undefined)
+          return loc;
+      }
+          
+      for (let i = stack.length - 1; i >= 0; --i) {
+        let loc = location_of(stack[i]);
+        if (loc !== undefined)
+          return loc;
+      }
+      return location_of(baseloc);
+    }
+                  
+    switch (TREE_CODE(t)) {
+      case GIMPLE_MODIFY_STMT: {
+        let [dest, source] = t.operands();
+        assignCheck(source, TREE_TYPE(dest), getLocation);
+        break;
+      }
+      case CONSTRUCTOR: {
+        let ttype = TREE_TYPE(t);
+        switch (TREE_CODE(ttype)) {
+          case RECORD_TYPE:
+          case UNION_TYPE: {
+            for each (let ce in VEC_iterate(CONSTRUCTOR_ELTS(t)))
+              assignCheck(ce.value, TREE_TYPE(ce.index), getLocation);
+            break;
+          }
+          case ARRAY_TYPE: {
+            let eltype = TREE_TYPE(ttype);
+            for each (let ce in VEC_iterate(CONSTRUCTOR_ELTS(t)))
+              assignCheck(ce.value, eltype, getLocation);
+            break;
+          }
+          default:
+            warning("Unexpected type in initializer: " + TREE_CODE(TREE_TYPE(t)), getLocation());
+        }
+        break;
+      }
+      case CALL_EXPR: {
+        // Check that the arguments to a function and the declared types
+        // of those arguments are compatible.
+        let ops = t.operands();
+        let funcType = TREE_TYPE( // function type
+          TREE_TYPE(ops[1])); // function pointer type
+        let argTypes = [t for (t in function_type_args(funcType))];
+        for (let i = argTypes.length - 1; i >= 0; --i) {
+          let destType = argTypes[i];
+          let source = ops[i + 3];
+          assignCheck(source, destType, getLocation);
+        }
+        break;
+      }
+    }
+  });
+}
+  
+function functionPointerCheck(fndecl)
+{
+  let cfg = function_decl_cfg(fndecl);
+  for (let bb in cfg_bb_iterator(cfg))
+    for (let isn in bb_isn_iterator(bb))
+      functionPointerWalk(isn, DECL_SAVED_TREE(fndecl));
+}

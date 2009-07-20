@@ -85,6 +85,7 @@ _TEST_FILES = 	findbar_window.xul \
 		test_autocomplete4.xul \
 		test_keys.xul \
 		window_keys.xul \
+		test_showcaret.xul \
 		$(NULL)
 
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to
@@ -94,6 +95,12 @@ _TEST_FILES += test_panel_focus.xul \
                window_panel_focus.xul
 else
 _TEST_FILES += test_autocomplete.xul
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+_TEST_FILES += 	$(warning test_cursorsnap.xul temporarily disabled) \
+		window_cursorsnap_dialog.xul \
+		window_cursorsnap_wizard.xul
 endif
 
 libs:: $(_TEST_FILES)

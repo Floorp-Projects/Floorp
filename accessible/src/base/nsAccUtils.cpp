@@ -655,18 +655,18 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
   nsWhitespaceTokenizer tokenizer(roleString);
   while (tokenizer.hasMoreTokens()) {
     // Do a binary search through table for the next role in role list
-    const char *role = NS_LossyConvertUTF16toASCII(tokenizer.nextToken()).get();
-    PRInt32 low = 0;
-    PRInt32 high = nsARIAMap::gWAIRoleMapLength;
-    while (low <= high) {
-      PRInt32 index = low + ((high - low) / 2);
-      PRInt32 compare = PL_strcmp(role, nsARIAMap::gWAIRoleMap[index].roleString);
+    NS_LossyConvertUTF16toASCII role(tokenizer.nextToken());
+    PRUint32 low = 0;
+    PRUint32 high = nsARIAMap::gWAIRoleMapLength;
+    while (low < high) {
+      PRUint32 index = (low + high) / 2;
+      PRInt32 compare = PL_strcmp(role.get(), nsARIAMap::gWAIRoleMap[index].roleString);
       if (compare == 0) {
         // The  role attribute maps to an entry in the role table
         return &nsARIAMap::gWAIRoleMap[index];
       }
       if (compare < 0) {
-        high = index - 1;
+        high = index;
       }
       else {
         low = index + 1;

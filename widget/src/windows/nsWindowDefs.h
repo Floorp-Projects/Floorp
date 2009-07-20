@@ -149,6 +149,9 @@
 #ifndef RDW_NOINTERNALPAINT
 #define RDW_NOINTERNALPAINT     0
 #endif
+#ifndef ERROR
+#define ERROR 0
+#endif
 #endif // defined(WINCE)
 
 /**************************************************************
@@ -164,34 +167,6 @@ typedef enum
     TRI_FALSE = 0,
     TRI_TRUE = 1
 } TriStateBool;
-
-// Rendering modes
-typedef enum {
-  // Use GDI and windows surfaces.
-  RENDER_GDI = 0,
-  // Use 32bpp image surfaces and call StretchDIBits.
-  RENDER_IMAGE_STRETCH32,
-  // Use 32bpp image surfaces, and do 32->24 conversion before calling StretchDIBits.
-  RENDER_IMAGE_STRETCH24,
-  // Use DirectDraw on Windows CE.
-  RENDER_DDRAW,
-  // Use 24bpp image surfaces and DirectDraw 166bbp on Windows CE.
-  RENDER_IMAGE_DDRAW16,
-  // max
-  RENDER_MODE_MAX
-} WinRenderMode;
-
-/*
- * Pick the default render mode differently between
- * desktop, Windows Mobile, and Windows CE.
- */
-#if defined(WINCE_WINDOWS_MOBILE)
-#define DEFAULT_RENDER_MODE               RENDER_IMAGE_DDRAW16
-#elif defined(WINCE)
-#define DEFAULT_RENDER_MODE               RENDER_DDRAW
-#else
-#define DEFAULT_RENDER_MODE               RENDER_GDI
-#endif
 
 /**************************************************************
  *
