@@ -115,6 +115,15 @@ oggplay_callback_theora (OGGZ * oggz, ogg_packet * op, long serialno,
     decoder->y_height = decoder->video_info.frame_height;
     decoder->uv_width = decoder->uv_stride = decoder->video_info.frame_width / 2;
     decoder->uv_height = decoder->video_info.frame_height / 2;
+  
+    if (decoder->y_width == 0 ||
+        decoder->y_height == 0 || 
+        decoder->uv_width == 0 ||
+        decoder->uv_height == 0) {
+      decoder->decoder.active = 0;
+      return 0;
+    }
+    
     if (--(decoder->remaining_header_packets) == 0) {
       /* Ensure the offsets do not push the viewable area outside of the decoded frame. */
       if (((decoder->video_info.height - decoder->video_info.offset_y)<decoder->video_info.frame_height)||
