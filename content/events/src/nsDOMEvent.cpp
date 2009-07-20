@@ -59,7 +59,7 @@
 static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
-  "focus", "blur", "load", "beforeunload", "unload", "abort", "error",
+  "focus", "blur", "load", "beforeunload", "unload", "hashchange", "abort", "error",
   "submit", "reset", "change", "select", "input", "paint" ,"text",
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
@@ -556,6 +556,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_PAGE_SHOW;
     else if (atom == nsGkAtoms::onpagehide)
       mEvent->message = NS_PAGE_HIDE;
+    else if (atom == nsGkAtoms::onhashchange)
+      mEvent->message = NS_HASHCHANGE;
   } else if (mEvent->eventStructType == NS_MUTATION_EVENT) {
     if (atom == nsGkAtoms::onDOMAttrModified)
       mEvent->message = NS_MUTATION_ATTRMODIFIED;
@@ -1268,6 +1270,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_beforeunload];
   case NS_PAGE_UNLOAD:
     return sEventNames[eDOMEvents_unload];
+  case NS_HASHCHANGE:
+    return sEventNames[eDOMEvents_hashchange];
   case NS_IMAGE_ABORT:
     return sEventNames[eDOMEvents_abort];
   case NS_LOAD_ERROR:

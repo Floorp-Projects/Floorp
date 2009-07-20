@@ -182,8 +182,8 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 
   if (mask & HITTEST_MASK_FILL)
     isHit = context.PointInFill(userSpacePoint);
-  if (!isHit && (mask & HITTEST_MASK_STROKE) &&
-      SetupCairoStrokeHitGeometry(&context)) {
+  if (!isHit && (mask & HITTEST_MASK_STROKE)) {
+    SetupCairoStrokeHitGeometry(&context);
     isHit = context.PointInStroke(userSpacePoint);
   }
 
@@ -267,7 +267,8 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
   // # If the stroke is very thin, cairo won't paint any stroke, and so the
   //   stroke bounds that it will return will be empty.
 
-  if (SetupCairoStrokeGeometry(&context)) {
+  if (HasStroke(&context)) {
+    SetupCairoStrokeGeometry(&context);
     extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);
   } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
     extent = gfxRect(0, 0, 0, 0);

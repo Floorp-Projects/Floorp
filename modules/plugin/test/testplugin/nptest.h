@@ -62,6 +62,8 @@ typedef struct InstanceData {
   uint32_t instanceCountWatchGeneration;
   bool lastReportedPrivateModeState;
   bool hasWidget;
+  uint32_t timerID1;
+  uint32_t timerID2;
 } InstanceData;
 
 #endif // nptest_h_

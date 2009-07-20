@@ -10,23 +10,26 @@ const enteredText2="\u03BE\u03B5\u03C3\u03BA\u03B5\u03C0\u03AC\u03B6\u03C9\u0020
 var testPage;
 
 function test() {
-  testPage = Application.activeWindow.open(url("chrome://mochikit/content/browser/docshell/test/browser/test-form_sjis.html"));
+  testPage = Application.activeWindow.open(url("about:blank"));
+  testPage.events.addListener("load", afterOpen);
+  testPage.load(url("chrome://mochikit/content/browser/docshell/test/browser/test-form_sjis.html"));
   testPage.focus();
 
   waitForExplicitFinish();
-  setTimeout(afterOpen, 1000);
 }
 
 function afterOpen() {
+    testPage.events.removeListener("load", afterOpen);
+    testPage.events.addListener("load", afterChangeCharset);
     testPage.document.getElementById("testtextarea").value=enteredText1;
     testPage.document.getElementById("testinput").value=enteredText2;
 
     /* Force the page encoding to Shift_JIS */
     SetForcedCharset("Shift_JIS");
-    setTimeout(afterChangeCharset, 3000);
 }
   
 function afterChangeCharset() {
+    testPage.events.removeListener("load", afterChangeCharset);
     is(testPage.document.getElementById("testpar").innerHTML, rightText,
        "encoding successfully changed");
     is(testPage.document.getElementById("testtextarea").value, enteredText1,

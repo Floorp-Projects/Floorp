@@ -192,4 +192,16 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_COM
 
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(findstring lib64,$(libdir)))
+DEFINES     += -DHAVE_USR_LIB64_DIR
+endif
+endif
+
 LOCAL_INCLUDES	= -I..
+
+ifdef MOZ_PLATFORM_HILDON
+CFLAGS          += $(MOZ_DBUS_GLIB_CFLAGS) $(LIBHILDONMIME_CFLAGS)
+CXXFLAGS        += $(MOZ_DBUS_GLIB_CFLAGS) $(LIBHILDONMIME_CFLAGS)
+endif
+

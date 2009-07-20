@@ -223,7 +223,6 @@ JS_HFILES +=			\
 	nanojit/Native.h	\
 	nanojit/RegAlloc.h	\
 	nanojit/nanojit.h	\
-	nanojit/TraceTreeDrawer.h \
 	$(NULL)
 endif
 
@@ -311,19 +310,12 @@ JS_CPPFILES +=		       \
 	nanojit/avmplus.cpp    \
 	$(NULL)
 
-ifdef DEBUG
-JS_CPPFILES += nanojit/TraceTreeDrawer.cpp
-endif
 endif
 
 ifndef BUILD_OPT
 #JS_CPPFILES +=                 \
 #        vprof/vprof.cpp        \
 #        $(NULL)
-endif
-
-ifdef JS_LIVECONNECT
-DIRS      += liveconnect
 endif
 
 ifdef JS_HAS_FILE_OBJECT

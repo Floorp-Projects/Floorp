@@ -41,15 +41,6 @@
 interface nsIURI;
 interface nsIChannel;
 
-/**
- * WARNING!! The JEP needs to call GetSubjectPrincipal()
- * to support JavaScript-to-Java LiveConnect.  So every change to the
- * nsIScriptSecurityManager interface (big enough to change its IID) also
- * breaks JavaScript-to-Java LiveConnect on mac.
- *
- * If you REALLY have to change this interface, please mark your bug as
- * blocking bug 293973.
- */
 [scriptable, uuid(f8e350b9-9f31-451a-8c8f-d10fea26b780)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {

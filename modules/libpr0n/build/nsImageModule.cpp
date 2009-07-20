@@ -99,7 +99,7 @@
 // objects that just require generic constructors
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainer)
-NS_GENERIC_FACTORY_CONSTRUCTOR(imgLoader)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(imgLoader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgTools)
 

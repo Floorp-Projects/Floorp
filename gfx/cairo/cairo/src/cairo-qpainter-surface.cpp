@@ -815,9 +815,10 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
  **/
 
 struct PatternToBrushConverter {
-    PatternToBrushConverter (const cairo_pattern_t *pattern)
-      : mBrush(0),
-        mAcquiredImageParent(0)
+    PatternToBrushConverter (const cairo_pattern_t *pattern) :
+        mAcquiredImageParent(0),
+        mAcquiredImage(0),
+        mAcquiredImageExtra(0)
     {
         if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
             cairo_solid_pattern_t *solid = (cairo_solid_pattern_t*) pattern;
@@ -827,7 +828,7 @@ struct PatternToBrushConverter {
                 solid->color.blue,
                 solid->color.alpha);
 
-            mBrush = new QBrush(color);
+            mBrush = QBrush(color);
         } else if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
             cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) pattern;
             cairo_surface_t *surface = spattern->surface;
@@ -836,12 +837,12 @@ struct PatternToBrushConverter {
                 cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t*) surface;
 
                 if (qs->image) {
-                    mBrush = new QBrush(*qs->image);
+                    mBrush = QBrush(*qs->image);
                 } else if (qs->pixmap) {
-                    mBrush = new QBrush(*qs->pixmap);
+                    mBrush = QBrush(*qs->pixmap);
                 } else {
                     // do something smart
-                    mBrush = new QBrush(0xff0000ff);
+                    mBrush = QBrush(0xff0000ff);
                 }
             } else {
                 cairo_image_surface_t *isurf = NULL;
@@ -861,13 +862,13 @@ struct PatternToBrushConverter {
                 }
 
                 if (isurf) {
-                    mBrush = new QBrush (QImage ((const uchar *) isurf->data,
-                                isurf->width,
-                                isurf->height,
-                                isurf->stride,
-                                _qimage_format_from_cairo_format (isurf->format)));
+                    mBrush = QBrush(QImage ((const uchar *) isurf->data,
+                                    isurf->width,
+                                    isurf->height,
+                                    isurf->stride,
+                                    _qimage_format_from_cairo_format (isurf->format)));
                 } else {
-                    mBrush = new QBrush(0x0000ffff);
+                    mBrush = QBrush(0x0000ffff);
                 }
             }
         } else if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
@@ -1003,33 +1004,31 @@ struct PatternToBrushConverter {
                 grad->setColorAt (offset, color);
             }
 
-            mBrush = new QBrush(*grad);
+            mBrush = QBrush(*grad);
 
             delete grad;
         }
 
-        if (mBrush &&
+        if (Qt::NoBrush != mBrush.style() &&
                 pattern->type != CAIRO_PATTERN_TYPE_SOLID &&
                 !_cairo_matrix_is_identity(&pattern->matrix))
         {
             cairo_matrix_t pm = pattern->matrix;
             if (cairo_matrix_invert (&pm) == CAIRO_STATUS_SUCCESS)
-            mBrush->setMatrix(_qmatrix_from_cairo_matrix (pm));
+            mBrush.setMatrix(_qmatrix_from_cairo_matrix (pm));
         }
     }
 
     ~PatternToBrushConverter () {
-        delete mBrush;
-
         if (mAcquiredImageParent)
             _cairo_surface_release_source_image (mAcquiredImageParent, mAcquiredImage, mAcquiredImageExtra);
     }
 
     operator QBrush& () {
-        return *mBrush;
+        return mBrush;
     }
 
-    QBrush *mBrush;
+    QBrush mBrush;
 
     cairo_surface_t *mAcquiredImageParent;
     cairo_image_surface_t *mAcquiredImage;
@@ -1038,8 +1037,8 @@ struct PatternToBrushConverter {
 
 struct PatternToPenConverter {
     PatternToPenConverter (const cairo_pattern_t *source,
-                           cairo_stroke_style_t *style)
-      : mBrushConverter(source)
+                           cairo_stroke_style_t *style) :
+        mBrushConverter(source)
     {
         Qt::PenJoinStyle join = Qt::MiterJoin;
         Qt::PenCapStyle cap = Qt::SquareCap;
@@ -1068,8 +1067,8 @@ struct PatternToPenConverter {
             break;
         }
 
-        mPen = new QPen (mBrushConverter, style->line_width, Qt::SolidLine, cap, join);
-        mPen->setMiterLimit (style->miter_limit);
+        mPen = QPen(mBrushConverter, style->line_width, Qt::SolidLine, cap, join);
+        mPen.setMiterLimit (style->miter_limit);
 
         if (style->dash && style->num_dashes) {
             Qt::PenStyle pstyle = Qt::NoPen;
@@ -1090,7 +1089,7 @@ struct PatternToPenConverter {
             }
 
             if (pstyle != Qt::NoPen) {
-                mPen->setStyle(pstyle);
+                mPen.setStyle(pstyle);
                 return;
             }
 
@@ -1107,20 +1106,18 @@ struct PatternToPenConverter {
                 }
             }
 
-            mPen->setDashPattern (dashes);
-            mPen->setDashOffset (style->dash_offset / style->line_width);
+            mPen.setDashPattern(dashes);
+            mPen.setDashOffset(style->dash_offset / style->line_width);
         }
     }
 
-    ~PatternToPenConverter() {
-        delete mPen;
-    }
+    ~PatternToPenConverter() { }
 
     operator QPen& () {
-        return *mPen;
+        return mPen;
     }
 
-    QPen *mPen;
+    QPen mPen;
     PatternToBrushConverter mBrushConverter;
 };
 

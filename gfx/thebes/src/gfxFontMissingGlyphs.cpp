@@ -224,9 +224,15 @@ gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRec
         aContext->SetDeviceColor(color);
         aContext->NewPath();
         aContext->Rectangle(borderStrokeRect);
+
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+        aContext->Fill();
+#else
         aContext->Stroke();
+#endif
     }
 
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
     gfxPoint center(aRect.X() + aRect.Width()/2,
                     aRect.Y() + aRect.Height()/2);
     gfxFloat halfGap = HEX_CHAR_GAP/2.0;
@@ -268,6 +274,7 @@ gfxFontMissingGlyphs::DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRec
                         center + gfxPoint(third, halfGap), aChar & 0xF);
         }
     }
+#endif
 
     aContext->Restore();
 }

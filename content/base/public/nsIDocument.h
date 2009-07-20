@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  {0x282f1cd0, 0x6dfb, 0x4cff, \
-      {0x83, 0x3e, 0x05, 0x98, 0x52, 0xe6, 0xd8, 0x59 } }
+  { 0x46003091, 0x7f99, 0x420f, \
+  { 0x95, 0xbc, 0x28, 0xd7, 0xd5, 0x01, 0x5a, 0x41 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -635,6 +635,7 @@ public:
 
   enum ReadyState { READYSTATE_UNINITIALIZED = 0, READYSTATE_LOADING = 1, READYSTATE_INTERACTIVE = 3, READYSTATE_COMPLETE = 4};
   virtual void SetReadyStateInternal(ReadyState rs) = 0;
+  virtual ReadyState GetReadyStateEnum() = 0;
 
   // notify that one or two content nodes changed state
   // either may be nsnull, but not both
@@ -1147,6 +1148,14 @@ public:
   PRUint32 EventHandlingSuppressed() const { return mEventsSuppressed; }
 
   PRBool IsDNSPrefetchAllowed() const { return mAllowDNSPrefetch; }
+
+  /**
+   * Called by nsParser to preload images. Can be removed and code moved
+   * to nsPreloadURIs::PreloadURIs() in file nsParser.cpp whenever the
+   * parser-module is linked with gklayout-module.
+   */
+  virtual void MaybePreLoadImage(nsIURI* uri) = 0;
+
 protected:
   ~nsIDocument()
   {

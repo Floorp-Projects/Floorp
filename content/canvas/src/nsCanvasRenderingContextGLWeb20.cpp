@@ -1721,15 +1721,13 @@ nsresult
 nsCanvasRenderingContextGLWeb20::TexImageElementBase(nsIDOMHTMLElement *imageOrCanvas,
                                                      gfxImageSurface **imageOut)
 {
-    nsresult rv;
-
     gfxImageSurface *surf = nsnull;
 
     nsLayoutUtils::SurfaceFromElementResult res =
         nsLayoutUtils::SurfaceFromElement(imageOrCanvas,
                                           nsLayoutUtils::SFE_WANT_NEW_SURFACE | nsLayoutUtils::SFE_WANT_IMAGE_SURFACE);
     if (!res.mSurface)
-        return rv;
+        return NS_ERROR_FAILURE;
 
     CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, res.mPrincipal, res.mIsWriteOnly);
 

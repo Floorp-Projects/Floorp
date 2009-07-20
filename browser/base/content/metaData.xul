@@ -76,7 +76,7 @@
         <row id="link-url">
           <separator orient="vertical"/>
           <label value="&link-url.label; "/>
-          <textbox readonly="true" id="link-url-text"/>
+          <textbox readonly="true" id="link-url-text" class="uri-element"/>
         </row>
         <row id="link-target">
           <separator orient="vertical"/>
@@ -125,7 +125,7 @@
         <row id="image-url">
           <separator orient="vertical"/>
           <label value="&image-url.label; "/>
-          <textbox readonly="true" id="image-url-text"/>
+          <textbox readonly="true" id="image-url-text" class="uri-element"/>
         </row>
         <row id="image-type">
           <separator orient="vertical"/>

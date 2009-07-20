@@ -1,0 +1,345 @@
+<html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=495388 -->
+<head>
+  <title>test nsHTMLTableAccessible::IsProbablyForLayout implementation</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // Attribute we're looking for
+      var attr = {
+        "layout-guess": "true"
+      };
+
+      // table with role of grid
+      testAbsentAttrs("table1", attr);
+
+      // table with landmark role
+      testAbsentAttrs("table2", attr);
+
+      // table with summary
+      testAbsentAttrs("table3", attr);
+
+      // table with caption
+      testAbsentAttrs("table4", attr);
+
+      // table with empty caption
+      testAttrs("table4.2", attr, true);
+
+      // table with two captions
+      testAbsentAttrs("table4.3", attr);
+
+      // table with th element
+      testAbsentAttrs("table5", attr);
+
+      // table with thead element
+      testAbsentAttrs("table6", attr);
+
+      // table with tfoot element
+      testAbsentAttrs("table7", attr);
+
+      // table with colgroup element
+      testAbsentAttrs("table8", attr);
+
+      // layout table with nested table
+      testAttrs("table9", attr, true);
+
+      // layout table with 1 column
+      testAttrs("table10", attr, true);
+
+      // layout table with 1 row
+      testAttrs("table11", attr, true);
+
+      // table with 5 columns
+      testAbsentAttrs("table12", attr);
+
+      // table with a bordered cell
+      testAbsentAttrs("table13", attr);
+
+      // table with alternating row background colors
+      testAbsentAttrs("table14", attr);
+
+      // table with 3 columns and 21 rows
+      testAbsentAttrs("table15", attr);
+
+      // layout table that has a 100% width
+      testAttrs("table16", attr, true);
+
+      // layout table that has a 95% width in pixels
+      testAttrs("table17", attr, true);
+
+      // layout table with less than 10 columns
+      testAttrs("table18", attr, true);
+
+      // layout table with embedded iframe
+      testAttrs("table19", attr, true);
+
+      // tree grid, no layout table
+      testAbsentAttrs("table20", attr);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=495388"
+     title="Don't treat tables that have a landmark role as layout table">
+    Mozilla Bug 495388
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- Table with role of grid -->
+  <table id="table1" role="grid">
+    <tr>
+      <th>Sender</th>
+      <th>Subject</th>
+      <th>Date</th>
+    </tr>
+    <tr>
+      <td>Marco</td>
+      <td>Test</td>
+      <td>June 12</td>
+    </tr>
+    <tr>
+      <td>David</td>
+      <td>Another test</td>
+      <td>June 12</td>
+    </tr>
+    <tr>
+      <td>Alex</td>
+      <td>Third test</td>
+      <td>June 12</td>
+    </tr>
+  </table>
+
+  <!-- table with landmark role -->
+  <table id="table2" role="main">
+    <tr>
+      <th>Sender</th>
+      <th>Subject</th>
+      <th>Date</th>
+    </tr>
+    <tr>
+      <td>Marco</td>
+      <td>Test</td>
+      <td>June 12</td>
+    </tr>
+    <tr>
+      <td>David</td>
+      <td>Another test</td>
+      <td>June 12</td>
+    </tr>
+    <tr>
+      <td>Alex</td>
+      <td>Third test</td>
+      <td>June 12</td>
+    </tr>
+  </table>
+
+  <!-- table with summary -->
+  <table id="table3" summary="This is a table">
+    <tr>
+      <td>Cell1</td><td>cell2</td>
+    </tr>
+  </table>
+
+  <!-- table with caption -->
+  <table id="table4">
+    <caption>This is a table</caption>
+    <tr>
+      <td>Cell1</td><td>cell2</td>
+    </tr>
+  </table>
+
+  <!-- table with empty caption -->
+  <table id="table4.2">
+    <caption> </caption>
+    <tr>
+      <td>Cell1</td><td>cell2</td>
+    </tr>
+  </table>
+
+  <!-- table with two captions -->
+  <table id="table4.3">
+    <caption> </caption>
+    <tr>
+      <td>Cell1</td><td>cell2</td>
+    </tr>
+    <caption>a caption</caption>
+  </table>
+
+  <!-- table with th element -->
+  <table id="table5">
+    <tr>
+      <th>Cell1</th><th>cell2</th>
+    </tr>
+  </table>
+
+  <!-- table with thead element -->
+  <table id="table6">
+    <thead>
+      <tr>
+        <td>Cell1</td><td>cell2</td>
+      </tr>
+    </thead>
+  </table>
+
+  <!-- table with tfoot element -->
+  <table id="table7">
+    <tfoot>
+      <tr>
+        <td>Cell1</td><td>cell2</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- table with colgroup element -->
+  <table id="table8">
+    <tr>
+      <colgroup><td>Cell1</td><td>cell2</td></colgroup>
+    </tr>
+  </table>
+
+  <!-- layout table with nested table -->
+  <table id="table9">
+    <tr>
+      <td><table><tr><td>Cell</td></tr></table></td>
+    </tr>
+  </table>
+
+  <!-- layout table with 1 column -->
+  <table id="table10">
+    <tr><td>Row1</td></tr>
+    <tr><td>Row2</td></tr>
+  </table>
+
+  <!-- layout table with 1 row and purposely many columns -->
+  <table id="table11">
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td><td>Col4</td><td>Col5</td></tr>
+  </table>
+
+  <!-- table with 5 columns -->
+  <table id="table12">
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td><td>Col4</td><td>Col5</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td><td>Col4</td><td>Col5</td></tr>
+  </table>
+
+  <!-- table with a bordered cell -->
+  <table id="table13" border="1" width="100%" bordercolor="#0000FF">
+    <tr>
+      <td bordercolor="#000000"> </td>
+      <td bordercolor="#000000"> </td>
+      <td bordercolor="#000000"> </td>
+    </tr>
+    <tr>
+      <td bordercolor="#000000"> </td>
+      <td bordercolor="#000000"> </td>
+      <td bordercolor="#000000"> </td>
+    </tr>
+  </table> 
+
+  <!-- table with alternating row background colors -->
+  <table id="table14" width="100%">
+    <tr style="background-color: #0000FF;">
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr style="background-color: #00FF00;">
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+  </table> 
+
+  <!-- table with 3 columns and 21 rows -->
+  <table id="table15" border="0">
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+  </table>
+
+  <!-- layout table that has a 100% width -->
+  <table id="table16" width="100%">
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+  </table>
+
+  <!-- layout table that has a 95% width in pixels -->
+  <table id="table17" width="98%">
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+    <tr><td>Col1</td><td>Col2</td><td>Col3</td></tr>
+  </table>
+
+  <!-- layout table with less than 10 columns -->
+  <table id="table18">
+    <tr>
+      <td>Marco</td>
+      <td>Test</td>
+      <td>June 12</td>
+    </tr>
+    <tr>
+      <td>David</td>
+      <td>Another test</td>
+      <td>June 12</td>
+    </tr>
+    <tr>
+      <td>Alex</td>
+      <td>Third test</td>
+      <td>June 12</td>
+    </tr>
+  </table>
+
+  <!-- layout table with embedded iframe -->
+  <table id="table19">
+    <tr><td><iframe id="frame"></iframe></td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td></tr>
+    <tr><td> </td><td> </td><td> </td></tr>
+  </table>
+
+  <!-- tree grid, no layout table -->
+  <table id="table20" role="treegrid">
+    <tr role="treeitem"><td>Cell1</td><td>Cell2</td></tr>
+  </table>
+</body>
+</html>

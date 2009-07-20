@@ -478,7 +478,7 @@ sub usage {
        "(-c|--classpath)          Classpath (Rhino only.)\n" .
        "(-e|--engine) <type> ...  Specify the type of engine(s) to test.\n" .
        "                          <type> is one or more of\n" .
-       "                          (smopt|smdebug|lcopt|lcdebug|xpcshell|" .
+       "                          (smopt|smdebug|xpcshell|" .
        "rhino|rhinoi|rhinoms|rhinomsi|rhino9|rhinoms9).\n" .
        "(-f|--file) <file>        Redirect output to file named <file>.\n" .
        "                          (default is " .
@@ -542,9 +542,6 @@ sub get_engine_command {
     } elsif ($opt_engine_type eq "xpcshell") {
         &dd ("getting xpcshell engine command.");
         $retval = &get_xpc_engine_command;
-    } elsif ($opt_engine_type =~ /^lc(opt|debug)$/) {
-        &dd ("getting liveconnect engine command.");
-        $retval = &get_lc_engine_command;   
     } elsif ($opt_engine_type =~ /^sm(opt|debug)$/) {
         &dd ("getting spidermonkey engine command.");
         $retval = &get_sm_engine_command;
@@ -768,63 +765,6 @@ sub get_ep_engine_command {
     }
 
     return $retval;
-}
-
-#
-# get the shell command used to run the liveconnect shell
-#
-sub get_lc_engine_command {
-    my $retval;
-
-    if ($opt_shell_path) {
-        $retval = $opt_shell_path;
-    } else {
-        if ($os_type eq "MAC") {
-            die "Don't know how to run the lc shell on the mac yet.\n";
-        } else {
-            $retval = $opt_suite_path . "../src/liveconnect/";
-            opendir (SRC_DIR_FILES, $retval);
-            my @src_dir_files = readdir(SRC_DIR_FILES);
-            closedir (SRC_DIR_FILES);
-
-            my ($dir, $object_dir);
-            my $pattern = ($opt_engine_type eq "lcdebug") ?
-              'DBG.OBJ' : 'OPT.OBJ';
-
-            foreach $dir (@src_dir_files) {
-                if ($dir =~ $pattern) {
-                    $object_dir = $dir;
-                    last;
-                }
-            }
-
-            if (!$object_dir) {
-                die ("Could not locate an object directory in $retval " .
-                     "matching the pattern *$pattern.  Have you built the " .
-                     "engine?\n");
-            }
-
-            $retval .= $object_dir . "/";
-
-            if ($os_type eq "WIN") {
-                $retval .= "lcshell.exe";
-            } else {
-                $retval .= "lcshell";
-            }
-        } # mac/ not mac
-
-        $retval = &xp_path($retval);
-
-    } # (user provided a path)
-
-
-    if (($os_type ne "MAC") && !(-x $retval)) {
-        # mac doesn't seem to deal with -x correctly
-        die ("$retval is not a valid executable on this system.\n");
-    }
-
-    return $retval;
-
 }
 
 sub get_os_type {

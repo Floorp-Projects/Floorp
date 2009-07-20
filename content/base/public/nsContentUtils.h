@@ -42,7 +42,7 @@
 #ifndef nsContentUtils_h___
 #define nsContentUtils_h___
 
-#include "jspubtd.h"
+#include "jsprvtd.h"
 #include "jsnum.h"
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
@@ -81,6 +81,7 @@ class nsIURI;
 class imgIDecoderObserver;
 class imgIRequest;
 class imgILoader;
+class imgICache;
 class nsIPrefBranch;
 class nsIImage;
 class nsIImageLoadingContent;
@@ -648,6 +649,11 @@ public:
                             imgIRequest** aRequest);
 
   /**
+   * Returns whether the given URI is in the image cache.
+   */
+  static PRBool IsImageInCache(nsIURI* aURI);
+
+  /**
    * Method to get an nsIImage from an image loading content
    *
    * @param aContent The image loading content.  Must not be null.
@@ -1144,6 +1150,33 @@ public:
    */
   static nsresult DropJSObjects(void* aScriptObjectHolder);
 
+  static void PreserveWrapper(nsISupports* aScriptObjectHolder,
+                              nsWrapperCache* aCache)
+  {
+    if (!aCache->PreservingWrapper()) {
+      nsXPCOMCycleCollectionParticipant* participant;
+      CallQueryInterface(aScriptObjectHolder, &participant);
+      HoldJSObjects(aScriptObjectHolder, participant);
+      aCache->SetPreservingWrapper(PR_TRUE);
+    }
+  }
+  static void ReleaseWrapper(nsISupports* aScriptObjectHolder,
+                             nsWrapperCache* aCache)
+  {
+    if (aCache->PreservingWrapper()) {
+      DropJSObjects(aScriptObjectHolder);
+      aCache->SetPreservingWrapper(PR_FALSE);
+    }
+  }
+  static void TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
+                           void *aClosure)
+  {
+    if (aCache->PreservingWrapper()) {
+      aCallback(nsIProgrammingLanguage::JAVASCRIPT, aCache->GetWrapper(),
+                aClosure);
+    }
+  }
+
   /**
    * Convert nsIContent::IME_STATUS_* to nsIWidget::IME_STATUS_*
    */
@@ -1477,6 +1510,7 @@ private:
   static nsIPref *sPref;
 
   static imgILoader* sImgLoader;
+  static imgICache* sImgCache;
 
   static nsIConsoleService* sConsoleService;
 

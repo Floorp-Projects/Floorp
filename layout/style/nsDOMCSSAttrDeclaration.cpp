@@ -52,14 +52,12 @@
 #include "nsIPrincipal.h"
 
 nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIContent *aContent)
+  : mContent(aContent)
 {
   MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);
 
-  // This reference is not reference-counted. The content
-  // object tells us when its about to go away.
   NS_ASSERTION(aContent && aContent->IsNodeOfType(nsINode::eELEMENT),
                "Inline style for non-element content?");
-  mContent = aContent;
 }
 
 nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
@@ -67,14 +65,32 @@ nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
   MOZ_COUNT_DTOR(nsDOMCSSAttributeDeclaration);
 }
 
-NS_IMPL_ADDREF(nsDOMCSSAttributeDeclaration)
-NS_IMPL_RELEASE(nsDOMCSSAttributeDeclaration)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMCSSAttributeDeclaration)
 
-void
-nsDOMCSSAttributeDeclaration::DropReference()
-{
-  mContent = nsnull;
-}
+NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsDOMCSSAttributeDeclaration)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_ROOT_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMCSSAttributeDeclaration)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMCSSAttributeDeclaration)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMCSSAttributeDeclaration)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN(nsDOMCSSAttributeDeclaration)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMCSSAttributeDeclaration)
+NS_IMPL_QUERY_TAIL_INHERITING(nsDOMCSSDeclaration)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMCSSAttributeDeclaration)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSAttributeDeclaration)
 
 nsresult
 nsDOMCSSAttributeDeclaration::DeclarationChanged()

@@ -77,8 +77,8 @@ class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x601e5415, 0x613e, 0x4ce2, \
-  { 0xb4, 0xe1, 0x85, 0xac, 0x2a, 0x4a, 0xf2, 0x3d } }
+{ 0x50cada82, 0x2350, 0x4bb5, \
+  { 0xb4, 0x72, 0xc8, 0xca, 0x8d, 0x39, 0x31, 0x77 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -402,8 +402,7 @@ public:
   }
   
   /**
-   * Initialize window.java and window.Packages, and start LiveConnect
-   * if we're running with a non-NPRuntime enabled Java plugin.
+   * Initialize window.java and window.Packages.
    */
   virtual void InitJavaProperties() = 0;
 
@@ -452,6 +451,12 @@ public:
    * reset the focus state.
    */
   virtual void PageHidden() = 0;
+
+  /**
+   * Instructs this window to asynchronously dispatch a hashchange event.  This
+   * method must be called on an inner window.
+   */
+  virtual nsresult DispatchAsyncHashchange() = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

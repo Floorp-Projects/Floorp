@@ -87,6 +87,12 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
     isState(state & STATE_CHECKED, 0, false,
             "Mixed element cannot be state checked!");
 
+  // selected/selectable
+  if (state & STATE_SELECTED) {
+    isState(state & STATE_SELECTABLE, STATE_SELECTABLE, false,
+            "Selected element should be selectable!");
+  }
+
   // unavailable
   if ((state & STATE_UNAVAILABLE)
       && (getRole(aAccOrElmOrID) != ROLE_GROUPING))

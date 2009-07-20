@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: masking curve data for psychoacoustics
- last mod: $Id: masking.h 13293 2007-07-24 00:09:47Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
@@ -22,7 +22,7 @@
    overly for only a bin or two of savings. */
 
 #define MAX_ATH 88
-static float ATH[]={
+static const float ATH[]={
   /*15*/  -51, -52, -53, -54, -55, -56, -57, -58,  
   /*31*/  -59, -60, -61, -62, -63, -64, -65, -66,
   /*63*/  -67, -68, -69, -70, -71, -72, -73, -74, 
@@ -48,7 +48,7 @@ static float ATH[]={
 /* (Vorbis 0dB, the loudest possible tone, is assumed to be ~100dB SPL
    for collection of these curves) */
 
-static float tonemasks[P_BANDS][6][EHMER_MAX]={
+static const float tonemasks[P_BANDS][6][EHMER_MAX]={
   /* 62.5 Hz */
   {{ -60,  -60,  -60,  -60,  -60,  -60,  -60,  -60, 
      -60,  -60,  -60,  -60,  -62,  -62,  -65,  -73, 

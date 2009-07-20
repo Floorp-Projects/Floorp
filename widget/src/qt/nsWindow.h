@@ -49,14 +49,7 @@
 
 #include "nsWeakReference.h"
 
-#include "nsIDragService.h"
-#include "nsITimer.h"
 #include "nsWidgetAtoms.h"
-
-
-#ifdef Q_WS_X11
-#include <QX11Info>
-#endif
 
 #ifdef MOZ_LOGGING
 
@@ -209,7 +202,6 @@ public:
 
     void               QWidgetDestroyed();
 
-
     /***** from CommonWidget *****/
 
     // event handling code
@@ -256,7 +248,7 @@ protected:
      * Event handlers (proxied from the actual qwidget).
      * They follow normal Qt widget semantics.
      */
-    void Initialize(QWidget *widget);
+    void Initialize(MozQWidget *widget);
     friend class nsQtEventDispatcher;
     friend class InterceptContainer;
     friend class MozQWidget;
@@ -333,10 +325,9 @@ private:
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &event, QMouseEvent *aEvent, int aClickCount = 1);
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);
-    QWidget           *createQWidget(QWidget *parent, nsWidgetInitData *aInitData);
+    MozQWidget        *createQWidget(QWidget *parent, nsWidgetInitData *aInitData);
 
-    QWidget            *mDrawingArea;
-    MozQWidget *mMozQWidget;
+    MozQWidget * mWidget;
 
     PRUint32            mIsVisible : 1,
                         mActivatePending : 1;

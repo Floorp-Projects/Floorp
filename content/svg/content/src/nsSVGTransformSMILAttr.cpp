@@ -91,7 +91,7 @@ nsSVGTransformSMILAttr::GetBaseValue() const
   nsSMILValue val(type);
   if (val.IsNull())
     return val;
- 
+
   nsIDOMSVGTransformList *list = mVal->mBaseVal.get();
 
   PRUint32 numItems = 0;
@@ -104,8 +104,16 @@ nsSVGTransformSMILAttr::GetBaseValue() const
       NS_ENSURE_SUCCESS(rv,nsSMILValue());
     }
   }
-  
+
   return val;
+}
+
+void
+nsSVGTransformSMILAttr::ClearAnimValue()
+{
+  mVal->WillModify(nsISVGValue::mod_other);
+  mVal->mAnimVal = nsnull;
+  mVal->DidModify(nsISVGValue::mod_other);
 }
 
 nsresult
@@ -158,7 +166,7 @@ nsSVGTransformSMILAttr::ParseValue(const nsAString& aSpec,
   float params[3] = { 0.f };
   PRInt32 numParsed = ParseParameterList(aSpec, params, 3);
   nsSVGSMILTransform::TransformType transformType;
-   
+
   if (aTransformType == nsGkAtoms::translate) {
     // tx [ty=0]
     if (numParsed != 1 && numParsed != 2)
@@ -335,7 +343,7 @@ nsSVGTransformSMILAttr::AppendSVGTransformToSMILValue(
   }
 
   if (transformType != nsSVGSMILTransform::TRANSFORM_MATRIX) {
-    rv = 
+    rv =
       type->AppendTransform(nsSVGSMILTransform(transformType, params), aValue);
   }
 

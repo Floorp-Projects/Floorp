@@ -918,6 +918,11 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
+  SLIM_LOG_WILL_MORPH(cx, objToWrap);
+  if(IS_SLIM_WRAPPER(objToWrap) && !MorphSlimWrapper(cx, objToWrap)) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   if (STOBJ_GET_CLASS(objToWrap) == &sXPC_XOW_JSClass.base) {
     // We're being asked to wrap a XOW. By using XPCWrapper::Unwrap,
     // we guarantee that the wrapped object is same-origin to us. If

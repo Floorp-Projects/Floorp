@@ -74,11 +74,33 @@ nsHyperTextAccessibleWrap(aDomNode, aShell)
 
 // nsAccessible
 
-/* unsigned long getRole (); */
 nsresult
 nsHTMLTableCellAccessible::GetRoleInternal(PRUint32 *aResult)
 {
   *aResult = nsIAccessibleRole::ROLE_CELL;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLTableCellAccessible::GetStateInternal(PRUint32 *aState,
+                                            PRUint32 *aExtraState)
+{
+  nsresult rv= nsHyperTextAccessibleWrap::GetStateInternal(aState, aExtraState);
+  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mWeakShell);
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  NS_ASSERTION(frame, "No frame for valid cell accessible!");
+
+  if (frame) {
+    *aState |= nsIAccessibleStates::STATE_SELECTABLE;
+    PRBool isSelected = PR_FALSE;
+    frame->GetSelected(&isSelected);
+    if (isSelected)
+      *aState |= nsIAccessibleStates::STATE_SELECTED;
+  }
+
   return NS_OK;
 }
 
@@ -619,16 +641,30 @@ nsHTMLTableAccessible::GetSelectedCellsCount(PRUint32* aCount)
   rv = GetColumns(&columnsCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsITableLayout *tableLayout = nsnull;
+  rv = GetTableLayout(&tableLayout);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMElement> domElement;
+  PRInt32 startRowIndex = 0, startColIndex = 0,
+    rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool isSelected = PR_FALSE;
+
   PRInt32 rowIndex;
   for (rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
     PRInt32 columnIndex;
     for (columnIndex = 0; columnIndex < columnsCount; columnIndex++) {
-      PRBool state = PR_FALSE;
-      rv = IsCellSelected(rowIndex, columnIndex, &state);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tableLayout->GetCellDataAt(rowIndex, columnIndex,
+                                      *getter_AddRefs(domElement),
+                                      startRowIndex, startColIndex,
+                                      rowSpan, colSpan,
+                                      actualRowSpan, actualColSpan,
+                                      isSelected);
 
-      if (state)
+      if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
+          startColIndex == columnIndex && isSelected) {
         (*aCount)++;
+      }
     }
   }
 
@@ -698,6 +734,15 @@ nsHTMLTableAccessible::GetSelectedCells(PRUint32 *aNumCells,
   rv = GetColumns(&columnsCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsITableLayout *tableLayout = nsnull;
+  rv = GetTableLayout(&tableLayout);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMElement> domElement;
+  PRInt32 startRowIndex = 0, startColIndex = 0,
+  rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool isSelected = PR_FALSE;
+
   PRInt32 cellsCount = columnsCount * rowsCount;
   nsAutoArrayPtr<PRBool> states(new PRBool[cellsCount]);
   NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
@@ -706,11 +751,20 @@ nsHTMLTableAccessible::GetSelectedCells(PRUint32 *aNumCells,
   for (rowIndex = 0, index = 0; rowIndex < rowsCount; rowIndex++) {
     PRInt32 columnIndex;
     for (columnIndex = 0; columnIndex < columnsCount; columnIndex++, index++) {
-      rv = IsCellSelected(rowIndex, columnIndex, &states[index]);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = tableLayout->GetCellDataAt(rowIndex, columnIndex,
+                                      *getter_AddRefs(domElement),
+                                      startRowIndex, startColIndex,
+                                      rowSpan, colSpan,
+                                      actualRowSpan, actualColSpan,
+                                      isSelected);
 
-      if (states[index])
+      if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
+          startColIndex == columnIndex && isSelected) {
+        states[index] = PR_TRUE;
         (*aNumCells)++;
+      } else {
+        states[index] = PR_FALSE;
+      }
     }
   }
 
@@ -1245,49 +1299,48 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetDescription(nsAString& aDescription)
   return NS_OK;
 }
 
-PRBool nsHTMLTableAccessible::HasDescendant(const char *aTagName, PRBool aAllowEmpty)
+PRBool
+nsHTMLTableAccessible::HasDescendant(const nsAString& aTagName,
+                                     PRBool aAllowEmpty)
 {
   nsCOMPtr<nsIDOMElement> tableElt(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(tableElt, PR_FALSE);
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
-  nsAutoString tagName;
-  tagName.AssignWithConversion(aTagName);
-  tableElt->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
+  tableElt->GetElementsByTagName(aTagName, getter_AddRefs(nodeList));
   NS_ENSURE_TRUE(nodeList, PR_FALSE);
-  PRUint32 length;
-  nodeList->GetLength(&length);
-  
-  if (length == 1) {
-    // Make sure it's not the table itself
-    nsCOMPtr<nsIDOMNode> foundItem;
-    nodeList->Item(0, getter_AddRefs(foundItem));
-    if (foundItem == mDOMNode) {
-      return PR_FALSE;
-    }
-    if (!aAllowEmpty) {
-      // Make sure that the item we found has contents
-      // and either has multiple children or the
-      // found item is not a whitespace-only text node
-      nsCOMPtr<nsIContent> foundItemContent = do_QueryInterface(foundItem);
-      if (!foundItemContent) {
-        return PR_FALSE;
-      }
-      if (foundItemContent->GetChildCount() > 1) {
-        return PR_TRUE; // Treat multiple child nodes as non-empty
-      }
-      nsIContent *innerItemContent = foundItemContent->GetChildAt(0);
-      if (!innerItemContent || innerItemContent->TextIsOnlyWhitespace()) {
-        return PR_FALSE;
-      }
-    }
-    return PR_TRUE;
-  }
 
-  return length > 0;
+  nsCOMPtr<nsIDOMNode> foundItem;
+  nodeList->Item(0, getter_AddRefs(foundItem));
+  if (!foundItem)
+    return PR_FALSE;
+
+  if (aAllowEmpty)
+    return PR_TRUE;
+
+  // Make sure that the item we found has contents and either has multiple
+  // children or the found item is not a whitespace-only text node.
+  nsCOMPtr<nsIContent> foundItemContent = do_QueryInterface(foundItem);
+  if (foundItemContent->GetChildCount() > 1)
+    return PR_TRUE; // Treat multiple child nodes as non-empty
+
+  nsIContent *innerItemContent = foundItemContent->GetChildAt(0);
+  if (innerItemContent && !innerItemContent->TextIsOnlyWhitespace())
+    return PR_TRUE;
+
+  // If we found more than one node then return true not depending on
+  // aAllowEmpty flag.
+  // XXX it might be dummy but bug 501375 where we changed this addresses
+  // performance problems only. Note, currently 'aAllowEmpty' flag is used for
+  // caption element only. On another hand we create accessible object for
+  // the first entry of caption element (see
+  // nsHTMLTableAccessible::CacheChildren).
+  nodeList->Item(1, getter_AddRefs(foundItem));
+  return !!foundItem;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
+NS_IMETHODIMP
+nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
 {
   // Implement a heuristic to determine if table is most likely used for layout
   // XXX do we want to look for rowspan or colspan, especialy that span all but a couple cells
@@ -1322,7 +1375,8 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     }
   }
 
-  // Check role and role attribute
+  // Check to see if an ARIA role overrides the role from native markup,
+  // but for which we still expose table semantics (treegrid, for example).
   PRBool hasNonTableRole =
     (nsAccUtils::Role(this) != nsIAccessibleRole::ROLE_TABLE);
   if (hasNonTableRole) {
@@ -1330,17 +1384,23 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   }
 
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) {
-    RETURN_LAYOUT_ANSWER(PR_TRUE, "Has role attribute, and role is table");
+    // Role attribute is present, but overridden roles have already been dealt with.
+    // Only landmarks and other roles that don't override the role from native
+    // markup are left to deal with here.
+    RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute, weak role, and role is table");
   }
   
   // Check for legitimate data table elements or attributes
   nsAutoString summary;
   if ((content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::summary, summary) && !summary.IsEmpty()) || 
-      HasDescendant("caption", PR_FALSE) || HasDescendant("th") || HasDescendant("thead") ||
-      HasDescendant("tfoot")   || HasDescendant("colgroup")) {
+      HasDescendant(NS_LITERAL_STRING("caption"), PR_FALSE) ||
+      HasDescendant(NS_LITERAL_STRING("th")) ||
+      HasDescendant(NS_LITERAL_STRING("thead")) ||
+      HasDescendant(NS_LITERAL_STRING("tfoot")) ||
+      HasDescendant(NS_LITERAL_STRING("colgroup"))) {
     RETURN_LAYOUT_ANSWER(PR_FALSE, "Has caption, summary, th, thead, tfoot or colgroup -- legitimate table structures");
   }
-  if (HasDescendant("table")) {
+  if (HasDescendant(NS_LITERAL_STRING("table"))) {
     RETURN_LAYOUT_ANSWER(PR_TRUE, "Has a nested table within it");
   }
   
@@ -1450,7 +1510,10 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     RETURN_LAYOUT_ANSWER(PR_TRUE, "2-4 columns, 10 cells or less, non-bordered");
   }
 
-  if (HasDescendant("embed") || HasDescendant("object") || HasDescendant("applet") || HasDescendant("iframe")) {
+  if (HasDescendant(NS_LITERAL_STRING("embed")) ||
+      HasDescendant(NS_LITERAL_STRING("object")) ||
+      HasDescendant(NS_LITERAL_STRING("applet")) ||
+      HasDescendant(NS_LITERAL_STRING("iframe"))) {
     RETURN_LAYOUT_ANSWER(PR_TRUE, "Has no borders, and has iframe, object, applet or iframe, typical of advertisements");
   }
 

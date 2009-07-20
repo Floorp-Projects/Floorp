@@ -88,7 +88,7 @@ nsSMILFloatType::ComputeDistance(const nsSMILValue& aFrom,
 {
   NS_PRECONDITION(aFrom.mType == aTo.mType,"Trying to compare different types");
   NS_PRECONDITION(aFrom.mType == this, "Unexpected source type");
-  
+
   const double &from = aFrom.mU.mDouble;
   const double &to   = aTo.mU.mDouble;
 

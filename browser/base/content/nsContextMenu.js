@@ -180,10 +180,14 @@ nsContextMenu.prototype = {
     this.showItem("context-saveimage", this.onLoadedImage || this.onCanvas);
     this.showItem("context-savevideo", this.onVideo);
     this.showItem("context-saveaudio", this.onAudio);
+    this.setItemAttr("context-savevideo", "disabled", !this.mediaURL);
+    this.setItemAttr("context-saveaudio", "disabled", !this.mediaURL);
     // Send media URL (but not for canvas, since it's a big data: URL)
     this.showItem("context-sendimage", this.onImage);
     this.showItem("context-sendvideo", this.onVideo);
     this.showItem("context-sendaudio", this.onAudio);
+    this.setItemAttr("context-sendvideo", "disabled", !this.mediaURL);
+    this.setItemAttr("context-sendaudio", "disabled", !this.mediaURL);
   },
 
   initViewItems: function CM_initViewItems() {
@@ -231,6 +235,7 @@ nsContextMenu.prototype = {
                   (!this.onStandaloneImage || this.inFrame)) || this.onCanvas);
 
     this.showItem("context-viewvideo", this.onVideo);
+    this.setItemAttr("context-viewvideo",  "disabled", !this.mediaURL);
 
     // View background image depends on whether there is one.
     this.showItem("context-viewbgimage", shouldShow);
@@ -380,6 +385,8 @@ nsContextMenu.prototype = {
     this.showItem("context-copyimage", this.onImage);
     this.showItem("context-copyvideourl", this.onVideo);
     this.showItem("context-copyaudiourl", this.onAudio);
+    this.setItemAttr("context-copyvideourl",  "disabled", !this.mediaURL);
+    this.setItemAttr("context-copyaudiourl",  "disabled", !this.mediaURL);
     this.showItem("context-sep-copyimage", this.onImage ||
                   this.onVideo || this.onAudio);
   },
@@ -392,12 +399,22 @@ nsContextMenu.prototype = {
   initMediaPlayerItems: function() {
     var onMedia = (this.onVideo || this.onAudio);
     // Several mutually exclusive items... play/pause, mute/unmute, show/hide
-    this.showItem("context-media-play",  onMedia && this.target.paused);
-    this.showItem("context-media-pause", onMedia && !this.target.paused);
+    this.showItem("context-media-play",  onMedia && (this.target.paused || this.target.ended));
+    this.showItem("context-media-pause", onMedia && !this.target.paused && !this.target.ended);
     this.showItem("context-media-mute",   onMedia && !this.target.muted);
     this.showItem("context-media-unmute", onMedia && this.target.muted);
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls)
     this.showItem("context-media-hidecontrols", onMedia && this.target.controls)
+    // Disable them when there isn't a valid media source loaded.
+    if (onMedia) {
+      var hasError = (this.target.error != null);
+      this.setItemAttr("context-media-play",  "disabled", hasError);
+      this.setItemAttr("context-media-pause", "disabled", hasError);
+      this.setItemAttr("context-media-mute",   "disabled", hasError);
+      this.setItemAttr("context-media-unmute", "disabled", hasError);
+      this.setItemAttr("context-media-showcontrols", "disabled", hasError);
+      this.setItemAttr("context-media-hidecontrols", "disabled", hasError);
+    }
     this.showItem("context-media-sep-commands",  onMedia);
   },
 
@@ -468,11 +485,11 @@ nsContextMenu.prototype = {
       }
       else if (this.target instanceof HTMLVideoElement) {
         this.onVideo = true;
-        this.mediaURL = this.target.currentSrc;
+        this.mediaURL = this.target.currentSrc || this.target.src;
       }
       else if (this.target instanceof HTMLAudioElement) {
         this.onAudio = true;
-        this.mediaURL = this.target.currentSrc;
+        this.mediaURL = this.target.currentSrc || this.target.src;
       }
       else if (this.target instanceof HTMLInputElement ) {
         this.onTextInput = this.isTargetATextBox(this.target);
@@ -1020,8 +1037,7 @@ nsContextMenu.prototype = {
 
     var brandBundle = document.getElementById("bundle_brand");
     var app = brandBundle.getString("brandShortName");
-    var bundle_browser = document.getElementById("bundle_browser");
-    var message = bundle_browser.getFormattedString(aBlock ?
+    var message = gNavigatorBundle.getFormattedString(aBlock ?
      "imageBlockedWarning" : "imageAllowedWarning", [app, uri.host]);
 
     var notificationBox = this.browser.getNotificationBox();
@@ -1032,8 +1048,8 @@ nsContextMenu.prototype = {
     else {
       var self = this;
       var buttons = [{
-        label: bundle_browser.getString("undo"),
-        accessKey: bundle_browser.getString("undo.accessKey"),
+        label: gNavigatorBundle.getString("undo"),
+        accessKey: gNavigatorBundle.getString("undo.accessKey"),
         callback: function() { self.toggleImageBlocking(!aBlock); }
       }];
       const priority = notificationBox.PRIORITY_WARNING_MEDIUM;

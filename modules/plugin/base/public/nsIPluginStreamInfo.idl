@@ -55,7 +55,7 @@
 [uuid(ed7d4ca0-b005-11d2-adaa-00805f6dec49)]
 interface nsIPluginStreamInfo : nsISupports
 {
-  readonly attribute nsMIMEType contentType;
+  readonly attribute string contentType;
 
   void isSeekable(out boolean aSeekable);
 

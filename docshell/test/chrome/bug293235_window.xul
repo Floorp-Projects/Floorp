@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="293235Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 293235 test">
+
+  <script type="application/javascript"
+    src=
+  "chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+    
+    // Return the Element object for the specified element id
+    function $(id) { return TestWindow.getDocument().getElementById(id); }
+
+    ////
+    // Generator function for test steps for bug 293235:  
+    // A visited link should have the :visited style applied
+    // to it when displayed on a page which was fetched from
+    // the bfcache.
+    //
+    function testIterator()
+    {
+      // Load a test page containing a link that should be initially
+      // blue, per the :link style.
+      doPageNavigation({
+        uri: getHttpUrl("bug293235.html"),
+        onNavComplete: nextTest
+      });
+      yield;
+      
+      is(TestWindow.getWindow().getComputedStyle($("link1"), "").color, 
+        "rgb(0, 0, 128)", 
+        "link not initially blue");
+
+      // Load the page that the link on the previous page points to.
+      doPageNavigation({
+        uri: getHttpUrl("bug293235_p2.html"),
+        onNavComplete: nextTest
+      });
+      yield;
+
+      // Go back, verify the original page was loaded from the bfcache,
+      // and verify that the link is now purple, per the
+      // :visited style.
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: ["pageshow"],
+        expectedEvents: [ { type: "pageshow",
+                            persisted: true,
+                            title: "Bug 293235 page1" } ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      is(TestWindow.getWindow().getComputedStyle($("link1"), "").color, 
+        "rgb(128, 0, 128)", 
+        ":visited link wrong color");
+
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+    
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

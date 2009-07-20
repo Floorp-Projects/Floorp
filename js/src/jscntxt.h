@@ -56,6 +56,7 @@
 #include "jspubtd.h"
 #include "jsregexp.h"
 #include "jsutil.h"
+#include "jsarray.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -207,10 +208,9 @@ typedef struct InterpStruct InterpStruct;
 # define EVAL_CACHE_METER_LIST(_)   _(probe), _(hit), _(step), _(noscope)
 # define identity(x)                x
 
-/* Have to typedef this for LiveConnect C code, which includes us. */
-typedef struct JSEvalCacheMeter {
+struct JSEvalCacheMeter {
     uint64 EVAL_CACHE_METER_LIST(identity);
-} JSEvalCacheMeter;
+};
 
 # undef identity
 #endif
@@ -529,8 +529,8 @@ struct JSRuntime {
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
-     * The propertyRemovals counter is incremented for every js_ClearScope,
-     * and for each js_RemoveScopeProperty that frees a slot in an object.
+     * The propertyRemovals counter is incremented for every JSScope::clear,
+     * and for each JSScope::remove method call that frees a slot in an object.
      * See js_NativeGet and js_NativeSet in jsobj.c.
      */
     JSDHashTable        propertyTreeHash;
@@ -955,6 +955,7 @@ struct JSContext {
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
+    JSHashTable         *busyArrayTable;
 
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;

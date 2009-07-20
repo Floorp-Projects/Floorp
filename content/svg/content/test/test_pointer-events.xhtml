@@ -1,0 +1,47 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500174
+-->
+<head>
+  <title>Test Pointer Events</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=500174">Mozilla Bug 500174</a>
+<p id="display"></p>
+<div id="content">
+
+  <div width="100%" height="1" id="div">
+  </div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" id="svg">
+    <rect id="bad" width="100%" height="100%" fill="green"/>
+    <circle id="good" cx="50%" cy="50%" r="1" stroke-width="1000" fill="black" pointer-events="all"/>
+  </svg>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var svgDoc = document.getElementById('svg');
+  var bad = document.getElementById('bad');
+  var good = document.getElementById('good');
+  var elementFromPoint = document.elementFromPoint(50, 50);
+  is(elementFromPoint, good, 'pointer-events="all"');
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run, false);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

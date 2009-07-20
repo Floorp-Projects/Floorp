@@ -74,6 +74,7 @@ class nsCookieEntry : public PLDHashEntryHdr
     typedef const char* KeyTypePointer;
 
     // do nothing with aHost - we require mHead to be set before we're live!
+    explicit
     nsCookieEntry(KeyTypePointer aHost)
      : mHead(nsnull)
     {

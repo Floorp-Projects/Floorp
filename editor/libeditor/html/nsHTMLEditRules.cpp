@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=79: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -600,7 +601,10 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
 
   // Deal with actions for which we don't need to check whether the selection is
   // editable.
-  if (info->action == kOutputText) {
+  if (info->action == kOutputText ||
+      info->action == kUndo ||
+      info->action == kRedo)
+  {
     return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel, aHandled);
   }
 
@@ -642,7 +646,7 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
       return NS_OK;
     }
   }
-    
+
   switch (info->action)
   {
     case kInsertText:

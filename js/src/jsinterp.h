@@ -71,7 +71,7 @@ struct JSStackFrame {
     jsbytecode      *imacpc;        /* null or interpreter macro call pc */
     jsval           *slots;         /* variables, locals and operand stack */
     JSObject        *callobj;       /* lazily created Call object */
-    JSObject        *argsobj;       /* lazily created arguments object */
+    jsval           argsobj;        /* lazily created arguments object, must be JSVAL_OBJECT */
     JSObject        *varobj;        /* variables object, where vars go */
     JSObject        *callee;        /* function or script object */
     JSScript        *script;        /* script being interpreted */
@@ -130,9 +130,7 @@ struct JSStackFrame {
     JSStackFrame    *displaySave;   /* previous value of display entry for
                                        script->staticLevel */
 
-#ifdef __cplusplus /* Aargh, LiveConnect, bug 442399. */
     inline void assertValidStackDepth(uintN depth);
-#endif
 };
 
 #ifdef __cplusplus
@@ -149,14 +147,12 @@ StackBase(JSStackFrame *fp)
     return fp->slots + fp->script->nfixed;
 }
 
-#ifdef __cplusplus /* Aargh, LiveConnect, bug 442399. */
 void
 JSStackFrame::assertValidStackDepth(uintN depth)
 {
     JS_ASSERT(0 <= regs->sp - StackBase(this));
     JS_ASSERT(depth <= uintptr_t(regs->sp - StackBase(this)));
 }
-#endif
 
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
@@ -241,13 +237,6 @@ typedef struct JSInlineFrame {
 #define PCVCAP_SHAPE(t)         ((t) >> PCVCAP_TAGBITS)
 
 #define SHAPE_OVERFLOW_BIT      JS_BIT(32 - PCVCAP_TAGBITS)
-
-#ifndef JS_THREADSAFE
-# define js_GenerateShape(cx, gcLocked)    js_GenerateShape (cx)
-#endif
-
-extern uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked);
 
 struct JSPropCacheEntry {
     jsbytecode          *kpc;           /* pc if vcap tag is <= 1, else atom */

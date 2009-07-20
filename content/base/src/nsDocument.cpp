@@ -1636,6 +1636,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument,
                                                         nsIDocument,
                                                         nsNodeUtils::LastRelease(this))
 
+NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_ROOT_END
 
 static PLDHashOperator
 SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
@@ -1716,7 +1719,11 @@ IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
-  if (nsCCUncollectableMarker::InGeneration(tmp->GetMarkedCCGeneration())) {
+  // Always need to traverse script objects, so do that before we check
+  // if we're uncollectable.
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+
+  if (nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -1773,6 +1780,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mPreloadingImages)
 
 #ifdef MOZ_SMIL
   // Traverse animation components
@@ -1781,12 +1789,15 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   }
 #endif // MOZ_SMIL
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
-
   if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
     PL_DHashTableEnumerate(tmp->mSubDocuments, SubDocTraverser, &cb);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
@@ -1814,7 +1825,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   tmp->mParentDocument = nsnull;
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mPreloadingImages)
 
   // nsDocument has a pretty complex destructor, so we're going to
   // assume that *most* cycles you actually want to break somewhere
@@ -3538,33 +3549,27 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     mLayoutHistoryState = nsnull;
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
 
-    // If we already have a wrapper at this point, it might have the wrong
-    // parent and scope, so reparent it.
-    nsIXPConnectWrappedNative *wrapper =
-      static_cast<nsIXPConnectWrappedNative*>(GetWrapper());
-    if (wrapper) {
-      JSObject *obj = nsnull;
-      wrapper->GetJSObject(&obj);
-      if (obj) {
-        JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
-        nsIScriptContext *scx = aScriptGlobalObject->GetContext();
-        JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
+#ifdef DEBUG
+    // We really shouldn't have a wrapper here but if we do we need to make sure
+    // it has the correct parent.
+    JSObject *obj = GetWrapper();
+    if (obj) {
+      JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
+      nsIScriptContext *scx = aScriptGlobalObject->GetContext();
+      JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
+      if (!cx) {
+        nsContentUtils::ThreadJSContextStack()->Peek(&cx);
         if (!cx) {
-          nsContentUtils::ThreadJSContextStack()->Peek(&cx);
-          if (!cx) {
-            nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
-            NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
-          }
-        }
-        if (cx) {
-          nsCOMPtr<nsIXPConnectJSObjectHolder> newWrapper;
-          nsContentUtils::XPConnect()->
-            ReparentWrappedNativeIfFound(cx, JS_GetGlobalForObject(cx, obj),
-                                         newScope, wrapper->Native(),
-                                         getter_AddRefs(newWrapper));
+          nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+          NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
         }
       }
+      if (cx) {
+        NS_ASSERTION(JS_GetGlobalForObject(cx, obj) == newScope,
+                     "Wrong scope, this is really bad!");
+      }
     }
+#endif
 
     if (mAllowDNSPrefetch) {
       nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
@@ -3861,6 +3866,9 @@ nsDocument::DispatchContentLoadedEvents()
   // If you add early returns from this method, make sure you're
   // calling UnblockOnload properly.
   
+  // Unpin references to preloaded images
+  mPreloadingImages.Clear();
+    
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
@@ -6888,7 +6896,7 @@ nsDocument::Destroy()
 
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
-  ReleaseWrapper();
+  nsContentUtils::ReleaseWrapper(static_cast<nsINode*>(this), this);
 }
 
 void
@@ -7297,10 +7305,7 @@ public:
 
     // Throw away the cached link state so it gets refetched by the style
     // system      
-    nsCOMPtr<nsILink> link = do_QueryInterface(aContent);
-    if (link) {
-      link->SetLinkState(eLinkState_Unknown);
-    }
+    aContent->SetLinkState(eLinkState_Unknown);
     contentVisited.AppendObject(aContent);
   }
 };
@@ -7424,6 +7429,11 @@ nsDocument::SetReadyStateInternal(ReadyState rs)
   // TODO fire "readystatechange"
 }
 
+nsIDocument::ReadyState
+nsDocument::GetReadyStateEnum()
+{
+  return mReadyState;
+}
 
 NS_IMETHODIMP
 nsDocument::GetReadyState(nsAString& aReadyState)
@@ -7478,6 +7488,34 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
   }
 }
 
+void
+nsDocument::MaybePreLoadImage(nsIURI* uri)
+{
+  // Early exit if the img is already present in the img-cache
+  // which indicates that the "real" load has already started and
+  // that we shouldn't preload it.
+  if (nsContentUtils::IsImageInCache(uri)) {
+    return;
+  }
+
+  // Image not in cache - trigger preload
+  nsCOMPtr<imgIRequest> request;
+  nsresult rv =
+    nsContentUtils::LoadImage(uri,
+                              this,
+                              NodePrincipal(),
+                              mDocumentURI, // uri of document used as referrer
+                              nsnull,       // no observer
+                              nsIRequest::LOAD_NORMAL,
+                              getter_AddRefs(request));
+
+  // Pin image-reference to avoid evicting it from the img-cache before
+  // the "real" load occurs. Unpinned in DispatchContentLoadedEvents and
+  // unlink
+  if (NS_SUCCEEDED(rv)) {
+    mPreloadingImages.AppendObject(request);
+  }
+}
 class nsDelayedEventDispatcher : public nsRunnable
 {
 public:

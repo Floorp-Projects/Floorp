@@ -3,44 +3,53 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
+var gLoggingEnabled = false;
+
 function nowInSeconds()
 {
     return Date.now() / 1000;
 }
 
 function LOG(aMsg) {
-    //aMsg = ("*** WIFI GEO: " + aMsg);
-    //Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
+
+    if (gLoggingEnabled)
+    {
+        aMsg = ("*** WIFI GEO: " + aMsg);
+        Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
+        dump(aMsg);
+    }
 }
 
-function getAccessTokenForURL(url)
-{
-    // check to see if we have an access token:
-    var accessToken = "";
-    
-    try {
-        var prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+function WifiGeoAddressObject(streetNumber, street, premises, city, county, region, country, countryCode, postalCode) {
 
-        var accessTokenPrefName = "geo.wifi.access_token." + url;
-        accessToken = prefService.getCharPref(accessTokenPrefName);
-        
-        // check to see if it has expired
-        var accessTokenDate = prefService.getIntPref(accessTokenPrefName + ".time");
-        
-        var accessTokenInterval = 1209600;  /* seconds in 2 weeks */
-        try {
-            accessTokenInterval = prefService.getIntPref("geo.wifi.access_token.recycle_interval");
-        } catch (e) {}
-        
-        if (nowInSeconds() - accessTokenDate > accessTokenInterval)
-            accessToken = "";
-    }
-    catch (e) {
-        accessToken = "";
-        LOG("Error: "+ e);
-    }
-    return accessToken;
+  this.streetNumber = streetNumber;
+  this.street       = street;
+  this.premises     = premises;
+  this.city         = city;
+  this.county       = county;
+  this.region       = region;
+  this.country      = country;
+  this.countryCode  = countryCode;
+  this.postalCode   = postalCode;
 }
+
+WifiGeoAddressObject.prototype = {
+
+    QueryInterface:   XPCOMUtils.generateQI([Ci.nsIDOMGeoPositionAddress, Ci.nsIClassInfo]),
+
+    getInterfaces: function(countRef) {
+        var interfaces = [Ci.nsIDOMGeoPositionAddress, Ci.nsIClassInfo, Ci.nsISupports];
+        countRef.value = interfaces.length;
+        return interfaces;
+    },
+
+    getHelperForLanguage: function(language) null,
+    contractID: "",
+    classDescription: "wifi geo position address object",
+    classID: null,
+    implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
+    flags: Ci.nsIClassInfo.DOM_OBJECT,
+};
 
 function WifiGeoCoordsObject(lat, lon, acc) {
     this.latitude = lat;
@@ -75,8 +84,24 @@ WifiGeoCoordsObject.prototype = {
     speed: 0,
 };
 
-function WifiGeoPositionObject(lat, lon, acc) {
+function WifiGeoPositionObject(lat, lon, acc, address) {
+
     this.coords = new WifiGeoCoordsObject(lat, lon, acc);
+
+    if (address) {
+        this.address = new WifiGeoAddressObject(address.streetNumber,
+                                                address.street,
+                                                address.premises,
+                                                address.city,
+                                                address.county,
+                                                address.region,
+                                                address.county,
+                                                address.countryCode,
+                                                address.postalCode);
+    }
+    else
+      this.address = null;
+
     this.timestamp = Date.now();
 };
 
@@ -102,13 +127,21 @@ WifiGeoPositionObject.prototype = {
     timestamp: 0,
 };
 
-function WifiGeoPositionProvider() {};
+function WifiGeoPositionProvider() {
+    this.prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).QueryInterface(Ci.nsIPrefService);
+    try {
+        gLoggingEnabled = this.prefService.getBoolPref("geo.wifi.logging.enabled");
+    } catch (e) {}
+};
+
 WifiGeoPositionProvider.prototype = {
     classDescription: "A component that returns a geolocation based on WIFI",
     classID:          Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
     contractID:       "@mozilla.org/geolocation/provider;1",
     QueryInterface:   XPCOMUtils.generateQI([Ci.nsIGeolocationProvider, Ci.nsIWifiListener, Ci.nsITimerCallback]),
-  
+
+    prefService:     null,
+
     provider_url:    null,
     wifi_service:    null,
     timer:           null,
@@ -117,9 +150,8 @@ WifiGeoPositionProvider.prototype = {
     observe: function (aSubject, aTopic, aData) {
         if (aTopic == "private-browsing") {
             if (aData == "enter" || aData == "exit") {
-                let psvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
                 try {
-                    let branch = psvc.getBranch("geo.wifi.access_token.");
+                    let branch = this.prefService.getBranch("geo.wifi.access_token.");
                     branch.deleteBranch("");
                 } catch (e) {}
             }
@@ -129,8 +161,7 @@ WifiGeoPositionProvider.prototype = {
     startup:         function() {
         LOG("startup called");
 
-        var prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-        this.provider_url = prefService.getCharPref("geo.wifi.uri");
+        this.provider_url = this.prefService.getCharPref("geo.wifi.uri");
         LOG("provider url = " + this.provider_url);
 
         // if we don't see anything in 5 seconds, kick of one IP geo lookup.
@@ -179,12 +210,37 @@ WifiGeoPositionProvider.prototype = {
         os.removeObserver(this, "private-browsing");
     },
 
+    getAccessTokenForURL: function(url)
+    {
+        // check to see if we have an access token:
+        var accessToken = "";
+        
+        try {
+            var accessTokenPrefName = "geo.wifi.access_token." + url;
+            accessToken = this.prefService.getCharPref(accessTokenPrefName);
+            
+            // check to see if it has expired
+            var accessTokenDate = this.prefService.getIntPref(accessTokenPrefName + ".time");
+            
+            var accessTokenInterval = 1209600;  /* seconds in 2 weeks */
+            try {
+                accessTokenInterval = this.prefService.getIntPref("geo.wifi.access_token.recycle_interval");
+            } catch (e) {}
+            
+            if (nowInSeconds() - accessTokenDate > accessTokenInterval)
+                accessToken = "";
+        }
+        catch (e) {
+            accessToken = "";
+            LOG("Error: "+ e);
+        }
+        return accessToken;
+    },
+
     onChange: function(accessPoints) {
 
         LOG("onChange called");
         this.hasSeenWiFi = true;
-
-        var prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
         // send our request to a wifi geolocation network provider:
         var xhr = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
@@ -229,19 +285,27 @@ WifiGeoPositionProvider.prototype = {
                 }
             }
 
+            var address = null;
+            try {
+                address = response.location.address;
+            } catch (e) {
+                LOG("No address in response");
+            }
+
             var newLocation = new WifiGeoPositionObject(response.location.latitude,
                                                         response.location.longitude,
-                                                        response.location.accuracy);
+                                                        response.location.accuracy,
+                                                        address);
 
             var update = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationUpdate);
             update.update(newLocation);
         };
 
-        var accessToken = getAccessTokenForURL(this.provider_url);
+        var accessToken = this.getAccessTokenForURL(this.provider_url);
 
         var request = {
             version: "1.1.0",
-//          request_address: true,
+            request_address: true,
         };
 
         if (accessToken != "")

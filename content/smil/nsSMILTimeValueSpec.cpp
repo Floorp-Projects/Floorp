@@ -91,10 +91,10 @@ nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec)
 
   if (NS_FAILED(rv) || (!clockTime.IsResolved() && !clockTime.IsIndefinite()))
     return NS_ERROR_FAILURE;
-  
+
   if (clockTime.IsResolved())
     mOffset = clockTime.GetMillis();
-  
+
   if (mOwner) {
     nsSMILInstanceTime instance(clockTime, this);
     mOwner->AddInstanceTime(instance, mIsBegin);

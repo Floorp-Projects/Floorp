@@ -212,6 +212,7 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
                     $(DEPTH)/js/src/mozilla-config.h
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/other-licenses/ply \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/qsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \

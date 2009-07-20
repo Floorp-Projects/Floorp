@@ -1,4 +1,13 @@
 /**
+ * This file provides set of helper functions to test nsIAccessibleTable
+ * interface.
+ *
+ * Required:
+ *   common.js
+ *   states.js
+ */
+
+/**
  * Test table indexes.
  *
  * @param  aIdentifier  [in] table accessible identifier
@@ -20,6 +29,16 @@ function testTableIndexes(aIdentifier, aIdxes)
     var colCount = aIdxes[rowIdx].length;
     for (var colIdx = 0; colIdx < colCount; colIdx++) {
       var idx = aIdxes[rowIdx][colIdx];
+
+      // cellRefAt
+      try {
+        cellAcc = null;
+        cellAcc = tableAcc.cellRefAt(rowIdx, colIdx);
+      } catch (e) { }
+      
+      ok(idx != -1 && cellAcc || idx == -1 && !cellAcc,
+         id + ": Can't get cell accessible at row = " + rowIdx + ", column = " + colIdx);
+
       if (idx != - 1) {
         // getRowAtIndex
         var origRowIdx = rowIdx;
@@ -50,15 +69,6 @@ function testTableIndexes(aIdentifier, aIdxes)
 
         is(obtainedColIdx, origColIdx,
            id + ": column  for index " + idx +" is not correct");
-
-        // cellRefAt
-        try {
-          cellAcc = null;
-          cellAcc = tableAcc.cellRefAt(rowIdx, colIdx);
-        } catch (e) { }
-
-        ok(cellAcc,
-           id + ": Can't get cell accessible at row = " + rowIdx + ", column = " + colIdx);
 
         // 'table-cell-index' attribute
         if (cellAcc) {
@@ -116,7 +126,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var colIdx = 0; colIdx < colsCount; colIdx++) {
     var isColSelected = true;
     for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-      if (!aCellsArray[rowIdx][colIdx]) {
+      if (aCellsArray[rowIdx][colIdx] == false) {
         isColSelected = false;
         break;
       }
@@ -156,7 +166,7 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     var isRowSelected = true;
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
-      if (!aCellsArray[rowIdx][colIdx]) {
+      if (aCellsArray[rowIdx][colIdx] == false) {
         isRowSelected = false;
         break;
       }
@@ -194,6 +204,9 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
   // isCellSelected test
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
     for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] == undefined)
+        continue;
+  
       is(acc.isCellSelected(rowIdx, colIdx), aCellsArray[rowIdx][colIdx],
          msg + "Wrong selection state of cell at " + rowIdx + " row and " +
          colIdx + " column for " + prettyName(aIdentifier));
@@ -220,6 +233,21 @@ function testTableSelection(aIdentifier, aCellsArray, aMsg)
     is (actualSelCells[i], selCells[i],
         msg + "Cell at index " + selCells[i] + " should be selected.");
   }
+
+  // selected states tests
+  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] == undefined)
+        continue;
+
+      var cell = acc.cellRefAt(rowIdx, colIdx);
+      var isSel = aCellsArray[rowIdx][colIdx];
+      if (isSel)
+        testStates(cell, STATE_SELECTED);
+      else
+        testStates(cell, STATE_SELECTABLE, 0, STATE_SELECTED);
+    }
+  }
 }
 
 /**
@@ -232,8 +260,10 @@ function testUnselectTableColumn(aIdentifier, aColIdx, aCellsArray)
     return;
 
   var rowsCount = aCellsArray.length;
-  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++)
-    aCellsArray[rowIdx][aColIdx] = false;
+  for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
+    if (aCellsArray[rowIdx][aColIdx] != undefined)
+      aCellsArray[rowIdx][aColIdx] = false;
+  }
 
   acc.unselectColumn(aColIdx);
   testTableSelection(aIdentifier, aCellsArray,
@@ -253,8 +283,10 @@ function testSelectTableColumn(aIdentifier, aColIdx, aCellsArray)
   var colsCount = aCellsArray[0].length;
 
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-    for (var colIdx = 0; colIdx < colsCount; colIdx++)
-      aCellsArray[rowIdx][colIdx] = (colIdx == aColIdx);
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] != undefined)
+        aCellsArray[rowIdx][colIdx] = (colIdx == aColIdx);
+    }
   }
 
   acc.selectColumn(aColIdx);
@@ -272,8 +304,10 @@ function testUnselectTableRow(aIdentifier, aRowIdx, aCellsArray)
     return;
 
   var colsCount = aCellsArray[0].length;
-  for (var colIdx = 0; colIdx < colsCount; colIdx++)
-    aCellsArray[aRowIdx][colIdx] = false;
+  for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+    if (aCellsArray[aRowIdx][colIdx] != undefined)
+      aCellsArray[aRowIdx][colIdx] = false;
+  }
 
   acc.unselectRow(aRowIdx);
   testTableSelection(aIdentifier, aCellsArray,
@@ -293,8 +327,10 @@ function testSelectTableRow(aIdentifier, aRowIdx, aCellsArray)
   var colsCount = aCellsArray[0].length;
 
   for (var rowIdx = 0; rowIdx < rowsCount; rowIdx++) {
-    for (var colIdx = 0; colIdx < colsCount; colIdx++)
-      aCellsArray[rowIdx][colIdx] = (rowIdx == aRowIdx);
+    for (var colIdx = 0; colIdx < colsCount; colIdx++) {
+      if (aCellsArray[rowIdx][colIdx] != undefined)
+        aCellsArray[rowIdx][colIdx] = (rowIdx == aRowIdx);
+    }
   }
 
   acc.selectRow(aRowIdx);

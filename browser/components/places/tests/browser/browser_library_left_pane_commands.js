@@ -162,8 +162,7 @@ gTests.push({
 function nextTest() {
   if (gTests.length) {
     var test = gTests.shift();
-    ok(true, "TEST: " + test.desc);
-    dump("TEST: " + test.desc + "\n");
+    info("Start of test: " + test.desc);
     test.run();
   }
   else {
@@ -194,7 +193,6 @@ var windowObserver = {
 };
 
 function test() {
-  dump("Starting test browser_library_left_pane_commands.js\n");
   waitForExplicitFinish();
   // Sanity checks.
   ok(PlacesUtils, "PlacesUtils is running in chrome context");

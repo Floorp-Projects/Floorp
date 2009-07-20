@@ -57,17 +57,18 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     nsXPCWrappedJS *tmp = Downcast(s);
 
     nsrefcnt refcnt = tmp->mRefCnt.get();
-#ifdef DEBUG_CC
-    char name[72];
-    if (tmp->GetClass())
-      JS_snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)",
-                  tmp->GetClass()->GetInterfaceName());
-    else
-      JS_snprintf(name, sizeof(name), "nsXPCWrappedJS");
-    cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS), name);
-#else
-    cb.DescribeNode(RefCounted, refcnt);
-#endif
+    if (cb.WantDebugInfo()) {
+        char name[72];
+        if (tmp->GetClass())
+            JS_snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)",
+                        tmp->GetClass()->GetInterfaceName());
+        else
+            JS_snprintf(name, sizeof(name), "nsXPCWrappedJS");
+        cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS), name);
+    } else {
+        cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS),
+                        "nsXPCWrappedJS");
+    }
 
     // nsXPCWrappedJS keeps its own refcount artificially at or above 1, see the
     // comment above nsXPCWrappedJS::AddRef.
@@ -307,6 +308,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
     nsXPCWrappedJS* wrapper = nsnull;
     nsXPCWrappedJSClass* clazz = nsnull;
     XPCJSRuntime* rt = ccx.GetRuntime();
+    JSBool release_root = JS_FALSE;
 
     map = rt->GetWrappedJSMap();
     if(!map)
@@ -341,6 +343,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
             }
         }
     }
+
     if(!root)
     {
         // build the root wrapper
@@ -374,6 +377,9 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
 
             if(!root)
                 goto return_wrapper;
+
+            release_root = JS_TRUE;
+
             {   // scoped lock
 #if DEBUG_xpc_leaks
                 printf("Created nsXPCWrappedJS %p, JSObject is %p\n",
@@ -406,6 +412,9 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
 return_wrapper:
     if(clazz)
         NS_RELEASE(clazz);
+
+    if(release_root)
+        NS_RELEASE(root);
 
     if(!wrapper)
         return NS_ERROR_FAILURE;
@@ -611,12 +620,12 @@ nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant **_retval)
     if(!ccx.IsValid())
         return NS_ERROR_UNEXPECTED;
 
-    JSString* jsstr = XPCStringConvert::ReadableToJSString(ccx, name);
+    jsval jsstr = XPCStringConvert::ReadableToJSVal(ccx, name);
     if(!jsstr)
         return NS_ERROR_OUT_OF_MEMORY;
 
     return nsXPCWrappedJSClass::
-        GetNamedPropertyAsVariant(ccx, mJSObj, STRING_TO_JSVAL(jsstr), _retval);
+        GetNamedPropertyAsVariant(ccx, mJSObj, jsstr, _retval);
 }
 
 /***************************************************************************/

@@ -1,0 +1,5 @@
+pi = quad 3.14
+half = quad 0.5
+halfpi = fmul pi half
+res = fcall sin cdecl halfpi
+fret res

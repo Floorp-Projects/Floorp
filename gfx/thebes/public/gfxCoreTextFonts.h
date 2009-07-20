@@ -109,7 +109,7 @@ public:
     // clean up static objects that may have been cached
     static void Shutdown();
 
-    static CTFontRef CreateCopyWithDisabledLigatures(CTFontRef aFont);
+    static CTFontRef CreateCTFontWithDisabledLigatures(ATSFontRef aFont, CGFloat aSize);
 
 protected:
     const gfxFontStyle *mFontStyle;

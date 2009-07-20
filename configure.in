@@ -203,6 +203,7 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
                            Disable compiler/library checks.],
     COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
+AC_SUBST(COMPILE_ENVIRONMENT)
 
 MOZ_ARG_WITH_STRING(l10n-base,
 [  --with-l10n-base=DIR     path to l10n repositories],
@@ -242,6 +243,11 @@ case "$target" in
                         The path to the Windows CE SDK],
     WINCE_SDK_DIR=$withval)
 
+    MOZ_ARG_WITH_STRING(ogles-sdk,
+    [  --with-ogles-sdk=OGLES_SDK_DIR
+                        The path to the OGLES SDK],
+    OGLES_SDK_DIR=$withval)
+
     dnl Default to Windows Mobile components enabled
     WINCE_WINDOWS_MOBILE=1
 
@@ -268,7 +274,7 @@ case "$target" in
 
     _pwdw=`pwd -W`
     _pwd=`pwd`
-    make WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
+    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdir" OBJDIR="$_pwdw" -C $srcdir/build/wince/tools
 
     CC="$_pwd/dist/sdk/bin/arm-wince-gcc"
     CXX="$_pwd/dist/sdk/bin/arm-wince-gcc"
@@ -3198,7 +3204,6 @@ else
 		[MISSING_X="$MISSING_X -lX11"], $XLIBS)
 	AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
 		[MISSING_X="$MISSING_X -lXext"], $XLIBS)
-    echo "green"
      
 	AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"], [
         unset ac_cv_lib_Xt_XtFree
@@ -4203,7 +4208,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.7.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
+    AM_PATH_NSPR(4.8.0, [MOZ_NATIVE_NSPR=1], [MOZ_NATIVE_NSPR=])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4563,7 +4568,6 @@ case "$target_os" in
         if test -z "$GNU_CC"; then 
             XPC_IDISPATCH_SUPPORT=1
             MOZ_NO_ACTIVEX_SUPPORT=
-            MOZ_ACTIVEX_SCRIPTING_SUPPORT=1
         fi
         ;;
 esac
@@ -6084,11 +6088,11 @@ MOZ_ARG_DISABLE_BOOL(activex,
     MOZ_NO_ACTIVEX_SUPPORT= )
 AC_SUBST(MOZ_NO_ACTIVEX_SUPPORT)
 
-MOZ_ARG_DISABLE_BOOL(activex-scripting,
-[  --disable-activex-scripting
-                          Disable building of ActiveX scripting support (win32)],
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=,
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1)
+MOZ_ARG_ENABLE_BOOL(activex-scripting,
+[  --enable-activex-scripting
+                          Enable building of ActiveX scripting support (win32)],
+    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1,
+    MOZ_ACTIVEX_SCRIPTING_SUPPORT=)
 AC_SUBST(MOZ_ACTIVEX_SCRIPTING_SUPPORT)
 
 if test -n "$MOZ_NO_ACTIVEX_SUPPORT" -a -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT";
@@ -7640,19 +7644,36 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
         if test -z "$WINCE"; then
-           WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
-           DDRAW_SURFACE_FEATURE=
+            WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
         else
-           WIN32_FONT_FEATURE=
+            WIN32_FONT_FEATURE=
         fi
 
         AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
         if test -z "$HAS_DDRAW"; then
-          AC_MSG_WARN([DirectDraw ddraw.h header not found or it's missing DDLOCK_WAITNOTBUSY, disabling DirectDraw surface.  If you have an older SDK (such as the CE5 SDK), try copying in ddraw.lib and ddraw.h from the WM6 SDK.])
-           DDRAW_SURFACE_FEATURE=
+            AC_MSG_WARN([DirectDraw ddraw.h header not found or it's missing DDLOCK_WAITNOTBUSY, disabling DirectDraw surface.  If you have an older SDK (such as the CE5 SDK), try copying in ddraw.lib and ddraw.h from the WM6 SDK.])
+            DDRAW_SURFACE_FEATURE=
         else
-          DDRAW_SURFACE_FEATURE="#define CAIRO_HAS_DDRAW_SURFACE 1"
+            DDRAW_SURFACE_FEATURE="#define CAIRO_HAS_DDRAW_SURFACE 1"
         fi
+
+        if test -z "$OGLES_SDK_DIR"; then
+            OGLES_SURFACE_FEATURE=
+        else
+            AC_TRY_COMPILE([
+              #include <EGL/egl.h>
+              #include <EGL/eglext.h>
+              #include <GLES2/gl2.h>
+              #include <GLES2/gl2ext.h>
+            ], [ EGLDisplay _cairo_ddraw_egl_dpy = EGL_NO_DISPLAY;], HAS_OGLES=1, HAS_OGLES=)
+            if test -z "$HAS_OGLES"; then
+              AC_MSG_WARN([OpenGL ES2 headers not found, disabling OpenGL acceleration surfaces.])
+              OGLES_SURFACE_FEATURE=
+            else
+              OGLES_SURFACE_FEATURE="#define CAIRO_DDRAW_USE_GL 1"
+            fi
+        fi
+
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
     fi
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
@@ -7673,6 +7694,7 @@ if test "$MOZ_TREE_CAIRO"; then
     fi
     AC_SUBST(MOZ_ENABLE_CAIRO_FT)
     AC_SUBST(CAIRO_FT_CFLAGS)
+    AC_SUBST(HAS_OGLES)
 
     if test "$MOZ_DEBUG"; then
       SANITY_CHECKING_FEATURE="#define CAIRO_DO_SANITY_CHECKING 1"
@@ -7692,6 +7714,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(XCB_SURFACE_FEATURE)
     AC_SUBST(WIN32_SURFACE_FEATURE)
     AC_SUBST(DDRAW_SURFACE_FEATURE)
+    AC_SUBST(OGLES_SURFACE_FEATURE)    
     AC_SUBST(OS2_SURFACE_FEATURE)
     AC_SUBST(BEOS_SURFACE_FEATURE)
     AC_SUBST(DIRECTFB_SURFACE_FEATURE)
@@ -7943,7 +7966,7 @@ if test "$NECKO_WIFI"; then
   elif test "$OS_ARCH" = "WINCE"; then
     NECKO_WIFI=1    
   else
-    AC_MSG_WARN([Necko WiFi scanning not supported on your platform.])
+    AC_MSG_ERROR([Necko WiFi scanning not supported on your platform, use --disable-necko-wifi])
   fi
   AC_SUBST(NECKO_WIFI)
   
@@ -8131,8 +8154,7 @@ AC_SUBST(MOZ_OS2_USE_DECLSPEC)
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
-AC_SUBST(WINCE)
-AC_SUBST(WINCE_SDK_DIR)
+AC_SUBST(OGLES_SDK_DIR)
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
@@ -8142,8 +8164,6 @@ AC_SUBST(FIREFOX_VERSION)
 AC_SUBST(MOZ_PKG_SPECIAL)
 
 AC_SUBST(MOZILLA_OFFICIAL)
-AC_SUBST(BUILD_OFFICIAL)
-AC_SUBST(MOZ_MILESTONE_RELEASE)
 
 dnl win32 options
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
@@ -8156,6 +8176,7 @@ AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(PYTHON)
 
 AC_SUBST(WINCE)
+AC_SUBST(WINCE_SDK_DIR)
 AC_SUBST(WINCE_WINDOWS_MOBILE)
 
 dnl Echo the CFLAGS to remove extra whitespace.
