@@ -54,11 +54,12 @@ struct ActorHandle
 };
 
 
+template<class ListenerT>
 class /*NS_INTERFACE_CLASS*/ IProtocolManager
 {
 public:
-    virtual int32 Register(RPCChannel::RPCListener*) = 0;
-    virtual RPCChannel::RPCListener* Lookup(int32) = 0;
+    virtual int32 Register(ListenerT*) = 0;
+    virtual ListenerT* Lookup(int32) = 0;
     virtual void Unregister(int32) = 0;
 };
 

@@ -206,7 +206,7 @@ class GenerateProtocolHeader(Visitor):
 
     def visitMessageDecl(self, md):
         # where we squirrel away some common information
-        setattr(md, '_cxx', _struct())
+        md._cxx = _struct()
 
         md._cxx.params = [ ]
         for param in md.inParams:
@@ -411,6 +411,8 @@ class GenerateProtocolActorHeader(Visitor):
 
 
     def visitProtocol(self, p):
+        p._cxx = _struct()
+
         if p.decl.type.isManager():
             self.file.addthing(cxx.CppDirective('include', '"base/id_map.h"'))
 
@@ -443,9 +445,11 @@ class GenerateProtocolActorHeader(Visitor):
         self.ns.addstmt(cxx.Whitespace.NL)
 
         channellistener = channelname +'::'+ channellistener
+        p._cxx.managertype = (
+            'mozilla::ipc::IProtocolManager<'+ channellistener +'>')
         inherits = [ cxx.Inherit(channellistener) ]
         if p.decl.type.isManager():
-            inherits.append(cxx.Inherit('mozilla::ipc::IProtocolManager'))
+            inherits.append(cxx.Inherit(p._cxx.managertype))
         cls = cxx.Class(self.clsname, inherits=inherits, abstract=True)
 
         if p.decl.type.isManaged():
@@ -687,12 +691,11 @@ class GenerateProtocolActorHeader(Visitor):
         if p.decl.type.isToplevel() and p.decl.type.isManager():
             cls.addstmt(cxx.StmtDecl(cxx.Decl(
                         cxx.Type('IDMap<ChannelListener>'), 'mActorMap')))
-        else:
+        elif p.decl.type.isManaged():
             cls.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('int'), 'mId')))
             cls.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('int'), 'mPeerId')))
             cls.addstmt(cxx.StmtDecl(cxx.Decl(
-                        cxx.Type('mozilla::ipc::IProtocolManager', ptr=1),
-                        'mManager')))
+                        cxx.Type(p._cxx.managertype, ptr=1), 'mManager')))
         self.ns.addstmt(cls)
         self.ns.addstmt(cxx.Whitespace.NL)
         self.ns.addstmt(cxx.Whitespace.NL)
