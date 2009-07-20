@@ -74,7 +74,6 @@ MOCHI_TESTS = \
 		test_bug_391514.html \
 		test_bug_427033.html \
 		test_bug_444968.html \
-		test_prompt_async.html \
 		test_notifications.html \
 		test_prompt.html \
 		test_xhr.html \
@@ -102,7 +101,6 @@ MOCHI_CONTENT = \
 		subtst_notifications_8.html \
 		subtst_notifications_9.html \
 		subtst_notifications_10.html \
-		subtst_prompt_async.html \
 		$(NULL)
 
 XPCSHELL_TESTS  = unit
