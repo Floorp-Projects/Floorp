@@ -764,10 +764,14 @@ namespace nanojit
         underrunProtect(4);
         LOpcode op = ins->opcode();
         LIns* condval = ins->oprnd1();
-        LIns* iftrue  = ins->oprnd2();
-        LIns* iffalse = ins->oprnd3();
-
         NanoAssert(condval->isCmp());
+
+        LIns* values = ins->oprnd2();
+
+        NanoAssert(values->opcode() == LIR_2);
+        LIns* iftrue = values->oprnd1();
+        LIns* iffalse = values->oprnd2();
+
         NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
 
         const Register rr = prepResultReg(ins, GpRegs);
