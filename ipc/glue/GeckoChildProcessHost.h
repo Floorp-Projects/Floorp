@@ -43,6 +43,8 @@
 #include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
 
+#include "mozilla/Monitor.h"
+
 #include "nsXULAppAPI.h"        // for GeckoChildProcessType
 
 namespace mozilla {
@@ -50,12 +52,15 @@ namespace ipc {
 
 class GeckoChildProcessHost : public ChildProcessHost
 {
+protected:
+  typedef mozilla::Monitor Monitor;
+
 public:
   GeckoChildProcessHost(GeckoChildProcessType aProcessType=GeckoChildProcess_Default);
 
-  bool Launch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
+  bool SyncLaunch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
+  bool AsyncLaunch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
 
-  // FIXME/cjones: these should probably disappear
   virtual void OnChannelConnected(int32 peer_pid);
   virtual void OnMessageReceived(const IPC::Message& aMsg);
   virtual void OnChannelError();
@@ -72,6 +77,8 @@ public:
 
 protected:
   GeckoChildProcessType mProcessType;
+  Monitor mMonitor;
+  bool mLaunched;
   FilePath mProcessPath;
 
 #if defined(OS_POSIX)

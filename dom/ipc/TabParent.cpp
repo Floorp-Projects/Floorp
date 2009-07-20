@@ -6,27 +6,13 @@
 
 using mozilla::ipc::BrowserProcessSubThread;
 
-template<>
-struct RunnableMethodTraits<mozilla::tabs::TabParent>
-{
-    static void RetainCallee(mozilla::tabs::TabParent* obj) { }
-    static void ReleaseCallee(mozilla::tabs::TabParent* obj) { }
-};
-
 namespace mozilla {
 namespace tabs {
 
 TabParent::TabParent(MagicWindowHandle parentWidget)
-    : mSubprocess()
-    , mMonitor("mozilla.dom.ipc.TabParent")
+    : mSubprocess(GeckoChildProcess_Tab)
 {
-    {
-        MonitorAutoEnter mon(mMonitor);
-        BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)->
-            PostTask(FROM_HERE, NewRunnableMethod(this, &TabParent::LaunchSubprocess));
-        mon.Wait();
-    }
-
+    mSubprocess.SyncLaunch();
     Open(mSubprocess.GetChannel());
 
     Sendinit(parentWidget);
@@ -34,14 +20,6 @@ TabParent::TabParent(MagicWindowHandle parentWidget)
 
 TabParent::~TabParent()
 {
-}
-
-void
-TabParent::LaunchSubprocess()
-{
-    MonitorAutoEnter mon(mMonitor);
-    mSubprocess.Launch();
-    mon.Notify();
 }
 
 void
