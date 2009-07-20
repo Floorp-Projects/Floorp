@@ -849,8 +849,32 @@ nsHttpChannel::CallOnStartRequest()
 
     // install stream converter if required
     rv = ApplyContentConversions();
+    if (NS_FAILED(rv)) return rv;
 
-    return rv;
+    if (!mCanceled) {
+        // create offline cache entry if offline caching was requested
+        if (mCacheForOfflineUse) {
+            PRBool shouldCacheForOfflineUse;
+            rv = ShouldUpdateOfflineCacheEntry(&shouldCacheForOfflineUse);
+            if (NS_FAILED(rv)) return rv;
+            
+            if (shouldCacheForOfflineUse) {
+                LOG(("writing to the offline cache"));
+                rv = InitOfflineCacheEntry();
+                if (NS_FAILED(rv)) return rv;
+                
+                if (mOfflineCacheEntry) {
+                  rv = InstallOfflineCacheListener();
+                  if (NS_FAILED(rv)) return rv;
+                }
+            } else {
+                LOG(("offline cache is up to date, not updating"));
+                CloseOfflineCacheEntry();
+            }
+        }
+    }
+
+    return NS_OK;
 }
 
 nsresult
@@ -1134,28 +1158,8 @@ nsHttpChannel::ProcessNormal()
         rv = InstallCacheListener();
         if (NS_FAILED(rv)) return rv;
     }
-    // create offline cache entry if offline caching was requested
-    if (mCacheForOfflineUse) {
-        PRBool shouldCacheForOfflineUse;
-        rv = ShouldUpdateOfflineCacheEntry(&shouldCacheForOfflineUse);
-        if (NS_FAILED(rv)) return rv;
 
-        if (shouldCacheForOfflineUse) {
-            LOG(("writing to the offline cache"));
-            rv = InitOfflineCacheEntry();
-            if (NS_FAILED(rv)) return rv;
-
-            if (mOfflineCacheEntry) {
-                rv = InstallOfflineCacheListener();
-                if (NS_FAILED(rv)) return rv;
-            }
-        } else {
-            LOG(("offline cache is up to date, not updating"));
-            CloseOfflineCacheEntry();
-        }
-    }
-
-    return rv;
+    return NS_OK;
 }
 
 nsresult
@@ -2355,27 +2359,6 @@ nsHttpChannel::ReadFromCache()
             LOG(("skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
                  "load flag\n"));
             return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
-        }
-    }
-
-    // set up the offline cache entry for writing
-    if (mCacheForOfflineUse) {
-        PRBool shouldUpdateOffline;
-        rv = ShouldUpdateOfflineCacheEntry(&shouldUpdateOffline);
-        if (NS_FAILED(rv)) return rv;
-
-        if (shouldUpdateOffline) {
-            LOG(("writing to the offline cache"));
-            rv = InitOfflineCacheEntry();
-            if (NS_FAILED(rv)) return rv;
-
-            if (mOfflineCacheEntry) {
-                rv = InstallOfflineCacheListener();
-                if (NS_FAILED(rv)) return rv;
-            }
-        } else {
-            LOG(("offline cache is up to date, not updating"));
-            CloseOfflineCacheEntry();
         }
     }
 
