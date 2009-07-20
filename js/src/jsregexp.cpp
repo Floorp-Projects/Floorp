@@ -2309,8 +2309,8 @@ class RegExpNativeCompiler {
         return pos;
     }
 
-#ifdef AVMPLUS_ARM
-/* We can't do this on ARM, since it relies on doing a 32-bit load from
+#if defined(AVMPLUS_ARM) || defined(AVMPLUS_SPARC)
+/* We can't do this on ARM or SPARC, since it relies on doing a 32-bit load from
  * a pointer which is only 2-byte aligned.
  */
 #undef USE_DOUBLE_CHAR_MATCH
