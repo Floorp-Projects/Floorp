@@ -106,7 +106,6 @@ EXPORTS		= \
 		nsICSSStyleRule.h \
 		nsICSSStyleRuleDOMWrapper.h \
 		nsICSSStyleSheet.h \
-		nsIComputedDOMStyle.h \
 		nsIHTMLCSSStyleSheet.h \
 		nsIInspectorCSSUtils.h \
 		nsIStyleRule.h \

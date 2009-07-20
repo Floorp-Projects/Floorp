@@ -4291,7 +4291,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         // forget the scroll position of the page.  Note that we need to check the
         // toplevel window, because child windows seem to go to 0x0 on minimize.
         HWND toplevelWnd = GetTopLevelHWND(mWnd);
-        if (!newWidth && !newHeight && IsIconic(toplevelWnd)) {
+        if (mWnd == toplevelWnd && IsIconic(toplevelWnd)) {
           result = PR_FALSE;
           break;
         }
@@ -5359,10 +5359,21 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       DispatchKeyEvent(NS_KEY_PRESS, uniChar, &altArray,
                        keyCode, nsnull, aModKeyState, extraFlags);
     }
-  } else
-#endif
+  } else {
     DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, DOMKeyCode, nsnull, aModKeyState,
                      extraFlags);
+  }
+#else
+  {
+    UINT unichar = ::MapVirtualKey(virtualKeyCode, MAPVK_VK_TO_CHAR);
+    // Check for dead characters or no mapping
+    if (unichar & 0x80) {
+      return noDefault;
+    }
+    DispatchKeyEvent(NS_KEY_PRESS, unichar, nsnull, DOMKeyCode, nsnull, aModKeyState,
+                     extraFlags);
+  }
+#endif
 
   return noDefault;
 }

@@ -11,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Geolocation.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Doug Turner <dougt@meer.net>  (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,40 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
 
-interface nsISimpleEnumerator;
+#include "domstubs.idl"
 
-[scriptable, uuid(9854976e-1dd1-11b2-8350-e6d35099fbce)]
-interface nsIFullScreen : nsISupports
+[scriptable, uuid(98808DEB-C8E4-422C-BA97-08BF2031464C)]
+interface nsIDOMGeoPositionAddress : nsISupports
 {
-  /**
-   * Hide all registered OS chrome components
-   */
-  void hideAllOSChrome();
-
-  /**
-   * Show all registered OS chrome components
-   */
-  void showAllOSChrome();
-
-  /**
-   * Return an enumerator of all registered OS chrome components
-   */
-  nsISimpleEnumerator getChromeItems();
+  readonly attribute string streetNumber;
+  readonly attribute string street;
+  readonly attribute string premises;
+  readonly attribute string city;
+  readonly attribute string county;
+  readonly attribute string region;
+  readonly attribute string country;
+  readonly attribute string countryCode;
+  readonly attribute string postalCode;
 };
-
-
-[scriptable, uuid(ddd6790a-1dd1-11b2-a804-b522643903b9)]
-interface nsIOSChromeItem : nsISupports
-{
-  readonly attribute string name;
-
-  attribute boolean hidden;
-
-  readonly attribute long x;
-  readonly attribute long y;
-  readonly attribute long width;
-  readonly attribute long height;
-};
-
