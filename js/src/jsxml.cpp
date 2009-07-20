@@ -292,7 +292,7 @@ NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri, JSBool declared)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_NamespaceClass.base, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_NamespaceClass.base, NULL, NULL);
     if (!obj)
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_VOID(obj->fslots[JSSLOT_PREFIX]));
@@ -505,7 +505,7 @@ NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix, JSString *localName,
     JSObject *obj;
 
     JS_ASSERT(IsQNameClass(clasp));
-    obj = js_NewObject(cx, clasp, NULL, NULL, 0);
+    obj = js_NewObject(cx, clasp, NULL, NULL);
     if (!obj)
         return NULL;
     InitXMLQName(obj, uri, prefix, localName);
@@ -617,7 +617,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             return JS_TRUE;
         }
 
-        obj = js_NewObject(cx, &js_NamespaceClass.base, NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_NamespaceClass.base, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -724,7 +724,7 @@ QNameHelper(JSContext *cx, JSObject *obj, JSClass *clasp, intN argc,
          * Create and return a new QName or AttributeName object exactly as if
          * constructed.
          */
-        obj = js_NewObject(cx, clasp, NULL, NULL, 0);
+        obj = js_NewObject(cx, clasp, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -7317,19 +7317,6 @@ XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-#define JSXML_LIST_SIZE     (offsetof(JSXML, u) + sizeof(struct JSXMLListVar))
-#define JSXML_ELEMENT_SIZE  (offsetof(JSXML, u) + sizeof(struct JSXMLElemVar))
-#define JSXML_LEAF_SIZE     (offsetof(JSXML, u) + sizeof(JSString *))
-
-static size_t sizeof_JSXML[JSXML_CLASS_LIMIT] = {
-    JSXML_LIST_SIZE,        /* JSXML_CLASS_LIST */
-    JSXML_ELEMENT_SIZE,     /* JSXML_CLASS_ELEMENT */
-    JSXML_LEAF_SIZE,        /* JSXML_CLASS_ATTRIBUTE */
-    JSXML_LEAF_SIZE,        /* JSXML_CLASS_PROCESSING_INSTRUCTION */
-    JSXML_LEAF_SIZE,        /* JSXML_CLASS_TEXT */
-    JSXML_LEAF_SIZE         /* JSXML_CLASS_COMMENT */
-};
-
 #ifdef DEBUG_notme
 JSCList xml_leaks = JS_INIT_STATIC_CLIST(&xml_leaks);
 uint32  xml_serial;
@@ -7340,7 +7327,7 @@ js_NewXML(JSContext *cx, JSXMLClass xml_class)
 {
     JSXML *xml;
 
-    xml = (JSXML *) js_NewGCThing(cx, GCX_XML, sizeof_JSXML[xml_class]);
+    xml = (JSXML *) js_NewGCXML(cx, GCX_XML);
     if (!xml)
         return NULL;
 
@@ -7478,7 +7465,7 @@ NewXMLObject(JSContext *cx, JSXML *xml)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_XMLClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_XMLClass, NULL, NULL);
     if (!obj || !JS_SetPrivate(cx, obj, xml)) {
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;
@@ -7881,7 +7868,7 @@ js_GetAnyName(JSContext *cx, jsval *vp)
 
             do {
                 obj = js_NewObjectWithGivenProto(cx, &js_AnyNameClass, NULL,
-                                                 NULL, 0);
+                                                 NULL);
                 if (!obj) {
                     ok = JS_FALSE;
                     break;
@@ -8178,7 +8165,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
         }
 
         filterobj = js_NewObjectWithGivenProto(cx, &js_XMLFilterClass,
-                                               NULL, NULL, 0);
+                                               NULL, NULL);
         if (!filterobj)
             return JS_FALSE;
 

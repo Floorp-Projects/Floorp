@@ -282,7 +282,7 @@ namespace nanojit
     void Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
     {
         underrunProtect(24);
-        if (i->isop(LIR_alloc)) {
+        if (i->isop(LIR_ialloc)) {
             ADD(FP, L2, r);
             SET32(disp(resv), L2);
             verbose_only(if (_logc->lcbits & LC_RegAlloc) {
@@ -323,7 +323,7 @@ namespace nanojit
                 // make sure what is in a register
                 Reservation *rA, *rB;
                 Register ra, rb;
-                if (base->isop(LIR_alloc)) {
+                if (base->isop(LIR_ialloc)) {
                     rb = FP;
                     dr += findMemFor(base);
                     ra = findRegFor(value, GpRegs);
@@ -364,7 +364,7 @@ namespace nanojit
 
         int dr = disp(resv);
         Register rb;
-        if (base->isop(LIR_alloc)) {
+        if (base->isop(LIR_ialloc)) {
             rb = FP;
             db += findMemFor(base);
         } else {
@@ -414,7 +414,7 @@ namespace nanojit
 
                 int da = findMemFor(value);
                 Register rb;
-                if (base->isop(LIR_alloc)) {
+                if (base->isop(LIR_ialloc)) {
                     rb = FP;
                     dr += findMemFor(base);
                 } else {
@@ -425,7 +425,7 @@ namespace nanojit
             }
 
         Register rb;
-        if (base->isop(LIR_alloc)) {
+        if (base->isop(LIR_ialloc)) {
             rb = FP;
             dr += findMemFor(base);
         } else {
@@ -649,7 +649,7 @@ namespace nanojit
                 }
                 allow &= ~rmask(rb);
             }
-        else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
+        else if ((op == LIR_add||op == LIR_iaddp) && lhs->isop(LIR_ialloc) && rhs->isconst()) {
             // add alloc+const, use lea
             Register rr = prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->imm32();
@@ -670,7 +670,7 @@ namespace nanojit
                 if (lhs == rhs)
                     rb = ra;
 
-                if (op == LIR_add || op == LIR_addp)
+                if (op == LIR_add || op == LIR_iaddp)
                     ADDCC(rr, rb, rr);
                 else if (op == LIR_sub)
                     SUBCC(rr, rb, rr);
@@ -694,7 +694,7 @@ namespace nanojit
         else
             {
                 int c = rhs->imm32();
-                if (op == LIR_add || op == LIR_addp) {
+                if (op == LIR_add || op == LIR_iaddp) {
                     ADDCC(rr, L2, rr);
                 } else if (op == LIR_sub) {
                     SUBCC(rr, L2, rr);
@@ -764,14 +764,10 @@ namespace nanojit
         underrunProtect(4);
         LOpcode op = ins->opcode();
         LIns* condval = ins->oprnd1();
+        LIns* iftrue  = ins->oprnd2();
+        LIns* iffalse = ins->oprnd3();
+
         NanoAssert(condval->isCmp());
-
-        LIns* values = ins->oprnd2();
-
-        NanoAssert(values->opcode() == LIR_2);
-        LIns* iftrue = values->oprnd1();
-        LIns* iffalse = values->oprnd2();
-
         NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
 
         const Register rr = prepResultReg(ins, GpRegs);

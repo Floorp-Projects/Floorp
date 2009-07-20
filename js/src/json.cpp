@@ -609,7 +609,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
     if (!InitializeGap(cx, space, &scx.gap))
         return JS_FALSE;
 
-    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
+    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!obj)
         return JS_FALSE;
 
@@ -714,7 +714,7 @@ static JSBool
 Revive(JSContext *cx, jsval reviver, jsval *vp)
 {
     
-    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
+    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!obj)
         return JS_FALSE;
 
@@ -921,7 +921,7 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
 static JSBool
 OpenObject(JSContext *cx, JSONParser *jp)
 {
-    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
+    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!obj)
         return JS_FALSE;
 

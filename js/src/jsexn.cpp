@@ -709,7 +709,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                            .classPrototypeAtom),
                               rval))
             return JS_FALSE;
-        obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(*rval), NULL, 0);
+        obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(*rval), NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -1033,7 +1033,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         /* Make the prototype for the current constructor name. */
         proto = js_NewObject(cx, &js_ErrorClass,
                              (i != JSEXN_ERR) ? error_proto : obj_proto,
-                             obj, 0);
+                             obj);
         if (!proto)
             return NULL;
         if (i == JSEXN_ERR) {
@@ -1185,7 +1185,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = js_NewObject(cx, &js_ErrorClass, errProto, NULL, 0);
+    errObject = js_NewObject(cx, &js_ErrorClass, errProto, NULL);
     if (!errObject) {
         ok = JS_FALSE;
         goto out;
