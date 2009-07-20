@@ -49,7 +49,6 @@ EXPORT_LIBRARY = 1
 
 CPPSRCS = \
   TabParent.cpp \
-  TabProcessParent.cpp \
   TabChild.cpp \
   TabThread.cpp \
   $(NULL)

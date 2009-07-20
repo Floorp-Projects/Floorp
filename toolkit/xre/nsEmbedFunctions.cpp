@@ -404,7 +404,8 @@ public:
     GeckoChildProcessHost* host =
       new GeckoChildProcessHost(GeckoChildProcess_TestShell);
     if (host) {
-      if (!host->Launch()) {
+      // FIXME/bent: use SyncLaunch() API to simplify this code
+      if (!host->AsyncLaunch()) {
         delete host;
       }
       // ChildProcessHost deletes itself once the child process exits, on
@@ -525,34 +526,15 @@ XRE_RunTestShell(int aArgc, char* aArgv[])
 // TestHarness
 
 static void
-IPCTestHarnessMain(TestProcessParent* subprocess)
+IPCTestHarnessMain(void* data)
 {
-    TestParent* parent = new TestParent(); // leaks
+    TestProcessParent* subprocess = new TestProcessParent(); // leaks
+    bool launched = subprocess->SyncLaunch();
+    NS_ASSERTION(launched, "can't launch subprocess");
 
+    TestParent* parent = new TestParent(); // leaks
     parent->Open(subprocess->GetChannel());
     parent->DoStuff();
-}
-
-static void
-IPCTestHarnessLaunchSubprocess(TestProcessParent* subprocess,
-                               MessageLoop* mainLoop)
-{
-    bool launched = subprocess->Launch();
-    NS_ASSERTION(launched, "can't launch subprocess");
-    mainLoop->PostTask(FROM_HERE,
-                       NewRunnableFunction(IPCTestHarnessMain, subprocess));
-}
-
-static void
-IPCTestHarnessPostLaunchSubprocessTask(void* data)
-{
-    TestProcessParent* subprocess = new TestProcessParent();
-    MessageLoop* ioLoop = 
-        BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
-    ioLoop->PostTask(FROM_HERE,
-                     NewRunnableFunction(IPCTestHarnessLaunchSubprocess,
-                                         subprocess,
-                                         MessageLoop::current()));
 }
 
 int
@@ -560,7 +542,7 @@ XRE_RunIPCTestHarness(int aArgc, char* aArgv[])
 {
     nsresult rv =
         XRE_InitParentProcess(
-            aArgc, aArgv, IPCTestHarnessPostLaunchSubprocessTask, NULL);
+            aArgc, aArgv, IPCTestHarnessMain, NULL);
     NS_ENSURE_SUCCESS(rv, 1);
     return 0;
 }

@@ -7,9 +7,8 @@
 #include "TabTypes.h"
 #include "IFrameEmbeddingProtocol.h"
 #include "IFrameEmbeddingProtocolParent.h"
-#include "TabProcessParent.h"
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 
 class nsIURI;
 
@@ -19,6 +18,9 @@ namespace tabs {
 class TabParent
     : private IFrameEmbeddingProtocolParent
 {
+private:
+    typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
+
 public:
     TabParent(MagicWindowHandle parentWidget);
     virtual ~TabParent();
@@ -27,11 +29,7 @@ public:
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);
 
 private:
-    void LaunchSubprocess();
-
-    TabProcessParent mSubprocess;
-
-    mozilla::Monitor mMonitor;
+    GeckoChildProcessHost mSubprocess;
 };
 
 } // namespace tabs

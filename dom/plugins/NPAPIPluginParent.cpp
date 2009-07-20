@@ -38,21 +38,6 @@
 
 #include "mozilla/plugins/NPAPIPluginParent.h"
 
-#include "base/task.h"
-
-#include "mozilla/ipc/GeckoThread.h"
-
-using mozilla::Monitor;
-using mozilla::MonitorAutoEnter;
-using mozilla::ipc::BrowserProcessSubThread;
-
-template<>
-struct RunnableMethodTraits<mozilla::plugins::NPAPIPluginParent>
-{
-    static void RetainCallee(mozilla::plugins::NPAPIPluginParent* obj) { }
-    static void ReleaseCallee(mozilla::plugins::NPAPIPluginParent* obj) { }
-};
-
 namespace mozilla {
 namespace plugins {
 
@@ -64,17 +49,7 @@ NPAPIPluginParent::LoadModule(const char* aFilePath, PRLibrary* aLibrary)
 
     // Block on the child process being launched and initialized.
     NPAPIPluginParent* parent = new NPAPIPluginParent(aFilePath);
-
-    // launch the process synchronously
-    {MonitorAutoEnter mon(parent->mMonitor);
-        BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)
-            ->PostTask(
-                FROM_HERE,
-                NewRunnableMethod(parent,
-                                  &NPAPIPluginParent::LaunchSubprocess));
-        mon.Wait();
-    }
-
+    parent->mSubprocess.Launch();
     parent->Open(parent->mSubprocess.GetChannel());
 
     // FIXME/cjones: leaking NPAPIPluginParents ...
@@ -85,7 +60,6 @@ NPAPIPluginParent::LoadModule(const char* aFilePath, PRLibrary* aLibrary)
 NPAPIPluginParent::NPAPIPluginParent(const char* aFilePath) :
     mFilePath(aFilePath),
     mSubprocess(aFilePath),
-    mMonitor("mozilla.plugins.NPAPIPluginParent.LaunchPluginProcess"),
     ALLOW_THIS_IN_INITIALIZER_LIST(mShim(new Shim(this)))
 {
 }
@@ -94,14 +68,6 @@ NPAPIPluginParent::~NPAPIPluginParent()
 {
     _MOZ_LOG("  (closing Shim ...)");
     delete mShim;
-}
-
-void
-NPAPIPluginParent::LaunchSubprocess()
-{
-    MonitorAutoEnter mon(mMonitor);
-    mSubprocess.Launch();
-    mon.Notify();
 }
 
 NPPProtocolParent*

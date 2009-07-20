@@ -41,17 +41,54 @@
 #include "base/string_util.h"
 #include "chrome/common/chrome_switches.h"
 
+#include "mozilla/ipc/GeckoThread.h"
+
+using mozilla::MonitorAutoEnter;
 using mozilla::ipc::GeckoChildProcessHost;
+
+template<>
+struct RunnableMethodTraits<GeckoChildProcessHost>
+{
+    static void RetainCallee(GeckoChildProcessHost* obj) { }
+    static void ReleaseCallee(GeckoChildProcessHost* obj) { }
+};
 
 GeckoChildProcessHost::GeckoChildProcessHost(GeckoChildProcessType aProcessType)
   : ChildProcessHost(RENDER_PROCESS), // FIXME/cjones: we should own this enum
-    mProcessType(aProcessType)
+    mProcessType(aProcessType),
+    mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
+    mLaunched(false)
 {
 }
 
 bool
-GeckoChildProcessHost::Launch(std::vector<std::wstring> aExtraOpts)
+GeckoChildProcessHost::SyncLaunch(std::vector<std::wstring> aExtraOpts)
 {
+  MessageLoop* loop = MessageLoop::current();
+  MessageLoop* ioLoop = 
+    BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+  NS_ASSERTION(loop != ioLoop, "sync launch from the IO thread NYI");
+
+  ioLoop->PostTask(FROM_HERE,
+                   NewRunnableMethod(this,
+                                     &GeckoChildProcessHost::AsyncLaunch,
+                                     aExtraOpts));
+
+  // NB: this uses a different mechanism than the chromium parent
+  // class.
+  MonitorAutoEnter mon(mMonitor);
+  while (!mLaunched) {
+    mon.Wait();
+  }
+
+  return true;
+}
+
+bool
+GeckoChildProcessHost::AsyncLaunch(std::vector<std::wstring> aExtraOpts)
+{
+  // FIXME/cjones: make this work from non-IO threads, too
+
   if (!CreateChannel()) {
     return false;
   }
@@ -95,30 +132,24 @@ GeckoChildProcessHost::Launch(std::vector<std::wstring> aExtraOpts)
   }
   SetHandle(process);
 
-  // FIXME/cjones: should have the option for sync/async launch.
-  // however, since most clients already expect this launch to be 
-  // synchronous wrt the channel connecting, we'll hack a bit here.
-  // (at least we're on the IO thread and not blocking main ...)
-  MessageLoop* loop = MessageLoop::current();
-  bool old_state = loop->NestableTasksAllowed();
-  loop->SetNestableTasksAllowed(true);
-  // spin the loop until OnChannelConnected() comes in, which will Quit() us
-  loop->Run();
-  loop->SetNestableTasksAllowed(old_state);
-
   return true;
 }
 
 void
 GeckoChildProcessHost::OnChannelConnected(int32 peer_pid)
 {
-    MessageLoop::current()->Quit();
+  MonitorAutoEnter mon(mMonitor);
+  mLaunched = true;
+  mon.Notify();
 }
+
+// XXX/cjones: these next two methods should basically never be called.
+// after the process is launched, its channel will be used to create
+// one of our channels, AsyncChannel et al.
 void
 GeckoChildProcessHost::OnMessageReceived(const IPC::Message& aMsg)
 {
 }
-
 void
 GeckoChildProcessHost::OnChannelError()
 {

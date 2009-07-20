@@ -62,7 +62,7 @@ PluginProcessParent::Launch()
 {
     std::vector<std::wstring> args;
     args.push_back(UTF8ToWide(mPluginFilePath));
-    return mozilla::ipc::GeckoChildProcessHost::Launch(args);
+    return SyncLaunch(args);
 }
 
 
