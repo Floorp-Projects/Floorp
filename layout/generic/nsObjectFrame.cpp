@@ -1159,8 +1159,100 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   window.clipRect.bottom = 0; window.clipRect.top = 0;
   window.clipRect.left = 0; window.clipRect.right = 0;
   
-// XXX platform specific printing code
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
+// platform specific printing code
+#if defined(XP_MACOSX)
+  window.x = 0;
+  window.y = 0;
+  window.width = presContext->AppUnitsToDevPixels(mRect.width);
+  window.height = presContext->AppUnitsToDevPixels(mRect.height);
+
+  gfxContext *ctx = aRenderingContext.ThebesContext();
+  if (!ctx)
+    return;
+  gfxContextAutoSaveRestore save(ctx);
+
+  ctx->NewPath();
+
+  gfxRect rect(window.x, window.y, window.width, window.height);
+
+  ctx->Rectangle(rect);
+  ctx->Clip();
+
+  gfxQuartzNativeDrawing nativeDraw(ctx, rect);
+  CGContextRef cgContext = nativeDraw.BeginNativeDrawing();
+  if (!cgContext) {
+    nativeDraw.EndNativeDrawing();
+    return;
+  }
+
+  window.clipRect.right = window.width;
+  window.clipRect.bottom = window.height;
+  window.type = nsPluginWindowType_Drawable;
+
+  Rect gwBounds;
+  ::SetRect(&gwBounds, 0, 0, window.width, window.height);
+
+  nsTArray<char> buffer(window.width * window.height * 4);
+  CGColorSpaceRef cspace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+  if (!cspace) {
+    nativeDraw.EndNativeDrawing();
+    return;
+  }
+  CGContextRef cgBuffer =
+    ::CGBitmapContextCreate(buffer.Elements(), 
+                            window.width, window.height, 8, window.width * 4,
+                            cspace, kCGBitmapByteOrder32Big | kCGImageAlphaPremultipliedFirst);
+  ::CGColorSpaceRelease(cspace);
+  if (!cgBuffer) {
+    nativeDraw.EndNativeDrawing();
+    return;
+  }
+  GWorldPtr gWorld;
+  if (::NewGWorldFromPtr(&gWorld, k32ARGBPixelFormat, &gwBounds, NULL, NULL, 0,
+                         buffer.Elements(), window.width * 4) != noErr) {
+    ::CGContextRelease(cgBuffer);
+    nativeDraw.EndNativeDrawing();
+    return;
+  }
+
+  window.clipRect.right = window.width;
+  window.clipRect.bottom = window.height;
+  window.type = nsPluginWindowType_Drawable;
+  // Setting nsPluginPrint/NPPrint.print.embedPrint.window.window to
+  // &GWorldPtr and nsPluginPrint/NPPrint.print.embedPrint.platformPrint to
+  // GWorldPtr isn't any kind of standard (it's not documented anywhere).
+  // But that's what WebKit does.  And it's what the Flash plugin (apparently
+  // the only NPAPI plugin on OS X to support printing) seems to expect.  So
+  // we do the same.  The Flash plugin uses the CoreGraphics drawing mode.
+  // But a GWorldPtr should be usable in either CoreGraphics or QuickDraw
+  // drawing mode.  See bug 191046.
+  window.window = reinterpret_cast<nsPluginPort *>(&gWorld);
+  npprint.print.embedPrint.platformPrint = gWorld;
+  npprint.print.embedPrint.window = window;
+  nsresult rv = pi->Print(&npprint);
+
+  ::CGContextSaveGState(cgContext);
+  ::CGContextTranslateCTM(cgContext, 0.0f, float(window.height));
+  ::CGContextScaleCTM(cgContext, 1.0f, -1.0f);
+  CGImageRef image = ::CGBitmapContextCreateImage(cgBuffer);
+  if (!image) {
+    ::CGContextRestoreGState(cgContext);
+    ::CGContextRelease(cgBuffer);
+    ::DisposeGWorld(gWorld);
+    nativeDraw.EndNativeDrawing();
+    return;
+  }
+  ::CGContextDrawImage(cgContext,
+                       ::CGRectMake(0, 0, window.width, window.height),
+                       image);
+  ::CGImageRelease(image);
+  ::CGContextRestoreGState(cgContext);
+  ::CGContextRelease(cgBuffer);
+
+  ::DisposeGWorld(gWorld);
+
+  nativeDraw.EndNativeDrawing();
+#elif defined(XP_UNIX)
 
   /* XXX this just flat-out doesn't work in a thebes world --
    * RenderEPS is a no-op.  So don't bother to do any work here.
