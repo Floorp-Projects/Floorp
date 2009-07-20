@@ -249,6 +249,12 @@ struct JSThreadData {
 #ifdef JS_EVAL_CACHE_METERING
     JSEvalCacheMeter    evalCacheMeter;
 #endif
+
+    /*
+     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
+     * locks on each JS_malloc.
+     */
+    size_t              gcMallocBytes;
 };
 
 #ifdef JS_THREADSAFE
@@ -263,12 +269,6 @@ struct JSThread {
 
     /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
     jsword              id;
-
-    /*
-     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
-     * locks on each JS_malloc.
-     */
-    uint32              gcMallocBytes;
 
     /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
     JSTitle             *titleToShare;
@@ -369,15 +369,16 @@ struct JSRuntime {
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     jsrefcount          gcKeepAtoms;
-    uint32              gcBytes;
-    uint32              gcLastBytes;
-    uint32              gcMaxBytes;
-    uint32              gcMaxMallocBytes;
+    size_t              gcBytes;
+    size_t              gcLastBytes;
+    size_t              gcMaxBytes;
+    size_t              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcLevel;
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
     uint32              gcTriggerFactor;
+    size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
 
     /*
@@ -394,7 +395,7 @@ struct JSRuntime {
 #endif
 
     JSGCCallback        gcCallback;
-    uint32              gcMallocBytes;
+    size_t              gcMallocBytes;
     JSGCArenaInfo       *gcUntracedArenaStackTop;
 #ifdef DEBUG
     size_t              gcTraceLaterCount;
@@ -682,6 +683,9 @@ struct JSRuntime {
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
 #endif
+
+    void setGCTriggerFactor(uint32 factor);
+    void setGCLastBytes(size_t lastBytes);
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
@@ -1036,6 +1040,17 @@ struct JSContext {
     uintN               nativeVpLen;
     jsval               *nativeVp;
 #endif
+
+    /* Call this after succesful malloc of memory for GC-related things. */
+    inline void
+    updateMallocCounter(size_t nbytes)
+    {
+        size_t *pbytes, bytes;
+
+        pbytes = &JS_THREAD_DATA(this)->gcMallocBytes;
+        bytes = *pbytes;
+        *pbytes = (size_t(-1) - bytes <= nbytes) ? size_t(-1) : bytes + nbytes;
+    }
 };
 
 #ifdef JS_THREADSAFE

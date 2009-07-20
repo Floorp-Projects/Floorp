@@ -238,8 +238,7 @@ public:
     }
 };
 
-
-#if defined(_MSC_VER) && _MSC_VER >= 1400 || defined(__GNUC__)
+#if defined(_MSC_VER) && _MSC_VER >= 1400 || (defined(__GNUC__) && __GNUC__ >= 4)
 #define USE_TRACE_TYPE_ENUM
 #endif
 
@@ -269,7 +268,7 @@ enum JSTraceType_
     TT_PSEUDOBOOLEAN  = 6, /* true, false, or undefined (0, 1, or 2) */
     TT_FUNCTION       = 7  /* pointer to JSObject whose class is js_FunctionClass */
 }
-#ifdef __GNUC__
+#if defined(__GNUC__) && defined(USE_TRACE_TYPE_ENUM)
 __attribute__((packed))
 #endif
 ;

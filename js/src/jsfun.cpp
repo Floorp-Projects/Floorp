@@ -259,7 +259,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         return argsobj;
 
     /* Link the new object to fp so it can get actual argument values. */
-    argsobj = js_NewObject(cx, &js_ArgumentsClass, NULL, NULL, 0);
+    argsobj = js_NewObject(cx, &js_ArgumentsClass, NULL, NULL);
     if (!argsobj || !JS_SetPrivate(cx, argsobj, fp)) {
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return NULL;
@@ -386,7 +386,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
         return NULL;
 
     JSObject *wfunobj = js_NewObjectWithGivenProto(cx, &js_FunctionClass,
-                                                   funobj, scopeChain, 0);
+                                                   funobj, scopeChain);
     if (!wfunobj)
         return NULL;
     JSAutoTempValueRooter tvr(cx, wfunobj);
@@ -880,7 +880,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     JSAtom *lambdaName = (fp->fun->flags & JSFUN_LAMBDA) ? fp->fun->atom : NULL;
     if (lambdaName) {
         JSObject *env = js_NewObjectWithGivenProto(cx, &js_DeclEnvClass, NULL,
-                                                   fp->scopeChain, 0);
+                                                   fp->scopeChain);
         if (!env)
             return NULL;
         env->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fp);
@@ -896,8 +896,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         }
     }
 
-    callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL,
-                                         fp->scopeChain, 0);
+    callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL, fp->scopeChain);
     if (!callobj)
         return NULL;
 
@@ -969,7 +968,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         JS_LOCK_OBJ(cx, callobj);
         n += JS_INITIAL_NSLOTS;
         if (n > STOBJ_NSLOTS(callobj))
-            ok &= js_ReallocSlots(cx, callobj, n, JS_TRUE);
+            ok &= js_GrowSlots(cx, callobj, n);
         scope = OBJ_SCOPE(callobj);
         if (ok) {
             memcpy(callobj->dslots, fp->argv, fun->nargs * sizeof(jsval));
@@ -1514,8 +1513,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * Make the prototype object to have the same parent as the function
          * object itself.
          */
-        proto = js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, obj),
-                             0);
+        proto = js_NewObject(cx, &js_ObjectClass, NULL, OBJ_GET_PARENT(cx, obj));
         if (!proto)
             return JS_FALSE;
 
@@ -2187,7 +2185,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSTokenType tt;
 
     if (!JS_IsConstructing(cx)) {
-        obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL, 0);
+        obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
         *rval = OBJECT_TO_JSVAL(obj);
@@ -2437,7 +2435,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         JS_ASSERT(HAS_FUNCTION_CLASS(funobj));
         OBJ_SET_PARENT(cx, funobj, parent);
     } else {
-        funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent, 0);
+        funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
         if (!funobj)
             return NULL;
     }
@@ -2491,8 +2489,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
      * The cloned function object does not need the extra JSFunction members
      * beyond JSObject as it points to fun via the private slot.
      */
-    JSObject *clone = js_NewObject(cx, &js_FunctionClass, NULL, parent,
-                                   sizeof(JSObject));
+    JSObject *clone = js_NewObject(cx, &js_FunctionClass, NULL, parent, sizeof(JSObject));
     if (!clone)
         return NULL;
     clone->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
@@ -2519,7 +2516,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     uint32 nslots = JSSLOT_FREE(&js_FunctionClass);
     JS_ASSERT(nslots == JS_INITIAL_NSLOTS);
     nslots += fun_reserveSlots(cx, closure);
-    if (!js_ReallocSlots(cx, closure, nslots, JS_TRUE))
+    if (!js_GrowSlots(cx, closure, nslots))
         return NULL;
 
     return closure;

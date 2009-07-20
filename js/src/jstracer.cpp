@@ -2879,7 +2879,9 @@ TraceRecorder::snapshot(ExitType exitType)
     /* Capture the type map into a temporary location. */
     unsigned ngslots = treeInfo->globalSlots->length();
     unsigned typemap_size = (stackSlots + ngslots) * sizeof(JSTraceType);
-    JSTraceType* typemap = (JSTraceType*)alloca(typemap_size);
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    JSTraceType* typemap;
+    JS_ARENA_ALLOCATE_CAST(typemap, JSTraceType*, &cx->tempPool, typemap_size);
 
     /*
      * Determine the type of a store by looking at the current type of the
@@ -2927,6 +2929,7 @@ TraceRecorder::snapshot(ExitType exitType)
                 ngslots == e->numGlobalSlots &&
                 !memcmp(getFullTypeMap(exits[n]), typemap, typemap_size)) {
                 AUDIT(mergedLoopExits);
+                JS_ARENA_RELEASE(&cx->tempPool, mark);
                 return e;
             }
         }
@@ -2943,6 +2946,7 @@ TraceRecorder::snapshot(ExitType exitType)
          */
         stackSlots = 0;
         ngslots = 0;
+        typemap_size = 0;
         trashSelf = true;
     }
 
@@ -2968,6 +2972,8 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->nativeCalleeWord = 0;
     exit->lookupFlags = js_InferFlags(cx, 0);
     memcpy(getFullTypeMap(exit), typemap, typemap_size);
+
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     return exit;
 }
 
@@ -3601,7 +3607,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
     }
 
     if (!stable) {
-        fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(exit));
+        fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
 
         /*
          * If we didn't find a type stable peer, we compile the loop anyway and
@@ -3633,7 +3639,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
         }
     } else {
         exit->target = fragment->root;
-        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), createGuardRecord(exit));
+        fragment->lastIns = lir->insGuard(LIR_loop, NULL, createGuardRecord(exit));
     }
     compile(tm);
 
@@ -3760,7 +3766,7 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
     }
 
     fragment->lastIns =
-        lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(snapshot(LOOP_EXIT)));
+        lir->insGuard(LIR_x, NULL, createGuardRecord(snapshot(LOOP_EXIT)));
     compile(tm);
 
     if (tm->fragmento->assm()->error() != nanojit::None)
@@ -4052,7 +4058,7 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
             "%s: %s %s -> pc=%p imacpc=%p sp%+ld rp%+ld",
             formatRef(i),
             lirNames[i->opcode()],
-            i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
+            i->oprnd1() ? formatRef(i->oprnd1()) : "",
             (void *)x->pc,
             (void *)x->imacpc,
             (long int)x->sp_adj,
@@ -4196,6 +4202,10 @@ js_TrashTree(JSContext* cx, Fragment* f)
     f->releaseCode(fragmento);
     Fragment** data = ti->dependentTrees.data();
     unsigned length = ti->dependentTrees.length();
+    for (unsigned n = 0; n < length; ++n)
+        js_TrashTree(cx, data[n]);
+    data = ti->linkedTrees.data();
+    length = ti->linkedTrees.length();
     for (unsigned n = 0; n < length; ++n)
         js_TrashTree(cx, data[n]);
     delete ti;
@@ -8572,7 +8582,7 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
 
         // Tell nanojit not to discard or defer stack writes before this call.
         LIns* guardRec = createGuardRecord(exit);
-        lir->insGuard(LIR_xbarrier, guardRec, guardRec);
+        lir->insGuard(LIR_xbarrier, NULL, guardRec);
     }
 
     LIns* res_ins = lir->insCall(known->builtin, args);
@@ -10253,7 +10263,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
                                                           dslots_ins,
                                                           -(int)sizeof(jsval))),
                                    NULL);
-        lir->insGuard(LIR_x, lir->insImm(1), createGuardRecord(exit));
+        lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
         LIns* label = lir->ins0(LIR_label);
         if (br1)
             br1->setTarget(label);

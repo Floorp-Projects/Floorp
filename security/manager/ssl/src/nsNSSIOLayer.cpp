@@ -829,6 +829,11 @@ void nsSSLIOLayerHelpers::Cleanup()
     mTLSIntolerantSites = nsnull;
   }
 
+  if (mTLSTolerantSites) {
+    delete mTLSTolerantSites;
+    mTLSTolerantSites = nsnull;
+  }
+
   if (mSharedPollableEvent)
     PR_DestroyPollableEvent(mSharedPollableEvent);
 
@@ -1622,6 +1627,18 @@ nsPSMRememberCertErrorsTable::LookupCertErrorBits(nsNSSSocketInfo* infoObject,
   status->mIsUntrusted = bits.mIsUntrusted;
 }
 
+void
+nsSSLIOLayerHelpers::getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key)
+{
+  PRInt32 port;
+  socketInfo->GetPort(&port);
+
+  nsXPIDLCString host;
+  socketInfo->GetHostName(getter_Copies(host));
+
+  key = host + NS_LITERAL_CSTRING(":") + nsPrintfCString("%d", port);
+}
+
 // Call this function to report a site that is possibly TLS intolerant.
 // This function will return true, if the given socket is currently using TLS.
 PRBool
@@ -1629,28 +1646,48 @@ nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(PRFileDesc* ssl_layer_fd, ns
 {
   PRBool currentlyUsesTLS = PR_FALSE;
 
+  nsCAutoString key;
+  getSiteKey(socketInfo, key);
+
   SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_TLS, &currentlyUsesTLS);
-  if (!currentlyUsesTLS)
+  if (!currentlyUsesTLS) {
+    // We were not using TLS but failed with an intolerant error using
+    // a different protocol. To give TLS a try on next connection attempt again
+    // drop this site from the list of intolerant sites. TLS failure might be 
+    // caused only by a traffic congestion while the server is TLS tolerant.
+    removeIntolerantSite(key);
     return PR_FALSE;
+  }
 
   PRBool enableSSL3 = PR_FALSE;
   SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_SSL3, &enableSSL3);
   PRBool enableSSL2 = PR_FALSE;
   SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_SSL2, &enableSSL2);
-  if (enableSSL3 || enableSSL2)
-  {
+  if (enableSSL3 || enableSSL2) {
     // Add this site to the list of TLS intolerant sites.
-    PRInt32 port;
-    nsXPIDLCString host;
-    socketInfo->GetPort(&port);
-    socketInfo->GetHostName(getter_Copies(host));
-    nsCAutoString key;
-    key = host + NS_LITERAL_CSTRING(":") + nsPrintfCString("%d", port);
-
     addIntolerantSite(key);
   }
   
   return currentlyUsesTLS;
+}
+
+void
+nsSSLIOLayerHelpers::rememberTolerantSite(PRFileDesc* ssl_layer_fd, 
+                                          nsNSSSocketInfo *socketInfo)
+{
+  PRBool usingSecurity = PR_FALSE;
+  PRBool currentlyUsesTLS = PR_FALSE;
+  SSL_OptionGet(ssl_layer_fd, SSL_SECURITY, &usingSecurity);
+  SSL_OptionGet(ssl_layer_fd, SSL_ENABLE_TLS, &currentlyUsesTLS);
+  if (!usingSecurity || !currentlyUsesTLS) {
+    return;
+  }
+
+  nsCAutoString key;
+  getSiteKey(socketInfo, key);
+
+  nsAutoLock lock(mutex);
+  nsSSLIOLayerHelpers::mTLSTolerantSites->Put(key);
 }
 
 static PRStatus PR_CALLBACK
@@ -1927,6 +1964,7 @@ PRDescIdentity nsSSLIOLayerHelpers::nsSSLIOLayerIdentity;
 PRIOMethods nsSSLIOLayerHelpers::nsSSLIOLayerMethods;
 PRLock *nsSSLIOLayerHelpers::mutex = nsnull;
 nsCStringHashSet *nsSSLIOLayerHelpers::mTLSIntolerantSites = nsnull;
+nsCStringHashSet *nsSSLIOLayerHelpers::mTLSTolerantSites = nsnull;
 nsPSMRememberCertErrorsTable *nsSSLIOLayerHelpers::mHostsWithCertErrors = nsnull;
 PRFileDesc *nsSSLIOLayerHelpers::mSharedPollableEvent = nsnull;
 nsNSSSocketInfo *nsSSLIOLayerHelpers::mSocketOwningPollableEvent = nsnull;
@@ -2137,6 +2175,15 @@ nsresult nsSSLIOLayerHelpers::Init()
 
   mTLSIntolerantSites->Init(1);
 
+  mTLSTolerantSites = new nsCStringHashSet();
+  if (!mTLSTolerantSites)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // Initialize the tolerant site hashtable to 16 items at the start seems
+  // reasonable as most servers are TLS tolerant. We just want to lower 
+  // the rate of hashtable array reallocation.
+  mTLSTolerantSites->Init(16);
+
   mHostsWithCertErrors = new nsPSMRememberCertErrorsTable();
   if (!mHostsWithCertErrors || !mHostsWithCertErrors->mErrorHosts.IsInitialized())
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2147,7 +2194,15 @@ nsresult nsSSLIOLayerHelpers::Init()
 void nsSSLIOLayerHelpers::addIntolerantSite(const nsCString &str)
 {
   nsAutoLock lock(mutex);
-  nsSSLIOLayerHelpers::mTLSIntolerantSites->Put(str);
+  // Remember intolerant site only if it is not known as tolerant
+  if (!mTLSTolerantSites->Contains(str))
+    nsSSLIOLayerHelpers::mTLSIntolerantSites->Put(str);
+}
+
+void nsSSLIOLayerHelpers::removeIntolerantSite(const nsCString &str)
+{
+  nsAutoLock lock(mutex);
+  nsSSLIOLayerHelpers::mTLSIntolerantSites->Remove(str);
 }
 
 PRBool nsSSLIOLayerHelpers::isKnownAsIntolerantSite(const nsCString &str)
