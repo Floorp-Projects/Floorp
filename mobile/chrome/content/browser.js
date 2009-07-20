@@ -138,6 +138,14 @@ var Browser = {
       ws.updateSize(w, h);
     }
     window.addEventListener("resize", resizeHandler, false);
+    
+    function fullscreenHandler() {
+      if (!window.fullScreen)
+        document.getElementById("toolbar-main").setAttribute("fullscreen", "true");
+      else
+        document.getElementById("toolbar-main").removeAttribute("fullscreen");      
+    }
+    window.addEventListener("fullscreen", fullscreenHandler, false);
 
     function viewportHandler(bounds, boundsSizeChanged) {
       self._canvasBrowser.viewportHandler(bounds, boundsSizeChanged);

@@ -63,13 +63,19 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-app-close {
+  visibility: hidden;
   min-height: 0 !important;
   min-width: 0 !important;
   margin-top: -40px; /* keep pixels */
   list-style-image: url("chrome://browser/skin/images/fullscreen-close-40.png");
 }
 
+#toolbar-main[fullscreen="true"] #tool-app-close {
+  visibility: visible;
+}
+
 #toolbar-main[dialog="true"] #tool-app-close {
+  visibility: visible;
   list-style-image: url("chrome://browser/skin/images/fullscreen-up-40.png");
 }
 
