@@ -7,13 +7,25 @@ namespace test {
 class TestParent :
     public TestProtocolParent
 {
-    virtual nsresult RecvPing(int* status);
+protected:
+#if 1
+//-----------------------------------------------------------------------------
+// "Hello world" example
+    virtual nsresult RecvWorld();
+
+
+#elif 0
+//-----------------------------------------------------------------------------
+// Example solution to exercise
+    virtual nsresult RecvPing();
+    virtual nsresult RecvPong(const int& status);
     virtual nsresult RecvGetValue(const String& key);
     virtual nsresult RecvGetValues(const StringArray& keys);
     virtual nsresult RecvSetValue(
                 const String& key,
                 const String& val,
                 bool* ok);
+#endif
 
 public:
     TestParent();
