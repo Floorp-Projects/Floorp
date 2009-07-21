@@ -99,9 +99,9 @@ const  int64 kint64max  = (( int64) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 #    define __STDC_FORMAT_MACROS 1
 #    include <inttypes.h>           // for 64-bit integer format macros
 #  elif defined(OS_WIN)
-#    define PRd64 "I64d"
-#    define PRu64 "I64u"
-#    define PRx64 "I64x"
+#    define PRId64 "I64d"
+#    define PRIu64 "I64u"
+#    define PRIx64 "I64x"
 #  endif
 #endif  // defined(CHROMIUM_MOZILLA_BUILD)
 
