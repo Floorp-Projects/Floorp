@@ -244,7 +244,7 @@ class CxxCodeGen(CodePrinter, Visitor):
 
     def visitExprAssn(self, ea):
         ea.lhs.accept(self)
-        self.write(' = ')
+        self.write(' '+ ea.op +' ')
         ea.rhs.accept(self)
 
     def visitExprCall(self, ec):
@@ -299,7 +299,7 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.indent()
             si.elseb.accept(self)
             self.dedent()
-            self.println('}')
+            self.printdentln('}')
 
 
     def visitStmtSwitch(self, sw):
@@ -344,14 +344,12 @@ class CxxCodeGen(CodePrinter, Visitor):
 
         self.indent()
         self.indent()
-        self.indent()
         for i, decl in enumerate(decls):
             self.println()
             self.printdent()
             decl.accept(self)
             if i != (ndecls-1):
                 self.write(',')
-        self.dedent()
         self.dedent()
         self.dedent()
 

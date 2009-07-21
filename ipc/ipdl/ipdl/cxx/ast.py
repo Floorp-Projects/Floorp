@@ -350,9 +350,19 @@ class ExprLiteral(Node):
         Node.__init__(self)
         self.value = value
         self.type = type
+
+    @staticmethod
+    def Int(i):  return ExprLiteral(i, 'd')
+
+    @staticmethod
+    def String(s):  return ExprLiteral('"'+ s +'"', 's')
+
+    @staticmethod
+    def WString(s):  return ExprLiteral('L"'+ s +'"', 's')
+
     def __str__(self):
         return ('%'+ self.type)% (self.value)
-ExprLiteral.ZERO = ExprLiteral(0, 'd')
+ExprLiteral.ZERO = ExprLiteral.Int(0)
 
 class ExprVar(Node):
     def __init__(self, name):
@@ -400,9 +410,10 @@ class ExprSelect(Node):
         self.field = field
 
 class ExprAssn(Node):
-    def __init__(self, lhs, rhs):
+    def __init__(self, lhs, rhs, op='='):
         Node.__init__(self)
         self.lhs = lhs
+        self.op = op
         self.rhs = rhs
 
 class ExprCall(Node):
