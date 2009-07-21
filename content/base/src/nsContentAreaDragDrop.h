@@ -53,7 +53,6 @@ class nsIDOMDocument;
 class nsIDOMDragEvent;
 class nsISelection;
 class nsITransferable;
-class nsIImage;
 class nsIPresShell;
 class nsPresContext;
 class nsIContent;

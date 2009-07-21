@@ -50,20 +50,20 @@ Any other render format? HTML?
 #include <windows.h>
 
 #include "nsCOMPtr.h"
-#include "nsIImage.h"
+#include "imgIContainer.h"
 #include "nsIInputStream.h"
 
 
 //
 // nsImageToClipboard
 //
-// A utility class that takes an nsIImage and does all the bitmap magic
+// A utility class that takes an imgIContainer and does all the bitmap magic
 // to allow us to put it on the clipboard
 //
 class nsImageToClipboard
 {
 public:
-  nsImageToClipboard ( nsIImage* inImage );
+  nsImageToClipboard ( imgIContainer* inImage );
   ~nsImageToClipboard();
 
     // Call to get the actual bits that go on the clipboard. If |nsnull|, the
@@ -79,9 +79,9 @@ private:
   PRInt32 CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount);
 
     // Do the work
-  nsresult CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap );
+  nsresult CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap );
 
-  nsCOMPtr<nsIImage> mImage;            // the image we're working with
+  nsCOMPtr<imgIContainer> mImage;            // the image we're working with
 
 }; // class nsImageToClipboard
 

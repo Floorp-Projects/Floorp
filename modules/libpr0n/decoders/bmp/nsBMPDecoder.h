@@ -43,7 +43,6 @@
 #include "imgIDecoder.h"
 #include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
-#include "gfxIImageFrame.h"
 #include "gfxColor.h"
 
 #define NS_BMPDECODER_CID \
@@ -118,9 +117,6 @@ struct bitFields {
 #endif
 
 #define USE_RGB
-#define BMP_GFXFORMAT gfxIFormats::RGB
-#define RLE_GFXFORMAT_ALPHA gfxIFormats::RGB_A1
-#define GFXBYTESPERPIXEL 4
 
 // BMPINFOHEADER.compression defines
 #define BI_RLE8 1
@@ -173,7 +169,6 @@ private:
     nsCOMPtr<imgIDecoderObserver> mObserver;
 
     nsCOMPtr<imgIContainer> mImage;
-    nsCOMPtr<gfxIImageFrame> mFrame;
 
     PRUint32 mPos;
 

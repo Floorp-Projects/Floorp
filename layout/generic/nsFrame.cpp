@@ -109,7 +109,6 @@
 #include "nsIServiceManager.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "gfxIImageFrame.h"
 #include "nsILookAndFeel.h"
 #include "nsLayoutCID.h"
 #include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID

@@ -61,8 +61,6 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsImageLoadingContent.h"
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
-#include "nsIImage.h"
 #include "nsNetUtil.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -5191,8 +5189,7 @@ public:
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
                           const PRUnichar *statusArg);
   // imgIContainerObserver
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
-                          nsIntRect *dirtyRect);
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, nsIntRect *dirtyRect);
   // imgIContainerObserver
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest,
                               imgIContainer *aContainer);
@@ -5378,31 +5375,27 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
   if (currentRequest)
     currentRequest->GetImage(getter_AddRefs(imageContainer));
 
-  nsCOMPtr<gfxIImageFrame> currentFrame;
+  nsRefPtr<gfxASurface> currentFrame;
   if (imageContainer)
     imageContainer->GetCurrentFrame(getter_AddRefs(currentFrame));
 
-  nsRefPtr<gfxPattern> thebesPattern = nsnull;
-  if (currentFrame) {
-    nsCOMPtr<nsIImage> img(do_GetInterface(currentFrame));
-
-    img->GetPattern(getter_AddRefs(thebesPattern));
-  }
+  // We need to wrap the surface in a pattern to have somewhere to set the
+  // graphics filter.
+  nsRefPtr<gfxPattern> thebesPattern;
+  if (currentFrame)
+    thebesPattern = new gfxPattern(currentFrame);
 
   if (thebesPattern) {
     thebesPattern->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(frame));
 
-    PRInt32 x, y, nativeWidth, nativeHeight;
-    currentFrame->GetX(&x);
-    currentFrame->GetY(&y);
-    currentFrame->GetWidth(&nativeWidth);
-    currentFrame->GetHeight(&nativeHeight);
+    PRInt32 nativeWidth, nativeHeight;
+    imageContainer->GetWidth(&nativeWidth);
+    imageContainer->GetHeight(&nativeHeight);
 
     nsCOMPtr<nsIDOMSVGMatrix> trans;
     const gfxRect& filterSubregion = aTarget->mFilterPrimitiveSubregion;
     trans = nsSVGUtils::GetViewBoxTransform(filterSubregion.Width(), filterSubregion.Height(),
-                                            x, y,
-                                            nativeWidth, nativeHeight,
+                                            0, 0, nativeWidth, nativeHeight,
                                             mPreserveAspectRatio);
     nsCOMPtr<nsIDOMSVGMatrix> xy, fini;
     NS_NewSVGMatrix(getter_AddRefs(xy), 1, 0, 0, 1, filterSubregion.X(), filterSubregion.Y());
@@ -5457,11 +5450,10 @@ nsSVGFEImageElement::OnStopDecode(imgIRequest *aRequest,
 
 NS_IMETHODIMP
 nsSVGFEImageElement::FrameChanged(imgIContainer *aContainer,
-                                  gfxIImageFrame *newframe,
                                   nsIntRect *dirtyRect)
 {
   nsresult rv =
-    nsImageLoadingContent::FrameChanged(aContainer, newframe, dirtyRect);
+    nsImageLoadingContent::FrameChanged(aContainer, dirtyRect);
   Invalidate();
   return rv;
 }

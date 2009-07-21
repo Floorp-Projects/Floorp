@@ -59,14 +59,20 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  js \
 		  uriloader \
+		  qcms \
 		  $(NULL)
 
 CPPSRCS		= \
 			imgContainer.cpp \
+			imgFrame.cpp \
 			imgLoader.cpp    \
 			imgRequest.cpp   \
 			imgRequestProxy.cpp \
 			imgTools.cpp
 
 include $(topsrcdir)/config/rules.mk
+
+# Because imgFrame.cpp includes "cairo.h"
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+
 

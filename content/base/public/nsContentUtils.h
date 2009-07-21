@@ -78,12 +78,12 @@ class nsIThreadJSContextStack;
 class nsIParserService;
 class nsIIOService;
 class nsIURI;
+class imgIContainer;
 class imgIDecoderObserver;
 class imgIRequest;
 class imgILoader;
 class imgICache;
 class nsIPrefBranch;
-class nsIImage;
 class nsIImageLoadingContent;
 class nsIDOMHTMLFormElement;
 class nsIDOMDocument;
@@ -654,13 +654,13 @@ public:
   static PRBool IsImageInCache(nsIURI* aURI);
 
   /**
-   * Method to get an nsIImage from an image loading content
+   * Method to get an imgIContainer from an image loading content
    *
    * @param aContent The image loading content.  Must not be null.
    * @param aRequest The image request [out]
-   * @return the nsIImage corresponding to the first frame of the image
+   * @return the imgIContainer corresponding to the first frame of the image
    */
-  static already_AddRefed<nsIImage> GetImageFromContent(nsIImageLoadingContent* aContent, imgIRequest **aRequest = nsnull);
+  static already_AddRefed<imgIContainer> GetImageFromContent(nsIImageLoadingContent* aContent, imgIRequest **aRequest = nsnull);
 
   /**
    * Method that decides whether a content node is draggable
