@@ -336,6 +336,98 @@ def generateMsgClass(md, clsname, params, typedefInjector):
         reader.addstmt(cxx.StmtReturn(cxx.ExprVar('true')))
 
         cls.addstmt(reader)
+        cls.addstmt(cxx.Whitespace.NL)
+
+        # generate a logging function
+        # 'pfx' will be something like "[FooParent] sent"
+        logger = cxx.MethodDefn(
+            cxx.MethodDecl(
+                'Log',
+                params=([ cxx.Decl(cxx.Type('std::string', const=1, ref=1),
+                                   '__pfx'),
+                          cxx.Decl(cxx.Type('FILE', ptr=True), '__outf') ]),
+                const=1))
+        pfxvar = cxx.ExprVar('__pfx')
+        outfvar = cxx.ExprVar('__outf')
+        # TODO/cjones: allow selecting what information is printed to 
+        # the log
+        logger.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('std::string'),
+                                             '__logmsg')))
+        msgvar = cxx.ExprVar('__logmsg')
+        def appendToMsg(thing):
+            logger.addstmt(cxx.StmtExpr(cxx.ExprCall(
+                        cxx.ExprSelect(msgvar, '.', 'append'),
+                        [ thing ])))
+
+        # XXX/cjones: OK to stick this before prefix?
+        logger.addstmt(cxx.StmtExpr(
+                cxx.ExprCall(cxx.ExprVar('StringAppendF'),
+                             [ cxx.ExprAddrOf(msgvar),
+                               cxx.ExprLiteral.String('[time:%" PRId64 "]'),
+                               cxx.ExprCall(cxx.ExprVar('PR_Now')) ])))
+        appendToMsg(pfxvar)
+        appendToMsg(cxx.ExprLiteral.String(md.decl.progname +'('))
+        logger.addstmt(cxx.Whitespace.NL)
+
+        # call the deserializing method we created above
+        for oparam in outparams:
+            oparam = deepcopy(oparam)
+            oparam.type.ptr = 0
+            logger.addstmt(cxx.StmtDecl(oparam))
+        errif = cxx.StmtIf(cxx.ExprCall(
+                    cxx.ExprVar('Read'),
+                    ([ cxx.ExprVar('this') ]
+                     + [ cxx.ExprAddrOf(cxx.ExprVar(p.name))
+                         for p in outparams ])))
+        # case where successfully deserialized message
+
+        # XXX we have to do this string/wstring garbage because of 
+        # our incompatible compilation of chromium and mozilla string
+        # code with gcc
+        errif.addifstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('std::wstring'), 
+                                            '__param')))
+        paramvar = cxx.ExprVar('__param')
+        for oparam in outparams:
+            # FIXME/cjones: this code doesn't work on gcc/POSIX,
+            # because it wprintf()s across the chromium/mozilla boundary.
+            # one side has -fshort-wchar, the other doesn't.  not
+            # feasible.  either message logging needs to be rewritten, or
+            # -fshort-wchar needs to be disabled (again)
+
+#             errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+#                         cxx.ExprVar('IPC::LogParam'),
+#                         [ cxx.ExprVar(oparam.name),
+#                           cxx.ExprAddrOf(paramvar) ])))
+#             errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+#                         cxx.ExprSelect(msgvar, '.', 'append'),
+#                         [ cxx.ExprCall(cxx.ExprVar('WideToUTF8'),
+#                                        [ paramvar ]) ])))
+#             errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+#                         cxx.ExprSelect(msgvar, '.', 'append'),
+#                         [ cxx.ExprLiteral.String(', ') ])))
+#             errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+#                         cxx.ExprSelect(paramvar, '.', 'clear'))))
+            errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+                        cxx.ExprSelect(msgvar, '.', 'append'),
+                        [ cxx.ExprLiteral.String('FIXME, ') ])))
+
+
+        # case where we couldn't deserialize the message
+        errif.addelsestmt(cxx.StmtExpr(
+                cxx.ExprCall(cxx.ExprSelect(msgvar, '.', 'append'),
+                             [ cxx.ExprLiteral.String('!!INVALID MSG!!') ])))
+        logger.addstmt(errif)
+
+        logger.addstmt(cxx.Whitespace.NL)
+        appendToMsg(cxx.ExprLiteral.String(')\\n'))
+
+        # and actually print the log message
+        logger.addstmt(cxx.StmtExpr(cxx.ExprCall(
+                    cxx.ExprVar('fputs'),
+                    [ cxx.ExprCall(cxx.ExprSelect(msgvar, '.', 'c_str')),
+                      outfvar ])))
+
+        cls.addstmt(logger)
 
         return cls
 
@@ -412,6 +504,10 @@ class GenerateProtocolActorHeader(Visitor):
 
     def visitProtocol(self, p):
         p._cxx = _struct()
+
+        self.file.addthing(cxx.CppDirective('ifdef', 'DEBUG'))
+        self.file.addthing(cxx.CppDirective('include', '"prenv.h"'))
+        self.file.addthing(cxx.CppDirective('endif', '// DEBUG'))
 
         if p.decl.type.isManager():
             self.file.addthing(cxx.CppDirective('include', '"base/id_map.h"'))
@@ -517,15 +613,17 @@ class GenerateProtocolActorHeader(Visitor):
             openmeth = cxx.MethodDefn(
                 cxx.MethodDecl(
                     'Open',
-                    params=[ cxx.Decl(cxx.Type('IPC::Channel', ptr=True),
-                                      'aChannel'),
+                    params=[ cxx.Decl(cxx.Type('Channel::Transport', ptr=True),
+                                      'aTransport'),
                              cxx.Decl(cxx.Type('MessageLoop', ptr=True),
                                       'aThread = 0') ],
                     ret=cxx.Type('bool')))
+            atransportvar = cxx.ExprVar('aTransport')
+            mchannelvar = cxx.ExprVar('mChannel')
             openmeth.addstmt(cxx.StmtReturn(
                     cxx.ExprCall(
-                        cxx.ExprSelect(cxx.ExprVar('mChannel'), '.', 'Open'),
-                        [ cxx.ExprVar('aChannel'), cxx.ExprVar('aThread') ])))
+                        cxx.ExprSelect(mchannelvar, '.', 'Open'),
+                        [ atransportvar, cxx.ExprVar('aThread') ])))
             cls.addstmt(openmeth)
             cls.addstmt(cxx.Whitespace.NL)
 
@@ -533,7 +631,7 @@ class GenerateProtocolActorHeader(Visitor):
             closemeth = cxx.MethodDefn(cxx.MethodDecl('Close'))
             closemeth.addstmt(cxx.StmtExpr(
                     cxx.ExprCall(
-                        cxx.ExprSelect(cxx.ExprVar('mChannel'), '.', 'Close'))))
+                        cxx.ExprSelect(mchannelvar, '.', 'Close'))))
             cls.addstmt(closemeth)
             cls.addstmt(cxx.Whitespace.NL)
 
@@ -605,8 +703,7 @@ class GenerateProtocolActorHeader(Visitor):
 
         dispatches = p.decl.type.isToplevel() and p.decl.type.isManager()
 
-        # FIXME/cjones: re-enable when we have AsyncChannel
-        if 0 and dispatches:
+        if dispatches:
             addDispatcher(asynchandler, 'OnMessageReceived',
                           [ cxx.ExprVar('msg') ])
         asynchandler.addstmt(self.asyncswitch)
@@ -614,8 +711,7 @@ class GenerateProtocolActorHeader(Visitor):
         cls.addstmt(cxx.Whitespace.NL)
 
         if p.decl.type.talksSync():
-            # FIXME/cjones: re-enable when we have SyncChannel
-            if 0 and dispatches:
+            if dispatches:
                 addDispatcher(synchandler, 'OnMessageReceived',
                               [ cxx.ExprVar('msg'), cxx.ExprVar('reply') ])
             synchandler.addstmt(self.syncswitch)
@@ -711,9 +807,22 @@ class GenerateProtocolActorHeader(Visitor):
 
 
     def visitMessageDecl(self, md):
-        # TODO special handling of constructor messages
+        def injectLogger(block, msgptr, note):
+            block.addstmt(cxx.Whitespace.NL)
+            block.addstmt(cxx.CppDirective('ifdef', 'DEBUG'))
+            logif = cxx.StmtIf(cxx.ExprCall(
+                    cxx.ExprVar('PR_GetEnv'),
+                    [ cxx.ExprLiteral.String("MOZ_IPC_MESSAGE_LOG") ]))
+            logif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+                        cxx.ExprSelect(msgptr, '->', 'Log'),
+                        [ cxx.ExprLiteral.String(
+                                '['+ self.clsname +'] '+ note),
+                          cxx.ExprVar('stderr') ])))
+            block.addstmt(logif)
+            block.addstmt(cxx.CppDirective('endif', '// ifdef DEBUG'))
+            block.addstmt(cxx.Whitespace.NL)
 
-        # create method for "that" interface
+
         if self.sendsMessage(md):
             pfx = None
             if md.decl.type.isRpc():
@@ -816,10 +925,10 @@ class GenerateProtocolActorHeader(Visitor):
 
             hasreply = md.decl.type.hasReply()
             if hasreply:
-                impl.addstmt(cxx.StmtDecl(
-                        cxx.Decl(cxx.Type('Message'), '__reply')))
+                impl.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('Message'),
+                                                   '__reply')))
                 replyvar = cxx.ExprVar('__reply')
-            impl.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type('Message', ptr=1),
+            impl.addstmt(cxx.StmtDecl(cxx.Decl(cxx.Type(md._cxx.nsid, ptr=1),
                                                '__msg')))
             msgvar = cxx.ExprVar('__msg')
 
@@ -854,6 +963,9 @@ class GenerateProtocolActorHeader(Visitor):
             else:
                 assert 0
 
+            # log the message, if DEBUG and the env var is set
+            injectLogger(impl, msgvar, sendmethod +' ')
+                
             sendcall = cxx.ExprCall(
                 cxx.ExprSelect(
                     cxx.ExprVar('mChannel'), self.channelsel, sendmethod),
@@ -875,6 +987,13 @@ class GenerateProtocolActorHeader(Visitor):
                 errhandle = cxx.StmtIf(cxx.ExprPrefixUnop(unpack, '!'))
                 errhandle.ifb.addstmt(cxx.StmtReturn(valueerrcode))
                 impl.addstmt(errhandle)
+
+                # log the reply, maybe
+                injectLogger(impl,
+                             cxx.ExprCast(cxx.ExprAddrOf(replyvar),
+                                          cxx.Type(md._cxx.nsreplyid, ptr=1),
+                                          static=1),
+                             'got reply ')
 
                 # FIXME/cjones: assuming we have sync/rpc constructors, need
                 # code for async ones if that makes sense
@@ -898,7 +1017,7 @@ class GenerateProtocolActorHeader(Visitor):
                     impl.addstmt(cxx.StmtExpr(
                         cxx.ExprCall(cxx.ExprVar('Unregister'), [ objid ])))
                     impl.addstmt(cxx.StmtExpr(
-                            cxx.ExprAssn(objid, cxx.ExprLiteral(-1, 'd'))))
+                            cxx.ExprAssn(objid, cxx.ExprLiteral.Int(-1))))
                     impl.addstmt(cxx.StmtExpr(
                             cxx.ExprAssn(
                                 cxx.ExprSelect(objvar, '->', 'mManager'),
@@ -906,7 +1025,7 @@ class GenerateProtocolActorHeader(Visitor):
                     impl.addstmt(cxx.StmtExpr(
                             cxx.ExprAssn(
                                 cxx.ExprSelect(objvar, '->', 'mPeerId'),
-                                cxx.ExprLiteral(-1, 'd'))))
+                                cxx.ExprLiteral.Int(-1))))
 
             impl.addstmt(cxx.StmtReturn(okcode))
             self.cls.addstmt(impl)
@@ -939,8 +1058,9 @@ class GenerateProtocolActorHeader(Visitor):
                 ahvar = cxx.ExprVar('__ah')
             block.addstmt(cxx.Whitespace.NL)
 
+            msgvar = cxx.ExprVar('msg')
             unpack = cxx.ExprCall(cxx.ExprVar(md._cxx.nsid +'::Read'),
-                                  [ cxx.ExprAddrOf(cxx.ExprVar('msg')) ]
+                                  [ cxx.ExprAddrOf(msgvar) ]
                                   + [ cxx.ExprAddrOf(cxx.ExprVar(p.name))
                                       for p in md._cxx.params ])
             if hasactor:
@@ -949,6 +1069,12 @@ class GenerateProtocolActorHeader(Visitor):
             errhandle.ifb.addstmt(cxx.StmtReturn(
                     cxx.ExprVar('MsgPayloadError')))
             block.addstmt(errhandle)
+
+            injectLogger(block, 
+                         cxx.ExprCast(cxx.ExprAddrOf(msgvar),
+                                      cxx.Type(md._cxx.nsid, ptr=1, const=1),
+                                      static=1),
+                         pfx +' ')
 
             if md.decl.type.isCtor():
                 block.addstmt(cxx.Whitespace.NL)
@@ -993,7 +1119,7 @@ class GenerateProtocolActorHeader(Visitor):
                 block.addstmt(cxx.StmtExpr(
                         cxx.ExprCall(cxx.ExprVar('Unregister'), [ routevar ])))
                 block.addstmt(cxx.StmtExpr(
-                        cxx.ExprAssn(routevar, cxx.ExprLiteral(-1, 'd'))))
+                        cxx.ExprAssn(routevar, cxx.ExprLiteral.Int(-1))))
 
             else:
                 callimpl = cxx.ExprCall(
@@ -1055,6 +1181,12 @@ class GenerateProtocolActorHeader(Visitor):
                             [ ])))
                 else:
                     assert 0
+
+                injectLogger(block,
+                             cxx.ExprCast(replyvar,
+                                          cxx.Type(md._cxx.nsreplyid, ptr=1),
+                                          static=1),
+                             'replying with ')
 
             block.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgProcessed')))
 
