@@ -4,22 +4,23 @@
 
 findbar {
   background: url("chrome://global/skin/icons/find-bar-background.png") repeat-x top center #D0D0D0;
-  border-top: 1px solid #686868;
-  border-bottom: none;
+  border-top: 1px solid #888;
   min-width: 1px;
+  padding: 4px 1px;
 }
 
 .findbar-container > label {
+  margin: 1px 3px 0 !important;
   color: #6D6D6D;
   font-weight: bold;
+  text-shadow: 0 1px rgba(255, 255, 255, .4);
 }
 
 .findbar-closebutton {
-  padding-right: 4px;
+  padding: 0;
+  margin: 0 4px;
   list-style-image: url("chrome://global/skin/icons/closetab.png");
   border: none;
-  background-image: none !important;
-  background-color: transparent !important;
 }
 
 .findbar-closebutton:hover {
@@ -34,17 +35,15 @@ findbar {
 .findbar-find-previous,
 .findbar-highlight {
   -moz-appearance: none;
-  border: 1px solid #5F5F5F;
+  border: 1px solid rgba(0, 0, 0, .4);
   -moz-border-radius: 100%;
-  background: url("chrome://global/skin/icons/white-gray-gradient.gif") #A09E9D repeat-x top center;
-  margin: 0 4px 1px 4px;
-  padding: 0 3px;
-  -moz-box-shadow: 0 1px 0 rgba(255,255,255,.3);
+  background: url("chrome://global/skin/toolbar/white-transparent-gradient.png") #C3C3C3 repeat-x top center;
+  margin: 0 4px;
+  padding: 1px 3px;
+  -moz-box-shadow: 0 1px 0 rgba(255, 255, 255, .4);
 }
 
-.findbar-find-next:focus,
-.findbar-find-previous:focus,
-.findbar-highlight:focus {
+.findbar-container > toolbarbutton:focus {
   position: relative;
   -moz-box-shadow: 0 0 1px -moz-mac-focusring inset,
                    0 0 4px 1px -moz-mac-focusring,
@@ -52,29 +51,44 @@ findbar {
 }
 
 .findbar-container > toolbarbutton > .toolbarbutton-text {
-  margin: 1px 6px !important;
+  margin: 0 6px !important;
 }
 
 .findbar-container > toolbarbutton[disabled] {
-  border-color: #8F8F8F !important;
-  color: graytext;
+  color: GrayText !important;
 }
 
-.findbar-container > toolbarbutton:not([disabled]):hover:active {
-  background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
+.findbar-find-next:not([disabled]):hover:active,
+.findbar-find-previous:not([disabled]):hover:active,
+.findbar-highlight:not([disabled]):hover:active {
+  text-shadow: 0 1px rgba(255, 255, 255, .4);
+  background: #CCC;
+  -moz-box-shadow: inset 0 1px 4px rgba(0, 0, 0, .2),
+                   0 1px rgba(255, 255, 255, .4);
 }
 
+.findbar-container > toolbarbutton:hover:active:focus {
+  text-shadow: 0 1px rgba(255, 255, 255, .4);
+  background: #CCC;
+  -moz-box-shadow: 0 0 1px -moz-mac-focusring inset,
+                   0 0 4px 1px -moz-mac-focusring,
+                   0 0 2px 1px -moz-mac-focusring,
+                   inset 0 1px 4px rgba(0, 0, 0, .2),
+                   0 1px rgba(255, 255, 255, .4);
+}
 
 .findbar-closebutton > .toolbarbutton-text {
   display: none;  
 }
 
+/* Match case checkbox */
+
 .findbar-container > checkbox {
   list-style-image: url("chrome://global/skin/icons/checkbox.png");
   -moz-image-region: rect(0px 16px 16px 0px);
   -moz-appearance: none;
+  margin: 0 2px;
   -moz-margin-start: 7px;
-  padding-top: 2px;
 }
 
 .findbar-container > checkbox:hover:active {
@@ -94,7 +108,8 @@ findbar {
 }
 
 .findbar-container > checkbox > .checkbox-label-box > .checkbox-label {
-  margin: 1px 0 !important;
+  margin: 0 !important;
+  padding: 2px 0 0;
 }
 
 .findbar-container > checkbox > .checkbox-label-box > .checkbox-icon {
@@ -108,29 +123,25 @@ findbar {
                    0 0 4px -moz-mac-focusring;
 }
 
+/* Search field */
+
 .findbar-textbox {
   -moz-appearance: none;
   -moz-border-radius: 100%;
-  border: 1px solid;
-  -moz-border-top-colors: #666;
-  -moz-border-right-colors: #777;
-  -moz-border-bottom-colors: #777;
-  -moz-border-left-colors: #777;
-  -moz-box-shadow: 0 1px 1px rgba(0,0,0,.3) inset,
-                   0 1px 0 rgba(255,255,255,.3);
-  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 2px center;
-  -moz-background-clip: padding;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  -moz-padding-end: 8px;
-  -moz-padding-start: 17px;
+  border: none;
+  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, .7) inset,
+                   0 0 0 1px rgba(0, 0, 0, .17) inset;
+  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 5px center;
+  margin: 0 4px -1px;
+  padding: 3px 8px 2px;
+  -moz-padding-start: 19px;
 }
 
 .findbar-textbox[focused="true"] {
-  -moz-box-shadow: 0 1px 1px rgba(0,0,0,.3) inset,
-                   0 0 1px -moz-mac-focusring inset,
+  -moz-box-shadow: 0 0 1px -moz-mac-focusring inset,
                    0 0 4px 1px -moz-mac-focusring,
-                   0 0 2px 1px -moz-mac-focusring;
+                   0 0 2px 1px -moz-mac-focusring,
+                   0 1px 2px rgba(0, 0, 0, .8) inset;
 }
 
 .findbar-textbox[flash="true"] {
@@ -176,7 +187,7 @@ findbar {
 .findbar-highlight > .toolbarbutton-icon {
   width: 13px;
   height: 8px;
-  margin: 4px;
+  margin: 0 4px;
   -moz-margin-end: 0;
   border: 1px solid #818181;
   -moz-border-radius: 4px;
@@ -196,6 +207,7 @@ findbar {
 .findbar-find-status {
   color: #436599;
   font-weight: bold;
-  margin: 1px;
-  -moz-margin-start: 12px;
+  text-shadow: 0 1px rgba(255, 255, 255, .4);
+  margin: 1px 1px 0 !important;
+  -moz-margin-start: 12px !important;
 }
