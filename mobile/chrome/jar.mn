@@ -23,7 +23,7 @@ browser.jar:
 * content/sanitize.js                  (content/sanitize.js)
   content/WidgetStack.js               (content/WidgetStack.js)
   content/BrowserView.js               (content/BrowserView.js)
-* content/TileManager.js               (content/TileManager.js)
+  content/TileManager.js               (content/TileManager.js)
   content/CanvasBrowser.js             (content/CanvasBrowser.js)
   content/InputHandler.js              (content/InputHandler.js)
   content/Util.js                      (content/Util.js)
