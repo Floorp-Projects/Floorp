@@ -117,6 +117,25 @@ nsSVGForeignObjectElement::PrependLocalTransformTo(const gfxMatrix &aMatrix)
   return gfxMatrix().Translate(gfxPoint(x, y)) * matrix;
 }
 
+nsresult
+nsSVGForeignObjectElement::AppendTransform(nsIDOMSVGMatrix *aCTM,
+                                           nsIDOMSVGMatrix **_retval)
+{
+  nsresult rv;
+  // foreignObject is one of establishing-viewport elements.
+  // so we are translated by foreignObject's x and y attribs.
+  float x, y;
+  GetAnimatedLengthValues(&x, &y, nsnull);
+  nsCOMPtr<nsIDOMSVGMatrix> translate;
+  rv = NS_NewSVGMatrix(getter_AddRefs(translate), 1, 0, 0, 1, x, y);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDOMSVGMatrix> tmp;
+  rv = aCTM->Multiply(translate, getter_AddRefs(tmp));
+  if (NS_FAILED(rv)) return rv;
+
+  return nsSVGGraphicElement::AppendTransform(tmp, _retval);
+}
+
 //----------------------------------------------------------------------
 // nsIContent methods
 

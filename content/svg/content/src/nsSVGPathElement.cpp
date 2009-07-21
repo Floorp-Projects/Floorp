@@ -102,7 +102,7 @@ nsSVGPathElement::GetTotalLength(float *_retval)
 {
   *_retval = 0;
 
-  nsRefPtr<gfxFlattenedPath> flat = GetFlattenedPath(gfxMatrix());
+  nsRefPtr<gfxFlattenedPath> flat = GetFlattenedPath(nsnull);
 
   if (!flat)
     return NS_ERROR_FAILURE;
@@ -118,7 +118,7 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
 {
   NS_ENSURE_FINITE(distance, NS_ERROR_ILLEGAL_VALUE);
 
-  nsRefPtr<gfxFlattenedPath> flat = GetFlattenedPath(gfxMatrix());
+  nsRefPtr<gfxFlattenedPath> flat = GetFlattenedPath(nsnull);
   if (!flat)
     return NS_ERROR_FAILURE;
 
@@ -494,12 +494,16 @@ nsSVGPathElement::DidModifySVGObservable(nsISVGValue* observable,
 }
 
 already_AddRefed<gfxFlattenedPath>
-nsSVGPathElement::GetFlattenedPath(const gfxMatrix &aMatrix)
+nsSVGPathElement::GetFlattenedPath(nsIDOMSVGMatrix *aMatrix)
 {
   gfxContext ctx(nsSVGUtils::GetThebesComputationalSurface());
 
-  ctx.SetMatrix(aMatrix);
+  if (aMatrix) {
+    ctx.SetMatrix(nsSVGUtils::ConvertSVGMatrixToThebes(aMatrix));
+  }
+
   mPathData.Playback(&ctx);
+
   ctx.IdentityMatrix();
 
   return ctx.GetFlattenedPath();

@@ -39,6 +39,7 @@
 #include "nsSVGPathGeometryFrame.h"
 #include "nsGkAtoms.h"
 #include "nsSVGMarkerFrame.h"
+#include "nsSVGMatrix.h"
 #include "nsSVGUtils.h"
 #include "nsSVGEffects.h"
 #include "nsSVGGraphicElement.h"

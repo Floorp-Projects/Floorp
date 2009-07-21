@@ -159,13 +159,17 @@ NS_IMETHODIMP_(nsIFrame*)
 nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
   if (GetStyleDisplay()->IsScrollableOverflow()) {
-    nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
-
     float clipX, clipY, clipWidth, clipHeight;
-    content->GetAnimatedLengthValues(&clipX, &clipY, &clipWidth, &clipHeight, nsnull);
+    nsCOMPtr<nsIDOMSVGMatrix> clipTransform;
 
-    if (!nsSVGUtils::HitTestRect(parent->GetCanvasTM(),
+    nsSVGElement *svg = static_cast<nsSVGElement*>(mContent);
+    svg->GetAnimatedLengthValues(&clipX, &clipY, &clipWidth, &clipHeight, nsnull);
+
+    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>
+                                             (mParent);
+    clipTransform = NS_NewSVGMatrix(parent->GetCanvasTM());
+
+    if (!nsSVGUtils::HitTestRect(clipTransform,
                                  clipX, clipY, clipWidth, clipHeight,
                                  PresContext()->AppUnitsToDevPixels(aPoint.x),
                                  PresContext()->AppUnitsToDevPixels(aPoint.y))) {

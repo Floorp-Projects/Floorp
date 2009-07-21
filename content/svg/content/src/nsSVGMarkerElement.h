@@ -131,9 +131,10 @@ public:
   virtual void DidChangePreserveAspectRatio(PRBool aDoSetAttr);
 
   // public helpers
-  gfxMatrix GetMarkerTransform(float aStrokeWidth,
-                               float aX, float aY, float aAngle);
-  gfxMatrix GetViewBoxTransform();
+  nsresult GetMarkerTransform(float aStrokeWidth,
+                              float aX, float aY, float aAngle,
+                              nsIDOMSVGMatrix **_retval);
+  nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
