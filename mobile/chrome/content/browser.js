@@ -183,7 +183,7 @@ function onKeyPress(e) {
     let noop = function noop() { for (let i = 0; i < 10; ++i); };
     bv._tileManager._tileCache.forEachIntersectingRect(bv._tileManager._criticalRect,
                                                        false, noop, window);
-    
+
     break;
   case t:
     let ijstrs = window.prompt('row,col plz').split(' ');
@@ -235,6 +235,14 @@ function getVisibleRect() {
 
 var ih = null;
 
+function BrowserViewContainerDragger() {}
+BrowserViewContainerDragger.prototype = {
+
+
+
+};
+
+
 var Browser = {
   _tabs : [],
   _browsers : [],
@@ -252,6 +260,27 @@ var Browser = {
     let scrollbox = document.getElementById("scrollbox");
     let scrollBoxObject = scrollbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
 
+    scrollbox.customDragger = {
+      dragStart: function dragStart(scroller) {
+        Browser._browserView.pauseRendering();
+      },
+
+      dragStop: function dragStop(dx, dy, scroller) {
+        scroller.scrollBy(dx, dy);
+        Browser._browserView.resumeRendering();
+      },
+
+      dragMove: function dragMove(dx, dy, scroller) {
+        bv.onBeforeVisibleMove(dx, dy);
+
+        scroller.scrollBy(dx, dy);
+
+        // TODO get real dx dy, this is a bug as it is because the guess is usually wrong
+        bv.onAfterVisibleMove(dx, dy);
+      }
+    };
+
+    // --- deprecated (TODO remove) but here for reference
     scrollbox.scrollByFunc = function(dx, dy) {
       let start = Date.now();
       bv.onBeforeVisibleMove(dx, dy);
@@ -264,7 +293,7 @@ var Browser = {
       start = Date.now();
       bv.onAfterVisibleMove(dx, dy);
       dump("after: " + (Date.now() - start) + "\n");
-    }
+    };
 
     // during startup a lot of viewportHandler calls happen due to content and window resizes
     bv.beginBatchOperation();
@@ -1316,7 +1345,7 @@ var HelperAppDialog = {
 
     if (!this._launcher.MIMEInfo.hasDefaultHandler)
       document.getElementById("helperapp-open").disabled = true;
-      
+
     let toolbar = document.getElementById("toolbar-main");
     let top = toolbar.top + toolbar.boxObject.height;
     let container = document.getElementById("helperapp-container");

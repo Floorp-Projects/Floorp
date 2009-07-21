@@ -38,6 +38,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
+#define FOREACH_RECT(rect, tilecache, fn, thisObj)                             \
+  {                                                                            \
+    let i    = (rect).left  >> kTileExponentWidth;                             \
+    let endi = (rect).right >> kTileExponentWidth;                             \
+    let j    = (rect).top    >> kTileExponentHeight;                           \
+    let endj = (rect).bottom >> kTileExponentHeight;                           \
+                                                                               \
+    let tile = null;                                                           \
+    for (; j <= endj; ++j) {                                                   \
+      for (; i <= endi; ++i) {                                                 \
+        tile = (tilecache).getTile(i, j, false);                               \
+        if (tile) {                                                            \
+          (fn).call((thisObj), tile);                                          \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+  }
+
+#define FOREACH_RECT_CREATE(rect, tilecache, fn, thisObj)                      \
+  {                                                                            \
+    let visited = {};                                                          \
+    let evictGuard = function evictGuard(tile)                                 \
+      { return !visited[tile.toString()]; };                                   \
+                                                                               \
+    let i    = (rect).left  >> kTileExponentWidth;                             \
+    let endi = (rect).right >> kTileExponentWidth;                             \
+    let j    = (rect).top    >> kTileExponentHeight;                           \
+    let endj = (rect).bottom >> kTileExponentHeight;                           \
+                                                                               \
+    let tile = null;                                                           \
+    for (; j <= endj; ++j) {                                                   \
+      for (; i <= endi; ++i) {                                                 \
+        tile = (tilecache).getTile(i, j, true, evictGuard);                    \
+        if (tile) {                                                            \
+          visited[tile.toString()] = true;                                     \
+          (fn).call((thisObj), tile);                                          \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+  }
+
+
+
 const kXHTMLNamespaceURI  = "http://www.w3.org/1999/xhtml";
 
 // base-2 exponent for width, height of a single tile.
