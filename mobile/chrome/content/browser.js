@@ -86,7 +86,7 @@ function debug() {
     let cr = bv._tileManager._criticalRect;
     dump('criticalRect from BV: ' + (cr ? cr.toString() : null) + endl);
     dump('visibleRect from BV : ' + bv._visibleRect.toString() + endl);
-    dump('visibleRect from foo: ' + getVisibleRect() + endl);
+    dump('visibleRect from foo: ' + getVisibleRect().toString() + endl);
 
     dump('batch depth:          ' + bv._batchOps.length + endl);
 
@@ -188,7 +188,7 @@ function onKeyPress(e) {
   case t:
     let ijstrs = window.prompt('row,col plz').split(' ');
     for each (let ijstr in ijstrs) {
-      let [i, j] = ijstr.split(',').map(function (x) parseInt(x));
+      let [i, j] = ijstr.split(',').map(function (x) { return parseInt(x); });
       debugTile(i, j);
     }
 
@@ -233,15 +233,14 @@ function getVisibleRect() {
   return new wsRect(x, y, w, h);
 }
 
+function getScrollboxPosition(scrollBoxObject) {
+  let x = {};
+  let y = {};
+  scrollBoxObject.getPosition(x, y);
+  return [x.value, y.value];
+}
+
 var ih = null;
-
-function BrowserViewContainerDragger() {}
-BrowserViewContainerDragger.prototype = {
-
-
-
-};
-
 
 var Browser = {
   _tabs : [],
@@ -258,29 +257,39 @@ var Browser = {
     let bv = this._browserView = new BrowserView(container, getVisibleRect());
 
     let scrollbox = document.getElementById("scrollbox");
-    let scrollBoxObject = scrollbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
 
     scrollbox.customDragger = {
       dragStart: function dragStart(scroller) {
-        Browser._browserView.pauseRendering();
+        bv.pauseRendering();
       },
 
       dragStop: function dragStop(dx, dy, scroller) {
-        scroller.scrollBy(dx, dy);
-        Browser._browserView.resumeRendering();
+        this.dragMove(dx, dy, scroller);
+        bv.resumeRendering();
       },
 
       dragMove: function dragMove(dx, dy, scroller) {
         bv.onBeforeVisibleMove(dx, dy);
 
+        let [x0, y0] = getScrollboxPosition(scroller);
+
         scroller.scrollBy(dx, dy);
 
-        // TODO get real dx dy, this is a bug as it is because the guess is usually wrong
-        bv.onAfterVisibleMove(dx, dy);
+        let [x1, y1] = getScrollboxPosition(scroller);
+
+        let realdx = x1 - x0;
+        let realdy = y1 - y0;
+
+        bv.onAfterVisibleMove(realdx, realdy);
+
+        if (realdx != dx || realdy != dy) {
+          dump('--> scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
+        }
       }
     };
 
     // --- deprecated (TODO remove) but here for reference
+    /*let scrollBoxObject = scrollbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
     scrollbox.scrollByFunc = function(dx, dy) {
       let start = Date.now();
       bv.onBeforeVisibleMove(dx, dy);
@@ -293,7 +302,7 @@ var Browser = {
       start = Date.now();
       bv.onAfterVisibleMove(dx, dy);
       dump("after: " + (Date.now() - start) + "\n");
-    };
+    };*/
 
     // during startup a lot of viewportHandler calls happen due to content and window resizes
     bv.beginBatchOperation();
