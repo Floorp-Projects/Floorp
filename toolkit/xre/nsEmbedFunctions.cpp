@@ -392,39 +392,6 @@ public:
 
 namespace {
 
-class CreateChildProcess : public Task
-{
-public:
-  CreateChildProcess(Monitor* aMonitor,
-                     IPC::Channel** aChannelPtr)
-  : mMonitor(aMonitor),
-    mChannelPtr(aChannelPtr)
-  {
-    NS_ASSERTION(aMonitor, "Null ptr!");
-  }
-
-  virtual void Run() {
-    GeckoChildProcessHost* host =
-      new GeckoChildProcessHost(GeckoChildProcess_TestShell);
-    if (host) {
-      // FIXME/bent: use SyncLaunch() API to simplify this code
-      if (!host->AsyncLaunch()) {
-        delete host;
-      }
-      // ChildProcessHost deletes itself once the child process exits, on
-      // windows at least...
-      *mChannelPtr = host->GetChannel();
-    }
-
-    MonitorAutoEnter ae(*mMonitor);
-    mMonitor->Notify();
-  }
-
-private:
-  Monitor* mMonitor;
-  IPC::Channel** mChannelPtr;
-};
-
 class QuitRunnable : public nsRunnable
 {
 public:
@@ -435,30 +402,6 @@ public:
     return appShell->Exit();
   }
 };
-
-IPC::Channel*
-LaunchTestShellChildProcess()
-{
-  Monitor mon("LaunchChildProcess monitor");
-
-  IPC::Channel* channel = nsnull;
-
-  CreateChildProcess* creator = new CreateChildProcess(&mon, &channel);
-  NS_ENSURE_TRUE(creator, nsnull);
-
-  MessageLoop* ioLoop = 
-      BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
-  NS_ENSURE_TRUE(ioLoop, nsnull);
-
-  {
-    MonitorAutoEnter ae(mon);
-
-    ioLoop->PostTask(FROM_HERE, creator);
-    mon.Wait();
-  }
-
-  return channel;
-}
 
 int
 TestShellMain(int argc, char** argv)
@@ -473,7 +416,17 @@ TestShellMain(int argc, char** argv)
   nsAutoRef<XPCShellEnvironment> env(XPCShellEnvironment::CreateEnvironment());
   NS_ENSURE_TRUE(env, 1);
 
-  IPC::Channel* channel = LaunchTestShellChildProcess();
+  GeckoChildProcessHost* host =
+    new GeckoChildProcessHost(GeckoChildProcess_TestShell);
+  NS_ENSURE_TRUE(host, 1);
+
+  if (!host->SyncLaunch()) {
+    NS_WARNING("Failed to launch child process!");
+    delete host;
+    return 1;
+  }
+
+  IPC::Channel* channel = host->GetChannel();
   NS_ENSURE_TRUE(channel, 1);
 
   TestShellParent testShellParent;
