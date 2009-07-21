@@ -762,6 +762,7 @@ namespace nanojit
             return out->insCall(call, args);
         }
         virtual LInsp insAlloc(int32_t size) {
+            NanoAssert(size != 0);
             return out->insAlloc(size);
         }
         virtual LInsp insSkip(size_t size) {
