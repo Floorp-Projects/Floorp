@@ -1377,42 +1377,91 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-/* ::::: Ctrl-Tab Panel ::::: */
+
+/* ::::: Keyboard UI Panel ::::: */
+
+.KUI-panel-closebutton {
+  list-style-image: url(KUI-close.png);
+}
+
+.KUI-panel-closebutton > .toolbarbutton-icon {
+  margin: 0;
+}
+
+/* ::::: Ctrl-Tab and All Tabs Panels ::::: */
+
+.ctrlTab-preview,
+.allTabs-preview {
+  -moz-appearance: toolbarbutton;
+}
+
+.tabPreview-canvas {
+  -moz-box-shadow: 0 0 5px ThreeDShadow;
+}
+
+.ctrlTab-preview:focus .tabPreview-canvas,
+.ctrlTab-preview:hover .tabPreview-canvas,
+.allTabs-preview:focus .tabPreview-canvas,
+.allTabs-preview:hover .tabPreview-canvas {
+  -moz-box-shadow: none;
+}
+
+.ctrlTab-favicon[src],
+.allTabs-favicon[src] {
+  background-color: white;
+  padding: 2px;
+/* XXX: Upscaling images is ugly on Linux (bug 422179)
+  width: 24px;
+  height: 24px;
+  opacity: .7;
+*/
+  width: 20px;
+  height: 20px;
+  opacity: .8;
+}
+
+/* Ctrl-Tab */
+
 #ctrlTab-panel {
-  padding-top: 15px;
+  padding: 10px;
 }
 
-#ctrlTab-search {
-  margin: 0 0 15px;
+.ctrlTab-preview:not(#ctrlTab-showAll) .tabPreview-canvas {
+  margin-bottom: 2px;
 }
 
-.ctrlTab-thumbnail {
-  margin-bottom: 15px;
-  cursor: pointer;
+#ctrlTab-showAll {
+  -moz-appearance: button;
+  color: ButtonText;
+  padding: 0 3px;
+  margin-top: 10px;
 }
 
-.ctrlTab-thumbnail > html|canvas {
-  border: 1px solid ThreeDShadow;
-  margin: -1px;
+/* All Tabs */
+
+#allTabs-panel {
+  /* compensate for the widget border and padding to center the panel correctly */
+  margin-left: -13px;
 }
 
-.ctrlTab-thumbnail[selected="true"] ,
-.ctrlTab-thumbnail:hover {
-  background: Highlight;
-  color: HighlightText;
-  -moz-box-shadow: 0 0 2px Highlight, 0 0 2px Highlight, 0 0 3px Highlight, 0 0 4px Highlight, 0 0 10px Highlight, 0 0 15px Highlight;
-}
- 
-.ctrlTab-pagePointer {
-  margin: 0 1em 1em;
-  width: 1.5em;
-  height: 1.5em;
-  -moz-border-radius: .75em;
-  background: ThreeDShadow;
-  cursor: pointer;
+#allTabs-tab-close-button {
+  /*XXX without this, the closebutton can cause the panel to expand horizontally */
+  margin-right: -16px;
 }
 
-.ctrlTab-pagePointer[selected="true"] {
-  background: ThreeDDarkShadow;
-  cursor: default;
+#allTabs-meta {
+  padding: 5px;
+}
+
+#allTabs-filter {
+  -moz-margin-start: 36px;
+  -moz-margin-end: 0;
+}
+
+#allTabs-stack {
+  margin: 10px;
+}
+
+.allTabs-preview-label {
+  -moz-transform: translate(0, -1px);
 }
