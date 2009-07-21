@@ -8081,7 +8081,7 @@ TraceRecorder::record_JSOP_RETURN()
         LIns* argsobj_ins = get(&cx->fp->argsobj);
         LIns* length_ins = INS_CONST(cx->fp->argc);
         LIns* callee_ins = get(&cx->fp->argv[-2]);
-        LIns* args_ins = lir->insAlloc(sizeof(jsval) * cx->fp->argc);
+        LIns* args_ins = cx->fp->argc ? lir->insAlloc(sizeof(jsval) * cx->fp->argc) : INS_CONSTPTR(0);
         for (uintN i = 0; i < cx->fp->argc; ++i) {
             LIns* arg_ins = get(&cx->fp->argv[i]);
             box_jsval(cx->fp->argv[i], arg_ins);
