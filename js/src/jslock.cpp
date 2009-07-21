@@ -739,7 +739,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
      * an earlier request.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
-        (scope->sealed() && scope->object == obj) ||
+        scope->sealed() ||
         (title->ownercx && ClaimTitle(title, cx))) {
         return STOBJ_GET_SLOT(obj, slot);
     }
@@ -834,7 +834,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
      * an earlier request.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
-        (scope->sealed() && scope->object == obj) ||
+        scope->sealed() ||
         (title->ownercx && ClaimTitle(title, cx))) {
         LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
         return;
@@ -1398,8 +1398,7 @@ js_LockObj(JSContext *cx, JSObject *obj)
     for (;;) {
         scope = OBJ_SCOPE(obj);
         title = &scope->title;
-        if (scope->sealed() && scope->object == obj &&
-            !cx->lockedSealedTitle) {
+        if (scope->sealed() && !cx->lockedSealedTitle) {
             cx->lockedSealedTitle = title;
             return;
         }

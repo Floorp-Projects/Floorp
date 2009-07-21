@@ -397,7 +397,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
     if (!setter) {
         JS_LOCK_OBJ(cx, wp->object);
         scope = OBJ_SCOPE(wp->object);
-        found = (scope->object == wp->object && scope->lookup(sprop->id));
+        found = (scope->lookup(sprop->id) != NULL);
         JS_UNLOCK_SCOPE(cx, scope);
 
         /*
@@ -484,7 +484,7 @@ FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id)
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        if (wp->object == scope->object && wp->sprop->id == id)
+        if (OBJ_SCOPE(wp->object) == scope && wp->sprop->id == id)
             return wp;
     }
     return NULL;
@@ -520,7 +520,7 @@ js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        if ((!scope || wp->object == scope->object) && wp->sprop == sprop) {
+        if ((!scope || OBJ_SCOPE(wp->object) == scope) && wp->sprop == sprop) {
             setter = wp->setter;
             break;
         }
@@ -1462,7 +1462,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 
     /* have no props, or object's scope has not mutated from that of proto */
     scope = OBJ_SCOPE(obj);
-    if (scope->object != obj || scope->entryCount == 0) {
+    if (scope->entryCount == 0) {
         pda->length = 0;
         pda->array = NULL;
         return JS_TRUE;
@@ -1587,7 +1587,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
     }
     if (OBJ_IS_NATIVE(obj)) {
         scope = OBJ_SCOPE(obj);
-        if (scope->object == obj) {
+        if (scope->owned()) {
             nbytes += sizeof *scope;
             nbytes += SCOPE_CAPACITY(scope) * sizeof(JSScopeProperty *);
         }
