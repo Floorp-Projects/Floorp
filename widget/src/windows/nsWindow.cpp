@@ -119,13 +119,11 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsITheme.h"
-#include "nsIImage.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
 #include "nsIFile.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
@@ -2058,14 +2056,13 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   }
 
   // Get the image data
-  nsCOMPtr<gfxIImageFrame> frame;
-  aCursor->GetFrameAt(0, getter_AddRefs(frame));
+  nsRefPtr<gfxImageSurface> frame;
+  aCursor->CopyCurrentFrame(getter_AddRefs(frame));
   if (!frame)
     return NS_ERROR_NOT_AVAILABLE;
 
-  PRInt32 width, height;
-  frame->GetWidth(&width);
-  frame->GetHeight(&height);
+  PRInt32 width = frame->Width();
+  PRInt32 height = frame->Height();
 
   // Reject cursors greater than 128 pixels in either direction, to prevent
   // spoofing.
@@ -2074,19 +2071,10 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   if (width > 128 || height > 128)
     return NS_ERROR_NOT_AVAILABLE;
 
-  frame->LockImageData();
-
-  PRUint32 dataLen;
-  PRUint8 *data;
-  nsresult rv = frame->GetImageData(&data, &dataLen);
-  if (NS_FAILED(rv)) {
-    frame->UnlockImageData();
-    return rv;
-  }
+  PRUint8 *data = frame->Data();
 
   HBITMAP bmp = DataToBitmap(data, width, -height, 32);
   PRUint8* a1data = Data32BitTo1Bit(data, width, height);
-  frame->UnlockImageData();
   if (!a1data) {
     return NS_ERROR_FAILURE;
   }
