@@ -179,46 +179,5 @@ interface IWeaveCrypto : nsISupports
                               in ACString aPassphrase,
                               in ACString aSalt,
                               in ACString aIV);
-                              
-  /**
-   * Rewrap a private key with a new user passphrase.
-   *
-   * @param aWrappedPrivateKey
-   *        The base64 encoded string holding an encrypted private key.
-   * @param aPassphrase
-   *        The passphrase to decrypt the private key.
-   * @param aSalt
-   *        The salt for the passphrase.
-   * @param aIV
-   *        The random IV used when unwrapping the private key.
-   * @param aNewPassphrase
-   *        The new passphrase to wrap the private key with.
-   * @returns The (re)wrapped private key, base64 encoded
-   *
-   */
-   ACString rewrapPrivateKey(in ACString aWrappedPrivateKey,
-                             in ACString aPassphrase,
-                             in ACString aSalt,
-                             in ACString aIV,
-                             in ACString aNewPassphrase);
-                             
-   /**
-    * Verify a user's passphrase against a private key.
-    *
-    * @param aWrappedPrivateKey
-    *        The base64 encoded string holding an encrypted private key.
-    * @param aPassphrase
-    *        The passphrase to decrypt the private key.
-    * @param aSalt
-    *        The salt for the passphrase.
-    * @param aIV
-    *        The random IV used when unwrapping the private key.
-    * @returns Boolean true if the passphrase decrypted the key correctly.
-    *
-    */
-   boolean verifyPassphrase(in ACString aWrappedPrivateKey,
-                            in ACString aPassphrase,
-                            in ACString aSalt,
-                            in ACString aIV);
 };
 
