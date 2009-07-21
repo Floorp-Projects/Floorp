@@ -441,6 +441,12 @@
                           type="checkbox"
                           command="View:FullScreen"/>
 #endif
+                <menuitem id="menu_showAllTabs"
+                          hidden="true"
+                          accesskey="&showAllTabsCmd.accesskey;"
+                          label="&showAllTabsCmd.label;"
+                          command="Browser:ShowAllTabs"
+                          key="key_showAllTabs"/>
                 <menuseparator hidden="true" id="documentDirection-separator"/>
                 <menuitem id="documentDirection-swap"
                           hidden="true"

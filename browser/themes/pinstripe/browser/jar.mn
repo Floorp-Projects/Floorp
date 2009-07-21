@@ -30,6 +30,7 @@ classic.jar:
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
   skin/classic/browser/KUI-background.png
+  skin/classic/browser/KUI-close.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
   skin/classic/browser/page-livemarks.png

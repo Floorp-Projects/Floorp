@@ -358,7 +358,8 @@ pref("browser.tabs.closeButtons", 1);
 // false  return to the adjacent tab (old default)
 pref("browser.tabs.selectOwnerOnClose", true);
 
-pref("browser.ctrlTab.previews", true);
+pref("browser.allTabs.previews", false);
+pref("browser.ctrlTab.previews", false);
 pref("browser.ctrlTab.recentlyUsedLimit", 7);
 
 // Default bookmark sorting
