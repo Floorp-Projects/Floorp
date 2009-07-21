@@ -1,9 +1,17 @@
 <!ENTITY dialog.title                 "Sign In to Weave">
 <!ENTITY dialog.login                 "Sign In">
 <!ENTITY dialog.help                  "Help">
-<!ENTITY whatsThis.label	"What's this?">
+<!ENTITY whatsThis.label	            "What's this?">
 <!ENTITY username.label               "Username:">
 <!ENTITY password.label               "Password:">
 <!ENTITY encryptionPassphrase.label   "Encryption Passphrase:">
 <!ENTITY savePassword.label           "Save password on this computer">
 <!ENTITY autoconnect.label            "Automatically connect each time I start Firefox">
+
+<!ENTITY forgotPhrase.label           "Forgot your passphrase?">
+<!ENTITY pph.title                    "Reset your Passphrase">
+<!ENTITY pph.message                  "Please update all your clients with the new passphrase">
+<!ENTITY pph.accept                   "Reset">
+<!ENTITY pph.cancel                   "Cancel">
+<!ENTITY pph.enter1                   "Enter new passphrase">
+<!ENTITY pph.enter2                   "Confirm new passphrase">

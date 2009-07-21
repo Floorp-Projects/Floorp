@@ -517,6 +517,35 @@ WeaveSvc.prototype = {
       // fixme: decrypt something here
     }))),
 
+  changePassphrase: function WeaveSvc_changePassphrase(newphrase)
+    this._catch(this._notify("changepph", "", function() {
+      throw "Unimplemented!";
+    }))(),
+  
+  resetPassphrase: function WeaveSvc_resetPassphrase(newphrase)
+    this._catch(this._notify("resetpph", "", function() {
+      /* Make remote commands ready so we have a list of clients beforehand */
+      this.prepCommand("logout", []);
+      let clientsBackup = Clients._store.clients;
+      
+      /* Wipe */
+      this.wipeServer();
+      
+      /* Set remote commands before syncing */
+      Clients._store.clients = clientsBackup;
+      let username = this.username;
+      let password = this.password;
+      this.logout();
+      
+      /* Set this so UI is updated on next run */
+      this.passphrase = newphrase;
+      
+      /* Login in sync: this also generates new keys */
+      this.login(username, password, newphrase);
+      this.sync(true);
+      return true;
+    }))(),
+  
   login: function WeaveSvc_login(username, password, passphrase)
     this._catch(this._lock(this._notify("login", "", function() {
       this._loggedIn = false;
@@ -1073,6 +1102,7 @@ WeaveSvc.prototype = {
     ["resetEngine", 1, "Clear temporary local data for engine"],
     ["wipeAll", 0, "Delete all client data for all engines"],
     ["wipeEngine", 1, "Delete all client data for engine"],
+    ["logout", 0, "Log out client"],
   ].reduce(function WeaveSvc__commands(commands, entry) {
     commands[entry[0]] = {};
     for (let [i, attr] in Iterator(["args", "desc"]))
@@ -1097,7 +1127,7 @@ WeaveSvc.prototype = {
       // Process each command in order
       for each ({command: command, args: args} in commands) {
         this._log.debug("Processing command: " + command + "(" + args + ")");
-
+        
         let engines = [args[0]];
         switch (command) {
           case "resetAll":
@@ -1106,14 +1136,15 @@ WeaveSvc.prototype = {
           case "resetEngine":
             this.resetClient(engines);
             break;
-
           case "wipeAll":
             engines = null;
             // Fallthrough
           case "wipeEngine":
             this.wipeClient(engines);
             break;
-
+          case "logout":
+            this.logout();
+            return false;
           default:
             this._log.debug("Received an unknown command: " + command);
             break;

@@ -22,6 +22,7 @@
 <!ENTITY newPasswordAgain.label             "Re-enter:">
 <!ENTITY showPasswords.label                "Show Passwords">
 <!ENTITY changePasswordButton.label         "Change Password">
+<!ENTITY changePassphraseButton.label       "Change Passphrase">
 
 <!ENTITY backUpCheckbox.label               "Back up and securely synchronize my data to a Weave server">
 <!ENTITY encryptOnServerCheckbox.label      "Encrypt locally and only store encrypted data on server">
@@ -111,3 +112,10 @@
 <!ENTITY tabs.sortBy.title.label "Title">
 <!ENTITY tabs.sortBy.source.label "Source">
 <!ENTITY tabs.sortBy.label "Sort by: ">
+
+<!ENTITY pph.accept "Change">
+<!ENTITY pph.cancel "Cancel">
+<!ENTITY pph.title "Change passphrase">
+<!ENTITY pph.message "Please update all your clients with the new phrase">
+<!ENTITY pph.enterNew1 "New passphrase:">
+<!ENTITY pph.enterNew2 "Confirm new passphrase:">
