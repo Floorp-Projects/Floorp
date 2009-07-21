@@ -72,7 +72,7 @@ public:
                       const gfxRect &aTargetBBox,
                       const gfxRect& aFilterRect,
                       const nsIntSize& aFilterSpaceSize,
-                      const gfxMatrix &aFilterSpaceToDeviceSpaceTransform,
+                      nsIDOMSVGMatrix *aFilterSpaceToDeviceSpaceTransform,
                       const nsIntRect& aDirtyOutputRect,
                       const nsIntRect& aDirtyInputRect,
                       PRUint16 aPrimitiveUnits) :
@@ -107,9 +107,9 @@ public:
   nsresult ComputeSourceNeededRect(nsIntRect* aDirty);
   nsresult ComputeOutputBBox(nsIntRect* aBBox);
 
-  gfxMatrix GetUserSpaceToFilterSpaceTransform() const;
-  gfxMatrix GetFilterSpaceToDeviceSpaceTransform() const {
-    return mFilterSpaceToDeviceSpaceTransform;
+  already_AddRefed<nsIDOMSVGMatrix> GetUserSpaceToFilterSpaceTransform() const;
+  nsIDOMSVGMatrix* GetFilterSpaceToDeviceSpaceTransform() const {
+    return mFilterSpaceToDeviceSpaceTransform.get();
   }
 
 private:
@@ -185,7 +185,7 @@ private:
   nsSVGFilterPaintCallback* mPaintCallback;
   nsSVGFilterElement*     mFilterElement;
   gfxRect                 mTargetBBox;
-  gfxMatrix               mFilterSpaceToDeviceSpaceTransform;
+  nsCOMPtr<nsIDOMSVGMatrix> mFilterSpaceToDeviceSpaceTransform;
   gfxRect                 mFilterRect;
   nsIntSize               mFilterSpaceSize;
   nsIntRect               mDirtyOutputRect;

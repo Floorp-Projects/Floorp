@@ -56,7 +56,7 @@ NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsresult
 nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
                               nsIFrame* aParent,
-                              const gfxMatrix &aMatrix)
+                              nsIDOMSVGMatrix *aMatrix)
 {
   // If the flag is set when we get here, it means this clipPath frame
   // has already been used painting the current clip, and the document
@@ -68,7 +68,7 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
   AutoClipPathReferencer clipRef(this);
 
   mClipParent = aParent,
-  mClipParentMatrix = NS_NewSVGMatrix(aMatrix);
+  mClipParentMatrix = aMatrix;
 
   PRBool isTrivial = IsTrivial();
 
@@ -97,7 +97,7 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
 
 PRBool
 nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
-                                const gfxMatrix &aMatrix,
+                                nsIDOMSVGMatrix *aMatrix,
                                 const nsPoint &aPoint)
 {
   // If the flag is set when we get here, it means this clipPath frame
@@ -110,7 +110,7 @@ nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
   AutoClipPathReferencer clipRef(this);
 
   mClipParent = aParent,
-  mClipParentMatrix = NS_NewSVGMatrix(aMatrix);
+  mClipParentMatrix = aMatrix;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -169,12 +169,18 @@ nsSVGClipPathFrame::GetType() const
 gfxMatrix
 nsSVGClipPathFrame::GetCanvasTM()
 {
+  NS_ASSERTION(mClipParentMatrix, "null parent matrix");
+
   nsSVGClipPathElement *content = static_cast<nsSVGClipPathElement*>(mContent);
 
   gfxMatrix tm = content->PrependLocalTransformTo(
     nsSVGUtils::ConvertSVGMatrixToThebes(mClipParentMatrix));
 
-  return nsSVGUtils::AdjustMatrixForUnits(tm,
+  nsCOMPtr<nsIDOMSVGMatrix> canvasTM = NS_NewSVGMatrix(tm);
+  nsCOMPtr<nsIDOMSVGMatrix> fini =
+         nsSVGUtils::AdjustMatrixForUnits(canvasTM,
                                           &content->mEnumAttributes[nsSVGClipPathElement::CLIPPATHUNITS],
                                           mClipParent);
+
+  return nsSVGUtils::ConvertSVGMatrixToThebes(fini);
 }

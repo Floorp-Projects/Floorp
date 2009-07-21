@@ -48,7 +48,6 @@
 #include "nsIRenderingContext.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
-#include "nsSVGMatrix.h"
 
 class nsIDocument;
 class nsPresContext;
@@ -59,6 +58,7 @@ class nsIFrame;
 struct nsStyleSVGPaint;
 class nsIDOMSVGElement;
 class nsIDOMSVGLength;
+class nsIDOMSVGMatrix;
 class nsIURI;
 class nsSVGOuterSVGFrame;
 class nsIPresShell;
@@ -251,19 +251,32 @@ public:
                             nsSVGElement *aContent,
                             const nsStyleCoord &aCoord);
 
-  static gfxMatrix GetCTM(nsSVGElement *aElement, PRBool aScreenCTM);
-
-  /**
-   * Check if this is one of the SVG elements that SVG 1.1 Full says
-   * establishes a viewport: svg, symbol, image or foreignObject.
+  /*
+   * This does the actual job for GetCTM and GetScreenCTM. When called,
+   * this goes up the tree starting from aContent, until reaching to aElement.
+   * When aElement is null, this goes up to the outermost SVG parent. Then,
+   * this post-multiplies aCTM by each parent node's transformation matrix,
+   * going down the tree from aElement to aContent.
+   * This doesn't initialize aCTM. So callers usually should pass
+   * the identity matrix by aCTM.
    */
-  static PRBool EstablishesViewport(nsIContent *aContent);
+  static nsresult AppendTransformUptoElement(nsIContent *aContent,
+                                             nsIDOMSVGElement *aElement,
+                                             nsIDOMSVGMatrix * *aCTM);
+  /*
+   * Return the CTM
+   */
+  static nsresult GetCTM(nsIContent *aContent, nsIDOMSVGMatrix * *aCTM);
 
-  static already_AddRefed<nsIDOMSVGElement>
-  GetNearestViewportElement(nsIContent *aContent);
-
-  static already_AddRefed<nsIDOMSVGElement>
-  GetFarthestViewportElement(nsIContent *aContent);
+  /*
+   * Return the screen CTM
+   */
+  static nsresult GetScreenCTM(nsIContent *aContent, nsIDOMSVGMatrix * *aCTM);
+  /*
+   * Return the nearest viewport element
+   */
+  static nsresult GetNearestViewportElement(nsIContent *aContent,
+                                            nsIDOMSVGElement * *aNearestViewportElement);
 
   /**
    * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame
@@ -271,7 +284,13 @@ public:
    * returns nsnull.
    */
   static nsSVGDisplayContainerFrame* GetNearestSVGViewport(nsIFrame *aFrame);
-  
+
+  /*
+   * Get the farthest viewport element
+   */
+  static nsresult GetFarthestViewportElement(nsIContent *aContent,
+                                             nsIDOMSVGElement * *aFarthestViewportElement);
+
   /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
@@ -342,7 +361,7 @@ public:
 
   /* Generate a viewbox to viewport tranformation matrix */
   
-  static gfxMatrix
+  static already_AddRefed<nsIDOMSVGMatrix>
   GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                       float aViewboxX, float aViewboxY,
                       float aViewboxWidth, float aViewboxHeight,
@@ -422,7 +441,7 @@ public:
    * Hit test a given rectangle/matrix.
    */
   static PRBool
-  HitTestRect(const gfxMatrix &aMatrix,
+  HitTestRect(nsIDOMSVGMatrix *aMatrix,
               float aRX, float aRY, float aRWidth, float aRHeight,
               float aX, float aY);
 
@@ -440,11 +459,11 @@ public:
 
   static void CompositeSurfaceMatrix(gfxContext *aContext,
                                      gfxASurface *aSurface,
-                                     const gfxMatrix &aCTM, float aOpacity);
+                                     nsIDOMSVGMatrix *aCTM, float aOpacity);
 
   static void CompositePatternMatrix(gfxContext *aContext,
                                      gfxPattern *aPattern,
-                                     const gfxMatrix &aCTM, float aWidth, float aHeight, float aOpacity);
+                                     nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity);
 
   static void SetClipRect(gfxContext *aContext,
                           const gfxMatrix &aCTM,
@@ -472,7 +491,7 @@ public:
 
   /* Calculate the maximum expansion of a matrix */
   static float
-  MaxExpansion(const gfxMatrix &aMatrix);
+  MaxExpansion(nsIDOMSVGMatrix *aMatrix);
 
   /**
    * Take the CTM to userspace for an element, and adjust it to a CTM to its
@@ -482,8 +501,8 @@ public:
    *
    * If the bbox is empty, this will return a singular matrix.
    */
-  static gfxMatrix
-  AdjustMatrixForUnits(const gfxMatrix &aMatrix,
+  static already_AddRefed<nsIDOMSVGMatrix>
+  AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
                        nsSVGEnum *aUnits,
                        nsIFrame *aFrame);
 
@@ -532,12 +551,6 @@ public:
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                                nsSVGGeometryFrame* aFrame);
 
-  /**
-   * Returns true if aContent is an SVG <svg> element that is the child of
-   * another non-foreignObject SVG element.
-   */
-  static PRBool IsInnerSVG(nsIContent* aContent);
-    
 private:
   /* Computational (nil) surfaces */
   static gfxASurface *mThebesComputationalSurface;

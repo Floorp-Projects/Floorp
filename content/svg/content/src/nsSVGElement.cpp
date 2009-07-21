@@ -932,8 +932,8 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
 NS_IMETHODIMP
 nsSVGElement::GetViewportElement(nsIDOMSVGElement * *aViewportElement)
 {
-  *aViewportElement = nsSVGUtils::GetNearestViewportElement(this).get();
-  return NS_OK;
+  nsSVGUtils::GetNearestViewportElement(this, aViewportElement);
+  return NS_OK; // we can't throw exceptions from this API.
 }
 
 //----------------------------------------------------------------------

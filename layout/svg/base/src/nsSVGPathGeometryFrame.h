@@ -48,6 +48,7 @@
 #include "gfxMatrix.h"
 
 class nsPresContext;
+class nsIDOMSVGMatrix;
 class nsSVGMarkerFrame;
 class nsSVGMarkerProperty;
 

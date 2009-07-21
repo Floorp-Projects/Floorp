@@ -57,7 +57,6 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "gfxContext.h"
-#include "gfxMatrix.h"
 #include "nsSVGLengthList.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsImageLoadingContent.h"
@@ -65,6 +64,7 @@
 #include "nsNetUtil.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsSVGMatrix.h"
 #include "nsSVGFilterElement.h"
 #include "nsSVGString.h"
 
@@ -5392,19 +5392,17 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
     imageContainer->GetWidth(&nativeWidth);
     imageContainer->GetHeight(&nativeHeight);
 
+    nsCOMPtr<nsIDOMSVGMatrix> trans;
     const gfxRect& filterSubregion = aTarget->mFilterPrimitiveSubregion;
+    trans = nsSVGUtils::GetViewBoxTransform(filterSubregion.Width(), filterSubregion.Height(),
+                                            0, 0, nativeWidth, nativeHeight,
+                                            mPreserveAspectRatio);
+    nsCOMPtr<nsIDOMSVGMatrix> xy, fini;
+    NS_NewSVGMatrix(getter_AddRefs(xy), 1, 0, 0, 1, filterSubregion.X(), filterSubregion.Y());
+    xy->Multiply(trans, getter_AddRefs(fini));
 
-    gfxMatrix viewBoxTM =
-      nsSVGUtils::GetViewBoxTransform(filterSubregion.Width(), filterSubregion.Height(),
-                                      0,0, nativeWidth, nativeHeight,
-                                      mPreserveAspectRatio);
-
-    gfxMatrix xyTM = gfxMatrix().Translate(gfxPoint(filterSubregion.X(), filterSubregion.Y()));
-
-    gfxMatrix TM = viewBoxTM * xyTM;
-    
     gfxContext ctx(aTarget->mImage);
-    nsSVGUtils::CompositePatternMatrix(&ctx, thebesPattern, TM, nativeWidth, nativeHeight, 1.0);
+    nsSVGUtils::CompositePatternMatrix(&ctx, thebesPattern, fini, nativeWidth, nativeHeight, 1.0);
   }
 
   return NS_OK;

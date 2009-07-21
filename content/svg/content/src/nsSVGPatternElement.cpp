@@ -40,6 +40,7 @@
 #include "nsSVGAnimatedTransformList.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
+#include "nsSVGMatrix.h"
 #include "nsSVGPatternElement.h"
 #include "nsIFrame.h"
 
