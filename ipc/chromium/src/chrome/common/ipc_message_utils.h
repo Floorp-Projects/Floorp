@@ -260,7 +260,11 @@ struct ParamTraits<int64> {
     return m->ReadInt64(iter, r);
   }
   static void Log(const param_type& p, std::wstring* l) {
+#ifndef CHROMIUM_MOZILLA_BUILD
     l->append(StringPrintf(L"%I64d", p));
+#else
+    l->append(StringPrintf(L"%" PRId64, p));
+#endif // ifndef CHROMIUM_MOZILLA_BUILD
   }
 };
 
@@ -274,7 +278,11 @@ struct ParamTraits<uint64> {
     return m->ReadInt64(iter, reinterpret_cast<int64*>(r));
   }
   static void Log(const param_type& p, std::wstring* l) {
+#ifndef CHROMIUM_MOZILLA_BUILD
     l->append(StringPrintf(L"%I64u", p));
+#else
+    l->append(StringPrintf(L"%" PRIu64, p));
+#endif // ifndef CHROMIUM_MOZILLA_BUILD
   }
 };
 
