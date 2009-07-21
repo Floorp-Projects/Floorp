@@ -111,14 +111,14 @@ protected:
   /* non-virtual imgIDecoderObserver methods */
   void OnStartDecode   ();
   void OnStartContainer(imgIContainer *aContainer);
-  void OnStartFrame    (gfxIImageFrame *aFrame);
-  void OnDataAvailable (gfxIImageFrame *aFrame, const nsIntRect * aRect);
-  void OnStopFrame     (gfxIImageFrame *aFrame);
+  void OnStartFrame    (PRUint32 aFrame);
+  void OnDataAvailable (PRBool aCurrentFrame, const nsIntRect * aRect);
+  void OnStopFrame     (PRUint32 aFrame);
   void OnStopContainer (imgIContainer *aContainer);
   void OnStopDecode    (nsresult status, const PRUnichar *statusArg); 
 
   /* non-virtual imgIContainerObserver methods */
-  void FrameChanged(imgIContainer *aContainer, gfxIImageFrame *aFrame, nsIntRect * aDirtyRect);
+  void FrameChanged(imgIContainer *aContainer, nsIntRect * aDirtyRect);
 
   /* non-virtual nsIRequestObserver (plus some) methods */
   void OnStartRequest(nsIRequest *request, nsISupports *ctxt);

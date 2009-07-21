@@ -71,13 +71,12 @@ public:
   NS_DECL_ISUPPORTS
   // imgIDecoderObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
-  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, gfxIImageFrame *aFrame,
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, PRBool aCurrentFrame,
                              const nsIntRect *aRect);
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
                           const PRUnichar *statusArg);
   // imgIContainerObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
-                          nsIntRect *dirtyRect);
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, nsIntRect *dirtyRect);
 
   void SetFrame(nsBulletFrame *frame) { mFrame = frame; }
 
@@ -1458,7 +1457,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest,
-                                             gfxIImageFrame *aFrame,
+                                             PRBool aCurrentFrame,
                                              const nsIntRect *aRect)
 {
   // The image has changed.
@@ -1489,7 +1488,6 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer,
-                                          gfxIImageFrame *aNewFrame,
                                           nsIntRect *aDirtyRect)
 {
   // Invalidate the entire content area. Maybe it's not optimal but it's simple and
@@ -1547,13 +1545,13 @@ NS_IMETHODIMP nsBulletListener::OnStartContainer(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest,
-                                                gfxIImageFrame *aFrame,
+                                                PRBool aCurrentFrame,
                                                 const nsIntRect *aRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  return mFrame->OnDataAvailable(aRequest, aFrame, aRect);
+  return mFrame->OnDataAvailable(aRequest, aCurrentFrame, aRect);
 }
 
 NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
@@ -1567,11 +1565,10 @@ NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer,
-                                             gfxIImageFrame *newframe,
                                              nsIntRect *dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  return mFrame->FrameChanged(aContainer, newframe, dirtyRect);
+  return mFrame->FrameChanged(aContainer, dirtyRect);
 }

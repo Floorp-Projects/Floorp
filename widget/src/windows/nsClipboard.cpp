@@ -70,8 +70,6 @@
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 
-#include "nsIImage.h"
-
 
 // oddly, this isn't in the MSVC headers anywhere.
 UINT nsClipboard::CF_HTML = ::RegisterClipboardFormatW(L"HTML Format");

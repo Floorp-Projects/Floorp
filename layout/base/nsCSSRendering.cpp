@@ -46,7 +46,6 @@
 
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsIImage.h"
 #include "nsIFrame.h"
 #include "nsPoint.h"
 #include "nsRect.h"
@@ -63,7 +62,6 @@
 #include "nsIScrollableFrame.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
 #include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
 #include "nsITheme.h"
@@ -321,7 +319,7 @@ static void DrawBorderImage(nsPresContext* aPresContext,
 
 static void DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
                                      nsIFrame* aForFrame,
-                                     nsIImage* aImage,
+                                     imgIContainer* aImage,
                                      const nsRect& aDirtyRect,
                                      const nsRect& aFill,
                                      const nsIntRect& aSrc,
@@ -1687,27 +1685,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       drawBackgroundColor) {
     nsCOMPtr<imgIContainer> image;
     bottomImage->GetImage(getter_AddRefs(image));
-    // If the image is completely opaque, we may not need to paint
-    // the background color.
-    nsCOMPtr<gfxIImageFrame> gfxImgFrame;
-    image->GetCurrentFrame(getter_AddRefs(gfxImgFrame));
-    if (gfxImgFrame) {
-      gfxImgFrame->GetNeedsBackground(&drawBackgroundColor);
-      if (!drawBackgroundColor) {
-        // If the current frame is smaller than its container, we
-        // need to paint the background color even if the frame
-        // itself is opaque.
-        nsIntSize iSize;
-        image->GetWidth(&iSize.width);
-        image->GetHeight(&iSize.height);
-        nsIntRect iframeRect;
-        gfxImgFrame->GetRect(iframeRect);
-        if (iSize.width != iframeRect.width ||
-            iSize.height != iframeRect.height) {
-          drawBackgroundColor = PR_TRUE;
-        }
-      }
-    }
+    PRBool isOpaque;
+    if (NS_SUCCEEDED(image->GetCurrentFrameIsOpaque(&isOpaque)) && isOpaque)
+      drawBackgroundColor = PR_FALSE;
   }
 
   // The background color is rendered over the entire dirty area,
@@ -1938,18 +1918,6 @@ DrawBorderImage(nsPresContext*       aPresContext,
   imgContainer->GetWidth(&imageSize.width);
   imgContainer->GetHeight(&imageSize.height);
 
-  nsCOMPtr<gfxIImageFrame> imgFrame;
-  imgContainer->GetCurrentFrame(getter_AddRefs(imgFrame));
-
-  nsIntRect innerRect;
-  imgFrame->GetRect(innerRect);
-
-  nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
-  // The inner rectangle should precisely enclose the image pixels for
-  // this frame.
-  NS_ASSERTION(innerRect.width == img->GetWidth(), "img inner width off");
-  NS_ASSERTION(innerRect.height == img->GetHeight(), "img inner height off");
-
   // Convert percentages and clamp values to the image size.
   nsIntMargin split;
   NS_FOR_CSS_SIDES(s) {
@@ -1983,7 +1951,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
   // These helper tables recharacterize the 'split' and 'border' margins
   // in a more convenient form: they are the x/y/width/height coords
   // required for various bands of the border, and they have been transformed
-  // to be relative to the innerRect (for 'split') or the page (for 'border').
+  // to be relative to the image (for 'split') or the page (for 'border').
   enum {
     LEFT, MIDDLE, RIGHT,
     TOP = LEFT, BOTTOM = RIGHT
@@ -2010,14 +1978,14 @@ DrawBorderImage(nsPresContext*       aPresContext,
   };
 
   const PRInt32 splitX[3] = {
-    -innerRect.x + 0,
-    -innerRect.x + split.left,
-    -innerRect.x + imageSize.width - split.right,
+    0,
+    split.left,
+    imageSize.width - split.right,
   };
   const PRInt32 splitY[3] = {
-    -innerRect.y + 0,
-    -innerRect.y + split.top,
-    -innerRect.y + imageSize.height - split.bottom,
+    0,
+    split.top,
+    imageSize.height - split.bottom,
   };
   const PRInt32 splitWidth[3] = {
     split.left,
@@ -2108,7 +2076,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
       }
 
       DrawBorderImageComponent(aRenderingContext, aForFrame,
-                               img, aDirtyRect,
+                               imgContainer, aDirtyRect,
                                destArea, subArea,
                                fillStyleH, fillStyleV, unitSize);
     }
@@ -2118,7 +2086,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
 static void
 DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
                          nsIFrame*            aForFrame,
-                         nsIImage*            aImage,
+                         imgIContainer*       aImage,
                          const nsRect&        aDirtyRect,
                          const nsRect&        aFill,
                          const nsIntRect&     aSrc,
@@ -2129,8 +2097,8 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
   if (aFill.IsEmpty() || aSrc.IsEmpty())
     return;
 
-  nsCOMPtr<nsIImage> subImage;
-  if (NS_FAILED(aImage->Extract(aSrc, getter_AddRefs(subImage))))
+  nsCOMPtr<imgIContainer> subImage;
+  if (NS_FAILED(aImage->ExtractCurrentFrame(aSrc, getter_AddRefs(subImage))))
     return;
 
   gfxPattern::GraphicsFilter graphicsFilter =

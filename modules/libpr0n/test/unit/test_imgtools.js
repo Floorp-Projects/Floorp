@@ -383,19 +383,23 @@ imgFile = do_get_file(imgName);
 istream = getFileInputStream(imgFile);
 do_check_eq(istream.available(), 17759);
 
-// You'd think the decoder would fail, but it doesn't. The decoders use
-// stream->ReadSegments with a callback, and buffered streams ignore errors
-// from the callback. :-( See bug 413595.
-outParam = { value: null };
-imgTools.decodeImageData(istream, inMimeType, outParam);
-container = outParam.value;
-
 try {
-    istream = imgTools.encodeImage(container, "image/png");
+  outParam = { value: null };
+  imgTools.decodeImageData(istream, inMimeType, outParam);
+  container = outParam.value;
+
+  // We should never hit this - decodeImageData throws an assertion because the
+  // image decoded doesn't have enough frames.
+  try {
+      istream = imgTools.encodeImage(container, "image/png");
+  } catch (e) {
+      err = e;
+  }
 } catch (e) {
-    err = e;
+  err = e;
 }
-checkExpectedError(/NS_ERROR_NOT_AVAILABLE/, err);
+
+checkExpectedError(/NS_ERROR_ILLEGAL_VALUE/, err);
 
 
 /* ========== end ========== */

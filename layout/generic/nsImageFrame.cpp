@@ -47,7 +47,6 @@
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
-#include "nsIImage.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
@@ -93,7 +92,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
-#include "gfxIImageFrame.h"
 #include "nsIDOMRange.h"
 
 #include "nsIContentPolicy.h"
@@ -523,7 +521,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
 
 nsresult
 nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
-                              gfxIImageFrame *aFrame,
+                              PRBool aCurrentFrame,
                               const nsIntRect *aRect)
 {
   // XXX do we need to make sure that the reflow from the
@@ -555,16 +553,8 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
 
   // Don't invalidate if the current visible frame isn't the one the data is
   // from
-  nsCOMPtr<imgIContainer> container;
-  aRequest->GetImage(getter_AddRefs(container));
-  if (container) {
-    nsCOMPtr<gfxIImageFrame> currentFrame;
-    container->GetCurrentFrame(getter_AddRefs(currentFrame));
-    if (aFrame != currentFrame) {
-      // just bail
-      return NS_OK;
-    }
-  }
+  if (!aCurrentFrame)
+    return NS_OK;
 
 #ifdef DEBUG_decode
   printf("Source rect (%d,%d,%d,%d) -> invalidate dest rect (%d,%d,%d,%d)\n",
@@ -634,9 +624,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
 }
 
 nsresult
-nsImageFrame::FrameChanged(imgIContainer *aContainer,
-                           gfxIImageFrame *aNewFrame,
-                           nsIntRect *aDirtyRect)
+nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible()) {
     return NS_OK;
@@ -1833,13 +1821,13 @@ NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest,
-                                               gfxIImageFrame *aFrame,
+                                               PRBool aCurrentFrame,
                                                const nsIntRect *aRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  return mFrame->OnDataAvailable(aRequest, aFrame, aRect);
+  return mFrame->OnDataAvailable(aRequest, aCurrentFrame, aRect);
 }
 
 NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
@@ -1853,13 +1841,12 @@ NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,
-                                            gfxIImageFrame *newframe,
                                             nsIntRect * dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  return mFrame->FrameChanged(aContainer, newframe, dirtyRect);
+  return mFrame->FrameChanged(aContainer, dirtyRect);
 }
 
 static PRBool

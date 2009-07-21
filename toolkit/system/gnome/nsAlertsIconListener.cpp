@@ -36,10 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAlertsIconListener.h"
+#include "imgIContainer.h"
 #include "imgILoader.h"
 #include "imgIRequest.h"
-#include "gfxIImageFrame.h"
-#include "nsIImage.h"
 #include "nsNetUtil.h"
 #include "nsIImageToPixbuf.h"
 #include "nsIStringBundle.h"
@@ -106,7 +105,7 @@ nsAlertsIconListener::OnStartContainer(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsAlertsIconListener::OnStartFrame(imgIRequest* aRequest,
-                                   gfxIImageFrame* aFrame)
+                                   PRUint32 aFrame)
 {
   return NS_OK;
 }
@@ -114,7 +113,7 @@ nsAlertsIconListener::OnStartFrame(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsAlertsIconListener::OnDataAvailable(imgIRequest* aRequest,
-                                      gfxIImageFrame* aFrame,
+                                      PRBool aCurrentFrame,
                                       const nsIntRect* aRect)
 {
   return NS_OK;
@@ -138,7 +137,6 @@ nsAlertsIconListener::OnStopDecode(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsAlertsIconListener::FrameChanged(imgIContainer* aContainer,
-                                   gfxIImageFrame* aFrame,
                                    nsIntRect* aDirtyRect)
 {
   return NS_OK;
@@ -165,7 +163,7 @@ nsAlertsIconListener::OnStopRequest(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
-                                  gfxIImageFrame* aFrame)
+                                  PRUint32 aFrame)
 {
   if (aRequest != mIconRequest)
     return NS_ERROR_FAILURE;
@@ -173,12 +171,8 @@ nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
   if (mLoadedFrame)
     return NS_OK; // only use one frame
 
-  nsCOMPtr<gfxIImageFrame> frame = aFrame;
-  nsCOMPtr<nsIImage> image = do_GetInterface(frame);
-  if (!image)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = image->LockImagePixels(PR_FALSE);
+  nsCOMPtr<imgIContainer> image;
+  nsresult rv = aRequest->GetImage(getter_AddRefs(image));
   if (NS_FAILED(rv))
     return rv;
 
@@ -188,10 +182,6 @@ nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
   GdkPixbuf* imagePixbuf = imgToPixbuf->ConvertImageToPixbuf(image);
   if (!imagePixbuf)
     return NS_ERROR_FAILURE;
-
-  rv = image->UnlockImagePixels(PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
 
   ShowAlert(imagePixbuf);
 

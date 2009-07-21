@@ -43,13 +43,13 @@
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsMemory.h"
-#include "nsIImage.h"
 #include "nsILocalFile.h"
 #include "nsStringStream.h"
 #include "nsDragService.h"
 #include "nsEscape.h"
 #include "nsPrintfCString.h"
 #include "nsObjCExceptions.h"
+#include "imgIContainer.h"
 
 // Screenshots use the (undocumented) png pasteboard type.
 #define IMAGE_PASTEBOARD_TYPES NSTIFFPboardType, @"Apple PNG pasteboard type", nil
@@ -425,18 +425,19 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       nsCOMPtr<nsISupports> primitiveData;
       ptrPrimitive->GetData(getter_AddRefs(primitiveData));
 
-      nsCOMPtr<nsIImage> image(do_QueryInterface(primitiveData));
+      nsCOMPtr<imgIContainer> image(do_QueryInterface(primitiveData));
       if (!image) {
-        NS_WARNING("Image isn't an nsIImage in transferable");
+        NS_WARNING("Image isn't an imgIContainer in transferable");
         continue;
       }
 
-      if (NS_FAILED(image->LockImagePixels(PR_FALSE)))
+      nsRefPtr<gfxImageSurface> currentFrame;
+      if (NS_FAILED(image->CopyCurrentFrame(getter_AddRefs(currentFrame))))
         continue;
 
-      PRInt32 height = image->GetHeight();
-      PRInt32 stride = image->GetLineStride();
-      PRInt32 width = image->GetWidth();
+      PRInt32 height = currentFrame->Height();
+      PRInt32 stride = currentFrame->Stride();
+      PRInt32 width = currentFrame->Width();
       if ((stride % 4 != 0) || (height < 1) || (width < 1))
         continue;
 
@@ -444,7 +445,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       // the alpha ordering and endianness of the machine so we don't have to
       // touch the bits ourselves.
       CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL,
-                                                                    image->GetBits(),
+                                                                    currentFrame->Data(),
                                                                     stride * height,
                                                                     NULL);
       CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
@@ -475,7 +476,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       if (destRef)
         CFRelease(destRef);
 
-      if (NS_FAILED(image->UnlockImagePixels(PR_FALSE)) || !successfullyConverted) {
+      if (!successfullyConverted) {
         if (tiffData)
           CFRelease(tiffData);
         continue;
