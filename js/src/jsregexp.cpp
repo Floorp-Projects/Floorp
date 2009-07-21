@@ -2082,8 +2082,14 @@ class CharSet {
 
     bool full() { return charEnd == charBuf + BufSize; }
 
-    /* Add a single char to the set.  Assumes !full() */
-    void addChar(jschar c) { JS_ASSERT(!full()); *charEnd++ = c; }
+    /* Add a single char to the set. */
+    bool addChar(jschar c)
+    {
+        if (full())
+            return false;
+        *charEnd++ = c;
+        return true;
+    }
 
     enum Class {
         LineTerms  = 1 << 0,  /* Line Terminators (E262 7.3) */
@@ -2249,8 +2255,7 @@ enumerateNextChars(JSContext *cx, RENode *node, CharSet &set)
 
       /* Record as individual characters. */
       case REOP_FLAT:
-        set.addChar(node->u.flat.chr);
-        return true;
+        return set.addChar(node->u.flat.chr);
 
       /* Control structures. */
       case REOP_EMPTY:
