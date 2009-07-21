@@ -63,16 +63,28 @@
   z-index: 10;
 }
 
+/*XXX Bug 473152 - Aero Glass clips panel content
+#allTabs-panel:-moz-system-metric(windows-compositor),*/
 #ctrlTab-panel:-moz-system-metric(windows-compositor) {
   background: transparent;
   -moz-appearance: -moz-win-glass;
   -moz-border-radius: 0;
   border: none;
-  font: "Segoe UI", window;
-  font-weight: normal;
+  font: normal 1.2em "Segoe UI";
   color: black;
   text-shadow: white -1px -1px .5em, white -1px 1px .5em, white 1px 1px .5em, white 1px -1px .5em;
 }
+
+/*XXX Bug 473152 - Aero Glass clips panel content
+.allTabs-preview:hover:-moz-system-metric(windows-compositor),
+.allTabs-preview[closebuttonhover]:-moz-system-metric(windows-compositor) {
+  background: rgba(0,0,0,.15) url(KUI-background.png) repeat-x;
+}
+
+.allTabs-preview:focus:-moz-system-metric(windows-compositor) {
+  background: rgba(0,0,0,.3) url(KUI-background.png) repeat-x;
+}
+*/
 
 /* ::::: fullscreen window controls ::::: */
 

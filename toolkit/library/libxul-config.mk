@@ -95,7 +95,6 @@ STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
 	gkgfx \
-	gfxshared_s \
 	$(NULL)
 
 #ifndef MOZ_EMBEDDING_LEVEL_DEFAULT

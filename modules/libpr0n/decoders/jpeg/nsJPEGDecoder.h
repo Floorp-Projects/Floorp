@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
 #include "imgIDecoderObserver.h"
 #include "imgILoad.h"
 #include "nsIInputStream.h"
@@ -99,9 +98,9 @@ protected:
 public:
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgILoad> mImageLoad;
-  nsCOMPtr<gfxIImageFrame> mFrame;
 
   nsCOMPtr<imgIDecoderObserver> mObserver;
+  PRUint8 *mImageData;
 
   struct jpeg_decompress_struct mInfo;
   struct jpeg_source_mgr mSourceMgr;

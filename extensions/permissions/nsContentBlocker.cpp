@@ -181,12 +181,13 @@ nsContentBlocker::ShouldLoad(PRUint32          aContentType,
   rv = TestPermission(aContentLocation, aRequestingLocation, aContentType,
                       &shouldLoad, &fromPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!shouldLoad)
-    if (fromPrefs)
+  if (!shouldLoad) {
+    if (fromPrefs) {
       *aDecision = nsIContentPolicy::REJECT_TYPE;
-    else
+    } else {
       *aDecision = nsIContentPolicy::REJECT_SERVER;
-
+    }
+  }
   if (aContentType != nsIContentPolicy::TYPE_OBJECT || aMimeGuess.IsEmpty())
     return NS_OK;
 

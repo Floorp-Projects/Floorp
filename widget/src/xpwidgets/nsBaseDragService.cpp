@@ -62,9 +62,7 @@
 #include "nsIDOMDataTransfer.h"
 #include "nsIEventStateManager.h"
 #include "nsICanvasElement.h"
-#include "nsIImage.h"
 #include "nsIImageLoadingContent.h"
-#include "gfxIImageFrame.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsIViewObserver.h"
@@ -530,7 +528,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     nsIntRect* aScreenDragRect,
                                     gfxASurface** aSurface)
 {
-  nsCOMPtr<nsIImage> img;
+  nsCOMPtr<imgIContainer> imgContainer;
   if (aImageLoader) {
     nsCOMPtr<imgIRequest> imgRequest;
     nsresult rv = aImageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
@@ -539,20 +537,10 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     if (!imgRequest)
       return NS_ERROR_NOT_AVAILABLE;
 
-    nsCOMPtr<imgIContainer> imgContainer;
     rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
     NS_ENSURE_SUCCESS(rv, rv);
     if (!imgContainer)
       return NS_ERROR_NOT_AVAILABLE;
-
-    nsCOMPtr<gfxIImageFrame> iframe;
-    imgContainer->GetCurrentFrame(getter_AddRefs(iframe));
-    if (!iframe)
-      return NS_ERROR_FAILURE;
-
-    img = do_GetInterface(iframe);
-    if (!img)
-      return NS_ERROR_FAILURE;
 
     // use the size of the image as the size of the drag image
     imgContainer->GetWidth(&aScreenDragRect->width);
@@ -612,8 +600,8 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     gfxRect outRect(0, 0, destSize.width, destSize.height);
     gfxMatrix scale =
       gfxMatrix().Scale(srcSize.width/outRect.Width(), srcSize.height/outRect.Height());
-    img->Draw(ctx, gfxPattern::FILTER_GOOD, scale, outRect, nsIntMargin(0,0,0,0),
-              nsIntRect(0, 0, srcSize.width, srcSize.height));
+    nsIntRect imgSize(0, 0, srcSize.width, srcSize.height);
+    imgContainer->Draw(ctx, gfxPattern::FILTER_GOOD, scale, outRect, imgSize);
     return NS_OK;
   } else {
     return aCanvas->RenderContexts(ctx, gfxPattern::FILTER_GOOD);
