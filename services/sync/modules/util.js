@@ -626,6 +626,11 @@ let Utils = {
       options || "centerscreen,chrome,dialog,modal,resizable=no", args);
   },
 
+  openGenericDialog: function Utils_openGenericDialog(type) {
+    this._genericDialogType = type;
+    this.openDialog("ChangeSomething", "generic-change.xul");
+  },
+  
   openLog: function Utils_openLog() {
     Utils.openWindow("Log", "log.xul");
   },
@@ -654,7 +659,7 @@ let Utils = {
   openWizard: function Utils_openWizard() {
     Utils.openWindow("Wizard", "wizard.xul");
   },
-
+  
   // assumes an nsIConverterInputStream
   readStream: function Weave_readStream(is) {
     let ret = "", str = {};

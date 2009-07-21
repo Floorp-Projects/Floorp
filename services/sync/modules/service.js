@@ -512,14 +512,28 @@ WeaveSvc.prototype = {
       id.setTempPassword(passphrase);
 
       let pubkey = PubKeys.getDefaultKey();
-      let privkey = PrivKeys.get(pubkey.PrivKeyUri);
+      let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
-      // fixme: decrypt something here
+      // FIXME: Use Svc.Crypto.verifyPassphrase.
     }))),
 
   changePassphrase: function WeaveSvc_changePassphrase(newphrase)
     this._catch(this._notify("changepph", "", function() {
-      throw "Unimplemented!";
+      let pubkey = PubKeys.getDefaultKey();
+      let privkey = PrivKeys.get(pubkey.privateKeyUri);
+      
+      /* Re-encrypt with new passphrase.
+       * FIXME: verifyPassphrase first!
+       */
+      let newkey = Svc.Crypto.rewrapPrivateKey(privkey.payload.keyData,
+          this.passphrase, privkey.payload.salt,
+          privkey.payload.iv, newphrase);
+      privkey.payload.keyData = newkey;
+      
+      new Resource(privkey.uri).put(privkey.serialize());
+      this.passphrase = newphrase;
+      
+      return true;
     }))(),
   
   resetPassphrase: function WeaveSvc_resetPassphrase(newphrase)
