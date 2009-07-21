@@ -2729,9 +2729,13 @@ nsWindow::HasPendingInputEvent()
   // Note: When the user is moving the window WIN32 spins
   // a separate event loop and input events are not
   // reported to the application.
-  WORD qstatus = HIWORD(GetQueueStatus(QS_INPUT));
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  return qstatus || (toolkit && toolkit->UserIsMovingWindow());
+  if (HIWORD(GetQueueStatus(QS_INPUT)))
+    return PR_TRUE;
+  GUITHREADINFO guiInfo;
+  guiInfo.cbSize = sizeof(GUITHREADINFO);
+  if (!GetGUIThreadInfo(GetCurrentThreadId(), &guiInfo))
+    return PR_FALSE;
+  return GUI_INMOVESIZE == (guiInfo.flags & GUI_INMOVESIZE);
 }
 
 /**************************************************************
