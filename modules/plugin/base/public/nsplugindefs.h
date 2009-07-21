@@ -114,6 +114,12 @@ RCDATA NS_INFO_ProductName       { "NPAVI32 Dynamic Link Library\0" }
 ////////////////////////////////////////////////////////////////////////////////
 // Structures and definitions
 
+#if !defined(__LP64__)
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#pragma options align=mac68k
+#endif
+#endif /* __LP64__ */
+
 struct nsByteRange {
     PRInt32             offset; 	/* negative offset means from the end */
     PRUint32            length;
@@ -376,6 +382,12 @@ class nsIPluginInstance;                // plugin instance
 // Classes that are implemented by the browser:
 class nsIPluginTagInfo;                 // describes html tag
 ////////////////////////////////////////////////////////////////////////////////
+
+#if !defined(__LP64__)
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#pragma options align=reset
+#endif
+#endif /* __LP64__ */
 
 #endif /* RC_INVOKED */
 #ifdef __OS2__

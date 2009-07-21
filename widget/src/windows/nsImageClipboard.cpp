@@ -59,9 +59,9 @@ Any other render format? HTML?
 //
 // nsImageToClipboard ctor
 //
-// Given an nsIImage, convert it to a DIB that is ready to go on the win32 clipboard
+// Given an imgIContainer, convert it to a DIB that is ready to go on the win32 clipboard
 //
-nsImageToClipboard :: nsImageToClipboard ( nsIImage* inImage )
+nsImageToClipboard :: nsImageToClipboard ( imgIContainer* inImage )
   : mImage(inImage)
 {
   // nothing to do here
@@ -143,19 +143,21 @@ nsImageToClipboard::CalcSpanLength(PRUint32 aWidth, PRUint32 aBitCount)
 // image. 
 //
 nsresult
-nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
+nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap )
 {
     nsresult result = NS_OK;
     *outBitmap = nsnull;
 
-    inImage->LockImagePixels(PR_FALSE);
+    nsRefPtr<gfxImageSurface> frame;
+    nsresult rv = inImage->CopyCurrentFrame(getter_AddRefs(frame));
+    if (NS_FAILED(rv))
+      return rv;
 
-    const PRUint32 imageSize = inImage->GetLineStride() * inImage->GetHeight();
+    const PRUint32 imageSize = frame->GetDataSize();
     const PRInt32 bitmapSize = sizeof(BITMAPINFOHEADER) + imageSize;
 
     HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, bitmapSize);
     if (!glob) {
-        inImage->UnlockImagePixels(PR_FALSE);
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -164,18 +166,21 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
 
     BITMAPINFOHEADER *header = (BITMAPINFOHEADER*)data;
     header->biSize          = sizeof(BITMAPINFOHEADER);
-    header->biWidth         = inImage->GetWidth();
-    header->biHeight        = inImage->GetHeight();
+    header->biWidth         = frame->Width();
+    header->biHeight        = frame->Height();
 
     header->biPlanes        = 1;
-    header->biBitCount      = inImage->GetBytesPix() * 8;
+    if (frame->Format() == gfxASurface::ImageFormatARGB32)
+        header->biBitCount  = 32;
+    else if (frame->Format() == gfxASurface::ImageFormatRGB24)
+        header->biBitCount  = 24;
     header->biCompression   = BI_RGB;
     header->biSizeImage     = imageSize;
 
-    const PRUint32 bpr = inImage->GetLineStride();
+    const PRUint32 bpr = frame->Stride();
 
     BYTE *dstBits = (BYTE*)data + sizeof(BITMAPINFOHEADER);
-    BYTE *srcBits = inImage->GetBits();
+    BYTE *srcBits = frame->Data();
     for (PRInt32 i = 0; i < header->biHeight; ++i) {
         PRUint32 srcOffset = imageSize - (bpr * (i + 1));
         PRUint32 dstOffset = i * bpr;
@@ -186,11 +191,7 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
 
     *outBitmap = (HANDLE)glob;
 
-    inImage->UnlockImagePixels(PR_FALSE);
     return NS_OK;
-
-    // Wow the old code is broken.  I'm not touching it.
-    // It should probably lock/unlock the same object....
 }
 
 nsImageFromClipboard :: nsImageFromClipboard ()

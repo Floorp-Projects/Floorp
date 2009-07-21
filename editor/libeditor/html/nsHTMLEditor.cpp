@@ -93,7 +93,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIImage.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "SetDocTitleTxn.h"

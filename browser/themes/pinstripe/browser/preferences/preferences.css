@@ -160,8 +160,9 @@ tabpanels {
 }
 
 caption {
-  border-bottom: 1px solid #ECECEC;
-  padding: 4px 4px 0px 0px !important;
+  -moz-padding-start: 5px;
+  padding-top: 4px;
+  padding-bottom: 2px;
 }
 
 #paneMain description,

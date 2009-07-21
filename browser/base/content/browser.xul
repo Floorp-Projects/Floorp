@@ -242,30 +242,44 @@
       <label crop="center" flex="1" class="tooltip-label"/>
     </tooltip>
 
-    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" ignorekeys="true">
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" level="top">
+      <hbox>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+      </hbox>
       <hbox pack="center">
-        <textbox id="ctrlTab-search"
+        <button id="ctrlTab-showAll" class="ctrlTab-preview" noicon="true"/>
+      </hbox>
+    </panel>
+
+    <panel id="allTabs-panel" hidden="true" norestorefocus="true" ignorekeys="true"
+# XXX: KUI style disabled, because the transparent background slows down
+#      interacting with the panel, esp. the search field.
+#           class="KUI-panel"
+           onmouseover="allTabs._updateTabCloseButton(event);">
+      <hbox id="allTabs-meta" align="center">
+        <spacer flex="1"/>
+        <textbox id="allTabs-filter"
+                 tooltiptext="&allTabs.filter.emptyText;"
                  type="search"
-                 emptytext="&ctrlTab.search.emptyText;"
-                 oncommand="ctrlTab.search();"
-                 onfocus="ctrlTab.sticky = true;"/>
+                 oncommand="allTabs.filter();"/>
+        <spacer flex="1"/>
+        <toolbarbutton class="KUI-panel-closebutton"
+                       oncommand="allTabs.close()"
+                       tooltiptext="&closeCmd.label;"/>
       </hbox>
-      <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-      </hbox>
-      <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-      </hbox>
-      <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-      </hbox>
-      <hbox id="ctrlTab-pages"/>
+      <stack id="allTabs-stack">
+        <box id="allTabs-container"/>
+        <toolbarbutton id="allTabs-tab-close-button"
+                       class="tab-close-button"
+                       oncommand="allTabs.closeTab(event);"
+                       tooltiptext="&closeCmd.label;"
+                       style="visibility:hidden"/>
+      </stack>
     </panel>
   </popupset>
 

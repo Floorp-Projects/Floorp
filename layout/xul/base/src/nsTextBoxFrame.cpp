@@ -238,6 +238,7 @@ nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
 {
     nsAutoString accesskey;
     nsCOMPtr<nsIDOMXULLabelElement> labelElement = do_QueryInterface(mContent);
+    NS_ENSURE_TRUE(aWeakThis.IsAlive(), PR_FALSE);
     if (labelElement) {
         // Accesskey may be stored on control.
         // Because this method is called by the reflow callback, current context

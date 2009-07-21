@@ -49,7 +49,6 @@ int mainReturn = 0;
 BOOL b16 = FALSE;
 BOOL bSimple = FALSE;
 
-//	freopen won't work on stdout in win16
 FILE *pAltFile = stdout;
 
 CStringArray includeDirectories;
