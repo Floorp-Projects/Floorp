@@ -112,10 +112,3 @@
 <!ENTITY tabs.sortBy.title.label "Title">
 <!ENTITY tabs.sortBy.source.label "Source">
 <!ENTITY tabs.sortBy.label "Sort by: ">
-
-<!ENTITY pph.accept "Change">
-<!ENTITY pph.cancel "Cancel">
-<!ENTITY pph.title "Change passphrase">
-<!ENTITY pph.message "Please update all your clients with the new phrase">
-<!ENTITY pph.enterNew1 "New passphrase:">
-<!ENTITY pph.enterNew2 "Confirm new passphrase:">
