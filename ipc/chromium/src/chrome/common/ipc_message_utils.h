@@ -263,7 +263,7 @@ struct ParamTraits<int64> {
 #ifndef CHROMIUM_MOZILLA_BUILD
     l->append(StringPrintf(L"%I64d", p));
 #else
-    l->append(StringPrintf(L"%" PRId64, p));
+    l->append(StringPrintf(L"%" PRId64L, p));
 #endif // ifndef CHROMIUM_MOZILLA_BUILD
   }
 };
@@ -281,7 +281,7 @@ struct ParamTraits<uint64> {
 #ifndef CHROMIUM_MOZILLA_BUILD
     l->append(StringPrintf(L"%I64u", p));
 #else
-    l->append(StringPrintf(L"%" PRIu64, p));
+    l->append(StringPrintf(L"%" PRIu64L, p));
 #endif // ifndef CHROMIUM_MOZILLA_BUILD
   }
 };
