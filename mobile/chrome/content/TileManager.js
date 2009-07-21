@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#define FOREACH_RECT(rect, tilecache, fn, thisObj)                             \
+/*
+#define FOREACH_RECT(rect, tilecache, fn)                                      \
   {                                                                            \
     let i    = (rect).left  >> kTileExponentWidth;                             \
     let endi = (rect).right >> kTileExponentWidth;                             \
@@ -51,13 +51,13 @@
       for (; i <= endi; ++i) {                                                 \
         tile = (tilecache).getTile(i, j, false);                               \
         if (tile) {                                                            \
-          (fn).call((thisObj), tile);                                          \
+          (fn)(tile);                                                          \
         }                                                                      \
       }                                                                        \
     }                                                                          \
   }
 
-#define FOREACH_RECT_CREATE(rect, tilecache, fn, thisObj)                      \
+#define FOREACH_RECT_CREATE(rect, tilecache, fn)                               \
   {                                                                            \
     let visited = {};                                                          \
     let evictGuard = function evictGuard(tile)                                 \
@@ -74,13 +74,12 @@
         tile = (tilecache).getTile(i, j, true, evictGuard);                    \
         if (tile) {                                                            \
           visited[tile.toString()] = true;                                     \
-          (fn).call((thisObj), tile);                                          \
+          (fn)(tile);                                                          \
         }                                                                      \
       }                                                                        \
     }                                                                          \
   }
-
-
+*/
 
 const kXHTMLNamespaceURI  = "http://www.w3.org/1999/xhtml";
 
