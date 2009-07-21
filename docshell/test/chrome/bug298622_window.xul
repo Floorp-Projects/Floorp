@@ -73,7 +73,7 @@
       yield;
 
       // Make sure we unsuppress painting before continuing
-      SimpleTest.executeSoon(nextTest)
+      SimpleTest.executeSoon(nextTest);
       yield;
       
       // Search for some text that's on the second page (but not on
@@ -82,6 +82,14 @@
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
       enterStringIntoFindField("A generic page");
+
+      // Make sure the key events above have time to be processed
+      // before continuing
+      SimpleTest.executeSoon(nextTest);
+      yield;
+
+      is(gFindBar._findField.inputField.value, "A generic page",
+        "expected text not present in find input field");
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "a generic page",
          "find failed on second page loaded");
