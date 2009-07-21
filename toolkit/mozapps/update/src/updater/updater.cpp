@@ -409,10 +409,20 @@ static int ensure_remove(const char *path)
   return rv;
 }
 
-static FILE* ensure_open(const char *path, char* flags)
+static FILE* ensure_open(const char *path, char* flags, int options)
 {
   ensure_write_permissions(path);
-  return fopen(path, flags);
+  FILE* f = fopen(path, flags);
+  if (chmod(path, options) != 0) {
+    fclose(f);
+    return NULL;
+  }
+  struct stat ss;
+  if (stat(path, &ss) != 0 || ss.st_mode != options) {
+    fclose(f);
+    return NULL;
+  }
+  return f;
 }
 
 // Ensure that the directory containing this file exists.
@@ -453,7 +463,7 @@ static int copy_file(const char *spath, const char *dpath)
     return READ_ERROR;
   }
 
-  AutoFile dfile = ensure_open(dpath, "wb+"); 
+  AutoFile dfile = ensure_open(dpath, "wb+", ss.st_mode); 
   if (dfile == NULL) {
     LOG(("copy_file: failed to open: %s,%d\n", dpath, errno));
     return WRITE_ERROR;
@@ -908,7 +918,7 @@ PatchFile::Execute()
   if (rv)
     return WRITE_ERROR;
 
-  AutoFile ofile = ensure_open(mFile, "wb+");
+  AutoFile ofile = ensure_open(mFile, "wb+", ss.st_mode);
   if (ofile == NULL)
     return WRITE_ERROR;
 

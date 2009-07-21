@@ -123,24 +123,46 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: -moz-box;
 }
 
-/* Tab Previews */
-#ctrlTab-panel {
-  -moz-user-focus: normal;
+/* ::::: Keyboard UI Panel ::::: */
+.KUI-panel-closebutton {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
 }
 
-.ctrlTab-thumbnail {
-  -moz-binding: url("chrome://browser/content/browser-tabPreviews.xml#ctrlTab-thumbnail");
+.ctrlTab-preview > html|canvas,
+.allTabs-preview > html|canvas {
+  min-width: inherit;
+  max-width: inherit;
+  min-height: inherit;
+  max-height: inherit;
 }
 
-.ctrlTab-thumbnail:not([valid]) {
-  visibility: hidden;
+.ctrlTab-favicon-container,
+.allTabs-favicon-container {
+  -moz-box-align: start;
+  -moz-box-pack: start;
 }
 
-#ctrlTab-pages {
+.ctrlTab-favicon,
+.allTabs-favicon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ::::: Ctrl-Tab Panel ::::: */
+.ctrlTab-preview {
+  -moz-binding: url("chrome://browser/content/browser-tabPreviews.xml#ctrlTab-preview");
+}
+
+/* ::::: All Tabs Panel ::::: */
+.allTabs-preview {
+  -moz-binding: url("chrome://browser/content/browser-tabPreviews.xml#allTabs-preview");
+}
+
+#allTabs-tab-close-button {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
+  margin: 0;
+}
+
+#allTabs-container {
   display: block;
-  text-align: center;
-}
- 
-.ctrlTab-pagePointer {
-  display: inline-block;
 }

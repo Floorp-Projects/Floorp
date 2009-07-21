@@ -393,6 +393,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const nsIntRect &aRect,
 
   [mWindow setBackgroundColor:[NSColor whiteColor]];
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
+  [mWindow disableCursorRects];
 
   // setup our notification delegate. Note that setDelegate: does NOT retain.
   mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];

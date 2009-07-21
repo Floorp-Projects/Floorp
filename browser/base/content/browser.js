@@ -1058,6 +1058,8 @@ function BrowserStartup() {
     gURLBar.setAttribute("enablehistory", "false");
   }
 
+  allTabs.readPref();
+
   setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
 }
 
@@ -1318,7 +1320,9 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
   tabPreviews.init();
-  ctrlTab.init();
+  ctrlTab.readPref();
+  gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
+  gPrefService.addObserver(allTabs.prefName, allTabs, false);
 
   // Initialize the microsummary service by retrieving it, prompting its factory
   // to create its singleton, whose constructor initializes the service.
@@ -1371,6 +1375,7 @@ function BrowserShutdown()
 {
   tabPreviews.uninit();
   ctrlTab.uninit();
+  allTabs.uninit();
 
   gGestureSupport.init(false);
 
