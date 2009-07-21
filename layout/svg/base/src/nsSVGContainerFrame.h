@@ -39,7 +39,6 @@
 
 #include "nsContainerFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsIDOMSVGMatrix.h"
 #include "nsSVGSVGElement.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
