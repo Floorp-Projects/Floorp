@@ -1120,7 +1120,7 @@ var HelperAppDialog = {
 
     if (!this._launcher.MIMEInfo.hasDefaultHandler)
       document.getElementById("helperapp-open").disabled = true;
-      
+
     let toolbar = document.getElementById("toolbar-main");
     let top = toolbar.top + toolbar.boxObject.height;
     let container = document.getElementById("helperapp-container");
@@ -1241,6 +1241,11 @@ ProgressController.prototype = {
       if (this.browser.markupDocumentViewer.textZoom != kDefaultTextZoom)
         this.browser.markupDocumentViewer.textZoom = kDefaultTextZoom;
     }
+
+    // broadcast a URLChanged message for consumption by InputHandler
+    let event = document.createEvent("Events");
+    event.initEvent("URLChanged", true, false);
+    this.browser.dispatchEvent(event);
   },
 
   _networkStop: function() {

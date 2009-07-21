@@ -88,6 +88,10 @@ function InputHandler() {
   /* when set to true, next click won't be dispatched */
   this._suppressNextClick = true;
 
+  /* used to cancel actions with browser window changes */
+  window.addEventListener("URLChanged", this, true);
+  window.addEventListener("TabSelect", this, true);
+
   /* used to stop everything if mouse leaves window on desktop */
   window.addEventListener("mouseout", this, true);
 
@@ -153,6 +157,12 @@ InputHandler.prototype = {
   handleEvent: function handleEvent(aEvent) {
     if (this._ignoreEvents)
       return;
+
+    /* changing URL or selected a new tab will immediately stop active input handlers */
+    if (aEvent.type == "URLChanged" || aEvent.type == "TabSelect") {
+      this.grab(null);
+      return;
+    }
 
     if (this._suppressNextClick && aEvent.type == "click") {
       this._suppressNextClick = false;
@@ -447,7 +457,7 @@ function KineticData(owner) {
     // In preferences this value is an int.  We divide so that it can be a percent.
     this._decelerationRate = gPrefService.getIntPref("browser.ui.kinetic.decelerationRate") / 100;
   }
-  catch (e) { 
+  catch (e) {
     this._updateInterval = 33;
     this._emaAlpha = .8;
     this._decelerationRate = .15;
@@ -488,13 +498,13 @@ KineticData.prototype = {
         let dx = Math.round(self._speedX * self._updateInterval);
         let dy = Math.round(self._speedY * self._updateInterval);
         // dump("dx, dy: " + dx + " " + dy + "\n");
-  
+
         let panned = self._owner._dragBy(dx, dy);
         if (!panned) {
           self.endKinetic();
           return;
         }
-        
+
         if (self._speedX < 0) {
           self._speedX = Math.min(self._speedX + self._decelerationRate, 0);
         } else if (self._speedX > 0) {
@@ -537,7 +547,7 @@ KineticData.prototype = {
       let me = mb[i];
 
       let timeDiff = me.t - prev.t;
-      
+
       this._speedX = ema( ((me.sx - prev.sx) / timeDiff), this._speedX, this._emaAlpha);
       this._speedY = ema( ((me.sy - prev.sy) / timeDiff), this._speedY, this._emaAlpha);
 

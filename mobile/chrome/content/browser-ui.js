@@ -235,7 +235,7 @@ var BrowserUI = {
       document.getElementById("toolbar-main").setAttribute("dialog", "true");
     }
   },
-  
+
   popDialog : function popDialog() {
     // Passing null means we pop the topmost dialog
     if (this._dialogs.length)
@@ -828,7 +828,7 @@ var FolderPicker = {
     this._panel.height = window.innerHeight;
     this._panel.hidden = false;
     BrowserUI.pushDialog(this);
-    
+
     this._control = aControl;
 
     let folders = document.getElementById("folder-items");
