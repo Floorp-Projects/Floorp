@@ -41,6 +41,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGTextFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsSVGMatrix.h"
 
 //----------------------------------------------------------------------
 // Implementation

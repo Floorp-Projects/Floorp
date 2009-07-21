@@ -39,10 +39,10 @@
 #include "nsIDOMSVGTransformable.h"
 #include "nsSVGGFrame.h"
 #include "nsIFrame.h"
+#include "nsSVGMatrix.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsSVGGraphicElement.h"
-#include "nsSVGMatrix.h"
 
 //----------------------------------------------------------------------
 // Implementation

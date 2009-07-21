@@ -42,7 +42,6 @@
 #include "nsDOMError.h"
 #include "nsSVGUtils.h"
 #include "nsSVGMarkerElement.h"
-#include "gfxMatrix.h"
 
 nsSVGElement::LengthInfo nsSVGMarkerElement::sLengthInfo[4] =
 {
@@ -377,9 +376,10 @@ nsSVGMarkerElement::GetPreserveAspectRatio()
 //----------------------------------------------------------------------
 // public helpers
 
-gfxMatrix
+nsresult
 nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
-                                       float aX, float aY, float aAngle)
+                                       float aX, float aY, float aAngle,
+                                       nsIDOMSVGMatrix **_retval)
 {
   float scale = 1.0;
   if (mEnumAttributes[MARKERUNITS].GetAnimValue() ==
@@ -390,14 +390,22 @@ nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
     aAngle = mAngleAttributes[ORIENT].GetAnimValue();
   }
 
-  return gfxMatrix(cos(aAngle) * scale,   sin(aAngle) * scale,
-                   -sin(aAngle) * scale,  cos(aAngle) * scale,
-                   aX,                    aY);
+  nsCOMPtr<nsIDOMSVGMatrix> matrix;
+  NS_NewSVGMatrix(getter_AddRefs(matrix),
+                  cos(aAngle) * scale,   sin(aAngle) * scale,
+                  -sin(aAngle) * scale,  cos(aAngle) * scale,
+                  aX,                    aY);
+    
+  *_retval = matrix;
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
 }
 
-gfxMatrix
-nsSVGMarkerElement::GetViewBoxTransform()
+nsresult
+nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 {
+  *_retval = nsnull;
+
   if (!mViewBoxToViewportTransform) {
     float viewportWidth =
       mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx);
@@ -407,27 +415,32 @@ nsSVGMarkerElement::GetViewBoxTransform()
     const nsSVGViewBoxRect& viewbox = mViewBox.GetAnimValue(); 
 
     if (viewbox.width <= 0.0f || viewbox.height <= 0.0f) {
-      return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // invalid - don't paint element
+      return NS_ERROR_FAILURE; // invalid - don't paint element
     }
 
     float refX = mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
     float refY = mLengthAttributes[REFY].GetAnimValue(mCoordCtx);
 
-    gfxMatrix viewBoxTM =
+    nsCOMPtr<nsIDOMSVGMatrix> vb2vp =
       nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
                                       viewbox.x, viewbox.y,
                                       viewbox.width, viewbox.height,
                                       mPreserveAspectRatio,
                                       PR_TRUE);
+    NS_ENSURE_TRUE(vb2vp, NS_ERROR_OUT_OF_MEMORY);
+    gfxPoint ref = nsSVGUtils::ConvertSVGMatrixToThebes(vb2vp).
+                    Transform(gfxPoint(refX, refY));
 
-    gfxPoint ref = viewBoxTM.Transform(gfxPoint(refX, refY));
-
-    gfxMatrix TM = viewBoxTM * gfxMatrix().Translate(gfxPoint(-ref.x, -ref.y));
-
-    mViewBoxToViewportTransform = NS_NewSVGMatrix(TM);
+    nsCOMPtr<nsIDOMSVGMatrix> translate;
+    NS_NewSVGMatrix(getter_AddRefs(translate),
+                    1.0f, 0.0f, 0.0f, 1.0f, -ref.x, -ref.y);
+    NS_ENSURE_TRUE(translate, NS_ERROR_OUT_OF_MEMORY);
+    translate->Multiply(vb2vp, getter_AddRefs(mViewBoxToViewportTransform));
   }
 
-  return nsSVGUtils::ConvertSVGMatrixToThebes(mViewBoxToViewportTransform);
+  *_retval = mViewBoxToViewportTransform;
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
 }
 
 

@@ -59,7 +59,7 @@ public:
   // nsSVGMaskFrame method:
   already_AddRefed<gfxPattern> ComputeMaskAlpha(nsSVGRenderState *aContext,
                                                 nsIFrame* aParent,
-                                                const gfxMatrix &aMatrix,
+                                                nsIDOMSVGMatrix* aMatrix,
                                                 float aOpacity = 1.0f);
 
 #ifdef DEBUG

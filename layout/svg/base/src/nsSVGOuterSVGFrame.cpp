@@ -741,23 +741,41 @@ gfxMatrix
 nsSVGOuterSVGFrame::GetCanvasTM()
 {
   if (!mCanvasTM) {
-    nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+    nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
 
     float devPxPerCSSPx =
-      1.0f / PresContext()->AppUnitsToFloatCSSPixels(
+      1 / PresContext()->AppUnitsToFloatCSSPixels(
                                 PresContext()->AppUnitsPerDevPixel());
+    nsCOMPtr<nsIDOMSVGMatrix> devPxToCSSPxMatrix;
+    NS_NewSVGMatrix(getter_AddRefs(devPxToCSSPxMatrix),
+                    devPxPerCSSPx, 0.0f,
+                    0.0f, devPxPerCSSPx);
 
-    gfxMatrix viewBoxTM = content->GetViewBoxTransform();
-
-    gfxMatrix zoomPanTM;
-    if (mIsRootContent) {
-      const nsSVGTranslatePoint& translate = content->GetCurrentTranslate();
-      zoomPanTM.Translate(gfxPoint(translate.GetX(), translate.GetY()));
-      zoomPanTM.Scale(content->GetCurrentScale(), content->GetCurrentScale());
+    nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
+    nsresult res =
+      svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
+    if (NS_SUCCEEDED(res) && viewBoxTM) {
+      // PRE-multiply px conversion!
+      devPxToCSSPxMatrix->Multiply(viewBoxTM, getter_AddRefs(mCanvasTM));
+    } else {
+      NS_WARNING("We should propagate the fact that the viewBox is invalid.");
+      mCanvasTM = devPxToCSSPxMatrix;
     }
 
-    gfxMatrix TM = viewBoxTM * zoomPanTM * gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx);
-    mCanvasTM = NS_NewSVGMatrix(TM);
+    // our content is the document element so we must premultiply the values
+    // of its currentScale and currentTranslate properties
+    if (mIsRootContent) {
+      nsCOMPtr<nsIDOMSVGMatrix> zoomPanMatrix;
+      nsCOMPtr<nsIDOMSVGMatrix> temp;
+      float scale = svgElement->GetCurrentScale();
+      const nsSVGTranslatePoint& translate = svgElement->GetCurrentTranslate();
+
+      svgElement->CreateSVGMatrix(getter_AddRefs(zoomPanMatrix));
+      zoomPanMatrix->Translate(translate.GetX(), translate.GetY(), getter_AddRefs(temp));
+      temp->Scale(scale, getter_AddRefs(zoomPanMatrix));
+      zoomPanMatrix->Multiply(mCanvasTM, getter_AddRefs(temp));
+      temp.swap(mCanvasTM);
+    }
   }
   return nsSVGUtils::ConvertSVGMatrixToThebes(mCanvasTM);
 }

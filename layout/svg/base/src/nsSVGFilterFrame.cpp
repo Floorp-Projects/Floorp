@@ -36,6 +36,7 @@
 
 #include "nsSVGFilterFrame.h"
 #include "nsIDocument.h"
+#include "nsSVGMatrix.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
@@ -140,7 +141,8 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
     return;
   }
 
-  gfxMatrix userToDeviceSpace = nsSVGUtils::GetCanvasTM(aTarget);
+  nsCOMPtr<nsIDOMSVGMatrix> userToDeviceSpace =
+    NS_NewSVGMatrix(nsSVGUtils::GetCanvasTM(aTarget));
   
   // Calculate filterRes (the width and height of the pixel buffer of the
   // temporary offscreen surface that we'll paint into):
@@ -181,14 +183,16 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
 
   // Convert the dirty rects to filter space, and create our nsSVGFilterInstance:
 
-  gfxMatrix filterToUserSpace(filterRegion.Width() / filterRes.width, 0.0f,
-                              0.0f, filterRegion.Height() / filterRes.height,
-                              filterRegion.X(), filterRegion.Y());
-  gfxMatrix filterToDeviceSpace = filterToUserSpace * userToDeviceSpace;
+  nsCOMPtr<nsIDOMSVGMatrix> filterToUserSpace, filterToDeviceSpace;
+  NS_NewSVGMatrix(getter_AddRefs(filterToUserSpace),
+                  filterRegion.Width() / filterRes.width, 0.0f,
+                  0.0f, filterRegion.Height() / filterRes.height,
+                  filterRegion.X(), filterRegion.Y());
+  userToDeviceSpace->Multiply(filterToUserSpace, getter_AddRefs(filterToDeviceSpace));
   
   // filterToDeviceSpace is always invertible
-  gfxMatrix deviceToFilterSpace = filterToDeviceSpace;
-  deviceToFilterSpace.Invert();
+  gfxMatrix deviceToFilterSpace
+    = nsSVGUtils::ConvertSVGMatrixToThebes(filterToDeviceSpace).Invert();
 
   nsIntRect dirtyOutputRect =
     MapDeviceRectToFilterSpace(deviceToFilterSpace, filterRes, aDirtyOutputRect);
@@ -230,7 +234,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 static nsresult
 TransformFilterSpaceToDeviceSpace(nsSVGFilterInstance *aInstance, nsIntRect *aRect)
 {
-  gfxMatrix m = aInstance->GetFilterSpaceToDeviceSpaceTransform();
+  gfxMatrix m = nsSVGUtils::ConvertSVGMatrixToThebes(
+    aInstance->GetFilterSpaceToDeviceSpaceTransform());
   gfxRect r(aRect->x, aRect->y, aRect->width, aRect->height);
   r = m.TransformBounds(r);
   r.RoundOut();

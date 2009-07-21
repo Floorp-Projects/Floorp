@@ -37,6 +37,7 @@
 #include "nsSVGContainerFrame.h"
 #include "nsSVGTextFrame.h"
 #include "nsSVGUtils.h"
+#include "nsSVGMatrix.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGTextElement.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
