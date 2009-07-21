@@ -57,7 +57,7 @@ let Util = {
       if (instance[key] instanceof Function)
         instance[key] = bind(instance[key], instance);
   }
-
+  
 };
 
 
