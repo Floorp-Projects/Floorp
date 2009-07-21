@@ -3412,7 +3412,7 @@ AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
 
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
-    *foundp = (scope->object == obj && scope->lookup(id));
+    *foundp = (scope->lookup(id) != NULL);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
@@ -4115,7 +4115,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     if (OBJ_IS_NATIVE(obj)) {
         /* Native case: start with the last property in obj's own scope. */
         scope = OBJ_SCOPE(obj);
-        pdata = (scope->object == obj) ? scope->lastProp : NULL;
+        pdata = scope->lastProp;
         index = -1;
     } else {
         JSTempValueRooter tvr;
@@ -4161,7 +4161,6 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         obj = OBJ_GET_PARENT(cx, iterobj);
         JS_ASSERT(OBJ_IS_NATIVE(obj));
         scope = OBJ_SCOPE(obj);
-        JS_ASSERT(scope->object == obj);
         sprop = (JSScopeProperty *) JS_GetPrivate(cx, iterobj);
 
         /*

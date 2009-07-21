@@ -3087,7 +3087,7 @@ PopStatement(JSTreeContext *tc)
     if (stmt->flags & SIF_SCOPE) {
         JSObject *obj = stmt->blockObj;
         JSScope *scope = OBJ_SCOPE(obj);
-        JS_ASSERT(scope->object == obj);
+        JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
 
         for (JSScopeProperty *sprop = scope->lastProp; sprop; sprop = sprop->parent) {
             JSAtom *atom = JSID_TO_ATOM(sprop->id);
@@ -3097,6 +3097,12 @@ PopStatement(JSTreeContext *tc)
                 continue;
             tc->decls.remove(tc->compiler, atom);
         }
+
+        /*
+         * The block scope will not be modified again. It may be shared. Clear
+         * scope->object to make scope->owned() false.
+         */
+        scope->object = NULL;
     }
     js_PopStatement(tc);
 }
