@@ -71,6 +71,7 @@ _TEST_FILES = \
   test_same_base_domain_5.html \
   test_same_base_domain_6.html \
   file_loopback_inner.html \
+  test_eviction.html \
 	$(NULL)
 
 # XXX see bug 454857
