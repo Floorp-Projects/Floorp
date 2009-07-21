@@ -49,3 +49,12 @@ DIRS += tests
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef GNU_CC
+ifndef CROSS_COMPILE
+
+$(topsrcdir)/chrome/content/TileManager.js: $(topsrcdir)/chrome/content/TileManager.js.in
+	$(CC) -c -x c -E -P -I$(srcdir) $< > $@
+
+endif
+endif

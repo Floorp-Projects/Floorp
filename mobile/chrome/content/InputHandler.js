@@ -116,7 +116,7 @@ function InputHandler() {
 
   let useEarlyMouseMoves = gPrefService.getBoolPref("browser.ui.panning.fixup.mousemove");
 
-  this._modules.push(new ChromeInputModule(this , browserCanvas));
+  this._modules.push(new ChromeInputModule(this));
   //this._modules.push(new ContentPanningModule(this, browserCanvas, useEarlyMouseMoves));
   this._modules.push(new ContentClickingModule(this));
   this._modules.push(new ScrollwheelModule(this, browserCanvas));
@@ -671,7 +671,7 @@ ContentPanningModule.prototype = {
 
     //ws.dragStart(sX, sY);
 
-    Browser.canvasBrowser.startPanning();
+    //Browser.canvasBrowser.startPanning();
   },
 
   _dragStop: function _dragStop(sX, sY) {
