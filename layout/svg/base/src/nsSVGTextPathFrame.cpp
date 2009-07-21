@@ -42,7 +42,6 @@
 #include "nsContentUtils.h"
 #include "nsSVGPathElement.h"
 #include "nsSVGTextPathElement.h"
-#include "nsSVGMatrix.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -153,13 +152,11 @@ already_AddRefed<gfxFlattenedPath>
 nsSVGTextPathFrame::GetFlattenedPath(nsIFrame *path)
 {
   NS_PRECONDITION(path, "Unexpected null path");
-  nsSVGPathGeometryElement *element = static_cast<nsSVGPathGeometryElement*>
-                                                 (path->GetContent());
 
-  nsCOMPtr<nsIDOMSVGMatrix> localTM =
-    NS_NewSVGMatrix(element->PrependLocalTransformTo(gfxMatrix()));
+  nsSVGPathGeometryElement *element =
+    static_cast<nsSVGPathGeometryElement*>(path->GetContent());
 
-  return element->GetFlattenedPath(localTM);
+  return element->GetFlattenedPath(element->PrependLocalTransformTo(gfxMatrix()));
 }
 
 gfxFloat

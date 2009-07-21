@@ -436,124 +436,111 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
   }
 }
 
-nsresult
-nsSVGUtils::GetNearestViewportElement(nsIContent *aContent,
-                                      nsIDOMSVGElement * *aNearestViewportElement)
+PRBool
+nsSVGUtils::EstablishesViewport(nsIContent *aContent)
 {
-  *aNearestViewportElement = nsnull;
+  return aContent && aContent->GetNameSpaceID() == kNameSpaceID_SVG &&
+           (aContent->Tag() == nsGkAtoms::svg ||
+            aContent->Tag() == nsGkAtoms::image ||
+            aContent->Tag() == nsGkAtoms::foreignObject ||
+            aContent->Tag() == nsGkAtoms::symbol);
+}
 
+already_AddRefed<nsIDOMSVGElement>
+nsSVGUtils::GetNearestViewportElement(nsIContent *aContent)
+{
+  nsIContent *element = GetParentElement(aContent);
+
+  while (element && element->GetNameSpaceID() == kNameSpaceID_SVG) {
+    if (EstablishesViewport(element)) {
+      if (element->Tag() == nsGkAtoms::foreignObject) {
+        return nsnull;
+      }
+      return nsCOMPtr<nsIDOMSVGElement>(do_QueryInterface(element)).forget();
+    }
+    element = GetParentElement(element);
+  }
+  return nsnull;
+}
+
+already_AddRefed<nsIDOMSVGElement>
+nsSVGUtils::GetFarthestViewportElement(nsIContent *aContent)
+{
+  nsIContent *element = nsnull;
   nsIContent *ancestor = GetParentElement(aContent);
 
   while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
-         ancestor->Tag() != nsGkAtoms::foreignObject) {
-
-    nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox = do_QueryInterface(ancestor);
-
-    if (fitToViewBox) {
-      // right interface
-      nsCOMPtr<nsIDOMSVGElement> element = do_QueryInterface(ancestor);
-      element.swap(*aNearestViewportElement);
-      return NS_OK;
-    }
-
-    ancestor = GetParentElement(ancestor);
+                     ancestor->Tag() != nsGkAtoms::foreignObject) {
+    element = ancestor;
+    ancestor = GetParentElement(element);
   }
-  if (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
-                  ancestor->Tag() == nsGkAtoms::foreignObject )
-    return NS_ERROR_FAILURE;
 
-  return NS_OK;
+  if (element && element->Tag() == nsGkAtoms::svg) {
+    return nsCOMPtr<nsIDOMSVGElement>(do_QueryInterface(element)).forget();
+  }
+  return nsnull;
 }
 
-nsresult
-nsSVGUtils::AppendTransformUptoElement(nsIContent *aContent, nsIDOMSVGElement *aElement, nsIDOMSVGMatrix * *aCTM){
-  nsresult rv;
-  nsCOMPtr<nsIDOMSVGElement> element = do_QueryInterface(aContent);
-  nsIContent *ancestor = GetParentElement(aContent);
-  if (!aElement) {
-    // calculating GetScreenCTM(): traverse upto the root or non-SVG content.
-    if (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG) {
-      if (ancestor->Tag() == nsGkAtoms::foreignObject && aContent->Tag() != nsGkAtoms::svg)
-        return NS_ERROR_FAILURE;
-      rv = AppendTransformUptoElement(ancestor, aElement, aCTM);
-      if (NS_FAILED(rv)) return rv;
-    }
-  } else if (element != aElement) { // calculating GetCTM(): stop at aElement.
-    NS_ASSERTION(ancestor != nsnull, "ancestor shouldn't be null.");
-    if (!ancestor)
-      return NS_ERROR_FAILURE;
-    rv = AppendTransformUptoElement(ancestor, aElement, aCTM);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  nsCOMPtr<nsIDOMSVGMatrix> tmp;
-  if (nsCOMPtr<nsIDOMSVGSVGElement>(do_QueryInterface(aContent))) {
-    nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(aContent);
-    rv = svgElement->AppendTransform(*aCTM, getter_AddRefs(tmp));
-    if (NS_FAILED(rv)) return rv;
-  } else if (nsCOMPtr<nsIDOMSVGTransformable>(do_QueryInterface(aContent))) {
-    nsSVGGraphicElement *graphicElement = static_cast<nsSVGGraphicElement*>(aContent);
-    rv = graphicElement->AppendTransform(*aCTM, getter_AddRefs(tmp));
-    if (NS_FAILED(rv)) return rv;
-  } else {
-    //XXX aContent may be other type of viewport-establising elements
-    //    (e.g. <use> and <symbol>) and handle them?
-  }
-  if (tmp)
-    tmp.swap(*aCTM);
-
-  return NS_OK;
-}
-
-nsresult
-nsSVGUtils::GetCTM(nsIContent *aContent, nsIDOMSVGMatrix * *aCTM)
+gfxMatrix
+nsSVGUtils::GetCTM(nsSVGElement *aElement, PRBool aScreenCTM)
 {
-  nsresult rv;
-  nsIDocument* currentDoc = aContent->GetCurrentDoc();
+  nsIDocument* currentDoc = aElement->GetCurrentDoc();
   if (currentDoc) {
-    // Flush all pending notifications so that our frames are uptodate
+    // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(Flush_Layout);
   }
 
-  *aCTM = nsnull;
-  nsCOMPtr<nsIDOMSVGElement> nearestViewportElement;
-  rv = GetNearestViewportElement(aContent, getter_AddRefs(nearestViewportElement));
-  // According to the spec(http://www.w3.org/TR/SVG11/types.html#InterfaceSVGLocatable),
-  // GetCTM is strictly defined to be the CTM for nearestViewportElement,
-  // Thus, if it is null, this is null, too.
-  if (NS_FAILED(rv) || !nearestViewportElement)
-    return NS_OK; // we can't throw exceptions from this API.
+  gfxMatrix matrix = aElement->PrependLocalTransformTo(gfxMatrix());
+  nsSVGElement *element = aElement;
+  nsIContent *ancestor = GetParentElement(aElement);
 
-  nsCOMPtr<nsIDOMSVGMatrix> tmp;
-  rv = NS_NewSVGMatrix(getter_AddRefs(tmp), 1, 0, 0, 1, 0, 0);
-  if (NS_FAILED(rv)) return NS_OK; // we can't throw exceptions from this API.
-  tmp.swap(*aCTM);
-  rv = AppendTransformUptoElement(aContent, nearestViewportElement, aCTM);
-  if (NS_FAILED(rv))
-    tmp.swap(*aCTM);
-  return NS_OK; // we can't throw exceptions from this API.
-}
-
-nsresult
-nsSVGUtils::GetScreenCTM(nsIContent *aContent, nsIDOMSVGMatrix * *aCTM)
-{
-  nsresult rv;
-  nsIDocument* currentDoc = aContent->GetCurrentDoc();
-  if (currentDoc) {
-    // Flush all pending notifications so that our frames are uptodate
-    currentDoc->FlushPendingNotifications(Flush_Layout);
+  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
+                     ancestor->Tag() != nsGkAtoms::foreignObject) {
+    element = static_cast<nsSVGElement*>(ancestor);
+    matrix *= element->PrependLocalTransformTo(gfxMatrix()); // i.e. *A*ppend
+    if (!aScreenCTM && EstablishesViewport(element)) {
+      if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
+          !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
+        NS_ERROR("New (SVG > 1.1) SVG viewport establishing element?");
+        return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+      }
+      // XXX spec seems to say x,y translation should be undone for IsInnerSVG
+      return matrix;
+    }
+    ancestor = GetParentElement(element);      
   }
-
-  *aCTM = nsnull;
-
-  nsCOMPtr<nsIDOMSVGMatrix> tmp;
-  rv = NS_NewSVGMatrix(getter_AddRefs(tmp), 1, 0, 0, 1, 0, 0);
-  if (NS_FAILED(rv)) return NS_OK; // we can't throw exceptions from this API.
-  tmp.swap(*aCTM);
-  rv = AppendTransformUptoElement(aContent, nsnull, aCTM);
-  if (NS_FAILED(rv))
-    tmp.swap(*aCTM);
-  return NS_OK; // we can't throw exceptions from this API.
+  if (!aScreenCTM) {
+    // didn't find a nearestViewportElement
+    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+  }
+  if (!ancestor || !ancestor->IsNodeOfType(nsINode::eELEMENT)) {
+    return matrix;
+  }
+  if (ancestor->GetNameSpaceID() == kNameSpaceID_SVG) {
+    if (element->Tag() != nsGkAtoms::svg) {
+      return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+    }
+    return matrix * GetCTM(static_cast<nsSVGElement*>(ancestor), PR_TRUE);
+  }
+  // XXX this does not take into account CSS transform, or that the non-SVG
+  // content that we've hit may itself be inside an SVG foreignObject higher up
+  float x = 0.0f, y = 0.0f;
+  if (element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
+    nsIPresShell *presShell = currentDoc->GetPrimaryShell();
+    if (element && presShell) {
+      nsPresContext *context = presShell->GetPresContext();
+      if (context) {
+        nsIFrame* frame = presShell->GetPrimaryFrameFor(element);
+        nsIFrame* ancestorFrame = presShell->GetRootFrame();
+        if (frame && ancestorFrame) {
+          nsPoint point = frame->GetOffsetTo(ancestorFrame);
+          x = nsPresContext::AppUnitsToFloatCSSPixels(point.x);
+          y = nsPresContext::AppUnitsToFloatCSSPixels(point.y);
+        }
+      }
+    }
+  }
+  return matrix * gfxMatrix().Translate(gfxPoint(x, y));
 }
 
 nsSVGDisplayContainerFrame*
@@ -572,33 +559,6 @@ nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
   }
   NS_NOTREACHED("This is not reached. It's only needed to compile.");
   return nsnull;
-}
-
-nsresult
-nsSVGUtils::GetFarthestViewportElement(nsIContent *aContent,
-                                       nsIDOMSVGElement * *aFarthestViewportElement)
-{
-  *aFarthestViewportElement = nsnull;
-
-  nsIContent *ancestor = GetParentElement(aContent);
-  nsCOMPtr<nsIDOMSVGElement> element;
-
-  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
-         ancestor->Tag() != nsGkAtoms::foreignObject) {
-
-    nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox = do_QueryInterface(ancestor);
-
-    if (fitToViewBox) {
-      // right interface
-      element = do_QueryInterface(ancestor);
-    }
-
-    ancestor = GetParentElement(ancestor);
-  }
-
-  element.swap(*aFarthestViewportElement);
-
-  return NS_OK;
 }
 
 nsRect
@@ -805,7 +765,7 @@ nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
   return GetOuterSVGFrame(aFrame);
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                                 float aViewboxX, float aViewboxY,
                                 float aViewboxWidth, float aViewboxHeight,
@@ -891,9 +851,7 @@ nsSVGUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
   if (aViewboxX) e += -a * aViewboxX;
   if (aViewboxY) f += -d * aViewboxY;
   
-  nsIDOMSVGMatrix *retval;
-  NS_NewSVGMatrix(&retval, a, 0.0f, 0.0f, d, e, f);
-  return retval;
+  return gfxMatrix(a, 0.0f, 0.0f, d, e, f);
 }
 
 gfxMatrix
@@ -902,8 +860,7 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
   // XXX yuck, we really need a common interface for GetCanvasTM
 
   if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsCOMPtr<nsIDOMSVGMatrix> matrix = nsSVGIntegrationUtils::GetInitialMatrix(aFrame);
-    return ConvertSVGMatrixToThebes(matrix);
+    return nsSVGIntegrationUtils::GetInitialMatrix(aFrame);
   }
 
   nsIAtom* type = aFrame->GetType();
@@ -1038,8 +995,9 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
     return;
   }
   
-  nsCOMPtr<nsIDOMSVGMatrix> matrix =
-    (clipPathFrame || maskFrame) ? NS_NewSVGMatrix(GetCanvasTM(aFrame)) : nsnull;
+  gfxMatrix matrix;
+  if (clipPathFrame || maskFrame)
+    matrix = GetCanvasTM(aFrame);
 
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
@@ -1122,8 +1080,7 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIDOMSVGMatrix> matrix = NS_NewSVGMatrix(GetCanvasTM(aFrame));
-  return clipPathFrame->ClipHitTest(aFrame, matrix, aPoint);
+  return clipPathFrame->ClipHitTest(aFrame, GetCanvasTM(aFrame), aPoint);
 }
 
 nsIFrame *
@@ -1274,25 +1231,19 @@ nsSVGUtils::ConvertSVGMatrixToThebes(nsIDOMSVGMatrix *aMatrix)
 }
 
 PRBool
-nsSVGUtils::HitTestRect(nsIDOMSVGMatrix *aMatrix,
+nsSVGUtils::HitTestRect(const gfxMatrix &aMatrix,
                         float aRX, float aRY, float aRWidth, float aRHeight,
                         float aX, float aY)
 {
-  PRBool result = PR_TRUE;
-
-  if (aMatrix) {
-    gfxContext ctx(GetThebesComputationalSurface());
-    ctx.SetMatrix(ConvertSVGMatrixToThebes(aMatrix));
-
-    ctx.NewPath();
-    ctx.Rectangle(gfxRect(aRX, aRY, aRWidth, aRHeight));
-    ctx.IdentityMatrix();
-
-    if (!ctx.PointInFill(gfxPoint(aX, aY)))
-      result = PR_FALSE;
+  if (aMatrix.IsSingular()) {
+    return PR_FALSE;
   }
-
-  return result;
+  gfxContext ctx(GetThebesComputationalSurface());
+  ctx.SetMatrix(aMatrix);
+  ctx.NewPath();
+  ctx.Rectangle(gfxRect(aRX, aRY, aRWidth, aRHeight));
+  ctx.IdentityMatrix();
+  return ctx.PointInFill(gfxPoint(aX, aY));
 }
 
 gfxRect
@@ -1339,40 +1290,31 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
 void
 nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
                                    gfxASurface *aSurface,
-                                   nsIDOMSVGMatrix *aCTM, float aOpacity)
+                                   const gfxMatrix &aCTM, float aOpacity)
 {
-  gfxMatrix matrix = ConvertSVGMatrixToThebes(aCTM);
-  if (matrix.IsSingular())
+  if (aCTM.IsSingular())
     return;
 
   aContext->Save();
-
-  aContext->Multiply(matrix);
-
+  aContext->Multiply(aCTM);
   aContext->SetSource(aSurface);
   aContext->Paint(aOpacity);
-
   aContext->Restore();
 }
 
 void
 nsSVGUtils::CompositePatternMatrix(gfxContext *aContext,
                                    gfxPattern *aPattern,
-                                   nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity)
+                                   const gfxMatrix &aCTM, float aWidth, float aHeight, float aOpacity)
 {
-  gfxMatrix matrix = ConvertSVGMatrixToThebes(aCTM);
-  if (matrix.IsSingular())
+  if (aCTM.IsSingular())
     return;
 
   aContext->Save();
-
-  SetClipRect(aContext, ConvertSVGMatrixToThebes(aCTM), gfxRect(0, 0, aWidth, aHeight));
-
-  aContext->Multiply(matrix);
-
+  SetClipRect(aContext, aCTM, gfxRect(0, 0, aWidth, aHeight));
+  aContext->Multiply(aCTM);
   aContext->SetPattern(aPattern);
   aContext->Paint(aOpacity);
-
   aContext->Restore();
 }
 
@@ -1461,40 +1403,34 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
 }
 
 float
-nsSVGUtils::MaxExpansion(nsIDOMSVGMatrix *aMatrix)
+nsSVGUtils::MaxExpansion(const gfxMatrix &aMatrix)
 {
-  float a, b, c, d;
-  aMatrix->GetA(&a);
-  aMatrix->GetB(&b);
-  aMatrix->GetC(&c);
-  aMatrix->GetD(&d);
-
   // maximum expansion derivation from
   // http://lists.cairographics.org/archives/cairo/2004-October/001980.html
-  float f = (a * a + b * b + c * c + d * d) / 2;
-  float g = (a * a + b * b - c * c - d * d) / 2;
-  float h = a * c + b * d;
+  // and also implemented in cairo_matrix_transformed_circle_major_axis
+  double a = aMatrix.xx;
+  double b = aMatrix.yx;
+  double c = aMatrix.xy;
+  double d = aMatrix.yy;
+  double f = (a * a + b * b + c * c + d * d) / 2;
+  double g = (a * a + b * b - c * c - d * d) / 2;
+  double h = a * c + b * d;
   return sqrt(f + sqrt(g * g + h * h));
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
-nsSVGUtils::AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
+gfxMatrix
+nsSVGUtils::AdjustMatrixForUnits(const gfxMatrix &aMatrix,
                                  nsSVGEnum *aUnits,
                                  nsIFrame *aFrame)
 {
-  nsCOMPtr<nsIDOMSVGMatrix> fini = aMatrix;
-
   if (aFrame &&
       aUnits->GetAnimValue() == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     gfxRect bbox = GetBBox(aFrame);
-    nsCOMPtr<nsIDOMSVGMatrix> tmp;
-    aMatrix->Translate(bbox.X(), bbox.Y(), getter_AddRefs(tmp));
-    tmp->ScaleNonUniform(bbox.Width(), bbox.Height(), getter_AddRefs(fini));
+    return gfxMatrix().Scale(bbox.Width(), bbox.Height()) *
+           gfxMatrix().Translate(gfxPoint(bbox.X(), bbox.Y())) *
+           aMatrix;
   }
-
-  nsIDOMSVGMatrix* retval = fini.get();
-  NS_IF_ADDREF(retval);
-  return retval;
+  return aMatrix;
 }
 
 nsIFrame*
@@ -1565,6 +1501,17 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
   gfxRect strokeExtents = aPathExtents;
   strokeExtents.Outset(dy, dx, dy, dx);
   return strokeExtents;
+}
+
+/* static */ PRBool
+nsSVGUtils::IsInnerSVG(nsIContent* aContent)
+{
+  if (!aContent->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
+    return PR_FALSE;
+  }
+  nsIContent *ancestor = GetParentElement(aContent);
+  return ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
+                     ancestor->Tag() != nsGkAtoms::foreignObject;
 }
 
 // ----------------------------------------------------------------------
