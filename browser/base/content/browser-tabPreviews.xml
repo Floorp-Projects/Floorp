@@ -41,21 +41,49 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-  <binding id="ctrlTab-thumbnail">
-    <content align="center">
-      <children/>
-      <xul:label xbl:inherits="value=label,crop"/>
+  <binding id="ctrlTab-preview" extends="chrome://global/content/bindings/button.xml#button-base">
+    <content pack="center">
+      <xul:stack>
+        <xul:vbox class="ctrlTab-preview-inner" align="center" pack="center"
+                  xbl:inherits="width=canvaswidth">
+          <xul:hbox class="tabPreview-canvas" xbl:inherits="style=canvasstyle">
+            <children/>
+          </xul:hbox>
+          <xul:label xbl:inherits="value=label,crop" class="plain"/>
+        </xul:vbox>
+        <xul:hbox class="ctrlTab-favicon-container" xbl:inherits="hidden=noicon">
+          <xul:image class="ctrlTab-favicon" xbl:inherits="src=image"/>
+        </xul:hbox>
+      </xul:stack>
     </content>
     <handlers>
-      <handler event="click" button="0" action="ctrlTab.selectThumbnail(this);"/>
-      <handler event="click" button="1" action="gBrowser.removeTab(this._tab);"/>
+      <handler event="mouseover" action="ctrlTab._mouseOverFocus(this);"/>
+      <handler event="command" action="ctrlTab.pick(this);"/>
+      <handler event="click" button="1" action="ctrlTab.remove(this);"/>
 #ifdef XP_MACOSX
 # Control+click is a right click on OS X
-      <handler event="click" button="2"><![CDATA[
-        if (!ctrlTab.sticky)
-          ctrlTab.selectThumbnail(this);
-      ]]></handler>
+      <handler event="click" button="2" action="ctrlTab.pick(this);"/>
 #endif
+    </handlers>
+  </binding>
+
+  <binding id="allTabs-preview" extends="chrome://global/content/bindings/button.xml#button-base">
+    <content pack="center" align="center">
+      <xul:stack>
+        <xul:vbox class="allTabs-preview-inner" align="center" pack="center">
+          <xul:hbox class="tabPreview-canvas" xbl:inherits="style=canvasstyle">
+            <children/>
+          </xul:hbox>
+          <xul:label flex="1" xbl:inherits="value=label,crop" class="allTabs-preview-label plain"/>
+        </xul:vbox>
+        <xul:hbox class="allTabs-favicon-container">
+          <xul:image class="allTabs-favicon" xbl:inherits="src=image"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
+    <handlers>
+      <handler event="command" action="allTabs.pick(this);"/>
+      <handler event="click" button="1" action="gBrowser.removeTab(this._tab);"/>
     </handlers>
   </binding>
 </bindings>
