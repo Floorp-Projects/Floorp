@@ -204,6 +204,7 @@ struct JSScope {
     jsrefcount      nrefs;              /* count of all referencing objects */
     uint32          freeslot;           /* index of next free slot in object */
     uint32          shape;              /* property cache shape identifier */
+    JSScope         *emptyScope;        /* cache for getEmptyScope below */
     uint8           flags;              /* flags, see below */
     int8            hashShift;          /* multiplicative hash shift */
 
@@ -220,10 +221,28 @@ struct JSScope {
     void reportReadOnlyScope(JSContext *cx);
     JSScopeProperty **searchTable(jsid id, bool adding);
     inline JSScopeProperty **search(jsid id, bool adding);
+    JSScope *createEmptyScope(JSContext *cx, JSClass *clasp);
 
   public:
+    /* Create a mutable, owned, empty scope. */
     static JSScope *create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj);
+
     static void destroy(JSContext *cx, JSScope *scope);
+
+    /*
+     * Return an immutable, shareable, empty scope with the same ops as this
+     * and the same freeslot as this had when empty.
+     *
+     * If |this| is the scope of an object |proto|, the resulting scope can be
+     * used the scope of a new object whose prototype is |proto|.
+     */
+    JSScope *getEmptyScope(JSContext *cx, JSClass *clasp) {
+        if (emptyScope) {
+            emptyScope->hold();
+            return emptyScope;
+        }
+        return createEmptyScope(cx, clasp);
+    }
 
     inline void hold();
     inline bool drop(JSContext *cx, JSObject *obj);
@@ -288,6 +307,8 @@ struct JSScope {
     bool branded()              { return flags & BRANDED; }
     void setBranded()           { flags |= BRANDED; }
     void clearBranded()         { flags &= ~BRANDED; }
+
+    bool owned()                { return object != NULL; }
 };
 
 #define JS_IS_SCOPE_LOCKED(cx, scope)   JS_IS_TITLE_LOCKED(cx, &(scope)->title)

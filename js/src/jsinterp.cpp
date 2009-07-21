@@ -118,7 +118,6 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
      * from pobj's scope (via unwatch or delete, e.g.).
      */
     scope = OBJ_SCOPE(pobj);
-    JS_ASSERT(scope->object == pobj);
     if (!scope->has(sprop)) {
         PCMETER(cache->oddfills++);
         return JS_NO_PROP_CACHE_FILL;
@@ -199,9 +198,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                  *
                  * So here, on first cache fill for this method, we brand the
                  * scope with a new shape and set the SCOPE_BRANDED flag. Once
-                 * this scope flag is set, any write that adds or deletes a
-                 * function-valued plain old property in scope->object will
-                 * result in shape being regenerated.
+                 * this scope flag is set, any write to a function-valued plain
+                 * old property in pobj will result in shape being regenerated.
                  */
                 if (!scope->branded()) {
                     PCMETER(cache->brandfills++);
@@ -262,13 +260,26 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                  * iterations the cache will be hit since the shape no longer
                  * mutates.
                  */
-                JS_ASSERT(scope->object == obj);
+                JS_ASSERT(scope->owned());
                 if (sprop->parent) {
                     kshape = sprop->parent->shape;
                 } else {
+                    /*
+                     * If obj had its own empty scope before, with a unique
+                     * shape, that is lost. Here we only attempt to find a
+                     * matching empty scope. In unusual cases involving
+                     * __proto__ assignment we may not find one.
+                     */
                     JSObject *proto = STOBJ_GET_PROTO(obj);
-                    if (proto && OBJ_IS_NATIVE(proto))
-                        kshape = OBJ_SHAPE(proto);
+                    if (!proto || !OBJ_IS_NATIVE(proto))
+                        return JS_NO_PROP_CACHE_FILL;
+                    JSScope *protoscope = OBJ_SCOPE(proto);
+                    if (!protoscope->emptyScope ||
+                        !js_ObjectIsSimilarToProto(cx, obj, obj->map->ops, OBJ_GET_CLASS(cx, obj),
+                                                   proto)) {
+                        return JS_NO_PROP_CACHE_FILL;
+                    }
+                    kshape = protoscope->emptyScope->shape;
                 }
 
                 /*
@@ -288,8 +299,6 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
     khash = PROPERTY_CACHE_HASH_PC(pc, kshape);
     if (obj == pobj) {
         JS_ASSERT(scopeIndex == 0 && protoIndex == 0);
-        JS_ASSERT(OBJ_SCOPE(obj)->object == obj);
-        JS_ASSERT(kshape != 0);
     } else {
         if (op == JSOP_LENGTH) {
             atom = cx->runtime->atomState.lengthAtom;
@@ -760,12 +769,10 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      * Special-case cloning the innermost block; this doesn't have enough in
      * common with subsequent steps to include in the loop.
      *
-     * We pass fp->scopeChain and not null even if we override the parent slot
-     * later as null triggers useless calculations of slot's value in
-     * js_NewObject that js_CloneBlockObject calls.
+     * js_CloneBlockObject leaves the clone's parent slot uninitialized. We
+     * populate it below.
      */
-    JSObject *innermostNewChild
-        = js_CloneBlockObject(cx, sharedBlock, fp->scopeChain, fp);
+    JSObject *innermostNewChild = js_CloneBlockObject(cx, sharedBlock, fp);
     if (!innermostNewChild)
         return NULL;
     JSAutoTempValueRooter tvr(cx, innermostNewChild);
@@ -785,7 +792,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 
         /* As in the call above, we don't know the real parent yet.  */
         JSObject *clone
-            = js_CloneBlockObject(cx, sharedBlock, fp->scopeChain, fp);
+            = js_CloneBlockObject(cx, sharedBlock, fp);
         if (!clone)
             return NULL;
 
@@ -796,6 +803,8 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
         STOBJ_SET_PARENT(newChild, clone);
         newChild = clone;
     }
+    STOBJ_SET_PARENT(newChild, fp->scopeChain);
+
 
     /*
      * If we found a limit block belonging to this frame, then we should have
@@ -4686,7 +4695,7 @@ js_Interpret(JSContext *cx)
 
                                 /* The cache entry doesn't apply. vshape mismatch. */
                                 checkForAdd = false;
-                            } else if (scope->object == obj) {
+                            } else if (scope->owned()) {
                                 if (sprop == scope->lastProp || scope->has(sprop)) {
                                   fast_set_propcache_hit:
                                     PCMETER(cache->pchits++);
@@ -4747,7 +4756,7 @@ js_Interpret(JSContext *cx)
                                  * If this obj's number of reserved slots
                                  * differed, or if something created a hash
                                  * table for scope, we must pay the price of
-                                 * JSScope::addProperty.
+                                 * JSScope::add.
                                  *
                                  * If slot does not match the cached sprop's
                                  * slot, update the cache entry in the hope
@@ -6442,7 +6451,7 @@ js_Interpret(JSContext *cx)
                     if (!SPROP_HAS_STUB_SETTER(sprop))
                         goto do_initprop_miss;
 
-                    if (scope->object != obj) {
+                    if (!scope->owned()) {
                         scope = js_GetMutableScope(cx, obj);
                         if (!scope) {
                             JS_UNLOCK_OBJ(cx, obj);
@@ -6453,7 +6462,7 @@ js_Interpret(JSContext *cx)
                     /*
                      * Detect a repeated property name and force a miss to
                      * share the strict warning code and cope with complexity
-                     * managed by JSScope::addProperty.
+                     * managed by JSScope::add.
                      */
                     if (sprop->parent != scope->lastProp)
                         goto do_initprop_miss;
@@ -6493,7 +6502,8 @@ js_Interpret(JSContext *cx)
                         }
                         JS_ASSERT(sprop2 == sprop);
                     } else {
-                        js_LeaveTraceIfGlobalObject(cx, scope->object);
+                        JS_ASSERT(scope->owned());
+                        js_LeaveTraceIfGlobalObject(cx, obj);
                         scope->shape = sprop->shape;
                         ++scope->entryCount;
                         scope->lastProp = sprop;

@@ -9135,7 +9135,7 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     LIns* obj_ins = get(&l);
     JSScope* scope = OBJ_SCOPE(obj);
 
-    JS_ASSERT(scope->object == obj);
+    JS_ASSERT(scope->owned());
     JS_ASSERT(scope->has(sprop));
 
     if (!isValidSlot(scope, sprop))
