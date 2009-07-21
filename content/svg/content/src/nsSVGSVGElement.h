@@ -199,9 +199,7 @@ public:
   float GetMMPerPx(PRUint8 mCtxType = 0);
 
   // public helpers:
-  nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
-  nsresult AppendTransform(nsIDOMSVGMatrix *aCTM,
-                           nsIDOMSVGMatrix **_retval);
+  gfxMatrix GetViewBoxTransform();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -226,7 +224,6 @@ protected:
 #endif // MOZ_SMIL   
 
   // implementation helpers:
-  void GetOffsetToAncestor(nsIContent* ancestor, float &x, float &y);
 
   PRBool IsRoot() {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==

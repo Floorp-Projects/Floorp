@@ -741,41 +741,23 @@ gfxMatrix
 nsSVGOuterSVGFrame::GetCanvasTM()
 {
   if (!mCanvasTM) {
-    nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
+    nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
 
     float devPxPerCSSPx =
-      1 / PresContext()->AppUnitsToFloatCSSPixels(
+      1.0f / PresContext()->AppUnitsToFloatCSSPixels(
                                 PresContext()->AppUnitsPerDevPixel());
-    nsCOMPtr<nsIDOMSVGMatrix> devPxToCSSPxMatrix;
-    NS_NewSVGMatrix(getter_AddRefs(devPxToCSSPxMatrix),
-                    devPxPerCSSPx, 0.0f,
-                    0.0f, devPxPerCSSPx);
 
-    nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
-    nsresult res =
-      svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
-    if (NS_SUCCEEDED(res) && viewBoxTM) {
-      // PRE-multiply px conversion!
-      devPxToCSSPxMatrix->Multiply(viewBoxTM, getter_AddRefs(mCanvasTM));
-    } else {
-      NS_WARNING("We should propagate the fact that the viewBox is invalid.");
-      mCanvasTM = devPxToCSSPxMatrix;
-    }
+    gfxMatrix viewBoxTM = content->GetViewBoxTransform();
 
-    // our content is the document element so we must premultiply the values
-    // of its currentScale and currentTranslate properties
+    gfxMatrix zoomPanTM;
     if (mIsRootContent) {
-      nsCOMPtr<nsIDOMSVGMatrix> zoomPanMatrix;
-      nsCOMPtr<nsIDOMSVGMatrix> temp;
-      float scale = svgElement->GetCurrentScale();
-      const nsSVGTranslatePoint& translate = svgElement->GetCurrentTranslate();
-
-      svgElement->CreateSVGMatrix(getter_AddRefs(zoomPanMatrix));
-      zoomPanMatrix->Translate(translate.GetX(), translate.GetY(), getter_AddRefs(temp));
-      temp->Scale(scale, getter_AddRefs(zoomPanMatrix));
-      zoomPanMatrix->Multiply(mCanvasTM, getter_AddRefs(temp));
-      temp.swap(mCanvasTM);
+      const nsSVGTranslatePoint& translate = content->GetCurrentTranslate();
+      zoomPanTM.Translate(gfxPoint(translate.GetX(), translate.GetY()));
+      zoomPanTM.Scale(content->GetCurrentScale(), content->GetCurrentScale());
     }
+
+    gfxMatrix TM = viewBoxTM * zoomPanTM * gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx);
+    mCanvasTM = NS_NewSVGMatrix(TM);
   }
   return nsSVGUtils::ConvertSVGMatrixToThebes(mCanvasTM);
 }
