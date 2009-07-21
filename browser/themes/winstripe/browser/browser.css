@@ -1390,7 +1390,7 @@ tabpanels {
 }
 
 /* tabbrowser-tab focus ring */
-.tab-text {
+.tabbrowser-tab > .tab-text {
   border: 1px dotted transparent;
 }
 

@@ -1516,7 +1516,7 @@ tabbrowser > tabbox {
   opacity: .6;
 }
 
-.tab-text {
+.tabbrowser-tab > .tab-text {
   margin-top: 3px;
   margin-bottom: 0;
   font: message-box;
