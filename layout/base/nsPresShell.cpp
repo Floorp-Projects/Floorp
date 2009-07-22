@@ -4476,7 +4476,9 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
 {
   PRUint32 hoverGenerationBefore = mFrameConstructor->GetHoverGeneration();
   nsEventStatus status;
-  mViewManager->DispatchEvent(aEvent, &status);
+  nsIView* rootView;
+  mViewManager->GetRootView(rootView);
+  mViewManager->DispatchEvent(aEvent, rootView, &status);
   if (aFlushOnHoverChange &&
       hoverGenerationBefore != mFrameConstructor->GetHoverGeneration()) {
     // Flush so that the resulting reflow happens now so that our caller

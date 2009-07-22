@@ -165,7 +165,7 @@ nsEventStatus HandleEvent(nsGUIEvent *aEvent)
   if (view)
   {
     nsCOMPtr<nsIViewManager> vm = view->GetViewManager();
-    vm->DispatchEvent(aEvent, &result);
+    vm->DispatchEvent(aEvent, view, &result);
   }
 
   return result;

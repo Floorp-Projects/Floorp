@@ -299,7 +299,7 @@ nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
   nsMouseScrollEvent scrollEventX(PR_TRUE, NS_MOUSE_SCROLL, mWidget);
   scrollEventX.delta = dx;
   scrollEventX.scrollFlags = nsMouseScrollEvent::kIsHorizontal | nsMouseScrollEvent::kIsPixels;
-  mViewManager->DispatchEvent(&scrollEventX, &statusX);
+  mViewManager->DispatchEvent(&scrollEventX, aView, &statusX);
   if(statusX != nsEventStatus_eIgnore ){
     if (dx > 5)
       g_panning = PR_TRUE;
@@ -310,7 +310,7 @@ nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
   nsMouseScrollEvent scrollEventY(PR_TRUE, NS_MOUSE_SCROLL, mWidget);
   scrollEventY.delta = dy;
   scrollEventY.scrollFlags = nsMouseScrollEvent::kIsVertical | nsMouseScrollEvent::kIsPixels;
-  mViewManager->DispatchEvent(&scrollEventY, &statusY);
+  mViewManager->DispatchEvent(&scrollEventY, aView, &statusY);
   if(statusY != nsEventStatus_eIgnore ){
     if (dy > 5)
       g_panning = PR_TRUE;
