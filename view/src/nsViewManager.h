@@ -171,8 +171,6 @@ public:
   NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
   NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);
 
-  NS_IMETHOD GetWidget(nsIWidget **aWidget);
-  nsIWidget* GetWidget() { return mRootView ? mRootView->GetWidget() : nsnull; }
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
  

@@ -60,8 +60,8 @@ enum nsRectVisibility {
 }; 
 
 #define NS_IVIEWMANAGER_IID   \
-  { 0x50c0a18c, 0x3e39, 0x4606, \
-    { 0x85, 0x77, 0xe7, 0x3a, 0xcc, 0xb4, 0x66, 0xc9 } }
+  { 0x739bbc2b, 0x5c45, 0x40bb, \
+    { 0xb0, 0xbc, 0xe3, 0x1c, 0xe0, 0xf2, 0x19, 0xc2 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -415,13 +415,6 @@ public:
    * @return error status
    */
   NS_IMETHOD GetRootScrollableView(nsIScrollableView **aScrollable) = 0;
-
-  /**
-   * Retrieve the widget at the root of the view manager. This is the
-   * widget associated with the root view, if the root view exists and has
-   * a widget.
-   */
-  NS_IMETHOD GetWidget(nsIWidget **aWidget) = 0;
 
   /**
    * Retrieve the widget at the root of the nearest enclosing
