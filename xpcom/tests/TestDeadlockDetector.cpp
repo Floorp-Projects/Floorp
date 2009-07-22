@@ -264,7 +264,8 @@ CheckForDeadlock(const char* test, const char* const* findTokens)
 #ifdef MOZILLA_INTERNAL_API
         idx = proc.mStderr.Find(token, PR_FALSE, idx);
 #else
-        idx = proc.mStderr.Find(token, idx);
+        nsCString tokenCString(token);
+        idx = proc.mStderr.Find(tokenCString, idx);
 #endif
         if (-1 == idx) {
             printf("(missed token '%s' in output)\n", token);
