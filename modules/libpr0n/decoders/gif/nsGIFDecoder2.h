@@ -95,6 +95,11 @@ private:
   PRUint32 *mColormap;       // Current colormap to be used in Cairo format
   PRUint32 mColormapSize;
   PRUint32 mOldColor;        // The old value of the transparent pixel
+
+  // The frame number of the currently-decoding frame when we're in the middle
+  // of decoding it, and -1 otherwise.
+  PRInt32 mCurrentFrame;
+
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
   PRPackedBool mGIFOpen;
