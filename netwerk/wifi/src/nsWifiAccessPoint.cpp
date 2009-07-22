@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsWifiAccessPoint.h"
+#include "nsString.h"
 #include "nsMemory.h"
 #include "prlog.h"
 
@@ -71,11 +72,7 @@ NS_IMETHODIMP nsWifiAccessPoint::GetSsid(nsAString& aSsid)
 {
   // just assign and embedded nulls will truncate resulting
   // in a displayable string.
-
-  nsString tempStr;
-  tempStr.AssignWithConversion(mSsid, mSsidLen);
-  aSsid = tempStr;
-
+  CopyASCIItoUTF16(mSsid, aSsid);
   return NS_OK;
 }
 
