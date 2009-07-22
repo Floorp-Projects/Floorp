@@ -2817,8 +2817,9 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   /* clip and build a region */
   nsCOMPtr<nsIRegion> rgn(do_CreateInstance(kRegionCID));
-  if (rgn)
-    rgn->Init();
+  if (!rgn)
+    return;
+  rgn->Init();
 
   // bounding box of the dirty area
   nsIntRect fullRect;
@@ -2832,8 +2833,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       const NSRect& r = rects[i];
 
       // add to the region
-      if (rgn)
-        rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
+      rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
 
       // to the context for clipping
       targetContext->Rectangle(gfxRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
@@ -2843,7 +2843,17 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     targetContext->Rectangle(gfxRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
   }
   targetContext->Clip();
-  
+
+  // Subtract child view rectangles from the region
+  NSArray* subviews = [self subviews];
+  for (int i = 0; i < int([subviews count]); ++i) {
+    NSView* view = [subviews objectAtIndex:i];
+    if (![view isKindOfClass:[ChildView class]] || [view isHidden])
+      continue;
+    NSRect frame = [view frame];
+    rgn->Subtract(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+  }
+
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
   paintEvent.renderingContext = rc;
   paintEvent.rect = &fullRect;
