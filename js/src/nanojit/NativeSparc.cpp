@@ -89,8 +89,8 @@ namespace nanojit
             SUBI(FP, frameSize, SP);
         else {
             SUB(FP, G1, SP);
-            ORI(G1, -frameSize & 0x3FF, G1);
-            SETHI(-frameSize, G1);
+            ORI(G1, frameSize & 0x3FF, G1);
+            SETHI(frameSize, G1);
         }
 
         verbose_only( verbose_outputf("        %p:",_nIns); )
