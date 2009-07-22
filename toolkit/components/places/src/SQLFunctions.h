@@ -197,9 +197,11 @@ private:
    *
    * @param aURISpec
    *        The spec of the URI to prepare for searching.
-   * @return the new string to use for the URI spec.
+   * @param _fixedSpec
+   *        An out parameter that is the fixed up string.
    */
-  static nsString fixupURISpec(const nsDependentCString &aURISpec);
+  static void fixupURISpec(const nsDependentCString &aURISpec,
+                           nsString &_fixedSpec);
 };
 
 } // namespace places

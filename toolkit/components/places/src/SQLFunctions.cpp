@@ -71,29 +71,29 @@ namespace places {
   }
 
   /* static */
-  nsString
-  MatchAutoCompleteFunction::fixupURISpec(const nsDependentCString &aURISpec)
+  void
+  MatchAutoCompleteFunction::fixupURISpec(const nsDependentCString &aURISpec,
+                                          nsString &_fixedSpec)
   {
-    nsCAutoString unescapedSpec;
+    nsCString unescapedSpec;
     (void)NS_UnescapeURL(aURISpec, esc_SkipControl | esc_AlwaysCopy,
                          unescapedSpec);
 
     // If this unescaped string is valid UTF-8, we'll convert it.  Otherwise,
     // we will simply convert our original string.
-    nsString fixedSpec;
+    NS_ASSERTION(_fixedSpec.IsEmpty(),
+                 "Passing a non-empty string as an out parameter!");
     if (IsUTF8(unescapedSpec))
-      CopyUTF8toUTF16(unescapedSpec, fixedSpec);
+      CopyUTF8toUTF16(unescapedSpec, _fixedSpec);
     else
-      CopyUTF8toUTF16(aURISpec, fixedSpec);
+      CopyUTF8toUTF16(aURISpec, _fixedSpec);
 
-    if (StringBeginsWith(fixedSpec, NS_LITERAL_STRING("http://")))
-      fixedSpec.Cut(0, 7);
-    else if (StringBeginsWith(fixedSpec, NS_LITERAL_STRING("https://")))
-      fixedSpec.Cut(0, 8);
-    else if (StringBeginsWith(fixedSpec, NS_LITERAL_STRING("ftp://")))
-      fixedSpec.Cut(0, 6);
-
-    return fixedSpec;
+    if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("http://")))
+      _fixedSpec.Cut(0, 7);
+    else if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("https://")))
+      _fixedSpec.Cut(0, 8);
+    else if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("ftp://")))
+      _fixedSpec.Cut(0, 6);
   }
 
   /* static */
@@ -214,10 +214,15 @@ namespace places {
     #define HAS_BEHAVIOR(aBitName) \
       (searchBehavior & mozIPlacesAutoComplete::BEHAVIOR_##aBitName)
 
-    nsDependentString searchString;
-    (void)aArguments->GetString(kArgSearchString, searchString);
-    nsDependentCString url;
-    (void)aArguments->GetUTF8String(kArgIndexURL, url);
+    // Temporaries used to get the strings.
+    const PRUnichar *wStr;
+    const char *str;
+    PRUint32 len;
+
+    (void)aArguments->GetSharedString(kArgSearchString, &len, &wStr);
+    nsDependentString searchString(wStr, len / sizeof(PRUnichar));
+    (void)aArguments->GetSharedUTF8String(kArgIndexURL, &len, &str);
+    nsDependentCString url(str, len);
 
     // We only want to filter javascript: URLs if we are not supposed to search
     // for them, and the search does not start with "javascript:".
@@ -232,8 +237,8 @@ namespace places {
     PRInt32 visitCount = aArguments->AsInt32(kArgIndexVisitCount);
     bool typed = aArguments->AsInt32(kArgIndexTyped) ? true : false;
     bool bookmark = aArguments->AsInt32(kArgIndexBookmark) ? true : false;
-    nsDependentString tags;
-    (void)aArguments->GetString(kArgIndexTags, tags);
+    (void)aArguments->GetSharedString(kArgIndexTags, &len, &wStr);
+    nsDependentString tags(wStr, len / sizeof(PRUnichar));
 
     // Make sure we match all the filter requirements.  If a given restriction
     // is active, make sure the corresponding condition is not true.
@@ -250,14 +255,15 @@ namespace places {
     }
 
     // Clean up our URI spec and prepare it for searching.
-    nsString fixedURI = fixupURISpec(url);
+    nsString fixedURI;
+    fixupURISpec(url, fixedURI);
 
     // Obtain our search function.
     PRInt32 matchBehavior = aArguments->AsInt32(kArgIndexMatchBehavior);
     searchFunctionPtr searchFunction = getSearchFunction(matchBehavior);
 
-    nsDependentString title;
-    (void)aArguments->GetString(kArgIndexTitle, title);
+    (void)aArguments->GetSharedString(kArgIndexTitle, &len, &wStr);
+    nsDependentString title(wStr, len / sizeof(PRUnichar));
 
     // Determine if every token matches either the bookmark title, tags, page
     // title, or page URL.
