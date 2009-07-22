@@ -183,10 +183,16 @@ WeaveSvc.prototype = {
   },
 
   get password() { return ID.get('WeaveID').password; },
-  set password(value) { ID.get('WeaveID').password = value; },
+  set password(value) {
+    ID.get('WeaveID').setTempPassword(null);
+    ID.get('WeaveID').password = value;
+  },
 
   get passphrase() { return ID.get('WeaveCryptoID').password; },
-  set passphrase(value) { ID.get('WeaveCryptoID').password = value; },
+  set passphrase(value) {
+    ID.get('WeaveCryptoID').setTempPassword(null);
+    ID.get('WeaveCryptoID').password = value;
+  },
 
   // chrome-provided callbacks for when the service needs a password/passphrase
   set onGetPassword(value) {
@@ -536,6 +542,27 @@ WeaveSvc.prototype = {
       return true;
     }))(),
   
+  changePassword: function WeaveSvc_changePassword(newpass)
+    this._catch(this._notify("changepwd", "", function() {
+      function enc(x) encodeURIComponent(x);
+      let message = "uid=" + enc(this.username) + "&password=" + 
+        enc(this.password) + "&new=" + enc(newpass);
+      let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/chpwd';
+      let res = new Weave.Resource(url);
+      res.authenticator = new Weave.NoOpAuthenticator();
+      res.setHeader("Content-Type", "application/x-www-form-urlencoded",
+                    "Content-Length", message.length);
+
+      let resp = res.post(message);
+      if (res.lastChannel.responseStatus != 200) {
+        this._log.info("Password change failed: " + resp);
+        throw "Could not change password";
+      }
+      
+      this.password = newpass;
+      return true;
+    }))(),
+    
   resetPassphrase: function WeaveSvc_resetPassphrase(newphrase)
     this._catch(this._notify("resetpph", "", function() {
       /* Make remote commands ready so we have a list of clients beforehand */
