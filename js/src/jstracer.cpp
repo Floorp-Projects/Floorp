@@ -229,7 +229,7 @@ JSClass jitstats_class = {
     JS_PropertyStub,       JS_PropertyStub,
     jitstats_getProperty,  JS_PropertyStub,
     JS_EnumerateStub,      JS_ResolveStub,
-    JS_ConvertStub,        JS_FinalizeStub,
+    JS_ConvertStub,        NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
