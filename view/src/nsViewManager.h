@@ -173,6 +173,7 @@ public:
 
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   nsIWidget* GetWidget() { return mRootView ? mRootView->GetWidget() : nsnull; }
+  NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
  
   NS_IMETHOD IsPainting(PRBool& aIsPainting);
