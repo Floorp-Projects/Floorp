@@ -529,10 +529,10 @@ private:
 
 };
 
-  // Mac specific code to fix up port position and clip during paint
+  // Mac specific code to fix up port position and clip
 #ifdef XP_MACOSX
 
-  enum { ePluginPaintIgnore, ePluginPaintEnable, ePluginPaintDisable };
+  enum { ePluginPaintEnable, ePluginPaintDisable };
 
 #endif // XP_MACOSX
 
@@ -1182,6 +1182,16 @@ nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
       configuration->mClipRegion.AppendElement(pixRect);
     }
   }
+}
+
+void
+nsObjectFrame::DidSetWidgetGeometry()
+{
+#if defined(XP_MACOSX)
+  if (mInstanceOwner) {
+    mInstanceOwner->FixUpPluginWindow(ePluginPaintEnable);
+  }
+#endif
 }
 
 PRBool
@@ -4094,7 +4104,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
       }
 
       PRBool eventHandled = PR_FALSE;
-      WindowRef window = FixUpPluginWindow(ePluginPaintIgnore);
+      WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
       if (window) {
         nsPluginEvent pluginEvent = { (EventRecord*)event, nsPluginPlatformWindowRef(window) };
         mInstance->HandleEvent(&pluginEvent, &eventHandled);
@@ -4787,7 +4797,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
   if (mInstance) {
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-      WindowRef window = FixUpPluginWindow(ePluginPaintIgnore);
+      WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
       if (window) {
         EventRecord idleEvent;
         InitializeEventRecord(&idleEvent);
