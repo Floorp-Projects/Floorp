@@ -229,27 +229,43 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
                                       nscoord aX, nscoord aY, nsIFrame* aForChild,
                                       PRUint32 aFlags)
 {
-  if (aForChild == mInner.mScrolledFrame && !(aFlags & INVALIDATE_NOTIFY_ONLY)) {
-    // restrict aDamageRect to the scrollable view's bounds
-    nsRect damage = aDamageRect + nsPoint(aX, aY);
-    nsRect r;
-    if (r.IntersectRect(damage, mInner.mScrollableView->View()->GetBounds())) {
-      nsHTMLContainerFrame::InvalidateInternal(r, 0, 0, aForChild, aFlags);
+  if (aForChild == mInner.mScrolledFrame) {
+    if (!(aFlags & INVALIDATE_NOTIFY_ONLY)) {
+      // restrict aDamageRect to the scrollable view's bounds
+      nsRect damage = aDamageRect + nsPoint(aX, aY);
+      nsRect r;
+      if (r.IntersectRect(damage, mInner.mScrollableView->View()->GetBounds())) {
+        nsHTMLContainerFrame::InvalidateInternal(r, 0, 0, aForChild, aFlags);
+      }
+      if (mInner.mIsRoot && r != damage) {
+        // Make sure we notify our prescontext about invalidations outside
+        // viewport clipping.
+        // This is important for things that are snapshotting the viewport,
+        // possibly outside the scrolled bounds.
+        // We don't need to propagate this any further up, though. Anyone who
+        // cares about scrolled-out-of-view invalidates had better be listening
+        // to our window directly.
+        PresContext()->NotifyInvalidation(damage,
+            (aFlags & INVALIDATE_CROSS_DOC) != 0);
+      }
+      return;
     }
-    if (mInner.mIsRoot && r != damage) {
-      // Make sure we notify our prescontext about invalidations outside
-      // viewport clipping.
-      // This is important for things that are snapshotting the viewport,
-      // possibly outside the scrolled bounds.
-      // We don't need to propagate this any further up, though. Anyone who
-      // cares about scrolled-out-of-view invalidates had better be listening
-      // to our window directly.
-      PresContext()->NotifyInvalidation(damage,
-          (aFlags & INVALIDATE_CROSS_DOC) != 0);
+  } else if (aForChild == mInner.mHScrollbarBox) {
+    if (!mInner.mHasHorizontalScrollbar) {
+      // Our scrollbars may send up invalidations even when they're collapsed,
+      // because we just size a collapsed scrollbar to empty and some
+      // descendants may be non-empty. Suppress that invalidation here.
+      return;
     }
-    return;
+  } else if (aForChild == mInner.mVScrollbarBox) {
+    if (!mInner.mHasVerticalScrollbar) {
+      // Our scrollbars may send up invalidations even when they're collapsed,
+      // because we just size a collapsed scrollbar to empty and some
+      // descendants may be non-empty. Suppress that invalidation here.
+      return;
+    }
   }
-  
+ 
   nsHTMLContainerFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aFlags);
 }
 
