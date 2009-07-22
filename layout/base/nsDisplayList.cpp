@@ -69,7 +69,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mBuildCaret(aBuildCaret),
       mEventDelivery(aIsForEvents),
       mIsAtRootOfPseudoStackingContext(PR_FALSE),
-      mPaintAllFrames(PR_FALSE) {
+      mPaintAllFrames(PR_FALSE),
+      mAccurateVisibleRegions(PR_FALSE) {
   PL_InitArenaPool(&mPool, "displayListArena", 1024, sizeof(void*)-1);
 
   nsPresContext* pc = aReferenceFrame->PresContext();
@@ -246,18 +247,21 @@ nsDisplayItem::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
   nsIFrame* f = GetUnderlyingFrame();
   NS_ASSERTION(f, "GetUnderlyingFrame() must return non-null for leaf items");
-  PRBool isMoving = aBuilder->IsMovingFrame(f);
 
   if (IsOpaque(aBuilder)) {
     nsRect opaqueArea = bounds;
-    if (isMoving) {
+    if (aBuilder->IsMovingFrame(f)) {
       // The display list should include items for both the before and after
       // states (see nsLayoutUtils::ComputeRepaintRegionForCopy. So the
       // only area we want to cover is the area that was opaque in the
       // before state and in the after state.
       opaqueArea.IntersectRect(bounds - aBuilder->GetMoveDelta(), bounds);
     }
-    aVisibleRegion->SimpleSubtract(opaqueArea);
+    if (aBuilder->GetAccurateVisibleRegions()) {
+      aVisibleRegion->Sub(*aVisibleRegion, opaqueArea);
+    } else {
+      aVisibleRegion->SimpleSubtract(opaqueArea);
+    }
   }
 
   return PR_TRUE;
@@ -1015,7 +1019,11 @@ PRBool nsDisplayClip::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   PRBool anyVisible = nsDisplayWrapList::OptimizeVisibility(aBuilder, &rNew);
   nsRegion subtracted;
   subtracted.Sub(clipped, rNew);
-  aVisibleRegion->SimpleSubtract(subtracted);
+  if (aBuilder->GetAccurateVisibleRegions()) {
+    aVisibleRegion->Sub(*aVisibleRegion, subtracted);
+  } else {
+    aVisibleRegion->SimpleSubtract(subtracted);
+  }
   return anyVisible;
 }
 
