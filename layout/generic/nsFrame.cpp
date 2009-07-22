@@ -1253,13 +1253,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       ApplyAbsPosClipping(aBuilder, disp, this, &absPosClip);
   nsRect dirtyRect = aDirtyRect;
 
+  PRBool inTransform = aBuilder->IsInTransform();
   /* If we're being transformed, we need to invert the matrix transform so that we don't 
    * grab points in the wrong coordinate system!
    */
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
-      disp->HasTransform())
+      disp->HasTransform()) {
     dirtyRect = nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0));
-  
+    inTransform = PR_TRUE;
+  }
+
   if (applyAbsPosClipping) {
     dirtyRect.IntersectRect(dirtyRect,
                             absPosClip - aBuilder->ToReferenceFrame(this));
@@ -1277,6 +1280,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsresult rv;
   {    
     nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, PR_TRUE);
+    nsDisplayListBuilder::AutoInTransformSetter
+      inTransformSetter(aBuilder, inTransform);
     rv = BuildDisplayList(aBuilder, dirtyRect, set);
   }
   NS_ENSURE_SUCCESS(rv, rv);

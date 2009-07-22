@@ -263,7 +263,19 @@ public:
    * Notify the display list builder that we're leaving a presshell.
    */
   void LeavePresShell(nsIFrame* aReferenceFrame, const nsRect& aDirtyRect);
-  
+
+  /**
+   * Returns true if we're currently building a display list that's
+   * directly or indirectly under an nsDisplayTransform or SVG
+   * foreignObject.
+   */
+  PRBool IsInTransform() { return mInTransform; }
+  /**
+   * Indicate whether or not we're directly or indirectly under and
+   * nsDisplayTransform or SVG foreignObject.
+   */
+  void SetInTransform(PRBool aInTransform) { mInTransform = aInTransform; }
+
   /**
    * Mark aFrames and its (next) siblings to be displayed if they
    * intersect aDirtyRect (which is relative to aDirtyFrame). If the
@@ -301,6 +313,25 @@ public:
     nsDisplayListBuilder* mBuilder;
     PRPackedBool          mOldValue;
   };
+
+  /**
+   * A helper class to temporarily set the value of mInTransform.
+   */
+  class AutoInTransformSetter;
+  friend class AutoInTransformSetter;
+  class AutoInTransformSetter {
+  public:
+    AutoInTransformSetter(nsDisplayListBuilder* aBuilder, PRBool aInTransform)
+      : mBuilder(aBuilder), mOldValue(aBuilder->mInTransform) { 
+      aBuilder->mInTransform = aInTransform;
+    }
+    ~AutoInTransformSetter() {
+      mBuilder->mInTransform = mOldValue;
+    }
+  private:
+    nsDisplayListBuilder* mBuilder;
+    PRPackedBool          mOldValue;
+  };  
   
   // Helpers for tables
   nsDisplayTableItem* GetCurrentTableItem() { return mCurrentTableItem; }
@@ -337,6 +368,9 @@ private:
   PRPackedBool                   mIsAtRootOfPseudoStackingContext;
   PRPackedBool                   mPaintAllFrames;
   PRPackedBool                   mAccurateVisibleRegions;
+  // True when we're building a display list that's directly or indirectly
+  // under an nsDisplayTransform
+  PRPackedBool                   mInTransform;
 };
 
 class nsDisplayItem;

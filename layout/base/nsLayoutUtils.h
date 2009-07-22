@@ -476,6 +476,7 @@ public:
   static nsRect RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor);
 
 
+  enum { PAINT_IN_TRANSFORM = 0x01 };
   /**
    * Given aFrame, the root frame of a stacking context, paint it and its
    * descendants to aRenderingContext. 
@@ -486,9 +487,12 @@ public:
    * of aFrame
    * @param aBackstop paint the dirty area with this color before drawing
    * the actual content; pass NS_RGBA(0,0,0,0) to draw no background
+   * @param aFlags if PAINT_IN_TRANSFORM is set, then we assume
+   * this is inside a transform or SVG foreignObject.
    */
   static nsresult PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                             const nsRegion& aDirtyRegion, nscolor aBackstop);
+                             const nsRegion& aDirtyRegion, nscolor aBackstop,
+                             PRUint32 aFlags = 0);
 
   /**
    * @param aRootFrame the root frame of the tree to be displayed
