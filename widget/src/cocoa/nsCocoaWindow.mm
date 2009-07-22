@@ -810,6 +810,15 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+nsresult
+nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    nsChildView::ApplyConfiguration(this, aConfigurations[i], PR_TRUE);
+  }
+  return NS_OK;
+} 
+
 void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;

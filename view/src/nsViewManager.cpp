@@ -542,7 +542,8 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
   // We may be required to paint behind them
   aRgn.SetEmpty();
 
-  nsIWidget* widget = aRootView->GetNearestWidget(nsnull);
+  nsPoint offsetToWidget;
+  nsIWidget* widget = aRootView->GetNearestWidget(&offsetToWidget);
   if (!widget) {
     return;
   }
@@ -557,24 +558,19 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
     PRBool widgetVisible;
     childWidget->IsVisible(widgetVisible);
     if (widgetVisible) {
+      nsTArray<nsIntRect> clipRects;
+      childWidget->GetWindowClipRegion(&clipRects);
+
       nsView* view = nsView::GetViewFor(childWidget);
       if (view && view->GetVisibility() == nsViewVisibility_kShow
           && !view->GetFloating()) {
-        nsRect bounds = view->GetBounds();
-        if (bounds.width > 0 && bounds.height > 0) {
-          nsView* viewParent = view->GetParent();
-            
-          while (viewParent && viewParent != aRootView) {
-            viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
-            viewParent = viewParent->GetParent();
-          }
-            
-          // maybe we couldn't get the view into the coordinate
-          // system of aRootView (maybe it's not a descendant
-          // view of aRootView?); if so, don't use it
-          if (viewParent) {
-            aRgn.Or(aRgn, bounds);
-          }
+        nsIntRect bounds;
+        childWidget->GetBounds(bounds);
+        for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
+          nsIntRect r = clipRects[i] + bounds.TopLeft();
+          nsRect rr = r.ToAppUnits(mContext->AppUnitsPerDevPixel()) -
+            offsetToWidget;
+          aRgn.Or(aRgn, rr);
         }
       }
     }
@@ -831,8 +827,17 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
           nsPoint offset = view->GetOffsetTo(aWidgetView);
           damage.MoveBy(-offset);
           UpdateWidgetArea(view, damage, aIgnoreWidgetView);
-          children.Or(children, view->GetDimensions() + offset);
-          children.SimplifyInward(20);
+
+          nsIntRect bounds;
+          childWidget->GetBounds(bounds);
+          nsTArray<nsIntRect> clipRects;
+          childWidget->GetWindowClipRegion(&clipRects);
+          for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
+            nsRect rr = (clipRects[i] + bounds.TopLeft()).
+              ToAppUnits(mContext->AppUnitsPerDevPixel());
+            children.Or(children, rr - aWidgetView->ViewToWidgetOffset()); 
+            children.SimplifyInward(20);
+          }
         }
       }
     }

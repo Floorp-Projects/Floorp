@@ -49,6 +49,7 @@
 #include "nsITheme.h"
 #include "nsNativeWidget.h"
 #include "nsWidgetInitData.h"
+#include "nsTArray.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -100,10 +101,9 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// {a395289d-b344-42c3-ae7e-34d64282b6e0}
 #define NS_IWIDGET_IID \
-{ 0xa395289d, 0xb344, 0x42c3, \
-  { 0xae, 0x7e, 0x34, 0xd6, 0x42, 0x82, 0xb6, 0xe0 } }
+  { 0x8f0869be, 0x6a53, 0x4f21, \
+    { 0xa9, 0x64, 0x90, 0xd9, 0x26, 0x04, 0x05, 0xa3 } }
 
 /*
  * Window shadow styles
@@ -607,6 +607,37 @@ class nsIWidget : public nsISupports {
      * widget.
      */
     virtual nsTransparencyMode GetTransparencyMode() = 0;
+
+    /**
+     * This represents a command to set the bounds and clip region of
+     * a child widget.
+     */
+    struct Configuration {
+        nsIWidget* mChild;
+        nsIntRect mBounds;
+        nsTArray<nsIntRect> mClipRegion;
+    };
+
+    /**
+     * Sets the clip region of each mChild (which must actually be a child
+     * of this widget) to the union of the pixel rects given in
+     * mClipRegion, all relative to the top-left of the child
+     * widget. Clip regions are not implemented on all platforms and only
+     * need to actually work for children that are plugins.
+     * 
+     * Also sets the bounds of each child to mBounds.
+     * 
+     * This will invalidate areas of the children that have changed, but
+     * does not need to invalidate any part of this widget.
+     */
+    virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) = 0;
+
+    /**
+     * Appends to aRects the rectangles constituting this widget's clip
+     * region. If this widget is not clipped, appends a single rectangle
+     * (0, 0, bounds.width, bounds.height).
+     */
+    virtual void GetWindowClipRegion(nsTArray<nsIntRect>* aRects) = 0;
 
     /**
      * Set the shadow style of the window.

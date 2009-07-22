@@ -5492,6 +5492,79 @@ nsWindow::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifie
   }
 }
 
+nsresult
+nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+  // XXXroc we could use BeginDeferWindowPos/DeferWindowPos/EndDeferWindowPos
+  // here, if that helps in some situations. So far I haven't seen a
+  // need.
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+    NS_ASSERTION(w->GetParent() == this,
+                 "Configured widget is not a child");
+#ifdef WINCE
+    // MSDN says we should do on WinCE this before moving or resizing the window
+    // See http://msdn.microsoft.com/en-us/library/aa930600.aspx
+    // We put the region back just below, anyway.
+    ::SetWindowRgn(w->mWnd, NULL, TRUE);
+#endif
+    w->Resize(configuration.mBounds.x, configuration.mBounds.y,
+              configuration.mBounds.width, configuration.mBounds.height,
+              PR_TRUE);
+    nsresult rv = w->SetWindowClipRegion(configuration.mClipRegion, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+static HRGN
+CreateHRGNFromArray(const nsTArray<nsIntRect>& aRects)
+{
+  PRInt32 size = sizeof(RGNDATAHEADER) + sizeof(RECT)*aRects.Length();
+  nsAutoTArray<PRUint8,100> buf;
+  if (!buf.SetLength(size))
+    return NULL;
+  RGNDATA* data = reinterpret_cast<RGNDATA*>(buf.Elements());
+  RECT* rects = reinterpret_cast<RECT*>(data->Buffer);
+  data->rdh.dwSize = sizeof(data->rdh);
+  data->rdh.iType = RDH_RECTANGLES;
+  data->rdh.nCount = aRects.Length();
+  nsIntRect bounds;
+  for (PRUint32 i = 0; i < aRects.Length(); ++i) {
+    const nsIntRect& r = aRects[i];
+    bounds.UnionRect(bounds, r);
+    ::SetRect(&rects[i], r.x, r.y, r.XMost(), r.YMost());
+  }
+  ::SetRect(&data->rdh.rcBound, bounds.x, bounds.y, bounds.XMost(), bounds.YMost());
+  return ::ExtCreateRegion(NULL, buf.Length(), data);
+}
+
+nsresult
+nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+                              PRBool aIntersectWithExisting)
+{
+  HRGN dest = CreateHRGNFromArray(aRects);
+  if (!dest)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (aIntersectWithExisting) {
+    HRGN current = ::CreateRectRgn(0, 0, 0, 0);
+    if (current) {
+      if (::GetWindowRgn(mWnd, current) != 0 /*ERROR*/) {
+        ::CombineRgn(dest, dest, current, RGN_AND);
+      }
+      ::DeleteObject(current);
+    }
+  }
+
+  if (!::SetWindowRgn(mWnd, dest, TRUE)) {
+    ::DeleteObject(dest);
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 // WM_DESTROY event handler
 void nsWindow::OnDestroy()
 {
