@@ -654,7 +654,6 @@ nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
 
   NS_PRECONDITION(aView, "Must have a view");
   NS_PRECONDITION(!aView->NeedsInvalidateFrameOnScroll(), "We shouldn't be BitBlting.");
-  NS_PRECONDITION(aView->HasWidget(), "View must have a widget");
 
   ++mScrollCnt;
   
@@ -670,24 +669,10 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegio
 {
   NS_ASSERTION(RootViewManager()->mScrollCnt > 0,
                "Someone forgot to call WillBitBlit()");
-  // Look at the view's clipped rect. It may be that part of the view is clipped out
-  // in which case we don't need to worry about invalidating the clipped-out part.
-  nsRect damageRect = aView->GetDimensions();
-  if (damageRect.IsEmpty()) {
-    // Don't forget to undo mScrollCnt!
-    --RootViewManager()->mScrollCnt;
-    return;
-  }
 
-  nsView* displayRoot = GetDisplayRootFor(aView);
-  nsPoint offset = aView->GetOffsetTo(displayRoot);
-  damageRect.MoveBy(offset);
-
-  UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
-                   nsRegion(damageRect), aView);
   if (!aUpdateRegion.IsEmpty()) {
-    // XXX We should update the region, not the bounds rect, but that requires
-    // a little more work. Fix this when we reshuffle this code.
+    nsView* displayRoot = GetDisplayRootFor(aView);
+    nsPoint offset = aView->GetOffsetTo(displayRoot);
     nsRegion update(aUpdateRegion);
     update.MoveBy(offset);
     UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
@@ -1572,11 +1557,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
 
   aUpdateRegion->MoveBy(-displayOffset);
 
-#if defined(MOZ_WIDGET_GTK2) || defined(XP_OS2)
-  return aUpdateRegion->IsEmpty();
-#else
   return GetArea(aUpdateRegion->GetBounds()) < GetArea(parentBounds)/2;
-#endif
 }
 
 NS_IMETHODIMP nsViewManager::SetViewFloating(nsIView *aView, PRBool aFloating)

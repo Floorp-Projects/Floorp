@@ -187,9 +187,8 @@ public:
     NS_IMETHOD         Invalidate(const nsIntRect &aRect,
                                   PRBool           aIsSynchronous);
     NS_IMETHOD         Update();
-    NS_IMETHOD         Scroll(PRInt32     aDx,
-                              PRInt32     aDy,
-                              nsIntRect  *aClipRect);
+    virtual void       Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                              const nsTArray<Configuration>& aReconfigureChildren);
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);

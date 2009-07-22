@@ -1731,35 +1731,46 @@ nsWindow::Update()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::Scroll(PRInt32     aDx,
-                 PRInt32     aDy,
-                 nsIntRect  *aClipRect)
+void
+nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                 const nsTArray<Configuration>& aConfigurations)
 {
-    if (!mDrawingarea)
-        return NS_OK;
-
-    D_DEBUG_AT( ns_Window, "%s( %4d,%4d )\n", __FUNCTION__, aDx, aDy );
-
-    if (aClipRect) {
-         D_DEBUG_AT( ns_Window, "  -> aClipRect: %4d,%4d-%4dx%4d\n",
-                     aClipRect->x, aClipRect->y, aClipRect->width, aClipRect->height );
+    if (!mDrawingarea) {
+        NS_ERROR("Cannot scroll widget");
+        return;
     }
 
-    moz_drawingarea_scroll(mDrawingarea, aDx, aDy);
-
-    // Update bounds on our child windows
-    for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-        nsIntRect bounds;
-        kid->GetBounds(bounds);
-        bounds.x += aDx;
-        bounds.y += aDy;
-        static_cast<nsBaseWidget*>(kid)->SetBounds(bounds);
+    nsAutoTArray<nsWindow*,1> windowsToShow;
+    // Hide any widgets that are becoming invisible or that are moving.
+    // Moving widgets are hidden for the duration of the scroll so that
+    // the XCopyArea treats their drawn pixels as part of the window
+    // that should be scrolled. This works well when the widgets are
+    // moving because they're being scrolled, which is normally true.
+    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+        NS_ASSERTION(w->GetParent() == this,
+                     "Configured widget is not a child");
+        if (w->mIsShown &&
+            (configuration.mClipRegion.IsEmpty() ||
+             configuration.mBounds != w->mBounds)) {
+            w->NativeShow(PR_FALSE);
+            windowsToShow.AppendElement(w);
+        }
     }
 
-    // Process all updates so that everything is drawn.
-    gdk_window_process_all_updates();
-    return NS_OK;
+    GdkRectangle gdkSource =
+      { aSource.x, aSource.y, aSource.width, aSource.height };
+    GdkRegion* region = gdk_region_rectangle(&gdkSource);
+    gdk_window_move_region(GDK_WINDOW(mDrawingarea->inner_window),
+                           region, aDelta.x, aDelta.y);
+    gdk_region_destroy(region);
+
+    ConfigureChildren(aConfigurations);
+
+    for (PRUint32 i = 0; i < windowsToShow.Length(); ++i) {
+        windowsToShow[i]->NativeShow(PR_TRUE);
+    }
 }
 
 void*

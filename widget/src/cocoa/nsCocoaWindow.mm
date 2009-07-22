@@ -813,11 +813,20 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 nsresult
 nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 {
-  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
-    nsChildView::ApplyConfiguration(this, aConfigurations[i], PR_TRUE);
+  if (mPopupContentView) {
+    mPopupContentView->ConfigureChildren(aConfigurations);
   }
   return NS_OK;
-} 
+}
+
+void
+nsCocoaWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                      const nsTArray<Configuration>& aConfigurations)
+{
+  if (mPopupContentView) {
+    mPopupContentView->Scroll(aDelta, aSource, aConfigurations);
+  }
+}
 
 void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
 {

@@ -65,14 +65,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCROLLABLEVIEW_IID)
 
   /**
-   * Create the controls used to allow scrolling. Call this method
-   * before anything else is done with the scrollable view.
-   * @param aNative native widget to use as parent for control widgets
-   * @return error status
-   */
-  NS_IMETHOD  CreateScrollControls(nsNativeWidget aNative = nsnull) = 0;
-
-  /**
    * Get the dimensions of the container
    * @param aWidth return value for width of container
    * @param aHeight return value for height of container
