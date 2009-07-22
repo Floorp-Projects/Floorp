@@ -272,17 +272,6 @@ SyncEngine.prototype = {
     return Utils.deepEquals(a.cleartext, b.cleartext);
   },
 
-  _lowMemCheck: function SyncEngine__lowMemCheck() {
-    if (Svc.Memory.isLowMemory()) {
-      this._log.warn("Low memory, forcing GC");
-      Cu.forceGC();
-      if (Svc.Memory.isLowMemory()) {
-        this._log.warn("Low memory, aborting sync!");
-        throw "Low memory";
-      }
-    }
-  },
-
   // Any setup that needs to happen at the beginning of each sync.
   // Makes sure crypto records and keys are all set-up
   _syncStartup: function SyncEngine__syncStartup() {
@@ -331,14 +320,11 @@ SyncEngine.prototype = {
     newitems.newer = this.lastSync;
     newitems.full = true;
     newitems.sort = "depthindex";
-    newitems.get();
 
-    let item;
     let count = {applied: 0, reconciled: 0};
     this._lastSyncTmp = 0;
 
-    while ((item = newitems.iter.next())) {
-      this._lowMemCheck();
+    newitems.recordHandler = Utils.bind2(this, function(item) {
       try {
         item.decrypt(ID.get("WeaveCryptoID"));
         if (this._reconcile(item)) {
@@ -355,7 +341,10 @@ SyncEngine.prototype = {
 			Utils.exceptionStr(e));
       }
       Sync.sleep(0);
-    }
+    });
+
+    newitems.get();
+
     if (this.lastSync < this._lastSyncTmp)
         this.lastSync = this._lastSyncTmp;
 

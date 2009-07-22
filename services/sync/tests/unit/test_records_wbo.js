@@ -71,18 +71,6 @@ function run_test() {
     do_check_eq(rec2.payload.cheese, "gruyere");
     do_check_eq(Records.lastResource.lastChannel.responseStatus, 200);
 
-    log.info("Using a collection to get a record");
-
-    let coll = new Collection("http://localhost:8080/coll", WBORecord);
-    coll.get();
-    do_check_eq(coll.iter.count, 1);
-
-    let rec3 = coll.iter.next();
-    do_check_eq(rec3.id, "record2");
-    do_check_eq(rec3.modified, 2454725.98284);
-    do_check_eq(typeof(rec3.payload), "object");
-    do_check_eq(rec3.payload.cheese, "gruyere");
-
     log.info("Done!");
   }
   catch (e) { do_throw(e); }
