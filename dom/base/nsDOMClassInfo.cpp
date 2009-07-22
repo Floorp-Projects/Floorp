@@ -5882,6 +5882,23 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     rv = GetXPCProto(sXPConnect, cx, aWin, name_struct,
                      getter_AddRefs(proto_holder));
 
+    if (NS_SUCCEEDED(rv) && obj != aWin->GetGlobalJSObject()) {
+      JSObject* dot_prototype;
+      rv = proto_holder->GetJSObject(&dot_prototype);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      const nsDOMClassInfoData *ci_data;
+      if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+        ci_data = &sClassInfoData[name_struct->mDOMClassInfoID];
+      } else {
+        ci_data = name_struct->mData;
+      }
+
+      return ResolvePrototype(sXPConnect, aWin, cx, obj, class_name, ci_data,
+                              name_struct, nameSpaceManager, dot_prototype,
+                              PR_TRUE, did_resolve);
+    }
+
     *did_resolve = NS_SUCCEEDED(rv);
 
     return rv;
