@@ -323,7 +323,9 @@ var BrowserUI = {
     this._favicon.addEventListener("error", this, false);
     this._autocompleteNavbuttons = document.getElementById("autocomplete_navbuttons");
 
-    document.getElementById("urlbar-editarea").addEventListener("click", this, false);
+    let urlbarEditArea = document.getElementById("urlbar-editarea");
+    urlbarEditArea.addEventListener("click", this, false);
+    urlbarEditArea.addEventListener("mousedown", this, false);
 
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
 
@@ -574,6 +576,14 @@ var BrowserUI = {
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
           this._edit.reset();
           this._editToolbar(false);
+        }
+        break;
+      case "mousedown":
+        if (aEvent.detail == 2 &&
+            aEvent.button == 0 &&
+            gPrefService.getBoolPref("browser.urlbar.doubleClickSelectsAll")) {
+          this._edit.editor.selectAll();
+          aEvent.preventDefault();
         }
         break;
       // Favicon events
