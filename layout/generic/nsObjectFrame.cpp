@@ -1233,12 +1233,19 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsObjectFrame");
-  
+
+#ifndef XP_MACOSX
+  if (mWidget && aBuilder->IsInTransform()) {
+    // Windowed plugins should not be rendered inside a transform.
+    return NS_OK;
+  }
+#endif
+
   // determine if we are printing
   if (type == nsPresContext::eContext_Print)
     return aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin"));
-  
+
   return aLists.Content()->AppendNewToTop(new (aBuilder)
       nsDisplayPlugin(this));
 }

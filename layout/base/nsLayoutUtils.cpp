@@ -1048,14 +1048,17 @@ GetNextPage(nsIFrame* aPageContentFrame)
 
 nsresult
 nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                          const nsRegion& aDirtyRegion, nscolor aBackstop)
+                          const nsRegion& aDirtyRegion, nscolor aBackstop,
+                          PRUint32 aFlags)
 {
   nsAutoDisableGetUsedXAssertions disableAssert;
 
   nsDisplayListBuilder builder(aFrame, PR_FALSE, PR_TRUE);
   nsDisplayList list;
   nsRect dirtyRect = aDirtyRegion.GetBounds();
-
+  if (aFlags & PAINT_IN_TRANSFORM) {
+    builder.SetInTransform(PR_TRUE);
+  }
   nsresult rv;
 
   builder.EnterPresShell(aFrame, dirtyRect);
