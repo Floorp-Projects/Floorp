@@ -3719,25 +3719,25 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 {
-  if (!mCurrentTarget && mCurrentTargetContent) {
-    if (mPresContext) {
-      nsIPresShell *shell = mPresContext->GetPresShell();
-      if (shell) {
-        mCurrentTarget = shell->GetPrimaryFrameFor(mCurrentTargetContent);
-      }
+  nsIPresShell *shell;
+  if (mCurrentTarget ||
+      !mPresContext ||
+      !(shell = mPresContext->GetPresShell())) {
+    *aFrame = mCurrentTarget;
+    return NS_OK;
+  }
+
+  if (mCurrentTargetContent) {
+    mCurrentTarget = shell->GetPrimaryFrameFor(mCurrentTargetContent);
+    if (mCurrentTarget) {
+      *aFrame = mCurrentTarget;
+      return NS_OK;
     }
   }
 
-  if (!mCurrentTarget) {
-    nsIPresShell *presShell = mPresContext->GetPresShell();
-    if (presShell) {
-      nsIFrame* frame = nsnull;
-      presShell->GetEventTargetFrame(&frame);
-      mCurrentTarget = frame;
-    }
-  }
-
-  *aFrame = mCurrentTarget;
+  nsIFrame* frame = nsnull;
+  shell->GetEventTargetFrame(&frame);
+  *aFrame = mCurrentTarget = frame;
   return NS_OK;
 }
 
