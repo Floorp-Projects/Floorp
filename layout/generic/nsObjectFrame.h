@@ -138,6 +138,8 @@ public:
     ComputeWidgetGeometry(nsRegion(), nsPoint(0,0), aConfigurations);
   }
 
+  void DidSetWidgetGeometry();
+
   // accessibility support
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);

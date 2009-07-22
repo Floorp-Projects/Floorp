@@ -1102,6 +1102,13 @@ public:
   void GetPluginGeometryUpdates(nsIFrame* aChangedRoot,
                                 nsTArray<nsIWidget::Configuration>* aConfigurations);
 
+  /**
+   * When all geometry updates have been applied, call this function
+   * in case the nsObjectFrames have work to do after the widgets
+   * have been updated.
+   */
+  void DidApplyPluginGeometryUpdates();
+
 private:
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
 };
