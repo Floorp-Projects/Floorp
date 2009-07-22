@@ -59,10 +59,10 @@ enum nsRectVisibility {
   nsRectVisibility_kZeroAreaRect
 }; 
 
-// fa490965-ebd0-4203-836c-51c42d01fedb
+// 98f676da-eb1a-467d-9c0e-0d64c2c88d85
 #define NS_IVIEWMANAGER_IID   \
-{ 0xfa490965, 0xebd0, 0x4203, \
-  { 0x83, 0x6c, 0x51, 0xc4, 0x2d, 0x01, 0xfe, 0xdb } }
+  { 0x98f676da, 0xeb1a, 0x467d, \
+    { 0x9c, 0x0e, 0x0d, 0x64, 0xc2, 0xc8, 0x8d, 0x85 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -181,10 +181,12 @@ public:
    * Called to dispatch an event to the appropriate view. Often called
    * as a result of receiving a mouse or keyboard event from the widget
    * event system.
-   * @param event event to dispatch
-   * @result event handling status
+   * @param aEvent event to dispatch
+   * @param aViewTarget dispatch the event to this view
+   * @param aStatus event handling status
    */
-  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus) = 0;
+  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
+      nsIView* aViewTarget, nsEventStatus* aStatus) = 0;
 
   /**
    * Used to grab/capture all mouse events for a specific view,

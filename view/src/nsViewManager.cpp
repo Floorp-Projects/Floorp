@@ -863,7 +863,8 @@ void nsViewManager::UpdateViews(nsView *aView, PRUint32 aUpdateFlags)
   }
 }
 
-NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aStatus)
+NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
+                                           nsIView* aView, nsEventStatus *aStatus)
 {
   *aStatus = nsEventStatus_eIgnore;
 
@@ -871,9 +872,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
     {
     case NS_SIZE:
       {
-        nsView* view = nsView::GetViewFor(aEvent->widget);
-
-        if (nsnull != view)
+        if (aView)
           {
             nscoord width = ((nsSizeEvent*)aEvent)->windowSize->width;
             nscoord height = ((nsSizeEvent*)aEvent)->windowSize->height;
@@ -883,7 +882,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // The root view may not be set if this is the resize associated with
             // window creation
 
-            if (view == mRootView)
+            if (aView == mRootView)
               {
                 PRInt32 p2a = mContext->AppUnitsPerDevPixel();
                 SetWindowDimensions(NSIntPixelsToAppUnits(width, p2a),
@@ -898,9 +897,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
     case NS_PAINT:
       {
         nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
-        nsView *view = nsView::GetViewFor(aEvent->widget);
 
-        if (!view || !mContext)
+        if (!aView || !mContext)
           break;
 
         *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -957,6 +955,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             if (widget)
                 transparentWindow = widget->GetTransparencyMode() == eTransparencyTransparent;
 
+            nsView* view = static_cast<nsView*>(aView);
             if (rootVM->mScrollCnt == 0 && !transparentWindow) {
               nsIViewObserver* observer = GetViewObserver();
               if (observer) {
@@ -1003,10 +1002,10 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
           nsCOMPtr<nsIRenderingContext> context = event->renderingContext;
           if (!context)
-            context = CreateRenderingContext(*view);
+            context = CreateRenderingContext(*static_cast<nsView*>(aView));
 
           if (context)
-            mObserver->PaintDefaultBackground(view, context, damRect);
+            mObserver->PaintDefaultBackground(aView, context, damRect);
           else
             NS_WARNING("nsViewManager: no rc for default refresh");        
 
@@ -1034,7 +1033,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           // ScrollingView's viewable area. (See bug 97674 for this
           // alternate patch.)
 
-          UpdateView(view, damRect, NS_VMREFRESH_NO_SYNC);
+          UpdateView(aView, damRect, NS_VMREFRESH_NO_SYNC);
         }
 
         break;
@@ -1064,10 +1063,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         // Hold a refcount to the observer. The continued existence of the observer will
         // delay deletion of this view hierarchy should the event want to cause its
         // destruction in, say, some JavaScript event handler.
-        nsView *view = nsView::GetViewFor(aEvent->widget);
         nsCOMPtr<nsIViewObserver> obs = GetViewObserver();
         if (obs) {
-          obs->HandleEvent(view, aEvent, aStatus);
+          obs->HandleEvent(aView, aEvent, aStatus);
         }
       }
       break; 
@@ -1095,7 +1093,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         }
 
         //Find the view whose coordinates system we're in.
-        nsView* baseView = nsView::GetViewFor(aEvent->widget);
+        nsView* baseView = static_cast<nsView*>(aView);
         nsView* view = baseView;
         PRBool capturedEvent = PR_FALSE;
         
@@ -1177,7 +1175,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
           // Dispatch the event
           nsRect baseViewDimensions;
-          if (baseView != nsnull) {
+          if (baseView) {
             baseView->GetDimensions(baseViewDimensions);
           }
 
