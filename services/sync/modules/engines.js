@@ -459,14 +459,28 @@ SyncEngine.prototype = {
       // don't cache the outgoing items, we won't need them later
       this._store.cache.enabled = false;
 
+      let count = 0;
       for (let id in this._tracker.changedIDs) {
         let out = this._createRecord(id);
         this._log.trace("Outgoing:\n" + out);
+
         // skip getting siblings of already processed and deleted records
         if (!out.deleted && !(out.id in meta))
           this._store.createMetaRecords(out.id, meta);
+
         out.encrypt(ID.get("WeaveCryptoID"));
         up.pushData(JSON.parse(out.serialize())); // FIXME: inefficient
+
+        if ((++count % MAX_UPLOAD_RECORDS) == 0) {
+          // partial upload
+          this._log.info("Uploading " + (count - MAX_UPLOAD_RECORDS) + " - " +
+                         count + " out of " + outnum + " records");
+          up.post();
+          if (up.data.modified > this.lastSync)
+            this.lastSync = up.data.modified;
+          up.clearRecords();
+        }
+
         Sync.sleep(0);
       }
 
@@ -474,22 +488,21 @@ SyncEngine.prototype = {
 
       // now add short depth-and-index-only records, except the ones we're
       // sending as full records
-      let count = 0;
+      let metaCount = 0;
       for each (let obj in meta) {
-          if (!(obj.id in this._tracker.changedIDs)) {
-            up.pushData(obj);
-            count++;
-          }
+        if (!(obj.id in this._tracker.changedIDs)) {
+          up.pushData(obj);
+          metaCount++;
+        }
       }
 
-      this._log.info("Uploading " + outnum + " records + " + count + " index/depth records)");
-      // do the upload
+      // final upload
+      this._log.info("Uploading " +
+                     (count >= MAX_UPLOAD_RECORDS? "last batch of " : "") +
+                     count + " records, and " + metaCount + " index/depth records");
       up.post();
-
-      // save last modified date
-      let mod = up.data.modified;
-      if (mod > this.lastSync)
-        this.lastSync = mod;
+      if (up.data.modified > this.lastSync)
+        this.lastSync = up.data.modified;
     }
     this._tracker.clearChangedIDs();
   },
