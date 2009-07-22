@@ -784,6 +784,7 @@ ContentClickingModule.prototype = {
 
         this._events.push({event: aEvent, time: Date.now()});
 
+        Browser.canvasBrowser.endPanning();
         if (this._clickTimeout == -1) {
           this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._sendSingleClick(); }, 400, this);
         } else {
