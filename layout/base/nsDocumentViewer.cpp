@@ -357,8 +357,15 @@ private:
    * Creates a view manager, root view, and widget for the root view, setting
    * mViewManager and mWindow.
    * @param aSize the initial size in appunits
+   * @param aContainerView the container view to hook our root view up
+   * to as a child, or null if this will be the root view manager
    */
-  nsresult MakeWindow(const nsSize& aSize);
+  nsresult MakeWindow(const nsSize& aSize, nsIView* aContainerView);
+
+  /**
+   * Find the view to use as the container view for MakeWindow.
+   */
+  nsIView* FindContainerView();
 
   /**
    * Create our device context
@@ -826,6 +833,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
 
+  nsIView* containerView = FindContainerView();
+
   PRBool makeCX = PR_FALSE;
   if (aDoCreation) {
     // XXXbz this is a nasty hack to do with the fact that we create
@@ -864,7 +873,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       // FlushPendingNotifications() calls down the road...
 
       rv = MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(aBounds.width),
-                             mPresContext->DevPixelsToAppUnits(aBounds.height)));
+                             mPresContext->DevPixelsToAppUnits(aBounds.height)),
+                      containerView);
       NS_ENSURE_SUCCESS(rv, rv);
       Hide();
 
@@ -1663,9 +1673,11 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 
     DestroyPresShell();
 
+    nsIView* containerView = FindContainerView();
+
     // This destroys the root view because it was associated with the root frame,
     // which has been torn down. Recreate the viewmanager and root view.
-    MakeWindow(currentSize);
+    MakeWindow(currentSize, containerView);
   }
 
   // And if we're already given a prescontext...
@@ -1896,6 +1908,8 @@ DocumentViewerImpl::Show(void)
     nsresult rv = CreateDeviceContext(mParentWidget);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsIView* containerView = FindContainerView();
+
     // Create presentation context
     NS_ASSERTION(!mPresContext, "Shouldn't have a prescontext if we have no shell!");
     mPresContext = new nsPresContext(mDocument, nsPresContext::eContext_Galley);
@@ -1916,7 +1930,8 @@ DocumentViewerImpl::Show(void)
     }
 
     rv = MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(tbounds.width),
-                           mPresContext->DevPixelsToAppUnits(tbounds.height)));
+                           mPresContext->DevPixelsToAppUnits(tbounds.height)),
+                           containerView);
     if (NS_FAILED(rv))
       return rv;
 
@@ -2214,7 +2229,7 @@ DocumentViewerImpl::ClearHistoryEntry()
 //-------------------------------------------------------
 
 nsresult
-DocumentViewerImpl::MakeWindow(const nsSize& aSize)
+DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
 {
   nsresult rv;
 
@@ -2228,45 +2243,10 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize)
   if (NS_FAILED(rv))
     return rv;
 
-  // Create a child window of the parent that is our "root view/window"
-  // if aParentWidget has a view, we'll hook our view manager up to its view tree
-  nsIView* containerView =
-    mParentWidget ? nsIView::GetViewFor(mParentWidget) : nsnull;
-
-  if (containerView) {
-    // see if the containerView has already been hooked into a foreign view manager hierarchy
-    // if it has, then we have to hook into the hierarchy too otherwise bad things will happen.
-    nsIViewManager* containerVM = containerView->GetViewManager();
-    nsIView* pView = containerView;
-    do {
-      pView = pView->GetParent();
-    } while (pView && pView->GetViewManager() == containerVM);
-
-    if (!pView) {
-      // OK, so the container is not already hooked up into a foreign view manager hierarchy.
-      // That means we can choose not to hook ourselves up.
-      //
-      // If the parent container is a chrome shell and we are a content shell
-      // then we won't hook into its view
-      // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
-      // but is really just for peace of mind. This check can be removed if we want to support fancy
-      // chrome effects like transparent controls floating over content, transparent Web browsers, and
-      // things like that, and the perf bugs are fixed.
-      nsCOMPtr<nsIDocShellTreeItem> container(do_QueryReferent(mContainer));
-      nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-      if (container) {
-        container->GetSameTypeParent(getter_AddRefs(sameTypeParent));
-      }
-      if (!sameTypeParent && mParentWidget->GetTransparencyMode() != eTransparencyTransparent) {
-        containerView = nsnull;
-      }
-    }
-  }
-
   // The root view is always at 0,0.
   nsRect tbounds(nsPoint(0, 0), aSize);
   // Create a view
-  nsIView* view = mViewManager->CreateView(tbounds, containerView);
+  nsIView* view = mViewManager->CreateView(tbounds, aContainerView);
   if (!view)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2286,7 +2266,7 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize)
     initDataPtr = nsnull;
   }
   rv = view->CreateWidget(kWidgetCID, initDataPtr,
-                          (containerView != nsnull || !mParentWidget) ?
+                          (aContainerView != nsnull || !mParentWidget) ?
                             nsnull : mParentWidget->GetNativeData(NS_NATIVE_WIDGET),
                           PR_TRUE, PR_FALSE);
   if (NS_FAILED(rv))
@@ -2303,6 +2283,48 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize)
   // mWindow->SetFocus();
 
   return rv;
+}
+
+nsIView*
+DocumentViewerImpl::FindContainerView()
+{
+  // If mParentWidget has a view, we can hook our view manager up
+  // to its view tree
+  if (!mParentWidget)
+    return nsnull;
+  nsIView* containerView = nsIView::GetViewFor(mParentWidget);
+  if (!containerView)
+    return nsnull;
+  if (mParentWidget->GetTransparencyMode() == eTransparencyTransparent)
+    return containerView;
+
+  // see if the containerView has already been hooked into a foreign view manager hierarchy
+  // if it has, then we have to hook into the hierarchy too otherwise bad things will happen.
+  nsIViewManager* containerVM = containerView->GetViewManager();
+  nsIView* pView = containerView;
+  do {
+    pView = pView->GetParent();
+  } while (pView && pView->GetViewManager() == containerVM);
+  if (pView)
+    return containerView;
+
+  // OK, so the container is not already hooked up into a foreign view manager hierarchy.
+  // That means we can choose not to hook ourselves up.
+  //
+  // If the parent container is a chrome shell and we are a content shell
+  // then we won't hook into its view
+  // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
+  // but is really just for peace of mind. This check can be removed if we want to support fancy
+  // chrome effects like transparent controls floating over content, transparent Web browsers, and
+  // things like that, and the perf bugs are fixed.
+  nsCOMPtr<nsIDocShellTreeItem> container(do_QueryReferent(mContainer));
+  if (container) {
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+    container->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+    if (sameTypeParent)
+      return containerView;
+  }
+  return nsnull;
 }
 
 nsresult
