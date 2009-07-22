@@ -53,6 +53,7 @@ _TEST_FILES = \
 		frame_selection_underline.css \
 		plugin_clipping_helper.xhtml \
 		plugin_clipping_helper2.xhtml \
+		plugin_clipping_helper_transformed.xhtml \
 		plugin_clipping_lib.js \
 		test_backspace_delete.xul \
 		test_bug263683.html \
@@ -86,6 +87,7 @@ _TEST_FILES = \
 		test_movement_by_words.html \
 		test_plugin_clipping.xhtml \
 		test_plugin_clipping2.xhtml \
+		test_plugin_clipping_transformed.xhtml \
 		test_plugin_position.xhtml \
 		test_selection_underline.html \
 		$(NULL)
