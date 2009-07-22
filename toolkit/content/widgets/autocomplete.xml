@@ -975,13 +975,15 @@
       <method name="_invalidate">
         <body>
           <![CDATA[
+          // If we do not have a specific height, we'll have to figure out what
+          // our actual height should be dynamically.
           if (!this.hasAttribute("height")) {
             // collapsed if no matches
             this.richlistbox.collapsed = (this._matchCount == 0);
 
-            // Dynamically update height until richlistbox.rows works (bug 401939)
-            // Adjust the height immediately and after the row contents update
-            this.adjustHeight();
+            // Adjust the height, but we need to delay this because adjustHeight
+            // gets the wrong values (see the comments in _adjustAcItem about
+            // overflow.  XXX why?).
             setTimeout(function(self) self.adjustHeight(), 0, this);
           }
 
