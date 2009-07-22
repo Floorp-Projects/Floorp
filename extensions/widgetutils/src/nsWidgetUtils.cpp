@@ -136,7 +136,7 @@ private:
   void AttachWindowListeners(nsIDOMWindow *aDOMWin);
   PRBool IsXULNode(nsIDOMNode *aNode, PRUint32 *aType = 0);
   nsresult GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
-  nsresult UpdateFromEvent(nsIDOMEvent *aDOMEvent, nsIWidget * *aWidget = nsnull, nsIViewManager * *aViewManager = nsnull);
+  nsresult UpdateFromEvent(nsIDOMEvent *aDOMEvent);
 
   static void StopPanningCallback(nsITimer *timer, void *closure);
 
@@ -166,7 +166,7 @@ nsWidgetUtils::Init()
 }
 
 nsresult
-nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent, nsIWidget * *aWidget, nsIViewManager * *aViewManager)
+nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent)
 {
   nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
   mouseEvent = do_QueryInterface(aDOMEvent);
@@ -216,12 +216,8 @@ nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent, nsIWidget * *aWidget, nsI
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
   mViewManager = shell->GetViewManager();
   NS_ENSURE_TRUE(mViewManager, NS_ERROR_FAILURE);
-  mViewManager->GetWidget(getter_AddRefs(mWidget));
+  mViewManager->GetRootWidget(getter_AddRefs(mWidget));
   NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
-  if (aWidget)
-    NS_ADDREF(*aWidget = mWidget);
-  if (aViewManager)
-    NS_ADDREF(*aViewManager = mViewManager);
   return NS_OK;
 }
 
