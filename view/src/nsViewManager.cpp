@@ -978,7 +978,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
             // Make sure to not send WillPaint notifications while scrolling
             nsRefPtr<nsViewManager> rootVM = RootViewManager();
 
-            nsIWidget *widget = mRootView->GetWidget();
+            nsCOMPtr<nsIWidget> widget;
+            rootVM->GetRootWidget(getter_AddRefs(widget));
             PRBool transparentWindow = PR_FALSE;
             if (widget)
                 transparentWindow = widget->GetTransparencyMode() == eTransparencyTransparent;
