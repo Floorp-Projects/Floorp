@@ -215,6 +215,7 @@ public:
                                         nsIWidget *aWidget, PRBool aActivate);
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
     NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
+    NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
@@ -302,6 +303,7 @@ protected:
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
   PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
                                         // this is used for sibling sheet contention only
+  PRPackedBool         mFullScreen;
   PRPackedBool         mModal;
 
   PRInt32              mNumModalDescendents;
