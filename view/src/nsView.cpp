@@ -844,7 +844,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
     if (aOffset) {
       *aOffset = pt;
     }
-    return static_cast<const nsView*>(this)->GetViewManager()->GetWidget();
+    return nsnull;
   }
 
   // pt is now the offset from v's origin to this's origin
