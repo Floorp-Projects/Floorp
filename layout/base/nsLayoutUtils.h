@@ -251,9 +251,25 @@ public:
 
   /**
    * Like IsProperAncestorFrame, but looks across document boundaries.
+   *
+   * Just like IsAncestorFrameCrossDoc, except that it returns false when
+   * aFrame == aAncestorFrame.
    */
   static PRBool IsProperAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                               nsIFrame* aCommonAncestor = nsnull);
+
+  /**
+   * IsAncestorFrameCrossDoc checks whether aAncestorFrame is an ancestor
+   * of aFrame or equal to aFrame, looking across document boundaries.
+   * @param aCommonAncestor nsnull, or a common ancestor of aFrame and
+   * aAncestorFrame. If non-null, this can bound the search and speed up
+   * the function.
+   *
+   * Just like IsProperAncestorFrameCrossDoc, except that it returns true when
+   * aFrame == aAncestorFrame.
+   */
+  static PRBool IsAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
+                                        nsIFrame* aCommonAncestor = nsnull);
 
   /**
     * GetFrameFor returns the root frame for a view
