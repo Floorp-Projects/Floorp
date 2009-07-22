@@ -213,9 +213,7 @@ Resource.prototype = {
     return this._lastChannel;
   },
 
-  _onProgress: function Res__onProgress(event) {
-    this._lastProgress = Date.now();
-  },
+  _onProgress: function Res__onProgress(channel) {},
 
   // ** {{{ Resource.filterUpload }}} **
   //
@@ -357,69 +355,12 @@ ChannelListener.prototype = {
   },
 
   onDataAvailable: function Channel_onDataAvail(req, cb, stream, off, count) {
-    this._onProgress();
-
     let siStream = Cc["@mozilla.org/scriptableinputstream;1"].
       createInstance(Ci.nsIScriptableInputStream);
     siStream.init(stream);
 
     this._data += siStream.read(count);
-  }
-};
-
-// = RecordParser =
-//
-// This object retrives single WBOs from a stream of incoming
-// JSON. This should be useful for performance optimizations
-// in cases where memory is low (on Fennec, for example).
-//
-// XXX: Note that this parser is currently not used because we
-// are yet to figure out the best way to integrate it with the
-// asynchronous nature of {{{ChannelListener}}}. Ed's work in the
-// Sync module will make this easier in the future.
-function RecordParser(data) {
-  this._data = data;
-}
-RecordParser.prototype = {
-  // ** {{{ RecordParser.getNextRecord }}} **
-  //
-  // Returns a single WBO from the stream of JSON received
-  // so far.
-  getNextRecord: function RecordParser_getNextRecord() {
-    let start;
-    let bCount = 0;
-    let done = false;
-
-    for (let i = 1; i < this._data.length; i++) {
-      if (this._data[i] == '{') {
-        if (bCount == 0)
-          start = i;
-        bCount++;
-      } else if (this._data[i] == '}') {
-        bCount--;
-        if (bCount == 0)
-          done = true;
-      }
-
-      if (done) {
-        let ret = this._data.substring(start, i + 1);
-        this._data = this._data.substring(i + 1);
-        return ret;
-      }
-    }
-
-    return false;
-  },
-
-  // ** {{{ RecordParser.append }}} **
-  //
-  // Appends data to the current internal buffer
-  // of received data by the parser. The buffer
-  // is continously processed as {{{getNextRecord}}}
-  // is called, so the caller need not keep a copy
-  // of the data passed to this function.
-  append: function RecordParser_append(data) {
-    this._data += data;
+    this._onProgress();
   }
 };
 
