@@ -274,6 +274,11 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
     view->CreateWidget(kCChildCID);
   }
 
+  // Set the primary frame now so that
+  // DocumentViewerImpl::FindContainerView called by ShowViewer below
+  // can find it if necessary.
+  PresContext()->FrameManager()->SetPrimaryFrameFor(aContent, this);
+
   ShowViewer();
   return NS_OK;
 }
