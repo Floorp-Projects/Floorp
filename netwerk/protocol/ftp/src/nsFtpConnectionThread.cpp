@@ -2010,13 +2010,16 @@ nsFtpState::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
     if (IsClosed())
         return NS_OK;
 
-    mDoomCache = PR_TRUE;
-    mCacheEntry = entry;
-    if (CanReadCacheEntry() && ReadCacheEntry()) {
-        mState = FTP_READ_CACHE;
-    } else {
-        Connect();
+    if (NS_SUCCEEDED(status) && entry) {
+        mDoomCache = PR_TRUE;
+        mCacheEntry = entry;
+        if (CanReadCacheEntry() && ReadCacheEntry()) {
+            mState = FTP_READ_CACHE;
+            return NS_OK;
+        }
     }
+
+    Connect();
     return NS_OK;
 }
 
@@ -2207,15 +2210,19 @@ nsFtpState::CheckCache()
     // Try to open a cache entry immediately, but if the cache entry is busy,
     // then wait for it to be available.
 
-    session->OpenCacheEntry(key, accessReq, PR_FALSE,
-                            getter_AddRefs(mCacheEntry));
-    if (mCacheEntry) {
+    nsresult rv = session->OpenCacheEntry(key, accessReq, PR_FALSE,
+                                          getter_AddRefs(mCacheEntry));
+    if (NS_SUCCEEDED(rv) && mCacheEntry) {
         mDoomCache = PR_TRUE;
         return PR_FALSE;  // great, we're ready to proceed!
     }
 
-    nsresult rv = session->AsyncOpenCacheEntry(key, accessReq, this);
-    return NS_SUCCEEDED(rv);
+    if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+        rv = session->AsyncOpenCacheEntry(key, accessReq, this);
+        return NS_SUCCEEDED(rv);
+    }
+
+    return PR_FALSE;
 }
 
 nsresult
