@@ -59,10 +59,9 @@ enum nsRectVisibility {
   nsRectVisibility_kZeroAreaRect
 }; 
 
-// 98f676da-eb1a-467d-9c0e-0d64c2c88d85
 #define NS_IVIEWMANAGER_IID   \
-  { 0x98f676da, 0xeb1a, 0x467d, \
-    { 0x9c, 0x0e, 0x0d, 0x64, 0xc2, 0xc8, 0x8d, 0x85 } }
+  { 0x50c0a18c, 0x3e39, 0x4606, \
+    { 0x85, 0x77, 0xe7, 0x3a, 0xcc, 0xb4, 0x66, 0xc9 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -423,6 +422,12 @@ public:
    * a widget.
    */
   NS_IMETHOD GetWidget(nsIWidget **aWidget) = 0;
+
+  /**
+   * Retrieve the widget at the root of the nearest enclosing
+   * view manager whose root view has a widget.
+   */
+  NS_IMETHOD GetRootWidget(nsIWidget **aWidget) = 0;
 
   /**
    * Force update of view manager widget

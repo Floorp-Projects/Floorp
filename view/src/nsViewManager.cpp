@@ -1874,6 +1874,23 @@ NS_IMETHODIMP nsViewManager::GetWidget(nsIWidget **aWidget)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsViewManager::GetRootWidget(nsIWidget **aWidget)
+{
+  if (!mRootView) {
+    *aWidget = nsnull;
+    return NS_OK;
+  }
+  if (mRootView->HasWidget()) {
+    *aWidget = mRootView->GetWidget();
+    NS_ADDREF(*aWidget);
+    return NS_OK;
+  }
+  if (mRootView->GetParent())
+    return mRootView->GetParent()->GetViewManager()->GetRootWidget(aWidget);
+  *aWidget = nsnull;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsViewManager::ForceUpdate()
 {
   if (!IsRootVM()) {
