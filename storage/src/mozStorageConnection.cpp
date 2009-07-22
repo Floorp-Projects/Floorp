@@ -630,42 +630,45 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
 {
   int rc = SQLITE_OK;
   nsTArray<StatementData> stmts(aNumStatements);
-  for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
-    sqlite3_stmt *old_stmt =
-        static_cast<Statement *>(aStatements[i])->nativeStatement();
-    if (!old_stmt) {
-      rc = SQLITE_MISUSE;
-      break;
-    }
-    NS_ASSERTION(::sqlite3_db_handle(old_stmt) == mDBConn,
-                 "Statement must be from this database connection!");
+  {
+    SQLiteMutexAutoLock lockedScope(mDBMutex);
+    for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
+      sqlite3_stmt *old_stmt =
+          static_cast<Statement *>(aStatements[i])->nativeStatement();
+      if (!old_stmt) {
+        rc = SQLITE_MISUSE;
+        break;
+      }
+      NS_ASSERTION(::sqlite3_db_handle(old_stmt) == mDBConn,
+                   "Statement must be from this database connection!");
 
-    // Clone this statement.  We only need a sqlite3_stmt object, so we can
-    // avoid all the extra work that making a new Statement would normally
-    // involve and use the SQLite API.
-    sqlite3_stmt *new_stmt;
-    rc = ::sqlite3_prepare_v2(mDBConn, ::sqlite3_sql(old_stmt), -1, &new_stmt,
-                              NULL);
-    if (rc != SQLITE_OK)
-      break;
+      // Clone this statement.  We only need a sqlite3_stmt object, so we can
+      // avoid all the extra work that making a new Statement would normally
+      // involve and use the SQLite API.
+      sqlite3_stmt *new_stmt;
+      rc = ::sqlite3_prepare_v2(mDBConn, ::sqlite3_sql(old_stmt), -1, &new_stmt,
+                                NULL);
+      if (rc != SQLITE_OK)
+        break;
 
 #ifdef PR_LOGGING
-    PR_LOG(gStorageLog, PR_LOG_NOTICE,
-           ("Cloned statement 0x%p to 0x%p", old_stmt, new_stmt));
+      PR_LOG(gStorageLog, PR_LOG_NOTICE,
+             ("Cloned statement 0x%p to 0x%p", old_stmt, new_stmt));
 #endif
 
-    // Transfer the bindings
-    rc = sqlite3_transfer_bindings(old_stmt, new_stmt);
-    if (rc != SQLITE_OK)
-      break;
+      // Transfer the bindings
+      rc = sqlite3_transfer_bindings(old_stmt, new_stmt);
+      if (rc != SQLITE_OK)
+        break;
 
-    Statement *storageStmt = static_cast<Statement *>(aStatements[i]);
-    StatementData data(new_stmt, storageStmt->bindingParamsArray());
-    if (!stmts.AppendElement(data)) {
-      rc = SQLITE_NOMEM;
-      break;
-    }
-  }
+      Statement *storageStmt = static_cast<Statement *>(aStatements[i]);
+      StatementData data(new_stmt, storageStmt->bindingParamsArray());
+      if (!stmts.AppendElement(data)) {
+        rc = SQLITE_NOMEM;
+        break;
+      }
+    } // for loop
+  } // locked Scope
 
   // Dispatch to the background
   nsresult rv = NS_OK;
@@ -682,8 +685,11 @@ Connection::ExecuteAsync(mozIStorageStatement **aStatements,
   }
 
   // Always reset all the statements
-  for (PRUint32 i = 0; i < aNumStatements; i++)
-    (void)aStatements[i]->Reset();
+  {
+    SQLiteMutexAutoLock lockedScope(mDBMutex);
+    for (PRUint32 i = 0; i < aNumStatements; i++)
+      (void)aStatements[i]->Reset();
+  }
 
   return rv;
 }
