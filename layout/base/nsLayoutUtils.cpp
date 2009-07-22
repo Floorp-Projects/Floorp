@@ -319,6 +319,16 @@ nsLayoutUtils::IsProperAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame*
 
 // static
 PRBool
+nsLayoutUtils::IsAncestorFrameCrossDoc(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
+                                       nsIFrame* aCommonAncestor)
+{
+  if (aFrame == aAncestorFrame)
+    return PR_TRUE;
+  return IsProperAncestorFrameCrossDoc(aAncestorFrame, aFrame, aCommonAncestor);
+}
+
+// static
+PRBool
 nsLayoutUtils::IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                      nsIFrame* aCommonAncestor)
 {
@@ -1038,14 +1048,17 @@ GetNextPage(nsIFrame* aPageContentFrame)
 
 nsresult
 nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                          const nsRegion& aDirtyRegion, nscolor aBackstop)
+                          const nsRegion& aDirtyRegion, nscolor aBackstop,
+                          PRUint32 aFlags)
 {
   nsAutoDisableGetUsedXAssertions disableAssert;
 
   nsDisplayListBuilder builder(aFrame, PR_FALSE, PR_TRUE);
   nsDisplayList list;
   nsRect dirtyRect = aDirtyRegion.GetBounds();
-
+  if (aFlags & PAINT_IN_TRANSFORM) {
+    builder.SetInTransform(PR_TRUE);
+  }
   nsresult rv;
 
   builder.EnterPresShell(aFrame, dirtyRect);

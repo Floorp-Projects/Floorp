@@ -101,6 +101,7 @@ nsBaseWidget::nsBaseWidget()
 , mOnDestroyCalled(PR_FALSE)
 , mBounds(0,0,0,0)
 , mOriginalBounds(nsnull)
+, mClipRectCount(0)
 , mZIndex(0)
 , mSizeMode(nsSizeMode_Normal)
 {
@@ -558,6 +559,26 @@ void nsBaseWidget::SetTransparencyMode(nsTransparencyMode aMode) {
 
 nsTransparencyMode nsBaseWidget::GetTransparencyMode() {
   return eTransparencyOpaque;
+}
+
+void
+nsBaseWidget::StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects)
+{
+  mClipRectCount = aRects.Length();
+  mClipRects = new nsIntRect[mClipRectCount];
+  if (mClipRects) {
+    memcpy(mClipRects, aRects.Elements(), sizeof(nsIntRect)*mClipRectCount);
+  }
+}
+
+void
+nsBaseWidget::GetWindowClipRegion(nsTArray<nsIntRect>* aRects)
+{
+  if (mClipRects) {
+    aRects->AppendElements(mClipRects.get(), mClipRectCount);
+  } else {
+    aRects->AppendElement(nsIntRect(0, 0, mBounds.width, mBounds.height));
+  }
 }
 
 //-------------------------------------------------------------------------

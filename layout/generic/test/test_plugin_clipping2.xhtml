@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
-<html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping">
+<html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping: Dynamic Tests">
 <head>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
@@ -9,10 +9,12 @@
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
-
-window.open("plugin_clipping_helper.xhtml", "", "width=620,height=320");
-SimpleTest.waitForExplicitFinish();
-
+if (navigator.platform.indexOf("Mac") == 0) {
+  todo(false, "Mac plugins do not support complex clipping");
+} else {
+  window.open("plugin_clipping_helper2.xhtml", "", "width=620,height=320");
+  SimpleTest.waitForExplicitFinish();
+}
 ]]>
 </script>
 

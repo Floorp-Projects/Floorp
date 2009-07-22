@@ -147,6 +147,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
 #include "nsWidgetsCID.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 #if defined(WINCE)
 #include "nsWindowCE.h"
@@ -2297,43 +2299,54 @@ NS_IMETHODIMP nsWindow::Update()
  *
  **************************************************************/
 
-// Invalidates a window if it's not one of ours, for example
-// a window created by a plugin.
-BOOL CALLBACK nsWindow::InvalidateForeignChildWindows(HWND aWnd, LPARAM aMsg)
+void
+nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                 const nsTArray<Configuration>& aConfigurations)
 {
-  LONG_PTR proc = ::GetWindowLongPtrW(aWnd, GWLP_WNDPROC);
-  if (proc != (LONG_PTR)&nsWindow::WindowProc) {
-    // This window is not one of our windows so invalidate it.
-    VERIFY(::InvalidateRect(aWnd, NULL, FALSE));    
-  }
-  return TRUE;
-}
-
-// Scroll
-NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
-{
-  RECT  trect;
-
-  if (nsnull != aClipRect)
-  {
-    trect.left = aClipRect->x;
-    trect.top = aClipRect->y;
-    trect.right = aClipRect->XMost();
-    trect.bottom = aClipRect->YMost();
+  // We can use SW_SCROLLCHILDREN if all the windows that intersect the
+  // affected area are moving by the scroll amount.
+  // First, build the set of widgets that are to be moved by the scroll
+  // amount.
+  // At the same time, set the clip region of all changed windows to the
+  // intersection of the current and new regions.
+  nsTHashtable<nsPtrHashKey<nsWindow> > scrolledWidgets;
+  scrolledWidgets.Init();
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+    NS_ASSERTION(w->GetParent() == this,
+                 "Configured widget is not a child");
+    if (configuration.mBounds == w->mBounds + aDelta) {
+      scrolledWidgets.PutEntry(w);
+    }
+    w->SetWindowClipRegion(configuration.mClipRegion, PR_TRUE);
   }
 
-  ::ScrollWindowEx(mWnd, aDx, aDy, NULL, (nsnull != aClipRect) ? &trect : NULL,
-                   NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
-  // Invalidate all child windows that aren't ours; we're moving them, and we
-  // expect them to be painted at the new location even if they're outside the
-  // region we're bit-blit scrolling. See bug 387701.
-#if !defined(WINCE)
-  ::EnumChildWindows(GetWindowHandle(), nsWindow::InvalidateForeignChildWindows, NULL);
-#else
-  nsWindowCE::EnumChildWindows(GetWindowHandle(), nsWindow::InvalidateForeignChildWindows, NULL);
-#endif
-  ::UpdateWindow(mWnd);
-  return NS_OK;
+  // Now check if any of our children would be affected by
+  // SW_SCROLLCHILDREN but not supposed to scroll.
+  nsIntRect affectedRect;
+  affectedRect.UnionRect(aSource, aSource + aDelta);
+  // We pass SW_INVALIDATE because areas that get scrolled into view
+  // from offscreen (but inside the scroll area) need to be repainted.
+  UINT flags = SW_SCROLLCHILDREN | SW_INVALIDATE;
+  for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
+       w = static_cast<nsWindow*>(w->GetNextSibling())) {
+    if (w->mBounds.Intersects(affectedRect) &&
+        !scrolledWidgets.GetEntry(w)) {
+      flags &= ~SW_SCROLLCHILDREN;
+      break;
+    }
+  }
+
+  nsIntRect destRect = aSource + aDelta;
+  RECT clip = { affectedRect.x, affectedRect.y, affectedRect.XMost(), affectedRect.YMost() };
+  ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, NULL, NULL, flags);
+
+  // Now make sure all children actually get positioned, sized and clipped
+  // correctly. If SW_SCROLLCHILDREN already moved widgets to their correct
+  // locations, then the SetWindowPos calls this triggers will just be
+  // no-ops.
+  ConfigureChildren(aConfigurations);
 }
 
 /**************************************************************
@@ -2729,9 +2742,13 @@ nsWindow::HasPendingInputEvent()
   // Note: When the user is moving the window WIN32 spins
   // a separate event loop and input events are not
   // reported to the application.
-  WORD qstatus = HIWORD(GetQueueStatus(QS_INPUT));
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  return qstatus || (toolkit && toolkit->UserIsMovingWindow());
+  if (HIWORD(GetQueueStatus(QS_INPUT)))
+    return PR_TRUE;
+  GUITHREADINFO guiInfo;
+  guiInfo.cbSize = sizeof(GUITHREADINFO);
+  if (!GetGUIThreadInfo(GetCurrentThreadId(), &guiInfo))
+    return PR_FALSE;
+  return GUI_INMOVESIZE == (guiInfo.flags & GUI_INMOVESIZE);
 }
 
 /**************************************************************
@@ -5486,6 +5503,79 @@ nsWindow::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifie
       aArray->AppendElement(KeyPair(map[1], map[2]));
     }
   }
+}
+
+nsresult
+nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+  // XXXroc we could use BeginDeferWindowPos/DeferWindowPos/EndDeferWindowPos
+  // here, if that helps in some situations. So far I haven't seen a
+  // need.
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+    NS_ASSERTION(w->GetParent() == this,
+                 "Configured widget is not a child");
+#ifdef WINCE
+    // MSDN says we should do on WinCE this before moving or resizing the window
+    // See http://msdn.microsoft.com/en-us/library/aa930600.aspx
+    // We put the region back just below, anyway.
+    ::SetWindowRgn(w->mWnd, NULL, TRUE);
+#endif
+    w->Resize(configuration.mBounds.x, configuration.mBounds.y,
+              configuration.mBounds.width, configuration.mBounds.height,
+              PR_TRUE);
+    nsresult rv = w->SetWindowClipRegion(configuration.mClipRegion, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+static HRGN
+CreateHRGNFromArray(const nsTArray<nsIntRect>& aRects)
+{
+  PRInt32 size = sizeof(RGNDATAHEADER) + sizeof(RECT)*aRects.Length();
+  nsAutoTArray<PRUint8,100> buf;
+  if (!buf.SetLength(size))
+    return NULL;
+  RGNDATA* data = reinterpret_cast<RGNDATA*>(buf.Elements());
+  RECT* rects = reinterpret_cast<RECT*>(data->Buffer);
+  data->rdh.dwSize = sizeof(data->rdh);
+  data->rdh.iType = RDH_RECTANGLES;
+  data->rdh.nCount = aRects.Length();
+  nsIntRect bounds;
+  for (PRUint32 i = 0; i < aRects.Length(); ++i) {
+    const nsIntRect& r = aRects[i];
+    bounds.UnionRect(bounds, r);
+    ::SetRect(&rects[i], r.x, r.y, r.XMost(), r.YMost());
+  }
+  ::SetRect(&data->rdh.rcBound, bounds.x, bounds.y, bounds.XMost(), bounds.YMost());
+  return ::ExtCreateRegion(NULL, buf.Length(), data);
+}
+
+nsresult
+nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+                              PRBool aIntersectWithExisting)
+{
+  HRGN dest = CreateHRGNFromArray(aRects);
+  if (!dest)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (aIntersectWithExisting) {
+    HRGN current = ::CreateRectRgn(0, 0, 0, 0);
+    if (current) {
+      if (::GetWindowRgn(mWnd, current) != 0 /*ERROR*/) {
+        ::CombineRgn(dest, dest, current, RGN_AND);
+      }
+      ::DeleteObject(current);
+    }
+  }
+
+  if (!::SetWindowRgn(mWnd, dest, TRUE)) {
+    ::DeleteObject(dest);
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 // WM_DESTROY event handler

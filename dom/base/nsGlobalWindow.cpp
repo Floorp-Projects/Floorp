@@ -8883,7 +8883,7 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
     vm->GetRootView(rootView);
     NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
-    nsIWidget* widget = rootView->GetWidget();
+    nsIWidget* widget = rootView->GetNearestWidget(nsnull);
     NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
     // Call esm and set cursor.

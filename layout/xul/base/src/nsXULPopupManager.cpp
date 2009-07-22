@@ -67,6 +67,7 @@
 #include "nsCaret.h"
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
+#include "nsFrameManager.h"
 
 const nsNavigationDirection DirectionFromKeyCodeTable[2][6] = {
   {
@@ -135,7 +136,7 @@ NS_IMPL_ISUPPORTS5(nsXULPopupManager,
 
 nsXULPopupManager::nsXULPopupManager() :
   mRangeOffset(0),
-  mCachedMousePoint(nsIntPoint(0, 0)),
+  mCachedMousePoint(0, 0),
   mActiveMenuBar(nsnull),
   mPopups(nsnull),
   mNoHidePanels(nsnull),
@@ -350,25 +351,33 @@ nsXULPopupManager::SetTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup)
         if (doc) {
           nsIPresShell* presShell = doc->GetPrimaryShell();
           if (presShell && presShell->GetPresContext()) {
-            nsPresContext* presContext = presShell->GetPresContext();
-            nsIFrame* rootFrame = presShell->GetRootFrame();
+            nsPresContext* rootDocPresContext =
+                presShell->GetPresContext()->RootPresContext();
+            nsIFrame* rootDocumentRootFrame = rootDocPresContext->
+                PresShell()->FrameManager()->GetRootFrame();
             if ((event->eventStructType == NS_MOUSE_EVENT || 
                  event->eventStructType == NS_MOUSE_SCROLL_EVENT) &&
                  !(static_cast<nsGUIEvent *>(event))->widget) {
               // no widget, so just use the client point if available
               nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-              mouseEvent->GetClientX(&mCachedMousePoint.x);
-              mouseEvent->GetClientY(&mCachedMousePoint.y);
+              nsIntPoint clientPt;
+              mouseEvent->GetClientX(&clientPt.x);
+              mouseEvent->GetClientY(&clientPt.y);
 
+              // XXX this doesn't handle IFRAMEs in transforms
+              nsPoint thisDocToRootDocOffset =
+                presShell->FrameManager()->GetRootFrame()->GetOffsetTo(rootDocumentRootFrame);
               // convert to device pixels
-              mCachedMousePoint.x = presContext->CSSPixelsToDevPixels(mCachedMousePoint.x);
-              mCachedMousePoint.y = presContext->CSSPixelsToDevPixels(mCachedMousePoint.y);
+              mCachedMousePoint.x = rootDocPresContext->AppUnitsToDevPixels(
+                  nsPresContext::CSSPixelsToAppUnits(clientPt.x) + thisDocToRootDocOffset.x);
+              mCachedMousePoint.y = rootDocPresContext->AppUnitsToDevPixels(
+                  nsPresContext::CSSPixelsToAppUnits(clientPt.y) + thisDocToRootDocOffset.y);
             }
-            else if (rootFrame) {
+            else if (rootDocumentRootFrame) {
               nsPoint pnt =
-                nsLayoutUtils::GetEventCoordinatesRelativeTo(event, rootFrame);
-              mCachedMousePoint = nsIntPoint(presContext->AppUnitsToDevPixels(pnt.x),
-                                             presContext->AppUnitsToDevPixels(pnt.y));
+                nsLayoutUtils::GetEventCoordinatesRelativeTo(event, rootDocumentRootFrame);
+              mCachedMousePoint = nsIntPoint(rootDocPresContext->AppUnitsToDevPixels(pnt.x),
+                                             rootDocPresContext->AppUnitsToDevPixels(pnt.y));
             }
           }
         }
@@ -1010,9 +1019,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   //   all the globals people keep adding to nsIDOMXULDocument.
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull, nsMouseEvent::eReal);
-  nsPoint pnt;
-  event.widget = presShell->GetRootFrame()->
-                            GetClosestView()->GetNearestWidget(&pnt);
+  presShell->GetViewManager()->GetRootWidget(getter_AddRefs(event.widget));
   event.refPoint = mCachedMousePoint;
   nsEventDispatcher::Dispatch(aPopup, aPresContext, &event, nsnull, &status);
   mCachedMousePoint = nsIntPoint(0, 0);

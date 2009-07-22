@@ -105,8 +105,8 @@ typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
 #define NS_IPRESSHELL_IID \
-{ 0x5039364e, 0x6e3e, 0x4aae, \
-  { 0xb8, 0xac, 0xf1, 0xee, 0xf1, 0xcb, 0x85, 0x45 } }
+{ 0xfea81c36, 0xed5b, 0x41f5, \
+  { 0x89, 0x5d, 0x4c, 0x50, 0x79, 0x49, 0xad, 0x3b } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -690,6 +690,7 @@ public:
                         nsIFrame * aFrame,
                         PRUint32 aColor) = 0;
   NS_IMETHOD SetPaintFrameCount(PRBool aOn) = 0;
+  virtual PRBool IsPaintingFrameCounts() = 0;
 #endif
 
 #ifdef DEBUG
