@@ -40,6 +40,8 @@
 
 #include "nsCoord.h"
 
+struct nsIntPoint;
+
 struct nsPoint {
   nscoord x, y;
 
@@ -79,6 +81,8 @@ struct nsPoint {
   nsPoint operator-() const {
     return nsPoint(-x, -y);
   }
+
+  inline nsIntPoint ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 };
 
 struct nsIntPoint {
@@ -116,5 +120,12 @@ struct nsIntPoint {
   }
   void MoveTo(PRInt32 aX, PRInt32 aY) {x = aX; y = aY;}
 };
+
+inline nsIntPoint
+nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const {
+  return nsIntPoint(
+      NSToIntRound(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel))),
+      NSToIntRound(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel))));
+}
 
 #endif /* NSPOINT_H */
