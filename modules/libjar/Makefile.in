@@ -50,17 +50,6 @@ ifdef MOZ_ZIPWRITER
 DIRS  += zipwriter
 endif
 
-ifdef MOZ_INSTALLER
-# Linux and Solaris installer needs standalone libjar
-DIRS  += standalone
-
-# Make this a true dynamic component even in static builds because
-# this component is shared by installer
-ifndef MOZ_ENABLE_LIBXUL
-BUILD_STATIC_LIBS=
-endif
-endif
-
 ifdef ENABLE_TESTS
 TOOL_DIRS += test
 endif
