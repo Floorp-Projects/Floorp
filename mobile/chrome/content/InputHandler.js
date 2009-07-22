@@ -100,6 +100,10 @@ function InputHandler() {
   /* when set to true, next click won't be dispatched */
   this._suppressNextClick = true;
 
+  /* used to cancel actions with browser window changes */
+  window.addEventListener("URLChanged", this, true);
+  window.addEventListener("TabSelect", this, true);
+
   /* used to stop everything if mouse leaves window on desktop */
   window.addEventListener("mouseout", this, true);
 
@@ -163,6 +167,12 @@ InputHandler.prototype = {
   handleEvent: function handleEvent(aEvent) {
     if (this._ignoreEvents)
       return;
+
+    /* changing URL or selected a new tab will immediately stop active input handlers */
+    if (aEvent.type == "URLChanged" || aEvent.type == "TabSelect") {
+      this.grab(null);
+      return;
+    }
 
     if (this._suppressNextClick && aEvent.type == "click") {
       this._suppressNextClick = false;

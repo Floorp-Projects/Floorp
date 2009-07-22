@@ -217,7 +217,7 @@ pref("browser.xul.error_pages.enabled", true);
 // various and sundry awesomebar prefs (should remove/re-evaluate
 // these once bug 447900 is fixed)
 pref("browser.urlbar.clickSelectsAll", true);
-pref("browser.urlbar.doubleClickSelectsAll", false);
+pref("browser.urlbar.doubleClickSelectsAll", true);
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.matchOnlyTyped", false);
 pref("browser.urlbar.matchBehavior", 1);
