@@ -51,6 +51,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsStreamUtils.h"
+#include "nsNetUtil.h"
 
 
 /* ========== Utility classes ========== */
@@ -220,12 +222,20 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   rv = decoder->Init(loader);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIInputStream> inStream = aInStr;
+  if (!NS_InputStreamIsBuffered(aInStr)) {
+    nsCOMPtr<nsIInputStream> bufStream;
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream), aInStr, 1024);
+    if (NS_SUCCEEDED(rv))
+      inStream = bufStream;
+  }
+
   PRUint32 length;
-  rv = aInStr->Available(&length);
+  rv = inStream->Available(&length);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 written;
-  rv = decoder->WriteFrom(aInStr, length, &written);
+  rv = decoder->WriteFrom(inStream, length, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   if (written != length)
     NS_WARNING("decoder didn't eat all of its vegetables");

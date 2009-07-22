@@ -117,6 +117,7 @@ nsGIFDecoder2::nsGIFDecoder2()
   , mLastFlushedRow(-1)
   , mImageData(nsnull)
   , mOldColor(0)
+  , mCurrentFrame(-1)
   , mCurrentPass(0)
   , mLastFlushedPass(0)
   , mGIFOpen(PR_FALSE)
@@ -160,7 +161,8 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgILoad *aLoad)
 /* void close (); */
 NS_IMETHODIMP nsGIFDecoder2::Close()
 {
-  EndImageFrame();
+  if (mCurrentFrame == mGIFStruct.images_decoded)
+    EndImageFrame();
   EndGIF();
 
   PR_FREEIF(mGIFStruct.local_colormap);
@@ -370,6 +372,8 @@ void nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
 
   if (mObserver)
     mObserver->OnStartFrame(nsnull, mGIFStruct.images_decoded);
+
+  mCurrentFrame = mGIFStruct.images_decoded;
 }
 
 
@@ -429,6 +433,8 @@ void nsGIFDecoder2::EndImageFrame()
     mColormap[mGIFStruct.tpixel] = mOldColor;
     mOldColor = 0;
   }
+
+  mCurrentFrame = -1;
 }
 
 

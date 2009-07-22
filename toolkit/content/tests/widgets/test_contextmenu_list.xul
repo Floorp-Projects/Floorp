@@ -149,6 +149,50 @@ function nextTest()
   }
 }
 
+// This is nasty so I'd better explain what's going on.
+// The basic problem is that the synthetic mouse coordinate generated
+// by DOMWindowUtils.sendMouseEvent and also the synthetic mouse coordinate
+// generated internally when contextmenu events are redirected to the focused
+// element are rounded to the nearest device pixel. But this rounding is done
+// while the coordinates are relative to the nearest widget. When this test
+// is run in the mochitest harness, the nearest widget is the main mochitest
+// window, and our document can have a fractional position within that
+// mochitest window. So when we round coordinates for comparison in this
+// test, we need to do so very carefully, especially if the target element
+// also has a fractional position within our document.
+//
+// For example, if the y-offset of our containing IFRAME is 100.4px,
+// and the offset of our expected point is 10.3px in our document, the actual
+// mouse event is dispatched to round(110.7) == 111px. This comes back
+// with a clientY of round(111 - 100.4) == round(10.6) == 11. This is not
+// equal to round(10.3) as you might expect.
+//
+// We use getOuterFrameOffset to adjust coordinates to the correct
+// space before rounding. Another way to do this would be to use screen
+// coordinates.
+function getOuterFrameOffset(isX)
+{
+  if (!window.frameElement)
+    return 0;
+
+  var r = window.frameElement.getBoundingClientRect();
+  return isX ? r.left : r.top;
+}
+
+function isRoundedX(a, b, msg)
+{
+  var v = getOuterFrameOffset(true);
+  ok(Math.round(a + v) == Math.round(b + v),
+     msg + " - got " + a + ", expected " + b);
+}
+
+function isRoundedY(a, b, msg)
+{
+  var v = getOuterFrameOffset(false);
+  ok(Math.round(a + v) == Math.round(b + v),
+     msg + " - got " + a + ", expected " + b);
+}
+
 function checkContextMenu(event)
 {
   var rect = $(gTestElement).getBoundingClientRect();
@@ -156,11 +200,11 @@ function checkContextMenu(event)
   var frombase = (gTestId == -1 || gTestId == 1);
   if (!frombase)
     rect = event.originalTarget.getBoundingClientRect();
-  left = Math.round(frombase ? rect.left + 7 : rect.left);
-  top = Math.round(frombase ? rect.top + 4 : rect.bottom);
+  left = frombase ? rect.left + 7 : rect.left;
+  top = frombase ? rect.top + 4 : rect.bottom;
 
-  is(event.clientX, left, gTestElement + " clientX " + gSelectionStep + " " + gTestId + "," + frombase);
-  is(event.clientY, top, gTestElement + " clientY " + gSelectionStep + " " + gTestId);
+  isRoundedX(event.clientX, left, gTestElement + " clientX " + gSelectionStep + " " + gTestId + "," + frombase);
+  isRoundedY(event.clientY, top, gTestElement + " clientY " + gSelectionStep + " " + gTestId);
   ok(event.screenX > left, gTestElement + " screenX " + gSelectionStep + " " + gTestId);
   ok(event.screenY > top, gTestElement + " screenY " + gSelectionStep + " " + gTestId);
 
@@ -204,17 +248,17 @@ function checkPopup()
   if (gTestId == 0) {
     if (gTestElement == "list") {
       var itemrect = $("item3").getBoundingClientRect();
-      is(Math.round(menurect.left), Math.round(itemrect.left) + 2,
+      isRoundedX(menurect.left, itemrect.left + 2,
          "list selection keyboard left");
-      is(Math.round(menurect.top), Math.round(itemrect.bottom) + 2,
+      isRoundedY(menurect.top, itemrect.bottom + 2,
          "list selection keyboard top");
     }
     else {
       var tree = $("tree");
       var bodyrect = $("treechildren").getBoundingClientRect();
-      is(Math.round(menurect.left), Math.round(bodyrect.left) + 2,
+      isRoundedX(menurect.left, bodyrect.left + 2,
          "tree selection keyboard left");
-      is(Math.round(menurect.top), Math.round(bodyrect.top) +
+      isRoundedY(menurect.top, bodyrect.top +
          tree.treeBoxObject.rowHeight * 3 + 2,
          "tree selection keyboard top");
     }
@@ -225,16 +269,16 @@ function checkPopup()
     // so that they don't appear exactly only the menu making them easier to
     // dismiss. See nsXULPopupListener.
     var elementrect = $(gTestElement).getBoundingClientRect();
-    is(Math.round(menurect.left), Math.round(elementrect.left) + 9,
+    isRoundedX(menurect.left, elementrect.left + 9,
        gTestElement + " mouse left");
-    is(Math.round(menurect.top), Math.round(elementrect.top) + 6,
+    isRoundedY(menurect.top, elementrect.top + 6,
        gTestElement + " mouse top");
   }
   else {
     var elementrect = $(gTestElement).getBoundingClientRect();
-    is(Math.round(menurect.left), Math.round(elementrect.left) + 2,
+    isRoundedX(menurect.left, elementrect.left + 2,
        gTestElement + " no selection keyboard left");
-    is(Math.round(menurect.top), Math.round(elementrect.bottom) + 2,
+    isRoundedY(menurect.top, elementrect.bottom + 2,
        gTestElement + " no selection keyboard top");
   }
 

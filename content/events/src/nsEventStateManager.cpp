@@ -95,7 +95,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch2.h"
-#include "nsIObjectFrame.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -209,12 +208,6 @@ PrintDocTree(nsIDocShellTreeItem* aParentItem, int aLevel)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   nsCOMPtr<nsIDOMWindowInternal> domwin = doc ? doc->GetWindow() : nsnull;
   nsIURI* uri = doc ? doc->GetDocumentURI() : nsnull;
-
-  nsCOMPtr<nsIWidget> widget;
-  nsIViewManager* vm = presShell ? presShell->GetViewManager() : nsnull;
-  if (vm) {
-    vm->GetWidget(getter_AddRefs(widget));
-  }
 
   printf("DS %p  Type %s  Cnt %d  Doc %p  DW %p  EM %p%c",
     static_cast<void*>(parentAsDocShell.get()),

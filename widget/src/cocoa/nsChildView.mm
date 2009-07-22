@@ -776,61 +776,18 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_PLUGIN_PORT:
-#ifndef NP_NO_QUICKDRAW
     case NS_NATIVE_PLUGIN_PORT_QD:
-    {
-      mPluginIsCG = PR_FALSE;
-      mIsPluginView = PR_TRUE;
-      if ([mView isKindOfClass:[ChildView class]])
-        [(ChildView*)mView setIsPluginView:YES];
-
-      NSWindow* window = [mView nativeWindow];
-      if (window) {
-        WindowRef topLevelWindow = (WindowRef)[window windowRef];
-        if (topLevelWindow) {
-          mPluginPort.qdPort.port = ::GetWindowPort(topLevelWindow);
-
-          NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
-          NSRect frame = [[window contentView] frame];
-          viewOrigin.y = frame.size.height - viewOrigin.y;
-          
-          // need to convert view's origin to window coordinates.
-          // then, encode as "SetOrigin" ready values.
-          mPluginPort.qdPort.portx = (PRInt32)-viewOrigin.x;
-          mPluginPort.qdPort.porty = (PRInt32)-viewOrigin.y;
-        }
-      }
-
-      retVal = (void*)&mPluginPort;
-      break;
-    }
-#endif
-
     case NS_NATIVE_PLUGIN_PORT_CG:
     {
-      mPluginIsCG = PR_TRUE;
+#ifdef NP_NO_QUICKDRAW
+      aDataType = NS_NATIVE_PLUGIN_PORT_CG;
+#endif
+      mPluginIsCG = (aDataType == NS_NATIVE_PLUGIN_PORT_CG);
       mIsPluginView = PR_TRUE;
       if ([mView isKindOfClass:[ChildView class]])
         [(ChildView*)mView setIsPluginView:YES];
 
-      NSWindow* window = [mView nativeWindow];
-      if (window) {
-        // [NSGraphicsContext currentContext] is supposed to "return the
-        // current graphics context of the current thread."  But sometimes
-        // (when called while mView isn't focused for drawing) it returns a
-        // graphics context for the wrong window.  [window graphicsContext]
-        // (which "provides the graphics context associated with the window
-        // for the current thread") seems always to return the "right"
-        // graphics context.  See bug 500130.
-        mPluginPort.cgPort.context = (CGContextRef)
-          [[window graphicsContext] graphicsPort];
-        WindowRef topLevelWindow = (WindowRef)[window windowRef];
-        mPluginPort.cgPort.window = topLevelWindow;
-      } else {
-        mPluginPort.cgPort.context = nil;
-        mPluginPort.cgPort.window = nil;
-      }
-
+      UpdatePluginPort();
       retVal = (void*)&mPluginPort;
       break;
     }
@@ -935,6 +892,46 @@ void nsChildView::HidePlugin()
        window->clipRect.bottom = 0;
        window->clipRect.right = 0;
        instance->SetWindow(window);
+    }
+  }
+}
+
+void nsChildView::UpdatePluginPort()
+{
+  NS_ASSERTION(mIsPluginView, "UpdatePluginPort called on non-plugin view");
+
+  NSWindow* window = [mView nativeWindow];
+  WindowRef topLevelWindow = window ? (WindowRef)[window windowRef] : nil;
+  if (mPluginIsCG) {
+    if (topLevelWindow) {
+      // [NSGraphicsContext currentContext] is supposed to "return the
+      // current graphics context of the current thread."  But sometimes
+      // (when called while mView isn't focused for drawing) it returns a
+      // graphics context for the wrong window.  [window graphicsContext]
+      // (which "provides the graphics context associated with the window
+      // for the current thread") seems always to return the "right"
+      // graphics context.  See bug 500130.
+      mPluginPort.cgPort.context = (CGContextRef)
+        [[window graphicsContext] graphicsPort];
+      mPluginPort.cgPort.window = topLevelWindow;
+    } else {
+      mPluginPort.cgPort.context = nil;
+      mPluginPort.cgPort.window = nil;
+    }
+  } else {
+    if (topLevelWindow) {
+      mPluginPort.qdPort.port = ::GetWindowPort(topLevelWindow);
+
+      NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
+      NSRect frame = [[window contentView] frame];
+      viewOrigin.y = frame.size.height - viewOrigin.y;
+
+      // need to convert view's origin to window coordinates.
+      // then, encode as "SetOrigin" ready values.
+      mPluginPort.qdPort.portx = (PRInt32)-viewOrigin.x;
+      mPluginPort.qdPort.porty = (PRInt32)-viewOrigin.y;
+    } else {
+      mPluginPort.qdPort.port = nil;
     }
   }
 }
@@ -1258,13 +1255,27 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
   
   outClipRect.x = NSToIntRound(clipOrigin.x);
   outClipRect.y = NSToIntRound(clipOrigin.y);
-  
-  
+
+  // need to convert view's origin to window coordinates.
+  // then, encode as "SetOrigin" ready values.
+  outOrigin.x = -NSToIntRound(viewOrigin.x);
+  outOrigin.y = -NSToIntRound(viewOrigin.y);
+
   PRBool isVisible;
   IsVisible(isVisible);
   if (isVisible && [mView window] != nil) {
     outClipRect.width  = NSToIntRound(visibleBounds.origin.x + visibleBounds.size.width) - NSToIntRound(visibleBounds.origin.x);
     outClipRect.height = NSToIntRound(visibleBounds.origin.y + visibleBounds.size.height) - NSToIntRound(visibleBounds.origin.y);
+
+    if (mClipRects) {
+      nsIntRect clipBounds;
+      for (PRUint32 i = 0; i < mClipRectCount; ++i) {
+        clipBounds.UnionRect(clipBounds, mClipRects[i]);
+      }
+      outClipRect.IntersectRect(outClipRect, clipBounds - outOrigin);
+    }
+
+    // XXXroc should this be !outClipRect.IsEmpty()?
     outWidgetVisible = PR_TRUE;
   }
   else {
@@ -1273,11 +1284,6 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
     outWidgetVisible = PR_FALSE;
   }
 
-  // need to convert view's origin to window coordinates.
-  // then, encode as "SetOrigin" ready values.
-  outOrigin.x = -NSToIntRound(viewOrigin.x);
-  outOrigin.y = -NSToIntRound(viewOrigin.y);
-  
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1688,143 +1694,73 @@ NS_IMETHODIMP nsChildView::Update()
 
 #pragma mark -
 
-// Scroll the bits of a view and its children
-// FIXME: I'm sure the invalidating can be optimized, just no time now.
-NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
+void nsChildView::ApplyConfiguration(nsIWidget* aExpectedParent,
+                                     const nsIWidget::Configuration& aConfiguration,
+                                     PRBool aRepaint)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+#ifdef DEBUG
+  nsWindowType kidType;
+  aConfiguration.mChild->GetWindowType(kidType);
+#endif
+  NS_ASSERTION(kidType == eWindowType_child,
+               "Configured widget is not a child type");
+  NS_ASSERTION(aConfiguration.mChild->GetParent() == aExpectedParent,
+               "Configured widget is not a child of the right widget");
+  aConfiguration.mChild->Resize(
+      aConfiguration.mBounds.x, aConfiguration.mBounds.y,
+      aConfiguration.mBounds.width, aConfiguration.mBounds.height,
+      aRepaint);
+  // On Mac we don't use the clip region here, we just store it
+  // in case GetPluginClipRect needs it.
+  static_cast<nsChildView*>(aConfiguration.mChild)->
+    StoreWindowClipRegion(aConfiguration.mClipRegion);
+}
+
+nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    nsChildView::ApplyConfiguration(this, aConfigurations[i], PR_TRUE);
+  }
+  return NS_OK;
+}  
+
+void nsChildView::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                         const nsTArray<Configuration>& aConfigurations)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NS_ASSERTION(mParentView, "Attempting to scroll a view that does not have a parent");
   if (!mParentView)
-    return NS_ERROR_NOT_AVAILABLE;
+    return;
 
   BOOL viewWasDirty = NO;
   if (mVisible) {
     viewWasDirty = [mView needsDisplay];
 
-    NSSize scrollVector = {aDx,aDy};
-    [mView scrollRect: [mView visibleRect] by:scrollVector];
+    NSRect rect;
+    GeckoRectToNSRect(aSource, rect);
+    NSSize scrollVector = {aDelta.x, aDelta.y};
+    [mView scrollRect:rect by:scrollVector];
   }
-  
-  // Scroll the children (even if the widget is not visible)
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    // We use resize rather than move since it gives us control
-    // over repainting.  We can scroll like a bat out of hell
-    // by not wasting time invalidating the widgets, since it's
-    // completely unnecessary to do so.
-    nsIntRect bounds;
-    kid->GetBounds(bounds);
-    kid->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
+
+  // Don't force invalidation of the child if it's moving by the scroll
+  // amount and not changing size
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    nsIntRect oldBounds;
+    configuration.mChild->GetBounds(oldBounds);
+    ApplyConfiguration(this, aConfigurations[i],
+                       oldBounds + aDelta != configuration.mBounds);
   }
 
   if (mOnDestroyCalled)
-    return NS_OK;
+    return;
 
   if (mVisible) {
-    if (viewWasDirty) {
-      [mView setNeedsDisplay:YES];
-    }
-    else {
-      NSRect frame = [mView visibleRect];
-      NSRect horizInvalid = frame;
-      NSRect vertInvalid = frame;
-  
-      if (aDx != 0) {
-        horizInvalid.size.width = abs(aDx);
-        if (aDx < 0)
-          horizInvalid.origin.x = frame.origin.x + frame.size.width + aDx;
-        [mView setNeedsDisplayInRect: horizInvalid];
-      }
-
-      if (aDy != 0) {
-        vertInvalid.size.height = abs(aDy);
-        if (aDy < 0)
-          vertInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
-        [mView setNeedsDisplayInRect: vertInvalid];
-      }
-
-      // We also need to check for any ChildViews which overlap this widget
-      // but are not descendent widgets.  If there are any, we need to
-      // invalidate the area of this view that these ChildViews will have been
-      // blitted into, since these widgets aren't supposed to scroll with
-      // this widget.
-
-      // To do this, start at the root Gecko NSView, and walk down along
-      // our ancestor view chain, looking at all the subviews in each level
-      // of the hierarchy.  If we find a non-ancestor view that overlaps
-      // this view, invalidate the area around it.
-
-      // We need to convert all rects to a common ancestor view to intersect
-      // them, since a view's frame is in the coordinate space of its parent.
-      // Use mParentView as the frame of reference.
-      NSRect selfFrame = [mParentView convertRect:[mView frame] fromView:[mView superview]];
-      NSView* view = mParentView;
-      BOOL selfLevel = NO;
-
-      while (!selfLevel) {
-        NSView* nextAncestorView = nil;
-        NSArray* subviews = [view subviews];
-        for (unsigned int i = 0; i < [subviews count]; ++i) {
-          NSView* subView = [subviews objectAtIndex: i];
-          if (subView == mView)
-            selfLevel = YES;
-          else if ([mView isDescendantOf:subView])
-            nextAncestorView = subView;
-          else {
-            NSRect intersectArea = NSIntersectionRect([mParentView convertRect:[subView frame] fromView:[subView superview]], selfFrame);
-            if (!NSIsEmptyRect(intersectArea)) {
-              NSPoint origin = [mView convertPoint:intersectArea.origin fromView:mParentView];
-
-              if (aDy != 0) {
-                vertInvalid.origin.x = origin.x;
-                if (aDy < 0)  // scrolled down, invalidate above
-                  vertInvalid.origin.y = origin.y + aDy;
-                else          // invalidate below
-                  vertInvalid.origin.y = origin.y + intersectArea.size.height;
-                vertInvalid.size.width = intersectArea.size.width;
-                [mView setNeedsDisplayInRect: vertInvalid];
-              }
-
-              if (aDx != 0) {
-                horizInvalid.origin.y = origin.y;
-                if (aDx < 0)  // scrolled right, invalidate to the left
-                  horizInvalid.origin.x = origin.x + aDx;
-                else          // invalidate to the right
-                  horizInvalid.origin.x = origin.x + intersectArea.size.width;
-                horizInvalid.size.height = intersectArea.size.height;
-                [mView setNeedsDisplayInRect: horizInvalid];
-              }
-            }
-          }
-        }
-        view = nextAncestorView;
-      }
-    }
+    [mView setNeedsDisplay:viewWasDirty];
   }
-  
-  // This is an evil hack that doesn't always work.
-  // 
-  // Drawing plugins in a Cocoa environment is tricky, because the
-  // plugins are living in a Carbon WindowRef/BeginUpdate/EndUpdate
-  // world, and Cocoa has its own notion of dirty rectangles. Throw
-  // Quartz Extreme and QuickTime into the mix, and things get bad.
-  // 
-  // This code is working around a cosmetic issue seen when Quartz Extreme
-  // is active, and you're scrolling a page with a QuickTime plugin; areas
-  // outside the plugin fail to scroll properly. This [display] ensures that
-  // the view is properly drawn before the next Scroll call.
-  //
-  // The time this doesn't work is when you're scrolling a page containing
-  // an iframe which in turn contains a plugin.
-  //
-  // This is turned off because it makes scrolling pages with plugins slow.
-  // 
-  //if ([mView childViewHasPlugin])
-  //  [mView display];
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Invokes callback and ProcessEvent methods on Event Listener object
@@ -2338,6 +2274,9 @@ NSEvent* gLastDragEvent = nil;
 - (void)setNativeWindow:(NSWindow*)aWindow
 {
   mWindow = aWindow;
+  if (aWindow && [self isPluginView] && mGeckoChild) {
+    mGeckoChild->UpdatePluginPort();
+  }
 }
 
 - (void)systemMetricsChanged
@@ -2778,8 +2717,9 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   /* clip and build a region */
   nsCOMPtr<nsIRegion> rgn(do_CreateInstance(kRegionCID));
-  if (rgn)
-    rgn->Init();
+  if (!rgn)
+    return;
+  rgn->Init();
 
   // bounding box of the dirty area
   nsIntRect fullRect;
@@ -2793,8 +2733,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       const NSRect& r = rects[i];
 
       // add to the region
-      if (rgn)
-        rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
+      rgn->Union((PRInt32)r.origin.x, (PRInt32)r.origin.y, (PRInt32)r.size.width, (PRInt32)r.size.height);
 
       // to the context for clipping
       targetContext->Rectangle(gfxRect(r.origin.x, r.origin.y, r.size.width, r.size.height));
@@ -2804,7 +2743,17 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     targetContext->Rectangle(gfxRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
   }
   targetContext->Clip();
-  
+
+  // Subtract child view rectangles from the region
+  NSArray* subviews = [self subviews];
+  for (int i = 0; i < int([subviews count]); ++i) {
+    NSView* view = [subviews objectAtIndex:i];
+    if (![view isKindOfClass:[ChildView class]] || [view isHidden])
+      continue;
+    NSRect frame = [view frame];
+    rgn->Subtract(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+  }
+
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
   paintEvent.renderingContext = rc;
   paintEvent.rect = &fullRect;

@@ -93,7 +93,8 @@ public:
   // nsIScrollPositionListener
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView,
                                       nscoord aX, nscoord aY);
-  virtual void ViewPositionDidChange(nsIScrollableView* aScrollable) {}
+  virtual void ViewPositionDidChange(nsIScrollableView* aScrollable,
+                                     nsTArray<nsIWidget::Configuration>* aConfigurations) {}
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView,
                                      nscoord aX, nscoord aY);
 

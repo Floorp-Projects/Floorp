@@ -2669,7 +2669,7 @@ TestApp::TestNotification(void)
     if (NS_SUCCEEDED(nsr) && presShell) {
       nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
       if (viewManager) {
-        nsr = viewManager->GetWidget(getter_AddRefs(widget));
+        nsr = viewManager->GetRootWidget(getter_AddRefs(widget));
       }
     }
   }
@@ -2736,7 +2736,7 @@ TestApp::TestContentEvents(void)
     if (NS_SUCCEEDED(nsr) && presShell) {
       nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
       if (viewManager) {
-        nsr = viewManager->GetWidget(getter_AddRefs(widget));
+        nsr = viewManager->GetRootWidget(getter_AddRefs(widget));
       }
     }
   }

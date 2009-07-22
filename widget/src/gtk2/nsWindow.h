@@ -187,9 +187,8 @@ public:
     NS_IMETHOD         Invalidate(const nsIntRect &aRect,
                                   PRBool           aIsSynchronous);
     NS_IMETHOD         Update();
-    NS_IMETHOD         Scroll(PRInt32     aDx,
-                              PRInt32     aDy,
-                              nsIntRect  *aClipRect);
+    virtual void       Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                              const nsTArray<Configuration>& aReconfigureChildren);
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
@@ -415,6 +414,7 @@ public:
    void                ApplyTransparencyBitmap();
    virtual void        SetTransparencyMode(nsTransparencyMode aMode);
    virtual nsTransparencyMode GetTransparencyMode();
+   virtual nsresult    ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             PRUint8* aAlphas, PRInt32 aStride);
 
@@ -466,6 +466,7 @@ private:
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);
+    nsresult           SetWindowClipRegion(const nsTArray<nsIntRect>& aRects);
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;

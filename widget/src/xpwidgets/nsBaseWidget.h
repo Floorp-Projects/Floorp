@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
+#include "nsAutoPtr.h"
 
 class nsIContent;
 class nsAutoRollup;
@@ -104,6 +105,7 @@ public:
   NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
+  virtual void            GetWindowClipRegion(nsTArray<nsIntRect>* aRects);
   NS_IMETHOD              SetWindowShadowStyle(PRInt32 aStyle);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
@@ -169,6 +171,8 @@ protected:
                                             const nsAString& aUnmodifiedCharacters)
   { return NS_ERROR_UNEXPECTED; }
 
+  void StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects);
+
 protected: 
   void*             mClientData;
   EVENT_CALLBACK    mEventCallback;
@@ -183,6 +187,9 @@ protected:
   PRPackedBool      mOnDestroyCalled;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
+  // When this pointer is null, the widget is not clipped
+  nsAutoArrayPtr<nsIntRect> mClipRects;
+  PRInt32           mClipRectCount;
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;
 

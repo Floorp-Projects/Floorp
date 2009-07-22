@@ -298,6 +298,12 @@ public:
    */
   nsMargin GetExcludedOuterBCBorder() const;
 
+  /**
+   * In quirks mode, the size of the table background is reduced
+   * by the outer BC border. Compute the reduction needed.
+   */
+  nsMargin GetDeflationForBackground(nsPresContext* aPresContext) const;
+
   /** Get width of table + colgroup + col collapse: elements that
    *  continue along the length of the whole left side.
    *  see nsTablePainter about continuous borders

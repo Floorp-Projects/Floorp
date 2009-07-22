@@ -165,7 +165,7 @@ nsEventStatus HandleEvent(nsGUIEvent *aEvent)
   if (view)
   {
     nsCOMPtr<nsIViewManager> vm = view->GetViewManager();
-    vm->DispatchEvent(aEvent, &result);
+    vm->DispatchEvent(aEvent, view, &result);
   }
 
   return result;
@@ -730,6 +730,31 @@ nsresult nsView::LoadWidget(const nsCID &aClassIID)
   return rv;
 }
 
+EVENT_CALLBACK nsIView::AttachWidgetEventHandler(nsIWidget* aWidget)
+{
+#ifdef DEBUG
+  void* data = nsnull;
+  aWidget->GetClientData(data);
+  NS_ASSERTION(!data, "Already got client data");
+#endif
+
+  nsView* v = static_cast<nsView*>(this);
+  ViewWrapper* wrapper = new ViewWrapper(v);
+  if (!wrapper)
+    return nsnull;
+  NS_ADDREF(wrapper); // Will be released in DetachWidgetEventHandler
+  aWidget->SetClientData(wrapper);
+  return ::HandleEvent;
+}
+
+void nsIView::DetachWidgetEventHandler(nsIWidget* aWidget)
+{
+  ViewWrapper* wrapper = GetWrapperFor(aWidget);
+  NS_ASSERTION(!wrapper || wrapper->GetView() == this, "Wrong view");
+  NS_IF_RELEASE(wrapper);
+  aWidget->SetClientData(nsnull);
+}
+
 #ifdef DEBUG
 void nsIView::List(FILE* out, PRInt32 aIndent) const
 {
@@ -819,7 +844,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
     if (aOffset) {
       *aOffset = pt;
     }
-    return static_cast<const nsView*>(this)->GetViewManager()->GetWidget();
+    return nsnull;
   }
 
   // pt is now the offset from v's origin to this's origin

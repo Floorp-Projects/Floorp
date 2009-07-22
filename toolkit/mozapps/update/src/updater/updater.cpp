@@ -1068,7 +1068,8 @@ copyASCIItoWCHAR(WCHAR *dest, const char *src)
     ++src; ++dest;
   }
 }
-
+#ifndef WINCE // until we have a replacement for GetPrivateProfileStringW, 
+              // it doesn't make sense to use this function
 static void
 LaunchWinPostProcess(const WCHAR *appExe)
 {
@@ -1161,6 +1162,7 @@ LaunchWinPostProcess(const WCHAR *appExe)
     CloseHandle(pi.hThread);
   }
 }
+#endif // WINCE
 #endif
 
 static void
@@ -1272,7 +1274,7 @@ int NS_main(int argc, NS_tchar **argv)
     }
   }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
   // Launch a second instance of the updater with the runas verb on Windows
   // when write access is denied to the installation directory.
   HANDLE updateLockFileHandle;
@@ -1333,9 +1335,7 @@ int NS_main(int argc, NS_tchar **argv)
       memset(&sinfo, 0, sizeof(SHELLEXECUTEINFO));
       sinfo.cbSize       = sizeof(SHELLEXECUTEINFO);
       sinfo.fMask        = SEE_MASK_FLAG_NO_UI |
-#ifndef WINCE
                            SEE_MASK_FLAG_DDEWAIT |
-#endif
                            SEE_MASK_NOCLOSEPROCESS;
       sinfo.hwnd         = NULL;
       sinfo.lpFile       = argv[0];
@@ -1374,7 +1374,7 @@ int NS_main(int argc, NS_tchar **argv)
 
   LogFinish();
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(WINCE)
   if (gSucceeded && argc > 4)
     LaunchWinPostProcess(argv[4]);
 
