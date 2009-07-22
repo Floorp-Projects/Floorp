@@ -80,7 +80,10 @@ static void invalid_source(struct mem_source *mem, const char *reason)
 
 static uint32_t read_u32(struct mem_source *mem, size_t offset)
 {
-	if (offset + 4 > mem->size) {
+	/* Subtract from mem->size instead of the more intuitive adding to offset.
+	 * This avoids overflowing offset. The subtraction is safe because
+	 * mem->size is guaranteed to be > 4 */
+	if (offset > mem->size - 4) {
 		invalid_source(mem, "Invalid offset");
 		return 0;
 	} else {
@@ -90,7 +93,7 @@ static uint32_t read_u32(struct mem_source *mem, size_t offset)
 
 static uint16_t read_u16(struct mem_source *mem, size_t offset)
 {
-	if (offset + 2 > mem->size) {
+	if (offset > mem->size - 2) {
 		invalid_source(mem, "Invalid offset");
 		return 0;
 	} else {
@@ -100,7 +103,7 @@ static uint16_t read_u16(struct mem_source *mem, size_t offset)
 
 static uint8_t read_u8(struct mem_source *mem, size_t offset)
 {
-	if (offset + 1 > mem->size) {
+	if (offset > mem->size - 1) {
 		invalid_source(mem, "Invalid offset");
 		return 0;
 	} else {
@@ -668,6 +671,7 @@ qcms_profile* qcms_profile_from_memory(const void *mem, size_t size)
 	source.buf = mem;
 	source.size = size;
 	source.valid = true;
+
 	length = read_u32(src, 0);
 	if (length <= size) {
 		// shrink the area that we can read if appropriate
@@ -675,6 +679,10 @@ qcms_profile* qcms_profile_from_memory(const void *mem, size_t size)
 	} else {
 		return INVALID_PROFILE;
 	}
+
+	/* ensure that the profile size is sane so it's easier to reason about */
+	if (source.size <= 64 || source.size >= MAX_PROFILE_SIZE)
+		return INVALID_PROFILE;
 
 	profile = qcms_profile_create();
 	if (!profile)
