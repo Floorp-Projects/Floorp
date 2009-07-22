@@ -360,8 +360,7 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
 
   WalkHandlersInternal(aKeyEvent, aEventType, mHandler);
 
-  nsINativeKeyBindings *nativeBindings;
-  if (isEditor && (nativeBindings = GetEditorKeyBindings())) {
+  if (isEditor && GetEditorKeyBindings()) {
     nsNativeKeyEvent nativeEvent;
     // get the DOM window we're attached to
     nsCOMPtr<nsIControllers> controllers;
