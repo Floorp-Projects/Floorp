@@ -143,10 +143,14 @@ function best_favicon_for_revhost(aTableName)
  *
  * @param aCallback
  *        A reference to a nsPlacesAutoComplete.
+ * @param aDBConnection
+ *        The database connection to execute the queries on.
  */
-function AutoCompleteStatementCallbackWrapper(aCallback)
+function AutoCompleteStatementCallbackWrapper(aCallback,
+                                              aDBConnection)
 {
   this._callback = aCallback;
+  this._db = aDBConnection;
 }
 
 AutoCompleteStatementCallbackWrapper.prototype = {
@@ -179,13 +183,15 @@ AutoCompleteStatementCallbackWrapper.prototype = {
    * Executes the specified query asynchronously.  This object will notify
    * this._callback if we should notify (logic explained in handleCompletion).
    *
-   * @param aQuery
-   *        The query to execute asynchronously.
-   * @return a mozIStoragePendingStatement that can be used to cancel the query.
+   * @param aQueries
+   *        The queries to execute asynchronously.
+   * @return a mozIStoragePendingStatement that can be used to cancel the
+   *         queries.
    */
-  executeAsync: function ACSCW_executeAsync(aQuery)
+  executeAsync: function ACSCW_executeAsync(aQueries)
   {
-    return this._handle = aQuery.executeAsync(this);
+    return this._handle = this._db.executeAsync(aQueries, aQueries.length,
+                                                this);
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -438,7 +444,7 @@ nsPlacesAutoComplete.prototype = {
   stopSearch: function PAC_stopSearch()
   {
     // We need to cancel our searches so we do not get any [more] results.
-    this._stopActiveQueries();
+    this._stopActiveQuery();
 
     this._finishSearch(false);
   },
@@ -463,8 +469,8 @@ nsPlacesAutoComplete.prototype = {
       haveMatches = haveMatches || match;
 
       if (this._result.matchCount == this._maxRichResults) {
-        // We have enough results, so stop running our queries.
-        this._stopActiveQueries();
+        // We have enough results, so stop running our search.
+        this._stopActiveQuery();
 
         // And finish our search.
         this._finishSearch(true);
@@ -487,15 +493,6 @@ nsPlacesAutoComplete.prototype = {
   {
     // If we have already finished our search, we should bail out early.
     if (this.isSearchComplete())
-      return;
-
-    // Remove the first query in our array of pending queries since it is the
-    // one we are getting notified about.
-    this._pendingQueries.shift();
-
-    // If we still have pending queries, we bail out because we aren't done
-    // getting results.
-    if (this._pendingQueries.length)
       return;
 
     // If we do not have enough results, and our match type is
@@ -610,6 +607,7 @@ nsPlacesAutoComplete.prototype = {
     delete this._listener;
     delete this._result;
     delete this._usedPlaceIds;
+    delete this._pendingQuery;
     this._secondPass = false;
   },
 
@@ -624,21 +622,19 @@ nsPlacesAutoComplete.prototype = {
     // Because we might get a handleCompletion for canceled queries, we want to
     // filter out queries we no longer care about (described in the
     // handleCompletion implementation of AutoCompleteStatementCallbackWrapper).
-    let PAC = this;
-    this._pendingQueries = aQueries.map(function(aQuery) {
-      // Create our wrapper object and execute the query.
-      let callbackWrapper = new AutoCompleteStatementCallbackWrapper(PAC);
-      return callbackWrapper.executeAsync(aQuery);
-    });
+
+    // Create our wrapper object and execute the queries.
+    let wrapper = new AutoCompleteStatementCallbackWrapper(this, this._db);
+    this._pendingQuery = wrapper.executeAsync(aQueries);
   },
 
   /**
-   * Stops executing all active queries.
+   * Stops executing our active query.
    */
-  _stopActiveQueries: function PAC_stopActiveQueries()
+  _stopActiveQuery: function PAC_stopActiveQuery()
   {
-    this._pendingQueries.forEach(function(aQuery) aQuery.cancel());
-    delete this._pendingQueries;
+    this._pendingQuery.cancel();
+    delete this._pendingQuery;
   },
 
   /**
@@ -1012,9 +1008,9 @@ nsPlacesAutoComplete.prototype = {
    */
   isSearchComplete: function PAC_isSearchComplete()
   {
-    // If _pendingQueries is null, we should no longer do any work since we have
+    // If _pendingQuery is null, we should no longer do any work since we have
     // already called _finishSearch.  This means we completed our search.
-    return this._pendingQueries == null;
+    return this._pendingQuery == null;
   },
 
   /**
@@ -1028,7 +1024,7 @@ nsPlacesAutoComplete.prototype = {
    */
   isPendingSearch: function PAC_isPendingSearch(aHandle)
   {
-    return this._pendingQueries.indexOf(aHandle) != -1;
+    return this._pendingQuery == aHandle;
   },
 
   //////////////////////////////////////////////////////////////////////////////
