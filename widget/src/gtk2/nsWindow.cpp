@@ -67,6 +67,7 @@
 #include "gtk2xtbin.h"
 #endif /* MOZ_X11 */
 #include <gdk/gdkkeysyms.h>
+#include <gtk/gtkprivate.h>
 
 #include "nsWidgetAtoms.h"
 
@@ -3898,6 +3899,9 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         gtk_container_add(GTK_CONTAINER(mShell), GTK_WIDGET(mContainer));
         gtk_widget_realize(GTK_WIDGET(mContainer));
 
+        // Don't let GTK mess with the shapes of our GdkWindows
+        GTK_PRIVATE_SET_FLAG(GTK_WIDGET(mContainer), GTK_HAS_SHAPE_MASK);
+
         // make sure this is the focus widget in the container
         gtk_window_set_focus(GTK_WINDOW(mShell), GTK_WIDGET(mContainer));
 
@@ -3924,6 +3928,9 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
             mContainer = MOZ_CONTAINER(moz_container_new());
             gtk_container_add(parentGtkContainer, GTK_WIDGET(mContainer));
             gtk_widget_realize(GTK_WIDGET(mContainer));
+
+            // Don't let GTK mess with the shapes of our GdkWindows
+            GTK_PRIVATE_SET_FLAG(GTK_WIDGET(mContainer), GTK_HAS_SHAPE_MASK);
 
             mDrawingarea = moz_drawingarea_new(nsnull, mContainer, visual);
         }
@@ -4394,6 +4401,50 @@ nsWindow::GetTransparencyMode()
     }
 
     return mIsTransparent ? eTransparencyTransparent : eTransparencyOpaque;
+}
+
+nsresult
+nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+        NS_ASSERTION(w->GetParent() == this,
+                     "Configured widget is not a child");
+        nsresult rv = w->SetWindowClipRegion(configuration.mClipRegion);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (w->mBounds.Size() != configuration.mBounds.Size()) {
+            w->Resize(configuration.mBounds.x, configuration.mBounds.y,
+                      configuration.mBounds.width, configuration.mBounds.height,
+                      PR_TRUE);
+        } else if (w->mBounds.TopLeft() != configuration.mBounds.TopLeft()) {
+            w->Move(configuration.mBounds.x, configuration.mBounds.y);
+        } 
+    }
+    return NS_OK;
+}
+
+nsresult
+nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects)
+{
+    StoreWindowClipRegion(aRects);
+
+    if (!mDrawingarea)
+        return NS_OK;
+
+    GdkRegion *region = gdk_region_new();
+    if (!region)
+        return NS_ERROR_OUT_OF_MEMORY;
+    for (PRUint32 i = 0; i < aRects.Length(); ++i) {
+        const nsIntRect& r = aRects[i];
+        GdkRectangle rect = { r.x, r.y, r.width, r.height };
+        gdk_region_union_with_rect(region, &rect);
+    }
+
+    gdk_window_shape_combine_region(mDrawingarea->clip_window, region, 0, 0);
+    gdk_region_destroy(region);
+
+    return NS_OK;
 }
 
 void

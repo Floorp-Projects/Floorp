@@ -1258,13 +1258,27 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
   
   outClipRect.x = NSToIntRound(clipOrigin.x);
   outClipRect.y = NSToIntRound(clipOrigin.y);
-  
-  
+
+  // need to convert view's origin to window coordinates.
+  // then, encode as "SetOrigin" ready values.
+  outOrigin.x = -NSToIntRound(viewOrigin.x);
+  outOrigin.y = -NSToIntRound(viewOrigin.y);
+
   PRBool isVisible;
   IsVisible(isVisible);
   if (isVisible && [mView window] != nil) {
     outClipRect.width  = NSToIntRound(visibleBounds.origin.x + visibleBounds.size.width) - NSToIntRound(visibleBounds.origin.x);
     outClipRect.height = NSToIntRound(visibleBounds.origin.y + visibleBounds.size.height) - NSToIntRound(visibleBounds.origin.y);
+
+    if (mClipRects) {
+      nsIntRect clipBounds;
+      for (PRUint32 i = 0; i < mClipRectCount; ++i) {
+        clipBounds.UnionRect(clipBounds, mClipRects[i]);
+      }
+      outClipRect.IntersectRect(outClipRect, clipBounds - outOrigin);
+    }
+
+    // XXXroc should this be !outClipRect.IsEmpty()?
     outWidgetVisible = PR_TRUE;
   }
   else {
@@ -1273,11 +1287,6 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
     outWidgetVisible = PR_FALSE;
   }
 
-  // need to convert view's origin to window coordinates.
-  // then, encode as "SetOrigin" ready values.
-  outOrigin.x = -NSToIntRound(viewOrigin.x);
-  outOrigin.y = -NSToIntRound(viewOrigin.y);
-  
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1687,6 +1696,36 @@ NS_IMETHODIMP nsChildView::Update()
 }
 
 #pragma mark -
+
+void nsChildView::ApplyConfiguration(nsIWidget* aExpectedParent,
+                                     const nsIWidget::Configuration& aConfiguration,
+                                     PRBool aRepaint)
+{
+#ifdef DEBUG
+  nsWindowType kidType;
+  aConfiguration.mChild->GetWindowType(kidType);
+#endif
+  NS_ASSERTION(kidType == eWindowType_child,
+               "Configured widget is not a child type");
+  NS_ASSERTION(aConfiguration.mChild->GetParent() == aExpectedParent,
+               "Configured widget is not a child of the right widget");
+  aConfiguration.mChild->Resize(
+      aConfiguration.mBounds.x, aConfiguration.mBounds.y,
+      aConfiguration.mBounds.width, aConfiguration.mBounds.height,
+      aRepaint);
+  // On Mac we don't use the clip region here, we just store it
+  // in case GetPluginClipRect needs it.
+  static_cast<nsChildView*>(aConfiguration.mChild)->
+    StoreWindowClipRegion(aConfiguration.mClipRegion);
+}
+
+nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    nsChildView::ApplyConfiguration(this, aConfigurations[i], PR_TRUE);
+  }
+  return NS_OK;
+}  
 
 // Scroll the bits of a view and its children
 // FIXME: I'm sure the invalidating can be optimized, just no time now.
