@@ -52,7 +52,6 @@
 #include "nsISelection.h"
 #include "nsCaret.h"
 #include "plarena.h"
-#include "nsLayoutUtils.h"
 
 #include <stdlib.h>
 
@@ -184,10 +183,7 @@ public:
    * @return PR_TRUE if aFrame is, or is a descendant of, the hypothetical
    * moving frame
    */
-  PRBool IsMovingFrame(nsIFrame* aFrame) {
-    return aFrame == mMovingFrame || (mMovingFrame &&
-       nsLayoutUtils::IsProperAncestorFrameCrossDoc(mMovingFrame, aFrame, mReferenceFrame));
-  }
+  PRBool IsMovingFrame(nsIFrame* aFrame);
   /**
    * @return the selection that painting should be restricted to (or nsnull
    * in the normal unrestricted case)

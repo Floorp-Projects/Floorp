@@ -56,6 +56,7 @@
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
 #endif
+#include "nsLayoutUtils.h"
 
 #include "imgIContainer.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -151,6 +152,13 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
+}
+
+PRBool
+nsDisplayListBuilder::IsMovingFrame(nsIFrame* aFrame)
+{
+  return mMovingFrame &&
+     nsLayoutUtils::IsAncestorFrameCrossDoc(mMovingFrame, aFrame, mReferenceFrame);
 }
 
 nsCaret *
