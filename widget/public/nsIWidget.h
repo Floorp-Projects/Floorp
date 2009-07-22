@@ -42,6 +42,7 @@
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsRect.h"
+#include "nsPoint.h"
 
 #include "prthread.h"
 #include "nsEvent.h"
@@ -102,8 +103,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x8f0869be, 0x6a53, 0x4f21, \
-    { 0xa9, 0x64, 0x90, 0xd9, 0x26, 0x04, 0x05, 0xa3 } }
+  { 0x9b8d70bd, 0x068e, 0x4465, \
+    { 0x8a, 0xd2, 0x4c, 0xf7, 0x96, 0x67, 0xe4, 0xfc } }
 
 /*
  * Window shadow styles
@@ -708,15 +709,25 @@ class nsIWidget : public nsISupports {
     virtual nsIToolkit* GetToolkit() = 0;    
 
     /**
-     * Scroll this widget. 
+     * Scroll a rectangle in this widget and (as simultaneously as
+     * possible) modify the specified child widgets.
+     * 
+     * This will invalidate areas of the children that have changed, unless
+     * they have just moved by the scroll amount, but does not need to
+     * invalidate any part of this widget, except where the scroll
+     * operation fails to blit because part of the window is unavailable
+     * (e.g. partially offscreen).
      *
-     * @param aDx amount to scroll along the x-axis
-     * @param aDy amount to scroll along the y-axis.
-     * @param aClipRect clipping rectangle to limit the scroll to.
-     *
+     * @param aDelta amount to scroll (device pixels)
+     * @param aSource rectangle to copy (device pixels relative to this
+     * widget)
+     * @param aReconfigureChildren commands to set the bounds and clip
+     * region of a subset of the children of this widget; these should
+     * be performed simultaneously with the scrolling, as far as possible,
+     * to avoid visual artifacts.
      */
-
-    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect) = 0;
+    virtual void Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                        const nsTArray<Configuration>& aReconfigureChildren) = 0;
 
     /** 
      * Internal methods

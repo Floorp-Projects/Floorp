@@ -1727,143 +1727,43 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
   return NS_OK;
 }  
 
-// Scroll the bits of a view and its children
-// FIXME: I'm sure the invalidating can be optimized, just no time now.
-NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
+void nsChildView::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                         const nsTArray<Configuration>& aConfigurations)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NS_ASSERTION(mParentView, "Attempting to scroll a view that does not have a parent");
   if (!mParentView)
-    return NS_ERROR_NOT_AVAILABLE;
+    return;
 
   BOOL viewWasDirty = NO;
   if (mVisible) {
     viewWasDirty = [mView needsDisplay];
 
-    NSSize scrollVector = {aDx,aDy};
-    [mView scrollRect: [mView visibleRect] by:scrollVector];
+    NSRect rect;
+    GeckoRectToNSRect(aSource, rect);
+    NSSize scrollVector = {aDelta.x, aDelta.y};
+    [mView scrollRect:rect by:scrollVector];
   }
-  
-  // Scroll the children (even if the widget is not visible)
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    // We use resize rather than move since it gives us control
-    // over repainting.  We can scroll like a bat out of hell
-    // by not wasting time invalidating the widgets, since it's
-    // completely unnecessary to do so.
-    nsIntRect bounds;
-    kid->GetBounds(bounds);
-    kid->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
+
+  // Don't force invalidation of the child if it's moving by the scroll
+  // amount and not changing size
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    nsIntRect oldBounds;
+    configuration.mChild->GetBounds(oldBounds);
+    ApplyConfiguration(this, aConfigurations[i],
+                       oldBounds + aDelta != configuration.mBounds);
   }
 
   if (mOnDestroyCalled)
-    return NS_OK;
+    return;
 
   if (mVisible) {
-    if (viewWasDirty) {
-      [mView setNeedsDisplay:YES];
-    }
-    else {
-      NSRect frame = [mView visibleRect];
-      NSRect horizInvalid = frame;
-      NSRect vertInvalid = frame;
-  
-      if (aDx != 0) {
-        horizInvalid.size.width = abs(aDx);
-        if (aDx < 0)
-          horizInvalid.origin.x = frame.origin.x + frame.size.width + aDx;
-        [mView setNeedsDisplayInRect: horizInvalid];
-      }
-
-      if (aDy != 0) {
-        vertInvalid.size.height = abs(aDy);
-        if (aDy < 0)
-          vertInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
-        [mView setNeedsDisplayInRect: vertInvalid];
-      }
-
-      // We also need to check for any ChildViews which overlap this widget
-      // but are not descendent widgets.  If there are any, we need to
-      // invalidate the area of this view that these ChildViews will have been
-      // blitted into, since these widgets aren't supposed to scroll with
-      // this widget.
-
-      // To do this, start at the root Gecko NSView, and walk down along
-      // our ancestor view chain, looking at all the subviews in each level
-      // of the hierarchy.  If we find a non-ancestor view that overlaps
-      // this view, invalidate the area around it.
-
-      // We need to convert all rects to a common ancestor view to intersect
-      // them, since a view's frame is in the coordinate space of its parent.
-      // Use mParentView as the frame of reference.
-      NSRect selfFrame = [mParentView convertRect:[mView frame] fromView:[mView superview]];
-      NSView* view = mParentView;
-      BOOL selfLevel = NO;
-
-      while (!selfLevel) {
-        NSView* nextAncestorView = nil;
-        NSArray* subviews = [view subviews];
-        for (unsigned int i = 0; i < [subviews count]; ++i) {
-          NSView* subView = [subviews objectAtIndex: i];
-          if (subView == mView)
-            selfLevel = YES;
-          else if ([mView isDescendantOf:subView])
-            nextAncestorView = subView;
-          else {
-            NSRect intersectArea = NSIntersectionRect([mParentView convertRect:[subView frame] fromView:[subView superview]], selfFrame);
-            if (!NSIsEmptyRect(intersectArea)) {
-              NSPoint origin = [mView convertPoint:intersectArea.origin fromView:mParentView];
-
-              if (aDy != 0) {
-                vertInvalid.origin.x = origin.x;
-                if (aDy < 0)  // scrolled down, invalidate above
-                  vertInvalid.origin.y = origin.y + aDy;
-                else          // invalidate below
-                  vertInvalid.origin.y = origin.y + intersectArea.size.height;
-                vertInvalid.size.width = intersectArea.size.width;
-                [mView setNeedsDisplayInRect: vertInvalid];
-              }
-
-              if (aDx != 0) {
-                horizInvalid.origin.y = origin.y;
-                if (aDx < 0)  // scrolled right, invalidate to the left
-                  horizInvalid.origin.x = origin.x + aDx;
-                else          // invalidate to the right
-                  horizInvalid.origin.x = origin.x + intersectArea.size.width;
-                horizInvalid.size.height = intersectArea.size.height;
-                [mView setNeedsDisplayInRect: horizInvalid];
-              }
-            }
-          }
-        }
-        view = nextAncestorView;
-      }
-    }
+    [mView setNeedsDisplay:viewWasDirty];
   }
-  
-  // This is an evil hack that doesn't always work.
-  // 
-  // Drawing plugins in a Cocoa environment is tricky, because the
-  // plugins are living in a Carbon WindowRef/BeginUpdate/EndUpdate
-  // world, and Cocoa has its own notion of dirty rectangles. Throw
-  // Quartz Extreme and QuickTime into the mix, and things get bad.
-  // 
-  // This code is working around a cosmetic issue seen when Quartz Extreme
-  // is active, and you're scrolling a page with a QuickTime plugin; areas
-  // outside the plugin fail to scroll properly. This [display] ensures that
-  // the view is properly drawn before the next Scroll call.
-  //
-  // The time this doesn't work is when you're scrolling a page containing
-  // an iframe which in turn contains a plugin.
-  //
-  // This is turned off because it makes scrolling pages with plugins slow.
-  // 
-  //if ([mView childViewHasPlugin])
-  //  [mView display];
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Invokes callback and ProcessEvent methods on Event Listener object

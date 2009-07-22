@@ -147,6 +147,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
 #include "nsWidgetsCID.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 #if defined(WINCE)
 #include "nsWindowCE.h"
@@ -2297,43 +2299,54 @@ NS_IMETHODIMP nsWindow::Update()
  *
  **************************************************************/
 
-// Invalidates a window if it's not one of ours, for example
-// a window created by a plugin.
-BOOL CALLBACK nsWindow::InvalidateForeignChildWindows(HWND aWnd, LPARAM aMsg)
+void
+nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                 const nsTArray<Configuration>& aConfigurations)
 {
-  LONG_PTR proc = ::GetWindowLongPtrW(aWnd, GWLP_WNDPROC);
-  if (proc != (LONG_PTR)&nsWindow::WindowProc) {
-    // This window is not one of our windows so invalidate it.
-    VERIFY(::InvalidateRect(aWnd, NULL, FALSE));    
-  }
-  return TRUE;
-}
-
-// Scroll
-NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
-{
-  RECT  trect;
-
-  if (nsnull != aClipRect)
-  {
-    trect.left = aClipRect->x;
-    trect.top = aClipRect->y;
-    trect.right = aClipRect->XMost();
-    trect.bottom = aClipRect->YMost();
+  // We can use SW_SCROLLCHILDREN if all the windows that intersect the
+  // affected area are moving by the scroll amount.
+  // First, build the set of widgets that are to be moved by the scroll
+  // amount.
+  // At the same time, set the clip region of all changed windows to the
+  // intersection of the current and new regions.
+  nsTHashtable<nsPtrHashKey<nsWindow> > scrolledWidgets;
+  scrolledWidgets.Init();
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+    NS_ASSERTION(w->GetParent() == this,
+                 "Configured widget is not a child");
+    if (configuration.mBounds == w->mBounds + aDelta) {
+      scrolledWidgets.PutEntry(w);
+    }
+    w->SetWindowClipRegion(configuration.mClipRegion, PR_TRUE);
   }
 
-  ::ScrollWindowEx(mWnd, aDx, aDy, NULL, (nsnull != aClipRect) ? &trect : NULL,
-                   NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
-  // Invalidate all child windows that aren't ours; we're moving them, and we
-  // expect them to be painted at the new location even if they're outside the
-  // region we're bit-blit scrolling. See bug 387701.
-#if !defined(WINCE)
-  ::EnumChildWindows(GetWindowHandle(), nsWindow::InvalidateForeignChildWindows, NULL);
-#else
-  nsWindowCE::EnumChildWindows(GetWindowHandle(), nsWindow::InvalidateForeignChildWindows, NULL);
-#endif
-  ::UpdateWindow(mWnd);
-  return NS_OK;
+  // Now check if any of our children would be affected by
+  // SW_SCROLLCHILDREN but not supposed to scroll.
+  nsIntRect affectedRect;
+  affectedRect.UnionRect(aSource, aSource + aDelta);
+  // We pass SW_INVALIDATE because areas that get scrolled into view
+  // from offscreen (but inside the scroll area) need to be repainted.
+  UINT flags = SW_SCROLLCHILDREN | SW_INVALIDATE;
+  for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
+       w = static_cast<nsWindow*>(w->GetNextSibling())) {
+    if (w->mBounds.Intersects(affectedRect) &&
+        !scrolledWidgets.GetEntry(w)) {
+      flags &= ~SW_SCROLLCHILDREN;
+      break;
+    }
+  }
+
+  nsIntRect destRect = aSource + aDelta;
+  RECT clip = { affectedRect.x, affectedRect.y, affectedRect.XMost(), affectedRect.YMost() };
+  ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, NULL, NULL, flags);
+
+  // Now make sure all children actually get positioned, sized and clipped
+  // correctly. If SW_SCROLLCHILDREN already moved widgets to their correct
+  // locations, then the SetWindowPos calls this triggers will just be
+  // no-ops.
+  ConfigureChildren(aConfigurations);
 }
 
 /**************************************************************
