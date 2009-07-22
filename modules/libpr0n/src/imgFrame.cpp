@@ -798,7 +798,7 @@ PRBool imgFrame::GetIsPaletted() const
 
 PRBool imgFrame::GetHasAlpha() const
 {
-  return mFormat != gfxASurface::ImageFormatARGB32;
+  return mFormat == gfxASurface::ImageFormatARGB32;
 }
 
 void imgFrame::GetPaletteData(PRUint32 **aPalette, PRUint32 *length) const
