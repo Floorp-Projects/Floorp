@@ -175,3 +175,7 @@ EXPORTS
         sqlite3_vfs_unregister
         sqlite3_vfs_register
         sqlite3_vmprintf
+#ifdef SQLITE_DEBUG
+        sqlite3_mutex_held
+        sqlite3_mutex_notheld
+#endif
