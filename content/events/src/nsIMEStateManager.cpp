@@ -222,7 +222,7 @@ nsIMEStateManager::GetWidget(nsPresContext* aPresContext)
   if (!vm)
     return nsnull;
   nsCOMPtr<nsIWidget> widget = nsnull;
-  nsresult rv = vm->GetWidget(getter_AddRefs(widget));
+  nsresult rv = vm->GetRootWidget(getter_AddRefs(widget));
   NS_ENSURE_SUCCESS(rv, nsnull);
   return widget;
 }
@@ -497,7 +497,7 @@ nsIMEStateManager::OnTextStateFocus(nsPresContext* aPresContext,
   NS_ENSURE_TRUE(vm, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIWidget> widget;
-  nsresult rv = vm->GetWidget(getter_AddRefs(widget));
+  nsresult rv = vm->GetRootWidget(getter_AddRefs(widget));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_AVAILABLE);
 
   rv = widget->OnIMEFocusChange(PR_TRUE);

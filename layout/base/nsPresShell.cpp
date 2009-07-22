@@ -5973,6 +5973,7 @@ PresShell::HandleEvent(nsIView         *aView,
   // key and IME events must be targeted at the presshell for the focused frame
   if (!sDontRetargetEvents &&
       (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
+       NS_IS_QUERY_CONTENT_EVENT(aEvent) || NS_IS_SELECTION_EVENT(aEvent) ||
        NS_IS_CONTEXT_MENU_KEY(aEvent))) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (!fm)
