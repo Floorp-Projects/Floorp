@@ -95,8 +95,6 @@ button:active {
 }
 
 toolbarbutton {
-  min-width: 8.5mm !important; /* primary button size */
-  min-height: 8.5mm !important; /* primary button size */
   -moz-appearance: none !important;
   margin: 0;
   padding: 0.25mm;
@@ -116,6 +114,22 @@ toolbarbutton:hover,
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
   border-color: transparent;
+}
+
+/* high-res screens */
+@media all and (min-device-width: 401px) {
+toolbarbutton {
+  min-width: 64px !important; /* primary button size (match image pixels)*/
+  min-height: 64px !important; /* primary button size (match image pixels) */
+}
+}
+
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+toolbarbutton {
+  min-width: 36px !important; /* primary button size (match image pixels) */
+  min-height: 36px !important; /* primary button size (match image pixels) */
+}
 }
 
 /* dark buttons ------------------------------------------------------------ */
