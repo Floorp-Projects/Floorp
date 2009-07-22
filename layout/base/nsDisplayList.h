@@ -225,6 +225,12 @@ public:
   void SetPaintAllFrames() { mPaintAllFrames = PR_TRUE; }
   PRBool GetPaintAllFrames() { return mPaintAllFrames; }
   /**
+   * Calling this setter makes us compute accurate visible regions at the cost
+   * of performance if regions get very complex.
+   */
+  void SetAccurateVisibleRegions() { mAccurateVisibleRegions = PR_TRUE; }
+  PRBool GetAccurateVisibleRegions() { return mAccurateVisibleRegions; }
+  /**
    * Allows callers to selectively override the regular paint suppression checks,
    * so that methods like GetFrameForPoint work when painting is suppressed.
    */
@@ -334,6 +340,7 @@ private:
   PRPackedBool                   mIsBackgroundOnly;
   PRPackedBool                   mIsAtRootOfPseudoStackingContext;
   PRPackedBool                   mPaintAllFrames;
+  PRPackedBool                   mAccurateVisibleRegions;
 };
 
 class nsDisplayItem;
