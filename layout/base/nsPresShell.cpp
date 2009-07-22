@@ -1387,7 +1387,7 @@ private:
   PRBool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTargetPt);
 
   // Get the selected item and coordinates in device pixels relative to root
-  // view for element, first ensuring the element is onscreen
+  // document's root view for element, first ensuring the element is onscreen
   void GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
                                            nsIContent **aTargetToUse,
                                            nsIntPoint& aTargetPt);
@@ -6501,7 +6501,11 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
   // up in the upper left of the relevant content area before we create
   // the DOM event. Since we never call InitMouseEvent() on the event, 
   // the client X/Y will be 0,0. We can make use of that if the widget is null.
-  mViewManager->GetWidget(getter_AddRefs(aEvent->widget));
+  // Use the root view manager's widget since it's most likely to have one,
+  // and the coordinates returned by GetCurrentItemAndPositionForElement
+  // are relative to the root of the root view manager.
+  mPresContext->RootPresContext()->PresShell()->GetViewManager()->
+    GetRootWidget(getter_AddRefs(aEvent->widget));
   aEvent->refPoint.x = 0;
   aEvent->refPoint.y = 0;
 
@@ -6743,12 +6747,8 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     nsIView *view = frame->GetClosestView(&frameOrigin);
     NS_ASSERTION(view, "No view for frame");
 
-    nsIView *rootView = nsnull;
-    mViewManager->GetRootView(rootView);
-    NS_ASSERTION(rootView, "No root view in pres shell");
-
-    // View's origin within its root view
-    frameOrigin += view->GetOffsetTo(rootView);
+    // View's origin within the view manager tree
+    frameOrigin += view->GetOffsetTo(nsnull);
 
     // Start context menu down and to the right from top left of frame
     // use the lineheight. This is a good distance to move the context
