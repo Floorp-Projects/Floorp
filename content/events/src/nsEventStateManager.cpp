@@ -209,12 +209,6 @@ PrintDocTree(nsIDocShellTreeItem* aParentItem, int aLevel)
   nsCOMPtr<nsIDOMWindowInternal> domwin = doc ? doc->GetWindow() : nsnull;
   nsIURI* uri = doc ? doc->GetDocumentURI() : nsnull;
 
-  nsCOMPtr<nsIWidget> widget;
-  nsIViewManager* vm = presShell ? presShell->GetViewManager() : nsnull;
-  if (vm) {
-    vm->GetWidget(getter_AddRefs(widget));
-  }
-
   printf("DS %p  Type %s  Cnt %d  Doc %p  DW %p  EM %p%c",
     static_cast<void*>(parentAsDocShell.get()),
     type==nsIDocShellTreeItem::typeChrome?"Chrome":"Content",
