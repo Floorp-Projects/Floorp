@@ -1242,8 +1242,8 @@ public:
         } else if (ci == &js_BoxDouble_ci) {
             LInsp s0 = args[0];
             JS_ASSERT(s0->isQuad());
-            if (isi2f(s0)) {
-                LIns* args2[] = { iu2fArg(s0), args[1] };
+            if (isPromoteInt(s0)) {
+                LIns* args2[] = { demote(out, s0), args[1] };
                 return out->insCall(&js_BoxInt32_ci, args2);
             }
             if (s0->isCall() && s0->callInfo() == &js_UnboxDouble_ci)
@@ -9669,12 +9669,18 @@ TraceRecorder::record_JSOP_SETELEM()
     idx_ins = makeNumberInt32(idx_ins);
 
     // Box the value so we can use one builtin instead of having to add one builtin for every
-    // storage type.
-    LIns* boxed_v_ins = v_ins;
-    box_jsval(v, boxed_v_ins);
+    // storage type. Special case for integers though, since they are so common.
+    LIns* res_ins;
+    if (isNumber(v) && isPromoteInt(v_ins)) {
+        LIns* args[] = { ::demote(lir, v_ins), idx_ins, obj_ins, cx_ins };
+        res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
+    } else {
+        LIns* boxed_v_ins = v_ins;
+        box_jsval(v, boxed_v_ins);
 
-    LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
-    LIns* res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
+        LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
+        res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
+    }
     guard(false, lir->ins_eq0(res_ins), MISMATCH_EXIT);
 
     jsbytecode* pc = cx->fp->regs->pc;
