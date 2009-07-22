@@ -2744,11 +2744,15 @@ nsWindow::HasPendingInputEvent()
   // reported to the application.
   if (HIWORD(GetQueueStatus(QS_INPUT)))
     return PR_TRUE;
+#ifdef WINCE
+  return PR_FALSE;
+#else
   GUITHREADINFO guiInfo;
   guiInfo.cbSize = sizeof(GUITHREADINFO);
   if (!GetGUIThreadInfo(GetCurrentThreadId(), &guiInfo))
     return PR_FALSE;
   return GUI_INMOVESIZE == (guiInfo.flags & GUI_INMOVESIZE);
+#endif
 }
 
 /**************************************************************
