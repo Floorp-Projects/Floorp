@@ -1232,7 +1232,7 @@ JSClass js_SlowArrayClass = {
     "Array",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     slowarray_addProperty, JS_PropertyStub, JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub,      JS_ResolveStub,  js_TryValueOf,    JS_FinalizeStub,
+    JS_EnumerateStub,      JS_ResolveStub,  js_TryValueOf,    NULL,
     slowarray_getObjectOps, NULL,           NULL,             NULL,
     NULL,                  NULL,            NULL,             NULL
 };

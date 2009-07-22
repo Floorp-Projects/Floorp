@@ -3030,7 +3030,7 @@ static JSClass OptionsClass = {
   "JSOptions",
   0,
   JS_PropertyStub, JS_PropertyStub, GetOptionsProperty, SetOptionsProperty,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nsnull
 };
 
 #ifdef NS_TRACE_MALLOC

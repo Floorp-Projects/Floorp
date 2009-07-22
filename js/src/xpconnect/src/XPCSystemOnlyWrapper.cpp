@@ -93,7 +93,7 @@ JSExtendedClass sXPC_SOW_JSClass = {
     XPC_SOW_AddProperty, XPC_SOW_DelProperty,
     XPC_SOW_GetProperty, XPC_SOW_SetProperty,
     XPC_SOW_Enumerate,   (JSResolveOp)XPC_SOW_NewResolve,
-    XPC_SOW_Convert,     JS_FinalizeStub,
+    XPC_SOW_Convert,     nsnull,
     nsnull,              XPC_SOW_CheckAccess,
     nsnull,              nsnull,
     nsnull,              XPC_SOW_HasInstance,

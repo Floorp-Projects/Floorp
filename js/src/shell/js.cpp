@@ -2827,7 +2827,7 @@ static JSClass sandbox_class = {
     JS_PropertyStub,   JS_PropertyStub,
     JS_PropertyStub,   JS_PropertyStub,
     sandbox_enumerate, (JSResolveOp)sandbox_resolve,
-    JS_ConvertStub,    JS_FinalizeStub,
+    JS_ConvertStub,    NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -4512,7 +4512,7 @@ static JSClass env_class = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  env_setProperty,
     env_enumerate, (JSResolveOp) env_resolve,
-    JS_ConvertStub,   JS_FinalizeStub,
+    JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 

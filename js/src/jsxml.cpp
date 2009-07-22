@@ -378,7 +378,7 @@ JS_FRIEND_DATA(JSExtendedClass) js_QNameClass = {
     JSCLASS_HAS_RESERVED_SLOTS(QNAME_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
     JS_PropertyStub,   JS_PropertyStub,   qname_getProperty, NULL,
-    JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    JS_FinalizeStub,
+    JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    NULL,
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              NULL,              NULL },
     qname_equality,    NULL,              NULL,              NULL,
@@ -397,7 +397,7 @@ JS_FRIEND_DATA(JSClass) js_AttributeNameClass = {
     JSCLASS_HAS_RESERVED_SLOTS(QNAME_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AttributeName),
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
-    JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    JS_FinalizeStub,
+    JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    NULL,
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              NULL,              NULL
 };
