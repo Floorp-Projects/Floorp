@@ -576,7 +576,7 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView, PRBool aDoInvalidate)
       nsRegion r = *dirtyRegion;
       r.MoveBy(aView->GetOffsetTo(nearestViewWithWidget));
       UpdateWidgetArea(nearestViewWithWidget,
-                       nearestViewWithWidget->GetNearestWidget(nsnull), r, nsnull);
+                       nearestViewWithWidget->GetWidget(), r, nsnull);
       dirtyRegion->SetEmpty();
     }
   }
@@ -683,14 +683,14 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegio
   nsPoint offset = aView->GetOffsetTo(displayRoot);
   damageRect.MoveBy(offset);
 
-  UpdateWidgetArea(displayRoot, displayRoot->GetNearestWidget(nsnull),
+  UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
                    nsRegion(damageRect), aView);
   if (!aUpdateRegion.IsEmpty()) {
     // XXX We should update the region, not the bounds rect, but that requires
     // a little more work. Fix this when we reshuffle this code.
     nsRegion update(aUpdateRegion);
     update.MoveBy(offset);
-    UpdateWidgetArea(displayRoot, displayRoot->GetNearestWidget(nsnull),
+    UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
                      update, nsnull);
     // FlushPendingInvalidates();
   }
@@ -851,7 +851,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   // can overlap each other and be translucent.  So we have to possibly
   // invalidate our rect in each of the widgets we have lying about.
   damagedRect.MoveBy(view->GetOffsetTo(displayRoot));
-  UpdateWidgetArea(displayRoot, displayRoot->GetNearestWidget(nsnull),
+  UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
                    nsRegion(damagedRect), nsnull);
 
   RootViewManager()->IncrementUpdateCount();
