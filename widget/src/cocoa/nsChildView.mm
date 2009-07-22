@@ -776,61 +776,18 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_PLUGIN_PORT:
-#ifndef NP_NO_QUICKDRAW
     case NS_NATIVE_PLUGIN_PORT_QD:
-    {
-      mPluginIsCG = PR_FALSE;
-      mIsPluginView = PR_TRUE;
-      if ([mView isKindOfClass:[ChildView class]])
-        [(ChildView*)mView setIsPluginView:YES];
-
-      NSWindow* window = [mView nativeWindow];
-      if (window) {
-        WindowRef topLevelWindow = (WindowRef)[window windowRef];
-        if (topLevelWindow) {
-          mPluginPort.qdPort.port = ::GetWindowPort(topLevelWindow);
-
-          NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
-          NSRect frame = [[window contentView] frame];
-          viewOrigin.y = frame.size.height - viewOrigin.y;
-          
-          // need to convert view's origin to window coordinates.
-          // then, encode as "SetOrigin" ready values.
-          mPluginPort.qdPort.portx = (PRInt32)-viewOrigin.x;
-          mPluginPort.qdPort.porty = (PRInt32)-viewOrigin.y;
-        }
-      }
-
-      retVal = (void*)&mPluginPort;
-      break;
-    }
-#endif
-
     case NS_NATIVE_PLUGIN_PORT_CG:
     {
-      mPluginIsCG = PR_TRUE;
+#ifdef NP_NO_QUICKDRAW
+      aDataType = NS_NATIVE_PLUGIN_PORT_CG;
+#endif
+      mPluginIsCG = (aDataType == NS_NATIVE_PLUGIN_PORT_CG);
       mIsPluginView = PR_TRUE;
       if ([mView isKindOfClass:[ChildView class]])
         [(ChildView*)mView setIsPluginView:YES];
 
-      NSWindow* window = [mView nativeWindow];
-      if (window) {
-        // [NSGraphicsContext currentContext] is supposed to "return the
-        // current graphics context of the current thread."  But sometimes
-        // (when called while mView isn't focused for drawing) it returns a
-        // graphics context for the wrong window.  [window graphicsContext]
-        // (which "provides the graphics context associated with the window
-        // for the current thread") seems always to return the "right"
-        // graphics context.  See bug 500130.
-        mPluginPort.cgPort.context = (CGContextRef)
-          [[window graphicsContext] graphicsPort];
-        WindowRef topLevelWindow = (WindowRef)[window windowRef];
-        mPluginPort.cgPort.window = topLevelWindow;
-      } else {
-        mPluginPort.cgPort.context = nil;
-        mPluginPort.cgPort.window = nil;
-      }
-
+      UpdatePluginPort();
       retVal = (void*)&mPluginPort;
       break;
     }
@@ -935,6 +892,46 @@ void nsChildView::HidePlugin()
        window->clipRect.bottom = 0;
        window->clipRect.right = 0;
        instance->SetWindow(window);
+    }
+  }
+}
+
+void nsChildView::UpdatePluginPort()
+{
+  NS_ASSERTION(mIsPluginView, "UpdatePluginPort called on non-plugin view");
+
+  NSWindow* window = [mView nativeWindow];
+  WindowRef topLevelWindow = window ? (WindowRef)[window windowRef] : nil;
+  if (mPluginIsCG) {
+    if (topLevelWindow) {
+      // [NSGraphicsContext currentContext] is supposed to "return the
+      // current graphics context of the current thread."  But sometimes
+      // (when called while mView isn't focused for drawing) it returns a
+      // graphics context for the wrong window.  [window graphicsContext]
+      // (which "provides the graphics context associated with the window
+      // for the current thread") seems always to return the "right"
+      // graphics context.  See bug 500130.
+      mPluginPort.cgPort.context = (CGContextRef)
+        [[window graphicsContext] graphicsPort];
+      mPluginPort.cgPort.window = topLevelWindow;
+    } else {
+      mPluginPort.cgPort.context = nil;
+      mPluginPort.cgPort.window = nil;
+    }
+  } else {
+    if (topLevelWindow) {
+      mPluginPort.qdPort.port = ::GetWindowPort(topLevelWindow);
+
+      NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
+      NSRect frame = [[window contentView] frame];
+      viewOrigin.y = frame.size.height - viewOrigin.y;
+
+      // need to convert view's origin to window coordinates.
+      // then, encode as "SetOrigin" ready values.
+      mPluginPort.qdPort.portx = (PRInt32)-viewOrigin.x;
+      mPluginPort.qdPort.porty = (PRInt32)-viewOrigin.y;
+    } else {
+      mPluginPort.qdPort.port = nil;
     }
   }
 }
@@ -2277,6 +2274,9 @@ NSEvent* gLastDragEvent = nil;
 - (void)setNativeWindow:(NSWindow*)aWindow
 {
   mWindow = aWindow;
+  if (aWindow && [self isPluginView] && mGeckoChild) {
+    mGeckoChild->UpdatePluginPort();
+  }
 }
 
 - (void)systemMetricsChanged
