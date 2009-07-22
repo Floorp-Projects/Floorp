@@ -83,7 +83,6 @@ function setPosition(params)
 
 function handleRequest(request, response)
 {
-  dump("GEOLOCATION_DEBUG: sjs queryString: " + request.queryString + "\n");
   var params = parseQueryString(request.queryString);
 
   controlResponse(params);

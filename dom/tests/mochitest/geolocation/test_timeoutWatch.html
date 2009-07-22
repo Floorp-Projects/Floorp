@@ -42,15 +42,15 @@ function errorCallback(err) {
 
 
 var options = {
-    maximumAge: 0,
-    timeout: 10
+    maximumAge: 1,
+    timeout: 100
 };
 
 navigator.geolocation.watchPosition(successCallback,
                                     errorCallback,
                                     options);
 
-setTimeout(clickNotificationButton, 100, kAcceptButton);
+setTimeout(clickNotificationButton, 10, kAcceptButton);
 
 </script>
 </pre>
