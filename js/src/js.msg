@@ -310,3 +310,4 @@ MSG_DEF(JSMSG_MISSING_FUN_ARG,        227, 2, JSEXN_TYPEERR, "missing argument {
 MSG_DEF(JSMSG_JSON_BAD_PARSE,         228, 0, JSEXN_SYNTAXERR, "JSON.parse")
 MSG_DEF(JSMSG_JSON_BAD_STRINGIFY,     229, 0, JSEXN_ERR, "JSON.stringify")
 MSG_DEF(JSMSG_XDR_CLOSURE_WRAPPER,    230, 1, JSEXN_INTERNALERR, "can't XDR closure wrapper for function {0}")
+MSG_DEF(JSMSG_NOT_NONNULL_OBJECT,     231, 0, JSEXN_TYPEERR, "value is not a non-null object")
