@@ -1868,13 +1868,6 @@ NS_IMETHODIMP nsViewManager::GetRootScrollableView(nsIScrollableView **aScrollab
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::GetWidget(nsIWidget **aWidget)
-{
-  *aWidget = GetWidget();
-  NS_IF_ADDREF(*aWidget);
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsViewManager::GetRootWidget(nsIWidget **aWidget)
 {
   if (!mRootView) {
