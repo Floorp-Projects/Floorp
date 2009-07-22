@@ -223,9 +223,6 @@ private:
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
 
-  void AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceContext* aContext,
-                                        nsView* aRootView);
-
   // Utilities
 
   PRBool IsViewInserted(nsView *aView);

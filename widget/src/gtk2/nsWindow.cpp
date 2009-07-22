@@ -2152,6 +2152,32 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
     }
 
+    PRBool translucent = eTransparencyTransparent == GetTransparencyMode();
+    if (!translucent) {
+        GList *children =
+            gdk_window_peek_children(mDrawingarea->inner_window);
+        while (children) {
+            GdkWindow *gdkWin = GDK_WINDOW(children->data);
+            nsWindow *kid = get_window_for_gdk_window(gdkWin);
+            if (kid) {
+                nsAutoTArray<nsIntRect,1> clipRects;
+                kid->GetWindowClipRegion(&clipRects);
+                nsIntRect bounds;
+                kid->GetBounds(bounds);
+                for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
+                    nsIntRect r = clipRects[i] + bounds.TopLeft();
+                    updateRegion->Subtract(r.x, r.y, r.width, r.height);
+                }
+            }
+            children = children->next;
+        }
+    }
+
+    if (updateRegion->IsEmpty()) {
+        g_free(rects);
+        return TRUE;
+    }
+
 #ifdef MOZ_DFB
     nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
     if (NS_UNLIKELY(!rc)) {
@@ -2181,8 +2207,6 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return FALSE;
     }
 
-    PRBool translucent;
-    translucent = eTransparencyTransparent == GetTransparencyMode();
     nsIntRect boundsRect;
 
     GdkPixmap* bufferPixmap = nsnull;
