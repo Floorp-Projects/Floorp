@@ -106,7 +106,7 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
     nsIViewManager* vm = shell->GetViewManager();
     if (vm) {
       nsCOMPtr<nsIWidget> widget;
-      vm->GetWidget(getter_AddRefs(widget));
+      vm->GetRootWidget(getter_AddRefs(widget));
       if (widget) {
         mWnd = widget->GetNativeData(NS_NATIVE_WINDOW);
       }

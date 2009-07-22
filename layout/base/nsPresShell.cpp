@@ -376,6 +376,8 @@ public:
   void SetDumpFrameByFrameCounts(PRBool aVal)  { mDumpFrameByFrameCounts = aVal; }
   void SetPaintFrameCounts(PRBool aVal)        { mPaintFrameByFrameCounts = aVal; }
 
+  PRBool IsPaintingFrameCounts() { return mPaintFrameByFrameCounts; }
+
 protected:
   void DisplayTotals(PRUint32 aTotal, PRUint32 * aDupArray, char * aTitle);
   void DisplayHTMLTotals(PRUint32 aTotal, PRUint32 * aDupArray, char * aTitle);
@@ -1004,7 +1006,7 @@ public:
   NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
 
   NS_IMETHOD SetPaintFrameCount(PRBool aOn);
-  
+  virtual PRBool IsPaintingFrameCounts();
 #endif
 
 #ifdef DEBUG
@@ -1385,7 +1387,7 @@ private:
   PRBool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTargetPt);
 
   // Get the selected item and coordinates in device pixels relative to root
-  // view for element, first ensuring the element is onscreen
+  // document's root view for element, first ensuring the element is onscreen
   void GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
                                            nsIContent **aTargetToUse,
                                            nsIntPoint& aTargetPt);
@@ -4474,7 +4476,9 @@ PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
 {
   PRUint32 hoverGenerationBefore = mFrameConstructor->GetHoverGeneration();
   nsEventStatus status;
-  mViewManager->DispatchEvent(aEvent, &status);
+  nsIView* rootView;
+  mViewManager->GetRootView(rootView);
+  mViewManager->DispatchEvent(aEvent, rootView, &status);
   if (aFlushOnHoverChange &&
       hoverGenerationBefore != mFrameConstructor->GetHoverGeneration()) {
     // Flush so that the resulting reflow happens now so that our caller
@@ -4624,6 +4628,8 @@ PresShell::UnsuppressAndInvalidate()
     nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
     rootFrame->Invalidate(rect);
   }
+
+  mPresContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
 
   // now that painting is unsuppressed, focus may be set on the document
   nsPIDOMWindow *win = mDocument->GetWindow();
@@ -5967,6 +5973,7 @@ PresShell::HandleEvent(nsIView         *aView,
   // key and IME events must be targeted at the presshell for the focused frame
   if (!sDontRetargetEvents &&
       (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
+       NS_IS_QUERY_CONTENT_EVENT(aEvent) || NS_IS_SELECTION_EVENT(aEvent) ||
        NS_IS_CONTEXT_MENU_KEY(aEvent))) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (!fm)
@@ -6494,7 +6501,11 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
   // up in the upper left of the relevant content area before we create
   // the DOM event. Since we never call InitMouseEvent() on the event, 
   // the client X/Y will be 0,0. We can make use of that if the widget is null.
-  mViewManager->GetWidget(getter_AddRefs(aEvent->widget));
+  // Use the root view manager's widget since it's most likely to have one,
+  // and the coordinates returned by GetCurrentItemAndPositionForElement
+  // are relative to the root of the root view manager.
+  mPresContext->RootPresContext()->PresShell()->GetViewManager()->
+    GetRootWidget(getter_AddRefs(aEvent->widget));
   aEvent->refPoint.x = 0;
   aEvent->refPoint.y = 0;
 
@@ -6736,12 +6747,8 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     nsIView *view = frame->GetClosestView(&frameOrigin);
     NS_ASSERTION(view, "No view for frame");
 
-    nsIView *rootView = nsnull;
-    mViewManager->GetRootView(rootView);
-    NS_ASSERTION(rootView, "No root view in pres shell");
-
-    // View's origin within its root view
-    frameOrigin += view->GetOffsetTo(rootView);
+    // View's origin within the view manager tree
+    frameOrigin += view->GetOffsetTo(nsnull);
 
     // Start context menu down and to the right from top left of frame
     // use the lineheight. This is a good distance to move the context
@@ -7224,6 +7231,8 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
     mSuppressInterruptibleReflows = PR_TRUE;
     PostReflowEvent();
   }
+
+  mPresContext->RootPresContext()->UpdatePluginGeometry(target);
 
   return !interrupted;
 }
@@ -7906,7 +7915,7 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a presentation context to view the new frame tree
   nsCOMPtr<nsPresContext> cx =
-       new nsPresContext(mDocument, mPresContext->IsPaginated() ?
+       new nsRootPresContext(mDocument, mPresContext->IsPaginated() ?
                                         nsPresContext::eContext_PrintPreview :
                                         nsPresContext::eContext_Galley);
   NS_ENSURE_TRUE(cx, PR_FALSE);
@@ -7918,6 +7927,7 @@ PresShell::VerifyIncrementalReflow()
   // Get our scrolling preference
   nsIView* rootView;
   mViewManager->GetRootView(rootView);
+  NS_ENSURE_TRUE(rootView->HasWidget(), PR_FALSE);
   void* nativeParentWidget = rootView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.
@@ -8096,6 +8106,14 @@ PresShell::SetPaintFrameCount(PRBool aPaintFrameCounts)
     mReflowCountMgr->SetPaintFrameCounts(aPaintFrameCounts);
   }
   return NS_OK; 
+}
+
+PRBool
+PresShell::IsPaintingFrameCounts()
+{ 
+  if (mReflowCountMgr)
+    return mReflowCountMgr->IsPaintingFrameCounts();
+  return PR_FALSE;
 }
 
 //------------------------------------------------------------------

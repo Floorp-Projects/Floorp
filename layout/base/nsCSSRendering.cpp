@@ -307,8 +307,7 @@ static void PaintBackgroundLayer(nsPresContext* aPresContext,
                                  const nsRect& aBorderArea,
                                  const nsRect& aBGClipRect,
                                  const nsStyleBackground& aBackground,
-                                 const nsStyleBackground::Layer& aLayer,
-                                 const nsStyleBorder& aBorder);
+                                 const nsStyleBackground::Layer& aLayer);
 
 static void DrawBorderImage(nsPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
@@ -1717,7 +1716,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       if (!dirtyRectGfx.IsEmpty()) {
         PaintBackgroundLayer(aPresContext, aRenderingContext, aForFrame,
                              dirtyRect, aBorderArea, bgClipArea, aBackground,
-                             layer, aBorder);
+                             layer);
       }
     }
   }
@@ -1731,8 +1730,7 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
                      const nsRect& aBorderArea,
                      const nsRect& aBGClipRect,
                      const nsStyleBackground& aBackground,
-                     const nsStyleBackground::Layer& aLayer,
-                     const nsStyleBorder& aBorder)
+                     const nsStyleBackground::Layer& aLayer)
 {
   // Lookup the image
   imgIRequest *req = aLayer.mImage;

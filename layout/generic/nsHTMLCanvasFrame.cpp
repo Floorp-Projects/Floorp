@@ -46,6 +46,7 @@
 #include "nsHTMLCanvasFrame.h"
 #include "nsICanvasElement.h"
 #include "nsDisplayList.h"
+#include "nsLayoutUtils.h"
 
 #include "nsTransform2D.h"
 
