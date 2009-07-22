@@ -118,6 +118,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
 , mSheetNeedsShow(PR_FALSE)
+, mFullScreen(PR_FALSE)
 , mModal(PR_FALSE)
 , mNumModalDescendents(0)
 {
@@ -167,6 +168,10 @@ void nsCocoaWindow::DestroyNativeWindow()
 nsCocoaWindow::~nsCocoaWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mFullScreen) {
+    nsCocoaUtils::HideOSChromeOnScreen(PR_FALSE, [mWindow screen]);
+  }
 
   // Notify the children that we're gone.  Popup windows (e.g. tooltips) can
   // have nsChildView children.  'kid' is an nsChildView object if and only if
@@ -1031,6 +1036,27 @@ NS_IMETHODIMP nsCocoaWindow::HideWindowChrome(PRBool aShouldHide)
     rv = Show(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+
+NS_METHOD nsCocoaWindow::MakeFullScreen(PRBool aFullScreen)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  NS_ASSERTION(mFullScreen != aFullScreen, "Unnecessary MakeFullScreen call");
+
+  NSDisableScreenUpdates();
+  nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen);
+  NSEnableScreenUpdates();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCocoaUtils::HideOSChromeOnScreen(aFullScreen, [mWindow screen]);
+
+  mFullScreen = aFullScreen;
 
   return NS_OK;
 
