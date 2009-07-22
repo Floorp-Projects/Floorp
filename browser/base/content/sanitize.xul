@@ -42,7 +42,6 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/"?>
-<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://browser/skin/sanitizeDialog.css"?>
 
 #ifdef CRH_DIALOG_TREE_VIEW
