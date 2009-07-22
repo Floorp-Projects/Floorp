@@ -892,11 +892,10 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 }
 
 #ifdef JS_TRACER
-JSBool FASTCALL
-js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
-{
-    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
 
+static inline JSBool FASTCALL
+dense_grow(JSContext* cx, JSObject* obj, jsint i, jsval v)
+{
     /*
      * Let the interpreter worry about negative array indexes.
      */
@@ -930,7 +929,33 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
     obj->dslots[u] = v;
     return JS_TRUE;
 }
+
+
+JSBool FASTCALL
+js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
+    return dense_grow(cx, obj, i, v);
+}
 JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem, CONTEXT, OBJECT, INT32, JSVAL, 0, 0)
+
+JSBool FASTCALL
+js_Array_dense_setelem_int(JSContext* cx, JSObject* obj, jsint i, int32 j)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
+
+    jsval v;
+    if (JS_LIKELY(INT_FITS_IN_JSVAL(j))) {
+        v = INT_TO_JSVAL(j);
+    } else {
+        jsdouble d = (jsdouble)j;
+        if (!js_NewDoubleInRootedValue(cx, d, &v))
+            return JS_FALSE;
+    }
+
+    return dense_grow(cx, obj, i, v);
+}
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_int, CONTEXT, OBJECT, INT32, INT32, 0, 0)
 #endif
 
 static JSBool
