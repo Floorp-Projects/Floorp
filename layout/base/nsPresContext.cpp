@@ -1025,7 +1025,7 @@ nsPresContext::Observe(nsISupports* aSubject,
 }
 
 // We may want to replace this with something faster, maybe caching the root prescontext
-nsPresContext*
+nsRootPresContext*
 nsPresContext::RootPresContext()
 {
   nsPresContext* pc = this;
@@ -1040,7 +1040,7 @@ nsPresContext::RootPresContext()
         }
       }
     }
-    return pc;
+    return static_cast<nsRootPresContext*>(pc);
   }
 }
 
@@ -2151,3 +2151,9 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
   }
   return mHasPendingInterrupt;
 }
+
+nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
+                                     nsPresContextType aType)
+  : nsPresContext(aDocument, aType)
+{
+}  
