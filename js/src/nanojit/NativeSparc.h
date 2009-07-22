@@ -824,6 +824,12 @@ namespace nanojit
     Format_3_1(2, rd, 0x4, rs1, 0, rs2); \
     } while (0)
 
+#define SUBI(rs1, simm13, rd) \
+    do { \
+    asm_output("sub %s, %d, %s", gpn(rs1), simm13, gpn(rd)); \
+    Format_3_1I(2, rd, 0x4, rs1, simm13); \
+    } while (0)
+
 #define XOR(rs1, rs2, rd) \
     do { \
     asm_output("xor %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
