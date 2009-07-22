@@ -115,6 +115,7 @@
 #include "nsDataHashtable.h"
 #include "nsDOMClassInfo.h"
 #include "nsFocusManager.h"
+#include "nsLayoutUtils.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
