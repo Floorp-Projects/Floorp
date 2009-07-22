@@ -70,6 +70,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
+#include "nsIWidget.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -98,6 +99,7 @@ class nsIRunnable;
 class gfxUserFontSet;
 class nsUserFontSet;
 struct nsFontFaceRuleContainer;
+class nsObjectFrame;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -1066,6 +1068,42 @@ public:
 class nsRootPresContext : public nsPresContext {
 public:
   nsRootPresContext(nsIDocument* aDocument, nsPresContextType aType) NS_HIDDEN;
+  virtual ~nsRootPresContext();
+
+  /**
+   * Registers a plugin to receive geometry updates (position and clip
+   * region) so it can update its widget.
+   * Callers must call UnregisterPluginForGeometryUpdates before
+   * the aPlugin frame is destroyed.
+   */
+  void RegisterPluginForGeometryUpdates(nsObjectFrame* aPlugin);
+  /**
+   * Stops a plugin receiving geometry updates (position and clip
+   * region). If the plugin was not already registered, this does
+   * nothing.
+   */
+  void UnregisterPluginForGeometryUpdates(nsObjectFrame* aPlugin);
+
+  /**
+   * Iterate through all plugins that are registered for geometry updates
+   * and update their position and clip region to match the current frame
+   * tree. Only frames at or under aChangedRoot can have changed their
+   * geometry.
+   */
+  void UpdatePluginGeometry(nsIFrame* aChangedRoot);
+
+  /**
+   * Iterate through all plugins that are registered for geometry updates
+   * and compute their position and clip region according to the
+   * current frame tree. Only frames at or under aChangedRoot can have
+   * changed their geometry. The computed positions and clip regions are
+   * appended to aConfigurations.
+   */
+  void GetPluginGeometryUpdates(nsIFrame* aChangedRoot,
+                                nsTArray<nsIWidget::Configuration>* aConfigurations);
+
+private:
+  nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
 };
 
 #ifdef DEBUG

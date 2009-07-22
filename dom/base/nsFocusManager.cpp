@@ -1534,9 +1534,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
       nsIFrame* contentFrame = presShell->GetPrimaryFrameFor(aContent);
       nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
       if (objectFrame) {
-        nsIView* view = contentFrame->GetViewExternal();
-        NS_ASSERTION(view, "Object frames must have views");
-        nsCOMPtr<nsIWidget> widget = view->GetWidget();
+        nsIWidget* widget = objectFrame->GetWidget();
         if (widget)
           widget->SetFocus(PR_TRUE);
       }

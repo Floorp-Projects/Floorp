@@ -63,6 +63,7 @@
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
 #include "gfxContext.h"
+#include "nsIPluginWidget.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -469,8 +470,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     SetPainting(PR_TRUE);
 
     nsCOMPtr<nsIRenderingContext> localcx;
-    NS_ASSERTION(aView->GetWidget(),
-                 "Must have a widget to calculate coordinates correctly");
     if (nsnull == aContext)
       {
         localcx = CreateRenderingContext(*aView);
@@ -568,7 +567,16 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView, PRBool aDoInvalidate)
     NS_ASSERTION(mRefreshEnabled, "Cannot process pending updates with refresh disabled");
     nsRegion* dirtyRegion = aView->GetDirtyRegion();
     if (dirtyRegion) {
-      UpdateWidgetArea(aView, *dirtyRegion, nsnull);
+      nsView* nearestViewWithWidget = aView;
+      while (!nearestViewWithWidget->HasWidget() &&
+             nearestViewWithWidget->GetParent()) {
+        nearestViewWithWidget =
+          static_cast<nsView*>(nearestViewWithWidget->GetParent());
+      }
+      nsRegion r = *dirtyRegion;
+      r.MoveBy(aView->GetOffsetTo(nearestViewWithWidget));
+      UpdateWidgetArea(nearestViewWithWidget,
+                       nearestViewWithWidget->GetNearestWidget(nsnull), r, nsnull);
       dirtyRegion->SetEmpty();
     }
   }
@@ -675,13 +683,15 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegio
   nsPoint offset = aView->GetOffsetTo(displayRoot);
   damageRect.MoveBy(offset);
 
-  UpdateWidgetArea(displayRoot, nsRegion(damageRect), aView);
+  UpdateWidgetArea(displayRoot, displayRoot->GetNearestWidget(nsnull),
+                   nsRegion(damageRect), aView);
   if (!aUpdateRegion.IsEmpty()) {
     // XXX We should update the region, not the bounds rect, but that requires
     // a little more work. Fix this when we reshuffle this code.
     nsRegion update(aUpdateRegion);
     update.MoveBy(offset);
-    UpdateWidgetArea(displayRoot, update, nsnull);
+    UpdateWidgetArea(displayRoot, displayRoot->GetNearestWidget(nsnull),
+                     update, nsnull);
     // FlushPendingInvalidates();
   }
 
@@ -689,14 +699,32 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegio
   --RootViewManager()->mScrollCnt;
 }
 
+static PRBool
+IsWidgetDrawnByPlugin(nsIWidget* aWidget, nsIView* aView)
+{
+  if (aView->GetWidget() == aWidget)
+    return PR_FALSE;
+  nsCOMPtr<nsIPluginWidget> pw = do_QueryInterface(aWidget);
+  if (pw) {
+    // It's a plugin widget, but one that we are responsible for painting
+    // (i.e., a Mac widget)
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 /**
+ * @param aWidget the widget for aWidgetView; in some cases the widget
+ * is being managed directly by the frame system, so aWidgetView->GetWidget()
+ * will return null but nsView::GetViewFor(aWidget) returns aWidgetview
  * @param aDamagedRegion this region, relative to aWidgetView, is invalidated in
  * every widget child of aWidgetView, plus aWidgetView's own widget
  * @param aIgnoreWidgetView if non-null, the aIgnoreWidgetView's widget and its
  * children are not updated.
  */
 void
-nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion,
+nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
+                                const nsRegion &aDamagedRegion,
                                 nsView* aIgnoreWidgetView)
 {
   if (!IsRefreshEnabled()) {
@@ -727,11 +755,9 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
   // If the widget is hidden, it don't cover nothing
   if (nsViewVisibility_kHide == aWidgetView->GetVisibility()) {
 #ifdef DEBUG
-    // Assert if view is hidden but widget is visible
-    nsIWidget* widget = aWidgetView->GetNearestWidget(nsnull);
-    if (widget) {
+    if (aWidget) {
       PRBool visible;
-      widget->IsVisible(visible);
+      aWidget->IsVisible(visible);
       NS_ASSERTION(!visible, "View is hidden but widget is visible!");
     }
 #endif
@@ -743,8 +769,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
     return;
   }
 
-  nsIWidget* widget = aWidgetView->GetNearestWidget(nsnull);
-  if (!widget) {
+  if (!aWidget) {
     // The root view or a scrolling view might not have a widget
     // (for example, during printing). We get here when we scroll
     // during printing to show selected options in a listbox, for example.
@@ -755,13 +780,15 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
   // accumulate the union of all the child widget areas, or at least
   // some subset of that.
   nsRegion children;
-  if (widget->GetTransparencyMode() != eTransparencyTransparent) {
-    for (nsIWidget* childWidget = widget->GetFirstChild();
+  if (aWidget->GetTransparencyMode() != eTransparencyTransparent) {
+    for (nsIWidget* childWidget = aWidget->GetFirstChild();
          childWidget;
          childWidget = childWidget->GetNextSibling()) {
       nsView* view = nsView::GetViewFor(childWidget);
       NS_ASSERTION(view != aWidgetView, "will recur infinitely");
-      if (view && view->GetVisibility() == nsViewVisibility_kShow) {
+      PRBool visible;
+      childWidget->IsVisible(visible);
+      if (view && visible && !IsWidgetDrawnByPlugin(childWidget, view)) {
         // Don't mess with views that are in completely different view
         // manager trees
         if (view->GetViewManager()->RootViewManager() == RootViewManager()) {
@@ -769,7 +796,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
           nsRegion damage = intersection;
           nsPoint offset = view->GetOffsetTo(aWidgetView);
           damage.MoveBy(-offset);
-          UpdateWidgetArea(view, damage, aIgnoreWidgetView);
+          UpdateWidgetArea(view, childWidget, damage, aIgnoreWidgetView);
 
           nsIntRect bounds;
           childWidget->GetBounds(bounds);
@@ -795,7 +822,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
     const nsRect* r;
     for (nsRegionRectIterator iter(leftOver); (r = iter.Next());) {
       nsIntRect bounds = ViewToWidget(aWidgetView, aWidgetView, *r);
-      widget->Invalidate(bounds, PR_FALSE);
+      aWidget->Invalidate(bounds, PR_FALSE);
     }
   }
 }
@@ -824,7 +851,8 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   // can overlap each other and be translucent.  So we have to possibly
   // invalidate our rect in each of the widgets we have lying about.
   damagedRect.MoveBy(view->GetOffsetTo(displayRoot));
-  UpdateWidgetArea(displayRoot, nsRegion(damagedRect), nsnull);
+  UpdateWidgetArea(displayRoot, displayRoot->GetNearestWidget(nsnull),
+                   nsRegion(damagedRect), nsnull);
 
   RootViewManager()->IncrementUpdateCount();
 
