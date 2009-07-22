@@ -376,6 +376,8 @@ public:
   void SetDumpFrameByFrameCounts(PRBool aVal)  { mDumpFrameByFrameCounts = aVal; }
   void SetPaintFrameCounts(PRBool aVal)        { mPaintFrameByFrameCounts = aVal; }
 
+  PRBool IsPaintingFrameCounts() { return mPaintFrameByFrameCounts; }
+
 protected:
   void DisplayTotals(PRUint32 aTotal, PRUint32 * aDupArray, char * aTitle);
   void DisplayHTMLTotals(PRUint32 aTotal, PRUint32 * aDupArray, char * aTitle);
@@ -1004,7 +1006,7 @@ public:
   NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
 
   NS_IMETHOD SetPaintFrameCount(PRBool aOn);
-  
+  virtual PRBool IsPaintingFrameCounts();
 #endif
 
 #ifdef DEBUG
@@ -8096,6 +8098,14 @@ PresShell::SetPaintFrameCount(PRBool aPaintFrameCounts)
     mReflowCountMgr->SetPaintFrameCounts(aPaintFrameCounts);
   }
   return NS_OK; 
+}
+
+PRBool
+PresShell::IsPaintingFrameCounts()
+{ 
+  if (mReflowCountMgr)
+    return mReflowCountMgr->IsPaintingFrameCounts();
+  return PR_FALSE;
 }
 
 //------------------------------------------------------------------
