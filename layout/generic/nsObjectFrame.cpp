@@ -116,6 +116,8 @@
 #include "nsDOMClassInfo.h"
 #include "nsFocusManager.h"
 #include "nsLayoutUtils.h"
+#include "nsFrameManager.h"
+#include "nsComponentManagerUtils.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -597,10 +599,19 @@ nsObjectFrame::Destroy()
                (mContent && mContent->GetCurrentDoc()->GetDisplayDocument()),
                "about to crash due to bug 136927");
 
+  PresContext()->RootPresContext()->UnregisterPluginForGeometryUpdates(this);
+
   // we need to finish with the plugin before native window is destroyed
   // doing this in the destructor is too late.
   StopPluginInternal(PR_TRUE);
-  
+
+  // StopPluginInternal might have disowned the widget; if it has,
+  // mWidget will be null.
+  if (mWidget) {
+    GetView()->DetachWidgetEventHandler(mWidget);
+    mWidget->Destroy();
+  }
+
   nsObjectFrameSuper::Destroy();
 }
 
@@ -640,6 +651,8 @@ nsObjectFrame::CreateWidgetForView(nsIView* aView)
   // Bug 179822: Create widget and allow non-unicode SubClass
   nsWidgetInitData initData;
   initData.mUnicode = PR_FALSE;
+  initData.clipChildren = PR_TRUE;
+  initData.clipSiblings = PR_TRUE;
   return aView->CreateWidget(kWidgetCID, &initData);
 }
 
@@ -659,6 +672,11 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   // XXX is the above comment correct?
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
 
+  PRBool usewidgets;
+  nsCOMPtr<nsIDeviceContext> dx;
+  viewMan->GetDeviceContext(*getter_AddRefs(dx));
+  dx->SupportsNativeWidgets(usewidgets);
+
   //this is ugly. it was ripped off from didreflow(). MMP
   // Position and size view relative to its parent, not relative to our
   // parent frame (our parent frame may not have a view).
@@ -671,14 +689,38 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   viewMan->ResizeView(view, r);
   viewMan->MoveViewTo(view, origin.x, origin.y);
 
-  if (!aViewOnly && !view->HasWidget()) {
-    nsresult rv = CreateWidgetForView(view);
-    if (NS_FAILED(rv)) {
-      return NS_OK;       //XXX why OK? MMP
-    }
+  if (!aViewOnly && !mWidget && usewidgets) {
+    nsresult rv;
+    mWidget = do_CreateInstance(kWidgetCID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsRootPresContext* rpc = PresContext()->RootPresContext();
+    // XXX this breaks plugins in popups ... do we care?
+    nsIWidget* parentWidget =
+      rpc->PresShell()->FrameManager()->GetRootFrame()->GetWindow();
+
+    nsWidgetInitData initData;
+    initData.mUnicode = PR_FALSE;
+    initData.clipChildren = PR_TRUE;
+    initData.clipSiblings = PR_TRUE;
+    // We want mWidget to be able to deliver events to us, especially on
+    // Mac where events to the plugin are routed through Gecko. So we
+    // allow the view to attach its event handler to mWidget even though
+    // mWidget isn't the view's designated widget.
+    EVENT_CALLBACK eventHandler = view->AttachWidgetEventHandler(mWidget);
+    mWidget->Create(parentWidget, nsIntRect(0,0,0,0),
+                    eventHandler, dx, nsnull, nsnull, &initData);
+
+    mWidget->EnableDragDrop(PR_TRUE);
+
+    rpc->RegisterPluginForGeometryUpdates(this);
+    rpc->UpdatePluginGeometry(this);
+
+    mWidget->Show(PR_TRUE);
   }
 
-  {
+  if (mWidget) {
     // Here we set the background color for this widget because some plugins will use 
     // the child window background color when painting. If it's not set, it may default to gray
     // Sometimes, a frame doesn't have a background color or is transparent. In this
@@ -686,13 +728,10 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     for (nsIFrame* frame = this; frame; frame = frame->GetParent()) {
       const nsStyleBackground* background = frame->GetStyleBackground();
       if (!background->IsTransparent()) {  // make sure we got an actual color
-        nsIWidget* win = view->GetWidget();
-        if (win)
-          win->SetBackgroundColor(background->mBackgroundColor);
+        mWidget->SetBackgroundColor(background->mBackgroundColor);
         break;
       }
     }
-
   }
 
   if (!IsHidden()) {
@@ -1071,11 +1110,97 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
   static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
 
-/*static */ void
-nsObjectFrame::PaintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
-                           const nsRect& aDirtyRect, nsPoint aPt)
+nsRect
+nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 {
-  static_cast<nsObjectFrame*>(aFrame)->PaintPlugin(*aCtx, aDirtyRect, aPt);
+  return mFrame->GetContentRect() +
+    aBuilder->ToReferenceFrame(mFrame->GetParent());
+}
+
+void
+nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
+                       nsIRenderingContext* aCtx,
+                       const nsRect& aDirtyRect)
+{
+  nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
+  f->PaintPlugin(*aCtx, aDirtyRect, GetBounds(aBuilder).TopLeft());
+}
+
+PRBool
+nsDisplayPlugin::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                    nsRegion* aVisibleRegion)
+{
+  mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
+  return nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion);
+}
+
+PRBool
+nsDisplayPlugin::IsOpaque(nsDisplayListBuilder* aBuilder)
+{
+  nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
+  return f->IsOpaque();
+}
+
+void
+nsDisplayPlugin::GetWidgetConfiguration(nsDisplayListBuilder* aBuilder,
+                                        nsTArray<nsIWidget::Configuration>* aConfigurations)
+{
+  nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
+  f->ComputeWidgetGeometry(mVisibleRegion, aBuilder->ToReferenceFrame(mFrame),
+                           aConfigurations);
+}
+
+void
+nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
+                                     const nsPoint& aPluginOrigin,
+                                     nsTArray<nsIWidget::Configuration>* aConfigurations)
+{
+  if (!mWidget)
+    return;
+
+  nsIWidget::Configuration* configuration =
+    aConfigurations->AppendElement();
+  if (!configuration)
+    return;
+  configuration->mChild = mWidget;
+
+  nsPresContext* presContext = PresContext();
+  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  nsIFrame* rootFrame =
+    presContext->RootPresContext()->PresShell()->FrameManager()->GetRootFrame();
+  nsRect bounds = GetContentRect() + GetParent()->GetOffsetTo(rootFrame);
+  configuration->mBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
+
+  nsRegionRectIterator iter(aRegion);
+  nsIntPoint pluginOrigin = aPluginOrigin.ToNearestPixels(appUnitsPerDevPixel);
+  for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
+    // Snap *r to pixels while it's relative to the painted widget, to
+    // improve consistency with rectangle and image drawing
+    nsIntRect pixRect =
+      r->ToNearestPixels(appUnitsPerDevPixel) - pluginOrigin;
+    if (!pixRect.IsEmpty()) {
+      configuration->mClipRegion.AppendElement(pixRect);
+    }
+  }
+}
+
+PRBool
+nsObjectFrame::IsOpaque() const
+{
+#if defined(XP_MACOSX)
+  return PR_FALSE;
+#else
+  if (mInstanceOwner) {
+    nsPluginWindow * window;
+    mInstanceOwner->GetWindow(window);
+    if (window->type == nsPluginWindowType_Drawable) {
+      // XXX we possibly should call nsPluginInstanceVariable_TransparentBool
+      // here to optimize for windowless but opaque plugins
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+#endif
 }
 
 NS_IMETHODIMP
@@ -1104,7 +1229,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin"));
   
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(this, PaintPlugin, "Plugin"));
+      nsDisplayPlugin(this));
 }
 
 void
@@ -2122,17 +2247,12 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   nsWeakFrame weakFrame(this);
 
 #if defined(XP_WIN) || defined(MOZ_X11)
-  if (aDelayedStop) {
+  if (aDelayedStop && mWidget) {
     // If we're asked to do a delayed stop it means we're stopping the
-    // plugin because we're destroying the frame. In that case, tell
-    // the view to disown the widget (i.e. leave it up to us to
-    // destroy it).
-
-    // Disown the view while we still know it's safe to do so.
-    nsIView *view = GetView();
-    if (view) {
-      view->DisownWidget();
-    }
+    // plugin because we're destroying the frame. In that case, disown
+    // the widget.
+    GetView()->DetachWidgetEventHandler(mWidget);
+    mWidget = nsnull;
   }
 #endif
 
@@ -4855,11 +4975,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                                 context->DevPixelsToAppUnits(mPluginWindow->height),
                                 windowless);
       if (NS_OK == rv) {
-        view = mOwner->GetView();
-
-        if (view) {
-          mWidget = view->GetWidget();
-        }
+        mWidget = mOwner->GetWidget();
 
         if (PR_TRUE == windowless) {
           mPluginWindow->type = nsPluginWindowType_Drawable;
@@ -4938,22 +5054,15 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   if (!pluginPort)
     return nsnull;
 
-  // first, check our view for CSS visibility style
-  PRBool isVisible =
-    mOwner->GetView()->GetVisibility() == nsViewVisibility_kShow;
-
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
   
   nsIntPoint pluginOrigin;
   nsIntRect widgetClip;
   PRBool widgetVisible;
   pluginWidget->GetPluginClipRect(widgetClip, pluginOrigin, widgetVisible);
+  mWidgetVisible = widgetVisible;
 
   // printf("GetPluginClipRect returning visible %d\n", widgetVisible);
-
-  isVisible &= widgetVisible;
-  if (!isVisible)
-    widgetClip.Empty();
 
 #ifndef NP_NO_QUICKDRAW
   // set the port coordinates
@@ -4984,8 +5093,6 @@ WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   // fix up the clipping region
   mPluginWindow->clipRect.top    = widgetClip.y;
   mPluginWindow->clipRect.left   = widgetClip.x;
-
-  mWidgetVisible = isVisible;
 
   if (!mWidgetVisible || inPaintState == ePluginPaintDisable) {
     mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
