@@ -389,15 +389,17 @@ public:
    */
   enum Type {
     TYPE_GENERIC,
-    TYPE_OUTLINE,
+
+    TYPE_BORDER,
     TYPE_CLIP,
     TYPE_OPACITY,
+    TYPE_OUTLINE,
+    TYPE_PLUGIN,
 #ifdef MOZ_SVG
     TYPE_SVG_EFFECTS,
 #endif
-    TYPE_WRAPLIST,
     TYPE_TRANSFORM,
-    TYPE_BORDER
+    TYPE_WRAPLIST
   };
 
   struct HitTestState {

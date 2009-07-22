@@ -1579,6 +1579,8 @@ public:
    * 
    * This function is fastest when aOther is an ancestor of |this|.
    *
+   * This function works across document boundaries.
+   *
    * NOTE: this actually returns the offset from aOther to |this|, but
    * that offset is added to transform _coordinates_ from |this| to
    * aOther.

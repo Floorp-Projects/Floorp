@@ -95,7 +95,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch2.h"
-#include "nsIObjectFrame.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif

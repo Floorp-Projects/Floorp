@@ -4629,6 +4629,8 @@ PresShell::UnsuppressAndInvalidate()
     rootFrame->Invalidate(rect);
   }
 
+  mPresContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
+
   // now that painting is unsuppressed, focus may be set on the document
   nsPIDOMWindow *win = mDocument->GetWindow();
   if (win)
@@ -7228,6 +7230,8 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
     mSuppressInterruptibleReflows = PR_TRUE;
     PostReflowEvent();
   }
+
+  mPresContext->RootPresContext()->UpdatePluginGeometry(target);
 
   return !interrupted;
 }

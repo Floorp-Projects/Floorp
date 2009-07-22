@@ -1816,6 +1816,9 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
   // Notify that the display has changed
   mOuter->InvalidateWithFlags(nsRect(nsPoint(0, 0), mOuter->GetSize()),
                               nsIFrame::INVALIDATE_NOTIFY_ONLY);
+
+  mOuter->PresContext()->RootPresContext()->UpdatePluginGeometry(mOuter);
+
   return NS_OK;
 }
 

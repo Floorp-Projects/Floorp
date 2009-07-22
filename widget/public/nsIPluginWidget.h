@@ -44,8 +44,8 @@
   {0xd530ce43, 0x8f6e, 0x45c5, \
     { 0xa9, 0x84, 0x35, 0xc4, 0x3d, 0xa1, 0x90, 0x73 }}
 
-struct nsRect;
-struct nsPoint;
+struct nsIntPoint;
+class nsIPluginInstanceOwner;
 
 class NS_NO_VTABLE nsIPluginWidget : public nsISupports
 {
