@@ -3613,25 +3613,32 @@ nsRect nsIFrame::GetScreenRectInAppUnitsExternal() const
 
 nsRect nsIFrame::GetScreenRectInAppUnits() const
 {
-  nsRect retval(0,0,0,0);
-  nsPoint toViewOffset(0,0);
-  nsIView* view = GetClosestView(&toViewOffset);
-
-  if (view) {
-    nsPoint toWidgetOffset(0,0);
-    nsIWidget* widget = view->GetNearestWidget(&toWidgetOffset);
-
-    if (widget) {
-      nsIntPoint screenPoint = widget->WidgetToScreenOffset();
-
-      retval = mRect;
-      retval.MoveTo(toViewOffset + toWidgetOffset);
-      retval.x += PresContext()->DevPixelsToAppUnits(screenPoint.x);
-      retval.y += PresContext()->DevPixelsToAppUnits(screenPoint.y);
+  nsPresContext* presContext = PresContext();
+  nsIFrame* rootFrame =
+    presContext->PresShell()->FrameManager()->GetRootFrame();
+  nsPoint rootScreenPos(0, 0);
+  nsPoint rootFrameOffsetInParent(0, 0);
+  nsIFrame* rootFrameParent =
+    nsLayoutUtils::GetCrossDocParentFrame(rootFrame, &rootFrameOffsetInParent);
+  if (rootFrameParent) {
+    nsRect parentScreenRectAppUnits = rootFrameParent->GetScreenRectInAppUnits();
+    nsPresContext* parentPresContext = rootFrameParent->PresContext();
+    double parentScale = double(presContext->AppUnitsPerDevPixel())/
+        parentPresContext->AppUnitsPerDevPixel();
+    nsPoint rootPt = parentScreenRectAppUnits.TopLeft() + rootFrameOffsetInParent;
+    rootScreenPos.x = NS_round(parentScale*rootPt.x);
+    rootScreenPos.y = NS_round(parentScale*rootPt.y);
+  } else {
+    nsCOMPtr<nsIWidget> rootWidget;
+    presContext->PresShell()->GetViewManager()->GetRootWidget(getter_AddRefs(rootWidget));
+    if (rootWidget) {
+      nsIntPoint rootDevPx = rootWidget->WidgetToScreenOffset();
+      rootScreenPos.x = presContext->DevPixelsToAppUnits(rootDevPx.x);
+      rootScreenPos.y = presContext->DevPixelsToAppUnits(rootDevPx.y);
     }
   }
 
-  return retval;
+  return nsRect(rootScreenPos + GetOffsetTo(rootFrame), GetSize());
 }
 
 // Returns the offset from this frame to the closest geometric parent that
