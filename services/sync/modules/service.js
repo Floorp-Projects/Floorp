@@ -482,7 +482,7 @@ WeaveSvc.prototype = {
     return false;
   },
 
-  verifyLogin: function WeaveSvc_verifyLogin(username, password, isLogin)
+  verifyLogin: function WeaveSvc_verifyLogin(username, password, passphrase, isLogin)
     this._catch(this._notify("verify-login", "", function() {
       this._log.debug("Verifying login for user " + username);
 
@@ -503,25 +503,28 @@ WeaveSvc.prototype = {
       };
       res.get();
 
-      //JSON.parse(res.data); // throws if not json
-      return true;
+      if (passphrase)
+        return this.verifyPassphrase(username, password, passphrase);
+      else
+        return true;
     }))(),
 
   verifyPassphrase: function WeaveSvc_verifyPassphrase(username, password, passphrase)
-    this._catch(this._lock(this._notify("verify-passphrase", "", function() {
-      this._log.debug("Verifying passphrase");
+    this._catch(this._notify("verify-passphrase", "", function() {
+      if ('verifyPassphrase' in Svc.Crypto) {
+        this._log.debug("Verifying passphrase");
+        this.username = username;
+        ID.get("WeaveID").setTempPassword(password);
+        let pubkey = PubKeys.getDefaultKey();
+        let privkey = PrivKeys.get(pubkey.privateKeyUri);
 
-      this.username = username;
-      ID.get("WeaveID").setTempPassword(password);
-
-      let id = new Identity("Passphrase Verification", username);
-      id.setTempPassword(passphrase);
-
-      let pubkey = PubKeys.getDefaultKey();
-      let privkey = PrivKeys.get(pubkey.privateKeyUri);
-
-      // FIXME: Use Svc.Crypto.verifyPassphrase.
-    }))),
+        return Svc.Crypto.verifyPassphrase(
+          privkey.payload.keyData, passphrase,
+          privkey.payload.salt, privkey.payload.iv
+        );
+      }
+      return true;
+    }))(),
 
   changePassphrase: function WeaveSvc_changePassphrase(newphrase)
     this._catch(this._notify("changepph", "", function() {
@@ -603,15 +606,14 @@ WeaveSvc.prototype = {
         this._setSyncFailure(LOGIN_FAILED_NO_USERNAME);
         throw "No username set, login failed";
       }
-
       if (!this.password) {
         this._setSyncFailure(LOGIN_FAILED_NO_PASSWORD);
         throw "No password given or found in password manager";
       }
-
       this._log.debug("Logging in user " + this.username);
 
-      if (!(this.verifyLogin(this.username, this.password, true))) {
+      if (!(this.verifyLogin(this.username, this.password,
+        passphrase, true))) {
         this._setSyncFailure(LOGIN_FAILED_REJECTED);
         throw "Login failed";
       }
