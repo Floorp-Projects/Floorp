@@ -361,6 +361,14 @@ var Browser = {
       bv.commitBatchOperation();
     }
     window.addEventListener("resize", resizeHandler, false);
+    
+    function fullscreenHandler() {
+      if (!window.fullScreen)
+        document.getElementById("toolbar-main").setAttribute("fullscreen", "true");
+      else
+        document.getElementById("toolbar-main").removeAttribute("fullscreen");      
+    }
+    window.addEventListener("fullscreen", fullscreenHandler, false);
 
     // initialize input handling
     ih = new InputHandler();
@@ -1482,6 +1490,11 @@ ProgressController.prototype = {
       if (this.browser.markupDocumentViewer.textZoom != kDefaultTextZoom)
         this.browser.markupDocumentViewer.textZoom = kDefaultTextZoom;
     }
+
+    // broadcast a URLChanged message for consumption by InputHandler
+    let event = document.createEvent("Events");
+    event.initEvent("URLChanged", true, false);
+    this.browser.dispatchEvent(event);
   },
 
   _networkStop: function _networkStop() {
