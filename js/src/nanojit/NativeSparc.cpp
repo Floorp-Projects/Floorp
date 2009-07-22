@@ -80,21 +80,26 @@ namespace nanojit
         /**
          * Prologue
          */
-        underrunProtect(12);
+        underrunProtect(16);
         uint32_t stackNeeded = STACK_GRANULARITY * _activation.highwatermark;
         uint32_t frameSize = stackNeeded + kcalleeAreaSize + kLinkageAreaSize;
         frameSize = BIT_ROUND_UP(frameSize, 8);
 
-        verbose_only( verbose_outputf("        %p:",_nIns); )
-        verbose_only( asm_output("        patch entry:"); )
-            NIns *patchEntry = _nIns;
         if (frameSize <= 4096)
-            SAVEI(SP, (-frameSize), SP);
+            SUBI(FP, frameSize, SP);
         else {
-            SAVE(SP, G1, SP);
+            SUB(FP, G1, SP);
             ORI(G1, -frameSize & 0x3FF, G1);
             SETHI(-frameSize, G1);
         }
+
+        verbose_only( verbose_outputf("        %p:",_nIns); )
+        verbose_only( asm_output("        patch entry:"); )
+        NIns *patchEntry = _nIns;
+
+        // The frame size in SAVE is faked. We will still re-caculate SP later.
+        // We can use 0 here but it is not good for debuggers.
+        SAVEI(SP, -148, SP);
 
         // align the entry point
         asm_align_code();
