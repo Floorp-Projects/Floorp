@@ -2329,4 +2329,19 @@ nsRootPresContext::UpdatePluginGeometry(nsIFrame* aChangedSubtree)
   nsIWidget* widget = configurations[0].mChild->GetParent();
   NS_ASSERTION(widget, "Plugin must have a parent");
   widget->ConfigureChildren(configurations);
+  DidApplyPluginGeometryUpdates();
+}
+
+static PLDHashOperator
+PluginDidSetGeometryEnumerator(nsPtrHashKey<nsObjectFrame>* aEntry, void* userArg)
+{
+  nsObjectFrame* f = aEntry->GetKey();
+  f->DidSetWidgetGeometry();
+  return PL_DHASH_NEXT;
+}
+
+void
+nsRootPresContext::DidApplyPluginGeometryUpdates()
+{
+  mRegisteredPlugins.EnumerateEntries(PluginDidSetGeometryEnumerator, nsnull);
 }
