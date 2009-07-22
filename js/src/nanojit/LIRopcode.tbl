@@ -183,7 +183,7 @@ OPDEF64(unused0_64, 0,-1, None)
 
 OPDEF64(file,       1, 2, Op1)      // source filename for debug symbols
 OPDEF64(line,       2, 2, Op1)      // source line number for debug symbols
-OPDEF64(xbarrier,   3, 1, Op2)      // memory barrier;  doesn't exit, but flushes all values to the stack
+OPDEF64(xbarrier,   3, 0, Op2)      // memory barrier;  doesn't exit, but flushes all values to the stack
 OPDEF64(xtbl,       4, 1, Op2)      // exit via indirect jump
 
 OPDEF64(unused5_64, 5,-1, None)
