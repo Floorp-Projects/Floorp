@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * Note: This file is a copy of xpcom/tests/TestDeadlockDetector.cpp, but all
+ *       mutexes were turned into SQLiteMutexes.
+ */
+
 #include "prenv.h"
 #include "prerror.h"
 #include "prio.h"
@@ -46,11 +51,44 @@
 
 #include "mozilla/CondVar.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/Mutex.h"
+#include "SQLiteMutex.h"
 
 #include "TestHarness.h"
 
 using namespace mozilla;
+
+/**
+ * Helper class to allocate a sqlite3_mutex for our SQLiteMutex.  Also makes
+ * keeping the test files in sync easier.
+ */
+class TestMutex : public mozilla::storage::SQLiteMutex
+{
+public:
+    TestMutex(const char* aName)
+    : mozilla::storage::SQLiteMutex(aName)
+    , mInner(sqlite3_mutex_alloc(SQLITE_MUTEX_FAST))
+    {
+        NS_ASSERTION(mInner, "could not allocate a sqlite3_mutex");
+        initWithMutex(mInner);
+    }
+
+    ~TestMutex()
+    {
+        sqlite3_mutex_free(mInner);
+    }
+
+    void Lock()
+    {
+        lock();
+    }
+
+    void Unlock()
+    {
+        unlock();
+    }
+private:
+  sqlite3_mutex *mInner;
+};
 
 static PRThread*
 spawn(void (*run)(void*), void* arg)
@@ -287,7 +325,7 @@ CheckForDeadlock(const char* test, const char* const* findTokens)
 nsresult
 Sanity_Child()
 {
-    mozilla::Mutex m1("dd.sanity.m1");
+    TestMutex m1("dd.sanity.m1");
     m1.Lock();
     m1.Lock();
     return 0;                  // not reached
@@ -315,8 +353,8 @@ Sanity()
 nsresult
 Sanity2_Child()
 {
-    mozilla::Mutex m1("dd.sanity2.m1");
-    mozilla::Mutex m2("dd.sanity2.m2");
+    TestMutex m1("dd.sanity2.m1");
+    TestMutex m2("dd.sanity2.m2");
     m1.Lock();
     m2.Lock();
     m1.Lock();
@@ -346,10 +384,10 @@ Sanity2()
 nsresult
 Sanity3_Child()
 {
-    mozilla::Mutex m1("dd.sanity3.m1");
-    mozilla::Mutex m2("dd.sanity3.m2");
-    mozilla::Mutex m3("dd.sanity3.m3");
-    mozilla::Mutex m4("dd.sanity3.m4");
+    TestMutex m1("dd.sanity3.m1");
+    TestMutex m2("dd.sanity3.m2");
+    TestMutex m3("dd.sanity3.m3");
+    TestMutex m4("dd.sanity3.m4");
 
     m1.Lock();
     m2.Lock();
@@ -390,7 +428,7 @@ nsresult
 Sanity4_Child()
 {
     mozilla::Monitor m1("dd.sanity4.m1");
-    mozilla::Mutex m2("dd.sanity4.m2");
+    TestMutex m2("dd.sanity4.m2");
     m1.Enter();
     m2.Lock();
     m1.Enter();
@@ -419,8 +457,8 @@ Sanity4()
 //-----------------------------------------------------------------------------
 // Multithreaded tests
 
-mozilla::Mutex* ttM1;
-mozilla::Mutex* ttM2;
+TestMutex* ttM1;
+TestMutex* ttM2;
 
 static void
 TwoThreads_thread(void* arg)
@@ -443,8 +481,8 @@ TwoThreads_thread(void* arg)
 nsresult
 TwoThreads_Child()
 {
-    ttM1 = new mozilla::Mutex("dd.twothreads.m1");
-    ttM2 = new mozilla::Mutex("dd.twothreads.m2");
+    ttM1 = new TestMutex("dd.twothreads.m1");
+    ttM2 = new TestMutex("dd.twothreads.m2");
     if (!ttM1 || !ttM2)
         NS_RUNTIMEABORT("couldn't allocate mutexes");
 
@@ -477,7 +515,7 @@ TwoThreads()
 }
 
 
-mozilla::Mutex* cndMs[4];
+TestMutex* cndMs[4];
 const PRUint32 K = 100000;
 
 static void
@@ -502,7 +540,7 @@ ContentionNoDeadlock_Child()
     PRThread* threads[3];
 
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(cndMs); ++i)
-        cndMs[i] = new mozilla::Mutex("dd.cnd.ms");
+        cndMs[i] = new TestMutex("dd.cnd.ms");
 
     for (PRInt32 i = 0; i < (PRInt32) NS_ARRAY_LENGTH(threads); ++i)
         threads[i] = spawn(ContentionNoDeadlock_thread, NS_INT32_TO_PTR(i));

@@ -51,7 +51,20 @@ XPCSHELL_TESTS = unit
 CPP_UNIT_TESTS = \
   test_transaction_helper.cpp \
   test_statement_scoper.cpp \
+  test_mutex.cpp \
   $(NULL)
+
+ifdef MOZ_DEBUG
+# Testing assertion failures is fragile, and test_deadlock_detector doesn't like
+# windows.
+ifneq ($(OS_ARCH), WINNT)
+ifneq ($(OS_ARCH), WINCE)
+CPP_UNIT_TESTS += \
+  test_deadlock_detector.cpp \
+  $(NULL)
+endif
+endif
+endif
 
 REQUIRES = \
 	xpcom \
@@ -59,10 +72,15 @@ REQUIRES = \
 	storage \
 	$(NULL)
 
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../src \
+  $(NULL)
+
 LIBS = \
 	$(LIBS_DIR) \
 	$(XPCOM_GLUE_LDOPTS) \
 	$(NSPR_LIBS) \
+	$(SQLITE_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
