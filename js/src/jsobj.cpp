@@ -1642,17 +1642,20 @@ js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
                         jsval *vp)
 {
     jsid id;
-    JSObject *obj;
-
     if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
-    obj = JS_THIS_OBJECT(cx, vp);
-    return obj && js_HasOwnProperty(cx, lookup, obj, id, vp);
+
+    JSBool found;
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj || !js_HasOwnProperty(cx, lookup, obj, id, &found))
+        return JS_FALSE;
+    *vp = BOOLEAN_TO_JSVAL(found);
+    return JS_TRUE;
 }
 
 JSBool
 js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
-                  jsval *vp)
+                  JSBool *foundp)
 {
     JSObject *obj2;
     JSProperty *prop;
@@ -1661,9 +1664,9 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
     if (!lookup(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
-        *vp = JSVAL_FALSE;
+        *foundp = JS_FALSE;
     } else if (obj2 == obj) {
-        *vp = JSVAL_TRUE;
+        *foundp = JS_TRUE;
     } else {
         JSClass *clasp;
         JSExtendedClass *xclasp;
@@ -1679,7 +1682,7 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                 return JS_FALSE;
         }
         if (outer == obj) {
-            *vp = JSVAL_TRUE;
+            *foundp = JS_TRUE;
         } else if (OBJ_IS_NATIVE(obj2) && OBJ_GET_CLASS(cx, obj) == clasp) {
             /*
              * The combination of JSPROP_SHARED and JSPROP_PERMANENT in a
@@ -1697,9 +1700,9 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
              * owned, or indirectly delegated.
              */
             sprop = (JSScopeProperty *)prop;
-            *vp = BOOLEAN_TO_JSVAL(SPROP_IS_SHARED_PERMANENT(sprop));
+            *foundp = SPROP_IS_SHARED_PERMANENT(sprop);
         } else {
-            *vp = JSVAL_FALSE;
+            *foundp = JS_FALSE;
         }
     }
     if (prop)
@@ -1712,16 +1715,15 @@ static JSBool FASTCALL
 Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id;
-    jsval v;
+    JSBool found;
 
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) ||
-        !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v)) {
+        !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &found)) {
         js_SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
-    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    return JSVAL_TO_BOOLEAN(v);
+    return found;
 }
 #endif
 
@@ -1956,6 +1958,90 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
                             JSACC_PROTO, vp, &attrs);
 }
 
+static JSBool
+obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc == 0 || JSVAL_IS_PRIMITIVE(vp[2])) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
+        return JS_FALSE;
+    }
+
+    JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
+
+    JSAutoTempIdRooter nameidr(cx);
+    if (!JS_ValueToId(cx, argc >= 2 ? vp[3] : JSVAL_VOID, nameidr.addr()))
+        return JS_FALSE;
+
+    JSBool found;
+    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, nameidr.id(), &found))
+        return JS_FALSE;
+    if (!found) {
+        *vp = JSVAL_VOID;
+        return JS_TRUE;
+    }
+
+    JSObject *pobj;
+    JSProperty *prop;
+    if (!obj->lookupProperty(cx, nameidr.id(), &pobj, &prop))
+        return JS_FALSE;
+    JS_ASSERT(prop);
+
+    JSBool ok = JS_FALSE;
+    uintN attrs;
+    JSAtomState &atomState = cx->runtime->atomState;
+    MUST_FLOW_THROUGH("drop_property");
+
+    if (!pobj->getAttributes(cx, nameidr.id(), prop, &attrs))
+        goto drop_property;
+
+    /* We have our own property, so start creating the descriptor. */
+    JSObject *desc = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+    if (!desc)
+        goto drop_property;
+    *vp = OBJECT_TO_JSVAL(desc); /* Root and return. */
+
+    if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+        JSAutoTempValueRooter tvr(cx);
+        if (!obj->getProperty(cx, nameidr.id(), tvr.addr()) ||
+            !desc->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), tvr.value(),
+                                  JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE) ||
+            !desc->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
+                                  BOOLEAN_TO_JSVAL((attrs & JSPROP_READONLY) == 0),
+                                  JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE)) {
+            goto drop_property;
+        }
+    } else {
+        jsval getter = JSVAL_VOID, setter = JSVAL_VOID;
+        if (OBJ_IS_NATIVE(obj)) {
+            JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+            if (attrs & JSPROP_GETTER)
+                getter = js_CastAsObjectJSVal(sprop->getter);
+            if (attrs & JSPROP_SETTER)
+                setter = js_CastAsObjectJSVal(sprop->setter);
+        }
+        if (!desc->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom),
+                                  getter, JS_PropertyStub, JS_PropertyStub,
+                                  JSPROP_ENUMERATE) ||
+            !desc->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom),
+                                  setter, JS_PropertyStub, JS_PropertyStub,
+                                  JSPROP_ENUMERATE)) {
+            goto drop_property;
+        }
+    }
+
+    ok = desc->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
+                              BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0),
+                              JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE) &&
+         desc->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
+                              BOOLEAN_TO_JSVAL((attrs & JSPROP_PERMANENT) == 0),
+                              JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE);
+
+  drop_property:
+    pobj->dropProperty(cx, prop);
+    return ok;
+}
+
+
 #if JS_HAS_OBJ_WATCHPOINT
 const char js_watch_str[] = "watch";
 const char js_unwatch_str[] = "unwatch";
@@ -2002,6 +2088,7 @@ static JSFunctionSpec object_methods[] = {
 
 static JSFunctionSpec object_static_methods[] = {
     JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
+    JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
     JS_FS_END
 };
 

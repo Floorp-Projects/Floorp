@@ -305,14 +305,14 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
         // Don't include prototype properties, since this operation is
         // supposed to be implemented as if by ES3.1 Object.keys()
         jsid id;
-        jsval v = JS_FALSE;
+        JSBool found = JS_FALSE;
         if (!js_ValueToStringId(cx, STRING_TO_JSVAL(ks), &id) ||
-            !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v)) {
+            !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &found)) {
             ok = JS_FALSE;
             break;
         }
 
-        if (v != JSVAL_TRUE)
+        if (!found)
             continue;
 
         ok = JS_GetPropertyById(cx, obj, id, &outputValue);
