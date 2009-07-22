@@ -786,7 +786,7 @@ JSClass js_ArgumentsClass = {
     JS_PropertyStub,    args_delProperty,
     args_getProperty,   args_setProperty,
     args_enumerate,     (JSResolveOp) args_resolve,
-    JS_ConvertStub,     JS_FinalizeStub,
+    JS_ConvertStub,     NULL,
     NULL,               NULL,
     NULL,               NULL,
     NULL,               NULL,
@@ -805,7 +805,7 @@ JSClass js_DeclEnvClass = {
     js_Object_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -1300,7 +1300,7 @@ JS_FRIEND_DATA(JSClass) js_CallClass = {
     JS_PropertyStub,    JS_PropertyStub,
     JS_PropertyStub,    JS_PropertyStub,
     call_enumerate,     (JSResolveOp)call_resolve,
-    call_convert,       JS_FinalizeStub,
+    call_convert,       NULL,
     NULL,               NULL,
     NULL,               NULL,
     NULL,               NULL,

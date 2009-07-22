@@ -1739,7 +1739,7 @@ NS_INTERFACE_MAP_END
 static JSClass sDOMConstructorProtoClass = {
   "DOM Constructor.prototype", 0,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nsnull
 };
 
 
@@ -8465,7 +8465,7 @@ static JSClass sHTMLDocumentAllHelperClass = {
   nsHTMLDocumentSH::DocumentAllHelperGetProperty,
   JS_PropertyStub, JS_EnumerateStub,
   (JSResolveOp)nsHTMLDocumentSH::DocumentAllHelperNewResolve, JS_ConvertStub,
-  JS_FinalizeStub
+  nsnull
 };
 
 
