@@ -158,6 +158,10 @@ const char *const js_common_atom_names[] = {
     js_valueOf_str,             /* valueOfAtom                  */
     js_toJSON_str,              /* toJSONAtom                   */
     "(void 0)",                 /* void0Atom                    */
+    js_enumerable_str,          /* enumerableAtom               */
+    js_configurable_str,        /* configurableAtom             */
+    js_writable_str,            /* writableAtom                 */
+    js_value_str,               /* valueAtom                    */
 
 #if JS_HAS_XML_SUPPORT
     js_etago_str,               /* etagoAtom                    */
@@ -228,6 +232,10 @@ const char js_toLocaleString_str[]  = "toLocaleString";
 const char js_undefined_str[]       = "undefined";
 const char js_valueOf_str[]         = "valueOf";
 const char js_toJSON_str[]          = "toJSON";
+const char js_enumerable_str[]      = "enumerable";
+const char js_configurable_str[]    = "configurable";
+const char js_writable_str[]        = "writable";
+const char js_value_str[]           = "value";
 
 #if JS_HAS_XML_SUPPORT
 const char js_etago_str[]           = "</";
