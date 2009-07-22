@@ -151,6 +151,8 @@ enum nsLayoutPhase {
 #define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
 #define NS_AUTHOR_SPECIFIED_PADDING         (1 << 2)
 
+class nsRootPresContext;
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 
@@ -197,7 +199,7 @@ public:
 
   // Find the prescontext for the root of the view manager hierarchy that contains
   // this prescontext.
-  nsPresContext* RootPresContext();
+  nsRootPresContext* RootPresContext();
 
   nsIDocument* Document() const
   {
@@ -1035,7 +1037,7 @@ protected:
 
 protected:
 
-  ~nsPresContext() NS_HIDDEN;
+  virtual ~nsPresContext() NS_HIDDEN;
 
   // these are private, use the list in nsFont.h if you want a public list
   enum {
@@ -1059,6 +1061,11 @@ public:
   }
 #endif
 
+};
+
+class nsRootPresContext : public nsPresContext {
+public:
+  nsRootPresContext(nsIDocument* aDocument, nsPresContextType aType) NS_HIDDEN;
 };
 
 #ifdef DEBUG

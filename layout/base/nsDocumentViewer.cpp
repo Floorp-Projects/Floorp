@@ -816,6 +816,16 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReena
   return NS_OK;
 }
 
+static nsPresContext*
+CreatePresContext(nsIDocument* aDocument,
+                  nsPresContext::nsPresContextType aType,
+                  nsIView* aContainerView)
+{
+  if (aContainerView)
+    return new nsPresContext(aDocument, aType);
+  return new nsRootPresContext(aDocument, aType);
+}
+
 //-----------------------------------------------
 // This method can be used to initial the "presentation"
 // The aDoCreation indicates whether it should create
@@ -845,10 +855,10 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       // Create presentation context
       if (mIsPageMode) {
         //Presentation context already created in SetPageMode which is calling this method
+      } else {
+        mPresContext = CreatePresContext(mDocument,
+            nsPresContext::eContext_Galley, containerView);
       }
-      else
-        mPresContext =
-            new nsPresContext(mDocument, nsPresContext::eContext_Galley);
       NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
       nsresult rv = mPresContext->Init(mDeviceContext); 
@@ -1912,7 +1922,8 @@ DocumentViewerImpl::Show(void)
 
     // Create presentation context
     NS_ASSERTION(!mPresContext, "Shouldn't have a prescontext if we have no shell!");
-    mPresContext = new nsPresContext(mDocument, nsPresContext::eContext_Galley);
+    mPresContext = CreatePresContext(mDocument,
+        nsPresContext::eContext_Galley, containerView);
     NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPresContext->Init(mDeviceContext);
@@ -4245,8 +4256,8 @@ NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings
   NS_ENSURE_STATE(mDocument);
   if (aPageMode)
   {    
-    mPresContext =
-      new nsPresContext(mDocument, nsPresContext::eContext_PageLayout);
+    mPresContext = CreatePresContext(mDocument,
+        nsPresContext::eContext_PageLayout, FindContainerView());
     NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
     mPresContext->SetPaginatedScrolling(PR_TRUE);
     mPresContext->SetPrintSettings(aPrintSettings);
