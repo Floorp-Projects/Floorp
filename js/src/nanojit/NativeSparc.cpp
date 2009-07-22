@@ -855,12 +855,10 @@ namespace nanojit
         freeRsrcOf(ins, false);
         if (d)
             {
-                Register r = registerAlloc(GpRegs);
-                _allocator.addFree(r);
-                STW32(r, d+4, FP);
-                SET32(ins->imm64_0(), r);
-                STW32(r, d, FP);
-                SET32(ins->imm64_1(), r);
+                STW32(L2, d+4, FP);
+                SET32(ins->imm64_0(), L2);
+                STW32(L2, d, FP);
+                SET32(ins->imm64_1(), L2);
             }
     }
 
