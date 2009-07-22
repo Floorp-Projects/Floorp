@@ -253,6 +253,8 @@ JSScope::destroy(JSContext *cx, JSScope *scope)
 #endif
     if (scope->table)
         JS_free(cx, scope->table);
+    if (scope->emptyScope)
+        scope->emptyScope->drop(cx, NULL);
 
     LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= scope->entryCount);
     JS_RUNTIME_UNMETER(cx->runtime, liveScopes);
