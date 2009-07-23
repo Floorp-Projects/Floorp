@@ -339,7 +339,8 @@ public:
     FontEntry *GetFontEntry();
 
     static already_AddRefed<gfxWindowsFont>
-    GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle);
+    GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle,
+                  PRBool aNeedsBold = PR_FALSE);
 
 protected:
     HFONT MakeHFONT();
@@ -402,7 +403,8 @@ public:
 
     virtual gfxWindowsFont *GetFontAt(PRInt32 i);
 
-    void GroupFamilyListToArrayList(nsTArray<nsRefPtr<FontEntry> > *list);
+    void GroupFamilyListToArrayList(nsTArray<nsRefPtr<FontEntry> > *list,
+                                    nsTArray<PRPackedBool> *aNeedsBold);
     void FamilyListToArrayList(const nsString& aFamilies,
                                const nsCString& aLangGroup,
                                nsTArray<nsRefPtr<FontEntry> > *list);
@@ -429,6 +431,7 @@ private:
 
     nsCString mGenericFamily;
     nsTArray<nsRefPtr<FontEntry> > mFontEntries;
+    nsTArray<PRPackedBool> mFontNeedsBold;
 
     const char *mItemLangGroup;  // used by pref-lang handling code
 
