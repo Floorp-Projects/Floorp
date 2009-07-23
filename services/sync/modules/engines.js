@@ -486,12 +486,14 @@ SyncEngine.prototype = {
       }
 
       // final upload
-      this._log.info("Uploading " +
-                     (count >= MAX_UPLOAD_RECORDS? "last batch of " : "") +
-                     count + " records, and " + metaCount + " index/depth records");
-      up.post();
-      if (up.data.modified > this.lastSync)
-        this.lastSync = up.data.modified;
+      if ((count % MAX_UPLOAD_RECORDS) + metaCount > 0) {
+        this._log.info("Uploading " +
+                       (count >= MAX_UPLOAD_RECORDS? "last batch of " : "") +
+                       count + " records, and " + metaCount + " index/depth records");
+        up.post();
+        if (up.data.modified > this.lastSync)
+          this.lastSync = up.data.modified;
+      }
     }
     this._tracker.clearChangedIDs();
   },
