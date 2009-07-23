@@ -55,6 +55,9 @@ const Cu = Components.utils;
 // How long we wait between sync checks.
 const SCHEDULED_SYNC_INTERVAL = 60 * 1000 * 5; // five minutes
 
+// how long we should wait before actually syncing on idle
+const IDLE_TIME = 5; // xxxmpc: in seconds, should be preffable
+
 // INITIAL_THRESHOLD represents the value an engine's score has to exceed
 // in order for us to sync it the first time we start up (and the first time
 // we do a sync check after having synced the engine or reset the threshold).
@@ -317,6 +320,8 @@ WeaveSvc.prototype = {
     Svc.Observer.addObserver(this, "network:offline-status-changed", true);
     Svc.Observer.addObserver(this, "private-browsing", true);
     Svc.Observer.addObserver(this, "quit-application", true);
+    Svc.Observer.addObserver(this, "weave:service:sync:finish", true);
+    Svc.Observer.addObserver(this, "weave:service:sync:error", true);
     FaultTolerance.Service; // initialize FT service
 
     if (!this.enabled)
@@ -334,7 +339,7 @@ WeaveSvc.prototype = {
     if (Svc.Prefs.get("autoconnect") && this.username) {
       try {
         if (this.login())
-          this.sync(true);
+          this.syncOnIdle();
       } catch (e) {}
     }
   },
@@ -423,22 +428,34 @@ WeaveSvc.prototype = {
           case "enabled":
           case "schedule":
             // Potentially we'll want to reschedule syncs
-            this._checkSync();
+            this._checkSyncStatus();
             break;
         }
         break;
       case "network:offline-status-changed":
         // Whether online or offline, we'll reschedule syncs
         this._log.debug("Network offline status change: " + data);
-        this._checkSync();
+        this._checkSyncStatus();
         break;
       case "private-browsing":
         // Entering or exiting private browsing? Reschedule syncs
         this._log.debug("Private browsing change: " + data);
-        this._checkSync();
+        this._checkSyncStatus();
         break;
       case "quit-application":
         this._onQuitApplication();
+        break;
+      case "weave:service:sync:error":
+        this._handleSyncError();
+        break;
+      case "weave:service:sync:finish":
+        this._scheduleNextSync();
+        this._serverErrors = 0;
+        break;
+      case "idle":
+        this._log.debug("idle time hit, trying to sync");
+        Svc.Idle.removeIdleObserver(this, IDLE_TIME);
+        this.sync(false);
         break;
     }
   },
@@ -620,7 +637,7 @@ WeaveSvc.prototype = {
 
       // Try starting the sync timer now that we're logged in
       this._loggedIn = true;
-      this._checkSync();
+      this._checkSyncStatus();
 
       return true;
     })))(),
@@ -633,7 +650,7 @@ WeaveSvc.prototype = {
     ID.get('WeaveCryptoID').setTempPassword(null); // and passphrase
 
     // Cancel the sync timer now that we're logged out
-    this._checkSync();
+    this._checkSyncStatus();
 
     Svc.Observer.notifyObservers(null, "weave:service:logout:finish", "");
   },
@@ -816,8 +833,7 @@ WeaveSvc.prototype = {
   _syncThresh: {},
 
   /**
-   * Determine if a sync should run. If so, schedule a repeating sync;
-   * otherwise, cancel future syncs and return a reason.
+   * Determine if a sync should run.
    *
    * @return Reason for not syncing; not-truthy if sync should run
    */
@@ -835,31 +851,114 @@ WeaveSvc.prototype = {
     else if (Svc.Prefs.get("schedule", 0) != 1)
       reason = kSyncNotScheduled;
 
-    // A truthy reason means we shouldn't continue to sync
-    if (reason) {
-      // Cancel any future syncs
+    return reason;
+  },
+
+  /**
+   * Check if we should be syncing and schedule the next sync, if it's not scheduled
+   */
+  _checkSyncStatus: function WeaveSvc__checkSyncStatus() {
+    // Should we be syncing now, if not, cancel any sync timers and return
+    if (this._checkSync()) {
       if (this._syncTimer) {
         this._syncTimer.cancel();
         this._syncTimer = null;
       }
-      this._log.config("Weave scheduler disabled: " + reason);
-    }
-    // We're good to sync, so schedule a repeating sync if we haven't yet
-    else if (!this._syncTimer) {
-      this._syncTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      let listener = new Utils.EventListener(Utils.bind2(this,
-        function WeaveSvc__checkSyncCallback(timer) {
-          if (this.locked)
-            this._log.debug("Skipping scheduled sync: already locked for sync");
-          else
-            this.sync(false);
-        }));
-      this._syncTimer.initWithCallback(listener, SCHEDULED_SYNC_INTERVAL,
-                                       Ci.nsITimer.TYPE_REPEATING_SLACK);
-      this._log.config("Weave scheduler enabled");
+
+      try {
+        Svc.Idle.removeIdleObserver(this, IDLE_TIME);
+      } catch(e) {} // this throws if there isn't an observer, but that's fine
+
+      return;
     }
 
-    return reason;
+    // otherwise, schedule the sync
+    this._scheduleNextSync();
+  },
+
+  /**
+   * Call sync() on an idle timer
+   * 
+   */
+  syncOnIdle: function WeaveSvc_syncOnIdle() {
+    this._log.debug("Idle timer created for sync, will sync after " +
+                    IDLE_TIME + " seconds of inactivity.");
+    Svc.Idle.addIdleObserver(this, IDLE_TIME);
+  },
+  
+  /**
+   * Set a timer for the next sync
+   */
+  _scheduleNextSync: function WeaveSvc__scheduleNextSync(interval) {
+    if (!interval)
+      interval = SCHEDULED_SYNC_INTERVAL;
+
+    // if there's an existing timer, cancel it and restart
+    if (this._syncTimer)
+      this._syncTimer.cancel();
+    else
+      this._syncTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    
+    let listener = new Utils.EventListener(Utils.bind2(this,
+      function WeaveSvc__scheduleNextSyncCallback(timer) {
+        this._syncTimer = null;
+        this.syncOnIdle();
+      }));
+    this._syncTimer.initWithCallback(listener, interval,
+                                     Ci.nsITimer.TYPE_ONE_SHOT);
+    this._log.debug("Next sync call in: " + this._syncTimer.delay / 1000 + " seconds.")
+  },
+
+  _serverErrors: 0,
+  /**
+   * Deal with sync errors appropriately
+   */
+  _handleSyncError: function WeaveSvc__handleSyncError() {
+    let shouldBackoff = false;
+    
+    let err = Weave.Service.detailedStatus.sync;
+    // we'll assume the server is just borked a little for these
+    switch (err) {
+      case METARECORD_DOWNLOAD_FAIL:
+      case KEYS_DOWNLOAD_FAIL:
+      case KEYS_UPLOAD_FAIL:
+        shouldBackoff = true;
+    }
+
+    // specifcally handle 500, 502, 503, 504 errors
+    // xxxmpc: what else should be in this list?
+    // this is sort of pseudocode, need a way to get at the 
+    if (!shouldBackoff && 
+        Utils.checkStatus(Records.lastResource.lastChannel.responseStatus, null, [500,[502,504]])) {
+       shouldBackoff = true;
+    }
+    
+    // if this is a client error, do the next sync as normal and return
+    if (!shouldBackoff) {
+      this._scheduleNextSync();
+      return;      
+    }
+
+    // ok, something failed connecting to the server, rev the counter
+    this._serverErrors++;
+
+    // do nothing on the first failure, if we fail again we'll back off
+    if (this._serverErrors < 2) {
+      this._scheduleNextSync();
+      return;
+    }
+
+    // 30-60 minute backoff interval, increasing each time
+    const MINIMUM_BACKOFF_INTERVAL = 15 * 60 * 1000;     // 15 minutes * >= 2
+    const MAXIMUM_BACKOFF_INTERVAL = 8 * 60 * 60 * 1000; // 8 hours
+    let backoffInterval = this._serverErrors *
+                          (Math.floor(Math.random() * MINIMUM_BACKOFF_INTERVAL) +
+                           MINIMUM_BACKOFF_INTERVAL);
+    backoffInterval = Math.min(backoffInterval, MAXIMUM_BACKOFF_INTERVAL);
+    this._scheduleNextSync(backoffInterval);
+
+    let d = new Date(Date.now() + backoffInterval);
+    this._log.config("Starting backoff, next sync at:" + d.toString());
   },
 
   /**
@@ -870,12 +969,6 @@ WeaveSvc.prototype = {
    */
   sync: function WeaveSvc_sync(fullSync)
     this._catch(this._lock(this._notify("sync", "", function() {
-
-    // Skip this incremental sync if the user has been active recently
-    if (!fullSync && Svc.Idle.idleTime < 30000) {
-      this._log.debug("Skipped sync because the user was active.");
-      return;
-    }
 
     fullSync = true; // not doing thresholds yet
 
