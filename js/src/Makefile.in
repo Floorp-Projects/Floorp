@@ -58,6 +58,10 @@ ifndef JS_DISABLE_SHELL
 DIRS += shell
 endif
 
+ifdef ENABLE_LIRASM
+DIRS += lirasm
+endif
+
 MODULE		    = js
 LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static
