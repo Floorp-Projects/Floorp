@@ -2208,7 +2208,7 @@ namespace nanojit
 
 #if defined(NJ_VERBOSE)
     LabelMap::LabelMap(AvmCore *core, nanojit::Allocator& a)
-        : allocator(a), names(core->gc), addrs(core->config.verbose_addrs), end(buf), core(core)
+        : allocator(a), names(core->gc), addrs(core->config.verbose_addrs), end(buf)
     {}
 
     LabelMap::~LabelMap()

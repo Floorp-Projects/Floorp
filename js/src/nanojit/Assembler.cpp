@@ -256,7 +256,6 @@ namespace nanojit
 
         // CodeAlloc contract: allocations never fail
         _codeAlloc->alloc(start, end);
-        VALGRIND_DISCARD_TRANSLATIONS(start, uintptr_t(end) - uintptr_t(start));
         NanoAssert(uintptr_t(end) - uintptr_t(start) >= (size_t)LARGEST_UNDERRUN_PROT);
         eip = end;
     }
