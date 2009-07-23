@@ -266,8 +266,6 @@ protected:
    PFNWP     GetPrevWP() const { return mPrevWndProc; }
 
    // nglayout data members
-   PRInt32        mPreferredHeight;
-   PRInt32        mPreferredWidth;
    nsToolkit     *mOS2Toolkit;
    PRInt32        mWindowState;
    nsRefPtr<gfxOS2Surface> mThebesSurface;

@@ -1710,7 +1710,7 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
     return NS_OK;
   }
 
-  nsRefPtr<gfxImageFrame> frame;
+  nsRefPtr<gfxImageSurface> frame;
   aCursor->CopyCurrentFrame(getter_AddRefs(frame));
   if (!frame)
     return NS_ERROR_NOT_AVAILABLE;

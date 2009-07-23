@@ -1429,11 +1429,6 @@ public:
                     nsLocation *aLocation,
                     nsIXPConnectJSObjectHolder *aOuterProto);
 
-  // Get the contents of focus memory when the state was saved
-  // (if the focus was inside of this window).
-  nsIDOMElement* GetFocusedElement() { return mFocusedElement; }
-  nsIDOMWindowInternal* GetFocusedWindow() { return mFocusedWindow; }
-
   nsGlobalWindow* GetInnerWindow() { return mInnerWindow; }
   nsISupports* GetInnerWindowHolder(PRUint32 aScriptTypeID)
   { return mInnerWindowHolders[NS_STID_INDEX(aScriptTypeID)]; }
@@ -1464,8 +1459,6 @@ protected:
   nsCOMPtr<nsISupports> mInnerWindowHolders[NS_STID_ARRAY_UBOUND];
   nsRefPtr<nsNavigator> mNavigator;
   nsRefPtr<nsLocation> mLocation;
-  nsCOMPtr<nsIDOMElement> mFocusedElement;
-  nsCOMPtr<nsIDOMWindowInternal> mFocusedWindow;
   nsCOMPtr<nsIXPConnectJSObjectHolder> mOuterProto;
 };
 
@@ -1487,33 +1480,6 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
   PRUint32 lang_ndx;
   NS_STID_FOR_INDEX(lang_ndx) {
     mInnerWindowHolders[lang_ndx] = aHolders[lang_ndx];
-  }
-
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    // We want to save the focused element/window only if they are inside of
-    // this window.
-
-    nsCOMPtr<nsIDOMWindow> window;
-    fm->GetFocusedWindow(getter_AddRefs(window));
-    nsCOMPtr<nsPIDOMWindow> focusedWindow = do_QueryInterface(window);
-
-    // The outer window is used for focus purposes, so make sure that's what
-    // we're looking for.
-    nsPIDOMWindow *targetWindow = aWindow->GetOuterWindow();
-
-    while (focusedWindow) {
-      if (focusedWindow == targetWindow) {
-        mFocusedWindow = do_QueryInterface(window);
-        fm->GetFocusedElement(getter_AddRefs(mFocusedElement));
-        break;
-      }
-
-      focusedWindow =
-        static_cast<nsGlobalWindow*>
-                   (static_cast<nsPIDOMWindow*>
-                               (focusedWindow))->GetPrivateParent();
-    }
   }
 
   aWindow->SuspendTimeouts();
@@ -8521,17 +8487,8 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
   printf("restoring window state, state = %p\n", (void*)holder);
 #endif
 
-  nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
-
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  nsIDOMElement *focusedElement = holder->GetFocusedElement();
-  nsIDOMWindowInternal *focusedWindow = holder->GetFocusedWindow();
-  if (fm && focusedElement)
-    fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL);
-  else if (focusedWindow)
-    focusedWindow->Focus();
-
   // And we're ready to go!
+  nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
   inner->Thaw();
 
   holder->DidRestoreWindow();

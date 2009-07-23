@@ -7340,15 +7340,11 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
   }
 
   JSBool useCapture;
-  if (!JS_ValueToBoolean(cx, argv[2], &useCapture)) {
-    return JS_FALSE;
-  }
+  JS_ValueToBoolean(cx, argv[2], &useCapture);
 
   if (argc == 4) {
     JSBool wantsUntrusted;
-    if (!JS_ValueToBoolean(cx, argv[3], &wantsUntrusted)) {
-      return JS_FALSE;
-    }
+    JS_ValueToBoolean(cx, argv[3], &wantsUntrusted);
 
     nsCOMPtr<nsIDOMNSEventTarget> eventTarget = do_QueryWrapper(cx, obj, &rv);
     if (NS_FAILED(rv)) {

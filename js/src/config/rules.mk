@@ -139,8 +139,8 @@ endif
 testxpcobjdir = $(DEPTH)/_tests/xpcshell
 
 # Test file installation
-ifeq (WINNT,$(HOST_OS_ARCH))
-# Windows nsinstall can't recursively copy directories, so use nsinstall.py
+ifneq (,$(filter WINNT os2-emx,$(HOST_OS_ARCH)))
+# Windows and OS/2 nsinstall can't recursively copy directories, so use nsinstall.py
 TEST_INSTALLER = $(PYTHON) $(topsrcdir)/config/nsinstall.py
 else
 TEST_INSTALLER = $(INSTALL)

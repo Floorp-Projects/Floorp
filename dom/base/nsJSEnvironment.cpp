@@ -3012,8 +3012,7 @@ SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) ||
         optbit == JSOPTION_RELIMIT) {
       JSBool optval;
-      if (! ::JS_ValueToBoolean(cx, *vp, &optval))
-        return JS_FALSE;
+      JS_ValueToBoolean(cx, *vp, &optval);
 
       uint32 optset = ::JS_GetOptions(cx);
       if (optval)

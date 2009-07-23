@@ -48,7 +48,6 @@
 
 class gfxContext;
 class nsPresContext;
-class nsIDOMSVGMatrix;
 class nsSVGRenderState;
 
 class nsISVGChildFrame : public nsQueryFrame

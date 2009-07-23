@@ -1099,11 +1099,13 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
 #endif
 
-    AutoLockJSGC lock(mJSRuntime);
+    if (mWatchdogWakeup) {
+        AutoLockJSGC lock(mJSRuntime);
 
-    mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
-                                      PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
-                                      PR_UNJOINABLE_THREAD, 0);
+        mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
+                                          PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                                          PR_UNJOINABLE_THREAD, 0);
+    }
 }
 
 // static

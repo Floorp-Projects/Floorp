@@ -41,7 +41,9 @@
 #include "nsMemory.h"
 #include "nsString.h"
 
+#include "mozStoragePrivateHelpers.h"
 #include "mozStorageStatementParams.h"
+#include "mozIStorageStatement.h"
 
 namespace mozilla {
 namespace storage {
@@ -86,7 +88,7 @@ StatementParams::SetProperty(nsIXPConnectWrappedNative *aWrapper,
   if (JSVAL_IS_INT(aId)) {
     int idx = JSVAL_TO_INT(aId);
 
-    PRBool res = JSValStorageStatementBinder(aCtx, mStatement, idx, *_vp);
+    PRBool res = bindJSValue(aCtx, mStatement, idx, *_vp);
     NS_ENSURE_TRUE(res, NS_ERROR_UNEXPECTED);
   }
   else if (JSVAL_IS_STRING(aId)) {
@@ -99,7 +101,7 @@ StatementParams::SetProperty(nsIXPConnectWrappedNative *aWrapper,
     nsresult rv = mStatement->GetParameterIndex(name, &index);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool res = JSValStorageStatementBinder(aCtx, mStatement, index, *_vp);
+    PRBool res = bindJSValue(aCtx, mStatement, index, *_vp);
     NS_ENSURE_TRUE(res, NS_ERROR_UNEXPECTED);
   }
   else {

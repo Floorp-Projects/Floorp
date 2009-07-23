@@ -66,6 +66,16 @@ CSRCS		= \
 		oggplay_tools.c \
 		$(NULL)
 
+ifeq ($(OS_ARCH),OS2)
+EXPORTS		+= \
+		os2_semaphore.h \
+		$(NULL)
+
+CSRCS		+= \
+		os2_semaphore.c \
+		$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += -I$(srcdir)/../../include/oggplay

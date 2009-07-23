@@ -167,8 +167,6 @@ public:
 	NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
 	NS_IMETHOD              BeginResizingChildren(void);
 	NS_IMETHOD              EndResizingChildren(void);
-	NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-	NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 	NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 	NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
 
@@ -225,8 +223,6 @@ protected:
 	nsIFontMetrics*  mFontMetrics;
 
 	nsViewBeOS*      mView;
-	PRInt32          mPreferredWidth;
-	PRInt32          mPreferredHeight;
 	window_feel      mBWindowFeel;
 	window_look      mBWindowLook;
 
