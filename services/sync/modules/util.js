@@ -301,14 +301,25 @@ let Utils = {
     if (a === b)
       return true;
 
-    // Grab the keys from both sides
-    let [A, B] = [[i for (i in a)], [i for (i in b)]];
-    // Don't bother doing any more if they aren't objects with same # keys
-    if (typeof a != "object" || typeof b != "object" || A.length != B.length)
+    // If they weren't equal, they must be objects to be different
+    if (typeof a != "object" || typeof b != "object")
       return false;
 
-    // Check if both sides have the same keys and same value for the key
-    return A.every(function(A) B.some(function(B) A == B && eq(a[A], b[B])));
+    // But null objects won't have properties to compare
+    if (a === null || b === null)
+      return false;
+
+    // Make sure all of a's keys have a matching value in b
+    for (let k in a)
+      if (!eq(a[k], b[k]))
+        return false;
+
+    // Do the same for b's keys but skip those that we already checked
+    for (let k in b)
+      if (!(k in a) && !eq(a[k], b[k]))
+        return false;
+
+    return true;
   },
 
   deepCopy: function Weave_deepCopy(thing, noSort) {
