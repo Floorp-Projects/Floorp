@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=503926
+-->
+<head>
+  <title>Test for Bug 503926</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=503926">Mozilla Bug 503926</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 503926 **/
+var passed = true;
+var obj = { QueryInterface: function() { passed = false; } };
+try { document.body.appendChild(obj); } catch (e) {}
+ok(passed, "untrusted QI should not be called!");
+
+</script>
+</pre>
+</body>
+</html>
