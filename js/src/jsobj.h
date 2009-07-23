@@ -603,12 +603,14 @@ js_CheckForStringIndex(jsid id);
 extern void
 js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id);
 
+#ifdef __cplusplus /* Aargh, libgjs, bug 492720. */
 static JS_INLINE void
 js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
 {
     if (OBJ_IS_DELEGATE(cx, obj))
         js_PurgeScopeChainHelper(cx, obj, id);
 }
+#endif
 
 /*
  * Find or create a property named by id in obj's scope, with the given getter
