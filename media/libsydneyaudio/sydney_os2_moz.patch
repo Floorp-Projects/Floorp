@@ -1,0 +1,390 @@
+diff --git a/media/libsydneyaudio/src/sydney_audio_os2.c b/media/libsydneyaudio/src/sydney_audio_os2.c
+--- a/media/libsydneyaudio/src/sydney_audio_os2.c
++++ b/media/libsydneyaudio/src/sydney_audio_os2.c
+@@ -143,27 +143,42 @@ struct sa_stream {
+   int32_t           readyCnt;
+   int32_t           readyNdx;
+   HEV               usedSem;
+   volatile int32_t  usedCnt;
+ 
+   /* miscellaneous */
+   volatile int32_t  state;
+   int64_t           writePos;
++  /* workaround for Bug 495352 */
++  uint32_t          zeroCnt;
+ };
+ 
+ /*****************************************************************************/
+ /*  Private (static) Functions  */
+ 
+ static int32_t  os2_mixer_event(uint32_t ulStatus, PMCI_MIX_BUFFER pBuffer,
+                                 uint32_t ulFlags);
+ static int      os2_write_to_device(sa_stream_t *s);
+ static void     os2_stop_device(uint16_t hwDeviceID);
+ static int      os2_pause_device(uint16_t hwDeviceID, uint32_t release);
+ static int      os2_get_free_count(sa_stream_t *s, int32_t count);
++
++/*****************************************************************************/
++/*  Mozilla-specific Additions  */
++
++/* reset the decode thread's priority */
++static void     os2_set_priority(void);
++
++/* load mdm.dll on demand */
++static int      os2_load_mdm(void);
++
++/* invoke mciSendCommand() via a static variable */
++typedef ULONG _System     MCISENDCOMMAND(USHORT, USHORT, ULONG, PVOID, USHORT);
++static MCISENDCOMMAND *   _mciSendCommand = 0;
+ 
+ /*****************************************************************************/
+ /*  Sydney Audio Functions                                                   */
+ /*****************************************************************************/
+ 
+ /** Normal way to open a PCM device */
+ 
+ int     sa_stream_create_pcm(sa_stream_t **  s, 
+@@ -176,16 +191,20 @@ int     sa_stream_create_pcm(sa_stream_t
+   uint32_t      status = SA_SUCCESS;
+   uint32_t      size;
+   uint32_t      rc;
+   sa_stream_t * sTemp = 0;
+ 
+   /* this do{}while(0) "loop" makes it easy to ensure
+    * resources are freed on exit if there's an error */
+ do {
++  /* load mdm.dll if it isn't already loaded */
++  if (os2_load_mdm() != SA_SUCCESS)
++    return SA_ERROR_SYSTEM;
++
+   if (mode != SA_MODE_WRONLY || format != SA_PCM_FORMAT_S16_LE)
+     return os2_error(SA_ERROR_NOT_SUPPORTED, "sa_stream_create_pcm",
+                      "invalid mode or format", 0);
+ 
+   if (!s)
+     return os2_error(SA_ERROR_INVALID, "sa_stream_create_pcm",
+                      "s is null", 0);
+   *s = 0;
+@@ -257,25 +276,28 @@ int     sa_stream_open(sa_stream_t *s)
+   MCI_AMP_OPEN_PARMS  AmpOpenParms;
+   MCI_MIXSETUP_PARMS  MixSetupParms;
+   MCI_BUFFER_PARMS    BufferParms;
+ 
+   if (!s)
+     return os2_error(SA_ERROR_NO_INIT, "sa_stream_open", "s is null", 0);
+ 
+ do {
++  /* set this thread's priority to 2-08 */
++  os2_set_priority();
++
+   /* s->bufCnt will be restored after successfully allocating buffers */
+   bufCntRequested = s->bufCnt;
+   s->bufCnt = 0;
+ 
+   /* open the Amp-Mixer using the default device in shared mode */
+   memset(&AmpOpenParms, 0, sizeof(MCI_AMP_OPEN_PARMS));
+   AmpOpenParms.pszDeviceType = (PSZ)(MCI_DEVTYPE_AUDIO_AMPMIX | 0);
+ 
+-  rc = mciSendCommand(0, MCI_OPEN,
++  rc = _mciSendCommand(0, MCI_OPEN,
+                       MCI_WAIT | MCI_OPEN_TYPE_ID | MCI_OPEN_SHAREABLE,
+                       (void*)&AmpOpenParms, 0);
+   if (LOUSHORT(rc)) {
+     status = os2_error(SA_ERROR_NO_DEVICE, "sa_stream_open",
+                        "MCI_OPEN - rc=", LOUSHORT(rc));
+     break;
+   }
+ 
+@@ -287,17 +309,17 @@ do {
+   MixSetupParms.ulBitsPerSample = 16;
+   MixSetupParms.ulFormatTag     = MCI_WAVE_FORMAT_PCM;
+   MixSetupParms.ulFormatMode    = MCI_PLAY;
+   MixSetupParms.ulSamplesPerSec = s->rate;
+   MixSetupParms.ulChannels      = s->nchannels;
+   MixSetupParms.ulDeviceType    = MCI_DEVTYPE_WAVEFORM_AUDIO;
+   MixSetupParms.pmixEvent       = (MIXEREVENT*)os2_mixer_event;
+ 
+-  rc = mciSendCommand(s->hwDeviceID, MCI_MIXSETUP,
++  rc = _mciSendCommand(s->hwDeviceID, MCI_MIXSETUP,
+                       MCI_WAIT | MCI_MIXSETUP_INIT,
+                       (void*)&MixSetupParms, 0);
+   if (LOUSHORT(rc)) {
+     status = os2_error(SA_ERROR_NOT_SUPPORTED, "sa_stream_open",
+                        "MCI_MIXSETUP - rc=", LOUSHORT(rc));
+     break;
+   }
+ 
+@@ -306,17 +328,17 @@ do {
+   s->hwWriteProc = MixSetupParms.pmixWrite;
+ 
+   /* allocate device buffers from the Amp-Mixer */
+   BufferParms.ulStructLength = sizeof(MCI_BUFFER_PARMS);
+   BufferParms.ulNumBuffers   = bufCntRequested;
+   BufferParms.ulBufferSize   = s->bufSize;
+   BufferParms.pBufList       = s->bufList;
+ 
+-  rc = mciSendCommand(s->hwDeviceID, MCI_BUFFER,
++  rc = _mciSendCommand(s->hwDeviceID, MCI_BUFFER,
+                       MCI_WAIT | MCI_ALLOCATE_MEMORY,
+                       (void*)&BufferParms, 0);
+   if (LOUSHORT(rc)) {
+     status = os2_error(SA_ERROR_OOM, "sa_stream_open",
+                        "MCI_ALLOCATE_MEMORY - rc=", LOUSHORT(rc));
+     break;
+   }
+ 
+@@ -363,25 +385,25 @@ int     sa_stream_destroy(sa_stream_t *s
+     /* if hardware buffers were allocated, free them */
+     if (s->bufCnt) {
+       BufferParms.hwndCallback   = 0;
+       BufferParms.ulStructLength = sizeof(MCI_BUFFER_PARMS);
+       BufferParms.ulNumBuffers   = s->bufCnt;
+       BufferParms.ulBufferSize   = s->bufSize;
+       BufferParms.pBufList       = s->bufList;
+ 
+-      rc = mciSendCommand(s->hwDeviceID, MCI_BUFFER,
++      rc = _mciSendCommand(s->hwDeviceID, MCI_BUFFER,
+                           MCI_WAIT | MCI_DEALLOCATE_MEMORY,
+                           (void*)&BufferParms, 0);
+       if (LOUSHORT(rc))
+         status = os2_error(SA_ERROR_SYSTEM, "sa_stream_destroy",
+                            "MCI_DEALLOCATE_MEMORY - rc=", LOUSHORT(rc));
+     }
+ 
+-    rc = mciSendCommand(s->hwDeviceID, MCI_CLOSE,
++    rc = _mciSendCommand(s->hwDeviceID, MCI_CLOSE,
+                         MCI_WAIT,
+                         (void*)&GenericParms, 0);
+     if (LOUSHORT(rc))
+       status = os2_error(SA_ERROR_SYSTEM, "sa_stream_destroy",
+                          "MCI_CLOSE - rc=", LOUSHORT(rc));
+   }
+ 
+   /* free other resources we allocated */
+@@ -405,18 +427,28 @@ int     sa_stream_write(sa_stream_t * s,
+   PMCI_MIX_BUFFER pHW;
+ 
+   if (!s)
+     return os2_error(SA_ERROR_NO_INIT, "sa_stream_write", "s is null", 0);
+   if (!data)
+     return os2_error(SA_ERROR_INVALID, "sa_stream_write", "data is null", 0);
+ 
+   /* exit if no data */
+-  if (!nbytes)
++  /* Bug 495352 - this function may get called repeatedly with no data;
++   * as a workaround to prevent as many as 30,000 such calls between valid
++   * writes (and 100% CPU usage), give up the remainder of the current
++   * time-slice every time 16 consecutive zero-byte writes are detected */
++  if (!nbytes) {
++    s->zeroCnt++;
++    if (!(s->zeroCnt & 0x0f)) {
++      s->zeroCnt = 0;
++      DosSleep(1);
++    }
+     return SA_SUCCESS;
++  }
+ 
+   /* This should only loop on the last write before sa_stream_drain()
+    * is called;  at other times, 'nbytes' won't exceed 'bufSize'. */
+   while (nbytes) {
+ 
+     /* get the count of free buffers, wait until at least one
+      * is available (in practice, this should never block) */
+     if (os2_get_free_count(s, 1))
+@@ -473,24 +505,24 @@ int     sa_stream_resume(sa_stream_t *s)
+ {
+   uint32_t          rc;
+   MCI_GENERIC_PARMS GenericParms = { 0 };
+ 
+   if (!s)
+     return os2_error(SA_ERROR_NO_INIT, "sa_stream_resume",
+                      "s is null", 0);
+ 
+-  rc = mciSendCommand(s->hwDeviceID, MCI_ACQUIREDEVICE,
++  rc = _mciSendCommand(s->hwDeviceID, MCI_ACQUIREDEVICE,
+                       MCI_WAIT,
+                       (void*)&GenericParms, 0);
+   if (LOUSHORT(rc))
+     return os2_error(SA_ERROR_SYSTEM, "sa_stream_resume",
+                      "MCI_ACQUIREDEVICE - rc=", LOUSHORT(rc));
+ 
+-  rc = mciSendCommand(s->hwDeviceID, MCI_RESUME,
++  rc = _mciSendCommand(s->hwDeviceID, MCI_RESUME,
+                       MCI_WAIT,
+                       (void*)&GenericParms, 0);
+   if (LOUSHORT(rc))
+     return os2_error(SA_ERROR_SYSTEM, "sa_stream_resume",
+                      "MCI_RESUME - rc=", LOUSHORT(rc));
+ 
+   return SA_SUCCESS;
+ }
+@@ -579,17 +611,17 @@ int     sa_stream_set_volume_abs(sa_stre
+     return os2_error(SA_ERROR_NO_INIT, "sa_stream_set_volume_abs",
+                      "s is null", 0);
+ 
+   /* convert f.p. value to an integer value ranging
+    * from 0 to 100 and apply to both channels */
+   SetParms.ulLevel = (vol * 100);
+   SetParms.ulAudio = MCI_SET_AUDIO_ALL;
+ 
+-  rc = mciSendCommand(s->hwDeviceID, MCI_SET,
++  rc = _mciSendCommand(s->hwDeviceID, MCI_SET,
+                       MCI_WAIT | MCI_SET_AUDIO | MCI_SET_VOLUME,
+                       (void*)&SetParms, 0);
+   if (LOUSHORT(rc))
+     return os2_error(SA_ERROR_SYSTEM, "sa_stream_set_volume_abs",
+                      "MCI_SET_VOLUME - rc=", LOUSHORT(rc));
+ 
+   return SA_SUCCESS;
+ }
+@@ -606,17 +638,17 @@ int     sa_stream_get_volume_abs(sa_stre
+ 
+   if (!s || !vol)
+     return os2_error(SA_ERROR_NO_INIT, "sa_stream_get_volume_abs",
+                      "s or vol is null", 0);
+ 
+   memset(&StatusParms, 0, sizeof(MCI_STATUS_PARMS));
+   StatusParms.ulItem = MCI_STATUS_VOLUME;
+ 
+-  rc = mciSendCommand(s->hwDeviceID, MCI_STATUS,
++  rc = _mciSendCommand(s->hwDeviceID, MCI_STATUS,
+                       MCI_WAIT | MCI_STATUS_ITEM,
+                       (void*)&StatusParms, 0);
+   if (LOUSHORT(rc)) {
+     /* if there's an error, return a reasonable value */
+     StatusParms.ulReturn = (50 | 50 << 16);
+     status = os2_error(SA_ERROR_SYSTEM, "sa_stream_get_volume_abs",
+                        "MCI_STATUS_VOLUME - rc=", LOUSHORT(rc));
+   }
+@@ -737,17 +769,17 @@ static int  os2_write_to_device(sa_strea
+ 
+ /** stop playback */
+ 
+ static void os2_stop_device(uint16_t hwDeviceID)
+ {
+   uint32_t          rc;
+   MCI_GENERIC_PARMS GenericParms = { 0 };
+ 
+-  rc = mciSendCommand(hwDeviceID, MCI_STOP,
++  rc = _mciSendCommand(hwDeviceID, MCI_STOP,
+                       MCI_WAIT,
+                       (void*)&GenericParms, 0);
+   if (LOUSHORT(rc))
+     os2_error(0, "os2_stop_device", "MCI_STOP - rc=", LOUSHORT(rc));
+ 
+   return;
+ }
+ 
+@@ -755,25 +787,25 @@ static void os2_stop_device(uint16_t hwD
+ 
+ /** pause playback and optionally release device */
+ 
+ static int  os2_pause_device(uint16_t hwDeviceID, uint32_t release)
+ {
+   uint32_t          rc;
+   MCI_GENERIC_PARMS GenericParms = { 0 };
+ 
+-  rc = mciSendCommand(hwDeviceID, MCI_PAUSE,
++  rc = _mciSendCommand(hwDeviceID, MCI_PAUSE,
+                       MCI_WAIT,
+                       (void*)&GenericParms, 0);
+   if (LOUSHORT(rc))
+     return os2_error(SA_ERROR_SYSTEM, "os2_pause_device",
+                      "MCI_PAUSE - rc=", LOUSHORT(rc));
+ 
+   if (release)
+-    mciSendCommand(hwDeviceID, MCI_RELEASEDEVICE,
++    _mciSendCommand(hwDeviceID, MCI_RELEASEDEVICE,
+                    MCI_WAIT,
+                    (void*)&GenericParms, 0);
+ 
+   return SA_SUCCESS;
+ }
+ 
+ /*****************************************************************************/
+ 
+@@ -816,16 +848,84 @@ static int  os2_error_msg(int rtn, char 
+   else
+     fprintf(stderr, "sa_os2 error - %s:  %s %u\n", func, msg, err);
+   fflush(stderr);
+ 
+   return rtn;
+ }
+ 
+ #endif
++
++/*****************************************************************************/
++/*  Mozilla-specific Functions                                               */
++/*****************************************************************************/
++
++/** load mdm.dll & get the entrypoint for mciSendCommand() */
++
++static int  os2_load_mdm(void)
++{
++  uint32_t  rc;
++  HMODULE   hmod;
++  char      text[32];
++
++  if (_mciSendCommand)
++    return SA_SUCCESS;
++
++  rc = DosLoadModule(text, sizeof(text), "MDM", &hmod);
++  if (rc)
++    return os2_error(SA_ERROR_SYSTEM, "os2_load_mdm",
++                     "DosLoadModule - rc=", rc);
++
++  /* the ordinal for mciSendCommand is '1' */
++  rc = DosQueryProcAddr(hmod, 1, 0, (PFN*)&_mciSendCommand);
++  if (rc) {
++    _mciSendCommand = 0;
++    return os2_error(SA_ERROR_SYSTEM, "os2_load_mdm",
++                     "DosQueryProcAddr - rc=", rc);
++  }
++
++  return SA_SUCCESS;
++}
++
++/*****************************************************************************/
++
++/** adjust the decode thread's priority */
++
++static void os2_set_priority(void)
++{
++  uint32_t  rc;
++  uint32_t  priority;
++  int32_t   delta;
++  int32_t   newdelta;
++  PTIB      ptib;
++  PPIB      ppib;
++
++#define SAOS2_PRIORITY  8
++
++  DosGetInfoBlocks(&ptib, &ppib);
++  priority = ptib->tib_ptib2->tib2_ulpri;
++  delta = priority & 0xff;
++  priority >>= 8;
++
++  /* if the current priority class is other than "regular" (priority 2),
++   * don't change anything - otherwise, calculate a delta that will set
++   * the priority to SAOS2_PRIORITY */
++  if (priority != PRTYC_REGULAR)
++    newdelta = 0;
++  else
++    newdelta = SAOS2_PRIORITY - delta;
++
++  if (newdelta) {
++    rc = DosSetPriority(PRTYS_THREAD, PRTYC_NOCHANGE, newdelta, 0);
++    if (rc)
++      rc = os2_error(rc, "os2_set_priority", "DosSetPriority - rc=", rc);
++  }
++
++  return;
++}
+ 
+ /*****************************************************************************/
+ /*  Not Implemented / Not Supported                                          */
+ /*****************************************************************************/
+ 
+ #define UNSUPPORTED(func)   func { return SA_ERROR_NOT_SUPPORTED; }
+ 
+ UNSUPPORTED(int sa_stream_create_opaque(sa_stream_t **s, const char *client_name, sa_mode_t mode, const char *codec))

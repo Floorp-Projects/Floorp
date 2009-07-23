@@ -2036,6 +2036,19 @@ PresShell::Destroy()
   mFrameConstructor->WillDestroyFrameTree();
   FrameManager()->Destroy();
 
+  // Destroy all frame properties (whose destruction was suppressed
+  // while destroying the frame tree, but which might contain more
+  // frames within the properties.
+  if (mPresContext) {
+    // Clear out the prescontext's property table -- since our frame tree is
+    // now dead, we shouldn't be looking up any more properties in that table.
+    // We want to do this before we call SetShell() on the prescontext, so
+    // property destructors can usefully call GetPresShell() on the
+    // prescontext.
+    mPresContext->PropertyTable()->DeleteAllProperties();
+  }
+
+
   NS_WARN_IF_FALSE(!mWeakFrames, "Weak frames alive after destroying FrameManager");
   while (mWeakFrames) {
     mWeakFrames->Clear(this);
@@ -2045,13 +2058,6 @@ PresShell::Destroy()
   mStyleSet->Shutdown(mPresContext);
 
   if (mPresContext) {
-    // Clear out the prescontext's property table -- since our frame tree is
-    // now dead, we shouldn't be looking up any more properties in that table.
-    // We want to do this before we call SetShell() on the prescontext, so
-    // property destructors can usefully call GetPresShell() on the
-    // prescontext.
-    mPresContext->PropertyTable()->DeleteAllProperties();
-
     // We hold a reference to the pres context, and it holds a weak link back
     // to us. To avoid the pres context having a dangling reference, set its 
     // pres shell to NULL

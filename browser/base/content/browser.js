@@ -4975,19 +4975,19 @@ function middleMousePaste(event)
  */
 
 var contentAreaDNDObserver = {
-  onDragOver: function (aEvent)
-    {
-      var types = aEvent.dataTransfer.types;
-      if (types.contains("application/x-moz-file") ||
-          types.contains("text/x-moz-url") ||
-          types.contains("text/uri-list") ||
-          types.contains("text/plain"))
-        aEvent.preventDefault();
-    },
   onDrop: function (aEvent)
     {
       if (aEvent.getPreventDefault())
         return;
+
+      var types = aEvent.dataTransfer.types;
+      if (!types.contains("application/x-moz-file") &&
+          !types.contains("text/x-moz-url") &&
+          !types.contains("text/uri-list") &&
+          !types.contains("text/plain")) {
+        aEvent.preventDefault();
+        return;
+      }
 
       let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
 

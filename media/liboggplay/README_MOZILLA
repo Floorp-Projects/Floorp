@@ -39,5 +39,9 @@ bug495129a.patch: Fix from liboggplay commit 6c8e11.
 bug495129b.patch: Fix from liboggplay commit 3602bf.
 
 bug487519.patch: Fix for bug 487519.
+
+oggplay_os2.patch: Bug 448918 - add OS/2 support (this patch should be
+                   removed when OS/2 support is added upstream)
+
 bug498815.patch: Fix for bug 498815.
 bug498824.patch: Fix for bug 498824.

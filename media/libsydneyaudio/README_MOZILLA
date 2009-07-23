@@ -13,5 +13,12 @@ with pausing and resuming audio streams.
 include-CoreServices.patch is applied to include CoreServices headers
 on Mac OS X. Fixes a build failure on Mac OS X 10.6. b=492072
 
+sydney_os2_base.patch: Bug 448918 - add OS/2 support (this patch should
+                       be removed when OS/2 support is added upstream)
+
+sydney_os2_moz.patch:  Bug 448918 - add Mozilla-specific code to
+                       sydney_audio_os2.c
+
+
 bug495794_closeAudio.patch fixes a crash when destroying the sa_stream_t after
 a failed attempt to open the stream.
