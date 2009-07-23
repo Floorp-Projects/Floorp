@@ -146,7 +146,7 @@ Tracker.prototype = {
     if (this.ignoreAll || (id in this._ignored))
       return false;
     if (!this.changedIDs[id]) {
-      this._log.debug("Adding changed ID " + id);
+      this._log.trace("Adding changed ID " + id);
       this.changedIDs[id] = true;
       this.saveChangedIDs();
     }
@@ -161,7 +161,7 @@ Tracker.prototype = {
     if (this.ignoreAll || (id in this._ignored))
       return false;
     if (this.changedIDs[id]) {
-      this._log.debug("Removing changed ID " + id);
+      this._log.trace("Removing changed ID " + id);
       delete this.changedIDs[id];
       this.saveChangedIDs();
     }
@@ -169,7 +169,7 @@ Tracker.prototype = {
   },
 
   clearChangedIDs: function T_clearChangedIDs() {
-    this._log.debug("Clearing changed ID list");
+    this._log.trace("Clearing changed ID list");
     for (let id in this.changedIDs) {
       delete this.changedIDs[id];
     }

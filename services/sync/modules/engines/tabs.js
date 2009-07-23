@@ -230,7 +230,7 @@ TabStore.prototype = {
 
         // add tab to record
         this._log.debug("Wrapping a tab with title " + currentPage.title);
-        this._log.debug("And timestamp " + lastUsedTimestamp);
+        this._log.trace("And timestamp " + lastUsedTimestamp);
         record.addTab(currentPage.title, urlHistory, lastUsedTimestamp);
       }
     }
@@ -255,7 +255,7 @@ TabStore.prototype = {
       let lastUsedTimestamp = "0";
 
       this._log.debug("Wrapping a tab with title " + title);
-      this._log.debug("And timestamp " + lastUsedTimestamp);
+      this._log.trace("And timestamp " + lastUsedTimestamp);
       record.addTab(title, urlHistory, lastUsedTimestamp);
       // TODO add last-visited date for this tab... but how?
     }
