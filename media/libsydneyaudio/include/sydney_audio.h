@@ -100,8 +100,8 @@ typedef __int64 int64_t;
 
 typedef struct sa_stream sa_stream_t;
 
-#if defined(WIN32)
-// (left << 16 | right) (16 bits per channel)
+#if defined(WIN32) || defined(OS2)
+/* (left << 16 | right) (16 bits per channel) */
 #define SA_VOLUME_MUTED ((int32_t) (0x00000000))
 #else
 /** Volume that corresponds to muted in/out */

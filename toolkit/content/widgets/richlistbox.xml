@@ -565,6 +565,20 @@
           ]]>
         </setter>
       </property>
+      
+      <property name="selected" onget="return this.getAttribute('selected') == 'true';">
+        <setter><![CDATA[
+          if (val) {
+            this.setAttribute("selected", "true");
+            this.setAttribute("_moz-menuactive", "true");
+          } else {
+            this.removeAttribute("selected");
+            this.removeAttribute("_moz-menuactive");
+          }
+
+          return val;
+        ]]></setter>
+      </property>
     </implementation>
   </binding>
 </bindings>

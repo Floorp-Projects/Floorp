@@ -924,8 +924,9 @@ statusbarpanel#statusbar-display {
 .ac-result-type-keyword,
 .autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
   list-style-image: url(chrome://global/skin/icons/search-textbox.png);
-  width: 16px;
-  height: 16px;
+  margin: 2px;
+  width: 12px;
+  height: 12px;
 }
 
 richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
@@ -1515,7 +1516,7 @@ tabbrowser > tabbox {
   opacity: .6;
 }
 
-.tab-text {
+.tabbrowser-tab > .tab-text {
   margin-top: 3px;
   margin-bottom: 0;
   font: message-box;
@@ -2124,63 +2125,143 @@ tabpanels.plain {
 }
 
 /* ::::: Keyboard UI Panel ::::: */
+
 .KUI-panel {
   -moz-appearance: none;
-  background: rgba(68, 68, 68, .9) url(KUI-background.png) repeat-x;
+  background: rgba(27%,27%,27%,.9) url(KUI-background.png) repeat-x;
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  -moz-border-radius: 10px;
-  margin-top: -1px;
-  margin-left: -1px;
+  border: 1px solid rgba(100%,100%,100%,.15);
+  -moz-border-radius: 20px;
 }
 
-.KUI-panel[level="top"] ,
-#ctrlTab-panel:not([sticky]) {
-  background-color: rgba(68, 68, 68, .5);
+.KUI-panel[level="top"] {
+  background-color: rgba(27%,27%,27%,.65);
+  border-style: none;
   -moz-window-shadow: none;
 }
 
-/* ::::: Ctrl-Tab Panel ::::: */
+.KUI-panel-closebutton {
+  list-style-image: url(KUI-close.png);
+  -moz-appearance: none;
+  border: none;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.KUI-panel-closebutton:not(:hover) {
+  opacity: .6;
+}
+
+.KUI-panel-closebutton > .toolbarbutton-icon {
+  margin: 0;
+}
+
+/* ::::: Ctrl-Tab and All Tabs Panels ::::: */
+
+.tabPreview-canvas {
+  -moz-box-shadow: 1px 1px 3px rgb(12%,12%,12%);
+}
+
+.ctrlTab-favicon-container,
+.allTabs-favicon-container {
+  -moz-box-pack: end;
+}
+
+.ctrlTab-favicon[src],
+.allTabs-favicon[src] {
+  background-color: white;
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  opacity: .7;
+}
+
+/* Ctrl-Tab */
+
 #ctrlTab-panel {
-  padding-top: 20px;
+  padding: 20px 10px 15px;
+  text-shadow: 0 0 1px rgb(27%,27%,27%), 0 0 3px rgb(27%,27%,27%);
+}
+
+.ctrlTab-preview:not(#ctrlTab-showAll) .ctrlTab-preview-inner {
+  padding-bottom: 2px;
+}
+
+.ctrlTab-preview:not(#ctrlTab-showAll) .tabPreview-canvas {
+  margin-bottom: 2px;
+}
+
+.ctrlTab-preview:focus:not(#ctrlTab-showAll) .ctrlTab-preview-inner {
+  background-color: #ccc;
+  color: black;
+  text-shadow: 0 0 1px white;
+  -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 0 5px 1px -moz-mac-focusring, 0 0 8px white;
+  padding: 2px;
+  margin: -2px -2px 0;
+}
+
+.ctrlTab-preview:focus .tabPreview-canvas {
+  -moz-box-shadow: none;
+}
+
+#ctrlTab-showAll {
+  -moz-appearance: button;
+  color: ButtonText;
+  text-shadow: none;
+  padding: 0 3px;
+  margin-top: 15px;
   font-size: 1.2em;
-  text-shadow: 0 0 3px black, 0 0 3px black;
 }
 
-#ctrlTab-search {
-  margin: 0 0 20px;
+#ctrlTab-showAll:focus {
+  -moz-box-shadow: 0 0 8px white;
+  -moz-border-radius: 100%;
 }
 
-.ctrlTab-thumbnail {
-  margin-bottom: 20px;
-  cursor: pointer;
-  font-weight: bold;
+/* All Tabs */
+
+#allTabs-panel {
+  padding: 10px;
+  margin-left: -10px;
 }
 
-.ctrlTab-thumbnail > html|canvas {
-  border: 2px solid white;
-  margin: -2px;
+#allTabs-panel:not(.KUI-panel) {
+  -moz-appearance: none;
+  background: rgb(27%,27%,27%) url(KUI-background.png) repeat-x;
+  border: none;
+  color: white;
 }
 
-.ctrlTab-thumbnail[selected="true"] ,
-.ctrlTab-thumbnail:hover {
-  background: Highlight;
-  color: HighlightText;
-  -moz-box-shadow: 0 0 2px Highlight, 0 0 2px Highlight, 0 0 3px Highlight, 0 0 4px Highlight, 0 0 10px Highlight, 0 0 20px white;
-  text-shadow: 0 0 3px transparent;
+#allTabs-meta {
+  margin-bottom: 10px;
 }
 
-.ctrlTab-pagePointer {
-  margin: 0 1em 1em;
-  width: 1.5em;
-  height: 1.5em;
-  -moz-border-radius: .75em;
-  background: rgba(0, 0, 0, .5);
-  border: 1px solid rgba(255, 255, 255, .3);
-  cursor: pointer;
+#allTabs-filter {
+  -moz-margin-start: 24px;
+  -moz-margin-end: 0;
 }
 
-.ctrlTab-pagePointer[selected="true"] {
-  background: rgba(255, 255, 255, .6);
-  cursor: default;
+#allTabs-tab-close-button {
+  /*XXX without this, the closebutton can cause the panel to expand horizontally */
+  margin-right: -16px;
+}
+
+#allTabs-tab-close-button > .toolbarbutton-icon {
+  margin: 0;
+}
+
+.allTabs-preview:hover,
+.allTabs-preview[closebuttonhover] {
+  background-color: rgba(100%,100%,100%,.15);
+  -moz-border-radius: 6px;
+}
+
+.allTabs-preview:focus {
+  background-color: rgba(100%,100%,100%,.3);
+  -moz-border-radius: 6px;
+}
+
+.allTabs-preview-label {
+  -moz-transform: translate(0, -1px);
 }

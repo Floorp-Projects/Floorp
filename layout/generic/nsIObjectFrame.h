@@ -89,6 +89,11 @@ public:
    * is currently active in this frame.
    */
   virtual void StopPlugin() = 0;
+
+  /**
+   * Get the native widget for the plugin, if any.
+   */
+  virtual nsIWidget* GetWidget() = 0;
 };
 
 #endif /* nsIObjectFrame_h___ */

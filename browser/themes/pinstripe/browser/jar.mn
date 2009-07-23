@@ -30,6 +30,7 @@ classic.jar:
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
   skin/classic/browser/KUI-background.png
+  skin/classic/browser/KUI-close.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
   skin/classic/browser/page-livemarks.png
@@ -110,8 +111,6 @@ classic.jar:
   skin/classic/browser/preferences/Options.png              (preferences/Options.png)
   skin/classic/browser/preferences/saveFile.png             (preferences/saveFile.png)
   skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
-  skin/classic/browser/preferences/panebutton-active.png    (preferences/panebutton-active.png)
-  skin/classic/browser/preferences/panebutton-inactive.png  (preferences/panebutton-inactive.png)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-bkgnd-animate.png)

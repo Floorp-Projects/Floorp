@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Federico Mena-Quintero <federico@novell.com>
+ *   Joe Drew <joe@drew.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,22 +40,113 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "gfxidltypes.idl"
-#include "gfxIFormats.idl"
 
-interface gfxIImageFrame;
 interface imgIContainerObserver;
 
+%{C++
+#include "gfxImageSurface.h"
+#include "gfxContext.h"
+#include "gfxMatrix.h"
+#include "gfxRect.h"
+#include "gfxPattern.h"
+#include "gfxASurface.h"
+#include "nsRect.h"
+%}
+
+[ptr] native gfxImageSurface(gfxImageSurface);
+[ptr] native gfxASurface(gfxASurface);
+native gfxImageFormat(gfxASurface::gfxImageFormat);
+[ptr] native gfxContext(gfxContext);
+[ref] native gfxMatrix(gfxMatrix);
+[ref] native gfxRect(gfxRect);
+native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
+[ref] native nsIntRect(nsIntRect);
+
 /**
- * gfxIImageContainer interface
+ * imgIContainer is the interface that represents an image. It allows
+ * access to frames as Thebes surfaces, and permits users to extract subregions
+ * as other imgIContainers. It also allows drawing of images on to Thebes
+ * contexts.
  *
- * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 0.2
- * @see "gfx2"
+ * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(a4e9df32-f5d7-479f-9082-70e1fead23d5)]
+[scriptable, uuid(1bcf7a25-1356-47a8-bf80-e284989ea38f)]
 interface imgIContainer : nsISupports
 {
+  /**
+   * The width of the container rectangle.
+   */
+  readonly attribute PRInt32 width;
+
+  /**
+   * The height of the container rectangle.
+   */
+  readonly attribute PRInt32 height;
+
+  /**
+   * Whether this image is animated.
+   */
+  readonly attribute boolean animated;
+
+  /**
+   * Whether the current frame is opaque; that is, needs the background painted
+   * behind it.
+   */
+  readonly attribute boolean currentFrameIsOpaque;
+
+  /**
+   * Get a surface for the current frame. This may be a platform-native,
+   * optimized frame, so you cannot inspect its pixel data.
+   */
+  [noscript] readonly attribute gfxASurface currentFrame;
+
+  /**
+   * Create and return a new copy of the current frame that you can write to
+   * and otherwise inspect the pixels of.
+   */
+  [noscript] gfxImageSurface copyCurrentFrame();
+
+  /**
+   * Create a new imgContainer that contains only a single frame, which itself
+   * contains a subregion of the current frame.
+   *
+   * @param aRect the area of the current frame to be duplicated in the
+   *              returned imgContainer's frame.
+   */
+  [noscript] imgIContainer extractCurrentFrame([const] in nsIntRect aRect);
+
+  /**
+   * Draw the current frame on to the context specified.
+   *
+   * @param aContext The Thebex context to draw the image to.
+   * @param aFilter The filter to be used if we're scaling the image.
+   * @param aUserSpaceToImageSpace The transformation from user space (e.g.,
+   *                               appunits) to image space.
+   * @param aFill The area in the context to draw pixels to. Image will be
+   *              automatically tiled as necessary.
+   * @param @aSubimage The area of the image, in pixels, that we are allowed to
+   *                   sample from.
+   */
+  [noscript] void draw(in gfxContext aContext, in gfxGraphicsFilter aFilter,
+                       in gfxMatrix aUserSpaceToImageSpace, in gfxRect aFill,
+                       in nsIntRect aSubimage);
+
+
+  /************ Internal libpr0n use only below here. *****************/
+
+  /**
+   * Create a new \a aWidth x \a aHeight sized image container.
+   *
+   * @param aWidth The width of the container in which all the
+   *               frames will fit.
+   * @param aHeight The height of the container in which all the
+   *                frames will fit.
+   * @param aObserver Observer to send animation notifications to.
+   */
+  void init(in PRInt32 aWidth,
+            in PRInt32 aHeight,
+            in imgIContainerObserver aObserver);
+
   /** 
    * "Disposal" method indicates how the image should be handled before the
    *  subsequent image is displayed.
@@ -79,42 +171,6 @@ interface imgIContainer : nsISupports
                                             // based on its alpha, using a simple OVER operation
   
   /**
-   * Create a new \a aWidth x \a aHeight sized image container.
-   *
-   * @param aWidth The width of the container in which all the
-   *               gfxIImageFrame children will fit.
-   * @param aHeight The height of the container in which all the
-   *                gfxIImageFrame children will fit.
-   * @param aObserver Observer to send animation notifications to.
-   */
-  void init(in PRInt32 aWidth,
-            in PRInt32 aHeight,
-            in imgIContainerObserver aObserver);
-
-
-  /* this should probably be on the device context (or equiv) */
-  readonly attribute gfx_format preferredAlphaChannelFormat;
-
-  /**
-   * The width of the container rectangle.
-   */
-  readonly attribute PRInt32 width;
-
-  /**
-   * The height of the container rectangle.
-   */
-  readonly attribute PRInt32 height;
-
-
-  /**
-   * Get the current frame that would be drawn if the image was to be drawn now
-   */
-  readonly attribute gfxIImageFrame currentFrame;
-
-
-  readonly attribute unsigned long numFrames;
-
-  /**
    * Animation mode Constants
    *   0 = normal
    *   1 = don't animate
@@ -126,13 +182,54 @@ interface imgIContainer : nsISupports
 
   attribute unsigned short animationMode;
 
-  gfxIImageFrame getFrameAt(in unsigned long index);
+  /**
+   * The rectangle defining the location and size of the currently displayed frame.
+   * Should be an attribute, but can't be because of reference/pointer
+   * conflicts with native types in xpidl.
+   */
+  [noscript] void getCurrentFrameRect(in nsIntRect aFrameRect);
 
   /**
-   * Adds \a item to the end of the list of frames.
-   * @param item frame to add.
+   * The index of the current frame that would be drawn if the image was to be
+   * drawn now.
    */
-  void appendFrame(in gfxIImageFrame item);
+  readonly attribute unsigned long currentFrameIndex;
+
+  /**
+   * The total number of frames in this image.
+   */
+  readonly attribute unsigned long numFrames;
+
+  /**
+   * Get the size, in bytes, of a particular frame's image data.
+   */
+  unsigned long getFrameImageDataLength(in unsigned long framenumber);
+
+  void getFrameColormap(in unsigned long framenumber, 
+                        [array, size_is(paletteLength)] out PRUint32 paletteData,
+                        out unsigned long paletteLength);
+
+  void setFrameDisposalMethod(in unsigned long framenumber, in PRInt32 aDisposalMethod);
+  void setFrameBlendMethod(in unsigned long framenumber, in PRInt32 aBlendMethod);
+  void setFrameTimeout(in unsigned long framenumber, in PRInt32 aTimeout);
+  void setFrameHasNoAlpha(in unsigned long framenumber);
+
+  /**
+   * Create or re-use a frame at index aFrameNum. It is an error to call this with aFrameNum not in the range [0, numFrames].
+   */
+  [noscript] void ensureCleanFrame(in unsigned long aFramenum, in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfxImageFormat aFormat,
+                                   [array, size_is(imageLength)] out PRUint8 imageData, out unsigned long imageLength);
+
+  /**
+   * Adds to the end of the list of frames.
+   */
+  [noscript] void appendFrame(in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfxImageFormat aFormat,
+                              [array, size_is(imageLength)] out PRUint8 imageData, out unsigned long imageLength);
+  [noscript] void appendPalettedFrame(in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfxImageFormat aFormat, in PRUint8 aPaletteDepth, 
+                                      [array, size_is(imageLength)] out PRUint8 imageData, out unsigned long imageLength,
+                                      [array, size_is(paletteLength)] out PRUint32 paletteData, out unsigned long paletteLength);
+
+  [noscript] void frameUpdated(in unsigned long framenum, in nsIntRect aNewRect);
 
   /* notification when the current frame is done decoding */
   void endFrameDecode(in unsigned long framenumber);

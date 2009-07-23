@@ -51,3 +51,4 @@ patch -p3 <key_frame_seek.patch
 patch -p3 <offset_next.patch
 patch -p3 <bug487519.patch
 patch -p3 <bug496063.patch
+patch -p3 <oggz_os2.patch

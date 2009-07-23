@@ -56,11 +56,10 @@
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
 #endif
+#include "nsLayoutUtils.h"
 
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIImage.h"
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret)
@@ -71,7 +70,9 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mBuildCaret(aBuildCaret),
       mEventDelivery(aIsForEvents),
       mIsAtRootOfPseudoStackingContext(PR_FALSE),
-      mPaintAllFrames(PR_FALSE) {
+      mPaintAllFrames(PR_FALSE),
+      mAccurateVisibleRegions(PR_FALSE),
+      mInTransform(PR_FALSE) {
   PL_InitArenaPool(&mPool, "displayListArena", 1024, sizeof(void*)-1);
 
   nsPresContext* pc = aReferenceFrame->PresContext();
@@ -152,6 +153,13 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
+}
+
+PRBool
+nsDisplayListBuilder::IsMovingFrame(nsIFrame* aFrame)
+{
+  return mMovingFrame &&
+     nsLayoutUtils::IsAncestorFrameCrossDoc(mMovingFrame, aFrame, mReferenceFrame);
 }
 
 nsCaret *
@@ -248,18 +256,21 @@ nsDisplayItem::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
   nsIFrame* f = GetUnderlyingFrame();
   NS_ASSERTION(f, "GetUnderlyingFrame() must return non-null for leaf items");
-  PRBool isMoving = aBuilder->IsMovingFrame(f);
 
   if (IsOpaque(aBuilder)) {
     nsRect opaqueArea = bounds;
-    if (isMoving) {
+    if (aBuilder->IsMovingFrame(f)) {
       // The display list should include items for both the before and after
       // states (see nsLayoutUtils::ComputeRepaintRegionForCopy. So the
       // only area we want to cover is the area that was opaque in the
       // before state and in the after state.
       opaqueArea.IntersectRect(bounds - aBuilder->GetMoveDelta(), bounds);
     }
-    aVisibleRegion->SimpleSubtract(opaqueArea);
+    if (aBuilder->GetAccurateVisibleRegions()) {
+      aVisibleRegion->Sub(*aVisibleRegion, opaqueArea);
+    } else {
+      aVisibleRegion->SimpleSubtract(opaqueArea);
+    }
   }
 
   return PR_TRUE;
@@ -555,18 +566,12 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
       nsCOMPtr<imgIContainer> container;
       bottomLayer.mImage->GetImage(getter_AddRefs(container));
       if (container) {
-        PRUint32 nframes;
-        container->GetNumFrames(&nframes);
-        if (nframes == 1) {
-          nsCOMPtr<gfxIImageFrame> imgFrame;
-          container->GetCurrentFrame(getter_AddRefs(imgFrame));
-          if (imgFrame) {
-            nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
-
-            PRBool hasMask = img->GetHasAlphaMask();
-
-            return !hasMask;
-          }
+        PRBool animated;
+        container->GetAnimated(&animated);
+        if (!animated) {
+          PRBool isOpaque;
+          if (NS_SUCCEEDED(container->GetCurrentFrameIsOpaque(&isOpaque)))
+            return isOpaque;
         }
       }
     }
@@ -1023,7 +1028,11 @@ PRBool nsDisplayClip::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   PRBool anyVisible = nsDisplayWrapList::OptimizeVisibility(aBuilder, &rNew);
   nsRegion subtracted;
   subtracted.Sub(clipped, rNew);
-  aVisibleRegion->SimpleSubtract(subtracted);
+  if (aBuilder->GetAccurateVisibleRegions()) {
+    aVisibleRegion->Sub(*aVisibleRegion, subtracted);
+  } else {
+    aVisibleRegion->SimpleSubtract(subtracted);
+  }
   return anyVisible;
 }
 

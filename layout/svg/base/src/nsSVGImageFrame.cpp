@@ -35,19 +35,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsIDOMSVGMatrix.h"
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
 #include "nsStubImageDecoderObserver.h"
 #include "nsImageLoadingContent.h"
 #include "nsIDOMSVGImageElement.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGImageElement.h"
 #include "nsSVGUtils.h"
-#include "nsSVGMatrix.h"
 #include "gfxContext.h"
+#include "gfxMatrix.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIImage.h"
 
 class nsSVGImageFrame;
 
@@ -61,8 +58,7 @@ public:
   NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
                           const PRUnichar *statusArg);
   // imgIContainerObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
-                          nsRect * dirtyRect);
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, nsIntRect * dirtyRect);
   // imgIContainerObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest,
                               imgIContainer *aContainer);
@@ -114,7 +110,7 @@ public:
 #endif
 
 private:
-  already_AddRefed<nsIDOMSVGMatrix> GetImageTransform();
+  gfxMatrix GetImageTransform();
 
   nsCOMPtr<imgIDecoderObserver> mListener;
 
@@ -189,11 +185,9 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                                    aAttribute, aModType);
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGImageFrame::GetImageTransform()
 {
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
-
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
   element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
@@ -202,17 +196,12 @@ nsSVGImageFrame::GetImageTransform()
   mImageContainer->GetWidth(&nativeWidth);
   mImageContainer->GetHeight(&nativeHeight);
 
-  nsCOMPtr<nsIDOMSVGMatrix> trans, ctmXY, fini;
-  trans = nsSVGUtils::GetViewBoxTransform(width, height,
-                                          0, 0,
-                                          nativeWidth, nativeHeight,
-                                          element->mPreserveAspectRatio);
-  ctm->Translate(x, y, getter_AddRefs(ctmXY));
-  ctmXY->Multiply(trans, getter_AddRefs(fini));
+  gfxMatrix viewBoxTM =
+    nsSVGUtils::GetViewBoxTransform(width, height,
+                                    0, 0, nativeWidth, nativeHeight,
+                                    element->mPreserveAspectRatio);
 
-  nsIDOMSVGMatrix *retval = nsnull;
-  fini.swap(retval);
-  return retval;
+  return viewBoxTM * gfxMatrix().Translate(gfxPoint(x, y)) * GetCanvasTM();
 }
 
 //----------------------------------------------------------------------
@@ -243,16 +232,15 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
       currentRequest->GetImage(getter_AddRefs(mImageContainer));
   }
 
-  nsCOMPtr<gfxIImageFrame> currentFrame;
+  nsRefPtr<gfxASurface> currentFrame;
   if (mImageContainer)
     mImageContainer->GetCurrentFrame(getter_AddRefs(currentFrame));
 
-  nsRefPtr<gfxPattern> thebesPattern = nsnull;
-  if (currentFrame) {
-    nsCOMPtr<nsIImage> img(do_GetInterface(currentFrame));
-
-    img->GetPattern(getter_AddRefs(thebesPattern));
-  }
+  // We need to wrap the surface in a pattern to have somewhere to set the
+  // graphics filter.
+  nsRefPtr<gfxPattern> thebesPattern;
+  if (currentFrame)
+    thebesPattern = new gfxPattern(currentFrame);
 
   if (thebesPattern) {
 
@@ -268,8 +256,6 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
       nsSVGUtils::SetClipRect(gfx, GetCanvasTM(), clipRect);
     }
 
-    nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
-
     // fill-opacity doesn't affect <image>, so if we're allowed to
     // optimize group opacity, the opacity used for compositing the
     // image into the current canvas is just the group opacity.
@@ -279,10 +265,11 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
     }
 
     PRInt32 nativeWidth, nativeHeight;
-    currentFrame->GetWidth(&nativeWidth);
-    currentFrame->GetHeight(&nativeHeight);
+    mImageContainer->GetWidth(&nativeWidth);
+    mImageContainer->GetHeight(&nativeHeight);
 
-    nsSVGUtils::CompositePatternMatrix(gfx, thebesPattern, fini, nativeWidth, nativeHeight, opacity);
+    nsSVGUtils::CompositePatternMatrix(gfx, thebesPattern, GetImageTransform(),
+                                       nativeWidth, nativeHeight, opacity);
 
     if (GetStyleDisplay()->IsScrollableOverflow())
       gfx->Restore();
@@ -299,9 +286,7 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
     mImageContainer->GetWidth(&nativeWidth);
     mImageContainer->GetHeight(&nativeHeight);
 
-    nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
-
-    if (!nsSVGUtils::HitTestRect(fini,
+    if (!nsSVGUtils::HitTestRect(GetImageTransform(),
                                  0, 0, nativeWidth, nativeHeight,
                                  PresContext()->AppUnitsToDevPixels(aPoint.x),
                                  PresContext()->AppUnitsToDevPixels(aPoint.y))) {
@@ -384,8 +369,7 @@ NS_IMETHODIMP nsSVGImageListener::OnStopDecode(imgIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsSVGImageListener::FrameChanged(imgIContainer *aContainer,
-                                               gfxIImageFrame *newframe,
-                                               nsRect * dirtyRect)
+                                               nsIntRect * dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;

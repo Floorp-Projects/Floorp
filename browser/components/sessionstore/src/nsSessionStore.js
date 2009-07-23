@@ -1510,7 +1510,7 @@ SessionStoreService.prototype = {
     // get the domain for each URL
     function extractHosts(aEntry) {
       if (/^https?:\/\/(?:[^@\/\s]+@)?([\w.-]+)/.test(aEntry.url)) {
-        if (!hosts[RegExp.$1] && this._checkPrivacyLevel(this._getURIFromString(aEntry.url).schemeIs("https"))) {
+        if (!hosts[RegExp.$1] && _this._checkPrivacyLevel(_this._getURIFromString(aEntry.url).schemeIs("https"))) {
           hosts[RegExp.$1] = true;
         }
       }
@@ -1522,7 +1522,8 @@ SessionStoreService.prototype = {
       }
     }
 
-    this._windows[aWindow.__SSi].tabs.forEach(function(aTabData) { aTabData.entries.forEach(extractHosts, this); }, this);
+    var _this = this;
+    this._windows[aWindow.__SSi].tabs.forEach(function(aTabData) { aTabData.entries.forEach(extractHosts); });
   },
 
   /**
@@ -1550,6 +1551,7 @@ SessionStoreService.prototype = {
       aWindows[i].cookies = [];
 
     var jscookies = {};
+    var _this = this;
     // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
     var MAX_EXPIRY = Math.pow(2, 62);
     aWindows.forEach(function(aWindow) {
@@ -1557,7 +1559,7 @@ SessionStoreService.prototype = {
         var list = cm.getCookiesFromHost(host);
         while (list.hasMoreElements()) {
           var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
-          if (cookie.isSession && this._checkPrivacyLevel(cookie.isSecure)) {
+          if (cookie.isSession && _this._checkPrivacyLevel(cookie.isSecure)) {
             // use the cookie's host, path, and name as keys into a hash,
             // to make sure we serialize each cookie only once
             var isInHash = false;
@@ -1582,7 +1584,7 @@ SessionStoreService.prototype = {
           }
         }
       }
-    }, this);
+    });
 
     // don't include empty cookie sections
     for (i = 0; i < aWindows.length; i++)

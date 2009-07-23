@@ -98,8 +98,6 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "imgILoader.h"
-#include "nsIImage.h"
-#include "gfxIImageFrame.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -2446,7 +2444,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
 }
 
 // static
-already_AddRefed<nsIImage>
+already_AddRefed<imgIContainer>
 nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
                                     imgIRequest **aRequest)
 {
@@ -2470,26 +2468,11 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
     return nsnull;
   }
 
-  nsCOMPtr<gfxIImageFrame> imgFrame;
-  imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
-
-  if (!imgFrame) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
-
-  if (!ir) {
-    return nsnull;
-  }
-
   if (aRequest) {
     imgRequest.swap(*aRequest);
   }
 
-  nsIImage* image = nsnull;
-  CallGetInterface(ir.get(), &image);
-  return image;
+  return imgContainer.forget();
 }
 
 // static

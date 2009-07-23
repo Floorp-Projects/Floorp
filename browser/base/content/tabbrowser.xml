@@ -2879,8 +2879,11 @@
           <xul:stack align="center" pack="end" chromedir="&locale.dir;">
             <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
             <xul:toolbarbutton class="tabs-alltabs-button" anonid="alltabs-button"
-                               tooltiptext="&listAllTabs.label;"
-                               oncommand="ctrlTab.open(true);"/>
+                               type="menu"
+                               tooltiptext="&listAllTabs.label;">
+             <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
+                            position="after_end"/>
+            </xul:toolbarbutton>
           </xul:stack>
           <xul:toolbarbutton anonid="tabs-closebutton"
                              class="close-button tabs-closebutton" chromedir="&locale.dir;"/>
@@ -3293,25 +3296,6 @@
   <binding id="tabbrowser-alltabs-popup"
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation implements="nsIDOMEventListener">
-      <field name="_xulWindow">
-        null
-      </field>
-
-      <constructor><![CDATA[
-        // We cannot cache the XULBrowserWindow object itself since it might
-        // be set after this binding is constructed.
-        try {
-          this._xulWindow = 
-            window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIWebNavigation)
-                  .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-                  .treeOwner
-                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                  .getInterface(Components.interfaces.nsIXULWindow);
-        }
-        catch(ex) { }
-      ]]></constructor>
-
       <method name="_menuItemOnCommand">
         <parameter name="aEvent"/>
 
@@ -3471,9 +3455,6 @@
 
       <handler event="DOMMenuItemActive">
       <![CDATA[
-        if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
-          return;
-
         var tab = event.target.tab;
         if (tab) {
           var statusText = tab.linkedBrowser.currentURI.spec;
@@ -3484,16 +3465,13 @@
             statusText = " ";
           }
 
-          this._xulWindow.XULBrowserWindow.setOverLink(statusText, null);
+          XULBrowserWindow.setOverLink(statusText, null);
         }
       ]]></handler>
 
       <handler event="DOMMenuItemInactive">
       <![CDATA[
-        if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
-          return;
-
-        this._xulWindow.XULBrowserWindow.setOverLink("", null);
+        XULBrowserWindow.setOverLink("", null);
       ]]></handler>
 
     </handlers>

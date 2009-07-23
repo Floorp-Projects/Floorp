@@ -69,7 +69,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMETextTxn)
     *aInstancePtr = (void*)(IMETextTxn*)this;
     NS_ADDREF_THIS();
     return NS_OK;
-  }
+  } else
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,

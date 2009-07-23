@@ -806,7 +806,8 @@ void DebugCheckChildSize(nsIFrame*            aChild,
                          nsSize&              aAvailSize)
 {
   if ((aMet.width < 0) || (aMet.width > PROBABLY_TOO_LARGE)) {
-    printf("WARNING: cell content %p has large width %d \n", aChild, aMet.width);
+    printf("WARNING: cell content %p has large width %d \n",
+           static_cast<void*>(aChild), aMet.width);
   }
 }
 #endif
@@ -894,16 +895,16 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   nsIFrame* firstKid = mFrames.FirstChild();
   NS_ASSERTION(firstKid, "Frame construction error, a table cell always has an inner cell frame");
 
-  nscoord computedPaginatedHeight = 0;
-
   if (aReflowState.mFlags.mSpecialHeightReflow) {
     const_cast<nsHTMLReflowState&>(aReflowState).SetComputedHeight(mRect.height - topInset - bottomInset);
     DISPLAY_REFLOW_CHANGE();
   }
   else if (aPresContext->IsPaginated()) {
-    computedPaginatedHeight = CalcUnpaginagedHeight(aPresContext, (nsTableCellFrame&)*this, *tableFrame, topInset + bottomInset);
-    if (computedPaginatedHeight > 0) {
-      const_cast<nsHTMLReflowState&>(aReflowState).SetComputedHeight(computedPaginatedHeight);
+    nscoord computedUnpaginatedHeight =
+      CalcUnpaginagedHeight(aPresContext, (nsTableCellFrame&)*this,
+                            *tableFrame, topInset + bottomInset);
+    if (computedUnpaginatedHeight > 0) {
+      const_cast<nsHTMLReflowState&>(aReflowState).SetComputedHeight(computedUnpaginatedHeight);
       DISPLAY_REFLOW_CHANGE();
     }
   }      
@@ -945,7 +946,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     // Don't pass OVERFLOW_INCOMPLETE through tables until they can actually handle it
     //XXX should paginate overflow as overflow, but not in this patch (bug 379349)
     NS_FRAME_SET_INCOMPLETE(aStatus);
-    printf("Set table cell incomplete %p\n", this);
+    printf("Set table cell incomplete %p\n", static_cast<void*>(this));
   }
 
   // XXXbz is this invalidate actually needed, really?
