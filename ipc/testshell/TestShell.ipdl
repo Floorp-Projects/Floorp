@@ -37,10 +37,11 @@
 namespace mozilla {
 namespace ipc {
 
-rpc protocol TestShell
+sync protocol TestShell
 {
   child:
-    rpc SendCommand(String aCommand);
+    async SendCommand(String aCommand);
+    sync SendCommandWithResponse(String aCommand) returns (String aResponse);
 };
 
 } // namespace ipc

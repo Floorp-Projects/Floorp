@@ -53,13 +53,26 @@ TestShellChild::~TestShellChild()
 }
 
 nsresult
-TestShellChild::AnswerSendCommand(const String& aCommand)
+TestShellChild::RecvSendCommand(const String& aCommand)
 {
-  nsresult rv = mXPCShell->EvaluateString(aCommand) ? NS_OK : NS_ERROR_FAILURE;
-
   if (mXPCShell->IsQuitting()) {
-    MessageLoop::current()->Quit();
+    NS_WARNING("Commands sent after quit command issued!");
+    return NS_ERROR_UNEXPECTED;
   }
 
-  return rv;
+  return mXPCShell->EvaluateString(aCommand) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult
+TestShellChild::RecvSendCommandWithResponse(const String& aCommand,
+                                            String* aResponse)
+{
+  if (mXPCShell->IsQuitting()) {
+    NS_WARNING("Commands sent after quit command issued!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return mXPCShell->EvaluateString(aCommand, aResponse) ?
+         NS_OK :
+         NS_ERROR_FAILURE;
 }
