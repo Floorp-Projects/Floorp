@@ -52,7 +52,9 @@ public:
   TestShellChild();
   virtual ~TestShellChild();
 
-  virtual nsresult AnswerSendCommand(const String& aCommand);
+  virtual nsresult RecvSendCommand(const String& aCommand);
+  virtual nsresult RecvSendCommandWithResponse(const String& aCommand,
+                                               String* aResponse);
 
   void SetXPCShell(XPCShellEnvironment* aXPCShell) {
     mXPCShell = aXPCShell;

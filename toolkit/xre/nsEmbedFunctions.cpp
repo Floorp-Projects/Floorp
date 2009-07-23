@@ -435,7 +435,7 @@ TestShellMain(int argc, char** argv)
     return 1;
   }
 
-  if (!env->DefineSendCommand(&testShellParent)) {
+  if (!env->DefineIPCCommands(&testShellParent)) {
     NS_WARNING("DefineChildObject failed!");
     return 1;
   }

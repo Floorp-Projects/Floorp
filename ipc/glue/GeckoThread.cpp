@@ -75,11 +75,6 @@ GeckoThread::CleanUp()
 {
   mXREEmbed.Stop();
   NS_LogTerm();
-
-  // Maybe kill process?
-
-  // Call this last according to chrome source comments.
-  ChildThread::CleanUp();
 }
 
 //

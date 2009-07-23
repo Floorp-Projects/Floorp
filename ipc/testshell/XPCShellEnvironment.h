@@ -45,6 +45,8 @@
 #include "nsDebug.h"
 #include "nsAutoJSValHolder.h"
 
+#include "mozilla/ipc/TestShellProtocol.h"
+
 struct JSContext;
 struct JSObject;
 struct JSPrincipals;
@@ -54,6 +56,7 @@ class nsIJSContextStack;
 namespace mozilla {
 namespace ipc {
 
+class TestShellChild;
 class TestShellParent;
 
 class XPCShellEnvironment
@@ -65,11 +68,14 @@ public:
     void Process(const char* aFilename = nsnull,
                  JSBool aIsInteractive = JS_FALSE);
 
-    bool DefineSendCommand(TestShellParent* aParent);
+    bool DefineIPCCommands(TestShellChild* aChild);
+    bool DefineIPCCommands(TestShellParent* aParent);
 
-    JSBool DoSendCommand(JSString* aCommand);
+    JSBool DoSendCommand(const mozilla::ipc::String& aCommand,
+                         mozilla::ipc::String* aResult = nsnull);
 
-    bool EvaluateString(const std::string& aString);
+    bool EvaluateString(const mozilla::ipc::String& aString,
+                        mozilla::ipc::String* aResult = nsnull);
 
     JSPrincipals* GetPrincipal() {
         return mJSPrincipals;
