@@ -1421,12 +1421,7 @@ nsWindow::SetFocus(PRBool aRaise)
     IMESetFocus();
 #endif
 
-    LOGFOCUS(("  widget now has focus - dispatching events [%p]\n",
-              (void *)this));
-
-    DispatchActivateEvent();
-
-    LOGFOCUS(("  done dispatching events in SetFocus() [%p]\n",
+    LOGFOCUS(("  widget now has focus in SetFocus() [%p]\n",
               (void *)this));
 
     return NS_OK;
@@ -2769,13 +2764,13 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     mLastButtonPressTime = aEvent->time;
     mLastButtonReleaseTime = 0;
 
-    // check to see if we should rollup
     nsWindow *containerWindow = GetContainerWindow();
     if (!gFocusWindow && containerWindow) {
         gFocusWindow = this;
-        DispatchActivateEvent();
+        containerWindow->DispatchActivateEvent();
     }
 
+    // check to see if we should rollup
     PRBool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
                                        aEvent->y_root, PR_FALSE);
     if (gConsumeRollupEvent && rolledUp)
