@@ -333,7 +333,7 @@ var BrowserUI = {
     browsers.addEventListener("DOMWindowClose", this, true);
     browsers.addEventListener("UIShowSelect", this, false, true);
 
-    // XXX these really want to listen to only the the current browser
+    // XXX these really want to listen to only the current browser
     browsers.addEventListener("DOMTitleChanged", this, true);
     browsers.addEventListener("DOMLinkAdded", this, true);
 
