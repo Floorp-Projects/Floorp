@@ -452,10 +452,6 @@ protected:
     // shouldn't be automatically set to 0,0 for first show.
     PRPackedBool        mPlaced;
 
-    // Preferred sizes
-    PRUint32            mPreferredWidth;
-    PRUint32            mPreferredHeight;
-
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
     GtkWidget         *GetMozContainerWidget();

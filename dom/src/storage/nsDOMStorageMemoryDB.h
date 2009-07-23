@@ -66,7 +66,7 @@ public:
     nsStorageItemsTable mTable;
     PRInt32 mUsageDelta;
 
-    nsInMemoryStorage() { mTable.Init(20); }
+    nsInMemoryStorage() : mUsageDelta(0) { mTable.Init(20); }
   };
 
   /**

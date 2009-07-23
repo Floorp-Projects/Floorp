@@ -431,8 +431,6 @@ protected:
   char                  mLeadByte;
   PRUint32              mBlurSuppressLevel;
   nsContentType         mContentType;
-  PRInt32               mPreferredWidth;
-  PRInt32               mPreferredHeight;
   PRInt32               mMenuCmdId;
   HDWP                  mDeferredPositioner;
   DWORD_PTR             mOldStyle;

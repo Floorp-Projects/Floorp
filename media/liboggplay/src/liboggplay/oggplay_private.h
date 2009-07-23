@@ -69,6 +69,12 @@
 #endif
 #endif
 
+#ifdef OS2
+#define INCL_DOSSEMAPHORES
+#define INCL_DOSPROCESS
+#include <os2.h>
+#endif
+
 // for Win32 <windows.h> has to be included last
 #include "std_semaphore.h"
 

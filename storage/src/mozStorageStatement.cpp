@@ -620,7 +620,7 @@ Statement::EscapeStringForLIKE(const nsAString &aValue,
 
   _escapedString.Truncate(0);
 
-  for (PRInt32 i = 0; i < aValue.Length(); i++) {
+  for (PRUint32 i = 0; i < aValue.Length(); i++) {
     if (aValue[i] == aEscapeChar || aValue[i] == MATCH_ALL ||
         aValue[i] == MATCH_ONE)
       _escapedString += aEscapeChar;

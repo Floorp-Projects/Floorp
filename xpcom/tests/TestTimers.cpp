@@ -40,13 +40,15 @@
 #include "nsIThread.h"
 #include "nsITimer.h"
 
-#include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "prinrval.h"
 #include "prmon.h"
+
+#include "mozilla/Monitor.h"
+using namespace mozilla;
 
 typedef nsresult(*TestFuncPtr)();
 
@@ -81,22 +83,22 @@ class AutoCreateAndDestroyMonitor
 {
 public:
   AutoCreateAndDestroyMonitor() {
-    mMonitor = nsAutoMonitor::NewMonitor("TestTimers::AutoMon");
+    mMonitor = new Monitor("TestTimers::AutoMon");
     NS_ASSERTION(mMonitor, "Out of memory!");
   }
 
   ~AutoCreateAndDestroyMonitor() {
     if (mMonitor) {
-      nsAutoMonitor::DestroyMonitor(mMonitor);
+      delete mMonitor;
     }
   }
 
-  operator PRMonitor*() {
+  operator Monitor* () {
     return mMonitor;
   }
 
 private:
-  PRMonitor* mMonitor;
+  Monitor* mMonitor;
 };
 
 class TimerCallback : public nsITimerCallback
@@ -104,13 +106,13 @@ class TimerCallback : public nsITimerCallback
 public:
   NS_DECL_ISUPPORTS
 
-  TimerCallback(nsIThread** aThreadPtr, PRMonitor* aMonitor)
+  TimerCallback(nsIThread** aThreadPtr, Monitor* aMonitor)
   : mThreadPtr(aThreadPtr), mMonitor(aMonitor) { }
 
   NS_IMETHOD Notify(nsITimer* aTimer) {
     nsCOMPtr<nsIThread> current(do_GetCurrentThread());
 
-    nsAutoMonitor mon(mMonitor);
+    MonitorAutoEnter mon(*mMonitor);
 
     NS_ASSERTION(!*mThreadPtr, "Timer called back more than once!");
     *mThreadPtr = current;
@@ -121,7 +123,7 @@ public:
   }
 private:
   nsIThread** mThreadPtr;
-  PRMonitor* mMonitor;
+  Monitor* mMonitor;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(TimerCallback, nsITimerCallback)
@@ -154,7 +156,7 @@ TestTargetedTimers()
                                nsITimer::TYPE_ONE_SHOT);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoMonitor mon(newMon);
+  MonitorAutoEnter mon(*newMon);
   while (!notifiedThread) {
     mon.Wait();
   }

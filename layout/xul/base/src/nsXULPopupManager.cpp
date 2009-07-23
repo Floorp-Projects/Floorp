@@ -190,8 +190,7 @@ nsXULPopupManager::Rollup(PRUint32 aCount, nsIContent** aLastRolledUp)
       nsMenuChainItem* first = item;
       while (first->GetParent())
         first = first->GetParent();
-      if (first)
-        NS_ADDREF(*aLastRolledUp = first->Content());
+      NS_ADDREF(*aLastRolledUp = first->Content());
     }
 
     // if a number of popups to close has been specified, determine the last

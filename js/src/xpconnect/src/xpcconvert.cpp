@@ -583,8 +583,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return JS_FALSE;
         break;
     case nsXPTType::T_BOOL   :
-        if(!JS_ValueToBoolean(cx, s, (JSBool*)d))
-            return JS_FALSE;
+        JS_ValueToBoolean(cx, s, (JSBool*)d);
         break;
     case nsXPTType::T_CHAR   :
         {

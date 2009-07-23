@@ -261,7 +261,7 @@ NS_IMETHODIMP nsWebBrowser::AddWebBrowserListener(nsIWeakReference *aListener, c
 }
 
 NS_IMETHODIMP nsWebBrowser::BindListener(nsISupports *aListener, const nsIID& aIID) {
-    NS_ASSERTION(aListener, "invalid args");
+    NS_ENSURE_ARG_POINTER(aListener);
     NS_ASSERTION(mWebProgress, "this should only be called after we've retrieved a progress iface");
     nsresult rv = NS_OK;
 
@@ -269,6 +269,7 @@ NS_IMETHODIMP nsWebBrowser::BindListener(nsISupports *aListener, const nsIID& aI
     if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
         nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
         if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_STATE(mWebProgress);
         rv = mWebProgress->AddProgressListener(listener, nsIWebProgress::NOTIFY_ALL);
     }
     else if (aIID.Equals(NS_GET_IID(nsISHistoryListener))) {      
@@ -325,7 +326,7 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIWeakReference *aListener
 }
 
 NS_IMETHODIMP nsWebBrowser::UnBindListener(nsISupports *aListener, const nsIID& aIID) {
-    NS_ASSERTION(aListener, "invalid args");
+    NS_ENSURE_ARG_POINTER(aListener);
     NS_ASSERTION(mWebProgress, "this should only be called after we've retrieved a progress iface");
     nsresult rv = NS_OK;
 
@@ -333,6 +334,7 @@ NS_IMETHODIMP nsWebBrowser::UnBindListener(nsISupports *aListener, const nsIID& 
     if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
         nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
         if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_STATE(mWebProgress);
         rv = mWebProgress->RemoveProgressListener(listener);
     }
     else if (aIID.Equals(NS_GET_IID(nsISHistoryListener))) {
@@ -353,14 +355,7 @@ NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(PRBool aEnable)
     nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(mDocShell, &rv));
     if (NS_FAILED(rv)) return rv;
     
-    if (aEnable) {
-        rv = dsHistory->SetUseGlobalHistory(PR_TRUE);
-    }
-    else {
-        rv = dsHistory->SetUseGlobalHistory(PR_FALSE);
-    }
-       
-    return rv;
+    return dsHistory->SetUseGlobalHistory(aEnable);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow)
@@ -972,7 +967,7 @@ NS_IMETHODIMP nsWebBrowser::SaveURI(
     // Create a throwaway persistence object to do the work
     nsresult rv;
     mPersist = do_CreateInstance(NS_WEBBROWSERPERSIST_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, rv);
     mPersist->SetProgressListener(this);
     mPersist->SetPersistFlags(mPersistFlags);
     mPersist->GetCurrentState(&mPersistCurrentState);
@@ -1006,7 +1001,7 @@ NS_IMETHODIMP nsWebBrowser::SaveChannel(
     // Create a throwaway persistence object to do the work
     nsresult rv;
     mPersist = do_CreateInstance(NS_WEBBROWSERPERSIST_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, rv);
     mPersist->SetProgressListener(this);
     mPersist->SetPersistFlags(mPersistFlags);
     mPersist->GetCurrentState(&mPersistCurrentState);
@@ -1058,7 +1053,7 @@ NS_IMETHODIMP nsWebBrowser::SaveDocument(
     // Create a throwaway persistence object to do the work
     nsresult rv;
     mPersist = do_CreateInstance(NS_WEBBROWSERPERSIST_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, rv);
     mPersist->SetProgressListener(this);
     mPersist->SetPersistFlags(mPersistFlags);
     mPersist->GetCurrentState(&mPersistCurrentState);
@@ -1119,13 +1114,15 @@ NS_IMETHODIMP nsWebBrowser::Create()
 {
    NS_ENSURE_STATE(!mDocShell && (mParentNativeWindow || mParentWidget));
 
-   NS_ENSURE_SUCCESS(EnsureDocShellTreeOwner(), NS_ERROR_FAILURE);
+    nsresult rv = EnsureDocShellTreeOwner();
+    NS_ENSURE_SUCCESS(rv, rv);
 
    nsCOMPtr<nsIWidget> docShellParentWidget(mParentWidget);
    if(!mParentWidget) // We need to create a widget
       {
       // Create the widget
-      NS_ENSURE_TRUE(mInternalWidget = do_CreateInstance(kChildCID), NS_ERROR_FAILURE);
+        mInternalWidget = do_CreateInstance(kChildCID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
 
       docShellParentWidget = mInternalWidget;
       nsWidgetInitData  widgetInit;
@@ -1142,12 +1139,15 @@ NS_IMETHODIMP nsWebBrowser::Create()
                               nsnull, nsnull, nsnull, &widgetInit);  
       }
 
-   nsCOMPtr<nsIDocShell> docShell(do_CreateInstance("@mozilla.org/docshell;1"));
-   NS_ENSURE_SUCCESS(SetDocShell(docShell), NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDocShell> docShell(do_CreateInstance("@mozilla.org/docshell;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = SetDocShell(docShell);
+    NS_ENSURE_SUCCESS(rv, rv);
 
    // get the system default window background colour
    {
       nsCOMPtr<nsILookAndFeel> laf = do_GetService(kLookAndFeelCID);
+        if (laf)
       laf->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackgroundColor);
    }
 
@@ -1202,18 +1202,19 @@ NS_IMETHODIMP nsWebBrowser::Create()
    // events from subframes. To solve that we install our own chrome event handler
    // that always gets called (even for subframes) for any bubbling event.
 
-   if(!mInitInfo->sessionHistory)
-      mInitInfo->sessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID);
-   NS_ENSURE_TRUE(mInitInfo->sessionHistory, NS_ERROR_FAILURE);
+    if (!mInitInfo->sessionHistory) {
+        mInitInfo->sessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
    mDocShellAsNav->SetSessionHistory(mInitInfo->sessionHistory);
    
    // Hook up global history. Do not fail if we can't - just warn.
-   nsresult rv = EnableGlobalHistory(mShouldEnableHistory);
+    rv = EnableGlobalHistory(mShouldEnableHistory);
    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
 
    NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);
 
-   // Hook into the OnSecurirtyChange() notification for lock/unlock icon
+    // Hook into the OnSecurityChange() notification for lock/unlock icon
    // updates
    nsCOMPtr<nsIDOMWindow> domWindow;
    rv = GetContentDOMWindow(getter_AddRefs(domWindow));
@@ -1224,7 +1225,8 @@ NS_IMETHODIMP nsWebBrowser::Create()
        // and calls docShell->SetSecurityUI(this);
        nsCOMPtr<nsISecureBrowserUI> securityUI =
            do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
-       if (NS_SUCCEEDED(rv)) securityUI->Init(domWindow);
+        if (NS_SUCCEEDED(rv))
+            securityUI->Init(domWindow);
    }
 
    mDocShellTreeOwner->AddToWatcher(); // evil twin of Remove in SetDocShell(0)
@@ -1827,6 +1829,9 @@ NS_IMETHODIMP nsWebBrowser::OpenStream(nsIURI *aBaseURI, const nsACString& aCont
 
   if (!mStream) {
     mStream = new nsEmbedStream();
+        if (!mStream)
+             return NS_ERROR_OUT_OF_MEMORY;
+
     mStreamGuard = do_QueryInterface(mStream);
     mStream->InitOwner(this);
     rv = mStream->Init();

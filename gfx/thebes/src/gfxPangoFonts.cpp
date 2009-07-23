@@ -100,6 +100,7 @@ static cairo_scaled_font_t *CreateScaledFont(FcPattern *aPattern);
 
 static PangoFontMap *gPangoFontMap;
 static PangoFontMap *GetPangoFontMap();
+static PRBool gPangoFontHasFontMapProperty;
 
 static FT_Library gFTLibrary;
 static nsILanguageAtomService* gLangService;
@@ -644,11 +645,24 @@ struct gfxPangoFcFont {
         FcPatternReference(aRequestedPattern);
         font->mRequestedPattern = aRequestedPattern;
 
-        // PangoFcFont::get_coverage wants an FcFontMap.  (PangoFcFontMap
-        // usually sets this after calling PangoFcFontMap::create_font().)
+        // PangoFcFont::get_coverage wants a PangoFcFontMap.  (PangoFcFontMap
+        // would usually set this after calling PangoFcFontMap::create_font()
+        // or new_font().)
+        PangoFontMap *fontmap = GetPangoFontMap();
+        // In Pango-1.24, this is a property; by setting the property, the
+        // PangoFcFont base class manages the pointer (as a weak reference).
         PangoFcFont *fc_font = &font->parent_instance;
-        fc_font->fontmap = GetPangoFontMap();
-        g_object_ref(fc_font->fontmap);
+        if (gPangoFontHasFontMapProperty) {
+            g_object_set(font, "fontmap", fontmap, NULL);
+        } else {
+            // In Pango versions up to 1.20.5, the parent class will decrement
+            // the reference count of the fontmap during shutdown() or
+            // finalize() of the font.  In Pango 1.22.x versions this no
+            // longer happens, so we'll end up leaking the (singleton)
+            // fontmap.
+            fc_font->fontmap = fontmap;
+            g_object_ref(fc_font->fontmap);
+        }
 
         return nsReturnRef<PangoFont>(PANGO_FONT(font));
     }
@@ -724,8 +738,6 @@ gfx_pango_fc_font_finalize(GObject *object)
     if (self->mCoverage)
         pango_coverage_unref(self->mCoverage);
     NS_IF_RELEASE(self->mGfxFont);
-
-    // The parent class removes the reference to parent_instance->fontmap.
 
     G_OBJECT_CLASS(gfx_pango_fc_font_parent_class)->finalize(object);
 }
@@ -921,6 +933,10 @@ gfx_pango_fc_font_class_init (gfxPangoFcFontClass *klass)
     fc_font_class->lock_face = gfx_pango_fc_font_lock_face;
     fc_font_class->unlock_face = gfx_pango_fc_font_unlock_face;
     fc_font_class->get_glyph = gfx_pango_fc_font_get_glyph;
+
+    gPangoFontHasFontMapProperty =
+        g_object_class_find_property(G_OBJECT_CLASS(gfx_pango_fc_font_parent_class),
+                                     "fontmap") != NULL;
 }
 
 /**
@@ -2105,7 +2121,8 @@ gfxPangoFontGroup::Shutdown()
     if (gPangoFontMap) {
         if (PANGO_IS_FC_FONT_MAP (gPangoFontMap)) {
             // This clears circular references from the fontmap to itself
-            // through its fonts.
+            // through its fonts.  (This is actually unnecessary with Pango
+            // versions >= 1.22.)
             pango_fc_font_map_shutdown(PANGO_FC_FONT_MAP(gPangoFontMap));
         }
         g_object_unref(gPangoFontMap);

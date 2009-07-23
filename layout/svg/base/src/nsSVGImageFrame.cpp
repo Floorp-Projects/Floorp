@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsIDOMSVGMatrix.h"
 #include "imgIContainer.h"
 #include "nsStubImageDecoderObserver.h"
 #include "nsImageLoadingContent.h"
@@ -43,8 +42,8 @@
 #include "nsLayoutUtils.h"
 #include "nsSVGImageElement.h"
 #include "nsSVGUtils.h"
-#include "nsSVGMatrix.h"
 #include "gfxContext.h"
+#include "gfxMatrix.h"
 #include "nsIInterfaceRequestorUtils.h"
 
 class nsSVGImageFrame;
@@ -111,7 +110,7 @@ public:
 #endif
 
 private:
-  already_AddRefed<nsIDOMSVGMatrix> GetImageTransform();
+  gfxMatrix GetImageTransform();
 
   nsCOMPtr<imgIDecoderObserver> mListener;
 
@@ -186,11 +185,9 @@ nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                                    aAttribute, aModType);
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGImageFrame::GetImageTransform()
 {
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = NS_NewSVGMatrix(GetCanvasTM());
-
   float x, y, width, height;
   nsSVGImageElement *element = static_cast<nsSVGImageElement*>(mContent);
   element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
@@ -199,17 +196,12 @@ nsSVGImageFrame::GetImageTransform()
   mImageContainer->GetWidth(&nativeWidth);
   mImageContainer->GetHeight(&nativeHeight);
 
-  nsCOMPtr<nsIDOMSVGMatrix> trans, ctmXY, fini;
-  trans = nsSVGUtils::GetViewBoxTransform(width, height,
-                                          0, 0,
-                                          nativeWidth, nativeHeight,
-                                          element->mPreserveAspectRatio);
-  ctm->Translate(x, y, getter_AddRefs(ctmXY));
-  ctmXY->Multiply(trans, getter_AddRefs(fini));
+  gfxMatrix viewBoxTM =
+    nsSVGUtils::GetViewBoxTransform(width, height,
+                                    0, 0, nativeWidth, nativeHeight,
+                                    element->mPreserveAspectRatio);
 
-  nsIDOMSVGMatrix *retval = nsnull;
-  fini.swap(retval);
-  return retval;
+  return viewBoxTM * gfxMatrix().Translate(gfxPoint(x, y)) * GetCanvasTM();
 }
 
 //----------------------------------------------------------------------
@@ -264,8 +256,6 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
       nsSVGUtils::SetClipRect(gfx, GetCanvasTM(), clipRect);
     }
 
-    nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
-
     // fill-opacity doesn't affect <image>, so if we're allowed to
     // optimize group opacity, the opacity used for compositing the
     // image into the current canvas is just the group opacity.
@@ -278,7 +268,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
     mImageContainer->GetWidth(&nativeWidth);
     mImageContainer->GetHeight(&nativeHeight);
 
-    nsSVGUtils::CompositePatternMatrix(gfx, thebesPattern, fini, nativeWidth, nativeHeight, opacity);
+    nsSVGUtils::CompositePatternMatrix(gfx, thebesPattern, GetImageTransform(),
+                                       nativeWidth, nativeHeight, opacity);
 
     if (GetStyleDisplay()->IsScrollableOverflow())
       gfx->Restore();
@@ -295,9 +286,7 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
     mImageContainer->GetWidth(&nativeWidth);
     mImageContainer->GetHeight(&nativeHeight);
 
-    nsCOMPtr<nsIDOMSVGMatrix> fini = GetImageTransform();
-
-    if (!nsSVGUtils::HitTestRect(fini,
+    if (!nsSVGUtils::HitTestRect(GetImageTransform(),
                                  0, 0, nativeWidth, nativeHeight,
                                  PresContext()->AppUnitsToDevPixels(aPoint.x),
                                  PresContext()->AppUnitsToDevPixels(aPoint.y))) {
