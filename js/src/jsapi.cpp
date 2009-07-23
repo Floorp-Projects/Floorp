@@ -79,6 +79,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jstask.h"
 #include "jstracer.h"
 #include "jsdbgapi.h"
 #include "prmjtime.h"
@@ -817,6 +818,9 @@ JS_NewRuntime(uint32 maxbytes)
     rt->debuggerLock = JS_NEW_LOCK();
     if (!rt->debuggerLock)
         goto bad;
+    rt->deallocatorThread = new JSBackgroundThread();
+    if (!rt->deallocatorThread || !rt->deallocatorThread->init())
+        goto bad;
 #endif
     if (!js_InitPropertyTree(rt))
         goto bad;
@@ -886,6 +890,10 @@ JS_DestroyRuntime(JSRuntime *rt)
         JS_DESTROY_CONDVAR(rt->titleSharingDone);
     if (rt->debuggerLock)
         JS_DESTROY_LOCK(rt->debuggerLock);
+    if (rt->deallocatorThread) {
+        rt->deallocatorThread->cancel();
+        delete rt->deallocatorThread;
+    }
 #endif
     js_FinishPropertyTree(rt);
     free(rt);
@@ -1839,8 +1847,8 @@ JS_malloc(JSContext *cx, size_t nbytes)
     void *p;
 
     JS_ASSERT(nbytes != 0);
-    if (nbytes == 0)
-        nbytes = 1;
+    if (nbytes < sizeof(jsuword))
+        nbytes = sizeof(jsuword);
 
     p = malloc(nbytes);
     if (!p) {
