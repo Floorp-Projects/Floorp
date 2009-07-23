@@ -519,15 +519,21 @@ __try {
     nsAutoString roleString;
     if (msaaRole != ROLE_SYSTEM_CLIENT &&
         !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString)) {
+      nsIDocument * document = content->GetCurrentDoc();
+      if (!document)
+        return E_FAIL;
+
       nsINodeInfo *nodeInfo = content->NodeInfo();
       nodeInfo->GetName(roleString);
-      nsAutoString nameSpaceURI;
-      nodeInfo->GetNamespaceURI(nameSpaceURI);
-      if (!nameSpaceURI.IsEmpty()) {
-        // Only append name space if different from that of current document
+
+      // Only append name space if different from that of current document.
+      if (!nodeInfo->NamespaceEquals(document->GetDefaultNamespaceID())) {
+        nsAutoString nameSpaceURI;
+        nodeInfo->GetNamespaceURI(nameSpaceURI);
         roleString += NS_LITERAL_STRING(", ") + nameSpaceURI;
       }
     }
+
     if (!roleString.IsEmpty()) {
       pvarRole->vt = VT_BSTR;
       pvarRole->bstrVal = ::SysAllocString(roleString.get());
