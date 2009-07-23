@@ -2481,6 +2481,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIContent*              aDocEle
 
   *aNewFrame = nsnull;
 
+  // Make sure to call PropagateScrollToViewport before
+  // SetUpDocElementContainingBlock, since it sets up our scrollbar state
+  // properly.
+  nsIContent* propagatedScrollFrom = PropagateScrollToViewport();
+
   SetUpDocElementContainingBlock(aDocElement);
 
   NS_ASSERTION(mDocElementContainingBlock, "Should have parent by now");
@@ -2531,12 +2536,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIContent*              aDocEle
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
 
 #ifdef DEBUG
-  PRBool propagatedScrollToViewport =
-    PropagateScrollToViewport() == aDocElement;
-
   NS_ASSERTION(!display->IsScrollableOverflow() || 
                state.mPresContext->IsPaginated() ||
-               propagatedScrollToViewport,
+               propagatedScrollFrom == aDocElement,
                "Scrollbars should have been propagated to the viewport");
 #endif
 
