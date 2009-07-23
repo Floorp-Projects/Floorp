@@ -56,10 +56,10 @@ public:
   // nsSVGClipPathFrame methods:
   nsresult ClipPaint(nsSVGRenderState* aContext,
                      nsIFrame* aParent,
-                     nsIDOMSVGMatrix *aMatrix);
+                     const gfxMatrix &aMatrix);
 
   PRBool ClipHitTest(nsIFrame* aParent,
-                     nsIDOMSVGMatrix *aMatrix,
+                     const gfxMatrix &aMatrix,
                      const nsPoint &aPoint);
 
   // Check if this clipPath is made up of more than one geometry object.
