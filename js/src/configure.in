@@ -661,11 +661,8 @@ if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
 
-MOZ_PATH_PROGS(NSINSTALL_BIN, nsinstall )
 if test -z "$COMPILE_ENVIRONMENT"; then
-if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
-fi
 fi
 AC_SUBST(NSINSTALL_BIN)
 
@@ -1975,9 +1972,6 @@ case "$target" in
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS
-        _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
@@ -2729,52 +2723,6 @@ else
 fi
 
 AC_LANG_C
-
-dnl Check for usable wchar_t (2 bytes, unsigned)
-dnl (we really don't need the unsignedness check anymore)
-dnl ========================================================
-
-AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
-    ac_cv_have_usable_wchar_v2,
-    [AC_TRY_COMPILE([#include <stddef.h>
-                     $configure_static_assert_macros],
-                    [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
-                     CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
-                    ac_cv_have_usable_wchar_v2="yes",
-                    ac_cv_have_usable_wchar_v2="no")])
-if test "$ac_cv_have_usable_wchar_v2" = "yes"; then
-    AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
-    HAVE_CPP_2BYTE_WCHAR_T=1
-else
-dnl This is really gcc-only
-dnl Do this test using CXX only since some versions of gcc
-dnl 2.95-2.97 have a signed wchar_t in c++ only and some versions
-dnl only have short-wchar support for c++.
-dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
-
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS -fshort-wchar"
-
-    AC_CACHE_CHECK(for compiler -fshort-wchar option, 
-        ac_cv_have_usable_wchar_option_v2,
-        [AC_TRY_LINK([#include <stddef.h>
-                      $configure_static_assert_macros],
-                     [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
-                      CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
-                     ac_cv_have_usable_wchar_option_v2="yes",
-                     ac_cv_have_usable_wchar_option_v2="no")])
-
-    if test "$ac_cv_have_usable_wchar_option_v2" = "yes"; then
-        AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
-        HAVE_CPP_2BYTE_WCHAR_T=1
-        WCHAR_CFLAGS="-fshort-wchar"
-    else    
-        CXXFLAGS=$_SAVE_CXXFLAGS
-    fi
-    AC_LANG_RESTORE
-fi
 
 dnl Check for .hidden assembler directive and visibility attribute.
 dnl Borrowed from glibc configure.in
@@ -4859,12 +4807,9 @@ if test "$_cpp_md_flag"; then
   fi
 else
   COMPILER_DEPEND=
-  dnl Don't override this for MSVC
-  if test -z "$_WIN32_MSVC"; then
-    _USE_CPP_INCLUDE_FLAG=
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-    _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-  fi
+  _USE_CPP_INCLUDE_FLAG=
+  _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+  _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 fi
 fi # MOZ_AUTO_DEPS
 MDDEPDIR='.deps'
@@ -5076,7 +5021,6 @@ AC_SUBST(COMPILE_CXXFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 AC_SUBST(CROSS_COMPILE)
-AC_SUBST(WCHAR_CFLAGS)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)

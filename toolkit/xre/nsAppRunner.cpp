@@ -112,6 +112,11 @@
 
 #ifdef XP_WIN
 #include "nsIWinAppHelper.h"
+#include <windows.h>
+
+#ifndef PROCESS_DEP_ENABLE
+#define PROCESS_DEP_ENABLE 0x1
+#endif
 #endif
 
 #include "nsCRT.h"
@@ -2565,6 +2570,10 @@ PRBool nspr_use_zone_allocator = PR_FALSE;
 #define MOZ_SPLASHSCREEN_UPDATE(_i)  do { } while(0)
 #endif
 
+#ifdef XP_WIN
+typedef BOOL (WINAPI* SetProcessDEPPolicyFunc)(DWORD dwFlags);
+#endif
+
 int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
@@ -2573,6 +2582,20 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     nsSplashScreen::GetOrCreate();
   if (splashScreen)
     splashScreen->Open();
+#endif
+
+#ifdef XP_WIN
+  /* On Windows XPSP3 and Windows Vista if DEP is configured off-by-default
+     we still want DEP protection: enable it explicitly and programmatically.
+     
+     This function is not available on WinXPSP2 so we dynamically load it.
+  */
+
+  HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+  SetProcessDEPPolicyFunc _SetProcessDEPPolicy =
+    (SetProcessDEPPolicyFunc) GetProcAddress(kernel32, "SetProcessDEPPolicy");
+  if (_SetProcessDEPPolicy)
+    _SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
 #endif
 
   nsresult rv;

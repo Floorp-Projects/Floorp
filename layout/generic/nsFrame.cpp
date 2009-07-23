@@ -109,7 +109,6 @@
 #include "nsIServiceManager.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "gfxIImageFrame.h"
 #include "nsILookAndFeel.h"
 #include "nsLayoutCID.h"
 #include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
@@ -962,6 +961,22 @@ nsFrame::HasBorder() const
 }
 
 nsresult
+nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
+                                        const nsDisplayListSet& aLists,
+                                        PRBool                  aForceBackground)
+{
+  // Here we don't try to detect background propagation. Frames that might
+  // receive a propagated background should just set aForceBackground to
+  // PR_TRUE.
+  if (aBuilder->IsForEventDelivery() || aForceBackground ||
+      !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
+    return aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBackground(this));
+  }
+  return NS_OK;
+}
+
+nsresult
 nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
                                         PRBool                  aForceBackground)
@@ -979,24 +994,18 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Here we don't try to detect background propagation. Frames that might
-  // receive a propagated background should just set aForceBackground to
-  // PR_TRUE.
-  if (aBuilder->IsForEventDelivery() || aForceBackground ||
-      !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBackground(this));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv =
+    DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (hasBoxShadow) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBoxShadowInner(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
   if (HasBorder()) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBorder(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1244,13 +1253,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       ApplyAbsPosClipping(aBuilder, disp, this, &absPosClip);
   nsRect dirtyRect = aDirtyRect;
 
+  PRBool inTransform = aBuilder->IsInTransform();
   /* If we're being transformed, we need to invert the matrix transform so that we don't 
    * grab points in the wrong coordinate system!
    */
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
-      disp->HasTransform())
+      disp->HasTransform()) {
     dirtyRect = nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0));
-  
+    inTransform = PR_TRUE;
+  }
+
   if (applyAbsPosClipping) {
     dirtyRect.IntersectRect(dirtyRect,
                             absPosClip - aBuilder->ToReferenceFrame(this));
@@ -1268,6 +1280,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsresult rv;
   {    
     nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, PR_TRUE);
+    nsDisplayListBuilder::AutoInTransformSetter
+      inTransformSetter(aBuilder, inTransform);
     rv = BuildDisplayList(aBuilder, dirtyRect, set);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3604,25 +3618,32 @@ nsRect nsIFrame::GetScreenRectInAppUnitsExternal() const
 
 nsRect nsIFrame::GetScreenRectInAppUnits() const
 {
-  nsRect retval(0,0,0,0);
-  nsPoint toViewOffset(0,0);
-  nsIView* view = GetClosestView(&toViewOffset);
-
-  if (view) {
-    nsPoint toWidgetOffset(0,0);
-    nsIWidget* widget = view->GetNearestWidget(&toWidgetOffset);
-
-    if (widget) {
-      nsIntPoint screenPoint = widget->WidgetToScreenOffset();
-
-      retval = mRect;
-      retval.MoveTo(toViewOffset + toWidgetOffset);
-      retval.x += PresContext()->DevPixelsToAppUnits(screenPoint.x);
-      retval.y += PresContext()->DevPixelsToAppUnits(screenPoint.y);
+  nsPresContext* presContext = PresContext();
+  nsIFrame* rootFrame =
+    presContext->PresShell()->FrameManager()->GetRootFrame();
+  nsPoint rootScreenPos(0, 0);
+  nsPoint rootFrameOffsetInParent(0, 0);
+  nsIFrame* rootFrameParent =
+    nsLayoutUtils::GetCrossDocParentFrame(rootFrame, &rootFrameOffsetInParent);
+  if (rootFrameParent) {
+    nsRect parentScreenRectAppUnits = rootFrameParent->GetScreenRectInAppUnits();
+    nsPresContext* parentPresContext = rootFrameParent->PresContext();
+    double parentScale = double(presContext->AppUnitsPerDevPixel())/
+        parentPresContext->AppUnitsPerDevPixel();
+    nsPoint rootPt = parentScreenRectAppUnits.TopLeft() + rootFrameOffsetInParent;
+    rootScreenPos.x = NS_round(parentScale*rootPt.x);
+    rootScreenPos.y = NS_round(parentScale*rootPt.y);
+  } else {
+    nsCOMPtr<nsIWidget> rootWidget;
+    presContext->PresShell()->GetViewManager()->GetRootWidget(getter_AddRefs(rootWidget));
+    if (rootWidget) {
+      nsIntPoint rootDevPx = rootWidget->WidgetToScreenOffset();
+      rootScreenPos.x = presContext->DevPixelsToAppUnits(rootDevPx.x);
+      rootScreenPos.y = presContext->DevPixelsToAppUnits(rootDevPx.y);
     }
   }
 
-  return retval;
+  return nsRect(rootScreenPos + GetOffsetTo(rootFrame), GetSize());
 }
 
 // Returns the offset from this frame to the closest geometric parent that

@@ -58,7 +58,6 @@
 #include "nsPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
-#include "nsIImage.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsStyleConsts.h"
@@ -543,7 +542,6 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
 }
 
 NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIContainer *container,
-                                            gfxIImageFrame *newframe,
                                             nsIntRect *dirtyRect)
 {
   nsBoxLayoutState state(PresContext());
@@ -591,12 +589,11 @@ NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request,
 }
 
 NS_IMETHODIMP nsImageBoxListener::FrameChanged(imgIContainer *container,
-                                               gfxIImageFrame *newframe,
                                                nsIntRect *dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  return mFrame->FrameChanged(container, newframe, dirtyRect);
+  return mFrame->FrameChanged(container, dirtyRect);
 }
 

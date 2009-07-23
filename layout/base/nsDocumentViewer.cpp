@@ -357,16 +357,27 @@ private:
    * Creates a view manager, root view, and widget for the root view, setting
    * mViewManager and mWindow.
    * @param aSize the initial size in appunits
+   * @param aContainerView the container view to hook our root view up
+   * to as a child, or null if this will be the root view manager
    */
-  nsresult MakeWindow(const nsSize& aSize);
+  nsresult MakeWindow(const nsSize& aSize, nsIView* aContainerView);
+
+  /**
+   * Find the view to use as the container view for MakeWindow. Returns
+   * null if this will be the root of a view manager hierarchy. In that
+   * case, if mParentWidget is null then this document should not even
+   * be displayed.
+   */
+  nsIView* FindContainerView();
 
   /**
    * Create our device context
    */
-  nsresult CreateDeviceContext(nsIWidget* aWidget);
+  nsresult CreateDeviceContext(nsIView* aContainerView);
 
   /**
-   * Make sure to set up mDeviceContext as needed before calling this
+   * If aDoCreation is true, this creates the device context, creates a
+   * prescontext if necessary, and calls MakeWindow.
    */
   nsresult InitInternal(nsIWidget* aParentWidget,
                         nsISupports *aState,
@@ -424,7 +435,7 @@ protected:
   // the following six items are explicitly in this order
   // so they will be destroyed in the reverse order (pinkerton, scc)
   nsCOMPtr<nsIDocument>    mDocument;
-  nsCOMPtr<nsIWidget>      mWindow;      // ??? should we really own it?
+  nsCOMPtr<nsIWidget>      mWindow;      // may be null
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsPresContext> mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
@@ -436,6 +447,8 @@ protected:
   nsCOMPtr<nsISHEntry> mSHEntry;
 
   nsIWidget* mParentWidget; // purposely won't be ref counted.  May be null
+
+  nsIntRect mBounds;
 
   // mTextZoom/mPageZoom record the textzoom/pagezoom of the first (galley)
   // presshell only.
@@ -680,9 +693,6 @@ NS_IMETHODIMP
 DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                          const nsIntRect& aBounds)
 {
-  nsresult rv = CreateDeviceContext(aParentWidget);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
   return InitInternal(aParentWidget, nsnull, aBounds, PR_TRUE, PR_FALSE);
 }
 
@@ -724,11 +734,8 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReena
   mPresShell->BeginObservingDocument();
 
   // Initialize our view manager
-  nsIntRect bounds;
-  mWindow->GetBounds(bounds);
-
-  nscoord width = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * bounds.width;
-  nscoord height = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * bounds.height;
+  nscoord width = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * mBounds.width;
+  nscoord height = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * mBounds.height;
 
   mViewManager->DisableRefresh();
   mViewManager->SetWindowDimensions(width, height);
@@ -809,6 +816,16 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReena
   return NS_OK;
 }
 
+static nsPresContext*
+CreatePresContext(nsIDocument* aDocument,
+                  nsPresContext::nsPresContextType aType,
+                  nsIView* aContainerView)
+{
+  if (aContainerView)
+    return new nsPresContext(aDocument, aType);
+  return new nsRootPresContext(aDocument, aType);
+}
+
 //-----------------------------------------------
 // This method can be used to initial the "presentation"
 // The aDoCreation indicates whether it should create
@@ -822,24 +839,31 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                                  PRBool aNeedMakeCX /*= PR_TRUE*/)
 {
   mParentWidget = aParentWidget; // not ref counted
+  mBounds = aBounds;
 
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
 
+  nsIView* containerView = FindContainerView();
+
   PRBool makeCX = PR_FALSE;
   if (aDoCreation) {
+    nsresult rv = CreateDeviceContext(containerView);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // XXXbz this is a nasty hack to do with the fact that we create
     // presentations both in Init() and in Show()...  Ideally we would only do
     // it in one place (Show()) and require that callers call init(), open(),
     // show() in that order or something.
-    if ((aParentWidget || mDocument->GetDisplayDocument()) && !mPresContext) {
+    if (!mPresContext &&
+        (aParentWidget || containerView || mDocument->GetDisplayDocument())) {
       // Create presentation context
       if (mIsPageMode) {
         //Presentation context already created in SetPageMode which is calling this method
+      } else {
+        mPresContext = CreatePresContext(mDocument,
+            nsPresContext::eContext_Galley, containerView);
       }
-      else
-        mPresContext =
-            new nsPresContext(mDocument, nsPresContext::eContext_Galley);
       NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
       nsresult rv = mPresContext->Init(mDeviceContext); 
@@ -864,7 +888,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       // FlushPendingNotifications() calls down the road...
 
       rv = MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(aBounds.width),
-                             mPresContext->DevPixelsToAppUnits(aBounds.height)));
+                             mPresContext->DevPixelsToAppUnits(aBounds.height)),
+                      containerView);
       NS_ENSURE_SUCCESS(rv, rv);
       Hide();
 
@@ -1278,13 +1303,10 @@ DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
 
-  nsIntRect bounds;
-  mWindow->GetBounds(bounds);
-
   if (mDocument)
     mDocument->SetContainer(nsCOMPtr<nsISupports>(do_QueryReferent(mContainer)));
 
-  nsresult rv = InitInternal(mParentWidget, aState, bounds, PR_FALSE, PR_FALSE);
+  nsresult rv = InitInternal(mParentWidget, aState, mBounds, PR_FALSE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mPresShell)
@@ -1663,9 +1685,11 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 
     DestroyPresShell();
 
+    nsIView* containerView = FindContainerView();
+
     // This destroys the root view because it was associated with the root frame,
     // which has been torn down. Recreate the viewmanager and root view.
-    MakeWindow(currentSize);
+    MakeWindow(currentSize, containerView);
   }
 
   // And if we're already given a prescontext...
@@ -1748,13 +1772,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetBounds(nsIntRect& aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
-  NS_PRECONDITION(mWindow, "null window");
-  if (mWindow) {
-    mWindow->GetBounds(aResult);
-  }
-  else {
-    aResult.SetRect(0, 0, 0, 0);
-  }
+  aResult = mBounds;
   return NS_OK;
 }
 
@@ -1804,11 +1822,16 @@ DocumentViewerImpl::SetBounds(const nsIntRect& aBounds)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
+  mBounds = aBounds;
   if (mWindow) {
     // Don't have the widget repaint. Layout will generate repaint requests
     // during reflow
     mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height,
                     PR_FALSE);
+  } else if (mPresContext && mViewManager) {
+    PRInt32 p2a = mPresContext->AppUnitsPerDevPixel();
+    mViewManager->SetWindowDimensions(NSIntPixelsToAppUnits(mBounds.width, p2a),
+                                      NSIntPixelsToAppUnits(mBounds.height, p2a));
   }
 
   // If there's a previous viewer, it's the one that's actually showing,
@@ -1835,7 +1858,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
-  NS_PRECONDITION(mWindow, "null window");
+  mBounds.MoveTo(aX, aY);
   if (mWindow) {
     mWindow->Move(aX, aY);
   }
@@ -1885,20 +1908,26 @@ DocumentViewerImpl::Show(void)
     mWindow->Show(PR_TRUE);
   }
 
-  if (mDocument && !mPresShell && !mWindow) {
+  if (mDocument && !mPresShell) {
+    NS_ASSERTION(!mWindow, "Window already created but no presshell?");
+
     nsCOMPtr<nsIBaseWindow> base_win(do_QueryReferent(mContainer));
     if (base_win) {
       base_win->GetParentWidget(&mParentWidget);
-      NS_ENSURE_TRUE(mParentWidget, NS_ERROR_UNEXPECTED);
-      mParentWidget->Release(); // GetParentWidget AddRefs, but mParentWidget is weak
+      if (mParentWidget) {
+        mParentWidget->Release(); // GetParentWidget AddRefs, but mParentWidget is weak
+      }
     }
 
-    nsresult rv = CreateDeviceContext(mParentWidget);
+    nsIView* containerView = FindContainerView();
+
+    nsresult rv = CreateDeviceContext(containerView);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create presentation context
     NS_ASSERTION(!mPresContext, "Shouldn't have a prescontext if we have no shell!");
-    mPresContext = new nsPresContext(mDocument, nsPresContext::eContext_Galley);
+    mPresContext = CreatePresContext(mDocument,
+        nsPresContext::eContext_Galley, containerView);
     NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPresContext->Init(mDeviceContext);
@@ -1907,16 +1936,9 @@ DocumentViewerImpl::Show(void)
       return rv;
     }
 
-    nsIntRect tbounds;
-    if (mParentWidget) {
-      mParentWidget->GetBounds(tbounds);
-    } else {
-      // No good default size; just size to 0 by 0 for lack of anything better.
-      tbounds = nsIntRect(0, 0, 0, 0);
-    }
-
-    rv = MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(tbounds.width),
-                           mPresContext->DevPixelsToAppUnits(tbounds.height)));
+    rv = MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(mBounds.width),
+                           mPresContext->DevPixelsToAppUnits(mBounds.height)),
+                           containerView);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1951,7 +1973,6 @@ DocumentViewerImpl::Show(void)
 NS_IMETHODIMP
 DocumentViewerImpl::Hide(void)
 {
-  NS_PRECONDITION(mWindow, "null window");
   if (mWindow) {
     mWindow->Show(PR_FALSE);
   }
@@ -2214,7 +2235,7 @@ DocumentViewerImpl::ClearHistoryEntry()
 //-------------------------------------------------------
 
 nsresult
-DocumentViewerImpl::MakeWindow(const nsSize& aSize)
+DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
 {
   nsresult rv;
 
@@ -2228,69 +2249,38 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize)
   if (NS_FAILED(rv))
     return rv;
 
-  // Create a child window of the parent that is our "root view/window"
-  // if aParentWidget has a view, we'll hook our view manager up to its view tree
-  nsIView* containerView =
-    mParentWidget ? nsIView::GetViewFor(mParentWidget) : nsnull;
-
-  if (containerView) {
-    // see if the containerView has already been hooked into a foreign view manager hierarchy
-    // if it has, then we have to hook into the hierarchy too otherwise bad things will happen.
-    nsIViewManager* containerVM = containerView->GetViewManager();
-    nsIView* pView = containerView;
-    do {
-      pView = pView->GetParent();
-    } while (pView && pView->GetViewManager() == containerVM);
-
-    if (!pView) {
-      // OK, so the container is not already hooked up into a foreign view manager hierarchy.
-      // That means we can choose not to hook ourselves up.
-      //
-      // If the parent container is a chrome shell and we are a content shell
-      // then we won't hook into its view
-      // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
-      // but is really just for peace of mind. This check can be removed if we want to support fancy
-      // chrome effects like transparent controls floating over content, transparent Web browsers, and
-      // things like that, and the perf bugs are fixed.
-      nsCOMPtr<nsIDocShellTreeItem> container(do_QueryReferent(mContainer));
-      nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-      if (container) {
-        container->GetSameTypeParent(getter_AddRefs(sameTypeParent));
-      }
-      if (!sameTypeParent && mParentWidget->GetTransparencyMode() != eTransparencyTransparent) {
-        containerView = nsnull;
-      }
-    }
-  }
-
   // The root view is always at 0,0.
   nsRect tbounds(nsPoint(0, 0), aSize);
   // Create a view
-  nsIView* view = mViewManager->CreateView(tbounds, containerView);
+  nsIView* view = mViewManager->CreateView(tbounds, aContainerView);
   if (!view)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.
-  // otherwise the view will find its own parent widget and "do the right thing" to
-  // establish a parent/child widget relationship
-  nsWidgetInitData initData;
-  nsWidgetInitData* initDataPtr;
-  if (!mParentWidget) {
-    initDataPtr = &initData;
-    initData.mWindowType = eWindowType_invisible;
+  // Don't create a widget if we weren't given a parent widget but we
+  // have a container view we can hook up to without a widget
+  if (mParentWidget || !aContainerView) {
+    // pass in a native widget to be the parent widget ONLY if the view hierarchy will stand alone.
+    // otherwise the view will find its own parent widget and "do the right thing" to
+    // establish a parent/child widget relationship
+    nsWidgetInitData initData;
+    nsWidgetInitData* initDataPtr;
+    if (!mParentWidget) {
+      initDataPtr = &initData;
+      initData.mWindowType = eWindowType_invisible;
 
-    initData.mContentType =
-      nsContentUtils::IsInChromeDocshell(mDocument) ?
-        eContentTypeUI : eContentTypeContent;
-  } else {
-    initDataPtr = nsnull;
+      initData.mContentType =
+        nsContentUtils::IsInChromeDocshell(mDocument) ?
+          eContentTypeUI : eContentTypeContent;
+    } else {
+      initDataPtr = nsnull;
+    }
+    rv = view->CreateWidget(kWidgetCID, initDataPtr,
+                            (aContainerView != nsnull || !mParentWidget) ?
+                              nsnull : mParentWidget->GetNativeData(NS_NATIVE_WIDGET),
+                            PR_TRUE, PR_FALSE);
+    if (NS_FAILED(rv))
+      return rv;
   }
-  rv = view->CreateWidget(kWidgetCID, initDataPtr,
-                          (containerView != nsnull || !mParentWidget) ?
-                            nsnull : mParentWidget->GetNativeData(NS_NATIVE_WIDGET),
-                          PR_TRUE, PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
 
   // Setup hierarchical relationship in view manager
   mViewManager->SetRootView(view);
@@ -2305,8 +2295,86 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize)
   return rv;
 }
 
+nsIView*
+DocumentViewerImpl::FindContainerView()
+{
+  nsIView* containerView = nsnull;
+
+  if (mParentWidget) {
+    containerView = nsIView::GetViewFor(mParentWidget);
+  } else if (mContainer) {
+    nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryReferent(mContainer);
+    nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
+    if (pwin) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(pwin->GetFrameElementInternal());
+      nsCOMPtr<nsIPresShell> parentPresShell;
+      if (docShellItem) {
+        nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
+        docShellItem->GetParent(getter_AddRefs(parentDocShellItem));
+        if (parentDocShellItem) {
+          nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
+          parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
+        }
+      }
+      if (content && parentPresShell) {
+        nsIFrame* f = parentPresShell->GetRealPrimaryFrameFor(content);
+        if (f) {
+          nsIFrame* subdocFrame = f->GetContentInsertionFrame();
+          // subdocFrame might not be a subdocument frame; the frame
+          // constructor can treat a <frame> as an inline in some XBL
+          // cases. Treat that as display:none, the document is not
+          // displayed.
+          if (subdocFrame->GetType() == nsGkAtoms::subDocumentFrame) {
+            nsIView* subdocFrameView = subdocFrame->GetView();
+            NS_ASSERTION(subdocFrameView, "Subdoc frames must have views");
+            nsIView* innerView = subdocFrameView->GetFirstChild();
+            NS_ASSERTION(innerView, "Subdoc frames must have an inner view too");
+            containerView = innerView;
+          }
+        }
+      }
+    }
+  }
+
+  if (!containerView)
+    return nsnull;
+
+  nsIWidget* outerWidget = containerView->GetNearestWidget(nsnull);
+  if (outerWidget &&
+      outerWidget->GetTransparencyMode() == eTransparencyTransparent)
+    return containerView;
+
+  // see if the containerView has already been hooked into a foreign view manager hierarchy
+  // if it has, then we have to hook into the hierarchy too otherwise bad things will happen.
+  nsIViewManager* containerVM = containerView->GetViewManager();
+  nsIView* pView = containerView;
+  do {
+    pView = pView->GetParent();
+  } while (pView && pView->GetViewManager() == containerVM);
+  if (pView)
+    return containerView;
+
+  // OK, so the container is not already hooked up into a foreign view manager hierarchy.
+  // That means we can choose not to hook ourselves up.
+  //
+  // If the parent container is a chrome shell and we are a content shell
+  // then we won't hook into its view
+  // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
+  // but is really just for peace of mind. This check can be removed if we want to support fancy
+  // chrome effects like transparent controls floating over content, transparent Web browsers, and
+  // things like that, and the perf bugs are fixed.
+  nsCOMPtr<nsIDocShellTreeItem> container(do_QueryReferent(mContainer));
+  if (container) {
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+    container->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+    if (sameTypeParent)
+      return containerView;
+  }
+  return nsnull;
+}
+
 nsresult
-DocumentViewerImpl::CreateDeviceContext(nsIWidget* aWidget)
+DocumentViewerImpl::CreateDeviceContext(nsIView* aContainerView)
 {
   NS_PRECONDITION(!mPresShell && !mPresContext && !mWindow,
                   "This will screw up our existing presentation");
@@ -2314,8 +2382,7 @@ DocumentViewerImpl::CreateDeviceContext(nsIWidget* aWidget)
   
   nsIDocument* doc = mDocument->GetDisplayDocument();
   if (doc) {
-    NS_ASSERTION(!aWidget, "Shouldn't have a widget here");
-    
+    NS_ASSERTION(!aContainerView, "External resource document embedded somewhere?");
     // We want to use our display document's device context if possible
     nsIPresShell* shell = doc->GetPrimaryShell();
     if (shell) {
@@ -2331,7 +2398,14 @@ DocumentViewerImpl::CreateDeviceContext(nsIWidget* aWidget)
   // might have changed.
   mDeviceContext = do_CreateInstance(kDeviceContextCID);
   NS_ENSURE_TRUE(mDeviceContext, NS_ERROR_FAILURE);
-  mDeviceContext->Init(aWidget ? aWidget->GetTopLevelWidget() : nsnull);
+  nsIWidget* widget = nsnull;
+  if (aContainerView) {
+    widget = aContainerView->GetNearestWidget(nsnull);
+    if (widget) {
+      widget = widget->GetTopLevelWidget();
+    }
+  }
+  mDeviceContext->Init(widget);
   return NS_OK;
 }
 
@@ -4202,9 +4276,6 @@ NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings
   // XXX Page mode is only partially working; it's currently used for
   // reftests that require a paginated context
   mIsPageMode = aPageMode;
-  // Get the current size of what is being viewed
-  nsIntRect bounds;
-  mWindow->GetBounds(bounds);
 
   if (mPresShell) {
     DestroyPresShell();
@@ -4223,15 +4294,15 @@ NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings
   NS_ENSURE_STATE(mDocument);
   if (aPageMode)
   {    
-    mPresContext =
-      new nsPresContext(mDocument, nsPresContext::eContext_PageLayout);
+    mPresContext = CreatePresContext(mDocument,
+        nsPresContext::eContext_PageLayout, FindContainerView());
     NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
     mPresContext->SetPaginatedScrolling(PR_TRUE);
     mPresContext->SetPrintSettings(aPrintSettings);
     nsresult rv = mPresContext->Init(mDeviceContext);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  InitInternal(mParentWidget, nsnull, bounds, PR_TRUE, PR_FALSE, PR_FALSE);
+  InitInternal(mParentWidget, nsnull, mBounds, PR_TRUE, PR_FALSE, PR_FALSE);
   mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
 
   Show();

@@ -498,6 +498,17 @@ public:
 #endif
 
   /**
+   * Adds display item for standard CSS background if necessary.
+   * Does not check IsVisibleForPainting.
+   * @param aForceBackground draw the background even if the frame
+   * background style appears to have no background --- this is useful
+   * for frames that might receive a propagated background via
+   * nsCSSRendering::FindBackground
+   */
+  nsresult DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
+                                          const nsDisplayListSet& aLists,
+                                          PRBool aForceBackground = PR_FALSE);
+  /**
    * Adds display items for standard CSS borders, background and outline for
    * for this frame, as necessary. Checks IsVisibleForPainting and won't
    * display anything if the frame is not visible.

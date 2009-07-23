@@ -120,8 +120,6 @@ nsWidget::nsWidget()
 
   mWidget = nsnull;
   mParent = nsnull;
-  mPreferredWidth  = 0;
-  mPreferredHeight = 0;
   mShown = PR_FALSE;
   mBounds.x = 0;
   mBounds.y = 0;

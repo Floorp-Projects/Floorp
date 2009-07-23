@@ -46,7 +46,7 @@
 checkbox {
   -moz-appearance: checkbox-container;
   -moz-box-align: center;
-  margin: 2px 2px 4px 2px;
+  margin: 2px 2px 4px;
 }
 
 .checkbox-label-box {
@@ -73,9 +73,12 @@ checkbox[disabled="true"] {
 
 .checkbox-check {
   -moz-appearance: checkbox;
-  margin: 1px;
-  width: 16px;
-  height: 16px;
+  margin: 0 1px;
+  /* vertical-align tells native theming where to snap to. However, this doesn't
+   * always work reliably because of bug 503833. */
+  vertical-align: top;
+  width: 1.3em;
+  height: 1.3em;
 }
   
 

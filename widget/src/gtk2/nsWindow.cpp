@@ -67,6 +67,7 @@
 #include "gtk2xtbin.h"
 #endif /* MOZ_X11 */
 #include <gdk/gdkkeysyms.h>
+#include <gtk/gtkprivate.h>
 
 #include "nsWidgetAtoms.h"
 
@@ -104,9 +105,7 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 /* SetCursor(imgIContainer*) */
 #include <gdk/gdk.h>
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
 #include "nsGfxCIID.h"
-#include "nsIImage.h"
 #include "nsImageToPixbuf.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
@@ -1422,12 +1421,7 @@ nsWindow::SetFocus(PRBool aRaise)
     IMESetFocus();
 #endif
 
-    LOGFOCUS(("  widget now has focus - dispatching events [%p]\n",
-              (void *)this));
-
-    DispatchActivateEvent();
-
-    LOGFOCUS(("  done dispatching events in SetFocus() [%p]\n",
+    LOGFOCUS(("  widget now has focus in SetFocus() [%p]\n",
               (void *)this));
 
     return NS_OK;
@@ -1572,17 +1566,8 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     }
     mCursor = nsCursor(-1);
 
-    // Get first image frame
-    nsCOMPtr<gfxIImageFrame> frame;
-    aCursor->GetFrameAt(0, getter_AddRefs(frame));
-    if (!frame)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    nsCOMPtr<nsIImage> img(do_GetInterface(frame));
-    if (!img)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(img);
+    // Get the image's current frame
+    GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(aCursor);
     if (!pixbuf)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -1741,35 +1726,46 @@ nsWindow::Update()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::Scroll(PRInt32     aDx,
-                 PRInt32     aDy,
-                 nsIntRect  *aClipRect)
+void
+nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                 const nsTArray<Configuration>& aConfigurations)
 {
-    if (!mDrawingarea)
-        return NS_OK;
-
-    D_DEBUG_AT( ns_Window, "%s( %4d,%4d )\n", __FUNCTION__, aDx, aDy );
-
-    if (aClipRect) {
-         D_DEBUG_AT( ns_Window, "  -> aClipRect: %4d,%4d-%4dx%4d\n",
-                     aClipRect->x, aClipRect->y, aClipRect->width, aClipRect->height );
+    if (!mDrawingarea) {
+        NS_ERROR("Cannot scroll widget");
+        return;
     }
 
-    moz_drawingarea_scroll(mDrawingarea, aDx, aDy);
-
-    // Update bounds on our child windows
-    for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-        nsIntRect bounds;
-        kid->GetBounds(bounds);
-        bounds.x += aDx;
-        bounds.y += aDy;
-        static_cast<nsBaseWidget*>(kid)->SetBounds(bounds);
+    nsAutoTArray<nsWindow*,1> windowsToShow;
+    // Hide any widgets that are becoming invisible or that are moving.
+    // Moving widgets are hidden for the duration of the scroll so that
+    // the XCopyArea treats their drawn pixels as part of the window
+    // that should be scrolled. This works well when the widgets are
+    // moving because they're being scrolled, which is normally true.
+    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+        NS_ASSERTION(w->GetParent() == this,
+                     "Configured widget is not a child");
+        if (w->mIsShown &&
+            (configuration.mClipRegion.IsEmpty() ||
+             configuration.mBounds != w->mBounds)) {
+            w->NativeShow(PR_FALSE);
+            windowsToShow.AppendElement(w);
+        }
     }
 
-    // Process all updates so that everything is drawn.
-    gdk_window_process_all_updates();
-    return NS_OK;
+    GdkRectangle gdkSource =
+      { aSource.x, aSource.y, aSource.width, aSource.height };
+    GdkRegion* region = gdk_region_rectangle(&gdkSource);
+    gdk_window_move_region(GDK_WINDOW(mDrawingarea->inner_window),
+                           region, aDelta.x, aDelta.y);
+    gdk_region_destroy(region);
+
+    ConfigureChildren(aConfigurations);
+
+    for (PRUint32 i = 0; i < windowsToShow.Length(); ++i) {
+        windowsToShow[i]->NativeShow(PR_TRUE);
+    }
 }
 
 void*
@@ -2162,6 +2158,32 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
     }
 
+    PRBool translucent = eTransparencyTransparent == GetTransparencyMode();
+    if (!translucent) {
+        GList *children =
+            gdk_window_peek_children(mDrawingarea->inner_window);
+        while (children) {
+            GdkWindow *gdkWin = GDK_WINDOW(children->data);
+            nsWindow *kid = get_window_for_gdk_window(gdkWin);
+            if (kid) {
+                nsAutoTArray<nsIntRect,1> clipRects;
+                kid->GetWindowClipRegion(&clipRects);
+                nsIntRect bounds;
+                kid->GetBounds(bounds);
+                for (PRUint32 i = 0; i < clipRects.Length(); ++i) {
+                    nsIntRect r = clipRects[i] + bounds.TopLeft();
+                    updateRegion->Subtract(r.x, r.y, r.width, r.height);
+                }
+            }
+            children = children->next;
+        }
+    }
+
+    if (updateRegion->IsEmpty()) {
+        g_free(rects);
+        return TRUE;
+    }
+
 #ifdef MOZ_DFB
     nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
     if (NS_UNLIKELY(!rc)) {
@@ -2191,8 +2213,6 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return FALSE;
     }
 
-    PRBool translucent;
-    translucent = eTransparencyTransparent == GetTransparencyMode();
     nsIntRect boundsRect;
 
     GdkPixmap* bufferPixmap = nsnull;
@@ -2744,13 +2764,13 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     mLastButtonPressTime = aEvent->time;
     mLastButtonReleaseTime = 0;
 
-    // check to see if we should rollup
     nsWindow *containerWindow = GetContainerWindow();
     if (!gFocusWindow && containerWindow) {
         gFocusWindow = this;
-        DispatchActivateEvent();
+        containerWindow->DispatchActivateEvent();
     }
 
+    // check to see if we should rollup
     PRBool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
                                        aEvent->y_root, PR_FALSE);
     if (gConsumeRollupEvent && rolledUp)
@@ -3909,6 +3929,9 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         gtk_container_add(GTK_CONTAINER(mShell), GTK_WIDGET(mContainer));
         gtk_widget_realize(GTK_WIDGET(mContainer));
 
+        // Don't let GTK mess with the shapes of our GdkWindows
+        GTK_PRIVATE_SET_FLAG(GTK_WIDGET(mContainer), GTK_HAS_SHAPE_MASK);
+
         // make sure this is the focus widget in the container
         gtk_window_set_focus(GTK_WINDOW(mShell), GTK_WIDGET(mContainer));
 
@@ -3935,6 +3958,9 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
             mContainer = MOZ_CONTAINER(moz_container_new());
             gtk_container_add(parentGtkContainer, GTK_WIDGET(mContainer));
             gtk_widget_realize(GTK_WIDGET(mContainer));
+
+            // Don't let GTK mess with the shapes of our GdkWindows
+            GTK_PRIVATE_SET_FLAG(GTK_WIDGET(mContainer), GTK_HAS_SHAPE_MASK);
 
             mDrawingarea = moz_drawingarea_new(nsnull, mContainer, visual);
         }
@@ -4405,6 +4431,50 @@ nsWindow::GetTransparencyMode()
     }
 
     return mIsTransparent ? eTransparencyTransparent : eTransparencyOpaque;
+}
+
+nsresult
+nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+        NS_ASSERTION(w->GetParent() == this,
+                     "Configured widget is not a child");
+        nsresult rv = w->SetWindowClipRegion(configuration.mClipRegion);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (w->mBounds.Size() != configuration.mBounds.Size()) {
+            w->Resize(configuration.mBounds.x, configuration.mBounds.y,
+                      configuration.mBounds.width, configuration.mBounds.height,
+                      PR_TRUE);
+        } else if (w->mBounds.TopLeft() != configuration.mBounds.TopLeft()) {
+            w->Move(configuration.mBounds.x, configuration.mBounds.y);
+        } 
+    }
+    return NS_OK;
+}
+
+nsresult
+nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects)
+{
+    StoreWindowClipRegion(aRects);
+
+    if (!mDrawingarea)
+        return NS_OK;
+
+    GdkRegion *region = gdk_region_new();
+    if (!region)
+        return NS_ERROR_OUT_OF_MEMORY;
+    for (PRUint32 i = 0; i < aRects.Length(); ++i) {
+        const nsIntRect& r = aRects[i];
+        GdkRectangle rect = { r.x, r.y, r.width, r.height };
+        gdk_region_union_with_rect(region, &rect);
+    }
+
+    gdk_window_shape_combine_region(mDrawingarea->clip_window, region, 0, 0);
+    gdk_region_destroy(region);
+
+    return NS_OK;
 }
 
 void

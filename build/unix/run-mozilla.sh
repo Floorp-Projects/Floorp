@@ -110,12 +110,12 @@ moz_get_debugger()
 	done="no"
 	for d in $debuggers
 	do
-		moz_test_binary /bin/type
+		moz_test_binary /bin/which
 		if [ $? -eq 1 ]
 		then
-			dpath=`LC_MESSAGES=C type ${d} | awk '{print $3;}' | sed -e 's/\.$//'`	
-		else 	
 			dpath=`which ${d}`	
+		else 	
+			dpath=`LC_MESSAGES=C type ${d} | awk '{print $3;}' | sed -e 's/\.$//'`	
 		fi
 		if [ -x "$dpath" ]
 		then
@@ -156,12 +156,12 @@ moz_debug_program()
 	fi
 	if [ -n "$moz_debugger" ]
 	then
-		moz_test_binary /bin/type
+		moz_test_binary /bin/which
 		if [ $? -eq 1 ]
 		then	
-			debugger=`LC_MESSAGES=C type $moz_debugger | awk '{print $3;}' | sed -e 's/\.$//'` 
-		else
 			debugger=`which $moz_debugger` 
+		else
+			debugger=`LC_MESSAGES=C type $moz_debugger | awk '{print $3;}' | sed -e 's/\.$//'` 
 		fi	
 	else
 		debugger=`moz_get_debugger`

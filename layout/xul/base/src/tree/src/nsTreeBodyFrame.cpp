@@ -2173,11 +2173,11 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
     imgIRequest *imgReq = entry.request;
     imgReq->GetImageStatus(&status);
     imgReq->GetImage(aResult); // We hand back the image here.  The GetImage call addrefs *aResult.
-    PRUint32 numFrames = 1;
+    PRBool animated = PR_FALSE;
     if (*aResult)
-      (*aResult)->GetNumFrames(&numFrames);
+      (*aResult)->GetAnimated(&animated);
 
-    if ((!(status & imgIRequest::STATUS_LOAD_COMPLETE)) || numFrames > 1) {
+    if ((!(status & imgIRequest::STATUS_LOAD_COMPLETE)) || animated) {
       // We either aren't done loading, or we're animating. Add our row as a listener for invalidations.
       nsCOMPtr<imgIDecoderObserver> obs;
       imgReq->GetDecoderObserver(getter_AddRefs(obs));
@@ -4128,7 +4128,24 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
     if (widget) {
       nscoord rowHeightAsPixels =
         PresContext()->AppUnitsToDevPixels(mRowHeight);
-      widget->Scroll(0, -delta*rowHeightAsPixels, nsnull);
+      nsIntPoint deltaPt = nsIntPoint(0, -delta*rowHeightAsPixels);
+      nsIntRect bounds;
+      widget->GetBounds(bounds);
+      bounds.x = bounds.y = 0;
+      nsIntRect source;
+      source.IntersectRect(bounds, bounds - deltaPt);
+      // No plugins have a tree widget as a parent so we don't need
+      // configurations here.
+      nsTArray<nsIWidget::Configuration> emptyConfigurations;
+      widget->Scroll(deltaPt, source, emptyConfigurations);
+      nsIntRect invalid = bounds;
+      if (deltaPt.y < 0) {
+        invalid.y = bounds.height + deltaPt.y;
+        invalid.height = -deltaPt.y;
+      } else {
+        invalid.height = deltaPt.y;
+      }
+      widget->Invalidate(invalid, PR_FALSE);
     }
   }
 
@@ -4166,7 +4183,24 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
   } else {
     nsIWidget* widget = nsLeafBoxFrame::GetView()->GetWidget();
     if (widget) {
-      widget->Scroll(PresContext()->AppUnitsToDevPixels(-delta), 0, nsnull);
+      nsIntPoint deltaPt(PresContext()->AppUnitsToDevPixels(-delta), 0);
+      nsIntRect bounds;
+      widget->GetBounds(bounds);
+      bounds.x = bounds.y = 0;
+      nsIntRect source;
+      source.IntersectRect(bounds, bounds - deltaPt);
+      // No plugins have a tree widget as a parent so we don't need
+      // configurations here.
+      nsTArray<nsIWidget::Configuration> emptyConfigurations;
+      widget->Scroll(deltaPt, source, emptyConfigurations);
+      nsIntRect invalid = bounds;
+      if (deltaPt.x < 0) {
+        invalid.x = bounds.width + deltaPt.x;
+        invalid.width = -deltaPt.x;
+      } else {
+        invalid.width = deltaPt.x;
+      }
+      widget->Invalidate(invalid, PR_FALSE);
     }
   }
 

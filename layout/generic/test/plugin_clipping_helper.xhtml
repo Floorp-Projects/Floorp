@@ -37,197 +37,20 @@
   </div>
 </div>
 <!-- Clipped by an iframe -->
-<iframe id="f1" style="position:absolute; left:200px; top:200px; width:200px; height:200px;"></iframe>
+<iframe id="f1" style="position:absolute; left:200px; top:200px; width:200px; height:200px;"
+        src="data:text/html,&lt;embed style='position:absolute; left:-100px; top:-100px; width:200px; height:200px;' id='p5' type='application/x-test' wmode='window'&gt;"></iframe>
 
+<script src="plugin_clipping_lib.js"></script>
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-var windowFrameX, windowFrameY;
-
-var f1 = document.getElementById("f1");
-f1.src = "data:text/html," +
-"<embed style='position:absolute; left:-100px; top:-100px; width:200px; height:200px;'" +
-"id='p5' type='application/x-test' wmode='window'></embed>";
-
-// Import test API
-var is = window.opener.is;
-var ok = window.opener.ok;
-var todo = window.opener.todo;
-var SimpleTest = window.opener.SimpleTest;
-
-function dumpRegion(rects) {
-  var s = [];
-  for (var i = 0; i < rects.length; ++i) {
-    var r = rects[i];
-    s.push("{" + r.join(",") + "}");
-  }
-  return s.join(", ");
-}
-
-function generateSpan(coords) {
-  coords.sort(function(a,b) { return a - b; });
-  var result = [coords[0]];
-  for (var i = 1; i < coords.length; ++i) {
-    if (coords[i] != coords[i - 1]) {
-      result.push(coords[i]);
-    }
-  }
-  return result;
-}
-
-function containsRect(r1, r2) {
-  return r1[0] <= r2[0] && r1[2] >= r2[2] &&
-         r1[1] <= r2[1] && r1[3] >= r2[3];
-}
-
-function subtractRect(r1, r2, rlist) {
-  var spanX = generateSpan([r1[0], r1[2], r2[0], r2[2]]);
-  var spanY = generateSpan([r1[1], r1[3], r2[1], r2[3]]);
-  for (var i = 1; i < spanX.length; ++i) {
-    for (var j = 1; j < spanY.length; ++j) {
-      var subrect = [spanX[i - 1], spanY[j - 1], spanX[i], spanY[j]];
-      if (containsRect(r1, subrect) && !containsRect(r2, subrect)) {
-        rlist.push(subrect);
-      }
-    }
-  }
-}
-
-function regionContainsRect(rs, r) {
-  var rectList = [r];
-  for (var i = 0; i < rs.length; ++i) {
-    var newList = [];
-    for (var j = 0; j < rectList.length; ++j) {
-      subtractRect(rs[i], rectList[j], newList);
-    }
-    if (newList.length == 0)
-      return true;
-    rectList = newList;
-  }
-  return false;
-}
-
-function regionContains(r1s, r2s) {
-  for (var i = 0; i < r2s.length; ++i) {
-    if (!regionContainsRect(r1s, r2s[i]))
-      return false;
-  }
-  return true;
-}
-
-function equalRegions(r1s, r2s) {
-  return regionContains(r1s, r2s) && regionContains(r2s, r1s);
-}
-
-// Checks that a plugin's clip region equals the specified rectangle list.
-// The rectangles are given relative to the plugin's top-left. They are in
-// [left, top, right, bottom] format.
-function checkClipRegionWithDoc(doc, offsetX, offsetY, id, rects) {
-  var p = doc.getElementById(id);
-  var pX = p.getEdge(0);
-  var pY = p.getEdge(1);
-  var pWidth = p.getEdge(2) - pX;
-  var pHeight = p.getEdge(3) - pY;
-  var bounds = p.getBoundingClientRect();
-
-  // First, check regular area
-  is(pX, windowFrameX + bounds.left + offsetX, id + " plugin X");
-  is(pY, windowFrameY + bounds.top + offsetY, id + " plugin Y");
-  is(pWidth, bounds.width, id + " plugin width");
-  is(pHeight, bounds.height, id + " plugin height");
-
-  // Now check clip region. 'rects' is relative to the plugin's top-left.
-  var clipRects = [];
-  var n = p.getClipRegionRectCount();
-  for (var i = 0; i < n; ++i) {
-    // Convert the clip rect to be relative to the plugin's top-left.
-    clipRects[i] = [
-      p.getClipRegionRectEdge(i, 0) - pX,
-      p.getClipRegionRectEdge(i, 1) - pY,
-      p.getClipRegionRectEdge(i, 2) - pX,
-      p.getClipRegionRectEdge(i, 3) - pY
-    ];
-  }
-
-  ok(equalRegions(clipRects, rects), "Matching regions for '" + id + "': expected " +
-        dumpRegion(rects) + ", got " + dumpRegion(clipRects));
-}
-
-function checkClipRegion(id, rects) {
-  checkClipRegionWithDoc(document, 0, 0, id, rects);
-}
-
-function checkClipRegionForFrame(fid, id, rects) {
-  var f = document.getElementById(fid);
-  var bounds = f.getBoundingClientRect();
-  checkClipRegionWithDoc(f.contentDocument, bounds.left, bounds.top, id, rects);
-}
-
-function runTests2() {
-  function check(id, doc) {
-    var p = (doc || document).getElementById(id);
-    if (p.getClipRegionRectEdge(0, 0) ==
-        p.getClipRegionRectEdge(0, 2))
-      throw id;
-  }
-
-  try {
-    check("p1");
-    check("p2");
-    check("p3");
-    check("p4");
-    check("p5", f1.contentDocument);
-  } catch (id) {
-    // One or more plugins haven't been updated yet. Wait.
-    setTimeout(runTests2, 100);
-    return;
-  }
-
+function runTests() {
   checkClipRegion("p1", [[0, 0, 200, 200]]);
   checkClipRegion("p2", [[100, 100, 200, 200]]);
   checkClipRegion("p3", [[100, 100, 200, 200]]);
   checkClipRegion("p4", [[100, 100, 200, 200]]);
   checkClipRegionForFrame("f1", "p5", [[100, 100, 200, 200]]);
-
-  SimpleTest.finish();
-  window.close();
 }
-
-function runTests() {
-  var h1 = document.getElementById("h1");
-  var h2 = document.getElementById("h2");
-  var hwidth = h2.boxObject.screenX - h1.boxObject.screenX;
-  if (hwidth != 100) {
-    // Maybe it's a DPI issue
-    todo(false, "Unexpected DPI?");
-    SimpleTest.finish();
-    window.close();
-    return;
-  }
-
-  if (!document.getElementById("p1").identifierToStringTest) {
-    todo(false, "Test plugin not available");
-    SimpleTest.finish();
-    window.close();
-    return;
-  }
-
-  if (navigator.platform.indexOf("Win") >= 0) {
-    todo(false, "Windows does not support windowed plugins (yet)");
-    SimpleTest.finish();
-    window.close();
-    return;
-  }
-
-  var bounds = h1.getBoundingClientRect();
-  windowFrameX = h1.boxObject.screenX - bounds.left - window.screenX;
-  windowFrameY = h1.boxObject.screenY - bounds.top - window.screenY;
-
-  runTests2();
-}
-
-window.addEventListener("load", runTests, false);
-
 ]]>
 </script>
 

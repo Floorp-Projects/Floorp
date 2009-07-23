@@ -169,20 +169,6 @@ public:
 		return NS_OK;
 		}
 
-  inline NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
-		{
-		aWidth  = mPreferredWidth;
-		aHeight = mPreferredHeight;
-		return (mPreferredWidth != 0 && mPreferredHeight != 0)?NS_OK:NS_ERROR_FAILURE;
-		}
-
-  inline NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
-		{
-		mPreferredWidth  = aWidth;
-		mPreferredHeight = aHeight;
-		return NS_OK;
-		}
-
   // Use this to set the name of a widget for normal widgets.. not the same as the nsWindow version
   inline NS_IMETHOD SetTitle(const nsAString& aTitle) { return NS_OK; }
 
@@ -339,7 +325,6 @@ protected:
   nsIWidget						*mParent;
   PRBool mShown;
 
-  PRUint32 mPreferredWidth, mPreferredHeight;
   PRBool       mListenForResizes;
    
   // Focus used global variable

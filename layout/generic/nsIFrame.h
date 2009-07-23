@@ -1579,6 +1579,8 @@ public:
    * 
    * This function is fastest when aOther is an ancestor of |this|.
    *
+   * This function works across document boundaries.
+   *
    * NOTE: this actually returns the offset from aOther to |this|, but
    * that offset is added to transform _coordinates_ from |this| to
    * aOther.
@@ -1757,6 +1759,10 @@ public:
    *   could cause frames to be deleted (including |this|).
    * @param aFlags INVALIDATE_CROSS_DOC: true if the invalidation
    *   originated in a subdocument
+   * @param aFlags INVALIDATE_NOTIFY_ONLY: set when this invalidation should
+   * cause MozAfterPaint listeners to be notified, but should not actually
+   * invalidate anything. This is used to notify about scrolling, where the
+   * screen has already been updated.
    */
   enum {
   	INVALIDATE_IMMEDIATE = 0x1,

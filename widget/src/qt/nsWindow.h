@@ -240,10 +240,6 @@ protected:
     // shouldn't be automatically set to 0,0 for first show.
     PRBool              mPlaced;
 
-    // Preferred sizes
-    PRUint32            mPreferredWidth;
-    PRUint32            mPreferredHeight;
-
     /**
      * Event handlers (proxied from the actual qwidget).
      * They follow normal Qt widget semantics.

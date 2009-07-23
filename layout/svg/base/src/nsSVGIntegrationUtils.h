@@ -41,12 +41,12 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "gfxRect.h"
+#include "gfxMatrix.h"
 
 class nsIFrame;
 class nsDisplayListBuilder;
 class nsDisplayList;
 class nsIRenderingContext;
-class nsIDOMSVGMatrix;
 
 /***** Integration of SVG effects with regular frame painting *****/
 
@@ -97,7 +97,7 @@ public:
                          nsDisplayListBuilder* aBuilder,
                          nsDisplayList* aInnerList);
 
-  static already_AddRefed<nsIDOMSVGMatrix>
+  static gfxMatrix
   GetInitialMatrix(nsIFrame* aNonSVGFrame);
   /**
    * Returns aNonSVGFrame's rect in CSS pixel units. This is the union

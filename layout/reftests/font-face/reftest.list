@@ -91,3 +91,7 @@ HTTP(..) load 486974-1.html
 
 # compare fonts with and without bad head checksum
 HTTP(..) == load-badchecksum.html load-badchecksum-ref.html
+
+# t2embed lib on windows is picky about fullname
+HTTP(..) == load-badfullname.html load-badfullname-ref.html
+

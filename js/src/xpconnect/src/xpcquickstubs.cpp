@@ -955,19 +955,35 @@ nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx,
                     jsval v,
                     const nsIID &iid,
-                    void **ppArg)
+                    void **ppArg,
+                    nsISupports **ppArgRef,
+                    jsval *vp)
 {
     // From XPCConvert::JSData2Native
     if(JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))
+    {
+        *ppArg = nsnull;
+        *ppArgRef = nsnull;
         return NS_OK;
+    }
 
     if(!JSVAL_IS_OBJECT(v))
     {
+        *ppArgRef = nsnull;
         return ((JSVAL_IS_INT(v) && JSVAL_TO_INT(v) == 0)
                 ? NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL
                 : NS_ERROR_XPC_BAD_CONVERT_JS);
     }
     JSObject *src = JSVAL_TO_OBJECT(v);
+
+    if(IS_SLIM_WRAPPER(src))
+    {
+        nsISupports *iface = static_cast<nsISupports*>(xpc_GetJSPrivate(src));
+        if(NS_FAILED(getNative(iface, GetOffsetsFromSlimWrapper(src),
+                               src, iid, ppArg, ppArgRef, vp)))
+            return NS_ERROR_XPC_BAD_CONVERT_JS;
+        return NS_OK;
+    }
 
     // From XPCConvert::JSObject2NativeInterface
     XPCWrappedNative* wrappedNative =
@@ -976,7 +992,8 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     if(wrappedNative)
     {
         iface = wrappedNative->GetIdentityObject();
-        if(NS_FAILED(iface->QueryInterface(iid, ppArg)))
+        if(NS_FAILED(getNativeFromWrapper(wrappedNative, iid, ppArg, ppArgRef,
+                                          vp)))
             return NS_ERROR_XPC_BAD_CONVERT_JS;
         return NS_OK;
     }
@@ -987,7 +1004,10 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     // This hack can be removed (or changed accordingly) when the
     // DOM <-> E4X bindings are complete, see bug 270553
     if(JS_TypeOfValue(cx, OBJECT_TO_JSVAL(src)) == JSTYPE_XML)
+    {
+        *ppArgRef = nsnull;
         return NS_ERROR_XPC_BAD_CONVERT_JS;
+    }
 
     // Does the JSObject have 'nsISupportness'?
     // XXX hmm, I wonder if this matters anymore with no
@@ -995,26 +1015,42 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     if(XPCConvert::GetISupportsFromJSObject(src, &iface))
     {
         if(!iface || NS_FAILED(iface->QueryInterface(iid, ppArg)))
+        {
+            *ppArgRef = nsnull;
             return NS_ERROR_XPC_BAD_CONVERT_JS;
+        }
+
+        *ppArgRef = static_cast<nsISupports*>(*ppArg);
         return NS_OK;
     }
 
     // Create the ccx needed for quick stubs.
     XPCCallContext ccx(JS_CALLER, cx);
     if(!ccx.IsValid())
+    {
+        *ppArgRef = nsnull;
         return NS_ERROR_XPC_BAD_CONVERT_JS;
+    }
 
     nsXPCWrappedJS *wrapper;
     nsresult rv =
         nsXPCWrappedJS::GetNewOrUsed(ccx, src, iid, nsnull, &wrapper);
     if(NS_FAILED(rv) || !wrapper)
+    {
+        *ppArgRef = nsnull;
         return rv;
+    }
 
     // We need to go through the QueryInterface logic to make this return
     // the right thing for the various 'special' interfaces; e.g.
     // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
     // there is an outer to avoid nasty recursion.
     rv = wrapper->QueryInterface(iid, ppArg);
+    if(NS_SUCCEEDED(rv))
+    {
+        *ppArgRef = static_cast<nsISupports*>(*ppArg);
+        *vp = OBJECT_TO_JSVAL(wrapper->GetJSObject());
+    }
     NS_RELEASE(wrapper);
     return rv;
 }

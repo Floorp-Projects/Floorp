@@ -34,6 +34,7 @@
 
 // We use the NSPR types, but we don't link with NSPR
 #include "prtypes.h"
+#include <stdio.h>
 
 typedef struct MBSPatchHeader_ {
   /* "MBDIFF10" */
@@ -68,7 +69,7 @@ typedef struct MBSPatchHeader_ {
  * @param fd Must have been opened for reading, and be at the beginning
  *           of the file.
  */
-int MBS_ReadHeader(int fd, MBSPatchHeader *header);
+int MBS_ReadHeader(FILE* file, MBSPatchHeader *header);
 
 /**
  * Apply a patch. This method does not validate the checksum of the original
@@ -81,8 +82,8 @@ int MBS_ReadHeader(int fd, MBSPatchHeader *header);
  *                to header->dlen if it is an existing file. The offset
  *                should be at the beginning of the file.
  */
-int MBS_ApplyPatch(const MBSPatchHeader *header, int patchfd,
-                   unsigned char *fbuffer, int filefd);
+int MBS_ApplyPatch(const MBSPatchHeader *header, FILE* patchFile,
+                   unsigned char *fbuffer, FILE* file);
 
 typedef struct MBSPatchTriple_ {
   PRUint32 x; /* add x bytes from oldfile to x bytes from the diff block */

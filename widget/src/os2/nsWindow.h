@@ -266,8 +266,6 @@ protected:
    PFNWP     GetPrevWP() const { return mPrevWndProc; }
 
    // nglayout data members
-   PRInt32        mPreferredHeight;
-   PRInt32        mPreferredWidth;
    nsToolkit     *mOS2Toolkit;
    PRInt32        mWindowState;
    nsRefPtr<gfxOS2Surface> mThebesSurface;
@@ -313,9 +311,8 @@ protected:
    HBITMAP DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
                         PRUint32 aHeight, PRUint32 aDepth);
    HBITMAP CreateBitmapRGB(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
-   // 'format' should be 'gfx_format' which is a PRInt32
-   HBITMAP CreateTransparencyMask(PRInt32  format, PRUint8* aImageData,
-                                  PRUint32 aWidth, PRUint32 aHeight);
+   HBITMAP CreateTransparencyMask(gfxASurface::gfxImageFormat format,
+                                  PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
 
    BOOL NotifyForeignChildWindows(HWND aWnd);
    void ScrollChildWindows(PRInt32 aX, PRInt32 aY);

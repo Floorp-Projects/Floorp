@@ -2481,6 +2481,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIContent*              aDocEle
 
   *aNewFrame = nsnull;
 
+  // Make sure to call PropagateScrollToViewport before
+  // SetUpDocElementContainingBlock, since it sets up our scrollbar state
+  // properly.
+  nsIContent* propagatedScrollFrom = PropagateScrollToViewport();
+
   SetUpDocElementContainingBlock(aDocElement);
 
   NS_ASSERTION(mDocElementContainingBlock, "Should have parent by now");
@@ -2531,12 +2536,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIContent*              aDocEle
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
 
 #ifdef DEBUG
-  PRBool propagatedScrollToViewport =
-    PropagateScrollToViewport() == aDocElement;
-
   NS_ASSERTION(!display->IsScrollableOverflow() || 
                state.mPresContext->IsPaginated() ||
-               propagatedScrollToViewport,
+               propagatedScrollFrom == aDocElement,
                "Scrollbars should have been propagated to the viewport");
 #endif
 
@@ -7712,7 +7714,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   // processing restyles
   BeginUpdate();
 
-  nsPropertyTable *propTable = mPresShell->GetPresContext()->PropertyTable();
+  nsPresContext* presContext = mPresShell->GetPresContext();
+  nsPropertyTable *propTable = presContext->PropertyTable();
 
   // Mark frames so that we skip frames that die along the way, bug 123049.
   // A frame can be in the list multiple times with different hints. Further
@@ -7730,6 +7733,9 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   }
 
   index = count;
+  PRBool didInvalidate = PR_FALSE;
+  PRBool didReflow = PR_FALSE;
+
   while (0 <= --index) {
     nsIFrame* frame;
     nsIContent* content;
@@ -7765,9 +7771,11 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 #endif
       if (hint & nsChangeHint_ReflowFrame) {
         StyleChangeReflow(frame);
+        didReflow = PR_TRUE;
       }
       if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView)) {
-        ApplyRenderingChangeToTree(mPresShell->GetPresContext(), frame, hint);
+        ApplyRenderingChangeToTree(presContext, frame, hint);
+        didInvalidate = PR_TRUE;
       }
       if (hint & nsChangeHint_UpdateCursor) {
         nsIViewManager* viewMgr = mPresShell->GetViewManager();
@@ -7778,7 +7786,15 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   }
 
   EndUpdate();
-  
+
+  if (didInvalidate && !didReflow) {
+    // RepaintFrame changes can indicate changes in opacity etc which
+    // can require plugin clipping to change. If we requested a reflow,
+    // we don't need to do this since the reflow will do it for us.
+    nsIFrame* rootFrame = mPresShell->FrameManager()->GetRootFrame();
+    presContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
+  }
+
   // cleanup references and verify the style tree.  Note that the latter needs
   // to happen once we've processed the whole list, since until then the tree
   // is not in fact in a consistent state.
@@ -11792,6 +11808,7 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
   // this is hard-coded to handle only menu popup frames
   nsIFrame* frame = mPresShell->GetPrimaryFrameFor(mContent);
   if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
+    nsWeakFrame weakFrame(frame);
 #ifdef MOZ_XUL
     // it is possible that the frame is different than the one that requested
     // the lazy generation, but as long as it's a popup frame that hasn't
@@ -11827,7 +11844,7 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
       fc->EndUpdate();
     }
 
-    if (mCallback)
+    if (mCallback && weakFrame.IsAlive())
       mCallback(mContent, frame, mArg);
 
     // call XBL constructors after the frames are created
