@@ -501,7 +501,7 @@ SyncEngine.prototype = {
   // Any cleanup necessary.
   // Save the current snapshot so as to calculate changes at next sync
   _syncFinish: function SyncEngine__syncFinish() {
-    this._log.debug("Finishing up sync");
+    this._log.trace("Finishing up sync");
     this._tracker.resetScore();
   },
 

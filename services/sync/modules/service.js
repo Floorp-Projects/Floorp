@@ -453,7 +453,7 @@ WeaveSvc.prototype = {
         this._serverErrors = 0;
         break;
       case "idle":
-        this._log.debug("idle time hit, trying to sync");
+        this._log.trace("Idle time hit, trying to sync");
         Svc.Idle.removeIdleObserver(this, IDLE_TIME);
         this.sync(false);
         break;
