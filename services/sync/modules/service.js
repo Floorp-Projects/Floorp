@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
  *  Myk Melez <myk@mozilla.org>
+ *  Anant Narayanan <anant@kix.in>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -532,8 +533,14 @@ WeaveSvc.prototype = {
         this._log.debug("Verifying passphrase");
         this.username = username;
         ID.get("WeaveID").setTempPassword(password);
-        let pubkey = PubKeys.getDefaultKey();
-        let privkey = PrivKeys.get(pubkey.privateKeyUri);
+        
+        try {
+          let pubkey = PubKeys.getDefaultKey();
+          let privkey = PrivKeys.get(pubkey.privateKeyUri);
+        } catch (e) {
+          // this means no keys are present (or there's a network error)
+          return true;
+        }
 
         return Svc.Crypto.verifyPassphrase(
           privkey.payload.keyData, passphrase,
