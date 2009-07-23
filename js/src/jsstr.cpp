@@ -1796,6 +1796,9 @@ js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
     rdata.lambda = lambda;
     rdata.repstr = repstr;
     if (repstr) {
+        /* We're about to store pointers into the middle of our string. */
+        if (!js_MakeStringImmutable(cx, repstr))
+            return JS_FALSE;
         rdata.dollarEnd = repstr->chars() + repstr->length();
         rdata.dollar = js_strchr_limit(repstr->chars(), '$',
                                        rdata.dollarEnd);
