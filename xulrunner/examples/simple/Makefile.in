@@ -53,9 +53,6 @@ DIST_FILES	= application.ini
 ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 ICONS		= icons/simple.ico
 endif
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-ICONS		= icons/simple.xpm icons/simple16.xpm
-endif
 
 include $(topsrcdir)/config/rules.mk
 

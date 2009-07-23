@@ -55,7 +55,6 @@
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
 #include "imgILoader.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
@@ -158,10 +157,9 @@ nsImageLoadingContent::~nsImageLoadingContent()
  */
 NS_IMETHODIMP
 nsImageLoadingContent::FrameChanged(imgIContainer* aContainer,
-                                    gfxIImageFrame* aFrame,
                                     nsIntRect* aDirtyRect)
 {
-  LOOP_OVER_OBSERVERS(FrameChanged(aContainer, aFrame, aDirtyRect));
+  LOOP_OVER_OBSERVERS(FrameChanged(aContainer, aDirtyRect));
   return NS_OK;
 }
             
@@ -196,7 +194,7 @@ nsImageLoadingContent::OnStartContainer(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageLoadingContent::OnStartFrame(imgIRequest* aRequest,
-                                    gfxIImageFrame* aFrame)
+                                    PRUint32 aFrame)
 {
   LOOP_OVER_OBSERVERS(OnStartFrame(aRequest, aFrame));
   return NS_OK;    
@@ -204,16 +202,16 @@ nsImageLoadingContent::OnStartFrame(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageLoadingContent::OnDataAvailable(imgIRequest* aRequest,
-                                       gfxIImageFrame* aFrame,
+                                       PRBool aCurrentFrame,
                                        const nsIntRect* aRect)
 {
-  LOOP_OVER_OBSERVERS(OnDataAvailable(aRequest, aFrame, aRect));
+  LOOP_OVER_OBSERVERS(OnDataAvailable(aRequest, aCurrentFrame, aRect));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImageLoadingContent::OnStopFrame(imgIRequest* aRequest,
-                                   gfxIImageFrame* aFrame)
+                                   PRUint32 aFrame)
 {
   LOOP_OVER_OBSERVERS(OnStopFrame(aRequest, aFrame));
   return NS_OK;

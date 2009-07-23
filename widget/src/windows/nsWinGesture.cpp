@@ -76,11 +76,6 @@ nsWinGesture::nsWinGesture() :
   mPixelScrollOverflow = 0;
 }
 
-nsWinGesture::~nsWinGesture()
-{
-  ShutdownLibrary();
-}
-
 /* Load and shutdown */
 
 PRBool nsWinGesture::InitLibrary()
@@ -147,12 +142,6 @@ PRBool nsWinGesture::InitLibrary()
 #endif
 }
 
-void nsWinGesture::ShutdownLibrary()
-{
-  getGestureInfo         = nsnull;
-  beginPanningFeedback   = nsnull;
-}
-
 #define GCOUNT 5
 
 PRBool nsWinGesture::InitWinGestureSupport(HWND hWnd)
@@ -176,9 +165,8 @@ PRBool nsWinGesture::InitWinGestureSupport(HWND hWnd)
   if (gEnableSingleFingerPanEvents) {
     config[2].dwWant = GC_PAN|GC_PAN_WITH_INERTIA|
                        GC_PAN_WITH_GUTTER|
-                       GC_PAN_WITH_SINGLE_FINGER_VERTICALLY|
-                       GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
-    config[2].dwBlock = 0;
+                       GC_PAN_WITH_SINGLE_FINGER_VERTICALLY;
+    config[2].dwBlock = GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
   }
   else {
     config[2].dwWant = GC_PAN|GC_PAN_WITH_INERTIA|

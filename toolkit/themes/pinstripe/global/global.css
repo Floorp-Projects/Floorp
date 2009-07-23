@@ -87,14 +87,6 @@ prefwindow {
   font: message-box;
 }
 
-prefwindow {
-  font: -moz-dialog;
-}
-
-prefwindow .paneSelector {
-  font: message-box;
-}
-
 prefwindow[type="child"] {
   padding-top: 18px;
   padding-bottom: 15px;

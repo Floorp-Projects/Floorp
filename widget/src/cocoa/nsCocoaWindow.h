@@ -214,7 +214,8 @@ public:
     NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                         nsIWidget *aWidget, PRBool aActivate);
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
-
+    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
+    NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
@@ -226,7 +227,9 @@ public:
     NS_IMETHOD Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
-    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *alCipRect) { return NS_OK; }
+    virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
+    virtual void Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                        const nsTArray<Configuration>& aConfigurations);
     NS_IMETHOD BeginResizingChildren(void) { return NS_OK; }
     NS_IMETHOD EndResizingChildren(void) { return NS_OK; }
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
@@ -279,8 +282,9 @@ protected:
                                       nsIToolkit *aToolkit,
                                       nsWidgetInitData *aInitData,
                                       nsNativeWidget aNativeWindow = nsnull);
-  nsresult             CreateNativeWindow(const nsIntRect &aRect,
-                                          nsBorderStyle aBorderStyle);
+  nsresult             CreateNativeWindow(const NSRect &aRect,
+                                          nsBorderStyle aBorderStyle,
+                                          PRBool aRectIsFrameRect);
   nsresult             CreatePopupContentView(const nsIntRect &aRect,
                                               EVENT_CALLBACK aHandleEventFunction,
                                               nsIDeviceContext *aContext,
@@ -299,6 +303,7 @@ protected:
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
   PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
                                         // this is used for sibling sheet contention only
+  PRPackedBool         mFullScreen;
   PRPackedBool         mModal;
 
   PRInt32              mNumModalDescendents;

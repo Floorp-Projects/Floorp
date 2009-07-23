@@ -48,11 +48,12 @@ include $(DEPTH)/config/autoconf.mk
 # headers, so that we can use it to set up the wrapped system headers.
 VISIBILITY_FLAGS =
 
-ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
-ifneq ($(OS_ARCH), WINCE)
 HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
+
+ifeq (WINNT,$(HOST_OS_ARCH))
+HOST_CSRCS	= nsinstall_win.c
+else
 HOST_CSRCS	= nsinstall.c pathsub.c
-endif
 endif
 
 PLSRCS		= nfspwd.pl
@@ -89,6 +90,8 @@ include $(topsrcdir)/config/config.mk
 NO_INSTALL=1
 
 include $(topsrcdir)/config/rules.mk
+
+HOST_CFLAGS += -DUNICODE -D_UNICODE
 
 ifeq ($(OS_CONFIG),SunOS4.1)
 NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md

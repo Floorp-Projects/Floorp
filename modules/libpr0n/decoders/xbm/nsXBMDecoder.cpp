@@ -47,7 +47,6 @@
 
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
-#include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
 
 #include "imgILoad.h"
@@ -56,7 +55,6 @@
 #include "nsISupportsPrimitives.h"
 
 #include "gfxColor.h"
-#include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
 
 // Static colormap
@@ -82,11 +80,7 @@ NS_IMETHODIMP nsXBMDecoder::Init(imgILoad *aLoad)
     nsresult rv;
     mObserver = do_QueryInterface(aLoad);
 
-    mImage = do_CreateInstance("@mozilla.org/image/container;1", &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2", &rv);
+    mImage = do_CreateInstance("@mozilla.org/image/container;2", &rv);
     if (NS_FAILED(rv))
         return rv;
 
@@ -106,7 +100,6 @@ NS_IMETHODIMP nsXBMDecoder::Close()
     mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
     mObserver = nsnull;
     mImage = nsnull;
-    mFrame = nsnull;
     mImageData = nsnull;
 
     return NS_OK;
@@ -198,7 +191,9 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         mImage->Init(mWidth, mHeight, mObserver);
         mObserver->OnStartContainer(nsnull, mImage);
 
-        nsresult rv = mFrame->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB_A1, 24);
+        PRUint32 imageLen;
+        nsresult rv = mImage->AppendFrame(0, 0, mWidth, mHeight, gfxASurface::ImageFormatARGB32,
+                                          (PRUint8**)&mImageData, &imageLen);
         if (NS_FAILED(rv))
             return rv;
 
@@ -218,11 +213,7 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             }
         }
 
-        mImage->AppendFrame(mFrame);
-        mObserver->OnStartFrame(nsnull, mFrame);
-
-        PRUint32 imageLen;
-        mFrame->GetImageData((PRUint8**)&mImageData, &imageLen);
+        mObserver->OnStartFrame(nsnull, 0);
 
         mState = RECV_SEEK;
 
@@ -240,7 +231,6 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         }
     }
     if (mState == RECV_DATA) {
-        nsCOMPtr<nsIImage> img = do_GetInterface(mFrame);
         PRUint32 *ar = mImageData + mCurRow * mWidth + mCurCol;
 
         do {
@@ -279,17 +269,17 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             mCurCol += numPixels;
             if (mCurCol == mWidth || mState == RECV_DONE) {
                 nsIntRect r(0, mCurRow, mWidth, 1);
-                nsresult rv = img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+                nsresult rv = mImage->FrameUpdated(0, r);
                 if (NS_FAILED(rv)) {
                   return rv;
                 }
 
-                mObserver->OnDataAvailable(nsnull, mFrame, &r);
+                mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
 
                 mCurRow++;
                 if (mCurRow == mHeight) {
                     mState = RECV_DONE;
-                    return mObserver->OnStopFrame(nsnull, mFrame);
+                    return mObserver->OnStopFrame(nsnull, 0);
                 }
                 mCurCol = 0;
             }

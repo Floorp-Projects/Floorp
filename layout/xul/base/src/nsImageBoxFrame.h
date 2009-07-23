@@ -59,8 +59,7 @@ public:
   NS_IMETHOD OnStopDecode(imgIRequest *request, nsresult status,
                           const PRUnichar *statusArg);
   // imgIContainerObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD FrameChanged(imgIContainer *container, gfxIImageFrame *newframe,
-                          nsIntRect *dirtyRect);
+  NS_IMETHOD FrameChanged(imgIContainer *container, nsIntRect *dirtyRect);
 
   void SetFrame(nsImageBoxFrame *frame) { mFrame = frame; }
 
@@ -121,9 +120,7 @@ public:
   NS_IMETHOD OnStopDecode(imgIRequest *request,
                           nsresult status,
                           const PRUnichar *statusArg);
-  NS_IMETHOD FrameChanged(imgIContainer *container,
-                          gfxIImageFrame *newframe,
-                          nsIntRect *dirtyRect);
+  NS_IMETHOD FrameChanged(imgIContainer *container, nsIntRect *dirtyRect);
 
   virtual ~nsImageBoxFrame();
 

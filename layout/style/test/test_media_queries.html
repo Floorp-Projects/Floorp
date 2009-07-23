@@ -24,11 +24,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=156716
 
 SimpleTest.waitForExplicitFinish();
 
+var iframe;
+
 function run() {
-  var subdoc = document.getElementById("subdoc").contentDocument;
-  var subwin = document.getElementById("subdoc").contentWindow;
+  iframe = document.getElementById("subdoc");
+  var subdoc = iframe.contentDocument;
+  var subwin = iframe.contentWindow;
   var style = subdoc.getElementById("style");
-  var iframe_style = document.getElementById("subdoc").style;
+  var iframe_style = iframe.style;
   var body_cs = subdoc.defaultView.getComputedStyle(subdoc.body, "");
 
   function query_applies(q) {
@@ -44,6 +47,16 @@ function run() {
   function should_not_apply(q) {
     ok(!query_applies(q), q + " should not apply");
     test_serialization(q, true, false);
+  }
+
+  /* for queries that are parseable standalone but not within CSS */
+  function should_apply_unbalanced(q) {
+    ok(query_applies(q), q + " should apply");
+  }
+
+  /* for queries that are parseable standalone but not within CSS */
+  function should_not_apply_unbalanced(q) {
+    ok(!query_applies(q), q + " should not apply");
   }
 
   /*
@@ -107,8 +120,37 @@ function run() {
     if (test_application) {
       var applies = body_cs.getPropertyValue("text-decoration") == "underline";
       is(applies, should_apply,
-         "Media query '" + q + "' should apply after serialize + reparse");
+         "Media query '" + q + "' should " + (should_apply ? "" : "NOT ") +
+         "apply after serialize + reparse");
     }
+
+    // Test cloning
+    var sheet = "@media " + q + " { body { text-decoration: underline } }"
+    var sheeturl = "data:text/css," + escape(sheet);
+    var link = "<link rel='stylesheet' href='" + sheeturl + "'>";
+    var htmldoc = "<!DOCTYPE HTML>" + link + link  + "<body>";
+    var docurl = "data:text/html," + escape(htmldoc);
+    post_clone_test(docurl, function() {
+      var clonedoc = iframe.contentDocument;
+      var clonewin = iframe.contentWindow;
+      var links = clonedoc.getElementsByTagName("link");
+      // cause a clone
+      var clonedsheet = links[1].sheet;
+      clonedsheet.insertRule("#nonexistent { color: purple}", 1);
+      // remove the uncloned sheet
+      links[0].parentNode.removeChild(links[0]);
+
+      var ser3 = clonedsheet.cssRules[0].media.mediaText;
+      is(ser3, ser1, "cloning query '" + q + "' should not change " +
+                     "serialization");
+      if (test_application) {
+        var applies = clonewin.getComputedStyle(clonedoc.body, "").
+                        textDecoration == "underline";
+        is(applies, should_apply,
+           "Media query '" + q + "' should " + (should_apply ? "" : "NOT ") +
+           "apply after cloning");
+      }
+    });
   }
 
   // The no-type syntax doesn't mix with the not and only keywords.
@@ -152,8 +194,10 @@ function run() {
   // in this test, assume the common underlying implementation is correct
   var width_val = 117; // pick two not-too-round numbers
   var height_val = 76;
-  iframe_style.width = width_val + "px";
-  iframe_style.height = height_val + "px";
+  change_state(function() {
+    iframe_style.width = width_val + "px";
+    iframe_style.height = height_val + "px";
+  });
   var device_width = window.screen.width;
   var device_height = window.screen.height;
   features = { "width": width_val,
@@ -181,24 +225,34 @@ function run() {
                      (Math.floor(value/em_size) - 1) + "em)");
   }
 
-  iframe_style.width = "0";
+  change_state(function() {
+    iframe_style.width = "0";
+  });
   should_apply("all and (height)");
   should_not_apply("all and (width)");
-  iframe_style.height = "0";
+  change_state(function() {
+    iframe_style.height = "0";
+  });
   should_not_apply("all and (height)");
   should_not_apply("all and (width)");
   should_apply("all and (device-height)");
   should_apply("all and (device-width)");
-  iframe_style.width = width_val + "px";
+  change_state(function() {
+    iframe_style.width = width_val + "px";
+  });
   should_not_apply("all and (height)");
   should_apply("all and (width)");
-  iframe_style.height = height_val + "px";
+  change_state(function() {
+    iframe_style.height = height_val + "px";
+  });
   should_apply("all and (height)");
   should_apply("all and (width)");
 
   // ratio that reduces to 59/40
-  iframe_style.width = "236px";
-  iframe_style.height = "160px";
+  change_state(function() {
+    iframe_style.width = "236px";
+    iframe_style.height = "160px";
+  });
   expression_should_be_parseable("orientation");
   expression_should_be_parseable("orientation: portrait");
   expression_should_be_parseable("orientation: landscape");
@@ -213,7 +267,9 @@ function run() {
   should_not_apply("(orientation: portrait)");
   should_apply("not all and (orientation: portrait)");
   // ratio that reduces to 59/80
-  iframe_style.height = "320px";
+  change_state(function() {
+    iframe_style.height = "320px";
+  });
   should_apply("(orientation)");
   should_not_apply("(orientation: landscape)");
   should_apply("not all and (orientation: landscape)");
@@ -438,16 +494,16 @@ function run() {
 
   // Parsing tests
   // bug 454227
-  should_apply("(orientation");
-  should_not_apply("not all and (orientation");
-  should_not_apply("(orientation:");
-  should_apply("all,(orientation:");
-  should_not_apply("(orientation:,all");
-  should_apply("not all and (grid");
-  should_not_apply("only all and (grid");
-  should_not_apply("(grid");
-  should_apply("all,(grid");
-  should_not_apply("(grid,all");
+  should_apply_unbalanced("(orientation");
+  should_not_apply_unbalanced("not all and (orientation");
+  should_not_apply_unbalanced("(orientation:");
+  should_apply_unbalanced("all,(orientation:");
+  should_not_apply_unbalanced("(orientation:,all");
+  should_apply_unbalanced("not all and (grid");
+  should_not_apply_unbalanced("only all and (grid");
+  should_not_apply_unbalanced("(grid");
+  should_apply_unbalanced("all,(grid");
+  should_not_apply_unbalanced("(grid,all");
   // bug 454226
   should_apply(",all");
   should_apply("all,");
@@ -464,7 +520,57 @@ function run() {
   should_not_apply("badmedium,[badsyntax]");
   should_not_apply("[badsyntax],badmedium");
 
-  SimpleTest.finish();
+  handle_posted_items();
+}
+
+/*
+ * The cloning tests have to post tests that wait for onload.  However,
+ * we also make a bunch of state changes during the tests above.  So we
+ * always change state using the change_state call, with both makes the
+ * change immediately and posts an item in the same queue so that we
+ * make the same state change again later.
+ */
+
+var posted_items = [];
+
+function change_state(func)
+{
+  func();
+  posted_items.push({state: func});
+}
+
+function post_clone_test(docurl, testfunc)
+{
+  posted_items.push({docurl: docurl, testfunc: testfunc});
+}
+
+function handle_posted_items()
+{
+  if (posted_items.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  if ("state" in posted_items[0]) {
+    var item = posted_items.shift();
+    item.state();
+    handle_posted_items();
+    return;
+  }
+
+  var docurl = posted_items[0].docurl;
+  iframe.onload = handle_iframe_onload;
+  iframe.src = docurl;
+}
+
+function handle_iframe_onload(event)
+{
+  if (event.target != iframe)
+    return;
+
+  var item = posted_items.shift();
+  item.testfunc();
+  handle_posted_items();
 }
 
 </script>

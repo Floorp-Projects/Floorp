@@ -287,8 +287,6 @@ nsIMEBeOS *nsIMEBeOS::beosIME = 0;
 nsWindow::nsWindow() : nsBaseWidget()
 {
 	mView               = 0;
-	mPreferredWidth     = 0;
-	mPreferredHeight    = 0;
 	mFontMetrics        = nsnull;
 	mIsShiftDown        = PR_FALSE;
 	mIsControlDown      = PR_FALSE;
@@ -2671,27 +2669,6 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
 		mView->Window()->SetTitle(NS_ConvertUTF16toUTF8(aTitle).get());
 		mView->UnlockLooper();
 	}
-	return NS_OK;
-}
-
-//----------------------------------------------------
-//
-// Get/Set the preferred size
-//
-//----------------------------------------------------
-NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
-{
-	// TODO:  Check to see how often this is called.  If too much, leave as is,
-	// otherwise, call mView->GetPreferredSize
-	aWidth  = mPreferredWidth;
-	aHeight = mPreferredHeight;
-	return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
-{
-	mPreferredWidth  = aWidth;
-	mPreferredHeight = aHeight;
 	return NS_OK;
 }
 

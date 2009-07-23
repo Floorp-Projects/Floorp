@@ -139,8 +139,8 @@ endif
 testxpcobjdir = $(DEPTH)/_tests/xpcshell
 
 # Test file installation
-ifdef NSINSTALL_BIN
-# nsinstall in moztools can't recursively copy directories, so use nsinstall.py
+ifneq (,$(filter WINNT os2-emx,$(HOST_OS_ARCH)))
+# Windows and OS/2 nsinstall can't recursively copy directories, so use nsinstall.py
 TEST_INSTALLER = $(PYTHON) $(topsrcdir)/config/nsinstall.py
 else
 TEST_INSTALLER = $(INSTALL)
@@ -337,7 +337,7 @@ endif # SHARED_LIBRARY_NAME
 endif # MOZ_MAPINFO
 
 ifdef DEFFILE
-OS_LDFLAGS += -DEF:$(DEFFILE)
+OS_LDFLAGS += -DEF:$(call normalizepath,$(DEFFILE))
 EXTRA_DEPS += $(DEFFILE)
 endif
 

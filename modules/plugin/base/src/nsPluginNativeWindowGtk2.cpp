@@ -193,16 +193,19 @@ nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aP
           printf("nsPluginNativeWindowGtk2: NPPVpluginNeedsXEmbed=%d\n", needXEmbed);
 #endif
         }
+        nsresult rv;
         if(needXEmbed) {
 #ifdef MOZ_COMPOSITED_PLUGINS
-          CreateXCompositedWindow();
+          rv = CreateXCompositedWindow();
 #else
-          CreateXEmbedWindow();
+          rv = CreateXEmbedWindow();
 #endif
         }
         else {
-          CreateXtWindow();
+          rv = CreateXtWindow();
         }
+        if(NS_FAILED(rv))
+          return NS_ERROR_FAILURE;
       }
 
       if(!mSocketWidget)
@@ -270,6 +273,9 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
   // Fill out the ws_info structure.
   // (The windowless case is done in nsObjectFrame.cpp.)
   GdkWindow *gdkWindow = gdk_window_lookup((XID)window);
+  if(!gdkWindow)
+    return NS_ERROR_FAILURE;
+
   mWsInfo.display = GDK_WINDOW_XDISPLAY(gdkWindow);
   mWsInfo.colormap = GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(gdkWindow));
   GdkVisual* gdkVisual = gdk_drawable_get_visual(gdkWindow);

@@ -756,7 +756,6 @@ panel[type="autocomplete-richlistbox"] {
 .autocomplete-richlistbox {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistbox");
   -moz-user-focus: ignore;
-  -moz-appearance: none;
 }
 
 .autocomplete-richlistbox > scrollbox {
@@ -1065,7 +1064,6 @@ preference {
 radio[pane] {
   -moz-binding: url("chrome://global/content/bindings/preferences.xml#panebutton") !important; 
   -moz-box-orient: vertical;
-  -moz-appearance: none;
   -moz-box-align: center;
 }
 
@@ -1086,7 +1084,6 @@ expander {
 richlistbox {
   -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistbox');
   -moz-user-focus: normal;
-  -moz-appearance: listbox;
   -moz-box-orient: vertical;
 }
 

@@ -822,11 +822,8 @@ if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
 
-MOZ_PATH_PROGS(NSINSTALL_BIN, nsinstall )
 if test -z "$COMPILE_ENVIRONMENT"; then
-if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
-fi
 fi
 AC_SUBST(NSINSTALL_BIN)
 
@@ -2162,9 +2159,6 @@ case "$target" in
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS
-        _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI mozilla-config.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
@@ -2888,7 +2882,24 @@ else
     AC_MSG_RESULT(no)
 fi
 
-AC_LANG_C
+AC_LANG_CPLUSPLUS
+
+dnl Check for usable char16_t (2 bytes, unsigned)
+dnl (we might not need the unsignedness check anymore)
+AC_CACHE_CHECK(for usable char16_t (2 bytes, unsigned),
+    ac_cv_have_usable_char16_t,
+    [AC_TRY_COMPILE([$configure_static_assert_macros],
+                    [CONFIGURE_STATIC_ASSERT(sizeof(char16_t) == 2);
+                     CONFIGURE_STATIC_ASSERT(char16_t(-1) > char16_t(0));
+                     CONFIGURE_STATIC_ASSERT(sizeof((u"hello")[0]) == 2);
+                     CONFIGURE_STATIC_ASSERT(sizeof(u'a') == 2);
+                     CONFIGURE_STATIC_ASSERT(u'\xFFFF' > u'\x0')],
+                    ac_cv_have_usable_char16_t="yes",
+                    ac_cv_have_usable_char16_t="no")])
+if test "$ac_cv_have_usable_char16_t" = "yes"; then
+    AC_DEFINE(HAVE_CPP_CHAR16_T)
+    HAVE_CPP_CHAR16_T=1
+fi
 
 dnl Check for usable wchar_t (2 bytes, unsigned)
 dnl (we really don't need the unsignedness check anymore)
@@ -2905,15 +2916,13 @@ AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
 if test "$ac_cv_have_usable_wchar_v2" = "yes"; then
     AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
     HAVE_CPP_2BYTE_WCHAR_T=1
-else
+elif test "$ac_cv_have_usable_char16_t" != "yes"; then
 dnl This is really gcc-only
 dnl Do this test using CXX only since some versions of gcc
 dnl 2.95-2.97 have a signed wchar_t in c++ only and some versions
 dnl only have short-wchar support for c++.
 dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
 
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
     _SAVE_CXXFLAGS=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS -fshort-wchar"
 
@@ -2933,8 +2942,9 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
     else    
         CXXFLAGS=$_SAVE_CXXFLAGS
     fi
-    AC_LANG_RESTORE
 fi
+
+AC_LANG_C
 
 dnl Check for .hidden assembler directive and visibility attribute.
 dnl Borrowed from glibc configure.in
@@ -4575,7 +4585,6 @@ case "$target_os" in
         if test -z "$GNU_CC"; then 
             XPC_IDISPATCH_SUPPORT=1
             MOZ_NO_ACTIVEX_SUPPORT=
-            MOZ_ACTIVEX_SCRIPTING_SUPPORT=1
         fi
         ;;
 esac
@@ -6074,11 +6083,11 @@ MOZ_ARG_DISABLE_BOOL(activex,
     MOZ_NO_ACTIVEX_SUPPORT= )
 AC_SUBST(MOZ_NO_ACTIVEX_SUPPORT)
 
-MOZ_ARG_DISABLE_BOOL(activex-scripting,
-[  --disable-activex-scripting
-                          Disable building of ActiveX scripting support (win32)],
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=,
-    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1)
+MOZ_ARG_ENABLE_BOOL(activex-scripting,
+[  --enable-activex-scripting
+                          Enable building of ActiveX scripting support (win32)],
+    MOZ_ACTIVEX_SCRIPTING_SUPPORT=1,
+    MOZ_ACTIVEX_SCRIPTING_SUPPORT=)
 AC_SUBST(MOZ_ACTIVEX_SCRIPTING_SUPPORT)
 
 if test -n "$MOZ_NO_ACTIVEX_SUPPORT" -a -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT";
@@ -7383,12 +7392,9 @@ if test "$_cpp_md_flag"; then
   fi
 else
   COMPILER_DEPEND=
-  dnl Don't override this for MSVC
-  if test -z "$_WIN32_MSVC"; then
-    _USE_CPP_INCLUDE_FLAG=
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-    _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-  fi
+  _USE_CPP_INCLUDE_FLAG=
+  _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+  _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
 fi
 fi # MOZ_AUTO_DEPS
 MDDEPDIR='.deps'
@@ -7945,6 +7951,8 @@ if test "$NECKO_WIFI"; then
     AC_CHECK_HEADER([iwlib.h])
     if test "$ac_cv_header_iwlib_h" = "yes"; then
       NECKO_WIFI=1
+    else
+      AC_MSG_ERROR([Can't find header iwlib.h for Necko WiFi scanning (might be in package libiw-dev (Ubuntu) or wireless-tools-devel (Fedora)); use --disable-necko-wifi to disable])
     fi
   elif test "$OS_ARCH" = "Darwin"; then
     NECKO_WIFI=1
@@ -8396,6 +8404,7 @@ HAVE_CPP_2BYTE_WCHAR_T
 HAVE_CPP_ACCESS_CHANGING_USING
 HAVE_CPP_AMBIGUITY_RESOLVING_USING
 HAVE_CPP_BOOL
+HAVE_CPP_CHAR16_T
 HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_CPP_EXPLICIT
 HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX

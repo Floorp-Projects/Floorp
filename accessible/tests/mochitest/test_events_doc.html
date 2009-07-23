@@ -1,0 +1,78 @@
+<html>
+
+<head>
+  <title>Accessible events testing for document</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function changeIframeSrc(aIdentifier, aURL)
+    {
+      this.DOMNode = getNode(aIdentifier);
+
+      this.invoke = function changeIframeSrc_invoke()
+      {
+        this.DOMNode.src = aURL;
+      }
+
+      this.getID = function changeIframeSrc_getID()
+      {
+        return "change iframe src on " + aURL;
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+
+    // var gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue(EVENT_REORDER);
+
+      gQueue.push(new changeIframeSrc("iframe", "about:"));
+      gQueue.push(new changeIframeSrc("iframe", "about:buildconfig"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=420845"
+     title="Fire event_reorder on any embedded frames/iframes whos document has just loaded">
+    Mozilla Bug 420845
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="testContainer">
+    <iframe id="iframe"></iframe>
+  </div>
+  <div id="eventdump"></div>
+</body>
+</html>

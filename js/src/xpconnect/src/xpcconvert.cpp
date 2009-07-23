@@ -583,8 +583,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             return JS_FALSE;
         break;
     case nsXPTType::T_BOOL   :
-        if(!JS_ValueToBoolean(cx, s, (JSBool*)d))
-            return JS_FALSE;
+        JS_ValueToBoolean(cx, s, (JSBool*)d);
         break;
     case nsXPTType::T_CHAR   :
         {
@@ -1129,6 +1128,13 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                         *d = slim;
                         return JS_TRUE;
                     }
+
+                    // Even if ConstructSlimWrapper returns JS_FALSE it might
+                    // have created a wrapper (while calling the PreCreate
+                    // hook). In that case we need to fall through because we
+                    // either have a slim wrapper that needs to be morphed or
+                    // we have an XPCWrappedNative.
+                    flat = cache->GetWrapper();
                 }
                 else if(!IS_WRAPPER_CLASS(STOBJ_GET_CLASS(flat)))
                 {

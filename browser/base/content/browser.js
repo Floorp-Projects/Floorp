@@ -1058,6 +1058,8 @@ function BrowserStartup() {
     gURLBar.setAttribute("enablehistory", "false");
   }
 
+  allTabs.readPref();
+
   setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
 }
 
@@ -1318,7 +1320,9 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
   tabPreviews.init();
-  ctrlTab.init();
+  ctrlTab.readPref();
+  gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
+  gPrefService.addObserver(allTabs.prefName, allTabs, false);
 
   // Initialize the microsummary service by retrieving it, prompting its factory
   // to create its singleton, whose constructor initializes the service.
@@ -1371,6 +1375,7 @@ function BrowserShutdown()
 {
   tabPreviews.uninit();
   ctrlTab.uninit();
+  allTabs.uninit();
 
   gGestureSupport.init(false);
 
@@ -2646,16 +2651,22 @@ var browserDragAndDrop = {
         case "text/x-moz-url":
           var split = dt.getData(type).split("\n");
           return [split[0], split[1]];
-        case "application/x-moz-file":
-          var file = dt.mozGetDataAt(type, 0);
-          var name = file instanceof Components.interfaces.nsIFile ? file.leafName : "";
-          var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                    .getService(Components.interfaces.nsIIOService);
-          var fileHandler = ioService.getProtocolHandler("file")
-                                     .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-          return [fileHandler.getURLSpecFromFile(file), name];
       }
     }
+
+    // For shortcuts, we want to check for the file type last, so that the
+    // url pointed to in one of the url types is found first before the file
+    // type, which points to the actual file.
+    var file = dt.mozGetDataAt("application/x-moz-file", 0);
+    if (file) {
+      var name = file instanceof Ci.nsIFile ? file.leafName : "";
+      var ioService = Cc["@mozilla.org/network/io-service;1"]
+                                .getService(Ci.nsIIOService);
+      var fileHandler = ioService.getProtocolHandler("file")
+                                 .QueryInterface(Ci.nsIFileProtocolHandler);
+      return [fileHandler.getURLSpecFromFile(file), name];
+    }
+
     return [ , ];
   },
 
@@ -4964,19 +4975,19 @@ function middleMousePaste(event)
  */
 
 var contentAreaDNDObserver = {
-  onDragOver: function (aEvent)
-    {
-      var types = aEvent.dataTransfer.types;
-      if (types.contains("application/x-moz-file") ||
-          types.contains("text/x-moz-url") ||
-          types.contains("text/uri-list") ||
-          types.contains("text/plain"))
-        aEvent.preventDefault();
-    },
   onDrop: function (aEvent)
     {
       if (aEvent.getPreventDefault())
         return;
+
+      var types = aEvent.dataTransfer.types;
+      if (!types.contains("application/x-moz-file") &&
+          !types.contains("text/x-moz-url") &&
+          !types.contains("text/uri-list") &&
+          !types.contains("text/plain")) {
+        aEvent.preventDefault();
+        return;
+      }
 
       let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
 

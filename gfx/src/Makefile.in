@@ -59,7 +59,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  $(NULL)
 
-DIRS        = shared thebes
+DIRS        = thebes
 
 ifdef MOZ_ENABLE_POSTSCRIPT
 DIRS        += psshared

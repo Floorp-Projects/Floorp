@@ -1915,10 +1915,9 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   }
 
   // create the PresContext
-  aPO->mPresContext = new nsPresContext(aPO->mDocument,
-                                        mIsCreatingPrintPreview ?
-                                         nsPresContext::eContext_PrintPreview:
-                                         nsPresContext::eContext_Print);
+  aPO->mPresContext = new nsRootPresContext(aPO->mDocument,
+    mIsCreatingPrintPreview ? nsPresContext::eContext_PrintPreview:
+                              nsPresContext::eContext_Print);
   NS_ENSURE_TRUE(aPO->mPresContext, NS_ERROR_OUT_OF_MEMORY);
   aPO->mPresContext->SetPrintSettings(mPrt->mPrintSettings);
 

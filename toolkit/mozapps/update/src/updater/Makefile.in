@@ -81,6 +81,14 @@ endif
 REQUIRES += string
 endif
 
+ifeq ($(OS_ARCH),WINCE)
+USE_STATIC_LIBS = 1
+OS_LIBS += $(call EXPAND_LIBNAME,ws2)
+DEFINES += -DUNICODE -D_UNICODE
+RCFLAGS += -I$(srcdir)
+REQUIRES += string
+endif
+
 ifneq ($(MOZ_ENABLE_GTK2),)
 HAVE_PROGRESSUI = 1
 CPPSRCS += \
@@ -106,6 +114,10 @@ MOZ_WINCONSOLE = 1
 else
 MOZ_WINCONSOLE = 0
 endif
+endif
+
+ifeq ($(OS_ARCH), WINCE)
+CPPSRCS += updater_wince.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -137,7 +149,7 @@ libs::
 	rm -f $(DIST)/bin/updater
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 # Pick up nsWindowsRestart.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 endif

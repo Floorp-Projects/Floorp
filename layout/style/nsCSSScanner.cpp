@@ -1076,7 +1076,6 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
 {
   NS_PRECONDITION(c == '.' || c == '+' || c == '-' || IsDigit(c),
                   "Why did we get called?");
-  PRBool gotDot = (c == '.');
   aToken.mHasSign = (c == '+' || c == '-');
 
   // Our sign.
@@ -1091,10 +1090,6 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
   // truncating down (as we would if fracPart were a float and we just
   // effectively lost the last several digits).
   double fracPart = 0;
-  // Power of ten by which we need to divide our next digit; this is 1
-  // unless we're parsing the fractional part of the mantissa (so
-  // unless gotDot is true).
-  float divisor = 1;
   // Absolute value of the power of 10 that we should multiply by (only
   // relevant for numbers in scientific notation).  Has to be a signed integer,
   // because multiplication of signed by unsigned converts the unsigned to
@@ -1102,66 +1097,69 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
   PRInt32 exponent = 0;
   // Sign of the exponent.
   PRInt32 expSign = 1;
-  
-  if (gotDot) {
-    divisor = 10;
-  } else if (!aToken.mHasSign) {
-    // We got our first digit
-    intPart += CHAR_TO_DIGIT(c);
+
+  if (aToken.mHasSign) {
+    NS_ASSERTION(c != '.', "How did that happen?");
+    c = Read();
   }
 
-  // Gather up characters that make up the number
-  PRBool gotE = PR_FALSE;
-  for (;;) {
-    c = Read();
-    if (c < 0) break;
+  PRBool gotDot = (c == '.');
 
-    // If gotE is true, then gotDot is no longer relevant for deciding
-    // what to do with 'c', nor will it change.
-    if (NS_UNLIKELY(gotE)) {
-      if (!IsDigit(c)) {
-        break;
-      }
-      exponent = 10*exponent + CHAR_TO_DIGIT(c);
-    }
-#ifdef MOZ_SVG
-    else if (NS_UNLIKELY(IsSVGMode() && (c == 'e' || c == 'E'))) {
-      PRInt32 nextChar = Peek();
-      PRInt32 expSignChar = 0;
-      if (nextChar == '-' || nextChar == '+') {
-        expSignChar = Read();
-        nextChar = Peek();
-      }
-      if (IsDigit(nextChar)) {
-        gotE = PR_TRUE;
-        if (expSignChar == '-') {
-          expSign = -1;
-        }
-      } else {
-        if (expSignChar) {
-          Pushback(expSignChar);
-        }
-        break;
-      }
-    }
-#endif
-    else if (gotDot) {
-      // We're in the fractional part, and c is not 'e' or 'E'
-      if (!IsDigit(c)) {
-        break;
-      }
+  if (!gotDot) {
+    // Parse the integer part of the mantisssa
+    NS_ASSERTION(IsDigit(c), "Why did we get called?");
+    do {
+      intPart = 10*intPart + CHAR_TO_DIGIT(c);
+      c = Read();
+      // The IsDigit check will do the right thing even if Read() returns < 0
+    } while (IsDigit(c));
+
+    gotDot = (c == '.') && IsDigit(Peek());
+  }
+
+  if (gotDot) {
+    // Parse the fractional part of the mantissa.
+    c = Read();
+    NS_ASSERTION(IsDigit(c), "How did we get here?");
+    // Power of ten by which we need to divide our next digit
+    float divisor = 10;
+    do {
       fracPart += CHAR_TO_DIGIT(c) / divisor;
       divisor *= 10;
-    } else if (c == '.' && IsDigit(Peek())) {
-      gotDot = PR_TRUE;
-      divisor = 10;
-    } else if (IsDigit(c)) {
-      intPart = 10*intPart + CHAR_TO_DIGIT(c);
+      c = Read();
+      // The IsDigit check will do the right thing even if Read() returns < 0
+    } while (IsDigit(c));
+  }
+
+  PRBool gotE = PR_FALSE;
+#ifdef MOZ_SVG
+  if (IsSVGMode() && (c == 'e' || c == 'E')) {
+    PRInt32 nextChar = Peek();
+    PRInt32 expSignChar = 0;
+    if (nextChar == '-' || nextChar == '+') {
+      expSignChar = Read();
+      nextChar = Peek();
+    }
+    if (IsDigit(nextChar)) {
+      gotE = PR_TRUE;
+      if (expSignChar == '-') {
+        expSign = -1;
+      }
+
+      c = Read();
+      NS_ASSERTION(IsDigit(c), "Peek() must have lied");
+      do {
+        exponent = 10*exponent + CHAR_TO_DIGIT(c);
+        c = Read();
+        // The IsDigit check will do the right thing even if Read() returns < 0
+      } while (IsDigit(c));
     } else {
-      // Don't know what to do with this char; stop consuming the number
-      break;
+      if (expSignChar) {
+        Pushback(expSignChar);
+      }
     }
   }
+#endif
 
   nsCSSTokenType type = eCSSToken_Number;
 

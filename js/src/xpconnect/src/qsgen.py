@@ -132,7 +132,6 @@ import xpidl
 import header
 import os, re
 import sys
-import sets
 
 # === Preliminaries
 
@@ -395,8 +394,7 @@ argumentUnboxingTemplates = {
 
     'boolean':
         "    PRBool ${name};\n"
-        "    if (!JS_ValueToBoolean(cx, ${argVal}, &${name}))\n"
-        "        return JS_FALSE;\n",
+        "    JS_ValueToBoolean(cx, ${argVal}, &${name});\n",
 
     '[astring]':
         "    xpc_qsAString ${name}(cx, ${argPtr});\n"
@@ -485,10 +483,11 @@ def writeArgumentUnboxing(f, i, name, type, haveCcx, optional, rvdeclared):
         else:
             if not rvdeclared:
                 f.write("    nsresult rv;\n");
-            f.write("    nsCOMPtr<%s> %s;\n" % (type.name, name))
+            f.write("    %s *%s;\n" % (type.name, name))
+            f.write("    xpc_qsSelfRef %sref;\n" % name)
             f.write("    rv = xpc_qsUnwrapArg<%s>("
-                    "cx, %s, getter_AddRefs(%s));\n"
-                    % (type.name, argVal, name))
+                    "cx, %s, &%s, &%sref.ptr, %s);\n"
+                    % (type.name, argVal, name, name, argPtr))
             f.write("    if (NS_FAILED(rv)) {\n")
             if isSetter:
                 f.write("        xpc_qsThrowBadSetterValue("
@@ -708,7 +707,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
         if isGetter:
             pthisval = 'vp'
         elif isSetter:
-            f.write("    xpc_qsTempRoot tvr(cx);\n")
+            f.write("    JSAutoTempValueRooter tvr(cx);\n")
             pthisval = 'tvr.addr()'
         else:
             pthisval = '&vp[1]' # as above, ok to overwrite vp[1]
@@ -915,7 +914,6 @@ traceableArgumentConversionTemplates = {
 def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
                                      rvdeclared):
     argVal = "_arg%d" % i
-    argPtr = "&" + argVal
 
     params = {
         'name': name,
@@ -946,10 +944,11 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
         else:
             if not rvdeclared:
                 f.write("    nsresult rv;\n");
-            f.write("    nsCOMPtr<%s> %s;\n" % (type.name, name))
+            f.write("    %s *%s;\n" % (type.name, name))
+            f.write("    xpc_qsSelfRef %sref;\n" % name)
             f.write("    rv = xpc_qsUnwrapArg<%s>("
-                    "cx, %s, getter_AddRefs(%s));\n"
-                    % (type.name, argVal, name))
+                    "cx, %s, &%s, &%sref.ptr, &vp.array[%d]);\n"
+                    % (type.name, argVal, name, name, 1 + i))
             f.write("    if (NS_FAILED(rv)) {\n")
             if haveCcx:
                 f.write("        xpc_qsThrowBadArgWithCcx(ccx, rv, %d);\n" % i)
@@ -1004,16 +1003,16 @@ def writeTraceableResultConv(f, type, paramNum):
     elif isInterfaceType(type):
         if isVariantType(type):
             f.write("    JSBool ok = xpc_qsVariantToJsval(ccx, result, %d, "
-                    "tvr.addr());\n" % paramNum)
+                    "&vp.array[0]);\n" % paramNum)
         else:
             f.write("    AutoMarkingNativeInterfacePtr resultiface(ccx, "
                     "%s_Interface(ccx));\n" % type.name)
             f.write("    JSBool ok = xpc_qsXPCOMObjectToJsval(ccx, result, "
-                    "xpc_qsGetWrapperCache(result), resultiface, tvr.addr());"
+                    "xpc_qsGetWrapperCache(result), resultiface, &vp.array[0]);"
                     "\n")
         f.write("    if (!ok) {\n");
         writeFailure(f, getTraceInfoDefaultReturn(type), 2)
-        f.write("    return *tvr.addr();\n")
+        f.write("    return vp.array[0];\n")
         return
 
     warn("Unable to convert result of type %s" % typeName)
@@ -1055,13 +1054,13 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     else:
         f.write("    %s *self;\n" % customMethodCall['thisType'])
     f.write("    xpc_qsSelfRef selfref;\n")
-    f.write("    xpc_qsTempRoot tvr(cx);\n")
+    f.write("    xpc_qsArgValArray<%d> vp(cx);\n" % (1 + len(member.params)))
     if haveCcx:
         f.write("    if (!xpc_qsUnwrapThisFromCcx(ccx, &self, &selfref.ptr, "
-                "tvr.addr())) {\n")
+                "&vp.array[0])) {\n")
     else:
         f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, "
-                "tvr.addr())) {\n")
+                "&vp.array[0])) {\n")
     writeFailure(f, getTraceInfoDefaultReturn(member.type), 2)
 
     argNames = []
@@ -1356,7 +1355,7 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
     make_targets.append(filename)
 
     f = open(filename, 'w')
-    filesIncluded = sets.Set()
+    filesIncluded = set()
 
     def includeType(type):
         type = unaliasType(type)
@@ -1397,7 +1396,7 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
         for iface in interfaces:
             resulttypes.extend(writeIncludesForInterface(iface))
         f.write("\n\n")
-        writeResultXPCInterfacesArray(f, conf, sets.ImmutableSet(resulttypes))
+        writeResultXPCInterfacesArray(f, conf, frozenset(resulttypes))
         for iface in interfaces:
             writeStubsForInterface(f, conf.customMethodCalls, iface)
         writeDefiner(f, conf, interfaces)

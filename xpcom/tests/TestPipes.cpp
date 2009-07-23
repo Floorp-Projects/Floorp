@@ -45,8 +45,9 @@
 #include "prinrval.h"
 #include "nsCRT.h"
 #include "nsIPipe.h"    // new implementation
-#include "nsAutoLock.h"
 
+#include "mozilla/Monitor.h"
+using namespace mozilla;
 
 /** NS_NewPipe2 reimplemented, because it's not exported by XPCOM */
 nsresult TP_NewPipe2(nsIAsyncInputStream** input,
@@ -263,17 +264,17 @@ public:
     }
 
     nsShortReader(nsIInputStream* in) : mIn(in), mReceived(0) {
-        mMon = nsAutoMonitor::NewMonitor("nsShortReader");
+        mMon = new Monitor("nsShortReader");
     }
 
     void Received(PRUint32 count) {
-        nsAutoMonitor mon(mMon);
+        MonitorAutoEnter mon(*mMon);
         mReceived += count;
         mon.Notify();
     }
 
     PRUint32 WaitForReceipt(const PRUint32 aWriteCount) {
-        nsAutoMonitor mon(mMon);
+        MonitorAutoEnter mon(*mMon);
         PRUint32 result = mReceived;
 
         while (result < aWriteCount) {
@@ -289,8 +290,8 @@ public:
 
 protected:
     nsCOMPtr<nsIInputStream> mIn;
-    PRUint32            mReceived;
-    PRMonitor*          mMon;
+    PRUint32                 mReceived;
+    Monitor*                 mMon;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsShortReader, nsIRunnable)

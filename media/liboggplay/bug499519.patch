@@ -1,0 +1,56 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_callback.c b/media/liboggplay/src/liboggplay/oggplay_callback.c
+--- a/media/liboggplay/src/liboggplay/oggplay_callback.c
++++ b/media/liboggplay/src/liboggplay/oggplay_callback.c
+@@ -115,6 +115,15 @@
+     decoder->y_height = decoder->video_info.frame_height;
+     decoder->uv_width = decoder->uv_stride = decoder->video_info.frame_width / 2;
+     decoder->uv_height = decoder->video_info.frame_height / 2;
++  
++    if (decoder->y_width == 0 ||
++        decoder->y_height == 0 || 
++        decoder->uv_width == 0 ||
++        decoder->uv_height == 0) {
++      decoder->decoder.active = 0;
++      return 0;
++    }
++    
+     if (--(decoder->remaining_header_packets) == 0) {
+       /* Ensure the offsets do not push the viewable area outside of the decoded frame. */
+       if (((decoder->video_info.height - decoder->video_info.offset_y)<decoder->video_info.frame_height)||
+diff --git a/media/liboggplay/src/liboggplay/oggplay_data.c b/media/liboggplay/src/liboggplay/oggplay_data.c
+--- a/media/liboggplay/src/liboggplay/oggplay_data.c
++++ b/media/liboggplay/src/liboggplay/oggplay_data.c
+@@ -317,6 +317,23 @@
+ 
+ }
+ 
++static int
++get_uv_offset(OggPlayTheoraDecode *decode, yuv_buffer *buffer)
++{
++  int xo=0, yo = 0;
++  if (decode->y_width != 0 &&
++      decode->uv_width != 0 &&
++      decode->y_width/decode->uv_width != 0) {
++    xo = (decode->video_info.offset_x/(decode->y_width/decode->uv_width));
++  }
++  if (decode->y_height != 0 &&
++      decode->uv_height != 0 &&
++      decode->y_height/decode->uv_height != 0) {
++    yo = (buffer->uv_stride)*(decode->video_info.offset_y/(decode->y_height/decode->uv_height));
++  }
++  return xo + yo;
++}
++
+ void
+ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
+                                     yuv_buffer *buffer) {
+@@ -367,8 +384,7 @@
+     q += buffer->y_stride;
+   }
+ 
+-  uv_offset = (decode->video_info.offset_x/(decode->y_width/decode->uv_width)) + 
+-              (buffer->uv_stride) *(decode->video_info.offset_y/(decode->y_height/decode->uv_height));
++  uv_offset = get_uv_offset(decode, buffer);
+ 
+   p = data->u;
+   q = buffer->u + uv_offset;

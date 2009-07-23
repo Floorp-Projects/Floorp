@@ -95,7 +95,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch2.h"
-#include "nsIObjectFrame.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -209,12 +208,6 @@ PrintDocTree(nsIDocShellTreeItem* aParentItem, int aLevel)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   nsCOMPtr<nsIDOMWindowInternal> domwin = doc ? doc->GetWindow() : nsnull;
   nsIURI* uri = doc ? doc->GetDocumentURI() : nsnull;
-
-  nsCOMPtr<nsIWidget> widget;
-  nsIViewManager* vm = presShell ? presShell->GetViewManager() : nsnull;
-  if (vm) {
-    vm->GetWidget(getter_AddRefs(widget));
-  }
 
   printf("DS %p  Type %s  Cnt %d  Doc %p  DW %p  EM %p%c",
     static_cast<void*>(parentAsDocShell.get()),
@@ -3726,25 +3719,25 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 {
-  if (!mCurrentTarget && mCurrentTargetContent) {
-    if (mPresContext) {
-      nsIPresShell *shell = mPresContext->GetPresShell();
-      if (shell) {
-        mCurrentTarget = shell->GetPrimaryFrameFor(mCurrentTargetContent);
-      }
+  nsIPresShell *shell;
+  if (mCurrentTarget ||
+      !mPresContext ||
+      !(shell = mPresContext->GetPresShell())) {
+    *aFrame = mCurrentTarget;
+    return NS_OK;
+  }
+
+  if (mCurrentTargetContent) {
+    mCurrentTarget = shell->GetPrimaryFrameFor(mCurrentTargetContent);
+    if (mCurrentTarget) {
+      *aFrame = mCurrentTarget;
+      return NS_OK;
     }
   }
 
-  if (!mCurrentTarget) {
-    nsIPresShell *presShell = mPresContext->GetPresShell();
-    if (presShell) {
-      nsIFrame* frame = nsnull;
-      presShell->GetEventTargetFrame(&frame);
-      mCurrentTarget = frame;
-    }
-  }
-
-  *aFrame = mCurrentTarget;
+  nsIFrame* frame = nsnull;
+  shell->GetEventTargetFrame(&frame);
+  *aFrame = mCurrentTarget = frame;
   return NS_OK;
 }
 

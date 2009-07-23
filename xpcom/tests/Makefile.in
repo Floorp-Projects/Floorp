@@ -102,7 +102,6 @@ CPP_UNIT_TESTS = \
 ifndef MOZ_ENABLE_LIBXUL
 CPP_UNIT_TESTS += \
                   TestArray.cpp \
-                  TestAutoLock.cpp \
                   TestCRT.cpp \
                   TestDeque.cpp \
                   TestEncoding.cpp \

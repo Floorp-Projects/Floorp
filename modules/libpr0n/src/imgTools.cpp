@@ -46,14 +46,13 @@
 #include "imgIEncoder.h"
 #include "imgIDecoderObserver.h"
 #include "imgIContainerObserver.h"
-#include "nsIImage.h"
-#include "gfxIImageFrame.h"
-#include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsStreamUtils.h"
+#include "nsNetUtil.h"
 
 
 /* ========== Utility classes ========== */
@@ -129,22 +128,21 @@ HelperLoader::OnStartContainer(imgIRequest *aRequest, imgIContainer
 
 /* Implement imgIDecoderObserver::onStartFrame() */
 NS_IMETHODIMP
-HelperLoader::OnStartFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame)
+HelperLoader::OnStartFrame(imgIRequest *aRequest, PRUint32 aFrame)
 {
   return NS_OK;
 }
 
 /* Implement imgIDecoderObserver::onDataAvailable() */
 NS_IMETHODIMP
-HelperLoader::OnDataAvailable(imgIRequest *aRequest, gfxIImageFrame
-*aFrame, const nsIntRect * aRect)
+HelperLoader::OnDataAvailable(imgIRequest *aRequest, PRBool aCurrentFrame, const nsIntRect * aRect)
 {
   return NS_OK;
 }
 
 /* Implement imgIDecoderObserver::onStopFrame() */
 NS_IMETHODIMP
-HelperLoader::OnStopFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame)
+HelperLoader::OnStopFrame(imgIRequest *aRequest, PRUint32 aFrame)
 {
   return NS_OK;
 }
@@ -174,8 +172,7 @@ HelperLoader::OnStopRequest(imgIRequest *aRequest, PRBool aIsLastPart)
   
 /* implement imgIContainerObserver::frameChanged() */
 NS_IMETHODIMP
-HelperLoader::FrameChanged(imgIContainer *aContainer,
-                           gfxIImageFrame *aFrame, nsIntRect * aDirtyRect)
+HelperLoader::FrameChanged(imgIContainer *aContainer, nsIntRect * aDirtyRect)
 {
   return NS_OK;
 }
@@ -225,13 +222,20 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   rv = decoder->Init(loader);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIInputStream> inStream = aInStr;
+  if (!NS_InputStreamIsBuffered(aInStr)) {
+    nsCOMPtr<nsIInputStream> bufStream;
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream), aInStr, 1024);
+    if (NS_SUCCEEDED(rv))
+      inStream = bufStream;
+  }
+
   PRUint32 length;
-  rv = aInStr->Available(&length);
+  rv = inStream->Available(&length);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 written;
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = decoder->WriteFrom(aInStr, length, &written);
+  rv = decoder->WriteFrom(inStream, length, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   if (written != length)
     NS_WARNING("decoder didn't eat all of its vegetables");
@@ -285,19 +289,16 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
     return NS_IMAGELIB_ERROR_NO_ENCODER;
 
   // Use frame 0 from the image container.
-  nsCOMPtr<gfxIImageFrame> frame;
-  rv = aContainer->GetFrameAt(0, getter_AddRefs(frame));
+  nsRefPtr<gfxImageSurface> frame;
+  rv = aContainer->CopyCurrentFrame(getter_AddRefs(frame));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!frame)
     return NS_ERROR_NOT_AVAILABLE;
 
-  PRInt32 w,h;
-  frame->GetWidth(&w);
-  frame->GetHeight(&h);
+  PRInt32 w = frame->Width(), h = frame->Height();
   if (!w || !h)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIImage> img(do_GetInterface(frame));
   nsRefPtr<gfxImageSurface> dest;
 
   if (!doScaling) {
@@ -305,22 +306,15 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
     aScaledWidth  = w;
     aScaledHeight = h;
 
-    img->LockImagePixels(PR_FALSE);
-    bitmapData = img->GetBits();
-    if (!bitmapData) {
-      img->UnlockImagePixels(PR_FALSE);
+    bitmapData = frame->Data();
+    if (!bitmapData)
       return NS_ERROR_FAILURE;
-    }
 
-    frame->GetImageBytesPerRow(&strideSize);
+    strideSize = frame->Stride();
     bitmapDataLength = aScaledHeight * strideSize;
 
   } else {
     // Prepare to draw a scaled version of the image to a temporary surface...
-
-    // Get the source image surface
-    nsRefPtr<gfxPattern> gfxpat;
-    img->GetPattern(getter_AddRefs(gfxpat));
 
     // Create a temporary image surface
     dest = new gfxImageSurface(gfxIntSize(aScaledWidth, aScaledHeight),
@@ -337,7 +331,7 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
 
     // Paint a scaled image
     ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx.SetPattern(gfxpat);
+    ctx.SetSource(frame);
     ctx.Paint();
 
     bitmapData = dest->Data();
@@ -349,8 +343,6 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
   rv = encoder->InitFromData(bitmapData, bitmapDataLength,
                              aScaledWidth, aScaledHeight, strideSize,
                              imgIEncoder::INPUT_FORMAT_HOSTARGB, EmptyString());
-  if (!doScaling)
-    img->UnlockImagePixels(PR_FALSE);
 
   NS_ENSURE_SUCCESS(rv, rv);
 

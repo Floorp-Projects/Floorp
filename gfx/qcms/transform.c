@@ -651,7 +651,7 @@ static void qcms_transform_data_rgb_out_pow(qcms_transform *transform, unsigned 
 
 static void qcms_transform_data_gray_out_lut(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	for (i = 0; i < length; i++) {
 		float out_device_r, out_device_g, out_device_b;
 		unsigned char device = *src++;
@@ -676,7 +676,7 @@ static void qcms_transform_data_gray_out_lut(qcms_transform *transform, unsigned
 
 static void qcms_transform_data_graya_out_lut(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	for (i = 0; i < length; i++) {
 		float out_device_r, out_device_g, out_device_b;
 		unsigned char device = *src++;
@@ -698,7 +698,7 @@ static void qcms_transform_data_graya_out_lut(qcms_transform *transform, unsigne
 
 static void qcms_transform_data_gray_out_precache(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	for (i = 0; i < length; i++) {
 		unsigned char device = *src++;
 		uint16_t gray;
@@ -716,7 +716,7 @@ static void qcms_transform_data_gray_out_precache(qcms_transform *transform, uns
 
 static void qcms_transform_data_graya_out_precache(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	for (i = 0; i < length; i++) {
 		unsigned char device = *src++;
 		unsigned char alpha = *src++;
@@ -806,7 +806,7 @@ void qcms_transform_data_rgb_out_lut_sse_intrin(qcms_transform *transform, unsig
 
 static void qcms_transform_data_rgb_out_lut_sse(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	float (*mat)[4] = transform->matrix;
         char input_back[32];
 	/* Ensure we have a buffer that's 16 byte aligned regardless of the original
@@ -944,7 +944,7 @@ static void qcms_transform_data_rgb_out_lut_sse(qcms_transform *transform, unsig
 
 static void qcms_transform_data_rgba_out_lut_sse(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	float (*mat)[4] = transform->matrix;
         char input_back[32];
 	/* align input on 16 byte boundary */
@@ -1082,7 +1082,7 @@ static void qcms_transform_data_rgba_out_lut_sse(qcms_transform *transform, unsi
 
 static void qcms_transform_data_rgb_out_lut_precache(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	float (*mat)[4] = transform->matrix;
 	for (i = 0; i < length; i++) {
 		unsigned char device_r = *src++;
@@ -1115,7 +1115,7 @@ static void qcms_transform_data_rgb_out_lut_precache(qcms_transform *transform, 
 
 static void qcms_transform_data_rgba_out_lut_precache(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	float (*mat)[4] = transform->matrix;
 	for (i = 0; i < length; i++) {
 		unsigned char device_r = *src++;
@@ -1150,7 +1150,7 @@ static void qcms_transform_data_rgba_out_lut_precache(qcms_transform *transform,
 
 static void qcms_transform_data_rgb_out_lut(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	float (*mat)[4] = transform->matrix;
 	for (i = 0; i < length; i++) {
 		unsigned char device_r = *src++;
@@ -1182,7 +1182,7 @@ static void qcms_transform_data_rgb_out_lut(qcms_transform *transform, unsigned 
 
 static void qcms_transform_data_rgba_out_lut(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {
-	int i;
+	unsigned int i;
 	float (*mat)[4] = transform->matrix;
 	for (i = 0; i < length; i++) {
 		unsigned char device_r = *src++;
