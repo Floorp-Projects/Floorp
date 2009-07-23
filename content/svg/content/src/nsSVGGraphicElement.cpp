@@ -75,14 +75,15 @@ nsSVGGraphicElement::nsSVGGraphicElement(nsINodeInfo *aNodeInfo)
 /* readonly attribute nsIDOMSVGElement nearestViewportElement; */
 NS_IMETHODIMP nsSVGGraphicElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
 {
-  nsSVGUtils::GetNearestViewportElement(this, aNearestViewportElement);
-  return NS_OK; // we can't throw exceptions from this API.
+  *aNearestViewportElement = nsSVGUtils::GetNearestViewportElement(this).get();
+  return NS_OK;
 }
 
 /* readonly attribute nsIDOMSVGElement farthestViewportElement; */
 NS_IMETHODIMP nsSVGGraphicElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewportElement)
 {
-  return nsSVGUtils::GetFarthestViewportElement(this, aFarthestViewportElement);
+  *aFarthestViewportElement = nsSVGUtils::GetFarthestViewportElement(this).get();
+  return NS_OK;
 }
 
 /* nsIDOMSVGRect getBBox (); */
@@ -102,41 +103,20 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
   return NS_ERROR_FAILURE;
 }
 
-/* Helper for GetCTM and GetScreenCTM */
-nsresult
-nsSVGGraphicElement::AppendTransform(nsIDOMSVGMatrix *aCTM,
-                                     nsIDOMSVGMatrix **_retval)
-{
-  if (!mTransforms) {
-    *_retval = aCTM;
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  }
-
-  // append our local transformations
-  nsCOMPtr<nsIDOMSVGTransformList> transforms;
-  mTransforms->GetAnimVal(getter_AddRefs(transforms));
-  NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMSVGMatrix> matrix =
-    nsSVGTransformList::GetConsolidationMatrix(transforms);
-  if (!matrix) {
-    *_retval = aCTM;
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  }
-  return aCTM->Multiply(matrix, _retval);  // addrefs, so we don't
-}
-
 /* nsIDOMSVGMatrix getCTM (); */
 NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix * *aCTM)
 {
-  return nsSVGUtils::GetCTM(this, aCTM);
+  gfxMatrix m = nsSVGUtils::GetCTM(this, PR_FALSE);
+  *aCTM = m.IsSingular() ? nsnull : NS_NewSVGMatrix(m).get();
+  return NS_OK;
 }
 
 /* nsIDOMSVGMatrix getScreenCTM (); */
 NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix * *aCTM)
 {
-  return nsSVGUtils::GetScreenCTM(this, aCTM);
+  gfxMatrix m = nsSVGUtils::GetCTM(this, PR_TRUE);
+  *aCTM = m.IsSingular() ? nsnull : NS_NewSVGMatrix(m).get();
+  return NS_OK;
 }
 
 /* nsIDOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
