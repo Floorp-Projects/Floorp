@@ -59,7 +59,7 @@ TestShellThread::Init()
 {
     GeckoThread::Init();
     mXPCShell = XPCShellEnvironment::CreateEnvironment();
-    if (mXPCShell) {
+    if (mXPCShell && mXPCShell->DefineIPCCommands(&mTestShellChild)) {
         if (mTestShellChild.Open(channel(), owner_loop())) {
             mTestShellChild.SetXPCShell(mXPCShell);
         }
@@ -69,9 +69,9 @@ TestShellThread::Init()
 void
 TestShellThread::CleanUp()
 {
-    GeckoThread::CleanUp();
     if (mXPCShell) {
         XPCShellEnvironment::DestroyEnvironment(mXPCShell);
         mTestShellChild.Close();
     }
+    GeckoThread::CleanUp();
 }

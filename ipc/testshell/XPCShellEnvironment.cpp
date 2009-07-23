@@ -45,10 +45,6 @@
 #include <unistd.h>     /* for isatty() */
 #endif
 
-#if defined(XP_MACOSX)
-#include <Foundation/Foundation.h>
-#endif
-
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
@@ -69,12 +65,14 @@
 
 #include "nsXULAppAPI.h"
 
+#include "TestShellChild.h"
 #include "TestShellParent.h"
 
 #define EXITCODE_RUNTIME_ERROR 3
 #define EXITCODE_FILE_NOT_FOUND 4
 
 using mozilla::ipc::XPCShellEnvironment;
+using mozilla::ipc::TestShellChild;
 using mozilla::ipc::TestShellParent;
 
 namespace {
@@ -1437,22 +1435,85 @@ SendCommand(JSContext *cx,
     return JS_FALSE;
   }
 
-  return Environment(cx)->DoSendCommand(str);
+  mozilla::ipc::String command(JS_GetStringBytes(str));
+
+  if (!Environment(cx)->DoSendCommand(command)) {
+    JS_ReportError(cx, "Failed to send command!");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+static JSBool
+SendCommandWithResponse(JSContext *cx,
+                        JSObject *obj,
+                        uintN argc,
+                        jsval *argv,
+                        jsval *rval)
+{
+  if (argc != 1) {
+    JS_ReportError(cx, "Function takes only one argument!");
+    return JS_FALSE;
+  }
+
+  JSString* str = JS_ValueToString(cx, argv[0]);
+  if (!str) {
+    JS_ReportError(cx, "Could not convert argument to string!");
+    return JS_FALSE;
+  }
+
+  mozilla::ipc::String command(JS_GetStringBytes(str));
+  mozilla::ipc::String result;
+
+  if (!Environment(cx)->DoSendCommand(command, &result)) {
+    JS_ReportError(cx, "Failed to send command!");
+    return JS_FALSE;
+  }
+
+  JSString* resultStr = JS_NewStringCopyN(cx, result.c_str(), result.length());
+  if (!resultStr) {
+    JS_ReportError(cx, "Failed to convert response to string!");
+    return JS_FALSE;
+  }
+
+  *rval = STRING_TO_JSVAL(resultStr);
+  return JS_TRUE;
 }
 
 } /* anonymous namespace */
 
 bool
-XPCShellEnvironment::DefineSendCommand(TestShellParent* aParent)
+XPCShellEnvironment::DefineIPCCommands(TestShellChild* aChild)
 {
+    NS_ASSERTION(aChild, "Don't hand me null!");
+
+    // XXXbent Nothing here yet, soon though!
+    return true;
+}
+
+bool
+XPCShellEnvironment::DefineIPCCommands(TestShellParent* aParent)
+{
+    NS_ASSERTION(aParent, "Don't hand me null!");
+
     mParent = aParent;
+
+    JSObject* global = GetGlobalObject();
 
     JSAutoRequest ar(mCx);
 
-    JSFunction* fun = JS_DefineFunction(mCx, GetGlobalObject(), "sendCommand",
+    JSFunction* fun = JS_DefineFunction(mCx, global, "sendCommand",
                                         SendCommand, 1, JSPROP_ENUMERATE);
     if (!fun) {
       NS_WARNING("Failed to define sendCommand function!");
+      return false;
+    }
+
+    fun = JS_DefineFunction(mCx, global, "sendCommandWithResponse",
+                            SendCommandWithResponse, 1, JSPROP_ENUMERATE);
+    if (!fun) {
+      NS_WARNING("Failed to define sendCommandWithResponse function!");
       return false;
     }
 
@@ -1460,16 +1521,19 @@ XPCShellEnvironment::DefineSendCommand(TestShellParent* aParent)
 }
 
 JSBool
-XPCShellEnvironment::DoSendCommand(JSString* aCommand)
+XPCShellEnvironment::DoSendCommand(const mozilla::ipc::String& aCommand,
+                                   mozilla::ipc::String* aResult)
 {
-  String str(JS_GetStringBytes(aCommand));
+  nsresult rv = aResult ?
+                mParent->SendSendCommandWithResponse(aCommand, aResult) :
+                mParent->SendSendCommand(aCommand);
 
-  nsresult rv = mParent->CallSendCommand(str);
   return NS_SUCCEEDED(rv) ? JS_TRUE : JS_FALSE;
 }
 
 bool
-XPCShellEnvironment::EvaluateString(const std::string& aString)
+XPCShellEnvironment::EvaluateString(const mozilla::ipc::String& aString,
+                                    mozilla::ipc::String* aResult)
 {
   JSAutoRequest ar(mCx);
 
@@ -1486,6 +1550,10 @@ XPCShellEnvironment::EvaluateString(const std::string& aString)
   }
 
   if (!ShouldCompileOnly()) {
+      if (aResult) {
+          aResult->clear();
+      }
+
       jsval result;
       JSBool ok = JS_ExecuteScript(mCx, global, script, &result);
       if (ok && result != JSVAL_VOID) {
@@ -1494,7 +1562,11 @@ XPCShellEnvironment::EvaluateString(const std::string& aString)
           JS_SetErrorReporter(mCx, old);
 
           if (str) {
-              fprintf(stdout, "%s\n", JS_GetStringBytes(str));
+              const char* bytes = JS_GetStringBytes(str);
+              fprintf(stdout, "%s\n", bytes);
+              if (aResult) {
+                  aResult->assign(bytes);
+              }
           }
       }
   }
