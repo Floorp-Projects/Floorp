@@ -656,6 +656,8 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
 
 nsresult UnsetExceptionHandler()
 {
+  delete gExceptionHandler;
+
   // do this here in the unlikely case that we succeeded in allocating
   // our strings but failed to allocate gExceptionHandler.
   if (crashReporterAPIData_Hash) {
@@ -681,7 +683,6 @@ nsresult UnsetExceptionHandler()
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;
 
-  delete gExceptionHandler;
   gExceptionHandler = nsnull;
 
   return NS_OK;
