@@ -49,8 +49,6 @@
  */
 
 
-#ifndef STANDALONE
-
 #include "nsWildCard.h"
 #include "nscore.h"
 #include "prmem.h"
@@ -75,52 +73,6 @@ nsRecyclingAllocator *gZlibAllocator = NULL;
 // For placement new used for arena allocations of zip file list
 #include NEW_H
 #define ZIP_ARENABLOCKSIZE (1*1024)
-
-#else /* STANDALONE */
-
-#ifdef XP_WIN
-#include "windows.h"
-#endif
-
-#undef MOZILLA_CLIENT       // undoes prtypes damage in zlib.h
-#define ZFILE_CREATE  "wb"
-#define READTYPE  PRUint32
-#include "zlib.h"
-#undef PR_PUBLIC_API
-#include "zipstub.h"
-
-#ifdef XP_MAC
-#include <string.h>
-#include <stdlib.h>
-
-char * strdup(const char *src);
-char * strdup(const char *src)
-{
-    long len = strlen(src);
-    char *dup = (char *)malloc(len+1 * sizeof(char));
-    memcpy(dup, src, len+1);
-    return dup;
-}
-#endif
-
-#ifdef WINCE
-int remove(const char* inPath)
-{
-  unsigned short wPath[MAX_PATH];
-  MultiByteToWideChar(CP_ACP,
-                      0,
-                      inPath,
-                      -1,
-                      wPath,
-                      MAX_PATH);
-  
-  if(FALSE != DeleteFileW(wPath))
-    return 0;
-  return -1;
-}
-#endif
-
-#endif /* STANDALONE */
 
 #ifdef XP_UNIX
     #include <sys/types.h>
@@ -162,265 +114,6 @@ static PRUint32 HashName(const char* aName);
 static PRBool IsSymlink(unsigned char *ll);
 static nsresult ResolveSymlink(const char *path);
 #endif
-
-/*---------------------------------------------
- * C API wrapper for nsZipArchive
- *--------------------------------------------*/
-
-#ifdef STANDALONE
-
-/**
- * ZIP_OpenArchive
- *
- * opens the named zip/jar archive and returns a handle that
- * represents the archive in other ZIP_ calls.
- *
- * @param   zipname   archive filename
- * @param   hZip      receives handle if archive opened OK
- * @return  status code
- */
-PR_PUBLIC_API(PRInt32) ZIP_OpenArchive(const char * zipname, void** hZip)
-{
-  PRInt32 status;
-
-  /*--- error check args ---*/
-  if (hZip == 0)
-    return ZIP_ERR_PARAM;
-
-  /*--- NULL output to prevent use by bozos who don't check errors ---*/
-  *hZip = 0;
-
-  /*--- create and open the archive ---*/
-  nsZipArchive* zip = new nsZipArchive();
-  if (zip == 0)
-    return ZIP_ERR_MEMORY;
-
-  PRFileDesc * fd = PR_Open(zipname, PR_RDONLY, 0400);
-  if (!fd) {
-    delete zip;
-    return ZIP_ERR_DISK;
-  }
-
-  status = zip->OpenArchive(fd);
-  if (status == ZIP_OK)
-    *hZip = static_cast<void*>(zip);
-  else {
-    delete zip;
-    PR_Close(fd);
-  }
-
-  return status;
-}
-
-
-
-/**
- * ZIP_TestArchive
- *
- * Tests the integrity of this open zip archive by extracting each
- * item to memory and performing a CRC check.
- *
- * @param   hZip      handle obtained from ZIP_OpenArchive
- * @return  status code (success indicated by ZIP_OK)
- */
-PR_PUBLIC_API(PRInt32) ZIP_TestArchive(void *hZip)
-{
-  /*--- error check args ---*/
-  if (hZip == 0)
-    return ZIP_ERR_PARAM;
-
-  nsZipArchive* zip = static_cast<nsZipArchive*>(hZip);
-  if (zip->kMagic != ZIP_MAGIC)
-    return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
-
-  /*--- test the archive ---*/
-  return zip->Test(NULL);
-}
-
-
-/**
- * ZIP_CloseArchive
- *
- * closes zip archive and frees memory
- * @param   hZip  handle obtained from ZIP_OpenArchive
- * @return  status code
- */
-PR_PUBLIC_API(PRInt32) ZIP_CloseArchive(void** hZip)
-{
-  /*--- error check args ---*/
-  if (hZip == 0 || *hZip == 0)
-    return ZIP_ERR_PARAM;
-
-  nsZipArchive* zip = static_cast<nsZipArchive*>(*hZip);
-  if (zip->kMagic != ZIP_MAGIC)
-    return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
-
-  /*--- close the archive ---*/
-  *hZip = 0;
-  delete zip;
-
-  return ZIP_OK;
-}
-
-
-
-/**
- * ZIP_ExtractFile
- *
- * extracts named file from an opened archive
- *
- * @param   hZip      handle obtained from ZIP_OpenArchive
- * @param   filename  name of file in archive
- * @param   outname   filename to extract to
- */
-PR_PUBLIC_API(PRInt32) ZIP_ExtractFile(void* hZip, const char * filename, const char * outname)
-{
-  /*--- error check args ---*/
-  if (hZip == 0)
-    return ZIP_ERR_PARAM;
-
-  nsZipArchive* zip = static_cast<nsZipArchive*>(hZip);
-  if (zip->kMagic != ZIP_MAGIC)
-    return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
-
-  //-- Find item in archive
-  nsZipItem* item = zip->GetItem(filename);
-  if (!item)
-    return ZIP_ERR_FNF;
-
-  // Can't extract a directory
-  if (item->isDirectory)
-    return ZIP_ERR_PARAM;
-
-  // delete any existing file so that we overwrite the file permissions         
-  PR_Delete(outname);
-                                                                    
-  PRFileDesc* fOut = PR_Open(outname, ZFILE_CREATE, item->mode);
-  if (!fOut)
-    return ZIP_ERR_DISK;
-
-#if defined(XP_UNIX) && defined(STANDALONE)
-  // When STANDALONE is defined, PR_Open ignores its 3d argument.
-  mode_t msk = umask(0);
-  umask(msk);
-  chmod(outname, (item->mode | S_IRUSR) & ~msk);
-#endif
-
-  // ExtractFile also closes the fOut handle and resolves the symlink if needed
-  return zip->ExtractFile(item, outname, fOut);
-}
-
-
-
-/**
- * ZIP_FindInit
- *
- * Initializes an enumeration of files in the archive
- *
- * @param   hZip      handle obtained from ZIP_OpenArchive
- * @param   pattern   regexp to match files in archive, the usual shell expressions.
- *                    NULL pattern also matches all files, faster than "*"
- */
-PR_PUBLIC_API(void*) ZIP_FindInit(void* hZip, const char * pattern)
-{
-  /*--- error check args ---*/
-  if (hZip == 0)
-    return 0;
-
-  nsZipArchive* zip = static_cast<nsZipArchive*>(hZip);
-  if (zip->kMagic != ZIP_MAGIC)
-    return 0;   /* whatever it is isn't one of ours! */
-
-  /*--- initialize the pattern search ---*/
-  nsZipFind* find;
-  PRInt32 rv = zip->FindInit(pattern, &find);
-  if (rv != ZIP_OK)
-      find = NULL;
-
-  return find;
-}
-
-
-
-/**
- * ZIP_FindNext
- *
- * Puts the next name in the passed buffer. Returns ZIP_ERR_SMALLBUF when
- * the name is too large for the buffer, and ZIP_ERR_FNF when there are no
- * more files that match the pattern
- *
- * @param   hFind     handle obtained from ZIP_FindInit
- * @param   outbuf    buffer to receive next filename
- * @param   bufsize   size of allocated buffer
- */
-PR_PUBLIC_API(PRInt32) ZIP_FindNext(void* hFind, char * outbuf, PRUint16 bufsize)
-{
-  PRInt32 status;
-
-  /*--- error check args ---*/
-  if (hFind == 0)
-    return ZIP_ERR_PARAM;
-
-  nsZipFind* find = static_cast<nsZipFind*>(hFind);
-  if (find->kMagic != ZIPFIND_MAGIC)
-    return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
-
-  /*--- return next filename file ---*/
-  const char* itemName;
-  status = find->FindNext(&itemName);
-  if (status == ZIP_OK)
-  {
-    PRUint16 namelen = (PRUint16)PL_strlen(itemName);
-
-    if (bufsize > namelen)
-    {
-        PL_strcpy(outbuf, itemName);
-    }
-    else
-        status = ZIP_ERR_SMALLBUF;
-  }
-
-  return status;
-}
-
-
-
-/**
- * ZIP_FindFree
- *
- * Releases allocated memory associated with the find token
- *
- * @param   hFind     handle obtained from ZIP_FindInit
- */
-PR_PUBLIC_API(PRInt32) ZIP_FindFree(void* hFind)
-{
-  /*--- error check args ---*/
-  if (hFind == 0)
-    return ZIP_ERR_PARAM;
-
-  nsZipFind* find = static_cast<nsZipFind*>(hFind);
-  if (find->kMagic != ZIPFIND_MAGIC)
-    return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
-
-  /* free the find structure */
-  delete find;
-  return ZIP_OK;
-}
-
-#if defined XP_WIN
-void ProcessWindowsMessages()
-{
-  MSG msg;
-
-  while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-  {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-  }
-}
-#endif /* XP_WIN */
-
-#else /* STANDALONE */
 
 //***********************************************************
 // Allocators for use with zlib
@@ -493,12 +186,10 @@ zlibFree(void *opaque, void *ptr)
     free(ptr);
   return;
 }
-#endif /* STANDALONE */
 
 nsresult gZlibInit(z_stream *zs)
 {
   memset(zs, 0, sizeof(z_stream));
-#ifndef STANDALONE
   //-- ensure we have our zlib allocator for better performance
   if (!gZlibAllocator) {
     gZlibAllocator = new nsRecyclingAllocator(NBUCKETS, NS_DEFAULT_RECYCLE_TIMEOUT, "libjar");
@@ -508,7 +199,6 @@ nsresult gZlibInit(z_stream *zs)
     zs->zfree = zlibFree;
     zs->opaque = gZlibAllocator;
   }
-#endif /* STANDALONE */
   int zerr = inflateInit2(zs, -MAX_WBITS);
   if (zerr != Z_OK) return ZIP_ERR_MEMORY;
 
@@ -528,10 +218,8 @@ nsresult nsZipArchive::OpenArchive(PRFileDesc * fd)
   if (!fd)
     return ZIP_ERR_PARAM;
 
-#ifndef STANDALONE
   // Initialize our arena
   PL_INIT_ARENA_POOL(&mArena, "ZipArena", ZIP_ARENABLOCKSIZE);
-#endif
 
   //-- Keep the filedescriptor for further reading...
   mFd = fd;
@@ -567,9 +255,6 @@ nsresult nsZipArchive::Test(const char *aEntryName)
       nsresult rv = ExtractFile(currItem, 0, 0);
       if (rv != ZIP_OK)
         return rv;
-#if defined STANDALONE && defined XP_WIN
-      ProcessWindowsMessages();
-#endif
     }
   }
 
@@ -581,7 +266,6 @@ nsresult nsZipArchive::Test(const char *aEntryName)
 //---------------------------------------------
 nsresult nsZipArchive::CloseArchive()
 {
-#ifndef STANDALONE
   if (mFd) {
     PL_FinishArenaPool(&mArena);
   }
@@ -595,23 +279,7 @@ nsresult nsZipArchive::CloseArchive()
   // Let us also cleanup the mFiles table for re-use on the next 'open' call
   for (int i = 0; i < ZIP_TABSIZE; i++) {
     mFiles[i] = 0;
-  }
-#else
-  // delete nsZipItems in table
-  nsZipItem* pItem;
-  for (int i = 0; i < ZIP_TABSIZE; ++i)
-  {
-    pItem = mFiles[i];
-    while (pItem != 0)
-    {
-      mFiles[i] = pItem->next;
-      free(pItem);
-      pItem = mFiles[i];
-    }
-    mFiles[i] = 0;              // make sure we don't double-delete
-  }
-#endif
-  
+  }  
   if (mFd) {
     PR_Close(mFd);
     mFd = 0;
@@ -783,12 +451,7 @@ nsresult nsZipFind::FindNext(const char ** aResult)
     else if (mRegExp)
       found = (NS_WildCardMatch(mItem->name, mPattern, PR_FALSE) == MATCH);
     else
-#if defined(STANDALONE) && defined(XP_MAC)
-      // simulate <regexp>* matches
-      found = (strncmp(mItem->name, mPattern, strlen(mPattern)) == 0);
-#else
       found = (PL_strcmp(mItem->name, mPattern) == 0);
-#endif
 
     if (found) {
       *aResult = mItem->name;
@@ -835,14 +498,10 @@ static nsresult ResolveSymlink(const char *path)
 nsZipItem* nsZipArchive::CreateZipItem(PRUint16 namelen)
 {
   // sizeof(nsZipItem) includes space for name's null byte
-#ifndef STANDALONE
   // Arena allocate the nsZipItem
   void *mem;
   PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsZipItem)+namelen);
   return (nsZipItem*)mem;
-#else
-  return (nsZipItem*)malloc(sizeof(nsZipItem)+namelen);
-#endif
 }
 
 //---------------------------------------------
@@ -858,11 +517,7 @@ nsresult nsZipArchive::BuildFileList()
 
   //-- get archive size using end pos
   PRInt32  pos = PR_Seek(mFd, 0, PR_SEEK_END);
-#ifndef STANDALONE
   if (pos <= 0)
-#else
-  if (pos || ((pos = ftell(mFd)) <= 0))
-#endif
     return ZIP_ERR_CORRUPT;
 
   PRBool bEndsigFound = PR_FALSE;
@@ -1272,9 +927,6 @@ nsresult nsZipArchive::InflateItem(const nsZipItem* aItem, PRFileDesc* outFD)
     else
       zerr = Z_STREAM_END;
 
-#if defined STANDALONE && defined XP_WIN
-    ProcessWindowsMessages();
-#endif
   } // while
 
   //-- verify crc32
@@ -1314,9 +966,6 @@ cleanup:
 //------------------------------------------
 
 nsZipArchive::nsZipArchive() :
-#ifdef STANDALONE
-    kMagic(ZIP_MAGIC),
-#endif
     mFd(0),
     mBuiltSynthetics(PR_FALSE)
 {
@@ -1339,9 +988,6 @@ nsZipArchive::~nsZipArchive()
 //------------------------------------------
 
 nsZipFind::nsZipFind(nsZipArchive* aZip, char* aPattern, PRBool aRegExp) : 
-#ifdef STANDALONE
-  kMagic(ZIPFIND_MAGIC),
-#endif
   mArchive(aZip),
   mPattern(aPattern),
   mItem(0),
