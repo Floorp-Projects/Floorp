@@ -1245,12 +1245,14 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 481948-3.html 481948-3-ref.html # differ
 == 488649-1.html 488649-1-ref.html
 == 488685-1.html 488685-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs EXTEND_PAD on non-Mac for correct scaling behaviour
-== 492661-1.html 492661-1-ref.html
 == 490182-1a.html 490182-1-ref.html
 == 490182-1b.html 490182-1-ref.html
 == 490173-1.html 490173-1-ref.html
 == 490173-2.html 490173-2-ref.html
+== 491180-1.html 491180-1-ref.html
+== 491180-2.html 491180-2-ref.html
 == 491323-1.xul 491323-1-ref.xul
+== 492661-1.html 492661-1-ref.html
 == 493968-1.html 493968-1-ref.html
 == 494667-1.html 494667-1-ref.html
 == 494667-2.html 494667-2-ref.html

@@ -135,8 +135,7 @@ public:
   }
 
 protected:
-  virtual PRBool IsReset(PRInt32 type);
-  virtual PRBool IsSubmit(PRInt32 type);
+  virtual PRBool IsInput() { return PR_FALSE; }
   void ReflowButtonContents(nsPresContext* aPresContext,
                             nsHTMLReflowMetrics& aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
