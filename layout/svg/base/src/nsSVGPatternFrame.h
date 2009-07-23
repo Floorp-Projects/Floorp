@@ -129,15 +129,14 @@ protected:
 
   NS_IMETHOD GetPatternFirstChild(nsIFrame **kid);
   gfxRect    GetPatternRect(const gfxRect &bbox,
-                            nsIDOMSVGMatrix *callerCTM,
+                            const gfxMatrix &callerCTM,
                             nsSVGElement *content);
   gfxMatrix  GetPatternMatrix(const gfxRect &bbox,
                               const gfxRect &callerBBox,
-                              nsIDOMSVGMatrix *callerCTM);
-  nsresult   ConstructCTM(nsIDOMSVGMatrix **ctm,
-                          const gfxRect &callerBBox,
-                          nsIDOMSVGMatrix *callerCTM);
-  nsresult   GetTargetGeometry(nsIDOMSVGMatrix **aCTM,
+                              const gfxMatrix &callerCTM);
+  gfxMatrix  ConstructCTM(const gfxRect &callerBBox,
+                          const gfxMatrix &callerCTM);
+  nsresult   GetTargetGeometry(gfxMatrix *aCTM,
                                gfxRect *aBBox,
                                nsSVGElement **aTargetContent,
                                nsSVGGeometryFrame *aTarget);
