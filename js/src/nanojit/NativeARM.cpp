@@ -1321,25 +1321,6 @@ Assembler::nativePageSetup()
         _nExitSlot = exitStart;
 }
 
-// Record the starting value of _nIns. On ARM, it is also necessary to record
-// the starting value of the literal pool pointer, _nSlot.
-void
-Assembler::recordStartingInstructionPointer()
-{
-    _startingIns = _nIns;
-    _startingSlot = _nSlot;
-    NanoAssert(samepage(_nIns,_nSlot));
-}
-
-// ARM uses a literal pool which needs to be reset along with the instruction
-// pointer.
-void
-Assembler::resetInstructionPointer()
-{
-    _nIns = _startingIns;
-    _nSlot = _startingSlot;
-    NanoAssert(samepage(_nIns,_nSlot));
-}
 
 void
 Assembler::underrunProtect(int bytes)
