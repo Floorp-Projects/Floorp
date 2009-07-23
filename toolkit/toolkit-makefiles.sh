@@ -288,7 +288,6 @@ MAKEFILES_libimg="
 
 MAKEFILES_libjar="
   modules/libjar/Makefile
-  modules/libjar/standalone/Makefile
   modules/libjar/test/Makefile
 "
 

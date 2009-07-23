@@ -48,18 +48,9 @@
 // Keep this odd. The -1 is significant.
 #define ZIP_BUFLEN    (4 * 1024 - 1)
 
-#ifdef STANDALONE
-#define nsZipArchive nsZipArchiveStandalone
-
-#define ZIP_Seek(fd,p,m) (fseek((fd),(p),(m))==0)
-
-#else
-
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #include "plarena.h"
 #define ZIP_Seek(fd,p,m) (PR_Seek((fd),((PROffset32)p),(m))==((PROffset32)p))
-
-#endif
 
 #include "zlib.h"
 
@@ -67,9 +58,7 @@ class nsZipFind;
 class nsZipReadState;
 class nsZipItemMetadata;
 
-#ifndef STANDALONE
 struct PRFileDesc;
-#endif
 
 /**
  * This file defines some of the basic structures used by libjar to
@@ -81,18 +70,6 @@ struct PRFileDesc;
  * nsZipItem      represents a single item (file) in the Zip archive.
  * nsZipFind      represents the metadata involved in doing a search,
  *                and current state of the iteration of found objects.
- *
- * There is a lot of #ifdef STANDALONE here, and that is so that these
- * basic structures can be reused in a standalone static
- * library. In order for the code to be reused, these structures
- * should never use anything from XPCOM, including such obvious things
- * as NS_ASSERTION(). Instead, use the basic NSPR equivalents.
- *
- * There is one key difference in the way that this code behaves in
- * STANDALONE mode. The nsZipArchive owns a single file descriptor and 
- * that is used to read the ZIP file index, and for 'Test' and 'Extract'. 
- * Since there is only one nsZipArchive per file, you can only Test/Extract 
- * one file at a time from the Zip file.
  * 'MT''safe' reading from the zipfile is performed through JARInputStream,
  * which maintains its own file descriptor, allowing for multiple reads 
  * concurrently from the same zip file.
@@ -143,11 +120,6 @@ class nsZipArchive
   friend class nsZipFind;
 
 public:
-#ifdef STANDALONE
-  /** cookie used to validate supposed objects passed from C code */
-  const PRInt32 kMagic;
-#endif
-
   /** constructing does not open the archive. See OpenArchive() */
   nsZipArchive();
 
@@ -225,9 +197,7 @@ private:
   //--- private members ---
 
   nsZipItem*    mFiles[ZIP_TABSIZE];
-#ifndef STANDALONE
   PLArenaPool   mArena;
-#endif
 
   // Used for central directory reading, and for Test and Extract
   PRFileDesc    *mFd;
@@ -257,9 +227,6 @@ private:
 class nsZipFind
 {
 public:
-#ifdef STANDALONE
-  const PRInt32       kMagic;
-#endif
 
   nsZipFind(nsZipArchive* aZip, char* aPattern, PRBool regExp);
   ~nsZipFind();
