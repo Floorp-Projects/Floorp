@@ -48,7 +48,6 @@
 #include "nsString.h"
 #include "nsInterfaceHashtable.h"
 #include "mozIStorageProgressHandler.h"
-#include "SQLiteMutex.h"
 #include "mozIStorageConnection.h"
 #include "mozStorageService.h"
 
@@ -159,27 +158,13 @@ private:
    */
   PRBool mAsyncExecutionThreadShuttingDown;
 
-  /**
-   * Wraps the mutex that SQLite gives us from sqlite3_db_mutex.
-   */
-  SQLiteMutex mDBMutex;
-
-  /**
-   * Tracks if we have a transaction in progress or not.  Access protected by
-   * mDBMutex.
-   */
+  PRLock *mTransactionMutex;
   PRBool mTransactionInProgress;
 
-  /**
-   * Stores the mapping of a given function by name to its instance.  Access is
-   * protected by mDBMutex.
-   */
+  PRLock *mFunctionsMutex;
   nsInterfaceHashtable<nsCStringHashKey, nsISupports> mFunctions;
 
-  /**
-   * Stores the registered progress handler for the database connection.  Access
-   * is protected by mDBMutex.
-   */
+  PRLock *mProgressHandlerMutex;
   nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
 
   // This is here for two reasons: 1) It's used to make sure that the
