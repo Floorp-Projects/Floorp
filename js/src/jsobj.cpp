@@ -3066,7 +3066,7 @@ js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
     JS_ASSERT(nslots <= size_t(slots[-1]));
 
     if (nslots <= JS_INITIAL_NSLOTS) {
-        JS_free(cx, slots - 1);
+        cx->runtime->asynchronousFree(slots - 1);
         obj->dslots = NULL;
     } else {
         size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);

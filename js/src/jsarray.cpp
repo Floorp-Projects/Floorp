@@ -1188,7 +1188,7 @@ static void
 array_finalize(JSContext *cx, JSObject *obj)
 {
     if (obj->dslots)
-        JS_free(cx, obj->dslots - 1);
+        cx->runtime->asynchronousFree(obj->dslots - 1);
     obj->dslots = NULL;
 }
 
