@@ -35,12 +35,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-MODULES_STANDALONE_LCPPSRCS = \
-		nsZipArchive.cpp \
-		$(NULL)
-
 MODULES_LIBJAR_LCPPSRCS = \
-		$(MODULES_STANDALONE_LCPPSRCS) \
+		nsZipArchive.cpp \
 		nsJARInputStream.cpp \
 		nsJAR.cpp \
 		nsJARFactory.cpp \
@@ -52,7 +48,6 @@ MODULES_LIBJAR_LCPPSRCS = \
 
 MODULES_LIBJAR_LEXPORTS = \
 		zipfile.h \
-		zipstub.h \
 		zipstruct.h \
 		$(NULL)
 
@@ -65,8 +60,6 @@ MODULES_LIBJAR_LXPIDLSRCS = \
 		$(NULL)
 
 MODULES_LIBJAR_CPPSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_LIBJAR_LCPPSRCS))
-
-MODULES_STANDALONE_CPPSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_STANDALONE_LCPPSRCS))
 
 MODULES_LIBJAR_XPIDLSRCS := $(addprefix $(topsrcdir)/modules/libjar/, $(MODULES_LIBJAR_LXPIDLSRCS))
 
