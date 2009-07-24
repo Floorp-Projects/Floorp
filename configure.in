@@ -6292,21 +6292,6 @@ MOZ_ARG_DISABLE_BOOL(zipwriter,
 AC_SUBST(MOZ_ZIPWRITER)
 
 dnl ========================================================
-dnl = Enable Ultrasparc specific optimizations for JS
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-ultrasparc,
-[  --enable-js-ultrasparc  Use UltraSPARC optimizations in JS],
-    JS_ULTRASPARC_OPTS=1,
-    JS_ULTRASPARC_OPTS= )
-
-dnl only enable option for ultrasparcs
-if test `echo "$target_os" | grep -c \^solaris 2>/dev/null` = 0 -o \
-    "$OS_TEST" != "sun4u"; then
-    JS_ULTRASPARC_OPTS=
-fi
-AC_SUBST(JS_ULTRASPARC_OPTS)
-
-dnl ========================================================
 dnl = Hildon and OSSO checks
 dnl ========================================================
 PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime,

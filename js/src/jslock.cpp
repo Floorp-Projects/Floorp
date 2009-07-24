@@ -59,6 +59,11 @@
 
 #define ReadWord(W) (W)
 
+#if !defined(__GNUC__)
+# define __asm__ asm
+# define __volatile__ volatile
+#endif
+
 /* Implement NativeCompareAndSwap. */
 
 #if defined(_WIN32) && defined(_M_IX86)
@@ -97,7 +102,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
     return OSAtomicCompareAndSwapPtrBarrier(ov, nv, w);
 }
 
-#elif defined(__GNUC__) && defined(__i386__)
+#elif defined(__i386) && (defined(__GNUC__) || defined(__SUNPRO_CC))
 
 /* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
 static JS_ALWAYS_INLINE int
@@ -116,7 +121,8 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
     return (int)res;
 }
 
-#elif defined(__GNUC__) && defined(__x86_64__)
+#elif defined(__x86_64) && (defined(__GNUC__) || defined(__SUNPRO_CC))
+
 static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
@@ -133,30 +139,24 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
     return (int)res;
 }
 
-#elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
+#elif defined(__sparc) && (defined(__GNUC__) || defined(__SUNPRO_CC))
 
 static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
-#if defined(__GNUC__)
     unsigned int res;
-    JS_ASSERT(ov != nv);
-    asm volatile ("\
-stbar\n\
-cas [%1],%2,%3\n\
-cmp %2,%3\n\
-be,a 1f\n\
-mov 1,%0\n\
-mov 0,%0\n\
-1:"
+
+    __asm__ __volatile__ (
+                  "stbar\n"
+                  "cas [%1],%2,%3\n"
+                  "cmp %2,%3\n"
+                  "be,a 1f\n"
+                  "mov 1,%0\n"
+                  "mov 0,%0\n"
+                  "1:"
                   : "=r" (res)
                   : "r" (w), "r" (ov), "r" (nv));
     return (int)res;
-#else /* !__GNUC__ */
-    extern int compare_and_swap(jsword*, jsword, jsword);
-    JS_ASSERT(ov != nv);
-    return compare_and_swap(w, ov, nv);
-#endif
 }
 
 #elif defined(AIX)
@@ -210,7 +210,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 #elif defined(NSPR_LOCK)
 
 # ifdef __GNUC__
-# warning "js_CompareAndSwap is implemented using NSSP lock"
+# warning "js_CompareAndSwap is implemented using NSPR lock"
 # endif
 
 JSBool
