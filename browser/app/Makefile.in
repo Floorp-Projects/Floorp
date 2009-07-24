@@ -51,9 +51,6 @@ PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
 		  $(srcdir)/profile/channel-prefs.js \
 		  $(NULL)
 
-ifndef MOZ_BRANDING_DIRECTORY
-PREF_JS_EXPORTS += $(srcdir)/firefox-branding.js
-endif
 
 # hardcode en-US for the moment
 AB_CD = en-US
@@ -226,7 +223,7 @@ endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
-RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
+RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox-os2.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document-os2.ico\"
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -299,68 +296,22 @@ endif
 
 endif # LIBXUL_SDK
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-
-ICON_FILES	= \
-		$(DIST)/branding/mozicon128.png \
-		$(DIST)/branding/document.png \
-		$(NULL)
-
-libs:: $(ICON_FILES)
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin/icons
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
-	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/mozicon128.png $(DIST)/bin/icons
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/document.png   $(DIST)/bin/icons
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png  $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default32.png  $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png  $(DIST)/bin/chrome/icons/default
 endif
-#ifdef MOZ_SPLASHSCREEN
+
+ifdef MOZ_SPLASHSCREEN
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/splash.bmp $(DIST)/bin
 endif
-#endif
+endif
 
-export::
-ifndef MOZ_BRANDING_DIRECTORY
-	$(NSINSTALL) -D $(DIST)/branding
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-	cp $(srcdir)/firefox.ico   $(DIST)/branding/firefox.ico
-	cp $(srcdir)/firefox.ico   $(DIST)/branding/app.ico
-	cp $(srcdir)/document.ico  $(DIST)/branding/document.ico
-endif
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-	cp $(srcdir)/macbuild/firefox.icns  $(DIST)/branding/firefox.icns
-	cp $(srcdir)/macbuild/document.icns  $(DIST)/branding/document.icns
-	cp $(srcdir)/macbuild/dsstore $(DIST)/branding/dsstore
-	cp $(srcdir)/macbuild/background.png $(DIST)/branding/background.png
-	cp $(srcdir)/macbuild/disk.icns $(DIST)/branding/disk.icns
-endif
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-	cp $(srcdir)/mozicon128.png $(DIST)/branding/mozicon128.png
-	cp $(srcdir)/document.png $(DIST)/branding/document.png
-endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-	cp $(srcdir)/default16.png   $(DIST)/branding/default16.png
-	cp $(srcdir)/default32.png   $(DIST)/branding/default32.png
-	cp $(srcdir)/default48.png   $(DIST)/branding/default48.png
-endif
-ifeq ($(OS_ARCH),OS2)
-	cp $(srcdir)/firefox-os2.ico   $(DIST)/branding/firefox.ico
-	cp $(srcdir)/firefox-os2.ico   $(DIST)/branding/app.ico
-	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
-endif
-#ifdef MOZ_SPLASHSCREEN
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-	cp $(srcdir)/splash.bmp        $(DIST)/branding/splash.bmp
-endif
-#endif
-endif
 
 libs::
 	touch $(DIST)/bin/.autoreg

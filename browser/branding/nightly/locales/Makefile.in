@@ -14,12 +14,11 @@
 # The Original Code is the Mozilla Browser code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Benjamin Smedberg <benjamin@smedbergs.us>
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,30 +34,22 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = browser/branding/nightly/locales
 
-include $(topsrcdir)/config/config.mk
+include $(DEPTH)/config/autoconf.mk
 
-DIRS = base components locales themes fuel app
-
-ifeq ($(OS_ARCH),WINNT)
-ifdef MOZ_INSTALLER
-DIRS += installer/windows
-endif
-endif
+DEFINES += -DAB_CD=$(AB_CD) -DMOZ_DISTRIBUTION_ID_UNQUOTED=$(MOZ_DISTRIBUTION_ID)
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
-ifdef MOZ_INSTALLER
-
-# For Windows build the uninstaller during the application build since the
-# uninstaller is included with the application for mar file generation.
 libs::
-	$(MAKE) -C installer/windows uninstaller
+	@$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/browserconfig.properties > $(FINAL_TARGET)/browserconfig.properties
 
-endif
-endif
+install::
+	@$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/browserconfig.properties > $(DESTDIR)$(mozappdir)/browserconfig.properties
