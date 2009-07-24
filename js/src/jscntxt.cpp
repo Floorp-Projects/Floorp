@@ -106,8 +106,8 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
 {
     js_PurgeGSNCache(&data->gsnCache);
 
-    if (cx->runtime->gcRegenShapes)
-        js_PurgePropertyCache(cx, &data->propertyCache);
+    /* FIXME: bug 506341. */
+    js_PurgePropertyCache(cx, &data->propertyCache);
 
 # ifdef JS_TRACER
     JSTraceMonitor *tm = &data->traceMonitor;
