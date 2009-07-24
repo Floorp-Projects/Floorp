@@ -102,7 +102,9 @@ namespace nanojit
         // Reserve stackNeeded bytes, padded
         // to preserve NJ_ALIGN_STACK-byte alignment.
         if (amt)
+        {
             SUBi(SP, amt);
+        }
 
         verbose_only( outputAddr=true; asm_output("[frag entry]"); )
         NIns *fragEntry = _nIns;
@@ -145,6 +147,7 @@ namespace nanojit
                 lr->jmp = _nIns;
             }
         }
+
         // first restore ESP from EBP, undoing SUBi(SP,amt) from genPrologue
         MR(SP,FP);
 
@@ -155,13 +158,11 @@ namespace nanojit
     NIns *Assembler::genEpilogue()
     {
         RET();
-
         if (!_thisfrag->lirbuf->explicitSavedRegs) {
             for (int i = NumSavedRegs - 1; i >= 0; --i)
                 POPr(savedRegs[i]);
             POPr(FP); // dummy
         }
-
         POPr(FP); // Restore caller's FP.
         MR(SP,FP); // pop the stack frame
         return  _nIns;
@@ -298,7 +299,7 @@ namespace nanojit
         asm(
             "bsf    %1, %%eax\n\t"
             "btr    %%eax, %2\n\t"
-            "movl    %%eax, %0\n\t"
+            "movl   %%eax, %0\n\t"
             : "=m"(r) : "m"(set), "m"(regs.free) : "%eax", "memory" );
     #endif /* WIN32 */
         return r;
@@ -393,7 +394,7 @@ namespace nanojit
             ST(FP, d, r);
         }
 
-        freeRsrcOf(ins, false);    // if we had a reg in use, emit a ST to flush it to mem
+        freeRsrcOf(ins, false); // if we had a reg in use, emit a ST to flush it to mem
     }
 
     void Assembler::asm_load(int d, Register r)
@@ -563,13 +564,13 @@ namespace nanojit
 
             if (config.sse2) {
                 Register rv = findRegFor(value, XmmRegs);
-        Register rb;
-        if (base->isop(LIR_ialloc)) {
-            rb = FP;
-            dr += findMemFor(base);
-        } else {
-            rb = findRegFor(base, GpRegs);
-        }
+                Register rb;
+                if (base->isop(LIR_ialloc)) {
+                    rb = FP;
+                    dr += findMemFor(base);
+                } else {
+                    rb = findRegFor(base, GpRegs);
+                }
                 SSE_STQ(dr, rb, rv);
                 return;
             }
@@ -577,10 +578,10 @@ namespace nanojit
             int da = findMemFor(value);
             Register rb;
             if (base->isop(LIR_ialloc)) {
-                    rb = FP;
-                    dr += findMemFor(base);
+                rb = FP;
+                dr += findMemFor(base);
             } else {
-                    rb = findRegFor(base, GpRegs);
+                rb = findRegFor(base, GpRegs);
             }
             asm_mmq(rb, dr, FP, da);
             return;
@@ -645,12 +646,10 @@ namespace nanojit
         NIns* at = 0;
         LOpcode condop = cond->opcode();
         NanoAssert(cond->isCond());
-
         if (condop >= LIR_feq && condop <= LIR_fge)
         {
             return asm_jmpcc(branchOnFalse, cond, targ);
         }
-
         // produce the branch
         if (branchOnFalse)
         {
@@ -698,7 +697,6 @@ namespace nanojit
             else //if (condop == LIR_uge)
                 JAE(targ, isfar);
         }
-
         at = _nIns;
         asm_cmp(cond);
         return at;
@@ -709,14 +707,14 @@ namespace nanojit
         LIns* diff = ins->oprnd1();
         findSpecificRegFor(diff, EBX);
         JMP(exit);
-       }
+    }
 
     void Assembler::asm_cmp(LIns *cond)
     {
         LOpcode condop = cond->opcode();
 
         // LIR_ov recycles the flags set by arithmetic ops
-        if ((condop == LIR_ov))
+        if (condop == LIR_ov)
             return;
 
         LInsp lhs = cond->oprnd1();
@@ -866,7 +864,6 @@ namespace nanojit
         Register rr = prepResultReg(ins, allow);
         Reservation* rA = getresv(lhs);
         Register ra;
-
         // if this is last use of lhs in reg, we can re-use result reg
         if (rA == 0 || (ra = rA->reg) == UnknownReg)
             ra = findSpecificRegFor(lhs, rr);
@@ -1074,17 +1071,17 @@ namespace nanojit
             switch (condval->opcode())
             {
                 // note that these are all opposites...
-                case LIR_eq:    MRNE(rr, iffalsereg);    break;
+                case LIR_eq:    MRNE(rr, iffalsereg);   break;
                 case LIR_ov:    MRNO(rr, iffalsereg);   break;
-                case LIR_lt:    MRGE(rr, iffalsereg);    break;
+                case LIR_lt:    MRGE(rr, iffalsereg);   break;
                 case LIR_le:    MRG(rr, iffalsereg);    break;
-                case LIR_gt:    MRLE(rr, iffalsereg);    break;
+                case LIR_gt:    MRLE(rr, iffalsereg);   break;
                 case LIR_ge:    MRL(rr, iffalsereg);    break;
-                case LIR_ult:    MRAE(rr, iffalsereg);    break;
-                case LIR_ule:    MRA(rr, iffalsereg);    break;
-                case LIR_ugt:    MRBE(rr, iffalsereg);    break;
-                case LIR_uge:    MRB(rr, iffalsereg);    break;
-                default: debug_only( NanoAssert(0); ) break;
+                case LIR_ult:   MRAE(rr, iffalsereg);   break;
+                case LIR_ule:   MRA(rr, iffalsereg);    break;
+                case LIR_ugt:   MRBE(rr, iffalsereg);   break;
+                case LIR_uge:   MRB(rr, iffalsereg);    break;
+                debug_only( default: NanoAssert(0); break; )
             }
         } else if (op == LIR_qcmov) {
             NanoAssert(0);
@@ -1489,12 +1486,12 @@ namespace nanojit
             //
             // gr is 0..2^32-1
             //
-            //       sub gr,0x80000000
+            //     sub gr,0x80000000
             //
             // now gr is -2^31..2^31-1, i.e. the range of int, but not the same value
             // as before
             //
-            //       cvtsi2sd rr,gr
+            //     cvtsi2sd rr,gr
             //
             // rr is now a double with the int value range
             //
@@ -1530,8 +1527,8 @@ namespace nanojit
             Register gr = findRegFor(ins->oprnd1(), GpRegs);
             NanoAssert(rr == FST0);
             FILDQ(disp, base);
-            STi(base, disp+4, 0);    // high 32 bits = 0
-            ST(base, disp, gr);        // low 32 bits = unsigned value
+            STi(base, disp+4, 0);   // high 32 bits = 0
+            ST(base, disp, gr);     // low 32 bits = unsigned value
         }
     }
 
@@ -1663,7 +1660,6 @@ namespace nanojit
                 evict(EAX);
                 TEST_AH(mask);
                 LAHF();
-
                 Reservation *rA, *rB;
                 findRegFor2(XmmRegs, lhs, rA, rhs, rB);
                 SSE_UCOMISD(rA->reg, rB->reg);
