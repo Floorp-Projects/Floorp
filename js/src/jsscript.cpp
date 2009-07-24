@@ -1606,8 +1606,9 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         JS_PURGE_GSN_CACHE(cx);
 
     /*
-     * The GC flushes all property caches, so no need to purge just the
-     * entries for this script.
+     * Worry about purging the property cache and any compiled traces related
+     * to its bytecode if this script is being destroyed from JS_DestroyScript
+     * or equivalent according to a mandatory "New/Destroy" protocol.
      *
      * JS_THREADSAFE note: js_PurgePropertyCacheForScript purges only the
      * current thread's property cache, so a script not owned by a function
@@ -1627,16 +1628,14 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         JSStackFrame *fp = js_GetTopStackFrame(cx);
 
         if (!(fp && (fp->flags & JSFRAME_EVAL))) {
-            js_PurgePropertyCacheForScript(cx, script);
-
-            if (!cx->runtime->gcRunning) {
 #ifdef CHECK_SCRIPT_OWNER
-                JS_ASSERT(script->owner == cx->thread);
+            JS_ASSERT(script->owner == cx->thread);
 #endif
+            js_PurgePropertyCacheForScript(cx, script);
 #ifdef JS_TRACER
-            js_PurgeScriptFragments(cx, script);
+            if (!cx->runtime->gcRunning)
+                js_PurgeScriptFragments(cx, script);
 #endif
-            }
         }
     }
 
