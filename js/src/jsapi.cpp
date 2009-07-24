@@ -4354,13 +4354,10 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
      */
     if (FUN_FLAT_CLOSURE(fun)) {
         JS_ASSERT(funobj->dslots);
-        JS_ASSERT(JSSLOT_FREE(&js_FunctionClass) == JS_INITIAL_NSLOTS);
-
-        uint32 nslots = JSSLOT_FREE(&js_FunctionClass);
-        JS_ASSERT(nslots == JS_INITIAL_NSLOTS);
-        nslots += js_FunctionClass.reserveSlots(cx, clone);
-        if (!js_AllocSlots(cx, clone, nslots))
+        if (!js_EnsureReservedSlots(cx, clone,
+                                    fun->countInterpretedReserveSlots())) {
             return NULL;
+        }
 
         JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
         JS_ASSERT(uva->length <= size_t(clone->dslots[-1]));

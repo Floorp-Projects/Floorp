@@ -2011,6 +2011,9 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FS_END
 };
 
+static bool
+AllocSlots(JSContext *cx, JSObject *obj, size_t nslots);
+
 static inline bool
 InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* ops)
 {
@@ -2032,7 +2035,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
         /* Let JSScope::create set freeslot so as to reserve slots. */
         JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
         if (scope->freeslot > JS_INITIAL_NSLOTS &&
-            !js_AllocSlots(cx, obj, scope->freeslot)) {
+            !AllocSlots(cx, obj, scope->freeslot)) {
             JSScope::destroy(cx, scope);
             goto bad;
         }
@@ -2600,7 +2603,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     if (normalUnwind && count > 1) {
         --count;
         JS_LOCK_OBJ(cx, obj);
-        if (!js_AllocSlots(cx, obj, JS_INITIAL_NSLOTS + count))
+        if (!AllocSlots(cx, obj, JS_INITIAL_NSLOTS + count))
             normalUnwind = JS_FALSE;
         else
             memcpy(obj->dslots, fp->slots + depth + 1, count * sizeof(jsval));
@@ -2976,8 +2979,8 @@ bad:
   (JS_ASSERT((words) > 1), (words) - 1 + JS_INITIAL_NSLOTS)
 
 
-bool
-js_AllocSlots(JSContext *cx, JSObject *obj, size_t nslots)
+static bool
+AllocSlots(JSContext *cx, JSObject *obj, size_t nslots)
 {
     JS_ASSERT(!obj->dslots);
     JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
@@ -3037,7 +3040,7 @@ js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
      */
     jsval* slots = obj->dslots;
     if (!slots)
-        return js_AllocSlots(cx, obj, nslots);
+        return AllocSlots(cx, obj, nslots);
 
     size_t oslots = size_t(slots[-1]);
 
@@ -3074,6 +3077,28 @@ js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
         *slots++ = nslots;
         obj->dslots = slots;
     }
+}
+
+bool
+js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
+{
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(!obj->dslots);
+
+    uintN nslots = JSSLOT_FREE(STOBJ_GET_CLASS(obj)) + nreserved;
+    if (nslots > STOBJ_NSLOTS(obj) && !AllocSlots(cx, obj, nslots))
+        return false;
+
+    JSScope *scope = OBJ_SCOPE(obj);
+    if (scope->owned()) {
+#ifdef JS_THREADSAFE
+        JS_ASSERT(scope->title.ownercx->thread == cx->thread);
+#endif
+        JS_ASSERT(scope->freeslot == JSSLOT_FREE(STOBJ_GET_CLASS(obj)));
+        if (scope->freeslot < nslots)
+            scope->freeslot = nslots;
+    }
+    return true;
 }
 
 extern JSBool
@@ -5863,7 +5888,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         if (clasp->reserveSlots)
             nslots += clasp->reserveSlots(cx, obj);
         JS_ASSERT(slot < nslots);
-        if (!js_AllocSlots(cx, obj, nslots)) {
+        if (!AllocSlots(cx, obj, nslots)) {
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
