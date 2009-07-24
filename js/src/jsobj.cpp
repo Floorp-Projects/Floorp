@@ -5039,7 +5039,7 @@ js_TraceNativeEnumerators(JSTracer *trc)
      * re-number completely when tracing is done for the GC.
      */
     rt = trc->context->runtime;
-    if (IS_GC_MARKING_TRACER(trc) && rt->gcRegenShapes) {
+    if (IS_GC_MARKING_TRACER(trc)) {
         memset(&rt->nativeEnumCache, 0, sizeof rt->nativeEnumCache);
 #ifdef JS_DUMP_ENUM_CACHE_STATS
         printf("nativeEnumCache hit rate %g%%\n",
@@ -5743,22 +5743,23 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     MeterEntryCount(scope->entryCount);
 #endif
 
-    sprop = scope->lastProp;
+    sprop = SCOPE_LAST_PROP(scope);
     if (sprop) {
         JS_ASSERT(scope->has(sprop));
 
         /* Regenerate property cache shape ids if GC'ing. */
-        if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
-            if (!(sprop->flags & SPROP_FLAG_SHAPE_REGEN)) {
-                sprop->shape = js_RegenerateShapeForGC(cx);
+        if (IS_GC_MARKING_TRACER(trc)) {
+            uint32 shape, oldshape;
+
+            shape = js_RegenerateShapeForGC(cx);
+            if (!(sprop->flags & SPROP_MARK)) {
+                oldshape = sprop->shape;
+                sprop->shape = shape;
                 sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
+                if (scope->shape != oldshape)
+                    shape = js_RegenerateShapeForGC(cx);
             }
 
-            uint32 shape = sprop->shape;
-            if (scope->hasOwnShape()) {
-                shape = js_RegenerateShapeForGC(cx);
-                JS_ASSERT(shape != sprop->shape);
-            }
             scope->shape = shape;
         }
 
