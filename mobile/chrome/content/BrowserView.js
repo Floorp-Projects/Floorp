@@ -467,6 +467,10 @@ BrowserView.prototype = {
     }
   },
 
+  getBrowser: function getBrowser() {
+    return this._browser;
+  },
+
   handleMozAfterPaint: function handleMozAfterPaint(ev) {
     let browser = this._browser;
     let tm = this._tileManager;
@@ -529,6 +533,11 @@ BrowserView.prototype = {
   },
 
   zoom: function zoom(aDirection) {
+    let bvs = this._browserViewportState;
+
+    if (!bvs)
+      throw "No browser is set";
+
     if (aDirection == 0)
       return;
 
@@ -536,7 +545,7 @@ BrowserView.prototype = {
     if (aDirection >= 0)
       zoomDelta *= -1;
 
-    this.zoomLevel = this._zoomLevel + zoomDelta;
+    this.setZoomLevel(bvs.zoomLevel + zoomDelta);
   },
 
   viewportToBrowser: function viewportToBrowser(x) {
