@@ -279,15 +279,6 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DIST)/lib)
 endif
 endif
 
-# When using gcc the assembly is inlined in the C-file (see jslock.cpp)
-ifeq ($(OS_ARCH),SunOS)
-ifneq (86,$(findstring 86,$(OS_TEST)))
-ifndef GNU_CC
-ASFILES		= lock_$(OS_ARCH).s
-endif
-endif
-endif
-
 ifndef BUILD_OPT
 MOCHAFILE	= 1
 endif
@@ -441,15 +432,12 @@ endif
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(TARGET_CPU),sparc)
 
-ifdef JS_ULTRASPARC_OPTS
-DEFINES += -DULTRA_SPARC
 ifdef GNU_CC
-CFLAGS   += -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0
-CXXFLAGS += -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0,-K,PIC
+CFLAGS   += -mcpu=v9
+CXXFLAGS += -mcpu=v9
 else
-ASFLAGS  += -xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC
+ASFLAGS  += -xarch=v8plus -P -L -D_ASM -D__STDC__=0 -K PIC
 endif # GNU_CC
-endif # JS_ULTRASPARC_OPTS
 
 endif
 ifeq ($(OS_RELEASE),4.1)
