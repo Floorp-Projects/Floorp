@@ -47,8 +47,8 @@
 menupopup,
 popup,
 panel {
-  border: 3px solid transparent;
-  padding: 0px;
+  border: 1px solid menutext;
+  padding: 2px;
   min-width: 1px;
   background: Menu;
 }

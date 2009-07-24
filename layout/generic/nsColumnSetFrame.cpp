@@ -901,6 +901,9 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
 {
+  // Don't support interruption in columns
+  nsPresContext::InterruptPreventer noInterrupts(aPresContext);
+
   DO_GLOBAL_REFLOW_COUNT("nsColumnSetFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 

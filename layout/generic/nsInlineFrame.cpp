@@ -398,6 +398,21 @@ nsInlineFrame::CanContinueTextRun() const
   return PR_TRUE;
 }
 
+/* virtual */ void
+nsInlineFrame::PullOverflowsFromPrevInFlow()
+{
+  nsInlineFrame* prevInFlow = static_cast<nsInlineFrame*>(GetPrevInFlow());
+  if (prevInFlow) {
+    nsPresContext* presContext = PresContext();
+    nsIFrame* prevOverflowFrames =
+      prevInFlow->GetOverflowFrames(presContext, PR_TRUE);
+    if (prevOverflowFrames) {
+      // Assume that our prev-in-flow has the same line container that we do.
+      mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
+    }
+  }
+}
+
 nsresult
 nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                             const nsHTMLReflowState& aReflowState,
@@ -1034,6 +1049,24 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
   // Note: the line layout code will properly compute our overflow state for us
 
   return rv;
+}
+
+/* virtual */ void
+nsFirstLineFrame::PullOverflowsFromPrevInFlow()
+{
+  nsFirstLineFrame* prevInFlow = static_cast<nsFirstLineFrame*>(GetPrevInFlow());
+  if (prevInFlow) {
+    nsPresContext* presContext = PresContext();
+    nsIFrame* prevOverflowFrames =
+      prevInFlow->GetOverflowFrames(presContext, PR_TRUE);
+    if (prevOverflowFrames) {
+      nsFrameList frames(prevOverflowFrames);
+
+      // Assume that our prev-in-flow has the same line container that we do.
+      mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
+      ReParentChildListStyle(presContext, frames, this);
+    }
+  }
 }
 
 //////////////////////////////////////////////////////////////////////

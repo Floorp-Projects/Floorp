@@ -169,6 +169,7 @@ function run_test() {
   /*
    * TEST 2 tests that:
    *     <frameset onhashchange = ... > works,
+   *     the event is targeted at the window object
    *     the event's cancelable, bubbles settings are correct
    */
   enableIframeLoadCallback();
@@ -180,6 +181,8 @@ function run_test() {
 
   eventExpected("frame onhashchange should fire events.");
   // iframe should set gSampleEvent
+  is(gSampleEvent.target, frameCw,
+     "The hashchange event should be targeted to the window.");
   is(gSampleEvent.type, "hashchange",
      "Event type should be 'hashchange'.");
   is(gSampleEvent.cancelable, false,
@@ -189,60 +192,13 @@ function run_test() {
 
   /*
    * TEST 3 tests that:
-   *     hashchange is not dispatched if the current document readyState is
-   *     not "complete".
+   *     hashchange is dispatched if the current document readyState is
+   *     not "complete" (bug 504837).
    */
-  enableIframeLoadCallback();
   frameCw.document.location = "file_bug385434_3.html";
   yield;
-  noEventExpected("Hashchange shouldn't fire if the document " +
-                  "hasn't finished loading.");
-
-  longWait();
-  yield;
-  noEventExpected("Hashchange shouldn't fire after longWait() if " +
-                  "the document hasn't finished loading.");
-
-  /*
-   * TEST 4 tests that if we
-   *
-   *    * Load a page A
-   *    * Register a hashchange callback on A
-   *    * Navigate to A#foo
-   *    * Redirect to a different page, B, before the hashchange event triggered
-   *      by redirecting to A#foo fires,
-   *
-   * a hashchange event is not fired on B.
-   */
-  statusMsg("Starting test 4.");
-  frameCw.document.location = "file_bug385434_4.html";
-  longWait();
-  yield;
-  noEventExpected("Test 4 sequence shouldn't trigger a hashchange.");
-  
-  /*
-   * TEST 5 tests that:
-   *     document.window.addEventListener() works for hashchange,
-   *     hashchange is dispatched to window, not to body
-   */
-
-  // Make sure the current window doesn't have a hash, as would happen if we
-  // were running this test interactively and it hung right after we assigned a
-  // value to window.location.hash
-  window.location.hash = "";
-
-  window.addEventListener("hashchange", onIframeHashchange, false);
-  window.location.hash = "#foo";
-  yield;
-  eventExpected("addEventListener() should work for hashchange.");
-  window.removeEventListener("hashchange", onIframeHashchange, false);
-
-  document.body.addEventListener("hashchange", onIframeHashchange, false);
-  enableIframeLoadCallback();
-  window.location.hash = "#baz";
-  longWait();
-  yield;
-  noEventExpected("hashchange shouldn't be dispatched to <body>.");
+  eventExpected("Hashchange should fire even if the document " +
+                "hasn't finished loading.");
 
   SimpleTest.finish();
   yield;
