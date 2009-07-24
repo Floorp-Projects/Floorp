@@ -180,8 +180,8 @@
 
 
 
-
-  <scrollbox id="scrollbox" style="-moz-box-orient: vertical; overflow: scroll;" top="0" left="0" flex="1">
+  <scrollbox id="scrollbox" style="overflow: scroll;" top="0" left="0" flex="1">
+    <vbox>
     <!-- Main Toolbar -->
     <toolbar id="toolbar-main" class="panel-dark" style="width: 800px;">
       <hbox id="urlbar-container" flex="1">
@@ -242,9 +242,11 @@
         <toolbarbutton id="tool-panel-open" class="page-button button-image" command="cmd_panel"/>
       </vbox>
     </hbox>
+    </vbox>
   </scrollbox>
 
-  <stack>
+
+  <stack flex="1">
     <notificationbox id="notifications" top="0" left="0"/>
 
     <!-- popup for find toolbar -->
@@ -444,9 +446,8 @@
     </hbox>
   </stack>
 
-
   <box>
-    <html:div style="position: relative; overflow: hidden; max-width: 0px; max-height: 0px; visibility: hidden;">
+    <html:div style="position: relative; overflow: -moz-hidden-unscrollable; max-width: 0px; max-height: 0px; visibility: hidden;">
       <html:div id="browsers" style="position: absolute;"/>
     </html:div>
   </box>
