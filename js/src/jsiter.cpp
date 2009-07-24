@@ -649,7 +649,7 @@ generator_finalize(JSContext *cx, JSObject *obj)
          */
         JS_ASSERT(gen->state == JSGEN_NEWBORN || gen->state == JSGEN_CLOSED ||
                   gen->state == JSGEN_OPEN);
-        cx->runtime->asynchronousFree(gen);
+        JS_free(cx, gen);
     }
 }
 
