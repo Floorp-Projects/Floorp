@@ -264,7 +264,7 @@ DWORD nsWindow::WindowStyle()
       break;
 
     case eWindowType_popup:
-      style = WS_POPUP | WS_BORDER;
+      style = WS_POPUP;
       break;
 
     default:

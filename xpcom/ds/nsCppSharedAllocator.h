@@ -5,12 +5,6 @@
 #include NEW_H					// to allow placement |new|
 
 
-  // under Metrowerks (Mac), we don't have autoconf yet
-#ifdef __MWERKS__
-  #define HAVE_CPP_MEMBER_TEMPLATES
-	#define HAVE_CPP_NUMERIC_LIMITS
-#endif
-
   // under MSVC shut off copious warnings about unused in-lines
 #ifdef _MSC_VER
   #pragma warning( disable: 4514 )
