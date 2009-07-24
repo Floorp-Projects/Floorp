@@ -61,15 +61,15 @@
 using namespace nanojit;
 using namespace std;
 
-static MMgc::GC gc;
+static avmplus::GC gc;
 
 struct LasmSideExit : public SideExit {
     size_t line;
 };
 
-typedef int32_t      (JS_FASTCALL *RetInt)();
-typedef double       (JS_FASTCALL *RetFloat)();
-typedef GuardRecord* (JS_FASTCALL *RetGuard)();
+typedef JS_FASTCALL int32_t (*RetInt)();
+typedef JS_FASTCALL double (*RetFloat)();
+typedef JS_FASTCALL GuardRecord* (*RetGuard)();
 
 struct Function {
     const char *name;
@@ -83,15 +83,15 @@ enum ReturnType {
 };
 
 #ifdef DEBUG
-#define DEBUG_ONLY_ARG(arg)   ,arg
+#define DEBUG_ONLY_NAME(name)   ,#name
 #else
-#define DEBUG_ONLY_ARG(arg)
+#define DEBUG_ONLY_NAME(name)
 #endif
 
-#define FN(cast, name, args) \
+#define FN(name, args) \
     {#name, \
-     {(uintptr_t) (cast (&name)), args, 0, 0, nanojit::ABI_CDECL \
-      DEBUG_ONLY_ARG(#name)}}
+     {(uintptr_t) (&name), args, 0, 0, nanojit::ABI_CDECL \
+      DEBUG_ONLY_NAME(name)}}
 
 const int I32 = nanojit::ARGSIZE_LO;
 const int I64 = nanojit::ARGSIZE_Q;
@@ -180,10 +180,10 @@ public:
 };
 
 Function functions[] = {
-    FN(                    , puts, I32 | (PTRARG<<2)),
-    FN((double (*)(double)), sin, F64 | (F64<<2)),
-    FN(                    , malloc, PTRRET | (PTRARG<<2)),
-    FN(                    , free, I32 | (PTRARG<<2))
+    FN(puts, I32 | (PTRARG<<2)),
+    FN(sin, F64 | (F64<<2)),
+    FN(malloc, PTRRET | (PTRARG<<2)),
+    FN(free, I32 | (PTRARG<<2))
 };
 
 void
@@ -200,18 +200,16 @@ LirasmAssembler::lookupFunction(const char *name, CallInfo *&ci)
     if (func != mParent->mFragments.end()) {
         if (func->second.mReturnType == RT_FLOAT) {
             CallInfo target = {(uintptr_t) func->second.rfloat, ARGSIZE_F, 0,
-                               0, nanojit::ABI_FASTCALL
-                               DEBUG_ONLY_ARG(func->first.c_str())};
+                               0, nanojit::ABI_FASTCALL, func->first.c_str()};
             *ci = target;
 
         } else {
             CallInfo target = {(uintptr_t) func->second.rint, ARGSIZE_LO, 0,
-                               0, nanojit::ABI_FASTCALL
-                               DEBUG_ONLY_ARG(func->first.c_str())};
+                               0, nanojit::ABI_FASTCALL, func->first.c_str()};
             *ci = target;
         }
     } else {
-        ci = NULL;
+    ci = NULL;
     }
 }
 
@@ -357,8 +355,12 @@ LirasmAssembler::assemble_jump()
 LIns*
 LirasmAssembler::assemble_load()
 {
+    // Support implicit immediate-as-second-operand modes
+    // since, unlike sti/stqi, no immediate-displacement
+    // load opcodes were defined in LIR.
     need(2);
     if (mTokens[1].find("0x") == 0 ||
+        mTokens[1].find("0x") == 0 ||
         mTokens[1].find_first_of("0123456789") == 0) {
         return mLir->insLoad(mOpcode,
                             ref(mTokens[0]),
@@ -388,7 +390,7 @@ LirasmAssembler::assemble_call(string &op)
     string func = pop_front(mTokens);
     string abi = pop_front(mTokens);
 
-    AbiKind _abi = ABI_FASTCALL;    // init to shut GCC up
+    AbiKind _abi;
     if (abi == "fastcall")
         _abi = ABI_FASTCALL;
     else if (abi == "stdcall")
@@ -481,13 +483,10 @@ LirasmAssembler::assemble_general()
         // 0-ary ops may, or may not, have an immediate
         // thing wedged in them; depends on the op. We
         // are lax and set it if it's provided.
-        // XXX: this needs to be fixed, with variable-width LIR it's not
-        // suitable.  Just assert for the moment, it needs to be fixed later.
         LIns *ins = mLir->ins0(mOpcode);
         if (mTokens.size() > 0) {
             assert(mTokens.size() == 1);
-            //ins->initLInsI(mOpcode, imm(mTokens[0]));
-            assert(0);
+            ins->initLInsI(mOpcode, imm(mTokens[0]));
         }
         return ins;
     } else {
@@ -509,7 +508,6 @@ LirasmAssembler::assemble_general()
         }
     }
     // Never get here.
-    assert(0);
     return NULL;
 }
 
@@ -667,15 +665,15 @@ LirasmAssembler::endFragment()
     switch (mReturnTypeBits) {
       case RT_FLOAT:
       default:
-        f->rfloat = reinterpret_cast<RetFloat>(reinterpret_cast<uintptr_t>(mFragment->code()));
+        f->rfloat = reinterpret_cast<RetFloat>(mFragment->code());
         f->mReturnType = RT_FLOAT;
         break;
       case RT_INT32:
-        f->rint = reinterpret_cast<RetInt>(reinterpret_cast<uintptr_t>(mFragment->code()));
+        f->rint = reinterpret_cast<RetInt>(mFragment->code());
         f->mReturnType = RT_INT32;
         break;
       case RT_GUARD:
-        f->rguard = reinterpret_cast<RetGuard>(reinterpret_cast<uintptr_t>(mFragment->code()));
+        f->rguard = reinterpret_cast<RetGuard>(mFragment->code());
         f->mReturnType = RT_GUARD;
         break;
     }
@@ -891,9 +889,9 @@ Lirasm::Lirasm(bool verbose)
     nanojit::AvmCore::config.tree_opt = true;
     mLogc.lcbits = 0;
     mFragmento = new (&gc) Fragmento(&s_core, &mLogc, 32);
+    mFragmento->labels = NULL;
     mLirbuf = new (&gc) LirBuffer(mFragmento);
 #ifdef DEBUG
-    mFragmento->labels = NULL;
     if (mVerbose) {
         mLogc.lcbits = LC_Assembly;
         mFragmento->labels = new (&gc) LabelMap(&s_core);
@@ -910,9 +908,7 @@ Lirasm::~Lirasm()
         delete i->second.fragptr;
     }
     delete mLirbuf;
-#ifdef DEBUG
     delete mFragmento->labels;
-#endif
     delete mFragmento;
 }
 
