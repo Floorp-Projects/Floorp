@@ -893,3 +893,6 @@ pref("toolbar.customization.usesheet", true);
 #else
 pref("toolbar.customization.usesheet", false);
 #endif
+
+pref("dom.ipc.plugins.enabled", false);
+pref("dom.ipc.tabs.enabled", false);
