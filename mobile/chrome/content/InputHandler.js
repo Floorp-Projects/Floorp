@@ -212,7 +212,7 @@ InputHandler.prototype = {
       let mods = this._modules;
       let i = skipToIndex || 0;
 
-      for (len = mods.length; i < len; ++i) {
+      for (let len = mods.length; i < len; ++i) {
         mods[i].handleEvent(evInfo);  // event focus could get grabbed in this invocation
         if (this._grabbed)            // so don't pass the event to the rest of modules
           break;
@@ -440,7 +440,7 @@ MouseModule.prototype = {
    */
   _doSingleClick: function _doSingleClick() {
     let ev = this._recordedEvents[1].event;
-    
+
     this._clicker.singleClick(ev.sX, ev.sY);
   },
 
@@ -568,7 +568,7 @@ MouseModule.prototype = {
 /**
  * Drag Data is used by both chrome and content input modules
  */
-DragData(owner, dragRadius, dragStartTimeoutLength) {
+function DragData(owner, dragRadius, dragStartTimeoutLength) {
   this._owner = owner;
   this._dragRadius = dragRadius;
   this.reset();
