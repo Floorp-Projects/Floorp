@@ -3807,9 +3807,9 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re)
                     JS_free(cx, re->classList[i].u.bits);
                 re->classList[i].u.bits = NULL;
             }
-            cx->runtime->asynchronousFree(re->classList);
+            JS_free(cx, re->classList);
         }
-        cx->runtime->asynchronousFree(re);
+        JS_free(cx, re);
     }
 }
 

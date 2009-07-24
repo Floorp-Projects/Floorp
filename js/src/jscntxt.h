@@ -57,7 +57,6 @@
 #include "jsregexp.h"
 #include "jsutil.h"
 #include "jsarray.h"
-#include "jstask.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -688,24 +687,6 @@ struct JSRuntime {
 
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
-
-#ifdef JS_THREADSAFE
-    JSBackgroundThread    *deallocatorThread;
-    JSFreePointerListTask *deallocatorTask;
-
-    inline void asynchronousFree(void* p) {
-        if (p) {
-            if (deallocatorTask)
-                deallocatorTask->add(p);
-            else
-                free(p);
-        }
-    }
-#else
-    inline void asynchronousFree(void* p) {
-        free(p);
-    }
-#endif
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
