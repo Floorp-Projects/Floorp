@@ -88,6 +88,9 @@
 #include "nsIHttpAuthManager.h"
 #include "nsICookieService.h"
 
+#include "mozilla/SharedLibrary.h"
+using mozilla::SharedLibrary;
+
 #include "mozilla/SharedPRLibrary.h"
 using mozilla::SharedPRLibrary;
 
@@ -360,6 +363,48 @@ nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 }
 #endif
 
+namespace {
+
+#ifdef MOZ_IPC
+
+inline PRBool
+OOPPluginsEnabled()
+{
+  if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs) {
+    return PR_FALSE;
+  }
+
+  PRBool oopPluginsEnabled = PR_FALSE;
+  prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
+
+  if (!oopPluginsEnabled) {
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+#endif // MOZ_IPC
+
+inline SharedLibrary*
+GetNewSharedLibrary(const char* aFilePath,
+                    PRLibrary* aLibrary)
+{
+#ifdef MOZ_IPC
+  if (aFilePath && OOPPluginsEnabled()) {
+    return NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
+  }
+#endif
+  return new SharedPRLibrary(aFilePath, aLibrary);
+}
+
+} /* anonymous namespace */
+
 // Creates the nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
 nsresult
 nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
@@ -374,15 +419,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   memset((void*) &callbacks, 0, sizeof(callbacks));
   callbacks.size = sizeof(callbacks);
 
-  SharedLibrary* pluginLib;
-#ifdef MOZ_IPC
-  if (PR_GetEnv("DISABLE_OOP_PLUGINS") || !aFilePath)
-    pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
-  else
-    pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
-#else
-  pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
-#endif
+  SharedLibrary* pluginLib = GetNewSharedLibrary(aFilePath, aLibrary);
 
   NP_PLUGINSHUTDOWN pfnShutdown =
     (NP_PLUGINSHUTDOWN) pluginLib->FindFunctionSymbol("NP_Shutdown");
@@ -419,15 +456,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 #endif
 
 #ifdef XP_WIN
-  SharedLibrary* pluginLib;
-#ifdef MOZ_IPC
-  if (PR_GetEnv("DISABLE_OOP_PLUGINS") || !aFilePath)
-    pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
-  else
-    pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
-#else
-  pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
-#endif
+  SharedLibrary* pluginLib = GetNewSharedLibrary(aFilePath, aLibrary);
 
   // Note: on Windows, we must use the fCallback because plugins may
   // change the function table. The Shockwave installer makes changes
@@ -549,15 +578,7 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
   nsPluginFile pluginFile(pluginPath);
   pluginRefNum = pluginFile.OpenPluginResource();
 
-  SharedLibrary* pluginLib;
-#ifdef MOZ_IPC
-  if (PR_GetEnv("DISABLE_OOP_PLUGINS") || !aFilePath)
-    pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
-  else
-    pluginLib = NPAPIPluginParent::LoadModule(aFilePath, aLibrary);
-#else
-  pluginLib = new SharedPRLibrary(aFilePath, aLibrary);
-#endif
+  SharedLibrary* pluginLib = GetNewSharedLibrary(aFilePath, aLibrary);
   nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, pluginLib, aLibrary, nsnull);
   ::UseResFile(appRefNum);
   if (!plugin)
