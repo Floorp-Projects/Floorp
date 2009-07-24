@@ -219,7 +219,6 @@ struct JSScope {
     bool createTable(JSContext *cx, bool report);
     bool changeTable(JSContext *cx, int change);
     void reportReadOnlyScope(JSContext *cx);
-    void generateOwnShape(JSContext *cx);
     JSScopeProperty **searchTable(jsid id, bool adding);
     inline JSScopeProperty **search(jsid id, bool adding);
     JSScope *createEmptyScope(JSContext *cx, JSClass *clasp);
@@ -282,13 +281,15 @@ struct JSScope {
         MIDDLE_DELETE           = 0x0001,
         SEALED                  = 0x0002,
         BRANDED                 = 0x0004,
-        INDEXED_PROPERTIES      = 0x0008,
-        OWN_SHAPE               = 0x0010
+        INDEXED_PROPERTIES      = 0x0008
     };
 
     bool hadMiddleDelete()      { return flags & MIDDLE_DELETE; }
     void setMiddleDelete()      { flags |= MIDDLE_DELETE; }
     void clearMiddleDelete()    { flags &= ~MIDDLE_DELETE; }
+
+    bool hadIndexedProperties() { return flags & INDEXED_PROPERTIES; }
+    void setIndexedProperties() { flags |= INDEXED_PROPERTIES; }
 
     /*
      * Don't define clearSealed, as it can't be done safely because JS_LOCK_OBJ
@@ -305,12 +306,7 @@ struct JSScope {
      */
     bool branded()              { return flags & BRANDED; }
     void setBranded()           { flags |= BRANDED; }
-
-    bool hadIndexedProperties() { return flags & INDEXED_PROPERTIES; }
-    void setIndexedProperties() { flags |= INDEXED_PROPERTIES; }
-
-    bool hasOwnShape()          { return flags & OWN_SHAPE; }
-    void setOwnShape()          { flags |= OWN_SHAPE; }
+    void clearBranded()         { flags &= ~BRANDED; }
 
     bool owned()                { return object != NULL; }
 };
