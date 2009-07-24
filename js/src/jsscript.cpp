@@ -1606,8 +1606,17 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         JS_PURGE_GSN_CACHE(cx);
 
     /*
-     * The GC flushes all property caches, so no need to purge just the
-     * entries for this script.
+     * Worry about purging the property cache and any compiled traces related
+     * to its bytecode if this script is being destroyed from JS_DestroyScript
+     * or equivalent according to a mandatory "New/Destroy" protocol.
+     *
+     * The GC purges all property caches when regenerating shapes upon shape
+     * generator overflow, so no need in that event to purge just the entries
+     * for this script.
+     *
+     * The GC purges trace-JITted code on every GC activation, not just when
+     * regenerating shapes, so we don't have to purge fragments if the GC is
+     * currently running.
      *
      * JS_THREADSAFE note: js_PurgePropertyCacheForScript purges only the
      * current thread's property cache, so a script not owned by a function
@@ -1623,7 +1632,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     JS_ASSERT_IF(cx->runtime->gcRunning, !script->owner);
 #endif
 
-    if (!cx->runtime->gcRunning) {
+    if (!cx->runtime->gcRegenShapes) {
         JSStackFrame *fp = js_GetTopStackFrame(cx);
 
         if (!(fp && (fp->flags & JSFRAME_EVAL))) {
@@ -1632,7 +1641,8 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 #endif
             js_PurgePropertyCacheForScript(cx, script);
 #ifdef JS_TRACER
-            js_PurgeScriptFragments(cx, script);
+            if (!cx->runtime->gcRunning)
+                js_PurgeScriptFragments(cx, script);
 #endif
         }
     }
