@@ -264,8 +264,9 @@ var Browser = {
       },
 
       dragStop: function dragStop(dx, dy, scroller) {
-        this.dragMove(dx, dy, scroller);
+        let ret = this.dragMove(dx, dy, scroller);
         bv.resumeRendering();
+        return ret;
       },
 
       dragMove: function dragMove(dx, dy, scroller) {
@@ -285,6 +286,8 @@ var Browser = {
         if (realdx != dx || realdy != dy) {
           dump('--> scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
         }
+
+        return !(realdx == 0 && realdy == 0);
       }
     };
 

@@ -42,40 +42,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function getScrollboxFromElement(elem) {
-  // check element for scrollable interface, if not found check parent until we get to root
-  let scrollbox = null;
-  let qinterface = null;
-
-  while (elem.parentNode) {
-    try {
-      if (elem.scrollBoxObject) {
-
-        scrollbox = elem;
-        qinterface = elem.scrollBoxObject;
-        break;
-
-      } else if (elem.boxObject) {
-
-        let qi = (elem._cachedSBO) ? elem._cachedSBO
-                                   : elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-        if (qi) {
-          scrollbox = elem;
-          elem._cachedSBO = qinterface = qi;
-          break;
-        }
-
-      }
-    } catch (e) {
-      // an exception is OK, we just don't want to propogate it
-    }
-    elem = elem.parentNode;
-  }
-
-  return [scrollbox, qinterface];
-}
-
-
 /**
  * Everything that is registed in _modules gets called with each event that the
  * InputHandler is registered to listen for.
@@ -92,7 +58,8 @@ function InputHandler() {
   this._modules = [];
 
   /* which module, if any, has all events directed to it */
-  this._grabbed = null;
+  this._grabber = null;
+  this._grabDepth = 0;
 
   /* when true, don't process any events */
   this._ignoreEvents = false;
@@ -110,38 +77,102 @@ function InputHandler() {
   window.addEventListener("click", this, true);
   window.addEventListener("DOMMouseScroll", this, true);
 
+  // TODO move elsewhere
   let browserCanvas = document.getElementById("tile-container");
   browserCanvas.addEventListener("keydown", this, true);
   browserCanvas.addEventListener("keyup", this, true);
 
   let useEarlyMouseMoves = gPrefService.getBoolPref("browser.ui.panning.fixup.mousemove");
 
-  this._modules.push(new ChromeInputModule(this));
+  this._modules.push(new MouseModule(this));
   //this._modules.push(new ContentPanningModule(this, browserCanvas, useEarlyMouseMoves));
-  this._modules.push(new ContentClickingModule(this));
+  //this._modules.push(new ContentClickingModule(this));
   this._modules.push(new ScrollwheelModule(this, browserCanvas));
 }
 
+
 InputHandler.prototype = {
-  grab: function grab(obj) {
-    // do nothing if we have a grab and it's the one requested
-    // grab(null) is allowed because of mouseout handling
-    if ((obj == null) || (this._grabbed != obj)) {
 
-      // only send events to this object
-      this._grabbed = obj;
-
-      // call cancel on all modules
-      for each(mod in this._modules) {
-        if (mod != obj)
-          mod.cancelPending();
-      }
+  /**
+   * A module calls grab(this) to grab event focus from the input handler.
+   * In grabbed state, the input handler forwards all events directly to
+   * the grabber module, and not to any other modules.  The this reference
+   * passed is essentially a ceritificate to the input handler --- collateral
+   * for the grab.  A grabber module may make nested calls to grab() but
+   * should symmetrically ungrab().  Other modules cannot grab a grabbed input
+   * handler, and only the grabber module can ungrab the input handler.
+   *
+   * Returns true if the grab succeeded, false otherwise.
+   */
+  // XXX froystig: grab(null) is supported because the old grab() supported
+  //       it, but I'm not sure why.  The comment on that was "grab(null) is
+  //       allowed because of mouseout handling.  Feel free to remove if that
+  //       is no longer relevant, or remove this comment if it still is.
+  grab: function grab(grabber) {
+    if (grabber == null) {
+      this._grabber = null;
+      this._grabDepth = -1;   // incremented to 0 below
     }
+
+    if (!this._grabber || this._grabber == grabber) {
+
+      if (!this._grabber) {
+        // call cancel on all modules
+        let mods = this._modules;
+        for (let i = 0, len = mods.length; i < len; ++i)
+          if (mods[i] != grabber)
+            mods[i].cancelPending();
+      }
+
+      this._grabber = grabber;
+      this._grabDepth++;
+      return true;
+    }
+
+    return false;
   },
 
-  ungrab: function ungrab(obj) {
-    if (this._grabbed == obj)
-      this._grabbed = null;
+  /**
+   * A grabber module should ungrab the input handler by calling ungrab(this).
+   * Of course, a module other than the original grabber may spoof the ungrab
+   * if it has our reference to that module.
+   *
+   * An optional second parameter gives a list of events to pass to the
+   * handlers of all other modules.  This is useful if the grabber module
+   * absorbed many events but wants to pass a possibly modified subset of
+   * them onward to the input handling modules that didn't get to see the
+   * events all along.
+   */
+  // XXX froystig: ungrab(null) is supported here too because the old ungrab()
+  //       happened to support it (not sure if intentionally --- there was no
+  //       comment it), so cf the corresponding comment on grab().
+  ungrab: function ungrab(grabber, restoreEventInfos) {
+    if (this._grabber == null && grabber == null) {
+      this._grabber = null;
+      this._grabDepth = 1;  // decremented to 0 below
+    }
+
+    if (this._grabber == grabber) {
+      this._grabDepth--;
+      if (this._grabDepth == 0) {
+        this._grabber = null;
+
+        if (restoreEventInfos) {
+          let mods = this._modules;
+          let grabberIndex = 0;
+
+          for (let i = 0, len = mods.length; i < len; ++i) {
+            if (mods[i] == grabber) {
+              grabberIndex = i;
+              break;
+            }
+          }
+
+          for (i = 0, len = restoreEventInfos.length; i < len; ++i)
+            this.passToModules(restoreEventInfos[i], grabberIndex + 1);
+        }
+      }
+    }
   },
 
   suppressNextClick: function suppressNextClick() {
@@ -171,28 +202,377 @@ InputHandler.prototype = {
       return;
     }
 
-    if (this._grabbed) {
-      this._grabbed.handleEvent(aEvent);
+    this.passToModules(new InputHandler.EventInfo(aEvent));
+  },
+
+  passToModules: function passToModules(evInfo, skipToIndex) {
+    if (this._grabber) {
+      this._grabber.handleEvent(evInfo);
     } else {
-      for each(mod in this._modules) {
-        mod.handleEvent(aEvent);
-        // if event got grabbed, don't pass to other handlers
-        if (this._grabbed)
+      let mods = this._modules;
+      let i = skipToIndex || 0;
+
+      for (len = mods.length; i < len; ++i) {
+        mods[i].handleEvent(evInfo);  // event focus could get grabbed in this invocation
+        if (this._grabbed)            // so don't pass the event to the rest of modules
           break;
       }
     }
   }
 };
 
+
+InputHandler.EventInfo = function EventInfo(aEvent, timestamp) {
+  this.event = aEvent;
+  this.time = timestamp || Date.now();
+};
+
+
+function MouseModule(owner) {
+  this._owner = owner;
+  this._dragData = new DragData(this, 50, 200);
+
+  this._dragger = this._defaultDragger;
+  this._clicker = null;
+
+  this._recordedEvents = [];
+  this._targetScrollInterface = null;
+
+  this._dragging = false;
+  this._fastPath = false;
+
+  var self = this;
+  this._kinetic = new KineticController( function (dx, dy) { return self._dragBy(dx, dy); } );
+}
+
+
+MouseModule.prototype = {
+  handleEvent: function handleEvent(evInfo) {
+    switch (evInfo.event.type) {
+      case "mousedown":
+        this._onMouseDown(evInfo);
+        break;
+      case "mousemove":
+        this._onMouseMove(evInfo);
+        break;
+      case "mouseup":
+        this._onMouseUp(evInfo);
+        break;
+    }
+  },
+
+  /**
+   * This gets invoked by owner if another module grabs.  Reset our state or something.
+   * This is probably silly and unexpected, and should just be a noop.
+   */
+  cancelPending: function cancelPending() {
+    this._kinetic.end();
+    this._dragData.reset();
+    this._targetScrollInterface = null;
+  },
+
+  _onMouseDown: function _onMouseDown(evInfo) {
+    this._owner.allowClicks();
+
+    // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
+    // returned if none found.
+    let [targetScrollbox, targetScrollInterface]
+      = this.getScrollboxFromElement(evInfo.event.target);
+
+    let targetClicker = this.getClickerFromElement(evInfo.event.target);
+
+    this._targetScrollInterface = targetScrollInterface;
+
+    // fast path: we have no scrollable element nor any element with custom clicker, so
+    // just let the event bubble on through
+    //this._fastPath = !targetScrollInterface && !targetClicker;
+    //if (this._fastPath)
+    //  return;
+
+    this._dragger = targetScrollbox.customDragger || this._defaultDragger;
+    this._clicker = (targetClicker) ? targetClicker.customClicker : null;
+
+    evInfo.event.stopPropagation();
+    evInfo.event.preventDefault();
+
+    this._owner.grab(this);
+
+    if (targetScrollInterface) {
+      this._kinetic.end();
+      this._doDragStart(evInfo.event.screenX, evInfo.event.screenY);
+    }
+
+    this._recordEvent(evInfo);
+  },
+
+  _onMouseUp: function _onMouseUp(evInfo) {
+    //if (this._fastPath)
+    //  return;
+
+    evInfo.event.stopPropagation();
+    evInfo.event.preventDefault();
+
+    // we are swallowing mousedown and mouseup, so we should swallow their
+    // corresponding click, too
+    this._owner.suppressNextClick();
+
+    let [sX, sY] = [evInfo.event.screenX, evInfo.event.screenY];
+
+    let movedOutOfRadius = dragData.isPointOutsideRadius(sX, sY);
+
+    let dragData = this._dragData;
+    if (dragData.dragging)
+      this._doDragStop(sX, sY);
+
+    dragData.reset();
+
+    this._recordedEvents.push(evInfo);
+
+    this._doClick(movedOutOfRadius);
+
+    this._owner.ungrab(this);
+  },
+
+  _onMouseMove: function _onMouseMove(evInfo) {
+    let dragData = this._dragData;
+
+    if (dragData.dragging) {
+      evInfo.event.stopPropagation();
+      evInfo.event.preventDefault();
+      this._doDragMove(evInfo.event.screenX, evInfo.event.screenY);
+    }
+  },
+
+  _recordEvent: function _recordEvent(evInfo) {
+    this._recordedEvents.push(evInfo);
+  },
+
+  _redispatchRecordedEvents: function _redispatchRecordedEvents() {
+    let evQueue = this._recordedEvents;
+
+    this._owner.stopListening();
+
+    while (evQueue.length > 0) {
+      let evInfo = evQueue.shift();
+      this._redispatchChromeMouseEvent(evInfo.event);
+    }
+
+    this._owner.startListening();
+  },
+
+  _redispatchChromeMouseEvent: function _redispatchChromeMouseEvent(aEvent) {
+    if (!(aEvent instanceof MouseEvent)) {
+      Cu.reportError("_redispatchChromeMouseEvent called with a non-mouse event");
+      return;
+    }
+
+    // Redispatch the mouse event, ignoring the root scroll frame
+    Browser.windowUtils.sendMouseEvent(aEvent.type, aEvent.clientX, aEvent.clientY,
+                                       aEvent.button, aEvent.detail, 0, true);
+  },
+
+  _doDragStart: function _doDragStart(sX, sY) {
+    let dragData = this._dragData;
+
+    dragData.setDragStart(sX, sY);
+    this._kinetic.addData(sX, sY);
+
+    this._dragger.dragStart(this._targetScrollInterface);
+  },
+
+  _doDragStop: function _doDragStop(sX, sY) {
+    let dragData = this._dragData;
+
+    let dx = dragData.sX - sX;
+    let dy = dragData.sY - sY;
+
+    dragData.setDragPosition(sX, sY);
+    this._kinetic.addData(sX, sY);
+
+    this._dragger.dragStop(dx, dy, this._targetScrollInterface);
+
+    this._kinetic.start();
+  },
+
+  _doDragMove: function _doDragMove(sX, sY) {
+    let dragData = this._dragData;
+    let dX = dragData.sX - sX;
+    let dY = dragData.sY - sY;
+    this._kinetic.addData(sX, sY);
+    return this._dragBy(dX, dY);
+  },
+
+  _dragBy: function _dragBy(dX, dY) {
+    let dragData = this._dragData;
+    let sX = dragData.sX - dX;
+    let sY = dragData.sY - dY;
+
+    dragData.setDragPosition(sX, sY);
+
+    return this._dragger.dragMove(dX, dX, this._targetScrollInterface);
+  },
+
+  _doClick: function _doClick(movedOutOfRadius) {
+    if (this._clicker && !movedOutOfRadius) {
+      // commit a single/double-wise click
+      this._commitAnotherClick();
+    }
+
+    this._redispatchRecordedEvents();
+  },
+
+  _commitAnotherClick: function _commitAnotherClick() {
+    // we're waiting for a click
+    if (this._clickTimeout) {
+      // go ahead and stop the timeout so no single click gets
+      // sent, but don't clear clickTimeout here so that mouseUp
+      // handler will treat this as a double click
+      window.clearTimeout(this._clickTimeout);
+      delete this._clickTimeout;
+      this._doDoubleClick();
+    } else {
+      this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); }, 400, this);
+    }
+  },
+
+  /**
+   * Helper to _doClick().  Finalize a single click and tell the customClicker
+   */
+  _doSingleClick: function _doSingleClick() {
+    let ev = this._recordedEvents[1].event;
+    
+    this._clicker.singleClick(ev.sX, ev.sY);
+  },
+
+  /**
+   * Helper to _doClick().  Finalize a double click and tell the customClicker
+   */
+  _doDoubleClick: function _doDoubleClick(sX, sY) {
+    let mouseUp1 = this._recordedEvents[1].event;
+    let mouseUp2 = this._recordedEvents[3].event;
+
+    this._clicker.doubleClick(mouseUp1.sX, mouseUp1.sY, mouseUp2.sX, mouseUp2.sY);
+  },
+
+  _defaultDragger: {
+    dragStart: function dragStart(scroller) {},
+    dragStop : function dragStop(dx, dy, scroller) { return this.dragMove(dx, dy, scroller); },
+    dragMove : function dragMove(dx, dy, scroller) {
+      if (scroller.getPosition) {
+        let oldX = {}, oldY = {};
+        scroller.getPosition(oldX, oldY);
+
+        scroller.scrollBy(dx, dy);
+
+        let newX = {}, newY = {};
+        scroller.getPosition(newX, newY);
+
+        return (newX.value != oldX.value) || (newY.value != oldY.value);
+      } else {
+        scroller.scrollBy(dx, dy);
+        /* always say we scrolled if we can't get the position */
+        return true;
+      }
+    }
+  },
+
+  /**
+   * The default clicker is really not a clicker in the conventional sense, but more of
+   * a wrapper for what we would like to do if we started through some drag but decided
+   * it's also a click.
+   */
+  _createDefaultClicker: function _createDefaultClicker() {
+    let self = this;
+    return {
+      singleClick: function singleClick(sX, sY) {
+        self._redispatchRecordedEvents();
+      },
+
+      doubleClick: function doubleClick(firstX, firstY, secondX, secondY) {
+        self._redispatchRecordedEvents();
+      }
+    };
+  },
+
+  // -----------------------------------------------------------
+  // -- Utility functions
+
+  /**
+   * Walk up (parentward) the DOM tree from elem in search of a scrollable element.
+   * Return the element and its scroll interface if one is found, two nulls otherwise.
+   *
+   * This function will cache the pointer to the scroll interface on the element itself,
+   * so it is safe to call it many times without incurring the same XPConnect overhead
+   * as in the initial call.
+   */
+  getScrollboxFromElement: function getScrollboxFromElement(elem) {
+    let scrollbox = null;
+    let qinterface = null;
+
+    while (elem.parentNode) {
+      try {
+
+        if (elem.scrollBoxObject) {
+
+          scrollbox = elem;
+          qinterface = elem.scrollBoxObject;
+          break;
+        } else if (elem.boxObject) {
+
+          let qi = (elem._cachedSBO) ? elem._cachedSBO
+                                     : elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+          if (qi) {
+            scrollbox = elem;
+            elem._cachedSBO = qinterface = qi;
+            break;
+          }
+        }
+      } catch (e) { /* we aren't here to deal with your exceptions, we'll just keep
+                       traversing until we find something more well-behaved, as we
+                       prefer default behaviour to whiny scrollers. */ }
+
+      elem = elem.parentNode;
+    }
+    return [scrollbox, qinterface];
+  },
+
+  /**
+   * Walk up (parentward) the DOM tree from elem in search of an element with
+   * a customClicker.  Return the element if found, null elsewise.
+   */
+  getClickerFromElement: function getClickerFromElement(elem) {
+    for (; elem; elem = elem.parentNode)
+      if (elem.customClicker)
+        break;
+
+    return (elem) ? elem : null;
+  },
+
+  /**
+   * Initialize a new mouse event the same as that given so that it can be
+   * re-dispatched.
+   */
+  cloneMouseEvent: function cloneMouseEvent(aEvent) {
+    let clickEvent = document.createEvent("MouseEvent");
+    clickEvent.initMouseEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
+                              aEvent.view, aEvent.detail,
+                              aEvent.screenX, aEvent.screenY, aEvent.clientX, aEvent.clientY,
+                              aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKeyArg, aEvent.metaKeyArg,
+                              aEvent.button, aEvent.relatedTarget);
+    return clickEvent;
+  }
+
+};
+
+
 /**
  * Drag Data is used by both chrome and content input modules
  */
-
-function DragData(owner, dragRadius, dragStartTimeoutLength) {
+DragData(owner, dragRadius, dragStartTimeoutLength) {
   this._owner = owner;
   this._dragRadius = dragRadius;
   this.reset();
-}
+};
 
 DragData.prototype = {
   reset: function reset() {
@@ -260,201 +640,16 @@ DragData.prototype = {
 
 
 /**
- * Panning code for chrome elements
+ * KineticController - a class to take drag position data and use it
+ * to do kinetic panning of a scrollable object.
+ *
+ * aPanBy is a function that will be called with the dx and dy
+ * generated by the kinetic algorithm.  It should return true if the
+ * object was panned, false if there was no movement.
  */
-function ChromeInputModule(owner) {
-  this._owner = owner;
-  this._dragData = new DragData(this, 50, 200);
-  this._defaultDragger = new ChromeInputModule.DefaultDragger();
-  this._dragger = null;
-  this._targetScrollFunction = null;
-  this._clickEvents = [];
-}
-
-ChromeInputModule.prototype = {
-  handleEvent: function handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case "mousedown":
-        this._onMouseDown(aEvent);
-        break;
-      case "mousemove":
-        this._onMouseMove(aEvent);
-        break;
-      case "mouseup":
-        this._onMouseUp(aEvent);
-        break;
-    }
-  },
-
-  /* If someone else grabs events ahead of us, cancel any pending
-   * timeouts we may have.
-   */
-  cancelPending: function cancelPending() {
-    this._dragData.reset();
-    this._targetScrollInterface = null;
-  },
-
-  _onMouseDown: function _onMouseDown(aEvent) {
-    // if we get a new mouseDown, we should allow the click to happen
-    this._owner.allowClicks();
-
-    let dragData = this._dragData;
-
-    let [targetScrollbox, targetScrollInterface] =
-      getScrollboxFromElement(aEvent.target);
-
-    if (!targetScrollbox)
-      return;
-
-    this._dragger = targetScrollbox.customDragger || this._defaultDragger;
-    let tsi = this._targetScrollInterface = targetScrollInterface;
-
-    if (!tsi)
-      return;
-
-    // absorb the event for the scrollable XUL element and make all future events grabbed too
-    this._owner.grab(this);
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-
-    this._doDragStart(aEvent.screenX, aEvent.screenY);
-
-    this._onMouseMove(aEvent); // treat this as a mouse move too
-
-    // store away the event for possible sending later if a drag doesn't happen
-    let clickEvent = document.createEvent("MouseEvent");
-    clickEvent.initMouseEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
-                              aEvent.view, aEvent.detail,
-                              aEvent.screenX, aEvent.screenY, aEvent.clientX, aEvent.clientY,
-                              aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKeyArg, aEvent.metaKeyArg,
-                              aEvent.button, aEvent.relatedTarget);
-    this._clickEvents.push({event: clickEvent, target: aEvent.target, time: Date.now()});
-  },
-
-  _onMouseUp: function _onMouseUp(aEvent) {
-    // only process if original mousedown was on a scrollable element
-    if (!this._targetScrollInterface)
-      return;
-
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-
-    let dragData = this._dragData;
-    if (dragData.dragging)
-      this._doDragStop(aEvent.screenX, aEvent.screenY);
-
-    dragData.reset();
-
-    // keep an eye out for mouseups that didn't start with a mousedown
-    if (!(this._clickEvents.length % 2)) {
-      this._clickEvents = [];
-      this._owner.suppressNextClick();
-    } else {
-      let clickEvent = document.createEvent("MouseEvent");
-      clickEvent.initMouseEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
-                                aEvent.view, aEvent.detail,
-                                aEvent.screenX, aEvent.screenY, aEvent.clientX, aEvent.clientY,
-                                aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKeyArg, aEvent.metaKeyArg,
-                                aEvent.button, aEvent.relatedTarget);
-      this._clickEvents.push({event: clickEvent, target: aEvent.target, time: Date.now()});
-
-      this._sendSingleClick();
-      this._owner.suppressNextClick();
-    }
-
-    this._targetScrollInterface = null;
-    this._owner.ungrab(this);
-  },
-
-  _onMouseMove: function _onMouseMove(aEvent) {
-    // only process if original mousedown was on a scrollable element
-    if (!this._targetScrollInterface)
-      return;
-
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-
-    if (this._dragData.dragging)
-      this._doDragMove(aEvent.screenX, aEvent.screenY);
-  },
-
-  // resend original events with our handler out of the loop
-  _sendSingleClick: function _sendSingleClick() {
-    this._owner.grab(this);
-    this._owner.stopListening();
-
-    // send original mouseDown/mouseUps again
-    this._redispatchChromeMouseEvent(this._clickEvents[0].event);
-    this._redispatchChromeMouseEvent(this._clickEvents[1].event);
-
-    this._owner.startListening();
-    this._owner.ungrab(this);
-
-    this._clickEvents = [];
-  },
-
-  _redispatchChromeMouseEvent: function _redispatchChromeMouseEvent(aEvent) {
-    if (!(aEvent instanceof MouseEvent)) {
-      Cu.reportError("_redispatchChromeMouseEvent called with a non-mouse event");
-      return;
-    }
-
-    // Redispatch the mouse event, ignoring the root scroll frame
-    let cwu = Browser.windowUtils;
-    cwu.sendMouseEvent(aEvent.type, aEvent.clientX, aEvent.clientY,
-                       aEvent.button, aEvent.detail, 0, true);
-  },
-
-  _doDragStart: function _doDragStart(sX, sY) {
-    let dragData = this._dragData;
-
-    dragData.setDragStart(sX, sY);
-
-    this._dragger.dragStart(this._targetScrollInterface);
-  },
-
-  _doDragStop: function _doDragStop(sX, sY) {
-    let dragData = this._dragData;
-
-    let dx = dragData.sX - sX;
-    let dy = dragData.sY - sY;
-
-    dragData.setDragPosition(sX, sY);
-
-    this._dragger.dragStop(dx, dy, this._targetScrollInterface);
-  },
-
-  _doDragMove: function _doDragMove(sX, sY) {
-    let dragData = this._dragData;
-    if (dragData.isPointOutsideRadius(sX, sY))
-      this._clickEvents = [];
-
-    let dx = dragData.sX - sX;
-    let dy = dragData.sY - sY;
-
-    dragData.setDragPosition(sX, sY);
-
-    this._dragger.dragMove(dx, dy, this._targetScrollInterface);
-  }
-};
-
-
-
-ChromeInputModule.DefaultDragger = function DefaultDragger() {};
-ChromeInputModule.DefaultDragger.prototype = {
-  dragStart: function dragStart(scroller) {},
-  dragStop : function dragStop(dx, dy, scroller) { scroller.scrollBy(dx, dy); },
-  dragMove : function dragMove(dx, dy, scroller) { scroller.scrollBy(dx, dy); }
-};
-
-
-
-/**
- * Kinetic panning code for content
- */
-function KineticData(owner) {
-  this._owner = owner;
-  this._kineticTimer = null;
+function KineticController(aPanBy) {
+  this._panBy = aPanBy;
+  this._timer = null;
 
   try {
     this._updateInterval = gPrefService.getIntPref("browser.ui.kinetic.updateInterval");
@@ -469,15 +664,14 @@ function KineticData(owner) {
     this._decelerationRate = .15;
   };
 
-  this.reset();
+  this._reset();
 }
 
-KineticData.prototype = {
-
-  reset: function reset() {
-    if (this._kineticTimer != null) {
-      this._kineticTimer.cancel();
-      this._kineticTimer = null;
+KineticController.prototype = {
+  _reset: function _reset() {
+    if (this._timer != null) {
+      this._timer.cancel();
+      this._timer = null;
     }
 
     this.momentumBuffer = [];
@@ -486,28 +680,28 @@ KineticData.prototype = {
   },
 
   isActive: function isActive() {
-    return (this._kineticTimer != null);
+    return (this._timer != null);
   },
 
-  _startKineticTimer: function _startKineticTimer() {
+  _startTimer: function _startTimer() {
     let callback = {
       _self: this,
       notify: function kineticTimerCallback(timer) {
         let self = this._self;
 
-        // dump("             speeds: " + self._speedX + " " + self._speedY + "\n");
+        //dump("             speeds: " + self._speedX + " " + self._speedY + "\n");
 
         if (self._speedX == 0 && self._speedY == 0) {
-          self.endKinetic();
+          self.end();
           return;
         }
         let dx = Math.round(self._speedX * self._updateInterval);
         let dy = Math.round(self._speedY * self._updateInterval);
-        // dump("dx, dy: " + dx + " " + dy + "\n");
+        //dump("dx, dy: " + dx + " " + dy + "\n");
 
-        let panned = self._owner._dragBy(dx, dy);
+        let panned = self._panBy(-dx, -dy);
         if (!panned) {
-          self.endKinetic();
+          self.end();
           return;
         }
 
@@ -523,25 +717,26 @@ KineticData.prototype = {
         }
 
         if (self._speedX == 0 && self._speedY == 0)
-          self.endKinetic();
+          self.end();
       }
     };
 
-    this._kineticTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     //initialize our timer with updateInterval
-    this._kineticTimer.initWithCallback(callback,
+    this._timer.initWithCallback(callback,
                                         this._updateInterval,
-                                        this._kineticTimer.TYPE_REPEATING_SLACK);
+                                        this._timer.TYPE_REPEATING_SLACK);
   },
 
-
-  startKinetic: function startKinetic(sX, sY) {
+  start: function start() {
     let mb = this.momentumBuffer;
     let mblen = this.momentumBuffer.length;
 
     // If we don't have at least 2 events do not do kinetic panning
-    if (mblen < 2)
+    if (mblen < 2) {
+      this.end();
       return false;
+    }
 
     function ema(currentSpeed, lastSpeed, alpha) {
       return alpha * currentSpeed + (1 - alpha) * lastSpeed;
@@ -561,49 +756,20 @@ KineticData.prototype = {
     }
 
     // fire off our kinetic timer which will do all the work
-    this._startKineticTimer();
+    this._startTimer();
 
     return true;
   },
 
-  endKinetic: function endKinetic() {
-    if (!this.isActive()) {
-      this.reset();
-      return;
-    }
-
-/*
-    Browser.canvasBrowser.endPanning();
-    ws.dragStop();
-
-    // Make sure that sidebars don't stay partially open
-    // XXX this should live somewhere else
-    let [leftVis,] = ws.getWidgetVisibility("tabs-container", false);
-    let [rightVis,] = ws.getWidgetVisibility("browser-controls", false);
-    if (leftVis != 0 && leftVis != 1) {
-      let w = document.getElementById("tabs-container").getBoundingClientRect().width;
-      if (leftVis >= 0.6666)
-        ws.panBy(-w, 0, true);
-      else
-        ws.panBy(leftVis * w, 0, true);
-    }
-    else if (rightVis != 0 && rightVis != 1) {
-      let w = document.getElementById("browser-controls").getBoundingClientRect().width;
-      if (rightVis >= 0.6666)
-        ws.panBy(w, 0, true);
-      else
-        ws.panBy(-rightVis * w, 0, true);
-    }
-
-    // unfreeze the toolbar if we have hide the sidebar
-    let visibleNow = ws.isWidgetVisible("tabs-container") || ws.isWidgetVisible("browser-controls");
-    if (!visibleNow)
-      ws.unfreeze('toolbar-main');
-*/
-    this.reset();
+  end: function end() {
+    this._reset();
   },
 
   addData: function addData(sx, sy) {
+    // if we're active, end that move before adding data
+    if (this.isActive())
+      this.end();
+
     let mbLength = this.momentumBuffer.length;
     // avoid adding duplicates which would otherwise slow down the speed
     let now = Date.now();
@@ -618,12 +784,15 @@ KineticData.prototype = {
   }
 };
 
+
 function ContentPanningModule(owner, browserCanvas, useEarlyMouseMoves) {
   this._owner = owner;
   this._browserCanvas = browserCanvas;
   this._dragData = new DragData(this, 50, 200);
-  this._kineticData = new KineticData(this);
   this._useEarlyMouseMoves = useEarlyMouseMoves;
+
+  var self = this;
+  this._kinetic = new KineticController( function (dx, dy) { return self._dragBy(dx, dy); } );
 }
 
 ContentPanningModule.prototype = {
@@ -651,15 +820,8 @@ ContentPanningModule.prototype = {
    * timeouts we may have.
    */
   cancelPending: function cancelPending() {
-    if (this._kineticData.isActive()) {
-      this._kineticData.endKinetic();
-    } else {
-      // make sure we're out of panning modes in case we weren't kinetic yet
-      //ws.dragStop();
-      //Browser.canvasBrowser.endPanning();
-    }
-    let dragData = this._dragData;
-    dragData.reset();
+    this._kinetic.end();
+    this._dragData.reset();
   },
 
   _dragStart: function _dragStart(sX, sY) {
@@ -682,8 +844,7 @@ ContentPanningModule.prototype = {
     [sX, sY] = dragData.lockMouseMove(sX, sY);
 
     // start kinetic scrolling here for canvas only
-    if (!this._kineticData.startKinetic(sX, sY))
-      this._kineticData.endKinetic();
+    this._kinetic.start(sX, sY);
 
     dragData.reset();
   },
@@ -708,8 +869,8 @@ ContentPanningModule.prototype = {
   _onMouseDown: function _onMouseDown(aEvent) {
     let dragData = this._dragData;
     // if we're in the process of kineticly scrolling, stop and start over
-    if (this._kineticData.isActive()) {
-      this._kineticData.endKinetic();
+    if (this._kinetic.isActive()) {
+      this._kinetic.end();
       this._owner.ungrab(this);
       dragData.reset();
     }
@@ -731,7 +892,7 @@ ContentPanningModule.prototype = {
 
   _onMouseMove: function _onMouseMove(aEvent) {
     // don't do anything if we're in the process of kineticly scrolling
-    if (this._kineticData.isActive())
+    if (this._kinetic.isActive())
       return;
 
     let dragData = this._dragData;
@@ -749,17 +910,17 @@ ContentPanningModule.prototype = {
     // even if we haven't started dragging yet, we should queue up the
     // mousemoves in case we do start
     if (this._useEarlyMouseMoves || dragData.dragging)
-      this._kineticData.addData(sX, sY);
+      this._kinetic.addData(sX, sY);
 
     if (dragData.dragging)
       this._dragMove(sX, sY);
   },
 };
 
+
 /**
  * Mouse click handlers
  */
-
 function ContentClickingModule(owner) {
   this._owner = owner;
   this._clickTimeout = -1;
@@ -769,28 +930,17 @@ function ContentClickingModule(owner) {
 
 ContentClickingModule.prototype = {
   handleEvent: function handleEvent(aEvent) {
-    // exit early for events outside displayed content area
-    if (aEvent.target !== document.getElementById("browser-canvas"))
-      return;
-
     switch (aEvent.type) {
       // UI panning events
       case "mousedown":
         this._events.push({event: aEvent, time: Date.now()});
 
-        // we're waiting for a click
-        if (this._clickTimeout != -1) {
-          // go ahead and stop the timeout so no single click gets
-          // sent, but don't clear clickTimeout here so that mouseUp
-          // handler will treat this as a double click
-          window.clearTimeout(this._clickTimeout);
-        }
-        break;
+
       case "mouseup":
         // keep an eye out for mouseups that didn't start with a mousedown
         if (!(this._events.length % 2)) {
           this._reset();
-          break;
+            break;
         }
 
         this._events.push({event: aEvent, time: Date.now()});
