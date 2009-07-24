@@ -2117,13 +2117,13 @@ FlushNativeGlobalFrame(JSContext *cx, double *global, unsigned ngslots,
 }
 
 /*
- * Generic function to read upvars on trace.
+ * Generic function to read upvars on trace from slots of active frames.
  *     T   Traits type parameter. Must provide static functions:
  *             interp_get(fp, slot)     Read the value out of an interpreter frame.
  *             native_slot(argc, slot)  Return the position of the desired value in the on-trace
  *                                      stack frame (with position 0 being callee).
  *
- *     upvarLevel  Static level of the function containing the upvar definition.
+ *     upvarLevel  Static level of the function containing the upvar definition
  *     slot        Identifies the value to get. The meaning is defined by the traits type.
  *     callDepth   Call depth of current point relative to trace entry
  */
@@ -2239,15 +2239,27 @@ js_GetUpvarStackOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 cal
     return js_GetUpvarOnTrace<UpvarStackTraits>(cx, upvarLevel, slot, callDepth, result);
 }
 
+/*
+ * Generic function to read upvars from Call objects of active heavyweight functions. 
+ *     callee       Callee Function object in which the upvar is accessed.
+ *     scopeIndex   Number of parent steps to make from |callee| to find upvar definition.
+ *                  This must be at least 1 because |callee| is a Function and we must reach a Call.
+ *     slot         Slot in Call object to read.
+ *     callDepth    callDepth of current point relative to trace entry.
+ */
 template<typename T>
 uint32 JS_INLINE
-js_GetFromClosure(JSContext* cx, JSObject* inner, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
+js_GetFromClosure(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
                   double* result)
 {
-    JSObject* call = OBJ_GET_PARENT(cx, inner);
-    for (uint32 i = 0; i < scopeIndex; ++i) {
+    JS_ASSERT(scopeIndex >= 1);
+    JS_ASSERT(OBJ_GET_CLASS(cx, callee) == &js_FunctionClass);
+    JSObject* call = callee;
+
+    for (uint32 i = 0; i < scopeIndex; ++i)
         call = OBJ_GET_PARENT(cx, call);
-    }
+
+    JS_ASSERT(OBJ_GET_CLASS(cx, call) == &js_CallClass);
 
     InterpState* state = cx->interpState;
     FrameInfo** fip = state->rp + callDepth;
@@ -2293,10 +2305,10 @@ private:
 };
 
 uint32 JS_FASTCALL
-js_GetClosureArg(JSContext* cx, JSObject* inner, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
+js_GetClosureArg(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
                  double* result)
 {
-    return js_GetFromClosure<ArgClosureTraits>(cx, inner, scopeIndex, slot, callDepth, result);
+    return js_GetFromClosure<ArgClosureTraits>(cx, callee, scopeIndex, slot, callDepth, result);
 }
 
 struct VarClosureTraits
@@ -2308,10 +2320,10 @@ private:
 };
 
 uint32 JS_FASTCALL
-js_GetClosureVar(JSContext* cx, JSObject* inner, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
+js_GetClosureVar(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
                  double* result)
 {
-    return js_GetFromClosure<VarClosureTraits>(cx, inner, scopeIndex, slot, callDepth, result);
+    return js_GetFromClosure<VarClosureTraits>(cx, callee, scopeIndex, slot, callDepth, result);
 }
 
 /**
@@ -6535,7 +6547,6 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, bool& track
     JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
     JSObject* obj2;
     JSProperty* prop;
-    JSObject* origobj = obj;
     if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop))
         ABORT_TRACE_ERROR("error in js_FindProperty");
     if (!prop)
@@ -6601,11 +6612,12 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, bool& track
             } else {
                 // Compute number of scope chain links to result.
                 jsint scopeIndex = 0;
-                JSObject* objd = origobj;
-                while (objd != obj) {
-                    objd = OBJ_GET_PARENT(cx, objd);
+                JSObject* tmp = JSVAL_TO_OBJECT(cx->fp->argv[-2]);
+                while (tmp != obj) {
+                    tmp = OBJ_GET_PARENT(cx, tmp);
                     scopeIndex++;
                 }
+                JS_ASSERT(scopeIndex >= 1);
 
                 LIns* callee_ins = get(&cx->fp->argv[-2]);
                 LIns* outp = lir->insAlloc(sizeof(double));
