@@ -2253,10 +2253,14 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
       nsBaseContentList *list = new nsBaseContentList();
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-      list->AppendElement(content);
+      NS_ASSERTION(content->GetParent(), "Item in list without parent");
 
-      // Add the new child too
-      list->AppendElement(newChild);
+      // Determine the ordering between the new and old element.
+      PRBool newFirst = nsContentUtils::PositionIsBefore(newChild, content);
+
+      list->AppendElement(newFirst ? newChild : content);
+      list->AppendElement(newFirst ? content : newChild);
+
 
       nsCOMPtr<nsISupports> listSupports =
         do_QueryInterface(static_cast<nsIDOMNodeList*>(list));
@@ -2273,12 +2277,31 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
       nsBaseContentList *list = static_cast<nsBaseContentList *>
                                            ((nsIDOMNodeList *)nodeList.get());
 
-      PRInt32 oldIndex = list->IndexOf(newChild, PR_FALSE);
+      NS_ASSERTION(list->Length() > 1,
+                   "List should have been converted back to a single element");
       
-      // Add the new child only if it's not in our list already
-      if (oldIndex < 0) {
-        list->AppendElement(newChild);
+      if(nsContentUtils::PositionIsBefore(list->GetNodeAt(list->Length() - 1), newChild)) {
+          list->AppendElement(newChild);
+          return NS_OK;
       }
+      
+      // first is the first possible insertion index, last is the last possible
+      // insertion index
+      PRUint32 first = 0;
+      PRUint32 last = list->Length() - 1;
+      PRUint32 mid;
+      
+      //Stop when there is only one index in our range
+      while (last != first) {
+          mid = (first + last) / 2;
+          
+          if (nsContentUtils::PositionIsBefore(newChild, list->GetNodeAt(mid)))
+            last = mid;
+          else
+            first = mid + 1;
+        }
+
+      list->InsertElementAt(newChild, first);
     }
   }
 
