@@ -56,3 +56,8 @@ ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/firefox-os2.ico  $(DIST)/branding/app.ico
 	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
 endif
+#ifdef MOZ_SPLASHSCREEN
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+	cp $(srcdir)/splash.bmp       $(DIST)/branding/splash.bmp
+endif
+#endif
