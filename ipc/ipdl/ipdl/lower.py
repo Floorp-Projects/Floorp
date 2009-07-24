@@ -188,7 +188,8 @@ class GenerateProtocolHeader(Visitor):
 
         for md in p.messageDecls:
             msgenum.addId(md._cxx.id +'__ID')
-            if md.decl.type.hasReply():
+            if (md.decl.type.hasReply()
+                or md.decl.type.isCtor() or md.decl.type.isDtor()):
                 msgenum.addId(md._cxx.replyid +'__ID')            
 
         msgenum.addId(self.pname +'End')
@@ -197,7 +198,8 @@ class GenerateProtocolHeader(Visitor):
 
         for md in p.messageDecls:
             ns.addstmt(generateMessageClass(md, self.injectTypedefs))
-            if md.decl.type.hasReply():
+            if (md.decl.type.hasReply()
+                or md.decl.type.isCtor() or md.decl.type.isDtor()):
                 ns.addstmt(generateReplyClass(md, self.injectTypedefs))
 
         ns.addstmt(cxx.Whitespace.NL)
@@ -237,7 +239,8 @@ class GenerateProtocolHeader(Visitor):
         # the ID is used by the IPC layer only
         md._cxx.id = 'Msg_%s'% (md.decl.progname)
         md._cxx.nsid = '%s::%s'% (self.pname, md._cxx.id)
-        if md.decl.type.hasReply():
+        if (md.decl.type.hasReply()
+            or md.decl.type.isCtor() or md.decl.type.isDtor()):
             md._cxx.replyid = 'Reply_%s'% (md.decl.progname)
             md._cxx.nsreplyid = '%s::%s'% (self.pname, md._cxx.replyid)
 
@@ -823,6 +826,48 @@ class GenerateProtocolActorHeader(Visitor):
             block.addstmt(cxx.Whitespace.NL)
 
 
+        def injectCtorResponseHandler(block, actorHandleVar, actorObjVar):
+            block.addstmt(cxx.StmtExpr(cxx.ExprAssn(
+                        cxx.ExprSelect(actorObjVar, '->', 'mPeerId'),
+                        cxx.ExprSelect(actorHandleVar, '.',
+                                       'm'+ self.otherside +'Id'))))
+            block.addstmt(cxx.StmtExpr(cxx.ExprAssn(
+                        cxx.ExprSelect(actorObjVar, '->', 'mManager'),
+                        cxx.ExprVar('this'))))
+            if self.p.decl.type.isManaged():
+                channelvar = cxx.ExprVar('mChannel')
+            else:
+                channelvar = cxx.ExprAddrOf(cxx.ExprVar('mChannel'))
+            block.addstmt(cxx.StmtExpr(cxx.ExprAssn(
+                        cxx.ExprSelect(objvar, '->', 'mChannel'),
+                        channelvar)))
+
+
+        def injectDtorResponseHandler(block, actorObjVar, actorId):
+            block.addstmt(cxx.StmtExpr(
+                    cxx.ExprCall(cxx.ExprVar('Unregister'), [ actorId ])))
+            block.addstmt(cxx.StmtExpr(
+                    cxx.ExprAssn(actorId, cxx.ExprLiteral.Int(-1))))
+            block.addstmt(cxx.StmtExpr(
+                    cxx.ExprAssn(
+                        cxx.ExprSelect(actorObjVar, '->', 'mManager'),
+                        cxx.ExprLiteral.ZERO)))
+            block.addstmt(cxx.StmtExpr(
+                    cxx.ExprAssn(
+                        cxx.ExprSelect(actorObjVar, '->', 'mPeerId'),
+                        cxx.ExprLiteral.Int(-1))))
+
+            calldtor = cxx.ExprCall(
+                cxx.ExprVar(md._cxx.method.name),
+                ([ objvar ]
+                 + [ cxx.ExprVar(p.name) for p in md._cxx.params ]
+                 + [ cxx.ExprVar(r.name) for r in md._cxx.returns ]))
+            failif = cxx.StmtIf(cxx.ExprCall(
+                    cxx.ExprVar('NS_FAILED'), [ calldtor ]))
+            failif.addifstmt(cxx.StmtReturn(valueerrcode))
+            block.addstmt(failif)
+
+
         if self.sendsMessage(md):
             pfx = None
             if md.decl.type.isRpc():
@@ -995,37 +1040,71 @@ class GenerateProtocolActorHeader(Visitor):
                                           static=1),
                              'got reply ')
 
-                # FIXME/cjones: assuming we have sync/rpc constructors, need
-                # code for async ones if that makes sense
                 if md.decl.type.isCtor():
-                    impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                                cxx.ExprSelect(objvar, '->', 'mPeerId'),
-                                cxx.ExprSelect(ahvar, '.',
-                                               'm'+ self.otherside +'Id'))))
-                    impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                                cxx.ExprSelect(objvar, '->', 'mManager'),
-                                cxx.ExprVar('this'))))
-                    if self.p.decl.type.isManaged():
-                        channelvar = cxx.ExprVar('mChannel')
-                    else:
-                        channelvar = cxx.ExprAddrOf(cxx.ExprVar('mChannel'))
-                    impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                                cxx.ExprSelect(objvar, '->', 'mChannel'),
-                                channelvar)))
+                    injectCtorResponseHandler(impl, ahvar, objvar)
 
                 elif md.decl.type.isDtor():
-                    impl.addstmt(cxx.StmtExpr(
-                        cxx.ExprCall(cxx.ExprVar('Unregister'), [ objid ])))
-                    impl.addstmt(cxx.StmtExpr(
-                            cxx.ExprAssn(objid, cxx.ExprLiteral.Int(-1))))
-                    impl.addstmt(cxx.StmtExpr(
-                            cxx.ExprAssn(
-                                cxx.ExprSelect(objvar, '->', 'mManager'),
-                                cxx.ExprLiteral.ZERO)))
-                    impl.addstmt(cxx.StmtExpr(
-                            cxx.ExprAssn(
-                                cxx.ExprSelect(objvar, '->', 'mPeerId'),
-                                cxx.ExprLiteral.Int(-1))))
+                    injectDtorResponseHandler(impl, objvar, objid)
+
+            # Async ctors dtors are handled specially: we fire off the
+            # ctor/dtor message, but don't actually finalize ction/dtion
+            # until the other side sends a message back to us.
+            #
+            # The |elif| case below adds the code to the message
+            # dispather switch() statement that would have been added
+            # to the |Send| method to process the response message,
+            # had this been a sync/rpc message.
+            elif md.decl.type.isCtor() or md.decl.type.isDtor():
+                case = cxx.CaseLabel(md._cxx.nsreplyid +'__ID')
+                block = cxx.StmtBlock()
+                objtype = cxx.Type(
+                    (_protocolHeaderName(md.decl.type.constructedType().name())
+                     + self.myside),
+                    ptr=1)
+                objvar = cxx.ExprVar('__a')
+                objid = cxx.ExprSelect(objvar, '->', 'mId')
+                
+                block.addstmt(cxx.StmtDecl(cxx.Decl(
+                            cxx.Type('mozilla::ipc::ActorHandle'), '__ah')))
+                ahvar = cxx.ExprVar('__ah')
+                block.addstmt(cxx.Whitespace.NL)
+
+                msgvar = cxx.ExprVar('msg')
+                unpack = cxx.ExprCall(cxx.ExprVar(md._cxx.nsreplyid +'::Read'),
+                                      [ cxx.ExprAddrOf(ahvar) ])
+                errhandle = cxx.StmtIf(cxx.ExprPrefixUnop(unpack, '!'))
+                errhandle.ifb.addstmt(cxx.StmtReturn(
+                        cxx.ExprVar('MsgPayloadError')))
+                block.addstmt(errhandle)
+
+                injectLogger(block, 
+                             cxx.ExprCast(cxx.ExprAddrOf(msgvar),
+                                          cxx.Type(md._cxx.nsid, ptr=1, const=1),
+                                          static=1),
+                             pfx +' ')
+
+                block.addstmt(cxx.StmtDecl(cxx.Decl(objtype, '__a')))
+
+                routevar = cxx.ExprSelect(ahvar, '.', 'm'+ self.myside +'Id')
+                dcast = cxx.ExprCast(
+                    cxx.ExprCall(cxx.ExprVar('Lookup'), [ routevar ]),
+                    objtype,
+                    static=1)
+                block.addstmt(cxx.StmtExpr(cxx.ExprAssn(objvar, dcast)))
+
+                failif = cxx.StmtIf(cxx.ExprPrefixUnop(objvar, '!'))
+                failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
+                block.addstmt(failif)
+
+                if md.decl.type.isCtor():
+                    injectCtorResponseHandler(block, ahvar, objvar)
+                elif md.decl.type.isDtor():
+                    injectDtorResponseHandler(block, objvar, objid)
+                else:
+                    assert 0
+
+                self.asyncswitch.addcase(case, block)
+
 
             impl.addstmt(cxx.StmtReturn(okcode))
             self.cls.addstmt(impl)
@@ -1158,7 +1237,11 @@ class GenerateProtocolActorHeader(Visitor):
                             channelvar)))
                 block.addstmt(cxx.Whitespace.NL)
 
-            if md.decl.type.hasReply():
+            if (md.decl.type.hasReply()
+                or md.decl.type.isCtor() or md.decl.type.isDtor()):
+                if not md.decl.type.hasReply():
+                    block.addstmt(cxx.StmtDecl(
+                            cxx.Decl(cxx.Type('Message', ptr=1), 'reply')))
                 replyvar = cxx.ExprVar('reply')
                 replymsgctor = cxx.ExprNew(
                     cxx.Type(md._cxx.nsreplyid),
@@ -1180,13 +1263,33 @@ class GenerateProtocolActorHeader(Visitor):
                             cxx.ExprSelect(replyvar, '->', 'set_rpc'),
                             [ ])))
                 else:
-                    assert 0
+                    assert (
+                        md.decl.type.isAsync()
+                        and (md.decl.type.isCtor() or md.decl.type.isDtor()))
 
                 injectLogger(block,
                              cxx.ExprCast(replyvar,
                                           cxx.Type(md._cxx.nsreplyid, ptr=1),
                                           static=1),
                              'replying with ')
+
+                if md.decl.type.isAsync(): # => isCtor or isDtor
+                    # when this is sync or rpc, we return the reply
+                    # message to the dispatcher.  when it's async, 
+                    # we have to explicitly send it back
+                    if self.p.decl.type.isManaged():
+                        sel = '->'
+                    else:
+                        sel = '.'
+                    failif = cxx.StmtIf(cxx.ExprPrefixUnop(
+                            cxx.ExprCall(
+                                cxx.ExprSelect(cxx.ExprVar('mChannel'), sel, 'Send'),
+                                [ replyvar ]),
+                            '!'))
+                    failif.addifstmt(
+                        cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
+
+                    block.addstmt(failif)
 
             block.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgProcessed')))
 
