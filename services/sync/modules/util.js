@@ -65,8 +65,7 @@ let Utils = {
         return func.call(thisArg);
       }
       catch(ex) {
-        thisArg._log.debug(["Caught exception:", Utils.exceptionStr(ex),
-          Utils.stackTrace(ex)].join(" ").replace(/\n/g, " "));
+        thisArg._log.debug("Exception: " + Utils.exceptionStr(ex));
       }
     };
   },
@@ -349,56 +348,45 @@ let Utils = {
   formatFrame: function Utils_formatFrame(frame) {
     let tmp = "<file:unknown>";
 
-    if (frame.filename)
-      tmp = frame.filename.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
-    else if (frame.fileName)
-      tmp = frame.fileName.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
+    let file = frame.filename || frame.fileName;
+    if (file)
+      tmp = file.replace(/^(?:chrome|file):.*?([^\/\.]+\.\w+)$/, "$1");
 
     if (frame.lineNumber)
       tmp += ":" + frame.lineNumber;
     if (frame.name)
-      tmp += " :: " + frame.name;
+      tmp = frame.name + "()@" + tmp;
 
     return tmp;
   },
 
   exceptionStr: function Weave_exceptionStr(e) {
     let message = e.message ? e.message : e;
-    let location = "";
-
-    if (e.location) // Wrapped nsIException.
-      location = e.location;
-    else if (e.fileName && e.lineNumber) // Standard JS exception
-      location = Utils.formatFrame(e);
-
-    if (location)
-      location = " (" + location + ")";
-    return message + location;
+    return message + " " + Utils.stackTrace(e);
  },
 
-  stackTraceFromFrame: function Weave_stackTraceFromFrame(frame, formatter) {
-    if (!formatter)
-      formatter = function defaultFormatter(frame) { return frame; };
-
-    let output = "";
-
+  stackTraceFromFrame: function Weave_stackTraceFromFrame(frame) {
+    let output = [];
     while (frame) {
-      let str = formatter(frame);
+      let str = Utils.formatFrame(frame);
       if (str)
-        output += str + "\n";
+        output.push(str);
       frame = frame.caller;
     }
-
-    return output;
+    return output.join(" < ");
   },
 
-  stackTrace: function Weave_stackTrace(e, formatter) {
-    if (e.location) // Wrapped nsIException
-      return "Stack trace:\n" + this.stackTraceFromFrame(e.location, formatter);
-    else if (e.stack) // Standard JS exception
-      return "JS Stack trace:\n" + e.stack;
-    else
-      return "No traceback available";
+  stackTrace: function Weave_stackTrace(e) {
+    // Wrapped nsIException
+    if (e.location)
+      return "Stack trace: " + Utils.stackTraceFromFrame(e.location);
+
+    // Standard JS exception
+    if (e.stack)
+      return "JS Stack trace: " + e.stack.trim().replace(/\n/g, " < ").
+        replace(/@(?:chrome|file):.*?([^\/\.]+\.\w+:)/g, "@$1");
+
+    return "No traceback available";
   },
 
   checkStatus: function Weave_checkStatus(code, msg, ranges) {
@@ -456,7 +444,7 @@ let Utils = {
       return Svc.IO.newURI(URIString, null, null);
     } catch (e) {
       let log = Log4Moz.repository.getLogger("Service.Util");
-      log.debug("Could not create URI: " + e);
+      log.debug("Could not create URI: " + Utils.exceptionStr(e));
       return null;
     }
   },
@@ -518,7 +506,7 @@ let Utils = {
     }
     catch (ex) {
       if (that._log)
-        that._log.debug("Failed to load json: " + ex);
+        that._log.debug("Failed to load json: " + Utils.exceptionStr(ex));
     }
   },
 
