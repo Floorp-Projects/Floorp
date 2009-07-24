@@ -89,12 +89,30 @@ public:
   virtual nsIContent* GetNodeAt(PRUint32 aIndex);
   virtual PRInt32 IndexOf(nsIContent* aContent);
   
+  PRUint32 Length() const { 
+    return mElements.Count();
+  }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsBaseContentList, nsINodeList)
 
   void AppendElement(nsIContent *aContent);
-  void RemoveElement(nsIContent *aContent);
+
+  /**
+   * Insert the element at a given index, shifting the objects at
+   * the given index and later to make space.
+   * @param aContent Element to insert, must not be null
+   * @param aIndex Index to insert the element at.
+   */
+  void InsertElementAt(nsIContent* aContent, PRInt32 aIndex);
+
+  void RemoveElement(nsIContent *aContent); 
+
+  void Reset() {
+    mElements.Clear();
+  }
+
+
   virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
-  void Reset();
 
   static void Shutdown();
 
