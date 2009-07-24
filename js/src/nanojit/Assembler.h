@@ -299,7 +299,7 @@ namespace nanojit
             void        asm_call(LInsp);
             void        asm_arg(ArgSize, LInsp, Register);
             Register    asm_binop_rhs_reg(LInsp ins);
-            NIns*        asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar);
+            NIns*       asm_branch(bool branchOnFalse, LInsp cond, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);
             void        emitJumpTable(SwitchInfo* si, NIns* target);
             void        assignSavedRegs();
