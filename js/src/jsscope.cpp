@@ -252,7 +252,7 @@ JSScope::destroy(JSContext *cx, JSScope *scope)
     js_FinishTitle(cx, &scope->title);
 #endif
     if (scope->table)
-        cx->runtime->asynchronousFree(scope->table);
+        JS_free(cx, scope->table);
     if (scope->emptyScope)
         scope->emptyScope->drop(cx, NULL);
 
