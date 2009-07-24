@@ -1043,7 +1043,19 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 PRBool
 nsFrameLoader::TryNewProcess()
 {
-  if (PR_GetEnv("DISABLE_OOP_IFRAME")) {
+  if (PR_GetEnv("MOZ_DISABLE_OOP_TABS")) {
+      return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs) {
+      return PR_FALSE;
+  }
+
+  PRBool oopTabsEnabled = PR_FALSE;
+  prefs->GetBoolPref("dom.ipc.tabs.enabled", &oopTabsEnabled);
+
+  if (!oopTabsEnabled) {
       return PR_FALSE;
   }
 
