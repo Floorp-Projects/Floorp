@@ -42,7 +42,7 @@
 class JSBackgroundTask {
     friend class JSBackgroundThread;
     JSBackgroundTask* next;
-  public:
+public:
     virtual void run() = 0;
 };
 
@@ -73,7 +73,7 @@ class JSBackgroundThread {
 #else
 
 class JSBackgroundThread {
-  public:
+public:
     void schedule(JSBackgroundTask* task) {
         task->run();
     }
