@@ -5060,11 +5060,15 @@ js_TraceNativeEnumerators(JSTracer *trc)
     jsid *cursor, *end;
 
     /*
-     * Purge native enumerators cached by shape id, which we are about to
-     * re-number completely when tracing is done for the GC.
+     * Purge native enumerators cached by shape id when the GC is about to
+     * re-number shapes due to shape generation overflow. Do this also when
+     * shutting down the runtime.
      */
     rt = trc->context->runtime;
-    if (IS_GC_MARKING_TRACER(trc)) {
+    bool doGC = IS_GC_MARKING_TRACER(trc) &&
+                (rt->gcRegenShapes || rt->state == JSRTS_LANDING);
+
+    if (doGC) {
         memset(&rt->nativeEnumCache, 0, sizeof rt->nativeEnumCache);
 #ifdef JS_DUMP_ENUM_CACHE_STATS
         printf("nativeEnumCache hit rate %g%%\n",
@@ -5083,7 +5087,7 @@ js_TraceNativeEnumerators(JSTracer *trc)
             do {
                 TRACE_ID(trc, *cursor);
             } while (++cursor != end);
-        } else if (IS_GC_MARKING_TRACER(trc)) {
+        } else if (doGC) {
             js_RemoveAsGCBytes(rt, NativeEnumeratorSize(ne->length));
             *nep = ne->next;
             JS_free(trc->context, ne);
@@ -5768,23 +5772,22 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     MeterEntryCount(scope->entryCount);
 #endif
 
-    sprop = SCOPE_LAST_PROP(scope);
+    sprop = scope->lastProp;
     if (sprop) {
         JS_ASSERT(scope->has(sprop));
 
         /* Regenerate property cache shape ids if GC'ing. */
-        if (IS_GC_MARKING_TRACER(trc)) {
-            uint32 shape, oldshape;
-
-            shape = js_RegenerateShapeForGC(cx);
-            if (!(sprop->flags & SPROP_MARK)) {
-                oldshape = sprop->shape;
-                sprop->shape = shape;
+        if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
+            if (!(sprop->flags & SPROP_FLAG_SHAPE_REGEN)) {
+                sprop->shape = js_RegenerateShapeForGC(cx);
                 sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
-                if (scope->shape != oldshape)
-                    shape = js_RegenerateShapeForGC(cx);
             }
 
+            uint32 shape = sprop->shape;
+            if (scope->hasOwnShape()) {
+                shape = js_RegenerateShapeForGC(cx);
+                JS_ASSERT(shape != sprop->shape);
+            }
             scope->shape = shape;
         }
 
