@@ -389,7 +389,8 @@ struct JSRuntime {
      */
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
-    uint16              gcPadding;
+    JSPackedBool        gcRegenShapes;
+    uint8               gcPadding;
 #ifdef JS_GC_ZEAL
     jsrefcount          gcZeal;
 #endif
@@ -1539,6 +1540,7 @@ static JS_INLINE uint32
 js_RegenerateShapeForGC(JSContext *cx)
 {
     JS_ASSERT(cx->runtime->gcRunning);
+    JS_ASSERT(cx->runtime->gcRegenShapes);
 
     /*
      * Under the GC, compared with js_GenerateShape, we don't need to use
