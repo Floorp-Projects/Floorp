@@ -87,7 +87,7 @@ function InputHandler() {
   this._modules.push(new MouseModule(this));
   //this._modules.push(new ContentPanningModule(this, browserCanvas, useEarlyMouseMoves));
   //this._modules.push(new ContentClickingModule(this));
-  this._modules.push(new ScrollwheelModule(this, browserCanvas));
+  //this._modules.push(new ScrollwheelModule(this, browserCanvas));
 }
 
 
@@ -235,7 +235,8 @@ function MouseModule(owner) {
   this._dragger = this._defaultDragger;
   this._clicker = null;
 
-  this._recordedEvents = [];
+  this._downUpEvents = [];
+  this._downUpDispatchedIndex = 0;
   this._targetScrollInterface = null;
 
   this._dragging = false;
@@ -289,7 +290,7 @@ MouseModule.prototype = {
     //if (this._fastPath)
     //  return;
 
-    this._dragger = targetScrollbox.customDragger || this._defaultDragger;
+    this._dragger = (targetScrollInterface && targetScrollbox.customDragger) || this._defaultDragger;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
 
     evInfo.event.stopPropagation();
@@ -306,8 +307,7 @@ MouseModule.prototype = {
   },
 
   _onMouseUp: function _onMouseUp(evInfo) {
-    //if (this._fastPath)
-    //  return;
+    let dragData = this._dragData;
 
     evInfo.event.stopPropagation();
     evInfo.event.preventDefault();
@@ -320,13 +320,12 @@ MouseModule.prototype = {
 
     let movedOutOfRadius = dragData.isPointOutsideRadius(sX, sY);
 
-    let dragData = this._dragData;
     if (dragData.dragging)
       this._doDragStop(sX, sY);
 
     dragData.reset();
 
-    this._recordedEvents.push(evInfo);
+    this._recordEvent(evInfo);
 
     this._doClick(movedOutOfRadius);
 
@@ -344,20 +343,27 @@ MouseModule.prototype = {
   },
 
   _recordEvent: function _recordEvent(evInfo) {
-    this._recordedEvents.push(evInfo);
+    this._downUpEvents.push(evInfo);
   },
 
-  _redispatchRecordedEvents: function _redispatchRecordedEvents() {
-    let evQueue = this._recordedEvents;
+  _redispatchDownUpEvents: function _redispatchDownUpEvents() {
+    let evQueue = this._downUpEvents;
 
     this._owner.stopListening();
 
-    while (evQueue.length > 0) {
-      let evInfo = evQueue.shift();
-      this._redispatchChromeMouseEvent(evInfo.event);
-    }
+    let len = evQueue.length;
+
+    for (let i = this._downUpDispatchedIndex; i < len; ++i)
+      this._redispatchChromeMouseEvent(evQueue[i].event);
+
+    this._downUpDispatchedIndex = len;
 
     this._owner.startListening();
+  },
+
+  _clearDownUpEvents: function _clearDownUpEvents() {
+    this._downUpEvents.splice(0);
+    this._downUpDispatchedIndex = 0;
   },
 
   _redispatchChromeMouseEvent: function _redispatchChromeMouseEvent(aEvent) {
@@ -366,7 +372,7 @@ MouseModule.prototype = {
       return;
     }
 
-    // Redispatch the mouse event, ignoring the root scroll frame
+    // we ignore the root scroll frame in this redispatch
     Browser.windowUtils.sendMouseEvent(aEvent.type, aEvent.clientX, aEvent.clientY,
                                        aEvent.button, aEvent.detail, 0, true);
   },
@@ -409,26 +415,30 @@ MouseModule.prototype = {
 
     dragData.setDragPosition(sX, sY);
 
-    return this._dragger.dragMove(dX, dX, this._targetScrollInterface);
+    return this._dragger.dragMove(dX, dY, this._targetScrollInterface);
   },
 
   _doClick: function _doClick(movedOutOfRadius) {
-    if (this._clicker && !movedOutOfRadius) {
-      // commit a single/double-wise click
-      this._commitAnotherClick();
+    let commitToClicker = this._clicker && !movedOutOfRadius;
+
+    if (commitToClicker) {
+      this._commitAnotherClick();  // commit this a click to the doubleclick timewait buffer
     }
 
-    this._redispatchRecordedEvents();
+    this._redispatchDownUpEvents();
+
+    if (!commitToClicker) {
+      this._cleanClickBuffer();    // clean the click buffer ourselves, since there was no clicker
+                                   // to commit to.  when there is one, the path taken through
+    }                              // _commitAndClick takes care of this.
   },
 
+  /**
+   *
+   */
   _commitAnotherClick: function _commitAnotherClick() {
-    // we're waiting for a click
-    if (this._clickTimeout) {
-      // go ahead and stop the timeout so no single click gets
-      // sent, but don't clear clickTimeout here so that mouseUp
-      // handler will treat this as a double click
+    if (this._clickTimeout) {   // we're waiting for a second click for double
       window.clearTimeout(this._clickTimeout);
-      delete this._clickTimeout;
       this._doDoubleClick();
     } else {
       this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); }, 400, this);
@@ -439,19 +449,37 @@ MouseModule.prototype = {
    * Helper to _doClick().  Finalize a single click and tell the customClicker
    */
   _doSingleClick: function _doSingleClick() {
-    let ev = this._recordedEvents[1].event;
+    dump('doing single click with ' + this._downUpEvents.length + '\n');
+    for (let i = 0; i < this._downUpEvents.length; ++i)
+      dump('      ' + this._downUpEvents[i].event.type
+           + " :: " + this._downUpEvents[i].event.button
+           + " :: " + this._downUpEvents[i].event.detail + '\n');
 
-    this._clicker.singleClick(ev.sX, ev.sY);
+    let ev = this._downUpEvents[1].event;
+    this._cleanClickBuffer();
+    this._clicker.singleClick(ev.clientX, ev.clientY);
   },
 
   /**
    * Helper to _doClick().  Finalize a double click and tell the customClicker
    */
-  _doDoubleClick: function _doDoubleClick(sX, sY) {
-    let mouseUp1 = this._recordedEvents[1].event;
-    let mouseUp2 = this._recordedEvents[3].event;
+  _doDoubleClick: function _doDoubleClick() {
+    dump('doing double click with ' + this._downUpEvents.length + '\n');
+    for (let i = 0; i < this._downUpEvents.length; ++i)
+      dump('      ' + this._downUpEvents[i].event.type
+           + " :: " + this._downUpEvents[i].event.button
+           + " :: " + this._downUpEvents[i].event.detail + '\n');
 
-    this._clicker.doubleClick(mouseUp1.sX, mouseUp1.sY, mouseUp2.sX, mouseUp2.sY);
+    let mouseUp1 = this._downUpEvents[1].event;
+    let mouseUp2 = this._downUpEvents[3].event;
+    this._cleanClickBuffer();
+    this._clicker.doubleClick(mouseUp1.clientX, mouseUp1.clientY,
+			      mouseUp2.clientX, mouseUp2.clientY);
+  },
+
+  _cleanClickBuffer: function _cleanClickBuffer() {
+    delete this._clickTimeout;
+    this._clearDownUpEvents();
   },
 
   _defaultDragger: {
@@ -474,24 +502,6 @@ MouseModule.prototype = {
         return true;
       }
     }
-  },
-
-  /**
-   * The default clicker is really not a clicker in the conventional sense, but more of
-   * a wrapper for what we would like to do if we started through some drag but decided
-   * it's also a click.
-   */
-  _createDefaultClicker: function _createDefaultClicker() {
-    let self = this;
-    return {
-      singleClick: function singleClick(sX, sY) {
-        self._redispatchRecordedEvents();
-      },
-
-      doubleClick: function doubleClick(firstX, firstY, secondX, secondY) {
-        self._redispatchRecordedEvents();
-      }
-    };
   },
 
   // -----------------------------------------------------------
@@ -914,7 +924,7 @@ ContentPanningModule.prototype = {
 
     if (dragData.dragging)
       this._dragMove(sX, sY);
-  },
+  }
 };
 
 
@@ -1029,7 +1039,6 @@ ContentClickingModule.prototype = {
 /**
  * Scrollwheel zooming handler
  */
-
 function ScrollwheelModule(owner, browserCanvas) {
   this._owner = owner;
   this._browserCanvas = browserCanvas;

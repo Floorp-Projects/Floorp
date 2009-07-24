@@ -220,6 +220,18 @@ function onKeyPress(e) {
   }
 }
 
+function screenToBrowserView(x, y) {
+  let container = document.getElementById("tile-container");
+  let containerBCR = container.getBoundingClientRect();
+
+  let dx = Math.round(-containerBCR.left);
+  let dy = Math.round(-containerBCR.top);
+
+  dump('stbv: ' + dx + ', ' + dy + '\n');
+
+  return [x + dx, y + dy];
+}
+
 // Return the visible rect in terms of the tile container
 function getVisibleRect() {
   let container = document.getElementById("tile-container");
@@ -255,6 +267,8 @@ var Browser = {
 
     let container = document.getElementById("tile-container");
     let bv = this._browserView = new BrowserView(container, getVisibleRect());
+
+    container.customClicker = this._createContentCustomClicker(bv);
 
     let scrollbox = document.getElementById("scrollbox");
 
@@ -774,6 +788,65 @@ var Browser = {
         Browser.selectedBrowser.loadURI(url, null, null, false);
       }
     }
+  },
+
+  _createContentCustomClicker: function _createContentCustomClicker(browserView) {
+    // TODO don't generate this dynamically like this, but actualy make
+    // it a prototype somewhere and instantiate it and such...
+
+    function transformScreenToBrowser(sX, sY) {
+      return screenToBrowserView(sX, sY).map(browserView.viewportToBrowser);
+    }
+
+    function elementFromPoint(browser, x, y) {
+      [x, y] = transformScreenToBrowser(browserView, x, y);
+      let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
+      return cwu.elementFromPoint(x, y,
+				  true,   /* ignore root scroll frame*/
+				  false); /* don't flush layout */
+    }
+
+    function dispatchContentClick(browser, x, y) {
+      dump('dispatching on the right browser? ' + (browser == Browser.selectedBrowser) + '\n');
+      let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
+      dump('     down on ' + cwu + '\n');
+      cwu.sendMouseEvent("mousedown", x, y, 0, 1, 0, true);
+      dump('     up\n');
+      cwu.sendMouseEvent("mouseup",   x, y, 0, 1, 0, true);
+    }
+
+    return {
+      zoomDir: 1,
+
+      singleClick: function singleClick(cX, cY) {
+        let browser = browserView.getBrowser();
+        if (browser) {
+	  dump('singleClick was invoked with ' + cX + ', ' + cY + '\n');
+          let [x, y] = transformScreenToBrowser(cX, cY);
+	  dump('dispatching in browser ' + x + ', ' + y + '\n');
+          dispatchContentClick(browser, x, y);
+        }
+      },
+
+      doubleClick: function doubleClick(cX1, cY1, cX2, cY2) {
+        let browser = browserView.getBrowser();
+        if (browser) {
+          let zoomElement = elementFromPoint(browser, cX2, cY2);
+
+          if (zoomElement) {
+	    // TODO actually zoom to and from element
+            //browserView.zoom(this.zoomDir);
+	    //this.zoomDir *= -1;
+	    dump('zooming to/from element: ' + zoomElement + '\n');
+          }
+
+          //let [x, y] = transformScreenToBrowser(cX1, cY1);
+          //dispatchContentClick(browser, x, y);
+          //[x, y] = transformScreenToBrowser(cX2, cY2);
+          //dispatchContentClick(browser, x, y);
+        }
+      }
+    };
   }
 };
 
