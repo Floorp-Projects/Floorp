@@ -1639,7 +1639,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         }
     }
 
-    cx->runtime->asynchronousFree(script);
+    JS_free(cx, script);
 }
 
 void
