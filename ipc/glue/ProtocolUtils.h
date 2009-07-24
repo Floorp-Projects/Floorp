@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,12 +48,12 @@ namespace mozilla {
 namespace ipc {
 
 
-// Used to pass references to protocol actors across the wire.  An actor
-// has a parent-side "routing ID" and another routing ID on the child side.
+// Used to pass references to protocol actors across the wire.
+// Actors created on the parent-side have a positive ID, and actors
+// allocated on the child side have a negative ID.
 struct ActorHandle
 {
-    int mParentId;
-    int mChildId;
+    int mId;
 };
 
 
@@ -59,6 +62,7 @@ class /*NS_INTERFACE_CLASS*/ IProtocolManager
 {
 public:
     virtual int32 Register(ListenerT*) = 0;
+    virtual int32 RegisterID(ListenerT*, int32) = 0;
     virtual ListenerT* Lookup(int32) = 0;
     virtual void Unregister(int32) = 0;
 };
@@ -72,30 +76,27 @@ namespace IPC {
 template <>
 struct ParamTraits<mozilla::ipc::ActorHandle>
 {
-  typedef mozilla::ipc::ActorHandle paramType;
+    typedef mozilla::ipc::ActorHandle paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    IPC::WriteParam(aMsg, aParam.mParentId);
-    IPC::WriteParam(aMsg, aParam.mChildId);
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    int parentId, childId;
-    if (IPC::ReadParam(aMsg, aIter, &parentId)
-        && ReadParam(aMsg, aIter, &childId)) {
-      aResult->mParentId = parentId;
-      aResult->mChildId = childId;
-      return true;
+    static void Write(Message* aMsg, const paramType& aParam)
+    {
+        IPC::WriteParam(aMsg, aParam.mId);
     }
-    return false;
-  }
 
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"(%d,%d)", aParam.mParentId, aParam.mChildId));
-  }
+    static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+    {
+        int id;
+        if (IPC::ReadParam(aMsg, aIter, &id)) {
+            aResult->mId = id;
+            return true;
+        }
+        return false;
+    }
+
+    static void Log(const paramType& aParam, std::wstring* aLog)
+    {
+        aLog->append(StringPrintf(L"(%d)", aParam.mId));
+    }
 };
 
 } // namespace IPC
