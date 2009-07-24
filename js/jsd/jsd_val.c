@@ -41,18 +41,21 @@
 
 #include "jsd.h"
 #include "jsapi.h"
+#include "jspubtd.h"
 
 /*
  * Lifted with slight modification from jsobj.h
  */
 
 #define OBJ_TO_OUTER_OBJECT(cx, obj)                                \
+do {                                                                \
     JSClass *clasp_ = JS_GetClass(cx, obj);                         \
     if (clasp_->flags & JSCLASS_IS_EXTENDED) {                      \
         JSExtendedClass *xclasp_ = (JSExtendedClass*) clasp_;       \
         if (xclasp_->outerObject)                                   \
             obj = xclasp_->outerObject(cx, obj);                    \
-    }
+    }                                                               \
+} while(0)
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_VALUE(JSDValue* jsdval)
