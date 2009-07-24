@@ -1636,14 +1636,16 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         JSStackFrame *fp = js_GetTopStackFrame(cx);
 
         if (!(fp && (fp->flags & JSFRAME_EVAL))) {
-#ifdef CHECK_SCRIPT_OWNER
-            JS_ASSERT(script->owner == cx->thread);
-#endif
             js_PurgePropertyCacheForScript(cx, script);
+
+            if (!cx->runtime->gcRunning) {
+#ifdef CHECK_SCRIPT_OWNER
+                JS_ASSERT(script->owner == cx->thread);
+#endif
 #ifdef JS_TRACER
-            if (!cx->runtime->gcRunning)
                 js_PurgeScriptFragments(cx, script);
 #endif
+            }
         }
     }
 
