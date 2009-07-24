@@ -371,21 +371,6 @@ typedef PRUint32 nsrefcnt;
     Need to add an autoconf test for this.
   */
 
-  /* under Metrowerks (Mac), we don't have autoconf yet */
-#ifdef __MWERKS__
-  #define HAVE_CPP_PARTIAL_SPECIALIZATION
-  #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
-
-  #define HAVE_CPP_ACCESS_CHANGING_USING
-  #define HAVE_CPP_AMBIGUITY_RESOLVING_USING
-  #define HAVE_CPP_EXPLICIT
-  #define HAVE_CPP_TYPENAME
-  #define HAVE_CPP_BOOL
-  #define HAVE_CPP_NAMESPACE_STD
-  #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
-  #define HAVE_CPP_2BYTE_WCHAR_T
-#endif
-
   /* under VC++ (Windows), we don't have autoconf yet */
 #if defined(_MSC_VER) && (_MSC_VER>=1100)
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
