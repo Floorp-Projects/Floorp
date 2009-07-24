@@ -104,9 +104,20 @@ FinishThreadData(JSThreadData *data)
 static void
 PurgeThreadData(JSContext *cx, JSThreadData *data)
 {
+    js_PurgeGSNCache(&data->gsnCache);
+
+    if (cx->runtime->gcRegenShapes)
+        js_PurgePropertyCache(cx, &data->propertyCache);
+
 # ifdef JS_TRACER
     JSTraceMonitor *tm = &data->traceMonitor;
     tm->reservedDoublePoolPtr = tm->reservedDoublePool;
+
+    /*
+     * FIXME: bug 506117. We should flush only if (cx->runtime->gcRegenShapes),
+     * but we can't yet, because traces may embed sprop and object references,
+     * and we don't yet mark such embedded refs.
+     */
     tm->needFlush = JS_TRUE;
 
     if (tm->recorder)
@@ -123,9 +134,6 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
 
     /* Destroy eval'ed scripts. */
     js_DestroyScriptsToGC(cx, data);
-
-    js_PurgeGSNCache(&data->gsnCache);
-    js_PurgePropertyCache(cx, &data->propertyCache);
 }
 
 #ifdef JS_THREADSAFE

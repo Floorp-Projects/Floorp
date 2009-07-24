@@ -3599,7 +3599,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #ifdef JS_TRACER
     js_PurgeJITOracle();
 #endif
-    js_PurgeThreads(cx);
 
   restart:
     rt->gcNumber++;
@@ -3611,8 +3610,13 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * Same for the protoHazardShape proxy-shape standing in for all object
      * prototypes having readonly or setter properties.
      */
-    rt->shapeGen = 0;
-    rt->protoHazardShape = 0;
+    if (rt->shapeGen & SHAPE_OVERFLOW_BIT) {
+        rt->gcRegenShapes = true;
+        rt->shapeGen = 0;
+        rt->protoHazardShape = 0;
+    }
+
+    js_PurgeThreads(cx);
 
     /*
      * Mark phase.
@@ -3887,7 +3891,7 @@ out:
     rt->setGCLastBytes(rt->gcBytes);
   done_running:
     rt->gcLevel = 0;
-    rt->gcRunning = JS_FALSE;
+    rt->gcRunning = rt->gcRegenShapes = false;
 
 #ifdef JS_THREADSAFE
     rt->gcThread = NULL;
