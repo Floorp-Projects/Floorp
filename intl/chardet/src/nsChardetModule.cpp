@@ -127,7 +127,7 @@ nsUKProbDetectorRegistrationProc(nsIComponentManager *aCompMgr,
 }
 
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
  { "Meta Charset", NS_META_CHARSET_CID, 
     NS_META_CHARSET_CONTRACTID, nsMetaCharsetObserverConstructor, 

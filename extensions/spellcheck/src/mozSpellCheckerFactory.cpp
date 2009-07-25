@@ -117,7 +117,7 @@ mozInlineSpellCheckerConstructor(nsISupports *aOuter, REFNSIID aIID,
 // information like the function to create an instance, contractid, and
 // class name.
 //
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
 #ifdef MOZ_MACBROWSER
     {
         "OSX Spell check service",
