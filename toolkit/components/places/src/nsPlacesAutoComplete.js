@@ -581,6 +581,9 @@ nsPlacesAutoComplete.prototype = {
     else if (uri.indexOf("ftp://") == 0)
       uri = uri.slice(6);
 
+    if (uri.indexOf("www.") == 0)
+      uri = uri.slice(4);
+
     return this._textURIService.unEscapeURIForUI("UTF-8", uri);
   },
 

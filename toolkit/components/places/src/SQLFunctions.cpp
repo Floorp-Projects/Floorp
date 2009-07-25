@@ -94,6 +94,9 @@ namespace places {
       _fixedSpec.Cut(0, 8);
     else if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("ftp://")))
       _fixedSpec.Cut(0, 6);
+
+    if (StringBeginsWith(_fixedSpec, NS_LITERAL_STRING("www.")))
+      _fixedSpec.Cut(0, 4);
   }
 
   /* static */
