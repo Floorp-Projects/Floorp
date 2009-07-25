@@ -56,7 +56,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSemanticUnitScanner)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
  // lwbrk
   { "Line Breaker", NS_LBRK_CID, 
