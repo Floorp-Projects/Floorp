@@ -1924,8 +1924,17 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     // Remember the old scope in case the call to SetNewDocument changes it.
     nsCOMPtr<nsIScriptGlobalObject> oldScope(do_QueryReferent(mScopeObject));
 
+#ifdef DEBUG
+    PRBool willReparent = mWillReparent;
+    mWillReparent = PR_TRUE;
+#endif
+
     rv = window->SetNewDocument(this, nsnull, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG
+    mWillReparent = willReparent;
+#endif
 
     // Now make sure we're not flagged as the initial document anymore, now
     // that we've had stuff done to us.  From now on, if anyone tries to
