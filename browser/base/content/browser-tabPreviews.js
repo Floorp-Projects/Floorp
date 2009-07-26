@@ -801,9 +801,7 @@ var allTabs = {
     {
       let innerWidth = Math.ceil(previewWidth / REL_PREVIEW_THUMBNAIL);
       let innerHeight = Math.ceil(previewHeight / REL_PREVIEW_THUMBNAIL);
-      let verticalPadding = innerHeight * (REL_PREVIEW_THUMBNAIL - 1);
-      var canvasStyle = "margin-bottom:" + (verticalPadding * .3) + "px;" +
-                        "max-width:" + innerWidth + "px;" +
+      var canvasStyle = "max-width:" + innerWidth + "px;" +
                         "min-width:" + innerWidth + "px;" +
                         "max-height:" + innerHeight + "px;" +
                         "min-height:" + innerHeight + "px;";
