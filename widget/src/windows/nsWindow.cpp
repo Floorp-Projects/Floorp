@@ -4334,7 +4334,21 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         else
           event.mSizeMode = nsSizeMode_Normal;
 #else
-        event.mSizeMode = mSizeMode;
+        // Bug 504499 - Can't find a way to query if the window is maximized
+        // on Windows CE. So as a hacky workaround, we'll assume that if the
+        // window size exactly fills the screen, then it must be maximized.
+        RECT wr;
+        ::GetWindowRect(mWnd, &wr);
+
+        if (::IsIconic(mWnd))
+          event.mSizeMode = nsSizeMode_Minimized;
+        else if (wr.left   == 0 &&
+                 wr.top    == 0 &&
+                 wr.right  == ::GetSystemMetrics(SM_CXSCREEN) &&
+                 wr.bottom == ::GetSystemMetrics(SM_CYSCREEN))
+          event.mSizeMode = nsSizeMode_Maximized;
+        else
+          event.mSizeMode = nsSizeMode_Normal;
 #endif
         InitEvent(event);
 

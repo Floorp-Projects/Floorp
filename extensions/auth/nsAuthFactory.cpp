@@ -209,7 +209,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAuthSASL)
 
 //-----------------------------------------------------------------------------
 
-static nsModuleComponentInfo components[] = {
+static const nsModuleComponentInfo components[] = {
   { "nsAuthKerbGSS", 
     NS_GSSAUTH_CID,
     NS_AUTH_MODULE_CONTRACTID_PREFIX "kerb-gss",

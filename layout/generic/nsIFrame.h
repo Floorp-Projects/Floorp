@@ -2315,6 +2315,12 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
    */
   virtual nsILineIterator* GetLineIterator() = 0;
 
+  /**
+   * If this frame is a next-in-flow, and its prev-in-flow has something on its
+   * overflow list, pull those frames into the child list of this one.
+   */
+  virtual void PullOverflowsFromPrevInFlow() {}
+
 protected:
   // Members
   nsRect           mRect;

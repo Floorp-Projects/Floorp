@@ -1,11 +1,7 @@
-function url(spec) {
-  var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
-  return ios.newURI(spec, null, null);
-}
-
-var gTestPage = null;
 var gBrowserHandler;
+var browser;
+
+function doc() browser.contentDocument;
 
 function setHandlerFunc(aResultFunc) {
   DOMLinkHandler.handleEvent = function (event) {
@@ -19,10 +15,14 @@ function test() {
   ok(gBrowserHandler, "found browser handler");
 
   waitForExplicitFinish();
-  var activeWin = Application.activeWindow;
-  gTestPage = activeWin.open(url("chrome://mochikit/content/browser/browser/base/content/test/discovery.html"));
-  gTestPage.focus();
-  setTimeout(iconDiscovery, 1000);
+
+  gBrowser.selectedTab = gBrowser.addTab();
+  browser = gBrowser.selectedBrowser;
+  browser.addEventListener("load", function (event) {
+    event.currentTarget.removeEventListener("load", arguments.callee, true);
+    iconDiscovery();
+  }, true);
+  content.location = "chrome://mochikit/content/browser/browser/base/content/test/discovery.html";
 }
 
 var iconDiscoveryTests = [
@@ -38,7 +38,7 @@ var iconDiscoveryTests = [
 
 function runIconDiscoveryTest() {
   var test = iconDiscoveryTests[0];
-  var head = gTestPage.document.getElementById("linkparent");
+  var head = doc().getElementById("linkparent");
   var hasSrc = gProxyFavIcon.hasAttribute("src");
   if (test.pass)
     ok(hasSrc, test.text);
@@ -56,8 +56,8 @@ function iconDiscovery() {
     gProxyFavIcon.removeAttribute("src");
 
     var test = iconDiscoveryTests[0];
-    var head = gTestPage.document.getElementById("linkparent");
-    var link = gTestPage.document.createElement("link");
+    var head = doc().getElementById("linkparent");
+    var link = doc().createElement("link");
 
     var rel = test.rel || "icon";
     var href = test.href || "chrome://mochikit/content/browser/browser/base/content/test/moz.png";
@@ -91,7 +91,6 @@ var searchDiscoveryTests = [
 ];
 
 function runSearchDiscoveryTest() {
-  var browser = gBrowser.getBrowserForDocument(gTestPage.document);
   var test = searchDiscoveryTests[0];
   var title = test.title || searchDiscoveryTests.length;
   if (browser.engines) {
@@ -116,12 +115,11 @@ function runMultipleEnginesTestAndFinalize() {
     ranOnce = true;
     return;
   }
-  var browser = gBrowser.getBrowserForDocument(gTestPage.document);
   ok(browser.engines, "has engines");
   is(browser.engines.length, 1, "only one engine");
   is(browser.engines[0].uri, "http://first.mozilla.com/search.xml", "first engine wins");
 
-  gTestPage.close();
+  gBrowser.removeCurrentTab();
 
   // Reset the default link handler
   DOMLinkHandler.handleEvent = gBrowserHandler;
@@ -130,13 +128,12 @@ function runMultipleEnginesTestAndFinalize() {
 }
 
 function searchDiscovery() {
-  var head = gTestPage.document.getElementById("linkparent");
-  var browser = gBrowser.getBrowserForDocument(gTestPage.document);
+  var head = doc().getElementById("linkparent");
 
   if (searchDiscoveryTests.length) {
     setHandlerFunc(runSearchDiscoveryTest);
     var test = searchDiscoveryTests[0];
-    var link = gTestPage.document.createElement("link");
+    var link = doc().createElement("link");
 
     var rel = test.rel || "search";
     var href = test.href || "http://so.not.here.mozilla.com/search.xml";
@@ -153,7 +150,7 @@ function searchDiscovery() {
   } else {
     setHandlerFunc(runMultipleEnginesTestAndFinalize);
     // Test multiple engines with the same title
-    var link = gTestPage.document.createElement("link");
+    var link = doc().createElement("link");
     link.rel = "search";
     link.href = "http://first.mozilla.com/search.xml";
     link.type = "application/opensearchdescription+xml";
