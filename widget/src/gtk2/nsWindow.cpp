@@ -4457,7 +4457,8 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 nsresult
 nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects)
 {
-    StoreWindowClipRegion(aRects);
+    if (!StoreWindowClipRegion(aRects))
+        return NS_OK;
 
     if (!mDrawingarea)
         return NS_OK;
