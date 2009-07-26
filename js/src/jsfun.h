@@ -180,7 +180,7 @@ struct JSFunction {
         return countLocalNames() != 0;
     }
 
-    uint32 countInterpretedReserveSlots() const;
+    uint32 countInterpretedReservedSlots() const;
 };
 
 /*

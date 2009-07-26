@@ -4355,7 +4355,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     if (FUN_FLAT_CLOSURE(fun)) {
         JS_ASSERT(funobj->dslots);
         if (!js_EnsureReservedSlots(cx, clone,
-                                    fun->countInterpretedReserveSlots())) {
+                                    fun->countInterpretedReservedSlots())) {
             return NULL;
         }
 
