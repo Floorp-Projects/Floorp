@@ -4261,35 +4261,6 @@ nsFrame::XMLQuote(nsString& aString)
 #endif
 
 PRBool
-nsFrame::ParentDisablesSelection() const
-{
-/*
-  // should never be called now
-  nsIFrame* parent = GetParent();
-  if (parent) {
-	  PRBool selectable;
-	  parent->IsSelectable(selectable);
-    return (selectable ? PR_FALSE : PR_TRUE);
-  }
-  return PR_FALSE;
-*/
-/*
-  PRBool selected;
-  if (NS_FAILED(GetSelected(&selected)))
-    return PR_FALSE;
-  if (selected)
-    return PR_FALSE; //if this frame is selected and no one has overridden the selection from "higher up"
-                     //then no one below us will be disabled by this frame.
-  nsIFrame* target = GetParent();
-  if (target)
-    return ((nsFrame *)target)->ParentDisablesSelection();
-  return PR_FALSE; //default this does not happen
-  */
-  
-  return PR_FALSE;
-}
-
-PRBool
 nsIFrame::IsVisibleForPainting(nsDisplayListBuilder* aBuilder) {
   if (!GetStyleVisibility()->IsVisible())
     return PR_FALSE;
