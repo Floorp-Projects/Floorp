@@ -39,7 +39,7 @@
 #include "nsILayoutDebuggingTools.h"
 #include "nsIDocShell.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 
 class nsLayoutDebuggingTools : public nsILayoutDebuggingTools {
 
@@ -57,7 +57,7 @@ protected:
     nsresult SetBoolPrefAndRefresh(const char * aPrefName, PRBool aNewValue);
 
     nsCOMPtr<nsIDocShell> mDocShell;
-    nsCOMPtr<nsIPref> mPrefs;
+    nsCOMPtr<nsIPrefBranch> mPrefs;
 
     PRBool mEditorMode;
     PRBool mVisualDebugging;

@@ -54,7 +54,6 @@
 #include "nsIDocument.h"
 #include "nsIGenericFactory.h"
 #include "nsIObserver.h"
-#include "nsIPref.h"
 #include "nsIPresShell.h"
 #include "nsIStyleSheetService.h"
 #include "nsIWebProgress.h"
@@ -294,7 +293,7 @@ nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
   nsEventStatus statusX;
   nsMouseScrollEvent scrollEventX(PR_TRUE, NS_MOUSE_SCROLL, mWidget);
   scrollEventX.delta = dx;
-  scrollEventX.scrollFlags = nsMouseScrollEvent::kIsHorizontal | nsMouseScrollEvent::kIsPixels;
+  scrollEventX.scrollFlags = nsMouseScrollEvent::kIsHorizontal | nsMouseScrollEvent::kHasPixels;
   mViewManager->DispatchEvent(&scrollEventX, aView, &statusX);
   if(statusX != nsEventStatus_eIgnore ){
     if (dx > 5)
@@ -305,7 +304,7 @@ nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
   nsEventStatus statusY;
   nsMouseScrollEvent scrollEventY(PR_TRUE, NS_MOUSE_SCROLL, mWidget);
   scrollEventY.delta = dy;
-  scrollEventY.scrollFlags = nsMouseScrollEvent::kIsVertical | nsMouseScrollEvent::kIsPixels;
+  scrollEventY.scrollFlags = nsMouseScrollEvent::kIsVertical | nsMouseScrollEvent::kHasPixels;
   mViewManager->DispatchEvent(&scrollEventY, aView, &statusY);
   if(statusY != nsEventStatus_eIgnore ){
     if (dy > 5)
