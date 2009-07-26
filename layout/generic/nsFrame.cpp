@@ -4487,43 +4487,30 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
 }
 #endif
 
-/*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
-  it will not update immediately.*/
-NS_IMETHODIMP
-nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelected, nsSpread aSpread, SelectionType aType)
+void
+nsIFrame::SetSelected(PRBool aSelected, SelectionType aType)
 {
-/*
-  if (aSelected && ParentDisablesSelection())
-    return NS_OK;
-*/
+  NS_ASSERTION(!GetPrevContinuation(),
+               "Should only be called on first in flow");
+  if (aType != nsISelectionController::SELECTION_NORMAL)
+    return;
 
-  if (aType == nsISelectionController::SELECTION_NORMAL) {
-    // check whether style allows selection
-    PRBool  selectable;
-    IsSelectable(&selectable, nsnull);
-    if (!selectable)
-      return NS_OK;
-  }
+  // check whether style allows selection
+  PRBool selectable;
+  IsSelectable(&selectable, nsnull);
+  if (!selectable)
+    return;
 
-/*
-  if (eSpreadDown == aSpread){
-    nsIFrame* kid = GetFirstChild(nsnull);
-    while (nsnull != kid) {
-      kid->SetSelected(nsnull,aSelected,aSpread);
-      kid = kid->GetNextSibling();
+  for (nsIFrame* f = this; f; f = f->GetNextContinuation()) {
+    if (aSelected) {
+      AddStateBits(NS_FRAME_SELECTED_CONTENT);
+    } else {
+      RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
     }
-  }
-*/
-  if ( aSelected ){
-    AddStateBits(NS_FRAME_SELECTED_CONTENT);
-  }
-  else
-    RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
 
-  // Repaint this frame subtree's entire area
-  InvalidateOverflowRect();
-
-  return NS_OK;
+    // Repaint this frame subtree's entire area
+    InvalidateOverflowRect();
+  }
 }
 
 NS_IMETHODIMP
