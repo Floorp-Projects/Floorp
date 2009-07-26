@@ -229,35 +229,30 @@ nsSVGGlyphFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   }
 }
 
-NS_IMETHODIMP
-nsSVGGlyphFrame::SetSelected(nsPresContext* aPresContext,
-                             nsIDOMRange*    aRange,
-                             PRBool          aSelected,
-                             nsSpread        aSpread,
-                             SelectionType   aType)
+void
+nsSVGGlyphFrame::SetSelected(PRBool        aSelected,
+                             SelectionType aType)
 {
 #if defined(DEBUG) && defined(SVG_DEBUG_SELECTION)
   printf("nsSVGGlyphFrame(%p)::SetSelected()\n", this);
 #endif
-//  return nsSVGGlyphFrameBase::SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
 
-  if (aType == nsISelectionController::SELECTION_NORMAL) {
-    // check whether style allows selection
-    PRBool  selectable;
-    IsSelectable(&selectable, nsnull);
-    if (!selectable)
-      return NS_OK;
-  }
+  if (aType != nsISelectionController::SELECTION_NORMAL)
+    return;
 
-  if ( aSelected ){
-    mState |=  NS_FRAME_SELECTED_CONTENT;
+  // check whether style allows selection
+  PRBool selectable;
+  IsSelectable(&selectable, nsnull);
+  if (!selectable)
+    return;
+
+  if (aSelected) {
+    AddStateBits(NS_FRAME_SELECTED_CONTENT);
+  } else {
+    RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
   }
-  else
-    mState &= ~NS_FRAME_SELECTED_CONTENT;
 
   nsSVGUtils::UpdateGraphic(this);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
