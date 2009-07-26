@@ -926,6 +926,7 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
   
   while ( startNode && 
           !nsTextEditUtils::IsBody(startNode) && 
+          IsEditable(startNode) &&
           IsAtFrontOfNode(startNode, startOffset) )
   {
     res = GetNodeLocation(startNode, address_of(parent), &startOffset);
@@ -936,6 +937,7 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
   
   while ( endNode && 
           !nsTextEditUtils::IsBody(endNode) && 
+          IsEditable(endNode) &&
           IsAtEndOfNode(endNode, endOffset) )
   {
     res = GetNodeLocation(endNode, address_of(parent), &endOffset);
