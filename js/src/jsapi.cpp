@@ -927,16 +927,12 @@ JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JSRuntime *rt;
-
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
     if (!cx->requestDepth) {
-        JS_ASSERT(cx->gcLocalFreeLists == &js_GCEmptyFreeListSet);
-
-        /* Wait until the GC is finished. */
-        rt = cx->runtime;
+        JSRuntime *rt = cx->runtime;
         JS_LOCK_GC(rt);
 
+        /* Wait until the GC is finished. */
         if (rt->gcThread != cx->thread) {
             while (rt->gcLevel > 0)
                 JS_AWAIT_GC_DONE(rt);
@@ -974,7 +970,6 @@ JS_EndRequest(JSContext *cx)
         cx->outstandingRequests--;
 
         js_ShareWaitingTitles(cx);
-        js_RevokeGCLocalFreeLists(cx);
 
         /* Give the GC a chance to run if this was the last request running. */
         JS_ASSERT(rt->requestCount > 0);

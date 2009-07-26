@@ -263,6 +263,7 @@ thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
         return JS_DHASH_REMOVE;
     }
     PurgeThreadData(cx, &thread->data);
+    memset(thread->gcFreeLists, 0, sizeof(thread->gcFreeLists));
     return JS_DHASH_NEXT;
 }
 
@@ -379,9 +380,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cx->stackLimit = (jsuword) -1;
 #endif
     cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
-#ifdef JS_THREADSAFE
-    cx->gcLocalFreeLists = (JSGCFreeListSet *) &js_GCEmptyFreeListSet;
-#endif
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->version == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
@@ -633,7 +631,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
      */
     if (cx->requestDepth == 0)
         js_WaitForGC(rt);
-    js_RevokeGCLocalFreeLists(cx);
 #endif
     JS_REMOVE_LINK(&cx->link);
     last = (rt->contextList.next == &rt->contextList);
