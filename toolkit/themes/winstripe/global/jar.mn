@@ -208,7 +208,7 @@ classic.jar:
         skin/classic/aero/global/splitter.css
         skin/classic/aero/global/tabbox.css
 *       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
-        skin/classic/aero/global/toolbar.css
+*       skin/classic/aero/global/toolbar.css
         skin/classic/aero/global/toolbarbutton.css
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
         skin/classic/aero/global/wizard.css
