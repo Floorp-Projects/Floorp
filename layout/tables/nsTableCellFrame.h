@@ -131,12 +131,6 @@ public:
   void PaintCellBackground(nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, nsPoint aPt);
 
-  NS_IMETHOD SetSelected(nsPresContext* aPresContext,
-                         nsIDOMRange *aRange,
-                         PRBool aSelected,
-                         nsSpread aSpread,
-                         SelectionType aType);
-
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
   virtual IntrinsicWidthOffsetData

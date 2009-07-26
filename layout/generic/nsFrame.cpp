@@ -4523,18 +4523,6 @@ nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aS
   // Repaint this frame subtree's entire area
   InvalidateOverflowRect();
 
-#ifdef IBMBIDI
-  PRInt32 start, end;
-  nsIFrame* frame = GetNextSibling();
-  if (frame) {
-    GetFirstLeaf(aPresContext, &frame);
-    GetOffsets(start, end);
-    if (start && end) {
-      frame->SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
-    }
-  }
-#endif // IBMBIDI
-
   return NS_OK;
 }
 
