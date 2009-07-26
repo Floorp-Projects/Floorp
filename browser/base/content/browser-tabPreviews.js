@@ -379,7 +379,7 @@ var ctrlTab = {
     this._timer = setTimeout(function (self) {
       self._timer = null;
       self._openPanel();
-    }, 100, this);
+    }, 200, this);
   },
 
   _openPanel: function ctrlTab_openPanel() {
