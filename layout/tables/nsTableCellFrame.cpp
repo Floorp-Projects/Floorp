@@ -508,39 +508,6 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
 }
 
-//null range means the whole thing
-NS_IMETHODIMP
-nsTableCellFrame::SetSelected(nsPresContext*  aPresContext,
-                              nsIDOMRange*    aRange,
-                              PRBool          aSelected,
-                              nsSpread        aSpread,
-                              SelectionType   aType)
-{
-  //traverse through children unselect tables
-#if 0
-  if ((aSpread == eSpreadDown)){
-    nsIFrame* kid = GetFirstChild(nsnull);
-    while (nsnull != kid) {
-      kid->SetSelected(nsnull, aSelected, eSpreadDown);
-      kid = kid->GetNextSibling();
-    }
-  }
-  //return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
-#endif
-  // Must call base class to set mSelected state and trigger repaint of frame
-  // Note that in current version, aRange and aSpread are ignored,
-  //   only this frame is considered
-  nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
-
-  nsCOMPtr<nsFrameSelection> frameSelection =
-    aPresContext->PresShell()->FrameSelection();
-  if (frameSelection->GetTableCellSelection()) {
-    // Selection can affect content, border and outline
-    InvalidateOverflowRect();
-  }
-  return NS_OK;
-}
-
 PRIntn
 nsTableCellFrame::GetSkipSides() const
 {
