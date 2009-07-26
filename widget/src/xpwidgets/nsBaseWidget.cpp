@@ -561,14 +561,19 @@ nsTransparencyMode nsBaseWidget::GetTransparencyMode() {
   return eTransparencyOpaque;
 }
 
-void
+PRBool
 nsBaseWidget::StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects)
 {
+  if (mClipRects && mClipRectCount == aRects.Length() &&
+      memcmp(mClipRects, aRects.Elements(), sizeof(nsIntRect)*mClipRectCount) == 0)
+    return PR_FALSE;
+
   mClipRectCount = aRects.Length();
   mClipRects = new nsIntRect[mClipRectCount];
   if (mClipRects) {
     memcpy(mClipRects, aRects.Elements(), sizeof(nsIntRect)*mClipRectCount);
   }
+  return PR_TRUE;
 }
 
 void
