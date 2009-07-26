@@ -563,8 +563,6 @@ protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
-  virtual PRBool ParentDisablesSelection() const; //override default behavior
-
 public:
   PRBool IsRowInserted() const;
   void   SetRowInserted(PRBool aValue);

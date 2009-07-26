@@ -4989,11 +4989,6 @@ nsTextFrame::SetSelectedRange(PRUint32 aStart,
   if (aStart == aEnd)
     return;
 
-  // XXXroc This is stupid, ParentDisablesSelection just returns true. Let's
-  // kill it.
-  if (aSelected && ParentDisablesSelection())
-    return;
-
   if (aType == nsISelectionController::SELECTION_NORMAL) {
     // check whether style allows selection
     PRBool selectable;

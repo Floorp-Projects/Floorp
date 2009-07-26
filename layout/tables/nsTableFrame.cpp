@@ -1477,16 +1477,6 @@ nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
   }
 }
 
-PRBool nsTableFrame::ParentDisablesSelection() const //override default behavior
-{
-  PRBool returnval;
-  if (NS_FAILED(GetSelected(&returnval)))
-    return PR_FALSE;
-  if (returnval)
-    return PR_TRUE;
-  return nsFrame::ParentDisablesSelection();
-}
-
 PRIntn
 nsTableFrame::GetSkipSides() const
 {
