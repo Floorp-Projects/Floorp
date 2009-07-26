@@ -75,17 +75,6 @@
   text-shadow: white -1px -1px .5em, white -1px 1px .5em, white 1px 1px .5em, white 1px -1px .5em;
 }
 
-/*XXX Bug 473152 - Aero Glass clips panel content
-.allTabs-preview:hover:-moz-system-metric(windows-compositor),
-.allTabs-preview[closebuttonhover]:-moz-system-metric(windows-compositor) {
-  background: rgba(0,0,0,.15) url(KUI-background.png) repeat-x;
-}
-
-.allTabs-preview:focus:-moz-system-metric(windows-compositor) {
-  background: rgba(0,0,0,.3) url(KUI-background.png) repeat-x;
-}
-*/
-
 /* ::::: fullscreen window controls ::::: */
 
 #window-controls {

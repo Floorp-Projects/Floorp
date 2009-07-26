@@ -130,17 +130,6 @@ nsBaseContentList::GetNodeAt(PRUint32 aIndex)
   return mElements.SafeObjectAt(aIndex);
 }
 
-void
-nsBaseContentList::AppendElement(nsIContent *aContent)
-{
-  mElements.AppendObject(aContent);
-}
-
-void
-nsBaseContentList::RemoveElement(nsIContent *aContent)
-{
-  mElements.RemoveObject(aContent);
-}
 
 PRInt32
 nsBaseContentList::IndexOf(nsIContent *aContent, PRBool aDoFlush)
@@ -154,19 +143,26 @@ nsBaseContentList::IndexOf(nsIContent* aContent)
   return IndexOf(aContent, PR_TRUE);
 }
 
-void
-nsBaseContentList::Reset()
+void nsBaseContentList::AppendElement(nsIContent *aContent) 
 {
-  mElements.Clear();
+  mElements.AppendObject(aContent);
 }
 
-// static
-void
-nsBaseContentList::Shutdown()
+void nsBaseContentList::RemoveElement(nsIContent *aContent) 
 {
+  mElements.RemoveObject(aContent);
+}
+
+void nsBaseContentList::InsertElementAt(nsIContent* aContent, PRInt32 aIndex)
+{
+  NS_ASSERTION(aContent, "Element to insert must not be null");
+  mElements.InsertObjectAt(aContent, aIndex);
+}
+
+//static
+void nsBaseContentList::Shutdown() {
   NS_IF_RELEASE(gCachedContentList);
 }
-
 
 // nsFormContentList
 

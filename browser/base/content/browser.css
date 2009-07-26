@@ -139,7 +139,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 .ctrlTab-favicon-container,
 .allTabs-favicon-container {
   -moz-box-align: start;
+%ifdef XP_MACOSX
+  -moz-box-pack: end;
+%else
   -moz-box-pack: start;
+%endif
 }
 
 .ctrlTab-favicon,

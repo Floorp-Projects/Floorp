@@ -18,13 +18,13 @@
       form1.insertBefore(input2, input1);
 
 	is(form1.elements["input"].length, "3", "Form 1 'input' has the correct length");
-	todo(form1.elements["input"][0].value == "2", "Form 1 element 1 is correct");
-	todo(form1.elements["input"][1].value == "1", "Form 1 element 2 is correct");
-	todo(form1.elements["input"][2].value == "3", "Form 1 element 3 is correct");
+	is(form1.elements["input"][0].value, "2", "Form 1 element 1 is correct");
+	is(form1.elements["input"][1].value, "1", "Form 1 element 2 is correct");
+	is(form1.elements["input"][2].value, "3", "Form 1 element 3 is correct");
 
-	todo(form1.elements["input"][0].id == "input", "Form 1 element 1 id is correct");
-	todo(form1.elements["input"][1].id == "input1", "Form 1 element 2 id is correct");
-	todo(form1.elements["input"][2].id == "input3", "Form 1 element 3 id is correct");
+	is(form1.elements["input"][0].id, "input", "Form 1 element 1 id is correct");
+	is(form1.elements["input"][1].id, "input1", "Form 1 element 2 id is correct");
+	is(form1.elements["input"][2].id, "input3", "Form 1 element 3 id is correct");
 </script>
 </body>
 </html>

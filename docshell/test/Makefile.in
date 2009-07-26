@@ -76,7 +76,6 @@ _TEST_FILES = \
 		file_bug385434_1.html \
 		file_bug385434_2.html \
 		file_bug385434_3.html \
-		file_bug385434_4.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
