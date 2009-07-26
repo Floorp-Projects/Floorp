@@ -97,6 +97,9 @@ else
 ifeq ($(machine), i686)
   arch = x86
 else
+ifeq ($(machine), i86pc)
+  arch = x86
+else
 ifeq ($(machine), ppc)
   arch = ppc
 else

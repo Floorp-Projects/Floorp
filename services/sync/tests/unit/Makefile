@@ -16,7 +16,11 @@ else
 ifeq ($(sys), MINGW32_NT-5.1)
   os = WINNT
 else
+ifeq ($(sys), SunOS)
+  os = SunOS
+else
   $(error Sorry, your os is unknown/unsupported: $(sys))
+endif
 endif
 endif
 endif
