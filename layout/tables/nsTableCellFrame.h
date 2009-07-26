@@ -235,8 +235,6 @@ protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
-  virtual PRBool ParentDisablesSelection() const; //override default behavior
-
   /**
    * GetSelfOverflow says what effect the cell should have on its own
    * overflow area.  In the separated borders model this should just be

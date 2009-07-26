@@ -596,8 +596,6 @@ protected:
                                       nsIContent **aParentContent, PRInt32 *aContentOffset, 
                                       PRInt32 *aTarget);
 
-  virtual PRBool ParentDisablesSelection() const;
-
   // Fills aCursor with the appropriate information from ui
   static void FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
                                              nsIFrame::Cursor& aCursor);
