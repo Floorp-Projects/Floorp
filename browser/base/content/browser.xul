@@ -423,6 +423,8 @@
                     tooltiptext="&feedButton.tooltip;"
                     onclick="return FeedHandler.onFeedButtonClick(event);">
               <menupopup position="after_end"
+                         id="feed-menu"
+                         chromedir="&locale.dir;"
                          onpopupshowing="return FeedHandler.buildFeedList(this);"
                          oncommand="return FeedHandler.subscribeToFeed(null, event);"
                          onclick="checkForMiddleClick(this, event);"/>
