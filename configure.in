@@ -7953,6 +7953,9 @@ if test "$NECKO_WIFI"; then
     NECKO_WIFI=1
   elif test "$OS_ARCH" = "WINCE"; then
     NECKO_WIFI=1    
+  elif test "$OS_ARCH" = "OS2"; then
+    dnl OS/2 implementation of Necko-WiFi support will be added in bug 506566
+    NECKO_WIFI=
   else
     AC_MSG_ERROR([Necko WiFi scanning not supported on your platform, use --disable-necko-wifi])
   fi
