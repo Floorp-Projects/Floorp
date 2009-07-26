@@ -43,15 +43,7 @@
 #ifndef nsGenericDOMDataNode_h___
 #define nsGenericDOMDataNode_h___
 
-// This bit is set to indicate that if the text node changes to
-// non-whitespace, we may need to create a frame for it. This bit must
-// not be set on nodes that already have a frame.
-#define NS_CREATE_FRAME_IF_NON_WHITESPACE (1 << NODE_TYPE_SPECIFIC_BITS_OFFSET)
-
-// This bit is set to indicate that if the text node changes to
-// whitespace, we may need to reframe it (or its ancestors).
-#define NS_REFRAME_IF_WHITESPACE (1 << (NODE_TYPE_SPECIFIC_BITS_OFFSET + 1))
-
+#include "nsIContent.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3Text.h"
@@ -65,6 +57,18 @@
 #ifdef MOZ_SMIL
 #include "nsISMILAttr.h"
 #endif // MOZ_SMIL
+
+// This bit is set to indicate that if the text node changes to
+// non-whitespace, we may need to create a frame for it. This bit must
+// not be set on nodes that already have a frame.
+#define NS_CREATE_FRAME_IF_NON_WHITESPACE (1 << NODE_TYPE_SPECIFIC_BITS_OFFSET)
+
+// This bit is set to indicate that if the text node changes to
+// whitespace, we may need to reframe it (or its ancestors).
+#define NS_REFRAME_IF_WHITESPACE (1 << (NODE_TYPE_SPECIFIC_BITS_OFFSET + 1))
+
+// This bit is set to indicate that the text may be part of a selection.
+#define NS_TEXT_IN_SELECTION (1 << (NODE_TYPE_SPECIFIC_BITS_OFFSET + 2))
 
 class nsIDOMAttr;
 class nsIDOMEventListener;

@@ -4969,120 +4969,98 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   return !aRect.IsEmpty() && !givenRect.Contains(aRect);
 }
 
-//null range means the whole thing
-NS_IMETHODIMP
-nsTextFrame::SetSelected(nsPresContext* aPresContext,
-                         nsIDOMRange *aRange,
-                         PRBool aSelected,
-                         nsSpread aSpread,
+void
+nsTextFrame::SetSelected(PRBool        aSelected,
                          SelectionType aType)
 {
-  DEBUG_VERIFY_NOT_DIRTY(mState);
-#if 0 //XXXrbs disable due to bug 310318
-  if (mState & NS_FRAME_IS_DIRTY)
-    return NS_ERROR_UNEXPECTED;
-#endif
+  SetSelectedRange(0, mContent->GetText()->GetLength(), aSelected, aType);
+}
 
+void
+nsTextFrame::SetSelectedRange(PRUint32 aStart,
+                              PRUint32 aEnd,
+                              PRBool aSelected,
+                              SelectionType aType)
+{
+  NS_ASSERTION(!GetPrevContinuation(), "Should only be called for primary frame");
+  DEBUG_VERIFY_NOT_DIRTY(mState);
+
+  // Selection is collapsed, which can't affect text frame rendering
+  if (aStart == aEnd)
+    return;
+
+  // XXXroc This is stupid, ParentDisablesSelection just returns true. Let's
+  // kill it.
   if (aSelected && ParentDisablesSelection())
-    return NS_OK;
+    return;
 
   if (aType == nsISelectionController::SELECTION_NORMAL) {
     // check whether style allows selection
     PRBool selectable;
     IsSelectable(&selectable, nsnull);
     if (!selectable)
-      return NS_OK;//do not continue no selection for this frame.
+      return;
   }
 
-  PRBool found = PR_FALSE;
-  if (aRange) {
-    //lets see if the range contains us, if so we must redraw!
-    nsCOMPtr<nsIDOMNode> endNode;
-    PRInt32 endOffset;
-    nsCOMPtr<nsIDOMNode> startNode;
-    PRInt32 startOffset;
-    aRange->GetEndContainer(getter_AddRefs(endNode));
-    aRange->GetEndOffset(&endOffset);
-    aRange->GetStartContainer(getter_AddRefs(startNode));
-    aRange->GetStartOffset(&startOffset);
-    nsCOMPtr<nsIDOMNode> thisNode = do_QueryInterface(GetContent());
+  PRBool anySelected = PR_FALSE;
 
-    if (thisNode == startNode)
-    {
-      if (GetContentEnd() >= startOffset)
-      {
-        found = PR_TRUE;
-        if (thisNode == endNode)
-        { //special case
-          if (endOffset == startOffset) //no need to redraw since drawing takes place with cursor
-            found = PR_FALSE;
+  nsTextFrame* f = this;
+  while (f && f->GetContentEnd() <= aStart) {
+    if (f->GetStateBits() & NS_FRAME_SELECTED_CONTENT) {
+      anySelected = PR_TRUE;
+    }
+    f = static_cast<nsTextFrame*>(f->GetNextContinuation());
+  }
 
-          if (mContentOffset > endOffset)
-            found = PR_FALSE;
-        }
+  nsPresContext* presContext = PresContext();
+  while (f && f->GetContentOffset() < aEnd) {
+    if (aSelected) {
+      f->AddStateBits(NS_FRAME_SELECTED_CONTENT);
+      anySelected = PR_TRUE;
+    } else { // we need to see if any other selection is available.
+      SelectionDetails *details = f->GetSelectionDetails();
+      if (details) {
+        anySelected = PR_TRUE;
+        DestroySelectionDetails(details);
+      } else {
+        f->RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
       }
     }
-    else if (thisNode == endNode)
-    {
-      if (mContentOffset < endOffset)
-        found = PR_TRUE;
-      else
-      {
-        found = PR_FALSE;
-      }
-    }
-    else
-    {
-      found = PR_TRUE;
-    }
-  }
-  else {
-    // null range means the whole thing
-    found = PR_TRUE;
-  }
 
-  if ( aSelected )
-    AddStateBits(NS_FRAME_SELECTED_CONTENT);
-  else
-  { //we need to see if any other selection is available.
-    SelectionDetails *details = GetSelectionDetails();
-    if (!details) {
-      RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
-    } else {
-      DestroySelectionDetails(details);
-    }
-  }
-  if (found) {
-    // If the selection state is changed in this content, we need to reflow
-    // to recompute the overflow area for underline of spellchecking or IME if
-    // their underline is thicker than normal decoration line.
+    // We may need to reflow to recompute the overflow area for
+    // spellchecking or IME underline if their underline is thicker than
+    // the normal decoration line.
     PRBool didHaveOverflowingSelection =
-      (mState & TEXT_SELECTION_UNDERLINE_OVERFLOWED) != 0;
+      (f->GetStateBits() & TEXT_SELECTION_UNDERLINE_OVERFLOWED) != 0;
     nsRect r(nsPoint(0, 0), GetSize());
     PRBool willHaveOverflowingSelection =
-      aSelected && CombineSelectionUnderlineRect(PresContext(), r);
+      aSelected && f->CombineSelectionUnderlineRect(presContext, r);
     if (didHaveOverflowingSelection || willHaveOverflowingSelection) {
-      PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                   nsIPresShell::eStyleChange,
-                                                   NS_FRAME_IS_DIRTY);
+      presContext->PresShell()->FrameNeedsReflow(f,
+                                                 nsIPresShell::eStyleChange,
+                                                 NS_FRAME_IS_DIRTY);
     }
     // Selection might change anything. Invalidate the overflow area.
-    InvalidateOverflowRect();
+    f->InvalidateOverflowRect();
+
+    f = static_cast<nsTextFrame*>(f->GetNextContinuation());
   }
-  if (aSpread == eSpreadDown)
-  {
-    nsIFrame* frame = GetPrevContinuation();
-    while(frame){
-      frame->SetSelected(aPresContext, aRange,aSelected,eSpreadNone, aType);
-      frame = frame->GetPrevContinuation();
+
+  // Scan remaining continuations to see if any are selected
+  while (f && !anySelected) {
+    if (f->GetStateBits() & NS_FRAME_SELECTED_CONTENT) {
+      anySelected = PR_TRUE;
     }
-    frame = GetNextContinuation();
-    while (frame){
-      frame->SetSelected(aPresContext, aRange,aSelected,eSpreadNone, aType);
-      frame = frame->GetNextContinuation();
-    }
+    f = static_cast<nsTextFrame*>(f->GetNextContinuation());
   }
-  return NS_OK;
+
+  if (anySelected) {
+    mContent->SetFlags(NS_TEXT_IN_SELECTION);
+  } else {
+    // This is only legal because there is only one presentation for the
+    // content with a selection
+    mContent->UnsetFlags(NS_TEXT_IN_SELECTION);
+  }
 }
 
 NS_IMETHODIMP
@@ -6421,7 +6399,18 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   SetLength(contentLength);
 
-  Invalidate(nsRect(nsPoint(0, 0), GetSize()));
+  if (mContent->HasFlag(NS_TEXT_IN_SELECTION)) {
+    // XXXroc Watch out, this could be slow!!! Speed up GetSelectionDetails?
+    SelectionDetails* details = GetSelectionDetails();
+    if (details) {
+      AddStateBits(NS_FRAME_SELECTED_CONTENT);
+      DestroySelectionDetails(details);
+    } else {
+      RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
+    }
+  }
+
+  Invalidate(aMetrics.mOverflowArea);
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);

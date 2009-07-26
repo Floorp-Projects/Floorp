@@ -155,12 +155,22 @@ public:
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint);
   ContentOffsets GetCharacterOffsetAtFramePoint(const nsPoint &aPoint);
 
-  NS_IMETHOD SetSelected(nsPresContext* aPresContext,
-                         nsIDOMRange *aRange,
-                         PRBool aSelected,
-                         nsSpread aSpread,
-                         SelectionType aType);
-  
+  /**
+   * This is called only on the primary text frame. It indicates that
+   * the selection state of the given character range has changed.
+   * Text in the range is unconditionally invalidated
+   * (nsTypedSelection::Repaint depends on this).
+   * @param aSelected true if the selection has been added to the range,
+   * false otherwise
+   * @param aType the type of selection added or removed
+   */
+  virtual void SetSelected(PRBool        aSelected,
+                           SelectionType aType);
+  void SetSelectedRange(PRUint32 aStart,
+                        PRUint32 aEnd,
+                        PRBool aSelected,
+                        SelectionType aType);
+
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
