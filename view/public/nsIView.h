@@ -63,10 +63,9 @@ enum nsViewVisibility {
 };
 
 // IID for the nsIView interface
-// 1377A30E-99E6-42FA-9A2E-EEEC6B31B7B6
 #define NS_IVIEW_IID    \
-{ 0x1377ae0e, 0x99e6, 0x42fa, \
-{ 0x9a, 0x2e, 0xee, 0xec, 0x6b, 0x31, 0xb7, 0xb6 } }
+  { 0x18b5f32a, 0x921a, 0x4772, \
+    { 0xa4, 0x3d, 0xf3, 0x04, 0x5c, 0xb9, 0xc2, 0x59 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -87,14 +86,10 @@ enum nsViewVisibility {
 // is z-index:auto also
 #define NS_VIEW_FLAG_TOPMOST              0x0010
 
-// If set, the view disowns the widget and leaves it up
-// to other code to destroy it.
-#define NS_VIEW_DISOWNS_WIDGET             0x0020
-
 // If set, the view should always invalidate its frame
 // during a scroll instead of doing a BitBlt.  This bit
 // is propagated down to children.
-#define NS_VIEW_FLAG_INVALIDATE_ON_SCROLL  0x0040
+#define NS_VIEW_FLAG_INVALIDATE_ON_SCROLL  0x0020
 
 struct nsViewZIndex {
   PRBool mIsAuto;
@@ -315,14 +310,6 @@ public:
    * Returns PR_TRUE if the view has a widget associated with it.
    */
   PRBool HasWidget() const { return mWindow != nsnull; }
-
-  /**
-   * If called, will make the view disown the widget and leave it up
-   * to other code to destroy it.
-   */
-  void DisownWidget() {
-    mVFlags |= NS_VIEW_DISOWNS_WIDGET;
-  }
 
   /**
    * Make aWidget direct its events to this view.
