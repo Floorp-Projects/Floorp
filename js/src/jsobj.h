@@ -141,6 +141,11 @@ struct JSObjectMap {
         }                                                                     \
     JS_END_MACRO
 
+/*
+ * The following macro has been copied to jsd/jsd_val.c. If making changes to
+ * OBJ_TO_OUTER_OBJECT, please update jsd/jsd_val.c as well.
+ */
+
 #define OBJ_TO_OUTER_OBJECT(cx,obj)                                           \
     JS_BEGIN_MACRO                                                            \
         JSClass *clasp_ = OBJ_GET_CLASS(cx, obj);                             \

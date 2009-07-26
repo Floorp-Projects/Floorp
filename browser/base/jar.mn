@@ -60,14 +60,6 @@ browser.jar:
 *       content/browser/softwareUpdateOverlay.xul  (content/softwareUpdateOverlay.xul)
 #endif
 *       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
-#ifdef MOZ_USE_GENERIC_BRANDING
-% content branding %content/branding/ xpcnativewrappers=yes
-  content/branding/about.png                     (branding/about.png)
-  content/branding/aboutCredits.png              (branding/aboutCredits.png)
-  content/branding/aboutFooter.png               (branding/aboutFooter.png)
-  content/branding/icon48.png                    (branding/icon48.png)
-  content/branding/icon64.png                    (branding/icon64.png)
-#endif
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)
 % override chrome://global/content/license.html chrome://browser/content/license.html
