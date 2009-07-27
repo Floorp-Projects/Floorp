@@ -6251,7 +6251,7 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   }
 
   // If we have a parent we must flush the parent too to ensure that our
-  // container is reflown if its size was changed.  But if it's not safe to
+  // container is reflowed if its size was changed.  But if it's not safe to
   // flush ourselves, then don't flush the parent, since that can cause things
   // like resizes of our frame's widget, which we can't handle while flushing
   // is unsafe.

@@ -89,7 +89,7 @@ var InlineSpellCheckerUI = {
     if (spellsel.rangeCount == 0)
       return; // easy case - no misspellings
 
-    var range = this.mInlineSpellChecker.getMispelledWord(rangeParent,
+    var range = this.mInlineSpellChecker.getMisspelledWord(rangeParent,
                                                           rangeOffset);
     if (! range)
       return; // not over a misspelled word
