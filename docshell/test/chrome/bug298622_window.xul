@@ -75,19 +75,29 @@
       // Make sure we unsuppress painting before continuing
       SimpleTest.executeSoon(nextTest);
       yield;
-      
+
       // Search for some text that's on the second page (but not on
       // the first page), and verify that it can be found.
+      var findFocused = false;
       gFindBar = document.getElementById("FindToolbar");
+      gFindBar._findField.inputField.onfocus = function () {
+        findFocused = true;
+      };
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
       enterStringIntoFindField("A generic page");
 
       // Make sure the key events above have time to be processed
       // before continuing
-      SimpleTest.executeSoon(nextTest);
+      waitForTrue(function() {
+        return (
+          TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+          "a generic page");
+      }, nextTest, 20);
       yield;
 
+      ok(findFocused, 
+        "find input field doesn't have the focus, find operation will fail!");
       is(gFindBar._findField.inputField.value, "A generic page",
         "expected text not present in find input field");
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
@@ -113,6 +123,16 @@
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
       enterStringIntoFindField("find this");
+
+      // Make sure the key events above have time to be processed
+      // before continuing
+      waitForTrue(function() {
+        return (
+          TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+          "find this");
+      }, nextTest, 20);
+      yield;
+
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "find this",
          "find failed on page loaded from bfcache");

@@ -102,12 +102,7 @@ else
 MAKE_JARS_TARGET = $(FINAL_TARGET)
 endif
 
-#
 # The VERSION_NUMBER is suffixed onto the end of the DLLs we ship.
-# Since the longest of these is 5 characters without the suffix,
-# be sure to not set VERSION_NUMBER to anything longer than 3 
-# characters for Win16's sake.
-#
 VERSION_NUMBER		= 50
 
 ifeq ($(HOST_OS_ARCH),WINNT)

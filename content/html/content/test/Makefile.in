@@ -83,6 +83,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug332893-4.html \
 		test_bug332893-5.html \
 		test_bug332893-6.html \
+		test_bug332893-7.html \
 		bug340800_iframe.txt \
 		test_bug340800.html \
 		test_bug353415-1.html \

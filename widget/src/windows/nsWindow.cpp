@@ -2299,11 +2299,22 @@ NS_IMETHODIMP nsWindow::Update()
  *
  **************************************************************/
 
+static PRBool
+ClipRegionContainedInRect(const nsTArray<nsIntRect>& aClipRects,
+                          const nsIntRect& aRect)
+{
+  for (PRUint32 i = 0; i < aClipRects.Length(); ++i) {
+    if (!aRect.Contains(aClipRects[i]))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 void
 nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
                  const nsTArray<Configuration>& aConfigurations)
 {
-  // We can use SW_SCROLLCHILDREN if all the windows that intersect the
+  // We use SW_SCROLLCHILDREN if all the windows that intersect the
   // affected area are moving by the scroll amount.
   // First, build the set of widgets that are to be moved by the scroll
   // amount.
@@ -2338,7 +2349,25 @@ nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
     }
   }
 
-  nsIntRect destRect = aSource + aDelta;
+  if (flags & SW_SCROLLCHILDREN) {
+    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+      const Configuration& configuration = aConfigurations[i];
+      nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+      // Widgets that will be scrolled by SW_SCROLLCHILDREN but which
+      // will be partly visible outside the scroll area after scrolling
+      // must be invalidated, because SW_SCROLLCHILDREN doesn't
+      // update parts of widgets outside the area it scrolled, even
+      // if it moved them.
+      if (w->mBounds.Intersects(affectedRect) &&
+          !ClipRegionContainedInRect(configuration.mClipRegion,
+                                     affectedRect - (w->mBounds.TopLeft() + aDelta))) {
+        w->Invalidate(PR_FALSE);
+      }
+    }
+  }
+
+  // Note that when SW_SCROLLCHILDREN is used, WM_MOVE messages are sent
+  // which will update the mBounds of the children.
   RECT clip = { affectedRect.x, affectedRect.y, affectedRect.XMost(), affectedRect.YMost() };
   ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, NULL, NULL, flags);
 
@@ -4334,7 +4363,21 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         else
           event.mSizeMode = nsSizeMode_Normal;
 #else
-        event.mSizeMode = mSizeMode;
+        // Bug 504499 - Can't find a way to query if the window is maximized
+        // on Windows CE. So as a hacky workaround, we'll assume that if the
+        // window size exactly fills the screen, then it must be maximized.
+        RECT wr;
+        ::GetWindowRect(mWnd, &wr);
+
+        if (::IsIconic(mWnd))
+          event.mSizeMode = nsSizeMode_Minimized;
+        else if (wr.left   == 0 &&
+                 wr.top    == 0 &&
+                 wr.right  == ::GetSystemMetrics(SM_CXSCREEN) &&
+                 wr.bottom == ::GetSystemMetrics(SM_CYSCREEN))
+          event.mSizeMode = nsSizeMode_Maximized;
+        else
+          event.mSizeMode = nsSizeMode_Normal;
 #endif
         InitEvent(event);
 
@@ -5526,9 +5569,15 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     // We put the region back just below, anyway.
     ::SetWindowRgn(w->mWnd, NULL, TRUE);
 #endif
-    w->Resize(configuration.mBounds.x, configuration.mBounds.y,
-              configuration.mBounds.width, configuration.mBounds.height,
-              PR_TRUE);
+    nsIntRect bounds;
+    w->GetBounds(bounds);
+    if (bounds.Size() != configuration.mBounds.Size()) {
+      w->Resize(configuration.mBounds.x, configuration.mBounds.y,
+                configuration.mBounds.width, configuration.mBounds.height,
+                PR_TRUE);
+    } else if (bounds.TopLeft() != configuration.mBounds.TopLeft()) {
+      w->Move(configuration.mBounds.x, configuration.mBounds.y);
+    }
     nsresult rv = w->SetWindowClipRegion(configuration.mClipRegion, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -5561,6 +5610,11 @@ nsresult
 nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                               PRBool aIntersectWithExisting)
 {
+  if (!aIntersectWithExisting) {
+    if (!StoreWindowClipRegion(aRects))
+      return NS_OK;
+  }
+
   HRGN dest = CreateHRGNFromArray(aRects);
   if (!dest)
     return NS_ERROR_OUT_OF_MEMORY;

@@ -48,7 +48,8 @@
 #include "nsIServiceManager.h"
 #include "nsIAtom.h"
 #include "nsQuickSort.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -148,7 +149,9 @@ NS_IMPL_ISUPPORTS1(nsLayoutDebuggingTools, nsILayoutDebuggingTools)
 NS_IMETHODIMP
 nsLayoutDebuggingTools::Init(nsIDOMWindow *aWin)
 {
-    mPrefs = do_GetService(NS_PREF_CONTRACTID);
+    mPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!mPrefs)
+        return NS_ERROR_UNEXPECTED;
 
     {
         nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWin);
@@ -579,7 +582,9 @@ nsLayoutDebuggingTools::SetBoolPrefAndRefresh(const char * aPrefName,
     NS_ENSURE_TRUE(mPrefs && aPrefName, NS_OK);
 
     mPrefs->SetBoolPref(aPrefName, aNewVal);
-    mPrefs->SavePrefFile(nsnull);
+    nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(mPrefs);
+    NS_ENSURE_STATE(prefService);
+    prefService->SavePrefFile(nsnull);
 
     ForceRefresh();
 

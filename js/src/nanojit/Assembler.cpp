@@ -619,8 +619,10 @@ namespace nanojit
             asm_spilli(i, resv, pop);
             _allocator.retire(rr);    // free any register associated with entry
         }
-        if (index)
+        if (index) {
+            NanoAssert(_activation.entry[index] == i);
             arFree(index);            // free any stack stack space associated with entry
+        }
         i->resv()->clear();
     }
 
@@ -1602,7 +1604,6 @@ namespace nanojit
     {
         AR &ar = _activation;
         LIns *i = ar.entry[idx];
-        NanoAssert(i != 0);
         do {
             ar.entry[idx] = 0;
             idx--;

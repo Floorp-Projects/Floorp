@@ -173,7 +173,7 @@ classic.jar:
         skin/classic/aero/browser/preferences/saveFile.png           (preferences/saveFile-aero.png)
         skin/classic/aero/browser/preferences/preferences.css        (preferences/preferences.css)
         skin/classic/aero/browser/preferences/applications.css       (preferences/applications.css)
-        skin/classic/aero/browser/tabbrowser/alltabs.png                        (tabbrowser/alltabs.png)
+        skin/classic/aero/browser/tabbrowser/alltabs.png                        (tabbrowser/alltabs-aero.png)
         skin/classic/aero/browser/tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png   (tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png)
         skin/classic/aero/browser/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png)
         skin/classic/aero/browser/tabbrowser/newtab.png                         (tabbrowser/newtab-aero.png)

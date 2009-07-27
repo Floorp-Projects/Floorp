@@ -56,7 +56,7 @@ interface nsIAutoCompleteSession : nsISupports {
     /* onStopLookup is called each time the user press a key */
     void onStopLookup();
 
-    /* onAutoComplete is called either when the user press enter/return or when the input element loose focus */
+    /* onAutoComplete is called either when the user press enter/return or when the input element loses focus */
     void onAutoComplete(in wstring searchString, in nsIAutoCompleteResults previousSearchResult,
                         in nsIAutoCompleteListener listener);
 };

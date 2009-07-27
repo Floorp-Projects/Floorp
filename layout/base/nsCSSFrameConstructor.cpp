@@ -1269,7 +1269,7 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                "Child list without containing block?");
   
   // Insert the frames hanging out in aItems.  We can use SetInitialChildList()
-  // if the containing block hasn't been reflown yet (so NS_FRAME_FIRST_REFLOW
+  // if the containing block hasn't been reflowed yet (so NS_FRAME_FIRST_REFLOW
   // is set) and doesn't have any frames in the aChildListName child list yet.
   nsIFrame* firstChild = containingBlock->GetFirstChild(aChildListName);
   nsresult rv = NS_OK;
@@ -5725,13 +5725,13 @@ AdjustAppendParentForAfterContent(nsPresContext* aPresContext,
 static nsIFrame*
 FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aAfterFrame)
 {
-  nsFrameList childList(aParentFrame->GetFirstChild(nsnull));
   if (aAfterFrame) {
+    nsFrameList childList(aParentFrame->GetFirstChild(nsnull));
     NS_ASSERTION(aAfterFrame->GetParent() == aParentFrame, "Wrong parent");
     return childList.GetPrevSiblingFor(aAfterFrame);
   }
 
-  return childList.LastChild();
+  return aParentFrame->GetLastChild(nsnull);
 }
 
 /**

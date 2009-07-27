@@ -229,8 +229,8 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
                                       nscoord aX, nscoord aY, nsIFrame* aForChild,
                                       PRUint32 aFlags)
 {
-  if (aForChild == mInner.mScrolledFrame) {
-    if (!(aFlags & INVALIDATE_NOTIFY_ONLY)) {
+  if (aForChild) {
+    if (aForChild == mInner.mScrolledFrame) {
       // restrict aDamageRect to the scrollable view's bounds
       nsRect damage = aDamageRect + nsPoint(aX, aY);
       nsRect r;
@@ -249,20 +249,20 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
             (aFlags & INVALIDATE_CROSS_DOC) != 0);
       }
       return;
-    }
-  } else if (aForChild == mInner.mHScrollbarBox) {
-    if (!mInner.mHasHorizontalScrollbar) {
-      // Our scrollbars may send up invalidations even when they're collapsed,
-      // because we just size a collapsed scrollbar to empty and some
-      // descendants may be non-empty. Suppress that invalidation here.
-      return;
-    }
-  } else if (aForChild == mInner.mVScrollbarBox) {
-    if (!mInner.mHasVerticalScrollbar) {
-      // Our scrollbars may send up invalidations even when they're collapsed,
-      // because we just size a collapsed scrollbar to empty and some
-      // descendants may be non-empty. Suppress that invalidation here.
-      return;
+    } else if (aForChild == mInner.mHScrollbarBox) {
+      if (!mInner.mHasHorizontalScrollbar) {
+        // Our scrollbars may send up invalidations even when they're collapsed,
+        // because we just size a collapsed scrollbar to empty and some
+        // descendants may be non-empty. Suppress that invalidation here.
+        return;
+      }
+    } else if (aForChild == mInner.mVScrollbarBox) {
+      if (!mInner.mHasVerticalScrollbar) {
+        // Our scrollbars may send up invalidations even when they're collapsed,
+        // because we just size a collapsed scrollbar to empty and some
+        // descendants may be non-empty. Suppress that invalidation here.
+        return;
+      }
     }
   }
  

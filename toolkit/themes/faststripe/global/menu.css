@@ -137,10 +137,7 @@ menuitem.menuitem-iconic > .menu-iconic-left {
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
-  border: 2px solid transparent;
-}
-menubar > menu[_moz-menuactive="true"][open="true"] {
-  border-width: 3px 1px 1px 3px;
+  padding: 1px 2px 2px 2px;
 }
 menubar > menu[_moz-menuactive="true"],
 menubar > menu[_moz-menuactive="true"][open="true"] {
@@ -165,6 +162,7 @@ menupopup > menu,
 popup > menu,
 menupopup > menuitem,
 popup > menuitem {
+  padding-bottom: 1px;
   max-width: 42em;
 }
 
@@ -257,10 +255,7 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  padding-left: 4px;
-  padding-right: 4px;
-  padding-top: 2px;
-  padding-bottom: 0px;
+  margin: 3px 1px 5px 1px;
   border-bottom: 1px solid gray;
 }
 

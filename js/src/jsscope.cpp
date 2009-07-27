@@ -91,7 +91,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
-    if (scope->object == obj)
+    if (scope->owned())
         return scope;
 
     /*
@@ -134,8 +134,8 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 void
 JSScope::initMinimal(JSContext *cx)
 {
-    js_LeaveTraceIfGlobalObject(cx, object);
-    shape = 0;
+    shape = js_GenerateShape(cx, false);
+    emptyScope = NULL;
     hashShift = JS_DHASH_BITS - MIN_SCOPE_SIZE_LOG2;
     entryCount = removedCount = 0;
     table = NULL;
@@ -197,6 +197,7 @@ JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj)
     scope->nrefs = 1;
     scope->freeslot = JSSLOT_FREE(clasp);
     scope->flags = 0;
+    js_LeaveTraceIfGlobalObject(cx, obj);
     scope->initMinimal(cx);
 
 #ifdef JS_THREADSAFE
@@ -204,6 +205,36 @@ JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj)
 #endif
     JS_RUNTIME_METER(cx->runtime, liveScopes);
     JS_RUNTIME_METER(cx->runtime, totalScopes);
+    return scope;
+}
+
+JSScope *
+JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
+{
+    JS_ASSERT(!emptyScope);
+
+    JSScope *scope = (JSScope *) JS_malloc(cx, sizeof(JSScope));
+    if (!scope)
+        return NULL;
+
+    scope->map.ops = map.ops;
+    scope->object = NULL;
+
+    /*
+     * This scope holds a reference to the new empty scope. Our only caller,
+     * getEmptyScope, also promises to incref on behalf of its caller.
+     */
+    scope->nrefs = 2;
+    scope->freeslot = JSSLOT_FREE(clasp);
+    scope->flags = 0;
+    scope->initMinimal(cx);
+
+#ifdef JS_THREADSAFE
+    js_InitTitle(cx, &scope->title);
+#endif
+    JS_RUNTIME_METER(cx->runtime, liveScopes);
+    JS_RUNTIME_METER(cx->runtime, totalScopes);
+    emptyScope = scope;
     return scope;
 }
 
@@ -222,6 +253,8 @@ JSScope::destroy(JSContext *cx, JSScope *scope)
 #endif
     if (scope->table)
         JS_free(cx, scope->table);
+    if (scope->emptyScope)
+        scope->emptyScope->drop(cx, NULL);
 
     LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= scope->entryCount);
     JS_RUNTIME_UNMETER(cx->runtime, liveScopes);
@@ -1002,8 +1035,9 @@ JSScope::reportReadOnlyScope(JSContext *cx)
 static inline void
 js_MakeScopeShapeUnique(JSContext *cx, JSScope *scope)
 {
-    js_LeaveTraceIfGlobalObject(cx, scope->object);
-    scope->shape = js_GenerateShape(cx, JS_FALSE);
+    if (scope->object)
+        js_LeaveTraceIfGlobalObject(cx, scope->object);
+    scope->shape = js_GenerateShape(cx, false);
 }
 
 JSScopeProperty *
@@ -1525,6 +1559,7 @@ JSScope::clear(JSContext *cx)
     if (table)
         free(table);
     clearMiddleDelete();
+    js_LeaveTraceIfGlobalObject(cx, object);
     initMinimal(cx);
     JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
 }

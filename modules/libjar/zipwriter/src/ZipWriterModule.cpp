@@ -43,7 +43,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeflateConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsZipWriter)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo components[] =
 {
   {
     DEFLATECONVERTER_CLASSNAME,

@@ -248,9 +248,8 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 
     JSScope* scope = OBJ_SCOPE(obj);
     uint32 slot;
-    if (scope->object == obj) {
-        if (sprop == scope->lastProp || scope->has(sprop))
-            goto exit_trace;
+    if (scope->owned()) {
+        JS_ASSERT(!scope->has(sprop));
     } else {
         scope = js_GetMutableScope(cx, obj);
         if (!scope)
@@ -408,8 +407,13 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     if (!closure)
         return NULL;
 
-    OBJ_SCOPE(proto)->hold();
-    closure->map = proto->map;
+    JSScope *scope = OBJ_SCOPE(proto)->getEmptyScope(cx, &js_FunctionClass);
+    if (!scope) {
+        closure->map = NULL;
+        return NULL;
+    }
+
+    closure->map = &scope->map;
     closure->classword = jsuword(&js_FunctionClass);
     closure->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     closure->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
