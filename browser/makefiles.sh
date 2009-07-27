@@ -82,15 +82,10 @@ browser/themes/pinstripe/Makefile
 browser/themes/winstripe/browser/Makefile
 browser/themes/winstripe/communicator/Makefile
 browser/themes/winstripe/Makefile
+$MOZ_BRANDING_DIRECTORY/Makefile
+$MOZ_BRANDING_DIRECTORY/content/Makefile
+$MOZ_BRANDING_DIRECTORY/locales/Makefile
 "
-
-if test -n "$MOZ_BRANDING_DIRECTORY"; then
-  add_makefiles "
-    $MOZ_BRANDING_DIRECTORY/Makefile
-    $MOZ_BRANDING_DIRECTORY/content/Makefile
-    $MOZ_BRANDING_DIRECTORY/locales/Makefile
-  "
-fi
 
 if [ "$ENABLE_TESTS" ]; then
   add_makefiles "

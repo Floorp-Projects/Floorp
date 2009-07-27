@@ -2277,7 +2277,7 @@ moz_gtk_tab_paint(GdkDrawable* drawable, GdkRectangle* rect,
                                 GTK_POS_TOP : GTK_POS_BOTTOM );
     } else {
         /* Draw the tab and the gap
-         * We want the gap to be positionned exactly on the tabpanel top
+         * We want the gap to be positioned exactly on the tabpanel top
          * border; since tabbox.css may set a negative margin so that the tab
          * frame rect already overlaps the tabpanel frame rect, we need to take
          * that into account when drawing. To that effect, nsNativeThemeGTK

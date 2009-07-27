@@ -65,7 +65,7 @@ namespace {
  *        An iterator at the end of the string to check for the pattern.
  * @param aEscapeChar
  *        The character to use for escaping symbols in the pattern.
- * @returns 1 if the pattern is found, 0 otherwise.
+ * @return 1 if the pattern is found, 0 otherwise.
  */
 int
 likeCompare(nsAString::const_iterator aPatternItr,
@@ -149,6 +149,159 @@ likeCompare(nsAString::const_iterator aPatternItr,
   return aStringItr == aStringEnd;
 }
 
+/**
+ * This class manages a dynamic array.  It can represent an array of any 
+ * reasonable size, but if the array is "N" elements or smaller, it will be
+ * stored using fixed space inside the auto array itself.  If the auto array
+ * is a local variable, this internal storage will be allocated cheaply on the
+ * stack, similar to nsAutoString.  If a larger size is requested, the memory
+ * will be dynamically allocated from the heap.  Since the destructor will
+ * free any heap-allocated memory, client code doesn't need to care where the
+ * memory came from.
+ */
+template <class T, size_t N> class AutoArray
+{
+
+public:
+
+  AutoArray(size_t size)
+  : mBuffer(size <= N ? mAutoBuffer : new T[size])
+  {
+  }
+
+  ~AutoArray()
+  { 
+    if (mBuffer != mAutoBuffer)
+      delete[] mBuffer; 
+  }
+
+  /**
+   * Return the pointer to the allocated array.
+   * @note If the array allocation failed, get() will return NULL!
+   *
+   * @return the pointer to the allocated array
+   */
+  T *get() 
+  {
+    return mBuffer; 
+  }
+
+private:
+  T *mBuffer;           // Points to mAutoBuffer if we can use it, heap otherwise.
+  T mAutoBuffer[N];     // The internal memory buffer that we use if we can.
+};
+
+/**
+ * Compute the Levenshtein Edit Distance between two strings.
+ * 
+ * @param aStringS
+ *        a string
+ * @param aStringT
+ *        another string
+ * @param _result
+ *        an outparam that will receive the edit distance between the arguments
+ * @return a Sqlite result code, e.g. SQLITE_OK, SQLITE_NOMEM, etc.
+ */
+int
+levenshteinDistance(const nsAString &aStringS,
+                    const nsAString &aStringT,
+                    int *_result)
+{
+    // Set the result to a non-sensical value in case we encounter an error.
+    *_result = -1;
+
+    const PRUint32 sLen = aStringS.Length();
+    const PRUint32 tLen = aStringT.Length();
+
+    if (sLen == 0) {
+      *_result = tLen;
+      return SQLITE_OK;
+    }
+    if (tLen == 0) {
+      *_result = sLen;
+      return SQLITE_OK;
+    }
+
+    // Notionally, Levenshtein Distance is computed in a matrix.  If we 
+    // assume s = "span" and t = "spam", the matrix would look like this:
+    //    s -->
+    //  t          s   p   a   n
+    //  |      0   1   2   3   4
+    //  V  s   1   *   *   *   *
+    //     p   2   *   *   *   *
+    //     a   3   *   *   *   *
+    //     m   4   *   *   *   *
+    //
+    // Note that the row width is sLen + 1 and the column height is tLen + 1,
+    // where sLen is the length of the string "s" and tLen is the length of "t".
+    // The first row and the first column are initialized as shown, and
+    // the algorithm computes the remaining cells row-by-row, and
+    // left-to-right within each row.  The computation only requires that
+    // we be able to see the current row and the previous one.
+
+    // Allocate memory for two rows.  Use AutoArray's to manage the memory
+    // so we don't have to explicitly free it, and so we can avoid the expense
+    // of memory allocations for relatively small strings.
+    AutoArray<int, nsAutoString::kDefaultStorageSize> row1(sLen + 1);
+    AutoArray<int, nsAutoString::kDefaultStorageSize> row2(sLen + 1);
+
+    // Declare the raw pointers that will actually be used to access the memory.
+    int *prevRow = row1.get();
+    NS_ENSURE_TRUE(prevRow, SQLITE_NOMEM);
+    int *currRow = row2.get();
+    NS_ENSURE_TRUE(currRow, SQLITE_NOMEM);
+
+    // Initialize the first row.
+    for (PRUint32 i = 0; i <= sLen; i++)
+        prevRow[i] = i;
+
+    const PRUnichar *s = aStringS.BeginReading();
+    const PRUnichar *t = aStringT.BeginReading();
+
+    // Compute the empty cells in the "matrix" row-by-row, starting with
+    // the second row.
+    for (PRUint32 ti = 1; ti <= tLen; ti++) {
+
+        // Initialize the first cell in this row.
+        currRow[0] = ti;
+
+        // Get the character from "t" that corresponds to this row.
+        const PRUnichar tch = t[ti - 1];
+
+        // Compute the remaining cells in this row, left-to-right,
+        // starting at the second column (and first character of "s").
+        for (PRUint32 si = 1; si <= sLen; si++) {
+            
+            // Get the character from "s" that corresponds to this column,
+            // compare it to the t-character, and compute the "cost".
+            const PRUnichar sch = s[si - 1];
+            int cost = (sch == tch) ? 0 : 1;
+
+            // ............ We want to calculate the value of cell "d" from
+            // ...ab....... the previously calculated (or initialized) cells
+            // ...cd....... "a", "b", and "c", where d = min(a', b', c').
+            // ............ 
+            int aPrime = prevRow[si - 1] + cost;
+            int bPrime = prevRow[si] + 1;
+            int cPrime = currRow[si - 1] + 1;
+            currRow[si] = NS_MIN(aPrime, NS_MIN(bPrime, cPrime));
+        }
+
+        // Advance to the next row.  The current row becomes the previous
+        // row and we recycle the old previous row as the new current row.
+        // We don't need to re-initialize the new current row since we will
+        // rewrite all of its cells anyway.
+        int *oldPrevRow = prevRow;
+        prevRow = currRow;
+        currRow = oldPrevRow;
+    }
+
+    // The final result is the value of the last cell in the last row.
+    // Note that that's now in the "previous" row, since we just swapped them.
+    *_result = prevRow[sLen];
+    return SQLITE_OK;
+}
+
 } // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,16 +316,61 @@ registerFunctions(sqlite3 *aDB)
     int enc;
     void *pContext;
     void (*xFunc)(::sqlite3_context*, int, sqlite3_value**);
-  } functions[] = {
-    {"lower", 1, SQLITE_UTF16, 0,        caseFunction},
-    {"lower", 1, SQLITE_UTF8,  0,        caseFunction},
-    {"upper", 1, SQLITE_UTF16, (void*)1, caseFunction},
-    {"upper", 1, SQLITE_UTF8,  (void*)1, caseFunction},
+  };
+  
+  Functions functions[] = {
+    {"lower",               
+      1, 
+      SQLITE_UTF16, 
+      0,        
+      caseFunction},
+    {"lower",               
+      1, 
+      SQLITE_UTF8,  
+      0,        
+      caseFunction},
+    {"upper",               
+      1, 
+      SQLITE_UTF16, 
+      (void*)1, 
+      caseFunction},
+    {"upper",               
+      1, 
+      SQLITE_UTF8,  
+      (void*)1, 
+      caseFunction},
 
-    {"like",  2, SQLITE_UTF16, 0,        likeFunction},
-    {"like",  2, SQLITE_UTF8,  0,        likeFunction},
-    {"like",  3, SQLITE_UTF16, 0,        likeFunction},
-    {"like",  3, SQLITE_UTF8,  0,        likeFunction},
+    {"like",                
+      2, 
+      SQLITE_UTF16, 
+      0,        
+      likeFunction},
+    {"like",                
+      2, 
+      SQLITE_UTF8,  
+      0,        
+      likeFunction},
+    {"like",                
+      3, 
+      SQLITE_UTF16, 
+      0,        
+      likeFunction},
+    {"like",                
+      3, 
+      SQLITE_UTF8,  
+      0,        
+      likeFunction},
+
+    {"levenshteinDistance", 
+      2, 
+      SQLITE_UTF16, 
+      0,        
+      levenshteinDistanceFunction},
+    {"levenshteinDistance", 
+      2, 
+      SQLITE_UTF8,  
+      0,        
+      levenshteinDistanceFunction},
   };
 
   int rv = SQLITE_OK;
@@ -244,6 +442,41 @@ likeFunction(sqlite3_context *aCtx,
   B.EndReading(endPattern);
   ::sqlite3_result_int(aCtx, likeCompare(itrPattern, endPattern, itrString,
                                          endString, E));
+}
+
+void levenshteinDistanceFunction(sqlite3_context *aCtx,
+                                 int aArgc,
+                                 sqlite3_value **aArgv)
+{
+  NS_ASSERTION(2 == aArgc, "Invalid number of arguments!");
+
+  // If either argument is a SQL NULL, then return SQL NULL.
+  if (::sqlite3_value_type(aArgv[0]) == SQLITE_NULL ||
+      ::sqlite3_value_type(aArgv[1]) == SQLITE_NULL) {
+    ::sqlite3_result_null(aCtx);
+    return;
+  }
+
+  int aLen = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(PRUnichar);
+  const PRUnichar *a = static_cast<const PRUnichar *>(::sqlite3_value_text16(aArgv[0]));
+
+  int bLen = ::sqlite3_value_bytes16(aArgv[1]) / sizeof(PRUnichar);
+  const PRUnichar *b = static_cast<const PRUnichar *>(::sqlite3_value_text16(aArgv[1]));
+
+  // Compute the Levenshtein Distance, and return the result (or error).
+  int distance = -1;
+  const nsDependentString A(a, aLen);
+  const nsDependentString B(b, bLen);
+  int status = levenshteinDistance(A, B, &distance);
+  if (status == SQLITE_OK) {
+    ::sqlite3_result_int(aCtx, distance);    
+  }
+  else if (status == SQLITE_NOMEM) {
+    ::sqlite3_result_error_nomem(aCtx);
+  }
+  else {
+    ::sqlite3_result_error(aCtx, "User function returned error code", -1);
+  }
 }
 
 } // namespace storage

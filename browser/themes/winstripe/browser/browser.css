@@ -2027,13 +2027,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-appearance: none;
   background: rgba(27%,27%,27%,.9) url(KUI-background.png) repeat-x;
   color: white;
-  border: 1px solid rgba(100%,100%,100%,.15);
+  border-style: none;
   -moz-border-radius: 20px;
 }
 
 .KUI-panel[level="top"] {
   background-color: rgba(27%,27%,27%,.65);
-  border-style: none;
 }
 
 .KUI-panel-closebutton {
@@ -2071,44 +2070,41 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 /* Ctrl-Tab */
 
 #ctrlTab-panel {
-  padding: 20px 10px 15px;
+  padding: 20px 10px 10px;
   font-weight: bold;
   text-shadow: 0 0 1px rgb(27%,27%,27%), 0 0 3px rgb(27%,27%,27%);
-}
-
-.ctrlTab-preview:not(#ctrlTab-showAll) .ctrlTab-preview-inner {
-  padding-bottom: 2px;
 }
 
 .ctrlTab-preview:not(#ctrlTab-showAll) .tabPreview-canvas {
   margin-bottom: 2px;
 }
 
-.ctrlTab-preview:focus:not(#ctrlTab-showAll) .ctrlTab-preview-inner {
-  background-color: #ccc;
-  color: black;
-  text-shadow: 0 0 1px white;
-  -moz-box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 0 5px 1px Highlight, 0 0 8px white;
-  padding: 2px;
-  margin: -2px -2px 0;
+.ctrlTab-preview .ctrlTab-preview-inner {
+  padding-bottom: 10px;
 }
 
-.ctrlTab-preview:focus .tabPreview-canvas {
-  -moz-box-shadow: none;
+#ctrlTab-showAll .ctrlTab-preview-inner {
+  padding: 10px;
+  background-color: rgba(255,255,255,.2);
+  -moz-border-radius: .5em;
+}
+
+.ctrlTab-preview:focus .ctrlTab-preview-inner,
+#ctrlTab-showAll:focus .ctrlTab-preview-inner {
+  color: white;
+  background-color: rgba(0,0,0,.6);
+  text-shadow: none;
+  padding: 8px;
+  border: 2px solid white;
+  -moz-border-radius: .5em;
+}
+
+.ctrlTab-preview:not(#ctrlTab-showAll):focus .ctrlTab-preview-inner {
+  margin: -10px -10px 0;
 }
 
 #ctrlTab-showAll {
-  -moz-appearance: button;
-  color: ButtonText;
-  font-weight: normal;
-  text-shadow: none;
-  padding: 3px 5px;
-  margin-top: 15px;
-}
-
-#ctrlTab-showAll:focus {
-  -moz-box-shadow: 0 0 8px white;
-  -moz-border-radius: 3px;
+  margin-top: .5em;
 }
 
 /* All Tabs */
@@ -2143,17 +2139,18 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin: 0;
 }
 
+.allTabs-preview:focus,
 .allTabs-preview:hover,
 .allTabs-preview[closebuttonhover] {
-  background-color: rgba(100%,100%,100%,.15);
-  -moz-border-radius: 4px;
+  color: white;
+  background-color: rgba(0,0,0,.4);
+  -moz-border-radius: .5em;
 }
 
 .allTabs-preview:focus {
-  background-color: rgba(100%,100%,100%,.3);
-  -moz-border-radius: 4px;
+  border: 2px solid white;
 }
 
 .allTabs-preview-label {
-  -moz-transform: translate(0, -1px);
+  -moz-transform: translate(0, 1px);
 }

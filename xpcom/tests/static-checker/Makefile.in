@@ -58,10 +58,12 @@ STACK_FAILURE_TESTCASES = \
   StackVector.cpp \
   StackConditional.cpp \
   StackAggrInit.cpp \
+  StackCondBad.cpp \
   $(NULL)
 
 STACK_PASS_TESTCASES = \
   StackPlacementNewOK.cpp \
+  StackCond.cpp \
   $(NULL)
 
 OUTPARAMS_WARNING_TESTCASES = \

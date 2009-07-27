@@ -702,6 +702,7 @@ public:
         IDX_ITEM                    ,
         IDX_PROTO                   ,
         IDX_ITERATOR                ,
+        IDX_PARENT                  ,
 #ifdef XPC_IDISPATCH_SUPPORT
         IDX_ACTIVEX_OBJECT          ,
         IDX_COM_OBJECT              ,
@@ -2457,16 +2458,20 @@ public:
 
     JSBool HasExternalReference() const {return mRefCnt > 1;}
 
-    JSBool NeedsChromeWrapper() { return !!(mWrapper & 1); }
-    void SetNeedsChromeWrapper() { mWrapper |= 1; }
+    JSBool NeedsChromeWrapper() { return !!(mWrapperWord & CHROME_ONLY); }
+    void SetNeedsChromeWrapper() { mWrapperWord |= CHROME_ONLY; }
+    JSBool IsDoubleWrapper() { return !!(mWrapperWord & DOUBLE_WRAPPER); }
+    void SetIsDoubleWrapper() { mWrapperWord |= DOUBLE_WRAPPER; }
+
     JSObject* GetWrapper()
     {
-        return (JSObject *)(mWrapper & ~1);
+        return (JSObject *) JSVAL_CLRTAG(mWrapperWord);
     }
     void SetWrapper(JSObject *obj)
     {
-        JSBool reset = NeedsChromeWrapper();
-        mWrapper = PRWord(obj) | reset;
+        JSBool needsChrome = NeedsChromeWrapper();
+        JSBool doubleWrapper = IsDoubleWrapper();
+        mWrapperWord = PRWord(obj) | doubleWrapper | needsChrome;
     }
 
     void NoteTearoffs(nsCycleCollectionTraversalCallback& cb);
@@ -2502,6 +2507,8 @@ protected:
     virtual ~XPCWrappedNative();
 
 private:
+    enum { CHROME_ONLY = JS_BIT(0), DOUBLE_WRAPPER = JS_BIT(1) };
+
     void TraceOtherWrapper(JSTracer* trc);
     JSBool Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
                 const XPCNativeScriptableCreateInfo* sci);
@@ -2535,7 +2542,7 @@ private:
     JSObject*                    mFlatJSObject;
     XPCNativeScriptableInfo*     mScriptableInfo;
     XPCWrappedNativeTearOffChunk mFirstChunk;
-    PRWord                       mWrapper;
+    PRWord                       mWrapperWord;
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
 public:
@@ -4165,6 +4172,9 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp,
 JSBool
 XPC_SOW_WrapObject(JSContext *cx, JSObject *parent, jsval v,
                    jsval *vp);
+
+JSBool
+XPC_COW_WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp);
 
 #ifdef XPC_IDISPATCH_SUPPORT
 

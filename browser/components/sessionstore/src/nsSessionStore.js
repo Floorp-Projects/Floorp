@@ -1477,8 +1477,15 @@ SessionStoreService.prototype = {
     if (!node)
       return null;
     
+    const MAX_GENERATED_XPATHS = 100;
+    let generatedCount = 0;
+    
     let data = {};
     do {
+      // Only generate a limited number of XPath expressions for perf reasons (cf. bug 477564)
+      if (!node.id && ++generatedCount > MAX_GENERATED_XPATHS)
+        continue;
+      
       let id = node.id ? "#" + node.id : XPathHelper.generate(node);
       if (node instanceof Ci.nsIDOMHTMLInputElement) {
         if (node.type != "file")

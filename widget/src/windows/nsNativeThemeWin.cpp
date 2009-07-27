@@ -387,6 +387,11 @@ nsNativeThemeWin::StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType,
 PRBool
 nsNativeThemeWin::IsMenuActive(nsIFrame *aFrame, PRUint8 aWidgetType)
 {
+  nsIContent* content = aFrame->GetContent();
+  if (content->IsNodeOfType(nsINode::eXUL) &&
+      content->NodeInfo()->Equals(nsWidgetAtoms::richlistitem))
+    return CheckBooleanAttr(aFrame, nsWidgetAtoms::selected);
+
   return CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
 }
 

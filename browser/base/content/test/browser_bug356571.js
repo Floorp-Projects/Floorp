@@ -1,11 +1,7 @@
 // Bug 356571 - loadOneOrMoreURIs gives up if one of the URLs has an unknown protocol
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cm = Components.manager;
-
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Set to true when docShell alerts for unknown protocol error
 var didFail = false;

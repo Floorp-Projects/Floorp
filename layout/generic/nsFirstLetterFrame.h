@@ -83,8 +83,6 @@ public:
 
   virtual PRBool CanContinueTextRun() const;
 
-  NS_IMETHOD SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread, SelectionType aType);
-
 //override of nsFrame method
   NS_IMETHOD GetChildFrameContainingOffset(PRInt32 inContentOffset,
                                            PRBool inHint,

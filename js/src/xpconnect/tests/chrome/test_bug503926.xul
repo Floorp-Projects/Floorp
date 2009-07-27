@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=503926
+-->
+<window title="Mozilla Bug 503926"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=503926"
+     target="_blank">Mozilla Bug 503926</a>
+  </body>
+
+  <iframe id="ifr" type="content" />
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 503926 **/
+  function iframe_loaded() {
+    var passed = false;
+    var obj = { QueryInterface: function() { passed = true; } };
+    try { document.documentElement.appendChild(obj); } catch (e) {}
+    ok(passed, "trusted QIs should be called");
+
+    openDialog("chrome://mochikit/content/chrome/js/src/xpconnect/tests/chrome/bug503926.xul",
+               "chromeDialog", "modal")
+    SimpleTest.finish();
+  }
+
+  $(ifr).onload = iframe_loaded;
+  $(ifr).location = "chrome://mochikit/content/chrome/js/src/xpconnect/tests/chrome/bug503926.xul#iframe"
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

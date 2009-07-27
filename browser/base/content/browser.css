@@ -45,6 +45,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
+#feed-menu[chromedir="rtl"] > menuitem {
+  direction: rtl;
+}
+
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > :not(#go-button) ,
 #urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button ,
 #urlbar[isempty="true"] > #urlbar-icons > #go-button {
@@ -139,7 +143,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 .ctrlTab-favicon-container,
 .allTabs-favicon-container {
   -moz-box-align: start;
+%ifdef XP_MACOSX
+  -moz-box-pack: end;
+%else
   -moz-box-pack: start;
+%endif
 }
 
 .ctrlTab-favicon,

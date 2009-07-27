@@ -1477,42 +1477,6 @@ nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
   }
 }
 
-//null range means the whole thing
-NS_IMETHODIMP
-nsTableFrame::SetSelected(nsPresContext* aPresContext,
-                          nsIDOMRange *aRange,
-                          PRBool aSelected,
-                          nsSpread aSpread,
-                          SelectionType aType)
-{
-#if 0
-  //traverse through children unselect tables
-  if ((aSpread == eSpreadDown)){
-    nsIFrame* kid = GetFirstChild(nsnull);
-    while (kid) {
-      kid->SetSelected(nsnull, aSelected, eSpreadDown);
-      kid = kid->GetNextSibling();
-    }
-  }
-#endif
-  // Must call base class to set mSelected state and trigger repaint of frame
-  // Note that in current version, aRange and aSpread are ignored,
-  //   only this frame is considered
-  nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
-  return NS_OK;//return nsFrame::SetSelected(aRange,aSelected,eSpreadNone, aType);
-  
-}
-
-PRBool nsTableFrame::ParentDisablesSelection() const //override default behavior
-{
-  PRBool returnval;
-  if (NS_FAILED(GetSelected(&returnval)))
-    return PR_FALSE;
-  if (returnval)
-    return PR_TRUE;
-  return nsFrame::ParentDisablesSelection();
-}
-
 PRIntn
 nsTableFrame::GetSkipSides() const
 {

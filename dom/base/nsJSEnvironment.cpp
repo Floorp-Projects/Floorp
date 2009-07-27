@@ -1882,17 +1882,22 @@ AtomToEventHandlerName(nsIAtom *aName)
 nsresult
 nsJSContext::JSObjectFromInterface(nsISupports* aTarget, void *aScope, JSObject **aRet)
 {
-  if (!aTarget) { // no target specified is ok
+  // It is legal to specify a null target.
+  if (!aTarget) {
       *aRet = nsnull;
       return NS_OK;
   }
+
   // Get the jsobject associated with this target
+  // We don't wrap here because we trust the JS engine to wrap the target
+  // later.
   nsresult rv;
   jsval v;
   rv = nsContentUtils::XPConnect()->WrapNativeToJSVal(mContext,
                                                       (JSObject *)aScope,
                                                       aTarget,
                                                       &NS_GET_IID(nsISupports),
+                                                      PR_FALSE,
                                                       &v, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3029,7 +3034,7 @@ static JSClass OptionsClass = {
   "JSOptions",
   0,
   JS_PropertyStub, JS_PropertyStub, GetOptionsProperty, SetOptionsProperty,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, nsnull
 };
 
 #ifdef NS_TRACE_MALLOC
