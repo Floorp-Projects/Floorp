@@ -5487,6 +5487,16 @@ function testObjectVsPrototype() {
 }
 test(testObjectVsPrototype);
 
+function testEliminatedGuardWithinAnchor() {
+    for (let i = 0; i < 5; ++i) { i / (i * i); }
+    return "ok";
+}
+testEliminatedGuardWithinAnchor.expected = "ok";
+testOwnPropertyWithInOperator.jitstats = {
+  sideExitIntoInterpreter: 3
+};
+test(testEliminatedGuardWithinAnchor);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
