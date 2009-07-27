@@ -234,7 +234,7 @@ public:
     FragmentAssembler(Lirasm &parent, const string &fragmentName);
     ~FragmentAssembler();
 
-    void assembleFragment(LirTokenStream &in, bool implied, const LirToken *firstToken);
+    void assembleFragment(LirTokenStream &in, bool implicitBegin, const LirToken *firstToken);
 
 private:
     // Prohibit copying.
@@ -735,7 +735,7 @@ FragmentAssembler::extract_any_label(string &lab, char lab_delim)
 }
 
 void
-FragmentAssembler::assembleFragment(LirTokenStream &in, bool implied, const LirToken *firstToken)
+FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, const LirToken *firstToken)
 {
     LirToken token;
     while (true) {
@@ -743,7 +743,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implied, const LirT
             token = *firstToken;
             firstToken = NULL;
         } else if (!in.get(token)) {
-            if (!implied)
+            if (!implicitBegin)
                 bad("unexpected end of file in fragment '" + mFragName + "'");
             break;
         }
@@ -756,7 +756,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implied, const LirT
         if (op == ".begin")
             bad("nested fragments are not supported");
         if (op == ".end") {
-            if (implied)
+            if (implicitBegin)
                 bad(".end without .begin");
             if (!in.eat(NEWLINE))
                 bad("extra junk after .end");
