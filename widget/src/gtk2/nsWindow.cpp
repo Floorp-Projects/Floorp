@@ -938,14 +938,39 @@ nsWindow::SetModal(PRBool aModal)
     return NS_OK;
 }
 
+// nsIWidget method, which means IsShown.
 NS_IMETHODIMP
-nsWindow::IsVisible(PRBool & aState)
+nsWindow::IsVisible(PRBool& aState)
 {
-    aState = mIsVisible;
-    if (mIsTopLevel && mShell) {
-        aState = GTK_WIDGET_VISIBLE(mShell);
-    }
+    aState = mIsShown;
     return NS_OK;
+}
+
+// Internal method, which returns false when no part of the window can be seen.
+PRBool
+nsWindow::CanBeSeen()
+{
+    // mIsVisible keeps track of whether any part of the window is unobscured,
+    // but does not get updated when the window changes state from viewable to
+    // not viewable (when any ancestor window is unmapped) because
+    // VisibilityNotifty events do not get sent on such a change in state.
+    if (!mIsShown || !mIsVisible)
+        return PR_FALSE;
+
+    GtkWidget *topWidget = nsnull;
+    GetToplevelWidget(&topWidget);
+
+    // If the toplevel widget has been unmapped, then record this in
+    // mIsVisible.  mIsVisible will be updated in OnVisibilityNotifyEvent()
+    // when its window becomes viewable again.
+    // (gdk_window_is_viewable() is not suitable here as it does not
+    // check GDK_WINDOW_STATE_ICONIFIED.)
+    mIsVisible =
+        topWidget &&
+        !(gdk_window_get_state(topWidget->window) &
+          (GDK_WINDOW_STATE_ICONIFIED|GDK_WINDOW_STATE_WITHDRAWN));
+        
+    return mIsVisible;
 }
 
 NS_IMETHODIMP
@@ -1670,8 +1695,10 @@ nsWindow::Validate()
 NS_IMETHODIMP
 nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-    GdkRectangle rect;
+    if (!mDrawingarea || !CanBeSeen())
+        return NS_OK;
 
+    GdkRectangle rect;
     rect.x = mBounds.x;
     rect.y = mBounds.y;
     rect.width = mBounds.width;
@@ -1679,9 +1706,6 @@ nsWindow::Invalidate(PRBool aIsSynchronous)
 
     LOGDRAW(("Invalidate (all) [%p]: %d %d %d %d\n", (void *)this,
              rect.x, rect.y, rect.width, rect.height));
-
-    if (!mDrawingarea)
-        return NS_OK;
 
     gdk_window_invalidate_rect(mDrawingarea->inner_window,
                                &rect, FALSE);
@@ -1695,8 +1719,10 @@ NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
                      PRBool           aIsSynchronous)
 {
-    GdkRectangle rect;
+    if (!mDrawingarea || !CanBeSeen())
+        return NS_OK;
 
+    GdkRectangle rect;
     rect.x = aRect.x;
     rect.y = aRect.y;
     rect.width = aRect.width;
@@ -1704,9 +1730,6 @@ nsWindow::Invalidate(const nsIntRect &aRect,
 
     LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d (sync: %d)\n", (void *)this,
              rect.x, rect.y, rect.width, rect.height, aIsSynchronous));
-
-    if (!mDrawingarea)
-        return NS_OK;
 
     gdk_window_invalidate_rect(mDrawingarea->inner_window,
                                &rect, FALSE);
@@ -4643,9 +4666,7 @@ nsWindow::GrabPointer(void)
     // If the window isn't visible, just set the flag to retry the
     // grab.  When this window becomes visible, the grab will be
     // retried.
-    PRBool visibility = PR_TRUE;
-    IsVisible(visibility);
-    if (!visibility) {
+    if (!CanBeSeen()) {
         LOG(("GrabPointer: window not visible\n"));
         mRetryPointerGrab = PR_TRUE;
         return;
@@ -4682,9 +4703,7 @@ nsWindow::GrabKeyboard(void)
     // If the window isn't visible, just set the flag to retry the
     // grab.  When this window becomes visible, the grab will be
     // retried.
-    PRBool visibility = PR_TRUE;
-    IsVisible(visibility);
-    if (!visibility) {
+    if (!CanBeSeen()) {
         LOG(("GrabKeyboard: window not visible\n"));
         mRetryKeyboardGrab = PR_TRUE;
         return;
