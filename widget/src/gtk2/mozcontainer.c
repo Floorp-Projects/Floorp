@@ -264,8 +264,15 @@ moz_container_realize (GtkWidget *widget)
 
     /* create the shell window */
 
-    attributes.event_mask = gtk_widget_get_events (widget);
-    attributes.event_mask |=  (GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK);
+    attributes.event_mask = (gtk_widget_get_events (widget) |
+                             GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
+                             GDK_VISIBILITY_NOTIFY_MASK |
+                             GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                             GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+#ifdef HAVE_GTK_MOTION_HINTS
+                             GDK_POINTER_MOTION_HINT_MASK |
+#endif
+                             GDK_POINTER_MOTION_MASK);
     attributes.x = widget->allocation.x;
     attributes.y = widget->allocation.y;
     attributes.width = widget->allocation.width;
