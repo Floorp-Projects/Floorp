@@ -407,9 +407,13 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
 
   // Handle CALC_DISCRETE separately, because it's simple.
   if (GetCalcMode() == CALC_DISCRETE) {
-    PRUint32 index = IsToAnimation() ? 0 :
-      (PRUint32) floor(simpleProgress * (aValues.Length()));
-    aResult = aValues[index];
+    if (IsToAnimation()) {
+      // Two discrete values: our base value, and the val in our array
+      aResult = (simpleProgress < 0.5f) ? aBaseValue : aValues[0];
+    } else {
+      PRUint32 index = (PRUint32) floor(simpleProgress * (aValues.Length()));
+      aResult = aValues[index];
+    }
     return NS_OK;
   }
 
