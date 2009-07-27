@@ -243,6 +243,10 @@ struct JSPropCacheEntry {
     jsuword             kshape;         /* key shape if pc, else obj for atom */
     jsuword             vcap;           /* value capability, see above */
     jsuword             vword;          /* value word, see PCVAL_* below */
+
+    bool adding() const {
+        return PCVCAP_TAG(vcap) == 0 && kshape != PCVCAP_SHAPE(vcap);
+    }
 };
 
 /*

@@ -2950,7 +2950,8 @@ TraceRecorder::snapshot(ExitType exitType)
     bool resumeAfter = (pendingTraceableNative &&
                         JSTN_ERRTYPE(pendingTraceableNative) == FAIL_STATUS);
     if (resumeAfter) {
-        JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW);
+        JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW ||
+                  *pc == JSOP_SETPROP || *pc == JSOP_SETNAME);
         pc += cs.length;
         regs->pc = pc;
         MUST_FLOW_THROUGH("restore_pc");
@@ -5410,11 +5411,11 @@ LeaveTree(InterpState& state, VMSideExit* lr)
              * js_ExecuteTree. We are about to return to the interpreter. Adjust
              * the top stack frame to resume on the next op.
              */
-            JS_ASSERT(*cx->fp->regs->pc == JSOP_CALL ||
-                      *cx->fp->regs->pc == JSOP_APPLY ||
-                      *cx->fp->regs->pc == JSOP_NEW);
-            uintN argc = GET_ARGC(cx->fp->regs->pc);
-            cx->fp->regs->pc += JSOP_CALL_LENGTH;
+            jsbytecode *pc = cx->fp->regs->pc;
+            JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW ||
+                      *pc == JSOP_SETPROP || *pc == JSOP_SETNAME);
+            uintN argc = (js_CodeSpec[*pc].format & JOF_INVOKE) ? GET_ARGC(pc) : 0;
+            cx->fp->regs->pc += js_CodeSpec[*pc].length;
             cx->fp->regs->sp -= argc + 1;
             JS_ASSERT_IF(!cx->fp->imacpc,
                          cx->fp->slots + cx->fp->script->nfixed +
@@ -7582,6 +7583,41 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::guardNativePropertyOp(JSObject* aobj, LIns* map_ins)
+{
+    /*
+     * Interpreter calls to PROPERTY_CACHE_TEST guard on native object ops
+     * which is required to use native objects (those whose maps are scopes),
+     * or even more narrow conditions required because the cache miss case
+     * will call a particular object-op (js_GetProperty, js_SetProperty).
+     *
+     * We parameterize using offsetof and guard on match against the hook at
+     * the given offset in js_ObjectOps. TraceRecorder::record_JSOP_SETPROP
+     * guards the js_SetProperty case.
+     */
+    uint32 format = js_CodeSpec[*cx->fp->regs->pc].format;
+    uint32 mode = JOF_MODE(format);
+
+    // No need to guard native-ness of global object.
+    JS_ASSERT(OBJ_IS_NATIVE(globalObj));
+    if (aobj != globalObj) {
+        size_t op_offset = offsetof(JSObjectOps, objectMap);
+        if (mode == JOF_PROP || mode == JOF_VARPROP) {
+            op_offset = (format & JOF_SET)
+                        ? offsetof(JSObjectOps, setProperty)
+                        : offsetof(JSObjectOps, getProperty);
+        } else {
+            JS_ASSERT(mode == JOF_NAME);
+        }
+
+        LIns* ops_ins;
+        if (!map_is_native(aobj->map, map_ins, ops_ins, op_offset))
+            ABORT_TRACE("non-native map");
+    }
+    return JSRS_CONTINUE;
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, jsuword& pcval)
 {
     jsbytecode* pc = cx->fp->regs->pc;
@@ -7598,33 +7634,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     }
 
     LIns* map_ins = map(obj_ins);
-    LIns* ops_ins;
 
-    // Interpreter calls to PROPERTY_CACHE_TEST guard on native object ops
-    // which is required to use native objects (those whose maps are scopes),
-    // or even more narrow conditions required because the cache miss case
-    // will call a particular object-op (js_GetProperty, js_SetProperty).
-    //
-    // We parameterize using offsetof and guard on match against the hook at
-    // the given offset in js_ObjectOps. TraceRecorder::record_JSOP_SETPROP
-    // guards the js_SetProperty case.
-    uint32 format = js_CodeSpec[*pc].format;
-    uint32 mode = JOF_MODE(format);
-
-    // No need to guard native-ness of global object.
-    JS_ASSERT(OBJ_IS_NATIVE(globalObj));
-    if (aobj != globalObj) {
-        size_t op_offset = offsetof(JSObjectOps, objectMap);
-        if (mode == JOF_PROP || mode == JOF_VARPROP) {
-            JS_ASSERT(!(format & JOF_SET));
-            op_offset = offsetof(JSObjectOps, getProperty);
-        } else {
-            JS_ASSERT(mode == JOF_NAME);
-        }
-
-        if (!map_is_native(aobj->map, map_ins, ops_ins, op_offset))
-            ABORT_TRACE("non-native map");
-    }
+    CHECK_STATUS(guardNativePropertyOp(aobj, map_ins));
 
     JSAtom* atom;
     JSPropCacheEntry* entry;
@@ -7692,31 +7703,60 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     JS_ASSERT(cx->requestDepth);
 #endif
 
-    // Emit guard(s), common code for both hit and miss cases.
+    return guardPropertyCacheHit(obj_ins, map_ins, aobj, obj2, entry, pcval);
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
+                                     LIns* map_ins,
+                                     JSObject* aobj,
+                                     JSObject* obj2,
+                                     JSPropCacheEntry* entry,
+                                     jsuword& pcval)
+{
+    uint32 vshape = PCVCAP_SHAPE(entry->vcap);
+
     // Check for first-level cache hit and guard on kshape if possible.
     // Otherwise guard on key object exact match.
     if (PCVCAP_TAG(entry->vcap) <= 1) {
         if (aobj != globalObj) {
             LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
                                       "shape");
-            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)(test_property_cache)"),
+            guard(true,
+                  addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard_kshape"),
                   BRANCH_EXIT);
+        }
+
+        if (entry->adding()) {
+            if (aobj == globalObj)
+                ABORT_TRACE("adding a property to the global object");
+
+            LIns *vshape_ins = addName(
+                lir->insLoad(LIR_ld,
+                             addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime)),
+                                     "runtime"),
+                             offsetof(JSRuntime, protoHazardShape)),
+                "protoHazardShape");
+            guard(true,
+                  addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard_protoHazardShape"),
+                  MISMATCH_EXIT);
         }
     } else {
 #ifdef DEBUG
-        JSOp op = js_GetOpcode(cx, cx->fp->script, pc);
+        JSOp op = js_GetOpcode(cx, cx->fp->script, cx->fp->regs->pc);
         JSAtom *pcatom;
         if (op == JSOP_LENGTH) {
             pcatom = cx->runtime->atomState.lengthAtom;
         } else {
             ptrdiff_t pcoff = (JOF_TYPE(js_CodeSpec[op].format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
-            GET_ATOM_FROM_BYTECODE(cx->fp->script, pc, pcoff, pcatom);
+            GET_ATOM_FROM_BYTECODE(cx->fp->script, cx->fp->regs->pc, pcoff, pcatom);
         }
         JS_ASSERT(entry->kpc == (jsbytecode *) pcatom);
         JS_ASSERT(entry->kshape == jsuword(aobj));
 #endif
         if (aobj != globalObj && !obj_ins->isconstp()) {
-            guard(true, addName(lir->ins2i(LIR_eq, obj_ins, entry->kshape), "guard(kobj)"),
+            guard(true,
+                  addName(lir->ins2i(LIR_eq, obj_ins, entry->kshape), "guard_kobj"),
                   BRANCH_EXIT);
         }
     }
@@ -7724,26 +7764,25 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // For any hit that goes up the scope and/or proto chains, we will need to
     // guard on the shape of the object containing the property.
     if (PCVCAP_TAG(entry->vcap) >= 1) {
-        jsuword vcap = entry->vcap;
-        uint32 vshape = PCVCAP_SHAPE(vcap);
         JS_ASSERT(OBJ_SHAPE(obj2) == vshape);
 
         LIns* obj2_ins;
         if (PCVCAP_TAG(entry->vcap) == 1) {
             // Duplicate the special case in PROPERTY_CACHE_TEST.
-            obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+            obj2_ins = addName(stobj_get_fslot(obj_ins, JSSLOT_PROTO), "proto");
             guard(false, lir->ins_eq0(obj2_ins), BRANCH_EXIT);
         } else {
             obj2_ins = INS_CONSTPTR(obj2);
         }
         map_ins = map(obj2_ins);
+        LIns* ops_ins;
         if (!map_is_native(obj2->map, map_ins, ops_ins))
             ABORT_TRACE("non-native map");
 
         LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                  "shape");
+                                  "obj2_shape");
         guard(true,
-              addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard(vshape)(test_property_cache)"),
+              addName(lir->ins2i(LIR_eq, shape_ins, vshape), "guard_vshape"),
               BRANCH_EXIT);
     }
 
@@ -7799,16 +7838,6 @@ TraceRecorder::stobj_get_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins)
     if (slot < JS_INITIAL_NSLOTS)
         return stobj_get_fslot(obj_ins, slot);
     return stobj_get_dslot(obj_ins, slot - JS_INITIAL_NSLOTS, dslots_ins);
-}
-
-JSRecordingStatus
-TraceRecorder::native_set(LIns* obj_ins, JSScopeProperty* sprop, LIns*& dslots_ins, LIns* v_ins)
-{
-    if (SPROP_HAS_STUB_SETTER(sprop) && sprop->slot != SPROP_INVALID_SLOT) {
-        stobj_set_slot(obj_ins, sprop->slot, dslots_ins, v_ins);
-        return JSRS_CONTINUE;
-    }
-    ABORT_TRACE("unallocated or non-stub sprop");
 }
 
 JSRecordingStatus
@@ -8703,6 +8732,83 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
     return JSRS_CONTINUE;
 }
 
+JS_REQUIRES_STACK void
+TraceRecorder::propagateFailureToBuiltinStatus(LIns* ok_ins, LIns*& status_ins)
+{
+    /*
+     * Check the boolean return value (ok_ins) of a native JSNative,
+     * JSFastNative, or JSPropertyOp hook for failure. On failure, set the
+     * JSBUILTIN_ERROR bit of cx->builtinStatus.
+     *
+     * If the return value (ok_ins) is true, status' == status. Otherwise
+     * status' = status | JSBUILTIN_ERROR. We calculate (rval&1)^1, which is 1
+     * if rval is JS_FALSE (error), and then shift that by 1, which is the log2
+     * of JSBUILTIN_ERROR.
+     */
+    JS_STATIC_ASSERT(((JS_TRUE & 1) ^ 1) << 1 == 0);
+    JS_STATIC_ASSERT(((JS_FALSE & 1) ^ 1) << 1 == JSBUILTIN_ERROR);
+    status_ins = lir->ins2(LIR_or,
+                           status_ins,
+                           lir->ins2i(LIR_lsh,
+                                      lir->ins2i(LIR_xor,
+                                                 lir->ins2i(LIR_and, ok_ins, 1),
+                                                 1),
+                                      1));
+    lir->insStorei(status_ins, lirbuf->state, (int) offsetof(InterpState, builtinStatus));
+}
+
+JS_REQUIRES_STACK void
+TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns* obj_ins,
+                                    bool setflag, LIns* boxed_ins)
+{
+    JS_ASSERT(!(sprop->attrs & (setflag ? JSPROP_SETTER : JSPROP_GETTER)));
+    JS_ASSERT(setflag ? !SPROP_HAS_STUB_SETTER(sprop) : !SPROP_HAS_STUB_GETTER(sprop));
+
+    // Take snapshot for js_DeepBail and store it in cx->bailExit.
+    VMSideExit* exit = snapshot(DEEP_BAIL_EXIT);
+    lir->insStorei(INS_CONSTPTR(exit), cx_ins, offsetof(JSContext, bailExit));
+
+    // Tell nanojit not to discard or defer stack writes before this call.
+    LIns* guardRec = createGuardRecord(exit);
+    lir->insGuard(LIR_xbarrier, guardRec, guardRec);
+
+    // It is unsafe to pass the address of an object slot as the out parameter,
+    // because the getter or setter could end up resizing the object's dslots.
+    // Instead, use a word of stack and root it in nativeVp.
+    LIns* vp_ins = lir->insAlloc(sizeof(jsval));
+    lir->insStorei(vp_ins, cx_ins, offsetof(JSContext, nativeVp));
+    lir->insStorei(INS_CONST(1), cx_ins, offsetof(JSContext, nativeVpLen));
+    if (setflag)
+        lir->insStorei(boxed_ins, vp_ins, 0);
+
+    CallInfo* ci = (CallInfo*) lir->insSkip(sizeof(struct CallInfo))->payload();
+    ci->_address = uintptr_t(setflag ? sprop->setter : sprop->getter);
+    ci->_argtypes = ARGSIZE_LO | ARGSIZE_LO << 2 | ARGSIZE_LO << 4 | ARGSIZE_LO << 6 | ARGSIZE_LO << 8;
+    ci->_cse = ci->_fold = 0;
+    ci->_abi = ABI_CDECL;
+#ifdef DEBUG
+    ci->_name = "JSPropertyOp";
+#endif
+    LIns* args[] = { vp_ins, INS_CONSTWORD(SPROP_USERID(sprop)), obj_ins, cx_ins };
+    LIns* ok_ins = lir->insCall(ci, args);
+
+    // Unroot the vp.
+    lir->insStorei(INS_CONSTPTR(NULL), cx_ins, offsetof(JSContext, nativeVp));
+
+    // Guard that the call succeeded and builtinStatus is still 0.
+    // If the native op succeeds but we deep-bail here, the result value is
+    // lost!  Therefore this can only be used for setters of shared properties.
+    // In that case we ignore the result value anyway.
+    LIns* status_ins = lir->insLoad(LIR_ld,
+                                    lirbuf->state,
+                                    (int) offsetof(InterpState, builtinStatus));
+    propagateFailureToBuiltinStatus(ok_ins, status_ins);
+    guard(true, lir->ins_eq0(status_ins), STATUS_EXIT);
+
+    // Re-load the value--but this is currently unused, so commented out.
+    //boxed_ins = lir->insLoad(LIR_ldp, vp_ins, 0);
+}
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[])
 {
@@ -9261,30 +9367,90 @@ TraceRecorder::record_JSOP_SETPROP()
     return JSRS_CONTINUE;
 }
 
+/* Emit a specialized, inlined copy of js_NativeSet. */
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop)
+TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
+                         jsval v, LIns* v_ins)
+{
+    JSScope* scope = OBJ_SCOPE(obj);
+    uint32 slot = sprop->slot;
+
+    /*
+     * We do not trace assignment to properties that have both a nonstub setter
+     * and a slot, for several reasons.
+     *
+     * First, that would require sampling rt->propertyRemovals before and after
+     * (see js_NativeSet), and even more code to handle the case where the two
+     * samples differ. A mere guard is not enough, because you can't just bail
+     * off trace in the middle of a property assignment without storing the
+     * value and making the stack right.
+     *
+     * If obj is the global object, there are two additional problems. We would
+     * have to emit still more code to store the result in the object (not the
+     * native global frame) if the setter returned successfully after
+     * deep-bailing.  And we would have to cope if the run-time type of the
+     * setter's return value differed from the record-time type of v, in which
+     * case unboxing would fail and, having called a native setter, we could
+     * not just retry the instruction in the interpreter.
+     */
+    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop) || slot == SPROP_INVALID_SLOT);
+
+    // Box the value to be stored, if necessary.
+    LIns* boxed_ins = NULL;
+    if (!SPROP_HAS_STUB_SETTER(sprop) || (slot != SPROP_INVALID_SLOT && obj != globalObj)) {
+        boxed_ins = v_ins;
+        box_jsval(v, boxed_ins);
+    }
+
+    // Call the setter, if any.
+    if (!SPROP_HAS_STUB_SETTER(sprop))
+        emitNativePropertyOp(scope, sprop, obj_ins, true, boxed_ins);
+
+    // Store the value, if this property has a slot.
+    if (slot != SPROP_INVALID_SLOT) {
+        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
+        JS_ASSERT(!(sprop->attrs & JSPROP_SHARED));
+        if (obj == globalObj) {
+            if (!lazilyImportGlobalSlot(slot))
+                ABORT_TRACE("lazy import of global slot failed");
+
+            // If we called a native setter, unbox the result.
+            if (!SPROP_HAS_STUB_SETTER(sprop)) {
+                v_ins = boxed_ins;
+                unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins, snapshot(BRANCH_EXIT));
+            }
+            set(&STOBJ_GET_SLOT(obj, slot), v_ins);
+        } else {
+            LIns* dslots_ins = NULL;
+            stobj_set_slot(obj_ins, slot, dslots_ins, boxed_ins);
+        }
+    }
+
+    return JSRS_CONTINUE;
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop,
+                       jsval &v, LIns*& v_ins)
 {
     if (entry == JS_NO_PROP_CACHE_FILL)
         ABORT_TRACE("can't trace uncacheable property set");
-    if (PCVCAP_TAG(entry->vcap) >= 1)
-        ABORT_TRACE("can't trace inherited property set");
+    JS_ASSERT_IF(PCVCAP_TAG(entry->vcap) >= 1, sprop->attrs & JSPROP_SHARED);
+    if (!SPROP_HAS_STUB_SETTER(sprop) && sprop->slot != SPROP_INVALID_SLOT)
+        ABORT_TRACE("can't trace set of property with setter and slot");
+    if (sprop->attrs & JSPROP_SETTER)
+        ABORT_TRACE("can't trace JavaScript function setter");
 
-    jsbytecode* pc = cx->fp->regs->pc;
-    JS_ASSERT(entry->kpc == pc);
-
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
+    // These two cases are actually errors and can't be cached.
+    JS_ASSERT(!(sprop->attrs & JSPROP_GETTER));  // getter without setter
+    JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
 
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
     JSScope* scope = OBJ_SCOPE(obj);
 
-    JS_ASSERT(scope->owned());
-    JS_ASSERT(scope->has(sprop));
-
-    if (!isValidSlot(scope, sprop))
-        return JSRS_STOP;
+    JS_ASSERT_IF(entry->vcap == PCVCAP_MAKE(entry->kshape, 0, 0), scope->has(sprop));
 
     /*
      * Setting a function-valued property might need to rebrand the object; we
@@ -9292,57 +9458,54 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
      * separating functions into the trace-time type TT_FUNCTION will save the
      * day!
      */
-    if (scope->branded() && VALUE_IS_FUNCTION(cx, r))
+    if (scope->branded() && VALUE_IS_FUNCTION(cx, v))
         ABORT_TRACE("can't trace function-valued property set in branded scope");
 
-    if (obj == globalObj) {
-        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
-        uint32 slot = sprop->slot;
-        if (!lazilyImportGlobalSlot(slot))
-            ABORT_TRACE("lazy import of global slot failed");
+    // Find obj2.  If entry->adding(), the TAG bits are all 0.
+    JSObject* obj2 = obj;
+    for (jsuword i = PCVCAP_TAG(entry->vcap) >> PCVCAP_PROTOBITS; i; i--)
+        obj2 = OBJ_GET_PARENT(cx, obj2);
+    for (jsuword j = PCVCAP_TAG(entry->vcap) & PCVCAP_PROTOMASK; j; j--)
+        obj2 = OBJ_GET_PROTO(cx, obj2);
+    scope = OBJ_SCOPE(obj2);
+    JS_ASSERT_IF(entry->adding(), obj2 == obj);
 
-        LIns* r_ins = get(&r);
-        set(&STOBJ_GET_SLOT(obj, slot), r_ins);
-
-        JS_ASSERT(*pc != JSOP_INITPROP);
-        if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
-            set(&l, r_ins);
-        return JSRS_CONTINUE;
-    }
-
-    // The global object's shape is guarded at trace entry, all others need a guard here.
+    // Guard before anything else.
     LIns* map_ins = map(obj_ins);
-    LIns* ops_ins;
-    if (!map_is_native(obj->map, map_ins, ops_ins, offsetof(JSObjectOps, setProperty)))
-        ABORT_TRACE("non-native map");
+    CHECK_STATUS(guardNativePropertyOp(obj, map_ins));
+    jsuword pcval;
+    CHECK_STATUS(guardPropertyCacheHit(obj_ins, map_ins, obj, obj2, entry, pcval));
+    JS_ASSERT(scope->object == obj2);
+    JS_ASSERT(scope->has(sprop));
+    JS_ASSERT_IF(obj2 != obj, sprop->attrs & JSPROP_SHARED);
 
-    LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-    guard(true,
-          addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(kshape)(record_SetPropHit)"),
-          BRANCH_EXIT);
-
-    uint32 vshape = PCVCAP_SHAPE(entry->vcap);
-    if (entry->kshape != vshape) {
-        LIns *vshape_ins = lir->insLoad(LIR_ld,
-                                        lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime)),
-                                        offsetof(JSRuntime, protoHazardShape));
-        guard(true,
-              addName(lir->ins2i(LIR_eq, vshape_ins, vshape), "guard(vshape)(record_SetPropHit)"),
-              MISMATCH_EXIT);
+    // Add a property to the object if necessary.
+    if (entry->adding()) {
+        JS_ASSERT(!(sprop->attrs & JSPROP_SHARED));
+        if (obj == globalObj)
+            ABORT_TRACE("adding a property to the global object");
 
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(&js_AddProperty_ci, args);
         guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
     }
 
-    LIns* dslots_ins = NULL;
-    LIns* v_ins = get(&r);
-    LIns* boxed_ins = v_ins;
-    box_jsval(r, boxed_ins);
-    CHECK_STATUS(native_set(obj_ins, sprop, dslots_ins, boxed_ins));
+    v_ins = get(&v);
+    return nativeSet(obj, obj_ins, sprop, v, v_ins);
+}
 
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop)
+{
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    LIns* v_ins;
+    CHECK_STATUS(setProp(l, entry, sprop, r, v_ins));
+
+    jsbytecode* pc = cx->fp->regs->pc;
     if (*pc != JSOP_INITPROP && pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
         set(&l, v_ins);
+
     return JSRS_CONTINUE;
 }
 
@@ -10097,22 +10260,24 @@ TraceRecorder::record_NativeCallComplete()
     jsbytecode* pc = cx->fp->regs->pc;
 
     JS_ASSERT(pendingTraceableNative);
-    JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW);
+    JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW || *pc == JSOP_SETPROP);
 
     jsval& v = stackval(-1);
     LIns* v_ins = get(&v);
 
-    /* At this point the generated code has already called the native function
-       and we can no longer fail back to the original pc location (JSOP_CALL)
-       because that would cause the interpreter to re-execute the native
-       function, which might have side effects.
-
-       Instead, the snapshot() call below sees that we are currently parked on
-       a traceable native's JSOP_CALL instruction, and it will advance the pc
-       to restore by the length of the current opcode.  If the native's return
-       type is jsval, snapshot() will also indicate in the type map that the
-       element on top of the stack is a boxed value which doesn't need to be
-       boxed if the type guard generated by unbox_jsval() fails. */
+    /*
+     * At this point the generated code has already called the native function
+     * and we can no longer fail back to the original pc location (JSOP_CALL)
+     * because that would cause the interpreter to re-execute the native
+     * function, which might have side effects.
+     *
+     * Instead, the snapshot() call below sees that we are currently parked on
+     * a traceable native's JSOP_CALL instruction, and it will advance the pc
+     * to restore by the length of the current opcode.  If the native's return
+     * type is jsval, snapshot() will also indicate in the type map that the
+     * element on top of the stack is a boxed value which doesn't need to be
+     * boxed if the type guard generated by unbox_jsval() fails.
+     */
 
     if (JSTN_ERRTYPE(pendingTraceableNative) == FAIL_STATUS) {
         // Keep cx->bailExit null when it's invalid.
@@ -10145,27 +10310,9 @@ TraceRecorder::record_NativeCallComplete()
             }
             set(&v, v_ins);
 
-            /*
-             * If this is a generic traceable native invocation, propagate the boolean return
-             * value of the native into builtinStatus. If the return value (v_ins)
-             * is true, status' == status. Otherwise status' = status | JSBUILTIN_ERROR.
-             * We calculate (rval&1)^1, which is 1 if rval is JS_FALSE (error), and then
-             * shift that by 1 which is JSBUILTIN_ERROR.
-             */
-            JS_STATIC_ASSERT((1 - JS_TRUE) << 1 == 0);
-            JS_STATIC_ASSERT((1 - JS_FALSE) << 1 == JSBUILTIN_ERROR);
-            status = lir->ins2(LIR_or,
-                               status,
-                               lir->ins2i(LIR_lsh,
-                                          lir->ins2i(LIR_xor,
-                                                     lir->ins2i(LIR_and, ok_ins, 1),
-                                                     1),
-                                          1));
-            lir->insStorei(status, lirbuf->state, (int) offsetof(InterpState, builtinStatus));
+            propagateFailureToBuiltinStatus(ok_ins, status);
         }
-        guard(true,
-              lir->ins_eq0(status),
-              STATUS_EXIT);
+        guard(true, lir->ins_eq0(status), STATUS_EXIT);
     }
 
     JSRecordingStatus ok = JSRS_CONTINUE;
@@ -10303,9 +10450,8 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         return JSRS_CONTINUE;
     }
 
-    /* Insist if setting on obj being the directly addressed object. */
-    uint32 setflags = (cs.format & (JOF_SET | JOF_INCDEC | JOF_FOR));
-    LIns* dslots_ins = NULL;
+    uint32 setflags = (cs.format & (JOF_INCDEC | JOF_FOR));
+    JS_ASSERT(!(cs.format & JOF_SET));
 
     /* Don't trace getter or setter calls, our caller wants a direct slot. */
     if (PCVAL_IS_SPROP(pcval)) {
@@ -10364,11 +10510,12 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
          * obj_ins the last proto-load.
          */
         while (obj != obj2) {
-            obj_ins = stobj_get_slot(obj_ins, JSSLOT_PROTO, dslots_ins);
+            obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
             obj = STOBJ_GET_PROTO(obj);
         }
     }
 
+    LIns* dslots_ins = NULL;
     v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
     unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins, snapshot(BRANCH_EXIT));
 
