@@ -326,7 +326,7 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray* aSearchPath,
     nsCOMPtr<nsILocalFile> file;
 
     // Iterate the paths backwards to avoid the
-    // insertions that would occurr if we preserved
+    // insertions that would occur if we preserved
     // the order of the list.
     for(PRUint32 i = pathCount; i; i--)
     {
