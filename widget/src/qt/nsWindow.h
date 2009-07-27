@@ -179,8 +179,6 @@ public:
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     virtual nsIntPoint WidgetToScreenOffset();
-    NS_IMETHOD         BeginResizingChildren(void);
-    NS_IMETHOD         EndResizingChildren(void);
     NS_IMETHOD         DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
 
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);

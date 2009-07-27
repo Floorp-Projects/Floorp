@@ -230,8 +230,6 @@ public:
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
     virtual void Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
                         const nsTArray<Configuration>& aConfigurations);
-    NS_IMETHOD BeginResizingChildren(void) { return NS_OK; }
-    NS_IMETHOD EndResizingChildren(void) { return NS_OK; }
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);

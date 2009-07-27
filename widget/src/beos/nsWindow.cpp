@@ -329,20 +329,6 @@ nsWindow::~nsWindow()
 	NS_IF_RELEASE(mFontMetrics);
 }
 
-NS_METHOD nsWindow::BeginResizingChildren(void)
-{
-	// HideKids(PR_TRUE) may be used here
-	NS_NOTYETIMPLEMENTED("BeginResizingChildren not yet implemented"); // to be implemented
-	return NS_OK;
-}
-
-NS_METHOD nsWindow::EndResizingChildren(void)
-{
-	// HideKids(PR_FALSE) may be used here
-	NS_NOTYETIMPLEMENTED("EndResizingChildren not yet implemented"); // to be implemented
-	return NS_OK;
-}
-
 NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
 	BPoint	point;
@@ -1629,8 +1615,6 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 	mIsScrolling = PR_TRUE;
 	//Preventing main view invalidation loop-chain  when children are moving
 	//by by hiding children nsWidgets.
-	//Maybe this method must be used wider, in move and resize chains
-	// and implemented in BeginResizingChildren or in Reset*Visibility() methods
 	//Children will be unhidden in ::Update() when called by other than gkview::Scroll() method.
 	HideKids(PR_TRUE);
 	if (mView && mView->LockLooper())
