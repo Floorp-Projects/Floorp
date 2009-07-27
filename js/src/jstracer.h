@@ -687,6 +687,15 @@ class TraceRecorder : public avmplus::GCObject {
                                          nanojit::LIns*& ops_ins, size_t op_offset = 0);
     JS_REQUIRES_STACK JSRecordingStatus test_property_cache(JSObject* obj, nanojit::LIns* obj_ins,
                                                             JSObject*& obj2, jsuword& pcval);
+    JS_REQUIRES_STACK JSRecordingStatus guardNativePropertyOp(JSObject* aobj,
+                                                              nanojit::LIns* map_ins);
+    JS_REQUIRES_STACK JSRecordingStatus guardPropertyCacheHit(nanojit::LIns* obj_ins,
+                                                              nanojit::LIns* map_ins,
+                                                              JSObject* aobj,
+                                                              JSObject* obj2,
+                                                              JSPropCacheEntry* entry,
+                                                              jsuword& pcval);
+
     void stobj_set_fslot(nanojit::LIns *obj_ins, unsigned slot,
                          nanojit::LIns* v_ins, const char *name);
     void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
@@ -704,8 +713,6 @@ class TraceRecorder : public avmplus::GCObject {
                          stobj_get_fslot(obj_ins, JSSLOT_PRIVATE),
                          lir->insImmPtr((void*) ~mask));
     }
-    JSRecordingStatus native_set(nanojit::LIns* obj_ins, JSScopeProperty* sprop,
-                                 nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
     JSRecordingStatus native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins,
                                  JSScopeProperty* sprop, nanojit::LIns*& dslots_ins,
                                  nanojit::LIns*& v_ins);
@@ -721,6 +728,13 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus getProp(JSObject* obj, nanojit::LIns* obj_ins);
     JS_REQUIRES_STACK JSRecordingStatus getProp(jsval& v);
     JS_REQUIRES_STACK JSRecordingStatus getThis(nanojit::LIns*& this_ins);
+
+    JS_REQUIRES_STACK JSRecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
+                                                  JSScopeProperty* sprop,
+                                                  jsval v, nanojit::LIns* v_ins);
+    JS_REQUIRES_STACK JSRecordingStatus setProp(jsval &l, JSPropCacheEntry* entry,
+                                                JSScopeProperty* sprop,
+                                                jsval &v, nanojit::LIns*& v_ins);
 
     JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, VMSideExit* exit);
@@ -748,8 +762,15 @@ class TraceRecorder : public avmplus::GCObject {
                                                   jsval* rval);
     JS_REQUIRES_STACK JSRecordingStatus interpretedFunctionCall(jsval& fval, JSFunction* fun,
                                                                 uintN argc, bool constructing);
+    JS_REQUIRES_STACK void propagateFailureToBuiltinStatus(nanojit::LIns *ok_ins,
+                                                           nanojit::LIns *&status_ins);
     JS_REQUIRES_STACK JSRecordingStatus emitNativeCall(JSTraceableNative* known, uintN argc,
                                                        nanojit::LIns* args[]);
+    JS_REQUIRES_STACK void emitNativePropertyOp(JSScope* scope,
+                                                JSScopeProperty* sprop,
+                                                nanojit::LIns* obj_ins,
+                                                bool setflag,
+                                                nanojit::LIns* boxed_ins);
     JS_REQUIRES_STACK JSRecordingStatus callTraceableNative(JSFunction* fun, uintN argc,
                                                             bool constructing);
     JS_REQUIRES_STACK JSRecordingStatus callNative(uintN argc, JSOp mode);

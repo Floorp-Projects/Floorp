@@ -5497,6 +5497,21 @@ testOwnPropertyWithInOperator.jitstats = {
 };
 test(testEliminatedGuardWithinAnchor);
 
+function testNativeSetter() {
+    var re = /foo/;
+    var N = RUNLOOP + 10;
+    for (var i = 0; i < N; i++)
+        re.lastIndex = i;
+    assertEq(re.lastIndex, N - 1);
+}
+testNativeSetter.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 1,
+    sideExitIntoInterpreter: 1
+};
+test(testNativeSetter);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
