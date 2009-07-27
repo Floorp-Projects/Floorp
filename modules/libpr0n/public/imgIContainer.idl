@@ -124,8 +124,8 @@ interface imgIContainer : nsISupports
    *                               appunits) to image space.
    * @param aFill The area in the context to draw pixels to. Image will be
    *              automatically tiled as necessary.
-   * @param @aSubimage The area of the image, in pixels, that we are allowed to
-   *                   sample from.
+   * @param aSubimage The area of the image, in pixels, that we are allowed to
+   *                  sample from.
    */
   [noscript] void draw(in gfxContext aContext, in gfxGraphicsFilter aFilter,
                        in gfxMatrix aUserSpaceToImageSpace, in gfxRect aFill,
