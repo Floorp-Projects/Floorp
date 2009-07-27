@@ -141,11 +141,6 @@ D_DEBUG_DOMAIN( ns_Window, "nsWindow", "nsWindow" );
 #define D_DEBUG_AT(x,y...)    do {} while (0)
 #endif
 
-#if (GTK_CHECK_VERSION(2, 12, 0) || \
-    (GTK_CHECK_VERSION(2, 10, 0) && defined(MOZ_PLATFORM_HILDON)))
-#define HAVE_GTK_MOTION_HINTS
-#endif
-
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
@@ -797,25 +792,27 @@ nsWindow::Destroy(void)
         gtk_widget_destroy(mShell);
         mShell = nsnull;
         mContainer = nsnull;
+        NS_ABORT_IF_FALSE(!mGdkWindow,
+                          "mGdkWindow should be NULL when mContainer is destroyed");
     }
     else if (mContainer) {
         gtk_widget_destroy(GTK_WIDGET(mContainer));
         mContainer = nsnull;
+        NS_ABORT_IF_FALSE(!mGdkWindow,
+                          "mGdkWindow should be NULL when mContainer is destroyed");
     }
-    else if (owningWidget) {
+    else if (mGdkWindow) {
         // Remove references from GdkWindows back to their container
         // widget while the GdkWindow hierarchy is still available.
         // (OnContainerUnrealize does this when the MozContainer widget is
         // destroyed.)
-        SetWidgetForHierarchy(mGdkWindow, owningWidget, NULL);
-    }
-
-    if (mGdkWindow) {
-        g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", NULL);
-
+        if (owningWidget) {
+            SetWidgetForHierarchy(mGdkWindow, owningWidget, NULL);
+        }
         NS_ASSERTION(!get_gtk_widget_for_gdk_window(mGdkWindow),
                      "widget reference not removed");
 
+        g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", NULL);
         gdk_window_destroy(mGdkWindow);
         mGdkWindow = nsnull;
     }
@@ -2464,6 +2461,9 @@ nsWindow::OnContainerUnrealize(GtkWidget *aWidget)
 
     if (mGdkWindow) {
         SetWidgetForHierarchy(mGdkWindow, aWidget, NULL);
+
+        g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", NULL);
+        mGdkWindow = NULL;
     }
 }
 
@@ -2484,8 +2484,6 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
 
     if (!mGdkWindow)
         return;
-
-    gdk_window_resize (mGdkWindow, rect.width, rect.height);
 
     if (mTransparencyBitmap) {
       ApplyTransparencyBitmap();
@@ -3959,8 +3957,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         // make sure this is the focus widget in the container
         gtk_window_set_focus(GTK_WINDOW(mShell), container);
 
-        // and the drawing window
-        mGdkWindow = CreateGdkWindow(container->window, container);
+        // the drawing window
+        mGdkWindow = container->window;
 
         if (mWindowType == eWindowType_popup) {
             // gdk does not automatically set the cursor for "temporary"
@@ -3987,7 +3985,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
             // Don't let GTK mess with the shapes of our GdkWindows
             GTK_PRIVATE_SET_FLAG(container, GTK_HAS_SHAPE_MASK);
 
-            mGdkWindow = CreateGdkWindow(container->window, container);
+            mGdkWindow = container->window;
         }
         else {
             NS_WARNING("Warning: tried to create a new child widget with no parent!");
@@ -4099,8 +4097,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
              (void *)GTK_WIDGET(mContainer)->window,
              GDK_WINDOW_XWINDOW(GTK_WIDGET(mContainer)->window)));
     }
-
-    if (mGdkWindow) {
+    else if (mGdkWindow) {
         LOG(("\tmGdkWindow %p %lx\n", (void *)mGdkWindow,
              GDK_WINDOW_XWINDOW(mGdkWindow)));
     }
@@ -4260,15 +4257,15 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
         gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
     }
     else if (mContainer) {
+        GtkWidget *widget = GTK_WIDGET(mContainer);
         GtkAllocation allocation;
-        allocation.x = 0;
-        allocation.y = 0;
+        allocation.x = widget->allocation.x;
+        allocation.y = widget->allocation.y;
         allocation.width = aWidth;
         allocation.height = aHeight;
-        gtk_widget_size_allocate(GTK_WIDGET(mContainer), &allocation);
+        gtk_widget_size_allocate(widget, &allocation);
     }
-
-    if (mGdkWindow) {
+    else if (mGdkWindow) {
         gdk_window_resize(mGdkWindow, aWidth, aHeight);
     }
 }
@@ -4299,12 +4296,11 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     }
     else if (mContainer) {
         GtkAllocation allocation;
-        allocation.x = 0;
-        allocation.y = 0;
+        allocation.x = aX;
+        allocation.y = aY;
         allocation.width = aWidth;
         allocation.height = aHeight;
         gtk_widget_size_allocate(GTK_WIDGET(mContainer), &allocation);
-        gdk_window_move_resize(mGdkWindow, aX, aY, aWidth, aHeight);
     }
     else if (mGdkWindow) {
         gdk_window_move_resize(mGdkWindow, aX, aY, aWidth, aHeight);
@@ -4336,12 +4332,10 @@ nsWindow::NativeShow (PRBool  aAction)
                 SetUserTimeAndStartupIDForActivatedWindow(mShell);
             }
 
-            gdk_window_show_unraised(mGdkWindow);
             gtk_widget_show(GTK_WIDGET(mContainer));
             gtk_widget_show(mShell);
         }
         else if (mContainer) {
-            gdk_window_show_unraised(mGdkWindow);
             gtk_widget_show(GTK_WIDGET(mContainer));
         }
         else if (mGdkWindow) {
@@ -4355,9 +4349,8 @@ nsWindow::NativeShow (PRBool  aAction)
         }
         else if (mContainer) {
             gtk_widget_hide(GTK_WIDGET(mContainer));
-            gdk_window_hide(mGdkWindow);
         }
-        if (mGdkWindow) {
+        else if (mGdkWindow) {
             gdk_window_hide(mGdkWindow);
         }
     }
