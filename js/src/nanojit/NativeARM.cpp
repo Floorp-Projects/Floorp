@@ -1833,12 +1833,8 @@ Assembler::asm_prep_fcall(Reservation*, LInsp)
 }
 
 NIns*
-Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
+Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
 {
-    // ignore isfar -- we figure this out on our own.
-    // XXX noone actually uses the far param in nj anyway... (always false)
-    (void)isfar;
-
     LOpcode condop = cond->opcode();
     NanoAssert(cond->isCond());
 

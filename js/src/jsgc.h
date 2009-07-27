@@ -309,18 +309,6 @@ typedef struct JSGCDoubleArenaList {
                                            things */
 } JSGCDoubleArenaList;
 
-typedef struct JSGCFreeListSet JSGCFreeListSet;
-
-struct JSGCFreeListSet {
-    JSGCThing           *array[GC_NUM_FREELISTS];
-    JSGCFreeListSet     *link;
-};
-
-extern const JSGCFreeListSet js_GCEmptyFreeListSet;
-
-extern void
-js_RevokeGCLocalFreeLists(JSContext *cx);
-
 extern void
 js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
 

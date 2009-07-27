@@ -467,9 +467,8 @@ namespace nanojit
         LDSW32(rs, ds, t);
     }
 
-    NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
+    NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     {
-              // XXX ignoring isfar
         NIns* at = 0;
         LOpcode condop = cond->opcode();
         NanoAssert(cond->isCond());
