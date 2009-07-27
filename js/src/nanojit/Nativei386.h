@@ -530,11 +530,11 @@ namespace nanojit
 #define JMP8  0xeb
 #define JMP32 0xe9
 
-#define JCC(o,t,isfar,n) do { \
+#define JCC(o,t,n) do { \
     count_jcc();\
     underrunProtect(6); \
     intptr_t tt = (intptr_t)t - (intptr_t)_nIns;    \
-    if (isS8(tt) && !isfar) { \
+    if (isS8(tt)) { \
         verbose_only( NIns* next = _nIns; (void)next; ) \
         _nIns -= 2; \
         _nIns[0] = (uint8_t) ( 0x70 | (o) ); \
@@ -584,33 +584,33 @@ namespace nanojit
         *(--_nIns) = 0xff;   \
         asm_output("jmp   *(%s)", gpn(r)); } while (0)
 
-#define JE(t, isfar)       JCC(0x04, t, isfar, "je")
-#define JNE(t, isfar)       JCC(0x05, t, isfar, "jne")
-#define JP(t, isfar)       JCC(0x0A, t, isfar, "jp")
-#define JNP(t, isfar)       JCC(0x0B, t, isfar, "jnp")
+#define JE(t)   JCC(0x04, t, "je")
+#define JNE(t)  JCC(0x05, t, "jne")
+#define JP(t)   JCC(0x0A, t, "jp")
+#define JNP(t)  JCC(0x0B, t, "jnp")
 
-#define JB(t, isfar)       JCC(0x02, t, isfar, "jb")
-#define JNB(t, isfar)       JCC(0x03, t, isfar, "jnb")
-#define JBE(t, isfar)       JCC(0x06, t, isfar, "jbe")
-#define JNBE(t, isfar)   JCC(0x07, t, isfar, "jnbe")
+#define JB(t)   JCC(0x02, t, "jb")
+#define JNB(t)  JCC(0x03, t, "jnb")
+#define JBE(t)  JCC(0x06, t, "jbe")
+#define JNBE(t) JCC(0x07, t, "jnbe")
 
-#define JA(t, isfar)       JCC(0x07, t, isfar, "ja")
-#define JNA(t, isfar)       JCC(0x06, t, isfar, "jna")
-#define JAE(t, isfar)       JCC(0x03, t, isfar, "jae")
-#define JNAE(t, isfar)   JCC(0x02, t, isfar, "jnae")
+#define JA(t)   JCC(0x07, t, "ja")
+#define JNA(t)  JCC(0x06, t, "jna")
+#define JAE(t)  JCC(0x03, t, "jae")
+#define JNAE(t) JCC(0x02, t, "jnae")
 
-#define JL(t, isfar)       JCC(0x0C, t, isfar, "jl")
-#define JNL(t, isfar)       JCC(0x0D, t, isfar, "jnl")
-#define JLE(t, isfar)       JCC(0x0E, t, isfar, "jle")
-#define JNLE(t, isfar)   JCC(0x0F, t, isfar, "jnle")
+#define JL(t)   JCC(0x0C, t, "jl")
+#define JNL(t)  JCC(0x0D, t, "jnl")
+#define JLE(t)  JCC(0x0E, t, "jle")
+#define JNLE(t) JCC(0x0F, t, "jnle")
 
-#define JG(t, isfar)       JCC(0x0F, t, isfar, "jg")
-#define JNG(t, isfar)       JCC(0x0E, t, isfar, "jng")
-#define JGE(t, isfar)       JCC(0x0D, t, isfar, "jge")
-#define JNGE(t, isfar)   JCC(0x0C, t, isfar, "jnge")
+#define JG(t)   JCC(0x0F, t, "jg")
+#define JNG(t)  JCC(0x0E, t, "jng")
+#define JGE(t)  JCC(0x0D, t, "jge")
+#define JNGE(t) JCC(0x0C, t, "jnge")
 
-#define JO(t, isfar)     JCC(0x00, t, isfar, "jo")
-#define JNO(t, isfar)    JCC(0x01, t, isfar, "jno")
+#define JO(t)   JCC(0x00, t, "jo")
+#define JNO(t)  JCC(0x01, t, "jno")
 
 // sse instructions
 #define SSE(c,d,s)  \
