@@ -194,9 +194,3 @@ INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
 		-I$(topsrcdir)/other-licenses/atk-1.0 \
 		$(NULL)
-
-test_container: mozdrawingarea.o mozcontainer.o test_container.c
-	$(CC) $(MOZ_GTK2_CFLAGS) -o test_container test_container.c \
-		mozdrawingarea.o mozcontainer.o \
-		$(MOZ_GTK2_LIBS)
-
