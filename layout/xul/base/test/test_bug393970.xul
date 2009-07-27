@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=393970
   <script type="application/javascript" src="/MochiKit/packed.js" />
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
 
-  <!-- test resuls are displayed in the html:body -->
+  <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=393970"
      target="_blank">Mozilla Bug 393970</a>

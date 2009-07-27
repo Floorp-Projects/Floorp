@@ -534,7 +534,7 @@ public:
   /**
    * To be called on a frame by its parent after setting its size/position and
    * calling DidReflow (possibly via FinishReflowChild()).  This can also be
-   * used for child frames which are not being reflown but did have their size
+   * used for child frames which are not being reflowed but did have their size
    * or position changed.
    *
    * @param aFrame The frame to invalidate
