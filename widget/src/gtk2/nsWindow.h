@@ -453,6 +453,7 @@ protected:
     PRPackedBool        mPlaced;
 
 private:
+    PRBool             CanBeSeen();
     void               GetToplevelWidget(GtkWidget **aWidget);
     GtkWidget         *GetMozContainerWidget();
     nsWindow          *GetContainerWindow();
