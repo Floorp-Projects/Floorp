@@ -161,6 +161,7 @@ function process_cp_pre_genericize(fndecl)
           let assign = stack[i];
           switch (TREE_CODE(assign)) {
           case VAR_DECL:
+          case COND_EXPR:
             break;
             
           case INIT_EXPR:
