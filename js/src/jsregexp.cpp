@@ -3166,10 +3166,6 @@ CompileRegExpToNative(JSContext* cx, JSRegExp* re, Fragment* fragment)
         goto out;
     }
     rv = rc.compile(cx);
-    static int fail = 0;  // TODO: remove
-    if (!rv)
-        ++fail;
-    debug_only_printf(LC_TMRegexp, "## Fail? %d, Total %d\n", (int)!rv, fail);
  out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return rv;
