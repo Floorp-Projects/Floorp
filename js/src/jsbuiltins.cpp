@@ -242,8 +242,6 @@ JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
-
     JS_LOCK_OBJ(cx, obj);
 
     JSScope* scope = OBJ_SCOPE(obj);

@@ -4802,7 +4802,6 @@ js_Interpret(JSContext *cx)
                             }
                             JS_UNLOCK_SCOPE(cx, scope);
                             PCMETER(cache->setpcmisses++);
-                            atom = NULL;
                         }
                     }
 
