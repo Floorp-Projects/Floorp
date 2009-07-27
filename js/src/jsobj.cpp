@@ -5773,23 +5773,40 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 #endif
 
     sprop = scope->lastProp;
-    if (sprop) {
-        JS_ASSERT(scope->has(sprop));
+    uint8 regenFlag = cx->runtime->gcRegenShapesScopeFlag;
+    if (IS_GC_MARKING_TRACER(trc) &&
+        cx->runtime->gcRegenShapes &&
+        scope->hasRegenFlag(regenFlag)) {
+        /*
+         * Either scope has its own shape, which must be regenerated, or it
+         * must have the same shape as its lastProp.
+         */
+        uint32 shape;
 
-        /* Regenerate property cache shape ids if GC'ing. */
-        if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
+        if (sprop) {
             if (!(sprop->flags & SPROP_FLAG_SHAPE_REGEN)) {
                 sprop->shape = js_RegenerateShapeForGC(cx);
                 sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
             }
-
-            uint32 shape = sprop->shape;
-            if (scope->hasOwnShape()) {
-                shape = js_RegenerateShapeForGC(cx);
-                JS_ASSERT(shape != sprop->shape);
-            }
-            scope->shape = shape;
+            shape = sprop->shape;
         }
+        if (!sprop || scope->hasOwnShape()) {
+            shape = js_RegenerateShapeForGC(cx);
+            JS_ASSERT_IF(sprop, shape != sprop->shape);
+        }
+        scope->shape = shape;
+        scope->flags ^= JSScope::SHAPE_REGEN;
+
+        /* Also regenerate the shapes of empty scopes, in case they are not shared. */
+        for (JSScope *empty = scope->emptyScope;
+             empty && empty->hasRegenFlag(regenFlag);
+             empty = empty->emptyScope) {
+            empty->shape = js_RegenerateShapeForGC(cx);
+            empty->flags ^= JSScope::SHAPE_REGEN;
+        }
+    }
+    if (sprop) {
+        JS_ASSERT(scope->has(sprop));
 
         /* Trace scope's property tree ancestor line. */
         do {

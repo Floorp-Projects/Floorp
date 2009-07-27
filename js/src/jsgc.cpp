@@ -3519,6 +3519,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     if (rt->shapeGen & SHAPE_OVERFLOW_BIT) {
         rt->gcRegenShapes = true;
+        rt->gcRegenShapesScopeFlag ^= JSScope::SHAPE_REGEN;
         rt->shapeGen = 0;
         rt->protoHazardShape = 0;
     }

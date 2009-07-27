@@ -196,7 +196,7 @@ JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj)
     scope->object = obj;
     scope->nrefs = 1;
     scope->freeslot = JSSLOT_FREE(clasp);
-    scope->flags = 0;
+    scope->flags = cx->runtime->gcRegenShapesScopeFlag;
     js_LeaveTraceIfGlobalObject(cx, obj);
     scope->initMinimal(cx);
 
@@ -226,7 +226,7 @@ JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
      */
     scope->nrefs = 2;
     scope->freeslot = JSSLOT_FREE(clasp);
-    scope->flags = 0;
+    scope->flags = OWN_SHAPE | cx->runtime->gcRegenShapesScopeFlag;
     scope->initMinimal(cx);
 
 #ifdef JS_THREADSAFE
