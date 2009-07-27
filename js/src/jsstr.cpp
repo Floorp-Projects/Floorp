@@ -628,7 +628,7 @@ JSClass js_StringClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_String),
     JS_PropertyStub,   JS_PropertyStub,   str_getProperty,   JS_PropertyStub,
-    str_enumerate, (JSResolveOp)str_resolve, JS_ConvertStub, JS_FinalizeStub,
+    str_enumerate, (JSResolveOp)str_resolve, JS_ConvertStub, NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -1796,6 +1796,9 @@ js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
     rdata.lambda = lambda;
     rdata.repstr = repstr;
     if (repstr) {
+        /* We're about to store pointers into the middle of our string. */
+        if (!js_MakeStringImmutable(cx, repstr))
+            return JS_FALSE;
         rdata.dollarEnd = repstr->chars() + repstr->length();
         rdata.dollar = js_strchr_limit(repstr->chars(), '$',
                                        rdata.dollarEnd);

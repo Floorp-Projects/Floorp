@@ -88,7 +88,7 @@ function isContentFrame(aFocusedWindow)
 }
 
 
-// Clientelle: (Make sure you don't break any of these)
+// Clientele: (Make sure you don't break any of these)
 //  - File    ->  Save Page/Frame As...
 //  - Context ->  Save Page/Frame As...
 //  - Context ->  Save Link As...
@@ -115,7 +115,7 @@ function saveURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
 
 // Just like saveURL, but will get some info off the image before
 // calling internalSave
-// Clientelle: (Make sure you don't break any of these)
+// Clientele: (Make sure you don't break any of these)
 //  - Context ->  Save Image As...
 const imgICache = Components.interfaces.imgICache;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;

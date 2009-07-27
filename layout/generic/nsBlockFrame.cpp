@@ -538,6 +538,20 @@ nsBlockFrame::GetFirstChild(nsIAtom* aListName) const
   return nsContainerFrame::GetFirstChild(aListName);;
 }
 
+nsIFrame*
+nsBlockFrame::GetLastChild(nsIAtom* aListName) const
+{
+  if (aListName) {
+    return nsBlockFrameSuper::GetLastChild(aListName);
+  }
+
+  if (mLines.empty()) {
+    return nsnull;
+  }
+
+  return mLines.back()->LastChild();
+}
+
 #define NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX  (NS_CONTAINER_LIST_COUNT_INCL_OC + 0)
 #define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         (NS_CONTAINER_LIST_COUNT_INCL_OC + 1)
 #define NS_BLOCK_FRAME_BULLET_LIST_INDEX        (NS_CONTAINER_LIST_COUNT_INCL_OC + 2)
@@ -1857,6 +1871,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       aState.ReconstructMarginAbove(line);
     }
 
+    PRBool reflowedPrevLine = !needToRecoverState;
     if (needToRecoverState) {
       needToRecoverState = PR_FALSE;
 
@@ -2001,6 +2016,15 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       }
 
       needToRecoverState = PR_TRUE;
+
+      if (reflowedPrevLine && !line->IsBlock() &&
+          aState.mPresContext->HasPendingInterrupt()) {
+        // Need to make sure to pull overflows from any prev-in-flows
+        for (nsIFrame* inlineKid = line->mFirstChild; inlineKid;
+             inlineKid = inlineKid->GetFirstChild(nsnull)) {
+          inlineKid->PullOverflowsFromPrevInFlow();
+        }
+      }
     }
 
     // Record if we need to clear floats before reflowing the next

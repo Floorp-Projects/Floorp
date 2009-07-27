@@ -3288,7 +3288,7 @@ nsGlobalWindow::SetOuterSize(PRInt32 aLengthCSSPixels, PRBool aIsWidth)
    * prevent setting window.outerWidth by exiting early
    */
 
-  if (!CanMoveResizeWindows()) {
+  if (!CanMoveResizeWindows() || IsFrame()) {
     return NS_OK;
   }
 
@@ -3357,7 +3357,7 @@ nsGlobalWindow::SetScreenX(PRInt32 aScreenX)
    * prevent setting window.screenX by exiting early
    */
 
-  if (!CanMoveResizeWindows()) {
+  if (!CanMoveResizeWindows() || IsFrame()) {
     return NS_OK;
   }
 
@@ -3408,7 +3408,7 @@ nsGlobalWindow::SetScreenY(PRInt32 aScreenY)
    * prevent setting window.screenY by exiting early
    */
 
-  if (!CanMoveResizeWindows()) {
+  if (!CanMoveResizeWindows() || IsFrame()) {
     return NS_OK;
   }
 
@@ -4883,7 +4883,7 @@ nsGlobalWindow::CheckForAbusePoint()
   
   nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mDocShell));
 
-  NS_ASSERTION(item, "Docshell doesn't implenent nsIDocShellTreeItem?");
+  NS_ASSERTION(item, "Docshell doesn't implement nsIDocShellTreeItem?");
 
   PRInt32 type = nsIDocShellTreeItem::typeChrome;
   item->GetItemType(&type);
@@ -6734,12 +6734,6 @@ nsresult
 nsGlobalWindow::DispatchAsyncHashchange()
 {
   FORWARD_TO_INNER(DispatchAsyncHashchange, (), NS_OK);
-
-  nsIDocument::ReadyState readyState = mDoc->GetReadyStateEnum();
-
-  // We only queue up the event if the ready state is currently "complete"
-  if (readyState != nsIDocument::READYSTATE_COMPLETE)
-      return NS_OK;
 
   nsCOMPtr<nsIRunnable> event =
     NS_NEW_RUNNABLE_METHOD(nsGlobalWindow, this, FireHashchange);

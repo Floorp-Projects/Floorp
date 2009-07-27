@@ -1667,6 +1667,12 @@ nsIFrame::CreateWidgetForView(nsIView* aView)
   return aView->CreateWidget(kWidgetCID);
 }
 
+nsIFrame*
+nsIFrame::GetLastChild(nsIAtom* aListName) const
+{
+  return nsLayoutUtils::GetLastSibling(GetFirstChild(aListName));
+}
+
 /**
   *
  */
@@ -4261,35 +4267,6 @@ nsFrame::XMLQuote(nsString& aString)
 #endif
 
 PRBool
-nsFrame::ParentDisablesSelection() const
-{
-/*
-  // should never be called now
-  nsIFrame* parent = GetParent();
-  if (parent) {
-	  PRBool selectable;
-	  parent->IsSelectable(selectable);
-    return (selectable ? PR_FALSE : PR_TRUE);
-  }
-  return PR_FALSE;
-*/
-/*
-  PRBool selected;
-  if (NS_FAILED(GetSelected(&selected)))
-    return PR_FALSE;
-  if (selected)
-    return PR_FALSE; //if this frame is selected and no one has overridden the selection from "higher up"
-                     //then no one below us will be disabled by this frame.
-  nsIFrame* target = GetParent();
-  if (target)
-    return ((nsFrame *)target)->ParentDisablesSelection();
-  return PR_FALSE; //default this does not happen
-  */
-  
-  return PR_FALSE;
-}
-
-PRBool
 nsIFrame::IsVisibleForPainting(nsDisplayListBuilder* aBuilder) {
   if (!GetStyleVisibility()->IsVisible())
     return PR_FALSE;
@@ -4487,55 +4464,30 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
 }
 #endif
 
-/*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
-  it will not update immediately.*/
-NS_IMETHODIMP
-nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelected, nsSpread aSpread, SelectionType aType)
+void
+nsIFrame::SetSelected(PRBool aSelected, SelectionType aType)
 {
-/*
-  if (aSelected && ParentDisablesSelection())
-    return NS_OK;
-*/
+  NS_ASSERTION(!GetPrevContinuation(),
+               "Should only be called on first in flow");
+  if (aType != nsISelectionController::SELECTION_NORMAL)
+    return;
 
-  if (aType == nsISelectionController::SELECTION_NORMAL) {
-    // check whether style allows selection
-    PRBool  selectable;
-    IsSelectable(&selectable, nsnull);
-    if (!selectable)
-      return NS_OK;
-  }
+  // check whether style allows selection
+  PRBool selectable;
+  IsSelectable(&selectable, nsnull);
+  if (!selectable)
+    return;
 
-/*
-  if (eSpreadDown == aSpread){
-    nsIFrame* kid = GetFirstChild(nsnull);
-    while (nsnull != kid) {
-      kid->SetSelected(nsnull,aSelected,aSpread);
-      kid = kid->GetNextSibling();
+  for (nsIFrame* f = this; f; f = f->GetNextContinuation()) {
+    if (aSelected) {
+      AddStateBits(NS_FRAME_SELECTED_CONTENT);
+    } else {
+      RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
     }
-  }
-*/
-  if ( aSelected ){
-    AddStateBits(NS_FRAME_SELECTED_CONTENT);
-  }
-  else
-    RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
 
-  // Repaint this frame subtree's entire area
-  InvalidateOverflowRect();
-
-#ifdef IBMBIDI
-  PRInt32 start, end;
-  nsIFrame* frame = GetNextSibling();
-  if (frame) {
-    GetFirstLeaf(aPresContext, &frame);
-    GetOffsets(start, end);
-    if (start && end) {
-      frame->SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
-    }
+    // Repaint this frame subtree's entire area
+    InvalidateOverflowRect();
   }
-#endif // IBMBIDI
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

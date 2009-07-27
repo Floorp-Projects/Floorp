@@ -119,7 +119,7 @@ interface nsIAccessibleRelation : nsISupports
 
   /**
    * This object is a transient component related to the target object. When
-   * this object is activated the target object doesn't loose focus.
+   * this object is activated the target object doesn't lose focus.
    */
   const unsigned long RELATION_POPUP_FOR = 0x0c;
 

@@ -980,7 +980,7 @@ nsAutoCompleteController::StartSearch()
   mDefaultIndexCompleted = PR_FALSE;
 
   // Cache the current results so that we can pass these through to all the
-  // searches without loosing them
+  // searches without losing them
   nsCOMArray<nsIAutoCompleteResult> resultCache;
   if (!resultCache.AppendObjects(mResults)) {
     return NS_ERROR_OUT_OF_MEMORY;

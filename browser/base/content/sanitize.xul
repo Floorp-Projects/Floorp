@@ -87,11 +87,9 @@
     <preferences id="sanitizePreferences">
       <preference id="privacy.cpd.history"               name="privacy.cpd.history"               type="bool"/>
       <preference id="privacy.cpd.formdata"              name="privacy.cpd.formdata"              type="bool"/>
-      <preference id="privacy.cpd.passwords"             name="privacy.cpd.passwords"             type="bool"/>
       <preference id="privacy.cpd.downloads"             name="privacy.cpd.downloads"             type="bool" disabled="true"/>
       <preference id="privacy.cpd.cookies"               name="privacy.cpd.cookies"               type="bool"/>
       <preference id="privacy.cpd.cache"                 name="privacy.cpd.cache"                 type="bool"/>
-      <preference id="privacy.cpd.offlineApps"           name="privacy.cpd.offlineApps"           type="bool"/>
       <preference id="privacy.cpd.sessions"              name="privacy.cpd.sessions"              type="bool"/>
       <preference id="privacy.cpd.siteSettings"          name="privacy.cpd.siteSettings"          type="bool"/>
     </preferences>

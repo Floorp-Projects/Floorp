@@ -75,9 +75,14 @@ FormAutoComplete.prototype = {
         return this.__observerService;
     },
 
-    _prefBranch  : null,
-    _enabled : true,  // mirrors browser.formfill.enable preference
-    _debug   : false, // mirrors browser.formfill.debug
+    _prefBranch        : null,
+    _debug             : false, // mirrors browser.formfill.debug
+    _enabled           : true,  // mirrors browser.formfill.enable preference
+    _agedWeight        : 2,
+    _bucketSize        : 5,
+    _maxTimeGroupings  : 25,
+    _timeGroupingSize  : 7 * 24 * 60 * 60 * 1000 * 1000,
+    _expireDays        : null,
 
     init : function() {
         // Preferences. Add observer so we get notified of changes.
@@ -89,6 +94,11 @@ FormAutoComplete.prototype = {
 
         this._debug   = this._prefBranch.getBoolPref("debug");
         this._enabled = this._prefBranch.getBoolPref("enable");
+        this._agedWeight = this._prefBranch.getIntPref("agedWeight");
+        this._bucketSize = this._prefBranch.getIntPref("bucketSize");
+        this._maxTimeGroupings = this._prefBranch.getIntPref("maxTimeGroupings");
+        this._timeGroupingSize = this._prefBranch.getIntPref("timeGroupingSize") * 1000 * 1000;
+        this._expireDays = this._getFormExpiryDays();
 
         this._dbStmts = [];
 
@@ -107,12 +117,27 @@ FormAutoComplete.prototype = {
                 let prefName = data;
                 self.log("got change to " + prefName + " preference");
 
-                if (prefName == "debug") {
-                    self._debug = self._prefBranch.getBoolPref("debug");
-                } else if (prefName == "enable") {
-                    self._enabled = self._prefBranch.getBoolPref("enable");
-                } else {
-                    self.log("Oops! Pref not handled, change ignored.");
+                switch (prefName) {
+                    case "agedWeight":
+                        self._agedWeight = self._prefBranch.getIntPref(prefName);
+                        break;
+                    case "debug":
+                        self._debug = self._prefBranch.getBoolPref(prefName);
+                        break;
+                    case "enable":
+                        self._enabled = self._prefBranch.getBoolPref(prefName);
+                        break;
+                    case "maxTimeGroupings":
+                        self._maxTimeGroupings = self._prefBranch.getIntPref(prefName);
+                        break;
+                    case "timeGroupingSize":
+                        self._timeGroupingSize = self._prefBranch.getIntPref(prefName) * 1000 * 1000;
+                        break;
+                    case "bucketSize":
+                        self._bucketSize = self._prefBranch.getIntPref(prefName);
+                        break;
+                    default:
+                        self.log("Oops! Pref not handled, change ignored.");
                 }
             } else if (topic == "xpcom-shutdown") {
                 self._dbStmts = null;
@@ -186,13 +211,35 @@ FormAutoComplete.prototype = {
 
     getAutoCompleteValues : function (fieldName, searchString) {
         let values = [];
-
-        let query = "SELECT value FROM moz_formhistory " +
+        /* Three factors in the frecency calculation for an entry (in order of use in calculation):
+         * 1) average number of times used - items used more are ranked higher
+         * 2) how recently it was last used - items used recently are ranked higher
+         * 3) additional weight for aged entries surviving expiry - these entries are relevant
+         *    since they have been used multiple times over a large time span so rank them higher
+         * The score is then divided by the bucket size and we round the result so that entries
+         * with a very similar frecency are bucketed together with an alphabetical sort. This is
+         * to reduce the amount of moving around by entries while typing.
+         */
+        let query = "SELECT value, " +
+                    "ROUND( " +
+                        "timesUsed / MAX(1.0, (lastUsed - firstUsed) / :timeGroupingSize) * " +
+                        "MAX(1.0, :maxTimeGroupings - (:now - lastUsed) / :timeGroupingSize) * "+
+                        "MAX(1.0, :agedWeight * (firstUsed < :expiryDate)) / " +
+                        ":bucketSize "+
+                    ") AS frecency " +
+                    "FROM moz_formhistory " +
                     "WHERE fieldname=:fieldname AND value LIKE :valuePrefix ESCAPE '/' " +
-                    "ORDER BY UPPER(value) ASC";
+                    "ORDER BY frecency DESC, UPPER(value) ASC";
+
         let params = {
-            fieldname: fieldName,
-            valuePrefix: null // set below...
+            agedWeight:         this._agedWeight,
+            bucketSize:         this._bucketSize,
+            expiryDate:         1000 * (Date.now() - this._expireDays * 24 * 60 * 60 * 1000),
+            fieldname:          fieldName,
+            maxTimeGroupings:   this._maxTimeGroupings,
+            now:                Date.now() * 1000,          // convert from ms to microseconds
+            timeGroupingSize:   this._timeGroupingSize,
+            valuePrefix:        null                        // set below...
         }
 
         let stmt;
@@ -205,9 +252,10 @@ FormAutoComplete.prototype = {
 
             while (stmt.step())
                 values.push(stmt.row.value);
+
         } catch (e) {
             this.log("getValues failed: " + e.name + " : " + e.message);
-            throw "DB failed getting form autocomplete falues";
+            throw "DB failed getting form autocomplete values";
         } finally {
             stmt.reset();
         }
@@ -227,10 +275,21 @@ FormAutoComplete.prototype = {
             this._dbStmts[query] = stmt;
         }
         // Replace parameters, must be done 1 at a time
-        if (params)
+        if (params) {
+            let stmtparams = stmt.params;
             for (let i in params)
-                stmt.params[i] = params[i];
+                stmtparams[i] = params[i];
+        }
         return stmt;
+    },
+
+    _getFormExpiryDays : function () {
+        let prefsBranch = Cc["@mozilla.org/preferences-service;1"].
+                          getService(Ci.nsIPrefBranch);
+        if (prefsBranch.prefHasUserValue("browser.formfill.expire_days"))
+            return prefsBranch.getIntPref("browser.formfill.expire_days");
+        else
+            return prefsBranch.getIntPref("browser.history_expire_days");
     }
 
 }; // end of FormAutoComplete implementation

@@ -1463,5 +1463,5 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 .allTabs-preview-label {
-  -moz-transform: translate(0, -1px);
+  -moz-transform: translate(0, 2px);
 }

@@ -3290,7 +3290,7 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
 }
 
 static void
-js_FinalizeObject(JSContext *cx, JSObject *obj)
+FinalizeObject(JSContext *cx, JSObject *obj)
 {
     /* Cope with stillborn objects that have no map. */
     if (!obj->map)
@@ -3302,7 +3302,9 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     }
 
     /* Finalize obj first, in case it needs map and slots. */
-    STOBJ_GET_CLASS(obj)->finalize(cx, obj);
+    JSClass *clasp = STOBJ_GET_CLASS(obj);
+    if (clasp->finalize)
+        clasp->finalize(cx, obj);
 
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
@@ -3715,10 +3717,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                         type = flags & GCF_TYPEMASK;
                         switch (type) {
                           case GCX_OBJECT:
-                            js_FinalizeObject(cx, (JSObject *) thing);
-                            break;
-                          case GCX_DOUBLE:
-                            /* Do nothing. */
+                            FinalizeObject(cx, (JSObject *) thing);
                             break;
 #if JS_HAS_XML_SUPPORT
                           case GCX_XML:

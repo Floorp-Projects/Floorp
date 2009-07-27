@@ -857,6 +857,16 @@ public:
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const = 0;
 
   /**
+   * Get the last child frame from the specified child list.
+   *
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @return  the child frame, or NULL if there is no such child
+   * @see     #GetAdditionalListName()
+   */
+  virtual nsIFrame* GetLastChild(nsIAtom* aListName) const;
+
+  /**
    * Child frames are linked together in a singly-linked list
    */
   nsIFrame* GetNextSibling() const { return mNextSibling; }
@@ -1887,19 +1897,20 @@ public:
   /** Selection related calls
    */
   /** 
-   *  Called to set the selection of the frame based on frame offsets.  you can FORCE the frame
-   *  to redraw event if aSelected == the frame selection with the last parameter.
-   *  data in struct may be changed when passed in.
-   *  @param aRange is the range that will dictate if the frames need to be redrawn null means the whole content needs to be redrawn
+   *  Called to set the selection status of the frame.
+   *  
+   *  This must be called on the primary frame, but all continuations
+   *  will be affected the same way.
+   *
+   *  This sets or clears NS_FRAME_SELECTED_CONTENT for each frame in the
+   *  continuation chain, if the frames are currently selectable.
+   *  The frames are unconditionally invalidated, if this selection type
+   *  is supported at all.
    *  @param aSelected is it selected?
-   *  @param aSpread should it spread the selection to flow elements around it? or go down to its children?
    *  @param aType the selection type of the selection that you are setting on the frame
    */
-  NS_IMETHOD  SetSelected(nsPresContext* aPresContext,
-                          nsIDOMRange*    aRange,
-                          PRBool          aSelected,
-                          nsSpread        aSpread,
-                          SelectionType   aType) = 0;
+  virtual void SetSelected(PRBool        aSelected,
+                           SelectionType aType);
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 
@@ -2314,6 +2325,12 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
    * @note dispose the line iterator using nsILineIterator::DisposeLineIterator
    */
   virtual nsILineIterator* GetLineIterator() = 0;
+
+  /**
+   * If this frame is a next-in-flow, and its prev-in-flow has something on its
+   * overflow list, pull those frames into the child list of this one.
+   */
+  virtual void PullOverflowsFromPrevInFlow() {}
 
 protected:
   // Members

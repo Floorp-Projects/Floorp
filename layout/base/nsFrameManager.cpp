@@ -1398,7 +1398,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
               // the frame where we started the reresolve.  Therefore, even if
               // aMinChange already includes nsChangeHint_ReflowFrame we don't
               // want to pass that on to the out-of-flow reresolve, since that
-              // can lead to the out-of-flow not getting reflown when it should
+              // can lead to the out-of-flow not getting reflowed when it should
               // be (eg a reresolve starting at <body> that involves reflowing
               // the <body> would miss reflowing fixed-pos nodes that also need
               // reflow).  In the cases when the out-of-flow _is_ a geometric

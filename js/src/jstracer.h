@@ -279,6 +279,12 @@ typedef JSTraceType_ JSTraceType;
 typedef int8_t JSTraceType;
 #endif
 
+/*
+ * This indicates an invalid type or error. Note that it should not be used in typemaps,
+ * because it is the wrong size. It can only be used as a uint32, for example as the 
+ * return value from a function that returns a type as a uint32.
+ */
+const uint32 TT_INVALID = uint32(-1);
 
 typedef Queue<uint16> SlotList;
 
@@ -629,7 +635,7 @@ class TraceRecorder : public avmplus::GCObject {
 
     JS_REQUIRES_STACK nanojit::LIns* scopeChain() const;
     JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
-    JS_REQUIRES_STACK JSRecordingStatus activeCallOrGlobalSlot(JSObject* obj, jsval*& vp);
+    JS_REQUIRES_STACK JSRecordingStatus scopeChainProp(JSObject* obj, jsval*& vp, nanojit::LIns*& ins, bool& tracked);
 
     JS_REQUIRES_STACK nanojit::LIns* arg(unsigned n);
     JS_REQUIRES_STACK void arg(unsigned n, nanojit::LIns* i);
@@ -706,7 +712,7 @@ class TraceRecorder : public avmplus::GCObject {
 
     nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
 
-    JS_REQUIRES_STACK JSRecordingStatus name(jsval*& vp);
+    JS_REQUIRES_STACK JSRecordingStatus name(jsval*& vp, nanojit::LIns*& ins, bool& tracked);
     JS_REQUIRES_STACK JSRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot,
                                              nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK JSRecordingStatus denseArrayElement(jsval& oval, jsval& idx, jsval*& vp,

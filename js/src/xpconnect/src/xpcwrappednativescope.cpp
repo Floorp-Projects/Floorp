@@ -215,7 +215,7 @@ JSClass XPC_WN_NoHelper_Proto_JSClass = {
     JS_EnumerateStub,               // enumerate;
     JS_ResolveStub,                 // resolve;
     JS_ConvertStub,                 // convert;
-    JS_FinalizeStub,                // finalize;
+    nsnull,                         // finalize;
 
     /* Optionally non-null members start here. */
     XPC_WN_Proto_GetObjectOps,      // getObjectOps;
