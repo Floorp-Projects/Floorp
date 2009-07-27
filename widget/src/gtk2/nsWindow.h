@@ -43,7 +43,6 @@
 #include "nsAutoPtr.h"
 
 #include "mozcontainer.h"
-#include "mozdrawingarea.h"
 #include "nsWeakReference.h"
 
 #include "nsIDragService.h"
@@ -467,7 +466,7 @@ private:
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
-    MozDrawingarea     *mDrawingarea;
+    GdkWindow          *mGdkWindow;
 
     GtkWindowGroup     *mWindowGroup;
 

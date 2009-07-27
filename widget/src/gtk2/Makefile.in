@@ -78,7 +78,6 @@ endif
 
 CSRCS		= \
 		mozcontainer.c \
-		mozdrawingarea.c \
 		keysym2ucs.c \
 		$(NULL)
 
@@ -159,7 +158,6 @@ endif
 EXPORTS		= \
                 nsGTKToolkit.h \
 		nsIImageToPixbuf.h \
-		mozdrawingarea.h \
 		mozcontainer.h \
 		$(NULL)
 
