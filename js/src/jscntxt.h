@@ -391,7 +391,18 @@ struct JSRuntime {
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
     JSPackedBool        gcRegenShapes;
-    uint8               gcPadding;
+
+    /*
+     * During gc, if rt->gcRegenShapes &&
+     *   (scope->flags & JSScope::SHAPE_REGEN) == rt->gcRegenShapesScopeFlag,
+     * then the scope's shape has already been regenerated during this GC.
+     * To avoid having to sweep JSScopes, the bit's meaning toggles with each
+     * shape-regenerating GC.
+     *
+     * FIXME Once scopes are GC'd (bug 505004), this will be obsolete.
+     */
+    uint8              gcRegenShapesScopeFlag;
+
 #ifdef JS_GC_ZEAL
     jsrefcount          gcZeal;
 #endif

@@ -283,7 +283,13 @@ struct JSScope {
         SEALED                  = 0x0002,
         BRANDED                 = 0x0004,
         INDEXED_PROPERTIES      = 0x0008,
-        OWN_SHAPE               = 0x0010
+        OWN_SHAPE               = 0x0010,
+
+        /*
+         * This flag toggles with each shape-regenerating GC cycle.
+         * See JSRuntime::gcRegenShapesScopeFlag.
+         */
+        SHAPE_REGEN             = 0x0020
     };
 
     bool hadMiddleDelete()      { return flags & MIDDLE_DELETE; }
@@ -311,6 +317,8 @@ struct JSScope {
 
     bool hasOwnShape()          { return flags & OWN_SHAPE; }
     void setOwnShape()          { flags |= OWN_SHAPE; }
+
+    bool hasRegenFlag(uint8 regenFlag) { return (flags & SHAPE_REGEN) == regenFlag; }
 
     bool owned()                { return object != NULL; }
 };
