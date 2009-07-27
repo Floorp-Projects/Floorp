@@ -114,8 +114,9 @@ var tabPreviewPanelHelper = {
     host.panel.hidden = false;
 
     var handler = this._generateHandler(host);
-    host.panel.addEventListener("popuphiding", handler, false);
     host.panel.addEventListener("popupshown", handler, false);
+    host.panel.addEventListener("popuphiding", handler, false);
+    host.panel.addEventListener("popuphidden", handler, false);
 
     host._prevFocus = document.commandDispatcher.focusedElement;
   },
@@ -136,10 +137,6 @@ var tabPreviewPanelHelper = {
     if ("suspendGUI" in host)
       host.suspendGUI();
 
-    // Destroy the widget in order to prevent outdated content
-    // when re-opening the panel.
-    host.panel.hidden = true;
-
     if (host._prevFocus) {
       Cc["@mozilla.org/focus-manager;1"]
         .getService(Ci.nsIFocusManager)
@@ -152,6 +149,11 @@ var tabPreviewPanelHelper = {
       gBrowser.selectedTab = host.tabToSelect;
       host.tabToSelect = null;
     }
+  },
+  _popuphidden: function (host) {
+    // Destroy the widget in order to prevent outdated content
+    // when re-opening the panel.
+    host.panel.hidden = true;
   }
 };
 
