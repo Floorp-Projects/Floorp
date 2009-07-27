@@ -538,6 +538,20 @@ nsBlockFrame::GetFirstChild(nsIAtom* aListName) const
   return nsContainerFrame::GetFirstChild(aListName);;
 }
 
+nsIFrame*
+nsBlockFrame::GetLastChild(nsIAtom* aListName) const
+{
+  if (aListName) {
+    return nsBlockFrameSuper::GetLastChild(aListName);
+  }
+
+  if (mLines.empty()) {
+    return nsnull;
+  }
+
+  return mLines.back()->LastChild();
+}
+
 #define NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX  (NS_CONTAINER_LIST_COUNT_INCL_OC + 0)
 #define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         (NS_CONTAINER_LIST_COUNT_INCL_OC + 1)
 #define NS_BLOCK_FRAME_BULLET_LIST_INDEX        (NS_CONTAINER_LIST_COUNT_INCL_OC + 2)
