@@ -857,6 +857,16 @@ public:
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const = 0;
 
   /**
+   * Get the last child frame from the specified child list.
+   *
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @return  the child frame, or NULL if there is no such child
+   * @see     #GetAdditionalListName()
+   */
+  virtual nsIFrame* GetLastChild(nsIAtom* aListName) const;
+
+  /**
    * Child frames are linked together in a singly-linked list
    */
   nsIFrame* GetNextSibling() const { return mNextSibling; }
