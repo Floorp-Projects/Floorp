@@ -1081,7 +1081,7 @@ namespace nanojit
                 case LIR_ule:   MRA(rr, iffalsereg);    break;
                 case LIR_ugt:   MRBE(rr, iffalsereg);   break;
                 case LIR_uge:   MRB(rr, iffalsereg);    break;
-                debug_only( default: NanoAssert(0); break; )
+                default: NanoAssert(0); break;
             }
         } else if (op == LIR_qcmov) {
             NanoAssert(0);
