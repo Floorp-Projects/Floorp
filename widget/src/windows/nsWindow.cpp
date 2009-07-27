@@ -770,8 +770,6 @@ LPCWSTR nsWindow::WindowClass()
 // Return the proper popup window class
 LPCWSTR nsWindow::WindowPopupClass()
 {
-  const LPCWSTR className = L"MozillaDropShadowWindowClass";
-
   if (!nsWindow::sIsPopupClassRegistered) {
     WNDCLASSW wc;
 
@@ -784,7 +782,7 @@ LPCWSTR nsWindow::WindowPopupClass()
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
-    wc.lpszClassName = className;
+    wc.lpszClassName = kClassNameDropShadow;
 
     nsWindow::sIsPopupClassRegistered = ::RegisterClassW(&wc);
     if (!nsWindow::sIsPopupClassRegistered) {
