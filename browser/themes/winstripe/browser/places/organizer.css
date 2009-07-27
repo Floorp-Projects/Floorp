@@ -73,6 +73,10 @@
   border: 1px solid transparent;
 }
 
+#placesMenu > menu[_moz-menuactive="true"] {
+  background-color: transparent;
+}
+
 #placesMenu > menu:hover {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
 }
