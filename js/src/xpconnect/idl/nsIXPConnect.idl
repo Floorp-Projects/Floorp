@@ -252,7 +252,7 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
  *
  * That activity is...
  *
- * When JavaScript code uses a component that is itself implemeted in
+ * When JavaScript code uses a component that is itself implemented in
  * JavaScript then XPConnect will build a wrapper rather than directly
  * expose the JSObject of the component. This allows components implemented
  * in JavaScript to 'look' just like any other xpcom component (from the
