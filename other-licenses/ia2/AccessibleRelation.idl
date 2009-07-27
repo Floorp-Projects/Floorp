@@ -80,7 +80,7 @@ const WCHAR *const IA2_RELATION_NODE_CHILD_OF = L"nodeChildOf";
 const WCHAR *const IA2_RELATION_PARENT_WINDOW_OF = L"parentWindowOf";
 
 /** This object is a transient component related to the target object. 
- When this object is activated the target object doesn't loose focus.
+ When this object is activated the target object doesn't lose focus.
 */
 const WCHAR *const IA2_RELATION_POPUP_FOR = L"popupFor";
 
