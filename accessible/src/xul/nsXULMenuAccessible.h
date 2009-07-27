@@ -45,7 +45,7 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 
 /*
- * The basic implemetation of nsIAccessibleSelectable.
+ * The basic implementation of nsIAccessibleSelectable.
  */
 class nsXULSelectableAccessible : public nsAccessibleWrap
 {
