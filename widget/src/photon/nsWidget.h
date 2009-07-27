@@ -157,18 +157,6 @@ public:
   NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
   NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
 
-  inline NS_IMETHOD BeginResizingChildren(void)
-		{
-		PtHold();
-		return NS_OK;
-		}
-
-  inline NS_IMETHOD EndResizingChildren(void)
-		{
-		PtRelease();
-		return NS_OK;
-		}
-
   // Use this to set the name of a widget for normal widgets.. not the same as the nsWindow version
   inline NS_IMETHOD SetTitle(const nsAString& aTitle) { return NS_OK; }
 
