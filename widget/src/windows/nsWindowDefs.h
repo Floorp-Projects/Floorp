@@ -190,6 +190,7 @@ const LPCWSTR kClassNameContent      = L"MozillaContentWindowClass";
 const LPCWSTR kClassNameContentFrame = L"MozillaContentFrameWindowClass";
 const LPCWSTR kClassNameGeneral      = L"MozillaWindowClass";
 const LPCWSTR kClassNameDialog       = L"MozillaDialogClass";
+const LPCWSTR kClassNameDropShadow   = L"MozillaDropShadowWindowClass";
 
 static const PRUint32 sModifierKeyMap[][3] = {
   { nsIWidget::CAPS_LOCK, VK_CAPITAL, 0 },
