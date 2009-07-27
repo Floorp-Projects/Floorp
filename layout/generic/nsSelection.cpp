@@ -3173,7 +3173,7 @@ nsTypedSelection::addTableCellRange(nsIRange *aRange, PRBool *aDidAddRange,
   }
   
   // Set frame selection mode only if not already set to a table mode
-  //  so we don't loose the select row and column flags (not detected by getTableCellLocation)
+  //  so we don't lose the select row and column flags (not detected by getTableCellLocation)
   if (mFrameSelection->mSelectingTableCellMode == TABLESELECTION_NONE)
     mFrameSelection->mSelectingTableCellMode = tableMode;
 

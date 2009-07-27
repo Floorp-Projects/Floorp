@@ -1062,7 +1062,7 @@ nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
 // Write #define UNIFIED_CONTINUATIONS here to have the transform property try
 // to transform content with continuations as one unified block instead of
 // several smaller ones.  This is currently disabled because it doesn't work
-// correctly, since when the frames are initially being reflown, their
+// correctly, since when the frames are initially being reflowed, their
 // continuations all compute their bounding rects independently of each other
 // and consequently get the wrong value.  Write #define DEBUG_HIT here to have
 // the nsDisplayTransform class dump out a bunch of information about hit
