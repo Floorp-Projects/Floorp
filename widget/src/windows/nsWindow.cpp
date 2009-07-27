@@ -793,7 +793,7 @@ LPCWSTR nsWindow::WindowPopupClass()
     }
   }
 
-  return className;
+  return kClassNameDropShadow;
 }
 
 /**************************************************************
