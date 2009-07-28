@@ -1,9 +1,6 @@
 function test() {
-  var ioserv = Components.classes["@mozilla.org/network/io-service;1"].
-               getService(Components.interfaces.nsIIOService);
-  var exampleUri = ioserv.newURI("http://example.com/", null, null);
-  var secman = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
-               getService(Components.interfaces.nsIScriptSecurityManager);
+  var exampleUri = makeURI("http://example.com/");
+  var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
   var principal = secman.getCodebasePrincipal(exampleUri);
 
   function testIsFeed(aTitle, aHref, aType, aKnown) {

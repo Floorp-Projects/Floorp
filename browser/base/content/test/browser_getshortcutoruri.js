@@ -1,9 +1,3 @@
-function makeURI(aURL, aOriginCharset, aBaseURI) {
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService);
-  return ioService.newURI(aURL, aOriginCharset, aBaseURI);
-}
-
 function getPostDataString(aIS) {
   if (!aIS)
     return null;

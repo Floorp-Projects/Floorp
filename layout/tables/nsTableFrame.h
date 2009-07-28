@@ -258,12 +258,9 @@ public:
     * @see nsIFrame::SetInitialChildList 
     */
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
 
-  /** return the first child belonging to the list aListName. 
-    * @see nsIFrame::GetFirstChild
-    */
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
   /** @see nsIFrame::GetAdditionalChildListName */
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
@@ -318,14 +315,6 @@ public:
                         nsStyleContext* aNewStyleContext);
   void PaintBCBorders(nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect);
-
-  /** nsIFrame method overridden to handle table specifics
-  */
-  NS_IMETHOD SetSelected(nsPresContext* aPresContext,
-                         nsIDOMRange *aRange,
-                         PRBool aSelected,
-                         nsSpread aSpread,
-                         SelectionType aType);
 
   virtual void MarkIntrinsicWidthsDirty();
   // For border-collapse tables, the caller must not add padding and
@@ -462,14 +451,18 @@ public:
 
   PRInt32 DestroyAnonymousColFrames(PRInt32 aNumFrames);
 
+  // Append aNumColsToAdd anonymous col frames of type eColAnonymousCell to our
+  // last eColGroupAnonymousCell colgroup.  If we have no such colgroup, then
+  // create one.
   void AppendAnonymousColFrames(PRInt32 aNumColsToAdd);
 
-  void CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
+  // Append aNumColsToAdd anonymous col frames of type aColType to
+  // aColGroupFrame.  If aAddToTable is true, also call AddColsToTable on the
+  // new cols.
+  void AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
                                 PRInt32               aNumColsToAdd,
                                 nsTableColType        aColType,
-                                PRBool                aAddToColGroupAndTable,
-                                nsIFrame*             aPrevCol,
-                                nsIFrame**            aFirstNewFrame);
+                                PRBool                aAddToTable);
 
   void MatchCellMapToColCache(nsTableCellMap* aCellMap);
   /** empty the column frame cache */
@@ -542,7 +535,7 @@ public:
   /**
    * To be called on a frame by its parent after setting its size/position and
    * calling DidReflow (possibly via FinishReflowChild()).  This can also be
-   * used for child frames which are not being reflown but did have their size
+   * used for child frames which are not being reflowed but did have their size
    * or position changed.
    *
    * @param aFrame The frame to invalidate
@@ -570,8 +563,6 @@ protected:
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
-
-  virtual PRBool ParentDisablesSelection() const; //override default behavior
 
 public:
   PRBool IsRowInserted() const;
@@ -648,7 +639,6 @@ protected:
                   const nsRect&        aOriginalKidOverflowRect);
 
   nsIFrame* GetFirstBodyRowGroupFrame();
-  PRBool MoveOverflowToChildList(nsPresContext* aPresContext);
   /**
    * Push all our child frames from the aFrames array, in order, starting from the
    * frame at aPushFrom to the end of the array. The frames are put on our overflow

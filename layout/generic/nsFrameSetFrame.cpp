@@ -477,14 +477,14 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsHTMLFramesetFrame::SetInitialChildList(nsIAtom*  aListName,
-                                         nsIFrame* aChildList)
+nsHTMLFramesetFrame::SetInitialChildList(nsIAtom*     aListName,
+                                         nsFrameList& aChildList)
 {
   // We do this weirdness where we create our child frames in Init().  On the
-  // other hand, we're going to get a SetInitialChildList() with a null list
-  // and list name after the frame constructor is done creating us.  So just
-  // ignore that call.
-  if (!aListName && !aChildList) {
+  // other hand, we're going to get a SetInitialChildList() with an empty list
+  // and null list name after the frame constructor is done creating us.  So
+  // just ignore that call.
+  if (!aListName && aChildList.IsEmpty()) {
     return NS_OK;
   }
 

@@ -250,9 +250,9 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri;
   PRBool isInline;
-  GetStyleSheetURL(&isInline, getter_AddRefs(uri));
+  
+  nsCOMPtr<nsIURI> uri = GetStyleSheetURL(&isInline);
 
   if (!aForceUpdate && mStyleSheet && !isInline && uri) {
     nsCOMPtr<nsIURI> oldURI;

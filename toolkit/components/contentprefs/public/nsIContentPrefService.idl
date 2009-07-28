@@ -65,7 +65,7 @@ interface nsIContentPrefObserver : nsISupports
   void onContentPrefRemoved(in AString aGroup, in AString aName);
 };
 
-[scriptable, uuid(5047e359-dfda-4858-abec-d145c7463250)]
+[scriptable, uuid(ea7d29eb-7095-476e-b5d9-13263f3ae243)]
 interface nsIContentPrefService : nsISupports
 {
   /**
@@ -117,6 +117,13 @@ interface nsIContentPrefService : nsISupports
   void removeGroupedPrefs();
 
   /**
+   * Remove all prefs with the given name.
+   *
+   * @param    aName        the setting name for which to remove prefs
+   */
+  void removePrefsByName(in AString aName);
+
+  /**
    * Get the prefs that apply to the given URI.
    *
    * @param    aURI        the URI for which to retrieve prefs
@@ -124,6 +131,15 @@ interface nsIContentPrefService : nsISupports
    * @returns  a property bag of prefs
    */
   nsIPropertyBag2 getPrefs(in nsIURI aURI);
+
+  /**
+   * Get the prefs with the given name.
+   *
+   * @param    aName        the setting name for which to retrieve prefs
+   * 
+   * @returns  a property bag of prefs
+   */
+  nsIPropertyBag2 getPrefsByName(in AString aName);
   
   /**
    * Add an observer.

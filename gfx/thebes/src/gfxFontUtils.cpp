@@ -38,7 +38,6 @@
 
 #include "gfxFontUtils.h"
 
-#include "nsIPref.h"  // for pref handling code
 #include "nsServiceManagerUtils.h"
 
 #include "nsIPrefBranch.h"

@@ -146,7 +146,7 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
                "should only get reflow from being reflow root");
   NS_ASSERTION(aReflowState.ComputedWidth() == GetSize().width &&
                aReflowState.ComputedHeight() == GetSize().height,
-               "reflow roots should be reflown at existing size and "
+               "reflow roots should be reflowed at existing size and "
                "svg.css should ensure we have no padding/border/margin");
 
   DoReflow();

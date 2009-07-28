@@ -91,6 +91,19 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
     return (NativeCompareAndSwapHelper(w, ov, nv) & 1);
 }
 
+#elif defined(_MSC_VER) && (defined(_M_AMD64) || defined(_M_X64))
+JS_BEGIN_EXTERN_C
+extern long long __cdecl
+_InterlockedCompareExchange64(long long *volatile dest, long long exchange, long long comp);
+JS_END_EXTERN_C
+#pragma intrinsic(_InterlockedCompareExchange64)
+
+static JS_ALWAYS_INLINE int
+NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    return _InterlockedCompareExchange64(w, nv, ov) == ov;
+}
+
 #elif defined(XP_MACOSX) || defined(DARWIN)
 
 #include <libkern/OSAtomic.h>
