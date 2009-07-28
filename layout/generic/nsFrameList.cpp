@@ -170,10 +170,10 @@ nsFrameList::RemoveFirstChild()
 }
 
 PRBool
-nsFrameList::DestroyFrame(nsIFrame* aFrame)
+nsFrameList::DestroyFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
-  if (RemoveFrame(aFrame)) {
+  if (RemoveFrame(aFrame, aPrevSiblingHint)) {
     aFrame->Destroy();
     return PR_TRUE;
   }
