@@ -129,8 +129,10 @@ menuitem.menuitem-iconic > .menu-iconic-left {
   padding-top: 1px;
 }
 
-.menu-right[_moz-menuactive="true"] {
-  /* XXXzpao We need a new image, essentially arrow-rit-sharp but white */
+.menu-right[_moz-menuactive="true"],
+.menu-right[disabled="true"] {
+  /* XXXzpao We need a new image, essentially arrow-rit-sharp but white
+   * disabled=true should probably have a different image. */
   list-style-image: url("chrome://global/skin/arrow/arrow-rit-dis.gif");
 }
 
@@ -231,16 +233,20 @@ menulist > menupopup > menuitem > .menu-iconic-text {
 menuitem[checked="true"] > .menu-iconic-left {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
-menuitem[checked="true"] > .menu-iconic-left[_moz-menuactive="true"] {
-  /* XXXzpao We need another image for here too */
+menuitem[checked="true"] > .menu-iconic-left[_moz-menuactive="true"],
+menuitem[checked="true"][disabled="true"] > .menu-iconic-left {
+  /* XXXzpao We need another image for here too.
+   * disabled=true should probably have a different image. */
   list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
 }
 
 menuitem[type="radio"][checked="true"] > .menu-iconic-left {
   list-style-image: url("chrome://global/skin/radio/radio-check.gif");
 }
-menuitem[type="radio"][checked="true"] > .menu-iconic-left[_moz-menuactive="true"] {
-  /* XXXzpao We need another image for here too */
+menuitem[type="radio"][checked="true"] > .menu-iconic-left[_moz-menuactive="true"],
+menuitem[type="radio"][checked="true"][disabled="true"] > .menu-iconic-left {
+  /* XXXzpao We need another image for here too
+   * disabled=true might need another image. Not sure if that can ever happen though. */
   list-style-image: url("chrome://global/skin/radio/radio-check-dis.gif");
 }
 
@@ -248,8 +254,8 @@ menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon,
 menuitem[checked="true"] > .menu-iconic-left > .menu-iconic-icon,
 menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
   padding-top: 0px;
-  height: 7px;
-  width: 7px;
+  height: auto;
+  width: auto;
 }
 
 /* ::::: menuseparator ::::: */

@@ -104,9 +104,20 @@ FinishThreadData(JSThreadData *data)
 static void
 PurgeThreadData(JSContext *cx, JSThreadData *data)
 {
+    js_PurgeGSNCache(&data->gsnCache);
+
+    /* FIXME: bug 506341. */
+    js_PurgePropertyCache(cx, &data->propertyCache);
+
 # ifdef JS_TRACER
     JSTraceMonitor *tm = &data->traceMonitor;
     tm->reservedDoublePoolPtr = tm->reservedDoublePool;
+
+    /*
+     * FIXME: bug 506117. We should flush only if (cx->runtime->gcRegenShapes),
+     * but we can't yet, because traces may embed sprop and object references,
+     * and we don't yet mark such embedded refs.
+     */
     tm->needFlush = JS_TRUE;
 
     if (tm->recorder)
@@ -123,9 +134,6 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
 
     /* Destroy eval'ed scripts. */
     js_DestroyScriptsToGC(cx, data);
-
-    js_PurgeGSNCache(&data->gsnCache);
-    js_PurgePropertyCache(cx, &data->propertyCache);
 }
 
 #ifdef JS_THREADSAFE
@@ -255,6 +263,7 @@ thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
         return JS_DHASH_REMOVE;
     }
     PurgeThreadData(cx, &thread->data);
+    memset(thread->gcFreeLists, 0, sizeof(thread->gcFreeLists));
     return JS_DHASH_NEXT;
 }
 
@@ -371,9 +380,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cx->stackLimit = (jsuword) -1;
 #endif
     cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
-#ifdef JS_THREADSAFE
-    cx->gcLocalFreeLists = (JSGCFreeListSet *) &js_GCEmptyFreeListSet;
-#endif
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->version == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
@@ -625,7 +631,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
      */
     if (cx->requestDepth == 0)
         js_WaitForGC(rt);
-    js_RevokeGCLocalFreeLists(cx);
 #endif
     JS_REMOVE_LINK(&cx->link);
     last = (rt->contextList.next == &rt->contextList);

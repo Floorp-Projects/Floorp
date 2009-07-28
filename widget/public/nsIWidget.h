@@ -102,9 +102,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
+// {5F8D1A5E-C380-4c60-978A-030335BE1D6A}
 #define NS_IWIDGET_IID \
-  { 0x9b8d70bd, 0x068e, 0x4465, \
-    { 0x8a, 0xd2, 0x4c, 0xf7, 0x96, 0x67, 0xe4, 0xfc } }
+  { 0x5f8d1a5e, 0xc380, 0x4c60, \
+    { 0x97, 0x8a, 0x03, 0x03, 0x35, 0xbe, 0x1d, 0x6a } }
 
 /*
  * Window shadow styles
@@ -780,24 +781,6 @@ class nsIWidget : public nsISupports {
      */
 
     virtual nsIntPoint WidgetToScreenOffset() = 0;
-
-    /**
-     * When adjustments are to made to a whole set of child widgets, call this
-     * before resizing/positioning the child windows to minimize repaints. Must
-     * be followed by EndResizingChildren() after child windows have been
-     * adjusted.
-     *
-     */
-
-    NS_IMETHOD BeginResizingChildren(void) = 0;
-
-    /**
-     * Call this when finished adjusting child windows. Must be preceded by
-     * BeginResizingChildren().
-     *
-     */
-
-    NS_IMETHOD EndResizingChildren(void) = 0;
 
     /**
      * Dispatches an event to the widget

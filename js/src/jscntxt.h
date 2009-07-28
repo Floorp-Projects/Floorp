@@ -273,6 +273,8 @@ struct JSThread {
     /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
     JSTitle             *titleToShare;
 
+    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
+
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
 };
@@ -365,7 +367,6 @@ struct JSRuntime {
     JSGCChunkInfo       *gcChunkList;
     JSGCArenaList       gcArenaList[GC_NUM_FREELISTS];
     JSGCDoubleArenaList gcDoubleArenaList;
-    JSGCFreeListSet     *gcFreeListsPool;
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     jsrefcount          gcKeepAtoms;
@@ -389,7 +390,8 @@ struct JSRuntime {
      */
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
-    uint16              gcPadding;
+    JSPackedBool        gcRegenShapes;
+    uint8               gcPadding;
 #ifdef JS_GC_ZEAL
     jsrefcount          gcZeal;
 #endif
@@ -1008,10 +1010,6 @@ struct JSContext {
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
 
-#ifdef JS_THREADSAFE
-    JSGCFreeListSet     *gcLocalFreeLists;
-#endif
-
     /* List of pre-allocated doubles. */
     JSGCDoubleCell      *doubleFreeList;
 
@@ -1539,6 +1537,7 @@ static JS_INLINE uint32
 js_RegenerateShapeForGC(JSContext *cx)
 {
     JS_ASSERT(cx->runtime->gcRunning);
+    JS_ASSERT(cx->runtime->gcRegenShapes);
 
     /*
      * Under the GC, compared with js_GenerateShape, we don't need to use

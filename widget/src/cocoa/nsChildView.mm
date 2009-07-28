@@ -1186,17 +1186,6 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsChildView::BeginResizingChildren(void)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsChildView::EndResizingChildren(void)
-{
-  return NS_OK;
-}
-
 static const PRInt32 resizeIndicatorWidth = 15;
 static const PRInt32 resizeIndicatorHeight = 15;
 PRBool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)

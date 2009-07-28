@@ -37,7 +37,9 @@
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 // ise - is exact - compares using ===
-function ise(left, right, name) { SimpleTest.ok(left === right, name); }
+function ise(left, right, name) {
+  SimpleTest.ok(left === right, name, "got " + left + ", expected " + right);
+}
 
 var gDone = false;
 
@@ -61,10 +63,12 @@ function doTests() {
   testValsMinMax(n4, "initial n4", -2, -8, 18);
   testValsMinMax(n5, "initial n5", -10, -10, -3);
   testValsMinMax(n6, "initial n6", 12, 12, 12);
-  testValsMinMax(n7, "initial n7", 4.68, 2, 10.5, "4.68"); // value should be rounded
+  testValsMinMax(n7, "initial n7", 4.68, 2, 10.5); // value should be rounded
 
   ok(n1.spinButtons != null && n1.spinButtons.localName == "spinbuttons", "spinButtons set");
-  ise(n1.decimalSymbol, ".", "decimalSymbol defaults to .");
+  isnot(n1.decimalSymbol, "", "n1.decimalSymbol is set to something");
+  n1.decimalSymbol = ".";
+  ise(n1.decimalSymbol, ".", "n1.decimalSymbol set to '.'");
   ise(n1.wrapAround, false, "wrapAround defaults to false");
   ise(n1.increment, 1, "increment defaults to 1");
   ise(n1.decimalPlaces, 0, "decimalPlaces defaults to 0");
@@ -171,10 +175,12 @@ function doTests() {
   testVals(n1, "set decimalPlaces Infinity set value,", 10.678123);
 
   n1.decimalSymbol = ",";
+  ise(n1.decimalSymbol, ",", "n1.decimalSymbol set to ','");
   n1.value = "9.67";
-  testVals(n1, "set decimalPlaces set value,", 9.67, "9,67");
+  testVals(n1, "set decimalPlaces set value,", 9.67);
 
   n1.decimalSymbol = ".";
+  ise(n1.decimalSymbol, ".", "n1.decimalSymbol set back to '.'");
   n1.decimalPlaces = 0;
 
   // UI tests
@@ -255,11 +261,16 @@ function doTests() {
 }
 
 function testVals(nb, name, valueNumber, valueFieldNumber) {
-  if (!valueFieldNumber)
+  if (valueFieldNumber === undefined)
     valueFieldNumber = "" + valueNumber;
+
   ise(nb.value, "" + valueNumber, name + " value is '" + valueNumber + "'");
   ise(nb.valueNumber, valueNumber, name + " valueNumber is " + valueNumber);
-  ise(nb.inputField.value, valueFieldNumber, name + " inputField value is " + valueNumber);
+
+  // This value format depends on the localized decimal symbol.
+  var localizedValue = valueFieldNumber.replace(/\./, nb.decimalSymbol);
+  ise(nb.inputField.value, localizedValue,
+      name + " inputField value is '" + localizedValue + "'");
 }
 
 function testValsMinMax(nb, name, valueNumber, min, max, valueFieldNumber) {
