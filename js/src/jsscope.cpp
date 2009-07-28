@@ -1594,7 +1594,7 @@ JSScope::replacingShapeChange(JSContext *cx, JSScopeProperty *sprop, JSScopeProp
 {
     if (shape == sprop->shape)
         shape = newsprop->shape;
-    else 
+    else
         generateOwnShape(cx);
 }
 
@@ -1604,7 +1604,7 @@ JSScope::sealingShapeChange(JSContext *cx)
     generateOwnShape(cx);
 }
 
-void 
+void
 JSScope::shadowingShapeChange(JSContext *cx, JSScopeProperty *sprop)
 {
     generateOwnShape(cx);

@@ -281,7 +281,7 @@ typedef int8_t JSTraceType;
 
 /*
  * This indicates an invalid type or error. Note that it should not be used in typemaps,
- * because it is the wrong size. It can only be used as a uint32, for example as the 
+ * because it is the wrong size. It can only be used as a uint32, for example as the
  * return value from a function that returns a type as a uint32.
  */
 const uint32 TT_INVALID = uint32(-1);
@@ -332,7 +332,7 @@ public:
     _(TIMEOUT)                                                                  \
     _(DEEP_BAIL)                                                                \
     _(STATUS)
-        
+
 
 enum ExitType {
     #define MAKE_EXIT_CODE(x) x##_EXIT,
@@ -408,7 +408,7 @@ struct FrameInfo {
      * stack frame for the caller *before* the slots covered by spdist.
      * This may be negative if the caller is the top level script.
      * The key fact is that if we let 'cpos' be the start of the caller's
-     * native stack frame, then (cpos + spoffset) points to the first 
+     * native stack frame, then (cpos + spoffset) points to the first
      * non-argument slot in the callee's native stack frame.
      */
     int32          spoffset;
@@ -548,7 +548,7 @@ struct JSRecordingStatus JSRS_ERROR    = { JSRS_ERROR_code };
 #define STATUS_ABORTS_RECORDING(s) ((s) == JSRS_STOP || (s) == JSRS_ERROR)
 #else
 enum JSRecordingStatus {
-    JSRS_ERROR,        // Error; propagate to interpreter. 
+    JSRS_ERROR,        // Error; propagate to interpreter.
     JSRS_STOP,         // Abort recording.
     JSRS_CONTINUE,     // Continue recording.
     JSRS_IMACRO        // Entered imacro; continue recording.
@@ -995,13 +995,13 @@ js_LogTraceVisState(TraceVisState s, TraceVisExitReason r)
     }
 }
 
-static inline void 
+static inline void
 js_EnterTraceVisState(TraceVisState s, TraceVisExitReason r)
 {
     js_LogTraceVisState(s, r);
 }
 
-static inline void 
+static inline void
 js_ExitTraceVisState(TraceVisExitReason r)
 {
     js_LogTraceVisState(S_EXITLAST, r);

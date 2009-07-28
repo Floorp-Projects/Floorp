@@ -2298,14 +2298,14 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
  * These functions allow setting an operation callback that will be called
  * from the thread the context is associated with some time after any thread
  * triggered the callback using JS_TriggerOperationCallback(cx).
- * 
+ *
  * In a threadsafe build the engine internally triggers operation callbacks
  * under certain circumstances (i.e. GC and title transfer) to force the
- * context to yield its current request, which the engine always 
+ * context to yield its current request, which the engine always
  * automatically does immediately prior to calling the callback function.
  * The embedding should thus not rely on callbacks being triggered through
  * the external API only.
- * 
+ *
  * Important note: Additional callbacks can occur inside the callback handler
  * if it re-enters the JS engine. The embedding must ensure that the callback
  * is disconnected before attempting such re-entry.
