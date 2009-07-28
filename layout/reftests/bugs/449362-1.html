@@ -31,14 +31,10 @@
 		}
   function doTest()
   {
+    toggleElements('B', 'A');
     document.documentElement.removeAttribute("class");
   }
-  function toggleElements2()
-  {
-    toggleElements('B', 'A');
-  }
-  document.addEventListener("MozReftestInvalidate", doTest, false);
-  setTimeout(toggleElements2, 200);
+  window.addEventListener("MozReftestInvalidate", doTest, false);
 	</script>
 
 </head>
@@ -58,10 +54,10 @@
 hello
     </td>
     <td >
-        <span id="A" style="" onclick="toggleElements('B', 'A')">
+        <span id="A">
               Click me!
 		</span>
-		<span id="B" style="display: none;" onclick="toggleElements('A', 'B')">
+		<span id="B" style="display: none;" >
 		    Now I am<br />
 		    higher.<br />
 
