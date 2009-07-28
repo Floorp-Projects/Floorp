@@ -468,7 +468,7 @@ def p_ActorType(p):
 def p_CxxType(p):
     """CxxType : QualifiedID
                | ID"""
-    if isinstance(p[0], QualifiedId):
+    if isinstance(p[1], QualifiedId):
         p[0] = TypeSpec(p[1].loc, p[1])
     else:
         loc = locFromTok(p, 1)
