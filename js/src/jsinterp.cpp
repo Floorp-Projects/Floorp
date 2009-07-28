@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=79:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -184,46 +184,61 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
          * is a plain old method? It's a function-valued property with stub
          * getter, so get of a function is idempotent.
          */
-        if ((cs->format & JOF_CALLOP) &&
-            SPROP_HAS_STUB_GETTER(sprop) &&
-            SPROP_HAS_VALID_SLOT(sprop, scope)) {
+        if (cs->format & JOF_CALLOP) {
             jsval v;
 
-            v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
-            if (VALUE_IS_FUNCTION(cx, v)) {
+            if (sprop->isMethod()) {
                 /*
-                 * Great, we have a function-valued prototype property where
-                 * the getter is JS_PropertyStub. The type id in pobj's scope
-                 * does not evolve with changes to property values, however.
-                 *
-                 * So here, on first cache fill for this method, we brand the
-                 * scope with a new shape and set the SCOPE_BRANDED flag. Once
-                 * this scope flag is set, any write to a function-valued plain
-                 * old property in pobj will result in shape being regenerated.
+                 * A compiler-created function object, AKA a method, already
+                 * memoized in the property tree.
                  */
-                if (!scope->branded()) {
-                    PCMETER(cache->brandfills++);
-#ifdef DEBUG_notme
-                    fprintf(stderr,
-                            "branding %p (%s) for funobj %p (%s), shape %lu\n",
-                            pobj, LOCKED_OBJ_GET_CLASS(pobj)->name,
-                            JSVAL_TO_OBJECT(v),
-                            JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
-                            OBJ_SHAPE(obj));
-#endif
-                    scope->brandingShapeChange(cx, sprop->slot, v);
-                    if (js_IsPropertyCacheDisabled(cx))  /* check for rt->shapeGen overflow */
-                        return JS_NO_PROP_CACHE_FILL;
-                    scope->setBranded();
-                }
+                JS_ASSERT(scope->hasMethodBarrier());
+                v = sprop->methodValue();
+                JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
                 vword = JSVAL_OBJECT_TO_PCVAL(v);
                 break;
+            }
+
+            if (SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop) &&
+                SPROP_HAS_VALID_SLOT(sprop, scope)) {
+                v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+                if (VALUE_IS_FUNCTION(cx, v)) {
+                    /*
+                     * Great, we have a function-valued prototype property
+                     * where the getter is JS_PropertyStub. The type id in
+                     * pobj's scope does not evolve with changes to property
+                     * values, however.
+                     *
+                     * So here, on first cache fill for this method, we brand
+                     * the scope with a new shape and set the SCOPE_BRANDED
+                     * flag. Once this scope flag is set, any write that adds
+                     * or deletes a function-valued plain old property in
+                     * scope->object will result in shape being regenerated.
+                     */
+                    if (!scope->branded()) {
+                        PCMETER(cache->brandfills++);
+#ifdef DEBUG_notme
+                        fprintf(stderr,
+                                "branding %p (%s) for funobj %p (%s), shape %lu\n",
+                                pobj, LOCKED_OBJ_GET_CLASS(pobj)->name,
+                                JSVAL_TO_OBJECT(v),
+                                JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
+                                OBJ_SHAPE(obj));
+#endif
+                        scope->brandingShapeChange(cx, sprop->slot, v);
+                        if (js_IsPropertyCacheDisabled(cx))  /* check for rt->shapeGen overflow */
+                            return JS_NO_PROP_CACHE_FILL;
+                        scope->setBranded();
+                    }
+                    vword = JSVAL_OBJECT_TO_PCVAL(v);
+                    break;
+                }
             }
         }
 
         /* If getting a value via a stub getter, we can cache the slot. */
         if (!(cs->format & (JOF_SET | JOF_INCDEC | JOF_FOR)) &&
-            SPROP_HAS_STUB_GETTER(sprop) &&
+            SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop) &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             /* Great, let's cache sprop's slot and use it on cache hit. */
             vword = SLOT_TO_PCVAL(sprop->slot);
@@ -235,30 +250,30 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                 scope->shape == sprop->shape) {
                 /*
                  * Our caller added a new property. We also know that a setter
-                 * that js_NativeSet could have run has not mutated the scope
-                 * so the added property is still the last one added and the
+                 * that js_NativeSet could have run has not mutated the scope,
+                 * so the added property is still the last one added, and the
                  * scope is not branded.
                  *
                  * We want to cache under scope's shape before the property
                  * addition to bias for the case when the mutator opcode
-                 * always adds the same property. It allows to optimize
-                 * periodic execution of object initializers or explicit
-                 * initialization sequences like
+                 * always adds the same property. This allows us to optimize
+                 * periodic execution of object initializers or other explicit
+                 * initialization sequences such as
                  *
                  *   obj = {}; obj.x = 1; obj.y = 2;
                  *
                  * We assume that on average the win from this optimization is
-                 * bigger that the cost of an extra mismatch per loop due to
+                 * greater than the cost of an extra mismatch per loop owing to
                  * the bias for the following case:
                  *
                  *   obj = {}; ... for (...) { ... obj.x = ... }
                  *
-                 * On the first iteration JSOP_SETPROP fills the cache with
-                 * the shape of newly created object, not the shape after
-                 * obj.x is assigned. That mismatches obj's shape on the
-                 * second iteration. Note that on third and the following
-                 * iterations the cache will be hit since the shape no longer
-                 * mutates.
+                 * On the first iteration of such a for loop, JSOP_SETPROP
+                 * fills the cache with the shape of the newly created object
+                 * obj, not the shape of obj after obj.x has been assigned.
+                 * That mismatches obj's shape on the second iteration. Note
+                 * that on the third and subsequent iterations the cache will
+                 * be hit because the shape is no longer updated.
                  */
                 JS_ASSERT(scope->owned());
                 if (sprop->parent) {
@@ -989,7 +1004,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
 
     MUST_FLOW_THROUGH("out");
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
-    ok = js_GetMethod(cx, obj, id, false, &tvr.u.value);
+    ok = js_GetMethod(cx, obj, id, 0, &tvr.u.value);
     if (!ok)
         goto out;
     if (JSVAL_IS_PRIMITIVE(tvr.u.value)) {
@@ -2132,9 +2147,9 @@ js_TraceOpcode(JSContext *cx)
                                 fp->script, cx->tracePrevPc);
 
         /*
-         * If there aren't that many elements on the stack, then
-         * we have probably entered a new frame, and printing output
-         * would just be misleading.
+         * If there aren't that many elements on the stack, then we have
+         * probably entered a new frame, and printing output would just be
+         * misleading.
          */
         if (ndefs != 0 &&
             ndefs < regs->sp - fp->slots) {
@@ -2600,7 +2615,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         JS_ASSERT(PCVAL_IS_OBJECT(entry->vword));
         JS_ASSERT(entry->vword != PCVAL_NULL);
         JS_ASSERT(OBJ_SCOPE(pobj)->branded());
-        JS_ASSERT(SPROP_HAS_STUB_GETTER(sprop));
+        JS_ASSERT(SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
         v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
         JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
@@ -2637,9 +2652,11 @@ JS_STATIC_ASSERT(JSOP_DEFFUN_FC_LENGTH == JSOP_DEFFUN_DBGFC_LENGTH);
 
 /*
  * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
- * remain distinct for the decompiler.
+ * remain distinct for the decompiler. Likewise for JSOP_INIT{PROP,METHOD}.
  */
 JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
+JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETMETHOD_LENGTH);
+JS_STATIC_ASSERT(JSOP_INITPROP_LENGTH == JSOP_INITMETHOD_LENGTH);
 
 /* See TRY_BRANCH_AFTER_COND. */
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
@@ -2699,14 +2716,6 @@ js_Interpret(JSContext *cx)
     JSPropertyOp getter, setter;
 #endif
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
-
-#ifdef __GNUC__
-# define JS_EXTENSION __extension__
-# define JS_EXTENSION_(s) __extension__ ({ s; })
-#else
-# define JS_EXTENSION
-# define JS_EXTENSION_(s) s
-#endif
 
 # ifdef DEBUG
     /*
@@ -3610,7 +3619,7 @@ js_Interpret(JSContext *cx)
             goto error;                                                       \
     JS_END_MACRO
 
-#define NATIVE_GET(cx,obj,pobj,sprop,vp)                                      \
+#define NATIVE_GET(cx,obj,pobj,sprop,getHow,vp)                               \
     JS_BEGIN_MACRO                                                            \
         if (SPROP_HAS_STUB_GETTER(sprop)) {                                   \
             /* Fast path for Object instance properties. */                   \
@@ -3620,7 +3629,7 @@ js_Interpret(JSContext *cx)
                   ? LOCKED_OBJ_GET_SLOT(pobj, (sprop)->slot)                  \
                   : JSVAL_VOID;                                               \
         } else {                                                              \
-            if (!js_NativeGet(cx, obj, pobj, sprop, vp))                      \
+            if (!js_NativeGet(cx, obj, pobj, sprop, getHow, vp))              \
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
@@ -4481,7 +4490,7 @@ js_Interpret(JSContext *cx)
                         } else {
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
-                            NATIVE_GET(cx, obj, obj2, sprop, &rval);
+                            NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
                         }
                         JS_UNLOCK_OBJ(cx, obj2);
                         break;
@@ -4495,7 +4504,9 @@ js_Interpret(JSContext *cx)
                 }
                 id = ATOM_TO_JSID(atom);
                 if (entry
-                    ? !js_GetPropertyHelper(cx, obj, id, true, &rval)
+                    ? !js_GetPropertyHelper(cx, obj, id,
+                                            JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
+                                            &rval)
                     : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
                     goto error;
                 }
@@ -4572,7 +4583,7 @@ js_Interpret(JSContext *cx)
                     } else {
                         JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                         sprop = PCVAL_TO_SPROP(entry->vword);
-                        NATIVE_GET(cx, obj, obj2, sprop, &rval);
+                        NATIVE_GET(cx, obj, obj2, sprop, 0, &rval);
                     }
                     JS_UNLOCK_OBJ(cx, obj2);
                     STORE_OPND(-1, rval);
@@ -4591,13 +4602,13 @@ js_Interpret(JSContext *cx)
             id = ATOM_TO_JSID(atom);
             PUSH(JSVAL_NULL);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
-                if (!js_GetMethod(cx, obj, id, !!entry, &rval))
+                if (!js_GetMethod(cx, obj, id, entry ? JSGET_CACHE_RESULT : 0, &rval))
                     goto error;
                 STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
                 STORE_OPND(-2, rval);
             } else {
                 JS_ASSERT(obj->map->ops->getProperty == js_GetProperty);
-                if (!js_GetPropertyHelper(cx, obj, id, true, &rval))
+                if (!js_GetPropertyHelper(cx, obj, id, JSGET_CACHE_RESULT, &rval))
                     goto error;
                 STORE_OPND(-1, lval);
                 STORE_OPND(-2, rval);
@@ -4628,9 +4639,12 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETPROP)
+          BEGIN_CASE(JSOP_SETMETHOD)
+          do_setprop:
             rval = FETCH_OPND(-1);
+            JS_ASSERT_IF(op == JSOP_SETMETHOD, VALUE_IS_FUNCTION(cx, rval));
             lval = FETCH_OPND(-2);
-            JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval) || op == JSOP_SETPROP);
+            JS_ASSERT_IF(op == JSOP_SETNAME, !JSVAL_IS_PRIMITIVE(lval));
             VALUE_TO_OBJECT(cx, -2, lval, obj);
 
             do {
@@ -4784,9 +4798,21 @@ js_Interpret(JSContext *cx)
                                     sprop = sprop2;
                                 } else {
                                     scope->extend(cx, sprop);
+
+                                    jsuint index;
+                                    if (js_IdIsIndex(sprop->id, &index))
+                                        scope->setIndexedProperties();
+
+                                    if (sprop->isMethod())
+                                        scope->setMethodBarrier();
                                 }
 
-                                LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
+                                /*
+                                 * No LOCKED_OBJ_WRITE_BARRIER because here we
+                                 * are adding a new property, not updating an
+                                 * existing slot's value that might contain a
+                                 * method of a branded scope.
+                                 */
                                 TRACE_2(SetPropHit, entry, sprop);
                                 LOCKED_OBJ_SET_SLOT(obj, slot, rval);
                                 JS_UNLOCK_SCOPE(cx, scope);
@@ -4830,7 +4856,10 @@ js_Interpret(JSContext *cx)
                     LOAD_ATOM(0);
                 id = ATOM_TO_JSID(atom);
                 if (entry) {
-                    if (!js_SetPropertyHelper(cx, obj, id, true, &rval))
+                    uintN defineHow = (op == JSOP_SETMETHOD)
+                                      ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
+                                      : JSDNP_CACHE_RESULT;
+                    if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval))
                         goto error;
                 } else {
                     if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
@@ -4887,7 +4916,7 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_CALLELEM)
-            ELEMENT_OP(-1, js_GetMethod(cx, obj, id, false, &rval));
+            ELEMENT_OP(-1, js_GetMethod(cx, obj, id, 0, &rval));
 #if JS_HAS_NO_SUCH_METHOD
             if (JS_UNLIKELY(JSVAL_IS_VOID(rval))) {
                 regs.sp[-2] = regs.sp[-1];
@@ -5341,7 +5370,7 @@ js_Interpret(JSContext *cx)
             } else {
                 sprop = (JSScopeProperty *)prop;
           do_native_get:
-                NATIVE_GET(cx, obj, obj2, sprop, &rval);
+                NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
                 OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *) sprop);
             }
 
@@ -5922,7 +5951,7 @@ js_Interpret(JSContext *cx)
                 sprop = (JSScopeProperty *) prop;
                 if ((sprop->attrs & JSPROP_PERMANENT) &&
                     SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
-                    SPROP_HAS_STUB_GETTER(sprop) &&
+                    SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop) &&
                     SPROP_HAS_STUB_SETTER(sprop)) {
                     /*
                      * Fast globals use frame variables to map the global
@@ -6216,23 +6245,64 @@ js_Interpret(JSContext *cx)
             obj = FUN_OBJECT(fun);
 
             if (FUN_NULL_CLOSURE(fun)) {
-                obj = js_CloneFunctionObject(cx, fun, fp->scopeChain);
-                if (!obj)
-                    goto error;
+                parent = fp->scopeChain;
+
+                if (OBJ_GET_PARENT(cx, obj) == parent) {
+                    JSScope *scope;
+
+                    lval = FETCH_OPND(-1);
+                    op = JSOp(regs.pc[JSOP_LAMBDA_LENGTH]);
+
+                    /*
+                     * Optimize ({method: function () { ... }, ...}) and
+                     * this.method = function () { ... }; bytecode sequences.
+                     *
+                     * Note that we jump to the entry points for JSOP_SETPROP
+                     * and JSOP_INITPROP without calling the trace recorder,
+                     * because the record hooks for those ops are essentially
+                     * no-ops (this can't change given the predictive shape
+                     * guarding the recorder must do).
+                     */
+                    if (op == JSOP_SETMETHOD) {
+#ifdef DEBUG
+                        op2 = JSOp(regs.pc[JSOP_LAMBDA_LENGTH + JSOP_SETMETHOD_LENGTH]);
+                        JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
+#endif
+
+                        if (JSVAL_IS_OBJECT(lval) &&
+                            (obj2 = JSVAL_TO_OBJECT(lval)) &&
+                            OBJ_GET_CLASS(cx, obj2) == &js_ObjectClass) {
+                            scope = OBJ_SCOPE(obj2);
+                            if (scope->object == obj2) {
+                                PUSH_OPND(OBJECT_TO_JSVAL(obj));
+                                regs.pc += JSOP_LAMBDA_LENGTH;
+                                goto do_setprop;
+                            }
+                        }
+                    } else if (op == JSOP_INITMETHOD) {
+                        JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval));
+                        obj2 = JSVAL_TO_OBJECT(lval);
+                        scope = OBJ_SCOPE(obj2);
+
+                        /*
+                         * JSOP_NEWINIT gave the new object it created (obj2
+                         * here) its own scope.
+                         */
+                        JS_ASSERT(scope->object == obj2);
+                        PUSH_OPND(OBJECT_TO_JSVAL(obj));
+                        regs.pc += JSOP_LAMBDA_LENGTH;
+                        goto do_initprop;
+                    }
+                }
             } else {
                 parent = js_GetScopeChain(cx, fp);
                 if (!parent)
                     goto error;
-
-                /*
-                 * FIXME: bug 471214, Cloning here even when the compiler saw
-                 * the right parent is wasteful but we don't fully support
-                 * joined function objects, yet.
-                 */
-                obj = js_CloneFunctionObject(cx, fun, parent);
-                if (!obj)
-                    goto error;
             }
+
+            obj = js_CloneFunctionObject(cx, fun, parent);
+            if (!obj)
+                goto error;
 
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_LAMBDA)
@@ -6379,11 +6449,26 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_NEWINIT)
             i = GET_INT8(regs.pc);
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
-            obj = (i == JSProto_Array)
-                  ? js_NewArrayObject(cx, 0, NULL)
-                  : js_NewObject(cx, &js_ObjectClass, NULL, NULL);
-            if (!obj)
-                goto error;
+            if (i == JSProto_Array) {
+                obj = js_NewArrayObject(cx, 0, NULL);
+                if (!obj)
+                    goto error;
+            } else {
+                obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+                if (!obj)
+                    goto error;
+
+                if (regs.pc[JSOP_NEWINIT_LENGTH] != JSOP_ENDINIT) {
+                    JS_LOCK_OBJ(cx, obj);
+                    JSScope *scope = js_GetMutableScope(cx, obj);
+                    if (!scope) {
+                        JS_UNLOCK_OBJ(cx, obj);
+                        goto error;
+                    }
+                    JS_UNLOCK_SCOPE(cx, scope);
+                }
+            }
+
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             fp->sharpDepth++;
             CHECK_INTERRUPT_HANDLER();
@@ -6401,6 +6486,8 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_ENDINIT)
 
           BEGIN_CASE(JSOP_INITPROP)
+          BEGIN_CASE(JSOP_INITMETHOD)
+          do_initprop:
             /* Load the property's initial value into rval. */
             JS_ASSERT(regs.sp - StackBase(fp) >= 2);
             rval = FETCH_OPND(-1);
@@ -6421,6 +6508,7 @@ js_Interpret(JSContext *cx)
 
                 JS_LOCK_OBJ(cx, obj);
                 scope = OBJ_SCOPE(obj);
+                JS_ASSERT(scope->object == obj);
                 JS_ASSERT(!scope->sealed());
                 kshape = scope->shape;
                 cache = &JS_PROPERTY_CACHE(cx);
@@ -6449,14 +6537,6 @@ js_Interpret(JSContext *cx)
                      */
                     if (!SPROP_HAS_STUB_SETTER(sprop))
                         goto do_initprop_miss;
-
-                    if (!scope->owned()) {
-                        scope = js_GetMutableScope(cx, obj);
-                        if (!scope) {
-                            JS_UNLOCK_OBJ(cx, obj);
-                            goto error;
-                        }
-                    }
 
                     /*
                      * Detect a repeated property name and force a miss to
@@ -6508,7 +6588,11 @@ js_Interpret(JSContext *cx)
                         scope->lastProp = sprop;
                     }
 
-                    LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
+                    /*
+                     * No LOCKED_OBJ_WRITE_BARRIER because here we are adding a
+                     * new property, not updating an existing slot's value that
+                     * might contain a method of a branded scope.
+                     */
                     TRACE_2(SetPropHit, entry, sprop);
                     LOCKED_OBJ_SET_SLOT(obj, slot, rval);
                     JS_UNLOCK_SCOPE(cx, scope);
@@ -6529,12 +6613,16 @@ js_Interpret(JSContext *cx)
                     goto error;
                 }
 
+                uintN defineHow = (op == JSOP_INITMETHOD)
+                                  ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
+                                  : JSDNP_CACHE_RESULT;
                 if (!(JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-                      ? js_SetPropertyHelper(cx, obj, id, true, &rval)
+                      ? js_SetPropertyHelper(cx, obj, id, defineHow, &rval)
                       : js_DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                                 JSPROP_ENUMERATE, 0, 0, NULL,
-                                                JSDNP_CACHE_RESULT)))
+                                                defineHow))) {
                     goto error;
+                }
             } while (0);
 
             /* Common tail for property cache hit and miss cases. */
