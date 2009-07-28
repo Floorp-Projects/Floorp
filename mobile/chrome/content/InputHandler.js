@@ -713,7 +713,6 @@ MouseModule.prototype = {
                               mouseUp2.clientX, mouseUp2.clientY);
   },
 
-
   /**
    * Clean out the click buffer.  Should be called after a single, double, or
    * non-click has been processed and all relevant (re)dispatches of events in
@@ -808,7 +807,7 @@ MouseModule.prototype = {
 
     return (elem) ? elem : null;
   }
-  
+
 };
 
 
