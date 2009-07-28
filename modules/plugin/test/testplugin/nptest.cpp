@@ -290,7 +290,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->npp = instance;
   instance->pdata = instanceData;
 
-#if 0
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
   if (!scriptableObject) {
     printf("NPN_CreateObject failed to create an object, can't create a plugin instance\n");
@@ -304,9 +303,8 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->scriptableObject = scriptableObject;
 
   instanceData->instanceCountWatchGeneration = sCurrentInstanceCountWatchGeneration;
- 
+  
   bool requestWindow = false;
-
   // handle extra params
   for (int i = 0; i < argc; i++) {
     if (strcmp(argn[i], "drawmode") == 0) {
@@ -322,9 +320,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
       }
     }
   }
-#else
-  bool requestWindow = true;
-#endif
 
   if (!browserSupportsWindowless || !pluginSupportsWindowlessMode()) {
     requestWindow = true;
@@ -339,21 +334,17 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     NPN_SetValue(instance, NPPVpluginWindowBool, (void*)false);
   }
 
-#if 0
   if (scriptableObject->drawMode == DM_SOLID_COLOR &&
       (scriptableObject->drawColor & 0xFF000000) != 0xFF000000) {
     NPN_SetValue(instance, NPPVpluginTransparentBool, (void*)true);
   }
-#endif
 
   instanceData->lastReportedPrivateModeState = false;
 
   // do platform-specific initialization
   NPError err = pluginInstanceInit(instanceData);
   if (err != NPERR_NO_ERROR) {
-#if 0
     NPN_ReleaseObject(scriptableObject);
-#endif
     free(instanceData);
     return err;
   }
@@ -367,9 +358,7 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
   pluginInstanceShutdown(instanceData);
-#if 0
   NPN_ReleaseObject(instanceData->scriptableObject);
-#endif
   free(instanceData);
 
   if (sCurrentInstanceCountWatchGeneration == instanceData->instanceCountWatchGeneration) {
@@ -442,14 +431,12 @@ NPError
 NPP_GetValue(NPP instance, NPPVariable variable, void* value)
 {
   InstanceData* instanceData = (InstanceData*)instance->pdata;
-#if 0
   if (variable == NPPVpluginScriptableNPObject) {
     NPObject* object = instanceData->scriptableObject;
     NPN_RetainObject(object);
     *((NPObject**)value) = object;
     return NPERR_NO_ERROR;
   }
-#endif
   if (variable == NPPVpluginNeedsXEmbed) {
     // Only relevant for X plugins
     *(NPBool*)value = instanceData->hasWidget;
