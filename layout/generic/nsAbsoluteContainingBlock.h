@@ -84,11 +84,11 @@ public:
   nsIAtom* GetChildListName() const { return mChildListName; }
 #endif
 
-  nsIFrame* GetFirstChild() const { return mAbsoluteFrames.FirstChild(); }
+  const nsFrameList& GetChildList() const { return mAbsoluteFrames; }
 
   nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                nsIAtom*        aListName,
-                               nsIFrame*       aChildList);
+                               nsFrameList&    aChildList);
   nsresult AppendFrames(nsIFrame*      aDelegatingFrame,
                         nsIAtom*       aListName,
                         nsIFrame*      aFrameList);

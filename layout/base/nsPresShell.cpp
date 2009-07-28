@@ -4597,7 +4597,7 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   if (!rootFrame) return NS_OK;
   // Capture frame state for the root scroll frame
   // Don't capture state when first creating doc element hierarchy
-  // As the scroll position is 0 and this will cause us to loose
+  // As the scroll position is 0 and this will cause us to lose
   // our previously saved place!
   if (aLeavingPage) {
     nsIFrame* scrollFrame = GetRootScrollFrame();
@@ -7659,13 +7659,14 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
   do {
-    nsIFrame* k1 = aFirstFrame->GetFirstChild(listName);
-    nsIFrame* k2 = aSecondFrame->GetFirstChild(listName);
-    PRInt32 l1 = nsContainerFrame::LengthOf(k1);
-    PRInt32 l2 = nsContainerFrame::LengthOf(k2);
+    const nsFrameList& kids1 = aFirstFrame->GetChildList(listName);
+    const nsFrameList& kids2 = aSecondFrame->GetChildList(listName);
+    PRInt32 l1 = kids1.GetLength();
+    PRInt32 l2 = kids2.GetLength();;
     if (l1 != l2) {
       ok = PR_FALSE;
-      LogVerifyMessage(k1, k2, "child counts don't match: ");
+      LogVerifyMessage(kids1.FirstChild(), kids2.FirstChild(),
+                       "child counts don't match: ");
       printf("%d != %d\n", l1, l2);
       if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
         break;
@@ -7674,7 +7675,11 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
 
     nsIntRect r1, r2;
     nsIView* v1, *v2;
-    for (;;) {
+    for (nsFrameList::Enumerator e1(kids1), e2(kids2);
+         ;
+         e1.Next(), e2.Next()) {
+      nsIFrame* k1 = e1.get();
+      nsIFrame* k2 = e2.get();
       if (((nsnull == k1) && (nsnull != k2)) ||
           ((nsnull != k1) && (nsnull == k2))) {
         ok = PR_FALSE;
@@ -7732,10 +7737,6 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
             break;
           }
         }
-
-        // Advance to next sibling
-        k1 = k1->GetNextSibling();
-        k2 = k2->GetNextSibling();
       }
       else {
         break;
@@ -7752,7 +7753,8 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
         ok = PR_FALSE;
       }
-      LogVerifyMessage(k1, k2, "child list names are not matched: ");
+      LogVerifyMessage(kids1.FirstChild(), kids2.FirstChild(),
+                       "child list names are not matched: ");
       nsAutoString tmp;
       if (nsnull != listName1) {
         listName1->ToString(tmp);

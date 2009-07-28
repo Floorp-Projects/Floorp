@@ -130,9 +130,9 @@ public:
   // The following methods are all overridden so that the menupopup
   // can be stored in a separate list, so that it doesn't impact reflow of the
   // actual menu item at all.
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual void Destroy();
 
@@ -232,6 +232,9 @@ protected:
   // initialize mPopupFrame to the first popup frame within aChildList. Returns
   // aChildList with the popup frame removed.
   nsIFrame* SetPopupFrame(nsIFrame* aChildList);
+
+  // As above, but using an nsFrameList; modifies the passed-in list.
+  void SetPopupFrame(nsFrameList& aChildList);
 
   // set mMenuParent to the nearest enclosing menu bar or menupopup frame of
   // aParent (or aParent itself). This is called when initializing the frame,

@@ -14,6 +14,8 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/events.js"></script>
 
   <script type="application/javascript">
@@ -23,6 +25,10 @@
     function changeIframeSrc(aIdentifier, aURL)
     {
       this.DOMNode = getNode(aIdentifier);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, getAccessible(this.DOMNode))
+      ];
 
       this.invoke = function changeIframeSrc_invoke()
       {
@@ -35,6 +41,49 @@
       }
     }
 
+    function openDialogWnd(aURL)
+    {
+      // Get application root accessible.
+      var docAcc = getAccessible(document);
+      while (docAcc) {
+        this.mRootAcc = docAcc;
+        docAcc = docAcc.parent;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.mRootAcc)
+      ];
+
+      this.invoke = function openDialogWnd_invoke()
+      {
+        this.mDialog = window.openDialog(aURL);
+      }
+
+      this.check = function openDialogWnd_check()
+      {
+        var accTree = {
+          role: ROLE_APP_ROOT,
+          children: [
+            {
+              role: ROLE_CHROME_WINDOW
+            },
+            {
+              role: ROLE_CHROME_WINDOW
+            }
+          ]
+        };
+
+        testAccessibleTree(this.mRootAcc, accTree);
+
+        this.mDialog.close();
+      }
+
+      this.getID = function openDialogWnd_getID()
+      {
+        return "open dialog '" + aURL + "'";
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
 
@@ -44,10 +93,11 @@
 
     function doTests()
     {
-      gQueue = new eventQueue(EVENT_REORDER);
+      gQueue = new eventQueue();
 
       gQueue.push(new changeIframeSrc("iframe", "about:"));
       gQueue.push(new changeIframeSrc("iframe", "about:buildconfig"));
+      gQueue.push(new openDialogWnd("about:"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -63,6 +113,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=420845"
      title="Fire event_reorder on any embedded frames/iframes whos document has just loaded">
     Mozilla Bug 420845
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=506206"
+     title="Fire event_reorder application root accessible">
+    Mozilla Bug 506206
   </a>
 
   <p id="display"></p>

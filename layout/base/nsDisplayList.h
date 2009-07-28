@@ -277,14 +277,15 @@ public:
   void SetInTransform(PRBool aInTransform) { mInTransform = aInTransform; }
 
   /**
-   * Mark aFrames and its (next) siblings to be displayed if they
-   * intersect aDirtyRect (which is relative to aDirtyFrame). If the
-   * frame(s) have placeholders that might not be displayed, we mark the
-   * placeholders and their ancestors to ensure that display list construction
-   * descends into them anyway. nsDisplayListBuilder will take care of
-   * unmarking them when it is destroyed.
+   * Mark the frames in aFrames to be displayed if they intersect aDirtyRect
+   * (which is relative to aDirtyFrame). If the frames have placeholders
+   * that might not be displayed, we mark the placeholders and their ancestors
+   * to ensure that display list construction descends into them
+   * anyway. nsDisplayListBuilder will take care of unmarking them when it is
+   * destroyed.
    */
-  void MarkFramesForDisplayList(nsIFrame* aDirtyFrame, nsIFrame* aFrames,
+  void MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
+                                const nsFrameList& aFrames,
                                 const nsRect& aDirtyRect);
   
   /**

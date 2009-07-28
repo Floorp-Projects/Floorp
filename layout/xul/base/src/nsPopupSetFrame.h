@@ -80,7 +80,7 @@ public:
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
-                                  nsIFrame*       aChildList);
+                                  nsFrameList&    aChildList);
 
     // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
@@ -100,7 +100,7 @@ public:
 
 protected:
 
-  nsresult AddPopupFrameList(nsIFrame* aPopupFrameList);
+  nsresult AddPopupFrameList(nsFrameList& aPopupFrameList);
   nsresult AddPopupFrame(nsIFrame* aPopup);
   nsresult RemovePopupFrame(nsIFrame* aPopup);
   

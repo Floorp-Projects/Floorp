@@ -79,6 +79,9 @@
 
 #include "imgIContainer.h"
 
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
+
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -308,59 +311,6 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
     WinSetCapture( HWND_DESKTOP, NULLHANDLE);
   }
   return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Deferred Window positioning
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::BeginResizingChildren(void)
-{
-   if( !mSWPs)
-   {
-      mlHave = 10;
-      mlUsed = 0;
-      mSWPs = (PSWP) malloc( 10 * sizeof( SWP));
-   }
-   return NS_OK;
-}
-
-void nsWindow::DeferPosition( HWND hwnd, HWND hwndInsertBehind,
-                              long x, long y, long cx, long cy, ULONG flags)
-{
-   if( mSWPs)
-   {
-      if( mlHave == mlUsed) // need more swps
-      {
-         mlHave += 10;
-         mSWPs = (PSWP) realloc( mSWPs, mlHave * sizeof( SWP));
-      }
-      mSWPs[ mlUsed].hwnd = hwnd;
-      mSWPs[ mlUsed].hwndInsertBehind = hwndInsertBehind;
-      mSWPs[ mlUsed].x = x;
-      mSWPs[ mlUsed].y = y;
-      mSWPs[ mlUsed].cx = cx;
-      mSWPs[ mlUsed].cy = cy;
-      mSWPs[ mlUsed].fl = flags;
-      mSWPs[ mlUsed].ulReserved1 = 0;
-      mSWPs[ mlUsed].ulReserved2 = 0;
-      mlUsed++;
-   }
-}
-
-NS_METHOD nsWindow::EndResizingChildren(void)
-{
-   if( nsnull != mSWPs)
-   {
-      WinSetMultWindowPos( 0/*hab*/, mSWPs, mlUsed);
-      free( mSWPs);
-      mSWPs = nsnull;
-      mlUsed = mlHave = 0;
-   }
-   return NS_OK;
 }
 
 nsIntPoint nsWindow::WidgetToScreenOffset()
@@ -2064,80 +2014,117 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
 
 //-------------------------------------------------------------------------
 //
-// Notify a child window of a coming move by sending it a WM_VRNDISABLED
-// message. Only do that if it's not one of ours like e.g. plugin windows.
+// Configure the child widgets used for plugins
 //
 //-------------------------------------------------------------------------
-BOOL nsWindow::NotifyForeignChildWindows(HWND aWnd)
-{
-  HENUM hEnum = WinBeginEnumWindows(aWnd);
-  HWND hwnd;
 
-  while ((hwnd = WinGetNextWindow(hEnum)) != NULLHANDLE) {
-    char className[19];
-    WinQueryClassName(hwnd, 19, className);
-    if (strcmp(className, WindowClass()) != 0) {
-      // This window is not one of our windows so notify it (and wait for
-      // the call to return so that the plugin has time to react)
-      WinSendMsg(hwnd, WM_VRNDISABLED, MPVOID, MPVOID);
-    } else {
-      // Recurse starting at this Mozilla child window.
-      NotifyForeignChildWindows(hwnd);
-    }
+// This is _supposed_ to set a clipping region for the child windows used
+// by plugins.  However, on OS/2, clipping regions aren't associated with
+// windows, usually aren't persistent, & have no effect on drawing done
+// into children of the clipped window (which is where OS/2 plugins paint).
+// As an alternative, this implementation uses the child windows' dimensions
+// as clipping rectangles, adjusting them to match the bounding boxes of the
+// supplied arrays of rectangles.  This should suffice in most situations.
+
+nsresult
+nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+  // for each child window
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+    NS_ASSERTION(w->GetParent() == this,
+                 "Configured widget is not a child");
+
+    // create the bounding box
+    const nsTArray<nsIntRect>& rects = configuration.mClipRegion;
+    nsIntRect r;
+    for (PRUint32 i = 0; i < rects.Length(); ++i)
+      r.UnionRect(r, rects[i]);
+
+    // resize the child;  mBounds.x/y contain the child's correct origin;
+    // r.x/y are always <= zero - adding them to r.width/height produces
+    // the actual clipped width/height this window should have
+    w->Resize(configuration.mBounds.x, configuration.mBounds.y,
+              r.width + r.x, r.height + r.y, PR_TRUE);
+
+    // some plugins may shrink their window when the Mozilla widget window
+    // shrinks, then fail to reinflate when the widget window reinflates;
+    // this ensures the plugin's window is always at its full size and is
+    // clipped correctly by the widget's bounds
+    HWND hwnd = WinQueryWindow( w->mWnd, QW_TOP);
+    ::WinSetWindowPos(hwnd, 0, 0, 0,
+                      configuration.mBounds.width, configuration.mBounds.height,
+                      SWP_MOVE | SWP_SIZE);
+
+    // show or hide the window, then save the array of rects
+    // for future reference
+    w->Show(!configuration.mClipRegion.IsEmpty());
+    w->StoreWindowClipRegion(configuration.mClipRegion);
   }
-  return WinEndEnumWindows(hEnum);
+
+  return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Force a resize of child windows after a scroll to reset hover positions.
-//
-//-------------------------------------------------------------------------
-void nsWindow::ScrollChildWindows(PRInt32 aX, PRInt32 aY)
-{
-  nsIWidget *child = GetFirstChild();
-  while (child) {
-    nsIntRect rect;
-    child->GetBounds(rect);
-    child->Resize(rect.x + aX, rect.y + aY, rect.width, rect.height, PR_FALSE);
-    child = child->GetNextSibling();
-  }
-}
 //-------------------------------------------------------------------------
 //
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
+void nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                      const nsTArray<Configuration>& aConfigurations)
 {
-  RECTL rcl;
-
-  if (nsnull != aClipRect)
-  {
-    rcl.xLeft = aClipRect->x;
-    rcl.yBottom = aClipRect->y + aClipRect->height;
-    rcl.xRight = rcl.xLeft + aClipRect->width;
-    rcl.yTop = rcl.yBottom + aClipRect->height;
-    NS2PM(rcl);
-    // this rect is inex
+  // Build the set of widgets that are to be moved by the scroll amount.
+  nsTHashtable<nsPtrHashKey<nsWindow> > scrolledWidgets;
+  scrolledWidgets.Init();
+  for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+    NS_ASSERTION(w->GetParent() == this,
+                 "Configured widget is not a child");
+    if (configuration.mBounds.TopLeft() == w->mBounds.TopLeft() + aDelta)
+      scrolledWidgets.PutEntry(w);
   }
 
+  nsIntRect affectedRect;
+  affectedRect.UnionRect(aSource, aSource + aDelta);
+  ULONG flags = SW_INVALIDATERGN;
+
+  // We can use SW_SCROLLCHILDREN if all the windows that intersect
+  // the affected area are moving by the scroll amount.   Check if
+  // any of our children would be affected by SW_SCROLLCHILDREN but
+  // are not supposed to scroll.
+  for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
+       w = static_cast<nsWindow*>(w->GetNextSibling())) {
+    if (w->mBounds.Intersects(affectedRect)) {
+      flags |= SW_SCROLLCHILDREN;
+      if (!scrolledWidgets.GetEntry(w)) {
+        flags &= ~SW_SCROLLCHILDREN;
+        break;
+      }
+    }
+  }
+
+  RECTL clip;
+  clip.xLeft   = affectedRect.x;
+  clip.xRight  = affectedRect.x + affectedRect.width;
+  clip.yTop    = mBounds.height - affectedRect.y;
+  clip.yBottom = clip.yTop - affectedRect.height;
+
   // this prevents screen corruption while scrolling during a
-  // Moz-originated drag - during a native drag, the screen
-  // isn't updated until the drag ends. so there's no corruption
+  // Moz-originated drag - the hps isn't actually used but
+  // fetching it unlocks the screen so it can be updated
   HPS hps = 0;
   CheckDragStatus(ACTION_SCROLL, &hps);
+  ::WinScrollWindow(mWnd, aDelta.x, -aDelta.y, &clip, &clip, NULL, NULL, flags);
 
-  NotifyForeignChildWindows(mWnd);
-  WinScrollWindow(mWnd, aDx, -aDy, aClipRect ? &rcl : 0, 0, 0,
-                  0, SW_SCROLLCHILDREN | SW_INVALIDATERGN);
-  ScrollChildWindows(aDx, aDy);
+  // Now make sure all children actually get positioned, sized, and clipped
+  // correctly.  If SW_SCROLLCHILDREN was in effect, they may already be.
+  ConfigureChildren(aConfigurations);
   Update();
 
   if (hps)
     ReleaseIfDragHPS(hps);
-
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

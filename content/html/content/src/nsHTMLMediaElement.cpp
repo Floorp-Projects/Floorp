@@ -985,10 +985,6 @@ static const char* gOggCodecs[] = {
   nsnull
 };
 
-static const char* gOggMaybeCodecs[] = {
-  nsnull
-};
-
 static PRBool IsOggEnabled()
 {
   return nsContentUtils::GetBoolPref("media.ogg.enabled");
@@ -1022,11 +1018,6 @@ static const char* gWaveCodecs[] = {
   nsnull
 };
 
-static const char* gWaveMaybeCodecs[] = {
-  "0", // Microsoft Unknown Wave Format
-  nsnull
-};
-
 static PRBool IsWaveEnabled()
 {
   return nsContentUtils::GetBoolPref("media.wave.enabled");
@@ -1046,20 +1037,17 @@ static PRBool IsWaveType(const nsACString& aType)
 
 /* static */
 PRBool nsHTMLMediaElement::CanHandleMediaType(const char* aMIMEType,
-                                              const char*** aCodecList,
-                                              const char*** aMaybeCodecList)
+                                              const char*** aCodecList)
 {
 #ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType))) {
     *aCodecList = gOggCodecs;
-    *aMaybeCodecList = gOggMaybeCodecs;
     return PR_TRUE;
   }
 #endif
 #ifdef MOZ_WAVE
   if (IsWaveType(nsDependentCString(aMIMEType))) {
     *aCodecList = gWaveCodecs;
-    *aMaybeCodecList = gWaveMaybeCodecs;
     return PR_TRUE;
   }
 #endif
@@ -1107,9 +1095,8 @@ static CanPlayStatus GetCanPlay(const nsAString& aType)
 
   NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
   const char** supportedCodecs;
-  const char** maybeSupportedCodecs;
   if (!nsHTMLMediaElement::CanHandleMediaType(mimeTypeUTF8.get(),
-          &supportedCodecs, &maybeSupportedCodecs))
+                                              &supportedCodecs))
     return CANPLAY_NO;
 
   nsAutoString codecs;
@@ -1126,9 +1113,7 @@ static CanPlayStatus GetCanPlay(const nsAString& aType)
   while (tokenizer.hasMoreTokens()) {
     const nsSubstring& token = tokenizer.nextToken();
 
-    if (CodecListContains(maybeSupportedCodecs, token)) {
-      result = CANPLAY_MAYBE;
-    } else if (!CodecListContains(supportedCodecs, token)) {
+    if (!CodecListContains(supportedCodecs, token)) {
       // Totally unsupported codec
       return CANPLAY_NO;
     }

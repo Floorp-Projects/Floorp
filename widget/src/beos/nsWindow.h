@@ -165,8 +165,6 @@ public:
 	NS_IMETHOD              ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE; }
 	NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
 	NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
-	NS_IMETHOD              BeginResizingChildren(void);
-	NS_IMETHOD              EndResizingChildren(void);
 	NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 	NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
 
