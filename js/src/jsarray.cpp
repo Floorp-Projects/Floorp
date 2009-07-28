@@ -1368,7 +1368,7 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok = JS_TRUE;
 
     /*
-     * This object will take responsibility for the jschar buffer until the 
+     * This object will take responsibility for the jschar buffer until the
      * buffer is transferred to the returned JSString.
      */
     JSTempVector<jschar> buf(cx);
@@ -1520,7 +1520,7 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     }
 
     /*
-     * This object will take responsibility for the jschar buffer until the 
+     * This object will take responsibility for the jschar buffer until the
      * buffer is transferred to the returned JSString.
      */
     JSTempVector<jschar> buf(cx);

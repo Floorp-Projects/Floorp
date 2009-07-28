@@ -1534,7 +1534,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     js_LeaveTrace(cx);
 
 #ifdef JS_TRACER
-    /* 
+    /*
      * The JIT requires that the scope chain here is equal to its global
      * object. Disable the JIT for this call if this condition is not true.
      */
@@ -2095,7 +2095,7 @@ js_GetUpvar(JSContext *cx, uintN level, uintN cookie)
     } else if (slot == CALLEE_UPVAR_SLOT) {
         vp = &fp->argv[-2];
         slot = 0;
-    } else { 
+    } else {
         slot -= fp->fun->nargs;
         JS_ASSERT(slot < fp->script->nslots);
         vp = fp->slots;
@@ -2132,7 +2132,7 @@ js_TraceOpcode(JSContext *cx)
                                 fp->script, cx->tracePrevPc);
 
         /*
-         * If there aren't that many elements on the stack, then 
+         * If there aren't that many elements on the stack, then
          * we have probably entered a new frame, and printing output
          * would just be misleading.
          */
@@ -2717,7 +2717,7 @@ js_Interpret(JSContext *cx)
      * 'op=x; DO_OP()' to let another opcode's implementation finish
      * their work, and many opcodes share entry points with a run of
      * consecutive BEGIN_CASEs.
-     * 
+     *
      * Take care to trace OP only when it is the opcode fetched from
      * the instruction stream, so the trace matches what one would
      * expect from looking at the code.  (We do omit POPs after SETs;

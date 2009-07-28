@@ -289,7 +289,7 @@ extern JSBool
 SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 /*
- * js_SetCallArg and js_SetCallVar are extern fastcall copies of the setter 
+ * js_SetCallArg and js_SetCallVar are extern fastcall copies of the setter
  * functions. These versions are required in order to set call vars from traces.
  * The normal versions must not be fastcall because they are stored in the
  * property ops map.

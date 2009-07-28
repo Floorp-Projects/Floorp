@@ -86,7 +86,7 @@ struct JSTraceableNative {
     const nanojit::CallInfo *builtin;
     const char              *prefix;
     const char              *argtypes;
-    uintN                   flags;  /* JSTNErrType | JSTN_UNBOX_AFTER | JSTN_MORE | 
+    uintN                   flags;  /* JSTNErrType | JSTN_UNBOX_AFTER | JSTN_MORE |
                                        JSTN_CONSTRUCTOR */
 };
 
@@ -117,7 +117,7 @@ struct JSTraceableNative {
 #endif
 
 /*
- * Supported types for builtin functions. 
+ * Supported types for builtin functions.
  *
  * Types with -- for the two string fields are not permitted as argument types
  * in JS_DEFINE_TRCINFO.
@@ -165,7 +165,7 @@ struct JSTraceableNative {
  * trace.  If an exception is pending, it is thrown; otherwise, we assume the
  * builtin had no side effects and retry the current bytecode in the
  * interpreter.
- * 
+ *
  * So a builtin must not return a value indicating failure after causing side
  * effects (such as reporting an error), without setting an exception pending.
  * The operation would be retried, despite the first attempt's observable

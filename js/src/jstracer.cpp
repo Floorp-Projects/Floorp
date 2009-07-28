@@ -1757,7 +1757,7 @@ TraceRecorder::isGlobal(jsval* p) const
             (size_t(p - globalObj->dslots) < (STOBJ_NSLOTS(globalObj) - JS_INITIAL_NSLOTS)));
 }
 
-/* 
+/*
  * Return the offset in the native stack for the given jsval. More formally,
  * |p| must be the address of a jsval that is represented in the native stack
  * area. The return value is the offset, from InterpState::stackBase, in bytes,
@@ -2240,7 +2240,7 @@ js_GetUpvarStackOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 cal
 }
 
 /*
- * Generic function to read upvars from Call objects of active heavyweight functions. 
+ * Generic function to read upvars from Call objects of active heavyweight functions.
  *     callee       Callee Function object in which the upvar is accessed.
  *     scopeIndex   Number of parent steps to make from |callee| to find upvar definition.
  *                  This must be at least 1 because |callee| is a Function and we must reach a Call.
@@ -2249,7 +2249,7 @@ js_GetUpvarStackOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 cal
  */
 template<typename T>
 uint32 JS_INLINE
-js_GetFromClosure(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
+js_GetFromClosure(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth,
                   double* result)
 {
     JS_ASSERT(scopeIndex >= 1);
@@ -2305,7 +2305,7 @@ private:
 };
 
 uint32 JS_FASTCALL
-js_GetClosureArg(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
+js_GetClosureArg(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth,
                  double* result)
 {
     return js_GetFromClosure<ArgClosureTraits>(cx, callee, scopeIndex, slot, callDepth, result);
@@ -2320,7 +2320,7 @@ private:
 };
 
 uint32 JS_FASTCALL
-js_GetClosureVar(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth, 
+js_GetClosureVar(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth,
                  double* result)
 {
     return js_GetFromClosure<VarClosureTraits>(cx, callee, scopeIndex, slot, callDepth, result);
@@ -4788,14 +4788,14 @@ js_AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom
             if (e2->numGlobalSlots < e1->numGlobalSlots) {
                 /*
                  * Watch out for an extremely rare case (bug 502714). The sequence of events is:
-                 * 
+                 *
                  * 1) Inner tree compiles not knowing about global X (which has type A).
                  * 2) Inner tree learns about global X and specializes it to a different type
                  *    (type B).
                  * 3) Outer tree records inner tree with global X as type A, exiting as B.
                  * 4) Outer tree now has a nesting guard with typeof(X)=B.
                  * 5) Inner tree takes its original exit that does not know about X.
-                 * 
+                 *
                  * In this case, the nesting guard fails, and now it is illegal to use the nested
                  * typemap entry for X. The correct entry is in the inner guard's TreeInfo,
                  * analogous to the solution for bug 476653.
@@ -6523,9 +6523,9 @@ TraceRecorder::frameIfInRange(JSObject* obj, unsigned* depthp) const
     return NULL;
 }
 
-JS_DEFINE_CALLINFO_6(extern, UINT32, js_GetClosureVar, CONTEXT, OBJECT, UINT32, 
+JS_DEFINE_CALLINFO_6(extern, UINT32, js_GetClosureVar, CONTEXT, OBJECT, UINT32,
                      UINT32, UINT32, DOUBLEPTR, 0, 0)
-JS_DEFINE_CALLINFO_6(extern, UINT32, js_GetClosureArg, CONTEXT, OBJECT, UINT32, 
+JS_DEFINE_CALLINFO_6(extern, UINT32, js_GetClosureArg, CONTEXT, OBJECT, UINT32,
                      UINT32, UINT32, DOUBLEPTR, 0, 0)
 
 /*
@@ -6622,13 +6622,13 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, bool& track
 
                 LIns* callee_ins = get(&cx->fp->argv[-2]);
                 LIns* outp = lir->insAlloc(sizeof(double));
-                LIns* args[] = { 
+                LIns* args[] = {
                     outp,
                     INS_CONST(callDepth),
                     INS_CONST(slot),
-                    INS_CONST(scopeIndex), 
+                    INS_CONST(scopeIndex),
                     callee_ins,
-                    cx_ins 
+                    cx_ins
                 };
                 const CallInfo* ci;
                 if (sprop->getter == js_GetCallArg)
@@ -9700,7 +9700,7 @@ TraceRecorder::record_JSOP_GETELEM()
                         typemap_ins = lir->ins2(LIR_add, fip_ins, INS_CONST(sizeof(FrameInfo) + 2/*callee,this*/ * sizeof(JSTraceType)));
                     }
 
-                    LIns* typep_ins = lir->ins2(LIR_add, typemap_ins, 
+                    LIns* typep_ins = lir->ins2(LIR_add, typemap_ins,
                                                 lir->ins2(LIR_mul, idx_ins, INS_CONST(sizeof(JSTraceType))));
                     LIns* type_ins = lir->insLoad(LIR_ldcb, typep_ins, 0);
                     guard(true,
@@ -9709,7 +9709,7 @@ TraceRecorder::record_JSOP_GETELEM()
                           BRANCH_EXIT);
 
                     // Read the value out of the native stack area.
-                    guard(true, lir->ins2(LIR_ult, idx_ins, INS_CONST(afp->argc)), 
+                    guard(true, lir->ins2(LIR_ult, idx_ins, INS_CONST(afp->argc)),
                           snapshot(BRANCH_EXIT));
                     size_t stackOffset = -treeInfo->nativeStackBase + nativeStackOffset(&afp->argv[0]);
                     LIns* args_addr_ins = lir->ins2(LIR_add, lirbuf->sp, INS_CONST(stackOffset));
@@ -9717,7 +9717,7 @@ TraceRecorder::record_JSOP_GETELEM()
                                                     lir->ins2(LIR_mul, idx_ins, INS_CONST(sizeof(double))));
                     v_ins = stackLoad(argi_addr_ins, type);
                 } else {
-                    guard(false, lir->ins2(LIR_ult, idx_ins, INS_CONST(afp->argc)), 
+                    guard(false, lir->ins2(LIR_ult, idx_ins, INS_CONST(afp->argc)),
                           snapshot(BRANCH_EXIT));
                     v_ins = INS_VOID();
                 }
@@ -10225,7 +10225,7 @@ TraceRecorder::record_JSOP_APPLY()
         aobj = JSVAL_TO_OBJECT(vp[3]);
         aobj_ins = get(&vp[3]);
 
-        /* 
+        /*
          * We trace dense arrays and arguments objects. The code we generate for apply
          * uses imacros to handle a specific number of arguments.
          */
@@ -11093,7 +11093,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     /*
      * If obj is a js_CallClass object, then we are tracing a reference to an
      * upvar in a heavyweight function. We cannot reach this point of the trace
-     * with a different call object because of the guard on the function call, 
+     * with a different call object because of the guard on the function call,
      * so we can assume the result of the bindname is constant on this trace.
      */
     if (obj != globalObj && OBJ_GET_CLASS(cx, obj) != &js_CallClass)

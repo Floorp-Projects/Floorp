@@ -819,7 +819,7 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
     return cx;
 #else
     return js_ContextIterator(rt, JS_FALSE, &iter);
-#endif           
+#endif
 }
 
 #ifdef JS_THREADSAFE
@@ -1738,10 +1738,10 @@ JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
     JS_ASSERT(cx->operationCallbackFlag);
-    
+
     /*
      * Reset the callback flag first, then yield. If another thread is racing
-     * us here we will accumulate another callback request which will be 
+     * us here we will accumulate another callback request which will be
      * serviced at the next opportunity.
      */
     cx->operationCallbackFlag = 0;
@@ -1755,7 +1755,7 @@ js_InvokeOperationCallback(JSContext *cx)
      */
     if (cx->runtime->gcIsNeeded)
         js_GC(cx, GC_NORMAL);
-#ifdef JS_THREADSAFE    
+#ifdef JS_THREADSAFE
     else
         JS_YieldRequest(cx);
 #endif

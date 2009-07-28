@@ -90,7 +90,7 @@ struct JSStackFrame {
      * variables on the stack initially, note when they are closed
      * over, and copy those that are out to the heap when we leave
      * their dynamic scope.
-     * 
+     *
      * The bytecode compiler produces a tree of block objects
      * accompanying each JSScript representing those lexical blocks in
      * the script that have let-bound variables associated with them.
@@ -102,7 +102,7 @@ struct JSStackFrame {
      * When we are in the static scope of such a block, blockChain
      * points to its compiler-allocated block object; otherwise, it is
      * NULL.
-     * 
+     *
      * scopeChain is the current scope chain, including 'call' and
      * 'block' objects for those function calls and lexical blocks
      * whose static scope we are currently executing in, and 'with'
@@ -158,7 +158,7 @@ static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
 {
     uintN n;
-    
+
     JS_ASSERT(!fp->fun);
     n = fp->script->nfixed;
     if (fp->script->regexpsOffset != 0)

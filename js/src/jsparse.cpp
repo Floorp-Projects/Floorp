@@ -3802,7 +3802,7 @@ CheckDestructuring(JSContext *cx, BindData *data,
 /*
  * This is a greatly pared down version of CheckDestructuring that extends the
  * pn_pos.end source coordinate of each name in a destructuring binding such as
- * 
+ *
  *   var [x, y] = [function () y, 42];
  *
  * to cover its corresponding initializer, so that the initialized binding does

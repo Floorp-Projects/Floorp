@@ -106,8 +106,8 @@ typedef enum JSAccessMode {
     JSACC_PROTO  = 0,           /* XXXbe redundant w.r.t. id */
     JSACC_PARENT = 1,           /* XXXbe redundant w.r.t. id */
 
-                                /* 
-                                 * enum value #2 formerly called JSACC_IMPORT, 
+                                /*
+                                 * enum value #2 formerly called JSACC_IMPORT,
                                  * gap preserved for ABI compatibility.
                                  */
 
