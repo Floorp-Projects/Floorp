@@ -257,14 +257,6 @@
   list-style-image: url("chrome://browser/skin/images/navigation-magnifier-16.png");
 }
 
-.ac-result-type-bookmark {
-  list-style-image: url("chrome://browser/skin/images/star-24.png");
-}
-
-.ac-result-type-tag {
-  list-style-image: url("chrome://browser/skin/images/tag-24.png");
-}
-
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 .documenttab-close {
   width: 16px;
