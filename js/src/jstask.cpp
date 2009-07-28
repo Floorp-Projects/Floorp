@@ -87,7 +87,7 @@ void
 JSBackgroundThread::work()
 {
     PR_Lock(lock);
-    do {
+    while (!shutdown) {
         PR_WaitCondVar(wakeup, PR_INTERVAL_NO_TIMEOUT);
         JSBackgroundTask* t;
         while ((t = stack) != NULL) {
@@ -97,7 +97,7 @@ JSBackgroundThread::work()
             delete t;
             PR_Lock(lock);
         }
-    } while (!shutdown);
+    }
     PR_Unlock(lock);
 }
 
