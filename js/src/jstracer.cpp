@@ -2636,9 +2636,8 @@ TraceRecorder::isValidSlot(JSScope* scope, JSScopeProperty* sprop)
         if (sprop->attrs & JSPROP_READONLY)
             ABORT_TRACE_RV("writing to a read-only property", false);
     }
-
     /* This check applies even when setflags == 0. */
-    if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop))
+    if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop))
         ABORT_TRACE_RV("non-stub getter", false);
 
     if (!SPROP_HAS_VALID_SLOT(sprop, scope))
@@ -4101,7 +4100,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
         JSScope* scope = OBJ_SCOPE(pobj);
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
-        if (SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop) &&
+        if (SPROP_HAS_STUB_GETTER(sprop) &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             jsval v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
             if (VALUE_IS_FUNCTION(cx, v)) {
@@ -10486,33 +10485,32 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         if (setflags && (sprop->attrs & JSPROP_READONLY))
             ABORT_TRACE("writing to a readonly property");
         if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop)) {
-            if (setflags == 0) {
-                // FIXME 450335: generalize this away from regexp built-in getters.
-                if (sprop->getter == js_RegExpClass.getProperty &&
-                    sprop->shortid < 0) {
-                    if (sprop->shortid == REGEXP_LAST_INDEX)
-                        ABORT_TRACE("can't trace RegExp.lastIndex yet");
-                    LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
-                    v_ins = lir->insCall(&js_CallGetter_ci, args);
-                    guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
-
-                    /*
-                     * BIG FAT WARNING: This snapshot cannot be a BRANCH_EXIT, since
-                     * the value to the top of the stack is not the value we unbox.
-                     */
-                    unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
-                                v_ins,
-                                snapshot(MISMATCH_EXIT));
-                    return JSRS_CONTINUE;
-                }
-                if (sprop->getter == js_StringClass.getProperty &&
-                    sprop->id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-                    if (!guardClass(obj, obj_ins, &js_StringClass, snapshot(MISMATCH_EXIT)))
-                        ABORT_TRACE("can't trace String.length on non-String objects");
-                    LIns* str_ins = stobj_get_private(obj_ins, JSVAL_TAGMASK);
-                    v_ins = lir->ins1(LIR_i2f, getStringLength(str_ins));
-                    return JSRS_CONTINUE;
-                }
+            // FIXME 450335: generalize this away from regexp built-in getters.
+            if (setflags == 0 &&
+                sprop->getter == js_RegExpClass.getProperty &&
+                sprop->shortid < 0) {
+                if (sprop->shortid == REGEXP_LAST_INDEX)
+                    ABORT_TRACE("can't trace RegExp.lastIndex yet");
+                LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
+                v_ins = lir->insCall(&js_CallGetter_ci, args);
+                guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
+                /*
+                 * BIG FAT WARNING: This snapshot cannot be a BRANCH_EXIT, since
+                 * the value to the top of the stack is not the value we unbox.
+                 */
+                unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
+                            v_ins,
+                            snapshot(MISMATCH_EXIT));
+                return JSRS_CONTINUE;
+            }
+            if (setflags == 0 &&
+                sprop->getter == js_StringClass.getProperty &&
+                sprop->id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
+                if (!guardClass(obj, obj_ins, &js_StringClass, snapshot(MISMATCH_EXIT)))
+                    ABORT_TRACE("can't trace String.length on non-String objects");
+                LIns* str_ins = stobj_get_private(obj_ins, JSVAL_TAGMASK);
+                v_ins = lir->ins1(LIR_i2f, getStringLength(str_ins));
+                return JSRS_CONTINUE;
             }
             ABORT_TRACE("non-stub getter");
         }
@@ -11864,9 +11862,7 @@ TraceRecorder::record_JSOP_CALLPROP()
         } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
             if (l == JSVAL_VOID)
                 ABORT_TRACE("callprop on void");
-            guard(false,
-                  lir->ins2i(LIR_eq, get(&l), JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)),
-                  MISMATCH_EXIT);
+            guard(false, lir->ins2i(LIR_eq, get(&l), JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), MISMATCH_EXIT);
             i = JSProto_Boolean;
             debug_only_stmt(protoname = "Boolean.prototype";)
         } else {
@@ -12377,18 +12373,6 @@ DBG_STUB(JSOP_CALLUPVAR_DBG)
 DBG_STUB(JSOP_DEFFUN_DBGFC)
 DBG_STUB(JSOP_DEFLOCALFUN_DBGFC)
 DBG_STUB(JSOP_LAMBDA_DBGFC)
-
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::record_JSOP_SETMETHOD()
-{
-    return record_JSOP_SETPROP();
-}
-
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::record_JSOP_INITMETHOD()
-{
-    return record_JSOP_INITPROP();
-}
 
 #ifdef JS_JIT_SPEW
 /* Prints information about entry typemaps and unstable exits for all peers at a PC */
