@@ -95,6 +95,43 @@ function InputHandler() {
 }
 
 
+/**
+ * The input handler is an arbiter between the Fennec chrome window inputs and any
+ * registered input modules.  It keeps an array of input module objects.  Incoming
+ * input events are wrapped in an EventInfo object and passed down to the input modules
+ * in the order of the modules array.
+ *
+ * Input modules must provide the following interface:
+ *
+ *   handleEvent(evInfo)
+ *     Entry point by which InputHandler passes wrapped Fennec chrome window events
+ *     to the module.
+ *
+ *   cancelPending()
+ *     Called by the InputHandler as a hint to the module that it may wish to reset
+ *     whatever state it might have entered by processing events thus far.  For
+ *     instance, a module may have grabbed (cf grab()) focus, in which case the
+ *     InputHandler will call cancelPending() on all remaining modules.
+ *
+ *
+ *
+ * An input module may wish to grab event focus of the InputHandler, which means that it
+ * wants to process all incoming events for a while.  When the InputHandler is grabbed
+ * by one of its modules, only that module will receive incoming events until it ungrabs
+ * the InputHandler.  No other modules' handleEvent() function will be called while the
+ * InputHandler is grabbed.  Grabs and ungrabs of the InputHandler require an object reference
+ * corresponding to the grabbing object.  That is, a module must call inputHandler.grab(this)
+ * and .ungrab(this) in order for the calls to succeed.  The object given as the argument
+ * will be that which is given event focus.  grab/ungrab may be nested (that is, a module can
+ * grab as many times as it wants to) provided that they are one-to-one.  That is, if a
+ * module grabs four times, it should be sure to ungrab that many times as well.  Lastly,
+ * an input module may, in ungrabbing, provide an array of queued EventInfo objects, each of
+ * which will be passed by the InputHandler to each of the subsequent modules ("subsequent"
+ * as in "next in the ordering within the modules array") via handleEvent().  This can be
+ * thought of as the module's way of saying "sorry for grabbing focus, here's everything I
+ * kept you from processing this whole time" to the modules of lower priority.  To prevent
+ * infinite loops, this event queue is only passed to lower-priority modules.
+ */
 InputHandler.prototype = {
 
   /**
@@ -110,7 +147,7 @@ InputHandler.prototype = {
    */
   // XXX froystig: grab(null) is supported because the old grab() supported
   //       it, but I'm not sure why.  The comment on that was "grab(null) is
-  //       allowed because of mouseout handling.  Feel free to remove if that
+  //       allowed because of mouseout handling".  Feel free to remove if that
   //       is no longer relevant, or remove this comment if it still is.
   grab: function grab(grabber) {
     if (grabber == null) {
@@ -148,7 +185,7 @@ InputHandler.prototype = {
    * events all along.
    */
   // XXX froystig: ungrab(null) is supported here too because the old ungrab()
-  //       happened to support it (not sure if intentionally --- there was no
+  //       happened to support it (not sure if intentionally; there was no
   //       comment it), so cf the corresponding comment on grab().
   ungrab: function ungrab(grabber, restoreEventInfos) {
     if (this._grabber == null && grabber == null) {
@@ -242,7 +279,7 @@ function MouseModule(owner) {
   this._owner = owner;
   this._dragData = new DragData(this, 50, 200);
 
-  this._dragger = this._defaultDragger;
+  this._dragger = null;
   this._clicker = null;
 
   this._downUpEvents = [];
@@ -253,7 +290,10 @@ function MouseModule(owner) {
   this._fastPath = false;
 
   var self = this;
-  this._kinetic = new KineticController( function (dx, dy) { return self._dragBy(dx, dy); } );
+  this._kinetic = new KineticController(
+    function _dragByBound(dx, dy) { return self._dragBy(dx, dy); },
+    function _dragStopBound() { return self._doDragStop(0, 0, true); }
+  );
 }
 
 
@@ -284,6 +324,8 @@ MouseModule.prototype = {
 
   _onMouseDown: function _onMouseDown(evInfo) {
     this._owner.allowClicks();
+    if (this._kinetic.isActive())
+      this._kinetic.end();
 
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
     // returned if none found.
@@ -294,13 +336,8 @@ MouseModule.prototype = {
 
     this._targetScrollInterface = targetScrollInterface;
 
-    // fast path: we have no scrollable element nor any element with custom clicker, so
-    // just let the event bubble on through
-    //this._fastPath = !targetScrollInterface && !targetClicker;
-    //if (this._fastPath)
-    //  return;
-
-    this._dragger = (targetScrollInterface && targetScrollbox.customDragger) || this._defaultDragger;
+    this._dragger = (targetScrollInterface) ? (targetScrollbox.customDragger || this._defaultDragger)
+                                            : null;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
 
     evInfo.event.stopPropagation();
@@ -309,7 +346,6 @@ MouseModule.prototype = {
     this._owner.grab(this);
 
     if (targetScrollInterface) {
-      this._kinetic.end();
       this._doDragStart(evInfo.event.screenX, evInfo.event.screenY);
     }
 
@@ -396,18 +432,22 @@ MouseModule.prototype = {
     this._dragger.dragStart(this._targetScrollInterface);
   },
 
-  _doDragStop: function _doDragStop(sX, sY) {
-    let dragData = this._dragData;
+  _doDragStop: function _doDragStop(sX, sY, kineticStop) {
+    if (!kineticStop) {    // we're not really done, since now it is
+                           // kinetic's turn to scroll about
+      let dragData = this._dragData;
 
-    let dx = dragData.sX - sX;
-    let dy = dragData.sY - sY;
+      let dx = dragData.sX - sX;
+      let dy = dragData.sY - sY;
 
-    dragData.setDragPosition(sX, sY);
-    this._kinetic.addData(sX, sY);
+      dragData.reset();
+      this._kinetic.addData(sX, sY);
 
-    this._dragger.dragStop(dx, dy, this._targetScrollInterface);
+      this._kinetic.start();
 
-    this._kinetic.start();
+    } else {               // now we're done, says our secret 3rd argument
+      this._dragger.dragStop(0, 0, this._targetScrollInterface);
+    }
   },
 
   _doDragMove: function _doDragMove(sX, sY) {
@@ -447,12 +487,14 @@ MouseModule.prototype = {
    *
    */
   _commitAnotherClick: function _commitAnotherClick() {
+    this._doSingleClick();
+    /*
     if (this._clickTimeout) {   // we're waiting for a second click for double
       window.clearTimeout(this._clickTimeout);
       this._doDoubleClick();
     } else {
       this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); }, 400, this);
-    }
+    }*/
   },
 
   /**
@@ -667,9 +709,10 @@ DragData.prototype = {
  * generated by the kinetic algorithm.  It should return true if the
  * object was panned, false if there was no movement.
  */
-function KineticController(aPanBy) {
+function KineticController(aPanBy, aEndCallback) {
   this._panBy = aPanBy;
   this._timer = null;
+  this._beforeEnd = aEndCallback;
 
   try {
     this._updateInterval = gPrefService.getIntPref("browser.ui.kinetic.updateInterval");
@@ -782,6 +825,7 @@ KineticController.prototype = {
   },
 
   end: function end() {
+    this._beforeEnd();
     this._reset();
   },
 
