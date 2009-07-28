@@ -61,14 +61,15 @@ PasswordEngine.prototype = {
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
 
-  _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.deleted || b.deleted)
-      return false;
-    if (["hostname", "httpRealm", "username"].some(function(k) a[k] != b[k]))
-      return false;
-    if (!a.formSubmitURL || !b.formSubmitURL)
-      return true;
-    return a.formSubmitURL == b.formSubmitURL;
+  _findLikeId: function PasswordEngine__findLikeId(item) {
+    let login = this._store._nsLoginInfoFromRecord(item);
+    let logins = Svc.Login.findLogins({}, login.hostname, login.formSubmitURL,
+      login.httpRealm);
+
+    // Look for existing logins that match the hostname but ignore the password
+    for each (let local in logins)
+      if (login.matches(local, true) && local instanceof Ci.nsILoginMetaInfo)
+        return local.guid;
   }
 };
 
