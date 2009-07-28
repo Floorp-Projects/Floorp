@@ -683,7 +683,7 @@ nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
         break;
       case eNext:
         result = selCont->CharacterExtendForDelete();
-        // Don't set aAction to eNone (see Bug 502259)
+        *aAction = eNone;
         break;
       case ePrevious:
         /* FIXME: extend selection over UTF-16 surrogates for Bug #332636
