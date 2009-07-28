@@ -126,6 +126,12 @@ RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   return PR_TRUE;
 }
 
+static void
+RequestInfoHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  nsRequestInfo* info = static_cast<nsRequestInfo *>(entry);
+  info->~nsRequestInfo();
+}
 
 struct nsListenerInfo {
   nsListenerInfo(nsIWeakReference *aListener, unsigned long aNotifyMask) 
@@ -162,7 +168,7 @@ nsDocLoader::nsDocLoader()
     PL_DHashVoidPtrKeyStub,
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    RequestInfoHashClearEntry,
     PL_DHashFinalizeStub,
     RequestInfoHashInitEntry
   };
