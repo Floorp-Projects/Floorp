@@ -183,7 +183,7 @@ nsProgressNotificationProxy::GetInterface(const nsIID& iid,
                                           void** result) {
   if (iid.Equals(NS_GET_IID(nsIProgressEventSink))) {
     *result = static_cast<nsIProgressEventSink*>(this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (mOriginalCallbacks)
