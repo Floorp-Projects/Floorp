@@ -76,6 +76,7 @@
 #include "jsscript.h"
 #include "jsstaticcheck.h"
 #include "jsstr.h"
+#include "jstask.h"
 #include "jstracer.h"
 
 #if JS_HAS_XML_SUPPORT
@@ -722,7 +723,7 @@ FreePtrTable(JSPtrTable *table, const JSPtrTableInfo *info)
 {
     if (table->array) {
         JS_ASSERT(table->count > 0);
-        free(table->array);
+        js_free(table->array);
         table->array = NULL;
         table->count = 0;
     }
@@ -756,8 +757,8 @@ AddToPtrTable(JSContext *cx, JSPtrTable *table, const JSPtrTableInfo *info,
             if (capacity > (size_t)-1 / sizeof table->array[0])
                 goto bad;
         }
-        array = (void **) realloc(table->array,
-                                  capacity * sizeof table->array[0]);
+        array = (void **) js_realloc(table->array,
+                                     capacity * sizeof table->array[0]);
         if (!array)
             goto bad;
 #ifdef DEBUG
@@ -796,11 +797,11 @@ ShrinkPtrTable(JSPtrTable *table, const JSPtrTableInfo *info,
         array = table->array;
         JS_ASSERT(array);
         if (capacity == 0) {
-            free(array);
+            js_free(array);
             table->array = NULL;
             return;
         }
-        array = (void **) realloc(array, capacity * sizeof array[0]);
+        array = (void **) js_realloc(array, capacity * sizeof array[0]);
         if (array)
             table->array = array;
     }
@@ -881,7 +882,7 @@ NewGCChunk(void)
      *
      * bytes to ensure that we always have room to store the gap.
      */
-    p = malloc((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT);
+    p = js_malloc((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT);
     if (!p)
         return 0;
 
@@ -913,11 +914,11 @@ DestroyGCChunk(jsuword chunk)
 #endif
 
 #if HAS_POSIX_MEMALIGN
-    free((void *) chunk);
+    js_free((void *) chunk);
 #else
     /* See comments in NewGCChunk. */
     JS_ASSERT(*GetMallocedChunkGapPtr(chunk) < GC_ARENA_SIZE);
-    free((void *) (chunk - *GetMallocedChunkGapPtr(chunk)));
+    js_free((void *) (chunk - *GetMallocedChunkGapPtr(chunk)));
 #endif
 }
 
@@ -3270,7 +3271,10 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
                 JS_ASSERT(type < 0);
                 rt->unitStrings[*chars] = NULL;
             } else if (type < 0) {
-                free(chars);
+                if (cx)
+                    cx->free(chars);
+                else
+                    rt->free(chars);
             } else {
                 JS_ASSERT((uintN) type < JS_ARRAY_LENGTH(str_finalizers));
                 finalizer = str_finalizers[type];
@@ -3556,6 +3560,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
     rt->gcMarkingTracer = NULL;
 
+#ifdef JS_THREADSAFE
+    cx->createDeallocatorTask();
+#endif
+
     /*
      * Sweep phase.
      *
@@ -3733,6 +3741,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * use js_IsAboutToBeFinalized().
      */
     DestroyGCArenas(rt, emptyArenas);
+
+#ifdef JS_THREADSAFE
+    cx->submitDeallocatorTask();
+#endif
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);

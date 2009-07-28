@@ -2145,7 +2145,7 @@ js_TraceOpcode(JSContext *cx)
                     fprintf(tracefp, "%s %s",
                             (n == -ndefs) ? "  output:" : ",",
                             bytes);
-                    JS_free(cx, bytes);
+                    cx->free(bytes);
                 }
             }
             fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
@@ -2177,7 +2177,7 @@ js_TraceOpcode(JSContext *cx)
                 fprintf(tracefp, "%s %s",
                         (n == -nuses) ? "  inputs:" : ",",
                         bytes);
-                JS_free(cx, bytes);
+                cx->free(bytes);
             }
         }
         fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
@@ -2264,7 +2264,7 @@ js_DumpOpMeters()
 
 # define SIGNIFICANT(count,total) (200. * (count) >= (total))
 
-    graph = (Edge *) calloc(nedges, sizeof graph[0]);
+    graph = (Edge *) js_calloc(nedges * sizeof graph[0]);
     for (i = nedges = 0; i < JSOP_LIMIT; i++) {
         from = js_CodeName[i];
         for (j = 0; j < JSOP_LIMIT; j++) {
@@ -2293,7 +2293,7 @@ js_DumpOpMeters()
                 graph[i].from, graph[i].to,
                 (unsigned long)graph[i].count, style);
     }
-    free(graph);
+    js_free(graph);
     fputs("}\n", fp);
     fclose(fp);
 
