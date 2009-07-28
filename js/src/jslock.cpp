@@ -896,7 +896,7 @@ DestroyFatlock(JSFatLock *fl)
 {
     PR_DestroyLock(fl->slock);
     PR_DestroyCondVar(fl->svar);
-    free(fl);
+    js_free(fl);
 }
 
 static JSFatLock *
@@ -990,7 +990,7 @@ js_SetupLocks(int listc, int globc)
     global_locks_log2 = JS_CeilingLog2(globc);
     global_locks_mask = JS_BITMASK(global_locks_log2);
     global_lock_count = JS_BIT(global_locks_log2);
-    global_locks = (PRLock **) malloc(global_lock_count * sizeof(PRLock*));
+    global_locks = (PRLock **) js_malloc(global_lock_count * sizeof(PRLock*));
     if (!global_locks)
         return JS_FALSE;
     for (i = 0; i < global_lock_count; i++) {
@@ -1001,7 +1001,7 @@ js_SetupLocks(int listc, int globc)
             return JS_FALSE;
         }
     }
-    fl_list_table = (JSFatLockTable *) malloc(i * sizeof(JSFatLockTable));
+    fl_list_table = (JSFatLockTable *) js_malloc(i * sizeof(JSFatLockTable));
     if (!fl_list_table) {
         js_CleanupLocks();
         return JS_FALSE;
@@ -1023,7 +1023,7 @@ js_CleanupLocks()
     if (global_locks) {
         for (i = 0; i < global_lock_count; i++)
             PR_DestroyLock(global_locks[i]);
-        free(global_locks);
+        js_free(global_locks);
         global_locks = NULL;
         global_lock_count = 1;
         global_locks_log2 = 0;
@@ -1036,7 +1036,7 @@ js_CleanupLocks()
             DeleteListOfFatlocks(fl_list_table[i].taken);
             fl_list_table[i].taken = NULL;
         }
-        free(fl_list_table);
+        js_free(fl_list_table);
         fl_list_table = NULL;
         fl_list_table_len = 0;
     }

@@ -9036,12 +9036,12 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
-            chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
+            chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
             str = js_NewString(cx, chars, length);
             if (!str) {
-                JS_free(cx, chars);
+                cx->free(chars);
                 return JS_FALSE;
             }
 

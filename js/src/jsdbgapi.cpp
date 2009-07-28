@@ -123,7 +123,7 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
                     continue;
                 nbytes += (sn - notes + 1) * sizeof *sn;
 
-                code = (jsbytecode *) JS_malloc(cx, nbytes);
+                code = (jsbytecode *) cx->malloc(nbytes);
                 if (!code)
                     break;
                 memcpy(code, script->code, nbytes);
@@ -155,12 +155,12 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     } else {
         sample = rt->debuggerMutations;
         DBG_UNLOCK(rt);
-        trap = (JSTrap *) JS_malloc(cx, sizeof *trap);
+        trap = (JSTrap *) cx->malloc(sizeof *trap);
         if (!trap)
             return JS_FALSE;
         trap->closure = NULL;
         if(!js_AddRoot(cx, &trap->closure, "trap->closure")) {
-            JS_free(cx, trap);
+            cx->free(trap);
             return JS_FALSE;
         }
         DBG_LOCK(rt);
@@ -184,7 +184,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     DBG_UNLOCK(rt);
     if (junk) {
         js_RemoveRoot(rt, &junk->closure);
-        JS_free(cx, junk);
+        cx->free(junk);
     }
     return JS_TRUE;
 }
@@ -213,7 +213,7 @@ DestroyTrapAndUnlock(JSContext *cx, JSTrap *trap)
     DBG_UNLOCK(cx->runtime);
 
     js_RemoveRoot(cx->runtime, &trap->closure);
-    JS_free(cx, trap);
+    cx->free(trap);
 }
 
 JS_PUBLIC_API(void)
@@ -413,7 +413,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
         }
     }
 
-    JS_free(cx, wp);
+    cx->free(wp);
     return ok;
 }
 
@@ -619,7 +619,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     if (nslots <= JS_ARRAY_LENGTH(smallv)) {
                         argv = smallv;
                     } else {
-                        argv = (jsval *) JS_malloc(cx, nslots * sizeof(jsval));
+                        argv = (jsval *) cx->malloc(nslots * sizeof(jsval));
                         if (!argv) {
                             DBG_LOCK(rt);
                             DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
@@ -651,7 +651,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                             JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
                             !js_GetCallObject(cx, &frame)) {
                             if (argv != smallv)
-                                JS_free(cx, argv);
+                                cx->free(argv);
                             DBG_LOCK(rt);
                             DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
                             return JS_FALSE;
@@ -679,7 +679,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
                     cx->fp = frame.down;
                     if (argv != smallv)
-                        JS_free(cx, argv);
+                        cx->free(argv);
                 }
             }
             DBG_LOCK(rt);
@@ -825,7 +825,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             goto out;
         }
 
-        wp = (JSWatchPoint *) JS_malloc(cx, sizeof *wp);
+        wp = (JSWatchPoint *) cx->malloc(sizeof *wp);
         if (!wp) {
             ok = JS_FALSE;
             goto out;
@@ -1343,7 +1343,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     length = (uintN) len;
     ok = JS_EvaluateUCInStackFrame(cx, fp, chars, length, filename, lineno,
                                    rval);
-    JS_free(cx, chars);
+    cx->free(chars);
 
     return ok;
 }
@@ -1469,7 +1469,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
     }
 
     n = scope->entryCount;
-    pd = (JSPropertyDesc *) JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
+    pd = (JSPropertyDesc *) cx->malloc((size_t)n * sizeof(JSPropertyDesc));
     if (!pd)
         return JS_FALSE;
     i = 0;
@@ -1511,7 +1511,7 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
         if (pd[i].flags & JSPD_ALIAS)
             js_RemoveRoot(cx->runtime, &pd[i].alias);
     }
-    JS_free(cx, pd);
+    cx->free(pd);
 }
 
 /************************************************************************/
@@ -1884,7 +1884,7 @@ js_DumpCallgrind(JSContext *cx, JSObject *obj,
         cstr = js_DeflateString(cx, str->chars(), str->length());
         if (cstr) {
             CALLGRIND_DUMP_STATS_AT(cstr);
-            JS_free(cx, cstr);
+            cx->free(cstr);
             return JS_TRUE;
         }
     }
@@ -1962,7 +1962,7 @@ js_StartVtune(JSContext *cx, JSObject *obj,
     status = VTStartSampling(&params);
 
     if (params.tb5Filename != default_filename)
-        JS_free(cx, params.tb5Filename);
+        cx->free(params.tb5Filename);
 
     if (status != 0) {
         if (status == VTAPI_MULTIPLE_RUNS)

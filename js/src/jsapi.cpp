@@ -79,6 +79,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jstask.h"
 #include "jstracer.h"
 #include "jsdbgapi.h"
 #include "prmjtime.h"
@@ -448,7 +449,7 @@ JS_AddArgumentFormatter(JSContext *cx, const char *format,
             goto out;
         mpp = &map->next;
     }
-    map = (JSArgumentFormatMap *) JS_malloc(cx, sizeof *map);
+    map = (JSArgumentFormatMap *) cx->malloc(sizeof *map);
     if (!map)
         return JS_FALSE;
     map->format = format;
@@ -471,7 +472,7 @@ JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
     while ((map = *mpp) != NULL) {
         if (map->length == length && !strcmp(map->format, format)) {
             *mpp = map->next;
-            JS_free(cx, map);
+            cx->free(map);
             return;
         }
         mpp = &map->next;
@@ -773,7 +774,7 @@ JS_NewRuntime(uint32 maxbytes)
     }
 #endif /* DEBUG */
 
-    rt = (JSRuntime *) malloc(sizeof(JSRuntime));
+    rt = (JSRuntime *) js_malloc(sizeof(JSRuntime));
     if (!rt)
         return NULL;
 
@@ -816,6 +817,9 @@ JS_NewRuntime(uint32 maxbytes)
     rt->titleSharingTodo = NO_TITLE_SHARING_TODO;
     rt->debuggerLock = JS_NEW_LOCK();
     if (!rt->debuggerLock)
+        goto bad;
+    rt->deallocatorThread = new JSBackgroundThread();
+    if (!rt->deallocatorThread || !rt->deallocatorThread->init())
         goto bad;
 #endif
     if (!js_InitPropertyTree(rt))
@@ -886,9 +890,13 @@ JS_DestroyRuntime(JSRuntime *rt)
         JS_DESTROY_CONDVAR(rt->titleSharingDone);
     if (rt->debuggerLock)
         JS_DESTROY_LOCK(rt->debuggerLock);
+    if (rt->deallocatorThread) {
+        rt->deallocatorThread->cancel();
+        delete rt->deallocatorThread;
+    }
 #endif
     js_FinishPropertyTree(rt);
-    free(rt);
+    js_free(rt);
 }
 
 JS_PUBLIC_API(void)
@@ -1653,7 +1661,7 @@ NewIdArray(JSContext *cx, jsint length)
     JSIdArray *ida;
 
     ida = (JSIdArray *)
-          JS_malloc(cx, offsetof(JSIdArray, vector) + length * sizeof(jsval));
+        cx->malloc(offsetof(JSIdArray, vector) + length * sizeof(jsval));
     if (ida)
         ida->length = length;
     return ida;
@@ -1831,41 +1839,19 @@ JS_ComputeThis(JSContext *cx, jsval *vp)
 JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes)
 {
-    void *p;
-
-    JS_ASSERT(nbytes != 0);
-    if (nbytes == 0)
-        nbytes = 1;
-
-    p = malloc(nbytes);
-    if (!p) {
-        JS_ReportOutOfMemory(cx);
-        return NULL;
-    }
-    cx->updateMallocCounter(nbytes);
-
-    return p;
+    return cx->malloc(nbytes);
 }
 
 JS_PUBLIC_API(void *)
 JS_realloc(JSContext *cx, void *p, size_t nbytes)
 {
-    void *orig = p;
-    p = realloc(p, nbytes);
-    if (!p) {
-        JS_ReportOutOfMemory(cx);
-        return NULL;
-    }
-    if (!orig)
-        cx->updateMallocCounter(nbytes);
-    return p;
+    return cx->realloc(p, nbytes);
 }
 
 JS_PUBLIC_API(void)
 JS_free(JSContext *cx, void *p)
 {
-    if (p)
-        free(p);
+    return cx->free(p);
 }
 
 JS_PUBLIC_API(char *)
@@ -1875,7 +1861,7 @@ JS_strdup(JSContext *cx, const char *s)
     void *p;
 
     n = strlen(s) + 1;
-    p = JS_malloc(cx, n);
+    p = cx->malloc(n);
     if (!p)
         return NULL;
     return (char *)memcpy(p, s, n);
@@ -2260,7 +2246,7 @@ DumpNotify(JSTracer *trc, void *thing, uint32 kind)
 
     edgeNameSize = strlen(edgeName) + 1;
     node = (JSHeapDumpNode *)
-        JS_malloc(cx, offsetof(JSHeapDumpNode, edgeName) + edgeNameSize);
+        cx->malloc(offsetof(JSHeapDumpNode, edgeName) + edgeNameSize);
     if (!node) {
         dtrc->ok = JS_FALSE;
         return;
@@ -2412,7 +2398,7 @@ JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
         for (;;) {
             next = node->next;
             parent = node->parent;
-            JS_free(cx, node);
+            cx->free(node);
             node = next;
             if (node)
                 break;
@@ -2679,7 +2665,7 @@ JS_SetScriptStackQuota(JSContext *cx, size_t quota)
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 {
-    JS_free(cx, ida);
+    cx->free(ida);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4644,7 +4630,7 @@ JS_CompileScript(JSContext *cx, JSObject *obj,
     if (!chars)
         return NULL;
     script = JS_CompileUCScript(cx, obj, chars, length, filename, lineno);
-    JS_free(cx, chars);
+    cx->free(chars);
     return script;
 }
 
@@ -4663,7 +4649,7 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
         return NULL;
     script = JS_CompileUCScriptForPrincipals(cx, obj, principals,
                                              chars, length, filename, lineno);
-    JS_free(cx, chars);
+    cx->free(chars);
     return script;
 }
 
@@ -4748,7 +4734,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
             JS_SetErrorReporter(cx, older);
         }
     }
-    JS_free(cx, chars);
+    cx->free(chars);
     JS_RestoreExceptionState(cx, exnState);
     return result;
 }
@@ -4857,7 +4843,7 @@ JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
         return NULL;
     fun = JS_CompileUCFunction(cx, obj, name, nargs, argnames, chars, length,
                                filename, lineno);
-    JS_free(cx, chars);
+    cx->free(chars);
     return fun;
 }
 
@@ -4878,7 +4864,7 @@ JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
     fun = JS_CompileUCFunctionForPrincipals(cx, obj, principals, name,
                                             nargs, argnames, chars, length,
                                             filename, lineno);
-    JS_free(cx, chars);
+    cx->free(chars);
     return fun;
 }
 
@@ -5088,7 +5074,7 @@ JS_EvaluateScript(JSContext *cx, JSObject *obj,
     if (!chars)
         return JS_FALSE;
     ok = JS_EvaluateUCScript(cx, obj, chars, length, filename, lineno, rval);
-    JS_free(cx, chars);
+    cx->free(chars);
     return ok;
 }
 
@@ -5110,7 +5096,7 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj,
         return JS_FALSE;
     ok = JS_EvaluateUCScriptForPrincipals(cx, obj, principals, chars, length,
                                           filename, lineno, rval);
-    JS_free(cx, chars);
+    cx->free(chars);
     return ok;
 }
 
@@ -5319,13 +5305,13 @@ JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
     /* Free chars (but not bytes, which caller frees on error) if we fail. */
     str = js_NewString(cx, chars, length);
     if (!str) {
-        JS_free(cx, chars);
+        cx->free(chars);
         return NULL;
     }
 
     /* Hand off bytes to the deflated string cache, if possible. */
     if (!js_SetStringBytes(cx, str, bytes, nbytes))
-        JS_free(cx, bytes);
+        cx->free(bytes);
     return str;
 }
 
@@ -5341,7 +5327,7 @@ JS_NewStringCopyN(JSContext *cx, const char *s, size_t n)
         return NULL;
     str = js_NewString(cx, js, n);
     if (!str)
-        JS_free(cx, js);
+        cx->free(js);
     return str;
 }
 
@@ -5361,7 +5347,7 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
         return NULL;
     str = js_NewString(cx, js, n);
     if (!str)
-        JS_free(cx, js);
+        cx->free(js);
     return str;
 }
 
@@ -5449,7 +5435,7 @@ JS_GetStringChars(JSString *str)
     if (str->isDependent()) {
         n = str->dependentLength();
         size = (n + 1) * sizeof(jschar);
-        s = (jschar *) malloc(size);
+        s = (jschar *) js_malloc(size);
         if (s) {
             memcpy(s, str->dependentChars(), n * sizeof *s);
             s[n] = 0;
@@ -5727,7 +5713,7 @@ JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
     if (!chars)
         return NULL;
     obj = js_NewRegExpObject(cx, NULL, chars, length, flags);
-    JS_free(cx, chars);
+    cx->free(chars);
     return obj;
 }
 
@@ -5857,7 +5843,7 @@ JS_SaveExceptionState(JSContext *cx)
     JSExceptionState *state;
 
     CHECK_REQUEST(cx);
-    state = (JSExceptionState *) JS_malloc(cx, sizeof(JSExceptionState));
+    state = (JSExceptionState *) cx->malloc(sizeof(JSExceptionState));
     if (state) {
         state->throwing = JS_GetPendingException(cx, &state->exception);
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))
@@ -5886,7 +5872,7 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
     if (state) {
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))
             JS_RemoveRoot(cx, &state->exception);
-        JS_free(cx, state);
+        cx->free(state);
     }
 }
 

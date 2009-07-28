@@ -136,7 +136,7 @@ MarkArgDeleted(JSContext *cx, JSStackFrame *fp, uintN slot)
             bitmap = (jsbitmap *) &bmapint;
         } else {
             nbytes = JS_HOWMANY(nbits, JS_BITS_PER_WORD) * sizeof(jsbitmap);
-            bitmap = (jsbitmap *) JS_malloc(cx, nbytes);
+            bitmap = (jsbitmap *) cx->malloc(nbytes);
             if (!bitmap)
                 return JS_FALSE;
             memset(bitmap, 0, nbytes);
@@ -311,7 +311,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
     if (!JSVAL_IS_VOID(bmapval)) {
         JS_SetReservedSlot(cx, argsobj, 0, JSVAL_VOID);
         if (fp->argc > JSVAL_INT_BITS)
-            JS_free(cx, JSVAL_TO_PRIVATE(bmapval));
+            cx->free(JSVAL_TO_PRIVATE(bmapval));
     }
 
     /*
@@ -2758,10 +2758,10 @@ FreeLocalNameHash(JSContext *cx, JSLocalNameMap *map)
 
     for (dup = map->lastdup; dup; dup = next) {
         next = dup->link;
-        JS_free(cx, dup);
+        cx->free(dup);
     }
     JS_DHashTableFinish(&map->names);
-    JS_free(cx, map);
+    cx->free(map);
 }
 
 static JSBool
@@ -2789,7 +2789,7 @@ HashLocalName(JSContext *cx, JSLocalNameMap *map, JSAtom *name,
     if (entry->name) {
         JS_ASSERT(entry->name == name);
         JS_ASSERT(entry->localKind == JSLOCAL_ARG);
-        dup = (JSNameIndexPair *) JS_malloc(cx, sizeof *dup);
+        dup = (JSNameIndexPair *) cx->malloc(sizeof *dup);
         if (!dup)
             return JS_FALSE;
         dup->name = entry->name;
@@ -2835,7 +2835,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
         if (n > 1) {
             array = fun->u.i.names.array;
         } else {
-            array = (jsuword *) JS_malloc(cx, MAX_ARRAY_LOCALS * sizeof *array);
+            array = (jsuword *) cx->malloc(MAX_ARRAY_LOCALS * sizeof *array);
             if (!array)
                 return JS_FALSE;
             array[0] = fun->u.i.names.taggedAtom;
@@ -2860,7 +2860,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
         }
     } else if (n == MAX_ARRAY_LOCALS) {
         array = fun->u.i.names.array;
-        map = (JSLocalNameMap *) JS_malloc(cx, sizeof *map);
+        map = (JSLocalNameMap *) cx->malloc(sizeof *map);
         if (!map)
             return JS_FALSE;
         if (!JS_DHashTableInit(&map->names, JS_DHashGetStubOps(),
@@ -2868,7 +2868,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
                                JS_DHASH_DEFAULT_CAPACITY(MAX_ARRAY_LOCALS
                                                          * 2))) {
             JS_ReportOutOfMemory(cx);
-            JS_free(cx, map);
+            cx->free(map);
             return JS_FALSE;
         }
 
@@ -2901,7 +2901,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
          * to replace fun->u.i.names with the built map.
          */
         fun->u.i.names.map = map;
-        JS_free(cx, array);
+        cx->free(array);
     } else {
         if (*indexp == JS_BITMASK(16)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -3123,7 +3123,7 @@ DestroyLocalNames(JSContext *cx, JSFunction *fun)
     if (n <= 1)
         return;
     if (n <= MAX_ARRAY_LOCALS)
-        JS_free(cx, fun->u.i.names.array);
+        cx->free(fun->u.i.names.array);
     else
         FreeLocalNameHash(cx, fun->u.i.names.map);
 }
@@ -3139,8 +3139,8 @@ js_FreezeLocalNames(JSContext *cx, JSFunction *fun)
     n = fun->nargs + fun->u.i.nvars + fun->u.i.nupvars;
     if (2 <= n && n < MAX_ARRAY_LOCALS) {
         /* Shrink over-allocated array ignoring realloc failures. */
-        array = (jsuword *) JS_realloc(cx, fun->u.i.names.array,
-                                       n * sizeof *array);
+        array = (jsuword *) cx->realloc(fun->u.i.names.array,
+                                        n * sizeof *array);
         if (array)
             fun->u.i.names.array = array;
     }

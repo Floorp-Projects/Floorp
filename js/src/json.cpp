@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <string.h>     /* memset */
+#include <string.h>
 #include "jsapi.h"
 #include "jsarena.h"
 #include "jsarray.h"
@@ -740,10 +740,9 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
     if (!arr)
         return NULL;
 
-    JSONParser *jp = (JSONParser*) JS_malloc(cx, sizeof(JSONParser));
+    JSONParser *jp = (JSONParser*) cx->calloc(sizeof(JSONParser));
     if (!jp)
         return NULL;
-    memset(jp, 0, sizeof *jp);
 
     jp->objectStack = arr;
     if (!js_AddRoot(cx, &jp->objectStack, "JSON parse stack"))
@@ -798,7 +797,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
 
     JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
     jsval *vp = jp->rootVal;
-    JS_free(cx, jp);
+    cx->free(jp);
 
     if (!early_ok)
         return JS_FALSE;

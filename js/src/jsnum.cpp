@@ -384,7 +384,7 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         }
         str = JS_NewStringCopyZ(cx, dStr);
-        free(dStr);
+        js_free(dStr);
     }
     if (!str)
         return JS_FALSE;
@@ -460,7 +460,7 @@ num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
     }
     tmpGroup--;
 
-    buf = (char *)JS_malloc(cx, size + 1);
+    buf = (char *)cx->malloc(size + 1);
     if (!buf)
         return JS_FALSE;
 
@@ -492,7 +492,7 @@ num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
 
     str = JS_NewString(cx, buf, size);
     if (!str) {
-        JS_free(cx, buf);
+        cx->free(buf);
         return JS_FALSE;
     }
 
@@ -739,9 +739,9 @@ js_FinishRuntimeNumberState(JSContext *cx)
     rt->jsNegativeInfinity = NULL;
     rt->jsPositiveInfinity = NULL;
 
-    JS_free(cx, (void *)rt->thousandsSeparator);
-    JS_free(cx, (void *)rt->decimalSeparator);
-    JS_free(cx, (void *)rt->numGrouping);
+    cx->free((void *)rt->thousandsSeparator);
+    cx->free((void *)rt->decimalSeparator);
+    cx->free((void *)rt->numGrouping);
     rt->thousandsSeparator = rt->decimalSeparator = rt->numGrouping = NULL;
 }
 
@@ -852,7 +852,7 @@ NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
         return NULL;
     s = JS_NewStringCopyZ(cx, numStr);
     if (!(numStr >= buf && numStr < buf + sizeof buf))
-        free(numStr);
+        js_free(numStr);
     return s;
 }
 
@@ -1251,7 +1251,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
 
     /* Use cbuf to avoid malloc */
     if (length >= sizeof cbuf) {
-        cstr = (char *) JS_malloc(cx, length + 1);
+        cstr = (char *) cx->malloc(length + 1);
         if (!cstr)
            return JS_FALSE;
     } else {
@@ -1292,7 +1292,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
 
     i = estr - cstr;
     if (cstr != cbuf)
-        JS_free(cx, cstr);
+        cx->free(cstr);
     *ep = i ? s1 + i : s;
     *dp = d;
     return JS_TRUE;
@@ -1405,7 +1405,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
              */
             size_t i;
             size_t length = s1 - start;
-            char *cstr = (char *) JS_malloc(cx, length + 1);
+            char *cstr = (char *) cx->malloc(length + 1);
             char *estr;
             int err=0;
 
@@ -1418,12 +1418,12 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
             value = JS_strtod(cstr, &estr, &err);
             if (err == JS_DTOA_ENOMEM) {
                 JS_ReportOutOfMemory(cx);
-                JS_free(cx, cstr);
+                cx->free(cstr);
                 return JS_FALSE;
             }
             if (err == JS_DTOA_ERANGE && value == HUGE_VAL)
                 value = *cx->runtime->jsPositiveInfinity;
-            JS_free(cx, cstr);
+            cx->free(cstr);
         } else if ((base & (base - 1)) == 0) {
             /*
              * The number may also be inaccurate for power-of-two bases.  This
