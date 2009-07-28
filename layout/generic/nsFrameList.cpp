@@ -39,7 +39,8 @@
 /* class for maintaining a linked list of child frames */
 
 #include "nsFrameList.h"
-#ifdef NS_DEBUG
+#include "nsIFrame.h"
+#ifdef DEBUG
 #include "nsIFrameDebug.h"
 #endif
 #include "nsLayoutUtils.h"
@@ -417,18 +418,7 @@ nsFrameList::GetPrevSiblingFor(nsIFrame* aFrame) const
   return frame;
 }
 
-void
-nsFrameList::VerifyParent(nsIFrame* aParent) const
-{
-#ifdef NS_DEBUG
-  for (nsIFrame* frame = mFirstChild; frame;
-       frame = frame->GetNextSibling()) {
-    NS_ASSERTION(frame->GetParent() == aParent, "bad parent");
-  }
-#endif
-}
-
-#ifdef NS_DEBUG
+#ifdef DEBUG
 void
 nsFrameList::List(FILE* out) const
 {
