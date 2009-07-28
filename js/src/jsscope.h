@@ -265,6 +265,8 @@ struct JSScope {
 
     void extend(JSContext *cx, JSScopeProperty *sprop);
 
+    void trace(JSTracer *trc);
+
     void brandingShapeChange(JSContext *cx, uint32 slot, jsval v);
     void deletingShapeChange(JSContext *cx, JSScopeProperty *sprop);
     void methodShapeChange(JSContext *cx, uint32 slot, jsval toval);
@@ -501,6 +503,54 @@ JSScope::extend(JSContext *cx, JSScopeProperty *sprop)
     lastProp = sprop;
 }
 
+inline void
+JSScope::trace(JSTracer *trc)
+{
+    JSContext *cx = trc->context;
+    JSScopeProperty *sprop = lastProp;
+    uint8 regenFlag = cx->runtime->gcRegenShapesScopeFlag;
+    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes && hasRegenFlag(regenFlag)) {
+        /*
+         * Either this scope has its own shape, which must be regenerated, or
+         * it must have the same shape as lastProp.
+         */
+        uint32 newShape;
+
+        if (sprop) {
+            if (!(sprop->flags & SPROP_FLAG_SHAPE_REGEN)) {
+                sprop->shape = js_RegenerateShapeForGC(cx);
+                sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
+            }
+            newShape = sprop->shape;
+        }
+        if (!sprop || hasOwnShape()) {
+            newShape = js_RegenerateShapeForGC(cx);
+            JS_ASSERT_IF(sprop, newShape != sprop->shape);
+        }
+        shape = newShape;
+        flags ^= JSScope::SHAPE_REGEN;
+
+        /* Also regenerate the shapes of empty scopes, in case they are not shared. */
+        for (JSScope *empty = emptyScope;
+             empty && empty->hasRegenFlag(regenFlag);
+             empty = empty->emptyScope) {
+            empty->shape = js_RegenerateShapeForGC(cx);
+            empty->flags ^= JSScope::SHAPE_REGEN;
+        }
+    }
+    if (sprop) {
+        JS_ASSERT(has(sprop));
+
+        /* Trace scope's property tree ancestor line. */
+        do {
+            if (hadMiddleDelete() && !has(sprop))
+                continue;
+            sprop->trace(trc);
+        } while ((sprop = sprop->parent) != NULL);
+    }
+}
+
+
 static JS_INLINE bool
 js_GetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
 {
@@ -552,14 +602,6 @@ js_SetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
-
-/*
- * These macros used to inline short code sequences, but they grew over time.
- * We retain them for internal backward compatibility, and in case one or both
- * ever shrink to inline-able size.
- */
-#define TRACE_ID(trc, id)                js_TraceId(trc, id)
-#define TRACE_SCOPE_PROPERTY(trc, sprop) sprop->trace(trc)
 
 extern void
 js_TraceId(JSTracer *trc, jsid id);

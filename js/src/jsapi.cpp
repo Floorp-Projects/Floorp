@@ -4058,13 +4058,13 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
         /* Native case: just mark the next property to visit. */
         sprop = (JSScopeProperty *) JSVAL_TO_PRIVATE(v);
         if (sprop)
-            TRACE_SCOPE_PROPERTY(trc, sprop);
+            sprop->trace(trc);
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         ida = (JSIdArray *) JSVAL_TO_PRIVATE(v);
         for (i = 0, n = ida->length; i < n; i++) {
             id = ida->vector[i];
-            TRACE_ID(trc, id);
+            js_TraceId(trc, id);
         }
     }
 }

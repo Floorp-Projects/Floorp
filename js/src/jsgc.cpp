@@ -3043,7 +3043,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
             tvr->u.trace(trc, tvr);
             break;
           case JSTVU_SPROP:
-            TRACE_SCOPE_PROPERTY(trc, tvr->u.sprop);
+            tvr->u.sprop->trace(trc);
             break;
           case JSTVU_WEAK_ROOTS:
             TraceWeakRoots(trc, tvr->u.weakRoots);
