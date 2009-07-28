@@ -266,20 +266,29 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
 #endif
 }
 
-PRBool
-nsFrameList::Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult)
+nsFrameList
+nsFrameList::ExtractHead(FrameLinkEnumerator& aLink)
 {
-  NS_PRECONDITION(nsnull != aAfterFrame, "null ptr");
-  NS_PRECONDITION(nsnull != aNextFrameResult, "null ptr");
-  NS_ASSERTION(ContainsFrame(aAfterFrame), "split after unknown frame");
+  NS_PRECONDITION(&aLink.List() == this, "Unexpected list");
+  NS_PRECONDITION(!aLink.PrevFrame() ||
+                  aLink.PrevFrame()->GetNextSibling() ==
+                    aLink.NextFrame(),
+                  "Unexpected PrevFrame()");
 
-  if (aNextFrameResult && aAfterFrame) {
-    nsIFrame* nextFrame = aAfterFrame->GetNextSibling();
-    aAfterFrame->SetNextSibling(nsnull);
-    *aNextFrameResult = nextFrame;
-    return PR_TRUE;
+  nsIFrame* prev = aLink.PrevFrame();
+  nsIFrame* newFirstFrame = nsnull;
+  if (prev) {
+    // Truncate the list after |prev| and hand the first part to our new list.
+    prev->SetNextSibling(nsnull);
+    newFirstFrame = mFirstChild;
+    mFirstChild = aLink.NextFrame();
+
+    // Now make sure aLink doesn't point to a frame we no longer have.
+    aLink.mPrev = nsnull;
   }
-  return PR_FALSE;
+  // else aLink is pointing to before our first frame.  Nothing to do.
+
+  return nsFrameList(newFirstFrame);
 }
 
 nsIFrame*
