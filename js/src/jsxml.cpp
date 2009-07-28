@@ -932,8 +932,12 @@ XMLArraySetCapacity(JSContext *cx, JSXMLArray *array, uint32 capacity)
 
     if (capacity == 0) {
         /* We could let realloc(p, 0) free this, but purify gets confused. */
-        if (array->vector)
-            cx->free(array->vector);
+        if (array->vector) {
+            if (cx)
+                cx->free(array->vector);
+            else
+                js_free(array->vector);
+        }
         vector = NULL;
     } else {
         if (
