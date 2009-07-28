@@ -54,6 +54,7 @@
 #include "nsIContent.h"
 #include "nsHTMLReflowMetrics.h"
 #include "gfxMatrix.h"
+#include "nsFrameList.h"
 
 /**
  * New rules of reflow:
@@ -2535,4 +2536,21 @@ private:
   nsIFrame*     mFrame;
 };
 
+inline void
+nsFrameList::Enumerator::Next() {
+  NS_ASSERTION(!AtEnd(), "Should have checked AtEnd()!");
+  mFrame = mFrame->GetNextSibling();
+}
+
+inline nsFrameList::Slice
+nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                          nsFrameList& aFrameList) {
+  NS_PRECONDITION(!aFrameList.IsEmpty(), "Unexpected empty list");
+  nsIFrame* firstNewFrame = aFrameList.FirstChild();
+  nsIFrame* nextSibling =
+    aPrevSibling ? aPrevSibling->GetNextSibling() : FirstChild();
+  InsertFrames(aParent, aPrevSibling, firstNewFrame);
+  aFrameList.mFirstChild = nsnull;
+  return Slice(*this, firstNewFrame, nextSibling);
+}
 #endif /* nsIFrame_h___ */
