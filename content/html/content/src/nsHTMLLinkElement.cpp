@@ -116,8 +116,7 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
-  virtual void GetStyleSheetURL(PRBool* aIsInline,
-                                nsIURI** aURI);
+  virtual already_AddRefed<nsIURI> GetStyleSheetURL(PRBool* aIsInline);
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,
@@ -395,13 +394,11 @@ nsHTMLLinkElement::GetHrefURI() const
   return GetHrefURIForAnchors();
 }
 
-void
-nsHTMLLinkElement::GetStyleSheetURL(PRBool* aIsInline,
-                                    nsIURI** aURI)
+already_AddRefed<nsIURI>
+nsHTMLLinkElement::GetStyleSheetURL(PRBool* aIsInline)
 {
   *aIsInline = PR_FALSE;
-  *aURI = GetHrefURIForAnchors().get();
-  return;
+  return GetHrefURIForAnchors();
 }
 
 void
