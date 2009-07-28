@@ -112,11 +112,6 @@ public:
                                      nsIFrame*      aNextInFlow,
                                      PRBool         aDeletingEmptyFrames);
 
-  static PRInt32 LengthOf(nsIFrame* aFrameList) {
-    nsFrameList tmp(aFrameList);
-    return tmp.GetLength();
-  }
-
   // Positions the frame's view based on the frame's origin
   static void PositionFrameView(nsIFrame* aKidFrame);
 
