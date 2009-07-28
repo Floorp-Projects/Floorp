@@ -566,9 +566,9 @@ AsyncExecuteStatements::Run()
   // If there is more than one statement, run it in a transaction.  We assume
   // that we have been given write statements since getting a batch of read
   // statements doesn't make a whole lot of sense.
-  // Additionally, if we have only one statement and it has parameters to be
-  // bound, we assume that the consumer would want a transaction as well.
-  if (mStatements.Length() > 1 || mStatements[0].hasParametersToBeBound()) {
+  // Additionally, if we have only one statement and it needs a transaction, we
+  // will wrap it in one.
+  if (mStatements.Length() > 1 || mStatements[0].needsTransaction()) {
     // We don't error if this failed because it's not terrible if it does.
     mTransactionManager = new mozStorageTransaction(mConnection, PR_FALSE,
                                                     mozIStorageConnection::TRANSACTION_IMMEDIATE);
