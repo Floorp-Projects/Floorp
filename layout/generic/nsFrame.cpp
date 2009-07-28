@@ -759,10 +759,10 @@ nsFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsnull;
 }
 
-nsIFrame*
-nsFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsFrame::GetChildList(nsIAtom* aListName) const
 {
-  return nsnull;
+  return nsFrameList::EmptyList();
 }
 
 static nsIFrame*

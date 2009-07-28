@@ -325,13 +325,13 @@ nsMenuFrame::~nsMenuFrame()
 
 // The following methods are all overridden to ensure that the menupopup frame
 // is placed in the appropriate list.
-nsIFrame*
-nsMenuFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsMenuFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::popupList == aListName) {
     return mPopupFrame;
   }
-  return nsBoxFrame::GetFirstChild(aListName);
+  return nsBoxFrame::GetChildList(aListName);
 }
 
 nsIFrame*

@@ -215,16 +215,16 @@ nsTableOuterFrame::Destroy()
   nsHTMLContainerFrame::Destroy();
 }
 
-nsIFrame*
-nsTableOuterFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsTableOuterFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::captionList == aListName) {
-    return mCaptionFrames.FirstChild();
+    return mCaptionFrames;
   }
   if (!aListName) {
-    return mFrames.FirstChild();
+    return mFrames;
   }
-  return nsnull;
+  return nsFrameList::EmptyList();
 }
 
 nsIAtom*

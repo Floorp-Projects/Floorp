@@ -107,7 +107,7 @@ public:
                          nsIFrame*       aOldFrame);
 
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
@@ -383,13 +383,13 @@ CanvasFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsHTMLContainerFrame::GetAdditionalChildListName(aIndex);
 }
 
-nsIFrame*
-CanvasFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+CanvasFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::absoluteList == aListName)
-    return mAbsoluteContainer.GetFirstChild();
+    return mAbsoluteContainer.GetChildList();
 
-  return nsHTMLContainerFrame::GetFirstChild(aListName);
+  return nsHTMLContainerFrame::GetChildList(aListName);
 }
 
 nsRect CanvasFrame::CanvasArea() const
@@ -477,7 +477,8 @@ CanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayOverflowContainers(aBuilder, aDirtyRect, aLists);
   }
 
-  aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetFirstChild(), aDirtyRect);
+  aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetChildList(),
+                                     aDirtyRect);
   
   // Force a background to be shown. We may have a background propagated to us,
   // in which case GetStyleBackground wouldn't have the right background

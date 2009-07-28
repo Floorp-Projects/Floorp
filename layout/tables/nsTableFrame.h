@@ -260,10 +260,7 @@ public:
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  /** return the first child belonging to the list aListName. 
-    * @see nsIFrame::GetFirstChild
-    */
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
   /** @see nsIFrame::GetAdditionalChildListName */
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
