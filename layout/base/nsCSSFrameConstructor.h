@@ -87,6 +87,13 @@ struct nsFrameItems : public nsFrameList {
   
   nsFrameItems(nsIFrame* aFrame = nsnull);
 
+  nsFrameItems(const nsFrameList& aList, nsIFrame* aLastChild) :
+    nsFrameList(aList),
+    lastChild(aLastChild)
+  {
+    NS_ASSERTION(LastChild() == lastChild, "Bogus aLastChild");
+  }
+
   // Appends the frame to the end of the list
   void AddChild(nsIFrame* aChild);
 
@@ -133,12 +140,32 @@ struct nsFrameItems : public nsFrameList {
     return removed;
   }
 
+  nsFrameItems ExtractHead(FrameLinkEnumerator& aLink) {
+    nsIFrame* newLastChild = aLink.PrevFrame();
+    if (lastChild && aLink.NextFrame() == lastChild) {
+      lastChild = nsnull;
+    }
+    return nsFrameItems(nsFrameList::ExtractHead(aLink),
+                        newLastChild);
+  }
+
   void Clear() {
     mFirstChild = lastChild = nsnull;
   }
 
   // For now, until we change some SetInitialChildList signatures
   operator nsIFrame* ()  { return FirstChild(); }
+
+private:
+  // Not implemented; shouldn't be called
+  void SetFrames(nsIFrame* aFrameList);
+  void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList);
+  Slice AppendFrames(nsIFrame* aParent, nsFrameList& aFrameList);
+  void AppendFrame(nsIFrame* aParent, nsIFrame* aFrame);
+  PRBool RemoveFirstChild();
+  void InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                    nsIFrame* aFrameList);
+  void SortByContentOrder();
 };
 
 class nsCSSFrameConstructor
@@ -1590,11 +1617,21 @@ private:
 
   // Methods support :first-line style
 
+  // This method chops the initial inline-outside frames out of aFrameItems.
+  // If aLineFrame is non-null, it appends them to that frame.  Otherwise, it
+  // creates a new line frame, sets the inline frames as its initial child
+  // list, and inserts that line frame at the front of what's left of
+  // aFrameItems.  In both cases, the kids are reparented to the line frame.
+  // After this call, aFrameItems holds the frames that need to become kids of
+  // the block (possibly including line frames).
   nsresult WrapFramesInFirstLineFrame(nsFrameConstructorState& aState,
                                       nsIContent*              aBlockContent,
                                       nsIFrame*                aBlockFrame,
+                                      nsIFrame*                aLineFrame,
                                       nsFrameItems&            aFrameItems);
 
+  // Handle the case when a block with first-line style is appended to (by
+  // possibly calling WrapFramesInFirstLineFrame as needed).
   nsresult AppendFirstLineFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
                                  nsIFrame*                aBlockFrame,

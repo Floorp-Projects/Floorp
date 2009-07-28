@@ -689,7 +689,7 @@ nsFrameItems::AddChild(nsIFrame* aChild)
   // parents (caption, I'm looking at you) on the same framelist, and
   // nsFrameList asserts if you try to do that.
   if (IsEmpty()) {
-    AppendFrames(nsnull, aChild);
+    nsFrameList::AppendFrames(nsnull, aChild);
   }
   else
   {
@@ -9558,7 +9558,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     rv = WrapFramesInFirstLetterFrame(aContent, aFrame, aFrameItems);
   }
   if (haveFirstLineStyle) {
-    rv = WrapFramesInFirstLineFrame(aState, aContent, aFrame, aFrameItems);
+    rv = WrapFramesInFirstLineFrame(aState, aContent, aFrame, nsnull,
+                                    aFrameItems);
   }
 
   // We might end up with first-line frames that change
@@ -9637,72 +9638,60 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   nsFrameConstructorState& aState,
   nsIContent*              aBlockContent,
   nsIFrame*                aBlockFrame,
+  nsIFrame*                aLineFrame,
   nsFrameItems&            aFrameItems)
 {
   nsresult rv = NS_OK;
 
-  // Find the first and last inline frame in aFrameItems
-  nsIFrame* kid = aFrameItems.FirstChild();
-  nsIFrame* firstInlineFrame = nsnull;
-  nsIFrame* lastInlineFrame = nsnull;
-  while (kid) {
-    if (IsInlineOutside(kid)) {
-      if (!firstInlineFrame) firstInlineFrame = kid;
-      lastInlineFrame = kid;
-    }
-    else {
-      break;
-    }
-    kid = kid->GetNextSibling();
+  // Find the part of aFrameItems that we want to put in the first-line
+  nsFrameList::FrameLinkEnumerator link(aFrameItems);
+  while (!link.AtEnd() && IsInlineOutside(link.NextFrame())) {
+    link.Next();
   }
 
-  // If we don't find any inline frames, then there is nothing to do
-  if (!firstInlineFrame) {
-    return rv;
+  nsFrameItems firstLineChildren = aFrameItems.ExtractHead(link);
+
+  if (firstLineChildren.IsEmpty()) {
+    // Nothing is supposed to go into the first-line; nothing to do
+    return NS_OK;
   }
 
-  // Create line frame
-  nsStyleContext* parentStyle =
-    nsFrame::CorrectStyleParentFrame(aBlockFrame,
-                                     nsCSSPseudoElements::firstLine)->
-      GetStyleContext();
-  nsRefPtr<nsStyleContext> firstLineStyle = GetFirstLineStyle(aBlockContent,
-                                                              parentStyle);
+  if (!aLineFrame) {
+    // Create line frame
+    nsStyleContext* parentStyle =
+      nsFrame::CorrectStyleParentFrame(aBlockFrame,
+                                       nsCSSPseudoElements::firstLine)->
+        GetStyleContext();
+    nsRefPtr<nsStyleContext> firstLineStyle = GetFirstLineStyle(aBlockContent,
+                                                                parentStyle);
 
-  nsIFrame* lineFrame = NS_NewFirstLineFrame(mPresShell, firstLineStyle);
+    aLineFrame = NS_NewFirstLineFrame(mPresShell, firstLineStyle);
 
-  if (lineFrame) {
-    // Initialize the line frame
-    rv = InitAndRestoreFrame(aState, aBlockContent, aBlockFrame, nsnull,
-                             lineFrame);
+    if (aLineFrame) {
+      // Initialize the line frame
+      rv = InitAndRestoreFrame(aState, aBlockContent, aBlockFrame, nsnull,
+                               aLineFrame);
 
-    // Mangle the list of frames we are giving to the block: first
-    // chop the list in two after lastInlineFrame
-    nsIFrame* secondBlockFrame = lastInlineFrame->GetNextSibling();
-    lastInlineFrame->SetNextSibling(nsnull);
+      // The lineFrame will be the block's first child; the rest of the
+      // frame list (after lastInlineFrame) will be the second and
+      // subsequent children; insert lineFrame into aFrameItems.
+      aFrameItems.InsertFrame(nsnull, nsnull, aLineFrame);
 
-    // The lineFrame will be the block's first child; the rest of the
-    // frame list (after lastInlineFrame) will be the second and
-    // subsequent children; join the list together and reset
-    // aFrameItems appropriately.
-    if (secondBlockFrame) {
-      lineFrame->SetNextSibling(secondBlockFrame);
+      NS_ASSERTION(aLineFrame->GetStyleContext() == firstLineStyle,
+                   "Bogus style context on line frame");
     }
-    if (aFrameItems.FirstChild() == lastInlineFrame) {
-      // Just in case the block had exactly one inline child
-      aFrameItems.lastChild = lineFrame;
-    }
-    aFrameItems.SetFrames(lineFrame);
+  }
 
+  if (aLineFrame) {
     // Give the inline frames to the lineFrame <b>after</b> reparenting them
-    kid = firstInlineFrame;
-    NS_ASSERTION(lineFrame->GetStyleContext() == firstLineStyle,
-                 "Bogus style context on line frame");
-    while (kid) {
-      ReparentFrame(aState.mFrameManager, lineFrame, kid);
-      kid = kid->GetNextSibling();
+    ReparentFrames(aState.mFrameManager, aLineFrame, firstLineChildren);
+    if (aLineFrame->GetChildList(nsnull).IsEmpty() &&
+        (aLineFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+      aLineFrame->SetInitialChildList(nsnull, firstLineChildren);
+    } else {
+      aState.mFrameManager->AppendFrames(aLineFrame, nsnull,
+                                         firstLineChildren.FirstChild());
     }
-    lineFrame->SetInitialChildList(nsnull, firstInlineFrame);
   }
   else {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -9723,66 +9712,25 @@ nsCSSFrameConstructor::AppendFirstLineFrames(
 {
   // It's possible that aBlockFrame needs to have a first-line frame
   // created because it doesn't currently have any children.
-  nsIFrame* blockKid = aBlockFrame->GetFirstChild(nsnull);
-  if (!blockKid) {
+  const nsFrameList& blockKids = aBlockFrame->GetChildList(nsnull);
+  if (blockKids.IsEmpty()) {
     return WrapFramesInFirstLineFrame(aState, aBlockContent,
-                                      aBlockFrame, aFrameItems);
+                                      aBlockFrame, nsnull, aFrameItems);
   }
 
   // Examine the last block child - if it's a first-line frame then
   // appended frames need special treatment.
-  nsresult rv = NS_OK;
-  nsFrameList blockFrames(blockKid);
-  nsIFrame* lastBlockKid = blockFrames.LastChild();
+  nsIFrame* lastBlockKid = blockKids.LastChild();
   if (lastBlockKid->GetType() != nsGkAtoms::lineFrame) {
     // No first-line frame at the end of the list, therefore there is
-    // an interveening block between any first-line frame the frames
+    // an intervening block between any first-line frame the frames
     // we are appending. Therefore, we don't need any special
     // treatment of the appended frames.
-    return rv;
-  }
-  nsIFrame* lineFrame = lastBlockKid;
-
-  // Find the first and last inline frame in aFrameItems
-  nsIFrame* kid = aFrameItems.FirstChild();
-  nsIFrame* firstInlineFrame = nsnull;
-  nsIFrame* lastInlineFrame = nsnull;
-  while (kid) {
-    if (IsInlineOutside(kid)) {
-      if (!firstInlineFrame) firstInlineFrame = kid;
-      lastInlineFrame = kid;
-    }
-    else {
-      break;
-    }
-    kid = kid->GetNextSibling();
+    return NS_OK;
   }
 
-  // If we don't find any inline frames, then there is nothing to do
-  if (!firstInlineFrame) {
-    return rv;
-  }
-
-  // The inline frames get appended to the lineFrame. Make sure they
-  // are reparented properly.
-  nsIFrame* remainingFrames = lastInlineFrame->GetNextSibling();
-  lastInlineFrame->SetNextSibling(nsnull);
-  kid = firstInlineFrame;
-  while (kid) {
-    ReparentFrame(aState.mFrameManager, lineFrame, kid);
-    kid = kid->GetNextSibling();
-  }
-  aState.mFrameManager->AppendFrames(lineFrame, nsnull, firstInlineFrame);
-
-  // The remaining frames get appended to the block frame
-  if (remainingFrames) {
-    aFrameItems.SetFrames(remainingFrames);
-  }
-  else {
-    aFrameItems.Clear();
-  }
-
-  return rv;
+  return WrapFramesInFirstLineFrame(aState, aBlockContent, aBlockFrame,
+                                    lastBlockKid, aFrameItems);
 }
 
 // Special routine to handle inserting a new frame into a block
@@ -10067,18 +10015,16 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   }
 
   NS_ASSERTION(aResult.IsEmpty(), "aResult should be an empty nsFrameItems!");
-  nsIFrame* insertAfter = nsnull;
   // Put the new float before any of the floats in the block we're
   // doing first-letter for, that is, before any floats whose parent is aBlockFrame
-  for (nsFrameList::Enumerator e(aState.mFloatedItems); !e.AtEnd(); e.Next()) {
-    if (e.get()->GetParent() == aBlockFrame)
-      break;
-    insertAfter = e.get();
+  nsFrameList::FrameLinkEnumerator link(aState.mFloatedItems);
+  while (!link.AtEnd() && link.NextFrame()->GetParent() != aBlockFrame) {
+    link.Next();
   }
 
   rv = aState.AddChild(letterFrame, aResult, letterContent, aStyleContext,
                        aParentFrame, PR_FALSE, PR_TRUE, PR_FALSE, PR_TRUE,
-                       insertAfter);
+                       link.PrevFrame());
 
   if (nextTextFrame) {
     if (NS_FAILED(rv)) {

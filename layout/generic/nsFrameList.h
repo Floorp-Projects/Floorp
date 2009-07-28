@@ -172,7 +172,13 @@ public:
   inline Slice InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
                             nsFrameList& aFrameList);
 
-  PRBool Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult);
+  class FrameLinkEnumerator;
+
+  /* Split this frame list such that all the frames before the link pointed to
+   * by aLink end up in the returned list, while the remaining frames stay in
+   * this list.  After this call, aLink points to the beginning of this list.
+   */
+  nsFrameList ExtractHead(FrameLinkEnumerator& aLink);
 
   /**
    * Sort the frames according to content order so that the first
@@ -310,13 +316,54 @@ public:
 
     nsIFrame* get() const { return mFrame; }
 
-  private:
+#ifdef DEBUG
+    const nsFrameList& List() const { return mSlice.mList; }
+#endif
+
+  protected:
 #ifdef DEBUG
     const Slice& mSlice;
 #endif
     nsIFrame* mFrame; // our current frame.
     const nsIFrame* const mEnd; // The first frame we should NOT enumerate.
                                 // May be null.
+  };
+
+  /**
+   * A class that can be used to enumerate links between frames.  When created
+   * from an nsFrameList, it points to the "link" immediately before the first
+   * frame.  It can then be advanced until it points to the "link" immediately
+   * after the last frame.  At any position, PrevFrame() and NextFrame() are
+   * the frames before and after the given link.  This means PrevFrame() is
+   * null when the enumerator is at the beginning of the list and NextFrame()
+   * is null when it's AtEnd().
+   */
+  class FrameLinkEnumerator : private Enumerator {
+  public:
+    friend class nsFrameList;
+
+    FrameLinkEnumerator(const nsFrameList& aList) :
+      Enumerator(aList),
+      mPrev(nsnull)
+    {}
+
+    FrameLinkEnumerator(const FrameLinkEnumerator& aOther) :
+      Enumerator(aOther),
+      mPrev(aOther.mPrev)
+    {}
+
+    void Next() {
+      mPrev = mFrame;
+      Enumerator::Next();
+    }
+
+    PRBool AtEnd() const { return Enumerator::AtEnd(); }
+
+    nsIFrame* PrevFrame() const { return mPrev; }
+    nsIFrame* NextFrame() const { return mFrame; }
+
+  protected:
+    nsIFrame* mPrev;
   };
 
 private:
