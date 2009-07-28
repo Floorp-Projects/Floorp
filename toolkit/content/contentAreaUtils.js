@@ -41,15 +41,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-var ContentAreaUtils = {
-  get ioService() {
-    delete this.ioService;
-    return this.ioService =
-      Components.classes["@mozilla.org/network/io-service;1"]
-                .getService(Components.interfaces.nsIIOService);
-  }
-}
-
 /**
  * urlSecurityCheck: JavaScript wrapper for checkLoadURIWithPrincipal
  * and checkLoadURIStrWithPrincipal.
@@ -781,12 +772,16 @@ function makeWebBrowserPersist()
  */
 function makeURI(aURL, aOriginCharset, aBaseURI)
 {
-  return ContentAreaUtils.ioService.newURI(aURL, aOriginCharset, aBaseURI);
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+  return ioService.newURI(aURL, aOriginCharset, aBaseURI);
 }
 
 function makeFileURI(aFile)
 {
-  return ContentAreaUtils.ioService.newFileURI(aFile);
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+  return ioService.newFileURI(aFile);
 }
 
 function makeFilePicker()
@@ -1030,7 +1025,9 @@ function getCharsetforSave(aDocument)
  */
 function openURL(aURL)
 {
-  var uri = makeURI(aURL, null, null);
+  var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+  var uri = ios.newURI(aURL, null, null);
 
   var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                               .getService(Components.interfaces.nsIExternalProtocolService);
