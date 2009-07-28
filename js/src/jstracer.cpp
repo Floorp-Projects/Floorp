@@ -3616,11 +3616,11 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     /* :TODO: windows support */
 #if defined DEBUG && !defined WIN32
     const char* filename = cx->fp->script->filename;
-    char* label = (char*)malloc((filename ? strlen(filename) : 7) + 16);
+    char* label = (char*)js_malloc((filename ? strlen(filename) : 7) + 16);
     sprintf(label, "%s:%u", filename ? filename : "<stdin>",
             js_FramePCToLineNumber(cx, cx->fp));
     fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
-    free(label);
+    js_free(label);
 #endif
     AUDIT(traceCompleted);
 }
@@ -12445,7 +12445,7 @@ js_StartTraceVis(JSContext *cx, JSObject *obj,
         if (!filename)
             goto error;
         ok = JS_StartTraceVis(filename);
-        JS_free(cx, filename);
+        cx->free(filename);
     } else {
         ok = JS_StartTraceVis();
     }

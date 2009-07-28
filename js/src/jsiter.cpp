@@ -649,7 +649,7 @@ generator_finalize(JSContext *cx, JSObject *obj)
          */
         JS_ASSERT(gen->state == JSGEN_NEWBORN || gen->state == JSGEN_CLOSED ||
                   gen->state == JSGEN_OPEN);
-        JS_free(cx, gen);
+        cx->free(gen);
     }
 }
 
@@ -716,7 +716,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* Allocate obj's private data struct. */
     gen = (JSGenerator *)
-          JS_malloc(cx, sizeof(JSGenerator) + (nslots - 1) * sizeof(jsval));
+        cx->malloc(sizeof(JSGenerator) + (nslots - 1) * sizeof(jsval));
     if (!gen)
         goto bad;
 
@@ -783,7 +783,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->state = JSGEN_NEWBORN;
 
     if (!JS_SetPrivate(cx, obj, gen)) {
-        JS_free(cx, gen);
+        cx->free(gen);
         goto bad;
     }
     return obj;

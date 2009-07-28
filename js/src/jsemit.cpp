@@ -112,10 +112,10 @@ JSCodeGenerator::~JSCodeGenerator()
 
     /* NB: non-null only after OOM. */
     if (spanDeps)
-        JS_free(compiler->context, spanDeps);
+        compiler->context->free(spanDeps);
 
     if (upvarMap.vector)
-        JS_free(compiler->context, upvarMap.vector);
+        compiler->context->free(upvarMap.vector);
 }
 
 static ptrdiff_t
@@ -549,7 +549,7 @@ AddSpanDep(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc, jsbytecode *pc2,
     if ((index & (index - 1)) == 0 &&
         (!(sdbase = cg->spanDeps) || index >= SPANDEPS_MIN)) {
         size = sdbase ? SPANDEPS_SIZE(index) : SPANDEPS_SIZE_MIN / 2;
-        sdbase = (JSSpanDep *) JS_realloc(cx, sdbase, size + size);
+        sdbase = (JSSpanDep *) cx->realloc(sdbase, size + size);
         if (!sdbase)
             return JS_FALSE;
         cg->spanDeps = sdbase;
@@ -1165,7 +1165,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
      * can span top-level statements, because JS lacks goto.
      */
     size = SPANDEPS_SIZE(JS_BIT(JS_CeilingLog2(cg->numSpanDeps)));
-    JS_free(cx, cg->spanDeps);
+    cx->free(cg->spanDeps);
     cg->spanDeps = NULL;
     FreeJumpTargets(cg, cg->jumpTargets);
     cg->jumpTargets = NULL;
@@ -1899,7 +1899,7 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
         JS_ASSERT(ALE_INDEX(ale) <= length);
         if (ALE_INDEX(ale) == length) {
             length = 2 * JS_MAX(2, length);
-            vector = (uint32 *) JS_realloc(cx, vector, length * sizeof *vector);
+            vector = (uint32 *) cx->realloc(vector, length * sizeof *vector);
             if (!vector)
                 return false;
             cg->upvarMap.vector = vector;
@@ -2197,7 +2197,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!vector) {
                 uint32 length = cg->lexdeps.count;
 
-                vector = (uint32 *) calloc(length, sizeof *vector);
+                vector = (uint32 *) js_calloc(length * sizeof *vector);
                 if (!vector) {
                     JS_ReportOutOfMemory(cx);
                     return JS_FALSE;
@@ -3144,9 +3144,8 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     /* Just grab 8K for the worst-case bitmap. */
                     intmap_bitlen = JS_BIT(16);
                     intmap = (jsbitmap *)
-                        JS_malloc(cx,
-                                  (JS_BIT(16) >> JS_BITS_PER_WORD_LOG2)
-                                  * sizeof(jsbitmap));
+                        cx->malloc((JS_BIT(16) >> JS_BITS_PER_WORD_LOG2)
+                                   * sizeof(jsbitmap));
                     if (!intmap) {
                         JS_ReportOutOfMemory(cx);
                         return JS_FALSE;
@@ -3163,7 +3162,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
       release:
         if (intmap && intmap != intmap_space)
-            JS_free(cx, intmap);
+            cx->free(intmap);
         if (!ok)
             return JS_FALSE;
 
@@ -3307,7 +3306,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
              */
             if (tableLength != 0) {
                 tableSize = (size_t)tableLength * sizeof *table;
-                table = (JSParseNode **) JS_malloc(cx, tableSize);
+                table = (JSParseNode **) cx->malloc(tableSize);
                 if (!table)
                     return JS_FALSE;
                 memset(table, 0, tableSize);
@@ -3475,7 +3474,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
 out:
     if (table)
-        JS_free(cx, table);
+        cx->free(table);
     if (ok) {
         ok = js_PopStatementCG(cx, cg);
 

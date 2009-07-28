@@ -314,7 +314,7 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldsize, uint32 size)
 
     if (size == 0) {
         if (obj->dslots) {
-            JS_free(cx, obj->dslots - 1);
+            cx->free(obj->dslots - 1);
             obj->dslots = NULL;
         }
         return JS_TRUE;
@@ -330,7 +330,7 @@ ResizeSlots(JSContext *cx, JSObject *obj, uint32 oldsize, uint32 size)
     }
 
     slots = obj->dslots ? obj->dslots - 1 : NULL;
-    newslots = (jsval *) JS_realloc(cx, slots, (size + 1) * sizeof(jsval));
+    newslots = (jsval *) cx->realloc(slots, (size + 1) * sizeof(jsval));
     if (!newslots)
         return JS_FALSE;
 
@@ -1099,7 +1099,7 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             if (obj->dslots[i] == JSVAL_HOLE) {
                 if (!ii) {
                     ii = (JSIndexIterState *)
-                         JS_malloc(cx, offsetof(JSIndexIterState, holes) +
+                         cx->malloc(offsetof(JSIndexIterState, holes) +
                                    JS_BITMAP_SIZE(capacity));
                     if (!ii)
                         return JS_FALSE;
@@ -1116,7 +1116,7 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 break;
             }
             ii = (JSIndexIterState *)
-                 JS_malloc(cx, offsetof(JSIndexIterState, holes));
+                 cx->malloc(offsetof(JSIndexIterState, holes));
             if (!ii)
                 return JS_FALSE;
             ii->hasHoles = JS_FALSE;
@@ -1157,7 +1157,7 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (JSVAL_TAG(*statep) != JSVAL_BOOLEAN) {
             JS_ASSERT((*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG);
             ii = (JSIndexIterState *) (*statep & ~INDEX_ITER_TAG);
-            JS_free(cx, ii);
+            cx->free(ii);
         }
         *statep = JSVAL_NULL;
         break;
@@ -1188,7 +1188,7 @@ static void
 array_finalize(JSContext *cx, JSObject *obj)
 {
     if (obj->dslots)
-        JS_free(cx, obj->dslots - 1);
+        cx->free(obj->dslots - 1);
     obj->dslots = NULL;
 }
 
@@ -1336,7 +1336,7 @@ BufferToString(JSContext *cx, JSTempVector<jschar> &buf, jsval *rval)
     jschar *chars = buf.extractRawBuffer();
     JSString *str = js_NewString(cx, chars, length);
     if (!str) {
-        JS_free(cx, chars);
+        cx->free(chars);
         return JS_FALSE;
     }
     *rval = STRING_TO_JSVAL(str);
@@ -1392,7 +1392,7 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
         if (!(ok = buf.pushBack(arr, arr + 3)))
             goto done;
         if (sharpchars)
-            JS_free(cx, sharpchars);
+            cx->free(sharpchars);
         goto make_string;
     }
 #endif
@@ -2151,7 +2151,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 #endif
-    vec = (jsval *) JS_malloc(cx, 2 * (size_t) len * sizeof(jsval));
+    vec = (jsval *) cx->malloc(2 * (size_t) len * sizeof(jsval));
     if (!vec)
         return JS_FALSE;
 
@@ -2280,8 +2280,8 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
             } while (i != 0);
 
             JS_ASSERT(tvr.u.array == vec);
-            vec = (jsval *) JS_realloc(cx, vec,
-                                       4 * (size_t) newlen * sizeof(jsval));
+            vec = (jsval *) cx->realloc(vec,
+                                        4 * (size_t) newlen * sizeof(jsval));
             if (!vec) {
                 vec = tvr.u.array;
                 ok = JS_FALSE;
@@ -2342,7 +2342,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
 
   out:
     JS_POP_TEMP_ROOT(cx, &tvr);
-    JS_free(cx, vec);
+    cx->free(vec);
     if (!ok)
         return JS_FALSE;
 
@@ -3507,7 +3507,7 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (JSVAL_IS_PRIMITIVE(argv[i]) ||
             !OBJ_IS_ARRAY(cx, (array = JSVAL_TO_OBJECT(argv[i])))) {
             fprintf(stderr, "%s: not array\n", bytes);
-            JS_free(cx, bytes);
+            cx->free(bytes);
             continue;
         }
         fprintf(stderr, "%s: %s (len %lu", bytes,
@@ -3519,7 +3519,7 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     js_DenseArrayCapacity(array));
         }
         fputs(")\n", stderr);
-        JS_free(cx, bytes);
+        cx->free(bytes);
     }
     return JS_TRUE;
 }

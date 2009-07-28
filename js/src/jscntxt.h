@@ -57,6 +57,7 @@
 #include "jsregexp.h"
 #include "jsutil.h"
 #include "jsarray.h"
+#include "jstask.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -255,6 +256,13 @@ struct JSThreadData {
      * locks on each JS_malloc.
      */
     size_t              gcMallocBytes;
+
+#ifdef JS_THREADSAFE
+    /*
+     * Deallocator task for this thread.
+     */
+    JSFreePointerListTask *deallocatorTask;
+#endif
 };
 
 #ifdef JS_THREADSAFE
@@ -699,6 +707,26 @@ struct JSRuntime {
 
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
+
+    inline void* malloc(size_t bytes) {
+        return ::js_malloc(bytes);
+    }
+
+    inline void* calloc(size_t bytes) {
+        return ::js_calloc(bytes);
+    }
+
+    inline void* realloc(void* p, size_t bytes) {
+        return ::js_realloc(p, bytes);
+    }
+
+    inline void free(void* p) {
+        ::js_free(p);
+    }
+
+#ifdef JS_THREADSAFE
+    JSBackgroundThread    *deallocatorThread;
+#endif
 };
 
 /* Common macros to access thread-local caches in JSThread or JSRuntime. */
@@ -1050,16 +1078,86 @@ struct JSContext {
     jsval               *nativeVp;
 #endif
 
+#ifdef JS_THREADSAFE
+    inline void createDeallocatorTask() {
+        JSThreadData* tls = JS_THREAD_DATA(this);
+        JS_ASSERT(!tls->deallocatorTask);
+        if (runtime->deallocatorThread && !runtime->deallocatorThread->busy())
+            tls->deallocatorTask = new JSFreePointerListTask();
+    }
+
+    inline void submitDeallocatorTask() {
+        JSThreadData* tls = JS_THREAD_DATA(this);
+        if (tls->deallocatorTask) {
+            runtime->deallocatorThread->schedule(tls->deallocatorTask);
+            tls->deallocatorTask = NULL;
+        }
+    }
+#endif
+
     /* Call this after succesful malloc of memory for GC-related things. */
-    inline void
-    updateMallocCounter(size_t nbytes)
-    {
+    inline void updateMallocCounter(size_t nbytes) {
         size_t *pbytes, bytes;
 
         pbytes = &JS_THREAD_DATA(this)->gcMallocBytes;
         bytes = *pbytes;
         *pbytes = (size_t(-1) - bytes <= nbytes) ? size_t(-1) : bytes + nbytes;
     }
+
+    inline void* malloc(size_t bytes) {
+        JS_ASSERT(bytes != 0);
+        void *p = runtime->malloc(bytes);
+        if (!p) {
+            JS_ReportOutOfMemory(this);
+            return NULL;
+        }
+        updateMallocCounter(bytes);
+        return p;
+    }
+
+    inline void* calloc(size_t bytes) {
+        JS_ASSERT(bytes != 0);
+        void *p = runtime->calloc(bytes);
+        if (!p) {
+            JS_ReportOutOfMemory(this);
+            return NULL;
+        }
+        updateMallocCounter(bytes);
+        return p;
+    }
+
+    inline void* realloc(void* p, size_t bytes) {
+        void *orig = p;
+        p = runtime->realloc(p, bytes);
+        if (!p) {
+            JS_ReportOutOfMemory(this);
+            return NULL;
+        }
+        if (!orig)
+            updateMallocCounter(bytes);
+        return p;
+    }
+
+#ifdef JS_THREADSAFE
+    inline void free(void* p) {
+        if (!p)
+            return;
+        if (thread) {
+            JSFreePointerListTask* task = JS_THREAD_DATA(this)->deallocatorTask;
+            if (task) {
+                task->add(p);
+                return;
+            }
+        }
+        runtime->free(p);
+    }
+#else
+    inline void free(void* p) {
+        if (!p)
+            return;
+        runtime->free(p);
+    }
+#endif
 };
 
 #ifdef JS_THREADSAFE

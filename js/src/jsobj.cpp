@@ -560,7 +560,7 @@ out:
             ida = JS_Enumerate(cx, obj);
             if (!ida) {
                 if (*sp) {
-                    JS_free(cx, *sp);
+                    cx->free(*sp);
                     *sp = NULL;
                 }
                 goto bad;
@@ -704,7 +704,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     if (!chars) {
         /* If outermost, allocate 4 + 1 for "({})" and the terminator. */
-        chars = (jschar *) malloc(((outermost ? 4 : 2) + 1) * sizeof(jschar));
+        chars = (jschar *) js_malloc(((outermost ? 4 : 2) + 1) * sizeof(jschar));
         nchars = 0;
         if (!chars)
             goto error;
@@ -715,9 +715,9 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         MAKE_SHARP(he);
         nchars = js_strlen(chars);
         chars = (jschar *)
-            realloc((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
+            js_realloc((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
         if (!chars) {
-            free(ochars);
+            js_free(ochars);
             goto error;
         }
         if (outermost) {
@@ -958,11 +958,11 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
             /* Allocate 1 + 1 at end for closing brace and terminating 0. */
             chars = (jschar *)
-                realloc((ochars = chars), curlen * sizeof(jschar));
+                js_realloc((ochars = chars), curlen * sizeof(jschar));
             if (!chars) {
                 /* Save code space on error: let JS_free ignore null vsharp. */
-                JS_free(cx, vsharp);
-                free(ochars);
+                cx->free(vsharp);
+                js_free(ochars);
                 goto error;
             }
 
@@ -1005,7 +1005,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             nchars += vlength;
 
             if (vsharp)
-                JS_free(cx, vsharp);
+                cx->free(vsharp);
         }
     }
 
@@ -1019,7 +1019,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     if (!ok) {
         if (chars)
-            free(chars);
+            js_free(chars);
         goto out;
     }
 
@@ -1031,7 +1031,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
   make_string:
     str = js_NewString(cx, chars, nchars);
     if (!str) {
-        free(chars);
+        js_free(chars);
         ok = JS_FALSE;
         goto out;
     }
@@ -1042,8 +1042,8 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 
   overflow:
-    JS_free(cx, vsharp);
-    free(chars);
+    cx->free(vsharp);
+    js_free(chars);
     chars = NULL;
     goto error;
 }
@@ -1064,7 +1064,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     obj = js_GetWrappedObject(cx, obj);
     clazz = OBJ_GET_CLASS(cx, obj)->name;
     nchars = 9 + strlen(clazz);         /* 9 for "[object ]" */
-    chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
+    chars = (jschar *) cx->malloc((nchars + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
 
@@ -1079,7 +1079,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
 
     str = js_NewString(cx, chars, nchars);
     if (!str) {
-        JS_free(cx, chars);
+        cx->free(chars);
         return JS_FALSE;
     }
     *vp = STRING_TO_JSVAL(str);
@@ -2986,7 +2986,7 @@ AllocSlots(JSContext *cx, JSObject *obj, size_t nslots)
     JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
 
     jsval* slots;
-    slots = (jsval*) JS_malloc(cx, SLOTS_TO_DYNAMIC_WORDS(nslots) * sizeof(jsval));
+    slots = (jsval*) cx->malloc(SLOTS_TO_DYNAMIC_WORDS(nslots) * sizeof(jsval));
     if (!slots)
         return true;
 
@@ -3044,7 +3044,7 @@ js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
 
     size_t oslots = size_t(slots[-1]);
 
-    slots = (jsval*) JS_realloc(cx, slots - 1, nwords * sizeof(jsval));
+    slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
     *slots++ = nslots;
     obj->dslots = slots;
 
@@ -3069,11 +3069,11 @@ js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
     JS_ASSERT(nslots <= size_t(slots[-1]));
 
     if (nslots <= JS_INITIAL_NSLOTS) {
-        JS_free(cx, slots - 1);
+        cx->free(slots - 1);
         obj->dslots = NULL;
     } else {
         size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
-        slots = (jsval*) JS_realloc(cx, slots - 1, nwords * sizeof(jsval));
+        slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
         *slots++ = nslots;
         obj->dslots = slots;
     }
@@ -4965,7 +4965,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             }
 
             allocated = NativeEnumeratorSize(length);
-            ne = (JSNativeEnumerator *) JS_malloc(cx, allocated);
+            ne = (JSNativeEnumerator *) cx->malloc(allocated);
             if (!ne) {
                 JS_UNLOCK_SCOPE(cx, scope);
                 return JS_FALSE;
@@ -4997,7 +4997,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 JS_LOCK_GC(cx->runtime);
                 if (!js_AddAsGCBytes(cx, allocated)) {
                     /* js_AddAsGCBytes releases the GC lock on failures. */
-                    JS_free(cx, ne);
+                    cx->free(ne);
                     return JS_FALSE;
                 }
                 ne->next = cx->runtime->nativeEnumerators;
@@ -5090,7 +5090,7 @@ js_TraceNativeEnumerators(JSTracer *trc)
         } else if (doGC) {
             js_RemoveAsGCBytes(rt, NativeEnumeratorSize(ne->length));
             *nep = ne->next;
-            JS_free(trc->context, ne);
+            trc->context->free(ne);
             continue;
         }
         nep = &ne->next;
