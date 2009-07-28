@@ -450,13 +450,13 @@ def p_Param(p):
 
 def p_Type(p):
     """Type : ActorType
-            | ID"""             # ID == CxxType; we forbid qnames here,
+            | CxxID"""          # ID == CxxType; we forbid qnames here,
                                 # in favor of the |using| declaration
     if isinstance(p[1], TypeSpec):
         p[0] = p[1]
     else:
-        loc = locFromTok(p, 1)
-        p[0] = TypeSpec(loc, QualifiedId(loc, p[1]))
+        loc, id = p[1]
+        p[0] = TypeSpec(loc, QualifiedId(loc, id))
 
 def p_ActorType(p):
     """ActorType : ID ':' State"""
