@@ -5,7 +5,7 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManage
 const bhist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
 const formhist = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
-Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader)
+Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js");
 
 function test() {
@@ -23,9 +23,7 @@ function test() {
   let s = new Sanitizer();
   s.ignoreTimespan = false;
   s.prefDomain = "privacy.cpd.";
-  var itemPrefs = Cc["@mozilla.org/preferences-service;1"]
-                  .getService(Components.interfaces.nsIPrefService)
-                  .getBranch(s.prefDomain);
+  var itemPrefs = gPrefService.getBranch(s.prefDomain);
   itemPrefs.setBoolPref("history", true);
   itemPrefs.setBoolPref("downloads", true);
   itemPrefs.setBoolPref("cache", false);
