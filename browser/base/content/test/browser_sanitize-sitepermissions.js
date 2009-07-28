@@ -8,7 +8,7 @@ function test() {
   // Add a permission entry
   var pm = Cc["@mozilla.org/permissionmanager;1"]
              .getService(Ci.nsIPermissionManager);
-  pm.add(makeURI("http://example.com"), "testing", Ci.nsIPermissionManager.ALLOW_ACTION);
+  pm.add(makeURI("http://example.com"), "testing", pm.ALLOW_ACTION);
   
   // Sanity check
   ok(pm.enumerator.hasMoreElements(), "Permission manager should have elements, since we just added one");
