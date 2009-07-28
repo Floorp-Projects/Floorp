@@ -356,6 +356,18 @@ SyncEngine.prototype = {
     Cu.forceGC();
   },
 
+  /**
+   * Find a GUID that is like the incoming item
+   *
+   * @return GUID of the similar record; falsy otherwise
+   */
+  _findLikeId: function SyncEngine__findLikeId(item) {
+    // By default, only look in the outgoing queue for similar records
+    for (let id in this._tracker.changedIDs)
+      if (this._recordLike(item, this._createRecord(id)))
+        return id;
+  },
+
   _isEqual: function SyncEngine__isEqual(item) {
     let local = this._createRecord(item.id);
     this._log.trace("Local record: \n" + local);
@@ -406,15 +418,17 @@ SyncEngine.prototype = {
 
     // Step 3: Check for similar items
     this._log.trace("Reconcile step 3");
-    for (let id in this._tracker.changedIDs) {
-      let out = this._createRecord(id);
-      if (this._recordLike(item, out)) {
-        this._store.changeItemID(id, item.id);
-        this._tracker.removeChangedID(id);
-        this._tracker.removeChangedID(item.id);
-        this._store.cache.clear(); // because parentid refs will be wrong
-        return false;
-      }
+    let likeId = this._findLikeId(item);
+    if (likeId) {
+      // Change the local item GUID to the incoming one
+      this._store.changeItemID(likeId, item.id);
+
+      // Remove outgoing changes of the original id any any that were just made
+      this._tracker.removeChangedID(likeId);
+      this._tracker.removeChangedID(item.id);
+
+      this._store.cache.clear(); // because parentid refs will be wrong
+      return false;
     }
 
     return true;
