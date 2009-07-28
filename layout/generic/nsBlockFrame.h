@@ -396,7 +396,7 @@ protected:
     * contains aPrevSibling and add aFrameList after aPrevSibling on that line.
     * new lines are created as necessary to handle block data in aFrameList.
     */
-  virtual nsresult AddFrames(nsIFrame* aFrameList,
+  virtual nsresult AddFrames(const nsFrameList& aFrameList,
                              nsIFrame* aPrevSibling);
 
 #ifdef IBMBIDI
