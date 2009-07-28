@@ -515,9 +515,9 @@ static inline JSTraceType getPromotedType(jsval v)
     }
     uint8_t tag = JSVAL_TAG(v);
     JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_BOOLEAN);
-    JS_STATIC_ASSERT(TT_DOUBLE == JSVAL_DOUBLE);
-    JS_STATIC_ASSERT(TT_STRING == JSVAL_STRING);
-    JS_STATIC_ASSERT(TT_PSEUDOBOOLEAN == JSVAL_BOOLEAN);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_BOOLEAN);
     return JSTraceType(tag);
 }
 
@@ -535,9 +535,9 @@ static inline JSTraceType getCoercedType(jsval v)
     }
     uint8_t tag = JSVAL_TAG(v);
     JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_BOOLEAN);
-    JS_STATIC_ASSERT(TT_DOUBLE == JSVAL_DOUBLE);
-    JS_STATIC_ASSERT(TT_STRING == JSVAL_STRING);
-    JS_STATIC_ASSERT(TT_PSEUDOBOOLEAN == JSVAL_BOOLEAN);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_BOOLEAN);
     return JSTraceType(tag);
 }
 
@@ -2895,8 +2895,8 @@ TraceRecorder::determineSlotType(jsval* vp)
             m = TT_OBJECT;
     } else {
         JS_ASSERT(JSVAL_TAG(*vp) == JSVAL_STRING || JSVAL_TAG(*vp) == JSVAL_BOOLEAN);
-        JS_STATIC_ASSERT(TT_STRING == JSVAL_STRING);
-        JS_STATIC_ASSERT(TT_PSEUDOBOOLEAN == JSVAL_BOOLEAN);
+        JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
+        JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_BOOLEAN);
         m = JSTraceType(JSVAL_TAG(*vp));
     }
     JS_ASSERT(m != TT_INT32 || isInt32(*vp));
