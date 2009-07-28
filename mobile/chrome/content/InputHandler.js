@@ -639,6 +639,12 @@ MouseModule.prototype = {
     return this._dragger.dragMove(dX, dY, this._targetScrollInterface);
   },
 
+  /**
+   * Helper function to mouseup, called  at the point where a DOM click should
+   * occur.  If movedOutOfRadius is true, then we don't call it an internal
+   * clicker-notifiable click.  In either case, we redispatch all pending
+   * recorded mousedown/mouseup events.
+   */
   _doClick: function _doClick(movedOutOfRadius) {
     let commitToClicker = this._clicker && !movedOutOfRadius;
 
@@ -654,25 +660,35 @@ MouseModule.prototype = {
     }                              // _commitAndClick takes care of this.
   },
 
+  /**
+   * Commit another click event to our click buffer.  The `click buffer' is a
+   * timeout initiated by the first click.  If the timeout is still alive when
+   * another click is committed, then the click buffer forms a double click, and
+   * the timeout is cancelled.  Otherwise, the timeout issues a single click to
+   * the clicker.
+   */
   _commitAnotherClick: function _commitAnotherClick() {
-    //this._doSingleClick();
+    const doubleClickInterval = 400;
+
     if (this._clickTimeout) {   // we're waiting for a second click for double
       window.clearTimeout(this._clickTimeout);
       this._doDoubleClick();
     } else {
-      this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); }, 400, this);
-    }/**/
+      this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); },
+                                             doubleClickInterval, this);
+    }
   },
 
   /**
-   * Helper to _doClick().  Finalize a single click and tell the customClicker
+   * Endpoint of _commitAnotherClick().  Finalize a single click and tell the clicker.
    */
   _doSingleClick: function _doSingleClick() {
+    /*
     dump('doing single click with ' + this._downUpEvents.length + '\n');
     for (let i = 0; i < this._downUpEvents.length; ++i)
       dump('      ' + this._downUpEvents[i].event.type
            + " :: " + this._downUpEvents[i].event.button
-           + " :: " + this._downUpEvents[i].event.detail + '\n');
+           + " :: " + this._downUpEvents[i].event.detail + '\n');/**/
 
     let ev = this._downUpEvents[1].event;
     this._cleanClickBuffer();
@@ -680,30 +696,45 @@ MouseModule.prototype = {
   },
 
   /**
-   * Helper to _doClick().  Finalize a double click and tell the customClicker
+   * Endpoint of _commitAnotherClick().  Finalize a double click and tell the clicker.
    */
   _doDoubleClick: function _doDoubleClick() {
+    /*
     dump('doing double click with ' + this._downUpEvents.length + '\n');
     for (let i = 0; i < this._downUpEvents.length; ++i)
       dump('      ' + this._downUpEvents[i].event.type
            + " :: " + this._downUpEvents[i].event.button
-           + " :: " + this._downUpEvents[i].event.detail + '\n');
+           + " :: " + this._downUpEvents[i].event.detail + '\n');/**/
 
     let mouseUp1 = this._downUpEvents[1].event;
     let mouseUp2 = this._downUpEvents[3].event;
     this._cleanClickBuffer();
     this._clicker.doubleClick(mouseUp1.clientX, mouseUp1.clientY,
-			      mouseUp2.clientX, mouseUp2.clientY);
+                              mouseUp2.clientX, mouseUp2.clientY);
   },
 
+
+  /**
+   * Clean out the click buffer.  Should be called after a single, double, or
+   * non-click has been processed and all relevant (re)dispatches of events in
+   * the recorded down/up event queue have been issued out.
+   */
   _cleanClickBuffer: function _cleanClickBuffer() {
     delete this._clickTimeout;
     this._clearDownUpEvents();
   },
 
+  /**
+   * The default dragger object used by MouseModule when dragging a scrollable
+   * element that provides no customDragger.  Simply performs the expected
+   * regular scrollBy calls on the scroller.
+   */
   _defaultDragger: {
     dragStart: function dragStart(scroller) {},
-    dragStop : function dragStop(dx, dy, scroller) { return this.dragMove(dx, dy, scroller); },
+
+    dragStop : function dragStop(dx, dy, scroller)
+    { return this.dragMove(dx, dy, scroller); },
+
     dragMove : function dragMove(dx, dy, scroller) {
       if (scroller.getPosition) {
         let oldX = {}, oldY = {};
@@ -717,8 +748,8 @@ MouseModule.prototype = {
         return (newX.value != oldX.value) || (newY.value != oldY.value);
       } else {
         scroller.scrollBy(dx, dy);
-        /* never say we scrolled if we can't get the position, as this will cause kinetic
-         * to never stop */
+        /* never say we scrolled if we can't get the position, as this will
+         * cause kinetic to never stop */
         return false;
       }
     }
@@ -776,22 +807,8 @@ MouseModule.prototype = {
         break;
 
     return (elem) ? elem : null;
-  },
-
-  /**
-   * Initialize a new mouse event the same as that given so that it can be
-   * re-dispatched.
-   */
-  cloneMouseEvent: function cloneMouseEvent(aEvent) {
-    let clickEvent = document.createEvent("MouseEvent");
-    clickEvent.initMouseEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
-                              aEvent.view, aEvent.detail,
-                              aEvent.screenX, aEvent.screenY, aEvent.clientX, aEvent.clientY,
-                              aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKeyArg, aEvent.metaKeyArg,
-                              aEvent.button, aEvent.relatedTarget);
-    return clickEvent;
   }
-
+  
 };
 
 
