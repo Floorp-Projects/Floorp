@@ -180,6 +180,12 @@ public:
    */
   nsFrameList ExtractHead(FrameLinkEnumerator& aLink);
 
+  /* Split this frame list such that all the frames coming after the link
+   * pointed to by aLink end up in the returned list, while the frames before
+   * that link stay in this list.  After this call, aLink is at end.
+   */
+  nsFrameList ExtractTail(FrameLinkEnumerator& aLink);
+
   /**
    * Sort the frames according to content order so that the first
    * frame in the list is the first in content order. Frames for
@@ -351,6 +357,12 @@ public:
       Enumerator(aOther),
       mPrev(aOther.mPrev)
     {}
+
+    void operator=(const FrameLinkEnumerator& aOther) {
+      NS_PRECONDITION(&List() == &aOther.List(), "Different lists?");
+      mFrame = aOther.mFrame;
+      mPrev = aOther.mPrev;
+    }
 
     void Next() {
       mPrev = mFrame;
