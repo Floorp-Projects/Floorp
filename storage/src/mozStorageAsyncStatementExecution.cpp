@@ -67,7 +67,7 @@ namespace storage {
  * periods of time, and dispatching many small events to the calling thread will
  * end up blocking it.
  */
-#define MAX_MILLISECONDS_BETWEEN_RESULTS 100
+#define MAX_MILLISECONDS_BETWEEN_RESULTS 75
 #define MAX_ROWS_PER_RESULT 15
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,8 +202,8 @@ AsyncExecuteStatements::AsyncExecuteStatements(StatementDataArray &aStatements,
 , mTransactionManager(nsnull)
 , mCallback(aCallback)
 , mCallingThread(::do_GetCurrentThread())
-, mMaxIntervalWait(::PR_MicrosecondsToInterval(MAX_MILLISECONDS_BETWEEN_RESULTS))
-, mIntervalStart(::PR_IntervalNow())
+, mMaxWait(TimeDuration::FromMilliseconds(MAX_MILLISECONDS_BETWEEN_RESULTS))
+, mIntervalStart(TimeStamp::Now())
 , mState(PENDING)
 , mCancelRequested(PR_FALSE)
 , mMutex(aConnection->sharedAsyncExecutionMutex)
@@ -399,9 +399,9 @@ AsyncExecuteStatements::buildAndNotifyResults(sqlite3_stmt *aStatement)
   // If we have hit our maximum number of allowed results, or if we have hit
   // the maximum amount of time we want to wait for results, notify the
   // calling thread about it.
-  PRIntervalTime now = ::PR_IntervalNow();
-  PRIntervalTime delta = now - mIntervalStart;
-  if (mResultSet->rows() >= MAX_ROWS_PER_RESULT || delta > mMaxIntervalWait) {
+  TimeStamp now = TimeStamp::Now();
+  TimeDuration delta = now - mIntervalStart;
+  if (mResultSet->rows() >= MAX_ROWS_PER_RESULT || delta > mMaxWait) {
     // Notify the caller
     rv = notifyResults();
     if (NS_FAILED(rv))
