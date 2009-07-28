@@ -101,8 +101,10 @@ drawToDC(InstanceData* instanceData, HDC dc,
   BYTE alpha = 255;
   RECT fill = { 0, 0, width, height };
 
+#if 0 // OOP Plugins don't yet support scriptable objects
   switch (instanceData->scriptableObject->drawMode) {
     case DM_DEFAULT:
+#endif
     {
       HBRUSH brush = ::CreateSolidBrush(RGB(0, 0, 0));
       if (brush) {
@@ -135,6 +137,7 @@ drawToDC(InstanceData* instanceData, HDC dc,
         }
       }
     }
+#if 0 // OOP Plugins don't yet support scriptable objects
     break;
 
     case DM_SOLID_COLOR:
@@ -153,6 +156,7 @@ drawToDC(InstanceData* instanceData, HDC dc,
     }
     break;
   }
+#endif
 
   BLENDFUNCTION blendFunc;
   blendFunc.BlendOp = AC_SRC_OVER;
