@@ -70,7 +70,7 @@ ViewportFrame::Destroy()
 
 NS_IMETHODIMP
 ViewportFrame::SetInitialChildList(nsIAtom*        aListName,
-                                   nsIFrame*       aChildList)
+                                   nsFrameList&    aChildList)
 {
   nsresult rv = NS_OK;
 

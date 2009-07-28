@@ -88,7 +88,7 @@ public:
 
   nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                nsIAtom*        aListName,
-                               nsIFrame*       aChildList);
+                               nsFrameList&    aChildList);
   nsresult AppendFrames(nsIFrame*      aDelegatingFrame,
                         nsIAtom*       aListName,
                         nsIFrame*      aFrameList);

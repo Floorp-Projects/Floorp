@@ -166,7 +166,7 @@ nsBoxFrame::~nsBoxFrame()
 
 NS_IMETHODIMP
 nsBoxFrame::SetInitialChildList(nsIAtom*        aListName,
-                                nsIFrame*       aChildList)
+                                nsFrameList&    aChildList)
 {
   nsresult r = nsContainerFrame::SetInitialChildList(aListName, aChildList);
   if (r == NS_OK) {

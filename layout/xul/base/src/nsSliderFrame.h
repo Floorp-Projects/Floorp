@@ -167,7 +167,7 @@ public:
                          nsEventStatus* aEventStatus);
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
 
   virtual nsIAtom* GetType() const;
 

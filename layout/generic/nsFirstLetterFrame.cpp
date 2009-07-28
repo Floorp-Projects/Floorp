@@ -97,16 +97,17 @@ nsFirstLetterFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::SetInitialChildList(nsIAtom*  aListName,
-                                        nsIFrame* aChildList)
+nsFirstLetterFrame::SetInitialChildList(nsIAtom*     aListName,
+                                        nsFrameList& aChildList)
 {
-  mFrames.SetFrames(aChildList);
   nsFrameManager *frameManager = PresContext()->FrameManager();
 
-  for (nsIFrame* frame = aChildList; frame; frame = frame->GetNextSibling()) {
-    NS_ASSERTION(frame->GetParent() == this, "Unexpected parent");
-    frameManager->ReParentStyleContext(frame);
+  for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
+    NS_ASSERTION(e.get()->GetParent() == this, "Unexpected parent");
+    frameManager->ReParentStyleContext(e.get());
   }
+
+  mFrames.SetFrames(aChildList);
   return NS_OK;
 }
 

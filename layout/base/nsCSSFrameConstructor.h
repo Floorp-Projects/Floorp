@@ -157,11 +157,9 @@ struct nsFrameItems : public nsFrameList {
   }
 
   void Clear() {
-    mFirstChild = lastChild = nsnull;
+    nsFrameList::Clear();
+    lastChild = nsnull;
   }
-
-  // For now, until we change some SetInitialChildList signatures
-  operator nsIFrame* ()  { return FirstChild(); }
 
 private:
   // Not implemented; shouldn't be called

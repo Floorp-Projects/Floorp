@@ -400,7 +400,7 @@ nsFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
-                                           nsIFrame*       aChildList)
+                                           nsFrameList&    aChildList)
 {
   // XXX This shouldn't be getting called at all, but currently is for backwards
   // compatility reasons...
@@ -408,7 +408,7 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
   NS_ERROR("not a container");
   return NS_ERROR_UNEXPECTED;
 #else
-  NS_ASSERTION(nsnull == aChildList, "not a container");
+  NS_ASSERTION(aChildList.IsEmpty(), "not a container");
   return NS_OK;
 #endif
 }
@@ -6872,10 +6872,11 @@ nsFrame::TraceMsg(const char* aFormatString, ...)
 }
 
 void
-nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
+nsFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList)
 {
-  for (nsIFrame*f = aFrameList; f; f = f->GetNextSibling()) {
-    NS_ASSERTION(f->GetStateBits() & NS_FRAME_IS_DIRTY, "dirty bit not set");
+  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
+    NS_ASSERTION(e.get()->GetStateBits() & NS_FRAME_IS_DIRTY,
+                 "dirty bit not set");
   }
 }
 

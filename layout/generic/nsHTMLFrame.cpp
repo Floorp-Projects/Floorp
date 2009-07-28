@@ -97,7 +97,7 @@ public:
   virtual void Destroy();
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
@@ -274,12 +274,12 @@ CanvasFrame::SetHasFocus(PRBool aHasFocus)
 
 NS_IMETHODIMP
 CanvasFrame::SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList)
+                                 nsFrameList&    aChildList)
 {
   if (nsGkAtoms::absoluteList == aListName)
     return mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
 
-  NS_ASSERTION(aListName || !aChildList || !aChildList->GetNextSibling(),
+  NS_ASSERTION(aListName || aChildList.IsEmpty() || aChildList.OnlyChild(),
                "Primary child list can have at most one frame in it");
   return nsHTMLContainerFrame::SetInitialChildList(aListName, aChildList);
 }

@@ -73,7 +73,7 @@ public:
     * @see nsIFrame::SetInitialChildList
     */
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
 
   /**
    * ColGroups never paint anything, nor receive events.
