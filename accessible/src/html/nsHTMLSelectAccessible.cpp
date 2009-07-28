@@ -1023,19 +1023,20 @@ void nsHTMLComboboxAccessible::CacheChildren()
     if (!mListAccessible) {
       mListAccessible = 
         new nsHTMLComboboxListAccessible(mParent, mDOMNode, mWeakShell);
+      if (!mListAccessible)
+        return;
+
+      mListAccessible->Init();
     }
+
 #ifdef COMBO_BOX_WITH_THREE_CHILDREN
     buttonAccessible->SetNextSibling(mListAccessible);
 #else
     SetFirstChild(mListAccessible);
 #endif
-    if (!mListAccessible) {
-      return;
-    }
 
     mListAccessible->SetParent(this);
     mListAccessible->SetNextSibling(nsnull);
-    mListAccessible->Init();
 
     ++ mAccChildCount;  // List accessible child successfully added
   }
