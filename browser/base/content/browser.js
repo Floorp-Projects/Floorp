@@ -2660,9 +2660,10 @@ var browserDragAndDrop = {
     var file = dt.mozGetDataAt("application/x-moz-file", 0);
     if (file) {
       var name = file instanceof Ci.nsIFile ? file.leafName : "";
-      var fileHandler = ContentAreaUtils.ioService
-                                        .getProtocolHandler("file")
-                                        .QueryInterface(Ci.nsIFileProtocolHandler);
+      var ioService = Cc["@mozilla.org/network/io-service;1"]
+                                .getService(Ci.nsIIOService);
+      var fileHandler = ioService.getProtocolHandler("file")
+                                 .QueryInterface(Ci.nsIFileProtocolHandler);
       return [fileHandler.getURLSpecFromFile(file), name];
     }
 
@@ -2888,7 +2889,9 @@ const DOMLinkHandler = {
               break;
 
             var targetDoc = link.ownerDocument;
-            var uri = makeURI(link.href, targetDoc.characterSet);
+            var ios = Cc["@mozilla.org/network/io-service;1"].
+                      getService(Ci.nsIIOService);
+            var uri = ios.newURI(link.href, targetDoc.characterSet, null);
 
             if (gBrowser.isFailedIcon(uri))
               break;
@@ -4419,7 +4422,10 @@ nsBrowserAccess.prototype =
           if (aURI) {
             if (aOpener) {
               location = aOpener.location;
-              referrer = makeURI(location);
+              referrer =
+                      Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(location, null, null);
             }
             newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIWebNavigation)
@@ -4436,7 +4442,10 @@ nsBrowserAccess.prototype =
             newWindow = aOpener.top;
             if (aURI) {
               location = aOpener.location;
-              referrer = makeURI(location);
+              referrer =
+                      Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(location, null, null);
 
               newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(nsIWebNavigation)
@@ -5406,7 +5415,17 @@ var OfflineApps = {
   _getManifestURI: function(aWindow) {
     if (!aWindow.document.documentElement) return null;
     var attr = aWindow.document.documentElement.getAttribute("manifest");
-    return attr ? aWindow.document.documentURIObject : null;
+    if (!attr) return null;
+
+    try {
+      var ios = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+
+      var contentURI = ios.newURI(aWindow.location.href, null, null);
+      return ios.newURI(attr, aWindow.document.characterSet, contentURI);
+    } catch (e) {
+      return null;
+    }
   },
 
   // A cache update isn't tied to a specific window.  Try to find
@@ -5604,8 +5623,11 @@ var OfflineApps = {
     if (!manifest)
       return;
 
-    var manifestURI = makeURI(manifest, aDocument.characterSet,
-                              aDocument.documentURIObject);
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+
+    var manifestURI = ios.newURI(manifest, aDocument.characterSet,
+                                 aDocument.documentURIObject);
 
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
@@ -5618,7 +5640,9 @@ var OfflineApps = {
   {
     if (aTopic == "dom-storage-warn-quota-exceeded") {
       if (aSubject) {
-        var uri = aSubject.document.documentURIObject;
+        var uri = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService).
+                  newURI(aSubject.location.href, null, null);
 
         if (OfflineApps._checkUsage(uri)) {
           var browserWindow =
@@ -5679,7 +5703,9 @@ var MailIntegration = {
       mailtoUrl += "&subject=" + encodeURIComponent(aSubject);
     }
 
-    var uri = makeURI(mailtoUrl);
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+    var uri = ioService.newURI(mailtoUrl, null, null);
 
     // now pass this uri to the operating system
     this._launchExternalUrl(uri);
