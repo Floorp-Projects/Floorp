@@ -67,6 +67,11 @@ public:
   void lock();
 
   /**
+   * Unlocks the parameters and allows modification to it again.
+   */
+  void unlock();
+
+  /**
    * @returns the pointer to the owning BindingParamsArray.
    */
   const BindingParamsArray *getOwner() const;
