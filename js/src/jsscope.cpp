@@ -444,13 +444,12 @@ js_HashScopeProperty(JSDHashTable *table, const void *key)
 
     /* Accumulate from least to most random so the low bits are most random. */
     hash = 0;
-    JS_ASSERT_IF(sprop->isMethod(), !sprop->setter);
     gsop = sprop->getter;
     if (gsop)
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsword(gsop);
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsword)gsop;
     gsop = sprop->setter;
     if (gsop)
-        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsword(gsop);
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsword)gsop;
 
     hash = JS_ROTATE_LEFT32(hash, 4)
            ^ (sprop->flags & ~SPROP_FLAGS_NOT_MATCHED);
@@ -1055,9 +1054,6 @@ JSScope::add(JSContext *cx, jsid id,
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, this));
     CHECK_ANCESTOR_LINE(this, true);
 
-    JS_ASSERT_IF(attrs & JSPROP_GETTER, getter);
-    JS_ASSERT_IF(attrs & JSPROP_SETTER, setter);
-
     /*
      * You can't add properties to a sealed scope.  But note well that you can
      * change property attributes in a sealed scope, even though that replaces
@@ -1073,17 +1069,10 @@ JSScope::add(JSContext *cx, jsid id,
      * Normalize stub getter and setter values for faster is-stub testing in
      * the SPROP_CALL_[GS]ETTER macros.
      */
+    if (getter == JS_PropertyStub)
+        getter = NULL;
     if (setter == JS_PropertyStub)
         setter = NULL;
-    if (flags & SPROP_IS_METHOD) {
-        /* Here, getter is the method, a function object reference. */
-        JS_ASSERT(getter);
-        JS_ASSERT(!setter);
-        JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-    } else {
-        if (getter == JS_PropertyStub)
-            getter = NULL;
-    }
 
     /*
      * Search for id in order to claim its entry, allocating a property tree
@@ -1364,9 +1353,6 @@ JSScope::add(JSContext *cx, jsid id,
     jsuint index;
     if (js_IdIsIndex(sprop->id, &index))
         setIndexedProperties();
-
-    if (sprop->isMethod())
-        setMethodBarrier();
 
     METER(adds);
     return sprop;
@@ -1669,11 +1655,11 @@ JSScopeProperty::trace(JSTracer *trc)
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if (attrs & JSPROP_GETTER) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
-            JS_CallTracer(trc, getterObject(), JSTRACE_OBJECT);
+            JS_CallTracer(trc, js_CastAsObject(getter), JSTRACE_OBJECT);
         }
         if (attrs & JSPROP_SETTER) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
-            JS_CallTracer(trc, setterObject(), JSTRACE_OBJECT);
+            JS_CallTracer(trc, js_CastAsObject(setter), JSTRACE_OBJECT);
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */
