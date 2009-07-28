@@ -3,7 +3,6 @@ var now_uSec = Date.now() * 1000;
 
 const dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
 const bhist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIBrowserHistory);
-const iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 const formhist = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader)
@@ -42,17 +41,17 @@ function test() {
   s.sanitize();
   s.range = null;
   
-  ok(!bhist.isVisited(uri("http://10minutes.com")), "10minutes.com should now be deleted");
-  ok(bhist.isVisited(uri("http://1hour.com")), "Pretend visit to 1hour.com should still exist");
-  ok(bhist.isVisited(uri("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should still exist");
-  ok(bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
-  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  ok(!bhist.isVisited(makeURI("http://10minutes.com")), "10minutes.com should now be deleted");
+  ok(bhist.isVisited(makeURI("http://1hour.com")), "Pretend visit to 1hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should still exist");
+  ok(bhist.isVisited(makeURI("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   
   if(minutesSinceMidnight > 10)
-    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+    ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("10minutes"), "10minutes form entry should be deleted");
   ok(formhist.nameExists("1hour"), "1hour form entry should still exist");
@@ -81,16 +80,16 @@ function test() {
   Sanitizer.prefs.setIntPref("timeSpan", 1);
   s.sanitize();
   
-  ok(!bhist.isVisited(uri("http://1hour.com")), "1hour.com should now be deleted");
-  ok(bhist.isVisited(uri("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should still exist");
-  ok(bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
-  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  ok(!bhist.isVisited(makeURI("http://1hour.com")), "1hour.com should now be deleted");
+  ok(bhist.isVisited(makeURI("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should still exist");
+  ok(bhist.isVisited(makeURI("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   
   if(hoursSinceMidnight > 1)
-    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+    ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("1hour"), "1hour form entry should be deleted");
   ok(formhist.nameExists("1hour10minutes"), "1hour10minutes form entry should still exist");
@@ -118,14 +117,14 @@ function test() {
   s.sanitize();
   s.range = null;
   
-  ok(!bhist.isVisited(uri("http://1hour10minutes.com")), "Pretend visit to 1hour10minutes.com should now be deleted");
-  ok(bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
-  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  ok(!bhist.isVisited(makeURI("http://1hour10minutes.com")), "Pretend visit to 1hour10minutes.com should now be deleted");
+  ok(bhist.isVisited(makeURI("http://2hour.com")), "Pretend visit to 2hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   if(minutesSinceMidnight > 70)
-    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+    ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("1hour10minutes"), "1hour10minutes form entry should be deleted");
   ok(formhist.nameExists("2hour"), "2hour form entry should still exist");
@@ -149,13 +148,13 @@ function test() {
   Sanitizer.prefs.setIntPref("timeSpan", 2);
   s.sanitize();
   
-  ok(!bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should now be deleted");
-  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  ok(!bhist.isVisited(makeURI("http://2hour.com")), "Pretend visit to 2hour.com should now be deleted");
+  ok(bhist.isVisited(makeURI("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   if(hoursSinceMidnight > 2)
-    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+    ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("2hour"), "2hour form entry should be deleted");
   ok(formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should still exist");
@@ -179,12 +178,12 @@ function test() {
   s.sanitize();
   s.range = null;
   
-  ok(!bhist.isVisited(uri("http://2hour10minutes.com")), "Pretend visit to 2hour10minutes.com should now be deleted");
-  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
-  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  ok(!bhist.isVisited(makeURI("http://2hour10minutes.com")), "Pretend visit to 2hour10minutes.com should now be deleted");
+  ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should still exist");
+  ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   if(minutesSinceMidnight > 130)
-    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+    ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("2hour10minutes"), "2hour10minutes form entry should be deleted");
   ok(formhist.nameExists("4hour"), "4hour form entry should still exist");
@@ -204,11 +203,11 @@ function test() {
   Sanitizer.prefs.setIntPref("timeSpan", 3);
   s.sanitize();
   
-  ok(!bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should now be deleted");
-  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
+  ok(!bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should now be deleted");
+  ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should still exist");
   if(hoursSinceMidnight > 4)
-    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+    ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("4hour"), "4hour form entry should be deleted");
   ok(formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should still exist");
@@ -227,10 +226,10 @@ function test() {
   s.sanitize();
   s.range = null;
   
-  ok(!bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should now be deleted");
+  ok(!bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should now be deleted");
   if(minutesSinceMidnight > 250)
-    ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should still exist");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+    ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should still exist");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
   
   ok(!formhist.nameExists("4hour10minutes"), "4hour10minutes form entry should be deleted");
   if(minutesSinceMidnight > 250)
@@ -246,8 +245,8 @@ function test() {
   Sanitizer.prefs.setIntPref("timeSpan", 4);
   s.sanitize();
   
-  ok(!bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should now be deleted");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should still exist");
+  ok(!bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should now be deleted");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
 
   ok(!formhist.nameExists("today"), "today form entry should be deleted");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
@@ -259,7 +258,7 @@ function test() {
   Sanitizer.prefs.setIntPref("timeSpan", 0);
   s.sanitize();
   
-  ok(!bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should now be deleted");
+  ok(!bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should now be deleted");
 
   ok(!formhist.nameExists("b4today"), "b4today form entry should be deleted");
   
@@ -268,34 +267,34 @@ function test() {
 }
 
 function setupHistory() {
-  bhist.addPageWithDetails(uri("http://10minutes.com/"), "10 minutes ago", now_uSec - 10*60*1000000);
-  bhist.addPageWithDetails(uri("http://1hour.com/"), "Less than 1 hour ago", now_uSec - 45*60*1000000);
-  bhist.addPageWithDetails(uri("http://1hour10minutes.com/"), "1 hour 10 minutes ago", now_uSec - 70*60*1000000);
-  bhist.addPageWithDetails(uri("http://2hour.com/"), "Less than 2 hours ago", now_uSec - 90*60*1000000);
-  bhist.addPageWithDetails(uri("http://2hour10minutes.com/"), "2 hours 10 minutes ago", now_uSec - 130*60*1000000);
-  bhist.addPageWithDetails(uri("http://4hour.com/"), "Less than 4 hours ago", now_uSec - 180*60*1000000);
-  bhist.addPageWithDetails(uri("http://4hour10minutes.com/"), "4 hours 10 minutesago", now_uSec - 250*60*1000000);
+  bhist.addPageWithDetails(makeURI("http://10minutes.com/"), "10 minutes ago", now_uSec - 10*60*1000000);
+  bhist.addPageWithDetails(makeURI("http://1hour.com/"), "Less than 1 hour ago", now_uSec - 45*60*1000000);
+  bhist.addPageWithDetails(makeURI("http://1hour10minutes.com/"), "1 hour 10 minutes ago", now_uSec - 70*60*1000000);
+  bhist.addPageWithDetails(makeURI("http://2hour.com/"), "Less than 2 hours ago", now_uSec - 90*60*1000000);
+  bhist.addPageWithDetails(makeURI("http://2hour10minutes.com/"), "2 hours 10 minutes ago", now_uSec - 130*60*1000000);
+  bhist.addPageWithDetails(makeURI("http://4hour.com/"), "Less than 4 hours ago", now_uSec - 180*60*1000000);
+  bhist.addPageWithDetails(makeURI("http://4hour10minutes.com/"), "4 hours 10 minutesago", now_uSec - 250*60*1000000);
   
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
   today.setSeconds(30);
-  bhist.addPageWithDetails(uri("http://today.com/"), "Today", today.valueOf() * 1000);
+  bhist.addPageWithDetails(makeURI("http://today.com/"), "Today", today.valueOf() * 1000);
   
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
-  bhist.addPageWithDetails(uri("http://before-today.com/"), "Before Today", lastYear.valueOf() * 1000);
+  bhist.addPageWithDetails(makeURI("http://before-today.com/"), "Before Today", lastYear.valueOf() * 1000);
   
   // Confirm everything worked
-  ok(bhist.isVisited(uri("http://10minutes.com/")), "Pretend visit to 10minutes.com should exist");
-  ok(bhist.isVisited(uri("http://1hour.com")), "Pretend visit to 1hour.com should exist");
-  ok(bhist.isVisited(uri("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should exist");
-  ok(bhist.isVisited(uri("http://2hour.com")), "Pretend visit to 2hour.com should exist");
-  ok(bhist.isVisited(uri("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should exist");
-  ok(bhist.isVisited(uri("http://4hour.com")), "Pretend visit to 4hour.com should exist");
-  ok(bhist.isVisited(uri("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should exist");
-  ok(bhist.isVisited(uri("http://today.com")), "Pretend visit to today.com should exist");
-  ok(bhist.isVisited(uri("http://before-today.com")), "Pretend visit to before-today.com should exist");
+  ok(bhist.isVisited(makeURI("http://10minutes.com/")), "Pretend visit to 10minutes.com should exist");
+  ok(bhist.isVisited(makeURI("http://1hour.com")), "Pretend visit to 1hour.com should exist");
+  ok(bhist.isVisited(makeURI("http://1hour10minutes.com/")), "Pretend visit to 1hour10minutes.com should exist");
+  ok(bhist.isVisited(makeURI("http://2hour.com")), "Pretend visit to 2hour.com should exist");
+  ok(bhist.isVisited(makeURI("http://2hour10minutes.com/")), "Pretend visit to 2hour10minutes.com should exist");
+  ok(bhist.isVisited(makeURI("http://4hour.com")), "Pretend visit to 4hour.com should exist");
+  ok(bhist.isVisited(makeURI("http://4hour10minutes.com/")), "Pretend visit to 4hour10minutes.com should exist");
+  ok(bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should exist");
+  ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should exist");
 }
 
 function setupFormHistory() {
@@ -597,8 +596,4 @@ function downloadExists(aID)
   var rows = stmt.step();
   stmt.finalize();
   return rows;
-}
-
-function uri(spec) {
-  return iosvc.newURI(spec, null, null);
 }
