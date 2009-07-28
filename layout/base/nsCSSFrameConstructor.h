@@ -149,6 +149,13 @@ struct nsFrameItems : public nsFrameList {
                         newLastChild);
   }
 
+  nsFrameItems ExtractTail(FrameLinkEnumerator& aLink) {
+    nsIFrame* newLastChild = lastChild;
+    lastChild = aLink.PrevFrame();
+    return nsFrameItems(nsFrameList::ExtractTail(aLink),
+                        newLastChild);
+  }
+
   void Clear() {
     mFirstChild = lastChild = nsnull;
   }
@@ -1496,7 +1503,7 @@ private:
    *
    * @param aState the frame construction state we're using right now.
    * @param aExistingEndFrame the already-existing end frame.
-   * @param aFramesToMove The frame list to move over
+   * @param aFramesToMove The frame list to move over.  Must be nonempty.
    * @param aBlockPart the block part of the {ib} split.
    * @param aTargetState if non-null, the target state to pass to
    *        MoveChildrenTo for float reparenting.
@@ -1504,7 +1511,7 @@ private:
    */
   void MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
                                 nsIFrame* aExistingEndFrame,
-                                nsIFrame* aFramesToMove,
+                                nsFrameItems& aFramesToMove,
                                 nsIFrame* aBlockPart,
                                 nsFrameConstructorState* aTargetState);
 

@@ -274,6 +274,14 @@ nsFrameList::ExtractHead(FrameLinkEnumerator& aLink)
                   aLink.PrevFrame()->GetNextSibling() ==
                     aLink.NextFrame(),
                   "Unexpected PrevFrame()");
+  NS_PRECONDITION(aLink.PrevFrame() ||
+                  aLink.NextFrame() == FirstChild(),
+                  "Unexpected NextFrame()");
+  NS_PRECONDITION(!aLink.PrevFrame() ||
+                  aLink.NextFrame() != FirstChild(),
+                  "Unexpected NextFrame()");
+  NS_PRECONDITION(aLink.mEnd == nsnull,
+                  "Unexpected mEnd for frame link enumerator");
 
   nsIFrame* prev = aLink.PrevFrame();
   nsIFrame* newFirstFrame = nsnull;
@@ -287,6 +295,43 @@ nsFrameList::ExtractHead(FrameLinkEnumerator& aLink)
     aLink.mPrev = nsnull;
   }
   // else aLink is pointing to before our first frame.  Nothing to do.
+
+  return nsFrameList(newFirstFrame);
+}
+
+nsFrameList
+nsFrameList::ExtractTail(FrameLinkEnumerator& aLink)
+{
+  NS_PRECONDITION(&aLink.List() == this, "Unexpected list");
+  NS_PRECONDITION(!aLink.PrevFrame() ||
+                  aLink.PrevFrame()->GetNextSibling() ==
+                    aLink.NextFrame(),
+                  "Unexpected PrevFrame()");
+  NS_PRECONDITION(aLink.PrevFrame() ||
+                  aLink.NextFrame() == FirstChild(),
+                  "Unexpected NextFrame()");
+  NS_PRECONDITION(!aLink.PrevFrame() ||
+                  aLink.NextFrame() != FirstChild(),
+                  "Unexpected NextFrame()");
+  NS_PRECONDITION(aLink.mEnd == nsnull,
+                  "Unexpected mEnd for frame link enumerator");
+
+  nsIFrame* prev = aLink.PrevFrame();
+  nsIFrame* newFirstFrame;
+  if (prev) {
+    // Truncate the list after |prev| and hand the second part to our new list
+    prev->SetNextSibling(nsnull);
+    newFirstFrame = aLink.NextFrame();
+  } else {
+    // Hand the whole list over to our new list
+    newFirstFrame = mFirstChild;
+    mFirstChild = nsnull;
+  }
+
+  // Now make sure aLink doesn't point to a frame we no longer have.
+  aLink.mFrame = nsnull;
+
+  NS_POSTCONDITION(aLink.AtEnd(), "What's going on here?");
 
   return nsFrameList(newFirstFrame);
 }

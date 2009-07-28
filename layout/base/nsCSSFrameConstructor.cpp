@@ -564,33 +564,35 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
 // child then the block child is migrated upward until it lands in a block
 // parent (the inline frames containing block is where it will end up).
 
-static nsIFrame*
-FindFirstBlock(nsIFrame* aKid, nsIFrame** aPrevKid)
+// After this function returns, aLink is pointing to the first link at or
+// after its starting position for which the next frame is a block.  If there
+// is no such link, it points to the end of the list.
+static void
+FindFirstBlock(nsFrameList::FrameLinkEnumerator& aLink)
 {
-  nsIFrame* prevKid = nsnull;
-  while (aKid) {
-    if (!IsInlineOutside(aKid)) {
-      *aPrevKid = prevKid;
-      return aKid;
+  for ( ; !aLink.AtEnd(); aLink.Next()) {
+    if (!IsInlineOutside(aLink.NextFrame())) {
+      return;
     }
-    prevKid = aKid;
-    aKid = aKid->GetNextSibling();
   }
-  *aPrevKid = nsnull;
-  return nsnull;
 }
 
-static nsIFrame*
-FindLastBlock(nsIFrame* aKid)
+// This function returns an frame link enumerator pointing to the last link in
+// the list which has a block prev frame.  This means the enumerator might be
+// at end.  If there are no blocks at all, the returned enumerator will point
+// to the beginning of the list.
+static nsFrameList::FrameLinkEnumerator
+FindLastBlock(const nsFrameList& aList)
 {
-  nsIFrame* lastBlock = nsnull;
-  while (aKid) {
-    if (!IsInlineOutside(aKid)) {
-      lastBlock = aKid;
+  nsFrameList::FrameLinkEnumerator cur(aList), last(aList);
+  for ( ; !cur.AtEnd(); cur.Next()) {
+    if (!IsInlineOutside(cur.NextFrame())) {
+      last = cur;
+      last.Next();
     }
-    aKid = aKid->GetNextSibling();
   }
-  return lastBlock;
+
+  return last;
 }
 
 /*
@@ -1364,6 +1366,10 @@ AdjustFloatParentPtrs(nsIFrame*                aFrame,
  * relevant frame state bits. |aState| may be null, in which case the parent
  * pointers of out-of-flow frames will remain untouched.
  */
+// XXXbz it would be nice if this could take a framelist-like thing,
+// but it would need to take some sort of sublist, not nsFrameList,
+// since the frames get inserted into their new home before we call
+// this method.
 static void
 MoveChildrenTo(nsFrameManager*          aFrameManager,
                nsIFrame*                aNewParent,
@@ -5707,18 +5713,10 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
       !IsInlineFrame(aParentFrame) &&
       IsInlineOutside(aFrameList.lastChild)) {
     // We want to put some of the frames into the following inline frame.
-    nsIFrame* lastBlock = FindLastBlock(aFrameList.FirstChild());
-    nsIFrame* firstTrailingInline;
-    if (lastBlock) {
-      firstTrailingInline = lastBlock->GetNextSibling();
-      lastBlock->SetNextSibling(nsnull);
-      aFrameList.lastChild = lastBlock;
-    } else {
-      firstTrailingInline = aFrameList.FirstChild();
-      aFrameList = nsFrameItems();
-    }
+    nsFrameList::FrameLinkEnumerator lastBlock = FindLastBlock(aFrameList);
+    nsFrameItems inlineKids = aFrameList.ExtractTail(lastBlock);
 
-    NS_ASSERTION(firstTrailingInline, "How did that happen?");
+    NS_ASSERTION(inlineKids.NotEmpty(), "How did that happen?");
 
     nsIFrame* inlineSibling = GetSpecialSibling(aParentFrame);
     NS_ASSERTION(inlineSibling, "How did that happen?");
@@ -5729,7 +5727,7 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
                                         GetAbsoluteContainingBlock(stateParent),
                                         GetFloatContainingBlock(stateParent));
 
-    MoveFramesToEndOfIBSplit(aState, inlineSibling, firstTrailingInline,
+    MoveFramesToEndOfIBSplit(aState, inlineSibling, inlineKids,
                              aParentFrame, &targetState);
   }
     
@@ -6068,7 +6066,7 @@ nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
                                            FrameConstructionItemList& aItems)
 {
   NS_ASSERTION(aContentIndex >= 0 &&
-               aContentIndex < aParentContent->GetChildCount(),
+               PRUint32(aContentIndex) < aParentContent->GetChildCount(),
                "child index out of range");
   nsIContent* content = aParentContent->GetChildAt(aContentIndex);
   if (!content->IsNodeOfType(nsINode::eTEXT) ||
@@ -6088,7 +6086,7 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
                                            PRInt32 aContentIndex)
 {
   NS_ASSERTION(aContentIndex >= 0 &&
-               aContentIndex < aParentContent->GetChildCount(),
+               PRUint32(aContentIndex) < aParentContent->GetChildCount(),
                "child index out of range");
   nsIContent* content = aParentContent->GetChildAt(aContentIndex);
   if (!content->IsNodeOfType(nsINode::eTEXT) ||
@@ -10655,14 +10653,12 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     return rv;
   }
 
-  nsIFrame* list1 = childItems.FirstChild();
-  nsIFrame* prevToFirstBlock;
-  nsIFrame* list2;
+  nsFrameList::FrameLinkEnumerator firstBlockEnumerator(childItems);
+  if (!aItem.mIsAllInline) {
+    FindFirstBlock(firstBlockEnumerator);
+  }
 
-  if (aItem.mIsAllInline ||
-      // Note: This really is meant to be an assignment to list2 followed by a
-      // test of !list2.
-      !(list2 = FindFirstBlock(list1, &prevToFirstBlock))) {
+  if (aItem.mIsAllInline || firstBlockEnumerator.AtEnd()) { 
     // This part is easy.  We either already know we have no non-inline kids,
     // or haven't found any when constructing actual frames (the latter can
     // happen only if out-of-flows that we thought had no containing block
@@ -10686,31 +10682,13 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // empty, otherwise - why are we here?). The final list contains all
   // of the inline children that follow the final block child.
 
-  // Find the first block child which defines list1 and list2
-  if (prevToFirstBlock) {
-    prevToFirstBlock->SetNextSibling(nsnull);
-  }
-  else {
-    list1 = nsnull;
-  }
-
-  // Find the last block child which defines the end of list2 and the
-  // start of list3
-  nsIFrame* afterFirstBlock = list2->GetNextSibling();
-  nsIFrame* list3 = nsnull;
-  nsIFrame* lastBlock = FindLastBlock(afterFirstBlock);
-  if (!lastBlock) {
-    lastBlock = list2;
-  }
-  list3 = lastBlock->GetNextSibling();
-  lastBlock->SetNextSibling(nsnull);
-
-  // list1's frames belong to this inline frame so go ahead and take them
-  newFrame->SetInitialChildList(nsnull, list1);
+  // Grab the first inline's kids
+  nsFrameItems firstInlineKids = childItems.ExtractHead(firstBlockEnumerator);
+  newFrame->SetInitialChildList(nsnull, firstInlineKids);
                                              
-  // list2's frames belong to an anonymous block that we create right
-  // now. The anonymous block will be the parent of the block children
-  // of the inline.
+  // The kids between the first and last block belong to an anonymous block
+  // that we create right now. The anonymous block will be the parent of the
+  // block children of the inline.
   nsIAtom* blockStyle;
   nsRefPtr<nsStyleContext> blockSC;
   nsIFrame* blockFrame;
@@ -10733,13 +10711,18 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // Any inline frame could have a view (e.g., opacity)
   nsHTMLContainerFrame::CreateViewForFrame(blockFrame, PR_FALSE);
 
+  // Find the last block child which defines the end of our block kids and the
+  // start of our trailing inline's kids
+  nsFrameList::FrameLinkEnumerator lastBlock = FindLastBlock(childItems);
+  nsFrameItems blockKids = childItems.ExtractHead(lastBlock);
+
   if (blockFrame->HasView() || newFrame->HasView()) {
-    // Move list2's frames into the new view
-    nsHTMLContainerFrame::ReparentFrameViewList(aState.mPresContext, list2,
-                                                list2->GetParent(), blockFrame);
+    // Move the block's child frames into the new view
+    nsHTMLContainerFrame::ReparentFrameViewList(aState.mPresContext, blockKids,
+                                                newFrame, blockFrame);
   }
 
-  blockFrame->SetInitialChildList(nsnull, list2);
+  blockFrame->SetInitialChildList(nsnull, blockKids);
 
   nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                 GetAbsoluteContainingBlock(blockFrame),
@@ -10750,10 +10733,10 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // parent block of the inline, but its parent pointer will be the anonymous
   // block we create...  AdjustFloatParentPtrs() deals with this by moving the
   // float from the outer state |aState| to the inner |state|.
-  MoveChildrenTo(state.mFrameManager, blockFrame, list2, nsnull, &state,
-                 &aState);
+  MoveChildrenTo(state.mFrameManager, blockFrame, blockKids.FirstChild(), nsnull,
+                 &state, &aState);
 
-  // list3's frames belong to another inline frame
+  // What's left in childItems belongs to our trailing inline frame
   nsIFrame* inlineFrame;
   if (positioned) {
     inlineFrame = NS_NewPositionedInlineFrame(mPresShell, styleContext);
@@ -10768,8 +10751,9 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // Any frame might need a view
   nsHTMLContainerFrame::CreateViewForFrame(inlineFrame, PR_FALSE);
 
-  if (list3) {
-    MoveFramesToEndOfIBSplit(aState, inlineFrame, list3, blockFrame, nsnull);
+  if (childItems.NotEmpty()) {
+    MoveFramesToEndOfIBSplit(aState, inlineFrame, childItems, blockFrame,
+                             nsnull);
   }
 
   // Mark the frames as special. That way if any of the append/insert/remove
@@ -10811,23 +10795,25 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 void
 nsCSSFrameConstructor::MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
                                                 nsIFrame* aExistingEndFrame,
-                                                nsIFrame* aFramesToMove,
+                                                nsFrameItems& aFramesToMove,
                                                 nsIFrame* aBlockPart,
                                                 nsFrameConstructorState* aTargetState)
 {
   NS_PRECONDITION(aBlockPart, "Must have a block part");
   NS_PRECONDITION(aExistingEndFrame, "Must have trailing inline");
-  NS_PRECONDITION(aFramesToMove, "Must have frames to move");
+  NS_PRECONDITION(aFramesToMove.NotEmpty(), "Must have frames to move");
 
-  if (aExistingEndFrame->HasView() || aFramesToMove->GetParent()->HasView()) {
-    // Move list3's frames into the new view
+  nsIFrame* newFirstChild = aFramesToMove.FirstChild();
+  if (aExistingEndFrame->HasView() ||
+      newFirstChild->GetParent()->HasView()) {
+    // Move the frames into the new view
     nsHTMLContainerFrame::ReparentFrameViewList(aState.mPresContext,
                                                 aFramesToMove,
-                                                aFramesToMove->GetParent(),
+                                                newFirstChild->GetParent(),
                                                 aExistingEndFrame);
   }
 
-  // Reparent (cheaply) the frames in list3
+  // Reparent (cheaply) the child frames
   nsIFrame* existingFirstChild = aExistingEndFrame->GetFirstChild(nsnull);
   if (!existingFirstChild &&
       (aExistingEndFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
@@ -10836,7 +10822,7 @@ nsCSSFrameConstructor::MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
     aExistingEndFrame->InsertFrames(nsnull, nsnull, aFramesToMove);
   }
   nsFrameConstructorState* startState = aTargetState ? &aState : nsnull;
-  MoveChildrenTo(aState.mFrameManager, aExistingEndFrame, aFramesToMove,
+  MoveChildrenTo(aState.mFrameManager, aExistingEndFrame, newFirstChild,
                  existingFirstChild, aTargetState, startState);
 }
 
