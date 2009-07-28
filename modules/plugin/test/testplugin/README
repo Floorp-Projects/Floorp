@@ -117,3 +117,9 @@ Throws an exception if there is no watch.
 
 * stopWatchingInstanceCount()
 Stops watching. Throws an exception if there is no watch.
+
+== NPAPI Timers ==
+
+* unscheduleAllTimers()
+Instructs the plugin instance to cancel all timers created via
+NPN_ScheduleTimer.
