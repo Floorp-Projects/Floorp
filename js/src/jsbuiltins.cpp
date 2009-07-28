@@ -337,9 +337,9 @@ JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedPropertyInt32, CONTEXT, OBJECT, IN
 jsval FASTCALL
 js_CallGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
-    JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
+    JS_ASSERT(!SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
     jsval v;
-    if (!js_GetSprop(cx, sprop, obj, &v))
+    if (!sprop->get(cx, obj, &v))
         return JSVAL_ERROR_COOKIE;
     return v;
 }
