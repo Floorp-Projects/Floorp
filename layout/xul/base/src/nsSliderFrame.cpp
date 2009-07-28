@@ -887,7 +887,7 @@ nsSliderFrame::GetType() const
 
 NS_IMETHODIMP
 nsSliderFrame::SetInitialChildList(nsIAtom*        aListName,
-                                   nsIFrame*       aChildList)
+                                   nsFrameList&    aChildList)
 {
   nsresult r = nsBoxFrame::SetInitialChildList(aListName, aChildList);
 

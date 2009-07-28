@@ -215,16 +215,16 @@ nsTableOuterFrame::Destroy()
   nsHTMLContainerFrame::Destroy();
 }
 
-nsIFrame*
-nsTableOuterFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsTableOuterFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::captionList == aListName) {
-    return mCaptionFrames.FirstChild();
+    return mCaptionFrames;
   }
   if (!aListName) {
-    return mFrames.FirstChild();
+    return mFrames;
   }
-  return nsnull;
+  return nsFrameList::EmptyList();
 }
 
 nsIAtom*
@@ -238,21 +238,21 @@ nsTableOuterFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 
 NS_IMETHODIMP 
 nsTableOuterFrame::SetInitialChildList(nsIAtom*        aListName,
-                                       nsIFrame*       aChildList)
+                                       nsFrameList&    aChildList)
 {
   if (nsGkAtoms::captionList == aListName) {
     // the frame constructor already checked for table-caption display type
     mCaptionFrames.SetFrames(aChildList);
-    mCaptionFrame  = mCaptionFrames.FirstChild();
+    mCaptionFrame = mCaptionFrames.FirstChild();
   }
   else {
     NS_ASSERTION(!aListName, "wrong childlist");
     NS_ASSERTION(mFrames.IsEmpty(), "Frame leak!");
-    mFrames.SetFrames(aChildList);
     mInnerTableFrame = nsnull;
-    if (aChildList) {
-      if (nsGkAtoms::tableFrame == aChildList->GetType()) {
-        mInnerTableFrame = (nsTableFrame*)aChildList;
+    if (aChildList.NotEmpty()) {
+      if (nsGkAtoms::tableFrame == aChildList.FirstChild()->GetType()) {
+        mInnerTableFrame = (nsTableFrame*)aChildList.FirstChild();
+        mFrames.SetFrames(aChildList);
       }
       else {
         NS_ERROR("expected a table frame");
@@ -393,16 +393,14 @@ nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilde
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsPresContext* aPresContext,
-                                             nsIDOMRange *aRange,
-                                             PRBool aSelected,
-                                             nsSpread aSpread,
-                                             SelectionType aType)
+void
+nsTableOuterFrame::SetSelected(PRBool        aSelected,
+                               SelectionType aType)
 {
-  nsresult result = nsFrame::SetSelected(aPresContext, aRange,aSelected, aSpread, aType);
-  if (NS_SUCCEEDED(result) && mInnerTableFrame)
-    return mInnerTableFrame->SetSelected(aPresContext, aRange,aSelected, aSpread, aType);
-  return result;
+  nsFrame::SetSelected(aSelected, aType);
+  if (mInnerTableFrame) {
+    mInnerTableFrame->SetSelected(aSelected, aType);
+  }
 }
 
 NS_IMETHODIMP 

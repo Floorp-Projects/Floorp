@@ -103,9 +103,9 @@ public:
   virtual PRBool IsContainingBlock() const;
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
  
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 
@@ -165,11 +165,8 @@ public:
 
   /** SetSelected needs to be overridden to talk to inner tableframe
    */
-  NS_IMETHOD SetSelected(nsPresContext* aPresContext,
-                         nsIDOMRange *aRange,
-                         PRBool aSelected,
-                         nsSpread aSpread,
-                         SelectionType aType);
+  void SetSelected(PRBool aSelected,
+                   SelectionType aType);
 
   NS_IMETHOD GetParentStyleContextFrame(nsPresContext* aPresContext,
                                         nsIFrame**      aProviderFrame,

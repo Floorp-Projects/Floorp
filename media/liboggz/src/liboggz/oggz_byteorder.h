@@ -33,11 +33,7 @@
 #ifndef __OGGZ_BYTEORDER_H__
 #define __OGGZ_BYTEORDER_H__
 
-#ifdef WIN32
-#include "config_win32.h"
-#else
 #include "config.h"
-#endif
 
 #ifdef _UNUSED_
 static  unsigned short

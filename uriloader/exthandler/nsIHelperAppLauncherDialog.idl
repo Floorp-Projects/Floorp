@@ -41,7 +41,7 @@ interface nsIHelperAppLauncher;
 interface nsILocalFile;
 
 /**
- * This interface is used to display a confirmatino dialog before
+ * This interface is used to display a confirmation dialog before
  * launching a "helper app" to handle content not handled by
  * Mozilla.
  *

@@ -302,9 +302,50 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree)
     is(children.length, aAccTree.children.length,
        "Different amount of expected children of " + prettyName(acc) + ".");
 
-    if (aAccTree.children.length == children.length) { 
+    if (aAccTree.children.length == children.length) {
+      var childCount = children.length;
+
+      // nsIAccessible::firstChild
+      var expectedFirstChild = childCount > 0 ?
+        children.queryElementAt(0, nsIAccessible) : null;
+      var firstChild = null;
+      try { firstChild = acc.firstChild; } catch (e) {}
+      is(firstChild, expectedFirstChild,
+         "Wrong first child of " + prettyName(acc));
+
+      // nsIAccessible::lastChild
+      var expectedLastChild = childCount > 0 ?
+        children.queryElementAt(childCount - 1, nsIAccessible) : null;
+      var lastChild = null;
+      try { lastChild = acc.lastChild; } catch (e) {}
+      is(lastChild, expectedLastChild,
+         "Wrong last child of " + prettyName(acc));
+
       for (var i = 0; i < children.length; i++) {
         var child = children.queryElementAt(i, nsIAccessible);
+
+        // nsIAccessible::parent
+        var parent = null;
+        try { parent = child.parent; } catch (e) {}
+        is(parent, acc, "Wrong parent of " + prettyName(child));
+
+        // nsIAccessible::nextSibling
+        var expectedNextSibling = (i < childCount - 1) ?
+          children.queryElementAt(i + 1, nsIAccessible) : null;
+        var nextSibling = null;
+        try { nextSibling = child.nextSibling; } catch (e) {}
+        is(nextSibling, expectedNextSibling,
+           "Wrong next sibling of " + prettyName(child));
+
+        // nsIAccessible::previousSibling
+        var expectedPrevSibling = (i > 0) ?
+          children.queryElementAt(i - 1, nsIAccessible) : null;
+        var prevSibling = null;
+        try { prevSibling = child.previousSibling; } catch (e) {}
+        is(prevSibling, expectedPrevSibling,
+           "Wrong previous sibling of " + prettyName(child));
+
+        // Go down through subtree
         testAccessibleTree(child, aAccTree.children[i]);
       }
     }

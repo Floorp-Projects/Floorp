@@ -813,11 +813,11 @@ mozInlineSpellChecker::SpellCheckRange(nsIDOMRange* aRange)
   return ScheduleSpellCheck(status);
 }
 
-// mozInlineSpellChecker::GetMispelledWord
+// mozInlineSpellChecker::GetMisspelledWord
 
 NS_IMETHODIMP
-mozInlineSpellChecker::GetMispelledWord(nsIDOMNode *aNode, PRInt32 aOffset,
-                                        nsIDOMRange **newword)
+mozInlineSpellChecker::GetMisspelledWord(nsIDOMNode *aNode, PRInt32 aOffset,
+                                         nsIDOMRange **newword)
 {
   NS_ENSURE_ARG_POINTER(aNode);
   nsCOMPtr<nsISelection> spellCheckSelection;
@@ -838,7 +838,7 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, PRInt32 aOffset,
   NS_ENSURE_TRUE(newword.Length() != 0, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMRange> range;
-  nsresult res = GetMispelledWord(aNode, aOffset, getter_AddRefs(range));
+  nsresult res = GetMisspelledWord(aNode, aOffset, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(res, res); 
 
   if (range)

@@ -239,7 +239,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
 
 NS_IMETHODIMP
 nsMathMLmactionFrame::SetInitialChildList(nsIAtom*        aListName,
-                                          nsIFrame*       aChildList)
+                                          nsFrameList&    aChildList)
 {
   nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aListName, aChildList);
 

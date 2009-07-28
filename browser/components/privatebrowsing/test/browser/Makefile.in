@@ -60,6 +60,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_forgetthissite.js \
 		browser_privatebrowsing_pageinfo.js \
 		browser_privatebrowsing_sslsite_transition.js \
+		browser_privatebrowsing_popupmode.js \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

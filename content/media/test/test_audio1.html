@@ -19,7 +19,7 @@ for (var i = 0; i < gAudioTests.length; ++i) {
   if (!a1.canPlayType(test.type))
     continue;
 
-  a1.setAttribute("autobuffer", "");
+  is(a1.getAttribute("autobuffer"), "autobuffer", "Autobuffer automatically set");
   a1.addEventListener('load', function(event) {
     is(event.target.networkState, HTMLMediaElement.NETWORK_LOADED,
        "Audio " + event.target.currentSrc + " loaded");

@@ -73,7 +73,7 @@ public:
     * @see nsIFrame::SetInitialChildList
     */
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
 
   /**
    * ColGroups never paint anything, nor receive events.
@@ -207,7 +207,7 @@ public:
 
   /** provide access to the mFrames list
     */
-  nsFrameList& GetChildList();
+  nsFrameList& GetWritableChildList();
 
   /** set the column index for all frames starting at aStartColFrame, it
     * will also reset the column indices in all subsequent colgroups
@@ -275,7 +275,7 @@ inline PRInt32 nsTableColGroupFrame::GetColCount() const
   return mColCount;
 }
 
-inline nsFrameList& nsTableColGroupFrame::GetChildList()
+inline nsFrameList& nsTableColGroupFrame::GetWritableChildList()
 {  
   return mFrames;
 }
