@@ -713,23 +713,12 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
 void
 nsTableFrame::AppendAnonymousColFrames(PRInt32 aNumColsToAdd)
 {
-  nsTableColFrame* prevCol = nsnull;
   // get the last col group frame
-  nsTableColGroupFrame* colGroupFrame = nsnull;
-  nsIFrame* childFrame = mColGroups.FirstChild();
-  while (childFrame) {
-    if (nsGkAtoms::tableColGroupFrame == childFrame->GetType()) {
-      colGroupFrame = (nsTableColGroupFrame *)childFrame;
-    }
-    childFrame = childFrame->GetNextSibling();
-  }
+  nsTableColGroupFrame* colGroupFrame =
+    static_cast<nsTableColGroupFrame*>(mColGroups.LastChild());
 
-  if (colGroupFrame &&
-      (colGroupFrame->GetColType() == eColGroupAnonymousCell)) {
-    prevCol =
-      static_cast<nsTableColFrame*> (colGroupFrame->GetChildList().LastChild());
-  }
-  else {
+  if (!colGroupFrame ||
+      (colGroupFrame->GetColType() != eColGroupAnonymousCell)) {
     PRInt32 colIndex = (colGroupFrame) ?
                         colGroupFrame->GetStartColumnIndex() +
                         colGroupFrame->GetColCount() : 0;
@@ -741,38 +730,26 @@ nsTableFrame::AppendAnonymousColFrames(PRInt32 aNumColsToAdd)
     mColGroups.AppendFrame(this, colGroupFrame);
     colGroupFrame->SetStartColumnIndex(colIndex);
   }
-  nsIFrame* firstNewFrame;
-  CreateAnonymousColFrames(colGroupFrame, aNumColsToAdd, eColAnonymousCell,
-                           PR_TRUE, prevCol, &firstNewFrame);
+  AppendAnonymousColFrames(colGroupFrame, aNumColsToAdd, eColAnonymousCell,
+                           PR_TRUE);
 
 }
 
 // XXX this needs to be moved to nsCSSFrameConstructor
 // Right now it only creates the col frames at the end 
 void
-nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
+nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
                                        PRInt32               aNumColsToAdd,
                                        nsTableColType        aColType,
-                                       PRBool                aAddToColGroupAndTable,         
-                                       nsIFrame*             aPrevFrameIn,
-                                       nsIFrame**            aFirstNewFrame)
+                                       PRBool                aAddToTable)
 {
   NS_PRECONDITION(aColGroupFrame, "null frame");
   NS_PRECONDITION(aColType != eColAnonymousCol, "Shouldn't happen");
 
-  *aFirstNewFrame = nsnull;
-  nsIFrame* lastColFrame = nsnull;
-  nsPresContext* presContext = PresContext();
-  nsIPresShell *shell = presContext->PresShell();
+  nsIPresShell *shell = PresContext()->PresShell();
 
   // Get the last col frame
-  nsIFrame* childFrame = aColGroupFrame->GetFirstChild(nsnull);
-  while (childFrame) {
-    if (nsGkAtoms::tableColFrame == childFrame->GetType()) {
-      lastColFrame = (nsTableColGroupFrame *)childFrame;
-    }
-    childFrame = childFrame->GetNextSibling();
-  }
+  nsFrameItems newColFrames;
 
   PRInt32 startIndex = mColFrames.Length();
   PRInt32 lastIndex  = startIndex + aNumColsToAdd - 1; 
@@ -796,35 +773,26 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     nsIFrame* colFrame = NS_NewTableColFrame(shell, styleContext);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
     colFrame->Init(iContent, aColGroupFrame, nsnull);
-    colFrame->SetInitialChildList(nsnull, nsnull);
 
-    // Add the col to the sibling chain
-    if (lastColFrame) {
-      lastColFrame->SetNextSibling(colFrame);
-    }
-    lastColFrame = colFrame;
-    if (childX == startIndex) {
-      *aFirstNewFrame = colFrame;
-    }
+    newColFrames.AddChild(colFrame);
   }
-  if (aAddToColGroupAndTable) {
-    nsFrameList& cols = aColGroupFrame->GetChildList();
-    // the chain already exists, now add it to the col group child list
-    if (!aPrevFrameIn) {
-      cols.AppendFrames(aColGroupFrame, *aFirstNewFrame);
-    }
+  nsFrameList& cols = aColGroupFrame->GetWritableChildList();
+  nsIFrame* oldLastCol = cols.LastChild();
+  nsIFrame* firstNewCol = newColFrames.FirstChild();
+  nsIFrame* lastNewCol = newColFrames.lastChild;
+  cols.InsertFrames(nsnull, oldLastCol, newColFrames);
+  if (aAddToTable) {
     // get the starting col index in the cache
-    PRInt32 startColIndex = aColGroupFrame->GetStartColumnIndex();
-    if (aPrevFrameIn) {
-      nsTableColFrame* colFrame = 
-        (nsTableColFrame*)nsTableFrame::GetFrameAtOrBefore((nsIFrame*) aColGroupFrame, aPrevFrameIn, 
-                                                           nsGkAtoms::tableColFrame);
-      if (colFrame) {
-        startColIndex = colFrame->GetColIndex() + 1;
-      }
+    PRInt32 startColIndex;
+    if (oldLastCol) {
+      startColIndex =
+        static_cast<nsTableColFrame*>(oldLastCol)->GetColIndex() + 1;
+    } else {
+      startColIndex = aColGroupFrame->GetStartColumnIndex();
     }
+
     aColGroupFrame->AddColsToTable(startColIndex, PR_TRUE, 
-                                  *aFirstNewFrame, lastColFrame);
+                                   firstNewCol, lastNewCol);
   }
 }
 
