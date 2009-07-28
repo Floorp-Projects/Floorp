@@ -27,6 +27,7 @@
  *   Johnathan Nightingale <johnath@mozilla.com>
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Taras Glek <tglek@mozilla.com>
+ *   Roy Frostig <rfrostig@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -89,6 +90,7 @@ function debug() {
     dump('visibleRect from foo: ' + getVisibleRect().toString() + endl);
 
     dump('batch depth:          ' + bv._batchOps.length + endl);
+    dump('renderpause depth:    ' + bv._renderMode + endl);
 
     dump(endl);
 
@@ -233,12 +235,12 @@ function screenToBrowserView(x, y) {
 }
 
 // Return the visible rect in terms of the tile container
-function getVisibleRect() {
+function getVisibleRect(noTranslate) {
   let container = document.getElementById("tile-container");
   let containerBCR = container.getBoundingClientRect();
 
-  let x = Math.round(-containerBCR.left);
-  let y = Math.round(-containerBCR.top);
+  let x = Math.round(noTranslate ? 0 : -containerBCR.left);
+  let y = Math.round(noTranslate ? 0 : -containerBCR.top);
   let w = window.innerWidth;
   let h = window.innerHeight;
 
@@ -279,12 +281,17 @@ var Browser = {
       },
 
       dragStop: function dragStop(dx, dy, scroller) {
-        let ret = this.dragMove(dx, dy, scroller);
+        let dx = this.dragMove(dx, dy, scroller, true);
+
+        let snapdx = Browser.snapSidebars(scroller);
+        bv.onAfterVisibleMove(snapdx, 0);
+
         bv.resumeRendering();
-        return ret;
+
+        return (dy != 0) || ((dx + snapdx) != 0);
       },
 
-      dragMove: function dragMove(dx, dy, scroller) {
+      dragMove: function dragMove(dx, dy, scroller, doReturnDX) {
         bv.onBeforeVisibleMove(dx, dy);
 
         let [x0, y0] = getScrollboxPosition(scroller);
@@ -302,7 +309,7 @@ var Browser = {
           dump('--> scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
         }
 
-        return !(realdx == 0 && realdy == 0);
+        return (doReturnDX) ? realdx : !(realdx == 0 && realdy == 0);
       }
     };
 
@@ -378,12 +385,12 @@ var Browser = {
       bv.commitBatchOperation();
     }
     window.addEventListener("resize", resizeHandler, false);
-    
+
     function fullscreenHandler() {
       if (!window.fullScreen)
         document.getElementById("toolbar-main").setAttribute("fullscreen", "true");
       else
-        document.getElementById("toolbar-main").removeAttribute("fullscreen");      
+        document.getElementById("toolbar-main").removeAttribute("fullscreen");
     }
     window.addEventListener("fullscreen", fullscreenHandler, false);
 
@@ -837,9 +844,9 @@ var Browser = {
       singleClick: function singleClick(cX, cY) {
         let browser = browserView.getBrowser();
         if (browser) {
-	  dump('singleClick was invoked with ' + cX + ', ' + cY + '\n');
+	        dump('singleClick was invoked with ' + cX + ', ' + cY + '\n');
           let [x, y] = transformScreenToBrowser(cX, cY);
-	  dump('dispatching in browser ' + x + ', ' + y + '\n');
+	        dump('dispatching in browser ' + x + ', ' + y + '\n');
           dispatchContentClick(browser, x, y);
         }
       },
@@ -850,10 +857,10 @@ var Browser = {
           let zoomElement = elementFromPoint(browser, cX2, cY2);
 
           if (zoomElement) {
-	    // TODO actually zoom to and from element
+	          // TODO actually zoom to and from element
             //browserView.zoom(this.zoomDir);
-	    //this.zoomDir *= -1;
-	    dump('zooming to/from element: ' + zoomElement + '\n');
+	          //this.zoomDir *= -1;
+	          dump('zooming to/from element: ' + zoomElement + '\n');
           }
 
           //let [x, y] = transformScreenToBrowser(cX1, cY1);
@@ -863,6 +870,57 @@ var Browser = {
         }
       }
     };
+  },
+
+  /**
+   * Returns dx of snap
+   */
+  snapSidebars: function snapSidebars(scroller) {
+    function visibility(bar, visrect) {
+      try {
+        let w = bar.width;
+        let h = bar.height;
+        bar.restrictTo(visrect); // throws exception if intersection of rects is empty
+        return [bar.width / w, bar.height / h];
+      } catch (e) {
+        return [0, 0];
+      }
+    }
+
+    let visrect = getVisibleRect(true);
+    let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
+    let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
+
+    let leftbar = new wsRect(leftbarCBR.left, leftbarCBR.top, leftbarCBR.width, leftbarCBR.height);
+    let ritebar = new wsRect(ritebarCBR.left, ritebarCBR.top, ritebarCBR.width, ritebarCBR.height);
+    let leftw = leftbar.width;
+    let ritew = ritebar.width;
+
+    let [leftvis, ] = visibility(leftbar, visrect);
+    let [ritevis, ] = visibility(ritebar, visrect);
+
+    let snappedX = 0;
+
+    if (leftvis != 0 && leftvis != 1) {
+      if (leftvis >= 0.6666)
+        snappedX = -((1 - leftvis) * leftw);
+      else
+        snappedX = leftvis * leftw;
+
+      snappedX = Math.round(snappedX);
+      scroller.scrollBy(snappedX, 0);
+    }
+    else if (ritevis != 0 && ritevis != 1) {
+      if (ritevis >= 0.6666)
+        snappedX = (1 - ritevis) * ritew;
+      else
+        snappedX = -ritevis * ritew;
+
+      snappedX = Math.round(snappedX);
+      scroller.scrollBy(snappedX, 0);
+    }
+
+    return snappedX;
   }
 };
 
@@ -1677,9 +1735,16 @@ Tab.prototype = {
   },
 
   load: function(uri) {
+    dump('browser 3: ' + this._browser.contentWindow + '\n');
     dump("cb set src\n");
     this._browser.setAttribute("src", uri);
     dump("cb end src\n");
+    dump('browser 4: ' + this._browser.contentWindow + '\n');
+    try {
+      dump('QIs to: ' + this._browser.contentWindow.QueryInterface(Ci.nsIDOMChromeWindow) + '\n');
+    } catch (e) {
+      dump('failed to QI\n');
+    }
   },
 
   create: function() {
@@ -1697,12 +1762,15 @@ Tab.prototype = {
   },
 
   _createBrowser: function() {
+    dump('for the break\n');
     if (this._browser)
       throw "Browser already exists";
 
     // Create the browser using the current width the dynamically size the height
     let scaledHeight = kDefaultBrowserWidth * (window.innerHeight / window.innerWidth);
     let browser = this._browser = document.createElement("browser");
+
+    dump('browser 1: ' + browser.contentWindow + '\n');
 
     browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden; width: " + kDefaultBrowserWidth + "px; height: " + scaledHeight + "px;");
     browser.setAttribute("type", "content");
@@ -1719,6 +1787,8 @@ Tab.prototype = {
 
     // stop about:blank from loading
     browser.stop();
+
+    dump('browser 2: ' + browser.contentWindow + '\n');
 
     // Attach a separate progress listener to the browser
     this._listener = new ProgressController(this);
