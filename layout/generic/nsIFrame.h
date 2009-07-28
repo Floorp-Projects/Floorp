@@ -543,11 +543,13 @@ public:
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
    *            initial list of frames has already been set for that child list,
-   *          NS_OK otherwise
+   *          NS_OK otherwise.  In this case, SetInitialChildList empties out
+   *            aChildList in the process of moving the frames over to its own
+   *            child list.
    * @see     #Init()
    */
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
-                                  nsIFrame*       aChildList) = 0;
+                                  nsFrameList&    aChildList) = 0;
 
   /**
    * This method is responsible for appending frames to the frame
@@ -2559,7 +2561,7 @@ nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
   nsIFrame* nextSibling =
     aPrevSibling ? aPrevSibling->GetNextSibling() : FirstChild();
   InsertFrames(aParent, aPrevSibling, firstNewFrame);
-  aFrameList.mFirstChild = nsnull;
+  aFrameList.Clear();
   return Slice(*this, firstNewFrame, nextSibling);
 }
 #endif /* nsIFrame_h___ */

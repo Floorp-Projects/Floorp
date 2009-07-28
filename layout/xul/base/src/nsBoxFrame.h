@@ -141,7 +141,7 @@ public:
   virtual nsIFrame* GetContentInsertionFrame();
 
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
-                                  nsIFrame*       aChildList);
+                                  nsFrameList&    aChildList);
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 

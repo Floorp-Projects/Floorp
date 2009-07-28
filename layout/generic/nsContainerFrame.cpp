@@ -101,8 +101,8 @@ nsContainerFrame::Init(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::SetInitialChildList(nsIAtom*  aListName,
-                                      nsIFrame* aChildList)
+nsContainerFrame::SetInitialChildList(nsIAtom*     aListName,
+                                      nsFrameList& aChildList)
 {
   nsresult  result;
   if (!mFrames.IsEmpty()) {

@@ -306,7 +306,7 @@ nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
 // frames into a separate child list, bug 343048.
 NS_IMETHODIMP
 nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
-                                  nsIFrame*       aChildList)
+                                  nsFrameList&    aChildList)
 {
 
   if (!mFrames.IsEmpty() || !mColGroups.IsEmpty()) {
@@ -320,48 +320,34 @@ nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
     NS_NOTREACHED("unknown frame list");
     return NS_ERROR_INVALID_ARG;
   } 
-  
-  nsIFrame *childFrame = aChildList;
+
+  // XXXbz the below code is an icky cesspit that's only needed in its current
+  // form for two reasons:
+  // 1) Both rowgroups and column groups come in on the principal child list.
+  // 2) Getting the last frame of a frame list is slow.
+  // Once #2 is fixed, it should be pretty easy to get rid of the
+  // SetNextSibling usage here, at least.
   nsIFrame *prevMainChild = nsnull;
   nsIFrame *prevColGroupChild = nsnull;
-  for ( ; nsnull!=childFrame; )
+  while (aChildList.NotEmpty())
   {
+    nsIFrame* childFrame = aChildList.FirstChild();
+    aChildList.RemoveFrame(childFrame);
     const nsStyleDisplay* childDisplay = childFrame->GetStyleDisplay();
-    // XXX this if should go away
-    if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
-    {
-      if (mFrames.IsEmpty()) 
-        mFrames.SetFrames(childFrame);
-      else
-        prevMainChild->SetNextSibling(childFrame);
-      prevMainChild = childFrame;
-    }
-    else if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
+
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       NS_ASSERTION(nsGkAtoms::tableColGroupFrame == childFrame->GetType(),
                    "This is not a colgroup");
-      if (mColGroups.IsEmpty())
-        mColGroups.SetFrames(childFrame);
-      else
-        prevColGroupChild->SetNextSibling(childFrame);
+      mColGroups.InsertFrame(nsnull, prevColGroupChild, childFrame);
       prevColGroupChild = childFrame;
     }
     else
-    { // unknown frames go on the main list for now
-      if (mFrames.IsEmpty())
-        mFrames.SetFrames(childFrame);
-      else
-        prevMainChild->SetNextSibling(childFrame);
+    { // row groups and unknown frames go on the main list for now
+      mFrames.InsertFrame(nsnull, prevMainChild, childFrame);
       prevMainChild = childFrame;
     }
-    nsIFrame *prevChild = childFrame;
-    childFrame = childFrame->GetNextSibling();
-    prevChild->SetNextSibling(nsnull);
   }
-  if (nsnull!=prevMainChild)
-    prevMainChild->SetNextSibling(nsnull);
-  if (nsnull!=prevColGroupChild)
-    prevColGroupChild->SetNextSibling(nsnull);
 
   // If we have a prev-in-flow, then we're a table that has been split and
   // so don't treat this like an append

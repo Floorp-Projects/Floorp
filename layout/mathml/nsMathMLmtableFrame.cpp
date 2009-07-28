@@ -659,7 +659,7 @@ nsMathMLmtableFrame::~nsMathMLmtableFrame()
 
 NS_IMETHODIMP
 nsMathMLmtableFrame::SetInitialChildList(nsIAtom*  aListName,
-                                         nsIFrame* aChildList)
+                                         nsFrameList& aChildList)
 {
   nsresult rv = nsTableFrame::SetInitialChildList(aListName, aChildList);
   if (NS_FAILED(rv)) return rv;

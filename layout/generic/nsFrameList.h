@@ -91,6 +91,14 @@ public:
 #endif
   }
 
+  void Clear() { SetFrames(nsnull); }
+
+  void SetFrames(nsFrameList& aFrameList) {
+    NS_PRECONDITION(!mFirstChild, "Losing frames");
+    mFirstChild = aFrameList.FirstChild();
+    aFrameList.Clear();
+  }
+
   class Slice;
 
   /**
@@ -108,7 +116,7 @@ public:
     NS_PRECONDITION(!aFrameList.IsEmpty(), "Unexpected empty list");
     nsIFrame* firstNewFrame = aFrameList.FirstChild();
     AppendFrames(aParent, firstNewFrame);
-    aFrameList.mFirstChild = nsnull;
+    aFrameList.Clear();
     return Slice(*this, firstNewFrame, nsnull);
   }
 
