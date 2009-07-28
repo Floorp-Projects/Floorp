@@ -135,9 +135,12 @@ public:
   /**
    * Take aFrame out of the frame list and then destroy it. This also
    * disconnects aFrame from the sibling list. This will return
-   * PR_FALSE if aFrame is nsnull or if aFrame is not in the list.
+   * PR_FALSE if aFrame is nsnull or if aFrame is not in the list. The
+   * second frame is a hint for the prev-sibling of aFrame; if the
+   * hint is correct, then the time this method takes doesn't depend
+   * on the number of previous siblings of aFrame.
    */
-  PRBool DestroyFrame(nsIFrame* aFrame);
+  PRBool DestroyFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
 
   /**
    * Inserts aNewFrame right after aPrevSibling, or prepends to
