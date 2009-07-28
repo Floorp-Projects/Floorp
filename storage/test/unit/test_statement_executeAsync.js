@@ -96,11 +96,11 @@ function test_add_data()
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (?, ?, ?, ?, ?)"
   );
-  stmt.bindInt32Parameter(0, INTEGER);
-  stmt.bindStringParameter(1, TEXT);
-  stmt.bindDoubleParameter(2, REAL);
-  stmt.bindNullParameter(3);
   stmt.bindBlobParameter(4, BLOB, BLOB.length);
+  stmt.bindNullParameter(3);
+  stmt.bindDoubleParameter(2, REAL);
+  stmt.bindStringParameter(1, TEXT);
+  stmt.bindInt32Parameter(0, INTEGER);
 
   stmt.executeAsync({
     handleResult: function(aResultSet)
