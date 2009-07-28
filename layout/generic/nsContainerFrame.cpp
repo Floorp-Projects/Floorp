@@ -1105,14 +1105,6 @@ nsContainerFrame::DisplayOverflowContainers(nsDisplayListBuilder*   aBuilder,
 }
 
 nsresult
-nsContainerFrame::AddFrames(nsIFrame* aFrameList,
-                            nsIFrame* aPrevSibling)
-{
-  mFrames.InsertFrames(nsnull, aPrevSibling, aFrameList);
-  return NS_OK;
-}
-
-nsresult
 nsContainerFrame::StealFrame(nsPresContext* aPresContext,
                              nsIFrame*      aChild,
                              PRBool         aForceNormal)

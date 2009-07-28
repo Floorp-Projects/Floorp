@@ -4893,20 +4893,20 @@ ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame)
 }
 
 nsresult
-nsBlockFrame::AddFrames(nsIFrame* aFrameList,
+nsBlockFrame::AddFrames(const nsFrameList& aFrameList,
                         nsIFrame* aPrevSibling)
 {
   // Clear our line cursor, since our lines may change.
   ClearLineCursor();
 
-  if (nsnull == aFrameList) {
+  if (aFrameList.IsEmpty()) {
     return NS_OK;
   }
 
   // If we're inserting at the beginning of our list and we have an
   // inside bullet, insert after that bullet.
   if (!aPrevSibling && mBullet && !HaveOutsideBullet()) {
-    NS_ASSERTION(!nsFrameList(aFrameList).ContainsFrame(mBullet),
+    NS_ASSERTION(!aFrameList.ContainsFrame(mBullet),
                  "Trying to make mBullet prev sibling to itself");
     aPrevSibling = mBullet;
   }
@@ -4961,7 +4961,7 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
     }
 
     // Now (partially) join the sibling lists together
-    aPrevSibling->SetNextSibling(aFrameList);
+    aPrevSibling->SetNextSibling(aFrameList.FirstChild());
   }
   else if (! mLines.empty()) {
     prevSiblingNextFrame = mLines.front()->mFirstChild;
@@ -4971,7 +4971,7 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
 
   // Walk through the new frames being added and update the line data
   // structures to fit.
-  nsIFrame* newFrame = aFrameList;
+  nsIFrame* newFrame = aFrameList.FirstChild();
   while (newFrame) {
     NS_ASSERTION(newFrame->GetType() != nsGkAtoms::placeholderFrame ||
                  (!newFrame->GetStyleDisplay()->IsAbsolutelyPositioned() &&
