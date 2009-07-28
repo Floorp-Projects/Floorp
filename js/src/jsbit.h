@@ -78,7 +78,7 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
  *
  * SWS: Added MSVC intrinsic bitscan support.  See bugs 349364 and 356856.
  */
-#if defined(_WIN32) && (_MSC_VER >= 1300) && defined(_M_IX86)
+#if defined(_WIN32) && (_MSC_VER >= 1300) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64))
 
 unsigned char _BitScanForward(unsigned long * Index, unsigned long Mask);
 unsigned char _BitScanReverse(unsigned long * Index, unsigned long Mask);
@@ -104,6 +104,31 @@ __BitScanReverse32(unsigned int val)
 # define js_bitscan_clz32(val)  __BitScanReverse32(val)
 # define JS_HAS_BUILTIN_BITSCAN32
 
+#if defined(_M_AMD64) || defined(_M_X64)
+unsigned char _BitScanForward64(unsigned long * Index, unsigned __int64 Mask);
+unsigned char _BitScanReverse64(unsigned long * Index, unsigned __int64 Mask);
+# pragma intrinsic(_BitScanForward64,_BitScanReverse64)
+
+__forceinline static int
+__BitScanForward64(unsigned __int64 val)
+{
+    unsigned long idx;
+
+    _BitScanForward64(&idx, val);
+    return (int)idx;
+}
+__forceinline static int
+__BitScanReverse64(unsigned __int64 val)
+{
+    unsigned long idx;
+
+    _BitScanReverse64(&idx, val);
+    return (int)(63-idx);
+}
+# define js_bitscan_ctz64(val)  __BitScanForward64(val)
+# define js_bitscan_clz64(val)  __BitScanReverse64(val)
+# define JS_HAS_BUILTIN_BITSCAN64
+#endif
 #elif (__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
 
 # define js_bitscan_ctz32(val)  __builtin_ctz(val)
