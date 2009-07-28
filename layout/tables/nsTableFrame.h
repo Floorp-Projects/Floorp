@@ -451,14 +451,18 @@ public:
 
   PRInt32 DestroyAnonymousColFrames(PRInt32 aNumFrames);
 
+  // Append aNumColsToAdd anonymous col frames of type eColAnonymousCell to our
+  // last eColGroupAnonymousCell colgroup.  If we have no such colgroup, then
+  // create one.
   void AppendAnonymousColFrames(PRInt32 aNumColsToAdd);
 
-  void CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
+  // Append aNumColsToAdd anonymous col frames of type aColType to
+  // aColGroupFrame.  If aAddToTable is true, also call AddColsToTable on the
+  // new cols.
+  void AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
                                 PRInt32               aNumColsToAdd,
                                 nsTableColType        aColType,
-                                PRBool                aAddToColGroupAndTable,
-                                nsIFrame*             aPrevCol,
-                                nsIFrame**            aFirstNewFrame);
+                                PRBool                aAddToTable);
 
   void MatchCellMapToColCache(nsTableCellMap* aCellMap);
   /** empty the column frame cache */
