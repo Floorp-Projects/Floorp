@@ -42,64 +42,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 /**
- * Everything that is registed in _modules gets called with each event that the
- * InputHandler is registered to listen for.
+ * InputHandler
+ *
+ * The input handler is an arbiter between the Fennec chrome window inputs and any
+ * registered input modules.  It keeps an array of input module objects.  Incoming
+ * input events are wrapped in an EventInfo object and passed down to the input modules
+ * in the order of the modules array.  Every registed module thus gets called with
+ * an EventInfo for each event that the InputHandler is registered to listen for.
+ * Currently, the InputHandler listens for the following events by default.
+ *
+ * On the Fennec global chrome window:
+ *   URLChanged
+ *   TabSelect
+ *   mouseout
+ *   mousedown
+ *   mouseup
+ *   mousemove
+ *   click
+ *
+ * On the browserViewContainer:
+ *   keydown
+ *   keyup
+ *   DOMMouseScroll
+ *
  *
  * When one of the handlers decides it wants to handle the event, it should call
  * grab() on its owner which will cause it to receive all of the events until it
  * calls ungrab().  Calling grab will notify the other handlers via a
  * cancelPending() notification.  This tells them to stop what they're doing and
  * give up hope for being the one to process the events.
- */
-
-function InputHandler() {
-  /* the list of modules that will handle input */
-  this._modules = [];
-
-  /* which module, if any, has all events directed to it */
-  this._grabber = null;
-  this._grabDepth = 0;
-
-  /* when true, don't process any events */
-  this._ignoreEvents = false;
-
-  /* when set to true, next click won't be dispatched */
-  this._suppressNextClick = true;
-
-  /* used to cancel actions with browser window changes */
-  window.addEventListener("URLChanged", this, true);
-  window.addEventListener("TabSelect", this, true);
-
-  /* used to stop everything if mouse leaves window on desktop */
-  window.addEventListener("mouseout", this, true);
-
-  /* these handle dragging of both chrome elements and content */
-  window.addEventListener("mousedown", this, true);
-  window.addEventListener("mouseup", this, true);
-  window.addEventListener("mousemove", this, true);
-  window.addEventListener("click", this, true);
-  window.addEventListener("DOMMouseScroll", this, true);
-
-  // TODO move elsewhere
-  let browserCanvas = document.getElementById("tile-container");
-  browserCanvas.addEventListener("keydown", this, true);
-  browserCanvas.addEventListener("keyup", this, true);
-
-  let useEarlyMouseMoves = gPrefService.getBoolPref("browser.ui.panning.fixup.mousemove");
-
-  this._modules.push(new MouseModule(this));
-  //this._modules.push(new ContentPanningModule(this, browserCanvas, useEarlyMouseMoves));
-  //this._modules.push(new ContentClickingModule(this));
-  //this._modules.push(new ScrollwheelModule(this, browserCanvas));
-}
-
-
-/**
- * The input handler is an arbiter between the Fennec chrome window inputs and any
- * registered input modules.  It keeps an array of input module objects.  Incoming
- * input events are wrapped in an EventInfo object and passed down to the input modules
- * in the order of the modules array.
  *
  * Input modules must provide the following interface:
  *
@@ -113,9 +86,8 @@ function InputHandler() {
  *     instance, a module may have grabbed (cf grab()) focus, in which case the
  *     InputHandler will call cancelPending() on all remaining modules.
  *
- *
- *
- * An input module may wish to grab event focus of the InputHandler, which means that it
+ * How grabbing works:
+ *   An input module may wish to grab event focus of the InputHandler, which means that it
  * wants to process all incoming events for a while.  When the InputHandler is grabbed
  * by one of its modules, only that module will receive incoming events until it ungrabs
  * the InputHandler.  No other modules' handleEvent() function will be called while the
@@ -132,7 +104,77 @@ function InputHandler() {
  * kept you from processing this whole time" to the modules of lower priority.  To prevent
  * infinite loops, this event queue is only passed to lower-priority modules.
  */
+function InputHandler(browserViewContainer) {
+  /* the list of modules that will handle input */
+  this._modules = [];
+
+  /* which module, if any, has all events directed to it */
+  this._grabber = null;
+  this._grabDepth = 0;
+
+  /* when true, don't process any events */
+  this._ignoreEvents = false;
+
+  /* when set to true, next click won't be dispatched */
+  this._suppressNextClick = true;
+
+  /* used to cancel actions with browser window changes */
+  this.listenFor(window, "URLChanged");
+  this.listenFor(window, "TabSelect");
+
+  /* used to stop everything if mouse leaves window on desktop */
+  this.listenFor(window, "mouseout");
+
+  /* these handle dragging of both chrome elements and content */
+  this.listenFor(window, "mousedown");
+  this.listenFor(window, "mouseup");
+  this.listenFor(window, "mousemove");
+  this.listenFor(window, "click");
+
+  /* these handle key strokes in the browser view (where page content appears) */
+  this.listenFor(browserViewContainer, "keydown");
+  this.listenFor(browserViewContainer, "keyup");
+  this.listenFor(browserViewContainer, "DOMMouseScroll");
+
+  //let useEarlyMouseMoves = gPrefService.getBoolPref("browser.ui.panning.fixup.mousemove");
+
+  this.addModule(new MouseModule(this));
+  this.addModule(new ScrollwheelModule(this, Browser._browserView, browserViewContainer));
+  //this.addModule(new ContentPanningModule(this, browserViewContainer, useEarlyMouseMoves));
+  //this.addModule(new ContentClickingModule(this));
+}
+
+
 InputHandler.prototype = {
+  /**
+   * Tell the InputHandler to begin handling events from target of type
+   * eventType.
+   */
+  listenFor: function listenFor(target, eventType) {
+    target.addEventListener(eventType, this, true);
+  },
+
+  /**
+   * Add a module.  Module priority is first come, first served, so modules
+   * added later have lower priority.
+   */
+  addModule: function addModule(m) {
+    this._modules.push(m);
+  },
+
+  /**
+   * Have the InputHandler begin/resume listening for events.
+   */
+  startListening: function startListening() {
+    this._ignoreEvents = false;
+  },
+
+  /**
+   * Stop/pause the InputHandler from listening for events.
+   */
+  stopListening: function stopListening() {
+    this._ignoreEvents = true;
+  },
 
   /**
    * A module calls grab(this) to grab event focus from the input handler.
@@ -145,10 +187,10 @@ InputHandler.prototype = {
    *
    * Returns true if the grab succeeded, false otherwise.
    */
-  // XXX froystig: grab(null) is supported because the old grab() supported
-  //       it, but I'm not sure why.  The comment on that was "grab(null) is
-  //       allowed because of mouseout handling".  Feel free to remove if that
-  //       is no longer relevant, or remove this comment if it still is.
+  // XXX grab(null) is supported because the old grab() supported it,
+  //  but I'm not sure why.  The comment on that was "grab(null) is allowed
+  //  because of mouseout handling".  Feel free to remove if that is no longer
+  //  relevant, or remove this comment if it still is.
   grab: function grab(grabber) {
     if (grabber == null) {
       this._grabber = null;
@@ -183,19 +225,24 @@ InputHandler.prototype = {
    * absorbed many events but wants to pass a possibly modified subset of
    * them onward to the input handling modules that didn't get to see the
    * events all along.
+   *
+   * @param grabber The grabber's object reference, as grabber proof.
+   * @param restoreEventInfos An array of EventInfo objects to pass to
+   * the handler of every module of lower priority than grabber.
    */
-  // XXX froystig: ungrab(null) is supported here too because the old ungrab()
-  //       happened to support it (not sure if intentionally; there was no
-  //       comment it), so cf the corresponding comment on grab().
+  // XXX ungrab(null) is supported here too because the old ungrab()
+  //   happened to support it (not sure if intentionally; there was no
+  //   comment it), so cf the corresponding comment on grab().
   ungrab: function ungrab(grabber, restoreEventInfos) {
     if (this._grabber == null && grabber == null) {
       this._grabber = null;
       this._grabDepth = 1;  // decremented to 0 below
     }
 
-    if (this._grabber == grabber) {
+    if (this._grabber == grabber) {  // only grabber can ungrab
       this._grabDepth--;
-      if (this._grabDepth == 0) {
+
+      if (this._grabDepth == 0) {    // all nested grabs gone
         this._grabber = null;
 
         if (restoreEventInfos) {
@@ -204,34 +251,41 @@ InputHandler.prototype = {
 
           for (let i = 0, len = mods.length; i < len; ++i) {
             if (mods[i] == grabber) {
-              grabberIndex = i;
+              grabberIndex = i;      // found the grabber's priority
               break;
             }
           }
 
           for (i = 0, len = restoreEventInfos.length; i < len; ++i)
-            this.passToModules(restoreEventInfos[i], grabberIndex + 1);
+            this._passToModules(restoreEventInfos[i], grabberIndex + 1);
         }
       }
     }
   },
 
+  /**
+   * Sometimes a module will swallow a mousedown and mouseup, which (when found
+   * in sequence) should be followed by a click.  Ideally, this module would
+   * listen for the click as well, and ignore it, but this is a convenience method
+   * for the module to do so via the InputHandler.  Hopefully the module is doing
+   * this under grab (that is, hopefully the module was grabbing while the mousedown
+   * and mouseup events came in, *not* just grabbing for making this call).
+   */
   suppressNextClick: function suppressNextClick() {
     this._suppressNextClick = true;
   },
 
+  /**
+   * Undoes any suppression caused by calling suppressNextClick(), unless the click
+   * already happened.
+   */
   allowClicks: function allowClicks() {
     this._suppressNextClick = false;
   },
 
-  startListening: function startListening() {
-    this._ignoreEvents = false;
-  },
-
-  stopListening: function stopListening() {
-    this._ignoreEvents = true;
-  },
-
+  /**
+   * InputHandler's DOM event handler.
+   */
   handleEvent: function handleEvent(aEvent) {
     if (this._ignoreEvents)
       return;
@@ -249,10 +303,14 @@ InputHandler.prototype = {
       return;
     }
 
-    this.passToModules(new InputHandler.EventInfo(aEvent));
+    this._passToModules(new InputHandler.EventInfo(aEvent));
   },
 
-  passToModules: function passToModules(evInfo, skipToIndex) {
+  /**
+   * Utility method for passing an EventInfo to the handlers of all modules beginning
+   * with the module at index skipToIndex and increasing (==> decreasing in priority).
+   */
+  _passToModules: function _passToModules(evInfo, skipToIndex) {
     if (this._grabber) {
       this._grabber.handleEvent(evInfo);
     } else {
@@ -269,12 +327,66 @@ InputHandler.prototype = {
 };
 
 
+/**
+ * Helper class to InputHandler.  Wraps a DOM event with some additional data.
+ */
 InputHandler.EventInfo = function EventInfo(aEvent, timestamp) {
   this.event = aEvent;
   this.time = timestamp || Date.now();
 };
 
 
+/**
+ * MouseModule
+ *
+ * Input handler module that handles all mouse-related input such as dragging and
+ * clicking.
+ *
+ * The Fennec chrome DOM tree has elements that are augmented dynamically with
+ * custom JS properties that tell the MouseModule they have custom support for
+ * either dragging or clicking.  These JS properties are JS objects that expose
+ * an interface supporting dragging or clicking (though currently we only look
+ * to drag scrollable elements).
+ *
+ * The MouseModule grabs event focus of the input handler on mousedown, at which
+ * point it will attempt to find such custom draggers/clickers by walking up the
+ * DOM tree from the event target.  It ungrabs event focus on mouseup.  It
+ * redispatches the swallowed mousedown, mouseup events back to chrome, so that
+ * chrome elements still get their events.
+ *
+ * A custom dragger is a JS property that lives on a scrollable DOM element,
+ * accessible as myElement.customDragger.  The customDragger must support the
+ * following interface:  (The `scroller' argument is given for convenience, and
+ * is the object reference to the element's scrollbox object).
+ *
+ *   dragStart(scroller)
+ *     Signals the beginning of a drag.
+ *
+ *   dragStop(dx, dy, scroller)
+ *     Signals the end of a drag.  The dx, dy parameters may be non-zero to
+ *     indicate one last drag movement.
+ *
+ *   dragMove(dx, dy, scroller)
+ *     Signals an input attempt to drag by dx, dy.
+ *
+ * Between mousedown and mouseup, MouseModule incrementally drags and updates
+ * the dragger accordingly, and also determines whether a [double-]click occured
+ * (based on whether the input moves have moved outside of a certain drag disk
+ * centered at the mousedown position).  If a [double-]click happened, any
+ * customClicker will be notified.  The customClicker must support the following
+ * interface:
+ *
+ *   singleClick(cx, cy)
+ *     Signals a single (as opposed to double) click occured at client
+ *     coordinates cx, cy
+ *
+ *   doubleClick(cx1, cy1, cx2, cy2)
+ *     Signals a doubleclick occured, with the first click at client coordinates
+ *     cx1, cy1, and second click at client coordinates cx2, cy2.
+ *
+ * There is a default dragger in case a scrollable element is dragged --- see
+ * the defaultDragger prototype property.  There is no default clicker.
+ */
 function MouseModule(owner) {
   this._owner = owner;
   this._dragData = new DragData(this, 50, 200);
@@ -313,15 +425,27 @@ MouseModule.prototype = {
   },
 
   /**
-   * This gets invoked by owner if another module grabs.  Reset our state or something.
-   * This is probably silly and unexpected, and should just be a noop.
+   * This gets invoked by the input handler if another module grabs.  We should
+   * reset our state or something here.  This is probably doing the wrong thing
+   * in its current form.
    */
   cancelPending: function cancelPending() {
-    this._kinetic.end();
+    if (this._kinetic.isActive())
+      this._kinetic.end();
+
     this._dragData.reset();
     this._targetScrollInterface = null;
   },
 
+  /**
+   * Handle a mousedown by stopping any lingering kinetic drag, walking DOM tree
+   * in search of a scrollable element (and its custom dragger if available) and
+   * a clicker, and initiating a drag if we have said scrollable element.  The
+   * mousedown event is entirely swallowed but is saved for later redispatching,
+   * once we know right and proper what the input is trying to do to us.
+   *
+   * We grab() in here.
+   */
   _onMouseDown: function _onMouseDown(evInfo) {
     this._owner.allowClicks();
     if (this._kinetic.isActive())
@@ -352,6 +476,15 @@ MouseModule.prototype = {
     this._recordEvent(evInfo);
   },
 
+  /**
+   * Handle a mouseup by swallowing the event (just as we did the mousedown) as
+   * well as the possible DOM click event that follows, making one last drag
+   * (which, do note, might just be the beginning of a kinetic drag that will
+   * linger long after we are gone), and recording the mousedown for later
+   * redispatching.
+   *
+   * We ungrab() in here.
+   */
   _onMouseUp: function _onMouseUp(evInfo) {
     let dragData = this._dragData;
 
@@ -359,7 +492,7 @@ MouseModule.prototype = {
     evInfo.event.preventDefault();
 
     // we are swallowing mousedown and mouseup, so we should swallow their
-    // corresponding click, too
+    // potential corresponding click, too
     this._owner.suppressNextClick();
 
     let [sX, sY] = [evInfo.event.screenX, evInfo.event.screenY];
@@ -378,6 +511,9 @@ MouseModule.prototype = {
     this._owner.ungrab(this);
   },
 
+  /**
+   * If we're in a drag, do what we have to do to drag on.
+   */
   _onMouseMove: function _onMouseMove(evInfo) {
     let dragData = this._dragData;
 
@@ -388,10 +524,18 @@ MouseModule.prototype = {
     }
   },
 
+  /**
+   * Record a mousedown/mouseup event for later redispatch via
+   * _redispatchDownUpEvents()
+   */
   _recordEvent: function _recordEvent(evInfo) {
     this._downUpEvents.push(evInfo);
   },
 
+  /**
+   * Redispatch all pending (un-redispatched) recorded events to the Fennec
+   * global chrome window.
+   */
   _redispatchDownUpEvents: function _redispatchDownUpEvents() {
     let evQueue = this._downUpEvents;
 
@@ -407,11 +551,10 @@ MouseModule.prototype = {
     this._owner.startListening();
   },
 
-  _clearDownUpEvents: function _clearDownUpEvents() {
-    this._downUpEvents.splice(0);
-    this._downUpDispatchedIndex = 0;
-  },
-
+  /**
+   * Helper function to _redispatchDownUpEvents() that sends a single DOM mouse
+   * event to the Fennec global chrome window.
+   */
   _redispatchChromeMouseEvent: function _redispatchChromeMouseEvent(aEvent) {
     if (!(aEvent instanceof MouseEvent)) {
       Cu.reportError("_redispatchChromeMouseEvent called with a non-mouse event");
@@ -423,6 +566,20 @@ MouseModule.prototype = {
                                        aEvent.button, aEvent.detail, 0, true);
   },
 
+  /**
+   * Clear all recorded events.  This will *not* automagically redispatch any
+   * pending un-redispatched events.  If you desire to redispatch everything
+   * in the recorded events buffer, you should call _redispatchDownUpEvents()
+   * before calling _clearDownUpEvents().
+   */
+  _clearDownUpEvents: function _clearDownUpEvents() {
+    this._downUpEvents.splice(0);
+    this._downUpDispatchedIndex = 0;
+  },
+
+  /**
+   * Inform our dragger of a dragStart and update kinetic with new data.
+   */
   _doDragStart: function _doDragStart(sX, sY) {
     let dragData = this._dragData;
 
@@ -432,6 +589,11 @@ MouseModule.prototype = {
     this._dragger.dragStart(this._targetScrollInterface);
   },
 
+  /**
+   * Finish a drag.  The third parameter is a secret one used to distinguish
+   * between the supposed end of drag caused by a mouseup and the real end
+   * of drag which happens when KineticController::end() is called.
+   */
   _doDragStop: function _doDragStop(sX, sY, kineticStop) {
     if (!kineticStop) {    // we're not really done, since now it is
                            // kinetic's turn to scroll about
@@ -450,6 +612,9 @@ MouseModule.prototype = {
     }
   },
 
+  /**
+   * Update kinetic with new data and drag.
+   */
   _doDragMove: function _doDragMove(sX, sY) {
     let dragData = this._dragData;
     let dX = dragData.sX - sX;
@@ -458,6 +623,12 @@ MouseModule.prototype = {
     return this._dragBy(dX, dY);
   },
 
+  /**
+   * Used by _doDragMove() above and by KineticController's timer to do the
+   * actual dragMove signalling to the dragger.  We'd put this in _doDragMove()
+   * but then KineticController would be adding to its own data as it signals
+   * the dragger of dragMove()s.
+   */
   _dragBy: function _dragBy(dX, dY) {
     let dragData = this._dragData;
     let sX = dragData.sX - dX;
@@ -472,7 +643,7 @@ MouseModule.prototype = {
     let commitToClicker = this._clicker && !movedOutOfRadius;
 
     if (commitToClicker) {
-      this._commitAnotherClick();  // commit this a click to the doubleclick timewait buffer
+      this._commitAnotherClick();  // commit this click to the doubleclick timewait buffer
     }
 
     this._redispatchDownUpEvents();
@@ -483,18 +654,14 @@ MouseModule.prototype = {
     }                              // _commitAndClick takes care of this.
   },
 
-  /**
-   *
-   */
   _commitAnotherClick: function _commitAnotherClick() {
-    this._doSingleClick();
-    /*
+    //this._doSingleClick();
     if (this._clickTimeout) {   // we're waiting for a second click for double
       window.clearTimeout(this._clickTimeout);
       this._doDoubleClick();
     } else {
       this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._doSingleClick(); }, 400, this);
-    }*/
+    }/**/
   },
 
   /**
@@ -550,8 +717,9 @@ MouseModule.prototype = {
         return (newX.value != oldX.value) || (newY.value != oldY.value);
       } else {
         scroller.scrollBy(dx, dy);
-        /* always say we scrolled if we can't get the position */
-        return true;
+        /* never say we scrolled if we can't get the position, as this will cause kinetic
+         * to never stop */
+        return false;
       }
     }
   },
@@ -1090,32 +1258,29 @@ ContentClickingModule.prototype = {
   }
 };
 
+
 /**
- * Scrollwheel zooming handler
+ * Input module for basic scrollwheel input.  Currently just zooms the browser
+ * view accordingly.
  */
-function ScrollwheelModule(owner, browserCanvas) {
+function ScrollwheelModule(owner, browserView, browserViewContainer) {
   this._owner = owner;
-  this._browserCanvas = browserCanvas;
+  this._browserView = browserView;
+  this._browserViewContainer = browserViewContainer;
 }
 
 ScrollwheelModule.prototype = {
-  handleEvent: function handleEvent(aEvent) {
-    if (aEvent.target !== this._browserCanvas)
-      return;
-
-    switch (aEvent.type) {
-      // UI panning events
-      case "DOMMouseScroll":
-        this._owner.grab(this);
-        Browser.canvasBrowser.zoom(aEvent.detail);
-        this._owner.ungrab(this);
-        break;
-    }
+  handleEvent: function handleEvent(evInfo) {
+    //if (evInfo.event.target === this._browserViewContainer) {
+      if (evInfo.event.type == "DOMMouseScroll") {
+        dump('got scrollwheel event on target ' + evInfo.event.target + '\n');
+        this._browserView.zoom(evInfo.event.detail);
+        evInfo.event.stopPropagation();
+        evInfo.event.preventDefault();
+      }
+    //}
   },
 
-  /* If someone else grabs events ahead of us, cancel any pending
-   * timeouts we may have.
-   */
-  cancelPending: function cancelPending() {
-  }
+  /* We don't have much state to reset if we lose event focus */
+  cancelPending: function cancelPending() {}
 };
