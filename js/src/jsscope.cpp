@@ -1649,7 +1649,7 @@ JSScopeProperty::trace(JSTracer *trc)
 {
     if (IS_GC_MARKING_TRACER(trc))
         flags |= SPROP_MARK;
-    TRACE_ID(trc, id);
+    js_TraceId(trc, id);
 
 #if JS_HAS_GETTER_SETTER
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {

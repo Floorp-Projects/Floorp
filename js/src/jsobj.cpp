@@ -5085,7 +5085,7 @@ js_TraceNativeEnumerators(JSTracer *trc)
             cursor = ne->ids;
             end = cursor + ne->length;
             do {
-                TRACE_ID(trc, *cursor);
+                js_TraceId(trc, *cursor);
             } while (++cursor != end);
         } else if (doGC) {
             js_RemoveAsGCBytes(rt, NativeEnumeratorSize(ne->length));
@@ -5748,7 +5748,6 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 {
     JSContext *cx;
     JSScope *scope;
-    JSScopeProperty *sprop;
     JSClass *clasp;
     size_t nslots, i;
     jsval v;
@@ -5772,49 +5771,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
     MeterEntryCount(scope->entryCount);
 #endif
 
-    sprop = scope->lastProp;
-    uint8 regenFlag = cx->runtime->gcRegenShapesScopeFlag;
-    if (IS_GC_MARKING_TRACER(trc) &&
-        cx->runtime->gcRegenShapes &&
-        scope->hasRegenFlag(regenFlag)) {
-        /*
-         * Either scope has its own shape, which must be regenerated, or it
-         * must have the same shape as its lastProp.
-         */
-        uint32 shape;
-
-        if (sprop) {
-            if (!(sprop->flags & SPROP_FLAG_SHAPE_REGEN)) {
-                sprop->shape = js_RegenerateShapeForGC(cx);
-                sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
-            }
-            shape = sprop->shape;
-        }
-        if (!sprop || scope->hasOwnShape()) {
-            shape = js_RegenerateShapeForGC(cx);
-            JS_ASSERT_IF(sprop, shape != sprop->shape);
-        }
-        scope->shape = shape;
-        scope->flags ^= JSScope::SHAPE_REGEN;
-
-        /* Also regenerate the shapes of empty scopes, in case they are not shared. */
-        for (JSScope *empty = scope->emptyScope;
-             empty && empty->hasRegenFlag(regenFlag);
-             empty = empty->emptyScope) {
-            empty->shape = js_RegenerateShapeForGC(cx);
-            empty->flags ^= JSScope::SHAPE_REGEN;
-        }
-    }
-    if (sprop) {
-        JS_ASSERT(scope->has(sprop));
-
-        /* Trace scope's property tree ancestor line. */
-        do {
-            if (scope->hadMiddleDelete() && !scope->has(sprop))
-                continue;
-            TRACE_SCOPE_PROPERTY(trc, sprop);
-        } while ((sprop = sprop->parent) != NULL);
-    }
+    scope->trace(trc);
 
     if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList))
         js_TraceWatchPoints(trc, obj);

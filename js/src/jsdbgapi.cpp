@@ -434,7 +434,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object == obj) {
-            TRACE_SCOPE_PROPERTY(trc, wp->sprop);
+            wp->sprop->trace(trc);
             if ((wp->sprop->attrs & JSPROP_SETTER) && wp->setter) {
                 JS_CALL_OBJECT_TRACER(trc, js_CastAsObject(wp->setter),
                                       "wp->setter");
