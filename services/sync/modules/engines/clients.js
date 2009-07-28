@@ -71,9 +71,7 @@ ClientEngine.prototype = {
 
   // We never want to change one client id to another, even if
   // they look exactly the same
-  _recordLike: function SyncEngine__recordLike(a, b) {
-    return false;
-  },
+  _findLikeId: function ClientEngine__findLikeId() {},
 
   // get and set info for clients
 
