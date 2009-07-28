@@ -1133,7 +1133,7 @@ js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return CallPropertyOp(cx, obj, id, vp, JSCPK_ARG, JS_FALSE);
 }
 
-static JSBool
+JSBool
 SetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return CallPropertyOp(cx, obj, id, vp, JSCPK_ARG, JS_TRUE);
@@ -1154,11 +1154,26 @@ js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return CheckForEscapingClosure(cx, obj, vp);
 }
 
-static JSBool
+JSBool
 SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return CallPropertyOp(cx, obj, id, vp, JSCPK_VAR, JS_TRUE);
 }
+
+JSBool JS_FASTCALL
+js_SetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval v)
+{
+    return CallPropertyOp(cx, obj, id, &v, JSCPK_ARG, JS_TRUE);
+}
+
+JSBool JS_FASTCALL
+js_SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval v)
+{
+    return CallPropertyOp(cx, obj, id, &v, JSCPK_VAR, JS_TRUE);
+}
+
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallArg, CONTEXT, OBJECT, JSID, JSVAL, 0, 0)
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_SetCallVar, CONTEXT, OBJECT, JSID, JSVAL, 0, 0)
 
 static JSBool
 call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,

@@ -9452,6 +9452,29 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
 
     JS_ASSERT_IF(entry->vcap == PCVCAP_MAKE(entry->kshape, 0, 0), scope->has(sprop));
 
+    // Fast path for CallClass. This is about 20% faster than the general case.
+    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
+        const CallInfo* ci = NULL;
+        if (sprop->setter == SetCallArg)
+            ci = &js_SetCallArg_ci;
+        else if (sprop->setter == SetCallVar)
+            ci = &js_SetCallVar_ci;
+        else
+            ABORT_TRACE("can't trace special CallClass setter");
+
+        LIns* v_ins = get(&v);
+        box_jsval(v, v_ins);
+        LIns* args[] = {
+            v_ins,
+            INS_CONST(SPROP_USERID(sprop)),
+            obj_ins,
+            cx_ins
+        };
+        LIns* call_ins = lir->insCall(ci, args);
+        guard(false, addName(lir->ins_eq0(call_ins), "guard(set upvar)"), STATUS_EXIT);
+        return JSRS_CONTINUE;
+    }
+
     /*
      * Setting a function-valued property might need to rebrand the object; we
      * don't trace that case. There's no need to guard on that, though, because
@@ -11067,8 +11090,14 @@ TraceRecorder::record_JSOP_BINDNAME()
         }
     }
 
-    if (obj != globalObj)
-        ABORT_TRACE("JSOP_BINDNAME must return global object on trace");
+    /*
+     * If obj is a js_CallClass object, then we are tracing a reference to an
+     * upvar in a heavyweight function. We cannot reach this point of the trace
+     * with a different call object because of the guard on the function call, 
+     * so we can assume the result of the bindname is constant on this trace.
+     */
+    if (obj != globalObj && OBJ_GET_CLASS(cx, obj) != &js_CallClass)
+        ABORT_TRACE("Can only trace JSOP_BINDNAME with global or call object");
 
     // The trace is specialized to this global object.  Furthermore,
     // we know it is the sole 'global' object on the scope chain: we
@@ -11076,7 +11105,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     // reached it starting from the function closure or the current
     // scopeChain, so there is nothing inner to it.  So this must be
     // the right base object.
-    stack(0, INS_CONSTPTR(globalObj));
+    stack(0, INS_CONSTPTR(obj));
     return JSRS_CONTINUE;
 }
 
@@ -11087,10 +11116,12 @@ TraceRecorder::record_JSOP_SETNAME()
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
 
     /*
-     * Trace cases that are global code or in lightweight functions scoped by
-     * the global object only.
+     * Trace only cases that are global code, in lightweight functions
+     * scoped by the global object only, or in call objects.
      */
     JSObject* obj = JSVAL_TO_OBJECT(l);
+    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass)
+        return JSRS_CONTINUE;
     if (obj != cx->fp->scopeChain || obj != globalObj)
         ABORT_TRACE("JSOP_SETNAME left operand is not the global object");
 
