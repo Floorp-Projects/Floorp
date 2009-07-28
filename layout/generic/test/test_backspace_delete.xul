@@ -202,10 +202,6 @@ function execTests() {
   testDeleteNextWord(editor.firstChild, 0, "\u00A0text.");
   // testDeleteNextWord(editor, 0, "");
 
-  // Tests for Bug 502259
-  setupTest("<p>foo</p>\n<p>bar</p>", 3);
-  testDelete(editor.firstChild.firstChild, 3, "foobar");
-
   SimpleTest.finish();
 }
 
