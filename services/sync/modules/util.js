@@ -619,7 +619,16 @@ let Utils = {
       win = win.activeWindow;
     win["open" + type].apply(win, Array.slice(arguments, 2));
   },
-
+  
+  _openChromeWindow: function Utils_openCWindow(name, uri, options, args) {
+    Utils.openWindow(name, "chrome://weave/content/" + uri, options, args);
+  },
+  
+  openWindow: function Utils_openWindow(name, uri, options, args) {
+    Utils._openWin(name, "Window", null, uri, "",
+    options || "centerscreen,chrome,dialog,resizable=yes", args);  
+  },
+    
   openDialog: function Utils_openDialog(name, uri, options, args) {
     Utils._openWin(name, "Dialog", "chrome://weave/content/" + uri, "",
       options || "centerscreen,chrome,dialog,modal,resizable=no", args);
@@ -629,10 +638,6 @@ let Utils = {
     this._genericDialogType = type;
     this.openDialog("ChangeSomething", "generic-change.xul");
   },
-  
-  openLog: function Utils_openLog() {
-    Utils.openWindow("Log", "log.xul");
-  },
 
   openLogin: function Utils_openLogin() {
     Utils.openDialog("Login", "login.xul");
@@ -641,22 +646,20 @@ let Utils = {
   openShare: function Utils_openShare() {
     Utils.openDialog("Share", "share.xul");
   },
-
+  
+  openLog: function Utils_openLog() {
+    Utils._openChromeWindow("Log", "log.xul");
+  },
   openStatus: function Utils_openStatus() {
-    Utils.openWindow("Status", "status.xul");
+    Utils._openChromeWindow("Status", "status.xul");
   },
 
   openSync: function Utils_openSync() {
-    Utils.openWindow("Sync", "pick-sync.xul");
+    Utils._openChromeWindow("Sync", "pick-sync.xul");
   },
-
-  openWindow: function Utils_openWindow(name, uri, options, args) {
-    Utils._openWin(name, "Window", null, "chrome://weave/content/" + uri,
-      "", options || "centerscreen,chrome,dialog,resizable=yes", args);
-  },
-
+  
   openWizard: function Utils_openWizard() {
-    Utils.openWindow("Wizard", "wizard.xul");
+    Utils._openChromeWindow("Wizard", "wizard.xul");
   },
   
   // assumes an nsIConverterInputStream
