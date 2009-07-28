@@ -1230,13 +1230,13 @@ nsComboboxControlFrame::Destroy()
 }
 
 
-nsIFrame*
-nsComboboxControlFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsComboboxControlFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::selectPopupList == aListName) {
-    return mPopupFrames.FirstChild();
+    return mPopupFrames;
   }
-  return nsBlockFrame::GetFirstChild(aListName);
+  return nsBlockFrame::GetChildList(aListName);
 }
 
 NS_IMETHODIMP

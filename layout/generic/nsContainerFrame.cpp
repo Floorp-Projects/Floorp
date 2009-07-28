@@ -311,28 +311,34 @@ nsContainerFrame::Destroy()
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-nsIFrame*
-nsContainerFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsContainerFrame::GetChildList(nsIAtom* aListName) const
 {
   // We only know about the unnamed principal child list and the overflow
-  // list
+  // lists
   if (nsnull == aListName) {
-    return mFrames.FirstChild();
-  } else if (nsGkAtoms::overflowList == aListName) {
+    return mFrames;
+  }
+
+  if (nsGkAtoms::overflowList == aListName) {
     nsFrameList* frameList = GetOverflowFrames();
-    return frameList ? frameList->FirstChild() : nsnull;
-  } else if (nsGkAtoms::overflowContainersList == aListName) {
+    return frameList ? *frameList : nsFrameList::EmptyList();
+  }
+
+  if (nsGkAtoms::overflowContainersList == aListName) {
     nsFrameList* list = GetPropTableFrames(PresContext(),
                           nsGkAtoms::overflowContainersProperty);
-    return (list) ? list->FirstChild() : nsnull;
-  } else if (nsGkAtoms::excessOverflowContainersList == aListName) {
+    return list ? *list : nsFrameList::EmptyList();
+  }
+
+  if (nsGkAtoms::excessOverflowContainersList == aListName) {
     nsFrameList* list = GetPropTableFrames(PresContext(),
                           nsGkAtoms::excessOverflowContainersProperty);
-    return (list) ? list->FirstChild() : nsnull;
+    return list ? *list : nsFrameList::EmptyList();
 
-  } else {
-    return nsnull;
   }
+
+  return nsFrameList::EmptyList();
 }
 
 #define NS_CONTAINER_FRAME_OVERFLOW_LIST_INDEX                   0
