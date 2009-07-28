@@ -424,33 +424,70 @@ placeitem .button-text {
   background-color: white;
 }
 
-.autocomplete-item,
-.autocomplete-item-selected {
+autocompleteresult {
   padding: 0.5mm 0.2mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
   min-height: 14.4mm; /* row size */
-  -moz-box-pack: center;
 }
 
-.autocomplete-item-selected {
+.autocompleteresult-selected {
   color: white;
   background-color: grey;
 }
 
-.autocomplete-item.noresults {
+.autocomplete-item-desc {
+  background-color: white;
+  color: blue;
+  white-space: pre;
+  font-size: 10pt !important;
+}
+
+.autocompleteresult-selected .autocomplete-item-desc {
+  background-color: grey;
+  color: blue;
+}
+
+.autocomplete-item-desc:first-line {
+  color: black;
+  font-size: 15.75pt !important;
+}
+
+.autocomplete-item-tags {
+  font-size: 11.75pt !important;
+  font-weight: lighter;
+}
+
+.autocomplete-item-tags[favorite=true]:after {
+  content: url(images/star-24.png);
+  margin: 1.6mm 2mm 0mm 1.5mm;
+}
+
+.autocompleteresult-selected .autocomplete-item-tags[favorite=true]:after {
+  background-color: grey;
+  color: yellow;
+}
+
+.autocomplete-item-image {
+  max-height: 16px;
+  max-width: 16px;
+  margin: 1.6mm 1.5mm 0mm 2mm;
+}
+
+/* no results */
+autocompleteresult.noresults {
   text-align: center;
   font-style: italic;
-  color: grey;
-  background-color: white;
   border-bottom: none;
 }
 
-.ac-result-type-bookmark {
-  list-style-image: url("chrome://browser/skin/images/star-30.png");
+autocompleteresult.noresults > .autocomplete-item-desc:first-line {
+  background-color: white;
+  color: grey;
 }
 
-.ac-result-type-tag {
-  list-style-image: url("chrome://browser/skin/images/tag-30.png");
+autocompleteresult.noresults > .autocomplete-item-image,
+autocompleteresult.noresults > .autocomplete-item-tags {
+  visibility: hidden;
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
