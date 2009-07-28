@@ -5669,13 +5669,13 @@ AdjustAppendParentForAfterContent(nsPresContext* aPresContext,
 static nsIFrame*
 FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aAfterFrame)
 {
+  nsFrameList childList(aParentFrame->GetFirstChild(nsnull));
   if (aAfterFrame) {
-    nsFrameList childList(aParentFrame->GetFirstChild(nsnull));
     NS_ASSERTION(aAfterFrame->GetParent() == aParentFrame, "Wrong parent");
     return childList.GetPrevSiblingFor(aAfterFrame);
   }
 
-  return aParentFrame->GetLastChild(nsnull);
+  return childList.LastChild();
 }
 
 /**
