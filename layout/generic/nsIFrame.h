@@ -2564,4 +2564,21 @@ nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
   aFrameList.Clear();
   return Slice(*this, firstNewFrame, nextSibling);
 }
+
+inline void
+nsFrameList::AppendFrame(nsIFrame* aParent, nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame && !aFrame->GetNextSibling(),
+                  "Shouldn't be appending more than one frame");
+  AppendFrames(aParent, aFrame);
+}
+
+inline void
+nsFrameList::InsertFrame(nsIFrame* aParent,
+                         nsIFrame* aPrevSibling,
+                         nsIFrame* aNewFrame) {
+  NS_PRECONDITION(aNewFrame && !aNewFrame->GetNextSibling(),
+                  "Shouldn't be inserting more than one frame");
+  InsertFrames(aParent, aPrevSibling, aNewFrame);
+}
 #endif /* nsIFrame_h___ */

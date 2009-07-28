@@ -84,52 +84,6 @@ nsFrameList::DestroyFrames()
   }
 }
 
-void
-nsFrameList::AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList)
-{
-  NS_PRECONDITION(nsnull != aFrameList, "null ptr");
-  if (nsnull != aFrameList) {
-    nsIFrame* lastChild = LastChild();
-    if (nsnull == lastChild) {
-      mFirstChild = aFrameList;
-    }
-    else {
-      lastChild->SetNextSibling(aFrameList);
-    }
-    if (aParent) {
-      for (nsIFrame* frame = aFrameList; frame;
-           frame = frame->GetNextSibling()) {
-        frame->SetParent(aParent);
-      }
-    }
-  }
-#ifdef DEBUG
-  CheckForLoops();
-#endif
-}
-
-void
-nsFrameList::AppendFrame(nsIFrame* aParent, nsIFrame* aFrame)
-{
-  NS_PRECONDITION(nsnull != aFrame, "null ptr");
-  if (nsnull != aFrame) {
-    NS_PRECONDITION(!aFrame->GetNextSibling(), "Can only append one frame here");
-    nsIFrame* lastChild = LastChild();
-    if (nsnull == lastChild) {
-      mFirstChild = aFrame;
-    }
-    else {
-      lastChild->SetNextSibling(aFrame);
-    }
-    if (nsnull != aParent) {
-      aFrame->SetParent(aParent);
-    }
-  }
-#ifdef DEBUG
-  CheckForLoops();
-#endif
-}
-
 PRBool
 nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
 {
@@ -161,9 +115,7 @@ PRBool
 nsFrameList::RemoveFirstChild()
 {
   if (mFirstChild) {
-    nsIFrame* nextFrame = mFirstChild->GetNextSibling();
-    mFirstChild->SetNextSibling(nsnull);
-    mFirstChild = nextFrame;
+    RemoveFrame(mFirstChild);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -178,38 +130,6 @@ nsFrameList::DestroyFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
     return PR_TRUE;
   }
   return PR_FALSE;
-}
-
-void
-nsFrameList::InsertFrame(nsIFrame* aParent,
-                         nsIFrame* aPrevSibling,
-                         nsIFrame* aNewFrame)
-{
-  NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
-  if (nsnull != aNewFrame) {
-    NS_ASSERTION(!aNewFrame->GetNextSibling(), 
-      "the pointer to this sibling will be overwritten");
-    if (aParent) {
-      aNewFrame->SetParent(aParent);
-    }
-    if (nsnull == aPrevSibling) {
-      aNewFrame->SetNextSibling(mFirstChild);
-      mFirstChild = aNewFrame;
-    }
-    else {
-      NS_ASSERTION(aNewFrame->GetParent() == aPrevSibling->GetParent(),
-                   "prev sibling has different parent");
-      nsIFrame* nextFrame = aPrevSibling->GetNextSibling();
-      NS_ASSERTION(!nextFrame ||
-                   aNewFrame->GetParent() == nextFrame->GetParent(),
-                   "next sibling has different parent");
-      aPrevSibling->SetNextSibling(aNewFrame);
-      aNewFrame->SetNextSibling(nextFrame);
-    }
-  }
-#ifdef DEBUG
-  CheckForLoops();
-#endif
 }
 
 void
