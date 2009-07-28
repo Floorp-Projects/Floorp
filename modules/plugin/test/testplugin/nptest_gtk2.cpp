@@ -154,7 +154,7 @@ pluginDrawWindow(InstanceData* instanceData, GdkDrawable* gdkWindow)
   int width = window.width;
   int height = window.height;
 
-  if (0 && instanceData->scriptableObject->drawMode == DM_SOLID_COLOR) {
+  if (instanceData->scriptableObject->drawMode == DM_SOLID_COLOR) {
     // drawing a solid color for reftests
     pluginDrawSolid(instanceData, gdkWindow, x, y, width, height);
     return;
