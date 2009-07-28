@@ -375,13 +375,6 @@ protected:
 #endif // MOZ_XUL
 
   /**
-   * Cursor helpers
-   */
-  static PRUint8*         Data32BitTo1Bit(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
-  static PRBool           IsCursorTranslucencySupported();
-  static HBITMAP          DataToBitmap(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aDepth);
-
-  /**
    * Misc.
    */
   UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
