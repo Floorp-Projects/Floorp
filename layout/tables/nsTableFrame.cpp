@@ -1214,14 +1214,14 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-nsIFrame*
-nsTableFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsTableFrame::GetChildList(nsIAtom* aListName) const
 {
   if (aListName == nsGkAtoms::colGroupList) {
-    return mColGroups.FirstChild();
+    return mColGroups;
   }
 
-  return nsHTMLContainerFrame::GetFirstChild(aListName);
+  return nsHTMLContainerFrame::GetChildList(aListName);
 }
 
 nsIAtom*

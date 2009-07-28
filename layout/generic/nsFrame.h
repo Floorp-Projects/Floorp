@@ -179,7 +179,7 @@ public:
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
   virtual nscoord GetBaseline() const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);

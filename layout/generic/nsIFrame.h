@@ -848,14 +848,23 @@ public:
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const = 0;
 
   /**
-   * Get the first child frame from the specified child list.
+   * Get the specified child list.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
-   * @return  the child frame, or NULL if there is no such child
+   * @return  the child list.  If this is an unknown list name, an empty list
+   *            will be returned.
    * @see     #GetAdditionalListName()
    */
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const = 0;
+  // XXXbz if all our frame storage were actually backed by nsFrameList, we
+  // could make this return a const reference...  nsBlockFrame is the only real
+  // culprit here.  Make sure to assign the return value of this function into
+  // a |const nsFrameList&|, not an nsFrameList.
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const = 0;
+  // XXXbz this method should go away
+  nsIFrame* GetFirstChild(nsIAtom* aListName) const {
+    return GetChildList(aListName).FirstChild();
+  }
 
   /**
    * Get the last child frame from the specified child list.

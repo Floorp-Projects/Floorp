@@ -1148,7 +1148,8 @@ nsPositionedInlineFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                           const nsRect&           aDirtyRect,
                                           const nsDisplayListSet& aLists)
 {
-  aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetFirstChild(), aDirtyRect);
+  aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetChildList(),
+				     aDirtyRect);
   return nsHTMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
@@ -1161,13 +1162,13 @@ nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsnull;
 }
 
-nsIFrame*
-nsPositionedInlineFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsPositionedInlineFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::absoluteList == aListName)
-    return mAbsoluteContainer.GetFirstChild();
+    return mAbsoluteContainer.GetChildList();
 
-  return nsInlineFrame::GetFirstChild(aListName);
+  return nsInlineFrame::GetChildList(aListName);
 }
 
 nsIAtom*
