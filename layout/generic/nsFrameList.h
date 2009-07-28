@@ -340,7 +340,9 @@ public:
 
   protected:
 #ifdef DEBUG
-    const Slice& mSlice;
+    /* Has to be an object, not a reference, since the slice could
+       well be a temporary constructed from an nsFrameList */
+    const Slice mSlice;
 #endif
     nsIFrame* mFrame; // our current frame.
     const nsIFrame* const mEnd; // The first frame we should NOT enumerate.
