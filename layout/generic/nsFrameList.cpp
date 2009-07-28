@@ -52,6 +52,20 @@
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
 
+const nsFrameList* nsFrameList::sEmptyList;
+
+/* static */
+nsresult
+nsFrameList::Init()
+{
+  NS_PRECONDITION(!sEmptyList, "Shouldn't be allocated");
+  sEmptyList = new nsFrameList();
+  if (!sEmptyList)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
+}
+
 void
 nsFrameList::Destroy()
 {
@@ -203,6 +217,8 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
                           nsIFrame* aPrevSibling,
                           nsIFrame* aFrameList)
 {
+  // XXXbz once we have fast access to last frames (and have an nsFrameList
+  // here, not an nsIFrame*), we should clean up this method significantly.
   NS_PRECONDITION(nsnull != aFrameList, "null ptr");
   if (nsnull != aFrameList) {
     nsIFrame* lastNewFrame = nsnull;
@@ -215,14 +231,20 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
     }
 
     // Get the last new frame if necessary
-    if (!lastNewFrame) {
+    if (!lastNewFrame &&
+        ((aPrevSibling && aPrevSibling->GetNextSibling()) ||
+         mFirstChild)) {
       nsFrameList tmp(aFrameList);
       lastNewFrame = tmp.LastChild();
     }
 
     // Link the new frames into the child list
-    if (nsnull == aPrevSibling) {
-      lastNewFrame->SetNextSibling(mFirstChild);
+    if (!aPrevSibling) {
+      NS_ASSERTION(lastNewFrame || !mFirstChild,
+                   "Should have lastNewFrame here");
+      if (lastNewFrame) {
+        lastNewFrame->SetNextSibling(mFirstChild);
+      }
       mFirstChild = aFrameList;
     }
     else {
@@ -233,7 +255,10 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
                    aFrameList->GetParent() == nextFrame->GetParent(),
                    "next sibling has different parent");
       aPrevSibling->SetNextSibling(aFrameList);
-      lastNewFrame->SetNextSibling(nextFrame);
+      NS_ASSERTION(lastNewFrame || !nextFrame, "Should have lastNewFrame here");
+      if (lastNewFrame) {
+        lastNewFrame->SetNextSibling(nextFrame);
+      }
     }
   }
 #ifdef DEBUG
