@@ -2071,49 +2071,11 @@ nsTableFrame::PushChildren(const FrameArray& aFrames,
     }
     nextInFlow->mFrames.InsertFrames(GetNextInFlow(), prevSibling, frames.FirstChild());
   }
-  else {
+  else if (frames.NotEmpty()) {
     // Add the frames to our overflow list
-    SetOverflowFrames(PresContext(), frames.FirstChild());
+    SetOverflowFrames(PresContext(), frames);
   }
 }
-
-// Table specific version that takes into account header and footer row group
-// frames that are repeated for continuing table frames
-//
-// Appends the overflow frames to the end of the child list, just like the
-// nsContainerFrame version does, except that there are no assertions that
-// the child list is empty (it may not be empty, because there may be repeated
-// header/footer frames)
-PRBool
-nsTableFrame::MoveOverflowToChildList(nsPresContext* aPresContext)
-{
-  PRBool result = PR_FALSE;
-
-  // Check for an overflow list with our prev-in-flow
-  nsTableFrame* prevInFlow = (nsTableFrame*)GetPrevInFlow();
-  if (prevInFlow) {
-    nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
-    if (prevOverflowFrames) {
-      // When pushing and pulling frames we need to check for whether any
-      // views need to be reparented.
-      for (nsIFrame* f = prevOverflowFrames; f; f = f->GetNextSibling()) {
-        nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, prevInFlow, this);
-      }
-      mFrames.AppendFrames(this, prevOverflowFrames);
-      result = PR_TRUE;
-    }
-  }
-
-  // It's also possible that we have an overflow list for ourselves
-  nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
-  if (overflowFrames) {
-    mFrames.AppendFrames(nsnull, overflowFrames);
-    result = PR_TRUE;
-  }
-  return result;
-}
-
-
 
 // collapsing row groups, rows, col groups and cols are accounted for after both passes of
 // reflow so that it has no effect on the calculations of reflow.

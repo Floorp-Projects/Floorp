@@ -601,15 +601,16 @@ CanvasFrame::Reflow(nsPresContext*           aPresContext,
   CanvasFrame* prevCanvasFrame = static_cast<CanvasFrame*>
                                                (GetPrevInFlow());
   if (prevCanvasFrame) {
-    nsIFrame* overflow = prevCanvasFrame->GetOverflowFrames(aPresContext, PR_TRUE);
+    nsAutoPtr<nsFrameList> overflow(prevCanvasFrame->StealOverflowFrames());
     if (overflow) {
-      NS_ASSERTION(!overflow->GetNextSibling(),
+      NS_ASSERTION(overflow->OnlyChild(),
                    "must have doc root as canvas frame's only child");
-      nsHTMLContainerFrame::ReparentFrameView(aPresContext, overflow, prevCanvasFrame, this);
+      nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, *overflow,
+                                                  prevCanvasFrame, this);
       // Prepend overflow to the our child list. There may already be
       // children placeholders for fixed-pos elements, which don't get
       // reflowed but must not be lost until the canvas frame is destroyed.
-      mFrames.InsertFrames(this, nsnull, overflow);
+      mFrames.InsertFrames(this, nsnull, *overflow);
     }
   }
 

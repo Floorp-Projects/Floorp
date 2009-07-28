@@ -203,6 +203,17 @@ public:
 
   nsIFrame* GetPrevSiblingFor(nsIFrame* aFrame) const;
 
+  /**
+   * If this frame list has only one frame, return that frame.
+   * Otherwise, return null.
+   */
+  nsIFrame* OnlyChild() const {
+    if (FirstChild() == LastChild()) {
+      return FirstChild();
+    }
+    return nsnull;
+  }
+
 #ifdef IBMBIDI
   /**
    * Return the frame before this frame in visual order (after Bidi reordering).
@@ -220,6 +231,10 @@ public:
 #ifdef DEBUG
   void List(FILE* out) const;
 #endif
+
+  static nsresult Init();
+  static void Shutdown() { delete sEmptyList; }
+  static const nsFrameList& EmptyList() { return *sEmptyList; }
 
   class Enumerator;
 
@@ -305,7 +320,9 @@ private:
 #ifdef DEBUG
   void CheckForLoops();
 #endif
-  
+
+  static const nsFrameList* sEmptyList;
+
 protected:
   nsIFrame* mFirstChild;
 };
