@@ -70,7 +70,7 @@ public:
   nsFieldSetFrame(nsStyleContext* aContext);
 
   NS_IMETHOD SetInitialChildList(nsIAtom*       aListName,
-                                 nsIFrame*      aChildList);
+                                 nsFrameList&   aChildList);
 
   NS_HIDDEN_(nscoord)
     GetIntrinsicWidth(nsIRenderingContext* aRenderingContext,
@@ -154,14 +154,15 @@ nsFieldSetFrame::IsContainingBlock() const
 
 NS_IMETHODIMP
 nsFieldSetFrame::SetInitialChildList(nsIAtom*       aListName,
-                                     nsIFrame*      aChildList)
+                                     nsFrameList&   aChildList)
 {
   // Get the content and legend frames.
-  if (aChildList->GetNextSibling()) {
-    mContentFrame = aChildList->GetNextSibling();
-    mLegendFrame  = aChildList;
+  if (!aChildList.OnlyChild()) {
+    NS_ASSERTION(aChildList.GetLength() == 2, "Unexpected child list");
+    mContentFrame = aChildList.LastChild();
+    mLegendFrame  = aChildList.FirstChild();
   } else {
-    mContentFrame = aChildList;
+    mContentFrame = aChildList.FirstChild();
     mLegendFrame  = nsnull;
   }
 

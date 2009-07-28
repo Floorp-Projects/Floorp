@@ -103,7 +103,7 @@ public:
   virtual PRBool IsContainingBlock() const;
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
  
   virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 

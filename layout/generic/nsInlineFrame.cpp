@@ -316,7 +316,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
         // Note that we don't set the parent pointer for the new frames. Instead wait
         // to do this until we actually reflow the frame. If the overflow list contains
         // thousands of frames this is a big performance issue (see bug #5588)
-        mFrames.InsertFrames(nsnull, nsnull, *prevOverflowFrames);
+        mFrames.SetFrames(*prevOverflowFrames);
         lazilySetParentPointer = PR_TRUE;
       } else {
         // Assign all floats to our block if necessary
@@ -1083,7 +1083,7 @@ nsPositionedInlineFrame::Destroy()
 
 NS_IMETHODIMP
 nsPositionedInlineFrame::SetInitialChildList(nsIAtom*        aListName,
-                                             nsIFrame*       aChildList)
+                                             nsFrameList&    aChildList)
 {
   nsresult  rv;
 

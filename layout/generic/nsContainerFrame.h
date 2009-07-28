@@ -77,8 +77,8 @@ public:
   NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame*   aParent,
                   nsIFrame*   aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsIAtom*  aListName,
-                                 nsIFrame* aChildList);
+  NS_IMETHOD SetInitialChildList(nsIAtom*     aListName,
+                                 nsFrameList& aChildList);
   NS_IMETHOD AppendFrames(nsIAtom*  aListName,
                           nsIFrame* aFrameList);
   NS_IMETHOD InsertFrames(nsIAtom*  aListName,

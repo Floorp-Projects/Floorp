@@ -1035,7 +1035,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
         nsLineList::iterator nextToLastLine = ----end_lines();
         PushLines(state, nextToLastLine);
       }
-      state.mOverflowPlaceholders.SetFrames(nsnull);
+      state.mOverflowPlaceholders.Clear();
     }
     state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
     if (NS_FRAME_IS_COMPLETE(state.mReflowStatus))
@@ -4495,7 +4495,7 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
           ReparentFrame(f, prevBlock, this);
         }
         mFloats.InsertFrames(nsnull, nsnull, oofs.mList.FirstChild());
-        oofs.mList.SetFrames(nsnull);
+        oofs.mList.Clear();
       }
     }
     
@@ -4511,7 +4511,7 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
     if (oofs.mList.NotEmpty()) {
       // The overflow floats go after our regular floats
       mFloats.AppendFrames(nsnull, oofs.mList.FirstChild());
-      oofs.mList.SetFrames(nsnull);
+      oofs.mList.Clear();
     }
   }
 
@@ -6419,7 +6419,7 @@ nsBlockFrame::Init(nsIContent*      aContent,
 
 NS_IMETHODIMP
 nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
-                                  nsIFrame*       aChildList)
+                                  nsFrameList&    aChildList)
 {
   nsresult rv = NS_OK;
 
@@ -6459,6 +6459,7 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
     if (NS_FAILED(rv)) {
       return rv;
     }
+    aChildList.Clear();
 
     // Create list bullet if this is a list-item. Note that this is done
     // here so that RenumberLists will work (it needs the bullets to

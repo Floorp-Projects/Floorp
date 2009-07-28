@@ -1196,7 +1196,8 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
     return nsnull;
   }
 
-  mDisplayFrame->SetInitialChildList(nsnull, mTextFrame);
+  nsFrameList textList(mTextFrame);
+  mDisplayFrame->SetInitialChildList(nsnull, textList);
   return mDisplayFrame;
 }
 
@@ -1241,23 +1242,22 @@ nsComboboxControlFrame::GetChildList(nsIAtom* aListName) const
 
 NS_IMETHODIMP
 nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
-                                            nsIFrame*       aChildList)
+                                            nsFrameList&    aChildList)
 {
   nsresult rv = NS_OK;
   if (nsGkAtoms::selectPopupList == aListName) {
     mPopupFrames.SetFrames(aChildList);
   } else {
-    rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
-
-    for (nsIFrame * child = aChildList; child;
-         child = child->GetNextSibling()) {
-      nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(child->GetContent());
+    for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
+      nsCOMPtr<nsIFormControl> formControl =
+        do_QueryInterface(e.get()->GetContent());
       if (formControl && formControl->GetType() == NS_FORM_INPUT_BUTTON) {
-        mButtonFrame = child;
+        mButtonFrame = e.get();
         break;
       }
     }
     NS_ASSERTION(mButtonFrame, "missing button frame in initial child list");
+    rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
   }
   return rv;
 }

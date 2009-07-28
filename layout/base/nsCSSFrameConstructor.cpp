@@ -610,6 +610,14 @@ MarkIBSpecialPrevSibling(nsIFrame *aAnonymousFrame,
                                aSpecialParent, nsnull, nsnull);
 }
 
+inline void
+SetInitialSingleChild(nsIFrame* aParent, nsIFrame* aFrame)
+{
+  NS_PRECONDITION(!aFrame->GetNextSibling(), "Should be using a frame list");
+  nsFrameList temp(aFrame);
+  aParent->SetInitialChildList(nsnull, temp);
+}
+
 // -----------------------------------------------------------
 
 static PRBool
@@ -1249,8 +1257,11 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
 
     rv = containingBlock->InsertFrames(aChildListName, insertionPoint,
                                        firstNewFrame);
+    aFrameItems.Clear();
   }
-  aFrameItems.Clear();
+
+  NS_POSTCONDITION(aFrameItems.IsEmpty(), "How did that happen?");
+
   // XXXbz And if NS_FAILED(rv), what?  I guess we need to clean up the list
   // and deal with all the placeholders... but what if the placeholders aren't
   // in the document yet?  Could that happen?
@@ -1366,10 +1377,11 @@ AdjustFloatParentPtrs(nsIFrame*                aFrame,
  * relevant frame state bits. |aState| may be null, in which case the parent
  * pointers of out-of-flow frames will remain untouched.
  */
-// XXXbz it would be nice if this could take a framelist-like thing,
-// but it would need to take some sort of sublist, not nsFrameList,
-// since the frames get inserted into their new home before we call
-// this method.
+// XXXbz it would be nice if this could take a framelist-like thing, but it
+// would need to take some sort of sublist, not nsFrameList, since the frames
+// get inserted into their new home before we call this method.  This could
+// easily take an nsFrameList::Slice if SetInitialChildList and InsertFrames
+// returned one from their respective underlying framelist ops....
 static void
 MoveChildrenTo(nsFrameManager*          aFrameManager,
                nsIFrame*                aNewParent,
@@ -2057,7 +2069,7 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   InitAndRestoreFrame(aState, content, newFrame, nsnull, innerFrame);
 
   // Put the newly created frames into the right child list
-  newFrame->SetInitialChildList(nsnull, innerFrame);
+  SetInitialSingleChild(newFrame, innerFrame);
 
   rv = aState.AddChild(newFrame, aFrameItems, content, styleContext,
                        aParentFrame);
@@ -2286,7 +2298,7 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   }
 
   cellInnerFrame->SetInitialChildList(nsnull, childItems);
-  newFrame->SetInitialChildList(nsnull, cellInnerFrame);
+  SetInitialSingleChild(newFrame, cellInnerFrame);
   aFrameItems.AddChild(newFrame);
   *aNewFrame = newFrame;
 
@@ -2913,7 +2925,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     nsIFrame *pageFrame, *canvasFrame;
     ConstructPageFrame(mPresShell, presContext, rootFrame, nsnull,
                        pageFrame, canvasFrame);
-    rootFrame->SetInitialChildList(nsnull, pageFrame);
+    SetInitialSingleChild(rootFrame, pageFrame);
 
     // The eventual parent of the document element frame.
     // XXX should this be set for every new page (in ConstructPageFrame)?
@@ -2922,7 +2934,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   }
 
   if (viewportFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    viewportFrame->SetInitialChildList(nsnull, newFrame);
+    SetInitialSingleChild(viewportFrame, newFrame);
   } else {
     viewportFrame->AppendFrames(nsnull, newFrame);
   }
@@ -2971,7 +2983,7 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
     NS_ASSERTION(prevPageContentFrame, "missing page content frame");
   }
   pageContentFrame->Init(nsnull, aPageFrame, prevPageContentFrame);
-  aPageFrame->SetInitialChildList(nsnull, pageContentFrame);
+  SetInitialSingleChild(aPageFrame, pageContentFrame);
   mFixedContainingBlock = pageContentFrame;
 
   nsRefPtr<nsStyleContext> canvasPseudoStyle;
@@ -2989,7 +3001,7 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
     NS_ASSERTION(prevCanvasFrame, "missing canvas frame");
   }
   aCanvasFrame->Init(nsnull, pageContentFrame, prevCanvasFrame);
-  pageContentFrame->SetInitialChildList(nsnull, aCanvasFrame);
+  SetInitialSingleChild(pageContentFrame, aCanvasFrame);
 
   return NS_OK;
 }
@@ -3126,7 +3138,7 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     blockFrame->SetInitialChildList(nsnull, childItems);
   }
 
-  buttonFrame->SetInitialChildList(nsnull, blockFrame);
+  SetInitialSingleChild(buttonFrame, blockFrame);
 
   if (isLeaf) {
     nsFrameItems  anonymousChildItems;
@@ -3429,31 +3441,31 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   ProcessChildren(aState, content, styleContext, blockFrame, PR_TRUE,
                   childItems, PR_TRUE);
 
-  nsIFrame * child      = childItems.FirstChild();
-  nsIFrame * previous   = nsnull;
-  nsLegendFrame* legendFrame = nsnull;
-  while (nsnull != child) {
-    legendFrame = do_QueryFrame(child);
+  nsFrameItems fieldsetKids;
+  fieldsetKids.AddChild(blockFrame);
+
+  for (nsFrameList::FrameLinkEnumerator link(childItems);
+       !link.AtEnd();
+       link.Next()) {
+    nsLegendFrame* legendFrame = do_QueryFrame(link.NextFrame());
     if (legendFrame) {
       // We want the legend to be the first frame in the fieldset child list.
       // That way the EventStateManager will do the right thing when tabbing
       // from a selection point within the legend (bug 236071), which is
       // used for implementing legend access keys (bug 81481).
       // GetAdjustedParentFrame() below depends on this frame order.
-      childItems.RemoveFrame(child, previous);
-      legendFrame->SetNextSibling(blockFrame);
-      legendFrame->SetParent(newFrame);
+      childItems.RemoveFrame(link.NextFrame(), link.PrevFrame());
+      // Make sure to reparent the legend so it has the fieldset as the parent.
+      fieldsetKids.InsertFrame(newFrame, nsnull, legendFrame);
       break;
     }
-    previous = child;
-    child = child->GetNextSibling();
   }
 
-  // Set the scrolled frame's initial child lists
+  // Set the inner frame's initial child lists
   blockFrame->SetInitialChildList(nsnull, childItems);
 
-  // Set the scroll frame's initial child list
-  newFrame->SetInitialChildList(nsnull, legendFrame ? legendFrame : blockFrame);
+  // Set the outer frame's initial child list
+  newFrame->SetInitialChildList(nsnull, fieldsetKids);
 
   // our new frame returned is the top frame which is the list frame. 
   *aNewFrame = newFrame; 
@@ -4727,7 +4739,8 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
   // abs-pos and floats are disabled in MathML children so we don't have to
   // worry about messing up those.
   blockFrame->SetInitialChildList(nsnull, *aBlockItems);
-  *aBlockItems = nsFrameItems();
+  NS_ASSERTION(aBlockItems->IsEmpty(), "What happened?");
+  aBlockItems->Clear();
   aNewItems->AddChild(blockFrame);
   return NS_OK;
 }
@@ -8317,7 +8330,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       }
 
       // Set the table cell's initial child list
-      newFrame->SetInitialChildList(nsnull, continuingBlockFrame);
+      SetInitialSingleChild(newFrame, continuingBlockFrame);
     }
   
   } else if (nsGkAtoms::lineFrame == frameType) {
@@ -8385,7 +8398,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
         return rv;
       }
       // Set the fieldset's initial child list
-      newFrame->SetInitialChildList(nsnull, continuingBlockFrame);
+      SetInitialSingleChild(newFrame, continuingBlockFrame);
     }
   } else if (nsGkAtoms::legendFrame == frameType) {
     newFrame = NS_NewLegendFrame(shell, styleContext);
@@ -9607,8 +9620,9 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     NS_ASSERTION(!blockFrame->HasView(), "need to do view reparenting");
     ReparentFrames(aState.mFrameManager, blockFrame, aFrameItems);
 
-    blockFrame->AppendFrames(nsnull, aFrameItems.FirstChild());
-    aFrameItems = nsFrameItems();
+    blockFrame->SetInitialChildList(nsnull, aFrameItems);
+    NS_ASSERTION(aFrameItems.IsEmpty(), "How did that happen?");
+    aFrameItems.Clear();
     aFrameItems.AddChild(blockFrame);
 
     aFrame->AddStateBits(NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK);
@@ -9987,7 +10001,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   InitAndRestoreFrame(aState, aTextContent, letterFrame, nsnull, aTextFrame);
 
   // And then give the text frame to the letter frame
-  letterFrame->SetInitialChildList(nsnull, aTextFrame);
+  SetInitialSingleChild(letterFrame, aTextFrame);
 
   // See if we will need to continue the text frame (does it contain
   // more than just the first-letter text or not?) If it does, then we
@@ -10097,7 +10111,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
         InitAndRestoreFrame(state, aTextContent, letterFrame, nsnull,
                             textFrame);
 
-        letterFrame->SetInitialChildList(nsnull, textFrame);
+        SetInitialSingleChild(letterFrame, textFrame);
         aResult.Clear();
         aResult.AddChild(letterFrame);
         aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
@@ -10558,7 +10572,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
     parent = columnSetFrame;
     *aNewFrame = columnSetFrame;
 
-    columnSetFrame->SetInitialChildList(nsnull, blockFrame);
+    SetInitialSingleChild(columnSetFrame, blockFrame);
   }
 
   blockFrame->SetStyleContextWithoutNotification(blockStyle);
@@ -10722,6 +10736,9 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
                                                 newFrame, blockFrame);
   }
 
+  // Save the first frame in blockKids for the MoveChildrenTo call, since
+  // SetInitialChildList will empty blockKids.
+  nsIFrame* firstBlock = blockKids.FirstChild();
   blockFrame->SetInitialChildList(nsnull, blockKids);
 
   nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
@@ -10733,7 +10750,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // parent block of the inline, but its parent pointer will be the anonymous
   // block we create...  AdjustFloatParentPtrs() deals with this by moving the
   // float from the outer state |aState| to the inner |state|.
-  MoveChildrenTo(state.mFrameManager, blockFrame, blockKids.FirstChild(), nsnull,
+  MoveChildrenTo(state.mFrameManager, blockFrame, firstBlock, nsnull,
                  &state, &aState);
 
   // What's left in childItems belongs to our trailing inline frame
@@ -10813,13 +10830,15 @@ nsCSSFrameConstructor::MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
                                                 aExistingEndFrame);
   }
 
-  // Reparent (cheaply) the child frames
+  // Reparent (cheaply) the child frames.  Have to grab the frame pointers
+  // for MoveChildrenTo now, since aFramesToMove will get cleared when we add
+  // the frames to aExistingEndFrame.  We already have newFirstChild.
   nsIFrame* existingFirstChild = aExistingEndFrame->GetFirstChild(nsnull);
   if (!existingFirstChild &&
       (aExistingEndFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     aExistingEndFrame->SetInitialChildList(nsnull, aFramesToMove);
   } else {
-    aExistingEndFrame->InsertFrames(nsnull, nsnull, aFramesToMove);
+    aExistingEndFrame->InsertFrames(nsnull, nsnull, aFramesToMove.FirstChild());
   }
   nsFrameConstructorState* startState = aTargetState ? &aState : nsnull;
   MoveChildrenTo(aState.mFrameManager, aExistingEndFrame, newFirstChild,
