@@ -676,66 +676,6 @@ CleanupFrameReferences(nsFrameManager*  aFrameManager,
 
 // -----------------------------------------------------------
 
-// Structure used when constructing formatting object trees.
-struct nsFrameItems : public nsFrameList {
-  nsIFrame* lastChild;
-  
-  nsFrameItems(nsIFrame* aFrame = nsnull);
-
-  // Appends the frame to the end of the list
-  void AddChild(nsIFrame* aChild);
-
-  void InsertFrame(nsIFrame* aParent, nsIFrame* aPrevSibling,
-                   nsIFrame* aNewFrame) {
-    nsFrameList::InsertFrame(aParent, aPrevSibling, aNewFrame);
-    if (aPrevSibling == lastChild) {
-      lastChild = aNewFrame;
-    }
-  }
-
-  void InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
-                    nsFrameItems& aFrames) {
-    nsFrameList::InsertFrames(aParent, aPrevSibling, aFrames);
-    if (aPrevSibling == lastChild) {
-      lastChild = aFrames.lastChild;
-    }
-  }
-
-  void DestroyFrame(nsIFrame* aFrameToDestroy, nsIFrame* aPrevSibling) {
-    NS_PRECONDITION((!aPrevSibling && aFrameToDestroy == FirstChild()) ||
-                    aPrevSibling->GetNextSibling() == aFrameToDestroy,
-                    "Unexpected prevsibling");
-    nsFrameList::DestroyFrame(aFrameToDestroy, aPrevSibling);
-    if (aFrameToDestroy == lastChild) {
-      lastChild = aPrevSibling;
-    }
-  }
-
-  PRBool RemoveFrame(nsIFrame* aFrameToRemove, nsIFrame* aPrevSibling) {
-    NS_PRECONDITION(!aPrevSibling ||
-                    aPrevSibling->GetNextSibling() == aFrameToRemove,
-                    "Unexpected aPrevSibling");
-    if (!aPrevSibling) {
-      aPrevSibling = GetPrevSiblingFor(aFrameToRemove);
-    }
-
-    PRBool removed = nsFrameList::RemoveFrame(aFrameToRemove, aPrevSibling);
-
-    if (aFrameToRemove == lastChild) {
-      lastChild = aPrevSibling;
-    }
-
-    return removed;
-  }
-
-  void Clear() {
-    mFirstChild = lastChild = nsnull;
-  }
-
-  // For now, until we change some SetInitialChildList signatures
-  operator nsIFrame* ()  { return FirstChild(); }
-};
-
 nsFrameItems::nsFrameItems(nsIFrame* aFrame)
   : nsFrameList(aFrame), lastChild(aFrame)
 {

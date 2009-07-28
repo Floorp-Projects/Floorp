@@ -192,12 +192,8 @@ nsTableColGroupFrame::SetInitialChildList(nsIAtom*        aListName,
     return NS_ERROR_NULL_POINTER;
 
   if (!aChildList) {
-    nsIFrame* firstChild;
-    tableFrame->CreateAnonymousColFrames(this, GetSpan(), eColAnonymousColGroup, 
-                                         PR_FALSE, nsnull, &firstChild);
-    if (firstChild) {
-      SetInitialChildList(aListName, firstChild);
-    }
+    tableFrame->AppendAnonymousColFrames(this, GetSpan(), eColAnonymousColGroup, 
+                                         PR_FALSE);
     return NS_OK; 
   }
 
