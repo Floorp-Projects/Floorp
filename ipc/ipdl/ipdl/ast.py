@@ -349,6 +349,9 @@ class TypeSpec(Node):
 
 class QualifiedId:              # FIXME inherit from node?
     def __init__(self, loc, baseid, quals=[ ]):
+        assert isinstance(baseid, str)
+        for qual in quals: assert isinstance(qual, str)
+
         self.loc = loc
         self.baseid = baseid
         self.quals = quals
