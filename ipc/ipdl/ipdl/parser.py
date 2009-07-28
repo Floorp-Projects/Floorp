@@ -163,7 +163,7 @@ tokens = [
 
 t_COLONCOLON = '::'
 
-literals = '(){}[];:,~'
+literals = '(){}[]<>;:,~'
 t_ignore = ' \f\t\v'
 
 def t_linecomment(t):
@@ -467,21 +467,36 @@ def p_ActorType(p):
 ## C++ stuff
 def p_CxxType(p):
     """CxxType : QualifiedID
-               | ID"""
+               | CxxID"""
     if isinstance(p[1], QualifiedId):
         p[0] = TypeSpec(p[1].loc, p[1])
     else:
-        loc = locFromTok(p, 1)
-        p[0] = TypeSpec(loc, QualifiedId(loc, p[1]))
+        loc, id = p[1]
+        p[0] = TypeSpec(loc, QualifiedId(loc, id))
 
 def p_QualifiedID(p):
-    """QualifiedID : QualifiedID COLONCOLON ID
-                   | ID COLONCOLON ID"""
+    """QualifiedID : QualifiedID COLONCOLON CxxID
+                   | CxxID COLONCOLON CxxID"""
     if isinstance(p[1], QualifiedId):
-        p[1].qualify(p[3])
+        loc, id = p[3]
+        p[1].qualify(id)
         p[0] = p[1]
     else:
-        p[0] = QualifiedId(locFromTok(p, 1), p[3])
+        loc1, id1 = p[1]
+        _, id2 = p[3]
+        p[0] = QualifiedId(loc1, id2, [ id1 ])
+
+def p_CxxID(p):
+    """CxxID : ID
+             | CxxTemplateInst"""
+    if isinstance(p[1], tuple):
+        p[0] = p[1]
+    else:
+        p[0] = (locFromTok(p, 1), str(p[1]))
+
+def p_CxxTemplateInst(p):
+    """CxxTemplateInst : ID '<' ID '>'"""
+    p[0] = (locFromTok(p, 1), str(p[1]) +'<'+ str(p[3]) +'>')
 
 def p_error(t):
     includeStackStr = Parser.includeStackString()
