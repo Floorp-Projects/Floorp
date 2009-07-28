@@ -105,7 +105,9 @@ public:
    * Appends frames from aFrameList to this list. If aParent
    * is not null, reparents the newly-added frames.
    */
-  void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList);
+  void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList) {
+    InsertFrames(aParent, LastChild(), aFrameList);
+  }
 
   /**
    * Appends aFrameList to this list.  If aParent is not null,
@@ -120,7 +122,9 @@ public:
     return Slice(*this, firstNewFrame, nsnull);
   }
 
-  void AppendFrame(nsIFrame* aParent, nsIFrame* aFrame);
+  /* This is implemented in nsIFrame.h because it needs to know about
+     nsIFrame. */
+  inline void AppendFrame(nsIFrame* aParent, nsIFrame* aFrame);
 
   /**
    * Take aFrame out of the frame list. This also disconnects aFrame
@@ -155,10 +159,10 @@ public:
    * list if aPrevSibling is null. If aParent is not null, also
    * reparents newly-added frame. Note that this method always
    * sets the frame's nextSibling pointer.
+   * This is implemented in nsIFrame.h because it needs to know about nsIFrame.
    */
-  void InsertFrame(nsIFrame* aParent,
-                   nsIFrame* aPrevSibling,
-                   nsIFrame* aNewFrame);
+  inline void InsertFrame(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                          nsIFrame* aNewFrame);
 
   /**
    * Inserts aFrameList right after aPrevSibling, or prepends to
