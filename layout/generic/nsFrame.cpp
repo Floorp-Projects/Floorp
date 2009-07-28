@@ -1667,12 +1667,6 @@ nsIFrame::CreateWidgetForView(nsIView* aView)
   return aView->CreateWidget(kWidgetCID);
 }
 
-nsIFrame*
-nsIFrame::GetLastChild(nsIAtom* aListName) const
-{
-  return nsLayoutUtils::GetLastSibling(GetFirstChild(aListName));
-}
-
 /**
   *
  */
