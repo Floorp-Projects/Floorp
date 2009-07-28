@@ -75,8 +75,9 @@ public:
                          nsEventStatus*  aEventStatus);
 
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus)  { return NS_OK; }
+                                 nsGUIEvent *    aEvent,
+                                 nsEventStatus*  aEventStatus,
+                                 PRBool aControlHeld)  { return NS_OK; }
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
