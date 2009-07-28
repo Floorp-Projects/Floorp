@@ -638,7 +638,6 @@ protected:
                   const nsRect&        aOriginalKidOverflowRect);
 
   nsIFrame* GetFirstBodyRowGroupFrame();
-  PRBool MoveOverflowToChildList(nsPresContext* aPresContext);
   /**
    * Push all our child frames from the aFrames array, in order, starting from the
    * frame at aPushFrom to the end of the array. The frames are put on our overflow
