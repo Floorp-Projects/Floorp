@@ -641,7 +641,7 @@ namespace nanojit
         }
     }
 
-    NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
+    NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     {
         NIns* at = 0;
         LOpcode condop = cond->opcode();
@@ -654,48 +654,48 @@ namespace nanojit
         if (branchOnFalse)
         {
             if (condop == LIR_eq)
-                JNE(targ, isfar);
+                JNE(targ);
             else if (condop == LIR_ov)
-                JNO(targ, isfar);
+                JNO(targ);
             else if (condop == LIR_lt)
-                JNL(targ, isfar);
+                JNL(targ);
             else if (condop == LIR_le)
-                JNLE(targ, isfar);
+                JNLE(targ);
             else if (condop == LIR_gt)
-                JNG(targ, isfar);
+                JNG(targ);
             else if (condop == LIR_ge)
-                JNGE(targ, isfar);
+                JNGE(targ);
             else if (condop == LIR_ult)
-                JNB(targ, isfar);
+                JNB(targ);
             else if (condop == LIR_ule)
-                JNBE(targ, isfar);
+                JNBE(targ);
             else if (condop == LIR_ugt)
-                JNA(targ, isfar);
+                JNA(targ);
             else //if (condop == LIR_uge)
-                JNAE(targ, isfar);
+                JNAE(targ);
         }
         else // op == LIR_xt
         {
             if (condop == LIR_eq)
-                JE(targ, isfar);
+                JE(targ);
             else if (condop == LIR_ov)
-                JO(targ, isfar);
+                JO(targ);
             else if (condop == LIR_lt)
-                JL(targ, isfar);
+                JL(targ);
             else if (condop == LIR_le)
-                JLE(targ, isfar);
+                JLE(targ);
             else if (condop == LIR_gt)
-                JG(targ, isfar);
+                JG(targ);
             else if (condop == LIR_ge)
-                JGE(targ, isfar);
+                JGE(targ);
             else if (condop == LIR_ult)
-                JB(targ, isfar);
+                JB(targ);
             else if (condop == LIR_ule)
-                JBE(targ, isfar);
+                JBE(targ);
             else if (condop == LIR_ugt)
-                JA(targ, isfar);
+                JA(targ);
             else //if (condop == LIR_uge)
-                JAE(targ, isfar);
+                JAE(targ);
         }
         at = _nIns;
         asm_cmp(cond);
@@ -1081,7 +1081,7 @@ namespace nanojit
                 case LIR_ule:   MRA(rr, iffalsereg);    break;
                 case LIR_ugt:   MRBE(rr, iffalsereg);   break;
                 case LIR_uge:   MRB(rr, iffalsereg);    break;
-                debug_only( default: NanoAssert(0); break; )
+                default: NanoAssert(0); break;
             }
         } else if (op == LIR_qcmov) {
             NanoAssert(0);
@@ -1565,10 +1565,10 @@ namespace nanojit
             }
 
             if (c == LIR_fgt) {
-                if (branchOnFalse) { JNA(targ, false); } else { JA(targ, false); }
+                if (branchOnFalse) { JNA(targ); } else { JA(targ); }
             }
             else { // if (c == LIR_fge)
-                if (branchOnFalse) { JNAE(targ, false); } else { JAE(targ, false); }
+                if (branchOnFalse) { JNAE(targ); } else { JAE(targ); }
             }
             NIns *at = _nIns;
             Reservation *rA, *rB;
@@ -1578,9 +1578,9 @@ namespace nanojit
         }
 
         if (branchOnFalse)
-            JP(targ, false);
+            JP(targ);
         else
-            JNP(targ, false);
+            JNP(targ);
         NIns *at = _nIns;
         asm_fcmp(cond);
         return at;

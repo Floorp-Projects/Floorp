@@ -318,7 +318,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mWnd                  = nsnull;
   mPaintDC              = nsnull;
   mPrevWndProc          = nsnull;
-  mDeferredPositioner   = nsnull;
   mOldIMC               = nsnull;
   mNativeDragTarget     = nsnull;
   mInDtor               = PR_FALSE;
@@ -771,8 +770,6 @@ LPCWSTR nsWindow::WindowClass()
 // Return the proper popup window class
 LPCWSTR nsWindow::WindowPopupClass()
 {
-  const LPCWSTR className = L"MozillaDropShadowWindowClass";
-
   if (!nsWindow::sIsPopupClassRegistered) {
     WNDCLASSW wc;
 
@@ -785,7 +782,7 @@ LPCWSTR nsWindow::WindowPopupClass()
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
-    wc.lpszClassName = className;
+    wc.lpszClassName = kClassNameDropShadow;
 
     nsWindow::sIsPopupClassRegistered = ::RegisterClassW(&wc);
     if (!nsWindow::sIsPopupClassRegistered) {
@@ -796,7 +793,7 @@ LPCWSTR nsWindow::WindowPopupClass()
     }
   }
 
-  return className;
+  return kClassNameDropShadow;
 }
 
 /**************************************************************
@@ -1271,25 +1268,10 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
       }
     }
 #endif
-
-    nsIWidget *par = GetParent();
-    HDWP      deferrer = NULL;
-
-    if (nsnull != par) {
-      deferrer = ((nsWindow *)par)->mDeferredPositioner;
-    }
-
-    if (NULL != deferrer) {
-      VERIFY(((nsWindow *)par)->mDeferredPositioner = ::DeferWindowPos(deferrer,
-                            mWnd, NULL, aX, aY, 0, 0,
-                            SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
-    }
-    else {
-      ClearThemeRegion();
-      VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0,
-                            SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
-      SetThemeRegion();
-    }
+    ClearThemeRegion();
+    VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0,
+                          SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
+    SetThemeRegion();
   }
   return NS_OK;
 }
@@ -1310,29 +1292,17 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   mBounds.height = aHeight;
 
   if (mWnd) {
-    nsIWidget *par = GetParent();
-    HDWP      deferrer = NULL;
-
-    if (nsnull != par) {
-      deferrer = ((nsWindow *)par)->mDeferredPositioner;
-    }
-
     UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE;
+
 #ifndef WINCE
     if (!aRepaint) {
       flags |= SWP_NOREDRAW;
     }
 #endif
 
-    if (NULL != deferrer) {
-      VERIFY(((nsWindow *)par)->mDeferredPositioner = ::DeferWindowPos(deferrer,
-                            mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), flags));
-    }
-    else {
-      ClearThemeRegion();
-      VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), flags));
-      SetThemeRegion();
-    }
+    ClearThemeRegion();
+    VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), flags));
+    SetThemeRegion();
   }
 
   if (aRepaint)
@@ -1359,13 +1329,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   mBounds.height = aHeight;
 
   if (mWnd) {
-    nsIWidget *par = GetParent();
-    HDWP      deferrer = NULL;
-
-    if (nsnull != par) {
-      deferrer = ((nsWindow *)par)->mDeferredPositioner;
-    }
-
     UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE;
 #ifndef WINCE
     if (!aRepaint) {
@@ -1373,15 +1336,9 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
     }
 #endif
 
-    if (NULL != deferrer) {
-      VERIFY(((nsWindow *)par)->mDeferredPositioner = ::DeferWindowPos(deferrer,
-                            mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), flags));
-    }
-    else {
-      ClearThemeRegion();
-      VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), flags));
-      SetThemeRegion();
-    }
+    ClearThemeRegion();
+    VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), flags));
+    SetThemeRegion();
   }
 
   if (aRepaint)
@@ -2540,51 +2497,6 @@ nsIntPoint nsWindow::WidgetToScreenOffset()
   point.y = 0;
   ::ClientToScreen(mWnd, &point);
   return nsIntPoint(point.x, point.y);
-}
-
-/**************************************************************
- *
- * SECTION: Deferred window positioning.
- *
- * nsIWidget::BeginResizingChildren,
- * nsIWidget::EndResizingChildren
- *
- * Filters child paint events during a resize operation.
- *
- **************************************************************/
-
-NS_METHOD nsWindow::BeginResizingChildren(void)
-{
-  if (NULL == mDeferredPositioner)
-    mDeferredPositioner = ::BeginDeferWindowPos(1);
-  return NS_OK;
-}
-
-NS_METHOD nsWindow::EndResizingChildren(void)
-{
-  if (NULL != mDeferredPositioner) {
-    ::EndDeferWindowPos(mDeferredPositioner);
-    mDeferredPositioner = NULL;
-  }
-  return NS_OK;
-}
-
-LPARAM nsWindow::lParamToScreen(LPARAM lParam)
-{
-  POINT pt;
-  pt.x = GET_X_LPARAM(lParam);
-  pt.y = GET_Y_LPARAM(lParam);
-  ::ClientToScreen(mWnd, &pt);
-  return MAKELPARAM(pt.x, pt.y);
-}
-
-LPARAM nsWindow::lParamToClient(LPARAM lParam)
-{
-  POINT pt;
-  pt.x = GET_X_LPARAM(lParam);
-  pt.y = GET_Y_LPARAM(lParam);
-  ::ScreenToClient(mWnd, &pt);
-  return MAKELPARAM(pt.x, pt.y);
 }
 
 /**************************************************************
@@ -5698,13 +5610,6 @@ void nsWindow::OnDestroy()
       mtrailer->SetCaptureWindow(nsnull);
   }
 
-  // If we were in the middle of deferred window positioning then free the memory for the
-  // multiple-window position structure.
-  if (mDeferredPositioner) {
-    VERIFY(::EndDeferWindowPos(mDeferredPositioner));
-    mDeferredPositioner = NULL;
-  }
-
   // Free GDI window class objects
   if (mBrush) {
     VERIFY(::DeleteObject(mBrush));
@@ -6635,6 +6540,24 @@ PRBool nsWindow::CanTakeFocus()
     }
   }
   return PR_FALSE;
+}
+
+LPARAM nsWindow::lParamToScreen(LPARAM lParam)
+{
+  POINT pt;
+  pt.x = GET_X_LPARAM(lParam);
+  pt.y = GET_Y_LPARAM(lParam);
+  ::ClientToScreen(mWnd, &pt);
+  return MAKELPARAM(pt.x, pt.y);
+}
+
+LPARAM nsWindow::lParamToClient(LPARAM lParam)
+{
+  POINT pt;
+  pt.x = GET_X_LPARAM(lParam);
+  pt.y = GET_Y_LPARAM(lParam);
+  ::ScreenToClient(mWnd, &pt);
+  return MAKELPARAM(pt.x, pt.y);
 }
 
 /**************************************************************

@@ -2303,11 +2303,21 @@ SessionStoreService.prototype = {
       aWindow[aItem].visible = hidden.indexOf(aItem) == -1;
     });
     
-    if (aWinData.isPopup)
+    if (aWinData.isPopup) {
       this._windows[aWindow.__SSi].isPopup = true;
-    else
+      if (aWindow.gURLBar) {
+        aWindow.gURLBar.readOnly = true;
+        aWindow.gURLBar.setAttribute("enablehistory", "false");
+      }
+    }
+    else {
       delete this._windows[aWindow.__SSi].isPopup;
-    
+      if (aWindow.gURLBar) {
+        aWindow.gURLBar.readOnly = false;
+        aWindow.gURLBar.setAttribute("enablehistory", "true");
+      }
+    }
+
     var _this = this;
     aWindow.setTimeout(function() {
       _this.restoreDimensions.apply(_this, [aWindow, aWinData.width || 0, 

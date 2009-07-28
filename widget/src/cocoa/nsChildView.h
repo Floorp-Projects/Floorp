@@ -354,8 +354,6 @@ public:
                                  const nsIntRect& aSource,
                                  const nsTArray<Configuration>& aConfigurations);
   virtual nsIntPoint      WidgetToScreenOffset();
-  NS_IMETHOD              BeginResizingChildren(void);
-  NS_IMETHOD              EndResizingChildren(void);
   virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);
 
   static  PRBool          ConvertStatus(nsEventStatus aStatus)
