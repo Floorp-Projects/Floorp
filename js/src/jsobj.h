@@ -664,9 +664,6 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
  */
 const uintN JSDNP_CACHE_RESULT = 1; /* an interpreter call from JSOP_INITPROP */
 const uintN JSDNP_DONT_PURGE   = 2; /* suppress js_PurgeScopeChain */
-const uintN JSDNP_SET_METHOD   = 4; /* js_{DefineNativeProperty,SetPropertyHelper}
-                                       must pass the SPROP_IS_METHOD flag on to
-                                       js_AddScopeProperty */
 
 extern JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
@@ -716,17 +713,6 @@ extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
 
 /*
- * JSGET_CACHE_RESULT is the analogue of JSDNP_CACHE_RESULT for js_GetMethod.
- *
- * JSGET_METHOD_BARRIER enables a read barrier that preserves standard function
- * object semantics (by default we assume our caller won't leak a joined callee
- * to script, where it would create hazardous mutable object sharing as well as
- * observable identity according to == and ===.
- */
-const uintN JSGET_CACHE_RESULT   = 1; // call from a caching interpreter opcode
-const uintN JSGET_METHOD_BARRIER = 2; // caller may leak shared function object
-
-/*
  * NB: js_NativeGet and js_NativeSet are called with the scope containing sprop
  * (pobj's scope for Get, obj's for Set) locked, and on successful return, that
  * scope is again locked.  But on failure, both functions return false with the
@@ -734,20 +720,21 @@ const uintN JSGET_METHOD_BARRIER = 2; // caller may leak shared function object
  */
 extern JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
-             JSScopeProperty *sprop, uintN getHow, jsval *vp);
+             JSScopeProperty *sprop, jsval *vp);
 
 extern JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp);
 
 extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                      jsval *vp);
 
 extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
-js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp);
+js_GetMethod(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
+             jsval *vp);
 
 /*
  * Check whether it is OK to assign an undeclared property of the global
@@ -757,7 +744,7 @@ extern JS_FRIEND_API(JSBool)
 js_CheckUndeclaredVarAssignment(JSContext *cx);
 
 extern JSBool
-js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                      jsval *vp);
 
 extern JSBool
