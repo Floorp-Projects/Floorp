@@ -1997,7 +1997,7 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
                           + GetCompactIndexWidth(len);
         return JS_TRUE;
     }
-    
+
     return ParseRegExp(&state);
 }
 
@@ -2410,7 +2410,7 @@ class RegExpNativeCompiler {
             LIns *branch = lir->insBranch(LIR_jt, test, 0);
             extras[i].match = branch;
         }
-            
+
         fails.pushBack(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, text_ch, lir->insImm(ch)), 0));
 
         for (int i = 0; i < nextras; ++i)
@@ -2418,7 +2418,7 @@ class RegExpNativeCompiler {
         return lir->ins2(LIR_piadd, pos, lir->insImm(2));
     }
 
-    JS_INLINE bool hasCases(jschar ch) 
+    JS_INLINE bool hasCases(jschar ch)
     {
         return JS_TOLOWER(ch) != JS_TOUPPER(ch);
     }

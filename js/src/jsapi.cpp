@@ -1328,7 +1328,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
     /* Define a top-level property 'undefined' with the undefined value. */
     atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, 
+                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT,
                              NULL)) {
         return JS_FALSE;
     }
@@ -1535,7 +1535,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     if (idstr == ATOM_TO_STRING(atom)) {
         *resolved = JS_TRUE;
         return OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), JSVAL_VOID,
-                                   JS_PropertyStub, JS_PropertyStub, 
+                                   JS_PropertyStub, JS_PropertyStub,
                                    JSPROP_PERMANENT, NULL);
     }
 
@@ -1630,7 +1630,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!AlreadyHasOwnProperty(cx, obj, atom) &&
         !OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, 
+                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT,
                              NULL)) {
         return JS_FALSE;
     }
@@ -3001,7 +3001,7 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
                                          attrs, flags, tinyid, NULL);
     }
     return OBJ_DEFINE_PROPERTY(cx, obj, id, value, getter, setter, attrs,
-                               NULL);   
+                               NULL);
 }
 
 static JSBool
@@ -3720,7 +3720,7 @@ JS_HasUCProperty(JSContext *cx, JSObject *obj,
     JSProperty *prop;
 
     CHECK_REQUEST(cx);
-    ok = LookupUCProperty(cx, obj, name, namelen, 
+    ok = LookupUCProperty(cx, obj, name, namelen,
                           JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING,
                           &obj2, &prop);
     if (ok) {
@@ -5197,7 +5197,7 @@ JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback)
 {
 #ifdef JS_THREADSAFE
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-#endif    
+#endif
     JSOperationCallback old = cx->operationCallback;
     cx->operationCallback = callback;
     return old;
