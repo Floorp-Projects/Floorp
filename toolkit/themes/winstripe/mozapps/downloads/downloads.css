@@ -3,7 +3,7 @@
 }
 
 /* Download View */
-#downloadView {
+#downloadView:not(:-moz-system-metric(windows-classic)) {
   -moz-appearance: none !important;
   margin: 0;
   border-bottom: 2px solid;

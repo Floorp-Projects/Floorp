@@ -1985,6 +1985,23 @@ namespace nanojit
 
     LInsp CseFilter::insGuard(LOpcode v, LInsp c, LInsp x)
     {
+        // LIR_xt and LIR_xf guards are CSEable.  Note that we compare the
+        // opcode and condition when determining if two guards are equivalent
+        // -- in find1(), hash1(), equals() and hashcode() -- but we do *not*
+        // compare the GuardRecord.  This works because:
+        // - If guard 1 is taken (exits) then guard 2 is never reached, so
+        //   guard 2 can be removed.
+        // - If guard 1 is not taken then neither is guard 2, so guard 2 can
+        //   be removed.
+        //
+        // The underlying assumptions that are required for this to be safe:
+        // - There's never a path from the side exit of guard 1 back to guard
+        //   2;  for tree-shaped fragments this should be true.
+        // - GuardRecords do not contain information other than what is needed
+        //   to execute a successful exit.  That is currently true.
+        // - The CSE algorithm will always keep guard 1 and remove guard 2
+        //   (not vice versa).  The current algorithm does this.
+        //
         if (isCseOpcode(v)) {
             // conditional guard
             NanoAssert(operandCount[v]==1);

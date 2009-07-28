@@ -313,59 +313,6 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
   return NS_OK;
 }
 
-
-//-------------------------------------------------------------------------
-//
-// Deferred Window positioning
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::BeginResizingChildren(void)
-{
-   if( !mSWPs)
-   {
-      mlHave = 10;
-      mlUsed = 0;
-      mSWPs = (PSWP) malloc( 10 * sizeof( SWP));
-   }
-   return NS_OK;
-}
-
-void nsWindow::DeferPosition( HWND hwnd, HWND hwndInsertBehind,
-                              long x, long y, long cx, long cy, ULONG flags)
-{
-   if( mSWPs)
-   {
-      if( mlHave == mlUsed) // need more swps
-      {
-         mlHave += 10;
-         mSWPs = (PSWP) realloc( mSWPs, mlHave * sizeof( SWP));
-      }
-      mSWPs[ mlUsed].hwnd = hwnd;
-      mSWPs[ mlUsed].hwndInsertBehind = hwndInsertBehind;
-      mSWPs[ mlUsed].x = x;
-      mSWPs[ mlUsed].y = y;
-      mSWPs[ mlUsed].cx = cx;
-      mSWPs[ mlUsed].cy = cy;
-      mSWPs[ mlUsed].fl = flags;
-      mSWPs[ mlUsed].ulReserved1 = 0;
-      mSWPs[ mlUsed].ulReserved2 = 0;
-      mlUsed++;
-   }
-}
-
-NS_METHOD nsWindow::EndResizingChildren(void)
-{
-   if( nsnull != mSWPs)
-   {
-      WinSetMultWindowPos( 0/*hab*/, mSWPs, mlUsed);
-      free( mSWPs);
-      mSWPs = nsnull;
-      mlUsed = mlHave = 0;
-   }
-   return NS_OK;
-}
-
 nsIntPoint nsWindow::WidgetToScreenOffset()
 {
   POINTL point = { 0, 0 };

@@ -1907,18 +1907,6 @@ nsWindow::WidgetToScreenOffset()
 }
 
 NS_IMETHODIMP
-nsWindow::BeginResizingChildren(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWindow::EndResizingChildren(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::EnableDragDrop(PRBool aEnable)
 {
     return NS_OK;
