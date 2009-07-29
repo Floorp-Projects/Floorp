@@ -166,8 +166,10 @@ public:
 #if defined(JS_JIT_SPEW) || defined(MOZ_NO_VARADIC_MACROS)
 
 enum LC_TMBits {
-    /* Output control bits for all non-Nanojit code.  Only use bits 16
-       and above, since Nanojit uses 0 .. 15 itself. */
+    /*
+     * Output control bits for all non-Nanojit code.  Only use bits 16 and
+     * above, since Nanojit uses 0 .. 15 itself.
+     */
     LC_TMMinimal  = 1<<16,
     LC_TMTracer   = 1<<17,
     LC_TMRecorder = 1<<18,
@@ -192,14 +194,22 @@ extern nanojit::LogControl js_LogController;
 
 #define debug_only_stmt(stmt) \
     stmt
-#define debug_only_printf(mask, fmt, ...) \
-    do { if ((js_LogController.lcbits & (mask)) > 0) {             \
-        js_LogController.printf(fmt, __VA_ARGS__); fflush(stdout); \
-    }} while (0)
-#define debug_only_print0(mask, str) \
-    do { if ((js_LogController.lcbits & (mask)) > 0) { \
-        js_LogController.printf(str); fflush(stdout);  \
-    }} while (0)
+
+#define debug_only_printf(mask, fmt, ...)                                      \
+    JS_BEGIN_MACRO                                                             \
+        if ((js_LogController.lcbits & (mask)) > 0) {                          \
+            js_LogController.printf(fmt, __VA_ARGS__);                         \
+            fflush(stdout);                                                    \
+        }                                                                      \
+    JS_END_MACRO
+
+#define debug_only_print0(mask, str)                                           \
+    JS_BEGIN_MACRO                                                             \
+        if ((js_LogController.lcbits & (mask)) > 0) {                          \
+            js_LogController.printf("%s", str);                                \
+            fflush(stdout);                                                    \
+        }                                                                      \
+    JS_END_MACRO
 
 #else
 
@@ -333,7 +343,6 @@ public:
     _(DEEP_BAIL)                                                                \
     _(STATUS)
 
-
 enum ExitType {
     #define MAKE_EXIT_CODE(x) x##_EXIT,
     JS_TM_EXITCODES(MAKE_EXIT_CODE)
@@ -373,21 +382,6 @@ struct VMSideExit : public nanojit::SideExit
         nativeCalleeWord = uintptr_t(callee) | (constructing ? 1 : 0);
     }
 };
-
-static inline JSTraceType* getStackTypeMap(nanojit::SideExit* exit)
-{
-    return (JSTraceType*)(((VMSideExit*)exit) + 1);
-}
-
-static inline JSTraceType* getGlobalTypeMap(nanojit::SideExit* exit)
-{
-    return getStackTypeMap(exit) + ((VMSideExit*)exit)->numStackSlots;
-}
-
-static inline JSTraceType* getFullTypeMap(nanojit::SideExit* exit)
-{
-    return getStackTypeMap(exit);
-}
 
 struct FrameInfo {
     JSObject*       callee;     // callee function object
