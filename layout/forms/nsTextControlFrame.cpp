@@ -2734,18 +2734,6 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   // than descending from the root frame of the frame hierarchy.
   first->AddStateBits(NS_FRAME_REFLOW_ROOT);
 
-  nsIScrollableFrame *scrollableFrame = do_QueryFrame(first);
-  NS_ASSERTION(scrollableFrame, "Child must be scrollable");
-
-  // we must turn off scrollbars for singleline text controls
-  // XXX FIXME this should be removed,
-  // nsGfxScrollFrameInner::CreateAnonymousContent handles this
-  if (IsSingleLineTextControl()) 
-  {
-    if (scrollableFrame)
-      scrollableFrame->SetScrollbarVisibility(PR_FALSE, PR_FALSE);
-  }
-
   //register key listeners
   nsCOMPtr<nsIDOMEventGroup> systemGroup;
   mContent->GetSystemEventGroup(getter_AddRefs(systemGroup));
