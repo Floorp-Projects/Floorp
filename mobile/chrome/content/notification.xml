@@ -22,7 +22,7 @@
             <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
             <xul:spacer flex="1"/>
           </xul:hbox>
-          <xul:hbox pack="center"
+          <xul:hbox pack="center" class="buttons"
                     oncommand="document.getBindingParent(this)._doButtonCommand(event);">
             <children/>
           </xul:hbox>
