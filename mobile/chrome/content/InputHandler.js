@@ -290,6 +290,12 @@ InputHandler.prototype = {
     if (this._ignoreEvents)
       return;
 
+    /* ignore all events that belong to other windows or documents (e.g. content events) */
+    if (aEvent.target != window
+        && aEvent.target != document
+        && (!aEvent.target.ownerDocument || aEvent.target.ownerDocument != document))
+      return;
+
     /* changing URL or selected a new tab will immediately stop active input handlers */
     if (aEvent.type == "URLChanged" || aEvent.type == "TabSelect") {
       this.grab(null);
@@ -771,6 +777,7 @@ MouseModule.prototype = {
   getScrollboxFromElement: function getScrollboxFromElement(elem) {
     let scrollbox = null;
     let qinterface = null;
+    let prev = null;
 
     for (; elem; elem = elem.parentNode) { dump(elem + '\n');
       try {
@@ -786,15 +793,16 @@ MouseModule.prototype = {
                                      : elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
           if (qi) {
             scrollbox = elem;
-            elem._cachedSBO = qinterface = qi;
+            scrollbox._cachedSBO = qinterface = qi;
             break;
           }
         }
       } catch (e) { /* we aren't here to deal with your exceptions, we'll just keep
                        traversing until we find something more well-behaved, as we
                        prefer default behaviour to whiny scrollers. */ }
+      prev = elem;
     }
-    return [scrollbox, qinterface];
+    return [scrollbox, qinterface, prev];
   },
 
   /**
