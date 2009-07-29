@@ -206,11 +206,14 @@ public:
   void SimpleSubtract (const nsRegion& aRegion);
 
   /**
-   * Checks that nsRegion code is single threaded, if any are enabled,
-   * should henceforth assume that nsRegion code will only execute on
-   * the thread calling this function.
+   * Initialize any static data associated with nsRegion.
    */
-  static void MigrateToCurrentThread();
+  static nsresult InitStatic();
+
+  /**
+   * Deinitialize static data.
+   */
+  static void ShutdownStatic();
 
 private:
   PRUint32    mRectCount;
