@@ -315,7 +315,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 #endif
 
         if (scopeIndex != 0 || protoIndex != 1) {
-            khash = PROPERTY_CACHE_HASH_ATOM(atom, obj, pobj);
+            khash = PROPERTY_CACHE_HASH_ATOM(atom, obj);
             PCMETER(if (PCVCAP_TAG(cache->table[khash].vcap) <= 1)
                         cache->pcrecycles++);
             pc = (jsbytecode *) atom;
@@ -381,7 +381,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 
     obj = *objp;
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    entry = &JS_PROPERTY_CACHE(cx).table[PROPERTY_CACHE_HASH_ATOM(atom, obj, NULL)];
+    entry = &JS_PROPERTY_CACHE(cx).table[PROPERTY_CACHE_HASH_ATOM(atom, obj)];
     *entryp = entry;
     vcap = entry->vcap;
 
@@ -4643,7 +4643,7 @@ js_Interpret(JSContext *cx)
                     uint32 kshape = OBJ_SHAPE(obj);
 
                     /*
-                     * Open-code JS_PROPERTY_CACHE_TEST, specializing for two
+                     * Open-code PROPERTY_CACHE_TEST, specializing for two
                      * important set-property cases. First:
                      *
                      *   function f(a, b, c) {
