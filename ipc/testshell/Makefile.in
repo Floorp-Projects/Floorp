@@ -63,7 +63,12 @@ CPPSRCS += \
   XPCShellEnvironment.cpp \
   $(NULL)
 
-LOCAL_INCLUDES += -I$(topsrcdir)/js/src/xpconnect/shell
+
+# For xpcshell error messages and nsDependentJSString
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/js/src/xpconnect/shell \
+  -I$(topsrcdir)/dom/base \
+  $(NULL)
 
 TOOL_DIRS += app
 

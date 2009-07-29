@@ -73,11 +73,11 @@ TabChild::Recvinit(const MagicWindowHandle& parentWidget)
 }
 
 nsresult
-TabChild::RecvloadURL(const String& uri)
+TabChild::RecvloadURL(const nsCString& uri)
 {
-    printf("loading %s, %d\n", uri.c_str(), NS_IsMainThread());
+    printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
 
-    return mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri.c_str()).get(),
+    return mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
                             nsIWebNavigation::LOAD_FLAGS_NONE,
                             NULL, NULL, NULL); 
 }

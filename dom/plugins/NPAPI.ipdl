@@ -1,9 +1,11 @@
 include "npapi.h";
+include "nsTArray.h";
 
 include protocol "NPP.ipdl";
 //include protocol "NPObject.ipdl";
 
 using NPError;
+using nsTArray<nsCString>;
 
 namespace mozilla {
 namespace plugins {
@@ -16,10 +18,10 @@ rpc protocol NPAPI
 child:
     rpc NP_Initialize() returns (NPError rv);
 
-    rpc NPP(String aMimeType,
-                uint16_t aMode,
-                StringArray aNames,
-                StringArray aValues) returns (NPError rv);
+    rpc NPP(nsCString aMimeType,
+            uint16_t aMode,
+            nsTArray<nsCString> aNames,
+            nsTArray<nsCString> aValues) returns (NPError rv);
     rpc ~NPP() returns (NPError rv);
 
 //    rpc in TradeNPPsForSomeReason(NPP n) returns (NPP n2);

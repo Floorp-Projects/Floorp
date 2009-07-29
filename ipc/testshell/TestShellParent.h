@@ -45,8 +45,6 @@ namespace ipc {
 class TestShellParent : public TestShellProtocolParent
 {
 public:
-  typedef mozilla::ipc::String String;
-
   TestShellParent();
   ~TestShellParent();
 };

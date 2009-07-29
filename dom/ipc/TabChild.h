@@ -15,9 +15,6 @@ namespace tabs {
 class TabChild
     : public IFrameEmbeddingProtocolChild
 {
-private:
-    typedef mozilla::ipc::String String;
-
 public:
     TabChild();
     virtual ~TabChild();
@@ -25,7 +22,7 @@ public:
     bool Init(MessageLoop* aIOLoop, IPC::Channel* aChannel);
 
     virtual nsresult Recvinit(const MagicWindowHandle& parentWidget);
-    virtual nsresult RecvloadURL(const String& uri);
+    virtual nsresult RecvloadURL(const nsCString& uri);
     virtual nsresult Recvmove(const PRUint32& x,
                               const PRUint32& y,
                               const PRUint32& width,

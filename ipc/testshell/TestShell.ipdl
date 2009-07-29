@@ -40,8 +40,8 @@ namespace ipc {
 sync protocol TestShell
 {
   child:
-    async SendCommand(String aCommand);
-    sync SendCommandWithResponse(String aCommand) returns (String aResponse);
+    async SendCommand(nsString aCommand);
+    sync SendCommandWithResponse(nsString aCommand) returns (nsString aResponse);
 };
 
 } // namespace ipc

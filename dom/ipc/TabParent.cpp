@@ -28,7 +28,7 @@ TabParent::LoadURL(nsIURI* aURI)
     nsCString spec;
     aURI->GetSpec(spec);
 
-    SendloadURL(spec.get());
+    SendloadURL(spec);
 }
 
 void

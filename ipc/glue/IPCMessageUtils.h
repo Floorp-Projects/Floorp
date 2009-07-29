@@ -49,55 +49,6 @@ COMPILE_ASSERT(LastMsgIndex <= 16, need_to_update_IPC_MESSAGE_MACRO);
 
 namespace IPC {
 
-
-// FIXME/cjones: PRInt16 traits had a stack corruption bug that took
-// a long time to find.  putting these on ice until we need them
-#if 0
-
-template <>
-struct ParamTraits<PRUint8>
-{
-  typedef PRUint8 paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    aMsg->WriteBytes(&aParam, sizeof(aParam));
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return aMsg->ReadBytes(aIter, reinterpret_cast<const char**>(aResult),
-                           sizeof(*aResult));
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"%u", aParam));
-  }
-};
-
-template <>
-struct ParamTraits<PRInt8>
-{
-  typedef PRInt8 paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    aMsg->WriteBytes(&aParam, sizeof(aParam));
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    return aMsg->ReadBytes(aIter, reinterpret_cast<const char**>(aResult),
-                           sizeof(*aResult));
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"%d", aParam));
-  }
-};
-
 template <>
 struct ParamTraits<nsACString>
 {
@@ -110,13 +61,13 @@ struct ParamTraits<nsACString>
     aMsg->WriteBytes(aParam.BeginReading(), length);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType& aResult)
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     PRUint32 length;
     if (ReadParam(aMsg, aIter, &length)) {
       const char* buf;
       if (aMsg->ReadBytes(aIter, &buf, length)) {
-        aResult.Assign(buf, length);
+        aResult->Assign(buf, length);
         return true;
       }
     }
@@ -141,14 +92,14 @@ struct ParamTraits<nsAString>
     aMsg->WriteBytes(aParam.BeginReading(), length * sizeof(PRUnichar));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType& aResult)
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     PRUint32 length;
     if (ReadParam(aMsg, aIter, &length)) {
       const PRUnichar* buf;
       if (aMsg->ReadBytes(aIter, reinterpret_cast<const char**>(&buf),
                        length * sizeof(PRUnichar))) {
-        aResult.Assign(buf, length);
+        aResult->Assign(buf, length);
         return true;
       }
     }
@@ -168,6 +119,18 @@ struct ParamTraits<nsAString>
   }
 };
 
+template <>
+struct ParamTraits<nsCString> : ParamTraits<nsACString>
+{
+  typedef nsCString paramType;
+};
+
+template <>
+struct ParamTraits<nsString> : ParamTraits<nsAString>
+{
+  typedef nsString paramType;
+};
+
 template <typename E>
 struct ParamTraits<nsTArray<E> >
 {
@@ -182,7 +145,7 @@ struct ParamTraits<nsTArray<E> >
     }
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType& aResult)
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     PRUint32 length;
     if (!ReadParam(aMsg, aIter, &length)) {
@@ -192,7 +155,7 @@ struct ParamTraits<nsTArray<E> >
     // Check to make sure the message is valid before requesting a huge chunk
     // of memory.
     if (aMsg->IteratorHasRoomFor(*aIter, length * sizeof(E)) &&
-        aResult.SetCapacity(length)) {
+        aResult->SetCapacity(length)) {
       for (PRUint32 index = 0; index < length; index++) {
         if (!ReadParam(aMsg, aIter, &aResult[index])) {
           return false;
@@ -201,11 +164,11 @@ struct ParamTraits<nsTArray<E> >
     }
     else {
       // Push elements individually.
-      aResult.Clear();
+      aResult->Clear();
       E element;
       for (PRUint32 index = 0; index < length; index++) {
         if (!ReadParam(aMsg, aIter, &element) ||
-            !aResult.AppendElement(element)) {
+            !aResult->AppendElement(element)) {
           return false;
         }
       }
@@ -224,8 +187,6 @@ struct ParamTraits<nsTArray<E> >
     }
   }
 };
-
-#endif
 
 } /* namespace IPC */
 

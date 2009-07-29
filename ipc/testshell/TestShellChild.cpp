@@ -53,7 +53,7 @@ TestShellChild::~TestShellChild()
 }
 
 nsresult
-TestShellChild::RecvSendCommand(const String& aCommand)
+TestShellChild::RecvSendCommand(const nsString& aCommand)
 {
   if (mXPCShell->IsQuitting()) {
     NS_WARNING("Commands sent after quit command issued!");
@@ -64,8 +64,8 @@ TestShellChild::RecvSendCommand(const String& aCommand)
 }
 
 nsresult
-TestShellChild::RecvSendCommandWithResponse(const String& aCommand,
-                                            String* aResponse)
+TestShellChild::RecvSendCommandWithResponse(const nsString& aCommand,
+                                            nsString* aResponse)
 {
   if (mXPCShell->IsQuitting()) {
     NS_WARNING("Commands sent after quit command issued!");
