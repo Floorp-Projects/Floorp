@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1994-2000
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,27 +34,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _PK11SDR_H_
-#define _PK11SDR_H_
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "seccomon.h"
-
-SEC_BEGIN_PROTOS
-
-/*
- * PK11SDR_Encrypt - encrypt data using the specified key id or SDR default
- * result should be freed with SECItem_ZfreeItem
- */
-SECStatus
-PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx);
+#include "nss.h"
+#include "secerr.h"
 
 /*
- * PK11SDR_Decrypt - decrypt data previously encrypted with PK11SDR_Encrypt
- * result should be freed with SECItem_ZfreeItem
+ * Regression test for bug 495097.
+ *
+ * NSS_InitReadWrite("sql:<dbdir>") should fail with SEC_ERROR_BAD_DATABASE
+ * if the directory <dbdir> doesn't exist.
  */
-SECStatus
-PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx);
 
-SEC_END_PROTOS
+int main()
+{
+    SECStatus status;
+    int error;
 
-#endif
+    status = NSS_InitReadWrite("sql:/no/such/db/dir");
+    if (status == SECSuccess) {
+        fprintf(stderr, "NSS_InitReadWrite succeeded unexpectedly\n");
+        exit(1);
+    }
+    error = PORT_GetError();
+    if (error != SEC_ERROR_BAD_DATABASE) {
+        fprintf(stderr, "NSS_InitReadWrite failed with the wrong error code: "
+                "%d\n", error);
+        exit(1);
+    }
+    printf("PASS\n");
+    return 0;
+}

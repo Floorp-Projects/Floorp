@@ -32,6 +32,7 @@ include moz-only/reftest.list
 == dynamic-gradient-contents-01.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
 == dynamic-marker-01.svg pass.svg
+== dynamic-marker-02.svg dynamic-marker-02-ref.svg
 == dynamic-mask-contents-01.svg pass.svg
 == dynamic-pattern-01.svg pass.svg
 == dynamic-pattern-02.svg pass.svg
