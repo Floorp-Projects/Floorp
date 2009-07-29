@@ -291,9 +291,7 @@ InputHandler.prototype = {
       return;
 
     /* ignore all events that belong to other windows or documents (e.g. content events) */
-    if (aEvent.target != window
-        && aEvent.target != document
-        && (!aEvent.target.ownerDocument || aEvent.target.ownerDocument != document))
+    if (aEvent.view != window)
       return;
 
     /* changing URL or selected a new tab will immediately stop active input handlers */
