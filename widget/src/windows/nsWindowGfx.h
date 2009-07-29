@@ -43,6 +43,7 @@
  */
 
 #include "nsWindow.h"
+#include <imgIContainer.h>
 
 // This isn't ideal, we should figure out how to export
 // the #defines here; need this to figure out if we have
@@ -62,6 +63,16 @@ public:
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
   static PRBool InitDDraw();
 #endif // defined(CAIRO_HAS_DDRAW_SURFACE)
+
+  static nsresult CreateIcon(imgIContainer *aContainer, PRBool aIsCursor, PRUint32 aHotspotX, PRUint32 aHotspotY, HICON *aIcon);
+
+private:
+  /**
+   * Cursor helpers
+   */
+  static PRUint8*         Data32BitTo1Bit(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
+  static PRBool           IsCursorTranslucencySupported();
+  static HBITMAP          DataToBitmap(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aDepth);
 };
 
 #endif // WindowGfx_h__

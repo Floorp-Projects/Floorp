@@ -143,7 +143,7 @@ sftk_FindTokenAttribute(SFTKTokenObject *object,CK_ATTRIBUTE_TYPE type)
 {
     SFTKAttribute *myattribute = NULL;
     SFTKDBHandle *dbHandle = NULL;
-    CK_RV crv;
+    CK_RV crv = CKR_HOST_MEMORY;
 
     myattribute = (SFTKAttribute*)PORT_Alloc(sizeof(SFTKAttribute));
     if (myattribute == NULL) {

@@ -210,12 +210,8 @@ endif
 
 endif #NS_USE_JDK
 
-#
-# If this is an "official" build, try to build everything.
-# I.e., don't exit on errors.
-#
-
-ifdef BUILD_OFFICIAL
+ifdef NSS_BUILD_CONTINUE_ON_ERROR
+# Try to build everything. I.e., don't exit on errors.
     EXIT_ON_ERROR		= +e
     CLICK_STOPWATCH		= date
 else
