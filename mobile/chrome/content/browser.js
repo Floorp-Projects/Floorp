@@ -167,6 +167,7 @@ function onKeyPress(e) {
   const m = 109;  // fix mouseout
   const r = 114;  // reset visible rect
   const t = 116;  // debug given list of tiles separated by space
+  const z = 122;  // set zoom level to 1
 
   switch (e.charCode) {
   case r:
@@ -220,6 +221,9 @@ function onKeyPress(e) {
     break;
   case m:
     bv.resumeRendering();
+    break;
+  case z:
+    bv.setZoomLevel(1.0);
     break;
   default:
     break;
