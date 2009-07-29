@@ -213,11 +213,6 @@
     cursor: default !important;
   }
 
-  *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas,
-  *|*::-moz-scrolled-canvas {
-    background-color: #737373 !important;
-  }
-
 }
 
 /* XML parse error reporting */
