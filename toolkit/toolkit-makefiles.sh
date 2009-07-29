@@ -119,7 +119,6 @@ MAKEFILES_gfx="
   gfx/public/Makefile
   gfx/src/Makefile
   gfx/src/psshared/Makefile
-  gfx/src/shared/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
   gfx/thebes/Makefile
