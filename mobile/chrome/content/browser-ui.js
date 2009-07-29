@@ -879,7 +879,7 @@ var SelectHelper = {
     else {
       for (let i = 0; i < control.options.length; i++) {
         if (control.options[i].selected)
-          indexes.push(i)
+          indexes.push(i);
       }
     }
 
@@ -896,6 +896,8 @@ var SelectHelper = {
     this._list = document.getElementById("select-list");
     this._list.setAttribute("multiple", this._control.multiple ? "true" : "false");
 
+    let firstSelected = null;
+    
     let optionIndex = 0;
     let children = this._control.children;
     for (let i=0; i<children.length; i++) {
@@ -914,24 +916,54 @@ var SelectHelper = {
           this._list.appendChild(item);
           item.className = "in-optgroup";
           item.optionIndex = optionIndex++;
-          if (subchild.selected)
+          if (subchild.selected) {
             item.setAttribute("selected", "true");
+            firstSelected = firstSelected ? firstSelected : item;
+          }
         }
       } else if (child instanceof HTMLOptionElement) {
         let item = document.createElement("option");
         item.setAttribute("label", child.textContent);
         this._list.appendChild(item);
         item.optionIndex = optionIndex++;
-        if (child.selected)
+        if (child.selected) {
           item.setAttribute("selected", "true");
+          firstSelected = firstSelected ? firstSelected : item;
+        }
       }
     }
 
     this._panel = document.getElementById("select-container");
     this._panel.hidden = false;
 
+    this._scrollElementIntoView(firstSelected);
+
     this._list.focus();
     this._list.addEventListener("click", this, false);
+  },
+
+  _scrollElementIntoView: function(aElement) {
+    if (!aElement)
+      return;
+
+    let index = -1;
+    this._forEachOption(
+      function(aItem, aIndex) {
+        if (aElement.optionIndex == aItem.optionIndex)
+          index = aIndex;
+      }
+    );
+    
+    if (index == -1)
+      return;
+    
+    let itemHeight = aElement.getBoundingClientRect().height;
+    let visibleItemsCount = this._list.boxObject.height / itemHeight;
+    if ((index + 1) > visibleItemsCount) {
+      let delta = Math.ceil(visibleItemsCount / 2);
+      let scrollBoxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+      scrollBoxObject.scrollTo(0, ((index + 1) - delta) * itemHeight);
+    }
   },
 
   _forEachOption: function(aCallback) {
@@ -940,7 +972,7 @@ var SelectHelper = {
         let item = children[i];
         if (!item.hasOwnProperty("optionIndex"))
           continue;
-        aCallback(item);
+        aCallback(item, i);
       }
   },
 
@@ -992,7 +1024,7 @@ var SelectHelper = {
           else {
             // Unselect all options
             this._forEachOption(
-              function(aItem) {
+              function(aItem, aIndex) {
                 aItem.selected = false;
               }
             );
