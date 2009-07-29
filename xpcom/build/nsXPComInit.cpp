@@ -145,6 +145,22 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 
 #include <locale.h>
 
+#ifdef MOZ_IPC
+#include "base/at_exit.h"
+#include "base/command_line.h"
+#include "base/message_loop.h"
+
+using base::AtExitManager;
+
+namespace {
+
+static AtExitManager* sExitManager;
+static MessageLoop* sMessageLoop;
+static bool sCommandLineWasInitialized;
+
+} /* anonymous namespace */
+#endif
+
 using mozilla::TimeStamp;
 
 // Registry Factory creation function defined in nsRegistry.cpp
@@ -549,6 +565,30 @@ NS_InitXPCOM3(nsIServiceManager* *result,
      // We are not shutting down
     gXPCOMShuttingDown = PR_FALSE;
 
+#ifdef MOZ_IPC
+    // Set up chromium libs
+    NS_ASSERTION(!sExitManager && !sMessageLoop, "Bad logic!");
+
+    if (!AtExitManager::AlreadyRegistered()) {
+        sExitManager = new AtExitManager();
+        NS_ENSURE_STATE(sExitManager);
+    }
+
+    if ((sCommandLineWasInitialized = !CommandLine::IsInitialized())) {
+#ifdef XP_WIN
+        CommandLine::Init(0, nsnull);
+#else
+        static char const *const argv = { "/really/should/not/exist" };
+        CommandLine::Init(sizeof(argv), &argv);
+#endif
+    }
+
+    if (!MessageLoop::current()) {
+        sMessageLoop = new MessageLoopForUI();
+        NS_ENSURE_STATE(sMessageLoop);
+    }
+#endif
+
     NS_LogInit();
 
     // Set up TimeStamp
@@ -919,6 +959,21 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 #ifdef GC_LEAK_DETECTOR
     // Shutdown the Leak detector.
     NS_ShutdownLeakDetector();
+#endif
+
+#ifdef MOZ_IPC
+    if (sMessageLoop) {
+        delete sMessageLoop;
+        sMessageLoop = nsnull;
+    }
+    if (sCommandLineWasInitialized) {
+        CommandLine::Terminate();
+        sCommandLineWasInitialized = false;
+    }
+    if (sExitManager) {
+        delete sExitManager;
+        sExitManager = nsnull;
+    }
 #endif
 
     return NS_OK;
