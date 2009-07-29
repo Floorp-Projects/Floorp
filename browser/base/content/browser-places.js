@@ -549,7 +549,9 @@ var PlacesCommandHook = {
    *          UnfiledBookmarks and Tags.
    */
   showPlacesOrganizer: function PCH_showPlacesOrganizer(aLeftPaneRoot) {
-    var organizer = gWindowMediator.getMostRecentWindow("Places:Organizer");
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
+    var organizer = wm.getMostRecentWindow("Places:Organizer");
     if (!organizer) {
       // No currently open places window, so open one with the specified mode.
       openDialog("chrome://browser/content/places/places.xul", 
@@ -573,12 +575,18 @@ var PlacesCommandHook = {
 
 // Helper object for the history menu.
 var HistoryMenu = {
+  get _ss() {
+    delete this._ss;
+    return this._ss = Cc["@mozilla.org/browser/sessionstore;1"].
+                      getService(Ci.nsISessionStore);
+  },
+
   toggleRecentlyClosedTabs: function PHM_toggleRecentlyClosedTabs() {
     // enable/disable the Recently Closed Tabs sub menu
     var undoPopup = document.getElementById("historyUndoPopup");
 
     // no restorable tabs, so disable menu
-    if (gSessionStore.getClosedTabCount(window) == 0)
+    if (this._ss.getClosedTabCount(window) == 0)
       undoPopup.parentNode.setAttribute("disabled", true);
     else
       undoPopup.parentNode.removeAttribute("disabled");
@@ -609,7 +617,7 @@ var HistoryMenu = {
       undoPopup.removeChild(undoPopup.firstChild);
 
     // no restorable tabs, so make sure menu is disabled, and return
-    if (gSessionStore.getClosedTabCount(window) == 0) {
+    if (this._ss.getClosedTabCount(window) == 0) {
       undoPopup.parentNode.setAttribute("disabled", true);
       return;
     }
@@ -618,7 +626,7 @@ var HistoryMenu = {
     undoPopup.parentNode.removeAttribute("disabled");
 
     // populate menu
-    var undoItems = eval("(" + gSessionStore.getClosedTabData(window) + ")");
+    var undoItems = eval("(" + this._ss.getClosedTabData(window) + ")");
     for (var i = 0; i < undoItems.length; i++) {
       var m = document.createElement("menuitem");
       m.setAttribute("label", undoItems[i].title);
@@ -655,7 +663,7 @@ var HistoryMenu = {
     let undoPopup = document.getElementById("historyUndoWindowPopup");
 
     // no restorable windows, so disable menu
-    if (gSessionStore.getClosedWindowCount() == 0)
+    if (this._ss.getClosedWindowCount() == 0)
       undoPopup.parentNode.setAttribute("disabled", true);
     else
       undoPopup.parentNode.removeAttribute("disabled");
@@ -675,7 +683,7 @@ var HistoryMenu = {
       undoPopup.removeChild(undoPopup.firstChild);
 
     // no restorable windows, so make sure menu is disabled, and return
-    if (gSessionStore.getClosedWindowCount() == 0) {
+    if (this._ss.getClosedWindowCount() == 0) {
       undoPopup.parentNode.setAttribute("disabled", true);
       return;
     }
@@ -684,7 +692,7 @@ var HistoryMenu = {
     undoPopup.parentNode.removeAttribute("disabled");
 
     // populate menu
-    let undoItems = JSON.parse(gSessionStore.getClosedWindowData());
+    let undoItems = JSON.parse(this._ss.getClosedWindowData());
     for (let i = 0; i < undoItems.length; i++) {
       let undoItem = undoItems[i];
       let otherTabsCount = undoItem.tabs.length - 1;
