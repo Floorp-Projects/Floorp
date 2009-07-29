@@ -415,6 +415,9 @@ js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed);
 extern JS_FRIEND_API(void)
 js_SetTraceableNativeFailed(JSContext *cx);
 
+extern jsdouble FASTCALL
+js_dmod(jsdouble a, jsdouble b);
+
 #else
 
 #define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)
