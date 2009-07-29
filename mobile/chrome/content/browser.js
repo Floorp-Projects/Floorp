@@ -773,12 +773,12 @@ var Browser = {
     // TODO don't generate this dynamically like this, but actualy make
     // it a prototype somewhere and instantiate it and such...
 
-    function transformScreenToBrowser(sX, sY) {
-      return Browser.screenToBrowserView(sX, sY).map(browserView.viewportToBrowser);
+    function transformClientToBrowser(cX, cY) {
+      return Browser.clientToBrowserView(cX, cY).map(browserView.viewportToBrowser);
     }
 
     function elementFromPoint(browser, x, y) {
-      [x, y] = transformScreenToBrowser(browserView, x, y);
+      [x, y] = transformClientToBrowser(browserView, x, y);
       let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
       return cwu.elementFromPoint(x, y,
 				  true,   /* ignore root scroll frame*/
@@ -801,7 +801,7 @@ var Browser = {
         let browser = browserView.getBrowser();
         if (browser) {
 	        dump('singleClick was invoked with ' + cX + ', ' + cY + '\n');
-          let [x, y] = transformScreenToBrowser(cX, cY);
+          let [x, y] = transformClientToBrowser(cX, cY);
 	        dump('dispatching in browser ' + x + ', ' + y + '\n');
           dispatchContentClick(browser, x, y);
         }
@@ -819,9 +819,9 @@ var Browser = {
 	          dump('zooming to/from element: ' + zoomElement + '\n');
           }
 
-          //let [x, y] = transformScreenToBrowser(cX1, cY1);
+          //let [x, y] = transformClientToBrowser(cX1, cY1);
           //dispatchContentClick(browser, x, y);
-          //[x, y] = transformScreenToBrowser(cX2, cY2);
+          //[x, y] = transformClientToBrowser(cX2, cY2);
           //dispatchContentClick(browser, x, y);
         }
       }
@@ -896,7 +896,7 @@ var Browser = {
   /**
    * Transform x and y from client coordinates to BrowserView coordinates.
    */
-  screenToBrowserView: function screenToBrowserView(x, y) {
+  clientToBrowserView: function clientToBrowserView(x, y) {
     let container = document.getElementById("tile-container");
     let containerBCR = container.getBoundingClientRect();
 
