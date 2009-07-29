@@ -219,7 +219,7 @@ function onKeyPress(e) {
     window.infoMode = !window.infoMode;
     break;
   case m:
-    onMouseUp();
+    bv.resumeRendering();
     break;
   default:
     break;
