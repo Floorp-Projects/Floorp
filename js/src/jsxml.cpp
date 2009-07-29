@@ -460,7 +460,7 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
 
     if (str && clasp == &js_AttributeNameClass) {
         length = str->length();
-        chars = (jschar *) JS_malloc(cx, (length + 2) * sizeof(jschar));
+        chars = (jschar *) cx->malloc((length + 2) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
         *chars = '@';
@@ -468,7 +468,7 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
         chars[++length] = 0;
         str = js_NewString(cx, chars, length);
         if (!str) {
-            JS_free(cx, chars);
+            cx->free(chars);
             return JS_FALSE;
         }
     }
@@ -932,8 +932,12 @@ XMLArraySetCapacity(JSContext *cx, JSXMLArray *array, uint32 capacity)
 
     if (capacity == 0) {
         /* We could let realloc(p, 0) free this, but purify gets confused. */
-        if (array->vector)
-            free(array->vector);
+        if (array->vector) {
+            if (cx)
+                cx->free(array->vector);
+            else
+                js_free(array->vector);
+        }
         vector = NULL;
     } else {
         if (
@@ -941,7 +945,7 @@ XMLArraySetCapacity(JSContext *cx, JSXMLArray *array, uint32 capacity)
             (size_t)capacity > ~(size_t)0 / sizeof(void *) ||
 #endif
             !(vector = (void **)
-                       realloc(array->vector, capacity * sizeof(void *)))) {
+                       js_realloc(array->vector, capacity * sizeof(void *)))) {
             if (cx)
                 JS_ReportOutOfMemory(cx);
             return JS_FALSE;
@@ -975,7 +979,7 @@ XMLArrayFinish(JSContext *cx, JSXMLArray *array)
 {
     JSXMLArrayCursor *cursor;
 
-    JS_free(cx, array->vector);
+    cx->free(array->vector);
 
     while ((cursor = array->cursors) != NULL)
         XMLArrayCursorFinish(cursor);
@@ -1039,7 +1043,7 @@ XMLArrayAddMember(JSContext *cx, JSXMLArray *array, uint32 index, void *elt)
                 (size_t)capacity > ~(size_t)0 / sizeof(void *) ||
 #endif
                 !(vector = (void **)
-                           realloc(array->vector, capacity * sizeof(void *)))) {
+                           js_realloc(array->vector, capacity * sizeof(void *)))) {
                 JS_ReportOutOfMemory(cx);
                 return JS_FALSE;
             }
@@ -1120,10 +1124,10 @@ XMLArrayTruncate(JSContext *cx, JSXMLArray *array, uint32 length)
 
     if (length == 0) {
         if (array->vector)
-            free(array->vector);
+            cx->free(array->vector);
         vector = NULL;
     } else {
-        vector = (void **) realloc(array->vector, length * sizeof(void *));
+        vector = (void **) js_realloc(array->vector, length * sizeof(void *));
         if (!vector)
             return;
     }
@@ -1854,7 +1858,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     length = constrlen(prefix) + urilen + constrlen(middle) + srclen +
              constrlen(suffix);
 
-    chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
+    chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
     if (!chars)
         return NULL;
 
@@ -1905,7 +1909,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
         }
     }
 
-    JS_free(cx, chars);
+    cx->free(chars);
     return xml;
 
 #undef constrlen
@@ -2138,7 +2142,7 @@ MakeXMLSpecialString(JSContext *cx, JSStringBuffer *sb,
                 prefixlength + length + ((length2 != 0) ? 1 + length2 : 0) +
                 suffixlength;
     bp = base = (jschar *)
-                JS_realloc(cx, sb->base, (newlength + 1) * sizeof(jschar));
+        cx->realloc(sb->base, (newlength + 1) * sizeof(jschar));
     if (!bp) {
         js_FinishStringBuffer(sb);
         return NULL;
@@ -2159,7 +2163,7 @@ MakeXMLSpecialString(JSContext *cx, JSStringBuffer *sb,
 
     str = js_NewString(cx, base, newlength);
     if (!str)
-        free(base);
+        cx->free(base);
     return str;
 }
 
@@ -2210,7 +2214,7 @@ AppendAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *valstr)
     valstr = js_EscapeAttributeValue(cx, valstr, JS_TRUE);
     if (!valstr) {
         if (STRING_BUFFER_OK(sb)) {
-            free(sb->base);
+            cx->free(sb->base);
             sb->base = STRING_BUFFER_ERROR_BASE;
         }
         return;
@@ -2482,7 +2486,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     if (STARTS_WITH_XML(cp, length) || !IsXMLName(cp, length)) {
         newlength = length + 2 + (size_t) log10((double) decls->length);
         bp = (jschar *)
-             JS_malloc(cx, (newlength + 1) * sizeof(jschar));
+             cx->malloc((newlength + 1) * sizeof(jschar));
         if (!bp)
             return NULL;
 
@@ -2507,7 +2511,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
                 if (bp == cp) {
                     newlength = length + 2 + (size_t) log10((double) n);
                     bp = (jschar *)
-                         JS_malloc(cx, (newlength + 1) * sizeof(jschar));
+                         cx->malloc((newlength + 1) * sizeof(jschar));
                     if (!bp)
                         return NULL;
                     js_strncpy(bp, cp, length);
@@ -2534,7 +2538,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
     } else {
         prefix = js_NewString(cx, bp, newlength);
         if (!prefix)
-            JS_free(cx, bp);
+            cx->free(bp);
     }
     return prefix;
 }
@@ -5132,7 +5136,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (length == 0) {
             cursor = NULL;
         } else {
-            cursor = (JSXMLArrayCursor *) JS_malloc(cx, sizeof *cursor);
+            cursor = (JSXMLArrayCursor *) cx->malloc(sizeof *cursor);
             if (!cursor)
                 return JS_FALSE;
             XMLArrayCursorInit(cursor, &xml->xml_kids);
@@ -5155,7 +5159,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
         if (cursor) {
             XMLArrayCursorFinish(cursor);
-            JS_free(cx, cursor);
+            cx->free(cursor);
         }
         *statep = JSVAL_NULL;
         break;
@@ -5266,7 +5270,7 @@ js_EnumerateXMLValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (length == 0) {
             cursor = NULL;
         } else {
-            cursor = (JSXMLArrayCursor *) JS_malloc(cx, sizeof *cursor);
+            cursor = (JSXMLArrayCursor *) cx->malloc(sizeof *cursor);
             if (!cursor)
                 return JS_FALSE;
             XMLArrayCursorInit(cursor, &xml->xml_kids);
@@ -5301,7 +5305,7 @@ js_EnumerateXMLValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (cursor) {
       destroy:
             XMLArrayCursorFinish(cursor);
-            JS_free(cx, cursor);
+            cx->free(cursor);
         }
         *statep = JSVAL_NULL;
         break;
@@ -7801,7 +7805,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
 
     str2->getCharsAndLength(chars2, len2);
     newlen = (isName) ? len + 1 + len2 : len + 2 + len2 + 1;
-    chars = (jschar *) JS_realloc(cx, chars, (newlen+1) * sizeof(jschar));
+    chars = (jschar *) cx->realloc(chars, (newlen+1) * sizeof(jschar));
     if (!chars)
         return NULL;
 
@@ -8114,7 +8118,7 @@ xmlfilter_finalize(JSContext *cx, JSObject *obj)
         return;
 
     XMLArrayCursorFinish(&filter->cursor);
-    JS_free(cx, filter);
+    cx->free(filter);
 }
 
 JSClass js_XMLFilterClass = {
@@ -8169,7 +8173,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
         if (!filterobj)
             return JS_FALSE;
 
-        filter = (JSXMLFilter *) JS_malloc(cx, sizeof *filter);
+        filter = (JSXMLFilter *) cx->malloc(sizeof *filter);
         if (!filter)
             return JS_FALSE;
 

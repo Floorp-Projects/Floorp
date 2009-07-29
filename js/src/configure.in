@@ -4742,6 +4742,8 @@ else
     _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
 fi
 
+AC_SUBST(_MOZ_EXCEPTIONS_FLAGS_ON)
+
 # Irix & OSF native compilers do not like exception declarations 
 # when exceptions are disabled
 if test -n "$MIPSPRO_CXX" -o -n "$COMPAQ_CXX" -o -n "$VACPP"; then

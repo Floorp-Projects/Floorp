@@ -368,7 +368,7 @@ JS_dtobasestr(int base, double dinput)
     JS_ASSERT(base >= 2 && base <= 36);
 
     dval(d) = dinput;
-    buffer = (char*) malloc(DTOBASESTR_BUFFER_SIZE);
+    buffer = (char*) js_malloc(DTOBASESTR_BUFFER_SIZE);
     if (buffer) {
         p = buffer;
         if (dval(d) < 0.0
@@ -412,7 +412,7 @@ JS_dtobasestr(int base, double dinput)
               nomem1:
                 Bfree(b);
                 UNLOCK_DTOA();
-                free(buffer);
+                js_free(buffer);
                 return NULL;
             }
             do {
@@ -449,7 +449,7 @@ JS_dtobasestr(int base, double dinput)
                     Bfree(mlo);
                 Bfree(mhi);
                 UNLOCK_DTOA();
-                free(buffer);
+                js_free(buffer);
                 return NULL;
             }
             JS_ASSERT(e < 0);
