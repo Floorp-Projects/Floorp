@@ -123,10 +123,7 @@ nsUConverterUnregSelf(nsIComponentManager *aCompMgr,                        \
     }                                                                   \
     key = entry->charset;                                               \
                                                                         \
-    char * value = entry->cid.ToString();                               \
-                                                                        \
     rv = catman->DeleteCategoryEntry(category, key, PR_TRUE);           \
-    CRTFREEIF(value);                                                   \
   }                                                                     \
   return rv;                                                            \
 }
