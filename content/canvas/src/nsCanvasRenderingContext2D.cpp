@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Rob Arnold <tellrob@gmail.com>
  *   Eric Butler <zantifon@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -317,7 +316,6 @@ public:
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
     NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
-    NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height);
     NS_IMETHOD Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter);
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
@@ -362,9 +360,6 @@ protected:
     // the canvas element informs us when it's going away,
     // so these are not nsCOMPtrs
     nsICanvasElement* mCanvasElement;
-
-    // If mCanvasElement is not provided, then a docshell is
-    nsCOMPtr<nsIDocShell> mDocShell;
 
     // our CSS parser, for colors and whatnot
     nsCOMPtr<nsICSSParser> mCSSParser;
@@ -483,20 +478,6 @@ protected:
      * Draws a rectangle in the given style; used by FillRect and StrokeRect.
      */
     nsresult DrawRect(const gfxRect& rect, Style style);
-
-    /**
-     * Gets the pres shell from either the canvas element or the doc shell
-     */
-    nsIPresShell *GetPresShell() {
-      nsIPresShell *presShell = nsnull;
-      nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
-      if (content) {
-          presShell = content->GetCurrentDoc()->GetPrimaryShell();
-      } else if (mDocShell) {
-          mDocShell->GetPresShell(&presShell);
-      }
-      return presShell;
-    }
 
     // text
     enum TextAlign {
@@ -632,14 +613,17 @@ protected:
         PRUint32 devPixel = 60;
         PRUint32 cssPixel = 60;
 
-        nsIPresShell *ps = GetPresShell();
-        nsPresContext *pc;
-
-        if (!ps) goto FINISH;
-        pc = ps->GetPresContext();
-        if (!pc) goto FINISH;
-        devPixel = pc->AppUnitsPerDevPixel();
-        cssPixel = pc->AppUnitsPerCSSPixel();
+        nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
+        if (elem) {
+            nsIDocument *doc = elem->GetOwnerDoc();
+            if (!doc) goto FINISH;
+            nsIPresShell *ps = doc->GetPrimaryShell();
+            if (!ps) goto FINISH;
+            nsPresContext *pc = ps->GetPresContext();
+            if (!pc) goto FINISH;
+            devPixel = pc->AppUnitsPerDevPixel();
+            cssPixel = pc->AppUnitsPerCSSPixel();
+        }
 
       FINISH:
         if (perDevPixel)
@@ -811,10 +795,12 @@ nsCanvasRenderingContext2D::ApplyStyle(Style aWhichStyle,
 
     nsCanvasPattern* pattern = CurrentState().patternStyles[aWhichStyle];
     if (pattern) {
-        if (mCanvasElement)
-            CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
-                                                  pattern->Principal(),
-                                                  pattern->GetForceWriteOnly());
+        if (!mCanvasElement)
+            return;
+
+        CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
+                                              pattern->Principal(),
+                                              pattern->GetForceWriteOnly());
 
         gfxPattern* gpat = pattern->GetPattern();
 
@@ -873,7 +859,8 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 {
     Destroy();
 
-    nsRefPtr<gfxASurface> surface;
+    mWidth = width;
+    mHeight = height;
 
     // Check that the dimensions are sane
     if (gfxASurface::CheckSurfaceSize(gfxIntSize(width, height), 0xffff)) {
@@ -881,28 +868,13 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
         if (mOpaque)
             format = gfxASurface::ImageFormatRGB24;
 
-        surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
+        mSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
             (gfxIntSize(width, height), format);
 
-        if (surface->CairoStatus() != 0) {
-          surface = NULL;
+        if (mSurface->CairoStatus() == 0) {
+            mThebes = new gfxContext(mSurface);
         }
     }
-    return InitializeWithSurface(NULL, surface, width, height);
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, PRInt32 width, PRInt32 height) {
-    Destroy();
-
-    NS_ASSERTION(!docShell ^ !mCanvasElement, "Cannot set both docshell and canvas element");
-    mDocShell = docShell;
-
-    mWidth = width;
-    mHeight = height;
-
-    mSurface = surface;
-    mThebes = new gfxContext(mSurface);
 
     /* Create dummy surfaces here */
     if (mSurface == nsnull || mSurface->CairoStatus() != 0 ||
@@ -912,11 +884,6 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
         mThebes = new gfxContext(mSurface);
     } else {
         mValid = PR_TRUE;
-    }
-
-    // set up our css parser, if necessary
-    if (!mCSSParser) {
-        mCSSParser = do_CreateInstance("@mozilla.org/content/css-parser;1");
     }
 
     // set up the initial canvas defaults
@@ -1064,6 +1031,11 @@ nsCanvasRenderingContext2D::SetCanvasElement(nsICanvasElement* aCanvasElement)
 {
     // don't hold a ref to this!
     mCanvasElement = aCanvasElement;
+
+    // set up our css parser, if necessary
+    if (!mCSSParser) {
+        mCSSParser = do_CreateInstance("@mozilla.org/content/css-parser;1");
+    }
 
     return NS_OK;
 }
@@ -1898,15 +1870,16 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
      */
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
-    if (!content && !mDocShell) {
-        NS_WARNING("Canvas element must be an nsIContent and non-null or a docshell must be provided");
+    if (!content) {
+        NS_WARNING("Canvas element must be an nsIContent and non-null");
         return NS_ERROR_FAILURE;
     }
 
-    nsIPresShell* presShell = GetPresShell();
+    nsIDocument* document = content->GetOwnerDoc();
+
+    nsIPresShell* presShell = document->GetPrimaryShell();
     if (!presShell)
-      return NS_ERROR_FAILURE;
-    nsIDocument* document = presShell->GetDocument();
+        return NS_ERROR_FAILURE;
 
     nsCString langGroup;
     presShell->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
@@ -1914,7 +1887,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     nsCOMArray<nsIStyleRule> rules;
 
     nsCOMPtr<nsICSSStyleRule> rule;
-    rv = CreateFontStyleRule(font, mCSSParser.get(), document, getter_AddRefs(rule));
+    rv = CreateFontStyleRule(font, mCSSParser.get(), content.get(), getter_AddRefs(rule));
     if (NS_FAILED(rv))
         return rv;
 
@@ -1926,7 +1899,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     // values (2em, bolder, etc.)
     nsRefPtr<nsStyleContext> parentContext;
 
-    if (content && content->IsInDoc()) {
+    if (content->IsInDoc()) {
         // inherit from the canvas element
         parentContext = nsInspectorCSSUtils::GetStyleContextForContent(
                 content,
@@ -1937,7 +1910,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
         nsCOMPtr<nsICSSStyleRule> parentRule;
         rv = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
                                  mCSSParser.get(),
-                                 document,
+                                 content.get(),
                                  getter_AddRefs(parentRule));
         if (NS_FAILED(rv))
             return rv;
@@ -2246,16 +2219,16 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
         return NS_ERROR_INVALID_ARG;
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
-    if (!content && !mDocShell) {
-        NS_WARNING("Canvas element must be an nsIContent and non-null or a docshell must be provided");
+    if (!content) {
+        NS_WARNING("Canvas element must be an nsIContent and non-null");
         return NS_ERROR_FAILURE;
     }
 
-    nsIPresShell* presShell = GetPresShell();
+    nsIDocument* document = content->GetOwnerDoc();
+
+    nsIPresShell* presShell = document->GetPrimaryShell();
     if (!presShell)
         return NS_ERROR_FAILURE;
-
-    nsIDocument* document = presShell->GetDocument();
 
     nsBidiPresUtils* bidiUtils = presShell->GetPresContext()->GetBidiUtils();
     if (!bidiUtils)
@@ -2268,7 +2241,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     // for now, default to ltr if not in doc
     PRBool isRTL = PR_FALSE;
 
-    if (content && content->IsInDoc()) {
+    if (content->IsInDoc()) {
         // try to find the closest context
         nsRefPtr<nsStyleContext> canvasStyle =
             nsInspectorCSSUtils::GetStyleContextForContent(content,
@@ -2278,8 +2251,6 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
             return NS_ERROR_FAILURE;
         isRTL = canvasStyle->GetStyleVisibility()->mDirection ==
             NS_STYLE_DIRECTION_RTL;
-    } else {
-      isRTL = GET_BIDI_OPTION_DIRECTION(document->GetBidiOptions()) == IBMBIDI_TEXTDIRECTION_RTL;
     }
 
     // don't need to take care of these with stroke since Stroke() does that
@@ -2925,6 +2896,11 @@ nsCanvasRenderingContext2D::DrawImage()
     nsresult rv;
     gfxRect dirty;
 
+    // we can't do a security check without a canvas element, so
+    // just skip this entirely
+    if (!mCanvasElement)
+        return NS_ERROR_FAILURE;
+
     nsAXPCNativeCallContext *ncc = nsnull;
     rv = nsContentUtils::XPConnect()->
         GetCurrentNativeCallContext(&ncc);
@@ -2983,8 +2959,7 @@ nsCanvasRenderingContext2D::DrawImage()
     gfxIntSize imgSize = res.mSize;
     PRBool forceWriteOnly = res.mIsWriteOnly;
 
-    if (mCanvasElement)
-        CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, principal, forceWriteOnly);
+    CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement, principal, forceWriteOnly);
 
     gfxContextPathAutoSaveRestore pathSR(mThebes, PR_FALSE);
 
@@ -3394,10 +3369,10 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetImageData()
 {
-    if (!mValid)
+    if (!mValid || !mCanvasElement)
         return NS_ERROR_FAILURE;
 
-    if (mCanvasElement && mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
+    if (mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_DOM_SECURITY_ERR;
     }
@@ -3752,7 +3727,7 @@ nsCanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::CreateImageData()
 {
-    if (!mValid)
+    if (!mValid || !mCanvasElement)
         return NS_ERROR_FAILURE;
 
     nsAXPCNativeCallContext *ncc = nsnull;
