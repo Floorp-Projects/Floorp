@@ -3313,6 +3313,14 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
     return eSelectorParsingStatus_Error;
   }
 
+  // -moz-locale-dir can only have values of 'ltr' or 'rtl'.
+  if (aPseudo == nsCSSPseudoClasses::mozLocaleDir) {
+    if (!mToken.mIdent.EqualsLiteral("ltr") &&
+        !mToken.mIdent.EqualsLiteral("rtl")) {
+      return eSelectorParsingStatus_Error;
+    }
+  }
+
   // Add the pseudo with the language parameter
   aSelector.AddPseudoClass(aPseudo, mToken.mIdent.get());
 

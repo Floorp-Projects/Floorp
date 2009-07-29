@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE bindings [
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
   <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
   %textcontextDTD;
 ]>
@@ -212,10 +210,6 @@
           this.boxObject.removeProperty("value");
         }
 
-        // Bindings that extend this one wouldn't inherit the
-        // chromedir attribute if it would only be set in <content>.
-        this.setAttribute("chromedir", "]]>&locale.dir;<![CDATA[");
-
         this._updateVisibleText();
         this._setNewlineHandling();
       ]]></constructor>
@@ -383,12 +377,10 @@
         <xul:deck class="textbox-search-icons" anonid="search-icons">
           <xul:image class="textbox-search-icon"
                      onclick="document.getBindingParent(this)._iconClick();"
-                     xbl:inherits="src=image,searchbutton,disabled"
-                     chromedir="&locale.dir;"/>
+                     xbl:inherits="src=image,searchbutton,disabled"/>
           <xul:image class="textbox-search-clear"
                      onclick="document.getBindingParent(this)._clearSearch();"
-                     xbl:inherits="disabled"
-                     chromedir="&locale.dir;"/>
+                     xbl:inherits="disabled"/>
         </xul:deck>
       </xul:hbox>
     </content>
@@ -521,7 +513,6 @@
       <children/>
       <xul:menupopup anonid="input-box-contextmenu"
                      class="textbox-contextmenu"
-                     chromedir="&locale.dir;"
                      onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
                                        this.parentNode.firstChild.focus();
                                      this.parentNode._doPopupItemEnabling(this);"
@@ -584,7 +575,6 @@
       <children/>
       <xul:menupopup anonid="input-box-contextmenu"
                      class="textbox-contextmenu"
-                     chromedir="&locale.dir;"
                      onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
                                        this.parentNode.firstChild.focus();
                                      this.parentNode._doPopupItemEnablingSpell(this);"
