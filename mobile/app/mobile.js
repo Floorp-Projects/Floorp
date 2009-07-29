@@ -52,6 +52,7 @@ pref("browser.ui.panning.fixup.mousemove", false);
 pref("ui.use_native_popup_windows", true);
 
 pref("javascript.options.showInConsole", false);
+pref("browser.dom.window.dump.enabled", false);
 
 /* cache prefs */
 #ifdef MOZ_PLATFORM_HILDON
