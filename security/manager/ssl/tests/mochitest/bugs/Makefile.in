@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
         test_bug480509.html \
+        test_bug483440.html \
         test_bug484111.html \
         $(NULL)
 
