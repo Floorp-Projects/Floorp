@@ -17,10 +17,10 @@ rpc protocol NPP
 
 child:
     rpc NPP_SetWindow(NPWindow window) returns (NPError rv);
-    rpc NPP_GetValue(String key) returns (String value);
+    rpc NPP_GetValue(nsString key) returns (nsString value);
 
 parent:
-    rpc NPN_GetValue(String key) returns (String value);
+    rpc NPN_GetValue(nsString key) returns (nsString value);
 };
 
 } // namespace plugins

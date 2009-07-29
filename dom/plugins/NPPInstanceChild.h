@@ -62,7 +62,7 @@ class NPPInstanceChild : public NPPProtocolChild
 protected:
     virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
-    virtual nsresult AnswerNPP_GetValue(const String& key, String* value);
+    virtual nsresult AnswerNPP_GetValue(const nsString& key, nsString* value);
 
 public:
     NPPInstanceChild(const NPPluginFuncs* aPluginIface) :

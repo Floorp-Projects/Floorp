@@ -63,6 +63,7 @@
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 
+#include "nsJSUtils.h"
 #include "nsXULAppAPI.h"
 
 #include "TestShellChild.h"
@@ -1435,8 +1436,7 @@ SendCommand(JSContext *cx,
     return JS_FALSE;
   }
 
-  mozilla::ipc::String command(JS_GetStringBytes(str));
-
+  nsDependentJSString command(str);
   if (!Environment(cx)->DoSendCommand(command)) {
     JS_ReportError(cx, "Failed to send command!");
     return JS_FALSE;
@@ -1463,15 +1463,14 @@ SendCommandWithResponse(JSContext *cx,
     return JS_FALSE;
   }
 
-  mozilla::ipc::String command(JS_GetStringBytes(str));
-  mozilla::ipc::String result;
-
+  nsDependentJSString command(str);
+  nsAutoString result;
   if (!Environment(cx)->DoSendCommand(command, &result)) {
     JS_ReportError(cx, "Failed to send command!");
     return JS_FALSE;
   }
 
-  JSString* resultStr = JS_NewStringCopyN(cx, result.c_str(), result.length());
+  JSString* resultStr = JS_NewUCStringCopyN(cx, result.get(), result.Length());
   if (!resultStr) {
     JS_ReportError(cx, "Failed to convert response to string!");
     return JS_FALSE;
@@ -1521,8 +1520,8 @@ XPCShellEnvironment::DefineIPCCommands(TestShellParent* aParent)
 }
 
 JSBool
-XPCShellEnvironment::DoSendCommand(const mozilla::ipc::String& aCommand,
-                                   mozilla::ipc::String* aResult)
+XPCShellEnvironment::DoSendCommand(const nsString& aCommand,
+                                   nsString* aResult)
 {
   nsresult rv = aResult ?
                 mParent->SendSendCommandWithResponse(aCommand, aResult) :
@@ -1532,8 +1531,8 @@ XPCShellEnvironment::DoSendCommand(const mozilla::ipc::String& aCommand,
 }
 
 bool
-XPCShellEnvironment::EvaluateString(const mozilla::ipc::String& aString,
-                                    mozilla::ipc::String* aResult)
+XPCShellEnvironment::EvaluateString(const nsString& aString,
+                                    nsString* aResult)
 {
   JSAutoRequest ar(mCx);
 
@@ -1542,16 +1541,16 @@ XPCShellEnvironment::EvaluateString(const mozilla::ipc::String& aString,
   JSObject* global = GetGlobalObject();
 
   JSScript* script =
-      JS_CompileScriptForPrincipals(mCx, global, GetPrincipal(),
-                                    aString.c_str(), aString.length(),
-                                    "typein", 0);
+      JS_CompileUCScriptForPrincipals(mCx, global, GetPrincipal(),
+                                      aString.get(), aString.Length(),
+                                      "typein", 0);
   if (!script) {
      return false;
   }
 
   if (!ShouldCompileOnly()) {
       if (aResult) {
-          aResult->clear();
+          aResult->Truncate();
       }
 
       jsval result;
@@ -1561,12 +1560,8 @@ XPCShellEnvironment::EvaluateString(const mozilla::ipc::String& aString,
           JSString* str = JS_ValueToString(mCx, result);
           JS_SetErrorReporter(mCx, old);
 
-          if (str) {
-              const char* bytes = JS_GetStringBytes(str);
-              fprintf(stdout, "%s\n", bytes);
-              if (aResult) {
-                  aResult->assign(bytes);
-              }
+          if (str && aResult) {
+              aResult->Assign(nsDependentJSString(str));
           }
       }
   }

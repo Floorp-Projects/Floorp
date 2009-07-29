@@ -129,7 +129,7 @@ NPPInstanceChild::NPN_GetValue(NPNVariable aVar, void* aValue)
 }
 
 nsresult
-NPPInstanceChild::AnswerNPP_GetValue(const String& key, String* value)
+NPPInstanceChild::AnswerNPP_GetValue(const nsString& key, nsString* value)
 {
     return NPERR_GENERIC_ERROR;
 }

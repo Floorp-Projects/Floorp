@@ -1,12 +1,12 @@
 using MagicWindowHandle;
 using PRUint32;
 
-sync protocol IFrameEmbedding
+protocol IFrameEmbedding
 {
 child:
-    sync init(MagicWindowHandle parentWidget);
+    init(MagicWindowHandle parentWidget);
 
-    loadURL(String uri);
+    loadURL(nsCString uri);
 
     move(PRUint32 x,
          PRUint32 y,

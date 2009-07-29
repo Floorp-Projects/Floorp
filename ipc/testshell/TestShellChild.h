@@ -47,14 +47,12 @@ class XPCShellEnvironment;
 class TestShellChild : public TestShellProtocolChild
 {
 public:
-  typedef mozilla::ipc::String String;
-
   TestShellChild();
   virtual ~TestShellChild();
 
-  virtual nsresult RecvSendCommand(const String& aCommand);
-  virtual nsresult RecvSendCommandWithResponse(const String& aCommand,
-                                               String* aResponse);
+  virtual nsresult RecvSendCommand(const nsString& aCommand);
+  virtual nsresult RecvSendCommandWithResponse(const nsString& aCommand,
+                                               nsString* aResponse);
 
   void SetXPCShell(XPCShellEnvironment* aXPCShell) {
     mXPCShell = aXPCShell;

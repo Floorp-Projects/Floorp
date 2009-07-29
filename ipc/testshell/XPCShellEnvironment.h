@@ -71,11 +71,11 @@ public:
     bool DefineIPCCommands(TestShellChild* aChild);
     bool DefineIPCCommands(TestShellParent* aParent);
 
-    JSBool DoSendCommand(const mozilla::ipc::String& aCommand,
-                         mozilla::ipc::String* aResult = nsnull);
+    JSBool DoSendCommand(const nsString& aCommand,
+                         nsString* aResult = nsnull);
 
-    bool EvaluateString(const mozilla::ipc::String& aString,
-                        mozilla::ipc::String* aResult = nsnull);
+    bool EvaluateString(const nsString& aString,
+                        nsString* aResult = nsnull);
 
     JSPrincipals* GetPrincipal() {
         return mJSPrincipals;
