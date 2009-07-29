@@ -83,6 +83,8 @@ LIB_SUFFIX   = lib
 DLL_SUFFIX   = dll
 OS_DLLFLAGS  += -DLL
 
+EXTRA_EXE_LD_FLAGS += -ENTRY:mainWCRTStartup
+
 ifdef BUILD_OPT
 #   OS_CFLAGS  += -MD
     OPTIMIZER  += -O2
@@ -206,7 +208,7 @@ endif
 
 
 #
-# Always set CPU_TAG on Linux, OpenVMS, WINCE.
+# Always set CPU_TAG on Linux, WINCE.
 #
 CPU_TAG = _$(CPU_ARCH)
 

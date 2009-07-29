@@ -41,6 +41,7 @@ CORE_DEPTH = ../../..
 MODULE = nss
 
 CSRCS = \
+	baddbdir.c \
 	conflict.c \
 	nonspr10.c \
 	remtest.c \
