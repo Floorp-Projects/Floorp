@@ -38,48 +38,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
-#define FOREACH_RECT(rect, tilecache, fn)                                      \
+
+#define FOREACH_RECT(rect, tilecache, fn, thisObj)                             \
   {                                                                            \
-    let i    = (rect).left  >> kTileExponentWidth;                             \
-    let endi = (rect).right >> kTileExponentWidth;                             \
-    let j    = (rect).top    >> kTileExponentHeight;                           \
-    let endj = (rect).bottom >> kTileExponentHeight;                           \
+    let starti = (rect).left  >> kTileExponentWidth;                           \
+    let endi   = (rect).right >> kTileExponentWidth;                           \
+    let startj = (rect).top    >> kTileExponentHeight;                         \
+    let endj   = (rect).bottom >> kTileExponentHeight;                         \
                                                                                \
     let tile = null;                                                           \
-    for (; j <= endj; ++j) {                                                   \
-      for (; i <= endi; ++i) {                                                 \
-        tile = (tilecache).getTile(i, j, false);                               \
+    let i, j;                                                                  \
+    for (j = startj; j <= endj; ++j) {                                         \
+      for (i = starti; i <= endi; ++i) {                                       \
+        tile = (tilecache).getTile(i, j, false, null);                         \
         if (tile) {                                                            \
-          (fn)(tile);                                                          \
+          (fn).call((thisObj), tile);                                          \
         }                                                                      \
       }                                                                        \
     }                                                                          \
   }
 
-#define FOREACH_RECT_CREATE(rect, tilecache, fn)                               \
+#define FOREACH_RECT_CREATE(rect, tilecache, fn, thisObj)                      \
   {                                                                            \
     let visited = {};                                                          \
     let evictGuard = function evictGuard(tile)                                 \
       { return !visited[tile.toString()]; };                                   \
                                                                                \
-    let i    = (rect).left  >> kTileExponentWidth;                             \
-    let endi = (rect).right >> kTileExponentWidth;                             \
-    let j    = (rect).top    >> kTileExponentHeight;                           \
-    let endj = (rect).bottom >> kTileExponentHeight;                           \
+    let starti = (rect).left  >> kTileExponentWidth;                           \
+    let endi   = (rect).right >> kTileExponentWidth;                           \
+    let startj = (rect).top    >> kTileExponentHeight;                         \
+    let endj   = (rect).bottom >> kTileExponentHeight;                         \
                                                                                \
     let tile = null;                                                           \
-    for (; j <= endj; ++j) {                                                   \
-      for (; i <= endi; ++i) {                                                 \
+    let i, j;                                                                  \
+    for (j = startj; j <= endj; ++j) {                                         \
+      for (i = starti; i <= endi; ++i) {                                       \
         tile = (tilecache).getTile(i, j, true, evictGuard);                    \
         if (tile) {                                                            \
           visited[tile.toString()] = true;                                     \
-          (fn)(tile);                                                          \
+          (fn).call((thisObj), tile);                                          \
         }                                                                      \
       }                                                                        \
     }                                                                          \
   }
-*/
+
 
 const kXHTMLNamespaceURI  = "http://www.w3.org/1999/xhtml";
 
@@ -90,6 +92,9 @@ const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^7 = 128
 const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^7 = 128
 const kTileLazyRoundTimeCap = 500;    // millis
 
+function test() {
+  FOREACH_RECT(a, b, c, null);
+}
 
 /**
  * The Tile Manager!
@@ -180,7 +185,9 @@ TileManager.prototype = {
     let criticalRect = this._criticalRect;
 
     for each (let rect in rects) {
-      this._tileCache.forEachIntersectingRect(rect, false, this._dirtyTile, this);
+      //this._tileCache.forEachIntersectingRect(rect, false, this._dirtyTile, this);
+      let tc = this._tileCache;
+      FOREACH_RECT(rect, tc, this._dirtyTile, this);
 
       if (criticalRect && rect.intersects(criticalRect))
         criticalIsDirty = true;
@@ -204,17 +211,20 @@ TileManager.prototype = {
     }
   },
 
-  beginCriticalMove2: function beginCriticalMove(destCriticalRect) {
+  beginCriticalMove: function beginCriticalMove(destCriticalRect) {
     function appendNonDirtyTile(tile) {
       if (!tile.isDirty())
         this._appendTileSafe(tile);
     }
 
-    if (destCriticalRect)
-      this._tileCache.forEachIntersectingRect(destCriticalRect, false, appendNonDirtyTile, this);
+    if (destCriticalRect) {
+      //this._tileCache.forEachIntersectingRect(destCriticalRect, false, appendNonDirtyTile, this);
+      let tc = this._tileCache;
+      FOREACH_RECT(destCriticalRect, tc, appendNonDirtyTile, this);
+    }
   },
 
-  beginCriticalMove: function beginCriticalMoveUnrolled(destCriticalRect) {
+  beginCriticalMoveUnrolled: function beginCriticalMoveUnrolled(destCriticalRect) {
     let start = Date.now();
 
     if (destCriticalRect) {
@@ -298,8 +308,10 @@ TileManager.prototype = {
     };
 
     let start = Date.now();
-    if (cr)
-      tc.forEachIntersectingRect(cr, false, f, this);
+    if (cr) {
+      //tc.forEachIntersectingRect(cr, false, f, this);
+      FOREACH_RECT(cr, tc, f, this);
+    }
     dump(" release: " + (Date.now() - start) + "\n");
     start = Date.now();
     if (destCriticalRect)
@@ -404,7 +416,9 @@ TileManager.prototype = {
       this._tileCache.holdTile(tile);
     }
 
-    this._tileCache.forEachIntersectingRect(rect, true, renderAppendHoldTile, this);
+    //this._tileCache.forEachIntersectingRect(rect, true, renderAppendHoldTile, this);
+    let tc = this._tileCache;
+    FOREACH_RECT_CREATE(rect, tc, renderAppendHoldTile, this);
   },
 
   _idleTileCrawler: function _idleTileCrawler(self) {
@@ -741,11 +755,14 @@ TileManager.TileCache.prototype = {
   },
 
   holdTilesIntersectingRect: function holdTilesIntersectingRect(rect) {
-    this.forEachIntersectingRect(rect, false, this.holdTile, this);
+    //this.forEachIntersectingRect(rect, false, this.holdTile, this);
+    //FOREACH_RECT_CREATE(rect, tilecache, fn, thisObj)
+    FOREACH_RECT(rect, this, this.holdTile, this);
   },
 
   releaseTilesIntersectingRect: function releaseTilesIntersectingRect(rect) {
-    this.forEachIntersectingRect(rect, false, this.releaseTile, this);
+    //this.forEachIntersectingRect(rect, false, this.releaseTile, this);
+    FOREACH_RECT(rect, this, this.releaseTile, this);
   }
 
 };

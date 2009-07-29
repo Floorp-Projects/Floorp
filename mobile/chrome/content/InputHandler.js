@@ -747,9 +747,8 @@ MouseModule.prototype = {
         return (newX.value != oldX.value) || (newY.value != oldY.value);
       } else {
         scroller.scrollBy(dx, dy);
-        /* never say we scrolled if we can't get the position, as this will
-         * cause kinetic to never stop */
-        return false;
+        /* always say we scrolled if we can't get the position */
+        return true;
       }
     }
   },
@@ -936,7 +935,7 @@ KineticController.prototype = {
       notify: function kineticTimerCallback(timer) {
         let self = this._self;
 
-        //dump("             speeds: " + self._speedX + " " + self._speedY + "\n");
+        dump("             speeds: " + self._speedX + " " + self._speedY + "\n");
 
         if (self._speedX == 0 && self._speedY == 0) {
           self.end();
@@ -946,7 +945,8 @@ KineticController.prototype = {
         let dy = Math.round(self._speedY * self._updateInterval);
         //dump("dx, dy: " + dx + " " + dy + "\n");
 
-        let panned = self._panBy(-dx, -dy);
+        let panned = false;
+        try { panned = self._panBy(-dx, -dy); } catch (e) {}
         if (!panned) {
           self.end();
           return;

@@ -48,9 +48,13 @@ ifdef ENABLE_TESTS
 DIRS += tests
 endif
 
-# Preprocess JS files!
+# Preprocess some JS files!
 $(srcdir)/content/TileManager.js: $(srcdir)/content/TileManager.js.in
-	$(CC) -c -x c -E -P -I$(srcdir) $< > $@
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+	$(CC) -EP -C -nologo -I$(srcdir) $< > $@
+else
+	$(CC) -x c -C -E -P -I$(srcdir) $< > $@
+endif
 
 include $(topsrcdir)/config/rules.mk
 
