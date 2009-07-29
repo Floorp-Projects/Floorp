@@ -174,21 +174,21 @@ protected:
     /**
      * Notify global nsIObserver's that a11y is getting init'd or shutdown
      */
-    static void NotifyA11yInitOrShutdown();
+    static void NotifyA11yInitOrShutdown(PRBool aIsInit);
 
     // Static data, we do our own refcounting for our static data
     static nsIStringBundle *gStringBundle;
     static nsIStringBundle *gKeyStringBundle;
     static nsITimer *gDoCommandTimer;
+#ifdef DEBUG
     static PRBool gIsAccessibilityActive;
-    static PRBool gIsShuttingDownApp;
+#endif
     static PRBool gIsCacheDisabled;
     static PRBool gIsFormFillEnabled;
 
     static nsAccessNodeHashtable gGlobalDocAccessibleCache;
 
 private:
-  static nsIAccessibilityService *sAccService;
   static nsApplicationAccessibleWrap *gApplicationAccessible;
 };
 
