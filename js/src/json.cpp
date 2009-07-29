@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <string.h>     /* memset */
+#include <string.h>
 #include "jsapi.h"
 #include "jsarena.h"
 #include "jsarray.h"
@@ -78,7 +78,7 @@ js_json_parse(JSContext *cx, uintN argc, jsval *vp)
     jsval *argv = vp + 2;
     jsval reviver = JSVAL_NULL;
     JSAutoTempValueRooter(cx, 1, &reviver);
-    
+
     if (!JS_ConvertArguments(cx, argc, argv, "S / v", &s, &reviver))
         return JS_FALSE;
 
@@ -523,7 +523,7 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 
         char numBuf[DTOSTR_STANDARD_BUFFER_SIZE], *numStr;
         jsdouble d = JSVAL_IS_INT(*vp) ? jsdouble(JSVAL_TO_INT(*vp)) : *JSVAL_TO_DOUBLE(*vp);
-        numStr = JS_dtostr(numBuf, sizeof numBuf, DTOSTR_STANDARD, 0, d);        
+        numStr = JS_dtostr(numBuf, sizeof numBuf, DTOSTR_STANDARD, 0, d);
         if (!numStr) {
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
@@ -546,7 +546,7 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 
         return ok;
     }
-    
+
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -640,7 +640,7 @@ static JSBool
 Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
 {
     JS_CHECK_RECURSION(cx, return JS_FALSE);
-    
+
     if (!OBJ_GET_PROPERTY(cx, holder, id, vp))
         return JS_FALSE;
 
@@ -649,7 +649,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
     if (!JSVAL_IS_PRIMITIVE(*vp) && !js_IsCallable(obj = JSVAL_TO_OBJECT(*vp), cx)) {
         jsval propValue = JSVAL_NULL;
         JSAutoTempValueRooter tvr(cx, 1, &propValue);
-        
+
         if(OBJ_IS_ARRAY(cx, obj)) {
             jsuint length = 0;
             if (!js_GetLengthProperty(cx, obj, &length))
@@ -713,7 +713,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
 static JSBool
 Revive(JSContext *cx, jsval reviver, jsval *vp)
 {
-    
+
     JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!obj)
         return JS_FALSE;
@@ -740,10 +740,9 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
     if (!arr)
         return NULL;
 
-    JSONParser *jp = (JSONParser*) JS_malloc(cx, sizeof(JSONParser));
+    JSONParser *jp = (JSONParser*) cx->calloc(sizeof(JSONParser));
     if (!jp)
         return NULL;
-    memset(jp, 0, sizeof *jp);
 
     jp->objectStack = arr;
     if (!js_AddRoot(cx, &jp->objectStack, "JSON parse stack"))
@@ -798,7 +797,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
 
     JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
     jsval *vp = jp->rootVal;
-    JS_free(cx, jp);
+    cx->free(jp);
 
     if (!early_ok)
         return JS_FALSE;
@@ -820,7 +819,7 @@ PushState(JSContext *cx, JSONParser *jp, JSONParserState state)
     if (*jp->statep == JSON_PARSE_STATE_FINISHED) {
         // extra input
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
-        return JS_FALSE; 
+        return JS_FALSE;
     }
 
     jp->statep++;
@@ -993,10 +992,10 @@ HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
         return JS_FALSE;
     }
 
-    jsval numVal;        
+    jsval numVal;
     if (!JS_NewNumberValue(cx, val, &numVal))
         return JS_FALSE;
-        
+
     return PushPrimitive(cx, jp, numVal);
 }
 
@@ -1248,7 +1247,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE);
                 return JS_FALSE;
             }
-            
+
             if (++(jp->numHex) == 4) {
                 js_FastAppendChar(&jp->buffer, jp->hexChar);
                 jp->hexChar = 0;
@@ -1265,7 +1264,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 i--;
                 if (!PopState(cx, jp))
                     return JS_FALSE;
-            
+
                 if (!HandleData(cx, jp, JSON_DATA_KEYWORD))
                     return JS_FALSE;
             }

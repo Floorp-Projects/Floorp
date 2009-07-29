@@ -280,7 +280,25 @@ extern JSBool
 js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
-js_GetCallVar(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+js_GetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+extern JSBool
+SetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+extern JSBool
+SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+/*
+ * js_SetCallArg and js_SetCallVar are extern fastcall copies of the setter
+ * functions. These versions are required in order to set call vars from traces.
+ * The normal versions must not be fastcall because they are stored in the
+ * property ops map.
+ */
+extern JSBool JS_FASTCALL
+js_SetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval v);
+
+extern JSBool JS_FASTCALL
+js_SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval v);
 
 /*
  * Slower version of js_GetCallVar used when call_resolve detects an attempt to

@@ -86,7 +86,7 @@ struct JSTraceableNative {
     const nanojit::CallInfo *builtin;
     const char              *prefix;
     const char              *argtypes;
-    uintN                   flags;  /* JSTNErrType | JSTN_UNBOX_AFTER | JSTN_MORE | 
+    uintN                   flags;  /* JSTNErrType | JSTN_UNBOX_AFTER | JSTN_MORE |
                                        JSTN_CONSTRUCTOR */
 };
 
@@ -117,7 +117,7 @@ struct JSTraceableNative {
 #endif
 
 /*
- * Supported types for builtin functions. 
+ * Supported types for builtin functions.
  *
  * Types with -- for the two string fields are not permitted as argument types
  * in JS_DEFINE_TRCINFO.
@@ -165,7 +165,7 @@ struct JSTraceableNative {
  * trace.  If an exception is pending, it is thrown; otherwise, we assume the
  * builtin had no side effects and retry the current bytecode in the
  * interpreter.
- * 
+ *
  * So a builtin must not return a value indicating failure after causing side
  * effects (such as reporting an error), without setting an exception pending.
  * The operation would be retried, despite the first attempt's observable
@@ -187,6 +187,7 @@ struct JSTraceableNative {
 #define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
 #define _JS_CTYPE_JSVAL_RETRY       _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_COOKIE)
 #define _JS_CTYPE_JSVAL_FAIL        _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_STATUS)
+#define _JS_CTYPE_JSID              _JS_CTYPE(jsid,                   _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_VOID)
 #define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_STATUS)
@@ -414,6 +415,9 @@ js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed);
 extern JS_FRIEND_API(void)
 js_SetTraceableNativeFailed(JSContext *cx);
 
+extern jsdouble FASTCALL
+js_dmod(jsdouble a, jsdouble b);
+
 #else
 
 #define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)
@@ -443,6 +447,10 @@ JS_DECLARE_CALLINFO(js_ArrayCompPush)
 /* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_AllocFlatClosure)
 JS_DECLARE_CALLINFO(js_PutArguments)
+
+/* Defined in jsfun.cpp. */
+JS_DECLARE_CALLINFO(js_SetCallVar)
+JS_DECLARE_CALLINFO(js_SetCallArg)
 
 /* Defined in jsnum.cpp. */
 JS_DECLARE_CALLINFO(js_NumberToString)

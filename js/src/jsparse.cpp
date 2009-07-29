@@ -3802,7 +3802,7 @@ CheckDestructuring(JSContext *cx, BindData *data,
 /*
  * This is a greatly pared down version of CheckDestructuring that extends the
  * pn_pos.end source coordinate of each name in a destructuring binding such as
- * 
+ *
  *   var [x, y] = [function () y, 42];
  *
  * to cover its corresponding initializer, so that the initialized binding does
@@ -9036,12 +9036,12 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
-            chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
+            chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
             str = js_NewString(cx, chars, length);
             if (!str) {
-                JS_free(cx, chars);
+                cx->free(chars);
                 return JS_FALSE;
             }
 

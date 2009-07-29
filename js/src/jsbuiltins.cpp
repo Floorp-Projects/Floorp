@@ -129,7 +129,7 @@ js_BoxInt32(JSContext* cx, int32 i)
     if (!js_NewDoubleInRootedValue(cx, d, &v))
         return JSVAL_ERROR_COOKIE;
     return v;
-} 
+}
 JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxInt32, CONTEXT, INT32, 1, 1)
 
 jsdouble FASTCALL
@@ -242,8 +242,6 @@ JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
-
     JS_LOCK_OBJ(cx, obj);
 
     JSScope* scope = OBJ_SCOPE(obj);

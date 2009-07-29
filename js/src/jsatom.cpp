@@ -783,7 +783,7 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
     str.initFlat(chars, inflatedLength);
     atom = js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
     if (chars != inflated && str.flatChars())
-        JS_free(cx, chars);
+        cx->free(chars);
     return atom;
 }
 
