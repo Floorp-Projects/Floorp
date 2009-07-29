@@ -156,13 +156,13 @@ DEFINES += \
   -DEXPORT_XPC_API \
   $(NULL)
 
-CONFIG := $(shell cat $(DEPTH)/js/src/mozilla-config.h)
+CONFIG := $(shell cat $(DEPTH)/js/src/js-confdefs.h)
 
 ENABLE_JIT = $(filter JS_TRACER, $(CONFIG))
 
 ifneq (,$(ENABLE_JIT))
 
-# Ugly! We need the AVMPLUS defines out of js/src/mozilla-config.h to make the
+# Ugly! We need the AVMPLUS defines out of js/src/js-confdefs.h to make the
 # nanojit headers happy. Gotta figure out a better way to get them, bug 483677.
 DEFINES += \
   -DJS_TRACER=1 \
@@ -211,7 +211,7 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
                     $(srcdir)/qsgen.py \
                     $(topsrcdir)/xpcom/idl-parser/header.py \
                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
-                    $(DEPTH)/js/src/mozilla-config.h
+                    $(DEPTH)/js/src/js-confdefs.h
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  -I$(topsrcdir)/other-licenses/ply \
 	  -I$(topsrcdir)/xpcom/idl-parser \
