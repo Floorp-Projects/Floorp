@@ -65,7 +65,7 @@ public:
 
     }
 
-    virtual nsresult AnswerNPN_GetValue(const String& in, String* out)
+    virtual nsresult AnswerNPN_GetValue(const nsString& in, nsString* out)
     {
         return NS_OK;
     }

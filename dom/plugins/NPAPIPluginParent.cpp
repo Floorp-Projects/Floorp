@@ -71,10 +71,10 @@ NPAPIPluginParent::~NPAPIPluginParent()
 }
 
 NPPProtocolParent*
-NPAPIPluginParent::NPPConstructor(const String& aMimeType,
+NPAPIPluginParent::NPPConstructor(const nsCString& aMimeType,
                                   const uint16_t& aMode,
-                                  const StringArray& aNames,
-                                  const StringArray& aValues,
+                                  const nsTArray<nsCString>& aNames,
+                                  const nsTArray<nsCString>& aValues,
                                   NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
@@ -154,27 +154,30 @@ NPAPIPluginParent::NP_GetEntryPoints(NPPluginFuncs* nppIface)
 #endif
 
 NPError
-NPAPIPluginParent::NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
-                           int16_t argc, char* argn[], char* argv[],
+NPAPIPluginParent::NPP_New(NPMIMEType pluginType,
+                           NPP instance,
+                           uint16_t mode,
+                           int16_t argc,
+                           char* argn[],
+                           char* argv[],
                            NPSavedData* saved)
 {
     _MOZ_LOG(__FUNCTION__);
 
     // create the instance on the other side
-    StringArray names;
-    StringArray values;
+    nsTArray<nsCString> names;
+    nsTArray<nsCString> values;
 
     for (int i = 0; i < argc; ++i) {
-        names.push_back(argn[i]);
-        values.push_back(argv[i]);
+        names.AppendElement(nsDependentCString(argn[i]));
+        values.AppendElement(nsDependentCString(argv[i]));
     }
 
     NPError prv;
     nsAutoPtr<NPPInstanceParent> parentInstance(
-        static_cast<NPPInstanceParent*>(CallNPPConstructor(pluginType,
-                                                           mode, names,
-                                                           values,
-                                                           &prv)));
+        static_cast<NPPInstanceParent*>(
+            CallNPPConstructor(nsDependentCString(pluginType), mode, names,
+                               values, &prv)));
     printf ("[NPAPIPluginParent] %s: got return value %hd\n", __FUNCTION__,
             prv);
 

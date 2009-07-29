@@ -101,10 +101,10 @@ protected:
     virtual nsresult AnswerNP_Initialize(NPError* rv);
 
     virtual NPPProtocolChild* NPPConstructor(
-        const String& aMimeType,
+        const nsCString& aMimeType,
         const uint16_t& aMode,
-        const StringArray& aNames,
-        const StringArray& aValues,
+        const nsTArray<nsCString>& aNames,
+        const nsTArray<nsCString>& aValues,
         NPError* rv);
 
     virtual nsresult NPPDestructor(

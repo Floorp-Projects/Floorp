@@ -57,7 +57,6 @@ EXPORTS_mozilla/ipc =				\
   AsyncChannel.h				\
   GeckoChildProcessHost.h			\
   GeckoThread.h 				\
-  MessageTypes.h 				\
   ProtocolUtils.h				\
   RPCChannel.h					\
   SyncChannel.h					\

@@ -913,10 +913,10 @@ NPAPIPluginChild::AnswerNP_Initialize(NPError* _retval)
 }
 
 NPPProtocolChild*
-NPAPIPluginChild::NPPConstructor(const String& aMimeType,
+NPAPIPluginChild::NPPConstructor(const nsCString& aMimeType,
                                  const uint16_t& aMode,
-                                 const StringArray& aNames,
-                                 const StringArray& aValues,
+                                 const nsTArray<nsCString>& aNames,
+                                 const nsTArray<nsCString>& aValues,
                                  NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
@@ -930,19 +930,19 @@ NPAPIPluginChild::NPPConstructor(const String& aMimeType,
     }
 
     // unpack the arguments into a C format
-    int argc = aNames.size();
-    NS_ASSERTION(argc == (int) aValues.size(),
+    int argc = aNames.Length();
+    NS_ASSERTION(argc == (int) aValues.Length(),
                  "argn.length != argv.length");
 
-    char** argn = (char**) calloc(1 + argc, sizeof(char*));
-    char** argv = (char**) calloc(1 + argc, sizeof(char*));
+    nsAutoArrayPtr<char*> argn(new char*[1 + argc]);
+    nsAutoArrayPtr<char*> argv(new char*[1 + argc]);
     argn[argc] = 0;
     argv[argc] = 0;
 
     printf ("(plugin args: ");
     for (int i = 0; i < argc; ++i) {
-        argn[i] = strdup(aNames[i].c_str());
-        argv[i] = strdup(aValues[i].c_str());
+        argn[i] = const_cast<char*>(aNames[i].get());
+        argv[i] = const_cast<char*>(aValues[i].get());
         printf("%s=%s, ", argn[i], argv[i]);
     }
     printf(")\n");
@@ -950,7 +950,7 @@ NPAPIPluginChild::NPPConstructor(const String& aMimeType,
     NPP npp = childInstance->GetNPP();
 
     // FIXME/cjones: use SAFE_CALL stuff
-    *rv = mFunctions.newp((char*) aMimeType.c_str(),
+    *rv = mFunctions.newp((char*)aMimeType.get(),
                           npp,
                           aMode,
                           argc,
@@ -958,19 +958,10 @@ NPAPIPluginChild::NPPConstructor(const String& aMimeType,
                           argv,
                           0);
     if (NPERR_NO_ERROR != *rv) {
-        childInstance = 0;
-        goto out;
+        return nsnull;
     }
 
-out:
     printf ("[NPAPIPluginChild] %s: returning %hd\n", __FUNCTION__, *rv);
-    for (int i = 0; i < argc; ++i) {
-        free(argn[i]);
-        free(argv[i]);
-    }
-    free(argn);
-    free(argv);
-
     return childInstance.forget();
 }
 
