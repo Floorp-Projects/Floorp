@@ -39,8 +39,19 @@
 
 # OS detection
 
-sys := $(shell uname -s)
+xpidl = $(sdkdir)/bin/xpidl
+link = link
 
+sys := $(shell uname -s)
+wince = $(WINCE)
+
+ifeq ($(wince), 1)
+  os = WINNT
+  cxx = $(sdkdir)/sdk/bin/arm-wince-gcc
+  xpidl = $(sdkdir)/host/bin/host_xpidl
+  link = $(sdkdir)/sdk/bin/arm-wince-link
+  so = dll
+else
 ifeq ($(sys), Darwin)
   os = Darwin
   compiler = gcc3
@@ -55,7 +66,7 @@ ifeq ($(sys), Linux)
   so = so
   cppflags += -shared
 else
-ifeq ($(sys), MINGW32_NT-6.0)
+ifeq ($(sys), MINGW32_NT-6.1)
   os = WINNT
   compiler = msvc
   cxx = cl
@@ -75,6 +86,7 @@ ifeq ($(sys), SunOS)
   cppflags += -G
 else
   $(error Sorry, your os is unknown/unsupported: $(sys))
+endif
 endif
 endif
 endif
@@ -153,8 +165,6 @@ sdkdir ?= ${MOZSDKDIR}
 destdir = ..
 platformdir = $(destdir)/platform/$(platform)
 
-xpidl = $(sdkdir)/bin/xpidl
-
 # FIXME: we don't actually require this for e.g. clean
 ifeq ($(sdkdir),)
   $(warning No 'sdkdir' variable given)
@@ -180,11 +190,17 @@ headers = -I$(sdkdir)/include \
 
 # libraries
 libdirs := $(sdkdir)/lib $(sdkdir)/bin
+ifeq ($(wince),1)
 libs := xpcomglue_s xpcom nspr4 \
         crmf smime3 ssl3 nss3 nssutil3 \
         plds4 plc4
+else
+libs := xpcomglue xpcomglue_s nspr4 \
+        crmf smime3 ssl3 nss3 nssutil3 \
+        plds4 plc4
+endif
 
-ifeq ($(os), linux)
+ifeq ($(os), Linux)
   libs := xpcom_core $(libs)
 endif
 
@@ -256,6 +272,16 @@ ifeq ($(os), SunOS)
              $(sdkdir)/lib/libxpcomglue_s.a \
              $(libdirs) $(libs)
 else
+ifneq ($(wince),)
+  libdirs := $(patsubst %,-LIBPATH:%,$(libdirs))
+  libs := $(patsubst %,$(sdkdir)/lib/%.lib,$(libs))
+  cppflags += -c -nologo -O1 -GR- -TP -Zc:wchar_t- -W3 -Gy $(headers) \
+              -DMOZILLA_STRICT_API \
+              -D"_WIN32_WCE=0x502" -D"UNDER_CE" -D"WIN32_PLATFORM_PSPC"   \
+			  -D"WINCE" -D"ARM" -D"_ARM_" -D"POCKETPC2003_UI_MODEL" -DXP_WIN
+  ldflags += -DLL $(libdirs) $(libs)
+  rcflags := -r $(headers)
+else
 ifeq ($(os), WINNT)
   libdirs := $(patsubst %,-LIBPATH:%,$(libdirs))
   libs := $(patsubst %,$(sdkdir)/lib/%.lib,$(libs))
@@ -272,6 +298,7 @@ ifeq ($(os), WINNT)
     $(libdirs) $(libs) \
     kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib
   rcflags := -r $(headers)
+endif
 endif
 endif
 endif
@@ -347,7 +374,7 @@ ifeq ($(os), WINNT)
 	$(cxx) -Fo$@ -Fd$(@:.o=.pdb) $(cppflags) $(@:.o=.cpp)
 
   $(so_target): $(idl_headers) $(cpp_objects) $(target:=.res)
-	link -OUT:$@ -PDB:$(@:.dll=.pdb) $(cpp_objects) $(target:=.res) $(ldflags)
+	$(link) -OUT:$@ -PDB:$(@:.dll=.pdb) $(cpp_objects) $(target:=.res) $(ldflags)
 	chmod +x $@
 endif
 endif
