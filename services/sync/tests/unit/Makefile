@@ -10,7 +10,7 @@ else
 ifeq ($(sys), Linux)
   os = Linux
 else
-ifeq ($(sys), MINGW32_NT-6.1)
+ifeq ($(sys), MINGW32_NT-6.0)
   os = WINNT
 else
 ifeq ($(sys), MINGW32_NT-5.1)
