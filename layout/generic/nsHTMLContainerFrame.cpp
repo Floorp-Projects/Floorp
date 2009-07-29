@@ -611,12 +611,12 @@ nsHTMLContainerFrame::ReparentFrameView(nsPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLContainerFrame::ReparentFrameViewList(nsPresContext* aPresContext,
-                                            nsIFrame*       aChildFrameList,
-                                            nsIFrame*       aOldParentFrame,
-                                            nsIFrame*       aNewParentFrame)
+nsHTMLContainerFrame::ReparentFrameViewList(nsPresContext*     aPresContext,
+                                            const nsFrameList& aChildFrameList,
+                                            nsIFrame*          aOldParentFrame,
+                                            nsIFrame*          aNewParentFrame)
 {
-  NS_PRECONDITION(aChildFrameList, "null child frame list");
+  NS_PRECONDITION(aChildFrameList.NotEmpty(), "empty child frame list");
   NS_PRECONDITION(aOldParentFrame, "null old parent frame pointer");
   NS_PRECONDITION(aNewParentFrame, "null new parent frame pointer");
   NS_PRECONDITION(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
@@ -665,9 +665,8 @@ nsHTMLContainerFrame::ReparentFrameViewList(nsPresContext* aPresContext,
     nsIViewManager* viewManager = oldParentView->GetViewManager();
 
     // They're not so we need to reparent any child views
-    for (nsIFrame* f = aChildFrameList; f; f = f->GetNextSibling()) {
-      ReparentFrameViewTo(f, viewManager, newParentView,
-                          oldParentView);
+    for (nsFrameList::Enumerator e(aChildFrameList); !e.AtEnd(); e.Next()) {
+      ReparentFrameViewTo(e.get(), viewManager, newParentView, oldParentView);
     }
   }
 

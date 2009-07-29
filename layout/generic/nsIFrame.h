@@ -54,6 +54,7 @@
 #include "nsIContent.h"
 #include "nsHTMLReflowMetrics.h"
 #include "gfxMatrix.h"
+#include "nsFrameList.h"
 
 /**
  * New rules of reflow:
@@ -542,11 +543,13 @@ public:
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
    *            initial list of frames has already been set for that child list,
-   *          NS_OK otherwise
+   *          NS_OK otherwise.  In this case, SetInitialChildList empties out
+   *            aChildList in the process of moving the frames over to its own
+   *            child list.
    * @see     #Init()
    */
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
-                                  nsIFrame*       aChildList) = 0;
+                                  nsFrameList&    aChildList) = 0;
 
   /**
    * This method is responsible for appending frames to the frame
@@ -847,14 +850,23 @@ public:
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const = 0;
 
   /**
-   * Get the first child frame from the specified child list.
+   * Get the specified child list.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
-   * @return  the child frame, or NULL if there is no such child
+   * @return  the child list.  If this is an unknown list name, an empty list
+   *            will be returned.
    * @see     #GetAdditionalListName()
    */
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const = 0;
+  // XXXbz if all our frame storage were actually backed by nsFrameList, we
+  // could make this return a const reference...  nsBlockFrame is the only real
+  // culprit here.  Make sure to assign the return value of this function into
+  // a |const nsFrameList&|, not an nsFrameList.
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const = 0;
+  // XXXbz this method should go away
+  nsIFrame* GetFirstChild(nsIAtom* aListName) const {
+    return GetChildList(aListName).FirstChild();
+  }
 
   /**
    * Get the last child frame from the specified child list.
@@ -2535,4 +2547,38 @@ private:
   nsIFrame*     mFrame;
 };
 
+inline void
+nsFrameList::Enumerator::Next() {
+  NS_ASSERTION(!AtEnd(), "Should have checked AtEnd()!");
+  mFrame = mFrame->GetNextSibling();
+}
+
+inline nsFrameList::Slice
+nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                          nsFrameList& aFrameList) {
+  NS_PRECONDITION(!aFrameList.IsEmpty(), "Unexpected empty list");
+  nsIFrame* firstNewFrame = aFrameList.FirstChild();
+  nsIFrame* nextSibling =
+    aPrevSibling ? aPrevSibling->GetNextSibling() : FirstChild();
+  InsertFrames(aParent, aPrevSibling, firstNewFrame);
+  aFrameList.Clear();
+  return Slice(*this, firstNewFrame, nextSibling);
+}
+
+inline void
+nsFrameList::AppendFrame(nsIFrame* aParent, nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame && !aFrame->GetNextSibling(),
+                  "Shouldn't be appending more than one frame");
+  AppendFrames(aParent, aFrame);
+}
+
+inline void
+nsFrameList::InsertFrame(nsIFrame* aParent,
+                         nsIFrame* aPrevSibling,
+                         nsIFrame* aNewFrame) {
+  NS_PRECONDITION(aNewFrame && !aNewFrame->GetNextSibling(),
+                  "Shouldn't be inserting more than one frame");
+  InsertFrames(aParent, aPrevSibling, aNewFrame);
+}
 #endif /* nsIFrame_h___ */

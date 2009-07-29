@@ -94,6 +94,14 @@ ifeq ($(OS_TARGET),OSF1)
     MPI_SRCS += mpvalpha.c
 endif
 
+ifeq (OS2,$(OS_TARGET))
+    ASFILES  = mpi_x86_os2.s
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+    DEFINES += -DMP_ASSEMBLY_DIV_2DX1D
+    DEFINES += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
+    DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+endif
+
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))  #omits WINCE
 ifndef USE_64
 # 32-bit Windows
@@ -222,9 +230,6 @@ endif
 
 ifeq ($(OS_TARGET),SunOS)
 
-# The -R '$ORIGIN' linker option instructs this library to search for its
-# dependencies in the same directory where it resides.
-MKSHLIB += -R '$$ORIGIN'
 ifdef NS_USE_GCC
     ifdef GCC_USE_GNU_LD
 	MKSHLIB += -Wl,-Bsymbolic,-z,now,-z,text

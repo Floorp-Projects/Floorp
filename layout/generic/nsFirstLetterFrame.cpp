@@ -97,16 +97,17 @@ nsFirstLetterFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::SetInitialChildList(nsIAtom*  aListName,
-                                        nsIFrame* aChildList)
+nsFirstLetterFrame::SetInitialChildList(nsIAtom*     aListName,
+                                        nsFrameList& aChildList)
 {
-  mFrames.SetFrames(aChildList);
   nsFrameManager *frameManager = PresContext()->FrameManager();
 
-  for (nsIFrame* frame = aChildList; frame; frame = frame->GetNextSibling()) {
-    NS_ASSERTION(frame->GetParent() == this, "Unexpected parent");
-    frameManager->ReParentStyleContext(frame);
+  for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
+    NS_ASSERTION(e.get()->GetParent() == this, "Unexpected parent");
+    frameManager->ReParentStyleContext(e.get());
   }
+
+  mFrames.SetFrames(aChildList);
   return NS_OK;
 }
 
@@ -300,31 +301,28 @@ nsFirstLetterFrame::CanContinueTextRun() const
 void
 nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
 {
-  nsIFrame* overflowFrames;
+  nsAutoPtr<nsFrameList> overflowFrames;
 
   // Check for an overflow list with our prev-in-flow
   nsFirstLetterFrame* prevInFlow = (nsFirstLetterFrame*)GetPrevInFlow();
   if (nsnull != prevInFlow) {
-    overflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
+    overflowFrames = prevInFlow->StealOverflowFrames();
     if (overflowFrames) {
       NS_ASSERTION(mFrames.IsEmpty(), "bad overflow list");
 
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
-      nsIFrame* f = overflowFrames;
-      while (f) {
-        nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, prevInFlow, this);
-        f = f->GetNextSibling();
-      }
-      mFrames.InsertFrames(this, nsnull, overflowFrames);
+      nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, *overflowFrames,
+                                                  prevInFlow, this);
+      mFrames.InsertFrames(this, nsnull, *overflowFrames);
     }
   }
 
   // It's also possible that we have an overflow list for ourselves
-  overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
+  overflowFrames = StealOverflowFrames();
   if (overflowFrames) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    mFrames.AppendFrames(nsnull, overflowFrames);
+    mFrames.AppendFrames(nsnull, *overflowFrames);
   }
 
   // Now repair our first frames style context (since we only reflow

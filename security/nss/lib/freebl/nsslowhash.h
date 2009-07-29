@@ -45,6 +45,7 @@ typedef struct NSSLOWHASHContextStr NSSLOWHASHContext;
 
 NSSLOWInitContext *NSSLOW_Init(void);
 void NSSLOW_Shutdown(NSSLOWInitContext *context);
+void NSSLOW_Reset(NSSLOWInitContext *context);
 NSSLOWHASHContext *NSSLOWHASH_NewContext(
 			NSSLOWInitContext *initContext, 
 			HASH_HashType hashType);

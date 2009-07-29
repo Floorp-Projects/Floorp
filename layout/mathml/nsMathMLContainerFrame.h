@@ -398,7 +398,7 @@ public:
   // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames
   NS_IMETHOD
   SetInitialChildList(nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
+                      nsFrameList&    aChildList)
   {
     NS_ASSERTION(!aListName, "unexpected frame list");
     nsresult rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
@@ -466,7 +466,7 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
+                      nsFrameList&    aChildList)
   {
     NS_ASSERTION(!aListName, "unexpected frame list");
     nsresult rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);

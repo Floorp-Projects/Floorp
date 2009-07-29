@@ -70,7 +70,7 @@ ViewportFrame::Destroy()
 
 NS_IMETHODIMP
 ViewportFrame::SetInitialChildList(nsIAtom*        aListName,
-                                   nsIFrame*       aChildList)
+                                   nsFrameList&    aChildList)
 {
   nsresult rv = NS_OK;
 
@@ -97,7 +97,8 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // mark our visible out-of-flow frames (i.e., the fixed position frames) so
   // that display list construction is guaranteed to recurse into their
   // ancestors.
-  aBuilder->MarkFramesForDisplayList(this, mFixedContainer.GetFirstChild(), aDirtyRect);
+  aBuilder->MarkFramesForDisplayList(this, mFixedContainer.GetChildList(),
+                                     aDirtyRect);
 
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid)
@@ -120,7 +121,7 @@ ViewportFrame::AppendFrames(nsIAtom*        aListName,
   }
   else {
     NS_ASSERTION(!aListName, "unexpected child list");
-    NS_ASSERTION(!GetFirstChild(nsnull), "Shouldn't have any kids!");
+    NS_ASSERTION(GetChildList(nsnull).IsEmpty(), "Shouldn't have any kids!");
     rv = nsContainerFrame::AppendFrames(aListName, aFrameList);
   }
 
@@ -139,7 +140,7 @@ ViewportFrame::InsertFrames(nsIAtom*        aListName,
   }
   else {
     NS_ASSERTION(!aListName, "unexpected child list");
-    NS_ASSERTION(!GetFirstChild(nsnull), "Shouldn't have any kids!");
+    NS_ASSERTION(GetChildList(nsnull).IsEmpty(), "Shouldn't have any kids!");
     rv = nsContainerFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
   }
 
@@ -175,13 +176,13 @@ ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsnull;
 }
 
-nsIFrame*
-ViewportFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+ViewportFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::fixedList == aListName)
-    return mFixedContainer.GetFirstChild();
+    return mFixedContainer.GetChildList();
 
-  return nsContainerFrame::GetFirstChild(aListName);
+  return nsContainerFrame::GetChildList(aListName);
 }
 
 /* virtual */ nscoord
@@ -304,8 +305,8 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   nsPoint offset = AdjustReflowStateForScrollbars(&reflowState);
   
 #ifdef DEBUG
-  nsIFrame* f = mFixedContainer.GetFirstChild();
-  NS_ASSERTION(!f || (offset.x == 0 && offset.y == 0),
+  NS_ASSERTION(mFixedContainer.GetChildList().IsEmpty() ||
+               (offset.x == 0 && offset.y == 0),
                "We don't handle correct positioning of fixed frames with "
                "scrollbars in odd positions");
 #endif

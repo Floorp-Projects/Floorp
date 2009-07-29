@@ -58,6 +58,7 @@ static PRInt32  filesToRead;
 static DWORD    totalFileBytes;
 static DWORD    maxFileBytes	= 250000;	/* 250 thousand */
 static DWORD    dwNumFiles, dwReadEvery, dwFileToRead;
+static PRBool   usedWindowsPRNG;
 
 static BOOL
 CurrentClockTickTime(LPDWORD lpdwHigh, LPDWORD lpdwLow)
@@ -131,24 +132,25 @@ size_t RNG_GetNoise(void *buf, size_t maxbuf)
     return n;
 }
 
-typedef PRInt32 (* Handler)(const char *);
+typedef PRInt32 (* Handler)(const PRUnichar *);
 #define MAX_DEPTH 2
+#define MAX_FOLDERS 4
+#define MAX_FILES 1024
 
 static void
 EnumSystemFilesInFolder(Handler func, PRUnichar* szSysDir, int maxDepth) 
 {
     int                 iContinue;
+    unsigned int        uFolders  = 0;
+    unsigned int        uFiles    = 0;
     HANDLE              lFindHandle;
     WIN32_FIND_DATAW    fdData;
     PRUnichar           szFileName[_MAX_PATH];
-    char                narrowFileName[_MAX_PATH];
 
     if (maxDepth < 0)
     	return;
-    // tack *.* on the end so we actually look for files. this will
-    // not overflow
-    wcscpy(szFileName, szSysDir);
-    wcscat(szFileName, L"\\*.*");
+    // append *.* so we actually look for files.
+    _snwprintf(szFileName, _MAX_PATH, L"%s\\*.*", szSysDir);
 
     lFindHandle = FindFirstFileW(szFileName, &fdData);
     if (lFindHandle == INVALID_HANDLE_VALUE)
@@ -163,13 +165,10 @@ EnumSystemFilesInFolder(Handler func, PRUnichar* szSysDir, int maxDepth)
 	    _snwprintf(szFileName, _MAX_PATH, L"%s\\%s", szSysDir, 
 		       fdData.cFileName);
 	    if (fdData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-		EnumSystemFilesInFolder(func, szFileName, maxDepth - 1);
+		if (++uFolders <= MAX_FOLDERS)
+		    EnumSystemFilesInFolder(func, szFileName, maxDepth - 1);
 	    } else {
-		iContinue = WideCharToMultiByte(CP_ACP, 0, szFileName, -1, 
-						narrowFileName, _MAX_PATH, 
-						NULL, NULL);
-		if (iContinue)
-		    iContinue = !(*func)(narrowFileName);
+		iContinue = (++uFiles <= MAX_FILES) && !(*func)(szFileName);
 	    }
 	}
 	if (iContinue)
@@ -187,7 +186,6 @@ EnumSystemFiles(Handler func)
 	CSIDL_RECENT,
 #ifndef WINCE		     
 	CSIDL_INTERNET_CACHE, 
-	CSIDL_COMPUTERSNEARME, 
 	CSIDL_HISTORY,
 #endif
 	0
@@ -208,17 +206,16 @@ EnumSystemFiles(Handler func)
 }
 
 static PRInt32
-CountFiles(const char *file)
+CountFiles(const PRUnichar *file)
 {
     dwNumFiles++;
     return 0;
 }
 
-static void 
+static int
 ReadSingleFile(const char *filename)
 {
     PRFileDesc *    file;
-    int             nBytes;
     unsigned char   buffer[1024];
 
     file = PR_Open(filename, PR_RDONLY, 0);
@@ -227,27 +224,43 @@ ReadSingleFile(const char *filename)
 	    ;
         PR_Close(file);
     }
+    return (file != NULL);
 }
 
 static PRInt32
-ReadOneFile(const char *file)
+ReadOneFile(const PRUnichar *szFileName)
 {
+    char narrowFileName[_MAX_PATH];
+
     if (dwNumFiles == dwFileToRead) {
-	ReadSingleFile(file);
+	int success = WideCharToMultiByte(CP_ACP, 0, szFileName, -1, 
+					  narrowFileName, _MAX_PATH, 
+					  NULL, NULL);
+	if (success)
+	    success = ReadSingleFile(narrowFileName);
+    	if (!success)
+	    dwFileToRead++; /* couldn't read this one, read the next one. */
     }
     dwNumFiles++;
     return dwNumFiles > dwFileToRead;
 }
 
 static PRInt32
-ReadFiles(const char *file)
+ReadFiles(const PRUnichar *szFileName)
 {
+    char narrowFileName[_MAX_PATH];
+
     if ((dwNumFiles % dwReadEvery) == 0) {
 	++filesToRead;
     }
     if (filesToRead) {
-	DWORD    prevFileBytes = totalFileBytes;
-        RNG_FileForRNG(file);
+	DWORD prevFileBytes = totalFileBytes;
+	int   iContinue     = WideCharToMultiByte(CP_ACP, 0, szFileName, -1, 
+						  narrowFileName, _MAX_PATH, 
+						  NULL, NULL);
+	if (iContinue) {
+	    RNG_FileForRNG(narrowFileName);
+	}
 	if (prevFileBytes < totalFileBytes) {
 	    --filesToRead;
 	}
@@ -257,7 +270,7 @@ ReadFiles(const char *file)
 }
 
 static void
-ReadSystemFiles()
+ReadSystemFiles(void)
 {
     // first count the number of files
     dwNumFiles = 0;
@@ -277,6 +290,7 @@ ReadSystemFiles()
         dwReadEvery = 1;  // less than 10 files
 
     dwNumFiles = 0;
+    totalFileBytes = 0;
     EnumSystemFiles(ReadFiles);
 }
 
@@ -349,8 +363,9 @@ void RNG_SystemInfoForRNG(void)
     }
 #endif
 
-    // now let's do some files
-    ReadSystemFiles();
+    // Skip the potentially slow file scanning if the OS's PRNG worked.
+    if (!usedWindowsPRNG)
+	ReadSystemFiles();
 
     nBytes = RNG_GetNoise(buffer, 20);  // get up to 20 bytes
     RNG_RandomUpdate(buffer, nBytes);
@@ -410,8 +425,10 @@ void RNG_FileForRNG(const char *filename)
 size_t RNG_SystemRNG(void *dest, size_t maxLen)
 {
     size_t bytes = 0;
+    usedWindowsPRNG = PR_FALSE;
     if (CeGenRandom(maxLen, dest)) {
-	    bytes = maxLen;
+	bytes = maxLen;
+	usedWindowsPRNG = PR_TRUE;
     }
     if (bytes == 0) {
 	bytes = rng_systemFromNoise(dest,maxLen);
@@ -428,8 +445,6 @@ void RNG_FileForRNG(const char *filename)
     int             nBytes;
     struct stat     stat_buf;
     unsigned char   buffer[1024];
-
-   /* static DWORD    totalFileBytes = 0; */
 
     /* windows doesn't initialize all the bytes in the stat buf,
      * so initialize them all here to avoid UMRs.
@@ -516,6 +531,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
     HCRYPTPROV hCryptProv;
     size_t bytes = 0;
 
+    usedWindowsPRNG = PR_FALSE;
     hModule = LoadLibrary("advapi32.dll");
     if (hModule == NULL) {
 	return rng_systemFromNoise(dest,maxLen);
@@ -525,6 +541,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
     if (pRtlGenRandom) {
 	if (pRtlGenRandom(dest, maxLen)) {
 	    bytes = maxLen;
+	    usedWindowsPRNG = PR_TRUE;
 	} else {
 	    bytes = rng_systemFromNoise(dest,maxLen);
 	}
@@ -544,6 +561,7 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
 	PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
 	if (pCryptGenRandom(hCryptProv, maxLen, dest)) {
 	    bytes = maxLen;
+	    usedWindowsPRNG = PR_TRUE;
 	}
 	pCryptReleaseContext(hCryptProv, 0);
     }

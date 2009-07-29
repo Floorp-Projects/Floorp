@@ -52,10 +52,6 @@ RANLIB			= ranlib
 
 DEFAULT_COMPILER = gcc
 
-ifeq ($(OS_TEST),m68k)
-	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH	= m68k
-else
 ifeq ($(OS_TEST),ppc64)
 	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= ppc
@@ -63,17 +59,9 @@ ifeq ($(USE_64),1)
 	ARCHFLAG	= -m64
 endif
 else
-ifeq ($(OS_TEST),ppc)
-	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH	= ppc
-else
 ifeq ($(OS_TEST),alpha)
         OS_REL_CFLAGS   = -D_ALPHA_ -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= alpha
-else
-ifeq ($(OS_TEST),ia64)
-	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH	= ia64
 else
 ifeq ($(OS_TEST),x86_64)
 ifeq ($(USE_64),1)
@@ -85,10 +73,6 @@ else
 	ARCHFLAG	= -m32
 endif
 else
-ifeq ($(OS_TEST),sparc)
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH        = sparc
-else
 ifeq ($(OS_TEST),sparc64)
 	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = sparc
@@ -97,39 +81,21 @@ ifeq (,$(filter-out arm% sa110,$(OS_TEST)))
 	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = arm
 else
-ifeq ($(OS_TEST),parisc)
+ifeq (,$(filter-out parisc%,$(OS_TEST)))
 	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = hppa
-else
-ifeq ($(OS_TEST),parisc64)
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH        = hppa
-else
-ifeq ($(OS_TEST),s390)
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH        = s390
-else
-ifeq ($(OS_TEST),s390x)
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH        = s390x
-else
-ifeq ($(OS_TEST),mips)
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH        = mips
 else
 ifeq (,$(filter-out i%86,$(OS_TEST)))
 	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
 	CPU_ARCH	= x86
 else
+ifeq ($(OS_TEST),sh4a)
+	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
+	CPU_ARCH        = sh4
+else
+# $(OS_TEST) == m68k, ppc, ia64, sparc, s390, s390x, mips, sh3, sh4
 	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= $(OS_TEST)
-endif
-endif
-endif
-endif
-endif
-endif
-endif
 endif
 endif
 endif
@@ -144,7 +110,7 @@ LIBC_TAG		= _glibc
 
 ifeq ($(OS_RELEASE),2.0)
 	OS_REL_CFLAGS	+= -DLINUX2_0
-	MKSHLIB		= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
+	MKSHLIB		= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so) $(RPATH)
 	ifdef MAPFILE
 		MKSHLIB += -Wl,--version-script,$(MAPFILE)
 	endif
@@ -182,9 +148,20 @@ LDFLAGS			+= $(ARCHFLAG)
 G++INCLUDES		= -I/usr/include/g++
 
 #
-# Always set CPU_TAG on Linux, OpenVMS, WINCE.
+# Always set CPU_TAG on Linux, WINCE.
 #
 CPU_TAG = _$(CPU_ARCH)
 
 USE_SYSTEM_ZLIB = 1
 ZLIB_LIBS = -lz
+
+# The -rpath '$$ORIGIN' linker option instructs this library to search for its
+# dependencies in the same directory where it resides.
+ifeq ($(BUILD_SUN_PKG), 1)
+ifeq ($(USE_64), 1)
+RPATH = -Wl,-rpath,'$$ORIGIN:/opt/sun/private/lib64:/opt/sun/private/lib'
+else
+RPATH = -Wl,-rpath,'$$ORIGIN:/opt/sun/private/lib'
+endif
+endif
+
