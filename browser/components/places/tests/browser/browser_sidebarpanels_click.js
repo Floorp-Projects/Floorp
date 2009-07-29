@@ -184,7 +184,7 @@ function test() {
     if (tests.length == 0)
       finish();
     else {
-      currentTest = tests.push();
+      currentTest = tests.shift();
       testPlacesPanel(function() {
         changeSidebarDirection("ltr");
         info("Running " + currentTest.desc + " in LTR mode");
