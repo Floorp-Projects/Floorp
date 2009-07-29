@@ -66,10 +66,10 @@ namespace nanojit
 
     struct AR
     {
-        LIns*            entry[ NJ_MAX_STACK_ENTRY ];    /* maps to 4B contiguous locations relative to the frame pointer */
+        LIns*           entry[ NJ_MAX_STACK_ENTRY ];    /* maps to 4B contiguous locations relative to the frame pointer */
         uint32_t        tos;                            /* current top of stack entry */
-        uint32_t        highwatermark;                    /* max tos hit */
-        uint32_t        lowwatermark;                    /* we pre-allocate entries from 0 upto this index-1; so dynamic entries are added above this index */
+        uint32_t        highwatermark;                  /* max tos hit */
+        uint32_t        lowwatermark;                   /* we pre-allocate entries from 0 upto this index-1; so dynamic entries are added above this index */
     };
 
     #ifdef AVMPLUS_WIN32
@@ -137,11 +137,11 @@ namespace nanojit
         LabelState *get(LIns *);
     };
     /**
-      * Information about the activation record for the method is built up
-      * as we generate machine code.  As part of the prologue, we issue
+     * Information about the activation record for the method is built up
+     * as we generate machine code.  As part of the prologue, we issue
      * a stack adjustment instruction and then later patch the adjustment
      * value.  Temporary values can be placed into the AR as method calls
-     * are issued.   Also MIR_alloc instructions will consume space.
+     * are issued.   Also LIR_alloc instructions will consume space.
      */
     class Assembler MMGC_SUBCLASS_DECL
     {
@@ -157,9 +157,7 @@ namespace nanojit
             void FASTCALL outputf(const char* format, ...);
             void FASTCALL output_asm(const char* s);
 
-            // if outputAddr=true then next asm instr. will include
-            // address in output
-            bool outputAddr, vpad[2];
+            bool outputAddr, vpad[3];  // if outputAddr=true then next asm instr. will include address in output
             void printActivationState();
 
             StringList* _outputCache;
@@ -180,19 +178,19 @@ namespace nanojit
             void        patch(GuardRecord *lr);
             void        patch(SideExit *exit);
 #ifdef NANOJIT_IA32
-            void        patch(SideExit* exit, SwitchInfo* si);
+            void        patch(SideExit *exit, SwitchInfo* si);
 #endif
             AssmError   error()    { return _err; }
             void        setError(AssmError e) { _err = e; }
             void        reset();
 
-            debug_only ( void        pageValidate(); )
+            debug_only ( void       pageValidate(); )
 
             // support calling out from a fragment ; used to debug the jit
             debug_only( void        resourceConsistencyCheck(); )
             debug_only( void        registerConsistencyCheck(); )
 
-            Stats        _stats;
+            Stats       _stats;
             int hasLoop;
             CodeList*   codeList;                   // finished blocks of code.
 
@@ -200,8 +198,8 @@ namespace nanojit
 
             void        gen(LirFilter* toCompile, NInsList& loopJumps, LabelStateMap& labels,
                             NInsMap& patches);
-            NIns*        genPrologue();
-            NIns*        genEpilogue();
+            NIns*       genPrologue();
+            NIns*       genEpilogue();
 
             uint32_t    arReserve(LIns* l);
             void        arFree(uint32_t idx);
@@ -217,7 +215,7 @@ namespace nanojit
             LInsp       findVictim(RegAlloc& regs, RegisterMask allow);
 
             Register    getBaseReg(LIns *i, int &d, RegisterMask allow);
-            int            findMemFor(LIns* i);
+            int         findMemFor(LIns* i);
             Register    findRegFor(LIns* i, RegisterMask allow);
             void        findRegFor2(RegisterMask allow, LIns* ia, Reservation* &ra, LIns *ib, Reservation* &rb);
             Register    findSpecificRegFor(LIns* i, Register w);
@@ -237,19 +235,17 @@ namespace nanojit
             AvmCore             *core;
             DWB(CodeAlloc*)     _codeAlloc;
             avmplus::GC*        _gc;
-            DWB(Fragment*)        _thisfrag;
+            DWB(Fragment*)      _thisfrag;
             RegAllocMap*        _branchStateMap;
 
             NIns        *codeStart, *codeEnd;       // current block we're adding code to
             NIns        *exitStart, *exitEnd;       // current block for exit stubs
-
-            NIns*        _nIns;            // current native instruction
-            NIns*        _nExitIns;        // current instruction in exit fragment page
-            NIns*        _startingIns;    // starting location of code compilation for error handling
+            NIns*       _nIns;          // current native instruction
+            NIns*       _nExitIns;      // current instruction in exit fragment page
             NIns*       _epilogue;
-            AssmError    _err;            // 0 = means assemble() appears ok, otherwise it failed
+            AssmError   _err;           // 0 = means assemble() appears ok, otherwise it failed
 
-            AR            _activation;
+            AR          _activation;
             RegAlloc    _allocator;
 
             bool        _inExit, vpad2[3];
@@ -260,7 +256,7 @@ namespace nanojit
             NIns *      asm_jmpcc(bool brOnFalse, LIns *cond, NIns *target);
             void        asm_mmq(Register rd, int dd, Register rs, int ds);
             NIns*       asm_exit(LInsp guard);
-            NIns*        asm_leave_trace(LInsp guard);
+            NIns*       asm_leave_trace(LInsp guard);
             void        asm_qjoin(LIns *ins);
             void        asm_store32(LIns *val, int d, LIns *base);
             void        asm_store64(LIns *val, int d, LIns *base);
@@ -313,8 +309,8 @@ namespace nanojit
             DECLARE_PLATFORM_ASSEMBLER()
 
         private:
-            debug_only( int32_t    _fpuStkDepth; )
-            debug_only( int32_t    _sv_fpuStkDepth; )
+            debug_only( int32_t _fpuStkDepth; )
+            debug_only( int32_t _sv_fpuStkDepth; )
 
             // since we generate backwards the depth is negative
             inline void fpu_push() {
