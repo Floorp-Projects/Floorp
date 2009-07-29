@@ -71,8 +71,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 
-#include "nsRegion.h"
-
 gfxPlatform *gPlatform = nsnull;
 
 // These two may point to the same profile
@@ -184,8 +182,6 @@ gfxPlatform::Init()
     if (!gPlatform)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsRegion::MigrateToCurrentThread();
-
     nsresult rv;
 
 #if defined(XP_MACOSX)
@@ -249,7 +245,7 @@ gfxPlatform::Shutdown()
     nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs)
         prefs->RemoveObserver(CMForceSRGBPrefName, gPlatform->overrideObserver);
-    
+
     delete gPlatform;
     gPlatform = nsnull;
 }
