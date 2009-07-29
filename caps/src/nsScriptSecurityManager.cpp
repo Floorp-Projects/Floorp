@@ -2863,7 +2863,7 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
 #ifdef DEBUG_CAPS_CanCreateWrapper
     char* iidStr = aIID.ToString();
     printf("### CanCreateWrapper(%s) ", iidStr);
-    nsCRT::free(iidStr);
+    NS_Free(iidStr);
 #endif
 // XXX Special case for nsIXPCException ?
     ClassInfoData objClassInfo = ClassInfoData(aClassInfo, nsnull);
@@ -2992,7 +2992,7 @@ nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
 #ifdef DEBUG_CAPS_CanCreateInstance
     char* cidStr = aCID.ToString();
     printf("### CanCreateInstance(%s) ", cidStr);
-    nsCRT::free(cidStr);
+    NS_Free(cidStr);
 #endif
 
     nsresult rv = CheckXPCPermissions(nsnull, nsnull, nsnull, nsnull);
@@ -3029,7 +3029,7 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
 #ifdef DEBUG_CAPS_CanGetService
     char* cidStr = aCID.ToString();
     printf("### CanGetService(%s) ", cidStr);
-    nsCRT::free(cidStr);
+    NS_Free(cidStr);
 #endif
 
     nsresult rv = CheckXPCPermissions(nsnull, nsnull, nsnull, nsnull);

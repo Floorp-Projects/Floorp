@@ -648,7 +648,7 @@ nsXPCWrappedJS::DebugDump(PRInt16 depth)
         char * iid = GetClass()->GetIID().ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
         if(iid)
-            PR_Free(iid);
+            NS_Free(iid);
         XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x", mClass));
 
         if(!isRoot)
