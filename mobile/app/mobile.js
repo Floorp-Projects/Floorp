@@ -269,6 +269,9 @@ pref("gfx.color_management.mode", 0);
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
+// prevent click image resizing for nsImageDocument
+pref("browser.enable_click_image_resizing", false);
+
 // open in tab preferences
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most window
 pref("browser.link.open_external", 3);
