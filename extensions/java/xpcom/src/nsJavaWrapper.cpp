@@ -1801,7 +1801,7 @@ GetNewOrUsedJavaWrapper(JNIEnv* env, nsISupports* aXPCOMObject,
            (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
                                                java_obj),
            (PRUint32) rootObject, iid_str));
-      PR_Free(iid_str);
+      NS_Free(iid_str);
 #endif
 
       // Associate XPCOM object with Java proxy
@@ -1844,7 +1844,7 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
        (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
                                            aJavaObject),
        (PRUint32) inst->GetInstance(), iid_str));
-  PR_Free(iid_str);
+  NS_Free(iid_str);
   nsMemory::Free(iid);
 #endif
   return NS_OK;
