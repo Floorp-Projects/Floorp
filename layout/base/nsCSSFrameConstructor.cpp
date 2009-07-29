@@ -3653,8 +3653,12 @@ nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
       (!aParentFrame ||
        (aParentFrame->GetType() != nsGkAtoms::fieldSetFrame &&
         aParentFrame->GetStyleContext()->GetPseudoType() !=
-          nsCSSAnonBoxes::fieldsetContent))) {
-    // <legend> is only special inside fieldset frames
+          nsCSSAnonBoxes::fieldsetContent) ||
+       aStyleContext->GetStyleDisplay()->IsFloating() ||
+       aStyleContext->GetStyleDisplay()->IsAbsolutelyPositioned())) {
+    // <legend> is only special inside fieldset frames, but for floated or
+    // absolutely positioned legends we want to construct by display type and
+    // not do special legend stuff
     // XXXbz it would be nice if we could just decide this based on the parent
     // tag, and hence just use a SIMPLE_TAG_CHAIN for legend below, but the
     // fact that with XBL we could end up with this legend element in some
