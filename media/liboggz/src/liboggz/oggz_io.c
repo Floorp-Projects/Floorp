@@ -36,11 +36,7 @@
  * Conrad Parker <conrad@annodex.net>
  */
 
-#ifdef WIN32
-#include "config_win32.h"
-#else
 #include "config.h"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>

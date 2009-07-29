@@ -157,9 +157,12 @@ NS_IMETHODIMP nsRootAccessible::GetParent(nsIAccessible * *aParent)
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nsnull;
 
-  nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
-  NS_IF_ADDREF(*aParent = root);
+  if (!mParent) {
+    nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
+    mParent = root;
+  }
 
+  NS_IF_ADDREF(*aParent = mParent);
   return NS_OK;
 }
 
@@ -956,14 +959,12 @@ void nsRootAccessible::FireFocusCallback(nsITimer *aTimer, void *aClosure)
 nsresult
 nsRootAccessible::Init()
 {
-  nsresult rv = nsDocAccessibleWrap::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
   NS_ENSURE_STATE(root);
 
   root->AddRootAccessible(this);
-  return NS_OK;
+
+  return nsDocAccessibleWrap::Init();
 }
 
 nsresult

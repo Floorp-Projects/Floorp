@@ -1030,19 +1030,22 @@ nsTableRowGroupFrame::UndoContinuedRow(nsPresContext*   aPresContext,
 
   // rowBefore was the prev-sibling of aRow's next-sibling before aRow was created
   nsTableRowFrame* rowBefore = (nsTableRowFrame*)aRow->GetPrevInFlow();
+  NS_PRECONDITION(mFrames.ContainsFrame(rowBefore),
+                  "rowBefore not in our frame list?");
 
-  nsIFrame* firstOverflow = GetOverflowFrames(aPresContext, PR_TRUE); 
-  if (!rowBefore || !firstOverflow || (firstOverflow != aRow)) {
-    NS_ASSERTION(PR_FALSE, "invalid continued row");
+  nsAutoPtr<nsFrameList> overflows(StealOverflowFrames());
+  if (!rowBefore || !overflows || overflows->IsEmpty() ||
+      overflows->FirstChild() != aRow) {
+    NS_ERROR("invalid continued row");
     return;
   }
 
-  // Remove aRow from the sibling chain and hook its next-sibling up with rowBefore
-  rowBefore->SetNextSibling(aRow->GetNextSibling());
-
-  // Destroy the row, its cells, and their cell blocks. Cell blocks that have split
+  // Destroy aRow, its cells, and their cell blocks. Cell blocks that have split
   // will not have reflowed yet to pick up content from any overflow lines.
-  aRow->Destroy();
+  overflows->DestroyFrame(aRow);
+
+  // Put the overflow rows into our child list
+  mFrames.InsertFrames(nsnull, rowBefore, *overflows);
 }
 
 static nsTableRowFrame* 

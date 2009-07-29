@@ -97,7 +97,7 @@ PROCESS_MAP_FILE = \
 
 endif   #NO_SHARED_LIB
 
-OS_CFLAGS          = -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Wno-switch -Zomf -DDEBUG -DTRACING -g
+OS_CFLAGS          = -Wall -Wno-unused -Wpointer-arith -Wcast-align -Wno-switch -Zomf -DDEBUG -DTRACING -g
 
 ifdef BUILD_OPT
 ifeq (11,$(ALLOW_OPT_CODE_SIZE)$(OPT_CODE_SIZE))

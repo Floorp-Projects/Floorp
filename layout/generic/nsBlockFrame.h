@@ -168,7 +168,7 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
   NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
   NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
@@ -176,7 +176,7 @@ public:
                            nsIFrame*       aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
   virtual nsIFrame* GetLastChild(nsIAtom* aListName) const;
   virtual nscoord GetBaseline() const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
@@ -396,7 +396,7 @@ protected:
     * contains aPrevSibling and add aFrameList after aPrevSibling on that line.
     * new lines are created as necessary to handle block data in aFrameList.
     */
-  virtual nsresult AddFrames(nsIFrame* aFrameList,
+  virtual nsresult AddFrames(const nsFrameList& aFrameList,
                              nsIFrame* aPrevSibling);
 
 #ifdef IBMBIDI

@@ -803,25 +803,25 @@ function LC(element) {
 // create a generator element
 function atomGenerator(s, generator) {
   generator.QueryInterface(Ci.nsIFeedGenerator);
-  generator.agent = trimString(s);
+  generator.agent = s.trim();
   return generator;
 }
 
 // post-process atom:logo to create an RSS2-like structure
 function atomLogo(s, logo) {
-  logo.setPropertyAsAString("url", trimString(s));
+  logo.setPropertyAsAString("url", s.trim());
 }
 
 // post-process an RSS category, map it to the Atom fields.
 function rssCatTerm(s, cat) {
   // add slash handling?
-  cat.setPropertyAsAString("term", trimString(s));
+  cat.setPropertyAsAString("term", s.trim());
   return cat;
 } 
 
 // post-process a GUID 
 function rssGuid(s, guid) {
-  guid.setPropertyAsAString("guid", trimString(s));
+  guid.setPropertyAsAString("guid", s.trim());
   return guid;
 }
 
@@ -841,13 +841,13 @@ function rssGuid(s, guid) {
 function rssAuthor(s,author) {
   author.QueryInterface(Ci.nsIFeedPerson);
   // check for RSS2 string format
-  var chars = trimString(s);
+  var chars = s.trim();
   var matches = chars.match(/(.*)\((.*)\)/);
   var emailCheck = 
     /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
   if (matches) {
-    var match1 = trimString(matches[1]);
-    var match2 = trimString(matches[2]);
+    var match1 = matches[1].trim();
+    var match2 = matches[2].trim();
     if (match2.indexOf("mailto:") == 0)
       match2 = match2.substring(7);
     if (emailCheck.test(match1)) {
@@ -896,16 +896,6 @@ function isValidRFC822Date(aDateStr) {
   return regex.test(aDateStr);
 }
 
-/**
- * Removes leading and trailing whitespace from a string.
- * @param s The string to trim.
- *
- * @returns A new string with whitespace stripped.
- */
-function trimString(s) {
-  return(s.replace(/^\s+/, "").replace(/\s+$/, ""));
-}
-
 // Regular expression matching RFC822 dates 
 const RFC822_RE = "^((Mon|Tue|Wed|Thu|Fri|Sat|Sun)([a-z]+)?,? *)?\\d\\d?"
 + " +(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)([a-z]+)?"
@@ -922,7 +912,7 @@ const RFC822_RE = "^((Mon|Tue|Wed|Thu|Fri|Sat|Sun)([a-z]+)?,? *)?\\d\\d?"
  * @returns A Date.toString XXX--fixme
  */
 function dateParse(dateString) {
-  var date = trimString(dateString);
+  var date = dateString.trim();
 
   if (date.search(/^\d\d\d\d/) != -1) //Could be a ISO8601/W3C date
     return W3CToIETFDate(dateString);
@@ -1067,7 +1057,7 @@ XHTMLHandler.prototype = {
 
     // When we peek too far, go back to the main processor
     if (this._depth < 0) {
-      this._processor.returnFromXHTMLHandler(trimString(this._buf),
+      this._processor.returnFromXHTMLHandler(this._buf.trim(),
                                              uri, localName, qName);
       return;
     }
@@ -1134,7 +1124,7 @@ ExtensionHandler.prototype = {
   endElement: function EH_endElement(uri, localName, qName) {
     --this._depth;
     if (this._depth == 0) {
-      var text = this._hasChildElements ? null : trimString(this._buf);
+      var text = this._hasChildElements ? null : this._buf.trim();
       this._processor.returnFromExtHandler(this._uri, this._localName, 
                                            text, this._attrs);
     }
@@ -1779,7 +1769,7 @@ FeedProcessor.prototype = {
 
   // Only for RSS2esque formats
   _findRSSVersion: function FP__findRSSVersion(attributes) {
-    var versionAttr = trimString(attributes.getValueFromName("", "version"));
+    var versionAttr = attributes.getValueFromName("", "version").trim();
     var versions = { "0.91":"rss091",
                      "0.92":"rss092",
                      "0.93":"rss093",

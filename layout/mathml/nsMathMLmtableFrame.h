@@ -110,7 +110,7 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(nsIAtom*  aListName,
-                      nsIFrame* aChildList);
+                      nsFrameList& aChildList);
 
   NS_IMETHOD
   AppendFrames(nsIAtom*  aListName,

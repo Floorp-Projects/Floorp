@@ -95,8 +95,7 @@ protected:
   nsresult UpdateStyleSheetInternal(nsIDocument *aOldDocument,
                                     PRBool aForceUpdate = PR_FALSE);
 
-  virtual void GetStyleSheetURL(PRBool* aIsInline,
-                                nsIURI** aURI) = 0;
+  virtual already_AddRefed<nsIURI> GetStyleSheetURL(PRBool* aIsInline) = 0;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
                                  nsAString& aType,
                                  nsAString& aMedia,

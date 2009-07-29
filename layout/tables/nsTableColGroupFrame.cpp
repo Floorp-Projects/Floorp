@@ -174,7 +174,7 @@ nsTableColGroupFrame::GetLastRealColGroup(nsTableFrame* aTableFrame,
 // don't set mColCount here, it is done in AddColsToTable
 NS_IMETHODIMP
 nsTableColGroupFrame::SetInitialChildList(nsIAtom*        aListName,
-                                          nsIFrame*       aChildList)
+                                          nsFrameList&    aChildList)
 {
   if (!mFrames.IsEmpty()) {
     // We already have child frames which means we've already been
@@ -191,13 +191,9 @@ nsTableColGroupFrame::SetInitialChildList(nsIAtom*        aListName,
   if (!tableFrame)
     return NS_ERROR_NULL_POINTER;
 
-  if (!aChildList) {
-    nsIFrame* firstChild;
-    tableFrame->CreateAnonymousColFrames(this, GetSpan(), eColAnonymousColGroup, 
-                                         PR_FALSE, nsnull, &firstChild);
-    if (firstChild) {
-      SetInitialChildList(aListName, firstChild);
-    }
+  if (aChildList.IsEmpty()) {
+    tableFrame->AppendAnonymousColFrames(this, GetSpan(), eColAnonymousColGroup, 
+                                         PR_FALSE);
     return NS_OK; 
   }
 

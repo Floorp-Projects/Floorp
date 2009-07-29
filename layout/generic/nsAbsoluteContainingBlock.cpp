@@ -55,7 +55,7 @@
 nsresult
 nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                                nsIAtom*        aListName,
-                                               nsIFrame*       aChildList)
+                                               nsFrameList&    aChildList)
 {
   NS_PRECONDITION(GetChildListName() == aListName, "unexpected child list name");
 #ifdef NS_DEBUG

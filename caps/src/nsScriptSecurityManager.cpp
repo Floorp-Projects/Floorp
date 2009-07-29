@@ -139,7 +139,8 @@ PRUint32 nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin;
 
 static
 nsresult
-GetOriginFromURI(nsIURI* aURI, nsACString& aOrigin)
+GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
+                         nsACString& aOrigin)
 {
   if (nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin > 1) {
       // Allow a single recursive call to GetPrincipalDomainOrigin, since that
@@ -150,8 +151,16 @@ GetOriginFromURI(nsIURI* aURI, nsACString& aOrigin)
   }
 
   nsAutoInPrincipalDomainOriginSetter autoSetter;
+  aOrigin.Truncate();
 
-  nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetDomain(getter_AddRefs(uri));
+  if (!uri) {
+    aPrincipal->GetURI(getter_AddRefs(uri));
+  }
+  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
+
+  uri = NS_GetInnermostURI(uri);
   NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
   nsCAutoString hostPort;
@@ -171,22 +180,6 @@ GetOriginFromURI(nsIURI* aURI, nsACString& aOrigin)
   }
 
   return NS_OK;
-}
-
-static
-nsresult
-GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
-                         nsACString& aOrigin)
-{
-
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetDomain(getter_AddRefs(uri));
-  if (!uri) {
-    aPrincipal->GetURI(getter_AddRefs(uri));
-  }
-  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
-
-  return GetOriginFromURI(uri, aOrigin);
 }
 
 // Inline copy of JS_GetPrivate() for better inlining and optimization
@@ -838,81 +831,35 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 
         NS_ConvertUTF8toUTF16 className(classInfoData.GetName());
         nsCAutoString subjectOrigin;
-        nsCAutoString subjectDomain;
         if (!nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin) {
-            nsCOMPtr<nsIURI> uri, domain;
-            subjectPrincipal->GetURI(getter_AddRefs(uri));
-            // Subject can't be system if we failed the security
-            // check, so |uri| is non-null.
-            NS_ASSERTION(uri, "How did that happen?");
-            GetOriginFromURI(uri, subjectOrigin);
-            subjectPrincipal->GetDomain(getter_AddRefs(domain));
-            if (domain) {
-                GetOriginFromURI(domain, subjectDomain);
-            }
+            GetPrincipalDomainOrigin(subjectPrincipal, subjectOrigin);
         } else {
             subjectOrigin.AssignLiteral("the security manager");
         }
         NS_ConvertUTF8toUTF16 subjectOriginUnicode(subjectOrigin);
-        NS_ConvertUTF8toUTF16 subjectDomainUnicode(subjectDomain);
 
         nsCAutoString objectOrigin;
-        nsCAutoString objectDomain;
         if (!nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin &&
             objectPrincipal) {
-            nsCOMPtr<nsIURI> uri, domain;
-            objectPrincipal->GetURI(getter_AddRefs(uri));
-            if (uri) { // Object principal might be system
-                GetOriginFromURI(uri, objectOrigin);
-            }
-            objectPrincipal->GetDomain(getter_AddRefs(domain));
-            if (domain) {
-                GetOriginFromURI(domain, objectDomain);
-            }
+            GetPrincipalDomainOrigin(objectPrincipal, objectOrigin);
         }
         NS_ConvertUTF8toUTF16 objectOriginUnicode(objectOrigin);
-        NS_ConvertUTF8toUTF16 objectDomainUnicode(objectDomain);
-
+            
         nsXPIDLString errorMsg;
         const PRUnichar *formatStrings[] =
         {
             subjectOriginUnicode.get(),
             className.get(),
             JSValIDToString(cx, aProperty),
-            objectOriginUnicode.get(),
-            subjectDomainUnicode.get(),
-            objectDomainUnicode.get()
+            objectOriginUnicode.get()
         };
 
         PRUint32 length = NS_ARRAY_LENGTH(formatStrings);
 
-        // XXXbz Our localization system is stupid and can't handle not showing
-        // some strings that get passed in.  Which means that we have to get
-        // our length precisely right: it has to be exactly the number of
-        // strings our format string wants.  This means we'll have to move
-        // strings in the array as needed, sadly...
         if (nsAutoInPrincipalDomainOriginSetter::sInPrincipalDomainOrigin ||
             !objectPrincipal) {
             stringName.AppendLiteral("OnlySubject");
-            length -= 3;
-        } else {
-            // default to a length that doesn't include the domains, then
-            // increase it as needed.
-            length -= 2;
-            if (!subjectDomainUnicode.IsEmpty()) {
-                stringName.AppendLiteral("SubjectDomain");
-                length += 1;
-            }
-            if (!objectDomainUnicode.IsEmpty()) {
-                stringName.AppendLiteral("ObjectDomain");
-                length += 1;
-                if (length != NS_ARRAY_LENGTH(formatStrings)) {
-                    // We have an object domain but not a subject domain.
-                    // Scoot our string over one slot.  See the XXX comment
-                    // above for why we need to do this.
-                    formatStrings[length-1] = formatStrings[length];
-                }
-            }
+            --length;
         }
         
         // We need to keep our existing failure rv and not override it
