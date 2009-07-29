@@ -87,7 +87,7 @@ function CanvasBrowser(canvas) {
 
   // Tells us to pan to top before first draw
   this._needToPanToTop = false;
-  
+
   this._eventHandler.cb = this;
 }
 
@@ -123,7 +123,7 @@ CanvasBrowser.prototype = {
           aIID.equals(Ci.nsIDOMEventListener) ||
           aIID.equals(Ci.nsISupports))
         return this;
-    
+
       throw Cr.NS_ERROR_NO_INTERFACE;
     },
 
@@ -146,7 +146,7 @@ CanvasBrowser.prototype = {
       currentBrowser.mZoomLevel = this.zoomLevel;
       currentBrowser.mPanX = ws._viewingRect.x;
       currentBrowser.mPanY = ws._viewingRect.y;
-      
+
       // stop monitor paint events for this browser
       currentBrowser.removeEventListener("MozAfterPaint", this._eventHandler, false);
       currentBrowser.removeEventListener("scroll", this._eventHandler, false);
@@ -155,7 +155,7 @@ CanvasBrowser.prototype = {
     }
 
     this._contentDOMWindowUtils = null;
-    
+
     if (!browser)
       return;
 
@@ -634,15 +634,40 @@ CanvasBrowser.prototype = {
    */
   elementFromPoint: function elementFromPoint(aX, aY) {
     let [x, y] = this._clientToContentCoords(aX, aY);
+    //dump("*** elementFromPoint: x: " + x + ", y: " + y + ", aX: " + aX + ", aY: " + aY + "\n");
     let cwu = this.contentDOMWindowUtils;
-    return cwu.elementFromPoint(x, y,
-                                true,   /* ignore root scroll frame*/
-                                false); /* don't flush layout */
+    let elem = cwu.elementFromPoint(x, y,
+                                    true,   /* ignore root scroll frame*/
+                                    false); /* don't flush layout */
+
+    // step through layers of IFRAMEs and FRAMES to find innermost element
+    while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
+      let frameWin = elem.ownerDocument.defaultView;
+      let frameUtils = frameWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let scrollX = {}, scrollY = {};
+      frameUtils.getScrollXY(false, scrollX, scrollY);
+
+      //dump("*** elementFromPoint: offset - " + elem.offsetLeft + "," +
+      //    elem.offsetTop + "; winScroll - " + scrollX.value +
+      //     "," + scrollY.value + "\n");
+
+      x = x - elem.offsetLeft + scrollX.value;
+      y = y - elem.offsetTop + scrollY.value;
+      //dump("*** elementFromPoint: FRAME/IFRAME found, adjusting to x = " + x + ", y = " + y + "\n");
+      elem = elem.contentDocument.elementFromPoint(x, y);
+    }
+
+    //if (elem)
+    //  dump("*** elementFromPoint: returning element " + elem + "(" + elem.tagName + ")\n");
+    //else
+    //  dump("*** elementFromPoint: returning null\n");
+
+    return elem;
   },
 
   /**
-   * Retrieve the page position for a given element
-   * (relative to the document origin).
+   * Return the position of the element relative to the top left of
+   * the page,
    */
   _getPagePosition: function _getPagePosition(aElement) {
     let [scrollX, scrollY] = this.contentScrollValues;
@@ -656,7 +681,8 @@ CanvasBrowser.prototype = {
     };
   },
 
-  /* Given a set of client coordinates (relative to the app window),
+  /**
+   * Given a set of client coordinates (relative to the app window),
    * returns the content coordinates relative to the viewport.
    */
   _clientToContentCoords: function _clientToContentCoords(aClientX, aClientY) {
@@ -672,6 +698,18 @@ CanvasBrowser.prototype = {
     let [scrollX, scrollY] = this.contentScrollValues;
     return [clickOffsetX - scrollX,
             clickOffsetY - scrollY];
+  },
+
+  /**
+   * Given a set of screen coordinates, returns the client coordinates relative
+   * to the viewport.
+   */
+  _screenToClientCoords: function _screenToClientCoords(aScreenX, aScreenY) {
+    let boxObject = document.getElementById("browser-container").boxObject;
+
+    // Take screen offset into account to return coordinates relative to the viewport
+    return [aScreenX - boxObject.screenX,
+            aScreenY - boxObject.screenY];
   },
 
   get contentScrollValues() {

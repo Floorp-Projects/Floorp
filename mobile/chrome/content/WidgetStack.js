@@ -706,6 +706,16 @@ WidgetStack.prototype = {
     this._dragState = null;
   },
 
+  // this can be called to allow a single screen refresh to be
+  // processed while dragging (normally, those are not processed
+  // during a drag)
+  dragUpdate: function dragUpdate() {
+    if (!this._dragging)
+      return;
+
+    this._viewportDragUpdate();
+  },
+
   // dragMove: process a mouse move to clientX,clientY for an ongoing drag
   dragMove: function dragMove(clientX, clientY) {
     if (!this._dragging)
@@ -727,6 +737,8 @@ WidgetStack.prototype = {
 
   // dragBy: process a mouse move by dx,dy for an ongoing drag
   dragBy: function dragBy(dx, dy) {
+    if (!this._dragging)
+      return false;
     return this.dragMove(this._dragState.outerCurX + dx, this._dragState.outerCurY + dy);
   },
 
