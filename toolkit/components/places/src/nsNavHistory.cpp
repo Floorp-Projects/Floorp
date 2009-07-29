@@ -3563,9 +3563,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
           // From start of epoch
           sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
             "(datetime(0, 'unixepoch')*1000000)");
-          // To start of 6 months ago
+          // To start of 6 months ago ( 5 months + this month).
           sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
-            "(strftime('%s','now','localtime','start of day','-6 months','utc')*1000000)");
+            "(strftime('%s','now','localtime','start of month','-5 months','utc')*1000000)");
           // Search for the same timeframe.
           sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
           sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;
@@ -3577,6 +3577,10 @@ PlacesSQLQueryBuilder::SelectAsDay()
         PRExplodedTime tm;
         PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &tm);
         PRUint16 currentYear = tm.tm_year;
+        // Set day before month, setting month without day could cause issues.
+        // For example setting month to February when today is 30, since
+        // February has not 30 days, will return March instead.
+        tm.tm_mday = 1;
         tm.tm_month -= MonthIndex;
         PR_NormalizeTime(&tm, PR_LocalTimeParameters);
         // tm_month starts from 0 while GetMonthName expects a 1-based index.
