@@ -72,7 +72,7 @@ nsJavaXPTCStub::nsJavaXPTCStub(jobject aJavaObject, nsIInterfaceInfo *aIInfo,
   char* iid_str = iid->ToString();
   LOG(("+ nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
       (PRUint32) mJavaRefHashCode, (PRUint32) this, iid_str));
-  PR_Free(iid_str);
+  NS_Free(iid_str);
 #endif
 }
 
@@ -112,7 +112,7 @@ nsJavaXPTCStub::AddRef()
   int refcnt = PRInt32(mMaster ? mMaster->mRefCnt : mRefCnt) + 1;
   LOG(("= nsJavaXPTCStub::AddRef (XPCOM=%08x | refcnt = %d | IID=%s)\n",
        (int) this, refcnt, iid_str));
-  PR_Free(iid_str);
+  NS_Free(iid_str);
   nsMemory::Free(iid);
 #endif
 
@@ -152,7 +152,7 @@ nsJavaXPTCStub::Release()
   int refcnt = PRInt32(mMaster ? mMaster->mRefCnt : mRefCnt) - 1;
   LOG(("= nsJavaXPTCStub::Release (XPCOM=%08x | refcnt = %d | IID=%s)\n",
        (int) this, refcnt, iid_str));
-  PR_Free(iid_str);
+  NS_Free(iid_str);
   nsMemory::Free(iid);
 #endif
 
@@ -171,7 +171,7 @@ nsJavaXPTCStub::Destroy()
   char* iid_str = iid->ToString();
   LOG(("- nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
       (PRUint32) mJavaRefHashCode, (PRUint32) this, iid_str));
-  PR_Free(iid_str);
+  NS_Free(iid_str);
   nsMemory::Free(iid);
 #endif
 
@@ -293,7 +293,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
     env->ExceptionClear();
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PR_Free(iid_str);
+  NS_Free(iid_str);
 
   // call queryInterface method
   jobject obj = env->CallObjectMethod(javaObject, qiMID, iid_jstr);
@@ -1653,7 +1653,7 @@ nsJavaXPTCStub::GetJavaObject()
   char* iid_str = iid->ToString();
   LOG(("< nsJavaXPTCStub (Java=%08x | XPCOM=%08x | IID=%s)\n",
        (PRUint32) mJavaRefHashCode, (PRUint32) this, iid_str));
-  PR_Free(iid_str);
+  NS_Free(iid_str);
   nsMemory::Free(iid);
 #endif
 
