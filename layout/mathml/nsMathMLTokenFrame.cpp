@@ -132,7 +132,7 @@ nsMathMLTokenFrame::Init(nsIContent*      aContent,
 
 NS_IMETHODIMP
 nsMathMLTokenFrame::SetInitialChildList(nsIAtom*        aListName,
-                                        nsIFrame*       aChildList)
+                                        nsFrameList&    aChildList)
 {
   // First, let the base class do its work
   nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aListName, aChildList);

@@ -2742,7 +2742,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
 
 NS_IMETHODIMP
 nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
-                                        nsIFrame*       aChildList)
+                                        nsFrameList&    aChildList)
 {
   nsresult rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
 

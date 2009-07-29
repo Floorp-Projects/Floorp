@@ -189,7 +189,7 @@ public:
   virtual nsresult CreateWidgetForView(nsIView* aView);
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
 
   virtual PRBool IsLeaf() const;
 

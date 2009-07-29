@@ -56,9 +56,8 @@ var gAdvancedPane = {
       advancedPrefs.selectedTab = document.getElementById(extraArgs["advancedTab"]);
     } else {
       var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
-      if (preference.value === null)
-        return;
-      advancedPrefs.selectedIndex = preference.value;
+      if (preference.value !== null)
+        advancedPrefs.selectedIndex = preference.value;
     }
 
 #ifdef MOZ_UPDATER

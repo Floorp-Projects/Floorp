@@ -79,10 +79,10 @@ HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
 HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
 HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
-# bug 493976 - testing to see if tinderbox timeouts are really due to this test or not (i.e. reftest whack-a-mole)
+# bug 493976 - for some reason the Arabic tests below cause Tinderbox timeouts
 # Arabic support requires AAT fonts under Mac OS, OpenType otherwise
-random-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-format-arabic.html src-format-arabic-aat-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == src-format-arabic.html src-format-arabic-ot-ref.html
+# random-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP(..) == src-format-arabic.html src-format-arabic-aat-ref.html
+# random-if(MOZ_WIDGET_TOOLKIT=="cocoa") HTTP(..) == src-format-arabic.html src-format-arabic-ot-ref.html
 
 == local-1.html local-1-ref.html
 HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html

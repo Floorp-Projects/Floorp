@@ -258,12 +258,9 @@ public:
     * @see nsIFrame::SetInitialChildList 
     */
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
 
-  /** return the first child belonging to the list aListName. 
-    * @see nsIFrame::GetFirstChild
-    */
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
   /** @see nsIFrame::GetAdditionalChildListName */
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
@@ -454,14 +451,18 @@ public:
 
   PRInt32 DestroyAnonymousColFrames(PRInt32 aNumFrames);
 
+  // Append aNumColsToAdd anonymous col frames of type eColAnonymousCell to our
+  // last eColGroupAnonymousCell colgroup.  If we have no such colgroup, then
+  // create one.
   void AppendAnonymousColFrames(PRInt32 aNumColsToAdd);
 
-  void CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
+  // Append aNumColsToAdd anonymous col frames of type aColType to
+  // aColGroupFrame.  If aAddToTable is true, also call AddColsToTable on the
+  // new cols.
+  void AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
                                 PRInt32               aNumColsToAdd,
                                 nsTableColType        aColType,
-                                PRBool                aAddToColGroupAndTable,
-                                nsIFrame*             aPrevCol,
-                                nsIFrame**            aFirstNewFrame);
+                                PRBool                aAddToTable);
 
   void MatchCellMapToColCache(nsTableCellMap* aCellMap);
   /** empty the column frame cache */
@@ -638,7 +639,6 @@ protected:
                   const nsRect&        aOriginalKidOverflowRect);
 
   nsIFrame* GetFirstBodyRowGroupFrame();
-  PRBool MoveOverflowToChildList(nsPresContext* aPresContext);
   /**
    * Push all our child frames from the aFrames array, in order, starting from the
    * frame at aPushFrom to the end of the array. The frames are put on our overflow

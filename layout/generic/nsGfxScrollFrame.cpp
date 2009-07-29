@@ -158,9 +158,8 @@ nsHTMLScrollFrame::Destroy()
 }
 
 NS_IMETHODIMP
-nsHTMLScrollFrame::
-SetInitialChildList(nsIAtom*       aListName,
-                    nsIFrame*      aChildList)
+nsHTMLScrollFrame::SetInitialChildList(nsIAtom*     aListName,
+                                       nsFrameList& aChildList)
 {
   nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aListName, aChildList);
   mInner.CreateScrollableView();
@@ -1046,7 +1045,7 @@ nsXULScrollFrame::Destroy()
 
 NS_IMETHODIMP
 nsXULScrollFrame::SetInitialChildList(nsIAtom*        aListName,
-                                      nsIFrame*       aChildList)
+                                      nsFrameList&    aChildList)
 {
   nsresult rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
 

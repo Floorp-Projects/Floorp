@@ -602,7 +602,11 @@ void CopyRawHeader(const char *aInput, PRUint32 aLen,
     aOutput.Append(utf8Text);
   } else { // replace each octet with Unicode replacement char in UTF-8.
     for (PRUint32 i = 0; i < aLen; i++) {
-      aOutput.Append(REPLACEMENT_CHAR);
+      c = PRUint8(*aInput++);
+      if (c & 0x80)
+        aOutput.Append(REPLACEMENT_CHAR);
+      else
+        aOutput.Append(char(c));
     }
   }
 }

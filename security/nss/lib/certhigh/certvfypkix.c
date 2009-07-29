@@ -1690,7 +1690,11 @@ cert_pkixSetParam(PKIX_ProcessingParams *procParams,
 
         case cert_pi_trustAnchors:
             certList = param->value.pointer.chain;
-
+            if (!certList) {
+                PORT_SetError(errCode);
+                r = SECFailure;
+                break;
+            }
             error = PKIX_List_Create(&certListPkix, plContext);
             if (error != NULL) {
                 break;

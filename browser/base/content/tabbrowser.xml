@@ -622,17 +622,13 @@
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
-            browser.mIconURL = aURI;
+            browser.mIconURL = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
 
-            if (aURI) {
-              if (!(aURI instanceof Components.interfaces.nsIURI)) {
-                var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                                    .getService(Components.interfaces.nsIIOService);
-                aURI = ios.newURI(aURI, null, null);
-              }
-              if (this.mFaviconService)
-                this.mFaviconService.setAndLoadFaviconForPage(browser.currentURI,
-                                                              aURI, false);
+            if (aURI && this.mFaviconService) {
+              if (!(aURI instanceof Ci.nsIURI))
+                aURI = makeURI(aURI);
+              this.mFaviconService.setAndLoadFaviconForPage(browser.currentURI,
+                                                            aURI, false);
             }
 
             this.updateIcon(aTab);
@@ -706,7 +702,7 @@
                       req.image.height > sz)
                     return;
 
-                  this.setIcon(aTab, browser.currentURI.spec);
+                  this.setIcon(aTab, browser.currentURI);
                 } catch (e) { }
               }
             }
@@ -725,14 +721,11 @@
         <parameter name="aURI"/>
         <body>
           <![CDATA[
-            if (!(aURI instanceof Components.interfaces.nsIURI)) {
-              var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                                  .getService(Components.interfaces.nsIIOService);
-              aURI = ios.newURI(aURI, null, null);
-            }
-
-            if (this.mFaviconService)
+            if (this.mFaviconService) {
+              if (!(aURI instanceof Ci.nsIURI))
+                aURI = makeURI(aURI);
               return this.mFaviconService.isFailedFavicon(aURI);
+            }
             return null;
           ]]>
         </body>
