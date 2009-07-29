@@ -73,11 +73,7 @@
 
 static char consoleName[] =  {
 #ifdef XP_UNIX
-#ifdef VMS
-    "TT"
-#else
     "/dev/tty"
-#endif
 #else
 #ifdef XP_OS2
     "\\DEV\\CON"
@@ -3315,6 +3311,56 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
     return(SECSuccess);
 }
 
+#if defined(DEBUG) || defined(FORCE_PR_ASSERT)
+/* Returns true iff a[i].flag has a duplicate in a[i+1 : count-1]  */
+static PRBool HasShortDuplicate(int i, secuCommandFlag *a, int count)
+{
+	char target = a[i].flag;
+	int j;
+
+	/* duplicate '\0' flags are okay, they are used with long forms */
+	for (j = i+1; j < count; j++) {
+		if (a[j].flag && a[j].flag == target) {
+			return PR_TRUE;
+		}
+	}
+	return PR_FALSE;
+}
+
+/* Returns true iff a[i].longform has a duplicate in a[i+1 : count-1] */
+static PRBool HasLongDuplicate(int i, secuCommandFlag *a, int count)
+{
+	int j;	
+	char *target = a[i].longform;
+
+	if (!target)
+		return PR_FALSE;
+
+	for (j = i+1; j < count; j++) {
+		if (a[j].longform && strcmp(a[j].longform, target) == 0) {
+			return PR_TRUE;
+		}
+	}
+	return PR_FALSE;
+}
+
+/* Returns true iff a has no short or long form duplicates
+ */
+PRBool HasNoDuplicates(secuCommandFlag *a, int count)
+{
+    int i;
+
+	for (i = 0; i < count; i++) {
+		if (a[i].flag && HasShortDuplicate(i, a, count)) {
+			return PR_FALSE;
+		}
+		if (a[i].longform && HasLongDuplicate(i, a, count)) {
+			return PR_FALSE;
+		}
+	}
+	return PR_TRUE;
+}
+#endif
 
 SECStatus
 SECU_ParseCommandLine(int argc, char **argv, char *progName,
@@ -3327,6 +3373,9 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName,
     PLLongOpt *longopts = NULL;
     int i, j;
     int lcmd = 0, lopt = 0;
+
+    PR_ASSERT(HasNoDuplicates(cmd->commands, cmd->numCommands));
+    PR_ASSERT(HasNoDuplicates(cmd->options, cmd->numOptions));
 
     optstring = (char *)PORT_Alloc(cmd->numCommands + 2*cmd->numOptions+1);
     if (optstring == NULL)

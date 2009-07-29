@@ -223,6 +223,10 @@ SECMOD_FindModule(const char *name)
     SECMODModuleList *mlp;
     SECMODModule *module = NULL;
 
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return module;
+    }
     SECMOD_GetReadLock(moduleLock);
     for(mlp = modules; mlp != NULL; mlp = mlp->next) {
 	if (PORT_Strcmp(name,mlp->module->commonName) == 0) {
@@ -258,6 +262,10 @@ SECMOD_FindModuleByID(SECMODModuleID id)
     SECMODModuleList *mlp;
     SECMODModule *module = NULL;
 
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return module;
+    }
     SECMOD_GetReadLock(moduleLock);
     for(mlp = modules; mlp != NULL; mlp = mlp->next) {
 	if (id == mlp->module->moduleID) {
@@ -282,6 +290,10 @@ SECMOD_FindSlotByID(SECMODModule *module, CK_SLOT_ID slotID)
     int i;
     PK11SlotInfo *slot = NULL;
 
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return slot;
+    }
     SECMOD_GetReadLock(moduleLock);
     for (i=0; i < module->slotCount; i++) {
 	PK11SlotInfo *cSlot = module->slots[i];
@@ -328,6 +340,11 @@ SECMOD_DeleteModuleEx(const char *name, SECMODModule *mod,
     SECMODModuleList *mlp;
     SECMODModuleList **mlpp;
     SECStatus rv = SECFailure;
+
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return rv;
+    }
 
     *type = SECMOD_EXTERNAL;
 
@@ -403,6 +420,10 @@ SECMOD_DeleteInternalModule(const char *name)
 
     if (pendingModule) {
 	PORT_SetError(SEC_ERROR_MODULE_STUCK);
+	return rv;
+    }
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
 	return rv;
     }
 
@@ -508,6 +529,10 @@ SECMOD_FindSlot(SECMODModule *module,const char *name)
     char *string;
     PK11SlotInfo *retSlot = NULL;
 
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return retSlot;
+    }
     SECMOD_GetReadLock(moduleLock);
     for (i=0; i < module->slotCount; i++) {
 	PK11SlotInfo *slot = module->slots[i];
@@ -574,6 +599,10 @@ SECMOD_AddNewModuleEx(const char* moduleName, const char* dllPath,
     PK11SlotInfo* slot;
 
     PR_SetErrorText(0, NULL);
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return result;
+    }
 
     module = SECMOD_CreateModule(dllPath, moduleName, modparms, nssparms);
 
@@ -693,10 +722,14 @@ PRBool
 SECMOD_IsModulePresent( unsigned long int pubCipherEnableFlags )
 {
     PRBool result = PR_FALSE;
-    SECMODModuleList *mods = SECMOD_GetDefaultModuleList();
+    SECMODModuleList *mods;
+
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return result;
+    }
     SECMOD_GetReadLock(moduleLock);
-
-
+    mods = SECMOD_GetDefaultModuleList();
     for ( ; mods != NULL; mods = mods->next) {
         if (mods->module->ssl[0] & 
 		SECMOD_PubCipherFlagstoInternal(pubCipherEnableFlags)) {
@@ -867,6 +900,11 @@ SECMOD_UpdateSlotList(SECMODModule *mod)
     PK11SlotInfo **newSlots = NULL;
     PK11SlotInfo **oldSlots = NULL;
 
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return SECFailure;
+    }
+
     /* C_GetSlotList is not a session function, make sure 
      * calls are serialized */
     PZ_Lock(mod->refLock);
@@ -988,6 +1026,10 @@ secmod_HandleWaitForSlotEvent(SECMODModule *mod,  unsigned long flags,
     int i;
     int error = SEC_ERROR_NO_EVENT;
 
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return NULL;
+    }
     PZ_Lock(mod->refLock);
     if (mod->evControlMask & SECMOD_END_WAIT) {
 	mod->evControlMask &= ~SECMOD_END_WAIT;
@@ -1184,6 +1226,10 @@ SECMOD_HasRemovableSlots(SECMODModule *mod)
     int i;
     PRBool ret = PR_FALSE;
 
+    if (!moduleLock) {
+    	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
+	return ret;
+    }
     SECMOD_GetReadLock(moduleLock);
     for (i=0; i < mod->slotCount; i++) {
 	PK11SlotInfo *slot = mod->slots[i];
