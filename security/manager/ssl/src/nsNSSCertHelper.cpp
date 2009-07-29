@@ -885,7 +885,24 @@ ProcessRDN(CERTRDN* rdn, nsAString &finalString, nsINSSComponent *nssComponent)
     if(!decodeItem) {
       return NS_ERROR_FAILURE;
     }
-    avavalue = NS_ConvertUTF8toUTF16((char*)decodeItem->data, decodeItem->len);
+
+    // We know we can fit buffer of this length. CERT_RFC1485_EscapeAndQuote
+    // will fail if we provide smaller buffer then the result can fit to.
+    PRIntn escapedValueCapacity = decodeItem->len * 3 + 3;
+    nsAutoArrayPtr<char> escapedValue;
+    escapedValue = new char[escapedValueCapacity];
+    if (!escapedValue)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    SECStatus status = CERT_RFC1485_EscapeAndQuote(
+          escapedValue.get(),
+          escapedValueCapacity, 
+          (char*)decodeItem->data, 
+          decodeItem->len);
+    if (SECSuccess != status)
+      return NS_ERROR_FAILURE;
+
+    avavalue = NS_ConvertUTF8toUTF16(escapedValue);
     
     SECITEM_FreeItem(decodeItem, PR_TRUE);
     params[0] = type.get();
