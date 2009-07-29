@@ -116,10 +116,20 @@ var gEditUIVisible = true;
   });
 });
 
-__defineGetter__("gPrefService", function() {
-  delete this.gPrefService;
-  return this.gPrefService = Cc["@mozilla.org/preferences-service;1"].
-                             getService(Ci.nsIPrefBranch2);
+[
+  ["gPrefService",       "preferences-service;1",      "nsIPrefBranch2"],
+  ["gPermissionManager", "permissionmanager;1",        "nsIPermissionManager"],
+  ["gObserverService",   "observer-service;1",         "nsIObserverService"],
+  ["gWindowMediator",    "appshell/window-mediator;1", "nsIWindowMediator"],
+  ["gPromptService",     "embedcomp/prompt-service;1", "nsIPromptService"],
+  ["gSearchService",     "browser/search-service;1",   "nsIBrowserSearchService"],
+  ["gSessionStore",      "browser/sessionstore;1",     "nsISessionStore"],
+].forEach(function (service) {
+  let [name, cid, iface] = service;
+  window.__defineGetter__(name, function () {
+    delete window[name];
+    return window[name] = Cc["@mozilla.org/" + cid].getService(Ci[iface]);
+  });
 });
 
 __defineGetter__("PluralForm", function() {
@@ -314,7 +324,6 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
 
 const gPopupBlockerObserver = {
   _reportButton: null,
-  _kIPM: Components.interfaces.nsIPermissionManager,
 
   onUpdatePageReport: function (aEvent)
   {
@@ -383,11 +392,9 @@ const gPopupBlockerObserver = {
   toggleAllowPopupsForSite: function (aEvent)
   {
     var currentURI = gBrowser.selectedBrowser.webNavigation.currentURI;
-    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
-                       .getService(this._kIPM);
     var shouldBlock = aEvent.target.getAttribute("block") == "true";
-    var perm = shouldBlock ? this._kIPM.DENY_ACTION : this._kIPM.ALLOW_ACTION;
-    pm.add(currentURI, "popup", perm);
+    var perm = shouldBlock ? gPermissionManager.DENY_ACTION : gPermissionManager.ALLOW_ACTION;
+    gPermissionManager.add(currentURI, "popup", perm);
 
     gBrowser.getNotificationBox().removeCurrentNotification();
   },
@@ -408,8 +415,7 @@ const gPopupBlockerObserver = {
     try {
       blockedPopupAllowSite.removeAttribute("hidden");
 
-      var pm = Cc["@mozilla.org/permissionmanager;1"].getService(this._kIPM);
-      if (pm.testPermission(uri, "popup") == this._kIPM.ALLOW_ACTION) {
+      if (gPermissionManager.testPermission(uri, "popup") == gPermissionManager.ALLOW_ACTION) {
         // Offer an item to block popups for this site, if a whitelist entry exists
         // already for it.
         let blockString = gNavigatorBundle.getFormattedString("popupBlock", [uri.host]);
@@ -524,9 +530,7 @@ const gPopupBlockerObserver = {
                    permissionType : "popup",
                    windowTitle    : bundlePreferences.getString("popuppermissionstitle"),
                    introText      : bundlePreferences.getString("popuppermissionstext") };
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                        .getService(Components.interfaces.nsIWindowMediator);
-    var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
+    var existingWindow = gWindowMediator.getMostRecentWindow("Browser:Permissions");
     if (existingWindow) {
       existingWindow.initWithParams(params);
       existingWindow.focus();
@@ -1023,9 +1027,7 @@ function BrowserStartup() {
 
   // Certain kinds of automigration rely on this notification to complete their
   // tasks BEFORE the browser window is shown.
-  Cc["@mozilla.org/observer-service;1"]
-    .getService(Ci.nsIObserverService)
-    .notifyObservers(null, "browser-window-before-show", "");
+  gObserverService.notifyObservers(null, "browser-window-before-show", "");
 
   // Set a sane starting width/height for all resolutions on new profiles.
   if (!document.documentElement.hasAttribute("width")) {
@@ -1153,8 +1155,7 @@ function prepareForStartup() {
   // progress notifications for back/forward button updating
   webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
                                            .createInstance(Components.interfaces.nsISHistory);
-  var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  os.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
+  gObserverService.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
 
   // remove the disablehistory attribute so the browser cleans up, as
   // though it had done this work itself
@@ -1183,9 +1184,8 @@ function prepareForStartup() {
 }
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
-  var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
-  os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
+  gObserverService.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
+  gObserverService.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
 
   BrowserOffline.init();
   OfflineApps.init();
@@ -1259,13 +1259,10 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
                                                          [brandShortName]);
       var checkboxLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
                                                          [brandShortName]);
-      const IPS = Components.interfaces.nsIPromptService;
-      var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                                .getService(IPS);
       var checkEveryTime = { value: shouldCheck };
-      var rv = ps.confirmEx(window, promptTitle, promptMessage,
-                            IPS.STD_YES_NO_BUTTONS,
-                            null, null, null, checkboxLabel, checkEveryTime);
+      var rv = gPromptService.confirmEx(window, promptTitle, promptMessage,
+                                        gPromptService.STD_YES_NO_BUTTONS,
+                                        null, null, null, checkboxLabel, checkEveryTime);
       if (rv == 0)
         shell.setDefaultBrowser(true, false);
       shell.shouldCheckDefaultBrowser = checkEveryTime.value;
@@ -1302,9 +1299,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   // initialize the session-restore service (in case it's not already running)
   if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
     try {
-      var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-               getService(Ci.nsISessionStore);
-      ss.init(window);
+      gSessionStore.init(window);
     } catch(ex) {
       dump("nsSessionStore could not be initialized: " + ex + "\n");
     }
@@ -1386,10 +1381,8 @@ function BrowserShutdown()
     Components.utils.reportError(ex);
   }
 
-  var os = Components.classes["@mozilla.org/observer-service;1"]
-    .getService(Components.interfaces.nsIObserverService);
-  os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
-  os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
+  gObserverService.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
+  gObserverService.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
 
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -1413,9 +1406,7 @@ function BrowserShutdown()
   DownloadMonitorPanel.uninit();
   gPrivateBrowsingUI.uninit();
 
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-  var enumerator = windowManagerInterface.getEnumerator(null);
+  var enumerator = gWindowMediator.getEnumerator(null);
   enumerator.getNext();
   if (!enumerator.hasMoreElements()) {
     document.persist("sidebar-box", "sidebarcommand");
@@ -1908,8 +1899,6 @@ function getShortcutOrURI(aURL, aPostDataRef) {
   var shortcutURL = null;
   var keyword = aURL;
   var param = "";
-  var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                      getService(Ci.nsIBrowserSearchService);
 
   var offset = aURL.indexOf(" ");
   if (offset > 0) {
@@ -1920,7 +1909,7 @@ function getShortcutOrURI(aURL, aPostDataRef) {
   if (!aPostDataRef)
     aPostDataRef = {};
 
-  var engine = searchService.getEngineByAlias(keyword);
+  var engine = gSearchService.getEngineByAlias(keyword);
   if (engine) {
     var submission = engine.getSubmission(param, null);
     aPostDataRef.value = submission.postData;
@@ -2287,9 +2276,7 @@ function PageProxyClickHandler(aEvent)
 function BrowserImport()
 {
 #ifdef XP_MACOSX
-  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("Browser:MigrationWizard");
+  var win = gWindowMediator.getMostRecentWindow("Browser:MigrationWizard");
   if (win)
     win.focus();
   else {
@@ -2435,12 +2422,10 @@ function BrowserOnCommand(event) {
  */
 function getMeOutOfHere() {
   // Get the start page from the *default* pref branch, not the user's
-  var prefs = Cc["@mozilla.org/preferences-service;1"]
-             .getService(Ci.nsIPrefService).getDefaultBranch(null);
   var url = "about:blank";
   try {
-    url = prefs.getComplexValue("browser.startup.homepage",
-                                Ci.nsIPrefLocalizedString).data;
+    url = gPrefService.getComplexValue("browser.startup.homepage",
+                                       Ci.nsIPrefLocalizedString).data;
     // If url is a pipe-delimited set of pages, just take the first one.
     if (url.indexOf("|") != -1)
       url = url.split("|")[0];
@@ -2726,12 +2711,11 @@ var homeButtonObserver = {
 
 function openHomeDialog(aURL)
 {
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   var promptTitle = gNavigatorBundle.getString("droponhometitle");
   var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
-  var pressedVal  = promptService.confirmEx(window, promptTitle, promptMsg,
-                          promptService.STD_YES_NO_BUTTONS,
-                          null, null, null, null, {value:0});
+  var pressedVal  = gPromptService.confirmEx(window, promptTitle, promptMsg,
+                                             gPromptService.STD_YES_NO_BUTTONS,
+                                             null, null, null, null, {value:0});
 
   if (pressedVal == 0) {
     try {
@@ -2983,9 +2967,7 @@ const BrowserSearch = {
     // to the list of hidden engines rather than to the main list.
     // XXX This will need to be changed when engines are identified by URL;
     // see bug 335102.
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                        getService(Ci.nsIBrowserSearchService);
-    if (searchService.getEngineByName(engine.title))
+    if (gSearchService.getEngineByName(engine.title))
       hidden = true;
 
     var engines = (hidden ? browser.hiddenEngines : browser.engines) || [];
@@ -3061,9 +3043,7 @@ const BrowserSearch = {
       searchBar.select();
       searchBar.focus();
     } else {
-      var ss = Cc["@mozilla.org/browser/search-service;1"].
-               getService(Ci.nsIBrowserSearchService);
-      var searchForm = ss.defaultEngine.searchForm;
+      let searchForm = gSearchService.defaultEngine.searchForm;
       loadURI(searchForm, null, null, false);
     }
   },
@@ -3080,16 +3060,14 @@ const BrowserSearch = {
    *        tab.
    */
   loadSearch: function BrowserSearch_search(searchText, useNewTab) {
-    var ss = Cc["@mozilla.org/browser/search-service;1"].
-             getService(Ci.nsIBrowserSearchService);
     var engine;
   
     // If the search bar is visible, use the current engine, otherwise, fall
     // back to the default engine.
     if (isElementVisible(this.searchBar))
-      engine = ss.currentEngine;
+      engine = gSearchService.currentEngine;
     else
-      engine = ss.defaultEngine;
+      engine = gSearchService.defaultEngine;
   
     var submission = engine.getSubmission(searchText, null); // HTML response
 
@@ -3221,9 +3199,7 @@ function BrowserDownloadsUI()
 
 function toOpenWindowByType(inType, uri, features)
 {
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-  var topWindow = windowManagerInterface.getMostRecentWindow(inType);
+  var topWindow = gWindowMediator.getMostRecentWindow(inType);
 
   if (topWindow)
     topWindow.focus();
@@ -3235,9 +3211,7 @@ function toOpenWindowByType(inType, uri, features)
 
 function toOpenDialogByTypeAndUrl(inType, relatedUrl, windowUri, features, extraArgument)
 {
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-  var windows = windowManagerInterface.getEnumerator(inType);
+  var windows = gWindowMediator.getEnumerator(inType);
 
   // Check for windows matching the url
   while (windows.hasMoreElements()) {
@@ -4255,8 +4229,6 @@ var XULBrowserWindow = {
     gBrowser.mCurrentBrowser.engines = null;    
 
     var uri = aRequest.QueryInterface(Ci.nsIChannel).URI;
-    var observerService = Cc["@mozilla.org/observer-service;1"]
-                            .getService(Ci.nsIObserverService);
 
     if (gURLBar &&
         gURLBar.value == "" &&
@@ -4264,7 +4236,7 @@ var XULBrowserWindow = {
       URLBarSetURI(uri);
 
     try {
-      observerService.notifyObservers(content, "StartDocumentLoad", uri.spec);
+      gObserverService.notifyObservers(content, "StartDocumentLoad", uri.spec);
     } catch (e) {
     }
   },
@@ -4272,12 +4244,9 @@ var XULBrowserWindow = {
   endDocumentLoad: function (aRequest, aStatus) {
     var urlStr = aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec;
 
-    var observerService = Cc["@mozilla.org/observer-service;1"]
-                            .getService(Ci.nsIObserverService);
-
     var notification = Components.isSuccessCode(aStatus) ? "EndDocumentLoad" : "FailDocumentLoad";
     try {
-      observerService.notifyObservers(content, notification, urlStr);
+      gObserverService.notifyObservers(content, notification, urlStr);
     } catch (e) {
     }
   }
@@ -5037,14 +5006,12 @@ function SelectDetector(event, doReload)
     }
 
     try {
-        var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch);
         var str =  Components.classes["@mozilla.org/supports-string;1"]
                              .createInstance(Components.interfaces.nsISupportsString);
 
         str.data = prefvalue;
-        pref.setComplexValue("intl.charset.detector",
-                             Components.interfaces.nsISupportsString, str);
+        gPrefService.setComplexValue("intl.charset.detector",
+                                     Ci.nsISupportsString, str);
         if (doReload) window.content.location.reload();
     }
     catch (ex) {
@@ -5102,10 +5069,8 @@ function UpdateCharsetDetector()
     var prefvalue;
 
     try {
-        var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch);
-        prefvalue = pref.getComplexValue("intl.charset.detector",
-                                         Components.interfaces.nsIPrefLocalizedString).data;
+        prefvalue = gPrefService.getComplexValue("intl.charset.detector",
+                                                 Ci.nsIPrefLocalizedString).data;
     }
     catch (ex) {
         prefvalue = "";
@@ -5135,8 +5100,7 @@ function UpdateMenus(event)
 
 function CreateMenu(node)
 {
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(null, "charsetmenu-selected", node);
+  gObserverService.notifyObservers(null, "charsetmenu-selected", node);
 }
 
 function charsetLoadListener (event)
@@ -5257,59 +5221,51 @@ var BrowserOffline = {
     if (!this._uiElement)
       this._uiElement = document.getElementById("goOfflineMenuitem");
 
-    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-    os.addObserver(this, "network:offline-status-changed", false);
+    gObserverService.addObserver(this, "network:offline-status-changed", false);
 
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
-      getService(Components.interfaces.nsIIOService2);
-
-    // if ioService is managing the offline status, then ioservice.offline
-    // is already set correctly. We will continue to allow the ioService
+    // if IO Service is managing the offline status, then IOService.offline
+    // is already set correctly. We will continue to allow the IO Service
     // to manage its offline state until the user uses the "Work Offline" UI.
     
-    if (!ioService.manageOfflineStatus) {
+    if (!ContentAreaUtils.ioService.manageOfflineStatus) {
       // set the initial state
       var isOffline = false;
       try {
         isOffline = gPrefService.getBoolPref("browser.offline");
       }
       catch (e) { }
-      ioService.offline = isOffline;
+      ContentAreaUtils.ioService.offline = isOffline;
     }
     
-    this._updateOfflineUI(ioService.offline);
+    this._updateOfflineUI(ContentAreaUtils.ioService.offline);
   },
 
   uninit: function ()
   {
     try {
-      var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-      os.removeObserver(this, "network:offline-status-changed");
+      gObserverService.removeObserver(this, "network:offline-status-changed");
     } catch (ex) {
     }
   },
 
   toggleOfflineStatus: function ()
   {
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
-      getService(Components.interfaces.nsIIOService2);
-
     // Stop automatic management of the offline status
     try {
-      ioService.manageOfflineStatus = false;
+      ContentAreaUtils.ioService.manageOfflineStatus = false;
     } catch (ex) {
     }
   
-    if (!ioService.offline && !this._canGoOffline()) {
+    if (!ContentAreaUtils.ioService.offline && !this._canGoOffline()) {
       this._updateOfflineUI(false);
       return;
     }
 
-    ioService.offline = !ioService.offline;
+    ContentAreaUtils.ioService.offline = !ContentAreaUtils.ioService.offline;
 
     // Save the current state for later use as the initial state
     // (if there is no netLinkService)
-    gPrefService.setBoolPref("browser.offline", ioService.offline);
+    gPrefService.setBoolPref("browser.offline", ContentAreaUtils.ioService.offline);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -5326,18 +5282,15 @@ var BrowserOffline = {
   // BrowserOffline Implementation Methods
   _canGoOffline: function ()
   {
-    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-    if (os) {
-      try {
-        var cancelGoOffline = Components.classes["@mozilla.org/supports-PRBool;1"].createInstance(Components.interfaces.nsISupportsPRBool);
-        os.notifyObservers(cancelGoOffline, "offline-requested", null);
+    try {
+      let cancelGoOffline = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+      gObserverService.notifyObservers(cancelGoOffline, "offline-requested", null);
 
-        // Something aborted the quit process.
-        if (cancelGoOffline.data)
-          return false;
-      }
-      catch (ex) {
-      }
+      // Something aborted the quit process.
+      if (cancelGoOffline.data)
+        return false;
+    }
+    catch (ex) {
     }
     return true;
   },
@@ -5358,18 +5311,14 @@ var OfflineApps = {
   // OfflineApps Public Methods
   init: function ()
   {
-    var obs = Cc["@mozilla.org/observer-service;1"].
-              getService(Ci.nsIObserverService);
-    obs.addObserver(this, "dom-storage-warn-quota-exceeded", false);
-    obs.addObserver(this, "offline-cache-update-completed", false);
+    gObserverService.addObserver(this, "dom-storage-warn-quota-exceeded", false);
+    gObserverService.addObserver(this, "offline-cache-update-completed", false);
   },
 
   uninit: function ()
   {
-    var obs = Cc["@mozilla.org/observer-service;1"].
-              getService(Ci.nsIObserverService);
-    obs.removeObserver(this, "dom-storage-warn-quota-exceeded");
-    obs.removeObserver(this, "offline-cache-update-completed");
+    gObserverService.removeObserver(this, "dom-storage-warn-quota-exceeded");
+    gObserverService.removeObserver(this, "offline-cache-update-completed");
   },
 
   handleEvent: function(event) {
@@ -5462,10 +5411,8 @@ var OfflineApps = {
 
     // Now that we've warned once, prevent the warning from showing up
     // again.
-    var pm = Cc["@mozilla.org/permissionmanager;1"].
-             getService(Ci.nsIPermissionManager);
-    pm.add(aURI, "offline-app",
-           Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
+    gPermissionManager.add(aURI, "offline-app",
+                           Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
   },
 
   // XXX: duplicated in preferences/advanced.js
@@ -5496,11 +5443,8 @@ var OfflineApps = {
   },
 
   _checkUsage: function(aURI) {
-    var pm = Cc["@mozilla.org/permissionmanager;1"].
-             getService(Ci.nsIPermissionManager);
-
     // if the user has already allowed excessive usage, don't bother checking
-    if (pm.testExactPermission(aURI, "offline-app") !=
+    if (gPermissionManager.testExactPermission(aURI, "offline-app") !=
         Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN) {
       var usage = this._getOfflineAppUsage(aURI.asciiHost);
       var warnQuota = gPrefService.getIntPref("offline-apps.quota.warn");
@@ -5522,12 +5466,10 @@ var OfflineApps = {
                                                    aContentWindow);
 
     var currentURI = aContentWindow.document.documentURIObject;
-    var pm = Cc["@mozilla.org/permissionmanager;1"].
-             getService(Ci.nsIPermissionManager);
 
     // don't bother showing UI if the user has already made a decision
-    if (pm.testExactPermission(currentURI, "offline-app") !=
-        Ci.nsIPermissionManager.UNKNOWN_ACTION)
+    if (gPermissionManager.testExactPermission(currentURI, "offline-app") !=
+        gPermissionManager.UNKNOWN_ACTION)
       return;
 
     try {
@@ -5581,10 +5523,8 @@ var OfflineApps = {
   },
 
   allowSite: function(aDocument) {
-    var pm = Cc["@mozilla.org/permissionmanager;1"].
-             getService(Ci.nsIPermissionManager);
-    pm.add(aDocument.documentURIObject, "offline-app",
-           Ci.nsIPermissionManager.ALLOW_ACTION);
+    gPermissionManager.add(aDocument.documentURIObject, "offline-app",
+                           gPermissionManager.ALLOW_ACTION);
 
     // When a site is enabled while loading, manifest resources will
     // start fetching immediately.  This one time we need to do it
@@ -5593,10 +5533,8 @@ var OfflineApps = {
   },
 
   disallowSite: function(aDocument) {
-    var pm = Cc["@mozilla.org/permissionmanager;1"].
-             getService(Ci.nsIPermissionManager);
-    pm.add(aDocument.documentURIObject, "offline-app",
-           Ci.nsIPermissionManager.DENY_ACTION);
+    gPermissionManager.add(aDocument.documentURIObject, "offline-app",
+                           gPermissionManager.DENY_ACTION);
   },
 
   manage: function() {
@@ -5707,9 +5645,7 @@ var MailIntegration = {
 function BrowserOpenAddonsMgr(aPane)
 {
   const EMTYPE = "Extension:Manager";
-  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
-  var theEM = wm.getMostRecentWindow(EMTYPE);
+  var theEM = gWindowMediator.getMostRecentWindow(EMTYPE);
   if (theEM) {
     theEM.focus();
     if (aPane)
@@ -6200,10 +6136,8 @@ function undoCloseTab(aIndex) {
     blankTabToRemove = gBrowser.selectedTab;
 
   var tab = null;
-  var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
-  if (ss.getClosedTabCount(window) > (aIndex || 0)) {
-    tab = ss.undoCloseTab(window, aIndex || 0);
+  if (gSessionStore.getClosedTabCount(window) > (aIndex || 0)) {
+    tab = gSessionStore.undoCloseTab(window, aIndex || 0);
     
     if (blankTabToRemove)
       gBrowser.removeTab(blankTabToRemove);
@@ -6219,13 +6153,11 @@ function undoCloseTab(aIndex) {
  * @returns a reference to the reopened window.
  */
 function undoCloseWindow(aIndex) {
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
-  let window = null;
-  if (ss.getClosedWindowCount() > (aIndex || 0))
-    window = ss.undoCloseWindow(aIndex || 0);
+  let win = null;
+  if (gSessionStore.getClosedWindowCount() > (aIndex || 0))
+    win = gSessionStore.undoCloseWindow(aIndex || 0);
 
-  return window;
+  return win;
 }
 
 /**
@@ -6780,14 +6712,11 @@ function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
 
 let gPrivateBrowsingUI = {
-  _observerService: null,
   _privateBrowsingService: null,
   _privateBrowsingAutoStarted: false,
 
   init: function PBUI_init() {
-    this._observerService = Cc["@mozilla.org/observer-service;1"].
-                            getService(Ci.nsIObserverService);
-    this._observerService.addObserver(this, "private-browsing", false);
+    gObserverService.addObserver(this, "private-browsing", false);
 
     this._privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
                                    getService(Ci.nsIPrivateBrowsingService);
@@ -6797,7 +6726,7 @@ let gPrivateBrowsingUI = {
   },
 
   uninit: function PBUI_unint() {
-    this._observerService.removeObserver(this, "private-browsing");
+    gObserverService.removeObserver(this, "private-browsing");
   },
 
   observe: function PBUI_observe(aSubject, aTopic, aData) {
@@ -6835,12 +6764,9 @@ let gPrivateBrowsingUI = {
 #endif
     var message = pbBundle.formatStringFromName("privateBrowsingMessage", [appName], 1);
 
-    var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                        getService(Ci.nsIPromptService);
-
-    var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
-                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
-                promptService.BUTTON_POS_0_DEFAULT;
+    var flags = gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0 +
+                gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_1 +
+                gPromptService.BUTTON_POS_0_DEFAULT;
 
     var neverAsk = {value:false};
     var button0Title = pbBundle.GetStringFromName("privateBrowsingYesTitle");
@@ -6848,9 +6774,9 @@ let gPrivateBrowsingUI = {
     var neverAskText = pbBundle.GetStringFromName("privateBrowsingNeverAsk");
 
     var result;
-    var choice = promptService.confirmEx(null, dialogTitle, header + message,
-                               flags, button0Title, button1Title, null,
-                               neverAskText, neverAsk);
+    var choice = gPromptService.confirmEx(null, dialogTitle, header + message,
+                                          flags, button0Title, button1Title, null,
+                                          neverAskText, neverAsk);
 
     switch (choice) {
     case 0: // Start Private Browsing
