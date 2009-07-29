@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.14 $ $Date: 2009/02/09 07:55:53 $";
+static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.15 $ $Date: 2009/06/05 00:22:04 $";
 #endif /* DEBUG */
 
 /*
@@ -706,18 +706,15 @@ nss_ckmdSessionObject_SetAttribute
     nss_ZFreeIf(n.data);
     return CKR_HOST_MEMORY;
   }
+  obj->attributes = ra;
 
-  rt = (CK_ATTRIBUTE_TYPE_PTR)nss_ZRealloc(obj->types, (obj->n + 1));
-  if( (CK_ATTRIBUTE_TYPE_PTR)NULL == rt ) {
+  rt = (CK_ATTRIBUTE_TYPE_PTR)nss_ZRealloc(obj->types, 
+                                      sizeof(CK_ATTRIBUTE_TYPE) * (obj->n + 1));
+  if (!rt) {
     nss_ZFreeIf(n.data);
-    obj->attributes = (NSSItem *)nss_ZRealloc(ra, sizeof(NSSItem) * obj->n);
-    if (!obj->attributes) {
-      return CKR_GENERAL_ERROR;
-    }
     return CKR_HOST_MEMORY;
   }
 
-  obj->attributes = ra;
   obj->types = rt;
   obj->attributes[obj->n] = n;
   obj->types[obj->n] = attribute;

@@ -392,11 +392,8 @@ typedef struct {
 #endif
 
 PR_BEGIN_EXTERN_C
-#if defined(__WATCOMC__) || defined(__WATCOM_CPLUSPLUS__)
+
 extern DB *
-#else
-PR_EXTERN(DB *)
-#endif
 dbopen (const char *, int, int, DBTYPE, const void *);
 
 /* set or unset a global lock flag to disable the

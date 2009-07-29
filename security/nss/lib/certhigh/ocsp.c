@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.58 2009/03/21 01:40:35 nelson%bolyard.com Exp $
+ * $Id: ocsp.c,v 1.59 2009/06/10 22:59:09 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "prerror.h"
@@ -730,7 +730,7 @@ ocsp_FreshenCacheItemNextFetchAttemptTime(OCSPCacheItem *cacheItem)
     }
   
     if (cacheItem->haveNextUpdate) {
-        OCSP_TRACE_TIME("have nextUpdate:", cacheItem->thisUpdate);
+        OCSP_TRACE_TIME("have nextUpdate:", cacheItem->nextUpdate);
     }
   
     if (cacheItem->haveNextUpdate &&

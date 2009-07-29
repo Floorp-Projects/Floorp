@@ -34,27 +34,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _PK11SDR_H_
-#define _PK11SDR_H_
+#ifdef WINCE
+#include <windows.h>
 
-#include "seccomon.h"
+int
+wmain(int argc, WCHAR **wargv)
+{
+    char **argv;
+    int i, ret;
 
-SEC_BEGIN_PROTOS
+    argv = malloc(argc * sizeof(char*));
 
-/*
- * PK11SDR_Encrypt - encrypt data using the specified key id or SDR default
- * result should be freed with SECItem_ZfreeItem
- */
-SECStatus
-PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx);
+    for (i = 0; i < argc; i++) {
+        int len = WideCharToMultiByte(CP_ACP, 0, wargv[i], -1, NULL, 0, 0, 0);
+        argv[i] = malloc(len * sizeof(char));
+        WideCharToMultiByte(CP_ACP, 0, wargv[i], -1, argv[i], len, 0, 0);
+    }
 
-/*
- * PK11SDR_Decrypt - decrypt data previously encrypted with PK11SDR_Encrypt
- * result should be freed with SECItem_ZfreeItem
- */
-SECStatus
-PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx);
+    ret = main(argc, argv);
 
-SEC_END_PROTOS
+    for (i = 0; i < argc; i++) {
+        free(argv[i]);
+    }
+    free(argv);
+
+    return ret;
+}
 
 #endif
+
