@@ -167,7 +167,8 @@ n
 6
 7
 9
-n" > ${CU_DATA}
+n
+" > ${CU_DATA}
 
     TESTNAME="Creating Root CA ${ENTITY}"
     echo "${SCRIPTNAME}: ${TESTNAME}"
@@ -204,20 +205,25 @@ create_cert_req()
 
     CA_FLAG=
     EXT_DATA=
+    OPTIONS=
+
     if [ "${TYPE}" != "EE" ]; then
         CA_FLAG="-2"
         EXT_DATA="y
 -1
-y"
+y
+"
     fi
+
+    process_crldp
 
     echo "${EXT_DATA}" > ${CU_DATA}
 
     TESTNAME="Creating ${TYPE} certifiate request ${REQ}"
     echo "${SCRIPTNAME}: ${TESTNAME}"
-    echo "certutil -s \"CN=${ENTITY} ${TYPE}, O=${ENTITY}, C=US\" ${CTYPE_OPT} -R ${CA_FLAG} -d ${ENTITY_DB} -f ${ENTITY_DB}/dbpasswd -z ${NOISE_FILE} -o ${REQ} < ${CU_DATA}"
+    echo "certutil -s \"CN=${ENTITY} ${TYPE}, O=${ENTITY}, C=US\" ${CTYPE_OPT} -R ${CA_FLAG} -d ${ENTITY_DB} -f ${ENTITY_DB}/dbpasswd -z ${NOISE_FILE} -o ${REQ} ${OPTIONS} < ${CU_DATA}"
     print_cu_data
-    ${BINDIR}/certutil -s "CN=${ENTITY} ${TYPE}, O=${ENTITY}, C=US" ${CTYPE_OPT} -R ${CA_FLAG} -d ${ENTITY_DB} -f ${ENTITY_DB}/dbpasswd -z ${NOISE_FILE} -o ${REQ} < ${CU_DATA} 
+    ${BINDIR}/certutil -s "CN=${ENTITY} ${TYPE}, O=${ENTITY}, C=US" ${CTYPE_OPT} -R ${CA_FLAG} -d ${ENTITY_DB} -f ${ENTITY_DB}/dbpasswd -z ${NOISE_FILE} -o ${REQ} ${OPTIONS} < ${CU_DATA} 
     html_msg $? 0 "${SCENARIO}${TESTNAME}"
 }
 
@@ -395,8 +401,69 @@ process_ocsp()
 ${NSS_AIA_OCSP}:${OCSP}
 0
 n
-n"
+n
+"
     fi
+}
+
+process_crldp()
+{
+    if [ -n "${CRLDP}" ]; then
+        OPTIONS="${OPTIONS} -4"
+
+        EXT_DATA="${EXT_DATA}1
+"
+
+        for ITEM in ${CRLDP}; do
+            CRL_PUBLIC="${HOST}-$$-${ITEM}.crl"
+
+            EXT_DATA="${EXT_DATA}7
+${NSS_AIA_HTTP}/${CRL_PUBLIC}
+"
+        done
+
+        EXT_DATA="${EXT_DATA}0
+0
+0
+n
+n
+"
+    fi
+}
+
+process_ku_ns_eku()
+{
+    if [ -n "${EXT_KU}" ]; then
+        OPTIONS="${OPTIONS} --keyUsage ${EXT_KU}"
+    fi
+    if [ -n "${EXT_NS}" ]; then
+        EXT_NS_KEY=$(echo ${EXT_NS} | cut -d: -f1)
+        EXT_NS_CODE=$(echo ${EXT_NS} | cut -d: -f2)
+
+        OPTIONS="${OPTIONS} --nsCertType ${EXT_NS_KEY}"
+        DATA="${DATA}${EXT_NS_CODE}
+-1
+n
+"
+    fi
+    if [ -n "${EXT_EKU}" ]; then
+        OPTIONS="${OPTIONS} --extKeyUsage ${EXT_EKU}"
+    fi
+}
+
+copy_crl()
+
+{
+    if [ -z "${NSS_AIA_PATH}" ]; then
+        return;
+    fi
+
+    CRL_LOCAL="${COPYCRL}.crl"
+    CRL_PUBLIC="${HOST}-$$-${COPYCRL}.crl"
+
+    cp ${CRL_LOCAL} ${NSS_AIA_PATH}/${CRL_PUBLIC} 2> /dev/null
+    chmod a+r ${NSS_AIA_PATH}/${CRL_PUBLIC}
+    echo ${NSS_AIA_PATH}/${CRL_PUBLIC} >> ${AIA_FILES}
 }
 
 ########################## process_extension ###########################
@@ -413,6 +480,7 @@ process_extensions()
     process_inhibit
     process_aia
     process_ocsp
+    process_ku_ns_eku
 }
 
 ############################## sign_cert ###############################
@@ -663,16 +731,19 @@ verify_cert()
         fi
     done
 
-    TESTNAME="Verifying certificate(s) ${VFY_LIST} with flags ${REV_OPTS} ${DB_OPT} ${FETCH_OPT} ${POLICY_OPT} ${TRUST_OPT}"
+    VFY_OPTS_TNAME="${REV_OPTS} ${DB_OPT} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${TRUST_OPT}"
+    VFY_OPTS_ALL="${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
+
+    TESTNAME="Verifying certificate(s) ${VFY_LIST} with flags ${VFY_OPTS_TNAME}"
     echo "${SCRIPTNAME}: ${TESTNAME}"
-    echo "vfychain ${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
+    echo "vfychain ${VFY_OPTS_ALL}"
 
     if [ -z "${MEMLEAK_DBG}" ]; then
-        VFY_OUT=$(${BINDIR}/vfychain ${DB_OPT} -pp -vv ${REV_OPTS} ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT} 2>&1)
+        VFY_OUT=$(${BINDIR}/vfychain ${VFY_OPTS_ALL} 2>&1)
         RESULT=$?
         echo "${VFY_OUT}"
     else 
-        VFY_OUT=$(${RUN_COMMAND_DBG} ${BINDIR}/vfychain ${REV_OPTS} ${DB_OPT} -pp -vv ${FETCH_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT} 2>> ${LOGFILE})
+        VFY_OUT=$(${RUN_COMMAND_DBG} ${BINDIR}/vfychain ${VFY_OPTS_ALL} 2>> ${LOGFILE})
         RESULT=$?
         echo "${VFY_OUT}"
     fi
@@ -699,7 +770,6 @@ verify_cert()
     fi
 }
 
-
 check_ocsp()
 {
     OCSP_CERT=$1
@@ -722,7 +792,7 @@ check_ocsp()
         ping -n 1 ${OCSP_HOST}
         return $?
     elif [ "${OS_ARCH}" = "HP-UX" ]; then
-        ping ${OCSP_HOST} -c 1
+        ping ${OCSP_HOST} -n 1
         return $?
     else
         ping -c 1 ${OCSP_HOST}
@@ -780,9 +850,13 @@ parse_config()
             MAPPING=
             INHIBIT=
             AIA=
+            CRLDP=
             OCSP=
             DB=
             EMAILS=
+            EXT_KU=
+            EXT_NS=
+            EXT_EKU=
             ;;
         "type")
             TYPE="${VALUE}"
@@ -800,6 +874,9 @@ parse_config()
             MAPPING=
             INHIBIT=
             AIA=
+            EXT_KU=
+            EXT_NS=
+            EXT_EKU=
             ;;
         "ctype") 
             CTYPE="${VALUE}"
@@ -815,6 +892,9 @@ parse_config()
             ;;
         "aia")
             AIA="${AIA} ${VALUE}"
+            ;;
+        "crldp")
+            CRLDP="${CRLDP} ${VALUE}"
             ;;
         "ocsp")
             OCSP="${VALUE}"
@@ -842,6 +922,10 @@ parse_config()
         "serial")
             SERIAL="${VALUE}"
             ;;
+        "copycrl")
+            COPYCRL="${VALUE}"
+            copy_crl "${COPYCRL}"
+            ;;
         "verify")
             VERIFY="${VALUE}"
             TRUST=
@@ -849,6 +933,7 @@ parse_config()
             FETCH=
             EXP_RESULT=
             REV_OPTS=
+            USAGE_OPT=
             ;;
         "cert")
             VERIFY="${VERIFY} ${VALUE}"
@@ -906,6 +991,18 @@ parse_config()
                 echo "OCSP server not accessible, skipping OCSP tests"
                 break;
             fi
+            ;;
+        "ku")
+            EXT_KU="${VALUE}"
+            ;;
+        "ns")
+            EXT_NS="${VALUE}"
+            ;;
+        "eku")
+            EXT_EKU="${VALUE}"
+            ;;
+        "usage")
+            USAGE_OPT="-u ${VALUE}"
             ;;
         "")
             if [ -n "${ENTITY}" ]; then

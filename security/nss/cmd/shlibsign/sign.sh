@@ -21,24 +21,6 @@ WIN*)
     echo ${2}/shlibsign -v -i ${5}
     ${2}/shlibsign -v -i ${5}
     ;;
-OpenVMS)
-    temp="tmp$$.tmp"
-    temp2="tmp$$.tmp2"
-    cd ${1}/lib
-    vmsdir=`dcl show default`
-    ls *.so > $temp
-    sed -e "s/\([^\.]*\)\.so/\$ define\/job \1 ${vmsdir}\1.so/" $temp > $temp2
-    echo '$ define/job getipnodebyname xxx' >> $temp2
-    echo '$ define/job vms_null_dl_name sys$share:decc$shr' >> $temp2
-    dcl @$temp2
-    echo ${2}/shlibsign -v -i ${5}
-    ${2}/shlibsign -v -i ${5}
-    sed -e "s/\([^\.]*\)\.so/\$ deass\/job \1/" $temp > $temp2
-    echo '$ deass/job getipnodebyname' >> $temp2
-    echo '$ deass/job vms_null_dl_name' >> $temp2
-    dcl @$temp2
-    rm $temp $temp2
-    ;;
 *)
     LIBPATH=`(cd ${1}/lib; pwd)`:`(cd ${4}; pwd)`:$LIBPATH
     export LIBPATH
