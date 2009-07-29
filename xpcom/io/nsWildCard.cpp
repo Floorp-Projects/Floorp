@@ -57,73 +57,75 @@
 
 template<class T>
 static int
-_valid_subexp(const T *expr, T stop)
+_valid_subexp(const T *expr, T stop1, T stop2)
 {
-    register int x,y,t;
-    int nsc,np,tld;
-
-    x=0;nsc=0;tld=0;
-
-    while(expr[x] && (expr[x] != stop)) {
+    register int x;
+    int nsc = 0;     /* Number of special characters */
+    int np;          /* Number of pipe characters in union */
+    int tld = 0;     /* Number of tilde characters */
+ 
+    for (x = 0; expr[x] && (expr[x] != stop1) && (expr[x] != stop2); ++x) {
         switch(expr[x]) {
-          case '~':
-            if(tld) return INVALID_SXP;
-            else ++tld;
-          case '*':
-          case '?':
-          case '^':
-          case '$':
+        case '~':
+            if(tld)                 /* at most one exclusion */
+                return INVALID_SXP;
+            if (stop1)              /* no exclusions within unions */
+                return INVALID_SXP;
+            if (!expr[x+1])          /* exclusion cannot be last character */
+                return INVALID_SXP;
+            if (!x)                 /* exclusion cannot be first character */
+                return INVALID_SXP;
+            ++tld;
+            /* fall through */
+        case '*':
+        case '?':
+        case '$':
             ++nsc;
             break;
-          case '[':
+        case '[':
             ++nsc;
             if((!expr[++x]) || (expr[x] == ']'))
                 return INVALID_SXP;
-            for(;expr[x] && (expr[x] != ']');++x)
-                if(expr[x] == '\\')
-                    if(!expr[++x])
-                        return INVALID_SXP;
+            for(; expr[x] && (expr[x] != ']'); ++x) {
+                if(expr[x] == '\\' && !expr[++x])
+                    return INVALID_SXP;
+            }
             if(!expr[x])
                 return INVALID_SXP;
             break;
-          case '(':
-            ++nsc;np = 0;
-            while(1) {
-                if(expr[++x] == ')')
-                    return INVALID_SXP;
-                for(y=x;(expr[y]) && (expr[y] != '|') && (expr[y] != ')');++y)
-                    if(expr[y] == '\\')
-                        if(!expr[++y])
-                            return INVALID_SXP;
-                if(!expr[y])
-                    return INVALID_SXP;
-                if(expr[y] == '|')
-                    ++np;
-                t = ::_valid_subexp(&expr[x],expr[y]);
-                if(t == INVALID_SXP)
+        case '(':
+            ++nsc;
+            if (stop1)                  /* no nested unions */
+                return INVALID_SXP;
+            np = -1;
+            do {
+                int t = ::_valid_subexp(&expr[++x], T(')'), T('|'));
+                if(t == 0 || t == INVALID_SXP)
                     return INVALID_SXP;
                 x+=t;
-                if(expr[x] == ')') {
-                    if(!np)
-                        return INVALID_SXP;
-                    break;
-                }
-            }
+                if(!expr[x])
+                    return INVALID_SXP;
+                ++np;
+            } while (expr[x] == '|' );
+            if(np < 1)  /* must be at least one pipe */
+                return INVALID_SXP;
             break;
-          case ')':
-          case ']':
+        case ')':
+        case ']':
+        case '|':
             return INVALID_SXP;
-          case '\\':
+        case '\\':
+            ++nsc;
             if(!expr[++x])
                 return INVALID_SXP;
-          default:
+            break;
+        default:
             break;
         }
-        ++x;
     }
-    if((!stop) && (!nsc))
-        return NON_SXP;
-    return ((expr[x] == stop) ? x : INVALID_SXP);
+    if((!stop1) && (!nsc)) /* must be at least one special character */
+         return NON_SXP;
+    return ((expr[x] == stop1 || expr[x] == stop2) ? x : INVALID_SXP);
 }
 
 
@@ -131,7 +133,7 @@ template<class T>
 int
 NS_WildCardValid_(const T *expr)
 {
-    int x = ::_valid_subexp(expr, T('\0'));
+    int x = ::_valid_subexp(expr, T('\0'), T('\0'));
     return (x < 0 ? x : VALID_SXP);
 }
 
@@ -155,166 +157,265 @@ NS_WildCardValid(const PRUnichar *expr)
 #define ABORTED -1
 
 template<class T>
-static int _shexp_match(const T *str, const T *expr, PRBool case_insensitive);
+static int
+_shexp_match(const T *str, const T *expr, PRBool case_insensitive, unsigned int level);
 
+/**
+ * Count characters until we reach a NUL character or either of the
+ * two delimiter characters, stop1 or stop2.  If we encounter a bracketed
+ * expression, look only for NUL or ']' inside it.  Do not look for stop1
+ * or stop2 inside it. Return ABORTED if bracketed expression is unterminated.
+ * Handle all escaping.
+ * Return index in input string of first stop found, or ABORTED if not found.
+ * If "dest" is non-NULL, copy counted characters to it and NUL terminate.
+ */
 template<class T>
 static int
-_handle_union(const T *str, const T *expr, PRBool case_insensitive)
+_scan_and_copy(const T *expr, T stop1, T stop2, T *dest)
 {
-    T *e2 = (T *) NS_Alloc(sizeof(T)*nsCharTraits<T>::length(expr));
-    register int t,p2,p1 = 1;
-    int cp;
+    register int sx;     /* source index */
+    register char cc;
 
-    while(1) {
-        for(cp=1;expr[cp] != ')';cp++)
-            if(expr[cp] == '\\')
-                ++cp;
-        for(p2 = 0;(expr[p1] != '|') && (p1 != cp);p1++,p2++) {
-            if(expr[p1] == '\\')
-                e2[p2++] = expr[p1++];
-            e2[p2] = expr[p1];
+    for (sx = 0; (cc = expr[sx]) && cc != stop1 && cc != stop2; sx++) {
+        if (cc == '\\') {
+            if (!expr[++sx])
+                return ABORTED; /* should be impossible */
         }
-        for (t=cp+1; ((e2[p2] = expr[t]) != 0); ++t,++p2) {}
-        if(::_shexp_match(str,e2, case_insensitive) == MATCH) {
-            NS_Free(e2);
-            return MATCH;
+        else if (cc == '[') {
+            while ((cc = expr[++sx]) && cc != ']') {
+                if(cc == '\\' && !expr[++sx])
+                    return ABORTED;
+            }
+            if (!cc)
+                return ABORTED; /* should be impossible */
         }
-        if(p1 == cp) {
-            NS_Free(e2);
-            return NOMATCH;
-        }
-        else ++p1;
     }
+    if (dest && sx) {
+        /* Copy all but the closing delimiter. */
+        memcpy(dest, expr, sx * sizeof(T));
+        dest[sx] = 0;
+    }
+    return cc ? sx : ABORTED; /* index of closing delimiter */
 }
 
+/* On input, expr[0] is the opening parenthesis of a union.
+ * See if any of the alternatives in the union matches as a pattern.
+ * The strategy is to take each of the alternatives, in turn, and append
+ * the rest of the expression (after the closing ')' that marks the end of
+ * this union) to that alternative, and then see if the resultant expression
+ * matches the input string.  Repeat this until some alternative matches,
+ * or we have an abort.
+ */
+template<class T>
+static int
+_handle_union(const T *str, const T *expr, PRBool case_insensitive,
+              unsigned int level)
+{
+    register int sx;     /* source index */
+    int cp;              /* source index of closing parenthesis */
+    int count;
+    int ret   = NOMATCH;
+    T *e2;
+
+    /* Find the closing parenthesis that ends this union in the expression */
+    cp = ::_scan_and_copy(expr, T(')'), T('\0'), static_cast<T*>(NULL));
+    if (cp == ABORTED || cp < 4) /* must be at least "(a|b" before ')' */
+        return ABORTED;
+    ++cp;                /* now index of char after closing parenthesis */
+    e2 = (T *) NS_Alloc(1 + nsCharTraits<T>::length(expr));
+    if (!e2)
+        return ABORTED;
+    for (sx = 1; ret == NOMATCH && expr[sx] && expr[sx] != ')'; ++sx) {
+        /* Here, expr[sx] is one character past the preceeding '(' or '|'. */
+        /* Copy everything up to the next delimiter to e2 */
+        count = ::_scan_and_copy(expr + sx, T(')'), T('|'), e2);
+        if (count == ABORTED || !count) {
+            ret = ABORTED;
+            break;
+        }
+        sx += count;
+        /* Append everything after closing parenthesis to e2. This is safe. */
+        nsCharTraits<T>::copy(e2 + count, expr + cp, nsCharTraits<T>::length(expr + cp) + 1);
+        ret = ::_shexp_match(str, e2, case_insensitive, level + 1);
+    }
+    NS_Free(e2);
+    if (sx < 2)
+        ret = ABORTED;
+    return ret;
+}
+
+/* returns 1 if val is in range from start..end, case insensitive. */
+static int
+_is_char_in_range(int start, int end, int val)
+{
+    char map[256];
+    memset(map, 0, sizeof map);
+    while (start <= end)
+        map[tolower(start++)] = 1;
+    return map[tolower(val)];
+}
 
 template<class T>
 static int
-_shexp_match(const T *str, const T *expr, PRBool case_insensitive)
+_shexp_match(const T *str, const T *expr, PRBool case_insensitive,
+             unsigned int level)
 {
-    register int x,y;
+    register int x;   /* input string index */
+    register int y;   /* expression index */
     int ret,neg;
 
-    ret = 0;
-    for(x=0,y=0;expr[y];++y,++x) {
-        if((!str[x]) && (expr[y] != '(') && (expr[y] != '$') && (expr[y] != '*'))
-            ret = ABORTED;
-        else {
-            switch(expr[y]) {
-              case '$':
-                if( (str[x]) )
-                    ret = NOMATCH;
-                else
-                    --x;             /* we don't want loop to increment x */
-                break;
-              case '*':
-                while(expr[++y] == '*'){}
-                if(!expr[y])
+    if (level > 20)      /* Don't let the stack get too deep. */
+        return ABORTED;
+    for(x = 0, y = 0; expr[y]; ++y, ++x) {
+        if((!str[x]) && (expr[y] != '$') && (expr[y] != '*')) {
+            return NOMATCH;
+        }
+        switch(expr[y]) {
+        case '$':
+            if(str[x])
+                return NOMATCH;
+            --x;                 /* we don't want loop to increment x */
+            break;
+        case '*':
+            while(expr[++y] == '*'){}
+            if(!expr[y])
+                return MATCH;
+            while(str[x]) {
+                ret = ::_shexp_match(&str[x++], &expr[y], case_insensitive,
+                                     level + 1);
+                switch(ret) {
+                case NOMATCH:
+                    continue;
+                case ABORTED:
+                    return ABORTED;
+                default:
                     return MATCH;
-                while(str[x]) {
-                    switch(::_shexp_match(&str[x++],&expr[y], case_insensitive)) {
-                      case NOMATCH:
-                        continue;
-                      case ABORTED:
-                        ret = ABORTED;
-                        break;
-                      default:
-                        return MATCH;
-                    }
-                    break;
                 }
-                if((expr[y] == '$') && (expr[y+1] == '\0') && (!str[x]))
-                    return MATCH;
-                else
-                    ret = ABORTED;
-                break;
-              case '[':
-                neg = ((expr[++y] == '^') && (expr[y+1] != ']'));
-                if (neg)
-                    ++y;
-
-                if ((isalnum(expr[y])) && (expr[y+1] == '-') &&
-                   (isalnum(expr[y+2])) && (expr[y+3] == ']'))
-                    {
-                        int start = expr[y], end = expr[y+2];
-
-                        /* Droolproofing for pinheads not included */
-                        if(neg ^ ((str[x] < start) || (str[x] > end))) {
-                            ret = NOMATCH;
-                            break;
-                        }
-                        y+=3;
-                    }
-                else {
-                    int matched;
-
-                    for (matched=0;expr[y] != ']';y++) {
-                        /* match an escaped ']' character */
-                        if('\\' == expr[y] && ']' == expr[y+1]) {
-                            if(']' == str[x])
-                                matched |= 1;
-                            y++; /* move an extra char to compensate for '\\' */
-                            continue;
-                        }
-                        matched |= (str[x] == expr[y]);
-                    }
-                    if (neg ^ (!matched))
-                        ret = NOMATCH;
-                }
-                break;
-              case '(':
-                return ::_handle_union(&str[x],&expr[y], case_insensitive);
-                break;
-              case '?':
-                break;
-              case '\\':
+            }
+            if((expr[y] == '$') && (expr[y+1] == '\0') && (!str[x]))
+                return MATCH;
+            else
+                return NOMATCH;
+        case '[': {
+            T start, end = 0;
+            int i;
+            neg = ((expr[++y] == '^') && (expr[y+1] != ']'));
+            if (neg)
                 ++y;
-              default:
-                if(case_insensitive)
-                  {
-                    if(toupper(str[x]) != toupper(expr[y]))
-                        ret = NOMATCH;
-                  }
-                else
-                  {
-                    if(str[x] != expr[y])
-                        ret = NOMATCH;
-                  }
-                break;
+            i = y;
+            start = expr[i++];
+            if (start == '\\')
+                start = expr[i++];
+            if (isalnum(int(start)) && expr[i++] == '-') {
+                end = expr[i++];
+                if (end == '\\')
+                    end = expr[i++];
+            }
+            if (isalnum(int(end)) && expr[i] == ']') {
+                /* This is a range form: a-b */
+                T val = str[x];
+                if (end < start) { /* swap them */
+                    T tmp = end;
+                    end = start;
+                    start = tmp;
+                }
+                if (case_insensitive && isalpha(int(val))) {
+                    val = ::_is_char_in_range(int(start), int(end), int(val));
+                    if (neg == val)
+                        return NOMATCH;
+                }
+                else if (neg != ((val < start) || (val > end))) {
+                    return NOMATCH;
+                }
+                y = i;
+            }
+            else {
+                /* Not range form */
+                int matched = 0;
+                for (; expr[y] != ']'; y++) {
+                    if (expr[y] == '\\')
+                        ++y;
+                    if(case_insensitive)
+                        matched |= (toupper(int(str[x])) == toupper(int(expr[y])));
+                    else
+                        matched |= (str[x] == expr[y]);
+                }
+                if (neg == matched)
+                    return NOMATCH;
             }
         }
-        if(ret)
+        break;
+        case '(':
+            if (!expr[y+1])
+                return ABORTED;
+            return ::_handle_union(&str[x], &expr[y], case_insensitive, level + 1);
+        case '?':
             break;
+        case ')':
+        case ']':
+        case '|':
+            return ABORTED;
+        case '\\':
+            ++y;
+            /* fall through */
+        default:
+            if(case_insensitive) {
+                if(toupper(int(str[x])) != toupper(int(expr[y])))
+                    return NOMATCH;
+            }
+            else {
+                if(str[x] != expr[y])
+                    return NOMATCH;
+            }
+            break;
+        }
     }
-    return (ret ? ret : (str[x] ? NOMATCH : MATCH));
+    return (str[x] ? NOMATCH : MATCH);
 }
 
 
 template<class T>
-int
-NS_WildCardMatch_(const T *str, const T *xp, PRBool case_insensitive)
+static int
+ns_WildCardMatch(const T *str, const T *xp, PRBool case_insensitive)
 {
-    T *expr = NS_strdup(xp);
+    T *expr = NULL;
+    int x, ret = MATCH;
 
+    if (!nsCharTraits<T>::find(xp, nsCharTraits<T>::length(xp), T('~')))
+        return _shexp_match(str, xp, case_insensitive, 0);
+
+    expr = (T *) NS_Alloc(nsCharTraits<T>::length(xp) + 1);
     if(!expr)
-        return 1;
+        return NOMATCH;
 
-    for(int x=nsCharTraits<T>::length(expr)-1;x;--x) {
-        if((expr[x] == '~') && (expr[x-1] != '\\')) {
-            expr[x] = '\0';
-            if(::_shexp_match(str,&expr[++x], case_insensitive) == MATCH)
-                goto punt;
-            break;
+    x = ::_scan_and_copy(expr, T('~'), T('\0'), static_cast<T*>(NULL));
+    if (x != ABORTED && expr[x] == '~') {
+        expr[x++] = '\0';
+        ret = ::_shexp_match(str, &expr[x], case_insensitive, 0);
+        switch (ret) {
+        case NOMATCH: ret = MATCH;   break;
+        case MATCH:   ret = NOMATCH; break;
+        default:                     break;
         }
     }
-    if(::_shexp_match(str,expr, case_insensitive) == MATCH) {
-        NS_Free(expr);
-        return 0;
-    }
+    if (ret == MATCH)
+        ret = ::_shexp_match(str, expr, case_insensitive, 0);
 
-  punt:
     NS_Free(expr);
-    return 1;
+    return ret;
+}
+
+template<class T>
+NS_COM int
+NS_WildCardMatch_(const T *str, const T *expr, PRBool case_insensitive)
+{
+    int is_valid = NS_WildCardValid(expr);
+    switch(is_valid) {
+        case INVALID_SXP:
+            return -1;
+        default:
+            return ns_WildCardMatch(str, expr, case_insensitive);
+    }
 }
 
 NS_COM int
