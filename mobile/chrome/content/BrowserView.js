@@ -152,7 +152,8 @@ BrowserView.Util = {
 
   clampZoomLevel: function clampZoomLevel(zl) {
     let bounded = Math.min(Math.max(kBrowserViewZoomLevelMin, zl), kBrowserViewZoomLevelMax);
-    return Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
+    let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
+    return (rounded) ? rounded : 1.0;
   },
 
   pageZoomLevel: function pageZoomLevel(visibleRect, browserW, browserH) {
