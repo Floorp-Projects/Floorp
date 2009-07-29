@@ -66,6 +66,10 @@
 #define _WIN32_WINNT 0x0600
 #endif
 
+#ifdef WINCE
+#define SHGetFileInfoW SHGetFileInfo
+#endif
+
 // we need windows.h to read out registry information...
 #include <windows.h>
 #include <shellapi.h>
@@ -298,12 +302,13 @@ static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFOW* aSFI
 static UINT GetSizeInfoFlag(PRUint32 aDesiredImageSize)
 {
   UINT infoFlag;
-#ifndef WINCE
-  // SHGFI_SHELLICONSIZE does not exist on windows mobile.
   if (aDesiredImageSize > 16)
+#ifndef WINCE
     infoFlag = SHGFI_SHELLICONSIZE;
-  else
+#else
+    infoFlag = SHGFI_LARGEICON;
 #endif
+  else
     infoFlag = SHGFI_SMALLICON;
 
   return infoFlag;
@@ -311,7 +316,7 @@ static UINT GetSizeInfoFlag(PRUint32 aDesiredImageSize)
 
 nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
 {
-#ifdef WINCE
+#ifdef WINCE_WINDOWS_MOBILE
     // GetDIBits does not exist on windows mobile.
   return NS_ERROR_NOT_AVAILABLE;
 #else
@@ -336,8 +341,15 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
     NS_ENSURE_SUCCESS(rv, rv);
 
     localFile->GetPath(filePath);
+#ifndef WINCE
     if (filePath.Length() < 2 || filePath[1] != ':')
       return NS_ERROR_MALFORMED_URI; // UNC
+#else
+    // WinCE paths don't have drive letters
+    if (filePath.Length() < 2 ||
+        filePath[0] != '\\' || filePath[1] == '\\')
+      return NS_ERROR_MALFORMED_URI; // UNC
+#endif
 
     if (filePath.Last() == ':')
       filePath.Append('\\');
@@ -368,12 +380,21 @@ nsresult nsIconChannel::GetHIconFromFile(HICON *hIcon)
     filePath = NS_LITERAL_STRING(".") + NS_ConvertUTF8toUTF16(defFileExt);
   }
 
+#ifndef WINCE
   // Is this the "Desktop" folder?
   DWORD shellResult = GetSpecialFolderIcon(localFile, CSIDL_DESKTOP, &sfi, infoFlags);
   if (!shellResult) {
     // Is this the "My Documents" folder?
     shellResult = GetSpecialFolderIcon(localFile, CSIDL_PERSONAL, &sfi, infoFlags);
   }
+#else
+  DWORD shellResult = 0;
+  // Fantastic. On WinCE, ::SHGetFileInfo (with a localFile) fails
+  // unless I also set another flag like this. We don't actually need
+  // the display name.
+  if (localFile)
+    infoFlags |= SHGFI_DISPLAYNAME;
+#endif
 
   // There are other "Special Folders" and Namespace entities that we are not 
   // fetching icons for, see: 
@@ -439,13 +460,88 @@ nsresult nsIconChannel::GetStockHIcon(nsIMozIconURI *aIconURI, HICON *hIcon)
 }
 #endif
 
+#ifdef WINCE
+int GetDIBits(HDC hdc,
+              HBITMAP hbmp,
+              UINT uStartScan,
+              UINT cScanLines,
+              LPVOID lpvBits,
+              LPBITMAPINFO lpbi,
+              UINT uUsage)
+{
+  // Enforce some assumptions this simplified implementation makes
+  if (!hdc || !hbmp || uStartScan != 0 ||
+      !lpbi || uUsage != DIB_RGB_COLORS ||
+      lpvBits == NULL && lpbi->bmiHeader.biSize != sizeof(BITMAPINFOHEADER))
+    return 0;
+
+  BITMAP bmpInfo;
+  if (!::GetObject(hbmp, sizeof(BITMAP), &bmpInfo))
+    return 0;
+
+  lpbi->bmiHeader.biWidth         = bmpInfo.bmWidth;
+  lpbi->bmiHeader.biHeight        = bmpInfo.bmHeight;
+  lpbi->bmiHeader.biPlanes        = bmpInfo.bmPlanes;
+  lpbi->bmiHeader.biBitCount      = bmpInfo.bmBitsPixel;
+  lpbi->bmiHeader.biCompression   = BI_RGB; // 0
+  lpbi->bmiHeader.biSizeImage     = bmpInfo.bmWidthBytes * bmpInfo.bmHeight;
+  lpbi->bmiHeader.biXPelsPerMeter = 0;
+  lpbi->bmiHeader.biYPelsPerMeter = 0;
+  lpbi->bmiHeader.biClrUsed       = 0;
+  lpbi->bmiHeader.biClrImportant  = 0;
+
+  if (lpbi->bmiHeader.biBitCount == 1) {
+    // Need to set this or else the mask is inverted.
+    lpbi->bmiHeader.biClrUsed       = 2;
+    lpbi->bmiHeader.biClrImportant  = 2;
+    lpbi->bmiColors[0].rgbRed = lpbi->bmiColors[0].rgbGreen =
+      lpbi->bmiColors[0].rgbBlue = lpbi->bmiColors[0].rgbReserved = 0;
+    lpbi->bmiColors[1].rgbRed = lpbi->bmiColors[1].rgbGreen =
+      lpbi->bmiColors[1].rgbBlue = lpbi->bmiColors[1].rgbReserved = 255;
+  }
+
+  if (lpvBits == NULL)
+    return bmpInfo.bmHeight;
+
+  // We just want to pull out the image bits, but Windows CE makes
+  // this stupidly difficult to do...
+  HBITMAP hTargetBitmap;
+  void *pBuffer; 
+  HDC someDC = ::GetDC(NULL);
+  hTargetBitmap = ::CreateDIBSection(someDC, lpbi, DIB_RGB_COLORS,
+                                     (void**)&pBuffer, NULL, 0);
+  ::ReleaseDC(NULL, someDC);
+
+  HDC memDc    = ::CreateCompatibleDC(NULL);
+  HDC targetDc = ::CreateCompatibleDC(NULL);
+  if (!memDc || !targetDc)
+    return 0;
+
+  HBITMAP hOldMemBitmap = (HBITMAP)::SelectObject(memDc, hbmp);
+  HBITMAP hOldTgtBitmap = (HBITMAP)::SelectObject(targetDc, hTargetBitmap);
+
+  // BitBlt into the target bitmap, then copy the bits into our buffer.
+  ::BitBlt(targetDc, 0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight, memDc, 0, 0, SRCCOPY);
+  memcpy(lpvBits, pBuffer, lpbi->bmiHeader.biSizeImage);
+
+  // Cleanup
+  ::SelectObject(memDc, hOldMemBitmap);
+  ::SelectObject(targetDc, hOldTgtBitmap);
+  ::DeleteDC(memDc);
+  ::DeleteDC(targetDc); 
+  ::DeleteObject(hTargetBitmap); 
+
+  return bmpInfo.bmHeight;
+}
+#endif
+
 nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
 {
   // Check whether the icon requested's a file icon or a stock icon
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
   // GetDIBits does not exist on windows mobile.
-#ifndef WINCE
+#ifndef WINCE_WINDOWS_MOBILE
   HICON hIcon = NULL;
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
