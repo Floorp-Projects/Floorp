@@ -459,7 +459,7 @@ MouseModule.prototype = {
     let targetClicker = this.getClickerFromElement(evInfo.event.target);
 
     this._targetScrollInterface = targetScrollInterface;
-
+    if (!targetScrollInterface) { debugger; dump('*********** no TSI found, dragger will be null\n'); }
     this._dragger = (targetScrollInterface) ? (targetScrollbox.customDragger || this._defaultDragger)
                                             : null;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
@@ -608,7 +608,11 @@ MouseModule.prototype = {
       this._kinetic.start();
 
     } else {               // now we're done, says our secret 3rd argument
+      try {
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
+      } catch (e) {
+        debugger; dump(e + '\n');
+      }
     }
   },
 
@@ -768,7 +772,7 @@ MouseModule.prototype = {
     let scrollbox = null;
     let qinterface = null;
 
-    while (elem.parentNode) {
+    for (; elem; elem = elem.parentNode) { dump(elem + '\n');
       try {
 
         if (elem.scrollBoxObject) {
@@ -789,8 +793,6 @@ MouseModule.prototype = {
       } catch (e) { /* we aren't here to deal with your exceptions, we'll just keep
                        traversing until we find something more well-behaved, as we
                        prefer default behaviour to whiny scrollers. */ }
-
-      elem = elem.parentNode;
     }
     return [scrollbox, qinterface];
   },
@@ -935,7 +937,10 @@ KineticController.prototype = {
       notify: function kineticTimerCallback(timer) {
         let self = this._self;
 
-        dump("             speeds: " + self._speedX + " " + self._speedY + "\n");
+        if (!self.isActive())  // someone called end() on us between timer intervals
+          return;
+
+        //dump("             speeds: " + self._speedX + " " + self._speedY + "\n");
 
         if (self._speedX == 0 && self._speedY == 0) {
           self.end();
@@ -971,8 +976,8 @@ KineticController.prototype = {
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     //initialize our timer with updateInterval
     this._timer.initWithCallback(callback,
-                                        this._updateInterval,
-                                        this._timer.TYPE_REPEATING_SLACK);
+                                 this._updateInterval,
+                                 this._timer.TYPE_REPEATING_SLACK);
   },
 
   start: function start() {

@@ -92,9 +92,6 @@ const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^7 = 128
 const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^7 = 128
 const kTileLazyRoundTimeCap = 500;    // millis
 
-function test() {
-  FOREACH_RECT(a, b, c, null);
-}
 
 /**
  * The Tile Manager!
