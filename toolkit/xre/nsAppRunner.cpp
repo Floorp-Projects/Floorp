@@ -208,9 +208,7 @@
 #endif
 
 #ifdef MOZ_IPC
-#include "base/at_exit.h"
 #include "base/command_line.h"
-#include "base/message_loop.h"
 #include "base/thread.h"
 #include "mozilla/ipc/GeckoThread.h"
 
@@ -2953,10 +2951,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   MOZ_SPLASHSCREEN_UPDATE(20);
 
 #ifdef MOZ_IPC
-  // Set up chromium libs
-  base::AtExitManager exitManager;
+  NS_ASSERTION(!CommandLine::IsInitialized(), "Bad news!");
   CommandLine::Init(gArgc, gArgv);
-  MessageLoopForUI mainMessageLoop;
 #endif
 
   {

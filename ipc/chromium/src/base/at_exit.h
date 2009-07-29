@@ -51,6 +51,10 @@ class AtExitManager {
   // is possible to register new callbacks after calling this function.
   static void ProcessCallbacksNow();
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+  static bool AlreadyRegistered();
+#endif
+
  private:
   struct CallbackAndParam {
     CallbackAndParam(AtExitCallbackType func, void* param)
