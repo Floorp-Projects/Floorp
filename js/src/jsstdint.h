@@ -40,7 +40,7 @@
 /*
  * This header provides definitions for the <stdint.h> types we use,
  * even on systems that lack <stdint.h>.
- * 
+ *
  * NOTE: This header should only be included in private SpiderMonkey
  * code; public headers should use only the JS{Int,Uint}N types; see
  * the comment for them in "jsinttypes.h".
