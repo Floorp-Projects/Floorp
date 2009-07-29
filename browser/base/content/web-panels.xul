@@ -47,8 +47,6 @@
 %browserDTD;
 <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd">
 %textcontextDTD;
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-%globalDTD;
 ]>
 
 <page id="webpanels-window"

@@ -15,8 +15,8 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,72 +35,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = toolkit/content/tests/chrome/rtltest
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE		= xuldoc
-LIBRARY_NAME	= gkconxuldoc_s
-LIBXUL_LIBRARY	= 1
-
-REQUIRES	= xpcom \
-		  string \
-		  exthandler \
-		  mimetype \
-		  gfx \
-		  thebes \
-		  layout \
-		  content \
-		  widget \
-		  dom \
-		  rdf \
-		  js \
-		  xpconnect \
-		  caps \
-		  locale \
-		  view \
-		  necko \
-		  htmlparser \
-		  docshell \
-		  pref \
-		  xultmpl \
-		  webshell \
-		  unicharutil \
-		  appshell \
-		  util \
-		  uriloader \
-		  $(NULL)
-
-CPPSRCS		= nsXULControllers.cpp
-
-ifdef MOZ_XUL
-CPPSRCS		+= \
-		nsXULCommandDispatcher.cpp \
-		nsXULContentSink.cpp \
-		nsXULDocument.cpp \
-		nsXULPrototypeCache.cpp \
-		nsXULPrototypeDocument.cpp \
-		$(NULL)
-endif
-
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES	= -I$(srcdir)/../../../base/src \
-		  -I$(srcdir)/../../content/src \
-		  -I$(srcdir)/../../templates/src \
-		  -I$(srcdir)/../../../../layout/base \
-		  -I$(srcdir)/../../../../layout/generic \
-		  -I$(srcdir)/../../../../layout/style \
-		  -I$(srcdir)/../../../../layout/xul/base/src \
-		  -I$(srcdir)/../../../xml/document/src \
-		  -I$(srcdir)/../../../events/src \
-		  $(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT
+libs:: righttoleft.manifest dirtest.xul
+	$(INSTALL) @srcdir@/righttoleft.manifest $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/
+	$(INSTALL) @srcdir@/dirtest.xul $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/content/

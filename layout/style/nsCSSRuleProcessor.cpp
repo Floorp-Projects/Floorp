@@ -1558,6 +1558,27 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     else if (nsCSSPseudoClasses::mozIsHTML == pseudoClass->mAtom) {
       result = data.mIsHTMLContent && data.mContent->IsInHTMLDocument();
     }
+    else if (nsCSSPseudoClasses::mozLocaleDir == pseudoClass->mAtom) {
+      nsIDocument* doc = data.mContent ? data.mContent->GetDocument() :
+                                         data.mPresContext->Document();
+
+      if (doc) {
+        PRBool docIsRTL = doc && doc->IsDocumentRightToLeft();
+
+        nsDependentString dirString(pseudoClass->u.mString);
+        NS_ASSERTION(dirString.EqualsLiteral("ltr") || dirString.EqualsLiteral("rtl"),
+                     "invalid value for -moz-locale-dir");
+
+        if (dirString.EqualsLiteral("rtl")) {
+          result = docIsRTL;
+        } else if (dirString.EqualsLiteral("ltr")) {
+          result = !docIsRTL;
+        }
+      }
+      else {
+        result = PR_FALSE;
+      }
+    }
 #ifdef MOZ_MATHML
     else if (nsCSSPseudoClasses::mozMathIncrementScriptLevel == pseudoClass->mAtom) {
       stateToCheck = NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL;
@@ -2068,6 +2089,14 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
 #endif
   // XXXbz now that :link and :visited are also states, do we need a
   // similar optimization in HasStateDependentStyle?
+
+  // check for the localedir attribute on root XUL elements
+  if (aData->mAttribute == nsGkAtoms::localedir &&
+      aData->mNameSpaceID == kNameSpaceID_XUL &&
+      aData->mContent == aData->mContent->GetOwnerDoc()->GetRootContent())
+  {
+    data.change = nsReStyleHint(data.change | eReStyle_Self);
+  }
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 

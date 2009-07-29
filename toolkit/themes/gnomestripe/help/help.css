@@ -52,11 +52,11 @@
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
 }
 
-#help-back-button[chromedir="rtl"] {
+#help-back-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
 }
 
-#help-back-button[disabled="true"][chromedir="rtl"] {
+#help-back-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
 }
 
@@ -68,11 +68,11 @@
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
 }
 
-#help-forward-button[chromedir="rtl"] {
+#help-forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
 }
 
-#help-forward-button[disabled="true"][chromedir="rtl"] {
+#help-forward-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
 }
 
@@ -120,7 +120,7 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
 }
 
-#context-back[chromedir="rtl"] {
+#context-back:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
 
@@ -128,7 +128,7 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
 }
 
-#context-back[disabled="true"][chromedir="rtl"] {
+#context-back[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
 }
 
@@ -136,7 +136,7 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
 }
 
-#context-forward[chromedir="rtl"] {
+#context-forward:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
 
@@ -144,7 +144,7 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
-#context-forward[disabled="true"][chromedir="rtl"] {
+#context-forward[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
 
