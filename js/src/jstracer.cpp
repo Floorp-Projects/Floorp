@@ -3729,7 +3729,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::compile(JSTraceMonitor* tm)
 {
 #ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(S_COMPILE);
+    TraceVisStateObj tvso(cx, S_COMPILE);
 #endif
 
     if (tm->needFlush) {
@@ -5427,7 +5427,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
             VMSideExit** innermostNestedGuardp)
 {
 #ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(S_EXECUTE);
+    TraceVisStateObj tvso(cx, S_EXECUTE);
 #endif
 
     JS_ASSERT(f->root == f && f->code() && f->vmprivate);
@@ -5525,7 +5525,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     // TraceVisStateObj constructors and destructors must run at the right times.
     {
 #ifdef MOZ_TRACEVIS
-        TraceVisStateObj tvso_n(S_NATIVE);
+        TraceVisStateObj tvso_n(cx, S_NATIVE);
 #endif
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
         SIMULATE_FASTCALL(rec, state, NULL, u.func);
@@ -5837,7 +5837,7 @@ JS_REQUIRES_STACK bool
 js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
 #ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(S_MONITOR);
+    TraceVisStateObj tvso(cx, S_MONITOR);
 #endif
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -12732,6 +12732,7 @@ DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint3
 #ifdef MOZ_TRACEVIS
 
 FILE* traceVisLogFile = NULL;
+JSHashTable *traceVisScriptTable = NULL;
 
 JS_FRIEND_API(bool)
 JS_StartTraceVis(const char* filename = "tracevis.dat")
