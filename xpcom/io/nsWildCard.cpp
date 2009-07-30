@@ -222,7 +222,7 @@ _handle_union(const T *str, const T *expr, PRBool case_insensitive,
     if (cp == ABORTED || cp < 4) /* must be at least "(a|b" before ')' */
         return ABORTED;
     ++cp;                /* now index of char after closing parenthesis */
-    e2 = (T *) NS_Alloc(1 + nsCharTraits<T>::length(expr));
+    e2 = (T *) NS_Alloc((1 + nsCharTraits<T>::length(expr)) * sizeof(T));
     if (!e2)
         return ABORTED;
     for (sx = 1; ; ++sx) {
@@ -386,7 +386,7 @@ ns_WildCardMatch(const T *str, const T *xp, PRBool case_insensitive)
     if (!nsCharTraits<T>::find(xp, nsCharTraits<T>::length(xp), T('~')))
         return _shexp_match(str, xp, case_insensitive, 0);
 
-    expr = (T *) NS_Alloc(nsCharTraits<T>::length(xp) + 1);
+    expr = (T *) NS_Alloc((nsCharTraits<T>::length(xp) + 1) * sizeof(T));
     if(!expr)
         return NOMATCH;
 
