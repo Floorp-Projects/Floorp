@@ -3347,6 +3347,72 @@ nsGlobalWindow::GetScreenX(PRInt32* aScreenX)
   return NS_OK;
 }
 
+nsRect
+nsGlobalWindow::GetInnerScreenRect()
+{
+  if (!mDocShell)
+    return nsRect();
+
+  nsGlobalWindow* rootWindow =
+    static_cast<nsGlobalWindow*>(GetPrivateRoot());
+  if (rootWindow) {
+    rootWindow->FlushPendingNotifications(Flush_Layout);
+  }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell)
+    return nsRect();
+  nsIFrame* rootFrame = presShell->GetRootFrame();
+  if (!rootFrame)
+    return nsRect();
+
+  return rootFrame->GetScreenRectInAppUnits();
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetMozInnerScreenX(float* aScreenX)
+{
+  FORWARD_TO_OUTER(GetMozInnerScreenX, (aScreenX), NS_ERROR_NOT_INITIALIZED);
+
+  nsRect r = GetInnerScreenRect();
+  *aScreenX = nsPresContext::AppUnitsToFloatCSSPixels(r.x);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetMozInnerScreenY(float* aScreenY)
+{
+  FORWARD_TO_OUTER(GetMozInnerScreenY, (aScreenY), NS_ERROR_NOT_INITIALIZED);
+
+  nsRect r = GetInnerScreenRect();
+  *aScreenY = nsPresContext::AppUnitsToFloatCSSPixels(r.y);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetMozScreenPixelsPerCSSPixel(float* aScreenPixels)
+{
+  FORWARD_TO_OUTER(GetMozScreenPixelsPerCSSPixel,
+      (aScreenPixels), NS_ERROR_NOT_INITIALIZED);
+
+  *aScreenPixels = 1;
+
+  if (!nsContentUtils::IsCallerTrustedForRead())
+    return NS_ERROR_DOM_SECURITY_ERR;
+  if (!mDocShell)
+    return NS_OK;
+  nsCOMPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext)
+    return NS_OK;
+
+  *aScreenPixels = float(nsPresContext::AppUnitsPerCSSPixel())/
+      presContext->AppUnitsPerDevPixel();
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::SetScreenX(PRInt32 aScreenX)
 {
