@@ -334,15 +334,6 @@ nsMenuFrame::GetChildList(nsIAtom* aListName) const
   return nsBoxFrame::GetChildList(aListName);
 }
 
-nsIFrame*
-nsMenuFrame::SetPopupFrame(nsIFrame* aChildList)
-{
-  // Check for a menupopup and move it to mPopupFrame
-  nsFrameList frames(aChildList);
-  SetPopupFrame(frames);
-  return frames.FirstChild();
-}
-
 void
 nsMenuFrame::SetPopupFrame(nsFrameList& aFrameList)
 {
@@ -1214,12 +1205,11 @@ nsMenuFrame::RemoveFrame(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsMenuFrame::InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList)
+                          nsFrameList&    aFrameList)
 {
   if (!mPopupFrame && (!aListName || aListName == nsGkAtoms::popupList)) {
-    aFrameList = SetPopupFrame(aFrameList);
+    SetPopupFrame(aFrameList);
     if (mPopupFrame) {
-
 #ifdef DEBUG_LAYOUT
       nsBoxLayoutState state(PresContext());
       SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
@@ -1228,12 +1218,10 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
-
-      return NS_OK;
     }
   }
 
-  if (!aFrameList)
+  if (aFrameList.IsEmpty())
     return NS_OK;
 
   if (NS_UNLIKELY(aPrevFrame == mPopupFrame)) {
@@ -1245,13 +1233,10 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
 
 NS_IMETHODIMP
 nsMenuFrame::AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList)
+                          nsFrameList&    aFrameList)
 {
-  if (!aFrameList)
-    return NS_OK;
-
   if (!mPopupFrame && (!aListName || aListName == nsGkAtoms::popupList)) {
-    aFrameList = SetPopupFrame(aFrameList);
+    SetPopupFrame(aFrameList);
     if (mPopupFrame) {
 
 #ifdef DEBUG_LAYOUT
@@ -1261,12 +1246,10 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
-
-      return NS_OK;
     }
   }
 
-  if (!aFrameList)
+  if (aFrameList.IsEmpty())
     return NS_OK;
 
   return nsBoxFrame::AppendFrames(aListName, aFrameList); 

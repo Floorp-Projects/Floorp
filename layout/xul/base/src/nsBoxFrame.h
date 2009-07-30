@@ -129,11 +129,11 @@ public:
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
+                           nsFrameList&    aFrameList);
 
   NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
+                           nsFrameList&    aFrameList);
 
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);

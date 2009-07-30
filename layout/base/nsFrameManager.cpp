@@ -688,7 +688,7 @@ nsresult
 nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
                              nsIAtom*        aListName,
                              nsIFrame*       aPrevFrame,
-                             nsIFrame*       aFrameList)
+                             nsFrameList&    aFrameList)
 {
   NS_PRECONDITION(!aPrevFrame || (!aPrevFrame->GetNextContinuation()
                   || IS_TRUE_OVERFLOW_CONTAINER(aPrevFrame->GetNextContinuation()))

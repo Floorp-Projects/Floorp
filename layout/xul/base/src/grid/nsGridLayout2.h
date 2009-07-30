@@ -80,9 +80,10 @@ public:
   virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal);
   virtual Type GetType() { return eGrid; }
   virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
-                              nsIBox* aPrevBox, nsIBox* aChildList);
+                                nsIBox* aPrevBox,
+                                const nsFrameList::Slice& aNewChildren);
   virtual void ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
-                              nsIBox* aChildList);
+                                const nsFrameList::Slice& aNewChildren);
   virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState,
                              nsIBox* aChildList);
   virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState,

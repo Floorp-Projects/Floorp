@@ -126,7 +126,7 @@ nsContainerFrame::SetInitialChildList(nsIAtom*     aListName,
 
 NS_IMETHODIMP
 nsContainerFrame::AppendFrames(nsIAtom*  aListName,
-                               nsIFrame* aFrameList)
+                               nsFrameList& aFrameList)
 {
   if (nsnull != aListName) {
 #ifdef IBMBIDI
@@ -137,7 +137,7 @@ nsContainerFrame::AppendFrames(nsIAtom*  aListName,
       return NS_ERROR_INVALID_ARG;
     }
   }
-  if (aFrameList) {
+  if (aFrameList.NotEmpty()) {
     mFrames.AppendFrames(this, aFrameList);
 
     // Ask the parent frame to reflow me.
@@ -156,7 +156,7 @@ nsContainerFrame::AppendFrames(nsIAtom*  aListName,
 NS_IMETHODIMP
 nsContainerFrame::InsertFrames(nsIAtom*  aListName,
                                nsIFrame* aPrevFrame,
-                               nsIFrame* aFrameList)
+                               nsFrameList& aFrameList)
 {
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
@@ -170,7 +170,7 @@ nsContainerFrame::InsertFrames(nsIAtom*  aListName,
       return NS_ERROR_INVALID_ARG;
     }
   }
-  if (aFrameList) {
+  if (aFrameList.NotEmpty()) {
     // Insert frames after aPrevFrame
     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
