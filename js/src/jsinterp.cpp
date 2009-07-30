@@ -441,7 +441,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 
         id = js_CheckForStringIndex(id);
         JS_ASSERT(OBJ_SCOPE(pobj)->lookup(id));
-        JS_ASSERT(OBJ_SCOPE(pobj)->object == pobj);
+        JS_ASSERT_IF(OBJ_SCOPE(pobj)->object, OBJ_SCOPE(pobj)->object == pobj);
 #endif
         *pobjp = pobj;
         return NULL;
