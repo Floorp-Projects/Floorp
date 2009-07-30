@@ -754,7 +754,7 @@ Assembler::asm_call(LInsp ins)
     // skip return type
     ArgSize rsize = (ArgSize)(atypes & ARGSIZE_MASK_ANY);
 
-    atypes >>= ARGSIZE_MASK_SHIFT;
+    atypes >>= ARGSIZE_SHIFT;
 
     // if we're using VFP, and the return type is a double,
     // it'll come back in R0/R1.  We need to either place it
