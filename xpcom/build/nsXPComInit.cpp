@@ -579,7 +579,7 @@ NS_InitXPCOM3(nsIServiceManager* *result,
         CommandLine::Init(0, nsnull);
 #else
         static char const *const argv = { "/really/should/not/exist" };
-        CommandLine::Init(sizeof(argv), &argv);
+        CommandLine::Init(1, &argv);
 #endif
     }
 
