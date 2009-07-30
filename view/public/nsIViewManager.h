@@ -256,7 +256,12 @@ public:
                          PRBool aRepaintExposedAreaOnly = PR_FALSE) = 0;
 
   /**
-   * Set the visibility of a view.
+   * Set the visibility of a view. Hidden views have the effect of hiding
+   * their descendants as well. This does not affect painting, so layout
+   * is responsible for ensuring that content in hidden views is not
+   * painted nor handling events. It does affect the visibility of widgets;
+   * if a view is hidden, descendant views with widgets have their widgets
+   * hidden.
    * The view manager generates the appropriate dirty regions.
    * @param aView view to change visibility state of
    * @param visible new visibility state
