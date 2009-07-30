@@ -87,7 +87,13 @@ BookmarksEngine.prototype = {
   logName: "Bookmarks",
   _recordObj: PlacesItem,
   _storeObj: BookmarksStore,
-  _trackerObj: BookmarksTracker
+  _trackerObj: BookmarksTracker,
+
+  _sync: function BookmarksEngine__sync() {
+    Svc.Bookmark.runInBatchMode({
+      runBatched: Utils.bind2(this, SyncEngine.prototype._sync)
+    }, null);
+  }
 };
 
 function BookmarksStore() {
