@@ -3,7 +3,7 @@
 browser.jar:
 % content browser %content/
 * content/browser.xul                  (content/browser.xul)
-  content/browser.js                   (content/browser.js)
+* content/browser.js                   (content/browser.js)
   content/browser-ui.js                (content/browser-ui.js)
   content/commandUtil.js               (content/commandUtil.js)
   content/bindings.xml                 (content/bindings.xml)
