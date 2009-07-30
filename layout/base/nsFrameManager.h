@@ -240,7 +240,8 @@ private:
                           nsIFrame          *aFrame,
                           nsIContent        *aParentContent,
                           nsStyleChangeList *aChangeList, 
-                          nsChangeHint       aMinChange);
+                          nsChangeHint       aMinChange,
+                          PRBool             aFireAccessibilityEvents);
 };
 
 #endif
