@@ -4007,7 +4007,7 @@ public:
 
     jsval GetJSVal() const {return mJSVal;}
 
-    XPCVariant(XPCCallContext& ccx, jsval aJSVal);
+    XPCVariant(jsval aJSVal);
 
     /**
      * Convert a variant into a jsval.
@@ -4032,7 +4032,6 @@ protected:
 protected:
     nsDiscriminatedUnion mData;
     jsval                mJSVal;
-    JSBool               mReturnRawObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)
@@ -4041,10 +4040,10 @@ class XPCTraceableVariant: public XPCVariant,
                            public XPCRootSetElem
 {
 public:
-    XPCTraceableVariant(XPCCallContext& ccx, jsval aJSVal)
-        : XPCVariant(ccx, aJSVal)
+    XPCTraceableVariant(XPCJSRuntime *runtime, jsval aJSVal)
+        : XPCVariant(aJSVal)
     {
-        ccx.GetRuntime()->AddVariantRoot(this);
+        runtime->AddVariantRoot(this);
     }
 
     virtual ~XPCTraceableVariant();
