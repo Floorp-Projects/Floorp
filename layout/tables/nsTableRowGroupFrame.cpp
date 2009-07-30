@@ -1030,19 +1030,22 @@ nsTableRowGroupFrame::UndoContinuedRow(nsPresContext*   aPresContext,
 
   // rowBefore was the prev-sibling of aRow's next-sibling before aRow was created
   nsTableRowFrame* rowBefore = (nsTableRowFrame*)aRow->GetPrevInFlow();
+  NS_PRECONDITION(mFrames.ContainsFrame(rowBefore),
+                  "rowBefore not in our frame list?");
 
-  nsIFrame* firstOverflow = GetOverflowFrames(aPresContext, PR_TRUE); 
-  if (!rowBefore || !firstOverflow || (firstOverflow != aRow)) {
-    NS_ASSERTION(PR_FALSE, "invalid continued row");
+  nsAutoPtr<nsFrameList> overflows(StealOverflowFrames());
+  if (!rowBefore || !overflows || overflows->IsEmpty() ||
+      overflows->FirstChild() != aRow) {
+    NS_ERROR("invalid continued row");
     return;
   }
 
-  // Remove aRow from the sibling chain and hook its next-sibling up with rowBefore
-  rowBefore->SetNextSibling(aRow->GetNextSibling());
-
-  // Destroy the row, its cells, and their cell blocks. Cell blocks that have split
+  // Destroy aRow, its cells, and their cell blocks. Cell blocks that have split
   // will not have reflowed yet to pick up content from any overflow lines.
-  aRow->Destroy();
+  overflows->DestroyFrame(aRow);
+
+  // Put the overflow rows into our child list
+  mFrames.InsertFrames(nsnull, rowBefore, *overflows);
 }
 
 static nsTableRowFrame* 
@@ -1387,20 +1390,21 @@ nsTableRowGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
 NS_IMETHODIMP
 nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
-                                   nsIFrame*       aFrameList)
+                                   nsFrameList&    aFrameList)
 {
   NS_ASSERTION(!aListName, "unexpected child list");
 
   ClearRowCursor();
 
   // collect the new row frames in an array
+  // XXXbz why are we doing the QI stuff?  There shouldn't be any non-rows here.
   nsAutoTArray<nsTableRowFrame*, 8> rows;
-  for (nsIFrame* childFrame = aFrameList; childFrame;
-       childFrame = childFrame->GetNextSibling()) {
-    nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
+  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
+    nsTableRowFrame *rowFrame = do_QueryFrame(e.get());
+    NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");
     if (rowFrame) {
       NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
-                     childFrame->GetStyleDisplay()->mDisplay,
+                     e.get()->GetStyleDisplay()->mDisplay,
                    "wrong display type on rowframe");      
       rows.AppendElement(rowFrame);
     }
@@ -1427,7 +1431,7 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
                                    nsIFrame*       aPrevFrame,
-                                   nsIFrame*       aFrameList)
+                                   nsFrameList&    aFrameList)
 {
   NS_ASSERTION(!aListName, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
@@ -1440,14 +1444,15 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
     return NS_ERROR_NULL_POINTER;
 
   // collect the new row frames in an array
+  // XXXbz why are we doing the QI stuff?  There shouldn't be any non-rows here.
   nsTArray<nsTableRowFrame*> rows;
   PRBool gotFirstRow = PR_FALSE;
-  for (nsIFrame* childFrame = aFrameList; childFrame;
-       childFrame = childFrame->GetNextSibling()) {
-    nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
+  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
+    nsTableRowFrame *rowFrame = do_QueryFrame(e.get());
+    NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");
     if (rowFrame) {
       NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
-                     childFrame->GetStyleDisplay()->mDisplay,
+                     e.get()->GetStyleDisplay()->mDisplay,
                    "wrong display type on rowframe");      
       rows.AppendElement(rowFrame);
       if (!gotFirstRow) {

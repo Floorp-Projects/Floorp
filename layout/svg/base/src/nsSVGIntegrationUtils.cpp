@@ -42,7 +42,6 @@
 #include "nsRegion.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
-#include "nsSVGMatrix.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGClipPathFrame.h"
@@ -284,7 +283,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
   userSpaceRect = userSpaceRect.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
   aCtx->Translate(userSpaceRect.x, userSpaceRect.y);
 
-  nsCOMPtr<nsIDOMSVGMatrix> matrix = GetInitialMatrix(aEffectsFrame);
+  gfxMatrix matrix = GetInitialMatrix(aEffectsFrame);
 
   PRBool complexEffects = PR_FALSE;
   /* Check if we need to do additional operations on this child's
@@ -359,19 +358,18 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
   gfx->SetMatrix(savedCTM);
 }
 
-already_AddRefed<nsIDOMSVGMatrix>
+gfxMatrix
 nsSVGIntegrationUtils::GetInitialMatrix(nsIFrame* aNonSVGFrame)
 {
   NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
                "SVG frames should not get here");
   PRInt32 appUnitsPerDevPixel = aNonSVGFrame->PresContext()->AppUnitsPerDevPixel();
-  nsCOMPtr<nsIDOMSVGMatrix> matrix;
   float devPxPerCSSPx =
     1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
-  NS_NewSVGMatrix(getter_AddRefs(matrix),
-                  devPxPerCSSPx, 0.0f,
-                  0.0f, devPxPerCSSPx);
-  return matrix.forget();
+
+  return gfxMatrix(devPxPerCSSPx, 0.0,
+                   0.0, devPxPerCSSPx,
+                   0.0, 0.0);
 }
 
 gfxRect

@@ -1270,7 +1270,7 @@ Define(JSParseNode *pn, JSAtom *atom, JSTreeContext *tc, bool let = false)
             while ((pnu = *pnup) != NULL && pnu->pn_blockid >= start) {
                 JS_ASSERT(pnu->pn_used);
                 pnu->pn_lexdef = (JSDefinition *) pn;
-                pn->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+                pn->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
                 pnup = &pnu->pn_link;
             }
 
@@ -1386,9 +1386,9 @@ MakeDefIntoUse(JSDefinition *dn, JSParseNode *pn, JSAtom *atom, JSTreeContext *t
         JS_ASSERT(pnu->pn_used);
         JS_ASSERT(!pnu->pn_defn);
         pnu->pn_lexdef = (JSDefinition *) pn;
-        pn->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+        pn->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
     }
-    pn->pn_dflags |= dn->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+    pn->pn_dflags |= dn->pn_dflags & PND_USE2DEF_FLAGS;
     pn->dn_uses = dn;
 
     dn->pn_defn = false;
@@ -3071,7 +3071,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
      */
     uintN slot = JSSLOT_FREE(&js_BlockClass) + n;
     if (slot >= STOBJ_NSLOTS(blockObj) &&
-        !js_ReallocSlots(cx, blockObj, slot + 1, JS_FALSE)) {
+        !js_GrowSlots(cx, blockObj, slot + 1)) {
         return JS_FALSE;
     }
     OBJ_SCOPE(blockObj)->freeslot = slot + 1;
@@ -3087,7 +3087,7 @@ PopStatement(JSTreeContext *tc)
     if (stmt->flags & SIF_SCOPE) {
         JSObject *obj = stmt->blockObj;
         JSScope *scope = OBJ_SCOPE(obj);
-        JS_ASSERT(scope->object == obj);
+        JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
 
         for (JSScopeProperty *sprop = scope->lastProp; sprop; sprop = sprop->parent) {
             JSAtom *atom = JSID_TO_ATOM(sprop->id);
@@ -3097,6 +3097,12 @@ PopStatement(JSTreeContext *tc)
                 continue;
             tc->decls.remove(tc->compiler, atom);
         }
+
+        /*
+         * The block scope will not be modified again. It may be shared. Clear
+         * scope->object to make scope->owned() false.
+         */
+        scope->object = NULL;
     }
     js_PopStatement(tc);
 }
@@ -3796,7 +3802,7 @@ CheckDestructuring(JSContext *cx, BindData *data,
 /*
  * This is a greatly pared down version of CheckDestructuring that extends the
  * pn_pos.end source coordinate of each name in a destructuring binding such as
- * 
+ *
  *   var [x, y] = [function () y, 42];
  *
  * to cover its corresponding initializer, so that the initialized binding does
@@ -4335,7 +4341,7 @@ RebindLets(JSParseNode *pn, JSTreeContext *tc)
                     JSDefinition *dn = ALE_DEFN(ale);
                     dn->pn_type = TOK_NAME;
                     dn->pn_op = JSOP_NOP;
-                    dn->pn_dflags |= pn->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+                    dn->pn_dflags |= pn->pn_dflags & PND_USE2DEF_FLAGS;
                 }
                 LinkUseToDef(pn, ALE_DEFN(ale), tc);
             }
@@ -6403,7 +6409,7 @@ CompExprTransplanter::transplant(JSParseNode *pn)
                         JSParseNode *pnu;
                         while ((pnu = *pnup) != NULL && pnu->pn_pos >= root->pn_pos) {
                             pnu->pn_lexdef = dn2;
-                            dn2->pn_dflags |= pnu->pn_dflags & (PND_ASSIGNED | PND_FUNARG);
+                            dn2->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
                             pnup = &pnu->pn_link;
                         }
                         dn2->dn_uses = dn->dn_uses;
@@ -9030,12 +9036,12 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
-            chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
+            chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
             str = js_NewString(cx, chars, length);
             if (!str) {
-                JS_free(cx, chars);
+                cx->free(chars);
                 return JS_FALSE;
             }
 

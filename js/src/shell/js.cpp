@@ -1889,8 +1889,7 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       case JSTYPE_NUMBER:
       case JSTYPE_BOOLEAN: {
         JSBool bval;
-        if (!JS_ValueToBoolean(cx, argv[0], &bval))
-            goto bad_argument;
+        JS_ValueToBoolean(cx, argv[0], &bval);
         file = bval ? stderr : NULL;
         break;
       }
@@ -2795,8 +2794,10 @@ sandbox_enumerate(JSContext *cx, JSObject *obj)
     jsval v;
     JSBool b;
 
-    if (!JS_GetProperty(cx, obj, "lazy", &v) || !JS_ValueToBoolean(cx, v, &b))
+    if (!JS_GetProperty(cx, obj, "lazy", &v))
         return JS_FALSE;
+
+    JS_ValueToBoolean(cx, v, &b);
     return !b || JS_EnumerateStandardClasses(cx, obj);
 }
 
@@ -2807,8 +2808,10 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     jsval v;
     JSBool b, resolved;
 
-    if (!JS_GetProperty(cx, obj, "lazy", &v) || !JS_ValueToBoolean(cx, v, &b))
+    if (!JS_GetProperty(cx, obj, "lazy", &v))
         return JS_FALSE;
+
+    JS_ValueToBoolean(cx, v, &b);
     if (b && (flags & JSRESOLVE_ASSIGNING) == 0) {
         if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return JS_FALSE;
@@ -2827,7 +2830,7 @@ static JSClass sandbox_class = {
     JS_PropertyStub,   JS_PropertyStub,
     JS_PropertyStub,   JS_PropertyStub,
     sandbox_enumerate, (JSResolveOp)sandbox_resolve,
-    JS_ConvertStub,    JS_FinalizeStub,
+    JS_ConvertStub,    NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -3596,7 +3599,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("assertEq",       AssertEq,       2,0),
-    JS_FN("gc",             GC,             0,0),
+    JS_FN("gc",             ::GC,           0,0),
     JS_FN("gcparam",        GCParameter,    2,0),
     JS_FN("countHeap",      CountHeap,      0,0),
 #ifdef JS_GC_ZEAL
@@ -4069,9 +4072,9 @@ its_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     str = JS_GetStringBytes(JSVAL_TO_STRING(id));
     if (!strcmp(str, "noisy"))
-        return JS_ValueToBoolean(cx, *vp, &its_noisy);
+        JS_ValueToBoolean(cx, *vp, &its_noisy);
     else if (!strcmp(str, "enum_fail"))
-        return JS_ValueToBoolean(cx, *vp, &its_enum_fail);
+        JS_ValueToBoolean(cx, *vp, &its_enum_fail);
 
     return JS_TRUE;
 }
@@ -4512,7 +4515,7 @@ static JSClass env_class = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  env_setProperty,
     env_enumerate, (JSResolveOp) env_resolve,
-    JS_ConvertStub,   JS_FinalizeStub,
+    JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 

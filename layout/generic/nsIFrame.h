@@ -54,6 +54,7 @@
 #include "nsIContent.h"
 #include "nsHTMLReflowMetrics.h"
 #include "gfxMatrix.h"
+#include "nsFrameList.h"
 
 /**
  * New rules of reflow:
@@ -106,10 +107,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface
-// 7b437d20-a34e-11dd-ad8b-0800200c9a66
+// 2871104e-2738-4ad7-b86a-ede63c71f1c2
 #define NS_IFRAME_IID \
-  { 0x7b437d20, 0xa34e, 0x11dd, \
-    { 0xad, 0x8b, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+  { 0x2871104e, 0x2738, 0x4ad7,                       \
+    { 0xb8, 0x6a, 0xed, 0xe6, 0x3c, 0x71, 0xf1, 0xc2 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -537,16 +538,18 @@ public:
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @param   aChildList list of child frames. Each of the frames has its
-   *            NS_FRAME_IS_DIRTY bit set
+   *            NS_FRAME_IS_DIRTY bit set.  Must not be empty.
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
    *            initial list of frames has already been set for that child list,
-   *          NS_OK otherwise
+   *          NS_OK otherwise.  In this case, SetInitialChildList empties out
+   *            aChildList in the process of moving the frames over to its own
+   *            child list.
    * @see     #Init()
    */
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
-                                  nsIFrame*       aChildList) = 0;
+                                  nsFrameList&    aChildList) = 0;
 
   /**
    * This method is responsible for appending frames to the frame
@@ -556,14 +559,16 @@ public:
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @param   aFrameList list of child frames to append. Each of the frames has
-   *            its NS_FRAME_IS_DIRTY bit set
+   *            its NS_FRAME_IS_DIRTY bit set.  Must not be empty.
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
-   *          NS_OK otherwise
+   *          NS_OK otherwise.  In this case, AppendFrames empties out
+   *            aChildList in the process of moving the frames over to its own
+   *            child list.
    */
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList) = 0;
+                          nsFrameList&    aFrameList) = 0;
 
   /**
    * This method is responsible for inserting frames into the frame
@@ -578,11 +583,13 @@ public:
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
-   *          NS_OK otherwise
+   *          NS_OK otherwise.  In this case, InsertFrames empties out
+   *            aChildList in the process of moving the frames over to its own
+   *            child list.
    */
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList) = 0;
+                          nsFrameList&    aFrameList) = 0;
 
   /**
    * This method is responsible for removing a frame in the frame
@@ -847,14 +854,33 @@ public:
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const = 0;
 
   /**
-   * Get the first child frame from the specified child list.
+   * Get the specified child list.
+   *
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @return  the child list.  If this is an unknown list name, an empty list
+   *            will be returned.
+   * @see     #GetAdditionalListName()
+   */
+  // XXXbz if all our frame storage were actually backed by nsFrameList, we
+  // could make this return a const reference...  nsBlockFrame is the only real
+  // culprit here.  Make sure to assign the return value of this function into
+  // a |const nsFrameList&|, not an nsFrameList.
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const = 0;
+  // XXXbz this method should go away
+  nsIFrame* GetFirstChild(nsIAtom* aListName) const {
+    return GetChildList(aListName).FirstChild();
+  }
+
+  /**
+   * Get the last child frame from the specified child list.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @return  the child frame, or NULL if there is no such child
    * @see     #GetAdditionalListName()
    */
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const = 0;
+  virtual nsIFrame* GetLastChild(nsIAtom* aListName) const;
 
   /**
    * Child frames are linked together in a singly-linked list
@@ -1579,6 +1605,8 @@ public:
    * 
    * This function is fastest when aOther is an ancestor of |this|.
    *
+   * This function works across document boundaries.
+   *
    * NOTE: this actually returns the offset from aOther to |this|, but
    * that offset is added to transform _coordinates_ from |this| to
    * aOther.
@@ -1757,6 +1785,10 @@ public:
    *   could cause frames to be deleted (including |this|).
    * @param aFlags INVALIDATE_CROSS_DOC: true if the invalidation
    *   originated in a subdocument
+   * @param aFlags INVALIDATE_NOTIFY_ONLY: set when this invalidation should
+   * cause MozAfterPaint listeners to be notified, but should not actually
+   * invalidate anything. This is used to notify about scrolling, where the
+   * screen has already been updated.
    */
   enum {
   	INVALIDATE_IMMEDIATE = 0x1,
@@ -1881,19 +1913,20 @@ public:
   /** Selection related calls
    */
   /** 
-   *  Called to set the selection of the frame based on frame offsets.  you can FORCE the frame
-   *  to redraw event if aSelected == the frame selection with the last parameter.
-   *  data in struct may be changed when passed in.
-   *  @param aRange is the range that will dictate if the frames need to be redrawn null means the whole content needs to be redrawn
+   *  Called to set the selection status of the frame.
+   *  
+   *  This must be called on the primary frame, but all continuations
+   *  will be affected the same way.
+   *
+   *  This sets or clears NS_FRAME_SELECTED_CONTENT for each frame in the
+   *  continuation chain, if the frames are currently selectable.
+   *  The frames are unconditionally invalidated, if this selection type
+   *  is supported at all.
    *  @param aSelected is it selected?
-   *  @param aSpread should it spread the selection to flow elements around it? or go down to its children?
    *  @param aType the selection type of the selection that you are setting on the frame
    */
-  NS_IMETHOD  SetSelected(nsPresContext* aPresContext,
-                          nsIDOMRange*    aRange,
-                          PRBool          aSelected,
-                          nsSpread        aSpread,
-                          SelectionType   aType) = 0;
+  virtual void SetSelected(PRBool        aSelected,
+                           SelectionType aType);
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 
@@ -2309,6 +2342,12 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
    */
   virtual nsILineIterator* GetLineIterator() = 0;
 
+  /**
+   * If this frame is a next-in-flow, and its prev-in-flow has something on its
+   * overflow list, pull those frames into the child list of this one.
+   */
+  virtual void PullOverflowsFromPrevInFlow() {}
+
 protected:
   // Members
   nsRect           mRect;
@@ -2512,4 +2551,38 @@ private:
   nsIFrame*     mFrame;
 };
 
+inline void
+nsFrameList::Enumerator::Next() {
+  NS_ASSERTION(!AtEnd(), "Should have checked AtEnd()!");
+  mFrame = mFrame->GetNextSibling();
+}
+
+inline nsFrameList::Slice
+nsFrameList::InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                          nsFrameList& aFrameList) {
+  NS_PRECONDITION(!aFrameList.IsEmpty(), "Unexpected empty list");
+  nsIFrame* firstNewFrame = aFrameList.FirstChild();
+  nsIFrame* nextSibling =
+    aPrevSibling ? aPrevSibling->GetNextSibling() : FirstChild();
+  InsertFrames(aParent, aPrevSibling, firstNewFrame);
+  aFrameList.Clear();
+  return Slice(*this, firstNewFrame, nextSibling);
+}
+
+inline void
+nsFrameList::AppendFrame(nsIFrame* aParent, nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame && !aFrame->GetNextSibling(),
+                  "Shouldn't be appending more than one frame");
+  AppendFrames(aParent, aFrame);
+}
+
+inline void
+nsFrameList::InsertFrame(nsIFrame* aParent,
+                         nsIFrame* aPrevSibling,
+                         nsIFrame* aNewFrame) {
+  NS_PRECONDITION(aNewFrame && !aNewFrame->GetNextSibling(),
+                  "Shouldn't be inserting more than one frame");
+  InsertFrames(aParent, aPrevSibling, aNewFrame);
+}
 #endif /* nsIFrame_h___ */

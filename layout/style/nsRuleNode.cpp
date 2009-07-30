@@ -1446,6 +1446,7 @@ nsRuleNode::GetBackgroundData(nsStyleContext* aContext)
   colorData.mBackRepeat = nsnull;
   colorData.mBackAttachment = nsnull;
   colorData.mBackPosition = nsnull;
+  colorData.mBackSize = nsnull;
   colorData.mBackClip = nsnull;
   colorData.mBackOrigin = nsnull;
 
@@ -3871,6 +3872,91 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
 };
 
 
+struct BackgroundSizeAxis {
+  nsCSSValue nsCSSValuePairList::* specified;
+  nsStyleBackground::Size::Dimension nsStyleBackground::Size::* result;
+  PRUint8 nsStyleBackground::Size::* type;
+};
+
+static const BackgroundSizeAxis gBGSizeAxes[] = {
+  { &nsCSSValuePairList::mXValue,
+    &nsStyleBackground::Size::mWidth,
+    &nsStyleBackground::Size::mWidthType },
+  { &nsCSSValuePairList::mYValue,
+    &nsStyleBackground::Size::mHeight,
+    &nsStyleBackground::Size::mHeightType }
+};
+
+NS_SPECIALIZE_TEMPLATE
+struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
+{
+  static void ComputeValue(nsStyleContext* aStyleContext,
+                           const nsCSSValuePairList* aSpecifiedValue,
+                           nsStyleBackground::Size& aComputedValue,
+                           PRBool& aCanStoreInRuleTree)
+  {
+    nsStyleBackground::Size &size = aComputedValue;
+    for (const BackgroundSizeAxis *axis = gBGSizeAxes,
+                        *axis_end = gBGSizeAxes + NS_ARRAY_LENGTH(gBGSizeAxes);
+         axis != axis_end; ++axis) {
+      const nsCSSValue &specified = aSpecifiedValue->*(axis->specified);
+      if (eCSSUnit_Auto == specified.GetUnit()) {
+        size.*(axis->type) = nsStyleBackground::Size::eAuto;
+      }
+      else if (eCSSUnit_Enumerated == specified.GetUnit()) {
+        PR_STATIC_ASSERT(nsStyleBackground::Size::eContain ==
+                         NS_STYLE_BG_SIZE_CONTAIN);
+        PR_STATIC_ASSERT(nsStyleBackground::Size::eCover ==
+                         NS_STYLE_BG_SIZE_COVER);
+        NS_ABORT_IF_FALSE(specified.GetIntValue() == NS_STYLE_BG_SIZE_CONTAIN ||
+                          specified.GetIntValue() == NS_STYLE_BG_SIZE_COVER,
+                          "invalid enumerated value for size coordinate");
+        size.*(axis->type) = specified.GetIntValue();
+      }
+      else if (eCSSUnit_Null == specified.GetUnit()) {
+        NS_ABORT_IF_FALSE(axis == gBGSizeAxes + 1,
+                          "null allowed only as height value, and only "
+                          "for contain/cover/initial/inherit");
+#ifdef DEBUG
+        {
+          const nsCSSValue &widthValue = aSpecifiedValue->mXValue;
+          NS_ABORT_IF_FALSE(widthValue.GetUnit() != eCSSUnit_Inherit &&
+                            widthValue.GetUnit() != eCSSUnit_Initial,
+                            "initial/inherit should already have been handled");
+          NS_ABORT_IF_FALSE(widthValue.GetUnit() == eCSSUnit_Enumerated &&
+                            (widthValue.GetIntValue() == NS_STYLE_BG_SIZE_CONTAIN ||
+                             widthValue.GetIntValue() == NS_STYLE_BG_SIZE_COVER),
+                            "null height value not corresponding to allowable "
+                            "non-null width value");
+        }
+#endif
+        size.*(axis->type) = size.mWidthType;
+      }
+      else if (eCSSUnit_Percent == specified.GetUnit()) {
+        (size.*(axis->result)).mFloat = specified.GetPercentValue();
+        size.*(axis->type) = nsStyleBackground::Size::ePercentage;
+      }
+      else {
+        NS_ABORT_IF_FALSE(specified.IsLengthUnit(), "unexpected unit");
+        (size.*(axis->result)).mCoord =
+          CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
+                     aCanStoreInRuleTree);
+        size.*(axis->type) = nsStyleBackground::Size::eLength;
+      }
+    }
+
+    NS_ABORT_IF_FALSE(size.mWidthType < nsStyleBackground::Size::eDimensionType_COUNT,
+                      "bad width type");
+    NS_ABORT_IF_FALSE(size.mHeightType < nsStyleBackground::Size::eDimensionType_COUNT,
+                      "bad height type");
+    NS_ABORT_IF_FALSE((size.mWidthType != nsStyleBackground::Size::eContain &&
+                       size.mWidthType != nsStyleBackground::Size::eCover) ||
+                      size.mWidthType == size.mHeightType,
+                      "contain/cover apply to both dimensions or to neither");
+  }
+};
+
+
 template <class SpecifiedValueItem, class ComputedValueItem>
 static void
 SetBackgroundList(nsStyleContext* aStyleContext,
@@ -4018,6 +4104,15 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                     bg->mPositionCount, maxItemCount, rebuild,
                     canStoreInRuleTree);
 
+  // background-size: enum, length, auto, inherit, initial [pair list]
+  nsStyleBackground::Size initialSize;
+  initialSize.SetInitialValues();
+  SetBackgroundList(aContext, colorData.mBackSize, bg->mLayers,
+                    parentBG->mLayers, &nsStyleBackground::Layer::mSize,
+                    initialSize, parentBG->mSizeCount,
+                    bg->mSizeCount, maxItemCount, rebuild,
+                    canStoreInRuleTree);
+
   if (rebuild) {
     // Delete any extra items.  We need to keep layers in which any
     // property was specified.
@@ -4036,6 +4131,8 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                        bg->mOriginCount, fillCount);
     FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mPosition,
                        bg->mPositionCount, fillCount);
+    FillBackgroundList(bg->mLayers, &nsStyleBackground::Layer::mSize,
+                       bg->mSizeCount, fillCount);
   }
 
   COMPUTE_END_RESET(Background, bg)
@@ -5750,6 +5847,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
         colorData.mBackPosition = nsnull;
         colorData.mBackClip = nsnull;
         colorData.mBackOrigin = nsnull;
+        colorData.mBackSize = nsnull;
 
         if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
             ruleData.mLevel == nsStyleSet::eUserSheet) {

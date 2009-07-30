@@ -93,8 +93,8 @@ public:
      * Create a textrun using cached words.
      * Invalid characters (see gfxFontGroup::IsInvalidChar) will be automatically
      * treated as invisible missing.
-     * @param aFlags the flags TEXT_IS_ASCII and TEXT_HAS_SURROGATES must be set
-     * by the caller, if applicable
+     * @param aFlags the flag TEXT_IS_ASCII must be set by the caller,
+     * if applicable
      * @param aIsInCache if true is returned, then RemoveTextRun must be called
      * before the textrun changes or dies.
      */

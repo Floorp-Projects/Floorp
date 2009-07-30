@@ -174,11 +174,16 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
             ((aProperty == eCSSProperty_background_position ||
               aProperty == eCSSProperty__moz_transform_origin) &&
              pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
-             pair->mXValue.GetUnit() != eCSSUnit_Initial)) {
-          // Only output a Y value if it's different from the X value
+             pair->mXValue.GetUnit() != eCSSUnit_Initial) ||
+            (aProperty == eCSSProperty__moz_background_size &&
+             pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
+             pair->mXValue.GetUnit() != eCSSUnit_Initial &&
+             pair->mXValue.GetUnit() != eCSSUnit_Enumerated)) {
+          // Only output a Y value if it's different from the X value,
           // or if it's a background-position value other than 'initial'
-          // or 'inherit' or if it's a -moz-transform-origin value other
-          // than 'initial' or 'inherit'.
+          // or 'inherit', or if it's a -moz-transform-origin value other
+          // than 'initial' or 'inherit', or if it's a -moz-background-size
+          // value other than 'initial' or 'inherit' or 'contain' or 'cover'.
           aResult.Append(PRUnichar(' '));
           AppendCSSValueToString(aProperty, pair->mYValue, aResult);
         }
@@ -772,6 +777,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         * data->ValueListStorageFor(eCSSProperty__moz_background_clip);
       const nsCSSValueList *origin =
         * data->ValueListStorageFor(eCSSProperty__moz_background_origin);
+      const nsCSSValuePairList *size =
+        * data->ValuePairListStorageFor(eCSSProperty__moz_background_size);
       for (;;) {
         AppendCSSValueToString(eCSSProperty_background_image,
                                image->mValue, aValue);
@@ -800,7 +807,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     // support for content-box on background-clip.
           PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
                            NS_STYLE_BG_ORIGIN_BORDER);
-          PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING == 
+          PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING ==
                            NS_STYLE_BG_ORIGIN_PADDING);
           // PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == /* does not exist */
           //                  NS_STYLE_BG_ORIGIN_CONTENT);
@@ -824,16 +831,17 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         position = position->mNext;
         clip = clip->mNext;
         origin = origin->mNext;
+        size = size->mNext;
 
         if (!image) {
-          if (repeat || attachment || position || clip || origin) {
+          if (repeat || attachment || position || clip || origin || size) {
             // Uneven length lists, so can't be serialized as shorthand.
             aValue.Truncate();
             return NS_OK;
           }
           break;
         }
-        if (!repeat || !attachment || !position || !clip || !origin) {
+        if (!repeat || !attachment || !position || !clip || !origin || !size) {
           // Uneven length lists, so can't be serialized as shorthand.
           aValue.Truncate();
           return NS_OK;

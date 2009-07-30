@@ -61,7 +61,8 @@ const char* XPCJSRuntime::mStrings[] = {
     "createInstance",       // IDX_CREATE_INSTANCE
     "item",                 // IDX_ITEM
     "__proto__",            // IDX_PROTO
-    "__iterator__"          // IDX_ITERATOR
+    "__iterator__",         // IDX_ITERATOR
+    "__parent__"            // IDX_PARENT
 #ifdef XPC_IDISPATCH_SUPPORT
     , "GeckoActiveXObject"  // IDX_ACTIVEX_OBJECT
     , "COMObject"           // IDX_COMOBJECT
@@ -1099,11 +1100,13 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
 #endif
 
-    AutoLockJSGC lock(mJSRuntime);
+    if (mWatchdogWakeup) {
+        AutoLockJSGC lock(mJSRuntime);
 
-    mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
-                                      PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
-                                      PR_UNJOINABLE_THREAD, 0);
+        mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
+                                          PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                                          PR_UNJOINABLE_THREAD, 0);
+    }
 }
 
 // static

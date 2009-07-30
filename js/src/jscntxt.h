@@ -57,6 +57,7 @@
 #include "jsregexp.h"
 #include "jsutil.h"
 #include "jsarray.h"
+#include "jstask.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -249,6 +250,19 @@ struct JSThreadData {
 #ifdef JS_EVAL_CACHE_METERING
     JSEvalCacheMeter    evalCacheMeter;
 #endif
+
+    /*
+     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
+     * locks on each JS_malloc.
+     */
+    size_t              gcMallocBytes;
+
+#ifdef JS_THREADSAFE
+    /*
+     * Deallocator task for this thread.
+     */
+    JSFreePointerListTask *deallocatorTask;
+#endif
 };
 
 #ifdef JS_THREADSAFE
@@ -264,14 +278,10 @@ struct JSThread {
     /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
     jsword              id;
 
-    /*
-     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
-     * locks on each JS_malloc.
-     */
-    uint32              gcMallocBytes;
-
     /* Indicates that the thread is waiting in ClaimTitle from jslock.cpp. */
     JSTitle             *titleToShare;
+
+    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -365,19 +375,19 @@ struct JSRuntime {
     JSGCChunkInfo       *gcChunkList;
     JSGCArenaList       gcArenaList[GC_NUM_FREELISTS];
     JSGCDoubleArenaList gcDoubleArenaList;
-    JSGCFreeListSet     *gcFreeListsPool;
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     jsrefcount          gcKeepAtoms;
-    uint32              gcBytes;
-    uint32              gcLastBytes;
-    uint32              gcMaxBytes;
-    uint32              gcMaxMallocBytes;
+    size_t              gcBytes;
+    size_t              gcLastBytes;
+    size_t              gcMaxBytes;
+    size_t              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcLevel;
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
     uint32              gcTriggerFactor;
+    size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
 
     /*
@@ -388,13 +398,25 @@ struct JSRuntime {
      */
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
-    uint16              gcPadding;
+    JSPackedBool        gcRegenShapes;
+
+    /*
+     * During gc, if rt->gcRegenShapes &&
+     *   (scope->flags & JSScope::SHAPE_REGEN) == rt->gcRegenShapesScopeFlag,
+     * then the scope's shape has already been regenerated during this GC.
+     * To avoid having to sweep JSScopes, the bit's meaning toggles with each
+     * shape-regenerating GC.
+     *
+     * FIXME Once scopes are GC'd (bug 505004), this will be obsolete.
+     */
+    uint8              gcRegenShapesScopeFlag;
+
 #ifdef JS_GC_ZEAL
     jsrefcount          gcZeal;
 #endif
 
     JSGCCallback        gcCallback;
-    uint32              gcMallocBytes;
+    size_t              gcMallocBytes;
     JSGCArenaInfo       *gcUntracedArenaStackTop;
 #ifdef DEBUG
     size_t              gcTraceLaterCount;
@@ -681,6 +703,29 @@ struct JSRuntime {
 #ifdef JS_FUNCTION_METERING
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
+#endif
+
+    void setGCTriggerFactor(uint32 factor);
+    void setGCLastBytes(size_t lastBytes);
+
+    inline void* malloc(size_t bytes) {
+        return ::js_malloc(bytes);
+    }
+
+    inline void* calloc(size_t bytes) {
+        return ::js_calloc(bytes);
+    }
+
+    inline void* realloc(void* p, size_t bytes) {
+        return ::js_realloc(p, bytes);
+    }
+
+    inline void free(void* p) {
+        ::js_free(p);
+    }
+
+#ifdef JS_THREADSAFE
+    JSBackgroundThread    *deallocatorThread;
 #endif
 };
 
@@ -1004,10 +1049,6 @@ struct JSContext {
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
 
-#ifdef JS_THREADSAFE
-    JSGCFreeListSet     *gcLocalFreeLists;
-#endif
-
     /* List of pre-allocated doubles. */
     JSGCDoubleCell      *doubleFreeList;
 
@@ -1035,6 +1076,87 @@ struct JSContext {
     /* Used when calling natives from trace to root the vp vector. */
     uintN               nativeVpLen;
     jsval               *nativeVp;
+#endif
+
+#ifdef JS_THREADSAFE
+    inline void createDeallocatorTask() {
+        JSThreadData* tls = JS_THREAD_DATA(this);
+        JS_ASSERT(!tls->deallocatorTask);
+        if (runtime->deallocatorThread && !runtime->deallocatorThread->busy())
+            tls->deallocatorTask = new JSFreePointerListTask();
+    }
+
+    inline void submitDeallocatorTask() {
+        JSThreadData* tls = JS_THREAD_DATA(this);
+        if (tls->deallocatorTask) {
+            runtime->deallocatorThread->schedule(tls->deallocatorTask);
+            tls->deallocatorTask = NULL;
+        }
+    }
+#endif
+
+    /* Call this after succesful malloc of memory for GC-related things. */
+    inline void updateMallocCounter(size_t nbytes) {
+        size_t *pbytes, bytes;
+
+        pbytes = &JS_THREAD_DATA(this)->gcMallocBytes;
+        bytes = *pbytes;
+        *pbytes = (size_t(-1) - bytes <= nbytes) ? size_t(-1) : bytes + nbytes;
+    }
+
+    inline void* malloc(size_t bytes) {
+        JS_ASSERT(bytes != 0);
+        void *p = runtime->malloc(bytes);
+        if (!p) {
+            JS_ReportOutOfMemory(this);
+            return NULL;
+        }
+        updateMallocCounter(bytes);
+        return p;
+    }
+
+    inline void* calloc(size_t bytes) {
+        JS_ASSERT(bytes != 0);
+        void *p = runtime->calloc(bytes);
+        if (!p) {
+            JS_ReportOutOfMemory(this);
+            return NULL;
+        }
+        updateMallocCounter(bytes);
+        return p;
+    }
+
+    inline void* realloc(void* p, size_t bytes) {
+        void *orig = p;
+        p = runtime->realloc(p, bytes);
+        if (!p) {
+            JS_ReportOutOfMemory(this);
+            return NULL;
+        }
+        if (!orig)
+            updateMallocCounter(bytes);
+        return p;
+    }
+
+#ifdef JS_THREADSAFE
+    inline void free(void* p) {
+        if (!p)
+            return;
+        if (thread) {
+            JSFreePointerListTask* task = JS_THREAD_DATA(this)->deallocatorTask;
+            if (task) {
+                task->add(p);
+                return;
+            }
+        }
+        runtime->free(p);
+    }
+#else
+    inline void free(void* p) {
+        if (!p)
+            return;
+        runtime->free(p);
+    }
 #endif
 };
 
@@ -1524,6 +1646,7 @@ static JS_INLINE uint32
 js_RegenerateShapeForGC(JSContext *cx)
 {
     JS_ASSERT(cx->runtime->gcRunning);
+    JS_ASSERT(cx->runtime->gcRegenShapes);
 
     /*
      * Under the GC, compared with js_GenerateShape, we don't need to use

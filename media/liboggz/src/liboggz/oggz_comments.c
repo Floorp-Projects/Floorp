@@ -30,11 +30,7 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifdef WIN32
-#include "config_win32.h"
-#else
 #include "config.h"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>

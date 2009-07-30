@@ -192,7 +192,6 @@ class nsWinGesture
 {
 public:
   nsWinGesture();
-  ~nsWinGesture();
 
 public:
   PRBool InitWinGestureSupport(HWND hWnd);
@@ -207,8 +206,8 @@ public:
   PRBool ProcessPanMessage(HWND hWnd, WPARAM wParam, LPARAM lParam);
   PRBool PanDeltaToPixelScrollX(nsMouseScrollEvent& evt);
   PRBool PanDeltaToPixelScrollY(nsMouseScrollEvent& evt);
-  void UpdatePanFeedbackX(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback);
-  void UpdatePanFeedbackY(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback);
+  void UpdatePanFeedbackX(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback);
+  void UpdatePanFeedbackY(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback);
   void PanFeedbackFinalize(HWND hWnd, PRBool endFeedback);
   
 public:
@@ -247,7 +246,6 @@ private:
 
   // Delay load info 
   PRBool InitLibrary();
-  void ShutdownLibrary();
 
   static HMODULE sLibraryHandle;
   static const PRUnichar kGestureLibraryName[];

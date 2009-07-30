@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html><head>
+
+
+<title>@font-face and synthetic rendering</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+<style type="text/css">
+
+@font-face {
+  font-family: test;
+  src: url(../fonts/mplus/mplus-1p-regular.ttf);
+  font-weight: normal;
+}
+
+body {
+  margin: 50px;
+  font-family: sans-serif;
+  font-size: 18pt;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+#test1, #test2, #test3 { font-family: test, Times New Roman, Times, Bitstream Vera, serif; }
+
+th, td {
+  padding-left: 1em;
+  padding-right: 1em;
+  text-align: left;
+}
+
+th { font-weight: normal; }
+td { font-weight: bold; }
+em { font-style: italic; }
+
+</style>
+
+   
+</head><body>
+
+<p>All lines should appear in a sans-serif face with proper bolding</p>
+
+<table id="test1">
+<tr class="w1"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w2"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w3"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w4"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w5"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w6"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w7"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w8"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w9"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+</table>
+
+<table id="test2">
+<tr class="w9"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w8"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w7"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w6"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w5"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w4"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w3"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w2"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+<tr class="w1"><th>normal</th><th><em>italic</em></th><td>bold</td><td><em>bolditalic</em></td></tr>
+</table>
+
+<table id="test3">
+<tr class="w1"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w2"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w3"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w4"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w5"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w6"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w7"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w8"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+<tr class="w9"><th><span>normal</span></th><th><span><em>italic</em></span></th><td><span>bold</span></td><td><span><em>bolditalic</em></span></td></tr>
+</table>
+
+</body></html>

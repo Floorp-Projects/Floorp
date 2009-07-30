@@ -19,3 +19,7 @@ offset_next.patch fixes bug 495366.
 
 bug487519.patch: Fix for bug 487519.
 bug496063.patch: Fix for infinite loop during seek while shutting down.
+
+oggz_os2.patch: Bug 448918 - add OS/2 support (this patch should be
+                removed when OS/2 support is added upstream)
+

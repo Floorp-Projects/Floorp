@@ -41,13 +41,15 @@
 #include "nsIThread.h"
 #include "nsIThreadPool.h"
 
-#include "nsAutoLock.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "pratom.h"
 #include "prinrval.h"
 #include "prmon.h"
 #include "prthread.h"
+
+#include "mozilla/Monitor.h"
+using namespace mozilla;
 
 #define NUMBER_OF_THREADS 4
 
@@ -57,7 +59,7 @@
 static nsIThread** gCreatedThreadList = nsnull;
 static nsIThread** gShutDownThreadList = nsnull;
 
-static PRMonitor* gMonitor = nsnull;
+static Monitor* gMonitor = nsnull;
 
 static PRBool gAllRunnablesPosted = PR_FALSE;
 static PRBool gAllThreadsCreated = PR_FALSE;
@@ -90,7 +92,7 @@ Listener::OnThreadCreated()
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
   TEST_ASSERTION(current, "Couldn't get current thread!");
 
-  nsAutoMonitor mon(gMonitor);
+  MonitorAutoEnter mon(*gMonitor);
 
   while (!gAllRunnablesPosted) {
     mon.Wait();
@@ -120,7 +122,7 @@ Listener::OnThreadShuttingDown()
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
   TEST_ASSERTION(current, "Couldn't get current thread!");
 
-  nsAutoMonitor mon(gMonitor);
+  MonitorAutoEnter mon(*gMonitor);
 
   for (PRUint32 i = 0; i < NUMBER_OF_THREADS; i++) {
     nsIThread* thread = gShutDownThreadList[i];
@@ -143,21 +145,21 @@ Listener::OnThreadShuttingDown()
 class AutoCreateAndDestroyMonitor
 {
 public:
-  AutoCreateAndDestroyMonitor(PRMonitor** aMonitorPtr)
+  AutoCreateAndDestroyMonitor(Monitor** aMonitorPtr)
   : mMonitorPtr(aMonitorPtr) {
-    *aMonitorPtr = nsAutoMonitor::NewMonitor("TestThreadPoolListener::AutoMon");
+    *aMonitorPtr = new Monitor("TestThreadPoolListener::AutoMon");
     TEST_ASSERTION(*aMonitorPtr, "Out of memory!");
   }
 
   ~AutoCreateAndDestroyMonitor() {
     if (*mMonitorPtr) {
-      nsAutoMonitor::DestroyMonitor(*mMonitorPtr);
+      delete *mMonitorPtr;
       *mMonitorPtr = nsnull;
     }
   }
 
 private:
-  PRMonitor** mMonitorPtr;
+  Monitor** mMonitorPtr;
 };
 
 int main(int argc, char** argv)
@@ -203,7 +205,7 @@ int main(int argc, char** argv)
   NS_ENSURE_SUCCESS(rv, 1);
 
   {
-    nsAutoMonitor mon(gMonitor);
+    MonitorAutoEnter mon(*gMonitor);
 
     for (PRUint32 i = 0; i < NUMBER_OF_THREADS; i++) {
       nsCOMPtr<nsIRunnable> runnable = new nsRunnable();
@@ -218,7 +220,7 @@ int main(int argc, char** argv)
   }
 
   {
-    nsAutoMonitor mon(gMonitor);
+    MonitorAutoEnter mon(*gMonitor);
     while (!gAllThreadsCreated) {
       mon.Wait();
     }
@@ -228,7 +230,7 @@ int main(int argc, char** argv)
   NS_ENSURE_SUCCESS(rv, 1);
 
   {
-    nsAutoMonitor mon(gMonitor);
+    MonitorAutoEnter mon(*gMonitor);
     while (!gAllThreadsShutDown) {
       mon.Wait();
     }

@@ -926,13 +926,14 @@ void nsOggDecodeStateMachine::PlayFrame() {
         if (time == prevTime)
           break;
         prevTime = time;
-        if (time < frame->mTime) {
-          mon.Wait(PR_MillisecondsToInterval(PRInt64((frame->mTime - time)*1000)));
-          if (mState == DECODER_STATE_SHUTDOWN)
-            return;
-          continue;
-        }
-        break;
+        // Is it time for the next frame?  Using an integer here avoids f.p.
+        // rounding errors that can cause multiple 0ms waits (Bug 495352)
+        PRInt64 wait = PRInt64((frame->mTime - time)*1000);
+        if (wait <= 0)
+          break;
+        mon.Wait(PR_MillisecondsToInterval(wait));
+        if (mState == DECODER_STATE_SHUTDOWN)
+          return;
       }
 
       mDecodedFrames.Pop();

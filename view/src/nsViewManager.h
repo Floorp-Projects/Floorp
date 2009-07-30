@@ -130,7 +130,8 @@ public:
   NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
 
-  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus);
+  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
+      nsIView* aTargetView, nsEventStatus* aStatus);
 
   NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool &aResult);
 
@@ -170,8 +171,7 @@ public:
   NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
   NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);
 
-  NS_IMETHOD GetWidget(nsIWidget **aWidget);
-  nsIWidget* GetWidget() { return mRootView ? mRootView->GetWidget() : nsnull; }
+  NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
  
   NS_IMETHOD IsPainting(PRBool& aIsPainting);
@@ -209,7 +209,8 @@ private:
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
   already_AddRefed<nsIRenderingContext> CreateRenderingContext(nsView &aView);
-  void UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion,
+  void UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
+                        const nsRegion &aDamagedRegion,
                         nsView* aIgnoreWidgetView);
 
   void UpdateViews(nsView *aView, PRUint32 aUpdateFlags);
@@ -222,9 +223,6 @@ private:
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
-
-  void AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceContext* aContext,
-                                        nsView* aRootView);
 
   // Utilities
 

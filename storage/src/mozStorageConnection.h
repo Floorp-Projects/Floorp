@@ -43,7 +43,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "mozilla/Mutex.h"
 
 #include "nsString.h"
 #include "nsInterfaceHashtable.h"
@@ -92,13 +91,6 @@ public:
    * @returns an event target suitable for asynchronous statement execution.
    */
   already_AddRefed<nsIEventTarget> getAsyncExecutionTarget();
-
-  /**
-   * Mutex used by asynchronous statements to protect state.  The mutex is
-   * declared on the connection object because there is no contention between
-   * asynchronous statements (they are serialized on mAsyncExecutionThread).
-   */
-  Mutex sharedAsyncExecutionMutex;
 
 private:
   ~Connection();

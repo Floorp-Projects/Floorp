@@ -93,21 +93,26 @@ class TableBackgroundPainter
     /* ~*~ Using nsTablePainter Background Painting ~*~
 
        A call to PaintTable will normally paint all of the table's
-       elements (except the cells in non-BC). Elements with views
-       however, will be skipped and must create their own painter
-       to call the appropriate paint function in their ::Paint
+       elements (except for the table background, if aPaintTableBackground
+       is false).
+       Elements with views however, will be skipped and must create their
+       own painter to call the appropriate paint function in their ::Paint
        method (e.g. painter.PaintRow in nsTableRow::Paint)
     */
 
-    /** Paint background for the table frame and its children down through cells
+    /** Paint background for the table frame (if requested) and its children
+      * down through cells.
       * (Cells themselves will only be painted in border collapse)
       * Table must do a flagged TABLE_BG_PAINT ::Paint call on its
       * children afterwards
       * @param aTableFrame - the table frame
       * @param aDeflate    - deflation needed to bring table's mRect
       *                      to the outer grid lines in border-collapse
+      * @param aPaintTableBackground - if true, the table background
+      * is included, otherwise it isn't
       */
-    nsresult PaintTable(nsTableFrame* aTableFrame, nsMargin* aDeflate);
+    nsresult PaintTable(nsTableFrame* aTableFrame, const nsMargin& aDeflate,
+                        PRBool aPaintTableBackground);
 
     /** Paint background for the row group and its children down through cells
       * (Cells themselves will only be painted in border collapse)
@@ -143,7 +148,7 @@ class TableBackgroundPainter
     nsresult PaintTableFrame(nsTableFrame*         aTableFrame,
                              nsTableRowGroupFrame* aFirstRowGroup,
                              nsTableRowGroupFrame* aLastRowGroup,
-                             nsMargin*             aDeflate = nsnull);
+                             const nsMargin&       aDeflate);
 
     /* aPassThrough params indicate whether to paint the element or to just
      * pass through and paint underlying layers only

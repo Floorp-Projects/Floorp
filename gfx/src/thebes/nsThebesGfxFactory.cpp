@@ -42,21 +42,17 @@
 #include "nsGfxCIID.h"
 
 #include "nsScriptableRegion.h"
-#include "gfxImageFrame.h"
 
 #include "nsThebesDeviceContext.h"
 #include "nsThebesRenderingContext.h"
-#include "nsThebesImage.h"
 #include "nsThebesRegion.h"
 #include "nsThebesFontMetrics.h"
 #include "nsThebesFontEnumerator.h"
 #include "gfxPlatform.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontMetrics)
-NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesDeviceContext)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRenderingContext)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesImage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRegion)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontEnumerator)
 
@@ -119,10 +115,6 @@ static const nsModuleComponentInfo components[] =
     NS_RENDERING_CONTEXT_CID,
     "@mozilla.org/gfx/renderingcontext;1",
     nsThebesRenderingContextConstructor },
-  { "Thebes nsImage",
-    NS_IMAGE_CID,
-    "@mozilla.org/gfx/image;1",
-    nsThebesImageConstructor },
   { "Thebes Region",
     NS_REGION_CID,
     "@mozilla.org/gfx/region/nsThebes;1",
@@ -131,10 +123,6 @@ static const nsModuleComponentInfo components[] =
     NS_SCRIPTABLE_REGION_CID,
     "@mozilla.org/gfx/region;1",
     nsScriptableRegionConstructor },
-  { "image frame",
-    GFX_IMAGEFRAME_CID,
-    "@mozilla.org/gfx/image/frame;2",
-    gfxImageFrameConstructor },
 };
 
 static nsresult

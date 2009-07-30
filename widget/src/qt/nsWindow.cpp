@@ -76,9 +76,7 @@
 
 /* SetCursor(imgIContainer*) */
 #include "imgIContainer.h"
-#include "gfxIImageFrame.h"
 #include "nsGfxCIID.h"
-#include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
 
@@ -801,18 +799,6 @@ nsWindow::WidgetToScreenOffset()
     return nsIntPoint(origin.x(), origin.y());
 }
  
-NS_IMETHODIMP
-nsWindow::BeginResizingChildren(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWindow::EndResizingChildren(void)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP
 nsWindow::EnableDragDrop(PRBool aEnable)
 {

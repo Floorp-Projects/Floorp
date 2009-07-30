@@ -760,7 +760,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
 
   if (nsiframe->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     // A frame for this plugin element already exists now, but it has
-    // not been reflown yet. Force a reflow now so that we don't end
+    // not been reflowed yet. Force a reflow now so that we don't end
     // up initializing a plugin before knowing its size. Also re-fetch
     // the frame, as flushing can cause the frame to be deleted.
     frame = GetExistingFrame(eFlushLayout);
@@ -1706,7 +1706,7 @@ nsObjectLoadingContent::TryInstantiate(const nsACString& aMIMEType,
 
   if (!instance) {
     // The frame has no plugin instance yet. If the frame hasn't been
-    // reflown yet, do nothing as once the reflow happens we'll end up
+    // reflowed yet, do nothing as once the reflow happens we'll end up
     // instantiating the plugin with the correct size n' all (which
     // isn't known until we've done the first reflow). But if the
     // frame does have a plugin instance already, be sure to
@@ -1714,7 +1714,7 @@ nsObjectLoadingContent::TryInstantiate(const nsACString& aMIMEType,
     // chanced since it was instantiated.
     nsIFrame* iframe = do_QueryFrame(frame);
     if (iframe->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-      LOG(("OBJLC [%p]: Frame hasn't been reflown yet\n", this));
+      LOG(("OBJLC [%p]: Frame hasn't been reflowed yet\n", this));
       return NS_OK; // Not a failure to have no frame
     }
   }

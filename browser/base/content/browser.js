@@ -1058,6 +1058,8 @@ function BrowserStartup() {
     gURLBar.setAttribute("enablehistory", "false");
   }
 
+  allTabs.readPref();
+
   setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
 }
 
@@ -1318,7 +1320,9 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
   tabPreviews.init();
-  ctrlTab.init();
+  ctrlTab.readPref();
+  gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
+  gPrefService.addObserver(allTabs.prefName, allTabs, false);
 
   // Initialize the microsummary service by retrieving it, prompting its factory
   // to create its singleton, whose constructor initializes the service.
@@ -1371,6 +1375,7 @@ function BrowserShutdown()
 {
   tabPreviews.uninit();
   ctrlTab.uninit();
+  allTabs.uninit();
 
   gGestureSupport.init(false);
 
@@ -2655,10 +2660,9 @@ var browserDragAndDrop = {
     var file = dt.mozGetDataAt("application/x-moz-file", 0);
     if (file) {
       var name = file instanceof Ci.nsIFile ? file.leafName : "";
-      var ioService = Cc["@mozilla.org/network/io-service;1"]
-                                .getService(Ci.nsIIOService);
-      var fileHandler = ioService.getProtocolHandler("file")
-                                 .QueryInterface(Ci.nsIFileProtocolHandler);
+      var fileHandler = ContentAreaUtils.ioService
+                                        .getProtocolHandler("file")
+                                        .QueryInterface(Ci.nsIFileProtocolHandler);
       return [fileHandler.getURLSpecFromFile(file), name];
     }
 
@@ -2884,9 +2888,7 @@ const DOMLinkHandler = {
               break;
 
             var targetDoc = link.ownerDocument;
-            var ios = Cc["@mozilla.org/network/io-service;1"].
-                      getService(Ci.nsIIOService);
-            var uri = ios.newURI(link.href, targetDoc.characterSet, null);
+            var uri = makeURI(link.href, targetDoc.characterSet);
 
             if (gBrowser.isFailedIcon(uri))
               break;
@@ -4417,10 +4419,7 @@ nsBrowserAccess.prototype =
           if (aURI) {
             if (aOpener) {
               location = aOpener.location;
-              referrer =
-                      Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService)
-                                .newURI(location, null, null);
+              referrer = makeURI(location);
             }
             newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIWebNavigation)
@@ -4437,10 +4436,7 @@ nsBrowserAccess.prototype =
             newWindow = aOpener.top;
             if (aURI) {
               location = aOpener.location;
-              referrer =
-                      Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService)
-                                .newURI(location, null, null);
+              referrer = makeURI(location);
 
               newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(nsIWebNavigation)
@@ -4970,19 +4966,19 @@ function middleMousePaste(event)
  */
 
 var contentAreaDNDObserver = {
-  onDragOver: function (aEvent)
-    {
-      var types = aEvent.dataTransfer.types;
-      if (types.contains("application/x-moz-file") ||
-          types.contains("text/x-moz-url") ||
-          types.contains("text/uri-list") ||
-          types.contains("text/plain"))
-        aEvent.preventDefault();
-    },
   onDrop: function (aEvent)
     {
       if (aEvent.getPreventDefault())
         return;
+
+      var types = aEvent.dataTransfer.types;
+      if (!types.contains("application/x-moz-file") &&
+          !types.contains("text/x-moz-url") &&
+          !types.contains("text/uri-list") &&
+          !types.contains("text/plain")) {
+        aEvent.preventDefault();
+        return;
+      }
 
       let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
 
@@ -5413,11 +5409,8 @@ var OfflineApps = {
     if (!attr) return null;
 
     try {
-      var ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-
-      var contentURI = ios.newURI(aWindow.location.href, null, null);
-      return ios.newURI(attr, aWindow.document.characterSet, contentURI);
+      var contentURI = makeURI(aWindow.location.href, null, null);
+      return makeURI(attr, aWindow.document.characterSet, contentURI);
     } catch (e) {
       return null;
     }
@@ -5618,11 +5611,8 @@ var OfflineApps = {
     if (!manifest)
       return;
 
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-
-    var manifestURI = ios.newURI(manifest, aDocument.characterSet,
-                                 aDocument.documentURIObject);
+    var manifestURI = makeURI(manifest, aDocument.characterSet,
+                              aDocument.documentURIObject);
 
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
@@ -5635,9 +5625,7 @@ var OfflineApps = {
   {
     if (aTopic == "dom-storage-warn-quota-exceeded") {
       if (aSubject) {
-        var uri = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService).
-                  newURI(aSubject.location.href, null, null);
+        var uri = makeURI(aSubject.location.href);
 
         if (OfflineApps._checkUsage(uri)) {
           var browserWindow =
@@ -5698,9 +5686,7 @@ var MailIntegration = {
       mailtoUrl += "&subject=" + encodeURIComponent(aSubject);
     }
 
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
-    var uri = ioService.newURI(mailtoUrl, null, null);
+    var uri = makeURI(mailtoUrl);
 
     // now pass this uri to the operating system
     this._launchExternalUrl(uri);
@@ -6642,9 +6628,7 @@ var gIdentityHandler = {
     
     // Make sure the identity popup hangs toward the middle of the location bar
     // in RTL builds
-    var position = 'after_start';
-    if (gURLBar.getAttribute("chromedir") == "rtl")
-      position = 'after_end';
+    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'after_end' : 'after_start';
 
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");

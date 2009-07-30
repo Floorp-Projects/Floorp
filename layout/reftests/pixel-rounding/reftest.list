@@ -175,3 +175,5 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == background-image-tiling.html background
 != border-image-width-0.html border-image-width-10.html
 == border-image-width-4.html border-image-width-0.html
 == border-image-width-9.html border-image-width-0.html
+
+== iframe-1.html iframe-1-ref.html

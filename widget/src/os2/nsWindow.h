@@ -154,8 +154,6 @@ class nsWindow : public nsBaseWidget,
 
    NS_IMETHOD CaptureMouse(PRBool aCapture);
 
-   NS_IMETHOD BeginResizingChildren();
-   NS_IMETHOD EndResizingChildren();
    virtual nsIntPoint WidgetToScreenOffset();
    NS_IMETHOD DispatchEvent( struct nsGUIEvent *event, nsEventStatus &aStatus);
    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
@@ -172,7 +170,9 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
    NS_IMETHOD              Invalidate( const nsIntRect & aRect, PRBool aIsSynchronous);
    NS_IMETHOD              Update();
-   NS_IMETHOD              Scroll( PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect);
+   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
+   virtual void            Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+                                  const nsTArray<Configuration>& aConfigurations);
    NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
 
    // Get a HWND or a HPS.
@@ -205,16 +205,12 @@ protected:
    // hooks subclasses may wish to override!
    virtual void     PostCreateWidget()            {}
    virtual PRInt32  GetClientHeight()             { return mBounds.height; }
-   virtual ULONG    GetSWPFlags( ULONG flags)     { return flags; }
    virtual void     SetupForPrint( HWND /*hwnd*/) {}
 
    // Useful functions for subclasses to use, threaded as necessary.
    virtual nsresult GetWindowText( nsString &str, PRUint32 *rc);
    virtual void     AddToStyle( ULONG style);
    virtual void     RemoveFromStyle( ULONG style);
-   // return true if deferred
-   virtual BOOL     SetWindowPos( HWND hwndInsertBehind, long x, long y,
-                                  long cx, long cy, unsigned long flags);
 
    // Message handlers - may wish to override.  Default implementation for
    // control, paint & scroll is to do nothing.
@@ -244,8 +240,6 @@ protected:
    PFNWP     mPrevWndProc;    // previous window procedure
    nsWindow *mParent;         // parent widget
    ULONG     mNextID;         // next child window id
-   PSWP      mSWPs;           // SWPs for deferred window positioning
-   ULONG     mlHave, mlUsed;  // description of mSWPs array
    HPOINTER  mFrameIcon;      // current frame icon
    VDKEY     mDeadKey;        // dead key from previous keyevent
    BOOL      mHaveDeadKey;    // is mDeadKey valid [0 may be a valid dead key, for all I know]
@@ -266,8 +260,6 @@ protected:
    PFNWP     GetPrevWP() const { return mPrevWndProc; }
 
    // nglayout data members
-   PRInt32        mPreferredHeight;
-   PRInt32        mPreferredWidth;
    nsToolkit     *mOS2Toolkit;
    PRInt32        mWindowState;
    nsRefPtr<gfxOS2Surface> mThebesSurface;
@@ -304,7 +296,6 @@ protected:
                                      PRInt16 aButton = nsMouseEvent::eLeftButton);
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
    void GetNonClientBounds(nsIntRect &aRect);
-   void    DeferPosition( HWND, HWND, long, long, long, long, ULONG);
    void ConstrainZLevel(HWND *aAfter);
 
    PRBool   CheckDragStatus(PRUint32 aAction, HPS * oHps);
@@ -313,12 +304,8 @@ protected:
    HBITMAP DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
                         PRUint32 aHeight, PRUint32 aDepth);
    HBITMAP CreateBitmapRGB(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
-   // 'format' should be 'gfx_format' which is a PRInt32
-   HBITMAP CreateTransparencyMask(PRInt32  format, PRUint8* aImageData,
-                                  PRUint32 aWidth, PRUint32 aHeight);
-
-   BOOL NotifyForeignChildWindows(HWND aWnd);
-   void ScrollChildWindows(PRInt32 aX, PRInt32 aY);
+   HBITMAP CreateTransparencyMask(gfxASurface::gfxImageFormat format,
+                                  PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
 
    // Enumeration of the methods which are accessible on the PM thread
    enum {

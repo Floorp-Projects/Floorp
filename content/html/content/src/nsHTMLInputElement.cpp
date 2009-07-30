@@ -1368,6 +1368,7 @@ nsHTMLInputElement::Focus()
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm && element)
             fm->SetFocus(element, 0);
+          break;
         }
 
         childFrame = childFrame->GetNextSibling();

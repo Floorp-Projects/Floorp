@@ -32,7 +32,7 @@ import "oleacc.idl";
  This interface provides the AT with the information it needs to differentiate 
  this application from other applications, from other versions of this 
  application, or from other versions of this application running on different 
- versions of an accessibility bridge or accessbility toolkit.
+ versions of an accessibility bridge or accessibility toolkit.
 */
 [object, uuid(D49DED83-5B25-43F4-9B95-93B44595979E)]
 interface IAccessibleApplication : IUnknown

@@ -179,8 +179,6 @@ public:
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     virtual nsIntPoint WidgetToScreenOffset();
-    NS_IMETHOD         BeginResizingChildren(void);
-    NS_IMETHOD         EndResizingChildren(void);
     NS_IMETHOD         DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
 
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);
@@ -239,10 +237,6 @@ protected:
     // Has anyone set an x/y location for this widget yet? Toplevels
     // shouldn't be automatically set to 0,0 for first show.
     PRBool              mPlaced;
-
-    // Preferred sizes
-    PRUint32            mPreferredWidth;
-    PRUint32            mPreferredHeight;
 
     /**
      * Event handlers (proxied from the actual qwidget).

@@ -131,7 +131,7 @@ class EmbedPrivate {
 */
 
   // these let the widget code know when the toplevel window gets and
-  // looses focus.
+  // loses focus.
   void        TopLevelFocusIn (void);
   void        TopLevelFocusOut(void);
 

@@ -173,7 +173,7 @@ int SuggestMgr::testsug(char** wlst, const char * candidate, int wl, int ns, int
       return ns;
 }
 
-// generate suggestions for a mispelled word
+// generate suggestions for a misspelled word
 //    pass in address of array of char * pointers
 // onlycompoundsug: probably bad suggestions (need for ngram sugs, too)
 

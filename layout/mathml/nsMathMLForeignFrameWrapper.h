@@ -72,14 +72,11 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD
   SetInitialChildList(nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
+                      nsFrameList&    aChildList)
   {
-    nsresult rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
-    // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames
-    nsFrameList frameList(aChildList);
-    NS_ASSERTION(frameList.FirstChild() && frameList.GetLength() == 1,
+    NS_ASSERTION(aChildList.NotEmpty() && aChildList.GetLength() == 1,
                  "there must be one and only one child frame");
-    return rv;
+    return nsBlockFrame::SetInitialChildList(aListName, aChildList);
   }
 #endif
 
@@ -92,7 +89,7 @@ public:
   // we are just a wrapper and these methods shouldn't be called
   NS_IMETHOD
   AppendFrames(nsIAtom*        aListName,
-               nsIFrame*       aFrameList)
+               nsFrameList&    aFrameList)
   {
     NS_NOTREACHED("unsupported operation");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -101,7 +98,7 @@ public:
   NS_IMETHOD
   InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
-               nsIFrame*       aFrameList)
+               nsFrameList&    aFrameList)
   {
     NS_NOTREACHED("unsupported operation");
     return NS_ERROR_NOT_IMPLEMENTED;

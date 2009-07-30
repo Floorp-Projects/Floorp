@@ -126,7 +126,6 @@ MAKEFILES_gfx="
   gfx/public/Makefile
   gfx/src/Makefile
   gfx/src/psshared/Makefile
-  gfx/src/shared/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
   gfx/thebes/Makefile
@@ -295,7 +294,6 @@ MAKEFILES_libimg="
 
 MAKEFILES_libjar="
   modules/libjar/Makefile
-  modules/libjar/standalone/Makefile
   modules/libjar/test/Makefile
 "
 
@@ -817,7 +815,6 @@ MAKEFILES_libpr0n="
   modules/libpr0n/decoders/icon/win/Makefile
   modules/libpr0n/decoders/icon/gtk/Makefile
   modules/libpr0n/decoders/icon/beos/Makefile
-  modules/libpr0n/decoders/xbm/Makefile
   modules/libpr0n/encoders/Makefile
   modules/libpr0n/encoders/png/Makefile
   modules/libpr0n/encoders/jpeg/Makefile

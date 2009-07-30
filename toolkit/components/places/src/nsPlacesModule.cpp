@@ -37,12 +37,6 @@ static const nsModuleComponentInfo components[] =
     nsNavHistoryConstructor,
     NS_NAVHISTORY_CLASSINFO },
 
-  { "Browser Navigation History",
-    NS_NAVHISTORYSERVICE_CID,
-    "@mozilla.org/autocomplete/search;1?name=history",
-    nsNavHistoryConstructor,
-    NS_NAVHISTORY_CLASSINFO },
-
   { "Download Navigation History",
     NS_NAVHISTORYSERVICE_CID,
     NS_DOWNLOADHISTORY_CONTRACTID,

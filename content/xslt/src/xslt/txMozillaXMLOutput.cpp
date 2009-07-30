@@ -480,7 +480,7 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix,
         lname = do_GetAtom(aLocalName);
     }
 
-    // No biggie if we loose the prefix due to OOM
+    // No biggie if we lose the prefix due to OOM
     NS_ENSURE_TRUE(lname, NS_ERROR_OUT_OF_MEMORY);
 
     // Check that it's a valid name

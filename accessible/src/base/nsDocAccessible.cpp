@@ -39,7 +39,7 @@
 #include "nsRootAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibleEventData.h"
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 #include "nsIMutableArray.h"
 #include "nsICommandManager.h"
 #include "nsIDocShell.h"
@@ -106,7 +106,7 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
     nsIViewManager* vm = shell->GetViewManager();
     if (vm) {
       nsCOMPtr<nsIWidget> widget;
-      vm->GetWidget(getter_AddRefs(widget));
+      vm->GetRootWidget(getter_AddRefs(widget));
       if (widget) {
         mWnd = widget->GetNativeData(NS_NATIVE_WINDOW);
       }
@@ -617,7 +617,17 @@ nsDocAccessible::Init()
   nsCOMPtr<nsIAccessible> parentAccessible;  // Ensure outer doc mParent accessible
   GetParent(getter_AddRefs(parentAccessible));
 
-  return nsHyperTextAccessibleWrap::Init();
+  nsresult rv = nsHyperTextAccessibleWrap::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Fire reorder event to notify new accessible document has been created and
+  // attached to the tree.
+  nsCOMPtr<nsIAccessibleEvent> reorderEvent =
+    new nsAccReorderEvent(mParent, PR_FALSE, PR_TRUE, mDOMNode);
+  NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
+
+  FireDelayedAccessibleEvent(reorderEvent);
+  return NS_OK;
 }
 
 nsresult
@@ -660,7 +670,7 @@ nsDocAccessible::Shutdown()
   // Remove from the cache after other parts of Shutdown(), so that Shutdown() procedures
   // can find the doc or root accessible in the cache if they need it.
   // We don't do this during ShutdownAccessibility() because that is already clearing the cache
-  if (!gIsShuttingDownApp)
+  if (!nsAccessibilityService::gIsShutdown)
     gGlobalDocAccessibleCache.Remove(static_cast<void*>(kungFuDeathGripDoc));
 
   return NS_OK;

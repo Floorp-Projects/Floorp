@@ -1457,7 +1457,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMdbStore, NS_IMDBSTORE_IID)
 **| current seed value (which implies the iteration is less than total) in
 **| between to cursor calls that actually access collection content.  By
 **| default, a cursor should assume this attribute is false until specified,
-**| so that iterations quietly try to re-sync when they loose coherence.
+**| so that iterations quietly try to re-sync when they lose coherence.
 |*/
 
 #define NS_IMDBCURSOR_IID_STR "a0c37337-6ebc-474c-90db-e65ea0b850aa"

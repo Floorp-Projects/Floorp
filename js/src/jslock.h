@@ -55,9 +55,10 @@ JS_BEGIN_EXTERN_C
 #ifdef JS_THREADSAFE
 
 #if (defined(_WIN32) && defined(_M_IX86)) ||                                  \
-    (defined(__GNUC__) && defined(__i386__)) ||                               \
-    (defined(__GNUC__) && defined(__x86_64__)) ||                             \
-    (defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)) ||           \
+    (defined(_WIN64) && (defined(_M_AMD64) || defined(_M_X64))) ||            \
+    (defined(__i386) && (defined(__GNUC__) || defined(__SUNPRO_CC))) ||       \
+    (defined(__x86_64) && (defined(__GNUC__) || defined(__SUNPRO_CC))) ||     \
+    (defined(__sparc) && (defined(__GNUC__) || defined(__SUNPRO_CC))) ||      \
     defined(AIX) ||                                                           \
     defined(USE_ARM_KUSER)
 # define JS_HAS_NATIVE_COMPARE_AND_SWAP 1

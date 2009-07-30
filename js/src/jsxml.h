@@ -122,14 +122,15 @@ struct JSXML {
     JSObject            *name;
     uint16              xml_class;      /* discriminates u, below */
     uint16              xml_flags;      /* flags, see below */
+    uint32              align;
     union {
         JSXMLListVar    list;
         JSXMLElemVar    elem;
         JSString        *value;
     } u;
-
-    /* Don't add anything after u -- see js_NewXML for why. */
 };
+
+JS_STATIC_ASSERT(JS_ROUNDUP(sizeof(JSXML), sizeof(JSGCThing)) == sizeof(JSXML));
 
 /* union member shorthands */
 #define xml_kids        u.list.kids

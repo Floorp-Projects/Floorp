@@ -100,6 +100,7 @@ static cairo_scaled_font_t *CreateScaledFont(FcPattern *aPattern);
 
 static PangoFontMap *gPangoFontMap;
 static PangoFontMap *GetPangoFontMap();
+static PRBool gUseFontMapProperty;
 
 static FT_Library gFTLibrary;
 static nsILanguageAtomService* gLangService;
@@ -138,6 +139,18 @@ ScaleRoundDesignUnits(FT_Short aDesignMetric, FT_Fixed aScale)
 {
     FT_Long fixed26dot6 = FT_MulFix(aDesignMetric, aScale);
     return ROUND_26_6_TO_INT(fixed26dot6);
+}
+
+static PRFuncPtr
+FindFunctionSymbol(const char *name)
+{
+    PRLibrary *lib = nsnull;
+    PRFuncPtr result = PR_FindFunctionSymbolAndLibrary(name, &lib);
+    if (lib) {
+        PR_UnloadLibrary(lib);
+    }
+
+    return result;
 }
 
 // A namespace for @font-face family names in FcPatterns so that fontconfig
@@ -364,23 +377,12 @@ typedef FcPattern* (*QueryFaceFunction)(const FT_Face face,
                                         const FcChar8 *file, int id,
                                         FcBlanks *blanks);
 
-static QueryFaceFunction
-GetFcFreeTypeQueryFace()
-{
-    PRLibrary *lib = nsnull;
-    PRFuncPtr result =
-        PR_FindFunctionSymbolAndLibrary("FcFreeTypeQueryFace", &lib);
-    if (lib) {
-        PR_UnloadLibrary(lib);
-    }
-
-    return reinterpret_cast<QueryFaceFunction>(result);
-}
-
 void
 gfxDownloadedFcFontEntry::InitPattern()
 {
-    static QueryFaceFunction sQueryFacePtr = GetFcFreeTypeQueryFace();
+    static QueryFaceFunction sQueryFacePtr =
+        reinterpret_cast<QueryFaceFunction>
+        (FindFunctionSymbol("FcFreeTypeQueryFace"));
     FcPattern *pattern;
 
     // FcFreeTypeQueryFace is the same function used to construct patterns for
@@ -644,11 +646,25 @@ struct gfxPangoFcFont {
         FcPatternReference(aRequestedPattern);
         font->mRequestedPattern = aRequestedPattern;
 
-        // PangoFcFont::get_coverage wants an FcFontMap.  (PangoFcFontMap
-        // usually sets this after calling PangoFcFontMap::create_font().)
+        // PangoFcFont::get_coverage wants a PangoFcFontMap.  (PangoFcFontMap
+        // would usually set this after calling PangoFcFontMap::create_font()
+        // or new_font().)
+        PangoFontMap *fontmap = GetPangoFontMap();
+        // In Pango-1.24.4, we can use the "fontmap" property; by setting the
+        // property, the PangoFcFont base class manages the pointer (as a weak
+        // reference).
         PangoFcFont *fc_font = &font->parent_instance;
-        fc_font->fontmap = GetPangoFontMap();
-        g_object_ref(fc_font->fontmap);
+        if (gUseFontMapProperty) {
+            g_object_set(font, "fontmap", fontmap, NULL);
+        } else {
+            // In Pango versions up to 1.20.5, the parent class will decrement
+            // the reference count of the fontmap during shutdown() or
+            // finalize() of the font.  In Pango versions from 1.22.0 this no
+            // longer happens, so we'll end up leaking the (singleton)
+            // fontmap.
+            fc_font->fontmap = fontmap;
+            g_object_ref(fc_font->fontmap);
+        }
 
         return nsReturnRef<PangoFont>(PANGO_FONT(font));
     }
@@ -724,8 +740,6 @@ gfx_pango_fc_font_finalize(GObject *object)
     if (self->mCoverage)
         pango_coverage_unref(self->mCoverage);
     NS_IF_RELEASE(self->mGfxFont);
-
-    // The parent class removes the reference to parent_instance->fontmap.
 
     G_OBJECT_CLASS(gfx_pango_fc_font_parent_class)->finalize(object);
 }
@@ -898,6 +912,8 @@ gfx_pango_fc_font_get_glyph(PangoFcFont *font, gunichar wc)
     return gfxFont->GetGlyph(wc);
 }
 
+typedef int (*PangoVersionFunction)();
+
 static void
 gfx_pango_fc_font_class_init (gfxPangoFcFontClass *klass)
 {
@@ -921,6 +937,18 @@ gfx_pango_fc_font_class_init (gfxPangoFcFontClass *klass)
     fc_font_class->lock_face = gfx_pango_fc_font_lock_face;
     fc_font_class->unlock_face = gfx_pango_fc_font_unlock_face;
     fc_font_class->get_glyph = gfx_pango_fc_font_get_glyph;
+
+    // The "fontmap" property on PangoFcFont was introduced for Pango-1.24.0
+    // but versions prior to Pango-1.24.4 leaked weak pointers for every font,
+    // which would causes crashes when shutting down the FontMap.  For the
+    // early Pango-1.24.x versions we're better off setting the fontmap member
+    // ourselves, which will not create weak pointers to leak, and instead
+    // we'll leak the FontMap on shutdown.  pango_version() and
+    // PANGO_VERSION_ENCODE require Pango-1.16.
+    PangoVersionFunction pango_version =
+        reinterpret_cast<PangoVersionFunction>
+        (FindFunctionSymbol("pango_version"));
+    gUseFontMapProperty = pango_version && (*pango_version)() >= 12404;
 }
 
 /**
@@ -1082,24 +1110,13 @@ FindFontPatterns(gfxUserFontSet *mUserFontSet,
 typedef FcBool (*FcPatternRemoveFunction)(FcPattern *p, const char *object,
                                           int id);
 
-static FcPatternRemoveFunction
-GetFcPatternRemove()
-{
-    PRLibrary *lib = nsnull;
-    PRFuncPtr result =
-        PR_FindFunctionSymbolAndLibrary("FcPatternRemove", &lib);
-    if (lib) {
-        PR_UnloadLibrary(lib);
-    }
-
-    return reinterpret_cast<FcPatternRemoveFunction>(result);
-}
-
 // FcPatternRemove is available in fontconfig-2.3.0 (2005)
 static FcBool
 moz_FcPatternRemove(FcPattern *p, const char *object, int id)
 {
-    static FcPatternRemoveFunction sFcPatternRemovePtr = GetFcPatternRemove();
+    static FcPatternRemoveFunction sFcPatternRemovePtr =
+        reinterpret_cast<FcPatternRemoveFunction>
+        (FindFunctionSymbol("FcPatternRemove"));
 
     if (!sFcPatternRemovePtr)
         return FcFalse;
@@ -2105,7 +2122,8 @@ gfxPangoFontGroup::Shutdown()
     if (gPangoFontMap) {
         if (PANGO_IS_FC_FONT_MAP (gPangoFontMap)) {
             // This clears circular references from the fontmap to itself
-            // through its fonts.
+            // through its fonts.  (This is actually unnecessary with Pango
+            // versions >= 1.22.)
             pango_fc_font_map_shutdown(PANGO_FC_FONT_MAP(gPangoFontMap));
         }
         g_object_unref(gPangoFontMap);
@@ -2841,8 +2859,6 @@ gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!run)
         return nsnull;
-
-    run->RecordSurrogates(aString);
 
     nsCAutoString utf8;
     PRInt32 headerLen = AppendDirectionalIndicatorUTF8(run->IsRightToLeft(), utf8);

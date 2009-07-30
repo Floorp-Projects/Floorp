@@ -28,19 +28,6 @@
     }
 
     ////
-    // Enter a string in the find bar's search field, by issuing
-    // a series of key events to it.
-    //
-    function enterStringIntoFindField(aString) {
-      for (var i=0; i < aString.length; i++) {
-        var event = document.createEvent("KeyEvents");
-        event.initKeyEvent("keypress", true, true, null, false, false,
-                           false, false, 0, aString.charCodeAt(i));
-        gFindBar._findField.inputField.dispatchEvent(event);
-      }
-    }
-
-    ////
     // Generator function for test steps for bug 298622:  
     // Find should work correctly on a page loaded from the
     // bfcache.
@@ -71,13 +58,43 @@
         onNavComplete: nextTest
       });
       yield;
-      
+
+      // Make sure we unsuppress painting before continuing
+      SimpleTest.executeSoon(nextTest);
+      yield;
+
       // Search for some text that's on the second page (but not on
       // the first page), and verify that it can be found.
+      var findFocused = false;
       gFindBar = document.getElementById("FindToolbar");
+      gFindBar._findField.inputField.onfocus = function () {
+        findFocused = true;
+      };
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
-      enterStringIntoFindField("A generic page");
+      gFindBar._findField.value = "A generic page";
+      gFindBar._find();
+      SimpleTest.executeSoon(nextTest);
+      yield;
+
+      // Make sure Find bar's internal status is not 'notfound'
+      isnot(gFindBar._findField.getAttribute("status"), "notfound",
+         "Findfield status attribute should not have been 'notfound'" +
+         " after Find");
+
+      // Make sure the key events above have time to be processed
+      // before continuing
+      waitForTrue(function() {
+        return (
+          TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+          "a generic page");
+      }, nextTest, 20);
+      yield;
+
+      ok(findFocused, 
+        "find input field doesn't have the focus, find operation will fail!");
+      is(gFindBar._findField.inputField.value, "A generic page",
+        "expected text not present in find input field");
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "a generic page",
          "find failed on second page loaded");
@@ -100,7 +117,25 @@
       gFindBar = document.getElementById("FindToolbar");
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
-      enterStringIntoFindField("find this");
+      gFindBar._findField.value = "find this";
+      gFindBar._find();
+      SimpleTest.executeSoon(nextTest);
+      yield;
+
+      // Make sure Find bar's internal status is not 'notfound'
+      isnot(gFindBar._findField.getAttribute("status"), "notfound",
+         "Findfield status attribute should not have been 'notfound'" +
+         " after Find");
+ 
+      // Make sure the key events above have time to be processed
+      // before continuing
+      waitForTrue(function() {
+        return (
+          TestWindow.getWindow().getSelection().toString().toLowerCase() == 
+          "find this");
+      }, nextTest, 20);
+      yield;
+
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),
          "find this",
          "find failed on page loaded from bfcache");

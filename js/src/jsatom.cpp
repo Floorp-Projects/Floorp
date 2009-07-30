@@ -783,7 +783,7 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
     str.initFlat(chars, inflatedLength);
     atom = js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
     if (chars != inflated && str.flatChars())
-        JS_free(cx, chars);
+        cx->free(chars);
     return atom;
 }
 
@@ -1094,6 +1094,7 @@ JSAtomList::add(JSCompiler *jsc, JSAtom *atom, AddHow how)
              * with the given key.
              */
             if (how == HOIST && ale->entry.next) {
+                JS_ASSERT(*hep == &ale->entry);
                 *hep = ale->entry.next;
                 ale->entry.next = NULL;
                 do {
