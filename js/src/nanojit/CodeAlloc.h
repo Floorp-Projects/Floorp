@@ -42,9 +42,6 @@
 
 namespace nanojit
 {
-    // Temporary tracemonkey hack until namespaces are sorted out.
-    using namespace MMgc;
-
     /** return true if ptr is in the range [start, end) */
     inline bool containsPtr(const NIns* start, const NIns* end, const NIns* ptr) {
         return ptr >= start && ptr < end;
@@ -107,14 +104,8 @@ namespace nanojit
         static const size_t sizeofMinBlock = offsetof(CodeList, code);
         static const size_t minAllocSize = LARGEST_UNDERRUN_PROT;
 
-        /** Terminator blocks.  All active and free allocations
-            are reachable by traversing this chain and each
-            element's lower chain. */
+        GCHeap* heap;
         CodeList* heapblocks;
-
-        /** Reusable blocks. */
-        CodeList* availblocks;
-        size_t totalAllocated;
 
         /** remove one block from a list */
         static CodeList* removeBlock(CodeList* &list);
@@ -134,22 +125,8 @@ namespace nanojit
         /** find the beginning of the heapblock terminated by term */
         static CodeList* firstBlock(CodeList* term);
 
-        //
-        // CodeAlloc's SPI.  Implementations must be defined by nanojit embedder.
-        // allocation failures should cause an exception or longjmp; nanojit
-        // intentionally does not check for null.
-        //
-
-        /** allocate nbytes of memory to hold code.  Never return null! */
-        void* allocCodeChunk(size_t nbytes);
-
-        /** free a block previously allocated by allocCodeMem.  nbytes will
-         * match the previous allocCodeMem, but is provided here as well
-         * to mirror the mmap()/munmap() api. */
-        void freeCodeChunk(void* addr, size_t nbytes);
-
     public:
-        CodeAlloc();
+        CodeAlloc(GCHeap*);
         ~CodeAlloc();
 
         /** allocate some memory for code, return pointers to the region. */
@@ -179,9 +156,6 @@ namespace nanojit
 
         /** return the number of bytes in all the code blocks in "code", including block overhead */
         static size_t size(const CodeList* code);
-
-        /** return the total number of bytes held by this CodeAlloc. */
-        size_t size();
 
         /** print out stats about heap usage */
         void logStats();

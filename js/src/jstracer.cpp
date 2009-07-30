@@ -261,38 +261,6 @@ static GC gc = GC();
 static avmplus::AvmCore s_core = avmplus::AvmCore();
 static avmplus::AvmCore* core = &s_core;
 
-/* Allocator SPI implementation. */
-
-void*
-nanojit::Allocator::allocChunk(size_t nbytes)
-{
-    VMAllocator *vma = (VMAllocator*)this;
-    JS_ASSERT(!vma->outOfMemory());
-    void *p = malloc(nbytes);
-    if (!p) {
-        JS_ASSERT(nbytes < sizeof(vma->mReserve));
-        vma->mOutOfMemory = true;
-        p = (void*) &vma->mReserve[0];
-    }
-    vma->mSize += nbytes;
-    return p;
-}
-
-void
-nanojit::Allocator::freeChunk(void *p) {
-    VMAllocator *vma = (VMAllocator*)this;
-    if (p != &vma->mReserve[0])
-        free(p);
-}
-
-void
-nanojit::Allocator::postReset() {
-    VMAllocator *vma = (VMAllocator*)this;
-    vma->mOutOfMemory = false;
-    vma->mSize = 0;
-}
-
-
 #ifdef JS_JIT_SPEW
 static void
 DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape, uint32 argc);
@@ -3164,8 +3132,7 @@ TraceRecorder::snapshot(ExitType exitType)
         }
     }
 
-    if (sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(JSTraceType) >
-        LirBuffer::MAX_SKIP_PAYLOAD_SZB) {
+    if (sizeof(VMSideExit) + (stackSlots + ngslots) * sizeof(JSTraceType) >= NJ_MAX_SKIP_PAYLOAD_SZB) {
         /*
          * ::snapshot() is infallible in the sense that callers don't
          * expect errors; but this is a trace-aborting error condition. So
@@ -3237,7 +3204,7 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
     /*
      * BIG FAT WARNING: If compilation fails we don't reset the lirbuf, so it's
      * safe to keep references to the side exits here. If we ever start
-     * clearing those lirbufs, we have to make sure we purge the side exits
+     * rewinding those lirbufs, we have to make sure we purge the side exits
      * that then no longer will be in valid memory.
      */
     if (exit->exitType == LOOP_EXIT)
@@ -3272,7 +3239,7 @@ TraceRecorder::copy(VMSideExit* copy)
     /*
      * BIG FAT WARNING: If compilation fails we don't reset the lirbuf, so it's
      * safe to keep references to the side exits here. If we ever start
-     * clearing those lirbufs, we have to make sure we purge the side exits
+     * rewinding those lirbufs, we have to make sure we purge the side exits
      * that then no longer will be in valid memory.
      */
     if (exit->exitType == LOOP_EXIT)
@@ -3704,7 +3671,7 @@ FlushJITCache(JSContext* cx)
         JS_ASSERT(fragmento->labels);
         fragmento->labels->clear();
 #endif
-
+        tm->lirbuf->rewind();
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
             VMFragment* f = tm->vmfragments[i];
             while (f) {
@@ -3719,8 +3686,6 @@ FlushJITCache(JSContext* cx)
             tm->globalStates[i].globalSlots->clear();
         }
     }
-    tm->allocator->reset();
-    tm->lirbuf->clear();
     tm->needFlush = JS_FALSE;
 }
 
@@ -3744,15 +3709,14 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     }
     if (anchor && anchor->exitType != CASE_EXIT)
         ++treeInfo->branchCount;
-    if (tm->allocator->outOfMemory())
+    if (lirbuf->outOMem()) {
+        fragmento->assm()->setError(nanojit::OutOMem);
         return;
-
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    ::compile(fragmento, assm, fragment);
-    if (assm->error() == nanojit::OutOMem)
+    }
+    ::compile(fragmento->assm(), fragment);
+    if (fragmento->assm()->error() == nanojit::OutOMem)
         return;
-
-    if (assm->error() != nanojit::None) {
+    if (fragmento->assm()->error() != nanojit::None) {
         debug_only_print0(LC_TMTracer, "Blacklisted: error during compilation\n");
         Blacklist((jsbytecode*) fragment->root->ip);
         return;
@@ -3762,10 +3726,10 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     if (anchor) {
 #ifdef NANOJIT_IA32
         if (anchor->exitType == CASE_EXIT)
-            assm->patch(anchor, anchor->switchInfo);
+            fragmento->assm()->patch(anchor, anchor->switchInfo);
         else
 #endif
-            assm->patch(anchor);
+            fragmento->assm()->patch(anchor);
     }
     JS_ASSERT(fragment->code());
     JS_ASSERT(!fragment->vmprivate);
@@ -3785,7 +3749,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
 }
 
 static bool
-JoinPeersIfCompatible(Assembler* assm, Fragment* stableFrag, TreeInfo* stableTree,
+JoinPeersIfCompatible(Fragmento* frago, Fragment* stableFrag, TreeInfo* stableTree,
                       VMSideExit* exit)
 {
     JS_ASSERT(exit->numStackSlots == stableTree->nStackTypes);
@@ -3797,7 +3761,7 @@ JoinPeersIfCompatible(Assembler* assm, Fragment* stableFrag, TreeInfo* stableTre
     }
 
     exit->target = stableFrag;
-    assm->patch(exit);
+    frago->assm()->patch(exit);
 
     stableTree->dependentTrees.addUnique(exit->from->root);
     ((TreeInfo*)exit->from->root->vmprivate)->linkedTrees.addUnique(stableFrag);
@@ -3890,8 +3854,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
     }
     compile(tm);
 
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    if (assm->error() != nanojit::None)
+    if (fragmento->assm()->error() != nanojit::None)
         return;
 
     joinEdgesToEntry(fragmento, peer_root);
@@ -3936,8 +3899,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
             uexit = ti->unstableExits;
             unext = &ti->unstableExits;
             while (uexit != NULL) {
-                Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-                bool remove = JoinPeersIfCompatible(assm, fragment, treeInfo, uexit->exit);
+                bool remove = JoinPeersIfCompatible(fragmento, fragment, treeInfo, uexit->exit);
                 JS_ASSERT(!remove || fragment != peer);
                 debug_only_stmt(
                     if (remove) {
@@ -4021,8 +3983,7 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
         lir->insGuard(LIR_x, NULL, createGuardRecord(snapshot(LOOP_EXIT)));
     compile(tm);
 
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    if (assm->error() != nanojit::None)
+    if (tm->fragmento->assm()->error() != nanojit::None)
         return;
 
     VMFragment* root = (VMFragment*)fragment->root;
@@ -4355,8 +4316,7 @@ DeleteRecorder(JSContext* cx)
     tm->recorder = NULL;
 
     /* If we ran out of memory, flush the code cache. */
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    if (assm->error() == OutOMem ||
+    if (JS_TRACE_MONITOR(cx).fragmento->assm()->error() == OutOMem ||
         js_OverfullFragmento(tm, tm->fragmento)) {
         FlushJITCache(cx);
         return false;
@@ -4455,8 +4415,7 @@ StartRecorder(JSContext* cx, VMSideExit* anchor, Fragment* f, TreeInfo* ti,
     }
 
     /* Clear any leftover error state. */
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    assm->setError(None);
+    tm->fragmento->assm()->setError(None);
     return true;
 }
 
@@ -4469,9 +4428,10 @@ TrashTree(JSContext* cx, Fragment* f)
         return;
     AUDIT(treesTrashed);
     debug_only_print0(LC_TMTracer, "Trashing tree info.\n");
+    Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
     f->vmprivate = NULL;
-    f->releaseCode(JS_TRACE_MONITOR(cx).codeAlloc);
+    f->releaseCode(fragmento);
     Fragment** data = ti->dependentTrees.data();
     unsigned length = ti->dependentTrees.length();
     for (unsigned n = 0; n < length; ++n)
@@ -4723,7 +4683,7 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     f->root = f;
     f->lirbuf = tm->lirbuf;
 
-    if (tm->allocator->outOfMemory() || js_OverfullFragmento(tm, tm->fragmento)) {
+    if (f->lirbuf->outOMem() || js_OverfullFragmento(tm, tm->fragmento)) {
         Backoff(cx, (jsbytecode*) f->root->ip);
         FlushJITCache(cx);
         debug_only_print0(LC_TMTracer,
@@ -4879,8 +4839,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
             if (ti->nGlobalTypes() < ti->globalSlots->length())
                 SpecializeTreesToMissingGlobals(cx, globalObj, ti);
             exit->target = f;
-            Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-            assm->patch(exit);
+            tm->fragmento->assm()->patch(exit);
 
             /* Now erase this exit from the unstable exit list. */
             UnstableExit** tail = &from_ti->unstableExits;
@@ -6037,8 +5996,6 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 {
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-
     /* Process needFlush and deepAbort() requests now. */
     if (JS_TRACE_MONITOR(cx).needFlush) {
         FlushJITCache(cx);
@@ -6100,15 +6057,14 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
         return JSRS_STOP;
     }
 
-    if (assm->error()) {
+    if (JS_TRACE_MONITOR(cx).fragmento->assm()->error()) {
         js_AbortRecording(cx, "error during recording");
         return JSRS_STOP;
     }
 
-    if (tr->traceMonitor->allocator->outOfMemory() ||
-        js_OverfullFragmento(&JS_TRACE_MONITOR(cx),
-                             JS_TRACE_MONITOR(cx).fragmento)) {
-        js_AbortRecording(cx, "no more memory");
+    if (tr->lirbuf->outOMem() ||
+        js_OverfullFragmento(&JS_TRACE_MONITOR(cx), JS_TRACE_MONITOR(cx).fragmento)) {
+        js_AbortRecording(cx, "no more LIR memory");
         FlushJITCache(cx);
         return JSRS_STOP;
     }
@@ -6468,23 +6424,14 @@ js_InitJIT(JSTraceMonitor *tm)
                           JS_DHASH_DEFAULT_CAPACITY(PC_HASH_COUNT));
     }
 
-    if (!tm->allocator)
-        tm->allocator = new VMAllocator();
-
-    if (!tm->codeAlloc)
-        tm->codeAlloc = new (&gc) CodeAlloc();
-
-    if (!tm->assembler)
-        tm->assembler = new (&gc) Assembler(tm->codeAlloc, core, &js_LogController);
-
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
-        Fragmento* fragmento = new (&gc) Fragmento(core, &js_LogController, 32, tm->codeAlloc);
-        verbose_only(fragmento->labels = new (&gc) LabelMap(core, *tm->allocator);)
+        Fragmento* fragmento = new (&gc) Fragmento(core, &js_LogController, 32);
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core);)
         tm->fragmento = fragmento;
-        tm->lirbuf = new (&gc) LirBuffer(*tm->allocator);
+        tm->lirbuf = new (&gc) LirBuffer(fragmento);
 #ifdef DEBUG
-        tm->lirbuf->names = new (&gc) LirNameMap(&gc, *tm->allocator, tm->fragmento->labels);
+        tm->lirbuf->names = new (&gc) LirNameMap(&gc, tm->fragmento->labels);
 #endif
         for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
             tm->globalStates[i].globalShape = -1;
@@ -6494,20 +6441,13 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->reservedDoublePoolPtr = tm->reservedDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
         memset(tm->vmfragments, 0, sizeof(tm->vmfragments));
     }
-
-    if (!tm->reAllocator)
-        tm->reAllocator = new VMAllocator();
-
-    if (!tm->reCodeAlloc)
-        tm->reCodeAlloc = new (&gc) CodeAlloc();
-
     if (!tm->reFragmento) {
-        Fragmento* fragmento = new (&gc) Fragmento(core, &js_LogController, 32, tm->reCodeAlloc);
-        verbose_only(fragmento->labels = new (&gc) LabelMap(core, *tm->reAllocator);)
+        Fragmento* fragmento = new (&gc) Fragmento(core, &js_LogController, 32);
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core);)
         tm->reFragmento = fragmento;
-        tm->reLirBuf = new (&gc) LirBuffer(*tm->reAllocator);
+        tm->reLirBuf = new (&gc) LirBuffer(fragmento);
 #ifdef DEBUG
-        tm->reLirBuf->names = new (&gc) LirNameMap(&gc, *tm->reAllocator, fragmento->labels);
+        tm->reLirBuf->names = new (&gc) LirNameMap(&gc, fragmento->labels);
 #endif
     }
 #if !defined XP_WIN
@@ -6569,15 +6509,7 @@ js_FinishJIT(JSTraceMonitor *tm)
         delete tm->reLirBuf;
         verbose_only(delete tm->reFragmento->labels;)
         delete tm->reFragmento;
-        delete tm->reAllocator;
-        delete tm->reCodeAlloc;
     }
-    if (tm->assembler)
-        delete tm->assembler;
-    if (tm->codeAlloc)
-        delete tm->codeAlloc;
-    if (tm->allocator)
-        delete tm->allocator;
 }
 
 void
@@ -6687,7 +6619,7 @@ bool
 js_OverfullFragmento(JSTraceMonitor* tm, Fragmento *fragmento)
 {
     /*
-     * You might imagine the outOfMemory flag on the allocator is sufficient
+     * You might imagine the outOMem flag on the lirbuf is sufficient
      * to model the notion of "running out of memory", but there are actually
      * two separate issues involved:
      *
@@ -6701,28 +6633,26 @@ js_OverfullFragmento(JSTraceMonitor* tm, Fragmento *fragmento)
      * safely shut down and signal the rest of spidermonkey when it
      * does. Condition 2 happens quite regularly.
      *
-     * Presently, the code in this file doesn't check the outOfMemory condition
+     * Presently, the code in this file doesn't check the outOMem condition
      * often enough, and frequently misuses the unchecked results of
      * lirbuffer insertions on the asssumption that it will notice the
-     * outOfMemory flag "soon enough" when it returns to the monitorRecording
-     * function. This turns out to be a false assumption if we use outOfMemory
+     * outOMem flag "soon enough" when it returns to the monitorRecording
+     * function. This turns out to be a false assumption if we use outOMem
      * to signal condition 2: we regularly provoke "passing our intended
      * size" and regularly fail to notice it in time to prevent writing
      * over the end of an artificially self-limited LIR buffer.
      *
      * To mitigate, though not completely solve, this problem, we're
      * modeling the two forms of memory exhaustion *separately* for the
-     * time being: condition 1 is handled by the outOfMemory flag inside
+     * time being: condition 1 is handled by the outOMem flag inside
      * nanojit, and condition 2 is being handled independently *here*. So
      * we construct our fragmentos to use all available memory they like,
-     * and only report outOfMemory to us when there is literally no OS memory
+     * and only report outOMem to us when there is literally no OS memory
      * left. Merely purging our cache when we hit our highwater mark is
      * handled by the (few) callers of this function.
      *
      */
     jsuint maxsz = tm->maxCodeCacheBytes;
-    VMAllocator *allocator = tm->allocator;
-    CodeAlloc *codeAlloc = tm->codeAlloc;
     if (fragmento == tm->fragmento) {
         if (tm->prohibitFlush)
             return false;
@@ -6734,10 +6664,8 @@ js_OverfullFragmento(JSTraceMonitor* tm, Fragmento *fragmento)
          * code caches.
          */
         maxsz /= 16;
-        allocator = tm->reAllocator;
-        codeAlloc = tm->reCodeAlloc;
     }
-    return (codeAlloc->size() + allocator->size() > maxsz);
+    return (fragmento->cacheUsed() > maxsz);
 }
 
 JS_FORCES_STACK JS_FRIEND_API(void)
@@ -9011,8 +8939,7 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
 
         // arr->dslots[i] = box_jsval(vp[i]);  for i in 0..argc
         LIns *dslots_ins = NULL;
-        VMAllocator *alloc = traceMonitor->allocator;
-        for (uint32 i = 0; i < argc && !alloc->outOfMemory(); i++) {
+        for (uint32 i = 0; i < argc && !lirbuf->outOMem(); i++) {
             LIns *elt_ins = get(argv + i);
             box_jsval(argv[i], elt_ins);
             stobj_set_dslot(arr_ins, i, dslots_ins, elt_ins, "set_array_elt");
@@ -9365,7 +9292,6 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     }
     lir->insStorei(this_ins, invokevp_ins, 1 * sizeof(jsval));
 
-    VMAllocator *alloc = traceMonitor->allocator;
     // Populate argv.
     for (uintN n = 2; n < 2 + argc; n++) {
         LIns* i = get(&vp[n]);
@@ -9374,7 +9300,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 
         // For a very long argument list we might run out of LIR space, so
         // check inside the loop.
-        if (alloc->outOfMemory())
+        if (lirbuf->outOMem())
             ABORT_TRACE("out of memory in argument list");
     }
 
@@ -9384,7 +9310,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         for (uintN n = 2 + argc; n < vplen; n++) {
             lir->insStorei(undef_ins, invokevp_ins, n * sizeof(jsval));
 
-            if (alloc->outOfMemory())
+            if (lirbuf->outOMem())
                 ABORT_TRACE("out of memory in extra slots");
         }
     }
@@ -9999,7 +9925,7 @@ TraceRecorder::record_JSOP_GETELEM()
                         // The entry type map is not necessarily up-to-date, so we capture a new type map
                         // for this point in the code.
                         unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
-                        if (stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
+                        if (stackSlots * sizeof(JSTraceType) > NJ_MAX_SKIP_PAYLOAD_SZB)
                             ABORT_TRACE("|arguments| requires saving too much stack");
                         JSTraceType* typemap = (JSTraceType*) lir->insSkip(stackSlots * sizeof(JSTraceType))->payload();
                         DetermineTypesVisitor detVisitor(*this, typemap);
@@ -10423,7 +10349,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     // Generate a type map for the outgoing frame and stash it in the LIR
     unsigned stackSlots = NativeStackSlots(cx, 0 /* callDepth */);
-    if (sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType) > LirBuffer::MAX_SKIP_PAYLOAD_SZB)
+    if (sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType) > NJ_MAX_SKIP_PAYLOAD_SZB)
         ABORT_TRACE("interpreted function call requires saving too much stack");
     LIns* data = lir->insSkip(sizeof(FrameInfo) + stackSlots * sizeof(JSTraceType));
     FrameInfo* fi = (FrameInfo*)data->payload();

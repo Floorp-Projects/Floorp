@@ -383,33 +383,6 @@ struct VMSideExit : public nanojit::SideExit
     }
 };
 
-struct VMAllocator : public nanojit::Allocator
-{
-
-public:
-    VMAllocator() : mOutOfMemory(false), mSize(0)
-    {}
-
-    size_t size() {
-        return mSize;
-    }
-
-    bool outOfMemory() {
-        return mOutOfMemory;
-    }
-
-    bool mOutOfMemory;
-    size_t mSize;
-    /*
-     * FIXME: Area the LIR spills into if we encounter an OOM mid-way
-     * through compilation; we must check mOutOfMemory before we run out
-     * of mReserve, otherwise we're in undefined territory. This area
-     * used to be one page, now 16 to be "safer". This is a temporary
-     * and quite unsatisfactory approach to handling OOM in Nanojit.
-     */
-    uintptr_t mReserve[0x10000];
-};
-
 struct FrameInfo {
     JSObject*       callee;     // callee function object
     JSObject*       block;      // caller block chain head
