@@ -4365,6 +4365,49 @@ function testSwitchUndefined()
 testSwitchUndefined.expected = 5;
 test(testSwitchUndefined);
 
+function testTableSwitch1() {
+    var x = 'miss';
+    var i, j = 0;
+    for (i = 0; i < RUNLOOP + 10; i++) {
+        switch (x) {
+          case 1: case 2: case 3: case 4: case 5: throw "FAIL";
+          default: j++;
+        }
+    }
+    assertEq(i, j);
+}
+testTableSwitch1.jitstats = {
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1,
+    recorderAborted: 0,
+    traceCompleted: 1
+};
+test(testTableSwitch1);
+
+function testTableSwitch2() {
+    var arr = [2, 2, 2, 2, 2, 5, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5];
+    var s = '';
+    for (var i = 0; i < arr.length; i++) {
+        switch (arr[i]) {
+        case 0: case 1: case 3: case 4:
+            throw "FAIL";
+        case 2:
+            s += '2';
+            break;
+        case 5:
+            s += '5';
+        }
+    }
+    assertEq(s, arr.join(""));
+}
+testTableSwitch2.jitstats = {
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 4,
+    recorderAborted: 0,
+    traceCompleted: 3
+};
+test(testTableSwitch2);
+
 function testGeneratorDeepBail() {
     function g() { yield 2; }
     var iterables = [[1], [], [], [], g()];

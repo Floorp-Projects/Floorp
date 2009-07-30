@@ -678,7 +678,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus ifop();
     JS_REQUIRES_STACK JSRecordingStatus switchop();
 #ifdef NANOJIT_IA32
-    JS_REQUIRES_STACK nanojit::LIns* tableswitch();
+    JS_REQUIRES_STACK JSRecordingStatus tableswitch();
 #endif
     JS_REQUIRES_STACK JSRecordingStatus inc(jsval& v, jsint incr, bool pre = true);
     JS_REQUIRES_STACK JSRecordingStatus inc(jsval& v, nanojit::LIns*& v_ins, jsint incr,
