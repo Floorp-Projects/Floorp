@@ -1434,12 +1434,7 @@ BuildTextRunsScanner::GetNextBreakBeforeFrame(PRUint32* aIndex)
 static PRUint32
 GetSpacingFlags(nscoord spacing)
 {
-  if (!spacing)
-    return 0;
-  if (spacing > 0)
-    return gfxTextRunFactory::TEXT_ENABLE_SPACING;
-  return gfxTextRunFactory::TEXT_ENABLE_SPACING |
-         gfxTextRunFactory::TEXT_ENABLE_NEGATIVE_SPACING;
+  return spacing ? gfxTextRunFactory::TEXT_ENABLE_SPACING : 0;
 }
 
 static gfxFontGroup*
