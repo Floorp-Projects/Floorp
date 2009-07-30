@@ -45,3 +45,5 @@ oggplay_os2.patch: Bug 448918 - add OS/2 support (this patch should be
 
 bug498815.patch: Fix for bug 498815.
 bug498824.patch: Fix for bug 498824.
+bug500311.patch: Fix crash during decoder initialization.
+
