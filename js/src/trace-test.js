@@ -5600,6 +5600,21 @@ testNativeSetter.jitstats = {
 };
 test(testNativeSetter);
 
+function testBug507425() {
+    var r = /x/;
+    for (var i = 0; i < 3; i++)
+        r.lastIndex = 0;          // call a setter
+    var s = ';';
+    try {
+        for (i = 0; i < 80; i++)
+            s += s;                   // call js_CanLeaveTrace
+    } catch (exc) {
+        return "ok";
+    }
+}
+testBug507425.expected = "ok";
+test(testBug507425);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
