@@ -184,7 +184,7 @@ namespace nanojit
             _activation.entry[i] = 0;
     }
 
-    void Assembler::registerResetAll()
+     void Assembler::registerResetAll()
     {
         nRegisterResetAll(_allocator);
 
@@ -197,7 +197,7 @@ namespace nanojit
     Register Assembler::registerAlloc(RegisterMask allow)
     {
         RegAlloc &regs = _allocator;
-//      RegisterMask prefer = livePastCall(_ins) ? saved : scratch;
+//        RegisterMask prefer = livePastCall(_ins) ? saved : scratch;
         RegisterMask prefer = SavedRegs & allow;
         RegisterMask free = regs.free & allow;
 
