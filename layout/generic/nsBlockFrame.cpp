@@ -1978,6 +1978,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // to be reflowed, so this computation of deltaY will not be
       // used.
       deltaY = line->mBounds.YMost() - oldYMost;
+
+      // Now do an interrupt check. We want to do this only in the case when we
+      // actually reflow the line, so that if we get back in here we'll get
+      // further on the reflow before interrupting.
+      aState.mPresContext->CheckForInterrupt(this);
     } else {
       aState.mOverflowTracker.Skip(line->mFirstChild, aState.mReflowStatus);
         // Nop except for blocks (we don't create overflow container
@@ -2044,7 +2049,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
     DumpLine(aState, line, deltaY, -1);
 
-    if (aState.mPresContext->CheckForInterrupt(this)) {
+    if (aState.mPresContext->HasPendingInterrupt()) {
       willReflowAgain = PR_TRUE;
       // Another option here might be to leave |line| clean if
       // !HasPendingInterrupt() before the CheckForInterrupt() call, since in
