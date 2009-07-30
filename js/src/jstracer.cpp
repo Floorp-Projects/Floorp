@@ -645,8 +645,8 @@ PCHash(jsbytecode* pc)
 Oracle::Oracle()
 {
     /* Grow the oracle bitsets to their (fixed) size here, once. */
-    _stackDontDemote.set(ORACLE_SIZE-1);
-    _globalDontDemote.set(ORACLE_SIZE-1);
+    _stackDontDemote.set(&gc, ORACLE_SIZE-1);
+    _globalDontDemote.set(&gc, ORACLE_SIZE-1);
     clear();
 }
 
@@ -654,7 +654,7 @@ Oracle::Oracle()
 JS_REQUIRES_STACK void
 Oracle::markGlobalSlotUndemotable(JSContext* cx, unsigned slot)
 {
-    _globalDontDemote.set(GlobalSlotHash(cx, slot));
+    _globalDontDemote.set(&gc, GlobalSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain global variable. */
@@ -668,7 +668,7 @@ Oracle::isGlobalSlotUndemotable(JSContext* cx, unsigned slot) const
 JS_REQUIRES_STACK void
 Oracle::markStackSlotUndemotable(JSContext* cx, unsigned slot)
 {
-    _stackDontDemote.set(StackSlotHash(cx, slot));
+    _stackDontDemote.set(&gc, StackSlotHash(cx, slot));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain slot. */
@@ -682,7 +682,7 @@ Oracle::isStackSlotUndemotable(JSContext* cx, unsigned slot) const
 void
 Oracle::markInstructionUndemotable(jsbytecode* pc)
 {
-    _pcDontDemote.set(PCHash(pc));
+    _pcDontDemote.set(&gc, PCHash(pc));
 }
 
 /* Consult with the oracle whether we shouldn't demote a certain bytecode location. */

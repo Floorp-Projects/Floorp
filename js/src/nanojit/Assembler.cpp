@@ -724,7 +724,7 @@ namespace nanojit
         })
 
         // STOREFILTER for sp
-        StackFilter storefilter1(prev, frag->lirbuf, frag->lirbuf->sp);
+        StackFilter storefilter1(prev, gc, frag->lirbuf, frag->lirbuf->sp);
         prev = &storefilter1;
 
         verbose_only( if (_logc->lcbits & LC_AfterSF_SP) {
@@ -734,7 +734,7 @@ namespace nanojit
         })
 
         // STOREFILTER for rp
-        StackFilter storefilter2(prev, frag->lirbuf, frag->lirbuf->rp);
+        StackFilter storefilter2(prev, gc, frag->lirbuf, frag->lirbuf->rp);
         prev = &storefilter2;
 
         verbose_only( if (_logc->lcbits & LC_AfterSF_RP) {
