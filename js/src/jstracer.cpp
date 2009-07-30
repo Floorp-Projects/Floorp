@@ -5539,6 +5539,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     cx->interpState = state->prev;
 
+    JS_ASSERT(!cx->bailExit);
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
     tm->tracecx = NULL;
     LeaveTree(*state, lr);
@@ -9090,8 +9091,10 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     LIns* args[] = { vp_ins, INS_CONSTWORD(SPROP_USERID(sprop)), obj_ins, cx_ins };
     LIns* ok_ins = lir->insCall(ci, args);
 
-    // Unroot the vp.
-    lir->insStorei(INS_CONSTPTR(NULL), cx_ins, offsetof(JSContext, nativeVp));
+    // Cleanup.
+    LIns* null_ins = INS_CONSTPTR(NULL);
+    lir->insStorei(null_ins, cx_ins, offsetof(JSContext, nativeVp));
+    lir->insStorei(null_ins, cx_ins, offsetof(JSContext, bailExit));
 
     // Guard that the call succeeded and builtinStatus is still 0.
     // If the native op succeeds but we deep-bail here, the result value is
