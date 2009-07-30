@@ -49,6 +49,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMRange.h"
+#include "imgIContainer.h"
 
 #include "nsIDocShell.h"
 #include "nsIContentViewerEdit.h"
@@ -65,7 +66,6 @@
 // image copy stuff
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIImage.h"
 #include "nsContentUtils.h"
 #include "nsContentCID.h"
 
@@ -463,7 +463,7 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
 
   if (aCopyFlags & nsIContentViewerEdit::COPY_IMAGE_DATA) {
     // get the image data from the element
-    nsCOMPtr<nsIImage> image =
+    nsCOMPtr<imgIContainer> image =
       nsContentUtils::GetImageFromContent(aImageElement);
     NS_ENSURE_TRUE(image, NS_ERROR_FAILURE);
 

@@ -60,7 +60,6 @@ EXPORTS		= \
 		nsIRenderingContext.h \
 		nsIFontMetrics.h \
 		nsIDeviceContext.h \
-		nsIImage.h \
 		nsGfxCIID.h \
 		nsIRegion.h \
 		nsITheme.h \

@@ -795,32 +795,26 @@ nsMathMLContainerFrame::ChildListChanged(PRInt32 aModType)
 
 NS_IMETHODIMP
 nsMathMLContainerFrame::AppendFrames(nsIAtom*        aListName,
-                                     nsIFrame*       aFrameList)
+                                     nsFrameList&    aFrameList)
 {
   if (aListName) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (aFrameList) {
-    mFrames.AppendFrames(this, aFrameList);
-    return ChildListChanged(nsIDOMMutationEvent::ADDITION);
-  }
-  return NS_OK;
+  mFrames.AppendFrames(this, aFrameList);
+  return ChildListChanged(nsIDOMMutationEvent::ADDITION);
 }
 
 NS_IMETHODIMP
 nsMathMLContainerFrame::InsertFrames(nsIAtom*        aListName,
                                      nsIFrame*       aPrevFrame,
-                                     nsIFrame*       aFrameList)
+                                     nsFrameList&    aFrameList)
 {
   if (aListName) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (aFrameList) {
-    // Insert frames after aPrevFrame
-    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-    return ChildListChanged(nsIDOMMutationEvent::ADDITION);
-  }
-  return NS_OK;
+  // Insert frames after aPrevFrame
+  mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+  return ChildListChanged(nsIDOMMutationEvent::ADDITION);
 }
 
 NS_IMETHODIMP

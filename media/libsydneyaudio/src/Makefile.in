@@ -57,6 +57,12 @@ CSRCS		= \
 		$(NULL)
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CSRCS		= \
+		sydney_audio_os2.c \
+		$(NULL)
+endif
+
 ifeq ($(OS_ARCH),Darwin)
 CSRCS		= \
 		sydney_audio_mac.c \

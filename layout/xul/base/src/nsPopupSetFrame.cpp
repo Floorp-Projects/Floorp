@@ -92,7 +92,7 @@ nsPopupSetFrame::GetType() const
 
 NS_IMETHODIMP
 nsPopupSetFrame::AppendFrames(nsIAtom*        aListName,
-                              nsIFrame*       aFrameList)
+                              nsFrameList&    aFrameList)
 {
   if (aListName == nsGkAtoms::popupList) {
     return AddPopupFrameList(aFrameList);
@@ -113,7 +113,7 @@ nsPopupSetFrame::RemoveFrame(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsPopupSetFrame::InsertFrames(nsIAtom*        aListName,
                               nsIFrame*       aPrevFrame,
-                              nsIFrame*       aFrameList)
+                              nsFrameList&    aFrameList)
 {
   if (aListName == nsGkAtoms::popupList) {
     return AddPopupFrameList(aFrameList);
@@ -123,7 +123,7 @@ nsPopupSetFrame::InsertFrames(nsIAtom*        aListName,
 
 NS_IMETHODIMP
 nsPopupSetFrame::SetInitialChildList(nsIAtom*        aListName,
-                                     nsIFrame*       aChildList)
+                                     nsFrameList&    aChildList)
 {
   if (aListName == nsGkAtoms::popupList) {
     return AddPopupFrameList(aChildList);
@@ -263,12 +263,13 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
 }
 
 nsresult
-nsPopupSetFrame::AddPopupFrameList(nsIFrame* aPopupFrameList)
+nsPopupSetFrame::AddPopupFrameList(nsFrameList& aPopupFrameList)
 {
-  for (nsIFrame* kid = aPopupFrameList; kid; kid = kid->GetNextSibling()) {
-    nsresult rv = AddPopupFrame(kid);
+  for (nsFrameList::Enumerator e(aPopupFrameList); !e.AtEnd(); e.Next()) {
+    nsresult rv = AddPopupFrame(e.get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  aPopupFrameList.Clear();
   return NS_OK;
 }
 

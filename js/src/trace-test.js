@@ -28,7 +28,7 @@ if (!('gReportSummary' in this))
 var testName = null;
 if ("arguments" in this && arguments.length > 0)
   testName = arguments[0];
-var fails = [], passes=[];
+var fails = [], passes = [];
 
 function jitstatHandler(f)
 {
@@ -3660,6 +3660,51 @@ function testComparisons()
 testComparisons.expected = "no failures reported!";
 test(testComparisons);
 
+function testBug504520() {
+    // A bug involving comparisons.
+    var arr = [1/0, 1/0, 1/0, 1/0, 1/0, 0];
+    assertEq(arr.length > RUNLOOP, true);
+
+    var s = '';
+    for (var i = 0; i < arr.length; i++)
+        arr[i] >= 1/0 ? null : (s += i);
+    assertEq(s, '5');
+}
+test(testBug504520);
+
+function testBug504520Harder() {
+    // test 1024 similar cases
+    var vals = [1/0, -1/0, 0, 0/0];
+    var ops = ["===", "!==", "==", "!=", "<", ">", "<=", ">="];
+    for each (var x in vals) {
+        for each (var y in vals) {
+            for each (var op in ops) {
+                for each (var z in vals) {
+                    // Assume eval is correct. This depends on the global
+                    // Infinity property not having been reassigned.
+                    var xz = eval(x + op + z);
+                    var yz = eval(y + op + z);
+
+                    var arr = [x, x, x, x, x, y];
+                    assertEq(arr.length > RUNLOOP, true);
+                    var expected = [xz, xz, xz, xz, xz, yz];
+
+                    // ?: looks superfluous but that's what we're testing here
+                    var fun = eval(
+                        '(function (arr, results) {\n' +
+                        '    for (let i = 0; i < arr.length; i++)\n' +
+                        '        results.push(arr[i]' + op + z + ' ? "true" : "false");\n' +
+                        '});\n');
+                    var actual = [];
+                    fun(arr, actual);
+                    assertEq("" + actual, "" + expected);
+                }
+            }
+        }
+    }
+}
+test(testBug504520Harder);
+
 function testCaseAbort()
 {
   var four = "4";
@@ -5405,6 +5450,112 @@ function testDivisionWithNegative1() {
 }
 testDivisionWithNegative1.expected = -Infinity;
 test(testDivisionWithNegative1);
+
+function testInt32ToId()
+{
+  // Ensure that a property which is a negative integer that does not fit in a
+  // jsval is properly detected by the 'in' operator.
+  var obj = { "-1073741828": 17 };
+  var index = -1073741819;
+  var a = [];
+  for (var i = 0; i < 10; i++)
+  {
+    a.push(index in obj);
+    index--;
+  }
+
+  // Ensure that a property which is a negative integer that does not fit in a
+  // jsval is properly *not* detected by the 'in' operator.  In this case
+  // wrongly applying INT_TO_JSID to -2147483648 will shift off the sign bit
+  // (the only bit set in that number) and bitwise-or that value with 1,
+  // producing jsid(1) -- which actually represents "0", not "-2147483648".
+  // Thus 'in' will report a "-2147483648" property when none exists, because
+  // it thinks the request was really whether the object had property "0".
+  var obj2 = { 0: 17 };
+  var b = [];
+  var index = -(1 << 28);
+  for (var i = 0; i < 10; i++)
+  {
+    b.push(index in obj2);
+    index = index - (1 << 28);
+  }
+
+  return a.join(",") + b.join(",");
+}
+testInt32ToId.expected =
+  "false,false,false,false,false,false,false,false,false,true" +
+  "false,false,false,false,false,false,false,false,false,false";
+testInt32ToId.jitstats = {
+  sideExitIntoInterpreter: 2
+};
+test(testInt32ToId);
+
+function testOwnPropertyWithInOperator()
+{
+  var o = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6 };
+  var a = [];
+  for (var i = 0; i < 7; i++)
+    a.push(i in o);
+  return a.join(",");
+}
+testOwnPropertyWithInOperator.expected = "true,true,true,true,true,true,true";
+testOwnPropertyWithInOperator.jitstats = {
+  sideExitIntoInterpreter: 1
+};
+test(testOwnPropertyWithInOperator);
+
+function testBug501690() {
+    // Property cache assertion when 3 objects along a prototype chain have the same shape.
+    function B(){}
+    B.prototype = {x: 123};
+
+    function D(){}
+    D.prototype = new B;
+    D.prototype.x = 1;    // [1] shapeOf(B.prototype) == shapeOf(D.prototype)
+
+    arr = [new D, new D, new D, D.prototype];  // [2] all the same shape
+    for (var i = 0; i < 4; i++)
+        assertEq(arr[i].x, 1);  // same kshape [2], same vshape [1]
+}
+test(testBug501690);
+
+function testObjectVsPrototype() {
+    function D() {}
+    var b = D.prototype = {x: 1};
+    var d = new D;
+    var arr = [b, b, b, d];
+    for (var i = 0; i < 4; i++)
+        arr[i].x = i;
+
+    d.y = 12;
+    assertEq(d.x, 3);
+}
+test(testObjectVsPrototype);
+
+function testEliminatedGuardWithinAnchor() {
+    for (let i = 0; i < 5; ++i) { i / (i * i); }
+    return "ok";
+}
+testEliminatedGuardWithinAnchor.expected = "ok";
+testOwnPropertyWithInOperator.jitstats = {
+  sideExitIntoInterpreter: 3
+};
+test(testEliminatedGuardWithinAnchor);
+
+function testNativeSetter() {
+    var re = /foo/;
+    var N = RUNLOOP + 10;
+    for (var i = 0; i < N; i++)
+        re.lastIndex = i;
+    assertEq(re.lastIndex, N - 1);
+}
+testNativeSetter.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 1,
+    sideExitIntoInterpreter: 1
+};
+test(testNativeSetter);
 
 /*****************************************************************************
  *                                                                           *

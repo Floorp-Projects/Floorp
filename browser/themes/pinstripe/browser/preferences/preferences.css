@@ -39,14 +39,6 @@
 # ***** END LICENSE BLOCK *****
 */
 
-.prefWindow-dlgbuttons {
-  margin: 0 12px 8px;
-}
-
-#BrowserPreferences .prefWindow-dlgbuttons {
-  padding-top: 0 !important;
-}
-
 .windowDialog {
   padding: 12px;
   font: -moz-dialog;
@@ -54,35 +46,6 @@
 
 .paneSelector {
   list-style-image: url("chrome://browser/skin/preferences/Options.png");
-  padding: 1px 4px;
-  -moz-appearance: -moz-mac-unified-toolbar;
-  margin: 0;
-}
-
-radio[pane] {
-  border: solid transparent;
-  border-width: 0 2px;
-  padding: 5px 4px 3px;
-  margin: 0;
-  -moz-appearance: none;
-  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
-}
-
-radio[pane]:active:hover {
-  text-shadow: none;
-}
-
-radio[pane][selected="true"] {
-  -moz-border-image: url("chrome://browser/skin/preferences/panebutton-active.png") 0 2 repeat stretch;
-}
-
-#BrowserPreferences:not([active="true"]) radio[pane][selected="true"] {
-  -moz-border-image: url("chrome://browser/skin/preferences/panebutton-inactive.png") 0 2 repeat stretch;
-}
-
-.paneButtonLabel {
-  margin: 0;
-  padding: 0;
 }
 
 /* ----- GENERAL BUTTON ----- */
@@ -197,8 +160,9 @@ tabpanels {
 }
 
 caption {
-  border-bottom: 1px solid #ECECEC;
-  padding: 4px 4px 0px 0px !important;
+  -moz-padding-start: 5px;
+  padding-top: 4px;
+  padding-bottom: 2px;
 }
 
 #paneMain description,
@@ -217,13 +181,17 @@ caption {
   -moz-box-align: center;
 }
 
-#popupPolicyRow, #enableSoftwareInstallRow, #enableImagesRow {
+#popupPolicyRow,
+#enableSoftwareInstallRow,
+#enableImagesRow {
   margin-bottom: 4px !important;
   padding-bottom: 4px !important;
   border-bottom: 1px solid #ccc;
 }
 
-#browserUseCurrent, #browserUseBookmark, #browserUseBlank {
+#browserUseCurrent,
+#browserUseBookmark,
+#browserUseBlank {
   margin-top: 10px;
 }
 

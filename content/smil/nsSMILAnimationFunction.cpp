@@ -407,9 +407,13 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
 
   // Handle CALC_DISCRETE separately, because it's simple.
   if (GetCalcMode() == CALC_DISCRETE) {
-    PRUint32 index = IsToAnimation() ? 0 :
-      (PRUint32) floor(simpleProgress * (aValues.Length()));
-    aResult = aValues[index];
+    if (IsToAnimation()) {
+      // Two discrete values: our base value, and the val in our array
+      aResult = (simpleProgress < 0.5f) ? aBaseValue : aValues[0];
+    } else {
+      PRUint32 index = (PRUint32) floor(simpleProgress * (aValues.Length()));
+      aResult = aValues[index];
+    }
     return NS_OK;
   }
 
@@ -607,13 +611,11 @@ nsSMILAnimationFunction::ScaleIntervalProgress(double& aProgress,
   if (!HasAttr(nsGkAtoms::keySplines))
     return;
 
-  NS_ASSERTION(aIntervalIndex >= 0 &&
-               aIntervalIndex < (PRUint32)mKeySplines.Length(),
+  NS_ASSERTION(aIntervalIndex < (PRUint32)mKeySplines.Length(),
                "Invalid interval index.");
   NS_ASSERTION(aNumIntervals >= 1, "Invalid number of intervals.");
 
-  if (aIntervalIndex < 0 ||
-      aIntervalIndex >= (PRUint32)mKeySplines.Length() ||
+  if (aIntervalIndex >= (PRUint32)mKeySplines.Length() ||
       aNumIntervals < 1)
     return;
 

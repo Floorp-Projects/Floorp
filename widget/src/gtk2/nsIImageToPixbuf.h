@@ -44,17 +44,17 @@
 { 0xdfa4ac93, 0x83f2, 0x4ab8, \
   { 0x9b, 0x2a, 0x0f, 0xf7, 0x02, 0x2a, 0xeb, 0xe2 } }
 
-class nsIImage;
+class imgIContainer;
 typedef struct _GdkPixbuf GdkPixbuf;
 
 /**
- * An interface that allows converting an nsIImage to a GdkPixbuf*.
+ * An interface that allows converting the current frame of an imgIContainer to a GdkPixbuf*.
  */
 class nsIImageToPixbuf : public nsISupports {
     public:
         NS_DECLARE_STATIC_IID_ACCESSOR(NSIIMAGETOPIXBUF_IID)
 
-        NS_IMETHOD_(GdkPixbuf*) ConvertImageToPixbuf(nsIImage* aImage) = 0;
+        NS_IMETHOD_(GdkPixbuf*) ConvertImageToPixbuf(imgIContainer* aImage) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIImageToPixbuf, NSIIMAGETOPIXBUF_IID)

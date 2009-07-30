@@ -54,6 +54,7 @@
 #include "nsPlacesIndexes.h"
 #include "nsPlacesTriggers.h"
 #include "nsPlacesMacros.h"
+#include "SQLFunctions.h"
 
 #include "nsIArray.h"
 #include "nsTArray.h"
@@ -89,19 +90,17 @@
 #include "nsIIDNService.h"
 #include "nsIClassInfoImpl.h"
 #include "nsThreadUtils.h"
-
-#include "mozIStorageConnection.h"
-#include "mozIStorageFunction.h"
-#include "mozIStoragePendingStatement.h"
-#include "mozIStorageService.h"
-#include "mozIStorageStatement.h"
-#include "mozIStorageValueArray.h"
-#include "mozStorageCID.h"
-#include "mozStorageHelper.h"
-#include "mozIStorageError.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "mozilla/storage.h"
+
+#ifdef MOZ_XUL
+#include "nsIAutoCompleteInput.h"
+#include "nsIAutoCompletePopup.h"
+#endif
 
 #include "nsMathUtils.h" // for NS_ceilf()
+
+using namespace mozilla::places;
 
 // Microsecond timeout for "recent" events such as typed and bookmark following.
 // If you typed it more than this time ago, it's not recent.
@@ -124,20 +123,6 @@
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
-#define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
-#define PREF_AUTOCOMPLETE_MATCH_BEHAVIOR        "urlbar.matchBehavior"
-#define PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT     "urlbar.filter.javascript"
-#define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
-#define PREF_AUTOCOMPLETE_MAX_RICH_RESULTS      "urlbar.maxRichResults"
-#define PREF_AUTOCOMPLETE_DEFAULT_BEHAVIOR      "urlbar.default.behavior"
-#define PREF_AUTOCOMPLETE_RESTRICT_HISTORY      "urlbar.restrict.history"
-#define PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK     "urlbar.restrict.bookmark"
-#define PREF_AUTOCOMPLETE_RESTRICT_TAG          "urlbar.restrict.tag"
-#define PREF_AUTOCOMPLETE_MATCH_TITLE           "urlbar.match.title"
-#define PREF_AUTOCOMPLETE_MATCH_URL             "urlbar.match.url"
-#define PREF_AUTOCOMPLETE_RESTRICT_TYPED        "urlbar.restrict.typed"
-#define PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE     "urlbar.search.chunkSize"
-#define PREF_AUTOCOMPLETE_SEARCH_TIMEOUT        "urlbar.search.timeout"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
 #define PREF_FRECENCY_NUM_VISITS                "places.frecency.numVisits"
 #define PREF_FRECENCY_FIRST_BUCKET_CUTOFF       "places.frecency.firstBucketCutoff"
@@ -159,6 +144,8 @@
 #define PREF_FRECENCY_DEFAULT_VISIT_BONUS       "places.frecency.defaultVisitBonus"
 #define PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS  "places.frecency.unvisitedBookmarkBonus"
 #define PREF_FRECENCY_UNVISITED_TYPED_BONUS     "places.frecency.unvisitedTypedBonus"
+
+#define PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC "places-autocomplete-feedback-updated"
 
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
@@ -239,10 +226,6 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsICharsetResolver)
   NS_INTERFACE_MAP_ENTRY(nsPIPlacesDatabase)
   NS_INTERFACE_MAP_ENTRY(nsPIPlacesHistoryListenersNotifier)
-#ifdef MOZ_XUL
-  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
-  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSimpleResultListener)
-#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryService)
   NS_IMPL_QUERY_CLASSINFO(nsNavHistory)
 NS_INTERFACE_MAP_END
@@ -366,21 +349,6 @@ const PRInt32 nsNavHistory::kGetInfoIndex_ItemId = 8;
 const PRInt32 nsNavHistory::kGetInfoIndex_ItemDateAdded = 9;
 const PRInt32 nsNavHistory::kGetInfoIndex_ItemLastModified = 10;
 
-const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_FaviconURL = 2;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_ParentId = 3;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_BookmarkTitle = 4;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_Tags = 5;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_VisitCount = 6;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_Typed = 7;
-
-const PRInt32 nsNavHistory::kAutoCompleteBehaviorHistory = 1 << 0;
-const PRInt32 nsNavHistory::kAutoCompleteBehaviorBookmark = 1 << 1;
-const PRInt32 nsNavHistory::kAutoCompleteBehaviorTag = 1 << 2;
-const PRInt32 nsNavHistory::kAutoCompleteBehaviorTitle = 1 << 3;
-const PRInt32 nsNavHistory::kAutoCompleteBehaviorUrl = 1 << 4;
-const PRInt32 nsNavHistory::kAutoCompleteBehaviorTyped = 1 << 5;
 
 static const char* gQuitApplicationGrantedMessage = "quit-application-granted";
 static const char* gXpcomShutdown = "xpcom-shutdown";
@@ -424,21 +392,6 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
-                               mAutoCompleteEnabled(PR_TRUE),
-                               mAutoCompleteMatchBehavior(MATCH_BOUNDARY_ANYWHERE),
-                               mAutoCompleteMaxResults(25),
-                               mAutoCompleteRestrictHistory(NS_LITERAL_STRING("^")),
-                               mAutoCompleteRestrictBookmark(NS_LITERAL_STRING("*")),
-                               mAutoCompleteRestrictTag(NS_LITERAL_STRING("+")),
-                               mAutoCompleteMatchTitle(NS_LITERAL_STRING("#")),
-                               mAutoCompleteMatchUrl(NS_LITERAL_STRING("@")),
-                               mAutoCompleteRestrictTyped(NS_LITERAL_STRING("~")),
-                               mAutoCompleteSearchChunkSize(100),
-                               mAutoCompleteSearchTimeout(100),
-                               mAutoCompleteDefaultBehavior(0),
-                               mAutoCompleteCurrentBehavior(0),
-                               mPreviousChunkOffset(-1),
-                               mAutoCompleteFinishedSearch(PR_FALSE),
                                mExpireDaysMin(0),
                                mExpireDaysMax(0),
                                mExpireSites(0),
@@ -519,11 +472,6 @@ nsNavHistory::Init()
   rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_XUL
-  rv = InitAutoComplete();
-  NS_ENSURE_SUCCESS(rv, rv);
-#endif
-
   // extract the last session ID so we know where to pick up. There is no index
   // over sessions so the naive statement "SELECT MAX(session) FROM
   // moz_historyvisits" won't have good performance.
@@ -565,19 +513,6 @@ nsNavHistory::Init()
 
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
-    pbi->AddObserver(PREF_AUTOCOMPLETE_ENABLED, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_DEFAULT_BEHAVIOR, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_HISTORY, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_TAG, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_TITLE, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_URL, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_TYPED, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
@@ -1151,11 +1086,15 @@ nsNavHistory::InitViews()
 nsresult
 nsNavHistory::InitFunctions()
 {
-  nsresult rv;
+  nsCOMPtr<mozIStorageFunction> func =
+    new mozStorageFunctionGetUnreversedHost;
+  NS_ENSURE_TRUE(func, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = mDBConn->CreateFunction(
+    NS_LITERAL_CSTRING("get_unreversed_host"), 1, func
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBConn->CreateFunction(
-      NS_LITERAL_CSTRING("get_unreversed_host"), 1, 
-      new mozStorageFunctionGetUnreversedHost);
+  rv = MatchAutoCompleteFunction::create(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2146,62 +2085,6 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   if (NS_FAILED(mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_SITES,
                                         &mExpireSites)))
     mExpireSites = EXPIRATION_CAP_SITES;
-  
-#ifdef MOZ_XUL
-  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ENABLED, &mAutoCompleteEnabled);
-
-  PRInt32 matchBehavior = 1;
-  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR,
-                          &matchBehavior);
-  switch (matchBehavior) {
-    case 0:
-      mAutoCompleteMatchBehavior = MATCH_ANYWHERE;
-      break;
-    case 2:
-      mAutoCompleteMatchBehavior = MATCH_BOUNDARY;
-      break;
-    case 3:
-      mAutoCompleteMatchBehavior = MATCH_BEGINNING;
-      break;
-    case 1:
-    default:
-      mAutoCompleteMatchBehavior = MATCH_BOUNDARY_ANYWHERE;
-      break;
-  }
-
-  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT,
-                           &mAutoCompleteFilterJavascript);
-  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS,
-                          &mAutoCompleteMaxResults);
-  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE,
-                          &mAutoCompleteSearchChunkSize);
-  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT,
-                          &mAutoCompleteSearchTimeout);
-  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_DEFAULT_BEHAVIOR,
-                          &mAutoCompleteDefaultBehavior);
-  nsXPIDLCString prefStr;
-  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_HISTORY,
-                           getter_Copies(prefStr));
-  CopyUTF8toUTF16(prefStr, mAutoCompleteRestrictHistory);
-  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK,
-                           getter_Copies(prefStr));
-  CopyUTF8toUTF16(prefStr, mAutoCompleteRestrictBookmark);
-  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_TAG,
-                           getter_Copies(prefStr));
-  CopyUTF8toUTF16(prefStr, mAutoCompleteRestrictTag);
-  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_MATCH_TITLE,
-                           getter_Copies(prefStr));
-  CopyUTF8toUTF16(prefStr, mAutoCompleteMatchTitle);
-  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_MATCH_URL,
-                           getter_Copies(prefStr));
-  CopyUTF8toUTF16(prefStr, mAutoCompleteMatchUrl);
-  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_TYPED,
-                           getter_Copies(prefStr));
-  CopyUTF8toUTF16(prefStr, mAutoCompleteRestrictTyped);
-
-  // Clear out the search on any pref change to invalidate cached search
-  mCurrentSearchString = EmptyString();
-#endif
 
   // get the frecency prefs
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
@@ -3563,9 +3446,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
           // From start of epoch
           sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
             "(datetime(0, 'unixepoch')*1000000)");
-          // To start of 6 months ago
+          // To start of 6 months ago ( 5 months + this month).
           sqlFragmentContainerEndTime = NS_LITERAL_CSTRING(
-            "(strftime('%s','now','localtime','start of day','-6 months','utc')*1000000)");
+            "(strftime('%s','now','localtime','start of month','-5 months','utc')*1000000)");
           // Search for the same timeframe.
           sqlFragmentSearchBeginTime = sqlFragmentContainerBeginTime;
           sqlFragmentSearchEndTime = sqlFragmentContainerEndTime;
@@ -3577,6 +3460,10 @@ PlacesSQLQueryBuilder::SelectAsDay()
         PRExplodedTime tm;
         PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &tm);
         PRUint16 currentYear = tm.tm_year;
+        // Set day before month, setting month without day could cause issues.
+        // For example setting month to February when today is 30, since
+        // February has not 30 days, will return March instead.
+        tm.tm_mday = 1;
         tm.tm_month -= MonthIndex;
         PR_NormalizeTime(&tm, PR_LocalTimeParameters);
         // tm_month starts from 0 while GetMonthName expects a 1-based index.
@@ -5657,10 +5544,6 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       mIdleTimer->Cancel();
       mIdleTimer = nsnull;
     }
-    if (mAutoCompleteTimer) {
-      mAutoCompleteTimer->Cancel();
-      mAutoCompleteTimer = nsnull;
-    }
     nsresult rv;
     nsCOMPtr<nsIPrefService> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
@@ -5682,7 +5565,6 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     NS_ENSURE_SUCCESS(rv, rv);
     observerService->RemoveObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC);
     observerService->RemoveObserver(this, gIdleDaily);
-    observerService->RemoveObserver(this, gAutoCompleteFeedback);
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationGrantedMessage);
   }
@@ -7746,6 +7628,131 @@ nsNavHistory::FixInvalidFrecencies()
 }
 
 
+#ifdef MOZ_XUL
+
+namespace {
+
+// Used to notify a topic to system observers on async execute completion.
+class AutoCompleteStatementCallbackNotifier : public mozIStorageStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+};
+
+NS_IMPL_ISUPPORTS1(AutoCompleteStatementCallbackNotifier,
+                   mozIStorageStatementCallback)
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
+{
+  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
+    return NS_ERROR_UNEXPECTED;
+
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = observerService->NotifyObservers(nsnull,
+                                        PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC,
+                                        nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleError(mozIStorageError *aError)
+{
+#ifdef DEBUG
+  PRInt32 result;
+  nsresult rv = aError->GetResult(&result);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString message;
+  rv = aError->GetMessage(message);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString warnMsg;
+  warnMsg.Append("An error occured while executing an async statement: ");
+  warnMsg.Append(result);
+  warnMsg.Append(" ");
+  warnMsg.Append(message);
+  NS_WARNING(warnMsg.get());
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AutoCompleteStatementCallbackNotifier::HandleResult(mozIStorageResultSet *aResultSet)
+{
+  NS_ASSERTION(PR_FALSE, "You cannot use AutoCompleteStatementCallbackNotifier to get async statements resultset");
+  return NS_OK;
+}
+
+} // anonymous namespace
+
+nsresult
+nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
+                                   nsIAutoCompleteController *aController)
+{
+  // We do not track user choices in the location bar in private browsing mode.
+  if (InPrivateBrowsingMode())
+    return NS_OK;
+
+  mozIStorageStatement *stmt = GetDBFeedbackIncrease();
+  mozStorageStatementScoper scope(stmt);
+
+  nsAutoString input;
+  nsresult rv = aController->GetSearchString(input);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindStringParameter(0, input);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString url;
+  rv = aController->GetValueAt(aIndex, url);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindStringParameter(1, url);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We do the update asynchronously and we do not care about failures.
+  nsCOMPtr<AutoCompleteStatementCallbackNotifier> callback =
+    new AutoCompleteStatementCallbackNotifier();
+  nsCOMPtr<mozIStoragePendingStatement> canceler;
+  rv = stmt->ExecuteAsync(callback, getter_AddRefs(canceler));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+mozIStorageStatement*
+nsNavHistory::GetDBFeedbackIncrease()
+{
+  if (mDBFeedbackIncrease)
+    return mDBFeedbackIncrease;
+
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    // Leverage the PRIMARY KEY (place_id, input) to insert/update entries.
+    "INSERT OR REPLACE INTO moz_inputhistory "
+      // use_count will asymptotically approach the max of 10.
+      "SELECT h.id, IFNULL(i.input, ?1), IFNULL(i.use_count, 0) * .9 + 1 "
+      "FROM moz_places_temp h "
+      "LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = ?1 "
+      "WHERE url = ?2 "
+      "UNION ALL "
+      "SELECT h.id, IFNULL(i.input, ?1), IFNULL(i.use_count, 0) * .9 + 1 "
+      "FROM moz_places h "
+      "LEFT JOIN moz_inputhistory i ON i.place_id = h.id AND i.input = ?1 "
+      "WHERE url = ?2 "
+        "AND h.id NOT IN (SELECT id FROM moz_places_temp)"),
+    getter_AddRefs(mDBFeedbackIncrease));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBFeedbackIncrease;
+}
+#endif
+
+
 nsICollation *
 nsNavHistory::GetCollation()
 {
@@ -7901,6 +7908,9 @@ nsNavHistory::GetDBBookmarkToUrlResult()
 nsresult
 nsNavHistory::FinalizeStatements() {
   mozIStorageStatement* stmts[] = {
+#ifdef MOZ_XUL
+    mDBFeedbackIncrease,
+#endif
     mDBGetURLPageInfo,
     mDBGetIdPageInfo,
     mDBRecentVisitOfURL,
@@ -7920,16 +7930,6 @@ nsNavHistory::FinalizeStatements() {
     mDBUpdateFrecencyAndHidden,
     mDBGetPlaceVisitStats,
     mDBFullVisitCount,
-    mDBCurrentQuery,
-    mDBAutoCompleteQuery,
-    mDBAutoCompleteTypedQuery,
-    mDBAutoCompleteHistoryQuery,
-    mDBAutoCompleteStarQuery,
-    mDBAutoCompleteTagsQuery,
-    mDBPreviousQuery,
-    mDBAdaptiveQuery,
-    mDBKeywordQuery,
-    mDBFeedbackIncrease
   };
 
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(stmts); i++) {

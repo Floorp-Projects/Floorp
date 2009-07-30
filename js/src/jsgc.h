@@ -47,6 +47,7 @@
 #include "jsdhash.h"
 #include "jsbit.h"
 #include "jsutil.h"
+#include "jstask.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -167,8 +168,17 @@ struct JSGCThing {
  * can potentially trigger GC. This will ensure that GC tracing never sees junk
  * values stored in the partially initialized thing.
  */
-extern void *
-js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes);
+extern JSObject*
+js_NewGCObject(JSContext *cx, uintN flags);
+
+extern JSString*
+js_NewGCString(JSContext *cx, uintN flags);
+
+extern JSFunction*
+js_NewGCFunction(JSContext *cx, uintN flags);
+
+extern JSXML*
+js_NewGCXML(JSContext *cx, uintN flags);
 
 /*
  * Allocate a new double jsval and store the result in *vp. vp must be a root.
@@ -274,10 +284,6 @@ typedef enum JSGCInvocationKind {
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
 
-/* Call this after succesful malloc of memory for GC-related things. */
-extern void
-js_UpdateMallocCounter(JSContext *cx, size_t nbytes);
-
 typedef struct JSGCArenaInfo JSGCArenaInfo;
 typedef struct JSGCArenaList JSGCArenaList;
 typedef struct JSGCChunkInfo JSGCChunkInfo;
@@ -303,18 +309,6 @@ typedef struct JSGCDoubleArenaList {
     jsbitmap        *nextDoubleFlags;   /* bitmask with flags to check for free
                                            things */
 } JSGCDoubleArenaList;
-
-typedef struct JSGCFreeListSet JSGCFreeListSet;
-
-struct JSGCFreeListSet {
-    JSGCThing           *array[GC_NUM_FREELISTS];
-    JSGCFreeListSet     *link;
-};
-
-extern const JSGCFreeListSet js_GCEmptyFreeListSet;
-
-extern void
-js_RevokeGCLocalFreeLists(JSContext *cx);
 
 extern void
 js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
@@ -347,6 +341,28 @@ js_AddAsGCBytes(JSContext *cx, size_t sz);
 
 extern void
 js_RemoveAsGCBytes(JSRuntime* rt, size_t sz);
+
+#ifdef JS_THREADSAFE
+class JSFreePointerListTask : public JSBackgroundTask {
+    void *head;
+  public:
+    JSFreePointerListTask() : head(NULL) {}
+
+    void add(void* ptr) {
+        *(void**)ptr = head;
+        head = ptr;
+    }
+
+    void run() {
+        void *ptr = head;
+        while (ptr) {
+            void *next = *(void **)ptr;
+            js_free(ptr);
+            ptr = next;
+        }
+    }
+};
+#endif
 
 /*
  * Free the chars held by str when it is finalized by the GC. When type is

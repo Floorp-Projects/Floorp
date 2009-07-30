@@ -123,6 +123,8 @@ public:
 
   virtual PRBool CanContinueTextRun() const;
 
+  virtual void PullOverflowsFromPrevInFlow();
+
   // Take all of the frames away from this frame. The caller is
   // presumed to keep them alive.
   void StealAllFrames() {
@@ -222,6 +224,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
+  virtual void PullOverflowsFromPrevInFlow();
+
   // Take frames starting at aFrame until the end of the frame-list
   // away from this frame. The caller is presumed to keep them alive.
   void StealFramesFrom(nsIFrame* aFrame);
@@ -253,12 +257,12 @@ public:
   virtual void Destroy();
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
@@ -268,7 +272,7 @@ public:
 
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

@@ -613,7 +613,7 @@ class nsXULAppInfo : public nsIXULAppInfo,
                      public nsICrashReporter,
 #endif
                      public nsIXULRuntime
-                     
+
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -1019,7 +1019,7 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
 #define APPINFO_CID \
   { 0x95d89e3e, 0xa169, 0x41a3, { 0x8e, 0x56, 0x71, 0x99, 0x78, 0xe1, 0x5b, 0x12 } }
 
-static nsModuleComponentInfo kComponents[] =
+static const nsModuleComponentInfo kComponents[] =
 {
   {
     "nsXULAppInfo",
@@ -1448,13 +1448,7 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
   if (!bundleURL)
     return NS_ERROR_FAILURE;
 
-  FSRef fileRef;
-  if (!CFURLGetFSRef(bundleURL, &fileRef)) {
-    CFRelease(bundleURL);
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = lfm->InitWithFSRef(&fileRef);
+  rv = lfm->InitWithCFURL(bundleURL);
   CFRelease(bundleURL);
 
   if (NS_FAILED(rv))

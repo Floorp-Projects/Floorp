@@ -596,11 +596,14 @@ function addImage(url, type, alt, elem, isBg)
 
 function grabAll(elem)
 {
-  // check for background images, any node may have one
-  var ComputedStyle = elem.ownerDocument.defaultView.getComputedStyle(elem, "");
-  var url = ComputedStyle && ComputedStyle.getPropertyCSSValue("background-image");
-  if (url && url.primitiveType == CSSPrimitiveValue.CSS_URI)
-    addImage(url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true);
+  // check for background images, any node may have multiple
+  var computedStyle = elem.ownerDocument.defaultView.getComputedStyle(elem, "");
+  if (computedStyle) {
+    Array.forEach(computedStyle.getPropertyCSSValue("background-image"), function (url) {
+      if (url.primitiveType == CSSPrimitiveValue.CSS_URI)
+        addImage(url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true);
+    });
+  }
 
   // one swi^H^H^Hif-else to rule them all
   if (elem instanceof HTMLImageElement)

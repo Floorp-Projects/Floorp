@@ -68,7 +68,7 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(nsIAtom*        aListName,
-                      nsIFrame*       aChildList);
+                      nsFrameList&    aChildList);
 
   virtual nsresult
   ChildListChanged(PRInt32 aModType);

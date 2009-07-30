@@ -469,11 +469,18 @@ typedef enum JSCharType {
 #define JS_ISFORMAT(c) (((1 << JSCT_FORMAT) >> JS_CTYPE(c)) & 1)
 
 /*
- * Per ECMA-262 15.10.2.6, these characters are the only ones that make up a
- * "word", as far as a RegExp is concerned.  If we want a Unicode-friendlier
- * definition of "word", we should rename this macro to something regexp-y.
+ * This table is used in JS_ISWORD.  The definition has external linkage to
+ * allow the raw table data to be used in the regular expression compiler.
  */
-#define JS_ISWORD(c)    ((c) < 128 && (isalnum(c) || (c) == '_'))
+extern const bool js_alnum[];
+
+/*
+ * This macro performs testing for the regular expression word class \w, which
+ * is defined by ECMA-262 15.10.2.6 to be [0-9A-Z_a-z].  If we want a
+ * Unicode-friendlier definition of "word", we should rename this macro to
+ * something regexp-y.
+ */
+#define JS_ISWORD(c)    ((c) < 128 && js_alnum[(c)])
 
 #define JS_ISIDSTART(c) (JS_ISLETTER(c) || (c) == '_' || (c) == '$')
 #define JS_ISIDENT(c)   (JS_ISIDPART(c) || (c) == '_' || (c) == '$')
@@ -730,6 +737,9 @@ js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str);
 extern JSBool
 js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval);
+
+extern JSBool
+js_str_toString(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
 js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,

@@ -1,0 +1,133 @@
+<html>
+
+<head>
+  <title>Accessible events testing for document</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function changeIframeSrc(aIdentifier, aURL)
+    {
+      this.DOMNode = getNode(aIdentifier);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, getAccessible(this.DOMNode))
+      ];
+
+      this.invoke = function changeIframeSrc_invoke()
+      {
+        this.DOMNode.src = aURL;
+      }
+
+      this.getID = function changeIframeSrc_getID()
+      {
+        return "change iframe src on " + aURL;
+      }
+    }
+
+    function openDialogWnd(aURL)
+    {
+      // Get application root accessible.
+      var docAcc = getAccessible(document);
+      while (docAcc) {
+        this.mRootAcc = docAcc;
+        docAcc = docAcc.parent;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.mRootAcc)
+      ];
+
+      this.invoke = function openDialogWnd_invoke()
+      {
+        this.mDialog = window.openDialog(aURL);
+      }
+
+      this.check = function openDialogWnd_check()
+      {
+        var accTree = {
+          role: ROLE_APP_ROOT,
+          children: [
+            {
+              role: ROLE_CHROME_WINDOW
+            },
+            {
+              role: ROLE_CHROME_WINDOW
+            }
+          ]
+        };
+
+        testAccessibleTree(this.mRootAcc, accTree);
+
+        this.mDialog.close();
+      }
+
+      this.getID = function openDialogWnd_getID()
+      {
+        return "open dialog '" + aURL + "'";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+
+    var gQueue = null;
+
+    // var gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new changeIframeSrc("iframe", "about:"));
+      gQueue.push(new changeIframeSrc("iframe", "about:buildconfig"));
+      gQueue.push(new openDialogWnd("about:"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=420845"
+     title="Fire event_reorder on any embedded frames/iframes whos document has just loaded">
+    Mozilla Bug 420845
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=506206"
+     title="Fire event_reorder application root accessible">
+    Mozilla Bug 506206
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="testContainer">
+    <iframe id="iframe"></iframe>
+  </div>
+  <div id="eventdump"></div>
+</body>
+</html>

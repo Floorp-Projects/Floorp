@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.66 2009/04/21 22:53:58 julien.pierre.boogz%sun.com Exp $
+ * $Id: crl.c,v 1.67 2009/05/13 22:47:28 julien.pierre.boogz%sun.com Exp $
  */
  
 #include "cert.h"
@@ -3136,6 +3136,7 @@ static SECStatus addCRLToCache(CERTCertDBHandle* dbhandle, SECItem* crl,
         rv = SECFailure;
         /* no need to keep unused CRL around */
         SECITEM_ZfreeItem(entry->crl, PR_TRUE);
+        entry->crl = NULL;
     }
     return rv;
 }
@@ -3206,6 +3207,10 @@ SECStatus cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
             if (!removed)
             {
                 rv = SECFailure;
+		/* leak old entry since we couldn't remove it from the hash table */
+            }
+            else
+            {
                 rv2 = NamedCRLCacheEntry_Destroy(oldEntry);
                 PORT_Assert(SECSuccess == rv2);
             }
@@ -3249,7 +3254,11 @@ SECStatus cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
                 PORT_Assert(removed);
                 if (!removed)
                 {
+		    /* leak old entry since we couldn't remove it from the hash table */
                     rv = SECFailure;
+                }
+                else
+                {
                     rv2 = NamedCRLCacheEntry_Destroy(oldEntry);
                     PORT_Assert(SECSuccess == rv2);
                 }

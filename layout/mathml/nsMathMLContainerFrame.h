@@ -119,12 +119,12 @@ public:
 
   NS_IMETHOD
   AppendFrames(nsIAtom*        aListName,
-               nsIFrame*       aFrameList);
+               nsFrameList&    aFrameList);
 
   NS_IMETHOD
   InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
-               nsIFrame*       aFrameList);
+               nsFrameList&    aFrameList);
 
   NS_IMETHOD
   RemoveFrame(nsIAtom*        aListName,
@@ -398,7 +398,7 @@ public:
   // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames
   NS_IMETHOD
   SetInitialChildList(nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
+                      nsFrameList&    aChildList)
   {
     NS_ASSERTION(!aListName, "unexpected frame list");
     nsresult rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
@@ -409,7 +409,7 @@ public:
 
   NS_IMETHOD
   AppendFrames(nsIAtom*        aListName,
-               nsIFrame*       aFrameList)
+               nsFrameList&    aFrameList)
   {
     NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
                  "unexpected frame list");
@@ -422,7 +422,7 @@ public:
   NS_IMETHOD
   InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
-               nsIFrame*       aFrameList)
+               nsFrameList&    aFrameList)
   {
     NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
                  "unexpected frame list");
@@ -466,7 +466,7 @@ public:
 
   NS_IMETHOD
   SetInitialChildList(nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
+                      nsFrameList&    aChildList)
   {
     NS_ASSERTION(!aListName, "unexpected frame list");
     nsresult rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);
@@ -477,7 +477,7 @@ public:
 
   NS_IMETHOD
   AppendFrames(nsIAtom*        aListName,
-               nsIFrame*       aFrameList)
+               nsFrameList&    aFrameList)
   {
     NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
                  "unexpected frame list");
@@ -490,7 +490,7 @@ public:
   NS_IMETHOD
   InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
-               nsIFrame*       aFrameList)
+               nsFrameList&    aFrameList)
   {
     NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
                  "unexpected frame list");

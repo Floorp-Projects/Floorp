@@ -104,17 +104,16 @@
 
   <popupset id="mainPopupSet">
     <menupopup id="backForwardMenu"
-               chromedir="&locale.dir;"
                onpopupshowing="return FillHistoryMenu(event.target);"
                oncommand="gotoHistoryIndex(event);"
                onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
     <!-- for search and content formfill/pw manager -->
-    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
+    <panel type="autocomplete" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
 
     <!-- for url bar autocomplete -->
-    <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
+    <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
     <panel id="editBookmarkPanel"
            orient="vertical"
@@ -205,8 +204,7 @@
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
            onpopupshown="document.getElementById('identity-popup-more-info-button').focus();"
-           level="top"
-           chromedir="&locale.dir;">
+           level="top">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box">
@@ -242,30 +240,44 @@
       <label crop="center" flex="1" class="tooltip-label"/>
     </tooltip>
 
-    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" ignorekeys="true">
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" level="top">
+      <hbox>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+        <button class="ctrlTab-preview" flex="1"/>
+      </hbox>
       <hbox pack="center">
-        <textbox id="ctrlTab-search"
+        <button id="ctrlTab-showAll" class="ctrlTab-preview" noicon="true"/>
+      </hbox>
+    </panel>
+
+    <panel id="allTabs-panel" hidden="true" norestorefocus="true" ignorekeys="true"
+# XXX: KUI style disabled, because the transparent background slows down
+#      interacting with the panel, esp. the search field.
+#           class="KUI-panel"
+           onmouseover="allTabs._updateTabCloseButton(event);">
+      <hbox id="allTabs-meta" align="center">
+        <spacer flex="1"/>
+        <textbox id="allTabs-filter"
+                 tooltiptext="&allTabs.filter.emptyText;"
                  type="search"
-                 emptytext="&ctrlTab.search.emptyText;"
-                 oncommand="ctrlTab.search();"
-                 onfocus="ctrlTab.sticky = true;"/>
+                 oncommand="allTabs.filter();"/>
+        <spacer flex="1"/>
+        <toolbarbutton class="KUI-panel-closebutton"
+                       oncommand="allTabs.close()"
+                       tooltiptext="&closeCmd.label;"/>
       </hbox>
-      <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-      </hbox>
-      <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-      </hbox>
-      <hbox class="ctrlTab-row">
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-        <vbox class="ctrlTab-thumbnail"/>
-        <hbox flex="1" pack="center"><vbox class="ctrlTab-thumbnail"/></hbox>
-      </hbox>
-      <hbox id="ctrlTab-pages"/>
+      <stack id="allTabs-stack">
+        <box id="allTabs-container"/>
+        <toolbarbutton id="allTabs-tab-close-button"
+                       class="tab-close-button"
+                       oncommand="allTabs.closeTab(event);"
+                       tooltiptext="&closeCmd.label;"
+                       style="visibility:hidden"/>
+      </stack>
     </panel>
   </popupset>
 
@@ -304,18 +316,16 @@
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
                    context="backForwardMenu">
         <toolbarbutton id="back-button" class="toolbarbutton-1"
-                       chromedir="&locale.dir;"
                        label="&backCmd.label;"
                        command="Browser:BackOrBackDuplicate"
                        onclick="checkForMiddleClick(this, event);"
                        tooltiptext="&backButton.tooltip;"/>
         <toolbarbutton id="forward-button" class="toolbarbutton-1"
-                       chromedir="&locale.dir;"
                        label="&forwardCmd.label;"
                        command="Browser:ForwardOrForwardDuplicate"
                        onclick="checkForMiddleClick(this, event);"
                        tooltiptext="&forwardButton.tooltip;"/>
-        <toolbarbutton id="back-forward-dropmarker" type="menu" chromedir="&locale.dir;"
+        <toolbarbutton id="back-forward-dropmarker" type="menu"
                        disabled="true" tooltiptext="&backForwardMenu.tooltip;"
                        onbroadcast="if (this.disabled) this.disabled =
                                       document.getElementById('Browser:Back').hasAttribute('disabled') &amp;&amp;
@@ -323,7 +333,6 @@
           <!-- bug 415444: event.stopPropagation is here for the cloned version of
                this menupopup -->
           <menupopup context=""
-                     chromedir="&locale.dir;"
                      position="after_start"
                      onpopupshowing="return FillHistoryMenu(event.target);"
                      oncommand="gotoHistoryIndex(event); event.stopPropagation();"
@@ -360,7 +369,6 @@
                  bookmarkemptytext="&urlbar.bookmark.emptyText;"
                  historyemptytext="&urlbar.history.emptyText;"
                  noneemptytext="&urlbar.none.emptyText;"
-                 chromedir="&locale.dir;"
                  type="autocomplete"
                  autocompletesearch="history"
                  autocompletepopup="PopupAutoCompleteRichResult"
@@ -370,6 +378,7 @@
                  showimagecolumn="true"
                  enablehistory="true"
                  maxrows="6"
+                 timeout="75"
                  newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value;"
                  ontextentered="this.handleCommand(param);"
@@ -384,7 +393,6 @@
                We only add the identity-box button to the tab order when the location bar
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
-               chromedir="&locale.dir;"
                onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
                onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
             <hbox align="center">
@@ -404,11 +412,11 @@
                     style="-moz-user-focus: none"
                     class="plain urlbar-icon"
                     id="feed-button"
-                    chromedir="&locale.dir;"
                     collapsed="true"
                     tooltiptext="&feedButton.tooltip;"
                     onclick="return FeedHandler.onFeedButtonClick(event);">
               <menupopup position="after_end"
+                         id="feed-menu"
                          onpopupshowing="return FeedHandler.buildFeedList(this);"
                          oncommand="return FeedHandler.subscribeToFeed(null, event);"
                          onclick="checkForMiddleClick(this, event);"/>
@@ -417,7 +425,6 @@
                    class="urlbar-icon"
                    onclick="PlacesStarButton.onClick(event);"/>
             <image id="go-button"
-                   chromedir="&locale.dir;"
                    class="urlbar-icon"
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
@@ -428,7 +435,7 @@
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
                    flex="100" persist="width">
-        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"/>
+        <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"

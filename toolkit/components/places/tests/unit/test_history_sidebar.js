@@ -82,6 +82,19 @@ function add_normalized_visit(aURI, aTime, aDayOffset) {
   return visitId;
 }
 
+function days_for_x_months_ago(aNowObj, aMonths) {
+  var oldTime = new Date();
+  // Set day before month, otherwise we could try to calculate 30 February, or
+  // other not existant days.
+  oldTime.setDate(1);
+  oldTime.setMonth(aNowObj.getMonth() - aMonths);
+  oldTime.setHours(0);
+  oldTime.setMinutes(0);
+  oldTime.setSeconds(0);
+  // Stay larger for eventual timezone issues, add 2 days.
+  return parseInt((aNowObj - oldTime) / (1000*60*60*24)) + 2;
+}
+
 var nowObj = new Date();
 // This test relies on en-US locale
 // Offset is number of days
@@ -90,8 +103,12 @@ var containers = [
   { label: "Yesterday"           , offset: -1                    , visible: true },
   { label: "Last 7 days"         , offset: -3                    , visible: true },
   { label: "This month"          , offset: -8                    , visible: nowObj.getDate() > 8 },
-  { label: ""                    , offset: -nowObj.getDate()-1   , visible: true },
-  { label: "Older than 6 months" , offset: -nowObj.getDate()-186 , visible: true },
+  { label: ""                    , offset: -days_for_x_months_ago(nowObj, 0)   , visible: true },
+  { label: ""                    , offset: -days_for_x_months_ago(nowObj, 1)   , visible: true },
+  { label: ""                    , offset: -days_for_x_months_ago(nowObj, 2)   , visible: true },
+  { label: ""                    , offset: -days_for_x_months_ago(nowObj, 3)   , visible: true },
+  { label: ""                    , offset: -days_for_x_months_ago(nowObj, 4)   , visible: true },
+  { label: "Older than 6 months" , offset: -days_for_x_months_ago(nowObj, 5) , visible: true },
 ];
 
 var visibleContainers = containers.filter(
@@ -130,12 +147,16 @@ function fill_history() {
 
   var cc = root.childCount;
   print("Found containers:");
+  var previousLabels = [];
   for (var i = 0; i < cc; i++) {
     var container = visibleContainers[i];
     var node = root.getChild(i);
     print(node.title);
     if (container.label)
       do_check_eq(node.title, container.label);
+    // Check labels are not repeated.
+    do_check_eq(previousLabels.indexOf(node.title), -1);
+    previousLabels.push(node.title);
   }
   do_check_eq(cc, visibleContainers.length);
   root.containerOpen = false;

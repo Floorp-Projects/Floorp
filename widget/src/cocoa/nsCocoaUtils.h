@@ -141,6 +141,9 @@ class nsCocoaUtils
   // Finds the foremost window that is under the mouse for the current application.
   static NSWindow* FindWindowUnderPoint(NSPoint aPoint);
 
+  // Hides the Menu bar and the Dock. Multiple hide/show requests can be nested.
+  static void HideOSChromeOnScreen(PRBool aShouldHide, NSScreen* aScreen);
+
   static nsIWidget* GetHiddenWindowWidget();
 
   static void PrepareForNativeAppModalDialog();

@@ -18,20 +18,20 @@
 
 /* ::::: Identity Indicator Styling ::::: */
 
-#urlbar[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+#urlbar:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
   -moz-margin-start: 9px;
 }
 
-#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+#identity-box:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
   -moz-margin-start: -7px;
 }
 
-#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+#identity-box:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
   -moz-border-radius: 11px 0 2px 11px / 15px 0 2px 15px;
 }
 
-/* Match #identity-box[chromedir="ltr"]'s -moz-margin-start */
-#identity-popup[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+/* Match #identity-box:-moz-locale-dir(ltr)'s -moz-margin-start */
+#identity-popup:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
   -moz-margin-start: 7px;
 }
 
@@ -63,13 +63,14 @@
   z-index: 10;
 }
 
+/*XXX Bug 473152 - Aero Glass clips panel content
+#allTabs-panel:-moz-system-metric(windows-compositor),*/
 #ctrlTab-panel:-moz-system-metric(windows-compositor) {
   background: transparent;
   -moz-appearance: -moz-win-glass;
   -moz-border-radius: 0;
   border: none;
-  font: "Segoe UI", window;
-  font-weight: normal;
+  font: normal 1.2em "Segoe UI";
   color: black;
   text-shadow: white -1px -1px .5em, white -1px 1px .5em, white 1px 1px .5em, white 1px -1px .5em;
 }

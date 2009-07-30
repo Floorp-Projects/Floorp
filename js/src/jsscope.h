@@ -204,6 +204,7 @@ struct JSScope {
     jsrefcount      nrefs;              /* count of all referencing objects */
     uint32          freeslot;           /* index of next free slot in object */
     uint32          shape;              /* property cache shape identifier */
+    JSScope         *emptyScope;        /* cache for getEmptyScope below */
     uint8           flags;              /* flags, see below */
     int8            hashShift;          /* multiplicative hash shift */
 
@@ -218,12 +219,31 @@ struct JSScope {
     bool createTable(JSContext *cx, bool report);
     bool changeTable(JSContext *cx, int change);
     void reportReadOnlyScope(JSContext *cx);
+    void generateOwnShape(JSContext *cx);
     JSScopeProperty **searchTable(jsid id, bool adding);
     inline JSScopeProperty **search(jsid id, bool adding);
+    JSScope *createEmptyScope(JSContext *cx, JSClass *clasp);
 
   public:
+    /* Create a mutable, owned, empty scope. */
     static JSScope *create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj);
+
     static void destroy(JSContext *cx, JSScope *scope);
+
+    /*
+     * Return an immutable, shareable, empty scope with the same ops as this
+     * and the same freeslot as this had when empty.
+     *
+     * If |this| is the scope of an object |proto|, the resulting scope can be
+     * used the scope of a new object whose prototype is |proto|.
+     */
+    JSScope *getEmptyScope(JSContext *cx, JSClass *clasp) {
+        if (emptyScope) {
+            emptyScope->hold();
+            return emptyScope;
+        }
+        return createEmptyScope(cx, clasp);
+    }
 
     inline void hold();
     inline bool drop(JSContext *cx, JSObject *obj);
@@ -245,6 +265,8 @@ struct JSScope {
 
     void extend(JSContext *cx, JSScopeProperty *sprop);
 
+    void trace(JSTracer *trc);
+
     void brandingShapeChange(JSContext *cx, uint32 slot, jsval v);
     void deletingShapeChange(JSContext *cx, JSScopeProperty *sprop);
     void methodShapeChange(JSContext *cx, uint32 slot, jsval toval);
@@ -262,15 +284,19 @@ struct JSScope {
         MIDDLE_DELETE           = 0x0001,
         SEALED                  = 0x0002,
         BRANDED                 = 0x0004,
-        INDEXED_PROPERTIES      = 0x0008
+        INDEXED_PROPERTIES      = 0x0008,
+        OWN_SHAPE               = 0x0010,
+
+        /*
+         * This flag toggles with each shape-regenerating GC cycle.
+         * See JSRuntime::gcRegenShapesScopeFlag.
+         */
+        SHAPE_REGEN             = 0x0020
     };
 
     bool hadMiddleDelete()      { return flags & MIDDLE_DELETE; }
     void setMiddleDelete()      { flags |= MIDDLE_DELETE; }
     void clearMiddleDelete()    { flags &= ~MIDDLE_DELETE; }
-
-    bool hadIndexedProperties() { return flags & INDEXED_PROPERTIES; }
-    void setIndexedProperties() { flags |= INDEXED_PROPERTIES; }
 
     /*
      * Don't define clearSealed, as it can't be done safely because JS_LOCK_OBJ
@@ -287,7 +313,16 @@ struct JSScope {
      */
     bool branded()              { return flags & BRANDED; }
     void setBranded()           { flags |= BRANDED; }
-    void clearBranded()         { flags &= ~BRANDED; }
+
+    bool hadIndexedProperties() { return flags & INDEXED_PROPERTIES; }
+    void setIndexedProperties() { flags |= INDEXED_PROPERTIES; }
+
+    bool hasOwnShape()          { return flags & OWN_SHAPE; }
+    void setOwnShape()          { flags |= OWN_SHAPE; }
+
+    bool hasRegenFlag(uint8 regenFlag) { return (flags & SHAPE_REGEN) == regenFlag; }
+
+    bool owned()                { return object != NULL; }
 };
 
 #define JS_IS_SCOPE_LOCKED(cx, scope)   JS_IS_TITLE_LOCKED(cx, &(scope)->title)
@@ -468,6 +503,54 @@ JSScope::extend(JSContext *cx, JSScopeProperty *sprop)
     lastProp = sprop;
 }
 
+inline void
+JSScope::trace(JSTracer *trc)
+{
+    JSContext *cx = trc->context;
+    JSScopeProperty *sprop = lastProp;
+    uint8 regenFlag = cx->runtime->gcRegenShapesScopeFlag;
+    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes && hasRegenFlag(regenFlag)) {
+        /*
+         * Either this scope has its own shape, which must be regenerated, or
+         * it must have the same shape as lastProp.
+         */
+        uint32 newShape;
+
+        if (sprop) {
+            if (!(sprop->flags & SPROP_FLAG_SHAPE_REGEN)) {
+                sprop->shape = js_RegenerateShapeForGC(cx);
+                sprop->flags |= SPROP_FLAG_SHAPE_REGEN;
+            }
+            newShape = sprop->shape;
+        }
+        if (!sprop || hasOwnShape()) {
+            newShape = js_RegenerateShapeForGC(cx);
+            JS_ASSERT_IF(sprop, newShape != sprop->shape);
+        }
+        shape = newShape;
+        flags ^= JSScope::SHAPE_REGEN;
+
+        /* Also regenerate the shapes of empty scopes, in case they are not shared. */
+        for (JSScope *empty = emptyScope;
+             empty && empty->hasRegenFlag(regenFlag);
+             empty = empty->emptyScope) {
+            empty->shape = js_RegenerateShapeForGC(cx);
+            empty->flags ^= JSScope::SHAPE_REGEN;
+        }
+    }
+    if (sprop) {
+        JS_ASSERT(has(sprop));
+
+        /* Trace scope's property tree ancestor line. */
+        do {
+            if (hadMiddleDelete() && !has(sprop))
+                continue;
+            sprop->trace(trc);
+        } while ((sprop = sprop->parent) != NULL);
+    }
+}
+
+
 static JS_INLINE bool
 js_GetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
 {
@@ -519,14 +602,6 @@ js_SetSprop(JSContext* cx, JSScopeProperty* sprop, JSObject* obj, jsval* vp)
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
-
-/*
- * These macros used to inline short code sequences, but they grew over time.
- * We retain them for internal backward compatibility, and in case one or both
- * ever shrink to inline-able size.
- */
-#define TRACE_ID(trc, id)                js_TraceId(trc, id)
-#define TRACE_SCOPE_PROPERTY(trc, sprop) sprop->trace(trc)
 
 extern void
 js_TraceId(JSTracer *trc, jsid id);

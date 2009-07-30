@@ -109,7 +109,6 @@
 #include "nsIServiceManager.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "gfxIImageFrame.h"
 #include "nsILookAndFeel.h"
 #include "nsLayoutCID.h"
 #include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
@@ -401,7 +400,7 @@ nsFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
-                                           nsIFrame*       aChildList)
+                                           nsFrameList&    aChildList)
 {
   // XXX This shouldn't be getting called at all, but currently is for backwards
   // compatility reasons...
@@ -409,14 +408,14 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
   NS_ERROR("not a container");
   return NS_ERROR_UNEXPECTED;
 #else
-  NS_ASSERTION(nsnull == aChildList, "not a container");
+  NS_ASSERTION(aChildList.IsEmpty(), "not a container");
   return NS_OK;
 #endif
 }
 
 NS_IMETHODIMP
 nsFrame::AppendFrames(nsIAtom*        aListName,
-                      nsIFrame*       aFrameList)
+                      nsFrameList&    aFrameList)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
@@ -425,7 +424,7 @@ nsFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsFrame::InsertFrames(nsIAtom*        aListName,
                       nsIFrame*       aPrevFrame,
-                      nsIFrame*       aFrameList)
+                      nsFrameList&    aFrameList)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
@@ -760,10 +759,10 @@ nsFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsnull;
 }
 
-nsIFrame*
-nsFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsFrame::GetChildList(nsIAtom* aListName) const
 {
-  return nsnull;
+  return nsFrameList::EmptyList();
 }
 
 static nsIFrame*
@@ -962,6 +961,22 @@ nsFrame::HasBorder() const
 }
 
 nsresult
+nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder*   aBuilder,
+                                        const nsDisplayListSet& aLists,
+                                        PRBool                  aForceBackground)
+{
+  // Here we don't try to detect background propagation. Frames that might
+  // receive a propagated background should just set aForceBackground to
+  // PR_TRUE.
+  if (aBuilder->IsForEventDelivery() || aForceBackground ||
+      !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
+    return aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBackground(this));
+  }
+  return NS_OK;
+}
+
+nsresult
 nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
                                         PRBool                  aForceBackground)
@@ -979,24 +994,18 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Here we don't try to detect background propagation. Frames that might
-  // receive a propagated background should just set aForceBackground to
-  // PR_TRUE.
-  if (aBuilder->IsForEventDelivery() || aForceBackground ||
-      !GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBackground(this));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv =
+    DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (hasBoxShadow) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBoxShadowInner(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
   if (HasBorder()) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBorder(this));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1244,13 +1253,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       ApplyAbsPosClipping(aBuilder, disp, this, &absPosClip);
   nsRect dirtyRect = aDirtyRect;
 
+  PRBool inTransform = aBuilder->IsInTransform();
   /* If we're being transformed, we need to invert the matrix transform so that we don't 
    * grab points in the wrong coordinate system!
    */
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) &&
-      disp->HasTransform())
+      disp->HasTransform()) {
     dirtyRect = nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0));
-  
+    inTransform = PR_TRUE;
+  }
+
   if (applyAbsPosClipping) {
     dirtyRect.IntersectRect(dirtyRect,
                             absPosClip - aBuilder->ToReferenceFrame(this));
@@ -1268,6 +1280,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsresult rv;
   {    
     nsDisplayListBuilder::AutoIsRootSetter rootSetter(aBuilder, PR_TRUE);
+    nsDisplayListBuilder::AutoInTransformSetter
+      inTransformSetter(aBuilder, inTransform);
     rv = BuildDisplayList(aBuilder, dirtyRect, set);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1651,6 +1665,12 @@ nsresult
 nsIFrame::CreateWidgetForView(nsIView* aView)
 {
   return aView->CreateWidget(kWidgetCID);
+}
+
+nsIFrame*
+nsIFrame::GetLastChild(nsIAtom* aListName) const
+{
+  return nsLayoutUtils::GetLastSibling(GetFirstChild(aListName));
 }
 
 /**
@@ -3604,25 +3624,32 @@ nsRect nsIFrame::GetScreenRectInAppUnitsExternal() const
 
 nsRect nsIFrame::GetScreenRectInAppUnits() const
 {
-  nsRect retval(0,0,0,0);
-  nsPoint toViewOffset(0,0);
-  nsIView* view = GetClosestView(&toViewOffset);
-
-  if (view) {
-    nsPoint toWidgetOffset(0,0);
-    nsIWidget* widget = view->GetNearestWidget(&toWidgetOffset);
-
-    if (widget) {
-      nsIntPoint screenPoint = widget->WidgetToScreenOffset();
-
-      retval = mRect;
-      retval.MoveTo(toViewOffset + toWidgetOffset);
-      retval.x += PresContext()->DevPixelsToAppUnits(screenPoint.x);
-      retval.y += PresContext()->DevPixelsToAppUnits(screenPoint.y);
+  nsPresContext* presContext = PresContext();
+  nsIFrame* rootFrame =
+    presContext->PresShell()->FrameManager()->GetRootFrame();
+  nsPoint rootScreenPos(0, 0);
+  nsPoint rootFrameOffsetInParent(0, 0);
+  nsIFrame* rootFrameParent =
+    nsLayoutUtils::GetCrossDocParentFrame(rootFrame, &rootFrameOffsetInParent);
+  if (rootFrameParent) {
+    nsRect parentScreenRectAppUnits = rootFrameParent->GetScreenRectInAppUnits();
+    nsPresContext* parentPresContext = rootFrameParent->PresContext();
+    double parentScale = double(presContext->AppUnitsPerDevPixel())/
+        parentPresContext->AppUnitsPerDevPixel();
+    nsPoint rootPt = parentScreenRectAppUnits.TopLeft() + rootFrameOffsetInParent;
+    rootScreenPos.x = NS_round(parentScale*rootPt.x);
+    rootScreenPos.y = NS_round(parentScale*rootPt.y);
+  } else {
+    nsCOMPtr<nsIWidget> rootWidget;
+    presContext->PresShell()->GetViewManager()->GetRootWidget(getter_AddRefs(rootWidget));
+    if (rootWidget) {
+      nsIntPoint rootDevPx = rootWidget->WidgetToScreenOffset();
+      rootScreenPos.x = presContext->DevPixelsToAppUnits(rootDevPx.x);
+      rootScreenPos.y = presContext->DevPixelsToAppUnits(rootDevPx.y);
     }
   }
 
-  return retval;
+  return nsRect(rootScreenPos + GetOffsetTo(rootFrame), GetSize());
 }
 
 // Returns the offset from this frame to the closest geometric parent that
@@ -3996,8 +4023,11 @@ nsIFrame::GetOverflowRectRelativeToSelf() const
   if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) ||
       !GetStyleDisplay()->HasTransform())
     return GetOverflowRect();
-  return *static_cast<nsRect*>
+  nsRect* preEffectsBBox = static_cast<nsRect*>
     (GetProperty(nsGkAtoms::preEffectsBBoxProperty));
+  if (!preEffectsBBox)
+    return GetOverflowRect();
+  return *preEffectsBBox;
 }
 
 void
@@ -4240,35 +4270,6 @@ nsFrame::XMLQuote(nsString& aString)
 #endif
 
 PRBool
-nsFrame::ParentDisablesSelection() const
-{
-/*
-  // should never be called now
-  nsIFrame* parent = GetParent();
-  if (parent) {
-	  PRBool selectable;
-	  parent->IsSelectable(selectable);
-    return (selectable ? PR_FALSE : PR_TRUE);
-  }
-  return PR_FALSE;
-*/
-/*
-  PRBool selected;
-  if (NS_FAILED(GetSelected(&selected)))
-    return PR_FALSE;
-  if (selected)
-    return PR_FALSE; //if this frame is selected and no one has overridden the selection from "higher up"
-                     //then no one below us will be disabled by this frame.
-  nsIFrame* target = GetParent();
-  if (target)
-    return ((nsFrame *)target)->ParentDisablesSelection();
-  return PR_FALSE; //default this does not happen
-  */
-  
-  return PR_FALSE;
-}
-
-PRBool
 nsIFrame::IsVisibleForPainting(nsDisplayListBuilder* aBuilder) {
   if (!GetStyleVisibility()->IsVisible())
     return PR_FALSE;
@@ -4466,55 +4467,30 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
 }
 #endif
 
-/*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
-  it will not update immediately.*/
-NS_IMETHODIMP
-nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelected, nsSpread aSpread, SelectionType aType)
+void
+nsIFrame::SetSelected(PRBool aSelected, SelectionType aType)
 {
-/*
-  if (aSelected && ParentDisablesSelection())
-    return NS_OK;
-*/
+  NS_ASSERTION(!GetPrevContinuation(),
+               "Should only be called on first in flow");
+  if (aType != nsISelectionController::SELECTION_NORMAL)
+    return;
 
-  if (aType == nsISelectionController::SELECTION_NORMAL) {
-    // check whether style allows selection
-    PRBool  selectable;
-    IsSelectable(&selectable, nsnull);
-    if (!selectable)
-      return NS_OK;
-  }
+  // check whether style allows selection
+  PRBool selectable;
+  IsSelectable(&selectable, nsnull);
+  if (!selectable)
+    return;
 
-/*
-  if (eSpreadDown == aSpread){
-    nsIFrame* kid = GetFirstChild(nsnull);
-    while (nsnull != kid) {
-      kid->SetSelected(nsnull,aSelected,aSpread);
-      kid = kid->GetNextSibling();
+  for (nsIFrame* f = this; f; f = f->GetNextContinuation()) {
+    if (aSelected) {
+      AddStateBits(NS_FRAME_SELECTED_CONTENT);
+    } else {
+      RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
     }
-  }
-*/
-  if ( aSelected ){
-    AddStateBits(NS_FRAME_SELECTED_CONTENT);
-  }
-  else
-    RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
 
-  // Repaint this frame subtree's entire area
-  InvalidateOverflowRect();
-
-#ifdef IBMBIDI
-  PRInt32 start, end;
-  nsIFrame* frame = GetNextSibling();
-  if (frame) {
-    GetFirstLeaf(aPresContext, &frame);
-    GetOffsets(start, end);
-    if (start && end) {
-      frame->SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
-    }
+    // Repaint this frame subtree's entire area
+    InvalidateOverflowRect();
   }
-#endif // IBMBIDI
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6899,10 +6875,11 @@ nsFrame::TraceMsg(const char* aFormatString, ...)
 }
 
 void
-nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
+nsFrame::VerifyDirtyBitSet(const nsFrameList& aFrameList)
 {
-  for (nsIFrame*f = aFrameList; f; f = f->GetNextSibling()) {
-    NS_ASSERTION(f->GetStateBits() & NS_FRAME_IS_DIRTY, "dirty bit not set");
+  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
+    NS_ASSERTION(e.get()->GetStateBits() & NS_FRAME_IS_DIRTY,
+                 "dirty bit not set");
   }
 }
 

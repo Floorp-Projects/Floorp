@@ -28,7 +28,7 @@ function check_for_exception(spec)
     return;
   }
 
-  do_throw("Succesfully opened invalid URI: '" + spec + "'");
+  do_throw("Successfully opened invalid URI: '" + spec + "'");
 }
 
 function run_test() {

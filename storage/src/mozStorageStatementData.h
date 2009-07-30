@@ -40,6 +40,8 @@
 #ifndef _mozStorageStatementData_h_
 #define _mozStorageStatementData_h_
 
+#include "sqlite3.h"
+
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 
@@ -54,14 +56,17 @@ class StatementData
 {
 public:
   StatementData(sqlite3_stmt *aStatement,
-                already_AddRefed<BindingParamsArray> aParamsArray)
+                already_AddRefed<BindingParamsArray> aParamsArray,
+                nsISupports *aStatementOwner)
   : mStatement(aStatement)
   , mParamsArray(aParamsArray)
+  , mStatementOwner(aStatementOwner)
   {
   }
   StatementData(const StatementData &aSource)
   : mStatement(aSource.mStatement)
   , mParamsArray(aSource.mParamsArray)
+  , mStatementOwner(aSource.mStatementOwner)
   {
   }
   StatementData()
@@ -76,28 +81,45 @@ public:
   operator BindingParamsArray *() const { return mParamsArray; }
 
   /**
-   * Finalizes and NULLs out our sqlite3_stmt.  Also releases our parameter
-   * array since we'll no longer need it.
+   * NULLs out our sqlite3_stmt (it is held by the owner) after reseting it and
+   * clear all bindings to it.  Then, NULL out the rest of our data.
    */
   inline void finalize()
   {
-    (void)::sqlite3_finalize(mStatement);
+    (void)::sqlite3_reset(mStatement);
+    (void)::sqlite3_clear_bindings(mStatement);
     mStatement = NULL;
     mParamsArray = nsnull;
+    mStatementOwner = nsnull;
   }
 
   /**
    * Indicates if this statement has parameters to be bound before it is
    * executed.
    *
-   * @returns true if the statement has parameters to bind against, false
-   *          otherwise.
+   * @return true if the statement has parameters to bind against, false
+   *         otherwise.
    */
   inline bool hasParametersToBeBound() const { return mParamsArray != nsnull; }
+  /**
+   * Indicates if this statement needs a transaction for execution.
+   *
+   * @return true if the statement needs a transaction, false otherwise.
+   */
+  inline bool needsTransaction() const
+  {
+    return mParamsArray != nsnull && mParamsArray->length() > 1;
+  }
 
 private:
   sqlite3_stmt *mStatement;
   nsRefPtr<BindingParamsArray> mParamsArray;
+
+  /**
+   * We hold onto a reference of the statement's owner so it doesn't get
+   * destroyed out from under us.
+   */
+  nsCOMPtr<nsISupports> mStatementOwner;
 };
 
 } // namespace storage

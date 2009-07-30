@@ -483,7 +483,7 @@ function doBrowseFiles()
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
     var pathbox = document.getElementById("device_path");
-    pathbox.setAttribute("value", fp.file.persistentDescriptor);
+    pathbox.setAttribute("value", fp.file.path);
   }
 }
 

@@ -53,14 +53,25 @@ LIB_IS_C_ONLY    = 1
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
-DEFFILE = $(win_srcdir)/sqlite.def
+DEFFILE = $(CURDIR)/sqlite-processed.def
 RCFILE  = sqlite.rc
 RESFILE = sqlite.res
 
-GARBAGE += sqlite-version.h
+GARBAGE += \
+  sqlite-version.h \
+  $(DEFFILE) \
+  $(NULL)
 
+# We generate the appropriate version header file with our python script.
 sqlite-version.h: sqlite-version.py sqlite3.h
 	$(PYTHON) $^ > $@
+
+# We have to preprocess our def file because we need different symbols in debug
+# builds exposed that are not built in non-debug builds.
+$(DEFFILE): sqlite.def
+	@$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
+	  $(srcdir)/sqlite.def > $(DEFFILE)
+
 export:: sqlite-version.h
 endif
 endif
@@ -84,8 +95,8 @@ EXPORTS = \
   $(NULL)
 
 CSRCS = \
-	sqlite3.c \
-	$(NULL)
+  sqlite3.c \
+  $(NULL)
 
 # -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
 # don't have to vacuum to make sure the data is not visible in the file.
@@ -103,6 +114,11 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 DEFINES += -DSQLITE_ENABLE_LOCKING_STYLE=1
 endif
 
+# Turn on SQLite's assertions in debug builds.
+ifdef MOZ_DEBUG
+DEFINES += -DSQLITE_DEBUG=1
+endif
+
 ifeq ($(OS_ARCH),OS2)
 ifdef MOZ_OS2_HIGH_MEMORY
 DEFINES += -DOS2_HIGH_MEMORY
@@ -115,6 +131,7 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += -I$(srcdir)
 
 ifeq ($(OS_ARCH),OS2)
-ADD_TO_DEF_FILE = sed -e '1,/^EXPORTS$$/ d' -e 's,sqlite3,_\0,' -e 's,\ DATA.*$$,,' \
-		$(srcdir)/sqlite.def >> $(DEF_FILE)
+ADD_TO_DEF_FILE = $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
+       $(srcdir)/sqlite.def | sed -e '1,/^EXPORTS$$/ d' -e 's,sqlite3,_\0,' \
+       -e 's,\ DATA.*$$,,' >> $(DEF_FILE)
 endif

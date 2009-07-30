@@ -141,6 +141,11 @@ struct JSObjectMap {
         }                                                                     \
     JS_END_MACRO
 
+/*
+ * The following macro has been copied to jsd/jsd_val.c. If making changes to
+ * OBJ_TO_OUTER_OBJECT, please update jsd/jsd_val.c as well.
+ */
+
 #define OBJ_TO_OUTER_OBJECT(cx,obj)                                           \
     JS_BEGIN_MACRO                                                            \
         JSClass *clasp_ = OBJ_GET_CLASS(cx, obj);                             \
@@ -421,8 +426,12 @@ extern JSClass  js_BlockClass;
  */
 #define JSSLOT_BLOCK_DEPTH      (JSSLOT_PRIVATE + 1)
 
-#define OBJ_IS_CLONED_BLOCK(obj)                                              \
-    (OBJ_SCOPE(obj)->object != (obj))
+static inline bool
+OBJ_IS_CLONED_BLOCK(JSObject *obj)
+{
+    return obj->fslots[JSSLOT_PROTO] != JSVAL_NULL;
+}
+
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
     (OBJ_SCOPE(obj)->entryCount)
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
@@ -451,8 +460,7 @@ extern JSObject *
 js_NewBlockObject(JSContext *cx);
 
 extern JSObject *
-js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
-                    JSStackFrame *fp);
+js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp);
 
 extern JS_REQUIRES_STACK JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind);
@@ -529,18 +537,15 @@ extern JSBool
 js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp);
 
 extern JSObject *
-js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
-             uintN objectSize);
+js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto,
+             JSObject *parent, size_t objectSize = 0);
 
 /*
  * See jsapi.h, JS_NewObjectWithGivenProto.
- *
- * objectSize is either the explicit size for the allocated object or 0
- * indicating to use the default size based on object's class.
  */
 extern JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent, uintN objectSize);
+                           JSObject *parent, size_t objectSize = 0);
 
 /*
  * Allocate a new native object and initialize all fslots with JSVAL_VOID
@@ -578,15 +583,29 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
 extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
+extern bool
+js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots);
+
+extern void
+js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots);
+
 static inline void
 js_FreeSlots(JSContext *cx, JSObject *obj)
 {
-    if (obj->dslots) {
-        JS_ASSERT((uint32)obj->dslots[-1] > JS_INITIAL_NSLOTS);
-        JS_free(cx, obj->dslots - 1);
-        obj->dslots = NULL;
-    }
+    if (obj->dslots)
+        js_ShrinkSlots(cx, obj, 0);
 }
+
+/*
+ * Ensure that the object has at least JSCLASS_RESERVED_SLOTS(clasp)+nreserved
+ * slots. The function can be called only for native objects just created with
+ * js_NewObject or its forms. In particular, the object should not be shared
+ * between threads and its dslots array must be null. nreserved must match the
+ * value that JSClass.reserveSlots (if any) would return after the object is
+ * fully initialized.
+ */
+bool
+js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved);
 
 extern jsid
 js_CheckForStringIndex(jsid id);
@@ -600,12 +619,14 @@ js_CheckForStringIndex(jsid id);
 extern void
 js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id);
 
+#ifdef __cplusplus /* Aargh, libgjs, bug 492720. */
 static JS_INLINE void
 js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
 {
     if (OBJ_IS_DELEGATE(cx, obj))
         js_PurgeScopeChainHelper(cx, obj, id);
 }
+#endif
 
 /*
  * Find or create a property named by id in obj's scope, with the given getter
@@ -850,6 +871,36 @@ js_ReportGetterOnlyAssignment(JSContext *cx);
 extern JS_FRIEND_API(JSBool)
 js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
+/*
+ * If an object is "similar" to its prototype, it can share OBJ_SCOPE(proto)->emptyScope.
+ * Similar objects have the same JSObjectOps and the same private and reserved slots.
+ *
+ * We assume that if prototype and object are of the same class, they always
+ * have the same number of computed reserved slots (returned via
+ * clasp->reserveSlots). This is true for builtin classes (except Block, and
+ * for this reason among others Blocks must never be exposed to scripts).
+ *
+ * Otherwise, prototype and object classes must have the same (null or not)
+ * reserveSlots hook.
+ *
+ * FIXME: This fails to distinguish between objects with different addProperty
+ * hooks. See bug 505523.
+ */
+static inline bool
+js_ObjectIsSimilarToProto(JSContext *cx, JSObject *obj, JSObjectOps *ops, JSClass *clasp,
+                          JSObject *proto)
+{
+    JS_ASSERT(proto == OBJ_GET_PROTO(cx, obj));
+
+    JSClass *protoclasp;
+    return (proto->map->ops == ops &&
+            ((protoclasp = OBJ_GET_CLASS(cx, proto)) == clasp ||
+             (!((protoclasp->flags ^ clasp->flags) &
+                (JSCLASS_HAS_PRIVATE |
+                 (JSCLASS_RESERVED_SLOTS_MASK << JSCLASS_RESERVED_SLOTS_SHIFT))) &&
+              protoclasp->reserveSlots == clasp->reserveSlots)));
+}
+
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);
 JS_FRIEND_API(void) js_DumpString(JSString *str);
@@ -862,6 +913,10 @@ JS_FRIEND_API(void) js_DumpStackFrame(JSStackFrame *fp);
 
 extern uintN
 js_InferFlags(JSContext *cx, uintN defaultFlags);
+
+/* Object constructor native. Exposed only so the JIT can know its address. */
+JSBool
+js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 JS_END_EXTERN_C
 

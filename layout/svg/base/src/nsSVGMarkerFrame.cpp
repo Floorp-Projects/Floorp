@@ -39,7 +39,6 @@
 #include "nsIDocument.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
-#include "nsSVGMatrix.h"
 #include "nsSVGEffects.h"
 #include "nsSVGMarkerElement.h"
 #include "nsSVGPathGeometryElement.h"
@@ -113,18 +112,10 @@ nsSVGMarkerFrame::GetCanvasTM()
   gfxMatrix markedTM = mMarkedFrame->GetCanvasTM();
   mInUse2 = PR_FALSE;
 
-  nsCOMPtr<nsIDOMSVGMatrix> markerTM;
-  content->GetMarkerTransform(mStrokeWidth, mX, mY, mAngle, getter_AddRefs(markerTM));
+  gfxMatrix markerTM = content->GetMarkerTransform(mStrokeWidth, mX, mY, mAngle);
+  gfxMatrix viewBoxTM = content->GetViewBoxTransform();
 
-  nsCOMPtr<nsIDOMSVGMatrix> viewBoxTM;
-  nsresult res = content->GetViewboxToViewportTransform(getter_AddRefs(viewBoxTM));
-  if (NS_FAILED(res)) {
-    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
-  }
-
-  markedTM.PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(markerTM));
-  markedTM.PreMultiply(nsSVGUtils::ConvertSVGMatrixToThebes(viewBoxTM));
-  return markedTM;
+  return viewBoxTM * markerTM * markedTM;
 }
 
 

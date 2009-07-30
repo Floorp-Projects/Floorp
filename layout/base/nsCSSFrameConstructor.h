@@ -81,6 +81,98 @@ typedef void (nsLazyFrameConstructionCallback)
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
   
+// Structure used when constructing formatting object trees.
+struct nsFrameItems : public nsFrameList {
+  nsIFrame* lastChild;
+  
+  nsFrameItems(nsIFrame* aFrame = nsnull);
+
+  nsFrameItems(const nsFrameList& aList, nsIFrame* aLastChild) :
+    nsFrameList(aList),
+    lastChild(aLastChild)
+  {
+    NS_ASSERTION(LastChild() == lastChild, "Bogus aLastChild");
+  }
+
+  // Appends the frame to the end of the list
+  void AddChild(nsIFrame* aChild);
+
+  void InsertFrame(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                   nsIFrame* aNewFrame) {
+    nsFrameList::InsertFrame(aParent, aPrevSibling, aNewFrame);
+    if (aPrevSibling == lastChild) {
+      lastChild = aNewFrame;
+    }
+  }
+
+  void InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                    nsFrameItems& aFrames) {
+    nsFrameList::InsertFrames(aParent, aPrevSibling, aFrames);
+    if (aPrevSibling == lastChild) {
+      lastChild = aFrames.lastChild;
+    }
+  }
+
+  void DestroyFrame(nsIFrame* aFrameToDestroy, nsIFrame* aPrevSibling) {
+    NS_PRECONDITION((!aPrevSibling && aFrameToDestroy == FirstChild()) ||
+                    aPrevSibling->GetNextSibling() == aFrameToDestroy,
+                    "Unexpected prevsibling");
+    nsFrameList::DestroyFrame(aFrameToDestroy, aPrevSibling);
+    if (aFrameToDestroy == lastChild) {
+      lastChild = aPrevSibling;
+    }
+  }
+
+  PRBool RemoveFrame(nsIFrame* aFrameToRemove, nsIFrame* aPrevSibling) {
+    NS_PRECONDITION(!aPrevSibling ||
+                    aPrevSibling->GetNextSibling() == aFrameToRemove,
+                    "Unexpected aPrevSibling");
+    if (!aPrevSibling) {
+      aPrevSibling = GetPrevSiblingFor(aFrameToRemove);
+    }
+
+    PRBool removed = nsFrameList::RemoveFrame(aFrameToRemove, aPrevSibling);
+
+    if (aFrameToRemove == lastChild) {
+      lastChild = aPrevSibling;
+    }
+
+    return removed;
+  }
+
+  nsFrameItems ExtractHead(FrameLinkEnumerator& aLink) {
+    nsIFrame* newLastChild = aLink.PrevFrame();
+    if (lastChild && aLink.NextFrame() == lastChild) {
+      lastChild = nsnull;
+    }
+    return nsFrameItems(nsFrameList::ExtractHead(aLink),
+                        newLastChild);
+  }
+
+  nsFrameItems ExtractTail(FrameLinkEnumerator& aLink) {
+    nsIFrame* newLastChild = lastChild;
+    lastChild = aLink.PrevFrame();
+    return nsFrameItems(nsFrameList::ExtractTail(aLink),
+                        newLastChild);
+  }
+
+  void Clear() {
+    nsFrameList::Clear();
+    lastChild = nsnull;
+  }
+
+private:
+  // Not implemented; shouldn't be called
+  void SetFrames(nsIFrame* aFrameList);
+  void AppendFrames(nsIFrame* aParent, nsIFrame* aFrameList);
+  Slice AppendFrames(nsIFrame* aParent, nsFrameList& aFrameList);
+  void AppendFrame(nsIFrame* aParent, nsIFrame* aFrame);
+  PRBool RemoveFirstChild();
+  void InsertFrames(nsIFrame* aParent, nsIFrame* aPrevSibling,
+                    nsIFrame* aFrameList);
+  void SortByContentOrder();
+};
+
 class nsCSSFrameConstructor
 {
 public:
@@ -1409,7 +1501,7 @@ private:
    *
    * @param aState the frame construction state we're using right now.
    * @param aExistingEndFrame the already-existing end frame.
-   * @param aFramesToMove The frame list to move over
+   * @param aFramesToMove The frame list to move over.  Must be nonempty.
    * @param aBlockPart the block part of the {ib} split.
    * @param aTargetState if non-null, the target state to pass to
    *        MoveChildrenTo for float reparenting.
@@ -1417,7 +1509,7 @@ private:
    */
   void MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
                                 nsIFrame* aExistingEndFrame,
-                                nsIFrame* aFramesToMove,
+                                nsFrameItems& aFramesToMove,
                                 nsIFrame* aBlockPart,
                                 nsFrameConstructorState* aTargetState);
 
@@ -1530,11 +1622,21 @@ private:
 
   // Methods support :first-line style
 
+  // This method chops the initial inline-outside frames out of aFrameItems.
+  // If aLineFrame is non-null, it appends them to that frame.  Otherwise, it
+  // creates a new line frame, sets the inline frames as its initial child
+  // list, and inserts that line frame at the front of what's left of
+  // aFrameItems.  In both cases, the kids are reparented to the line frame.
+  // After this call, aFrameItems holds the frames that need to become kids of
+  // the block (possibly including line frames).
   nsresult WrapFramesInFirstLineFrame(nsFrameConstructorState& aState,
                                       nsIContent*              aBlockContent,
                                       nsIFrame*                aBlockFrame,
+                                      nsIFrame*                aLineFrame,
                                       nsFrameItems&            aFrameItems);
 
+  // Handle the case when a block with first-line style is appended to (by
+  // possibly calling WrapFramesInFirstLineFrame as needed).
   nsresult AppendFirstLineFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
                                  nsIFrame*                aBlockFrame,

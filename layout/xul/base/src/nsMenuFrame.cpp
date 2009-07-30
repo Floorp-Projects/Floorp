@@ -325,42 +325,35 @@ nsMenuFrame::~nsMenuFrame()
 
 // The following methods are all overridden to ensure that the menupopup frame
 // is placed in the appropriate list.
-nsIFrame*
-nsMenuFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+nsMenuFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::popupList == aListName) {
     return mPopupFrame;
   }
-  return nsBoxFrame::GetFirstChild(aListName);
+  return nsBoxFrame::GetChildList(aListName);
 }
 
-nsIFrame*
-nsMenuFrame::SetPopupFrame(nsIFrame* aChildList)
+void
+nsMenuFrame::SetPopupFrame(nsFrameList& aFrameList)
 {
-  // Check for a menupopup and move it to mPopupFrame
-  nsFrameList frames(aChildList);
-  nsIFrame* frame = frames.FirstChild();
-  while (frame) {
-    if (frame->GetType() == nsGkAtoms::menuPopupFrame) {
+  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
+    if (e.get()->GetType() == nsGkAtoms::menuPopupFrame) {
       // Remove this frame from the list and set it as mPopupFrame
-      frames.RemoveFrame(frame);
-      mPopupFrame = (nsMenuPopupFrame *)frame;
-      aChildList = frames.FirstChild();
+      mPopupFrame = (nsMenuPopupFrame *)e.get();
+      aFrameList.RemoveFrame(e.get());
       break;
     }
-    frame = frame->GetNextSibling();
   }
-
-  return aChildList;
 }
 
 NS_IMETHODIMP
 nsMenuFrame::SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList)
+                                 nsFrameList&    aChildList)
 {
   NS_ASSERTION(!mPopupFrame, "already have a popup frame set");
   if (!aListName || aListName == nsGkAtoms::popupList)
-    aChildList = SetPopupFrame(aChildList);
+    SetPopupFrame(aChildList);
   return nsBoxFrame::SetInitialChildList(aListName, aChildList);
 }
 
@@ -1212,12 +1205,11 @@ nsMenuFrame::RemoveFrame(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsMenuFrame::InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList)
+                          nsFrameList&    aFrameList)
 {
   if (!mPopupFrame && (!aListName || aListName == nsGkAtoms::popupList)) {
-    aFrameList = SetPopupFrame(aFrameList);
+    SetPopupFrame(aFrameList);
     if (mPopupFrame) {
-
 #ifdef DEBUG_LAYOUT
       nsBoxLayoutState state(PresContext());
       SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
@@ -1226,12 +1218,10 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
-
-      return NS_OK;
     }
   }
 
-  if (!aFrameList)
+  if (aFrameList.IsEmpty())
     return NS_OK;
 
   if (NS_UNLIKELY(aPrevFrame == mPopupFrame)) {
@@ -1243,13 +1233,10 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
 
 NS_IMETHODIMP
 nsMenuFrame::AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList)
+                          nsFrameList&    aFrameList)
 {
-  if (!aFrameList)
-    return NS_OK;
-
   if (!mPopupFrame && (!aListName || aListName == nsGkAtoms::popupList)) {
-    aFrameList = SetPopupFrame(aFrameList);
+    SetPopupFrame(aFrameList);
     if (mPopupFrame) {
 
 #ifdef DEBUG_LAYOUT
@@ -1259,12 +1246,10 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
-
-      return NS_OK;
     }
   }
 
-  if (!aFrameList)
+  if (aFrameList.IsEmpty())
     return NS_OK;
 
   return nsBoxFrame::AppendFrames(aListName, aFrameList); 

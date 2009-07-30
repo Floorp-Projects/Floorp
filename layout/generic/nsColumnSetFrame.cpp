@@ -57,7 +57,7 @@ public:
   nsColumnSetFrame(nsStyleContext* aContext);
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
 
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -65,10 +65,10 @@ public:
                     nsReflowStatus& aStatus);
                                
   NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
+                           nsFrameList&    aFrameList);
   NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
+                           nsFrameList&    aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
@@ -287,10 +287,10 @@ nsColumnSetFrame::PaintColumnRule(nsIRenderingContext* aCtx,
 
 NS_IMETHODIMP
 nsColumnSetFrame::SetInitialChildList(nsIAtom*        aListName,
-                                      nsIFrame*       aChildList)
+                                      nsFrameList&    aChildList)
 {
   NS_ASSERTION(!aListName, "Only default child list supported");
-  NS_ASSERTION(aChildList && !aChildList->GetNextSibling(),
+  NS_ASSERTION(aChildList.OnlyChild(),
                "initial child list must have exactly one child");
   // Queue up the frames for the content frame
   return nsHTMLContainerFrame::SetInitialChildList(nsnull, aChildList);
@@ -865,33 +865,22 @@ nsColumnSetFrame::DrainOverflowColumns()
   // frame.
   nsColumnSetFrame* prev = static_cast<nsColumnSetFrame*>(GetPrevInFlow());
   if (prev) {
-    nsIFrame* overflows = prev->GetOverflowFrames(PresContext(), PR_TRUE);
+    nsAutoPtr<nsFrameList> overflows(prev->StealOverflowFrames());
     if (overflows) {
-      // Make all the frames on the overflow list mine
-      nsIFrame* lastFrame = nsnull;
-      for (nsIFrame* f = overflows; f; f = f->GetNextSibling()) {
-        f->SetParent(this);
+      nsHTMLContainerFrame::ReparentFrameViewList(PresContext(), *overflows,
+                                                  prev, this);
 
-        // When pushing and pulling frames we need to check for whether any
-        // views need to be reparented
-        nsHTMLContainerFrame::ReparentFrameView(PresContext(), f, prev, this);
-
-        // Get the next frame
-        lastFrame = f;
-      }
-
-      NS_ASSERTION(lastFrame, "overflow list was created with no frames");
-      lastFrame->SetNextSibling(mFrames.FirstChild());
-      
-      mFrames.SetFrames(overflows);
+      mFrames.InsertFrames(this, nsnull, *overflows);
     }
   }
   
   // Now pull back our own overflows and append them to our children.
   // We don't need to reparent them since we're already their parent.
-  nsIFrame* overflows = GetOverflowFrames(PresContext(), PR_TRUE);
+  nsAutoPtr<nsFrameList> overflows(StealOverflowFrames());
   if (overflows) {
-    mFrames.AppendFrames(this, overflows);
+    // We're already the parent for these frames, so no need to set
+    // their parent again.
+    mFrames.AppendFrames(nsnull, *overflows);
   }
 }
 
@@ -901,6 +890,9 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
 {
+  // Don't support interruption in columns
+  nsPresContext::InterruptPreventer noInterrupts(aPresContext);
+
   DO_GLOBAL_REFLOW_COUNT("nsColumnSetFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
@@ -1114,7 +1106,7 @@ nsColumnSetFrame::GetSkipSides() const
 
 NS_IMETHODIMP
 nsColumnSetFrame::AppendFrames(nsIAtom*        aListName,
-                               nsIFrame*       aFrameList)
+                               nsFrameList&    aFrameList)
 {
   NS_NOTREACHED("AppendFrames not supported");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1123,7 +1115,7 @@ nsColumnSetFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsColumnSetFrame::InsertFrames(nsIAtom*        aListName,
                                nsIFrame*       aPrevFrame,
-                               nsIFrame*       aFrameList)
+                               nsFrameList&    aFrameList)
 {
   NS_NOTREACHED("InsertFrames not supported");
   return NS_ERROR_NOT_IMPLEMENTED;

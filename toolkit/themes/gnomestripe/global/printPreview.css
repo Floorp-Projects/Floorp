@@ -4,7 +4,7 @@
   list-style-image: url("moz-icon://stock/gtk-goto-first-ltr?size=menu");
 }
 
-.home-arrow[chromedir="rtl"] {
+.home-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-goto-first-rtl?size=menu");
 }
 
@@ -12,7 +12,7 @@
   list-style-image: url("moz-icon://stock/gtk-goto-last-ltr?size=menu");
 }
 
-.end-arrow[chromedir="rtl"] {
+.end-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-goto-last-rtl?size=menu");
 }
 
@@ -20,7 +20,7 @@
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
 }
 
-.left-arrow[chromedir="rtl"] {
+.left-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
 
@@ -28,7 +28,7 @@
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
 }
 
-.right-arrow[chromedir="rtl"] {
+.right-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
 
