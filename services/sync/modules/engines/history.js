@@ -62,6 +62,12 @@ HistoryEngine.prototype = {
   _storeObj: HistoryStore,
   _trackerObj: HistoryTracker,
 
+  _sync: function HistoryEngine__sync() {
+    Svc.History.runInBatchMode({
+      runBatched: Utils.bind2(this, SyncEngine.prototype._sync)
+    }, null);
+  },
+
   // History reconciliation is simpler than the default one from SyncEngine,
   // because we have the advantage that we can use the URI as a definitive
   // check for local existence of incoming items.  The steps are as follows:
