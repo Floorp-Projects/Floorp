@@ -106,11 +106,9 @@ struct nsMargin;
 
 typedef class nsIFrame nsIBox;
 
-// IID for the nsIFrame interface
-// 2871104e-2738-4ad7-b86a-ede63c71f1c2
 #define NS_IFRAME_IID \
-  { 0x2871104e, 0x2738, 0x4ad7,                       \
-    { 0xb8, 0x6a, 0xed, 0xe6, 0x3c, 0x71, 0xf1, 0xc2 } }
+  { 0x7e9018b5, 0x5405, 0x4e2b, \
+    { 0x87, 0x67, 0xe2, 0xb4, 0xb1, 0x3e, 0xc1, 0x69 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -2289,9 +2287,6 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
 
   NS_IMETHOD DumpBox(FILE* out)=0;
 #endif
-
-  // Only nsDeckFrame requires that all its children have widgets
-  virtual PRBool ChildrenMustHaveWidgets() const { return PR_FALSE; }
 
   /**
    * @return PR_TRUE if this text frame ends with a newline character.  It
