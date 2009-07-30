@@ -1045,23 +1045,9 @@ nsIntPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
   // if it's windowless, let's make sure we have our origin set right
   // it may need to be corrected, like after scrolling
   if (aWindowless && parentWithView) {
-    // XXX Should this be replaced by nsIView::GetNearestWidget?
-    // The implementation below doesn't handle cases where the widget's origin
-    // doesn't coincide with its view's origin.
-
-    nsIViewManager* parentVM = parentWithView->GetViewManager();
-
-    // Walk up all the views and add up their positions until we
-    // reach the first view with a window (non-null widget). This will give us our
-    // position relative to the containing window which is what we want to give the plugin
-    nsIView* theView = parentWithView;
-    while (theView && !theView->GetWidget()) {
-      if (theView->GetViewManager() != parentVM)
-        break;
-
-      origin += theView->GetPosition();
-      theView = theView->GetParent();
-    }  
+    nsPoint offsetToWidget;
+    parentWithView->GetNearestWidget(&offsetToWidget);
+    origin += offsetToWidget;
   }
 
   return nsIntPoint(PresContext()->AppUnitsToDevPixels(origin.x),
