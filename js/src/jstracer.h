@@ -729,11 +729,17 @@ class TraceRecorder : public avmplus::GCObject {
                                    nanojit::LIns*& dslots_ins);
     nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
                                   nanojit::LIns*& dslots_ins);
+
     nanojit::LIns* stobj_get_private(nanojit::LIns* obj_ins, jsval mask=JSVAL_INT) {
         return lir->ins2(nanojit::LIR_piand,
                          stobj_get_fslot(obj_ins, JSSLOT_PRIVATE),
                          lir->insImmPtr((void*) ~mask));
     }
+
+    nanojit::LIns* stobj_get_parent(nanojit::LIns* obj_ins) {
+        return stobj_get_fslot(obj_ins, JSSLOT_PARENT);
+    }
+
     JSRecordingStatus native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins,
                                  JSScopeProperty* sprop, nanojit::LIns*& dslots_ins,
                                  nanojit::LIns*& v_ins);
