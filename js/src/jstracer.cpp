@@ -9770,10 +9770,11 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
         else
             ABORT_TRACE("can't trace special CallClass setter");
 
-        LIns* v_ins = get(&v);
-        box_jsval(v, v_ins);
+        v_ins = get(&v);
+        LIns* v_boxed_ins = v_ins;
+        box_jsval(v, v_boxed_ins);
         LIns* args[] = {
-            v_ins,
+            v_boxed_ins,
             INS_CONST(SPROP_USERID(sprop)),
             obj_ins,
             cx_ins
