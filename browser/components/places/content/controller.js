@@ -154,7 +154,7 @@ PlacesController.prototype = {
         var result = this._view.getResult();
         if (result) {
           var container = asContainer(result.root);
-          if (container.containerOpen && container.childCount > 0);
+          if (container.containerOpen && container.childCount > 0)
             return true;
         }
       }
