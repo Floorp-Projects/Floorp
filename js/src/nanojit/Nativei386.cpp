@@ -213,7 +213,7 @@ namespace nanojit
         // pre-assign registers to the first N 4B args based on the calling convention
         uint32_t n = 0;
 
-        ArgSize sizes[2*MAXARGS];
+        ArgSize sizes[MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
 
         for(uint32_t i=0; i < argc; i++)
@@ -1283,7 +1283,7 @@ namespace nanojit
                 NanoAssert(0); // not supported
             }
         }
-        else if (sz == ARGSIZE_LO)
+        else if (sz == ARGSIZE_I || sz == ARGSIZE_U)
         {
             if (r != UnknownReg) {
                 // arg goes in specific register
