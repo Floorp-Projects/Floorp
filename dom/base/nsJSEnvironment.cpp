@@ -3269,6 +3269,14 @@ static JSFunctionSpec VtuneFunctions[] = {
 };
 #endif
 
+#ifdef MOZ_TRACEVIS
+static JSFunctionSpec EthogramFunctions[] = {
+    {"initEthogram",               js_InitEthogram,            0, 0, 0},
+    {"shutdownEthogram",           js_ShutdownEthogram,        0, 0, 0},
+    {nsnull,                       nsnull,                     0, 0, 0}
+};
+#endif
+
 nsresult
 nsJSContext::InitClasses(void *aGlobalObj)
 {
@@ -3314,6 +3322,11 @@ nsJSContext::InitClasses(void *aGlobalObj)
 #ifdef MOZ_VTUNE
   // Attempt to initialize Vtune functions
   ::JS_DefineFunctions(mContext, globalObj, VtuneFunctions);
+#endif
+
+#ifdef MOZ_TRACEVIS
+  // Attempt to initialize Ethogram functions
+  ::JS_DefineFunctions(mContext, globalObj, EthogramFunctions);
 #endif
 
   JSOptionChangedCallback(js_options_dot_str, this);
