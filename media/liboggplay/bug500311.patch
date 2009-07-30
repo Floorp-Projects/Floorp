@@ -1,0 +1,99 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay.c b/media/liboggplay/src/liboggplay/oggplay.c
+--- a/media/liboggplay/src/liboggplay/oggplay.c
++++ b/media/liboggplay/src/liboggplay/oggplay.c
+@@ -129,16 +129,17 @@ oggplay_initialise(OggPlay *me, int bloc
+   }
+ 
+   /*
+    * set all the tracks to inactive
+    */
+   for (i = 0; i < me->num_tracks; i++) {
+     me->decode_data[i]->active = 0;
+   }
++  me->active_tracks = 0;
+ 
+   /*
+    * if the buffer was set up before initialisation, prepare it now
+    */
+   if (me->buffer != NULL) {
+     oggplay_buffer_prepare(me);
+   }
+ 
+@@ -693,18 +694,18 @@ read_more_data:
+     /* end-of-file */
+     if (r == 0) {
+       num_records = oggplay_callback_info_prepare(me, &info);
+      /*
+        * set all of the tracks to inactive
+        */
+       for (i = 0; i < me->num_tracks; i++) {
+         me->decode_data[i]->active = 0;
+-        me->active_tracks = 0;
+       }
++      me->active_tracks = 0;
+ 
+       if (info != NULL) {
+         me->callback (me, num_records, info, me->callback_user_ptr);
+         oggplay_callback_info_destroy(me, info);
+       }
+ 
+       /*
+        * ensure all tracks have their final data packet set to end_of_stream
+diff --git a/media/liboggplay/src/liboggplay/oggplay_callback.c b/media/liboggplay/src/liboggplay/oggplay_callback.c
+--- a/media/liboggplay/src/liboggplay/oggplay_callback.c
++++ b/media/liboggplay/src/liboggplay/oggplay_callback.c
+@@ -54,16 +54,17 @@ oggplay_init_theora(void *user_data) {
+   theora_info_init(&(decoder->video_info));
+   theora_comment_init(&(decoder->video_comment));
+   decoder->remaining_header_packets = 3;
+   decoder->granulepos_seen = 0;
+   decoder->frame_delta = 0;
+   decoder->y_width = 0;
+   decoder->convert_to_rgb = 0;
+   decoder->decoder.decoded_type = OGGPLAY_YUV_VIDEO;
++  decoder->decoder.player->active_tracks++;
+ }
+ 
+ void
+ oggplay_shutdown_theora(void *user_data) {
+ 
+   OggPlayTheoraDecode   * decoder = (OggPlayTheoraDecode *)user_data;
+ 
+   if (decoder->remaining_header_packets == 0) {
+@@ -366,16 +367,17 @@ oggplay_init_audio (void * user_data) {
+ 
+   decoder->sound_info.channels = 0;
+   fish_sound_set_interleave(decoder->sound_handle, 1);
+   fish_sound_set_decoded_float_ilv(decoder->sound_handle,
+                                       oggplay_fish_sound_callback_floats,
+                                       (void *)decoder);
+ 
+   decoder->decoder.decoded_type = OGGPLAY_FLOATS_AUDIO;
++  decoder->decoder.player->active_tracks++;
+ }
+ 
+ void
+ oggplay_shutdown_audio(void *user_data) {
+ 
+   OggPlayAudioDecode   * decoder = (OggPlayAudioDecode *)user_data;
+ 
+   fish_sound_delete(decoder->sound_handle);
+@@ -566,17 +568,17 @@ oggplay_initialise_decoder(OggPlay *me, 
+ 
+   if (decoder == NULL)
+     return NULL;
+ 
+   decoder->serialno = serialno;
+   decoder->content_type = content_type;
+   decoder->content_type_name =
+           oggz_stream_get_content_type (me->oggz, serialno);
+-  decoder->active = 0;
++  decoder->active = 1;
+   decoder->final_granulepos = -1;
+   decoder->player = me;
+   decoder->decoded_type = OGGPLAY_TYPE_UNKNOWN;
+ 
+   /*
+    * set the StreamInfo to unitialised until we get some real data in
+    */
+   decoder->stream_info = OGGPLAY_STREAM_UNINITIALISED;
