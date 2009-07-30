@@ -59,15 +59,23 @@
 # define putenv _putenv
 # define snprintf _snprintf
 # define fchmod(a,b)
-# define mkdir(path, perms) _mkdir(path)
 
 # define NS_T(str) L ## str
 # define NS_tsnprintf _snwprintf
 # define NS_tstrrchr wcsrchr
+# define NS_taccess _waccess
 # define NS_tchdir _wchdir
+# define NS_tchmod _wchmod
+# define NS_tmkdir(path, perms) _wmkdir(path)
 # define NS_tremove _wremove
 # define NS_tfopen _wfopen
 # define NS_tatoi _wtoi64
+#ifndef WINCE
+# define stat _stat
+#endif
+# define NS_tstat _wstat
+# define BACKUP_EXT L".moz-backup"
+# define LOG_S "%S"
 #else
 # include <sys/wait.h>
 # include <unistd.h>
@@ -75,10 +83,16 @@
 # define NS_T(str) str
 # define NS_tsnprintf snprintf
 # define NS_tstrrchr strrchr
+# define NS_taccess access
 # define NS_tchdir chdir
+# define NS_tchmod chmod
+# define NS_tmkdir mkdir
 # define NS_tremove remove
 # define NS_tfopen fopen
 # define NS_tatoi atoi
+# define NS_tstat stat
+# define BACKUP_EXT ".moz-backup"
+# define LOG_S "%s"
 #endif
 
 #include "bspatch.h"
@@ -297,6 +311,11 @@ private:
 
 //-----------------------------------------------------------------------------
 
+#ifdef WINCE
+// Since WinCE doesn't have a current working directory store the current
+// working directory specified in the command line arguments 
+static NS_tchar* gDestPath;
+#endif
 static NS_tchar* gSourcePath;
 static ArchiveReader gArchiveReader;
 #ifdef XP_WIN
@@ -392,10 +411,38 @@ mstrtok(const char *delims, char **str)
   return ret;
 }
 
-static void ensure_write_permissions(const char *path)
+#ifdef XP_WIN
+// Returns a wchar path. The path returned will be absolute on Windows CE /
+// Windows Mobile and relative on all other versions of Windows.
+static NS_tchar*
+get_wide_path(const char *path)
+{
+  WCHAR *s = (WCHAR*) malloc(MAXPATHLEN * sizeof(WCHAR));
+  if (!s)
+    return NULL;
+
+  WCHAR *c = s;
+  WCHAR wpath[MAXPATHLEN];
+  MultiByteToWideChar(CP_ACP, 0, path, -1, wpath, MAXPATHLEN);
+#ifndef WINCE
+  wcscpy(c, wpath);
+  c += wcslen(wpath);
+#else
+  wcscpy(c, gDestPath);
+  c += wcslen(gDestPath);
+  wcscat(c, wpath);
+  c += wcslen(wpath);
+#endif
+  *c = NS_T('\0');
+  c++;
+  return s;
+}
+#endif
+
+static void ensure_write_permissions(const NS_tchar *path)
 {
 #ifdef XP_WIN
-  (void) chmod(path, _S_IREAD | _S_IWRITE);
+  (void) _wchmod(path, _S_IREAD | _S_IWRITE);
 #else
   struct stat fs;
   if (!stat(path, &fs) && !(fs.st_mode & S_IWUSR)) {
@@ -404,25 +451,25 @@ static void ensure_write_permissions(const char *path)
 #endif
 }
 
-static int ensure_remove(const char *path)
+static int ensure_remove(const NS_tchar *path)
 {
   ensure_write_permissions(path);
-  int rv = remove(path);
+  int rv = NS_tremove(path);
   if (rv)
-    LOG(("remove failed: %d,%d (%s)\n", rv, errno, path));
+    LOG(("remove failed: %d,%d (" LOG_S ")\n", rv, errno, path));
   return rv;
 }
 
-static FILE* ensure_open(const char *path, const char* flags, unsigned int options)
+static FILE* ensure_open(const NS_tchar *path, const NS_tchar* flags, unsigned int options)
 {
   ensure_write_permissions(path);
-  FILE* f = fopen(path, flags);
-  if (chmod(path, options) != 0) {
+  FILE* f = NS_tfopen(path, flags);
+  if (NS_tchmod(path, options) != 0) {
     fclose(f);
     return NULL;
   }
   struct stat ss;
-  if (stat(path, &ss) != 0 || ss.st_mode != options) {
+  if (NS_tstat(path, &ss) != 0 || ss.st_mode != options) {
     fclose(f);
     return NULL;
   }
@@ -430,30 +477,30 @@ static FILE* ensure_open(const char *path, const char* flags, unsigned int optio
 }
 
 // Ensure that the directory containing this file exists.
-static int ensure_parent_dir(const char *path)
+static int ensure_parent_dir(const NS_tchar *path)
 {
   int rv = OK;
 
-  char *slash = (char *) strrchr(path, '/');
-  if (slash)
-  {
-    *slash = '\0';
+  NS_tchar *slash = (NS_tchar *) NS_tstrrchr(path, NS_T('/'));
+  if (slash) {
+    *slash = NS_T('\0');
     rv = ensure_parent_dir(path);
     if (rv == OK) {
-      rv = mkdir(path, 0755);
-      // If the directory already exists, then ignore the error.
+      rv = NS_tmkdir(path, 0755);
+      // If the directory already exists, then ignore the error. On WinCE rv
+      // will equal 0 if the directory already exists.
       if (rv < 0 && errno != EEXIST) {
         rv = WRITE_ERROR;
       } else {
         rv = OK;
       }
     }
-    *slash = '/';
+    *slash = NS_T('/');
   }
   return rv;
 }
 
-static int copy_file(const char *spath, const char *dpath)
+static int copy_file(const NS_tchar *spath, const NS_tchar *dpath)
 {
   int rv = ensure_parent_dir(dpath);
   if (rv)
@@ -461,15 +508,15 @@ static int copy_file(const char *spath, const char *dpath)
 
   struct stat ss;
 
-  AutoFile sfile = fopen(spath, "rb");
+  AutoFile sfile = NS_tfopen(spath, NS_T("rb"));
   if (sfile == NULL || fstat(fileno(sfile), &ss)) {
-    LOG(("copy_file: failed to open or stat: %p,%s,%d\n", sfile.get(), spath, errno));
+    LOG(("copy_file: failed to open or stat: %p," LOG_S ",%d\n", sfile, spath, errno));
     return READ_ERROR;
   }
 
-  AutoFile dfile = ensure_open(dpath, "wb+", ss.st_mode); 
+  AutoFile dfile = ensure_open(dpath, NS_T("wb+"), ss.st_mode); 
   if (dfile == NULL) {
-    LOG(("copy_file: failed to open: %s,%d\n", dpath, errno));
+    LOG(("copy_file: failed to open: " LOG_S ",%d\n", dpath, errno));
     return WRITE_ERROR;
   }
 
@@ -498,13 +545,11 @@ static int copy_file(const char *spath, const char *dpath)
 
 //-----------------------------------------------------------------------------
 
-#define BACKUP_EXT ".moz-backup"
-
 // Create a backup copy of the specified file alongside it.
-static int backup_create(const char *path)
+static int backup_create(const NS_tchar *path)
 {
-  char backup[MAXPATHLEN];
-  snprintf(backup, sizeof(backup), "%s" BACKUP_EXT, path);
+  NS_tchar backup[MAXPATHLEN];
+  NS_tsnprintf(backup, sizeof(backup), NS_T("%s" BACKUP_EXT), path);
 
   return copy_file(path, backup);
 }
@@ -512,10 +557,10 @@ static int backup_create(const char *path)
 // Copy the backup copy of the specified file back overtop
 // the specified file.
 // XXX should be a file move instead
-static int backup_restore(const char *path)
+static int backup_restore(const NS_tchar *path)
 {
-  char backup[MAXPATHLEN];
-  snprintf(backup, sizeof(backup), "%s" BACKUP_EXT, path);
+  NS_tchar backup[MAXPATHLEN];
+  NS_tsnprintf(backup, sizeof(backup), NS_T("%s" BACKUP_EXT), path);
 
   int rv = copy_file(backup, path);
   if (rv)
@@ -529,10 +574,10 @@ static int backup_restore(const char *path)
 }
 
 // Discard the backup copy of the specified file.
-static int backup_discard(const char *path)
+static int backup_discard(const NS_tchar *path)
 {
-  char backup[MAXPATHLEN];
-  snprintf(backup, sizeof(backup), "%s" BACKUP_EXT, path);
+  NS_tchar backup[MAXPATHLEN];
+  NS_tsnprintf(backup, sizeof(backup), NS_T("%s" BACKUP_EXT), path);
 
   int rv = ensure_remove(backup);
   if (rv)
@@ -542,7 +587,7 @@ static int backup_discard(const char *path)
 }
 
 // Helper function for post-processing a temporary backup.
-static void backup_finish(const char *path, int status)
+static void backup_finish(const NS_tchar *path, int status)
 {
   if (status == OK)
     backup_discard(path);
@@ -586,7 +631,7 @@ private:
 class RemoveFile : public Action
 {
 public:
-  RemoveFile() : mFile(NULL), mSkip(0) { }
+  RemoveFile() : mFile(NULL), mDestFile(NULL), mSkip(0) { }
 
   int Parse(char *line);
   int Prepare();
@@ -595,6 +640,7 @@ public:
 
 private:
   const char* mFile;
+  const NS_tchar* mDestFile;
   int mSkip;
 };
 
@@ -607,35 +653,45 @@ RemoveFile::Parse(char *line)
   if (!mFile)
     return PARSE_ERROR;
 
+#ifdef XP_WIN
+  mDestFile = get_wide_path(mFile);
+  if (!mDestFile)
+    return PARSE_ERROR;
+#else
+  mDestFile = mFile;
+#endif
+
   return OK;
 }
 
 int
 RemoveFile::Prepare()
 {
-  LOG(("PREPARE REMOVE %s\n", mFile));
+  LOG(("PREPARE REMOVE " LOG_S "\n", mDestFile));
 
   // We expect the file to exist if we are to remove it.
-  int rv = access(mFile, F_OK);
+  int rv = NS_taccess(mDestFile, F_OK);
   if (rv) {
     LOG(("file cannot be removed because it does not exist; skipping\n"));
     mSkip = 1;
     return OK;
   }
 
-  char *slash = (char *) strrchr(mFile, '/');
+#ifndef WINCE
+  NS_tchar *slash = (NS_tchar *) NS_tstrrchr(mDestFile, NS_T('/'));
   if (slash) {
-    *slash = '\0';
-    rv = access(mFile, W_OK);
-    *slash = '/';
+    *slash = NS_T('\0');
+    rv = NS_taccess(mDestFile, W_OK);
+    *slash = NS_T('/');
   } else {
-    rv = access(".", W_OK);
+    rv = NS_taccess(NS_T("."), W_OK);
   }
 
   if (rv) {
     LOG(("access failed: %d\n", errno));
     return WRITE_ERROR;
   }
+#endif
 
   return OK;
 }
@@ -643,7 +699,7 @@ RemoveFile::Prepare()
 int
 RemoveFile::Execute()
 {
-  LOG(("EXECUTE REMOVE %s\n", mFile));
+  LOG(("EXECUTE REMOVE " LOG_S "\n", mDestFile));
 
   if (mSkip)
     return OK;
@@ -651,7 +707,7 @@ RemoveFile::Execute()
   // We expect the file to exist if we are to remove it.  We check here as well
   // as in PREPARE since we might have been asked to remove the same file more
   // than once: bug 311099.
-  int rv = access(mFile, F_OK);
+  int rv = NS_taccess(mDestFile, F_OK);
   if (rv) {
     LOG(("file cannot be removed because it does not exist; skipping\n"));
     mSkip = 1;
@@ -661,13 +717,13 @@ RemoveFile::Execute()
   // save a complete copy of the old file, and then remove the
   // old file.  we'll clean up the copy in Finish.
 
-  rv = backup_create(mFile);
+  rv = backup_create(mDestFile);
   if (rv) {
     LOG(("backup_create failed: %d\n", rv));
     return rv;
   }
 
-  rv = ensure_remove(mFile);
+  rv = ensure_remove(mDestFile);
   if (rv)
     return WRITE_ERROR;
 
@@ -677,18 +733,18 @@ RemoveFile::Execute()
 void
 RemoveFile::Finish(int status)
 {
-  LOG(("FINISH REMOVE %s\n", mFile));
+  LOG(("FINISH REMOVE " LOG_S "\n", mDestFile));
 
   if (mSkip)
     return;
 
-  backup_finish(mFile, status);
+  backup_finish(mDestFile, status);
 }
 
 class AddFile : public Action
 {
 public:
-  AddFile() : mFile(NULL) { }
+  AddFile() : mFile(NULL), mDestFile(NULL) { }
 
   virtual int Parse(char *line);
   virtual int Prepare(); // check that the source file exists
@@ -697,6 +753,7 @@ public:
 
 private:
   const char *mFile;
+  const NS_tchar *mDestFile;
 };
 
 int
@@ -708,13 +765,21 @@ AddFile::Parse(char *line)
   if (!mFile)
     return PARSE_ERROR;
 
+#ifdef XP_WIN
+  mDestFile = get_wide_path(mFile);
+  if (!mDestFile)
+    return PARSE_ERROR;
+#else
+  mDestFile = mFile;
+#endif
+
   return OK;
 }
 
 int
 AddFile::Prepare()
 {
-  LOG(("PREPARE ADD %s\n", mFile));
+  LOG(("PREPARE ADD " LOG_S "\n", mDestFile));
 
   return OK;
 }
@@ -722,37 +787,35 @@ AddFile::Prepare()
 int
 AddFile::Execute()
 {
-  LOG(("EXECUTE ADD %s\n", mFile));
+  LOG(("EXECUTE ADD " LOG_S "\n", mDestFile));
 
   int rv;
 
   // First make sure that we can actually get rid of any existing file.
-  if (access(mFile, F_OK) == 0)
-  {
-    rv = backup_create(mFile);
+  rv = NS_taccess(mDestFile, F_OK);
+  if (rv == 0) {
+    rv = backup_create(mDestFile);
     if (rv)
       return rv;
 
-    rv = ensure_remove(mFile);
+    rv = ensure_remove(mDestFile);
     if (rv)
       return WRITE_ERROR;
-  }
-  else
-  {
-    rv = ensure_parent_dir(mFile);
+  } else {
+    rv = ensure_parent_dir(mDestFile);
     if (rv)
       return rv;
   }
-    
-  return gArchiveReader.ExtractFile(mFile, mFile);
+
+  return gArchiveReader.ExtractFile(mFile, mDestFile);
 }
 
 void
 AddFile::Finish(int status)
 {
-  LOG(("FINISH ADD %s\n", mFile));
+  LOG(("FINISH ADD " LOG_S "\n", mDestFile));
 
-  backup_finish(mFile, status);
+  backup_finish(mDestFile, status);
 }
 
 class PatchFile : public Action
@@ -773,6 +836,7 @@ private:
 
   const char *mPatchFile;
   const char *mFile;
+  const NS_tchar *mDestFile;
   int mPatchIndex;
   MBSPatchHeader header;
   FILE* pfile;
@@ -855,13 +919,21 @@ PatchFile::Parse(char *line)
   if (!mFile)
     return PARSE_ERROR;
 
+#ifdef XP_WIN
+  mDestFile = get_wide_path(mFile);
+  if (!mDestFile)
+    return PARSE_ERROR;
+#else
+  mDestFile = mFile;
+#endif
+
   return OK;
 }
 
 int
 PatchFile::Prepare()
 {
-  LOG(("PREPARE PATCH %s\n", mFile));
+  LOG(("PREPARE PATCH " LOG_S "\n", mDestFile));
 
   // extract the patch to a temporary file
   mPatchIndex = sPatchIndex++;
@@ -893,7 +965,7 @@ PatchFile::Prepare()
   if (rv)
     return rv;
 
-  AutoFile ofile = fopen(mFile, "rb");
+  AutoFile ofile = NS_tfopen(mDestFile, NS_T("rb"));
   if (ofile == NULL)
     return READ_ERROR;
 
@@ -906,23 +978,23 @@ PatchFile::Prepare()
 int
 PatchFile::Execute()
 {
-  LOG(("EXECUTE PATCH %s\n", mFile));
+  LOG(("EXECUTE PATCH %s\n", mDestFile));
 
   // Create backup copy of the destination file before proceeding.
 
   struct stat ss;
-  if (stat(mFile, &ss))
+  if (NS_tstat(mDestFile, &ss))
     return READ_ERROR;
 
-  int rv = backup_create(mFile);
+  int rv = backup_create(mDestFile);
   if (rv)
     return rv;
 
-  rv = ensure_remove(mFile);
+  rv = ensure_remove(mDestFile);
   if (rv)
     return WRITE_ERROR;
 
-  AutoFile ofile = ensure_open(mFile, "wb+", ss.st_mode);
+  AutoFile ofile = ensure_open(mDestFile, NS_T("wb+"), ss.st_mode);
   if (ofile == NULL)
     return WRITE_ERROR;
 
@@ -932,9 +1004,9 @@ PatchFile::Execute()
 void
 PatchFile::Finish(int status)
 {
-  LOG(("FINISH PATCH %s\n", mFile));
+  LOG(("FINISH PATCH %s\n", mDestFile));
 
-  backup_finish(mFile, status);
+  backup_finish(mDestFile, status);
 }
 
 class AddIfFile : public AddFile
@@ -1177,7 +1249,7 @@ LaunchCallbackApp(const NS_tchar *workingDir, int argc, NS_tchar **argv)
 
   // Run from the specified working directory (see bug 312360).
   if(NS_tchdir(workingDir) != 0)
-    LOG(("Warning: chdir failed"));
+    LOG(("Warning: chdir failed\n"));
 
 #if defined(USE_EXECV)
   execv(argv[0], argv);
@@ -1250,10 +1322,17 @@ int NS_main(int argc, NS_tchar **argv)
   // necessary for the parent process to exit before its executable image may
   // be altered.
 
+#ifndef WINCE
   if (argc < 2) {
     fprintf(stderr, "Usage: updater <dir-path> [parent-pid [working-dir callback args...]]\n");
     return 1;
   }
+#else
+  if (argc < 4) {
+    fprintf(stderr, "Usage: updater <dir-path> parent-pid <working-dir> [callback args...]]\n");
+    return 1;
+  }
+#endif
 
   if (argc > 2 ) {
     int pid = NS_tatoi(argv[2]);
@@ -1366,6 +1445,9 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
 
   gSourcePath = argv[1];
+#ifdef WINCE
+  gDestPath = argv[3];
+#endif
 
   LogInit();
 
@@ -1477,8 +1559,7 @@ ActionList::Execute()
     UpdateProgressUI(1.0f + float(i++) / divisor);
 
     int rv = a->Execute();
-    if (rv)
-    {
+    if (rv) {
       LOG(("### execution failed\n"));
       return rv;
     }
