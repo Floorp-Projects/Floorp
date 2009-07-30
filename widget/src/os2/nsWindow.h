@@ -205,16 +205,12 @@ protected:
    // hooks subclasses may wish to override!
    virtual void     PostCreateWidget()            {}
    virtual PRInt32  GetClientHeight()             { return mBounds.height; }
-   virtual ULONG    GetSWPFlags( ULONG flags)     { return flags; }
    virtual void     SetupForPrint( HWND /*hwnd*/) {}
 
    // Useful functions for subclasses to use, threaded as necessary.
    virtual nsresult GetWindowText( nsString &str, PRUint32 *rc);
    virtual void     AddToStyle( ULONG style);
    virtual void     RemoveFromStyle( ULONG style);
-   // return true if deferred
-   virtual BOOL     SetWindowPos( HWND hwndInsertBehind, long x, long y,
-                                  long cx, long cy, unsigned long flags);
 
    // Message handlers - may wish to override.  Default implementation for
    // control, paint & scroll is to do nothing.
@@ -244,8 +240,6 @@ protected:
    PFNWP     mPrevWndProc;    // previous window procedure
    nsWindow *mParent;         // parent widget
    ULONG     mNextID;         // next child window id
-   PSWP      mSWPs;           // SWPs for deferred window positioning
-   ULONG     mlHave, mlUsed;  // description of mSWPs array
    HPOINTER  mFrameIcon;      // current frame icon
    VDKEY     mDeadKey;        // dead key from previous keyevent
    BOOL      mHaveDeadKey;    // is mDeadKey valid [0 may be a valid dead key, for all I know]
@@ -302,7 +296,6 @@ protected:
                                      PRInt16 aButton = nsMouseEvent::eLeftButton);
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
    void GetNonClientBounds(nsIntRect &aRect);
-   void    DeferPosition( HWND, HWND, long, long, long, long, ULONG);
    void ConstrainZLevel(HWND *aAfter);
 
    PRBool   CheckDragStatus(PRUint32 aAction, HPS * oHps);
