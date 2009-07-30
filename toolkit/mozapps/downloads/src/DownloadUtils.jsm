@@ -66,7 +66,12 @@ var EXPORTED_SYMBOLS = [ "DownloadUtils" ];
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/PluralForm.jsm");
+
+__defineGetter__("PluralForm", function() {
+  delete this.PluralForm;
+  Cu.import("resource://gre/modules/PluralForm.jsm");
+  return PluralForm;
+});
 
 const kDownloadProperties =
   "chrome://mozapps/locale/downloads/downloads.properties";
