@@ -65,10 +65,10 @@ public:
                     nsReflowStatus& aStatus);
                                
   NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
+                           nsFrameList&    aFrameList);
   NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
+                           nsFrameList&    aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
@@ -1106,7 +1106,7 @@ nsColumnSetFrame::GetSkipSides() const
 
 NS_IMETHODIMP
 nsColumnSetFrame::AppendFrames(nsIAtom*        aListName,
-                               nsIFrame*       aFrameList)
+                               nsFrameList&    aFrameList)
 {
   NS_NOTREACHED("AppendFrames not supported");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1115,7 +1115,7 @@ nsColumnSetFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsColumnSetFrame::InsertFrames(nsIAtom*        aListName,
                                nsIFrame*       aPrevFrame,
-                               nsIFrame*       aFrameList)
+                               nsFrameList&    aFrameList)
 {
   NS_NOTREACHED("InsertFrames not supported");
   return NS_ERROR_NOT_IMPLEMENTED;

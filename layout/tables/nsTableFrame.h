@@ -200,10 +200,10 @@ public:
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
@@ -499,22 +499,12 @@ public:
                           PRBool           aConsiderSpans);
 
   /** Insert multiple rowgroups into the table cellmap handling
-    * @param aFirstRowGroupFrame - first row group to be inserted all siblings
-    *                              will be appended too.
+    * @param aRowGroups - iterator that iterates over the rowgroups to insert
     */
-  void AppendRowGroups(nsIFrame* aFirstRowGroupFrame);
+  void InsertRowGroups(const nsFrameList::Slice& aRowGroups);
 
-  /** Insert multiple rowgroups into the table cellmap handling
-    * @param aFirstRowGroupFrame - first row group to be inserted
-    * @param aLastRowGroupFrame  - when inserting the siblings of 
-    *                              aFirstRowGroupFrame stop at this row group
-    */
-  void InsertRowGroups(nsIFrame*       aFirstRowGroupFrame,
-                       nsIFrame*       aLastRowGroupFrame);
-
-  void InsertColGroups(PRInt32         aColIndex,
-                       nsIFrame*       aFirstFrame,
-                       nsIFrame*       aLastFrame = nsnull);
+  void InsertColGroups(PRInt32                   aStartColIndex,
+                       const nsFrameList::Slice& aColgroups);
 
   virtual void RemoveCol(nsTableColGroupFrame* aColGroupFrame,
                          PRInt32               aColIndex,
@@ -745,13 +735,10 @@ public:
   /** Reset the rowindices of all rows as they might have changed due to 
     * rowgroup reordering, exclude new row group frames that show in the
     * reordering but are not yet inserted into the cellmap
-    * @param aFirstRowGroupFrame - first row group to be excluded
-    * @param aLastRowGroupFrame  - last sibling of aFirstRowGroupFrame that
-    *                              should be excluded when reseting the row
-    *                              indices.
+    * @param aRowGroupsToExclude - an iterator that will produce the row groups
+    *                              to exclude.
     */
-  void ResetRowIndices(nsIFrame* aFirstRowGroupFrame = nsnull,
-                       nsIFrame* aLastRowGroupFrame = nsnull);
+  void ResetRowIndices(const nsFrameList::Slice& aRowGroupsToExclude);
 
   nsTArray<nsTableColFrame*>& GetColCache();
 

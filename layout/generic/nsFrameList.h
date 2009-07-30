@@ -325,20 +325,48 @@ public:
       mEnd(aOther.mEnd)
     {}
 
-    PRBool AtEnd() const { return mFrame == mEnd; }
+    PRBool AtEnd() const {
+      // Can't just check mEnd, because some table code goes and destroys the
+      // tail of the frame list (including mEnd!) while iterating over the
+      // frame list.
+      return !mFrame || mFrame == mEnd;
+    }
 
     /* Next() needs to know about nsIFrame, and nsIFrame will need to
        know about nsFrameList methods, so in order to inline this put
        the implementation in nsIFrame.h */
     inline void Next();
 
-    nsIFrame* get() const { return mFrame; }
+    /**
+     * Get the current frame we're pointing to.  Do not call this on an
+     * iterator that is at end!
+     */
+    nsIFrame* get() const {
+      NS_PRECONDITION(!AtEnd(), "Enumerator is at end");
+      return mFrame;
+    }
+
+    /**
+     * Get an enumerator that is just like this one, but not limited in terms of
+     * the part of the list it will traverse.
+     */
+    Enumerator GetUnlimitedEnumerator() const {
+      return Enumerator(*this, nsnull);
+    }
 
 #ifdef DEBUG
     const nsFrameList& List() const { return mSlice.mList; }
 #endif
 
   protected:
+    Enumerator(const Enumerator& aOther, const nsIFrame* const aNewEnd):
+#ifdef DEBUG
+      mSlice(aOther.mSlice),
+#endif
+      mFrame(aOther.mFrame),
+      mEnd(aNewEnd)
+    {}
+
 #ifdef DEBUG
     /* Has to be an object, not a reference, since the slice could
        well be a temporary constructed from an nsFrameList */

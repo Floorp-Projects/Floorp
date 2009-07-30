@@ -406,7 +406,7 @@ nsHTMLButtonControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 
 NS_IMETHODIMP 
 nsHTMLButtonControlFrame::AppendFrames(nsIAtom*        aListName,
-                                       nsIFrame*       aFrameList)
+                                       nsFrameList&    aFrameList)
 {
   NS_NOTREACHED("unsupported operation");
   return NS_ERROR_UNEXPECTED;
@@ -415,7 +415,7 @@ nsHTMLButtonControlFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::InsertFrames(nsIAtom*        aListName,
                                        nsIFrame*       aPrevFrame,
-                                       nsIFrame*       aFrameList)
+                                       nsFrameList&    aFrameList)
 {
   NS_NOTREACHED("unsupported operation");
   return NS_ERROR_UNEXPECTED;

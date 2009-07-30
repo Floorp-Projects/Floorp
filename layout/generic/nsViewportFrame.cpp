@@ -112,7 +112,7 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 NS_IMETHODIMP
 ViewportFrame::AppendFrames(nsIAtom*        aListName,
-                            nsIFrame*       aFrameList)
+                            nsFrameList&    aFrameList)
 {
   nsresult rv = NS_OK;
 
@@ -131,7 +131,7 @@ ViewportFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 ViewportFrame::InsertFrames(nsIAtom*        aListName,
                             nsIFrame*       aPrevFrame,
-                            nsIFrame*       aFrameList)
+                            nsFrameList&    aFrameList)
 {
   nsresult rv = NS_OK;
 
