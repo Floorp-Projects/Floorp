@@ -82,8 +82,13 @@ ASFLAGS		+= /I../../..public
 endif
 
 ifeq ($(TARGET_CPU),x86_64)
+ifndef GNU_CXX
 CPPSRCS 	:= xptcinvoke_x86_64.cpp xptcstubs_x86_64.cpp
 ASFILES		:= xptcinvoke_asm_x86_64.asm xptcstubs_asm_x86_64.asm
+else #!GNU_CXX
+CPPSRCS		:= xptcinvoke_x86_64.cpp  xptcstubs_x86_64_gnu.cpp
+ASFILES		:= xptcinvoke_asm_x86_64_gnu.s
+endif #!GNU_CXX
 endif
 
 ifeq ($(OS_ARCH),WINCE)

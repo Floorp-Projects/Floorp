@@ -166,7 +166,7 @@ JSScope::createTable(JSContext *cx, bool report)
         sizeLog2 = MIN_SCOPE_SIZE_LOG2;
     }
 
-    table = (JSScopeProperty **) calloc(JS_BIT(sizeLog2), sizeof(JSScopeProperty *));
+    table = (JSScopeProperty **) js_calloc(JS_BIT(sizeLog2) * sizeof(JSScopeProperty *));
     if (!table) {
         if (report)
             JS_ReportOutOfMemory(cx);
@@ -188,7 +188,7 @@ JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj)
     JS_ASSERT(OPS_IS_NATIVE(ops));
     JS_ASSERT(obj);
 
-    JSScope *scope = (JSScope *) JS_malloc(cx, sizeof(JSScope));
+    JSScope *scope = (JSScope *) cx->malloc(sizeof(JSScope));
     if (!scope)
         return NULL;
 
@@ -196,7 +196,7 @@ JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj)
     scope->object = obj;
     scope->nrefs = 1;
     scope->freeslot = JSSLOT_FREE(clasp);
-    scope->flags = 0;
+    scope->flags = cx->runtime->gcRegenShapesScopeFlag;
     js_LeaveTraceIfGlobalObject(cx, obj);
     scope->initMinimal(cx);
 
@@ -213,7 +213,7 @@ JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
 {
     JS_ASSERT(!emptyScope);
 
-    JSScope *scope = (JSScope *) JS_malloc(cx, sizeof(JSScope));
+    JSScope *scope = (JSScope *) cx->malloc(sizeof(JSScope));
     if (!scope)
         return NULL;
 
@@ -226,7 +226,7 @@ JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
      */
     scope->nrefs = 2;
     scope->freeslot = JSSLOT_FREE(clasp);
-    scope->flags = 0;
+    scope->flags = OWN_SHAPE | cx->runtime->gcRegenShapesScopeFlag;
     scope->initMinimal(cx);
 
 #ifdef JS_THREADSAFE
@@ -252,13 +252,13 @@ JSScope::destroy(JSContext *cx, JSScope *scope)
     js_FinishTitle(cx, &scope->title);
 #endif
     if (scope->table)
-        JS_free(cx, scope->table);
+        cx->free(scope->table);
     if (scope->emptyScope)
         scope->emptyScope->drop(cx, NULL);
 
     LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= scope->entryCount);
     JS_RUNTIME_UNMETER(cx->runtime, liveScopes);
-    JS_free(cx, scope);
+    cx->free(scope);
 }
 
 #ifdef JS_DUMP_PROPTREE_STATS
@@ -401,11 +401,9 @@ JSScope::changeTable(JSContext *cx, int change)
     oldsize = JS_BIT(oldlog2);
     newsize = JS_BIT(newlog2);
     nbytes = SCOPE_TABLE_NBYTES(newsize);
-    newtable = (JSScopeProperty **) calloc(nbytes, 1);
-    if (!newtable) {
-        JS_ReportOutOfMemory(cx);
+    newtable = (JSScopeProperty **) cx->calloc(nbytes);
+    if (!newtable)
         return false;
-    }
 
     /* Now that we have newtable allocated, update members. */
     hashShift = JS_DHASH_BITS - newlog2;
@@ -428,7 +426,7 @@ JSScope::changeTable(JSContext *cx, int change)
     }
 
     /* Finally, free the old table storage. */
-    JS_free(cx, oldtable);
+    cx->free(oldtable);
     return true;
 }
 
@@ -578,7 +576,7 @@ NewPropTreeKidsChunk(JSRuntime *rt)
 {
     PropTreeKidsChunk *chunk;
 
-    chunk = (PropTreeKidsChunk *) calloc(1, sizeof *chunk);
+    chunk = (PropTreeKidsChunk *) js_calloc(sizeof *chunk);
     if (!chunk)
         return NULL;
     JS_ASSERT(((jsuword)chunk & CHUNKY_KIDS_TAG) == 0);
@@ -592,7 +590,7 @@ DestroyPropTreeKidsChunk(JSRuntime *rt, PropTreeKidsChunk *chunk)
     JS_RUNTIME_UNMETER(rt, propTreeKidsChunks);
     if (chunk->table)
         JS_DHashTableDestroy(chunk->table);
-    free(chunk);
+    js_free(chunk);
 }
 
 /* NB: Called with rt->gcLock held. */
@@ -1215,7 +1213,7 @@ JSScope::add(JSContext *cx, jsid id,
                 splen = entryCount;
                 JS_ASSERT(splen != 0);
                 spvec = (JSScopeProperty **)
-                        JS_malloc(cx, SCOPE_TABLE_NBYTES(splen));
+                        cx->malloc(SCOPE_TABLE_NBYTES(splen));
                 if (!spvec)
                     goto fail_overwrite;
                 i = splen;
@@ -1248,7 +1246,7 @@ JSScope::add(JSContext *cx, jsid id,
                     } else {
                         sprop = GetPropertyTreeChild(cx, sprop, spvec[i]);
                         if (!sprop) {
-                            JS_free(cx, spvec);
+                            cx->free(spvec);
                             goto fail_overwrite;
                         }
 
@@ -1257,7 +1255,7 @@ JSScope::add(JSContext *cx, jsid id,
                         SPROP_STORE_PRESERVING_COLLISION(spp2, sprop);
                     }
                 } while (++i < splen);
-                JS_free(cx, spvec);
+                cx->free(spvec);
 
                 /*
                  * Now sprop points to the last property in this scope, where
@@ -1558,7 +1556,7 @@ JSScope::clear(JSContext *cx)
     LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= entryCount);
 
     if (table)
-        free(table);
+        js_free(table);
     clearMiddleDelete();
     js_LeaveTraceIfGlobalObject(cx, object);
     initMinimal(cx);
@@ -1594,7 +1592,7 @@ JSScope::replacingShapeChange(JSContext *cx, JSScopeProperty *sprop, JSScopeProp
 {
     if (shape == sprop->shape)
         shape = newsprop->shape;
-    else 
+    else
         generateOwnShape(cx);
 }
 
@@ -1604,7 +1602,7 @@ JSScope::sealingShapeChange(JSContext *cx)
     generateOwnShape(cx);
 }
 
-void 
+void
 JSScope::shadowingShapeChange(JSContext *cx, JSScopeProperty *sprop)
 {
     generateOwnShape(cx);
@@ -1651,7 +1649,7 @@ JSScopeProperty::trace(JSTracer *trc)
 {
     if (IS_GC_MARKING_TRACER(trc))
         flags |= SPROP_MARK;
-    TRACE_ID(trc, id);
+    js_TraceId(trc, id);
 
 #if JS_HAS_GETTER_SETTER
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {

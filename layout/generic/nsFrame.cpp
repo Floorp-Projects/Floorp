@@ -4023,8 +4023,11 @@ nsIFrame::GetOverflowRectRelativeToSelf() const
   if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) ||
       !GetStyleDisplay()->HasTransform())
     return GetOverflowRect();
-  return *static_cast<nsRect*>
+  nsRect* preEffectsBBox = static_cast<nsRect*>
     (GetProperty(nsGkAtoms::preEffectsBBoxProperty));
+  if (!preEffectsBBox)
+    return GetOverflowRect();
+  return *preEffectsBBox;
 }
 
 void

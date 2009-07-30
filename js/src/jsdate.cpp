@@ -1961,7 +1961,7 @@ date_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     str = JS_NewString(cx, bytes, strlen(bytes));
     if (!str) {
-        free(bytes);
+        js_free(bytes);
         return JS_FALSE;
     }
     *vp = STRING_TO_JSVAL(str);

@@ -2860,8 +2860,6 @@ gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     if (!run)
         return nsnull;
 
-    run->RecordSurrogates(aString);
-
     nsCAutoString utf8;
     PRInt32 headerLen = AppendDirectionalIndicatorUTF8(run->IsRightToLeft(), utf8);
     AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
