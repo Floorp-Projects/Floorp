@@ -70,10 +70,10 @@ public:
      * Create a textrun using cached words.
      * Invalid characters (see gfxFontGroup::IsInvalidChar) will be automatically
      * treated as invisible missing.
-     * @param aFlags the flags TEXT_IS_ASCII and TEXT_HAS_SURROGATES must be set
-     * by the caller, if applicable; TEXT_IN_CACHE is added if we
-     * have a reference to the textrun in the cache and RemoveTextRun must
-     * be called when the textrun dies.
+     * @param aFlags the flag TEXT_IS_ASCII must be set by the caller,
+     * if applicable; TEXT_IN_CACHE is added if we have a reference to
+     * the textrun in the cache and RemoveTextRun must be called when the
+     * textrun dies.
      */
     static gfxTextRun *MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                                    gfxFontGroup *aFontGroup,
@@ -83,10 +83,10 @@ public:
      * Create a textrun using cached words.
      * Invalid characters (see gfxFontGroup::IsInvalidChar) will be automatically
      * treated as invisible missing.
-     * @param aFlags the flags TEXT_IS_ASCII and TEXT_HAS_SURROGATES must be set
-     * by the caller, if applicable; TEXT_IN_CACHE is added if we
-     * have a reference to the textrun in the cache and RemoveTextRun must
-     * be called when the textrun dies.
+     * @param aFlags the flag TEXT_IS_ASCII must be set by the caller,
+     * if applicable; TEXT_IN_CACHE is added if we have a reference to
+     * the textrun in the cache and RemoveTextRun must be called when the
+     * textrun dies.
      */
     static gfxTextRun *MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                                    gfxFontGroup *aFontGroup,
