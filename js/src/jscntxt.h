@@ -95,14 +95,11 @@ typedef struct VMSideExit VMSideExit;
 
 #ifdef __cplusplus
 namespace nanojit {
-    class Assembler;
-    class CodeAlloc;
     class Fragment;
     class Fragmento;
     class LirBuffer;
 }
 class TraceRecorder;
-class VMAllocator;
 extern "C++" { template<typename T> class Queue; }
 typedef Queue<uint16> SlotList;
 
@@ -143,9 +140,6 @@ struct JSTraceMonitor {
 
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::Fragmento) fragmento;
-    CLS(VMAllocator)        allocator;   // A chunk allocator for LIR.
-    CLS(nanojit::CodeAlloc) codeAlloc;   // A general allocator for native code.
-    CLS(nanojit::Assembler) assembler;
     CLS(TraceRecorder)      recorder;
     jsval                   *reservedDoublePool;
     jsval                   *reservedDoublePoolPtr;
@@ -177,11 +171,9 @@ struct JSTraceMonitor {
     JSPackedBool            useReservedObjects;
     JSObject                *reservedObjects;
 
-    /* Parts for the regular expression compiler. This is logically
+    /* Fragmento for the regular expression compiler. This is logically
      * a distinct compiler but needs to be managed in exactly the same
      * way as the real tracing Fragmento. */
-    CLS(VMAllocator)        reAllocator;
-    CLS(nanojit::CodeAlloc) reCodeAlloc;
     CLS(nanojit::LirBuffer) reLirBuf;
     CLS(nanojit::Fragmento) reFragmento;
 
