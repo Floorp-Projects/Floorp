@@ -111,13 +111,13 @@
 JS_PUBLIC_API(void *)
 JS_DHashAllocTable(JSDHashTable *table, uint32 nbytes)
 {
-    return malloc(nbytes);
+    return js_malloc(nbytes);
 }
 
 JS_PUBLIC_API(void)
 JS_DHashFreeTable(JSDHashTable *table, void *ptr)
 {
-    free(ptr);
+    js_free(ptr);
 }
 
 JS_PUBLIC_API(JSDHashNumber)
@@ -180,7 +180,7 @@ JS_DHashFreeStringKey(JSDHashTable *table, JSDHashEntryHdr *entry)
 {
     const JSDHashEntryStub *stub = (const JSDHashEntryStub *)entry;
 
-    free((void *) stub->key);
+    js_free((void *) stub->key);
     memset(entry, 0, table->entrySize);
 }
 
@@ -212,11 +212,11 @@ JS_NewDHashTable(const JSDHashTableOps *ops, void *data, uint32 entrySize,
 {
     JSDHashTable *table;
 
-    table = (JSDHashTable *) malloc(sizeof *table);
+    table = (JSDHashTable *) js_malloc(sizeof *table);
     if (!table)
         return NULL;
     if (!JS_DHashTableInit(table, ops, data, entrySize, capacity)) {
-        free(table);
+        js_free(table);
         return NULL;
     }
     return table;
@@ -226,7 +226,7 @@ JS_PUBLIC_API(void)
 JS_DHashTableDestroy(JSDHashTable *table)
 {
     JS_DHashTableFinish(table);
-    free(table);
+    js_free(table);
 }
 
 JS_PUBLIC_API(JSBool)

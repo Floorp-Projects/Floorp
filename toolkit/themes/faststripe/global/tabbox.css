@@ -76,7 +76,7 @@ tab
   color: -moz-DialogText;
 }
 
-tab[chromedir="rtl"] {
+tab:-moz-locale-dir(rtl) {
   -moz-border-radius-bottomleft: 1px;
   -moz-border-radius-bottomright: 0px;
 }
@@ -96,14 +96,14 @@ tab:focus > .tab-middle {
   outline: 1px dotted;
 }
 
-tab[beforeselected="true"]:not([chromedir="rtl"]),
-tab[selected="true"][chromedir="rtl"] + tab {
+tab[beforeselected="true"]:not(:-moz-locale-dir(rtl)),
+tab[selected="true"]:-moz-locale-dir(rtl) + tab {
   border-right: none;
   -moz-border-radius-topright: 0;
 }
 
-tab[selected="true"]:not([chromedir="rtl"]) + tab,
-tab[beforeselected="true"][chromedir="rtl"] {
+tab[selected="true"]:not(:-moz-locale-dir(rtl)) + tab,
+tab[beforeselected="true"]:-moz-locale-dir(rtl) {
   border-left: none;
   -moz-border-radius-topleft: 0;
 }
@@ -136,13 +136,13 @@ tab:first-of-type[selected="true"] {
   padding: 4px 6px 1px 6px;
 }
 
-.tab-bottom[beforeselected="true"]:not([chromedir="rtl"]),
-.tab-bottom[selected="true"][chromedir="rtl"] + .tab-bottom {
+.tab-bottom[beforeselected="true"]:not(:-moz-locale-dir(rtl)),
+.tab-bottom[selected="true"]:-moz-locale-dir(rtl) + .tab-bottom {
   -moz-border-radius-bottomright: 0;
 }
 
-.tab-bottom[selected="true"]:not([chromedir="rtl"]) + .tab-bottom,
-.tab-bottom[beforeselected="true"][chromedir="rtl"] {
+.tab-bottom[selected="true"]:not(:-moz-locale-dir(rtl)) + .tab-bottom,
+.tab-bottom[beforeselected="true"]:-moz-locale-dir(rtl) {
   -moz-border-radius-bottomleft: 0;
 }
 

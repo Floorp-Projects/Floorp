@@ -104,7 +104,7 @@ textbox.plain {
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.textbox-search-icon[chromedir="rtl"] {
+.textbox-search-icon:-moz-locale-dir(rtl) {
   -moz-transform: scaleX(-1);
 }
 

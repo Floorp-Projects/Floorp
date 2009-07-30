@@ -910,6 +910,11 @@ pref("intl.locale.matchOS",                 false);
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://global/locale/intl.properties");
 
+// these locales have right-to-left UI
+pref("intl.uidirection.ar", "rtl");
+pref("intl.uidirection.he", "rtl");
+pref("intl.uidirection.fa", "rtl");
+
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Standard Symbols L, DejaVu Sans, Cambria Math");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.

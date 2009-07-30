@@ -45,7 +45,7 @@
   padding: 0;
 }
 
-.searchbar-engine-button[chromedir="rtl"] {
+.searchbar-engine-button:-moz-locale-dir(rtl) {
   background-image: url("chrome://browser/skin/urlbar/startcap-rtl.png");
 }
 
@@ -53,7 +53,7 @@
   background-image: url("chrome://browser/skin/urlbar/startcap-focused.png");
 }
 
-.searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"] {
+.searchbar-textbox[focused="true"] > .searchbar-engine-button:-moz-locale-dir(rtl) {
   background-image: url("chrome://browser/skin/urlbar/startcap-focused-rtl.png");
 }
 
@@ -61,7 +61,7 @@
   background-image: url("chrome://browser/skin/urlbar/startcap-focused-graphite.png");
 }
 
-.searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"]:-moz-system-metric(mac-graphite-theme) {
+.searchbar-textbox[focused="true"] > .searchbar-engine-button:-moz-locale-dir(rtl):-moz-system-metric(mac-graphite-theme) {
   background-image: url("chrome://browser/skin/urlbar/startcap-focused-graphite-rtl.png");
 }
 
@@ -70,8 +70,8 @@
   background-image: url("chrome://browser/skin/urlbar/startcap-active.png") !important;
 }
 
-.searchbar-engine-button:hover:active[chromedir="rtl"],
-.searchbar-engine-button[open="true"][chromedir="rtl"] {
+.searchbar-engine-button:hover:active:-moz-locale-dir(rtl),
+.searchbar-engine-button[open="true"]:-moz-locale-dir(rtl) {
   background-image: url("chrome://browser/skin/urlbar/startcap-active-rtl.png") !important;
 }
 
@@ -80,8 +80,8 @@
   background-image: url("chrome://browser/skin/urlbar/startcap-active-focused.png") !important;
 }
 
-.searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"]:active,
-.searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"][chromedir="rtl"] {
+.searchbar-textbox[focused="true"] > .searchbar-engine-button:-moz-locale-dir(rtl):active,
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"]:-moz-locale-dir(rtl) {
   background-image: url("chrome://browser/skin/urlbar/startcap-active-focused-rtl.png") !important;
 }
 
@@ -90,8 +90,8 @@
   background-image: url("chrome://browser/skin/urlbar/startcap-active-focused-graphite.png") !important;
 }
 
-.searchbar-textbox[focused="true"] > .searchbar-engine-button[chromedir="rtl"]:active:-moz-system-metric(mac-graphite-theme),
-.searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"][chromedir="rtl"]:-moz-system-metric(mac-graphite-theme) {
+.searchbar-textbox[focused="true"] > .searchbar-engine-button:-moz-locale-dir(rtl):active:-moz-system-metric(mac-graphite-theme),
+.searchbar-textbox[focused="true"] > .searchbar-engine-button[open="true"]:-moz-locale-dir(rtl):-moz-system-metric(mac-graphite-theme) {
   background-image: url("chrome://browser/skin/urlbar/startcap-active-focused-graphite-rtl.png") !important;
 }
 
@@ -118,7 +118,7 @@
   -moz-padding-end: 5px;
 }
 
-.search-go-container[chromedir="rtl"] {
+.search-go-container:-moz-locale-dir(rtl) {
   background-image: url("chrome://browser/skin/urlbar/endcap-rtl.png");
 }
 
@@ -126,7 +126,7 @@
   background-image: url("chrome://browser/skin/urlbar/endcap-focused.png");
 }
 
-.searchbar-textbox[focused="true"] > .search-go-container[chromedir="rtl"] {
+.searchbar-textbox[focused="true"] > .search-go-container:-moz-locale-dir(rtl) {
   background: url("chrome://browser/skin/urlbar/endcap-focused-rtl.png") no-repeat left top;
 }
 
@@ -134,7 +134,7 @@
   background-image: url("chrome://browser/skin/urlbar/endcap-focused-graphite.png");
 }
 
-.searchbar-textbox[focused="true"] > .search-go-container[chromedir="rtl"]:-moz-system-metric(mac-graphite-theme) {
+.searchbar-textbox[focused="true"] > .search-go-container:-moz-locale-dir(rtl):-moz-system-metric(mac-graphite-theme) {
   background-image: url("chrome://browser/skin/urlbar/endcap-focused-graphite-rtl.png");
 }
 

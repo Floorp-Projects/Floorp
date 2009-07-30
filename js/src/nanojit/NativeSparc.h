@@ -214,7 +214,7 @@ namespace nanojit
     int offset = (c->_address) - ((int)_nIns) + 4; \
     int i = 0x40000000 | ((offset >> 2) & 0x3FFFFFFF); \
     IMM32(i);    \
-    verbose_only(asm_output("call %s",(c->_name));) \
+    asm_output("call %s",(c->_name)); \
     } while (0)
 
 #define Format_2_1(rd, op2, imm22) do { \
@@ -292,548 +292,548 @@ namespace nanojit
 
 #define ADDCC(rs1, rs2, rd) \
     do { \
-    asm_output("addcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x10, rs1, 0, rs2); \
+    asm_output("addcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define ADD(rs1, rs2, rd) \
     do { \
-    asm_output("add %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0, rs1, 0, rs2); \
+    asm_output("add %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define AND(rs1, rs2, rd) \
     do { \
-    asm_output("and %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x1, rs1, 0, rs2); \
+    asm_output("and %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define BA(a, dsp22) \
     do { \
-    asm_output("ba %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x8, 0x2, dsp22); \
+    asm_output("ba %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BE(a, dsp22) \
     do { \
-    asm_output("be %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x1, 0x2, dsp22); \
+    asm_output("be %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BG(a, dsp22) \
     do { \
-    asm_output("bg %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xA, 0x2, dsp22); \
+    asm_output("bg %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BGU(a, dsp22) \
     do { \
-    asm_output("bgu %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xC, 0x2, dsp22); \
+    asm_output("bgu %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BGE(a, dsp22) \
     do { \
-    asm_output("bge %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xB, 0x2, dsp22); \
+    asm_output("bge %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BL(a, dsp22) \
     do { \
-    asm_output("bl %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x3, 0x2, dsp22); \
+    asm_output("bl %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BLE(a, dsp22) \
     do { \
-    asm_output("ble %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x2, 0x2, dsp22); \
+    asm_output("ble %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BLEU(a, dsp22) \
     do { \
-    asm_output("bleu %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x4, 0x2, dsp22); \
+    asm_output("bleu %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BCC(a, dsp22) \
     do { \
-    asm_output("bcc %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xd, 0x2, dsp22); \
+    asm_output("bcc %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BCS(a, dsp22) \
     do { \
-    asm_output("bcs %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x5, 0x2, dsp22); \
+    asm_output("bcs %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BVC(a, dsp22) \
     do { \
-    asm_output("bvc %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xf, 0x2, dsp22); \
+    asm_output("bvc %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BVS(a, dsp22) \
     do { \
-    asm_output("bvc %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x7, 0x2, dsp22); \
+    asm_output("bvc %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define BNE(a, dsp22) \
     do { \
-    asm_output("bne %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x9, 0x2, dsp22); \
+    asm_output("bne %p", _nIns + dsp22 - 1); \
     } while (0)
 
 #define FABSS(rs2, rd) \
     do { \
-    asm_output("fabs %s, %s", gpn(rs2+32), gpn(rd+32)); \
     Format_3_8(2, rd, 0x34, 0, 0x9, rs2); \
+    asm_output("fabs %s, %s", gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
 #define FADDD(rs1, rs2, rd) \
     do { \
-    asm_output("faddd %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     Format_3_8(2, rd, 0x34, rs1, 0x42, rs2); \
+    asm_output("faddd %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
 #define FBE(a, dsp22) \
     do { \
-    asm_output("fbe %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x9, 0x6, dsp22); \
+    asm_output("fbe %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FBNE(a, dsp22) \
     do { \
-    asm_output("fbne %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x1, 0x6, dsp22); \
+    asm_output("fbne %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FBUE(a, dsp22) \
     do { \
-    asm_output("fbue %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xA, 0x6, dsp22); \
+    asm_output("fbue %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FBG(a, dsp22) \
     do { \
-    asm_output("fng %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x6, 0x6, dsp22); \
+    asm_output("fng %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FBUG(a, dsp22) \
     do { \
-    asm_output("fbug %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x5, 0x6, dsp22); \
+    asm_output("fbug %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FBGE(a, dsp22) \
     do { \
-    asm_output("fbge %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xB, 0x6, dsp22); \
+    asm_output("fbge %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FBUGE(a, dsp22) \
     do { \
-    asm_output("fbuge %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xC, 0x6, dsp22); \
+    asm_output("fbuge %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FBL(a, dsp22) \
     do { \
-    asm_output("fbl %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0x4, 0x6, dsp22); \
+    asm_output("fbl %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FBLE(a, dsp22) \
     do { \
-    asm_output("fble %p", _nIns + dsp22 - 1); \
     Format_2_2(a, 0xD, 0x6, dsp22); \
+    asm_output("fble %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FCMPD(rs1, rs2) \
     do { \
-    asm_output("fcmpd %s, %s", gpn(rs1+32), gpn(rs2+32)); \
     Format_3_9(2, 0, 0, 0x35, rs1, 0x52, rs2); \
+    asm_output("fcmpd %s, %s", gpn(rs1+32), gpn(rs2+32)); \
     } while (0)
 
 #define FSUBD(rs1, rs2, rd) \
     do { \
-    asm_output("fsubd %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     Format_3_8(2, rd, 0x34, rs1, 0x46, rs2); \
+    asm_output("fsubd %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
 #define FMULD(rs1, rs2, rd) \
     do { \
-    asm_output("fmuld %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     Format_3_8(2, rd, 0x34, rs1, 0x4a, rs2); \
+    asm_output("fmuld %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
 #define FDIVD(rs1, rs2, rd) \
     do { \
-    asm_output("fdivd %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     Format_3_8(2, rd, 0x34, rs1, 0x4e, rs2); \
+    asm_output("fdivd %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
 #define FMOVD(rs2, rd) \
     do { \
-    asm_output("fmovd %s, %s", gpn(rs2+32), gpn(rd+32)); \
     Format_3_8(2, rd, 0x34, 0, 0x2, rs2); \
+    asm_output("fmovd %s, %s", gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
 #define FNEGD(rs2, rd) \
     do { \
-    asm_output("fnegd %s, %s", gpn(rs2+32), gpn(rd+32)); \
     Format_3_8(2, rd, 0x34, 0, 0x6, rs2); \
+    asm_output("fnegd %s, %s", gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
 #define FITOD(rs2, rd) \
     do { \
-    asm_output("fitod %s, %s", gpn(rs2+32), gpn(rd+32)); \
     Format_3_8(2, rd, 0x34, 0, 0xc8, rs2); \
+    asm_output("fitod %s, %s", gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
 #define JMPL(rs1, rs2, rd) \
     do { \
-    asm_output("jmpl [%s + %s]", gpn(rs1), gpn(rs2)); \
     Format_3_1(2, rd, 0x38, rs1, 0, rs2); \
+    asm_output("jmpl [%s + %s]", gpn(rs1), gpn(rs2)); \
     } while (0)
 
 #define JMPLI(rs1, simm13, rd) \
     do { \
-    asm_output("jmpl [%s + %d]", gpn(rs1), simm13); \
     Format_3_1I(2, rd, 0x38, rs1, simm13); \
+    asm_output("jmpl [%s + %d]", gpn(rs1), simm13); \
     } while (0)
 
 #define LDF(rs1, rs2, rd) \
     do { \
-    asm_output("ld [%s + %s], %s", gpn(rs1), gpn(rs2), gpn(rd+32)); \
     Format_3_1(3, rd, 0x20, rs1, 0, rs2); \
+    asm_output("ld [%s + %s], %s", gpn(rs1), gpn(rs2), gpn(rd+32)); \
     } while (0)
 
 #define LDFI(rs1, simm13, rd) \
     do { \
-    asm_output("ld [%s + %d], %s", gpn(rs1), simm13, gpn(rd+32)); \
     Format_3_1I(3, rd, 0x20, rs1, simm13); \
+    asm_output("ld [%s + %d], %s", gpn(rs1), simm13, gpn(rd+32)); \
     } while (0)
 
 #define LDUB(rs1, rs2, rd) \
     do { \
-    asm_output("ld [%s + %s], %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(3, rd, 0x1, rs1, 0, rs2); \
+    asm_output("ld [%s + %s], %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define LDUBI(rs1, simm13, rd) \
     do { \
-    asm_output("ld [%s + %d], %s", gpn(rs1), simm13, gpn(rd)); \
     Format_3_1I(3, rd, 0x1, rs1, simm13); \
+    asm_output("ld [%s + %d], %s", gpn(rs1), simm13, gpn(rd)); \
     } while (0)
 
 #define LDUH(rs1, rs2, rd) \
     do { \
-    asm_output("ld [%s + %s], %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(3, rd, 0x2, rs1, 0, rs2); \
+    asm_output("ld [%s + %s], %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define LDUHI(rs1, simm13, rd) \
     do { \
-    asm_output("ld [%s + %d], %s", gpn(rs1), simm13, gpn(rd)); \
     Format_3_1I(3, rd, 0x2, rs1, simm13); \
+    asm_output("ld [%s + %d], %s", gpn(rs1), simm13, gpn(rd)); \
     } while (0)
 
 #define LDSW(rs1, rs2, rd) \
     do { \
-    asm_output("ld [%s + %s], %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(3, rd, 0x8, rs1, 0, rs2); \
+    asm_output("ld [%s + %s], %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define LDSWI(rs1, simm13, rd) \
     do { \
-    asm_output("ld [%s + %d], %s", gpn(rs1), simm13, gpn(rd)); \
     Format_3_1I(3, rd, 0x8, rs1, simm13); \
+    asm_output("ld [%s + %d], %s", gpn(rs1), simm13, gpn(rd)); \
     } while (0)
 
 #define MOVE(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("move %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 1, cc1, cc0, rs); \
+    asm_output("move %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVNE(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movne %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 9, cc1, cc0, rs); \
+    asm_output("movne %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVL(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movl %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 3, cc1, cc0, rs); \
+    asm_output("movl %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVLE(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movle %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 2, cc1, cc0, rs); \
+    asm_output("movle %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVG(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movg %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 0xa, cc1, cc0, rs); \
+    asm_output("movg %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVGE(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movge %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 0xb, cc1, cc0, rs); \
+    asm_output("movge %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVCS(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movcs %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 5, cc1, cc0, rs); \
+    asm_output("movcs %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVLEU(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movleu %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 4, cc1, cc0, rs); \
+    asm_output("movleu %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVGU(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movgu %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 0xc, cc1, cc0, rs); \
+    asm_output("movgu %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVCC(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movcc %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 0xd, cc1, cc0, rs); \
+    asm_output("movcc %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVVC(rs, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movvc %s, %s", gpn(rs), gpn(rd)); \
     Format_4_2(rd, 0x2c, cc2, 0xf, cc1, cc0, rs); \
+    asm_output("movvc %s, %s", gpn(rs), gpn(rd)); \
     } while (0)
 
 #define MOVEI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("move %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 1, cc1, cc0, simm11); \
+    asm_output("move %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVFEI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("move %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 9, cc1, cc0, simm11); \
+    asm_output("move %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVNEI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("move %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 9, cc1, cc0, simm11); \
+    asm_output("move %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVLI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("move %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 3, cc1, cc0, simm11); \
+    asm_output("move %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVFLI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("move %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 4, cc1, cc0, simm11); \
+    asm_output("move %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVLEI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movle %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 2, cc1, cc0, simm11); \
+    asm_output("movle %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVFLEI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movle %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 0xd, cc1, cc0, simm11); \
+    asm_output("movle %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVGI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movg %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 0xa, cc1, cc0, simm11); \
+    asm_output("movg %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVFGI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movg %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 6, cc1, cc0, simm11); \
+    asm_output("movg %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVGEI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movge %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 0xb, cc1, cc0, simm11); \
+    asm_output("movge %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVFGEI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movge %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 0xb, cc1, cc0, simm11); \
+    asm_output("movge %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVLEUI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movleu %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 4, cc1, cc0, simm11); \
+    asm_output("movleu %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVGUI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movgu %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 0xc, cc1, cc0, simm11); \
+    asm_output("movgu %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVCCI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movcc %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 0xd, cc1, cc0, simm11); \
+    asm_output("movcc %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MOVVSI(simm11, cc2, cc1, cc0, rd) \
     do { \
-    asm_output("movvs %d, %s", simm11, gpn(rd)); \
     Format_4_2I(rd, 0x2c, cc2, 7, cc1, cc0, simm11); \
+    asm_output("movvs %d, %s", simm11, gpn(rd)); \
     } while (0)
 
 #define MULX(rs1, rs2, rd) \
     do { \
-    asm_output("mul %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x9, rs1, 0, rs2); \
+    asm_output("mul %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define NOP() \
     do { \
-    asm_output("nop"); \
     Format_2_1(0, 0x4, 0); \
+    asm_output("nop"); \
     } while (0)
 
 #define ORI(rs1, simm13, rd) \
     do { \
-    asm_output("or %s, %d, %s", gpn(rs1), simm13, gpn(rd)); \
     Format_3_1I(2, rd, 0x2, rs1, simm13); \
+    asm_output("or %s, %d, %s", gpn(rs1), simm13, gpn(rd)); \
     } while (0)
 
 #define OR(rs1, rs2, rd) \
     do { \
-    asm_output("or %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x2, rs1, 0, rs2); \
+    asm_output("or %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define ORN(rs1, rs2, rd) \
     do { \
-    asm_output("orn %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x6, rs1, 0, rs2); \
+    asm_output("orn %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define ANDCC(rs1, rs2, rd) \
     do { \
-    asm_output("andcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x11, rs1, 0, rs2); \
+    asm_output("andcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define RESTORE(rs1, rs2, rd) \
     do { \
-    asm_output("restore"); \
     Format_3_1(2, rd, 0x3D, rs1, 0, rs2); \
+    asm_output("restore"); \
     } while (0)
 
 #define SAVEI(rs1, simm13, rd) \
     do { \
-    asm_output("save %s, %d, %s", gpn(rs1), simm13, gpn(rd)); \
     Format_3_1I(2, rd, 0x3C, rs1, simm13); \
+    asm_output("save %s, %d, %s", gpn(rs1), simm13, gpn(rd)); \
     } while (0)
 
 #define SAVE(rs1, rs2, rd) \
     do { \
-    asm_output("save %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x3C, rs1, 0, rs2); \
+    asm_output("save %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define SETHI(imm22, rd) \
     do { \
-    asm_output("sethi %p, %s", imm22,  gpn(rd)); \
     Format_2_1(rd, 0x4, (imm22 >> 10)); \
+    asm_output("sethi %p, %s", imm22,  gpn(rd)); \
     } while (0)
 
 #define SLL(rs1, rs2, rd) \
     do { \
-    asm_output("sll %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_5(2, rd, 0x25, rs1, 0, rs2); \
+    asm_output("sll %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define SRA(rs1, rs2, rd) \
     do { \
-    asm_output("sra %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_5(2, rd, 0x27, rs1, 0, rs2); \
+    asm_output("sra %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define SRL(rs1, rs2, rd) \
     do { \
-    asm_output("srl %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_5(2, rd, 0x26, rs1, 0, rs2); \
+    asm_output("srl %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define STF(rd, rs1, rs2) \
     do { \
-    asm_output("st %s, [%s + %s]", gpn(rd+32), gpn(rs1), gpn(rs2)); \
     Format_3_1(3, rd, 0x24, rs1, 0, rs2); \
+    asm_output("st %s, [%s + %s]", gpn(rd+32), gpn(rs1), gpn(rs2)); \
     } while (0)
 
 #define STFI(rd, simm13, rs1) \
     do { \
-    asm_output("st %s, [%s + %d]", gpn(rd+32), gpn(rs1), simm13); \
     Format_3_1I(3, rd, 0x24, rs1, simm13); \
+    asm_output("st %s, [%s + %d]", gpn(rd+32), gpn(rs1), simm13); \
     } while (0)
 
 #define STW(rd, rs2, rs1) \
     do { \
-    asm_output("st %s, [%s + %s]", gpn(rd), gpn(rs1), gpn(rs2)); \
     Format_3_1(3, rd, 0x4, rs1, 0, rs2); \
+    asm_output("st %s, [%s + %s]", gpn(rd), gpn(rs1), gpn(rs2)); \
     } while (0)
 
 #define STWI(rd, simm13, rs1) \
     do { \
-    asm_output("st %s, [%s + %d]", gpn(rd), gpn(rs1), simm13); \
     Format_3_1I(3, rd, 0x4, rs1, simm13); \
+    asm_output("st %s, [%s + %d]", gpn(rd), gpn(rs1), simm13); \
     } while (0)
 
 #define SUBCC(rs1, rs2, rd) \
     do { \
-    asm_output("subcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x14, rs1, 0, rs2); \
+    asm_output("subcc %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define SUB(rs1, rs2, rd) \
     do { \
-    asm_output("sub %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x4, rs1, 0, rs2); \
+    asm_output("sub %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
 #define SUBI(rs1, simm13, rd) \
     do { \
-    asm_output("sub %s, %d, %s", gpn(rs1), simm13, gpn(rd)); \
     Format_3_1I(2, rd, 0x4, rs1, simm13); \
+    asm_output("sub %s, %d, %s", gpn(rs1), simm13, gpn(rd)); \
     } while (0)
 
 #define XOR(rs1, rs2, rd) \
     do { \
-    asm_output("xor %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     Format_3_1(2, rd, 0x3, rs1, 0, rs2); \
+    asm_output("xor %s, %s, %s", gpn(rs1), gpn(rs2), gpn(rd)); \
     } while (0)
 
         // Returns true if imm below 13-bit unsigned immediate)

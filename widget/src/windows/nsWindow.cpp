@@ -1415,9 +1415,9 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
       case nsSizeMode_Minimized :
         mode = sTrimOnMinimize ? SW_MINIMIZE : SW_SHOWMINIMIZED;
         if (!sTrimOnMinimize) {
-          // Find the next window that is visible and not minimized.
+          // Find the next window that is enabled, visible, and not minimized.
           HWND hwndBelow = ::GetNextWindow(mWnd, GW_HWNDNEXT);
-          while (hwndBelow && (!::IsWindowVisible(hwndBelow) ||
+          while (hwndBelow && (!::IsWindowEnabled(hwndBelow) || !::IsWindowVisible(hwndBelow) ||
                                ::IsIconic(hwndBelow))) {
             hwndBelow = ::GetNextWindow(hwndBelow, GW_HWNDNEXT);
           }
@@ -4620,17 +4620,26 @@ PRBool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
     event.time      = ::GetMessageTime();
 
     PRBool endFeedback = PR_TRUE;
-    
+
+    PRInt32 scrollOverflowX = 0;
+    PRInt32 scrollOverflowY = 0;
+
     if (mGesture.PanDeltaToPixelScrollX(event)) {
       DispatchEvent(&event, status);
+      scrollOverflowX = event.scrollOverflow;
     }
-    mGesture.UpdatePanFeedbackX(mWnd, event, endFeedback);
-    
+
     if (mGesture.PanDeltaToPixelScrollY(event)) {
       DispatchEvent(&event, status);
+      scrollOverflowY = event.scrollOverflow;
     }
-    mGesture.UpdatePanFeedbackY(mWnd, event, endFeedback);
-    mGesture.PanFeedbackFinalize(mWnd, endFeedback);
+
+    if (mWindowType != eWindowType_popup) {
+      mGesture.UpdatePanFeedbackX(mWnd, scrollOverflowX, endFeedback);
+      mGesture.UpdatePanFeedbackY(mWnd, scrollOverflowY, endFeedback);
+      mGesture.PanFeedbackFinalize(mWnd, endFeedback);
+    }
+
     mGesture.CloseGestureInfoHandle((HGESTUREINFO)lParam);
 
     return PR_TRUE;

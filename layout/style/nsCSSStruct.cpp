@@ -110,6 +110,7 @@ nsCSSColor::nsCSSColor(void)
   , mBackRepeat(nsnull)
   , mBackAttachment(nsnull)
   , mBackPosition(nsnull)
+  , mBackSize(nsnull)
   , mBackClip(nsnull)
   , mBackOrigin(nsnull)
 {
@@ -124,6 +125,7 @@ nsCSSColor::~nsCSSColor(void)
   delete mBackRepeat;
   delete mBackAttachment;
   delete mBackPosition;
+  delete mBackSize;
   delete mBackClip;
   delete mBackOrigin;
 }

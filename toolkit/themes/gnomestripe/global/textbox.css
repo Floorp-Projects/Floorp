@@ -109,7 +109,7 @@ textbox.plain {
   list-style-image: url(chrome://global/skin/icons/Search-glass.png);
 }
 
-.textbox-search-icon[chromedir="rtl"] {
+.textbox-search-icon:-moz-locale-dir(rtl) {
   -moz-transform: scaleX(-1);
 }
 

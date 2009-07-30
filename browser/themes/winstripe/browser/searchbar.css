@@ -45,7 +45,7 @@
                    0 -1px 0 rgba(255,255,255,.4) inset;
 }
 
-.searchbar-engine-button:-moz-system-metric(windows-default-theme)[chromedir="ltr"] {
+.searchbar-engine-button:-moz-system-metric(windows-default-theme):-moz-locale-dir(ltr) {
   -moz-border-right-colors: rgba(0,0,0,.05);
 }
 
@@ -68,7 +68,7 @@
   background: transparent url(chrome://browser/skin/Search-addengines.png) no-repeat right center;
 }
 
-.searchbar-engine-button[addengines="true"][chromedir="rtl"] > .button-box {
+.searchbar-engine-button[addengines="true"]:-moz-locale-dir(rtl) > .button-box {
   background-position: left center;
 }
 
@@ -94,7 +94,7 @@
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-.search-go-button[chromedir="rtl"] {
+.search-go-button:-moz-locale-dir(rtl) {
   -moz-transform: scaleX(-1);
 }
 

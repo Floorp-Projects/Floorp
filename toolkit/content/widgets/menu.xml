@@ -1,10 +1,5 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE bindings [
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-]>
-
 <bindings id="menuitemBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -176,8 +171,7 @@
       <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
-      <xul:hbox align="center" class="menu-right" chromedir="&locale.dir;"
-                xbl:inherits="_moz-menuactive,disabled">
+      <xul:hbox align="center" class="menu-right" xbl:inherits="_moz-menuactive,disabled">
         <xul:image/>
       </xul:hbox>
       <children includes="menupopup"/>
@@ -254,8 +248,8 @@
       <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
-      <xul:hbox class="menu-right" chromedir="&locale.dir;"
-                xbl:inherits="_moz-menuactive,disabled" align="center" pack="center">
+      <xul:hbox class="menu-right" xbl:inherits="_moz-menuactive,disabled"
+                align="center" pack="center">
         <xul:image/>
       </xul:hbox>
       <children includes="menupopup|template"/>

@@ -3660,6 +3660,51 @@ function testComparisons()
 testComparisons.expected = "no failures reported!";
 test(testComparisons);
 
+function testBug504520() {
+    // A bug involving comparisons.
+    var arr = [1/0, 1/0, 1/0, 1/0, 1/0, 0];
+    assertEq(arr.length > RUNLOOP, true);
+
+    var s = '';
+    for (var i = 0; i < arr.length; i++)
+        arr[i] >= 1/0 ? null : (s += i);
+    assertEq(s, '5');
+}
+test(testBug504520);
+
+function testBug504520Harder() {
+    // test 1024 similar cases
+    var vals = [1/0, -1/0, 0, 0/0];
+    var ops = ["===", "!==", "==", "!=", "<", ">", "<=", ">="];
+    for each (var x in vals) {
+        for each (var y in vals) {
+            for each (var op in ops) {
+                for each (var z in vals) {
+                    // Assume eval is correct. This depends on the global
+                    // Infinity property not having been reassigned.
+                    var xz = eval(x + op + z);
+                    var yz = eval(y + op + z);
+
+                    var arr = [x, x, x, x, x, y];
+                    assertEq(arr.length > RUNLOOP, true);
+                    var expected = [xz, xz, xz, xz, xz, yz];
+
+                    // ?: looks superfluous but that's what we're testing here
+                    var fun = eval(
+                        '(function (arr, results) {\n' +
+                        '    for (let i = 0; i < arr.length; i++)\n' +
+                        '        results.push(arr[i]' + op + z + ' ? "true" : "false");\n' +
+                        '});\n');
+                    var actual = [];
+                    fun(arr, actual);
+                    assertEq("" + actual, "" + expected);
+                }
+            }
+        }
+    }
+}
+test(testBug504520Harder);
+
 function testCaseAbort()
 {
   var four = "4";
@@ -5496,6 +5541,21 @@ testOwnPropertyWithInOperator.jitstats = {
   sideExitIntoInterpreter: 3
 };
 test(testEliminatedGuardWithinAnchor);
+
+function testNativeSetter() {
+    var re = /foo/;
+    var N = RUNLOOP + 10;
+    for (var i = 0; i < N; i++)
+        re.lastIndex = i;
+    assertEq(re.lastIndex, N - 1);
+}
+testNativeSetter.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 1,
+    sideExitIntoInterpreter: 1
+};
+test(testNativeSetter);
 
 /*****************************************************************************
  *                                                                           *

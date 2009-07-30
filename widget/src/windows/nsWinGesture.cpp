@@ -461,11 +461,11 @@ inline PRBool TestTransition(PRInt32 a, PRInt32 b)
 }
 
 void
-nsWinGesture::UpdatePanFeedbackX(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback)
+nsWinGesture::UpdatePanFeedbackX(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback)
 {
   // If scroll overflow was returned indicating we panned past the bounds of
   // the scrollable view port, start feeback.
-  if (evt.scrollOverflow != 0) {
+  if (scrollOverflow != 0) {
     if (!mFeedbackActive) {
       BeginPanningFeedback(hWnd);
       mFeedbackActive = PR_TRUE;
@@ -490,11 +490,11 @@ nsWinGesture::UpdatePanFeedbackX(HWND hWnd, nsMouseScrollEvent& evt, PRBool& end
 }
 
 void
-nsWinGesture::UpdatePanFeedbackY(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback)
+nsWinGesture::UpdatePanFeedbackY(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback)
 {
   // If scroll overflow was returned indicating we panned past the bounds of
   // the scrollable view port, start feeback.
-  if (evt.scrollOverflow != 0) {
+  if (scrollOverflow != 0) {
     if (!mFeedbackActive) {
       BeginPanningFeedback(hWnd);
       mFeedbackActive = PR_TRUE;
