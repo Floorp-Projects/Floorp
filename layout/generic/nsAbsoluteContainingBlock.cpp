@@ -68,7 +68,7 @@ nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
 nsresult
 nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
                                         nsIAtom*       aListName,
-                                        nsIFrame*      aFrameList)
+                                        nsFrameList&   aFrameList)
 {
   NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
 
@@ -89,7 +89,7 @@ nsresult
 nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
                                         nsIAtom*       aListName,
                                         nsIFrame*      aPrevFrame,
-                                        nsIFrame*      aFrameList)
+                                        nsFrameList&   aFrameList)
 {
   NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == aDelegatingFrame,

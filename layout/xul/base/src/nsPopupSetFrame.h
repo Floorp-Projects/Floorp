@@ -73,12 +73,12 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsFrameList&    aChildList);
 

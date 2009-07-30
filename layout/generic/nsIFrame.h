@@ -107,10 +107,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface
-// 7b437d20-a34e-11dd-ad8b-0800200c9a66
+// 2871104e-2738-4ad7-b86a-ede63c71f1c2
 #define NS_IFRAME_IID \
-  { 0x7b437d20, 0xa34e, 0x11dd, \
-    { 0xad, 0x8b, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+  { 0x2871104e, 0x2738, 0x4ad7,                       \
+    { 0xb8, 0x6a, 0xed, 0xe6, 0x3c, 0x71, 0xf1, 0xc2 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -538,7 +538,7 @@ public:
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @param   aChildList list of child frames. Each of the frames has its
-   *            NS_FRAME_IS_DIRTY bit set
+   *            NS_FRAME_IS_DIRTY bit set.  Must not be empty.
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
@@ -559,14 +559,16 @@ public:
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @param   aFrameList list of child frames to append. Each of the frames has
-   *            its NS_FRAME_IS_DIRTY bit set
+   *            its NS_FRAME_IS_DIRTY bit set.  Must not be empty.
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
-   *          NS_OK otherwise
+   *          NS_OK otherwise.  In this case, AppendFrames empties out
+   *            aChildList in the process of moving the frames over to its own
+   *            child list.
    */
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList) = 0;
+                          nsFrameList&    aFrameList) = 0;
 
   /**
    * This method is responsible for inserting frames into the frame
@@ -581,11 +583,13 @@ public:
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
-   *          NS_OK otherwise
+   *          NS_OK otherwise.  In this case, InsertFrames empties out
+   *            aChildList in the process of moving the frames over to its own
+   *            child list.
    */
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList) = 0;
+                          nsFrameList&    aFrameList) = 0;
 
   /**
    * This method is responsible for removing a frame in the frame
