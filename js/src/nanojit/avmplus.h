@@ -970,12 +970,12 @@ namespace avmplus {
                         bits.ar[i] = 0;
             }
 
-            void set(int bitNbr)
+            void set(GC *gc, int bitNbr)
             {
                 int index = bitNbr / kUnit;
                 int bit = bitNbr % kUnit;
                 if (index >= capacity)
-                    grow(index+1);
+                    grow(gc, index+1);
 
                 if (capacity > kDefaultCapacity)
                     bits.ptr[index] |= (1<<bit);
@@ -1013,7 +1013,7 @@ namespace avmplus {
 
         private:
             // Grow the array until at least newCapacity big
-            void grow(int newCapacity)
+            void grow(GC *gc, int newCapacity)
             {
                 // create vector that is 2x bigger than requested
                 newCapacity *= 2;
