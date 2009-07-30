@@ -1,46 +1,46 @@
 /* ..... page navigation ..... */
 
 .home-arrow,
-.end-arrow[chromedir="rtl"] {
+.end-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://global/skin/printpreview/arrow-left-end.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .home-arrow:hover,
-.end-arrow[chromedir="rtl"]:hover {
+.end-arrow:-moz-locale-dir(rtl):hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .end-arrow,
-.home-arrow[chromedir="rtl"] {
+.home-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://global/skin/printpreview/arrow-right-end.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .end-arrow:hover,
-.home-arrow[chromedir="rtl"]:hover {
+.home-arrow:-moz-locale-dir(rtl):hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .left-arrow,
-.right-arrow[chromedir="rtl"] {
+.right-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://global/skin/printpreview/arrow-left.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .left-arrow:hover,
-.right-arrow[chromedir="rtl"]:hover {
+.right-arrow:-moz-locale-dir(rtl):hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 .right-arrow,
-.left-arrow[chromedir="rtl"] {
+.left-arrow:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://global/skin/printpreview/arrow-right.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .right-arrow:hover,
-.left-arrow[chromedir="rtl"]:hover {
+.left-arrow:-moz-locale-dir(rtl):hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 

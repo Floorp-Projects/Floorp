@@ -39,3 +39,4 @@ load 473914-1.html
 skip load long-url-list-stack-overflow.html # skipped due to being slow (bug 477490)
 load 495269-1.html
 load 495269-2.html
+load 504311-1.xul

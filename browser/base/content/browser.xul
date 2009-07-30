@@ -104,17 +104,16 @@
 
   <popupset id="mainPopupSet">
     <menupopup id="backForwardMenu"
-               chromedir="&locale.dir;"
                onpopupshowing="return FillHistoryMenu(event.target);"
                oncommand="gotoHistoryIndex(event);"
                onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
     <!-- for search and content formfill/pw manager -->
-    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
+    <panel type="autocomplete" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
 
     <!-- for url bar autocomplete -->
-    <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
+    <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
     <panel id="editBookmarkPanel"
            orient="vertical"
@@ -205,8 +204,7 @@
     <!-- Popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
            onpopupshown="document.getElementById('identity-popup-more-info-button').focus();"
-           level="top"
-           chromedir="&locale.dir;">
+           level="top">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box">
@@ -318,18 +316,16 @@
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
                    context="backForwardMenu">
         <toolbarbutton id="back-button" class="toolbarbutton-1"
-                       chromedir="&locale.dir;"
                        label="&backCmd.label;"
                        command="Browser:BackOrBackDuplicate"
                        onclick="checkForMiddleClick(this, event);"
                        tooltiptext="&backButton.tooltip;"/>
         <toolbarbutton id="forward-button" class="toolbarbutton-1"
-                       chromedir="&locale.dir;"
                        label="&forwardCmd.label;"
                        command="Browser:ForwardOrForwardDuplicate"
                        onclick="checkForMiddleClick(this, event);"
                        tooltiptext="&forwardButton.tooltip;"/>
-        <toolbarbutton id="back-forward-dropmarker" type="menu" chromedir="&locale.dir;"
+        <toolbarbutton id="back-forward-dropmarker" type="menu"
                        disabled="true" tooltiptext="&backForwardMenu.tooltip;"
                        onbroadcast="if (this.disabled) this.disabled =
                                       document.getElementById('Browser:Back').hasAttribute('disabled') &amp;&amp;
@@ -337,7 +333,6 @@
           <!-- bug 415444: event.stopPropagation is here for the cloned version of
                this menupopup -->
           <menupopup context=""
-                     chromedir="&locale.dir;"
                      position="after_start"
                      onpopupshowing="return FillHistoryMenu(event.target);"
                      oncommand="gotoHistoryIndex(event); event.stopPropagation();"
@@ -374,7 +369,6 @@
                  bookmarkemptytext="&urlbar.bookmark.emptyText;"
                  historyemptytext="&urlbar.history.emptyText;"
                  noneemptytext="&urlbar.none.emptyText;"
-                 chromedir="&locale.dir;"
                  type="autocomplete"
                  autocompletesearch="history"
                  autocompletepopup="PopupAutoCompleteRichResult"
@@ -399,7 +393,6 @@
                We only add the identity-box button to the tab order when the location bar
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
-               chromedir="&locale.dir;"
                onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
                onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
             <hbox align="center">
@@ -419,13 +412,11 @@
                     style="-moz-user-focus: none"
                     class="plain urlbar-icon"
                     id="feed-button"
-                    chromedir="&locale.dir;"
                     collapsed="true"
                     tooltiptext="&feedButton.tooltip;"
                     onclick="return FeedHandler.onFeedButtonClick(event);">
               <menupopup position="after_end"
                          id="feed-menu"
-                         chromedir="&locale.dir;"
                          onpopupshowing="return FeedHandler.buildFeedList(this);"
                          oncommand="return FeedHandler.subscribeToFeed(null, event);"
                          onclick="checkForMiddleClick(this, event);"/>
@@ -434,7 +425,6 @@
                    class="urlbar-icon"
                    onclick="PlacesStarButton.onClick(event);"/>
             <image id="go-button"
-                   chromedir="&locale.dir;"
                    class="urlbar-icon"
                    tooltiptext="&goEndCap.tooltip;"
                    onclick="gURLBar.handleCommand(event);"/>
@@ -445,7 +435,7 @@
       <toolbaritem id="search-container" title="&searchItem.title;"
                    align="center" class="chromeclass-toolbar-additional"
                    flex="100" persist="width">
-        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"/>
+        <searchbar id="searchbar" flex="1"/>
       </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"

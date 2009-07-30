@@ -401,13 +401,13 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
 }
 
-#historyMenuBack[chromedir="rtl"],
-#context-back[chromedir="rtl"] {
+#historyMenuBack:-moz-locale-dir(rtl),
+#context-back:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
 
-#historyMenuBack[disabled][chromedir="rtl"],
-#context-back[disabled][chromedir="rtl"] {
+#historyMenuBack[disabled]:-moz-locale-dir(rtl),
+#context-back[disabled]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
 }
 
@@ -421,13 +421,13 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
-#historyMenuForward[chromedir="rtl"],
-#context-forward[chromedir="rtl"] {
+#historyMenuForward:-moz-locale-dir(rtl),
+#context-forward:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
 
-#historyMenuForward[disabled][chromedir="rtl"],
-#context-forward[disabled][chromedir="rtl"] {
+#historyMenuForward[disabled]:-moz-locale-dir(rtl),
+#context-forward[disabled]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
 
@@ -522,10 +522,10 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
 }
 
-#back-button[chromedir="rtl"] {
+#back-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
 }
-#back-button[disabled="true"][chromedir="rtl"] {
+#back-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
 }
 
@@ -536,10 +536,10 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
 }
 
-#forward-button[chromedir="rtl"] {
+#forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
 }
-#forward-button[disabled="true"][chromedir="rtl"] {
+#forward-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
 }
 
@@ -648,13 +648,13 @@ toolbar[iconsize="small"] #back-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
 }
 
-toolbar[iconsize="small"] #back-button[chromedir="rtl"] {
+toolbar[iconsize="small"] #back-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
-menupopup[chromedir="rtl"] > .unified-nav-back[_moz-menuactive] {
+menupopup:-moz-locale-dir(rtl) > .unified-nav-back[_moz-menuactive] {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu") !important;
 }
-toolbar[iconsize="small"] #back-button[disabled="true"][chromedir="rtl"] {
+toolbar[iconsize="small"] #back-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
 }
 
@@ -668,13 +668,13 @@ toolbar[iconsize="small"] #forward-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"] {
+toolbar[iconsize="small"] #forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
-menupopup[chromedir="rtl"] > .unified-nav-forward[_moz-menuactive] {
+menupopup:-moz-locale-dir(rtl) > .unified-nav-forward[_moz-menuactive] {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu") !important;
 }
-toolbar[iconsize="small"] #forward-button[disabled="true"][chromedir="rtl"] {
+toolbar[iconsize="small"] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
 
@@ -833,7 +833,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   direction: ltr !important;
 }
 
-#PopupAutoComplete[chromedir="rtl"] > tree > treerows {
+#PopupAutoComplete:-moz-locale-dir(rtl) > tree > treerows {
   direction: rtl;
 }
 
@@ -875,7 +875,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-border-end: 1px solid ThreeDShadow;
 }
 
-#identity-box[chromedir="rtl"] {
+#identity-box:-moz-locale-dir(rtl) {
   -moz-border-start: 1px solid ThreeDShadow;
 }
 
@@ -1338,7 +1338,7 @@ toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
 }
 
-toolbarbutton.chevron[chromedir="rtl"] {
+toolbarbutton.chevron:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://global/skin/toolbar/chevron-rtl.gif") !important;
 }
 

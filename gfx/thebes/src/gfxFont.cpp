@@ -2377,30 +2377,6 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
     mCharacterGlyphs[aIndex].SetMissing(1);
 }
 
-void
-gfxTextRun::RecordSurrogates(const PRUnichar *aString)
-{
-    // !! FIXME !!
-    //
-    // This is called from the platform font implementations when making text runs, but currently it
-    // doesn't do anything because callers do not (consistently, or ever?) set the TEXT_HAS_SURROGATES flag.
-    // However, I have not seen anything that relies on the surrogate flag on glyphs, so perhaps we can
-    // simply eliminate this and remove that flag from gfxTextRunFactory?
-
-    if (!(mFlags & gfxTextRunFactory::TEXT_HAS_SURROGATES))
-        return;
-
-    // Remember which characters are low surrogates (the second half of
-    // a surrogate pair).
-    PRUint32 i;
-    gfxTextRun::CompressedGlyph g;
-    for (i = 0; i < mCharacterCount; ++i) {
-        if (NS_IS_LOW_SURROGATE(aString[i])) {
-            SetGlyphs(i, g.SetLowSurrogate(), nsnull);
-        }
-    }
-}
-
 static void
 ClearCharacters(gfxTextRun::CompressedGlyph *aGlyphs, PRUint32 aLength)
 {

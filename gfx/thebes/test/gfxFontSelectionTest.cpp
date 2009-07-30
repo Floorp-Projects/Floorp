@@ -304,7 +304,6 @@ RunTest (TestEntry *test, gfxContext *ctx) {
         length = strlen(test->string);
         textRun = gfxTextRunWordCache::MakeTextRun(reinterpret_cast<PRUint8*>(test->string), length, fontGroup, &params, flags);
     } else {
-        flags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->string));
         length = str.Length();
         textRun = gfxTextRunWordCache::MakeTextRun(str.get(), length, fontGroup, &params, flags);

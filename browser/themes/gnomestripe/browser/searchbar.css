@@ -73,7 +73,7 @@
   cursor: pointer;
 }
 
-.search-go-button[chromedir="rtl"] {
+.search-go-button:-moz-locale-dir(rtl) {
   -moz-transform: scaleX(-1);
 }
 

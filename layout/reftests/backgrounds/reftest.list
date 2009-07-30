@@ -24,3 +24,72 @@
 == continuous-inline-4b.html continuous-inline-4-ref.html
 == continuous-inline-5a.html continuous-inline-5-ref.html
 == continuous-inline-5b.html continuous-inline-5-ref.html
+
+== background-size-auto-auto.html background-size-auto-ref.html
+== background-size-auto.html background-size-auto-ref.html
+== background-size-contain.html background-size-contain-ref.html
+== background-size-cover.html background-size-cover-ref.html
+== background-size-auto-length.html background-size-auto-length-ref.html
+== background-size-length-auto.html background-size-auto-length-ref.html
+== background-size-length.html background-size-auto-length-ref.html
+== background-size-auto-percent.html background-size-auto-length-ref.html
+== background-size-percent-auto.html background-size-auto-length-ref.html
+== background-size-percent.html background-size-auto-length-ref.html
+== background-size-length-percent.html background-size-length-percent-ref.html
+== background-size-percent-length.html background-size-length-percent-ref.html
+== background-size-percent-percent.html background-size-percent-percent-ref.html
+== background-size-length-length.html background-size-length-length-ref.html
+== background-size-percent-percent-stretch.html background-size-percent-percent-stretch-ref.html
+
+== background-size-body-percent-percent.html background-size-body-percent-percent-ref.html
+== background-size-body-percent-percent-no-repeat.html background-size-body-percent-percent-ref.html
+== background-size-body-percent-percent-not-fixed.html background-size-body-percent-percent-ref.html
+== background-size-body-cover.html background-size-body-cover-ref.html
+== background-size-body-cover-no-repeat.html background-size-body-cover-ref.html
+!= background-size-body-cover-not-fixed.html background-size-body-cover-ref.html
+!= background-size-body-cover-not-fixed.html background-size-body-single-not-fixed.html
+
+# relies on reftest window having greater height than width
+== background-size-body-contain.html background-size-body-cover-ref.html
+!= background-size-body-contain-no-repeat.html background-size-body-cover-ref.html
+!= background-size-body-contain-not-fixed.html background-size-body-cover-ref.html
+!= background-size-body-cover-not-fixed.html background-size-body-contain-not-fixed.html
+
+!= background-size-body-percent-percent-overflow.html background-size-body-percent-percent-overflow-ref.html
+
+== background-size-zoom-no-repeat.html background-size-zoom-no-repeat-ref.html
+
+== background-size-contain-clip-padding.html background-size-contain-clip-padding-ref.html
+== background-size-contain-clip-border.html background-size-contain-clip-border-ref.html
+== background-size-contain-position-fifty-fifty.html background-size-contain-position-fifty-fifty-ref.html
+== background-size-contain-clip-padding-origin-border.html background-size-contain-clip-padding-origin-border-ref.html
+== background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding-ref.html
+
+# -moz-background-inline-policy is touchy and hard to test due to stretching
+# artifacts and the difficulty of covering exact lines, and its CSS3 analog is
+# on the chopping block at the moment, so just make sure background-size results
+# in a different rendering when present.
+!= background-size-cover-continuous.html background-size-continuous.html
+!= background-size-cover-each-box.html background-size-each-box.html
+!= background-size-cover-bounding-box.html background-size-bounding-box.html
+
+# ...and make sure each rendering with background-size is different from the
+# others
+!= background-size-cover-continuous.html background-size-cover-each-box.html
+!= background-size-cover-continuous.html background-size-cover-bounding-box.html
+!= background-size-cover-each-box.html background-size-cover-bounding-box.html
+
+
+# There seems to be a pixel-snapping problem here, where the repeated background
+# image isn't being snapped at its boundaries.  Note that the boundaries within
+# the image aren't the issue, because they're being obscured to avoid sampling
+# algorithm dependencies (at least assuming the sampling algorithm in use
+# doesn't sample too far astray from the boundaries).
+fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
+
+# background-size affects images without intrinsic dimensions specially; we may
+# not support such image formats right now, but when we do, we want
+# background-size to be changed accordingly, and hopefully these tests should
+# start failing when we do.
+fails == background-size-no-intrinsic-width-image.html background-size-no-intrinsic-width-image-ref.html
+fails == background-size-no-intrinsic-height-image.html background-size-no-intrinsic-height-image-ref.html

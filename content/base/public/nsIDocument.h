@@ -105,8 +105,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  { 0x46003091, 0x7f99, 0x420f, \
-  { 0x95, 0xbc, 0x28, 0xd7, 0xd5, 0x01, 0x5a, 0x41 } }
+{ 0xe0ca6723, 0x1efa, 0x4819, \
+  { 0x84, 0xbb, 0xfa, 0x48, 0x39, 0xe8, 0xef, 0x19 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1155,6 +1155,15 @@ public:
    * parser-module is linked with gklayout-module.
    */
   virtual void MaybePreLoadImage(nsIURI* uri) = 0;
+
+  /**
+   * Returns true if the locale used for the document specifies a direction of
+   * right to left. For chrome documents, this comes from the chrome registry.
+   * This is used to determine the current state for the :-moz-locale-dir pseudoclass
+   * so once can know whether a document is expected to be rendered left-to-right
+   * or right-to-left.
+   */
+  virtual PRBool IsDocumentRightToLeft() { return PR_FALSE; }
 
 protected:
   ~nsIDocument()

@@ -21,11 +21,11 @@ findbar {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
 }
 
-.findbar-find-next[chromedir="rtl"] {
+.findbar-find-next:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
 
-.findbar-find-next[disabled="true"][chromedir="rtl"] {
+.findbar-find-next[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
 }
 
@@ -39,11 +39,11 @@ findbar {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
 }
 
-.findbar-find-previous[chromedir="rtl"] {
+.findbar-find-previous:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
 
-.findbar-find-previous[disabled="true"][chromedir="rtl"] {
+.findbar-find-previous[disabled="true"]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
 }
 

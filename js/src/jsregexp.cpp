@@ -585,12 +585,12 @@ ParseRegExp(CompilerState *state)
     }
 
     operatorStack = (REOpData *)
-        JS_malloc(state->context, sizeof(REOpData) * operatorStackSize);
+        state->context->malloc(sizeof(REOpData) * operatorStackSize);
     if (!operatorStack)
         return JS_FALSE;
 
     operandStack = (RENode **)
-        JS_malloc(state->context, sizeof(RENode *) * operandStackSize);
+        state->context->malloc(sizeof(RENode *) * operandStackSize);
     if (!operandStack)
         goto out;
 
@@ -682,8 +682,8 @@ pushOperand:
                     RENode **tmp;
                     operandStackSize += operandStackSize;
                     tmp = (RENode **)
-                        JS_realloc(state->context, operandStack,
-                                   sizeof(RENode *) * operandStackSize);
+                        state->context->realloc(operandStack,
+                                                sizeof(RENode *) * operandStackSize);
                     if (!tmp)
                         goto out;
                     operandStack = tmp;
@@ -817,8 +817,8 @@ pushOperator:
                 REOpData *tmp;
                 operatorStackSize += operatorStackSize;
                 tmp = (REOpData *)
-                    JS_realloc(state->context, operatorStack,
-                               sizeof(REOpData) * operatorStackSize);
+                    state->context->realloc(operatorStack,
+                                            sizeof(REOpData) * operatorStackSize);
                 if (!tmp)
                     goto out;
                 operatorStack = tmp;
@@ -831,9 +831,9 @@ pushOperator:
     }
 out:
     if (operatorStack)
-        JS_free(state->context, operatorStack);
+        state->context->free(operatorStack);
     if (operandStack)
-        JS_free(state->context, operandStack);
+        state->context->free(operandStack);
     return result;
 }
 
@@ -1647,9 +1647,8 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
         emitStateStack = NULL;
     } else {
         emitStateStack =
-            (EmitStateStackEntry *)JS_malloc(state->context,
-                                             sizeof(EmitStateStackEntry) *
-                                             treeDepth);
+            (EmitStateStackEntry *)
+            state->context->malloc(sizeof(EmitStateStackEntry) * treeDepth);
         if (!emitStateStack)
             return NULL;
     }
@@ -1951,7 +1950,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
 
   cleanup:
     if (emitStateStack)
-        JS_free(state->context, emitStateStack);
+        state->context->free(emitStateStack);
     return pc;
 
   jump_too_big:
@@ -1997,7 +1996,7 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
                           + GetCompactIndexWidth(len);
         return JS_TRUE;
     }
-    
+
     return ParseRegExp(&state);
 }
 
@@ -2410,7 +2409,7 @@ class RegExpNativeCompiler {
             LIns *branch = lir->insBranch(LIR_jt, test, 0);
             extras[i].match = branch;
         }
-            
+
         fails.pushBack(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, text_ch, lir->insImm(ch)), 0));
 
         for (int i = 0; i < nextras; ++i)
@@ -2418,7 +2417,7 @@ class RegExpNativeCompiler {
         return lir->ins2(LIR_piadd, pos, lir->insImm(2));
     }
 
-    JS_INLINE bool hasCases(jschar ch) 
+    JS_INLINE bool hasCases(jschar ch)
     {
         return JS_TOLOWER(ch) != JS_TOUPPER(ch);
     }
@@ -3166,10 +3165,6 @@ CompileRegExpToNative(JSContext* cx, JSRegExp* re, Fragment* fragment)
         goto out;
     }
     rv = rc.compile(cx);
-    static int fail = 0;  // TODO: remove
-    if (!rv)
-        ++fail;
-    debug_only_printf(LC_TMRegexp, "## Fail? %d, Total %d\n", (int)!rv, fail);
  out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return rv;
@@ -3232,7 +3227,7 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         goto out;
 
     resize = offsetof(JSRegExp, program) + state.progLength + 1;
-    re = (JSRegExp *) JS_malloc(cx, resize);
+    re = (JSRegExp *) cx->malloc(resize);
     if (!re)
         goto out;
 
@@ -3241,7 +3236,7 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     re->classCount = state.classCount;
     if (re->classCount) {
         re->classList = (RECharSet *)
-            JS_malloc(cx, re->classCount * sizeof(RECharSet));
+            cx->malloc(re->classCount * sizeof(RECharSet));
         if (!re->classList) {
             js_DestroyRegExp(cx, re);
             re = NULL;
@@ -3270,7 +3265,7 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         JSRegExp *tmp;
         JS_ASSERT((size_t)(endPC - re->program) < state.progLength + 1);
         resize = offsetof(JSRegExp, program) + (endPC - re->program);
-        tmp = (JSRegExp *) JS_realloc(cx, re, resize);
+        tmp = (JSRegExp *) cx->realloc(re, resize);
         if (tmp)
             re = tmp;
     }
@@ -3610,7 +3605,7 @@ ProcessCharSet(JSContext *cx, JSRegExp *re, RECharSet *charSet)
     JS_ASSERT(end[0] == ']');
 
     byteLength = (charSet->length >> 3) + 1;
-    charSet->u.bits = (uint8 *)JS_malloc(cx, byteLength);
+    charSet->u.bits = (uint8 *)cx->malloc(byteLength);
     if (!charSet->u.bits) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -3804,12 +3799,12 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re)
             uintN i;
             for (i = 0; i < re->classCount; i++) {
                 if (re->classList[i].converted)
-                    JS_free(cx, re->classList[i].u.bits);
+                    cx->free(re->classList[i].u.bits);
                 re->classList[i].u.bits = NULL;
             }
-            JS_free(cx, re->classList);
+            cx->free(re->classList);
         }
-        JS_free(cx, re);
+        cx->free(re);
     }
 }
 
@@ -4874,12 +4869,12 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                 if (!morepar) {
                     res->moreLength = 10;
                     morepar = (JSSubString*)
-                        JS_malloc(cx, 10 * sizeof(JSSubString));
+                        cx->malloc(10 * sizeof(JSSubString));
                 } else if (morenum >= res->moreLength) {
                     res->moreLength += 10;
                     morepar = (JSSubString*)
-                        JS_realloc(cx, morepar,
-                                   res->moreLength * sizeof(JSSubString));
+                        cx->realloc(morepar,
+                                    res->moreLength * sizeof(JSSubString));
                 }
                 if (!morepar) {
                     cx->weakRoots.newborn[GCX_OBJECT] = NULL;
@@ -5118,7 +5113,7 @@ js_FreeRegExpStatics(JSContext *cx)
     JSRegExpStatics *res = &cx->regExpStatics;
 
     if (res->moreParens) {
-        JS_free(cx, res->moreParens);
+        cx->free(res->moreParens);
         res->moreParens = NULL;
     }
     JS_FinishArenaPool(&cx->regexpPool);
@@ -5369,7 +5364,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
     nflags = 0;
     for (flags = re->flags; flags != 0; flags &= flags - 1)
         nflags++;
-    chars = (jschar*) JS_malloc(cx, (length + nflags + 1) * sizeof(jschar));
+    chars = (jschar*) cx->malloc((length + nflags + 1) * sizeof(jschar));
     if (!chars) {
         JS_UNLOCK_OBJ(cx, obj);
         return JS_FALSE;
@@ -5393,7 +5388,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
 
     str = js_NewString(cx, chars, length);
     if (!str) {
-        JS_free(cx, chars);
+        cx->free(chars);
         return JS_FALSE;
     }
     *vp = STRING_TO_JSVAL(str);
@@ -5476,15 +5471,15 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             if (*cp == '/' && (cp == start || cp[-1] != '\\')) {
                 nbytes = (++length + 1) * sizeof(jschar);
                 if (!nstart) {
-                    nstart = (jschar *) JS_malloc(cx, nbytes);
+                    nstart = (jschar *) cx->malloc(nbytes);
                     if (!nstart)
                         return JS_FALSE;
                     ncp = nstart + (cp - start);
                     js_strncpy(nstart, start, cp - start);
                 } else {
-                    tmp = (jschar *) JS_realloc(cx, nstart, nbytes);
+                    tmp = (jschar *) cx->realloc(nstart, nbytes);
                     if (!tmp) {
-                        JS_free(cx, nstart);
+                        cx->free(nstart);
                         return JS_FALSE;
                     }
                     ncp = tmp + (ncp - nstart);
@@ -5502,7 +5497,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             *ncp = 0;
             str = js_NewString(cx, nstart, length);
             if (!str) {
-                JS_free(cx, nstart);
+                cx->free(nstart);
                 return JS_FALSE;
             }
             argv[0] = STRING_TO_JSVAL(str);
