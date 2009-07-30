@@ -6714,15 +6714,6 @@ nsFrame::SetParent(const nsIFrame* aParent)
   else if (wasBoxWrapped && !IsBoxWrapped())
     DeleteProperty(nsGkAtoms::boxMetricsProperty);
 
-  if (aParent && aParent->IsBoxFrame()) {
-    if (aParent->ChildrenMustHaveWidgets()) {
-        nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
-        nsIView* view = GetView();
-        if (!view->HasWidget())
-          CreateWidgetForView(view);
-    }
-  }
-
   return NS_OK;
 }
 
