@@ -110,14 +110,8 @@ public:
 
 static PRBool IsViewVisible(nsView *aView)
 {
-  for (nsIView *view = aView; view; view = view->GetParent()) {
-    // We don't check widget visibility here because in the future (with
-    // the better approach to this that's in attachment 160801 on bug
-    // 227361), callers of the equivalent to this function should be able
-    // to rely on being notified when the result of this function changes.
-    if (view->GetVisibility() == nsViewVisibility_kHide)
-      return PR_FALSE;
-  }
+  if (!aView->IsEffectivelyVisible())
+    return PR_FALSE;
 
   // Find out if the root view is visible by asking the view observer
   // (this won't be needed anymore if we link view trees across chrome /
@@ -1231,8 +1225,7 @@ NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 
   // Along with nsView::SetVisibility, we enforce that the mouse grabber
   // can never be a hidden view.
-  if (aView && static_cast<nsView*>(aView)->GetVisibility()
-               == nsViewVisibility_kHide) {
+  if (aView && static_cast<nsView*>(aView)->IsEffectivelyVisible()) {
     aView = nsnull;
   }
 
@@ -1585,16 +1578,6 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
         else {
           UpdateView(view, NS_VMREFRESH_NO_SYNC);
         }
-      }
-    }
-
-    // Any child views not associated with frames might not get their visibility
-    // updated, so propagate our visibility to them. This is important because
-    // hidden views should have all hidden children.
-    for (nsView* childView = view->GetFirstChild(); childView;
-         childView = childView->GetNextSibling()) {
-      if (!childView->GetClientData()) {
-        childView->SetVisibility(aVisible);
       }
     }
   }
@@ -1967,7 +1950,7 @@ NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView,
   }
 
   // is this view even visible?
-  if (view->GetVisibility() == nsViewVisibility_kHide) {
+  if (!view->IsEffectivelyVisible()) {
     return NS_OK; 
   }
 
