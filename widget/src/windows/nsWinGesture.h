@@ -206,8 +206,8 @@ public:
   PRBool ProcessPanMessage(HWND hWnd, WPARAM wParam, LPARAM lParam);
   PRBool PanDeltaToPixelScrollX(nsMouseScrollEvent& evt);
   PRBool PanDeltaToPixelScrollY(nsMouseScrollEvent& evt);
-  void UpdatePanFeedbackX(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback);
-  void UpdatePanFeedbackY(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback);
+  void UpdatePanFeedbackX(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback);
+  void UpdatePanFeedbackY(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback);
   void PanFeedbackFinalize(HWND hWnd, PRBool endFeedback);
   
 public:
