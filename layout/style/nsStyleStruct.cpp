@@ -1918,14 +1918,13 @@ nsStyleText::~nsStyleText(void) { }
 
 nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
 {
-  if (NewlineIsSignificant() != aOther.NewlineIsSignificant()) {
+  if (mWhiteSpace != aOther.mWhiteSpace) {
     // This may require construction of suppressed text frames
     return NS_STYLE_HINT_FRAMECHANGE;
   }
 
   if ((mTextAlign != aOther.mTextAlign) ||
       (mTextTransform != aOther.mTextTransform) ||
-      (mWhiteSpace != aOther.mWhiteSpace) ||
       (mWordWrap != aOther.mWordWrap) ||
       (mLetterSpacing != aOther.mLetterSpacing) ||
       (mLineHeight != aOther.mLineHeight) ||
