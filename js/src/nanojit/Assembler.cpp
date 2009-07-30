@@ -2018,7 +2018,7 @@ namespace nanojit
         uint32_t argc = 0;
         uint32_t argt = _argtypes;
         for (uint32_t i = 0; i < MAXARGS; ++i) {
-            argt >>= 2;
+            argt >>= ARGSIZE_SHIFT;
             if (!argt)
                 break;
             argc += (argt & mask) != 0;
@@ -2031,8 +2031,8 @@ namespace nanojit
         uint32_t argt = _argtypes;
         uint32_t argc = 0;
         for (uint32_t i = 0; i < MAXARGS; i++) {
-            argt >>= 2;
-            ArgSize a = ArgSize(argt&3);
+            argt >>= ARGSIZE_SHIFT;
+            ArgSize a = ArgSize(argt & ARGSIZE_MASK_ANY);
             if (a != ARGSIZE_NONE) {
                 sizes[argc++] = a;
             } else {
