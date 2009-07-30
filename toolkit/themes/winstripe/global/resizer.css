@@ -15,7 +15,7 @@ resizer[dir="topleft"] {
 }
 
 resizer[dir="bottomright"],
-resizer[dir="bottomend"][chromedir="ltr"] {
+resizer[dir="bottomend"]:-moz-locale-dir(ltr) {
   cursor: se-resize;
 }
 
@@ -24,11 +24,11 @@ resizer[dir="topright"] {
 }
 
 resizer[dir="bottomleft"],
-resizer[dir="bottomend"][chromedir="rtl"] {
+resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
   cursor: sw-resize;
 }
 
-resizer[dir="bottomright"][chromedir="ltr"],
+resizer[dir="bottomright"]:-moz-locale-dir(ltr),
 resizer[dir="bottomend"] {
   -moz-appearance: resizer;
 }

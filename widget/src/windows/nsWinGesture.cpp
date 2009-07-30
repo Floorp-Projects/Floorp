@@ -76,11 +76,6 @@ nsWinGesture::nsWinGesture() :
   mPixelScrollOverflow = 0;
 }
 
-nsWinGesture::~nsWinGesture()
-{
-  ShutdownLibrary();
-}
-
 /* Load and shutdown */
 
 PRBool nsWinGesture::InitLibrary()
@@ -147,12 +142,6 @@ PRBool nsWinGesture::InitLibrary()
 #endif
 }
 
-void nsWinGesture::ShutdownLibrary()
-{
-  getGestureInfo         = nsnull;
-  beginPanningFeedback   = nsnull;
-}
-
 #define GCOUNT 5
 
 PRBool nsWinGesture::InitWinGestureSupport(HWND hWnd)
@@ -176,9 +165,8 @@ PRBool nsWinGesture::InitWinGestureSupport(HWND hWnd)
   if (gEnableSingleFingerPanEvents) {
     config[2].dwWant = GC_PAN|GC_PAN_WITH_INERTIA|
                        GC_PAN_WITH_GUTTER|
-                       GC_PAN_WITH_SINGLE_FINGER_VERTICALLY|
-                       GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
-    config[2].dwBlock = 0;
+                       GC_PAN_WITH_SINGLE_FINGER_VERTICALLY;
+    config[2].dwBlock = GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
   }
   else {
     config[2].dwWant = GC_PAN|GC_PAN_WITH_INERTIA|
@@ -473,11 +461,11 @@ inline PRBool TestTransition(PRInt32 a, PRInt32 b)
 }
 
 void
-nsWinGesture::UpdatePanFeedbackX(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback)
+nsWinGesture::UpdatePanFeedbackX(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback)
 {
   // If scroll overflow was returned indicating we panned past the bounds of
   // the scrollable view port, start feeback.
-  if (evt.scrollOverflow != 0) {
+  if (scrollOverflow != 0) {
     if (!mFeedbackActive) {
       BeginPanningFeedback(hWnd);
       mFeedbackActive = PR_TRUE;
@@ -502,11 +490,11 @@ nsWinGesture::UpdatePanFeedbackX(HWND hWnd, nsMouseScrollEvent& evt, PRBool& end
 }
 
 void
-nsWinGesture::UpdatePanFeedbackY(HWND hWnd, nsMouseScrollEvent& evt, PRBool& endFeedback)
+nsWinGesture::UpdatePanFeedbackY(HWND hWnd, PRInt32 scrollOverflow, PRBool& endFeedback)
 {
   // If scroll overflow was returned indicating we panned past the bounds of
   // the scrollable view port, start feeback.
-  if (evt.scrollOverflow != 0) {
+  if (scrollOverflow != 0) {
     if (!mFeedbackActive) {
       BeginPanningFeedback(hWnd);
       mFeedbackActive = PR_TRUE;

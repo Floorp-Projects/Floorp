@@ -129,7 +129,7 @@ js_BoxInt32(JSContext* cx, int32 i)
     if (!js_NewDoubleInRootedValue(cx, d, &v))
         return JSVAL_ERROR_COOKIE;
     return v;
-} 
+}
 JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxInt32, CONTEXT, INT32, 1, 1)
 
 jsdouble FASTCALL
@@ -242,15 +242,12 @@ JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
-
     JS_LOCK_OBJ(cx, obj);
 
     JSScope* scope = OBJ_SCOPE(obj);
     uint32 slot;
-    if (scope->object == obj) {
-        if (sprop == scope->lastProp || scope->has(sprop))
-            goto exit_trace;
+    if (scope->owned()) {
+        JS_ASSERT(!scope->has(sprop));
     } else {
         scope = js_GetMutableScope(cx, obj);
         if (!scope)
@@ -308,7 +305,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
 
     JSObject* obj2;
     JSProperty* prop;
-    if (!js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop))
+    if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
         return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
     if (prop)
         OBJ_DROP_PROPERTY(cx, obj2, prop);
@@ -390,7 +387,7 @@ js_Arguments(JSContext* cx, JSObject* parent, JSObject* cached)
 {
     if (cached)
         return cached;
-    return js_NewObject(cx, &js_ArgumentsClass, NULL, NULL, 0);
+    return js_NewObject(cx, &js_ArgumentsClass, NULL, NULL);
 }
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, OBJECT, 0, 0)
 
@@ -404,12 +401,17 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     JSFunction *fun = (JSFunction*) funobj;
     JS_ASSERT(GET_FUNCTION_PRIVATE(cx, funobj) == fun);
 
-    JSObject* closure = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    JSObject* closure = js_NewGCObject(cx, GCX_OBJECT);
     if (!closure)
         return NULL;
 
-    OBJ_SCOPE(proto)->hold();
-    closure->map = proto->map;
+    JSScope *scope = OBJ_SCOPE(proto)->getEmptyScope(cx, &js_FunctionClass);
+    if (!scope) {
+        closure->map = NULL;
+        return NULL;
+    }
+
+    closure->map = &scope->map;
     closure->classword = jsuword(&js_FunctionClass);
     closure->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     closure->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);

@@ -441,6 +441,12 @@
                           type="checkbox"
                           command="View:FullScreen"/>
 #endif
+                <menuitem id="menu_showAllTabs"
+                          hidden="true"
+                          accesskey="&showAllTabsCmd.accesskey;"
+                          label="&showAllTabsCmd.label;"
+                          command="Browser:ShowAllTabs"
+                          key="key_showAllTabs"/>
                 <menuseparator hidden="true" id="documentDirection-separator"/>
                 <menuitem id="documentDirection-swap"
                           hidden="true"
@@ -468,7 +474,6 @@
 #else
                           key="goBackKb"
 #endif
-                          chromedir="&locale.dir;"
                           command="Browser:BackOrBackDuplicate"
                           onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="historyMenuForward"
@@ -478,7 +483,6 @@
 #else
                           key="goForwardKb"
 #endif
-                          chromedir="&locale.dir;"
                           command="Browser:ForwardOrForwardDuplicate"
                           onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="historyMenuHome"

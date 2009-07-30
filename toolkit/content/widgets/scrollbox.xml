@@ -1,10 +1,5 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE bindings [
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-]>
-
 <bindings id="arrowscrollboxBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -521,7 +516,7 @@
   </binding>
 
   <binding id="autorepeatbutton" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
-    <content repeat="hover" chromedir="&locale.dir;">
+    <content repeat="hover">
       <xul:image class="autorepeatbutton-icon"/>
     </content>
   </binding>
@@ -535,8 +530,7 @@
                          onmousedown="_startScroll(-1);"
                          onmouseover="_continueScroll(-1);"
                          onmouseup="_stopScroll();"
-                         onmouseout="_pauseScroll();"
-                         chromedir="&locale.dir;"/>
+                         onmouseout="_pauseScroll();"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
       </xul:scrollbox>
@@ -547,8 +541,7 @@
                          onmousedown="_startScroll(1);"
                          onmouseover="_continueScroll(1);"
                          onmouseup="_stopScroll();"
-                         onmouseout="_pauseScroll();"
-                         chromedir="&locale.dir;"/>
+                         onmouseout="_pauseScroll();"/>
     </content>
     <implementation implements="nsITimerCallback, nsIDOMEventListener">
       <constructor><![CDATA[

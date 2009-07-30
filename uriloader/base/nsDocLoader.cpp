@@ -98,13 +98,22 @@ struct nsRequestInfo : public PLDHashEntryHdr
 {
   nsRequestInfo(const void *key)
     : mKey(key), mCurrentProgress(0), mMaxProgress(0), mUploading(PR_FALSE)
+   , mIsDone(PR_FALSE)
   {
+  }
+
+  nsIRequest* Request() {
+    return static_cast<nsIRequest*>(const_cast<void*>(mKey));
   }
 
   const void* mKey; // Must be first for the pldhash stubs to work
   nsInt64 mCurrentProgress;
   nsInt64 mMaxProgress;
   PRBool mUploading;
+
+  PRBool mIsDone;
+  nsString mLastStatus;
+  nsresult mLastStatusCode;
 };
 
 
@@ -117,6 +126,12 @@ RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   return PR_TRUE;
 }
 
+static void
+RequestInfoHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  nsRequestInfo* info = static_cast<nsRequestInfo *>(entry);
+  info->~nsRequestInfo();
+}
 
 struct nsListenerInfo {
   nsListenerInfo(nsIWeakReference *aListener, unsigned long aNotifyMask) 
@@ -153,7 +168,7 @@ nsDocLoader::nsDocLoader()
     PL_DHashVoidPtrKeyStub,
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    RequestInfoHashClearEntry,
     PL_DHashFinalizeStub,
     RequestInfoHashInitEntry
   };
@@ -576,6 +591,8 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
   //
   nsRequestInfo *info = GetRequestInfo(aRequest);
   if (info) {
+    info->mIsDone = PR_TRUE;
+
     nsInt64 oldMax = info->mMaxProgress;
 
     info->mMaxProgress = info->mCurrentProgress;
@@ -837,6 +854,24 @@ void nsDocLoader::doStartURLLoad(nsIRequest *request)
                     NS_OK);
 }
 
+// PLDHashTable enumeration callback that finds a RequestInfo that's not done
+// yet.
+static PLDHashOperator
+FindUnfinishedRequestCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                              PRUint32 number, void *arg)
+{
+  nsRequestInfo* info = static_cast<nsRequestInfo *>(hdr);
+  nsRequestInfo** retval = static_cast<nsRequestInfo**>(arg);
+
+  if (!info->mIsDone && !info->mLastStatus.IsEmpty()) {
+    *retval = info;
+    return PL_DHASH_STOP;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+
 void nsDocLoader::doStopURLLoad(nsIRequest *request, nsresult aStatus)
 {
 #if defined(DEBUG)
@@ -854,6 +889,17 @@ void nsDocLoader::doStopURLLoad(nsIRequest *request, nsresult aStatus)
                     nsIWebProgressListener::STATE_STOP |
                     nsIWebProgressListener::STATE_IS_REQUEST,
                     aStatus);
+
+  // Fire a status change message for a random unfinished request to make sure
+  // that the displayed status is not outdated.
+  nsRequestInfo* unfinishedRequest = nsnull;
+  PL_DHashTableEnumerate(&mRequestInfoHash, FindUnfinishedRequestCallback,
+                         &unfinishedRequest);
+  if (unfinishedRequest) {
+    FireOnStatusChange(this, unfinishedRequest->Request(),
+                       unfinishedRequest->mLastStatusCode,
+                       unfinishedRequest->mLastStatus.get());
+  }
 }
 
 void nsDocLoader::doStopDocumentLoad(nsIRequest *request,
@@ -1113,6 +1159,15 @@ NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
     nsXPIDLString msg;
     rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(msg));
     if (NS_FAILED(rv)) return rv;
+
+    // Keep around the message. In case a request finishes, we need to make sure
+    // to send the status message of another request to our user to that we
+    // don't display, for example, "Transferring" messages for requests that are
+    // already done.
+    if (info) {
+      info->mLastStatus = msg;
+      info->mLastStatusCode = aStatus;
+    }
     FireOnStatusChange(this, aRequest, aStatus, msg);
   }
   return NS_OK;
@@ -1696,4 +1751,3 @@ void nsDocLoader::DumpChannelInfo()
   printf("\nCurrent=%d   Total=%d\n====\n", current, max);
 }
 #endif /* 0 */
-

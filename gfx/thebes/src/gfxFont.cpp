@@ -130,17 +130,26 @@ gfxFontEntry *gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PR
     gfxFontEntry *matchFE;
     const PRInt8 absDistance = abs(weightDistance);
     direction = (weightDistance >= 0) ? 1 : -1;
-    PRInt8 i, k;
-    for (i = matchBaseWeight, k = 0; i < 10 && i > 0; i += direction) {
+    PRInt8 i, wghtSteps = 0;
+
+    // account for synthetic bold in lighter case
+    // if lighter is applied with an inherited bold weight,
+    // and no actual bold faces exist, synthetic bold is used
+    // so the matched weight above is actually one step down already
+    if (weightDistance < 0 && baseWeight > 5 && matchBaseWeight < 6) {
+        wghtSteps = 1; // if no faces [600, 900] then synthetic bold at 700
+    }
+
+    for (i = matchBaseWeight; i < 10 && i > 0; i += direction) {
         if (weightList[i]) {
             matchFE = weightList[i];
-            k++;
+            wghtSteps++;
         }
-        if (k > absDistance)
+        if (wghtSteps > absDistance)
             break;
     }
 
-    if (weightDistance > 0 && k <= absDistance) {
+    if (weightDistance > 0 && wghtSteps <= absDistance) {
         aNeedsBold = PR_TRUE;
     }
 
@@ -2366,30 +2375,6 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
     details->mXOffset = 0;
     details->mYOffset = 0;
     mCharacterGlyphs[aIndex].SetMissing(1);
-}
-
-void
-gfxTextRun::RecordSurrogates(const PRUnichar *aString)
-{
-    // !! FIXME !!
-    //
-    // This is called from the platform font implementations when making text runs, but currently it
-    // doesn't do anything because callers do not (consistently, or ever?) set the TEXT_HAS_SURROGATES flag.
-    // However, I have not seen anything that relies on the surrogate flag on glyphs, so perhaps we can
-    // simply eliminate this and remove that flag from gfxTextRunFactory?
-
-    if (!(mFlags & gfxTextRunFactory::TEXT_HAS_SURROGATES))
-        return;
-
-    // Remember which characters are low surrogates (the second half of
-    // a surrogate pair).
-    PRUint32 i;
-    gfxTextRun::CompressedGlyph g;
-    for (i = 0; i < mCharacterCount; ++i) {
-        if (NS_IS_LOW_SURROGATE(aString[i])) {
-            SetGlyphs(i, g.SetLowSurrogate(), nsnull);
-        }
-    }
 }
 
 static void

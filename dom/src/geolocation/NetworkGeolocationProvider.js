@@ -89,15 +89,15 @@ function WifiGeoPositionObject(lat, lon, acc, address) {
     this.coords = new WifiGeoCoordsObject(lat, lon, acc);
 
     if (address) {
-        this.address = new WifiGeoAddressObject(address.streetNumber,
+        this.address = new WifiGeoAddressObject(address.street_number,
                                                 address.street,
                                                 address.premises,
                                                 address.city,
                                                 address.county,
                                                 address.region,
-                                                address.county,
-                                                address.countryCode,
-                                                address.postalCode);
+                                                address.country,
+                                                address.country_code,
+                                                address.postal_code);
     }
     else
       this.address = null;

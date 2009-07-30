@@ -117,8 +117,15 @@ NS_IMETHODIMP
 nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
                                JSObject *aObj, PRUint32 argc, jsval *argv)
 {
+  // Audio elements created using "new Audio(...)" should have
+  // 'autobuffer' set (since the script must intend to play the audio)
+  nsresult rv = SetAttr(kNameSpaceID_None, nsGkAtoms::autobuffer,
+                        NS_LITERAL_STRING("autobuffer"), PR_TRUE);
+  if (NS_FAILED(rv))
+    return rv;
+
   if (argc <= 0) {
-    // Nothing to do here if we don't get any arguments.
+    // Nothing more to do here if we don't get any arguments.
     return NS_OK;
   }
 

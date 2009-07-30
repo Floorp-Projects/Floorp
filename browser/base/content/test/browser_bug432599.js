@@ -30,16 +30,16 @@ function invokeUsingStarButton(phase) {
   }
 }
 
+var testURL = "data:text/plain,Content";
+
 // test bug 432599
 function test() {
   waitForExplicitFinish();
 
-  let testTab = gBrowser.addTab();
-  gBrowser.selectedTab = testTab;
-  let testBrowser = gBrowser.getBrowserForTab(testTab);
-  testBrowser.addEventListener("load", initTest, true);
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.addEventListener("load", initTest, true);
 
-  testBrowser.contentWindow.location = "data:text/plain,Content";
+  content.location = testURL;
 }
 
 let invokers = [invokeUsingStarButton, invokeUsingCtrlD];
@@ -47,12 +47,7 @@ let currentInvoker = 0;
 
 function initTest() {
   // first, bookmark the page
-  let app = Components.classes["@mozilla.org/fuel/application;1"]
-                      .getService(Components.interfaces.fuelIApplication);
-  let ios = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Ci.nsIIOService);
-  app.bookmarks.toolbar.addBookmark("Bug 432599 Test",
-                                    ios.newURI("data:text/plain,Content", null, null));
+  Application.bookmarks.toolbar.addBookmark("Bug 432599 Test", makeURI(testURL));
 
   checkBookmarksPanel(invokers[currentInvoker], 1);
 }
@@ -77,7 +72,7 @@ function checkBookmarksPanel(invoker, phase)
       if (phase < 4) {
         checkBookmarksPanel(invoker, phase + 1);
       } else {
-        ++ currentInvoker;
+        ++currentInvoker;
         if (currentInvoker < invokers.length) {
           checkBookmarksPanel(invokers[currentInvoker], 1);
         } else {

@@ -38,7 +38,6 @@
 
 #include "gfxFontUtils.h"
 
-#include "nsIPref.h"  // for pref handling code
 #include "nsServiceManagerUtils.h"
 
 #include "nsIPrefBranch.h"
@@ -517,7 +516,12 @@ nsresult gfxFontUtils::MakeUniqueUserFontName(nsAString& aName)
 #pragma pack(1)
 
 struct AutoSwap_PRUint16 {
+#ifdef __SUNPRO_CC
+    AutoSwap_PRUint16& operator = (const PRUint16 aValue)
+      { this->value = NS_SWAP16(aValue); return *this; }
+#else
     AutoSwap_PRUint16(PRUint16 aValue) { value = NS_SWAP16(aValue); }
+#endif
     operator PRUint16() const { return NS_SWAP16(value); }
     operator PRUint32() const { return NS_SWAP16(value); }
     operator PRUint64() const { return NS_SWAP16(value); }
@@ -525,20 +529,35 @@ struct AutoSwap_PRUint16 {
 };
 
 struct AutoSwap_PRInt16 {
+#ifdef __SUNPRO_CC
+    AutoSwap_PRInt16& operator = (const PRInt16 aValue)
+      { this->value = NS_SWAP16(aValue); return *this; }
+#else
     AutoSwap_PRInt16(PRInt16 aValue) { value = NS_SWAP16(aValue); }
+#endif
     operator PRInt16() const { return NS_SWAP16(value); }
     operator PRUint32() const { return NS_SWAP16(value); }
     PRInt16  value;
 };
 
 struct AutoSwap_PRUint32 {
+#ifdef __SUNPRO_CC
+    AutoSwap_PRUint32& operator = (const PRUint32 aValue)
+      { this->value = NS_SWAP32(aValue); return *this; }
+#else
     AutoSwap_PRUint32(PRUint32 aValue) { value = NS_SWAP32(aValue); }
+#endif
     operator PRUint32() const { return NS_SWAP32(value); }
     PRUint32  value;
 };
 
 struct AutoSwap_PRUint64 {
+#ifdef __SUNPRO_CC
+    AutoSwap_PRUint64& operator = (const PRUint64 aValue)
+      { this->value = NS_SWAP64(aValue); return *this; }
+#else
     AutoSwap_PRUint64(PRUint64 aValue) { value = NS_SWAP64(aValue); }
+#endif
     operator PRUint64() const { return NS_SWAP64(value); }
     PRUint64  value;
 };
@@ -1372,13 +1391,15 @@ DumpEOTHeader(PRUint8 *aHeader, PRUint32 aHeaderLen)
 
 nsresult
 gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
-                            nsTArray<PRUint8> *aHeader)
+                            nsTArray<PRUint8> *aHeader, FontDataOverlay *aOverlay)
 {
-
     NS_ASSERTION(aFontData && aFontDataLength != 0, "null font data");
     NS_ASSERTION(aHeader, "null header");
     NS_ASSERTION(aHeader->Length() == 0, "non-empty header passed in");
+    NS_ASSERTION(aOverlay, "null font overlay struct passed in");
 
+    aOverlay->overlaySrc = 0;
+    
     if (!aHeader->AppendElements(sizeof(EOTFixedHeader)))
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1481,6 +1502,7 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
 
     // -- first, read name table header
     const NameHeader *nameHeader = reinterpret_cast<const NameHeader*>(aFontData + nameOffset);
+    PRUint32 nameStringsBase = PRUint32(nameHeader->stringOffset);
 
     PRUint32 nameCount = nameHeader->count;
 
@@ -1542,7 +1564,7 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
     if (needNames != 0) 
     {
         return NS_ERROR_FAILURE;
-    }        
+    }
 
     // -- expand buffer if needed to include variable-length portion
     PRUint32 eotVariableLength = 0;
@@ -1566,10 +1588,12 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
         PRUint32 nameoff = names[i].offset;  // offset from base of string storage
 
         // sanity check the name string location
-        if (PRUint64(nameOffset) + PRUint64(PRUint32(nameHeader->stringOffset)) + PRUint64(nameoff) + PRUint64(namelen) > dataLength)
+        if (PRUint64(nameOffset) + PRUint64(nameStringsBase) + PRUint64(nameoff) 
+            + PRUint64(namelen) > dataLength) {
             return NS_ERROR_FAILURE;
+        }
     
-        strOffset = nameOffset + PRUint32(nameHeader->stringOffset) + nameoff + namelen;
+        strOffset = nameOffset + nameStringsBase + nameoff + namelen;
 
         // output 2-byte str size   
         strLen = namelen & (~1);  // UTF-16 string len must be even
@@ -1599,6 +1623,23 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
     NS_ASSERTION(eotEnd == aHeader->Elements() + aHeader->Length(), 
                  "header length calculation incorrect");
                  
+    // bug 496573 -- fonts with a fullname that does not begin with the 
+    // family name cause the EOT font loading API to hiccup
+    PRUint32 famOff = names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].offset;
+    PRUint32 famLen = names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length;
+    PRUint32 fullOff = names[EOTFixedHeader::EOT_FULL_NAME_INDEX].offset;
+    PRUint32 fullLen = names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length;
+    
+    const PRUint8 *nameStrings = aFontData + nameOffset + nameStringsBase;
+
+    // assure that the start of the fullname matches the family name
+    if (famLen <= fullLen 
+        && memcmp(nameStrings + famOff, nameStrings + fullOff, famLen)) {
+        aOverlay->overlaySrc = nameOffset + nameStringsBase + famOff;
+        aOverlay->overlaySrcLen = famLen;
+        aOverlay->overlayDest = nameOffset + nameStringsBase + fullOff;
+    }
+
     // -- OS/2 table data
     const OS2Table *os2Data = reinterpret_cast<const OS2Table*>(aFontData + os2Offset);
 

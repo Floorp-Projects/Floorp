@@ -73,7 +73,7 @@ DefaultAllocTable(void *pool, size_t size)
 static void
 DefaultFreeTable(void *pool, void *item, size_t size)
 {
-    free(item);
+    js_free(item);
 }
 
 static JSHashEntry *
@@ -86,7 +86,7 @@ static void
 DefaultFreeEntry(void *pool, JSHashEntry *he, uintN flag)
 {
     if (flag == HT_FREE_ENTRY)
-        free(he);
+        js_free(he);
 }
 
 static JSHashAllocOps defaultHashAllocOps = {
@@ -246,7 +246,7 @@ Resize(JSHashTable *ht, uint32 newshift)
 }
 
 JS_PUBLIC_API(JSHashEntry *)
-JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
+JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **&hep,
                    JSHashNumber keyHash, const void *key, void *value)
 {
     uint32 n;

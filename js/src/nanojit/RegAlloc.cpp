@@ -68,14 +68,17 @@ namespace nanojit
     void RegAlloc::addActive(Register r, LIns* v)
     {
         //  Count++;
-        NanoAssert(v && r != UnknownReg && active[r] == NULL );
+        NanoAssert(v);
+        NanoAssert(r != UnknownReg);
+        NanoAssert(active[r] == NULL);
         active[r] = v;
         useActive(r);
     }
 
     void RegAlloc::useActive(Register r)
     {
-        NanoAssert(r != UnknownReg && active[r] != NULL);
+        NanoAssert(r != UnknownReg);
+        NanoAssert(active[r] != NULL);
         usepri[r] = priority++;
     }
 

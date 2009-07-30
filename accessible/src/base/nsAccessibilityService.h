@@ -84,6 +84,16 @@ public:
    */
   static nsresult GetAccessibilityService(nsIAccessibilityService** aResult);
 
+  /**
+   * Return cached accessibility service.
+   */
+  static nsIAccessibilityService* GetAccessibilityService();
+
+  /**
+   * Indicates whether accessibility service was shutdown.
+   */
+  static PRBool gIsShutdown;
+
 private:
   /**
    * Return presentation shell, DOM node for the given frame.

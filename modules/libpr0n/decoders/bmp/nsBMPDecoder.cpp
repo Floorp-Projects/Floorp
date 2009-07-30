@@ -51,7 +51,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 
 #include "imgILoad.h"
-#include "nsIImage.h"
 
 #include "prlog.h"
 
@@ -89,11 +88,7 @@ NS_IMETHODIMP nsBMPDecoder::Init(imgILoad *aLoad)
     mObserver = do_QueryInterface(aLoad);
 
     nsresult rv;
-    mImage = do_CreateInstance("@mozilla.org/image/container;1", &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2", &rv);
+    mImage = do_CreateInstance("@mozilla.org/image/container;2", &rv);
     if (NS_FAILED(rv))
         return rv;
 
@@ -106,13 +101,12 @@ NS_IMETHODIMP nsBMPDecoder::Close()
 
     mImage->DecodingComplete();
     if (mObserver) {
-        mObserver->OnStopFrame(nsnull, mFrame);
+        mObserver->OnStopFrame(nsnull, 0);
         mObserver->OnStopContainer(nsnull, mImage);
         mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
         mObserver = nsnull;
     }
     mImage = nsnull;
-    mFrame = nsnull;
     return NS_OK;
 }
 
@@ -266,8 +260,10 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         NS_ENSURE_SUCCESS(rv, rv);
         mOldLine = mCurLine = real_height;
 
+        PRUint32 imageLength;
         if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
-            rv = mFrame->Init(0, 0, mBIH.width, real_height, RLE_GFXFORMAT_ALPHA, 24);
+            rv = mImage->AppendFrame(0, 0, mBIH.width, real_height, gfxASurface::ImageFormatARGB32,
+                                     (PRUint8**)&mImageData, &imageLength);
         } else {
             // mRow is not used for RLE encoded images
             mRow = (PRUint8*)malloc((mBIH.width * mBIH.bpp)/8 + 4);
@@ -277,12 +273,10 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             if (!mRow) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
-            rv = mFrame->Init(0, 0, mBIH.width, real_height, BMP_GFXFORMAT, 24);
+            rv = mImage->AppendFrame(0, 0, mBIH.width, real_height, gfxASurface::ImageFormatRGB24,
+                                     (PRUint8**)&mImageData, &imageLength);
         }
         NS_ENSURE_SUCCESS(rv, rv);
-
-        PRUint32 imageLength;
-        mFrame->GetImageData((PRUint8**)&mImageData, &imageLength);
         if (!mImageData)
             return NS_ERROR_FAILURE;
 
@@ -297,9 +291,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             memset(mImageData, 0, imageLength);
         }
 
-        rv = mImage->AppendFrame(mFrame);
-        NS_ENSURE_SUCCESS(rv, rv);
-        mObserver->OnStartFrame(nsnull, mFrame);
+        mObserver->OnStartFrame(nsnull, 0);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     PRUint8 bpc; // bytes per color
@@ -603,14 +595,11 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         nsIntRect r(0, mBIH.height < 0 ? -mBIH.height - mOldLine : mCurLine,
                     mBIH.width, rows);
 
-        // Tell the image that it's data has been updated
-        nsCOMPtr<nsIImage> img(do_GetInterface(mFrame, &rv));
+        // Tell the image that its data has been updated
+        rv = mImage->FrameUpdated(0, r); 
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);        
-        if (NS_FAILED(rv))
-          return rv;
 
-        mObserver->OnDataAvailable(nsnull, mFrame, &r);
+        mObserver->OnDataAvailable(nsnull, PR_TRUE, &r);
         mOldLine = mCurLine;
     }
 

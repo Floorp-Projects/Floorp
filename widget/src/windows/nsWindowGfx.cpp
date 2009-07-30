@@ -63,6 +63,7 @@
 #include "gfxContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
+#include "prmem.h"
 
 #ifndef WINCE
 #include "nsUXThemeData.h"
@@ -72,10 +73,6 @@
 extern "C" {
 #include "pixman.h"
 }
-
-#ifdef DEBUG_vladimir
-#include "nsFunctionTimer.h"
-#endif
 
 /**************************************************************
  **************************************************************
@@ -328,13 +325,6 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif
   }
 
-#ifdef DEBUG_vladimir
-  nsFunctionTimer ft("OnPaint [%d %d %d %d]",
-                     ps.rcPaint.left, ps.rcPaint.top, 
-                     ps.rcPaint.right - ps.rcPaint.left,
-                     ps.rcPaint.bottom - ps.rcPaint.top);
-#endif
-
   nsCOMPtr<nsIRegion> paintRgnWin;
   if (paintRgn) {
     paintRgnWin = nsWindowGfx::ConvertHRGNToRegion(paintRgn);
@@ -489,17 +479,9 @@ DDRAW_FAILED:
       return PR_FALSE;
     }
 
-#ifdef DEBUG_vladimir
-    ft.Mark("Init");
-#endif
-
     event.renderingContext = rc;
     result = DispatchWindowEvent(&event, eventStatus);
     event.renderingContext = nsnull;
-
-#ifdef DEBUG_vladimir
-    ft.Mark("Dispatch");
-#endif
 
 #ifdef MOZ_XUL
     if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) &&
@@ -631,14 +613,6 @@ DDRAW_FAILED:
                       DIB_RGB_COLORS,
                       SRCCOPY);
       }
-
-#ifdef DEBUG_vladimir
-      ft.Mark("Blit");
-#endif
-    } else {
-#ifdef DEBUG_vladimir
-      ft.Mark("Discard!");
-#endif
     }
   }
 
@@ -670,6 +644,202 @@ DDRAW_FAILED:
   return result;
 }
 
+nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
+                                  PRBool aIsCursor,
+                                  PRUint32 aHotspotX,
+                                  PRUint32 aHotspotY,
+                                  HICON *aIcon) {
+
+  nsresult rv;
+  PRInt32 maxWidth = GetSystemMetrics(SM_CXICON);
+  PRInt32 maxHeight = GetSystemMetrics(SM_CYICON);
+
+  if (!maxWidth || !maxHeight)
+    return NS_ERROR_UNEXPECTED;
+
+  PRUint32 nFrames;
+  rv = aContainer->GetNumFrames(&nFrames);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!nFrames)
+    return NS_ERROR_INVALID_ARG;
+
+  // Get the image data
+  nsRefPtr<gfxImageSurface> frame;
+  aContainer->CopyCurrentFrame(getter_AddRefs(frame));
+  if (!frame)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PRUint8 *data = frame->Data();
+
+  PRInt32 width = frame->Width();
+  PRInt32 height = frame->Height();
+
+  if (width > maxWidth || height > maxHeight)
+    return NS_ERROR_INVALID_ARG;
+
+  HBITMAP bmp = DataToBitmap(data, width, -height, 32);
+  PRUint8* a1data = Data32BitTo1Bit(data, width, height);
+  if (!a1data) {
+    return NS_ERROR_FAILURE;
+  }
+
+  HBITMAP mbmp = DataToBitmap(a1data, width, -height, 1);
+  PR_Free(a1data);
+
+  ICONINFO info = {0};
+  info.fIcon = !aIsCursor;
+  info.xHotspot = aHotspotX;
+  info.yHotspot = aHotspotY;
+  info.hbmMask = mbmp;
+  info.hbmColor = bmp;
+  
+  HCURSOR icon = ::CreateIconIndirect(&info);
+  ::DeleteObject(mbmp);
+  ::DeleteObject(bmp);
+  if (!icon)
+    return NS_ERROR_FAILURE;
+  *aIcon = icon;
+  return NS_OK;
+}
+
+// Adjust cursor image data
+PRUint8* nsWindowGfx::Data32BitTo1Bit(PRUint8* aImageData,
+                                      PRUint32 aWidth, PRUint32 aHeight)
+{
+  // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
+  // 4 bytes for each row (HBITMAP requirement). Bug 353553.
+  PRUint32 outBpr = ((aWidth + 31) / 8) & ~3;
+
+  // Allocate and clear mask buffer
+  PRUint8* outData = (PRUint8*)PR_Calloc(outBpr, aHeight);
+  if (!outData)
+    return NULL;
+
+  PRInt32 *imageRow = (PRInt32*)aImageData;
+  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
+    PRUint8 *outRow = outData + curRow * outBpr;
+    PRUint8 mask = 0x80;
+    for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
+      // Use sign bit to test for transparency, as alpha byte is highest byte
+      if (*imageRow++ < 0)
+        *outRow |= mask;
+
+      mask >>= 1;
+      if (!mask) {
+        outRow ++;
+        mask = 0x80;
+      }
+    }
+  }
+
+  return outData;
+}
+
+PRBool nsWindowGfx::IsCursorTranslucencySupported()
+{
+#ifdef WINCE
+  return PR_FALSE;
+#else
+  static PRBool didCheck = PR_FALSE;
+  static PRBool isSupported = PR_FALSE;
+  if (!didCheck) {
+    didCheck = PR_TRUE;
+    // Cursor translucency is supported on Windows XP and newer
+    isSupported = nsWindow::GetWindowsVersion() >= 0x501;
+  }
+
+  return isSupported;
+#endif
+}
+
+/**
+ * Convert the given image data to a HBITMAP. If the requested depth is
+ * 32 bit and the OS supports translucency, a bitmap with an alpha channel
+ * will be returned.
+ *
+ * @param aImageData The image data to convert. Must use the format accepted
+ *                   by CreateDIBitmap.
+ * @param aWidth     With of the bitmap, in pixels.
+ * @param aHeight    Height of the image, in pixels.
+ * @param aDepth     Image depth, in bits. Should be one of 1, 24 and 32.
+ *
+ * @return The HBITMAP representing the image. Caller should call
+ *         DeleteObject when done with the bitmap.
+ *         On failure, NULL will be returned.
+ */
+HBITMAP nsWindowGfx::DataToBitmap(PRUint8* aImageData,
+                                  PRUint32 aWidth,
+                                  PRUint32 aHeight,
+                                  PRUint32 aDepth)
+{
+#ifndef WINCE
+  HDC dc = ::GetDC(NULL);
+
+  if (aDepth == 32 && IsCursorTranslucencySupported()) {
+    // Alpha channel. We need the new header.
+    BITMAPV4HEADER head = { 0 };
+    head.bV4Size = sizeof(head);
+    head.bV4Width = aWidth;
+    head.bV4Height = aHeight;
+    head.bV4Planes = 1;
+    head.bV4BitCount = aDepth;
+    head.bV4V4Compression = BI_BITFIELDS;
+    head.bV4SizeImage = 0; // Uncompressed
+    head.bV4XPelsPerMeter = 0;
+    head.bV4YPelsPerMeter = 0;
+    head.bV4ClrUsed = 0;
+    head.bV4ClrImportant = 0;
+
+    head.bV4RedMask   = 0x00FF0000;
+    head.bV4GreenMask = 0x0000FF00;
+    head.bV4BlueMask  = 0x000000FF;
+    head.bV4AlphaMask = 0xFF000000;
+
+    HBITMAP bmp = ::CreateDIBitmap(dc,
+                                   reinterpret_cast<CONST BITMAPINFOHEADER*>(&head),
+                                   CBM_INIT,
+                                   aImageData,
+                                   reinterpret_cast<CONST BITMAPINFO*>(&head),
+                                   DIB_RGB_COLORS);
+    ::ReleaseDC(NULL, dc);
+    return bmp;
+  }
+
+  char reserved_space[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2];
+  BITMAPINFOHEADER& head = *(BITMAPINFOHEADER*)reserved_space;
+
+  head.biSize = sizeof(BITMAPINFOHEADER);
+  head.biWidth = aWidth;
+  head.biHeight = aHeight;
+  head.biPlanes = 1;
+  head.biBitCount = (WORD)aDepth;
+  head.biCompression = BI_RGB;
+  head.biSizeImage = 0; // Uncompressed
+  head.biXPelsPerMeter = 0;
+  head.biYPelsPerMeter = 0;
+  head.biClrUsed = 0;
+  head.biClrImportant = 0;
+  
+  BITMAPINFO& bi = *(BITMAPINFO*)reserved_space;
+
+  if (aDepth == 1) {
+    RGBQUAD black = { 0, 0, 0, 0 };
+    RGBQUAD white = { 255, 255, 255, 0 };
+
+    bi.bmiColors[0] = white;
+    bi.bmiColors[1] = black;
+  }
+
+  HBITMAP bmp = ::CreateDIBitmap(dc, &head, CBM_INIT, aImageData, &bi, DIB_RGB_COLORS);
+  ::ReleaseDC(NULL, dc);
+  return bmp;
+#else
+  return nsnull;
+#endif
+}
+
+
 // Windows Mobile Special image/direct draw painting fun
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
 PRBool nsWindow::OnPaintImageDDraw16()
@@ -692,12 +862,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
 
   HRGN paintRgn = ::CreateRectRgn(ps.rcPaint.left, ps.rcPaint.top, 
                                   ps.rcPaint.right, ps.rcPaint.bottom);
-#ifdef DEBUG_vladimir
-  nsFunctionTimer ft("OnPaint [%d %d %d %d]",
-                     ps.rcPaint.left, ps.rcPaint.top, 
-                     ps.rcPaint.right - ps.rcPaint.left,
-                     ps.rcPaint.bottom - ps.rcPaint.top);
-#endif
 
   nsCOMPtr<nsIRegion> paintRgnWin;
   if (paintRgn) {
@@ -787,16 +951,9 @@ PRBool nsWindow::OnPaintImageDDraw16()
     goto cleanup;
   }
   
-#ifdef DEBUG_vladimir
-  ft.Mark("Init");
-#endif
   event.renderingContext = rc;
   result = DispatchWindowEvent(&event, eventStatus);
   event.renderingContext = nsnull;
-  
-#ifdef DEBUG_vladimir
-  ft.Mark("Dispatch");
-#endif
   
   if (!result) {
     printf("result is null from dispatch\n");
@@ -812,9 +969,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
     goto cleanup;
   }
   
-#ifdef DEBUG_vladimir
-  ft.Mark("Locked");
-#endif
   // Convert RGB24 -> RGB565
   pixman_image_t *srcPixmanImage = pixman_image_create_bits(PIXMAN_x8r8g8b8,
                                                             surfaceSize.width,
@@ -828,10 +982,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
                                                             (uint32_t*) gDDSDSecondary.lpSurface,
                                                             gDDSDSecondary.dwWidth * 2);
  
-#ifdef DEBUG_vladimir
-  ft.Mark("created pixman images");
-#endif
-
   pixman_image_composite(PIXMAN_OP_SRC,
                          srcPixmanImage,
                          NULL,
@@ -845,10 +995,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
   pixman_image_unref(dstPixmanImage);
   pixman_image_unref(srcPixmanImage);
 
-#ifdef DEBUG_vladimir
-  ft.Mark("composite");
-#endif
-  
   hr = glpDDSecondary->Unlock(0);
   if (FAILED(hr)) {
 #ifdef DEBUG
@@ -856,10 +1002,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
 #endif
     goto cleanup;
   }
-
-#ifdef DEBUG_vladimir
-  ft.Mark("unlock");
-#endif
 
   hr = glpDDClipper->SetHWnd(0, mWnd);
   if (FAILED(hr)) {
@@ -869,17 +1011,9 @@ PRBool nsWindow::OnPaintImageDDraw16()
     goto cleanup;
   }
 
-#ifdef DEBUG_vladimir
-  ft.Mark("sethwnd");
-#endif
-
   // translate the paint region to screen coordinates
   renderArea = ps.rcPaint;
   MapWindowPoints(mWnd, 0, (LPPOINT)&renderArea, 2);
-
-#ifdef DEBUG_vladimir
-  ft.Mark("preblt");
-#endif
 
   // set the rect to be 0,0 based
   ps.rcPaint.right = surfaceSize.width;
@@ -897,10 +1031,6 @@ PRBool nsWindow::OnPaintImageDDraw16()
 #endif
     goto cleanup;
   }
-
-#ifdef DEBUG_vladimir
-  ft.Mark("Blit");
-#endif
 
 cleanup:
  

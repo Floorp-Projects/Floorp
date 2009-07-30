@@ -97,17 +97,17 @@ public:
   virtual void Destroy();
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+                                 nsFrameList&    aChildList);
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
@@ -130,7 +130,8 @@ public:
 
   // nsIScrollPositionListener
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
-  virtual void ViewPositionDidChange(nsIScrollableView* aScrollable) {}
+  virtual void ViewPositionDidChange(nsIScrollableView* aScrollable,
+                                     nsTArray<nsIWidget::Configuration>* aConfigurations) {}
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
 
   // nsICanvasFrame
@@ -273,19 +274,19 @@ CanvasFrame::SetHasFocus(PRBool aHasFocus)
 
 NS_IMETHODIMP
 CanvasFrame::SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList)
+                                 nsFrameList&    aChildList)
 {
   if (nsGkAtoms::absoluteList == aListName)
     return mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
 
-  NS_ASSERTION(aListName || !aChildList || !aChildList->GetNextSibling(),
+  NS_ASSERTION(aListName || aChildList.IsEmpty() || aChildList.OnlyChild(),
                "Primary child list can have at most one frame in it");
   return nsHTMLContainerFrame::SetInitialChildList(aListName, aChildList);
 }
 
 NS_IMETHODIMP
 CanvasFrame::AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList)
+                          nsFrameList&    aFrameList)
 {
   nsresult  rv;
 
@@ -304,10 +305,12 @@ CanvasFrame::AppendFrames(nsIAtom*        aListName,
 
   } else {
     // Insert the new frames
+    NS_ASSERTION(aFrameList.FirstChild() == aFrameList.LastChild(),
+                 "Only one principal child frame allowed");
 #ifdef NS_DEBUG
     nsFrame::VerifyDirtyBitSet(aFrameList);
 #endif
-    mFrames.AppendFrame(nsnull, aFrameList);
+    mFrames.AppendFrames(nsnull, aFrameList);
 
     rv = PresContext()->PresShell()->
            FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -320,7 +323,7 @@ CanvasFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 CanvasFrame::InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList)
+                          nsFrameList&    aFrameList)
 {
   nsresult  rv;
 
@@ -382,13 +385,13 @@ CanvasFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsHTMLContainerFrame::GetAdditionalChildListName(aIndex);
 }
 
-nsIFrame*
-CanvasFrame::GetFirstChild(nsIAtom* aListName) const
+nsFrameList
+CanvasFrame::GetChildList(nsIAtom* aListName) const
 {
   if (nsGkAtoms::absoluteList == aListName)
-    return mAbsoluteContainer.GetFirstChild();
+    return mAbsoluteContainer.GetChildList();
 
-  return nsHTMLContainerFrame::GetFirstChild(aListName);
+  return nsHTMLContainerFrame::GetChildList(aListName);
 }
 
 nsRect CanvasFrame::CanvasArea() const
@@ -476,7 +479,8 @@ CanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayOverflowContainers(aBuilder, aDirtyRect, aLists);
   }
 
-  aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetFirstChild(), aDirtyRect);
+  aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetChildList(),
+                                     aDirtyRect);
   
   // Force a background to be shown. We may have a background propagated to us,
   // in which case GetStyleBackground wouldn't have the right background
@@ -600,15 +604,16 @@ CanvasFrame::Reflow(nsPresContext*           aPresContext,
   CanvasFrame* prevCanvasFrame = static_cast<CanvasFrame*>
                                                (GetPrevInFlow());
   if (prevCanvasFrame) {
-    nsIFrame* overflow = prevCanvasFrame->GetOverflowFrames(aPresContext, PR_TRUE);
+    nsAutoPtr<nsFrameList> overflow(prevCanvasFrame->StealOverflowFrames());
     if (overflow) {
-      NS_ASSERTION(!overflow->GetNextSibling(),
+      NS_ASSERTION(overflow->OnlyChild(),
                    "must have doc root as canvas frame's only child");
-      nsHTMLContainerFrame::ReparentFrameView(aPresContext, overflow, prevCanvasFrame, this);
+      nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, *overflow,
+                                                  prevCanvasFrame, this);
       // Prepend overflow to the our child list. There may already be
       // children placeholders for fixed-pos elements, which don't get
       // reflowed but must not be lost until the canvas frame is destroyed.
-      mFrames.InsertFrames(this, nsnull, overflow);
+      mFrames.InsertFrames(this, nsnull, *overflow);
     }
   }
 

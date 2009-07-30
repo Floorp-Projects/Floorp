@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: drbg.c,v 1.8 2009/04/01 03:37:29 wtc%google.com Exp $ */
+/* $Id: drbg.c,v 1.9 2009/06/10 03:24:01 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -381,6 +381,9 @@ static PRStatus rng_init(void)
     PRUint8 bytes[PRNG_SEEDLEN*2]; /* entropy + nonce */
     unsigned int numBytes;
     if (globalrng == NULL) {
+	/* bytes needs to have enough space to hold
+	 * a SHA256 hash value. Blow up at compile time if this isn't true */
+	PR_STATIC_ASSERT(sizeof(bytes) >= SHA256_LENGTH);
 	/* create a new global RNG context */
 	globalrng = &theGlobalRng;
         PORT_Assert(NULL == globalrng->lock);
@@ -413,6 +416,10 @@ static PRStatus rng_init(void)
 	}
 	/* the RNG is in a valid state */
 	globalrng->isValid = PR_TRUE;
+
+	/* fetch one random value so that we can populate rng->oldV for our
+	 * continous random number test. */
+	prng_generateNewBytes(globalrng, bytes, SHA256_LENGTH, NULL, 0);
 
 	/* Fetch more entropy into the PRNG */
 	RNG_SystemInfoForRNG();

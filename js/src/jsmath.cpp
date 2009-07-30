@@ -99,7 +99,7 @@ JSClass js_MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -231,7 +231,7 @@ static inline jsdouble JS_FASTCALL
 math_ceil_kernel(jsdouble x)
 {
 #ifdef __APPLE__
-    if (x < 0 && x > -1.0) 
+    if (x < 0 && x > -1.0)
         return js_copysign(0, -1);
 #endif
     return ceil(x);

@@ -120,7 +120,7 @@ JSClass js_IteratorClass = {
     JSCLASS_HAS_RESERVED_SLOTS(2) | /* slots for state and flags */
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -388,7 +388,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
              * we use the parent slot to keep track of the iterable, we must
              * fix it up after.
              */
-            iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL, 0);
+            iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
             if (!iterobj)
                 goto bad;
 
@@ -627,7 +627,7 @@ JSClass js_StopIterationClass = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   JS_FinalizeStub,
+    JS_ConvertStub,   NULL,
     NULL,             NULL,
     NULL,             NULL,
     NULL,             stopiter_hasInstance,
@@ -649,7 +649,7 @@ generator_finalize(JSContext *cx, JSObject *obj)
          */
         JS_ASSERT(gen->state == JSGEN_NEWBORN || gen->state == JSGEN_CLOSED ||
                   gen->state == JSGEN_OPEN);
-        JS_free(cx, gen);
+        cx->free(gen);
     }
 }
 
@@ -705,7 +705,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     jsval *slots;
 
     /* After the following return, failing control flow must goto bad. */
-    obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL);
     if (!obj)
         return NULL;
 
@@ -716,7 +716,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* Allocate obj's private data struct. */
     gen = (JSGenerator *)
-          JS_malloc(cx, sizeof(JSGenerator) + (nslots - 1) * sizeof(jsval));
+        cx->malloc(sizeof(JSGenerator) + (nslots - 1) * sizeof(jsval));
     if (!gen)
         goto bad;
 
@@ -783,7 +783,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->state = JSGEN_NEWBORN;
 
     if (!JS_SetPrivate(cx, obj, gen)) {
-        JS_free(cx, gen);
+        cx->free(gen);
         goto bad;
     }
     return obj;

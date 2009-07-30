@@ -95,11 +95,11 @@ public:
                                          nsStyleContext* aStyleContext);
  
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
 
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
 
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
@@ -135,8 +135,7 @@ public:
   }
 
 protected:
-  virtual PRBool IsReset(PRInt32 type);
-  virtual PRBool IsSubmit(PRInt32 type);
+  virtual PRBool IsInput() { return PR_FALSE; }
   void ReflowButtonContents(nsPresContext* aPresContext,
                             nsHTMLReflowMetrics& aDesiredSize,
                             const nsHTMLReflowState& aReflowState,

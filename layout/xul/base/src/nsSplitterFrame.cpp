@@ -394,8 +394,9 @@ nsSplitterFrame::HandlePress(nsPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsSplitterFrame::HandleMultiplePress(nsPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus)
+                                     nsGUIEvent *    aEvent,
+                                     nsEventStatus*  aEventStatus,
+                                     PRBool aControlHeld)
 {
   return NS_OK;
 }

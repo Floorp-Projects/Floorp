@@ -36,7 +36,6 @@
 
 #include "nsSVGGFrame.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsSVGMatrix.h"
 #include "nsIDOMSVGUseElement.h"
 #include "nsIDOMSVGTransformable.h"
 #include "nsSVGElement.h"

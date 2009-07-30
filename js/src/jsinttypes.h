@@ -43,7 +43,7 @@
  * Types:
  *   JSInt<N>, JSUint<N> (for <N> = 8, 16, 32, and 64)
  *   JSIntPtr, JSUIntPtr
- * 
+ *
  * JSInt<N> and JSUint<N> are signed and unsigned types known to be
  * <N> bits long.  Note that neither JSInt8 nor JSUInt8 is necessarily
  * equivalent to a plain "char".

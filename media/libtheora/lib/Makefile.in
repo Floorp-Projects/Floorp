@@ -49,7 +49,9 @@ DEFINES += -DTHEORA_DISABLE_ENCODE
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifneq ($(OS_ARCH),SunOS)
+ifneq ($(OS_ARCH)$(OS_TEST),WINNTx86_64)
 DEFINES += -DOC_X86ASM -DUSE_ASM
+endif
 endif
 endif
 
@@ -74,6 +76,8 @@ CSRCS		= \
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifeq ($(OS_ARCH),WINNT)
+ifeq (64,$(findstring 64,$(OS_TEST)))
+else
 VPATH		+= $(srcdir)/dec/x86_vc
 
 CSRCS		+= \
@@ -83,6 +87,7 @@ CSRCS		+= \
 		mmxstate.c \
 		mmxidct.c \
 		$(NULL)
+endif
 else
 VPATH		+= $(srcdir)/dec/x86
 

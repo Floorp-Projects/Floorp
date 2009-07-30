@@ -10,25 +10,6 @@
 			vertical-align: top;
 		}
 	</style>
-	<script type="text/javascript" language="JavaScript">
-		/**
-		 * Display the element 'idShow' and hide the element 'idHide'.
-		 *
-		 * @param idShow the id of the element to show.
-		 * @param idHide the id of the element to hide.
-		 */
-		toggleElements = function(idShow, idHide)
-		{
-			var elementHide = document.getElementById(idHide);
-			var elementShow = document.getElementById(idShow);
-			if (elementHide && elementShow)
-			{
-				elementHide.style.display = 'none';
-				elementShow.style.display = '';
-			}
-		}
-	</script>
-
 </head>
 
 <body>
@@ -47,10 +28,7 @@
 hello
     </td>
     <td >
-        <span id="A" style="" onclick="toggleElements('B', 'A')">
-              Click me!
-		</span>
-		<span id="B" style="display: none;" onclick="toggleElements('A', 'B')">
+		<span id="B" >
 		    Now I am<br />
 		    higher.<br />
 

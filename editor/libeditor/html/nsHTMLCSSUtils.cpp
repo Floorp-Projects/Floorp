@@ -782,69 +782,67 @@ void
 nsHTMLCSSUtils::GetCSSPropertyAtom(nsCSSEditableProperty aProperty, nsIAtom ** aAtom)
 {
   *aAtom = nsnull;
-  if (0 < aProperty) {
-    switch (aProperty) {
-      case eCSSEditableProperty_background_color:
-        *aAtom = nsEditProperty::cssBackgroundColor;
-        break;
-      case eCSSEditableProperty_background_image:
-        *aAtom = nsEditProperty::cssBackgroundImage;
-        break;
-      case eCSSEditableProperty_border:
-        *aAtom = nsEditProperty::cssBorder;
-        break;
-      case eCSSEditableProperty_caption_side:
-        *aAtom = nsEditProperty::cssCaptionSide;
-        break;
-      case eCSSEditableProperty_color:
-        *aAtom = nsEditProperty::cssColor;
-        break;
-      case eCSSEditableProperty_float:
-        *aAtom = nsEditProperty::cssFloat;
-        break;
-      case eCSSEditableProperty_font_family:
-        *aAtom = nsEditProperty::cssFontFamily;
-        break;
-      case eCSSEditableProperty_font_size:
-        *aAtom = nsEditProperty::cssFontSize;
-        break;
-      case eCSSEditableProperty_font_style:
-        *aAtom = nsEditProperty::cssFontStyle;
-        break;
-      case eCSSEditableProperty_font_weight:
-        *aAtom = nsEditProperty::cssFontWeight;
-        break;
-      case eCSSEditableProperty_height:
-        *aAtom = nsEditProperty::cssHeight;
-        break;
-      case eCSSEditableProperty_list_style_type:
-        *aAtom = nsEditProperty::cssListStyleType;
-        break;
-      case eCSSEditableProperty_margin_left:
-        *aAtom = nsEditProperty::cssMarginLeft;
-        break;
-      case eCSSEditableProperty_margin_right:
-        *aAtom = nsEditProperty::cssMarginRight;
-        break;
-      case eCSSEditableProperty_text_align:
-        *aAtom = nsEditProperty::cssTextAlign;
-        break;
-      case eCSSEditableProperty_text_decoration:
-        *aAtom = nsEditProperty::cssTextDecoration;
-        break;
-      case eCSSEditableProperty_vertical_align:
-        *aAtom = nsEditProperty::cssVerticalAlign;
-        break;
-      case eCSSEditableProperty_whitespace:
-        *aAtom = nsEditProperty::cssWhitespace;
-        break;
-      case eCSSEditableProperty_width:
-        *aAtom = nsEditProperty::cssWidth;
-        break;
-      case eCSSEditableProperty_NONE:
-        // intentionally empty
-        break;
-    }
+  switch (aProperty) {
+    case eCSSEditableProperty_background_color:
+      *aAtom = nsEditProperty::cssBackgroundColor;
+      break;
+    case eCSSEditableProperty_background_image:
+      *aAtom = nsEditProperty::cssBackgroundImage;
+      break;
+    case eCSSEditableProperty_border:
+      *aAtom = nsEditProperty::cssBorder;
+      break;
+    case eCSSEditableProperty_caption_side:
+      *aAtom = nsEditProperty::cssCaptionSide;
+      break;
+    case eCSSEditableProperty_color:
+      *aAtom = nsEditProperty::cssColor;
+      break;
+    case eCSSEditableProperty_float:
+      *aAtom = nsEditProperty::cssFloat;
+      break;
+    case eCSSEditableProperty_font_family:
+      *aAtom = nsEditProperty::cssFontFamily;
+      break;
+    case eCSSEditableProperty_font_size:
+      *aAtom = nsEditProperty::cssFontSize;
+      break;
+    case eCSSEditableProperty_font_style:
+      *aAtom = nsEditProperty::cssFontStyle;
+      break;
+    case eCSSEditableProperty_font_weight:
+      *aAtom = nsEditProperty::cssFontWeight;
+      break;
+    case eCSSEditableProperty_height:
+      *aAtom = nsEditProperty::cssHeight;
+      break;
+    case eCSSEditableProperty_list_style_type:
+      *aAtom = nsEditProperty::cssListStyleType;
+      break;
+    case eCSSEditableProperty_margin_left:
+      *aAtom = nsEditProperty::cssMarginLeft;
+      break;
+    case eCSSEditableProperty_margin_right:
+      *aAtom = nsEditProperty::cssMarginRight;
+      break;
+    case eCSSEditableProperty_text_align:
+      *aAtom = nsEditProperty::cssTextAlign;
+      break;
+    case eCSSEditableProperty_text_decoration:
+      *aAtom = nsEditProperty::cssTextDecoration;
+      break;
+    case eCSSEditableProperty_vertical_align:
+      *aAtom = nsEditProperty::cssVerticalAlign;
+      break;
+    case eCSSEditableProperty_whitespace:
+      *aAtom = nsEditProperty::cssWhitespace;
+      break;
+    case eCSSEditableProperty_width:
+      *aAtom = nsEditProperty::cssWidth;
+      break;
+    case eCSSEditableProperty_NONE:
+      // intentionally empty
+      break;
   }
 }
 

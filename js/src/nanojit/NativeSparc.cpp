@@ -80,21 +80,26 @@ namespace nanojit
         /**
          * Prologue
          */
-        underrunProtect(12);
+        underrunProtect(16);
         uint32_t stackNeeded = STACK_GRANULARITY * _activation.highwatermark;
         uint32_t frameSize = stackNeeded + kcalleeAreaSize + kLinkageAreaSize;
         frameSize = BIT_ROUND_UP(frameSize, 8);
 
+        if (frameSize <= 4096)
+            SUBI(FP, frameSize, SP);
+        else {
+            SUB(FP, G1, SP);
+            ORI(G1, frameSize & 0x3FF, G1);
+            SETHI(frameSize, G1);
+        }
+
         verbose_only( verbose_outputf("        %p:",_nIns); )
         verbose_only( asm_output("        patch entry:"); )
-            NIns *patchEntry = _nIns;
-        if (frameSize <= 4096)
-            SAVEI(SP, (-frameSize), SP);
-        else {
-            SAVE(SP, G1, SP);
-            ORI(G1, -frameSize & 0x3FF, G1);
-            SETHI(-frameSize, G1);
-        }
+        NIns *patchEntry = _nIns;
+
+        // The frame size in SAVE is faked. We will still re-caculate SP later.
+        // We can use 0 here but it is not good for debuggers.
+        SAVEI(SP, -148, SP);
 
         // align the entry point
         asm_align_code();
@@ -282,7 +287,7 @@ namespace nanojit
     void Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
     {
         underrunProtect(24);
-        if (i->isop(LIR_alloc)) {
+        if (i->isop(LIR_ialloc)) {
             ADD(FP, L2, r);
             SET32(disp(resv), L2);
             verbose_only(if (_logc->lcbits & LC_RegAlloc) {
@@ -323,7 +328,7 @@ namespace nanojit
                 // make sure what is in a register
                 Reservation *rA, *rB;
                 Register ra, rb;
-                if (base->isop(LIR_alloc)) {
+                if (base->isop(LIR_ialloc)) {
                     rb = FP;
                     dr += findMemFor(base);
                     ra = findRegFor(value, GpRegs);
@@ -364,7 +369,7 @@ namespace nanojit
 
         int dr = disp(resv);
         Register rb;
-        if (base->isop(LIR_alloc)) {
+        if (base->isop(LIR_ialloc)) {
             rb = FP;
             db += findMemFor(base);
         } else {
@@ -414,7 +419,7 @@ namespace nanojit
 
                 int da = findMemFor(value);
                 Register rb;
-                if (base->isop(LIR_alloc)) {
+                if (base->isop(LIR_ialloc)) {
                     rb = FP;
                     dr += findMemFor(base);
                 } else {
@@ -425,7 +430,7 @@ namespace nanojit
             }
 
         Register rb;
-        if (base->isop(LIR_alloc)) {
+        if (base->isop(LIR_ialloc)) {
             rb = FP;
             dr += findMemFor(base);
         } else {
@@ -462,9 +467,8 @@ namespace nanojit
         LDSW32(rs, ds, t);
     }
 
-    NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ, bool isfar)
+    NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     {
-              // XXX ignoring isfar
         NIns* at = 0;
         LOpcode condop = cond->opcode();
         NanoAssert(cond->isCond());
@@ -649,7 +653,7 @@ namespace nanojit
                 }
                 allow &= ~rmask(rb);
             }
-        else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
+        else if ((op == LIR_add||op == LIR_iaddp) && lhs->isop(LIR_ialloc) && rhs->isconst()) {
             // add alloc+const, use lea
             Register rr = prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->imm32();
@@ -670,7 +674,7 @@ namespace nanojit
                 if (lhs == rhs)
                     rb = ra;
 
-                if (op == LIR_add || op == LIR_addp)
+                if (op == LIR_add || op == LIR_iaddp)
                     ADDCC(rr, rb, rr);
                 else if (op == LIR_sub)
                     SUBCC(rr, rb, rr);
@@ -694,7 +698,7 @@ namespace nanojit
         else
             {
                 int c = rhs->imm32();
-                if (op == LIR_add || op == LIR_addp) {
+                if (op == LIR_add || op == LIR_iaddp) {
                     ADDCC(rr, L2, rr);
                 } else if (op == LIR_sub) {
                     SUBCC(rr, L2, rr);
@@ -764,14 +768,10 @@ namespace nanojit
         underrunProtect(4);
         LOpcode op = ins->opcode();
         LIns* condval = ins->oprnd1();
+        LIns* iftrue  = ins->oprnd2();
+        LIns* iffalse = ins->oprnd3();
+
         NanoAssert(condval->isCmp());
-
-        LIns* values = ins->oprnd2();
-
-        NanoAssert(values->opcode() == LIR_2);
-        LIns* iftrue = values->oprnd1();
-        LIns* iffalse = values->oprnd2();
-
         NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
 
         const Register rr = prepResultReg(ins, GpRegs);
@@ -854,12 +854,10 @@ namespace nanojit
         freeRsrcOf(ins, false);
         if (d)
             {
-                Register r = registerAlloc(GpRegs);
-                _allocator.addFree(r);
-                STW32(r, d+4, FP);
-                SET32(ins->imm64_0(), r);
-                STW32(r, d, FP);
-                SET32(ins->imm64_1(), r);
+                STW32(L2, d+4, FP);
+                SET32(ins->imm64_0(), L2);
+                STW32(L2, d, FP);
+                SET32(ins->imm64_1(), L2);
             }
     }
 

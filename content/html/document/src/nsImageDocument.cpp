@@ -74,6 +74,7 @@
 #include "nsIMarkupDocumentViewer.h"
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
+#define CLICK_IMAGE_RESIZING_PREF "browser.enable_click_image_resizing"
 
 class nsImageDocument;
 
@@ -146,6 +147,7 @@ protected:
   PRInt32                       mImageHeight;
 
   PRPackedBool                  mResizeImageByDefault;
+  PRPackedBool                  mClickResizingEnabled;
   PRPackedBool                  mImageIsOverflowing;
   // mImageIsResized is true if the image is currently resized
   PRPackedBool                  mImageIsResized;
@@ -307,6 +309,8 @@ nsImageDocument::Init()
 
   mResizeImageByDefault =
     nsContentUtils::GetBoolPref(AUTOMATIC_IMAGE_RESIZING_PREF);
+  mClickResizingEnabled =
+    nsContentUtils::GetBoolPref(CLICK_IMAGE_RESIZING_PREF);
   mShouldResize = mResizeImageByDefault;
   mFirstResize = PR_TRUE;
 
@@ -560,7 +564,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
   if (eventType.EqualsLiteral("resize")) {
     CheckOverflowing(PR_FALSE);
   }
-  else if (eventType.EqualsLiteral("click")) {
+  else if (eventType.EqualsLiteral("click") && mClickResizingEnabled) {
     SetZoomLevel(1.0);
     mShouldResize = PR_TRUE;
     if (mImageIsResized) {

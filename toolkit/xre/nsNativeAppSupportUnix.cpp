@@ -157,7 +157,7 @@ gboolean save_yourself_cb(GnomeClient *client, gint phase,
   }
   
   // Is there a request to suppress default binary launcher? 
-  char* argv1 = getenv("MOZILLA_APP_LAUNCHER");
+  char* argv1 = getenv("MOZ_APP_LAUNCHER");
 
   if(!argv1) {
     // Tell GNOME the command for restarting us so that we can be part of XSMP session restore

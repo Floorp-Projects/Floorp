@@ -51,10 +51,18 @@ endif
 endif
 
 ifeq ($(OS_ARCH), Linux)
+ifeq ($(BUILD_SUN_PKG), 1)
+ifeq ($(USE_64), 1)
+EXTRA_SHARED_LIBS += -Wl,-rpath,'$$ORIGIN/../lib64:/opt/sun/private/lib64:$$ORIGIN/../lib'
+else
+EXTRA_SHARED_LIBS += -Wl,-rpath,'$$ORIGIN/../lib:/opt/sun/private/lib'
+endif
+else
 ifeq ($(USE_64), 1)
 EXTRA_SHARED_LIBS += -Wl,-rpath,'$$ORIGIN/../lib64:$$ORIGIN/../lib'
 else
 EXTRA_SHARED_LIBS += -Wl,-rpath,'$$ORIGIN/../lib'
+endif
 endif
 endif
 
@@ -83,7 +91,7 @@ endif
 ifdef USE_STATIC_LIBS
 
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH))) 
 
 DEFINES += -DNSS_USE_STATIC_LIBS
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
@@ -203,7 +211,7 @@ endif
 
 else # USE_STATIC_LIBS
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH))) 
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 EXTRA_LIBS += \

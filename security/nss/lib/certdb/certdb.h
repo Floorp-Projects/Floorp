@@ -63,7 +63,7 @@ CERTSignedCrl *
 SEC_FindCrlByDERCert(CERTCertDBHandle *handle, SECItem *derCrl, int type);
 
 PRBool
-SEC_CertNicknameConflict(char *nickname, SECItem *derSubject,
+SEC_CertNicknameConflict(const char *nickname, SECItem *derSubject,
 			 CERTCertDBHandle *handle);
 CERTSignedCrl *
 SEC_NewCrl(CERTCertDBHandle *handle, char *url, SECItem *derCrl, int type);

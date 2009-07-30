@@ -47,7 +47,7 @@
 
 #if defined(AVMPLUS_UNIX) && defined(AVMPLUS_ARM)
 #include <asm/unistd.h>
-extern "C" void __clear_cache(char *BEG, char *END);
+extern "C" void __clear_cache(void *BEG, void *END);
 #endif
 
 #ifdef AVMPLUS_SPARC
@@ -255,7 +255,7 @@ namespace nanojit
      * they can just be recalculated w/out any inputs.
      */
     bool Assembler::canRemat(LIns *i) {
-        return i->isconst() || i->isconstq() || i->isop(LIR_alloc);
+        return i->isconst() || i->isconstq() || i->isop(LIR_ialloc);
     }
 
     void Assembler::internalReset()
@@ -403,7 +403,7 @@ namespace nanojit
             Reservation *r = getresv(ins);
             NanoAssert(r != 0);
             if (r->arIndex) {
-                if (ins->isop(LIR_alloc)) {
+                if (ins->isop(LIR_ialloc)) {
                     int j=i+1;
                     for (int n = i + (ins->size()>>2); j < n; j++) {
                         NanoAssert(ar.entry[j]==ins);
@@ -495,7 +495,7 @@ namespace nanojit
 
     Register Assembler::getBaseReg(LIns *i, int &d, RegisterMask allow)
     {
-        if (i->isop(LIR_alloc)) {
+        if (i->isop(LIR_ialloc)) {
             d += findMemFor(i);
             return FP;
         } else {
@@ -505,7 +505,7 @@ namespace nanojit
 
     Register Assembler::findRegFor(LIns* i, RegisterMask allow)
     {
-        if (i->isop(LIR_alloc)) {
+        if (i->isop(LIR_ialloc)) {
             // never allocate a reg for this w/out stack space too
             findMemFor(i);
         }
@@ -597,7 +597,7 @@ namespace nanojit
     {
         int d = disp(resv);
         Register rr = resv->reg;
-        bool quad = i->opcode() == LIR_param || i->isQuad();
+        bool quad = i->opcode() == LIR_iparam || i->isQuad();
         verbose_only( if (d && (_logc->lcbits & LC_RegAlloc)) {
                          outputForEOL("  <= spill %s",
                                       _thisfrag->lirbuf->names->formatRef(i)); } )
@@ -619,8 +619,10 @@ namespace nanojit
             asm_spilli(i, resv, pop);
             _allocator.retire(rr);    // free any register associated with entry
         }
-        if (index)
+        if (index) {
+            NanoAssert(_activation.entry[index] == i);
             arFree(index);            // free any stack stack space associated with entry
+        }
         i->resv()->clear();
     }
 
@@ -632,6 +634,8 @@ namespace nanojit
 
     void Assembler::patch(GuardRecord *lr)
     {
+        if (!lr->jmp) // the guard might have been eliminated as redundant
+            return;
         Fragment *frag = lr->exit->target;
         NanoAssert(frag->fragEntry != 0);
         NIns* was = nPatchBranch((NIns*)lr->jmp, frag->fragEntry);
@@ -1176,7 +1180,7 @@ namespace nanojit
 
                 // allocate some stack space.  the value of this instruction
                 // is the address of the stack space.
-                case LIR_alloc: {
+                case LIR_ialloc: {
                     countlir_alloc();
                     Reservation *resv = getresv(ins);
                     NanoAssert(resv->arIndex != 0);
@@ -1211,7 +1215,7 @@ namespace nanojit
                     break;
                 }
 #endif
-                case LIR_param:
+                case LIR_iparam:
                 {
                     countlir_param();
                     asm_param(ins);
@@ -1278,7 +1282,7 @@ namespace nanojit
 #endif
 
                 case LIR_add:
-                case LIR_addp:
+                case LIR_iaddp:
                 case LIR_sub:
                 case LIR_mul:
                 case LIR_and:
@@ -1388,7 +1392,7 @@ namespace nanojit
                     if (label && label->addr) {
                         // forward jump to known label.  need to merge with label's register state.
                         unionRegisterState(label->regs);
-                        asm_branch(op == LIR_jf, cond, label->addr, false);
+                        asm_branch(op == LIR_jf, cond, label->addr);
                     }
                     else {
                         // back edge.
@@ -1403,7 +1407,7 @@ namespace nanojit
                             // evict all registers, most conservative approach.
                             intersectRegisterState(label->regs);
                         }
-                        NIns *branch = asm_branch(op == LIR_jf, cond, 0, false);
+                        NIns *branch = asm_branch(op == LIR_jf, cond, 0);
                         patches.put(branch,to);
                     }
                     break;
@@ -1448,7 +1452,7 @@ namespace nanojit
                     // we only support cmp with guard right now, also assume it is 'close' and only emit the branch
                     NIns* exit = asm_exit(ins); // does intersectRegisterState()
                     LIns* cond = ins->oprnd1();
-                    asm_branch(op == LIR_xf, cond, exit, false);
+                    asm_branch(op == LIR_xf, cond, exit);
                     break;
                 }
                 case LIR_x:
@@ -1590,13 +1594,18 @@ namespace nanojit
         for (int i=0, n=pending_lives.size(); i < n; i++) {
             findMemFor(pending_lives[i]);
         }
+        /*
+         * TODO: I'm not positive, but I think the following line needs to be
+         * added, otherwise the pending_lives will build up and never get
+         * cleared.
+         */
+        pending_lives.clear();
     }
 
     void Assembler::arFree(uint32_t idx)
     {
         AR &ar = _activation;
         LIns *i = ar.entry[idx];
-        NanoAssert(i != 0);
         do {
             ar.entry[idx] = 0;
             idx--;
@@ -1663,7 +1672,7 @@ namespace nanojit
     uint32_t Assembler::arReserve(LIns* l)
     {
         //verbose_only(printActivationState());
-        int32_t size = l->isop(LIR_alloc) ? (l->size()>>2) : l->isQuad() ? 2 : sizeof(intptr_t)>>2;
+        int32_t size = l->isop(LIR_ialloc) ? (l->size()>>2) : l->isQuad() ? 2 : sizeof(intptr_t)>>2;
         AR &ar = _activation;
         const int32_t tos = ar.tos;
         int32_t start = ar.lowwatermark;

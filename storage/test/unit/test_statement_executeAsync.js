@@ -96,11 +96,11 @@ function test_add_data()
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (?, ?, ?, ?, ?)"
   );
-  stmt.bindInt32Parameter(0, INTEGER);
-  stmt.bindStringParameter(1, TEXT);
-  stmt.bindDoubleParameter(2, REAL);
-  stmt.bindNullParameter(3);
   stmt.bindBlobParameter(4, BLOB, BLOB.length);
+  stmt.bindNullParameter(3);
+  stmt.bindDoubleParameter(2, REAL);
+  stmt.bindStringParameter(1, TEXT);
+  stmt.bindInt32Parameter(0, INTEGER);
 
   stmt.executeAsync({
     handleResult: function(aResultSet)
@@ -373,7 +373,6 @@ function test_immediate_cancellation()
     "DELETE FROM test WHERE id = ?"
   );
   stmt.bindInt32Parameter(0, 0);
-  let reason = Ci.mozIStorageStatementCallback.REASON_CANCELED;
   var pendingStatement = stmt.executeAsync({
     handleResult: function(aResultSet)
     {
@@ -389,7 +388,9 @@ function test_immediate_cancellation()
     {
       print("handleCompletion(" + aReason +
             ") for test_immediate_cancellation");
-      do_check_eq(reason, aReason);
+      // It is possible that we finished before we canceled.
+      do_check_true(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ||
+                    aReason == Ci.mozIStorageStatementCallback.REASON_CANCELED);
 
       // Run the next test.
       run_next_test();
@@ -397,10 +398,7 @@ function test_immediate_cancellation()
   });
 
   // Cancel immediately
-  if (!pendingStatement.cancel()) {
-    // It is possible that we finished before we canceled
-    reason = Ci.mozIStorageStatementCallback.REASON_FINISHED;
-  }
+  pendingStatement.cancel()
 
   stmt.finalize();
 }
@@ -411,7 +409,6 @@ function test_double_cancellation()
     "DELETE FROM test WHERE id = ?"
   );
   stmt.bindInt32Parameter(0, 0);
-  let reason = Ci.mozIStorageStatementCallback.REASON_CANCELED;
   var pendingStatement = stmt.executeAsync({
     handleResult: function(aResultSet)
     {
@@ -427,7 +424,9 @@ function test_double_cancellation()
     {
       print("handleCompletion(" + aReason +
             ") for test_double_cancellation");
-      do_check_eq(reason, aReason);
+      // It is possible that we finished before we canceled.
+      do_check_true(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ||
+                    aReason == Ci.mozIStorageStatementCallback.REASON_CANCELED);
 
       // Run the next test.
       run_next_test();
@@ -435,10 +434,7 @@ function test_double_cancellation()
   });
 
   // Cancel immediately
-  if (!pendingStatement.cancel()) {
-    // It is possible that we finished before we canceled
-    reason = Ci.mozIStorageStatementCallback.REASON_FINISHED;
-  }
+  pendingStatement.cancel()
 
   // And cancel again - expect an exception
   try {

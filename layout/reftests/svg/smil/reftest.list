@@ -48,6 +48,11 @@ include pause/reftest.list
 == anim-discrete-sum-none-1.svg    anim-standard-ref.svg
 == anim-discrete-sum-sum-1.svg     anim-standard-ref.svg
 
+== anim-discrete-to-1.svg          anim-standard-ref.svg
+== anim-discrete-to-2.svg          anim-standard-ref.svg
+== anim-discrete-to-3.svg          anim-standard-ref.svg
+== anim-discrete-to-4.svg          anim-standard-ref.svg
+
 fails == anim-fillcolor-1.svg      anim-standard-ref.svg # color support
 fails == anim-fillopacity-1.svg anim-standard-ref.svg    # non-length-numeric values support
 

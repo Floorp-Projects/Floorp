@@ -768,16 +768,14 @@ nsAttrAndChildArray::GrowBy(PRUint32 aGrowSize)
     size = PR_BIT(PR_CeilingLog2(minSize));
   }
 
-  Impl* newImpl = static_cast<Impl*>
-                             (mImpl ? PR_Realloc(mImpl, size * sizeof(void*)) :
-              PR_Malloc(size * sizeof(void*)));
+  PRBool needToInitialize = !mImpl;
+  Impl* newImpl = static_cast<Impl*>(PR_Realloc(mImpl, size * sizeof(void*)));
   NS_ENSURE_TRUE(newImpl, PR_FALSE);
 
-  Impl* oldImpl = mImpl;
   mImpl = newImpl;
 
   // Set initial counts if we didn't have a buffer before
-  if (!oldImpl) {
+  if (needToInitialize) {
     mImpl->mMappedAttrs = nsnull;
     SetAttrSlotAndChildCount(0, 0);
   }

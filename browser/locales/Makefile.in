@@ -64,12 +64,10 @@ vpath book%.inc @srcdir@/en-US/profile
 endif
 
 
-ifdef MOZ_BRANDING_DIRECTORY
 SUBMAKEFILES += \
 	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
 	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
 	$(NULL)
-endif
 
 # This makefile uses variable overrides from the libs-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
@@ -86,10 +84,6 @@ ZIP_IN ?= $(_ABS_DIST)/$(PACKAGE)
 WIN32_INSTALLER_IN ?= $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 
 MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
-
-ifndef MOZ_BRANDING_DIRECTORY
-DEFINES += -DMOZ_USE_GENERIC_BRANDING
-endif
 
 ifeq (,$(filter-out pref,$(MOZ_EXTENSIONS)))
 DEFINES += -DEXTENSION_PREF
@@ -188,9 +182,7 @@ libs-%:
 	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref BOTH_MANIFESTS=1
-ifdef MOZ_BRANDING_DIRECTORY
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
-endif
 	@$(MAKE) tests AB_CD=$*
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
@@ -204,11 +196,7 @@ endif
 repackage-win32-installer: WIN32_INSTALLER_OUT="$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
 	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
-ifdef MOZ_BRANDING_DIRECTORY
 	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
-else
-	$(MAKE) -C ../installer/windows export
-endif
 	if test ! -d $(_ABS_DIST)/$(PKG_INST_PATH); then \
 	  $(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH); \
 	fi

@@ -70,6 +70,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
+#include "nsIWidget.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -84,7 +85,6 @@ class nsIContent;
 class nsIFontMetrics;
 class nsIFrame;
 class nsFrameManager;
-class nsIImage;
 class nsILinkHandler;
 class nsStyleContext;
 class nsIAtom;
@@ -99,6 +99,7 @@ class nsIRunnable;
 class gfxUserFontSet;
 class nsUserFontSet;
 struct nsFontFaceRuleContainer;
+class nsObjectFrame;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -152,6 +153,8 @@ enum nsLayoutPhase {
 #define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
 #define NS_AUTHOR_SPECIFIED_PADDING         (1 << 2)
 
+class nsRootPresContext;
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 
@@ -198,7 +201,7 @@ public:
 
   // Find the prescontext for the root of the view manager hierarchy that contains
   // this prescontext.
-  nsPresContext* RootPresContext();
+  nsRootPresContext* RootPresContext();
 
   nsIDocument* Document() const
   {
@@ -1036,7 +1039,7 @@ protected:
 
 protected:
 
-  ~nsPresContext() NS_HIDDEN;
+  virtual ~nsPresContext() NS_HIDDEN;
 
   // these are private, use the list in nsFont.h if you want a public list
   enum {
@@ -1060,6 +1063,54 @@ public:
   }
 #endif
 
+};
+
+class nsRootPresContext : public nsPresContext {
+public:
+  nsRootPresContext(nsIDocument* aDocument, nsPresContextType aType) NS_HIDDEN;
+  virtual ~nsRootPresContext();
+
+  /**
+   * Registers a plugin to receive geometry updates (position and clip
+   * region) so it can update its widget.
+   * Callers must call UnregisterPluginForGeometryUpdates before
+   * the aPlugin frame is destroyed.
+   */
+  void RegisterPluginForGeometryUpdates(nsObjectFrame* aPlugin);
+  /**
+   * Stops a plugin receiving geometry updates (position and clip
+   * region). If the plugin was not already registered, this does
+   * nothing.
+   */
+  void UnregisterPluginForGeometryUpdates(nsObjectFrame* aPlugin);
+
+  /**
+   * Iterate through all plugins that are registered for geometry updates
+   * and update their position and clip region to match the current frame
+   * tree. Only frames at or under aChangedRoot can have changed their
+   * geometry.
+   */
+  void UpdatePluginGeometry(nsIFrame* aChangedRoot);
+
+  /**
+   * Iterate through all plugins that are registered for geometry updates
+   * and compute their position and clip region according to the
+   * current frame tree. Only frames at or under aChangedRoot can have
+   * changed their geometry. The computed positions and clip regions are
+   * appended to aConfigurations.
+   */
+  void GetPluginGeometryUpdates(nsIFrame* aChangedRoot,
+                                nsTArray<nsIWidget::Configuration>* aConfigurations);
+
+  /**
+   * When all geometry updates have been applied, call this function
+   * in case the nsObjectFrames have work to do after the widgets
+   * have been updated.
+   */
+  void DidApplyPluginGeometryUpdates();
+
+private:
+  nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;
 };
 
 #ifdef DEBUG

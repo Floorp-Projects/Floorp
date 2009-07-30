@@ -9,12 +9,12 @@ var gLoads = 0;
 function setupTest(uri, cookies, loads) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  prefs.setIntPref("network.cookie.cookieBehavior", 1);
+  Components.classes["@mozilla.org/preferences-service;1"]
+            .getService(Components.interfaces.nsIPrefBranch)
+            .setIntPref("network.cookie.cookieBehavior", 1);
 
   var cs = Components.classes["@mozilla.org/cookiemanager;1"]
-                      .getService(Components.interfaces.nsICookieManager2);
+                     .getService(Components.interfaces.nsICookieManager2);
   cs.removeAll();
 
   gExpectedCookies = cookies;
@@ -25,22 +25,29 @@ function setupTest(uri, cookies, loads) {
   gPopup = window.open(uri, 'hai', 'width=100,height=100');
 }
 
+window.addEventListener("message", messageReceiver, false);
+
 /** Receives MessageEvents to this window. */
 function messageReceiver(evt)
 {
-  ok(evt instanceof MessageEvent, "wrong event type");
+  ok(evt instanceof MessageEvent, "event type", evt);
 
-  if (evt.data == "message")
-    gLoads++;
-  else {
-    ok(false, "wrong message");
+  if (evt.data != "message") {
+    window.removeEventListener("message", messageReceiver, false);
+
+    ok(false, "message", evt.data);
+
     gPopup.close();
     SimpleTest.finish();
+    return;
   }
 
   // only run the test when all our children are done loading & setting cookies
-  if (gLoads == gExpectedLoads)
+  if (++gLoads == gExpectedLoads) {
+    window.removeEventListener("message", messageReceiver, false);
+
     runTest();
+  }
 }
 
 function runTest() {
@@ -48,6 +55,7 @@ function runTest() {
   document.cookie = "oh=hai";
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
   var cs = Components.classes["@mozilla.org/cookiemanager;1"]
                      .getService(Components.interfaces.nsICookieManager);
   var list = cs.enumerator;
@@ -56,12 +64,9 @@ function runTest() {
     count++;
     list.getNext();
   }
-  is(count, gExpectedCookies, "incorrect number of cookies");
+  is(count, gExpectedCookies, "number of cookies");
+  cs.removeAll();
 
   gPopup.close();
-  cs.removeAll();
   SimpleTest.finish();
 }
-
-window.addEventListener("message", messageReceiver, false);
-

@@ -735,7 +735,7 @@ nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame* aFrame,
 
   /* Now aFrame is the containing block we want */
 
-  /* Check whether the containing block is currently being reflown.
+  /* Check whether the containing block is currently being reflowed.
      If so, use the info from the reflow state. */
   const nsHTMLReflowState* state;
   if (aFrame->GetStateBits() & NS_FRAME_IN_REFLOW) {
@@ -978,7 +978,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
   // Get the placeholder x-offset and y-offset in the coordinate
   // space of the block frame that contains it
-  // XXXbz the placeholder is not fully reflown yet if our containing block is
+  // XXXbz the placeholder is not fully reflowed yet if our containing block is
   // relatively positioned...
   nsPoint placeholderOffset = aPlaceholderFrame->GetOffsetTo(aContainingBlock);
 
@@ -1002,7 +1002,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // the line containing the placeholder frame, unless all the frames
       // before it are empty.  In that case, it would have been just before
       // this line.      
-      // XXXbz the line box is not fully reflown yet if our containing block is
+      // XXXbz the line box is not fully reflowed yet if our containing block is
       // relatively positioned...
       if (lineBox != iter.End()) {
         nsIFrame * firstFrame = lineBox->mFirstChild;
@@ -1831,6 +1831,9 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     } else {
       PRBool isBlock =
         NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
+      // make sure legend frames with display:block and width:auto still
+      // shrink-wrap
+      PRBool shrinkWrap = !isBlock || frame->GetType() == nsGkAtoms::legendFrame;
       nsSize size =
         frame->ComputeSize(rendContext,
                            nsSize(aContainingBlockWidth,
@@ -1844,7 +1847,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
                                     mComputedPadding.TopBottom()),
                            nsSize(mComputedPadding.LeftRight(),
                                   mComputedPadding.TopBottom()),
-                           !isBlock);
+                           shrinkWrap);
 
       mComputedWidth = size.width;
       mComputedHeight = size.height;
@@ -1922,7 +1925,8 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
   }
   mComputedBorderPadding += mComputedPadding;
 
-  if (frame->GetType() == nsGkAtoms::tableFrame) {
+  nsIAtom* frameType = frame->GetType();
+  if (frameType == nsGkAtoms::tableFrame) {
     nsTableFrame *tableFrame = static_cast<nsTableFrame*>(frame);
 
     if (tableFrame->IsBorderCollapse()) {
@@ -1932,6 +1936,23 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
       // '-moz-box-sizing', or 'auto' margins.
       mComputedPadding.SizeTo(0,0,0,0);
       mComputedBorderPadding = tableFrame->GetIncludedOuterBCBorder();
+    }
+  } else if (frameType == nsGkAtoms::scrollbarFrame) {
+    // scrollbars may have had their width or height smashed to zero
+    // by the associated scrollframe, in which case we must not report
+    // any padding or border on that axis.
+    nsSize size(frame->GetSize());
+    if (size.width == 0) {
+      mComputedPadding.left = 0;
+      mComputedPadding.right = 0;
+      mComputedBorderPadding.left = 0;
+      mComputedBorderPadding.right = 0;
+    }
+    if (size.height == 0) {
+      mComputedPadding.top = 0;
+      mComputedPadding.bottom = 0;
+      mComputedBorderPadding.top = 0;
+      mComputedBorderPadding.bottom = 0;
     }
   }
 }

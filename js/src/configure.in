@@ -1251,7 +1251,7 @@ if test "$GNU_CC"; then
     fi
 
 
-    _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 elif test "$SOLARIS_SUNPRO_CC"; then
     MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
@@ -1270,7 +1270,7 @@ elif test "$SOLARIS_SUNPRO_CC"; then
     else
         DSO_PIC_CFLAGS='-KPIC'
     fi
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS='$(ACDEFINES) -D_JS_CONFDEFS_H_ -DMOZILLA_CLIENT'
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
     MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
@@ -1283,7 +1283,7 @@ else
 
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-KPIC'
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS='$(ACDEFINES) -D_JS_CONFDEFS_H_ -DMOZILLA_CLIENT'
 fi
 
 if test "$GNU_CXX"; then
@@ -1303,7 +1303,7 @@ if test "$GNU_CXX"; then
        esac
     fi
 
-    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
+    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js-confdefs.h'
     _USE_CPP_INCLUDE_FLAG=1
 
     AC_CACHE_CHECK(whether the compiler supports -Wno-invalid-offsetof,
@@ -1342,7 +1342,7 @@ if test "$GNU_CXX"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-variadic-macros"
     fi
 else
-    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
+    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_JS_CONFDEFS_H_ $(ACDEFINES)'
 fi
 
 dnl gcc can come with its own linker so it is better to use the pass-thru calls
@@ -1972,9 +1972,6 @@ case "$target" in
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS
-        _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
@@ -2132,8 +2129,8 @@ case "$target" in
 	USE_PTHREADS=1
 	_PEDANTIC=
 	LIBS="$LIBS -lsocket -lstdc++"
-	_DEFINES_CFLAGS='-Wp,-include -Wp,$(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
-	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -Wp,-include -Wp,$(DEPTH)/mozilla-config.h -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CFLAGS='-Wp,-include -Wp,$(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -Wp,-include -Wp,$(DEPTH)/js-confdefs.h -D_POSIX_C_SOURCE=199506'
 	if test "$with_x" != "yes"
 	then
 		_PLATFORM_DEFAULT_TOOLKIT="photon"
@@ -2296,6 +2293,11 @@ dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
+    if test -z "$CROSS_COMPILE" && pkginfo -q SUNWpr && pkginfo -q SUNWprd; then
+       NO_NSPR_CONFIG_SYSTEM_LDFLAGS="-L/usr/lib/mps -R/usr/lib/mps -lnspr4"
+       NO_NSPR_CONFIG_SYSTEM_CFLAGS="-I/usr/include/mps"
+       NO_NSPR_CONFIG_SYSTEM_VERSION=["`pkgparam SUNWpr SUNW_PRODVERS | sed -e 's/^[1-9][0-9]*\.[0-9][0-9]*$/&.0/'`"]
+    fi
     SYSTEM_MAKEDEPEND=
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
@@ -2726,52 +2728,6 @@ else
 fi
 
 AC_LANG_C
-
-dnl Check for usable wchar_t (2 bytes, unsigned)
-dnl (we really don't need the unsignedness check anymore)
-dnl ========================================================
-
-AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
-    ac_cv_have_usable_wchar_v2,
-    [AC_TRY_COMPILE([#include <stddef.h>
-                     $configure_static_assert_macros],
-                    [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
-                     CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
-                    ac_cv_have_usable_wchar_v2="yes",
-                    ac_cv_have_usable_wchar_v2="no")])
-if test "$ac_cv_have_usable_wchar_v2" = "yes"; then
-    AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
-    HAVE_CPP_2BYTE_WCHAR_T=1
-else
-dnl This is really gcc-only
-dnl Do this test using CXX only since some versions of gcc
-dnl 2.95-2.97 have a signed wchar_t in c++ only and some versions
-dnl only have short-wchar support for c++.
-dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
-
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS -fshort-wchar"
-
-    AC_CACHE_CHECK(for compiler -fshort-wchar option, 
-        ac_cv_have_usable_wchar_option_v2,
-        [AC_TRY_LINK([#include <stddef.h>
-                      $configure_static_assert_macros],
-                     [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
-                      CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
-                     ac_cv_have_usable_wchar_option_v2="yes",
-                     ac_cv_have_usable_wchar_option_v2="no")])
-
-    if test "$ac_cv_have_usable_wchar_option_v2" = "yes"; then
-        AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
-        HAVE_CPP_2BYTE_WCHAR_T=1
-        WCHAR_CFLAGS="-fshort-wchar"
-    else    
-        CXXFLAGS=$_SAVE_CXXFLAGS
-    fi
-    AC_LANG_RESTORE
-fi
 
 dnl Check for .hidden assembler directive and visibility attribute.
 dnl Borrowed from glibc configure.in
@@ -3955,21 +3911,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Individual module options)
 
 dnl ========================================================
-dnl = Enable Ultrasparc specific optimizations for JS
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(js-ultrasparc,
-[  --enable-js-ultrasparc  Use UltraSPARC optimizations in JS],
-    JS_ULTRASPARC_OPTS=1,
-    JS_ULTRASPARC_OPTS= )
-
-dnl only enable option for ultrasparcs
-if test `echo "$target_os" | grep -c \^solaris 2>/dev/null` = 0 -o \
-    "$OS_TEST" != "sun4u"; then
-    JS_ULTRASPARC_OPTS=
-fi
-AC_SUBST(JS_ULTRASPARC_OPTS)
-
-dnl ========================================================
 dnl =
 dnl = Debugging Options
 dnl = 
@@ -4801,6 +4742,8 @@ else
     _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
 fi
 
+AC_SUBST(_MOZ_EXCEPTIONS_FLAGS_ON)
+
 # Irix & OSF native compilers do not like exception declarations 
 # when exceptions are disabled
 if test -n "$MIPSPRO_CXX" -o -n "$COMPAQ_CXX" -o -n "$VACPP"; then
@@ -4856,12 +4799,9 @@ if test "$_cpp_md_flag"; then
   fi
 else
   COMPILER_DEPEND=
-  dnl Don't override this for MSVC
-  if test -z "$_WIN32_MSVC"; then
-    _USE_CPP_INCLUDE_FLAG=
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-    _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-  fi
+  _USE_CPP_INCLUDE_FLAG=
+  _DEFINES_CFLAGS='$(ACDEFINES) -D_JS_CONFDEFS_H_ -DMOZILLA_CLIENT'
+  _DEFINES_CXXFLAGS='$(ACDEFINES) -D_JS_CONFDEFS_H_ -DMOZILLA_CLIENT'
 fi
 fi # MOZ_AUTO_DEPS
 MDDEPDIR='.deps'
@@ -5073,7 +5013,6 @@ AC_SUBST(COMPILE_CXXFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 AC_SUBST(CROSS_COMPILE)
-AC_SUBST(WCHAR_CFLAGS)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
@@ -5241,7 +5180,7 @@ dnl ========================================================
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
   _CONFIG_TMP=confdefs-tmp.h
-  _CONFIG_DEFS_H=mozilla-config.h
+  _CONFIG_DEFS_H=js-confdefs.h
 
   cat > $_CONFIG_TMP <<\EOF
 /* List of defines generated by configure. Included with preprocessor flag,
@@ -5249,8 +5188,8 @@ dnl ========================================================
  * Do not edit.
  */
 
-#ifndef _MOZILLA_CONFIG_H_
-#define _MOZILLA_CONFIG_H_
+#ifndef _JS_CONFDEFS_H_
+#define _JS_CONFDEFS_H_
 EOF
 
 _EGREP_PATTERN='^#define ('
@@ -5265,11 +5204,11 @@ _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
 
   cat >> $_CONFIG_TMP <<\EOF
 
-#endif /* _MOZILLA_CONFIG_H_ */
+#endif /* _JS_CONFDEFS_H_ */
 
 EOF
 
-  # Only write mozilla-config.h when something changes (or it doesn't exist)
+  # Only write js-confdefs.h when something changes (or it doesn't exist)
   if cmp -s $_CONFIG_TMP $_CONFIG_DEFS_H; then
     rm $_CONFIG_TMP
   else

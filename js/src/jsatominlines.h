@@ -83,8 +83,9 @@ js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
 static inline JSBool
 js_Int32ToId(JSContext* cx, int32 index, jsid* id)
 {
-    if (index <= JSVAL_INT_MAX) {
+    if (INT_FITS_IN_JSVAL(index)) {
         *id = INT_TO_JSID(index);
+        JS_ASSERT(INT_JSID_TO_JSVAL(*id) == INT_TO_JSVAL(index));
         return JS_TRUE;
     }
     JSString* str = js_NumberToString(cx, index);

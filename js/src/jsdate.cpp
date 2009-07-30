@@ -494,7 +494,7 @@ JSClass js_DateClass = {
     JSCLASS_HAS_RESERVED_SLOTS(DATE_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -1961,7 +1961,7 @@ date_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     str = JS_NewString(cx, bytes, strlen(bytes));
     if (!str) {
-        free(bytes);
+        js_free(bytes);
         return JS_FALSE;
     }
     *vp = STRING_TO_JSVAL(str);
@@ -2199,7 +2199,7 @@ js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
     JSObject *obj;
     jsdouble *date;
 
-    obj = js_NewObject(cx, &js_DateClass, NULL, NULL, 0);
+    obj = js_NewObject(cx, &js_DateClass, NULL, NULL);
     if (!obj)
         return NULL;
 

@@ -258,7 +258,8 @@ nsAttrSelector::~nsAttrSelector(void)
 // -- nsCSSSelector -------------------------------
 
 nsCSSSelector::nsCSSSelector(void)
-  : mTag(nsnull),
+  : mLowercaseTag(nsnull),
+    mCasedTag(nsnull),
     mIDList(nsnull),
     mClassList(nsnull),
     mPseudoClassList(nsnull),
@@ -279,7 +280,8 @@ nsCSSSelector::Clone(PRBool aDeepNext, PRBool aDeepNegations) const
     return nsnull;
 
   result->mNameSpace = mNameSpace;
-  result->mTag = mTag;
+  result->mLowercaseTag = mLowercaseTag;
+  result->mCasedTag = mCasedTag;
   result->mOperator = mOperator;
   
   NS_IF_CLONE(mIDList);
@@ -316,7 +318,8 @@ nsCSSSelector::~nsCSSSelector(void)
 void nsCSSSelector::Reset(void)
 {
   mNameSpace = kNameSpaceID_Unknown;
-  mTag = nsnull;
+  mLowercaseTag = nsnull;
+  mCasedTag = nsnull;
   NS_IF_DELETE(mIDList);
   NS_IF_DELETE(mClassList);
   NS_IF_DELETE(mPseudoClassList);
@@ -334,12 +337,23 @@ void nsCSSSelector::SetNameSpace(PRInt32 aNameSpace)
   mNameSpace = aNameSpace;
 }
 
-void nsCSSSelector::SetTag(const nsString& aTag)
+void nsCSSSelector::SetTag(const nsString& aTag, PRBool aCaseMatters)
 {
-  if (aTag.IsEmpty())
-    mTag = nsnull;
-  else
-    mTag = do_GetAtom(aTag);
+  if (aTag.IsEmpty()) {
+    mLowercaseTag = mCasedTag =  nsnull;
+    return;
+  }
+
+  mCasedTag = do_GetAtom(aTag);
+ 
+  if (aCaseMatters) {
+    mLowercaseTag = mCasedTag;
+  } 
+  else {
+    nsAutoString lowercase(aTag);
+    ToLowerCase(lowercase);
+    mLowercaseTag = do_GetAtom(lowercase);
+  }
 }
 
 void nsCSSSelector::AddID(const nsString& aID)
@@ -422,7 +436,7 @@ PRInt32 nsCSSSelector::CalcWeightWithoutNegations() const
 {
   PRInt32 weight = 0;
 
-  if (nsnull != mTag) {
+  if (nsnull != mLowercaseTag) {
     weight += 0x000001;
   }
   nsAtomList* list = mIDList;
@@ -458,19 +472,6 @@ PRInt32 nsCSSSelector::CalcWeight() const
   return weight;
 }
 
-// pseudo-elements are stored in the selectors' chain using fictional elements;
-// these fictional elements have mTag starting with a colon
-static PRBool IsPseudoElement(nsIAtom* aAtom)
-{
-  if (aAtom) {
-    const char* str;
-    aAtom->GetUTF8String(&str);
-    return str && (*str == ':');
-  }
-
-  return PR_FALSE;
-}
-
 //
 // Builds the textual representation of a selector. Called by DOM 2 CSS 
 // StyleRule:selectorText
@@ -499,7 +500,7 @@ nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
     // Append the combinator, if needed.
     if (!stack.IsEmpty()) {
       const nsCSSSelector *next = stack.ElementAt(index - 1);
-      if (!IsPseudoElement(next->mTag)) {
+      if (!next->IsPseudoElement()) {
         aString.Append(PRUnichar(' '));
         PRUnichar oper = s->mOperator;
         if (oper != PRUnichar(0)) {
@@ -532,7 +533,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
                    PRBool aIsNegated) const
 {
   nsAutoString temp;
-  PRBool isPseudoElement = IsPseudoElement(mTag);
+  PRBool isPseudoElement = IsPseudoElement();
 
   // For non-pseudo-element selectors or for lone pseudo-elements, deal with
   // namespace prefixes.
@@ -588,7 +589,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
     }
   }
       
-  if (!mTag) {
+  if (!mLowercaseTag) {
     // Universal selector:  avoid writing the universal selector when we
     // can avoid it, especially since we're required to avoid it for the
     // inside of :not()
@@ -605,12 +606,12 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
         // XXXldb Why?
         aString.Append(PRUnichar('*'));
       }
-      if (!nsCSSPseudoElements::IsCSS2PseudoElement(mTag)) {
+      if (!nsCSSPseudoElements::IsCSS2PseudoElement(mLowercaseTag)) {
         aString.Append(PRUnichar(':'));
       }
     }
     nsAutoString prefix;
-    mTag->ToString(prefix);
+    mLowercaseTag->ToString(prefix);
     aString.Append(prefix);
   }
 

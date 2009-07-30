@@ -601,6 +601,7 @@ nsMediaList::Clone(nsMediaList** aResult)
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
+  result->mIsEmpty = mIsEmpty;
   NS_ADDREF(*aResult = result);
   return NS_OK;
 }

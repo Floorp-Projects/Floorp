@@ -86,7 +86,6 @@ nsDOMStorageMemoryDB::GetItemsTable(nsDOMStorage* aStorage,
   if (!storageData)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  storageData->mUsageDelta = 0;
   if (!storageData->mTable.Init()) {
     delete storageData;
     return NS_ERROR_OUT_OF_MEMORY;

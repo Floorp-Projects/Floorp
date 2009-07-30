@@ -122,7 +122,7 @@ static PRBool secmod_argGetPair(char c) {
 }
 
 static PRBool secmod_argIsBlank(char c) {
-   return isspace(c);
+   return isspace((unsigned char )c);
 }
 
 static PRBool secmod_argIsEscape(char c) {

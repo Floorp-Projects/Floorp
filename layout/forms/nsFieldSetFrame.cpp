@@ -70,7 +70,7 @@ public:
   nsFieldSetFrame(nsStyleContext* aContext);
 
   NS_IMETHOD SetInitialChildList(nsIAtom*       aListName,
-                                 nsIFrame*      aChildList);
+                                 nsFrameList&   aChildList);
 
   NS_HIDDEN_(nscoord)
     GetIntrinsicWidth(nsIRenderingContext* aRenderingContext,
@@ -95,10 +95,10 @@ public:
     nsPoint aPt, const nsRect& aDirtyRect);
 
   NS_IMETHOD AppendFrames(nsIAtom*       aListName,
-                          nsIFrame*      aFrameList);
+                          nsFrameList&   aFrameList);
   NS_IMETHOD InsertFrames(nsIAtom*       aListName,
                           nsIFrame*      aPrevFrame,
-                          nsIFrame*      aFrameList);
+                          nsFrameList&   aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*       aListName,
                          nsIFrame*      aOldFrame);
 
@@ -118,7 +118,7 @@ public:
 protected:
 
   virtual PRIntn GetSkipSides() const;
-  void ReParentFrameList(nsIFrame* aFrameList);
+  void ReParentFrameList(const nsFrameList& aFrameList);
 
   nsIFrame* mLegendFrame;
   nsIFrame* mContentFrame;
@@ -154,14 +154,15 @@ nsFieldSetFrame::IsContainingBlock() const
 
 NS_IMETHODIMP
 nsFieldSetFrame::SetInitialChildList(nsIAtom*       aListName,
-                                     nsIFrame*      aChildList)
+                                     nsFrameList&   aChildList)
 {
   // Get the content and legend frames.
-  if (aChildList->GetNextSibling()) {
-    mContentFrame = aChildList->GetNextSibling();
-    mLegendFrame  = aChildList;
+  if (!aChildList.OnlyChild()) {
+    NS_ASSERTION(aChildList.GetLength() == 2, "Unexpected child list");
+    mContentFrame = aChildList.LastChild();
+    mLegendFrame  = aChildList.FirstChild();
   } else {
-    mContentFrame = aChildList;
+    mContentFrame = aChildList.FirstChild();
     mLegendFrame  = nsnull;
   }
 
@@ -612,34 +613,28 @@ nsFieldSetFrame::GetSkipSides() const
 
 NS_IMETHODIMP
 nsFieldSetFrame::AppendFrames(nsIAtom*       aListName,
-                              nsIFrame*      aFrameList)
+                              nsFrameList&   aFrameList)
 {
-  if (aFrameList) {
-    // aFrameList is not allowed to contain "the legend" for this fieldset
-    ReParentFrameList(aFrameList);
-    return mContentFrame->AppendFrames(aListName, aFrameList);
-  }
-  return NS_OK;
+  // aFrameList is not allowed to contain "the legend" for this fieldset
+  ReParentFrameList(aFrameList);
+  return mContentFrame->AppendFrames(aListName, aFrameList);
 }
 
 NS_IMETHODIMP
 nsFieldSetFrame::InsertFrames(nsIAtom*       aListName,
                               nsIFrame*      aPrevFrame,
-                              nsIFrame*      aFrameList)
+                              nsFrameList&   aFrameList)
 {
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this ||
                aPrevFrame->GetParent() == mContentFrame,
                "inserting after sibling frame with different parent");
 
-  if (aFrameList) {
-    // aFrameList is not allowed to contain "the legend" for this fieldset
-    ReParentFrameList(aFrameList);
-    if (NS_UNLIKELY(aPrevFrame == mLegendFrame)) {
-      aPrevFrame = nsnull;
-    }
-    return mContentFrame->InsertFrames(aListName, aPrevFrame, aFrameList);
+  // aFrameList is not allowed to contain "the legend" for this fieldset
+  ReParentFrameList(aFrameList);
+  if (NS_UNLIKELY(aPrevFrame == mLegendFrame)) {
+    aPrevFrame = nsnull;
   }
-  return NS_OK;
+  return mContentFrame->InsertFrames(aListName, aPrevFrame, aFrameList);
 }
 
 NS_IMETHODIMP
@@ -665,14 +660,14 @@ NS_IMETHODIMP nsFieldSetFrame::GetAccessible(nsIAccessible** aAccessible)
 #endif
 
 void
-nsFieldSetFrame::ReParentFrameList(nsIFrame* aFrameList)
+nsFieldSetFrame::ReParentFrameList(const nsFrameList& aFrameList)
 {
   nsFrameManager* frameManager = PresContext()->FrameManager();
-  for (nsIFrame* frame = aFrameList; frame; frame = frame->GetNextSibling()) {
-    NS_ASSERTION(mLegendFrame || frame->GetType() != nsGkAtoms::legendFrame,
+  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
+    NS_ASSERTION(mLegendFrame || e.get()->GetType() != nsGkAtoms::legendFrame,
                  "The fieldset's legend is not allowed in this list");
-    frame->SetParent(mContentFrame);
-    frameManager->ReParentStyleContext(frame);
+    e.get()->SetParent(mContentFrame);
+    frameManager->ReParentStyleContext(e.get());
   }
   mContentFrame->AddStateBits(GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
 }

@@ -136,4 +136,3 @@
 typedef unsigned char uint8_t;
 
 #define inline __inline // MSVC
-#undef DEBUG
