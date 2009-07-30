@@ -226,6 +226,9 @@ namespace nanojit
             void        evict(Register r);
             RegisterMask hint(LIns*i, RegisterMask allow);
 
+            void        resetInstructionPointer();
+            void        recordStartingInstructionPointer();
+
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip);
             bool        canRemat(LIns*);
 
