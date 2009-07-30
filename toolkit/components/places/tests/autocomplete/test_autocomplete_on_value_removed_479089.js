@@ -53,7 +53,8 @@ getService(Ci.nsINavHistoryService);
 function run_test()
 {
   // QI to nsIAutoCompleteSimpleResultListener
-  var historyService = histsvc.QueryInterface(Components.interfaces.nsIAutoCompleteSimpleResultListener);
+  var listener = Cc["@mozilla.org/autocomplete/search;1?name=history"].
+                 getService(Components.interfaces.nsIAutoCompleteSimpleResultListener);
 
   // add history visit
   var now = Date.now() * 1000;
@@ -61,20 +62,20 @@ function run_test()
   var ref = ios.newURI("http://mozilla.com/", null, null);
   var visit = histsvc.addVisit(uri, now, ref, 1, false, 0);
   // create a query object
-  var query = historyService.getNewQuery();
+  var query = histsvc.getNewQuery();
   // create the options object we will never use
-  var options = historyService.getNewQueryOptions();
+  var options = histsvc.getNewQueryOptions();
   // look for this uri only
   query.uri = uri;
   // execute
-  var queryRes = historyService.executeQuery(query, options);
+  var queryRes = histsvc.executeQuery(query, options);
   // open the result container
   queryRes.root.containerOpen = true;
   // debug queries
   // dump_table("moz_places_view");
   do_check_eq(queryRes.root.childCount, 1);  
   // call the untested code path
-  historyService.onValueRemoved(null, uri.spec, true);
+  listener.onValueRemoved(null, uri.spec, true);
   // make sure it is GONE from the DB
   do_check_eq(queryRes.root.childCount, 0);
   // close the container
