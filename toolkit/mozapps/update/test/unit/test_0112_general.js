@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/* General Partial MAR File Patch Apply Test */
+/* General Partial MAR File Patch Apply Failure Test */
 
 function run_test() {
   // The directory the updates will be applied to is the current working
@@ -60,16 +60,16 @@ function run_test() {
   // Create the files to test the partial mar's ability to modify and delete
   // files.
   var testFile = do_get_file("mar_test/1/1_1/1_1_text1", true);
-  writeFile(testFile, "ToBeModified\n");
+  writeFile(testFile, "ShouldNotBeModified\n");
 
   testFile = do_get_file("mar_test/1/1_1/1_1_text2", true);
-  writeFile(testFile, "ToBeDeleted\n");
+  writeFile(testFile, "ShouldNotBeDeleted\n");
 
-  testFile = do_get_file("data/aus-0110_general_ref_image.png");
+  testFile = do_get_file("data/aus-0111_general_ref_image.png");
   testFile.copyTo(testDir, "1_1_image1.png");
 
   testFile = do_get_file("mar_test/2/2_1/2_1_text1", true);
-  writeFile(testFile, "ToBeDeleted\n");
+  writeFile(testFile, "ShouldNotBeDeleted\n");
 
   var binDir = getGREDir();
 
@@ -89,7 +89,7 @@ function run_test() {
   }
 
   // Use a directory outside of dist/bin to lessen the garbage in dist/bin
-  var updatesSubDir = do_get_file("0111_complete_mar", true);
+  var updatesSubDir = do_get_file("0112_complete_mar", true);
   try {
     // Mac OS X intermittently fails when removing the dir where the updater
     // binary was launched.
@@ -110,32 +110,33 @@ function run_test() {
        "a partial mar\n");
   do_check_eq(exitValue, 0);
 
-  dump("Testing: update.status should be set to STATE_SUCCEEDED\n");
+  dump("Testing: update.status should be set to STATE_FAILED\n");
   testFile = updatesSubDir.clone();
   testFile.append("update.status");
-  do_check_eq(readFile(testFile).split("\n")[0], STATE_SUCCEEDED);
+  // The update status format for a failure is failed: # where # is the error
+  // code for the failure.
+  do_check_eq(readFile(testFile).split(": ")[0], STATE_FAILED);
 
-  dump("Testing: removal of a file and contents of added / modified files by " +
-       "a partial mar\n");
+  dump("Testing: files should not be modified or deleted when an update " +
+       "fails\n");
   do_check_eq(getFileBytes(do_get_file("mar_test/1/1_1/1_1_text1", true)),
-              "Modified\n");
-  do_check_false(do_get_file("mar_test/1/1_1/1_1_text2", true).exists());
-  do_check_eq(getFileBytes(do_get_file("mar_test/1/1_1/1_1_text3", true)),
-              "Added\n");
+              "ShouldNotBeModified\n");
+  do_check_true(do_get_file("mar_test/1/1_1/1_1_text2", true).exists());
+  do_check_eq(getFileBytes(do_get_file("mar_test/1/1_1/1_1_text2", true)),
+              "ShouldNotBeDeleted\n");
 
   var refImage = do_get_file("data/aus-0111_general_ref_image.png");
   var srcImage = do_get_file("mar_test/1/1_1/1_1_image1.png", true);
   do_check_eq(getFileBytes(srcImage), getFileBytes(refImage));
 
   dump("Testing: removal of a file by a partial mar\n");
-  do_check_false(do_get_file("mar_test/2/2_1/2_1_text1", true).exists());
+  do_check_true(do_get_file("mar_test/2/2_1/2_1_text1", true).exists());
+  do_check_eq(getFileBytes(do_get_file("mar_test/1/1_1/1_1_text2", true)),
+              "ShouldNotBeDeleted\n");
 
-  do_check_eq(getFileBytes(do_get_file("mar_test/3/3_1/3_1_text1", true)),
-              "Added\n");
-
-  dump("Testing: directory still exists after removal of the last file in " +
-       "the directory (bug 386760)\n");
-  do_check_true(do_get_file("mar_test/2/2_1/", true).exists());
+  do_check_false(do_get_file("mar_test/3/3_1/3_1_text1", true).exists());
+  do_check_eq(getFileBytes(do_get_file("mar_test/1/1_1/1_1_text2", true)),
+              "ShouldNotBeDeleted\n");
 
   try {
     // Mac OS X intermittently fails when removing the dir where the updater
