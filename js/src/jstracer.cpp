@@ -11389,14 +11389,19 @@ TraceRecorder::record_JSOP_BINDNAME()
         }
     }
 
-    /*
-     * If obj is a js_CallClass object, then we are tracing a reference to an
-     * upvar in a heavyweight function. We cannot reach this point of the trace
-     * with a different call object because of the guard on the function call,
-     * so we can assume the result of the bindname is constant on this trace.
-     */
-    if (obj != globalObj && OBJ_GET_CLASS(cx, obj) != &js_CallClass)
-        ABORT_TRACE("Can only trace JSOP_BINDNAME with global or call object");
+    if (obj != globalObj) {
+        if (OBJ_GET_CLASS(cx, obj) != &js_CallClass)
+            ABORT_TRACE("Can only trace JSOP_BINDNAME with global or call object");
+
+        /*
+         * The interpreter version of JSOP_BINDNAME does the full lookup. We
+         * don't need to do that on trace because we will leave trace if the
+         * scope ever changes, so the result of the lookup cannot change.
+         */
+        JS_ASSERT(obj == cx->fp->scopeChain);
+        stack(0, stobj_get_parent(get(&cx->fp->argv[-2])));
+        return JSRS_CONTINUE;
+    }
 
     /*
      * The trace is specialized to this global object. Furthermore, we know it
