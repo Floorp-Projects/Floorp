@@ -145,11 +145,6 @@ static HPOINTER gPtrArray[IDC_COUNT];
 static PRBool gIsTrackPoint = PR_FALSE;
 static PRBool gIsDBCS = PR_FALSE;
 
-// The last user input event time in milliseconds. If there are any pending
-// native toolkit input events it returns the current time. The value is
-// compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
-static PRUint32 gLastInputEventTime = 0;
-
 #ifdef DEBUG_FOCUS
 int currentWindowIdentifier = 0;
 #endif
@@ -205,9 +200,6 @@ nsWindow::nsWindow() : nsBaseWidget()
     mPrevWndProc        = NULL;
     mParent             = 0;
     mNextID             = 1;
-    mSWPs               = 0;
-    mlHave              = 0;
-    mlUsed              = 0;
     mFrameIcon          = 0;
     mDeadKey            = 0;
     mHaveDeadKey        = FALSE;
@@ -1334,7 +1326,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 {
    // For mWnd & eWindowType_child set the cached values upfront, see bug 286555.
    // For other mWnd types we defer transfer of values to mBounds to
-   // SetWindowPos(), see bug 391421.
+   // WinSetWindowPos(), see bug 391421.
    if( !mWnd || mWindowType == eWindowType_child) 
    {
       // Set cached value for lightweight and printing
@@ -1362,9 +1354,9 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
          ptl.y = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - h - 1 - aY;
       }
 
-      if( !SetWindowPos( 0, ptl.x, ptl.y, w, h, SWP_MOVE | SWP_SIZE))
-         if( aRepaint)
-            Invalidate(PR_FALSE);
+      WinSetWindowPos(GetMainWindow(), 0, ptl.x, ptl.y, w, h, SWP_MOVE | SWP_SIZE);
+      if (aRepaint)
+         Invalidate(PR_FALSE);
 
 #if DEBUG_sobotka
       printf("+++++++++++Resized 0x%lx at %ld, %ld to %d x %d (%d,%d)\n",
@@ -2788,11 +2780,6 @@ void nsWindow::OnDestroy()
    SubclassWindow( PR_FALSE);
    mWnd = 0;
 
-   // if we were in the middle of deferred window positioning then free up
-   if( mSWPs) free( mSWPs);
-   mSWPs = 0;
-   mlHave = mlUsed = 0;
-
    // release references to context, toolkit, appshell, children
    nsBaseWidget::OnDestroy();
 
@@ -3345,23 +3332,6 @@ nsWindow::HasPendingInputEvent()
 // --------------------------------------------------------------------------
 // OS2-specific routines to emulate Windows behaviors
 // --------------------------------------------------------------------------
-
-BOOL nsWindow::SetWindowPos( HWND ib, long x, long y, long cx, long cy, ULONG flags)
-{
-   BOOL bDeferred = FALSE;
-
-   if( mParent && mParent->mSWPs) // XXX bit implicit...
-   {
-      mParent->DeferPosition( GetMainWindow(), ib, x, y, cx, cy, flags);
-      bDeferred = TRUE;
-   }
-   else // WinSetWindowPos appears not to need msgq (hmm)
-      WinSetWindowPos( GetMainWindow(), ib, x, y, cx, cy, GetSWPFlags(flags));
-
-   // When the window is actually sized, mBounds will be updated in the fnwp.
-
-   return bDeferred;
-}
 
 nsresult nsWindow::GetWindowText( nsString &aStr, PRUint32 *rc)
 {
