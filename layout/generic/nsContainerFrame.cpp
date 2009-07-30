@@ -617,10 +617,11 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 
     if (!aStyleContext->GetStyleVisibility()->IsVisible() &&
         !aFrame->SupportsVisibilityHidden()) {
-      // If it's a subdocument frame or a plugin, hide the view and
-      // any associated widget.
-      // These are leaf elements so this is OK, no descendant can be
-      // visibility:visible.
+      // If it's a scrollable frame that can't hide its scrollbars,
+      // hide the view. This means that child elements can't override
+      // their parent's visibility, but it's not practical to leave it
+      // visible in all cases because the scrollbars will be showing
+      // XXXldb Does the view system really enforce this correctly?
       viewIsVisible = PR_FALSE;
     } else if (IsMenuPopup(aFrame)) {
       // if the view is for a popup, don't show the view if the popup is closed
