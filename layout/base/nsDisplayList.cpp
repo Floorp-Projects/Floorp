@@ -562,9 +562,9 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
     return PR_TRUE;
 
   if (bottomLayer.mRepeat == NS_STYLE_BG_REPEAT_XY) {
-    if (bottomLayer.mImage) {
+    if (bottomLayer.mImage.GetType() == eBackgroundImage_Image) {
       nsCOMPtr<imgIContainer> container;
-      bottomLayer.mImage->GetImage(getter_AddRefs(container));
+      bottomLayer.mImage.GetImageData()->GetImage(getter_AddRefs(container));
       if (container) {
         PRBool animated;
         container->GetAnimated(&animated);
@@ -591,7 +591,7 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
   if (!hasBG)
     return PR_TRUE;
-  if (!bg->BottomLayer().mImage &&
+  if (bg->BottomLayer().mImage.GetType() == eBackgroundImage_Null &&
       bg->mImageCount == 1 &&
       !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
       bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER)
