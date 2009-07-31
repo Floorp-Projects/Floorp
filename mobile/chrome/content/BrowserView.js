@@ -266,8 +266,7 @@ BrowserView.prototype = {
       bvs.visibleX = vr.left;
       bvs.visibleY = vr.top;
 
-      // reclamp minimally to the new visible rect
-      //this.setViewportDimensions(bvs.viewportRect.right, bvs.viewportRect.bottom);
+      // XXX should we reclamp minimally to the new visible rect?
     } else
       this._viewportChanged(false, false);
   },
@@ -515,7 +514,7 @@ BrowserView.prototype = {
   handleMozAfterSizeChange: function handleMozAfterPaint(ev) {
     // !!! --- RESIZE HACK BEGIN -----
     // get the correct properties off of the event, these are wrong because
-    // we're using a MouseEvent since it has an X and Y prop of some sort and
+    // we're using a MouseEvent, as it has an X and Y prop of some sort and
     // we piggyback on that.
     let w = ev.screenX;
     let h = ev.screenY;
@@ -582,6 +581,11 @@ BrowserView.prototype = {
     ctx.scale(f, f);
   },
 
+  forceContainerResize: function forceContainerResize() {
+    let bvs = this._browserViewportState;
+    if (bvs)
+      BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
+  },
 
   // -----------------------------------------------------------
   // Private instance methods

@@ -314,6 +314,8 @@ var Browser = {
   _selectedTab : null,
   windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils),
+  scrollbox: null,
+  scrollboxScroller: null,
 
   startup: function() {
     var self = this;
@@ -325,7 +327,8 @@ var Browser = {
 
     container.customClicker = this._createContentCustomClicker(bv);
 
-    let scrollbox = document.getElementById("scrollbox");
+    let scrollbox = this.scrollbox = document.getElementById("scrollbox");
+    this.scrollboxScroller = scrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
     scrollbox.customDragger = {
       dragStart: function dragStart(scroller) {
@@ -858,7 +861,7 @@ var Browser = {
     }
 
     function elementFromPoint(browser, x, y) {
-      [x, y] = transformClientToBrowser(browserView, x, y);
+      [x, y] = transformClientToBrowser(x, y);
       let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
       return cwu.elementFromPoint(x, y,
 		                              true,   // ignore root scroll frame
@@ -872,6 +875,11 @@ var Browser = {
     }
 
     return {
+      // XXX whether we are zoomed in or out should be reset to false every time
+      // we call zoomToPage elsewhere.  basically, this variable isn't a great way
+      // to track state of zoomed in- our out-ness.
+      zoomIn: false,
+
       singleClick: function singleClick(cX, cY) {
         if (window.infoMode) {
           [cX, cY] = transformClientToBrowser(cX, cY);
@@ -898,16 +906,17 @@ var Browser = {
           let zoomElement = elementFromPoint(browser, cX2, cY2);
 
           if (zoomElement) {
-	          // TODO actually zoom to and from element
-            //browserView.zoom(this.zoomDir);
-	          //this.zoomDir *= -1;
-	          dump('zooming to/from element: ' + zoomElement + '\n');
-          }
+            dump('zooming to/from element: ' + zoomElement
+                 + ' :: ' + zoomElement.id + ' :: ' + zoomElement.name + '\n');
+            dump('    at ' + cX2 + ', ' + cY2 + '\n');
 
-          //let [x, y] = transformClientToBrowser(cX1, cY1);
-          //dispatchContentClick(browser, x, y);
-          //[x, y] = transformClientToBrowser(cX2, cY2);
-          //dispatchContentClick(browser, x, y);
+            this.zoomIn = !this.zoomIn;
+
+            if (this.zoomIn)
+              Browser.zoomToElement(zoomElement);
+            else
+              Browser.zoomFromElement(zoomElement);
+          }
         }
       }
     };
@@ -978,6 +987,93 @@ var Browser = {
     return snappedX;
   },
 
+  zoomToElement: function zoomToElement(aElement) {
+    const margin = 15;
+
+    let bv = Browser._browserView;
+    let scroller = Browser.scrollboxScroller;
+
+    let elRect = Browser.getBoundingContentRect(aElement);
+    let elWidth = elRect.width;
+    let vrWidth = bv.getVisibleRectWidth();
+    /* Try to set zoom-level such that once zoomed element is as wide
+     *  as the visible rect */
+    let zoomLevel = vrWidth / (elWidth + (2 * margin));
+
+    bv.beginBatchOperation();
+
+    bv.setZoomLevel(zoomLevel);
+
+    /* If zoomLevel ends up clamped to less than asked for, calculate
+     * how many more screen pixels will fit horizontally in addition to
+     * element's width. This ensures that more of the webpage is
+     * showing instead of the navbar. Bug 480595. */
+    let screenW = vrWidth - bv.browserToViewport(elWidth);
+    let xpadding = Math.max(margin, screenW);
+
+    let x0 = bv.getVisibleRectX();
+    let y0 = bv.getVisibleRectY();
+
+    let x = bv.browserToViewport(elRect.left) - xpadding;
+    let y = bv.browserToViewport(elRect.top) - margin;
+
+    x = Math.floor(Math.max(x, 0));
+    y = Math.floor(Math.max(y, 0));
+
+    bv.forceContainerResize();
+    Browser.forceChromeReflow();
+
+    Browser.scrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
+
+    bv.commitBatchOperation();
+  },
+
+  zoomFromElement: function zoomFromElement(aElement) {
+    let bv = Browser._browserView;
+    let scroller = Browser.scrollboxScroller;
+
+    let elRect = Browser.getBoundingContentRect(aElement);
+
+    bv.beginBatchOperation();
+
+    bv.zoomToPage();
+
+    let x0 = bv.getVisibleRectX();
+    let y0 = bv.getVisibleRectY();
+
+    let x = bv.browserToViewport(elRect.left);
+    let y = bv.browserToViewport(elRect.top);
+
+    x = Math.floor(Math.max(x, 0));
+    y = Math.floor(Math.max(y, 0));
+
+    bv.forceContainerResize();
+    Browser.forceChromeReflow();
+
+    Browser.scrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
+
+    bv.commitBatchOperation();
+  },
+
+  getBoundingContentRect: function getBoundingContentRect(contentElem) {
+    let browser = Browser._browserView.getBrowser();
+
+    if (!browser)
+      return null;
+
+    let scrollX = {};
+    let scrollY = {};
+
+    let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
+    cwu.getScrollXY(false, scrollX, scrollY);
+
+    let r = contentElem.getBoundingClientRect();
+
+    return new wsRect(r.left + scrollX.value,
+                      r.top + scrollY.value,
+                      r.width, r.height);
+  },
+
   /**
    * Transform x and y from client coordinates to BrowserView coordinates.
    */
@@ -986,9 +1082,23 @@ var Browser = {
     let containerBCR = container.getBoundingClientRect();
 
     let x0 = Math.round(containerBCR.left);
-    let y0 = Math.round(containerBCR.top);
+    let y0;
+    if (arguments.length > 1)
+      y0 = Math.round(containerBCR.top);
 
-    return [x - x0, y - y0];
+    return (arguments.length > 1) ? [x - x0, y - y0] : (x - x0);
+  },
+
+  browserViewToClient: function browserViewToClient(x, y) {
+    let container = document.getElementById("tile-container");
+    let containerBCR = container.getBoundingClientRect();
+
+    let x0 = Math.round(-containerBCR.left);
+    let y0;
+    if (arguments.length > 1)
+      y0 = Math.round(-containerBCR.top);
+
+    return (arguments.length > 1) ? [x - x0, y - y0] : (x - x0);
   },
 
   /**
@@ -1019,6 +1129,10 @@ var Browser = {
     let y = {};
     scroller.getPosition(x, y);
     return [x.value, y.value];
+  },
+
+  forceChromeReflow: function forceChromeReflow() {
+    let dummy = getComputedStyle(document.documentElement, "").width;
   }
 
 };
