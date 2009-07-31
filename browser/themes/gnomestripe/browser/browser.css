@@ -627,6 +627,10 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled");
 }
 
+#fullscreen-button {
+  list-style-image: url("moz-icon://stock/gtk-fullscreen?size=toolbar");
+}
+
 /* 16px primary toolbar buttons */
 toolbar[iconsize="small"] .toolbarbutton-1 {
   -moz-box-orient: vertical;
@@ -762,6 +766,10 @@ toolbar[iconsize="small"] #paste-button {
 }
 toolbar[iconsize="small"] #paste-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-paste?size=menu&state=disabled");
+}
+
+toolbar[iconsize="small"] #fullscreen-button {
+  list-style-image: url("moz-icon://stock/gtk-fullscreen?size=menu");
 }
 
 /* Fullscreen window controls */

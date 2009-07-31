@@ -511,7 +511,13 @@
                        label="&pasteCmd.label;"
                        command="cmd_paste"
                        tooltiptext="&pasteButton.tooltip;"/>
-
+#ifndef XP_MACOSX
+        <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       observes="View:FullScreen"
+                       type="checkbox"
+                       label="&fullScreenCmd.label;"
+                       tooltiptext="&fullScreenButton.tooltip;"/>
+#ifndef XP_MACOSX
     </toolbarpalette>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
