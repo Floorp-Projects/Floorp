@@ -58,6 +58,7 @@ _BROWSER_TEST_FILES = \
 	browser_346337.js \
 	browser_346337_sample.html \
 	browser_350525.js \
+	browser_354894.js \
 	browser_367052.js \
 	browser_393716.js \
 	browser_394759.js \
