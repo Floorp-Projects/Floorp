@@ -439,7 +439,7 @@
                           label="&fullScreenCmd.label;"
                           key="key_fullScreen"
                           type="checkbox"
-                          command="View:FullScreen"/>
+                          observes="View:FullScreen"/>
 #endif
                 <menuitem id="menu_showAllTabs"
                           hidden="true"
