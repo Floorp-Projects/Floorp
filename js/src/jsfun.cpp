@@ -2519,20 +2519,16 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
                ? JS_SCRIPT_UPVARS(fun->u.i.script)->length
                : 0) == fun->u.i.nupvars);
 
-    /*
-     * Assert that fun->countInterpretedReservedSlots returns 0 when
-     * fun->u.i.nupvars is zero.
-     */
-    JS_ASSERT(fun->u.i.script->regexpsOffset == 0);
-
     JSObject *closure = js_CloneFunctionObject(cx, fun, scopeChain);
-    if (!closure || fun->u.i.nupvars == 0)
+    if (!closure)
         return closure;
-    if (!js_EnsureReservedSlots(cx, closure,
-                                fun->countInterpretedReservedSlots())) {
+
+    uint32 nslots = fun->countInterpretedReservedSlots();
+    if (!nslots)
+        return closure;
+    if (!js_EnsureReservedSlots(cx, closure, nslots))
         return NULL;
 
-    }
     return closure;
 }
 
