@@ -10373,7 +10373,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
     if (callDepth == 0)
-        fi->spoffset = 2 /*callee,this*/ + argc - fi->spdist;
+        fi->spoffset = -fp->script->nfixed;
 
     lir->insStorei(INS_CONSTPTR(fi), lirbuf->rp, callDepth * sizeof(FrameInfo*));
 
