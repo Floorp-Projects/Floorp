@@ -113,26 +113,27 @@ const kInitialCacheCapacity = 200;
  * the width of the screen.  This is used in setting the zoomLevel.
  */
 function TileManager(appendTile, removeTile, browserView) {
-  // backref to the BrowserView object that owns us
+  /* backref to the BrowserView object that owns us */
   this._browserView = browserView;
 
-  // callbacks to append / remove a tile to / from the parent
+  /* callbacks to append / remove a tile to / from the parent */
   this._appendTile = appendTile;
   this._removeTile = removeTile;
 
-  // tile cache holds tile objects and pools them under a given capacity
+  /* tile cache holds tile objects and pools them under a given capacity */
   let self = this;
   this._tileCache = new TileManager.TileCache(function(tile) { self._removeTileSafe(tile); },
                                               -1, -1, kInitialCacheCapacity);
 
-  // Rectangle within the viewport that is visible to the user.  It is "critical"
-  // in the sense that it must be rendered as soon as it becomes dirty
+  /* Rectangle within the viewport that is visible to the user.  It is "critical"
+   * in the sense that it must be rendered as soon as it becomes dirty, and tiles
+   * within this rectangle should not be evicted for use elsewhere. */
   this._criticalRect = null;
 
-  // timeout of the non-visible-tiles-crawler to cache renders from the browser
+  /* timeout of the non-visible-tiles-crawler to cache renders from the browser */
   this._idleTileCrawlerTimeout = 0;
 
-  // object that keeps state on our current lazyload crawl
+  /* object that keeps state on our current lazyload crawl */
   this._crawler = null;
 }
 
@@ -246,7 +247,7 @@ TileManager.prototype = {
 
     dump(" hold: " + (Date.now() - start) + "\n");
 
-    if (cr)
+    if (cr && destCriticalRect)
       cr.copyFrom(destCriticalRect);
     else
       this._criticalRect = cr = destCriticalRect;
@@ -308,7 +309,7 @@ TileManager.prototype = {
     }
   },
 
-  _removeTileSafe: function _removeTileSafe(tile) { debugger;
+  _removeTileSafe: function _removeTileSafe(tile) {
     if (tile.appended) {
       this._removeTile(tile);
       tile.appended = false;
@@ -587,7 +588,7 @@ TileManager.TileCache.prototype = {
     for (; k >= 0; --k) {
       if (pool[k].free && ( !evictionGuard || evictionGuard(pool[k]) )) {
         victim = pool[k];
-	      --k;
+        --k;
         break;
       }
     }
