@@ -53,6 +53,39 @@
 #include "nsCRTGlue.h"
 #include "nsCharTraits.h"
 
+/* -------------------- ASCII-specific character methods ------------------- */
+
+typedef int static_assert_character_code_arrangement['a' > 'A' ? 1 : -1];
+
+template<class T>
+static int
+alpha(T c)
+{
+    return ('a' <= c && c <= 'z') ||
+           ('A' <= c && c <= 'Z');
+}
+
+template<class T>
+static int
+alphanumeric(T c)
+{
+    return ('0' <= c && c <= '9') || alpha(c);
+}
+
+template<class T>
+static int
+lower(T c)
+{
+    return ('A' <= c && c <= 'Z') ? c + ('a' - 'A') : c;
+}
+
+template<class T>
+static int
+upper(T c)
+{
+    return ('a' <= c && c <= 'z') ? c - ('a' - 'A') : c;
+}
+
 /* ----------------------------- _valid_subexp ---------------------------- */
 
 template<class T>
@@ -248,13 +281,13 @@ _handle_union(const T *str, const T *expr, PRBool case_insensitive,
 
 /* returns 1 if val is in range from start..end, case insensitive. */
 static int
-_is_char_in_range(int start, int end, int val)
+_is_char_in_range(unsigned char start, unsigned char end, unsigned char val)
 {
     char map[256];
     memset(map, 0, sizeof map);
     while (start <= end)
-        map[tolower(start++)] = 1;
-    return map[tolower(val)];
+        map[lower(start++)] = 1;
+    return map[lower(val)];
 }
 
 template<class T>
@@ -308,12 +341,12 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive,
             start = expr[i++];
             if (start == '\\')
                 start = expr[i++];
-            if (isalnum(int(start)) && expr[i++] == '-') {
+            if (alphanumeric(start) && expr[i++] == '-') {
                 end = expr[i++];
                 if (end == '\\')
                     end = expr[i++];
             }
-            if (isalnum(int(end)) && expr[i] == ']') {
+            if (alphanumeric(end) && expr[i] == ']') {
                 /* This is a range form: a-b */
                 T val = str[x];
                 if (end < start) { /* swap them */
@@ -321,8 +354,10 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive,
                     end = start;
                     start = tmp;
                 }
-                if (case_insensitive && isalpha(int(val))) {
-                    val = ::_is_char_in_range(int(start), int(end), int(val));
+                if (case_insensitive && alpha(val)) {
+                    val = ::_is_char_in_range((unsigned char) start,
+                                              (unsigned char) end,
+                                              (unsigned char) val);
                     if (neg == val)
                         return NOMATCH;
                 }
@@ -338,7 +373,7 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive,
                     if (expr[y] == '\\')
                         ++y;
                     if(case_insensitive)
-                        matched |= (toupper(int(str[x])) == toupper(int(expr[y])));
+                        matched |= (upper(str[x]) == upper(expr[y]));
                     else
                         matched |= (str[x] == expr[y]);
                 }
@@ -362,7 +397,7 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive,
             /* fall through */
         default:
             if(case_insensitive) {
-                if(toupper(int(str[x])) != toupper(int(expr[y])))
+                if(upper(str[x]) != upper(expr[y]))
                     return NOMATCH;
             }
             else {
