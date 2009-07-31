@@ -57,7 +57,7 @@ let Util = {
       if (instance[key] instanceof Function)
         instance[key] = bind(instance[key], instance);
   }
-  
+
 };
 
 
@@ -213,14 +213,32 @@ Util.Rect.prototype = {
 
   intersects: function(other) {
     if (!other) debugger;
-    let xok = (other.left > this.left && other.left < this.right) ||
-      (other.right > this.left && other.right < this.right) ||
-      (other.left <= this.left && other.right >= this.right);
-    let yok = (other.top > this.top && other.top < this.bottom) ||
-      (other.bottom > this.top && other.bottom < this.bottom) ||
-      (other.top <= this.top && other.bottom >= this.bottom);
-    return xok && yok;
+
+    let left = this.left;
+    let right = this.right;
+    let otherleft = other.left;
+    let otherright = otherright;
+
+    let xok = (otherleft > left && otherleft < right) ||
+      (otherright > left && otherright < right) ||
+      (otherleft <= left && otherright >= right);
+
+    if (!xok) return false;
+
+    let top = this.top;
+    let bottom = this.bottom;
+    let othertop = other.top;
+    let otherbottom = other.bottom;
+
+    let yok = (othertop > top && othertop < bottom) ||
+      (otherbottom > top && otherbottom < bottom) ||
+      (othertop <= top && otherbottom >= bottom);
+
+    if (!yok) return false;
+
+    return true;
   },
+
 
   /**
    * Similar to (and most code stolen from) intersect().  A restriction
@@ -443,13 +461,30 @@ wsRect.prototype = {
 
   intersects: function(other) {
     if (!other) debugger;
-    let xok = (other.left > this.left && other.left < this.right) ||
-      (other.right > this.left && other.right < this.right) ||
-      (other.left <= this.left && other.right >= this.right);
-    let yok = (other.top > this.top && other.top < this.bottom) ||
-      (other.bottom > this.top && other.bottom < this.bottom) ||
-      (other.top <= this.top && other.bottom >= this.bottom);
-    return xok && yok;
+
+    let left = this.left;
+    let right = this.right;
+    let otherleft = other.left;
+    let otherright = otherright;
+
+    let xok = (otherleft > left && otherleft < right) ||
+      (otherright > left && otherright < right) ||
+      (otherleft <= left && otherright >= right);
+
+    if (!xok) return false;
+
+    let top = this.top;
+    let bottom = this.bottom;
+    let othertop = other.top;
+    let otherbottom = other.bottom;
+
+    let yok = (othertop > top && othertop < bottom) ||
+      (otherbottom > top && otherbottom < bottom) ||
+      (othertop <= top && otherbottom >= bottom);
+
+    if (!yok) return false;
+
+    return true;
   },
 
   /**
