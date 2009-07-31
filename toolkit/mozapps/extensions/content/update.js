@@ -204,7 +204,7 @@ var gVersionInfoPage = {
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
                        .getService(nsIExtensionManager);
     // Retrieve the remaining incompatible items.
-    gUpdateWizard.items = em.getIncompatibleItemList(null, null, null,
+    gUpdateWizard.items = em.getIncompatibleItemList(null, null,
                                                      nsIUpdateItem.TYPE_ANY,
                                                      true, { });
     gUpdateWizard.items = gUpdateWizard.items.filter(function(item) {
