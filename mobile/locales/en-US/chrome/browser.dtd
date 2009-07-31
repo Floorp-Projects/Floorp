@@ -99,7 +99,7 @@
 <!ENTITY consoleMessages.label     "Messages">
 <!ENTITY consoleCodeEval.label     "Code:">
 <!ENTITY consoleClear.label        "Clear">
-<!ENTITY consoleEvaluate.label     "Evaluate">
+<!ENTITY consoleEvaluate.label     "…">
 <!ENTITY consoleErrFile.label      "Source File:">
 <!ENTITY consoleErrLine.label      "Line:">
 <!ENTITY consoleErrColumn.label    "Column:">

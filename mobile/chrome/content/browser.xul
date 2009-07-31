@@ -296,15 +296,14 @@
     </vbox>
 
     <!-- barrier to the left of the right bar -->
-    <hbox id="panel-container" hidden="true" class="panel-dark" top="0" left="0">
-      <vbox id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
-        <toolbarspring/>
-        <toolbarbutton id="tool-console" type="radio" group="1" hidden="true" class="panel-button button-image" linkedpanel="console-container" oncommand="ConsoleView.init();"/>
+    <box id="panel-container" hidden="true" class="panel-dark" top="0" left="0">
+      <box id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
+        <toolbarbutton id="tool-panel-close" type="check" checked="true" class="page-button button-image" command="cmd_panel"/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button button-image" linkedpanel="addons-container"/>
         <toolbarbutton id="tool-downloads" type="radio" group="1" class="panel-button button-image" linkedpanel="downloads-container"/>
         <toolbarbutton id="tool-preferences" type="radio" group="1" checked="true" class="panel-button button-image" linkedpanel="prefs-container"/>
-        <toolbarbutton id="tool-panel-close" type="check" checked="true" class="page-button button-image" command="cmd_panel"/>
-      </vbox>
+        <toolbarbutton id="tool-console" type="radio" group="1" hidden="true" class="panel-button button-image" linkedpanel="console-container" oncommand="ConsoleView.init();"/>
+      </box>
       <deck id="panel-items" selectedIndex="2" flex="1">
         <vbox id="addons-container" flex="1">
           <hbox id="addons-header" class="panel-header">
@@ -315,7 +314,7 @@
               <richlistitem id="addons-local" class="section-header" align="center">
                 <label value="&addonsLocal.label;" flex="1"/>
               </richlistitem>
-              <richlistitem id="addons-repo" class="section-header" orient="horizontal" align="center">
+              <richlistitem id="addons-repo" class="section-header">
                 <label value="&addonsRepo.label;" flex="1"/>
                 <textbox id="addons-search-text" emptytext="&addonsSearch.emptytext;" type="search" searchbutton="false"
                          oncommand="ExtensionsView.getAddonsFromRepo(this.value);"/>
@@ -326,7 +325,7 @@
 
         <vbox id="downloads-container" flex="1">
           <vbox id="downloads-header" class="panel-header">
-            <hbox align="center">
+            <box id="downloads-subheader">
               <label value="&downloadsHeader.label;" flex="1"/>
               <radiogroup id="downloads-sort-mode" class="toggle-dark" oncommand="DownloadsView.toggleMode();">
                 <radio label="&downloadsSortDate.label;" value="date" selected="true"/>
@@ -334,7 +333,7 @@
                 <radio label="&downloadsSortName.label;" value="name"/>
                 <radio label="&downloadsSearch.label;" value="search"/>
               </radiogroup>
-            </hbox>
+            </box>
             <hbox id="downloads-search-box" pack="end" collapsed="true">
               <textbox id="downloads-search-text" emptytext="&downloadsSearch.emptytext;" type="search" searchbutton="false"
                        oncommand="DownloadsView.getDownloads();"/>
@@ -344,9 +343,8 @@
         </vbox>
 
         <vbox id="prefs-container" flex="1">
-          <hbox pack="center" id="buttons" oncommand="BrowserUI.showPrefSection(event.target.getAttribute('linkedsection'));">
-            <toolbarbutton id="prefs-content-button" class="show-text button-dark" label="&content.title;" linkedsection="prefs-content"/>
-            <toolbarbutton id="prefs-privacy-button" class="show-text button-dark" label="&privacy.title;" linkedsection="prefs-privacy"/>
+          <hbox id="prefs-header" class="panel-header">
+            <label value="&prefsHeader.label;"/>
           </hbox>
           <richlistbox id="prefs-list" seltype="single" flex="1">
             <vbox class="prefsection" id="prefs-content">
@@ -376,6 +374,7 @@
 
         <vbox id="console-container" flex="1">
           <vbox id="console-header" class="panel-header">
+            <label value="&consoleHeader.label;"/>
             <hbox align="center">
               <label value="&consoleCodeEval.label;" control="console-eval-textbox"/>
               <textbox id="console-eval-textbox" class="toolbar" value="" onkeypress="ConsoleView.onEvalKeyPress(event)" flex="1"/>
@@ -383,10 +382,10 @@
             </hbox>
             <hbox align="center" pack="end">
               <radiogroup id="console-filter" class="toggle-dark" oncommand="ConsoleView.changeMode();">
-                <radio label="&consoleAll.label;" value="all" selected="true"/>
-                <radio label="&consoleErrors.label;" value="error"/>
-                <radio label="&consoleWarnings.label;" value="warning"/>
-                <radio label="&consoleMessages.label;" value="message"/>
+                <radio id="console-filter-all" label="&consoleAll.label;" value="all" selected="true"/>
+                <radio id="console-filter-messages" label="&consoleMessages.label;" value="message"/>
+                <radio id="console-filter-warnings" label="&consoleWarnings.label;" value="warning"/>
+                <radio id="console-filter-errors" label="&consoleErrors.label;" value="error"/>
               </radiogroup>
               <button id="console-clear" class="button-dark show-text" oncommand="ConsoleView.clearConsole();" label="&consoleClear.label;"/>
             </hbox>
@@ -395,7 +394,7 @@
           <richlistbox id="console-box" class="console-box" flex="1"/>
         </vbox>
       </deck>
-    </hbox>
+    </box>
 
     <vbox id="popup_autocomplete" class="panel-dark" hidden="true" top="0" left="0" constraint="ignore-x,vp-relative">
       <arrowscrollbox id="autocomplete_navbuttons"
