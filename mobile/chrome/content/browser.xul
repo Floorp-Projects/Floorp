@@ -101,7 +101,6 @@
 
     <!-- bookmarking -->
     <command id="cmd_star" label="&star.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_bookmarks" label="&bookmarks.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- misc -->
     <command id="cmd_close" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -255,7 +254,6 @@
           <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
         </hbox>
       </hbox>
-      <toolbarbutton id="tool-bookmarks" class="urlbar-button button-image" command="cmd_bookmarks"/>
       <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
     </toolbar>
     <!-- end: Main Toolbar -->

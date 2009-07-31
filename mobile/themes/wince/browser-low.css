@@ -39,14 +39,6 @@
 @media all and (max-device-width: 400px) {
 
 /* main toolbar (URL bar) -------------------------------------------------- */
-#tool-bookmarks {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-default-36.png");
-}
-
-#tool-bookmarks:hover:active {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-active-36.png");
-}
-
 #tool-app-close {
   visibility: hidden;
   min-height: 0 !important;
@@ -255,6 +247,12 @@
 
 .tool-search {
   list-style-image: url("chrome://browser/skin/images/navigation-magnifier-16.png");
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-image {
+  max-width: 35px; // XXX adjust as needed
+  max-height: 24px;
+  list-style-image: url(images/bookmarks-24.png);
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */

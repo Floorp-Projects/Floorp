@@ -14,7 +14,6 @@
 <!ENTITY openLocation.tooltip  "Open location">
 <!ENTITY star.label            "Star">
 <!ENTITY star.tooltip          "Bookmark this page">
-<!ENTITY bookmarks.label       "Bookmarks">
 <!ENTITY bookmarks.tooltip     "View bookmarks">
 
 <!ENTITY newtab.label          "New Tab">
@@ -82,6 +81,7 @@
 <!ENTITY downloadRetry.label       "Retry">
 
 <!ENTITY noResults.label           "No results">
+<!ENTITY allBookmarks.label        "See all bookmarks">
 
 <!ENTITY identity.unverifiedsite2 "This web site does not supply identity information.">
 <!ENTITY identity.connectedTo2 "Connected to">

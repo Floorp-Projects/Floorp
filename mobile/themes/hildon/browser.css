@@ -54,14 +54,6 @@ toolbarbutton.urlbar-button {
   margin-left: 2.2mm; /* core spacing */
 }
 
-#tool-bookmarks {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-default-64.png");
-}
-
-#tool-bookmarks:hover:active {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-active-64.png");
-}
-
 #tool-app-close {
   visibility: hidden;
   min-height: 0 !important;
@@ -499,7 +491,6 @@ placeitem .button-text {
 }
 
 .autocomplete-items {
-  color: black;
   background-color: white;
 }
 
@@ -511,19 +502,13 @@ autocompleteresult {
 
 .autocompleteresult-selected {
   color: white;
-  background-color: grey;
+  background-color: grey !important;
 }
 
 .autocomplete-item-desc {
-  background-color: white;
   color: blue;
   white-space: pre;
   font-size: 10pt !important;
-}
-
-.autocompleteresult-selected .autocomplete-item-desc {
-  background-color: grey;
-  color: blue;
 }
 
 .autocomplete-item-desc:first-line {
@@ -541,32 +526,51 @@ autocompleteresult {
   margin: 1.6mm 2mm 0mm 1.5mm;
 }
 
-.autocompleteresult-selected .autocomplete-item-tags[favorite=true]:after {
-  background-color: grey;
-  color: yellow;
-}
-
 .autocomplete-item-image {
   max-height: 16px;
   max-width: 16px;
-  margin: 1.6mm 1.5mm 0mm 2mm;
+  margin: 0mm 4mm 5mm 2mm;
 }
 
-/* no results */
-autocompleteresult.noresults {
+/* special "no results" and "all bookmarks" items */
+autocompleteresult.noresults > .autocomplete-item-desc {
   text-align: center;
-  font-style: italic;
-  border-bottom: none;
 }
 
 autocompleteresult.noresults > .autocomplete-item-desc:first-line {
-  background-color: white;
   color: grey;
 }
 
 autocompleteresult.noresults > .autocomplete-item-image,
 autocompleteresult.noresults > .autocomplete-item-tags {
   visibility: hidden;
+}
+
+autocompleteresult.noresults {
+  font-style: italic;
+  border-bottom: none;
+}
+
+autocompleteresult.allbookmarks {
+  color: black;
+  background-color: #E9E9E9;
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-desc {
+  color: black;
+  font-size: 15.75pt !important;
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-image {
+  max-width: 44px;
+  max-height: 30px;
+  margin: 0 3mm;
+  list-style-image: url(images/bookmarks-30.png);
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
+  content: url(images/arrowRight-16.png);
+  -moz-margin-end: 4mm;
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
