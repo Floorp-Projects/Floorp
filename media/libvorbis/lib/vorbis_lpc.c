@@ -5,13 +5,13 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2007             *
+ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
   function: LPC low level routines
-  last mod: $Id$
+  last mod: $Id: lpc.c 16227 2009-07-08 06:58:46Z xiphmont $
 
  ********************************************************************/
 
@@ -72,7 +72,7 @@ float vorbis_lpc_from_data(float *data,float *lpci,int n,int m){
     for(i=j;i<n;i++)d+=(double)data[i]*data[i-j];
     aut[j]=d;
   }
-  
+
   /* Generate lpc coefficients from autocorr values */
 
   /* set our noise floor to about -100dB */
@@ -93,10 +93,10 @@ float vorbis_lpc_from_data(float *data,float *lpci,int n,int m){
        each iteration. */
 
     for(j=0;j<i;j++)r-=lpc[j]*aut[i-j];
-    r/=error; 
+    r/=error;
 
     /* Update LPC coefficients and total error */
-    
+
     lpc[i]=r;
     for(j=0;j<i/2;j++){
       double tmp=lpc[j];
@@ -111,8 +111,8 @@ float vorbis_lpc_from_data(float *data,float *lpci,int n,int m){
   }
 
  done:
-   
-  /* slightly damp the filter */ 
+
+  /* slightly damp the filter */
   {
     double g = .99;
     double damp = g;
@@ -126,14 +126,14 @@ float vorbis_lpc_from_data(float *data,float *lpci,int n,int m){
 
   /* we need the error value to know how big an impulse to hit the
      filter with later */
-  
+
   return error;
 }
 
 void vorbis_lpc_predict(float *coeff,float *prime,int m,
                      float *data,long n){
 
-  /* in: coeff[0...m-1] LPC coefficients 
+  /* in: coeff[0...m-1] LPC coefficients
          prime[0...m-1] initial values (allocated size of n+m-1)
     out: data[0...n-1] data samples */
 
@@ -154,12 +154,7 @@ void vorbis_lpc_predict(float *coeff,float *prime,int m,
     p=m;
     for(j=0;j<m;j++)
       y-=work[o++]*coeff[--p];
-    
+
     data[i]=work[o]=y;
   }
 }
-
-
-
-
-
