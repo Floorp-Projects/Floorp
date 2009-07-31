@@ -14,12 +14,16 @@
     <implementation>
       <method name="openPopup">
         <body><![CDATA[
-          this.popup.openAutocompletePopup(this, document.getElementById("toolbar-main"));
+          this.popup.openAutocompletePopup(this, null);
         ]]></body>
       </method>
       <method name="closePopup">
         <body><![CDATA[
-          // do nothing
+          // hack! we want to revert to the "all results" popup when the
+          // controller would otherwise close us because of an empty search
+          // string, and handle closing ourselves (via reallyClosePopup).
+          if (this.value == "")
+            this.showHistoryPopup();
         ]]></body>
       </method>
       <method name="reallyClosePopup">
@@ -29,10 +33,20 @@
         ]]></body>
       </method>
     </implementation>
+    <handlers>
+      <handler event="keypress" keycode="VK_RETURN" phase="capturing">
+        <![CDATA[
+          if (this.popup.allBookmarksItemSelected) {
+            this.popup.closePopup();
+            CommandUpdater.doCommand("cmd_bookmarks");
+          }
+        ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="popup_autocomplete_result">
-    <content>
+    <content align="center">
       <xul:image class="autocomplete-item-image" src="" xbl:inherits="src"/>
       <xul:description flex="1" class="autocomplete-item-desc" xbl:inherits="xbl:text=value"></xul:description>
       <xul:label class="autocomplete-item-tags" xbl:inherits="favorite,xbl:text=tags"></xul:label>
@@ -46,6 +60,9 @@
                        class="autocomplete-items"
                        anonid="autocomplete-items"
                        flex="1000">
+          <xul:autocompleteresult anonid="allbookmarks"
+                                  value="&allBookmarks.label;"
+                                  class="allbookmarks"/>
           <xul:autocompleteresult/>
           <xul:autocompleteresult/>
           <xul:autocompleteresult/>
@@ -85,7 +102,7 @@
       <field name="_selectedIndex">-1</field>
       <field name="_selectedItem"/>
       <property name="selectedIndex"
-                onget="return this._selectedIndex;">
+                onget="return this._allBookmarksItem._hidden ? this._selectedIndex : this._selectedIndex - 1;">
         <setter><![CDATA[
           // Ignore invalid indices
           if (val < -1 ||
@@ -165,12 +182,20 @@
           if (this._items.scrollTop || this._items.scrollLeft)
             this._scrollBoxObject.scrollTo(0, 0);
 
+          let controller = this.input.controller;
+          let searchString = controller.searchString;
+          let items = this._items;
+
+          // Remove the allBookmarksItem if present, before populating the list.
+          if (!this._allBookmarksItem._hidden) {
+            items.removeChild(this._allBookmarksItem);
+            this._allBookmarksItem._hidden = true;
+          }
+
           // Need to iterate over all our existing entries at a minimum, to make
           // sure they're either updated or cleared out. We might also have to
           // add extra items.
-          let controller = this.input.controller;
           let matchCount = this._matchCount;
-          let items = this._items;
           let children = items.childNodes;
           let iterCount = Math.max(children.length, matchCount);
           for (let i = 0; i < iterCount; ++i) {
@@ -210,7 +235,12 @@
             item.setAttribute("src", controller.getImageAt(i));
           }
 
+          // Show the "no results" or "all bookmarks" entries as needed
           this._updateNoResultsItem(matchCount);
+          if (searchString == "") {
+            items.insertBefore(this._allBookmarksItem, items.firstChild);
+            this._allBookmarksItem._hidden = false;
+          }
         ]]></body>
       </method>
 
@@ -227,6 +257,11 @@
           }
         ]]></body>
       </method>
+
+      <field name="_allBookmarksItem">document.getAnonymousElementByAttribute(this, "anonid", "allbookmarks");</field>
+      
+      <property name="allBookmarksItemSelected" readonly="true"
+                onget="return this._selectedItem == this._allBookmarksItem;"/>
 
       <method name="_truncate">
         <parameter name="aString" />
@@ -274,7 +309,8 @@
       <property name="_matchCount"
                 readonly="true">
         <getter><![CDATA[
-          return Math.min(this.input.controller.matchCount, this._maxEntries);
+          let matches = Math.min(this.input.controller.matchCount, this._maxEntries);
+          return matches + (this._allBookmarksItem._hidden ? 0 : 1);
         ]]></getter>
       </property>
 
@@ -295,21 +331,26 @@
         <parameter name="aAddStyle"/>
         <body><![CDATA[
           if (aAddStyle)
-            aItem.className = "autocompleteresult-selected";
+            aItem.className += " autocompleteresult-selected";
           else
-            aItem.className = "";
+            aItem.className = aItem.className.replace(/\s*autocompleteresult-selected/, "");
         ]]></body>
       </method>
     </implementation>
 
     <handlers>
-      <handler event="click">
+      <handler event="click" button="0">
         <![CDATA[
-          let target = event.originalTarget.parentNode;
-          if (event.button == 0 &&
-              target.localName == "autocompleteresult" &&
-              target._empty != true) {
-            this._selectedIndex = target._index;
+          let originalTarget = event.originalTarget;
+          let target = originalTarget.parentNode;
+          if (originalTarget == this._allBookmarksItem ||
+              target == this._allBookmarksItem) {
+            this.closePopup();
+            CommandUpdater.doCommand("cmd_bookmarks");
+          } else if (target.localName == "autocompleteresult" &&
+                     target._empty != true) {
+            let offset = this._allBookmarksItem._hidden ? 0 : 1;
+            this._selectedIndex = target._index + offset;
             this.input.controller.handleEnter(true);
           } else
             this.closePopup();
