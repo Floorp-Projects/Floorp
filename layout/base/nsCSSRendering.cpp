@@ -1513,12 +1513,9 @@ DetermineBackgroundColorInternal(nsPresContext* aPresContext,
     aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
 
-  if (aBackground.BottomLayer().mImage.GetType() == eBackgroundImage_Image) {
-    aBottomImage = aBackground.BottomLayer().mImage.GetImageData();
-    if (!aDrawBackgroundImage || !HaveCompleteBackgroundImage(aBottomImage)) {
-      aBottomImage = nsnull;
-    }
-  } else {
+  aBottomImage = aBackground.BottomLayer().mImage;
+
+  if (!aDrawBackgroundImage || !HaveCompleteBackgroundImage(aBottomImage)) {
     aBottomImage = nsnull;
   }
 
@@ -1556,84 +1553,6 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
                                           drawBackgroundImage,
                                           drawBackgroundColor,
                                           bottomImage);
-}
-
-static gfxFloat
-ConvertGradientValueToPixels(const nsStyleCoord& aCoord,
-                             nscoord aFillLength,
-                             nscoord aAppUnitsPerPixel)
-{
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Percent:
-      return aCoord.GetPercentValue() * aFillLength / aAppUnitsPerPixel;
-    case eStyleUnit_Coord:
-      return aCoord.GetCoordValue() / aAppUnitsPerPixel;
-    default:
-      NS_WARNING("Unexpected coord unit");
-      return 0;
-  }
-}
-
-void
-nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              nsStyleGradient* aGradient,
-                              const nsRect& aDirtyRect,
-                              const nsRect& aOneCellArea,
-                              const nsRect& aFillArea,
-                              PRBool aRepeat)
-{
-  gfxContext *ctx = aRenderingContext.ThebesContext();
-  nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
-
-  gfxRect dirtyRect = RectToGfxRect(aDirtyRect, appUnitsPerPixel);
-  gfxRect areaToFill = RectToGfxRect(aFillArea, appUnitsPerPixel);
-  gfxRect oneCellArea = RectToGfxRect(aOneCellArea, appUnitsPerPixel);
-  gfxPoint fillOrigin = oneCellArea.TopLeft();
-
-  areaToFill = areaToFill.Intersect(dirtyRect);
-  if (areaToFill.IsEmpty())
-    return;
-
-  gfxFloat gradX0 = ConvertGradientValueToPixels(aGradient->mStartX,
-                        aOneCellArea.width, appUnitsPerPixel);
-  gfxFloat gradY0 = ConvertGradientValueToPixels(aGradient->mStartY,
-                        aOneCellArea.height, appUnitsPerPixel);
-  gfxFloat gradX1 = ConvertGradientValueToPixels(aGradient->mEndX,
-                        aOneCellArea.width, appUnitsPerPixel);
-  gfxFloat gradY1 = ConvertGradientValueToPixels(aGradient->mEndY,
-                        aOneCellArea.height, appUnitsPerPixel);
-
-  nsRefPtr<gfxPattern> gradientPattern;
-  if (aGradient->mIsRadial) {
-    gfxFloat gradRadius0 = double(aGradient->mStartRadius) / appUnitsPerPixel;
-    gfxFloat gradRadius1 = double(aGradient->mEndRadius) / appUnitsPerPixel;
-    gradientPattern = new gfxPattern(gradX0, gradY0, gradRadius0,
-                                     gradX1, gradY1, gradRadius1);
-  } else {
-    gradientPattern = new gfxPattern(gradX0, gradY0, gradX1, gradY1);
-  }
-
-  if (!gradientPattern || gradientPattern->CairoStatus())
-    return;
-
-  for (PRUint32 i = 0; i < aGradient->mStops.Length(); i++) {
-    gradientPattern->AddColorStop(aGradient->mStops[i].mPosition,
-                                  gfxRGBA(aGradient->mStops[i].mColor));
-  }
-
-  if (aRepeat)
-    gradientPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
-
-  ctx->Save();
-  ctx->NewPath();
-  // The fill origin is part of the translate call so the pattern starts at
-  // the desired point, rather than (0,0).
-  ctx->Translate(fillOrigin);
-  ctx->SetPattern(gradientPattern);
-  ctx->Rectangle(areaToFill - fillOrigin, PR_TRUE);
-  ctx->Fill();
-  ctx->Restore();
 }
 
 void
@@ -1892,6 +1811,26 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
    *   background-repeat
    */
 
+  // Lookup the image
+  imgIRequest *req = aLayer.mImage;
+  if (!HaveCompleteBackgroundImage(req))
+    return;
+
+  nsCOMPtr<imgIContainer> image;
+  req->GetImage(getter_AddRefs(image));
+  req = nsnull;
+
+  nsIntSize imageIntSize;
+  image->GetWidth(&imageIntSize.width);
+  image->GetHeight(&imageIntSize.height);
+
+  nsSize imageSize;
+  imageSize.width = nsPresContext::CSSPixelsToAppUnits(imageIntSize.width);
+  imageSize.height = nsPresContext::CSSPixelsToAppUnits(imageIntSize.height);
+
+  if (imageSize.width == 0 || imageSize.height == 0)
+    return;
+
   // relative to aBorderArea
   nsRect bgPositioningArea(0, 0, 0, 0);
 
@@ -1945,32 +1884,6 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
                    "unknown background-origin value");
     }
   }
-
-  nsSize imageSize;
-  nsCOMPtr<imgIContainer> image;
-  if (aLayer.mImage.GetType() == eBackgroundImage_Image) {
-    // Lookup the image
-    imgIRequest *req = aLayer.mImage.GetImageData();
-    if (!HaveCompleteBackgroundImage(req))
-      return;
-
-    req->GetImage(getter_AddRefs(image));
-    req = nsnull;
-
-    nsIntSize imageIntSize;
-    image->GetWidth(&imageIntSize.width);
-    image->GetHeight(&imageIntSize.height);
-
-    imageSize.width = nsPresContext::CSSPixelsToAppUnits(imageIntSize.width);
-    imageSize.height = nsPresContext::CSSPixelsToAppUnits(imageIntSize.height);
-  } else if (aLayer.mImage.GetType() == eBackgroundImage_Gradient) {
-    imageSize = bgPositioningArea.Size();
-  } else {
-    return;
-  }
-
-  if (imageSize.width == 0 || imageSize.height == 0)
-    return;
 
   // Compute the anchor point.
   //
@@ -2081,16 +1994,9 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   }
   fillArea.IntersectRect(fillArea, aBGClipRect);
 
-  if (aLayer.mImage.GetType() == eBackgroundImage_Image) {
-    nsLayoutUtils::DrawImage(&aRenderingContext, image,
-        nsLayoutUtils::GetGraphicsFilterForFrame(aForFrame),
-        destArea, fillArea, anchor + aBorderArea.TopLeft(), aDirtyRect);
-  } else {
-    nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
-                  aLayer.mImage.GetGradientData(),
-                  aDirtyRect, destArea, fillArea,
-                  (repeat != NS_STYLE_BG_REPEAT_OFF));
-  }
+  nsLayoutUtils::DrawImage(&aRenderingContext, image,
+      nsLayoutUtils::GetGraphicsFilterForFrame(aForFrame),
+      destArea, fillArea, anchor + aBorderArea.TopLeft(), aDirtyRect);
 }
 
 static void
