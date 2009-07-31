@@ -38,49 +38,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#define FOREACH_RECT(rect, tilecache, fn, thisObj)                             \
+#define BEGIN_FOREACH_IN_RECT(rect, tilecache, tile)                           \
   {                                                                            \
-    let starti = (rect).left  >> kTileExponentWidth;                           \
-    let endi   = (rect).right >> kTileExponentWidth;                           \
-    let startj = (rect).top    >> kTileExponentHeight;                         \
-    let endj   = (rect).bottom >> kTileExponentHeight;                         \
+    let __starti = (rect).left  >> kTileExponentWidth;                         \
+    let __endi   = (rect).right >> kTileExponentWidth;                         \
+    let __startj = (rect).top    >> kTileExponentHeight;                       \
+    let __endj   = (rect).bottom >> kTileExponentHeight;                       \
                                                                                \
     let tile = null;                                                           \
-    let i, j;                                                                  \
-    for (j = startj; j <= endj; ++j) {                                         \
-      for (i = starti; i <= endi; ++i) {                                       \
-        tile = (tilecache).getTile(i, j, false, null);                         \
-        if (tile) {                                                            \
-          (fn).call((thisObj), tile);                                          \
+    let __i, __j;                                                              \
+    for (__j = __startj; __j <= __endj; ++__j) {                               \
+      for (__i = __starti; __i <= __endi; ++__i) {                             \
+        tile = (tilecache).getTile(__i, __j, false, null);                     \
+        if (tile) {
+
+#define END_FOREACH_IN_RECT                                                    \
         }                                                                      \
       }                                                                        \
     }                                                                          \
   }
 
-#define FOREACH_RECT_CREATE(rect, tilecache, fn, thisObj)                      \
+#define BEGIN_FORCREATE_IN_RECT(rect, tilecache, tile)                         \
   {                                                                            \
-    let visited = {};                                                          \
-    let evictGuard = function evictGuard(tile)                                 \
-      { return !visited[tile.toString()]; };                                   \
-                                                                               \
-    let starti = (rect).left  >> kTileExponentWidth;                           \
-    let endi   = (rect).right >> kTileExponentWidth;                           \
-    let startj = (rect).top    >> kTileExponentHeight;                         \
-    let endj   = (rect).bottom >> kTileExponentHeight;                         \
+    let __starti = (rect).left  >> kTileExponentWidth;                         \
+    let __endi   = (rect).right >> kTileExponentWidth;                         \
+    let __startj = (rect).top    >> kTileExponentHeight;                       \
+    let __endj   = (rect).bottom >> kTileExponentHeight;                       \
                                                                                \
     let tile = null;                                                           \
-    let i, j;                                                                  \
-    for (j = startj; j <= endj; ++j) {                                         \
-      for (i = starti; i <= endi; ++i) {                                       \
-        tile = (tilecache).getTile(i, j, true, evictGuard);                    \
+    let __i, __j;                                                              \
+    for (__j = __startj; __j <= __endj; ++__j) {                               \
+      for (__i = __starti; __i <= __endi; ++__i) {                             \
+        tile = (tilecache).getTile(__i, __j, true, null);                      \
         if (tile) {                                                            \
-          visited[tile.toString()] = true;                                     \
-          (fn).call((thisObj), tile);                                          \
+
+#define END_FORCREATE_IN_RECT                                                  \
         }                                                                      \
       }                                                                        \
     }                                                                          \
   }
+
+#define FOREACH_IN_RECT(rect, tilecache, fn, thisObj)                          \
+  BEGIN_FOREACH_IN_RECT(rect, tilecache, tile)                                 \
+  (fn).call((thisObj), tile);                                                  \
+  END_FOREACH_IN_RECT
+
+#define FORCREATE_IN_RECT(rect, tilecache, fn, thisObj)                        \
+  BEGIN_FORCREATE_IN_RECT(rect, tilecache, tile)                               \
+  (fn).call((thisObj), tile);                                                  \
+  END_FORCREATE_IN_RECT
 
 
 const kXHTMLNamespaceURI  = "http://www.w3.org/1999/xhtml";
@@ -91,6 +97,7 @@ const kTileExponentHeight = 7;
 const kTileWidth  = Math.pow(2, kTileExponentWidth);   // 2^7 = 128
 const kTileHeight = Math.pow(2, kTileExponentHeight);  // 2^7 = 128
 const kTileLazyRoundTimeCap = 500;    // millis
+const kInitialCacheCapacity = 200;
 
 
 /**
@@ -116,51 +123,29 @@ function TileManager(appendTile, removeTile, browserView) {
   // tile cache holds tile objects and pools them under a given capacity
   let self = this;
   this._tileCache = new TileManager.TileCache(function(tile) { self._removeTileSafe(tile); },
-                                              -1, -1, 200);
+                                              -1, -1, kInitialCacheCapacity);
 
   // Rectangle within the viewport that is visible to the user.  It is "critical"
   // in the sense that it must be rendered as soon as it becomes dirty
   this._criticalRect = null;
-
-  // if we have an outstanding paint timeout, its value is stored here
-  // for cancelling when we end page loads
-  //this._drawTimeout = 0;
-  this._pageLoadResizerTimeout = 0;
 
   // timeout of the non-visible-tiles-crawler to cache renders from the browser
   this._idleTileCrawlerTimeout = 0;
 
   // object that keeps state on our current lazyload crawl
   this._crawler = null;
-
-  // the max right coordinate we've seen from paint events
-  // while we were loading a page.  If we see something that's bigger than
-  // our width, we'll trigger a page zoom.
-  this._pageLoadMaxRight = 0;
-  this._pageLoadMaxBottom = 0;
-
-  // Tells us to pan to top before first draw
-  this._needToPanToTop = false;
 }
 
 TileManager.prototype = {
 
-  // This is the callback fired by our client whenever the viewport
-  // changed somehow (or didn't change but someone asked it to update).
+  /**
+   * This is the callback fired by our client whenever the viewport changes
+   * somehow.
+   */
   viewportChangeHandler: function viewportChangeHandler(viewportRect,
                                                         criticalRect,
                                                         boundsSizeChanged,
                                                         dirtyAll) {
-    // !!! --- DEBUG BEGIN -----
-    /*
-    dump("***vphandler***\n");
-    dump(viewportRect.toString() + "\n");
-    dump((criticalRect ? criticalRect.toString() : "null") + "\n");
-    dump(boundsSizeChanged + "\n");
-    dump(dirtyAll + "\n***************\n");
-    */
-    // !!! --- DEBUG END -------
-
     let tc = this._tileCache;
 
     tc.iBound = Math.ceil(viewportRect.right / kTileWidth);
@@ -180,11 +165,23 @@ TileManager.prototype = {
   dirtyRects: function dirtyRects(rects, doCriticalRender) {
     let criticalIsDirty = false;
     let criticalRect = this._criticalRect;
+    let tc = this._tileCache;
+    let crawler = this._crawler;
 
-    for each (let rect in rects) {
-      //this._tileCache.forEachIntersectingRect(rect, false, this._dirtyTile, this);
-      let tc = this._tileCache;
-      FOREACH_RECT(rect, tc, this._dirtyTile, this);
+    for (let i = 0, len = rects.length; i < len; ++i) {
+      let rect = rects[i];
+
+      BEGIN_FOREACH_IN_RECT(rect, tc, tile)
+
+      if (!criticalRect || !tile.boundRect.intersects(criticalRect))
+        this._removeTileSafe(tile);
+
+      tile.markDirty();
+
+      if (crawler)
+        crawler.enqueue(tile.i, tile.j);
+
+      END_FOREACH_IN_RECT
 
       if (criticalRect && rect.intersects(criticalRect))
         criticalIsDirty = true;
@@ -194,125 +191,60 @@ TileManager.prototype = {
       this.criticalRectPaint();
   },
 
-  criticalRectPaint: function criticalRectPaint() {
+  criticalRectPaint: function criticalRectPaint(skipRecenter) {
     let cr = this._criticalRect;
 
+    let start = Date.now();
+
     if (cr) {
-      let [ctrx, ctry] = cr.centerRounded();
+      if (!skipRecenter) {
+        let [ctrx, ctry] = cr.centerRounded();
+        dump('-----> centering at ' + ctrx + ',' + ctry + '\n');
+        this.recenterEvictionQueue(ctrx, ctry);
+      }
+
       let start = Date.now();
-      this.recenterEvictionQueue(ctrx, ctry);
-      dump("  center: " + (Date.now() - start) + "\n");
-      start = Date.now();
       this._renderAppendHoldRect(cr);
-      dump("  render: " + (Date.now() - start) + "\n");
+      dump("  render, append, hold: " + (Date.now() - start) + "\n");
     }
+
+    dump(" paint: " + (Date.now() - start) + "\n");
   },
 
   beginCriticalMove: function beginCriticalMove(destCriticalRect) {
-    function appendNonDirtyTile(tile) {
+    if (destCriticalRect) {
+      let tc = this._tileCache;
+
+      BEGIN_FOREACH_IN_RECT(destCriticalRect, tc, tile)
+
       if (!tile.isDirty())
         this._appendTileSafe(tile);
+
+      END_FOREACH_IN_RECT
     }
-
-    if (destCriticalRect) {
-      //this._tileCache.forEachIntersectingRect(destCriticalRect, false, appendNonDirtyTile, this);
-      let tc = this._tileCache;
-      FOREACH_RECT(destCriticalRect, tc, appendNonDirtyTile, this);
-    }
-  },
-
-  beginCriticalMoveUnrolled: function beginCriticalMoveUnrolled(destCriticalRect) {
-    let start = Date.now();
-
-    if (destCriticalRect) {
-
-      let rect = destCriticalRect;
-
-      let create = false;
-
-      // this._tileCache.forEachIntersectingRect(destCriticalRect, false, appendNonDirtyTile, this);
-      let visited = {};
-      let evictGuard = null;
-      if (create) {
-	evictGuard = function evictGuard(tile) {
-	  return !visited[tile.toString()];
-	};
-      }
-
-      let starti = rect.left  >> kTileExponentWidth;
-      let endi   = rect.right >> kTileExponentWidth;
-
-      let startj = rect.top    >> kTileExponentHeight;
-      let endj   = rect.bottom >> kTileExponentHeight;
-
-      let tile = null;
-      let tc = this._tileCache;
-
-      for (var j = startj; j <= endj; ++j) {
-	for (var i = starti; i <= endi; ++i) {
-	  // 'this' for getTile needs to be tc
-	  //tile = this.getTile(i, j, create, evictGuard);
-	  //if (!tc.inBounds(i, j)) {
-	  if (0 <= i && 0 <= j && i <= tc.iBound && j <= tc.jBound) {
-	    //return null;
-	    break;
-	  }
-
-	  tile = null;
-
-	  //if (tc._isOccupied(i, j)) {
-	  if (!!(tc._tiles[i] && tc._tiles[i][j])) {
-	    tile = tc._tiles[i][j];
-	  } else if (create) {
-	    // NOTE: create is false here
-	    tile = tc._createTile(i, j, evictionGuard);
-	    if (tile) tile.markDirty();
-	  }
-
-	  if (tile) {
-	    visited[tile.toString()] = true;
-	    //fn.call(thisObj, tile);
-	    //function appendNonDirtyTile(tile) {
-	    //if (!tile.isDirty())
-	    if (!tile._dirtyTileCanvas) {
-	      //this._appendTileSafe(tile);
-	      if (!tile._appended) {
-		let astart = Date.now();
-		this._appendTile(tile);
-		tile._appended = true;
-		let aend = Date.now();
-		dump("append: " + (aend - astart) + "\n");
-	      }
-	    }
-	    //}
-	  }
-	}
-      }
-    }
-
-    let end = Date.now();
-    dump("start: " + (end-start) + "\n");
   },
 
   endCriticalMove: function endCriticalMove(destCriticalRect, doCriticalPaint) {
     let tc = this._tileCache;
     let cr = this._criticalRect;
 
-    let dcr = destCriticalRect; // XXX help the closure upval analyser with a local let
-    let f = function releaseOldTile(tile) {
-      if (!tile.boundRect.intersects(dcr))
-        tc.releaseTile(tile);
-    };
-
     let start = Date.now();
+
     if (cr) {
-      //tc.forEachIntersectingRect(cr, false, f, this);
-      FOREACH_RECT(cr, tc, f, this);
+      BEGIN_FOREACH_IN_RECT(cr, tc, tile)
+	    tc.releaseTile(tile);
+      END_FOREACH_IN_RECT
     }
+
     dump(" release: " + (Date.now() - start) + "\n");
     start = Date.now();
-    if (destCriticalRect)
-      this._holdRect(destCriticalRect);
+
+    if (destCriticalRect) {
+      BEGIN_FOREACH_IN_RECT(destCriticalRect, tc, tile)
+      tc.holdTile(tile);
+      END_FOREACH_IN_RECT
+    }
+
     dump(" hold: " + (Date.now() - start) + "\n");
 
     if (cr)
@@ -320,10 +252,8 @@ TileManager.prototype = {
     else
       this._criticalRect = cr = destCriticalRect;
 
-    start = Date.now();
     if (doCriticalPaint)
       this.criticalRectPaint();
-    dump(" paint: " + (Date.now() - start) + "\n");
   },
 
   restartLazyCrawl: function restartLazyCrawl(startRectOrQueue) {
@@ -358,13 +288,13 @@ TileManager.prototype = {
     let ctri = ctrx >> kTileExponentWidth;
     let ctrj = ctry >> kTileExponentHeight;
 
-    function evictFarTiles(a, b) {
+    dump('       that is, ' + ctri + ',' + ctrj + '\n');
+
+    this._tileCache.sortEvictionQueue(function evictFarTiles(a, b) {
       let dista = Math.max(Math.abs(a.i - ctri), Math.abs(a.j - ctrj));
       let distb = Math.max(Math.abs(b.i - ctri), Math.abs(b.j - ctrj));
       return dista - distb;
-    }
-
-    this._tileCache.sortEvictionQueue(evictFarTiles);
+    });
   },
 
   _renderTile: function _renderTile(tile) {
@@ -373,53 +303,36 @@ TileManager.prototype = {
   },
 
   _appendTileSafe: function _appendTileSafe(tile) {
-    if (!tile._appended) {
+    if (!tile.appended) {
       this._appendTile(tile);
-      tile._appended = true;
+      tile.appended = true;
     }
   },
 
   _removeTileSafe: function _removeTileSafe(tile) {
-    if (tile._appended) {
+    if (tile.appended) {
       this._removeTile(tile);
-      tile._appended = false;
+      tile.appended = false;
     }
-  },
-
-  _dirtyTile: function _dirtyTile(tile) {
-    if (!this._criticalRect || !tile.boundRect.intersects(this._criticalRect))
-      this._removeTileSafe(tile);
-
-    tile.markDirty();
-
-    if (this._crawler)
-      this._crawler.enqueue(tile.i, tile.j);
-  },
-
-  _holdRect: function _holdRect(rect) {
-    this._tileCache.holdTilesIntersectingRect(rect);
-  },
-
-  _releaseRect: function _releaseRect(rect) {
-    this._tileCache.releaseTilesIntersectingRect(rect);
   },
 
   _renderAppendHoldRect: function _renderAppendHoldRect(rect) {
-    function renderAppendHoldTile(tile) {
-      if (tile.isDirty())
-        this._renderTile(tile);
-
-      this._appendTileSafe(tile);
-      this._tileCache.holdTile(tile);
-    }
-
-    //this._tileCache.forEachIntersectingRect(rect, true, renderAppendHoldTile, this);
     let tc = this._tileCache;
-    FOREACH_RECT_CREATE(rect, tc, renderAppendHoldTile, this);
+
+    BEGIN_FORCREATE_IN_RECT(rect, tc, tile)
+
+    if (tile.isDirty())
+      this._renderTile(tile);
+
+    this._appendTileSafe(tile);
+    this._tileCache.holdTile(tile);
+
+    END_FORCREATE_IN_RECT
   },
 
   _idleTileCrawler: function _idleTileCrawler(self) {
     if (!self) self = this;
+
     dump('crawl pass.\n');
     let itered = 0, rendered = 0;
 
@@ -476,15 +389,14 @@ TileManager.TileCache = function TileCache(onBeforeTileDetach, iBound, jBound, c
   // are not unique, so a tile could be referenced by multiple array entries,
   // i.e. a tile could "span" many tile placeholders (e.g. if we merge
   // neighbouring tiles).
-  this._tiles = [];
+  this._tileMap = [];
 
-  // holds the same tiles that _tiles holds, but as contiguous array
+  // holds the same tiles that _tileMap holds, but as contiguous array
   // elements, for pooling tiles for reuse under finite capacity
-  this._tilePool = (capacity == Infinity) ? new Array() : new Array(capacity);
+  this._tilePool = [];
+  this._pos = -1;
 
   this._capacity = capacity;
-  this._nTiles = 0;
-  this._numFree = 0;
 
   this._onBeforeTileDetach = onBeforeTileDetach;
 
@@ -494,16 +406,24 @@ TileManager.TileCache = function TileCache(onBeforeTileDetach, iBound, jBound, c
 
 TileManager.TileCache.prototype = {
 
-  get size() { return this._nTiles; },
-  get numFree() { return this._numFree; },
+  get size() { return this._tilePool.length; },
 
-  // A comparison function that will compare all free tiles as greater
-  // than all non-free tiles.  Useful because, for instance, to shrink
-  // the tile pool when capacity is lowered, we want to remove all tiles
-  // at the new cap and beyond, favoring removal of free tiles first.
-  evictionCmp: function freeTilesLast(a, b) {
+  /**
+   * The default tile comparison function used to order the tile pool such that
+   * tiles most eligible for eviction have higher index.
+   *
+   * Unless reset, this is a comparison function that will compare free tiles
+   * as greater than all non-free tiles.  Useful, for instance, to shrink
+   * the tile pool when capacity is lowered, as we want to remove all tiles
+   * at the new cap and beyond, favoring removal of free tiles first.
+   */
+  evictionCmp: function evictionCmp(a, b) {
     if (a.free == b.free) return (a.j == b.j) ? b.i - a.i : b.j - a.j;
     return (a.free) ? 1 : -1;
+  },
+
+  isOccupied: function isOccupied(i, j) {
+    return !!(this._tileMap[i] && this._tileMap[i][j]);
   },
 
   getCapacity: function getCapacity() { return this._capacity; },
@@ -520,115 +440,33 @@ TileManager.TileCache.prototype = {
       this._capacity = this._tilePool.length;
     }
 
-    let rem = null;
-
     if (newCap < this._capacity) {
       // This case is obnoxious.  We're decreasing our capacity which means
-      // we may have to get rid of tiles.  Depending on our eviction comparator,
-      // we probably try to get rid free tiles first, but we might have to throw
-      // out some nonfree ones too.  Note that "throwing out" means the cache
-      // won't keep them, and they'll get GC'ed as soon as all other refholders
-      // let go of their refs to the tile.
+      // we may have to get rid of tiles.  Note that "throwing out" means the
+      // cache won't keep them, and they'll get GC'ed as soon as all other
+      // refholders let go of their refs to the tile.
+
       if (!skipEvictionQueueSort)
         this.sortEvictionQueue();
 
-      rem = this._tilePool.splice(newCap);
-
-    } else {
-      // This case is win.  Extend our tile pool array with new empty space.
-      this._tilePool.push.apply(this._tilePool, new Array(newCap - this._capacity));
-    }
-
-    // update state in the case that we threw things out.
-    let nTilesDeleted = this._nTiles - newCap;
-    if (nTilesDeleted > 0) {
-      let nFreeDeleted = 0;
-      for (let k = 0; k < nTilesDeleted; ++k) {
-        if (rem[k].free)
-          nFreeDeleted++;
-
-        this._detachTile(rem[k].i, rem[k].j);
-      }
-
-      this._nTiles -= nTilesDeleted;
-      this._numFree -= nFreeDeleted;
+      let rem = this._tilePool.splice(newCap);
+      for (let k = 0, len = rem.length; k < len; ++k)
+	      this._detachTile(rem[k].i, rem[k].j);
     }
 
     this._capacity = newCap;
   },
 
-  _isOccupied: function _isOccupied(i, j) {
-    return !!(this._tiles[i] && this._tiles[i][j]);
-  },
-
-  _detachTile: function _detachTile(i, j) {
-    let tile = null;
-    if (this._isOccupied(i, j)) {
-      tile = this._tiles[i][j];
-
-      if (this._onBeforeTileDetach)
-        this._onBeforeTileDetach(tile);
-
-      this.releaseTile(tile);
-      delete this._tiles[i][j];
-    }
-    return tile;
-  },
-
-  _reassignTile: function _reassignTile(tile, i, j) {
-    this._detachTile(tile.i, tile.j);    // detach
-    tile.init(i, j);                     // re-init
-    this._tiles[i][j] = tile;            // attach
-    return tile;
-  },
-
-  _evictTile: function _evictTile(evictionGuard) {
-    let k = this._nTiles - 1;
-    let pool = this._tilePool;
-    let victim = null;
-
-    for (; k >= 0; --k) {
-      if (pool[k].free &&
-          (!evictionGuard || evictionGuard(pool[k])))
-      {
-        victim = pool[k];
-        break;
-      }
-    }
-
-    return victim;
-  },
-
-  _createTile: function _createTile(i, j, evictionGuard) {
-    if (!this._tiles[i])
-      this._tiles[i] = [];
-
-    let tile = null;
-
-    if (this._nTiles < this._capacity) {
-      // either capacity is infinite, or we still have room to allocate more
-      tile = new TileManager.Tile(i, j);
-      this._tiles[i][j] = tile;
-      this._tilePool[this._nTiles++] = tile;
-      this._numFree++;
-
-    } else {
-      // assert: nTiles == capacity
-      tile = this._evictTile(evictionGuard);
-      if (tile)
-        this._reassignTile(tile, i, j);
-    }
-
-    return tile;
-  },
-
   inBounds: function inBounds(i, j) {
-    return 0 <= i && 0 <= j && i <= this.iBound && j <= this.jBound;
+    return (0 <= i && 0 <= j
+            && i <= this.iBound && j <= this.jBound);
   },
 
   sortEvictionQueue: function sortEvictionQueue(cmp) {
-    if (!cmp) cmp = this.evictionCmp;
-    this._tilePool.sort(cmp);
+    let pool = this._tilePool;
+
+    pool.sort(cmp ? cmp : this.evictionCmp);
+    this._pos = pool.length - 1;
   },
 
   /**
@@ -651,8 +489,8 @@ TileManager.TileCache.prototype = {
 
     let tile = null;
 
-    if (this._isOccupied(i, j)) {
-      tile = this._tiles[i][j];
+    if (this.isOccupied(i, j)) {
+      tile = this._tileMap[i][j];
     } else if (create) {
       tile = this._createTile(i, j, evictionGuard);
       if (tile) tile.markDirty();
@@ -677,72 +515,38 @@ TileManager.TileCache.prototype = {
   },
 
   /**
-   * Hold a tile (i.e. mark it non-free).  Returns true if the operation
-   * actually did something, false elsewise.
+   * Hold a tile (i.e. mark it non-free).
    */
   holdTile: function holdTile(tile) {
-    if (tile && tile.free) {
-      tile._hold();
-      this._numFree--;
-      return true;
-    }
-    return false;
+    if (tile) tile.free = false;
   },
 
   /**
-   * Release a tile (i.e. mark it free).  Returns true if the operation
-   * actually did something, false elsewise.
+   * Release a tile (i.e. mark it free).
    */
   releaseTile: function releaseTile(tile) {
-    if (tile && !tile.free) {
-      tile._release();
-      this._numFree++;
-      return true;
-    }
-    return false;
+    if (tile) tile.free = true;
   },
 
-  // XXX the following two functions will iterate through duplicate tiles
-  // once we begin to merge tiles.
   /**
-   * Fetch all tiles that share at least one point with this rect.  If `create'
-   * is true then any tileless tileholders will have tiles created for them.
+   * Call fn for all tiles that share at least one point with this rect.  If
+   * `create' is true then any tileless tileholders will have tiles created
+   * in them.
+   *
+   * This function gets really trace-branchy due to its meta-nature.  It can
+   * also be slow if using in tight loops.  See the C preprocessor macros for
+   * a more dangerous but faster version.
    */
-  tilesIntersectingRect: function tilesIntersectingRect(rect, create) {
-    let dx = (rect.right % kTileWidth) - (rect.left % kTileWidth);
-    let dy = (rect.bottom % kTileHeight) - (rect.top % kTileHeight);
-    let tiles = [];
-
-    for (let y = rect.top; y <= rect.bottom - dy; y += kTileHeight) {
-      for (let x = rect.left; x <= rect.right - dx; x += kTileWidth) {
-        let tile = this.tileFromPoint(x, y, create);
-        if (tile)
-          tiles.push(tile);
-      }
-    }
-
-    return tiles;
-  },
-
   forEachIntersectingRect: function forEachIntersectingRect(rect, create, fn, thisObj) {
-    let visited = {};
-    let evictGuard = null;
-    if (create) {
-      evictGuard = function evictGuard(tile) {
-        return !visited[tile.toString()];
-      };
-    }
-
     let starti = rect.left  >> kTileExponentWidth;
     let endi   = rect.right >> kTileExponentWidth;
-
     let startj = rect.top    >> kTileExponentHeight;
     let endj   = rect.bottom >> kTileExponentHeight;
 
     let tile = null;
     for (var j = startj; j <= endj; ++j) {
       for (var i = starti; i <= endi; ++i) {
-        tile = this.getTile(i, j, create, evictGuard);
+        tile = this.getTile(i, j, create, null);
         if (tile) {
           visited[tile.toString()] = true;
           fn.call(thisObj, tile);
@@ -751,69 +555,120 @@ TileManager.TileCache.prototype = {
     }
   },
 
-  holdTilesIntersectingRect: function holdTilesIntersectingRect(rect) {
-    //this.forEachIntersectingRect(rect, false, this.holdTile, this);
-    //FOREACH_RECT_CREATE(rect, tilecache, fn, thisObj)
-    FOREACH_RECT(rect, this, this.holdTile, this);
+  _detachTile: function _detachTile(i, j) {
+    let tile = null;
+    if (this.isOccupied(i, j)) {
+      tile = this._tileMap[i][j];
+
+      if (this._onBeforeTileDetach)
+        this._onBeforeTileDetach(tile);
+
+      this.releaseTile(tile);
+      delete this._tileMap[i][j];
+    }
+    return tile;
   },
 
-  releaseTilesIntersectingRect: function releaseTilesIntersectingRect(rect) {
-    //this.forEachIntersectingRect(rect, false, this.releaseTile, this);
-    FOREACH_RECT(rect, this, this.releaseTile, this);
+  /**
+   * Pluck tile from its current tileMap position and drop it in position
+   * given by (i, j).
+   */
+  _reassignTile: function _reassignTile(tile, i, j) {
+    this._detachTile(tile.i, tile.j);    // detach
+    tile.init(i, j);                     // re-init
+    this._tileMap[i][j] = tile;          // attach
+    return tile;
+  },
+
+  _evictTile: function _evictTile(evictionGuard) {
+    let k = this._pos;
+    let pool = this._tilePool;
+    let victim = null;
+
+    for (; k >= 0; --k) {
+      if (pool[k].free && ( !evictionGuard || evictionGuard(pool[k]) )) {
+        victim = pool[k];
+	      --k;
+        break;
+      }
+    }
+
+    this._pos = k;
+
+    return victim;
+  },
+
+  _createTile: function _createTile(i, j, evictionGuard) {
+    if (!this._tileMap[i])
+      this._tileMap[i] = [];
+
+    let tile = null;
+
+    if (this._tilePool.length < this._capacity) { // either capacity is
+      tile = new TileManager.Tile(i, j);          // infinite, or we have
+      this._tileMap[i][j] = tile;                 // room to allocate more
+      this._tilePool.push(tile);
+    } else {
+      tile = this._evictTile(evictionGuard);
+      if (tile)
+        this._reassignTile(tile, i, j);
+    }
+
+    return tile;
   }
 
 };
 
 
-
+/**
+ * A tile is a little object with an <html:canvas> DOM element that it used for
+ * caching renders from drawWindow().
+ *
+ * Supports the dirtying of only a subrectangle of the bounding rectangle, as
+ * well as just dirtying the entire tile.
+ */
 TileManager.Tile = function Tile(i, j) {
-  // canvas element is where we keep paint data from browser for this tile
   this._canvas = document.createElementNS(kXHTMLNamespaceURI, "canvas");
   this._canvas.setAttribute("width", String(kTileWidth));
   this._canvas.setAttribute("height", String(kTileHeight));
   this._canvas.setAttribute("moz-opaque", "true");
-  //this._canvas.style.border = "1px solid red";
 
   this.init(i, j);  // defines more properties, cf below
 };
 
 TileManager.Tile.prototype = {
 
-  // essentially, this is part of constructor code, but since we reuse tiles
-  // in the tile cache, this is here so that we can reinitialize tiles when we
-  // reuse them
   init: function init(i, j) {
     if (!this.boundRect)
       this.boundRect = new wsRect(i * kTileWidth, j * kTileHeight, kTileWidth, kTileHeight);
     else
       this.boundRect.setRect(i * kTileWidth, j * kTileHeight, kTileWidth, kTileHeight);
 
-    // indices!
-    this.i = i;
-    this.j = j;
+    /* indices of this tile in the tile cache's tile grid map */
+    this.i = i;    // row
+    this.j = j;    // column
 
-    // flags true if we need to repaint our own local canvas
+    /* flag used by TileManager to avoid re-appending tiles that have already
+     * been appended */
+    this.appended = false;
+
+    /* flag used by the TileCache to mark tiles as ineligible for eviction,
+     * usually because they are fixed in some critical position */
+    this.free = true;
+
+    /* flags true if we need to repaint our own local canvas */
     this._dirtyTileCanvas = false;
 
-    // keep a dirty rectangle (i.e. only part of the tile is dirty)
+    /* keep a dirty rectangle (i.e. only part of the tile is dirty) */
     this._dirtyTileCanvasRect = null;
-
-    // flag used by TileManager to avoid re-appending tiles that have already
-    // been appended
-    this._appended = false;
-
-    // We keep tile objects around after their use for later reuse, so this
-    // flags true for an unused pooled tile.  We don't actually care about
-    // this from within the Tile prototype, it is here for the cache to use.
-    this.free = true;
   },
 
-  // viewport coordinates
   get x() { return this.boundRect.left; },
   get y() { return this.boundRect.top; },
 
-  // the actual canvas that holds the most recently rendered image of this
-  // canvas
+  /**
+   * Get the <html:canvas> DOM element with this tile's cached paint.
+   */
   getContentImage: function getContentImage() { return this._canvas; },
 
   isDirty: function isDirty() { return this._dirtyTileCanvas; },
@@ -851,18 +706,18 @@ TileManager.Tile.prototype = {
 
     }
 
-    // TODO if after the above, the dirty rectangle is large enough,
-    // mark the whole tile dirty.
+    // XXX if, after the above, the dirty rectangle takes up a large enough
+    // portion of the boundRect, we should probably just mark the entire tile
+    // dirty and fastpath for future calls.
 
     if (this._dirtyTileCanvasRect)
       this._dirtyTileCanvas = true;
   },
 
   /**
-   * Actually draw the browser content into the dirty region of this
-   * tile.  This requires us to actually draw with the
-   * nsIDOMCanvasRenderingContext2D object's drawWindow method, which
-   * we expect to be a relatively heavy operation.
+   * Actually draw the browser content into the dirty region of this tile.  This
+   * requires us to actually draw with nsIDOMCanvasRenderingContext2D::
+   * drawWindow(), which we expect to be a heavy operation.
    *
    * You likely want to check if the tile isDirty() before asking it
    * to render, as this will cause the entire tile to re-render in the
@@ -897,28 +752,27 @@ TileManager.Tile.prototype = {
     this.unmarkDirty();
   },
 
+  /**
+   * Standard toString prints "Tile(<row>, <column>)", but if `more' flags true
+   * then some extra information is printed.
+   */
   toString: function toString(more) {
     if (more) {
-      return 'Tile(' + [this.i,
-                        this.j,
-                        "dirty=" + this.isDirty(),
-                        "boundRect=" + this.boundRect].join(', ')
-               + ')';
+      return 'Tile(' + this.i                                   + ', '
+                     + this.j                                   + ', '
+                     + 'dirty=' + this.isDirty()                + ', '
+                     + 'boundRect=' + this.boundRect.toString() + ')';
     }
 
     return 'Tile(' + this.i + ', ' + this.j + ')';
-  },
-
-  _hold: function hold() { this.free = false; },
-  _release: function release() { this.free = true; }
+  }
 
 };
 
 
 /**
  * A CrawlIterator is in charge of creating and returning subsequent tiles "crawled"
- * over as we render tiles lazily.  It supports iterator semantics so you can use
- * CrawlIterator objects in for..in loops.
+ * over as we render tiles lazily.
  *
  * Currently the CrawlIterator is built to expand a rectangle iteratively and return
  * subsequent tiles that intersect the boundary of the rectangle.  Each expansion of

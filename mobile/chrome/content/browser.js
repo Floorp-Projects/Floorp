@@ -89,12 +89,13 @@ function debug() {
     dump('visibleRect from BV : ' + bv._visibleRect.toString() + endl);
     dump('visibleRect from foo: ' + Browser.getVisibleRect().toString() + endl);
 
-    dump('batch depth:          ' + bv._batchOps.length + endl);
+    dump('bv batchops depth:    ' + bv._batchOps.length + endl);
     dump('renderpause depth:    ' + bv._renderMode + endl);
 
     dump(endl);
 
-    dump('window.innerWidth: ' + window.innerWidth + endl);
+    dump('window.innerWidth : ' + window.innerWidth  + endl);
+    dump('window.innerHeight: ' + window.innerHeight + endl);
 
     dump(endl);
 
@@ -119,7 +120,6 @@ function debug() {
 
     dump('tilecache capacity: ' + bv._tileManager._tileCache.getCapacity() + endl);
     dump('tilecache size    : ' + bv._tileManager._tileCache.size          + endl);
-    dump('tilecache numFree : ' + bv._tileManager._tileCache.numFree       + endl);
     dump('tilecache iBound  : ' + bv._tileManager._tileCache.iBound        + endl);
     dump('tilecache jBound  : ' + bv._tileManager._tileCache.jBound        + endl);
 
@@ -136,7 +136,7 @@ function debugTile(i, j) {
   dump('------ DEBUGGING TILE (' + i + ',' + j + ') --------\n');
 
   dump('in bounds: ' + tc.inBounds(i, j) + endl);
-  dump('occupied : ' + tc._isOccupied(i, j) + endl);
+  dump('occupied : ' + tc.isOccupied(i, j) + endl);
   if (t)
   {
   dump('toString : ' + t.toString(true) + endl);
@@ -152,24 +152,90 @@ function debugTile(i, j) {
   dump('------------------------------------\n');
 }
 
-function onKeyPress(e) {
+function onKeyPress(ev) {
   let bv = Browser._browserView;
 
-  if (!e.ctrlKey)
+  if (!ev.ctrlKey)
     return;
 
   const a = 97;   // debug all critical tiles
+  const b = 98;   // dump an ASCII graphic of the tile map
   const c = 99;   // set tilecache capacity
   const d = 100;  // debug dump
-  const f = 102;  // run noop() through forEachIntersectingRect (for timing)
+  const e = 101;
+  const f = 102;
+  const g = 103;
+  const h = 104;
   const i = 105;  // toggle info click mode
+  const j = 106;
+  const k = 107;
   const l = 108;  // restart lazy crawl
   const m = 109;  // fix mouseout
+  const n = 110;
+  const o = 111;
+  const p = 112;  // debug tiles in pool order
+  const q = 113;
   const r = 114;  // reset visible rect
+  const s = 115;
   const t = 116;  // debug given list of tiles separated by space
+  const u = 117;
+  const v = 118;
+  const w = 119;
+  const x = 120;
+  const y = 121;
   const z = 122;  // set zoom level to 1
 
-  switch (e.charCode) {
+  if (window.tileMapMode) {
+    function putChar(ev, col, row) {
+      let tile = tc.getTile(col, row);
+      switch (ev.charCode) {
+      case h: // held tiles
+        dump(tile ? (tile.free ? '*' : 'h') : ' ');
+        break;
+      case d: // dirty tiles
+        dump(tile ? (tile.isDirty() ? 'd' : '*') : ' ');
+        break;
+      case o: // occupied tileholders
+        dump(tc.isOccupied(col, row) ? 'o' : ' ');
+        break;
+      }
+    }
+
+    let tc = Browser._browserView._tileManager._tileCache;
+    let col, row;
+
+    dump(endl);
+
+    dump('  ');
+    for (col = 0; col < tc.iBound; ++col)
+      dump(col % 10);
+
+    dump(endl);
+
+    for (row = 0; row < tc.jBound; ++row) {
+
+      dump((row % 10) + ' ');
+
+      for (col = 0; col < tc.iBound; ++col) {
+        putChar(ev, col, row);
+      }
+
+      dump(endl);
+    }
+    dump(endl + endl);
+
+    for (let ii = 0; ii < tc._tilePool.length; ++ii) {
+      let tile = tc._tilePool[ii];
+      putChar(ev, tile.i, tile.j);
+    }
+
+    dump(endl + endl);
+
+    window.tileMapMode = false;
+    return;
+  }
+
+  switch (ev.charCode) {
   case r:
     bv.setVisibleRect(Browser.getVisibleRect());
 
@@ -186,11 +252,8 @@ function onKeyPress(e) {
     bv._tileManager._tileCache.setCapacity(cap);
 
     break;
-  case f:
-    let noop = function noop() { for (let i = 0; i < 10; ++i); };
-    bv._tileManager._tileCache.forEachIntersectingRect(bv._tileManager._criticalRect,
-                                                       false, noop, window);
-
+  case b:
+    window.tileMapMode = true;
     break;
   case t:
     let ijstrs = window.prompt('row,col plz').split(' ');
@@ -222,6 +285,17 @@ function onKeyPress(e) {
   case m:
     bv.resumeRendering();
     break;
+  case p:
+    let tc = bv._tileManager._tileCache;
+    dump('************* TILE POOL ****************\n');
+    for (let ii = 0, len = tc._tilePool.length; ii < len; ++ii) {
+      if (window.infoMode)
+        debugTile(tc._tilePool[ii].i, tc._tilePool[ii].j);
+      else
+        dump(tc._tilePool[ii].i + ',' + tc._tilePool[ii].j + '\n');
+    }
+    dump('****************************************\n');
+    break;
   case z:
     bv.setZoomLevel(1.0);
     break;
@@ -229,6 +303,8 @@ function onKeyPress(e) {
     break;
   }
 }
+window.infoMode = false;
+window.tileMapMode = false;
 
 var ih = null;
 
@@ -774,8 +850,8 @@ var Browser = {
   },
 
   _createContentCustomClicker: function _createContentCustomClicker(browserView) {
-    // TODO don't generate this dynamically like this, but actualy make
-    // it a prototype somewhere and instantiate it and such...
+    // XXX we probably shouldn't generate this dynamically like this, but
+    // actually make it a prototype somewhere and instantiate it and such...
 
     function transformClientToBrowser(cX, cY) {
       return Browser.clientToBrowserView(cX, cY).map(browserView.viewportToBrowser);
@@ -785,23 +861,28 @@ var Browser = {
       [x, y] = transformClientToBrowser(browserView, x, y);
       let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
       return cwu.elementFromPoint(x, y,
-				  true,   /* ignore root scroll frame*/
-				  false); /* don't flush layout */
+		                              true,   // ignore root scroll frame
+				                          false); // don't flush layout
     }
 
     function dispatchContentClick(browser, x, y) {
-      dump('dispatching on the right browser? ' + (browser == Browser.selectedBrowser) + '\n');
       let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-      dump('     down on ' + cwu + '\n');
       cwu.sendMouseEvent("mousedown", x, y, 0, 1, 0, true);
-      dump('     up\n');
       cwu.sendMouseEvent("mouseup",   x, y, 0, 1, 0, true);
     }
 
     return {
-      zoomDir: 1,
-
       singleClick: function singleClick(cX, cY) {
+        if (window.infoMode) {
+          [cX, cY] = transformClientToBrowser(cX, cY);
+          let i = cX >> kTileExponentWidth;
+          let j = cY >> kTileExponentHeight;
+
+          debugTile(i, j);
+
+          return;
+        }
+
         let browser = browserView.getBrowser();
         if (browser) {
 	        dump('singleClick was invoked with ' + cX + ', ' + cY + '\n');
@@ -904,10 +985,10 @@ var Browser = {
     let container = document.getElementById("tile-container");
     let containerBCR = container.getBoundingClientRect();
 
-    let dx = Math.round(-containerBCR.left);
-    let dy = Math.round(-containerBCR.top);
+    let x0 = Math.round(containerBCR.left);
+    let y0 = Math.round(containerBCR.top);
 
-    return [x + dx, y + dy];
+    return [x - x0, y - y0];
   },
 
   /**
@@ -1780,7 +1861,6 @@ Tab.prototype = {
   },
 
   _createBrowser: function() {
-    dump('for the break\n');
     if (this._browser)
       throw "Browser already exists";
 
