@@ -301,11 +301,7 @@ findbar .findbar-closebutton {
 }
 
 /* Preferences window   ---------------------------------------------------- */
-/* XXX should be a richlistitem */
 .prefbox {
-  padding: 0.25mm 1.1mm;
-  border-bottom: 0.05mm solid rgb(207,207,207);
-  min-height: 7.2mm; /* row size */
   -moz-box-align: start;
   -moz-box-orient: vertical;
 }

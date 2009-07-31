@@ -257,10 +257,44 @@ toolbarbutton.page-button {
   margin-left: -40px; /* big number just to make sure the image overflows the edge */
 }
 
-/* "extras" panel UI   ----------------------------------------------------- */
+/* browser tools panel UI   ------------------------------------------------ */
+@media (orientation: landscape) {
+  #panel-container {
+    -moz-box-orient: horizontal;
+  }
+  
+  #panel-controls {
+    -moz-box-orient: vertical;
+    -moz-box-ordinal-group: 1;
+    -moz-box-pack: end;
+  }
+  
+  #tool-panel-close {
+    -moz-box-ordinal-group: 1000;
+  }
+}
+
+@media (orientation: portrait) {
+  #panel-container {
+    -moz-box-orient: vertical;
+  }
+  
+  #panel-controls {
+    -moz-box-orient: horizontal;
+    -moz-box-ordinal-group: 1000;
+    -moz-box-pack: start;
+    padding-top: 2.2mm; /* core spacing */
+  }
+  
+  #tool-panel-close {
+    -moz-box-ordinal-group: 1;
+  }
+}
+
 #panel-controls {
   /* match #browser-controls end padding */
-  padding: 0 2.2mm; /* core spacing */
+  padding-left: 2.2mm; /* core spacing */
+  padding-right: 2.2mm; /* core spacing */
   -moz-box-align: end;
 }
 
@@ -302,6 +336,51 @@ toolbarbutton.page-button {
 #tool-console:hover:active,
 #tool-console[checked="true"] {
   list-style-image: url("chrome://browser/skin/images/console-active-64.png");
+}
+
+/* downloads panel UI   ---------------------------------------------------- */
+@media (orientation: landscape) {
+  #downloads-subheader {
+    -moz-box-orient: horizontal;
+    -moz-box-align: center;
+  }
+}
+
+@media (orientation: portrait) {
+  #downloads-subheader {
+    -moz-box-orient: vertical;
+    -moz-box-pack: center;
+  }
+}
+
+/* addons panel UI   ------------------------------------------------------- */
+@media (orientation: landscape) {
+  #addons-repo {
+    -moz-box-orient: horizontal;
+    -moz-box-align: center;
+  }
+}
+
+@media (orientation: portrait) {
+  #addons-repo {
+    -moz-box-orient: vertical;
+    -moz-box-pack: center;
+  }
+}
+
+/* console panel UI   ------------------------------------------------------ */
+@media (orientation: landscape) {
+  #console-filter-warnings,
+  #console-filter-messages {
+    visibility: visible;
+  }
+}
+
+@media (orientation: portrait) {
+  #console-filter-warnings,
+  #console-filter-messages {
+    visibility: collapse;
+  }
 }
 
 /* URL List and autocomplete navigation popup ------------------------------ */

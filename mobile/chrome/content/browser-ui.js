@@ -250,10 +250,6 @@ var BrowserUI = {
     document.getElementById("panel-items").selectedPanel = document.getElementById(id);
   },
 
-  showPrefSection : function(id) {
-    document.getElementById("prefs-list").scrollBoxObject.scrollToElement(document.getElementById(id));
-  },
-
   get toolbarH() {
     if (!this._toolbarH) {
       let toolbar = document.getElementById("toolbar-main");
