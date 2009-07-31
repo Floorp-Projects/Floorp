@@ -744,20 +744,22 @@ MouseModule.prototype = {
 
     dragMove : function dragMove(dx, dy, scroller) {
       if (scroller.getPosition) {
-        let oldX = {}, oldY = {};
-        scroller.getPosition(oldX, oldY);
+        try {
 
-        scroller.scrollBy(dx, dy);
+          let oldX = {}, oldY = {};
+          scroller.getPosition(oldX, oldY);
 
-        let newX = {}, newY = {};
-        scroller.getPosition(newX, newY);
+          scroller.scrollBy(dx, dy);
 
-        return (newX.value != oldX.value) || (newY.value != oldY.value);
-      } else {
-        scroller.scrollBy(dx, dy);
-        /* always say we scrolled if we can't get the position */
-        return true;
+          let newX = {}, newY = {};
+          scroller.getPosition(newX, newY);
+
+          return (newX.value != oldX.value) || (newY.value != oldY.value);
+
+        } catch (e) { /* we have no time for whiny scrollers! */ }
       }
+
+      return false;
     }
   },
 
