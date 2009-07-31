@@ -217,7 +217,7 @@ Util.Rect.prototype = {
     let left = this.left;
     let right = this.right;
     let otherleft = other.left;
-    let otherright = otherright;
+    let otherright = other.right;
 
     let xok = (otherleft > left && otherleft < right) ||
       (otherright > left && otherright < right) ||
@@ -465,7 +465,7 @@ wsRect.prototype = {
     let left = this.left;
     let right = this.right;
     let otherleft = other.left;
-    let otherright = otherright;
+    let otherright = other.right;
 
     let xok = (otherleft > left && otherleft < right) ||
       (otherright > left && otherright < right) ||

@@ -175,6 +175,8 @@ TileManager.prototype = {
 
       if (!criticalRect || !tile.boundRect.intersects(criticalRect))
         this._removeTileSafe(tile);
+      else
+        criticalIsDirty = true;
 
       tile.markDirty();
 
@@ -182,9 +184,6 @@ TileManager.prototype = {
         crawler.enqueue(tile.i, tile.j);
 
       END_FOREACH_IN_RECT
-
-      if (criticalRect && rect.intersects(criticalRect))
-        criticalIsDirty = true;
     }
 
     if (criticalIsDirty && doCriticalRender)
@@ -309,7 +308,7 @@ TileManager.prototype = {
     }
   },
 
-  _removeTileSafe: function _removeTileSafe(tile) {
+  _removeTileSafe: function _removeTileSafe(tile) { debugger;
     if (tile.appended) {
       this._removeTile(tile);
       tile.appended = false;
