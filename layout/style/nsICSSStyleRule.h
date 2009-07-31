@@ -152,7 +152,7 @@ public:
 
   void Reset(void);
   void SetNameSpace(PRInt32 aNameSpace);
-  void SetTag(const nsString& aTag, PRBool aCaseSensitive);
+  void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
   void AddPseudoClass(nsIAtom* aPseudoClass);
@@ -162,14 +162,6 @@ public:
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
                     const nsString& aValue, PRBool aCaseSensitive);
   void SetOperator(PRUnichar aOperator);
-
-  inline PRBool HasTagSelector() const {
-    return !!mCasedTag;
-  }
-
-  inline PRBool IsPseudoElement() const {
-    return mLowercaseTag && !mCasedTag;
-  }
 
   // Calculate the specificity of this selector (not including its mNext!).
   PRInt32 CalcWeight() const;
@@ -196,12 +188,7 @@ private:
   PRInt32 CalcWeightWithoutNegations() const;
 
 public:
-  // For case-sensitive documents, mLowercaseTag is the same as mCasedTag,
-  // but in case-insensitive documents (HTML) mLowercaseTag is lowercase.
-  // Also, for pseudo-elements mCasedTag will be null but mLowercaseTag
-  // contains their name.
-  nsCOMPtr<nsIAtom> mLowercaseTag;
-  nsCOMPtr<nsIAtom> mCasedTag;
+  nsCOMPtr<nsIAtom> mTag;
   nsAtomList*     mIDList;
   nsAtomList*     mClassList;
   nsPseudoClassList* mPseudoClassList; // atom for the pseudo, string for
