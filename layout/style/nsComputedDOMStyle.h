@@ -131,6 +131,9 @@ private:
                              const PRInt32 aTable[],
                              nsIDOMCSSValue** aResult);
 
+  nsresult GetCSSGradientString(const nsStyleGradient* aGradient,
+                                nsAString& aString);
+
   /* Properties Queryable as CSSValues */
 
   nsresult GetAppearance(nsIDOMCSSValue** aValue);

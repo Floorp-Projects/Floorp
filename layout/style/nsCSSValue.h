@@ -49,6 +49,7 @@
 #include "nsAutoPtr.h"
 #include "nsCRTGlue.h"
 #include "nsStringBuffer.h"
+#include "nsTArray.h"
 
 class imgIRequest;
 class nsIDocument;
@@ -112,6 +113,7 @@ enum nsCSSUnit {
 
   eCSSUnit_URL          = 30,     // (nsCSSValue::URL*) value
   eCSSUnit_Image        = 31,     // (nsCSSValue::Image*) value
+  eCSSUnit_Gradient     = 32,     // (nsCSSValueGradient*) value
   eCSSUnit_Integer      = 50,     // (int) simple value
   eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
   eCSSUnit_EnumColor    = 80,     // (int) enumerated color (kColorKTable)
@@ -155,6 +157,8 @@ enum nsCSSUnit {
   eCSSUnit_Milliseconds = 3001     // (float) 1/1000 second
 };
 
+struct nsCSSValueGradient;
+
 class nsCSSValue {
 public:
   struct Array;
@@ -180,6 +184,7 @@ public:
   nsCSSValue(Array* aArray, nsCSSUnit aUnit) NS_HIDDEN;
   explicit nsCSSValue(URL* aValue) NS_HIDDEN;
   explicit nsCSSValue(Image* aValue) NS_HIDDEN;
+  explicit nsCSSValue(nsCSSValueGradient* aValue) NS_HIDDEN;
   nsCSSValue(const nsCSSValue& aCopy) NS_HIDDEN;
   ~nsCSSValue() { Reset(); }
 
@@ -266,6 +271,12 @@ public:
       mValue.mURL->mURI : mValue.mImage->mURI;
   }
 
+  nsCSSValueGradient* GetGradientValue() const
+  {
+    NS_ASSERTION(mUnit == eCSSUnit_Gradient, "not a gradient value");
+    return mValue.mGradient;
+  }
+
   URL* GetURLStructValue() const
   {
     // Not allowing this for Image values, because if the caller takes
@@ -307,6 +318,7 @@ public:
   NS_HIDDEN_(void)  SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetURLValue(nsCSSValue::URL* aURI);
   NS_HIDDEN_(void)  SetImageValue(nsCSSValue::Image* aImage);
+  NS_HIDDEN_(void)  SetGradientValue(nsCSSValueGradient* aGradient);
   NS_HIDDEN_(void)  SetAutoValue();
   NS_HIDDEN_(void)  SetInheritValue();
   NS_HIDDEN_(void)  SetInitialValue();
@@ -355,17 +367,24 @@ public:
         return;
       }
       ++mRefCnt;
+      NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::URL", sizeof(*this));
     }
     void Release() {
       if (mRefCnt == PR_UINT32_MAX) {
         NS_WARNING("refcount overflow, leaking nsCSSValue::URL");
         return;
       }
-      if (--mRefCnt == 0)
+      --mRefCnt;
+      NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::URL");
+      if (mRefCnt == 0)
         delete this;
     }
   protected:
     nsrefcnt mRefCnt;
+
+    // not to be implemented
+    URL(const URL& aOther);
+    URL& operator=(const URL& aOther);
   };
 
   struct Image : public URL {
@@ -381,13 +400,25 @@ public:
 
     nsCOMPtr<imgIRequest> mRequest; // null == image load blocked or somehow failed
 
-    // Override Release so we delete correctly without a virtual destructor
+    // Override AddRef and Release to not only log ourselves correctly, but
+    // also so that we delete correctly without a virtual destructor
+    void AddRef() {
+      if (mRefCnt == PR_UINT32_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::Image");
+        return;
+      }
+      ++mRefCnt;
+      NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Image", sizeof(*this));
+    }
+
     void Release() {
       if (mRefCnt == PR_UINT32_MAX) {
         NS_WARNING("refcount overflow, leaking nsCSSValue::Image");
         return;
       }
-      if (--mRefCnt == 0)
+      --mRefCnt;
+      NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Image");
+      if (mRefCnt == 0)
         delete this;
     }
   };
@@ -409,7 +440,103 @@ protected:
     Array*     mArray;
     URL*       mURL;
     Image*     mImage;
+    nsCSSValueGradient* mGradient;
   }         mValue;
+};
+
+struct nsCSSValueGradientStop {
+public:
+  nsCSSValueGradientStop(const nsCSSValue& aLocation, const nsCSSValue& aColor) NS_HIDDEN;
+  // needed to keep bloat logs happy when we use the nsTArray in nsCSSValueGradient
+  nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther) NS_HIDDEN;
+  ~nsCSSValueGradientStop() NS_HIDDEN;
+
+  nsCSSValue mLocation;
+  nsCSSValue mColor;
+
+  PRBool operator==(const nsCSSValueGradientStop& aOther) const
+  {
+    return (mLocation == aOther.mLocation &&
+            mColor == aOther.mColor);
+  }
+
+  PRBool operator!=(const nsCSSValueGradientStop& aOther) const
+  {
+    return !(*this == aOther);
+  }
+};
+
+struct nsCSSValueGradient {
+  nsCSSValueGradient(PRBool aIsRadial, const nsCSSValue& aStartX, const nsCSSValue& aStartY,
+           const nsCSSValue& aStartRadius, const nsCSSValue& aEndX, const nsCSSValue& aEndY,
+           const nsCSSValue& aEndRadius) NS_HIDDEN;
+
+  // true if gradient is radial, false if it is linear
+  PRPackedBool mIsRadial;
+  nsCSSValue mStartX;
+  nsCSSValue mStartY;
+
+  nsCSSValue mEndX;
+  nsCSSValue mEndY;
+
+  // Only meaningful if mIsRadial is true
+  nsCSSValue mStartRadius;
+  nsCSSValue mEndRadius;
+
+  nsTArray<nsCSSValueGradientStop> mStops;
+
+  PRBool operator==(const nsCSSValueGradient& aOther) const
+  {
+    if (mIsRadial != aOther.mIsRadial ||
+        mStartX != aOther.mStartX ||
+        mStartY != aOther.mStartY ||
+        mStartRadius != aOther.mStartRadius ||
+        mEndX != aOther.mEndX ||
+        mEndY != aOther.mEndY ||
+        mEndRadius != aOther.mEndRadius)
+      return PR_FALSE;
+
+    if (mStops.Length() != aOther.mStops.Length())
+      return PR_FALSE;
+
+    for (PRUint32 i = 0; i < mStops.Length(); i++) {
+      if (mStops[i] != aOther.mStops[i])
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+  }
+
+  PRBool operator!=(const nsCSSValueGradient& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  void AddRef() {
+    if (mRefCnt == PR_UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking nsCSSValue::Gradient");
+      return;
+    }
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Gradient", sizeof(*this));
+  }
+  void Release() {
+    if (mRefCnt == PR_UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking nsCSSValue::Gradient");
+      return;
+    }
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Gradient");
+    if (mRefCnt == 0)
+      delete this;
+  }
+
+private:
+  nsrefcnt mRefCnt;
+
+  // not to be implemented
+  nsCSSValueGradient(const nsCSSValueGradient& aOther);
+  nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther);
 };
 
 struct nsCSSValue::Array {
@@ -508,7 +635,9 @@ private:
 #undef CSSVALUE_LIST_FOR_EXTRA_VALUES
 
 private:
-  Array(const Array& aOther); // not to be implemented
+  // not to be implemented
+  Array(const Array& aOther);
+  Array& operator=(const Array& aOther);
 };
 
 #endif /* nsCSSValue_h___ */

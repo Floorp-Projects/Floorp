@@ -66,7 +66,6 @@
 #include "nsIAtom.h"
 #include "nsCOMArray.h"
 #include "nsColor.h"
-#include "nsStyleConsts.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
@@ -107,6 +106,7 @@
 #define VARIANT_NONE            0x040000  // O
 #define VARIANT_NORMAL          0x080000  // M
 #define VARIANT_SYSFONT         0x100000  // eCSSUnit_System_Font
+#define VARIANT_GRADIENT        0x200000  // eCSSUnit_Gradient
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -422,7 +422,7 @@ protected:
 
   PRBool ParseBackgroundList(nsCSSProperty aPropID); // a single value prop-id
   PRBool ParseBackgroundPosition();
-  PRBool ParseBoxPositionValues(nsCSSValuePair& aOut);
+  PRBool ParseBoxPositionValues(nsCSSValuePair& aOut, PRBool aAcceptsInherit);
   PRBool ParseBackgroundSize();
   PRBool ParseBackgroundSizeValues(nsCSSValuePair& aOut);
   PRBool ParseBorderColor();
@@ -510,6 +510,8 @@ protected:
   PRBool ParseURL(nsCSSValue& aValue);
   PRBool TranslateDimension(nsCSSValue& aValue, PRInt32 aVariantMask,
                             float aNumber, const nsString& aUnit);
+  PRBool ParseGradientStop(nsCSSValueGradient* aGradient);
+  PRBool ParseGradient(nsCSSValue& aValue, PRBool aIsRadial);
 
   void SetParsingCompoundProperty(PRBool aBool) {
     NS_ASSERTION(aBool == PR_TRUE || aBool == PR_FALSE, "bad PRBool value");
@@ -4513,6 +4515,15 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     }
     return PR_FALSE;
   }
+  if ((aVariantMask & VARIANT_GRADIENT) != 0 &&
+      eCSSToken_Function == tk->mType) {
+    // a generated gradient
+    if (tk->mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient"))
+      return ParseGradient(aValue, PR_FALSE);
+
+    if (tk->mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient"))
+      return ParseGradient(aValue, PR_TRUE);
+  }
   if ((aVariantMask & VARIANT_COLOR) != 0) {
     if ((mNavQuirkMode && !IsParsingCompoundProperty()) || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
         (eCSSToken_ID == tk->mType) ||
@@ -4759,6 +4770,181 @@ CSSParserImpl::ParseURL(nsCSSValue& aValue)
     return PR_FALSE;
   }
   aValue.SetURLValue(urlVal);
+  return PR_TRUE;
+}
+
+PRBool
+CSSParserImpl::ParseGradientStop(nsCSSValueGradient* aGradient)
+{
+  if (!GetToken(PR_TRUE))
+    return PR_FALSE;
+
+  if (eCSSToken_Function != mToken.mType) {
+    UngetToken();
+    return PR_FALSE;
+  }
+
+  if (mToken.mIdent.LowerCaseEqualsLiteral("from")) {
+    // Start of the gradient
+    if (!ExpectSymbol('(', PR_FALSE)) {
+      NS_ABORT_IF_FALSE(PR_FALSE, "function token without (");
+    }
+
+    nsCSSValue fromFloat(0.0f, eCSSUnit_Percent);
+    nsCSSValue fromColor;
+    if (!ParseVariant(fromColor, VARIANT_COLOR, nsnull)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    if (!ExpectSymbol(')', PR_TRUE)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    aGradient->mStops.AppendElement(nsCSSValueGradientStop(fromFloat, fromColor));
+    return PR_TRUE;
+  }
+
+  if (mToken.mIdent.LowerCaseEqualsLiteral("to")) {
+    // End of the gradient
+    if (!ExpectSymbol('(', PR_FALSE)) {
+      NS_ABORT_IF_FALSE(PR_FALSE, "function token without (");
+    }
+
+    nsCSSValue toFloat(1.0f, eCSSUnit_Percent);
+    nsCSSValue toColor;
+    if (!ParseVariant(toColor, VARIANT_COLOR, nsnull)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    if (!ExpectSymbol(')', PR_TRUE)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    aGradient->mStops.AppendElement(nsCSSValueGradientStop(toFloat, toColor));
+    return PR_TRUE;
+  }
+
+  if (mToken.mIdent.LowerCaseEqualsLiteral("color-stop")) {
+    // Some kind of gradient stop, somewhere...
+    if (!ExpectSymbol('(', PR_FALSE)) {
+      NS_ABORT_IF_FALSE(PR_FALSE, "function token without (");
+    }
+
+    nsCSSValue stopFloat;
+    if (!ParseVariant(stopFloat, VARIANT_PERCENT | VARIANT_NUMBER, nsnull)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    // Check for a sane position value, and clamp it if it isn't
+    if (stopFloat.GetUnit() == eCSSUnit_Percent) {
+      if (stopFloat.GetPercentValue() > 1.0)
+        stopFloat.SetPercentValue(1.0);
+      else if (stopFloat.GetPercentValue() < 0.0)
+        stopFloat.SetPercentValue(0.0);
+    } else {
+      if (stopFloat.GetFloatValue() > 1.0)
+        stopFloat.SetFloatValue(1.0, eCSSUnit_Number);
+      else if (stopFloat.GetFloatValue() < 0.0)
+        stopFloat.SetFloatValue(0.0, eCSSUnit_Number);
+    }
+
+    if (!ExpectSymbol(',', PR_TRUE)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    nsCSSValue stopColor;
+    if (!ParseVariant(stopColor, VARIANT_COLOR, nsnull)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    if (!ExpectSymbol(')', PR_TRUE)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    aGradient->mStops.AppendElement(nsCSSValueGradientStop(stopFloat, stopColor));
+    return PR_TRUE;
+  }
+
+  // No idea what this is
+  return PR_FALSE;
+}
+
+PRBool
+CSSParserImpl::ParseGradient(nsCSSValue& aValue,
+                             PRBool aIsRadial)
+{
+  if (!ExpectSymbol('(', PR_FALSE)) {
+    NS_ABORT_IF_FALSE(PR_FALSE, "function token without (");
+  }
+
+  nsCSSValuePair startPos;
+  if (!ParseBoxPositionValues(startPos, PR_FALSE))
+    return PR_FALSE;
+
+  if (!ExpectSymbol(',', PR_TRUE)) {
+    SkipUntil(')');
+    return PR_FALSE;
+  }
+
+  nsCSSValue startRadius;
+  if (aIsRadial) {
+    if (!ParseNonNegativeVariant(startRadius, VARIANT_LENGTH, nsnull)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    if (!ExpectSymbol(',', PR_TRUE)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+  }
+
+  nsCSSValuePair endPos;
+  if (!ParseBoxPositionValues(endPos, PR_FALSE)) {
+    SkipUntil(')');
+    return PR_FALSE;
+  }
+
+  nsCSSValue endRadius;
+  if (aIsRadial) {
+    if (!ExpectSymbol(',', PR_TRUE)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+
+    if (!ParseNonNegativeVariant(endRadius, VARIANT_LENGTH, nsnull)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+  }
+
+  nsRefPtr<nsCSSValueGradient> cssGradient =
+    new nsCSSValueGradient(aIsRadial, startPos.mXValue, startPos.mYValue,
+                           startRadius, endPos.mXValue, endPos.mYValue,
+                           endRadius);
+
+  // Do optional stop functions
+  while (ExpectSymbol(',', PR_TRUE)) {
+    if (!ParseGradientStop(cssGradient)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+  }
+
+  if (!ExpectSymbol(')', PR_TRUE)) {
+    SkipUntil(')');
+    return PR_FALSE;
+  }
+
+  aValue.SetGradientValue(cssGradient);
   return PR_TRUE;
 }
 
@@ -5421,7 +5607,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_background_image:
     // Used only internally.
-    return ParseVariant(aValue, VARIANT_HUO, nsnull);
+    return ParseVariant(aValue, VARIANT_HUO | VARIANT_GRADIENT, nsnull);
   case eCSSProperty__moz_background_inline_policy:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundInlinePolicyKTable);
@@ -6155,7 +6341,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
         if (havePosition)
           return PR_FALSE;
         havePosition = PR_TRUE;
-        if (!ParseBoxPositionValues(aItem.mPosition)) {
+        if (!ParseBoxPositionValues(aItem.mPosition, PR_FALSE)) {
           return PR_FALSE;
         }
 #if 0
@@ -6202,7 +6388,9 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
         aItem.mLastItem = PR_TRUE;
       }
     } else if (eCSSToken_Function == tt &&
-               mToken.mIdent.LowerCaseEqualsLiteral("url")) {
+               (mToken.mIdent.LowerCaseEqualsLiteral("url") ||
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient"))) {
       if (haveImage)
         return PR_FALSE;
       haveImage = PR_TRUE;
@@ -6214,7 +6402,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
       if (havePosition)
         return PR_FALSE;
       havePosition = PR_TRUE;
-      if (!ParseBoxPositionValues(aItem.mPosition)) {
+      if (!ParseBoxPositionValues(aItem.mPosition, PR_FALSE)) {
         return PR_FALSE;
       }
     } else {
@@ -6285,15 +6473,11 @@ CSSParserImpl::ParseBackgroundPosition()
   nsCSSValuePair valuePair;
   nsCSSValuePairList *head = nsnull, **tail = &head;
   for (;;) {
-    if (!ParseBoxPositionValues(valuePair)) {
+    if (!ParseBoxPositionValues(valuePair, !head)) {
       break;
     }
     PRBool inheritOrInitial = valuePair.mXValue.GetUnit() == eCSSUnit_Inherit ||
                               valuePair.mXValue.GetUnit() == eCSSUnit_Initial;
-    if (inheritOrInitial && head) {
-      // inherit and initial are only allowed on their own
-      break;
-    }
     nsCSSValuePairList *item = new nsCSSValuePairList;
     if (!item) {
       mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
@@ -6323,14 +6507,17 @@ CSSParserImpl::ParseBackgroundPosition()
  * like "top," "left center," etc.
  *
  * @param aOut The nsCSSValuePair in which to place the result.
+ * @param aAcceptsInherit If true, 'inherit' and 'initial' are legal values
  * @return Whether or not the operation succeeded.
  */
-PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut)
+PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
+                                             PRBool aAcceptsInherit)
 {
   // First try a percentage or a length value
   nsCSSValue &xValue = aOut.mXValue,
              &yValue = aOut.mYValue;
-  if (ParseVariant(xValue, VARIANT_HLP, nsnull)) {
+  PRInt32 variantMask = aAcceptsInherit ? VARIANT_HLP : VARIANT_LP;
+  if (ParseVariant(xValue, variantMask, nsnull)) {
     if (eCSSUnit_Inherit == xValue.GetUnit() ||
         eCSSUnit_Initial == xValue.GetUnit()) {  // both are inherited or both are set to initial
       yValue = xValue;
@@ -7585,7 +7772,7 @@ PRBool CSSParserImpl::ParseMozTransform()
 PRBool CSSParserImpl::ParseMozTransformOrigin()
 {
   /* Read in a box position, fail if we can't. */
-  if (!ParseBoxPositionValues(mTempData.mDisplay.mTransformOrigin) ||
+  if (!ParseBoxPositionValues(mTempData.mDisplay.mTransformOrigin, PR_TRUE) ||
       !ExpectEndProperty())
     return PR_FALSE;
 
