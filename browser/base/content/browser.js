@@ -6693,6 +6693,12 @@ let DownloadMonitorPanel = {
   _lastTime: Infinity,
   _listening: false,
 
+  get DownloadUtils() {
+    delete this.DownloadUtils;
+    Cu.import("resource://gre/modules/DownloadUtils.jsm", this);
+    return this.DownloadUtils;
+  },
+
   //////////////////////////////////////////////////////////////////////////////
   //// DownloadMonitorPanel Public Methods
 
@@ -6700,9 +6706,6 @@ let DownloadMonitorPanel = {
    * Initialize the status panel and member variables
    */
   init: function DMP_init() {
-    // Load the modules to help display strings
-    Cu.import("resource://gre/modules/DownloadUtils.jsm");
-
     // Initialize "private" member variables
     this._panel = document.getElementById("download-monitor");
 
@@ -6754,7 +6757,8 @@ let DownloadMonitorPanel = {
 
     // Get the remaining time string and last sec for time estimation
     let timeLeft;
-    [timeLeft, this._lastTime] = DownloadUtils.getTimeLeft(maxTime, this._lastTime);
+    [timeLeft, this._lastTime] =
+      this.DownloadUtils.getTimeLeft(maxTime, this._lastTime);
 
     // Figure out how many downloads are currently downloading
     let numDls = numActive - numPaused;
