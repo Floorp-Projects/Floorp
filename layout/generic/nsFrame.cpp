@@ -532,8 +532,11 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     const nsStyleBackground *oldBG = aOldStyleContext->GetStyleBackground();
     const nsStyleBackground *newBG = GetStyleBackground();
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, oldBG) {
-      if (i >= newBG->mImageCount ||
-          oldBG->mLayers[i].mImage != newBG->mLayers[i].mImage) {
+      imgIRequest *oldImage = oldBG->mLayers[i].mImage;
+      imgIRequest *newImage = i < newBG->mImageCount
+                                ? newBG->mLayers[i].mImage.get()
+                                : nsnull;
+      if (oldImage && !EqualImages(oldImage, newImage)) {
         // stop the image loading for the frame, the image has changed
         PresContext()->SetImageLoaders(this,
           nsPresContext::BACKGROUND_IMAGE, nsnull);
@@ -4089,7 +4092,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   const nsStyleBackground *bg = GetStyleBackground();
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     const nsStyleBackground::Layer &layer = bg->mLayers[i];
-    if (layer.mImage.GetType() != eBackgroundImage_Null &&
+    if (layer.mImage &&
         (layer.mPosition.mXIsPercent || layer.mPosition.mYIsPercent)) {
       Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;

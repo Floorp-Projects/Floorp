@@ -41,9 +41,6 @@ include css-import/reftest.list
 # css character encoding tests
 include css-charset/reftest.list
 
-# css gradients
-include css-gradients/reftest.list
-
 # css media queries (tests for print mode)
 include css-mediaqueries/reftest.list
 

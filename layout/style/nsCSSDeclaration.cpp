@@ -413,49 +413,6 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     tmpStr.AppendFloat(aValue.GetFloatValue());
     aResult.Append(tmpStr);
   }
-  else if (eCSSUnit_Gradient == unit) {
-    nsCSSValueGradient* gradient = aValue.GetGradientValue();
-
-    if (gradient->mIsRadial)
-      aResult.AppendLiteral("-moz-radial-gradient(");
-    else
-      aResult.AppendLiteral("-moz-linear-gradient(");
-
-    AppendCSSValueToString(eCSSProperty_background_position,
-                           gradient->mStartX, aResult);
-    aResult.AppendLiteral(" ");
-
-    AppendCSSValueToString(eCSSProperty_background_position,
-                           gradient->mStartY, aResult);
-    aResult.AppendLiteral(", ");
-
-    if (gradient->mIsRadial) {
-      AppendCSSValueToString(aProperty, gradient->mStartRadius, aResult);
-      aResult.AppendLiteral(", ");
-    }
-
-    AppendCSSValueToString(eCSSProperty_background_position,
-                           gradient->mEndX, aResult);
-    aResult.AppendLiteral(" ");
-
-    AppendCSSValueToString(eCSSProperty_background_position,
-                           gradient->mEndY, aResult);
-
-    if (gradient->mIsRadial) {
-      aResult.AppendLiteral(", ");
-      AppendCSSValueToString(aProperty, gradient->mEndRadius, aResult);
-    }
-
-    for (PRUint32 i = 0; i < gradient->mStops.Length(); i++) {
-      aResult.AppendLiteral(", color-stop(");
-      AppendCSSValueToString(aProperty, gradient->mStops[i].mLocation, aResult);
-      aResult.AppendLiteral(", ");
-      AppendCSSValueToString(aProperty, gradient->mStops[i].mColor, aResult);
-      aResult.AppendLiteral(")");
-    }
-
-    aResult.AppendLiteral(")");
-  }
 
   switch (unit) {
     case eCSSUnit_Null:         break;
@@ -489,7 +446,6 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Color:        break;
     case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
     case eCSSUnit_Number:       break;
-    case eCSSUnit_Gradient:     break;
 
     case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
     case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
