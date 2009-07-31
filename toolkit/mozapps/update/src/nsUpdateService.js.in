@@ -1647,6 +1647,8 @@ UpdateService.prototype = {
     if (gCanUpdate !== null)
       return gCanUpdate;
 
+// On Windows CE skip the write access checks and assume we have write access
+#ifndef WINCE
     try {
       var appDirFile = getUpdateFile([FILE_PERMS_TEST]);
       LOG("UpdateService", "canUpdate - testing " + appDirFile.path);
@@ -1737,13 +1739,15 @@ UpdateService.prototype = {
           actualAppDirFile.remove(false);
         }
       }
-#endif
+#endif //XP_WIN
     }
     catch (e) {
        LOG("UpdateService", "canUpdate - unable to update. Exception: " + e);
       // No write privileges to install directory
       return gCanUpdate = false;
     }
+#endif //WINCE
+
     // If the administrator has locked the app update functionality
     // OFF - this is not just a user setting, so disable the manual
     // UI too.
