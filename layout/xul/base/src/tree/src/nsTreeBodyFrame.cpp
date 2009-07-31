@@ -4267,23 +4267,26 @@ nsTreeBodyFrame::GetPseudoStyleContext(nsIAtom* aPseudoElement)
 NS_IMETHODIMP
 nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult)
 {
-  NS_ABORT_IF_FALSE(aSelector->mLowercaseTag == aTag,
-                   "should not have been called");
-  // Iterate the pseudoclass list.  For each item in the list, see if
-  // it is contained in our scratch array.  If we have a miss, then
-  // we aren't a match.  If all items in the pseudoclass list are
-  // present in the scratch array, then we have a match.
-  nsPseudoClassList* curr = aSelector->mPseudoClassList;
-  while (curr) {
-    PRInt32 index;
-    mScratchArray->GetIndexOf(curr->mAtom, &index);
-    if (index == -1) {
-      *aResult = PR_FALSE;
-      return NS_OK;
+  if (aSelector->mTag == aTag) {
+    // Iterate the pseudoclass list.  For each item in the list, see if
+    // it is contained in our scratch array.  If we have a miss, then
+    // we aren't a match.  If all items in the pseudoclass list are
+    // present in the scratch array, then we have a match.
+    nsPseudoClassList* curr = aSelector->mPseudoClassList;
+    while (curr) {
+      PRInt32 index;
+      mScratchArray->GetIndexOf(curr->mAtom, &index);
+      if (index == -1) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+      }
+      curr = curr->mNext;
     }
-    curr = curr->mNext;
+    *aResult = PR_TRUE;
   }
-  *aResult = PR_TRUE;
+  else 
+    *aResult = PR_FALSE;
+
   return NS_OK;
 }
 
