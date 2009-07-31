@@ -517,7 +517,7 @@
                        type="checkbox"
                        label="&fullScreenCmd.label;"
                        tooltiptext="&fullScreenButton.tooltip;"/>
-#ifndef XP_MACOSX
+#endif
     </toolbarpalette>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
