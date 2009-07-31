@@ -1520,14 +1520,14 @@ UpdateService.prototype = {
                getService(Ci.nsIExtensionManager);
     // Get the add-ons that are incompatible with the update's application
     // version and toolkit version.
-    var currentAddons = em.getIncompatibleItemList("", this._update.extensionVersion,
+    var currentAddons = em.getIncompatibleItemList(this._update.extensionVersion,
                                                    this._update.platformVersion,
                                                    Ci.nsIUpdateItem.TYPE_ANY,
                                                    false, { });
     if (currentAddons.length > 0) {
       // Get the add-ons that are incompatible with the current application
       // version and toolkit version.
-      var previousAddons = em.getIncompatibleItemList("", null, null,
+      var previousAddons = em.getIncompatibleItemList(null, null,
                                                       Ci.nsIUpdateItem.TYPE_ANY,
                                                       false, { });
       // Don't include add-ons that are already incompatible with the current
