@@ -46,6 +46,7 @@
 #   Thomas K. Dyas <tdyas@zecador.org>
 #   Edward Lee <edward.lee@engineering.uiuc.edu>
 #   Paul O’Shannessy <paul@oshannessy.com>
+#   Nils Maier <maierman@web.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -5653,11 +5654,7 @@ function WindowIsClosing()
 {
   var cn = gBrowser.tabContainer.childNodes;
   var numtabs = cn.length;
-  var reallyClose = 
-    closeWindow(false,
-                function () {
-                  return gBrowser.warnAboutClosingTabs(true);
-                });
+  var reallyClose = closeWindow(false, warnAboutClosingWindow);
 
   if (!reallyClose)
     return false;
@@ -5670,6 +5667,49 @@ function WindowIsClosing()
   }
 
   return reallyClose;
+}
+
+/**
+ * Checks if this is the last full *browser* window around. If it is, this will
+ * be communicated like quitting. Otherwise, we warn about closing multiple tabs.
+ * @returns true if closing can proceed, false if it got cancelled.
+ */
+function warnAboutClosingWindow() {
+  // Popups aren't considered full browser windows.
+  if (!toolbar.visible)
+    return gBrowser.warnAboutClosingTabs(true);
+
+  // Figure out if there's at least one other browser window around.
+  let foundOtherBrowserWindow = false;
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+  let e = wm.getEnumerator("navigator:browser");
+  while (e.hasMoreElements() && !foundOtherBrowserWindow) {
+    let win = e.getNext();
+    if (win != window && win.toolbar.visible)
+      foundOtherBrowserWindow = true;
+  }
+  if (foundOtherBrowserWindow)
+    return gBrowser.warnAboutClosingTabs(true);
+
+  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+
+  let closingCanceled = Cc["@mozilla.org/supports-PRBool;1"].
+                        createInstance(Ci.nsISupportsPRBool);
+  os.notifyObservers(closingCanceled,
+                                   "browser-lastwindow-close-requested", null);
+  if (closingCanceled.data)
+    return false;
+
+  os.notifyObservers(null, "browser-lastwindow-close-granted", null);
+
+#ifdef XP_MACOSX
+  // OS X doesn't quit the application when the last window is closed, but keeps
+  // the session alive. Hence don't prompt users to save tabs, but warn about
+  // closing multiple tabs.
+  return gBrowser.warnAboutClosingTabs(true);
+#else
+  return true;
+#endif
 }
 
 var MailIntegration = {
