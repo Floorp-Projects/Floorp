@@ -1385,6 +1385,12 @@ sun4u | sparc*)
 x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
+
+arm)
+    if test "$OS_TARGET" == "WINCE"; then
+        CPU_ARCH="$OS_TEST"
+    fi
+    ;;
 esac
 
 if test -z "$OS_TARGET"; then
@@ -2008,7 +2014,7 @@ case "$target" in
     ;;
 
 *-wince*)
-
+    TARGET_COMPILER_ABI=msvc
     MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
     AR_LIST="$AR -list"
     AR_EXTRACT="$AR -extract"
