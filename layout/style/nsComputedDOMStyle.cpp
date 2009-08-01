@@ -1250,6 +1250,97 @@ nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
   return CallQueryInterface(val, aValue);
 }
 
+static void
+AppendCSSGradientLength(const nsStyleCoord& aValue,
+                        nsROCSSPrimitiveValue* aPrimitive,
+                        nsAString& aString)
+{
+  nsAutoString tokenString;
+  if (aValue.GetUnit() == eStyleUnit_Coord)
+    aPrimitive->SetAppUnits(aValue.GetCoordValue());
+  else
+    aPrimitive->SetPercent(aValue.GetPercentValue());
+  aPrimitive->GetCssText(tokenString);
+  aString.Append(tokenString);
+}
+
+static void
+AppendCSSGradientRadius(const nscoord aValue,
+                        nsROCSSPrimitiveValue* aPrimitive,
+                        nsAString& aString)
+{
+  nsAutoString tokenString;
+  aPrimitive->SetAppUnits(aValue);
+  aPrimitive->GetCssText(tokenString);
+  aString.Append(tokenString);
+}
+
+nsresult
+nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
+                                         nsAString& aString)
+{
+  if (aGradient->mIsRadial)
+    aString.AssignLiteral("-moz-radial-gradient(");
+  else
+    aString.AssignLiteral("-moz-linear-gradient(");
+
+  nsROCSSPrimitiveValue *tmpVal = GetROCSSPrimitiveValue();
+  if (!tmpVal)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // starting X position
+  AppendCSSGradientLength(aGradient->mStartX, tmpVal, aString);
+  aString.AppendLiteral(" ");
+
+  // starting Y position
+  AppendCSSGradientLength(aGradient->mStartY, tmpVal, aString);
+  aString.AppendLiteral(", ");
+
+  // starting radius
+  if (aGradient->mIsRadial) {
+    AppendCSSGradientRadius(aGradient->mStartRadius, tmpVal, aString);
+    aString.AppendLiteral(", ");
+  }
+
+  // ending X position
+  AppendCSSGradientLength(aGradient->mEndX, tmpVal, aString);
+  aString.AppendLiteral(" ");
+
+  // ending Y position
+  AppendCSSGradientLength(aGradient->mEndY, tmpVal, aString);
+
+  // ending radius
+  if (aGradient->mIsRadial) {
+    aString.AppendLiteral(", ");
+    AppendCSSGradientRadius(aGradient->mStartRadius, tmpVal, aString);
+  }
+
+  // color stops
+  for (PRUint32 i = 0; i < aGradient->mStops.Length(); ++i) {
+    nsAutoString tokenString;
+    aString.AppendLiteral(", color-stop(");
+
+    tmpVal->SetPercent(aGradient->mStops[i].mPosition);
+    tmpVal->GetCssText(tokenString);
+    aString.Append(tokenString);
+    aString.AppendLiteral(", ");
+
+    nsresult rv = SetToRGBAColor(tmpVal, aGradient->mStops[i].mColor);
+    if (NS_FAILED(rv)) {
+      delete tmpVal;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    tmpVal->GetCssText(tokenString);
+    aString.Append(tokenString);
+    aString.AppendLiteral(")");
+  }
+
+  delete tmpVal;
+  aString.AppendLiteral(")");
+  return NS_OK;
+}
+
 nsresult
 nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
 {
@@ -1266,13 +1357,27 @@ nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    imgIRequest *image = bg->mLayers[i].mImage;
-    if (!image) {
-      val->SetIdent(eCSSKeyword_none);
+    const nsStyleBackground::Image &image = bg->mLayers[i].mImage;
+    if (image.GetType() == eBackgroundImage_Image) {
+      imgIRequest *req = image.GetImageData();
+      if (!req) {
+        val->SetIdent(eCSSKeyword_none);
+      } else {
+        nsCOMPtr<nsIURI> uri;
+        req->GetURI(getter_AddRefs(uri));
+        val->SetURI(uri);
+      }
+    } else if (image.GetType() == eBackgroundImage_Gradient) {
+      nsAutoString gradientString;
+      nsresult rv = GetCSSGradientString(image.GetGradientData(),
+                                         gradientString);
+      if (NS_FAILED(rv)) {
+        delete valueList;
+        return rv;
+      }
+      val->SetString(gradientString);
     } else {
-      nsCOMPtr<nsIURI> uri;
-      image->GetURI(getter_AddRefs(uri));
-      val->SetURI(uri);
+      val->SetIdent(eCSSKeyword_none);
     }
   }
 
