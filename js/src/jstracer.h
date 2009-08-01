@@ -627,9 +627,19 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK jsval& varval(unsigned n) const;
     JS_REQUIRES_STACK jsval& stackval(int n) const;
 
+    struct NameResult {
+        // |tracked| is true iff the result of the name lookup is a variable that
+        // is already in the tracker. The rest of the fields are set only if
+        // |tracked| is false.
+        bool             tracked;
+        JSObject         *obj;           // Call object where name was found
+        jsint            scopeIndex;     // scope chain links from callee to obj
+        JSScopeProperty  *sprop;         // sprop name was resolved to
+    };
+
     JS_REQUIRES_STACK nanojit::LIns* scopeChain() const;
     JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
-    JS_REQUIRES_STACK JSRecordingStatus scopeChainProp(JSObject* obj, jsval*& vp, nanojit::LIns*& ins, bool& tracked);
+    JS_REQUIRES_STACK JSRecordingStatus scopeChainProp(JSObject* obj, jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
 
     JS_REQUIRES_STACK nanojit::LIns* arg(unsigned n);
     JS_REQUIRES_STACK void arg(unsigned n, nanojit::LIns* i);
@@ -719,7 +729,7 @@ class TraceRecorder : public avmplus::GCObject {
 
     nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
 
-    JS_REQUIRES_STACK JSRecordingStatus name(jsval*& vp, nanojit::LIns*& ins, bool& tracked);
+    JS_REQUIRES_STACK JSRecordingStatus name(jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
     JS_REQUIRES_STACK JSRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot,
                                              nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK JSRecordingStatus denseArrayElement(jsval& oval, jsval& idx, jsval*& vp,
@@ -735,6 +745,9 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus setProp(jsval &l, JSPropCacheEntry* entry,
                                                 JSScopeProperty* sprop,
                                                 jsval &v, nanojit::LIns*& v_ins);
+    JS_REQUIRES_STACK JSRecordingStatus setCallProp(nanojit::LIns *callobj_ins,
+                                                    JSScopeProperty *sprop, nanojit::LIns *v_ins,
+                                                    jsval v);
 
     JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, VMSideExit* exit);
