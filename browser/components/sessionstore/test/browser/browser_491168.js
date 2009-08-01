@@ -61,13 +61,13 @@ function test() {
     ss.setTabState(tab, JSON.stringify(tabState));
 
     tab.addEventListener("SSTabRestored", function() {
-      tab.removeEventListener("SSTabRestored", arguments.callee, true);
+      tab.removeEventListener("SSTabRestored", arguments.callee, false);
       is(window.content.document.referrer, REFERRER2, "document.referrer matches referrer set via setTabState.");
 
       gBrowser.removeTab(tab);
       let newTab = ss.undoCloseTab(window, 0);
       newTab.addEventListener("SSTabRestored", function() {
-        newTab.removeEventListener("SSTabRestored", arguments.callee, true);
+        newTab.removeEventListener("SSTabRestored", arguments.callee, false);
 
         is(window.content.document.referrer, REFERRER2, "document.referrer is still correct after closing and reopening the tab.");
         gBrowser.removeTab(newTab);
