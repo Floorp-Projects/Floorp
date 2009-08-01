@@ -11330,7 +11330,7 @@ TraceRecorder::record_JSOP_BINDNAME()
          * don't need to do that on trace because we will leave trace if the
          * scope ever changes, so the result of the lookup cannot change.
          */
-        JS_ASSERT(obj == cx->fp->scopeChain);
+        JS_ASSERT(obj == cx->fp->scopeChain || obj == OBJ_GET_PARENT(cx, cx->fp->scopeChain));
         stack(0, stobj_get_parent(get(&cx->fp->argv[-2])));
         return JSRS_CONTINUE;
     }
