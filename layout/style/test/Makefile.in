@@ -124,6 +124,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_property_database.html \
 		test_priority_preservation.html \
 		test_property_syntax_errors.html \
+		test_rem_unit.html \
 		test_selectors.html \
 		test_selectors_on_anonymous_content.html \
 		test_shorthand_property_getters.html \
