@@ -50,6 +50,7 @@
 #include "nsIStyleRule.h"
 #include "pldhash.h"
 #include "nsCOMPtr.h"
+#include "nsColor.h"
 class nsMappedAttributes;
 
 class nsHTMLStyleSheet : public nsIStyleSheet, public nsIStyleRuleProcessor {

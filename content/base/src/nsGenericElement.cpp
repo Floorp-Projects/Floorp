@@ -134,6 +134,7 @@
 #include "nsXBLInsertionPoint.h"
 #include "nsICSSStyleRule.h" /* For nsCSSSelectorList */
 #include "nsCSSRuleProcessor.h"
+#include "nsRuleProcessorData.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"

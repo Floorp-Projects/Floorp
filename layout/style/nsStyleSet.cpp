@@ -57,6 +57,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
+#include "nsRuleProcessorData.h"
 
 NS_IMPL_ISUPPORTS1(nsEmptyStyleRule, nsIStyleRule)
 

@@ -46,6 +46,7 @@
  */
 
 #include "nsCSSRuleProcessor.h"
+#include "nsRuleProcessorData.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #define NS_RULEHASH_ARENA_BLOCK_SIZE (256)
