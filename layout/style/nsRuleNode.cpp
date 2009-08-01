@@ -480,6 +480,81 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
   return result;
 }
 
+static void SetGradientCoord(const nsCSSValue& aValue, nsPresContext* aPresContext,
+                             nsStyleContext* aContext, nsStyleCoord& aResult,
+                             PRBool& aCanStoreInRuleTree)
+{
+  // If coordinate is an enumerated type, handle it explicitly.
+  if (aValue.GetUnit() == eCSSUnit_Enumerated) {
+    aResult.SetPercentValue(GetFloatFromBoxPosition(aValue.GetIntValue()));
+    return;
+  }
+
+  // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
+  PRBool result = SetCoord(aValue, aResult, nsStyleCoord(), SETCOORD_LP,
+                           aContext, aPresContext, aCanStoreInRuleTree);
+  NS_ABORT_IF_FALSE(result, "Incorrect data structure created by parsing code");
+}
+
+static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
+                        nsStyleContext* aContext, nsStyleGradient& aResult,
+                        PRBool& aCanStoreInRuleTree)
+{
+  NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Gradient,
+                    "The given data is not a gradient");
+
+  nsCSSValueGradient* gradient = aValue.GetGradientValue();
+  aResult.mIsRadial = gradient->mIsRadial;
+
+  // start values
+  SetGradientCoord(gradient->mStartX, aPresContext, aContext,
+                   aResult.mStartX, aCanStoreInRuleTree);
+
+  SetGradientCoord(gradient->mStartY, aPresContext, aContext,
+                   aResult.mStartY, aCanStoreInRuleTree);
+
+  if (gradient->mIsRadial) {
+    NS_ABORT_IF_FALSE(gradient->mStartRadius.IsLengthUnit(),
+                      "Incorrect data structure created by parsing code");
+    aResult.mStartRadius = CalcLength(gradient->mStartRadius, aContext,
+                                      aPresContext, aCanStoreInRuleTree);
+  }
+
+  // end values
+  SetGradientCoord(gradient->mEndX, aPresContext, aContext,
+                   aResult.mEndX, aCanStoreInRuleTree);
+
+  SetGradientCoord(gradient->mEndY, aPresContext, aContext,
+                   aResult.mEndY, aCanStoreInRuleTree);
+
+  if (gradient->mIsRadial) {
+    NS_ABORT_IF_FALSE(gradient->mEndRadius.IsLengthUnit(),
+                      "Incorrect data structure created by parsing code");
+    aResult.mEndRadius = CalcLength(gradient->mEndRadius, aContext,
+                                    aPresContext, aCanStoreInRuleTree);
+  }
+
+  // stops
+  for (PRUint32 i = 0; i < gradient->mStops.Length(); i++) {
+    nsStyleGradientStop stop;
+    nsCSSValueGradientStop &valueStop = gradient->mStops[i];
+
+    if (valueStop.mLocation.GetUnit() == eCSSUnit_Percent)
+      stop.mPosition = valueStop.mLocation.GetPercentValue();
+    else
+      stop.mPosition = valueStop.mLocation.GetFloatValue();
+
+    // inherit is not a valid color for stops, so we pass in a dummy
+    // parent color
+    NS_ASSERTION(valueStop.mColor.GetUnit() != eCSSUnit_Inherit,
+                 "inherit is not a valid color for gradient stops");
+    SetColor(valueStop.mColor, NS_RGB(0, 0, 0), aPresContext,
+             aContext, stop.mColor, aCanStoreInRuleTree);
+
+    aResult.mStops.AppendElement(stop);
+  }
+}
+
 // flags for SetDiscrete - align values with SETCOORD_* constants
 // where possible
 
@@ -3812,20 +3887,30 @@ struct BackgroundItemComputer<nsCSSValueList, PRUint8>
 };
 
 NS_SPECIALIZE_TEMPLATE
-struct BackgroundItemComputer<nsCSSValueList, nsCOMPtr<imgIRequest> >
+struct BackgroundItemComputer<nsCSSValueList, nsStyleBackground::Image>
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
                            const nsCSSValueList* aSpecifiedValue,
-                           nsCOMPtr<imgIRequest>& aComputedValue,
+                           nsStyleBackground::Image& aComputedValue,
                            PRBool& aCanStoreInRuleTree)
   {
     const nsCSSValue &value = aSpecifiedValue->mValue;
     if (eCSSUnit_Image == value.GetUnit()) {
-      aComputedValue = value.GetImageValue();
+      aComputedValue.SetImageData(value.GetImageValue());
+    }
+    else if (eCSSUnit_Gradient == value.GetUnit()) {
+      nsStyleGradient* gradient = new nsStyleGradient();
+      if (gradient) {
+        SetGradient(value, aStyleContext->PresContext(), aStyleContext,
+                    *gradient, aCanStoreInRuleTree);
+        aComputedValue.SetGradientData(gradient);
+      } else {
+        aComputedValue.SetNull();
+      }
     }
     else {
       NS_ASSERTION(eCSSUnit_None == value.GetUnit(), "unexpected unit");
-      aComputedValue = nsnull;
+      aComputedValue.SetNull();
     }
   }
 };
@@ -4065,10 +4150,11 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
   PRBool rebuild = PR_FALSE;
 
   // background-image: url (stored as image), none, inherit [list]
+  nsStyleBackground::Image initialImage;
   SetBackgroundList(aContext, colorData.mBackImage, bg->mLayers,
                     parentBG->mLayers, &nsStyleBackground::Layer::mImage,
-                    nsCOMPtr<imgIRequest>(nsnull), parentBG->mImageCount,
-                    bg->mImageCount, maxItemCount, rebuild, canStoreInRuleTree);
+                    initialImage, parentBG->mImageCount, bg->mImageCount,
+                    maxItemCount, rebuild, canStoreInRuleTree);
 
   // background-repeat: enum, inherit, initial [list]
   SetBackgroundList(aContext, colorData.mBackRepeat, bg->mLayers,

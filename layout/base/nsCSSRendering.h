@@ -128,6 +128,17 @@ struct nsCSSRendering {
                          nscolor aColor);
 
   /**
+   * Render a gradient for an element.
+   */
+  static void PaintGradient(nsPresContext* aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            nsStyleGradient* aGradient,
+                            const nsRect& aDirtyRect,
+                            const nsRect& aOneCellArea,
+                            const nsRect& aFillArea,
+                            PRBool aRepeat);
+
+  /**
    * Gets the root frame for the frame
    */
   static nsIFrame* FindRootFrame(nsIFrame* aForFrame);
