@@ -172,6 +172,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
 {
   NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
   NS_ASSERTION(aStyleFont || aStyleContext, "Must have style data");
+  NS_ASSERTION(!aStyleFont || !aStyleContext, "Duplicate sources of data");
   NS_ASSERTION(aPresContext, "Must have prescontext");
 
   if (aValue.IsFixedLengthUnit()) {
@@ -197,9 +198,17 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
 
       if (aUseProvidedRootEmSize) {
         // We should use the provided aFontSize as the reference length to
-        // scale. This only happens when we are calculating something on the
-        // root element, in which case aFontSize is already the value we want.
+        // scale. This only happens when we are calculating font-size or
+        // an equivalent (scriptminsize or CalcLengthWithInitialFont) on
+        // the root element, in which case aFontSize is already the
+        // value we want.
         rootFontSize = aFontSize;
+      } else if (aStyleContext && !aStyleContext->GetParent()) {
+        // This is the root element (XXX we don't really know this, but
+        // nsRuleNode::SetFont makes the same assumption!), so we should
+        // use GetStyleFont on this context to get the root element's
+        // font size.
+        rootFontSize = aStyleFont->mFont.size;
       } else {
         // This is not the root element or we are calculating something other
         // than font size, so rem is relative to the root element's font size.
