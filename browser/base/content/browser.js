@@ -5652,15 +5652,13 @@ var OfflineApps = {
 
 function WindowIsClosing()
 {
-  var cn = gBrowser.tabContainer.childNodes;
-  var numtabs = cn.length;
   var reallyClose = closeWindow(false, warnAboutClosingWindow);
-
   if (!reallyClose)
     return false;
 
-  for (var i = 0; reallyClose && i < numtabs; ++i) {
-    var ds = gBrowser.getBrowserForTab(cn[i]).docShell;
+  var numBrowsers = gBrowser.browsers.length;
+  for (let i = 0; reallyClose && i < numBrowsers; ++i) {
+    let ds = gBrowser.browsers[i].docShell;
 
     if (ds.contentViewer && !ds.contentViewer.permitUnload())
       reallyClose = false;
