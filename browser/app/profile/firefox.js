@@ -885,6 +885,9 @@ pref("content.sink.interactive_time", 750000); /* default 750000 */
 pref("content.sink.initial_perf_time", 500000); /* default 2000000 */
 pref("content.sink.enable_perf_mode", 0); /* default 0; 0 == switch, 1 == stay interactive, 2 == stay perf */
 
+// Write sessionstore.js less often
+pref("browser.sessionstore.interval", 60000);
+
 #endif /* WINCE */
 
 // Whether to use a panel that looks like an OS X sheet for customization
