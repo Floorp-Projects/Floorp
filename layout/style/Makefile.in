@@ -114,6 +114,7 @@ EXPORTS		= \
 		nsLayoutStylesheetCache.h \
 		nsRuleData.h \
 		nsRuleNode.h \
+		nsRuleProcessorData.h \
 		nsRuleWalker.h \
 		nsStyleContext.h \
 		nsStyleCoord.h \
