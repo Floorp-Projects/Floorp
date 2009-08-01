@@ -62,13 +62,6 @@ tier_app_dirs += embedding/tests
 endif
 endif
 
-# os2embed
-ifeq ($(OS_ARCH),OS2)
-ifdef ENABLE_TESTS
-tier_app_dirs += embedding/tests
-endif
-endif
-
 ifdef MOZ_JAVAXPCOM
 tier_app_dirs += extensions/java
 endif
