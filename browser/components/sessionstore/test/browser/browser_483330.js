@@ -10,7 +10,7 @@ function test() {
 
   let browser = tab.linkedBrowser;
   browser.addEventListener("load", function loadListener(e) {
-    browser.removeEventListener("load", arguments.callee, true);
+    browser.removeEventListener("load", arguments.callee, false);
 
     // Scroll the content document
     browser.contentWindow.scrollTo(1100, 1200);
@@ -21,7 +21,7 @@ function test() {
 
     let newTab = ss.undoCloseTab(window, 0);
     newTab.addEventListener("SSTabRestored", function tabRestored(e) {
-      newTab.removeEventListener("SSTabRestored", arguments.callee, true);
+      newTab.removeEventListener("SSTabRestored", arguments.callee, false);
 
       let newBrowser = newTab.linkedBrowser;
 
