@@ -2737,7 +2737,11 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
     event.refPoint.y = aPoint->y;
   }
 
+#ifndef WINCE
   event.time = ::GetMessageTime();
+#else
+  event.time = PR_Now() / 1000;
+#endif
 
   mLastPoint = event.refPoint;
 }
@@ -3037,7 +3041,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
 
   // Doubleclicks are used to set the click count, then changed to mousedowns
   // We're going to time double-clicks from mouse *up* to next mouse *down*
+#ifndef WINCE
   LONG curMsgTime = ::GetMessageTime();
+#else
+  LONG curMsgTime = PR_Now() / 1000;
+#endif
 
   if (aEventType == NS_MOUSE_DOUBLECLICK) {
     event.message = NS_MOUSE_BUTTON_DOWN;
@@ -3052,11 +3060,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   }
   else if (aEventType == NS_MOUSE_BUTTON_DOWN) {
     // now look to see if we want to convert this to a double- or triple-click
-
-#ifdef NS_DEBUG_XX
-    printf("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, sLastMouseDownTime, curMsgTime-sLastMouseDownTime, ::GetDoubleClickTime());
-    printf("Mouse %d %d\n", abs(sLastMousePoint.x - mp.x), abs(sLastMousePoint.y - mp.y));
-#endif
     if (((curMsgTime - sLastMouseDownTime) < (LONG)::GetDoubleClickTime()) && insideMovementThreshold &&
         eventButton == sLastMouseButton) {
       sLastClickCount ++;
