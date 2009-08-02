@@ -121,6 +121,10 @@ namespace nanojit
         ARGSIZE_V = ARGSIZE_NONE  // void
     };
 
+    enum IndirectCall {
+        CALL_INDIRECT = 0
+    };
+
     struct CallInfo
     {
         uintptr_t   _address;
@@ -133,6 +137,9 @@ namespace nanojit
         uint32_t FASTCALL _count_args(uint32_t mask) const;
         uint32_t get_sizes(ArgSize*) const;
 
+        inline bool isIndirect() const {
+            return _address < 256;
+        }
         inline uint32_t FASTCALL count_args() const {
             return _count_args(ARGSIZE_MASK_ANY);
         }
