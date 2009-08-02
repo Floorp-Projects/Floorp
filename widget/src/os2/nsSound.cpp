@@ -70,7 +70,6 @@ NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 static int sInitialized = 0;
 static PRBool sMMPMInstalled = PR_FALSE;
 static HMODULE sHModMMIO = NULLHANDLE;
-static HMODULE sHModMDM = NULLHANDLE;
 
 // function pointer definitions, include underscore (work around redef. warning)
 HMMIO (*APIENTRY _mmioOpen)(PSZ, PMMIOINFO, ULONG);
@@ -100,9 +99,10 @@ static void InitGlobals(void)
 {
   ULONG ulrc = 0;
   char LoadError[CCHMAXPATH];
+  HMODULE hModMDM = NULLHANDLE;
 
   ulrc = DosLoadModule(LoadError, CCHMAXPATH, "MMIO", &sHModMMIO);
-  ulrc += DosLoadModule(LoadError, CCHMAXPATH, "MDM", &sHModMDM);
+  ulrc += DosLoadModule(LoadError, CCHMAXPATH, "MDM", &hModMDM);
   if (ulrc == NO_ERROR) {
 #ifdef DEBUG
     printf("InitGlobals: MMOS2 is installed, both DLLs loaded\n");
@@ -114,12 +114,12 @@ static void InitGlobals(void)
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioClose", (PFN *)&_mmioClose);
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioGetFormats", (PFN *)&_mmioGetFormats);
     // mci functions are in MDM.DLL
-    ulrc += DosQueryProcAddr(sHModMDM, 0L, "mciSendCommand", (PFN *)&_mciSendCommand);
+    ulrc += DosQueryProcAddr(hModMDM, 0L, "mciSendCommand", (PFN *)&_mciSendCommand);
 #ifdef DEBUG
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioGetLastError", (PFN *)&_mmioGetLastError);
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioQueryFormatCount", (PFN *)&_mmioQueryFormatCount);
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioGetFormatName", (PFN *)&_mmioGetFormatName);
-    ulrc += DosQueryProcAddr(sHModMDM, 0L, "mciGetErrorString", (PFN *)&_mciGetErrorString);
+    ulrc += DosQueryProcAddr(hModMDM, 0L, "mciGetErrorString", (PFN *)&_mciGetErrorString);
 #endif
 
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioIniFileHandler", (PFN *)&_mmioIniFileHandler);
@@ -398,7 +398,7 @@ nsSound::~nsSound()
 #endif
     ULONG ulrc;
     ulrc = DosFreeModule(sHModMMIO);
-    ulrc += DosFreeModule(sHModMDM);
+    // do not free MDM.DLL because it doesn't like to be unloaded repeatedly
     if (ulrc != NO_ERROR) {
       NS_WARNING("DosFreeModule did not work");
     }
