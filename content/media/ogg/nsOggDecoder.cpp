@@ -910,22 +910,16 @@ void nsOggDecodeStateMachine::PlayFrame() {
       }
 
       double time;
-      double prevTime = -1.0;
+      PRUint32 hasAudio = frame->mAudioData.Length();
       for (;;) {
         // Even if the frame has had its audio data written we call
         // PlayAudio to ensure that any data we have buffered in the
         // nsAudioStream is written to the hardware.
         PlayAudio(frame);
-        double hwtime = mAudioStream ? mAudioStream->GetPosition() : -1.0;
+        double hwtime = mAudioStream && hasAudio ? mAudioStream->GetPosition() : -1.0;
         time = hwtime < 0.0 ?
           (TimeStamp::Now() - mPlayStartTime - mPauseDuration).ToSeconds() :
           hwtime;
-        // Break out of the loop if we've not played any audio. This can
-        // happen when the frame has no audio, and there's no audio pending
-        // in the nsAudioStream.
-        if (time == prevTime)
-          break;
-        prevTime = time;
         // Is it time for the next frame?  Using an integer here avoids f.p.
         // rounding errors that can cause multiple 0ms waits (Bug 495352)
         PRInt64 wait = PRInt64((frame->mTime - time)*1000);
