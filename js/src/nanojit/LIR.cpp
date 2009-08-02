@@ -1760,8 +1760,13 @@ namespace nanojit
 #endif
             case LIR_fcall:
             case LIR_call: {
-                sprintf(s, "%s = %s ( ", formatRef(i), i->callInfo()->_name);
-                for (int32_t j=i->argc()-1; j >= 0; j--) {
+                const CallInfo* call = i->callInfo();
+                int32_t argc = i->argc();
+                if (call->isIndirect())
+                    sprintf(s, "%s = %s [%s] ( ", formatRef(i), lirNames[op], formatRef(i->arg(--argc)));
+                else
+                    sprintf(s, "%s = %s #%s ( ", formatRef(i), lirNames[op], call->_name);
+                for (int32_t j = argc - 1; j >= 0; j--) {
                     s += strlen(s);
                     sprintf(s, "%s ",formatRef(i->arg(j)));
                 }
