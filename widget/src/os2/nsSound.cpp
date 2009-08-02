@@ -70,7 +70,6 @@ NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 static int sInitialized = 0;
 static PRBool sMMPMInstalled = PR_FALSE;
 static HMODULE sHModMMIO = NULLHANDLE;
-static HMODULE sHModMDM = NULLHANDLE;
 
 // function pointer definitions, include underscore (work around redef. warning)
 HMMIO (*APIENTRY _mmioOpen)(PSZ, PMMIOINFO, ULONG);
@@ -100,9 +99,10 @@ static void InitGlobals(void)
 {
   ULONG ulrc = 0;
   char LoadError[CCHMAXPATH];
+  HMODULE hModMDM = NULLHANDLE;
 
   ulrc = DosLoadModule(LoadError, CCHMAXPATH, "MMIO", &sHModMMIO);
-  ulrc += DosLoadModule(LoadError, CCHMAXPATH, "MDM", &sHModMDM);
+  ulrc += DosLoadModule(LoadError, CCHMAXPATH, "MDM", &hModMDM);
   if (ulrc == NO_ERROR) {
 #ifdef DEBUG
     printf("InitGlobals: MMOS2 is installed, both DLLs loaded\n");
@@ -114,12 +114,12 @@ static void InitGlobals(void)
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioClose", (PFN *)&_mmioClose);
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioGetFormats", (PFN *)&_mmioGetFormats);
     // mci functions are in MDM.DLL
-    ulrc += DosQueryProcAddr(sHModMDM, 0L, "mciSendCommand", (PFN *)&_mciSendCommand);
+    ulrc += DosQueryProcAddr(hModMDM, 0L, "mciSendCommand", (PFN *)&_mciSendCommand);
 #ifdef DEBUG
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioGetLastError", (PFN *)&_mmioGetLastError);
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioQueryFormatCount", (PFN *)&_mmioQueryFormatCount);
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioGetFormatName", (PFN *)&_mmioGetFormatName);
-    ulrc += DosQueryProcAddr(sHModMDM, 0L, "mciGetErrorString", (PFN *)&_mciGetErrorString);
+    ulrc += DosQueryProcAddr(hModMDM, 0L, "mciGetErrorString", (PFN *)&_mciGetErrorString);
 #endif
 
     ulrc += DosQueryProcAddr(sHModMMIO, 0L, "mmioIniFileHandler", (PFN *)&_mmioIniFileHandler);
@@ -398,7 +398,7 @@ nsSound::~nsSound()
 #endif
     ULONG ulrc;
     ulrc = DosFreeModule(sHModMMIO);
-    ulrc += DosFreeModule(sHModMDM);
+    // do not free MDM.DLL because it doesn't like to be unloaded repeatedly
     if (ulrc != NO_ERROR) {
       NS_WARNING("DosFreeModule did not work");
     }
@@ -457,14 +457,14 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   return NS_OK;
 }
 
-NS_METHOD nsSound::Beep()
+NS_IMETHODIMP nsSound::Beep()
 {
   WinAlarm(HWND_DESKTOP, WA_WARNING);
 
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(nsIURL *aURL)
+NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 {
   nsresult rv;
 
@@ -481,18 +481,22 @@ NS_IMETHODIMP nsSound::Init()
 
 NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
-  // Just beep if MMPM isn't installed.
   if (!sMMPMInstalled) {
-    Beep();
-    return NS_OK;
+    return Beep();
   }
 
   if (NS_IsMozAliasSound(aSoundAlias)) {
     NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
-    // We don't have a default mail sound on OS/2, so just beep.
-    if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
-      Beep();
-    return NS_OK;
+    PRUint32 eventId;
+    if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG))
+        eventId = EVENT_ALERT_DIALOG_OPEN;
+    else if (aSoundAlias.Equals(NS_SYSSOUND_CONFIRM_DIALOG))
+        eventId = EVENT_CONFIRM_DIALOG_OPEN;
+    else if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
+        eventId = EVENT_NEW_MAIL_RECEIVED;
+    else
+        return NS_OK;
+    return PlayEventSound(eventId);
   }
   nsCAutoString nativeSoundAlias;
   NS_CopyUnicodeToNative(aSoundAlias, nativeSoundAlias);
@@ -515,11 +519,21 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 
 NS_IMETHODIMP nsSound::PlayEventSound(PRUint32 aEventId)
 {
-  // Just beep if MMPM isn't installed.
-  if (!sMMPMInstalled) {
-    return Beep();
+  // Prompt dialog and select dialog sounds do not correspond to OS/2
+  // system sounds, ignore them. Ignore the menu sounds, too. Try to handle
+  // the rest. Skip the beeps on systems without MMPM, too many of them are
+  // confusing and annoying.
+  switch(aEventId) {
+  case EVENT_NEW_MAIL_RECEIVED:
+    // We don't have a default mail sound on OS/2, so just "beep"
+    return Beep(); // this corresponds to the "Warning" sound
+  case EVENT_ALERT_DIALOG_OPEN:
+    WinAlarm(HWND_DESKTOP, WA_ERROR); // play "Error" sound
+    break;
+  case EVENT_CONFIRM_DIALOG_OPEN:
+    WinAlarm(HWND_DESKTOP, WA_NOTE); // play "Information" sound
+    break;
   }
 
-  // We don't have a default mail sound on OS/2, so just beep.
-  return aEventId == EVENT_NEW_MAIL_RECEIVED ? Beep() : NS_OK;
+  return NS_OK;
 }

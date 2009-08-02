@@ -1730,7 +1730,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
         }
 
         if (extList[ext_NSCertType].activated) {
-            rv = AddNscpCertType(extHandle, extList[ext_extKeyUsage].arg);
+            rv = AddNscpCertType(extHandle, extList[ext_NSCertType].arg);
             if (rv) {
 		errstring = "NSCertType";
                 break;

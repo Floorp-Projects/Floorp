@@ -98,18 +98,6 @@ nsLeafBoxFrame::Init(
   nsresult  rv = nsLeafFrame::Init(aContent, aParent, aPrevInFlow);
   NS_ENSURE_SUCCESS(rv, rv);
 
-   // see if we need a widget
-  if (aParent && aParent->IsBoxFrame()) {
-    if (aParent->ChildrenMustHaveWidgets()) {
-        rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE); 
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsIView* view = GetView();
-        if (!view->HasWidget())
-           view->CreateWidget(kWidgetCID);   
-    }
-  }
-  
   mMouseThrough = unset;
 
   UpdateMouseThrough();

@@ -18,20 +18,20 @@
 
 /* ::::: Identity Indicator Styling ::::: */
 
-#urlbar[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+#urlbar:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
   -moz-margin-start: 9px;
 }
 
-#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+#identity-box:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
   -moz-margin-start: -7px;
 }
 
-#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+#identity-box:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
   -moz-border-radius: 11px 0 2px 11px / 15px 0 2px 15px;
 }
 
-/* Match #identity-box[chromedir="ltr"]'s -moz-margin-start */
-#identity-popup[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+/* Match #identity-box:-moz-locale-dir(ltr)'s -moz-margin-start */
+#identity-popup:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
   -moz-margin-start: 7px;
 }
 

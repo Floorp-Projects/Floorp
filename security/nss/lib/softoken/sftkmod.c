@@ -628,12 +628,16 @@ sftkdb_DeleteSecmodDB(SDBType dbType, const char *appName,
     } 
     fclose(fd);
     fclose(fd2);
-    /* rename dbname2 to dbname */
     if (found) {
+	/* rename dbname2 to dbname */
 	PR_Delete(dbname);
 	PR_Rename(dbname2,dbname);
+    } else {
+	PR_Delete(dbname2);
     }
     PORT_Free(dbname2);
+    PORT_Free(lib);
+    PORT_Free(name);
     return SECSuccess;
 
 loser:
@@ -647,6 +651,8 @@ loser:
 	PR_Delete(dbname2);
 	PORT_Free(dbname2);
     }
+    PORT_Free(lib);
+    PORT_Free(name);
     return SECFailure;
 }
 
@@ -695,9 +701,9 @@ sftkdb_AddSecmodDB(SDBType dbType, const char *appName,
 	    block = sftkdb_DupCat(block, module);
 	    break;
 	}
-	value = sftk_argFetchValue(&keyEnd[1], &count);
 	block = sftkdb_DupnCat(block, module, keyEnd-module+1);
 	if (block == NULL) { goto loser; }
+	value = sftk_argFetchValue(&keyEnd[1], &count);
 	if (value) {
 	    block = sftkdb_DupCat(block, sftk_argStrip(value));
 	    PORT_Free(value);

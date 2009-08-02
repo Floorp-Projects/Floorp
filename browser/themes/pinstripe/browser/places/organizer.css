@@ -96,7 +96,7 @@
   border-right: none;
 }
 
-#back-button[chromedir="rtl"] {
+#back-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0px, 67px, 23px, 34px);
 }
 
@@ -104,7 +104,7 @@
  -moz-image-region: rect(23px, 34px, 46px, 0px) !important;
 }
 
-#back-button[disabled="true"][chromedir="rtl"] {
+#back-button[disabled="true"]:-moz-locale-dir(rtl) {
  -moz-image-region: rect(23px, 67px, 46px, 34px) !important;
 }
 
@@ -114,9 +114,9 @@
   -moz-image-region: rect(46px, 34px, 69px, 0px);
 }
 
-#back-button:hover:active[chromedir="rtl"],
-#back-button[buttondown="true"][chromedir="rtl"],
-#back-button[open="true"][chromedir="rtl"] {
+#back-button:hover:active:-moz-locale-dir(rtl),
+#back-button[buttondown="true"]:-moz-locale-dir(rtl),
+#back-button[open="true"]:-moz-locale-dir(rtl) {
   -moz-image-region: rect(46px, 67px, 69px, 34px);
 }
 
@@ -136,7 +136,7 @@
   border-right: none;
 }
 
-#forward-button[chromedir="rtl"] {
+#forward-button:-moz-locale-dir(rtl) {
   -moz-image-region: rect(0px, 34px, 23px, 0px);
 }
 
@@ -144,7 +144,7 @@
   -moz-image-region: rect(23px, 67px, 46px, 34px) !important;
 }
 
-#forward-button[disabled="true"][chromedir="rtl"] {
+#forward-button[disabled="true"]:-moz-locale-dir(rtl) {
   -moz-image-region: rect(23px, 34px, 46px, 0px) !important;
 }
 
@@ -154,9 +154,9 @@
   -moz-image-region: rect(46px, 67px, 69px, 34px);
 }
 
-#forward-button:hover:active[chromedir="rtl"],
-#forward-button[buttondown="true"][chromedir="rtl"],
-#forward-button[open="true"][chromedir="rtl"] {
+#forward-button:hover:active:-moz-locale-dir(rtl),
+#forward-button[buttondown="true"]:-moz-locale-dir(rtl),
+#forward-button[open="true"]:-moz-locale-dir(rtl) {
   -moz-image-region: rect(46px, 34px, 69px, 0px);
 }
 
@@ -169,10 +169,10 @@
   background: url("chrome://browser/skin/places/menubutton-end-pressed.png") right center no-repeat;
 }
 
-#placesToolbar[chromedir="rtl"] > toolbarbutton[type="menu"] {
+#placesToolbar:-moz-locale-dir(rtl) > toolbarbutton[type="menu"] {
   background: url("chrome://browser/skin/places/menubutton-end-rtl.png") left center no-repeat;
 }
-#placesToolbar[chromedir="rtl"] > toolbarbutton[type="menu"][open="true"] {
+#placesToolbar:-moz-locale-dir(rtl) > toolbarbutton[type="menu"][open="true"] {
   background: url("chrome://browser/skin/places/menubutton-end-pressed-rtl.png") left center no-repeat;
 }
 
@@ -192,10 +192,10 @@
   background: url("chrome://browser/skin/places/menubutton-start-pressed.png") left center no-repeat;
 }
 
-#placesToolbar[chromedir="rtl"] > toolbarbutton[type="menu"] > .toolbarbutton-icon {
+#placesToolbar:-moz-locale-dir(rtl) > toolbarbutton[type="menu"] > .toolbarbutton-icon {
   background: url("chrome://browser/skin/places/menubutton-start-rtl.png") right center no-repeat;
 }
-#placesToolbar[chromedir="rtl"] > toolbarbutton[type="menu"][open="true"] > .toolbarbutton-icon {
+#placesToolbar:-moz-locale-dir(rtl) > toolbarbutton[type="menu"][open="true"] > .toolbarbutton-icon {
   background: url("chrome://browser/skin/places/menubutton-start-pressed-rtl.png") right center no-repeat;
 }
 

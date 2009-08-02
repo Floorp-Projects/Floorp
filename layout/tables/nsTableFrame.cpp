@@ -354,8 +354,8 @@ nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
   if (!GetPrevInFlow()) {
     // process col groups first so that real cols get constructed before
     // anonymous ones due to cells in rows.
-    InsertColGroups(0, mColGroups.FirstChild());
-    AppendRowGroups(mFrames.FirstChild());
+    InsertColGroups(0, mColGroups);
+    InsertRowGroups(mFrames);
     // calc collapsing borders 
     if (IsBorderCollapse()) {
       nsRect damageArea(0, 0, GetColCount(), GetRowCount());
@@ -527,78 +527,72 @@ void nsTableFrame::AdjustRowIndices(PRInt32         aRowIndex,
 }
 
 
-void nsTableFrame::ResetRowIndices(nsIFrame* aFirstRowGroupFrame,
-                                   nsIFrame* aLastRowGroupFrame)
+void nsTableFrame::ResetRowIndices(const nsFrameList::Slice& aRowGroupsToExclude)
 {
   // Iterate over the row groups and adjust the row indices of all rows
   // omit the rowgroups that will be inserted later
+  // XXXbz this code seems to assume that the row groups handed out by
+  // aRowGroupsToExclude are already in OrderRowGroups() order.
+  // There's no reason that would be true!
   RowGroupArray rowGroups;
   OrderRowGroups(rowGroups);
 
   PRInt32 rowIndex = 0;
   nsTableRowGroupFrame* newRgFrame = nsnull;
-  nsIFrame* omitRgFrame = aFirstRowGroupFrame;
-  if (omitRgFrame) {
-    newRgFrame = GetRowGroupFrame(omitRgFrame);
-    if (omitRgFrame == aLastRowGroupFrame)
-      omitRgFrame = nsnull;
+  nsFrameList::Enumerator excludeRowGroupsEnumerator(aRowGroupsToExclude);
+  if (!excludeRowGroupsEnumerator.AtEnd()) {
+    newRgFrame = GetRowGroupFrame(excludeRowGroupsEnumerator.get());
+    excludeRowGroupsEnumerator.Next();
   }
 
   for (PRUint32 rgX = 0; rgX < rowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
     if (rgFrame == newRgFrame) {
-      // omit the new rowgroup
-      if (omitRgFrame) {
-        omitRgFrame = omitRgFrame->GetNextSibling();
-        if (omitRgFrame) {
-          newRgFrame  = GetRowGroupFrame(omitRgFrame);
-          if (omitRgFrame == aLastRowGroupFrame)
-            omitRgFrame = nsnull;
-        }
+      // omit the new rowgroup and move our iterator along
+      if (!excludeRowGroupsEnumerator.AtEnd()) {
+        newRgFrame = GetRowGroupFrame(excludeRowGroupsEnumerator.get());
+        excludeRowGroupsEnumerator.Next();
       }
     }
     else {
-      nsIFrame* rowFrame = rgFrame->GetFirstChild(nsnull);
-      for ( ; rowFrame; rowFrame = rowFrame->GetNextSibling()) {
-        if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->GetStyleDisplay()->mDisplay) {
-          ((nsTableRowFrame *)rowFrame)->SetRowIndex(rowIndex);
+      const nsFrameList& rowFrames = rgFrame->GetChildList(nsnull);
+      for (nsFrameList::Enumerator rows(rowFrames); !rows.AtEnd(); rows.Next()) {
+        if (NS_STYLE_DISPLAY_TABLE_ROW==rows.get()->GetStyleDisplay()->mDisplay) {
+          ((nsTableRowFrame *)rows.get())->SetRowIndex(rowIndex);
           rowIndex++;
         }
       }
     }
   }
 }
-void nsTableFrame::InsertColGroups(PRInt32         aStartColIndex,
-                                   nsIFrame*       aFirstFrame,
-                                   nsIFrame*       aLastFrame)
+void nsTableFrame::InsertColGroups(PRInt32                   aStartColIndex,
+                                   const nsFrameList::Slice& aColGroups)
 {
   PRInt32 colIndex = aStartColIndex;
-  nsTableColGroupFrame* firstColGroupToReset = nsnull;
-  nsIFrame* kidFrame = aFirstFrame;
-  PRBool didLastFrame = PR_FALSE;
-  while (kidFrame) {
-    if (nsGkAtoms::tableColGroupFrame == kidFrame->GetType()) {
-      if (didLastFrame) {
-        firstColGroupToReset = (nsTableColGroupFrame*)kidFrame;
-        break;
-      }
-      else {
-        nsTableColGroupFrame* cgFrame = (nsTableColGroupFrame*)kidFrame;
-        cgFrame->SetStartColumnIndex(colIndex);
-        nsIFrame* firstCol = kidFrame->GetFirstChild(nsnull);
-        cgFrame->AddColsToTable(colIndex, PR_FALSE, firstCol);
-        PRInt32 numCols = cgFrame->GetColCount();
-        colIndex += numCols;
-      }
-    }
-    if (kidFrame == aLastFrame) {
-      didLastFrame = PR_TRUE;
-    }
-    kidFrame = kidFrame->GetNextSibling();
+  nsFrameList::Enumerator colGroups(aColGroups);
+  for (; !colGroups.AtEnd(); colGroups.Next()) {
+    nsTableColGroupFrame* cgFrame =
+      static_cast<nsTableColGroupFrame*>(colGroups.get());
+    cgFrame->SetStartColumnIndex(colIndex);
+    // XXXbz this sucks.  AddColsToTable will actually remove colgroups from
+    // the list we're traversing!  Need to fix things here.  :( I guess this is
+    // why the old code used pointer-to-last-frame as opposed to
+    // pointer-to-frame-after-last....
+
+    // How about dealing with this by storing a const reference to the
+    // mNextSibling of the framelist's last frame, instead of storing a pointer
+    // to the first-after-next frame?  Will involve making nsFrameList friend
+    // of nsIFrame, but it's time for that anyway.
+    cgFrame->AddColsToTable(colIndex, PR_FALSE,
+                              colGroups.get()->GetChildList(nsnull));
+    PRInt32 numCols = cgFrame->GetColCount();
+    colIndex += numCols;
   }
 
-  if (firstColGroupToReset) {
-    nsTableColGroupFrame::ResetColIndices(firstColGroupToReset, colIndex);
+  nsFrameList::Enumerator remainingColgroups = colGroups.GetUnlimitedEnumerator();
+  if (!remainingColgroups.AtEnd()) {
+    nsTableColGroupFrame::ResetColIndices(
+      static_cast<nsTableColGroupFrame*>(remainingColgroups.get()), colIndex);
   }
 }
 
@@ -764,9 +758,8 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
   }
   nsFrameList& cols = aColGroupFrame->GetWritableChildList();
   nsIFrame* oldLastCol = cols.LastChild();
-  nsIFrame* firstNewCol = newColFrames.FirstChild();
-  nsIFrame* lastNewCol = newColFrames.lastChild;
-  cols.InsertFrames(nsnull, oldLastCol, newColFrames);
+  const nsFrameList::Slice& newCols =
+    cols.InsertFrames(nsnull, oldLastCol, newColFrames);
   if (aAddToTable) {
     // get the starting col index in the cache
     PRInt32 startColIndex;
@@ -777,8 +770,7 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
       startColIndex = aColGroupFrame->GetStartColumnIndex();
     }
 
-    aColGroupFrame->AddColsToTable(startColIndex, PR_TRUE, 
-                                   firstNewCol, lastNewCol);
+    aColGroupFrame->AddColsToTable(startColIndex, PR_TRUE, newCols);
   }
 }
 
@@ -1023,17 +1015,6 @@ void nsTableFrame::RemoveRows(nsTableRowFrame& aFirstRowFrame,
 #endif
 }
 
-void nsTableFrame::AppendRowGroups(nsIFrame* aFirstRowGroupFrame)
-{
-  if (aFirstRowGroupFrame) {
-    nsTableCellMap* cellMap = GetCellMap();
-    if (cellMap) {
-      nsFrameList newList(aFirstRowGroupFrame);
-      InsertRowGroups(aFirstRowGroupFrame, newList.LastChild());
-    }
-  }
-}
-
 nsTableRowGroupFrame*
 nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
                                nsIAtom*  aFrameTypeIn)
@@ -1086,8 +1067,7 @@ nsTableFrame::CollectRows(nsIFrame*                   aFrame,
 }
 
 void
-nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
-                              nsIFrame* aLastRowGroupFrame)
+nsTableFrame::InsertRowGroups(const nsFrameList::Slice& aRowGroups)
 {
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== insertRowGroupsBefore\n");
@@ -1101,11 +1081,13 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
     nsAutoTArray<nsTableRowFrame*, 8> rows;
     // Loop over the rowgroups and check if some of them are new, if they are
     // insert cellmaps in the order that is predefined by OrderRowGroups,
+    // XXXbz this code is O(N*M) where N is number of new rowgroups
+    // and M is number of rowgroups we have!
     PRUint32 rgIndex;
     for (rgIndex = 0; rgIndex < orderedRowGroups.Length(); rgIndex++) {
-      nsIFrame* kidFrame = aFirstRowGroupFrame;
-      while (kidFrame) {
-        nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
+      for (nsFrameList::Enumerator rowgroups(aRowGroups); !rowgroups.AtEnd();
+           rowgroups.Next()) {
+        nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(rowgroups.get());
 
         if (orderedRowGroups[rgIndex] == rgFrame) {
           nsTableRowGroupFrame* priorRG =
@@ -1115,28 +1097,22 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
         
           break;
         }
-        else {
-          if (kidFrame == aLastRowGroupFrame) {
-            break;
-          }
-          kidFrame = kidFrame->GetNextSibling();
-        }
       }
     }
     cellMap->Synchronize(this);
-    ResetRowIndices(aFirstRowGroupFrame, aLastRowGroupFrame);
+    ResetRowIndices(aRowGroups);
 
     //now that the cellmaps are reordered too insert the rows
     for (rgIndex = 0; rgIndex < orderedRowGroups.Length(); rgIndex++) {
-      nsIFrame* kidFrame = aFirstRowGroupFrame;
-      while (kidFrame) {
-        nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
+      for (nsFrameList::Enumerator rowgroups(aRowGroups); !rowgroups.AtEnd();
+           rowgroups.Next()) {
+        nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(rowgroups.get());
 
         if (orderedRowGroups[rgIndex] == rgFrame) {
           nsTableRowGroupFrame* priorRG =
             (0 == rgIndex) ? nsnull : orderedRowGroups[rgIndex - 1]; 
           // collect the new row frames in an array and add them to the table
-          PRInt32 numRows = CollectRows(kidFrame, rows);
+          PRInt32 numRows = CollectRows(rowgroups.get(), rows);
           if (numRows > 0) {
             PRInt32 rowIndex = 0;
             if (priorRG) {
@@ -1147,12 +1123,6 @@ nsTableFrame::InsertRowGroups(nsIFrame* aFirstRowGroupFrame,
             rows.Clear();
           }
           break;
-        }
-        else {
-          if (kidFrame == aLastRowGroupFrame) {
-            break;
-          }
-          kidFrame = kidFrame->GetNextSibling();
         }
       }
     }    
@@ -2020,10 +1990,9 @@ nsTableFrame::PushChildren(const FrameArray& aFrames,
     }
     // When pushing and pulling frames we need to check for whether any
     // views need to be reparented.
-    for (nsIFrame* f = frames.FirstChild(); f; f = f->GetNextSibling()) {
-      nsHTMLContainerFrame::ReparentFrameView(PresContext(), f, this, nextInFlow);
-    }
-    nextInFlow->mFrames.InsertFrames(GetNextInFlow(), prevSibling, frames.FirstChild());
+    ReparentFrameViewList(PresContext(), frames, this, nextInFlow);
+    nextInFlow->mFrames.InsertFrames(nextInFlow, prevSibling,
+                                     frames);
   }
   else if (frames.NotEmpty()) {
     // Add the frames to our overflow list
@@ -2138,7 +2107,7 @@ nsTableFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
 NS_IMETHODIMP
 nsTableFrame::AppendFrames(nsIAtom*        aListName,
-                           nsIFrame*       aFrameList)
+                           nsFrameList&    aFrameList)
 {
   NS_ASSERTION(!aListName || aListName == nsGkAtoms::colGroupList,
                "unexpected child list");
@@ -2147,43 +2116,33 @@ nsTableFrame::AppendFrames(nsIAtom*        aListName,
   // for everything else, we need to look at each frame individually
   // XXX The frame construction code should be separating out child frames
   // based on the type, bug 343048.
-  nsIFrame* f = aFrameList;
-  while (f) {
-    // Get the next frame and disconnect this frame from its sibling
-    nsIFrame* next = f->GetNextSibling();
-    f->SetNextSibling(nsnull);
+  while (!aFrameList.IsEmpty()) {
+    nsIFrame* f = aFrameList.FirstChild();
+    aFrameList.RemoveFrame(f);
 
     // See what kind of frame we have
     const nsStyleDisplay* display = f->GetStyleDisplay();
 
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-      nsTableColGroupFrame* lastColGroup;
-      PRBool doAppend = nsTableColGroupFrame::GetLastRealColGroup(this, (nsIFrame**) &lastColGroup);
+      nsTableColGroupFrame* lastColGroup =
+        nsTableColGroupFrame::GetLastRealColGroup(this);
       PRInt32 startColIndex = (lastColGroup) 
         ? lastColGroup->GetStartColumnIndex() + lastColGroup->GetColCount() : 0;
-      if (doAppend) {
-        // Append the new col group frame
-        mColGroups.AppendFrame(nsnull, f);
-      }
-      else {
-        // there is a colgroup after the last real one
-          mColGroups.InsertFrame(nsnull, lastColGroup, f);
-      }
+      mColGroups.InsertFrame(nsnull, lastColGroup, f);
       // Insert the colgroup and its cols into the table
-      InsertColGroups(startColIndex, f, f);
+      InsertColGroups(startColIndex,
+                      nsFrameList::Slice(mColGroups, f, f->GetNextSibling()));
     } else if (IsRowGroup(display->mDisplay)) {
       // Append the new row group frame to the sibling chain
       mFrames.AppendFrame(nsnull, f);
 
       // insert the row group and its rows into the table
-      InsertRowGroups(f, f);
+      InsertRowGroups(nsFrameList::Slice(mFrames, f, nsnull));
     } else {
       // Nothing special to do, just add the frame to our child list
+      NS_NOTREACHED("How did we get here?  Frame construction screwed up");
       mFrames.AppendFrame(nsnull, f);
     }
-
-    // Move to the next frame
-    f = next;
   }
 
 #ifdef DEBUG_TABLE_CELLMAP
@@ -2200,7 +2159,7 @@ nsTableFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsTableFrame::InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList)
+                           nsFrameList&    aFrameList)
 {
   // Asssume there's only one frame being inserted. The problem is that
   // row group frames and col group frames go in separate child lists and
@@ -2212,22 +2171,20 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
                "inserting after sibling frame with different parent");
 
   if ((aPrevFrame && !aPrevFrame->GetNextSibling()) ||
-      (!aPrevFrame && !GetFirstChild(aListName))) {
+      (!aPrevFrame && GetChildList(aListName).IsEmpty())) {
     // Treat this like an append; still a workaround for bug 343048.
     return AppendFrames(aListName, aFrameList);
   }
 
   // See what kind of frame we have
-  const nsStyleDisplay* display = aFrameList->GetStyleDisplay();
+  const nsStyleDisplay* display = aFrameList.FirstChild()->GetStyleDisplay();
 #ifdef DEBUG
   // verify that all sibling have the same type, if they do not, expect cellmap issues
-  nsIFrame* nextFrame = aFrameList->GetNextSibling();
-  while (nextFrame) {
-    const nsStyleDisplay* nextDisplay = nextFrame->GetStyleDisplay();
+  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
+    const nsStyleDisplay* nextDisplay = e.get()->GetStyleDisplay();
     NS_ASSERTION((display->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP) ==
         (nextDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP),
       "heterogenous childlist");  
-    nextFrame = nextFrame->GetNextSibling();    
   }
 #endif  
   if (aPrevFrame) {
@@ -2238,7 +2195,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
       // the previous frame is not valid, see comment at ::AppendFrames
       // XXXbz Using content indices here means XBL will get screwed
       // over...  Oh, well.
-      nsIFrame* pseudoFrame = aFrameList;
+      nsIFrame* pseudoFrame = aFrameList.FirstChild();
       nsIContent* parentContent = GetContent();
       nsIContent* content;
       aPrevFrame = nsnull;
@@ -2255,8 +2212,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
         nsTableColGroupFrame* lastColGroup;
         if (isColGroup) {
           kidFrame = mColGroups.FirstChild();
-          nsTableColGroupFrame::GetLastRealColGroup(this,
-                                                   (nsIFrame**) &lastColGroup);
+          lastColGroup = nsTableColGroupFrame::GetLastRealColGroup(this);
         }
         else {
           kidFrame = mFrames.FirstChild();
@@ -2288,10 +2244,9 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
     NS_ASSERTION(!aListName || aListName == nsGkAtoms::colGroupList,
                  "unexpected child list");
-    // Insert the column group frame
-    nsFrameList frames(aFrameList); // convience for getting last frame
-    nsIFrame* lastFrame = frames.LastChild();
-    mColGroups.InsertFrames(nsnull, aPrevFrame, aFrameList);
+    // Insert the column group frames
+    const nsFrameList::Slice& newColgroups =
+      mColGroups.InsertFrames(nsnull, aPrevFrame, aFrameList);
     // find the starting col index for the first new col group
     PRInt32 startColIndex = 0;
     if (aPrevFrame) {
@@ -2302,17 +2257,17 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
         startColIndex = prevColGroup->GetStartColumnIndex() + prevColGroup->GetColCount();
       }
     }
-    InsertColGroups(startColIndex, aFrameList, lastFrame);
+    InsertColGroups(startColIndex, newColgroups);
   } else if (IsRowGroup(display->mDisplay)) {
     NS_ASSERTION(!aListName, "unexpected child list");
-    nsFrameList newList(aFrameList);
-    nsIFrame* lastSibling = newList.LastChild();
     // Insert the frames in the sibling chain
-    mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+    const nsFrameList::Slice& newRowGroups =
+      mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
-    InsertRowGroups(aFrameList, lastSibling);
+    InsertRowGroups(newRowGroups);
   } else {
     NS_ASSERTION(!aListName, "unexpected child list");
+    NS_NOTREACHED("How did we even get here?");
     // Just insert the frame and don't worry about reflowing it
     mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
     return NS_OK;
@@ -2377,7 +2332,8 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
       // XXXldb [reflow branch merging 20060830] do we still need this?
       if (cellMap) {
         cellMap->Synchronize(this);
-        ResetRowIndices();
+        // Create an empty slice
+        ResetRowIndices(nsFrameList::Slice(mFrames, nsnull, nsnull));
         nsRect damageArea;
         cellMap->RebuildConsideringCells(nsnull, nsnull, 0, 0, PR_FALSE, damageArea);
       }

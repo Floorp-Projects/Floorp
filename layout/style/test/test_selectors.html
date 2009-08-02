@@ -632,6 +632,16 @@ function run() {
     test_selector_in_html("html|a:not(*|a)", single_a, empty_set, set_single,
                           xul_default_ns + html_ns);
 
+    // Test -moz-locale-dir
+    test_parseable(":-moz-locale-dir(ltr)");
+    test_parseable(":-moz-locale-dir(rtl)");
+
+    test_balanced_unparseable(":-moz-locale-dir(other)");
+    test_balanced_unparseable(":-moz-locale-dir()");
+    test_balanced_unparseable(":-moz-locale-dir('ltr')");
+    test_balanced_unparseable(":-moz-locale-dir(ltr, other)");
+    test_balanced_unparseable(":-moz-locale-dir");
+
     run_deferred_tests();
 }
 

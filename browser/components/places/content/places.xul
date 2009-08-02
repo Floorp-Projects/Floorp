@@ -62,8 +62,6 @@
 %placesDTD;
 <!ENTITY % editMenuOverlayDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuOverlayDTD;
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-%globalDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
 ]>
@@ -187,24 +185,22 @@
   </popupset>
 
   <toolbox id="placesToolbox">
-    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center" chromedir="&locale.dir;">
+    <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center">
       <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      command="OrganizerCommand:Back"
                      tooltiptext="&backButton.tooltip;"
-                     chromedir="&locale.dir;"
                      disabled="true"/>
 
       <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      command="OrganizerCommand:Forward"
                      tooltiptext="&forwardButton.tooltip;"
-                     chromedir="&locale.dir;"
                      disabled="true"/>
 
 #ifdef XP_MACOSX
         <toolbarbutton type="menu" class="tabbable"
               onpopupshowing="document.getElementById('placeContent').focus()"
 #else
-      <menubar id="placesMenu" chromedir="&locale.dir;">
+      <menubar id="placesMenu">
         <menu accesskey="&organize.accesskey;" class="menu-iconic"
 #endif
               id="organizeButton" label="&organize.label;">

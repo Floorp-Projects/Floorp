@@ -174,7 +174,7 @@ nsHTMLScrollFrame::SetInitialChildList(nsIAtom*     aListName,
 
 NS_IMETHODIMP
 nsHTMLScrollFrame::AppendFrames(nsIAtom*  aListName,
-                                nsIFrame* aFrameList)
+                                nsFrameList& aFrameList)
 {
   NS_ASSERTION(!aListName, "Only main list supported");
   mFrames.AppendFrames(nsnull, aFrameList);
@@ -185,7 +185,7 @@ nsHTMLScrollFrame::AppendFrames(nsIAtom*  aListName,
 NS_IMETHODIMP
 nsHTMLScrollFrame::InsertFrames(nsIAtom*  aListName,
                                 nsIFrame* aPrevFrame,
-                                nsIFrame* aFrameList)
+                                nsFrameList& aFrameList)
 {
   NS_ASSERTION(!aListName, "Only main list supported");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
@@ -1061,7 +1061,7 @@ nsXULScrollFrame::SetInitialChildList(nsIAtom*        aListName,
 
 NS_IMETHODIMP
 nsXULScrollFrame::AppendFrames(nsIAtom*        aListName,
-                               nsIFrame*       aFrameList)
+                               nsFrameList&    aFrameList)
 {
   nsresult rv = nsBoxFrame::AppendFrames(aListName, aFrameList);
   mInner.ReloadChildFrames();
@@ -1071,7 +1071,7 @@ nsXULScrollFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsXULScrollFrame::InsertFrames(nsIAtom*        aListName,
                                nsIFrame*       aPrevFrame,
-                               nsIFrame*       aFrameList)
+                               nsFrameList&    aFrameList)
 {
   nsresult rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
   mInner.ReloadChildFrames();

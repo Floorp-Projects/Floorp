@@ -44,7 +44,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/TimeStamp.h"
 
 #include "mozIStoragePendingStatement.h"
 #include "mozIStorageStatementCallback.h"
@@ -117,8 +117,6 @@ private:
    * occurs, or we are canceled.  If aLastStatement is true, we should set
    * mState accordingly.
    *
-   * @pre mMutex is not held
-   *
    * @param aData
    *        The StatementData to bind, execute, and then process.
    * @param aLastStatement
@@ -133,8 +131,6 @@ private:
    * Executes a given statement until completion, an error occurs, or we are
    * canceled.  If aLastStatement is true, we should set mState accordingly.
    *
-   * @pre mMutex is not held
-   *
    * @param aStatement
    *        The statement to execute and then process.
    * @param aLastStatement
@@ -148,8 +144,6 @@ private:
   /**
    * Executes a statement to completion, properly handling any error conditions.
    *
-   * @pre mMutex is held
-   *
    * @param aStatement
    *        The statement to execute to completion.
    * @returns true if results were obtained, false otherwise.
@@ -160,8 +154,6 @@ private:
    * Builds a result set up with a row from a given statement.  If we meet the
    * right criteria, go ahead and notify about this results too.
    *
-   * @pre mMutex is held
-   *
    * @param aStatement
    *        The statement to get the row data from.
    */
@@ -169,15 +161,11 @@ private:
 
   /**
    * Notifies callback about completion, and does any necessary cleanup.
-   *
-   * @pre mMutex is not held
    */
   nsresult notifyComplete();
 
   /**
    * Notifies callback about an error.
-   *
-   * @pre mMutex is not held
    *
    * @param aErrorCode
    *        The error code defined in mozIStorageError for the error.
@@ -191,8 +179,6 @@ private:
 
   /**
    * Notifies the callback about a result set.
-   *
-   * @pre mMutex is not held
    */
   nsresult notifyResults();
 
@@ -207,32 +193,28 @@ private:
    * The maximum amount of time we want to wait between results.  Defined by
    * MAX_MILLISECONDS_BETWEEN_RESULTS and set at construction.
    */
-  const PRIntervalTime mMaxIntervalWait;
+  const TimeDuration mMaxWait;
 
   /**
    * The start time since our last set of results.
    */
-  PRIntervalTime mIntervalStart;
+  TimeStamp mIntervalStart;
 
   /**
-   * Indicates our state of execution.
+   * Indicates our state of execution.  This is one of the values in the
+   * ExecutionState enum.
+   *
+   * @note This should only be set with PR_Atomic* functions.
    */
-  ExecutionState mState;
+  volatile PRInt32 mState;
 
   /**
-   * Indicates if we should try to cancel at a cancelation point.
+   * Indicates if we should try to cancel at a cancelation point or not.  This
+   * is evaluated as a boolean.
+   *
+   * @note This should only be set with PR_Atomic* functions.
    */
-  bool mCancelRequested;
-
-  /**
-   * This is the mutex tat protects our state from changing between threads.
-   * This includes the following variables:
-   *   - mState
-   *   - mCancelRequested is only set on the calling thread while the lock is
-   *     held.  It is always read from within the lock on the background thread,
-   *     but not on the calling thread (see shouldNotify for why).
-   */
-  Mutex &mMutex;
+  volatile PRInt32 mCancelRequested;
 };
 
 } // namespace storage

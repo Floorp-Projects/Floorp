@@ -134,7 +134,7 @@ nsSVGTextContainerFrame::GetDy()
 NS_IMETHODIMP
 nsSVGTextContainerFrame::InsertFrames(nsIAtom* aListName,
                                       nsIFrame* aPrevFrame,
-                                      nsIFrame* aFrameList)
+                                      nsFrameList& aFrameList)
 {
   nsresult rv = nsSVGDisplayContainerFrame::InsertFrames(aListName,
                                                          aPrevFrame,

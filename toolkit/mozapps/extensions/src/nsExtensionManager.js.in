@@ -4984,12 +4984,12 @@ ExtensionManager.prototype = {
   },
 
   /* See nsIExtensionManager.idl */
-  getIncompatibleItemList: function EM_getIncompatibleItemList(id, appVersion,
+  getIncompatibleItemList: function EM_getIncompatibleItemList(appVersion,
                                                                platformVersion,
                                                                type,
                                                                includeDisabled,
                                                                countRef) {
-    var items = this.datasource.getIncompatibleItemList(id, appVersion ? appVersion : undefined,
+    var items = this.datasource.getIncompatibleItemList(appVersion ? appVersion : undefined,
                                                         platformVersion ? platformVersion : undefined,
                                                         type, includeDisabled);
     countRef.value = items.length;
@@ -6636,8 +6636,6 @@ ExtensionsDataSource.prototype = {
 
   /**
    * Gets a list of items that are incompatible with a specific application version.
-   * @param   appID
-   *          The ID of the application - XXXben unused?
    * @param   appVersion
    *          The Version of the application to check for incompatibility against.
    * @param   platformVersion
@@ -6649,8 +6647,7 @@ ExtensionsDataSource.prototype = {
    * @returns An array of nsIUpdateItems that are incompatible with the application
    *          ID/Version supplied.
    */
-  getIncompatibleItemList: function EMDS_getIncompatibleItemList(appID,
-                                                                 appVersion,
+  getIncompatibleItemList: function EMDS_getIncompatibleItemList(appVersion,
                                                                  platformVersion,
                                                                  desiredType,
                                                                  includeDisabled) {

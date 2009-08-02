@@ -604,7 +604,7 @@ class nsXULAppInfo : public nsIXULAppInfo,
                      public nsICrashReporter,
 #endif
                      public nsIXULRuntime
-                     
+
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

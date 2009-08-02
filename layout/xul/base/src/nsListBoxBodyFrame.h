@@ -136,8 +136,8 @@ public:
   nsIBox* GetFirstItemBox(PRInt32 aOffset, PRBool* aCreated);
   nsIBox* GetNextItemBox(nsIBox* aBox, PRInt32 aOffset, PRBool* aCreated);
   PRBool ContinueReflow(nscoord height);
-  NS_IMETHOD ListBoxAppendFrames(nsIFrame* aFrameList);
-  NS_IMETHOD ListBoxInsertFrames(nsIFrame* aPrevFrame, nsIFrame* aFrameList);
+  NS_IMETHOD ListBoxAppendFrames(nsFrameList& aFrameList);
+  NS_IMETHOD ListBoxInsertFrames(nsIFrame* aPrevFrame, nsFrameList& aFrameList);
   void OnContentInserted(nsPresContext* aPresContext, nsIContent* aContent);
   void OnContentRemoved(nsPresContext* aPresContext,  nsIFrame* aChildFrame, PRInt32 aIndex);
 

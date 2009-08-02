@@ -126,7 +126,7 @@ nsContainerFrame::SetInitialChildList(nsIAtom*     aListName,
 
 NS_IMETHODIMP
 nsContainerFrame::AppendFrames(nsIAtom*  aListName,
-                               nsIFrame* aFrameList)
+                               nsFrameList& aFrameList)
 {
   if (nsnull != aListName) {
 #ifdef IBMBIDI
@@ -137,7 +137,7 @@ nsContainerFrame::AppendFrames(nsIAtom*  aListName,
       return NS_ERROR_INVALID_ARG;
     }
   }
-  if (aFrameList) {
+  if (aFrameList.NotEmpty()) {
     mFrames.AppendFrames(this, aFrameList);
 
     // Ask the parent frame to reflow me.
@@ -156,7 +156,7 @@ nsContainerFrame::AppendFrames(nsIAtom*  aListName,
 NS_IMETHODIMP
 nsContainerFrame::InsertFrames(nsIAtom*  aListName,
                                nsIFrame* aPrevFrame,
-                               nsIFrame* aFrameList)
+                               nsFrameList& aFrameList)
 {
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
@@ -170,7 +170,7 @@ nsContainerFrame::InsertFrames(nsIAtom*  aListName,
       return NS_ERROR_INVALID_ARG;
     }
   }
-  if (aFrameList) {
+  if (aFrameList.NotEmpty()) {
     // Insert frames after aPrevFrame
     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
@@ -617,11 +617,10 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 
     if (!aStyleContext->GetStyleVisibility()->IsVisible() &&
         !aFrame->SupportsVisibilityHidden()) {
-      // If it's a scrollable frame that can't hide its scrollbars,
-      // hide the view. This means that child elements can't override
-      // their parent's visibility, but it's not practical to leave it
-      // visible in all cases because the scrollbars will be showing
-      // XXXldb Does the view system really enforce this correctly?
+      // If it's a subdocument frame or a plugin, hide the view and
+      // any associated widget.
+      // These are leaf elements so this is OK, no descendant can be
+      // visibility:visible.
       viewIsVisible = PR_FALSE;
     } else if (IsMenuPopup(aFrame)) {
       // if the view is for a popup, don't show the view if the popup is closed

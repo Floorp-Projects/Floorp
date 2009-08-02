@@ -160,7 +160,7 @@ function run_test() {
   gEM.disableItem(ADDONS[0].id);
   restartEM();
 
-  var items = gEM.getIncompatibleItemList("", "3", "3", Ci.nsIUpdateItem.TYPE_ANY,
+  var items = gEM.getIncompatibleItemList("3", "3", Ci.nsIUpdateItem.TYPE_ANY,
                                           false, { });
 
   // Verify only items incompatible with the next app version are returned

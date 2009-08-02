@@ -58,7 +58,7 @@ typedef unsigned int mode_t;
 
 #define HAVE_LCHOWN
 
-#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(VMS) || defined(NTO) || defined(DARWIN) || defined(BEOS) || defined(__riscos__)
+#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(NTO) || defined(DARWIN) || defined(BEOS) || defined(__riscos__)
 #undef HAVE_LCHOWN
 #endif
 
@@ -407,11 +407,6 @@ retry:
 
 	    if (ftruncate(tofd, sb.st_size) < 0)
 		fail("cannot truncate %s", toname);
-	    /*
-	    ** On OpenVMS we can't chmod() until the file is closed, and we
-	    ** have to utime() last since fchown/chmod alter the timestamps.
-	    */
-#ifndef VMS
 	    if (dotimes) {
 		utb.actime = sb.st_atime;
 		utb.modtime = sb.st_mtime;
@@ -424,7 +419,7 @@ retry:
 	    if (chmod(toname, mode) < 0)
 #endif
 		fail("cannot change mode of %s", toname);
-#endif
+
 	    if ((owner || group) && fchown(tofd, uid, gid) < 0)
 		fail("cannot change owner of %s", toname);
 
@@ -432,16 +427,6 @@ retry:
 	    if (close(tofd) < 0)
 		fail("close reports write error on %s", toname);
 	    close(fromfd);
-#ifdef VMS
-	    if (chmod(toname, mode) < 0)
-		fail("cannot change mode of %s", toname);
-	    if (dotimes) {
-		utb.actime = sb.st_atime;
-		utb.modtime = sb.st_mtime;
-		if (utime(toname, &utb) < 0)
-		    fail("cannot set times of %s", toname);
-	    }
-#endif
 	}
 
 	free(toname);

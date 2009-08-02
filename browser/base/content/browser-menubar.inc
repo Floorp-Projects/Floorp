@@ -439,7 +439,7 @@
                           label="&fullScreenCmd.label;"
                           key="key_fullScreen"
                           type="checkbox"
-                          command="View:FullScreen"/>
+                          observes="View:FullScreen"/>
 #endif
                 <menuitem id="menu_showAllTabs"
                           hidden="true"
@@ -474,7 +474,6 @@
 #else
                           key="goBackKb"
 #endif
-                          chromedir="&locale.dir;"
                           command="Browser:BackOrBackDuplicate"
                           onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="historyMenuForward"
@@ -484,7 +483,6 @@
 #else
                           key="goForwardKb"
 #endif
-                          chromedir="&locale.dir;"
                           command="Browser:ForwardOrForwardDuplicate"
                           onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="historyMenuHome"

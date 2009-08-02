@@ -3838,6 +3838,7 @@ RemoveBookmarkFolderObserversCallback(nsTrimInt64HashKey::KeyType aKey,
 }
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
+  tmp->StopObserving();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mView)
   tmp->mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nsnull);

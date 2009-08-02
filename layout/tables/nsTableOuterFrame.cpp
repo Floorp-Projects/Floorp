@@ -266,15 +266,15 @@ nsTableOuterFrame::SetInitialChildList(nsIAtom*        aListName,
 
 NS_IMETHODIMP
 nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
-                                nsIFrame*       aFrameList)
+                                nsFrameList&    aFrameList)
 {
   nsresult rv;
 
   // We only have two child frames: the inner table and a caption frame.
   // The inner frame is provided when we're initialized, and it cannot change
   if (nsGkAtoms::captionList == aListName) {
-    NS_ASSERTION(!aFrameList ||
-                 aFrameList->GetType() == nsGkAtoms::tableCaptionFrame,
+    NS_ASSERTION(aFrameList.IsEmpty() ||
+                 aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
                  "appending non-caption frame to captionList");
     mCaptionFrames.AppendFrames(this, aFrameList);
     mCaptionFrame = mCaptionFrames.FirstChild();
@@ -297,13 +297,13 @@ nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsTableOuterFrame::InsertFrames(nsIAtom*        aListName,
                                 nsIFrame*       aPrevFrame,
-                                nsIFrame*       aFrameList)
+                                nsFrameList&    aFrameList)
 {
   if (nsGkAtoms::captionList == aListName) {
     NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                  "inserting after sibling frame with different parent");
-    NS_ASSERTION(!aFrameList ||
-                 aFrameList->GetType() == nsGkAtoms::tableCaptionFrame,
+    NS_ASSERTION(aFrameList.IsEmpty() ||
+                 aFrameList.FirstChild()->GetType() == nsGkAtoms::tableCaptionFrame,
                  "inserting non-caption frame into captionList");
     mCaptionFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
     mCaptionFrame = mCaptionFrames.FirstChild();

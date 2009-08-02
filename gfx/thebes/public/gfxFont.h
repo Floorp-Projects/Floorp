@@ -746,24 +746,15 @@ public:
          */
         TEXT_ENABLE_SPACING          = 0x0008,
         /**
-         * When set, GetSpacing can return negative spacing.
-         */
-        TEXT_ENABLE_NEGATIVE_SPACING = 0x0010,
-        /**
          * When set, GetHyphenationBreaks may return true for some character
          * positions, otherwise it will always return false for all characters.
          */
-        TEXT_ENABLE_HYPHEN_BREAKS    = 0x0040,
+        TEXT_ENABLE_HYPHEN_BREAKS    = 0x0010,
         /**
          * When set, the text has no characters above 255 and it is stored
          * in the textrun in 8-bit format.
          */
-        TEXT_IS_8BIT                 = 0x0080,
-        /**
-         * When set, the text may have UTF16 surrogate pairs, otherwise it
-         * doesn't.
-         */
-        TEXT_HAS_SURROGATES          = 0x0100,
+        TEXT_IS_8BIT                 = 0x0020,
         /**
          * When set, the RunMetrics::mBoundingBox field will be initialized
          * properly based on glyph extents, in particular, glyph extents that
@@ -771,18 +762,18 @@ public:
          * and advance width of the glyph). When not set, it may just be the
          * standard font-box even if glyphs overflow.
          */
-        TEXT_NEED_BOUNDING_BOX       = 0x0200,
+        TEXT_NEED_BOUNDING_BOX       = 0x0040,
         /**
          * When set, optional ligatures are disabled. Ligatures that are
          * required for legible text should still be enabled.
          */
-        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0400,
+        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0080,
         /**
          * When set, the textrun should favour speed of construction over
          * quality. This may involve disabling ligatures and/or kerning or
          * other effects.
          */
-        TEXT_OPTIMIZE_SPEED          = 0x0800
+        TEXT_OPTIMIZE_SPEED          = 0x0100
     };
 
     /**
@@ -1196,7 +1187,6 @@ public:
             FLAG_NOT_MISSING              = 0x01,
             FLAG_NOT_CLUSTER_START        = 0x02,
             FLAG_NOT_LIGATURE_GROUP_START = 0x04,
-            FLAG_LOW_SURROGATE            = 0x08,
             
             GLYPH_COUNT_MASK = 0x00FFFF00U,
             GLYPH_COUNT_SHIFT = 8
@@ -1222,9 +1212,6 @@ public:
         PRUint32 GetSimpleGlyph() const { return mValue & GLYPH_MASK; }
 
         PRBool IsMissing() const { return (mValue & (FLAG_NOT_MISSING|FLAG_IS_SIMPLE_GLYPH)) == 0; }
-        PRBool IsLowSurrogate() const {
-            return (mValue & (FLAG_LOW_SURROGATE|FLAG_IS_SIMPLE_GLYPH)) == FLAG_LOW_SURROGATE;
-        }
         PRBool IsClusterStart() const {
             return (mValue & FLAG_IS_SIMPLE_GLYPH) || !(mValue & FLAG_NOT_CLUSTER_START);
         }
@@ -1269,15 +1256,6 @@ public:
         CompressedGlyph& SetMissing(PRUint32 aGlyphCount) {
             mValue = (mValue & FLAG_CAN_BREAK_BEFORE) |
                 (aGlyphCount << GLYPH_COUNT_SHIFT);
-            return *this;
-        }
-        /**
-         * Low surrogates don't have any glyphs and are not the start of
-         * a cluster or ligature group.
-         */
-        CompressedGlyph& SetLowSurrogate() {
-            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_NOT_MISSING |
-                FLAG_LOW_SURROGATE;
             return *this;
         }
         PRUint32 GetGlyphCount() const {
@@ -1351,11 +1329,6 @@ public:
 
     // API for setting up the textrun glyphs. Should only be called by
     // things that construct textruns.
-    /**
-     * Record every character that is the second half of a surrogate pair.
-     * This should be called after creating a Unicode textrun.
-     */
-    void RecordSurrogates(const PRUnichar *aString);
     /**
      * We've found a run of text that should use a particular font. Call this
      * only during initialization when font substitution has been computed.

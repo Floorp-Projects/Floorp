@@ -45,6 +45,18 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- normal form for testing word boundary filtering -->
+  <form id="form6" onsubmit="return false;">
+    <input  type="text" name="field4">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with maxlength attribute on input -->
+  <form id="form7" onsubmit="return false;">
+    <input  type="text" name="field5" maxlength="10">
+    <button type="submit">Submit</button>
+  </form>
+
 </div>
 
 <pre id="test">
@@ -74,6 +86,14 @@ fh.addEntry("field3", "aaz");
 fh.addEntry("field3", "aa\xe6"); // 0xae == latin ae pair (0xc6 == AE)
 fh.addEntry("field3", "az");
 fh.addEntry("field3", "z");
+fh.addEntry("field4", "a\xe6");
+fh.addEntry("field4", "aa a\xe6");
+fh.addEntry("field4", "aba\xe6");
+fh.addEntry("field4", "bc d\xe6");
+fh.addEntry("field5", "1");
+fh.addEntry("field5", "12");
+fh.addEntry("field5", "123");
+fh.addEntry("field5", "1234");
 
 // Restore the form to the default state.
 function restoreForm() {
@@ -436,7 +456,7 @@ function runTest(testNum) {
         break;
 
     case 205:
-        checkMenuEntries(["az"]);
+        ok(getMenuEntries().length > 0, "checking typing in middle of text");
         doKey("left");
         sendChar("a", input);
         break;
@@ -459,6 +479,140 @@ function runTest(testNum) {
         // check that empty results were cached - bug 496466
         checkMenuEntries([]);
         doKey("escape");
+
+        // Look at form 6, try to trigger autocomplete popup
+        input = $_(6, "field4");
+        restoreForm();
+        testNum = 249;
+        sendChar("a", input);
+        break;
+
+    /* Test substring matches and word boundary bonuses */
+
+    case 250:
+        // alphabetical results for first character
+        checkMenuEntries(["aa a\xe6", "aba\xe6", "a\xe6"]);
+        sendChar("\xc6", input);
+        break;
+
+    case 251:
+        // prefix match comes first, then word boundary match
+        // followed by substring match
+        checkMenuEntries(["a\xe6", "aa a\xe6", "aba\xe6"]);
+
+        restoreForm();
+        sendChar("b", input);
+        break;
+
+    case 252:
+        checkMenuEntries(["bc d\xe6"]);
+        sendChar(" ", input);
+        break;
+
+    case 253:
+        // check that trailing space has no effect after single char.
+        checkMenuEntries(["bc d\xe6"]);
+        sendChar("\xc6", input);
+        break;
+
+    case 254:
+        // check multi-word substring matches
+        checkMenuEntries(["bc d\xe6", "aba\xe6"]);
+        doKey("left");
+        sendChar("d", input);
+        break;
+
+    case 255:
+        // check inserting in multi-word searches
+        checkMenuEntries(["bc d\xe6"]);
+        sendChar("z", input);
+        break;
+
+    case 256:
+        checkMenuEntries([]);
+
+        // Look at form 7, try to trigger autocomplete popup
+        input = $_(7, "field5");
+        restoreForm();
+        doKey("down");
+        testNum = 299;
+        break;
+
+    case 300:
+        checkMenuEntries(["1", "12", "123", "1234"]);
+        input.maxLength = 4;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 301:
+        checkMenuEntries(["1", "12", "123", "1234"]);
+        input.maxLength = 3;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 302:
+        checkMenuEntries(["1", "12", "123"]);
+        input.maxLength = 2;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 303:
+        checkMenuEntries(["1", "12"]);
+        input.maxLength = 1;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 304:
+        checkMenuEntries(["1"]);
+        input.maxLength = 0;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 305:
+        checkMenuEntries([]);
+        input.maxLength = 4;
+
+        // now again with a character typed
+        sendChar("1", input);
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 306:
+        checkMenuEntries(["1", "12", "123", "1234"]);
+        input.maxLength = 3;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 307:
+        checkMenuEntries(["1", "12", "123"]);
+        input.maxLength = 2;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 308:
+        checkMenuEntries(["1", "12"]);
+        input.maxLength = 1;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 309:
+        checkMenuEntries(["1"]);
+        input.maxLength = 0;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 310:
+        checkMenuEntries([]);
 
         SimpleTest.finish();
         return;

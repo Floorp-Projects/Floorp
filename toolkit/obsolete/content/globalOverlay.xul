@@ -4,6 +4,26 @@
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript"><![CDATA[
+
+    function FillInTooltip ( tipElement )
+    {
+      var retVal = false;
+      var textNode = document.getElementById("TOOLTIP-tooltipText");
+      if (textNode) {
+        while (textNode.hasChildNodes())
+          textNode.removeChild(textNode.firstChild);
+        var tipText = tipElement.getAttribute("tooltiptext");
+        if (tipText) {
+          var node = document.createTextNode(tipText);
+          textNode.appendChild(node);
+          retVal = true;
+        }
+      }
+      return retVal;
+    }
+
+  ]]></script>
 
   <popupset id="aTooltipSet">
     <popup id="aTooltip" class="tooltip" onpopupshowing="return FillInTooltip(document.tooltipNode);" > 

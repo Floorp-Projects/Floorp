@@ -28,19 +28,6 @@
     }
 
     ////
-    // Enter a string in the find bar's search field, by issuing
-    // a series of key events to it.
-    //
-    function enterStringIntoFindField(aString) {
-      for (var i=0; i < aString.length; i++) {
-        var event = document.createEvent("KeyEvents");
-        event.initKeyEvent("keypress", true, true, null, false, false,
-                           false, false, 0, aString.charCodeAt(i));
-        gFindBar._findField.inputField.dispatchEvent(event);
-      }
-    }
-
-    ////
     // Generator function for test steps for bug 298622:  
     // Find should work correctly on a page loaded from the
     // bfcache.
@@ -85,7 +72,15 @@
       };
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
-      enterStringIntoFindField("A generic page");
+      gFindBar._findField.value = "A generic page";
+      gFindBar._find();
+      SimpleTest.executeSoon(nextTest);
+      yield;
+
+      // Make sure Find bar's internal status is not 'notfound'
+      isnot(gFindBar._findField.getAttribute("status"), "notfound",
+         "Findfield status attribute should not have been 'notfound'" +
+         " after Find");
 
       // Make sure the key events above have time to be processed
       // before continuing
@@ -122,8 +117,16 @@
       gFindBar = document.getElementById("FindToolbar");
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
-      enterStringIntoFindField("find this");
+      gFindBar._findField.value = "find this";
+      gFindBar._find();
+      SimpleTest.executeSoon(nextTest);
+      yield;
 
+      // Make sure Find bar's internal status is not 'notfound'
+      isnot(gFindBar._findField.getAttribute("status"), "notfound",
+         "Findfield status attribute should not have been 'notfound'" +
+         " after Find");
+ 
       // Make sure the key events above have time to be processed
       // before continuing
       waitForTrue(function() {

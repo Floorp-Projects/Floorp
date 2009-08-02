@@ -1,0 +1,72 @@
+<html>
+<head>
+  <title>Test bug 484111</title>
+  <script type="text/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body onload="onWindowLoad()">
+
+<iframe src="https://www.bank2.com/" onload="onFrameLoad()"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function badCertListener() 
+{
+}
+
+badCertListener.prototype = {
+  badCertCaught: false,
+
+  getInterface: function (aIID) {
+    return this.QueryInterface(aIID);
+  },
+
+  QueryInterface: function(aIID) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    if (aIID.equals(Components.interfaces.nsIBadCertListener2) ||
+        aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },  
+
+  notifyCertProblem: function(socketInfo, sslStatus, targetHost) {
+    this.badCertCaught = true;
+    return true;
+  }
+}
+
+function onFrameLoad()
+{
+  ok(false, "Attackers page failed to load");
+}
+
+function onWindowLoad()
+{
+  var req = new XMLHttpRequest();
+  var certListener = new badCertListener();
+  try
+  {
+    req.open("GET", "https://www.bank2.com/", false);
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    req.channel.notificationCallbacks = certListener;
+    req.send(null);
+  }
+  catch(ex)
+  {
+    // ignore
+  }
+  
+  ok(certListener.badCertCaught, "We Caught the invalid certificate");
+  
+  SimpleTest.finish();
+}
+
+</script>
+
+</body>
+</html>

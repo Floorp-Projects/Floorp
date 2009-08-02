@@ -160,8 +160,8 @@ findbar {
   -moz-margin-end: 0 !important;
 }
 
-.findbar-find-next[chromedir="ltr"],
-.findbar-find-previous[chromedir="rtl"] {
+.findbar-find-next:-moz-locale-dir(ltr),
+.findbar-find-previous:-moz-locale-dir(rtl) {
   -moz-border-radius-topright: 0px;
   -moz-border-radius-bottomright: 0px;
 }
@@ -172,8 +172,8 @@ findbar {
   -moz-margin-start: 0 !important;
 }
 
-.findbar-find-previous[chromedir="ltr"],
-.findbar-find-next[chromedir="rtl"] {
+.findbar-find-previous:-moz-locale-dir(ltr),
+.findbar-find-next:-moz-locale-dir(rtl) {
   -moz-border-radius-topleft: 0px;
   -moz-border-radius-bottomleft: 0px;
 }

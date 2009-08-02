@@ -126,12 +126,28 @@ FontEntry::CreateFontEntryFromFace(FT_Face aFace) {
     cairo_font_face_set_user_data(fe->mFontFace, &key,
                                   aFace, FTFontDestroyFunc);
     TT_OS2 *os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(aFace, ft_sfnt_os2));
-    if (os2 && os2->version != 0xffff)
-        fe->mWeight  = os2->usWeightClass;
+
+    PRUint16 os2weight = 0;
+    if (os2 && os2->version != 0xffff) {
+        // Technically, only 100 to 900 are valid, but some fonts
+        // have this set wrong -- e.g. "Microsoft Logo Bold Italic" has
+        // it set to 6 instead of 600.  We try to be nice and handle that
+        // as well.
+        if (os2->usWeightClass >= 100 && os2->usWeightClass <= 900)
+            os2weight = os2->usWeightClass;
+        else if (os2->usWeightClass >= 1 && os2->usWeightClass <= 9)
+            os2weight = os2->usWeightClass * 100;
+    }
+
+    if (os2weight != 0)
+        fe->mWeight = os2weight;
     else if (aFace->style_flags & FT_STYLE_FLAG_BOLD)
         fe->mWeight = 700;
     else
         fe->mWeight = 400;
+
+    NS_ASSERTION(fe->mWeight >= 100 && fe->mWeight <= 900, "Invalid final weight in font!");
+
     return fe;
 }
 
@@ -288,8 +304,6 @@ gfxTextRun *gfxFT2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
-
-    textRun->RecordSurrogates(aString);
 
     mString.Assign(nsDependentSubstring(aString, aString + aLength));
 
@@ -819,8 +833,9 @@ cairo_font_face_t *
 gfxFT2Font::CairoFontFace()
 {
     // XXX we need to handle fake bold here (or by having a sepaerate font entry)
-    if (mStyle.weight >= 600 && mFontEntry->mWeight < 600)
-        printf("** We want fake weight\n");
+    if (mStyle.weight >= 600 && mFontEntry->mWeight < 600) {
+        //printf("** We want fake weight\n");
+    }
     return GetFontEntry()->CairoFontFace();
 }
 

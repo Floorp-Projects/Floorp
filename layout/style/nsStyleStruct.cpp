@@ -1207,6 +1207,51 @@ nsChangeHint nsStyleColor::MaxDifference()
 #endif
 
 // --------------------
+// nsStyleGradient
+//
+PRBool
+nsStyleGradient::operator==(const nsStyleGradient& aOther) const
+{
+  NS_ABORT_IF_FALSE(mIsRadial || (mStartRadius == 0 && mEndRadius == 0),
+                    "incorrect unused radius values");
+  NS_ABORT_IF_FALSE(aOther.mIsRadial ||
+                    (aOther.mStartRadius == 0 && aOther.mEndRadius == 0),
+                    "incorrect unused radius values");
+
+  if (mIsRadial != aOther.mIsRadial ||
+      mStartX != aOther.mStartX ||
+      mStartY != aOther.mStartY ||
+      mStartRadius != aOther.mStartRadius ||
+      mEndX != aOther.mEndX ||
+      mEndY != aOther.mEndY ||
+      mEndRadius != aOther.mEndRadius)
+    return PR_FALSE;
+
+  if (mStops.Length() != aOther.mStops.Length())
+    return PR_FALSE;
+
+  for (PRUint32 i = 0; i < mStops.Length(); i++) {
+    if (mStops[i].mPosition != aOther.mStops[i].mPosition ||
+        mStops[i].mColor != aOther.mStops[i].mColor)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+nsStyleGradient::nsStyleGradient(void)
+  : mIsRadial(PR_FALSE)
+  , mStartRadius(0)
+  , mEndRadius(0)
+  , mRefCnt(0)
+{
+  mStartX.SetCoordValue(0);
+  mStartY.SetCoordValue(0);
+  mEndX.SetCoordValue(0);
+  mEndY.SetCoordValue(0);
+}
+
+// --------------------
 // nsStyleBackground
 //
 
@@ -1217,6 +1262,7 @@ nsStyleBackground::nsStyleBackground()
   , mRepeatCount(1)
   , mPositionCount(1)
   , mImageCount(1)
+  , mSizeCount(1)
   , mBackgroundColor(NS_RGBA(0, 0, 0, 0))
   , mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS)
 {
@@ -1232,6 +1278,7 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
   , mRepeatCount(aSource.mRepeatCount)
   , mPositionCount(aSource.mPositionCount)
   , mImageCount(aSource.mImageCount)
+  , mSizeCount(aSource.mSizeCount)
   , mLayers(aSource.mLayers) // deep copy
   , mBackgroundColor(aSource.mBackgroundColor)
   , mBackgroundInlinePolicy(aSource.mBackgroundInlinePolicy)
@@ -1246,6 +1293,7 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
     mRepeatCount = PR_MAX(mRepeatCount, count);
     mPositionCount = PR_MAX(mPositionCount, count);
     mImageCount = PR_MAX(mImageCount, count);
+    mSizeCount = PR_MAX(mSizeCount, count);
   }
 }
 
@@ -1281,7 +1329,8 @@ PRBool nsStyleBackground::HasFixedBackground() const
 {
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, this) {
     const Layer &layer = mLayers[i];
-    if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED && layer.mImage) {
+    if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+        layer.mImage.GetType() != eBackgroundImage_Null) {
       return PR_TRUE;
     }
   }
@@ -1290,7 +1339,8 @@ PRBool nsStyleBackground::HasFixedBackground() const
 
 PRBool nsStyleBackground::IsTransparent() const
 {
-  return !BottomLayer().mImage && mImageCount == 1 &&
+  return BottomLayer().mImage.GetType() == eBackgroundImage_Null &&
+         mImageCount == 1 &&
          NS_GET_A(mBackgroundColor) == 0;
 }
 
@@ -1301,6 +1351,46 @@ nsStyleBackground::Position::SetInitialValues()
   mYPosition.mFloat = 0.0f;
   mXIsPercent = PR_TRUE;
   mYIsPercent = PR_TRUE;
+}
+
+void
+nsStyleBackground::Size::SetInitialValues()
+{
+  mWidthType = mHeightType = eAuto;
+}
+
+PRBool
+nsStyleBackground::Size::operator==(const Size& aOther) const
+{
+  NS_ABORT_IF_FALSE(mWidthType < eDimensionType_COUNT,
+                    "bad mWidthType for this");
+  NS_ABORT_IF_FALSE(mHeightType < eDimensionType_COUNT,
+                    "bad mHeightType for this");
+  NS_ABORT_IF_FALSE(aOther.mWidthType < eDimensionType_COUNT,
+                    "bad mWidthType for aOther");
+  NS_ABORT_IF_FALSE(aOther.mHeightType < eDimensionType_COUNT,
+                    "bad mHeightType for aOther");
+
+  if (mWidthType != aOther.mWidthType || mHeightType != aOther.mHeightType)
+    return PR_FALSE;
+
+  if (mWidthType == ePercentage) {
+    if (mWidth.mFloat != aOther.mWidth.mFloat)
+      return PR_FALSE;
+  } else if (mWidthType == eLength) {
+    if (mWidth.mCoord != aOther.mWidth.mCoord)
+      return PR_FALSE;
+  }
+
+  if (mHeightType == ePercentage) {
+    if (mHeight.mFloat != aOther.mHeight.mFloat)
+      return PR_FALSE;
+  } else if (mHeightType == eLength) {
+    if (mHeight.mCoord != aOther.mHeight.mCoord)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 nsStyleBackground::Layer::Layer()
@@ -1319,7 +1409,8 @@ nsStyleBackground::Layer::SetInitialValues()
   mOrigin = NS_STYLE_BG_ORIGIN_PADDING;
   mRepeat = NS_STYLE_BG_REPEAT_XY;
   mPosition.SetInitialValues();
-  mImage = nsnull;
+  mSize.SetInitialValues();
+  mImage.SetNull();
 }
 
 PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
@@ -1329,7 +1420,100 @@ PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
          mOrigin == aOther.mOrigin &&
          mRepeat == aOther.mRepeat &&
          mPosition == aOther.mPosition &&
-         EqualImages(mImage, aOther.mImage);
+         mSize == aOther.mSize &&
+         mImage == aOther.mImage;
+}
+
+nsStyleBackground::Image::Image()
+{
+  MOZ_COUNT_CTOR(nsStyleBackground::Image);
+  mType = eBackgroundImage_Null;
+}
+
+nsStyleBackground::Image::~Image()
+{
+  MOZ_COUNT_DTOR(nsStyleBackground::Image);
+  if (mType != eBackgroundImage_Null)
+    SetNull();
+}
+
+nsStyleBackground::Image::Image(const nsStyleBackground::Image& aOther)
+{
+  // We need our own copy constructor because we don't want
+  // to copy the reference count
+  MOZ_COUNT_CTOR(nsStyleBackground::Image);
+  mType = eBackgroundImage_Null;
+  DoCopy(aOther);
+}
+
+nsStyleBackground::Image&
+nsStyleBackground::Image::operator=(const nsStyleBackground::Image& aOther)
+{
+  if (this != &aOther)
+    DoCopy(aOther);
+
+  return *this;
+}
+
+void nsStyleBackground::Image::DoCopy(const nsStyleBackground::Image& aOther)
+{
+  SetNull();
+
+  if (aOther.mType == eBackgroundImage_Image)
+    SetImageData(aOther.mImage);
+  else if (aOther.mType == eBackgroundImage_Gradient)
+    SetGradientData(aOther.mGradient);
+}
+
+void nsStyleBackground::Image::SetImageData(imgIRequest* aImage)
+{
+  NS_IF_ADDREF(aImage);
+
+  if (mType != eBackgroundImage_Null)
+    SetNull();
+
+  if (aImage) {
+    mImage = aImage;
+    mType = eBackgroundImage_Image;
+  }
+}
+
+void nsStyleBackground::Image::SetGradientData(nsStyleGradient* aGradient)
+{
+  if (aGradient)
+    aGradient->AddRef();
+
+  if (mType != eBackgroundImage_Null)
+    SetNull();
+
+  if (aGradient) {
+    mGradient = aGradient;
+    mType = eBackgroundImage_Gradient;
+  }
+}
+
+void nsStyleBackground::Image::SetNull()
+{
+  if (mType == eBackgroundImage_Gradient)
+    mGradient->Release();
+  else if (mType == eBackgroundImage_Image)
+    NS_RELEASE(mImage);
+
+  mType = eBackgroundImage_Null;
+}
+
+PRBool nsStyleBackground::Image::operator==(const Image& aOther) const
+{
+  if (mType != aOther.mType)
+    return PR_FALSE;
+
+  if (mType == eBackgroundImage_Image)
+    return EqualImages(mImage, aOther.mImage);
+
+  if (mType == eBackgroundImage_Gradient)
+    return *mGradient == *aOther.mGradient;
+
+  return PR_TRUE;
 }
 
 // --------------------

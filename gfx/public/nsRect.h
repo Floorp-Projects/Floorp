@@ -324,12 +324,12 @@ inline nsIntRect
 nsRect::ToNearestPixels(nscoord aAppUnitsPerPixel) const
 {
   nsIntRect rect;
-  rect.x = NSToIntRound(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)));
-  rect.y = NSToIntRound(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)));
-  rect.width  = NSToIntRound(NSAppUnitsToFloatPixels(XMost(),
-                             float(aAppUnitsPerPixel))) - rect.x;
-  rect.height = NSToIntRound(NSAppUnitsToFloatPixels(YMost(),
-                             float(aAppUnitsPerPixel))) - rect.y;
+  rect.x = NSToIntRoundUp(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)));
+  rect.y = NSToIntRoundUp(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)));
+  rect.width  = NSToIntRoundUp(NSAppUnitsToFloatPixels(XMost(),
+                               float(aAppUnitsPerPixel))) - rect.x;
+  rect.height = NSToIntRoundUp(NSAppUnitsToFloatPixels(YMost(),
+                               float(aAppUnitsPerPixel))) - rect.y;
   return rect;
 }
 

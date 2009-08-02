@@ -503,6 +503,7 @@ GK_ATOM(listing, "listing")
 GK_ATOM(listitem, "listitem")
 GK_ATOM(listrows, "listrows")
 GK_ATOM(load, "load")
+GK_ATOM(localedir, "localedir")
 GK_ATOM(localName, "local-name")
 GK_ATOM(longdesc, "longdesc")
 #ifdef MOZ_MEDIA

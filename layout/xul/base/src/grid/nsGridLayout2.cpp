@@ -260,14 +260,15 @@ nsGridLayout2::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
 
 void
 nsGridLayout2::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
-                                nsIBox* aPrevBox, nsIBox* aChildList)
+                                nsIBox* aPrevBox,
+                                const nsFrameList::Slice& aNewChildren)
 {
   mGrid.NeedsRebuild(aState);
 }
 
 void
 nsGridLayout2::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
-                                nsIBox* aChildList)
+                                const nsFrameList::Slice& aNewChildren)
 {
   mGrid.NeedsRebuild(aState);
 }
