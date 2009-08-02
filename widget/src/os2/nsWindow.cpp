@@ -2035,19 +2035,21 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
       r.UnionRect(r, rects[i]);
 
     // resize the child;  mBounds.x/y contain the child's correct origin;
-    // r.x/y are always <= zero - adding them to r.width/height produces
-    // the actual clipped width/height this window should have
+    // the sum of r.x/y + r.width/height produces the actual clipped
+    // width/height this window should have - it's only smaller than
+    // normal when part or all the window is scrolled off the right
+    // or bottom side of the parent
     w->Resize(configuration.mBounds.x, configuration.mBounds.y,
-              r.width + r.x, r.height + r.y, PR_TRUE);
+              r.width + r.x, r.height + r.y, PR_FALSE);
 
     // some plugins may shrink their window when the Mozilla widget window
     // shrinks, then fail to reinflate when the widget window reinflates;
     // this ensures the plugin's window is always at its full size and is
-    // clipped correctly by the widget's bounds
+    // positioned so the correct part of the child will be clipped
     HWND hwnd = WinQueryWindow( w->mWnd, QW_TOP);
-    ::WinSetWindowPos(hwnd, 0, 0, 0,
-                      configuration.mBounds.width, configuration.mBounds.height,
-                      SWP_MOVE | SWP_SIZE);
+    WinSetWindowPos(hwnd, 0, 0, r.height + r.y - configuration.mBounds.height,
+                    configuration.mBounds.width, configuration.mBounds.height,
+                    SWP_MOVE | SWP_SIZE);
 
     // show or hide the window, then save the array of rects
     // for future reference
@@ -2108,7 +2110,22 @@ void nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
   // fetching it unlocks the screen so it can be updated
   HPS hps = 0;
   CheckDragStatus(ACTION_SCROLL, &hps);
-  ::WinScrollWindow(mWnd, aDelta.x, -aDelta.y, &clip, &clip, NULL, NULL, flags);
+
+  // send a WM_VRNDISABLED to the grandchildren of this window;
+  // if they're plugins that blit directly to the screen, this
+  // will halt their output during the scroll - if they're
+  // anything else, this will have no effect
+  HWND hChild;
+  HENUM hEnum = WinBeginEnumWindows(mWnd);
+  while ((hChild = WinGetNextWindow(hEnum)) != 0) {
+    HWND hGrandChild;
+    if ((hGrandChild = WinQueryWindow(hChild, QW_TOP)) != 0)
+      WinSendMsg(hGrandChild, WM_VRNDISABLED, 0, 0);
+  }
+  WinEndEnumWindows(hEnum);
+
+  // do it
+  WinScrollWindow(mWnd, aDelta.x, -aDelta.y, &clip, &clip, NULL, NULL, flags);
 
   // Now make sure all children actually get positioned, sized, and clipped
   // correctly.  If SW_SCROLLCHILDREN was in effect, they may already be.
