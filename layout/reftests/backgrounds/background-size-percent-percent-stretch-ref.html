@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>background-size: 100% 100%; stretch reference</title>
+  <style type="text/css">
+#outer
+{
+  border: 10px solid black;
+  width: 60px;
+  height: 120px;
+}
+#inner1
+{
+  background: blue;
+  width: 15px;
+  height: 120px;
+  display: inline-block;
+  background-image: url(blue-16x20.png);
+
+  /* obscure sampling artifacts at the color boundary */
+  border-right: 5px solid black;
+}
+#inner2
+{
+  background: lime;
+  width: 35px;
+  height: 120px;
+  display: inline-block;
+  background-image: url(green-16x20.png);
+
+  /* obscure sampling artifacts at the color boundary */
+  border-left: 5px solid black;
+}
+  </style>
+</head>
+<body>
+<div id="outer"><div id="inner1"></div><div id="inner2"></div></div>
+</body>
+</html>

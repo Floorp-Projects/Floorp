@@ -258,11 +258,17 @@ SECKEY_CreateECPrivateKey(SECKEYECParams *param, SECKEYPublicKey **pubk, void *c
 	return NULL;
     }
 
-    privk = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, param, 
-                                 pubk, PR_FALSE, PR_FALSE, cx);
+    privk = PK11_GenerateKeyPairWithOpFlags(slot, CKM_EC_KEY_PAIR_GEN, 
+                        param, pubk,
+                        PK11_ATTR_SESSION | PK11_ATTR_INSENSITIVE | 
+                        PK11_ATTR_PUBLIC,
+                        CKF_DERIVE, CKF_DERIVE|CKF_SIGN,cx);
     if (!privk) 
-	privk = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, param, 
-	                             pubk, PR_FALSE, PR_TRUE, cx);
+        privk = PK11_GenerateKeyPairWithOpFlags(slot, CKM_EC_KEY_PAIR_GEN, 
+                        param, pubk,
+                        PK11_ATTR_SESSION | PK11_ATTR_SENSITIVE | 
+                        PK11_ATTR_PRIVATE,
+                        CKF_DERIVE, CKF_DERIVE|CKF_SIGN,cx);
 
     PK11_FreeSlot(slot);
     return(privk);

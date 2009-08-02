@@ -52,8 +52,7 @@ public:
      * Get a textrun for the given text, using a global cache. The textrun
      * must be released via ReleaseTextRun, not deleted.
      * Do not set any state in the textrun (e.g. actual or potential linebreaks).
-     * Flags IS_8BIT, IS_ASCII and HAS_SURROGATES are automatically set
-     * appropriately.
+     * Flags IS_8BIT and IS_ASCII are automatically set appropriately.
      * Flag IS_PERSISTENT must NOT be set unless aText is guaranteed to live
      * forever.
      * The string can contain any characters, invalid ones will be stripped

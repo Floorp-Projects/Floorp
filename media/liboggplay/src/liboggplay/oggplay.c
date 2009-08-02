@@ -134,6 +134,7 @@ oggplay_initialise(OggPlay *me, int block) {
   for (i = 0; i < me->num_tracks; i++) {
     me->decode_data[i]->active = 0;
   }
+  me->active_tracks = 0;
 
   /*
    * if the buffer was set up before initialisation, prepare it now
@@ -698,8 +699,8 @@ read_more_data:
        */
       for (i = 0; i < me->num_tracks; i++) {
         me->decode_data[i]->active = 0;
-        me->active_tracks = 0;
       }
+      me->active_tracks = 0;
 
       if (info != NULL) {
         me->callback (me, num_records, info, me->callback_user_ptr);

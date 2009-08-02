@@ -34,14 +34,14 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.16 $ $Date: 2008/12/03 18:44:24 $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.17 $ $Date: 2009/05/22 01:03:30 $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
 include $(CORE_DEPTH)/coreconf/rules.mk
 
-ifdef MOZILLA_CLIENT
+ifdef NOTDEF # was ifdef MOZILLA_CLIENT
 NSS_BUILD_CAPI = 1
 endif
 

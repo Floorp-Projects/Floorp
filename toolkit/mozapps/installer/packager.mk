@@ -249,7 +249,6 @@ NO_PKG_FILES += \
 	certutil* \
 	pk12util* \
 	winEmbed.exe \
-	os2Embed.exe \
 	chrome/chrome.rdf \
 	chrome/app-chrome.manifest \
 	chrome/overlayinfo \

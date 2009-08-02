@@ -205,18 +205,6 @@ nsBoxFrame::Init(nsIContent*      aContent,
 
   MarkIntrinsicWidthsDirty();
 
-  // see if we need a widget
-  if (aParent && aParent->IsBoxFrame()) {
-    if (aParent->ChildrenMustHaveWidgets()) {
-        rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsIView* view = GetView();
-        if (!view->HasWidget())
-           view->CreateWidget(kWidgetCID);   
-    }
-  }
-
   CacheAttributes();
 
 #ifdef DEBUG_LAYOUT
@@ -1036,7 +1024,7 @@ nsBoxFrame::RemoveFrame(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsBoxFrame::InsertFrames(nsIAtom*        aListName,
                          nsIFrame*       aPrevFrame,
-                         nsIFrame*       aFrameList)
+                         nsFrameList&    aFrameList)
 {
    NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                 "inserting after sibling frame with different parent");
@@ -1046,11 +1034,12 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
    nsBoxLayoutState state(PresContext());
 
    // insert the child frames
-   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+   const nsFrameList::Slice& newFrames =
+     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
    // notify the layout manager
    if (mLayoutManager)
-     mLayoutManager->ChildrenInserted(this, state, aPrevFrame, aFrameList);
+     mLayoutManager->ChildrenInserted(this, state, aPrevFrame, newFrames);
 
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.
@@ -1067,17 +1056,17 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
 
 NS_IMETHODIMP
 nsBoxFrame::AppendFrames(nsIAtom*        aListName,
-                         nsIFrame*       aFrameList)
+                         nsFrameList&    aFrameList)
 {
    NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
    nsBoxLayoutState state(PresContext());
 
    // append the new frames
-   mFrames.AppendFrames(this, aFrameList);
+   const nsFrameList::Slice& newFrames = mFrames.AppendFrames(this, aFrameList);
 
    // notify the layout manager
    if (mLayoutManager)
-     mLayoutManager->ChildrenAppended(this, state, aFrameList);
+     mLayoutManager->ChildrenAppended(this, state, newFrames);
 
 #ifdef DEBUG_LAYOUT
    // if we are in debug make sure our children are in debug as well.

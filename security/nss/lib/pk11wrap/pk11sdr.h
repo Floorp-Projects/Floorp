@@ -43,13 +43,14 @@ SEC_BEGIN_PROTOS
 
 /*
  * PK11SDR_Encrypt - encrypt data using the specified key id or SDR default
- *
+ * result should be freed with SECItem_ZfreeItem
  */
 SECStatus
 PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx);
 
 /*
  * PK11SDR_Decrypt - decrypt data previously encrypted with PK11SDR_Encrypt
+ * result should be freed with SECItem_ZfreeItem
  */
 SECStatus
 PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx);

@@ -339,7 +339,7 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
 		if (stat(file, &statbuf))
 			return (NULL);
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(VMS) && !defined(XP_OS2)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 #if defined(__QNX__) && !defined(__QNXNTO__)
 		hashp->BSIZE = 512; /* preferred blk size on qnx4 */
 #else

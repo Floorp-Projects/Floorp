@@ -21,6 +21,10 @@
   text-rendering: optimizeLegibility;
 }
 
+:root:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
 /* hide the content and destroy the frame */
 [hidden="true"] {
   display: none;
@@ -692,7 +696,7 @@ textbox[type="number"] {
   -moz-binding: url("chrome://global/content/bindings/numberbox.xml#numberbox");
 }
 
-.textbox-contextmenu[chromedir="rtl"] {
+.textbox-contextmenu:-moz-locale-dir(rtl) {
   direction: rtl;
 }
 

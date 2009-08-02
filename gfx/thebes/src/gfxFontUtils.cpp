@@ -516,7 +516,12 @@ nsresult gfxFontUtils::MakeUniqueUserFontName(nsAString& aName)
 #pragma pack(1)
 
 struct AutoSwap_PRUint16 {
+#ifdef __SUNPRO_CC
+    AutoSwap_PRUint16& operator = (const PRUint16 aValue)
+      { this->value = NS_SWAP16(aValue); return *this; }
+#else
     AutoSwap_PRUint16(PRUint16 aValue) { value = NS_SWAP16(aValue); }
+#endif
     operator PRUint16() const { return NS_SWAP16(value); }
     operator PRUint32() const { return NS_SWAP16(value); }
     operator PRUint64() const { return NS_SWAP16(value); }
@@ -524,20 +529,35 @@ struct AutoSwap_PRUint16 {
 };
 
 struct AutoSwap_PRInt16 {
+#ifdef __SUNPRO_CC
+    AutoSwap_PRInt16& operator = (const PRInt16 aValue)
+      { this->value = NS_SWAP16(aValue); return *this; }
+#else
     AutoSwap_PRInt16(PRInt16 aValue) { value = NS_SWAP16(aValue); }
+#endif
     operator PRInt16() const { return NS_SWAP16(value); }
     operator PRUint32() const { return NS_SWAP16(value); }
     PRInt16  value;
 };
 
 struct AutoSwap_PRUint32 {
+#ifdef __SUNPRO_CC
+    AutoSwap_PRUint32& operator = (const PRUint32 aValue)
+      { this->value = NS_SWAP32(aValue); return *this; }
+#else
     AutoSwap_PRUint32(PRUint32 aValue) { value = NS_SWAP32(aValue); }
+#endif
     operator PRUint32() const { return NS_SWAP32(value); }
     PRUint32  value;
 };
 
 struct AutoSwap_PRUint64 {
+#ifdef __SUNPRO_CC
+    AutoSwap_PRUint64& operator = (const PRUint64 aValue)
+      { this->value = NS_SWAP64(aValue); return *this; }
+#else
     AutoSwap_PRUint64(PRUint64 aValue) { value = NS_SWAP64(aValue); }
+#endif
     operator PRUint64() const { return NS_SWAP64(value); }
     PRUint64  value;
 };

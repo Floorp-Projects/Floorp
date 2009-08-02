@@ -54,11 +54,11 @@ struct stat {
   time_t st_atime;
   time_t st_mtime;
 };
-int remove(const char* path);
-int chmod(const char* path, unsigned int mode);
+int _wchmod(const WCHAR* path, unsigned int mode);
 int fstat(FILE* handle, struct stat* buff);
 int stat(const char* path, struct stat* buf);
-int _mkdir(const char* path);
+int _wstat(const WCHAR* path, struct stat* buf);
+int _wmkdir(const WCHAR* path);
 int access(const char* path, int amode);
 int _waccess(const WCHAR* path, int amode);
 int _wremove(const WCHAR* wpath);

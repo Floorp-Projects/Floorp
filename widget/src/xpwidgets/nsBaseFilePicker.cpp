@@ -153,8 +153,7 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
   }
   if (aFilterMask & filterImages) {
     stringBundle->GetStringFromName(NS_LITERAL_STRING("imageTitle").get(), getter_Copies(title));
-    stringBundle->GetStringFromName(NS_LITERAL_STRING("imageFilter").get(), getter_Copies(filter));
-    AppendFilter(title,filter);
+    AppendFilter(title,NS_LITERAL_STRING("*.jpg; *.jpeg; *.gif; *.png; *.bmp; *.ico"));
   }
   if (aFilterMask & filterXML) {
     stringBundle->GetStringFromName(NS_LITERAL_STRING("xmlTitle").get(), getter_Copies(title));

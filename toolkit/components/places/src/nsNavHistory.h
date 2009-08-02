@@ -52,14 +52,6 @@
 #include "nsINavHistoryService.h"
 #include "nsPIPlacesDatabase.h"
 #include "nsPIPlacesHistoryListenersNotifier.h"
-#ifdef MOZ_XUL
-#include "nsIAutoCompleteController.h"
-#include "nsIAutoCompleteInput.h"
-#include "nsIAutoCompletePopup.h"
-#include "nsIAutoCompleteSearch.h"
-#include "nsIAutoCompleteResult.h"
-#include "nsIAutoCompleteSimpleResult.h"
-#endif
 #include "nsIBrowserHistory.h"
 #include "nsICollation.h"
 #include "nsIGlobalHistory.h"
@@ -109,8 +101,6 @@
 #define PLACES_INIT_COMPLETE_EVENT_TOPIC "places-init-complete"
 #define PLACES_DB_LOCKED_EVENT_TOPIC "places-database-locked"
 
-struct AutoCompleteIntermediateResult;
-class AutoCompleteResultComparator;
 class mozIAnnotationService;
 class nsNavHistory;
 class nsNavBookmarks;
@@ -118,6 +108,7 @@ class QueryKeyValuePair;
 class nsIEffectiveTLDService;
 class nsIIDNService;
 class PlacesSQLQueryBuilder;
+class nsIAutoCompleteController;
 
 // nsNavHistory
 
@@ -130,13 +121,7 @@ class nsNavHistory : public nsSupportsWeakReference
                    , public nsICharsetResolver
                    , public nsPIPlacesDatabase
                    , public nsPIPlacesHistoryListenersNotifier
-#ifdef MOZ_XUL
-                   , public nsIAutoCompleteSearch
-                   , public nsIAutoCompleteSimpleResultListener
-#endif
 {
-  friend class AutoCompleteIntermediateResultSet;
-  friend class AutoCompleteResultComparator;
   friend class PlacesSQLQueryBuilder;
 
 public:
@@ -152,10 +137,6 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSPIPLACESDATABASE
   NS_DECL_NSPIPLACESHISTORYLISTENERSNOTIFIER
-#ifdef MOZ_XUL
-  NS_DECL_NSIAUTOCOMPLETESEARCH
-  NS_DECL_NSIAUTOCOMPLETESIMPLERESULTLISTENER
-#endif
 
 
   /**
@@ -658,123 +639,14 @@ protected:
   PRInt64 mLastSessionID;
   PRInt64 GetNewSessionID() { mLastSessionID ++; return mLastSessionID; }
 
-  //
+#ifdef MOZ_XUL
   // AutoComplete stuff
-  //
-  static const PRInt32 kAutoCompleteIndex_URL;
-  static const PRInt32 kAutoCompleteIndex_Title;
-  static const PRInt32 kAutoCompleteIndex_FaviconURL;
-  static const PRInt32 kAutoCompleteIndex_ParentId;
-  static const PRInt32 kAutoCompleteIndex_BookmarkTitle;
-  static const PRInt32 kAutoCompleteIndex_Tags;
-  static const PRInt32 kAutoCompleteIndex_VisitCount;
-  static const PRInt32 kAutoCompleteIndex_Typed;
-  nsCOMPtr<mozIStorageStatement> mDBCurrentQuery; //  kAutoCompleteIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteTypedQuery; //  kAutoCompleteIndex_* results
-  mozIStorageStatement* GetDBAutoCompleteHistoryQuery();
-  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteHistoryQuery; //  kAutoCompleteIndex_* results
-  mozIStorageStatement* GetDBAutoCompleteStarQuery();
-  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteStarQuery; //  kAutoCompleteIndex_* results
-  mozIStorageStatement* GetDBAutoCompleteTagsQuery();
-  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteTagsQuery; //  kAutoCompleteIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBPreviousQuery; //  kAutoCompleteIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBAdaptiveQuery; //  kAutoCompleteIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBKeywordQuery; //  kAutoCompleteIndex_* results
   mozIStorageStatement* GetDBFeedbackIncrease();
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
-  /**
-   * AutoComplete word matching behavior to determine if words should match on
-   * word boundaries or not or both.
-   */
-  enum MatchType {
-    MATCH_ANYWHERE,
-    MATCH_BOUNDARY_ANYWHERE,
-    MATCH_BOUNDARY,
-    MATCH_BEGINNING
-  };
-
-  nsresult InitAutoComplete();
-  nsresult CreateAutoCompleteQueries();
-  PRBool mAutoCompleteEnabled;
-  MatchType mAutoCompleteMatchBehavior;
-  PRBool mAutoCompleteFilterJavascript;
-  PRInt32 mAutoCompleteMaxResults;
-  nsString mAutoCompleteRestrictHistory;
-  nsString mAutoCompleteRestrictBookmark;
-  nsString mAutoCompleteRestrictTag;
-  nsString mAutoCompleteMatchTitle;
-  nsString mAutoCompleteMatchUrl;
-  nsString mAutoCompleteRestrictTyped;
-  PRInt32 mAutoCompleteSearchChunkSize;
-  PRInt32 mAutoCompleteSearchTimeout;
-  nsCOMPtr<nsITimer> mAutoCompleteTimer;
-
-  static const PRInt32 kAutoCompleteBehaviorHistory;
-  static const PRInt32 kAutoCompleteBehaviorBookmark;
-  static const PRInt32 kAutoCompleteBehaviorTag;
-  static const PRInt32 kAutoCompleteBehaviorTitle;
-  static const PRInt32 kAutoCompleteBehaviorUrl;
-  static const PRInt32 kAutoCompleteBehaviorTyped;
-
-  PRInt32 mAutoCompleteDefaultBehavior; // kAutoCompleteBehavior* bitmap
-  PRInt32 mAutoCompleteCurrentBehavior; // kAutoCompleteBehavior* bitmap
-
-  // Original search string for case-sensitive usage
-  nsString mOrigSearchString;
-  // Search string and tokens for case-insensitive matching
-  nsString mCurrentSearchString;
-  nsTArray<nsString> mCurrentSearchTokens;
-  void GenerateSearchTokens();
-  void AddSearchToken(nsAutoString &aToken);
-  void ProcessTokensForSpecialSearch();
-
-#ifdef MOZ_XUL
   nsresult AutoCompleteFeedback(PRInt32 aIndex,
                                 nsIAutoCompleteController *aController);
-
-  nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
-  nsCOMPtr<nsIAutoCompleteSimpleResult> mCurrentResult;
 #endif
-
-  MatchType mCurrentMatchType;
-  MatchType mPreviousMatchType;
-  nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
-  PRInt32 mCurrentChunkOffset;
-  PRInt32 mPreviousChunkOffset;
-
-  nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;
-  nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
-
-  nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
-  nsresult AutoCompletePreviousSearch();
-  nsresult AutoCompleteAdaptiveSearch();
-  nsresult AutoCompleteKeywordSearch();
-
-  /**
-   * Query type passed to AutoCompleteProcessSearch to determine what style to
-   * use and if results should be filtered
-   */
-  enum QueryType {
-    QUERY_KEYWORD,
-    QUERY_FILTERED
-  };
-  nsresult AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
-                                     const QueryType aType,
-                                     PRBool *aHasMoreResults = nsnull);
-  PRBool AutoCompleteHasEnoughResults();
-
-  nsresult PerformAutoComplete();
-  nsresult StartAutoCompleteTimer(PRUint32 aMilliseconds);
-  static void AutoCompleteTimerCallback(nsITimer* aTimer, void* aClosure);
-
-  PRBool mAutoCompleteFinishedSearch;
-  void DoneSearching(PRBool aFinished);
-
-  // Used to unescape encoded URI strings for searching
-  nsCOMPtr<nsITextToSubURI> mTextURIService;
-  nsString FixupURIText(const nsAString &aURIText);
 
   PRInt32 mExpireDaysMin;
   PRInt32 mExpireDaysMax;

@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: example.c,v 1.5 2005/07/20 20:32:42 wtchang%redhat.com Exp $ */
+/* @(#) $Id: example.c,v 1.6 2009/06/05 02:22:16 nelson%bolyard.com Exp $ */
 
 #include <stdio.h>
 #include "zlib.h"
@@ -13,7 +13,7 @@
 #  include <stdlib.h>
 #endif
 
-#if defined(VMS) || defined(RISCOS)
+#if defined(RISCOS)
 #  define TESTFILE "foo-gz"
 #else
 #  define TESTFILE "foo.gz"

@@ -336,21 +336,33 @@ nsTextEquivUtils::AppendFromValue(nsIAccessible *aAccessible,
       NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
   }
 
-  nsCOMPtr<nsIAccessible> nextSibling;
-  aAccessible->GetNextSibling(getter_AddRefs(nextSibling));
-  if (nextSibling) {
-    nsCOMPtr<nsIAccessible> parent;
-    aAccessible->GetParent(getter_AddRefs(parent));
-    if (parent) {
-      nsCOMPtr<nsIAccessible> firstChild;
-      parent->GetFirstChild(getter_AddRefs(firstChild));
-      if (firstChild && firstChild != aAccessible) {
-        nsresult rv = aAccessible->GetValue(text);
-        NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(aAccessible);
+  nsCOMPtr<nsIDOMNode> node;
+  acc->GetDOMNode(getter_AddRefs(node));
+  NS_ENSURE_STATE(node);
 
-        return AppendString(aString, text) ?
-          NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  NS_ENSURE_STATE(content);
+
+  nsCOMPtr<nsIContent> parent = content->GetParent();
+  PRInt32 indexOf = parent->IndexOf(content);
+
+  for (PRInt32 i = indexOf - 1; i >= 0; i--) {
+    // check for preceding text...
+    if (!parent->GetChildAt(i)->TextIsOnlyWhitespace()) {
+      PRUint32 childCount = parent->GetChildCount();
+      for (PRUint32 j = indexOf + 1; j < childCount; j++) {
+        // .. and subsequent text
+        if (!parent->GetChildAt(j)->TextIsOnlyWhitespace()) {
+          nsresult rv = aAccessible->GetValue(text);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          return AppendString(aString, text) ?
+            NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
+          break;
+        }
       }
+      break;
     }
   }
 

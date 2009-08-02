@@ -73,11 +73,17 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
-  virtual nsIAtom* GetType() const;
+  // Override SetInitialChildList/AppendFrames/InsertFrames to
+  // create views for our child frames if necessary
+  NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
+                                  nsFrameList&    aChildList);
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
+                          nsFrameList&    aFrameList);
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsFrameList&    aFrameList);
 
-#ifndef MOZ_GFX_OPTIMIZE_MOBILE
-  virtual PRBool ChildrenMustHaveWidgets() const { return PR_TRUE; }
-#endif
+  virtual nsIAtom* GetType() const;
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const

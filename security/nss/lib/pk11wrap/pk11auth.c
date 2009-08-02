@@ -630,7 +630,7 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx)
 void PK11_LogoutAll(void)
 {
     SECMODListLock *lock = SECMOD_GetDefaultModuleListLock();
-    SECMODModuleList *modList = SECMOD_GetDefaultModuleList();
+    SECMODModuleList *modList;
     SECMODModuleList *mlp = NULL;
     int i;
 
@@ -640,6 +640,7 @@ void PK11_LogoutAll(void)
     }
 
     SECMOD_GetReadLock(lock);
+    modList = SECMOD_GetDefaultModuleList();
     /* find the number of entries */
     for (mlp = modList; mlp != NULL; mlp = mlp->next) {
 	for (i=0; i < mlp->module->slotCount; i++) {

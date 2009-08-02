@@ -23,6 +23,7 @@
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *   Michael Kraft <morac99-firefox@yahoo.com>
  *   Paul O’Shannessy <paul@oshannessy.com>
+ *   Nils Maier <maierman@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -74,6 +75,7 @@ const NOTIFY_WINDOWS_RESTORED = "sessionstore-windows-restored";
 const OBSERVING = [
   "domwindowopened", "domwindowclosed",
   "quit-application-requested", "quit-application-granted",
+  "browser-lastwindow-close-granted",
   "quit-application", "browser:purge-session-history",
   "private-browsing", "browser:purge-domain-data",
   "private-browsing-change-granted"
@@ -168,6 +170,11 @@ SessionStoreService.prototype = {
 
   // whether we clearing history on shutdown
   _clearingOnShutdown: false,
+
+#ifndef XP_MACOSX
+  // whether the last window was closed and should be restored
+  _restoreLastWindow: false,
+#endif
 
 /* ........ Global Event Handlers .............. */
 
@@ -329,6 +336,15 @@ SessionStoreService.prototype = {
       // freeze the data at what we've got (ignoring closing windows)
       this._loadState = STATE_QUITTING;
       break;
+#ifndef XP_MACOSX
+    case "browser-lastwindow-close-granted":
+      // last browser window is quitting.
+      // remember to restore the last window when another browser window is openend
+      // do not account for pref(resume_session_once) at this point, as it might be
+      // set by another observer getting this notice after us
+      this._restoreLastWindow = true;
+      break;
+#endif
     case "quit-application":
       if (aData == "restart") {
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
@@ -568,7 +584,8 @@ SessionStoreService.prototype = {
         this.restoreWindow(aWindow, this._initialState, this._isCmdLineEmpty(aWindow));
         delete this._initialState;
         
-        // mark ourselves as running
+        // _loadState changed from "stopped" to "running"
+        // force a save operation so that crashes happening during startup are correctly counted
         this.saveState(true);
       }
       else {
@@ -586,7 +603,38 @@ SessionStoreService.prototype = {
       let followUp = this._statesToRestore[aWindow.__SS_restoreID].windows.length == 1;
       this.restoreWindow(aWindow, this._statesToRestore[aWindow.__SS_restoreID], true, followUp);
     }
-    
+#ifndef XP_MACOSX
+    else if (this._restoreLastWindow && aWindow.toolbar.visible &&
+             this._closedWindows.length && this._doResumeSession() &&
+             !this._inPrivateBrowsing) {
+
+      // default to the most-recently closed window
+      // don't use popup windows
+      let state = null;
+      this._closedWindows = this._closedWindows.filter(function(aWinState) {
+        if (!state && !aWinState.isPopup) {
+          state = aWinState;
+          return false;
+        }
+        return true;
+      });
+      if (state) {
+        delete state.hidden;
+        state = { windows: [state] };
+        this._restoreCount = 1;
+        this.restoreWindow(aWindow, state, this._isCmdLineEmpty(aWindow));
+      }
+      // we actually restored the session just now.
+      this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
+    }
+    if (this._restoreLastWindow && aWindow.toolbar.visible) {
+      // always reset (if not a popup window)
+      // we don't want to restore a window directly after, for example,
+      // undoCloseWindow was executed.
+      this._restoreLastWindow = false;
+    }
+#endif
+
     var tabbrowser = aWindow.getBrowser();
     var tabpanels = tabbrowser.mPanelContainer;
     
@@ -1546,9 +1594,6 @@ SessionStoreService.prototype = {
         aHash[aHost] = {};
       if (!aHash[aHost][aPath])
         aHash[aHost][aPath] = {};
-      if (!aHash[aHost][aPath][aName])
-        aHash[aHost][aPath][aName] = {};
-
       aHash[aHost][aPath][aName] = aCookie;
     }
 
@@ -1569,14 +1614,9 @@ SessionStoreService.prototype = {
           if (cookie.isSession && _this._checkPrivacyLevel(cookie.isSecure)) {
             // use the cookie's host, path, and name as keys into a hash,
             // to make sure we serialize each cookie only once
-            var isInHash = false;
-            try {
-              if (jscookies[cookie.host][cookie.path][cookie.name])
-                isInHash = true;
-            } catch (e) {
-              // not in hash yet
-            }
-            if (!isInHash) {
+            if (!(cookie.host in jscookies &&
+                  cookie.path in jscookies[cookie.host] &&
+                  cookie.name in jscookies[cookie.host][cookie.path])) {
               var jscookie = { "host": cookie.host, "value": cookie.value };
               // only add attributes with non-default values (saving a few bits)
               if (cookie.path) jscookie.path = cookie.path;

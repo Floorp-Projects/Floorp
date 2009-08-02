@@ -89,7 +89,7 @@ public:
   // we are just a wrapper and these methods shouldn't be called
   NS_IMETHOD
   AppendFrames(nsIAtom*        aListName,
-               nsIFrame*       aFrameList)
+               nsFrameList&    aFrameList)
   {
     NS_NOTREACHED("unsupported operation");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -98,7 +98,7 @@ public:
   NS_IMETHOD
   InsertFrames(nsIAtom*        aListName,
                nsIFrame*       aPrevFrame,
-               nsIFrame*       aFrameList)
+               nsFrameList&    aFrameList)
   {
     NS_NOTREACHED("unsupported operation");
     return NS_ERROR_NOT_IMPLEMENTED;

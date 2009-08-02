@@ -57,18 +57,22 @@ static void
 Usage(char *progName)
 {
 #define FPS PR_fprintf(PR_STDERR,
-    FPS "Usage:	 %s -i importfile [-d certdir] [-P dbprefix] [-h tokenname] [-v]\n",
+    FPS "Usage:	 %s -i importfile [-d certdir] [-P dbprefix] [-h tokenname]\n",
 				 progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
+    FPS "\t\t [-v]\n");
 
-    FPS "Usage:	 %s -l listfile [-d certdir] [-P dbprefix] [-h tokenname] [-r]\n",
+    FPS "Usage:	 %s -l listfile [-d certdir] [-P dbprefix] [-h tokenname]\n",
 				 progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
+    FPS "\t\t [-v]\n");
 
-    FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-P dbprefix] [-v]\n", 
-        progName);
-    FPS "\t\t [-c key_cipher] [-C cert_cipher] [-m | --key_len keyLen] [-n | --cert_key_len certKeyLen]\n");
-    FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filefilepw]\n");
+    FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-P dbprefix]\n",
+		progName);
+    FPS "\t\t [-c key_cipher] [-C cert_cipher]\n"
+        "\t\t [-m | --key_len keyLen] [--cert_key_len certKeyLen] [-v]\n");
+    FPS "\t\t [-k slotpwfile | -K slotpw]\n"
+		"\t\t [-w p12filepwfile | -W p12filefilepw]\n");
 
     exit(PK12UERR_USAGE);
 }
@@ -955,7 +959,7 @@ static secuCommandFlag pk12util_options[] =
     { /* opt_Cipher	       */ 'c', PR_TRUE,  0, PR_FALSE },
     { /* opt_CertCipher	       */ 'C', PR_TRUE,  0, PR_FALSE },
     { /* opt_KeyLength         */ 'm', PR_TRUE,  0, PR_FALSE, "key_len" },
-    { /* opt_CertKeyLength     */ 'n', PR_TRUE,  0, PR_FALSE, "cert_key_len" }
+    { /* opt_CertKeyLength     */ 0, PR_TRUE,  0, PR_FALSE, "cert_key_len" }
 };
 
 int

@@ -43,10 +43,8 @@
 
 <!DOCTYPE bindings [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
   <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd" >
   %brandDTD;
-  %globalDTD;
   %extensionsDTD;
 ]>
 

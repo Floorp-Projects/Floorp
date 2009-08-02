@@ -45,7 +45,7 @@
   padding: 4px 5px;
 }
 
-#HelpToolbar[chromedir="rtl"] toolbarbutton {
+#HelpToolbar:-moz-locale-dir(rtl) toolbarbutton {
   list-style-image: url("chrome://help/skin/Toolbar-rtl.png");
 }
 

@@ -3519,16 +3519,21 @@ hmac_calc(unsigned char *hmac_computed,
 void hmac_test(char *reqfn) 
 {
     unsigned int i, j;
-    size_t bufSize =      288;    /* MAX buffer size */
+    size_t bufSize =      400;    /* MAX buffer size */
     char *buf = NULL;  /* holds one line from the input REQUEST file.*/
     unsigned int keyLen;          /* Key Length */  
-    unsigned char key[140];       /* key MAX size = 140 */
+    unsigned char key[200];       /* key MAX size = 184 */
     unsigned int msgLen = 128;    /* the length of the input  */
                                   /*  Message is always 128 Bytes */
     unsigned char *msg = NULL;    /* holds the message to digest.*/
     unsigned int HMACLen;         /* the length of the HMAC Bytes  */
+    unsigned int TLen;            /* the length of the requested */
+                                  /* truncated HMAC Bytes */
     unsigned char HMAC[HASH_LENGTH_MAX];  /* computed HMAC */
+    unsigned char expectedHMAC[HASH_LENGTH_MAX]; /* for .fax files that have */ 
+                                                 /* supplied known answer */
     HASH_HashType hash_alg;       /* HMAC type */
+    
 
     FILE *req = NULL;  /* input stream from the REQUEST file */
     FILE *resp;        /* output stream to the RESPONSE file */
@@ -3546,6 +3551,28 @@ void hmac_test(char *reqfn)
     req = fopen(reqfn, "r");
     resp = stdout;
     while (fgets(buf, bufSize, req) != NULL) {
+        if (strncmp(buf, "Mac", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            memset(expectedHMAC, 0, HASH_LENGTH_MAX);
+            for (j=0; isxdigit(buf[i]); i+=2,j++) { 
+                hex_to_byteval(&buf[i], &expectedHMAC[j]);
+            }
+            if (memcmp(HMAC, expectedHMAC, TLen) != 0) {
+                fprintf(stderr, "Generate failed:\n");
+                fputs(  "   expected=", stderr);
+                to_hex_str(buf, expectedHMAC, 
+                           TLen);
+                fputs(buf, stderr);
+                fputs("\n   generated=", stderr);
+                to_hex_str(buf, HMAC, 
+                           TLen);
+                fputs(buf, stderr);
+                fputc('\n', stderr);
+            }
+        }
 
         /* a comment or blank line */
         if (buf[0] == '#' || buf[0] == '\n') {
@@ -3583,7 +3610,7 @@ void hmac_test(char *reqfn)
             fputs(buf, resp);
             /* zeroize the variables for the test with this data set */
             keyLen = 0; 
-            HMACLen = 0;
+            TLen = 0;
             memset(key, 0, sizeof key);     
             memset(msg, 0, sizeof msg);  
             memset(HMAC, 0, sizeof HMAC);
@@ -3616,7 +3643,7 @@ void hmac_test(char *reqfn)
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            HMACLen = atoi(&buf[i]); /* in bytes */
+            TLen = atoi(&buf[i]); /* in bytes */
             fputs(buf, resp);
             continue;
         }
@@ -3636,7 +3663,7 @@ void hmac_test(char *reqfn)
                goto loser;
            }
            fputs("MAC = ", resp);
-           to_hex_str(buf, HMAC, HMACLen);
+           to_hex_str(buf, HMAC, TLen);
            fputs(buf, resp);
            fputc('\n', resp);
            continue;

@@ -113,7 +113,7 @@ function populateReportList() {
       if (leaf.substr(0, 3) == "bp-" &&
           leaf.substr(-4) == ".txt") {
         var entry = {
-          id: leaf.substring(3, leaf.length - 4),
+          id: leaf.slice(0, -4),
           date: file.lastModifiedTime
         };
         var pos = findInsertionPoint(reports, entry.date);

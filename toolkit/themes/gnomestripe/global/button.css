@@ -326,11 +326,11 @@ button[icon="go-forward"][disabled="true"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=button&state=disabled");
 }
 
-button[icon="go-forward"][chromedir="rtl"] .button-icon {
+button[icon="go-forward"]:-moz-locale-dir(rtl) .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=button");
 }
 
-button[icon="go-forward"][chromedir="rtl"][disabled="true"] .button-icon {
+button[icon="go-forward"]:-moz-locale-dir(rtl)[disabled="true"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=button&state=disabled");
 }
 
@@ -342,11 +342,11 @@ button[icon="go-back"][disabled="true"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=button&state=disabled");
 }
 
-button[icon="go-back"][chromedir="rtl"] .button-icon {
+button[icon="go-back"]:-moz-locale-dir(rtl) .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=button");
 }
 
-button[icon="go-back"][chromedir="rtl"][disabled="true"] .button-icon {
+button[icon="go-back"]:-moz-locale-dir(rtl)[disabled="true"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=button&state=disabled");
 }
 

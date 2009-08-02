@@ -1209,7 +1209,7 @@ nsComputedDOMStyle::GetBackgroundList(PRUint8 nsStyleBackground::Layer::* aMembe
       delete valueList;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    val->SetIdent(nsCSSProps::ValueToKeywordEnum(bg->mLayers[i].*aMember, 
+    val->SetIdent(nsCSSProps::ValueToKeywordEnum(bg->mLayers[i].*aMember,
                                                  aTable));
   }
 
@@ -1250,6 +1250,97 @@ nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
   return CallQueryInterface(val, aValue);
 }
 
+static void
+AppendCSSGradientLength(const nsStyleCoord& aValue,
+                        nsROCSSPrimitiveValue* aPrimitive,
+                        nsAString& aString)
+{
+  nsAutoString tokenString;
+  if (aValue.GetUnit() == eStyleUnit_Coord)
+    aPrimitive->SetAppUnits(aValue.GetCoordValue());
+  else
+    aPrimitive->SetPercent(aValue.GetPercentValue());
+  aPrimitive->GetCssText(tokenString);
+  aString.Append(tokenString);
+}
+
+static void
+AppendCSSGradientRadius(const nscoord aValue,
+                        nsROCSSPrimitiveValue* aPrimitive,
+                        nsAString& aString)
+{
+  nsAutoString tokenString;
+  aPrimitive->SetAppUnits(aValue);
+  aPrimitive->GetCssText(tokenString);
+  aString.Append(tokenString);
+}
+
+nsresult
+nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
+                                         nsAString& aString)
+{
+  if (aGradient->mIsRadial)
+    aString.AssignLiteral("-moz-radial-gradient(");
+  else
+    aString.AssignLiteral("-moz-linear-gradient(");
+
+  nsROCSSPrimitiveValue *tmpVal = GetROCSSPrimitiveValue();
+  if (!tmpVal)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // starting X position
+  AppendCSSGradientLength(aGradient->mStartX, tmpVal, aString);
+  aString.AppendLiteral(" ");
+
+  // starting Y position
+  AppendCSSGradientLength(aGradient->mStartY, tmpVal, aString);
+  aString.AppendLiteral(", ");
+
+  // starting radius
+  if (aGradient->mIsRadial) {
+    AppendCSSGradientRadius(aGradient->mStartRadius, tmpVal, aString);
+    aString.AppendLiteral(", ");
+  }
+
+  // ending X position
+  AppendCSSGradientLength(aGradient->mEndX, tmpVal, aString);
+  aString.AppendLiteral(" ");
+
+  // ending Y position
+  AppendCSSGradientLength(aGradient->mEndY, tmpVal, aString);
+
+  // ending radius
+  if (aGradient->mIsRadial) {
+    aString.AppendLiteral(", ");
+    AppendCSSGradientRadius(aGradient->mStartRadius, tmpVal, aString);
+  }
+
+  // color stops
+  for (PRUint32 i = 0; i < aGradient->mStops.Length(); ++i) {
+    nsAutoString tokenString;
+    aString.AppendLiteral(", color-stop(");
+
+    tmpVal->SetPercent(aGradient->mStops[i].mPosition);
+    tmpVal->GetCssText(tokenString);
+    aString.Append(tokenString);
+    aString.AppendLiteral(", ");
+
+    nsresult rv = SetToRGBAColor(tmpVal, aGradient->mStops[i].mColor);
+    if (NS_FAILED(rv)) {
+      delete tmpVal;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    tmpVal->GetCssText(tokenString);
+    aString.Append(tokenString);
+    aString.AppendLiteral(")");
+  }
+
+  delete tmpVal;
+  aString.AppendLiteral(")");
+  return NS_OK;
+}
+
 nsresult
 nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
 {
@@ -1266,13 +1357,27 @@ nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    imgIRequest *image = bg->mLayers[i].mImage;
-    if (!image) {
-      val->SetIdent(eCSSKeyword_none);
+    const nsStyleBackground::Image &image = bg->mLayers[i].mImage;
+    if (image.GetType() == eBackgroundImage_Image) {
+      imgIRequest *req = image.GetImageData();
+      if (!req) {
+        val->SetIdent(eCSSKeyword_none);
+      } else {
+        nsCOMPtr<nsIURI> uri;
+        req->GetURI(getter_AddRefs(uri));
+        val->SetURI(uri);
+      }
+    } else if (image.GetType() == eBackgroundImage_Gradient) {
+      nsAutoString gradientString;
+      nsresult rv = GetCSSGradientString(image.GetGradientData(),
+                                         gradientString);
+      if (NS_FAILED(rv)) {
+        delete valueList;
+        return rv;
+      }
+      val->SetString(gradientString);
     } else {
-      nsCOMPtr<nsIURI> uri;
-      image->GetURI(getter_AddRefs(uri));
-      val->SetURI(uri);
+      val->SetIdent(eCSSKeyword_none);
     }
   }
 
@@ -1356,6 +1461,82 @@ nsComputedDOMStyle::GetBackgroundRepeat(nsIDOMCSSValue** aValue)
                            &nsStyleBackground::mRepeatCount,
                            nsCSSProps::kBackgroundRepeatKTable,
                            aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMozBackgroundSize(nsIDOMCSSValue** aValue)
+{
+  const nsStyleBackground* bg = GetStyleBackground();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  for (PRUint32 i = 0, i_end = bg->mSizeCount; i < i_end; ++i) {
+    const nsStyleBackground::Size &size = bg->mLayers[i].mSize;
+
+    switch (size.mWidthType) {
+      case nsStyleBackground::Size::eContain:
+      case nsStyleBackground::Size::eCover: {
+        NS_ABORT_IF_FALSE(size.mWidthType == size.mHeightType,
+                          "unsynced types");
+        nsCSSKeyword keyword = size.mWidthType == nsStyleBackground::Size::eContain
+                             ? eCSSKeyword_contain
+                             : eCSSKeyword_cover;
+        nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+        if (!val || !valueList->AppendCSSValue(val)) {
+          delete valueList;
+          delete val;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        val->SetIdent(keyword);
+        break;
+      }
+      default: {
+        nsDOMCSSValueList *itemList = GetROCSSValueList(PR_FALSE);
+        if (!itemList || !valueList->AppendCSSValue(itemList)) {
+          delete valueList;
+          delete itemList;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        nsROCSSPrimitiveValue* valX = GetROCSSPrimitiveValue();
+        nsROCSSPrimitiveValue* valY = GetROCSSPrimitiveValue();
+        if (!valX || !itemList->AppendCSSValue(valX)) {
+          delete valueList;
+          delete valX;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        if (!valY || !itemList->AppendCSSValue(valY)) {
+          delete valueList;
+          delete valY;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (size.mWidthType == nsStyleBackground::Size::eAuto) {
+          valX->SetIdent(eCSSKeyword_auto);
+        } else if (size.mWidthType == nsStyleBackground::Size::ePercentage) {
+          valX->SetPercent(size.mWidth.mFloat);
+        } else {
+          NS_ABORT_IF_FALSE(size.mWidthType == nsStyleBackground::Size::eLength,
+                            "bad mWidthType");
+          valX->SetAppUnits(size.mWidth.mCoord);
+        }
+
+        if (size.mHeightType == nsStyleBackground::Size::eAuto) {
+          valY->SetIdent(eCSSKeyword_auto);
+        } else if (size.mHeightType == nsStyleBackground::Size::ePercentage) {
+          valY->SetPercent(size.mHeight.mFloat);
+        } else {
+          NS_ABORT_IF_FALSE(size.mHeightType == nsStyleBackground::Size::eLength,
+                            "bad mHeightType");
+          valY->SetAppUnits(size.mHeight.mCoord);
+        }
+        break;
+      }
+    }
+  }
+
+  return CallQueryInterface(valueList, aValue);
 }
 
 nsresult
@@ -4216,6 +4397,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_clip,          BackgroundClip),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_inline_policy, BackgroundInlinePolicy),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_origin,        BackgroundOrigin),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_background_size,          MozBackgroundSize),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_colors,          BorderBottomColors),
     COMPUTED_STYLE_MAP_ENTRY(border_image,                  BorderImage),

@@ -270,8 +270,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/xulrunner.ico
-	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/app.ico
-	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
 endif
 
 libs::

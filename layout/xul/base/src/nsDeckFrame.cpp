@@ -56,6 +56,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
 #include "nsDisplayList.h"
+#include "nsHTMLContainerFrame.h"
 
 nsIFrame*
 NS_NewDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -105,6 +106,39 @@ nsDeckFrame::Init(nsIContent*     aContent,
   mIndex = GetSelectedIndex();
 
   return rv;
+}
+
+static void
+CreateViewsForFrames(const nsFrameList& aFrames)
+{
+  for (nsFrameList::Enumerator f(aFrames); !f.AtEnd(); f.Next()) {
+    nsHTMLContainerFrame::CreateViewForFrame(f.get(), PR_TRUE);
+  }
+}
+
+NS_IMETHODIMP
+nsDeckFrame::SetInitialChildList(nsIAtom*        aListName,
+                                 nsFrameList&    aChildList)
+{
+  CreateViewsForFrames(aChildList);
+  return nsBoxFrame::SetInitialChildList(aListName, aChildList);
+}
+
+NS_IMETHODIMP
+nsDeckFrame::AppendFrames(nsIAtom*        aListName,
+                          nsFrameList&    aFrameList)
+{
+  CreateViewsForFrames(aFrameList);
+  return nsBoxFrame::AppendFrames(aListName, aFrameList);
+}
+
+NS_IMETHODIMP
+nsDeckFrame::InsertFrames(nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsFrameList&    aFrameList)
+{
+  CreateViewsForFrames(aFrameList);
+  return nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
 }
 
 void

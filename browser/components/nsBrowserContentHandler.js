@@ -909,7 +909,6 @@ var Module = {
     registerType("image/bmp");
     registerType("image/x-icon");
     registerType("image/vnd.microsoft.icon");
-    registerType("image/x-xbitmap");
     registerType("application/http-index-format");
 
     var catMan = Components.classes["@mozilla.org/categorymanager;1"]

@@ -42,8 +42,6 @@
 <!DOCTYPE bindings [
 <!ENTITY % printPreviewDTD SYSTEM "chrome://global/locale/printPreview.dtd" >
 %printPreviewDTD;
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-%globalDTD;
 ]>
 
 <bindings id="printPreviewBindings"
@@ -66,9 +64,9 @@
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;" accesskey="&page.accesskey;" control="pageNumber"/>
       </xul:vbox>
-      <xul:toolbarbutton class="home-arrow tabbable" chromedir="&locale.dir;"
+      <xul:toolbarbutton class="home-arrow tabbable"
         oncommand="parentNode.navigate(0, 0, 'home');" tooltiptext="&homearrow.tooltip;"/>
-      <xul:toolbarbutton class="left-arrow tabbable" chromedir="&locale.dir;"
+      <xul:toolbarbutton class="left-arrow tabbable"
         oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&leftarrow.tooltip;"/>
       <xul:hbox align="center" pack="center">
         <xul:textbox id="pageNumber" size="3" value="1" lastvalid="1"
@@ -76,9 +74,9 @@
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>
       </xul:hbox>
-      <xul:toolbarbutton class="right-arrow tabbable" chromedir="&locale.dir;"
+      <xul:toolbarbutton class="right-arrow tabbable"
         oncommand="parentNode.navigate(1, 0, 0);" tooltiptext="&rightarrow.tooltip;"/>
-      <xul:toolbarbutton class="end-arrow tabbable" chromedir="&locale.dir;"
+      <xul:toolbarbutton class="end-arrow tabbable"
         oncommand="parentNode.navigate(0, 0, 'end');" tooltiptext="&endarrow.tooltip;"/>
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>

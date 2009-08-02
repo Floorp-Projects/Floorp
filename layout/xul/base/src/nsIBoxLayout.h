@@ -47,10 +47,10 @@ class nsBoxLayoutState;
 class nsIRenderingContext;
 struct nsRect;
 
-// c9bf9fe7-a2f4-4f38-bbed-11a05633d676
+// 6a529924-c73d-4fae-af7a-0e8084e701d5
 #define NS_IBOX_LAYOUT_IID \
-{ 0xc9bf9fe7, 0xa2f4, 0x4f38, \
-  { 0xbb, 0xed, 0x11, 0xa0, 0x56, 0x33, 0xd6, 0x76 } }
+{ 0x6a529924, 0xc73d, 0x4fae, \
+ { 0xaf, 0x7a, 0x0e, 0x80, 0x84, 0xe7, 0x01, 0xd5 } }
 
 class nsIBoxLayout : public nsISupports {
 
@@ -65,8 +65,13 @@ public:
   virtual nsSize GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)=0;
   virtual nscoord GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)=0;
 
-  virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList)=0;
-  virtual void ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)=0;
+  // FIXME: Bug 507416.  The Children* notifications don't actually
+  // use all those arguments.  Can we just simplify the signatures?
+  virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
+                                nsIBox* aPrevBox,
+                                const nsFrameList::Slice& aNewChildren)=0;
+  virtual void ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
+                                const nsFrameList::Slice& aNewChildren)=0;
   virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)=0;
   virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)=0;
   virtual void IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState)=0;

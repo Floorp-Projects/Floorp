@@ -131,6 +131,9 @@ private:
                              const PRInt32 aTable[],
                              nsIDOMCSSValue** aResult);
 
+  nsresult GetCSSGradientString(const nsStyleGradient* aGradient,
+                                nsAString& aString);
+
   /* Properties Queryable as CSSValues */
 
   nsresult GetAppearance(nsIDOMCSSValue** aValue);
@@ -175,6 +178,7 @@ private:
   nsresult GetBackgroundClip(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundInlinePolicy(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundOrigin(nsIDOMCSSValue** aValue);
+  nsresult GetMozBackgroundSize(nsIDOMCSSValue** aValue);
 
   /* Padding properties */
   nsresult GetPadding(nsIDOMCSSValue** aValue);

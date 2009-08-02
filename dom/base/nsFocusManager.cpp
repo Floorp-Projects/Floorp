@@ -727,9 +727,6 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 
   // if the content is currently focused in the window, or is an ancestor
   // of the currently focused element, reset the focus within that window.
-  // Note that nothing special needs to happen when the focused node is an
-  // iframe; in that case, DocumentUnloaded should be called to invalidate the
-  // child frame.
   nsCOMPtr<nsIContent> content = window->GetFocusedNode();
   if (content && nsContentUtils::ContentIsDescendantOf(content, aContent)) {
     window->SetFocusedNode(nsnull);
@@ -743,8 +740,24 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 
     // if this window is currently focused, clear the global focused
     // element as well, but don't fire any events.
-    if (window == mFocusedWindow)
+    if (window == mFocusedWindow) {
       mFocusedContent = nsnull;
+    }
+    else {
+      // Check if the node that was focused is an iframe or similar by looking
+      // if it has a subdocument. This would indicate that this focused iframe
+      // and its descendants will be going away. We will need to move the
+      // focus somewhere else, so just clear the focus in the toplevel window
+      // so that no element is focused.
+      nsIDocument* subdoc = aDocument->GetSubDocumentFor(content);
+      if (subdoc) {
+        nsCOMPtr<nsISupports> container = subdoc->GetContainer();
+        nsCOMPtr<nsPIDOMWindow> childWindow = do_GetInterface(container);
+        if (childWindow && IsSameOrAncestor(childWindow, mFocusedWindow)) {
+          ClearFocus(mActiveWindow);
+        }
+      }
+    }
   }
 
   return NS_OK;
@@ -1118,9 +1131,11 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
 {
   nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(aWindow1));
   nsCOMPtr<nsIDocShellTreeItem> dsti1 = do_QueryInterface(webnav);
+  NS_ENSURE_TRUE(dsti1, nsnull);
 
   webnav = do_GetInterface(aWindow2);
   nsCOMPtr<nsIDocShellTreeItem> dsti2 = do_QueryInterface(webnav);
+  NS_ENSURE_TRUE(dsti2, nsnull);
 
   nsAutoTPtrArray<nsIDocShellTreeItem, 30> parents1, parents2;
   do {

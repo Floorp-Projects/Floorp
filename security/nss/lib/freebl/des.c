@@ -403,6 +403,11 @@ static const HALF PC2[8][64] = {
 #if defined(__GNUC__) && defined(NSS_X86_OR_X64)
 #define BYTESWAP(word, temp) \
     __asm("bswap	%0" : "+r" (word));
+#elif (_MSC_VER >= 1300) && defined(NSS_X86_OR_X64)
+#include <stdlib.h>
+#pragma intrinsic(_byteswap_ulong)
+#define BYTESWAP(word, temp) \
+    word = _byteswap_ulong(word);
 #else
 #define BYTESWAP(word, temp) \
     word = (word >> 16) | (word << 16); \

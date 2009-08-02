@@ -415,7 +415,7 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
 
 NS_IMETHODIMP
 nsFrame::AppendFrames(nsIAtom*        aListName,
-                      nsIFrame*       aFrameList)
+                      nsFrameList&    aFrameList)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
@@ -424,7 +424,7 @@ nsFrame::AppendFrames(nsIAtom*        aListName,
 NS_IMETHODIMP
 nsFrame::InsertFrames(nsIAtom*        aListName,
                       nsIFrame*       aPrevFrame,
-                      nsIFrame*       aFrameList)
+                      nsFrameList&    aFrameList)
 {
   NS_PRECONDITION(PR_FALSE, "not a container");
   return NS_ERROR_UNEXPECTED;
@@ -532,11 +532,8 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     const nsStyleBackground *oldBG = aOldStyleContext->GetStyleBackground();
     const nsStyleBackground *newBG = GetStyleBackground();
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, oldBG) {
-      imgIRequest *oldImage = oldBG->mLayers[i].mImage;
-      imgIRequest *newImage = i < newBG->mImageCount
-                                ? newBG->mLayers[i].mImage.get()
-                                : nsnull;
-      if (oldImage && !EqualImages(oldImage, newImage)) {
+      if (i >= newBG->mImageCount ||
+          oldBG->mLayers[i].mImage != newBG->mLayers[i].mImage) {
         // stop the image loading for the frame, the image has changed
         PresContext()->SetImageLoaders(this,
           nsPresContext::BACKGROUND_IMAGE, nsnull);
@@ -1665,6 +1662,12 @@ nsresult
 nsIFrame::CreateWidgetForView(nsIView* aView)
 {
   return aView->CreateWidget(kWidgetCID);
+}
+
+nsIFrame*
+nsIFrame::GetLastChild(nsIAtom* aListName) const
+{
+  return nsLayoutUtils::GetLastSibling(GetFirstChild(aListName));
 }
 
 /**
@@ -4017,8 +4020,11 @@ nsIFrame::GetOverflowRectRelativeToSelf() const
   if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS) ||
       !GetStyleDisplay()->HasTransform())
     return GetOverflowRect();
-  return *static_cast<nsRect*>
+  nsRect* preEffectsBBox = static_cast<nsRect*>
     (GetProperty(nsGkAtoms::preEffectsBBoxProperty));
+  if (!preEffectsBBox)
+    return GetOverflowRect();
+  return *preEffectsBBox;
 }
 
 void
@@ -4083,7 +4089,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   const nsStyleBackground *bg = GetStyleBackground();
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     const nsStyleBackground::Layer &layer = bg->mLayers[i];
-    if (layer.mImage &&
+    if (layer.mImage.GetType() != eBackgroundImage_Null &&
         (layer.mPosition.mXIsPercent || layer.mPosition.mYIsPercent)) {
       Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
@@ -6707,15 +6713,6 @@ nsFrame::SetParent(const nsIFrame* aParent)
     InitBoxMetrics(PR_TRUE);
   else if (wasBoxWrapped && !IsBoxWrapped())
     DeleteProperty(nsGkAtoms::boxMetricsProperty);
-
-  if (aParent && aParent->IsBoxFrame()) {
-    if (aParent->ChildrenMustHaveWidgets()) {
-        nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
-        nsIView* view = GetView();
-        if (!view->HasWidget())
-          CreateWidgetForView(view);
-    }
-  }
 
   return NS_OK;
 }

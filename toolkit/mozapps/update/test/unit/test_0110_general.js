@@ -36,15 +36,14 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/* General Complete MAR File Patch Apply Tests */
+/* General Complete MAR File Patch Apply Test */
 
 function run_test() {
   // The directory the updates will be applied to is the current working
   // directory and not dist/bin.
-  var testDir = do_get_cwd();
+  var testDir = do_get_file("mar_test", true);
   // The mar files were created with all files in a subdirectory named
   // mar_test... clear it out of the way if it exists and then create it.
-  testDir.append("mar_test");
   try {
     if (testDir.exists())
       testDir.remove(true);
@@ -55,12 +54,12 @@ function run_test() {
   }
   dump("Testing: successful removal of the directory used to apply the mar file\n");
   do_check_false(testDir.exists());
+  testDir = do_get_file("mar_test/1/1_1/", true);
   testDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 
   // Create an empty test file to test the complete mar's ability to replace an
   // existing file.
-  var testFile = testDir.clone();
-  testFile.append("text1");
+  var testFile = do_get_file("mar_test/1/1_1/1_1_text1", true);
   testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
 
   var binDir = getGREDir();
@@ -81,9 +80,7 @@ function run_test() {
   }
 
   // Use a directory outside of dist/bin to lessen the garbage in dist/bin
-  var updatesSubDir = do_get_cwd();
-  updatesSubDir.append("0110_complete_mar");
-
+  var updatesSubDir = do_get_file("0110_complete_mar", true);
   try {
     // Mac OS X intermittently fails when removing the dir where the updater
     // binary was launched.
@@ -104,13 +101,23 @@ function run_test() {
        "a complete mar\n");
   do_check_eq(exitValue, 0);
 
+  dump("Testing: update.status should be set to STATE_SUCCEEDED\n");
+  testFile = updatesSubDir.clone();
+  testFile.append("update.status");
+  do_check_eq(readFile(testFile).split("\n")[0], STATE_SUCCEEDED);
+
   dump("Testing: contents of files added by a complete mar\n");
-  do_check_eq(getFileBytes(getTestFile(testDir, "text1")), "ToBeModified\n");
-  do_check_eq(getFileBytes(getTestFile(testDir, "text2")), "ToBeDeleted\n");
+  do_check_eq(getFileBytes(do_get_file("mar_test/1/1_1/1_1_text1", true)),
+              "ToBeModified\n");
+  do_check_eq(getFileBytes(do_get_file("mar_test/1/1_1/1_1_text2", true)),
+              "ToBeDeleted\n");
 
   var refImage = do_get_file("data/aus-0110_general_ref_image.png");
-  var srcImage = getTestFile(testDir, "image1.png");
+  var srcImage = do_get_file("mar_test/1/1_1/1_1_image1.png", true);
   do_check_eq(getFileBytes(srcImage), getFileBytes(refImage));
+
+  do_check_eq(getFileBytes(do_get_file("mar_test/2/2_1/2_1_text1", true)),
+              "ToBeDeleted\n");
 
   try {
     // Mac OS X intermittently fails when removing the dir where the updater
@@ -146,23 +153,16 @@ function runUpdate(aUpdatesSubDir, aUpdater) {
   if (/ /.test(updatesSubDirPath))
     updatesSubDirPath = '"' + updatesSubDirPath + '"';
 
+  var cwdPath = do_get_file("/", true).path;
+  if (/ /.test(cwdPath))
+    cwdPath = '"' + cwdPath + '"';
+
   var process = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
   process.init(updateBin);
-  var args = [updatesSubDirPath];
+  var args = [updatesSubDirPath, 0, cwdPath];
   process.run(true, args, args.length);
   return process.exitValue;
-}
-
-// Gets a file in the mar_test subdirectory of the current working directory
-// which is where the mar will be applied.
-function getTestFile(aDir, aLeafName) {
-  var file = aDir.clone();
-  file.append(aLeafName);
-  if (!(file instanceof AUS_Ci.nsILocalFile))
-    do_throw("File must be a nsILocalFile for this test! File: " + aLeafName);
-
-  return file;
 }
 
 // Returns the binary contents of a file

@@ -104,6 +104,10 @@ CSS_PSEUDO_CLASS(mozIsHTML, ":-moz-is-html")
 // Matches anything when the specified look-and-feel metric is set
 CSS_PSEUDO_CLASS(mozSystemMetric, ":-moz-system-metric")
 
+// -moz-locale-dir(ltr) and -moz-locale-dir(rtl) may be used
+// to match based on the locale's chrome direction
+CSS_PSEUDO_CLASS(mozLocaleDir, ":-moz-locale-dir")
+
 #ifdef MOZ_MATHML
 CSS_PSEUDO_CLASS(mozMathIncrementScriptLevel, ":-moz-math-increment-script-level")
 #endif
