@@ -114,7 +114,7 @@ public:
 
   NS_IMETHOD
   AppendFrames(nsIAtom*  aListName,
-               nsIFrame* aFrameList)
+               nsFrameList& aFrameList)
   {
     nsresult rv = nsTableFrame::AppendFrames(aListName, aFrameList);
     RestyleTable();
@@ -124,7 +124,7 @@ public:
   NS_IMETHOD
   InsertFrames(nsIAtom*  aListName,
                nsIFrame* aPrevFrame,
-               nsIFrame* aFrameList)
+               nsFrameList& aFrameList)
   {
     nsresult rv = nsTableFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
     RestyleTable();
@@ -171,7 +171,7 @@ public:
 
   NS_IMETHOD
   AppendFrames(nsIAtom*  aListName,
-               nsIFrame* aFrameList)
+               nsFrameList& aFrameList)
   {
     nsresult rv = nsTableRowFrame::AppendFrames(aListName, aFrameList);
     RestyleTable();
@@ -181,7 +181,7 @@ public:
   NS_IMETHOD
   InsertFrames(nsIAtom*  aListName,
                nsIFrame* aPrevFrame,
-               nsIFrame* aFrameList)
+               nsFrameList& aFrameList)
   {
     nsresult rv = nsTableRowFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
     RestyleTable();

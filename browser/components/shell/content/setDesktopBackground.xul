@@ -77,7 +77,9 @@
         <menupopup>
           <menuitem label="&center.label;"  value="CENTER"/>
           <menuitem label="&tile.label;"    value="TILE"/>
+#ifndef WINCE
           <menuitem label="&stretch.label;" value="STRETCH"/>
+#endif
         </menupopup>
       </menulist>
       <spacer flex="1"/>

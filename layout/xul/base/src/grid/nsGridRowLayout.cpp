@@ -54,13 +54,16 @@ nsGridRowLayout::nsGridRowLayout():nsSprocketLayout()
 }
 
 void
-nsGridRowLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList)
+nsGridRowLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
+                                  nsIBox* aPrevBox,
+                                  const nsFrameList::Slice& aNewChildren)
 {
   ChildAddedOrRemoved(aBox, aState);
 }
 
 void
-nsGridRowLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
+nsGridRowLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
+                                  const nsFrameList::Slice& aNewChildren)
 {
   ChildAddedOrRemoved(aBox, aState);
 }

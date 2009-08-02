@@ -600,14 +600,14 @@ var gIncompatibleCheckPage = {
 
     var em = CoC["@mozilla.org/extensions/manager;1"].
              getService(CoI.nsIExtensionManager);
-    this.addons = em.getIncompatibleItemList("", gUpdates.update.extensionVersion,
+    this.addons = em.getIncompatibleItemList(gUpdates.update.extensionVersion,
                                              gUpdates.update.platformVersion,
                                              CoI.nsIUpdateItem.TYPE_ANY, false,
                                              { });
     if (this.addons.length > 0) {
       // Don't include add-ons that are already incompatible with the current
       // version of the application
-      var addons = em.getIncompatibleItemList("", null, null,
+      var addons = em.getIncompatibleItemList(null, null,
                                               CoI.nsIUpdateItem.TYPE_ANY, false,
                                               { });
       for (var i = 0; i < addons.length; ++i) {

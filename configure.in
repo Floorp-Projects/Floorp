@@ -1385,6 +1385,12 @@ sun4u | sparc*)
 x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
+
+arm)
+    if test "$OS_TARGET" == "WINCE"; then
+        CPU_ARCH="$OS_TEST"
+    fi
+    ;;
 esac
 
 if test -z "$OS_TARGET"; then
@@ -2008,7 +2014,7 @@ case "$target" in
     ;;
 
 *-wince*)
-
+    TARGET_COMPILER_ABI=msvc
     MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
     AR_LIST="$AR -list"
     AR_EXTRACT="$AR -extract"
@@ -4508,7 +4514,7 @@ MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
 MOZ_ENABLE_CANVAS3D=
 MOZ_FEEDS=1
-MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
+MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1

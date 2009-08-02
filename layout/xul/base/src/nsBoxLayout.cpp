@@ -146,12 +146,15 @@ nsBoxLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSize2)
 }
 
 void
-nsBoxLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList)
+nsBoxLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
+                              nsIBox* aPrevBox,
+                              const nsFrameList::Slice& aNewChildren)
 {
 }
 
 void
-nsBoxLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
+nsBoxLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
+                              const nsFrameList::Slice& aNewChildren)
 {
 }
 

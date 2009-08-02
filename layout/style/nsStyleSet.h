@@ -58,6 +58,8 @@
 
 class nsIURI;
 class nsCSSFontFaceRule;
+class nsRuleWalker;
+struct RuleProcessorData;
 
 class nsEmptyStyleRule : public nsIStyleRule
 {

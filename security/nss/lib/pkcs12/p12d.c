@@ -2407,7 +2407,10 @@ sec_pkcs12_add_cert(sec_PKCS12SafeBag *cert, PRBool keyExists, void *wincx)
 	rv = PK11_ImportDERCert(cert->slot, derCert, CK_INVALID_HANDLE,
 							nickData, PR_FALSE);
     }
-
+    if (rv) {
+	cert->problem = 1;
+	cert->error = PORT_GetError();
+    }
     cert->installed = PR_TRUE;
     if(nickName) SECITEM_ZfreeItem(nickName, PR_TRUE);
     return rv;

@@ -3246,7 +3246,7 @@ int main(int argc, char **argv)
 
     double              totalTime;
     PRIntervalTime      time1, time2;
-    PRFileDesc          *outfile;           
+    PRFileDesc          *outfile = NULL;
     bltestCipherInfo    *cipherInfoListHead, *cipherInfo;
     bltestIOMode        ioMode;
     int                 bufsize, exponent, curThrdNum;

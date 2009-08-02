@@ -3952,6 +3952,12 @@ nsDocShell::Stop(PRUint32 aStopFlags)
     // Revoke any pending event related to content viewer restoration
     mRestorePresentationEvent.Revoke();
 
+    if (mLoadType == LOAD_ERROR_PAGE && mLSHE) {
+        // Since error page loads never unset mLSHE, do so now
+        SetHistoryEntry(&mOSHE, mLSHE);
+        SetHistoryEntry(&mLSHE, nsnull);
+    }
+
     if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
         // Stop the document loading
         if (mContentViewer)

@@ -721,7 +721,6 @@ gfxCoreTextFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     if (!textRun)
         return nsnull;
 
-    textRun->RecordSurrogates(aString);
     gfxPlatformMac::SetupClusterBoundaries(textRun, aString);
 
     nsAutoString utf16;

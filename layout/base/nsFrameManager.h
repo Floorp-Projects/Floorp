@@ -150,7 +150,7 @@ public:
   // Functions for manipulating the frame model
   NS_HIDDEN_(nsresult) AppendFrames(nsIFrame*       aParentFrame,
                                     nsIAtom*        aListName,
-                                    nsIFrame*       aFrameList)
+                                    nsFrameList&    aFrameList)
   {
     return aParentFrame->AppendFrames(aListName, aFrameList);
   }
@@ -158,7 +158,7 @@ public:
   NS_HIDDEN_(nsresult) InsertFrames(nsIFrame*       aParentFrame,
                                     nsIAtom*        aListName,
                                     nsIFrame*       aPrevFrame,
-                                    nsIFrame*       aFrameList);
+                                    nsFrameList&    aFrameList);
 
   NS_HIDDEN_(nsresult) RemoveFrame(nsIFrame*       aParentFrame,
                                    nsIAtom*        aListName,
@@ -240,7 +240,8 @@ private:
                           nsIFrame          *aFrame,
                           nsIContent        *aParentContent,
                           nsStyleChangeList *aChangeList, 
-                          nsChangeHint       aMinChange);
+                          nsChangeHint       aMinChange,
+                          PRBool             aFireAccessibilityEvents);
 };
 
 #endif

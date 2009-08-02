@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.49 2008/12/02 06:36:59 nelson%bolyard.com Exp $ */
+/* $Id: sslsnce.c,v 1.50 2009/06/05 02:34:15 nelson%bolyard.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -260,7 +260,7 @@ static PRBool isMultiProcess  = PR_FALSE;
 #define MAX_SSL3_TIMEOUT      86400L  /* 24 hours */
 #define MIN_SSL3_TIMEOUT          5   /* seconds  */
 
-#if defined(AIX) || defined(LINUX) || defined(VMS) || defined(NETBSD) || defined(OPENBSD)
+#if defined(AIX) || defined(LINUX) || defined(NETBSD) || defined(OPENBSD)
 #define MAX_SID_CACHE_LOCKS 8	/* two FDs per lock */
 #elif defined(OSF1)
 #define MAX_SID_CACHE_LOCKS 16	/* one FD per lock */

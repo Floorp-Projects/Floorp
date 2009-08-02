@@ -80,25 +80,3 @@ EXTRA_SHARED_LIBS += \
 
 endif
 
-ifeq ($(OS_TARGET),SunOS)
-ifeq ($(BUILD_SUN_PKG), 1)
-# The -R '$ORIGIN' linker option instructs this library to search for its
-# dependencies in the same directory where it resides.
-ifeq ($(USE_64), 1)
-MKSHLIB += -R '$$ORIGIN:/usr/lib/mps/secv1/64:/usr/lib/mps/64'
-else
-MKSHLIB += -R '$$ORIGIN:/usr/lib/mps/secv1:/usr/lib/mps'
-endif
-else
-MKSHLIB += -R '$$ORIGIN'
-endif
-endif
-
-ifeq ($(OS_ARCH), HP-UX) 
-ifneq ($(OS_TEST), ia64)
-# pa-risc
-ifeq ($(USE_64), 1)
-MKSHLIB += +b '$$ORIGIN'
-endif
-endif
-endif

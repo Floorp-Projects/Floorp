@@ -46,6 +46,7 @@
  */
 
 #include "nsCSSRuleProcessor.h"
+#include "nsRuleProcessorData.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #define NS_RULEHASH_ARENA_BLOCK_SIZE (256)
@@ -144,6 +145,10 @@ struct RuleHashTableEntry : public PLDHashEntryHdr {
   RuleValue *mRules; // linked list of |RuleValue|, null-terminated
 };
 
+struct RuleHashTagTableEntry : public RuleHashTableEntry {
+  nsCOMPtr<nsIAtom> mTag;
+};
+
 static PLDHashNumber
 RuleHash_CIHashKey(PLDHashTable *table, const void *key)
 {
@@ -205,12 +210,20 @@ RuleHash_CSMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return match_atom == entry_atom;
 }
 
-static nsIAtom*
-RuleHash_TagTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
+static PRBool
+RuleHash_TagTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+                      const void *key)
 {
-  const RuleHashTableEntry *entry =
-    static_cast<const RuleHashTableEntry*>(hdr);
-  return entry->mRules->mSelector->mTag;
+  nsIAtom *match_atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>
+                                              (key));
+  nsIAtom *entry_atom = static_cast<const RuleHashTagTableEntry*>(hdr)->mTag;
+
+  return match_atom == entry_atom;
+}
+
+static void RuleHash_TagTable_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  (static_cast<RuleHashTagTableEntry*>(entry))->~RuleHashTagTableEntry();
 }
 
 static nsIAtom*
@@ -247,18 +260,15 @@ RuleHash_NameSpaceTable_MatchEntry(PLDHashTable *table,
          entry->mRules->mSelector->mNameSpace;
 }
 
-static const RuleHashTableOps RuleHash_TagTable_Ops = {
-  {
+static const PLDHashTableOps RuleHash_TagTable_Ops = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
-  RuleHash_CSMatchEntry,
+  RuleHash_TagTable_MatchEntry,
   PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
+  RuleHash_TagTable_ClearEntry,
   PL_DHashFinalizeStub,
   NULL
-  },
-  RuleHash_TagTable_GetKey
 };
 
 // Case-sensitive ops.
@@ -361,6 +371,7 @@ public:
 protected:
   void PrependRuleToTable(PLDHashTable* aTable, const void* aKey,
                           RuleValue* aRuleInfo);
+  void PrependRuleToTagTable(const void* aKey, RuleValue* aRuleInfo);
   void PrependUniversalRule(RuleValue* aRuleInfo);
 
   // All rule values in these hashtables are arena allocated
@@ -420,8 +431,8 @@ RuleHash::RuleHash(PRBool aQuirksMode)
   // Initialize our arena
   PL_INIT_ARENA_POOL(&mArena, "RuleHashArena", NS_RULEHASH_ARENA_BLOCK_SIZE);
 
-  PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops.ops, nsnull,
-                    sizeof(RuleHashTableEntry), 64);
+  PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops, nsnull,
+                    sizeof(RuleHashTagTableEntry), 64);
   PL_DHashTableInit(&mIdTable,
                     aQuirksMode ? &RuleHash_IdTable_CIOps.ops
                                 : &RuleHash_IdTable_CSOps.ops,
@@ -497,6 +508,21 @@ void RuleHash::PrependRuleToTable(PLDHashTable* aTable, const void* aKey,
   entry->mRules = aRuleInfo->Add(mRuleCount++, entry->mRules);
 }
 
+void RuleHash::PrependRuleToTagTable(const void* aKey, RuleValue* aRuleInfo)
+{
+  // Get a new or exisiting entry
+   RuleHashTagTableEntry *entry = static_cast<RuleHashTagTableEntry*>
+                              (PL_DHashTableOperate(&mTagTable, aKey, PL_DHASH_ADD));
+   if (!entry)
+     return;
+
+   entry->mTag = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(aKey));
+
+   // This may give the same rule two different rule counts, but that is OK
+   // because we never combine two different entries in the tag table.
+   entry->mRules = aRuleInfo->Add(mRuleCount++, entry->mRules);
+}
+
 void RuleHash::PrependUniversalRule(RuleValue *aRuleInfo)
 {
   mUniversalRules = aRuleInfo->Add(mRuleCount++, mUniversalRules);
@@ -513,9 +539,16 @@ void RuleHash::PrependRule(RuleValue *aRuleInfo)
     PrependRuleToTable(&mClassTable, selector->mClassList->mAtom, aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mClassSelectors);
   }
-  else if (nsnull != selector->mTag) {
-    PrependRuleToTable(&mTagTable, selector->mTag, aRuleInfo);
+  else if (selector->mLowercaseTag) {
+    PrependRuleToTagTable(selector->mLowercaseTag, aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mTagSelectors);
+    if (selector->mCasedTag && 
+        selector->mCasedTag != selector->mLowercaseTag) {
+      PrependRuleToTagTable(selector->mCasedTag, 
+                            new (mArena) RuleValue(aRuleInfo->mRule, 
+                                                   aRuleInfo->mSelector));
+      RULE_HASH_STAT_INCREMENT(mTagSelectors);
+    }
   }
   else if (kNameSpaceID_Unknown != selector->mNameSpace) {
     PrependRuleToTable(&mNameSpaceTable,
@@ -1191,11 +1224,23 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
 {
   // namespace/tag match
+  // optimization : bail out early if we can
   if ((kNameSpaceID_Unknown != aSelector->mNameSpace &&
-       data.mNameSpaceID != aSelector->mNameSpace) ||
-      (aSelector->mTag && aSelector->mTag != data.mContentTag)) {
-    // optimization : bail out early if we can
+       data.mNameSpaceID != aSelector->mNameSpace))
     return PR_FALSE;
+
+  if (aSelector->mLowercaseTag) {
+    //If we tested that this is an HTML node in a text/html document and
+    //had some tweaks in RuleHash, we could remove case-sensitivity from
+    //style sheets.
+    if (data.mIsHTMLContent) {
+      if (data.mContentTag != aSelector->mLowercaseTag)
+        return PR_FALSE;
+    }
+    else {
+      if (data.mContentTag != aSelector->mCasedTag)
+        return PR_FALSE;
+    }
   }
 
   PRBool result = PR_TRUE;
@@ -1558,6 +1603,27 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     else if (nsCSSPseudoClasses::mozIsHTML == pseudoClass->mAtom) {
       result = data.mIsHTMLContent && data.mContent->IsInHTMLDocument();
     }
+    else if (nsCSSPseudoClasses::mozLocaleDir == pseudoClass->mAtom) {
+      nsIDocument* doc = data.mContent ? data.mContent->GetDocument() :
+                                         data.mPresContext->Document();
+
+      if (doc) {
+        PRBool docIsRTL = doc && doc->IsDocumentRightToLeft();
+
+        nsDependentString dirString(pseudoClass->u.mString);
+        NS_ASSERTION(dirString.EqualsLiteral("ltr") || dirString.EqualsLiteral("rtl"),
+                     "invalid value for -moz-locale-dir");
+
+        if (dirString.EqualsLiteral("rtl")) {
+          result = docIsRTL;
+        } else if (dirString.EqualsLiteral("ltr")) {
+          result = !docIsRTL;
+        }
+      }
+      else {
+        result = PR_FALSE;
+      }
+    }
 #ifdef MOZ_MATHML
     else if (nsCSSPseudoClasses::mozMathIncrementScriptLevel == pseudoClass->mAtom) {
       stateToCheck = NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL;
@@ -1572,7 +1638,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       if ((stateToCheck & (NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) &&
           data.mCompatMode == eCompatibility_NavQuirks &&
           // global selector (but don't check .class):
-          !aSelector->mTag && !aSelector->mIDList && !aSelector->mAttrList &&
+          !aSelector->HasTagSelector() && !aSelector->mIDList && 
+          !aSelector->mAttrList &&
           // This (or the other way around) both make :not() asymmetric
           // in quirks mode (and it's hard to work around since we're
           // testing the current mNegations, not the first
@@ -1908,7 +1975,10 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 {
   PseudoRuleProcessorData* data = (PseudoRuleProcessorData*)aData;
 
-  NS_ASSERTION(aSelector->mTag == data->mPseudoTag, "RuleHash failure");
+  if (!aSelector->IsPseudoElement())
+    return;
+
+  NS_ASSERTION(aSelector->mLowercaseTag == data->mPseudoTag, "RuleHash failure");
   PRBool matches = PR_TRUE;
   if (data->mComparator)
     data->mComparator->PseudoMatches(data->mPseudoTag, aSelector, &matches);
@@ -2068,6 +2138,14 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
 #endif
   // XXXbz now that :link and :visited are also states, do we need a
   // similar optimization in HasStateDependentStyle?
+
+  // check for the localedir attribute on root XUL elements
+  if (aData->mAttribute == nsGkAtoms::localedir &&
+      aData->mNameSpaceID == kNameSpaceID_XUL &&
+      aData->mContent == aData->mContent->GetOwnerDoc()->GetRootContent())
+  {
+    data.change = nsReStyleHint(data.change | eReStyle_Self);
+  }
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 

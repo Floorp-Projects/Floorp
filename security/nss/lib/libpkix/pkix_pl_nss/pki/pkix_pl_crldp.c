@@ -152,7 +152,7 @@ pkix_pl_CrlDp_Create(
             issuerName = certIssuerName;
         }
         rdnArena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-        if (rdnArena) {
+        if (!rdnArena) {
             PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
         }
         issuerNameCopy = (CERTName *)PORT_ArenaZNew(rdnArena, CERTName*);
@@ -164,7 +164,7 @@ pkix_pl_CrlDp_Create(
             PKIX_ERROR(PKIX_ALLOCERROR);
         }
         rv = CERT_AddRDN(issuerNameCopy, (CERTRDN*)relName);
-        if (rv = SECFailure) {
+        if (rv == SECFailure) {
             PKIX_ERROR(PKIX_ALLOCERROR);
         }
         dpl->distPointType = relativeDistinguishedName;

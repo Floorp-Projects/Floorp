@@ -46,6 +46,7 @@
 #   Thomas K. Dyas <tdyas@zecador.org>
 #   Edward Lee <edward.lee@engineering.uiuc.edu>
 #   Paul O’Shannessy <paul@oshannessy.com>
+#   Nils Maier <maierman@web.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1839,6 +1840,35 @@ function delayedOpenTab(aUrl, aReferrer, aCharset, aPostData, aAllowThirdPartyFi
   gBrowser.loadOneTab(aUrl, aReferrer, aCharset, aPostData, false, aAllowThirdPartyFixup);
 }
 
+var gLastOpenDirectory = {
+  _lastDir: null,
+  get path() {
+    if (!this._lastDir || !this._lastDir.exists()) {
+      try {
+        this._lastDir = gPrefService.getComplexValue("browser.open.lastDir",
+                                                     Ci.nsILocalFile);
+        if (!this._lastDir.exists())
+          this._lastDir = null;
+      }
+      catch(e) {}
+    }
+    return this._lastDir;
+  },
+  set path(val) {
+    if (!val || !val.exists() || !val.isDirectory())
+      return;
+    this._lastDir = val.clone();
+
+    // Don't save the last open directory pref inside the Private Browsing mode
+    if (!gPrivateBrowsingUI.privateBrowsingEnabled)
+      gPrefService.setComplexValue("browser.open.lastDir", Ci.nsILocalFile,
+                                   this._lastDir);
+  },
+  reset: function() {
+    this._lastDir = null;
+  }
+};
+
 function BrowserOpenFileWindow()
 {
   // Get filepicker component.
@@ -1848,9 +1878,13 @@ function BrowserOpenFileWindow()
     fp.init(window, gNavigatorBundle.getString("openFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText | nsIFilePicker.filterImages |
                      nsIFilePicker.filterXML | nsIFilePicker.filterHTML);
+    fp.displayDirectory = gLastOpenDirectory.path;
 
-    if (fp.show() == nsIFilePicker.returnOK)
+    if (fp.show() == nsIFilePicker.returnOK) {
+      if (fp.file && fp.file.exists())
+        gLastOpenDirectory.path = fp.file.parent.QueryInterface(Ci.nsILocalFile);
       openTopWin(fp.fileURL.spec);
+    }
   } catch (ex) {
   }
 }
@@ -2557,7 +2591,6 @@ function onExitPrintPreview()
 {
   // restore chrome to original state
   gInPrintPreviewMode = false;
-  FullZoom.setSettingValue();
   toggleAffectedChrome(false);
 }
 
@@ -2660,10 +2693,9 @@ var browserDragAndDrop = {
     var file = dt.mozGetDataAt("application/x-moz-file", 0);
     if (file) {
       var name = file instanceof Ci.nsIFile ? file.leafName : "";
-      var ioService = Cc["@mozilla.org/network/io-service;1"]
-                                .getService(Ci.nsIIOService);
-      var fileHandler = ioService.getProtocolHandler("file")
-                                 .QueryInterface(Ci.nsIFileProtocolHandler);
+      var fileHandler = ContentAreaUtils.ioService
+                                        .getProtocolHandler("file")
+                                        .QueryInterface(Ci.nsIFileProtocolHandler);
       return [fileHandler.getURLSpecFromFile(file), name];
     }
 
@@ -2889,9 +2921,7 @@ const DOMLinkHandler = {
               break;
 
             var targetDoc = link.ownerDocument;
-            var ios = Cc["@mozilla.org/network/io-service;1"].
-                      getService(Ci.nsIIOService);
-            var uri = ios.newURI(link.href, targetDoc.characterSet, null);
+            var uri = makeURI(link.href, targetDoc.characterSet);
 
             if (gBrowser.isFailedIcon(uri))
               break;
@@ -3474,7 +3504,7 @@ var FullScreen =
     // show/hide all menubars, toolbars, and statusbars (except the full screen toolbar)
     this.showXULChrome("toolbar", window.fullScreen);
     this.showXULChrome("statusbar", window.fullScreen);
-    document.getElementById("fullScreenItem").setAttribute("checked", !window.fullScreen);
+    document.getElementById("View:FullScreen").setAttribute("checked", !window.fullScreen);
 
     var fullScrToggler = document.getElementById("fullscr-toggler");
     if (!window.fullScreen) {
@@ -4231,7 +4261,7 @@ var XULBrowserWindow = {
   // simulate all change notifications after switching tabs
   onUpdateCurrentBrowser: function (aStateFlags, aStatus, aMessage, aTotalProgress) {
     if (FullZoom.updateBackgroundTabs)
-      FullZoom.onLocationChange(gBrowser.currentURI);
+      FullZoom.onLocationChange(gBrowser.currentURI, true);
     var nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     var loadingDone = aStateFlags & nsIWebProgressListener.STATE_STOP;
     // use a pseudo-object instead of a (potentially non-existing) channel for getting
@@ -4298,7 +4328,7 @@ var TabsProgressListener = {
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI) {
     // Filter out any sub-frame loads
     if (aBrowser.contentWindow == aWebProgress.DOMWindow)
-      FullZoom.onLocationChange(aLocationURI, aBrowser);
+      FullZoom.onLocationChange(aLocationURI, false, aBrowser);
   },
   
   onStatusChange: function (aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
@@ -4422,10 +4452,7 @@ nsBrowserAccess.prototype =
           if (aURI) {
             if (aOpener) {
               location = aOpener.location;
-              referrer =
-                      Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService)
-                                .newURI(location, null, null);
+              referrer = makeURI(location);
             }
             newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIWebNavigation)
@@ -4442,10 +4469,7 @@ nsBrowserAccess.prototype =
             newWindow = aOpener.top;
             if (aURI) {
               location = aOpener.location;
-              referrer =
-                      Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService)
-                                .newURI(location, null, null);
+              referrer = makeURI(location);
 
               newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(nsIWebNavigation)
@@ -5418,11 +5442,8 @@ var OfflineApps = {
     if (!attr) return null;
 
     try {
-      var ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-
-      var contentURI = ios.newURI(aWindow.location.href, null, null);
-      return ios.newURI(attr, aWindow.document.characterSet, contentURI);
+      var contentURI = makeURI(aWindow.location.href, null, null);
+      return makeURI(attr, aWindow.document.characterSet, contentURI);
     } catch (e) {
       return null;
     }
@@ -5623,11 +5644,8 @@ var OfflineApps = {
     if (!manifest)
       return;
 
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-
-    var manifestURI = ios.newURI(manifest, aDocument.characterSet,
-                                 aDocument.documentURIObject);
+    var manifestURI = makeURI(manifest, aDocument.characterSet,
+                              aDocument.documentURIObject);
 
     var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
                         getService(Ci.nsIOfflineCacheUpdateService);
@@ -5640,9 +5658,7 @@ var OfflineApps = {
   {
     if (aTopic == "dom-storage-warn-quota-exceeded") {
       if (aSubject) {
-        var uri = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService).
-                  newURI(aSubject.location.href, null, null);
+        var uri = makeURI(aSubject.location.href);
 
         if (OfflineApps._checkUsage(uri)) {
           var browserWindow =
@@ -5668,25 +5684,62 @@ var OfflineApps = {
 
 function WindowIsClosing()
 {
-  var cn = gBrowser.tabContainer.childNodes;
-  var numtabs = cn.length;
-  var reallyClose = 
-    closeWindow(false,
-                function () {
-                  return gBrowser.warnAboutClosingTabs(true);
-                });
-
+  var reallyClose = closeWindow(false, warnAboutClosingWindow);
   if (!reallyClose)
     return false;
 
-  for (var i = 0; reallyClose && i < numtabs; ++i) {
-    var ds = gBrowser.getBrowserForTab(cn[i]).docShell;
+  var numBrowsers = gBrowser.browsers.length;
+  for (let i = 0; reallyClose && i < numBrowsers; ++i) {
+    let ds = gBrowser.browsers[i].docShell;
 
     if (ds.contentViewer && !ds.contentViewer.permitUnload())
       reallyClose = false;
   }
 
   return reallyClose;
+}
+
+/**
+ * Checks if this is the last full *browser* window around. If it is, this will
+ * be communicated like quitting. Otherwise, we warn about closing multiple tabs.
+ * @returns true if closing can proceed, false if it got cancelled.
+ */
+function warnAboutClosingWindow() {
+  // Popups aren't considered full browser windows.
+  if (!toolbar.visible)
+    return gBrowser.warnAboutClosingTabs(true);
+
+  // Figure out if there's at least one other browser window around.
+  let foundOtherBrowserWindow = false;
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+  let e = wm.getEnumerator("navigator:browser");
+  while (e.hasMoreElements() && !foundOtherBrowserWindow) {
+    let win = e.getNext();
+    if (win != window && win.toolbar.visible)
+      foundOtherBrowserWindow = true;
+  }
+  if (foundOtherBrowserWindow)
+    return gBrowser.warnAboutClosingTabs(true);
+
+  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+
+  let closingCanceled = Cc["@mozilla.org/supports-PRBool;1"].
+                        createInstance(Ci.nsISupportsPRBool);
+  os.notifyObservers(closingCanceled,
+                                   "browser-lastwindow-close-requested", null);
+  if (closingCanceled.data)
+    return false;
+
+  os.notifyObservers(null, "browser-lastwindow-close-granted", null);
+
+#ifdef XP_MACOSX
+  // OS X doesn't quit the application when the last window is closed, but keeps
+  // the session alive. Hence don't prompt users to save tabs, but warn about
+  // closing multiple tabs.
+  return gBrowser.warnAboutClosingTabs(true);
+#else
+  return true;
+#endif
 }
 
 var MailIntegration = {
@@ -5703,9 +5756,7 @@ var MailIntegration = {
       mailtoUrl += "&subject=" + encodeURIComponent(aSubject);
     }
 
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
-    var uri = ioService.newURI(mailtoUrl, null, null);
+    var uri = makeURI(mailtoUrl);
 
     // now pass this uri to the operating system
     this._launchExternalUrl(uri);
@@ -6647,9 +6698,7 @@ var gIdentityHandler = {
     
     // Make sure the identity popup hangs toward the middle of the location bar
     // in RTL builds
-    var position = 'after_start';
-    if (gURLBar.getAttribute("chromedir") == "rtl")
-      position = 'after_end';
+    var position = (getComputedStyle(gNavToolbox, "").direction == "rtl") ? 'after_end' : 'after_start';
 
     // Add the "open" attribute to the identity box for styling
     this._identityBox.setAttribute("open", "true");
@@ -6674,6 +6723,12 @@ let DownloadMonitorPanel = {
   _lastTime: Infinity,
   _listening: false,
 
+  get DownloadUtils() {
+    delete this.DownloadUtils;
+    Cu.import("resource://gre/modules/DownloadUtils.jsm", this);
+    return this.DownloadUtils;
+  },
+
   //////////////////////////////////////////////////////////////////////////////
   //// DownloadMonitorPanel Public Methods
 
@@ -6681,9 +6736,6 @@ let DownloadMonitorPanel = {
    * Initialize the status panel and member variables
    */
   init: function DMP_init() {
-    // Load the modules to help display strings
-    Cu.import("resource://gre/modules/DownloadUtils.jsm");
-
     // Initialize "private" member variables
     this._panel = document.getElementById("download-monitor");
 
@@ -6702,10 +6754,17 @@ let DownloadMonitorPanel = {
       gDownloadMgr.removeListener(this);
   },
 
+  inited: function DMP_inited() {
+    return this._panel != null;
+  },
+
   /**
    * Update status based on the number of active and paused downloads
    */
   updateStatus: function DMP_updateStatus() {
+    if (!this.inited())
+      return;
+
     let numActive = gDownloadMgr.activeDownloadCount;
 
     // Hide the panel and reset the "last time" if there's no downloads
@@ -6735,7 +6794,8 @@ let DownloadMonitorPanel = {
 
     // Get the remaining time string and last sec for time estimation
     let timeLeft;
-    [timeLeft, this._lastTime] = DownloadUtils.getTimeLeft(maxTime, this._lastTime);
+    [timeLeft, this._lastTime] =
+      this.DownloadUtils.getTimeLeft(maxTime, this._lastTime);
 
     // Figure out how many downloads are currently downloading
     let numDls = numActive - numPaused;
@@ -6912,6 +6972,10 @@ let gPrivateBrowsingUI = {
         docElement.getAttribute("titlemodifier_privatebrowsing"));
       docElement.setAttribute("browsingmode", "private");
     }
+
+    setTimeout(function () {
+      DownloadMonitorPanel.updateStatus();
+    }, 0);
   },
 
   onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
@@ -6946,6 +7010,12 @@ let gPrivateBrowsingUI = {
             .removeAttribute("disabled");
 
     this._privateBrowsingAutoStarted = false;
+
+    gLastOpenDirectory.reset();
+
+    setTimeout(function () {
+      DownloadMonitorPanel.updateStatus();
+    }, 0);
   },
 
   _setPBMenuTitle: function PBUI__setPBMenuTitle(aMode) {

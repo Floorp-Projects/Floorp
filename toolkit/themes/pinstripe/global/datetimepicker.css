@@ -72,7 +72,7 @@ html|*.datetimepicker-input {
   text-align: right;
 }
 
-html|*.datetimepicker-input[chromedir="rtl"] {
+html|*.datetimepicker-input:-moz-locale-dir(rtl) {
   text-align: left;
 }
 

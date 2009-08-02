@@ -46,8 +46,6 @@
 <!DOCTYPE bindings [
 <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
 %findBarDTD;
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-%globalDTD;
 ]>
 
 <bindings id="findbarBindings"
@@ -219,7 +217,6 @@
                          tooltiptext="&previous.tooltip;"
                          oncommand="onFindAgainCommand(true);"
                          disabled="true"
-                         chromedir="&locale.dir;"
                          xbl:inherits="accesskey=findpreviousaccesskey"/>
 #endif
       <xul:toolbarbutton anonid="find-next"
@@ -229,7 +226,6 @@
                          tooltiptext="&next.tooltip;"
                          oncommand="onFindAgainCommand(false);"
                          disabled="true"
-                         chromedir="&locale.dir;"
                          xbl:inherits="accesskey=findnextaccesskey"/>
 #ifndef MOZ_WIDGET_GTK2
       <xul:toolbarbutton anonid="find-previous"
@@ -239,7 +235,6 @@
                          tooltiptext="&previous.tooltip;"
                          oncommand="onFindAgainCommand(true);"
                          disabled="true"
-                         chromedir="&locale.dir;"
                          xbl:inherits="accesskey=findpreviousaccesskey"/>
 #endif
       <xul:toolbarbutton anonid="highlight"

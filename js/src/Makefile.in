@@ -345,7 +345,7 @@ endif
 
 DIST_GARBAGE = config.cache config.log config.status \
    config/myrules.mk config/myconfig.mk \
-   unallmakefiles js-config js-config.h mozilla-config.h
+   unallmakefiles js-config js-config.h js-confdefs.h
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f

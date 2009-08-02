@@ -179,7 +179,7 @@ check-interactive:
           -I$(topsrcdir)/build \
           $(testxpcsrcdir)/runxpcshelltests.py \
           --symbols-path=$(DIST)/crashreporter-symbols \
-          --test=$(SOLO_FILE) \
+          --test-path=$(SOLO_FILE) \
           --interactive \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
@@ -190,7 +190,7 @@ check-one:
           -I$(topsrcdir)/build \
           $(testxpcsrcdir)/runxpcshelltests.py \
           --symbols-path=$(DIST)/crashreporter-symbols \
-          --test=$(SOLO_FILE) \
+          --test-path=$(SOLO_FILE) \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 

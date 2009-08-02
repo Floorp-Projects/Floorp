@@ -129,29 +129,6 @@ SHARED_LIBRARY_DIRS = \
 	../libpkix/pkix_pl_nss/module \
 	$(NULL)
 
-ifeq ($(OS_TARGET),SunOS)
-ifeq ($(BUILD_SUN_PKG), 1)
-# The -R '$ORIGIN' linker option instructs this library to search for its
-# dependencies in the same directory where it resides.
-ifeq ($(USE_64), 1)
-MKSHLIB += -R '$$ORIGIN:/usr/lib/mps/secv1/64:/usr/lib/mps/64'
-else
-MKSHLIB += -R '$$ORIGIN:/usr/lib/mps/secv1:/usr/lib/mps'
-endif
-else
-MKSHLIB += -R '$$ORIGIN'
-endif
-endif
-
-ifeq ($(OS_ARCH), HP-UX) 
-ifneq ($(OS_TEST), ia64)
-# pa-risc
-ifeq ($(USE_64), 1)
-MKSHLIB += +b '$$ORIGIN'
-endif
-endif
-endif
-
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
 ifndef NS_USE_GCC
 # Export 'mktemp' to be backward compatible with NSS 3.2.x and 3.3.x

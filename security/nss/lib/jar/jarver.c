@@ -343,11 +343,11 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
 
     /* skip over the preliminary section */
     /* This is one section at the top of the file with global metainfo */
-    while (raw_len) {
+    while (raw_len > 0) {
 	JAR_Metainfo *met;
 
 	raw_manifest = jar_eat_line(1, PR_TRUE, raw_manifest, &raw_len);
-	if (!*raw_manifest)
+	if (raw_len <= 0 || !*raw_manifest)
 	    break;
 
 	met = PORT_ZNew(JAR_Metainfo);
@@ -443,7 +443,7 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
     }
 
     /* done with top section of global data */
-    while (raw_len) {
+    while (raw_len > 0) {
 	*x_md5 = 0;
 	*x_sha = 0;
 	*x_name = 0;
@@ -461,7 +461,7 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
 	    } else
 		sec = raw_manifest;
 
-	    if (!PORT_Strncasecmp(sec, "Name:", 5)) {
+	    if (sec_len > 0 && !PORT_Strncasecmp(sec, "Name:", 5)) {
 		if (type == jarTypeMF)
 		    mfdig = jar_digest_section(sec, sec_len);
 		else
@@ -470,9 +470,9 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
 	}
 
 
-	while (raw_len) {
+	while (raw_len > 0) {
 	    raw_manifest = jar_eat_line(1, PR_TRUE, raw_manifest, &raw_len);
-	    if (!*raw_manifest)
+	    if (raw_len <= 0 || !*raw_manifest)
 		break; /* blank line, done with this entry */
 
 	    if (PORT_Strlen(raw_manifest) >= SZ) {
@@ -747,53 +747,72 @@ loser:
 /*
  *  e a t _ l i n e
  *
- *  Consume an ASCII line from the top of a file kept in memory. 
- *  This destroys the file in place. 
+ * Reads and/or modifies input buffer "data" of length "*len".
+ * This function does zero, one or two of the following tasks:
+ * 1) if "lines" is non-zero, it reads and discards that many lines from
+ *    the input.  NUL characters are treated as end-of-line characters,
+ *    not as end-of-input characters.  The input is NOT NUL terminated.
+ *    Note: presently, all callers pass either 0 or 1 for lines.
+ * 2) After skipping the specified number of input lines, if "eating" is 
+ *    non-zero, it finds the end of the next line of input and replaces
+ *    the end of line character(s) with a NUL character.
+ *  This function modifies the input buffer, containing the file, in place. 
  *  This function handles PC, Mac, and Unix style text files.
+ *  On entry, *len contains the maximum number of characters that this
+ *  function should ever examine, starting with the character in *data.
+ *  On return, *len is reduced by the number of characters skipped by the
+ *  first task, if any;
+ *  If lines is zero and eating is false, this function returns
+ *  the value in the data argument, but otherwise does nothing.
  */
 static char *
 jar_eat_line(int lines, int eating, char *data, long *len)
 {
-    char *ret;
+    char *start = data;
+    long maxLen = *len;
 
-    ret = data;
-    if (!*len)
-	return ret;
+    if (maxLen <= 0)
+	return start;
+
+#define GO_ON ((data - start) < maxLen)
 
     /* Eat the requisite number of lines, if any;
-	 prior to terminating the current line with a 0. */
+       prior to terminating the current line with a 0. */
+    for (/* yip */ ; lines > 0; lines--) {
+	while (GO_ON && *data && *data != '\r' && *data != '\n')
+	    data++;
 
-    for (/* yip */ ; lines; lines--) {
-	while (*data && *data != '\n')
+	/* Eat any leading CR */
+	if (GO_ON && *data == '\r')
 	    data++;
 
 	/* After the CR, ok to eat one LF */
-	if (*data == '\n')
+	if (GO_ON && *data == '\n')
 	    data++;
 
-	/* If there are zeros, we put them there */
-	while (*data == 0 && data - ret < *len)
+	/* If there are NULs, this function probably put them there */
+	while (GO_ON && !*data)
 	    data++;
     }
-
-    *len -= data - ret;
-    ret = data;
-
-    if (eating) {
+    maxLen -= data - start;           /* we have this many characters left. */
+    *len  = maxLen;
+    start = data;                     /* now start again here.            */
+    if (maxLen > 0 && eating) {
 	/* Terminate this line with a 0 */
-	while (*data && *data != '\n' && *data != '\r')
+	while (GO_ON && *data && *data != '\n' && *data != '\r')
 	    data++;
 
-	/* In any case we are allowed to eat CR */
-	if (*data == '\r')
+	/* If not past the end, we are allowed to eat one CR */
+	if (GO_ON && *data == '\r')
 	    *data++ = 0;
 
-	/* After the CR, ok to eat one LF */
-	if (*data == '\n')
+	/* After the CR (if any), if not past the end, ok to eat one LF */
+	if (GO_ON && *data == '\n')
 	    *data++ = 0;
     }
-    return ret;
+    return start;
 }
+#undef GO_ON
 
 /*
  *  j a r _ d i g e s t _ s e c t i o n
@@ -811,9 +830,9 @@ jar_digest_section(char *manifest, long length)
     global_end = manifest;
     global_len = length;
 
-    while (global_len) {
+    while (global_len > 0) {
 	global_end = jar_eat_line(1, PR_FALSE, global_end, &global_len);
-	if (*global_end == 0 || *global_end == '\n')
+	if (global_len > 0 && (*global_end == 0 || *global_end == '\n'))
 	    break;
     }
     return JAR_calculate_digest (manifest, global_end - manifest);

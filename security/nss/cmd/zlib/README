@@ -17,7 +17,7 @@ minigzip.c.
 To compile all files and run the test program, follow the instructions given at
 the top of Makefile. In short "make test; make install" should work for most
 machines. For Unix: "./configure; make test; make install". For MSDOS, use one
-of the special makefiles such as Makefile.msc. For VMS, use make_vms.com.
+of the special makefiles such as Makefile.msc. 
 
 Questions about zlib should be sent to <zlib@gzip.org>, or to Gilles Vollant
 <info@winimage.com> for the Windows DLL version. The zlib home page is

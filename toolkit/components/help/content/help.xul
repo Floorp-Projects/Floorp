@@ -46,8 +46,6 @@
     %brandDTD;
     <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd">
     %helpDTD;
-    <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-    %globalDTD;
 ]>
 
 <window id="help"
@@ -153,20 +151,18 @@
                 src="chrome://help/locale/help.properties"/>
 
     <toolbox id="help-toolbox" class="toolbox-top">
-      <toolbar id="HelpToolbar" class="chromeclass-toolbar" chromedir="&locale.dir;">
+      <toolbar id="HelpToolbar" class="chromeclass-toolbar">
         <toolbarbutton id="help-back-button" type="menu-button"
                        label="&backButton.label;"
                        oncommand="if (event.target == this) goBack(); else gotoHistoryIndex(event);"
                        observes="canGoBack" context="backMenu"
-                       tooltiptext="&backButton.tooltip;"
-                       chromedir="&locale.dir;">
+                       tooltiptext="&backButton.tooltip;">
           <menupopup context="" onpopupshowing="createBackMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="help-forward-button" type="menu-button"
                        oncommand="if (event.target == this) goForward(); else gotoHistoryIndex(event);"
                        tooltiptext="&forwardButton.tooltip;"
-                       observes="canGoForward"
-                       chromedir="&locale.dir;">
+                       observes="canGoForward">
           <menupopup context="" onpopupshowing="createForwardMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="help-home-button"

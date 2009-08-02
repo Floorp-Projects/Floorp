@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zutil.h,v 1.7 2007/12/01 02:16:10 julien.pierre.boogz%sun.com Exp $ */
+/* @(#) $Id: zutil.h,v 1.8 2009/06/05 02:22:17 nelson%bolyard.com Exp $ */
 
 #ifndef ZUTIL_H
 #define ZUTIL_H
@@ -105,7 +105,7 @@ extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #  define OS_CODE  0x01
 #endif
 
-#if defined(VAXC) || defined(VMS)
+#if defined(VAXC)
 #  define OS_CODE  0x02
 #  define F_OPEN(name, mode) \
      fopen((name), (mode), "mbc=60", "ctx=stm", "rfm=fix", "mrs=512")
@@ -204,9 +204,6 @@ extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #  ifdef __SASC
 #    define NO_vsnprintf
 #  endif
-#endif
-#ifdef VMS
-#  define NO_vsnprintf
 #endif
 
 #if defined(pyr)

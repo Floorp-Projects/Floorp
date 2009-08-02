@@ -81,12 +81,7 @@ void    ConvertMaskBitMap(PRUint8 *inBuf, PBITMAPINFO2 pBMInfo,
 //------------------------------------------------------------------------
 
 // reduces overhead by preventing calls to nsRws when it isn't present
-#ifdef MOZ_PHOENIX  // should work fine in Firefox
 static PRBool sUseRws = PR_TRUE;
-#else // XXX causes duplicate attachment icons and crashes in apps that
-      //     use mailnews, so off now for other apps
-static PRBool sUseRws = PR_FALSE;
-#endif
 
 //------------------------------------------------------------------------
 // nsIconChannel methods

@@ -535,6 +535,14 @@ freebl_InitNSSUtil(void *lib)
 #define freebl_releaseLibrary(lib) \
     if (lib) dlclose(lib)
 
+static void * FREEBLnsprGlobalLib = NULL;
+static void * FREEBLnssutilGlobalLib = NULL;
+
+void __attribute ((destructor)) FREEBL_unload()
+{
+    freebl_releaseLibrary(FREEBLnsprGlobalLib);
+    freebl_releaseLibrary(FREEBLnssutilGlobalLib);
+}
 #endif
 
 /*
@@ -552,28 +560,30 @@ FREEBL_InitStubs()
     void *nssutil = NULL; 
 
     /* NSPR should be first */
-    if (!ptr_PR_DestroyLock) {
+    if (!FREEBLnsprGlobalLib) {
 	nspr = freebl_getLibrary(nsprLibName);
 	if (!nspr) {
 	    return SECFailure;
 	}
 	rv = freebl_InitNSPR(nspr);
-	freebl_releaseLibrary(nspr);
 	if (rv != SECSuccess) {
+	    freebl_releaseLibrary(nspr);
 	    return rv;
 	}
+	FREEBLnsprGlobalLib = nspr; /* adopt */
     }
     /* now load NSSUTIL */
-    if (!ptr_SECITEM_ZfreeItem_Util) {
+    if (!FREEBLnssutilGlobalLib) {
 	nssutil= freebl_getLibrary(nssutilLibName);
 	if (!nssutil) {
 	    return SECFailure;
 	}
 	rv = freebl_InitNSSUtil(nssutil);
-	freebl_releaseLibrary(nssutil);
 	if (rv != SECSuccess) {
+	    freebl_releaseLibrary(nssutil);
 	    return rv;
 	}
+	FREEBLnssutilGlobalLib = nssutil; /* adopt */
     }
 #endif
 

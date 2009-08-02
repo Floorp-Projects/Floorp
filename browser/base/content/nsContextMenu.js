@@ -1182,10 +1182,8 @@ nsContextMenu.prototype = {
   },
   
   getLinkURI: function() {
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
     try {
-      return ioService.newURI(this.linkURL, null, null);
+      return makeURI(this.linkURL);
     }
     catch (ex) {
      // e.g. empty URL string

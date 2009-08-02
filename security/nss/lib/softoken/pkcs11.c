@@ -2589,8 +2589,6 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	crv = CKR_DEVICE_ERROR;
 	return crv;
     }
-    RNG_SystemInfoForRNG();
-
 
     /* NOTE:
      * we should be getting out mutexes from this list, not statically binding

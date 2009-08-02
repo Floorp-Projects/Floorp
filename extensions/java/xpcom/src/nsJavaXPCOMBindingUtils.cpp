@@ -490,7 +490,7 @@ DestroyJavaProxyMappingEnum(PLDHashTable* aTable, PLDHashEntryHdr* aHeader,
            (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
                                                javaObject),
            (PRUint32) entry, iid_str));
-      PR_Free(iid_str);
+      NS_Free(iid_str);
 #endif
       delete inst;  // releases native XPCOM object
     }
@@ -548,7 +548,7 @@ NativeToJavaProxyMap::Add(JNIEnv* env, nsISupports* aXPCOMObject,
   LOG(("+ NativeToJavaProxyMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
        (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID, aProxy),
        (PRUint32) aXPCOMObject, iid_str));
-  PR_Free(iid_str);
+  NS_Free(iid_str);
 #endif
   return NS_OK;
 }
@@ -584,7 +584,7 @@ NativeToJavaProxyMap::Find(JNIEnv* env, nsISupports* aNativeObject,
              (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
                                                  *aResult),
              (PRUint32) aNativeObject, iid_str));
-        PR_Free(iid_str);
+        NS_Free(iid_str);
 #endif
       }
     }
@@ -620,7 +620,7 @@ NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
            (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
                                                item->javaObject),
            (PRUint32) aNativeObject, iid_str));
-      PR_Free(iid_str);
+      NS_Free(iid_str);
 #endif
 
       env->CallVoidMethod(item->javaObject, clearReferentMID);
@@ -709,7 +709,7 @@ JavaToXPTCStubMap::Add(jint aJavaObjectHashCode, nsJavaXPTCStub* aProxy)
   char* iid_str = iid->ToString();
   LOG(("+ JavaToXPTCStubMap (Java=%08x | XPCOM=%08x | IID=%s)\n",
        (PRUint32) aJavaObjectHashCode, (PRUint32) aProxy, iid_str));
-  PR_Free(iid_str);
+  NS_Free(iid_str);
   nsMemory::Free(iid);
   NS_RELEASE(iface_info);
 #endif

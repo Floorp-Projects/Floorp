@@ -103,11 +103,9 @@ public:
     * that are the result of wrapping cells in an anonymous
     * column and colgroup are not considered real here.
     * @param aTableFrame - the table parent of the colgroups
-    * @param aLastColgroup - the last real colgroup
-    * @return  is false if there is a non real colgroup at the end
+    * @return the last real colgroup
     */
-  static PRBool GetLastRealColGroup(nsTableFrame* aTableFrame, 
-                                    nsIFrame**    aLastColGroup);
+  static nsTableColGroupFrame* GetLastRealColGroup(nsTableFrame* aTableFrame);
 
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
@@ -115,10 +113,10 @@ public:
   /** @see nsIFrame::AppendFrames, InsertFrames, RemoveFrame
     */
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
+                          nsFrameList&    aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
@@ -161,18 +159,16 @@ public:
     * @param aResetSubsequentColIndices - the indices of the col frames
     *                                     after the insertion might need
     *                                     an update
-    * @param aFirstFrame - first frame that needs to be added to the table,
-    *                      the frame should have a correctly set sibling
-    * @param aLastFrame  - last frame that needs to be added. It can be either
-    *                      null or should be in the sibling chain of
-    *                      aFirstFrame
+    * @param aCols - an iterator that can be used to iterate over the col
+    *                frames to be added.  Once this is done, the frames on the
+    *                sbling chain of its .get() at that point will still need
+    *                their col indices updated.
     * @result            - if there is no table frame or the table frame is not
     *                      the first in flow it will return an error
     */
-  nsresult AddColsToTable(PRInt32          aFirstColIndex,
-                          PRBool           aResetSubsequentColIndices,
-                          nsIFrame*        aFirstFrame,
-                          nsIFrame*        aLastFrame = nsnull);
+  nsresult AddColsToTable(PRInt32                   aFirstColIndex,
+                          PRBool                    aResetSubsequentColIndices,
+                          const nsFrameList::Slice& aCols);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -237,9 +233,8 @@ public:
 protected:
   nsTableColGroupFrame(nsStyleContext* aContext);
 
-  void InsertColsReflow(PRInt32         aColIndex,
-                        nsIFrame*       aFirstFrame,
-                        nsIFrame*       aLastFrame = nsnull);
+  void InsertColsReflow(PRInt32                   aColIndex,
+                        const nsFrameList::Slice& aCols);
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;

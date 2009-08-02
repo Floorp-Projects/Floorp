@@ -757,6 +757,9 @@
               window.removeEventListener("mousedown", this, true);
               window.removeEventListener("mouseup", this, true);
               window.removeEventListener("contextmenu", this, true);
+              window.removeEventListener("keydown", this, true);
+              window.removeEventListener("keypress", this, true);
+              window.removeEventListener("keyup", this, true);
               clearInterval(this._autoScrollTimer);
             }
          ]]>
@@ -767,7 +770,7 @@
         <body>
           <![CDATA[
             const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-            var popup = document.createElementNS(XUL_NS, "popup");
+            var popup = document.createElementNS(XUL_NS, "panel");
             popup.className = "autoscroller";
             return popup;
           ]]>
@@ -828,6 +831,9 @@
             window.addEventListener("mousedown", this, true);
             window.addEventListener("mouseup", this, true);
             window.addEventListener("contextmenu", this, true);
+            window.addEventListener("keydown", this, true);
+            window.addEventListener("keypress", this, true);
+            window.addEventListener("keyup", this, true);
 
             this._scrollErrorX = 0;
             this._scrollErrorY = 0;
@@ -949,6 +955,22 @@
               case "popuphidden": {
                 this._autoScrollPopup.removeEventListener("popuphidden", this, true);
                 this.stopScroll();
+                break;
+              }
+              case "keypress": {
+                if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
+                  // the escape key will be processed by
+                  // nsXULPopupManager::KeyPress and the panel will be closed.
+                  // So, nothing to do here.
+                  break;
+                }
+                // don't break here. we need to eat keypress events.
+              }
+              case "keydown":
+              case "keyup": {
+                // All keyevents should be eaten here during autoscrolling.
+                aEvent.stopPropagation();
+                aEvent.preventDefault();
                 break;
               }
             }

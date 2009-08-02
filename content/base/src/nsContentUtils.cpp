@@ -165,6 +165,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMDragEvent.h"
 #include "nsDOMDataTransfer.h"
 #include "nsHtml5Module.h"
+#include "nsPresContext.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"

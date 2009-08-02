@@ -1328,12 +1328,13 @@ CK_RV
 sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
                                 const CK_ATTRIBUTE *template, CK_ULONG count)
 {
-    CK_RV crv = CKR_OK;
     CK_ATTRIBUTE *ntemplate;
     unsigned char *data = NULL;
     PLArenaPool *arena = NULL;
-    CK_OBJECT_HANDLE objectID = (object->handle & SFTK_OBJ_ID_MASK);
     SDB *db;
+    CK_RV crv = CKR_OK;
+    CK_OBJECT_HANDLE objectID = (object->handle & SFTK_OBJ_ID_MASK);
+    PRBool inTransaction = PR_FALSE;
 
     if (handle == NULL) {
 	return CKR_TOKEN_WRITE_PROTECTED;
@@ -1363,18 +1364,20 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
     /* make sure we don't have attributes that conflict with the existing DB */
     crv = sftkdb_checkConflicts(db, object->objclass, template, count, objectID);
     if (crv != CKR_OK) {
-	return crv;
+	goto loser;
     }
 
     arena = PORT_NewArena(256);
     if (arena ==  NULL) {
-	return CKR_HOST_MEMORY;
+	crv = CKR_HOST_MEMORY;
+	goto loser;
     }
 
     crv = (*db->sdb_Begin)(db);
     if (crv != CKR_OK) {
 	goto loser;
     }
+    inTransaction = PR_TRUE;
     crv = sftkdb_setAttributeValue(arena, handle, db, 
 				   objectID, template, count);
     if (crv != CKR_OK) {
@@ -1382,14 +1385,16 @@ sftkdb_SetAttributeValue(SFTKDBHandle *handle, SFTKObject *object,
     }
     crv = (*db->sdb_Commit)(db);
 loser:
-    if (crv != CKR_OK) {
+    if (crv != CKR_OK && inTransaction) {
 	(*db->sdb_Abort)(db);
     }
     if (data) {
 	PORT_Free(ntemplate);
 	PORT_Free(data);
     }
-    PORT_FreeArena(arena, PR_FALSE);
+    if (arena) {
+	PORT_FreeArena(arena, PR_FALSE);
+    }
     return crv;
 }
 
@@ -2113,7 +2118,8 @@ sftkdb_updateObjectTemplate(PRArenaPool *arena, SDB *db,
 		 * give them a new CKA_ID */
 		/* NOTE: this changes ptemplate */
 		attr = sftkdb_getAttributeFromTemplate(CKA_ID,ptemplate,*plen);
-		crv = sftkdb_incrementCKAID(arena, attr); 
+		crv = attr ? sftkdb_incrementCKAID(arena, attr) 
+		           : CKR_HOST_MEMORY; 
 		/* in the extremely rare event that we needed memory and
 		 * couldn't get it, just drop the key */
 		if (crv != CKR_OK) {

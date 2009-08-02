@@ -70,8 +70,11 @@ public:
   virtual nsGridLayout2* CastToGridLayout() { return nsnull; }
   virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull);
   virtual void GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow);
-  virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList);
-  virtual void ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
+  virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
+                                nsIBox* aPrevBox,
+                                const nsFrameList::Slice& aNewChildren);
+  virtual void ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
+                                const nsFrameList::Slice& aNewChildren);
   virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal);

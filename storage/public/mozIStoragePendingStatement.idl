@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(fc3c5fdc-9a87-4757-b01f-4ace2670a3a0)]
+[scriptable, uuid(00da7d20-3768-4398-bedc-e310c324b3f0)]
 interface mozIStoragePendingStatement : nsISupports {
 
   /**
@@ -48,8 +48,6 @@ interface mozIStoragePendingStatement : nsISupports {
    *
    * @note For read statements (such as SELECT), you will no longer receive any
    *       notifications about results once cancel is called.
-   *
-   * @returns true if canceled successfully, false otherwise.
    */
-   boolean cancel();
+   void cancel();
 };

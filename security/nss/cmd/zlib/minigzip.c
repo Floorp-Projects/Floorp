@@ -13,7 +13,7 @@
  * or in pipe mode.
  */
 
-/* @(#) $Id: minigzip.c,v 1.5 2005/07/20 20:32:42 wtchang%redhat.com Exp $ */
+/* @(#) $Id: minigzip.c,v 1.6 2009/06/05 02:22:16 nelson%bolyard.com Exp $ */
 
 #include <stdio.h>
 #include "zlib.h"
@@ -37,10 +37,6 @@
 #  define SET_BINARY_MODE(file)
 #endif
 
-#ifdef VMS
-#  define unlink delete
-#  define GZ_SUFFIX "-gz"
-#endif
 #ifdef RISCOS
 #  define unlink remove
 #  define GZ_SUFFIX "-gz"

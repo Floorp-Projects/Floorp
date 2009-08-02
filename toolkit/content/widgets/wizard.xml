@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE bindings [
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
   <!ENTITY % wizardDTD SYSTEM "chrome://global/locale/wizard.dtd">
   %wizardDTD;
 ]>
@@ -20,7 +18,7 @@
   
   <binding id="wizard" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <content>
-      <xul:hbox class="wizard-header" chromedir="&locale.dir;" anonid="Header"/>
+      <xul:hbox class="wizard-header" anonid="Header"/>
       
       <xul:deck class="wizard-page-box" flex="1" anonid="Deck">
         <children includes="wizardpage"/>
@@ -539,8 +537,7 @@
                       dlgtype="cancel" icon="cancel"/>
           <xul:spacer style="width: 24px"/>
           <xul:button label="&button-back-unix.label;" accesskey="&button-back-unix.accesskey;"
-                      class="wizard-button" dlgtype="back" icon="go-back"
-                      chromedir="&locale.dir;"/>
+                      class="wizard-button" dlgtype="back" icon="go-back"/>
           <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
             <xul:hbox>
               <xul:button label="&button-finish-unix.label;" class="wizard-button"
@@ -549,13 +546,12 @@
             <xul:hbox>
               <xul:button label="&button-next-unix.label;" accesskey="&button-next-unix.accesskey;"
                           class="wizard-button" dlgtype="next" icon="go-forward" 
-                          chromedir="&locale.dir;" default="true" flex="1"/>
+                          default="true" flex="1"/>
             </xul:hbox>
           </xul:deck>
 #else
           <xul:button label="&button-back-win.label;" accesskey="&button-back-win.accesskey;"
-                      class="wizard-button" dlgtype="back" icon="go-back"
-                      chromedir="&locale.dir;"/>
+                      class="wizard-button" dlgtype="back" icon="go-back"/>
           <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
             <xul:hbox>
               <xul:button label="&button-finish-win.label;" class="wizard-button"
@@ -564,7 +560,7 @@
             <xul:hbox>
               <xul:button label="&button-next-win.label;" accesskey="&button-next-win.accesskey;"
                           class="wizard-button" dlgtype="next" icon="go-forward" 
-                          chromedir="&locale.dir;" default="true" flex="1"/>
+                          default="true" flex="1"/>
             </xul:hbox>
           </xul:deck>
           <xul:button label="&button-cancel-win.label;" class="wizard-button"

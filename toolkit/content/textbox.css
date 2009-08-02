@@ -20,8 +20,8 @@ textbox[isempty="true"] html|*.textbox-textarea {
   direction: ltr;
 }
 
-textbox[isempty="true"][chromedir="rtl"] html|*.textbox-input ,
-textbox[isempty="true"][chromedir="rtl"] html|*.textbox-textarea {
+textbox[isempty="true"]:-moz-locale-dir(rtl) html|*.textbox-input ,
+textbox[isempty="true"]:-moz-locale-dir(rtl) html|*.textbox-textarea {
   text-align: right;
   direction: rtl;
 }
