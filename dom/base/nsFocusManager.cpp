@@ -1041,9 +1041,22 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
   PRBool allowFrameSwitch = !(aFlags & FLAG_NOSWITCHFRAME) ||
                             IsSameOrAncestor(newWindow, mFocusedWindow);
 
+  PRBool canStealFocus = PR_TRUE;
+  // When an element already has focus but this focus changing isn't by the
+  // user input, we should check the permission.
+  if (mFocusedContent && !(aFlags & (FLAG_BYMOUSE | FLAG_BYKEY))) {
+    nsCOMPtr<nsIDOMNode> currentFocusedNode =
+                           do_QueryInterface(mFocusedContent);
+    // If the caller cannot access the current focused node, the caller should
+    // not be able to steal focus from it. E.g., When the current focused node
+    // is in chrome, any web contents should not be able to steal the focus.
+    canStealFocus = nsContentUtils::CanCallerAccess(currentFocusedNode);
+  }
+
   // if the element is in the active window, frame switching is allowed and
   // the content is in a visible window, fire blur and focus events.
-  if (isElementInActiveWindow && allowFrameSwitch && IsWindowVisible(newWindow)) {
+  if (isElementInActiveWindow && allowFrameSwitch &&
+      IsWindowVisible(newWindow) && canStealFocus) {
     // return if blurring fails or the focus changes during the blur
     if (mFocusedWindow) {
       // if the focus is being moved to another element in the same document,
