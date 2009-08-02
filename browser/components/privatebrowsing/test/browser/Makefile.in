@@ -64,6 +64,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_popupmode.js \
 		browser_privatebrowsing_geoprompt.js \
 		browser_privatebrowsing_geoprompt_page.html \
+		browser_privatebrowsing_opendir.js \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
