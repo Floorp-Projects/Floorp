@@ -68,6 +68,7 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_downloadmonitor.js \
 		staller.sjs \
 		browser_privatebrowsing_certexceptionsui.js \
+		browser_privatebrowsing_viewsource.js \
 		$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
