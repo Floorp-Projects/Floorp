@@ -51,6 +51,12 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- form with maxlength attribute on input -->
+  <form id="form7" onsubmit="return false;">
+    <input  type="text" name="field5" maxlength="10">
+    <button type="submit">Submit</button>
+  </form>
+
 </div>
 
 <pre id="test">
@@ -84,6 +90,10 @@ fh.addEntry("field4", "a\xe6");
 fh.addEntry("field4", "aa a\xe6");
 fh.addEntry("field4", "aba\xe6");
 fh.addEntry("field4", "bc d\xe6");
+fh.addEntry("field5", "1");
+fh.addEntry("field5", "12");
+fh.addEntry("field5", "123");
+fh.addEntry("field5", "1234");
 
 // Restore the form to the default state.
 function restoreForm() {
@@ -519,6 +529,89 @@ function runTest(testNum) {
         break;
 
     case 256:
+        checkMenuEntries([]);
+
+        // Look at form 7, try to trigger autocomplete popup
+        input = $_(7, "field5");
+        restoreForm();
+        doKey("down");
+        testNum = 299;
+        break;
+
+    case 300:
+        checkMenuEntries(["1", "12", "123", "1234"]);
+        input.maxLength = 4;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 301:
+        checkMenuEntries(["1", "12", "123", "1234"]);
+        input.maxLength = 3;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 302:
+        checkMenuEntries(["1", "12", "123"]);
+        input.maxLength = 2;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 303:
+        checkMenuEntries(["1", "12"]);
+        input.maxLength = 1;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 304:
+        checkMenuEntries(["1"]);
+        input.maxLength = 0;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 305:
+        checkMenuEntries([]);
+        input.maxLength = 4;
+
+        // now again with a character typed
+        sendChar("1", input);
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 306:
+        checkMenuEntries(["1", "12", "123", "1234"]);
+        input.maxLength = 3;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 307:
+        checkMenuEntries(["1", "12", "123"]);
+        input.maxLength = 2;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 308:
+        checkMenuEntries(["1", "12"]);
+        input.maxLength = 1;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 309:
+        checkMenuEntries(["1"]);
+        input.maxLength = 0;
+        doKey("escape");
+        doKey("down");
+        break;
+
+    case 310:
         checkMenuEntries([]);
 
         SimpleTest.finish();

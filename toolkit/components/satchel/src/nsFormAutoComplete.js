@@ -173,11 +173,12 @@ FormAutoComplete.prototype = {
      *
      * aInputName    -- |name| attribute from the form input being autocompleted.
      * aUntrimmedSearchString -- current value of the input
+     * aField -- nsIDOMHTMLInputElement being autocompleted (may be null if from chrome)
      * aPreviousResult -- previous search result, if any.
      *
      * Returns: an nsIAutoCompleteResult
      */
-    autoCompleteSearch : function (aInputName, aUntrimmedSearchString, aPreviousResult) {
+    autoCompleteSearch : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult) {
         function sortBytotalScore (a, b) {
             let x = a.totalScore;
             let y = b.totalScore;
@@ -222,6 +223,11 @@ FormAutoComplete.prototype = {
             this.log("Creating new autocomplete search result.");
             let entries = this.getAutoCompleteValues(aInputName, searchString);
             result = new FormAutoCompleteResult(this._formHistory, entries, aInputName, aUntrimmedSearchString);
+            if (aField && aField.maxLength > -1) {
+                let original = result.wrappedJSObject.entries;
+                let filtered = original.filter(function (el) el.text.length <= this.maxLength, aField);
+                result.wrappedJSObject.entries = filtered;
+            }
         }
 
         return result;
