@@ -6754,10 +6754,17 @@ let DownloadMonitorPanel = {
       gDownloadMgr.removeListener(this);
   },
 
+  inited: function DMP_inited() {
+    return this._panel != null;
+  },
+
   /**
    * Update status based on the number of active and paused downloads
    */
   updateStatus: function DMP_updateStatus() {
+    if (!this.inited())
+      return;
+
     let numActive = gDownloadMgr.activeDownloadCount;
 
     // Hide the panel and reset the "last time" if there's no downloads
@@ -6965,6 +6972,10 @@ let gPrivateBrowsingUI = {
         docElement.getAttribute("titlemodifier_privatebrowsing"));
       docElement.setAttribute("browsingmode", "private");
     }
+
+    setTimeout(function () {
+      DownloadMonitorPanel.updateStatus();
+    }, 0);
   },
 
   onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
@@ -7001,6 +7012,10 @@ let gPrivateBrowsingUI = {
     this._privateBrowsingAutoStarted = false;
 
     gLastOpenDirectory.reset();
+
+    setTimeout(function () {
+      DownloadMonitorPanel.updateStatus();
+    }, 0);
   },
 
   _setPBMenuTitle: function PBUI__setPBMenuTitle(aMode) {
