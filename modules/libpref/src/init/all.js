@@ -2730,9 +2730,11 @@ pref("signon.debug",                        false); // logs to Error Console
 pref("browser.formfill.debug",            false);
 pref("browser.formfill.enable",           true);
 pref("browser.formfill.agedWeight",       2);
-pref("browser.formfill.bucketSize",       5);
+pref("browser.formfill.bucketSize",       1);
 pref("browser.formfill.maxTimeGroupings", 25);
 pref("browser.formfill.timeGroupingSize", 604800);
+pref("browser.formfill.boundaryWeight",   25);
+pref("browser.formfill.prefixWeight",     5);
 
 // Zoom prefs
 pref("browser.zoom.full", false);
