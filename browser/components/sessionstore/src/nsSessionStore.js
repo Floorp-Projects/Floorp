@@ -1594,9 +1594,6 @@ SessionStoreService.prototype = {
         aHash[aHost] = {};
       if (!aHash[aHost][aPath])
         aHash[aHost][aPath] = {};
-      if (!aHash[aHost][aPath][aName])
-        aHash[aHost][aPath][aName] = {};
-
       aHash[aHost][aPath][aName] = aCookie;
     }
 
