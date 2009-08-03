@@ -9925,7 +9925,7 @@ TraceRecorder::getPropertyByName(LIns* obj_ins, jsval* idvalp, jsval* outp)
 }
 
 static JSBool FASTCALL
-GetPropertyByIndex(JSContext* cx, JSObject* obj, int32_t index, jsval* vp)
+GetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, jsval* vp)
 {
     js_LeaveTraceIfGlobalObject(cx, obj);
 
