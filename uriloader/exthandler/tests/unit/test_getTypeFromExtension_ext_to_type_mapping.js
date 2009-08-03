@@ -81,5 +81,5 @@ function run_test() {
   do_check_eq(type, kTestMimeType);
 
   // Clean up after ourselves.
-  catMan.deleteCategoryEntry("ext-to-type-mapping", kTestExtension, false);
+  categoryManager.deleteCategoryEntry("ext-to-type-mapping", kTestExtension, false);
 }
