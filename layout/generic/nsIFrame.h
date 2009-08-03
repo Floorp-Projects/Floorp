@@ -837,7 +837,7 @@ public:
    * Get the position of the frame's baseline, relative to the top of
    * the frame (its top border edge).  Only valid when Reflow is not
    * needed and when the frame returned nsHTMLReflowMetrics::
-   * ASK_FOR_ASCENT as ascent in its reflow metrics.
+   * ASK_FOR_BASELINE as ascent in its reflow metrics.
    */
   virtual nscoord GetBaseline() const = 0;
 
