@@ -628,48 +628,6 @@ static struct {
     },
 };
 static struct {
-    jsbytecode getprop[10];
-    jsbytecode getelem[10];
-} getelem_imacros = {
-    {
-/* 0*/  JSOP_SWAP,
-/* 1*/  JSOP_CALLBUILTIN, ((JSBUILTIN_GetProperty) & 0xff00) >> 8, ((JSBUILTIN_GetProperty) & 0xff),
-/* 4*/  JSOP_PICK, 2,
-/* 6*/  JSOP_CALL, 0, 1,
-/* 9*/  JSOP_STOP,
-    },
-    {
-/* 0*/  JSOP_SWAP,
-/* 1*/  JSOP_CALLBUILTIN, ((JSBUILTIN_GetElement) & 0xff00) >> 8, ((JSBUILTIN_GetElement) & 0xff),
-/* 4*/  JSOP_PICK, 2,
-/* 6*/  JSOP_CALL, 0, 1,
-/* 9*/  JSOP_STOP,
-    },
-};
-static struct {
-    jsbytecode callprop[12];
-    jsbytecode callelem[12];
-} callelem_imacros = {
-    {
-/* 0*/  JSOP_SWAP,
-/* 1*/  JSOP_DUP,
-/* 2*/  JSOP_CALLBUILTIN, ((JSBUILTIN_GetProperty) & 0xff00) >> 8, ((JSBUILTIN_GetProperty) & 0xff),
-/* 5*/  JSOP_PICK, 3,
-/* 7*/  JSOP_CALL, 0, 1,
-/*10*/  JSOP_SWAP,
-/*11*/  JSOP_STOP,
-    },
-    {
-/* 0*/  JSOP_SWAP,
-/* 1*/  JSOP_DUP,
-/* 2*/  JSOP_CALLBUILTIN, ((JSBUILTIN_GetElement) & 0xff00) >> 8, ((JSBUILTIN_GetElement) & 0xff),
-/* 5*/  JSOP_PICK, 3,
-/* 7*/  JSOP_CALL, 0, 1,
-/*10*/  JSOP_SWAP,
-/*11*/  JSOP_STOP,
-    },
-};
-static struct {
     jsbytecode setprop[15];
     jsbytecode setelem[15];
 } setelem_imacros = {
@@ -785,7 +743,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_ELEMDEC */
     0,  /* JSOP_GETPROP */
     0,  /* JSOP_SETPROP */
-    1,  /* JSOP_GETELEM */
+    0,  /* JSOP_GETELEM */
     2,  /* JSOP_SETELEM */
     0,  /* JSOP_CALLNAME */
     3,  /* JSOP_CALL */
@@ -924,7 +882,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_RESETBASE0 */
     0,  /* JSOP_STARTXML */
     0,  /* JSOP_STARTXMLEXPR */
-    2,  /* JSOP_CALLELEM */
+    0,  /* JSOP_CALLELEM */
     0,  /* JSOP_STOP */
     0,  /* JSOP_GETXPROP */
     0,  /* JSOP_CALLXMLNAME */
@@ -985,7 +943,6 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_MOD \
  || x == JSOP_NEG \
  || x == JSOP_POS \
- || x == JSOP_GETELEM \
  || x == JSOP_SETELEM \
  || x == JSOP_CALL \
  || x == JSOP_ITER \
@@ -994,7 +951,6 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_NEW \
  || x == JSOP_INITELEM \
  || x == JSOP_INSTANCEOF \
- || x == JSOP_CALLELEM \
 )
 jsbytecode*
 js_GetImacroStart(jsbytecode* pc) {
@@ -1033,10 +989,6 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - iter_imacros.for_each_native) < 10) return iter_imacros.for_each_native;
     if (size_t(pc - nextiter_imacros.custom_iter_next) < 12) return nextiter_imacros.custom_iter_next;
     if (size_t(pc - nextiter_imacros.native_iter_next) < 12) return nextiter_imacros.native_iter_next;
-    if (size_t(pc - getelem_imacros.getprop) < 10) return getelem_imacros.getprop;
-    if (size_t(pc - getelem_imacros.getelem) < 10) return getelem_imacros.getelem;
-    if (size_t(pc - callelem_imacros.callprop) < 12) return callelem_imacros.callprop;
-    if (size_t(pc - callelem_imacros.callelem) < 12) return callelem_imacros.callelem;
     if (size_t(pc - setelem_imacros.setprop) < 15) return setelem_imacros.setprop;
     if (size_t(pc - setelem_imacros.setelem) < 15) return setelem_imacros.setelem;
     if (size_t(pc - initelem_imacros.initprop) < 15) return initelem_imacros.initprop;

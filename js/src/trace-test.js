@@ -1859,6 +1859,16 @@ function testNegativeGETELEMIndex()
 testNegativeGETELEMIndex.expected = "ok";
 test(testNegativeGETELEMIndex);
 
+function testCallElem()
+{
+    var obj = {x0: function(){}};
+    var count = 0;
+    var m = "x" + count; // "x0" as a non-atom string
+    for (i = 0; i < 4; ++i)
+        obj[m]();
+}
+test(testCallElem);
+
 function doTestInvalidCharCodeAt(input)
 {
     var q = "";
