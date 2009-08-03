@@ -319,12 +319,6 @@ namespace nanojit
             inline void fpu_pop() {
                 debug_only( --_fpuStkDepth; /*char foo[8]= "FPUSTK0"; foo[6]-=_fpuStkDepth; output_asm(foo);*/ NanoAssert(_fpuStkDepth<=0); )
             }
-    #ifdef AVMPLUS_PORTING_API
-            // these pointers are required to store
-            // the address range where code has been
-            // modified so we can flush the instruction cache.
-            void* _endJit2Addr;
-    #endif // AVMPLUS_PORTING_API
             avmplus::Config &config;
     };
 
