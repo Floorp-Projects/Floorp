@@ -327,8 +327,6 @@ typedef enum JSRuntimeState {
 typedef enum JSBuiltinFunctionId {
     JSBUILTIN_ObjectToIterator,
     JSBUILTIN_CallIteratorNext,
-    JSBUILTIN_GetProperty,
-    JSBUILTIN_GetElement,
     JSBUILTIN_SetProperty,
     JSBUILTIN_SetElement,
     JSBUILTIN_HasInstance,
