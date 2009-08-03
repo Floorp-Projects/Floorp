@@ -152,13 +152,11 @@ struct UnifiedGradientInfo {
 {
   TitlebarAndBackgroundColor *mColor;
   float mUnifiedToolbarHeight;
-  BOOL mSuppressPainting;
 }
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
 - (void)setUnifiedToolbarHeight:(float)aToolbarHeight;
 - (float)unifiedToolbarHeight;
 - (float)titlebarHeight;
-- (BOOL)isPaintingSuppressed;
 // This method is also available on NSWindows (via a category), and is the 
 // preferred way to check the background color of a window.
 - (NSColor*)windowBackgroundColor;
