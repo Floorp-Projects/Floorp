@@ -1354,7 +1354,7 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
     [(ToolbarWindow*)win setUnifiedToolbarHeight:inBoxRect.size.height];
   }
   
-  BOOL isMain = win ? [win isMainWindow] : YES;
+  BOOL isMain = [win isMainWindow] || ![NSView focusView];
 
   // Draw the gradient
   UnifiedGradientInfo info = { titlebarHeight, inBoxRect.size.height, isMain, NO };
@@ -1374,9 +1374,10 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   CGShadingRelease(shading);
 
   // Draw the border at the bottom of the toolbar.
-  [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
-  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y +
-                        inBoxRect.size.height - 1.0f, inBoxRect.size.width, 1.0f));
+  CGRect borderRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y +
+                                 inBoxRect.size.height - 1.0f,
+                                 inBoxRect.size.width, 1.0f);
+  DrawNativeGreyColorInRect(cgContext, headerBorderGrey, borderRect, isMain);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1428,15 +1429,14 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
   if (inBoxRect.size.height < 2.0f)
     return;
 
-  BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow];
+  BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow] || ![NSView focusView];
 
   // Draw the borders at the top of the statusbar.
-  [NativeGreyColorAsNSColor(statusbarFirstTopBorderGrey, isMain) set];
-  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y,
-                        inBoxRect.size.width, 1.0f));
-  [NativeGreyColorAsNSColor(statusbarSecondTopBorderGrey, isMain) set];
-  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y + 1.0f,
-                        inBoxRect.size.width, 1.0f));
+  CGRect rect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y,
+                           inBoxRect.size.width, 1.0f);
+  DrawNativeGreyColorInRect(cgContext, statusbarFirstTopBorderGrey, rect, isMain);
+  rect.origin.y += 1.0f;
+  DrawNativeGreyColorInRect(cgContext, statusbarSecondTopBorderGrey, rect, isMain);
 
   // Draw the gradient.
   DrawGreyGradient(cgContext, CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y + 2.0f,
@@ -1633,22 +1633,22 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_TOOLBAR: {
-      BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow];
+      BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow] || ![NSView focusView];
+      CGRect drawRect = macRect;
 
       // top border
-      [NativeGreyColorAsNSColor(toolbarTopBorderGrey, isMain) set];
-      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y,
-                            macRect.size.width, 1.0f));
+      drawRect.size.height = 1.0f;
+      DrawNativeGreyColorInRect(cgContext, toolbarTopBorderGrey, drawRect, isMain);
 
       // background
-      [NativeGreyColorAsNSColor(headerEndGrey, isMain) set];
-      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y + 1.0f,
-                            macRect.size.width, macRect.size.height - 2.0f));
+      drawRect.origin.y += drawRect.size.height;
+      drawRect.size.height = macRect.size.height - 2.0f;
+      DrawNativeGreyColorInRect(cgContext, headerEndGrey, drawRect, isMain);
 
       // bottom border
-      [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
-      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y +
-                            macRect.size.height - 1.0f, macRect.size.width, 1.0f));
+      drawRect.origin.y += drawRect.size.height;
+      drawRect.size.height = 1.0f;
+      DrawNativeGreyColorInRect(cgContext, headerBorderGrey, drawRect, isMain);
     }
       break;
 
