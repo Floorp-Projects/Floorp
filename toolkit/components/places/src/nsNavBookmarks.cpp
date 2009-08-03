@@ -219,7 +219,7 @@ nsNavBookmarks::InitStatements()
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT b.id "
       "FROM moz_bookmarks b "
-      "WHERE b.type = 1 AND b.fk = ( "
+      "WHERE b.type = ?2 AND b.fk = ( "
         "SELECT id FROM moz_places_temp "
         "WHERE url = ?1 "
         "UNION "
@@ -2716,7 +2716,8 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI *aURI,
 
   nsresult rv = BindStatementURI(mDBFindURIBookmarks, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
-  mDBFindURIBookmarks->BindInt32Parameter(1, TYPE_BOOKMARK);
+  rv = mDBFindURIBookmarks->BindInt32Parameter(1, TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool more;
   while (NS_SUCCEEDED((rv = mDBFindURIBookmarks->ExecuteStep(&more))) && more) {
