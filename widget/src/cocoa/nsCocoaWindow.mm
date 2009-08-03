@@ -393,7 +393,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   // titlebar color (for unified windows), so use the special ToolbarWindow class. 
   // Note that we need to check the window type because we mark sheets as 
   // having titlebars.
-  if (mWindowType == eWindowType_toplevel &&
+  if ((mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) &&
       (features & NSTitledWindowMask))
     windowClass = [ToolbarWindow class];
   // If we're a popup window we need to use the PopupWindow class.
@@ -732,7 +732,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   }
   else {
     // roll up any popups if a top-level window is going away
-    if (mWindowType == eWindowType_toplevel)
+    if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)
       RollUpPopups();
 
     // now get rid of the window/sheet
