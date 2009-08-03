@@ -102,10 +102,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// {5F8D1A5E-C380-4c60-978A-030335BE1D6A}
+// {5FF2CD19-4F73-4935-8EA2-7A2C33166D4C}
 #define NS_IWIDGET_IID \
-  { 0x5f8d1a5e, 0xc380, 0x4c60, \
-    { 0x97, 0x8a, 0x03, 0x03, 0x35, 0xbe, 0x1d, 0x6a } }
+{ 0x5FF2CD19, 0x4F73, 0x4935, \
+  { 0x8E, 0xA2, 0x7A, 0x2C, 0x33, 0x16, 0x6D, 0x4C } }
 
 /*
  * Window shadow styles
@@ -293,11 +293,9 @@ class nsIWidget : public nsISupports {
     /**
      * Return the top level Widget of this Widget
      *
-     * @param     aLevelsUp   returns the number of GetParent() calls that
-     *                        were necessary to get to the top level widget
      * @return the top level widget
      */
-    virtual nsIWidget* GetTopLevelWidget(PRInt32* aLevelsUp = NULL) = 0;
+    virtual nsIWidget* GetTopLevelWidget() = 0;
 
     /**
      * Return the top (non-sheet) parent of this Widget if it's a sheet,
