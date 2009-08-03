@@ -43,10 +43,6 @@
 #ifndef __nanojit_Fragmento__
 #define __nanojit_Fragmento__
 
-#ifdef AVMPLUS_VERBOSE
-extern void drawTraceTrees(Fragmento *frago, FragmentMap * _frags, avmplus::AvmCore *core, char *fileName);
-#endif
-
 namespace nanojit
 {
     struct GuardRecord;
