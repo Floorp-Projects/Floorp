@@ -1643,13 +1643,6 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
   if (matches.Count() == 0)
     return;
 
-  SortComparator comparator = nsnull;
-  nsCAutoString sortingAnnotation;
-  if (aUpdateSort) {
-    comparator = GetSortingComparator(GetSortType());
-    GetSortingAnnotation(sortingAnnotation);
-  }
-
   // PERFORMANCE: This updates each container for each child in it that
   // changes. In some cases, many elements have changed inside the same
   // container. It would be better to compose a list of containers, and
