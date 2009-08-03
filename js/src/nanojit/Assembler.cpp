@@ -673,10 +673,6 @@ namespace nanojit
         // native code gen buffer setup
         nativePageSetup();
 
-    #ifdef AVMPLUS_PORTING_API
-        _endJit2Addr = _nExitIns;
-    #endif
-
         // make sure we got memory at least one page
         if (error()) return;
 
