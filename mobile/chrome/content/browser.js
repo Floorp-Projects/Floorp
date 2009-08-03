@@ -114,7 +114,14 @@ function debug() {
     dump('container location:     ' + Math.round(container.getBoundingClientRect().left) + " " +
                                       Math.round(container.getBoundingClientRect().top) + endl);
 
+    dump(endl);
 
+    let mouseModule = ih._modules[0];
+    dump('ih grabber  : ' + ih._grabber           + endl);
+    dump('ih grabdepth: ' + ih._grabDepth         + endl);
+    dump('ih listening: ' + !ih._ignoreEvents     + endl);
+    dump('ih suppress : ' + ih._suppressNextClick + endl);
+    dump('mouseModule : ' + mouseModule           + endl);
 
     dump(endl);
 
@@ -918,6 +925,10 @@ var Browser = {
               Browser.zoomFromElement(zoomElement);
           }
         }
+      },
+
+      toString: function toString() {
+        return "[ContentCustomClicker] { zoomed=" + this.zoomIn + " }";
       }
     };
   },
