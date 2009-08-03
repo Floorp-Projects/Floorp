@@ -289,20 +289,14 @@ nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
   if (mMargin == aOther.mMargin) {
     return NS_STYLE_HINT_NONE;
   }
-  // Margin differences can't affect descendant intrinsic sizes and
-  // don't need to force children to reflow.
-  return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
-                         NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                        nsChangeHint_NeedDirtyReflow));
+  return NS_STYLE_HINT_REFLOW;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStyleMargin::MaxDifference()
 {
-  return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
-                         NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                        nsChangeHint_NeedDirtyReflow));
+  return NS_STYLE_HINT_REFLOW;
 }
 #endif
 
@@ -350,20 +344,14 @@ nsChangeHint nsStylePadding::CalcDifference(const nsStylePadding& aOther) const
   if (mPadding == aOther.mPadding) {
     return NS_STYLE_HINT_NONE;
   }
-  // Padding differences can't affect descendant intrinsic sizes and
-  // don't need to force children to reflow.
-  return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
-                         NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                        nsChangeHint_NeedDirtyReflow));
+  return NS_STYLE_HINT_REFLOW;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStylePadding::MaxDifference()
 {
-  return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
-                         NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                        nsChangeHint_NeedDirtyReflow));
+  return NS_STYLE_HINT_REFLOW;
 }
 #endif
 
@@ -471,8 +459,6 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 
   // Note that differences in mBorder don't affect rendering (which should only
   // use mComputedBorder), so don't need to be tested for here.
-  // XXXbz we should be able to return a more specific change hint for
-  // at least GetActualBorder() differences...
   if (mTwipsPerPixel != aOther.mTwipsPerPixel ||
       GetActualBorder() != aOther.GetActualBorder() || 
       mFloatEdge != aOther.mFloatEdge ||
@@ -1069,34 +1055,20 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
 nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
 {
   if (mZIndex != aOther.mZIndex) {
-    // FIXME: Bug 507764.  Why do we need reflow here?
     return NS_STYLE_HINT_REFLOW;
   }
   
-  if ((mWidth == aOther.mWidth) &&
+  if ((mOffset == aOther.mOffset) &&
+      (mWidth == aOther.mWidth) &&
       (mMinWidth == aOther.mMinWidth) &&
       (mMaxWidth == aOther.mMaxWidth) &&
       (mHeight == aOther.mHeight) &&
       (mMinHeight == aOther.mMinHeight) &&
       (mMaxHeight == aOther.mMaxHeight) &&
-      (mBoxSizing == aOther.mBoxSizing)) {
-    if (mOffset == aOther.mOffset) {
-      return NS_STYLE_HINT_NONE;
-    } else {
-      // Offset changes only affect positioned content, and can't affect any
-      // intrinsic widths (except, XXXbz, stacks!  So for now have to clear
-      // ancestor intrinsic widths).  They also don't need to force reflow of
-      // descendants.
-      return NS_CombineHint(nsChangeHint_NeedReflow,
-                            nsChangeHint_ClearAncestorIntrinsics);
-    }
-  }
-
-  // None of our differences can affect descendant intrinsic sizes and none of
-  // them need to force children to reflow.
-  return NS_SubtractHint(nsChangeHint_ReflowFrame,
-                         NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                        nsChangeHint_NeedDirtyReflow));
+      (mBoxSizing == aOther.mBoxSizing))
+    return NS_STYLE_HINT_NONE;
+  
+  return nsChangeHint_ReflowFrame;
 }
 
 #ifdef DEBUG
@@ -1607,16 +1579,10 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mOverflowY != aOther.mOverflowY)
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
 
-  if (mFloats != aOther.mFloats) {
-    // Changing which side we float on doesn't affect descendants directly
-    NS_UpdateHint(hint,
-       NS_SubtractHint(nsChangeHint_ReflowFrame,
-                       NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                      nsChangeHint_NeedDirtyReflow)));
-  }
+  if (mFloats != aOther.mFloats)
+    NS_UpdateHint(hint, nsChangeHint_ReflowFrame);    
 
   if (mClipFlags != aOther.mClipFlags || mClip != aOther.mClip) {
-    // FIXME: Bug 507764.  Could we use a more precise hint here?
     NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
   }
   // XXX the following is conservative, for now: changing float breaking shouldn't
@@ -2039,8 +2005,6 @@ nsCSSShadowArray::Release()
 
 // Allowed to return one of NS_STYLE_HINT_NONE, NS_STYLE_HINT_REFLOW
 // or NS_STYLE_HINT_VISUAL. Currently we just return NONE or REFLOW, though.
-// XXXbz can this not return a more specific hint?  If that's ever
-// changed, nsStyleBorder::CalcDifference will need changing too.
 static nsChangeHint
 CalcShadowDifference(nsCSSShadowArray* lhs,
                      nsCSSShadowArray* rhs)
