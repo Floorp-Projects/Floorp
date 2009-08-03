@@ -1986,7 +1986,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption ,
 #identity-popup-content-box.verifiedDomain > #identity-popup-encryption {
   margin-top: 10px;
-  margin-left: -24px;
+  -moz-margin-start: -24px;
 }
 
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
