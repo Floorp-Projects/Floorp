@@ -4365,6 +4365,49 @@ function testSwitchUndefined()
 testSwitchUndefined.expected = 5;
 test(testSwitchUndefined);
 
+function testTableSwitch1() {
+    var x = 'miss';
+    var i, j = 0;
+    for (i = 0; i < RUNLOOP + 10; i++) {
+        switch (x) {
+          case 1: case 2: case 3: case 4: case 5: throw "FAIL";
+          default: j++;
+        }
+    }
+    assertEq(i, j);
+}
+testTableSwitch1.jitstats = {
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 1,
+    recorderAborted: 0,
+    traceCompleted: 1
+};
+test(testTableSwitch1);
+
+function testTableSwitch2() {
+    var arr = [2, 2, 2, 2, 2, 5, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5];
+    var s = '';
+    for (var i = 0; i < arr.length; i++) {
+        switch (arr[i]) {
+        case 0: case 1: case 3: case 4:
+            throw "FAIL";
+        case 2:
+            s += '2';
+            break;
+        case 5:
+            s += '5';
+        }
+    }
+    assertEq(s, arr.join(""));
+}
+testTableSwitch2.jitstats = {
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 4,
+    recorderAborted: 0,
+    traceCompleted: 3
+};
+test(testTableSwitch2);
+
 function testGeneratorDeepBail() {
     function g() { yield 2; }
     var iterables = [[1], [], [], [], g()];
@@ -5556,6 +5599,21 @@ testNativeSetter.jitstats = {
     sideExitIntoInterpreter: 1
 };
 test(testNativeSetter);
+
+function testBug507425() {
+    var r = /x/;
+    for (var i = 0; i < 3; i++)
+        r.lastIndex = 0;          // call a setter
+    var s = ';';
+    try {
+        for (i = 0; i < 80; i++)
+            s += s;                   // call js_CanLeaveTrace
+    } catch (exc) {
+        return "ok";
+    }
+}
+testBug507425.expected = "ok";
+test(testBug507425);
 
 /*****************************************************************************
  *                                                                           *

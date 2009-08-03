@@ -71,6 +71,12 @@ namespace nanojit
 #undef OPDEF64
     };
 
+#ifdef NANOJIT_64BIT
+#  define PTR_SIZE(a,b)  b
+#else
+#  define PTR_SIZE(a,b)  a
+#endif
+
     #if defined NANOJIT_64BIT
     #define LIR_ldp     LIR_ldq
     #define LIR_piadd   LIR_qiadd
@@ -100,30 +106,45 @@ namespace nanojit
 
     enum ArgSize {
         ARGSIZE_NONE = 0,
-        ARGSIZE_F = 1,
-        ARGSIZE_LO = 2,
-        ARGSIZE_Q = 3,
-        _ARGSIZE_MASK_INT = 2,
-        _ARGSIZE_MASK_ANY = 3
+        ARGSIZE_F = 1,      // double (64bit)
+        ARGSIZE_I = 2,      // int32_t
+        ARGSIZE_Q = 3,      // uint64_t
+        ARGSIZE_U = 6,      // uint32_t
+        ARGSIZE_MASK_ANY = 7,
+        ARGSIZE_MASK_INT = 2,
+        ARGSIZE_SHIFT = 3,
+
+        // aliases
+        ARGSIZE_P = PTR_SIZE(ARGSIZE_I, ARGSIZE_Q), // pointer
+        ARGSIZE_LO = ARGSIZE_I, // int32_t
+        ARGSIZE_B = ARGSIZE_I, // bool
+        ARGSIZE_V = ARGSIZE_NONE  // void
+    };
+
+    enum IndirectCall {
+        CALL_INDIRECT = 0
     };
 
     struct CallInfo
     {
-        uintptr_t    _address;
-        uint32_t    _argtypes:18;    // 9 2-bit fields indicating arg type, by ARGSIZE above (including ret type): a1 a2 a3 a4 a5 ret
-        uint8_t        _cse:1;            // true if no side effects
-        uint8_t        _fold:1;        // true if no side effects
+        uintptr_t   _address;
+        uint32_t    _argtypes:27;    // 9 3-bit fields indicating arg type, by ARGSIZE above (including ret type): a1 a2 a3 a4 a5 ret
+        uint8_t     _cse:1;          // true if no side effects
+        uint8_t     _fold:1;         // true if no side effects
         AbiKind     _abi:3;
         verbose_only ( const char* _name; )
 
         uint32_t FASTCALL _count_args(uint32_t mask) const;
         uint32_t get_sizes(ArgSize*) const;
 
+        inline bool isIndirect() const {
+            return _address < 256;
+        }
         inline uint32_t FASTCALL count_args() const {
-            return _count_args(_ARGSIZE_MASK_ANY);
+            return _count_args(ARGSIZE_MASK_ANY);
         }
         inline uint32_t FASTCALL count_iargs() const {
-            return _count_args(_ARGSIZE_MASK_INT);
+            return _count_args(ARGSIZE_MASK_INT);
         }
         // fargs = args - iargs
     };
