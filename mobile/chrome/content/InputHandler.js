@@ -339,6 +339,12 @@ InputHandler.EventInfo = function EventInfo(aEvent, timestamp) {
   this.time = timestamp || Date.now();
 };
 
+InputHandler.EventInfo.prototype = {
+  toString: function toString() {
+    return '[EventInfo] { event=' + this.event + 'time=' + this.time + ' }';
+  }
+};
+
 
 /**
  * MouseModule
@@ -402,9 +408,6 @@ function MouseModule(owner) {
   this._downUpDispatchedIndex = 0;
   this._targetScrollInterface = null;
 
-  this._dragging = false;
-  this._fastPath = false;
-
   var self = this;
   this._kinetic = new KineticController(
     function _dragByBound(dx, dy) { return self._dragBy(dx, dy); },
@@ -463,7 +466,6 @@ MouseModule.prototype = {
     let targetClicker = this.getClickerFromElement(evInfo.event.target);
 
     this._targetScrollInterface = targetScrollInterface;
-    if (!targetScrollInterface) { debugger; dump('*********** no TSI found, dragger will be null\n'); }
     this._dragger = (targetScrollInterface) ? (targetScrollbox.customDragger || this._defaultDragger)
                                             : null;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
@@ -612,11 +614,7 @@ MouseModule.prototype = {
       this._kinetic.start();
 
     } else {               // now we're done, says our secret 3rd argument
-      try {
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
-      } catch (e) {
-        debugger; dump(e + '\n');
-      }
     }
   },
 
@@ -691,7 +689,7 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a single click and tell the clicker.
    */
   _doSingleClick: function _doSingleClick() {
-    /*
+    
     dump('doing single click with ' + this._downUpEvents.length + '\n');
     for (let i = 0; i < this._downUpEvents.length; ++i)
       dump('      ' + this._downUpEvents[i].event.type
@@ -707,7 +705,7 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a double click and tell the clicker.
    */
   _doDoubleClick: function _doDoubleClick() {
-    /*
+
     dump('doing double click with ' + this._downUpEvents.length + '\n');
     for (let i = 0; i < this._downUpEvents.length; ++i)
       dump('      ' + this._downUpEvents[i].event.type
@@ -779,7 +777,7 @@ MouseModule.prototype = {
     let qinterface = null;
     let prev = null;
 
-    for (; elem; elem = elem.parentNode) { dump(elem + '\n');
+    for (; elem; elem = elem.parentNode) {
       try {
 
         if (elem.scrollBoxObject) {
@@ -815,6 +813,18 @@ MouseModule.prototype = {
         break;
 
     return (elem) ? elem : null;
+  },
+
+  toString: function toString() {
+    return '[MouseModule] {'
+      + '\n\tdragData=' + this._dragData + ', '
+      + 'dragger=' + this._dragger + ', '
+      + 'clicker=' + this._clicker + ', '
+      + '\n\tdownUpEvents=' + this._downUpEvents + ', '
+      + 'downUpIndex=' + this._downUpDispatchedIndex + ', '
+      + 'length=' + this._downUpEvents.length + ', '
+      + '\n\ttargetScroller=' + this._targetScrollInterface + ', '
+      + '\n\tclickTimeout=' + this._clickTimeout + '\n  }';
   }
 
 };
@@ -1300,14 +1310,11 @@ function ScrollwheelModule(owner, browserView, browserViewContainer) {
 
 ScrollwheelModule.prototype = {
   handleEvent: function handleEvent(evInfo) {
-    //if (evInfo.event.target === this._browserViewContainer) {
-      if (evInfo.event.type == "DOMMouseScroll") {
-        dump('got scrollwheel event on target ' + evInfo.event.target + '\n');
-        this._browserView.zoom(evInfo.event.detail);
-        evInfo.event.stopPropagation();
-        evInfo.event.preventDefault();
-      }
-    //}
+    if (evInfo.event.type == "DOMMouseScroll") {
+      this._browserView.zoom(evInfo.event.detail);
+      evInfo.event.stopPropagation();
+      evInfo.event.preventDefault();
+    }
   },
 
   /* We don't have much state to reset if we lose event focus */
