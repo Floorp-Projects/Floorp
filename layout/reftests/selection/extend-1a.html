@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<body style="white-space:pre">0123456789
+<script>
+var t = document.body.firstChild;
+var sel = window.getSelection();
+sel.collapse(t, 2);
+sel.extend(t, 9);
+
+function doTest() {
+  sel.extend(t, 8);
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
