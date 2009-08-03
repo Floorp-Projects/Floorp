@@ -1280,18 +1280,6 @@ namespace nanojit
         return m_list[k] = name;
     }
 
-    void LInsHashSet::replace(LInsp i)
-    {
-        LInsp *list = m_list;
-        uint32_t k = find(i, hashcode(i), list, m_cap);
-        if (list[k]) {
-            // already there, so replace it
-            list[k] = i;
-        } else {
-            add(i, k);
-        }
-    }
-
     uint32_t LInsHashSet::hashimm(int32_t a) {
         return _hashfinish(_hash32(0,a));
     }
@@ -1983,18 +1971,6 @@ namespace nanojit
             return exprs.add(out->insCall(ci, args), k);
         }
         return out->insCall(ci, args);
-    }
-
-    CseReader::CseReader(LirFilter *in, LInsHashSet *exprs)
-        : LirFilter(in), exprs(exprs)
-    {}
-
-    LInsp CseReader::read()
-    {
-        LInsp i = in->read();
-        if (i->isCse())
-            exprs->replace(i);
-        return i;
     }
 
     LIns* FASTCALL callArgN(LIns* i, uint32_t n)
