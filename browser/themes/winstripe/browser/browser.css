@@ -1845,7 +1845,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-box-shadow: 1px 1px 0 rgba(255,255,255,.3) inset,
                    0 -1px 0 rgba(255,255,255,.2) inset;
 }
-#identity-box:-moz-locale-dir(ltr) {
+#identity-box:-moz-locale-dir(rtl) {
   -moz-border-start-style: solid;
 }
 #identity-box:-moz-locale-dir(ltr):-moz-system-metric(windows-default-theme) {
