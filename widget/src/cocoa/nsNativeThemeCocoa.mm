@@ -183,7 +183,7 @@ static NSView* NativeViewForFrame(nsIFrame* aFrame)
   return (NSView*)widget->GetNativeData(NS_NATIVE_WIDGET);
 }
 
-static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, int* aLevelsUp = NULL,
+static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
                                       nsIWidget** aTopLevelWidget = NULL)
 {
   if (!aFrame)
@@ -193,7 +193,7 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, int* aLevelsUp = NULL,
   if (!widget)
     return nil;
 
-  nsIWidget* topLevelWidget = widget->GetTopLevelWidget(aLevelsUp);
+  nsIWidget* topLevelWidget = widget->GetTopLevelWidget();
   if (aTopLevelWidget)
     *aTopLevelWidget = topLevelWidget;
 
@@ -203,7 +203,7 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, int* aLevelsUp = NULL,
 static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
 {
   nsIWidget* topLevelWidget = NULL;
-  NSWindow* win = NativeWindowForFrame(aFrame, NULL, &topLevelWidget);
+  NSWindow* win = NativeWindowForFrame(aFrame, &topLevelWidget);
   if (!topLevelWidget || !win)
     return YES;
 
@@ -1325,6 +1325,17 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
   return scrollbarFrame;
 }
 
+static BOOL DrawingAtWindowTop(CGContextRef cgContext, float viewHeight, float yPos)
+{
+  // Ignore all non-trivial transforms.
+  CGAffineTransform ctm = CGContextGetCTM(cgContext);
+  if (ctm.a != 1.0f || ctm.b != 0.0f || ctm.c != 0.0f || ctm.d != -1.0f)
+    return NO;
+
+  // ctm.ty contains the vertical offset from the window's bottom edge.
+  return ctm.ty - yPos >= viewHeight;
+}
+
 void
 nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                                        nsIFrame *aFrame)
@@ -1332,12 +1343,10 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   float titlebarHeight = 0;
-  int levelsUp = 0;
-  NSWindow* win = NativeWindowForFrame(aFrame, &levelsUp);
+  NSWindow* win = NativeWindowForFrame(aFrame);
 
-  // If the toolbar is directly below the titlebar in the top level view of a ToolbarWindow
-  if ([win isKindOfClass:[ToolbarWindow class]] && levelsUp == 0 &&
-      inBoxRect.origin.y <= 0) {
+  if ([win isKindOfClass:[ToolbarWindow class]] &&
+      DrawingAtWindowTop(cgContext, [[win contentView] bounds].size.height, inBoxRect.origin.y)) {
     // Consider the titlebar height when calculating the gradient.
     titlebarHeight = [(ToolbarWindow*)win titlebarHeight];
     // Notify the window about the toolbar's height so that it can draw the
