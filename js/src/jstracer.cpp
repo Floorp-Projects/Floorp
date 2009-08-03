@@ -1141,7 +1141,7 @@ public:
     {
         // if the return type is ARGSIZE_F, we have
         // to do a quadCall(qjoin(call,callh))
-        if ((ci->_argtypes & 3) == ARGSIZE_F)
+        if ((ci->_argtypes & ARGSIZE_MASK_ANY) == ARGSIZE_F)
             return quadCall(ci, args);
 
         return out->insCall(ci, args);
@@ -3694,7 +3694,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::compile(JSTraceMonitor* tm)
 {
 #ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(S_COMPILE);
+    TraceVisStateObj tvso(cx, S_COMPILE);
 #endif
 
     if (tm->needFlush) {
@@ -5386,7 +5386,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
             VMSideExit** innermostNestedGuardp)
 {
 #ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(S_EXECUTE);
+    TraceVisStateObj tvso(cx, S_EXECUTE);
 #endif
 
     JS_ASSERT(f->root == f && f->code() && f->vmprivate);
@@ -5484,7 +5484,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     // TraceVisStateObj constructors and destructors must run at the right times.
     {
 #ifdef MOZ_TRACEVIS
-        TraceVisStateObj tvso_n(S_NATIVE);
+        TraceVisStateObj tvso_n(cx, S_NATIVE);
 #endif
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
         SIMULATE_FASTCALL(rec, state, NULL, u.func);
@@ -5498,6 +5498,7 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
 
     cx->interpState = state->prev;
 
+    JS_ASSERT(!cx->bailExit);
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
     tm->tracecx = NULL;
     LeaveTree(*state, lr);
@@ -5796,7 +5797,7 @@ JS_REQUIRES_STACK bool
 js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
 #ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(S_MONITOR);
+    TraceVisStateObj tvso(cx, S_MONITOR);
 #endif
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -6754,15 +6755,12 @@ JS_DEFINE_CALLINFO_6(extern, UINT32, GetClosureArg, CONTEXT, OBJECT, UINT32,
  * generate LIR to access the given property. Return JSRS_CONTINUE on success,
  * otherwise abort and return JSRS_STOP. There are 3 outparams:
  *
- *     vp         the address of the current property value
- *     ins        LIR instruction representing the property value on trace
- *     tracked    true iff the property value is tracked on this trace. If true,
- *                then the tracked value can be modified using the tracker set
- *                functions. If false, then the value comes from a call to a
- *                builtin to access an upvar, and can't be modified directly.
+ *     vp           the address of the current property value
+ *     ins          LIR instruction representing the property value on trace
+ *     NameResult   describes how to look up name; see comment for NameResult in jstracer.h
  */
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, bool& tracked)
+TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult& nr)
 {
     JS_ASSERT(obj != globalObj);
 
@@ -6792,7 +6790,7 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, bool& track
         vp = &STOBJ_GET_SLOT(obj, sprop->slot);
         ins = get(vp);
         OBJ_DROP_PROPERTY(cx, obj2, prop);
-        tracked = true;
+        nr.tracked = true;
         return JSRS_CONTINUE;
     }
 
@@ -6829,7 +6827,7 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, bool& track
                 // At this point we are guaranteed to be looking at an active call object
                 // whose properties are stored in the corresponding JSStackFrame.
                 ins = get(vp);
-                tracked = true;
+                nr.tracked = true;
                 return JSRS_CONTINUE;
             } else {
                 // Compute number of scope chain links to result.
@@ -6864,7 +6862,10 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, bool& track
                               "guard(type-stable name access)"),
                       BRANCH_EXIT);
                 ins = stackLoad(outp, type);
-                tracked = false;
+                nr.tracked = false;
+                nr.obj = obj;
+                nr.scopeIndex = scopeIndex;
+                nr.sprop = sprop;
                 return JSRS_CONTINUE;
             }
         }
@@ -7153,24 +7154,26 @@ TraceRecorder::ifop()
  * "first" time we hit the op. Later, when we start traces after exiting that
  * trace, we just patch.
  */
-JS_REQUIRES_STACK LIns*
+JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::tableswitch()
 {
     jsval& v = stackval(-1);
+
+    /* No need to guard if the condition can't match any of the cases. */
     if (!isNumber(v))
-        return NULL;
+        return JSRS_CONTINUE;
 
     /* No need to guard if the condition is constant. */
     LIns* v_ins = f2i(get(&v));
     if (v_ins->isconst() || v_ins->isconstq())
-        return NULL;
+        return JSRS_CONTINUE;
 
     jsbytecode* pc = cx->fp->regs->pc;
     /* Starting a new trace after exiting a trace via switch. */
     if (anchor &&
         (anchor->exitType == CASE_EXIT || anchor->exitType == DEFAULT_EXIT) &&
         fragment->ip == pc) {
-        return NULL;
+        return JSRS_CONTINUE;
     }
 
     /* Decode jsop. */
@@ -7191,14 +7194,8 @@ TraceRecorder::tableswitch()
      * Really large tables won't fit in a page. This is a conservative check.
      * If it matters in practice we need to go off-page.
      */
-    if ((high + 1 - low) * sizeof(intptr_t*) + 128 > (unsigned) LARGEST_UNDERRUN_PROT) {
-        /*
-         * This throws away the return value of switchop but it seems ok
-         * because switchop always returns true.
-         */
-        (void) switchop();
-        return NULL;
-    }
+    if ((high + 1 - low) * sizeof(intptr_t*) + 128 > (unsigned) LARGEST_UNDERRUN_PROT)
+        return switchop();
 
     /* Generate switch LIR. */
     LIns* si_ins = lir_buf_writer->insSkip(sizeof(SwitchInfo));
@@ -7212,7 +7209,10 @@ TraceRecorder::tableswitch()
     lir->insStorei(diff, lir->insImmPtr(&si->index), 0);
     VMSideExit* exit = snapshot(CASE_EXIT);
     exit->switchInfo = si;
-    return lir->insGuard(LIR_xtbl, diff, createGuardRecord(exit));
+    LIns* guardIns = lir->insGuard(LIR_xtbl, diff, createGuardRecord(exit));
+    fragment->lastIns = guardIns;
+    compile(&JS_TRACE_MONITOR(cx));
+    return JSRS_STOP;
 }
 #endif
 
@@ -9005,7 +9005,11 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
 
     CallInfo* ci = (CallInfo*) lir->insSkip(sizeof(struct CallInfo))->payload();
     ci->_address = uintptr_t(setflag ? sprop->setter : sprop->getter);
-    ci->_argtypes = ARGSIZE_LO | ARGSIZE_LO << 2 | ARGSIZE_LO << 4 | ARGSIZE_LO << 6 | ARGSIZE_LO << 8;
+    ci->_argtypes = ARGSIZE_LO << (0*ARGSIZE_SHIFT) |
+                    ARGSIZE_LO << (1*ARGSIZE_SHIFT) |
+                    ARGSIZE_LO << (2*ARGSIZE_SHIFT) |
+                    ARGSIZE_LO << (3*ARGSIZE_SHIFT) |
+                    ARGSIZE_LO << (4*ARGSIZE_SHIFT);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
 #ifdef DEBUG
@@ -9014,8 +9018,10 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     LIns* args[] = { vp_ins, INS_CONSTWORD(SPROP_USERID(sprop)), obj_ins, cx_ins };
     LIns* ok_ins = lir->insCall(ci, args);
 
-    // Unroot the vp.
-    lir->insStorei(INS_CONSTPTR(NULL), cx_ins, offsetof(JSContext, nativeVp));
+    // Cleanup.
+    LIns* null_ins = INS_CONSTPTR(NULL);
+    lir->insStorei(null_ins, cx_ins, offsetof(JSContext, nativeVp));
+    lir->insStorei(null_ins, cx_ins, offsetof(JSContext, bailExit));
 
     // Guard that the call succeeded and builtinStatus is still 0.
     // If the native op succeeds but we deep-bail here, the result value is
@@ -9318,7 +9324,10 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         args[0] = invokevp_ins;
         args[1] = lir->insImm(argc);
         args[2] = cx_ins;
-        types = ARGSIZE_LO | ARGSIZE_LO << 2 | ARGSIZE_LO << 4 | ARGSIZE_LO << 6;
+        types = ARGSIZE_LO << (0*ARGSIZE_SHIFT) |
+                ARGSIZE_LO << (1*ARGSIZE_SHIFT) |
+                ARGSIZE_LO << (2*ARGSIZE_SHIFT) |
+                ARGSIZE_LO << (3*ARGSIZE_SHIFT);
     } else {
         native_rval_ins = lir->ins2i(LIR_piadd, invokevp_ins, int32_t((vplen - 1) * sizeof(jsval)));
         args[0] = native_rval_ins;
@@ -9326,8 +9335,12 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         args[2] = lir->insImm(argc);
         args[3] = this_ins;
         args[4] = cx_ins;
-        types = ARGSIZE_LO | ARGSIZE_LO << 2 | ARGSIZE_LO << 4 | ARGSIZE_LO << 6 |
-                ARGSIZE_LO << 8 | ARGSIZE_LO << 10;
+        types = ARGSIZE_LO << (0*ARGSIZE_SHIFT) |
+                ARGSIZE_LO << (1*ARGSIZE_SHIFT) |
+                ARGSIZE_LO << (2*ARGSIZE_SHIFT) |
+                ARGSIZE_LO << (3*ARGSIZE_SHIFT) |
+                ARGSIZE_LO << (4*ARGSIZE_SHIFT) |
+                ARGSIZE_LO << (5*ARGSIZE_SHIFT);
     }
 
     // Generate CallInfo and a JSTraceableNative structure on the fly.  Do not
@@ -9526,13 +9539,20 @@ TraceRecorder::incName(jsint incr, bool pre)
 {
     jsval* vp;
     LIns* v_ins;
-    bool tracked;
-    CHECK_STATUS(name(vp, v_ins, tracked));
-    if (!tracked)
-        ABORT_TRACE("incName on non-tracked value not supported");
+    NameResult nr;
+    CHECK_STATUS(name(vp, v_ins, nr));
     CHECK_STATUS(inc(*vp, v_ins, incr, pre));
-    set(vp, v_ins);
-    return JSRS_CONTINUE;
+    if (nr.tracked) {
+        set(vp, v_ins);
+        return JSRS_CONTINUE;
+    }
+
+    if (OBJ_GET_CLASS(cx, nr.obj) != &js_CallClass)
+        ABORT_TRACE("incName on unsupported object class");
+    LIns* callobj_ins = get(&cx->fp->argv[-2]);
+    for (jsint i = 0; i < nr.scopeIndex; ++i)
+        callobj_ins = stobj_get_parent(callobj_ins);
+    return setCallProp(callobj_ins, nr.sprop, v_ins, *vp);
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -9665,9 +9685,11 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     if (sprop->attrs & JSPROP_SETTER)
         ABORT_TRACE("can't trace JavaScript function setter");
 
-    // These two cases are actually errors and can't be cached.
-    JS_ASSERT(!(sprop->attrs & JSPROP_GETTER)); // getter without setter
-    JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+    // These two cases are errors and can't be traced.
+    if (sprop->attrs & JSPROP_GETTER)
+        ABORT_TRACE("can't assign to property with script getter but no setter");
+    if (sprop->attrs & JSPROP_READONLY)
+        ABORT_TRACE("can't assign to readonly property");
 
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
     JSObject* obj = JSVAL_TO_OBJECT(l);
@@ -9678,25 +9700,8 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
 
     // Fast path for CallClass. This is about 20% faster than the general case.
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
-        const CallInfo* ci = NULL;
-        if (sprop->setter == SetCallArg)
-            ci = &js_SetCallArg_ci;
-        else if (sprop->setter == SetCallVar)
-            ci = &js_SetCallVar_ci;
-        else
-            ABORT_TRACE("can't trace special CallClass setter");
-
-        LIns* v_ins = get(&v);
-        box_jsval(v, v_ins);
-        LIns* args[] = {
-            v_ins,
-            INS_CONST(SPROP_USERID(sprop)),
-            obj_ins,
-            cx_ins
-        };
-        LIns* call_ins = lir->insCall(ci, args);
-        guard(false, addName(lir->ins_eq0(call_ins), "guard(set upvar)"), STATUS_EXIT);
-        return JSRS_CONTINUE;
+        v_ins = get(&v);
+        return setCallProp(obj_ins, sprop, v_ins, v);
     }
 
     /*
@@ -9739,6 +9744,29 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
 
     v_ins = get(&v);
     return nativeSet(obj, obj_ins, sprop, v, v_ins);
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::setCallProp(LIns *callobj_ins, JSScopeProperty *sprop, LIns *v_ins, jsval v)
+{
+    const CallInfo* ci = NULL;
+    if (sprop->setter == SetCallArg)
+        ci = &js_SetCallArg_ci;
+    else if (sprop->setter == SetCallVar)
+        ci = &js_SetCallVar_ci;
+    else
+        ABORT_TRACE("can't trace special CallClass setter");
+
+    box_jsval(v, v_ins);
+    LIns* args[] = {
+        v_ins,
+        INS_CONST(SPROP_USERID(sprop)),
+        callobj_ins,
+        cx_ins
+    };
+    LIns* call_ins = lir->insCall(ci, args);
+    guard(false, addName(lir->ins_eq0(call_ins), "guard(set upvar)"), STATUS_EXIT);
+    return JSRS_CONTINUE;
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -10122,8 +10150,8 @@ TraceRecorder::record_JSOP_CALLNAME()
     if (obj != globalObj) {
         jsval* vp;
         LIns* ins;
-        bool tracked;
-        CHECK_STATUS(scopeChainProp(obj, vp, ins, tracked));
+        NameResult nr;
+        CHECK_STATUS(scopeChainProp(obj, vp, ins, nr));
         stack(0, ins);
         stack(1, INS_CONSTPTR(globalObj));
         return JSRS_CONTINUE;
@@ -10357,7 +10385,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
     if (callDepth == 0)
-        fi->spoffset = 2 /*callee,this*/ + argc - fi->spdist;
+        fi->spoffset = -fp->script->nfixed;
 
     lir->insStorei(INS_CONSTPTR(fi), lirbuf->rp, callDepth * sizeof(FrameInfo*));
 
@@ -10579,7 +10607,7 @@ TraceRecorder::record_NativeCallComplete()
     } else {
         /* Convert the result to double if the builtin returns int32. */
         if (JSVAL_IS_NUMBER(v) &&
-            (pendingTraceableNative->builtin->_argtypes & 3) == nanojit::ARGSIZE_LO) {
+            (pendingTraceableNative->builtin->_argtypes & ARGSIZE_MASK_ANY) == ARGSIZE_LO) {
             set(&v, lir->ins1(LIR_i2f, v_ins));
         }
     }
@@ -10590,11 +10618,11 @@ TraceRecorder::record_NativeCallComplete()
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::name(jsval*& vp, LIns*& ins, bool& tracked)
+TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
 {
     JSObject* obj = cx->fp->scopeChain;
     if (obj != globalObj)
-        return scopeChainProp(obj, vp, ins, tracked);
+        return scopeChainProp(obj, vp, ins, nr);
 
     /* Can't use prop here, because we don't want unboxing from global slots. */
     LIns* obj_ins = scopeChain();
@@ -10634,7 +10662,7 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, bool& tracked)
 
     vp = &STOBJ_GET_SLOT(obj, slot);
     ins = get(vp);
-    tracked = true;
+    nr.tracked = true;
     return JSRS_CONTINUE;
 }
 
@@ -10904,8 +10932,8 @@ TraceRecorder::record_JSOP_NAME()
 {
     jsval* vp;
     LIns* v_ins;
-    bool tracked;
-    CHECK_STATUS(name(vp, v_ins, tracked));
+    NameResult nr;
+    CHECK_STATUS(name(vp, v_ins, nr));
     stack(0, v_ins);
     return JSRS_CONTINUE;
 }
@@ -10988,12 +11016,7 @@ TraceRecorder::record_JSOP_TABLESWITCH()
 {
 #ifdef NANOJIT_IA32
     /* Handle tableswitches specially -- prepare a jump table if needed. */
-    LIns* guardIns = tableswitch();
-    if (guardIns) {
-        fragment->lastIns = guardIns;
-        compile(&JS_TRACE_MONITOR(cx));
-    }
-    return JSRS_STOP;
+    return tableswitch();
 #else
     return switchop();
 #endif
@@ -11239,9 +11262,9 @@ TraceRecorder::record_JSOP_FORNAME()
 {
     jsval* vp;
     LIns* x_ins;
-    bool tracked;
-    CHECK_STATUS(name(vp, x_ins, tracked));
-    if (!tracked)
+    NameResult nr;
+    CHECK_STATUS(name(vp, x_ins, nr));
+    if (!nr.tracked)
         ABORT_TRACE("forname on non-tracked value not supported");
     set(vp, stack(-1));
     return JSRS_CONTINUE;
@@ -11310,14 +11333,19 @@ TraceRecorder::record_JSOP_BINDNAME()
         }
     }
 
-    /*
-     * If obj is a js_CallClass object, then we are tracing a reference to an
-     * upvar in a heavyweight function. We cannot reach this point of the trace
-     * with a different call object because of the guard on the function call,
-     * so we can assume the result of the bindname is constant on this trace.
-     */
-    if (obj != globalObj && OBJ_GET_CLASS(cx, obj) != &js_CallClass)
-        ABORT_TRACE("Can only trace JSOP_BINDNAME with global or call object");
+    if (obj != globalObj) {
+        if (OBJ_GET_CLASS(cx, obj) != &js_CallClass)
+            ABORT_TRACE("Can only trace JSOP_BINDNAME with global or call object");
+
+        /*
+         * The interpreter version of JSOP_BINDNAME does the full lookup. We
+         * don't need to do that on trace because we will leave trace if the
+         * scope ever changes, so the result of the lookup cannot change.
+         */
+        JS_ASSERT(obj == cx->fp->scopeChain || obj == OBJ_GET_PARENT(cx, cx->fp->scopeChain));
+        stack(0, stobj_get_parent(get(&cx->fp->argv[-2])));
+        return JSRS_CONTINUE;
+    }
 
     /*
      * The trace is specialized to this global object. Furthermore, we know it
@@ -12207,8 +12235,8 @@ TraceRecorder::record_JSOP_GETXPROP()
 
     jsval* vp;
     LIns* v_ins;
-    bool tracked;
-    CHECK_STATUS(name(vp, v_ins, tracked));
+    NameResult nr;
+    CHECK_STATUS(name(vp, v_ins, nr));
     stack(-1, v_ins);
     return JSRS_CONTINUE;
 }
@@ -12647,6 +12675,7 @@ DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint3
 #ifdef MOZ_TRACEVIS
 
 FILE* traceVisLogFile = NULL;
+JSHashTable *traceVisScriptTable = NULL;
 
 JS_FRIEND_API(bool)
 JS_StartTraceVis(const char* filename = "tracevis.dat")

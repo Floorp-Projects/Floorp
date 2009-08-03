@@ -315,7 +315,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 #endif
 
         if (scopeIndex != 0 || protoIndex != 1) {
-            khash = PROPERTY_CACHE_HASH_ATOM(atom, obj, pobj);
+            khash = PROPERTY_CACHE_HASH_ATOM(atom, obj);
             PCMETER(if (PCVCAP_TAG(cache->table[khash].vcap) <= 1)
                         cache->pcrecycles++);
             pc = (jsbytecode *) atom;
@@ -381,7 +381,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 
     obj = *objp;
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    entry = &JS_PROPERTY_CACHE(cx).table[PROPERTY_CACHE_HASH_ATOM(atom, obj, NULL)];
+    entry = &JS_PROPERTY_CACHE(cx).table[PROPERTY_CACHE_HASH_ATOM(atom, obj)];
     *entryp = entry;
     vcap = entry->vcap;
 
@@ -441,7 +441,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
 
         id = js_CheckForStringIndex(id);
         JS_ASSERT(OBJ_SCOPE(pobj)->lookup(id));
-        JS_ASSERT(OBJ_SCOPE(pobj)->object == pobj);
+        JS_ASSERT_IF(OBJ_SCOPE(pobj)->object, OBJ_SCOPE(pobj)->object == pobj);
 #endif
         *pobjp = pobj;
         return NULL;
@@ -2664,7 +2664,7 @@ JS_REQUIRES_STACK JSBool
 js_Interpret(JSContext *cx)
 {
 #ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(S_INTERP);
+    TraceVisStateObj tvso(cx, S_INTERP);
 #endif
 
     JSRuntime *rt;
@@ -2880,11 +2880,18 @@ js_Interpret(JSContext *cx)
 #ifdef JS_TRACER
 
 #ifdef MOZ_TRACEVIS
+#if JS_THREADED_INTERP
 #define MONITOR_BRANCH_TRACEVIS                                               \
     JS_BEGIN_MACRO                                                            \
         if (jumpTable != interruptJumpTable)                                  \
-            js_EnterTraceVisState(S_RECORD, R_NONE);                          \
+            js_EnterTraceVisState(cx, S_RECORD, R_NONE);                      \
     JS_END_MACRO
+#else /* !JS_THREADED_INTERP */
+#define MONITOR_BRANCH_TRACEVIS                                               \
+    JS_BEGIN_MACRO                                                            \
+        js_EnterTraceVisState(cx, S_RECORD, R_NONE);                          \
+    JS_END_MACRO
+#endif
 #else
 #define MONITOR_BRANCH_TRACEVIS
 #endif
@@ -3115,7 +3122,7 @@ js_Interpret(JSContext *cx)
 #if JS_THREADED_INTERP
 #ifdef MOZ_TRACEVIS
             if (!moreInterrupts)
-                js_ExitTraceVisState(R_ABORT);
+                js_ExitTraceVisState(cx, R_ABORT);
 #endif
             jumpTable = moreInterrupts ? interruptJumpTable : normalJumpTable;
             JS_EXTENSION_(goto *normalJumpTable[op]);
@@ -4643,7 +4650,7 @@ js_Interpret(JSContext *cx)
                     uint32 kshape = OBJ_SHAPE(obj);
 
                     /*
-                     * Open-code JS_PROPERTY_CACHE_TEST, specializing for two
+                     * Open-code PROPERTY_CACHE_TEST, specializing for two
                      * important set-property cases. First:
                      *
                      *   function f(a, b, c) {

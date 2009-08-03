@@ -627,9 +627,19 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK jsval& varval(unsigned n) const;
     JS_REQUIRES_STACK jsval& stackval(int n) const;
 
+    struct NameResult {
+        // |tracked| is true iff the result of the name lookup is a variable that
+        // is already in the tracker. The rest of the fields are set only if
+        // |tracked| is false.
+        bool             tracked;
+        JSObject         *obj;           // Call object where name was found
+        jsint            scopeIndex;     // scope chain links from callee to obj
+        JSScopeProperty  *sprop;         // sprop name was resolved to
+    };
+
     JS_REQUIRES_STACK nanojit::LIns* scopeChain() const;
     JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
-    JS_REQUIRES_STACK JSRecordingStatus scopeChainProp(JSObject* obj, jsval*& vp, nanojit::LIns*& ins, bool& tracked);
+    JS_REQUIRES_STACK JSRecordingStatus scopeChainProp(JSObject* obj, jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
 
     JS_REQUIRES_STACK nanojit::LIns* arg(unsigned n);
     JS_REQUIRES_STACK void arg(unsigned n, nanojit::LIns* i);
@@ -651,7 +661,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus ifop();
     JS_REQUIRES_STACK JSRecordingStatus switchop();
 #ifdef NANOJIT_IA32
-    JS_REQUIRES_STACK nanojit::LIns* tableswitch();
+    JS_REQUIRES_STACK JSRecordingStatus tableswitch();
 #endif
     JS_REQUIRES_STACK JSRecordingStatus inc(jsval& v, jsint incr, bool pre = true);
     JS_REQUIRES_STACK JSRecordingStatus inc(jsval& v, nanojit::LIns*& v_ins, jsint incr,
@@ -702,18 +712,24 @@ class TraceRecorder : public avmplus::GCObject {
                                    nanojit::LIns*& dslots_ins);
     nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
                                   nanojit::LIns*& dslots_ins);
+
     nanojit::LIns* stobj_get_private(nanojit::LIns* obj_ins, jsval mask=JSVAL_INT) {
         return lir->ins2(nanojit::LIR_piand,
                          stobj_get_fslot(obj_ins, JSSLOT_PRIVATE),
                          lir->insImmPtr((void*) ~mask));
     }
+
+    nanojit::LIns* stobj_get_parent(nanojit::LIns* obj_ins) {
+        return stobj_get_fslot(obj_ins, JSSLOT_PARENT);
+    }
+
     JSRecordingStatus native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins,
                                  JSScopeProperty* sprop, nanojit::LIns*& dslots_ins,
                                  nanojit::LIns*& v_ins);
 
     nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
 
-    JS_REQUIRES_STACK JSRecordingStatus name(jsval*& vp, nanojit::LIns*& ins, bool& tracked);
+    JS_REQUIRES_STACK JSRecordingStatus name(jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
     JS_REQUIRES_STACK JSRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot,
                                              nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK JSRecordingStatus denseArrayElement(jsval& oval, jsval& idx, jsval*& vp,
@@ -729,6 +745,9 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus setProp(jsval &l, JSPropCacheEntry* entry,
                                                 JSScopeProperty* sprop,
                                                 jsval &v, nanojit::LIns*& v_ins);
+    JS_REQUIRES_STACK JSRecordingStatus setCallProp(nanojit::LIns *callobj_ins,
+                                                    JSScopeProperty *sprop, nanojit::LIns *v_ins,
+                                                    jsval v);
 
     JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, VMSideExit* exit);
@@ -972,14 +991,18 @@ enum TraceVisExitReason {
     R_OTHER_EXIT
 };
 
-const unsigned long long MS64_MASK = 0xfllu << 60;
-const unsigned long long MR64_MASK = 0x1fllu << 55;
+const unsigned long long MS64_MASK = 0xfull << 60;
+const unsigned long long MR64_MASK = 0x1full << 55;
 const unsigned long long MT64_MASK = ~(MS64_MASK | MR64_MASK);
 
 extern FILE* traceVisLogFile;
+extern JSHashTable *traceVisScriptTable;
+
+extern JS_FRIEND_API(void)
+js_StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r);
 
 static inline void
-js_LogTraceVisState(TraceVisState s, TraceVisExitReason r)
+js_LogTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
 {
     if (traceVisLogFile) {
         unsigned long long sllu = s;
@@ -987,30 +1010,35 @@ js_LogTraceVisState(TraceVisState s, TraceVisExitReason r)
         unsigned long long d = (sllu << 60) | (rllu << 55) | (rdtsc() & MT64_MASK);
         fwrite(&d, sizeof(d), 1, traceVisLogFile);
     }
+    if (traceVisScriptTable) {
+        js_StoreTraceVisState(cx, s, r);
+    }
 }
 
 static inline void
-js_EnterTraceVisState(TraceVisState s, TraceVisExitReason r)
+js_EnterTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
 {
-    js_LogTraceVisState(s, r);
+    js_LogTraceVisState(cx, s, r);
 }
 
 static inline void
-js_ExitTraceVisState(TraceVisExitReason r)
+js_ExitTraceVisState(JSContext *cx, TraceVisExitReason r)
 {
-    js_LogTraceVisState(S_EXITLAST, r);
+    js_LogTraceVisState(cx, S_EXITLAST, r);
 }
 
 struct TraceVisStateObj {
     TraceVisExitReason r;
+    JSContext *mCx;
 
-    inline TraceVisStateObj(TraceVisState s) : r(R_NONE)
+    inline TraceVisStateObj(JSContext *cx, TraceVisState s) : r(R_NONE)
     {
-        js_EnterTraceVisState(s, R_NONE);
+        js_EnterTraceVisState(cx, s, R_NONE);
+        mCx = cx;
     }
     inline ~TraceVisStateObj()
     {
-        js_ExitTraceVisState(r);
+        js_ExitTraceVisState(mCx, r);
     }
 };
 
