@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=504311
+-->
+<window title="Mozilla Bug 504311"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="doTest()">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<body xmlns="http://www.w3.org/1999/xhtml">
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=504311"
+   target="_blank">Mozilla Bug 504311</a>
+</body>
+  <!-- test code goes here -->
+<script type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function doTest()
+{
+  var tb = document.getElementById("tb01");
+  var inputField = tb.inputField;
+  var editor = inputField.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+  editor = editor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
+  editor.wrapWidth = -1;
+
+  ok(true, "Didn't crash");
+  SimpleTest.finish();
+}
+]]></script>
+<textbox id="tb01" multiline="true"/>
+</window>
