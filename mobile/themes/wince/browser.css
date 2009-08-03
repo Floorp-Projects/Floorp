@@ -307,16 +307,16 @@ autocompleteresult {
 .autocomplete-item-desc {
   color: blue;
   white-space: pre;
-  font-size: 10pt !important;
+  font-size: 8pt !important;
 }
 
 .autocomplete-item-desc:first-line {
   color: black;
-  font-size: 15.75pt !important;
+  font-size: 9pt !important;
 }
 
 .autocomplete-item-tags {
-  font-size: 11.75pt !important;
+  font-size: 8pt !important;
   font-weight: lighter;
 }
 
@@ -357,17 +357,17 @@ autocompleteresult.allbookmarks {
 
 autocompleteresult.allbookmarks > .autocomplete-item-desc {
   color: black;
-  font-size: 15.75pt !important;
+  font-size: 9pt !important;
 }
 
 autocompleteresult.allbookmarks > .autocomplete-item-image {
-  margin: 0 3mm;
+  margin: 0 1.5mm;
 }
 
 autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
   /* this image works fine for both -high and -low */
-  content: url(images/arrowRight-16.png);
-  -moz-margin-end: 4mm;
+  content: url(images/arrowright-16.png);
+  -moz-margin-end: 1.1mm;
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
@@ -449,7 +449,7 @@ findbar {
 
 #identity-popup-content-box > hbox > description,
 #identity-popup-content-box > hbox > label {
-  font-size: 11pt !important;
+  font-size: 9pt !important;
   white-space: pre-wrap;
 }
 

@@ -569,7 +569,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-image {
 }
 
 autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
-  content: url(images/arrowRight-16.png);
+  content: url(images/arrowright-16.png);
   -moz-margin-end: 4mm;
 }
 
