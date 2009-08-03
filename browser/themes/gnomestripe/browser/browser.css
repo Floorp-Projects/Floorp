@@ -940,13 +940,13 @@ toolbar[iconsize="small"] #fullscreen-button {
 #identity-popup-content-box > description,
 #identity-popup-encryption-label {
   white-space: pre-wrap;
-  padding-left: 15px;
+  -moz-padding-start: 15px;
   margin: 2px 0 4px;
 }
 
 #identity-popup-content-box > label {
   white-space: pre-wrap;
-  padding-left: 15px;
+  -moz-padding-start: 15px;
   margin: 0;
 }
 
@@ -972,7 +972,7 @@ toolbar[iconsize="small"] #fullscreen-button {
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption ,
 #identity-popup-content-box.verifiedDomain > #identity-popup-encryption {
   margin-top: 10px;
-  margin-left: -18px;
+  -moz-margin-start: -18px;
 }
 
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
