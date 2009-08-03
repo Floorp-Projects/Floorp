@@ -2573,8 +2573,13 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
   // Let's see if an extension added something
   nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
   if (catMan) {
+    // The extension in the category entry is always stored as lowercase
+    nsCAutoString lowercaseFileExt(aFileExt);
+    ToLowerCase(lowercaseFileExt);
+    // Read the MIME type from the category entry, if available
     nsXPIDLCString type;
-    rv = catMan->GetCategoryEntry("ext-to-type-mapping", flatExt.get(), getter_Copies(type));
+    rv = catMan->GetCategoryEntry("ext-to-type-mapping", lowercaseFileExt.get(),
+                                  getter_Copies(type));
     aContentType = type;
   }
   else {
