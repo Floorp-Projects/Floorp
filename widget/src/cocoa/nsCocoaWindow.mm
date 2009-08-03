@@ -2077,8 +2077,8 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
     // Draw the one pixel border at the bottom of the titlebar.
     if ([window unifiedToolbarHeight] == 0) {
-      [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
-      NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
+      CGRect borderRect = CGRectMake(0.0f, titlebarOrigin, sPatternWidth, 1.0f);
+      DrawNativeGreyColorInRect(aContext, headerBorderGrey, borderRect, isMain);
     }
   } else {
     // if the titlebar color is not nil, just set and draw it normally.
