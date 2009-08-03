@@ -398,9 +398,10 @@
       <arrowscrollbox id="autocomplete_navbuttons"
                       align="center"
                       flex="1"
-                      orient="horizontal"
-                      oncommand="BrowserUI.doButtonSearch(event.target);">
+                      orient="horizontal">
         <image class="tool-search"/>
+        <radiogroup id="search-buttons" class="toggle-dark" onmousedown="BrowserUI.doButtonSearch(event.target);">
+        </radiogroup>
       </arrowscrollbox>
     </vbox>
 

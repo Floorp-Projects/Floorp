@@ -76,7 +76,6 @@ const kDefaultFavIconURL = "chrome://browser/skin/images/favicon-default-30.png"
 var BrowserUI = {
   _edit : null,
   _throbber : null,
-  _autocompleteNavbuttons : null,
   _favicon : null,
   _faviconLink : null,
   _dialogs: [],
@@ -317,7 +316,6 @@ var BrowserUI = {
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
-    this._autocompleteNavbuttons = document.getElementById("autocomplete_navbuttons");
 
     let urlbarEditArea = document.getElementById("urlbar-editarea");
     urlbarEditArea.addEventListener("click", this, false);
@@ -464,15 +462,15 @@ var BrowserUI = {
     this.engines = engines;
 
     const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    var container = this._autocompleteNavbuttons;
+    var container = document.getElementById("search-buttons");
     for (var e = 0; e < engines.length; e++) {
-      var button = document.createElementNS(kXULNS, "toolbarbutton");
+      var button = document.createElementNS(kXULNS, "radio");
       var engine = engines[e];
       button.id = engine.name;
       button.setAttribute("label", engine.name);
-      button.className = "searchengine show-text button-dark";
+      button.className = "searchengine";
       if (engine.iconURI)
-        button.setAttribute("image", engine.iconURI.spec);
+        button.setAttribute("src", engine.iconURI.spec);
       container.appendChild(button);
       button.engine = engine;
     }

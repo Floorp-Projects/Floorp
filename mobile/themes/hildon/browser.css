@@ -485,9 +485,17 @@ placeitem .button-text {
   -moz-box-orient: horizontal;
 }
 
+.searchengine .radio-icon {
+  display: block;
+}
+
 #autocomplete_navbuttons {
   margin: 2.2mm; /* core spacing */
   min-height: 14.4mm; /* row size */
+}
+
+#autocomplete_navbuttons autorepeatbutton {
+  display: none;
 }
 
 .autocomplete-items {

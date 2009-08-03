@@ -84,6 +84,10 @@ placelabel {
   -moz-binding: url("chrome://browser/content/bindings.xml#place-label");
 }
 
+radio {
+  -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
+}
+
 checkbox {
   -moz-binding: url("chrome://browser/content/checkbox.xml#checkbox-radio");
 }
