@@ -673,50 +673,6 @@
 
 .end nextiter
 
-.igroup getelem JSOP_GETELEM
-
-    .imacro getprop                                 # obj name
-        swap                                        # name obj
-        callbuiltin (JSBUILTIN_GetProperty)         # name fun obj
-        pick 2                                      # fun obj name
-        call 1                                      # propval
-        stop
-    .end
-
-    .imacro getelem                                 # obj i
-        swap                                        # i obj
-        callbuiltin (JSBUILTIN_GetElement)          # i fun obj
-        pick 2                                      # fun obj i
-        call 1                                      # propval
-        stop
-    .end
-
-.end getelem
-
-.igroup callelem JSOP_CALLELEM
-
-    .imacro callprop                                # obj name
-        swap                                        # name obj
-        dup                                         # name obj obj
-        callbuiltin (JSBUILTIN_GetProperty)         # name obj fun obj
-        pick 3                                      # obj fun obj name
-        call 1                                      # obj propval
-        swap                                        # propval obj
-        stop
-    .end
-
-    .imacro callelem                                # obj i
-        swap                                        # i obj
-        dup                                         # i obj obj
-        callbuiltin (JSBUILTIN_GetElement)          # i obj fun obj
-        pick 3                                      # obj fun obj i
-        call 1                                      # obj propval
-        swap                                        # propval obj
-        stop
-    .end
-
-.end callelem
-
 .igroup setelem JSOP_SETELEM
 
     .imacro setprop                                 # obj name val

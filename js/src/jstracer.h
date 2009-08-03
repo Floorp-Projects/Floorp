@@ -588,6 +588,8 @@ class TraceRecorder : public avmplus::GCObject {
     jsval*                  global_dslots;
     JSTraceableNative*      generatedTraceableNative;
     JSTraceableNative*      pendingTraceableNative;
+    jsval*                  pendingUnboxSlot;
+    nanojit::LIns*          pendingGuardCondition;
     TraceRecorder*          nextRecorderToAbort;
     bool                    wasRootFragment;
     jsbytecode*             outer;     /* outer trace header PC */
@@ -614,6 +616,8 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset);
     JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool initializing = false);
     JS_REQUIRES_STACK nanojit::LIns* get(jsval* p);
+    JS_REQUIRES_STACK nanojit::LIns* addr(jsval* p);
+
     JS_REQUIRES_STACK bool known(jsval* p);
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation();
 
@@ -738,6 +742,16 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus getProp(JSObject* obj, nanojit::LIns* obj_ins);
     JS_REQUIRES_STACK JSRecordingStatus getProp(jsval& v);
     JS_REQUIRES_STACK JSRecordingStatus getThis(nanojit::LIns*& this_ins);
+
+    JS_REQUIRES_STACK void enterDeepBailCall();
+    JS_REQUIRES_STACK void leaveDeepBailCall();
+
+    JS_REQUIRES_STACK void finishGetProp(nanojit::LIns* obj_ins, nanojit::LIns* vp_ins,
+                                         nanojit::LIns* ok_ins, jsval* outp);
+    JS_REQUIRES_STACK JSRecordingStatus getPropertyByName(nanojit::LIns* obj_ins, jsval* idvalp,
+                                                          jsval* outp);
+    JS_REQUIRES_STACK JSRecordingStatus getPropertyByIndex(nanojit::LIns* obj_ins,
+                                                           nanojit::LIns* index_ins, jsval* outp);
 
     JS_REQUIRES_STACK JSRecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                   JSScopeProperty* sprop,

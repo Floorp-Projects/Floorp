@@ -2818,6 +2818,14 @@ TraceRecorder::get(jsval* p)
     return tracker.get(p);
 }
 
+JS_REQUIRES_STACK LIns*
+TraceRecorder::addr(jsval* p)
+{
+    return isGlobal(p)
+           ? lir->ins2i(LIR_piadd, lirbuf->state, nativeGlobalOffset(p))
+           : lir->ins2i(LIR_piadd, lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(p));
+}
+
 JS_REQUIRES_STACK bool
 TraceRecorder::known(jsval* p)
 {
@@ -3090,12 +3098,19 @@ TraceRecorder::snapshot(ExitType exitType)
               ngslots + stackSlots);
 
     /*
-     * If we are currently executing a traceable native or we are attaching a
-     * second trace to it, the value on top of the stack is a jsval. Make a
-     * note of this in the typemap.
+     * If this snapshot is for a side exit that leaves a boxed jsval result on
+     * the stack, make a note of this in the typemap. Examples include the
+     * builtinStatus guard after calling a _FAIL builtin, a JSFastNative, or
+     * GetPropertyByName; and the type guard in unbox_jsval after such a call
+     * (also at the beginning of a trace branched from such a type guard).
      */
-    if (pendingTraceableNative && (pendingTraceableNative->flags & JSTN_UNBOX_AFTER))
-        typemap[stackSlots - 1] = TT_JSVAL;
+    if (pendingUnboxSlot ||
+        (pendingTraceableNative && (pendingTraceableNative->flags & JSTN_UNBOX_AFTER))) {
+        unsigned pos = stackSlots - 1;
+        if (pendingUnboxSlot == cx->fp->regs->sp - 2)
+            pos = stackSlots - 2;
+        typemap[pos] = TT_JSVAL;
+    }
 
     /* Now restore the the original pc (after which early returns are ok). */
     if (resumeAfter) {
@@ -5590,30 +5605,30 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 
         if (!(bs & JSBUILTIN_ERROR)) {
             /*
-             * The native succeeded (no exception or error). After it returned, the
-             * trace stored the return value (at the top of the native stack) and
-             * then immediately flunked the guard on state->builtinStatus.
+             * The builtin or native deep-bailed but finished successfully
+             * (no exception or error).
+             *
+             * After it returned, the JIT code stored the results of the
+             * builtin or native at the top of the native stack and then
+             * immediately flunked the guard on state->builtinStatus.
              *
              * Now LeaveTree has been called again from the tail of
              * ExecuteTree. We are about to return to the interpreter. Adjust
              * the top stack frame to resume on the next op.
              */
-            jsbytecode *pc = cx->fp->regs->pc;
-            JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW ||
-                      *pc == JSOP_SETPROP || *pc == JSOP_SETNAME);
-            uintN argc = (js_CodeSpec[*pc].format & JOF_INVOKE) ? GET_ARGC(pc) : 0;
-            cx->fp->regs->pc += js_CodeSpec[*pc].length;
-            cx->fp->regs->sp -= argc + 1;
+            JSFrameRegs* regs = cx->fp->regs;
+            JSOp op = (JSOp) *regs->pc;
+            JS_ASSERT(op == JSOP_CALL || op == JSOP_APPLY || op == JSOP_NEW ||
+                      op == JSOP_GETELEM || op == JSOP_CALLELEM ||
+                      op == JSOP_SETPROP || op == JSOP_SETNAME);
+            const JSCodeSpec& cs = js_CodeSpec[op];
+            regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
+            regs->sp += cs.ndefs;
+            regs->pc += cs.length;
             JS_ASSERT_IF(!cx->fp->imacpc,
                          cx->fp->slots + cx->fp->script->nfixed +
-                         js_ReconstructStackDepth(cx, cx->fp->script, cx->fp->regs->pc) ==
-                         cx->fp->regs->sp);
-
-            /*
-             * The return value was not available when we reconstructed the stack,
-             * but we have it now. Box it.
-             */
-            JSTraceType* typeMap = GetStackTypeMap(innermost);
+                         js_ReconstructStackDepth(cx, cx->fp->script, regs->pc) ==
+                         regs->sp);
 
             /*
              * If there's a tree call around the point that we deep exited at,
@@ -5622,10 +5637,21 @@ LeaveTree(InterpState& state, VMSideExit* lr)
              * which we sampled when we were told to deep bail.
              */
             JS_ASSERT(state.deepBailSp >= state.stackBase && state.sp <= state.deepBailSp);
-            NativeToValue(cx,
-                          cx->fp->regs->sp[-1],
-                          typeMap[innermost->numStackSlots - 1],
-                          (jsdouble *) state.deepBailSp + innermost->sp_adj / sizeof(jsdouble) - 1);
+
+            /*
+             * As explained above, the JIT code stored a result value or values
+             * on the native stack. Transfer them to the interpreter stack now.
+             * (Some opcodes, like JSOP_CALLELEM, produce two values, hence the
+             * loop.)
+             */
+            JSTraceType* typeMap = GetStackTypeMap(innermost);
+            for (int i = 1; i <= cs.ndefs; i++) {
+                NativeToValue(cx,
+                              regs->sp[-i],
+                              typeMap[innermost->numStackSlots - i],
+                              (jsdouble *) state.deepBailSp
+                                  + innermost->sp_adj / sizeof(jsdouble) - i);
+            }
         }
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         if (tm->prohibitFlush && --tm->prohibitFlush == 0 && tm->needFlush)
@@ -6013,6 +6039,20 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
      */
     tr->pendingTraceableNative = NULL;
     tr->newobj_ins = NULL;
+
+    /* Handle one-shot request from finishGetProp to snapshot post-op state and guard. */
+    if (tr->pendingGuardCondition) {
+        tr->guard(true, tr->pendingGuardCondition, STATUS_EXIT);
+        tr->pendingGuardCondition = NULL;
+    }
+
+    /* Handle one-shot request to unbox the result of a property get. */
+    if (tr->pendingUnboxSlot) {
+        LIns* val_ins = tr->get(tr->pendingUnboxSlot);
+        tr->unbox_jsval(*tr->pendingUnboxSlot, val_ins, tr->snapshot(BRANCH_EXIT));
+        tr->set(tr->pendingUnboxSlot, val_ins);
+        tr->pendingUnboxSlot = 0;
+    }
 
     debug_only_stmt(
         if (js_LogController.lcbits & LC_TMRecorder) {
@@ -8986,13 +9026,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     JS_ASSERT(!(sprop->attrs & (setflag ? JSPROP_SETTER : JSPROP_GETTER)));
     JS_ASSERT(setflag ? !SPROP_HAS_STUB_SETTER(sprop) : !SPROP_HAS_STUB_GETTER(sprop));
 
-    // Take snapshot for js_DeepBail and store it in cx->bailExit.
-    VMSideExit* exit = snapshot(DEEP_BAIL_EXIT);
-    lir->insStorei(INS_CONSTPTR(exit), cx_ins, offsetof(JSContext, bailExit));
-
-    // Tell nanojit not to discard or defer stack writes before this call.
-    LIns* guardRec = createGuardRecord(exit);
-    lir->insGuard(LIR_xbarrier, guardRec, guardRec);
+    enterDeepBailCall();
 
     // It is unsafe to pass the address of an object slot as the out parameter,
     // because the getter or setter could end up resizing the object's dslots.
@@ -9019,9 +9053,8 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     LIns* ok_ins = lir->insCall(ci, args);
 
     // Cleanup.
-    LIns* null_ins = INS_CONSTPTR(NULL);
-    lir->insStorei(null_ins, cx_ins, offsetof(JSContext, nativeVp));
-    lir->insStorei(null_ins, cx_ins, offsetof(JSContext, bailExit));
+    lir->insStorei(INS_CONSTPTR(NULL), cx_ins, offsetof(JSContext, nativeVp));
+    leaveDeepBailCall();
 
     // Guard that the call succeeded and builtinStatus is still 0.
     // If the native op succeeds but we deep-bail here, the result value is
@@ -9047,7 +9080,7 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
         // pendingTraceableNative before taking this snapshot.
         JS_ASSERT(!pendingTraceableNative);
 
-        // Take snapshot for deep LeaveTree and store it in cx->bailExit.
+        // Take snapshot for js_DeepBail and store it in cx->bailExit.
         // If we are calling a slow native, add information to the side exit
         // for SynthesizeSlowNativeFrame.
         VMSideExit* exit = snapshot(DEEP_BAIL_EXIT);
@@ -9784,75 +9817,141 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     return JSRS_CONTINUE;
 }
 
-/* Functions used by JSOP_GETELEM. */
-
-static JSBool
-GetProperty(JSContext *cx, uintN argc, jsval *vp)
+JS_REQUIRES_STACK void
+TraceRecorder::enterDeepBailCall()
 {
-    jsval *argv;
+    // Take snapshot for js_DeepBail and store it in cx->bailExit.
+    VMSideExit* exit = snapshot(DEEP_BAIL_EXIT);
+    lir->insStorei(INS_CONSTPTR(exit), cx_ins, offsetof(JSContext, bailExit));
+
+    // Tell nanojit not to discard or defer stack writes before this call.
+    LIns* guardRec = createGuardRecord(exit);
+    lir->insGuard(LIR_xbarrier, guardRec, guardRec);
+}
+
+JS_REQUIRES_STACK void
+TraceRecorder::leaveDeepBailCall()
+{
+    // Keep cx->bailExit null when it's invalid.
+    lir->insStorei(INS_CONSTPTR(NULL), cx_ins, offsetof(JSContext, bailExit));    
+}
+
+JS_REQUIRES_STACK void
+TraceRecorder::finishGetProp(LIns* obj_ins, LIns* vp_ins, LIns* ok_ins, jsval* outp)
+{
+    // Store the boxed result (and this-object, if JOF_CALLOP) before the
+    // guard. The deep-bail case requires this. If the property get fails,
+    // these slots will be ignored anyway.
+    LIns* result_ins = lir->insLoad(LIR_ldp, vp_ins, 0);
+    set(outp, result_ins, true);
+    if (js_CodeSpec[*cx->fp->regs->pc].format & JOF_CALLOP)
+        set(outp + 1, obj_ins, true);
+
+    // We need to guard on ok_ins, but this requires a snapshot of the state
+    // after this op. monitorRecording will do it for us.
+    pendingGuardCondition = ok_ins;
+
+    // Note there is a boxed result sitting on the stack. The caller must leave
+    // it there for the time being, since the return type is not yet
+    // known. monitorRecording will emit the code to unbox it.
+    pendingUnboxSlot = outp;
+}
+
+static JSBool FASTCALL
+GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, jsval* vp)
+{
+    js_LeaveTraceIfGlobalObject(cx, obj);
+
     jsid id;
+    JSString* name = *namep;
+    if (name->isAtomized()) {
+        id = ATOM_TO_JSID((JSAtom*) STRING_TO_JSVAL(name));
+    } else {
+        JSAtom* atom = js_AtomizeString(cx, name, 0);
+        if (!atom)
+            goto error;
+        *namep = ATOM_TO_STRING(atom); /* write back to GC root */
+        id = ATOM_TO_JSID(atom);
+    }
 
-    JS_ASSERT_NOT_ON_TRACE(cx);
-    JS_ASSERT(cx->fp->imacpc && argc == 1);
-    argv = JS_ARGV(cx, vp);
-    JS_ASSERT(JSVAL_IS_STRING(argv[0]));
-    if (!js_ValueToStringId(cx, argv[0], &id))
-        return JS_FALSE;
-    argv[0] = ID_TO_VALUE(id);
-    return OBJ_GET_PROPERTY(cx, JS_THIS_OBJECT(cx, vp), id, &JS_RVAL(cx, vp));
+    if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
+        goto error;
+    return cx->interpState->builtinStatus == 0;
+
+error:
+    js_SetBuiltinError(cx);
+    return JS_FALSE;
+}
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, JSVALPTR,
+                     0, 0)
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::getPropertyByName(LIns* obj_ins, jsval* idvalp, jsval* outp)
+{
+    jsval idval = *idvalp;
+    JS_ASSERT(JSVAL_IS_PRIMITIVE(idval));
+
+    if (!JSVAL_IS_STRING(idval)) {
+        // idval is not a string. Turn it into one.
+        // js_ValueToString is a safe because idval is not an object.
+        JSString *str = js_ValueToString(cx, idval);
+        if (!str)
+            ABORT_TRACE_ERROR("failed to stringify element id");
+        idval = STRING_TO_JSVAL(str);
+        set(idvalp, stringify(*idvalp));
+
+        // Write the string back to the stack to save the interpreter some work.
+        *idvalp = idval;
+    }
+
+    enterDeepBailCall();
+
+    // Call GetPropertyByName. The vp parameter points to stack because this is
+    // what the interpreter currently does. obj and id are rooted on the
+    // interpreter stack, but the slot at vp is not a root.
+    LIns* vp_ins = addName(lir->insAlloc(sizeof(jsval)), "vp");
+    LIns* idvalp_ins = addName(addr(idvalp), "idvalp");
+    LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
+    LIns* ok_ins = lir->insCall(&GetPropertyByName_ci, args);
+
+    // GetPropertyByName can assign to *idvalp, so the tracker has an incorrect
+    // entry for that address. Correct it. (If the value in the address is
+    // never used again, the usual case, Nanojit will kill this load.)
+    tracker.set(idvalp, lir->insLoad(LIR_ldp, idvalp_ins, 0));
+
+    finishGetProp(obj_ins, vp_ins, ok_ins, outp);
+    leaveDeepBailCall();
+    return JSRS_CONTINUE;
 }
 
-static jsval FASTCALL
-GetProperty_tn(JSContext *cx, jsbytecode *pc, JSObject *obj, JSString *name)
+static JSBool FASTCALL
+GetPropertyByIndex(JSContext* cx, JSObject* obj, int32_t index, jsval* vp)
 {
+    js_LeaveTraceIfGlobalObject(cx, obj);
+
     JSAutoTempIdRooter idr(cx);
-    JSAutoTempValueRooter tvr(cx);
-
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(name), idr.addr()) ||
-        !OBJ_GET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
+    if (!js_Int32ToId(cx, index, idr.addr()) || !OBJ_GET_PROPERTY(cx, obj, idr.id(), vp)) {
         js_SetBuiltinError(cx);
-        *tvr.addr() = JSVAL_ERROR_COOKIE;
-    }
-    return tvr.value();
-}
-
-static JSBool
-GetElement(JSContext *cx, uintN argc, jsval *vp)
-{
-    jsval *argv;
-    jsid id;
-
-    JS_ASSERT_NOT_ON_TRACE(cx);
-    JS_ASSERT(cx->fp->imacpc && argc == 1);
-    argv = JS_ARGV(cx, vp);
-    JS_ASSERT(JSVAL_IS_NUMBER(argv[0]));
-    if (!JS_ValueToId(cx, argv[0], &id))
         return JS_FALSE;
-    argv[0] = ID_TO_VALUE(id);
-    return OBJ_GET_PROPERTY(cx, JS_THIS_OBJECT(cx, vp), id, &JS_RVAL(cx, vp));
+    }
+    return cx->interpState->builtinStatus == 0;
 }
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyByIndex, CONTEXT, OBJECT, INT32, JSVALPTR, 0, 0)
 
-static jsval FASTCALL
-GetElement_tn(JSContext* cx, jsbytecode *pc, JSObject* obj, int32 index)
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::getPropertyByIndex(LIns* obj_ins, LIns* index_ins, jsval* outp)
 {
-    JSAutoTempValueRooter tvr(cx);
-    JSAutoTempIdRooter idr(cx);
+    index_ins = makeNumberInt32(index_ins);
 
-    if (!js_Int32ToId(cx, index, idr.addr())) {
-        js_SetBuiltinError(cx);
-        return JSVAL_ERROR_COOKIE;
-    }
-    if (!OBJ_GET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
-        js_SetBuiltinError(cx);
-        *tvr.addr() = JSVAL_ERROR_COOKIE;
-    }
-    return tvr.value();
+    // See note in getPropertyByName about vp.
+    enterDeepBailCall();
+    LIns* vp_ins = addName(lir->insAlloc(sizeof(jsval)), "vp");
+    LIns* args[] = {vp_ins, index_ins, obj_ins, cx_ins};
+    LIns* ok_ins = lir->insCall(&GetPropertyByIndex_ci, args);
+    finishGetProp(obj_ins, vp_ins, ok_ins, outp);
+    leaveDeepBailCall();
+    return JSRS_CONTINUE;
 }
-
-JS_DEFINE_TRCINFO_1(GetProperty,
-    (4, (static, JSVAL_FAIL,    GetProperty_tn, CONTEXT, PC, THIS, STRING,      0, 0)))
-JS_DEFINE_TRCINFO_1(GetElement,
-    (4, (extern, JSVAL_FAIL,    GetElement_tn,  CONTEXT, PC, THIS, INT32,       0, 0)))
 
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_GETELEM()
@@ -9885,7 +9984,8 @@ TraceRecorder::record_JSOP_GETELEM()
     ABORT_IF_XML(lval);
 
     JSObject* obj = JSVAL_TO_OBJECT(lval);
-    jsval id;
+    if (obj == globalObj)
+        ABORT_TRACE("JSOP_GETELEM on global");
     LIns* v_ins;
 
     /* Property access using a string name or something we have to stringify. */
@@ -9893,19 +9993,7 @@ TraceRecorder::record_JSOP_GETELEM()
         if (!JSVAL_IS_PRIMITIVE(idx))
             ABORT_TRACE("object used as index");
 
-        // If index is not a string, turn it into a string.
-        if (!js_InternNonIntElementId(cx, obj, idx, &id))
-            ABORT_TRACE_ERROR("failed to intern non-int element id");
-        set(&idx, stringify(idx));
-
-        // Store the interned string to the stack to save the interpreter from redoing this work.
-        idx = ID_TO_VALUE(id);
-
-        // The object is not guaranteed to be a dense array at this point, so it might be the
-        // global object, which we have to guard against.
-        CHECK_STATUS(guardNotGlobalObject(obj, obj_ins));
-
-        return call_imacro(call ? callelem_imacros.callprop : getelem_imacros.getprop);
+        return getPropertyByName(obj_ins, &idx, &lval);
     }
 
     if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass) {
@@ -9981,21 +10069,20 @@ TraceRecorder::record_JSOP_GETELEM()
         }
         ABORT_TRACE("can't reach arguments object's frame");
     }
+    if (js_IsDenseArray(obj)) {
+        // Fast path for dense arrays accessed with a integer index.
+        jsval* vp;
+        LIns* addr_ins;
 
-    if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
-        CHECK_STATUS(guardNotGlobalObject(obj, obj_ins));
-
-        return call_imacro(call ? callelem_imacros.callelem : getelem_imacros.getelem);
+        guardDenseArray(obj, obj_ins, BRANCH_EXIT);
+        CHECK_STATUS(denseArrayElement(lval, idx, vp, v_ins, addr_ins));
+        set(&lval, v_ins);
+        if (call)
+            set(&idx, obj_ins);
+        return JSRS_CONTINUE;
     }
 
-    // Fast path for dense arrays accessed with a integer index.
-    jsval* vp;
-    LIns* addr_ins;
-    CHECK_STATUS(denseArrayElement(lval, idx, vp, v_ins, addr_ins));
-    set(&lval, v_ins);
-    if (call)
-        set(&idx, obj_ins);
-    return JSRS_CONTINUE;
+    return getPropertyByIndex(obj_ins, idx_ins, &lval);
 }
 
 /* Functions used by JSOP_SETELEM */
@@ -12461,8 +12548,6 @@ static const struct BuiltinFunctionInfo {
 } builtinFunctionInfo[JSBUILTIN_LIMIT] = {
     {ObjectToIterator_trcinfo,   1},
     {CallIteratorNext_trcinfo,   0},
-    {GetProperty_trcinfo,        1},
-    {GetElement_trcinfo,         1},
     {SetProperty_trcinfo,        2},
     {SetElement_trcinfo,         2},
     {HasInstance_trcinfo,        1}
