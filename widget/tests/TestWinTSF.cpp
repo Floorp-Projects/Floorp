@@ -2745,7 +2745,7 @@ TestApp::TestContentEvents(void)
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIWidget> topLevel = widget->GetTopLevelWidget(nsnull);
+  nsCOMPtr<nsIWidget> topLevel = widget->GetTopLevelWidget();
   if (!topLevel) {
     fail("TestContentEvents: get top level widget");
     return PR_FALSE;
