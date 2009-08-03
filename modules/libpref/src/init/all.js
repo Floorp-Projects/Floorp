@@ -541,7 +541,7 @@ pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 pref("javascript.options.relimit",          false);
 pref("javascript.options.jit.content",      true);
-pref("javascript.options.jit.chrome",       false);
+pref("javascript.options.jit.chrome",       true);
 // This preference limits the memory usage of javascript.
 // If you want to change these values for your device,
 // please find Bug 417052 comment 17 and Bug 456721
