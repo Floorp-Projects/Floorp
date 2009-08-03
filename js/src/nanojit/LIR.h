@@ -1050,7 +1050,6 @@ namespace nanojit
         LInsp findLoad(LOpcode v, LInsp a, int32_t b, uint32_t &i);
         LInsp findcall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &i);
         LInsp add(LInsp i, uint32_t k);
-        void replace(LInsp i);
         void clear();
 
         static uint32_t FASTCALL hashimm(int32_t);
@@ -1207,14 +1206,6 @@ namespace nanojit
     public:
         StackFilter(LirFilter *in, LirBuffer *lirbuf, LInsp sp);
         virtual ~StackFilter() {}
-        LInsp read();
-    };
-
-    class CseReader: public LirFilter
-    {
-        LInsHashSet *exprs;
-    public:
-        CseReader(LirFilter *in, LInsHashSet *exprs);
         LInsp read();
     };
 
