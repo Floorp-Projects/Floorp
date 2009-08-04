@@ -114,6 +114,7 @@ _TEST_FILES += \
 		320x240.allow-origin.ogv \
 		320x240.allow-origin.ogv^headers^ \
 		448636.ogv \
+    bug495129.ogv \
 		bug461281.ogg \
 		bug482461.ogv \
 		bug498855-1.ogv \
