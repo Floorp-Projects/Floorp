@@ -131,6 +131,23 @@ struct JSStackFrame {
                                        script->staticLevel */
 
     inline void assertValidStackDepth(uintN depth);
+
+    JSBool putActivationObjects(JSContext *cx) {
+        /*
+         * The order of calls here is important as js_PutCallObject needs to
+         * access argsobj.
+         */
+        JSBool ok;
+        if (callobj) {
+            ok = js_PutCallObject(cx, this);
+            JS_ASSERT(!argsobj);
+        } else if (argsobj) {
+            ok = js_PutArgsObject(cx, this);
+        } else {
+            ok = JS_TRUE;
+        }
+        return ok;
+    }
 };
 
 #ifdef __cplusplus

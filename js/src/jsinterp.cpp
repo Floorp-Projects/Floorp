@@ -1394,13 +1394,7 @@ out:
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
 
-    /* If frame has a call object, sync values and clear back-pointer. */
-    if (frame.callobj)
-        ok &= js_PutCallObject(cx, &frame);
-
-    /* If frame has an arguments object, sync values and clear back-pointer. */
-    if (frame.argsobj)
-        ok &= js_PutArgsObject(cx, &frame);
+    ok &= frame.putActivationObjects(cx);
 
     *vp = frame.rval;
 
@@ -3282,11 +3276,7 @@ js_Interpret(JSContext *cx)
                  * calls eval unexpectedly (in a way that is hidden from the
                  * compiler). See bug 325540.
                  */
-                if (fp->callobj)
-                    ok &= js_PutCallObject(cx, fp);
-
-                if (fp->argsobj)
-                    ok &= js_PutArgsObject(cx, fp);
+                ok &= fp->putActivationObjects(cx);
 
 #ifdef INCLUDE_MOZILLA_DTRACE
                 /* DTrace function return, inlines */

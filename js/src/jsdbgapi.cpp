@@ -672,11 +672,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                       : wp->setter(cx, obj, userid, vp));
                 if (injectFrame) {
                     /* Evil code can cause us to have an arguments object. */
-                    if (frame.callobj)
-                        ok &= js_PutCallObject(cx, &frame);
-                    if (frame.argsobj)
-                        ok &= js_PutArgsObject(cx, &frame);
-
+                    ok = frame.putActivationObjects(cx);
                     cx->fp = frame.down;
                     if (argv != smallv)
                         cx->free(argv);
