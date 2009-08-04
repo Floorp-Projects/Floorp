@@ -3348,10 +3348,6 @@ FlushJITCache(JSContext* cx)
         }
 
         fragmento->clearFrags();
-#ifdef DEBUG
-        JS_ASSERT(fragmento->labels);
-        fragmento->labels->clear();
-#endif
 
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
             VMFragment* f = tm->vmfragments[i];
@@ -3370,10 +3366,19 @@ FlushJITCache(JSContext* cx)
 
 #ifdef DEBUG
     delete tm->lirbuf->names;
-    tm->lirbuf->names = new (&gc) LirNameMap(&gc, *tm->allocator, tm->fragmento->labels);
 #endif
+
     tm->allocator->reset();
     tm->codeAlloc->sweep();
+
+#ifdef DEBUG
+    JS_ASSERT(fragmento);
+    JS_ASSERT(fragmento->labels);
+    Allocator& alloc = *tm->allocator;
+    fragmento->labels = new (alloc) LabelMap(alloc, &js_LogController);
+    tm->lirbuf->names = new (&gc) LirNameMap(&gc, alloc, tm->fragmento->labels);
+#endif
+
     tm->lirbuf->clear();
     tm->needFlush = JS_FALSE;
 }
@@ -6411,21 +6416,23 @@ js_InitJIT(JSTraceMonitor *tm)
     if (!tm->allocator)
         tm->allocator = new VMAllocator();
 
+    Allocator& alloc = *tm->allocator;
+
     if (!tm->codeAlloc)
         tm->codeAlloc = new CodeAlloc();
 
     if (!tm->assembler)
-        tm->assembler = new (&gc) Assembler(*tm->codeAlloc, *tm->allocator, core,
+        tm->assembler = new (&gc) Assembler(*tm->codeAlloc, alloc, core,
                                             &js_LogController);
 
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
         Fragmento* fragmento = new (&gc) Fragmento(core, &js_LogController, 32, tm->codeAlloc);
-        verbose_only(fragmento->labels = new (&gc) LabelMap(core, *tm->allocator);)
+        verbose_only(fragmento->labels = new (alloc) LabelMap(alloc, &js_LogController);)
         tm->fragmento = fragmento;
-        tm->lirbuf = new (&gc) LirBuffer(*tm->allocator);
+        tm->lirbuf = new (&gc) LirBuffer(alloc);
 #ifdef DEBUG
-        tm->lirbuf->names = new (&gc) LirNameMap(&gc, *tm->allocator, tm->fragmento->labels);
+        tm->lirbuf->names = new (&gc) LirNameMap(&gc, alloc, tm->fragmento->labels);
 #endif
         for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
             tm->globalStates[i].globalShape = -1;
@@ -6439,20 +6446,22 @@ js_InitJIT(JSTraceMonitor *tm)
     if (!tm->reAllocator)
         tm->reAllocator = new VMAllocator();
 
+    Allocator& reAlloc = *tm->reAllocator;
+
     if (!tm->reCodeAlloc)
         tm->reCodeAlloc = new CodeAlloc();
 
     if (!tm->reAssembler)
-        tm->reAssembler = new (&gc) Assembler(*tm->reCodeAlloc, *tm->reAllocator, core,
+        tm->reAssembler = new (&gc) Assembler(*tm->reCodeAlloc, reAlloc, core,
                                               &js_LogController);
 
     if (!tm->reFragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, &js_LogController, 32, tm->reCodeAlloc);
-        verbose_only(fragmento->labels = new (&gc) LabelMap(core, *tm->reAllocator);)
+        verbose_only(fragmento->labels = new (reAlloc) LabelMap(reAlloc, &js_LogController);)
         tm->reFragmento = fragmento;
-        tm->reLirBuf = new (&gc) LirBuffer(*tm->reAllocator);
+        tm->reLirBuf = new (&gc) LirBuffer(reAlloc);
 #ifdef DEBUG
-        tm->reLirBuf->names = new (&gc) LirNameMap(&gc, *tm->reAllocator, fragmento->labels);
+        tm->reLirBuf->names = new (&gc) LirNameMap(&gc, reAlloc, fragmento->labels);
 #endif
     }
 #if !defined XP_WIN
@@ -6481,7 +6490,6 @@ js_FinishJIT(JSTraceMonitor *tm)
 #endif
     if (tm->fragmento != NULL) {
         JS_ASSERT(tm->reservedDoublePool);
-        verbose_only(delete tm->fragmento->labels;)
 #ifdef DEBUG
         delete tm->lirbuf->names;
         tm->lirbuf->names = NULL;
@@ -6512,7 +6520,6 @@ js_FinishJIT(JSTraceMonitor *tm)
     }
     if (tm->reFragmento != NULL) {
         delete tm->reLirBuf;
-        verbose_only(delete tm->reFragmento->labels;)
         delete tm->reFragmento;
         delete tm->reAllocator;
         delete tm->reAssembler;

@@ -99,7 +99,7 @@ namespace nanojit
 
             verbose_only( DWB(BlockHist*)        enterCounts; )
             verbose_only( DWB(BlockHist*)        mergeCounts; )
-            verbose_only( DWB(LabelMap*)        labels; )
+            verbose_only( LabelMap*        labels; )
 
             #ifdef AVMPLUS_VERBOSE
             void    drawTrees(char *fileName);

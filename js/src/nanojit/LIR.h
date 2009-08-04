@@ -861,7 +861,7 @@ namespace nanojit
     /**
      * map address ranges to meaningful names.
      */
-    class LabelMap MMGC_SUBCLASS_DECL
+    class LabelMap
     {
         Allocator& allocator;
         class Entry
@@ -871,17 +871,15 @@ namespace nanojit
             char* name;
             size_t size:29, align:3;
         };
-        avmplus::SortedMap<const void*, Entry*, avmplus::LIST_NonGCObjects> names;
-        bool addrs, pad[3];
+        TreeMap<const void*, Entry*> names;
+        LogControl *logc;
         char buf[1000], *end;
         void formatAddr(const void *p, char *buf);
     public:
-        LabelMap(avmplus::AvmCore *, Allocator& allocator);
-        ~LabelMap();
+        LabelMap(Allocator& allocator, LogControl* logc);
         void add(const void *p, size_t size, size_t align, const char *name);
         const char *dup(const char *);
         const char *format(const void *p);
-        void clear();
     };
 
     class LirNameMap MMGC_SUBCLASS_DECL

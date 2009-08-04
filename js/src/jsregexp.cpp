@@ -3093,7 +3093,7 @@ class RegExpNativeCompiler {
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         Assembler *assm = tm->reAssembler;
         Fragmento* fragmento = tm->reFragmento;
-        VMAllocator *alloc = tm->reAllocator;
+        VMAllocator& alloc = *tm->reAllocator;
 
         re->source->getCharsAndLength(re_chars, re_length);
         /*
@@ -3108,7 +3108,7 @@ class RegExpNativeCompiler {
         this->cx = cx;
         /* At this point we have an empty fragment. */
         LirBuffer* lirbuf = fragment->lirbuf;
-        if (alloc->outOfMemory())
+        if (alloc.outOfMemory())
             goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
         lir = lirBufWriter = new (&gc) LirBufWriter(lirbuf);
@@ -3117,7 +3117,7 @@ class RegExpNativeCompiler {
 #ifdef NJ_VERBOSE
         debug_only_stmt(
             if (js_LogController.lcbits & LC_TMRegexp) {
-                lir = new (&gc) VerboseWriter(*alloc, lir, lirbuf->names,
+                lir = new (&gc) VerboseWriter(alloc, lir, lirbuf->names,
                                               &js_LogController);
             }
         )
@@ -3146,9 +3146,9 @@ class RegExpNativeCompiler {
 
         guard = insertGuard(re_chars, re_length);
 
-        if (alloc->outOfMemory())
+        if (alloc.outOfMemory())
             goto fail;
-        ::compile(fragmento, assm, fragment, *alloc);
+        ::compile(fragmento, assm, fragment, alloc);
         if (assm->error() != nanojit::None) {
             oom = assm->error() == nanojit::OutOMem;
             goto fail;
@@ -3161,16 +3161,18 @@ class RegExpNativeCompiler {
 #endif
         return JS_TRUE;
     fail:
-        if (alloc->outOfMemory() || oom ||
+        if (alloc.outOfMemory() || oom ||
             js_OverfullFragmento(tm, fragmento)) {
             fragmento->clearFrags();
 #ifdef DEBUG
-    fragmento->labels->clear();
-    delete lirbuf->names;
-    lirbuf->names = new (&gc) LirNameMap(&gc, *alloc, fragmento->labels);
+            delete lirbuf->names;
 #endif
             tm->reCodeAlloc->sweep();
-            alloc->reset();
+            alloc.reset();
+#ifdef DEBUG
+            fragmento->labels = new (alloc) LabelMap(alloc, &js_LogController);
+            lirbuf->names = new (&gc) LirNameMap(&gc, alloc, fragmento->labels);
+#endif
             lirbuf->clear();
         } else {
             if (!guard) insertGuard(re_chars, re_length);
