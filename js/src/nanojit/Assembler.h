@@ -132,6 +132,7 @@ namespace nanojit
         LabelStateMap(Allocator& alloc) : alloc(alloc), labels(alloc)
         {}
 
+        void clear() { labels.clear(); }
         void add(LIns *label, NIns *addr, RegAlloc &regs);
         LabelState *get(LIns *);
     };

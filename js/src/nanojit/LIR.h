@@ -55,6 +55,7 @@ namespace nanojit
 
     enum LOpcode
 #if defined(_MSC_VER) && _MSC_VER >= 1400
+#pragma warning(disable:4480) // nonstandard extension used: specifying underlying type for enum
           : unsigned
 #endif
     {
@@ -311,6 +312,8 @@ namespace nanojit
         LRK_None    // this one is used for unused opcode numbers
     };
 
+    class LIns;
+
     // 0-operand form.  Used for LIR_start and LIR_label.
     class LInsOp0
     {
@@ -494,7 +497,7 @@ namespace nanojit
         // Last word: fields shared by all LIns kinds.  The reservation fields
         // are read/written during assembly.
         union {
-        Reservation lastWord;
+            Reservation lastWord;
             // force sizeof(LIns)==8 and 8-byte alignment on 64-bit machines.
             // this is necessary because sizeof(Reservation)==4 and we want all
             // instances of LIns to be pointer-aligned.
@@ -882,7 +885,7 @@ namespace nanojit
 
     class LirNameMap MMGC_SUBCLASS_DECL
     {
-        Allocator& allocator;
+        Allocator& alloc;
 
         template <class Key>
         class CountMap: public avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects> {
@@ -911,8 +914,8 @@ namespace nanojit
         void formatImm(int32_t c, char *buf);
     public:
 
-        LirNameMap(GC *gc, Allocator& allocator, LabelMap *r)
-            : allocator(allocator),
+        LirNameMap(GC *gc, Allocator& alloc, LabelMap *r)
+            : alloc(alloc),
             lircounts(gc),
             funccounts(gc),
             names(gc),
@@ -1030,7 +1033,7 @@ namespace nanojit
         // don't start too large, will waste memory.
         static const uint32_t kInitialCap = 64;
 
-        LInsp *m_list; // explicit WB's are used, no DWB needed.
+        LInsp *m_list;
         uint32_t m_used, m_cap;
         GC* m_gc;
 
@@ -1214,6 +1217,7 @@ namespace nanojit
     public:
         LInsp sp, rp;
         LInsHashSet exprs;
+
         void clear(LInsp p);
     public:
         LoadFilter(LirWriter *out, GC *gc)

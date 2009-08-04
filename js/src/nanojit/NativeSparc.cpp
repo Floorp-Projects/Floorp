@@ -585,8 +585,6 @@ namespace nanojit
     {
         (void)ins;
         JMP_long_placeholder(); // jump to SOT
-        verbose_only( if ((_logc->lcbits & LC_Assembly) && _outputCache) {
-                          _outputCache->removeLast(); outputf("         jmp   SOT"); } );
 
         loopJumps.add(_nIns);
 
