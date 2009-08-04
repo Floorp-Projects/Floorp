@@ -3514,8 +3514,7 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(regs.sp - 2 >= StackBase(fp));
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < fp->script->nslots);
-            vp = &fp->slots[slot];
-            *vp = regs.sp[-1];
+            fp->slots[slot] = regs.sp[-1];
           END_CASE(JSOP_FORLOCAL)
 
           BEGIN_CASE(JSOP_FORNAME)
