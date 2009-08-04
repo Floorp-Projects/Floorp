@@ -240,7 +240,6 @@ namespace nanojit
 
             Allocator           &alloc;
             CodeAlloc&          _codeAlloc;
-            avmplus::GC*        _gc;
             DWB(Fragment*)      _thisfrag;
             RegAllocMap*        _branchStateMap;
 

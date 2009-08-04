@@ -3117,7 +3117,7 @@ class RegExpNativeCompiler {
 #ifdef NJ_VERBOSE
         debug_only_stmt(
             if (js_LogController.lcbits & LC_TMRegexp) {
-                lir = new (&gc) VerboseWriter(&gc, lir, lirbuf->names,
+                lir = new (&gc) VerboseWriter(*alloc, lir, lirbuf->names,
                                               &js_LogController);
             }
         )
