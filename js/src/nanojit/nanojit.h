@@ -125,7 +125,6 @@ namespace nanojit
     typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
     typedef avmplus::SortedMap<SideExit*,RegAlloc*,avmplus::LIST_GCObjects> RegAllocMap;
     typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>    InsList;
-    typedef avmplus::List<char*, avmplus::LIST_GCObjects> StringList;
 
     const uint32_t MAXARGS = 8;
 
