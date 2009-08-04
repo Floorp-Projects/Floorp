@@ -119,7 +119,7 @@ static PLDHashOperator
 CancelImageRequest(const nsAString& aKey,
                    nsTreeImageCacheEntry aEntry, void* aData)
 {
-  aEntry.request->Cancel(NS_BINDING_ABORTED);
+  aEntry.request->CancelAndForgetObserver(NS_BINDING_ABORTED);
   return PL_DHASH_NEXT;
 }
 
