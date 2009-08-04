@@ -963,9 +963,16 @@ pref("mousewheel.transaction.ignoremovedelay", 100);
 // Macbook touchpad two finger pixel scrolling
 pref("mousewheel.enable_pixel_scrolling", true);
 
+// prefs for improved windows scrolling model
+// number of mousewheel clicks when acceleration starts
+// acceleration can be turned off if pref is set to -1
+pref("mousewheel.acceleration.start", 3);
+// factor to be muliplied for constant acceleration
+pref("mousewheel.acceleration.factor", 10);
+
 // 0=lines, 1=pages, 2=history , 3=text size
 pref("mousewheel.withnokey.action",0);
-pref("mousewheel.withnokey.numlines",1);	
+pref("mousewheel.withnokey.numlines",6);
 pref("mousewheel.withnokey.sysnumlines",true);
 pref("mousewheel.withcontrolkey.action",0);
 pref("mousewheel.withcontrolkey.numlines",1);
