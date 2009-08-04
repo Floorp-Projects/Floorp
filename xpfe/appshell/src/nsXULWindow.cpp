@@ -1597,34 +1597,6 @@ NS_IMETHODIMP nsXULWindow::GetWindowDOMElement(nsIDOMElement** aDOMElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElement)
-{
-  NS_ENSURE_STATE(mDocShell);
-  NS_ENSURE_ARG_POINTER(aDOMElement);
-
-  *aDOMElement = nsnull;
-
-  nsCOMPtr<nsIContentViewer> cv;
-
-  mDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (!cv)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-  if (!docv)   
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocument> doc;
-  docv->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-  if (!domdoc) 
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_SUCCESS(domdoc->GetElementById(NS_ConvertASCIItoUTF16(aID), aDOMElement), NS_ERROR_FAILURE);
-
-  return NS_OK;
-}
-
 nsresult nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, PRBool aTargetable, const nsAString& aID)
 {

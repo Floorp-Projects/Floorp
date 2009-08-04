@@ -126,7 +126,6 @@ protected:
 
    NS_IMETHOD GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow);
    NS_IMETHOD GetWindowDOMElement(nsIDOMElement** aDOMElement);
-   NS_IMETHOD GetDOMElementById(char* aID, nsIDOMElement** aDOMElement);
 
    // See nsIDocShellTreeOwner for docs on next two methods
    NS_HIDDEN_(nsresult) ContentShellAdded(nsIDocShellTreeItem* aContentShell,
