@@ -108,7 +108,7 @@ namespace nanojit
             void        clearFragment(Fragment *f);
         private:
             AvmCore*        _core;
-            DWB(CodeAlloc*) _codeAlloc;
+            CodeAlloc*      _codeAlloc;
             FragmentMap     _frags;        /* map from ip -> Fragment ptr  */
 
             const uint32_t _max_pages;
