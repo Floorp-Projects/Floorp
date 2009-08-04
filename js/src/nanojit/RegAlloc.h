@@ -49,10 +49,10 @@ namespace nanojit
         return 1 << r;
     }
 
-    class RegAlloc MMGC_SUBCLASS_DECL
+    class RegAlloc
     {
         public:
-            RegAlloc() : free(0), used(0), priority(0) {}
+            RegAlloc() { clear(); }
             void    clear();
             bool    isFree(Register r);
             void    addFree(Register r);
