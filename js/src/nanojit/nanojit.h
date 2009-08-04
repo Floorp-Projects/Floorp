@@ -118,12 +118,9 @@ namespace nanojit
      */
     class Fragment;
     class LIns;
-    struct SideExit;
-    class RegAlloc;
     typedef avmplus::AvmCore AvmCore;
     typedef avmplus::OSDep OSDep;
     typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
-    typedef avmplus::SortedMap<SideExit*,RegAlloc*,avmplus::LIST_GCObjects> RegAllocMap;
     typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>    InsList;
 
     const uint32_t MAXARGS = 8;
