@@ -62,6 +62,8 @@ public:
   // whenever the size of the element changes.
   NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height) = 0;
 
+  NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, PRInt32 width, PRInt32 height) = 0;
+
   // Render the canvas at the origin of the given gfxContext
   NS_IMETHOD Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter) = 0;
 
