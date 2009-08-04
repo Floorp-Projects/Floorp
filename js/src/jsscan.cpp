@@ -261,6 +261,14 @@ js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
         cx->free((void *) ts->filename);
 }
 
+#ifdef XP_WIN
+#ifdef WINCE
+#define getc_unlocked getc
+#else
+#define getc_unlocked _getc_nolock
+#endif
+#endif
+
 JS_FRIEND_API(int)
 js_fgets(char *buf, int size, FILE *file)
 {
@@ -272,7 +280,7 @@ js_fgets(char *buf, int size, FILE *file)
         return -1;
 
     crflag = JS_FALSE;
-    for (i = 0; i < n && (c = getc(file)) != EOF; i++) {
+    for (i = 0; i < n && (c = getc_unlocked(file)) != EOF; i++) {
         buf[i] = c;
         if (c == '\n') {        /* any \n ends a line */
             i++;                /* keep the \n; we know there is room for \0 */
