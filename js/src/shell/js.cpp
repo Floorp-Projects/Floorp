@@ -308,6 +308,8 @@ GetContextData(JSContext *cx)
 static JSBool
 ShellOperationCallback(JSContext *cx)
 {
+    JS_MaybeGC(cx);
+
     if (!gCanceled)
         return JS_TRUE;
 
@@ -1117,16 +1119,12 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     if (strcmp(paramName, "maxBytes") == 0) {
         param = JSGC_MAX_BYTES;
-    } else if (strcmp(paramName, "maxMallocBytes") == 0) {
-        param = JSGC_MAX_MALLOC_BYTES;
     } else if (strcmp(paramName, "gcStackpoolLifespan") == 0) {
         param = JSGC_STACKPOOL_LIFESPAN;
     } else if (strcmp(paramName, "gcBytes") == 0) {
         param = JSGC_BYTES;
     } else if (strcmp(paramName, "gcNumber") == 0) {
         param = JSGC_NUMBER;
-    } else if (strcmp(paramName, "gcTriggerFactor") == 0) {
-        param = JSGC_TRIGGER_FACTOR;
     } else {
         JS_ReportError(cx,
                        "the first argument argument must be maxBytes, "
@@ -1151,11 +1149,6 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportError(cx,
                        "the second argument must be convertable to uint32 "
                        "with non-zero value");
-        return JS_FALSE;
-    }
-    if (param == JSGC_TRIGGER_FACTOR && value < 100) {
-        JS_ReportError(cx,
-                       "the gcTriggerFactor value must be >= 100");
         return JS_FALSE;
     }
     JS_SetGCParameter(cx->runtime, param, value);
