@@ -858,18 +858,22 @@ PrintWinCodebase(nsGlobalWindow *win)
 }
 #endif
 
+// Don't GC for the first 10s (startup).
+PRIntervalTime startTime = -1;
+
 static void
 MaybeGC(JSContext *cx)
 {
-  size_t bytes = cx->runtime->gcBytes;
-  size_t lastBytes = cx->runtime->gcLastBytes;
-  if ((bytes > 8192 && bytes > lastBytes * 16)
-#ifdef DEBUG
-      || cx->runtime->gcZeal > 0
-#endif
-      ) {
-    JS_GC(cx);
+  if (startTime) {
+    if (startTime == -1) {
+      startTime = PR_IntervalNow();
+      return;
+    }
+    if (PR_IntervalToMilliseconds(PR_IntervalNow() - startTime) < 10000)
+      return;
+    startTime = 0;
   }
+  JS_MaybeGC(cx);
 }
 
 static already_AddRefed<nsIPrompt>
