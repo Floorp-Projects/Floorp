@@ -75,7 +75,7 @@
       function openSanitizeDialog() {
         let browserGlue = Cc["@mozilla.org/browser/browserglue;1"].
                           getService(Ci.nsIBrowserGlue);
-        browserGlue.sanitize(mainWindow || null);
+        browserGlue.sanitize(mainWindow);
       }
 
       function setFavIcon(url) {
