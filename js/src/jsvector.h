@@ -268,7 +268,7 @@ class JSTempVector
 
   private:
     typedef JSTempVectorImpl<T, IsPodType<T>::result> Impl;
-    friend class JSTempVectorImpl<T, IsPodType<T>::result>;
+    friend struct JSTempVectorImpl<T, IsPodType<T>::result>;
 
     static const int sGrowthFactor = 3;
 
