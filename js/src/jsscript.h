@@ -187,7 +187,7 @@ StackDepth(JSScript *script)
                                                                               \
         JS_GET_SCRIPT_OBJECT(script, index, funobj_);                         \
         JS_ASSERT(HAS_FUNCTION_CLASS(funobj_));                               \
-        JS_ASSERT(funobj_ == (JSObject *) STOBJ_GET_PRIVATE(funobj_));        \
+        JS_ASSERT(funobj_ == (JSObject *) funobj_->getAssignedPrivate());     \
         (fun) = (JSFunction *) funobj_;                                       \
         JS_ASSERT(FUN_INTERPRETED(fun));                                      \
     JS_END_MACRO

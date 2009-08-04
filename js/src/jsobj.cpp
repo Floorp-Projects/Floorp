@@ -1513,7 +1513,7 @@ out:
     if (setCallerScopeChain) {
         caller->scopeChain = callerScopeChain;
         JS_ASSERT(OBJ_GET_CLASS(cx, setCallerScopeChain) == &js_WithClass);
-        JS_SetPrivate(cx, setCallerScopeChain, NULL);
+        setCallerScopeChain->setPrivate(NULL);
     }
     if (setCallerVarObj)
         caller->varobj = callerVarObj;
@@ -2518,7 +2518,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     obj = js_NewObject(cx, &js_WithClass, proto, parent);
     if (!obj)
         return NULL;
-    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(cx->fp));
+    obj->setPrivate(cx->fp);
     OBJ_SET_BLOCK_DEPTH(cx, obj, depth);
     return obj;
 }
@@ -2552,7 +2552,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     clone->classword = jsuword(&js_BlockClass);
     clone->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     clone->fslots[JSSLOT_PARENT] = JSVAL_NULL;  // caller's responsibility
-    clone->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fp);
+    clone->setPrivate(fp);
     clone->fslots[JSSLOT_BLOCK_DEPTH] = proto->fslots[JSSLOT_BLOCK_DEPTH];
     JS_ASSERT(scope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
     for (uint32 i = JSSLOT_BLOCK_DEPTH + 1; i < JS_INITIAL_NSLOTS; ++i)
@@ -2575,7 +2575,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     fp = cx->fp;
     obj = fp->scopeChain;
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
-    JS_ASSERT(OBJ_GET_PRIVATE(cx, obj) == cx->fp);
+    JS_ASSERT(obj->getAssignedPrivate() == cx->fp);
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
 
     /*
@@ -2611,7 +2611,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     }
 
     /* We must clear the private slot even with errors. */
-    JS_SetPrivate(cx, obj, NULL);
+    obj->setPrivate(NULL);
     fp->scopeChain = OBJ_GET_PARENT(cx, obj);
     return normalUnwind;
 }
@@ -2619,16 +2619,13 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 static JSBool
 block_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    uintN index;
-    JSStackFrame *fp;
-
     JS_ASSERT(JS_InstanceOf(cx, obj, &js_BlockClass, NULL));
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
 
-    index = (uint16) JSVAL_TO_INT(id);
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    uintN index = (uint16) JSVAL_TO_INT(id);
+    JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
         index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
         JS_ASSERT(index < fp->script->nslots);
@@ -2644,15 +2641,12 @@ block_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    uintN index;
-    JSStackFrame *fp;
-
     JS_ASSERT(JS_InstanceOf(cx, obj, &js_BlockClass, NULL));
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
 
-    index = (uint16) JSVAL_TO_INT(id);
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    uintN index = (uint16) JSVAL_TO_INT(id);
+    JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (fp) {
         index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
         JS_ASSERT(index < fp->script->nslots);
@@ -3376,7 +3370,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     if (OBJ_GET_CLASS(cx, obj) != clasp ||
         (!(~clasp->flags & (JSCLASS_HAS_PRIVATE |
                             JSCLASS_CONSTRUCT_PROTOTYPE)) &&
-         !JS_GetPrivate(cx, obj))) {
+         !obj->getPrivate())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_WRONG_CONSTRUCTOR, clasp->name);
         goto bad;
@@ -5480,7 +5474,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     obj = js_NewObject(cx, clasp, NULL, NULL);
     if (!obj)
         return JS_FALSE;
-    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, *vp);
+    obj->fslots[JSSLOT_PRIVATE] = *vp;
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
@@ -6007,7 +6001,7 @@ dumpValue(jsval val)
     } else if (JSVAL_IS_OBJECT(val) &&
                HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(val))) {
         JSObject *funobj = JSVAL_TO_OBJECT(val);
-        JSFunction *fun = (JSFunction *) STOBJ_GET_PRIVATE(funobj);
+        JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
         fprintf(stderr, "<%s %s at %p (JSFunction at %p)>",
                 fun->atom ? "function" : "unnamed",
                 fun->atom ? JS_GetStringBytes(ATOM_TO_STRING(fun->atom)) : "function",
@@ -6120,26 +6114,28 @@ js_DumpObject(JSObject *obj)
             fprintf(stderr, "not native\n");
     }
 
+    fprintf(stderr, "proto ");
+    dumpValue(OBJECT_TO_JSVAL(STOBJ_GET_PROTO(obj)));
+    fputc('\n', stderr);
+
+    fprintf(stderr, "parent ");
+    dumpValue(OBJECT_TO_JSVAL(STOBJ_GET_PARENT(obj)));
+    fputc('\n', stderr);
+
+    i = JSSLOT_PRIVATE;
+    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
+        i = JSSLOT_PRIVATE + 1;
+        fprintf(stderr, "private %p\n", obj->getPrivate());
+    }
+
     fprintf(stderr, "slots:\n");
-    reservedEnd = JSSLOT_PRIVATE;
-    if (clasp->flags & JSCLASS_HAS_PRIVATE)
-        reservedEnd++;
-    reservedEnd += JSCLASS_RESERVED_SLOTS(clasp);
+    reservedEnd = i + JSCLASS_RESERVED_SLOTS(clasp);
     slots = (OBJ_IS_NATIVE(obj) && !sharesScope)
             ? OBJ_SCOPE(obj)->freeslot
             : STOBJ_NSLOTS(obj);
-    for (i = 0; i < slots; i++) {
+    for (; i < slots; i++) {
         fprintf(stderr, " %3d ", i);
-        if (i == JSSLOT_PRIVATE && (clasp->flags & JSCLASS_HAS_PRIVATE)) {
-            fprintf(stderr, "(private) = %p\n",
-                    JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, i)));
-            continue;
-        }
-        if (i == JSSLOT_PROTO)
-            fprintf(stderr, "(proto) ");
-        else if (i == JSSLOT_PARENT)
-            fprintf(stderr, "(parent) ");
-        else if (i < reservedEnd)
+        if (i < reservedEnd)
             fprintf(stderr, "(reserved) ");
         fprintf(stderr, "= ");
         dumpValue(STOBJ_GET_SLOT(obj, i));

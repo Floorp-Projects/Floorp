@@ -595,7 +595,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     script = FUN_SCRIPT(fun);
                 } else if (clasp == &js_ScriptClass) {
                     fun = NULL;
-                    script = (JSScript *) JS_GetPrivate(cx, closure);
+                    script = (JSScript *) closure->getAssignedPrivate();
                 } else {
                     fun = NULL;
                     script = NULL;
@@ -1167,7 +1167,7 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
         return NULL;
 
     JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee));
-    JS_ASSERT(OBJ_GET_PRIVATE(cx, fp->callee) == fp->fun);
+    JS_ASSERT(fp->callee->getAssignedPrivate() == fp->fun);
     return fp->callee;
 }
 

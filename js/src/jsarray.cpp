@@ -1245,8 +1245,9 @@ array_getObjectOps(JSContext *cx, JSClass *clasp)
 
 JSClass js_ArrayClass = {
     "Array",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
-    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_NEW_ENUMERATE,
+    JSCLASS_HAS_RESERVED_SLOTS(2) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
+    JSCLASS_NEW_ENUMERATE,
     JS_PropertyStub,    JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,   JS_ResolveStub,    js_TryValueOf,     array_finalize,
     array_getObjectOps, NULL,              NULL,              NULL,
@@ -1255,7 +1256,8 @@ JSClass js_ArrayClass = {
 
 JSClass js_SlowArrayClass = {
     "Array",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     slowarray_addProperty, JS_PropertyStub, JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub,      JS_ResolveStub,  js_TryValueOf,    NULL,
     slowarray_getObjectOps, NULL,           NULL,             NULL,

@@ -4977,7 +4977,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_GetReservedSlot(cx, obj, 0, vp);
 
     JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp *) JS_GetPrivate(cx, obj);
+    re = (JSRegExp *) obj->getPrivate();
     if (re) {
         switch (slot) {
           case REGEXP_SOURCE:
@@ -5241,9 +5241,7 @@ static JSPropertySpec regexp_static_props[] = {
 static void
 regexp_finalize(JSContext *cx, JSObject *obj)
 {
-    JSRegExp *re;
-
-    re = (JSRegExp *) JS_GetPrivate(cx, obj);
+    JSRegExp *re = (JSRegExp *) obj->getPrivate();
     if (!re)
         return;
     js_DestroyRegExp(cx, re);
@@ -5274,7 +5272,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
     JSObject *obj;
 
     if (xdr->mode == JSXDR_ENCODE) {
-        re = (JSRegExp *) JS_GetPrivate(xdr->cx, *objp);
+        re = (JSRegExp *) (*objp)->getPrivate();
         if (!re)
             return JS_FALSE;
         source = re->source;
@@ -5293,11 +5291,9 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         re = js_NewRegExp(xdr->cx, NULL, source, (uint8)flagsword, JS_FALSE);
         if (!re)
             return JS_FALSE;
-        if (!JS_SetPrivate(xdr->cx, obj, re) ||
-            !js_SetLastIndex(xdr->cx, obj, 0)) {
-            js_DestroyRegExp(xdr->cx, re);
+        obj->setPrivate(re);
+        if (!js_SetLastIndex(xdr->cx, obj, 0))
             return JS_FALSE;
-        }
         *objp = obj;
     }
     return JS_TRUE;
@@ -5312,9 +5308,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
 static void
 regexp_trace(JSTracer *trc, JSObject *obj)
 {
-    JSRegExp *re;
-
-    re = (JSRegExp *) JS_GetPrivate(trc->context, obj);
+    JSRegExp *re = (JSRegExp *) obj->getPrivate();
     if (re && re->source)
         JS_CALL_STRING_TRACER(trc, re->source, "source");
 }
@@ -5348,7 +5342,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
     if (!JS_InstanceOf(cx, obj, &js_RegExpClass, vp + 2))
         return JS_FALSE;
     JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp *) JS_GetPrivate(cx, obj);
+    re = (JSRegExp *) obj->getPrivate();
     if (!re) {
         JS_UNLOCK_OBJ(cx, obj);
         *vp = STRING_TO_JSVAL(cx->runtime->emptyString);
@@ -5410,7 +5404,6 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSString *opt, *str;
     JSRegExp *oldre, *re;
-    JSBool ok, ok2;
     JSObject *obj2;
     size_t length, nbytes;
     const jschar *cp, *start, *end;
@@ -5438,7 +5431,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     return JS_FALSE;
                 }
                 JS_LOCK_OBJ(cx, obj2);
-                re = (JSRegExp *) JS_GetPrivate(cx, obj2);
+                re = (JSRegExp *) obj->getPrivate();
                 if (!re) {
                     JS_UNLOCK_OBJ(cx, obj2);
                     return JS_FALSE;
@@ -5509,18 +5502,15 @@ created:
     if (!re)
         return JS_FALSE;
     JS_LOCK_OBJ(cx, obj);
-    oldre = (JSRegExp *) JS_GetPrivate(cx, obj);
-    ok = JS_SetPrivate(cx, obj, re);
-    ok2 = js_SetLastIndex(cx, obj, 0);
+    oldre = (JSRegExp *) obj->getPrivate();
+    obj->setPrivate(re);
+
+    JSBool ok = js_SetLastIndex(cx, obj, 0);
     JS_UNLOCK_OBJ(cx, obj);
-    if (!ok) {
-        js_DestroyRegExp(cx, re);
-        return JS_FALSE;
-    }
     if (oldre)
         js_DestroyRegExp(cx, oldre);
     *rval = OBJECT_TO_JSVAL(obj);
-    return ok2;
+    return ok;
 }
 
 static JSBool
@@ -5546,7 +5536,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!ok)
         return JS_FALSE;
     JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp *) JS_GetPrivate(cx, obj);
+    re = (JSRegExp *) obj->getPrivate();
     if (!re) {
         JS_UNLOCK_OBJ(cx, obj);
         return JS_TRUE;
@@ -5710,12 +5700,13 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     if (!re)
         return NULL;
     obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
-    if (!obj || !JS_SetPrivate(cx, obj, re)) {
+    if (!obj) {
         js_DestroyRegExp(cx, re);
-        obj = NULL;
+        return NULL;
     }
-    if (obj && !js_SetLastIndex(cx, obj, 0))
-        obj = NULL;
+    obj->setPrivate(re);
+    if (!js_SetLastIndex(cx, obj, 0))
+        return NULL;
     return obj;
 }
 
@@ -5729,12 +5720,11 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent)
     clone = js_NewObject(cx, &js_RegExpClass, NULL, parent);
     if (!clone)
         return NULL;
-    re = (JSRegExp *) JS_GetPrivate(cx, obj);
-    if (!JS_SetPrivate(cx, clone, re) || !js_SetLastIndex(cx, clone, 0)) {
-        cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-        return NULL;
+    re = (JSRegExp *) obj->getPrivate();
+    if (re) {
+        clone->setPrivate(re);
+        HOLD_REGEXP(cx, re);
     }
-    HOLD_REGEXP(cx, re);
     return clone;
 }
 

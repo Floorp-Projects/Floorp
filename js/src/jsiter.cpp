@@ -72,9 +72,7 @@
 #include "jsxml.h"
 #endif
 
-#if JSSLOT_ITER_FLAGS >= JS_INITIAL_NSLOTS
-#error JS_INITIAL_NSLOTS must be greater than JSSLOT_ITER_FLAGS.
-#endif
+JS_STATIC_ASSERT(JSSLOT_ITER_FLAGS < JS_INITIAL_NSLOTS);
 
 #if JS_HAS_GENERATORS
 
@@ -639,26 +637,24 @@ JSClass js_StopIterationClass = {
 static void
 generator_finalize(JSContext *cx, JSObject *obj)
 {
-    JSGenerator *gen;
+    JSGenerator *gen = (JSGenerator *) obj->getPrivate();
+    if (!gen)
+        return;
 
-    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (gen) {
-        /*
-         * gen can be open on shutdown when close hooks are ignored or when
-         * the embedding cancels scheduled close hooks.
-         */
-        JS_ASSERT(gen->state == JSGEN_NEWBORN || gen->state == JSGEN_CLOSED ||
-                  gen->state == JSGEN_OPEN);
-        cx->free(gen);
-    }
+    /*
+     * gen is open when a script has not called its close method while
+     * explicitly manipulating it.
+     */
+    JS_ASSERT(gen->state == JSGEN_NEWBORN ||
+              gen->state == JSGEN_CLOSED ||
+              gen->state == JSGEN_OPEN);
+    cx->free(gen);
 }
 
 static void
 generator_trace(JSTracer *trc, JSObject *obj)
 {
-    JSGenerator *gen;
-
-    gen = (JSGenerator *) JS_GetPrivate(trc->context, obj);
+    JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen)
         return;
 
@@ -704,7 +700,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     JSGenerator *gen;
     jsval *slots;
 
-    /* After the following return, failing control flow must goto bad. */
     obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL);
     if (!obj)
         return NULL;
@@ -718,19 +713,19 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen = (JSGenerator *)
         cx->malloc(sizeof(JSGenerator) + (nslots - 1) * sizeof(jsval));
     if (!gen)
-        goto bad;
+        return NULL;
 
     gen->obj = obj;
 
     /* Steal away objects reflecting fp and point them at gen->frame. */
     gen->frame.callobj = fp->callobj;
     if (fp->callobj) {
-        JS_SetPrivate(cx, fp->callobj, &gen->frame);
+        fp->callobj->setPrivate(&gen->frame);
         fp->callobj = NULL;
     }
     gen->frame.argsobj = fp->argsobj;
     if (fp->argsobj) {
-        JS_SetPrivate(cx, JSVAL_TO_OBJECT(fp->argsobj), &gen->frame);
+        JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(&gen->frame);
         fp->argsobj = NULL;
     }
 
@@ -782,15 +777,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     /* Note that gen is newborn. */
     gen->state = JSGEN_NEWBORN;
 
-    if (!JS_SetPrivate(cx, obj, gen)) {
-        cx->free(gen);
-        goto bad;
-    }
+    obj->setPrivate(gen);
     return obj;
-
-  bad:
-    cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-    return NULL;
 }
 
 typedef enum JSGeneratorOp {
@@ -897,10 +885,9 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
 static JS_REQUIRES_STACK JSBool
 CloseGenerator(JSContext *cx, JSObject *obj)
 {
-    JSGenerator *gen;
-
     JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_GeneratorClass);
-    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
+
+    JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen) {
         /* Generator prototype object. */
         return JS_TRUE;
@@ -919,7 +906,6 @@ static JSBool
 generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
 {
     JSObject *obj;
-    JSGenerator *gen;
     jsval arg;
 
     js_LeaveTrace(cx);
@@ -928,8 +914,8 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
     if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, vp + 2))
         return JS_FALSE;
 
-    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-    if (gen == NULL) {
+    JSGenerator *gen = (JSGenerator *) obj->getPrivate();
+    if (!gen) {
         /* This happens when obj is the generator prototype. See bug 352885. */
         goto closed_generator;
     }
