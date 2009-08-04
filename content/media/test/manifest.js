@@ -27,6 +27,8 @@ var gPlayTests = [
   { name:"bug461281.ogg", type:"application/ogg" },
   // oggz-chop stream
   { name:"bug482461.ogv", type:"video/ogg", duration:4.24 },
+  // With first frame a "duplicate" (empty) frame.
+  { name:"bug500311.ogv", type:"video/ogg", duration:1.96 },
   // Small audio file
   { name:"small-shot.ogg", type:"video/ogg" },
 
