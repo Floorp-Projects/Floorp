@@ -116,6 +116,9 @@ _TEST_FILES += \
 		448636.ogv \
 		bug461281.ogg \
 		bug482461.ogv \
+		bug498855-1.ogv \
+		bug498855-2.ogv \
+		bug498855-3.ogv \
 		bug499519.ogv \
 		seek.ogv \
 		small-shot.ogg \
