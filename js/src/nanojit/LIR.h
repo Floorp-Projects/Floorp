@@ -1193,19 +1193,18 @@ namespace nanojit
 
     class Assembler;
 
-    void compile(Fragmento *frago, Assembler *assm, Fragment *frag);
+    void compile(Fragmento *frago, Assembler *assm, Fragment *frag, Allocator& alloc);
     verbose_only(void live(GC *gc, LirBuffer *lirbuf);)
 
     class StackFilter: public LirFilter
     {
         LirBuffer *lirbuf;
         LInsp sp;
-        avmplus::BitSet stk;
+        BitSet stk;
         int top;
         int getTop(LInsp br);
     public:
-        StackFilter(LirFilter *in, LirBuffer *lirbuf, LInsp sp);
-        virtual ~StackFilter() {}
+        StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp);
         LInsp read();
     };
 

@@ -1017,8 +1017,8 @@ namespace nanojit
 
     using namespace avmplus;
 
-    StackFilter::StackFilter(LirFilter *in, LirBuffer *lirbuf, LInsp sp)
-        : LirFilter(in), lirbuf(lirbuf), sp(sp), top(0)
+    StackFilter::StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp)
+        : LirFilter(in), lirbuf(lirbuf), sp(sp), stk(alloc), top(0)
     {}
 
     LInsp StackFilter::read()
@@ -1501,15 +1501,15 @@ namespace nanojit
         }
     };
 
-    void live(GC *gc, Fragment *frag, LogControl *logc)
+    void live(GC *gc, Allocator& alloc, Fragment *frag, LogControl *logc)
     {
         // traverse backwards to find live exprs and a few other stats.
 
         LiveTable live(gc);
         uint32_t exits = 0;
         LirReader br(frag->lastIns);
-        StackFilter sf(&br, frag->lirbuf, frag->lirbuf->sp);
-        StackFilter r(&sf, frag->lirbuf, frag->lirbuf->rp);
+        StackFilter sf(&br, alloc, frag->lirbuf, frag->lirbuf->sp);
+        StackFilter r(&sf, alloc, frag->lirbuf, frag->lirbuf->rp);
         int total = 0;
         if (frag->lirbuf->state)
             live.add(frag->lirbuf->state, r.pos());
@@ -1978,7 +1978,7 @@ namespace nanojit
         return i->arg(i->argc()-n-1);
     }
 
-    void compile(Fragmento* frago, Assembler* assm, Fragment* triggerFrag)
+    void compile(Fragmento* frago, Assembler* assm, Fragment* triggerFrag, Allocator& alloc)
     {
         AvmCore *core = frago->core();
 #ifdef NJ_VERBOSE
@@ -2008,11 +2008,11 @@ namespace nanojit
             logc->printf("\n");
             logc->printf("=== Results of liveness analysis:\n");
             logc->printf("===\n");
-            live(gc, triggerFrag, logc);
+            live(gc, alloc, triggerFrag, logc);
         })
 
         /* Set up the generic text output cache for the assembler */
-        verbose_only( StringList asmOutput(gc); )
+        verbose_only( StringList asmOutput(alloc); )
         verbose_only( assm->_outputCache = &asmOutput; )
 
         bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
@@ -2106,16 +2106,15 @@ namespace nanojit
         // to assm->output.  Since _outputCache is now NULL, outputf just
         // hands these strings directly onwards to logc->printf.
         verbose_only( if (anyVerb) {
-               logc->printf("\n");
+            logc->printf("\n");
             logc->printf("=== Aggregated assembly output: BEGIN\n");
-               logc->printf("===\n");
+            logc->printf("===\n");
             assm->_outputCache = 0;
-            for (int i = asmOutput.size() - 1; i >= 0; --i) {
-                char* str = asmOutput.get(i);
+            for (Seq<char*>* p = asmOutput.get(); p != NULL; p = p->tail) {
+                char *str = p->head;
                 assm->outputf("  %s", str);
-                gc->Free(str);
             }
-               logc->printf("===\n");
+            logc->printf("===\n");
             logc->printf("=== Aggregated assembly output: END\n");
         });
 

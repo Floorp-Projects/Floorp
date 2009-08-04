@@ -3087,12 +3087,13 @@ class RegExpNativeCompiler {
     {
         GuardRecord* guard = NULL;
         LIns* pos;
-        Assembler *assm;
         bool oom = false;
         const jschar* re_chars;
         size_t re_length;
-        Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
-        VMAllocator *alloc = JS_TRACE_MONITOR(cx).reAllocator;
+        JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+        Assembler *assm = tm->reAssembler;
+        Fragmento* fragmento = tm->reFragmento;
+        VMAllocator *alloc = tm->reAllocator;
 
         re->source->getCharsAndLength(re_chars, re_length);
         /*
@@ -3147,8 +3148,7 @@ class RegExpNativeCompiler {
 
         if (alloc->outOfMemory())
             goto fail;
-        assm = JS_TRACE_MONITOR(cx).reAssembler;
-        ::compile(JS_TRACE_MONITOR(cx).reFragmento, assm, fragment);
+        ::compile(fragmento, assm, fragment, *alloc);
         if (assm->error() != nanojit::None) {
             oom = assm->error() == nanojit::OutOMem;
             goto fail;
@@ -3162,9 +3162,9 @@ class RegExpNativeCompiler {
         return JS_TRUE;
     fail:
         if (alloc->outOfMemory() || oom ||
-            js_OverfullFragmento(&JS_TRACE_MONITOR(cx), fragmento)) {
+            js_OverfullFragmento(tm, fragmento)) {
             fragmento->clearFrags();
-            JS_TRACE_MONITOR(cx).reCodeAlloc->sweep();
+            tm->reCodeAlloc->sweep();
             alloc->reset();
             lirbuf->clear();
         } else {
