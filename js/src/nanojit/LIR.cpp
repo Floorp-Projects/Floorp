@@ -123,7 +123,6 @@ namespace nanojit
     LirBuffer::~LirBuffer()
     {
         clear();
-        verbose_only(if (names) NJ_DELETE(names);)
     }
 
     void LirBuffer::clear()

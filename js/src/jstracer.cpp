@@ -3364,10 +3364,6 @@ FlushJITCache(JSContext* cx)
         }
     }
 
-#ifdef DEBUG
-    delete tm->lirbuf->names;
-#endif
-
     tm->allocator->reset();
     tm->codeAlloc->sweep();
 
@@ -3376,7 +3372,7 @@ FlushJITCache(JSContext* cx)
     JS_ASSERT(fragmento->labels);
     Allocator& alloc = *tm->allocator;
     fragmento->labels = new (alloc) LabelMap(alloc, &js_LogController);
-    tm->lirbuf->names = new (&gc) LirNameMap(&gc, alloc, tm->fragmento->labels);
+    tm->lirbuf->names = new (alloc) LirNameMap(alloc, tm->fragmento->labels);
 #endif
 
     tm->lirbuf->clear();
@@ -6434,7 +6430,7 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->fragmento = fragmento;
         tm->lirbuf = new (&gc) LirBuffer(alloc);
 #ifdef DEBUG
-        tm->lirbuf->names = new (&gc) LirNameMap(&gc, alloc, tm->fragmento->labels);
+        tm->lirbuf->names = new (alloc) LirNameMap(alloc, tm->fragmento->labels);
 #endif
         for (size_t i = 0; i < MONITOR_N_GLOBAL_STATES; ++i) {
             tm->globalStates[i].globalShape = -1;
@@ -6463,7 +6459,7 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->reFragmento = fragmento;
         tm->reLirBuf = new (&gc) LirBuffer(reAlloc);
 #ifdef DEBUG
-        tm->reLirBuf->names = new (&gc) LirNameMap(&gc, reAlloc, fragmento->labels);
+        tm->reLirBuf->names = new (reAlloc) LirNameMap(reAlloc, fragmento->labels);
 #endif
     }
 #if !defined XP_WIN
@@ -6493,7 +6489,6 @@ js_FinishJIT(JSTraceMonitor *tm)
     if (tm->fragmento != NULL) {
         JS_ASSERT(tm->reservedDoublePool);
 #ifdef DEBUG
-        delete tm->lirbuf->names;
         tm->lirbuf->names = NULL;
 #endif
         delete tm->lirbuf;
