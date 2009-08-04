@@ -1454,58 +1454,68 @@ namespace nanojit
     }
 
 #ifdef NJ_VERBOSE
-    class RetiredEntry: public GCObject
+    class RetiredEntry
     {
     public:
-        List<LInsp, LIST_NonGCObjects> live;
-        LInsp i;
-        RetiredEntry(GC *gc): live(gc) {}
+        Seq<LIns*>* live;
+        LIns* i;
+        RetiredEntry(): live(NULL), i(NULL) {}
     };
     class LiveTable
     {
+        Allocator& alloc;
     public:
-        SortedMap<LInsp,LInsp,LIST_NonGCObjects> live;
-        List<RetiredEntry*, LIST_GCObjects> retired;
+        HashMap<LIns*, LIns*> live;
+        SeqBuilder<RetiredEntry*> retired;
+        int retiredCount;
         int maxlive;
-        LiveTable(GC *gc) : live(gc), retired(gc), maxlive(0) {}
-        ~LiveTable()
-        {
-            for (size_t i = 0; i < retired.size(); i++) {
-                NJ_DELETE(retired.get(i));
-            }
+        LiveTable(Allocator& alloc) 
+            : alloc(alloc)
+            , live(alloc)
+            , retired(alloc)
+            , retiredCount(0)
+            , maxlive(0)
+        { }
 
-        }
         void add(LInsp i, LInsp use) {
             if (!i->isconst() && !i->isconstq() && !live.containsKey(i)) {
                 NanoAssert(size_t(i->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
                 live.put(i,use);
             }
         }
-        void retire(LInsp i, GC *gc) {
-            RetiredEntry *e = NJ_NEW(gc, RetiredEntry)(gc);
+
+        void retire(LInsp i) {
+            RetiredEntry *e = new (alloc) RetiredEntry();
             e->i = i;
-            for (int j=0, n=live.size(); j < n; j++) {
-                LInsp ins = live.keyAt(j);
-                if (!ins->isStore() && !ins->isGuard())
-                    e->live.add(ins);
+            SeqBuilder<LIns*> livelist(alloc);
+            HashMap<LIns*, LIns*>::Iter iter(live);
+            int live_count = 0;
+            while (iter.next()) {
+                LIns* ins = iter.key();
+                if (!ins->isStore() && !ins->isGuard()) {
+                    live_count++;
+                    livelist.insert(ins);
+                }
             }
-            int size=0;
-            if ((size = e->live.size()) > maxlive)
-                maxlive = size;
+            e->live = livelist.get();
+            if (live_count > maxlive)
+                maxlive = live_count;
 
             live.remove(i);
-            retired.add(e);
+            retired.insert(e);
+            retiredCount++;
         }
+
         bool contains(LInsp i) {
             return live.containsKey(i);
         }
     };
 
-    void live(GC *gc, Allocator& alloc, Fragment *frag, LogControl *logc)
+    void live(Allocator& alloc, Fragment *frag, LogControl *logc)
     {
         // traverse backwards to find live exprs and a few other stats.
 
-        LiveTable live(gc);
+        LiveTable live(alloc);
         uint32_t exits = 0;
         LirReader br(frag->lastIns);
         StackFilter sf(&br, alloc, frag->lirbuf, frag->lirbuf->sp);
@@ -1528,7 +1538,7 @@ namespace nanojit
             // now propagate liveness
             if (live.contains(i))
             {
-                live.retire(i,gc);
+                live.retire(i);
                 NanoAssert(size_t(i->opcode()) < sizeof(operandCount) / sizeof(operandCount[0]));
                 if (i->isStore()) {
                     live.add(i->oprnd2(),i); // base
@@ -1554,7 +1564,7 @@ namespace nanojit
         }
 
         logc->printf("  Live instruction count %d, total %u, max pressure %d\n",
-                     live.retired.size(), total, live.maxlive);
+                     live.retiredCount, total, live.maxlive);
         logc->printf("  Side exits %u\n", exits);
         logc->printf("  Showing LIR instructions with live-after variables\n");
         logc->printf("\n");
@@ -1562,17 +1572,16 @@ namespace nanojit
         // print live exprs, going forwards
         LirNameMap *names = frag->lirbuf->names;
         bool newblock = true;
-        for (int j=live.retired.size()-1; j >= 0; j--)
-        {
-            RetiredEntry *e = live.retired[j];
+        for (Seq<RetiredEntry*>* p = live.retired.get(); p != NULL; p = p->tail) {
+            RetiredEntry* e = p->head;
             char livebuf[4000], *s=livebuf;
             *s = 0;
             if (!newblock && e->i->isop(LIR_label)) {
                 logc->printf("\n");
             }
             newblock = false;
-            for (int k=0,n=e->live.size(); k < n; k++) {
-                VMPI_strcpy(s, names->formatRef(e->live[k]));
+            for (Seq<LIns*>* p = e->live; p != NULL; p = p->tail) {
+                VMPI_strcpy(s, names->formatRef(p->head));
                 s += VMPI_strlen(s);
                 *s++ = ' '; *s = 0;
                 NanoAssert(s < livebuf+sizeof(livebuf));
@@ -2008,7 +2017,7 @@ namespace nanojit
             logc->printf("\n");
             logc->printf("=== Results of liveness analysis:\n");
             logc->printf("===\n");
-            live(gc, alloc, triggerFrag, logc);
+            live(alloc, triggerFrag, logc);
         })
 
         /* Set up the generic text output cache for the assembler */
