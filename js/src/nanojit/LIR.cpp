@@ -2025,7 +2025,7 @@ namespace nanojit
         verbose_only( assm->_outputCache = &asmOutput; )
 
         bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
-        RegAllocMap regMap(gc);
+        RegAllocMap regMap(alloc);
         NInsList loopJumps(gc);
 #ifdef MEMORY_INFO
 //        loopJumps.set_meminfo_name("LIR loopjumps");
@@ -2075,7 +2075,7 @@ namespace nanojit
                         assm->outputf("## compiling branch %s ip %s", labels->format(frag), labels->format(frag->ip)); )
 
                     NanoAssert(frag->kind == BranchTrace);
-                    RegAlloc* regs = NJ_NEW(gc, RegAlloc)();
+                    RegAlloc* regs = new (alloc) RegAlloc();
                     assm->copyRegisters(regs);
                     assm->releaseRegisters();
                     SideExit* exit = frag->spawnedFrom;

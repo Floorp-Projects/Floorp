@@ -744,7 +744,7 @@ namespace nanojit
         _inExit = false;
 
         GC* gc = core->gc;
-        LabelStateMap labels(_gc);
+        LabelStateMap labels(alloc);
         NInsMap patches(_gc);
         gen(prev, loopJumps, labels, patches);
         frag->loopEntry = _nIns;
@@ -1884,17 +1884,8 @@ namespace nanojit
     }
 
     void LabelStateMap::add(LIns *label, NIns *addr, RegAlloc &regs) {
-        LabelState *st = NJ_NEW(gc, LabelState)(addr, regs);
+        LabelState *st = new (alloc) LabelState(addr, regs);
         labels.put(label, st);
-    }
-
-    LabelStateMap::~LabelStateMap() {
-        LabelState *st;
-
-        while (!labels.isEmpty()) {
-            st = labels.removeLast();
-            delete st;
-        }
     }
 
     LabelState* LabelStateMap::get(LIns *label) {
