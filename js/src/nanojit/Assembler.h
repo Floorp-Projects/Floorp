@@ -167,7 +167,7 @@ namespace nanojit
             LogControl* _logc;
             #endif
 
-            Assembler(CodeAlloc* codeAlloc, AvmCore* core, LogControl* logc);
+            Assembler(CodeAlloc& codeAlloc, AvmCore* core, LogControl* logc);
             ~Assembler() {}
 
             void        assemble(Fragment* frag, NInsList& loopJumps);
@@ -233,7 +233,7 @@ namespace nanojit
             }
 
             AvmCore             *core;
-            DWB(CodeAlloc*)     _codeAlloc;
+            CodeAlloc&          _codeAlloc;
             avmplus::GC*        _gc;
             DWB(Fragment*)      _thisfrag;
             RegAllocMap*        _branchStateMap;

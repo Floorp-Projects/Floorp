@@ -6401,10 +6401,10 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->allocator = new VMAllocator();
 
     if (!tm->codeAlloc)
-        tm->codeAlloc = new (&gc) CodeAlloc();
+        tm->codeAlloc = new CodeAlloc();
 
     if (!tm->assembler)
-        tm->assembler = new (&gc) Assembler(tm->codeAlloc, core, &js_LogController);
+        tm->assembler = new (&gc) Assembler(*tm->codeAlloc, core, &js_LogController);
 
     if (!tm->fragmento) {
         JS_ASSERT(!tm->reservedDoublePool);
@@ -6428,10 +6428,10 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->reAllocator = new VMAllocator();
 
     if (!tm->reCodeAlloc)
-        tm->reCodeAlloc = new (&gc) CodeAlloc();
+        tm->reCodeAlloc = new CodeAlloc();
 
     if (!tm->reAssembler)
-        tm->reAssembler = new (&gc) Assembler(tm->reCodeAlloc, core, &js_LogController);
+        tm->reAssembler = new (&gc) Assembler(*tm->reCodeAlloc, core, &js_LogController);
 
     if (!tm->reFragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, &js_LogController, 32, tm->reCodeAlloc);
