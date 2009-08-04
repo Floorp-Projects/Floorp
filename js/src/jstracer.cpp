@@ -1710,7 +1710,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     debug_only_stmt(
         if (js_LogController.lcbits & LC_TMRecorder) {
            lir = verbose_filter
-               = new (&gc) VerboseWriter(&gc, lir, lirbuf->names, &js_LogController);
+               = new (&gc) VerboseWriter(*traceMonitor->allocator, lir,
+                                         lirbuf->names, &js_LogController);
         }
     )
     if (nanojit::AvmCore::config.soft_float)
