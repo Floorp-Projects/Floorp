@@ -2226,9 +2226,10 @@ GetUpvarOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDepth, 
              * stack.
              */
             int32 nativeStackFramePos = state->callstackBase[0]->spoffset;
+            // Duplicate native stack layout computation: see VisitFrameSlots header comment.
             for (FrameInfo** fip2 = state->callstackBase; fip2 <= fip; fip2++)
-                nativeStackFramePos += (*fip2)->spdist;
-            nativeStackFramePos -= (2 + (*fip)->get_argc());
+                nativeStackFramePos += (*fip2)->spdist + 1 /* arguments */;
+            nativeStackFramePos -= (3 /* callee,this,arguments */ + (*fip)->get_argc());
             uint32 native_slot = T::native_slot((*fip)->get_argc(), slot);
             *result = state->stackBase[nativeStackFramePos + native_slot];
             return fi->get_typemap()[native_slot];
