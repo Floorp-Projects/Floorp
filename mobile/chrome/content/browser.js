@@ -65,7 +65,7 @@ const kDefaultBrowserWidth = 1024;
 function debug() {
   let bv = Browser._browserView;
   let tc = bv._tileManager._tileCache;
-  let scrollbox = document.getElementById("scrollbox")
+  let scrollbox = document.getElementById("tile-container-container")
 		.boxObject
 		.QueryInterface(Components.interfaces.nsIScrollBoxObject);
 
@@ -115,7 +115,7 @@ function debug() {
     dump('scrollbox scrolledsize: ' + w + ', ' + h + endl);
 
 
-    let sb = document.getElementById("scrollbox");
+    let sb = document.getElementById("tile-container-container");
     dump('container location:     ' + Math.round(container.getBoundingClientRect().left) + " " +
                                       Math.round(container.getBoundingClientRect().top) + endl);
 
@@ -339,7 +339,7 @@ var Browser = {
 
     container.customClicker = this._createContentCustomClicker(bv);
 
-    let scrollbox = this.scrollbox = document.getElementById("scrollbox");
+    let scrollbox = this.scrollbox = document.getElementById("tile-container-container");
     this.scrollboxScroller = scrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
     scrollbox.customDragger = {
@@ -370,11 +370,37 @@ var Browser = {
         let realdx = x1 - x0;
         let realdy = y1 - y0;
 
-        bv.onAfterVisibleMove(realdx, realdy);
-
         if (realdx != dx || realdy != dy) {
           dump('--> scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
+
+	  // scroll outer box
+	  let outerScrollbox = document.getElementById("scrollbox");
+	  let outerScroller = outerScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+
+	  let newdx = dx - realdx;
+	  let newdy = dy - realdy;
+
+	  dump("newdx, newdy: " + newdx + " " + newdy + "\n");
+
+	  [x0, y0] = Browser.getScrollboxPosition(outerScroller);
+
+	  outerScroller.scrollBy(newdx, newdy);
+
+	  [x1, y1] = Browser.getScrollboxPosition(outerScroller);
+
+	  let orealdx = x1 - x0;
+	  let orealdy = y1 - y0;
+
+          dump('--> outer scroll asked for ' + newdx + ',' + newdy + ' and got ' + orealdx + ',' + orealdy + '\n');
+
+	  //realdx += orealdx;
+	  //realdy += orealdy;
+
         }
+
+	dump('--> new real dx/y ' + realdx + ',' + realdy + '\n');
+
+        bv.onAfterVisibleMove(realdx, realdy);
 
         return (doReturnDX) ? realdx : !(realdx == 0 && realdy == 0);
       }
@@ -410,13 +436,19 @@ var Browser = {
       dump(window.innerWidth + "," + window.innerHeight + "\n");
       // XXX is this code right here actually needed?
       let w = window.innerWidth;
+      let h = window.innerHeight;
       let maximize = (document.documentElement.getAttribute("sizemode") == "maximized");
       if (maximize && w > screen.width)
         return;
 
       bv.beginBatchOperation();
 
-      let h = window.innerHeight;
+      scrollbox.style.width  = window.innerWidth + 'px';
+      scrollbox.style.height = window.innerHeight + 'px';
+
+      let sb = document.getElementById("scrollbox");
+      sb.style.width  = window.innerWidth + 'px';
+      sb.style.height = window.innerHeight + 'px';
 
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
@@ -466,9 +498,10 @@ var Browser = {
     }
 
     // load styles for scrollbars
+    /*
     var styleURI = ios.newURI("chrome://browser/content/content.css", null, null);
     styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
-
+    */
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
     os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
