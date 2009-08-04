@@ -418,6 +418,9 @@ function MouseModule(owner) {
 
 MouseModule.prototype = {
   handleEvent: function handleEvent(evInfo) {
+    if (evInfo.event.button !== 0) // avoid all but a clean left click
+      return;
+
     switch (evInfo.event.type) {
       case "mousedown":
         this._onMouseDown(evInfo);
@@ -507,8 +510,6 @@ MouseModule.prototype = {
 
     if (dragData.dragging)
       this._doDragStop(sX, sY);
-
-    dragData.reset();
 
     this._recordEvent(evInfo);
 
@@ -601,20 +602,22 @@ MouseModule.prototype = {
    * of drag which happens when KineticController::end() is called.
    */
   _doDragStop: function _doDragStop(sX, sY, kineticStop) {
+    let dragData = this._dragData;
+
     if (!kineticStop) {    // we're not really done, since now it is
                            // kinetic's turn to scroll about
-      let dragData = this._dragData;
-
       let dx = dragData.sX - sX;
       let dy = dragData.sY - sY;
 
-      dragData.reset();
+      dragData.endDrag();
+
       this._kinetic.addData(sX, sY);
 
       this._kinetic.start();
 
     } else {               // now we're done, says our secret 3rd argument
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
+      dragData.reset();
     }
   },
 
@@ -689,7 +692,7 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a single click and tell the clicker.
    */
   _doSingleClick: function _doSingleClick() {
-    
+
     dump('doing single click with ' + this._downUpEvents.length + '\n');
     for (let i = 0; i < this._downUpEvents.length; ++i)
       dump('      ' + this._downUpEvents[i].event.type
@@ -821,7 +824,7 @@ MouseModule.prototype = {
       + 'dragger=' + this._dragger + ', '
       + 'clicker=' + this._clicker + ', '
       + '\n\tdownUpEvents=' + this._downUpEvents + ', '
-      + 'downUpIndex=' + this._downUpDispatchedIndex + ', '
+      + '\n\tdownUpIndex=' + this._downUpDispatchedIndex + ', '
       + 'length=' + this._downUpEvents.length + ', '
       + '\n\ttargetScroller=' + this._targetScrollInterface + ', '
       + '\n\tclickTimeout=' + this._clickTimeout + '\n  }';
@@ -863,6 +866,10 @@ DragData.prototype = {
     this.dragging = true;
   },
 
+  endDrag: function endDrag() {
+    this.dragging = false;
+  },
+
   lockMouseMove: function lockMouseMove(sX, sY) {
     if (this.lockedX !== null)
       sX = this.lockedX;
@@ -900,6 +907,10 @@ DragData.prototype = {
       return false;
     return (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2)) >
       (2 * Math.pow(this._dragRadius, 2));
+  },
+
+  toString: function toString() {
+    return '[DragData] { sX,sY=' + this.sX + ',' + this.sY + ', dragging=' + this.dragging + ' }';
   }
 };
 

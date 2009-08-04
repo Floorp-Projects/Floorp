@@ -84,6 +84,11 @@ function debug() {
 
     dump(endl);
 
+    dump('location from Browser: ' + Browser.selectedBrowser.contentWindow.location + endl);
+    dump('location from BV     : ' + bv.getBrowser().contentWindow.location + endl);
+
+    dump(endl + endl);
+
     let cr = bv._tileManager._criticalRect;
     dump('criticalRect from BV: ' + (cr ? cr.toString() : null) + endl);
     dump('visibleRect from BV : ' + bv._visibleRect.toString() + endl);
@@ -584,7 +589,7 @@ var Browser = {
     if (this._pageLoading) {
       // kick ourselves off 2s later while we're still loading
       this._browserView.beginBatchOperation();
-      this._loadingTimeout = setTimeout(resizeAndPaint, 2000);
+      this._loadingTimeout = setTimeout(Util.bind(Browser._resizeAndPaint, Browser), 2000);
     } else {
       delete this._loadingTimeout;
     }
@@ -598,7 +603,7 @@ var Browser = {
 
     if (!this._loadingTimeout) {
       this._browserView.beginBatchOperation();
-      this._loadingTimeout = setTimeout(Util.bind(this, this._resizeAndPaint), 2000);
+      this._loadingTimeout = setTimeout(Util.bind(Browser._resizeAndPaint, Browser), 2000);
     }
   },
 
@@ -876,9 +881,15 @@ var Browser = {
     }
 
     function dispatchContentClick(browser, x, y) {
+      x = Math.round(x);
+      y = Math.round(y);
       let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-      cwu.sendMouseEvent("mousedown", x, y, 0, 1, 0, true);
-      cwu.sendMouseEvent("mouseup",   x, y, 0, 1, 0, true);
+      let scrollX = { value: 0 };
+      let scrollY = { value: 0 };
+      cwu.getScrollXY(false, scrollX, scrollY);
+      cwu.sendMouseEvent("mousedown", x - scrollX.value, y - scrollY.value, 0, 1, 0, true);
+      cwu.getScrollXY(false, scrollX, scrollY);
+      cwu.sendMouseEvent("mouseup",   x - scrollX.value, y - scrollY.value, 0, 1, 0, true);
     }
 
     return {
@@ -1072,8 +1083,8 @@ var Browser = {
     if (!browser)
       return null;
 
-    let scrollX = {};
-    let scrollY = {};
+    let scrollX = { value: 0 };
+    let scrollY = { value: 0 };
 
     let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
     cwu.getScrollXY(false, scrollX, scrollY);
@@ -1765,7 +1776,7 @@ ProgressController.prototype = {
     return this._tab.browser;
   },
 
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     // ignore notification that aren't about the main document (iframes, etc)
     if (aWebProgress.DOMWindow != this._tab.browser.contentWindow)
       return;
@@ -1837,7 +1848,7 @@ ProgressController.prototype = {
   onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
   },
 
-  _networkStart: function() {
+  _networkStart: function _networkStart() {
     this._tab.setLoading(true);
     if (Browser.selectedBrowser == this.browser) {
       Browser.startLoading();
