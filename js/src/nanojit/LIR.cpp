@@ -2199,20 +2199,9 @@ namespace nanojit
     #endif /* FEATURE_NANOJIT */
 
 #if defined(NJ_VERBOSE)
-    LabelMap::LabelMap(AvmCore *core, nanojit::Allocator& a)
-        : allocator(a), names(core->gc), addrs(core->config.verbose_addrs), end(buf)
+    LabelMap::LabelMap(nanojit::Allocator& a, LogControl *logc)
+        : allocator(a), names(a), logc(logc), end(buf)
     {}
-
-    LabelMap::~LabelMap()
-    {
-        clear();
-    }
-
-    void LabelMap::clear()
-    {
-        // don't free entries since they're owned by Allocator
-        names.clear();
-    }
 
     void LabelMap::add(const void *p, size_t size, size_t align, const char *name)
     {
@@ -2227,14 +2216,14 @@ namespace nanojit
     const char *LabelMap::format(const void *p)
     {
         char b[200];
-        int i = names.findNear(p);
-        if (i >= 0) {
-            const void *start = names.keyAt(i);
-            Entry *e = names.at(i);
+
+        const void *start = names.findNear(p);
+        if (start != NULL) {
+            Entry *e = names.get(start);
             const void *end = (const char*)start + e->size;
             const char *name = e->name;
             if (p == start) {
-                if (addrs)
+                if (!(logc->lcbits & LC_NoCodeAddrs))
                     VMPI_sprintf(b,"%p %s",p,name);
                 else
                     VMPI_strcpy(b, name);
@@ -2242,7 +2231,7 @@ namespace nanojit
             }
             else if (p > start && p < end) {
                 int32_t d = int32_t(intptr_t(p)-intptr_t(start)) >> e->align;
-                if (addrs)
+                if (!(logc->lcbits & LC_NoCodeAddrs))
                     VMPI_sprintf(b, "%p %s+%d", p, name, d);
                 else
                     VMPI_sprintf(b,"%s+%d", name, d);
