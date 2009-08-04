@@ -257,8 +257,6 @@ endif
 
 EXPORTS = $(INSTALLED_HEADERS)
 
-JS_SAFE_ARENA	= 1
-
 DASH_R		= -r
 
 ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
@@ -363,10 +361,6 @@ GARBAGE		+= jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 TARGETS		+= jscpucfg$(HOST_BIN_SUFFIX)
-endif
-
-ifdef JS_SAFE_ARENA
-DEFINES		+= -DJS_USE_SAFE_ARENA
 endif
 
 ifdef JS_THREADSAFE
