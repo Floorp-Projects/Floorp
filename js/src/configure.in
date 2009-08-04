@@ -3814,7 +3814,9 @@ MOZ_ARG_WITH_BOOL(system-nspr,
 [  --with-system-nspr      Use an NSPR that is already built and installed.
                           Use the 'nspr-config' script in the current path,
                           or look for the script in the directories given with
-                          --with-nspr-exec-prefix or --with-nspr-prefix.],
+                          --with-nspr-exec-prefix or --with-nspr-prefix.
+                          (Those flags are only checked if you specify
+                          --with-system-nspr.)],
     _USE_SYSTEM_NSPR=1 )
 
 MOZ_ARG_WITH_STRING(nspr-cflags,
