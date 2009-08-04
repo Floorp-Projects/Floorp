@@ -715,10 +715,10 @@ var BrowserUI = {
         break;
       }
       case "cmd_zoomin":
-        Browser.canvasBrowser.zoom(-1);
+        Browser._browserView.zoom(-1);
         break;
       case "cmd_zoomout":
-        Browser.canvasBrowser.zoom(1);
+        Browser._browserView.zoom(1);
         break;
     }
   }
