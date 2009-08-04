@@ -7,6 +7,7 @@ var gSmallTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240 },
   { name: "bug499519.ogv", type:"video/ogg", duration:0.24 },
+  { name: "bug506094.ogv", type:"video/ogg", duration:0 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -43,6 +44,8 @@ var gErrorTests = [
   { name: "bug498855-1.ogv", type:"video/ogg", duration:0.2 },
   { name: "bug498855-2.ogv", type:"video/ogg", duration:0.2 },
   { name: "bug498855-3.ogv", type:"video/ogg", duration:0.2 },
+  { name: "bug501279.ogg", type:"audio/ogg", duration:0 },
+  { name: "bug504644.ogv", type:"video/ogg", duration:1.56 },
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },
   { name:"448636.ogv", type:"video/ogg" },
