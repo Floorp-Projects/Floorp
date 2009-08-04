@@ -2035,7 +2035,7 @@ namespace nanojit
 
         bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
         RegAllocMap regMap(alloc);
-        NInsList loopJumps(gc);
+        NInsList loopJumps(alloc);
 #ifdef MEMORY_INFO
 //        loopJumps.set_meminfo_name("LIR loopjumps");
 #endif
