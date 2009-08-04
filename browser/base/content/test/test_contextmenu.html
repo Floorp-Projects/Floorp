@@ -28,28 +28,8 @@ function openContextMenuFor(element) {
     // Context menu should be closed before we open it again.
     is(contextMenu.state, "closed", "checking if popup is closed");
 
-    // XXX this doesn't work:
-    // var eventDetails = { type : "contextmenu", button : 2 }
-    // synthesizeMouse(element, 50, 90, eventDetails);
-    //
-    // It triggers the popup, but then we fail in nsContextMenu when
-    // initializing: ine 565: this.target.ownerDocument is null
-    // |this.target| was assigned there from |document.popupNode|, but it's a
-    // HTMLDocument instead of the node we supposedly fired the event at.
-    // I think the event's |target| is never being set, and we're hitting the
-    // fallback case in nsXULPopupListener::PreLaunchPopup.
-    //
-    // Also interesting is that just firing a mousedown+mouseup doesn't seem
-    // to do anything. Not clear why we'd specifically have to fire a
-    // contextmenu event instead of just a right-click.
-
-    // This seems to work, as long as we explicitly set the popupNode first.
-    // For frames, the popupNode needs to be set to inside the frame.
-    if (element.localName == "iframe")
-        chromeWin.document.popupNode = element.contentDocument.body;
-    else
-        chromeWin.document.popupNode = element;
-    contextMenu.openPopup(element, "overlap", 5, 5, true, false);
+    var eventDetails = { type : "contextmenu", button : 2 }
+    synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
 }
 
 function closeContextMenu() {
