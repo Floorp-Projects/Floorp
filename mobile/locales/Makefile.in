@@ -83,7 +83,14 @@ installers-%: clobber-% langpack-% repackage-zip-%
 	@echo "repackaging done"
 
 ifdef MOZ_UPDATER
-libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
+ifdef LOCALE_MERGEDIR
+UPDATER_INI := $(firstword $(wildcard $(LOCALE_MERGEDIR)/updater/updater.ini) \
+       $(wildcard $(LOCALE_SRCDIR)/updater/updater.ini) \
+       $(srcdir)/en-US/updater/updater.ini )
+else
+UPDATER_INI := $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
+endif
+libs:: $(UPDATER_INI)
 	cat $< | \
 	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
 	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" > \
