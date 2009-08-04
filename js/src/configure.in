@@ -3158,7 +3158,7 @@ if test "$ac_cv_have_systemtimetofiletime" = "yes"; then
 fi
 AC_TRY_LINK([#include <windows.h>],
              [FILETIME ft;GetSystemTimeAsFileTime(&ft);],
-             ac_cv_have_getsystemtimetasfiletime="yes",
+             ac_cv_have_getsystemtimeasfiletime="yes",
              ac_cv_have_getsystemtimeasfiletime="no")
 if test "$ac_cv_have_getsystemtimeasfiletime" = "yes"; then
     AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
