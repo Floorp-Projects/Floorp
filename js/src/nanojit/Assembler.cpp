@@ -155,7 +155,6 @@ namespace nanojit
         : hasLoop(0)
         , codeList(0)
         , alloc(alloc)
-        , core(core)
         , _codeAlloc(codeAlloc)
         , config(core->config)
     {
@@ -741,19 +740,18 @@ namespace nanojit
         verbose_only(_thisfrag->compileNbr++; )
         _inExit = false;
 
-        GC* gc = core->gc;
         LabelStateMap labels(alloc);
-        NInsMap patches(_gc);
+        NInsMap patches(alloc);
         gen(prev, loopJumps, labels, patches);
         frag->loopEntry = _nIns;
         //nj_dprintf(stderr, "assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 
         if (!error()) {
             // patch all branches
-            while (!patches.isEmpty())
-            {
-                NIns* where = patches.lastKey();
-                LInsp targ = patches.removeLast();
+            NInsMap::Iter iter(patches);
+            while (iter.next()) {
+                NIns* where = iter.key();
+                LIns* targ = iter.value();
                 LabelState *label = labels.get(targ);
                 NIns* ntarg = label->addr;
                 if (ntarg) {
