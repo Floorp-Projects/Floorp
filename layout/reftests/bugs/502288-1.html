@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+      window.addEventListener("MozReftestInvalidate",
+                              function() {
+                                document.getElementById("x").style.paddingTop = "2em";
+                                document.documentElement.className = "";
+                              },
+                              false);
+    </script>
+  </head>
+  <body>
+    <div id="x">
+      Some text
+    </div>
+  </body>
+</html>

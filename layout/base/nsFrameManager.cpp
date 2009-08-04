@@ -1085,6 +1085,16 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       nsChangeHint       aMinChange,
                                       PRBool             aFireAccessibilityEvents)
 {
+  // If aMinChange doesn't include nsChangeHint_NeedDirtyReflow, clear out the
+  // nsChangeHint_NeedReflow bit from it, so that we'll make sure to append a
+  // change to the list for ourselves if we need a reflow.  Need this because
+  // the parent may or may not actually end up reflowing us otherwise.  This
+  // works because any reflow hint will include nsChangeHint_NeedReflow, which
+  // will be missing from aMinChange.
+  if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aMinChange)) {
+    aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_NeedReflow);
+  }
+  
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|
   // and |pseudoContent| in sensible ways as well as making what
