@@ -117,11 +117,9 @@ namespace nanojit
      * -------------------------------------------
      */
     class Fragment;
-    class LIns;
     typedef avmplus::AvmCore AvmCore;
     typedef avmplus::OSDep OSDep;
     typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
-    typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>    InsList;
 
     const uint32_t MAXARGS = 8;
 

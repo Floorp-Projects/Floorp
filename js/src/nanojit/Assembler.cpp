@@ -55,17 +55,15 @@ namespace nanojit
         InsList block;
         bool flushnext;
     public:
-        VerboseBlockReader(LirFilter *in, Assembler *a, LirNameMap *n)
-            : LirFilter(in), assm(a), names(n), block(a->_gc), flushnext(false)
+        VerboseBlockReader(Allocator& alloc, LirFilter *in, Assembler *a, LirNameMap *n)
+            : LirFilter(in), assm(a), names(n), block(alloc), flushnext(false)
         {}
 
         void flush() {
             flushnext = false;
             if (!block.isEmpty()) {
-                for (int j=0,n=block.size(); j < n; j++) {
-                    LIns *i = block[j];
-                    assm->outputf("    %s", names->formatIns(i));
-                }
+                for (Seq<LIns*>* p = block.get(); p != NULL; p = p->tail)
+                    assm->outputf("    %s", names->formatIns(p->head));
                 block.clear();
             }
         }
@@ -732,7 +730,7 @@ namespace nanojit
 
         // end of pipeline
         verbose_only(
-        VerboseBlockReader vbr(prev, this, frag->lirbuf->names);
+        VerboseBlockReader vbr(alloc, prev, this, frag->lirbuf->names);
         if (_logc->lcbits & LC_Assembly)
             prev = &vbr;
         )
@@ -927,7 +925,7 @@ namespace nanojit
                    reader->pos()->isop(LIR_ret) ||
                    reader->pos()->isop(LIR_xtbl));
 
-        InsList pending_lives(_gc);
+        InsList pending_lives(alloc);
 
         for (LInsp ins = reader->read(); !ins->isop(LIR_start) && !error();
                                          ins = reader->read())
@@ -1429,9 +1427,8 @@ namespace nanojit
     {
         // ensure that exprs spanning the loop are marked live at the end of the loop
         reserveSavedRegs();
-        for (int i=0, n=pending_lives.size(); i < n; i++) {
-            findMemFor(pending_lives[i]);
-        }
+        for (Seq<LIns*>* p = pending_lives.get(); p != NULL; p = p->tail)
+            findMemFor(p->head);
         /*
          * TODO: I'm not positive, but I think the following line needs to be
          * added, otherwise the pending_lives will build up and never get
