@@ -873,16 +873,20 @@ var Browser = {
     }
 
     function elementFromPoint(browser, x, y) {
-      [x, y] = transformClientToBrowser(x, y);
       let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-      return cwu.elementFromPoint(x, y,
-		                              true,   // ignore root scroll frame
-				                          false); // don't flush layout
+      let scrollX = { value: 0 };
+      let scrollY = { value: 0 };
+      cwu.getScrollXY(false, scrollX, scrollY);
+
+      dump('elementFromPoint: ' + x + ', ' + y + '\n');
+
+      return cwu.elementFromPoint(x - scrollX.value,
+                                  y - scrollY.value,
+                                  true,   // ignore root scroll frame
+                                  false); // don't flush layout
     }
 
     function dispatchContentClick(browser, x, y) {
-      x = Math.round(x);
-      y = Math.round(y);
       let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
       let scrollX = { value: 0 };
       let scrollY = { value: 0 };
@@ -899,21 +903,9 @@ var Browser = {
       zoomIn: false,
 
       singleClick: function singleClick(cX, cY) {
-        if (window.infoMode) {
-          [cX, cY] = transformClientToBrowser(cX, cY);
-          let i = cX >> kTileExponentWidth;
-          let j = cY >> kTileExponentHeight;
-
-          debugTile(i, j);
-
-          return;
-        }
-
         let browser = browserView.getBrowser();
         if (browser) {
-	        dump('singleClick was invoked with ' + cX + ', ' + cY + '\n');
           let [x, y] = transformClientToBrowser(cX, cY);
-	        dump('dispatching in browser ' + x + ', ' + y + '\n');
           dispatchContentClick(browser, x, y);
         }
       },
@@ -921,13 +913,11 @@ var Browser = {
       doubleClick: function doubleClick(cX1, cY1, cX2, cY2) {
         let browser = browserView.getBrowser();
         if (browser) {
-          let zoomElement = elementFromPoint(browser, cX2, cY2);
+          let [x, y] = transformClientToBrowser(cX2, cY2);
+          let zoomElement = elementFromPoint(browser, x, y);
+          dump('@@@ zoomElement is ' + zoomElement + ' :: ' + zoomElement.id + ' :: ' + zoomElement.name + '\n');
 
           if (zoomElement) {
-            dump('zooming to/from element: ' + zoomElement
-                 + ' :: ' + zoomElement.id + ' :: ' + zoomElement.name + '\n');
-            dump('    at ' + cX2 + ', ' + cY2 + '\n');
-
             this.zoomIn = !this.zoomIn;
 
             if (this.zoomIn)
@@ -1045,6 +1035,8 @@ var Browser = {
     bv.forceContainerResize();
     Browser.forceChromeReflow();
 
+    dump('zoom to element at ' + x + ', ' + y + ' by dragging ' + (x - x0) + ', ' + (y - y0) + '\n');
+
     Browser.scrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
 
     bv.commitBatchOperation();
@@ -1072,6 +1064,8 @@ var Browser = {
     bv.forceContainerResize();
     Browser.forceChromeReflow();
 
+    dump('zoom from element at ' + x + ', ' + y + ' by dragging ' + (x - x0) + ', ' + (y - y0) + '\n');
+
     Browser.scrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
 
     bv.commitBatchOperation();
@@ -1090,6 +1084,8 @@ var Browser = {
     cwu.getScrollXY(false, scrollX, scrollY);
 
     let r = contentElem.getBoundingClientRect();
+
+    dump('getBoundingContentRect: clientRect is at ' + r.left + ', ' + r.top + '; scrolls are ' + scrollX.value + ', ' + scrollY.value + '\n');
 
     return new wsRect(r.left + scrollX.value,
                       r.top + scrollY.value,
