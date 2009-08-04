@@ -47,8 +47,6 @@
 
 namespace nanojit
 {
-    int UseSoftfloat = 0;
-
 #ifdef NJ_VERBOSE
     class VerboseBlockReader: public LirFilter
     {
@@ -123,7 +121,7 @@ namespace nanojit
             , _title(title)
             , _strs(alloc)
             , _logc(logc)
-         { }
+        { }
 
         void finish()
         {
@@ -257,7 +255,6 @@ namespace nanojit
 
     void Assembler::reset()
     {
-        // readies for a brand spanking new code generation pass.
         _nIns = 0;
         _nExitIns = 0;
         codeStart = codeEnd = 0;
@@ -341,7 +338,7 @@ namespace nanojit
             {
                 if (regs->isFree(r))
                 {
-                    NanoAssert(regs->getActive(r)==0);
+                    NanoAssertMsgf(regs->getActive(r)==0, "register %s is free but assigned to ins", gpn(r));
                 }
                 else
                 {
@@ -376,7 +373,7 @@ namespace nanojit
                     // ib already assigned to an allowable reg, keep that one
                     allow &= ~rmask(rb);
                 } else {
-                    // ib assigned to unusable reg, pick a different one below.
+                    // ib assigned to unusable reg, pick a different one below
                     rb = UnknownReg;
                 }
             }
@@ -428,7 +425,7 @@ namespace nanojit
         // figure out what registers are preferred for this instruction
         RegisterMask prefer = hint(i, allow);
 
-        // if we didn't have a reservation, allocate one now
+        // if we didn't have a reservation, initialize one now
         if (!resv) {
             (resv = i->resv())->init();
         }
@@ -552,7 +549,7 @@ namespace nanojit
     void Assembler::patch(SideExit *exit)
     {
         GuardRecord *rec = exit->guards;
-        AvmAssert(rec);
+        NanoAssert(rec);
         while (rec) {
             patch(rec);
             rec = rec->next;
@@ -604,7 +601,7 @@ namespace nanojit
         swapptrs();
         _inExit = true;
 
-        // verbose_only( verbose_outputf("         LIR_xend swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
+        //verbose_only( verbose_outputf("         LIR_xend swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
         debug_only( _sv_fpuStkDepth = _fpuStkDepth; _fpuStkDepth = 0; )
 
         nFragExit(guard);
@@ -626,7 +623,7 @@ namespace nanojit
         swapptrs();
         _inExit = false;
 
-        // verbose_only( verbose_outputf("         LIR_xt/xf swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
+        //verbose_only( verbose_outputf("         LIR_xt/xf swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
         verbose_only( verbose_outputf("%010lx:", (unsigned long)jmpTarget);)
         verbose_only( verbose_outputf("----------------------------------- ## BEGIN exit block (LIR_xt|LIR_xf)") );
 
@@ -656,6 +653,7 @@ namespace nanojit
         _activation.lowwatermark = 1;
         _activation.tos = _activation.lowwatermark;
         _activation.highwatermark = _activation.tos;
+        _inExit = false;
 
         counter_reset(native);
         counter_reset(exitnative);
@@ -709,7 +707,7 @@ namespace nanojit
         // INITIAL PRINTING
         verbose_only( if (_logc->lcbits & LC_ReadLIR) {
         pp_init = new (alloc) ReverseLister(prev, alloc, frag->lirbuf->names, _logc,
-                                            "Initial LIR");
+                                    "Initial LIR");
         prev = pp_init;
         })
 
@@ -748,8 +746,7 @@ namespace nanojit
         NInsMap patches(_gc);
         gen(prev, loopJumps, labels, patches);
         frag->loopEntry = _nIns;
-        //frag->outbound = config.tree_opt? _latestGuard : 0;
-        //nj_dprintf("assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
+        //nj_dprintf(stderr, "assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 
         if (!error()) {
             // patch all branches
@@ -772,9 +769,9 @@ namespace nanojit
         // If we were accumulating debug info in the various ReverseListers,
         // call finish() to emit whatever contents they have accumulated.
         verbose_only(
-        if (pp_init)       pp_init->finish();
-        if (pp_after_sf1)  pp_after_sf1->finish();
-        if (pp_after_sf2)  pp_after_sf2->finish();
+        if (pp_init)        pp_init->finish();
+        if (pp_after_sf1)   pp_after_sf1->finish();
+        if (pp_after_sf2)   pp_after_sf2->finish();
         )
     }
 
@@ -949,18 +946,18 @@ namespace nanojit
                Otherwise we fall into the big switch, which calls a
                target-specific routine to generate the required
                instructions.
-   
+
                For each node, we need to decide whether we need to
                generate any code.  This is a rather subtle part of the
                generation algorithm.
- 
+
                There are two categories:
- 
+
                "statement" nodes -- ones with side effects.  Anything
                that could change control flow or the state of memory.
                These we must absolutely retain.  That accounts for the
                first part of the following disjunction for 'required'.
- 
+
                The rest are "value" nodes, which compute a value based
                only on the operands to the node (and, in the case of
                loads, the state of memory).  It's safe to omit these
@@ -976,7 +973,7 @@ namespace nanojit
             bool required = ins->isStmt() || ins->resv()->used;
             if (!required)
                 continue;
- 
+
             LOpcode op = ins->opcode();
             switch(op)
             {
