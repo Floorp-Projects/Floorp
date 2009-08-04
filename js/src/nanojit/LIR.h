@@ -882,14 +882,14 @@ namespace nanojit
         const char *format(const void *p);
     };
 
-    class LirNameMap MMGC_SUBCLASS_DECL
+    class LirNameMap
     {
         Allocator& alloc;
 
         template <class Key>
-        class CountMap: public avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects> {
+        class CountMap: public HashMap<Key, int> {
         public:
-            CountMap(GC*gc) : avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects>(gc) {}
+            CountMap(Allocator& alloc) : HashMap<Key, int>(alloc) {}
             int add(Key k) {
                 int c = 1;
                 if (containsKey(k)) {
@@ -908,17 +908,17 @@ namespace nanojit
             Entry(char* n) : name(n) {}
             char* name;
         };
-        avmplus::SortedMap<LInsp, Entry*, avmplus::LIST_NonGCObjects> names;
+        HashMap<LInsp, Entry*> names;
         LabelMap *labels;
         void formatImm(int32_t c, char *buf);
     public:
 
-        LirNameMap(GC *gc, Allocator& alloc, LabelMap *r)
+        LirNameMap(Allocator& alloc, LabelMap *lm)
             : alloc(alloc),
-            lircounts(gc),
-            funccounts(gc),
-            names(gc),
-            labels(r)
+            lircounts(alloc),
+            funccounts(alloc),
+            names(alloc),
+            labels(lm)
         {}
 
         void addName(LInsp i, const char *s);
@@ -932,7 +932,7 @@ namespace nanojit
     class VerboseWriter : public LirWriter
     {
         InsList code;
-        DWB(LirNameMap*) names;
+        LirNameMap* names;
         LogControl* logc;
     public:
         VerboseWriter(Allocator& alloc, LirWriter *out,
@@ -1090,7 +1090,7 @@ namespace nanojit
             uintptr_t   makeRoom(size_t szB);   // make room for an instruction
 
             debug_only (void validate() const;)
-            verbose_only(DWB(LirNameMap*) names;)
+            verbose_only(LirNameMap* names;)
 
             int32_t insCount();
             size_t  byteCount();
