@@ -120,11 +120,6 @@ namespace nanojit
         clear();
     }
 
-    LirBuffer::~LirBuffer()
-    {
-        clear();
-    }
-
     void LirBuffer::clear()
     {
         // clear the stats, etc
