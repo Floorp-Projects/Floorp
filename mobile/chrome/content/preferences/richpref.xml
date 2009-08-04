@@ -45,8 +45,11 @@
   <binding id="richpref-base">
     <implementation>
       <constructor>
-        this.pref._setValue(this.pref.valueFromPreferences, false);
-        this.prefChanged();
+        let prefValue = this.pref.valueFromPreferences;
+        if (prefValue != null) {
+          this.pref._setValue(prefValue, false);
+          this.prefChanged();
+        }
       </constructor>
 
       <method name="fireEvent">
@@ -54,15 +57,15 @@
         <parameter name="funcStr"/>
         <body>
           <![CDATA[
-            var body = funcStr || this.getAttribute(eventName);
+            let body = funcStr || this.getAttribute(eventName);
             if (!body)
               return;
 
             try
             {
-              var event = document.createEvent("Events");
+              let event = document.createEvent("Events");
               event.initEvent(eventName, true, true);
-              var f = new Function("event", body);
+              let f = new Function("event", body);
               f.call(this, event);
             }
             catch (e)
