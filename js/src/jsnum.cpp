@@ -240,7 +240,7 @@ static JSFunctionSpec number_functions[] = {
 
 JSClass js_NumberClass = {
     js_Number_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Number),
+    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -267,12 +267,11 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         v = JSVAL_ZERO;
     }
-    if (!JS_IsConstructing(cx)) {
+    if (!JS_IsConstructing(cx))
         *rval = v;
-        return JS_TRUE;
-    }
-    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, v);
-    return JS_TRUE;
+    else
+        obj->fslots[JSSLOT_PRIVATE] = v;
+    return true;
 }
 
 #if JS_HAS_TOSOURCE
@@ -514,7 +513,7 @@ num_valueOf(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
-    *vp = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    *vp = obj->fslots[JSSLOT_PRIVATE];
     return JS_TRUE;
 }
 
@@ -761,7 +760,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
-    STOBJ_SET_SLOT(proto, JSSLOT_PRIVATE, JSVAL_ZERO);
+    proto->fslots[JSSLOT_PRIVATE] = JSVAL_ZERO;
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 

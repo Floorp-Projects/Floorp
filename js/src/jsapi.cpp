@@ -275,7 +275,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             if (!obj)
                 return JS_FALSE;
             *sp = OBJECT_TO_JSVAL(obj);
-            *va_arg(ap, JSFunction **) = (JSFunction *) JS_GetPrivate(cx, obj);
+            *va_arg(ap, JSFunction **) = GET_FUNCTION_PRIVATE(cx, obj);
             break;
           case 'v':
             *va_arg(ap, jsval *) = *sp;
@@ -2057,13 +2057,9 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
         name = clasp->name;
 #ifdef HAVE_XPCONNECT
         if (clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
-            jsval privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-
-            JS_ASSERT(clasp->flags & JSCLASS_HAS_PRIVATE);
-            if (!JSVAL_IS_VOID(privateValue)) {
-                void  *privateThing = JSVAL_TO_PRIVATE(privateValue);
+            void *privateThing = obj->getPrivate();
+            if (privateThing) {
                 const char *xpcClassName = GetXPCObjectClassName(privateThing);
-
                 if (xpcClassName)
                     name = xpcClassName;
             }
@@ -2110,9 +2106,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             JSObject  *obj = (JSObject *)thing;
             JSClass *clasp = STOBJ_GET_CLASS(obj);
             if (clasp == &js_FunctionClass) {
-                JSFunction *fun = (JSFunction *)
-                                  JS_GetPrivate(trc->context, obj);
-
+                JSFunction *fun = GET_FUNCTION_PRIVATE(trc->context, obj);
                 if (!fun) {
                     JS_snprintf(buf, bufsize, "<newborn>");
                 } else if (FUN_OBJECT(fun) != obj) {
@@ -2123,12 +2117,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
                                             ATOM_TO_STRING(fun->atom), 0);
                 }
             } else if (clasp->flags & JSCLASS_HAS_PRIVATE) {
-                jsval     privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-                void      *privateThing = JSVAL_IS_VOID(privateValue)
-                                          ? NULL
-                                          : JSVAL_TO_PRIVATE(privateValue);
-
-                JS_snprintf(buf, bufsize, "%p", privateThing);
+                JS_snprintf(buf, bufsize, "%p", obj->getPrivate());
             } else {
                 JS_snprintf(buf, bufsize, "<no private>");
             }
@@ -2776,13 +2765,7 @@ JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_PUBLIC_API(void *)
 JS_GetPrivate(JSContext *cx, JSObject *obj)
 {
-    jsval v;
-
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
-    v = obj->fslots[JSSLOT_PRIVATE];
-    if (!JSVAL_IS_INT(v))
-        return NULL;
-    return JSVAL_TO_PRIVATE(v);
+    return obj->getPrivate();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4015,57 +3998,38 @@ error:
  * + native case here uses a JSScopeProperty *, but that iterates in reverse!
  * + so we make non-native match, by reverse-iterating after JS_Enumerating
  */
-#define JSSLOT_ITER_INDEX       (JSSLOT_PRIVATE + 1)
-
-#if JSSLOT_ITER_INDEX >= JS_INITIAL_NSLOTS
-# error "JSSLOT_ITER_INDEX botch!"
-#endif
+const uint32 JSSLOT_ITER_INDEX = JSSLOT_PRIVATE + 1;
+JS_STATIC_ASSERT(JSSLOT_ITER_INDEX < JS_INITIAL_NSLOTS);
 
 static void
 prop_iter_finalize(JSContext *cx, JSObject *obj)
 {
-    jsval v;
-    jsint i;
-    JSIdArray *ida;
-
-    v = obj->fslots[JSSLOT_ITER_INDEX];
-    if (JSVAL_IS_VOID(v))
+    void *pdata = obj->getPrivate();
+    if (!pdata)
         return;
 
-    i = JSVAL_TO_INT(v);
-    if (i >= 0) {
+    if (JSVAL_TO_INT(obj->fslots[JSSLOT_ITER_INDEX]) >= 0) {
         /* Non-native case: destroy the ida enumerated when obj was created. */
-        ida = (JSIdArray *) JS_GetPrivate(cx, obj);
-        if (ida)
-            JS_DestroyIdArray(cx, ida);
+        JSIdArray *ida = (JSIdArray *) pdata;
+        JS_DestroyIdArray(cx, ida);
     }
 }
 
 static void
 prop_iter_trace(JSTracer *trc, JSObject *obj)
 {
-    jsval v;
-    jsint i, n;
-    JSScopeProperty *sprop;
-    JSIdArray *ida;
-    jsid id;
+    void *pdata = obj->getPrivate();
+    if (!pdata)
+        return;
 
-    v = obj->fslots[JSSLOT_PRIVATE];
-    JS_ASSERT(!JSVAL_IS_VOID(v));
-
-    i = JSVAL_TO_INT(obj->fslots[JSSLOT_ITER_INDEX]);
-    if (i < 0) {
+    if (JSVAL_TO_INT(obj->fslots[JSSLOT_ITER_INDEX]) < 0) {
         /* Native case: just mark the next property to visit. */
-        sprop = (JSScopeProperty *) JSVAL_TO_PRIVATE(v);
-        if (sprop)
-            sprop->trace(trc);
+        ((JSScopeProperty *) pdata)->trace(trc);
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
-        ida = (JSIdArray *) JSVAL_TO_PRIVATE(v);
-        for (i = 0, n = ida->length; i < n; i++) {
-            id = ida->vector[i];
-            js_TraceId(trc, id);
-        }
+        JSIdArray *ida = (JSIdArray *) pdata;
+        for (jsint i = 0, n = ida->length; i < n; i++)
+            js_TraceId(trc, ida->vector[i]);
     }
 }
 
@@ -4099,31 +4063,24 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
         pdata = scope->lastProp;
         index = -1;
     } else {
-        JSTempValueRooter tvr;
-
         /*
          * Non-native case: enumerate a JSIdArray and keep it via private.
          *
          * Note: we have to make sure that we root obj around the call to
          * JS_Enumerate to protect against multiple allocations under it.
          */
-        JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(iterobj), &tvr);
+        JSAutoTempValueRooter tvr(cx, iterobj);
         ida = JS_Enumerate(cx, obj);
-        JS_POP_TEMP_ROOT(cx, &tvr);
         if (!ida)
-            goto bad;
+            return NULL;
         pdata = ida;
         index = ida->length;
     }
 
     /* iterobj cannot escape to other threads here. */
-    STOBJ_SET_SLOT(iterobj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(pdata));
-    STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(index));
+    iterobj->setPrivate(pdata);
+    iterobj->fslots[JSSLOT_ITER_INDEX] = INT_TO_JSVAL(index);
     return iterobj;
-
-bad:
-    cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-    return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4136,13 +4093,13 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
     JSIdArray *ida;
 
     CHECK_REQUEST(cx);
-    i = JSVAL_TO_INT(OBJ_GET_SLOT(cx, iterobj, JSSLOT_ITER_INDEX));
+    i = JSVAL_TO_INT(iterobj->fslots[JSSLOT_ITER_INDEX]);
     if (i < 0) {
         /* Native case: private data is a property tree node pointer. */
         obj = OBJ_GET_PARENT(cx, iterobj);
         JS_ASSERT(OBJ_IS_NATIVE(obj));
         scope = OBJ_SCOPE(obj);
-        sprop = (JSScopeProperty *) JS_GetPrivate(cx, iterobj);
+        sprop = (JSScopeProperty *) iterobj->getAssignedPrivate();
 
         /*
          * If the next property mapped by scope in the property tree ancestor
@@ -4161,13 +4118,12 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         if (!sprop) {
             *idp = JSVAL_VOID;
         } else {
-            if (!JS_SetPrivate(cx, iterobj, sprop->parent))
-                return JS_FALSE;
+            iterobj->setPrivate(sprop->parent);
             *idp = sprop->id;
         }
     } else {
         /* Non-native case: use the ida enumerated when iterobj was created. */
-        ida = (JSIdArray *) JS_GetPrivate(cx, iterobj);
+        ida = (JSIdArray *) iterobj->getAssignedPrivate();
         JS_ASSERT(i <= ida->length);
         if (i == 0) {
             *idp = JSVAL_VOID;
@@ -4805,7 +4761,7 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
     obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
     if (obj) {
-        JS_SetPrivate(cx, obj, script);
+        obj->setPrivate(script);
         script->u.object = obj;
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;

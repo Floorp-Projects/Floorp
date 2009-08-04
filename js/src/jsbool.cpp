@@ -64,7 +64,7 @@ JS_STATIC_ASSERT(!(JSVAL_ARETURN & JSVAL_HOLE_FLAG));
 
 JSClass js_BooleanClass = {
     "Boolean",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
+    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -136,12 +136,11 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     bval = (argc != 0)
            ? BOOLEAN_TO_JSVAL(js_ValueToBoolean(argv[0]))
            : JSVAL_FALSE;
-    if (!JS_IsConstructing(cx)) {
+    if (!JS_IsConstructing(cx))
         *rval = bval;
-        return JS_TRUE;
-    }
-    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, bval);
-    return JS_TRUE;
+    else
+        obj->fslots[JSSLOT_PRIVATE] = bval;
+    return true;
 }
 
 JSObject *
@@ -153,7 +152,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
                         NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;
-    STOBJ_SET_SLOT(proto, JSSLOT_PRIVATE, JSVAL_FALSE);
+    proto->fslots[JSSLOT_PRIVATE] = JSVAL_FALSE;
     return proto;
 }
 

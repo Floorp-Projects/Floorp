@@ -515,7 +515,7 @@ GetMemberInfo(JSObject *obj,
     }
     else
     {
-        XPCWrappedNative *wrapper = (XPCWrappedNative *) STOBJ_GET_PRIVATE(obj);
+        XPCWrappedNative *wrapper = (XPCWrappedNative *) obj->getAssignedPrivate();
         proto = wrapper->GetProto();
     }
     if(proto)

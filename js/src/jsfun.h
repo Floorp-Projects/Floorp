@@ -218,7 +218,7 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
  */
 #define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
     (JS_ASSERT(HAS_FUNCTION_CLASS(funobj)),                                   \
-     (JSFunction *) OBJ_GET_PRIVATE(cx, funobj))
+     (JSFunction *) (funobj)->getAssignedPrivate())
 
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);

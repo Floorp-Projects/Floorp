@@ -722,7 +722,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     JSObject *limitBlock, *limitClone;
     if (fp->fun && !fp->callobj) {
         JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass ||
-                  OBJ_GET_PRIVATE(cx, fp->scopeChain) != fp);
+                  fp->scopeChain->getAssignedPrivate() != fp);
         if (!js_GetCallObject(cx, fp))
             return NULL;
 
@@ -812,7 +812,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      */
     JS_ASSERT_IF(limitBlock &&
                  OBJ_GET_CLASS(cx, limitBlock) == &js_BlockClass &&
-                 OBJ_GET_PRIVATE(cx, limitClone) == fp,
+                 limitClone->getAssignedPrivate() == fp,
                  sharedBlock);
 
     /* Place our newly cloned blocks at the head of the scope chain.  */
@@ -831,7 +831,7 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
         obj = JS_THIS_OBJECT(cx, vp);
         if (!JS_InstanceOf(cx, obj, clasp, vp + 2))
             return JS_FALSE;
-        v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+        v = obj->fslots[JSSLOT_PRIVATE];
     }
     *thisvp = v;
     return JS_TRUE;
@@ -1978,10 +1978,10 @@ js_LeaveWith(JSContext *cx)
 
     withobj = cx->fp->scopeChain;
     JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
-    JS_ASSERT(OBJ_GET_PRIVATE(cx, withobj) == cx->fp);
+    JS_ASSERT(withobj->getAssignedPrivate() == cx->fp);
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
     cx->fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
-    JS_SetPrivate(cx, withobj, NULL);
+    withobj->setPrivate(NULL);
 }
 
 JS_REQUIRES_STACK JSClass *
@@ -1991,7 +1991,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
 
     clasp = OBJ_GET_CLASS(cx, obj);
     if ((clasp == &js_WithClass || clasp == &js_BlockClass) &&
-        OBJ_GET_PRIVATE(cx, obj) == cx->fp &&
+        obj->getAssignedPrivate() == cx->fp &&
         OBJ_BLOCK_DEPTH(cx, obj) >= stackDepth) {
         return clasp;
     }
@@ -3161,7 +3161,7 @@ js_Interpret(JSContext *cx)
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if (clasp != &js_BlockClass && clasp != &js_WithClass)
                     continue;
-                if (OBJ_GET_PRIVATE(cx, obj) != fp)
+                if (obj->getAssignedPrivate() != fp)
                     break;
                 JS_ASSERT(StackBase(fp) + OBJ_BLOCK_DEPTH(cx, obj)
                                      + ((clasp == &js_BlockClass)
@@ -7034,7 +7034,7 @@ js_Interpret(JSContext *cx)
             while ((clasp = OBJ_GET_CLASS(cx, obj2)) == &js_WithClass)
                 obj2 = OBJ_GET_PARENT(cx, obj2);
             if (clasp == &js_BlockClass &&
-                OBJ_GET_PRIVATE(cx, obj2) == fp) {
+                obj2->getAssignedPrivate() == fp) {
                 JSObject *youngestProto = OBJ_GET_PROTO(cx, obj2);
                 JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
                 parent = obj;
