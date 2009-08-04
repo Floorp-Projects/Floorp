@@ -36,6 +36,7 @@ var gPlayTests = [
 var gErrorTests = [
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },
+  { name:"448636.ogv", type:"video/ogg" },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
