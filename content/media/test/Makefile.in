@@ -120,6 +120,8 @@ _TEST_FILES += \
 		bug498855-2.ogv \
 		bug498855-3.ogv \
 		bug499519.ogv \
+		bug500311.ogv \
+		bug500311.ogv^headers^ \
 		seek.ogv \
 		small-shot.ogg \
 		sound.ogg \
