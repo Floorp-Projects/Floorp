@@ -275,7 +275,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         return NULL;
 
     /* Link the new object to fp so it can get actual argument values. */
-    JS_SetPrivate(cx, argsobj, fp);
+    argsobj->setPrivate(fp);
     fp->argsobj = OBJECT_TO_JSVAL(argsobj);
     return argsobj;
 }
@@ -329,7 +329,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
      * Do this last because the args_enumerate and js_GetProperty calls above
      * need to follow the private slot to find fp.
      */
-    ok &= JS_SetPrivate(cx, argsobj, NULL);
+    argsobj->setPrivate(NULL);
     fp->argsobj = NULL;
     return ok;
 }
@@ -337,7 +337,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 static JSBool
 args_delProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
-    JSStackFrame *fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
     if (!fp)
         return JS_TRUE;
     JS_ASSERT(fp->argsobj);
@@ -816,7 +816,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     /* A call object should be a frame's outermost scope chain element.  */
     JSClass *classp = OBJ_GET_CLASS(cx, fp->scopeChain);
     if (classp == &js_WithClass || classp == &js_BlockClass || classp == &js_CallClass)
-        JS_ASSERT(OBJ_GET_PRIVATE(cx, fp->scopeChain) != fp);
+        JS_ASSERT(fp->scopeChain->getAssignedPrivate() != fp);
 #endif
 
     /*
@@ -850,7 +850,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         return NULL;
     }
 
-    JS_SetPrivate(cx, callobj, fp);
+    callobj->setPrivate(fp);
     JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->callee));
     STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, OBJECT_TO_JSVAL(fp->callee));
     fp->callobj = callobj;
@@ -919,11 +919,11 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         JSObject *env = STOBJ_GET_PARENT(callobj);
 
         JS_ASSERT(STOBJ_GET_CLASS(env) == &js_DeclEnvClass);
-        JS_ASSERT(STOBJ_GET_PRIVATE(env) == fp);
-        JS_SetPrivate(cx, env, NULL);
+        JS_ASSERT(env->getAssignedPrivate() == fp);
+        env->setPrivate(NULL);
     }
 
-    JS_SetPrivate(cx, callobj, NULL);
+    callobj->setPrivate(NULL);
     fp->callobj = NULL;
     return ok;
 }
@@ -1002,7 +1002,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
         return JS_TRUE;
 
     fun = GetCallObjectFunction(obj);
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame *) obj->getPrivate();
 
     if (kind == JSCPK_ARGUMENTS) {
         if (setter) {
@@ -1216,10 +1216,8 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
 static JSBool
 call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
-    JSStackFrame *fp;
-
     if (type == JSTYPE_FUNCTION) {
-        fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+        JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
         if (fp) {
             JS_ASSERT(fp->fun);
             *vp = OBJECT_TO_JSVAL(fp->callee);
@@ -1750,10 +1748,8 @@ DestroyLocalNames(JSContext *cx, JSFunction *fun);
 static void
 fun_trace(JSTracer *trc, JSObject *obj)
 {
-    JSFunction *fun;
-
     /* A newborn function object may have a not yet initialized private slot. */
-    fun = (JSFunction *) JS_GetPrivate(trc->context, obj);
+    JSFunction *fun = (JSFunction *) obj->getPrivate();
     if (!fun)
         return;
 
@@ -1809,11 +1805,11 @@ static uint32
 fun_reserveSlots(JSContext *cx, JSObject *obj)
 {
     /*
-     * We use JS_GetPrivate and not GET_FUNCTION_PRIVATE because during
+     * We use getPrivate and not GET_FUNCTION_PRIVATE because during
      * js_InitFunctionClass invocation the function is called before the
      * private slot of the function object is set.
      */
-    JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    JSFunction *fun = (JSFunction *) obj->getPrivate();
     return (fun && FUN_INTERPRETED(fun))
            ? fun->countInterpretedReservedSlots()
            : 0;
@@ -2142,9 +2138,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         /*
          * The constructor is called before the private slot is initialized so
-         * we must use JS_GetPrivate, not GET_FUNCTION_PRIVATE here.
+         * we must use getPrivate, not GET_FUNCTION_PRIVATE here.
          */
-        if (JS_GetPrivate(cx, obj))
+        if (obj->getPrivate())
             return JS_TRUE;
     }
 
@@ -2389,7 +2385,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         if (!funobj)
             return NULL;
     }
-    JS_ASSERT(JSVAL_IS_VOID(funobj->fslots[JSSLOT_PRIVATE]));
+    JS_ASSERT(!funobj->getPrivate());
     fun = (JSFunction *) funobj;
 
     /* Initialize all function members. */
@@ -2428,7 +2424,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     fun->atom = atom;
 
     /* Set private to self to indicate non-cloned fully initialized function. */
-    FUN_OBJECT(fun)->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
+    FUN_OBJECT(fun)->setPrivate(fun);
     return fun;
 }
 
@@ -2442,7 +2438,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
     JSObject *clone = js_NewObject(cx, &js_FunctionClass, NULL, parent, sizeof(JSObject));
     if (!clone)
         return NULL;
-    clone->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
+    clone->setPrivate(fun);
     return clone;
 }
 

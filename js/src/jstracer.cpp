@@ -232,7 +232,7 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
 JSClass jitstats_class = {
     "jitstats",
-    JSCLASS_HAS_PRIVATE,
+    0,
     JS_PropertyStub,       JS_PropertyStub,
     jitstats_getProperty,  JS_PropertyStub,
     JS_EnumerateStub,      JS_ResolveStub,
@@ -2364,7 +2364,7 @@ GetFromClosure(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, 
         return state->callstackBase[0]->get_typemap()[slot];
     }
 
-    JSStackFrame* fp = (JSStackFrame*) OBJ_GET_PRIVATE(cx, call);
+    JSStackFrame* fp = (JSStackFrame*) call->getPrivate();
     if (!fp)
         return TT_INVALID;
     jsval v = T::slots(fp)[slot];
@@ -6772,7 +6772,7 @@ TraceRecorder::scopeChain() const
 JS_REQUIRES_STACK JSStackFrame*
 TraceRecorder::frameIfInRange(JSObject* obj, unsigned* depthp) const
 {
-    JSStackFrame* ofp = (JSStackFrame*) JS_GetPrivate(cx, obj);
+    JSStackFrame* ofp = (JSStackFrame*) obj->getPrivate();
     JSStackFrame* fp = cx->fp;
     for (unsigned depth = 0; depth <= callDepth; ++depth) {
         if (fp == ofp) {
@@ -6839,7 +6839,7 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
         ABORT_TRACE("deep abort from property lookup");
 
     if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
-        JSStackFrame* cfp = (JSStackFrame*) JS_GetPrivate(cx, obj);
+        JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
         if (cfp) {
             JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
@@ -10442,7 +10442,7 @@ TraceRecorder::guardCallee(jsval& callee)
     guard(true,
           lir->ins2(LIR_eq,
                     stobj_get_private(callee_ins),
-                    INS_CONSTPTR(OBJ_GET_PRIVATE(cx, callee_obj))),
+                    INS_CONSTPTR(callee_obj->getAssignedPrivate())),
           branchExit);
     guard(true,
           lir->ins2(LIR_eq,
@@ -11431,7 +11431,7 @@ TraceRecorder::record_JSOP_BINDNAME()
         // to refer to these.
         while (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
             // The block's values are still on the stack.
-            JS_ASSERT(OBJ_GET_PRIVATE(cx, obj) == fp);
+            JS_ASSERT(obj->getAssignedPrivate() == fp);
 
             obj = OBJ_GET_PARENT(cx, obj);
 

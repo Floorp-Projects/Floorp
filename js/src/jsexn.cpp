@@ -342,7 +342,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JS_ASSERT(priv->stackElems + stackDepth == elem);
     JS_ASSERT(GetStackTraceValueBuffer(priv) + valueCount == values);
 
-    STOBJ_SET_SLOT(exnObject, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(priv));
+    exnObject->setPrivate(priv);
 
     if (report) {
         /*
@@ -361,19 +361,10 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     return JS_TRUE;
 }
 
-static JSExnPrivate *
+static inline JSExnPrivate *
 GetExnPrivate(JSContext *cx, JSObject *obj)
 {
-    jsval privateValue;
-    JSExnPrivate *priv;
-
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_ErrorClass);
-    privateValue = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    if (JSVAL_IS_VOID(privateValue))
-        return NULL;
-    priv = (JSExnPrivate *)JSVAL_TO_PRIVATE(privateValue);
-    JS_ASSERT(priv);
-    return priv;
+    return (JSExnPrivate *) obj->getPrivate();
 }
 
 static void
@@ -720,7 +711,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * data so that the finalizer doesn't attempt to free it.
      */
     if (OBJ_GET_CLASS(cx, obj) == &js_ErrorClass)
-        STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, JSVAL_VOID);
+        obj->setPrivate(NULL);
 
     /* Set the 'message' property. */
     if (argc != 0) {
@@ -1046,7 +1037,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         }
 
         /* So exn_finalize knows whether to destroy private data. */
-        STOBJ_SET_SLOT(proto, JSSLOT_PRIVATE, JSVAL_VOID);
+        proto->setPrivate(NULL);
 
         /* Make a constructor function for the current name. */
         protoKey = GetExceptionProtoKey(i);

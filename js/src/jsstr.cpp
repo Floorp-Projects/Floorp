@@ -550,7 +550,7 @@ str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
         if (OBJ_GET_CLASS(cx, obj) == &js_StringClass) {
             /* Follow ECMA-262 by fetching intrinsic length of our string. */
-            v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+            v = obj->fslots[JSSLOT_PRIVATE];
             JS_ASSERT(JSVAL_IS_STRING(v));
             str = JSVAL_TO_STRING(v);
         } else {
@@ -575,7 +575,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
     JSString *str, *str1;
     size_t i, length;
 
-    v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    v = obj->fslots[JSSLOT_PRIVATE];
     JS_ASSERT(JSVAL_IS_STRING(v));
     str = JSVAL_TO_STRING(v);
 
@@ -604,7 +604,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
         return JS_TRUE;
 
-    v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    v = obj->fslots[JSSLOT_PRIVATE];
     JS_ASSERT(JSVAL_IS_STRING(v));
     str = JSVAL_TO_STRING(v);
 
@@ -625,7 +625,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
 JSClass js_StringClass = {
     js_String_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_String),
     JS_PropertyStub,   JS_PropertyStub,   str_getProperty,   JS_PropertyStub,
     str_enumerate, (JSResolveOp)str_resolve, JS_ConvertStub, NULL,
@@ -785,7 +785,7 @@ String_p_toString(JSContext* cx, JSObject* obj)
 {
     if (!JS_InstanceOf(cx, obj, &js_StringClass, NULL))
         return NULL;
-    jsval v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    jsval v = obj->fslots[JSSLOT_PRIVATE];
     JS_ASSERT(JSVAL_IS_STRING(v));
     return JSVAL_TO_STRING(v);
 }
@@ -1316,7 +1316,7 @@ match_or_replace(JSContext *cx,
 
     if (argc != 0 && VALUE_IS_REGEXP(cx, vp[2])) {
         reobj = JSVAL_TO_OBJECT(vp[2]);
-        re = (JSRegExp *) JS_GetPrivate(cx, reobj);
+        re = (JSRegExp *) reobj->getPrivate();
     } else {
         src = ArgToRootedString(cx, argc, vp, 0);
         if (!src)
@@ -2002,7 +2002,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
         ok = OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(0), &v);
     } else {
         if (VALUE_IS_REGEXP(cx, vp[2])) {
-            re = (JSRegExp *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(vp[2]));
+            re = (JSRegExp *) JSVAL_TO_OBJECT(vp[2])->getPrivate();
             sep = &tmp;
 
             /* Set a magic value so we can detect a successful re match. */
