@@ -2494,6 +2494,14 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
       rv = FillMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
       LOG(("Searched extras (by ext), rv 0x%08X\n", rv));
     }
+    // If that still didn't work, set the file description to "ext File"
+    if (NS_FAILED(rv) && !aFileExt.IsEmpty()) {
+      // XXXzpao This should probably be localized
+      nsCAutoString desc(aFileExt);
+      desc.Append(" File");
+      (*_retval)->SetDescription(NS_ConvertASCIItoUTF16(desc));
+      LOG(("Falling back to 'File' file description\n"));
+    }
   }
 
   // Finally, check if we got a file extension and if yes, if it is an
