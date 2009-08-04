@@ -614,34 +614,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
 
-  // Switch to the "main gui thread" if necessary... This method must
-  // be executed on the "gui thread"...
-
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  if (toolkit && !toolkit->IsGuiThread()) {
-    DWORD_PTR args[7];
-    args[0] = (DWORD_PTR)aParent;
-    args[1] = (DWORD_PTR)&aRect;
-    args[2] = (DWORD_PTR)aHandleEventFunction;
-    args[3] = (DWORD_PTR)aContext;
-    args[4] = (DWORD_PTR)aAppShell;
-    args[5] = (DWORD_PTR)aToolkit;
-    args[6] = (DWORD_PTR)aInitData;
-
-    if (nsnull != aParent) {
-      // nsIWidget parent dispatch
-      MethodInfo info(this, nsWindow::CREATE, 7, args);
-      toolkit->CallMethod(&info);
-      return NS_OK;
-    }
-    else {
-      // Native parent dispatch
-      MethodInfo info(this, nsWindow::CREATE_NATIVE, 5, args);
-      toolkit->CallMethod(&info);
-      return NS_OK;
-    }
-  }
-
   HWND parent;
   if (nsnull != aParent) { // has a nsIWidget parent
     parent = ((aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
@@ -765,15 +737,6 @@ NS_METHOD nsWindow::Destroy()
   // WM_DESTROY has already fired, we're done.
   if (nsnull == mWnd)
     return NS_OK;
-
-  // Switch to the "main gui thread" if necessary. Destroy() must be executed on the
-  // "gui thread".
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  if (toolkit != nsnull && !toolkit->IsGuiThread()) {
-    MethodInfo info(this, nsWindow::DESTROY);
-    toolkit->CallMethod(&info);
-    return NS_ERROR_FAILURE;
-  }
 
   // During the destruction of all of our children, make sure we don't get deleted.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -1669,16 +1632,6 @@ NS_METHOD nsWindow::IsEnabled(PRBool *aState)
 
 NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 {
-  // Switch to the "main gui thread" if necessary... This method must
-  // be executed on the "gui thread"...
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  NS_ASSERTION(toolkit != nsnull, "This should never be null!"); // Bug 57044
-  if (toolkit != nsnull && !toolkit->IsGuiThread()) {
-    MethodInfo info(this, nsWindow::SET_FOCUS);
-    toolkit->CallMethod(&info);
-    return NS_ERROR_FAILURE;
-  }
-
   if (mWnd) {
     // Uniconify, if necessary
     HWND toplevelWnd = GetTopLevelHWND(mWnd);
@@ -2729,71 +2682,6 @@ nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
   }
   return NS_OK;
 #endif
-}
-
-/**************************************************************
- **************************************************************
- **
- ** BLOCK: nsSwitchToUIThread impl.
- **
- ** Switch thread to match the thread the widget was created
- ** in so messages will be dispatched.
- **
- **************************************************************
- **************************************************************/
-
-/**************************************************************
- *
- * SECTION: nsSwitchToUIThread::CallMethod
- *
- * Every function that needs a thread switch goes through this function
- * by calling SendMessage (..WM_CALLMETHOD..) in nsToolkit::CallMethod.
- *
- **************************************************************/
-
-BOOL nsWindow::CallMethod(MethodInfo *info)
-{
-  BOOL bRet = TRUE;
-
-  switch (info->methodId) {
-    case nsWindow::CREATE:
-      NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
-      Create((nsIWidget*)(info->args[0]),
-             (nsIntRect&)*(nsIntRect*)(info->args[1]),
-             (EVENT_CALLBACK)(info->args[2]),
-             (nsIDeviceContext*)(info->args[3]),
-             (nsIAppShell *)(info->args[4]),
-             (nsIToolkit*)(info->args[5]),
-             (nsWidgetInitData*)(info->args[6]));
-      break;
-
-    case nsWindow::CREATE_NATIVE:
-      NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
-      Create((nsNativeWidget)(info->args[0]),
-             (nsIntRect&)*(nsIntRect*)(info->args[1]),
-             (EVENT_CALLBACK)(info->args[2]),
-             (nsIDeviceContext*)(info->args[3]),
-             (nsIAppShell *)(info->args[4]),
-             (nsIToolkit*)(info->args[5]),
-             (nsWidgetInitData*)(info->args[6]));
-      return TRUE;
-
-    case nsWindow::DESTROY:
-      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-      Destroy();
-      break;
-
-    case nsWindow::SET_FOCUS:
-      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-      SetFocus(PR_FALSE);
-      break;
-
-    default:
-      bRet = FALSE;
-      break;
-  }
-
-  return bRet;
 }
 
 /**************************************************************

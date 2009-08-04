@@ -199,18 +199,6 @@ protected:
   // so it can be cleared automatically.
   static nsIContent* mLastRollup;
     
-    // Enumeration of the methods which are accessible on the "main GUI thread"
-    // via the CallMethod(...) mechanism...
-    // see nsSwitchToUIThread
-  enum {
-    CREATE       = 0x0101,
-    CREATE_NATIVE,
-    DESTROY, 
-    SET_FOCUS,
-    SET_CURSOR,
-    CREATE_HACK
-  };
-
 #ifdef DEBUG
 protected:
   static nsAutoString debug_GuiEventToString(nsGUIEvent * aGuiEvent);
