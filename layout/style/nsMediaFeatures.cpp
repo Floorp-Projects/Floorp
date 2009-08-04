@@ -90,20 +90,15 @@ GetHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-static nsIDeviceContext*
+inline static nsIDeviceContext*
 GetDeviceContextFor(nsPresContext* aPresContext)
 {
-  // Do this dance rather than aPresContext->DeviceContext() to get
-  // things right in multi-monitor situations.
-  // (It's not clear if this is really needed for GetDepth and GetColor,
-  // but do it anyway.)
-  nsIDeviceContext* ctx = nsLayoutUtils::GetDeviceContextForScreenInfo(
-    nsCOMPtr<nsIDocShell>(do_QueryInterface(
-      nsCOMPtr<nsISupports>(aPresContext->GetContainer()))));
-  if (!ctx) {
-    ctx = aPresContext->DeviceContext();
-  }
-  return ctx;
+  // It would be nice to call
+  // nsLayoutUtils::GetDeviceContextForScreenInfo here, except for two
+  // things:  (1) it can flush, and flushing is bad here, and (2) it
+  // doesn't really get us consistency in multi-monitor situations
+  // *anyway*.
+  return aPresContext->DeviceContext();
 }
 
 // A helper for three features below.
