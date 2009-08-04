@@ -6870,45 +6870,45 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
                 ins = get(vp);
                 nr.tracked = true;
                 return JSRS_CONTINUE;
-            } else {
-                // Compute number of scope chain links to result.
-                jsint scopeIndex = 0;
-                JSObject* tmp = JSVAL_TO_OBJECT(cx->fp->argv[-2]);
-                while (tmp != obj) {
-                    tmp = OBJ_GET_PARENT(cx, tmp);
-                    scopeIndex++;
-                }
-                JS_ASSERT(scopeIndex >= 1);
-
-                LIns* callee_ins = get(&cx->fp->argv[-2]);
-                LIns* outp = lir->insAlloc(sizeof(double));
-                LIns* args[] = {
-                    outp,
-                    INS_CONST(callDepth),
-                    INS_CONST(slot),
-                    INS_CONST(scopeIndex),
-                    callee_ins,
-                    cx_ins
-                };
-                const CallInfo* ci;
-                if (sprop->getter == js_GetCallArg)
-                    ci = &GetClosureArg_ci;
-                else
-                    ci = &GetClosureVar_ci;
-
-                LIns* call_ins = lir->insCall(ci, args);
-                JSTraceType type = getCoercedType(*vp);
-                guard(true,
-                      addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
-                              "guard(type-stable name access)"),
-                      BRANCH_EXIT);
-                ins = stackLoad(outp, type);
-                nr.tracked = false;
-                nr.obj = obj;
-                nr.scopeIndex = scopeIndex;
-                nr.sprop = sprop;
-                return JSRS_CONTINUE;
             }
+
+            // Compute number of scope chain links to result.
+            jsint scopeIndex = 0;
+            JSObject* tmp = JSVAL_TO_OBJECT(cx->fp->argv[-2]);
+            while (tmp != obj) {
+                tmp = OBJ_GET_PARENT(cx, tmp);
+                scopeIndex++;
+            }
+            JS_ASSERT(scopeIndex >= 1);
+
+            LIns* callee_ins = get(&cx->fp->argv[-2]);
+            LIns* outp = lir->insAlloc(sizeof(double));
+            LIns* args[] = {
+                outp,
+                INS_CONST(callDepth),
+                INS_CONST(slot),
+                INS_CONST(scopeIndex),
+                callee_ins,
+                cx_ins
+            };
+            const CallInfo* ci;
+            if (sprop->getter == js_GetCallArg)
+                ci = &GetClosureArg_ci;
+            else
+                ci = &GetClosureVar_ci;
+
+            LIns* call_ins = lir->insCall(ci, args);
+            JSTraceType type = getCoercedType(*vp);
+            guard(true,
+                  addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
+                          "guard(type-stable name access)"),
+                  BRANCH_EXIT);
+            ins = stackLoad(outp, type);
+            nr.tracked = false;
+            nr.obj = obj;
+            nr.scopeIndex = scopeIndex;
+            nr.sprop = sprop;
+            return JSRS_CONTINUE;
         }
     }
 
@@ -9586,7 +9586,7 @@ TraceRecorder::incName(jsint incr, bool pre)
     LIns* callobj_ins = get(&cx->fp->argv[-2]);
     for (jsint i = 0; i < nr.scopeIndex; ++i)
         callobj_ins = stobj_get_parent(callobj_ins);
-    return setCallProp(callobj_ins, nr.sprop, v_ins, *vp);
+    return setCallProp(nr.obj, callobj_ins, nr.sprop, v_ins, *vp);
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -9735,7 +9735,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     // Fast path for CallClass. This is about 20% faster than the general case.
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
         v_ins = get(&v);
-        return setCallProp(obj_ins, sprop, v_ins, v);
+        return setCallProp(obj, obj_ins, sprop, v_ins, v);
     }
 
     /*
@@ -9781,8 +9781,27 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::setCallProp(LIns *callobj_ins, JSScopeProperty *sprop, LIns *v_ins, jsval v)
+TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty *sprop,
+                           LIns *v_ins, jsval v)
 {
+    // Set variables in on-trace-stack call objects by updating the tracker.
+    JSStackFrame *fp = frameIfInRange(callobj);
+    if (fp) {
+        jsint slot = JSVAL_TO_INT(SPROP_USERID(sprop));
+        if (sprop->setter == SetCallArg) {
+            jsval *vp2 = &fp->argv[slot];
+            set(vp2, v_ins);
+            return JSRS_CONTINUE;
+        }
+        if (sprop->setter == SetCallVar) {
+            jsval *vp2 = &fp->slots[slot];
+            set(vp2, v_ins);
+            return JSRS_CONTINUE;
+        }
+        ABORT_TRACE("can't trace special CallClass setter");
+    }
+
+    // Set variables in off-trace-stack call objects by calling standard builtins.
     const CallInfo* ci = NULL;
     if (sprop->setter == SetCallArg)
         ci = &js_SetCallArg_ci;
@@ -12316,10 +12335,6 @@ TraceRecorder::record_JSOP_GETXPROP()
     jsval& l = stackval(-1);
     if (JSVAL_IS_PRIMITIVE(l))
         ABORT_TRACE("primitive-this for GETXPROP?");
-
-    JSObject* obj = JSVAL_TO_OBJECT(l);
-    if (obj != cx->fp->scopeChain || obj != globalObj)
-        return JSRS_STOP;
 
     jsval* vp;
     LIns* v_ins;
