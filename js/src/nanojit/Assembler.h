@@ -239,7 +239,7 @@ namespace nanojit
                 return r->used ? r : 0;
             }
 
-            Allocator           &alloc;
+            Allocator&          alloc;
             CodeAlloc&          _codeAlloc;
             DWB(Fragment*)      _thisfrag;
             RegAllocMap*        _branchStateMap;
