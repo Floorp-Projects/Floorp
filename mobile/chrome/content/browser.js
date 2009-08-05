@@ -855,15 +855,16 @@ IdentityHandler.prototype = {
     this._identityPopup.top = BrowserUI.toolbarH;
     this._identityPopup.focus();
 
+    this._identityBox.setAttribute("open", "true");
+    
     // Update the popup strings
     this.setPopupMessages(this._identityBox.getAttribute("mode") || this.IDENTITY_MODE_UNKNOWN);
-
-    window.addEventListener("blur", this, true);
   },
 
   hide: function ih_hide() {
-    window.removeEventListener("blur", this, true);
     this._identityPopup.hidden = true;
+    
+    this._identityBox.removeAttribute("open");
   },
 
   /**
@@ -881,11 +882,6 @@ IdentityHandler.prototype = {
       this.show();
     else
       this.hide();
-  },
-
-  handleEvent: function(event) {
-    // Watch for blur events so we can close the panel
-    this.hide();
   }
 };
 
