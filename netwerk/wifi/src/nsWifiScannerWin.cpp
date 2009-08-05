@@ -97,14 +97,14 @@ PRBool ResizeBuffer(int requested_size, BYTE **buffer)
 
 #ifdef WINCE
 int PerformQuery(HANDLE &ndis_handle,
-                 TCHAR *device_name,
+                 const TCHAR *device_name,
                  BYTE *buffer,
                  DWORD buffer_size,
                  BYTE *&data,
                  DWORD *bytes_out) {
   // Form the query parameters.
   NDISUIO_QUERY_OID *query = (NDISUIO_QUERY_OID*)(buffer);
-  query->ptcDeviceName = device_name;
+  query->ptcDeviceName = const_cast<PTCHAR>(device_name);
   query->Oid = OID_802_11_BSSID_LIST;
   
   if (!DeviceIoControl(ndis_handle,
