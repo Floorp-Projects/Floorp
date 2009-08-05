@@ -454,7 +454,7 @@ static PRBool RomanToText(PRInt32 ordinal, nsString& result, const char* achars,
       case '5': case '6':
       case '7': case  '8':
         addOn.Append(PRUnichar(bchars[romanPos]));
-        for(n=0;n<(*dp-'5');n++) {
+        for(n=0;'5'+n<*dp;n++) {
           addOn.Append(PRUnichar(achars[romanPos]));
         }
         break;
