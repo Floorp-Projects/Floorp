@@ -119,10 +119,7 @@ protected:
    PRBool     LoadPositionFromXUL();
    PRBool     LoadSizeFromXUL();
    PRBool     LoadMiscPersistentAttributesFromXUL();
-   nsresult   LoadChromeHidingFromXUL();
-   NS_IMETHOD LoadWindowClassFromXUL();
-   NS_IMETHOD LoadIconFromXUL();
-   NS_IMETHOD LoadToolbarButtonPresenceFromXUL();
+   void       SyncAttributesToWidget();
    NS_IMETHOD SavePersistentAttributes();
 
    NS_IMETHOD GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow);
