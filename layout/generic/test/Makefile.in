@@ -91,6 +91,7 @@ _TEST_FILES = \
 		test_plugin_clipping2.xhtml \
 		test_plugin_clipping_transformed.xhtml \
 		test_plugin_clipping_table.xhtml \
+		test_plugin_mouse_coords.html \
 		test_plugin_position.xhtml \
 		test_selection_underline.html \
 		$(NULL)
