@@ -7615,7 +7615,7 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIFrame* aFrame,
 
 nsresult
 nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
-                                            PRBool aAppend)
+                                            CharacterDataChangeInfo* aInfo)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   nsresult      rv = NS_OK;
@@ -7675,8 +7675,7 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
       }
     }
 
-    frame->CharacterDataChanged(mPresShell->GetPresContext(), aContent,
-                                aAppend);
+    frame->CharacterDataChanged(aInfo);
 
     if (haveFirstLetterStyle) {
       nsFrameConstructorState state(mPresShell, mFixedContainingBlock,

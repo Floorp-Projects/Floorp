@@ -4946,7 +4946,7 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
       mFrameConstructor->RestyleForInsertOrChange(container, aContent);
   }
 
-  mFrameConstructor->CharacterDataChanged(aContent, aInfo->mAppend);
+  mFrameConstructor->CharacterDataChanged(aContent, aInfo);
   VERIFY_STYLE_TREE;
 }
 
