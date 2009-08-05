@@ -102,6 +102,7 @@
 #include "nsHTMLTags.h"
 #include "nsDeque.h"
 #include "nsParserCIID.h"
+#include "nsTime.h"
 #include "nsDTDUtils.h"
 #include "nsParser.h"
 #include "nsCycleCollectionParticipant.h"
