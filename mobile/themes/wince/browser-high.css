@@ -80,7 +80,8 @@
   -moz-box-pack: center;
 }
 
-#identity-box:hover:active {
+#identity-box:hover:active,
+#identity-box[open] {
   background: url("images/leftcap-active-64.png");
 }
 
@@ -89,7 +90,8 @@
   background: url("images/leftcapEV-default-64.png");
 }
 
-#identity-box[mode="verifiedIdentity"]:hover:active {
+#identity-box[mode="verifiedIdentity"]:hover:active,
+#identity-box[mode="verifiedIdentity"][open] {
   background: url("images/leftcapEV-active-64.png");
 }
 
@@ -98,7 +100,8 @@
   background: url("images/leftcapSSL-default-64.png");
 }
 
-#identity-box[mode="verifiedDomain"]:hover:active {
+#identity-box[mode="verifiedDomain"]:hover:active,
+#identity-box[mode="verifiedDomain"][open] {
   background: url("images/leftcapSSL-active-64.png");
 }
 
