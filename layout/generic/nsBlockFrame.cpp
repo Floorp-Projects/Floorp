@@ -3816,16 +3816,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         // Split line, but after the frame just reflowed
         rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        if (NS_INLINE_IS_BREAK_AFTER(frameReflowStatus) &&
-            !aLineLayout.GetLineEndsInBR()) {
-          // Mark next line dirty in case SplitLine didn't end up
-          // pushing any frames.
-          nsLineList_iterator next = aLine.next();
-          if (next != end_lines() && !next->IsBlock()) {
-            next->MarkDirty();
-          }
-        }
       }
     }
   }
@@ -3860,13 +3850,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       *aLineReflowStatus = LINE_REFLOW_STOP;
       rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      // Mark next line dirty in case SplitLine didn't end up
-      // pushing any frames.
-      nsLineList_iterator next = aLine.next();
-      if (next != end_lines() && !next->IsBlock()) {
-        next->MarkDirty();
-      }
     }
   }
 
