@@ -114,7 +114,7 @@ protected:
   PRInt16  GetNextChar(PRUint32 numBytesInBuffer);
   nsresult ProcessNextChunk(nsIRequest * aRequest, nsISupports * aContext, PRUint32 numBytesInBuffer);
   nsresult ProcessNextState(nsIRequest * aRequest, nsISupports * aContext);
-  nsresult SetContentType(nsIRequest * aRequest, const char * fileName);
+  nsresult DetectContentType(nsIRequest * aRequest, const nsAFlatCString &aFilename);
 
 protected:
   nsCOMPtr<nsIStreamListener> mNextListener;
@@ -133,7 +133,7 @@ protected:
 
   // Bin Hex Header Information
   binhex_header mHeader;
-  char      mName[64];   /* fsspec for the output file */
+  nsCString mName;       /* fsspec for the output file */
 
   // unfortunately we are going to need 2 8K buffers here. One for the data we are currently digesting. Another
   // for the outgoing decoded data. I tried getting them to share a buffer but things didn't work out so nicely.
@@ -143,7 +143,7 @@ protected:
 
   unsigned char mRlebuf;  /* buffer for last run length encoding value */
 
-  PRInt32 mCount;         /* generic counter */
+  PRUint32 mCount;        /* generic counter */
   PRInt16 mMarker;        /* flag indicating maker */
 
   PRInt32 mPosInbuff;     /* the index of the inbuff.  */
