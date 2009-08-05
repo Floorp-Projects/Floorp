@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4 et filetype=javascript
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+let EXPORTED_SYMBOLS = [
+  "NetUtil",
+];
+
 /**
  * Necko utilities
  */
@@ -69,11 +73,12 @@ const NetUtil = {
         var sourceBuffered = ioUtil.inputStreamIsBuffered(aSource);
         var sinkBuffered = ioUtil.outputStreamIsBuffered(aSink);
 
+        var ostream = aSink;
         if (!sourceBuffered && !sinkBuffered) {
             // wrap the sink in a buffered stream.
-            var bostream = Cc["@mozilla.org/network/buffered-output-stream;1"].
-                createInstance(Ci.nsIBufferedOutputStream);
-            bostream.init(aSink, 0x8000);
+            ostream = Cc["@mozilla.org/network/buffered-output-stream;1"].
+                      createInstance(Ci.nsIBufferedOutputStream);
+            ostream.init(aSink, 0x8000);
             sinkBuffered = true;
         }
 
@@ -85,15 +90,16 @@ const NetUtil = {
         // buffer our buffered stream is using, for best performance.  If we're
         // not using our own buffered stream, that's ok too.  But maybe we
         // should just use the default net segment size here?
-        copier.init(aSource, bostream, null, sourceBuffered, sinkBuffered,
+        copier.init(aSource, ostream, null, sourceBuffered, sinkBuffered,
                     0x8000, true, true);
 
         var observer;
         if (aCallback) {
             observer = {
-            onStartRequest: function(aRequest, aContext) {},
-            onStopRequest: function(aRequest, aContext, aStatusCode) {
-              aCallback(aStatusCode);
+                onStartRequest: function(aRequest, aContext) {},
+                onStopRequest: function(aRequest, aContext, aStatusCode) {
+                    aCallback(aStatusCode);
+                }
             }
         } else {
             observer = null;
