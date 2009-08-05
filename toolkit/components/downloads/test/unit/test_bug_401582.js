@@ -38,6 +38,8 @@
 // This tests that downloads in the scanning state are set to a completed state
 // upon service initialization.
 
+cleanup();
+
 importDownloadsFile("bug_401582_downloads.sqlite");
 
 const nsIDownloadManager = Ci.nsIDownloadManager;
@@ -62,4 +64,6 @@ function run_test()
 {
   for (var i = 0; i < tests.length; i++)
     tests[i]();
+  
+  cleanup();
 }
