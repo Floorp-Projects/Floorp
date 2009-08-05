@@ -3784,7 +3784,7 @@ js_MaybeGC(JSContext *cx)
     size_t freed = rt->gcFreed;
     if (lastRSS > freed)
         lastRSS -= freed;
-    if (js_GetRSS() > (lastRSS + lastRSS/16 + lastRSS/8)) // 18.75% growth?
+    if (js_GetRSS() > (lastRSS + lastRSS/4)) // 25% growth?
         JS_GC(cx);
 }
 
