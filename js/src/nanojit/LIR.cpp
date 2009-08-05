@@ -1207,10 +1207,10 @@ namespace nanojit
             }
 
             case LIR_ld:
+            case LIR_ldq:
             case LIR_ldcb:
             case LIR_ldcs:
             case LIR_ldc:
-            case LIR_ldq:
             case LIR_ldqc:
                 return
                     (a->oprnd1() == b->oprnd1() && a->disp() == b->disp() ? true : false );
@@ -1387,10 +1387,10 @@ namespace nanojit
         uint32_t cap = m_cap;
         const LInsp *list = m_list;
         const uint32_t bitmask = (cap - 1) & ~0x1;
-        uint32_t hash = hash3(op,a,b,c) & bitmask;  
+        uint32_t hash = hash3(op,a,b,c) & bitmask;
         uint32_t n = 7 << 1;
         LInsp k;
-        while ((k = list[hash]) != NULL && 
+        while ((k = list[hash]) != NULL &&
             (k->opcode() != op || k->oprnd1() != a || k->oprnd2() != b || k->oprnd3() != c))
         {
             hash = (hash + (n += 2)) & bitmask;     // quadratic probe
@@ -1990,14 +1990,8 @@ namespace nanojit
         return i->arg(i->argc()-n-1);
     }
 
-    void compile(Fragmento* frago, Assembler* assm, Fragment* triggerFrag, Allocator& alloc)
+    void compile(Assembler* assm, Fragment* frag, Allocator& alloc verbose_only(, LabelMap* labels))
     {
-        AvmCore *core = frago->core();
-#ifdef NJ_VERBOSE
-        LabelMap* labels = frago->labels;
-#endif
-        GC *gc = core->gc;
-
         verbose_only(
         LogControl *logc = assm->_logc;
         bool anyVerb = (logc->lcbits & 0xFFFF) > 0;
@@ -2011,7 +2005,7 @@ namespace nanojit
             logc->printf("========================================"
                          "========================================\n");
             logc->printf("=== BEGIN LIR::compile(%p, %p)\n",
-                         (void*)assm, (void*)triggerFrag);
+                         (void*)assm, (void*)frag);
             logc->printf("===\n");
         })
         /* END decorative preamble */
@@ -2020,96 +2014,42 @@ namespace nanojit
             logc->printf("\n");
             logc->printf("=== Results of liveness analysis:\n");
             logc->printf("===\n");
-            live(alloc, triggerFrag, logc);
+            live(alloc, frag, logc);
         })
 
         /* Set up the generic text output cache for the assembler */
         verbose_only( StringList asmOutput(alloc); )
         verbose_only( assm->_outputCache = &asmOutput; )
 
-        bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
         RegAllocMap regMap(alloc);
         NInsList loopJumps(alloc);
-#ifdef MEMORY_INFO
-//        loopJumps.set_meminfo_name("LIR loopjumps");
-#endif
-        assm->beginAssembly(triggerFrag, &regMap);
+        assm->beginAssembly(frag, &regMap);
         if (assm->error())
             return;
 
-        //logc->printf("recompile trigger %X kind %d\n", (int)triggerFrag, triggerFrag->kind);
+        //logc->printf("recompile trigger %X kind %d\n", (int)frag, frag->kind);
 
         verbose_only( if (anyVerb) {
             logc->printf("=== Translating LIR fragments into assembly:\n");
         })
 
-        Fragment* root = triggerFrag;
-        if (treeCompile)
-        {
-            // recompile the entire tree
-            verbose_only( if (anyVerb) {
-               logc->printf("=== -- Compile the entire tree: begin\n");
-            })
-            root = triggerFrag->root;
-            root->fragEntry = 0;
-            root->loopEntry = 0;
-
-            // do the tree branches
-            verbose_only( if (anyVerb) {
-               logc->printf("=== -- Do the tree branches\n");
-            })
-            Fragment* frag = root->treeBranches;
-            while (frag)
-            {
-                // compile til no more frags
-                if (frag->lastIns)
-                {
-                    verbose_only( if (anyVerb) {
-                        logc->printf("=== -- Compiling branch %s ip %s\n",
-                                     labels->format(frag),
-                                     labels->format(frag->ip));
-                    })
-                    if (!assm->error()) {
-                        assm->assemble(frag, loopJumps);
-                        verbose_only(frago->_stats.compiles++);
-                        verbose_only(frago->_stats.totalCompiles++);
-                    }
-                    verbose_only(if (asmVerb)
-                        assm->outputf("## compiling branch %s ip %s", labels->format(frag), labels->format(frag->ip)); )
-
-                    NanoAssert(frag->kind == BranchTrace);
-                    RegAlloc* regs = new (alloc) RegAlloc();
-                    assm->copyRegisters(regs);
-                    assm->releaseRegisters();
-                    SideExit* exit = frag->spawnedFrom;
-                    regMap.put(exit, regs);
-                }
-                frag = frag->treeBranches;
-            }
-            verbose_only( if (anyVerb) {
-               logc->printf("=== -- Compile the entire tree: end\n");
-            })
-        }
-
         // now the the main trunk
         verbose_only( if (anyVerb) {
             logc->printf("=== -- Compile trunk %s: begin\n",
-                         labels->format(root));
+                         labels->format(frag));
         })
-        assm->assemble(root, loopJumps);
+        assm->assemble(frag, loopJumps);
         verbose_only( if (anyVerb) {
             logc->printf("=== -- Compile trunk %s: end\n",
-                         labels->format(root));
+                         labels->format(frag));
         })
 
         verbose_only(
             if (asmVerb)
                 assm->outputf("## compiling trunk %s",
-                              labels->format(root));
+                              labels->format(frag));
         )
-        NanoAssert(!frago->core()->config.tree_opt
-                   || root == root->anchor || root->kind == MergeTrace);
-        assm->endAssembly(root, loopJumps);
+        assm->endAssembly(frag, loopJumps);
 
         // reverse output so that assembly is displayed low-to-high
         // Up to this point, assm->_outputCache has been non-NULL, and so
@@ -2131,12 +2071,12 @@ namespace nanojit
         });
 
         if (assm->error()) {
-            root->fragEntry = 0;
-            root->loopEntry = 0;
+            frag->fragEntry = 0;
+            frag->loopEntry = 0;
         }
         else
         {
-            CodeAlloc::moveAll(root->codeList, assm->codeList);
+            CodeAlloc::moveAll(frag->codeList, assm->codeList);
         }
 
         /* BEGIN decorative postamble */
@@ -2144,7 +2084,7 @@ namespace nanojit
             logc->printf("\n");
             logc->printf("===\n");
             logc->printf("=== END LIR::compile(%p, %p)\n",
-                         (void*)assm, (void*)triggerFrag);
+                         (void*)assm, (void*)frag);
             logc->printf("========================================"
                          "========================================\n");
             logc->printf("\n");
