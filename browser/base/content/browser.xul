@@ -378,7 +378,6 @@
                  showimagecolumn="true"
                  enablehistory="true"
                  maxrows="6"
-                 timeout="75"
                  newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value;"
                  ontextentered="this.handleCommand(param);"
