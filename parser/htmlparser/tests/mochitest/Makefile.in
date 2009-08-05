@@ -57,6 +57,8 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug396568.html \
 		test_bug418464.html \
 		test_bug460437.xhtml \
+		test_bug502091.html \
+		bug_502091_iframe.html \
 		test_compatmode.html \
 		regressions.txt \
 		invalidchar.xml \
