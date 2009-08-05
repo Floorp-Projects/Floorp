@@ -357,7 +357,7 @@ var Browser = {
       dragStop: function dragStop(dx, dy, scroller) {
         let dx = this.dragMove(dx, dy, scroller, true);
 
-        let snapdx = 0;//Browser.snapSidebars(scroller);
+        let snapdx = Browser.snapSidebars(Browser.controlsScrollboxScroller);
         bv.onAfterVisibleMove(snapdx, 0);
 
         bv.resumeRendering();
@@ -375,21 +375,15 @@ var Browser = {
           if (dx > 0) {
             let contentleft = Math.floor(contentScrollbox.getBoundingClientRect().left);
             odx = (contentleft > 0) ? Math.min(contentleft, dx) : dx;
-            //odx = Math.min(dx, Math.max(0,
-            //                            Math.floor(contentScrollbox.getBoundingClientRect().left)));
           } else if (dx < 0) {
             let contentright = Math.ceil(contentScrollbox.getBoundingClientRect().right);
             let w = window.innerWidth;
             odx = (contentright < w) ? Math.max(contentright - w, dx) : dx;
-            //odx = Math.max(dx, Math.min(0,
-            //                            Math.ceil(contentScrollbox.getBoundingClientRect().right - window.innerWidth)));
           }
 
           dump('--> odx, ody: ' + odx + ', ' + ody + '\n');
 
-          let controlsMoved = controlsScrollbox.customDragger.dragMove(odx, ody, Browser.controlsScrollboxScroller);
-
-          //return false;
+          let controlsMoved = this.outerDragMove(odx, ody, Browser.controlsScrollboxScroller);
 
           if (odx != dx || ody != dy) {
             this.scrollingOuter = false;
@@ -410,6 +404,8 @@ var Browser = {
         let realdx = x1 - x0;
         let realdy = y1 - y0;
 
+        bv.onAfterVisibleMove(realdx, realdy);
+
         if (realdx != dx || realdy != dy) {
           dump('--> scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
 
@@ -424,22 +420,12 @@ var Browser = {
 
         dump('--> new real dx/y ' + realdx + ',' + realdy + '\n');
 
-        bv.onAfterVisibleMove(realdx, realdy);
-
         return (doReturnDX) ? realdx : (realdx != 0 || realdy != 0);
-      }
-    };
-
-    controlsScrollbox.customDragger = {
-      dragStart: function dragStart(scroller) {
-
       },
 
-      dragStop: function dragStop(dx, dy, scroller) {
+      outerDragMove: function outerDragMove(dx, dy, scroller) {
+        bv.onBeforeVisibleMove(dx, dy);
 
-      },
-
-      dragMove: function dragMove(dx, dy, scroller) {
         let [x0, y0] = Browser.getScrollboxPosition(scroller);
 
         scroller.scrollBy(dx, dy);
@@ -449,11 +435,19 @@ var Browser = {
         let realdx = x1 - x0;
         let realdy = y1 - y0;
 
+        bv.onAfterVisibleMove(realdx, realdy);
+
         if (realdx != dx || realdy != dy)
           dump('--> outer scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
 
         return (realdx != 0 || realdy != 0);
       }
+    };
+
+    controlsScrollbox.customDragger = {
+      dragStart: function dragStart(scroller) {},
+      dragStop: function dragStop(dx, dy, scroller) { return false; },
+      dragMove: function dragMove(dx, dy, scroller) { return false; }
     };
 
     // during startup a lot of viewportHandler calls happen due to content and window resizes
