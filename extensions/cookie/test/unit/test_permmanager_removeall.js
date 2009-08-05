@@ -3,7 +3,30 @@ const Ci = Components.interfaces;
 
 function run_test() {
   // setup a profile directory
-  var dir = do_get_profile();
+  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+               getService(Ci.nsIProperties);
+  var leafRandomName = "PermMgr" + Math.floor(Math.random() * 10000);
+  var dir = dirSvc.get("TmpD", Ci.nsILocalFile);
+  dir.append(leafRandomName);
+  dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0700);
+  var provider = {
+    getFile: function(prop, persistent) {
+      persistent.value = true;
+      if (prop == "ProfLD" ||
+          prop == "ProfD")
+        return dir.clone();
+      throw Cr.NS_ERROR_FAILURE;
+    },
+    QueryInterface: function(iid) {
+      if (iid.equals(Ci.nsIDirectoryProvider) ||
+          iid.equals(Ci.nsISupports)) {
+        return this;
+      }
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    }
+  };
+  dirSvc.QueryInterface(Ci.nsIDirectoryService).
+         registerProvider(provider);
 
   // initialize the permission manager service
   var pm = Cc["@mozilla.org/permissionmanager;1"].
@@ -33,4 +56,8 @@ function run_test() {
 
   // remove all should not throw
   pm.removeAll();
+
+  // cleanup
+  dirSvc.unregisterProvider(provider);
 }
+
