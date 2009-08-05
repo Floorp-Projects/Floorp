@@ -215,8 +215,8 @@ public:
                           RemoveFlags aFlags,
                           PRBool*     aDidReconstruct);
 
-  nsresult CharacterDataChanged(nsIContent*     aContent,
-                                PRBool          aAppend);
+  nsresult CharacterDataChanged(nsIContent* aContent,
+                                CharacterDataChangeInfo* aInfo);
 
   nsresult ContentStatesChanged(nsIContent*     aContent1,
                                 nsIContent*     aContent2,

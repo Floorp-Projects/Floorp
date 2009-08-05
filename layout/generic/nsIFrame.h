@@ -103,6 +103,7 @@ struct nsPoint;
 struct nsRect;
 struct nsSize;
 struct nsMargin;
+struct CharacterDataChangeInfo;
 
 typedef class nsIFrame nsIBox;
 
@@ -1120,17 +1121,10 @@ public:
   void RemoveStateBits(nsFrameState aBits) { mState &= ~aBits; }
 
   /**
-   * This call is invoked when content is changed in the content tree.
-   * The first frame that maps that content is asked to deal with the
-   * change by generating an incremental reflow command.
-   *
-   * @param aPresContext the presentation context
-   * @param aContent     the content node that was changed
-   * @param aAppend      a hint to the frame about the change
+   * This call is invoked on the primary frame for a character data content
+   * node, when it is changed in the content tree.
    */
-  NS_IMETHOD  CharacterDataChanged(nsPresContext* aPresContext,
-                                   nsIContent*     aChild,
-                                   PRBool          aAppend) = 0;
+  NS_IMETHOD  CharacterDataChanged(CharacterDataChangeInfo* aInfo) = 0;
 
   /**
    * This call is invoked when the value of a content objects's attribute
