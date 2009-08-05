@@ -88,6 +88,7 @@ _TEST_FILES = \
 		test_bug469774.xul \
 		test_bug470212.html \
 		test_bug503813.html \
+		test_bug508115.xul \
 		$(warning test_bug507902.html temporarily disabled - see bug 510001) \
 		test_bug514732.html \
 		test_movement_by_characters.html \
