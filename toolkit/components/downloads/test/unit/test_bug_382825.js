@@ -73,11 +73,13 @@ var httpserv = null;
 function run_test()
 {
   httpserv = new nsHttpServer();
-  httpserv.registerDirectory("/", do_get_cwd());
+  httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
   httpserv.start(4444);
-
+  
   dm.addListener(getDownloadListener());
-
+  
   for (var i = 0; i < tests.length; i++)
     tests[i]();
+  
+  cleanup();
 }
