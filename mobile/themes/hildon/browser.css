@@ -54,14 +54,6 @@ toolbarbutton.urlbar-button {
   margin-left: 2.2mm; /* core spacing */
 }
 
-#tool-bookmarks {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-default-64.png");
-}
-
-#tool-bookmarks:hover:active {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-active-64.png");
-}
-
 #tool-app-close {
   visibility: hidden;
   min-height: 0 !important;
@@ -257,10 +249,44 @@ toolbarbutton.page-button {
   margin-left: -40px; /* big number just to make sure the image overflows the edge */
 }
 
-/* "extras" panel UI   ----------------------------------------------------- */
+/* browser tools panel UI   ------------------------------------------------ */
+@media (orientation: landscape) {
+  #panel-container {
+    -moz-box-orient: horizontal;
+  }
+  
+  #panel-controls {
+    -moz-box-orient: vertical;
+    -moz-box-ordinal-group: 1;
+    -moz-box-pack: end;
+  }
+  
+  #tool-panel-close {
+    -moz-box-ordinal-group: 1000;
+  }
+}
+
+@media (orientation: portrait) {
+  #panel-container {
+    -moz-box-orient: vertical;
+  }
+  
+  #panel-controls {
+    -moz-box-orient: horizontal;
+    -moz-box-ordinal-group: 1000;
+    -moz-box-pack: start;
+    padding-top: 2.2mm; /* core spacing */
+  }
+  
+  #tool-panel-close {
+    -moz-box-ordinal-group: 1;
+  }
+}
+
 #panel-controls {
   /* match #browser-controls end padding */
-  padding: 0 2.2mm; /* core spacing */
+  padding-left: 2.2mm; /* core spacing */
+  padding-right: 2.2mm; /* core spacing */
   -moz-box-align: end;
 }
 
@@ -302,6 +328,51 @@ toolbarbutton.page-button {
 #tool-console:hover:active,
 #tool-console[checked="true"] {
   list-style-image: url("chrome://browser/skin/images/console-active-64.png");
+}
+
+/* downloads panel UI   ---------------------------------------------------- */
+@media (orientation: landscape) {
+  #downloads-subheader {
+    -moz-box-orient: horizontal;
+    -moz-box-align: center;
+  }
+}
+
+@media (orientation: portrait) {
+  #downloads-subheader {
+    -moz-box-orient: vertical;
+    -moz-box-pack: center;
+  }
+}
+
+/* addons panel UI   ------------------------------------------------------- */
+@media (orientation: landscape) {
+  #addons-repo {
+    -moz-box-orient: horizontal;
+    -moz-box-align: center;
+  }
+}
+
+@media (orientation: portrait) {
+  #addons-repo {
+    -moz-box-orient: vertical;
+    -moz-box-pack: center;
+  }
+}
+
+/* console panel UI   ------------------------------------------------------ */
+@media (orientation: landscape) {
+  #console-filter-warnings,
+  #console-filter-messages {
+    visibility: visible;
+  }
+}
+
+@media (orientation: portrait) {
+  #console-filter-warnings,
+  #console-filter-messages {
+    visibility: collapse;
+  }
 }
 
 /* URL List and autocomplete navigation popup ------------------------------ */
@@ -414,43 +485,100 @@ placeitem .button-text {
   -moz-box-orient: horizontal;
 }
 
+.searchengine .radio-icon {
+  display: block;
+}
+
 #autocomplete_navbuttons {
   margin: 2.2mm; /* core spacing */
   min-height: 14.4mm; /* row size */
 }
 
+#autocomplete_navbuttons autorepeatbutton {
+  display: none;
+}
+
 .autocomplete-items {
-  color: black;
   background-color: white;
 }
 
-.autocomplete-item,
-.autocomplete-item-selected {
+autocompleteresult {
   padding: 0.5mm 0.2mm;
   border-bottom: 0.1mm solid rgb(207,207,207);
   min-height: 14.4mm; /* row size */
-  -moz-box-pack: center;
 }
 
-.autocomplete-item-selected {
+.autocompleteresult-selected {
   color: white;
-  background-color: grey;
+  background-color: grey !important;
 }
 
-.autocomplete-item.noresults {
+.autocomplete-item-desc {
+  color: blue;
+  white-space: pre;
+  font-size: 10pt !important;
+}
+
+.autocomplete-item-desc:first-line {
+  color: black;
+  font-size: 15.75pt !important;
+}
+
+.autocomplete-item-tags {
+  font-size: 11.75pt !important;
+  font-weight: lighter;
+}
+
+.autocomplete-item-tags[favorite=true]:after {
+  content: url(images/star-24.png);
+  margin: 1.6mm 2mm 0mm 1.5mm;
+}
+
+.autocomplete-item-image {
+  max-height: 16px;
+  max-width: 16px;
+  margin: 0mm 4mm 5mm 2mm;
+}
+
+/* special "no results" and "all bookmarks" items */
+autocompleteresult.noresults > .autocomplete-item-desc {
   text-align: center;
-  font-style: italic;
+}
+
+autocompleteresult.noresults > .autocomplete-item-desc:first-line {
   color: grey;
-  background-color: white;
+}
+
+autocompleteresult.noresults > .autocomplete-item-image,
+autocompleteresult.noresults > .autocomplete-item-tags {
+  visibility: hidden;
+}
+
+autocompleteresult.noresults {
+  font-style: italic;
   border-bottom: none;
 }
 
-.ac-result-type-bookmark {
-  list-style-image: url("chrome://browser/skin/images/star-30.png");
+autocompleteresult.allbookmarks {
+  color: black;
+  background-color: #E9E9E9;
 }
 
-.ac-result-type-tag {
-  list-style-image: url("chrome://browser/skin/images/tag-30.png");
+autocompleteresult.allbookmarks > .autocomplete-item-desc {
+  color: black;
+  font-size: 15.75pt !important;
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-image {
+  max-width: 44px;
+  max-height: 30px;
+  margin: 0 3mm;
+  list-style-image: url(images/bookmarks-30.png);
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
+  content: url(images/arrowright-16.png);
+  -moz-margin-end: 4mm;
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */

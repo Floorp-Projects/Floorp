@@ -109,10 +109,44 @@ toolbarbutton.page-button {
   margin-bottom: 1.1mm; /* core spacing */
 }
 
-/* "extras" panel UI   ----------------------------------------------------- */
+/* browser tools panel UI   ------------------------------------------------ */
+@media (orientation: landscape) {
+  #panel-container {
+    -moz-box-orient: horizontal;
+  }
+  
+  #panel-controls {
+    -moz-box-orient: vertical;
+    -moz-box-ordinal-group: 1;
+    -moz-box-pack: end;
+  }
+  
+  #tool-panel-close {
+    -moz-box-ordinal-group: 1000;
+  }
+}
+
+@media (orientation: portrait) {
+  #panel-container {
+    -moz-box-orient: vertical;
+  }
+  
+  #panel-controls {
+    -moz-box-orient: horizontal;
+    -moz-box-ordinal-group: 1000;
+    -moz-box-pack: start;
+    padding-top: 1.1mm; /* core spacing */
+  }
+  
+  #tool-panel-close {
+    -moz-box-ordinal-group: 1;
+  }
+}
+
 #panel-controls {
   /* match #browser-controls end padding */
-  padding: 0 1.1mm; /* core spacing */
+  padding-left: 1.1mm; /* core spacing */
+  padding-right: 1.1mm; /* core spacing */
   -moz-box-align: end;
 }
 
@@ -120,6 +154,52 @@ toolbarbutton.page-button {
   padding: 1.1mm; /* core spacing */
 }
 
+/* downloads panel UI   ---------------------------------------------------- */
+@media (orientation: landscape) {
+  #downloads-subheader {
+    -moz-box-orient: horizontal;
+    -moz-box-align: center;
+  }
+}
+
+@media (orientation: portrait) {
+  #downloads-subheader {
+    -moz-box-orient: vertical;
+    -moz-box-pack: center;
+  }
+}
+
+/* addons panel UI   ------------------------------------------------------- */
+@media (orientation: landscape) {
+  #addons-repo {
+    -moz-box-orient: horizontal;
+    -moz-box-align: center;
+  }
+}
+
+@media (orientation: portrait) {
+  #addons-repo {
+    -moz-box-orient: vertical;
+    -moz-box-pack: center;
+  }
+}
+
+/* console panel UI   ------------------------------------------------------ */
+@media (orientation: landscape) {
+  #console-filter-warnings,
+  #console-filter-messages {
+    visibility: visible;
+  }
+}
+
+@media (orientation: portrait) {
+  #console-filter-warnings,
+  #console-filter-messages {
+    visibility: collapse;
+  }
+}
+
+/* bookmark list panel UI   ------------------------------------------------ */
 #bookmarklist-container {
   padding: 0;
 }
@@ -210,29 +290,84 @@ placeitem .button-text {
 }
 
 .autocomplete-items {
-  color: black;
   background-color: white;
 }
 
-.autocomplete-item,
-.autocomplete-item-selected {
+autocompleteresult {
   padding: 0.25mm 0.1mm;
   border-bottom: 0.05mm solid rgb(207,207,207);
   min-height: 7.2mm; /* row size */
-  -moz-box-pack: center;
 }
 
-.autocomplete-item-selected {
+.autocompleteresult-selected {
   color: white;
-  background-color: grey;
+  background-color: grey !important;
 }
 
-.autocomplete-item.noresults {
+.autocomplete-item-desc {
+  color: blue;
+  white-space: pre;
+  font-size: 8pt !important;
+}
+
+.autocomplete-item-desc:first-line {
+  color: black;
+  font-size: 9pt !important;
+}
+
+.autocomplete-item-tags {
+  font-size: 8pt !important;
+  font-weight: lighter;
+}
+
+.autocomplete-item-tags[favorite=true]:after {
+  content: url(images/star-24.png);
+  margin: 1.6mm 2mm 0mm 1.5mm;
+}
+
+.autocomplete-item-image {
+  max-height: 16px;
+  max-width: 16px;
+  margin: 1.6mm 1.5mm 0mm 2mm;
+}
+
+/* special "no results" and "all bookmarks" items */
+autocompleteresult.noresults > .autocomplete-item-desc {
   text-align: center;
-  font-style: italic;
+}
+
+autocompleteresult.noresults > .autocomplete-item-desc:first-line {
   color: grey;
-  background-color: white;
+}
+
+autocompleteresult.noresults > .autocomplete-item-image,
+autocompleteresult.noresults > .autocomplete-item-tags {
+  visibility: hidden;
+}
+
+autocompleteresult.noresults {
+  font-style: italic;
   border-bottom: none;
+}
+
+autocompleteresult.allbookmarks {
+  color: black;
+  background-color: #E9E9E9;
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-desc {
+  color: black;
+  font-size: 9pt !important;
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-image {
+  margin: 0 1.5mm;
+}
+
+autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
+  /* this image works fine for both -high and -low */
+  content: url(images/arrowright-16.png);
+  -moz-margin-end: 1.1mm;
 }
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
@@ -314,7 +449,7 @@ findbar {
 
 #identity-popup-content-box > hbox > description,
 #identity-popup-content-box > hbox > label {
-  font-size: 11pt !important;
+  font-size: 9pt !important;
   white-space: pre-wrap;
 }
 
@@ -341,6 +476,13 @@ richpref {
   color: #000;
   background-color: lightgray;
   padding: 0.25mm;
+}
+
+/* XXX should be a richlistitem */
+.prefbox {
+  padding: 0.25mm 1.1mm;
+  border-bottom: 0.05mm solid rgb(207,207,207);
+  min-height: 7.2mm; /* row size */
 }
 
 /* XXX should be a richlistitem description.title */

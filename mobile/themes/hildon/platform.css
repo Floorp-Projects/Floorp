@@ -184,57 +184,93 @@ radiogroup {
 }
 
 radio {
-  min-width: 12mm !important; /* button size */
-  min-height: 12mm !important; /* button size */
   color: #36373b;
-  padding: 0.2mm 2.2mm 0.2mm 1mm !important;
+  min-width: 12mm !important; /* button size */
+  min-height: 6mm !important;
+  padding: 1mm !important;
   margin: 0;
-  border: 0.1mm solid #36373b;
+  border-width: 8px;
   -moz-box-align: center;
   -moz-appearance: none;
-  background: #fff;
+  -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-64.png") 8 repeat repeat;
 }
 
-radio[selected] {
-  color: #fff;
-  border: 0.1mm solid #91875a;
-  background-color: #DDC763;
-}
-
-radio .radio-check-box1, radio .radio-icon, radio .radio-check {
+radio .radio-icon, radio .radio-check {
   display: none;
 }
 
+radio[selected] {
+  color: #000;
+  -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat;
+}
+
 radio:first-child {
-  -moz-border-radius-topleft: 2mm;
-  -moz-border-radius-bottomleft: 2mm;
+  -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
+}
+
+radio:first-child[selected] {
+  -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
 }
 
 radio:last-child {
-  -moz-border-radius-topright: 2mm;
-  -moz-border-radius-bottomright: 2mm;
+  -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
 }
 
-radiogroup[orient=vertical] radio:first-child {
-  -moz-border-radius-topright: 2mm;
-  -moz-border-radius-bottomleft: 0;
+radio:last-child[selected] {
+  -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
 }
 
-radiogroup[orient=vertical] radio:last-child {
-  -moz-border-radius-bottomleft: 2mm;
-  -moz-border-radius-topright: 0;
+/* checkbox radios --------------------------------------------------------- */
+checkbox {
+  margin: 1px 5px 2px 5px; /* match platform style for buttons */
+}
+
+radio.checkbox-radio-on {
+  -moz-border-image: url("chrome://browser/skin/images/toggleon-inactive-64.png") 8 repeat repeat;
+}
+
+radio.checkbox-radio-on[selected] {
+  color: #fff;
+  -moz-border-image: url("chrome://browser/skin/images/toggleon-active-64.png") 8 repeat repeat;
+}
+
+radio.checkbox-radio-off {
+  -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-64.png") 8 repeat repeat;
+}
+
+radio.checkbox-radio-off[selected] {
+  -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-64.png") 8 repeat repeat;
+}
+
+radio.checkbox-radio-on:not([selected]) .radio-label-box,
+radio.checkbox-radio-off:not([selected]) .radio-label-box {
+  visibility: hidden;
 }
 
 /* dark radios ------------------------------------------------------------- */
 .toggle-dark radio {
   color: #fff;
-  border: 0.1mm solid #777;
-  background-color: #525252;
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-inactive-64.png") 8 repeat repeat;
 }
 
 .toggle-dark radio[selected] {
-  border: 0.1mm solid #202020;
-  background-color: #303030;
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-active-64.png") 8 repeat repeat;
+}
+
+.toggle-dark radio:first-child {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-inactive-64.png") 8 repeat repeat;
+}
+
+.toggle-dark radio:first-child[selected] {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-64.png") 8 repeat repeat;
+}
+
+.toggle-dark radio:last-child {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkright-inactive-64.png") 8 repeat repeat;
+}
+
+.toggle-dark radio:last-child[selected] {
+  -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
 }
 
 /* richlistbox ------------------------------------------------------------- */

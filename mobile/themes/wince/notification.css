@@ -1,9 +1,31 @@
 notification {
-  background: rgb(255, 255, 176);
-  color: black;
+  color: #fff;
+  background: #4483d8;
+  border-top: 1px solid #396dcb;
+  border-bottom: 1px solid #396dcb;
 }
 
 notification .messageCloseButton {
-  list-style-image: url("chrome://browser/skin/images/tab-close.png");
   -moz-image-region: -moz-initial;
+  -moz-box-align: start;
+}
+
+@media all and (min-device-width: 401px) {
+notification .messageCloseButton {
+  list-style-image: url("chrome://browser/skin/images/close-30.png");
+}
+}
+
+@media all and (max-device-width: 400px) {
+notification .messageCloseButton {
+  list-style-image: url("chrome://browser/skin/images/close-16.png");
+}
+}
+
+notification .outset {
+  border-color: #396dcb !important;
+}
+
+notification .buttons {
+  padding: 1.1mm;
 }

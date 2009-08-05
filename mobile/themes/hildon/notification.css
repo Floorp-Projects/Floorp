@@ -1,9 +1,21 @@
-notification {
-  background: rgb(255, 255, 176);
-  color: black;
+notification, notification[type="warning"] {
+  padding: 0;
+  color: #fff;
+  background: #4483d8;
+  border-top: 1px solid #396dcb;
+  border-bottom: 1px solid #396dcb;
 }
 
 notification .messageCloseButton {
-  list-style-image: url("chrome://browser/skin/images/tab-close.png");
+  list-style-image: url("chrome://browser/skin/images/close-30.png");
   -moz-image-region: -moz-initial;
+  -moz-box-align: start;
+}
+
+notification .outset {
+  border-color: #396dcb !important;
+}
+
+notification .buttons {
+  padding: 2.2mm;
 }

@@ -56,6 +56,14 @@ notification[type="geo"] {
   -moz-binding: url("chrome://browser/content/bindings.xml#popup_autocomplete");
 }
 
+.autocomplete-items > autocompleteresult {
+  -moz-binding: url("chrome://browser/content/bindings.xml#popup_autocomplete_result");
+}
+
+autocompleteresult[value=""] {
+  visibility: hidden;
+}
+
 placeitem {
   -moz-binding: url("chrome://browser/content/bindings.xml#place-item");
 }
@@ -74,6 +82,10 @@ placetree {
 
 placelabel {
   -moz-binding: url("chrome://browser/content/bindings.xml#place-label");
+}
+
+radio {
+  -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
 }
 
 checkbox {
