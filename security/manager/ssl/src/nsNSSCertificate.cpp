@@ -60,6 +60,7 @@
 #include "nsReadableUtils.h"
 #include "nsILocaleService.h"
 #include "nsIURI.h"
+#include "nsTime.h"
 #include "nsIProxyObjectManager.h"
 #include "nsCRT.h"
 #include "nsAutoLock.h"
