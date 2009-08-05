@@ -1424,6 +1424,15 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+void nsCocoaWindow::SetShowsToolbarButton(PRBool aShow)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mWindow setShowsToolbarButton:aShow];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1904,7 +1913,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
-// Always show the toolbar pill button.
+// Returning YES here makes the setShowsToolbarButton method work even though
+// the window doesn't contain an NSToolbar.
 - (BOOL)_hasToolbar
 {
   return YES;
