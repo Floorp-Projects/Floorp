@@ -199,16 +199,16 @@ TileManager.prototype = {
     if (cr) {
       if (!skipRecenter) {
         let [ctrx, ctry] = cr.centerRounded();
-        dump('-----> centering at ' + ctrx + ',' + ctry + '\n');
+        //dump('-----> centering at ' + ctrx + ',' + ctry + '\n');
         this.recenterEvictionQueue(ctrx, ctry);
       }
 
       let start = Date.now();
       this._renderAppendHoldRect(cr);
-      dump("  render, append, hold: " + (Date.now() - start) + "\n");
+      //dump("  render, append, hold: " + (Date.now() - start) + "\n");
     }
 
-    dump(" paint: " + (Date.now() - start) + "\n");
+    //dump(" paint: " + (Date.now() - start) + "\n");
   },
 
   beginCriticalMove: function beginCriticalMove(destCriticalRect) {
@@ -236,7 +236,7 @@ TileManager.prototype = {
       END_FOREACH_IN_RECT
     }
 
-    dump(" release: " + (Date.now() - start) + "\n");
+    //dump(" release: " + (Date.now() - start) + "\n");
     start = Date.now();
 
     if (destCriticalRect) {
@@ -245,7 +245,7 @@ TileManager.prototype = {
       END_FOREACH_IN_RECT
     }
 
-    dump(" hold: " + (Date.now() - start) + "\n");
+    //dump(" hold: " + (Date.now() - start) + "\n");
 
     if (cr && destCriticalRect)
       cr.copyFrom(destCriticalRect);
@@ -288,7 +288,7 @@ TileManager.prototype = {
     let ctri = ctrx >> kTileExponentWidth;
     let ctrj = ctry >> kTileExponentHeight;
 
-    dump('       that is, ' + ctri + ',' + ctrj + '\n');
+    //dump('       that is, ' + ctri + ',' + ctrj + '\n');
 
     this._tileCache.sortEvictionQueue(function evictFarTiles(a, b) {
       let dista = Math.max(Math.abs(a.i - ctri), Math.abs(a.j - ctrj));

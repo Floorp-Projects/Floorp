@@ -358,25 +358,6 @@ var Browser = {
     // during startup a lot of viewportHandler calls happen due to content and window resizes
     bv.beginBatchOperation();
 
-    function panHandler(vr, dx, dy) {
-      if (dx) {
-        let visibleNow = ws.isWidgetVisible("tabs-container") || ws.isWidgetVisible("browser-controls");
-        let isToolbarFrozen = ws.isWidgetFrozen('toolbar-main');
-        if (visibleNow && !isToolbarFrozen) {
-          BrowserUI.showToolbar(URLBAR_FORCE);
-        }
-        else if (!visibleNow && isToolbarFrozen) {
-          BrowserUI.showToolbar();
-        }
-      }
-
-      // this is really only necessary for maemo, where we don't
-      // always repaint fast enough.
-      self.windowUtils.processUpdates();
-    }
-
-    //ws.setPanHandler(panHandler);
-
     function resizeHandler(e) {
 
       if (e.target != window)
@@ -392,11 +373,24 @@ var Browser = {
 
       bv.beginBatchOperation();
 
-      contentScrollbox.style.width  = window.innerWidth + 'px';
-      contentScrollbox.style.height = window.innerHeight + 'px';
+      contentScrollbox.style.width  = w + 'px';
+      contentScrollbox.style.height = h + 'px';
 
-      controlsScrollbox.style.width  = window.innerWidth + 'px';
-      controlsScrollbox.style.height = window.innerHeight + 'px';
+      controlsScrollbox.style.width  = w + 'px';
+      controlsScrollbox.style.height = h + 'px';
+
+      let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
+      let spacers = document.getElementsByClassName("sidebar-spacer");
+      let len = spacers.length;
+      let i;
+      for (i = 0; i < len; i++) spacers[i].style.height = toolbarHeight + 'px';
+
+      let toolbarContainer = document.getElementById("toolbar-container");
+      let stackToolbarContainer = document.getElementById("stack-toolbar-container");
+      toolbarContainer.style.width = w + 'px';
+      toolbarContainer.style.height = toolbarHeight + 'px';
+      stackToolbarContainer.style.width = w + 'px';
+      stackToolbarContainer.style.height = toolbarHeight + 'px';
 
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
@@ -407,7 +401,7 @@ var Browser = {
         let scaledH = (kDefaultBrowserWidth * (h / w));
         for (let i=0; i<browsers.length; i++) {
           let browserStyle = browsers[i].style;
-          browserStyle.height = scaledH + "px";
+          browserStyle.height = scaledH + 'px';
         }
       }
 
@@ -986,6 +980,62 @@ var Browser = {
     return snappedX;
   },
 
+
+  ensureToolbarVisibility: function ensureToolbarVisibility(scroller) {
+    // XXX merge this functionality with above function
+
+    function visibility(bar, visrect) {
+      try {
+        let w = bar.width;
+        let h = bar.height;
+        bar.restrictTo(visrect); // throws exception if intersection of rects is empty
+        return [bar.width / w, bar.height / h];
+      } catch (e) {
+        return [0, 0];
+      }
+    }
+
+    let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
+    let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
+
+    let leftbar = new wsRect(leftbarCBR.left, 0, Math.round(leftbarCBR.width), 1);
+    let ritebar = new wsRect(ritebarCBR.left, 0, Math.round(ritebarCBR.width), 1);
+    let leftw = leftbar.width;
+    let ritew = ritebar.width;
+
+    let visrect = new wsRect(0, 0, window.innerWidth, 1);
+
+    let [leftvis, ] = visibility(leftbar, visrect);
+    let [ritevis, ] = visibility(ritebar, visrect);
+
+    let snappedX = 0;
+
+    let toolbarContainer = document.getElementById("toolbar-container");
+    let stackToolbarContainer = document.getElementById("stack-toolbar-container");
+    let toolbarMain = document.getElementById("toolbar-main");
+
+    dump("left/right vis " + leftvis + " " + ritevis + "\n");
+
+    // XXX this should really be 0 and 0 -- check math for why it is sometimes 0.0015...
+
+    if (leftvis > 0.002 || ritevis > 0.002) {
+      // if the toolbar isn't already inside of the stack toolbar then we move it there
+      if (toolbarMain.parentNode != stackToolbarContainer) {
+	dump("moving toolbar to stack\n");
+	stackToolbarContainer.setAttribute("hidden", false);
+	stackToolbarContainer.appendChild(toolbarMain);
+      }
+    } else {
+      if (toolbarMain.parentNode != toolbarContainer) {
+	dump("moving toolbar to scrollbox\n");
+	toolbarContainer.appendChild(toolbarMain);
+	stackToolbarContainer.setAttribute("hidden", true);
+      }
+    }
+  },
+
+
+
   zoomToElement: function zoomToElement(aElement) {
     const margin = 15;
 
@@ -1157,6 +1207,8 @@ Browser.MainDragger.prototype = {
     
     dx += this.dragMove(Browser.snapSidebars(), 0, scroller, true);
 
+    Browser.ensureToolbarVisibility();
+
     this.bv.resumeRendering();
 
     return (dx != 0) || (dy != 0);
@@ -1192,6 +1244,8 @@ Browser.MainDragger.prototype = {
     }
 
     this.bv.onBeforeVisibleMove(dx, dy);
+
+    Browser.ensureToolbarVisibility();
 
     let [x0, y0] = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(dx, dy);
