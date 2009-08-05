@@ -5431,7 +5431,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     return JS_FALSE;
                 }
                 JS_LOCK_OBJ(cx, obj2);
-                re = (JSRegExp *) obj->getPrivate();
+                re = (JSRegExp *) obj2->getPrivate();
                 if (!re) {
                     JS_UNLOCK_OBJ(cx, obj2);
                     return JS_FALSE;
