@@ -39,14 +39,6 @@
 @media all and (min-device-width: 401px) {
 	
 /* main toolbar (URL bar) -------------------------------------------------- */
-#tool-bookmarks {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-default-64.png");
-}
-
-#tool-bookmarks:hover:active {
-  list-style-image: url("chrome://browser/skin/images/bookmarks-active-64.png");
-}
-
 #tool-app-close {
   visibility: hidden;
   min-height: 0 !important;
@@ -258,12 +250,10 @@
   list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
 }
 
-.ac-result-type-bookmark {
-  list-style-image: url("chrome://browser/skin/images/star-30.png");
-}
-
-.ac-result-type-tag {
-  list-style-image: url("chrome://browser/skin/images/tag-30.png");
+autocompleteresult.allbookmarks > .autocomplete-item-image {
+  max-width: 44px;
+  max-height: 30px;
+  list-style-image: url(images/bookmarks-30.png);
 }
 
 .documenttab-close {
@@ -308,11 +298,8 @@ findbar .findbar-closebutton {
   list-style-image: url("chrome://browser/skin/images/lock-40.png");
 }
 
-/* XXX should be a richlistitem */
+/* Preferences window   ---------------------------------------------------- */
 .prefbox {
-  padding: 0.25mm;
-  border-bottom: 0.05mm solid rgb(207,207,207);
-  min-height: 7.2mm; /* row size */
   -moz-box-align: center;
   -moz-box-orient: horizontal;
 }
