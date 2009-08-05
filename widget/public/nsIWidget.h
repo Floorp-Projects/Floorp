@@ -102,10 +102,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// {5FF2CD19-4F73-4935-8EA2-7A2C33166D4C}
+// {A16A3387-A529-439C-A127-A5893351FD24}
 #define NS_IWIDGET_IID \
-{ 0x5FF2CD19, 0x4F73, 0x4935, \
-  { 0x8E, 0xA2, 0x7A, 0x2C, 0x33, 0x16, 0x6D, 0x4C } }
+{ 0xA16A3387, 0xA529, 0x439C, \
+  { 0xA1, 0x27, 0xA5, 0x89, 0x33, 0x51, 0xFD, 0x24 } }
 
 /*
  * Window shadow styles
@@ -643,6 +643,14 @@ class nsIWidget : public nsISupports {
      * Set the shadow style of the window.
      */
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle) = 0;
+
+    /*
+     * On Mac OS X, this method shows or hides the pill button in the titlebar
+     * that's used to collapse the toolbar.
+     *
+     * Ignored on child widgets and on non-Mac platforms.
+     */
+    virtual void SetShowsToolbarButton(PRBool aShow) = 0;
 
     /** 
      * Hide window chrome (borders, buttons) for this widget.

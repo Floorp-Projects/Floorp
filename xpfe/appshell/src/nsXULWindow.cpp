@@ -994,6 +994,7 @@ void nsXULWindow::OnChromeLoaded()
     if (positionSet)
       positionSet = LoadPositionFromXUL();
     LoadMiscPersistentAttributesFromXUL();
+    LoadToolbarButtonPresenceFromXUL();
 
     //LoadContentAreas();
 
@@ -1433,6 +1434,19 @@ NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
   }
 
   mWindow->SetIcon(id);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::LoadToolbarButtonPresenceFromXUL()
+{
+  nsCOMPtr<nsIDOMElement> windowElement;
+  GetWindowDOMElement(getter_AddRefs(windowElement));
+  NS_ENSURE_TRUE(windowElement, NS_ERROR_FAILURE);
+  nsAutoString attr;
+  nsresult rv = windowElement->GetAttribute(NS_LITERAL_STRING("toggletoolbar"), attr);
+  if (NS_SUCCEEDED(rv)) {
+    mWindow->SetShowsToolbarButton(attr.LowerCaseEqualsLiteral("true"));
+  }
   return NS_OK;
 }
 

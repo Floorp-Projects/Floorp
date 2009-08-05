@@ -122,6 +122,7 @@ protected:
    nsresult   LoadChromeHidingFromXUL();
    NS_IMETHOD LoadWindowClassFromXUL();
    NS_IMETHOD LoadIconFromXUL();
+   NS_IMETHOD LoadToolbarButtonPresenceFromXUL();
    NS_IMETHOD SavePersistentAttributes();
 
    NS_IMETHOD GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow);
