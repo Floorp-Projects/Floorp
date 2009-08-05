@@ -347,102 +347,7 @@ var Browser = {
     let controlsScrollbox = this.controlsScrollbox = document.getElementById("scrollbox");
     this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
-    contentScrollbox.customDragger = {
-      scrollingOuter: true,
-
-      dragStart: function dragStart(scroller) {
-        bv.pauseRendering();
-      },
-
-      dragStop: function dragStop(dx, dy, scroller) {
-        let dx = this.dragMove(dx, dy, scroller, true);
-
-        let snapdx = Browser.snapSidebars(Browser.controlsScrollboxScroller);
-        bv.onAfterVisibleMove(snapdx, 0);
-
-        bv.resumeRendering();
-
-        return (dy != 0) || ((dx + snapdx) != 0);
-      },
-
-      dragMove: function dragMove(dx, dy, scroller, doReturnDX) {
-        dump('--> dx, dy: ' + dx + ', ' + dy + '\n');
-
-        if (this.scrollingOuter) {
-          let odx = 0;
-          let ody = dy;
-
-          if (dx > 0) {
-            let contentleft = Math.floor(contentScrollbox.getBoundingClientRect().left);
-            odx = (contentleft > 0) ? Math.min(contentleft, dx) : dx;
-          } else if (dx < 0) {
-            let contentright = Math.ceil(contentScrollbox.getBoundingClientRect().right);
-            let w = window.innerWidth;
-            odx = (contentright < w) ? Math.max(contentright - w, dx) : dx;
-          }
-
-          dump('--> odx, ody: ' + odx + ', ' + ody + '\n');
-
-          let controlsMoved = this.outerDragMove(odx, ody, Browser.controlsScrollboxScroller);
-
-          if (odx != dx || ody != dy) {
-            this.scrollingOuter = false;
-            dx -= odx;
-            dy -= ody;
-          } else
-            return controlsMoved;
-        }
-
-        bv.onBeforeVisibleMove(dx, dy);
-
-        let [x0, y0] = Browser.getScrollboxPosition(scroller);
-
-        scroller.scrollBy(dx, dy);
-
-        let [x1, y1] = Browser.getScrollboxPosition(scroller);
-
-        let realdx = x1 - x0;
-        let realdy = y1 - y0;
-
-        bv.onAfterVisibleMove(realdx, realdy);
-
-        if (realdx != dx || realdy != dy) {
-          dump('--> scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
-
-          let restdx = dx - realdx;
-          let restdy = dy - realdy;
-
-          dump("--> restdx, restdy: " + restdx + " " + restdy + "\n");
-
-          this.scrollingOuter = true;
-          this.dragMove(restdx, restdy, scroller, doReturnDX);
-        }
-
-        dump('--> new real dx/y ' + realdx + ',' + realdy + '\n');
-
-        return (doReturnDX) ? realdx : (realdx != 0 || realdy != 0);
-      },
-
-      outerDragMove: function outerDragMove(dx, dy, scroller) {
-        bv.onBeforeVisibleMove(dx, dy);
-
-        let [x0, y0] = Browser.getScrollboxPosition(scroller);
-
-        scroller.scrollBy(dx, dy);
-
-        let [x1, y1] = Browser.getScrollboxPosition(scroller);
-
-        let realdx = x1 - x0;
-        let realdy = y1 - y0;
-
-        bv.onAfterVisibleMove(realdx, realdy);
-
-        if (realdx != dx || realdy != dy)
-          dump('--> outer scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
-
-        return (realdx != 0 || realdy != 0);
-      }
-    };
+    contentScrollbox.customDragger = new Browser.MainDragger(bv);
 
     controlsScrollbox.customDragger = {
       dragStart: function dragStart(scroller) {},
@@ -1059,27 +964,32 @@ var Browser = {
     let [ritevis, ] = visibility(ritebar, visrect);
 
     let snappedX = 0;
+    let snappedIn = false;
 
     if (leftvis != 0 && leftvis != 1) {
-      if (leftvis >= 0.6666)
+      if (leftvis >= 0.6666) {
         snappedX = -((1 - leftvis) * leftw);
-      else
+      } else {
         snappedX = leftvis * leftw;
+        snappedIn = true;
+      }
 
       snappedX = Math.round(snappedX);
       scroller.scrollBy(snappedX, 0);
     }
     else if (ritevis != 0 && ritevis != 1) {
-      if (ritevis >= 0.6666)
+      if (ritevis >= 0.6666) {
         snappedX = (1 - ritevis) * ritew;
-      else
+      } else {
         snappedX = -ritevis * ritew;
+        snappedIn = true;
+      }
 
       snappedX = Math.round(snappedX);
       scroller.scrollBy(snappedX, 0);
     }
 
-    return snappedX;
+    return [snappedX, snappedIn];
   },
 
   zoomToElement: function zoomToElement(aElement) {
@@ -1236,6 +1146,97 @@ var Browser = {
     let dummy = getComputedStyle(document.documentElement, "").width;
   }
 
+};
+
+Browser.MainDragger = function MainDragger(browserView) {
+  this.scrollingOuterX = true;
+  this.bv = browserView;
+};
+
+Browser.MainDragger.prototype = {
+  dragStart: function dragStart(scroller) {
+    this.bv.pauseRendering();
+  },
+
+  dragStop: function dragStop(dx, dy, scroller) {
+    let dx = this.dragMove(dx, dy, scroller, true);
+
+    let [snapdx, snappedIn] = Browser.snapSidebars(Browser.controlsScrollboxScroller);
+    this.bv.onAfterVisibleMove(snapdx, 0);
+
+    if (snappedIn) {
+      this.scrollingOuterX = false;
+    }
+
+    this.bv.resumeRendering();
+
+    return (dy != 0) || ((dx + snapdx) != 0);
+  },
+
+  dragMove: function dragMove(dx, dy, scroller, doReturnDX) {
+    let outrv = 0;
+
+    if (this.scrollingOuterX) {
+      let odx = 0;
+      let ody = 0;
+
+      if (dx > 0) {
+        let contentleft = Math.floor(Browser.contentScrollbox.getBoundingClientRect().left);
+        odx = (contentleft > 0) ? Math.min(contentleft, dx) : dx;
+      } else if (dx < 0) {
+        let contentright = Math.ceil(Browser.contentScrollbox.getBoundingClientRect().right);
+        let w = window.innerWidth;
+        odx = (contentright < w) ? Math.max(contentright - w, dx) : dx;
+      }
+
+      outrv = this.outerDragMove(odx, ody, Browser.controlsScrollboxScroller, doReturnDX);
+
+      if (odx != dx || ody != dy) {
+        this.scrollingOuterX = false;
+        dx -= odx;
+        dx -= ody;
+      } else {
+        return outrv;
+      }
+    }
+
+    this.bv.onBeforeVisibleMove(dx, dy);
+
+    let [x0, y0] = Browser.getScrollboxPosition(scroller);
+    scroller.scrollBy(dx, dy);
+    let [x1, y1] = Browser.getScrollboxPosition(scroller);
+
+    let realdx = x1 - x0;
+    let realdy = y1 - y0;
+
+    this.bv.onAfterVisibleMove(realdx, realdy);
+
+    if (realdx != dx) {
+      let restdx = dx - realdx;
+
+      dump("--> restdx: " + restdx + "\n");
+
+      this.scrollingOuterX = true;
+      this.dragMove(restdx, 0, scroller, doReturnDX);
+    }
+
+    return (doReturnDX) ? (outrv + realdx) : ((outrv + realdx) != 0 || realdy != 0);
+  },
+
+  outerDragMove: function outerDragMove(dx, dy, scroller, doReturnDX) {
+    this.bv.onBeforeVisibleMove(dx, dy);
+
+    let [x0, y0] = Browser.getScrollboxPosition(scroller);
+    scroller.scrollBy(dx, dy);
+    let [x1, y1] = Browser.getScrollboxPosition(scroller);
+
+    let realdx = x1 - x0;
+    let realdy = y1 - y0;
+
+    this.bv.onAfterVisibleMove(realdx, realdy);
+
+    return (doReturnDX) ? realdx : (realdx != 0 || realdy != 0);
+  }
 };
 
 function nsBrowserAccess()
