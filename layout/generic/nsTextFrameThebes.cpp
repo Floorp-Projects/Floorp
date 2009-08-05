@@ -221,8 +221,8 @@ struct TextRunMappedFlow {
 
 /**
  * This is our user data for the textrun, when textRun->GetFlags() does not
- * have TEXT_IS_SIMPLE_FLOW set. When TEXT_IS_SIMPLE_FLOW is set, there is
- * just one flow, the textrun's user data pointer is a pointer to mStartFrame
+ * have TEXT_SIMPLE_FLOW set. When TEXT_SIMPLE_FLOW is set, there is just one
+ * flow, the textrun's user data pointer is a pointer to mStartFrame
  * for that flow, mDOMOffsetToBeforeTransformOffset is zero, and mContentLength
  * is the length of the text node.
  */
@@ -3779,72 +3779,52 @@ nsTextFrame::ClearTextRun()
   }
 }
 
+static void
+ClearTextRunsInFlowChain(nsTextFrame* aFrame)
+{
+  nsTextFrame* f;
+  for (f = aFrame; f; f = static_cast<nsTextFrame*>(f->GetNextInFlow())) {
+    f->ClearTextRun();
+  }
+}
+
 NS_IMETHODIMP
 nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
-  // Find the first frame whose text has changed. Frames that are entirely
-  // before the text change are completely unaffected.
-  nsTextFrame* next;
-  nsTextFrame* textFrame = this;
-  while (PR_TRUE) {
-    next = static_cast<nsTextFrame*>(textFrame->GetNextContinuation());
-    if (!next || next->GetContentOffset() > PRInt32(aInfo->mChangeStart))
-      break;
-    textFrame = next;
-  }
+  ClearTextRunsInFlowChain(this);
 
-  PRInt32 endOfChangedText = aInfo->mChangeStart + aInfo->mReplaceLength;
-  nsTextFrame* lastDirtiedFrame = nsnull;
+  nsTextFrame* targetTextFrame;
+  PRInt32 nodeLength = mContent->GetText()->GetLength();
 
-  nsIPresShell* shell = PresContext()->GetPresShell();
-  do {
-    // textFrame contained deleted text (or the insertion point,
-    // if this was a pure insertion).
-    textFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
-    textFrame->ClearTextRun();
-    if (!lastDirtiedFrame ||
-        lastDirtiedFrame->GetParent() != textFrame->GetParent()) {
-      // Ask the parent frame to reflow me.
-      shell->FrameNeedsReflow(textFrame, nsIPresShell::eStyleChange,
-                              NS_FRAME_IS_DIRTY);
-      lastDirtiedFrame = textFrame;
-    } else {
-      // if the parent is a block, we're cheating here because we should
-      // be marking our line dirty, but we're not. nsTextFrame::SetLength
-      // will do that when it gets called during reflow.
-      textFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-    }
-
-    // Below, frames that start after the deleted text will be adjusted so that
-    // their offsets move with the trailing unchanged text. If this change
-    // deletes more text than it inserts, those frame offsets will decrease.
-    // We need to maintain the invariant that mContentOffset is non-decreasing
-    // along the continuation chain. So we need to ensure that frames that
-    // started in the deleted text are all still starting before the
-    // unchanged text.
-    if (textFrame->mContentOffset > endOfChangedText) {
-      textFrame->mContentOffset = endOfChangedText;
-    }
-
-    textFrame = static_cast<nsTextFrame*>(textFrame->GetNextContinuation());
-  } while (textFrame && textFrame->GetContentOffset() < PRInt32(aInfo->mChangeEnd));
-
-  // This is how much the length of the string changed by --- i.e.,
-  // how much the trailing unchanged text moved.
-  PRInt32 sizeChange =
-    aInfo->mChangeStart + aInfo->mReplaceLength - aInfo->mChangeEnd;
-
-  if (sizeChange) {
-    // Fix the offsets of the text frames that start in the trailing
-    // unchanged text.
-    while (textFrame) {
-      textFrame->mContentOffset += sizeChange;
-      // XXX we could rescue some text runs by adjusting their user data
-      // to reflect the change in DOM offsets
-      textFrame->ClearTextRun();
+  if (aInfo->mAppend) {
+    targetTextFrame = static_cast<nsTextFrame*>(GetLastContinuation());
+    targetTextFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
+  } else {
+    // Mark all the continuation frames as dirty, and fix up content offsets to
+    // be valid.
+    // Don't set NS_FRAME_IS_DIRTY on |this|, since we call FrameNeedsReflow
+    // below.
+    nsTextFrame* textFrame = this;
+    PRInt32 newLength = nodeLength;
+    do {
+      textFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
+      // If the text node has shrunk, clip the frame contentlength as necessary
+      if (textFrame->mContentOffset > newLength) {
+        textFrame->mContentOffset = newLength;
+      }
       textFrame = static_cast<nsTextFrame*>(textFrame->GetNextContinuation());
-    }
+      if (!textFrame) {
+        break;
+      }
+      textFrame->mState |= NS_FRAME_IS_DIRTY;
+    } while (1);
+    targetTextFrame = this;
   }
+
+  // Ask the parent frame to reflow me.
+  PresContext()->GetPresShell()->FrameNeedsReflow(targetTextFrame,
+                                                  nsIPresShell::eStyleChange,
+                                                  NS_FRAME_IS_DIRTY);
 
   return NS_OK;
 }
@@ -5918,33 +5898,13 @@ HasSoftHyphenBefore(const nsTextFragment* aFrag, gfxTextRun* aTextRun,
 }
 
 void
-nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
+nsTextFrame::SetLength(PRInt32 aLength)
 {
   mContentLengthHint = aLength;
   PRInt32 end = GetContentOffset() + aLength;
   nsTextFrame* f = static_cast<nsTextFrame*>(GetNextInFlow());
   if (!f)
     return;
-
-  // If our end offset is moving, then even if frames are not being pushed or
-  // pulled, content is moving to or from the next line and the next line
-  // must be reflowed.
-  // If the next-continuation is dirty, then we should dirty the next line now
-  // because we may have skipped doing it if we dirtied it in
-  // CharacterDataChanged. This is ugly but teaching FrameNeedsReflow
-  // and ChildIsDirty to handle a range of frames would be worse.
-  if (aLineLayout &&
-      (end != f->mContentOffset || (f->GetStateBits() & NS_FRAME_IS_DIRTY))) {
-    const nsLineList::iterator* line = aLineLayout->GetLine();
-    nsBlockFrame* block = do_QueryFrame(aLineLayout->GetLineContainerFrame());
-    if (line && block) {
-      nsLineList::iterator next = line->next();
-      if (next != block->end_lines() && !next->IsBlock()) {
-        next->MarkDirty();
-      }
-    }
-  }
-
   if (end < f->mContentOffset) {
     // Our frame is shrinking. Give the text to our next in flow.
     f->mContentOffset = end;
@@ -5954,12 +5914,8 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
     }
     return;
   }
-  // Our frame is growing. Take text from our in-flow(s).
-  // We can take text from frames in lines beyond just the next line.
-  // We don't dirty those lines. That's OK, because when we reflow
-  // our empty next-in-flow, it will take text from its next-in-flow and
-  // dirty that line.
   while (f && f->mContentOffset < end) {
+    // Our frame is growing. Take text from our in-flow.
     f->mContentOffset = end;
     if (f->GetTextRun() != mTextRun) {
       ClearTextRun();
@@ -5967,7 +5923,6 @@ nsTextFrame::SetLength(PRInt32 aLength, nsLineLayout* aLineLayout)
     }
     f = static_cast<nsTextFrame*>(f->GetNextInFlow());
   }
-
 #ifdef DEBUG
   f = this;
   PRInt32 iterations = 0;
@@ -6091,7 +6046,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // Layout dependent styles are a problem because we need to reconstruct
   // the gfxTextRun based on our layout.
   if (lineLayout.GetInFirstLetter() || lineLayout.GetInFirstLine()) {
-    SetLength(maxContentLength, &lineLayout);
+    SetLength(maxContentLength);
 
     if (lineLayout.GetInFirstLetter()) {
       // floating first-letter boundaries are significant in textrun
@@ -6133,7 +6088,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
         // Change this frame's length to the first-letter length right now
         // so that when we rebuild the textrun it will be built with the
         // right first-letter boundary
-        SetLength(offset + length - GetContentOffset(), &lineLayout);
+        SetLength(offset + length - GetContentOffset());
         // Ensure that the textrun will be rebuilt
         ClearTextRun();
       }
@@ -6430,9 +6385,10 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
         charsFit - numJustifiableCharacters);
   }
 
-  SetLength(contentLength, &lineLayout);
+  SetLength(contentLength);
 
   if (mContent->HasFlag(NS_TEXT_IN_SELECTION)) {
+    // XXXroc Watch out, this could be slow!!! Speed up GetSelectionDetails?
     SelectionDetails* details = GetSelectionDetails();
     if (details) {
       AddStateBits(NS_FRAME_SELECTED_CONTENT);
@@ -6863,7 +6819,7 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
   }
 
   mContentOffset = aStart;
-  SetLength(aEnd - aStart, nsnull);
+  SetLength(aEnd - aStart);
 }
 
 /**
