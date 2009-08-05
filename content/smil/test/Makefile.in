@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Daniel Holbert <dholbert@mozilla.com>
+#   Brian Birtles <bbirtles@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,6 +50,8 @@ _TEST_FILES = 	test_smilRestart.xhtml \
 	  test_smilSetCurrentTime.xhtml \
 	  test_smilSync.xhtml \
 	  test_smilSyncTransform.xhtml \
+	  test_smilTiming.xhtml \
+	  test_smilTimingZeroIntervals.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

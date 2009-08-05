@@ -1,0 +1,111 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL timing</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="-100" cy="20" r="15" fill="blue" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for SMIL timing **/
+
+/* Global Variables */
+const svgns="http://www.w3.org/2000/svg";
+var svg = document.getElementById("svg");
+var circle = document.getElementById('circle');
+
+SimpleTest.waitForExplicitFinish();
+
+function createAnim() {
+  var anim = document.createElementNS(svgns,'animate');
+  anim.setAttribute('attributeName','cx');
+  anim.setAttribute('from','0');
+  anim.setAttribute('to','100');
+  anim.setAttribute('dur','10s');
+  anim.setAttribute('begin','indefinite');
+  return circle.appendChild(anim);
+}
+
+function removeAnim(anim) {
+  anim.parentNode.removeChild(anim);
+}
+
+function main() {
+  svg.pauseAnimations();
+  var tests =
+    [ testOffsetStartup,
+      testMultipleBegins,
+      testNegativeBegins,
+      testSorting
+    ];
+  for (var i = 0; i < tests.length; i++) {
+    var anim = createAnim();
+    svg.setCurrentTime(0);
+    tests[i](anim);
+    removeAnim(anim);
+  }
+  SimpleTest.finish();
+}
+
+function checkSample(time, expectedValue) {
+  svg.setCurrentTime(time);
+  is(circle.cx.animVal.value, expectedValue);
+}
+
+function testOffsetStartup(anim) {
+  anim.setAttribute('begin', '3s');
+  checkSample(0,-100);
+  checkSample(4,10);
+}
+
+function testMultipleBegins(anim) {
+  anim.setAttribute('begin', '2s; 6s');
+  anim.setAttribute('dur', ' 2s');
+  checkSample(0,-100);
+  checkSample(3,50);
+  checkSample(4,-100);
+  checkSample(7,50);
+  checkSample(8,-100);
+}
+
+function testNegativeBegins(anim) {
+  anim.setAttribute('begin', '-3s; 1s ; 4s');
+  anim.setAttribute('dur', '2s ');
+  anim.setAttribute('fill', 'freeze');
+  checkSample(0,-100);
+  checkSample(0.5,-100);
+  checkSample(1,0);
+  checkSample(2,50);
+  checkSample(3,100);
+  checkSample(5,50);
+}
+
+function testSorting(anim) {
+  anim.setAttribute('begin', '-3s; 110s; 1s; 4s; -5s; -10s');
+  anim.setAttribute('end', '111s; -5s; -15s; 6s; -5s; 1.2s');
+  anim.setAttribute('dur', '2s ');
+  anim.setAttribute('fill', 'freeze');
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(2,10);
+  checkSample(4,0);
+  checkSample(5,50);
+  checkSample(109,100);
+  checkSample(110,0);
+  checkSample(112,50);
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>
