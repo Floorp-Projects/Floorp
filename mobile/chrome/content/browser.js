@@ -326,8 +326,10 @@ var Browser = {
   _selectedTab : null,
   windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils),
-  scrollbox: null,
-  scrollboxScroller: null,
+  contentScrollbox: null,
+  contentScrollboxScroller: null,
+  controlsScrollbox: null,
+  controlsScrollboxScroller: null,
 
   startup: function() {
     var self = this;
@@ -339,10 +341,15 @@ var Browser = {
 
     container.customClicker = this._createContentCustomClicker(bv);
 
-    let scrollbox = this.scrollbox = document.getElementById("tile-container-container");
-    this.scrollboxScroller = scrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+    let contentScrollbox = this.contentScrollbox = document.getElementById("tile-container-container");
+    this.contentScrollboxScroller = contentScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
-    scrollbox.customDragger = {
+    let controlsScrollbox = this.controlsScrollbox = document.getElementById("scrollbox");
+    this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+
+    contentScrollbox.customDragger = {
+      scrollingOuter: true,
+
       dragStart: function dragStart(scroller) {
         bv.pauseRendering();
       },
@@ -350,7 +357,7 @@ var Browser = {
       dragStop: function dragStop(dx, dy, scroller) {
         let dx = this.dragMove(dx, dy, scroller, true);
 
-        let snapdx = Browser.snapSidebars(scroller);
+        let snapdx = 0;//Browser.snapSidebars(scroller);
         bv.onAfterVisibleMove(snapdx, 0);
 
         bv.resumeRendering();
@@ -359,6 +366,39 @@ var Browser = {
       },
 
       dragMove: function dragMove(dx, dy, scroller, doReturnDX) {
+        dump('--> dx, dy: ' + dx + ', ' + dy + '\n');
+
+        if (this.scrollingOuter) {
+          let odx = 0;
+          let ody = dy;
+
+          if (dx > 0) {
+            let contentleft = Math.floor(contentScrollbox.getBoundingClientRect().left);
+            odx = (contentleft > 0) ? Math.min(contentleft, dx) : dx;
+            //odx = Math.min(dx, Math.max(0,
+            //                            Math.floor(contentScrollbox.getBoundingClientRect().left)));
+          } else if (dx < 0) {
+            let contentright = Math.ceil(contentScrollbox.getBoundingClientRect().right);
+            let w = window.innerWidth;
+            odx = (contentright < w) ? Math.max(contentright - w, dx) : dx;
+            //odx = Math.max(dx, Math.min(0,
+            //                            Math.ceil(contentScrollbox.getBoundingClientRect().right - window.innerWidth)));
+          }
+
+          dump('--> odx, ody: ' + odx + ', ' + ody + '\n');
+
+          let controlsMoved = controlsScrollbox.customDragger.dragMove(odx, ody, Browser.controlsScrollboxScroller);
+
+          //return false;
+
+          if (odx != dx || ody != dy) {
+            this.scrollingOuter = false;
+            dx -= odx;
+            dy -= ody;
+          } else
+            return controlsMoved;
+        }
+
         bv.onBeforeVisibleMove(dx, dy);
 
         let [x0, y0] = Browser.getScrollboxPosition(scroller);
@@ -373,36 +413,46 @@ var Browser = {
         if (realdx != dx || realdy != dy) {
           dump('--> scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
 
-	  // scroll outer box
-	  let outerScrollbox = document.getElementById("scrollbox");
-	  let outerScroller = outerScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+          let restdx = dx - realdx;
+          let restdy = dy - realdy;
 
-	  let newdx = dx - realdx;
-	  let newdy = dy - realdy;
+          dump("--> restdx, restdy: " + restdx + " " + restdy + "\n");
 
-	  dump("newdx, newdy: " + newdx + " " + newdy + "\n");
-
-	  [x0, y0] = Browser.getScrollboxPosition(outerScroller);
-
-	  outerScroller.scrollBy(newdx, newdy);
-
-	  [x1, y1] = Browser.getScrollboxPosition(outerScroller);
-
-	  let orealdx = x1 - x0;
-	  let orealdy = y1 - y0;
-
-          dump('--> outer scroll asked for ' + newdx + ',' + newdy + ' and got ' + orealdx + ',' + orealdy + '\n');
-
-	  //realdx += orealdx;
-	  //realdy += orealdy;
-
+          this.scrollingOuter = true;
+          this.dragMove(restdx, restdy, scroller, doReturnDX);
         }
 
-	dump('--> new real dx/y ' + realdx + ',' + realdy + '\n');
+        dump('--> new real dx/y ' + realdx + ',' + realdy + '\n');
 
         bv.onAfterVisibleMove(realdx, realdy);
 
-        return (doReturnDX) ? realdx : !(realdx == 0 && realdy == 0);
+        return (doReturnDX) ? realdx : (realdx != 0 || realdy != 0);
+      }
+    };
+
+    controlsScrollbox.customDragger = {
+      dragStart: function dragStart(scroller) {
+
+      },
+
+      dragStop: function dragStop(dx, dy, scroller) {
+
+      },
+
+      dragMove: function dragMove(dx, dy, scroller) {
+        let [x0, y0] = Browser.getScrollboxPosition(scroller);
+
+        scroller.scrollBy(dx, dy);
+
+        let [x1, y1] = Browser.getScrollboxPosition(scroller);
+
+        let realdx = x1 - x0;
+        let realdy = y1 - y0;
+
+        if (realdx != dx || realdy != dy)
+          dump('--> outer scroll asked for ' + dx + ',' + dy + ' and got ' + realdx + ',' + realdy + '\n');
+
+        return (realdx != 0 || realdy != 0);
       }
     };
 
@@ -443,12 +493,11 @@ var Browser = {
 
       bv.beginBatchOperation();
 
-      scrollbox.style.width  = window.innerWidth + 'px';
-      scrollbox.style.height = window.innerHeight + 'px';
+      contentScrollbox.style.width  = window.innerWidth + 'px';
+      contentScrollbox.style.height = window.innerHeight + 'px';
 
-      let sb = document.getElementById("scrollbox");
-      sb.style.width  = window.innerWidth + 'px';
-      sb.style.height = window.innerHeight + 'px';
+      controlsScrollbox.style.width  = window.innerWidth + 'px';
+      controlsScrollbox.style.height = window.innerHeight + 'px';
 
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
@@ -1043,7 +1092,7 @@ var Browser = {
     const margin = 15;
 
     let bv = Browser._browserView;
-    let scroller = Browser.scrollboxScroller;
+    let scroller = Browser.contentScrollboxScroller;
 
     let elRect = Browser.getBoundingContentRect(aElement);
     let elWidth = elRect.width;
@@ -1077,14 +1126,14 @@ var Browser = {
 
     dump('zoom to element at ' + x + ', ' + y + ' by dragging ' + (x - x0) + ', ' + (y - y0) + '\n');
 
-    Browser.scrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
+    Browser.contentScrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
 
     bv.commitBatchOperation();
   },
 
   zoomFromElement: function zoomFromElement(aElement) {
     let bv = Browser._browserView;
-    let scroller = Browser.scrollboxScroller;
+    let scroller = Browser.contentScrollboxScroller;
 
     let elRect = Browser.getBoundingContentRect(aElement);
 
@@ -1106,7 +1155,7 @@ var Browser = {
 
     dump('zoom from element at ' + x + ', ' + y + ' by dragging ' + (x - x0) + ', ' + (y - y0) + '\n');
 
-    Browser.scrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
+    Browser.contentScrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
 
     bv.commitBatchOperation();
   },

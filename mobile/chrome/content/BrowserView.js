@@ -275,8 +275,8 @@ BrowserView.prototype = {
     return this._visibleRect.clone();
   },
 
-  getVisibleRectX: function getVisibleRectX() { return this._visibleRect.x; },
-  getVisibleRectY: function getVisibleRectY() { return this._visibleRect.y; },
+  getVisibleRectX: function getVisibleRectX() { return this._visibleRect.left; },
+  getVisibleRectY: function getVisibleRectY() { return this._visibleRect.top; },
   getVisibleRectWidth: function getVisibleRectWidth() { return this._visibleRect.width; },
   getVisibleRectHeight: function getVisibleRectHeight() { return this._visibleRect.height; },
 
