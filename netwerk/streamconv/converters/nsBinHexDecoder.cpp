@@ -199,23 +199,26 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
   {
     case BINHEX_STATE_START:
       mState = BINHEX_STATE_FNAME;
-      mCount = 1;
+      mCount = 0;
 
       // c & 63 returns the length of mName. So if we need the length, that's how
-      // you can figure it out...for now we are storing it in the first byte of mName
-      *(mName) = (c & 63);
+      // you can figure it out....
+      mName.SetLength(c & 63);
+      if (mName.Length() != c & 63) {
+        /* XXX ProcessNextState/ProcessNextChunk aren't rv checked */
+        mState = BINHEX_STATE_DONE;
+      }
       break;
 
     case BINHEX_STATE_FNAME:
-      mName[mCount] = c;
+      mName.BeginWriting()[mCount] = c;
 
-      if (mCount++ > *(mName)) // the first byte of mName is the length...
+      if (++mCount > mName.Length())
       {
         // okay we've figured out the file name....set the content type on the channel
         // based on the file name AND issue our delayed on start request....
-        // be sure to skip the first byte of mName which is the size of the file name
 
-        SetContentType(aRequest, &mName[1]);
+        DetectContentType(aRequest, mName);
         // now propagate the on start request
         mNextListener->OnStartRequest(aRequest, aContext);
 
@@ -498,10 +501,10 @@ nsBinHexDecoder::OnStartRequest(nsIRequest* request, nsISupports *aCtxt)
 // content type and set it on the channel associated with the request.  If the
 // filename tells us nothing useful, just report an unknown type and let the
 // unknown decoder handle things.
-nsresult nsBinHexDecoder::SetContentType(nsIRequest* aRequest,
-                                         const char * fileName)
+nsresult nsBinHexDecoder::DetectContentType(nsIRequest* aRequest,
+                                            const nsAFlatCString &aFilename)
 {
-  if (!fileName || !*fileName) {
+  if (aFilename.IsEmpty()) {
     // Nothing to do here.
     return NS_OK;
   }
@@ -515,8 +518,8 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest* aRequest,
 
   nsCAutoString contentType;
 
-  // extract the extension from fileName and look it up.
-  const char * fileExt = strrchr(fileName, '.');
+  // extract the extension from aFilename and look it up.
+  const char * fileExt = strrchr(aFilename.get(), '.');
   if (!fileExt) {
     return NS_OK;
   }
