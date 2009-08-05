@@ -3148,7 +3148,7 @@ class RegExpNativeCompiler {
 
         if (alloc.outOfMemory())
             goto fail;
-        ::compile(fragmento, assm, fragment, alloc);
+        ::compile(assm, fragment, alloc verbose_only(, fragmento->labels));
         if (assm->error() != nanojit::None) {
             oom = assm->error() == nanojit::OutOMem;
             goto fail;
