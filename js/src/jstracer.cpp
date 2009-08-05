@@ -3403,7 +3403,7 @@ TraceRecorder::compile(JSTraceMonitor* tm)
         return;
 
     Assembler *assm = tm->assembler;
-    ::compile(fragmento, assm, fragment, *tm->allocator);
+    ::compile(assm, fragment, *tm->allocator verbose_only(, fragmento->labels));
     if (assm->error() == nanojit::OutOMem)
         return;
 
