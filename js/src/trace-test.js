@@ -5650,6 +5650,20 @@ function testNestedClosures() {
 testNestedClosures.expected = '4,8,5,9,6,10,7,11';
 test(testNestedClosures);
 
+function testMultipleArgumentsObjects() {
+    var testargs = arguments;
+    var f = function (name, which) {
+        var args = [testargs, arguments];
+        return args[which][0];
+    };
+    var arr = [0, 0, 0, 0, 1];
+    for (var i = 0; i < arr.length; i++)
+        arr[i] = f("f", arr[i]);
+    return arr + '';
+}
+testMultipleArgumentsObjects.expected =  ",,,,f";
+test(testMultipleArgumentsObjects);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
