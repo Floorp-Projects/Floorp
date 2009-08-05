@@ -1207,7 +1207,7 @@ Browser.MainDragger.prototype = {
     
     dx += this.dragMove(Browser.snapSidebars(), 0, scroller, true);
 
-    Browser.ensureToolbarVisibility();
+    //Browser.ensureToolbarVisibility();
 
     this.bv.resumeRendering();
 
@@ -1245,7 +1245,7 @@ Browser.MainDragger.prototype = {
 
     this.bv.onBeforeVisibleMove(dx, dy);
 
-    Browser.ensureToolbarVisibility();
+    //Browser.ensureToolbarVisibility();
 
     let [x0, y0] = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(dx, dy);
