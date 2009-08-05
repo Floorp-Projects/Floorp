@@ -533,7 +533,7 @@ private:
                 return (symbol_type) NP_GetMIMEDescription;
             if (!strcmp("NP_GetValue", aSymbolName))
                 return (symbol_type) NP_GetValue;
-#ifdef OS_WINDOWS
+#ifdef OS_WIN
             if (!strcmp("NP_GetEntryPoints", aSymbolName))
                 return (symbol_type) NP_GetEntryPoints;
 #endif

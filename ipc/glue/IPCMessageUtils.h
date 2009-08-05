@@ -154,23 +154,18 @@ struct ParamTraits<nsTArray<E> >
 
     // Check to make sure the message is valid before requesting a huge chunk
     // of memory.
-    if (aMsg->IteratorHasRoomFor(*aIter, length * sizeof(E)) &&
-        aResult->SetCapacity(length)) {
-      for (PRUint32 index = 0; index < length; index++) {
-        if (!ReadParam(aMsg, aIter, &aResult[index])) {
-          return false;
-        }
-      }
+    if (!aMsg->IteratorHasRoomFor(*aIter, length * sizeof(E))) {
+      return false;
     }
-    else {
-      // Push elements individually.
-      aResult->Clear();
-      E element;
-      for (PRUint32 index = 0; index < length; index++) {
-        if (!ReadParam(aMsg, aIter, &element) ||
-            !aResult->AppendElement(element)) {
-          return false;
-        }
+
+    if (!aResult->SetLength(length)) {
+      return false;
+    }
+
+    for (PRUint32 index = 0; index < length; index++) {
+      E& element = aResult->ElementAt(index);
+      if (!ReadParam(aMsg, aIter, &element)) {
+        return false;
       }
     }
 
