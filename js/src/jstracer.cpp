@@ -9853,7 +9853,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::leaveDeepBailCall()
 {
     // Keep cx->bailExit null when it's invalid.
-    lir->insStorei(INS_CONSTPTR(NULL), cx_ins, offsetof(JSContext, bailExit));    
+    lir->insStorei(INS_CONSTPTR(NULL), cx_ins, offsetof(JSContext, bailExit));
 }
 
 JS_REQUIRES_STACK void
@@ -10017,10 +10017,8 @@ TraceRecorder::record_JSOP_GETELEM()
     }
 
     if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass) {
-        guardClass(obj, obj_ins, &js_ArgumentsClass, snapshot(MISMATCH_EXIT));
-
         unsigned depth;
-        JSStackFrame* afp = frameIfInRange(obj, &depth);
+        JSStackFrame *afp = guardArguments(obj, obj_ins, &depth);
         if (afp) {
             uintN int_idx = JSVAL_TO_INT(idx);
             jsval* vp = &afp->argv[int_idx];
@@ -10033,7 +10031,6 @@ TraceRecorder::record_JSOP_GETELEM()
                 // If the index is not a constant expression, we generate LIR to load the value from
                 // the native stack area. The guard on js_ArgumentClass above ensures the up-to-date
                 // value has been written back to the native stack area.
-
                 idx_ins = makeNumberInt32(idx_ins);
                 if (int_idx >= 0 && int_idx < afp->argc) {
                     JSTraceType type = getCoercedType(*vp);
@@ -10452,6 +10449,30 @@ TraceRecorder::guardCallee(jsval& callee)
     return JSRS_CONTINUE;
 }
 
+/*
+ * Prepare the given |arguments| object to be accessed on trace. If the return
+ * value is non-NULL, then the given |arguments| object refers to a frame on
+ * the current trace and is guaranteed to refer to the same frame on trace for
+ * all later executions.
+ */
+JS_REQUIRES_STACK JSStackFrame *
+TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
+{
+    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_ArgumentsClass);
+
+    JSStackFrame *afp = frameIfInRange(obj, depthp);
+    if (!afp)
+        return NULL;
+
+    VMSideExit *exit = snapshot(MISMATCH_EXIT);
+    guardClass(obj, obj_ins, &js_ArgumentsClass, exit);
+
+    LIns* args_ins = get(&afp->argsobj);
+    LIns* cmp = lir->ins2(LIR_eq, args_ins, obj_ins);
+    lir->insGuard(LIR_xf, cmp, createGuardRecord(exit));
+    return afp;
+}
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing)
 {
@@ -10598,10 +10619,10 @@ TraceRecorder::record_JSOP_APPLY()
                              length),
                   BRANCH_EXIT);
         } else if (OBJ_GET_CLASS(cx, aobj) == &js_ArgumentsClass) {
-            guardClass(aobj, aobj_ins, &js_ArgumentsClass, snapshot(MISMATCH_EXIT));
-            JSStackFrame* afp = frameIfInRange(aobj);
+            unsigned depth;
+            JSStackFrame *afp = guardArguments(aobj, aobj_ins, &depth);
             if (!afp)
-                ABORT_TRACE("arguments object not in range");
+                ABORT_TRACE("can't reach arguments object's frame");
             length = afp->argc;
         } else {
             ABORT_TRACE("arguments parameter of apply is not a dense array or argments object");
@@ -12643,13 +12664,14 @@ TraceRecorder::record_JSOP_LENGTH()
     LIns* obj_ins = get(&l);
 
     if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass) {
-        guardClass(obj, obj_ins, &js_ArgumentsClass, snapshot(MISMATCH_EXIT));
-        JSStackFrame* afp = frameIfInRange(obj);
-        if (afp) {
-            LIns* v_ins = lir->ins1(LIR_i2f, INS_CONST(afp->argc));
-            set(&l, v_ins);
-            return JSRS_CONTINUE;
-        }
+        unsigned depth;
+        JSStackFrame *afp = guardArguments(obj, obj_ins, &depth);
+        if (!afp)
+            ABORT_TRACE("can't reach arguments object's frame");
+
+        LIns* v_ins = lir->ins1(LIR_i2f, INS_CONST(afp->argc));
+        set(&l, v_ins);
+        return JSRS_CONTINUE;
     }
 
     LIns* v_ins;

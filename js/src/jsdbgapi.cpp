@@ -2013,7 +2013,7 @@ js_ResumeVtune(JSContext *cx, JSObject *obj,
 /*
  * Ethogram - Javascript wrapper for TraceVis state
  *
- * ethology: The scientific study of animal behavior, 
+ * ethology: The scientific study of animal behavior,
  *           especially as it occurs in a natural environment.
  * ethogram: A pictorial catalog of the behavioral patterns of
  *           an organism or a species.
