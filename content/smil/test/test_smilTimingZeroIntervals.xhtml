@@ -1,0 +1,271 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL timing with zero-duration intervals</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="-100" cy="20" r="15" fill="blue" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for SMIL timing with zero-duration intervals **/
+
+/* Global Variables */
+const svgns="http://www.w3.org/2000/svg";
+var svg = document.getElementById("svg");
+var circle = document.getElementById('circle');
+
+SimpleTest.waitForExplicitFinish();
+
+function createAnim() {
+  var anim = document.createElementNS(svgns,'animate');
+  anim.setAttribute('attributeName','cx');
+  anim.setAttribute('from','0');
+  anim.setAttribute('to','100');
+  anim.setAttribute('dur','10s');
+  anim.setAttribute('begin','indefinite');
+  return circle.appendChild(anim);
+}
+
+function removeAnim(anim) {
+  anim.parentNode.removeChild(anim);
+}
+
+function main() {
+  svg.pauseAnimations();
+  var tests =
+    [ testZeroDurationIntervalsA,
+      testZeroDurationIntervalsB,
+      testZeroDurationIntervalsC,
+      testZeroDurationIntervalsD,
+      testZeroDurationIntervalsE,
+      testZeroDurationIntervalsF,
+      testZeroDurationIntervalsG,
+      testZeroDurationIntervalsH,
+      testZeroDurationIntervalsI,
+      testZeroDurationIntervalsJ,
+      testZeroDurationIntervalsK,
+      testZeroDurationIntervalsL,
+      testZeroDurationIntervalsM,
+      testZeroDurationIntervalsN,
+      testZeroDurationIntervalsO
+    ];
+  for (var i = 0; i < tests.length; i++) {
+    var anim = createAnim();
+    svg.setCurrentTime(0);
+    tests[i](anim);
+    removeAnim(anim);
+  }
+  SimpleTest.finish();
+}
+
+function checkSample(time, expectedValue) {
+  svg.setCurrentTime(time);
+  is(circle.cx.animVal.value, expectedValue);
+}
+
+function testZeroDurationIntervalsA(anim) {
+  // The zero-duration interval should play, followed by a second interval
+  // starting at the same point. There is no end for the interval
+  // at 4s so it should not play.
+  anim.setAttribute('begin', '1s ;4s');
+  anim.setAttribute('end', '1s; 2s');
+  anim.setAttribute('dur', '2s ');
+  anim.setAttribute('fill', 'freeze');
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(1.1,5);
+  checkSample(2,50);
+  checkSample(3,50);
+  checkSample(4,50);
+  checkSample(5,50);
+  checkSample(6,50);
+}
+
+function testZeroDurationIntervalsB(anim) {
+  // This interval should however actually restart as there is a valid end-point
+  anim.setAttribute('begin', '1s ;4s');
+  anim.setAttribute('end', '1.1s; indefinite');
+  anim.setAttribute('dur', '2s ');
+  anim.setAttribute('fill', 'freeze');
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(1.1,5);
+  checkSample(2,5);
+  checkSample(4,0);
+  checkSample(5,50);
+}
+
+function testZeroDurationIntervalsC(anim) {
+  // -0.5s has already been used as the endpoint of one interval so don't use it
+  // a second time
+  anim.setAttribute('begin', '-2s; -0.5s');
+  anim.setAttribute('end', '-0.5s; 1s');
+  anim.setAttribute('dur', '2s');
+  anim.setAttribute('fill', 'freeze');
+  checkSample(0,25);
+  checkSample(1.5,75);
+}
+
+function testZeroDurationIntervalsD(anim) {
+  // Two end points that could make a zero-length interval
+  anim.setAttribute('begin', '-2s; -0.5s');
+  anim.setAttribute('end', '-0.5s; -0.5s; 1s');
+  anim.setAttribute('dur', '2s');
+  anim.setAttribute('fill', 'freeze');
+  checkSample(0,25);
+  checkSample(1.5,75);
+}
+
+function testZeroDurationIntervalsE(anim) {
+  // Should give us 1s-1s, 1s-5s
+  anim.setAttribute('begin', '1s');
+  anim.setAttribute('end', '1s; 5s');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),1);
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(6,40);
+}
+
+function testZeroDurationIntervalsF(anim) {
+  // Should give us 1s-1s
+  anim.setAttribute('begin', '1s');
+  anim.setAttribute('end', '1s');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),1);
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(2,0);
+  is(anim.getStartTime(),1);
+}
+
+function testZeroDurationIntervalsG(anim) {
+  // Test a non-zero interval after a zero interval
+  // Should give us 1-2s, 3-3s, 3-4s
+  anim.setAttribute('begin', '1s; 3s');
+  anim.setAttribute('end', '3s; 5s');
+  anim.setAttribute('dur', '1s');
+  anim.setAttribute('fill', 'freeze');
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(2,100);
+  checkSample(3,0);
+  checkSample(5,100);
+}
+
+function testZeroDurationIntervalsH(anim) {
+  // Test multiple non-adjacent zero-intervals
+  // Should give us 1-1s, 1-2s, 3-3s, 3-4s
+  anim.setAttribute('begin', '1s; 3s');
+  anim.setAttribute('end', '1s; 3s; 5s');
+  anim.setAttribute('dur', '1s');
+  anim.setAttribute('fill', 'freeze');
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(2,100);
+  checkSample(3,0);
+  checkSample(5,100);
+}
+
+function testZeroDurationIntervalsI(anim) {
+  // Test skipping values that are the same
+  // Should give us 1-1s, 1-2s
+  anim.setAttribute('begin', '1s; 1s');
+  anim.setAttribute('end', '1s; 1s; 2s');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),1);
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(2,10);
+  checkSample(3,10);
+}
+
+function testZeroDurationIntervalsJ(anim) {
+  // Should give us 0-0.5s, 1-1s, 1-3s
+  anim.setAttribute('begin', '0s; 1s; 1s');
+  anim.setAttribute('end', '1s; 3s');
+  anim.setAttribute('dur', '0.5s');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),0);
+  checkSample(0,0);
+  checkSample(0.6,100);
+  checkSample(1,0);
+  checkSample(2,100);
+}
+
+function testZeroDurationIntervalsK(anim) {
+  // Should give us -0.5-1s
+  anim.setAttribute('begin', '-0.5s');
+  anim.setAttribute('end', '-0.5s; 1s');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),-0.5);
+  checkSample(0,5);
+  checkSample(1,15);
+  checkSample(2,15);
+}
+
+function testZeroDurationIntervalsL(anim) {
+  // Test that multiple end values are ignored
+  // Should give us 1-1s, 1-3s
+  anim.setAttribute('begin', '1s');
+  anim.setAttribute('end', '1s; 1s; 1s; 3s');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),1);
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(2,10);
+  checkSample(4,20);
+}
+
+function testZeroDurationIntervalsM(anim) {
+  // Test 0-duration interval at start
+  anim.setAttribute('begin', '0s');
+  anim.setAttribute('end', '0s');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),0);
+  checkSample(0,0);
+  checkSample(1,0);
+}
+
+function testZeroDurationIntervalsN(anim) {
+  // Test 0-active-duration interval at start (different code path to above)
+  anim.setAttribute('begin', '0s');
+  anim.setAttribute('repeatDur', '0s');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),0);
+  checkSample(0,0);
+  checkSample(1,0);
+}
+
+function testZeroDurationIntervalsO(anim) {
+  // Make a zero-duration interval by constraining the active duration
+  // We should not loop infinitely but should look for the next begin time after
+  // that (in this case that is 2s, which would otherwise have been skipped
+  // because restart=whenNotActive)
+  // Should give us 1-1s, 2-2s
+  anim.setAttribute('begin', '1s; 2s');
+  anim.setAttribute('repeatDur', '0s');
+  anim.setAttribute('restart', 'whenNotActive');
+  anim.setAttribute('fill', 'freeze');
+  is(anim.getStartTime(),1);
+  checkSample(0,-100);
+  checkSample(1,0);
+  checkSample(1.5,0);
+  checkSample(3,0);
+  is(anim.getStartTime(),2);
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>
