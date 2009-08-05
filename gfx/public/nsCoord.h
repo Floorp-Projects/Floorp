@@ -425,7 +425,7 @@ inline PRInt32 NSAppUnitsToIntPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
  */
 inline nscoord NSUnitsToTwips(float aValue, float aPointsPerUnit)
 {
-  return NSToCoordRound(aValue * aPointsPerUnit * TWIPS_PER_POINT_FLOAT);
+  return NSToCoordRoundWithClamp(aValue * aPointsPerUnit * TWIPS_PER_POINT_FLOAT);
 }
 
 inline float NSTwipsToUnits(nscoord aTwips, float aUnitsPerPoint)
