@@ -12769,24 +12769,29 @@ DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint3
     for (f = getLoop(tm, ip, globalObj, globalShape, argc); f != NULL; f = f->peer) {
         if (!f->vmprivate)
             continue;
-        debug_only_printf(LC_TMStats, "fragment %p:\nENTRY: ", (void*)f);
+        debug_only_printf(LC_TMRecorder, "Stability of fragment %p:\nENTRY STACK=", (void*)f);
         ti = (TreeInfo*)f->vmprivate;
         if (looped)
             JS_ASSERT(ti->nStackTypes == length);
         for (unsigned i = 0; i < ti->nStackTypes; i++)
-            debug_only_printf(LC_TMStats, "S%d ", ti->stackTypeMap()[i]);
+            debug_only_printf(LC_TMRecorder, "%c", typeChar[ti->stackTypeMap()[i]]);
+        debug_only_print0(LC_TMRecorder, " GLOBALS=");
         for (unsigned i = 0; i < ti->nGlobalTypes(); i++)
-            debug_only_printf(LC_TMStats, "G%d ", ti->globalTypeMap()[i]);
-        debug_only_print0(LC_TMStats, "\n");
+            debug_only_printf(LC_TMRecorder, "%c", typeChar[ti->globalTypeMap()[i]]);
+        debug_only_print0(LC_TMRecorder, "\n");
         UnstableExit* uexit = ti->unstableExits;
         while (uexit != NULL) {
-            debug_only_print0(LC_TMStats, "EXIT:  ");
+            debug_only_print0(LC_TMRecorder, "EXIT  ");
             JSTraceType* m = GetFullTypeMap(uexit->exit);
+            debug_only_print0(LC_TMRecorder, "STACK=");
             for (unsigned i = 0; i < uexit->exit->numStackSlots; i++)
-                debug_only_printf(LC_TMStats, "S%d ", m[i]);
-            for (unsigned i = 0; i < uexit->exit->numGlobalSlots; i++)
-                debug_only_printf(LC_TMStats, "G%d ", m[uexit->exit->numStackSlots + i]);
-            debug_only_print0(LC_TMStats, "\n");
+                debug_only_printf(LC_TMRecorder, "%c", typeChar[m[i]]);
+            debug_only_print0(LC_TMRecorder, " GLOBALS=");
+            for (unsigned i = 0; i < uexit->exit->numGlobalSlots; i++) {
+                debug_only_printf(LC_TMRecorder, "%c",
+                                  typeChar[m[uexit->exit->numStackSlots + i]]);
+            }
+            debug_only_print0(LC_TMRecorder, "\n");
             uexit = uexit->next;
         }
         length = ti->nStackTypes;
