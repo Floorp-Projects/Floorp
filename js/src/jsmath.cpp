@@ -179,7 +179,7 @@ math_atan(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static jsdouble JS_FASTCALL
+static inline jsdouble JS_FASTCALL
 math_atan2_kernel(jsdouble x, jsdouble y)
 {
 #if defined(_MSC_VER)
@@ -227,7 +227,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, math_atan2_kernel (x, y), vp);
 }
 
-static inline jsdouble
+static inline jsdouble JS_FASTCALL
 math_ceil_kernel(jsdouble x)
 {
 #ifdef __APPLE__
