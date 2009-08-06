@@ -689,15 +689,18 @@ ComputeGradientValue (void *info, const float *in, float *out)
     }
 }
 
+static const float gradient_output_value_ranges[8] = {
+    0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f
+};
+static const CGFunctionCallbacks gradient_callbacks = {
+    0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
+};
+
 static CGFunctionRef
 CreateGradientFunction (const cairo_gradient_pattern_t *gpat)
 {
     cairo_pattern_t *pat;
     float input_value_range[2] = { 0.f, 1.f };
-    float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
-    CGFunctionCallbacks callbacks = {
-	0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
-    };
 
     if (_cairo_pattern_create_copy (&pat, &gpat->base))
 	/* quartz doesn't deal very well with malloc failing, so there's
@@ -708,8 +711,8 @@ CreateGradientFunction (const cairo_gradient_pattern_t *gpat)
 			     1,
 			     input_value_range,
 			     4,
-			     output_value_ranges,
-			     &callbacks);
+			     gradient_output_value_ranges,
+			     &gradient_callbacks);
 }
 
 static CGFunctionRef
@@ -720,10 +723,6 @@ CreateRepeatingLinearGradientFunction (cairo_quartz_surface_t *surface,
 {
     cairo_pattern_t *pat;
     float input_value_range[2];
-    float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
-    CGFunctionCallbacks callbacks = {
-	0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
-    };
 
     CGPoint mstart, mend;
 
@@ -792,8 +791,8 @@ CreateRepeatingLinearGradientFunction (cairo_quartz_surface_t *surface,
 			     1,
 			     input_value_range,
 			     4,
-			     output_value_ranges,
-			     &callbacks);
+			     gradient_output_value_ranges,
+			     &gradient_callbacks);
 }
 
 static void
@@ -852,10 +851,6 @@ CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
     CGAffineTransform transform;
     cairo_pattern_t *pat;
     float input_value_range[2];
-    float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
-    CGFunctionCallbacks callbacks = {
-        0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
-    };
     CGPoint *inner;
     double *inner_radius;
     CGPoint *outer;
@@ -932,8 +927,8 @@ CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
            1,
            input_value_range,
            4,
-           output_value_ranges,
-           &callbacks);
+           gradient_output_value_ranges,
+           &gradient_callbacks);
 }
 
 /* Obtain a CGImageRef from a #cairo_surface_t * */
