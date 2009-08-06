@@ -893,7 +893,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
 
 #ifdef JS_TRACER
 
-static JSBool FASTCALL
+static inline JSBool FASTCALL
 dense_grow(JSContext* cx, JSObject* obj, jsint i, jsval v)
 {
     /*
