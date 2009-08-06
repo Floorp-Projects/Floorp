@@ -549,7 +549,7 @@ class NS_STACK_CLASS nsTAutoString_CharT : public nsTFixedString_CharT
   class nsTArrayElementTraits<nsTAutoString_CharT> {
     public:
       template<class A> struct Dont_Instantiate_nsTArray_of;
-      template<class A> struct Instead_Use_nsTArray_of;;
+      template<class A> struct Instead_Use_nsTArray_of;
 
       static Dont_Instantiate_nsTArray_of<nsTAutoString_CharT> *
       Construct(Instead_Use_nsTArray_of<nsTString_CharT> *e) {
