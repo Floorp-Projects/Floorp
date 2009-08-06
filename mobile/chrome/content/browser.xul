@@ -181,77 +181,78 @@
   <stack flex="1">
 
   <scrollbox id="scrollbox" style="overflow: hidden; -moz-box-sizing: ignore" top="0" left="0" flex="1">
-    <vbox>
+    <hbox style="position: relative">
 
-      <hbox style="position: relative">
-
-        <vbox>
-          <spacer class="sidebar-spacer"/>
-          <!-- Left toolbar -->
-          <vbox id="tabs-container" class="panel-dark">
-            <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onclick="BrowserUI.hideTabs();" onclosetab="BrowserUI.closeTab(this)"/>
-            <hbox id="tabs-controls">
-              <toolbarbutton id="newtab-button" class="button-image" command="cmd_newTab"/>
-            </hbox>
-          </vbox>
+      <vbox>
+        <spacer class="sidebar-spacer"/>
+        <!-- Left toolbar -->
+        <vbox id="tabs-container" class="panel-dark">
+          <richlistbox id="tabs" onselect="BrowserUI.selectTab(this.selectedItem);" onclick="BrowserUI.hideTabs();" onclosetab="BrowserUI.closeTab(this)"/>
+          <hbox id="tabs-controls">
+            <toolbarbutton id="newtab-button" class="button-image" command="cmd_newTab"/>
+          </hbox>
         </vbox>
+      </vbox>
 
-        <!-- Content Area -->
-        <scrollbox id="tile-container-container" style="-moz-box-orient: vertical; overflow: hidden;" flex="1">
+      <!-- Content Area -->
+      <scrollbox id="tile-container-container" style="-moz-box-orient: vertical; overflow: hidden;" flex="1">
 
-          <!-- Main Toolbar -->
-          <box id="toolbar-container">
-            <toolbar id="toolbar-main" class="panel-dark">
-              <hbox id="urlbar-container" flex="1">
-                <box id="identity-box"
-                     onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
-                     onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-                  <box id="urlbar-image-box">
-                    <image id="urlbar-throbber"/>
-                    <image id="urlbar-favicon" hidden="true"/>
-                  </box>
+        <!-- Main Toolbar -->
+        <box id="toolbar-container">
+          <toolbar id="toolbar-main" class="panel-dark">
+            <hbox id="urlbar-container" flex="1">
+              <box id="identity-box"
+                   onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
+                   onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+                <box id="urlbar-image-box">
+                  <image id="urlbar-throbber"/>
+                  <image id="urlbar-favicon" hidden="true"/>
                 </box>
-                <hbox id="urlbar-editarea" flex="1">
-                  <textbox id="urlbar-edit"
-                           type="autocomplete"
-                           autocompletesearch="history"
-                           autocompletepopup="popup_autocomplete"
-                           enablehistory="false"
-                           maxrows="6"
-                           completeselectedindex="true"
-                           minresultsforpopup="0"
-                           flex="1"
-                           ontextentered="BrowserUI.goToURI();"
-                           clickSelectsAll="true"/>
-                </hbox>
-                <hbox id="urlbar-icons" mode="view">
-                  <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
-                  <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
-                  <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
-                </hbox>
+              </box>
+              <hbox id="urlbar-editarea" flex="1">
+                <textbox id="urlbar-edit"
+                         type="autocomplete"
+                         autocompletesearch="history"
+                         autocompletepopup="popup_autocomplete"
+                         enablehistory="false"
+                         maxrows="6"
+                         completeselectedindex="true"
+                         minresultsforpopup="0"
+                         flex="1"
+                         ontextentered="BrowserUI.goToURI();"
+                         clickSelectsAll="true"/>
               </hbox>
-              <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
-            </toolbar>
-          </box>
+              <hbox id="urlbar-icons" mode="view">
+                <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
+                <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
+                <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
+              </hbox>
+            </hbox>
+            <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
+          </toolbar>
+        </box>
 
-          <html:div id="tile-container" style="width: 800px; height: 480px; overflow: hidden; position: relative;"
+        <!-- Content viewport -->
+	<box>
+	  <html:div id="tile-container" style="width: 800px; height: 480px; overflow: hidden;"
                     onnewtab="CommandUpdater.doCommand('cmd_newTab');"/> <!-- do we want this new tab thing? -->
-        </scrollbox>
+	</box>
 
-        <!-- Right toolbar -->
-        <vbox>
-          <spacer class="sidebar-spacer"/>
+      </scrollbox>
 
-          <vbox id="browser-controls" class="panel-dark">
-            <toolbarbutton id="tool-star" class="browser-control-button button-image" command="cmd_star"/>
-            <toolbarbutton id="tool-back" class="browser-control-button button-image" command="cmd_back"/>
-            <toolbarbutton id="tool-forward" class="browser-control-button button-image" command="cmd_forward"/>
-            <toolbarspring/>
-            <toolbarbutton id="tool-panel-open" class="page-button button-image" command="cmd_panel"/>
-          </vbox>
+      <!-- Right toolbar -->
+      <vbox>
+        <spacer class="sidebar-spacer"/>
+
+        <vbox id="browser-controls" class="panel-dark">
+          <toolbarbutton id="tool-star" class="browser-control-button button-image" command="cmd_star"/>
+          <toolbarbutton id="tool-back" class="browser-control-button button-image" command="cmd_back"/>
+          <toolbarbutton id="tool-forward" class="browser-control-button button-image" command="cmd_forward"/>
+          <toolbarspring/>
+          <toolbarbutton id="tool-panel-open" class="page-button button-image" command="cmd_panel"/>
         </vbox>
-      </hbox>
-    </vbox>
+      </vbox>
+    </hbox>
   </scrollbox>
 
   <box id="stack-toolbar-container" hidden="true" top="0" left="0"/>

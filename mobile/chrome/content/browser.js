@@ -917,6 +917,39 @@ var Browser = {
   },
 
   /**
+   * Compute the sidebar percentage visibility.
+   *
+   * @return [leftVisibility, rightVisiblity, leftTotalWidth, rightTotalWidth]
+   */
+  computeSidebarVisibility: function computeSidebarVisibility() {
+    function visibility(bar, visrect) {
+      try {
+        let w = bar.width;
+        let h = bar.height;
+        bar.restrictTo(visrect); // throws exception if intersection of rects is empty
+        return bar.width / w;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
+    let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
+
+    let leftbar = new wsRect(leftbarCBR.left, 0, leftbarCBR.width, 1);
+    let ritebar = new wsRect(ritebarCBR.left, 0, ritebarCBR.width, 1);
+    let leftw = leftbar.width;
+    let ritew = ritebar.width;
+
+    let visrect = new wsRect(0, 0, window.innerWidth, 1);
+
+    let leftvis = visibility(leftbar, visrect);
+    let ritevis = visibility(ritebar, visrect);
+
+    return [leftvis, ritevis, leftw, ritew];
+  },
+
+  /**
    * Compute the horizontal distance needed to scroll in order to snap the
    * sidebars into place.
    *
@@ -931,30 +964,8 @@ var Browser = {
    *
    * @return scrollBy dx needed to make snap happen
    */
-  snapSidebars: function snapSidebars(scroller) {
-    function visibility(bar, visrect) {
-      try {
-        let w = bar.width;
-        let h = bar.height;
-        bar.restrictTo(visrect); // throws exception if intersection of rects is empty
-        return [bar.width / w, bar.height / h];
-      } catch (e) {
-        return [0, 0];
-      }
-    }
-
-    let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
-    let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
-
-    let leftbar = new wsRect(leftbarCBR.left, 0, leftbarCBR.width, 1);
-    let ritebar = new wsRect(ritebarCBR.left, 0, ritebarCBR.width, 1);
-    let leftw = leftbar.width;
-    let ritew = ritebar.width;
-
-    let visrect = new wsRect(0, 0, window.innerWidth, 1);
-
-    let [leftvis, ] = visibility(leftbar, visrect);
-    let [ritevis, ] = visibility(ritebar, visrect);
+  snapSidebars: function snapSidebars() {
+    let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility();
 
     let snappedX = 0;
 
@@ -980,61 +991,47 @@ var Browser = {
     return snappedX;
   },
 
-
-  ensureToolbarVisibility: function ensureToolbarVisibility(scroller) {
-    // XXX merge this functionality with above function
-
-    function visibility(bar, visrect) {
-      try {
-        let w = bar.width;
-        let h = bar.height;
-        bar.restrictTo(visrect); // throws exception if intersection of rects is empty
-        return [bar.width / w, bar.height / h];
-      } catch (e) {
-        return [0, 0];
-      }
-    }
-
-    let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
-    let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
-
-    let leftbar = new wsRect(leftbarCBR.left, 0, Math.round(leftbarCBR.width), 1);
-    let ritebar = new wsRect(ritebarCBR.left, 0, Math.round(ritebarCBR.width), 1);
-    let leftw = leftbar.width;
-    let ritew = ritebar.width;
-
-    let visrect = new wsRect(0, 0, window.innerWidth, 1);
-
-    let [leftvis, ] = visibility(leftbar, visrect);
-    let [ritevis, ] = visibility(ritebar, visrect);
-
-    let snappedX = 0;
-
-    let toolbarContainer = document.getElementById("toolbar-container");
+  tryFloatToolbar: function tryFloatToolbar() {
     let stackToolbarContainer = document.getElementById("stack-toolbar-container");
     let toolbarMain = document.getElementById("toolbar-main");
 
-    dump("left/right vis " + leftvis + " " + ritevis + "\n");
+    if (toolbarMain.parentNode == stackToolbarContainer)
+      return true;
 
-    // XXX this should really be 0 and 0 -- check math for why it is sometimes 0.0015...
+    let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility();
 
     if (leftvis > 0.002 || ritevis > 0.002) {
+      let toolbarContainer = document.getElementById("toolbar-container");
+
       // if the toolbar isn't already inside of the stack toolbar then we move it there
-      if (toolbarMain.parentNode != stackToolbarContainer) {
-	dump("moving toolbar to stack\n");
-	stackToolbarContainer.setAttribute("hidden", false);
-	stackToolbarContainer.appendChild(toolbarMain);
-      }
-    } else {
-      if (toolbarMain.parentNode != toolbarContainer) {
-	dump("moving toolbar to scrollbox\n");
-	toolbarContainer.appendChild(toolbarMain);
-	stackToolbarContainer.setAttribute("hidden", true);
-      }
+	    dump("moving toolbar to stack\n");
+      stackToolbarContainer.setAttribute("hidden", false);
+      stackToolbarContainer.appendChild(toolbarMain);
+
+      return true;
     }
+    return false;
   },
 
+  tryUnfloatToolbar: function tryUnfloatToolbar() {
+    let toolbarContainer = document.getElementById("toolbar-container");
+    let toolbarMain = document.getElementById("toolbar-main");
 
+    if (toolbarMain.parentNode == toolbarContainer)
+      return true;
+
+    let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility();
+
+    if (leftvis <= 0.002 && ritevis <= 0.002) {
+      let stackToolbarContainer = document.getElementById("stack-toolbar-container");
+
+	    dump("moving toolbar to scrollbox\n");
+	    toolbarContainer.appendChild(toolbarMain);
+	    stackToolbarContainer.setAttribute("hidden", true);
+      return true;
+    }
+    return false;
+  },
 
   zoomToElement: function zoomToElement(aElement) {
     const margin = 15;
@@ -1195,21 +1192,24 @@ var Browser = {
 Browser.MainDragger = function MainDragger(browserView) {
   this.scrollingOuterX = true;
   this.bv = browserView;
+  this.floatedWhileDragging = false;
 };
 
 Browser.MainDragger.prototype = {
   dragStart: function dragStart(scroller) {
     this.bv.pauseRendering();
+    this.floatedWhileDragging = false;
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
     let dx = this.dragMove(dx, dy, scroller, true);
-    
+
     dx += this.dragMove(Browser.snapSidebars(), 0, scroller, true);
 
-    //Browser.ensureToolbarVisibility();
+    Browser.tryUnfloatToolbar();
 
     this.bv.resumeRendering();
+    this.floatedWhileDragging = false;
 
     return (dx != 0) || (dy != 0);
   },
@@ -1237,7 +1237,7 @@ Browser.MainDragger.prototype = {
       if (odx != dx || ody != dy) {
         this.scrollingOuterX = false;
         dx -= odx;
-        dx -= ody;
+        dy -= ody;
       } else {
         return outrv;
       }
@@ -1245,7 +1245,8 @@ Browser.MainDragger.prototype = {
 
     this.bv.onBeforeVisibleMove(dx, dy);
 
-    //Browser.ensureToolbarVisibility();
+    if (!this.floatedWhileDragging)
+      this.floatedWhileDragging = Browser.tryFloatToolbar();
 
     let [x0, y0] = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(dx, dy);
