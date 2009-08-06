@@ -41,7 +41,6 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsILocale.h"
 #include "nsMacLocale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
