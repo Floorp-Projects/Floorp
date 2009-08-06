@@ -51,7 +51,6 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
-#include "nsILocale.h"
 #include "nsOS2Locale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
