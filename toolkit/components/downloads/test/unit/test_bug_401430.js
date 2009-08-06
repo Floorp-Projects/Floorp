@@ -48,7 +48,8 @@ const resultFileName = "test\u00e3\u041b\u3056" + Date.now() + ".doc";
 
 function checkResult() {
   // delete the saved file (this doesn't affect the "recent documents" list)
-  var resultFile = do_get_file(resultFileName);
+  var resultFile = dirSvc.get("ProfD", Ci.nsIFile);
+  resultFile.append(resultFileName);
   resultFile.remove(false);
 
   do_check_true(checkRecentDocsFor(resultFileName));
