@@ -1036,7 +1036,7 @@ namespace nanojit
 
         LInsp *m_list;
         uint32_t m_used, m_cap;
-        GC* m_gc;
+        Allocator& alloc;
 
         static uint32_t FASTCALL hashcode(LInsp i);
         uint32_t FASTCALL find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap);
@@ -1044,8 +1044,8 @@ namespace nanojit
         void FASTCALL grow();
 
     public:
-        LInsHashSet(GC* gc);
-        ~LInsHashSet();
+
+        LInsHashSet(Allocator&);
         LInsp find32(int32_t a, uint32_t &i);
         LInsp find64(uint64_t a, uint32_t &i);
         LInsp find1(LOpcode v, LInsp a, uint32_t &i);
@@ -1069,7 +1069,7 @@ namespace nanojit
     {
     public:
         LInsHashSet exprs;
-        CseFilter(LirWriter *out, GC *gc);
+        CseFilter(LirWriter *out, Allocator&);
         LIns* insImm(int32_t imm);
         LIns* insImmq(uint64_t q);
         LIns* ins0(LOpcode v);
@@ -1084,7 +1084,7 @@ namespace nanojit
     class LirBuffer
     {
         public:
-            LirBuffer(Allocator&);
+            LirBuffer(Allocator& alloc);
             void        clear();
             uintptr_t   makeRoom(size_t szB);   // make room for an instruction
 
@@ -1144,7 +1144,7 @@ namespace nanojit
             }
 
             // LirWriter interface
-            LInsp   insLoad(LOpcode op, LInsp base, int32_t disp);
+            LInsp    insLoad(LOpcode op, LInsp base, int32_t disp);
             LInsp    insStorei(LInsp o1, LInsp o2, int32_t disp);
             LInsp    ins0(LOpcode op);
             LInsp    ins1(LOpcode op, LInsp o1);
@@ -1181,7 +1181,9 @@ namespace nanojit
         LInsp _i; // current instruction that this decoder is operating on.
 
     public:
-        LirReader(LInsp i) : LirFilter(0), _i(i) { }
+        LirReader(LInsp i) : LirFilter(0), _i(i) {
+            NanoAssert(_i);
+        }
         virtual ~LirReader() {}
 
         // LirReader i/f
@@ -1220,8 +1222,9 @@ namespace nanojit
 
         void clear(LInsp p);
     public:
-        LoadFilter(LirWriter *out, GC *gc)
-            : LirWriter(out), exprs(gc) { }
+        LoadFilter(LirWriter *out, Allocator& alloc)
+            : LirWriter(out), sp(NULL), rp(NULL), exprs(alloc)
+        { }
 
         LInsp ins0(LOpcode);
         LInsp insLoad(LOpcode, LInsp base, int32_t disp);
