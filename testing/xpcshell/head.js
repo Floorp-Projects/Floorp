@@ -177,6 +177,17 @@ function do_timeout(delay, expr) {
   timer.initWithCallback(new _TimerCallback(expr), delay, timer.TYPE_ONE_SHOT);
 }
 
+function do_execute_soon(callback) {
+  var tm = Components.classes["@mozilla.org/thread-manager;1"]
+                     .getService(Components.interfaces.nsIThreadManager);
+
+  tm.mainThread.dispatch({
+    run: function() {
+      callback();
+    }
+  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+}
+
 function do_throw(text, stack) {
   if (!stack)
     stack = Components.stack.caller;
