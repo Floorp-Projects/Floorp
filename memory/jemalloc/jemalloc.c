@@ -6397,11 +6397,7 @@ free(void *ptr)
  */
 
 size_t
-#ifdef __linux__
-malloc_usable_size(void *ptr)
-#else
 malloc_usable_size(const void *ptr)
-#endif
 {
 
 #ifdef MALLOC_VALIDATE
