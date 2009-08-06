@@ -2047,8 +2047,8 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
       break;
     }
   }
-  imageSize.width = NSCoordSaturatingMultiply(imageSize.width, scaleX);
-  imageSize.height = NSCoordSaturatingMultiply(imageSize.height, scaleY);
+  imageSize.width = NSCoordSaturatingNonnegativeMultiply(imageSize.width, scaleX);
+  imageSize.height = NSCoordSaturatingNonnegativeMultiply(imageSize.height, scaleY);
 
   // Compute the position of the background now that the background's size is
   // determined.
