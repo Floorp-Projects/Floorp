@@ -47,6 +47,9 @@ include css-gradients/reftest.list
 # css media queries (tests for print mode)
 include css-mediaqueries/reftest.list
 
+# css namespaces
+include css-namespace/reftest.list
+
 # css values and units
 include css-valuesandunits/reftest.list
 
