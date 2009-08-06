@@ -600,8 +600,8 @@ public:
                    AppUnitsToGfxUnits(aAppRect.height)); }
 
   nscoord TwipsToAppUnits(PRInt32 aTwips) const
-  { return NSToCoordRound(NS_TWIPS_TO_INCHES(aTwips) *
-                          mDeviceContext->AppUnitsPerInch()); }
+  { return NSCoordSaturatingMultiply(NS_TWIPS_TO_INCHES(aTwips),
+                                     mDeviceContext->AppUnitsPerInch()); }
 
   // Margin-specific version, since they often need TwipsToAppUnits
   nsMargin TwipsToAppUnits(const nsIntMargin &marginInTwips) const
