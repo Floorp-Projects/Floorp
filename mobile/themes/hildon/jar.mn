@@ -1,13 +1,13 @@
 #filter substitution
 
-firstrun.jar:
+chrome.jar:
 % content firstrun %content/ contentaccessible=yes
   content/firstrun_splash.gif           (firstrun/firstrun_splash.gif)
   content/firstrun_background.gif       (firstrun/firstrun_background.gif)
   content/firstrun.html                 (firstrun/firstrun.html)
   content/favicon-fennec-30.png         (firstrun/favicon-fennec-30.png)
 
-classic.jar:
+chrome.jar:
 % skin browser classic/1.0 %
   platform.css                         (platform.css)
   browser.css                          (browser.css)
