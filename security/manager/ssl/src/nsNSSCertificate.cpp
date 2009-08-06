@@ -58,7 +58,6 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsILocaleService.h"
 #include "nsIURI.h"
 #include "nsTime.h"
 #include "nsIProxyObjectManager.h"
