@@ -10,7 +10,7 @@
 == syntax-010.xml ref-lime-3.xml
 == syntax-011.xml ref-lime-6.xml
 == syntax-012.xml ref-lime-3.xml
-fails == syntax-013.xml ref-lime-5.xml # bug 476856
+== syntax-013.xml ref-lime-5.xml
 == syntax-014.xml ref-lime-3.xml
 == syntax-015.xml ref-lime-1.xml
 == scope-001.xml ref-lime-1.xml
