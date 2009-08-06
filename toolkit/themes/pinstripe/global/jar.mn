@@ -1,4 +1,4 @@
-classic.jar:
+toolkit.jar:
 % skin global classic/1.0 %skin/classic/global/
 +  skin/classic/global/10pct_transparent_grey.png
 +  skin/classic/global/20pct_transparent_pixel.png
