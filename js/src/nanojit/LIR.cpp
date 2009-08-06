@@ -109,8 +109,7 @@ namespace nanojit
 #endif /* NJ_PROFILE */
 
     // LCompressedBuffer
-    LirBuffer::LirBuffer(Allocator& alloc)
-        :
+    LirBuffer::LirBuffer(Allocator& alloc) :
 #ifdef NJ_VERBOSE
           names(NULL),
 #endif
@@ -1110,19 +1109,11 @@ namespace nanojit
         return hash;
     }
 
-    LInsHashSet::LInsHashSet(GC* gc) :
-            m_used(0), m_cap(kInitialCap), m_gc(gc)
+    LInsHashSet::LInsHashSet(Allocator& alloc) :
+            m_cap(kInitialCap), alloc(alloc)
     {
-#ifdef MEMORY_INFO
-//        m_list.set_meminfo_name("LInsHashSet.list");
-#endif
-        LInsp *list = (LInsp*) gc->Alloc(sizeof(LInsp)*m_cap, GC::kZero);
-        WB(gc, this, &m_list, list);
-    }
-
-    LInsHashSet::~LInsHashSet()
-    {
-        m_gc->Free(m_list);
+        m_list = new (alloc) LInsp[m_cap];
+        clear();
     }
 
     void LInsHashSet::clear() {
@@ -1230,11 +1221,9 @@ namespace nanojit
     void FASTCALL LInsHashSet::grow()
     {
         const uint32_t newcap = m_cap << 1;
-        LInsp *newlist = (LInsp*) m_gc->Alloc(newcap * sizeof(LInsp), GC::kZero);
+        LInsp *newlist = new (alloc) LInsp[newcap];
+        VMPI_memset(newlist, 0, newcap * sizeof(LInsp));
         LInsp *list = m_list;
-#ifdef MEMORY_INFO
-//        newlist.set_meminfo_name("LInsHashSet.list");
-#endif
         for (uint32_t i=0, n=m_cap; i < n; i++) {
             LInsp name = list[i];
             if (!name) continue;
@@ -1242,8 +1231,7 @@ namespace nanojit
             newlist[j] = name;
         }
         m_cap = newcap;
-        m_gc->Free(list);
-        WB(m_gc, this, &m_list, newlist);
+        m_list = newlist;
     }
 
     uint32_t FASTCALL LInsHashSet::find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap)
@@ -1863,8 +1851,8 @@ namespace nanojit
 
 
 #endif
-    CseFilter::CseFilter(LirWriter *out, GC *gc)
-        : LirWriter(out), exprs(gc) {}
+    CseFilter::CseFilter(LirWriter *out, Allocator& alloc)
+        : LirWriter(out), exprs(alloc) {}
 
     LIns* CseFilter::insImm(int32_t imm)
     {
@@ -2133,7 +2121,7 @@ namespace nanojit
     #endif /* FEATURE_NANOJIT */
 
 #if defined(NJ_VERBOSE)
-    LabelMap::LabelMap(nanojit::Allocator& a, LogControl *logc)
+    LabelMap::LabelMap(Allocator& a, LogControl *logc)
         : allocator(a), names(a), logc(logc), end(buf)
     {}
 
