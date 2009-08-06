@@ -56,6 +56,29 @@ ClientRecord.prototype = {
     this._WBORec_init(uri);
   },
 
+  _escape: function ClientRecord__escape(toAscii) {
+    // Escape-to-ascii or unescape-from-ascii each value
+    if (this.payload != null)
+      for (let [key, val] in Iterator(this.payload))
+        this.payload[key] = (toAscii ? escape : unescape)(val);
+  },
+
+  serialize: function ClientRecord_serialize() {
+    // Convert potential non-ascii to ascii before serializing
+    this._escape(true);
+    let ret = WBORecord.prototype.serialize.apply(this, arguments);
+
+    // Restore the original data for normal use
+    this._escape(false);
+    return ret;
+  },
+
+  deserialize: function ClientRecord_deserialize(json) {
+    // Deserialize then convert potential escaped non-ascii
+    WBORecord.prototype.deserialize.apply(this, arguments);
+    this._escape(false);
+  },
+
   // engines.js uses cleartext to determine if records _isEqual
   // XXX Bug 482669 Implement .equals() for SyncEngine to compare records
   get cleartext() this.serialize(),
