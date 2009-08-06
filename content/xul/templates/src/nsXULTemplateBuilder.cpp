@@ -1669,8 +1669,14 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
         nsCOMPtr<nsIDOMElement> domElement;
         domDoc->GetElementById(templateID, getter_AddRefs(domElement));
 
-        if (domElement)
-            return CallQueryInterface(domElement, aResult);
+        if (domElement) {
+            nsCOMPtr<nsIContent> content = do_QueryInterface(domElement);
+            NS_ENSURE_STATE(content &&
+                            !nsContentUtils::ContentIsDescendantOf(mRoot,
+                                                                   content));
+            content.forget(aResult);
+            return NS_OK;
+        }
     }
 
 #if 1 // XXX hack to workaround bug with XBL insertion/removal?
