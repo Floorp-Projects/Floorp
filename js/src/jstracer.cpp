@@ -1746,7 +1746,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
         lir = float_filter = new (&gc) SoftFloatFilter(lir);
     else
         float_filter = 0;
-    lir = cse_filter = new (&gc) CseFilter(lir, &gc);
+    lir = cse_filter = new (&gc) CseFilter(lir, *traceMonitor->allocator);
     lir = expr_filter = new (&gc) ExprFilter(lir);
     lir = func_filter = new (&gc) FuncFilter(lir);
     lir->ins0(LIR_start);
