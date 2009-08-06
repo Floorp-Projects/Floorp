@@ -1423,17 +1423,6 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     JSBool ok;
 
     js_LeaveTrace(cx);
-
-#ifdef JS_TRACER
-    /*
-     * The JIT requires that the scope chain here is equal to its global
-     * object. Disable the JIT for this call if this condition is not true.
-     */
-    uint32 oldOptions = cx->options;
-    if ((oldOptions & JSOPTION_JIT) && obj != JS_GetGlobalForObject(cx, obj))
-        cx->options &= ~JSOPTION_JIT;
-#endif
-
     invokevp = js_AllocStack(cx, 2 + argc, &mark);
     if (!invokevp)
         return JS_FALSE;
@@ -1463,13 +1452,6 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     }
 
     js_FreeStack(cx, mark);
-
-#ifdef JS_TRACER
-    /* Possibly re-enable JIT, if disabled above. */
-    if (oldOptions & JSOPTION_JIT)
-        cx->options |= JSOPTION_JIT;
-#endif
-
     return ok;
 }
 
@@ -1526,16 +1508,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSBool ok;
 
     js_LeaveTrace(cx);
-
-#ifdef JS_TRACER
-    /*
-     * The JIT requires that the scope chain here is equal to its global
-     * object. Disable the JIT for this call if this condition is not true.
-     */
-    uint32 oldOptions = cx->options;
-    if ((oldOptions & JSOPTION_JIT) && chain != JS_GetGlobalForObject(cx, chain))
-        cx->options &= ~JSOPTION_JIT;
-#endif
 
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_START_ENABLED())
@@ -1661,13 +1633,6 @@ out:
     if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
         jsdtrace_execute_done(script);
 #endif
-
-#ifdef JS_TRACER
-    /* Possibly re-enable JIT, if disabled above. */
-    if (oldOptions & JSOPTION_JIT)
-        cx->options |= JSOPTION_JIT;
-#endif
-
     return ok;
 }
 

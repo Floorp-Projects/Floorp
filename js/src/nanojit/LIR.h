@@ -140,10 +140,10 @@ namespace nanojit
         inline bool isIndirect() const {
             return _address < 256;
         }
-        inline uint32_t FASTCALL count_args() const {
+        inline uint32_t count_args() const {
             return _count_args(ARGSIZE_MASK_ANY);
         }
-        inline uint32_t FASTCALL count_iargs() const {
+        inline uint32_t count_iargs() const {
             return _count_args(ARGSIZE_MASK_INT);
         }
         // fargs = args - iargs
