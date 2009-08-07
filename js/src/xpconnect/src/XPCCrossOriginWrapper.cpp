@@ -244,6 +244,7 @@ IsValFrame(JSObject *obj, jsval v, XPCWrappedNative *wn)
 nsresult
 CanAccessWrapper(JSContext *cx, JSObject *wrappedObj)
 {
+  // TODO bug 508928: Refactor this with the XOW security checking code.
   // Get the subject principal from the execution stack.
   nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
   if (!ssm) {
@@ -271,18 +272,6 @@ CanAccessWrapper(JSContext *cx, JSObject *wrappedObj)
     return NS_OK;
   }
 
-  // There might be no code running, but if there is, we need to see if it is
-  // UniversalXPConnect enabled code.
-  if (fp) {
-    void *annotation = JS_GetFrameAnnotation(cx, fp);
-    rv = subjectPrin->IsCapabilityEnabled("UniversalXPConnect", annotation,
-                                          &isSystem);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (isSystem) {
-      return NS_OK;
-    }
-  }
-
   nsCOMPtr<nsIPrincipal> objectPrin;
   rv = ssm->GetObjectPrincipal(cx, wrappedObj, getter_AddRefs(objectPrin));
   if (NS_FAILED(rv)) {
@@ -299,7 +288,14 @@ CanAccessWrapper(JSContext *cx, JSObject *wrappedObj)
   PRBool subsumes;
   rv = subjectPrin->Subsumes(objectPrin, &subsumes);
   if (NS_SUCCEEDED(rv) && !subsumes) {
-    rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
+    // We're about to fail, but make a last effort to see if
+    // UniversalXPConnect was enabled anywhere else on the stack.
+    rv = ssm->IsCapabilityEnabled("UniversalXPConnect", &isSystem);
+    if (NS_SUCCEEDED(rv) && isSystem) {
+      rv = NS_OK;
+    } else {
+      rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
+    }
   }
   return rv;
 }
