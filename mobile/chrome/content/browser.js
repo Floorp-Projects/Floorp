@@ -920,6 +920,7 @@ var Browser = {
    * @return [leftVisibility, rightVisiblity, leftTotalWidth, rightTotalWidth]
    */
   computeSidebarVisibility: function computeSidebarVisibility() {
+    // XXX these should return 0 if the sidebars aren't visible
     function visibility(bar, visrect) {
       try {
         let w = bar.width;
@@ -998,11 +999,12 @@ var Browser = {
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility();
 
+    // XXX computeSideBarVisibility will normally return 0.0015... for ritevis
     if (leftvis > 0.002 || ritevis > 0.002) {
       let toolbarContainer = document.getElementById("toolbar-container");
 
       // if the toolbar isn't already inside of the stack toolbar then we move it there
-	    dump("moving toolbar to stack\n");
+      dump("moving toolbar to stack\n");
       stackToolbarContainer.setAttribute("hidden", false);
       stackToolbarContainer.appendChild(toolbarMain);
 
@@ -1023,9 +1025,9 @@ var Browser = {
     if (leftvis <= 0.002 && ritevis <= 0.002) {
       let stackToolbarContainer = document.getElementById("stack-toolbar-container");
 
-	    dump("moving toolbar to scrollbox\n");
-	    toolbarContainer.appendChild(toolbarMain);
-	    stackToolbarContainer.setAttribute("hidden", true);
+      dump("moving toolbar to scrollbox\n");
+      toolbarContainer.appendChild(toolbarMain);
+      stackToolbarContainer.setAttribute("hidden", true);
       return true;
     }
     return false;
@@ -2109,16 +2111,7 @@ Tab.prototype = {
   },
 
   load: function(uri) {
-    dump('browser 3: ' + this._browser.contentWindow + '\n');
-    dump("cb set src\n");
     this._browser.setAttribute("src", uri);
-    dump("cb end src\n");
-    dump('browser 4: ' + this._browser.contentWindow + '\n');
-    try {
-      dump('QIs to: ' + this._browser.contentWindow.QueryInterface(Ci.nsIDOMChromeWindow) + '\n');
-    } catch (e) {
-      dump('failed to QI\n');
-    }
   },
 
   create: function() {
@@ -2143,8 +2136,6 @@ Tab.prototype = {
     let scaledHeight = kDefaultBrowserWidth * (window.innerHeight / window.innerWidth);
     let browser = this._browser = document.createElement("browser");
 
-    dump('browser 1: ' + browser.contentWindow + '\n');
-
     browser.setAttribute("style", "overflow: -moz-hidden-unscrollable; visibility: hidden; width: " + kDefaultBrowserWidth + "px; height: " + scaledHeight + "px;");
     browser.setAttribute("type", "content");
 
@@ -2160,8 +2151,6 @@ Tab.prototype = {
 
     // stop about:blank from loading
     browser.stop();
-
-    dump('browser 2: ' + browser.contentWindow + '\n');
 
     // Attach a separate progress listener to the browser
     this._listener = new ProgressController(this);
