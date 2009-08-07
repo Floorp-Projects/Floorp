@@ -7945,13 +7945,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                 break;
               case TOK_RC:
-                if (afterComma &&
-                    !js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                 JSREPORT_WARNING |
-                                                 JSREPORT_STRICT,
-                                                 JSMSG_TRAILING_COMMA)) {
-                        return NULL;
-                }
                 goto end_obj_init;
               default:
                 js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
