@@ -180,7 +180,7 @@ radio {
   min-width: 6.0mm !important; /* button size */
   min-height: 6.0mm !important; /* button size */
   color: #36373b;
-  padding: 0.0.5mm 1.1mm 0.1mm 0.5mm !important;
+  padding: 0.5mm 1.1mm 0.1mm 0.5mm !important;
   margin: 0;
   border: 0.05mm solid #36373b;
   -moz-box-align: center;
