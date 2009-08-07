@@ -45,7 +45,9 @@
  */
 
 #define _PR_SI_SYSNAME  "SYMBIAN"
-#ifdef __arm__
+#if defined(__WINS__)
+#define _PR_SI_ARCHITECTURE "i386"
+#elif defined(__arm__)
 #define _PR_SI_ARCHITECTURE "arm"
 #else
 #error "Unknown CPU architecture"
