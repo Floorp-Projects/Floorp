@@ -617,9 +617,6 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:-moz-locale-dir
 
 /* toolbar new tab button */
 
-toolbar:not([iconsize="small"]) #new-tab-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 #new-tab-button {
   -moz-image-region: rect(0px 240px 24px 216px);
 }
@@ -635,9 +632,6 @@ toolbar:not([iconsize="small"]) #new-tab-button > .toolbarbutton-icon {
 
 /* new window button */
 
-toolbar:not([iconsize="small"]) #new-window-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 #new-window-button {
   -moz-image-region: rect(0px 264px 24px 240px);
 }
@@ -796,9 +790,6 @@ menupopup:-moz-locale-dir(rtl) > .unified-nav-back[_moz-menuactive] {
 
 /* stop button */
 
-toolbar[iconsize="small"] #stop-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #stop-button {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
@@ -814,9 +805,6 @@ toolbar[iconsize="small"] #stop-button:not([disabled="true"]):hover:active {
 
 /* reload button */
 
-toolbar[iconsize="small"] #reload-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #reload-button {
   -moz-image-region: rect(0px 64px 16px 48px);
 }
@@ -832,9 +820,6 @@ toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover:active {
 
 /* home button */
 
-toolbar[iconsize="small"] #home-button.toolbarbutton-1 > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 #home-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
@@ -857,9 +842,6 @@ toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover:active ,
 
 /* download manager button */
 
-toolbar[iconsize="small"] #downloads-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #downloads-button {
   -moz-image-region: rect(0px 96px 16px 80px);
 }
@@ -875,9 +857,6 @@ toolbar[iconsize="small"] #downloads-button:not([disabled="true"]):hover:active 
 
 /* history sidebar button */
 
-toolbar[iconsize="small"] #history-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #history-button {
   -moz-image-region: rect(0px 112px 16px 96px);
 }
@@ -896,9 +875,6 @@ toolbar[iconsize="small"] #history-button:not([disabled="true"]):not([checked="t
 
 /* bookmark sidebar button */
 
-toolbar[iconsize="small"] #bookmarks-button > .toolbarbutton-icon {
-  padding-left: 2px;
-}
 toolbar[iconsize="small"] #bookmarks-button {
   -moz-image-region: rect(0px 128px 16px 112px);
 }
@@ -917,9 +893,6 @@ toolbar[iconsize="small"] #bookmarks-button:not([disabled="true"]):not([checked=
 
 /* print button */
 
-toolbar[iconsize="small"] #print-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #print-button {
   -moz-image-region: rect(0px 144px 16px 128px);
 }
@@ -935,9 +908,6 @@ toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover:active {
 
 /* toolbar new tab button */
 
-toolbar[iconsize="small"] #new-tab-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #new-tab-button {
   -moz-image-region: rect(0px 160px 16px 144px);
 }
@@ -986,9 +956,6 @@ toolbar[iconsize="small"] #cut-button:not([disabled="true"]):hover:active {
 
 /* copy button */
 
-toolbar[iconsize="small"] #copy-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #copy-button {
   -moz-image-region: rect(0px 208px 16px 192px);
 }
@@ -1004,9 +971,6 @@ toolbar[iconsize="small"] #copy-button:not([disabled="true"]):hover:active {
 
 /* paste button */
 
-toolbar[iconsize="small"] #paste-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #paste-button {
   -moz-image-region: rect(0px 224px 16px 208px);
 }
@@ -1022,9 +986,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 
 /* fullscreen button */
 
-toolbar[iconsize="small"] #fullscreen-button > .toolbarbutton-icon {
-  padding-left: 1px;
-}
 toolbar[iconsize="small"] #fullscreen-button {
   -moz-image-region: rect(0px 240px 16px 224px);
 }
