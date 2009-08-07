@@ -6561,7 +6561,7 @@ js_Interpret(JSContext *cx)
                                      JSMSG_BAD_SHARP_DEF, numBuf);
                 goto error;
             }
-            if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
+            if (!OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL, JSPROP_ENUMERATE, NULL))
                 goto error;
           END_CASE(JSOP_DEFSHARP)
 
