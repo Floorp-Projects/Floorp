@@ -205,17 +205,7 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
   JSStackFrame *fp;
   nsIPrincipal *subjectPrincipal = ssm->GetCxSubjectPrincipalAndFrame(cx, &fp);
   if (!subjectPrincipal || !fp) {
-    // We must allow the access if there is no code running.
-    return JS_TRUE;
-  }
-
-  // This might be chrome code or content code with UniversalXPConnect.
-  void *annotation = JS_GetFrameAnnotation(cx, fp);
-  PRBool isPrivileged = PR_FALSE;
-  nsresult rv = subjectPrincipal->IsCapabilityEnabled("UniversalXPConnect",
-                                                      annotation,
-                                                      &isPrivileged);
-  if (NS_SUCCEEDED(rv) && isPrivileged) {
+    // We must allow access if there is no code running.
     return JS_TRUE;
   }
 
@@ -227,6 +217,13 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
     PRBool subsumes;
     if (NS_FAILED(subjectPrincipal->Subsumes(objectPrincipal, &subsumes)) ||
         !subsumes) {
+      // This might be chrome code or content code with UniversalXPConnect.
+      PRBool isPrivileged = PR_FALSE;
+      nsresult rv =
+        ssm->IsCapabilityEnabled("UniversalXPConnect", &isPrivileged);
+      if (NS_SUCCEEDED(rv) && isPrivileged) {
+        return JS_TRUE;
+      }
 
       JSObject* flatObj;
       if (!JSVAL_IS_VOID(id) &&
@@ -288,26 +285,15 @@ XPCNativeWrapper::GetWrappedNative(JSContext *cx, JSObject *obj,
     return JS_TRUE;
   }
 
-  if (fp) {
-    void *annotation = JS_GetFrameAnnotation(cx, fp);
-
-    PRBool isPrivileged;
-    nsresult rv =
-      subjectPrincipal->IsCapabilityEnabled("UniversalXPConnect",
-                                            annotation,
-                                            &isPrivileged);
-    if (NS_SUCCEEDED(rv) && isPrivileged) {
-      return JS_TRUE;
-    }
-  }
-
   XPCWrappedNativeScope *scope = wn->GetScope();
   nsIPrincipal *objectPrincipal = scope->GetPrincipal();
 
   PRBool subsumes;
   nsresult rv = subjectPrincipal->Subsumes(objectPrincipal, &subsumes);
   if (NS_FAILED(rv) || !subsumes) {
-    return JS_FALSE;
+    PRBool isPrivileged;
+    rv = ssm->IsCapabilityEnabled("UniversalXPConnect", &isPrivileged);
+    return NS_SUCCEEDED(rv) && isPrivileged;
   }
 
   return JS_TRUE;
