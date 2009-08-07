@@ -795,7 +795,7 @@ var Browser = {
    * Obviously, care should be taken not to trust events that web pages could have
    * synthesized.
    */
-  _handleContentCommand: function (aEvent) {
+  _handleContentCommand: function _handleContentCommand(aEvent) {
     // Don't trust synthetic events
     if (!aEvent.isTrusted)
       return;
@@ -1642,7 +1642,7 @@ function getIdentityHandler() {
 const gPopupBlockerObserver = {
   _kIPM: Ci.nsIPermissionManager,
 
-  onUpdatePageReport: function (aEvent)
+  onUpdatePageReport: function onUpdatePageReport(aEvent)
   {
     var cBrowser = Browser.selectedBrowser;
     if (aEvent.originalTarget != cBrowser)
@@ -1698,7 +1698,7 @@ const gPopupBlockerObserver = {
     }
   },
 
-  toggleAllowPopupsForSite: function (aEvent)
+  toggleAllowPopupsForSite: function toggleAllowPopupsForSite(aEvent)
   {
     var currentURI = Browser.selectedBrowser.webNavigation.currentURI;
     var pm = Cc["@mozilla.org/permissionmanager;1"].getService(this._kIPM);
@@ -1707,7 +1707,7 @@ const gPopupBlockerObserver = {
     Browser.getNotificationBox().removeCurrentNotification();
   },
 
-  dontShowMessage: function ()
+  dontShowMessage: function dontShowMessage()
   {
     var showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
     gPrefService.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
@@ -1716,7 +1716,7 @@ const gPopupBlockerObserver = {
 };
 
 const gXPInstallObserver = {
-  observe: function (aSubject, aTopic, aData)
+  observe: function xpi_observer(aSubject, aTopic, aData)
   {
     var brandBundle = document.getElementById("bundle_brand");
     var browserBundle = document.getElementById("bundle_browser");
