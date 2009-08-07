@@ -38,11 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsToolkit.h"
-#include "nsSwitchToUIThread.h"
 #include "nsWidgetAtoms.h"
-
-// Window procedure for the internal window
-static MRESULT EXPENTRY nsToolkitWindowProc(HWND, ULONG, MPARAM, MPARAM);
 
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
@@ -52,38 +48,6 @@ NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 //
 static PRUintn gToolkitTLSIndex = 0;
 
-//
-// main for the message pump thread
-//
-PRBool gThreadState = PR_FALSE;
-
-struct ThreadInitInfo {
-    PRMonitor *monitor;
-    nsToolkit *toolkit;
-};
-
-void RunPump(void* arg)
-{
-    ThreadInitInfo *info = (ThreadInitInfo*)arg;
-    ::PR_EnterMonitor(info->monitor);
-
-    // do registration and creation in this thread
-    info->toolkit->CreateInternalWindow(PR_GetCurrentThread());
-
-    gThreadState = PR_TRUE;
-
-    ::PR_Notify(info->monitor);
-    ::PR_ExitMonitor(info->monitor);
-
-    delete info;
-
-    // Process messages
-    QMSG qmsg;
-    while (WinGetMsg((HAB)0, &qmsg, 0, 0, 0)) {
-        WinDispatchMsg((HAB)0, &qmsg);
-    }
-}
-
 //-------------------------------------------------------------------------
 //
 // constructor
@@ -91,9 +55,6 @@ void RunPump(void* arg)
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()  
 {
-    mGuiThread  = NULL;
-    mDispatchWnd = 0;
-    mMonitor = PR_NewMonitor();
 }
 
 
@@ -104,80 +65,9 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-    NS_PRECONDITION(::WinIsWindow((HAB)0, mDispatchWnd), "Invalid window handle");
-
-    // Destroy the Dispatch Window
-    ::WinDestroyWindow(mDispatchWnd);
-    mDispatchWnd = NULL;
-
     // Remove the TLS reference to the toolkit...
     PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
-    PR_DestroyMonitor( mMonitor);
 }
-
-
-//-------------------------------------------------------------------------
-//
-// Register the window class for the internal window and create the window
-//
-//-------------------------------------------------------------------------
-void nsToolkit::CreateInternalWindow(PRThread *aThread)
-{
-    
-    NS_PRECONDITION(aThread, "null thread");
-    mGuiThread  = aThread;
-
-    //
-    // create the internal window
-    //
-    WinRegisterClass((HAB)0, "nsToolkitClass", nsToolkitWindowProc, NULL, 0);
-    mDispatchWnd = ::WinCreateWindow(HWND_DESKTOP,
-                                     "nsToolkitClass",
-                                     "NetscapeDispatchWnd",
-                                     WS_DISABLED,
-                                     -50, -50,
-                                     10, 10,
-                                     HWND_DESKTOP,
-                                     HWND_BOTTOM,
-                                     0, 0, 0);
-    VERIFY(mDispatchWnd);
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Create a new thread and run the message pump in there
-//
-//-------------------------------------------------------------------------
-void nsToolkit::CreateUIThread()
-{
-    PRMonitor *monitor = ::PR_NewMonitor();
-
-    ::PR_EnterMonitor(monitor);
-
-    ThreadInitInfo *ti = new ThreadInitInfo();
-    ti->monitor = monitor;
-    ti->toolkit = this;
-
-    // create a gui thread
-    mGuiThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
-                                    RunPump,
-                                    (void*)ti,
-                                    PR_PRIORITY_NORMAL,
-                                    PR_LOCAL_THREAD,
-                                    PR_UNJOINABLE_THREAD,
-                                    0);
-
-    // wait for the gui thread to start
-    while(gThreadState == PR_FALSE) {
-        ::PR_Wait(monitor, PR_INTERVAL_NO_TIMEOUT);
-    }
-
-    // at this point the thread is running
-    ::PR_ExitMonitor(monitor);
-    ::PR_DestroyMonitor(monitor);
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -185,40 +75,12 @@ void nsToolkit::CreateUIThread()
 //-------------------------------------------------------------------------
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
-    // Store the thread ID of the thread containing the message pump.  
-    // If no thread is provided create one
-    if (NULL != aThread) {
-        CreateInternalWindow(aThread);
-    } else {
-        // create a thread where the message pump will run
-        CreateUIThread();
-    }
+    NS_ASSERTION(aThread, "Can only initialize toolkit on the current thread");
 
     nsWidgetAtoms::RegisterAtoms();
 
     return NS_OK;
 }
-
-
-//-------------------------------------------------------------------------
-//
-// nsToolkit WindowProc. Used to call methods on the "main GUI thread"...
-//
-//-------------------------------------------------------------------------
-MRESULT EXPENTRY nsToolkitWindowProc(HWND hWnd, ULONG msg, MPARAM mp1,
-                                     MPARAM mp2)
-{
-    switch (msg) {
-        case WM_CALLMETHOD:
-        {
-            MethodInfo *info = (MethodInfo *)mp2;
-            return (MRESULT)info->Invoke();
-        }
-    }
-    return ::WinDefWindowProc(hWnd, msg, mp1, mp2);
-}
-
-
 
 //-------------------------------------------------------------------------
 //
