@@ -667,6 +667,24 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
   if (mUndisplayedMap) {
     mUndisplayedMap->RemoveNodesFor(aParentContent);
   }
+
+  // Need to look at aParentContent's content list due to XBL insertions.
+  // Nodes in aParentContent's content list do not have aParentContent as a
+  // parent, but are treated as children of aParentContent. We get access to
+  // the content list via GetXBLChildNodesFor and just ignore any nodes we
+  // don't care about.
+  nsINodeList* list =
+    aParentContent->GetOwnerDoc()->BindingManager()->GetXBLChildNodesFor(aParentContent);
+  if (list) {
+    PRUint32 length;
+    list->GetLength(&length);
+    for (PRUint32 i = 0; i < length; ++i) {
+      nsIContent* child = list->GetNodeAt(i);
+      if (child->GetParent() != aParentContent) {
+        ClearUndisplayedContentIn(child, child->GetParent());
+      }
+    }
+  }
 }
 
 void
