@@ -151,6 +151,8 @@
 #ifdef MOZ_XUL
 #include "nsTreeBodyFrame.h"
 #endif
+#include "nsIFocusController.h"
+#include "nsIController.h"
 
 #ifdef XP_MACOSX
 #include <Carbon/Carbon.h>
@@ -1193,6 +1195,16 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     {
       nsContentEventHandler handler(mPresContext);
       handler.OnSelectionEvent((nsSelectionEvent*)aEvent);
+    }
+    break;
+  case NS_CONTENT_COMMAND_CUT:
+  case NS_CONTENT_COMMAND_COPY:
+  case NS_CONTENT_COMMAND_PASTE:
+  case NS_CONTENT_COMMAND_DELETE:
+  case NS_CONTENT_COMMAND_UNDO:
+  case NS_CONTENT_COMMAND_REDO:
+    {
+      DoContentCommandEvent(static_cast<nsContentCommandEvent*>(aEvent));
     }
     break;
   }
@@ -4204,4 +4216,57 @@ nsEventStateManager::IsShellVisible(nsIDocShell* aShell)
   // we don't tab into hidden tabs of tabbrowser.  -bryner
 
   return isVisible;
+}
+
+nsresult
+nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
+{
+  EnsureDocument(mPresContext);
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mDocument->GetWindow()));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  nsIFocusController* fc = window->GetRootFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
+  const char* cmd;
+  switch (aEvent->message) {
+    case NS_CONTENT_COMMAND_CUT:
+      cmd = "cmd_cut";
+      break;
+    case NS_CONTENT_COMMAND_COPY:
+      cmd = "cmd_copy";
+      break;
+    case NS_CONTENT_COMMAND_PASTE:
+      cmd = "cmd_paste";
+      break;
+    case NS_CONTENT_COMMAND_DELETE:
+      cmd = "cmd_delete";
+      break;
+    case NS_CONTENT_COMMAND_UNDO:
+      cmd = "cmd_undo";
+      break;
+    case NS_CONTENT_COMMAND_REDO:
+      cmd = "cmd_redo";
+      break;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  nsCOMPtr<nsIController> controller;
+  nsresult rv = fc->GetControllerForCommand(cmd, getter_AddRefs(controller));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!controller) {
+    // When GetControllerForCommand succeeded but there is no controller, the
+    // command isn't supported.
+    aEvent->mIsEnabled = PR_FALSE;
+  } else {
+    PRBool canDoIt;
+    rv = controller->IsCommandEnabled(cmd, &canDoIt);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aEvent->mIsEnabled = canDoIt;
+    if (canDoIt && !aEvent->mOnlyEnabledCheck) {
+      rv = controller->DoCommand(cmd);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  aEvent->mSucceeded = PR_TRUE;
+  return NS_OK;
 }

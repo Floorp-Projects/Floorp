@@ -166,6 +166,7 @@
 #include <mmsystem.h> // needed for WIN32_LEAN_AND_MEAN
 #include <zmouse.h>
 #include <pbt.h>
+#include <Richedit.h>
 #endif // !defined(WINCE)
 
 #if defined(ACCESSIBILITY)
@@ -4249,6 +4250,92 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     result = OnGesture(wParam, lParam);
     break;
 #endif // !defined(WINCE)
+
+    case WM_CLEAR:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_DELETE, this);
+      DispatchWindowEvent(&command);
+      result = PR_TRUE;
+    }
+    break;
+
+    case WM_CUT:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_CUT, this);
+      DispatchWindowEvent(&command);
+      result = PR_TRUE;
+    }
+    break;
+
+    case WM_COPY:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_COPY, this);
+      DispatchWindowEvent(&command);
+      result = PR_TRUE;
+    }
+    break;
+
+    case WM_PASTE:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_PASTE, this);
+      DispatchWindowEvent(&command);
+      result = PR_TRUE;
+    }
+    break;
+
+#ifndef WINCE
+    case EM_UNDO:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_UNDO, this);
+      DispatchWindowEvent(&command);
+      *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+      result = PR_TRUE;
+    }
+    break;
+
+    case EM_REDO:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_REDO, this);
+      DispatchWindowEvent(&command);
+      *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+      result = PR_TRUE;
+    }
+    break;
+
+    case EM_CANPASTE:
+    {
+      // Support EM_CANPASTE message only when wParam isn't specified or
+      // is plain text format.
+      if (wParam == 0 || wParam == CF_TEXT || wParam == CF_UNICODETEXT) {
+        nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_PASTE,
+                                      this, PR_TRUE);
+        DispatchWindowEvent(&command);
+        *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+        result = PR_TRUE;
+      }
+    }
+    break;
+
+    case EM_CANUNDO:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_UNDO,
+                                    this, PR_TRUE);
+      DispatchWindowEvent(&command);
+      *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+      result = PR_TRUE;
+    }
+    break;
+
+    case EM_CANREDO:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_REDO,
+                                    this, PR_TRUE);
+      DispatchWindowEvent(&command);
+      *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+      result = PR_TRUE;
+    }
+    break;
+#endif
 
     default:
     {
