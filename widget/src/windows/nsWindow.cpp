@@ -5606,12 +5606,6 @@ PRBool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
 
 void nsWindow::OnSettingsChange(WPARAM wParam, LPARAM lParam)
 {
-#if defined(WINCE_WINDOWS_MOBILE)
-  if (wParam == SPI_SETSIPINFO) {
-    nsWindowCE::NotifySoftKbObservers();
-  }
-#endif
-
   nsWindowGfx::OnSettingsChangeGfx(wParam);
 }
 

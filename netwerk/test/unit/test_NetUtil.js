@@ -110,11 +110,48 @@ function test_async_write_file()
   });
 }
 
+function test_async_write_file_nsISafeOutputStream()
+{
+  do_test_pending();
+
+  // First, we need an output file to write to.
+  let file = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).
+             get("TmpD", Ci.nsIFile);
+  file.append("NetUtil-async-test-file.tmp");
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+
+  // Then, we need an output stream to our output file.
+  let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                createInstance(Ci.nsIFileOutputStream);
+  ostream.init(file, -1, -1, 0);
+
+  // Finally, we need an input stream to take data from.
+  const TEST_DATA = "this is a test string";
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                createInstance(Ci.nsIStringInputStream);
+  istream.setData(TEST_DATA, TEST_DATA.length);
+
+  NetUtil.asyncCopy(istream, ostream, function(aResult) {
+    // Make sure the copy was successful!
+    do_check_true(Components.isSuccessCode(aResult));
+
+    // Check the file contents.
+    do_check_eq(TEST_DATA, getFileContents(file));
+
+    // Remove the file, and finish the test.
+    file.remove(false);
+    do_test_finished();
+    run_next_test();
+  });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
 let tests = [
   test_async_write_file,
+  test_async_write_file_nsISafeOutputStream,
 ];
 let index = 0;
 
