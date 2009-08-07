@@ -151,7 +151,7 @@ namespace nanojit
         underrunProtect(8);
         NOP();
 
-        ArgSize sizes[10];
+        ArgSize sizes[MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
 
         NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));

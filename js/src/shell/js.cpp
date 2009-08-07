@@ -1082,7 +1082,7 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     char buf[256];
     JS_snprintf(buf, sizeof(buf), "before %lu, after %lu, break %08lx\n",
                 (unsigned long)preBytes, (unsigned long)rt->gcBytes,
-#ifdef XP_UNIX
+#ifdef HAVE_SBRK
                 (unsigned long)sbrk(0)
 #else
                 0

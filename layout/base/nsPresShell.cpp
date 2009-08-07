@@ -3061,15 +3061,10 @@ NS_IMETHODIMP
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
   nsresult result;
-  nsIViewManager* viewManager = GetViewManager();
-  nsIScrollableView *scrollableView;
-  if (!viewManager) 
+  nsIScrollableView *scrollableView = GetViewToScroll(nsLayoutUtils::eVertical);
+  if (!scrollableView)
     return NS_ERROR_UNEXPECTED;
-  result = viewManager->GetRootScrollableView(&scrollableView);
-  if (NS_FAILED(result)) 
-    return result;
-  if (!scrollableView) 
-    return NS_ERROR_UNEXPECTED;
+
   nsIView *scrolledView;
   result = scrollableView->GetScrolledView(scrolledView);
   mSelection->CommonPageMove(aForward, aExtend, scrollableView);
@@ -4951,7 +4946,7 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
       mFrameConstructor->RestyleForInsertOrChange(container, aContent);
   }
 
-  mFrameConstructor->CharacterDataChanged(aContent, aInfo->mAppend);
+  mFrameConstructor->CharacterDataChanged(aContent, aInfo);
   VERIFY_STYLE_TREE;
 }
 
@@ -5977,10 +5972,7 @@ PresShell::HandleEvent(nsIView         *aView,
 #endif
 
   // key and IME events must be targeted at the presshell for the focused frame
-  if (!sDontRetargetEvents &&
-      (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
-       NS_IS_QUERY_CONTENT_EVENT(aEvent) || NS_IS_SELECTION_EVENT(aEvent) ||
-       NS_IS_CONTEXT_MENU_KEY(aEvent))) {
+  if (!sDontRetargetEvents && NS_IsEventTargetedAtFocusedWindow(aEvent)) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (!fm)
       return NS_ERROR_FAILURE;
@@ -6065,10 +6057,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
   nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
 
-  PRBool dispatchUsingCoordinates =
-      !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
-      !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_FOCUS_EVENT(aEvent) &&
-      !NS_IS_PLUGIN_EVENT(aEvent);
+  PRBool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
 
   // if this event has no frame, we need to retarget it at a parent
   // view that has a frame.

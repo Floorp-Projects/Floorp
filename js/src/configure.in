@@ -1191,6 +1191,12 @@ sun4u | sparc*)
 x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
+
+arm)
+    if test "$OS_TARGET" == "WINCE"; then
+        CPU_ARCH="$OS_TEST"
+    fi
+    ;;
 esac
 
 if test -z "$OS_TARGET"; then
@@ -1809,7 +1815,7 @@ case "$target" in
     ;;
 
 *-wince*)
-
+    TARGET_COMPILER_ABI=msvc
     MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
     AR_LIST="$AR -list"
     AR_EXTRACT="$AR -extract"
@@ -3138,9 +3144,9 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64)
-AC_CHECK_FUNCS(flockfile getpagesize)
-AC_CHECK_FUNCS(localtime_r strtok_r)
+AC_CHECK_FUNCS([fchmod flockfile getpagesize lchown localtime_r lstat64 \
+                memmove random rint sbrk snprintf stat64 statvfs statvfs64 \
+                strerror strtok_r truncate64])
 
 dnl Windows functions, for mingw.
 AC_TRY_LINK([#include <windows.h>],
@@ -3152,7 +3158,7 @@ if test "$ac_cv_have_systemtimetofiletime" = "yes"; then
 fi
 AC_TRY_LINK([#include <windows.h>],
              [FILETIME ft;GetSystemTimeAsFileTime(&ft);],
-             ac_cv_have_getsystemtimetasfiletime="yes",
+             ac_cv_have_getsystemtimeasfiletime="yes",
              ac_cv_have_getsystemtimeasfiletime="no")
 if test "$ac_cv_have_getsystemtimeasfiletime" = "yes"; then
     AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
@@ -3808,7 +3814,9 @@ MOZ_ARG_WITH_BOOL(system-nspr,
 [  --with-system-nspr      Use an NSPR that is already built and installed.
                           Use the 'nspr-config' script in the current path,
                           or look for the script in the directories given with
-                          --with-nspr-exec-prefix or --with-nspr-prefix.],
+                          --with-nspr-exec-prefix or --with-nspr-prefix.
+                          (Those flags are only checked if you specify
+                          --with-system-nspr.)],
     _USE_SYSTEM_NSPR=1 )
 
 MOZ_ARG_WITH_STRING(nspr-cflags,

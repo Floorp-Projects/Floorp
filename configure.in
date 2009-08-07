@@ -130,7 +130,7 @@ GCONF_VERSION=1.2.1
 LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.6.14.2
+SQLITE_VERSION=3.6.16
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -1385,6 +1385,12 @@ sun4u | sparc*)
 x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
     ;;
+
+arm)
+    if test "$OS_TARGET" == "WINCE"; then
+        CPU_ARCH="$OS_TEST"
+    fi
+    ;;
 esac
 
 if test -z "$OS_TARGET"; then
@@ -2008,7 +2014,7 @@ case "$target" in
     ;;
 
 *-wince*)
-
+    TARGET_COMPILER_ABI=msvc
     MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
     AR_LIST="$AR -list"
     AR_EXTRACT="$AR -extract"
@@ -6696,6 +6702,17 @@ dnl ========================================================
 MOZ_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc=DIR  Location of malloc wrapper library],
     WRAP_MALLOC_LIB=$withval)
+
+dnl ========================================================
+dnl = Use TraceVis
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(tracevis,
+[  --enable-tracevis       Enable TraceVis tracing tool (default=no)],
+    MOZ_TRACEVIS=1,
+    MOZ_TRACEVIS= )
+if test -n "$MOZ_TRACEVIS"; then
+    AC_DEFINE(MOZ_TRACEVIS)
+fi
 
 dnl ========================================================
 dnl = Use Valgrind

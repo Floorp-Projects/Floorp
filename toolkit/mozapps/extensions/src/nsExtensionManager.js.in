@@ -3624,10 +3624,9 @@ ExtensionManager.prototype = {
       installData.error = INSTALLERROR_INSECURE_UPDATE;
       return installData;
     }
-      
-    // Check that the target application range allows compatibility with the app
-    if (gCheckCompatibility &&
-        !this.datasource.isCompatible(installManifest, gInstallManifestRoot, undefined)) {
+
+    // Check that the item is compatible with the application.
+    if (!this.datasource.isCompatible(installManifest, gInstallManifestRoot, false)) {
       installData.error = INSTALLERROR_INCOMPATIBLE_VERSION;
       return installData;
     }
@@ -4818,10 +4817,9 @@ ExtensionManager.prototype = {
    */
   _isUsableItem: function EM__isUsableItem(id) {
     var ds = this.datasource;
-    /* If we're not compatibility checking or if the item is compatible
-     * and if it isn't blocklisted and has all dependencies satisfied then
-     * proceed to the security check */
-    if ((!gCheckCompatibility || ds.getItemProperty(id, "compatible") == "true") &&
+    /* If the item is compatible and if it isn't blocklisted and has all
+     * dependencies satisfied then proceed to the security check */
+    if (ds.isCompatible(ds, getResourceForID(id), false) &&
         ds.getItemProperty(id, "blocklisted") == "false" &&
         ds.getItemProperty(id, "satisfiesDependencies") == "true") {
 
@@ -6588,6 +6586,10 @@ ExtensionsDataSource.prototype = {
    *          datasource or an Install Manifest.
    * @param   source
    *          The RDF Resource of the item to inspect for compatibility.
+   * @param   alwaysCheckVersion
+   *          Set to true to only obey the compatibility information in the
+   *          datasource. When false the compatibility range may be ignored
+   *          if compatibility checking is disabled.
    * @param   appVersion
    *          The version of the application we are checking for compatibility
    *          against. If this parameter is undefined, the version of the running
@@ -6597,9 +6599,15 @@ ExtensionsDataSource.prototype = {
    * @returns true if the item is compatible with this version of the
    *          application, false, otherwise.
    */
-  isCompatible: function EMDS_isCompatible(datasource, source, appVersion, platformVersion) {
+  isCompatible: function EMDS_isCompatible(datasource, source, alwaysCheckVersion,
+                                           appVersion, platformVersion) {
     // The Default Theme is always compatible.
     if (source.EqualsNode(this._defaultTheme))
+      return true;
+
+    // Items pending install have no target application info in the datasource
+    if (datasource === this &&
+        this._getItemProperty(source, "opType") == OP_NEEDS_INSTALL)
       return true;
 
     var appID = gApp.ID;
@@ -6620,12 +6628,16 @@ ExtensionsDataSource.prototype = {
       var minVersion  = stringData(datasource.GetTarget(targetApp, minVersionRes, true));
       var maxVersion  = stringData(datasource.GetTarget(targetApp, maxVersionRes, true));
       if (id == appID) {
+        if (!alwaysCheckVersion && !gCheckCompatibility)
+          return true;
         rv = (versionChecker.compare(appVersion, minVersion) >= 0) &&
              (versionChecker.compare(appVersion, maxVersion) <= 0);
         return rv; // App takes precedence over toolkit.
       }
 
       if (id == TOOLKIT_ID) {
+        if (!alwaysCheckVersion && !gCheckCompatibility)
+          return true;
         rv =  (versionChecker.compare(platformVersion, minVersion) >= 0) &&
               (versionChecker.compare(platformVersion, maxVersion) <= 0);
         // Keep looping, in case the app id is later.
@@ -6675,7 +6687,7 @@ ExtensionsDataSource.prototype = {
         continue;
 
       if (type != -1 && (type & desiredType) &&
-          !this.isCompatible(this, item, appVersion, platformVersion))
+          !this.isCompatible(this, item, true, appVersion, platformVersion))
         items.push(this.getItemForID(id));
     }
     return items;
@@ -7810,23 +7822,8 @@ ExtensionsDataSource.prototype = {
    * Get the em:compatible property (whether or not this item is compatible)
    */
   _rdfGet_compatible: function EMDS__rdfGet_compatible(item, property) {
-    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-    var targetAppInfo = this.getTargetApplicationInfo(id, this);
-    if (!targetAppInfo) {
-      // When installing a new addon targetAppInfo does not exist yet
-      if (this.getItemProperty(id, "opType") == OP_NEEDS_INSTALL)
-        return EM_L("true");
-      return EM_L("false");
-    }
-
-    getVersionChecker();
-    var appVersion = targetAppInfo.appID == TOOLKIT_ID ? gApp.platformVersion : gApp.version;
-    if (gVersionChecker.compare(targetAppInfo.maxVersion, appVersion) < 0 ||
-        gVersionChecker.compare(appVersion, targetAppInfo.minVersion) < 0) {
-      // OK, this item is incompatible.
-      return EM_L("false");
-    }
-    return EM_L("true");
+    var compatible = this.isCompatible(this, item, true);
+    return compatible ? EM_L("true") : EM_L("false");
   },
 
   /**

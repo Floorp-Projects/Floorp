@@ -1,0 +1,26 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl" xmlns:html="http://www.w3.org/1999/xhtml">
+  <binding id="foo">
+    <content><html:span>ABC DEF<children xmlns="http://www.mozilla.org/xbl"/></html:span></content>
+  </binding>
+</bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var cap = document.getElementById("cap");
+  var space = document.createTextNode(" ");
+  cap.insertBefore(space, cap.firstChild);
+}
+
+</script>
+
+</head>
+
+<body onload="boom();">&#x202D;<caption id="cap" style="-moz-binding: url('#foo');"><span style="display: none;"/></caption></body>
+
+</html>

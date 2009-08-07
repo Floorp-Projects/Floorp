@@ -104,6 +104,7 @@ class nsHashKey;
 #define NS_NOTIFYPAINT_EVENT              36
 #define NS_SIMPLE_GESTURE_EVENT           37
 #define NS_SELECTION_EVENT                38
+#define NS_CONTENT_COMMAND_EVENT          39
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -418,6 +419,15 @@ class nsHashKey;
 #define NS_SELECTION_EVENT_START        3700
 // Clear any previous selection and set the given range as the selection
 #define NS_SELECTION_SET                (NS_SELECTION_EVENT_START)
+
+// Events of commands for the contents
+#define NS_CONTENT_COMMAND_EVENT_START  3800
+#define NS_CONTENT_COMMAND_CUT          (NS_CONTENT_COMMAND_EVENT_START)
+#define NS_CONTENT_COMMAND_COPY         (NS_CONTENT_COMMAND_EVENT_START+1)
+#define NS_CONTENT_COMMAND_PASTE        (NS_CONTENT_COMMAND_EVENT_START+2)
+#define NS_CONTENT_COMMAND_DELETE       (NS_CONTENT_COMMAND_EVENT_START+3)
+#define NS_CONTENT_COMMAND_UNDO         (NS_CONTENT_COMMAND_EVENT_START+4)
+#define NS_CONTENT_COMMAND_REDO         (NS_CONTENT_COMMAND_EVENT_START+5)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -1134,6 +1144,23 @@ public:
   PRPackedBool mSucceeded;
 };
 
+class nsContentCommandEvent : public nsGUIEvent
+{
+public:
+  nsContentCommandEvent(PRBool aIsTrusted, PRUint32 aMsg, nsIWidget *aWidget,
+                        PRBool aOnlyEnabledCheck = PR_FALSE) :
+    nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_CONTENT_COMMAND_EVENT),
+    mOnlyEnabledCheck(PRPackedBool(aOnlyEnabledCheck)),
+    mSucceeded(PR_FALSE), mIsEnabled(PR_FALSE)
+  {
+  }
+
+  PRPackedBool mOnlyEnabledCheck;                          // [in]
+
+  PRPackedBool mSucceeded;                                 // [out]
+  PRPackedBool mIsEnabled;                                 // [out]
+};
+
 /**
  * MenuItem event
  * 
@@ -1300,6 +1327,14 @@ enum nsDragDropEventStatus {
 
 #define NS_IS_SELECTION_EVENT(evnt) \
        (((evnt)->message == NS_SELECTION_SET))
+
+#define NS_IS_CONTENT_COMMAND_EVENT(evnt) \
+       (((evnt)->message == NS_CONTENT_COMMAND_CUT) || \
+        ((evnt)->message == NS_CONTENT_COMMAND_COPY) || \
+        ((evnt)->message == NS_CONTENT_COMMAND_PASTE) || \
+        ((evnt)->message == NS_CONTENT_COMMAND_DELETE) || \
+        ((evnt)->message == NS_CONTENT_COMMAND_UNDO) || \
+        ((evnt)->message == NS_CONTENT_COMMAND_REDO))
 
 #define NS_IS_PLUGIN_EVENT(evnt) \
        (((evnt)->message == NS_PLUGIN_EVENT))
@@ -1485,10 +1520,27 @@ inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
   // send the events to pre-focused element.
 
   return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
-         NS_IS_PLUGIN_EVENT(aEvent);
+         NS_IS_PLUGIN_EVENT(aEvent) || NS_IS_CONTENT_COMMAND_EVENT(aEvent);
 #else
   return PR_FALSE;
 #endif
+}
+
+inline PRBool NS_IsEventUsingCoordinates(nsEvent* aEvent)
+{
+  return !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
+         !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_FOCUS_EVENT(aEvent) &&
+         !NS_IS_QUERY_CONTENT_EVENT(aEvent) && !NS_IS_PLUGIN_EVENT(aEvent) &&
+         !NS_IS_SELECTION_EVENT(aEvent) &&
+         !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
+         aEvent->eventStructType != NS_ACCESSIBLE_EVENT;
+}
+
+inline PRBool NS_IsEventTargetedAtFocusedWindow(nsEvent* aEvent)
+{
+  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
+         NS_IS_QUERY_CONTENT_EVENT(aEvent) || NS_IS_SELECTION_EVENT(aEvent) ||
+         NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_CONTENT_COMMAND_EVENT(aEvent);
 }
 
 #endif // nsGUIEvent_h__

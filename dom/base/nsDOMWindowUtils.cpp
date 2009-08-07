@@ -798,3 +798,18 @@ nsDOMWindowUtils::GetIMEStatus(PRUint32 *aState)
   return widget->GetIMEEnabled(aState);
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetScreenPixelsPerCSSPixel(float* aScreenPixels)
+{
+  *aScreenPixels = 1;
+
+  if (!nsContentUtils::IsCallerTrustedForRead())
+    return NS_ERROR_DOM_SECURITY_ERR;
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext)
+    return NS_OK;
+
+  *aScreenPixels = float(nsPresContext::AppUnitsPerCSSPixel())/
+      presContext->AppUnitsPerDevPixel();
+  return NS_OK;
+}

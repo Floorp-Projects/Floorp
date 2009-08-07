@@ -2217,7 +2217,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   const nsStyle##type_* parentdata_ = nsnull;                                 \
   PRBool canStoreInRuleTree = aCanStoreInRuleTree;                            \
                                                                               \
-  /* If |canStoreInRuleTree| might be false by the time we're done, we */     \
+  /* If |canStoreInRuleTree| might be true by the time we're done, we */      \
   /* can't call parentContext->GetStyle##type_() since it could recur into */ \
   /* setting the same struct on the same rule node, causing a leak. */        \
   if (parentContext && aRuleDetail != eRuleFullReset &&                       \
@@ -2286,7 +2286,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   if (NS_UNLIKELY(!data_))                                                    \
     return nsnull;  /* Out Of Memory */                                       \
                                                                               \
-  /* If |canStoreInRuleTree| might be false by the time we're done, we */     \
+  /* If |canStoreInRuleTree| might be true by the time we're done, we */      \
   /* can't call parentContext->GetStyle##type_() since it could recur into */ \
   /* setting the same struct on the same rule node, causing a leak. */        \
   const nsStyle##type_* parentdata_ = data_;                                  \
@@ -2304,6 +2304,11 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
  * @param data_ Variable holding the result of this function.
  */
 #define COMPUTE_END_INHERITED(type_, data_)                                   \
+  NS_POSTCONDITION(!canStoreInRuleTree || aRuleDetail == eRuleFullReset ||    \
+                   (aStartStruct && aRuleDetail == eRulePartialReset),        \
+                   "canStoreInRuleTree must be false for inherited structs "  \
+                   "unless all properties have been specified with values "   \
+                   "other than inherit");                                     \
   if (!canStoreInRuleTree)                                                    \
     /* We can't be cached in the rule node.  We have to be put right */       \
     /* on the style context. */                                               \
@@ -2319,6 +2324,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
         return nsnull;                                                        \
       }                                                                       \
     }                                                                         \
+    NS_ASSERTION(!aHighestNode->mStyleData.mInheritedData->m##type_##Data,    \
+                 "Going to leak style data");                                 \
     aHighestNode->mStyleData.mInheritedData->m##type_##Data = data_;          \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(NS_STYLE_INHERIT_BIT(type_), aHighestNode);         \
@@ -2333,6 +2340,12 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
  * @param data_ Variable holding the result of this function.
  */
 #define COMPUTE_END_RESET(type_, data_)                                       \
+  NS_POSTCONDITION(!canStoreInRuleTree ||                                     \
+                   aRuleDetail == eRuleNone ||                                \
+                   aRuleDetail == eRulePartialReset ||                        \
+                   aRuleDetail == eRuleFullReset,                             \
+                   "canStoreInRuleTree must be false for reset structs "      \
+                   "if any properties were specified as inherit");            \
   if (!canStoreInRuleTree)                                                    \
     /* We can't be cached in the rule node.  We have to be put right */       \
     /* on the style context. */                                               \
@@ -2348,6 +2361,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
         return nsnull;                                                        \
       }                                                                       \
     }                                                                         \
+    NS_ASSERTION(!aHighestNode->mStyleData.mResetData->m##type_##Data,        \
+                 "Going to leak style data");                                 \
     aHighestNode->mStyleData.mResetData->m##type_##Data = data_;              \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(NS_STYLE_INHERIT_BIT(type_), aHighestNode);         \
@@ -4398,6 +4413,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
           border->ClearBorderColors(side);
         }
         else if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+          canStoreInRuleTree = PR_FALSE;
           NS_ASSERTION(!list->mNext, "should have only one item");
           nsBorderColors *parentColors;
           parentBorder->GetCompositeColors(side, &parentColors);
@@ -4445,8 +4461,8 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     NS_FOR_CSS_SIDES(side) {
       const nsCSSValue &value = ourBorderColor.*(nsCSSRect::sides[side]);
       if (eCSSUnit_Inherit == value.GetUnit()) {
+        canStoreInRuleTree = PR_FALSE;
         if (parentContext) {
-          canStoreInRuleTree = PR_FALSE;
           parentBorder->GetBorderColor(side, borderColor, foreground);
           if (foreground) {
             // We want to inherit the color from the parent, not use the
@@ -4559,6 +4575,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     border->mHaveBorderImageWidth = PR_FALSE;
     border->SetBorderImage(nsnull);
   } else if (eCSSUnit_Inherit == marginData.mBorderImage.GetUnit()) {
+    canStoreInRuleTree = PR_FALSE;
     NS_FOR_CSS_SIDES(side) {
       border->SetBorderImageWidthOverride(side, parentBorder->mBorderImageWidth.side(side));
     }
@@ -5461,10 +5478,10 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   nsCSSValueList *list = SVGData.mStrokeDasharray;
   if (list) {
     if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+      canStoreInRuleTree = PR_FALSE;
       // only do the copy if weren't already set up by the copy constructor
       // FIXME Bug 389408: This is broken when aStartStruct is non-null!
       if (!svg->mStrokeDasharray) {
-        canStoreInRuleTree = PR_FALSE;
         svg->mStrokeDasharrayLength = parentSVG->mStrokeDasharrayLength;
         if (svg->mStrokeDasharrayLength) {
           svg->mStrokeDasharray = new nsStyleCoord[svg->mStrokeDasharrayLength];

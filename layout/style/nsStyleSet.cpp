@@ -688,6 +688,7 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
                "content must be element");
 
   if (aContent && presContext) {
+    NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     ElementRuleProcessorData data(presContext, aContent, mRuleWalker);
     FileRules(EnumRulesMatching, &data);
     result = GetContext(presContext, aParentContext, nsnull).get();
@@ -707,6 +708,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArra
   nsPresContext *presContext = PresContext();
 
   if (presContext) {
+    NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     mRuleWalker->SetLevel(eDocSheet, PR_FALSE);
     for (PRInt32 i = 0; i < rules.Count(); i++) {
       mRuleWalker->Forward(rules.ObjectAt(i));
@@ -726,6 +728,7 @@ nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
   nsPresContext *presContext = PresContext();
 
   if (presContext) {
+    NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     result = GetContext(presContext, aParentContext,
                         nsCSSAnonBoxes::mozNonElement).get();
     NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
@@ -779,6 +782,7 @@ nsStyleSet::ResolvePseudoStyleFor(nsIContent* aParentContent,
                "aPseudoTag must be pseudo-element or anonymous box");
 
   if (aPseudoTag && presContext) {
+    NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     PseudoRuleProcessorData data(presContext, aParentContent, aPseudoTag,
                                  aComparator, mRuleWalker);
     WalkRestrictionRule(aPseudoTag);
@@ -817,6 +821,7 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
                "aPseudoTag must be pseudo-element or anonymous box");
 
   if (aPseudoTag && presContext) {
+    NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     PseudoRuleProcessorData data(presContext, aParentContent, aPseudoTag,
                                  nsnull, mRuleWalker);
     WalkRestrictionRule(aPseudoTag);

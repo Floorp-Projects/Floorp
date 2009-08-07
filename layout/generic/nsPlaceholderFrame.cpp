@@ -127,9 +127,13 @@ nsPlaceholderFrame::Destroy()
 {
   nsIPresShell* shell = PresContext()->GetPresShell();
   if (shell && mOutOfFlowFrame) {
-    NS_ASSERTION(!shell->FrameManager()->GetPlaceholderFrameFor(mOutOfFlowFrame),
-                 "Placeholder relationship should have been torn down; see "
-                 "comments in nsPlaceholderFrame.h");
+    if (shell->FrameManager()->GetPlaceholderFrameFor(mOutOfFlowFrame)) {
+      NS_ERROR("Placeholder relationship should have been torn down; see "
+               "comments in nsPlaceholderFrame.h.  Unregistering ourselves, "
+               "but this might cause our out-of-flow to be unable to destroy "
+               "itself properly.  Not that it could anyway, with us dead.");
+      shell->FrameManager()->UnregisterPlaceholderFrame(this);
+    }
   }
 
   nsSplittableFrame::Destroy();
