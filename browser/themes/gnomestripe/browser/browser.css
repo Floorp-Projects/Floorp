@@ -655,7 +655,7 @@ toolbar[iconsize="small"] #back-button[disabled="true"] {
 toolbar[iconsize="small"] #back-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
-menupopup:-moz-locale-dir(rtl) > .unified-nav-back[_moz-menuactive] {
+.unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu") !important;
 }
 toolbar[iconsize="small"] #back-button[disabled="true"]:-moz-locale-dir(rtl) {
@@ -675,7 +675,7 @@ toolbar[iconsize="small"] #forward-button[disabled="true"] {
 toolbar[iconsize="small"] #forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
-menupopup:-moz-locale-dir(rtl) > .unified-nav-forward[_moz-menuactive] {
+.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu") !important;
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {

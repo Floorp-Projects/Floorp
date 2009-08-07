@@ -472,13 +472,13 @@ toolbar[mode="icons"] #back-forward-dropmarker > dropmarker {
   -moz-image-region: rect(66px, 514px, 99px, 504px);
 }
 
-.unified-nav-back[_moz-menuactive],
-menupopup:-moz-locale-dir(rtl) > .unified-nav-forward[_moz-menuactive] {
+.unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
+.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/menu-back.png") !important;
 }
 
-.unified-nav-forward[_moz-menuactive],
-menupopup:-moz-locale-dir(rtl) > .unified-nav-back[_moz-menuactive] {
+.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(ltr),
+.unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
 }
 
