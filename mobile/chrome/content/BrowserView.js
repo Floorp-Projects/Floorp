@@ -217,12 +217,6 @@ BrowserView.Util = {
     };
   },
 
-  clampViewportWH: function clampViewportWH(width, height, visibleRect) {
-    let minW = visibleRect.width;
-    let minH = visibleRect.height;
-    return [Math.max(width, minW), Math.max(height, minH)];
-  },
-
   initContainer: function initContainer(container, visibleRect) {
     container.style.width    = visibleRect.width  + 'px';
     container.style.height   = visibleRect.height + 'px';
@@ -265,10 +259,9 @@ BrowserView.prototype = {
     if (bvs) {
       bvs.visibleX = vr.left;
       bvs.visibleY = vr.top;
+    }
 
-      // XXX should we reclamp minimally to the new visible rect?
-    } else
-      this._viewportChanged(false, false);
+    this._viewportChanged(false, false);
   },
 
   getVisibleRect: function getVisibleRect() {
@@ -282,12 +275,10 @@ BrowserView.prototype = {
 
   setViewportDimensions: function setViewportDimensions(width, height, causedByZoom) {
     let bvs = this._browserViewportState;
-    let vis = this._visibleRect;
 
     if (!bvs)
       return;
 
-    //[width, height] = BrowserView.Util.clampViewportWH(width, height, vis);
     bvs.viewportRect.right  = width;
     bvs.viewportRect.bottom = height;
 
@@ -314,7 +305,8 @@ BrowserView.prototype = {
       let browserH = this.viewportToBrowser(bvs.viewportRect.bottom);
       bvs.zoomLevel = newZL; // side-effect: now scale factor in transformations is newZL
       this.setViewportDimensions(this.browserToViewport(browserW),
-                                 this.browserToViewport(browserH));
+                                 this.browserToViewport(browserH),
+                                 true);
     }
   },
 
