@@ -90,22 +90,29 @@ RPCChannel::Call(Message* msg, Message* reply)
             NS_ASSERTION(0 < mPending.size(), "invalid RPC stack");
 
             const Message& pending = mPending.top();
-            if (recvd.type() != (pending.type()+1)) {
+
+#ifdef DEBUG
+            if (recvd.type() != (pending.type()+1) && !recvd.is_reply_error()) {
                 // FIXME/cjones: handle error
                 NS_ASSERTION(0, "somebody's misbehavin'");
             }
+#endif
 
             // we received a reply to our most recent message.  pop this
             // frame and return the reply
             mPending.pop();
-            *reply = recvd;
+
+            bool isError = recvd.is_reply_error();
+            if (!isError) {
+                *reply = recvd;
+            }
 
             if (!WaitingForReply()) {
                 mChannelState = ChannelIdle;
             }
 
             mMutex.Unlock();
-            return true;
+            return !isError;
         }
         // RPC in-call
         else {
@@ -131,7 +138,7 @@ RPCChannel::OnDispatchMessage(const Message& call)
         return SyncChannel::OnDispatchMessage(call);
     }
 
-    Message* reply;
+    Message* reply = nsnull;
     switch (static_cast<RPCListener*>(mListener)->OnCallReceived(call, reply)) {
     case MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
@@ -145,6 +152,15 @@ RPCChannel::OnDispatchMessage(const Message& call)
     case MsgPayloadError:
     case MsgRouteError:
     case MsgValueError:
+        delete reply;
+        reply = new Message();
+        reply->set_rpc();
+        reply->set_reply();
+        reply->set_reply_error();
+        mIOLoop->PostTask(FROM_HERE,
+                          NewRunnableMethod(this,
+                                            &RPCChannel::OnSendReply,
+                                            reply));
         // FIXME/cjones: error handling; OnError()?
         return;
 

@@ -173,7 +173,7 @@ NPAPIPluginParent::NPP_New(NPMIMEType pluginType,
         values.AppendElement(nsDependentCString(argv[i]));
     }
 
-    NPError prv;
+    NPError prv = NPERR_GENERIC_ERROR;
     nsAutoPtr<NPPInstanceParent> parentInstance(
         static_cast<NPPInstanceParent*>(
             CallNPPConstructor(nsDependentCString(pluginType), mode, names,
