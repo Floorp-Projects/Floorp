@@ -181,7 +181,7 @@ nsCacheProfilePrefObserver::Install()
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG(observerService);
     
-    for (int i=0; i<NS_ARRAY_LENGTH(observerList); i++) {
+    for (unsigned int i=0; i<NS_ARRAY_LENGTH(observerList); i++) {
         rv = observerService->AddObserver(this, observerList[i], PR_FALSE);
         if (NS_FAILED(rv)) 
             rv2 = rv;
@@ -191,7 +191,7 @@ nsCacheProfilePrefObserver::Install()
     nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!branch) return NS_ERROR_FAILURE;
 
-    for (int i=0; i<NS_ARRAY_LENGTH(prefList); i++) {
+    for (unsigned int i=0; i<NS_ARRAY_LENGTH(prefList); i++) {
         rv = branch->AddObserver(prefList[i], this, PR_FALSE);
         if (NS_FAILED(rv))
             rv2 = rv;
@@ -231,7 +231,7 @@ nsCacheProfilePrefObserver::Remove()
     nsCOMPtr<nsIObserverService> obs =
             do_GetService("@mozilla.org/observer-service;1");
     if (obs) {
-        for (int i=0; i<NS_ARRAY_LENGTH(observerList); i++) {
+        for (unsigned int i=0; i<NS_ARRAY_LENGTH(observerList); i++) {
             obs->RemoveObserver(this, observerList[i]);
         }
     }
@@ -240,7 +240,7 @@ nsCacheProfilePrefObserver::Remove()
     nsCOMPtr<nsIPrefBranch2> prefs =
            do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
-        for (int i=0; i<NS_ARRAY_LENGTH(prefList); i++) {
+        for (unsigned int i=0; i<NS_ARRAY_LENGTH(prefList); i++) {
             // remove cache pref observers
             prefs->RemoveObserver(prefList[i], this);
         }
@@ -449,13 +449,11 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
                 }
             }
         }
-#if DEBUG
-        if (!directory) {
-            // use current process directory during development
+        // use file cache in build tree only if asked, to avoid cache dir litter
+        if (!directory && PR_GetEnv("NECKO_DEV_ENABLE_DISK_CACHE")) {
             rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                                         getter_AddRefs(directory));
         }
-#endif
         if (directory)
             mDiskCacheParentDirectory = do_QueryInterface(directory, &rv);
     }

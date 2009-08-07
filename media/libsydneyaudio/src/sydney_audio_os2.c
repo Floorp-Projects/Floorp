@@ -555,10 +555,12 @@ int     sa_stream_drain(sa_stream_t *s)
   /* keep os2_mixer_event() from reacting to buffer under-runs */
   s->state = SAOS2_EXIT;
 
-  /* DART won't start playing until 2 buffers have been
-   * written, so write a dummy 2nd buffer just in case */
-  memset(buf, 0, sizeof(buf));
-  sa_stream_write(s, buf, s->nchannels * SAOS2_SAMPLE_SIZE);
+  /* DART won't start playing until 2 buffers have been written,
+   * so write a dummy 2nd buffer if any buffers are in use */
+  if (s->freeCnt < SAOS2_BUF_CNT) {
+    memset(buf, 0, sizeof(buf));
+    sa_stream_write(s, buf, s->nchannels * SAOS2_SAMPLE_SIZE);
+  }
 
   /* write all remaining buffers to the device */
   if (s->readyCnt)

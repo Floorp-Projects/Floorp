@@ -194,8 +194,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
-- (BOOL)isPaintingSuppressed;
-
 - (void)maybeInvalidateShadow;
 - (void)invalidateShadow;
 
@@ -2661,13 +2659,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   mNeedsShadowInvalidation = NO;
 }
 
-- (BOOL)isPaintingSuppressed
-{
-  NSWindow* win = [self window];
-  return ([win isKindOfClass:[ToolbarWindow class]] &&
-          [(ToolbarWindow*)win isPaintingSuppressed]);
-}
-
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2676,7 +2667,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   PRBool isVisible;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
-      !isVisible || [self isPaintingSuppressed])
+      !isVisible)
     return;
 
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];

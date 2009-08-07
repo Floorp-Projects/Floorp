@@ -38,8 +38,9 @@
 #include "nsISupports.idl"
 
 interface nsIAutoCompleteResult;
+interface nsIDOMHTMLInputElement;
 
-[scriptable, uuid(2f5bb765-428e-4e33-b2d8-441eb7ddf730)]
+[scriptable, uuid(997c0c05-5d1d-47e5-9cbc-765c0b8ec699)]
 
 interface nsIFormAutoComplete: nsISupports {
     /**
@@ -48,5 +49,6 @@ interface nsIFormAutoComplete: nsISupports {
     nsIAutoCompleteResult autoCompleteSearch(
                                     in AString aInputName,
                                     in AString aSearchString,
+                                    in nsIDOMHTMLInputElement aField,
                                     in nsIAutoCompleteResult aPreviousResult);
 };

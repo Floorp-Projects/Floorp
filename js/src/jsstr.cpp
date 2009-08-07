@@ -2734,7 +2734,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
         if (JS_ON_TRACE(cx)) {
             /*
              * If we can't leave the trace, signal OOM condition, otherwise
-             * exit from trace and proceed with GC.
+             * exit from trace before throwing.
              */
             if (!js_CanLeaveTrace(cx))
                 return NULL;

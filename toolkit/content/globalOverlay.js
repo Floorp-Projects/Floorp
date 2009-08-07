@@ -178,33 +178,11 @@ function visitLink(aEvent) {
     protocolSvc.loadUrl(uri);
 }
 
-function isValidLeftClick(aEvent, aName)
-{
-  return (aEvent.button == 0 && aEvent.originalTarget.localName == aName);
-}
-
 function setTooltipText(aID, aTooltipText)
 {
   var element = document.getElementById(aID);
   if (element)
     element.setAttribute("tooltiptext", aTooltipText);
-}
-
-function FillInTooltip ( tipElement )
-{
-  var retVal = false;
-  var textNode = document.getElementById("TOOLTIP-tooltipText");
-  if (textNode) {
-    while (textNode.hasChildNodes())
-      textNode.removeChild(textNode.firstChild);
-    var tipText = tipElement.getAttribute("tooltiptext");
-    if (tipText) {
-      var node = document.createTextNode(tipText);
-      textNode.appendChild(node);
-      retVal = true;
-    }
-  }
-  return retVal;
 }
 
 __defineGetter__("NS_ASSERT", function() {

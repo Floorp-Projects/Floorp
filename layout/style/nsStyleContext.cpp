@@ -43,18 +43,13 @@
 #include "nsString.h"
 #include "nsPresContext.h"
 #include "nsIStyleRule.h"
-#include "nsCRT.h"
 
 #include "nsCOMPtr.h"
 #include "nsStyleSet.h"
 #include "nsIPresShell.h"
-#include "prenv.h"
 
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
-#include "imgIRequest.h"
-
-#include "nsPrintfCString.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -308,6 +303,8 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
     }
   }
   char* dataSlot = resetOrInherit + info.mInheritResetOffset;
+  NS_ASSERTION(!*reinterpret_cast<void**>(dataSlot),
+               "Going to leak style data");
   *reinterpret_cast<void**>(dataSlot) = aStruct;
 }
 

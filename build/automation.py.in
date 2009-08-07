@@ -402,7 +402,7 @@ def fillCertificateDB(profileDir, certPath, utilityPath, xrePath):
   os.unlink(pwfilePath)
   return 0
 
-def environment(env = None, xrePath = DIST_BIN):
+def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
   if env == None:
     env = dict(os.environ)
 
@@ -417,8 +417,9 @@ def environment(env = None, xrePath = DIST_BIN):
   elif IS_WIN32:
     env["PATH"] = env["PATH"] + ";" + ldLibraryPath
 
-  env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
-  env['MOZ_CRASHREPORTER'] = '1'
+  if crashreporter:
+    env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
+    env['MOZ_CRASHREPORTER'] = '1'
 
   return env
 
@@ -585,8 +586,11 @@ def runApp(testURL, env, app, profileDir, extraArgs,
   else:
     outputPipe = subprocess.PIPE
 
-  proc = Process([cmd] + args, env = environment(env, xrePath = xrePath),
-          stdout = outputPipe, stderr = subprocess.STDOUT)
+  proc = Process([cmd] + args,
+                 env = environment(env, xrePath = xrePath,
+                                   crashreporter = not debuggerInfo),
+                 stdout = outputPipe,
+                 stderr = subprocess.STDOUT)
   log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
   if outputPipe is None:

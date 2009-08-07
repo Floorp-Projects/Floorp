@@ -43,6 +43,129 @@ div.style.listStyleImage = 'url("/**/")';
 is(div.style.listStyleImage, 'url("/**/")',
    "not treated as comment");
 
+// Tests from Alfred Keyser's patch in bug 337287 (modified by dbaron)
+div.style.listStyleImage = 'url("bad")';
+div.style.listStyleImage = 'url(good /*bad comment*/)';
+is(div.style.listStyleImage, 'url("bad")',
+   "comment not allowed inside token");
+
+div.style.listStyleImage = 'url(good /*bad comments*/ /*Hello*/)';
+is(div.style.listStyleImage, 'url("bad")',
+   "comment not allowed inside token");
+
+div.style.listStyleImage = 'url(good/*commentaspartofurl*/)';
+is(div.style.listStyleImage, 'url("good/*commentaspartofurl*/")',
+   "comment-like syntax not comment inside of url");
+
+div.style.listStyleImage = 'url("bad")';
+div.style.listStyleImage = 'url(good/**/ /*secondcommentcanbeskipped*/ )';
+is(div.style.listStyleImage, 'url("bad")',
+   "comment not allowed inside token");
+
+div.style.listStyleImage = 'url(/*partofurl*/good)';
+is(div.style.listStyleImage, 'url("/*partofurl*/good")',
+   "comment not parsed as part of url");
+
+div.style.listStyleImage = 'url(good';
+is(div.style.listStyleImage, 'url("good")',
+   "URL ending with eof not correctly handled");
+
+div.style.listStyleImage = 'url("bad")';
+div.style.listStyleImage = 'url(good /*)*/';
+is(div.style.listStyleImage, 'url("bad")',
+   "comment not allowed inside token");
+
+div.style.listStyleImage = 'url("bad")';
+div.style.listStyleImage = 'url(good /*)*/ tokenaftercommentevenwithclosebracketisinvalid';
+is(div.style.listStyleImage, 'url("bad")',
+   "comment not allowed inside token");
+
+div.style.listStyleImage = 'url(bad)';
+div.style.listStyleImage = 'url("good"';
+is(div.style.listStyleImage, 'url("good")',
+   "URL as string without close bracket");
+
+div.style.listStyleImage = 'url(bad)';
+div.style.listStyleImage = 'url("good';
+is(div.style.listStyleImage, 'url("good")',
+   "URL as string without closing quote");
+
+div.style.listStyleImage = 'url("bad")';
+div.style.listStyleImage = 'url(good notgood';
+is(div.style.listStyleImage, 'url("bad")',
+   "second token should make url invalid");
+
+div.style.listStyleImage = 'url("bad")';
+div.style.listStyleImage = 'url(good(notgood';
+is(div.style.listStyleImage, 'url("bad")',
+   "open bracket in url not recognized as invalid");
+
+var longurl = '';
+for (i=0;i<1000;i++) {
+    longurl = longurl + 'verylongurlindeed_thequickbrownfoxjumpsoverthelazydoq';
+}
+div.style.listStyleImage = 'url(' + longurl;
+is(div.style.listStyleImage, 'url("' + longurl + '")',
+   "very long url not correctly parsed");
+
+
+// Additional tests from
+// https://bugzilla.mozilla.org/show_bug.cgi?id=337287#c21
+
+div.style.listStyleImage = 'url(good/*)';
+is(div.style.listStyleImage, 'url("good/*")',
+   "URL containing comment start is valid");
+
+div.style.listStyleImage = 'url("bad")';
+div.style.listStyleImage = 'url(good bad)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url(\\g b)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url( \\g b)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url(c\\g b)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url(cc\\g b)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url(\\f  b)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url( \\f  b)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url(c\\f  b)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url(cc\\f  b)';
+is(div.style.listStyleImage, 'url("bad")',
+   "unquoted URL with spaces not allowed");
+
+div.style.listStyleImage = 'url(\\f good)';
+is(div.style.listStyleImage, 'url("\\F good")', "URL allowed");
+div.style.listStyleImage = 'url( \\f good)';
+is(div.style.listStyleImage, 'url("\\F good")', "URL allowed");
+div.style.listStyleImage = 'url(f\\f good)';
+is(div.style.listStyleImage, 'url("f\\F good")', "URL allowed");
+div.style.listStyleImage = 'url(go\\od)';
+is(div.style.listStyleImage, 'url("good")', "URL allowed");
+div.style.listStyleImage = 'url(goo\\d)';
+is(div.style.listStyleImage, 'url("goo\\D ")', "URL allowed");
+div.style.listStyleImage = 'url(go\\o)';
+is(div.style.listStyleImage, 'url("goo")', "URL allowed");
+
 </script>
 </pre>
 </body>

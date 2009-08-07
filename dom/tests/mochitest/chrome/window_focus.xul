@@ -677,7 +677,7 @@ function startTest()
   if (!gPartialTabbing)
     doCommandDispatcherTests();
 
-  doRemoveTests()
+  doRemoveTests();
 
   testMoveFocus();
 
@@ -729,7 +729,31 @@ function startTest()
   getById("inpopup1").focus();
   is(fm.focusedElement, getById("t9"), "focus in closed popup");
 
-  gEvents = "";
+  // ---- tests to check if tabbing out of a textbox works
+
+  setFocusTo("t1", window);
+
+  var textbox1 = document.createElement("textbox");
+  $("innerbox").appendChild(textbox1);
+  textbox1.inputField.id = "innerinput1";
+
+  var textbox2 = document.createElement("textbox");
+  $("innerbox").appendChild(textbox2);
+  textbox2.inputField.id = "innerinput2";
+
+  expectFocusShift(function () textbox2.focus(),
+                   null, "innerinput2", true, "focus on textbox");
+  expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+                   null, "innerinput1", true, "shift+tab on textbox");
+
+  textbox1.tabIndex = 2;
+  textbox2.tabIndex = 2;
+  expectFocusShift(function () textbox2.focus(),
+                   null, "innerinput2", true, "focus on textbox with tabindex set");
+  expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+                   null, "innerinput1", true, "shift+tab on textbox with tabindex set");
+
+  setFocusTo("t9", window);
   window.openDialog("focus_window2.xul", "_blank", "chrome", otherWindowFocused, null);
 }
 
@@ -1399,7 +1423,7 @@ SimpleTest.waitForExplicitFinish();
    even numbered ids - focusable but not part of the tab order
  -->
 <vbox id="buttonbox">
-<hbox>
+<hbox id="innerbox">
   <button id="t4" accesskey="h" label="no tabindex"/>
   <button id="o1" accesskey="i" label="tabindex = -1" tabindex="-1"/>
   <listbox id="t5" label="tabindex = 0" tabindex="0" rows="1">
