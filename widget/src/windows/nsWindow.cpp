@@ -2270,10 +2270,20 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
           w->Invalidate(PR_FALSE);
         }
       }
+
+      // ScrollWindowEx will send WM_MOVE to each moved window to tell it
+      // its new position. Unfortunately those messages don't reach our
+      // WM_MOVE handler for some plugins, so we have to update their
+      // mBounds here. For windows that do receive WM_MOVE, this is OK,
+      // they'll just overwrite mBounds again with the correct value.
+      for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
+           w = static_cast<nsWindow*>(w->GetNextSibling())) {
+        if (w->mBounds.Intersects(affectedRect)) {
+          w->mBounds += aDelta;
+        }
+      }
     }
 
-    // Note that when SW_SCROLLCHILDREN is used, WM_MOVE messages are sent
-    // which will update the mBounds of the children.
     RECT clip = { affectedRect.x, affectedRect.y, affectedRect.XMost(), affectedRect.YMost() };
     ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, NULL, NULL, flags);
   }
