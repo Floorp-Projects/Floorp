@@ -381,9 +381,7 @@ var Browser = {
 
       let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
       let spacers = document.getElementsByClassName("sidebar-spacer");
-      let len = spacers.length;
-      let i;
-      for (i = 0; i < len; i++) spacers[i].style.height = toolbarHeight + 'px';
+      for (let i = 0, len = spacers.length; i < len; i++) spacers[i].style.height = toolbarHeight + 'px';
 
       let toolbarContainer = document.getElementById("toolbar-container");
       let stackToolbarContainer = document.getElementById("stack-toolbar-container");
@@ -440,10 +438,9 @@ var Browser = {
     }
 
     // load styles for scrollbars
-    /*
     var styleURI = ios.newURI("chrome://browser/content/content.css", null, null);
     styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
-    */
+
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
     os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
@@ -465,6 +462,7 @@ var Browser = {
       if (!aElement)
         return;
 
+      // XXX We need to add this back
       //canvasBrowser.ensureElementIsVisible(aElement);
     }
     // Init it with the "browsers" element, which will receive keypress events
@@ -687,7 +685,7 @@ var Browser = {
     this._selectedTab = tab;
 
     bv.beginBatchOperation();
-    this._browserView.setBrowser(this.selectedBrowser, true);
+    bv.setBrowser(this.selectedBrowser, true);
     document.getElementById("tabs").selectedItem = tab.chromeTab;
 
     if (!firstTab) {
