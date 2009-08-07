@@ -1,4 +1,4 @@
-toolkit.jar:
+classic.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/ os=WINNT osversion<6
 % skin mozapps classic/1.0 %skin/classic/mozapps/ os!=WINNT
 # NOTE: If you add a new file here, you'll need to add it to the aero
@@ -42,7 +42,7 @@ toolkit.jar:
         skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png    (xpinstall/xpinstallItemGeneric.png)
 
 #ifdef XP_WIN
-toolkit.jar:
+classic.jar:
 % skin mozapps classic/1.0 %skin/classic/aero/mozapps/ os=WINNT osversion>=6
         skin/classic/aero/mozapps/downloads/downloadButtons.png            (downloads/downloadButtons-aero.png)
         skin/classic/aero/mozapps/downloads/downloadIcon.png               (downloads/downloadIcon-aero.png)

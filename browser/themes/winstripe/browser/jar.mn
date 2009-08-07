@@ -1,4 +1,4 @@
-browser.jar:
+classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/ os=WINNT osversion<6
 % skin browser classic/1.0 %skin/classic/browser/ os!=WINNT
 # NOTE: If you add a new file here, you'll need to add it to the aero
@@ -94,7 +94,7 @@ browser.jar:
         preview.png
 
 #ifdef XP_WIN
-browser.jar:
+classic.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
         skin/classic/aero/browser/sanitizeDialog.css                       (sanitizeDialog.css)
 *       skin/classic/aero/browser/aboutPrivateBrowsing.css           (aboutPrivateBrowsing.css)

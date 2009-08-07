@@ -1,4 +1,4 @@
-toolkit.jar:
+classic.jar:
 % skin help classic/1.0 %skin/classic/help/
   skin/classic/help/help.css
   skin/classic/help/Toolbar.png

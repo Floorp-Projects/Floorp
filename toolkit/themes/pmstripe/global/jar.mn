@@ -1,4 +1,4 @@
-toolkit.jar:
+classic.jar:
 +  skin/classic/global/popup.css
 +  skin/classic/global/menu.css
 +  skin/classic/global/toolbar.css
