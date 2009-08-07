@@ -49,22 +49,89 @@ var doctypes = [
 'BackCompat' , '<!DOCTYPE HTMLz PUBLIC "DTD HTML 3.2">',
 'BackCompat' , '<!DOCTYPE "DTD HTML 3.2">',
 /* end from bug 363883 */
+// from bug 502600
+'BackCompat' , '<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">',
 ];
 
-function test(mode,i){
-        is(mode,doctypes[i],doctypes[i+1])
+////
+// Restore the original value of the html5.enable pref,
+// and finish.
+//
+function finishTest() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+            .getService(Components.interfaces.nsIPrefBranch);
+  prefs.setBoolPref("html5.enable", gOriginalHtml5Pref);
+  SimpleTest.finish();  
 }
-var results = new Array();
+
+////
+// Verify that the iframe's compatibility mode matches
+// the expected value.  This function is called from the
+// test iframe's onload handler.  When verifying the
+// last test in the group, if there is no original
+// value for the html5.enable pref stored in the
+// 'gOriginalHtml5Pref' variable, then run the tests
+// again in HTML5 mode.  Otherwise, finish the test.
+//
+function test(mode,i){
+  is(mode,doctypes[i],doctypes[i+1]);
+  if (i == doctypes.length - 2) {
+    if (typeof(gOriginalHtml5Pref) == "undefined") {
+      doTestHtml5();
+    }
+    else {
+      finishTest();
+    }
+  }
+}
+
+////
+// Enable the HTML5 parser, then iterate through the tests
+// a second time.
+//
+function doTestHtml5() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+            .getService(Components.interfaces.nsIPrefBranch);
+  gOriginalHtml5Pref = prefs.getBoolPref("html5.enable");
+  prefs.setBoolPref("html5.enable", true);
+  
+  doTest();
+}
+
+////
+// Insert a hidden iframe into the document, with the src 
+// containing the test doctype.  The iframe's onload
+// function is set to call the test's verification step.
+//
 function insert_iframe(doctype,expected) {
   var elm = document.createElement('iframe');
-  elm.setAttribute('src', 'data:text/html,'+doctype+'<html><body onload="parent.test(document.compatMode,'+i+')"></body>');
+  elm.setAttribute('src', 'data:text/html,' + doctype +
+    '<html><body onload="parent.test(document.compatMode,'+i+')"></body>');
   elm.setAttribute('style', 'display:none');
   document.getElementsByTagName('body')[0].appendChild(elm);
 }
 
-for (i=0; i < doctypes.length; i+=2) {
-  insert_iframe(doctypes[i+1],doctypes[i]);
+////
+// First iteration of the compatibility mode tests, without
+// the HTML5 parser enabled.
+//
+function doTest() {
+  for (i=0; i < doctypes.length; i+=2) {
+    insert_iframe(doctypes[i+1],doctypes[i]);
+  }
 }
+
+////
+// Run the compatbility mode tests.  First, the tests are run
+// without the HTML5 parser enabled.  Completing the last test
+// then triggers a second iteration, this time with the HTML5
+// parser enabled.
+//
+var gOriginalHtml5Pref;
+SimpleTest.waitForExplicitFinish();
+doTest();
 
 </script>
 </pre>
