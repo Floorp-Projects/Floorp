@@ -1,6 +1,6 @@
 #filter substitution
 
-browser.jar:
+chrome.jar:
 % content browser %content/
 * content/browser.xul                  (content/browser.xul)
 * content/browser.js                   (content/browser.js)
