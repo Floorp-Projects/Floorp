@@ -978,7 +978,7 @@ PatchFile::Prepare()
 int
 PatchFile::Execute()
 {
-  LOG(("EXECUTE PATCH %s\n", mDestFile));
+  LOG(("EXECUTE PATCH 2 " LOG_S "\n", mDestFile));
 
   // Create backup copy of the destination file before proceeding.
 
@@ -1004,7 +1004,7 @@ PatchFile::Execute()
 void
 PatchFile::Finish(int status)
 {
-  LOG(("FINISH PATCH %s\n", mDestFile));
+  LOG(("FINISH PATCH " LOG_S "\n", mDestFile));
 
   backup_finish(mDestFile, status);
 }
