@@ -7961,10 +7961,6 @@ MOZ_ARG_DISABLE_BOOL(necko-wifi,
     NECKO_WIFI=,
     NECKO_WIFI=1
 )
-
-dnl XXXbent remove this once bsmedberg updates his linux system
-NECKO_WIFI=
-
 if test "$NECKO_WIFI"; then
   NECKO_WIFI=
   if test "$OS_ARCH" = "Linux"; then
