@@ -1,3 +1,0 @@
-Enter port to use [25]: Enter host name to use [nsmail-2.mcom.com]: Enter command number: Location of message [message.eml]: Recipient of message [mscott@netscape.com]: No accounts. I'll try to migrate 4.x prefs..
-Tried to upgrade old prefs, but couldn't find server type!
-Enter command number: Terminating Smtp test harness....

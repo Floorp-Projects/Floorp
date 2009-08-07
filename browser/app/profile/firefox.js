@@ -222,11 +222,6 @@ pref("browser.urlbar.filter.javascript", true);
 
 // the maximum number of results to show in autocomplete when doing richResults
 pref("browser.urlbar.maxRichResults", 12);
-// Size of "chunks" affects the number of places to process between each search
-// timeout (ms). Too big and the UI will be unresponsive; too small and we'll
-// be waiting on the timeout too often without many results.
-pref("browser.urlbar.search.chunkSize", 1000);
-pref("browser.urlbar.search.timeout", 100);
 // The amount of time (ms) to wait after the user has stopped typing
 // before starting to perform autocomplete.  50 is the default set in
 // autocomplete.xml.
@@ -858,10 +853,7 @@ pref("geo.wifi.uri", "https://www.google.com/loc/json");
 
 #ifdef WINCE
 
-// tweak awesomebar -- increase the delay until a search happens, and reduce
-// the amount of time spent waiting for a search result 
-pref("browser.urlbar.search.chunkSize", 100);
-pref("browser.urlbar.search.timeout", 500);
+// tweak awesomebar -- increase the delay until a search happens.
 pref("browser.urlbar.delay", 1000);
 
 // disable safe browsing, due to perf hit
@@ -884,6 +876,9 @@ pref("content.sink.event_probe_rate", 1); /* default 1 */
 pref("content.sink.interactive_time", 750000); /* default 750000 */
 pref("content.sink.initial_perf_time", 500000); /* default 2000000 */
 pref("content.sink.enable_perf_mode", 0); /* default 0; 0 == switch, 1 == stay interactive, 2 == stay perf */
+
+// Write sessionstore.js less often
+pref("browser.sessionstore.interval", 60000);
 
 #endif /* WINCE */
 

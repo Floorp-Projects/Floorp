@@ -1004,10 +1004,13 @@ namespace nanojit
 
     LIns* LirBufWriter::insCall(const CallInfo *ci, LInsp args[])
     {
-        static const LOpcode k_callmap[]  = { LIR_call,  LIR_fcall,  LIR_call,  LIR_callh };
+        static const LOpcode k_callmap[] = {
+        //  ARGSIZE_NONE  ARGSIZE_F  ARGSIZE_LO  ARGSIZE_Q  (4)        (5)        ARGSIZE_U  (7)
+            LIR_call,     LIR_fcall, LIR_call,   LIR_callh, LIR_skip,  LIR_skip,  LIR_call,  LIR_skip
+        };
 
         uint32_t argt = ci->_argtypes;
-        LOpcode op = k_callmap[argt & 3];
+        LOpcode op = k_callmap[argt & ARGSIZE_MASK_ANY];
         NanoAssert(op != LIR_skip); // LIR_skip here is just an error condition
 
         ArgSize sizes[MAXARGS];
@@ -1757,8 +1760,13 @@ namespace nanojit
 #endif
             case LIR_fcall:
             case LIR_call: {
-                sprintf(s, "%s = %s ( ", formatRef(i), i->callInfo()->_name);
-                for (int32_t j=i->argc()-1; j >= 0; j--) {
+                const CallInfo* call = i->callInfo();
+                int32_t argc = i->argc();
+                if (call->isIndirect())
+                    sprintf(s, "%s = %s [%s] ( ", formatRef(i), lirNames[op], formatRef(i->arg(--argc)));
+                else
+                    sprintf(s, "%s = %s #%s ( ", formatRef(i), lirNames[op], call->_name);
+                for (int32_t j = argc - 1; j >= 0; j--) {
                     s += strlen(s);
                     sprintf(s, "%s ",formatRef(i->arg(j)));
                 }

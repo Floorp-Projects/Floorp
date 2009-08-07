@@ -190,6 +190,7 @@ var PrintUtils = {
     return printSettings;
   },
 
+  _originalZoomValue: null,
   _closeHandlerPP: null,
   _webProgressPP: null,
   _onEnterPP: null,
@@ -218,11 +219,19 @@ var PrintUtils = {
   {
     gFocusedElement = document.commandDispatcher.focusedElement;
 
+    // Reset the zoom value and save it to be restored later.
+    if (typeof ZoomManager == "object") {
+      this._originalZoomValue = ZoomManager.zoom;
+      ZoomManager.reset();
+    }
+
     var webBrowserPrint = this.getWebBrowserPrint(aWindow);
     var printSettings   = this.getPrintSettings();
     try {
       webBrowserPrint.printPreview(printSettings, null, this._webProgressPP.value);
     } catch (e) {
+      if (typeof ZoomManager == "object")
+        ZoomManager.zoom = this._originalZoomValue;
       // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
       // causing an exception to be thrown which we catch here.
       // Unfortunately this will also consume helpful failures, so add a
@@ -280,7 +289,9 @@ var PrintUtils = {
     this._closeHandlerPP = null;
 
     var webBrowserPrint = this.getWebBrowserPrint(aWindow);
-    webBrowserPrint.exitPrintPreview(); 
+    webBrowserPrint.exitPrintPreview();
+    if (typeof ZoomManager == "object")
+      ZoomManager.zoom = this._originalZoomValue;
 
     // remove the print preview toolbar
     var printPreviewTB = document.getElementById("print-preview-toolbar");

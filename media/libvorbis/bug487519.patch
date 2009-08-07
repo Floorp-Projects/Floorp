@@ -10,7 +10,7 @@ index 8872f57..b7b2399 100644
 +  if(mode==-1) {
 +    return(OV_EBADPACKET);
 +  }
-   
+ 
    vb->mode=mode;
 +  if(!ci->mode_param[mode]) {
 +    return(OV_EBADPACKET); 

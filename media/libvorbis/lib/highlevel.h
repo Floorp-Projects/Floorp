@@ -5,13 +5,13 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2007             *
+ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
  function: highlevel encoder setup struct seperated out for vorbisenc clarity
- last mod: $Id$
+ last mod: $Id: highlevel.h 16227 2009-07-08 06:58:46Z xiphmont $
 
  ********************************************************************/
 
@@ -21,7 +21,7 @@ typedef struct highlevel_byblocktype {
   double noise_bias_setting;
   double noise_compand_setting;
 } highlevel_byblocktype;
-  
+
 typedef struct highlevel_encode_setup {
   const void *setup;
   int   set_in_stone;
@@ -38,7 +38,7 @@ typedef struct highlevel_encode_setup {
   long   bitrate_max;
   long   bitrate_reservoir;
   double bitrate_reservoir_bias;
-  
+
   int impulse_block_p;
   int noise_normalize_p;
 
@@ -50,8 +50,7 @@ typedef struct highlevel_encode_setup {
 
   double amplitude_track_dBpersec;
   double trigger_setting;
-  
+
   highlevel_byblocktype block[4]; /* padding, impulse, transition, long */
 
 } highlevel_encode_setup;
-

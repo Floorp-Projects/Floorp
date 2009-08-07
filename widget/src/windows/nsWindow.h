@@ -51,7 +51,6 @@
 
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
-#include "nsSwitchToUIThread.h"
 #include "nsToolkit.h"
 #include "nsIEventListener.h"
 #include "nsString.h"
@@ -91,8 +90,7 @@ class imgIContainer;
  * Native WIN32 window wrapper.
  */
 
-class nsWindow : public nsSwitchToUIThread,
-                 public nsBaseWidget
+class nsWindow : public nsBaseWidget
 {
 public:
   nsWindow();
@@ -183,11 +181,6 @@ public:
   NS_IMETHOD              OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd);
   NS_IMETHOD              OnIMESelectionChange(void);
 #endif // NS_ENABLE_TSF
-
-  /**
-   * nsSwitchToUIThread interface
-   */
-  virtual BOOL            CallMethod(MethodInfo *info);
 
   /**
    * Statics used in other classes
@@ -325,6 +318,11 @@ protected:
   PRBool                  OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, 
                                        PRBool& result, PRBool& getWheelInfo,
                                        LRESULT *aRetValue);
+  static void             OnMouseWheelTimeout(nsITimer* aTimer, void* aClosure);
+  void                    UpdateMouseWheelSeriesCounter();
+  int                     ComputeMouseWheelDelta(int currentVDelta,
+                                                 int iDeltaPerLine,
+                                                 ULONG ulScrollLines);
 #endif // !defined(WINCE_WINDOWS_MOBILE)
 #if !defined(WINCE)
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
@@ -389,22 +387,6 @@ protected:
 #endif // ACCESSIBILITY
 
 protected:
-
-  /**
-   * nsSwitchToUIThread
-   */
-  enum {
-    // Enumeration of the methods which are accessible on the "main GUI thread"
-    // via the CallMethod(...) mechanism. (see nsSwitchToUIThread)
-    CREATE = 0x0101,
-    CREATE_NATIVE,
-    DESTROY,
-    SET_FOCUS,
-    SET_CURSOR,
-    CREATE_HACK
-  };
-
-protected:
   nsIntSize             mLastSize;
   nsIntPoint            mLastPoint;
   HWND                  mWnd;
@@ -430,6 +412,7 @@ protected:
   nsNativeDragTarget*   mNativeDragTarget;
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;
+  int                   mScrollSeriesCounter;
 
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;

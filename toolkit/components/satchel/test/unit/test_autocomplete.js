@@ -131,13 +131,13 @@ function run_test() {
         // ===== 2 =====
         // Check search contains all entries
         testnum++;
-        results = fac.autoCompleteSearch("field1", "", null);
+        results = fac.autoCompleteSearch("field1", "", null, null);
         do_check_eq(numRecords, results.matchCount);
 
         // ===== 3 =====
         // Check search result ordering with empty search term
         testnum++;
-        results = fac.autoCompleteSearch("field1", "", null);
+        results = fac.autoCompleteSearch("field1", "", null, null);
         let lastFound = numRecords;
         for (let i = 0; i < numRecords; i+=2) {
             do_check_eq(parseInt(results.getValueAt(i + 1).substr(5), 10), --lastFound);
@@ -147,7 +147,7 @@ function run_test() {
         // ===== 4 =====
         // Check search result ordering with "v"
         testnum++;
-        results = fac.autoCompleteSearch("field1", "v", null);
+        results = fac.autoCompleteSearch("field1", "v", null, null);
         lastFound = numRecords;
         for (let i = 0; i < numRecords; i+=2) {
             do_check_eq(parseInt(results.getValueAt(i + 1).substr(5), 10), --lastFound);
@@ -176,7 +176,7 @@ function run_test() {
         // ===== 5 =====
         // Check search result ordering with empty search term
         testnum++;
-        results = fac.autoCompleteSearch("field2", "", null);
+        results = fac.autoCompleteSearch("field2", "", null, null);
         lastFound = timesUsedSamples;
         for (let i = 0; i < timesUsedSamples; i++) {
             do_check_eq(parseInt(results.getValueAt(i).substr(5)), --lastFound);
@@ -185,7 +185,7 @@ function run_test() {
         // ===== 6 =====
         // Check search result ordering with "v"
         testnum++;
-        results = fac.autoCompleteSearch("field2", "v", null);
+        results = fac.autoCompleteSearch("field2", "v", null, null);
         lastFound = timesUsedSamples;
         for (let i = 0; i < timesUsedSamples; i++) {
             do_check_eq(parseInt(results.getValueAt(i).substr(5)), --lastFound);
@@ -217,7 +217,7 @@ function run_test() {
               now +
           ");");
 
-        results = fac.autoCompleteSearch("field3", "", null);
+        results = fac.autoCompleteSearch("field3", "", null, null);
         do_check_eq(results.getValueAt(0), "senior citizen");
         do_check_eq(results.getValueAt(1), "old but not senior");
 
@@ -257,7 +257,7 @@ function run_test() {
               (now * 2) +
           ");");
 
-        results = fac.autoCompleteSearch("field4", "", null);
+        results = fac.autoCompleteSearch("field4", "", null, null);
         do_check_eq(results.matchCount, 3);
 
 
