@@ -120,9 +120,18 @@ public:
         _len = 0;
     }
 
+    T & get(unsigned i) {
+        JS_ASSERT(i < length());
+        return _data[i];
+    }
+
     const T & get(unsigned i) const {
         JS_ASSERT(i < length());
         return _data[i];
+    }
+
+    T & operator [](unsigned i) {
+        return get(i);
     }
 
     const T & operator [](unsigned i) const {
@@ -551,7 +560,15 @@ enum JSRecordingStatus {
 #define STATUS_ABORTS_RECORDING(s) ((s) <= JSRS_STOP)
 #endif
 
+class SlotMap;
 
+/* Results of trying to compare two typemaps together */
+enum TypeConsensus
+{
+    TypeConsensus_Okay,         /* Two typemaps are compatible */
+    TypeConsensus_Undemotes,    /* Not compatible now, but would be with pending undemotes. */
+    TypeConsensus_Bad           /* Typemaps are not compatible */
+};
 
 class TraceRecorder : public avmplus::GCObject {
     JSContext*              cx;
@@ -621,11 +638,8 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK bool known(jsval* p);
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation();
 
-    JS_REQUIRES_STACK bool checkType(jsval& v, JSTraceType t, jsval*& stage_val,
-                                     nanojit::LIns*& stage_ins, unsigned& stage_count);
-    JS_REQUIRES_STACK bool deduceTypeStability(nanojit::Fragment* root_peer,
-                                               nanojit::Fragment** stable_peer,
-                                               bool& demote);
+    JS_REQUIRES_STACK TypeConsensus selfTypeStability(SlotMap& smap);
+    JS_REQUIRES_STACK TypeConsensus peerTypeStability(SlotMap& smap, VMFragment** peer);
 
     JS_REQUIRES_STACK jsval& argval(unsigned n) const;
     JS_REQUIRES_STACK jsval& varval(unsigned n) const;
@@ -851,8 +865,10 @@ public:
     nanojit::Fragment* getFragment() const { return fragment; }
     TreeInfo* getTreeInfo() const { return treeInfo; }
     JS_REQUIRES_STACK void compile(JSTraceMonitor* tm);
-    JS_REQUIRES_STACK void closeLoop(JSTraceMonitor* tm, bool& demote);
-    JS_REQUIRES_STACK void endLoop(JSTraceMonitor* tm);
+    JS_REQUIRES_STACK bool closeLoop(TypeConsensus &consensus);
+    JS_REQUIRES_STACK bool closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus &consensus);
+    JS_REQUIRES_STACK void endLoop();
+    JS_REQUIRES_STACK void endLoop(VMSideExit* exit);
     JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
                                             VMFragment* peer_root);
     void blacklist() { fragment->blacklist(); }
@@ -887,9 +903,8 @@ public:
     friend class AdjustCallerGlobalTypesVisitor;
     friend class AdjustCallerStackTypesVisitor;
     friend class TypeCompatibilityVisitor;
-    friend class SelfTypeStabilityVisitor;
-    friend class PeerTypeStabilityVisitor;
-    friend class UndemoteVisitor;
+    friend class SlotMap;
+    friend class DefaultSlotMap;
 };
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 #define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
