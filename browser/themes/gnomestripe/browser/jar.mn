@@ -1,4 +1,4 @@
-browser.jar:
+classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 % override chrome://global/skin/icons/warning-16.png moz-icon://stock/gtk-dialog-warning?size=menu
   skin/classic/browser/sanitizeDialog.css             (sanitizeDialog.css)
