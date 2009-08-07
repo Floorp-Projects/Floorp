@@ -668,6 +668,18 @@ Oracle::clearDemotability()
     _pcDontDemote.reset();
 }
 
+JS_REQUIRES_STACK static JS_INLINE void
+MarkSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
+{
+    if (slot < ti->nStackTypes) {
+        oracle.markStackSlotUndemotable(cx, slot);
+        return;
+    }
+
+    uint16* gslots = ti->globalSlots->data();
+    oracle.markGlobalSlotUndemotable(cx, gslots[slot - ti->nStackTypes]);
+}
+
 struct PCHashEntry : public JSDHashEntryStub {
     size_t          count;
 };
@@ -3274,391 +3286,6 @@ TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
     guard(expected, cond, snapshot(exitType));
 }
 
-/*
- * Try to match the type of a slot to type t. checkType is used to verify that
- * the type of each value flowing into the loop edge is compatible with the
- * type we expect in the loop header.
- *
- * @param v             Value.
- * @param t             Typemap entry for value.
- * @param stage_val     Outparam for set() address.
- * @param stage_ins     Outparam for set() instruction.
- * @param stage_count   Outparam for set() buffer count.
- * @return              True if types are compatible, false otherwise.
- */
-JS_REQUIRES_STACK bool
-TraceRecorder::checkType(jsval& v, JSTraceType t, jsval*& stage_val, LIns*& stage_ins,
-                         unsigned& stage_count)
-{
-    if (t == TT_INT32) { /* initially all whole numbers cause the slot to be demoted */
-        debug_only_printf(LC_TMTracer, "checkType(tag=1, t=%d, isnum=%d, i2f=%d) stage_count=%d\n",
-                          t,
-                          isNumber(v),
-                          isPromoteInt(get(&v)),
-                          stage_count);
-        if (!isNumber(v))
-            return false; /* not a number? type mismatch */
-        LIns* i = get(&v);
-
-        /* This is always a type mismatch, we can't close a double to an int. */
-        if (!isPromoteInt(i))
-            return false;
-
-        /* Looks good, slot is an int32, the last instruction should be promotable. */
-        JS_ASSERT(isInt32(v) && isPromoteInt(i));
-
-        /* Overwrite the value in this slot with the argument promoted back to an integer. */
-        stage_val = &v;
-        stage_ins = f2i(i);
-        stage_count++;
-        return true;
-    }
-    if (t == TT_DOUBLE) {
-        debug_only_printf(LC_TMTracer,
-                          "checkType(tag=2, t=%d, isnum=%d, promote=%d) stage_count=%d\n",
-                          t,
-                          isNumber(v),
-                          isPromoteInt(get(&v)),
-                          stage_count);
-        if (!isNumber(v))
-            return false; /* not a number? type mismatch */
-        LIns* i = get(&v);
-
-        /*
-         * We sink i2f conversions into the side exit, but at the loop edge we
-         * have to make sure we promote back to double if at loop entry we want
-         * a double.
-         */
-        if (isPromoteInt(i)) {
-            stage_val = &v;
-            stage_ins = lir->ins1(LIR_i2f, i);
-            stage_count++;
-        }
-        return true;
-    }
-    if (t == TT_NULL)
-        return JSVAL_IS_NULL(v);
-    if (t == TT_FUNCTION)
-        return !JSVAL_IS_PRIMITIVE(v) && HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v));
-    if (t == TT_OBJECT)
-        return !JSVAL_IS_PRIMITIVE(v) && !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(v));
-
-    /* for non-number types we expect a precise match of the type */
-    JSTraceType vt = getCoercedType(v);
-#ifdef DEBUG
-    if (vt != t) {
-        debug_only_printf(LC_TMTracer, "Type mismatch: val %c, map %c ", typeChar[vt],
-                          typeChar[t]);
-    }
-#endif
-    debug_only_printf(LC_TMTracer, "checkType(vt=%d, t=%d) stage_count=%d\n",
-                      (int) vt, t, stage_count);
-    return vt == t;
-}
-
-class SelfTypeStabilityVisitor : public SlotVisitorBase
-{
-    TraceRecorder &mRecorder;
-    JSTraceType *mTypeMap;
-    JSContext *mCx;
-    bool &mDemote;
-    jsval **&mStageVals;
-    LIns **&mStageIns;
-    unsigned &mStageCount;
-    unsigned mStackSlotNum;
-    bool mOk;
-
-public:
-
-    SelfTypeStabilityVisitor(TraceRecorder &recorder,
-                             JSTraceType *typeMap,
-                             bool &demote,
-                             jsval **&stageVals,
-                             LIns **&stageIns,
-                             unsigned &stageCount) :
-        mRecorder(recorder),
-        mTypeMap(typeMap),
-        mCx(mRecorder.cx),
-        mDemote(demote),
-        mStageVals(stageVals),
-        mStageIns(stageIns),
-        mStageCount(stageCount),
-        mStackSlotNum(0),
-        mOk(true)
-    {}
-
-    JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(jsval *vp, unsigned n, unsigned slot) {
-        if (mOk) {
-            debug_only_printf(LC_TMTracer, "global%d ", n);
-            if (!mRecorder.checkType(*vp, *mTypeMap,
-                                     mStageVals[mStageCount],
-                                     mStageIns[mStageCount],
-                                     mStageCount)) {
-                /* If the failure was an int->double, tell the oracle. */
-                if (*mTypeMap == TT_INT32 && isNumber(*vp) &&
-                    !isPromoteInt(mRecorder.get(vp))) {
-                    oracle.markGlobalSlotUndemotable(mCx, slot);
-                    mDemote = true;
-                } else {
-                    mOk = false;
-                }
-            }
-            mTypeMap++;
-        }
-    }
-
-    JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
-    visitStackSlots(jsval *vp, size_t count, JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            debug_only_printf(LC_TMTracer, "%s%u ", stackSlotKind(), unsigned(i));
-            if (!mRecorder.checkType(*vp, *mTypeMap,
-                                     mStageVals[mStageCount],
-                                     mStageIns[mStageCount],
-                                     mStageCount)) {
-                if (*mTypeMap == TT_INT32 && isNumber(*vp) &&
-                    !isPromoteInt(mRecorder.get(vp))) {
-                    oracle.markStackSlotUndemotable(mCx, mStackSlotNum);
-                    mDemote = true;
-                } else {
-                    mOk = false;
-                    break;
-                }
-            }
-            vp++;
-            mTypeMap++;
-            mStackSlotNum++;
-        }
-        return mOk;
-    }
-
-    bool isOk() {
-        return mOk;
-    }
-};
-
-class PeerTypeStabilityVisitor : public SlotVisitorBase
-{
-    TraceRecorder &mRecorder;
-    JSTraceType *mTypeMap;
-    jsval **&mStageVals;
-    LIns **&mStageIns;
-    unsigned &mStageCount;
-    bool mOk;
-
-public:
-
-    PeerTypeStabilityVisitor(TraceRecorder &recorder,
-                              JSTraceType *typeMap,
-                              jsval **&stageVals,
-                              LIns **&stageIns,
-                              unsigned &stageCount) :
-        mRecorder(recorder),
-        mTypeMap(typeMap),
-        mStageVals(stageVals),
-        mStageIns(stageIns),
-        mStageCount(stageCount),
-        mOk(true)
-    {}
-
-    JS_REQUIRES_STACK JS_ALWAYS_INLINE void check(jsval *vp) {
-        if (!mRecorder.checkType(*vp, *mTypeMap++,
-                                 mStageVals[mStageCount],
-                                 mStageIns[mStageCount],
-                                 mStageCount))
-            mOk = false;
-    }
-
-    JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(jsval *vp, unsigned n, unsigned slot) {
-        if (mOk)
-            check(vp);
-    }
-
-    JS_REQUIRES_STACK JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
-    visitStackSlots(jsval *vp, size_t count, JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            check(vp++);
-            if (!mOk)
-                break;
-        }
-        return mOk;
-    }
-
-    bool isOk() {
-        return mOk;
-    }
-};
-
-class UndemoteVisitor : public SlotVisitorBase
-{
-    TraceRecorder &mRecorder;
-    JSContext *mCx;
-    JSTraceType *mTypeMap;
-    unsigned mStackSlotNum;
-public:
-    UndemoteVisitor(TraceRecorder &recorder,
-                    JSTraceType *typeMap) :
-        mRecorder(recorder),
-        mCx(mRecorder.cx),
-        mTypeMap(typeMap),
-        mStackSlotNum(0)
-    {}
-
-    JS_REQUIRES_STACK JS_ALWAYS_INLINE void
-    visitGlobalSlot(jsval *vp, unsigned n, unsigned slot) {
-        if (*mTypeMap == TT_INT32) {
-            JS_ASSERT(isNumber(*vp));
-            if (!isPromoteInt(mRecorder.get(vp)))
-                oracle.markGlobalSlotUndemotable(mCx, slot);
-        } else if (*mTypeMap == TT_DOUBLE) {
-            JS_ASSERT(isNumber(*vp));
-            oracle.markGlobalSlotUndemotable(mCx, slot);
-        } else {
-                JS_ASSERT(*mTypeMap == TT_OBJECT
-                          ? !JSVAL_IS_PRIMITIVE(*vp) && !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))
-                          : *mTypeMap == TT_STRING
-                          ? JSVAL_IS_STRING(*vp)
-                          : *mTypeMap == TT_PSEUDOBOOLEAN && JSVAL_TAG(*vp) == JSVAL_BOOLEAN);
-        }
-        mTypeMap++;
-    }
-
-    JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
-    visitStackSlots(jsval *vp, size_t count, JSStackFrame* fp) {
-        for (size_t i = 0; i < count; ++i) {
-            if (*mTypeMap == TT_INT32) {
-                JS_ASSERT(isNumber(*vp));
-                if (!isPromoteInt(mRecorder.get(vp)))
-                    oracle.markStackSlotUndemotable(mCx, mStackSlotNum);
-            } else if (*mTypeMap == TT_DOUBLE) {
-                JS_ASSERT(isNumber(*vp));
-                oracle.markStackSlotUndemotable(mCx, mStackSlotNum);
-            } else {
-                JS_ASSERT(*mTypeMap == TT_NULL
-                          ? JSVAL_IS_NULL(*vp)
-                          : *mTypeMap == TT_FUNCTION
-                          ? !JSVAL_IS_PRIMITIVE(*vp) && HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))
-                          : *mTypeMap == TT_OBJECT
-                          ? !JSVAL_IS_PRIMITIVE(*vp) && !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*vp))
-                          : *mTypeMap == TT_STRING
-                          ? JSVAL_IS_STRING(*vp)
-                          : *mTypeMap == TT_PSEUDOBOOLEAN && JSVAL_TAG(*vp) == JSVAL_BOOLEAN);
-            }
-            mStackSlotNum++;
-            mTypeMap++;
-            vp++;
-        }
-        return true;
-    }
-};
-
-/**
- * Make sure that the current values in the given stack frame and all stack
- * frames up to and including entryFrame are type-compatible with the entry
- * map.
- *
- * @param root_peer         First fragment in peer list.
- * @param stable_peer       Outparam for first type stable peer.
- * @param demote            True if stability was achieved through demotion.
- * @return                  True if type stable, false otherwise.
- */
-JS_REQUIRES_STACK bool
-TraceRecorder::deduceTypeStability(Fragment* root_peer, Fragment** stable_peer, bool& demote)
-{
-    JS_ASSERT(treeInfo->globalSlots->length() == treeInfo->nGlobalTypes());
-
-    if (stable_peer)
-        *stable_peer = NULL;
-
-    /*
-     * Rather than calculate all of this stuff twice, it gets cached locally.
-     * The "stage" buffers are for calls to set() that will change the exit
-     * types.
-     */
-    bool success;
-    unsigned stage_count;
-    jsval** stage_vals = (jsval**)alloca(sizeof(jsval*) * (treeInfo->typeMap.length()));
-    LIns** stage_ins = (LIns**)alloca(sizeof(LIns*) * (treeInfo->typeMap.length()));
-
-    /* First run through and see if we can close ourselves - best case! */
-    stage_count = 0;
-    success = false;
-
-    debug_only_printf(LC_TMTracer, "Checking type stability against self=%p\n", (void*)fragment);
-    SelfTypeStabilityVisitor selfVisitor(*this, treeInfo->stackTypeMap(), demote,
-                                         stage_vals, stage_ins, stage_count);
-    VisitSlots(selfVisitor, cx, 0, *treeInfo->globalSlots);
-    success = selfVisitor.isOk();
-
-    /* If we got a success and we don't need to recompile, we should just close here. */
-    if (success && !demote) {
-        for (unsigned i = 0; i < stage_count; i++)
-            set(stage_vals[i], stage_ins[i]);
-        return true;
-    /* If we need to trash, don't bother checking peers. */
-    } else if (trashSelf) {
-        return false;
-    }
-
-    demote = false;
-
-    /*
-     * At this point the tree is about to be incomplete, so let's see if we can
-     * connect to any peer fragment that is type stable.
-     */
-    Fragment* f;
-    TreeInfo* ti;
-    for (f = root_peer; f != NULL; f = f->peer) {
-        debug_only_printf(LC_TMTracer,
-                          "Checking type stability against peer=%p (code=%p)\n",
-                          (void*)f, f->code());
-        if (!f->code())
-            continue;
-        ti = (TreeInfo*)f->vmprivate;
-
-        /* Don't allow varying stack depths */
-        if ((ti->nStackTypes != treeInfo->nStackTypes) ||
-            (ti->typeMap.length() != treeInfo->typeMap.length()) ||
-            (ti->globalSlots->length() != treeInfo->globalSlots->length()))
-            continue;
-        stage_count = 0;
-        success = false;
-
-        PeerTypeStabilityVisitor peerVisitor(*this, ti->stackTypeMap(),
-                                             stage_vals, stage_ins, stage_count);
-        VisitSlots(peerVisitor, cx, 0, *treeInfo->globalSlots);
-        success = peerVisitor.isOk();
-
-        if (success) {
-            /*
-             * There was a successful match.  We don't care about restoring the
-             * saved staging, but we do need to clear the original undemote
-             * list.
-             */
-            for (unsigned i = 0; i < stage_count; i++)
-                set(stage_vals[i], stage_ins[i]);
-            if (stable_peer)
-                *stable_peer = f;
-            demote = false;
-            return false;
-        }
-    }
-
-    /*
-     * If this is a loop trace and it would be stable with demotions, build an
-     * undemote list and return true.  Our caller should sniff this and trash
-     * the tree, recording a new one that will assumedly stabilize.
-     */
-    if (demote && fragment->kind == LoopTrace) {
-        UndemoteVisitor visitor(*this, treeInfo->stackTypeMap());
-        VisitSlots(visitor, cx, 0, *treeInfo->globalSlots);
-        return true;
-    }
-    demote = false;
-    return false;
-}
-
 static JS_REQUIRES_STACK void
 FlushJITCache(JSContext* cx)
 {
@@ -3785,9 +3412,244 @@ JoinPeersIfCompatible(Fragmento* frago, Fragment* stableFrag, TreeInfo* stableTr
     return true;
 }
 
-/* Complete and compile a trace and link it to the existing tree if appropriate. */
-JS_REQUIRES_STACK void
-TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
+/* Results of trying to connect an arbitrary type A with arbitrary type B */
+enum TypeCheckResult
+{
+    TypeCheck_Okay,         /* Okay: same type */
+    TypeCheck_Promote,      /* Okay: Type A needs f2i() */
+    TypeCheck_Demote,       /* Okay: Type A needs i2f() */
+    TypeCheck_Undemote,     /* Bad: Slot is undemotable */
+    TypeCheck_Bad           /* Bad: incompatible types */
+};
+
+class SlotMap : public SlotVisitorBase
+{
+  public:
+    struct SlotInfo
+    {
+        SlotInfo(jsval* v, bool promoteInt)
+          : v(v), promoteInt(promoteInt), lastCheck(TypeCheck_Bad)
+        {
+        }
+        jsval           *v;
+        bool            promoteInt;
+        TypeCheckResult lastCheck;
+    };
+
+    SlotMap(TraceRecorder& rec, unsigned slotOffset)
+      : mRecorder(rec), mCx(rec.cx), slotOffset(slotOffset)
+    {
+    }
+
+    JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+    visitGlobalSlot(jsval *vp, unsigned n, unsigned slot)
+    {
+        addSlot(vp);
+    }
+
+    JS_ALWAYS_INLINE SlotMap::SlotInfo&
+    operator [](unsigned i)
+    {
+        return slots[i];
+    }
+
+    JS_ALWAYS_INLINE SlotMap::SlotInfo&
+    get(unsigned i)
+    {
+        return slots[i];
+    }
+
+    JS_ALWAYS_INLINE unsigned
+    length()
+    {
+        return slots.length();
+    }
+
+    /**
+     * Possible return states:
+     *
+     * TypeConsensus_Okay:      All types are compatible. Caller must go through slot list and handle
+     *                          promote/demotes.
+     * TypeConsensus_Bad:       Types are not compatible. Individual type check results are undefined.
+     * TypeConsensus_Undemotes: Types would be compatible if slots were marked as undemotable
+     *                          before recording began. Caller can go through slot list and mark
+     *                          such slots as undemotable.
+     */
+    JS_REQUIRES_STACK TypeConsensus
+    checkTypes(TreeInfo* ti)
+    {
+        if (ti->typeMap.length() < slotOffset || length() != ti->typeMap.length() - slotOffset)
+            return TypeConsensus_Bad;
+
+        bool has_undemotes = false;
+        for (unsigned i = 0; i < length(); i++) {
+            TypeCheckResult result = checkType(i, ti->typeMap[i + slotOffset]);
+            if (result == TypeCheck_Bad)
+                return TypeConsensus_Bad;
+            if (result == TypeCheck_Undemote)
+                has_undemotes = true;
+            slots[i].lastCheck = result;
+        }
+        if (has_undemotes)
+            return TypeConsensus_Undemotes;
+        return TypeConsensus_Okay;
+    }
+
+    JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+    addSlot(jsval* vp)
+    {
+        slots.add(SlotInfo(vp, isNumber(*vp) && isPromoteInt(mRecorder.get(vp))));
+    }
+
+    JS_REQUIRES_STACK void
+    markUndemotes()
+    {
+        for (unsigned i = 0; i < length(); i++) {
+            if (get(i).lastCheck == TypeCheck_Undemote)
+                MarkSlotUndemotable(mRecorder.cx, mRecorder.treeInfo, slotOffset + i);
+        }
+    }
+
+    JS_REQUIRES_STACK virtual void
+    adjustTypes()
+    {
+        for (unsigned i = 0; i < length(); i++) {
+            SlotInfo& info = get(i);
+            JS_ASSERT(info.lastCheck != TypeCheck_Undemote && info.lastCheck != TypeCheck_Bad);
+            if (info.lastCheck == TypeCheck_Promote) {
+                JS_ASSERT(isNumber(*info.v));
+                mRecorder.set(info.v, mRecorder.f2i(mRecorder.get(info.v)));
+            } else if (info.lastCheck == TypeCheck_Demote) {
+                JS_ASSERT(isNumber(*info.v));
+                mRecorder.set(info.v, mRecorder.lir->ins1(LIR_i2f, mRecorder.get(info.v)));
+            }
+        }
+    }
+  private:
+    TypeCheckResult
+    checkType(unsigned i, JSTraceType t)
+    {
+        debug_only_printf(LC_TMTracer,
+                          "checkType slot %d: interp=%c typemap=%c isNum=%d promoteInt=%d\n", 
+                          i,
+                          typeChar[getCoercedType(*slots[i].v)],
+                          typeChar[t],
+                          isNumber(*slots[i].v),
+                          slots[i].promoteInt);
+        switch (t) {
+          case TT_INT32:
+            if (!isNumber(*slots[i].v))
+                return TypeCheck_Bad; /* Not a number? Type mismatch. */
+            /* This is always a type mismatch, we can't close a double to an int. */
+            if (!slots[i].promoteInt)
+                return TypeCheck_Undemote;
+            /* Looks good, slot is an int32, the last instruction should be promotable. */
+            JS_ASSERT(isInt32(*slots[i].v) && slots[i].promoteInt);
+            return TypeCheck_Promote;
+          case TT_DOUBLE:
+            if (!isNumber(*slots[i].v))
+                return TypeCheck_Bad; /* Not a number? Type mismatch. */
+            if (slots[i].promoteInt)
+                return TypeCheck_Demote;
+            return TypeCheck_Okay;
+          case TT_NULL:
+            return JSVAL_IS_NULL(*slots[i].v) ? TypeCheck_Okay : TypeCheck_Bad;
+          case TT_FUNCTION:
+            return !JSVAL_IS_PRIMITIVE(*slots[i].v) &&
+                   HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*slots[i].v)) ?
+                   TypeCheck_Okay : TypeCheck_Bad;
+          case TT_OBJECT:
+            return !JSVAL_IS_PRIMITIVE(*slots[i].v) &&
+                   !HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(*slots[i].v)) ?
+                   TypeCheck_Okay : TypeCheck_Bad;
+          default:
+            return getCoercedType(*slots[i].v) == t ? TypeCheck_Okay : TypeCheck_Bad;
+        }
+        JS_NOT_REACHED("shouldn't fall through type check switch");
+    }
+  protected:
+    TraceRecorder& mRecorder;
+    JSContext* mCx;
+    Queue<SlotInfo> slots;
+    unsigned   slotOffset;
+};
+
+class DefaultSlotMap : public SlotMap
+{
+  public:
+    DefaultSlotMap(TraceRecorder& tr) : SlotMap(tr, 0)
+    {
+    }
+
+    JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
+    visitStackSlots(jsval *vp, size_t count, JSStackFrame* fp)
+    {
+        for (size_t i = 0; i < count; i++)
+            addSlot(&vp[i]);
+        return true;
+    }
+};
+
+JS_REQUIRES_STACK TypeConsensus
+TraceRecorder::selfTypeStability(SlotMap& slotMap)
+{
+    debug_only_printf(LC_TMTracer, "Checking type stability against self=%p\n", (void*)fragment);
+    TypeConsensus consensus = slotMap.checkTypes(treeInfo);
+
+    /* Best case: loop jumps back to its own header */
+    if (consensus == TypeConsensus_Okay)
+        return TypeConsensus_Okay;
+
+    /* If the only thing keeping this loop from being stable is undemotions, then mark relevant
+     * slots as undemotable.
+     */
+    if (consensus == TypeConsensus_Undemotes)
+        slotMap.markUndemotes();
+
+    return consensus;
+}
+
+JS_REQUIRES_STACK TypeConsensus
+TraceRecorder::peerTypeStability(SlotMap& slotMap, VMFragment** pPeer)
+{
+    /* See if there are any peers that would make this stable */
+    VMFragment* root = (VMFragment*)fragment->root;
+    VMFragment* peer = getLoop(traceMonitor, root->ip, root->globalObj, root->globalShape,
+                               root->argc);
+    JS_ASSERT(peer != NULL);
+    bool onlyUndemotes = false;
+    for (; peer != NULL; peer = (VMFragment*)peer->peer) {
+        if (!peer->vmprivate || peer == fragment)
+            continue;
+        debug_only_printf(LC_TMTracer, "Checking type stability against peer=%p\n", (void*)peer);
+        TypeConsensus consensus = slotMap.checkTypes((TreeInfo*)peer->vmprivate);
+        if (consensus == TypeConsensus_Okay) {
+            *pPeer = peer;
+            /* Return this even though there will be linkage; the trace itself is not stable.
+             * Caller should inspect ppeer to check for a compatible peer.
+             */
+            return TypeConsensus_Okay;
+        }
+        if (consensus == TypeConsensus_Undemotes)
+            onlyUndemotes = true;
+    }
+
+    return onlyUndemotes ? TypeConsensus_Undemotes : TypeConsensus_Bad;
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::closeLoop(TypeConsensus &consensus)
+{
+    DefaultSlotMap slotMap(*this);
+    VisitSlots(slotMap, cx, 0, *treeInfo->globalSlots);
+    return closeLoop(slotMap, snapshot(UNSTABLE_LOOP_EXIT), consensus);
+}
+
+/* Complete and compile a trace and link it to the existing tree if appropriate.
+ * Returns true if something was compiled. Outparam is always set.
+ */
+JS_REQUIRES_STACK bool
+TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& consensus)
 {
     /*
      * We should have arrived back at the loop header, and hence we don't want
@@ -3796,50 +3658,51 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
      */
     JS_ASSERT((*cx->fp->regs->pc == JSOP_LOOP || *cx->fp->regs->pc == JSOP_NOP) && !cx->fp->imacpc);
 
-    bool stable;
-    Fragment* peer;
-    VMFragment* peer_root;
-    Fragmento* fragmento = tm->fragmento;
+    Fragmento* fragmento = traceMonitor->fragmento;
 
     if (callDepth != 0) {
         debug_only_print0(LC_TMTracer,
                           "Blacklisted: stack depth mismatch, possible recursion.\n");
         Blacklist((jsbytecode*) fragment->root->ip);
         trashSelf = true;
-        return;
+        consensus = TypeConsensus_Bad;
+        return false;
     }
 
-    VMSideExit* exit = snapshot(UNSTABLE_LOOP_EXIT);
+    JS_ASSERT(exit->exitType == UNSTABLE_LOOP_EXIT);
     JS_ASSERT(exit->numStackSlots == treeInfo->nStackTypes);
 
+    VMFragment* peer = NULL;
     VMFragment* root = (VMFragment*)fragment->root;
-    peer_root = getLoop(traceMonitor, root->ip, root->globalObj, root->globalShape, root->argc);
-    JS_ASSERT(peer_root != NULL);
 
-    stable = deduceTypeStability(peer_root, &peer, demote);
+    consensus = selfTypeStability(slotMap);
+    if (consensus != TypeConsensus_Okay) {
+        TypeConsensus peerConsensus = peerTypeStability(slotMap, &peer);
+        /* If there was a semblance of a stable peer (even if not linkable), keep the result. */
+        if (peerConsensus != TypeConsensus_Bad)
+            consensus = peerConsensus;
+    }
 
 #if DEBUG
-    if (!stable)
+    if (consensus != TypeConsensus_Okay || peer)
         AUDIT(unstableLoopVariable);
 #endif
 
-    if (trashSelf) {
-        debug_only_print0(LC_TMTracer, "Trashing tree from type instability.\n");
-        return;
-    }
+    JS_ASSERT(!trashSelf);
 
-    if (stable && demote) {
-        JS_ASSERT(fragment->kind == LoopTrace);
-        return;
-    }
+    /* This exit is indeed linkable to something now. Process any promote/demotes that
+     * are pending in the slot map.
+     */
+    if (consensus == TypeConsensus_Okay)
+        slotMap.adjustTypes();
 
-    if (!stable) {
+    if (consensus != TypeConsensus_Okay || peer) {
         fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
 
-        /*
-         * If we didn't find a type stable peer, we compile the loop anyway and
-         * hope it becomes stable later.
-         */
+        /* If there is a peer, there must have been an "Okay" consensus. */
+        JS_ASSERT_IF(peer, consensus == TypeConsensus_Okay);
+
+        /* Compile as a type-unstable loop, and hope for a connection later. */
         if (!peer) {
             /*
              * If such a fragment does not exist, let's compile the loop ahead
@@ -3860,20 +3723,21 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
             debug_only_printf(LC_TMTracer,
                               "Joining type-unstable trace to target fragment %p.\n",
                               (void*)peer);
-            stable = true;
             ((TreeInfo*)peer->vmprivate)->dependentTrees.addUnique(fragment->root);
             treeInfo->linkedTrees.addUnique(peer);
         }
     } else {
         exit->target = fragment->root;
-        fragment->lastIns = lir->insGuard(LIR_loop, NULL, createGuardRecord(exit));
+        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), createGuardRecord(exit));
     }
-    compile(tm);
+    compile(traceMonitor);
 
     if (fragmento->assm()->error() != nanojit::None)
-        return;
+        return false;
 
-    joinEdgesToEntry(fragmento, peer_root);
+    peer = getLoop(traceMonitor, root->ip, root->globalObj, root->globalShape, root->argc);
+    JS_ASSERT(peer);
+    joinEdgesToEntry(fragmento, peer);
 
     debug_only_print0(LC_TMTracer,
                       "updating specializations on dependent and linked trees\n");
@@ -3885,7 +3749,7 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
      * should try to compile the outer tree again.
      */
     if (outer)
-        AttemptCompilation(cx, tm, globalObj, outer, outerArgc);
+        AttemptCompilation(cx, traceMonitor, globalObj, outer, outerArgc);
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
                       "recording completed at  %s:%u@%u via closeLoop\n",
@@ -3894,6 +3758,8 @@ TraceRecorder::closeLoop(JSTraceMonitor* tm, bool& demote)
                       FramePCOffset(cx->fp));
     debug_only_print0(LC_TMMinimal, "\n");
 #endif
+
+    return true;
 }
 
 JS_REQUIRES_STACK void
@@ -3908,7 +3774,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
         uint32* stackDemotes = (uint32*)alloca(sizeof(uint32) * treeInfo->nStackTypes);
         uint32* globalDemotes = (uint32*)alloca(sizeof(uint32) * treeInfo->nGlobalTypes());
 
-        for (peer = peer_root; peer != NULL; peer = peer->peer) {
+        for (peer = peer_root; peer; peer = peer->peer) {
             if (!peer->code())
                 continue;
             ti = (TreeInfo*)peer->vmprivate;
@@ -3984,9 +3850,15 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
                                       peer_root->globalShape, peer_root->argc);)
 }
 
+JS_REQUIRES_STACK void
+TraceRecorder::endLoop()
+{
+    endLoop(snapshot(LOOP_EXIT));
+}
+
 /* Emit an always-exit guard and compile the tree (used for break statements. */
 JS_REQUIRES_STACK void
-TraceRecorder::endLoop(JSTraceMonitor* tm)
+TraceRecorder::endLoop(VMSideExit* exit)
 {
     if (callDepth != 0) {
         debug_only_print0(LC_TMTracer, "Blacklisted: stack depth mismatch, possible recursion.\n");
@@ -3996,14 +3868,18 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
     }
 
     fragment->lastIns =
-        lir->insGuard(LIR_x, NULL, createGuardRecord(snapshot(LOOP_EXIT)));
-    compile(tm);
+        lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+    compile(traceMonitor);
 
-    if (tm->fragmento->assm()->error() != nanojit::None)
+    if (traceMonitor->fragmento->assm()->error() != nanojit::None)
         return;
 
     VMFragment* root = (VMFragment*)fragment->root;
-    joinEdgesToEntry(tm->fragmento, getLoop(tm, root->ip, root->globalObj, root->globalShape, root->argc));
+    joinEdgesToEntry(traceMonitor->fragmento, getLoop(traceMonitor,
+                                                      root->ip,
+                                                      root->globalObj,
+                                                      root->globalShape,
+                                                      root->argc));
 
     /*
      * Note: this must always be done, in case we added new globals on trace
@@ -4019,7 +3895,7 @@ TraceRecorder::endLoop(JSTraceMonitor* tm)
      * yet, we should try to compile the outer tree again.
      */
     if (outer)
-        AttemptCompilation(cx, tm, globalObj, outer, outerArgc);
+        AttemptCompilation(cx, traceMonitor, globalObj, outer, outerArgc);
 #ifdef JS_JIT_SPEW
     debug_only_printf(LC_TMMinimal,
                       "Recording completed at  %s:%u@%u via endLoop\n",
@@ -4223,22 +4099,12 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
             cx->fp->regs->pc = (jsbytecode*)fragment->root->ip;
             cx->fp->regs->sp -= fused ? 2 : 1;
 
-            bool demote = false;
-            closeLoop(traceMonitor, demote);
+            TypeConsensus consensus;
+            closeLoop(consensus);
 
             *cx->fp->regs = orig;
-
-            /*
-             * If compiling this loop generated new oracle information which
-             * will likely lead to a different compilation result, immediately
-             * trigger another compiler run. This is guaranteed to converge
-             * since the oracle only accumulates adverse information but never
-             * drops it (except when we flush it during garbage collection.)
-             */
-            if (demote)
-                AttemptCompilation(cx, traceMonitor, globalObj, outer, outerArgc);
         } else {
-            endLoop(traceMonitor);
+            endLoop();
         }
         return JSRS_STOP;
     }
@@ -4741,18 +4607,6 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     }
 
     return true;
-}
-
-static JS_REQUIRES_STACK inline void
-MarkSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
-{
-    if (slot < ti->nStackTypes) {
-        oracle.markStackSlotUndemotable(cx, slot);
-        return;
-    }
-
-    uint16* gslots = ti->globalSlots->data();
-    oracle.markGlobalSlotUndemotable(cx, gslots[slot - ti->nStackTypes]);
 }
 
 static JS_REQUIRES_STACK inline bool
@@ -8542,7 +8396,7 @@ TraceRecorder::record_JSOP_RETURN()
     /* A return from callDepth 0 terminates the current loop. */
     if (callDepth == 0) {
         AUDIT(returnLoopExits);
-        endLoop(traceMonitor);
+        endLoop();
         return JSRS_STOP;
     }
 
@@ -8594,7 +8448,7 @@ TraceRecorder::record_JSOP_GOTO()
 
     if (sn && SN_TYPE(sn) == SRC_BREAK) {
         AUDIT(breakLoopExits);
-        endLoop(traceMonitor);
+        endLoop();
         return JSRS_STOP;
     }
     return JSRS_CONTINUE;
