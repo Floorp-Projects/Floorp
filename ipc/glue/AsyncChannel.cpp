@@ -160,8 +160,10 @@ AsyncChannel::OnChannelConnected(int32 peer_pid)
 void
 AsyncChannel::OnChannelError()
 {
+    NS_WARNING("Channel error, quitting IO loop!");
     // FIXME/cjones impl
     mChannelState = ChannelError;
+    MessageLoop::current()->Quit();
 }
 
 void
