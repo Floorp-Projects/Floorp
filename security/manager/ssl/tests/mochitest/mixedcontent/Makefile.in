@@ -68,7 +68,6 @@ _TEST_FILES = \
         somestyle.css \
         test_bug383369.html \
         test_bug455367.html \
-        test_bug472986.html \
         test_cssBefore1.html \
         test_cssContent1.html \
         test_cssContent2.html \
@@ -100,6 +99,7 @@ _TEST_FILES = \
 #        test_bug329869.html \  leaks, bug 452401
 #        test_dynUnsecureRedirect.html \ intermitently fails, quit often, bug 487402
 #        test_unsecureIframeMetaRedirect.html \ also intermittently fails, less often, bug 487632
+#        test_bug472986.html \ causes timeout of this and all following tests
 
 
 libs:: $(_TEST_FILES)
