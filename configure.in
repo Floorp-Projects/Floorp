@@ -4538,15 +4538,6 @@ MOZ_PLUGINS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PSM=1
-MOZ_PYTHON_EXTENSIONS="xpcom dom"
-MOZ_PYTHON=
-MOZ_PYTHON_DEBUG_SUFFIX=
-MOZ_PYTHON_DLL_SUFFIX=
-MOZ_PYTHON_INCLUDES=
-MOZ_PYTHON_LIBS=
-MOZ_PYTHON_PREFIX=
-MOZ_PYTHON_VER=
-MOZ_PYTHON_VER_DOTTED=
 MOZ_RDF=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
@@ -7778,106 +7769,6 @@ else
 fi
 
 AC_SUBST(MOZ_XUL)
-
-dnl ========================================================
-dnl Two ways to enable Python support:
-dnl   --enable-extensions=python # select all available.
-dnl    (MOZ_PYTHON_EXTENSIONS contains the list of extensions)
-dnl or:
-dnl   --enable-extensions=python/xpcom,... # select individual ones
-dnl
-dnl If either is used, we locate the Python to use.
-dnl ========================================================
-dnl
-dnl If 'python' appears anywhere in the extensions list, go lookin'...
-if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
-    dnl Allow PYTHON to point to the Python interpreter to use
-    dnl (note that it must be the python executable - which we
-    dnl run to locate the relevant paths etc)
-    dnl If not set, we use whatever Python we can find.
-    MOZ_PYTHON=$PYTHON
-    dnl Ask Python what its version number is
-    changequote(,)
-    MOZ_PYTHON_VER=`$PYTHON -c "import sys;print '%d%d' % sys.version_info[0:2]"`
-    MOZ_PYTHON_VER_DOTTED=`$PYTHON -c "import sys;print '%d.%d' % sys.version_info[0:2]"`
-    changequote([,])
-    dnl Ask for the Python "prefix" (ie, home/source dir)
-    MOZ_PYTHON_PREFIX=`$PYTHON -c "import sys; print sys.prefix"`
-    dnl Setup the include and library directories.
-    if test "$OS_ARCH" = "WINNT"; then
-        MOZ_PYTHON_PREFIX=`$CYGPATH_W $MOZ_PYTHON_PREFIX | $CYGPATH_S`
-        dnl Source trees have "include" and "PC" for .h, and "PCbuild" for .lib
-        dnl Binary trees have "include" for .h, and "libs" for .lib
-        dnl We add 'em both - along with quotes, to handle spaces.
-        MOZ_PYTHON_DLL_SUFFIX=.pyd
-        MOZ_PYTHON_INCLUDES="\"-I$MOZ_PYTHON_PREFIX/include\" \"-I$MOZ_PYTHON_PREFIX/PC\""
-        MOZ_PYTHON_LIBS="\"/libpath:$MOZ_PYTHON_PREFIX/PCBuild\" \"/libpath:$MOZ_PYTHON_PREFIX/libs\""
-    else
-        dnl Non-Windows include and libs
-        MOZ_PYTHON_DLL_SUFFIX=$DLL_SUFFIX
-        MOZ_PYTHON_INCLUDES="-I$MOZ_PYTHON_PREFIX/include/python$MOZ_PYTHON_VER_DOTTED"
-        dnl Check for dynamic Python lib
-        dnl - A static Python is no good - multiple dynamic libraries (xpcom
-        dnl - core, xpcom loader, pydom etc) all need to share Python.
-        dnl - Python 2.3's std --enable-shared configure option will
-        dnl   create a libpython2.3.so.1.0. We should first try this
-        dnl   dotted versioned .so file because this is the one that
-        dnl   the PyXPCOM build mechanics tries to link to.
-        dnl   XXX Should find a better way than hardcoding "1.0".
-        dnl - Python developement tree dir layouts are NOT allowed here
-        dnl   because the PyXPCOM build just dies on it later anyway.
-        dnl - Fixes to the above by Python/*nix knowledgable people welcome!
-        if test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
-            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
-        elif test -f "$MOZ_PYTHON_PREFIX/lib64/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
-            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib64 -lpython$MOZ_PYTHON_VER_DOTTED"
-        elif test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
-            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
-        elif test -f "$MOZ_PYTHON_PREFIX/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
-            dnl Don't Python development tree directory layout.
-            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX -lpython$MOZ_PYTHON_VER_DOTTED"
-            AC_MSG_ERROR([The Python at $MOZ_PYTHON_PREFIX looks like a dev tree. The PyXPCOM build cannot handle this yet. You must 'make install' Python and use the installed tree.])
-        elif test "$OS_ARCH" = "Darwin"; then
-            dnl We do Darwin last, so if a custom non-framework build of
-            dnl python is used on OSX, then it will be picked up first by
-            dnl the logic above.
-            MOZ_PYTHON_LIBS="-framework Python"
-        else
-            AC_MSG_ERROR([Could not find build shared libraries for Python at $MOZ_PYTHON_PREFIX.  This is required for PyXPCOM.])
-        fi
-        if test "$OS_ARCH" = "Linux"; then
-            MOZ_PYTHON_LIBS="$MOZ_PYTHON_LIBS -lutil"
-        fi
-    fi
-    dnl Handle "_d" on Windows
-    if test "$OS_ARCH" = "WINNT" && test -n "$MOZ_DEBUG"; then
-        MOZ_PYTHON_DEBUG_SUFFIX="_d"
-    else
-        MOZ_PYTHON_DEBUG_SUFFIX=
-    fi
-    AC_MSG_RESULT(Building Python extensions using python-$MOZ_PYTHON_VER_DOTTED from $MOZ_PYTHON_PREFIX)
-fi
-
-dnl If the user asks for the 'python' extension, then we add
-dnl MOZ_PYTHON_EXTENSIONS to MOZ_EXTENSIONS - but with the leading 'python/'
-dnl Note the careful regex - it must match 'python' followed by anything
-dnl other than a '/', including the end-of-string.
-if test `echo "$MOZ_EXTENSIONS" | grep -c 'python\([[^/]]\|$\)'` -ne 0; then
-    for pyext in $MOZ_PYTHON_EXTENSIONS; do
-        MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS python/$pyext`
-    done
-fi
-dnl Later we may allow MOZ_PYTHON_EXTENSIONS to be specified on the
-dnl command-line, but not yet
-AC_SUBST(MOZ_PYTHON_EXTENSIONS)
-AC_SUBST(MOZ_PYTHON)
-AC_SUBST(MOZ_PYTHON_PREFIX)
-AC_SUBST(MOZ_PYTHON_INCLUDES)
-AC_SUBST(MOZ_PYTHON_LIBS)
-AC_SUBST(MOZ_PYTHON_VER)
-AC_SUBST(MOZ_PYTHON_VER_DOTTED)
-AC_SUBST(MOZ_PYTHON_DEBUG_SUFFIX)
-AC_SUBST(MOZ_PYTHON_DLL_SUFFIX)
 
 dnl ========================================================
 dnl disable profile locking
