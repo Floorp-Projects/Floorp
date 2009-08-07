@@ -36,6 +36,7 @@ from copy import deepcopy
 from ipdl.ast import Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT
 import ipdl.cxx.ast as cxx
 
+EMIT_LOGGING_CODE = False
 
 def _joinProtocolNamespacesName(sep, p, pname):
     return sep.join([ ns.namespace for ns in p.namespaces ] + [ pname ])
@@ -394,23 +395,24 @@ def generateMsgClass(md, clsname, params, typedefInjector):
             # feasible.  either message logging needs to be rewritten, or
             # -fshort-wchar needs to be disabled (again)
 
-#             errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
-#                         cxx.ExprVar('IPC::LogParam'),
-#                         [ cxx.ExprVar(oparam.name),
-#                           cxx.ExprAddrOf(paramvar) ])))
-#             errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
-#                         cxx.ExprSelect(msgvar, '.', 'append'),
-#                         [ cxx.ExprCall(cxx.ExprVar('WideToUTF8'),
-#                                        [ paramvar ]) ])))
-#             errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
-#                         cxx.ExprSelect(msgvar, '.', 'append'),
-#                         [ cxx.ExprLiteral.String(', ') ])))
-#             errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
-#                         cxx.ExprSelect(paramvar, '.', 'clear'))))
-            errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
-                        cxx.ExprSelect(msgvar, '.', 'append'),
-                        [ cxx.ExprLiteral.String('FIXME, ') ])))
-
+            if EMIT_LOGGING_CODE:
+                errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+                            cxx.ExprVar('IPC::LogParam'),
+                            [ cxx.ExprVar(oparam.name),
+                              cxx.ExprAddrOf(paramvar) ])))
+                errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+                            cxx.ExprSelect(msgvar, '.', 'append'),
+                            [ cxx.ExprCall(cxx.ExprVar('WideToUTF8'),
+                                           [ paramvar ]) ])))
+                errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+                            cxx.ExprSelect(msgvar, '.', 'append'),
+                            [ cxx.ExprLiteral.String(', ') ])))
+                errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+                            cxx.ExprSelect(paramvar, '.', 'clear'))))
+            else:
+                errif.addifstmt(cxx.StmtExpr(cxx.ExprCall(
+                            cxx.ExprSelect(msgvar, '.', 'append'),
+                            [ cxx.ExprLiteral.String('FIXME, ') ])))
 
         # case where we couldn't deserialize the message
         errif.addelsestmt(cxx.StmtExpr(
