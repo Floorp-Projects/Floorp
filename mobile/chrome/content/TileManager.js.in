@@ -140,8 +140,8 @@ function TileManager(appendTile, removeTile, browserView) {
 TileManager.prototype = {
 
   /**
-   * This is the callback fired by our client whenever the viewport changes
-   * somehow.
+   * Entry point by which the BrowserView informs of changes to the viewport or
+   * critical rect.
    */
   viewportChangeHandler: function viewportChangeHandler(viewportRect,
                                                         criticalRect,
@@ -179,6 +179,9 @@ TileManager.prototype = {
       else
         criticalIsDirty = true;
 
+      // XXX we may want to pass rect through to make markDirty only mark the
+      // intersection of tile's boundRect with rect dirty (e.g. if we have big
+      // tiles)
       tile.markDirty();
 
       if (crawler)
@@ -191,19 +194,17 @@ TileManager.prototype = {
       this.criticalRectPaint();
   },
 
-  criticalRectPaint: function criticalRectPaint(skipRecenter) {
+  criticalRectPaint: function criticalRectPaint() {
     let cr = this._criticalRect;
 
-    let start = Date.now();
+    //let start = Date.now();
 
     if (cr) {
-      if (!skipRecenter) {
-        let [ctrx, ctry] = cr.centerRounded();
-        //dump('-----> centering at ' + ctrx + ',' + ctry + '\n');
-        this.recenterEvictionQueue(ctrx, ctry);
-      }
+      let [ctrx, ctry] = cr.centerRounded();
+      //dump('-----> centering at ' + ctrx + ',' + ctry + '\n');
+      this.recenterEvictionQueue(ctrx, ctry);
 
-      let start = Date.now();
+      //let start = Date.now();
       this._renderAppendHoldRect(cr);
       //dump("  render, append, hold: " + (Date.now() - start) + "\n");
     }
@@ -228,7 +229,7 @@ TileManager.prototype = {
     let tc = this._tileCache;
     let cr = this._criticalRect;
 
-    let start = Date.now();
+    //let start = Date.now();
 
     if (cr) {
       BEGIN_FOREACH_IN_RECT(cr, tc, tile)
@@ -237,13 +238,18 @@ TileManager.prototype = {
     }
 
     //dump(" release: " + (Date.now() - start) + "\n");
-    start = Date.now();
+    //start = Date.now();
 
-    if (destCriticalRect) {
-      BEGIN_FOREACH_IN_RECT(destCriticalRect, tc, tile)
-      tc.holdTile(tile);
-      END_FOREACH_IN_RECT
-    }
+    // XXX the conjunction with doCriticalPaint may cause tiles to disappear
+    // (be evicted) during a (relatively slow) move as no tiles will be "held"
+    // until a critical paint is requested.  Also, while we have this
+    // && doCriticalPaint then we don't need this loop altogether, as
+    // criticalRectPaint will hold everything for us (called below)
+    //if (destCriticalRect && doCriticalPaint) {
+    //  BEGIN_FOREACH_IN_RECT(destCriticalRect, tc, tile)
+    //  tc.holdTile(tile);
+    //  END_FOREACH_IN_RECT
+    //}
 
     //dump(" hold: " + (Date.now() - start) + "\n");
 
@@ -274,7 +280,9 @@ TileManager.prototype = {
   },
 
   stopLazyCrawl: function stopLazyCrawl() {
-    this._idleTileCrawlerTimeout = 0;
+    if (this._idleTileCrawlerTimeout)
+      clearTimeout(this._idleTileCrawlerTimeout);
+    delete this._idleTileCrawlerTimeout;
     this._crawler = null;
 
     let cr = this._criticalRect;
@@ -422,8 +430,13 @@ TileManager.TileCache.prototype = {
     return (a.free) ? 1 : -1;
   },
 
-  isOccupied: function isOccupied(i, j) {
-    return !!(this._tileMap[i] && this._tileMap[i][j]);
+  lookup: function lookup(i, j) {
+    let tile = null;
+
+    if (this._tileMap[i])
+      tile = this._tileMap[i][j] || null;
+
+    return tile;
   },
 
   getCapacity: function getCapacity() { return this._capacity; },
@@ -487,11 +500,9 @@ TileManager.TileCache.prototype = {
     if (!this.inBounds(i, j))
       return null;
 
-    let tile = null;
+    let tile = this.lookup(i, j);
 
-    if (this.isOccupied(i, j)) {
-      tile = this._tileMap[i][j];
-    } else if (create) {
+    if (!tile && create) {
       tile = this._createTile(i, j, evictionGuard);
       if (tile) tile.markDirty();
     }
@@ -528,38 +539,9 @@ TileManager.TileCache.prototype = {
     if (tile) tile.free = true;
   },
 
-  /**
-   * Call fn for all tiles that share at least one point with this rect.  If
-   * `create' is true then any tileless tileholders will have tiles created
-   * in them.
-   *
-   * This function gets really trace-branchy due to its meta-nature.  It can
-   * also be slow if using in tight loops.  See the C preprocessor macros for
-   * a more dangerous but faster version.
-   */
-  forEachIntersectingRect: function forEachIntersectingRect(rect, create, fn, thisObj) {
-    let starti = rect.left  >> kTileExponentWidth;
-    let endi   = rect.right >> kTileExponentWidth;
-    let startj = rect.top    >> kTileExponentHeight;
-    let endj   = rect.bottom >> kTileExponentHeight;
-
-    let tile = null;
-    for (var j = startj; j <= endj; ++j) {
-      for (var i = starti; i <= endi; ++i) {
-        tile = this.getTile(i, j, create, null);
-        if (tile) {
-          visited[tile.toString()] = true;
-          fn.call(thisObj, tile);
-        }
-      }
-    }
-  },
-
   _detachTile: function _detachTile(i, j) {
-    let tile = null;
-    if (this.isOccupied(i, j)) {
-      tile = this._tileMap[i][j];
-
+    let tile = this.lookup(i, j);
+    if (tile) {
       if (this._onBeforeTileDetach)
         this._onBeforeTileDetach(tile);
 
@@ -674,22 +656,12 @@ TileManager.Tile.prototype = {
   isDirty: function isDirty() { return this._dirtyTileCanvas; },
 
   /**
-   * Mark this entire tile as dirty (i.e. the whole tile needs to be rendered
-   * on next render).
-   */
-  markDirty: function markDirty() { this.updateDirtyRegion(); },
-
-  unmarkDirty: function unmarkDirty() {
-    this._dirtyTileCanvasRect = null;
-    this._dirtyTileCanvas = false;
-  },
-
-  /**
    * This will mark dirty at least everything in dirtyRect (which must be
    * specified in canvas coordinates).  If dirtyRect is not given then
-   * the entire tile is marked dirty.
+   * the entire tile is marked dirty (i.e. the whole tile needs to be rendered
+   * on next render).
    */
-  updateDirtyRegion: function updateDirtyRegion(dirtyRect) {
+  markDirty: function markDirty(dirtyRect) {
     if (!dirtyRect) {
 
       if (!this._dirtyTileCanvasRect)
@@ -697,7 +669,7 @@ TileManager.Tile.prototype = {
       else
         this._dirtyTileCanvasRect.copyFrom(this.boundRect);
 
-    } else {
+    } else {  // XXX this case is not very well-tested
 
       if (!this._dirtyTileCanvasRect)
         this._dirtyTileCanvasRect = dirtyRect.intersect(this.boundRect);
@@ -712,6 +684,11 @@ TileManager.Tile.prototype = {
 
     if (this._dirtyTileCanvasRect)
       this._dirtyTileCanvas = true;
+  },
+
+  unmarkDirty: function unmarkDirty() {
+    this._dirtyTileCanvasRect = null;
+    this._dirtyTileCanvas = false;
   },
 
   /**
