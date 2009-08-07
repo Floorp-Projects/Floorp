@@ -581,7 +581,7 @@ js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp)
 {
     JSClass *clasp;
 
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = OBJ_GET_CLASS(cx, js_GetWrappedObject(cx, obj));
     *answerp = (clasp == &js_ArgumentsClass || clasp == &js_ArrayClass ||
                 clasp == &js_SlowArrayClass);
     if (!*answerp) {
