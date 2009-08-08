@@ -53,24 +53,23 @@ class nsJARInputStream : public nsIInputStream
 {
   public:
     nsJARInputStream() : 
-        mInSize(0), mCurPos(0), mInflate(nsnull), mDirectory(0), mClosed(PR_FALSE)
-  { }
-
-  ~nsJARInputStream() {
-    Close();
-  }
+        mFd(nsnull), mInSize(0), mCurPos(0),
+        mInflate(nsnull), mDirectory(0), mClosed(PR_FALSE) { }
+    
+    ~nsJARInputStream() { Close(); }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
    
     // takes ownership of |fd|, even on failure
-    nsresult InitFile(nsZipHandle *aFd, nsZipItem *item);
+    nsresult InitFile(nsZipArchive* aZip, nsZipItem *item, PRFileDesc *fd);
 
-    nsresult InitDirectory(nsJAR *aJar,
+    nsresult InitDirectory(nsZipArchive* aZip,
                            const nsACString& aJarDirSpec,
                            const char* aDir);
   
   private:
+    PRFileDesc*   mFd;              // My own file handle, for reading
     PRUint32      mInSize;          // Size in original file 
     PRUint32      mCurPos;          // Current position in input 
 
@@ -84,14 +83,14 @@ class nsJARInputStream : public nsIInputStream
     struct InflateStruct *   mInflate;
 
     /* For directory reading */
-    nsRefPtr<nsJAR>         mJar;     // string reference to zipreader
+    nsZipArchive*           mZip;        // the zipReader
     PRUint32                mNameLen; // length of dirname
     nsCAutoString           mBuffer;  // storage for generated text of stream
     PRUint32                mArrPos;  // current position within mArray
     nsTArray<nsCString>     mArray;   // array of names in (zip) directory
-  PRPackedBool            mDirectory; // is this a directory?
-    PRPackedBool            mClosed;  // Whether the stream is closed
-    nsSeekableZipHandle     mFd;      // handle for reading
+
+    PRPackedBool    mDirectory;
+    PRPackedBool    mClosed;          // Whether the stream is closed
 
     nsresult ContinueInflate(char* aBuf, PRUint32 aCount, PRUint32* aBytesRead);
     nsresult ReadDirectory(char* aBuf, PRUint32 aCount, PRUint32* aBytesRead);
