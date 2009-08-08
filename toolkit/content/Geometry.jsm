@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Roy Frostig <rfrostig@mozilla.com>
+ *   Ben Combee <bcombee@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,8 +57,13 @@ let Util = {
     for (let key in instance)
       if (instance[key] instanceof Function)
         instance[key] = bind(instance[key], instance);
-  }
+  },
 
+  dumpLn: function dumpLn() {
+    // like dump, but each arg is handled and there's an automatic newline
+    for (var i = 0; i < arguments.length; i++) { dump(arguments[i]); }
+    dump("\n");
+  }
 };
 
 
@@ -554,4 +560,3 @@ wsRect.prototype = {
     return this;
   }
 };
-
