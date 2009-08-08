@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+var i = 0;
+function boom()
+{
+  var div = document.getElementById("div");
+  var audio = document.getElementById("audio");
+
+  audio.onload = null;
+
+  div.textContent = "FAIL";
+  audio.src += "";
+  div.textContent = "PASS?";
+
+  ++i;
+
+  setTimeout(done, 1);
+}
+
+function done()
+{
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body>
+<audio id="audio" autoplay src="../sound.ogg" onload="setTimeout(boom, 1);"></audio>
+<div id="div"></div>
+</body>
+</html>
