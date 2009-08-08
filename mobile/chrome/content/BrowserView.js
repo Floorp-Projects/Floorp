@@ -510,7 +510,7 @@ BrowserView.prototype = {
   },
   // !!! --- RESIZE HACK END -------
 
-  handleMozAfterSizeChange: function handleMozAfterPaint(ev) {
+  handleMozAfterSizeChange: function handleMozAfterSizeChange(ev) {
     // !!! --- RESIZE HACK BEGIN -----
     // get the correct properties off of the event, these are wrong because
     // we're using a MouseEvent, as it has an X and Y prop of some sort and
