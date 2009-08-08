@@ -102,9 +102,7 @@ nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanc
 
     nsRefPtr<nsObserverService> os = new nsObserverService();
 
-    // The cast is required for MSVC6, otherwise it complains about calling
-    // a private function.
-    if (!os || !((nsObserverService*) os)->mObserverTopicTable.IsInitialized())
+    if (!os || !os->mObserverTopicTable.IsInitialized())
         return NS_ERROR_OUT_OF_MEMORY;
 
     return os->QueryInterface(aIID, aInstancePtr);
