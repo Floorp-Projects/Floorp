@@ -1,0 +1,10 @@
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
+
+<html:div onDOMAttrModified="this.parentNode.removeChild(this)">
+<html:div/>
+<html:style>div {-moz-binding:url(468211-2-binding.xml#xbl);</html:style>
+</html:div>
+
+</window>
