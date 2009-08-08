@@ -42,7 +42,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 /**
  * InputHandler
  *
@@ -56,7 +55,6 @@
  * On the Fennec global chrome window:
  *   URLChanged
  *   TabSelect
- *   mouseout
  *   mousedown
  *   mouseup
  *   mousemove
@@ -122,9 +120,6 @@ function InputHandler(browserViewContainer) {
   this.listenFor(window, "URLChanged");
   this.listenFor(window, "TabSelect");
 
-  /* used to stop everything if mouse leaves window on desktop */
-  this.listenFor(window, "mouseout");
-
   /* these handle dragging of both chrome elements and content */
   this.listenFor(window, "mousedown");
   this.listenFor(window, "mouseup");
@@ -140,8 +135,6 @@ function InputHandler(browserViewContainer) {
 
   this.addModule(new MouseModule(this));
   this.addModule(new ScrollwheelModule(this, Browser._browserView, browserViewContainer));
-  //this.addModule(new ContentPanningModule(this, browserViewContainer, useEarlyMouseMoves));
-  //this.addModule(new ContentClickingModule(this));
 }
 
 
@@ -177,20 +170,21 @@ InputHandler.prototype = {
   },
 
   /**
-   * A module calls grab(this) to grab event focus from the input handler.
-   * In grabbed state, the input handler forwards all events directly to
-   * the grabber module, and not to any other modules.  The this reference
-   * passed is essentially a ceritificate to the input handler --- collateral
-   * for the grab.  A grabber module may make nested calls to grab() but
-   * should symmetrically ungrab().  Other modules cannot grab a grabbed input
-   * handler, and only the grabber module can ungrab the input handler.
+   * A module calls grab(this) to grab event focus from the input
+   * handler.  In grabbed state, the input handler forwards all events
+   * directly to the grabber module, and not to any other modules.
+   * The this reference passed is essentially a ceritificate to the
+   * input handler --- collateral for the grab.  A grabber module may
+   * make nested calls to grab() but should symmetrically ungrab().
+   * Other modules cannot grab a grabbed input handler, and only the
+   * grabber module can ungrab the input handler.
    *
+   * grab(null) aborts all input handlers.  This is used in situations
+   * like the page changing to a different URL where you want to abort
+   * drags in progress or kinetic movement.
+   * 
    * Returns true if the grab succeeded, false otherwise.
    */
-  // XXX grab(null) is supported because the old grab() supported it,
-  //  but I'm not sure why.  The comment on that was "grab(null) is allowed
-  //  because of mouseout handling".  Feel free to remove if that is no longer
-  //  relevant, or remove this comment if it still is.
   grab: function grab(grabber) {
     if (grabber == null) {
       this._grabber = null;
@@ -369,8 +363,9 @@ InputHandler.EventInfo.prototype = {
  * following interface:  (The `scroller' argument is given for convenience, and
  * is the object reference to the element's scrollbox object).
  *
- *   dragStart(scroller)
- *     Signals the beginning of a drag.
+ *   dragStart(cX, cY, target, scroller)
+ *     Signals the beginning of a drag.  Coordinates are passed as
+ *     client coordinates. target is copied from the event.
  *
  *   dragStop(dx, dy, scroller)
  *     Signals the end of a drag.  The dx, dy parameters may be non-zero to
@@ -479,7 +474,7 @@ MouseModule.prototype = {
     this._owner.grab(this);
 
     if (targetScrollInterface) {
-      this._doDragStart(evInfo.event.screenX, evInfo.event.screenY);
+      this._doDragStart(evInfo.event);
     }
 
     this._recordEvent(evInfo);
@@ -587,13 +582,13 @@ MouseModule.prototype = {
   /**
    * Inform our dragger of a dragStart and update kinetic with new data.
    */
-  _doDragStart: function _doDragStart(sX, sY) {
+  _doDragStart: function _doDragStart(event) {
     let dragData = this._dragData;
 
-    dragData.setDragStart(sX, sY);
-    this._kinetic.addData(sX, sY);
+    dragData.setDragStart(event.screenX, event.screenY);
+    this._kinetic.addData(event.screenX, event.screenY);
 
-    this._dragger.dragStart(this._targetScrollInterface);
+    this._dragger.dragStart(event.clientX, event.clientY, event.target, this._targetScrollInterface);
   },
 
   /**
@@ -738,7 +733,7 @@ MouseModule.prototype = {
    * regular scrollBy calls on the scroller.
    */
   _defaultDragger: {
-    dragStart: function dragStart(scroller) {},
+    dragStart: function dragStart(cx, cy, target, scroller) {},
 
     dragStop : function dragStop(dx, dy, scroller)
     { return this.dragMove(dx, dy, scroller); },
@@ -903,7 +898,7 @@ DragData.prototype = {
   },
 
   isPointOutsideRadius: function isPointOutsideRadius(sX, sY) {
-    if (this._originX == undefined)
+    if (this._originX === null)
       return false;
     return (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2)) >
       (2 * Math.pow(this._dragRadius, 2));
@@ -1043,7 +1038,8 @@ KineticController.prototype = {
   },
 
   end: function end() {
-    this._beforeEnd();
+    if (this._beforeEnd)
+      this._beforeEnd();
     this._reset();
   },
 
@@ -1062,252 +1058,10 @@ KineticController.prototype = {
         return;
     }
 
+    // Util.dumpLn("adding t:", now, ", sx: ", sx, ", sy: ", sy);
     this.momentumBuffer.push({'t': now, 'sx' : sx, 'sy' : sy});
   }
 };
-
-
-function ContentPanningModule(owner, browserCanvas, useEarlyMouseMoves) {
-  this._owner = owner;
-  this._browserCanvas = browserCanvas;
-  this._dragData = new DragData(this, 50, 200);
-  this._useEarlyMouseMoves = useEarlyMouseMoves;
-
-  var self = this;
-  this._kinetic = new KineticController( function (dx, dy) { return self._dragBy(dx, dy); } );
-}
-
-ContentPanningModule.prototype = {
-  handleEvent: function handleEvent(aEvent) {
-    // exit early for events outside displayed content area
-    if (aEvent.target !== this._browserCanvas)
-      return;
-
-    switch (aEvent.type) {
-      case "mousedown":
-        this._onMouseDown(aEvent);
-        break;
-      case "mousemove":
-        this._onMouseMove(aEvent);
-        break;
-      case "mouseout":
-      case "mouseup":
-        this._onMouseUp(aEvent);
-        break;
-    }
-  },
-
-
-  /* If someone else grabs events ahead of us, cancel any pending
-   * timeouts we may have.
-   */
-  cancelPending: function cancelPending() {
-    this._kinetic.end();
-    this._dragData.reset();
-  },
-
-  _dragStart: function _dragStart(sX, sY) {
-    let dragData = this._dragData;
-
-    dragData.setDragStart(sX, sY);
-
-    [sX, sY] = dragData.lockAxis(sX, sY);
-
-    //ws.dragStart(sX, sY);
-
-    //Browser.canvasBrowser.startPanning();
-  },
-
-  _dragStop: function _dragStop(sX, sY) {
-    let dragData = this._dragData;
-
-    this._owner.ungrab(this);
-
-    [sX, sY] = dragData.lockMouseMove(sX, sY);
-
-    // start kinetic scrolling here for canvas only
-    this._kinetic.start(sX, sY);
-
-    dragData.reset();
-  },
-
-  _dragBy: function _dragBy(dx, dy) {
-    /* XXX
-    let panned = ws.dragBy(dx, dy);
-    return panned;
-    */
-    return false;
-  },
-
-  _dragMove: function _dragMove(sX, sY) {
-    let dragData = this._dragData;
-    [sX, sY] = dragData.lockMouseMove(sX, sY);
-    //XXX let panned = ws.dragMove(sX, sY);
-    let panned = false;
-    dragData.setDragPosition(sX, sY);
-    return panned;
-  },
-
-  _onMouseDown: function _onMouseDown(aEvent) {
-    let dragData = this._dragData;
-    // if we're in the process of kineticly scrolling, stop and start over
-    if (this._kinetic.isActive()) {
-      this._kinetic.end();
-      this._owner.ungrab(this);
-      dragData.reset();
-    }
-
-    this._dragStart(aEvent.screenX, aEvent.screenY);
-    this._onMouseMove(aEvent); // treat this as a mouse move too
-  },
-
-  _onMouseUp: function _onMouseUp(aEvent) {
-    let dragData = this._dragData;
-
-    if (dragData.dragging) {
-      this._onMouseMove(aEvent); // treat this as a mouse move, incase our x/y are different
-      this._dragStop(aEvent.screenX, aEvent.screenY);
-    }
-
-    dragData.reset(); // be sure to reset the timer
-  },
-
-  _onMouseMove: function _onMouseMove(aEvent) {
-    // don't do anything if we're in the process of kineticly scrolling
-    if (this._kinetic.isActive())
-      return;
-
-    let dragData = this._dragData;
-
-    // if we move enough, start a grab to prevent click from getting events
-    if (dragData.isPointOutsideRadius(aEvent.screenX, aEvent.screenY))
-      this._owner.grab(this);
-
-    // if we never received a mouseDown, we need to go ahead and set this data
-    if (!dragData.sX)
-      dragData.setDragPosition(aEvent.screenX, aEvent.screenY);
-
-    let [sX, sY] = dragData.lockMouseMove(aEvent.screenX, aEvent.screenY);
-
-    // even if we haven't started dragging yet, we should queue up the
-    // mousemoves in case we do start
-    if (this._useEarlyMouseMoves || dragData.dragging)
-      this._kinetic.addData(sX, sY);
-
-    if (dragData.dragging)
-      this._dragMove(sX, sY);
-  }
-};
-
-
-/**
- * Mouse click handlers
- */
-function ContentClickingModule(owner) {
-  this._owner = owner;
-  this._clickTimeout = -1;
-  this._events = [];
-  this._zoomedTo = null;
-}
-
-ContentClickingModule.prototype = {
-  handleEvent: function handleEvent(aEvent) {
-    switch (aEvent.type) {
-      // UI panning events
-      case "mousedown":
-        this._events.push({event: aEvent, time: Date.now()});
-
-
-      case "mouseup":
-        // keep an eye out for mouseups that didn't start with a mousedown
-        if (!(this._events.length % 2)) {
-          this._reset();
-            break;
-        }
-
-        this._events.push({event: aEvent, time: Date.now()});
-
-        if (this._clickTimeout == -1) {
-          this._clickTimeout = window.setTimeout(function _clickTimeout(self) { self._sendSingleClick(); }, 400, this);
-        } else {
-          window.clearTimeout(this._clickTimeout);
-          this._clickTimeout = -1;
-          this._sendDoubleClick();
-        }
-        break;
-    }
-  },
-
-  /* If someone else grabs events ahead of us, cancel any pending
-   * timeouts we may have.
-   */
-  cancelPending: function cancelPending() {
-    this._reset();
-  },
-
-  _reset: function _reset() {
-    if (this._clickTimeout != -1)
-      window.clearTimeout(this._clickTimeout);
-    this._clickTimeout = -1;
-
-    this._events = [];
-  },
-
-  _sendSingleClick: function _sendSingleClick() {
-    this._owner.grab(this);
-    this._dispatchContentMouseEvent(this._events[0].event);
-    this._dispatchContentMouseEvent(this._events[1].event);
-    this._owner.ungrab(this);
-
-    this._reset();
-  },
-
-  _sendDoubleClick: function _sendDoubleClick() {
-    this._owner.grab(this);
-
-    function optimalElementForPoint(cX, cY) {
-      var element = Browser.canvasBrowser.elementFromPoint(cX, cY);
-      return element;
-    }
-
-    let firstEvent = this._events[0].event;
-    let zoomElement = optimalElementForPoint(firstEvent.clientX, firstEvent.clientY);
-
-    if (zoomElement) {
-      if (zoomElement != this._zoomedTo) {
-        this._zoomedTo = zoomElement;
-        Browser.canvasBrowser.zoomToElement(zoomElement);
-      } else {
-        this._zoomedTo = null;
-        Browser.canvasBrowser.zoomFromElement(zoomElement);
-      }
-    }
-
-    this._owner.ungrab(this);
-
-    this._reset();
-  },
-
-
-  _dispatchContentMouseEvent: function _dispatchContentMouseEvent(aEvent, aType) {
-    if (!(aEvent instanceof MouseEvent)) {
-      Cu.reportError("_dispatchContentMouseEvent called with a non-mouse event");
-      return;
-    }
-
-    let cb = Browser.canvasBrowser;
-    var [x, y] = cb._clientToContentCoords(aEvent.clientX, aEvent.clientY);
-    var cwu = cb.contentDOMWindowUtils;
-
-    // Redispatch the mouse event, ignoring the root scroll frame
-    cwu.sendMouseEvent(aType || aEvent.type,
-                       x, y,
-                       aEvent.button || 0,
-                       aEvent.detail || 1,
-                       0, true);
-  }
-};
-
 
 /**
  * Input module for basic scrollwheel input.  Currently just zooms the browser

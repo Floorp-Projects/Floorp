@@ -28,7 +28,8 @@
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Taras Glek <tglek@mozilla.com>
  *   Roy Frostig <rfrostig@mozilla.com>
- *
+ *   Ben Combee <bcombee@mozilla.com>
+ * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -339,18 +340,19 @@ var Browser = {
     let container = document.getElementById("tile-container");
     let bv = this._browserView = new BrowserView(container, Browser.getVisibleRect());
 
+    /* handles dispatching clicks on tiles into clicks in content or zooms */
     container.customClicker = this._createContentCustomClicker(bv);
 
+    /* vertically scrolling box that contains tiles and the urlbar */
     let contentScrollbox = this.contentScrollbox = document.getElementById("tile-container-container");
     this.contentScrollboxScroller = contentScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-
-    let controlsScrollbox = this.controlsScrollbox = document.getElementById("scrollbox");
-    this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-
     contentScrollbox.customDragger = new Browser.MainDragger(bv);
 
+    /* horizontally scrolling box that holds the sidebars as well as the contentScrollbox */
+    let controlsScrollbox = this.controlsScrollbox = document.getElementById("scrollbox");
+    this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     controlsScrollbox.customDragger = {
-      dragStart: function dragStart(scroller) {},
+      dragStart: function dragStart(cx, cy, target, scroller) {},
       dragStop: function dragStop(dx, dy, scroller) { return false; },
       dragMove: function dragMove(dx, dy, scroller) { return false; }
     };
@@ -848,24 +850,6 @@ var Browser = {
     // XXX we probably shouldn't generate this dynamically like this, but
     // actually make it a prototype somewhere and instantiate it and such...
 
-    function transformClientToBrowser(cX, cY) {
-      return Browser.clientToBrowserView(cX, cY).map(browserView.viewportToBrowser);
-    }
-
-    function elementFromPoint(browser, x, y) {
-      let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
-      let scrollX = { value: 0 };
-      let scrollY = { value: 0 };
-      cwu.getScrollXY(false, scrollX, scrollY);
-
-      dump('elementFromPoint: ' + x + ', ' + y + '\n');
-
-      return cwu.elementFromPoint(x - scrollX.value,
-                                  y - scrollY.value,
-                                  true,   // ignore root scroll frame
-                                  false); // don't flush layout
-    }
-
     function dispatchContentClick(browser, x, y) {
       let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
       let scrollX = { value: 0 };
@@ -885,26 +869,23 @@ var Browser = {
       singleClick: function singleClick(cX, cY) {
         let browser = browserView.getBrowser();
         if (browser) {
-          let [x, y] = transformClientToBrowser(cX, cY);
+          let [x, y] = Browser.transformClientToBrowser(cX, cY);
           dispatchContentClick(browser, x, y);
         }
       },
 
       doubleClick: function doubleClick(cX1, cY1, cX2, cY2) {
-        let browser = browserView.getBrowser();
-        if (browser) {
-          let [x, y] = transformClientToBrowser(cX2, cY2);
-          let zoomElement = elementFromPoint(browser, x, y);
+        let [x, y] = Browser.transformClientToBrowser(cX2, cY2);
+        let zoomElement = Browser.elementFromPoint(x, y);
+
+        if (zoomElement) {
           dump('@@@ zoomElement is ' + zoomElement + ' :: ' + zoomElement.id + ' :: ' + zoomElement.name + '\n');
+          this.zoomIn = !this.zoomIn;
 
-          if (zoomElement) {
-            this.zoomIn = !this.zoomIn;
-
-            if (this.zoomIn)
-              Browser.zoomToElement(zoomElement);
-            else
-              Browser.zoomFromElement(zoomElement);
-          }
+          if (this.zoomIn)
+            Browser.zoomToElement(zoomElement);
+          else
+            Browser.zoomFromElement(zoomElement);
         }
       },
 
@@ -1154,6 +1135,49 @@ var Browser = {
   },
 
   /**
+   * turn client coordinates into page-relative ones (adjusted for
+   * zoom and page position)
+   */
+  transformClientToBrowser: function transformClientToBrowser(cX, cY) {
+    return this.clientToBrowserView(cX, cY).map(this._browserView.viewportToBrowser);
+  },
+
+  /**
+   * return element at client coordinates of browser, returns null if
+   * there's no active browser or if no element can be found
+   */
+  elementFromPoint: function elementFromPoint(x, y) {
+    Util.dumpLn("*** elementFromPoint: page ", x, ",", y);
+    
+    let browser = this._browserView.getBrowser();
+    if (!browser) return null;
+    
+    let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
+
+    let scrollX = { value: 0 }, scrollY = { value: 0 };
+    cwu.getScrollXY(false, scrollX, scrollY); 
+    x = x - scrollX.value;
+    y = y - scrollY.value;
+
+    let elem = cwu.elementFromPoint(x, y,
+                                    true,   /* ignore root scroll frame*/
+                                    false); /* don't flush layout */
+
+    // step through layers of IFRAMEs and FRAMES to find innermost element
+    while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
+      let frameWin = elem.ownerDocument.defaultView;
+      let frameUtils = frameWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      frameUtils.getScrollXY(false, scrollX, scrollY);
+      
+      x = x - elem.offsetLeft + scrollX.value;
+      y = y - elem.offsetTop + scrollY.value;
+      elem = elem.contentDocument.elementFromPoint(x, y);
+    }
+    
+    return elem;
+  },
+  
+  /**
    * Return the visible rect in coordinates with origin at the (left, top) of
    * the tile container, i.e. BrowserView coordinates.
    */
@@ -1193,19 +1217,86 @@ Browser.MainDragger = function MainDragger(browserView) {
   this.scrollingOuterX = true;
   this.bv = browserView;
   this.floatedWhileDragging = false;
+  this.draggedFrame = null;
 };
 
 Browser.MainDragger.prototype = {
-  dragStart: function dragStart(scroller) {
+  _targetIsContent: function _targetIsContent(target) {
+    let tileBox = document.getElementById("tile-container");
+    while (target) {
+      if (target === window)
+        return false;
+      if (target === tileBox)
+        return true;
+      
+      target = target.parentNode;
+    }
+    return false;
+  },
+  
+  dragStart: function dragStart(clientX, clientY, target, scroller) {
+    this.draggedFrame = null;
+    
+    if (this._targetIsContent(target)) {
+      // since we're dealing with content, look to see if user has started
+      // a drag while over a IFRAME/FRAME element
+      let [x, y] = Browser.transformClientToBrowser(clientX, clientY);
+      let element = Browser.elementFromPoint(x, y);
+      if (element && element.ownerDocument != Browser.selectedBrowser.contentDocument) {
+        Util.dumpLn("*** dragStart got element ", element, " ownerDoc ", element.ownerDocument,
+                    " selectedBrowser.contentDoc ", Browser.selectedBrowser.contentDocument);
+        this.draggedFrame = element.ownerDocument.defaultView;
+      }
+    }
+    
     this.bv.pauseRendering();
     this.floatedWhileDragging = false;
   },
-
+  
+  _panFrame: function _panFrame(dx, dy) {
+    if (this.draggedFrame === null)
+      return false;
+    
+    if (dx == 0 && dy == 0)
+      return true;
+    
+    let panned = false;
+    let elem = this.draggedFrame;
+    
+    // top-level window will have itself as its parent, so stop
+    // there to allow canvasbrowser/widgetstack to pan instead
+    // of doing scrolling
+    while (elem && elem !== elem.parent.document.defaultView) {
+      let windowUtils = elem.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      
+      let origX = {}, origY = {};
+      windowUtils.getScrollXY(false, origX, origY);
+      
+      elem.scrollBy(dx, dy);
+      
+      let newX = {}, newY = {};
+      windowUtils.getScrollXY(false, newX, newY);
+      
+      panned = (origX.value != newX.value) || (origY.value != newY.value);
+      
+      if (panned) {
+        // get critical area to redraw after we move frame
+        // NOTE: may need to rate limit these for performance
+        this.bv.renderNow();
+        break;
+      }
+      
+      elem = elem.parent.document.defaultView;
+    }
+    
+    return panned;
+  },
+  
   dragStop: function dragStop(dx, dy, scroller) {
     let dx = this.dragMove(dx, dy, scroller, true);
-
+    
     dx += this.dragMove(Browser.snapSidebars(), 0, scroller, true);
-
+    
     Browser.tryUnfloatToolbar();
 
     this.bv.resumeRendering();
@@ -1216,6 +1307,10 @@ Browser.MainDragger.prototype = {
 
   dragMove: function dragMove(dx, dy, scroller, doReturnDX) {
     let outrv = 0;
+
+    // first see if we need to adjust internal IFRAME/FRAME
+    if (this._panFrame(dx, dy))
+      return true;
 
     if (this.scrollingOuterX) {
       let odx = 0;
