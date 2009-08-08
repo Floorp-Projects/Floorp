@@ -3772,6 +3772,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
 
     Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
     if (assm->error() != nanojit::None)
+        return false;
 
     peer = getLoop(traceMonitor, root->ip, root->globalObj, root->globalShape, root->argc);
     JS_ASSERT(peer);
