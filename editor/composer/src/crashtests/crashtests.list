@@ -1,3 +1,4 @@
 load 351236-1.html
+load 407062-1.html
 skip-if(MOZ_WIDGET_TOOLKIT=="windows") load 428844-1.html # bug 471185
 load removing-editable-xslt.html
