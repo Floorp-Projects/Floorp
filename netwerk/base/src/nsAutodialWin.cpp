@@ -688,7 +688,7 @@ PRBool nsAutodial::LoadRASapi32DLL()
     if (!mhRASapi32)
     {
         mhRASapi32 = ::LoadLibraryW(L"rasapi32.dll");
-        if ((UINT)mhRASapi32 > 32)
+        if ((UINT_PTR)mhRASapi32 > 32)
         {
             // RasEnumConnections
             mpRasEnumConnections = (tRASENUMCONNECTIONS)
@@ -737,7 +737,7 @@ PRBool nsAutodial::LoadRASdlgDLL()
     if (!mhRASdlg)
     {
         mhRASdlg = ::LoadLibraryW(L"rasdlg.dll");
-        if ((UINT)mhRASdlg > 32)
+        if ((UINT_PTR)mhRASdlg > 32)
         {
             // RasPhonebookDlg
             mpRasPhonebookDlg =
