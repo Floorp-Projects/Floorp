@@ -91,7 +91,7 @@ public:
             return NS_OK;
         }
 
-        LOG(("handle startevent=%8lX\n",(long)this));
+        LOG(("handle startevent=%p\n", this));
         nsresult rv = mProxy->mObserver->OnStartRequest(mRequest, mContext);
         if (NS_FAILED(rv)) {
             LOG(("OnStartRequest failed [rv=%x] canceling request!\n", rv));
@@ -138,7 +138,7 @@ public:
         rv = mRequest->GetStatus(&status);
         NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed for request!");
 
-        LOG(("handle stopevent=%8lX\n",(long)this));
+        LOG(("handle stopevent=%p\n", this));
         (void) observer->OnStopRequest(mRequest, mContext, status);
 
         return NS_OK;
