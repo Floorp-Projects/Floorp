@@ -95,8 +95,9 @@
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
 const PRInt32 kNothingSelected          = -1;
 
-
+// Static members
 nsListControlFrame * nsListControlFrame::mFocused = nsnull;
+nsString * nsListControlFrame::sIncrementalString = nsnull;
 
 // Using for incremental typing navigation
 #define INCREMENTAL_SEARCH_KEYPRESS_TIME 1000
@@ -2452,8 +2453,17 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 aStartIndex,
 nsAString& 
 nsListControlFrame::GetIncrementalString()
 { 
-  static nsString incrementalString;
-  return incrementalString; 
+  if (sIncrementalString == nsnull)
+    sIncrementalString = new nsString();
+
+  return *sIncrementalString;
+}
+
+void
+nsListControlFrame::Shutdown()
+{
+  delete sIncrementalString;
+  sIncrementalString = nsnull;
 }
 
 void
