@@ -2763,6 +2763,26 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
 }
 
 JSString *
+js_NewStringFromCharBuffer(JSContext *cx, JSCharVector &cb)
+{
+    if (cb.empty())
+        return ATOM_TO_STRING(cx->runtime->atomState.emptyAtom);
+
+    size_t length = cb.size();
+    if (!cb.append('\0'))
+        return NULL;
+
+    jschar *buf = cb.extractRawBuffer();
+    if (!buf)
+        return NULL;
+
+    JSString *str = js_NewString(cx, buf, length);
+    if (!str)
+        cx->free(buf);
+    return str;
+}
+
+JSString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,
                       size_t length)
 {
@@ -2922,18 +2942,18 @@ js_ValueToString(JSContext *cx, jsval v)
 }
 
 static inline JSBool
-pushAtom(JSAtom *atom, JSTempVector<jschar> &buf)
+pushAtom(JSAtom *atom, JSCharVector &buf)
 {
     JSString *str = ATOM_TO_STRING(atom);
     const jschar *chars;
     size_t length;
     str->getCharsAndLength(chars, length);
-    return buf.pushBack(chars, chars + length);
+    return buf.append(chars, length);
 }
 
 /* This function implements E-262-3 section 9.8, toString. */
 JS_FRIEND_API(JSBool)
-js_ValueToStringBuffer(JSContext *cx, jsval v, JSTempVector<jschar> &buf)
+js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
 {
     if (!JSVAL_IS_PRIMITIVE(v) &&
         !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v)) {
@@ -2945,12 +2965,12 @@ js_ValueToStringBuffer(JSContext *cx, jsval v, JSTempVector<jschar> &buf)
         const jschar *chars;
         size_t length;
         str->getCharsAndLength(chars, length);
-        return buf.pushBack(chars, chars + length);
+        return buf.append(chars, length);
     }
     if (JSVAL_IS_NUMBER(v))
-        return js_NumberValueToStringBuffer(cx, v, buf);
+        return js_NumberValueToCharBuffer(cx, v, buf);
     if (JSVAL_IS_BOOLEAN(v))
-        return js_BooleanToStringBuffer(cx, JSVAL_TO_BOOLEAN(v), buf);
+        return js_BooleanToCharBuffer(cx, JSVAL_TO_BOOLEAN(v), buf);
     if (JSVAL_IS_NULL(v))
         return pushAtom(cx->runtime->atomState.nullAtom, buf);
     JS_ASSERT(JSVAL_IS_VOID(v));

@@ -2062,8 +2062,8 @@ namespace {
 
 /*
  * This table allows efficient testing for the ASCII portion of \s during a
- * trace.  ECMA-262 15.10.2.12 defines the following characters below 128 to be
- * whitespace: 0x9 (0), 0xA (10), 0xB (11), 0xC (12), 0xD (13), 0x20 (32).  The
+ * trace. ECMA-262 15.10.2.12 defines the following characters below 128 to be
+ * whitespace: 0x9 (0), 0xA (10), 0xB (11), 0xC (12), 0xD (13), 0x20 (32). The
  * index must be <= 32.
  */
 static const bool js_ws[] = {
@@ -2157,7 +2157,7 @@ CharSet::disjoint(const jschar *beg, const jschar *end, uintN classes)
 }
 
 /*
- * Predicate version of the STL's set_intersection.  Assumes both ranges are
+ * Predicate version of the STL's set_intersection. Assumes both ranges are
  * sorted and thus runs in linear time.
  *
  * FIXME: This is a reusable algorithm, perhaps it should be put somewhere.
@@ -2205,9 +2205,9 @@ CharSet::disjoint(const CharSet &other) const
 }
 
 /*
- * Return true if the given subexpression may match the empty string.  The
- * conservative answer is |true|.  If |next| is true, then the subexpression is
- * considered to be |node| followed by the rest of |node->next|.  Otherwise, the
+ * Return true if the given subexpression may match the empty string. The
+ * conservative answer is |true|. If |next| is true, then the subexpression is
+ * considered to be |node| followed by the rest of |node->next|. Otherwise, the
  * subexpression is considered to be |node| by itself.
  */
 static bool
@@ -2232,7 +2232,7 @@ mayMatchEmpty(RENode *node, bool next = true)
 
 /*
  * Enumerate the set of characters that may be consumed next by the given
- * subexpression in isolation.  Return whether the enumeration was successful.
+ * subexpression in isolation. Return whether the enumeration was successful.
  */
 static bool
 enumerateNextChars(JSContext *cx, RENode *node, CharSet &set)
@@ -2325,7 +2325,8 @@ class RegExpNativeCompiler {
     LIns* compileFlatSingleChar(jschar ch, LIns* pos, LInsList& fails)
     {
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
-        fails.pushBack(to_fail);
+        if (!fails.append(to_fail))
+            return NULL;
         LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
 
         // Extra characters that need to be compared against when doing folding.
@@ -2410,7 +2411,8 @@ class RegExpNativeCompiler {
             extras[i].match = branch;
         }
 
-        fails.pushBack(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, text_ch, lir->insImm(ch)), 0));
+        if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, text_ch, lir->insImm(ch)), 0)))
+            return NULL;
 
         for (int i = 0; i < nextras; ++i)
             targetCurrentPoint(extras[i].match);
@@ -2456,12 +2458,14 @@ class RegExpNativeCompiler {
         }
 
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, lir->ins2(LIR_sub, cpend, lir->insImm(2))), 0);
-        fails.pushBack(to_fail);
+        if (!fails.append(to_fail))
+            return NULL;
         LIns* text_word = lir->insLoad(LIR_ld, pos, 0);
         LIns* comp_word = useFastCI ?
             lir->ins2(LIR_or, text_word, lir->insImm(mask.i)) :
             text_word;
-        fails.pushBack(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_word, lir->insImm(word)), 0));
+        if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_eq, comp_word, lir->insImm(word)), 0)))
+            return NULL;
 
         return lir->ins2(LIR_piadd, pos, lir->insImm(4));
     }
@@ -2537,9 +2541,14 @@ class RegExpNativeCompiler {
         memcpy(bitmapData, charSet->u.bits, bitmapLen);
 
         LIns* to_fail = lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0);
-        fails.pushBack(to_fail);
+        if (!fails.append(to_fail))
+            return NULL;
         LIns* text_ch = lir->insLoad(LIR_ldcs, pos, 0);
-        fails.pushBack(lir->insBranch(LIR_jf, lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)), 0));
+        if (!fails.append(lir->insBranch(LIR_jf,
+                                         lir->ins2(LIR_le, text_ch, lir->insImm(charSet->length)),
+                                         0))) {
+            return NULL;
+        }
         LIns* byteIndex = lir->ins2(LIR_rsh, text_ch, lir->insImm(3));
         LIns* bitmap = lir->insImmPtr(bitmapData);
         LIns* byte = lir->insLoad(LIR_ldcb, lir->ins2(LIR_piadd, bitmap, byteIndex), (int) 0);
@@ -2548,7 +2557,8 @@ class RegExpNativeCompiler {
         LIns* test = lir->ins2(LIR_eq, lir->ins2(LIR_and, byte, bitMask), lir->insImm(0));
 
         LIns* to_next = lir->insBranch(LIR_jt, test, 0);
-        fails.pushBack(to_next);
+        if (!fails.append(to_next))
+            return NULL;
         return lir->ins2(LIR_piadd, pos, lir->insImm(2));
     }
 
@@ -2567,7 +2577,8 @@ class RegExpNativeCompiler {
     LIns *compileBuiltinClass(RENode *node, LIns *pos, LInsList &fails)
     {
         /* All the builtins checked below consume one character. */
-        fails.pushBack(lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0));
+        if (!fails.append(lir->insBranch(LIR_jf, lir->ins2(LIR_lt, pos, cpend), 0)))
+            return NULL;
         LIns *chr = lir->insLoad(LIR_ldcs, pos, 0);
 
         switch (node->op) {
@@ -2575,21 +2586,27 @@ class RegExpNativeCompiler {
           {
             /* Accept any character except those in ECMA-262 15.10.2.8. */
             LIns *eq1 = lir->ins2(LIR_eq, chr, lir->insImm('\n'));
-            fails.pushBack(lir->insBranch(LIR_jt, eq1, NULL));
+            if (!fails.append(lir->insBranch(LIR_jt, eq1, NULL)))
+                return NULL;
             LIns *eq2 = lir->ins2(LIR_eq, chr, lir->insImm('\r'));
-            fails.pushBack(lir->insBranch(LIR_jt, eq2, NULL));
+            if (!fails.append(lir->insBranch(LIR_jt, eq2, NULL)))
+                return NULL;
             LIns *eq3 = lir->ins2(LIR_eq, chr, lir->insImm(LINE_SEPARATOR));
-            fails.pushBack(lir->insBranch(LIR_jt, eq3, NULL));
+            if (!fails.append(lir->insBranch(LIR_jt, eq3, NULL)))
+                return NULL;
             LIns *eq4 = lir->ins2(LIR_eq, chr, lir->insImm(PARA_SEPARATOR));
-            fails.pushBack(lir->insBranch(LIR_jt, eq4, NULL));
+            if (!fails.append(lir->insBranch(LIR_jt, eq4, NULL)))
+                return NULL;
             break;
           }
           case REOP_DIGIT:
           {
             LIns *ge = lir->ins2(LIR_ge, chr, lir->insImm('0'));
-            fails.pushBack(lir->insBranch(LIR_jf, ge, NULL));
+            if (!fails.append(lir->insBranch(LIR_jf, ge, NULL)))
+                return NULL;
             LIns *le = lir->ins2(LIR_le, chr, lir->insImm('9'));
-            fails.pushBack(lir->insBranch(LIR_jf, le, NULL));
+            if (!fails.append(lir->insBranch(LIR_jf, le, NULL)))
+                return NULL;
             break;
           }
           case REOP_NONDIGIT:
@@ -2598,7 +2615,8 @@ class RegExpNativeCompiler {
             LIns *ge = lir->ins2(LIR_ge, chr, lir->insImm('0'));
             LIns *le = lir->ins2(LIR_le, chr, lir->insImm('9'));
             LIns *both = lir->ins2(LIR_and, ge, le);
-            fails.pushBack(lir->insBranch(LIR_jf, lir->ins_eq0(both), NULL));
+            if (!fails.append(lir->insBranch(LIR_jf, lir->ins_eq0(both), NULL)))
+                return NULL;
             break;
           }
           case REOP_ALNUM:
@@ -2608,9 +2626,11 @@ class RegExpNativeCompiler {
              *   ((uint)*cp) < 128 && js_alnum[(uint)*cp]
              */
             LIns *rangeCnd = lir->ins2(LIR_ult, chr, lir->insImm(128));
-            fails.pushBack(lir->insBranch(LIR_jf, rangeCnd, NULL));
+            if (!fails.append(lir->insBranch(LIR_jf, rangeCnd, NULL)))
+                return NULL;
             LIns *tableVal = compileTableRead(chr, js_alnum);
-            fails.pushBack(lir->insBranch(LIR_jt, lir->ins_eq0(tableVal), NULL));
+            if (!fails.append(lir->insBranch(LIR_jt, lir->ins_eq0(tableVal), NULL)))
+                return NULL;
             break;
           }
           case REOP_NONALNUM:
@@ -2622,7 +2642,8 @@ class RegExpNativeCompiler {
             LIns *rangeCnd = lir->ins2(LIR_uge, chr, lir->insImm(128));
             LIns *rangeBr = lir->insBranch(LIR_jt, rangeCnd, NULL);
             LIns *tableVal = compileTableRead(chr, js_alnum);
-            fails.pushBack(lir->insBranch(LIR_jf, lir->ins_eq0(tableVal), NULL));
+            if (!fails.append(lir->insBranch(LIR_jf, lir->ins_eq0(tableVal), NULL)))
+                return NULL;
             LIns *success = lir->ins0(LIR_label);
             rangeBr->setTarget(success);
             break;
@@ -2632,9 +2653,9 @@ class RegExpNativeCompiler {
           {
             /*
              * ECMA-262 7.2, 7.3, and 15.10.2.12 define a bunch of Unicode code
-             * points for whitespace.  We optimize here for the common case of
+             * points for whitespace. We optimize here for the common case of
              * ASCII characters using a table lookup for the lower block that
-             * can actually contain spaces.  For the rest, use a (more or less)
+             * can actually contain spaces. For the rest, use a (more or less)
              * binary search to minimize tests.
              *
              *   [0000,0020]: 9, A, B, C, D, 20
@@ -2699,8 +2720,10 @@ class RegExpNativeCompiler {
             belowMissBr->setTarget(missLbl);
             aboveMissBr->setTarget(missLbl);
             LIns *missBr = lir->ins2(LIR_j, NULL, NULL);
-            if (node->op == REOP_SPACE)
-                fails.pushBack(missBr);
+            if (node->op == REOP_SPACE) {
+                if (!fails.append(missBr))
+                    return NULL;
+            }
 
             /* Collect matches. */
             LIns *matchLbl = lir->ins0(LIR_label);
@@ -2712,7 +2735,8 @@ class RegExpNativeCompiler {
             eq7Br->setTarget(matchLbl); eq8Br->setTarget(matchLbl);
             if (node->op == REOP_NONSPACE) {
                 LIns *matchBr = lir->ins2(LIR_j, NULL, NULL);
-                fails.pushBack(matchBr);
+                if (!fails.append(matchBr))
+                    return NULL;
             }
             /* Fall through means match == success. */
 
@@ -2735,7 +2759,7 @@ class RegExpNativeCompiler {
 
         /*
          * If the RE continues after the alternative, we need to ensure that no
-         * backtracking is required.  Recursive calls to compileNode will fail
+         * backtracking is required. Recursive calls to compileNode will fail
          * on capturing parens, so the only thing we have to check here is that,
          * if the left subexpression matches, we can keep going without later
          * deciding we need to try the right subexpression.
@@ -2835,7 +2859,7 @@ class RegExpNativeCompiler {
 
         /*
          * If the RE continues after the alternative, we need to ensure that no
-         * backtracking is required.  Recursive calls to compileNode will fail
+         * backtracking is required. Recursive calls to compileNode will fail
          * on capturing parens, so the only thing we have to check here is that,
          * if the quantifier body matches, we can continue matching the body
          * without later deciding we need to undo the body matches.
@@ -2892,7 +2916,8 @@ class RegExpNativeCompiler {
          */
         if (mayMatchEmpty(bodyRe)) {
             LIns *eqCnd = lir->ins2(LIR_eq, iterBegin, iterEnd);
-            kidFails.pushBack(lir->insBranch(LIR_jt, eqCnd, NULL));
+            if (!kidFails.append(lir->insBranch(LIR_jt, eqCnd, NULL)))
+                return NULL;
         }
 
         /* End iteration: store loop variables, increment, jump */
@@ -2901,17 +2926,17 @@ class RegExpNativeCompiler {
 
         /*
          * This might be the only LIR_live in Mozilla, so I will explain its
-         * sinister semantics.  LIR_lives must appear immediately following a
+         * sinister semantics. LIR_lives must appear immediately following a
          * backwards jump and describe what is live immediately at the *target*
-         * of the back-edge.  Thus, these instructions answer the question "what
+         * of the back-edge. Thus, these instructions answer the question "what
          * is live at the top of the loop?", which makes sense, because the
          * backwards scan has not yet seen the top of the loop and needs this
          * information to continue working backwards up the inside of the loop.
          *
          * Here, 'cpend' and 'state' get defined before the loop, and used
-         * inside, so they are live at 'loopTop'.  While 'iterBegin' is used
-         * after the loop, making it live in on loop exit, it gets defined after
-         * 'loopTop', which "kills" its liveness.
+         * inside, so they are live at 'loopTop'. While 'iterBegin' is used
+         * after the loop, making it live in on loop exit, it gets defined
+         * after 'loopTop', which "kills" its liveness.
          */
         lir->ins1(LIR_live, state);
         lir->ins1(LIR_live, cpend);
@@ -2922,8 +2947,8 @@ class RegExpNativeCompiler {
     }
 
     /*
-     * Compile the regular expression rooted at 'node'.  Return 0 on failed
-     * compilation.  Otherwise, generate code that falls through on success (the
+     * Compile the regular expression rooted at 'node'. Return 0 on failed
+     * compilation. Otherwise, generate code that falls through on success (the
      * returned LIns* is the current 'pos') and jumps to the end on failure (by
      * adding the guard LIns to 'fails').
      */
@@ -3010,7 +3035,7 @@ class RegExpNativeCompiler {
     /* Compile normal regular expressions that can match starting at any char. */
     bool compileAnchoring(RENode *root, LIns *start)
     {
-        /* Guard outer anchoring loop.  Use <= to allow empty regexp match. */
+        /* Guard outer anchoring loop. Use <= to allow empty regexp match. */
         LIns *anchorFail = lir->insBranch(LIR_jf, lir->ins2(LIR_le, start, cpend), 0);
 
         if (!compileRootNode(root, start, anchorFail))

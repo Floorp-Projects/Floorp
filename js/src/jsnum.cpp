@@ -862,7 +862,7 @@ js_NumberToString(JSContext *cx, jsdouble d)
 }
 
 JSBool JS_FASTCALL
-js_NumberValueToStringBuffer(JSContext *cx, jsval v, JSTempVector<jschar> &buf)
+js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
 {
     /* Convert to C-string. */
     static const size_t arrSize = DTOSTR_STANDARD_BUFFER_SIZE;
