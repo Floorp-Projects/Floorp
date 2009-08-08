@@ -244,7 +244,7 @@
       <vbox>
         <spacer class="sidebar-spacer"/>
 
-        <vbox id="browser-controls" class="panel-dark">
+        <vbox id="browser-controls" style="overflow: -moz-hidden-unscrollable;" class="panel-dark">
           <toolbarbutton id="tool-star" class="browser-control-button button-image" command="cmd_star"/>
           <toolbarbutton id="tool-back" class="browser-control-button button-image" command="cmd_back"/>
           <toolbarbutton id="tool-forward" class="browser-control-button button-image" command="cmd_forward"/>
