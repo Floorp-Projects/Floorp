@@ -1331,58 +1331,51 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
 }
 
 /* Transfer ownership of buffer to returned string. */
-static JSBool
-BufferToString(JSContext *cx, JSTempVector<jschar> &buf, jsval *rval)
+static inline JSBool
+BufferToString(JSContext *cx, JSCharVector &buf, jsval *rval)
 {
-    size_t length = buf.size() - 1;
-    jschar *chars = buf.extractRawBuffer();
-    JSString *str = js_NewString(cx, chars, length);
-    if (!str) {
-        cx->free(chars);
-        return JS_FALSE;
-    }
+    JSString *str = js_NewStringFromCharBuffer(cx, buf);
+    if (!str)
+        return false;
     *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    return true;
 }
 
 #if JS_HAS_TOSOURCE
 static JSBool
 array_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, return false);
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj ||
         (OBJ_GET_CLASS(cx, obj) != &js_SlowArrayClass &&
          !JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))) {
-        return JS_FALSE;
+        return false;
     }
 
     /* Find joins or cycles in the reachable object graph. */
     jschar *sharpchars;
     JSHashEntry *he = js_EnterSharpObject(cx, obj, NULL, &sharpchars);
     if (!he)
-        return JS_FALSE;
-    JSBool initiallySharp = IS_SHARP(he) ? JS_TRUE : JS_FALSE;
+        return false;
+    bool initiallySharp = IS_SHARP(he);
 
-    /* After this point, all paths exit through the 'done' label. */
-    MUST_FLOW_THROUGH("done");
-    JSBool ok = JS_TRUE;
+    /* After this point, all paths exit through the 'out' label. */
+    MUST_FLOW_THROUGH("out");
+    bool ok = false;
 
     /*
      * This object will take responsibility for the jschar buffer until the
      * buffer is transferred to the returned JSString.
      */
-    JSTempVector<jschar> buf(cx);
-    if (!(ok = buf.reserve(3)))
-        goto done;
+    JSCharVector buf(cx);
 
     /* Cycles/joins are indicated by sharp objects. */
 #if JS_HAS_SHARP_VARS
     if (IS_SHARP(he)) {
         JS_ASSERT(sharpchars != 0);
-        /* +1 to include the trailing '\0' */
-        buf.replaceRawBuffer(sharpchars, js_strlen(sharpchars) + 1);
+        buf.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
         goto make_string;
     } else if (sharpchars) {
         MAKE_SHARP(he);
@@ -1390,30 +1383,28 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
     }
 #else
     if (IS_SHARP(he)) {
-        static const jschar arr[] = { '[', ']', 0 };
-        if (!(ok = buf.pushBack(arr, arr + 3)))
-            goto done;
+        if (!js_AppendLiteral(buf, "[]"))
+            goto out;
         if (sharpchars)
             cx->free(sharpchars);
         goto make_string;
     }
 #endif
 
-    if (!(ok = buf.pushBack('[')))
-        goto done;
+    if (!buf.append('['))
+        goto out;
 
     jsuint length;
-    ok = js_GetLengthProperty(cx, obj, &length);
-    if (!ok)
-        goto done;
+    if (!js_GetLengthProperty(cx, obj, &length))
+        goto out;
 
     for (jsuint index = 0; index < length; index++) {
         /* Use vp to locally root each element value. */
         JSBool hole;
-        ok = (JS_CHECK_OPERATION_LIMIT(cx) &&
-              GetArrayElement(cx, obj, index, &hole, vp));
-        if (!ok)
-            goto done;
+        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
+            !GetArrayElement(cx, obj, index, &hole, vp)) {
+            goto out;
+        }
 
         /* Get element's character string. */
         JSString *str;
@@ -1421,10 +1412,8 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
             str = cx->runtime->emptyString;
         } else {
             str = js_ValueToSource(cx, *vp);
-            if (!str) {
-                ok = JS_FALSE;
-                goto done;
-            }
+            if (!str)
+                goto out;
         }
         *vp = STRING_TO_JSVAL(str);
         const jschar *chars;
@@ -1432,26 +1421,28 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
         str->getCharsAndLength(chars, charlen);
 
         /* Append element to buffer. */
-        if (!(ok = buf.pushBack(chars, chars + charlen)))
-            goto done;
+        if (!buf.append(chars, charlen))
+            goto out;
         if (index + 1 != length) {
-            if (!(ok = buf.pushBack(',')) || !(ok = buf.pushBack(' ')))
-                goto done;
+            if (!js_AppendLiteral(buf, ", "))
+                goto out;
         } else if (hole) {
-            if (!(ok = buf.pushBack(',')))
-                goto done;
+            if (!buf.append(','))
+                goto out;
         }
     }
 
     /* Finalize the buffer. */
-    if (!(ok = buf.pushBack(']')) || !(ok = buf.pushBack(0)))
-        goto done;
+    if (!buf.append(']'))
+        goto out;
 
   make_string:
-    if (!(ok = BufferToString(cx, buf, vp)))
-        goto done;
+    if (!BufferToString(cx, buf, vp))
+        goto out;
 
-  done:
+    ok = true;
+
+  out:
     if (!initiallySharp)
         js_LeaveSharpObject(cx, NULL);
     return ok;
@@ -1464,7 +1455,7 @@ js_hash_array(const void *key)
     return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
 }
 
-JSBool
+bool
 js_InitContextBusyArrayTable(JSContext *cx)
 {
     cx->busyArrayTable = JS_NewHashTable(4, js_hash_array, JS_CompareValues,
@@ -1476,7 +1467,7 @@ static JSBool
 array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
                    JSString *sepstr, jsval *rval)
 {
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
+    JS_CHECK_RECURSION(cx, return false);
 
     /*
      * This hash table is shared between toString invocations and must be empty
@@ -1485,7 +1476,7 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     JSHashTable *table = cx->busyArrayTable;
 
     /*
-     * Use HashTable entry as the cycle indicator.  On first visit, create the
+     * Use HashTable entry as the cycle indicator. On first visit, create the
      * entry, and, when leaving, remove the entry.
      */
     JSHashNumber hash = js_hash_array(obj);
@@ -1496,19 +1487,19 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
         he = JS_HashTableRawAdd(table, hep, hash, obj, NULL);
         if (!he) {
             JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
+            return false;
         }
     } else {
         /* Cycle, so return empty string. */
         *rval = ATOM_KEY(cx->runtime->atomState.emptyAtom);
-        return JS_TRUE;
+        return true;
     }
 
     JSAutoTempValueRooter tvr(cx, obj);
 
-    /* After this point, all paths exit through the 'done' label. */
-    MUST_FLOW_THROUGH("done");
-    JSBool ok = JS_TRUE;
+    /* After this point, all paths exit through the 'out' label. */
+    MUST_FLOW_THROUGH("out");
+    bool ok = false;
 
     /* Get characters to use for the separator. */
     static const jschar comma = ',';
@@ -1525,64 +1516,55 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
      * This object will take responsibility for the jschar buffer until the
      * buffer is transferred to the returned JSString.
      */
-    JSTempVector<jschar> buf(cx);
+    JSCharVector buf(cx);
 
     jsuint length;
-    ok = js_GetLengthProperty(cx, obj, &length);
-    if (!ok)
-        goto done;
+    if (!js_GetLengthProperty(cx, obj, &length))
+        goto out;
 
     for (jsuint index = 0; index < length; index++) {
         /* Use rval to locally root each element value. */
         JSBool hole;
-        ok = JS_CHECK_OPERATION_LIMIT(cx) &&
-             GetArrayElement(cx, obj, index, &hole, rval);
-        if (!ok)
-            goto done;
+        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
+            !GetArrayElement(cx, obj, index, &hole, rval)) {
+            goto out;
+        }
 
         /* Get element's character string. */
         if (!(hole || JSVAL_IS_VOID(*rval) || JSVAL_IS_NULL(*rval))) {
             if (locale) {
+                /* Work on obj.toLocalString() instead. */
                 JSObject *robj;
 
+                if (!js_ValueToObject(cx, *rval, &robj))
+                    goto out;
+                *rval = OBJECT_TO_JSVAL(robj);
                 JSAtom *atom = cx->runtime->atomState.toLocaleStringAtom;
-                ok = js_ValueToObject(cx, *rval, &robj);
-                if (ok) {
-                    /* Re-use *rval to protect robj temporarily. */
-                    *rval = OBJECT_TO_JSVAL(robj);
-                    ok = js_TryMethod(cx, robj, atom, 0, NULL, rval);
-                }
-                if (!ok)
-                    goto done;
+                if (!js_TryMethod(cx, robj, atom, 0, NULL, rval))
+                    goto out;
             }
 
-            ok = js_ValueToStringBuffer(cx, *rval, buf);
-            if (!ok)
-                goto done;
+            if (!js_ValueToCharBuffer(cx, *rval, buf))
+                goto out;
         }
 
         /* Append the separator. */
         if (index + 1 != length) {
-            if (!(ok = buf.pushBack(sep, sep + seplen)))
-                goto done;
+            if (!buf.append(sep, seplen))
+                goto out;
         }
     }
 
     /* Finalize the buffer. */
-    if (buf.empty()) {
-        *rval = ATOM_KEY(cx->runtime->atomState.emptyAtom);
-        goto done;
-    }
+    if (!BufferToString(cx, buf, rval))
+        goto out;
 
-    ok = buf.pushBack(0) &&
-         BufferToString(cx, buf, rval);
-    if (!ok)
-        goto done;
+    ok = true;
 
-  done:
+  out:
     /*
      * It is possible that 'hep' may have been invalidated by subsequent
-     * RawAdd/Remove.  Hence, 'RawRemove' must not be used.
+     * RawAdd/Remove. Hence, 'RawRemove' must not be used.
      */
     JS_HashTableRemove(table, obj);
     return ok;
