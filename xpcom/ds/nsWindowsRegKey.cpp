@@ -43,12 +43,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
-// The Platform SDK included with VC6 does not define REG_QWORD.  VC 7's
-// WinNT.h defines REG_QWORD as follows:
-#ifndef REG_QWORD
-# define REG_QWORD 11
-#endif
-
 //-----------------------------------------------------------------------------
 
 // According to MSDN, the following limits apply (in characters excluding room
