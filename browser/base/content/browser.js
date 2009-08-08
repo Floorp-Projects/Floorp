@@ -6861,7 +6861,6 @@ function getNavToolbox() gNavToolbox;
 let gPrivateBrowsingUI = {
   _observerService: null,
   _privateBrowsingService: null,
-  _privateBrowsingAutoStarted: false,
   _searchBarValue: null,
   _findBarValue: null,
 
@@ -6962,9 +6961,7 @@ let gPrivateBrowsingUI = {
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").setAttribute("disabled", "true");
 
-    this._privateBrowsingAutoStarted = this._privateBrowsingService.autoStarted;
-
-    if (this._privateBrowsingAutoStarted) {
+    if (this._privateBrowsingService.autoStarted) {
       // Disable the menu item in auto-start mode
       document.getElementById("privateBrowsingItem")
               .setAttribute("disabled", "true");
@@ -7028,8 +7025,6 @@ let gPrivateBrowsingUI = {
             .removeAttribute("disabled");
     document.getElementById("Tools:PrivateBrowsing")
             .removeAttribute("disabled");
-
-    this._privateBrowsingAutoStarted = false;
 
     gLastOpenDirectory.reset();
 
