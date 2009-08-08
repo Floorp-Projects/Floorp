@@ -164,12 +164,9 @@ js_BooleanToString(JSContext *cx, JSBool b)
 
 /* This function implements E-262-3 section 9.8, toString. */
 JSBool
-js_BooleanToStringBuffer(JSContext *cx, JSBool b, JSTempVector<jschar> &buf)
+js_BooleanToCharBuffer(JSContext *cx, JSBool b, JSCharVector &buf)
 {
-    static const jschar trueChars[] = { 't', 'r', 'u', 'e' },
-                        falseChars[] = { 'f', 'a', 'l', 's', 'e' };
-    return b ? buf.pushBack(trueChars, trueChars + JS_ARRAY_LENGTH(trueChars))
-             : buf.pushBack(falseChars, falseChars + JS_ARRAY_LENGTH(falseChars));
+    return b ? js_AppendLiteral(buf, "true") : js_AppendLiteral(buf, "false");
 }
 
 JSBool
