@@ -814,7 +814,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
       }
       else if (!wcsncat(buffer, L"\\" LXPCOM_DLL, aBufLen) 
 #ifdef WINCE
-               || (GetFileAttributesW(buffer) != INVALID_FILE_ATTRIBUTES)
+               || (GetFileAttributesW(buffer) == INVALID_FILE_ATTRIBUTES)
 #else
                || _waccess(buffer, R_OK)
 #endif
