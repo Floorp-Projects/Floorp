@@ -1997,20 +1997,20 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     for (PRUint32 i = 0; i < rects.Length(); ++i)
       r.UnionRect(r, rects[i]);
 
-    // resize the child;  mBounds.x/y contain the child's correct origin;
-    // the sum of r.x/y + r.width/height produces the actual clipped
-    // width/height this window should have - it's only smaller than
-    // normal when part or all the window is scrolled off the right
-    // or bottom side of the parent
-    w->Resize(configuration.mBounds.x, configuration.mBounds.y,
-              r.width + r.x, r.height + r.y, PR_FALSE);
+    // resize the widget to the dimensions of the bounding rectangle;
+    // the sum of mBounds.x/y (the widget's unclipped origin) and
+    // r.x/y (the clipped rect's offset from that origin) yields the
+    // resized widget's correct position
+    w->Resize(configuration.mBounds.x + r.x, configuration.mBounds.y + r.y,
+              r.width, r.height, PR_FALSE);
 
-    // some plugins may shrink their window when the Mozilla widget window
-    // shrinks, then fail to reinflate when the widget window reinflates;
-    // this ensures the plugin's window is always at its full size and is
-    // positioned so the correct part of the child will be clipped
+    // reposition the widget's child (typically, a frame created by
+    // the plugin) so the correct side(s) get clipped;  also, ensure
+    // the widget's child is at its full size - some plugins may shrink
+    // their window when widget shrinks
     HWND hwnd = WinQueryWindow( w->mWnd, QW_TOP);
-    WinSetWindowPos(hwnd, 0, 0, r.height + r.y - configuration.mBounds.height,
+    WinSetWindowPos(hwnd, 0,
+                    -r.x, r.height + r.y - configuration.mBounds.height,
                     configuration.mBounds.width, configuration.mBounds.height,
                     SWP_MOVE | SWP_SIZE);
 
