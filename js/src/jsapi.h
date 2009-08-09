@@ -234,15 +234,25 @@ STRING_TO_JSVAL(JSString *str)
 #define JSVAL_INT_MAX           (JSVAL_INT_POW2(30) - 1)
 
 /* Not a function, because we have static asserts that use it */
-#define INT_FITS_IN_JSVAL(i)    ((jsuint)(i) - (jsuint)JSVAL_INT_MIN <=      \
+#define INT_FITS_IN_JSVAL(i)    ((jsuint)(i) - (jsuint)JSVAL_INT_MIN <=       \
                                  (jsuint)(JSVAL_INT_MAX - JSVAL_INT_MIN))
-/* Not a function, because we have static asserts that use it */
-/* FIXME:  Bug 506721, since that means we can't assert JSVAL_IS_INT(v) */
-#define JSVAL_TO_INT(v)         ((jsint)(v) >> 1)
+
+static JS_ALWAYS_INLINE jsint
+JSVAL_TO_INT(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_INT(v));
+    return (jsint) v >> 1;
+}
 
 /* Not a function, because we have static asserts that use it */
-/* FIXME:  Bug 506721, since that means we can't assert INT_FITS_IN_JSVAL(i) */
-#define INT_TO_JSVAL(i)         (((jsval)(i) << 1) | JSVAL_INT)
+#define INT_TO_JSVAL_CONSTEXPR(i)  (((jsval)(i) << 1) | JSVAL_INT)
+
+static JS_ALWAYS_INLINE jsval
+INT_TO_JSVAL(jsint i)
+{
+    JS_ASSERT(INT_FITS_IN_JSVAL(i));
+    return INT_TO_JSVAL_CONSTEXPR(i);
+}
 
 /* Convert between boolean and jsval, asserting that inputs are valid. */
 static JS_ALWAYS_INLINE JSBool
