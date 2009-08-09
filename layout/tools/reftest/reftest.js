@@ -568,7 +568,7 @@ function DoneTests()
 }
 
 function setupZoom(contentRootElement) {
-    if (!contentRootElement.hasAttribute('reftest-zoom'))
+    if (!contentRootElement || !contentRootElement.hasAttribute('reftest-zoom'))
         return;
     gBrowser.markupDocumentViewer.fullZoom =
         contentRootElement.getAttribute('reftest-zoom');
@@ -598,14 +598,16 @@ function OnDocumentLoad(event)
 
     function shouldWait() {
         // use getAttribute because className works differently in HTML and SVG
-        return contentRootElement.hasAttribute('class') &&
+        return contentRootElement &&
+               contentRootElement.hasAttribute('class') &&
                contentRootElement.getAttribute('class').split(/\s+/)
                                  .indexOf("reftest-wait") != -1;
     }
 
     function doPrintMode() {
         // use getAttribute because className works differently in HTML and SVG
-        return contentRootElement.hasAttribute('class') &&
+        return contentRootElement &&
+               contentRootElement.hasAttribute('class') &&
                contentRootElement.getAttribute('class').split(/\s+/)
                                  .indexOf("reftest-print") != -1;
     }
