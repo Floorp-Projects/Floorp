@@ -846,7 +846,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                     if(str)
                     {
                         NS_ConvertUTF16toUTF8
-                            fname(JS_GetStringChars(str));
+                            fname(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str)));
                         JS_snprintf(name, sizeof(name),
                                     "JS Object (Function - %s)", fname.get());
                     }
