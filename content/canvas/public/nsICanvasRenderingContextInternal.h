@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsICanvasElement.h"
 #include "nsIInputStream.h"
+#include "nsIDocShell.h"
 #include "gfxPattern.h"
 
 // {ed741c16-4039-469b-91da-dca742c51a9f}
