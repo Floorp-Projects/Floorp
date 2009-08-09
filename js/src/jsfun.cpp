@@ -623,7 +623,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
             if (str == ATOM_TO_STRING(atom)) {
                 if (TEST_OVERRIDE_BIT(fp, ARGS_CALLEE))
                     return true;
-                v = INT_TO_JSVAL(fp->callee);
+                v = INT_TO_JSVAL(reinterpret_cast<jsint>(fp->callee));
             } else {
                 return true;
             }
