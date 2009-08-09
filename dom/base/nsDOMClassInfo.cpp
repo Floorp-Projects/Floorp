@@ -4222,7 +4222,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
 
   // Don't overwrite a property set by content.
   JSBool found;
-  if (!::JS_AlreadyHasOwnUCProperty(cx, global, mData->mNameUTF16,
+  if (!::JS_AlreadyHasOwnUCProperty(cx, global, reinterpret_cast<const jschar*>(mData->mNameUTF16),
                                     nsCRT::strlen(mData->mNameUTF16), &found)) {
     return NS_ERROR_FAILURE;
   }
