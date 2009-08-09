@@ -62,6 +62,9 @@ _TEST_FILES = \
 		offlineEvent.html \
 		offlineEvent.cacheManifest \
 		offlineEvent.cacheManifest^headers^ \
+		test_bug364677.html \
+		bug364677-data.xml \
+		bug364677-data.xml^headers^ \
 		$(NULL)
 
 # The following tests are disabled because they are unreliable:
