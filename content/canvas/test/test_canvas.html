@@ -3649,18 +3649,20 @@ isPixel(ctx, 50,25, 0,255,0,255, 2);
 
 function test_2d_drawImage_wrongtype() {
 
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
 var canvas = document.getElementById('c127');
 var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.drawImage(undefined, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.result == Components.results.NS_ERROR_INVALID_ARG, "should throw NS_ERROR_INVALID_ARG");
 var _thrown = undefined; try {
   ctx.drawImage(0, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.result == Components.results.NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL, "should throw NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL");
 var _thrown = undefined; try {
   ctx.drawImage("", 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.result == Components.results.NS_ERROR_XPC_BAD_CONVERT_JS, "should throw NS_ERROR_XPC_BAD_CONVERT_JS");
 var _thrown = undefined; try {
   ctx.drawImage(document.createElement('p'), 0, 0);
 } catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
@@ -7352,8 +7354,8 @@ var _thrown_outer = false;
 
 var imgdata1 = ctx.createImageData(10.01, 10.99);
 var imgdata2 = ctx.getImageData(0, 0, 10.01, 10.99);
-ok(imgdata1.width == imgdata2.width, "imgdata1.width == imgdata2.width");
-ok(imgdata1.height == imgdata2.height, "imgdata1.height == imgdata2.height");
+is(imgdata1.width, imgdata2.width, "imgdata1.width == imgdata2.width");
+is(imgdata1.height, imgdata2.height, "imgdata1.height == imgdata2.height");
 
 
 }
