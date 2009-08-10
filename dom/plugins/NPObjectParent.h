@@ -16,7 +16,7 @@
  * The Original Code is Mozilla Plugin App.
  *
  * The Initial Developer of the Original Code is
- *   Chris Jones <jones.chris.g@gmail.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -36,22 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NPObjectProtocol_h
-#define NPObjectProtocol_h 1
+#ifndef __DOM_PLUGINS_NPOBJECTPARENT_H__
+#define __DOM_PLUGINS_NPOBJECTPARENT_H__
 
-#include "npruntime.h"
+#include "mozilla/plugins/NPObjectProtocolParent.h"
 
 namespace mozilla {
 namespace plugins {
-//-----------------------------------------------------------------------------
 
-class NPObjectProtocol
+class NPObjectParent : public NPObjectProtocolParent
 {
-
+public:
+    NPObjectParent();
+    virtual ~NPObjectParent();
 };
 
+} /* namespace plugins */
+} /* namespace mozilla */
 
-} // namespace plugins
-} // namespace mozilla
-
-#endif // NPObjectProtocol_h
+#endif /* __DOM_PLUGINS_NPOBJECTPARENT_H__ */
