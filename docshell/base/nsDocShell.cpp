@@ -4628,16 +4628,12 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
     }
 
 
-    // Update SessionHistory with the document's title. If the
-    // page was loaded from history or the page bypassed history,
-    // there is no need to update the title. There is no need to
-    // go to mSessionHistory to update the title. Setting it in mOSHE 
-    // would suffice. 
-    if (mOSHE && (mLoadType != LOAD_BYPASS_HISTORY) &&
-        (mLoadType != LOAD_HISTORY) && (mLoadType != LOAD_ERROR_PAGE)) {
+    // Update SessionHistory with the document's title.
+    if (mOSHE && mLoadType != LOAD_BYPASS_HISTORY &&
+        mLoadType != LOAD_ERROR_PAGE) {
+
         mOSHE->SetTitle(mTitle);    
     }
-
 
     return NS_OK;
 }
