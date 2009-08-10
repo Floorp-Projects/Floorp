@@ -65,7 +65,7 @@
 
 #include "nsICSSParser.h"
 #include "nsICSSStyleRule.h"
-#include "nsInspectorCSSUtils.h"
+#include "nsComputedDOMStyle.h"
 #include "nsStyleSet.h"
 
 #include "nsPrintfCString.h"
@@ -1928,7 +1928,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
 
     if (content && content->IsInDoc()) {
         // inherit from the canvas element
-        parentContext = nsInspectorCSSUtils::GetStyleContextForContent(
+        parentContext = nsComputedDOMStyle::GetStyleContextForContent(
                 content,
                 nsnull,
                 presShell);
@@ -2273,9 +2273,9 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     if (content && content->IsInDoc()) {
         // try to find the closest context
         nsRefPtr<nsStyleContext> canvasStyle =
-            nsInspectorCSSUtils::GetStyleContextForContent(content,
-                                                           nsnull,
-                                                           presShell);
+            nsComputedDOMStyle::GetStyleContextForContent(content,
+                                                          nsnull,
+                                                          presShell);
         if (!canvasStyle)
             return NS_ERROR_FAILURE;
         isRTL = canvasStyle->GetStyleVisibility()->mDirection ==
