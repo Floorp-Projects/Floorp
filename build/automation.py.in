@@ -81,6 +81,7 @@ __all__ = [
 #expand DIST_BIN = __XPC_BIN_PATH__
 #expand IS_WIN32 = len("__WIN32__") != 0
 #expand IS_MAC = __IS_MAC__ != 0
+#expand IS_LINUX = __IS_LINUX__ != 0
 #ifdef IS_CYGWIN
 #expand IS_CYGWIN = __IS_CYGWIN__ == 1
 #else
@@ -88,6 +89,7 @@ IS_CYGWIN = False
 #endif
 #expand IS_CAMINO = __IS_CAMINO__ != 0
 #expand BIN_SUFFIX = __BIN_SUFFIX__
+#expand PERL = __PERL__
 
 UNIXISH = not IS_WIN32 and not IS_MAC
 
@@ -593,17 +595,33 @@ def runApp(testURL, env, app, profileDir, extraArgs,
                  stderr = subprocess.STDOUT)
   log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
+  stackFixerProcess = None
   if outputPipe is None:
     log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
   else:
-    line = proc.stdout.readline()
+    logsource = proc.stdout
+    if IS_DEBUG_BUILD:
+      stackFixerCommand = None
+      if IS_MAC:
+        stackFixerCommand = "fix-macosx-stack.pl"
+      elif IS_LINUX:
+        stackFixerCommand = "fix-linux-stack.pl"
+      if stackFixerCommand is not None:
+        stackFixerProcess = Process([PERL, os.path.join(utilityPath, stackFixerCommand)], stdin=logsource, stdout=subprocess.PIPE)
+        logsource = stackFixerProcess.stdout
+
+    line = logsource.readline()
     while line != "":
       log.info(line.rstrip())
-      line = proc.stdout.readline()
+      line = logsource.readline()
 
   status = proc.wait()
   if status != 0:
     log.info("TEST-UNEXPECTED-FAIL | automation.py | Exited with code %d during test run", status)
+  if stackFixerProcess is not None:
+    status = stackFixerProcess.wait()
+    if status != 0:
+      log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", status)
   log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
   if checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath):
