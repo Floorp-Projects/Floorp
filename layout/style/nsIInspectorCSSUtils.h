@@ -52,10 +52,10 @@ class nsIContent;
 class nsIDOMElement;
 class nsIArray;
 
-// 5cfdb02f-0962-454c-b015-b05123927021
+// afb608b5-96ac-440e-a203-52cac9f188e1
 #define NS_IINSPECTORCSSUTILS_IID \
-  { 0x5cfdb02f, 0x0962, 0x454c, \
-    { 0xb0, 0x15, 0xb0, 0x51, 0x23, 0x92, 0x70, 0x21 } }
+  { 0xafb608b5, 0x96ac, 0x440e, \
+    { 0xa2, 0x03, 0x52, 0xca, 0xc9, 0xf1, 0x88, 0xe1 } }
 
 // 7ef2f07f-6e34-410b-8336-88acd1cd16b7
 #define NS_INSPECTORCSSUTILS_CID \
@@ -65,17 +65,6 @@ class nsIArray;
 class nsIInspectorCSSUtils : public nsISupports {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IINSPECTORCSSUTILS_IID)
-
-    // Hooks to nsCSSProps static methods from another library (the
-    // AddRefTable and ReleaseTable should be handled by the
-    // implementation of this interface).
-    NS_IMETHOD LookupCSSProperty(const nsAString& aName, nsCSSProperty *aProp) = 0;
-
-    // Hooks to inline methods on nsRuleNode that have trouble linking
-    // on certain debug builds (MacOSX Mach-O with gcc).
-    NS_IMETHOD GetRuleNodeParent(nsRuleNode *aNode, nsRuleNode **aParent) = 0;
-    NS_IMETHOD GetRuleNodeRule(nsRuleNode *aNode, nsIStyleRule **aRule) = 0;
-    NS_IMETHOD IsRuleNodeRoot(nsRuleNode *aNode, PRBool *aIsRoot) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIInspectorCSSUtils, NS_IINSPECTORCSSUTILS_IID)
