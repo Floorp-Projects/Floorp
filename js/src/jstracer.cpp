@@ -7267,17 +7267,27 @@ TraceRecorder::inc(jsval& v, jsint incr, bool pre)
  * (pre- or post-increment as described by pre) is stacked.
  */
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::inc(jsval& v, LIns*& v_ins, jsint incr, bool pre)
+TraceRecorder::inc(jsval v, LIns*& v_ins, jsint incr, bool pre)
 {
-    if (!isNumber(v))
-        ABORT_TRACE("can only inc numbers");
-
-    LIns* v_after = alu(LIR_fadd, asNumber(v), incr, v_ins, lir->insImmf(incr));
+    LIns* v_after;
+    CHECK_STATUS(incHelper(v, v_ins, v_after, incr));
 
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     JS_ASSERT(cs.ndefs == 1);
     stack(-cs.nuses, pre ? v_after : v_ins);
     v_ins = v_after;
+    return JSRS_CONTINUE;
+}
+
+/*
+ * Do an increment operation without storing anything to the stack.
+ */
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::incHelper(jsval v, LIns* v_ins, LIns*& v_after, jsint incr)
+{
+    if (!isNumber(v))
+        ABORT_TRACE("can only inc numbers");
+    v_after = alu(LIR_fadd, asNumber(v), incr, v_ins, lir->insImmf(incr));
     return JSRS_CONTINUE;
 }
 
@@ -9539,11 +9549,15 @@ TraceRecorder::incName(jsint incr, bool pre)
 {
     jsval* vp;
     LIns* v_ins;
+    LIns* v_after;
     NameResult nr;
+    
     CHECK_STATUS(name(vp, v_ins, nr));
-    CHECK_STATUS(inc(*vp, v_ins, incr, pre));
+    CHECK_STATUS(incHelper(*vp, v_ins, v_after, incr));
+    LIns* v_result = pre ? v_after : v_ins;
     if (nr.tracked) {
-        set(vp, v_ins);
+        set(vp, v_after);
+        stack(0, v_result);
         return JSRS_CONTINUE;
     }
 
@@ -9552,7 +9566,9 @@ TraceRecorder::incName(jsint incr, bool pre)
     LIns* callobj_ins = get(&cx->fp->argv[-2]);
     for (jsint i = 0; i < nr.scopeIndex; ++i)
         callobj_ins = stobj_get_parent(callobj_ins);
-    return setCallProp(nr.obj, callobj_ins, nr.sprop, v_ins, *vp);
+    CHECK_STATUS(setCallProp(nr.obj, callobj_ins, nr.sprop, v_after, *vp));
+    stack(0, v_result);
+    return JSRS_CONTINUE;
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
