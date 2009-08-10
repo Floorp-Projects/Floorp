@@ -40,7 +40,7 @@
 #define PROGRESSUI_H__
 
 #if defined(XP_WIN)
-  typedef unsigned short NS_tchar;
+  typedef WCHAR NS_tchar;
   #define NS_main wmain
 #else
   typedef char NS_tchar;
