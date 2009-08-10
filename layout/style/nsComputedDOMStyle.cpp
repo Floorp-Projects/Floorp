@@ -70,7 +70,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
 #include "imgIRequest.h"
-#include "nsInspectorCSSUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameManager.h"
 #include "prlog.h"
@@ -324,6 +323,68 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   return rv;
 }
 
+static nsStyleContext*
+GetStyleContextForFrame(nsIFrame* aFrame)
+{
+  nsStyleContext* styleContext = aFrame->GetStyleContext();
+
+  /* For tables the primary frame is the "outer frame" but the style
+   * rules are applied to the "inner frame".  Luckily, the "outer
+   * frame" actually inherits style from the "inner frame" so we can
+   * just move one level up in the style context hierarchy....
+   */
+  if (aFrame->GetType() == nsGkAtoms::tableOuterFrame)
+    return styleContext->GetParent();
+
+  return styleContext;
+}    
+
+/* static */
+already_AddRefed<nsStyleContext>
+nsComputedDOMStyle::GetStyleContextForContent(nsIContent* aContent,
+                                              nsIAtom* aPseudo,
+                                              nsIPresShell* aPresShell)
+{
+  if (!aPseudo) {
+    aPresShell->FlushPendingNotifications(Flush_Style);
+    nsIFrame* frame = aPresShell->GetPrimaryFrameFor(aContent);
+    if (frame) {
+      nsStyleContext* result = GetStyleContextForFrame(frame);
+      // Don't use the style context if it was influenced by
+      // pseudo-elements, since then it's not the primary style
+      // for this element.
+      if (!result->HasPseudoElementData()) {
+        // this function returns an addrefed style context
+        result->AddRef();
+        return result;
+      }
+    }
+  }
+
+  // No frame has been created or we have a pseudo, so resolve the
+  // style ourselves
+  nsRefPtr<nsStyleContext> parentContext;
+  nsIContent* parent = aPseudo ? aContent : aContent->GetParent();
+  if (parent)
+    parentContext = GetStyleContextForContent(parent, nsnull, aPresShell);
+
+  nsPresContext *presContext = aPresShell->GetPresContext();
+  if (!presContext)
+    return nsnull;
+
+  nsStyleSet *styleSet = aPresShell->StyleSet();
+
+  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+    NS_ASSERTION(!aPseudo, "Shouldn't have a pseudo for a non-element!");
+    return styleSet->ResolveStyleForNonElement(parentContext);
+  }
+
+  if (aPseudo) {
+    return styleSet->ResolvePseudoStyleFor(aContent, aPseudo, parentContext);
+  }
+
+  return styleSet->ResolveStyleFor(aContent, parentContext);
+}
 
 NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
@@ -410,9 +471,9 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 #endif
     // Need to resolve a style context
     mStyleContextHolder =
-      nsInspectorCSSUtils::GetStyleContextForContent(mContent,
-                                                     mPseudo,
-                                                     mPresShell);
+      nsComputedDOMStyle::GetStyleContextForContent(mContent,
+                                                    mPseudo,
+                                                    mPresShell);
     NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
     NS_ASSERTION(mPseudo || !mStyleContextHolder->HasPseudoElementData(),
                  "should not have pseudo-element data");
