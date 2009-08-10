@@ -1753,30 +1753,14 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 
 /* void open (in AUTF8String method, in AUTF8String url); */
 NS_IMETHODIMP
-nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
+nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
+                       PRBool async, const nsAString& user,
+                       const nsAString& password, PRUint8 optional_argc)
 {
   nsresult rv = NS_OK;
-  PRBool async = PR_TRUE;
-  nsAutoString user, password;
 
-  nsAXPCNativeCallContext *cc = nsnull;
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  if (xpc) {
-    rv = xpc->GetCurrentNativeCallContext(&cc);
-  }
-
-  if (NS_SUCCEEDED(rv) && cc) {
-    PRUint32 argc;
-    rv = cc->GetArgc(&argc);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    jsval* argv;
-    rv = cc->GetArgvPtr(&argv);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  if (nsContentUtils::GetCurrentJSContext()) {
+    // We're (likely) called from JS
 
     // Find out if UniversalBrowserRead privileges are enabled
     if (nsContentUtils::IsCallerTrustedForRead()) {
@@ -1784,33 +1768,11 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
     } else {
       mState &= ~XML_HTTP_REQUEST_XSITEENABLED;
     }
+  }
 
-    if (argc > 2) {
-      JSAutoRequest ar(cx);
-      JSBool asyncBool;
-      ::JS_ValueToBoolean(cx, argv[2], &asyncBool);
-      async = (PRBool)asyncBool;
-
-      if (argc > 3 && !JSVAL_IS_NULL(argv[3]) && !JSVAL_IS_VOID(argv[3])) {
-        JSString* userStr = ::JS_ValueToString(cx, argv[3]);
-
-        if (userStr) {
-          user.Assign(reinterpret_cast<PRUnichar *>
-                                      (::JS_GetStringChars(userStr)),
-                      ::JS_GetStringLength(userStr));
-        }
-
-        if (argc > 4 && !JSVAL_IS_NULL(argv[4]) && !JSVAL_IS_VOID(argv[4])) {
-          JSString* passwdStr = JS_ValueToString(cx, argv[4]);
-
-          if (passwdStr) {
-            password.Assign(reinterpret_cast<PRUnichar *>
-                                            (::JS_GetStringChars(passwdStr)),
-                            ::JS_GetStringLength(passwdStr));
-          }
-        }
-      }
-    }
+  if (!optional_argc) {
+    // No optional arguments were passed in. Default async to true.
+    async = PR_TRUE;
   }
 
   return OpenRequest(method, url, async, user, password);

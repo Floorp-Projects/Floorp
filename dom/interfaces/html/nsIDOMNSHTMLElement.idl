@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(7F142F9A-FBA7-4949-93D6-CF08A974AC51)]
+[scriptable, uuid(bd365f77-3af4-4248-98ce-5eb98dc3b222)]
 interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
@@ -58,9 +58,7 @@ interface nsIDOMNSHTMLElement : nsISupports
   void blur();
   void focus();
 
-  // |top| is optional in JS, scriptability of this method is done in
-  // nsHTMLElementSH
-  void scrollIntoView(in boolean top);
+  [optional_argc] void scrollIntoView([optional] in boolean top);
 
            attribute boolean         spellcheck;
 };
