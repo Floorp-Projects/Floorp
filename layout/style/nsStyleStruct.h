@@ -75,8 +75,10 @@ class imgIRequest;
 #define NS_STYLE_INHERIT_MASK             0x00ffffff
 
 // Additional bits for nsStyleContext's mBits:
-// A bit to test whether or not we have any text decorations.
+// See nsStyleContext::HasTextDecorations
 #define NS_STYLE_HAS_TEXT_DECORATIONS     0x01000000
+// See nsStyleContext::HasPseudoElementData.
+#define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA  0x02000000
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_GC_MARK              0x02000000
