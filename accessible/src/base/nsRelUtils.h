@@ -97,10 +97,14 @@ public:
    * @param  aRelation      [in, out] relation object
    * @param  aContent       [in] node having the given IDRef attribute
    * @param  aAttr          [in] IDRef attribute
+   * @param  aMayBeAnon     [in] true if the target may be anonymous; if so,
+   *                             we need to look for it under the binding
+   *                             parent of aContent.
    */
   static nsresult AddTargetFromIDRefAttr(PRUint32 aRelationType,
                                          nsIAccessibleRelation **aRelation,
-                                         nsIContent *aContent, nsIAtom *aAttr);
+                                         nsIContent *aContent, nsIAtom *aAttr,
+                                         PRBool aMayBeAnon = PR_FALSE);
 
   /**
    * Create the relation if the given relation is null and add the targets to it
