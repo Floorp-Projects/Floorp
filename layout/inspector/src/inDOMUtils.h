@@ -42,7 +42,6 @@
 
 #include "nsIEventStateManager.h"
 #include "nsISupportsArray.h"
-#include "nsIInspectorCSSUtils.h"
 
 class nsRuleNode;
 
@@ -56,8 +55,6 @@ public:
   virtual ~inDOMUtils();
 
 private:
-  nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
-
   static nsresult GetRuleNodeForContent(nsIContent* aContent,
                                         nsRuleNode** aRuleNode);
 };
