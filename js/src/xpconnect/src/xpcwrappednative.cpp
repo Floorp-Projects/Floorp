@@ -2227,6 +2227,8 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     const nsXPTMethodInfo* methodInfo;
     uint8 requiredArgs;
     uint8 paramCount;
+    uint8 wantsOptArgc;
+    uint8 optArgcIndex = PR_UINT8_MAX;
     jsval src;
     nsresult invokeResult;
     nsID param_iid;
@@ -2339,16 +2341,22 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         goto done;
     }
 
+    wantsOptArgc = methodInfo->WantsOptArgc() ? 1 : 0;
+
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     paramCount = methodInfo->GetParamCount();
     requiredArgs = paramCount;
     if(paramCount && methodInfo->GetParam(paramCount-1).IsRetval())
         requiredArgs--;
-    if(argc < requiredArgs)
+
+    if(argc < requiredArgs || wantsOptArgc)
     {
+        if(wantsOptArgc)
+            optArgcIndex = requiredArgs;
+
         // skip over any optional arguments
         while(requiredArgs && methodInfo->GetParam(requiredArgs-1).IsOptional())
-          requiredArgs--;
+            requiredArgs--;
 
         if(argc < requiredArgs) {
             Throw(NS_ERROR_XPC_NOT_ENOUGH_ARGS, ccx);
@@ -2357,9 +2365,9 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     }
 
     // setup variant array pointer
-    if(paramCount > PARAM_BUFFER_COUNT)
+    if(paramCount + wantsOptArgc > PARAM_BUFFER_COUNT)
     {
-        if(!(dispatchParams = new nsXPTCVariant[paramCount]))
+        if(!(dispatchParams = new nsXPTCVariant[paramCount + wantsOptArgc]))
         {
             JS_ReportOutOfMemory(ccx);
             goto done;
@@ -2690,11 +2698,29 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         }
     }
 
+    // Fill in the optional_argc argument
+    if(wantsOptArgc)
+    {
+        nsXPTCVariant* dp = &dispatchParams[optArgcIndex];
+
+        if(optArgcIndex != paramCount)
+        {
+            // The method has a return value, the return value must be
+            // last so push it out one so that we'll have room to
+            // insert the optional argc argument.
+            dispatchParams[paramCount] = *dp;
+        }
+
+        dp->ClearFlags();
+        dp->type = nsXPTType::T_U8;
+        dp->val.u8 = argc - requiredArgs;
+    }
 
     // do the invoke
     {
         AutoJSSuspendNonMainThreadRequest req(ccx.GetJSContext());
-        invokeResult = NS_InvokeByIndex(callee, vtblIndex, paramCount,
+        invokeResult = NS_InvokeByIndex(callee, vtblIndex,
+                                        paramCount + wantsOptArgc,
                                         dispatchParams);
     }
 
@@ -2713,12 +2739,17 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     // now we iterate through the native params to gather and convert results
     for(i = 0; i < paramCount; i++)
     {
+        uint8 dispatchParamIndex = i;
+
+        if (i >= optArgcIndex)
+            dispatchParamIndex++;
+
         const nsXPTParamInfo& paramInfo = methodInfo->GetParam(i);
         if(!paramInfo.IsOut() && !paramInfo.IsDipper())
             continue;
 
         const nsXPTType& type = paramInfo.GetType();
-        nsXPTCVariant* dp = &dispatchParams[i];
+        nsXPTCVariant* dp = &dispatchParams[dispatchParamIndex];
         jsval v = JSVAL_NULL;
         AUTO_MARK_JSVAL(ccx, &v);
         JSUint32 array_count;
@@ -2821,7 +2852,12 @@ done:
     {
         for(i = 0; i < paramCount; i++)
         {
-            nsXPTCVariant* dp = &dispatchParams[i];
+            uint8 dispatchParamIndex = i;
+
+            if (i >= optArgcIndex)
+                dispatchParamIndex++;
+
+            nsXPTCVariant* dp = &dispatchParams[dispatchParamIndex];
             void* p = dp->val.p;
             if(!p)
                 continue;
