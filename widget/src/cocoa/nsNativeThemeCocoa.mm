@@ -866,18 +866,21 @@ static const CellRenderSettings editableMenulistSettings = {
 
 void
 nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 PRInt32 inState, PRBool aIsEditable, nsIFrame* aFrame)
+                                 PRInt32 inState, PRUint8 aWidgetType, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSCell* cell = aIsEditable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
+  [mDropdownCell setPullsDown:(aWidgetType == NS_THEME_BUTTON)];
+
+  BOOL isEditable = (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD);
+  NSCell* cell = isEditable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
 
   [cell setEnabled:!IsDisabled(aFrame)];
   [cell setShowsFirstResponder:(IsFocused(aFrame) || (inState & NS_EVENT_STATE_FOCUS))];
   [cell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
   [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
 
-  const CellRenderSettings& settings = aIsEditable ? editableMenulistSettings : dropdownSettings;
+  const CellRenderSettings& settings = isEditable ? editableMenulistSettings : dropdownSettings;
   DrawCellWithSnapping(cell, cgContext, inBoxRect, settings,
                        0.5f, NativeViewForFrame(aFrame), IsFrameRTL(aFrame));
 
@@ -1588,6 +1591,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       if (IsDefaultButton(aFrame)) {
         DrawButton(cgContext, kThemePushButton, macRect, true, IsDisabled(aFrame), 
                    kThemeButtonOff, kThemeAdornmentNone, eventState, aFrame);
+      } else if (IsButtonTypeMenu(aFrame)) {
+        DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
       } else {
         DrawPushButton(cgContext, macRect, IsDisabled(aFrame), eventState, aFrame);
       }
@@ -1664,8 +1669,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_TEXTFIELD:
-      DrawDropdown(cgContext, macRect, eventState,
-                   (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD), aFrame);
+      DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
       break;
 
     case NS_THEME_DROPDOWN_BUTTON:
@@ -1893,7 +1897,11 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     {
-      aResult->SizeTo(7, 1, 7, 3);
+      if (IsButtonTypeMenu(aFrame)) {
+        *aResult = RTLAwareMargin(kAquaDropdownBorder, aFrame);
+      } else {
+        aResult->SizeTo(7, 1, 7, 3);
+      }
       break;
     }
 
