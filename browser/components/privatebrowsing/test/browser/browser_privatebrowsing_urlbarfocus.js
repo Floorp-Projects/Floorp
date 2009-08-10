@@ -50,7 +50,7 @@ function test() {
     browser.removeEventListener("load", arguments.callee, true);
 
     // ensure that the URL bar is not focused initially
-    focusElement(content);
+    browser.focus();
     isnot(document.commandDispatcher.focusedElement, gURLBar.inputField,
       "URL Bar should not be focused before entering the private browsing mode");
     // ensure that the URL bar is not empty initially
