@@ -701,7 +701,10 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArray<nsIStyleRule> &rules)
+nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
+                                 nsIAtom* aPseudoTag,
+                                 nsRuleNode *aRuleNode,
+                                 const nsCOMArray<nsIStyleRule> &aRules)
 {
   NS_ENSURE_FALSE(mInShutdown, nsnull);
   nsStyleContext* result = nsnull;
@@ -709,11 +712,15 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArra
 
   if (presContext) {
     NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
+    if (aRuleNode)
+      mRuleWalker->SetCurrentNode(aRuleNode);
+    // FIXME: Perhaps this should be passed in, but it probably doesn't
+    // matter.
     mRuleWalker->SetLevel(eDocSheet, PR_FALSE);
-    for (PRInt32 i = 0; i < rules.Count(); i++) {
-      mRuleWalker->Forward(rules.ObjectAt(i));
+    for (PRInt32 i = 0; i < aRules.Count(); i++) {
+      mRuleWalker->Forward(aRules.ObjectAt(i));
     }
-    result = GetContext(presContext, aParentContext, nsnull).get();
+    result = GetContext(presContext, aParentContext, aPseudoTag).get();
 
     // Now reset the walker back to the root of the tree.
     mRuleWalker->Reset();
