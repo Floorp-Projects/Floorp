@@ -45,6 +45,7 @@
 #include "nsIDOMDocument.h"
 #include "inISearchObserver.h"
 #include "nsTArray.h"
+#include "nsCSSProps.h"
 #include "nsIInspectorCSSUtils.h"
 
 class nsIDOMCSSStyleSheet;

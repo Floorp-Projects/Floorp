@@ -178,15 +178,10 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   NS_NewISupportsArray(getter_AddRefs(rules));
   if (!rules) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIStyleRule> srule;
   nsCOMPtr<nsICSSStyleRule> cssRule;
   nsCOMPtr<nsIDOMCSSRule> domRule;
-  for (PRBool isRoot;
-       mCSSUtils->IsRuleNodeRoot(ruleNode, &isRoot), !isRoot;
-       mCSSUtils->GetRuleNodeParent(ruleNode, &ruleNode))
-  {
-    mCSSUtils->GetRuleNodeRule(ruleNode, getter_AddRefs(srule));
-    cssRule = do_QueryInterface(srule);
+  for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
+    cssRule = do_QueryInterface(ruleNode->GetRule());
     if (cssRule) {
       cssRule->GetDOMRule(getter_AddRefs(domRule));
       if (domRule)
