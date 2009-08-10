@@ -4033,6 +4033,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   {
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
     if (slots) {
+      slots->mStyle = nsnull;
       if (slots->mAttributeMap) {
         slots->mAttributeMap->DropReference();
         slots->mAttributeMap = nsnull;
