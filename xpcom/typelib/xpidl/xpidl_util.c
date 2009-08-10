@@ -719,7 +719,7 @@ verify_method_declaration(IDL_tree method_tree)
         else if (hasoptional && IDL_tree_property_get(simple_decl, "retval") == NULL) {
             IDL_tree_error(method_tree,
                            "non-optional non-retval parameter used after one marked [optional]");
-                return FALSE;
+            return FALSE;
         }
 
         /*
@@ -767,6 +767,14 @@ verify_method_declaration(IDL_tree method_tree)
         if (!verify_type_fits_version(param_type, method_tree))
             return FALSE;
         
+    }
+
+    if (IDL_tree_property_get(op->ident, "optional_argc") != NULL &&
+        !hasoptional) {
+        IDL_tree_error(method_tree,
+                       "[optional_argc] method must contain [optional] "
+                       "arguments");
+        return FALSE;
     }
     
     /* XXX q: can return type be nsid? */
