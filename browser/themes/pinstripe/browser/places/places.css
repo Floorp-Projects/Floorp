@@ -80,6 +80,7 @@ tree.sidebar-placesTree treechildren::-moz-tree-cell-text(selected) {
 }
 
 #viewButton .button-menu-dropmarker {
+  display: -moz-box;
   list-style-image: url("chrome://global/skin/icons/menulist-dropmarker.png");
 }
 
