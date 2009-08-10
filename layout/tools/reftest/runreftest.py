@@ -133,7 +133,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     # via the commandline at your own risk.
     # NO_EM_RESTART: will do a '-silent' run instead.
     browserEnv["NO_EM_RESTART"] = "1"
-    browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
+    browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
     if automation.UNIXISH:
       browserEnv["LD_LIBRARY_PATH"] = options.xrePath
       browserEnv["MOZILLA_FIVE_HOME"] = options.xrePath

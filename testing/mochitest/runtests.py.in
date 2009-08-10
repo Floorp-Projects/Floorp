@@ -391,7 +391,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # via the commandline at your own risk.
   # NO_EM_RESTART: will do a '-silent' run instead.
   browserEnv["NO_EM_RESTART"] = "1"
-  browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
+  browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
   appDir = os.path.dirname(options.app)
   if automation.UNIXISH:
     browserEnv["LD_LIBRARY_PATH"] = appDir
