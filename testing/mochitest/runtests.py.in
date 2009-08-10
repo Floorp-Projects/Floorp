@@ -389,6 +389,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 
   # These variables are necessary for correct application startup; change
   # via the commandline at your own risk.
+  # NO_EM_RESTART: will do a '-silent' run instead.
   browserEnv["NO_EM_RESTART"] = "1"
   browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
   appDir = os.path.dirname(options.app)
@@ -464,6 +465,24 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   if options.fatalAssertions:
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
+  # run once with -silent to let the extension manager do its thing
+  # and then exit the app
+  automation.log.info("INFO | runtests.py | Performing extension manager registration: start.\n")
+  # Don't care about this |status|: |runApp()| reporting it should be enough.
+  status = automation.runApp(None, browserEnv, options.app,
+                             PROFILE_DIRECTORY, ["-silent"],
+                             xrePath = options.xrePath,
+                             symbolsPath=options.symbolsPath)
+  # We don't care to call |automation.processLeakLog()| for this step.
+  automation.log.info("\nINFO | runtests.py | Performing extension manager registration: end.")
+
+  # Remove the leak detection file so it can't "leak" to the tests run.
+  # The file is not there if leak logging was not enabled in the application build.
+  if os.path.exists(LEAK_REPORT_FILE):
+    os.remove(LEAK_REPORT_FILE)
+
+  # then again to actually run reftest
+  automation.log.info("INFO | runtests.py | Running tests: start.\n")
   status = automation.runApp(testURL, browserEnv, options.app,
                              PROFILE_DIRECTORY, options.browserArgs,
                              runSSLTunnel = True,
@@ -478,6 +497,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   server.stop()
 
   automation.processLeakLog(LEAK_REPORT_FILE, options.leakThreshold)
+  automation.log.info("\nINFO | runtests.py | Running tests: end.")
 
   # delete the profile and manifest
   os.remove(manifest)
