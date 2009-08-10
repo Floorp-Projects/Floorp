@@ -40,10 +40,7 @@ function test() {
 
   if (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow !=
       window) {
-    window.addEventListener("focus", function () {
-      window.removeEventListener("focus", arguments.callee, false);
-      test();
-    }, false);
+    setTimeout(test, 0);
     window.focus();
     return;
   }
