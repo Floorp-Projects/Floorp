@@ -1,11 +1,14 @@
+include protocol "NPP.ipdl";
+
 include "npapi.h";
 include "nsTArray.h";
-
-include protocol "NPP.ipdl";
-//include protocol "NPObject.ipdl";
+include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
 using nsTArray<nsCString>;
+using nsTArray<intptr_t>;
+using mozilla::ipc::NPRemoteIdentifier;
+using nsTArray<NPRemoteIdentifier>;
 
 namespace mozilla {
 namespace plugins {
@@ -13,7 +16,6 @@ namespace plugins {
 rpc protocol NPAPI
 {
     manages NPP;
-//    manages NPObject;
 
 child:
     rpc NP_Initialize() returns (NPError rv);
@@ -24,7 +26,17 @@ child:
             nsTArray<nsCString> aValues) returns (NPError rv);
     rpc ~NPP() returns (NPError rv);
 
-//    rpc in TradeNPPsForSomeReason(NPP n) returns (NPP n2);
+parent:
+    sync NPN_GetStringIdentifier(nsCString aString) returns (NPRemoteIdentifier aId);
+    sync NPN_GetIntIdentifier(int32_t aInt) returns (NPRemoteIdentifier aId);
+
+    sync NPN_UTF8FromIdentifier(NPRemoteIdentifier aId) returns (nsCString aString);
+    sync NPN_IntFromIdentifier(NPRemoteIdentifier aId) returns (int32_t aInt);
+
+    sync NPN_IdentifierIsString(NPRemoteIdentifier aId) returns (bool aIsString);
+
+    sync NPN_GetStringIdentifiers() returns (nsTArray<nsCString> aNames,
+                                             nsTArray<NPRemoteIdentifier> aIds);
 };
 
 } // namespace plugins

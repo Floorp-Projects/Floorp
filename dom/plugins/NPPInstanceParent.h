@@ -40,6 +40,7 @@
 #define dom_plugins_NPPInstanceParent_h 1
 
 #include "mozilla/plugins/NPPProtocolParent.h"
+#include "mozilla/plugins/NPObjectParent.h"
 
 #include "npfunctions.h"
 
@@ -48,7 +49,6 @@
 
 namespace mozilla {
 namespace plugins {
-//-----------------------------------------------------------------------------
 
 class NPPInstanceParent :
     public NPPProtocolParent
@@ -69,6 +69,13 @@ public:
     {
         return NS_OK;
     }
+
+    virtual NPObjectProtocolParent*
+    NPObjectConstructor(NPError* _retval);
+
+    virtual nsresult
+    NPObjectDestructor(NPObjectProtocolParent* aObject,
+                       NPError* _retval);
 
     NPError NPP_SetWindow(NPWindow* aWindow);
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);

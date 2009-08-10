@@ -109,6 +109,26 @@ public:
     static SharedLibrary* LoadModule(const char* aFilePath,
                                      PRLibrary* aLibrary);
 
+    // NPRemoteIdentifier funcs
+    virtual nsresult
+    RecvNPN_GetStringIdentifier(const nsCString& aString,
+                                NPRemoteIdentifier* aId);
+    virtual nsresult
+    RecvNPN_GetIntIdentifier(const int32_t& aInt,
+                             NPRemoteIdentifier* aId);
+    virtual nsresult
+    RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
+                               nsCString* aString);
+    virtual nsresult
+    RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
+                              int32_t* aInt);
+    virtual nsresult
+    RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
+                               bool* aIsString);
+    virtual nsresult
+    RecvNPN_GetStringIdentifiers(nsTArray<nsCString>* aNames,
+                                 nsTArray<NPRemoteIdentifier>* aIds);
+
 private:
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
