@@ -53,8 +53,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
-static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
-
 ///////////////////////////////////////////////////////////////////////////////
 inCSSValueSearch::inCSSValueSearch()
   : mResults(nsnull),
@@ -68,7 +66,6 @@ inCSSValueSearch::inCSSValueSearch()
 {
   nsCSSProps::AddRefTable();
   mProperties = new nsCSSProperty[100];
-  mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
 inCSSValueSearch::~inCSSValueSearch()
