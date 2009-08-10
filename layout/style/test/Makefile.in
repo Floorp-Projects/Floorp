@@ -105,6 +105,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug499655.xhtml \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
+		test_computed_style_no_pseudo.html \
 		test_css_eof_handling.html \
 		test_descriptor_storage.html \
 		test_descriptor_syntax_errors.html \

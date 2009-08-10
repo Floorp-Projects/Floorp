@@ -95,8 +95,6 @@ NS_NewComputedDOMStyle(nsIDOMElement *aElement, const nsAString &aPseudoElt,
                        nsIPresShell *aPresShell,
                        nsComputedDOMStyle **aComputedStyle)
 {
-  NS_ENSURE_ARG_POINTER(aComputedStyle);
-
   nsRefPtr<nsComputedDOMStyle> computedStyle;
   if (sCachedComputedDOMStyle) {
     // There's an unused nsComputedDOMStyle cached, use it.
@@ -302,7 +300,6 @@ nsComputedDOMStyle::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsComputedDOMStyle::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  NS_ENSURE_ARG_POINTER(aParentRule);
   *aParentRule = nsnull;
 
   return NS_OK;
@@ -332,7 +329,8 @@ NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
                                         nsIDOMCSSValue** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ASSERTION(!mStyleContextHolder, "bad state");
+
   *aReturn = nsnull;
 
   nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak);
@@ -377,14 +375,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
   mOuterFrame = mPresShell->GetPrimaryFrameFor(mContent);
   mInnerFrame = mOuterFrame;
-  if (!mOuterFrame || mPseudo) {
-    // Need to resolve a style context
-    mStyleContextHolder =
-      nsInspectorCSSUtils::GetStyleContextForContent(mContent,
-                                                     mPseudo,
-                                                     mPresShell);
-    NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
-  } else {
+  if (mOuterFrame && !mPseudo) {
     nsIAtom* type = mOuterFrame->GetType();
     if (type == nsGkAtoms::tableOuterFrame) {
       // If the frame is an outer table frame then we should get the style
@@ -398,6 +389,33 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
     mStyleContextHolder = mInnerFrame->GetStyleContext();
     NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
+  }
+
+  if (!mStyleContextHolder || mStyleContextHolder->HasPseudoElementData()) {
+#ifdef DEBUG
+    if (mStyleContextHolder) {
+      // We want to check that going through this path because of
+      // HasPseudoElementData is rare, because it slows us down a good
+      // bit.  So check that we're really inside something associated
+      // with a pseudo-element that contains elements.
+      nsStyleContext *topWithPseudoElementData = mStyleContextHolder;
+      while (topWithPseudoElementData->GetParent()->HasPseudoElementData()) {
+        topWithPseudoElementData = topWithPseudoElementData->GetParent();
+      }
+      NS_ASSERTION(nsCSSPseudoElements::PseudoElementContainsElements(
+                     topWithPseudoElementData->GetPseudoType()),
+                   "we should be in a pseudo-element that is expected to "
+                   "contain elements");
+    }
+#endif
+    // Need to resolve a style context
+    mStyleContextHolder =
+      nsInspectorCSSUtils::GetStyleContextForContent(mContent,
+                                                     mPseudo,
+                                                     mPresShell);
+    NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
+    NS_ASSERTION(mPseudo || !mStyleContextHolder->HasPseudoElementData(),
+                 "should not have pseudo-element data");
   }
 
   // Call our pointer-to-member-function.

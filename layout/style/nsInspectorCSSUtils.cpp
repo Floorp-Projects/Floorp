@@ -101,8 +101,6 @@ nsStyleContext*
 nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame)
 {
     nsStyleContext* styleContext = aFrame->GetStyleContext();
-    if (!styleContext)
-        return nsnull;
 
     /* For tables the primary frame is the "outer frame" but the style
      * rules are applied to the "inner frame".  Luckily, the "outer
@@ -126,10 +124,14 @@ nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
         nsIFrame* frame = aPresShell->GetPrimaryFrameFor(aContent);
         if (frame) {
             nsStyleContext* result = GetStyleContextForFrame(frame);
-            // this function returns an addrefed style context
-            if (result)
+            // Don't use the style context if it was influenced by
+            // pseudo-elements, since then it's not the primary style
+            // for this element.
+            if (!result->HasPseudoElementData()) {
+                // this function returns an addrefed style context
                 result->AddRef();
-            return result;
+                return result;
+            }
         }
     }
 
