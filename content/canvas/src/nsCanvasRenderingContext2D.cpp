@@ -3529,7 +3529,7 @@ js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
                                 JSUint8 *dest);
 }
 
-static inline PRUint8 ToUint8(PRInt32 aInput)
+static inline PRUint8 ToUint8(jsint aInput)
 {
     if (PRUint32(aInput) > 255)
         return (aInput < 0) ? 0 : 255;
