@@ -89,7 +89,7 @@ members = [
     #
     # nsIDOMCanvasRenderingContext2D
     # NOTE: attributes strokeStyle and fillStyle are nsIVariant
-    # NOTE: drawImage(), getImageData(), and putImageData() use
+    # NOTE: getImageData(), and putImageData() use
     #       GetCurrentNativeCallContext
     'nsIDOMCanvasRenderingContext2D.canvas',
     'nsIDOMCanvasRenderingContext2D.save',
@@ -126,6 +126,7 @@ members = [
     'nsIDOMCanvasRenderingContext2D.fillText',
     'nsIDOMCanvasRenderingContext2D.strokeText',
     'nsIDOMCanvasRenderingContext2D.measureText',
+    'nsIDOMCanvasRenderingContext2D.drawImage',
     'nsIDOMCanvasRenderingContext2D.isPointInPath',
     'nsIDOMTextMetrics.width',
 
@@ -386,7 +387,7 @@ members = [
     'nsIDOMHTMLCanvasElement.width',
     'nsIDOMHTMLCanvasElement.height',
     'nsIDOMHTMLCanvasElement.getContext',
-    # 'nsIDOMHTMLCanvasElement.toDataURL',  # uses GetCurrentNativeCallContext
+    'nsIDOMHTMLCanvasElement.toDataURL',
     'nsIDOMNSHTMLAnchorElement.text',
     'nsIDOMNSHTMLAnchorElement.search',
     'nsIDOMNSHTMLAnchorElement.hash',
@@ -402,6 +403,7 @@ members = [
     'nsIDOMNSHTMLElement.offsetTop',
     'nsIDOMNSHTMLElement.offsetHeight',
     'nsIDOMNSHTMLElement.offsetWidth',
+    'nsIDOMNSHTMLElement.scrollIntoView',
     'nsIDOMNSHTMLFrameElement.contentWindow',
     'nsIDOMNSHTMLImageElement.complete',
     'nsIDOMNSHTMLInputElement.files',
@@ -410,6 +412,7 @@ members = [
     'nsIDOMNSHTMLInputElement.selectionEnd',
     'nsIDOMNSHTMLInputElement.setSelectionRange',
     'nsIDOMNSHTMLOptionCollection.selectedIndex',
+    'nsIDOMNSHTMLOptionCollection.add',
     'nsIDOMNSHTMLOptionElement.text',
     'nsIDOMNSHTMLSelectElement.item',
     'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
