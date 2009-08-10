@@ -228,7 +228,10 @@ interface nsIXMLHttpRequest : nsISupports
    * @param password (optional) A password for authentication if necessary.
    *                 The default value is the empty string
    */
-  void   open(in AUTF8String method, in AUTF8String url);
+  [optional_argc] void open(in AUTF8String method, in AUTF8String url,
+                            [optional] in boolean async,
+                            [optional] in DOMString user,
+                            [optional] in DOMString password);
 
   /**
    * Sends the request. If the request is asynchronous, returns

@@ -39,6 +39,7 @@
 #include "nsIVariant.idl"
 
 interface nsIDOMWindow;
+interface nsIDOMElement;
 interface nsIDOMHTMLElement;
 interface nsIDOMHTMLImageElement;
 interface nsIDOMHTMLCanvasElement;
@@ -60,7 +61,7 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(3e7d5d06-8846-4cff-8739-44756cbf494f)]
+[scriptable, uuid(72635fb6-0c1c-47d7-bf69-49388d5980fc)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -140,7 +141,16 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   void mozTextAlongPath(in DOMString textToDraw, in boolean stroke);
 
   // image api
-  void drawImage();
+
+  [optional_argc] void drawImage(in nsIDOMElement image,
+                                 in float a1, in float a2,
+                                 [optional] in float a3,
+                                 [optional] in float a4,
+                                 [optional] in float a5,
+                                 [optional] in float a6,
+                                 [optional] in float a7,
+                                 [optional] in float a8);
+
 /*
   void drawImage(in HTMLImageElement image, in float dx, in float dy);
   void drawImage(in HTMLImageElement image, in float dx, in float dy, in float sw, in float sh);

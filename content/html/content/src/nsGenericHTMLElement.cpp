@@ -721,7 +721,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 }
 
 nsresult
-nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
+nsGenericHTMLElement::ScrollIntoView(PRBool aTop, PRUint8 optional_argc)
 {
   nsIDocument *document = GetCurrentDoc();
 
@@ -733,6 +733,10 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
   nsCOMPtr<nsIPresShell> presShell = document->GetPrimaryShell();
   if (!presShell) {
     return NS_OK;
+  }
+
+  if (!optional_argc) {
+    aTop = PR_TRUE;
   }
 
   PRIntn vpercent = aTop ? NS_PRESSHELL_SCROLL_TOP :
