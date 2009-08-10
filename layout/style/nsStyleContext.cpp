@@ -324,6 +324,10 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
       mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
   }
 
+  if ((mParent && mParent->HasPseudoElementData()) || mPseudoTag) {
+    mBits |= NS_STYLE_HAS_PSEUDO_ELEMENT_DATA;
+  }
+
   // Correct tables.
   const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
