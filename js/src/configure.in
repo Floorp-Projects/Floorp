@@ -790,36 +790,8 @@ tools are selected during the Xcode/Developer Tools installation.])
 
   GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
   if test "$GCC_VERSION_MAJOR" -lt "4" ; then
-    SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include -F${MACOS_SDK_DIR}/System/Library/Frameworks"
-    if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
-      SDK_C_INCLUDE="$SDK_C_INCLUDE -F${MACOS_SDK_DIR}/Library/Frameworks"
-    fi
-    SDK_CXX_INCLUDE="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++ -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/ppc-darwin -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/backward"
-
-    CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
-    CXXFLAGS="$CXXFLAGS -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
-
-    dnl CPP/CXXCPP needs to be set for AC_CHECK_HEADER.
-    CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
-    CXXCPP="$CXXCPP -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
-
-    dnl ld support for -syslibroot is compiler-agnostic, but only available
-    dnl on Tiger.  Although it's possible to switch on the build host's
-    dnl OS release to use ld -syslibroot when available, ld -syslibroot will
-    dnl cause warnings as long as NEXT_ROOT is set.  NEXT_ROOT should be
-    dnl set because both the compiler and linker use it.
-    LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin -L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
-    export NEXT_ROOT=$MACOS_SDK_DIR
-
-    if test -n "$CROSS_COMPILE" ; then
-      dnl NEXT_ROOT will be in the environment, but it shouldn't be set for
-      dnl the build host.  HOST_CXX is presently unused.
-      HOST_CC="NEXT_ROOT= $HOST_CC"
-      HOST_CXX="NEXT_ROOT= $HOST_CXX"
-    fi
+    AC_MSG_ERROR([You need to upgrade the compiler version to 4.x])
   else
-    dnl gcc >= 4.0 uses different paths than above, but knows how to find
-    dnl them itself.
     CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
     CXXFLAGS="$CXXFLAGS -isysroot ${MACOS_SDK_DIR}"
 
