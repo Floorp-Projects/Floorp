@@ -327,10 +327,12 @@ xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval);
 JSBool
 xpc_qsUnwrapThisImpl(JSContext *cx,
                      JSObject *obj,
+                     JSObject *callee,
                      const nsIID &iid,
                      void **ppThis,
                      nsISupports **ppThisRef,
-                     jsval *vp);
+                     jsval *vp,
+                     XPCLazyCallContext *lccx);
 
 /**
  * Search @a obj and its prototype chain for an XPCOM object that implements
@@ -352,16 +354,20 @@ template <class T>
 inline JSBool
 xpc_qsUnwrapThis(JSContext *cx,
                  JSObject *obj,
+                 JSObject *callee,
                  T **ppThis,
                  nsISupports **pThisRef,
-                 jsval *pThisVal)
+                 jsval *pThisVal,
+                 XPCLazyCallContext *lccx)
 {
     return xpc_qsUnwrapThisImpl(cx,
                                 obj,
+                                callee,
                                 NS_GET_TEMPLATE_IID(T),
                                 reinterpret_cast<void **>(ppThis),
                                 pThisRef,
-                                pThisVal);
+                                pThisVal,
+                                lccx);
 }
 
 JSBool
@@ -417,22 +423,19 @@ xpc_qsGetWrapperCache(void *p)
 
 /** Convert an XPCOM pointer to jsval. Return JS_TRUE on success. */
 JSBool
-xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx,
+xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx,
                          nsISupports *p,
                          nsWrapperCache *cache,
-                         XPCNativeInterface *iface,
+                         const nsIID *iid,
+                         XPCNativeInterface **iface,
                          jsval *rval);
 
 /**
  * Convert a variant to jsval. Return JS_TRUE on success.
- *
- * @a paramNum is used in error messages. XPConnect treats the return
- * value as a parameter in this regard.
  */
 JSBool
-xpc_qsVariantToJsval(XPCCallContext &ccx,
+xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
                      nsIVariant *p,
-                     uintN paramNum,
                      jsval *rval);
 
 #ifdef DEBUG
@@ -449,15 +452,5 @@ xpc_qsSameResult(nsISupports *result1, nsISupports *result2)
 #else
 #define XPC_QS_ASSERT_CONTEXT_OK(cx) ((void) 0)
 #endif
-
-#define XPC_QS_DEFINE_XPCNATIVEINTERFACE_GETTER(_iface, _iface_cache)         \
-inline XPCNativeInterface*                                                    \
-_iface##_Interface(XPCCallContext& ccx)                                       \
-{                                                                             \
-    if(!(_iface_cache))                                                       \
-        (_iface_cache) =                                                      \
-            XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(_iface));       \
-    return (_iface_cache);                                                    \
-}
 
 #endif /* xpcquickstubs_h___ */
