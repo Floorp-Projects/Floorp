@@ -122,7 +122,7 @@ richlistitem[type="download"] button {
   border: 1px solid rgba(0, 0, 0, 0.6);
   -moz-border-radius: 3px;
   -moz-box-shadow: rgba(255, 255, 255, 0.4) 0 1px;
-  background: url("chrome://global/skin/toolbar/white-transparent-gradient.png") repeat-x #B4B4B4;
+  background: -moz-linear-gradient(top, bottom, from(#FFF), to(#B4B4B4)) repeat-x;
 }
 
 #clearListButton:hover:active:not([disabled="true"]) {
@@ -134,5 +134,5 @@ richlistitem[type="download"] button {
 :root:not([active]) #clearListButton {
   color: #7C7C7C !important; /* remove this when we support click-through, bug 392188 */
   border-color: rgba(0, 0, 0, 0.25);
-  background-color: #CCC;
+  background-image: -moz-linear-gradient(top, bottom, from(#FFF), to(#CCC));
 }

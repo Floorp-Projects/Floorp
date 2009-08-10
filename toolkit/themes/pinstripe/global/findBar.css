@@ -3,7 +3,7 @@
 /* ::::: find toolbar ::::: */
 
 findbar {
-  background: url("chrome://global/skin/icons/find-bar-background.png") repeat-x top center #D0D0D0;
+  background: -moz-linear-gradient(top, bottom, from(#E8E8E8), to(#D0D0D0)) repeat-x;
   border-top: 1px solid #888;
   min-width: 1px;
   padding: 4px 1px;
@@ -37,7 +37,7 @@ findbar {
   -moz-appearance: none;
   border: 1px solid rgba(0, 0, 0, .4);
   -moz-border-radius: 100%;
-  background: url("chrome://global/skin/toolbar/white-transparent-gradient.png") #C3C3C3 repeat-x top center;
+  background: -moz-linear-gradient(top, bottom, from(#FFF), to(#CACACA)) repeat-x;
   margin: 0 4px;
   padding: 1px 3px;
   -moz-box-shadow: 0 1px 0 rgba(255, 255, 255, .4);
