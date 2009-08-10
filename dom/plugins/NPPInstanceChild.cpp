@@ -51,9 +51,11 @@
 
 #endif
 
-namespace mozilla {
-namespace plugins {
-//-----------------------------------------------------------------------------
+using mozilla::plugins::NPPInstanceChild;
+using mozilla::plugins::NPObjectChild;
+using mozilla::plugins::NPObjectProtocolChild;
+
+namespace {
 
 static const char*
 NPNVariableToString(NPNVariable aVar)
@@ -86,6 +88,8 @@ NPNVariableToString(NPNVariable aVar)
     }
 #undef VARSTR
 }
+
+} /* anonymous namespace */
 
 NPPInstanceChild::~NPPInstanceChild()
 {
@@ -355,5 +359,17 @@ NPPInstanceChild::PluginWindowProc(HWND hWnd,
 
 #endif // OS_WIN
 
-} // namespace plugins
-} // namespace mozilla
+NPObjectProtocolChild*
+NPPInstanceChild::NPObjectConstructor(NPError* _retval)
+{
+    NS_NOTYETIMPLEMENTED("NPPInstanceChild::NPObjectConstructor");
+    return nsnull;
+}
+
+nsresult
+NPPInstanceChild::NPObjectDestructor(NPObjectProtocolChild* aObject,
+                                     NPError* _retval)
+{
+    NS_NOTYETIMPLEMENTED("NPPInstanceChild::NPObjectDestructor");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

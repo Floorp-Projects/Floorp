@@ -48,23 +48,25 @@ DIRS += testplugin
 
 EXPORTS_NAMESPACES = mozilla
 
-EXPORTS_mozilla =				\
-  SharedLibrary.h				\
-  SharedPRLibrary.h				\
+EXPORTS_mozilla = \
+  SharedLibrary.h \
+  SharedPRLibrary.h \
   $(NULL)
 
 ifdef MOZ_IPC
 
 EXPORTS_NAMESPACES = mozilla mozilla/plugins
 
-EXPORTS_mozilla/plugins =			\
-  NPAPIPluginChild.h				\
-  NPAPIPluginParent.h				\
-  NPPInstanceChild.h				\
-  NPPInstanceParent.h				\
-  PluginMessageUtils.h				\
-  PluginProcessParent.h				\
-  PluginThreadChild.h				\
+EXPORTS_mozilla/plugins = \
+  NPAPIPluginChild.h \
+  NPAPIPluginParent.h \
+  NPObjectChild.h \
+  NPObjectParent.h \
+  NPPInstanceChild.h \
+  NPPInstanceParent.h \
+  PluginMessageUtils.h \
+  PluginProcessParent.h \
+  PluginThreadChild.h \
   $(NULL)
 
 MODULE           = dom
@@ -74,18 +76,20 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 ENABLE_CXX_EXCEPTIONS = 1
 
-CPPSRCS =					\
-  NPAPIPluginChild.cpp				\
-  NPAPIPluginParent.cpp				\
-  NPPInstanceChild.cpp				\
-  NPPInstanceParent.cpp				\
-  PluginProcessParent.cpp			\
-  PluginThreadChild.cpp				\
+CPPSRCS =	 \
+  NPAPIPluginChild.cpp \
+  NPAPIPluginParent.cpp \
+  NPObjectChild.cpp \
+  NPObjectParent.cpp \
+  NPPInstanceChild.cpp \
+  NPPInstanceParent.cpp \
+  PluginProcessParent.cpp \
+  PluginThreadChild.cpp \
   $(NULL)
 
-LOCAL_INCLUDES =				\
-  -I$(topsrcdir)/modules/plugin/base/public/	\
-  -I$(topsrcdir)/modules/plugin/base/src/	\
+LOCAL_INCLUDES = \
+  -I$(topsrcdir)/modules/plugin/base/public/ \
+  -I$(topsrcdir)/modules/plugin/base/src/ \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

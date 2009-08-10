@@ -42,24 +42,19 @@
 #include "IPC/IPCMessageUtils.h"
 
 #include "npapi.h"
+#include "npruntime.h"
+#include "nsAutoPtr.h"
+#include "nsStringGlue.h"
+
+namespace mozilla {
+namespace ipc {
+
+typedef intptr_t NPRemoteIdentifier;
+
+} /* namespace ipc */
+} /* namespace mozilla */
 
 namespace IPC {
-
-#if 0
-  void* window;  /* Platform specific window handle */
-                 /* OS/2: x - Position of bottom left corner */
-                 /* OS/2: y - relative to visible netscape window */
-  int32_t  x;      /* Position of top left corner relative */
-  int32_t  y;      /* to a netscape page. */
-  uint32_t width;  /* Maximum window size */
-  uint32_t height;
-  NPRect   clipRect; /* Clipping rectangle in port coordinates */
-                     /* Used by MAC only. */
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-  void * ws_info; /* Platform-dependent additonal data */
-#endif /* XP_UNIX */
-  NPWindowType type; /* Is this a window or a drawable? */
-#endif
 
 template <>
 struct ParamTraits<NPRect>
@@ -174,6 +169,180 @@ struct ParamTraits<NPWindow>
                               (unsigned long)aParam.window,
                               aParam.x, aParam.y, aParam.width,
                               aParam.height, (long)aParam.type));
+  }
+};
+
+template <>
+struct ParamTraits<NPString>
+{
+  typedef NPString paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.UTF8Length);
+    aMsg->WriteBytes(aParam.UTF8Characters,
+                     aParam.UTF8Length * sizeof(NPUTF8));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (ReadParam(aMsg, aIter, &aResult->UTF8Length)) {
+      int byteCount = aResult->UTF8Length * sizeof(NPUTF8);
+      if (!byteCount) {
+        aResult->UTF8Characters = "\0";
+        return true;
+      }
+
+      const char* messageBuffer = nsnull;
+      nsAutoArrayPtr<char> newBuffer(new char[byteCount]);
+      if (newBuffer && aMsg->ReadBytes(aIter, &messageBuffer, byteCount )) {
+        memcpy((void*)messageBuffer, newBuffer.get(), byteCount);
+        aResult->UTF8Characters = newBuffer.forget();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    aLog->append(StringPrintf(L"%s", aParam.UTF8Characters));
+  }
+};
+
+template <>
+struct ParamTraits<NPVariant>
+{
+  typedef NPVariant paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    if (NPVARIANT_IS_VOID(aParam)) {
+      aMsg->WriteInt(0);
+      return;
+    }
+
+    if (NPVARIANT_IS_NULL(aParam)) {
+      aMsg->WriteInt(1);
+      return;
+    }
+
+    if (NPVARIANT_IS_BOOLEAN(aParam)) {
+      aMsg->WriteInt(2);
+      WriteParam(aMsg, NPVARIANT_TO_BOOLEAN(aParam));
+      return;
+    }
+
+    if (NPVARIANT_IS_INT32(aParam)) {
+      aMsg->WriteInt(3);
+      WriteParam(aMsg, NPVARIANT_TO_INT32(aParam));
+      return;
+    }
+
+    if (NPVARIANT_IS_DOUBLE(aParam)) {
+      aMsg->WriteInt(4);
+      WriteParam(aMsg, NPVARIANT_TO_DOUBLE(aParam));
+      return;
+    }
+
+    if (NPVARIANT_IS_STRING(aParam)) {
+      aMsg->WriteInt(5);
+      WriteParam(aMsg, NPVARIANT_TO_STRING(aParam));
+      return;
+    }
+
+    NS_ERROR("Unsupported type!");
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    int type;
+    if (!aMsg->ReadInt(aIter, &type)) {
+      return false;
+    }
+
+    switch (type) {
+      case 0:
+        VOID_TO_NPVARIANT(*aResult);
+        return true;
+
+      case 1:
+        NULL_TO_NPVARIANT(*aResult);
+        return true;
+
+      case 2: {
+        bool value;
+        if (ReadParam(aMsg, aIter, &value)) {
+          BOOLEAN_TO_NPVARIANT(value, *aResult);
+          return true;
+        }
+      } break;
+
+      case 3: {
+        int32 value;
+        if (ReadParam(aMsg, aIter, &value)) {
+          INT32_TO_NPVARIANT(value, *aResult);
+          return true;
+        }
+      } break;
+
+      case 4: {
+        double value;
+        if (ReadParam(aMsg, aIter, &value)) {
+          DOUBLE_TO_NPVARIANT(value, *aResult);
+          return true;
+        }
+      } break;
+
+      case 5: {
+        NPString value;
+        if (ReadParam(aMsg, aIter, &value)) {
+          STRINGN_TO_NPVARIANT(value.UTF8Characters, value.UTF8Length,
+                               *aResult);
+          return true;
+        }
+      } break;
+
+      default:
+        NS_ERROR("Unsupported type!");
+    }
+
+    return false;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    if (NPVARIANT_IS_VOID(aParam)) {
+      aLog->append(L"[void]");
+      return;
+    }
+
+    if (NPVARIANT_IS_NULL(aParam)) {
+      aLog->append(L"[null]");
+      return;
+    }
+
+    if (NPVARIANT_IS_BOOLEAN(aParam)) {
+      LogParam(NPVARIANT_TO_BOOLEAN(aParam), aLog);
+      return;
+    }
+
+    if (NPVARIANT_IS_INT32(aParam)) {
+      LogParam(NPVARIANT_TO_INT32(aParam), aLog);
+      return;
+    }
+
+    if (NPVARIANT_IS_DOUBLE(aParam)) {
+      LogParam(NPVARIANT_TO_DOUBLE(aParam), aLog);
+      return;
+    }
+
+    if (NPVARIANT_IS_STRING(aParam)) {
+      LogParam(NPVARIANT_TO_STRING(aParam), aLog);
+      return;
+    }
+
+    NS_ERROR("Unsupported type!");
   }
 };
 

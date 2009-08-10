@@ -40,6 +40,7 @@
 #define dom_plugins_NPPInstanceChild_h 1
 
 #include "mozilla/plugins/NPPProtocolChild.h"
+#include "mozilla/plugins/NPObjectChild.h"
 
 #include "npfunctions.h"
 
@@ -48,7 +49,6 @@
 
 namespace mozilla {
 namespace plugins {
-//-----------------------------------------------------------------------------
 
 class NPPInstanceChild : public NPPProtocolChild
 {
@@ -63,6 +63,14 @@ protected:
     virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
     virtual nsresult AnswerNPP_GetValue(const nsString& key, nsString* value);
+
+    virtual NPObjectProtocolChild*
+    NPObjectConstructor(NPError* _retval);
+
+    virtual nsresult
+    NPObjectDestructor(NPObjectProtocolChild* aObject,
+                       NPError* _retval);
+
 
 public:
     NPPInstanceChild(const NPPluginFuncs* aPluginIface) :

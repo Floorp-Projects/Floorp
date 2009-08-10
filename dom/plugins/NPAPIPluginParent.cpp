@@ -38,9 +38,12 @@
 
 #include "mozilla/plugins/NPAPIPluginParent.h"
 
-namespace mozilla {
-namespace plugins {
+using mozilla::plugins::NPAPIPluginParent;
+using mozilla::plugins::NPPProtocolParent;
+using mozilla::SharedLibrary;
 
+// HACKS
+NPAPIPluginParent* NPAPIPluginParent::Shim::HACK_target;
 
 SharedLibrary*
 NPAPIPluginParent::LoadModule(const char* aFilePath, PRLibrary* aLibrary)
@@ -214,10 +217,44 @@ NPAPIPluginParent::NPP_Destroy(NPP instance,
     return prv;
  }
 
-// HACKS
-NPAPIPluginParent* NPAPIPluginParent::Shim::HACK_target;
+nsresult
+NPAPIPluginParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
+                                               NPRemoteIdentifier* aId)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
+nsresult
+NPAPIPluginParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
+                                            NPRemoteIdentifier* aId)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-} // namespace plugins
-} // namespace mozilla
+nsresult
+NPAPIPluginParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
+                                              nsCString* aString)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
+nsresult
+NPAPIPluginParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
+                                             int32_t* aInt)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+NPAPIPluginParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
+                                              bool* aIsString)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+NPAPIPluginParent::RecvNPN_GetStringIdentifiers(nsTArray<nsCString>* aNames,
+                                                nsTArray<NPRemoteIdentifier>* aIds)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

@@ -16,7 +16,7 @@
  * The Original Code is Mozilla Plugin App.
  *
  * The Initial Developer of the Original Code is
- *   Chris Jones <jones.chris.g@gmail.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -36,23 +36,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NPObjectProtocolChild_h
-#define NPObjectProtocolChild_h 1
+#ifndef __DOM_PLUGINS_NPOBJECTCHILD_H__
+#define __DOM_PLUGINS_NPOBJECTCHILD_H__
 
-#include "base/basictypes.h"
-#include "mozilla/plugins/NPRuntimeBase.h"
+#include "mozilla/plugins/NPObjectProtocolChild.h"
 
 namespace mozilla {
 namespace plugins {
-//-----------------------------------------------------------------------------
 
-class NPObjectProtocolChild
+class NPObjectChild : public NPObjectProtocolChild
 {
+public:
+    NPObjectChild();
+    virtual ~NPObjectChild();
 
+    virtual nsresult
+    AnswerInvalidate();
+
+    virtual nsresult
+    AnswerHasMethod(const NPRemoteIdentifier& aId,
+                    bool* aHasMethod);
+
+    virtual nsresult
+    AnswerInvoke(const NPRemoteIdentifier& aId,
+                 const nsTArray<NPVariant>& aArgs,
+                 NPVariant* aResult,
+                 bool* aSuccess);
+
+    virtual nsresult
+    AnswerInvokeDefault(const NPRemoteIdentifier& aId,
+                        const nsTArray<NPVariant>& aArgs,
+                        NPVariant* aResult,
+                        bool* aSuccess);
+
+    virtual nsresult
+    AnswerHasProperty(const NPRemoteIdentifier& aId,
+                      bool* aHasProperty);
+
+    virtual nsresult
+    AnswerGetProperty(const NPRemoteIdentifier& aId,
+                      NPVariant* aResult,
+                      bool* aSuccess);
+
+    virtual nsresult
+    AnswerSetProperty(const NPRemoteIdentifier& aId,
+                      const NPVariant& aValue,
+                      bool* aSuccess);
+
+    virtual nsresult
+    AnswerRemoveProperty(const NPRemoteIdentifier& aId,
+                         bool* aSuccess);
+
+    virtual nsresult
+    AnswerEnumerate(nsTArray<NPRemoteIdentifier>* aProperties,
+                    bool* aSuccess);
+
+    virtual nsresult
+    AnswerConstruct(const nsTArray<NPVariant>& aArgs,
+                    NPVariant* aResult,
+                    bool* aSuccess);
 };
 
+} /* namespace plugins */
+} /* namespace mozilla */
 
-} // namespace plugins
-} // namespace mozilla
-
-#endif  // ifndef NPObjectProtocolChild_h
+#endif /* __DOM_PLUGINS_NPOBJECTCHILD_H__ */

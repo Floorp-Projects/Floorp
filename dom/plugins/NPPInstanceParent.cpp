@@ -38,9 +38,9 @@
 
 #include "NPPInstanceParent.h"
 
-namespace mozilla {
-namespace plugins {
-//-----------------------------------------------------------------------------
+using mozilla::plugins::NPPInstanceParent;
+using mozilla::plugins::NPObjectParent;
+using mozilla::plugins::NPObjectProtocolParent;
 
 NPError
 NPPInstanceParent::NPP_SetWindow(NPWindow* aWindow)
@@ -75,6 +75,17 @@ NPPInstanceParent::NPP_GetValue(NPPVariable variable, void *ret_value)
     return NPERR_GENERIC_ERROR;
 }
 
+NPObjectProtocolParent*
+NPPInstanceParent::NPObjectConstructor(NPError* _retval)
+{
+    NS_NOTYETIMPLEMENTED("NPPInstanceParent::NPObjectConstructor");
+    return nsnull;
+}
 
-} // namespace plugins
-} // namespace mozilla
+nsresult
+NPPInstanceParent::NPObjectDestructor(NPObjectProtocolParent* aObject,
+                                      NPError* _retval)
+{
+    NS_NOTYETIMPLEMENTED("NPPInstanceParent::NPObjectDestructor");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
