@@ -52,10 +52,10 @@ class nsIContent;
 class nsIDOMElement;
 class nsIArray;
 
-// 35dfc2a6-b069-4014-ad4b-01927e77d828
+// 5cfdb02f-0962-454c-b015-b05123927021
 #define NS_IINSPECTORCSSUTILS_IID \
-  { 0x35dfc2a6, 0xb069, 0x4014, \
-    {0xad, 0x4b, 0x01, 0x92, 0x7e, 0x77, 0xd8, 0x28 } }
+  { 0x5cfdb02f, 0x0962, 0x454c, \
+    { 0xb0, 0x15, 0xb0, 0x51, 0x23, 0x92, 0x70, 0x21 } }
 
 // 7ef2f07f-6e34-410b-8336-88acd1cd16b7
 #define NS_INSPECTORCSSUTILS_CID \
@@ -76,13 +76,6 @@ public:
     NS_IMETHOD GetRuleNodeParent(nsRuleNode *aNode, nsRuleNode **aParent) = 0;
     NS_IMETHOD GetRuleNodeRule(nsRuleNode *aNode, nsIStyleRule **aRule) = 0;
     NS_IMETHOD IsRuleNodeRoot(nsRuleNode *aNode, PRBool *aIsRoot) = 0;
-
-    // Hooks to methods that need nsStyleContext
-    NS_IMETHOD GetRuleNodeForContent(nsIContent* aContent,
-                                     nsRuleNode** aParent) = 0;
-
-    // Hooks to XBL
-    NS_IMETHOD GetBindingURLs(nsIDOMElement *aElement, nsIArray **aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIInspectorCSSUtils, NS_IINSPECTORCSSUTILS_IID)
