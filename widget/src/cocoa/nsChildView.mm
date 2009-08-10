@@ -2327,158 +2327,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-// Find the nearest scrollable view for this ChildView
-// (recall that views are not refcounted)
-- (nsIScrollableView*) getScrollableView
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
-
-  nsIScrollableView* scrollableView = nsnull;
-
-  ChildView* currView = self;
-  // we have to loop up through superviews in case the view that received the
-  // mouseDown is in fact a plugin view with no scrollbars
-  while (currView) {
-    nsIWidget* widget = [currView widget];
-    if (widget) {
-      void* clientData;
-      if (NS_SUCCEEDED(widget->GetClientData(clientData))) {
-        nsISupports* data = (nsISupports*)clientData;
-        nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
-        if (req) {
-          req->GetInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
-          if (scrollableView)
-            break;
-        }
-      }
-    }
-
-    NSView* superview = [currView superview];
-    if (superview && [superview isMemberOfClass:[ChildView class]])
-        currView = (ChildView*)superview;
-    else
-        currView = nil;
-  }
-
-  return scrollableView;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
-}
-
-// set the closed hand cursor and record the starting scroll positions
-- (void) startHandScroll:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mGeckoChild)
-    return;
-
-  mHandScrollStartMouseLoc = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
-
-  nsIScrollableView* aScrollableView = [self getScrollableView]; 
-
-  // if we succeeded in getting aScrollableView
-  if (aScrollableView) {
-    aScrollableView->GetScrollPosition(mHandScrollStartScrollX, mHandScrollStartScrollY);
-    mGeckoChild->SetCursor(eCursor_grabbing);
-    mInHandScroll = TRUE;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// update the scroll position based on the new mouse coordinates
-- (void) updateHandScroll:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mGeckoChild)
-    return;
-
-  nsIScrollableView* aScrollableView = [self getScrollableView];
-  if (!aScrollableView)
-    return;
-
-  NSPoint newMouseLoc = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
-
-  PRInt32 deltaX = (PRInt32)(mHandScrollStartMouseLoc.x - newMouseLoc.x);
-  PRInt32 deltaY = (PRInt32)(newMouseLoc.y - mHandScrollStartMouseLoc.y);
-
-  // convert to the nsIView coordinates
-  PRInt32 p2a = mGeckoChild->GetDeviceContext()->AppUnitsPerDevPixel();
-  nscoord newX = mHandScrollStartScrollX + NSIntPixelsToAppUnits(deltaX, p2a);
-  nscoord newY = mHandScrollStartScrollY + NSIntPixelsToAppUnits(deltaY, p2a);
-  aScrollableView->ScrollTo(newX, newY, 0);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// Return true if the correct modifiers are pressed to perform hand scrolling.
-+ (BOOL) areHandScrollModifiers:(unsigned int)modifiers
-{
-  // The command and option key should be held down.  Ignore capsLock by
-  // setting it explicitly to match.
-  modifiers |= NSAlphaShiftKeyMask;
-  return (modifiers & NSDeviceIndependentModifierFlagsMask) ==
-      (NSAlphaShiftKeyMask | NSCommandKeyMask | NSAlternateKeyMask);
-}
-
-// If the user is pressing the hand scroll modifiers, then set
-// the hand scroll cursor.
-- (void) setHandScrollCursor:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mGeckoChild)
-    return;
-
-  BOOL inMouseView = NO;
-
-  // check to see if the user has hand scroll modifiers held down; if so, 
-  // find out if the cursor is in an ChildView
-  if ([ChildView areHandScrollModifiers:nsCocoaUtils::GetCocoaEventModifierFlags(theEvent)]) {
-    NSPoint pointInWindow = [[self window] mouseLocationOutsideOfEventStream];
-
-    NSView* mouseView = [[[self window] contentView] hitTest:pointInWindow];
-    inMouseView = (mouseView != nil && [mouseView isMemberOfClass:[ChildView class]]);   
-  }
-  if (inMouseView) {
-      mGeckoChild->SetCursor(eCursor_grab);
-  } else {
-    nsCursor cursor = mGeckoChild->GetCursor();
-    if (!mInHandScroll) {
-      if (cursor == eCursor_grab || cursor == eCursor_grabbing)
-        mGeckoChild->SetCursor(eCursor_standard);
-    }
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// reset the scroll flag and cursor
-- (void) stopHandScroll:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  mInHandScroll = FALSE;
-  [self setHandScrollCursor:theEvent];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// When smooth scrolling is turned on on panther, the parent of a scrollbar (which
-// I guess they assume is a NSScrollView) gets called with this method. I have no
-// idea what the correct return value is, but we have to have this otherwise the scrollbar
-// will not continuously respond when the mouse is held down in the pageup/down area.
--(float)_destinationFloatValueForScroller:(id)scroller
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  return [scroller floatValue];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0.0);
-}
-
 // Make the origin of this view the topLeft corner (gecko origin) rather
 // than the bottomLeft corner (standard cocoa origin).
 - (BOOL)isFlipped
@@ -3222,17 +3070,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   if ([self maybeRollup:theEvent])
     return;
 
-  unsigned int modifierFlags = nsCocoaUtils::GetCocoaEventModifierFlags(theEvent);
-
-  // if the command and alt keys are held down, initiate hand scrolling
-  if ([ChildView areHandScrollModifiers:modifierFlags]) {
-    [self startHandScroll:theEvent];
-    // needed to change the focus, among other things, since we don't
-    // get to do that below.
-    [super mouseDown:theEvent];
-    return; // do not pass this mousedown event to gecko
-  }
-
 #if USE_CLICK_HOLD_CONTEXTMENU
   // fire off timer to check for click-hold after two seconds. retains |theEvent|
   [self performSelector:@selector(clickHoldCallback:) withObject:theEvent afterDelay:2.0];
@@ -3245,7 +3082,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
-  if (modifierFlags & NSControlKeyMask)
+  if (nsCocoaUtils::GetCocoaEventModifierFlags(theEvent) & NSControlKeyMask)
     geckoEvent.button = nsMouseEvent::eRightButton;
   else
     geckoEvent.button = nsMouseEvent::eLeftButton;
@@ -3269,12 +3106,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 - (void)mouseUp:(NSEvent *)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mInHandScroll) {
-    [self updateHandScroll:theEvent];
-    [self stopHandScroll:theEvent];
-    return;
-  }
 
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
@@ -3442,16 +3273,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
     // mark this view as the last view entered
     sLastViewEntered = (NSView*)self;
-
-    // checks to see if we should change to the hand cursor
-    [self setHandScrollCursor:theEvent];
   }
-
-  // check if we are in a hand scroll or if the user
-  // has command and alt held down; if so,  we do not want
-  // gecko messing with the cursor.
-  if ([ChildView areHandScrollModifiers:nsCocoaUtils::GetCocoaEventModifierFlags(theEvent)])
-    return;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -3479,12 +3301,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   if (!mGeckoChild)
     return;
-
-  // if the handscroll flag is set, steal this event
-  if (mInHandScroll) {
-    [self updateHandScroll:theEvent];
-    return;
-  }
 
   gLastDragView = self;
   gLastDragEvent = theEvent;
@@ -5683,9 +5499,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
     gLastModifierState = modifiers;
   }
-
-  // check if the hand scroll cursor needs to be set/unset
-  [self setHandScrollCursor:theEvent];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
