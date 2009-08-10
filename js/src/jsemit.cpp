@@ -2433,10 +2433,6 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
       case PN_UNARY:
         switch (pn->pn_type) {
-          case TOK_RP:
-            ok = CheckSideEffects(cx, cg, pn->pn_kid, answer);
-            break;
-
           case TOK_DELETE:
             pn2 = pn->pn_kid;
             switch (pn2->pn_type) {
@@ -3631,10 +3627,6 @@ static JSBool
 EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
     jsuint slot;
-
-    /* Skip any parenthesization. */
-    while (pn->pn_type == TOK_RP)
-        pn = pn->pn_kid;
 
     /*
      * Now emit the lvalue opcode sequence.  If the lvalue is a nested
@@ -5606,7 +5598,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * stack, which impose pervasive runtime "GetValue" costs.
          */
         pn2 = pn->pn_left;
-        JS_ASSERT(pn2->pn_type != TOK_RP);
         atomIndex = (jsatomid) -1;              /* quell GCC overwarning */
         switch (pn2->pn_type) {
           case TOK_NAME:
@@ -5985,12 +5976,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
         pn2 = pn->pn_kid;
-        if (op == JSOP_TYPEOF) {
-            for (pn3 = pn2; pn3->pn_type == TOK_RP; pn3 = pn3->pn_kid)
-                continue;
-            if (pn3->pn_type != TOK_NAME)
-                op = JSOP_TYPEOFEXPR;
-        }
+        if (op == JSOP_TYPEOF && pn2->pn_type != TOK_NAME)
+            op = JSOP_TYPEOFEXPR;
         oldflags = cg->flags;
         cg->flags &= ~TCF_IN_FOR_INIT;
         if (!js_EmitTree(cx, cg, pn2))
@@ -6438,7 +6425,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
             if (op == JSOP_NEWINIT && !EmitNumberOp(cx, atomIndex, cg))
                 return JS_FALSE;
-            if (pn2->pn_type == TOK_COMMA) {
+            if (pn2->pn_type == TOK_COMMA && pn2->pn_arity == PN_NULLARY) {
                 if (js_Emit1(cx, cg, JSOP_HOLE) < 0)
                     return JS_FALSE;
             } else {
@@ -6562,23 +6549,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         EMIT_UINT16_IMM_OP(JSOP_USESHARP, (jsatomid) pn->pn_num);
         break;
 #endif /* JS_HAS_SHARP_VARS */
-
-      case TOK_RP:
-      {
-        uintN oldflags;
-
-        /*
-         * The node for (e) has e as its kid, enabling users who want to nest
-         * assignment expressions in conditions to avoid the error correction
-         * done by Condition (from x = y to x == y) by double-parenthesizing.
-         */
-        oldflags = cg->flags;
-        cg->flags &= ~TCF_IN_FOR_INIT;
-        if (!js_EmitTree(cx, cg, pn->pn_kid))
-            return JS_FALSE;
-        cg->flags |= oldflags & TCF_IN_FOR_INIT;
-        break;
-      }
 
       case TOK_NAME:
         /*
