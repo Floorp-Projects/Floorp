@@ -44,6 +44,8 @@
 #include "nsISupportsArray.h"
 #include "nsIInspectorCSSUtils.h"
 
+class nsRuleNode;
+
 class inDOMUtils : public inIDOMUtils
 {
 public:
@@ -53,9 +55,11 @@ public:
   inDOMUtils();
   virtual ~inDOMUtils();
 
-protected:
+private:
   nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
 
+  static nsresult GetRuleNodeForContent(nsIContent* aContent,
+                                        nsRuleNode** aRuleNode);
 };
 
 // {40B22006-5DD5-42f2-BFE7-7DBF0757AB8B}
