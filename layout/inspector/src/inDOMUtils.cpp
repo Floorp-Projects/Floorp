@@ -58,13 +58,10 @@
 #include "nsBindingManager.h"
 #include "nsComputedDOMStyle.h"
 
-static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
-
 ///////////////////////////////////////////////////////////////////////////////
 
 inDOMUtils::inDOMUtils()
 {
-  mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
 inDOMUtils::~inDOMUtils()
