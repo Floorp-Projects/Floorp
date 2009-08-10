@@ -1548,8 +1548,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
             if(isArray)
             {
-
-                if(!XPCConvert::NativeArray2JS(ccx, &val, (const void**)&pv->val,
+                XPCLazyCallContext lccx(ccx);
+                if(!XPCConvert::NativeArray2JS(lccx, &val,
+                                               (const void**)&pv->val,
                                                datum_type, &param_iid,
                                                array_count, obj, nsnull))
                     goto pre_call_clean_up;
