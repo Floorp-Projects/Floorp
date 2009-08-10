@@ -1211,9 +1211,9 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   window.addEventListener("fullscreen", onFullScreen, true);
 
   if (isLoadingBlank && gURLBar && isElementVisible(gURLBar))
-    focusElement(gURLBar);
+    gURLBar.focus();
   else
-    focusElement(content);
+    gBrowser.selectedBrowser.focus();
 
   if (gURLBar)
     gURLBar.emptyText = gURLBarEmptyText.value;
