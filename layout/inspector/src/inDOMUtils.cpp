@@ -43,6 +43,7 @@
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
+#include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMCharacterData.h"
 #include "nsRuleNode.h"
@@ -50,6 +51,12 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsXBLBinding.h"
+#include "nsXBLPrototypeBinding.h"
+#include "nsIDOMElement.h"
+#include "nsIMutableArray.h"
+#include "nsBindingManager.h"
+#include "nsComputedDOMStyle.h"
 
 static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
@@ -160,7 +167,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
 
   nsRuleNode* ruleNode = nsnull;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  mCSSUtils->GetRuleNodeForContent(content, &ruleNode);
+  GetRuleNodeForContent(content, &ruleNode);
   if (!ruleNode) {
     // This can fail for content nodes that are not in the document or
     // if the document they're in doesn't have a presshell.  Bail out.
@@ -213,7 +220,28 @@ NS_IMETHODIMP
 inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
 {
   NS_ENSURE_ARG_POINTER(aElement);
-  return mCSSUtils->GetBindingURLs(aElement, _retval);
+
+  *_retval = nsnull;
+
+  nsCOMPtr<nsIMutableArray> urls = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!urls)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  NS_ASSERTION(content, "elements must implement nsIContent");
+
+  nsIDocument *ownerDoc = content->GetOwnerDoc();
+  if (ownerDoc) {
+    nsXBLBinding *binding = ownerDoc->BindingManager()->GetBinding(content);
+
+    while (binding) {
+      urls->AppendElement(binding->PrototypeBinding()->BindingURI(), PR_FALSE);
+      binding = binding->GetBaseBinding();
+    }
+  }
+
+  NS_ADDREF(*_retval = urls);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -250,3 +278,19 @@ inDOMUtils::GetContentState(nsIDOMElement *aElement, PRInt32* aState)
   return NS_ERROR_FAILURE;
 }
 
+/* static */ nsresult
+inDOMUtils::GetRuleNodeForContent(nsIContent* aContent, nsRuleNode** aRuleNode)
+{
+  *aRuleNode = nsnull;
+
+  nsIDocument* doc = aContent->GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
+  nsIPresShell *presShell = doc->GetPrimaryShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
+
+  nsRefPtr<nsStyleContext> sContext =
+    nsComputedDOMStyle::GetStyleContextForContent(aContent, nsnull, presShell);
+  *aRuleNode = sContext->GetRuleNode();
+  return NS_OK;
+}
