@@ -31,11 +31,8 @@ tree.sidebar-placesTree treechildren::-moz-tree-row {
 }
 
 #bookmarks-view treechildren::-moz-tree-row(selected), 
-#historyTree treechildren::-moz-tree-row(selected) {  
-  background-color: #6f81a9;
-  background-image: url("chrome://browser/skin/places/selected-gradient.png");
-  background-repeat: repeat-x;
-  background-position: bottom left;
+#historyTree treechildren::-moz-tree-row(selected) {
+  background: -moz-linear-gradient(top, bottom, from(#B5B5B5), to(#8A8A8A)) repeat-x;
   border-top: 1px solid #979797;
 }
 
@@ -50,9 +47,8 @@ tree.sidebar-placesTree treechildren::-moz-tree-separator {
 }
 
 #bookmarks-view treechildren::-moz-tree-row(selected,focus),
-#historyTree treechildren::-moz-tree-row(selected,focus) {  
-  background-image: url("chrome://browser/skin/places/selected-focused-gradient.png");
-  background-color: #8a8a8a !important;
+#historyTree treechildren::-moz-tree-row(selected,focus) {
+  background: -moz-linear-gradient(top, bottom, from(#A2B1D0), to(#6E81A9)) repeat-x;
   border-top: 1px solid #91a0c0;
 }
 
