@@ -46,6 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 NO_PKG_FILES = \
 	$(MOZ_APP_NAME)-config \
 	$(MOZ_APP_NAME)-bin.elf \
+	nspr-config \
 	regchrome* \
 	regxpcom* \
 	xpcshell* \
