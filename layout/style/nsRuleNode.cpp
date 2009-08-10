@@ -4663,8 +4663,8 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   nscolor outlineColor;
   nscolor unused = NS_RGB(0,0,0);
   if (eCSSUnit_Inherit == marginData.mOutlineColor.GetUnit()) {
+    canStoreInRuleTree = PR_FALSE;
     if (parentContext) {
-      canStoreInRuleTree = PR_FALSE;
       if (parentOutline->GetOutlineColor(outlineColor))
         outline->SetOutlineColor(outlineColor);
       else {
