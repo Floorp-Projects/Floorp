@@ -160,23 +160,16 @@ BrowserView.Util = {
     return BrowserView.Util.clampZoomLevel(visibleRect.width / browserW);
   },
 
-  seenBrowser: function seenBrowser(browser) {
-    return !!(browser.__BrowserView__vps);
-  },
-
-  initBrowserState: function initBrowserState(browser, visibleRect) {
+  createBrowserViewportState: function createBrowserViewportState(browser, visibleRect) {
     let [browserW, browserH] = BrowserView.Util.getBrowserDimensions(browser);
 
     let zoomLevel = BrowserView.Util.pageZoomLevel(visibleRect, browserW, browserH);
     let viewportRect = (new wsRect(0, 0, browserW, browserH)).scale(zoomLevel, zoomLevel);
 
-    dump('--- initing browser to ---' + endl);
-    browser.__BrowserView__vps = new BrowserView.BrowserViewportState(viewportRect,
-                                                                      visibleRect.x,
-                                                                      visibleRect.y,
-                                                                      zoomLevel);
-    dump(browser.__BrowserView__vps.toString() + endl);
-    dump('--------------------------' + endl);
+    return new BrowserView.BrowserViewportState(viewportRect,
+                                                visibleRect.x,
+                                                visibleRect.y,
+                                                zoomLevel);
   },
 
   getViewportStateFromBrowser: function getViewportStateFromBrowser(browser) {
@@ -380,7 +373,14 @@ BrowserView.prototype = {
     this._tileManager.endCriticalMove(cr, this.isRendering());
   },
 
-  setBrowser: function setBrowser(browser, doZoom) {
+  /**
+   * Swap out the current browser and browser viewport state with a new pair.
+   */
+  setBrowser: function setBrowser(browser, browserViewportState, doZoom) {
+    if (browser && !browserViewportState) {
+      throw "Cannot set non-null browser with null BrowserViewportState";
+    }
+
     let currentBrowser = this._browser;
 
     let browserChanged = (currentBrowser !== browser);
@@ -393,13 +393,13 @@ BrowserView.prototype = {
       currentBrowser.removeEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange, false);
       // !!! --- RESIZE HACK END -------
 
-      this.discardAllBatchOperations();
-
       currentBrowser.setAttribute("type", "content");
       currentBrowser.docShell.isOffScreenBrowser = false;
     }
 
-    this._restoreBrowser(browser);
+    this._browser = browser;
+    this._contentWindow = (browser) ? browser.contentWindow : null;
+    this._browserViewportState = browserViewportState;
 
     if (browser) {
       browser.setAttribute("type", "content-primary");
@@ -547,21 +547,6 @@ BrowserView.prototype = {
   // -----------------------------------------------------------
   // Private instance methods
   //
-
-  _restoreBrowser: function _restoreBrowser(browser) {
-    let bvs = null;
-
-    if (browser) {
-      if (!BrowserView.Util.seenBrowser(browser))
-        BrowserView.Util.initBrowserState(browser, this.getVisibleRect());
-
-      bvs = BrowserView.Util.getViewportStateFromBrowser(browser);
-    }
-
-    this._browser = browser;
-    this._contentWindow = (browser) ? browser.contentWindow : null;
-    this._browserViewportState = bvs;
-  },
 
   _viewportChanged: function _viewportChanged(viewportSizeChanged, dirtyAll) {
     let bops = this._batchOps;

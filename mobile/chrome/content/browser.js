@@ -92,7 +92,7 @@ function debug() {
 
     let cr = bv._tileManager._criticalRect;
     dump('criticalRect from BV: ' + (cr ? cr.toString() : null) + endl);
-    dump('visibleRect from BV : ' + bv._visibleRect + endl);
+    dump('visibleRect from BV : ' + bv.getVisibleRect().toString() + endl);
     dump('visibleRect from foo: ' + Browser.getVisibleRect().toString() + endl);
 
     dump('bv batchops depth:    ' + bv._batchOps.length + endl);
@@ -534,7 +534,7 @@ var Browser = {
   },
 
   shutdown: function() {
-    this._browserView.setBrowser(null, false);
+    this._browserView.setBrowser(null, null, false);
 
     BrowserUI.uninit();
 
@@ -688,7 +688,21 @@ var Browser = {
     this._selectedTab = tab;
 
     bv.beginBatchOperation();
-    bv.setBrowser(this.selectedBrowser, true);
+
+    bv.setBrowser(tab.browser, tab.browserViewportState, false);
+    bv.forceContainerResize();
+
+    // XXX these should probably be computed less hackily so they don't
+    //   potentially break if we change something in browser.xul
+    let offY = Math.round(document.getElementById("toolbar-container").getBoundingClientRect().height);
+    let restoreX = Math.max(0, tab.browserViewportState.visibleX);
+    let restoreY = Math.max(0, tab.browserViewportState.visibleY) + offY;
+
+    dump('Switch tab scrolls to: ' + restoreX
+                            + ', ' + restoreY + '\n');
+
+    Browser.contentScrollboxScroller.scrollTo(restoreX, restoreY);
+
     document.getElementById("tabs").selectedItem = tab.chromeTab;
 
     if (!firstTab) {
@@ -696,7 +710,7 @@ var Browser = {
       let securityUI = this.selectedBrowser.securityUI;
 
       try {
-        tab._listener.onLocationChange(webProgress, null, this.selectedBrowser.currentURI);
+        tab._listener.onLocationChange(webProgress, null, tab.browser.currentURI);
         if (securityUI)
           tab._listener.onSecurityChange(webProgress, null, securityUI.state);
       } catch (e) {
@@ -708,7 +722,8 @@ var Browser = {
       event.initEvent("TabSelect", true, false);
       tab.chromeTab.dispatchEvent(event);
     }
-    bv.commitBatchOperation(true);
+
+    bv.commitBatchOperation();
   },
 
   supportsCommand: function(cmd) {
@@ -1224,18 +1239,6 @@ Browser.MainDragger = function MainDragger(browserView) {
 };
 
 Browser.MainDragger.prototype = {
-  _targetIsContent: function _targetIsContent(target) {
-    let tileBox = document.getElementById("tile-container");
-    while (target) {
-      if (target === window)
-        return false;
-      if (target === tileBox)
-        return true;
-
-      target = target.parentNode;
-    }
-    return false;
-  },
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
     this.draggedFrame = null;
@@ -1256,45 +1259,6 @@ Browser.MainDragger.prototype = {
     this.floatedWhileDragging = false;
   },
 
-  _panFrame: function _panFrame(dx, dy) {
-    if (this.draggedFrame === null)
-      return false;
-
-    if (dx == 0 && dy == 0)
-      return true;
-
-    let panned = false;
-    let elem = this.draggedFrame;
-
-    // top-level window will have itself as its parent, so stop
-    // there to allow canvasbrowser/widgetstack to pan instead
-    // of doing scrolling
-    while (elem && elem !== elem.parent.document.defaultView) {
-      let windowUtils = elem.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-
-      let origX = {}, origY = {};
-      windowUtils.getScrollXY(false, origX, origY);
-
-      elem.scrollBy(dx, dy);
-
-      let newX = {}, newY = {};
-      windowUtils.getScrollXY(false, newX, newY);
-
-      panned = (origX.value != newX.value) || (origY.value != newY.value);
-
-      if (panned) {
-        // get critical area to redraw after we move frame
-        // NOTE: may need to rate limit these for performance
-        this.bv.renderNow();
-        break;
-      }
-
-      elem = elem.parent.document.defaultView;
-    }
-
-    return panned;
-  },
-
   dragStop: function dragStop(dx, dy, scroller) {
     let dx = this.dragMove(dx, dy, scroller, true);
 
@@ -1311,8 +1275,7 @@ Browser.MainDragger.prototype = {
   dragMove: function dragMove(dx, dy, scroller, doReturnDX) {
     let outrv = 0;
 
-    // first see if we need to adjust internal IFRAME/FRAME
-    if (this._panFrame(dx, dy))
+    if (this._panFrame(dx, dy))  // first see if we need to adjust internal IFRAME/FRAME
       return true;
 
     if (this.scrollingOuterX) {
@@ -1358,8 +1321,6 @@ Browser.MainDragger.prototype = {
     if (realdx != dx) {
       let restdx = dx - realdx;
 
-      dump("--> restdx: " + restdx + "\n");
-
       this.scrollingOuterX = true;
       this.dragMove(restdx, 0, scroller, doReturnDX);
     }
@@ -1380,7 +1341,60 @@ Browser.MainDragger.prototype = {
     this.bv.onAfterVisibleMove(realdx, realdy);
 
     return (doReturnDX) ? realdx : (realdx != 0 || realdy != 0);
+  },
+
+  _panFrame: function _panFrame(dx, dy) {
+    if (this.draggedFrame === null)
+      return false;
+
+    if (dx == 0 && dy == 0)
+      return true;
+
+    let panned = false;
+    let elem = this.draggedFrame;
+
+    // top-level window will have itself as its parent, so stop
+    // there to allow canvasbrowser/widgetstack to pan instead
+    // of doing scrolling
+    while (elem && elem !== elem.parent.document.defaultView) {
+      let windowUtils = elem.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+
+      let origX = {}, origY = {};
+      windowUtils.getScrollXY(false, origX, origY);
+
+      elem.scrollBy(dx, dy);
+
+      let newX = {}, newY = {};
+      windowUtils.getScrollXY(false, newX, newY);
+
+      panned = (origX.value != newX.value) || (origY.value != newY.value);
+
+      if (panned) {
+        // get critical area to redraw after we move frame
+        // NOTE: may need to rate limit these for performance
+        this.bv.renderNow();
+        break;
+      }
+
+      elem = elem.parent.document.defaultView;
+    }
+
+    return panned;
+  },
+
+  _targetIsContent: function _targetIsContent(target) {
+    let tileBox = document.getElementById("tile-container");
+    while (target) {
+      if (target === window)
+        return false;
+      if (target === tileBox)
+        return true;
+
+      target = target.parentNode;
+    }
+    return false;
   }
+
 };
 
 function nsBrowserAccess()
@@ -2181,19 +2195,23 @@ ProgressController.prototype = {
 
 
 function Tab() {
+  this._id = null;
+  this._browser = null;
+  this._browserViewportState = null;
+  this._state = null;
+  this._listener = null;
+  this._loading = false;
+  this._chromeTab = null;
   this.create();
 }
 
 Tab.prototype = {
-  _id: null,
-  _browser: null,
-  _state: null,
-  _listener: null,
-  _loading: false,
-  _chromeTab: null,
-
   get browser() {
     return this._browser;
+  },
+
+  get browserViewportState() {
+    return this._browserViewportState;
   },
 
   get chromeTab() {
@@ -2249,6 +2267,12 @@ Tab.prototype = {
 
     // stop about:blank from loading
     browser.stop();
+
+    // Initialize a viewport state for BrowserView
+    let initVis = Browser.getVisibleRect();
+    initVis.x = 0;
+    initVis.y = 0;
+    this._browserViewportState = BrowserView.Util.createBrowserViewportState(browser, initVis);
 
     // Attach a separate progress listener to the browser
     this._listener = new ProgressController(this);
