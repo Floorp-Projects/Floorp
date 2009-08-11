@@ -2256,7 +2256,28 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
     // There are no lines so we have to fake up some y motion so that
     // we end up with *some* height.
-    aState.mY += metrics.height;
+
+    if (metrics.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE &&
+        !nsLayoutUtils::GetFirstLineBaseline(mBullet, &metrics.ascent)) {
+      metrics.ascent = metrics.height;
+    }
+
+    nsIRenderingContext *rc = aState.mReflowState.rendContext;
+    nsLayoutUtils::SetFontFromStyle(rc, GetStyleContext());
+    nsCOMPtr<nsIFontMetrics> fm;
+    rc->GetFontMetrics(*getter_AddRefs(fm));
+
+    nscoord minAscent =
+      nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
+    nscoord minDescent = aState.mMinLineHeight - minAscent;
+
+    aState.mY += PR_MAX(minAscent, metrics.ascent) +
+                 PR_MAX(minDescent, metrics.height - metrics.ascent);
+
+    nscoord offset = minAscent - metrics.ascent;
+    if (offset > 0) {
+      mBullet->SetRect(mBullet->GetRect() + nsPoint(0, offset));
+    }
   }
 
   if (foundAnyClears) {
@@ -2768,6 +2789,10 @@ nsBlockFrame::IsSelfEmpty()
                      padding->mPadding.GetTop()) ||
       !IsPaddingZero(padding->mPadding.GetBottomUnit(),
                      padding->mPadding.GetBottom())) {
+    return PR_FALSE;
+  }
+
+  if (HaveOutsideBullet()) {
     return PR_FALSE;
   }
 
