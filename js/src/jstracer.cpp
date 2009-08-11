@@ -4722,10 +4722,8 @@ FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, VMFragment** peerp)
         JS_ASSERT(peer->argc == from->argc);
         JS_ASSERT(exit->numStackSlots == peer_ti->nStackTypes);
         TypeConsensus consensus = TypeMapLinkability(cx, typeMap, peer);
-        if (consensus == TypeConsensus_Okay) {
+        if (consensus == TypeConsensus_Okay || consensus == TypeConsensus_Undemotes) {
             *peerp = peer;
-            return consensus;
-        } else if (consensus == TypeConsensus_Undemotes) {
             return consensus;
         }
     }
@@ -4763,7 +4761,7 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
     VMFragment* from = exit->root();
     TreeInfo* from_ti = from->getTreeInfo();
 
-    VMFragment* peer;
+    VMFragment* peer = NULL;
     TypeConsensus consensus = FindLoopEdgeTarget(cx, exit, &peer);
     if (consensus == TypeConsensus_Okay) {
         TreeInfo* peer_ti = peer->getTreeInfo();
