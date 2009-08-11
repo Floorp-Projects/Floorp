@@ -3367,6 +3367,10 @@ FlushJITCache(JSContext* cx)
         }
     }
 
+#ifdef DEBUG
+    delete tm->lirbuf->names;
+    tm->lirbuf->names = new (&gc) LirNameMap(&gc, *tm->allocator, tm->fragmento->labels);
+#endif
     tm->allocator->reset();
     tm->codeAlloc->sweep();
     tm->lirbuf->clear();
