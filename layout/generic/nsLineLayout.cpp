@@ -207,6 +207,10 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mSpanDepth = 0;
   mMaxTopBoxHeight = mMaxBottomBoxHeight = 0;
 
+  if (GetFlag(LL_GOTLINEBOX)) {
+    mLineBox->ClearHasBullet();
+  }
+
   PerSpanData* psd;
   NewPerSpanData(&psd);
   mCurrentSpan = mRootSpan = psd;
@@ -1327,8 +1331,10 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
                              const nsHTMLReflowMetrics& aMetrics)
 {
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
+  NS_ASSERTION(GetFlag(LL_GOTLINEBOX), "must have line box");
 
   SetFlag(LL_HASBULLET, PR_TRUE);
+  mLineBox->SetHasBullet();
 
   PerFrameData* pfd;
   nsresult rv = NewPerFrameData(&pfd);
