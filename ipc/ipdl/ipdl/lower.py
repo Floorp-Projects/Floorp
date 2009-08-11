@@ -1316,7 +1316,10 @@ class GenerateSkeletonImpl(cxx.Visitor):
         impl = cxx.MethodDefn(cxx.MethodDecl(self.implname(md.name),
                                              params=md.params,
                                              ret=md.ret))
-        impl.addstmt(cxx.StmtReturn(cxx.ExprVar('NS_ERROR_NOT_IMPLEMENTED')))
+        if md.ret.ptr:
+            impl.addstmt(cxx.StmtReturn(cxx.ExprLiteral.ZERO))
+        else:
+            impl.addstmt(cxx.StmtReturn(cxx.ExprVar('NS_ERROR_NOT_IMPLEMENTED')))
 
         self.cls.addstmt(cxx.StmtDecl(decl))
         self.addmethodimpl(impl)
