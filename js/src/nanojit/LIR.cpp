@@ -1584,8 +1584,8 @@ namespace nanojit
             }
             newblock = false;
             for (int k=0,n=e->live.size(); k < n; k++) {
-                strcpy(s, names->formatRef(e->live[k]));
-                s += strlen(s);
+                VMPI_strcpy(s, names->formatRef(e->live[k]));
+                s += VMPI_strlen(s);
                 *s++ = ' '; *s = 0;
                 NanoAssert(s < livebuf+sizeof(livebuf));
             }
@@ -1593,7 +1593,7 @@ namespace nanojit
                live-after set on the same line.  If not, put
                live-after set on a new line, suitably indented. */
             const char* insn_text = names->formatIns(e->i);
-            if (strlen(insn_text) >= 30-2) {
+            if (VMPI_strlen(insn_text) >= 30-2) {
                 logc->printf("  %-30s\n  %-30s %s\n", names->formatIns(e->i), "", livebuf);
             } else {
                 logc->printf("  %-30s %s\n", names->formatIns(e->i), livebuf);
@@ -1617,7 +1617,7 @@ namespace nanojit
 
     void LirNameMap::copyName(LInsp i, const char *s, int suffix) {
         char s2[200];
-        if (isdigit(s[strlen(s)-1])) {
+        if (isdigit(s[VMPI_strlen(s)-1])) {
             // if s ends with a digit, add '_' to clarify the suffix
             VMPI_sprintf(s2,"%s_%d", s, suffix);
         } else {
@@ -1628,9 +1628,9 @@ namespace nanojit
 
     void LirNameMap::formatImm(int32_t c, char *buf) {
         if (c >= 10000 || c <= -10000)
-            sprintf(buf,"#%s",labels->format((void*)c));
+            VMPI_sprintf(buf,"#%s",labels->format((void*)c));
         else
-            sprintf(buf,"%d", c);
+            VMPI_sprintf(buf,"%d", c);
     }
 
     const char* LirNameMap::formatRef(LIns *ref)
@@ -1643,10 +1643,10 @@ namespace nanojit
         }
         else if (ref->isconstq()) {
 #if defined NANOJIT_64BIT
-            sprintf(buf, "#0x%lx", (nj_printf_ld)ref->imm64());
+            VMPI_sprintf(buf, "#0x%lx", (nj_printf_ld)ref->imm64());
 #else
             formatImm(ref->imm64_1(), buf);
-            buf += strlen(buf);
+            buf += VMPI_strlen(buf);
             *buf++ = ':';
             formatImm(ref->imm64_0(), buf);
 #endif
@@ -1685,24 +1685,24 @@ namespace nanojit
         {
             case LIR_int:
             {
-                sprintf(s, "%s", formatRef(i));
+                VMPI_sprintf(s, "%s", formatRef(i));
                 break;
             }
 
             case LIR_ialloc: {
-                sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], i->size());
+                VMPI_sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], i->size());
                 break;
             }
 
             case LIR_quad:
             {
-                sprintf(s, "#%X:%X /* %g */", i->imm64_1(), i->imm64_0(), i->imm64f());
+                VMPI_sprintf(s, "#%X:%X /* %g */", i->imm64_1(), i->imm64_0(), i->imm64f());
                 break;
             }
 
             case LIR_loop:
             case LIR_start:
-                sprintf(s, "%s", lirNames[op]);
+                VMPI_sprintf(s, "%s", lirNames[op]);
                 break;
 
 #if defined NANOJIT_64BIT
@@ -1713,15 +1713,15 @@ namespace nanojit
                 const CallInfo* call = i->callInfo();
                 int32_t argc = i->argc();
                 if (call->isIndirect())
-                    sprintf(s, "%s = %s [%s] ( ", formatRef(i), lirNames[op], formatRef(i->arg(--argc)));
+                    VMPI_sprintf(s, "%s = %s [%s] ( ", formatRef(i), lirNames[op], formatRef(i->arg(--argc)));
                 else
-                    sprintf(s, "%s = %s #%s ( ", formatRef(i), lirNames[op], call->_name);
+                    VMPI_sprintf(s, "%s = %s #%s ( ", formatRef(i), lirNames[op], call->_name);
                 for (int32_t j = argc - 1; j >= 0; j--) {
-                    s += strlen(s);
-                    sprintf(s, "%s ",formatRef(i->arg(j)));
+                    s += VMPI_strlen(s);
+                    VMPI_sprintf(s, "%s ",formatRef(i->arg(j)));
                 }
-                s += strlen(s);
-                sprintf(s, ")");
+                s += VMPI_strlen(s);
+                VMPI_sprintf(s, ")");
                 break;
             }
 
@@ -1729,37 +1729,37 @@ namespace nanojit
                 uint32_t arg = i->paramArg();
                 if (!i->paramKind()) {
                     if (arg < sizeof(Assembler::argRegs)/sizeof(Assembler::argRegs[0])) {
-                        sprintf(s, "%s = %s %d %s", formatRef(i), lirNames[op],
+                        VMPI_sprintf(s, "%s = %s %d %s", formatRef(i), lirNames[op],
                             arg, gpn(Assembler::argRegs[arg]));
                     } else {
-                        sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], arg);
+                        VMPI_sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], arg);
                     }
                 } else {
-                    sprintf(s, "%s = %s %d %s", formatRef(i), lirNames[op],
+                    VMPI_sprintf(s, "%s = %s %d %s", formatRef(i), lirNames[op],
                         arg, gpn(Assembler::savedRegs[arg]));
                 }
                 break;
             }
 
             case LIR_label:
-                sprintf(s, "%s:", formatRef(i));
+                VMPI_sprintf(s, "%s:", formatRef(i));
                 break;
 
             case LIR_jt:
             case LIR_jf:
-                sprintf(s, "%s %s -> %s", lirNames[op], formatRef(i->oprnd1()),
+                VMPI_sprintf(s, "%s %s -> %s", lirNames[op], formatRef(i->oprnd1()),
                     i->oprnd2() ? formatRef(i->oprnd2()) : "unpatched");
                 break;
 
             case LIR_j:
-                sprintf(s, "%s -> %s", lirNames[op],
+                VMPI_sprintf(s, "%s -> %s", lirNames[op],
                     i->oprnd2() ? formatRef(i->oprnd2()) : "unpatched");
                 break;
 
             case LIR_live:
             case LIR_ret:
             case LIR_fret:
-                sprintf(s, "%s %s", lirNames[op], formatRef(i->oprnd1()));
+                VMPI_sprintf(s, "%s %s", lirNames[op], formatRef(i->oprnd1()));
                 break;
 
             case LIR_callh:
@@ -1772,7 +1772,7 @@ namespace nanojit
             case LIR_ov:
             case LIR_not:
             case LIR_mod:
-                sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
+                VMPI_sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
                 break;
 
             case LIR_x:
@@ -1816,20 +1816,20 @@ namespace nanojit
             case LIR_qiand:
             case LIR_qilsh:
             case LIR_qior:
-                sprintf(s, "%s = %s %s, %s", formatRef(i), lirNames[op],
+                VMPI_sprintf(s, "%s = %s %s, %s", formatRef(i), lirNames[op],
                     formatRef(i->oprnd1()),
                     formatRef(i->oprnd2()));
                 break;
 
             case LIR_qjoin:
-                sprintf(s, "%s (%s), %s", lirNames[op],
+                VMPI_sprintf(s, "%s (%s), %s", lirNames[op],
                     formatIns(i->oprnd1()),
                      formatRef(i->oprnd2()));
                  break;
 
             case LIR_qcmov:
             case LIR_cmov:
-                sprintf(s, "%s = %s %s ? %s : %s", formatRef(i), lirNames[op],
+                VMPI_sprintf(s, "%s = %s %s ? %s : %s", formatRef(i), lirNames[op],
                     formatRef(i->oprnd1()),
                     formatRef(i->oprnd2()),
                     formatRef(i->oprnd3()));
@@ -1841,21 +1841,21 @@ namespace nanojit
             case LIR_ldqc:
             case LIR_ldcb:
             case LIR_ldcs:
-                sprintf(s, "%s = %s %s[%d]", formatRef(i), lirNames[op],
+                VMPI_sprintf(s, "%s = %s %s[%d]", formatRef(i), lirNames[op],
                     formatRef(i->oprnd1()),
                     i->disp());
                 break;
 
             case LIR_sti:
             case LIR_stqi:
-                sprintf(s, "%s %s[%d] = %s", lirNames[op],
+                VMPI_sprintf(s, "%s %s[%d] = %s", lirNames[op],
                     formatRef(i->oprnd2()),
                     i->disp(),
                     formatRef(i->oprnd1()));
                 break;
 
             default:
-                sprintf(s, "?");
+                VMPI_sprintf(s, "?");
                 break;
         }
         return labels->dup(sbuf);
