@@ -408,6 +408,7 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
         jsval realVal = xpcvariant->GetJSVal();
         if(JSVAL_IS_PRIMITIVE(realVal) || 
            type == nsIDataType::VTYPE_ARRAY ||
+           type == nsIDataType::VTYPE_EMPTY_ARRAY ||
            type == nsIDataType::VTYPE_ID)
         {
             // Not a JSObject (or is a JSArray or is a JSObject representing 
