@@ -185,6 +185,8 @@ AllowedToAct(JSContext *cx, jsval idval)
     // Some code is running, we can't make the assumption, as above, but we
     // can't use a native frame, so clear fp.
     fp = nsnull;
+  } else if (!fp->script) {
+    fp = nsnull;
   }
 
   void *annotation = fp ? JS_GetFrameAnnotation(cx, fp) : nsnull;
