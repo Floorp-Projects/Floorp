@@ -208,16 +208,11 @@ ParseIntDouble(jsdouble d)
 {
     if (!JSDOUBLE_IS_FINITE(d))
         return js_NaN;
-
-    /* Don't preserve -0, because js_strtointeger doesn't. */
-    if (d == 0)
-        return 0;
     if (d > 0)
         return floor(d);
-    d = ceil(d);
-
-    /* ceil does not seem to return -0 if not given -0. */
-    return (d == 0) ? -0.0 : d;
+    if (d < 0)
+    	return -floor(-d);
+    return 0;
 }
 #endif
 
