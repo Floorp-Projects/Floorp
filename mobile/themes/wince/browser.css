@@ -409,7 +409,7 @@ richlistitem[type="documenttab"][selected="true"] .documenttab-canvas {
   -moz-border-radius: 4px;
 }
 
-vbox:first-child richlistitem[type="documenttab"]:only-child .documenttab-close {
+vbox:first-child > richlistitem[type="documenttab"]:only-child .documenttab-close {
   display: none;
 }
 
