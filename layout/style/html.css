@@ -52,6 +52,22 @@ bdo[dir] {
   unicode-bidi: bidi-override;
 }
 
+/* To ensure http://www.w3.org/TR/REC-html40/struct/dirlang.html#style-bidi:
+ *
+ * "When a block element that does not have a dir attribute is transformed to
+ * the style of an inline element by a style sheet, the resulting presentation
+ * should be equivalent, in terms of bidirectional formatting, to the
+ * formatting obtained by explicitly adding a dir attribute (assigned the
+ * inherited value) to the transformed element." */
+
+address, blockquote, body, caption, center, col, colgroup, dd, dir, div, dl, dt,
+fieldset, form, h1, h2, h3, h4, h5, h6, hr, html, isindex, li, listing, map, 
+marquee, menu, noframes, ol, p, plaintext, pre, table, tbody, td, tfoot, th, 
+thead, tr, ul, xmp {
+  unicode-bidi: embed;
+}
+
+
 /* blocks */
 
 html, div, map, dt, isindex, form {
