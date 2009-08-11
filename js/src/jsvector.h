@@ -430,10 +430,22 @@ class JSTempVector
 
     /* mutators */
 
+    /* If reserve(N) succeeds, the N next appends are guaranteed to succeed. */
     bool reserve(size_t capacity);
-    bool resize(size_t newSize);
+
+    /* Destroy elements in the range [begin() + incr, end()). */
     void shrinkBy(size_t incr);
+
+    /*
+     * Grow the vector by incr elements.  If T is a POD (as judged by
+     * JSUtils::IsPodType), leave as uninitialized memory.  Otherwise, default
+     * construct each element.
+     */
     bool growBy(size_t incr);
+
+    /* Call shrinkBy or growBy based on whether newSize > size(). */
+    bool resize(size_t newSize);
+
     void clear();
 
     bool append(const T &t);
@@ -586,7 +598,8 @@ JSTempVector<T,N>::growBy(size_t incr)
         size_t freespace = sInlineCapacity - inlineSize();
         if (incr <= freespace) {
             T *newend = inlineEnd() + incr;
-            Impl::initialize(inlineEnd(), newend);
+            if (!JSUtils::IsPodType<T>::result)
+                Impl::initialize(inlineEnd(), newend);
             inlineSize() += incr;
             JS_ASSERT(usingInlineStorage());
             return true;
@@ -606,7 +619,8 @@ JSTempVector<T,N>::growBy(size_t incr)
     /* We are !usingInlineStorage(). Initialize new elements. */
     JS_ASSERT(heapCapacity() - heapSize() >= incr);
     T *newend = heapEnd() + incr;
-    Impl::initialize(heapEnd(), newend);
+    if (!JSUtils::IsPodType<T>::result)
+        Impl::initialize(heapEnd(), newend);
     heapEnd() = newend;
     return true;
 }
