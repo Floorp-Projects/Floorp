@@ -2952,7 +2952,7 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
 
     obj = JSVAL_TO_OBJECT(v);
     if (!OBJECT_IS_XML(cx, obj)) {
-        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_STRING, &v))
+        if (!obj->defaultValue(cx, JSTYPE_STRING, &v))
             return NULL;
         str = js_ValueToString(cx, v);
         if (!str)
@@ -4832,7 +4832,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
     if (!js_LookupProperty(cx, obj, funid, &pobj, &prop))
         return JS_FALSE;
     if (prop) {
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
+        pobj->dropProperty(cx, prop);
     } else {
         xml = (JSXML *) obj->getAssignedPrivate();
         if (HasSimpleContent(xml)) {
@@ -4847,7 +4847,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
             if (ok) {
                 ok = js_LookupProperty(cx, tvr.u.object, funid, &pobj, &prop);
                 if (ok && prop)
-                    OBJ_DROP_PROPERTY(cx, pobj, prop);
+                    pobj->dropProperty(cx, prop);
             }
             JS_POP_TEMP_ROOT(cx, &tvr);
             if (!ok)
@@ -4913,7 +4913,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
  * js_XMLObjectOps.newObjectMap is null, so XML objects appear to be native.
  * Thus xml_lookupProperty must return a valid JSScopeProperty pointer
  * parameter via *propp to signify "property found".  Since the only call to
- * xml_lookupProperty is via OBJ_LOOKUP_PROPERTY, and then only from
+ * xml_lookupProperty is via JSObject::lookupProperty, and then only from
  * js_FindProperty (in jsobj.c, called from jsinterp.c) or from JSOP_IN case
  * in the interpreter, the only time we add a JSScopeProperty here is when an
  * unqualified name is being accessed or when "name in xml" is called.
@@ -6081,7 +6081,7 @@ TempNSArrayToJSArray(JSContext *cx, JSTempRootedNSArray *tmp, jsval *rval)
         if (!ns)
             continue;
         tmp->value = OBJECT_TO_JSVAL(ns);
-        if (!OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(i), &tmp->value))
+        if (!arrayobj->setProperty(cx, INT_TO_JSID(i), &tmp->value))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -7561,9 +7561,9 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 
     /*
      * Prepare to set default settings on the XML constructor we just made.
-     * NB: We can't use JS_GetConstructor, because it calls OBJ_GET_PROPERTY,
-     * which is xml_getProperty, which creates a new XMLList every time!  We
-     * must instead call js_LookupProperty directly.
+     * NB: We can't use JS_GetConstructor, because it calls
+     * JSObject::getProperty, which is xml_getProperty, which creates a new
+     * XMLList every time!  We must instead call js_LookupProperty directly.
      */
     if (!js_LookupProperty(cx, proto,
                            ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
@@ -7574,7 +7574,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
     sprop = (JSScopeProperty *) prop;
     JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
     cval = OBJ_GET_SLOT(cx, pobj, sprop->slot);
-    OBJ_DROP_PROPERTY(cx, pobj, prop);
+    pobj->dropProperty(cx, prop);
     JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
 
     /* Set default settings. */
@@ -7702,7 +7702,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         JSClass *clasp = OBJ_GET_CLASS(cx, tmp);
         if (clasp == &js_BlockClass || clasp == &js_WithClass)
             continue;
-        if (!OBJ_GET_PROPERTY(cx, tmp, JS_DEFAULT_XML_NAMESPACE_ID, &v))
+        if (!tmp->getProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, &v))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
             fp->xmlNamespace = JSVAL_TO_OBJECT(v);
@@ -7717,8 +7717,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
     if (obj &&
-        !OBJ_DEFINE_PROPERTY(cx, obj, JS_DEFAULT_XML_NAMESPACE_ID, v,
-                             JS_PropertyStub, JS_PropertyStub,
+        !obj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v, JS_PropertyStub, JS_PropertyStub,
                              JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
     }
@@ -7744,9 +7743,8 @@ js_SetDefaultXMLNamespace(JSContext *cx, jsval v)
     fp = js_GetTopStackFrame(cx);
     varobj = fp->varobj;
     if (varobj) {
-        if (!OBJ_DEFINE_PROPERTY(cx, varobj, JS_DEFAULT_XML_NAMESPACE_ID, v,
-                                 JS_PropertyStub, JS_PropertyStub,
-                                 JSPROP_PERMANENT, NULL)) {
+        if (!varobj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v,
+                                    JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, NULL)) {
             return JS_FALSE;
         }
     } else {
@@ -7959,10 +7957,10 @@ js_FindXMLProperty(JSContext *cx, jsval nameval, JSObject **objp, jsid *idp)
                 return JS_TRUE;
             }
         } else if (funid != 0) {
-            if (!OBJ_LOOKUP_PROPERTY(cx, target, funid, &pobj, &prop))
+            if (!target->lookupProperty(cx, funid, &pobj, &prop))
                 return JS_FALSE;
             if (prop) {
-                OBJ_DROP_PROPERTY(cx, pobj, prop);
+                pobj->dropProperty(cx, prop);
                 *idp = funid;
                 *objp = target;
                 return JS_TRUE;
@@ -8019,7 +8017,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (!ok)
             goto out;
         JS_ASSERT(tvr.u.object);
-        ok = OBJ_GET_PROPERTY(cx, tvr.u.object, id, vp);
+        ok = tvr.u.object->getProperty(cx, id, vp);
     }
 
   out:

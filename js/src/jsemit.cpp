@@ -1601,8 +1601,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
             } else {
                 JS_ASSERT(cg->flags & TCF_COMPILE_N_GO);
                 obj = cg->scopeChain;
-                ok = OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &objbox,
-                                         &prop);
+                ok = obj->lookupProperty(cx, ATOM_TO_JSID(atom), &objbox, &prop);
                 if (!ok)
                     return JS_FALSE;
                 if (objbox == obj) {
@@ -1612,15 +1611,14 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                      * variable object.  Therefore we can get constant values
                      * from our variable object here.
                      */
-                    ok = OBJ_GET_ATTRIBUTES(cx, obj, ATOM_TO_JSID(atom), prop,
-                                            &attrs);
+                    ok = obj->getAttributes(cx, ATOM_TO_JSID(atom), prop, &attrs);
                     if (ok && IS_CONSTANT_PROPERTY(attrs)) {
-                        ok = OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), vp);
+                        ok = obj->getProperty(cx, ATOM_TO_JSID(atom), vp);
                         JS_ASSERT_IF(ok, *vp != JSVAL_HOLE);
                     }
                 }
                 if (prop)
-                    OBJ_DROP_PROPERTY(cx, objbox, prop);
+                    objbox->dropProperty(cx, prop);
                 if (!ok)
                     return JS_FALSE;
                 if (prop)

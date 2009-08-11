@@ -251,10 +251,8 @@ ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
         return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     vp += 2 + arg;
 
-    if (!JSVAL_IS_PRIMITIVE(*vp) &&
-        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(*vp), JSTYPE_STRING, vp)) {
+    if (!JSVAL_IS_PRIMITIVE(*vp) && !JSVAL_TO_OBJECT(*vp)->defaultValue(cx, JSTYPE_STRING, vp))
         return NULL;
-    }
 
     JSString *str;
     if (JSVAL_IS_STRING(*vp)) {
@@ -584,8 +582,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
         str1 = js_NewDependentString(cx, str, i, 1);
         if (!str1)
             return JS_FALSE;
-        if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSID(i),
-                                 STRING_TO_JSVAL(str1), NULL, NULL,
+        if (!obj->defineProperty(cx, INT_TO_JSID(i), STRING_TO_JSVAL(str1), NULL, NULL,
                                  STRING_ELEMENT_ATTRS, NULL)) {
             return JS_FALSE;
         }
@@ -613,8 +610,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         str1 = js_GetUnitString(cx, str, (size_t)slot);
         if (!str1)
             return JS_FALSE;
-        if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSID(slot),
-                                 STRING_TO_JSVAL(str1), NULL, NULL,
+        if (!obj->defineProperty(cx, INT_TO_JSID(slot), STRING_TO_JSVAL(str1), NULL, NULL,
                                  STRING_ELEMENT_ATTRS, NULL)) {
             return JS_FALSE;
         }
@@ -1445,7 +1441,7 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     JS_ASSERT(count <= JSVAL_INT_MAX);
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(count), &v);
+    return arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
 }
 
 static JSBool
@@ -1999,7 +1995,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
 
     if (argc == 0) {
         v = STRING_TO_JSVAL(str);
-        ok = OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(0), &v);
+        ok = arrayobj->setProperty(cx, INT_TO_JSID(0), &v);
     } else {
         if (VALUE_IS_REGEXP(cx, vp[2])) {
             re = (JSRegExp *) JSVAL_TO_OBJECT(vp[2])->getPrivate();
@@ -2920,10 +2916,8 @@ js_ValueToString(JSContext *cx, jsval v)
 {
     JSString *str;
 
-    if (!JSVAL_IS_PRIMITIVE(v) &&
-        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v)) {
+    if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
         return NULL;
-    }
 
     if (JSVAL_IS_STRING(v)) {
         str = JSVAL_TO_STRING(v);
@@ -2955,10 +2949,8 @@ pushAtom(JSAtom *atom, JSCharVector &buf)
 JS_FRIEND_API(JSBool)
 js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
 {
-    if (!JSVAL_IS_PRIMITIVE(v) &&
-        !OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_STRING, &v)) {
+    if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
         return JS_FALSE;
-    }
 
     if (JSVAL_IS_STRING(v)) {
         JSString *str = JSVAL_TO_STRING(v);

@@ -108,7 +108,7 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
                                   NULL, NULL);
         } else
 #endif
-            OBJ_ENUMERATE(cx, iterable, JSENUMERATE_DESTROY, &state, NULL);
+            iterable->enumerate(cx, JSENUMERATE_DESTROY, &state, NULL);
     }
     STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_STATE, JSVAL_NULL);
 }
@@ -145,7 +145,7 @@ InitNativeIterator(JSContext *cx, JSObject *iterobj, JSObject *obj, uintN flags)
          ? js_EnumerateXMLValues(cx, obj, JSENUMERATE_INIT, &state, NULL, NULL)
          :
 #endif
-           OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &state, NULL);
+           obj->enumerate(cx, JSENUMERATE_INIT, &state, NULL);
     if (!ok)
         return JS_FALSE;
 
@@ -235,7 +235,7 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
                                  &id, rval)
          :
 #endif
-           OBJ_ENUMERATE(cx, iterable, JSENUMERATE_NEXT, &state, &id);
+           iterable->enumerate(cx, JSENUMERATE_NEXT, &state, &id);
     if (!ok)
         return JS_FALSE;
 
@@ -246,7 +246,7 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
     if (foreach) {
 #if JS_HAS_XML_SUPPORT
         if (!OBJECT_IS_XML(cx, iterable) &&
-            !OBJ_GET_PROPERTY(cx, iterable, id, rval)) {
+            !iterable->getProperty(cx, id, rval)) {
             return JS_FALSE;
         }
 #endif
@@ -480,7 +480,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
                 return JS_FALSE;
             }
         } else {
-            if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &state, &id))
+            if (!obj->enumerate(cx, JSENUMERATE_NEXT, &state, &id))
                 return JS_FALSE;
         }
         STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_STATE, state);
@@ -490,7 +490,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
 #endif
     {
       restart:
-        if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &state, &id))
+        if (!obj->enumerate(cx, JSENUMERATE_NEXT, &state, &id))
             return JS_FALSE;
 
         STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_STATE, state);
@@ -511,7 +511,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
                 obj = OBJ_GET_PROTO(cx, obj);
                 if (obj) {
                     STOBJ_SET_PARENT(iterobj, obj);
-                    if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &state, NULL))
+                    if (!obj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))
                         return JS_FALSE;
                     STOBJ_SET_SLOT(iterobj, JSSLOT_ITER_STATE, state);
                     if (!JSVAL_IS_NULL(state))
@@ -522,16 +522,16 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
         }
 
         /* Skip properties not in obj when looking from origobj. */
-        if (!OBJ_LOOKUP_PROPERTY(cx, origobj, id, &obj2, &prop))
+        if (!origobj->lookupProperty(cx, id, &obj2, &prop))
             return JS_FALSE;
         if (!prop)
             goto restart;
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        obj2->dropProperty(cx, prop);
 
         /*
          * If the id was found in a prototype object or an unrelated object
          * (specifically, not in an inner object for obj), skip it. This step
-         * means that all OBJ_LOOKUP_PROPERTY implementations must return an
+         * means that all lookupProperty implementations must return an
          * object further along on the prototype chain, or else possibly an
          * object returned by the JSExtendedClass.outerObject optional hook.
          */
@@ -549,7 +549,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
 
         if (foreach) {
             /* Get property querying the original object. */
-            if (!OBJ_GET_PROPERTY(cx, origobj, id, rval))
+            if (!origobj->getProperty(cx, id, rval))
                 return JS_FALSE;
         }
     }
