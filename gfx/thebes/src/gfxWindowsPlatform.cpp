@@ -333,7 +333,7 @@ gfxWindowsPlatform::FindFonts()
     NS_GetSpecialDirectory(NS_APP_RES_DIR, getter_AddRefs(resDir));
     if (resDir) {
         resDir->Append(NS_LITERAL_STRING("fonts"));
-        nsDependentString resPath;
+        nsAutoString resPath;
         resDir->GetPath(resPath);
         searchPaths.AppendElement(resPath);
     }
