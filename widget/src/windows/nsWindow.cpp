@@ -4032,6 +4032,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     {
       WINDOWPOS *wp = (LPWINDOWPOS)lParam;
       OnWindowPosChanged(wp, result);
+    }
     break;
 
     case WM_SETTINGCHANGE:
