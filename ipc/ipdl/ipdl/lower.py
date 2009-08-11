@@ -719,10 +719,7 @@ class GenerateProtocolActorHeader(Visitor):
         if dispatches:
             addDispatcher(asynchandler, 'OnMessageReceived',
                           [ cxx.ExprVar('msg') ])
-        # bug 509581: don't generate the switch stmt if there is only the 
-        # default case; MSVC doesn't like that
-        if self.asyncswitch.nr_cases > 1:
-            asynchandler.addstmt(self.asyncswitch)
+        asynchandler.addstmt(self.asyncswitch)
         cls.addstmt(asynchandler)
         cls.addstmt(cxx.Whitespace.NL)
 
@@ -730,8 +727,7 @@ class GenerateProtocolActorHeader(Visitor):
             if dispatches:
                 addDispatcher(synchandler, 'OnMessageReceived',
                               [ cxx.ExprVar('msg'), cxx.ExprVar('reply') ])
-            if self.syncswitch.nr_cases > 1:
-                synchandler.addstmt(self.syncswitch)
+            synchandler.addstmt(self.syncswitch)
             cls.addstmt(synchandler)
             cls.addstmt(cxx.Whitespace.NL)
 
@@ -739,8 +735,7 @@ class GenerateProtocolActorHeader(Visitor):
                 if dispatches:
                     addDispatcher(rpchandler, 'OnCallReceived',
                                   [ cxx.ExprVar('msg'), cxx.ExprVar('reply') ])
-                if self.rpcswitch.nr_cases > 1:
-                    rpchandler.addstmt(self.rpcswitch)
+                rpchandler.addstmt(self.rpcswitch)
                 cls.addstmt(rpchandler)
                 cls.addstmt(cxx.Whitespace.NL)
 

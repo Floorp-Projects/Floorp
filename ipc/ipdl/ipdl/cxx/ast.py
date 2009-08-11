@@ -477,13 +477,11 @@ class StmtSwitch(Block):
     def __init__(self, expr):
         Block.__init__(self)
         self.expr = expr
-        self.nr_cases = 0
 
     def addcase(self, case, block):
         '''NOTE: |case| is not checked for uniqueness'''
         self.addstmt(case)
         self.addstmt(block)
-        self.nr_cases += 1
 
 class StmtExpr(Node):
     def __init__(self, expr):
