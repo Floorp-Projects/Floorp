@@ -311,6 +311,7 @@ protected:
   BOOL                    OnInputLangChange(HKL aHKL);
   void                    OnSettingsChange(WPARAM wParam, LPARAM lParam);
   virtual PRBool          OnPaint(HDC aDC = nsnull);
+  void                    OnWindowPosChanged(WINDOWPOS *wp, PRBool& aResult);
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
   PRBool                  OnPaintImageDDraw16();
 #endif // defined(CAIRO_HAS_DDRAW_SURFACE)
