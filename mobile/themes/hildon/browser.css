@@ -629,7 +629,7 @@ richlistitem[type="documenttab"][selected="true"] .documenttab-canvas {
   list-style-image: url("chrome://browser/skin/images/close-30.png");
 }
 
-vbox:first-child richlistitem[type="documenttab"]:only-child .documenttab-close {
+vbox:first-child > richlistitem[type="documenttab"]:only-child .documenttab-close {
   display: none;
 }
 
