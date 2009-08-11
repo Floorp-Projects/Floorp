@@ -47,6 +47,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
+#include "nsAccessibilityService.h"
 
 #include <gtk/gtk.h>
 #include <atk/atk.h>
@@ -435,16 +436,18 @@ mai_util_remove_key_event_listener (guint remove_listener)
 AtkObject *
 mai_util_get_root(void)
 {
+    if (nsAccessibilityService::gIsShutdown) {
+        // We've shutdown, try to use gail instead
+        // (to avoid assert in spi_atk_tidy_windows())
+        if (gail_get_root)
+            return gail_get_root();
+    }
+
     nsRefPtr<nsApplicationAccessibleWrap> root =
         nsAccessNode::GetApplicationAccessible();
 
     if (root)
         return root->GetAtkObject();
-
-    // We've shutdown, try to use gail instead
-    // (to avoid assert in spi_atk_tidy_windows())
-    if (gail_get_root)
-        return gail_get_root();
 
     return nsnull;
 }
