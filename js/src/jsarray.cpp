@@ -229,7 +229,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     }
 
     JSAutoTempValueRooter tvr(cx, JSVAL_NULL);
-    if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), tvr.addr()))
+    if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), tvr.addr()))
         return JS_FALSE;
 
     if (JSVAL_IS_INT(tvr.value())) {
@@ -448,14 +448,14 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole,
 
     JSObject *obj2;
     JSProperty *prop;
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, idr.id(), &obj2, &prop))
+    if (!obj->lookupProperty(cx, idr.id(), &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         *hole = JS_TRUE;
         *vp = JSVAL_VOID;
     } else {
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
-        if (!OBJ_GET_PROPERTY(cx, obj, idr.id(), vp))
+        obj2->dropProperty(cx, prop);
+        if (!obj->getProperty(cx, idr.id(), vp))
             return JS_FALSE;
         *hole = JS_FALSE;
     }
@@ -497,7 +497,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, jsval v)
         return JS_FALSE;
     JS_ASSERT(!JSVAL_IS_VOID(idr.id()));
 
-    return OBJ_SET_PROPERTY(cx, obj, idr.id(), &v);
+    return obj->setProperty(cx, idr.id(), &v);
 }
 
 static JSBool
@@ -525,7 +525,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
         return JS_TRUE;
 
     jsval junk;
-    return OBJ_DELETE_PROPERTY(cx, obj, idr.id(), &junk);
+    return obj->deleteProperty(cx, idr.id(), &junk);
 }
 
 /*
@@ -552,7 +552,7 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
     if (!IndexToValue(cx, length, &v))
         return JS_FALSE;
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    return OBJ_SET_PROPERTY(cx, obj, id, &v);
+    return obj->setProperty(cx, id, &v);
 }
 
 JSBool
@@ -566,7 +566,7 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     older = JS_SetErrorReporter(cx, NULL);
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-    ok = OBJ_GET_PROPERTY(cx, obj, id, &tvr.u.value);
+    ok = obj->getProperty(cx, id, &tvr.u.value);
     JS_SetErrorReporter(cx, older);
     if (ok) {
         *lengthp = ValueIsLength(cx, &tvr.u.value);
@@ -625,8 +625,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!OBJ_IS_ARRAY(cx, obj)) {
         jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
 
-        return OBJ_DEFINE_PROPERTY(cx, obj, lengthId, *vp, NULL, NULL,
-                                   JSPROP_ENUMERATE, NULL);
+        return obj->defineProperty(cx, lengthId, *vp, NULL, NULL, JSPROP_ENUMERATE, NULL);
     }
 
     newlen = ValueIsLength(cx, vp);
@@ -670,7 +669,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (!iter)
             return JS_FALSE;
 
-        /* Protect iter against GC in OBJ_DELETE_PROPERTY. */
+        /* Protect iter against GC under JSObject::deleteProperty. */
         JS_PUSH_TEMP_ROOT_OBJECT(cx, iter, &tvr);
         gap = oldlen - newlen;
         for (;;) {
@@ -681,7 +680,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             if (JSVAL_IS_VOID(id))
                 break;
             if (js_IdIsIndex(id, &index) && index - newlen < gap) {
-                ok = OBJ_DELETE_PROPERTY(cx, obj, id, &junk);
+                ok = obj->deleteProperty(cx, id, &junk);
                 if (!ok)
                     break;
             }
@@ -731,7 +730,7 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
         *propp = NULL;
         return JS_TRUE;
     }
-    return OBJ_LOOKUP_PROPERTY(cx, proto, id, objp, propp);
+    return proto->lookupProperty(cx, id, objp, propp);
 }
 
 static void
@@ -795,7 +794,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                 if (!js_NativeGet(cx, obj, obj2, sprop, vp))
                     return JS_FALSE;
             }
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            obj2->dropProperty(cx, prop);
         }
         return JS_TRUE;
     }
@@ -1638,7 +1637,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, jsva
                     JS_ASSERT(ReallyBigIndexToId(cx, index, idr.addr()));
                     JSObject* obj2;
                     JSProperty* prop;
-                    JS_ASSERT(OBJ_LOOKUP_PROPERTY(cx, obj, idr.id(), &obj2, &prop));
+                    JS_ASSERT(obj->lookupProperty(cx, idr.id(), &obj2, &prop));
                     JS_ASSERT(!prop);
                 }
             }
@@ -1704,7 +1703,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, jsva
     do {
         tmp[1] = *vector++;
         if (!js_ValueToStringId(cx, tmp[0], idr.addr()) ||
-            !OBJ_SET_PROPERTY(cx, obj, idr.id(), &tmp[1])) {
+            !obj->setProperty(cx, idr.id(), &tmp[1])) {
             return JS_FALSE;
         }
         *dp += 1;
@@ -2845,10 +2844,8 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
             aobj = JSVAL_TO_OBJECT(v);
             wobj = js_GetWrappedObject(cx, aobj);
             if (OBJ_IS_ARRAY(cx, wobj)) {
-                ok = OBJ_GET_PROPERTY(cx, aobj,
-                                      ATOM_TO_JSID(cx->runtime->atomState
-                                                   .lengthAtom),
-                                      &tvr.u.value);
+                ok = aobj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                                       &tvr.u.value);
                 if (!ok)
                     goto out;
                 alength = ValueIsLength(cx, &tvr.u.value);
