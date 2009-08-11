@@ -4209,7 +4209,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
 
     JSObject* pobj;
     JSProperty* prop;
-    int protoIndex = OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop);
+    int protoIndex = obj->lookupProperty(cx, id, &pobj, &prop);
     if (protoIndex < 0 || !prop)
         return false;
 
@@ -4231,7 +4231,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
         }
     }
 
-    OBJ_DROP_PROPERTY(cx, pobj, prop);
+    pobj->dropProperty(cx, prop);
     return found;
 }
 
@@ -6791,20 +6791,20 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
         if (obj2 != obj) {
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            obj2->dropProperty(cx, prop);
             ABORT_TRACE("prototype property");
         }
         if (!isValidSlot(OBJ_SCOPE(obj), sprop)) {
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            obj2->dropProperty(cx, prop);
             return JSRS_STOP;
         }
         if (!lazilyImportGlobalSlot(sprop->slot)) {
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            obj2->dropProperty(cx, prop);
             ABORT_TRACE("lazy import of global slot failed");
         }
         vp = &STOBJ_GET_SLOT(obj, sprop->slot);
         ins = get(vp);
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        obj2->dropProperty(cx, prop);
         nr.tracked = true;
         return JSRS_CONTINUE;
     }
@@ -6834,7 +6834,7 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
                 vp = &cfp->slots[slot];
                 upvar_slot = cx->fp->fun->nargs + slot;
             }
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            obj2->dropProperty(cx, prop);
             if (!vp)
                 ABORT_TRACE("dynamic property of Call object");
 
@@ -6886,7 +6886,7 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
         }
     }
 
-    OBJ_DROP_PROPERTY(cx, obj2, prop);
+    obj2->dropProperty(cx, prop);
     ABORT_TRACE("fp->scopeChain is not global or active call object");
 }
 
@@ -7908,7 +7908,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
             if (prop) {
                 if (!OBJ_IS_NATIVE(obj2)) {
-                    OBJ_DROP_PROPERTY(cx, obj2, prop);
+                    obj2->dropProperty(cx, prop);
                     ABORT_TRACE("property found on non-native object");
                 }
                 entry = js_FillPropertyCache(cx, aobj, 0, protoIndex, obj2,
@@ -7930,7 +7930,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             return JSRS_CONTINUE;
         }
 
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        obj2->dropProperty(cx, prop);
         if (!entry)
             ABORT_TRACE("failed to fill property cache");
     }
@@ -8885,11 +8885,8 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
 {
     jsval pval;
 
-    if (!OBJ_GET_PROPERTY(cx, ctor,
-                          ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                          &pval)) {
+    if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &pval))
         ABORT_TRACE_ERROR("error getting prototype from constructor");
-    }
     if (JSVAL_TAG(pval) != JSVAL_OBJECT)
         ABORT_TRACE("got primitive prototype from constructor");
 #ifdef DEBUG
@@ -9886,7 +9883,7 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, jsval* vp)
         id = ATOM_TO_JSID(atom);
     }
 
-    if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
+    if (!obj->getProperty(cx, id, vp))
         goto error;
     return cx->interpState->builtinStatus == 0;
 
@@ -9942,7 +9939,7 @@ GetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, jsval* vp)
     js_LeaveTraceIfGlobalObject(cx, obj);
 
     JSAutoTempIdRooter idr(cx);
-    if (!js_Int32ToId(cx, index, idr.addr()) || !OBJ_GET_PROPERTY(cx, obj, idr.id(), vp)) {
+    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->getProperty(cx, idr.id(), vp)) {
         js_SetBuiltinError(cx);
         return JS_FALSE;
     }
@@ -10108,7 +10105,7 @@ SetProperty(JSContext *cx, uintN argc, jsval *vp)
     if (!js_ValueToStringId(cx, argv[0], &id))
         return JS_FALSE;
     argv[0] = ID_TO_VALUE(id);
-    if (!OBJ_SET_PROPERTY(cx, JS_THIS_OBJECT(cx, vp), id, &argv[1]))
+    if (!JS_THIS_OBJECT(cx, vp)->setProperty(cx, id, &argv[1]))
         return JS_FALSE;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -10121,7 +10118,7 @@ SetProperty_tn(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
     JSAutoTempIdRooter idr(cx);
 
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), idr.addr()) ||
-        !OBJ_SET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
+        !obj->setProperty(cx, idr.id(), tvr.addr())) {
         js_SetBuiltinError(cx);
     }
     return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
@@ -10139,7 +10136,7 @@ SetElement(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_ValueToId(cx, argv[0], &id))
         return JS_FALSE;
     argv[0] = ID_TO_VALUE(id);
-    if (!OBJ_SET_PROPERTY(cx, JS_THIS_OBJECT(cx, vp), id, &argv[1]))
+    if (!JS_THIS_OBJECT(cx, vp)->setProperty(cx, id, &argv[1]))
         return JS_FALSE;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
@@ -10152,7 +10149,7 @@ SetElement_tn(JSContext* cx, JSObject* obj, int32 index, jsval v)
     JSAutoTempValueRooter tvr(cx, v);
 
     if (!js_Int32ToId(cx, index, idr.addr()) ||
-        !OBJ_SET_PROPERTY(cx, obj, idr.id(), tvr.addr())) {
+        !obj->setProperty(cx, idr.id(), tvr.addr())) {
         js_SetBuiltinError(cx);
     }
     return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
@@ -11535,11 +11532,11 @@ TraceRecorder::record_JSOP_IN()
 
     JSObject* obj2;
     JSProperty* prop;
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-        ABORT_TRACE_ERROR("OBJ_LOOKUP_PROPERTY failed in JSOP_IN");
+    if (!obj->lookupProperty(cx, id, &obj2, &prop))
+        ABORT_TRACE_ERROR("obj->lookupProperty failed in JSOP_IN");
     bool cond = prop != NULL;
     if (prop)
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        obj2->dropProperty(cx, prop);
     if (wasDeepAborted())
         ABORT_TRACE("deep abort from property lookup");
 

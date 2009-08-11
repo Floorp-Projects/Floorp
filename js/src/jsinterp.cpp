@@ -889,7 +889,7 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
         thisp = JSVAL_TO_OBJECT(argv[-2]);
         id = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
 
-        ok = OBJ_CHECK_ACCESS(cx, thisp, id, JSACC_PARENT, &v, &attrs);
+        ok = thisp->checkAccess(cx, id, JSACC_PARENT, &v, &attrs);
         if (lazy) {
             cx->dormantFrameChain = fp->dormantNext;
             fp->dormantNext = NULL;
@@ -907,7 +907,7 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
     }
 
     /* Some objects (e.g., With) delegate 'this' to another object. */
-    thisp = OBJ_THIS_OBJECT(cx, thisp);
+    thisp = thisp->thisObject(cx);
     if (!thisp)
         return NULL;
     argv[-1] = OBJECT_TO_JSVAL(thisp);
@@ -932,7 +932,7 @@ ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
         }
 
         /* Some objects (e.g., With) delegate 'this' to another object. */
-        thisp = OBJ_THIS_OBJECT(cx, thisp);
+        thisp = thisp->thisObject(cx);
         if (!thisp)
             return NULL;
         argv[-1] = OBJECT_TO_JSVAL(thisp);
@@ -1594,7 +1594,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     cx->fp = &frame;
     if (!down) {
-        frame.thisp = OBJ_THIS_OBJECT(cx, frame.thisp);
+        frame.thisp = frame.thisp->thisObject(cx);
         if (!frame.thisp) {
             ok = JS_FALSE;
             goto out2;
@@ -1662,14 +1662,14 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     JS_ASSERT_IF(attrs & JSPROP_INITIALIZER, attrs == JSPROP_INITIALIZER);
     JS_ASSERT_IF(attrs == JSPROP_INITIALIZER, !propp);
 
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+    if (!obj->lookupProperty(cx, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop)
         return JS_TRUE;
 
-    /* Use prop as a speedup hint to OBJ_GET_ATTRIBUTES. */
-    if (!OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs)) {
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
+    /* Use prop as a speedup hint to obj->getAttributes. */
+    if (!obj2->getAttributes(cx, id, prop, &oldAttrs)) {
+        obj2->dropProperty(cx, prop);
         return JS_FALSE;
     }
 
@@ -1677,7 +1677,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
      * If our caller doesn't want prop, drop it (we don't need it any longer).
      */
     if (!propp) {
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        obj2->dropProperty(cx, prop);
         prop = NULL;
     } else {
         *objp = obj2;
@@ -1722,12 +1722,12 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
                 return JS_TRUE;
         }
         if (prop)
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            obj2->dropProperty(cx, prop);
 
         report = JSREPORT_ERROR;
         isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
         if (!isFunction) {
-            if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
+            if (!obj->getProperty(cx, id, &value))
                 return JS_FALSE;
             isFunction = VALUE_IS_FUNCTION(cx, value);
         }
@@ -1829,10 +1829,8 @@ js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
          * root to protect this prototype, in case it has no other
          * strong refs.
          */
-        if (!OBJ_GET_PROPERTY(cx, obj2,
-                              ATOM_TO_JSID(cx->runtime->atomState
-                                           .classPrototypeAtom),
-                              &vp[1])) {
+        if (!obj2->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                               &vp[1])) {
             return JS_FALSE;
         }
         rval = vp[1];
@@ -2422,7 +2420,7 @@ js_DumpOpMeters()
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));                                    \
         JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), hint, &regs.sp[n]))    \
+        if (!JSVAL_TO_OBJECT(v)->defaultValue(cx, hint, &regs.sp[n]))         \
             goto error;                                                       \
         v = regs.sp[n];                                                       \
     JS_END_MACRO
@@ -2543,7 +2541,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         return true;
     if (cx->runtime->gcNumber != sample ||
         PCVCAP_SHAPE(entry->vcap) != OBJ_SHAPE(pobj)) {
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
+        pobj->dropProperty(cx, prop);
         return true;
     }
     JS_ASSERT(prop);
@@ -2566,7 +2564,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         JS_ASSERT(PCVAL_TO_OBJECT(entry->vword) == JSVAL_TO_OBJECT(v));
     }
 
-    OBJ_DROP_PROPERTY(cx, pobj, prop);
+    pobj->dropProperty(cx, prop);
     return true;
 }
 
