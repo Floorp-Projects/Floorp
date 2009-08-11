@@ -3827,7 +3827,7 @@ FullMapFromExit(TypeMap& typeMap, VMSideExit* exit)
     }
 }
 
-static TypeConsensus
+static JS_REQUIRES_STACK TypeConsensus
 TypeMapLinkability(JSContext* cx, const TypeMap& typeMap, VMFragment* peer)
 {
     const TypeMap& peerMap = peer->getTreeInfo()->typeMap;
@@ -4696,7 +4696,7 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     return true;
 }
 
-static TypeConsensus
+static JS_REQUIRES_STACK TypeConsensus
 FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, VMFragment** peerp)
 {
     VMFragment* from = exit->root();
