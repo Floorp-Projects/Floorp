@@ -987,8 +987,8 @@ var Browser = {
 
       // if the toolbar isn't already inside of the stack toolbar then we move it there
       dump("moving toolbar to stack\n");
-      stackToolbarContainer.setAttribute("hidden", false);
       stackToolbarContainer.appendChild(toolbarMain);
+      stackToolbarContainer.setAttribute("hidden", false);
 
       return true;
     }
