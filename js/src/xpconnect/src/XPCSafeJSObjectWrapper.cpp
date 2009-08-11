@@ -531,9 +531,7 @@ CallWithoutStatics(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
   JSTempValueRooter tvr;
   js_SaveRegExpStatics(cx, &statics, &tvr);
   JS_ClearRegExpStatics(cx);
-  JSStackFrame *fp = JS_SaveFrameChain(cx);
   JSBool ok = ::JS_CallFunctionValue(cx, obj, fval, argc, argv, rval);
-  JS_RestoreFrameChain(cx, fp);
   js_RestoreRegExpStatics(cx, &statics, &tvr);
   return ok;
 }
