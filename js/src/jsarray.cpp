@@ -1385,8 +1385,7 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
     if (IS_SHARP(he)) {
         if (!js_AppendLiteral(buf, "[]"))
             goto out;
-        if (sharpchars)
-            cx->free(sharpchars);
+        cx->free(sharpchars);
         goto make_string;
     }
 #endif
