@@ -129,6 +129,8 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 163504-2b.html 163504-2-ref.html
 == 169749-1.html 169749-1-ref.html
 == 172073-1.html 172073-1-ref.html
+== 179596-1a.html 179596-1a-ref.html
+== 179596-1b.html 179596-1b-ref.html
 == 180085-1.html 180085-1-ref.html
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
@@ -977,68 +979,68 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 428521-1c.html 428521-1-ref.html
 == 428810-1a-ltr.html 428810-1-ltr-ref.html
 == 428810-1b-ltr.html 428810-1-ltr-ref.html
-fails == 428810-1c-ltr.html 428810-empty-ltr-ref.html # bug 179596
+== 428810-1c-ltr.html 428810-empty-ltr-ref.html
 fails == 428810-1d-ltr.html 428810-empty-ltr-ref.html # bug 179596
 != 428810-1-ltr-ref.html about:blank
 == 428810-2a-ltr.html 428810-2-ltr-ref.html
 == 428810-2b-ltr.html 428810-2-ltr-ref.html
 fails == 428810-2e-ltr.html 428810-empty-ltr-ref.html # bug 179596
-fails == 428810-2f-ltr.html 428810-empty-ltr-ref.html # bug 179596
+== 428810-2f-ltr.html 428810-empty-ltr-ref.html
 != 428810-2-ltr-ref.html about:blank
 == 428810-3a-ltr.html 428810-3-ltr-ref.html
 == 428810-3b-ltr.html 428810-3-ltr-ref.html
 fails == 428810-3e-ltr.html 428810-empty-ltr-ref.html # bug 179596
-fails == 428810-3f-ltr.html 428810-empty-ltr-ref.html # bug 179596
+== 428810-3f-ltr.html 428810-empty-ltr-ref.html
 != 428810-3-ltr-ref.html about:blank
 == 428810-1a-rtl.html 428810-1-rtl-ref.html
 == 428810-1b-rtl.html 428810-1-rtl-ref.html
-fails == 428810-1c-rtl.html 428810-empty-rtl-ref.html # bug 179596
+== 428810-1c-rtl.html 428810-empty-rtl-ref.html
 fails == 428810-1d-rtl.html 428810-empty-rtl-ref.html # bug 179596
 != 428810-1-rtl-ref.html about:blank
 != 428810-1-rtl-ref.html 428810-1-ltr-ref.html
 == 428810-2a-rtl.html 428810-2-rtl-ref.html
 == 428810-2b-rtl.html 428810-2-rtl-ref.html
 fails == 428810-2e-rtl.html 428810-empty-rtl-ref.html # bug 179596
-fails == 428810-2f-rtl.html 428810-empty-rtl-ref.html # bug 179596
+== 428810-2f-rtl.html 428810-empty-rtl-ref.html
 != 428810-2-rtl-ref.html about:blank
 != 428810-2-rtl-ref.html 428810-2-ltr-ref.html
 == 428810-3a-rtl.html 428810-3-rtl-ref.html
 == 428810-3b-rtl.html 428810-3-rtl-ref.html
 fails == 428810-3e-rtl.html 428810-empty-rtl-ref.html # bug 179596
-fails == 428810-3f-rtl.html 428810-empty-rtl-ref.html # bug 179596
+== 428810-3f-rtl.html 428810-empty-rtl-ref.html
 != 428810-3-rtl-ref.html about:blank
 != 428810-3-rtl-ref.html 428810-3-ltr-ref.html
 == 428810-1a-ltr-insets.html 428810-1-ltr-insets-ref.html
 == 428810-1b-ltr-insets.html 428810-1-ltr-insets-ref.html
-fails == 428810-1c-ltr-insets.html 428810-empty-ltr-insets-ref.html # bug 179596
+== 428810-1c-ltr-insets.html 428810-empty-ltr-insets-ref.html
 fails == 428810-1d-ltr-insets.html 428810-empty-ltr-insets-ref.html # bug 179596
 != 428810-1-ltr-insets-ref.html about:blank
 == 428810-2a-ltr-insets.html 428810-2-ltr-insets-ref.html
 == 428810-2b-ltr-insets.html 428810-2-ltr-insets-ref.html
 fails == 428810-2e-ltr-insets.html 428810-empty-ltr-insets-ref.html # bug 179596
-fails == 428810-2f-ltr-insets.html 428810-empty-ltr-insets-ref.html # bug 179596
+== 428810-2f-ltr-insets.html 428810-empty-ltr-insets-ref.html
 != 428810-2-ltr-insets-ref.html about:blank
 == 428810-3a-ltr-insets.html 428810-3-ltr-insets-ref.html
 == 428810-3b-ltr-insets.html 428810-3-ltr-insets-ref.html
 fails == 428810-3e-ltr-insets.html 428810-empty-ltr-insets-ref.html # bug 179596
-fails == 428810-3f-ltr-insets.html 428810-empty-ltr-insets-ref.html # bug 179596
+== 428810-3f-ltr-insets.html 428810-empty-ltr-insets-ref.html
 != 428810-3-ltr-insets-ref.html about:blank
 == 428810-1a-rtl-insets.html 428810-1-rtl-insets-ref.html
 == 428810-1b-rtl-insets.html 428810-1-rtl-insets-ref.html
-fails == 428810-1c-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
+== 428810-1c-rtl-insets.html 428810-empty-rtl-insets-ref.html
 fails == 428810-1d-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
 != 428810-1-rtl-insets-ref.html about:blank
 != 428810-1-rtl-insets-ref.html 428810-1-ltr-insets-ref.html
 == 428810-2a-rtl-insets.html 428810-2-rtl-insets-ref.html
 == 428810-2b-rtl-insets.html 428810-2-rtl-insets-ref.html
 fails == 428810-2e-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
-fails == 428810-2f-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
+== 428810-2f-rtl-insets.html 428810-empty-rtl-insets-ref.html
 != 428810-2-rtl-insets-ref.html about:blank
 != 428810-2-rtl-insets-ref.html 428810-2-ltr-insets-ref.html
 == 428810-3a-rtl-insets.html 428810-3-rtl-insets-ref.html
 == 428810-3b-rtl-insets.html 428810-3-rtl-insets-ref.html
 fails == 428810-3e-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
-fails == 428810-3f-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
+== 428810-3f-rtl-insets.html 428810-empty-rtl-insets-ref.html
 != 428810-3-rtl-insets-ref.html about:blank
 != 428810-3-rtl-insets-ref.html 428810-3-ltr-insets-ref.html
 == 430412-1.html 430412-1-ref.html
