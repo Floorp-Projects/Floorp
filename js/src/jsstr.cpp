@@ -1297,7 +1297,6 @@ globfunc_stack_cast(RedGlobFunc f)
 static JSBool
 match_or_replace(JSContext *cx,
                  GlobFunc glob,
-                 void (*destroy)(JSContext *cx, GlobData *data),
                  GlobData *data, uintN argc, jsval *vp)
 {
     JSString *str, *src, *opt;
@@ -1365,8 +1364,6 @@ match_or_replace(JSContext *cx,
                     index++;
                 }
             }
-            if (!ok && destroy)
-                destroy(cx, data);
         }
     } else {
         if (GET_MODE(data->flags) == MODE_REPLACE) {
@@ -1456,7 +1453,7 @@ StringMatchHelper(JSContext *cx, uintN argc, jsval *vp, jsbytecode *pc)
     mdata.base.flags = MODE_MATCH;
     mdata.base.optarg = 1;
     mdata.arrayval = &tvr.u.value;
-    ok = match_or_replace(cx, match_glob, NULL, &mdata.base, argc, vp);
+    ok = match_or_replace(cx, match_glob, &mdata.base, argc, vp);
     if (ok && !JSVAL_IS_NULL(*mdata.arrayval))
         *vp = *mdata.arrayval;
     JS_POP_TEMP_ROOT(cx, &tvr);
@@ -1476,20 +1473,21 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
 
     data.flags = MODE_SEARCH;
     data.optarg = 1;
-    return match_or_replace(cx, NULL, NULL, &data, argc, vp);
+    return match_or_replace(cx, NULL, &data, argc, vp);
 }
 
 typedef struct ReplaceData {
-    GlobData    base;           /* base struct state */
-    JSObject    *lambda;        /* replacement function object or null */
-    JSString    *repstr;        /* replacement string */
-    jschar      *dollar;        /* null or pointer to first $ in repstr */
-    jschar      *dollarEnd;     /* limit pointer for js_strchr_limit */
-    jschar      *chars;         /* result chars, null initially */
-    size_t      length;         /* result length, 0 initially */
-    jsint       index;          /* index in result of next replacement */
-    jsint       leftIndex;      /* left context index in base.str->chars */
-    JSSubString dollarStr;      /* for "$$" interpret_dollar result */
+    ReplaceData(JSContext *cx) : cb(cx) {}
+    GlobData      base;           /* base struct state */
+    JSObject      *lambda;        /* replacement function object or null */
+    JSString      *repstr;        /* replacement string */
+    jschar        *dollar;        /* null or pointer to first $ in repstr */
+    jschar        *dollarEnd;     /* limit pointer for js_strchr_limit */
+    jsint         index;          /* index in result of next replacement */
+    jsint         leftIndex;      /* left context index in base.str->chars */
+    JSSubString   dollarStr;      /* for "$$" interpret_dollar result */
+    bool          globCalled;     /* record whether replace_glob has been called */
+    JSCharVector  cb;             /* buffer built during match_or_replace */
 } ReplaceData;
 
 static JSSubString *
@@ -1706,16 +1704,6 @@ do_replace(JSContext *cx, ReplaceData *rdata, jschar *chars)
     js_strncpy(chars, cp, repstr->length() - (cp - bp));
 }
 
-static void
-replace_destroy(JSContext *cx, GlobData *data)
-{
-    ReplaceData *rdata;
-
-    rdata = (ReplaceData *)data;
-    cx->free(rdata->chars);
-    rdata->chars = NULL;
-}
-
 static JS_REQUIRES_STACK JSBool
 replace_glob(JSContext *cx, jsint count, GlobData *data)
 {
@@ -1726,6 +1714,7 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     jschar *chars;
 
     rdata = (ReplaceData *)data;
+    rdata->globCalled = true;
     str = data->str;
     leftoff = rdata->leftIndex;
     left = str->chars() + leftoff;
@@ -1735,16 +1724,9 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     if (!find_replen(cx, rdata, &replen))
         return JS_FALSE;
     growth = leftlen + replen;
-    chars = (jschar *)
-        (rdata->chars
-         ? cx->realloc(rdata->chars, (rdata->length + growth + 1)
-                                        * sizeof(jschar))
-         : cx->malloc((growth + 1) * sizeof(jschar)));
-    if (!chars)
+    if (!rdata->cb.growBy(growth))
         return JS_FALSE;
-    rdata->chars = chars;
-    rdata->length += growth;
-    chars += rdata->index;
+    chars = rdata->cb.begin() + rdata->index;
     rdata->index += growth;
     js_strncpy(chars, left, leftlen);
     chars += leftlen;
@@ -1775,10 +1757,9 @@ JSBool
 js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
                        JSString *repstr, jsval *vp)
 {
-    ReplaceData rdata;
+    ReplaceData rdata(cx);
     JSBool ok;
-    size_t leftlen, rightlen, length;
-    jschar *chars;
+    size_t leftlen, length;
     JSString *str;
 
     /*
@@ -1801,17 +1782,16 @@ js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
     } else {
         rdata.dollar = rdata.dollarEnd = NULL;
     }
-    rdata.chars = NULL;
-    rdata.length = 0;
     rdata.index = 0;
     rdata.leftIndex = 0;
+    rdata.globCalled = false;
 
-    ok = match_or_replace(cx, globfunc_stack_cast(replace_glob),
-                          replace_destroy, &rdata.base, argc, vp);
+    ok = match_or_replace(cx, globfunc_stack_cast(replace_glob), &rdata.base,
+                          argc, vp);
     if (!ok)
         return JS_FALSE;
 
-    if (!rdata.chars) {
+    if (!rdata.globCalled) {
         if ((rdata.base.flags & GLOBAL_REGEXP) || *vp != JSVAL_TRUE) {
             /* Didn't match even once. */
             *vp = STRING_TO_JSVAL(rdata.base.str);
@@ -1822,36 +1802,19 @@ js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
         if (!ok)
             goto out;
         length += leftlen;
-        chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
-        if (!chars) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        js_strncpy(chars, cx->regExpStatics.leftContext.chars, leftlen);
-        do_replace(cx, &rdata, chars + leftlen);
-        rdata.chars = chars;
-        rdata.length = length;
+        if (!rdata.cb.growBy(length))
+            return JS_FALSE;
+        js_strncpy(rdata.cb.begin(), cx->regExpStatics.leftContext.chars, leftlen);
+        do_replace(cx, &rdata, rdata.cb.begin() + leftlen);
     }
 
-    rightlen = cx->regExpStatics.rightContext.length;
-    length = rdata.length + rightlen;
-    chars = (jschar *)
-        cx->realloc(rdata.chars, (length + 1) * sizeof(jschar));
-    if (!chars) {
-        cx->free(rdata.chars);
+    if (!rdata.cb.append(cx->regExpStatics.rightContext.chars,
+                         cx->regExpStatics.rightContext.length) ||
+        !(str = js_NewStringFromCharBuffer(cx, rdata.cb))) {
         ok = JS_FALSE;
         goto out;
     }
-    js_strncpy(chars + rdata.length, cx->regExpStatics.rightContext.chars,
-               rightlen);
-    chars[length] = 0;
 
-    str = js_NewString(cx, chars, length);
-    if (!str) {
-        cx->free(chars);
-        ok = JS_FALSE;
-        goto out;
-    }
     *vp = STRING_TO_JSVAL(str);
 
 out:
@@ -2758,6 +2721,8 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     return str;
 }
 
+static const size_t sMinWasteSize = 16;
+
 JSString *
 js_NewStringFromCharBuffer(JSContext *cx, JSCharVector &cb)
 {
@@ -2768,9 +2733,23 @@ js_NewStringFromCharBuffer(JSContext *cx, JSCharVector &cb)
     if (!cb.append('\0'))
         return NULL;
 
+    size_t capacity = cb.capacity();
+
     jschar *buf = cb.extractRawBuffer();
     if (!buf)
         return NULL;
+
+    /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
+    JS_ASSERT(capacity >= length);
+    if (capacity > sMinWasteSize && capacity - length > (length >> 2)) {
+        size_t bytes = sizeof(jschar) * (length + 1);
+        jschar *tmp = (jschar *)cx->realloc(buf, bytes);
+        if (!tmp) {
+            cx->free(buf);
+            return NULL;
+        }
+        buf = tmp;
+    }
 
     JSString *str = js_NewString(cx, buf, length);
     if (!str)
