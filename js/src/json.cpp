@@ -308,7 +308,7 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
                 continue;
 
             jsval newKey;
-            if (!OBJ_GET_PROPERTY(cx, scx->replacer, key, &newKey))
+            if (!scx->replacer->getProperty(cx, key, &newKey))
                 return JS_FALSE;
             key = newKey;
         }
@@ -431,7 +431,7 @@ JA(JSContext *cx, jsval *vp, StringifyContext *scx)
     for (i = 0; i < length; i++) {
         id = INT_TO_JSID(i);
 
-        if (!OBJ_GET_PROPERTY(cx, obj, id, &outputValue))
+        if (!obj->getProperty(cx, id, &outputValue))
             return JS_FALSE;
 
         if (!Str(cx, id, obj, scx, &outputValue))
@@ -476,7 +476,7 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 {
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    if (!OBJ_GET_PROPERTY(cx, holder, id, vp))
+    if (!holder->getProperty(cx, id, vp))
         return JS_FALSE;
 
     if (!JSVAL_IS_PRIMITIVE(*vp) && !js_TryJSON(cx, vp))
@@ -613,7 +613,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
     if (!obj)
         return JS_FALSE;
 
-    if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
                              *vp, NULL, NULL, JSPROP_ENUMERATE, NULL)) {
         return JS_FALSE;
     }
@@ -640,8 +640,8 @@ static JSBool
 Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
 {
     JS_CHECK_RECURSION(cx, return JS_FALSE);
-
-    if (!OBJ_GET_PROPERTY(cx, holder, id, vp))
+    
+    if (!holder->getProperty(cx, id, vp))
         return JS_FALSE;
 
     JSObject *obj;
@@ -663,10 +663,8 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
                 if (!Walk(cx, index, obj, reviver, &propValue))
                     return JS_FALSE;
 
-                if (!OBJ_DEFINE_PROPERTY(cx, obj, index, propValue,
-                                         NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+                if (!obj->defineProperty(cx, index, propValue, NULL, NULL, JSPROP_ENUMERATE, NULL))
                     return JS_FALSE;
-                }
             }
         } else {
             JSIdArray *ida = JS_Enumerate(cx, obj);
@@ -683,7 +681,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
                     if (!js_DeleteProperty(cx, obj, idName, &propValue))
                         return DestroyIdArrayOnError(cx, ida);
                 } else {
-                    if (!OBJ_DEFINE_PROPERTY(cx, obj, idName, propValue,
+                    if (!obj->defineProperty(cx, idName, propValue,
                                              NULL, NULL, JSPROP_ENUMERATE, NULL)) {
                         return DestroyIdArrayOnError(cx, ida);
                     }
@@ -720,7 +718,7 @@ Revive(JSContext *cx, jsval reviver, jsval *vp)
 
     jsval v = OBJECT_TO_JSVAL(obj);
     JSAutoTempValueRooter tvr(cx, 1, &v);
-    if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
                              *vp, NULL, NULL, JSPROP_ENUMERATE, NULL)) {
         return JS_FALSE;
     }
@@ -861,8 +859,7 @@ PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, jsval value)
             jsid index;
             if (!js_IndexToId(cx, len, &index))
                 return JS_FALSE;
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, index, value,
-                                     NULL, NULL, JSPROP_ENUMERATE, NULL);
+            ok = parent->defineProperty(cx, index, value, NULL, NULL, JSPROP_ENUMERATE, NULL);
         }
     } else {
         ok = JS_DefineUCProperty(cx, parent, jp->objectKey.base,
@@ -892,15 +889,15 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
     if (len == 0) {
         *jp->rootVal = v;
         // This property must be enumerable to keep the array dense
-        if (!OBJ_DEFINE_PROPERTY(cx, jp->objectStack, INT_TO_JSID(0), *jp->rootVal,
-                                 NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+        if (!jp->objectStack->defineProperty(cx, INT_TO_JSID(0), *jp->rootVal,
+                                             NULL, NULL, JSPROP_ENUMERATE, NULL)) {
             return JS_FALSE;
         }
         return JS_TRUE;
     }
 
     jsval p;
-    if (!OBJ_GET_PROPERTY(cx, jp->objectStack, INT_TO_JSID(len - 1), &p))
+    if (!jp->objectStack->getProperty(cx, INT_TO_JSID(len - 1), &p))
         return JS_FALSE;
 
     JS_ASSERT(JSVAL_IS_OBJECT(p));
@@ -909,8 +906,8 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
         return JS_FALSE;
 
     // This property must be enumerable to keep the array dense
-    if (!OBJ_DEFINE_PROPERTY(cx, jp->objectStack, INT_TO_JSID(len), v,
-                             NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+    if (!jp->objectStack->defineProperty(cx, INT_TO_JSID(len), v,
+                                         NULL, NULL, JSPROP_ENUMERATE, NULL)) {
         return JS_FALSE;
     }
 
@@ -967,7 +964,7 @@ PushPrimitive(JSContext *cx, JSONParser *jp, jsval value)
 
     if (len > 0) {
         jsval o;
-        if (!OBJ_GET_PROPERTY(cx, jp->objectStack, INT_TO_JSID(len - 1), &o))
+        if (!jp->objectStack->getProperty(cx, INT_TO_JSID(len - 1), &o))
             return JS_FALSE;
 
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(o));

@@ -436,7 +436,7 @@ exn_enumerate(JSContext *cx, JSObject *obj)
         if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
             return JS_FALSE;
         if (prop)
-            OBJ_DROP_PROPERTY(cx, pobj, prop);
+            pobj->dropProperty(cx, prop);
     }
     return JS_TRUE;
 }
@@ -695,11 +695,12 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * js_NewObject to find the class prototype, we must get the class
          * prototype ourselves.
          */
-        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(argv[-2]),
-                              ATOM_TO_JSID(cx->runtime->atomState
-                                           .classPrototypeAtom),
-                              rval))
+        if (!JSVAL_TO_OBJECT(argv[-2])->getProperty(cx,
+                                                    ATOM_TO_JSID(cx->runtime->atomState
+                                                                 .classPrototypeAtom),
+                                                    rval)) {
             return JS_FALSE;
+        }
         obj = js_NewObject(cx, &js_ErrorClass, JSVAL_TO_OBJECT(*rval), NULL);
         if (!obj)
             return JS_FALSE;
@@ -773,12 +774,8 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
     size_t name_length, message_length, length;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj ||
-        !OBJ_GET_PROPERTY(cx, obj,
-                          ATOM_TO_JSID(cx->runtime->atomState.nameAtom),
-                          &v)) {
+    if (!obj || !obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), &v))
         return JS_FALSE;
-    }
     name = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v) : cx->runtime->emptyString;
     *vp = STRING_TO_JSVAL(name);
 
@@ -834,12 +831,8 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     jschar *chars, *cp;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj ||
-        !OBJ_GET_PROPERTY(cx, obj,
-                          ATOM_TO_JSID(cx->runtime->atomState.nameAtom),
-                          vp)) {
+    if (!obj || !obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.nameAtom), vp))
         return JS_FALSE;
-    }
     name = js_ValueToString(cx, *vp);
     if (!name)
         return JS_FALSE;
