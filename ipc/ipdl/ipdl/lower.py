@@ -608,8 +608,11 @@ class GenerateProtocolActorHeader(Visitor):
         ctor = cxx.ConstructorDefn(cxx.ConstructorDecl(self.clsname))
         if p.decl.type.isToplevel():
             ctor.memberinits = [
-                cxx.ExprMemberInit(cxx.ExprVar('mChannel'),
-                                   [ cxx.ExprVar('this') ]) ]
+                cxx.ExprMemberInit(
+                    cxx.ExprVar('mChannel'),
+                    [ cxx.ExprCall(
+                            cxx.ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
+                            [ cxx.ExprVar('this') ]) ]) ]
         cls.addstmt(ctor)
         cls.addstmt(cxx.Whitespace.NL)
 
