@@ -48,12 +48,12 @@ ifndef MOZ_PKG_FORMAT
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_FORMAT  = DMG
 else
-ifeq (,$(filter-out OS2 WINNT BeOS, $(OS_ARCH)))
+ifeq (,$(filter-out OS2 WINNT WINCE BeOS, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = ZIP
 ifeq ($(OS_ARCH),OS2)
 INSTALLER_DIR   = os2
 else
-ifeq ($(OS_ARCH), WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 INSTALLER_DIR   = windows
 endif
 endif
@@ -64,11 +64,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 MOZ_PKG_FORMAT  = BZ2
 else
-ifeq (,$(filter-out WINCE, $(OS_ARCH)))
-MOZ_PKG_FORMAT  = ZIP
-else
 MOZ_PKG_FORMAT  = TGZ
-endif
 endif
 endif
 INSTALLER_DIR   = unix
@@ -292,7 +288,7 @@ STRIP_FLAGS	=
 PLATFORM_EXCLUDE_LIST = ! -name "*.ico" ! -name "$(MOZ_PKG_APPNAME).exe"
 endif
 
-ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
+ifneq (,$(filter WINNT WINCE OS2,$(OS_ARCH)))
 PKGCP_OS = dos
 else
 PKGCP_OS = unix
@@ -419,7 +415,7 @@ make-package: stage-package $(PACKAGE_XULRUNNER)
 # dist/sdk/lib -> prefix/lib/appname-devel-version/lib
 # prefix/lib/appname-devel-version/* symlinks to the above directories
 install:: stage-package
-ifneq (,$(filter WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
 ifeq (bundle,$(MOZ_FS_LAYOUT))

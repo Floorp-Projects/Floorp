@@ -97,3 +97,5 @@ include $(topsrcdir)/config/rules.mk
 mozce_shunt.def: mozce_shunt.def.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@
 
+.NOTPARALLEL:
+
