@@ -3850,7 +3850,7 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
         }
 
         /* MaybeEmitGroupAssignment won't call us if rhs is holey. */
-        JS_ASSERT(pn->pn_type != TOK_COMMA);
+        JS_ASSERT(!(pn->pn_type == TOK_COMMA && pn->pn_arity == PN_NULLARY));
         if (!js_EmitTree(cx, cg, pn))
             return JS_FALSE;
         ++limit;
