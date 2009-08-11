@@ -119,7 +119,7 @@ function test() {
                             test_state._closedWindows.length);
     ss.setWindowState(newWin, JSON.stringify(test_state), true);
     
-    let closedWindows = JSON.parse("(" + ss.getClosedWindowData() + ")");
+    let closedWindows = JSON.parse(ss.getClosedWindowData());
     is(closedWindows.length, test_state._closedWindows.length,
        "Closed window list has the expected length");
     is(countByTitle(closedWindows, FORGET),
@@ -138,7 +138,7 @@ function test() {
     ss.forgetClosedWindow(2);
     ss.forgetClosedWindow(null);
     
-    closedWindows = JSON.parse("(" + ss.getClosedWindowData() + ")");
+    closedWindows = JSON.parse(ss.getClosedWindowData());
     is(closedWindows.length, remember_count,
        "The correct amount of windows were removed");
     is(countByTitle(closedWindows, FORGET), 0,
