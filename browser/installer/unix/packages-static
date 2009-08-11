@@ -363,6 +363,7 @@ bin/libfreebl3.chk
 bin/libfreebl3.so
 bin/libssl3.so
 bin/libnssdbm3.so
+bin/libnssdbm3.chk
 bin/chrome/pippki.jar
 bin/chrome/pippki.manifest
 
