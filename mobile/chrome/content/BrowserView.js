@@ -132,9 +132,9 @@ const kBrowserViewZoomLevelPrecision = 10000;
  * hopefully no one but us will touch.  See BrowserView.Util.getViewportStateFromBrowser()
  * for the property name.
  */
-function BrowserView(container, visibleRect) {
+function BrowserView(container, visibleRectFactory) {
   Util.bindAll(this);
-  this.init(container, visibleRect);
+  this.init(container, visibleRectFactory);
 }
 
 
@@ -236,7 +236,7 @@ BrowserView.prototype = {
   // Public instance methods
   //
 
-  init: function init(container, visibleRect) {
+  init: function init(container, visibleRectFactory) {
     this._batchOps = [];
     this._container = container;
     this._browser = null;
@@ -244,34 +244,12 @@ BrowserView.prototype = {
     this._contentWindow = null;
     this._renderMode = 0;
     this._tileManager = new TileManager(this._appendTile, this._removeTile, this);
-    this.setVisibleRect(visibleRect);
-  },
-
-  setVisibleRect: function setVisibleRect(r) {
-    let bvs = this._browserViewportState;
-    let vr  = this._visibleRect;
-
-    if (!vr)
-      this._visibleRect = vr = r.clone();
-    else
-      vr.copyFrom(r);
-
-    if (bvs) {
-      bvs.visibleX = vr.left;
-      bvs.visibleY = vr.top;
-    }
-
-    this._viewportChanged(false, false);
+    this._visibleRectFactory = visibleRectFactory;
   },
 
   getVisibleRect: function getVisibleRect() {
-    return this._visibleRect.clone();
+    return this._visibleRectFactory();
   },
-
-  getVisibleRectX: function getVisibleRectX() { return this._visibleRect.left; },
-  getVisibleRectY: function getVisibleRectY() { return this._visibleRect.top; },
-  getVisibleRectWidth: function getVisibleRectWidth() { return this._visibleRect.width; },
-  getVisibleRectHeight: function getVisibleRectHeight() { return this._visibleRect.height; },
 
   setViewportDimensions: function setViewportDimensions(width, height, causedByZoom) {
     let bvs = this._browserViewportState;
@@ -346,21 +324,6 @@ BrowserView.prototype = {
       this.discardBatchOperation();
   },
 
-  moveVisibleBy: function moveVisibleBy(dx, dy) {
-    let vr = this._visibleRect;
-    let vs = this._browserViewportState;
-
-    this.onBeforeVisibleMove(dx, dy);
-    this.onAfterVisibleMove(dx, dy);
-  },
-
-  moveVisibleTo: function moveVisibleTo(x, y) {
-    let visibleRect = this._visibleRect;
-    let dx = x - visibleRect.x;
-    let dy = y - visibleRect.y;
-    this.moveBy(dx, dy);
-  },
-
   /**
    * Calls to this function need to be one-to-one with calls to
    * resumeRendering()
@@ -398,22 +361,17 @@ BrowserView.prototype = {
    */
   onBeforeVisibleMove: function onBeforeVisibleMove(dx, dy) {
     let vs = this._browserViewportState;
-    let vr = this._visibleRect;
+    let vr = this.getVisibleRect();
 
-    let destCR = BrowserView.Util.visibleRectToCriticalRect(vr.clone().translate(dx, dy), vs);
+    let destCR = BrowserView.Util.visibleRectToCriticalRect(vr.translate(dx, dy), vs);
 
     this._tileManager.beginCriticalMove(destCR);
   },
 
-  /**
-   * @param dx Actual delta to destination x coordinate
-   * @param dy Actual delta to destination y coordinate
-   */
-  onAfterVisibleMove: function onAfterVisibleMove(dx, dy) {
+  onAfterVisibleMove: function onAfterVisibleMove() {
     let vs = this._browserViewportState;
-    let vr = this._visibleRect;
+    let vr = this.getVisibleRect();
 
-    vr.translate(dx, dy);
     vs.visibleX = vr.left;
     vs.visibleY = vr.top;
 
@@ -528,7 +486,7 @@ BrowserView.prototype = {
       return;
 
     let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
-    this.setZoomLevel(BrowserView.Util.pageZoomLevel(this._visibleRect, w, h));
+    this.setZoomLevel(BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h));
   },
 
   zoom: function zoom(aDirection) {
@@ -594,15 +552,10 @@ BrowserView.prototype = {
     let bvs = null;
 
     if (browser) {
-      let vr = this._visibleRect;
-
       if (!BrowserView.Util.seenBrowser(browser))
-        BrowserView.Util.initBrowserState(browser, vr);
+        BrowserView.Util.initBrowserState(browser, this.getVisibleRect());
 
       bvs = BrowserView.Util.getViewportStateFromBrowser(browser);
-
-      vr.left = bvs.visibleX;
-      vr.top  = bvs.visibleY;
     }
 
     this._browser = browser;
@@ -626,7 +579,6 @@ BrowserView.prototype = {
     }
 
     let bvs = this._browserViewportState;
-    let vis = this._visibleRect;
 
     if (bvs) {
       BrowserView.Util.resizeContainerToViewport(this._container, bvs.viewportRect);
@@ -638,7 +590,7 @@ BrowserView.prototype = {
       }
 
       this._tileManager.viewportChangeHandler(bvs.viewportRect,
-                                              BrowserView.Util.visibleRectToCriticalRect(vis, bvs),
+                                              BrowserView.Util.visibleRectToCriticalRect(this.getVisibleRect(), bvs),
                                               viewportSizeChanged,
                                               dirtyAll);
     }
@@ -662,16 +614,12 @@ BrowserView.prototype = {
     canvas.setAttribute("style", "position: absolute; left: " + tile.boundRect.left + "px; " + "top: " + tile.boundRect.top + "px;");
 
     this._container.appendChild(canvas);
-
-    //dump('++ ' + tile.toString(true) + endl);
   },
 
   _removeTile: function _removeTile(tile) {
     let canvas = tile.getContentImage();
 
     this._container.removeChild(canvas);
-
-    //dump('-- ' + tile.toString(true) + endl);
   }
 
 };
