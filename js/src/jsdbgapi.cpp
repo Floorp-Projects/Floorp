@@ -787,16 +787,16 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             flags = sprop->flags;
             shortid = sprop->shortid;
         } else {
-            if (!OBJ_GET_PROPERTY(cx, pobj, propid, &value) ||
-                !OBJ_GET_ATTRIBUTES(cx, pobj, propid, prop, &attrs)) {
-                OBJ_DROP_PROPERTY(cx, pobj, prop);
+            if (!pobj->getProperty(cx, propid, &value) ||
+                !pobj->getAttributes(cx, propid, prop, &attrs)) {
+                pobj->dropProperty(cx, prop);
                 return JS_FALSE;
             }
             getter = setter = NULL;
             flags = 0;
             shortid = 0;
         }
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
+        pobj->dropProperty(cx, prop);
 
         /* Recall that obj is native, whether or not pobj is native. */
         if (!js_DefineNativeProperty(cx, obj, propid, value, getter, setter,
@@ -808,7 +808,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
 
     /*
      * At this point, prop/sprop exists in obj, obj is locked, and we must
-     * OBJ_DROP_PROPERTY(cx, obj, prop) before returning.
+     * obj->dropProperty(cx, prop) before returning.
      */
     ok = JS_TRUE;
     DBG_LOCK(rt);
@@ -861,7 +861,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     DBG_UNLOCK(rt);
 
 out:
-    OBJ_DROP_PROPERTY(cx, obj, prop);
+    obj->dropProperty(cx, prop);
     return ok;
 }
 
