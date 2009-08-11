@@ -289,6 +289,7 @@ function openDownload(aDownload)
     } catch (e) { }
 
 #ifdef XP_WIN
+#ifndef WINCE
     // On Vista and above, we rely on native security prompting for
     // downloaded content.
     try {
@@ -297,6 +298,7 @@ function openDownload(aDownload)
         if (parseFloat(sysInfo.getProperty("version")) >= 6)
           dontAsk = true;
     } catch (ex) { }
+#endif
 #endif
 
     if (!dontAsk) {
