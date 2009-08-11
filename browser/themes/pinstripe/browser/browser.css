@@ -290,11 +290,6 @@ toolbarbutton.bookmark-item-microsummarized {
   -moz-box-orient: vertical;
 }
 
-.toolbarbutton-1:-moz-locale-dir(rtl),
-#back-forward-dropmarker:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/Toolbar-rtl.png");
-}
-
 toolbar[mode="text"] .toolbarbutton-1,
 toolbar[mode="text"] .toolbarbutton-menubutton-button {
   -moz-box-orient: horizontal;
@@ -336,6 +331,12 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
   display: none;
 }
 
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#back-forward-dropmarker:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
+}
+
 /* ----- DEFAULT BACK BUTTON, STAND-ALONE ----- */	
 
 #back-button {
@@ -375,26 +376,13 @@ toolbar[mode="icons"] #unified-back-forward-button > #back-button {
   border-right: none;
 }
 
-toolbar[mode="icons"] #unified-back-forward-button > #back-button:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 571px, 33px, 540px);
-}
-
 toolbar[mode="icons"] #unified-back-forward-button > #back-button[disabled="true"] {
  -moz-image-region: rect(33px, 535px, 66px, 504px);
-}
-
-toolbar[mode="icons"] #unified-back-forward-button > #back-button[disabled="true"]:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(33px, 571px, 66px, 540px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #back-button:hover:active:not([disabled]),
 toolbar[mode="icons"] #unified-back-forward-button > #back-button[open="true"] {
   -moz-image-region: rect(66px, 535px, 99px, 504px);
-}
-
-toolbar[mode="icons"] #unified-back-forward-button > #back-button:hover:active:-moz-locale-dir(rtl):not([disabled]),
-toolbar[mode="icons"] #unified-back-forward-button > #back-button[open="true"]:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(66px, 571px, 99px, 540px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button {
@@ -407,27 +395,14 @@ toolbar[mode="icons"] #unified-back-forward-button > #forward-button {
   border-right: none;
 }
 
-toolbar[mode="icons"] #unified-back-forward-button > #forward-button:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 540px, 33px, 514px);
-}
-
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button[disabled="true"] {
  -moz-image-region: rect(33px, 560px, 66px, 535px);
-}
-
-toolbar[mode="icons"] #unified-back-forward-button > #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
- -moz-image-region: rect(33px, 540px, 66px, 514px);
 }
 
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button:hover:active:not([disabled]),
 toolbar[mode="icons"] #unified-back-forward-button > #forward-button[open="true"] {
   -moz-image-region: rect(99px, 560px, 132px, 530px);
   -moz-margin-start: -5px;
-}
-
-toolbar[mode="icons"] #unified-back-forward-button > #forward-button:-moz-locale-dir(rtl):hover:active:not([disabled]),
-toolbar[mode="icons"] #unified-back-forward-button > #forward-button[open="true"]:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(99px, 545px, 132px, 514px);
 }
 
 #back-forward-dropmarker {
@@ -438,10 +413,6 @@ toolbar[mode="icons"] #unified-back-forward-button > #forward-button[open="true"
   -moz-padding-end: 1px;
   border-left: none;
   border-right: none;
-}
-
-#back-forward-dropmarker:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 514px, 33px, 504px);
 }
 
 toolbar[mode="icons"] #back-forward-dropmarker > image {
@@ -458,18 +429,9 @@ toolbar[mode="icons"] #back-forward-dropmarker > dropmarker {
  -moz-image-region: rect(33px, 571px, 66px, 560px);
 }
 
-#back-forward-dropmarker[disabled="true"]:-moz-locale-dir(rtl) {
- -moz-image-region: rect(33px, 514px, 66px, 504px);
-}
-
 #back-forward-dropmarker:hover:active:not([disabled]),
 #back-forward-dropmarker[open="true"] {
   -moz-image-region: rect(66px, 571px, 99px, 560px);
-}
-
-#back-forward-dropmarker:-moz-locale-dir(rtl):hover:active:not([disabled]),
-#back-forward-dropmarker[open="true"]:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(66px, 514px, 99px, 504px);
 }
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
@@ -493,26 +455,13 @@ toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-but
   border-right: none;
 }
 
-toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 648px, 23px, 614px);
-}
-
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[disabled="true"] {
   -moz-image-region: rect(23px, 605px, 46px, 571px);
-}
-
-toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[disabled="true"]:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(23px, 648px, 46px, 614px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button:hover:active:not([disabled]),
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[open="true"] {
   -moz-image-region: rect(46px, 605px, 69px, 571px);
-}
-
-toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button:-moz-locale-dir(rtl):hover:active:not([disabled]),
-toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #back-button[open="true"]:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(46px, 648px, 69px, 614px);
 }
 
 /* ----- SMALL FORWARD BUTTON, PAIRED ----- */	
@@ -525,16 +474,8 @@ toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-
   border-right: none;
 }
 
-toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 614px, 23px, 580px);
-}
-
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[disabled="true"] {
  -moz-image-region: rect(23px, 638px, 46px, 605px);
-}
-
-toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
- -moz-image-region: rect(23px, 614px, 46px, 580px);
 }
 
 toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button:hover:active:not([disabled]),
@@ -543,37 +484,19 @@ toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-
   -moz-margin-start: 0;
 }
 
-toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button:-moz-locale-dir(rtl):hover:active:not([disabled]),
-toolbar[mode="icons"][iconsize="small"] #unified-back-forward-button > #forward-button[open="true"]:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(46px, 614px, 69px, 580px);
-}
-
 /* ----- SMALL BACK/FORWARD DROPMARKER ----- */	
 
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker {
   -moz-image-region: rect(0px, 648px, 23px, 638px);
 }
 
-toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 580px, 23px, 571px);
-}
-
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[disabled="true"] {
  -moz-image-region: rect(23px, 648px, 46px, 638px);
-}
-
-toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[disabled="true"]:-moz-locale-dir(rtl) {
- -moz-image-region: rect(23px, 580px, 46px, 571px);
 }
 
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker:hover:active:not([disabled]),
 toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[open="true"] {
   -moz-image-region: rect(46px, 648px, 69px, 638px);
-}
-
-toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker:-moz-locale-dir(rtl):hover:active:not([disabled]),
-toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarker[open="true"]:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(46px, 580px, 69px, 571px);
 }
 
 /* ----- DEFAULT RELOAD BUTTON ----- */	
@@ -1461,8 +1384,8 @@ toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/icons/chevron.png") !important;
 }
 
-toolbarbutton.chevron:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/icons/chevron-rtl.png") !important;
+toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
 }
 
 

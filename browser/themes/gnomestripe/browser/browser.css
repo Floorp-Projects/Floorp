@@ -1346,8 +1346,8 @@ toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
 }
 
-toolbarbutton.chevron:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/toolbar/chevron-rtl.gif") !important;
+toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
 }
 
 toolbarbutton.chevron > .toolbarbutton-text,
