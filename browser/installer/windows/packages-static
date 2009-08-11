@@ -42,6 +42,9 @@ bin\xpcom_core.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
 #endif
+#ifdef WINCE
+bin\mozce_shunt.dll
+#else
 #ifndef MOZ_MEMORY
 bin\Microsoft.VC80.CRT.manifest
 bin\msvcm80.dll
@@ -49,6 +52,7 @@ bin\msvcp80.dll
 bin\msvcr80.dll
 #else
 bin\mozcrt19.dll
+#endif
 #endif
 
 [browser]
@@ -139,7 +143,9 @@ bin\components\inspector.xpt
 bin\components\locale.xpt
 bin\components\lwbrk.xpt
 bin\components\microsummaries.xpt
+#ifndef WINCE
 bin\components\migration.xpt
+#endif
 bin\components\mimetype.xpt
 bin\components\mozbrwsr.xpt
 bin\components\mozfind.xpt
@@ -367,8 +373,10 @@ bin\chrome\pippki.manifest
 ;
 bin\updater.exe
 
+#ifdef MOZ_CRASHREPORTER
 ; [Crash Reporter]
 bin\crashreporter.exe
 bin\crashreporter.ini
 bin\crashreporter-override.ini
+#endif
 
