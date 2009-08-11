@@ -712,6 +712,16 @@ MarkSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
     oracle.markGlobalSlotUndemotable(cx, gslots[slot - ti->nStackTypes]);
 }
 
+static JS_REQUIRES_STACK inline bool
+IsSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
+{
+    if (slot < ti->nStackTypes)
+        return oracle.isStackSlotUndemotable(cx, slot);
+
+    uint16* gslots = ti->globalSlots->data();
+    return oracle.isGlobalSlotUndemotable(cx, gslots[slot - ti->nStackTypes]);
+}
+
 struct PCHashEntry : public JSDHashEntryStub {
     size_t          count;
 };
@@ -807,6 +817,9 @@ struct VMFragment : public Fragment
         globalShape(_globalShape),
         argc(_argc)
     {}
+    inline TreeInfo* getTreeInfo() {
+        return (TreeInfo*)vmprivate;
+    }
     VMFragment* next;
     JSObject* globalObj;
     uint32 globalShape;
@@ -1601,6 +1614,15 @@ TypeMap::matches(TypeMap& other) const
     return !memcmp(data(), other.data(), length());
 }
 
+void
+TypeMap::fromRaw(JSTraceType* other, unsigned numSlots)
+{
+    unsigned oldLength = length();
+    setLength(length() + numSlots);
+    for (unsigned i = 0; i < numSlots; i++)
+        get(oldLength + i) = other[i];
+}
+
 /*
  * Use the provided storage area to create a new type map that contains the
  * partial type map with the rest of it filled up from the complete type
@@ -1638,24 +1660,6 @@ SpecializeTreesToMissingGlobals(JSContext* cx, JSObject* globalObj, TreeInfo* ro
         if (ti && ti->nGlobalTypes() < ti->globalSlots->length())
             SpecializeTreesToMissingGlobals(cx, globalObj, ti);
     }
-}
-
-static inline JSTraceType*
-GetStackTypeMap(nanojit::SideExit* exit)
-{
-    return (JSTraceType*)(((VMSideExit*)exit) + 1);
-}
-
-static inline JSTraceType*
-GetGlobalTypeMap(nanojit::SideExit* exit)
-{
-    return GetStackTypeMap(exit) + ((VMSideExit*)exit)->numStackSlots;
-}
-
-static inline JSTraceType*
-GetFullTypeMap(nanojit::SideExit* exit)
-{
-    return GetStackTypeMap(exit);
 }
 
 static void
@@ -3184,7 +3188,7 @@ TraceRecorder::snapshot(ExitType exitType)
             VMSideExit* e = exits[n];
             if (e->pc == pc && e->imacpc == fp->imacpc &&
                 ngslots == e->numGlobalSlots &&
-                !memcmp(GetFullTypeMap(exits[n]), typemap, typemap_size)) {
+                !memcmp(exits[n]->fullTypeMap(), typemap, typemap_size)) {
                 AUDIT(mergedLoopExits);
                 JS_ARENA_RELEASE(&cx->tempPool, mark);
                 return e;
@@ -3229,7 +3233,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     exit->nativeCalleeWord = 0;
     exit->lookupFlags = js_InferFlags(cx, 0);
-    memcpy(GetFullTypeMap(exit), typemap, typemap_size);
+    memcpy(exit->fullTypeMap(), typemap, typemap_size);
 
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return exit;
@@ -3429,6 +3433,19 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     AUDIT(traceCompleted);
 }
 
+static void
+JoinPeers(Assembler* assm, VMSideExit* exit, VMFragment* target)
+{
+    exit->target = target;
+    assm->patch(exit);
+
+    if (exit->root() == target)
+        return;
+
+    target->getTreeInfo()->dependentTrees.addUnique(exit->root());
+    exit->root()->getTreeInfo()->linkedTrees.addUnique(target);
+}
+
 static bool
 JoinPeersIfCompatible(Assembler* assm, Fragment* stableFrag, TreeInfo* stableTree,
                       VMSideExit* exit)
@@ -3437,15 +3454,11 @@ JoinPeersIfCompatible(Assembler* assm, Fragment* stableFrag, TreeInfo* stableTre
 
     /* Must have a matching type unstable exit. */
     if ((exit->numGlobalSlots + exit->numStackSlots != stableTree->typeMap.length()) ||
-        memcmp(GetFullTypeMap(exit), stableTree->typeMap.data(), stableTree->typeMap.length())) {
+        memcmp(exit->fullTypeMap(), stableTree->typeMap.data(), stableTree->typeMap.length())) {
        return false;
     }
 
-    exit->target = stableFrag;
-    assm->patch(exit);
-
-    stableTree->dependentTrees.addUnique(exit->from->root);
-    ((TreeInfo*)exit->from->root->vmprivate)->linkedTrees.addUnique(stableFrag);
+    JoinPeers(assm, exit, (VMFragment*)stableFrag);
 
     return true;
 }
@@ -3801,6 +3814,38 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
     return true;
 }
 
+static void
+FullMapFromExit(TypeMap& typeMap, VMSideExit* exit)
+{
+    typeMap.setLength(0);
+    typeMap.fromRaw(exit->stackTypeMap(), exit->numStackSlots);
+    typeMap.fromRaw(exit->globalTypeMap(), exit->numGlobalSlots);
+    /* Include globals that were later specialized at the root of the tree. */
+    if (exit->numGlobalSlots < exit->root()->getTreeInfo()->nGlobalTypes()) {
+        typeMap.fromRaw(exit->root()->getTreeInfo()->globalTypeMap() + exit->numGlobalSlots,
+                        exit->root()->getTreeInfo()->nGlobalTypes() - exit->numGlobalSlots);
+    }
+}
+
+static TypeConsensus
+TypeMapLinkability(JSContext* cx, const TypeMap& typeMap, VMFragment* peer)
+{
+    const TypeMap& peerMap = peer->getTreeInfo()->typeMap;
+    unsigned minSlots = JS_MIN(typeMap.length(), peerMap.length());
+    TypeConsensus consensus = TypeConsensus_Okay;
+    for (unsigned i = 0; i < minSlots; i++) {
+        if (typeMap[i] == peerMap[i])
+            continue;
+        if (typeMap[i] == TT_INT32 && peerMap[i] == TT_DOUBLE &&
+            IsSlotUndemotable(cx, peer->getTreeInfo(), i)) {
+            consensus = TypeConsensus_Undemotes;
+        } else {
+            return TypeConsensus_Bad;
+        }
+    }
+    return consensus;
+}
+
 JS_REQUIRES_STACK void
 TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
 {
@@ -3841,7 +3886,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
                     unsigned stackCount = 0;
                     unsigned globalCount = 0;
                     t1 = treeInfo->stackTypeMap();
-                    t2 = GetStackTypeMap(uexit->exit);
+                    t2 = uexit->exit->stackTypeMap();
                     for (unsigned i = 0; i < uexit->exit->numStackSlots; i++) {
                         if (t2[i] == TT_INT32 && t1[i] == TT_DOUBLE) {
                             stackDemotes[stackCount++] = i;
@@ -3851,7 +3896,7 @@ TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
                         }
                     }
                     t1 = treeInfo->globalTypeMap();
-                    t2 = GetGlobalTypeMap(uexit->exit);
+                    t2 = uexit->exit->globalTypeMap();
                     for (unsigned i = 0; i < uexit->exit->numGlobalSlots; i++) {
                         if (t2[i] == TT_INT32 && t1[i] == TT_DOUBLE) {
                             globalDemotes[globalCount++] = i;
@@ -4015,10 +4060,10 @@ TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
 #ifdef DEBUG
     JSTraceType* map;
     size_t i;
-    map = GetGlobalTypeMap(exit);
+    map = exit->globalTypeMap();
     for (i = 0; i < exit->numGlobalSlots; i++)
         JS_ASSERT(map[i] != TT_JSVAL);
-    map = GetStackTypeMap(exit);
+    map = exit->stackTypeMap();
     for (i = 0; i < exit->numStackSlots; i++)
         JS_ASSERT(map[i] != TT_JSVAL);
 #endif
@@ -4027,9 +4072,9 @@ TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
      * first extending from the inner. Make a new typemap here.
      */
     TypeMap fullMap;
-    fullMap.add(GetStackTypeMap(exit), exit->numStackSlots);
-    fullMap.add(GetGlobalTypeMap(exit), exit->numGlobalSlots);
-    TreeInfo* innerTree = (TreeInfo*)exit->from->root->vmprivate;
+    fullMap.add(exit->stackTypeMap(), exit->numStackSlots);
+    fullMap.add(exit->globalTypeMap(), exit->numGlobalSlots);
+    TreeInfo* innerTree = exit->root()->getTreeInfo();
     if (exit->numGlobalSlots < innerTree->nGlobalTypes()) {
         fullMap.add(innerTree->globalTypeMap() + exit->numGlobalSlots,
                     innerTree->nGlobalTypes() - exit->numGlobalSlots);
@@ -4651,14 +4696,58 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     return true;
 }
 
-static JS_REQUIRES_STACK inline bool
-IsSlotUndemotable(JSContext* cx, TreeInfo* ti, unsigned slot)
+static TypeConsensus
+FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, VMFragment** peerp)
 {
-    if (slot < ti->nStackTypes)
-        return oracle.isStackSlotUndemotable(cx, slot);
+    VMFragment* from = exit->root();
+    TreeInfo* from_ti = from->getTreeInfo();
 
-    uint16* gslots = ti->globalSlots->data();
-    return oracle.isGlobalSlotUndemotable(cx, gslots[slot - ti->nStackTypes]);
+    JS_ASSERT(from->code());
+
+    TypeMap typeMap;
+    FullMapFromExit(typeMap, exit);
+    JS_ASSERT(typeMap.length() - exit->numStackSlots == from_ti->nGlobalTypes());
+
+    /* Mark all double slots as undemotable */
+    for (unsigned i = 0; i < typeMap.length(); i++) {
+        if (typeMap[i] == TT_DOUBLE)
+            MarkSlotUndemotable(cx, from_ti, i);
+    }
+
+    VMFragment* firstPeer = (VMFragment*)from->first;
+    for (VMFragment* peer = firstPeer; peer; peer = (VMFragment*)peer->peer) {
+        TreeInfo* peer_ti = peer->getTreeInfo();
+        if (!peer_ti)
+            continue;
+        JS_ASSERT(peer->argc == from->argc);
+        JS_ASSERT(exit->numStackSlots == peer_ti->nStackTypes);
+        TypeConsensus consensus = TypeMapLinkability(cx, typeMap, peer);
+        if (consensus == TypeConsensus_Okay) {
+            *peerp = peer;
+            return consensus;
+        } else if (consensus == TypeConsensus_Undemotes) {
+            return consensus;
+        }
+    }
+
+    return TypeConsensus_Bad;
+}
+
+UnstableExit*
+TreeInfo::removeUnstableExit(VMSideExit* exit)
+{
+    /* Now erase this exit from the unstable exit list. */
+    UnstableExit** tail = &this->unstableExits;
+    for (UnstableExit* uexit = this->unstableExits; uexit != NULL; uexit = uexit->next) {
+        if (uexit->exit == exit) {
+            *tail = uexit->next;
+            delete uexit;
+            return *tail;
+        }
+        tail = &uexit->next;
+    }
+    JS_NOT_REACHED("exit not in unstable exit list");
+    return NULL;
 }
 
 static JS_REQUIRES_STACK bool
@@ -4671,117 +4760,36 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
         return false;
     }
 
-    VMFragment* from = (VMFragment*)exit->from->root;
-    TreeInfo* from_ti = (TreeInfo*)from->vmprivate;
+    VMFragment* from = exit->root();
+    TreeInfo* from_ti = from->getTreeInfo();
 
-    JS_ASSERT(exit->from->root->code());
-
-    /*
-     * The loop edge exit might not know about all types since the tree could
-     * have been further specialized since it was recorded. Fill in the missing
-     * types from the entry type map.
-     */
-    JSTraceType* m = GetFullTypeMap(exit);
-    unsigned ngslots = exit->numGlobalSlots;
-    if (ngslots < from_ti->nGlobalTypes()) {
-        uint32 partial = exit->numStackSlots + exit->numGlobalSlots;
-        m = (JSTraceType*)alloca(from_ti->typeMap.length() * sizeof(JSTraceType));
-        memcpy(m, GetFullTypeMap(exit), partial);
-        memcpy(m + partial, from_ti->globalTypeMap() + exit->numGlobalSlots,
-               from_ti->nGlobalTypes() - exit->numGlobalSlots);
-        ngslots = from_ti->nGlobalTypes();
-    }
-    JS_ASSERT(exit->numStackSlots + ngslots == from_ti->typeMap.length());
-
-    /*
-     * If we see any doubles along the loop edge, mark those slots undemotable
-     * since we know now for a fact that they can contain doubles.
-     */
-    for (unsigned i = 0; i < from_ti->typeMap.length(); i++) {
-        if (m[i] == TT_DOUBLE)
-            MarkSlotUndemotable(cx, from_ti, i);
-    }
-
-    bool bound = false;
-    for (Fragment* f = from->first; f != NULL; f = f->peer) {
-        if (!f->code())
-            continue;
-        TreeInfo* ti = (TreeInfo*)f->vmprivate;
-        JS_ASSERT(exit->numStackSlots == ti->nStackTypes);
-
-        /* Check the minimum number of slots that need to be compared. */
-        unsigned checkSlots = JS_MIN(from_ti->typeMap.length(), ti->typeMap.length());
-        JSTraceType* m2 = ti->typeMap.data();
-
-        /* Analyze the exit typemap against the peer typemap.
-         * Two conditions are important:
-         * 1) Typemaps are identical: these peers can be attached.
-         * 2) Typemaps do not match, but only contain I->D mismatches.
-         *    In this case, the original tree must be trashed because it
-         *    will never connect to any peer.
+    VMFragment* peer;
+    TypeConsensus consensus = FindLoopEdgeTarget(cx, exit, &peer);
+    if (consensus == TypeConsensus_Okay) {
+        TreeInfo* peer_ti = peer->getTreeInfo();
+        JS_ASSERT(from_ti->globalSlots == peer_ti->globalSlots);
+        JS_ASSERT(from_ti->nStackTypes == peer_ti->nStackTypes);
+        /* Patch this exit to its peer */
+        JoinPeers(tm->assembler, exit, peer);
+        /*
+         * Update peer global types. The |from| fragment should already be updated because it on
+         * the execution path, and somehow connected to the entry trace.
          */
-        bool matched = true;
-        bool undemote = false;
-        for (uint32 i = 0; i < checkSlots; i++) {
-            /* If the types are equal we're okay. */
-            if (m[i] == m2[i])
-                continue;
-            matched = false;
-
-            /*
-             * If there's an I->D that cannot be resolved, flag it.
-             * Otherwise, break and go to the next peer.
-             */
-            if (m[i] == TT_INT32 && m2[i] == TT_DOUBLE && IsSlotUndemotable(cx, ti, i)) {
-                undemote = true;
-            } else {
-                undemote = false;
-                break;
-            }
-        }
-        if (matched) {
-            JS_ASSERT(from_ti->globalSlots == ti->globalSlots);
-            JS_ASSERT(from_ti->nStackTypes == ti->nStackTypes);
-
-            /* Capture missing globals on both trees and link the fragments together. */
-            if (from != f) {
-                ti->dependentTrees.addUnique(from);
-                from_ti->linkedTrees.addUnique(f);
-            }
-            if (ti->nGlobalTypes() < ti->globalSlots->length())
-                SpecializeTreesToMissingGlobals(cx, globalObj, ti);
-            exit->target = f;
-            Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-            assm->patch(exit);
-
-            /* Now erase this exit from the unstable exit list. */
-            UnstableExit** tail = &from_ti->unstableExits;
-            for (UnstableExit* uexit = from_ti->unstableExits; uexit != NULL; uexit = uexit->next) {
-                if (uexit->exit == exit) {
-                    *tail = uexit->next;
-                    delete uexit;
-                    bound = true;
-                    break;
-                }
-                tail = &uexit->next;
-            }
-            JS_ASSERT(bound);
-            debug_only_stmt( DumpPeerStability(tm, f->ip, from->globalObj, from->globalShape, from->argc); )
-            break;
-        } else if (undemote) {
-            /* The original tree is unconnectable, so trash it. */
-            TrashTree(cx, f);
-
-            /* We shouldn't attempt to record now, since we'll hit a duplicate. */
-            return false;
-        }
-    }
-    if (bound)
+        if (peer_ti->nGlobalTypes() < peer_ti->globalSlots->length())
+            SpecializeTreesToMissingGlobals(cx, globalObj, peer_ti);
+        JS_ASSERT(from_ti->nGlobalTypes() == from_ti->globalSlots->length());
+        /* This exit is no longer unstable, so remove it. */
+        from_ti->removeUnstableExit(exit);
+        debug_only_stmt(DumpPeerStability(tm, peer->ip, from->globalObj, from->globalShape, from->argc);)
         return false;
+    } else if (consensus == TypeConsensus_Undemotes) {
+        /* The original tree is unconnectable, so trash it. */
+        TrashTree(cx, peer);
+        return false;
+    }
 
-    VMFragment* root = (VMFragment*)from->root;
-    return RecordTree(cx, tm, from->first, outer, outerArgc, root->globalObj,
-                      root->globalShape, from_ti->globalSlots, cx->fp->argc);
+    return RecordTree(cx, tm, from->first, outer, outerArgc, from->globalObj,
+                      from->globalShape, from_ti->globalSlots, cx->fp->argc);
 }
 
 static JS_REQUIRES_STACK bool
@@ -4800,7 +4808,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         return false;
     }
 
-    Fragment* f = anchor->from->root;
+    Fragment* f = anchor->root();
     JS_ASSERT(f->vmprivate);
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
 
@@ -4850,7 +4858,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
              */
             ngslots = anchor->numGlobalSlots;
             stackSlots = anchor->numStackSlots;
-            typeMap = GetFullTypeMap(anchor);
+            typeMap = anchor->fullTypeMap();
         } else {
             /*
              * If we side-exited on a loop exit and continue on a nesting
@@ -4861,10 +4869,10 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
              */
             VMSideExit* e1 = anchor;
             VMSideExit* e2 = exitedFrom;
-            fullMap.add(GetStackTypeMap(e1), e1->numStackSlotsBelowCurrentFrame);
-            fullMap.add(GetStackTypeMap(e2), e2->numStackSlots);
+            fullMap.add(e1->stackTypeMap(), e1->numStackSlotsBelowCurrentFrame);
+            fullMap.add(e2->stackTypeMap(), e2->numStackSlots);
             stackSlots = fullMap.length();
-            fullMap.add(GetGlobalTypeMap(e2), e2->numGlobalSlots);
+            fullMap.add(e2->globalTypeMap(), e2->numGlobalSlots);
             if (e2->numGlobalSlots < e1->numGlobalSlots) {
                 /*
                  * Watch out for an extremely rare case (bug 502714). The sequence of events is:
@@ -4880,7 +4888,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
                  * typemap entry for X. The correct entry is in the inner guard's TreeInfo,
                  * analogous to the solution for bug 476653.
                  */
-                TreeInfo* innerTree = (TreeInfo*)e2->from->root->vmprivate;
+                TreeInfo* innerTree = e2->root()->getTreeInfo();
                 unsigned slots = e2->numGlobalSlots;
                 if (innerTree->nGlobalTypes() > slots) {
                     unsigned addSlots = JS_MIN(innerTree->nGlobalTypes() - slots,
@@ -4889,7 +4897,7 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
                     slots += addSlots;
                 }
                 if (slots < e1->numGlobalSlots)
-                    fullMap.add(GetGlobalTypeMap(e1) + slots, e1->numGlobalSlots - slots);
+                    fullMap.add(e1->globalTypeMap() + slots, e1->numGlobalSlots - slots);
                 JS_ASSERT(slots == e1->numGlobalSlots);
             }
             ngslots = e1->numGlobalSlots;
@@ -5574,7 +5582,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
              * (Some opcodes, like JSOP_CALLELEM, produce two values, hence the
              * loop.)
              */
-            JSTraceType* typeMap = GetStackTypeMap(innermost);
+            JSTraceType* typeMap = innermost->stackTypeMap();
             for (int i = 1; i <= cs.ndefs; i++) {
                 NativeToValue(cx,
                               regs->sp[-i],
@@ -5693,7 +5701,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     /* Are there enough globals? */
     if (innermost->numGlobalSlots == ngslots) {
         /* Yes. This is the ideal fast path. */
-        globalTypeMap = GetGlobalTypeMap(innermost);
+        globalTypeMap = innermost->globalTypeMap();
     } else {
         /*
          * No. Merge the typemap of the innermost entry and exit together. This
@@ -5702,11 +5710,11 @@ LeaveTree(InterpState& state, VMSideExit* lr)
          * is lazily added into a tree, all dependent and linked trees are
          * immediately specialized (see bug 476653).
          */
-        TreeInfo* ti = (TreeInfo*)innermost->from->root->vmprivate;
+        TreeInfo* ti = innermost->root()->getTreeInfo();
         JS_ASSERT(ti->nGlobalTypes() == ngslots);
         JS_ASSERT(ti->nGlobalTypes() > innermost->numGlobalSlots);
         globalTypeMap = (JSTraceType*)alloca(ngslots * sizeof(JSTraceType));
-        memcpy(globalTypeMap, GetGlobalTypeMap(innermost), innermost->numGlobalSlots);
+        memcpy(globalTypeMap, innermost->globalTypeMap(), innermost->numGlobalSlots);
         memcpy(globalTypeMap + innermost->numGlobalSlots,
                ti->globalTypeMap() + innermost->numGlobalSlots,
                ti->nGlobalTypes() - innermost->numGlobalSlots);
@@ -5717,7 +5725,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     int slots =
 #endif
         FlushNativeStackFrame(cx, innermost->calldepth,
-                              GetStackTypeMap(innermost),
+                              innermost->stackTypeMap(),
                               stack, NULL);
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
 
@@ -12764,7 +12772,7 @@ DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint3
         UnstableExit* uexit = ti->unstableExits;
         while (uexit != NULL) {
             debug_only_print0(LC_TMRecorder, "EXIT  ");
-            JSTraceType* m = GetFullTypeMap(uexit->exit);
+            JSTraceType* m = uexit->exit->fullTypeMap();
             debug_only_print0(LC_TMRecorder, "STACK=");
             for (unsigned i = 0; i < uexit->exit->numStackSlots; i++)
                 debug_only_printf(LC_TMRecorder, "%c", typeChar[m[i]]);

@@ -313,6 +313,7 @@ public:
     JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots,
                                                      unsigned stackSlots);
     bool matches(TypeMap& other) const;
+    void fromRaw(JSTraceType* other, unsigned numSlots);
 };
 
 #define JS_TM_EXITCODES(_)    \
@@ -389,6 +390,22 @@ struct VMSideExit : public nanojit::SideExit
 
     void setNativeCallee(JSObject *callee, bool constructing) {
         nativeCalleeWord = uintptr_t(callee) | (constructing ? 1 : 0);
+    }
+
+    inline JSTraceType* stackTypeMap() {
+        return (JSTraceType*)(this + 1);
+    }
+
+    inline JSTraceType* globalTypeMap() {
+        return (JSTraceType*)(this + 1) + this->numStackSlots;
+    }
+
+    inline JSTraceType* fullTypeMap() {
+        return stackTypeMap();
+    }
+
+    inline VMFragment* root() {
+        return (VMFragment*)from->root;
     }
 };
 
@@ -508,6 +525,8 @@ public:
     inline JSTraceType* stackTypeMap() {
         return typeMap.data();
     }
+
+    UnstableExit* removeUnstableExit(VMSideExit* exit);
 };
 
 #if defined(JS_JIT_SPEW) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
