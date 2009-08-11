@@ -65,6 +65,11 @@ _TEST_FILES = \
 		test_bug364677.html \
 		bug364677-data.xml \
 		bug364677-data.xml^headers^ \
+		test_offline_gzip.html \
+		gZipOfflineChild.html \
+		gZipOfflineChild.html^headers^ \
+		gZipOfflineChild.cacheManifest \
+		gZipOfflineChild.cacheManifest^headers^ \
 		$(NULL)
 
 # The following tests are disabled because they are unreliable:
