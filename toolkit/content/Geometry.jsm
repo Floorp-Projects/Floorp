@@ -59,9 +59,9 @@ let Util = {
         instance[key] = bind(instance[key], instance);
   },
 
+  /** Like dump, but each arg is handled and there's an automatic newline */
   dumpLn: function dumpLn() {
-    // like dump, but each arg is handled and there's an automatic newline
-    for (var i = 0; i < arguments.length; i++) { dump(arguments[i]); }
+    for (var i = 0; i < arguments.length; i++) { dump(arguments[i] + ' '); }
     dump("\n");
   }
 };
