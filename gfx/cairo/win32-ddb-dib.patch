@@ -16,11 +16,11 @@ diff --git a/gfx/cairo/cairo/src/cairo-win32-private.h b/gfx/cairo/cairo/src/cai
 +++ b/gfx/cairo/cairo/src/cairo-win32-private.h
 @@ -117,6 +117,9 @@
  
-     /* Whether we can use GradientFill rectangles with this surface */
-     CAIRO_WIN32_SURFACE_CAN_RECT_GRADIENT = (1<<6),
+     /* Whether we can use the CHECKJPEGFORMAT escape function */
+     CAIRO_WIN32_SURFACE_CAN_CHECK_PNG = (1<<8),
 +
 +    /* if this DDB surface can be converted to a DIB if necessary */
-+    CAIRO_WIN32_SURFACE_CAN_CONVERT_TO_DIB = (1<<7),
++    CAIRO_WIN32_SURFACE_CAN_CONVERT_TO_DIB = (1<<9),
  };
  
  cairo_status_t
@@ -167,9 +167,9 @@ diff --git a/gfx/cairo/cairo/src/cairo-win32-surface.c b/gfx/cairo/cairo/src/cai
 diff --git a/gfx/cairo/cairo/src/cairo-win32.h b/gfx/cairo/cairo/src/cairo-win32.h
 --- a/gfx/cairo/cairo/src/cairo-win32.h
 +++ b/gfx/cairo/cairo/src/cairo-win32.h
-@@ -74,6 +74,12 @@
-  * Win32 font support
-  */
+@@ -68,6 +68,12 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface);
+ cairo_public cairo_surface_t *
+ cairo_win32_surface_get_image (cairo_surface_t *surface);
  
 +cairo_public cairo_status_t
 +cairo_win32_surface_set_can_convert_to_dib (cairo_surface_t *surface, cairo_bool_t can_convert);
@@ -177,6 +177,5 @@ diff --git a/gfx/cairo/cairo/src/cairo-win32.h b/gfx/cairo/cairo/src/cairo-win32
 +cairo_public cairo_status_t
 +cairo_win32_surface_get_can_convert_to_dib (cairo_surface_t *surface, cairo_bool_t *can_convert);
 +
- cairo_public cairo_font_face_t *
- cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont);
+ #if CAIRO_HAS_WIN32_FONT
  
