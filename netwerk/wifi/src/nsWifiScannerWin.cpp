@@ -382,9 +382,13 @@ nsWifiMonitor::DoScan()
         // Get the data.
         
         BYTE *buffer = (BYTE*)malloc(oid_buffer_size_);
-        if (buffer == NULL)
+        if (buffer == NULL) {
+#ifdef WINCE
+          CloseHandle(ndis_handle);
+#endif
           return NS_ERROR_OUT_OF_MEMORY;
-          
+        }
+
         DWORD bytes_out;
         int result;
         
@@ -491,9 +495,13 @@ nsWifiMonitor::DoScan()
 
       PRUint32 resultCount = lastAccessPoints.Count();
       nsIWifiAccessPoint** result = static_cast<nsIWifiAccessPoint**> (nsMemory::Alloc(sizeof(nsIWifiAccessPoint*) * resultCount));
-      if (!result)
+      if (!result) {
+#ifdef WINCE
+        CloseHandle(ndis_handle);
+#endif
         return NS_ERROR_OUT_OF_MEMORY;
-      
+      }
+
       for (PRUint32 i = 0; i < resultCount; i++)
         result[i] = lastAccessPoints[i];
       
