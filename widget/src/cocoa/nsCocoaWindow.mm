@@ -1272,10 +1272,11 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 }
 
 void
-nsCocoaWindow::DispatchSizeModeEvent(nsSizeMode aSizeMode)
+nsCocoaWindow::DispatchSizeModeEvent()
 {
   nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
-  event.mSizeMode = aSizeMode;
+  event.mSizeMode = [mWindow isMiniaturized] ? nsSizeMode_Minimized :
+                    [mWindow isZoomed] ? nsSizeMode_Maximized : nsSizeMode_Normal;
   event.time = PR_IntervalNow();
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -1583,6 +1584,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   [super init];
   mGeckoWindow = geckoWind;
   mToplevelActiveState = PR_FALSE;
+  mHasEverBeenZoomed = PR_FALSE;
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -1600,6 +1602,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   if (!mGeckoWindow || mGeckoWindow->IsResizing())
     return;
 
+  // Resizing might have changed our zoom state.
+  mGeckoWindow->DispatchSizeModeEvent();
   mGeckoWindow->ReportSizeEvent();
 }
 
@@ -1700,13 +1704,22 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 - (void)windowDidMiniaturize:(NSNotification *)aNotification
 {
   if (mGeckoWindow)
-    mGeckoWindow->DispatchSizeModeEvent(nsSizeMode_Minimized);
+    mGeckoWindow->DispatchSizeModeEvent();
 }
 
 - (void)windowDidDeminiaturize:(NSNotification *)aNotification
 {
   if (mGeckoWindow)
-    mGeckoWindow->DispatchSizeModeEvent(nsSizeMode_Normal);
+    mGeckoWindow->DispatchSizeModeEvent();
+}
+
+- (BOOL)windowShouldZoom:(NSWindow *)window toFrame:(NSRect)proposedFrame
+{
+  if (!mHasEverBeenZoomed && [window isZoomed])
+    return NO; // See bug 429954.
+
+  mHasEverBeenZoomed = YES;
+  return YES;
 }
 
 - (void)sendFocusEvent:(PRUint32)eventType
