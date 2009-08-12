@@ -378,7 +378,7 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint64 progress)
     if (status == nsISocketTransport::STATUS_RECEIVING_FROM)
         return;
 
-    nsUint64 progressMax;
+    PRUint64 progressMax;
 
     if (status == nsISocketTransport::STATUS_SENDING_TO) {
         // suppress progress when only writing request headers
