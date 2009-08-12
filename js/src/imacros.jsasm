@@ -672,14 +672,3 @@
     .end
 
 .end nextiter
-
-.igroup instanceof JSOP_INSTANCEOF
-
-    .imacro instanceof                              # val obj
-        callbuiltin (JSBUILTIN_HasInstance)         # val fun obj
-        pick 2                                      # fun obj val
-        call 1                                      # bool
-        stop
-    .end
-
-.end instanceof
