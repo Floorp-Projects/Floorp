@@ -3785,36 +3785,33 @@ static void find_dest_id(XID top, XID *root, XID *dest, int target_x, int target
   while (1) {
 loop:
     //printf("searching %x\n", target_id);
-    XQueryTree(GDK_DISPLAY(), target_id, root, &parent, &children, &nchildren);
-    if (nchildren > 0) {
-      for (unsigned int i=0; i<nchildren; i++) {
-        Window root;
-        int x, y;
-        unsigned int width, height;
-        unsigned int border_width, depth;
-        XGetGeometry(GDK_DISPLAY(), children[i], &root, &x, &y,
-            &width, &height, &border_width,
-            &depth);
-        //printf("target: %d %d\n", target_x, target_y);
-        //printf("geom: %dx%x @ %dx%d\n", width, height, x, y);
-        // XXX: we may need to be more careful here, i.e. if
-        // this condition matches more than one child
-        if (target_x >= x && target_y >= y &&
-            target_x <= x + int(width) &&
-            target_y <= y + int(height)) {
-          target_id = children[i];
-          // printf("found new target: %x\n", target_id);
-          XFree(children);
-          goto loop;
-        }
+    if (!XQueryTree(GDK_DISPLAY(), target_id, root, &parent, &children, &nchildren) ||
+        !nchildren)
+      break;
+    for (unsigned int i=0; i<nchildren; i++) {
+      Window root;
+      int x, y;
+      unsigned int width, height;
+      unsigned int border_width, depth;
+      XGetGeometry(GDK_DISPLAY(), children[i], &root, &x, &y,
+          &width, &height, &border_width,
+          &depth);
+      //printf("target: %d %d\n", target_x, target_y);
+      //printf("geom: %dx%x @ %dx%d\n", width, height, x, y);
+      // XXX: we may need to be more careful here, i.e. if
+      // this condition matches more than one child
+      if (target_x >= x && target_y >= y &&
+          target_x <= x + int(width) &&
+          target_y <= y + int(height)) {
+        target_id = children[i];
+        // printf("found new target: %x\n", target_id);
+        XFree(children);
+        goto loop;
       }
-      XFree(children);
-      /* no children contain the target */
-      break;
-    } else {
-      /* we have no children */
-      break;
     }
+    XFree(children);
+    /* no children contain the target */
+    break;
   }
   *dest = target_id;
 }
