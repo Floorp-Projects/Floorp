@@ -1000,11 +1000,16 @@ var Browser = {
     if (leftvis > 0.002 || ritevis > 0.002) {
       let toolbarContainer = document.getElementById("toolbar-container");
 
+      // XXX Hack to reset the value of the textbox after the appendChild below
+      // removes and adds it back into the document
+      let urlbar = document.getElementById("urlbar-edit");
+      let url = urlbar.value;
+      setTimeout(function() { urlbar.value = url; }, 0);
+
       // if the toolbar isn't already inside of the stack toolbar then we move it there
       dump("moving toolbar to stack\n");
       stackToolbarContainer.appendChild(toolbarMain);
       stackToolbarContainer.setAttribute("hidden", false);
-
       return true;
     }
     return false;
@@ -1022,7 +1027,14 @@ var Browser = {
     if (leftvis <= 0.002 && ritevis <= 0.002) {
       let stackToolbarContainer = document.getElementById("stack-toolbar-container");
 
+      // XXX Hack to reset the value of the textbox after the appendChild below
+      // removes and adds it back into the document
+      let urlbar = document.getElementById("urlbar-edit");
+      let url = urlbar.value;
+      setTimeout(function() { urlbar.value = url; }, 0);
+
       dump("moving toolbar to scrollbox\n");
+      document.getElementById("urlbar-edit").boxObject.setProperty("value", "hello");
       toolbarContainer.appendChild(toolbarMain);
       stackToolbarContainer.setAttribute("hidden", true);
       return true;
