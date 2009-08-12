@@ -1,11 +1,17 @@
-using MagicWindowHandle;
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
+
+include protocol "ContentProcess.ipdl";
+
 using PRUint32;
 
-protocol IFrameEmbedding
-{
-child:
-    init(MagicWindowHandle parentWidget);
+namespace mozilla {
+namespace dom {
 
+async protocol IFrameEmbedding
+{
+    manager ContentProcess;
+
+child:
     loadURL(nsCString uri);
 
     move(PRUint32 x,
@@ -13,3 +19,6 @@ child:
          PRUint32 width,
          PRUint32 height);
 };
+
+}
+}

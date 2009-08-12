@@ -3,25 +3,20 @@
 #ifndef mozilla_tabs_TabChild_h
 #define mozilla_tabs_TabChild_h
 
-#include "TabTypes.h"
-#include "IFrameEmbeddingProtocol.h"
-#include "IFrameEmbeddingProtocolChild.h"
+#include "mozilla/dom/IFrameEmbeddingProtocolChild.h"
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
-namespace tabs {
+namespace dom {
 
 class TabChild
     : public IFrameEmbeddingProtocolChild
 {
 public:
-    TabChild();
+    TabChild(const MagicWindowHandle& parentWidget);
     virtual ~TabChild();
 
-    bool Init(MessageLoop* aIOLoop, IPC::Channel* aChannel);
-
-    virtual nsresult Recvinit(const MagicWindowHandle& parentWidget);
     virtual nsresult RecvloadURL(const nsCString& uri);
     virtual nsresult Recvmove(const PRUint32& x,
                               const PRUint32& y,
@@ -29,7 +24,6 @@ public:
                               const PRUint32& height);
 
 private:
-    MagicWindowHandle mWidget;
     nsCOMPtr<nsIWebNavigation> mWebNav;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);

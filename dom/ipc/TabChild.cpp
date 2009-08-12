@@ -14,27 +14,9 @@
 #include <gtk/gtk.h>
 #endif
 
-using namespace mozilla::tabs;
+using namespace mozilla::dom;
 
-TabChild::TabChild()
-    : mWidget(0)
-{
-}
-
-TabChild::~TabChild()
-{
-    // TODObsmedberg: destroy the window!
-}
-
-bool
-TabChild::Init(MessageLoop* aIOLoop, IPC::Channel* aChannel)
-{
-    Open(aChannel, aIOLoop);
-    return true;
-}
-
-nsresult
-TabChild::Recvinit(const MagicWindowHandle& parentWidget)
+TabChild::TabChild(const MagicWindowHandle& parentWidget)
 {
     printf("creating %d!\n", NS_IsMainThread());
 
@@ -66,10 +48,11 @@ TabChild::Recvinit(const MagicWindowHandle& parentWidget)
     baseWindow->SetVisibility(PR_TRUE);
 
     mWebNav = do_QueryInterface(webBrowser);
+}
 
-    // TODObz: create and embed a window!
-    //return NS_ERROR_NOT_IMPLEMENTED;
-    return NS_OK;
+TabChild::~TabChild()
+{
+    // TODObsmedberg: destroy the window!
 }
 
 nsresult
