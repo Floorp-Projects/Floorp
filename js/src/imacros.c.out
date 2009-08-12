@@ -627,16 +627,6 @@ static struct {
 /*11*/  JSOP_STOP,
     },
 };
-static struct {
-    jsbytecode instanceof[9];
-} instanceof_imacros = {
-    {
-/* 0*/  JSOP_CALLBUILTIN, ((JSBUILTIN_HasInstance) & 0xff00) >> 8, ((JSBUILTIN_HasInstance) & 0xff),
-/* 3*/  JSOP_PICK, 2,
-/* 5*/  JSOP_CALL, 0, 1,
-/* 8*/  JSOP_STOP,
-    },
-};
 uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NOP */
     0,  /* JSOP_PUSH */
@@ -750,7 +740,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_SETNAME */
     0,  /* JSOP_THROW */
     0,  /* JSOP_IN */
-    1,  /* JSOP_INSTANCEOF */
+    0,  /* JSOP_INSTANCEOF */
     0,  /* JSOP_DEBUGGER */
     0,  /* JSOP_GOSUB */
     0,  /* JSOP_RETSUB */
@@ -898,7 +888,6 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_NEXTITER \
  || x == JSOP_APPLY \
  || x == JSOP_NEW \
- || x == JSOP_INSTANCEOF \
 )
 jsbytecode*
 js_GetImacroStart(jsbytecode* pc) {
@@ -937,6 +926,5 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - iter_imacros.for_each_native) < 10) return iter_imacros.for_each_native;
     if (size_t(pc - nextiter_imacros.custom_iter_next) < 12) return nextiter_imacros.custom_iter_next;
     if (size_t(pc - nextiter_imacros.native_iter_next) < 12) return nextiter_imacros.native_iter_next;
-    if (size_t(pc - instanceof_imacros.instanceof) < 9) return instanceof_imacros.instanceof;
     return NULL;
 }
