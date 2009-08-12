@@ -292,7 +292,6 @@
       </hbox>
     </vbox>
 
-    <!-- barrier to the left of the right bar -->
     <box id="panel-container" hidden="true" class="panel-dark" top="0" left="0">
       <box id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarbutton id="tool-panel-close" type="check" checked="true" class="page-button button-image" command="cmd_panel"/>
