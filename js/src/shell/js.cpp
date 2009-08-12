@@ -3558,7 +3558,6 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (buf) {
                     cc = fread(buf, 1, len, file);
                     if (cc != len) {
-                        JS_free(cx, buf);
                         JS_ReportError(cx, "can't read %s: %s", pathname,
                                        (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
                     } else {
