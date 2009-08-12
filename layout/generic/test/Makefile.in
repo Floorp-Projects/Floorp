@@ -85,6 +85,7 @@ _TEST_FILES = \
 		test_bug468167.html \
 		test_bug469613.xul \
 		test_bug470212.html \
+		test_bug507902.html \
 		test_movement_by_characters.html \
 		test_movement_by_words.html \
 		test_plugin_clipping.xhtml \
@@ -94,6 +95,10 @@ _TEST_FILES = \
 		test_plugin_mouse_coords.html \
 		test_plugin_position.xhtml \
 		test_selection_underline.html \
+		file_BrokenImageReference.png \
+		file_Dolske.png \
+		file_IconTestServer.sjs \
+		file_LoadingImageReference.png \
 		$(NULL)
 # disabled temporarily
 #		test_bug488417.html \
