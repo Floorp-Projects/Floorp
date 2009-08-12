@@ -5706,6 +5706,21 @@ function doParseIntTests() {
 }
 doParseIntTests();
 
+function testSetelemWithFloatIndex() {
+    var x, a = {};
+    for (var i = 0; i < 9; i++)
+        x = a[-3.5] = "ok";
+    assertEq(x, "ok");
+}
+test(testSetelemWithFloatIndex);
+
+function testInitelemWithSetter() {  // bug 509843
+    Object.prototype.__defineSetter__(1, function () { throw "fabulous fit"; });
+    for (var i =0; i<9; i++)
+        ({1:'a'});
+}
+test(testInitelemWithSetter);
+
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *
