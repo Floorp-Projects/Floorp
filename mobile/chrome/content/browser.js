@@ -406,6 +406,8 @@ var Browser = {
         }
       }
 
+      Browser.hideSidebars();
+
       bv.onAfterVisibleMove();
       bv.zoomToPage();
       bv.commitBatchOperation();
@@ -601,6 +603,22 @@ var Browser = {
     this._resizeAndPaint();
   },
 
+  scrollContentToTop: function scrollContentToTop() {
+    this.contentScrollboxScroller.scrollTo(0, 0);
+    this._browserView.onAfterVisibleMove();
+  },
+
+  hideSidebars: function scrollSidebarsOffscreen() {
+    let container = document.getElementById("tile-container");
+    let containerBCR = container.getBoundingClientRect();
+
+    let dx = containerBCR.left;
+    if (dx < 0)
+      dx = Math.min(containerBCR.right, 0);
+
+    this.controlsScrollboxScroller.scrollBy(Math.round(dx), 0);
+    this._browserView.onAfterVisibleMove();
+  },
 
   /**
    * Return the currently active <browser> object
@@ -1328,7 +1346,7 @@ Browser.MainDragger.prototype = {
     let realdx = x1 - x0;
     let realdy = y1 - y0;
 
-    this.bv.onAfterVisibleMove(realdx, realdy);
+    this.bv.onAfterVisibleMove();
 
     if (realdx != dx) {
       let restdx = dx - realdx;
@@ -1350,7 +1368,7 @@ Browser.MainDragger.prototype = {
     let realdx = x1 - x0;
     let realdy = y1 - y0;
 
-    this.bv.onAfterVisibleMove(realdx, realdy);
+    this.bv.onAfterVisibleMove();
 
     return (doReturnDX) ? realdx : (realdx != 0 || realdy != 0);
   },
@@ -2134,6 +2152,10 @@ ProgressController.prototype = {
 
     if (aWebProgress.DOMWindow == selectedBrowser.contentWindow) {
       BrowserUI.setURI();
+
+      // We're about to have new page content, to scroll the content area
+      // to the top so the new paints will draw correctly.
+      Browser.scrollContentToTop();
     }
   },
 
