@@ -94,8 +94,8 @@ private:
     // nsIInputStream implementation.
     nsCOMPtr<nsITransportEventSink> mEventSink;
     nsCOMPtr<nsIInputStream>        mSource;
-    nsUint64                        mOffset;
-    nsUint64                        mLimit;
+    PRUint64                        mOffset;
+    PRUint64                        mLimit;
     PRPackedBool                    mCloseWhenDone;
     PRPackedBool                    mFirstTime;
 
@@ -208,14 +208,12 @@ nsInputStreamTransport::Read(char *buf, PRUint32 count, PRUint32 *result)
 {
     if (mFirstTime) {
         mFirstTime = PR_FALSE;
-        if (mOffset != nsUint64(0)) {
+        if (mOffset != 0) {
             // read from current position if offset equal to max
             if (mOffset != LL_MAXUINT) {
                 nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSource);
-                // Note: The casts to PRUint64 are needed to cast to PRInt64, as
-                // nsUint64 can't directly be cast to PRInt64
                 if (seekable)
-                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, PRUint64(mOffset));
+                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
             }
             // reset offset to zero so we can use it to enforce limit
             mOffset = 0;
@@ -296,8 +294,8 @@ private:
     // nsIOutputStream implementation.
     nsCOMPtr<nsITransportEventSink> mEventSink;
     nsCOMPtr<nsIOutputStream>       mSink;
-    nsUint64                        mOffset;
-    nsUint64                        mLimit;
+    PRUint64                        mOffset;
+    PRUint64                        mLimit;
     PRPackedBool                    mCloseWhenDone;
     PRPackedBool                    mFirstTime;
 
@@ -410,14 +408,12 @@ nsOutputStreamTransport::Write(const char *buf, PRUint32 count, PRUint32 *result
 {
     if (mFirstTime) {
         mFirstTime = PR_FALSE;
-        if (mOffset != nsUint64(0)) {
+        if (mOffset != 0) {
             // write to current position if offset equal to max
             if (mOffset != LL_MAXUINT) {
                 nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mSink);
-                // Note: The casts to PRUint64 are needed to cast to PRInt64, as
-                // nsUint64 can't directly be cast to PRInt64
                 if (seekable)
-                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, PRUint64(mOffset));
+                    seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
             }
             // reset offset to zero so we can use it to enforce limit
             mOffset = 0;
