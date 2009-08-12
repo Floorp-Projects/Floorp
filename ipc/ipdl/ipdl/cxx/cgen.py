@@ -87,6 +87,12 @@ class CxxCodeGen(CodePrinter, Visitor):
         td.totype.accept(self)
         self.println(';')
 
+    def visitForwardDecl(self, fd):
+        if fd.cls:      self.printdent('class ')
+        elif fd.struct: self.printdent('struct ')
+        self.write(str(fd.pqname))
+        self.println(';')
+
     def visitDecl(self, d):
         d.type.accept(self)
         if d.name:

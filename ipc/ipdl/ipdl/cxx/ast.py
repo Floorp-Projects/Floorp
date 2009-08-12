@@ -64,6 +64,9 @@ class Visitor:
         tdef.fromtype.accept(self)
         tdef.totype.accept(self)
 
+    def visitForwardDecl(self, fd):
+        pass
+
     def visitDecl(self, decl):
         decl.type.accept(self)
 
@@ -262,6 +265,14 @@ class Typedef(Node):
         Node.__init__(self)
         self.fromtype = fromtype
         self.totype = totype
+
+class ForwardDecl(Node):
+    def __init__(self, pqname, cls=0, struct=0):
+        assert (not cls and struct) or (cls and not struct)
+
+        self.pqname = pqname
+        self.cls = cls
+        self.struct = struct
 
 class Decl(Node):
     '''represents |Foo bar|, e.g. in a function signature'''
