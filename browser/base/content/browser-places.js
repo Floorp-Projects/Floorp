@@ -644,13 +644,13 @@ var HistoryMenu = {
       undoPopup.appendChild(m);
     }
 
-    // "Open All in Tabs"
+    // "Restore All Tabs"
     var strings = gNavigatorBundle;
     undoPopup.appendChild(document.createElement("menuseparator"));
     m = undoPopup.appendChild(document.createElement("menuitem"));
     m.id = "menu_restoreAllTabs";
-    m.setAttribute("label", strings.getString("menuOpenAllInTabs.label"));
-    m.setAttribute("accesskey", strings.getString("menuOpenAllInTabs.accesskey"));
+    m.setAttribute("label", strings.getString("menuRestoreAllTabs.label"));
+    m.setAttribute("accesskey", strings.getString("menuRestoreAllTabs.accesskey"));
     m.addEventListener("command", function() {
       for (var i = 0; i < undoItems.length; i++)
         undoCloseTab();
