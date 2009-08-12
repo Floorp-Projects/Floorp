@@ -1280,7 +1280,7 @@ nsXPInstallManager::OnProgress(nsIRequest* request, nsISupports *ctxt, PRUint64 
             if (NS_FAILED(rv)) return rv;
         }
         // XXX once channels support that, use 64-bit contentlength
-        rv = mDlg->OnProgress( mNextItem-1, aProgress, nsUint64(mContentLength) );
+        rv = mDlg->OnProgress( mNextItem-1, aProgress, PRUint64(mContentLength) );
     }
 
     return rv;
