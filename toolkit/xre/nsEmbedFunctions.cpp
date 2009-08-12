@@ -71,9 +71,9 @@
 
 #include "mozilla/plugins/PluginThreadChild.h"
 #include "ContentProcessThread.h"
+#include "ContentProcessParent.h"
 
 #include "mozilla/ipc/TestShellParent.h"
-#include "mozilla/ipc/TestShellThread.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/test/TestParent.h"
 #include "mozilla/test/TestProcessParent.h"
@@ -87,8 +87,8 @@ using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::plugins::PluginThreadChild;
 using mozilla::dom::ContentProcessThread;
+using mozilla::dom::ContentProcessParent;
 using mozilla::ipc::TestShellParent;
-using mozilla::ipc::TestShellThread;
 using mozilla::ipc::XPCShellEnvironment;
 
 using mozilla::test::TestParent;
@@ -274,10 +274,6 @@ XRE_InitChildProcess(int aArgc,
       mainThread = new TestThreadChild();
       break;
 
-    case GeckoChildProcess_TestShell:
-      mainThread = new TestShellThread();
-      break;
-
     default:
       NS_RUNTIMEABORT("Unknown main thread class");
     }
@@ -332,6 +328,7 @@ XRE_InitParentProcess(int aArgc,
 
   base::AtExitManager exitManager;
   CommandLine::Init(aArgc, aArgv);
+  ScopedXREEmbed embed;
   MessageLoopForUI mainMessageLoop;
 
   {
@@ -355,7 +352,6 @@ XRE_InitParentProcess(int aArgc,
       return NS_ERROR_FAILURE;
     }
 
-    ScopedXREEmbed embed;
     embed.Start();
 
     nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
@@ -416,29 +412,13 @@ TestShellMain(int argc, char** argv)
   nsAutoRef<XPCShellEnvironment> env(XPCShellEnvironment::CreateEnvironment());
   NS_ENSURE_TRUE(env, 1);
 
-  GeckoChildProcessHost* host =
-    new GeckoChildProcessHost(GeckoChildProcess_TestShell);
-  NS_ENSURE_TRUE(host, 1);
-
-  if (!host->SyncLaunch()) {
-    NS_WARNING("Failed to launch child process!");
-    delete host;
+  ContentProcessParent* childProcess = ContentProcessParent::GetSingleton();
+  if (!childProcess)
     return 1;
-  }
 
-  IPC::Channel* channel = host->GetChannel();
-  NS_ENSURE_TRUE(channel, 1);
+  TestShellParent* testShellParent = childProcess->CreateTestShell();
 
-  TestShellParent testShellParent;
-  if (!testShellParent.Open(channel)) {
-    NS_WARNING("Failed to open channel!");
-    return 1;
-  }
-
-  if (!env->DefineIPCCommands(&testShellParent)) {
-    NS_WARNING("DefineChildObject failed!");
-    return 1;
-  }
+  env->DefineIPCCommands(testShellParent);
 
   const char* filename = argc > 1 ? argv[1] : nsnull;
   env->Process(filename);

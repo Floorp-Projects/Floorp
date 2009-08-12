@@ -8,6 +8,10 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 namespace mozilla {
+namespace ipc {
+class TestShellParent;
+}
+
 namespace dom {
 
 class TabParent;
@@ -27,19 +31,24 @@ public:
 #endif
 
     TabParent* CreateTab(const MagicWindowHandle& hwnd);
+    mozilla::ipc::TestShellParent* CreateTestShell();
 
 private:
     static ContentProcessParent* gSingleton;
 
-    // hide SendIFrameEmbeddingConstructor since we don't want client code
-    // using it
+    // Hide the raw constructor methods since we don't want client code
+    // using them.
     using ContentProcessProtocolParent::SendIFrameEmbeddingConstructor;
+    using ContentProcessProtocolParent::SendTestShellConstructor;
 
     ContentProcessParent();
     virtual ~ContentProcessParent();
 
     virtual IFrameEmbeddingProtocolParent* IFrameEmbeddingConstructor(const MagicWindowHandle& parentWidget);
     virtual nsresult IFrameEmbeddingDestructor(IFrameEmbeddingProtocolParent* frame);
+
+    virtual TestShellProtocolParent* TestShellConstructor();
+    virtual nsresult TestShellDestructor(TestShellProtocolParent* shell);
 
     GeckoChildProcessHost mSubprocess;
 };

@@ -42,7 +42,7 @@ using mozilla::ipc::TestShellChild;
 using mozilla::ipc::XPCShellEnvironment;
 
 TestShellChild::TestShellChild()
-: mXPCShell(nsnull)
+  : mXPCShell(XPCShellEnvironment::CreateEnvironment())
 {
 
 }

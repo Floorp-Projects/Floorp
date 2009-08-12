@@ -1,10 +1,11 @@
 #include "ContentProcessParent.h"
-#include "TabParent.h"
 
 #include "mozilla/ipc/GeckoThread.h"
 
-using mozilla::ipc::BrowserProcessSubThread;
-using mozilla::dom::TabParent;
+#include "TabParent.h"
+#include "mozilla/ipc/TestShellParent.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace dom {
@@ -24,6 +25,12 @@ TabParent*
 ContentProcessParent::CreateTab(const MagicWindowHandle& hwnd)
 {
   return static_cast<TabParent*>(SendIFrameEmbeddingConstructor(hwnd));
+}
+
+TestShellParent*
+ContentProcessParent::CreateTestShell()
+{
+  return static_cast<TestShellParent*>(SendTestShellConstructor());
 }
 
 ContentProcessParent::ContentProcessParent()
@@ -48,6 +55,19 @@ nsresult
 ContentProcessParent::IFrameEmbeddingDestructor(IFrameEmbeddingProtocolParent* frame)
 {
   delete frame;
+  return NS_OK;
+}
+
+TestShellProtocolParent*
+ContentProcessParent::TestShellConstructor()
+{
+  return new TestShellParent();
+}
+
+nsresult
+ContentProcessParent::TestShellDestructor(TestShellProtocolParent* shell)
+{
+  delete shell;
   return NS_OK;
 }
 

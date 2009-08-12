@@ -52,14 +52,12 @@ EXPORTS_NAMESPACES = mozilla/ipc
 EXPORTS_mozilla/ipc = \
   TestShellChild.h \
   TestShellParent.h \
-  TestShellThread.h \
   XPCShellEnvironment.h \
   $(NULL)
 
 CPPSRCS += \
   TestShellChild.cpp \
   TestShellParent.cpp \
-  TestShellThread.cpp \
   XPCShellEnvironment.cpp \
   $(NULL)
 
