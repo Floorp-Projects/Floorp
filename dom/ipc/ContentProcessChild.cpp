@@ -31,6 +31,7 @@ nsresult
 ContentProcessChild::IFrameEmbeddingDestructor(IFrameEmbeddingProtocolChild* iframe)
 {
   delete iframe;
+  return NS_OK;
 }
 
 } // namespace dom
