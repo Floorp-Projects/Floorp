@@ -1797,12 +1797,11 @@ nsDocAccessible::FlushPendingEvents()
     }
   }
   mEventsToFire.Clear(); // Clear out array
+  mInFlushPendingEvents = PR_FALSE;
   NS_RELEASE_THIS(); // Release kung fu death grip
 
   // After a flood of events, reset so that user input flag is off
   nsAccEvent::ResetLastInputState();
-
-  mInFlushPendingEvents = PR_FALSE;
 }
 
 void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)
