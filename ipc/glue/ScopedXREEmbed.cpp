@@ -52,11 +52,13 @@ using mozilla::ipc::ScopedXREEmbed;
 ScopedXREEmbed::ScopedXREEmbed()
 : mShouldKillEmbedding(false)
 {
+  NS_LogInit();
 }
 
 ScopedXREEmbed::~ScopedXREEmbed()
 {
   Stop();
+  NS_LogTerm();
 }
 
 void
