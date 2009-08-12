@@ -975,7 +975,6 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
   nsresult result;
   nsCOMPtr<nsIDOMNode> anchorNode;
   PRInt32 anchorOffset = 0;
-  PRInt32 anchorFrameOffset = 0;
 
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   if (!mDomSelections[index])
@@ -994,15 +993,11 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
   if (NS_FAILED(result))
     return result;
 
-  nsIFrame *anchorFrame = 0;
   nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode);
 
   if (!anchorContent)
     return NS_ERROR_FAILURE;
   
-  anchorFrame = GetFrameForNodeOffset(anchorContent, anchorOffset,
-                                      mHint, &anchorFrameOffset);
-
   //
   // Now find the root of the subtree containing the anchor's content.
   //
