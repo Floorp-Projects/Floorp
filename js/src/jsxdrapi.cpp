@@ -557,7 +557,7 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
             *vp = OBJECT_TO_JSVAL(obj);
         break;
       }
-      case JSVAL_BOOLEAN: {
+      case JSVAL_SPECIAL: {
         uint32 b;
         if (xdr->mode == JSXDR_ENCODE)
             b = (uint32) JSVAL_TO_BOOLEAN(*vp);
