@@ -24,6 +24,7 @@
  *   Daniel Veditz <dveditz@netscape.com>
  *   Samir Gehani <sgehani@netscape.com>
  *   Mitch Stoltz <mstoltz@netscape.com>
+ *   Taras Glek <tglek@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,6 +54,7 @@
 #define ZIP_Seek(fd,p,m) (PR_Seek((fd),((PROffset32)p),(m))==((PROffset32)p))
 
 #include "zlib.h"
+#include "nsAutoPtr.h"
 
 class nsZipFind;
 class nsZipReadState;
@@ -111,6 +113,8 @@ struct nsZipItem
   char        name[1]; // actually, bigger than 1
 };
 
+class nsZipHandle;
+class nsSeekableZipHandle;
 /** 
  * nsZipArchive -- a class for reading the PKZIP file format.
  *
@@ -186,12 +190,10 @@ public:
    */
   PRInt32 FindInit(const char * aPattern, nsZipFind** aFind);
 
-  /**
-   * Moves the filepointer aFd to the start of data of the aItem.
-   * @param   aItem       Pointer to nsZipItem
-   * @param   aFd         The filepointer to move
+  /* Gets an undependent handle to the jar
+   * Also ensures that aItem is fully filled
    */
-  nsresult  SeekToItem(nsZipItem* aItem, PRFileDesc* aFd);
+  nsZipHandle* GetFD(nsZipItem* aItem);
 
 private:
   //--- private members ---
@@ -199,12 +201,18 @@ private:
   nsZipItem*    mFiles[ZIP_TABSIZE];
   PLArenaPool   mArena;
 
-  // Used for central directory reading, and for Test and Extract
-  PRFileDesc    *mFd;
+  /**
+   * Fills in nsZipItem fields that were not filled in by BuildFileList
+   * @param   aItem       Pointer to nsZipItem
+   * returns true if the item was filled in successfully
+   */
+  bool MaybeReadItem(nsZipItem* aItem);
 
   // Whether we synthesized the directory entries
   PRPackedBool  mBuiltSynthetics;
 
+  // file handle
+  nsRefPtr<nsZipHandle> mFd;
   //--- private methods ---
   
   nsZipArchive& operator=(const nsZipArchive& rhs); // prevent assignments
@@ -214,8 +222,92 @@ private:
   nsresult          BuildFileList();
   nsresult          BuildSynthetics();
 
-  nsresult  CopyItemToDisk(PRUint32 size, PRUint32 crc, PRFileDesc* outFD);
-  nsresult  InflateItem(const nsZipItem* aItem, PRFileDesc* outFD);
+  nsresult  CopyItemToDisk(PRUint32 size, PRUint32 crc, nsSeekableZipHandle &fd, PRFileDesc* outFD);
+  nsresult  InflateItem(const nsZipItem* aItem, nsSeekableZipHandle &fd, PRFileDesc* outFD);
+};
+
+class nsZipHandle {
+friend class nsZipArchive;
+friend class nsSeekableZipHandle;
+public:
+  static nsresult Init(PRFileDesc *fd, nsZipHandle **ret NS_OUTPARAM);
+
+  /**
+   * Reads data at a certain point
+   * @param aPosition seek ofset
+   * @param aBuffer buffer
+   * @param aCount number of bytes to read */
+  PRInt32 Read(PRUint32 aPosition, void *aBuffer, PRUint32 aCount);
+
+  NS_METHOD_(nsrefcnt) AddRef(void);
+  NS_METHOD_(nsrefcnt) Release(void);
+
+protected:
+  PRFileDesc *mFd; // OS file-descriptor
+  PRUint8 *mFileData; // pointer to mmaped file
+  PRUint32 mLen; // length of file and memory mapped area
+
+private:
+  nsZipHandle();
+  ~nsZipHandle();
+
+  PRFileMap *mMap; // nspr datastructure for mmap
+  nsrefcnt mRefCnt; // ref count
+};
+
+
+/** nsSeekableZipHandle acts as a container for nsZipHandle,
+    emulates sequential file io */
+class nsSeekableZipHandle {
+  //   stick nsZipItem in here
+public:
+  nsSeekableZipHandle()
+    : mOffset(0)
+    , mRemaining(0)
+  {
+  }
+
+  /** Initializes nsSeekableZipHandle with
+   * @param aOffset byte offset of the file to start reading at
+   * @param length of this descriptor
+   */
+  bool Open(nsZipHandle *aHandle, PRUint32 aOffset, PRUint32 aLength) {
+    NS_ABORT_IF_FALSE (aHandle, "Argument must not be NULL");
+    if (aOffset > aHandle->mLen)
+      return false;
+    mFd = aHandle;
+    mOffset = aOffset;
+    mRemaining = aLength;
+    return true;
+  }
+
+  /** Releases the file handle. It is safe to call multiple times. */
+  void Close()
+  {
+    mFd = NULL;
+  }
+
+  /**
+   * Reads data at a certain point
+   * @param aBuffer input buffer
+   * @param aCount number of bytes to read */
+  PRInt32 Read(void *aBuffer, PRUint32 aCount)
+  {
+    if (!mFd.get())
+      return -1;
+    aCount = PR_MIN(mRemaining, aCount);
+    PRInt32 ret = mFd->Read(mOffset, aBuffer, aCount);
+    if (ret > 0) {
+      mOffset += ret;
+      mRemaining -= ret;
+    }
+    return ret;
+  }
+
+private:
+  nsRefPtr<nsZipHandle> mFd; // file handle
+  PRUint32 mOffset; // current reading offset
+  PRUint32 mRemaining; // bytes remaining
 };
 
 
