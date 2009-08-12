@@ -1925,16 +1925,13 @@ static void
 DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
 {
     uintN i;
-    JSScope *scope;
     JSScopeProperty *sprop;
     jsval v;
     JSString *str;
 
     i = 0;
-    scope = OBJ_SCOPE(obj);
-    for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
-        if (scope->hadMiddleDelete() && !scope->has(sprop))
-            continue;
+    sprop = NULL;
+    while (JS_PropertyIterator(obj, &sprop)) {
         fprintf(fp, "%3u %p ", i, (void *)sprop);
 
         v = ID_TO_VALUE(sprop->id);
