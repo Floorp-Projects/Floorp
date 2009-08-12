@@ -133,10 +133,6 @@ class nsJAR : public nsIZipReader, public nsIJAR
       mCache = cache;
     }
 
-    PRInt64 GetMtime() {
-      return mMtime;
-    }
-
   protected:
     //-- Private data members
     nsCOMPtr<nsIFile>        mZipFile;        // The zip/jar file on disk

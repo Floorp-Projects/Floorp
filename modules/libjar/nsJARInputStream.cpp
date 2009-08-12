@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Mitch Stoltz <mstoltz@netscape.com>
+ *   Taras Glek <tglek@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,7 @@
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 #include "nsIFile.h"
+#include "nsDebug.h"
 
 /*---------------------------------------------
  *  nsISupports implementation
@@ -57,23 +59,17 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputStream, nsIInputStream)
  *--------------------------------------------------------*/
 
 nsresult
-nsJARInputStream::InitFile(nsZipArchive* aZip, nsZipItem *item, PRFileDesc *fd)
+nsJARInputStream::InitFile(nsZipHandle *aFd, nsZipItem *item)
 {
     nsresult rv;
-
-    // Keep the file handle, even on failure
-    mFd = fd;
-      
-    NS_ENSURE_ARG_POINTER(aZip);
-    NS_ENSURE_ARG_POINTER(item);
-    NS_ENSURE_ARG_POINTER(fd);
+    NS_ABORT_IF_FALSE(aFd, "Argument may not be null");
+    NS_ABORT_IF_FALSE(item, "Argument may not be null");
 
     // Mark it as closed, in case something fails in initialisation
     mClosed = PR_TRUE;
-
     // Keep the important bits of nsZipItem only
     mInSize = item->size;
- 
+
     //-- prepare for the compression type
     switch (item->compression) {
        case STORED: 
@@ -96,8 +92,7 @@ nsJARInputStream::InitFile(nsZipArchive* aZip, nsZipItem *item, PRFileDesc *fd)
     }
    
     //-- Set filepointer to start of item
-    rv = aZip->SeekToItem(item, mFd);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FILE_CORRUPTED);
+    mFd.Open(aFd, item->dataOffset, item->size);
         
     // Open for reading
     mClosed = PR_FALSE;
@@ -106,19 +101,19 @@ nsJARInputStream::InitFile(nsZipArchive* aZip, nsZipItem *item, PRFileDesc *fd)
 }
 
 nsresult
-nsJARInputStream::InitDirectory(nsZipArchive* aZip,
+nsJARInputStream::InitDirectory(nsJAR* aJar,
                                 const nsACString& aJarDirSpec,
                                 const char* aDir)
 {
-    NS_ENSURE_ARG_POINTER(aZip);
-    NS_ENSURE_ARG_POINTER(aDir);
+    NS_ABORT_IF_FALSE(aJar, "Argument may not be null");
+    NS_ABORT_IF_FALSE(aDir, "Argument may not be null");
 
     // Mark it as closed, in case something fails in initialisation
     mClosed = PR_TRUE;
     mDirectory = PR_TRUE;
     
     // Keep the zipReader for getting the actual zipItems
-    mZip = aZip;
+    mJar = aJar;
     nsZipFind *find;
     nsresult rv;
     // We can get aDir's contents as strings via FindEntries
@@ -156,7 +151,7 @@ nsJARInputStream::InitDirectory(nsZipArchive* aZip,
     }
     nsCAutoString pattern = escDirName + NS_LITERAL_CSTRING("?*~") +
                             escDirName + NS_LITERAL_CSTRING("?*/?*");
-    rv = aZip->FindInit(pattern.get(), &find);
+    rv = mJar->mZip.FindInit(pattern.get(), &find);
     if (NS_FAILED(rv)) return rv;
 
     const char *name;
@@ -220,27 +215,25 @@ nsJARInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
             PRInt32 bytesRead = 0;
             aCount = PR_MIN(aCount, mInSize - mCurPos);
             if (aCount) {
-                bytesRead = PR_Read(mFd, aBuffer, aCount);
+                bytesRead = mFd.Read(aBuffer, aCount);
                 if (bytesRead < 0)
                     return NS_ERROR_FILE_CORRUPTED;
                 mCurPos += bytesRead;
-                if (bytesRead != aCount) {
+                if ((PRUint32)bytesRead != aCount) {
                     // file is truncated or was lying about size, we're done
-                    PR_Close(mFd);
-                    mFd = nsnull;
+                    Close();
                     return NS_ERROR_FILE_CORRUPTED;
                 }
             }
             *aBytesRead = bytesRead;
         }
-
         // be aggressive about closing!
         // note that sometimes, we will close mFd before we've finished
         // deflating - this is because zlib buffers the input
         // So, don't free the ReadBuf/InflateStruct yet.
-        if (mCurPos >= mInSize && mFd) {
-            PR_Close(mFd);
-            mFd = nsnull;
+        // It is ok to close the fd multiple times (also in nsJARInputStream::Close())
+        if (mCurPos >= mInSize) {
+            mFd.Close();
         }
     }
     return rv;
@@ -265,11 +258,8 @@ NS_IMETHODIMP
 nsJARInputStream::Close()
 {
     PR_FREEIF(mInflate);
-    if (mFd) {
-        PR_Close(mFd);
-        mFd = nsnull;
-    }
     mClosed = PR_TRUE;
+    mFd.Close();
     return NS_OK;
 }
 
@@ -297,8 +287,7 @@ nsJARInputStream::ContinueInflate(char* aBuffer, PRUint32 aCount,
             // time to fill the buffer!
             PRUint32 bytesToRead = PR_MIN(mInSize - mCurPos, ZIP_BUFLEN);
 
-            NS_ASSERTION(mFd, "File handle missing");
-            PRInt32 bytesRead = PR_Read(mFd, mInflate->mReadBuf, bytesToRead);
+            PRInt32 bytesRead = mFd.Read(mInflate->mReadBuf, bytesToRead);
             if (bytesRead < 0) {
                 zerr = Z_ERRNO;
                 break;
@@ -362,7 +351,7 @@ nsJARInputStream::ReadDirectory(char* aBuffer, PRUint32 aCount, PRUint32 *aBytes
 
             const char * entryName = mArray[mArrPos].get();
             PRUint32 entryNameLen = mArray[mArrPos].Length();
-            nsZipItem* ze = mZip->GetItem(entryName);
+            nsZipItem* ze = mJar->mZip.GetItem(entryName);
             NS_ENSURE_TRUE(ze, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
             // Last Modified Time
