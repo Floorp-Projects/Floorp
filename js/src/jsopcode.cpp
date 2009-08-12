@@ -5333,6 +5333,10 @@ SimulateOp(JSContext *cx, JSScript *script, JSOp op, const JSCodeSpec *cs,
 }
 
 #ifdef JS_TRACER
+
+#undef LOCAL_ASSERT
+#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_CUSTOM(expr, goto failure);
+
 static intN
 SimulateImacroCFG(JSContext *cx, JSScript *script,
                   uintN pcdepth, jsbytecode *pc, jsbytecode *target,
@@ -5386,6 +5390,9 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
     cx->free(tmp_pcstack);
     return -1;
 }
+
+#undef LOCAL_ASSERT
+#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
 
 static intN
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
