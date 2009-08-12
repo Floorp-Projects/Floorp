@@ -1304,20 +1304,18 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Print(nsPluginPrint* platformPrint)
   // to be compatible with the older SDK versions and to match what
   // NPAPI and other browsers do, overwrite |window.type| field with one
   // more copy of |platformPrint|. See bug 113264
-  if (mCallbacks) {
-    PRUint16 sdkmajorversion = (mCallbacks->version & 0xff00)>>8;
-    PRUint16 sdkminorversion = mCallbacks->version & 0x00ff;
-    if ((sdkmajorversion == 0) && (sdkminorversion < 11)) { 
-      // Let's copy platformPrint bytes over to where it was supposed to be 
-      // in older versions -- four bytes towards the beginning of the struct
-      // but we should be careful about possible misalignments
-      if (sizeof(NPWindowType) >= sizeof(void *)) {
-        void* source = thePrint->print.embedPrint.platformPrint; 
-        void** destination = (void **)&(thePrint->print.embedPrint.window.type); 
-        *destination = source;
-      } 
-      else 
-        NS_ASSERTION(PR_FALSE, "Incompatible OS for assignment");
+  PRUint16 sdkmajorversion = (mCallbacks->version & 0xff00)>>8;
+  PRUint16 sdkminorversion = mCallbacks->version & 0x00ff;
+  if ((sdkmajorversion == 0) && (sdkminorversion < 11)) {
+    // Let's copy platformPrint bytes over to where it was supposed to be
+    // in older versions -- four bytes towards the beginning of the struct
+    // but we should be careful about possible misalignments
+    if (sizeof(NPWindowType) >= sizeof(void *)) {
+      void* source = thePrint->print.embedPrint.platformPrint;
+      void** destination = (void **)&(thePrint->print.embedPrint.window.type);
+      *destination = source;
+    } else {
+      NS_ERROR("Incompatible OS for assignment");
     }
   }
 
