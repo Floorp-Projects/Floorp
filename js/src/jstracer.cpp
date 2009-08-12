@@ -95,8 +95,8 @@ using namespace nanojit;
 
 /*
  * Never use JSVAL_IS_BOOLEAN because it restricts the value (true, false) and
- * the type. What you want to use is JSVAL_TAG(x) == JSVAL_BOOLEAN and then
- * handle the undefined case properly (bug 457363).
+ * the type. What you want to use is JSVAL_IS_SPECIAL(x) and then handle the
+ * undefined case properly (bug 457363).
  */
 #undef JSVAL_IS_BOOLEAN
 #define JSVAL_IS_BOOLEAN(x) JS_STATIC_ASSERT(0)
@@ -255,7 +255,7 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
 #define INS_CONSTPTR(p)     addName(lir->insImmPtr(p), #p)
 #define INS_CONSTFUNPTR(p)  addName(lir->insImmPtr(JS_FUNC_TO_DATA_PTR(void*, p)), #p)
 #define INS_CONSTWORD(v)    addName(lir->insImmPtr((void *) v), #v)
-#define INS_VOID()          INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))
+#define INS_VOID()          INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))
 
 static GC gc = GC();
 static avmplus::AvmCore s_core = avmplus::AvmCore();
@@ -567,10 +567,10 @@ GetPromotedType(jsval v)
         return TT_OBJECT;
     }
     uint8_t tag = JSVAL_TAG(v);
-    JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_BOOLEAN);
+    JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_SPECIAL);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
-    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_BOOLEAN);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_SPECIAL);
     return JSTraceType(tag);
 }
 
@@ -588,10 +588,10 @@ getCoercedType(jsval v)
         return TT_OBJECT;
     }
     uint8_t tag = JSVAL_TAG(v);
-    JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_BOOLEAN);
+    JS_ASSERT(tag == JSVAL_DOUBLE || tag == JSVAL_STRING || tag == JSVAL_SPECIAL);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_DOUBLE) == JSVAL_DOUBLE);
     JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
-    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_BOOLEAN);
+    JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_SPECIAL);
     return JSTraceType(tag);
 }
 
@@ -1955,8 +1955,8 @@ ValueToNative(JSContext* cx, jsval v, JSTraceType type, double* slot)
 
       case TT_PSEUDOBOOLEAN:
         /* Watch out for pseudo-booleans. */
-        JS_ASSERT(tag == JSVAL_BOOLEAN);
-        *(JSBool*)slot = JSVAL_TO_PSEUDO_BOOLEAN(v);
+        JS_ASSERT(tag == JSVAL_SPECIAL);
+        *(JSBool*)slot = JSVAL_TO_SPECIAL(v);
         debug_only_printf(LC_TMTracer, "pseudoboolean<%d> ", *(JSBool*)slot);
         return;
 
@@ -2112,7 +2112,7 @@ NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
 
       case TT_PSEUDOBOOLEAN:
         /* Watch out for pseudo-booleans. */
-        v = PSEUDO_BOOLEAN_TO_JSVAL(*(JSBool*)slot);
+        v = SPECIAL_TO_JSVAL(*(JSBool*)slot);
         debug_only_printf(LC_TMTracer, "boolean<%d> ", *(JSBool*)slot);
         break;
 
@@ -3050,9 +3050,9 @@ TraceRecorder::determineSlotType(jsval* vp)
         else
             m = TT_OBJECT;
     } else {
-        JS_ASSERT(JSVAL_TAG(*vp) == JSVAL_STRING || JSVAL_TAG(*vp) == JSVAL_BOOLEAN);
+        JS_ASSERT(JSVAL_TAG(*vp) == JSVAL_STRING || JSVAL_IS_SPECIAL(*vp));
         JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_STRING) == JSVAL_STRING);
-        JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_BOOLEAN);
+        JS_STATIC_ASSERT(static_cast<jsvaltag>(TT_PSEUDOBOOLEAN) == JSVAL_SPECIAL);
         m = JSTraceType(JSVAL_TAG(*vp));
     }
     JS_ASSERT(m != TT_INT32 || isInt32(*vp));
@@ -5103,7 +5103,7 @@ IsEntryTypeCompatible(jsval* vp, JSTraceType* m)
         debug_only_printf(LC_TMTracer, "null != tag%u ", tag);
         return false;
       case TT_PSEUDOBOOLEAN:
-        if (tag == JSVAL_BOOLEAN)
+        if (tag == JSVAL_SPECIAL)
             return true;
         debug_only_printf(LC_TMTracer, "bool != tag%u ", tag);
         return false;
@@ -7096,7 +7096,7 @@ TraceRecorder::stringify(jsval& v)
     const CallInfo* ci;
     if (JSVAL_IS_NUMBER(v)) {
         ci = &js_NumberToString_ci;
-    } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+    } else if (JSVAL_IS_SPECIAL(v)) {
         ci = &js_BooleanOrUndefinedToString_ci;
     } else {
         /*
@@ -7143,9 +7143,9 @@ TraceRecorder::ifop()
     } else if (!JSVAL_IS_PRIMITIVE(v)) {
         cond = true;
         x = lir->insImm(1);
-    } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+    } else if (JSVAL_IS_SPECIAL(v)) {
         /* Test for boolean is true, negate later if we are testing for false. */
-        cond = JSVAL_TO_PSEUDO_BOOLEAN(v) == JS_TRUE;
+        cond = JSVAL_TO_SPECIAL(v) == JS_TRUE;
         x = lir->ins2i(LIR_eq, v_ins, 1);
     } else if (isNumber(v)) {
         jsdouble d = asNumber(v);
@@ -7238,6 +7238,14 @@ TraceRecorder::tableswitch()
 }
 #endif
 
+static JS_ALWAYS_INLINE int32_t
+UnboxBooleanOrUndefined(jsval v)
+{
+    /* Although this says 'special', we really only expect 3 special values: */
+    JS_ASSERT(v == JSVAL_TRUE || v == JSVAL_FALSE || v == JSVAL_VOID);
+    return JSVAL_TO_SPECIAL(v);
+}
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::switchop()
 {
@@ -7259,9 +7267,9 @@ TraceRecorder::switchop()
               addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(&js_EqualStrings_ci, args))),
                       "guard(switch on string)"),
               BRANCH_EXIT);
-    } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+    } else if (JSVAL_IS_SPECIAL(v)) {
         guard(true,
-              addName(lir->ins2(LIR_eq, v_ins, lir->insImm(JSVAL_TO_PUBLIC_PSEUDO_BOOLEAN(v))),
+              addName(lir->ins2(LIR_eq, v_ins, lir->insImm(UnboxBooleanOrUndefined(v))),
                       "guard(switch on boolean)"),
               BRANCH_EXIT);
     } else {
@@ -7464,7 +7472,7 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
      */
 
     if (GetPromotedType(l) == GetPromotedType(r)) {
-        if (JSVAL_TAG(l) == JSVAL_OBJECT || JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+        if (JSVAL_TAG(l) == JSVAL_OBJECT || JSVAL_IS_SPECIAL(l)) {
             cond = (l == r);
         } else if (JSVAL_IS_STRING(l)) {
             args[0] = r_ins, args[1] = l_ins;
@@ -7476,11 +7484,11 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
             cond = (asNumber(l) == asNumber(r));
             fp = true;
         }
-    } else if (JSVAL_IS_NULL(l) && JSVAL_TAG(r) == JSVAL_BOOLEAN) {
-        l_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
+    } else if (JSVAL_IS_NULL(l) && JSVAL_IS_SPECIAL(r)) {
+        l_ins = lir->insImm(JSVAL_TO_SPECIAL(JSVAL_VOID));
         cond = (r == JSVAL_VOID);
-    } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN && JSVAL_IS_NULL(r)) {
-        r_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
+    } else if (JSVAL_IS_SPECIAL(l) && JSVAL_IS_NULL(r)) {
+        r_ins = lir->insImm(JSVAL_TO_SPECIAL(JSVAL_VOID));
         cond = (l == JSVAL_VOID);
     } else if (isNumber(l) && JSVAL_IS_STRING(r)) {
         args[0] = r_ins, args[1] = cx_ins;
@@ -7493,10 +7501,10 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
         cond = (js_StringToNumber(cx, JSVAL_TO_STRING(l)) == asNumber(r));
         fp = true;
     } else {
-        if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+        if (JSVAL_IS_SPECIAL(l)) {
             bool isVoid = JSVAL_IS_VOID(l);
             guard(isVoid,
-                  lir->ins2(LIR_eq, l_ins, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))),
+                  lir->ins2(LIR_eq, l_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))),
                   BRANCH_EXIT);
             if (!isVoid) {
                 args[0] = l_ins, args[1] = cx_ins;
@@ -7507,10 +7515,10 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
                 return equalityHelper(l, r, l_ins, r_ins, negate,
                                       tryBranchAfterCond, rval);
             }
-        } else if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+        } else if (JSVAL_IS_SPECIAL(r)) {
             bool isVoid = JSVAL_IS_VOID(r);
             guard(isVoid,
-                  lir->ins2(LIR_eq, r_ins, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))),
+                  lir->ins2(LIR_eq, r_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID))),
                   BRANCH_EXIT);
             if (!isVoid) {
                 args[0] = r_ins, args[1] = cx_ins;
@@ -7616,7 +7624,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
     if (!JSVAL_IS_NUMBER(l)) {
         LIns* args[] = { l_ins, cx_ins };
         switch (JSVAL_TAG(l)) {
-          case JSVAL_BOOLEAN:
+          case JSVAL_SPECIAL:
             l_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
             break;
           case JSVAL_STRING:
@@ -7639,7 +7647,7 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
     if (!JSVAL_IS_NUMBER(r)) {
         LIns* args[] = { r_ins, cx_ins };
         switch (JSVAL_TAG(r)) {
-          case JSVAL_BOOLEAN:
+          case JSVAL_SPECIAL:
             r_ins = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
             break;
           case JSVAL_STRING:
@@ -7776,16 +7784,16 @@ TraceRecorder::binary(LOpcode op)
             rightIsNumber = true;
         }
     }
-    if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+    if (JSVAL_IS_SPECIAL(l)) {
         LIns* args[] = { a, cx_ins };
         a = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        lnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_PSEUDO_BOOLEAN(l));
+        lnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_SPECIAL(l));
         leftIsNumber = true;
     }
-    if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+    if (JSVAL_IS_SPECIAL(r)) {
         LIns* args[] = { b, cx_ins };
         b = lir->insCall(&js_BooleanOrUndefinedToNumber_ci, args);
-        rnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_PSEUDO_BOOLEAN(r));
+        rnum = js_BooleanOrUndefinedToNumber(cx, JSVAL_TO_SPECIAL(r));
         rightIsNumber = true;
     }
     if (leftIsNumber && rightIsNumber) {
@@ -8100,7 +8108,7 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
     if (sprop->slot != SPROP_INVALID_SLOT)
         v_ins = stobj_get_slot(pobj_ins, sprop->slot, dslots_ins);
     else
-        v_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
+        v_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
     return JSRS_CONTINUE;
 }
 
@@ -8115,8 +8123,8 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
         return;
     }
     switch (JSVAL_TAG(v)) {
-      case JSVAL_BOOLEAN:
-        v_ins = lir->ins2i(LIR_pior, lir->ins2i(LIR_pilsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
+      case JSVAL_SPECIAL:
+        v_ins = lir->ins2i(LIR_pior, lir->ins2i(LIR_pilsh, v_ins, JSVAL_TAGBITS), JSVAL_SPECIAL);
         return;
       case JSVAL_OBJECT:
         return;
@@ -8145,11 +8153,11 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
         return;
     }
     switch (JSVAL_TAG(v)) {
-      case JSVAL_BOOLEAN:
+      case JSVAL_SPECIAL:
         guard(true,
               lir->ins2i(LIR_eq,
                          lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
-                         JSVAL_BOOLEAN),
+                         JSVAL_SPECIAL),
               exit);
         v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
         return;
@@ -8464,7 +8472,7 @@ TraceRecorder::record_LeaveFrame()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_PUSH()
 {
-    stack(0, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)));
+    stack(0, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)));
     return JSRS_CONTINUE;
 }
 
@@ -8762,7 +8770,7 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_NOT()
 {
     jsval& v = stackval(-1);
-    if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+    if (JSVAL_IS_SPECIAL(v)) {
         set(&v, lir->ins_eq0(lir->ins2i(LIR_eq, get(&v), 1)));
         return JSRS_CONTINUE;
     }
@@ -8832,7 +8840,7 @@ TraceRecorder::record_JSOP_NEG()
         return JSRS_CONTINUE;
     }
 
-    JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING || JSVAL_TAG(v) == JSVAL_BOOLEAN);
+    JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING || JSVAL_IS_SPECIAL(v));
 
     LIns* args[] = { get(&v), cx_ins };
     set(&v, lir->ins1(LIR_fneg,
@@ -8861,7 +8869,7 @@ TraceRecorder::record_JSOP_POS()
         return JSRS_CONTINUE;
     }
 
-    JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING || JSVAL_TAG(v) == JSVAL_BOOLEAN);
+    JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING || JSVAL_IS_SPECIAL(v));
 
     LIns* args[] = { get(&v), cx_ins };
     set(&v, lir->insCall(JSVAL_IS_STRING(v)
@@ -9095,7 +9103,7 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
         guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(0)), OOM_EXIT);
         break;
       case FAIL_VOID:
-        guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+        guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
         break;
       case FAIL_COOKIE:
         guard(false, lir->ins2(LIR_eq, res_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
@@ -9501,7 +9509,7 @@ TraceRecorder::record_JSOP_TYPEOF()
         type = INS_CONSTPTR(ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_FUNCTION]));
     } else {
         LIns* args[] = { get(&r), cx_ins };
-        if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+        if (JSVAL_IS_SPECIAL(r)) {
             // We specialize identically for boolean and undefined. We must not have a hole here.
             // Pass the unboxed type here, since TypeOfBoolean knows how to handle it.
             JS_ASSERT(r == JSVAL_TRUE || r == JSVAL_FALSE || r == JSVAL_VOID);
@@ -9518,7 +9526,7 @@ TraceRecorder::record_JSOP_TYPEOF()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_VOID()
 {
-    stack(-1, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)));
+    stack(-1, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)));
     return JSRS_CONTINUE;
 }
 
@@ -10885,7 +10893,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 ABORT_TRACE("non-native object involved in undefined property access");
         } while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit));
 
-        v_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
+        v_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
         slot = SPROP_INVALID_SLOT;
         return JSRS_CONTINUE;
     }
@@ -10916,7 +10924,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                  * BIG FAT WARNING: This snapshot cannot be a BRANCH_EXIT, since
                  * the value to the top of the stack is not the value we unbox.
                  */
-                unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
+                unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_SPECIAL,
                             v_ins,
                             snapshot(MISMATCH_EXIT));
                 return JSRS_CONTINUE;
@@ -11019,7 +11027,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
         // Return undefined and indicate that we didn't actually read this (addr_ins).
-        v_ins = lir->insImm(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
+        v_ins = lir->insImm(JSVAL_TO_SPECIAL(JSVAL_VOID));
         addr_ins = NULL;
         return JSRS_CONTINUE;
     }
@@ -11056,13 +11064,13 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     v_ins = lir->insLoad(LIR_ldp, addr_ins, 0);
     unbox_jsval(*vp, v_ins, exit);
 
-    if (JSVAL_TAG(*vp) == JSVAL_BOOLEAN) {
+    if (JSVAL_IS_SPECIAL(*vp)) {
         /*
          * If we read a hole from the array, convert it to undefined and guard
          * that there are no indexed properties along the prototype chain.
          */
         LIns* br = lir->insBranch(LIR_jf,
-                                  lir->ins2i(LIR_eq, v_ins, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE)),
+                                  lir->ins2i(LIR_eq, v_ins, JSVAL_TO_SPECIAL(JSVAL_HOLE)),
                                   NULL);
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
         br->setTarget(lir->ins0(LIR_label));
@@ -11578,7 +11586,7 @@ TraceRecorder::record_JSOP_IN()
         ABORT_TRACE("string or integer expected");
     }
 
-    guard(false, lir->ins2i(LIR_eq, x, JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+    guard(false, lir->ins2i(LIR_eq, x, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
     x = lir->ins2i(LIR_eq, x, 1);
 
     JSObject* obj2;
@@ -12276,10 +12284,10 @@ TraceRecorder::record_JSOP_CALLPROP()
         } else if (JSVAL_IS_NUMBER(l)) {
             i = JSProto_Number;
             debug_only_stmt(protoname = "Number.prototype";)
-        } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+        } else if (JSVAL_IS_SPECIAL(l)) {
             if (l == JSVAL_VOID)
                 ABORT_TRACE("callprop on void");
-            guard(false, lir->ins2i(LIR_eq, get(&l), JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID)), MISMATCH_EXIT);
+            guard(false, lir->ins2i(LIR_eq, get(&l), JSVAL_TO_SPECIAL(JSVAL_VOID)), MISMATCH_EXIT);
             i = JSProto_Boolean;
             debug_only_stmt(protoname = "Boolean.prototype";)
         } else {
@@ -12381,7 +12389,7 @@ TraceRecorder::record_JSOP_STOP()
         JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
     } else {
-        rval_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
+        rval_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
     }
     clearFrameSlotsFromCache();
     return JSRS_CONTINUE;
@@ -12420,7 +12428,7 @@ TraceRecorder::record_JSOP_ENTERBLOCK()
     JSObject* obj;
     JS_GET_SCRIPT_OBJECT(cx->fp->script, getFullIndex(0), obj);
 
-    LIns* void_ins = INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID));
+    LIns* void_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
     for (int i = 0, n = OBJ_BLOCK_COUNT(cx, obj); i < n; i++)
         stack(i, void_ins);
     return JSRS_CONTINUE;
@@ -12763,7 +12771,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_HOLE()
 {
-    stack(0, INS_CONST(JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_HOLE)));
+    stack(0, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE)));
     return JSRS_CONTINUE;
 }
 
