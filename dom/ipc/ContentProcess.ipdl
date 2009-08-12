@@ -1,0 +1,22 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
+
+include protocol "IFrameEmbedding.ipdl";
+
+include "mozilla/TabTypes.h";
+
+using MagicWindowHandle;
+
+namespace mozilla {
+namespace dom {
+
+async protocol ContentProcess
+{
+    manages IFrameEmbedding;
+
+child:
+    IFrameEmbedding(MagicWindowHandle parentWidget);
+    ~IFrameEmbedding();
+};
+
+}
+}
