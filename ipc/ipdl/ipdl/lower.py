@@ -128,9 +128,6 @@ class GenerateProtocolHeader(Visitor):
             cxx.CppDirective(
                 'include',
                 '"'+ _protocolHeaderFilename(p, _protocolHeaderName(p.name)) +'"'))
-        # FIXME/cjones: not clear what types we need from other header
-#         if p.decl.fullname is not None:
-#             self.typedef(p.decl.fullname, p.decl.shortname)
 
 
     def visitUsingStmt(self, using):
@@ -466,7 +463,7 @@ class GenerateProtocolActorHeader(Visitor):
         self.pname = pname
         self.clsname = clsname
         self.file = cxxHeaderFile
-        self.typedefs = typedefs
+        self.typedefs = deepcopy(typedefs)
         tu.accept(self)
 
     def visitTranslationUnit(self, tu):
@@ -502,7 +499,9 @@ class GenerateProtocolActorHeader(Visitor):
             header = _protocolHeaderFilename(
                 p, _protocolHeaderName(p.name)+ self.myside)
             self.file.addthing(cxx.CppDirective('include', '"'+ header +'"'))
-
+            self.typedefs.append(cxx.Typedef(
+                cxx.Type(_protocolHeaderName(p.decl.fullname) + self.myside),
+                cxx.Type(_protocolHeaderName(p.decl.shortname) + self.myside)))
 
     def visitProtocol(self, p):
         p._cxx = _struct()
