@@ -381,15 +381,15 @@ NS_IMETHODIMP NS_GetCurrentToolkit(nsIToolkit* *aResult)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-long nsToolkit::OSXVersion()
+PRInt32 nsToolkit::OSXVersion()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  static long gOSXVersion = 0x0;
+  static PRInt32 gOSXVersion = 0x0;
   if (gOSXVersion == 0x0) {
-    OSErr err = ::Gestalt(gestaltSystemVersion, &gOSXVersion);
+    OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
     if (err != noErr) {
-      //This should probably be changed when our minimum version changes
+      // This should probably be changed when our minimum version changes
       NS_ERROR("Couldn't determine OS X version, assuming 10.4");
       gOSXVersion = MAC_OS_X_VERSION_10_4_HEX;
     }
@@ -441,9 +441,13 @@ nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
   if (!original || !posed)
     return NS_ERROR_FAILURE;
 
+#ifdef __LP64__
+  method_exchangeImplementations(original, posed);
+#else
   IMP aMethodImp = original->method_imp;
   original->method_imp = posed->method_imp;
   posed->method_imp = aMethodImp;
+#endif
 
   return NS_OK;
 
