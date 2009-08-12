@@ -48,6 +48,7 @@ nsresult
 ContentProcessParent::IFrameEmbeddingDestructor(IFrameEmbeddingProtocolParent* frame)
 {
   delete frame;
+  return NS_OK;
 }
 
 } // namespace dom
