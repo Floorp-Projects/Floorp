@@ -62,7 +62,7 @@ NO_PKG_FILES = \
 	nsinstall \
 	$(NULL)
 
-ifdef SYSTEM_LIBXUL
+ifndef SYSTEM_LIBXUL
 NO_PKG_FILES += xulrunner
 endif
 
