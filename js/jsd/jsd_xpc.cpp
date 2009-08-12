@@ -376,7 +376,7 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
     if (!script)
         return PR_TRUE;
 
-    jsuint pc = JSD_GetPCForStackFrame (jsdc, state, frame);
+    jsuword pc = JSD_GetPCForStackFrame (jsdc, state, frame);
 
     nsDependentCString url(JSD_GetScriptFilename (jsdc, script));
     if (url.IsEmpty()) {
