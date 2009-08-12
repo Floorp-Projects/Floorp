@@ -4166,8 +4166,6 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     goto bad;
             } else {
                 nameobj = targetprop;
-                if (!nameobj)
-                    goto bad;
                 if (OBJ_GET_CLASS(cx, nameobj) == &js_AttributeNameClass) {
                     /*
                      * 2(c)(iii)(1-3).

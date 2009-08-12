@@ -846,55 +846,55 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   // apply very well. To simplify the parser and relax some of the
   // requirements on the scanner we parse url's here. If we find a
   // malformed URL then we emit a token of type "InvalidURL" so that
-  // the CSS1 parser can ignore the invalid input. We attempt to eat
-  // the right amount of input data when an invalid URL is presented.
+  // the CSS1 parser can ignore the invalid input.  The parser must
+  // treat an InvalidURL token like a Function token, and process
+  // tokens until a matching parenthesis.
 
   aToken.mType = eCSSToken_InvalidURL;
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
 
-  if (ch == ')') {
-    Pushback(ch);
-    // empty url spec; just get out of here
-    aToken.mType = eCSSToken_URL;
-  } else {
-    // start of a non-quoted url
-    Pushback(ch);
-    PRBool ok = PR_TRUE;
-    for (;;) {
-      ch = Read();
-      if (ch < 0) break;
-      if (ch == CSS_ESCAPE) {
-        ParseAndAppendEscape(ident);
-      } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
-        // This is an invalid URL spec
-        ok = PR_FALSE;
-      } else if (IsWhitespace(ch)) {
-        // Whitespace is allowed at the end of the URL
+  Pushback(ch);
+
+  // start of a non-quoted url (which may be empty)
+  PRBool ok = PR_TRUE;
+  for (;;) {
+    ch = Read();
+    if (ch < 0) break;
+    if (ch == CSS_ESCAPE) {
+      ParseAndAppendEscape(ident);
+    } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
+      // This is an invalid URL spec
+      ok = PR_FALSE;
+      Pushback(ch); // push it back so the parser can match tokens and
+                    // then closing parenthesis
+      break;
+    } else if (IsWhitespace(ch)) {
+      // Whitespace is allowed at the end of the URL
         EatWhiteSpace();
         if (LookAhead(')')) {
-          Pushback(')');  // leave the closing symbol
-          // done!
-          break;
-        }
-        // Whitespace is followed by something other than a
-        // ")". This is an invalid url spec.
-        ok = PR_FALSE;
-      } else if (ch == ')') {
-        Pushback(ch);
-        // All done
+        Pushback(')');  // leave the closing symbol
+        // done!
         break;
-      } else {
-        // A regular url character.
-        ident.Append(PRUnichar(ch));
       }
+      // Whitespace is followed by something other than a
+      // ")". This is an invalid url spec.
+      ok = PR_FALSE;
+      break;
+    } else if (ch == ')') {
+      Pushback(ch);
+      // All done
+      break;
+    } else {
+      // A regular url character.
+      ident.Append(PRUnichar(ch));
     }
+  }
 
-    // If the result of the above scanning is ok then change the token
-    // type to a useful one.
-    if (ok) {
-      aToken.mType = eCSSToken_URL;
-    }
+  // If the result of the above scanning is ok then change the token
+  // type to a useful one.
+  if (ok) {
+    aToken.mType = eCSSToken_URL;
   }
   return PR_TRUE;
 }

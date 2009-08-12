@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl">
+<xbl:binding id="foo"><xbl:content><div style="position:relative;"><xbl:children/></div></xbl:content></xbl:binding>
+</xbl:bindings>
+
+<script>
+<![CDATA[
+function test() {
+  document.getElementById("span").innerHTML = "<table><tr><td></td></tr></table>";
+}
+]]>
+</script>
+
+</head>
+
+<body onload="test();">
+
+<div style="-moz-binding: url(#foo)">
+
+  <div style="display:none">text</div>
+  <span id="span">text</span>
+
+</div>
+
+</body>
+</html>

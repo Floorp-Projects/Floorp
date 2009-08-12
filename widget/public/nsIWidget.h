@@ -102,10 +102,10 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// {5F8D1A5E-C380-4c60-978A-030335BE1D6A}
+// {A16A3387-A529-439C-A127-A5893351FD24}
 #define NS_IWIDGET_IID \
-  { 0x5f8d1a5e, 0xc380, 0x4c60, \
-    { 0x97, 0x8a, 0x03, 0x03, 0x35, 0xbe, 0x1d, 0x6a } }
+{ 0xA16A3387, 0xA529, 0x439C, \
+  { 0xA1, 0x27, 0xA5, 0x89, 0x33, 0x51, 0xFD, 0x24 } }
 
 /*
  * Window shadow styles
@@ -293,11 +293,9 @@ class nsIWidget : public nsISupports {
     /**
      * Return the top level Widget of this Widget
      *
-     * @param     aLevelsUp   returns the number of GetParent() calls that
-     *                        were necessary to get to the top level widget
      * @return the top level widget
      */
-    virtual nsIWidget* GetTopLevelWidget(PRInt32* aLevelsUp = NULL) = 0;
+    virtual nsIWidget* GetTopLevelWidget() = 0;
 
     /**
      * Return the top (non-sheet) parent of this Widget if it's a sheet,
@@ -645,6 +643,14 @@ class nsIWidget : public nsISupports {
      * Set the shadow style of the window.
      */
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle) = 0;
+
+    /*
+     * On Mac OS X, this method shows or hides the pill button in the titlebar
+     * that's used to collapse the toolbar.
+     *
+     * Ignored on child widgets and on non-Mac platforms.
+     */
+    virtual void SetShowsToolbarButton(PRBool aShow) = 0;
 
     /** 
      * Hide window chrome (borders, buttons) for this widget.

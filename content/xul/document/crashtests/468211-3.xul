@@ -1,0 +1,18 @@
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<box style="-moz-binding:url(#xbl)"/>
+
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="xbl" inheritstyle="false">
+<content>
+<g xmlns="http://www.w3.org/2000/svg" onDOMAttrModified="document.removeChild(document.documentElement)" id="a"/>
+<box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" observes="a"/>
+
+<children xmlns="http://www.mozilla.org/xbl"/>
+
+</content>
+</binding>
+</bindings>
+
+</window>

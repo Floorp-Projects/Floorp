@@ -3046,9 +3046,9 @@ CNavDTD::AddHeadContent(nsIParserNode *aNode)
 
     // Make sure the head is opened.
     if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)) {
-      mFlags |= NS_DTD_FLAG_HAS_OPEN_HEAD;
-      mBodyContext->PushTag(eHTMLTag_head);
       result = mSink->OpenHead();
+      mBodyContext->PushTag(eHTMLTag_head);
+      mFlags |= NS_DTD_FLAG_HAS_OPEN_HEAD;
     }
 
     // Note: userdefined tags in the head are treated as leaves.
@@ -3067,11 +3067,11 @@ CNavDTD::AddHeadContent(nsIParserNode *aNode)
         mHeadContainerPosition = mBodyContext->GetCount();
       }
 
-      mBodyContext->Push(static_cast<nsCParserNode*>(aNode), nsnull,
-                         PR_FALSE);
-
       // Note: The head context is already opened.
       result = mSink->OpenContainer(*aNode);
+
+      mBodyContext->Push(static_cast<nsCParserNode*>(aNode), nsnull,
+                         PR_FALSE);
     }
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadContent(), this=%p\n", this));

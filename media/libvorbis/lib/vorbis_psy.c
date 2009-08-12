@@ -5,13 +5,13 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2007             *
+ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
  function: psychoacoustics not including preecho
- last mod: $Id$
+ last mod: $Id: psy.c 16227 2009-07-08 06:58:46Z xiphmont $
 
  ********************************************************************/
 
@@ -68,12 +68,12 @@ void _vi_psy_free(vorbis_info_psy *i){
 
 static void min_curve(float *c,
                        float *c2){
-  int i;  
+  int i;
   for(i=0;i<EHMER_MAX;i++)if(c2[i]<c[i])c[i]=c2[i];
 }
 static void max_curve(float *c,
                        float *c2){
-  int i;  
+  int i;
   for(i=0;i<EHMER_MAX;i++)if(c2[i]>c[i])c[i]=c2[i];
 }
 
@@ -101,7 +101,7 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
        curve limiting (last step). */
 
     /* A half-band's settings must be valid over the whole band, and
-       it's better to mask too little than too much */  
+       it's better to mask too little than too much */
     int ath_offset=i*4;
     for(j=0;j<EHMER_MAX;j++){
       float min=999.;
@@ -120,7 +120,7 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
       memcpy(workc[i][j+2],tonemasks[i][j],EHMER_MAX*sizeof(*tonemasks[i][j]));
     memcpy(workc[i][0],tonemasks[i][0],EHMER_MAX*sizeof(*tonemasks[i][0]));
     memcpy(workc[i][1],tonemasks[i][0],EHMER_MAX*sizeof(*tonemasks[i][0]));
-    
+
     /* apply centered curve boost/decay */
     for(j=0;j<P_LEVELS;j++){
       for(k=0;k<EHMER_MAX;k++){
@@ -141,7 +141,7 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
     }
 
     /* Now limit the louder curves.
-       
+
        the idea is this: We don't know what the playback attenuation
        will be; 0dB SL moves every time the user twiddles the volume
        knob. So that means we have to use a single 'most pessimal' curve
@@ -149,7 +149,7 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
        can be in (we assume) a range of ...+100dB] SL.  However, sounds
        20dB down will be in a range ...+80], 40dB down is from ...+60],
        etc... */
-    
+
     for(j=1;j<P_LEVELS;j++){
       min_curve(athc[j],athc[j-1]);
       min_curve(workc[i][j],athc[j]);
@@ -168,7 +168,7 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
        composite of multiple octaves.  It also may mean that a single
        bin may span > an eighth of an octave and that the eighth
        octave values may also be composited. */
-    
+
     /* which octave curves will we be compositing? */
     bin=floor(fromOC(i*.5)/binHz);
     lo_curve=  ceil(toOC(bin*binHz+1)*2);
@@ -179,9 +179,9 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
 
     for(m=0;m<P_LEVELS;m++){
       ret[i][m]=_ogg_malloc(sizeof(***ret)*(EHMER_MAX+2));
-      
+
       for(j=0;j<n;j++)brute_buffer[j]=999.;
-      
+
       /* render the curve into bins, then pull values back into curve.
          The point is that any inherent subsampling aliasing results in
          a safe minimum */
@@ -191,7 +191,7 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
         for(j=0;j<EHMER_MAX;j++){
           int lo_bin= fromOC(j*.125+k*.5-2.0625)/binHz;
           int hi_bin= fromOC(j*.125+k*.5-1.9375)/binHz+1;
-          
+
           if(lo_bin<0)lo_bin=0;
           if(lo_bin>n)lo_bin=n;
           if(lo_bin<l)l=lo_bin;
@@ -216,7 +216,7 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
         for(j=0;j<EHMER_MAX;j++){
           int lo_bin= fromOC(j*.125+i*.5-2.0625)/binHz;
           int hi_bin= fromOC(j*.125+i*.5-1.9375)/binHz+1;
-          
+
           if(lo_bin<0)lo_bin=0;
           if(lo_bin>n)lo_bin=n;
           if(lo_bin<l)l=lo_bin;
@@ -250,9 +250,9 @@ static float ***setup_tone_curves(float curveatt_dB[P_BANDS],float binHz,int n,
 
       /* add fenceposts */
       for(j=0;j<EHMER_OFFSET;j++)
-        if(ret[i][m][j+2]>-200.f)break;  
+        if(ret[i][m][j+2]>-200.f)break;
       ret[i][m][0]=j;
-      
+
       for(j=EHMER_MAX-1;j>EHMER_OFFSET+1;j--)
         if(ret[i][m][j+2]>-200.f)
           break;
@@ -289,7 +289,7 @@ void _vp_psy_init(vorbis_look_psy *p,vorbis_info_psy *vi,
   if(rate < 26000) p->m_val = 0;
   else if(rate < 38000) p->m_val = .94;   /* 32kHz */
   else if(rate > 46000) p->m_val = 1.275; /* 48kHz */
-  
+
   /* set up the lookups for a given blocksize and sample rate */
 
   for(i=0,j=0;i<MAX_ATH-1;i++){
@@ -309,14 +309,14 @@ void _vp_psy_init(vorbis_look_psy *p,vorbis_info_psy *vi,
   }
 
   for(i=0;i<n;i++){
-    float bark=toBARK(rate/(2*n)*i); 
+    float bark=toBARK(rate/(2*n)*i);
 
-    for(;lo+vi->noisewindowlomin<i && 
+    for(;lo+vi->noisewindowlomin<i &&
           toBARK(rate/(2*n)*lo)<(bark-vi->noisewindowlo);lo++);
-    
+
     for(;hi<=n && (hi<i+vi->noisewindowhimin ||
           toBARK(rate/(2*n)*hi)<(bark+vi->noisewindowhi));hi++);
-    
+
     p->bark[i]=((lo-1)<<16)+(hi-1);
 
   }
@@ -326,27 +326,27 @@ void _vp_psy_init(vorbis_look_psy *p,vorbis_info_psy *vi,
 
   p->tonecurves=setup_tone_curves(vi->toneatt,rate*.5/n,n,
                                   vi->tone_centerboost,vi->tone_decay);
-  
+
   /* set up rolling noise median */
   p->noiseoffset=_ogg_malloc(P_NOISECURVES*sizeof(*p->noiseoffset));
   for(i=0;i<P_NOISECURVES;i++)
     p->noiseoffset[i]=_ogg_malloc(n*sizeof(**p->noiseoffset));
-  
+
   for(i=0;i<n;i++){
     float halfoc=toOC((i+.5)*rate/(2.*n))*2.;
     int inthalfoc;
     float del;
-    
+
     if(halfoc<0)halfoc=0;
     if(halfoc>=P_BANDS-1)halfoc=P_BANDS-1;
     inthalfoc=(int)halfoc;
     del=halfoc-inthalfoc;
-    
+
     for(j=0;j<P_NOISECURVES;j++)
       p->noiseoffset[j][i]=
-        p->vi->noiseoff[j][inthalfoc]*(1.-del) + 
+        p->vi->noiseoff[j][inthalfoc]*(1.-del) +
         p->vi->noiseoff[j][inthalfoc+1]*del;
-    
+
   }
 #if 0
   {
@@ -413,7 +413,7 @@ static void seed_curve(float *seed,
 
 static void seed_loop(vorbis_look_psy *p,
                       const float ***curves,
-                      const float *f, 
+                      const float *f,
                       const float *flr,
                       float *seed,
                       float specmax){
@@ -430,7 +430,7 @@ static void seed_loop(vorbis_look_psy *p,
       i++;
       if(f[i]>max)max=f[i];
     }
-    
+
     if(max+6.f>flr[i]){
       oc=oc>>p->shiftoc;
 
@@ -498,7 +498,7 @@ static void seed_chase(float *seeds, int linesper, long n){
     for(;pos<endpos;pos++)
       seeds[pos]=ampstack[i];
   }
-  
+
   /* there.  Linear time.  I now remember this was on a problem set I
      had in Grad Skool... I didn't solve it at the time ;-) */
 
@@ -515,7 +515,7 @@ static void max_seeds(vorbis_look_psy *p,
   long   pos;
 
   seed_chase(seed,linesper,n); /* for masking */
- 
+
   pos=p->octave[0]-p->firstoc-(linesper>>1);
 
   while(linpos+1<p->n){
@@ -527,18 +527,18 @@ static void max_seeds(vorbis_look_psy *p,
       if((seed[pos]>NEGINF && seed[pos]<minV) || minV==NEGINF)
         minV=seed[pos];
     }
-    
+
     end=pos+p->firstoc;
     for(;linpos<p->n && p->octave[linpos]<=end;linpos++)
       if(flr[linpos]<minV)flr[linpos]=minV;
   }
-  
+
   {
     float minV=seed[p->total_octave_lines-1];
     for(;linpos<p->n;linpos++)
       if(flr[linpos]<minV)flr[linpos]=minV;
   }
-  
+
 }
 
 static void bark_noise_hybridmp(int n,const long *b,
@@ -546,7 +546,7 @@ static void bark_noise_hybridmp(int n,const long *b,
                                 float *noise,
                                 const float offset,
                                 const int fixed){
-  
+
   float *N=alloca(n*sizeof(*N));
   float *X=alloca(n*sizeof(*N));
   float *XX=alloca(n*sizeof(*N));
@@ -569,7 +569,7 @@ static void bark_noise_hybridmp(int n,const long *b,
   if (y < 1.f) y = 1.f;
 
   w = y * y * .5;
-    
+
   tN += w;
   tX += w;
   tY += w * y;
@@ -581,12 +581,12 @@ static void bark_noise_hybridmp(int n,const long *b,
   XY[0] = tXY;
 
   for (i = 1, x = 1.f; i < n; i++, x += 1.f) {
-    
+
     y = f[i] + offset;
     if (y < 1.f) y = 1.f;
 
     w = y * y;
-    
+
     tN += w;
     tX += w * x;
     tXX += w * x * x;
@@ -599,59 +599,59 @@ static void bark_noise_hybridmp(int n,const long *b,
     Y[i] = tY;
     XY[i] = tXY;
   }
-  
+
   for (i = 0, x = 0.f;; i++, x += 1.f) {
-    
+
     lo = b[i] >> 16;
     if( lo>=0 ) break;
     hi = b[i] & 0xffff;
-    
+
     tN = N[hi] + N[-lo];
     tX = X[hi] - X[-lo];
     tXX = XX[hi] + XX[-lo];
-    tY = Y[hi] + Y[-lo];    
+    tY = Y[hi] + Y[-lo];
     tXY = XY[hi] - XY[-lo];
-    
+
     A = tY * tXX - tX * tXY;
     B = tN * tXY - tX * tY;
     D = tN * tXX - tX * tX;
     R = (A + x * B) / D;
     if (R < 0.f)
       R = 0.f;
-    
+
     noise[i] = R - offset;
   }
-  
+
   for ( ;; i++, x += 1.f) {
-    
+
     lo = b[i] >> 16;
     hi = b[i] & 0xffff;
     if(hi>=n)break;
-    
+
     tN = N[hi] - N[lo];
     tX = X[hi] - X[lo];
     tXX = XX[hi] - XX[lo];
     tY = Y[hi] - Y[lo];
     tXY = XY[hi] - XY[lo];
-    
+
     A = tY * tXX - tX * tXY;
     B = tN * tXY - tX * tY;
     D = tN * tXX - tX * tX;
     R = (A + x * B) / D;
     if (R < 0.f) R = 0.f;
-    
+
     noise[i] = R - offset;
   }
   for ( ; i < n; i++, x += 1.f) {
-    
+
     R = (A + x * B) / D;
     if (R < 0.f) R = 0.f;
-    
+
     noise[i] = R - offset;
   }
-  
+
   if (fixed <= 0) return;
-  
+
   for (i = 0, x = 0.f;; i++, x += 1.f) {
     hi = i + fixed / 2;
     lo = hi - fixed;
@@ -662,8 +662,8 @@ static void bark_noise_hybridmp(int n,const long *b,
     tXX = XX[hi] + XX[-lo];
     tY = Y[hi] + Y[-lo];
     tXY = XY[hi] - XY[-lo];
-    
-    
+
+
     A = tY * tXX - tX * tXY;
     B = tN * tXY - tX * tY;
     D = tN * tXX - tX * tX;
@@ -672,22 +672,22 @@ static void bark_noise_hybridmp(int n,const long *b,
     if (R - offset < noise[i]) noise[i] = R - offset;
   }
   for ( ;; i++, x += 1.f) {
-    
+
     hi = i + fixed / 2;
     lo = hi - fixed;
     if(hi>=n)break;
-    
+
     tN = N[hi] - N[lo];
     tX = X[hi] - X[lo];
     tXX = XX[hi] - XX[lo];
     tY = Y[hi] - Y[lo];
     tXY = XY[hi] - XY[lo];
-    
+
     A = tY * tXX - tX * tXY;
     B = tN * tXY - tX * tY;
     D = tN * tXX - tX * tX;
     R = (A + x * B) / D;
-    
+
     if (R - offset < noise[i]) noise[i] = R - offset;
   }
   for ( ; i < n; i++, x += 1.f) {
@@ -697,69 +697,69 @@ static void bark_noise_hybridmp(int n,const long *b,
 }
 
 static const float FLOOR1_fromdB_INV_LOOKUP[256]={
-  0.F, 8.81683e+06F, 8.27882e+06F, 7.77365e+06F, 
-  7.29930e+06F, 6.85389e+06F, 6.43567e+06F, 6.04296e+06F, 
-  5.67422e+06F, 5.32798e+06F, 5.00286e+06F, 4.69759e+06F, 
-  4.41094e+06F, 4.14178e+06F, 3.88905e+06F, 3.65174e+06F, 
-  3.42891e+06F, 3.21968e+06F, 3.02321e+06F, 2.83873e+06F, 
-  2.66551e+06F, 2.50286e+06F, 2.35014e+06F, 2.20673e+06F, 
-  2.07208e+06F, 1.94564e+06F, 1.82692e+06F, 1.71544e+06F, 
-  1.61076e+06F, 1.51247e+06F, 1.42018e+06F, 1.33352e+06F, 
-  1.25215e+06F, 1.17574e+06F, 1.10400e+06F, 1.03663e+06F, 
-  973377.F, 913981.F, 858210.F, 805842.F, 
-  756669.F, 710497.F, 667142.F, 626433.F, 
-  588208.F, 552316.F, 518613.F, 486967.F, 
-  457252.F, 429351.F, 403152.F, 378551.F, 
-  355452.F, 333762.F, 313396.F, 294273.F, 
-  276316.F, 259455.F, 243623.F, 228757.F, 
-  214798.F, 201691.F, 189384.F, 177828.F, 
-  166977.F, 156788.F, 147221.F, 138237.F, 
-  129802.F, 121881.F, 114444.F, 107461.F, 
-  100903.F, 94746.3F, 88964.9F, 83536.2F, 
-  78438.8F, 73652.5F, 69158.2F, 64938.1F, 
-  60975.6F, 57254.9F, 53761.2F, 50480.6F, 
-  47400.3F, 44507.9F, 41792.0F, 39241.9F, 
-  36847.3F, 34598.9F, 32487.7F, 30505.3F, 
-  28643.8F, 26896.0F, 25254.8F, 23713.7F, 
-  22266.7F, 20908.0F, 19632.2F, 18434.2F, 
-  17309.4F, 16253.1F, 15261.4F, 14330.1F, 
-  13455.7F, 12634.6F, 11863.7F, 11139.7F, 
-  10460.0F, 9821.72F, 9222.39F, 8659.64F, 
-  8131.23F, 7635.06F, 7169.17F, 6731.70F, 
-  6320.93F, 5935.23F, 5573.06F, 5232.99F, 
-  4913.67F, 4613.84F, 4332.30F, 4067.94F, 
-  3819.72F, 3586.64F, 3367.78F, 3162.28F, 
-  2969.31F, 2788.13F, 2617.99F, 2458.24F, 
-  2308.24F, 2167.39F, 2035.14F, 1910.95F, 
-  1794.35F, 1684.85F, 1582.04F, 1485.51F, 
-  1394.86F, 1309.75F, 1229.83F, 1154.78F, 
-  1084.32F, 1018.15F, 956.024F, 897.687F, 
-  842.910F, 791.475F, 743.179F, 697.830F, 
-  655.249F, 615.265F, 577.722F, 542.469F, 
-  509.367F, 478.286F, 449.101F, 421.696F, 
-  395.964F, 371.803F, 349.115F, 327.812F, 
-  307.809F, 289.026F, 271.390F, 254.830F, 
-  239.280F, 224.679F, 210.969F, 198.096F, 
-  186.008F, 174.658F, 164.000F, 153.993F, 
-  144.596F, 135.773F, 127.488F, 119.708F, 
-  112.404F, 105.545F, 99.1046F, 93.0572F, 
-  87.3788F, 82.0469F, 77.0404F, 72.3394F, 
-  67.9252F, 63.7804F, 59.8885F, 56.2341F, 
-  52.8027F, 49.5807F, 46.5553F, 43.7144F, 
-  41.0470F, 38.5423F, 36.1904F, 33.9821F, 
-  31.9085F, 29.9614F, 28.1332F, 26.4165F, 
-  24.8045F, 23.2910F, 21.8697F, 20.5352F, 
-  19.2822F, 18.1056F, 17.0008F, 15.9634F, 
-  14.9893F, 14.0746F, 13.2158F, 12.4094F, 
-  11.6522F, 10.9411F, 10.2735F, 9.64662F, 
-  9.05798F, 8.50526F, 7.98626F, 7.49894F, 
-  7.04135F, 6.61169F, 6.20824F, 5.82941F, 
-  5.47370F, 5.13970F, 4.82607F, 4.53158F, 
-  4.25507F, 3.99542F, 3.75162F, 3.52269F, 
-  3.30774F, 3.10590F, 2.91638F, 2.73842F, 
-  2.57132F, 2.41442F, 2.26709F, 2.12875F, 
-  1.99885F, 1.87688F, 1.76236F, 1.65482F, 
-  1.55384F, 1.45902F, 1.36999F, 1.28640F, 
+  0.F, 8.81683e+06F, 8.27882e+06F, 7.77365e+06F,
+  7.29930e+06F, 6.85389e+06F, 6.43567e+06F, 6.04296e+06F,
+  5.67422e+06F, 5.32798e+06F, 5.00286e+06F, 4.69759e+06F,
+  4.41094e+06F, 4.14178e+06F, 3.88905e+06F, 3.65174e+06F,
+  3.42891e+06F, 3.21968e+06F, 3.02321e+06F, 2.83873e+06F,
+  2.66551e+06F, 2.50286e+06F, 2.35014e+06F, 2.20673e+06F,
+  2.07208e+06F, 1.94564e+06F, 1.82692e+06F, 1.71544e+06F,
+  1.61076e+06F, 1.51247e+06F, 1.42018e+06F, 1.33352e+06F,
+  1.25215e+06F, 1.17574e+06F, 1.10400e+06F, 1.03663e+06F,
+  973377.F, 913981.F, 858210.F, 805842.F,
+  756669.F, 710497.F, 667142.F, 626433.F,
+  588208.F, 552316.F, 518613.F, 486967.F,
+  457252.F, 429351.F, 403152.F, 378551.F,
+  355452.F, 333762.F, 313396.F, 294273.F,
+  276316.F, 259455.F, 243623.F, 228757.F,
+  214798.F, 201691.F, 189384.F, 177828.F,
+  166977.F, 156788.F, 147221.F, 138237.F,
+  129802.F, 121881.F, 114444.F, 107461.F,
+  100903.F, 94746.3F, 88964.9F, 83536.2F,
+  78438.8F, 73652.5F, 69158.2F, 64938.1F,
+  60975.6F, 57254.9F, 53761.2F, 50480.6F,
+  47400.3F, 44507.9F, 41792.0F, 39241.9F,
+  36847.3F, 34598.9F, 32487.7F, 30505.3F,
+  28643.8F, 26896.0F, 25254.8F, 23713.7F,
+  22266.7F, 20908.0F, 19632.2F, 18434.2F,
+  17309.4F, 16253.1F, 15261.4F, 14330.1F,
+  13455.7F, 12634.6F, 11863.7F, 11139.7F,
+  10460.0F, 9821.72F, 9222.39F, 8659.64F,
+  8131.23F, 7635.06F, 7169.17F, 6731.70F,
+  6320.93F, 5935.23F, 5573.06F, 5232.99F,
+  4913.67F, 4613.84F, 4332.30F, 4067.94F,
+  3819.72F, 3586.64F, 3367.78F, 3162.28F,
+  2969.31F, 2788.13F, 2617.99F, 2458.24F,
+  2308.24F, 2167.39F, 2035.14F, 1910.95F,
+  1794.35F, 1684.85F, 1582.04F, 1485.51F,
+  1394.86F, 1309.75F, 1229.83F, 1154.78F,
+  1084.32F, 1018.15F, 956.024F, 897.687F,
+  842.910F, 791.475F, 743.179F, 697.830F,
+  655.249F, 615.265F, 577.722F, 542.469F,
+  509.367F, 478.286F, 449.101F, 421.696F,
+  395.964F, 371.803F, 349.115F, 327.812F,
+  307.809F, 289.026F, 271.390F, 254.830F,
+  239.280F, 224.679F, 210.969F, 198.096F,
+  186.008F, 174.658F, 164.000F, 153.993F,
+  144.596F, 135.773F, 127.488F, 119.708F,
+  112.404F, 105.545F, 99.1046F, 93.0572F,
+  87.3788F, 82.0469F, 77.0404F, 72.3394F,
+  67.9252F, 63.7804F, 59.8885F, 56.2341F,
+  52.8027F, 49.5807F, 46.5553F, 43.7144F,
+  41.0470F, 38.5423F, 36.1904F, 33.9821F,
+  31.9085F, 29.9614F, 28.1332F, 26.4165F,
+  24.8045F, 23.2910F, 21.8697F, 20.5352F,
+  19.2822F, 18.1056F, 17.0008F, 15.9634F,
+  14.9893F, 14.0746F, 13.2158F, 12.4094F,
+  11.6522F, 10.9411F, 10.2735F, 9.64662F,
+  9.05798F, 8.50526F, 7.98626F, 7.49894F,
+  7.04135F, 6.61169F, 6.20824F, 5.82941F,
+  5.47370F, 5.13970F, 4.82607F, 4.53158F,
+  4.25507F, 3.99542F, 3.75162F, 3.52269F,
+  3.30774F, 3.10590F, 2.91638F, 2.73842F,
+  2.57132F, 2.41442F, 2.26709F, 2.12875F,
+  1.99885F, 1.87688F, 1.76236F, 1.65482F,
+  1.55384F, 1.45902F, 1.36999F, 1.28640F,
   1.20790F, 1.13419F, 1.06499F, 1.F
 };
 
@@ -767,12 +767,12 @@ void _vp_remove_floor(vorbis_look_psy *p,
                       float *mdct,
                       int *codedflr,
                       float *residue,
-                      int sliding_lowpass){ 
+                      int sliding_lowpass){
 
   int i,n=p->n;
- 
+
   if(sliding_lowpass>n)sliding_lowpass=n;
-  
+
   for(i=0;i<sliding_lowpass;i++){
     residue[i]=
       mdct[i]*FLOOR1_fromdB_INV_LOOKUP[codedflr[i]];
@@ -783,7 +783,7 @@ void _vp_remove_floor(vorbis_look_psy *p,
 }
 
 void _vp_noisemask(vorbis_look_psy *p,
-                   float *logmdct, 
+                   float *logmdct,
                    float *logmask){
 
   int i,n=p->n;
@@ -798,7 +798,7 @@ void _vp_noisemask(vorbis_look_psy *p,
                       p->vi->noisewindowfixed);
 
   for(i=0;i<n;i++)work[i]=logmdct[i]-work[i];
-  
+
 #if 0
   {
     static int seq=0;
@@ -807,12 +807,12 @@ void _vp_noisemask(vorbis_look_psy *p,
     for(i=0;i<n;i++){
       work2[i]=logmask[i]+work[i];
     }
-    
+
     if(seq&1)
       _analysis_output("median2R",seq/2,work,n,1,0,0);
     else
       _analysis_output("median2L",seq/2,work,n,1,0,0);
-    
+
     if(seq&1)
       _analysis_output("envelope2R",seq/2,work2,n,1,0,0);
     else
@@ -841,11 +841,11 @@ void _vp_tonemask(vorbis_look_psy *p,
   float *seed=alloca(sizeof(*seed)*p->total_octave_lines);
   float att=local_specmax+p->vi->ath_adjatt;
   for(i=0;i<p->total_octave_lines;i++)seed[i]=NEGINF;
-  
+
   /* set the ATH (floating below localmax, not global max by a
      specified att) */
   if(att<p->vi->ath_maxatt)att=p->vi->ath_maxatt;
-  
+
   for(i=0;i<n;i++)
     logmask[i]=p->ath[i]+att;
 
@@ -867,7 +867,7 @@ void _vp_offset_and_mix(vorbis_look_psy *p,
   float toneatt=p->vi->tone_masteratt[offset_select];
 
   cx = p->m_val;
-  
+
   for(i=0;i<n;i++){
     float val= noise[i]+p->noiseoffset[offset_select][i];
     if(val>p->vi->noisemaxsupp)val=p->vi->noisemaxsupp;
@@ -876,39 +876,39 @@ void _vp_offset_and_mix(vorbis_look_psy *p,
 
     /* AoTuV */
     /** @ M1 **
-        The following codes improve a noise problem.  
+        The following codes improve a noise problem.
         A fundamental idea uses the value of masking and carries out
-        the relative compensation of the MDCT. 
-        However, this code is not perfect and all noise problems cannot be solved. 
+        the relative compensation of the MDCT.
+        However, this code is not perfect and all noise problems cannot be solved.
         by Aoyumi @ 2004/04/18
     */
 
     if(offset_select == 1) {
       coeffi = -17.2;       /* coeffi is a -17.2dB threshold */
       val = val - logmdct[i];  /* val == mdct line value relative to floor in dB */
-      
+
       if(val > coeffi){
         /* mdct value is > -17.2 dB below floor */
-        
+
         de = 1.0-((val-coeffi)*0.005*cx);
         /* pro-rated attenuation:
-           -0.00 dB boost if mdct value is -17.2dB (relative to floor) 
-           -0.77 dB boost if mdct value is 0dB (relative to floor) 
-           -1.64 dB boost if mdct value is +17.2dB (relative to floor) 
+           -0.00 dB boost if mdct value is -17.2dB (relative to floor)
+           -0.77 dB boost if mdct value is 0dB (relative to floor)
+           -1.64 dB boost if mdct value is +17.2dB (relative to floor)
            etc... */
-        
+
         if(de < 0) de = 0.0001;
       }else
         /* mdct value is <= -17.2 dB below floor */
-        
+
         de = 1.0-((val-coeffi)*0.0003*cx);
       /* pro-rated attenuation:
-         +0.00 dB atten if mdct value is -17.2dB (relative to floor) 
-         +0.45 dB atten if mdct value is -34.4dB (relative to floor) 
+         +0.00 dB atten if mdct value is -17.2dB (relative to floor)
+         +0.45 dB atten if mdct value is -34.4dB (relative to floor)
          etc... */
-      
+
       mdct[i] *= de;
-      
+
     }
   }
 }
@@ -926,16 +926,16 @@ float _vp_ampmax_decay(float amp,vorbis_dsp_state *vd){
   return(amp);
 }
 
-static void couple_lossless(float A, float B, 
+static void couple_lossless(float A, float B,
                             float *qA, float *qB){
   int test1=fabs(*qA)>fabs(*qB);
   test1-= fabs(*qA)<fabs(*qB);
-  
+
   if(!test1)test1=((fabs(A)>fabs(B))<<1)-1;
   if(test1==1){
     *qB=(*qA>0.f?*qA-*qB:*qB-*qA);
   }else{
-    float temp=*qB;  
+    float temp=*qB;
     *qB=(*qB>0.f?*qA-*qB:*qB-*qA);
     *qA=temp;
   }
@@ -947,19 +947,19 @@ static void couple_lossless(float A, float B,
 }
 
 static const float hypot_lookup[32]={
-  -0.009935, -0.011245, -0.012726, -0.014397, 
-  -0.016282, -0.018407, -0.020800, -0.023494, 
-  -0.026522, -0.029923, -0.033737, -0.038010, 
-  -0.042787, -0.048121, -0.054064, -0.060671, 
-  -0.068000, -0.076109, -0.085054, -0.094892, 
-  -0.105675, -0.117451, -0.130260, -0.144134, 
-  -0.159093, -0.175146, -0.192286, -0.210490, 
+  -0.009935, -0.011245, -0.012726, -0.014397,
+  -0.016282, -0.018407, -0.020800, -0.023494,
+  -0.026522, -0.029923, -0.033737, -0.038010,
+  -0.042787, -0.048121, -0.054064, -0.060671,
+  -0.068000, -0.076109, -0.085054, -0.094892,
+  -0.105675, -0.117451, -0.130260, -0.144134,
+  -0.159093, -0.175146, -0.192286, -0.210490,
   -0.229718, -0.249913, -0.271001, -0.292893};
 
 static void precomputed_couple_point(float premag,
                                      int floorA,int floorB,
                                      float *mag, float *ang){
-  
+
   int test=(floorA>floorB)-1;
   int offset=31-abs(floorA-floorB);
   float floormag=hypot_lookup[((offset<0)-1)&offset]+1.f;
@@ -1003,11 +1003,11 @@ float **_vp_quantize_couple_memo(vorbis_block *vb,
                                  vorbis_look_psy *p,
                                  vorbis_info_mapping0 *vi,
                                  float **mdct){
-  
+
   int i,j,n=p->n;
   float **ret=_vorbis_block_alloc(vb,vi->coupling_steps*sizeof(*ret));
   int limit=g->coupling_pointlimit[p->vi->blockflag][PACKETBLOBS/2];
-  
+
   for(i=0;i<vi->coupling_steps;i++){
     float *mdctM=mdct[vi->coupling_mag[i]];
     float *mdctA=mdct[vi->coupling_ang[i]];
@@ -1039,10 +1039,10 @@ int **_vp_quantize_couple_sort(vorbis_block *vb,
     int **ret=_vorbis_block_alloc(vb,vi->coupling_steps*sizeof(*ret));
     int partition=p->vi->normal_partition;
     float **work=alloca(sizeof(*work)*partition);
-    
+
     for(i=0;i<vi->coupling_steps;i++){
       ret[i]=_vorbis_block_alloc(vb,n*sizeof(**ret));
-      
+
       for(j=0;j<n;j+=partition){
         for(k=0;k<partition;k++)work[k]=mags[i]+k+j;
         qsort(work,partition,sizeof(*work),apsort);
@@ -1084,17 +1084,17 @@ void _vp_noise_normalize(vorbis_look_psy *p,
   if(vi->normal_channel_p){
     for(;j<start;j++)
       out[j]=rint(in[j]);
-    
+
     for(;j+partition<=n;j+=partition){
       float acc=0.;
       int k;
-      
+
       for(i=j;i<j+partition;i++)
         acc+=in[i]*in[i];
-      
+
       for(i=0;i<partition;i++){
         k=sortedindex[i+j-start];
-        
+
         if(in[k]*in[k]>=.25f){
           out[k]=rint(in[k]);
           acc-=in[k]*in[k];
@@ -1105,17 +1105,17 @@ void _vp_noise_normalize(vorbis_look_psy *p,
           acc-=1.;
         }
       }
-      
+
       for(;i<partition;i++){
         k=sortedindex[i+j-start];
         out[k]=0.;
       }
     }
   }
-  
+
   for(;j<n;j++)
     out[j]=rint(in[j]);
-  
+
 }
 
 void _vp_couple(int blobno,
@@ -1147,7 +1147,7 @@ void _vp_couple(int blobno,
        nonzero channels. */
     if(nonzero[vi->coupling_mag[i]] ||
        nonzero[vi->coupling_ang[i]]){
-     
+
 
       float *rM=res[vi->coupling_mag[i]];
       float *rA=res[vi->coupling_ang[i]];
@@ -1161,13 +1161,13 @@ void _vp_couple(int blobno,
       int limit=g->coupling_pointlimit[p->vi->blockflag][blobno];
       int pointlimit=limit;
 
-      nonzero[vi->coupling_mag[i]]=1; 
-      nonzero[vi->coupling_ang[i]]=1; 
+      nonzero[vi->coupling_mag[i]]=1;
+      nonzero[vi->coupling_ang[i]]=1;
 
        /* The threshold of a stereo is changed with the size of n */
        if(n > 1000)
-         postpoint=stereo_threshholds_limited[g->coupling_postpointamp[blobno]]; 
- 
+         postpoint=stereo_threshholds_limited[g->coupling_postpointamp[blobno]];
+
       for(j=0;j<p->n;j+=partition){
         float acc=0.f;
 
@@ -1192,7 +1192,7 @@ void _vp_couple(int blobno,
             qA[l]=0.;
           }
         }
-        
+
         if(p->vi->normal_point_p){
           for(k=0;k<partition && acc>=p->vi->normal_thresh;k++){
             int l=mag_sort[i][j+k];
@@ -1200,7 +1200,7 @@ void _vp_couple(int blobno,
               qM[l]=unitnorm(qM[l]);
               acc-=1.f;
             }
-          } 
+          }
         }
       }
     }
@@ -1209,22 +1209,22 @@ void _vp_couple(int blobno,
 
 /* AoTuV */
 /** @ M2 **
-   The boost problem by the combination of noise normalization and point stereo is eased. 
-   However, this is a temporary patch. 
+   The boost problem by the combination of noise normalization and point stereo is eased.
+   However, this is a temporary patch.
    by Aoyumi @ 2004/04/18
 */
 
 void hf_reduction(vorbis_info_psy_global *g,
-                      vorbis_look_psy *p, 
+                      vorbis_look_psy *p,
                       vorbis_info_mapping0 *vi,
                       float **mdct){
- 
+
   int i,j,n=p->n, de=0.3*p->m_val;
   int limit=g->coupling_pointlimit[p->vi->blockflag][PACKETBLOBS/2];
-  
+
   for(i=0; i<vi->coupling_steps; i++){
     /* for(j=start; j<limit; j++){} // ???*/
-    for(j=limit; j<n; j++) 
+    for(j=limit; j<n; j++)
       mdct[i][j] *= (1.0 - de*((float)(j-limit) / (float)(n-limit)));
   }
 }

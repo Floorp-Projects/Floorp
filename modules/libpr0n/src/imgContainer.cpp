@@ -153,6 +153,9 @@ NS_IMETHODIMP imgContainer::ExtractCurrentFrame(const nsIntRect &aRegion, imgICo
   nsIntRect framerect = frame->GetRect();
   framerect.IntersectRect(framerect, aRegion);
 
+  if (framerect.IsEmpty())
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsAutoPtr<imgFrame> subframe;
   nsresult rv = frame->Extract(framerect, getter_Transfers(subframe));
   if (NS_FAILED(rv))

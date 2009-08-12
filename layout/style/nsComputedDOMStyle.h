@@ -82,6 +82,10 @@ public:
     return mContent;
   }
 
+  static already_AddRefed<nsStyleContext>
+  GetStyleContextForContent(nsIContent* aContent, nsIAtom* aPseudo,
+                            nsIPresShell* aPresShell);
+
 private:
   void AssertFlushedPendingReflows() {
     NS_ASSERTION(mFlushedPendingReflows,

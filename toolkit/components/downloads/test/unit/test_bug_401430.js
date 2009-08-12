@@ -48,8 +48,7 @@ const resultFileName = "test\u00e3\u041b\u3056" + Date.now() + ".doc";
 
 function checkResult() {
   // delete the saved file (this doesn't affect the "recent documents" list)
-  var resultFile = dirSvc.get("ProfD", Ci.nsIFile);
-  resultFile.append(resultFileName);
+  var resultFile = do_get_file(resultFileName);
   resultFile.remove(false);
 
   do_check_true(checkRecentDocsFor(resultFileName));
@@ -99,7 +98,7 @@ function run_test()
   do_test_pending();
 
   httpserv = new nsHttpServer();
-  httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
+  httpserv.registerDirectory("/", do_get_cwd());
   httpserv.start(4444);
 
   var listener = {
@@ -118,7 +117,9 @@ function run_test()
   dm.addListener(listener);
   dm.addListener(getDownloadListener());
 
-  var dl = addDownload({resultFileName: resultFileName});
-
-  cleanup();
+  // need to save the file to the CWD, because the profile dir is in $TEMP,
+  // and Windows apparently doesn't like putting things from $TEMP into
+  // the recent files list.
+  var dl = addDownload({resultFileName: resultFileName,
+			targetFile: do_get_file(resultFileName, true)});
 }

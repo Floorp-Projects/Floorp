@@ -516,7 +516,7 @@ PR_IMPLEMENT(void)
         case PRTraceUnLockHandles :
             PR_LOG( lm, PR_LOG_DEBUG,
                 ("PRSetTraceOption: PRTraceUnLockHandles"));
-            PR_Lock( traceLock );
+            PR_Unlock( traceLock );
             break;
 
         default:

@@ -80,8 +80,10 @@ const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
 const KEY_APPDIR          = "XCurProcD";
 const KEY_GRED            = "GreD";
 #ifdef XP_WIN
+#ifndef WINCE
 const KEY_UPDROOT         = "UpdRootD";
 const KEY_UAPPDATA        = "UAppData";
+#endif
 #endif
 
 const DIR_UPDATES         = "updates";
@@ -242,12 +244,14 @@ function getDirInternal(key, pathArray, shouldCreate, update) {
                     getService(Ci.nsIProperties);
   var dir = fileLocator.get(key, Ci.nsIFile);
 #ifdef XP_WIN
+#ifndef WINCE
   if (update) {
     try {
       dir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
     } catch (e) {
     }
   }
+#endif
 #endif
   for (var i = 0; i < pathArray.length; ++i) {
     dir.append(pathArray[i]);
@@ -356,10 +360,12 @@ function getUpdatesDir(key) {
   else {
     updateDir = fileLocator.get(KEY_APPDIR, Ci.nsIFile);
 #ifdef XP_WIN
+#ifndef WINCE
     try {
       updateDir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
     } catch (e) {
     }
+#endif
 #endif
   }
   updateDir.append(DIR_UPDATES);
@@ -1196,6 +1202,7 @@ UpdateService.prototype = {
 
     var updRootKey = null;
 #ifdef XP_WIN
+#ifndef WINCE
     function findPreviousUpdate(key) {
       var updateDir = getUpdatesDir(key);
       if (updateDir.exists()) {
@@ -1216,6 +1223,7 @@ UpdateService.prototype = {
     // required to migrate from older versions.
     if (status == null)
       findPreviousUpdate(KEY_APPDIR);
+#endif
 #endif
 
     if (status == STATE_DOWNLOADING) {

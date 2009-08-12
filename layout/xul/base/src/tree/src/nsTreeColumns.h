@@ -107,7 +107,10 @@ protected:
 
   nsTreeColumn* GetNext() { return mNext; }
   nsTreeColumn* GetPrevious() { return mPrevious; }
-  void SetNext(nsTreeColumn* aNext) { NS_IF_ADDREF(mNext = aNext); }
+  void SetNext(nsTreeColumn* aNext) {
+    NS_ASSERTION(!mNext, "already have a next sibling");
+    NS_IF_ADDREF(mNext = aNext);
+  }
   void SetPrevious(nsTreeColumn* aPrevious) { mPrevious = aPrevious; }
 
 private:

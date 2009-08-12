@@ -107,10 +107,6 @@ JSExtendedClass sXPC_COW_JSClass = {
   JSCLASS_NO_RESERVED_MEMBERS
 };
 
-static JSBool
-XPC_COW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                 jsval *rval);
-
 // Throws an exception on context |cx|.
 static inline JSBool
 ThrowException(nsresult rv, JSContext *cx)
@@ -260,7 +256,8 @@ XPC_COW_RewrapForChrome(JSContext *cx, JSObject *wrapperObj, jsval *vp)
 
   XPCWrappedNative *wn;
   if (IS_WRAPPER_CLASS(STOBJ_GET_CLASS(obj)) &&
-      (wn = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj))) {
+      (wn = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj)) &&
+      !nsXPCWrappedJSClass::IsWrappedJS(wn->Native())) {
     // Return an explicit XPCNativeWrapper in case "chrome" code happens to be
     // XBL code cloned into an untrusted context.
     return XPCNativeWrapperCtor(cx, obj, 1, vp, vp);
@@ -356,10 +353,6 @@ static JSBool
 XPC_COW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
                          JSBool isSet)
 {
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
-    return JS_TRUE;
-  }
-
   obj = GetWrapper(obj);
   if (!obj) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
@@ -450,26 +443,6 @@ XPC_COW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
-    jsval oldSlotVal;
-    if (!::JS_GetReservedSlot(cx, obj, XPCWrapper::sFlagsSlot, &oldSlotVal) ||
-        !::JS_SetReservedSlot(cx, obj, XPCWrapper::sFlagsSlot,
-                              INT_TO_JSVAL(JSVAL_TO_INT(oldSlotVal) |
-                                           FLAG_RESOLVING))) {
-      return JS_FALSE;
-    }
-
-    JSBool ok = JS_DefineFunction(cx, obj, "toString",
-                                  XPC_COW_toString, 0, 0) != nsnull;
-
-    if (ok && (ok = ::JS_SetReservedSlot(cx, obj, XPCWrapper::sFlagsSlot,
-                                         oldSlotVal))) {
-      *objp = obj;
-    }
-
-    return ok;
-  }
-
   return XPCWrapper::NewResolve(cx, obj, JS_TRUE, wrappedObj, id, flags, objp);
 }
 
@@ -485,10 +458,6 @@ XPC_COW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
   if (!wrappedObj) {
     // Converting the prototype to something.
-
-    if (type == JSTYPE_STRING || type == JSTYPE_VOID) {
-      return XPC_COW_toString(cx, obj, 0, nsnull, vp);
-    }
 
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
@@ -587,38 +556,6 @@ static JSObject *
 XPC_COW_WrappedObject(JSContext *cx, JSObject *obj)
 {
   return GetWrappedObject(cx, obj);
-}
-
-static JSBool
-XPC_COW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                 jsval *rval)
-{
-  obj = GetWrapper(obj);
-  if (!obj) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
-  }
-
-  JSObject *wrappedObj = GetWrappedObject(cx, obj);
-  if (!wrappedObj) {
-    // Someone's calling toString on our prototype.
-    NS_NAMED_LITERAL_CSTRING(protoString, "[object XPCCrossOriginWrapper]");
-    JSString *str =
-      JS_NewStringCopyN(cx, protoString.get(), protoString.Length());
-    if (!str) {
-      return JS_FALSE;
-    }
-    *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
-  }
-
-  XPCCallContext ccx(JS_CALLER, cx);
-  if (!ccx.IsValid()) {
-    return ThrowException(NS_ERROR_FAILURE, cx);
-  }
-
-  XPCWrappedNative *wn =
-    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wrappedObj);
-  return XPCWrapper::NativeToString(cx, wn, argc, argv, rval, JS_FALSE);
 }
 
 JSBool

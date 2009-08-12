@@ -286,6 +286,9 @@ nsLineBox::IsEmpty() const
     if (!kid->IsEmpty())
       return PR_FALSE;
   }
+  if (HasBullet()) {
+    return PR_FALSE;
+  }
   return PR_TRUE;
 }
 
@@ -316,6 +319,9 @@ nsLineBox::CachedIsEmpty()
           break;
         }
       }
+    if (HasBullet()) {
+      result = PR_FALSE;
+    }
   }
 
   mFlags.mEmptyCacheValid = PR_TRUE;

@@ -53,7 +53,10 @@ PL_strlen(const char *str)
      * we don't have ultra long strings that overflow an int32
      */ 
     if( sizeof(PRUint32) < sizeof(size_t) )
-        PR_ASSERT(l <= PR_INT32_MAX);
+    {
+        if( l > PR_INT32_MAX )
+            PR_Assert("l <= PR_INT32_MAX", __FILE__, __LINE__);
+    }
 
     return (PRUint32)l;
 }

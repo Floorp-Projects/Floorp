@@ -63,7 +63,6 @@
 #include "nsWeakReference.h"
 
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIImage.h"
 #include "nsDOMError.h"
 #include "nsIJSRuntimeService.h"
 

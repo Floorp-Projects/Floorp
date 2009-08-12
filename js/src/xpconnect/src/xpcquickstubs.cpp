@@ -839,93 +839,42 @@ getNativeFromWrapper(XPCWrappedNative *wrapper,
 JSBool
 xpc_qsUnwrapThisImpl(JSContext *cx,
                      JSObject *obj,
+                     JSObject *callee,
                      const nsIID &iid,
                      void **ppThis,
                      nsISupports **pThisRef,
-                     jsval *vp)
+                     jsval *vp,
+                     XPCLazyCallContext *lccx)
 {
-    // From XPCWrappedNative::GetWrappedNativeOfJSObject.
-    //
-    // Usually IS_WRAPPER_CLASS is true the first time through the while loop,
-    // and the QueryInterface then succeeds.
-
-    NS_ASSERTION(obj, "this == null");
-
     JSObject *cur = obj;
-    while(cur)
+    XPCWrappedNativeTearOff *tearoff;
+    XPCWrappedNative *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, callee, &cur,
+                                                     &tearoff);
+    if(wrapper)
     {
-        JSClass *clazz;
-
-        clazz = STOBJ_GET_CLASS(cur);
-        if(IS_SLIM_WRAPPER_CLASS(clazz))
-        {
-            nsISupports *native =
-                static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
-            if(NS_SUCCEEDED(getNative(native, GetOffsetsFromSlimWrapper(cur),
-                                      cur, iid, ppThis, pThisRef, vp)))
-                return JS_TRUE;
-            *pThisRef = nsnull;
-            return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_OP_ON_WN_PROTO);
-        }
-
-        XPCWrappedNative *wrapper;
-        nsresult rv;
-
-        if(IS_WRAPPER_CLASS(clazz))
-        {
-            wrapper = (XPCWrappedNative*) xpc_GetJSPrivate(cur);
-            NS_ASSERTION(wrapper, "XPCWN wrapping nothing");
-        }
-        else if(clazz == &XPC_WN_Tearoff_JSClass)
-        {
-            wrapper = (XPCWrappedNative*) xpc_GetJSPrivate(STOBJ_GET_PARENT(cur));
-            NS_ASSERTION(wrapper, "XPCWN wrapping nothing");
-        }
-        else
-        {
-            JSObject *unsafeObj = XPCWrapper::Unwrap(cx, cur);
-            if(unsafeObj)
-            {
-                cur = unsafeObj;
-                continue;
-            }
-
-            // This goto is a bug, dutifully copied from
-            // XPCWrappedNative::GetWrappedNativeOfJSObject.
-            goto next;
-        }
-
-        rv = getNativeFromWrapper(wrapper, iid, ppThis, pThisRef, vp);
+        nsresult rv = getNativeFromWrapper(wrapper, iid, ppThis, pThisRef, vp);
         if(NS_SUCCEEDED(rv))
+        {
+            if(lccx)
+                lccx->SetWrapper(cur, wrapper, tearoff);
+            
             return JS_TRUE;
+        }
         if(rv != NS_ERROR_NO_INTERFACE)
             return xpc_qsThrow(cx, rv);
-
-    next:
-        cur = STOBJ_GET_PROTO(cur);
     }
-
-    // If we didn't find a wrapper using the given obj, try again with obj's
-    // outer object, if it's got one.
-
-    JSClass *clazz = STOBJ_GET_CLASS(obj);
-
-    if((clazz->flags & JSCLASS_IS_EXTENDED) &&
-        ((JSExtendedClass*)clazz)->outerObject)
+    else if(cur)
     {
-        JSObject *outer = ((JSExtendedClass*)clazz)->outerObject(cx, obj);
-
-        // Protect against infinite recursion through XOWs.
-        JSObject *unsafeObj;
-        clazz = STOBJ_GET_CLASS(outer);
-        if(clazz == &sXPC_XOW_JSClass.base &&
-           (unsafeObj = XPCWrapper::Unwrap(cx, outer)))
+        nsISupports *native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
+        if(NS_SUCCEEDED(getNative(native, GetOffsetsFromSlimWrapper(cur),
+                                  cur, iid, ppThis, pThisRef, vp)))
         {
-            outer = unsafeObj;
-        }
+            if(lccx)
+                lccx->SetWrapper(cur, nsnull, nsnull);
 
-        if(outer && outer != obj)
-            return xpc_qsUnwrapThisImpl(cx, outer, iid, ppThis, pThisRef, vp);
+            return JS_TRUE;
+        }
     }
 
     *pThisRef = nsnull;
@@ -1125,34 +1074,34 @@ xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval)
 }
 
 JSBool
-xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx, nsISupports *p,
-                         nsWrapperCache *cache, XPCNativeInterface *iface,
-                         jsval *rval)
+xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, nsISupports *p,
+                         nsWrapperCache *cache, const nsIID *iid,
+                         XPCNativeInterface **iface, jsval *rval)
 {
     // From the T_INTERFACE case in XPCConvert::NativeData2JS.
     // This is one of the slowest things quick stubs do.
 
-    JSObject *scope = ccx.GetCurrentJSObject();
-    NS_ASSERTION(scope, "bad ccx");
-
+    JSContext *cx = lccx.GetJSContext();
     if(!iface)
-        return xpc_qsThrow(ccx, NS_ERROR_XPC_BAD_CONVERT_NATIVE);
+        return xpc_qsThrow(cx, NS_ERROR_XPC_BAD_CONVERT_NATIVE);
 
     // XXX The OBJ_IS_NOT_GLOBAL here is not really right. In
     // fact, this code is depending on the fact that the
     // global object will not have been collected, and
     // therefore this NativeInterface2JSObject will not end up
     // creating a new XPCNativeScriptableShared.
+
     nsresult rv;
-    if(!XPCConvert::NativeInterface2JSObject(ccx, rval, nsnull, p, nsnull,
-                                             iface, cache, scope, PR_TRUE,
+    if(!XPCConvert::NativeInterface2JSObject(lccx, rval, nsnull, p,
+                                             iid, iface, cache,
+                                             lccx.GetCurrentJSObject(), PR_TRUE,
                                              OBJ_IS_NOT_GLOBAL, &rv))
     {
         // I can't tell if NativeInterface2JSObject throws JS exceptions
         // or not.  This is a sloppy stab at the right semantics; the
         // method really ought to be fixed to behave consistently.
-        if(!JS_IsExceptionPending(ccx))
-            xpc_qsThrow(ccx, NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED);
+        if(!JS_IsExceptionPending(cx))
+            xpc_qsThrow(cx, NS_FAILED(rv) ? rv : NS_ERROR_UNEXPECTED);
         return JS_FALSE;
     }
 
@@ -1167,9 +1116,8 @@ xpc_qsXPCOMObjectToJsval(XPCCallContext &ccx, nsISupports *p,
 }
 
 JSBool
-xpc_qsVariantToJsval(XPCCallContext &ccx,
+xpc_qsVariantToJsval(XPCLazyCallContext &lccx,
                      nsIVariant *p,
-                     uintN paramNum,
                      jsval *rval)
 {
     // From the T_INTERFACE case in XPCConvert::NativeData2JS.
@@ -1177,11 +1125,11 @@ xpc_qsVariantToJsval(XPCCallContext &ccx,
     if(p)
     {
         nsresult rv;
-        JSBool ok = XPCVariant::VariantDataToJS(ccx, p,
-                                                ccx.GetCurrentJSObject(),
+        JSBool ok = XPCVariant::VariantDataToJS(lccx, p,
+                                                lccx.GetCurrentJSObject(),
                                                 &rv, rval);
         if (!ok)
-            XPCThrower::ThrowBadParam(rv, 0, ccx);
+            xpc_qsThrow(lccx.GetJSContext(), rv);
         return ok;
     }
     *rval = JSVAL_NULL;

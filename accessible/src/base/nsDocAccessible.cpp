@@ -88,6 +88,9 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE),
   mIsLoadCompleteFired(PR_FALSE), mInFlushPendingEvents(PR_FALSE)
 {
+  // XXX aaronl should we use an algorithm for the initial cache size?
+  mAccessNodeCache.Init(kDefaultCacheSize);
+
   // For GTK+ native window, we do nothing here.
   if (!mDOMNode)
     return;
@@ -112,9 +115,6 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
       }
     }
   }
-
-  // XXX aaronl should we use an algorithm for the initial cache size?
-  mAccessNodeCache.Init(kDefaultCacheSize);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
@@ -1797,12 +1797,11 @@ nsDocAccessible::FlushPendingEvents()
     }
   }
   mEventsToFire.Clear(); // Clear out array
+  mInFlushPendingEvents = PR_FALSE;
   NS_RELEASE_THIS(); // Release kung fu death grip
 
   // After a flood of events, reset so that user input flag is off
   nsAccEvent::ResetLastInputState();
-
-  mInFlushPendingEvents = PR_FALSE;
 }
 
 void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)

@@ -48,6 +48,7 @@
 
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
+const PREF_BDM_SCANWHENDONE = "browser.download.manager.scanWhenDone";
 
 const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
@@ -289,14 +290,18 @@ function openDownload(aDownload)
     } catch (e) { }
 
 #ifdef XP_WIN
+#ifndef WINCE
     // On Vista and above, we rely on native security prompting for
-    // downloaded content.
+    // downloaded content unless it's disabled.
     try {
-        var sysInfo = Cc["@mozilla.org/system-info;1"].
-                      getService(Ci.nsIPropertyBag2);
-        if (parseFloat(sysInfo.getProperty("version")) >= 6)
-          dontAsk = true;
+      var sysInfo = Cc["@mozilla.org/system-info;1"].
+                    getService(Ci.nsIPropertyBag2);
+      if (parseFloat(sysInfo.getProperty("version")) >= 6 &&
+          pref.getBoolPref(PREF_BDM_SCANWHENDONE)) {
+        dontAsk = true;
+      }
     } catch (ex) { }
+#endif
 #endif
 
     if (!dontAsk) {

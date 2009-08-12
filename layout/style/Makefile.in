@@ -107,7 +107,6 @@ EXPORTS		= \
 		nsICSSStyleRuleDOMWrapper.h \
 		nsICSSStyleSheet.h \
 		nsIHTMLCSSStyleSheet.h \
-		nsIInspectorCSSUtils.h \
 		nsIStyleRule.h \
 		nsIStyleRuleProcessor.h \
 		nsIStyleSheet.h \
@@ -154,7 +153,6 @@ CPPSRCS		= \
 		nsFontFaceLoader.cpp \
 		nsHTMLCSSStyleSheet.cpp \
 		nsHTMLStyleSheet.cpp \
-		nsInspectorCSSUtils.cpp \
 		nsLayoutStylesheetCache.cpp \
 		nsMediaFeatures.cpp \
 		nsROCSSPrimitiveValue.cpp \

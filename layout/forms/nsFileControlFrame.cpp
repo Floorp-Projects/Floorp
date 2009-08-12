@@ -338,6 +338,8 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   result = filePicker->Show(&mode);
   if (NS_FAILED(result))
     return result;
+  if (mode == nsIFilePicker::returnCancel)
+    return NS_OK;
 
   if (!mFrame) {
     // The frame got destroyed while the filepicker was up.  Don't do
@@ -348,35 +350,30 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   }
   
   // Set property
-  nsAutoString unicodePath;
   nsCOMPtr<nsILocalFile> localFile;
-  if (mode != nsIFilePicker::returnCancel) {
-    result = filePicker->GetFile(getter_AddRefs(localFile));
-    if (localFile) {
-      result = localFile->GetPath(unicodePath);
+  result = filePicker->GetFile(getter_AddRefs(localFile));
+  if (localFile) {
+    nsAutoString unicodePath;
+    result = localFile->GetPath(unicodePath);
+    if (!unicodePath.IsEmpty()) {
+      // Tell mTextFrame that this update of the value is a user initiated
+      // change. Otherwise it'll think that the value is being set by a script
+      // and not fire onchange when it should.
+      PRBool oldState = mFrame->mTextFrame->GetFireChangeEventState();
+      mFrame->mTextFrame->SetFireChangeEventState(PR_TRUE);
+      nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(content);
+      if (fileControl) {
+        fileControl->SetFileName(unicodePath);
+      }
+      
+      mFrame->mTextFrame->SetFireChangeEventState(oldState);
+      // May need to fire an onchange here
+      mFrame->mTextFrame->CheckFireOnChange();
+      return NS_OK;
     }
   }
 
-  nsAutoString oldFileName;
-  nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(content);
-  NS_ENSURE_TRUE(fileControl, NS_ERROR_UNEXPECTED);
-
-  fileControl->GetFileName(oldFileName);
-
-  if (!unicodePath.Equals(oldFileName)) {
-    // Tell mTextFrame that this update of the value is a user initiated
-    // change. Otherwise it'll think that the value is being set by a script
-    // and not fire onchange when it should.
-    PRBool oldState = mFrame->mTextFrame->GetFireChangeEventState();
-    mFrame->mTextFrame->SetFireChangeEventState(PR_TRUE);
-    fileControl->SetFileName(unicodePath);
-      
-    mFrame->mTextFrame->SetFireChangeEventState(oldState);
-    // May need to fire an onchange here
-    mFrame->mTextFrame->CheckFireOnChange();
-  }
-
-  return NS_OK;
+  return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
 }
 
 nscoord

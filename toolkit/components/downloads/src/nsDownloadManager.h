@@ -252,7 +252,7 @@ protected:
   // Virus scanner for windows
 #ifdef DOWNLOAD_SCANNER
 private:
-  nsRefPtr<nsDownloadScanner> mScanner;
+  nsDownloadScanner* mScanner;
 #endif
 
 private:

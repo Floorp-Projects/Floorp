@@ -493,6 +493,17 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
 #endif
         break;
+    case eMetric_TouchEnabled:
+        aMetric = 0;
+#ifndef WINCE
+        PRInt32 touchCapabilities;
+        touchCapabilities = ::GetSystemMetrics(SM_DIGITIZER);
+        if ((touchCapabilities & NID_READY) && 
+           (touchCapabilities & (NID_EXTERNAL_TOUCH | NID_INTEGRATED_TOUCH))) {
+            aMetric = 1;
+        }
+#endif
+        break;
     case eMetric_WindowsDefaultTheme:
         aMetric = 0;
 #ifndef WINCE

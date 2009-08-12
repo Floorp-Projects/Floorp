@@ -1,0 +1,12 @@
+<html>
+    <body>
+        <div id="foo">
+            <script>
+                function get(x) { return x }
+                obj = {};
+                obj.__proto__ = get(document.all);
+                obj.foo
+            </script>
+        </div>
+    </body>
+</html>

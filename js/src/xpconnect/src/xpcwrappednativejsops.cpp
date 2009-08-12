@@ -1131,6 +1131,10 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
         if(!si->GetFlags().WantNewResolve())
             return retval;
 
+        NS_ASSERTION(si->GetFlags().AllowPropModsToPrototype() &&
+                     !si->GetFlags().AllowPropModsDuringResolve(),
+                     "We don't support these flags for slim wrappers!");
+
         rv = si->GetCallback()->NewResolve(nsnull, cx, obj, idval, flags,
                                            &obj2FromScriptable, &retval);
         if(NS_FAILED(rv))

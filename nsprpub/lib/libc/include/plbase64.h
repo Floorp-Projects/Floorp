@@ -57,6 +57,10 @@ PR_BEGIN_EXTERN_C
  * be terminated with an extra null character.  It is the caller's 
  * responsibility to free the result when it is allocated.  A null is returned 
  * if the allocation fails.
+ *
+ * NOTE: when calculating ((srclen + 2)/3)*4), first ensure that
+ *     srclen <= (PR_UINT32_MAX/4) * 3
+ * to avoid PRUint32 overflow.
  */
 
 PR_EXTERN(char *)
@@ -83,6 +87,12 @@ PL_Base64Encode
  * result *will* be terminated with an extra null character.  It is the
  * caller's responsibility to free the result when it is allocated.  A null
  * is retuned if the allocation fails, or if the source is not well-coded.
+ *
+ * NOTE: when calculating (srclen * 3)/4, first ensure that 
+ *     srclen <= PR_UINT32_MAX/3
+ * to avoid PRUint32 overflow.  Alternatively, calculate
+ *     (srclen/4) * 3 + ((srclen%4) * 3)/4
+ * which is equivalent but doesn't overflow for any value of srclen.
  */
 
 PR_EXTERN(char *)

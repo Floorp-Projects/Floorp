@@ -333,11 +333,6 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
                                        LPARAM lParam)
 {
     switch (msg) {
-        case WM_CALLMETHOD:
-        {
-            MethodInfo *info = (MethodInfo *)lParam;
-            return info->Invoke();
-        }
 #ifndef WINCE
         case WM_SYSCOLORCHANGE:
         {

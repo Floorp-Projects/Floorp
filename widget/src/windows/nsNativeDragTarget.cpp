@@ -440,9 +440,13 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   winDragService->SetDroppedLocal();
 
   // tell the drag service we're done with the session
-  POINT pos;
-  GetCursorPos(&pos);
-  winDragService->SetDragEndPoint(nsIntPoint(pos.x, pos.y));
+  // Use GetMessagePos to get the position of the mouse at the last message
+  // seen by the event loop. (Bug 489729)
+  DWORD pos = ::GetMessagePos();
+  POINT cpos;
+  cpos.x = GET_X_LPARAM(pos);
+  cpos.y = GET_Y_LPARAM(pos);
+  winDragService->SetDragEndPoint(nsIntPoint(cpos.x, cpos.y));
   serv->EndDragSession(PR_TRUE);
 
   // release the ref that was taken in DragEnter

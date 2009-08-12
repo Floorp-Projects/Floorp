@@ -75,8 +75,10 @@ class imgIRequest;
 #define NS_STYLE_INHERIT_MASK             0x00ffffff
 
 // Additional bits for nsStyleContext's mBits:
-// A bit to test whether or not we have any text decorations.
+// See nsStyleContext::HasTextDecorations
 #define NS_STYLE_HAS_TEXT_DECORATIONS     0x01000000
+// See nsStyleContext::HasPseudoElementData.
+#define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA  0x02000000
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_GC_MARK              0x02000000
@@ -90,7 +92,9 @@ struct nsStyleFont {
   nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext);
   nsStyleFont(const nsStyleFont& aStyleFont);
   nsStyleFont(nsPresContext *aPresContext);
-  ~nsStyleFont(void) {}
+  ~nsStyleFont(void) {
+    MOZ_COUNT_DTOR(nsStyleFont);
+  }
 
   nsChangeHint CalcDifference(const nsStyleFont& aOther) const;
 #ifdef DEBUG
@@ -189,7 +193,9 @@ private:
 struct nsStyleColor {
   nsStyleColor(nsPresContext* aPresContext);
   nsStyleColor(const nsStyleColor& aOther);
-  ~nsStyleColor(void) {}
+  ~nsStyleColor(void) {
+    MOZ_COUNT_DTOR(nsStyleColor);
+  }
 
   nsChangeHint CalcDifference(const nsStyleColor& aOther) const;
 #ifdef DEBUG
@@ -420,7 +426,9 @@ struct nsStyleBackground {
 struct nsStyleMargin {
   nsStyleMargin(void);
   nsStyleMargin(const nsStyleMargin& aMargin);
-  ~nsStyleMargin(void) {}
+  ~nsStyleMargin(void) {
+    MOZ_COUNT_DTOR(nsStyleMargin);
+  }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsPresContext* aContext);
@@ -451,7 +459,9 @@ protected:
 struct nsStylePadding {
   nsStylePadding(void);
   nsStylePadding(const nsStylePadding& aPadding);
-  ~nsStylePadding(void) {}
+  ~nsStylePadding(void) {
+    MOZ_COUNT_DTOR(nsStylePadding);
+  }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsPresContext* aContext);
@@ -810,7 +820,9 @@ protected:
 struct nsStyleOutline {
   nsStyleOutline(nsPresContext* aPresContext);
   nsStyleOutline(const nsStyleOutline& aOutline);
-  ~nsStyleOutline(void) {}
+  ~nsStyleOutline(void) {
+    MOZ_COUNT_DTOR(nsStyleOutline);
+  }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
@@ -1025,7 +1037,9 @@ struct nsStyleText {
 struct nsStyleVisibility {
   nsStyleVisibility(nsPresContext* aPresContext);
   nsStyleVisibility(const nsStyleVisibility& aVisibility);
-  ~nsStyleVisibility() {}
+  ~nsStyleVisibility() {
+    MOZ_COUNT_DTOR(nsStyleVisibility);
+  }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
@@ -1057,7 +1071,9 @@ struct nsStyleVisibility {
 struct nsStyleDisplay {
   nsStyleDisplay();
   nsStyleDisplay(const nsStyleDisplay& aOther); 
-  ~nsStyleDisplay() {}
+  ~nsStyleDisplay() {
+    MOZ_COUNT_DTOR(nsStyleDisplay);
+  }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);

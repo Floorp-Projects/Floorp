@@ -1,0 +1,21 @@
+<html manifest="gZipOfflineChild.cacheManifest">
+<head>
+  <!-- This file is gzipped to create gZipOfflineChild.html -->
+<title></title>
+<script type="text/javascript">
+
+function finish(success) {
+  window.parent.postMessage(success, "*");
+}
+
+applicationCache.oncached = function() { finish("oncache"); }
+applicationCache.onnoupdate = function() { finish("onupdate"); }
+applicationCache.onerror = function() { finish("onerror"); }
+
+</script>
+</head>
+
+<body>
+<h1>Child</h1>
+</body>
+</html>

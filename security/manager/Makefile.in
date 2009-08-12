@@ -58,8 +58,10 @@ SOFTOKEN3_CHK = $(DLL_PREFIX)softokn3.chk
 
 ifndef NSS_DISABLE_DBM
 NSSDBM3_LIB = $(DLL_PREFIX)nssdbm3$(DLL_SUFFIX)
+NSSDBM3_CHK = $(DLL_PREFIX)nssdbm3.chk
 else
 NSSDBM3_LIB = 
+NSSDBM3_CHK = 
 endif
 
 ifndef MOZ_NATIVE_NSS
@@ -323,6 +325,9 @@ ifndef SKIP_CHK
 endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
 ifndef NSS_DISABLE_DBM
+ifndef SKIP_CHK
+	$(INSTALL) -m 644 $(DIST)/lib/$(NSSDBM3_CHK) $(DIST)/bin
+endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DIST)/bin
 endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
@@ -382,6 +387,9 @@ ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DESTDIR)$(mozappdir)
 endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DESTDIR)$(mozappdir)
+ifndef SKIP_CHK
+	$(SYSINSTALL) -m 644 $(DIST)/lib/$(NSSDBM3_CHK) $(DESTDIR)$(mozappdir)
+endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSSUTIL3_LIB) $(DESTDIR)$(mozappdir)

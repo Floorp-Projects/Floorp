@@ -120,7 +120,9 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsITheme.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
 #include "imgIContainer.h"
@@ -164,10 +166,11 @@
 #include <mmsystem.h> // needed for WIN32_LEAN_AND_MEAN
 #include <zmouse.h>
 #include <pbt.h>
+#include <richedit.h>
 #endif // !defined(WINCE)
 
 #if defined(ACCESSIBILITY)
-#include "OLEIDL.H"
+#include "oleidl.h"
 #include <winuser.h>
 #if !defined(WINABLEAPI)
 #include <winable.h>
@@ -189,6 +192,105 @@
 #include "nsplugindefs.h"
 
 #include "nsWindowDefs.h"
+
+// For scroll wheel calculations
+#include "nsITimer.h"
+
+/**************************************************************
+ *
+ * nsScrollPrefObserver Class for scroll acceleration prefs
+ *
+ **************************************************************/
+
+class nsScrollPrefObserver : public nsIObserver
+{
+public:
+  nsScrollPrefObserver();
+  int GetScrollAccelerationStart();
+  int GetScrollAccelerationFactor();
+  int GetScrollNumLines();
+  void RemoveObservers();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+private:
+  nsCOMPtr<nsIPrefBranch2> mPrefBranch;
+  int mScrollAccelerationStart;
+  int mScrollAccelerationFactor;
+  int mScrollNumLines;
+};
+
+NS_IMPL_ISUPPORTS1(nsScrollPrefObserver, nsScrollPrefObserver)
+
+nsScrollPrefObserver::nsScrollPrefObserver()
+{
+  nsresult rv;
+  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+
+  rv = mPrefBranch->GetIntPref("mousewheel.acceleration.start",
+                               &mScrollAccelerationStart);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
+                    "Failed to get pref: mousewheel.acceleration.start");
+  rv = mPrefBranch->AddObserver("mousewheel.acceleration.start", 
+                                this, PR_FALSE);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
+                    "Failed to add pref observer: mousewheel.acceleration.start");
+                    
+  rv = mPrefBranch->GetIntPref("mousewheel.acceleration.factor",
+                               &mScrollAccelerationFactor);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
+                    "Failed to get pref: mousewheel.acceleration.factor");
+  rv = mPrefBranch->AddObserver("mousewheel.acceleration.factor", 
+                                this, PR_FALSE);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
+                    "Failed to add pref observer: mousewheel.acceleration.factor");
+                    
+  rv = mPrefBranch->GetIntPref("mousewheel.withnokey.numlines",
+                               &mScrollNumLines);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
+                    "Failed to get pref: mousewheel.withnokey.numlines");
+  rv = mPrefBranch->AddObserver("mousewheel.withnokey.numlines", 
+                                this, PR_FALSE);
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
+                    "Failed to add pref observer: mousewheel.withnokey.numlines");
+}
+
+int nsScrollPrefObserver::GetScrollAccelerationStart()
+{
+  return mScrollAccelerationStart;
+}
+
+int nsScrollPrefObserver::GetScrollAccelerationFactor()
+{
+  return mScrollAccelerationFactor;
+}
+
+int nsScrollPrefObserver::GetScrollNumLines()
+{
+  return mScrollNumLines;
+}
+
+void nsScrollPrefObserver::RemoveObservers()
+{
+  mPrefBranch->RemoveObserver("mousewheel.acceleration.start", this);
+  mPrefBranch->RemoveObserver("mousewheel.acceleration.factor", this);
+  mPrefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
+}
+
+NS_IMETHODIMP nsScrollPrefObserver::Observe(nsISupports *aSubject,
+                                            const char *aTopic,
+                                            const PRUnichar *aData)
+{
+  mPrefBranch->GetIntPref("mousewheel.acceleration.start",
+                          &mScrollAccelerationStart);
+  mPrefBranch->GetIntPref("mousewheel.acceleration.factor",
+                          &mScrollAccelerationFactor);
+  mPrefBranch->GetIntPref("mousewheel.withnokey.numlines",
+                          &mScrollNumLines);
+
+  return NS_OK;
+}
 
 /**************************************************************
  **************************************************************
@@ -291,6 +393,9 @@ static PRBool   gWindowsVisible                   = PR_FALSE;
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
+// Global scroll pref observer for scroll acceleration prefs
+static nsScrollPrefObserver* gScrollPrefObserver  = nsnull;
+
 /**************************************************************
  **************************************************************
  **
@@ -351,6 +456,9 @@ nsWindow::nsWindow() : nsBaseWidget()
   mBrush                = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
   mForeground           = ::GetSysColor(COLOR_WINDOWTEXT);
 
+  // To be used for scroll acceleration
+  mScrollSeriesCounter = 0;
+
   // Global initialization
   if (!sInstanceCount) {
 #if !defined(WINCE)
@@ -359,6 +467,9 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   // Init IME handler
   nsIMM32Handler::Initialize();
+
+  // Init scroll pref observer for scroll acceleration
+  NS_IF_ADDREF(gScrollPrefObserver = new nsScrollPrefObserver());
 
 #ifdef NS_ENABLE_TSF
   nsTextStore::Initialize();
@@ -410,6 +521,9 @@ nsWindow::~nsWindow()
     // delete any of the IME structures that we allocated
     nsIMM32Handler::Terminate();
 #endif // !defined(WINCE)
+
+    gScrollPrefObserver->RemoveObservers();
+    NS_RELEASE(gScrollPrefObserver);
   }
 
 #if !defined(WINCE)
@@ -500,34 +614,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
-
-  // Switch to the "main gui thread" if necessary... This method must
-  // be executed on the "gui thread"...
-
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  if (toolkit && !toolkit->IsGuiThread()) {
-    DWORD_PTR args[7];
-    args[0] = (DWORD_PTR)aParent;
-    args[1] = (DWORD_PTR)&aRect;
-    args[2] = (DWORD_PTR)aHandleEventFunction;
-    args[3] = (DWORD_PTR)aContext;
-    args[4] = (DWORD_PTR)aAppShell;
-    args[5] = (DWORD_PTR)aToolkit;
-    args[6] = (DWORD_PTR)aInitData;
-
-    if (nsnull != aParent) {
-      // nsIWidget parent dispatch
-      MethodInfo info(this, nsWindow::CREATE, 7, args);
-      toolkit->CallMethod(&info);
-      return NS_OK;
-    }
-    else {
-      // Native parent dispatch
-      MethodInfo info(this, nsWindow::CREATE_NATIVE, 5, args);
-      toolkit->CallMethod(&info);
-      return NS_OK;
-    }
-  }
 
   HWND parent;
   if (nsnull != aParent) { // has a nsIWidget parent
@@ -652,15 +738,6 @@ NS_METHOD nsWindow::Destroy()
   // WM_DESTROY has already fired, we're done.
   if (nsnull == mWnd)
     return NS_OK;
-
-  // Switch to the "main gui thread" if necessary. Destroy() must be executed on the
-  // "gui thread".
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  if (toolkit != nsnull && !toolkit->IsGuiThread()) {
-    MethodInfo info(this, nsWindow::DESTROY);
-    toolkit->CallMethod(&info);
-    return NS_ERROR_FAILURE;
-  }
 
   // During the destruction of all of our children, make sure we don't get deleted.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -1438,6 +1515,10 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
         mode = SW_RESTORE;
     }
     ::ShowWindow(mWnd, mode);
+    // we dispatch an activate event here to ensure that the right child window
+    // is focused
+    if (mode == SW_RESTORE || mode == SW_MAXIMIZE)
+      DispatchFocusToTopLevelWindow(NS_ACTIVATE);
   }
   return rv;
 }
@@ -1556,16 +1637,6 @@ NS_METHOD nsWindow::IsEnabled(PRBool *aState)
 
 NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 {
-  // Switch to the "main gui thread" if necessary... This method must
-  // be executed on the "gui thread"...
-  nsToolkit* toolkit = (nsToolkit *)mToolkit;
-  NS_ASSERTION(toolkit != nsnull, "This should never be null!"); // Bug 57044
-  if (toolkit != nsnull && !toolkit->IsGuiThread()) {
-    MethodInfo info(this, nsWindow::SET_FOCUS);
-    toolkit->CallMethod(&info);
-    return NS_ERROR_FAILURE;
-  }
-
   if (mWnd) {
     // Uniconify, if necessary
     HWND toplevelWnd = GetTopLevelHWND(mWnd);
@@ -2616,71 +2687,6 @@ nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
   }
   return NS_OK;
 #endif
-}
-
-/**************************************************************
- **************************************************************
- **
- ** BLOCK: nsSwitchToUIThread impl.
- **
- ** Switch thread to match the thread the widget was created
- ** in so messages will be dispatched.
- **
- **************************************************************
- **************************************************************/
-
-/**************************************************************
- *
- * SECTION: nsSwitchToUIThread::CallMethod
- *
- * Every function that needs a thread switch goes through this function
- * by calling SendMessage (..WM_CALLMETHOD..) in nsToolkit::CallMethod.
- *
- **************************************************************/
-
-BOOL nsWindow::CallMethod(MethodInfo *info)
-{
-  BOOL bRet = TRUE;
-
-  switch (info->methodId) {
-    case nsWindow::CREATE:
-      NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
-      Create((nsIWidget*)(info->args[0]),
-             (nsIntRect&)*(nsIntRect*)(info->args[1]),
-             (EVENT_CALLBACK)(info->args[2]),
-             (nsIDeviceContext*)(info->args[3]),
-             (nsIAppShell *)(info->args[4]),
-             (nsIToolkit*)(info->args[5]),
-             (nsWidgetInitData*)(info->args[6]));
-      break;
-
-    case nsWindow::CREATE_NATIVE:
-      NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
-      Create((nsNativeWidget)(info->args[0]),
-             (nsIntRect&)*(nsIntRect*)(info->args[1]),
-             (EVENT_CALLBACK)(info->args[2]),
-             (nsIDeviceContext*)(info->args[3]),
-             (nsIAppShell *)(info->args[4]),
-             (nsIToolkit*)(info->args[5]),
-             (nsWidgetInitData*)(info->args[6]));
-      return TRUE;
-
-    case nsWindow::DESTROY:
-      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-      Destroy();
-      break;
-
-    case nsWindow::SET_FOCUS:
-      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-      SetFocus(PR_FALSE);
-      break;
-
-    default:
-      bRet = FALSE;
-      break;
-  }
-
-  return bRet;
 }
 
 /**************************************************************
@@ -4029,118 +4035,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_WINDOWPOSCHANGED:
     {
       WINDOWPOS *wp = (LPWINDOWPOS)lParam;
-
-      // We only care about a resize, so filter out things like z-order
-      // changes. Note: there's a WM_MOVE handler above which is why we're
-      // not handling them here...
-      if (0 == (wp->flags & SWP_NOSIZE)) {
-        // XXX Why are we using the client size area? If the size notification
-        // is for the client area then the origin should be (0,0) and not
-        // the window origin in screen coordinates...
-        RECT r;
-        ::GetWindowRect(mWnd, &r);
-        PRInt32 newWidth, newHeight;
-        newWidth = PRInt32(r.right - r.left);
-        newHeight = PRInt32(r.bottom - r.top);
-        nsIntRect rect(wp->x, wp->y, newWidth, newHeight);
-
-#ifdef MOZ_XUL
-        if (eTransparencyTransparent == mTransparencyMode)
-          ResizeTranslucentWindow(newWidth, newHeight);
-#endif
-
-        if (newWidth > mLastSize.width)
-        {
-          RECT drect;
-
-          //getting wider
-          drect.left = wp->x + mLastSize.width;
-          drect.top = wp->y;
-          drect.right = drect.left + (newWidth - mLastSize.width);
-          drect.bottom = drect.top + newHeight;
-
-          ::RedrawWindow(mWnd, &drect, NULL,
-                         RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
-        }
-        if (newHeight > mLastSize.height)
-        {
-          RECT drect;
-
-          //getting taller
-          drect.left = wp->x;
-          drect.top = wp->y + mLastSize.height;
-          drect.right = drect.left + newWidth;
-          drect.bottom = drect.top + (newHeight - mLastSize.height);
-
-          ::RedrawWindow(mWnd, &drect, NULL,
-                         RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
-        }
-
-        mBounds.width  = newWidth;
-        mBounds.height = newHeight;
-        mLastSize.width = newWidth;
-        mLastSize.height = newHeight;
-        ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
-
-        // If we're being minimized, don't send the resize event to Gecko because
-        // it will cause the scrollbar in the content area to go away and we'll
-        // forget the scroll position of the page.  Note that we need to check the
-        // toplevel window, because child windows seem to go to 0x0 on minimize.
-        HWND toplevelWnd = GetTopLevelHWND(mWnd);
-        if (mWnd == toplevelWnd && IsIconic(toplevelWnd)) {
-          result = PR_FALSE;
-          break;
-        }
-
-        // recalculate the width and height
-        // this time based on the client area
-        if (::GetClientRect(mWnd, &r)) {
-          rect.width  = PRInt32(r.right - r.left);
-          rect.height = PRInt32(r.bottom - r.top);
-        }
-        result = OnResize(rect);
-      }
-
-      /* handle size mode changes
-         (the framechanged message seems a handy place to hook in,
-         because it happens early enough (WM_SIZE is too late) and
-         because in testing it seems an accurate harbinger of
-         an impending min/max/restore change (WM_NCCALCSIZE would
-         also work, but it's also sent when merely resizing.)) */
-      if (wp->flags & SWP_FRAMECHANGED && ::IsWindowVisible(mWnd)) {
-        nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
-#ifndef WINCE
-        WINDOWPLACEMENT pl;
-        pl.length = sizeof(pl);
-        ::GetWindowPlacement(mWnd, &pl);
-
-        if (pl.showCmd == SW_SHOWMAXIMIZED)
-          event.mSizeMode = nsSizeMode_Maximized;
-        else if (pl.showCmd == SW_SHOWMINIMIZED)
-          event.mSizeMode = nsSizeMode_Minimized;
-        else
-          event.mSizeMode = nsSizeMode_Normal;
-#else
-        // Bug 504499 - Can't find a way to query if the window is maximized
-        // on Windows CE. So as a hacky workaround, we'll assume that if the
-        // window size exactly fills the screen, then it must be maximized.
-        RECT wr;
-        ::GetWindowRect(mWnd, &wr);
-
-        if (::IsIconic(mWnd))
-          event.mSizeMode = nsSizeMode_Minimized;
-        else if (wr.left   == 0 &&
-                 wr.top    == 0 &&
-                 wr.right  == ::GetSystemMetrics(SM_CXSCREEN) &&
-                 wr.bottom == ::GetSystemMetrics(SM_CYSCREEN))
-          event.mSizeMode = nsSizeMode_Maximized;
-        else
-          event.mSizeMode = nsSizeMode_Normal;
-#endif
-        InitEvent(event);
-
-        result = DispatchWindowEvent(&event);
-      }
+      OnWindowPosChanged(wp, result);
     }
     break;
 
@@ -4248,6 +4143,92 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     result = OnGesture(wParam, lParam);
     break;
 #endif // !defined(WINCE)
+
+    case WM_CLEAR:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_DELETE, this);
+      DispatchWindowEvent(&command);
+      result = PR_TRUE;
+    }
+    break;
+
+    case WM_CUT:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_CUT, this);
+      DispatchWindowEvent(&command);
+      result = PR_TRUE;
+    }
+    break;
+
+    case WM_COPY:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_COPY, this);
+      DispatchWindowEvent(&command);
+      result = PR_TRUE;
+    }
+    break;
+
+    case WM_PASTE:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_PASTE, this);
+      DispatchWindowEvent(&command);
+      result = PR_TRUE;
+    }
+    break;
+
+#ifndef WINCE
+    case EM_UNDO:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_UNDO, this);
+      DispatchWindowEvent(&command);
+      *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+      result = PR_TRUE;
+    }
+    break;
+
+    case EM_REDO:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_REDO, this);
+      DispatchWindowEvent(&command);
+      *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+      result = PR_TRUE;
+    }
+    break;
+
+    case EM_CANPASTE:
+    {
+      // Support EM_CANPASTE message only when wParam isn't specified or
+      // is plain text format.
+      if (wParam == 0 || wParam == CF_TEXT || wParam == CF_UNICODETEXT) {
+        nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_PASTE,
+                                      this, PR_TRUE);
+        DispatchWindowEvent(&command);
+        *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+        result = PR_TRUE;
+      }
+    }
+    break;
+
+    case EM_CANUNDO:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_UNDO,
+                                    this, PR_TRUE);
+      DispatchWindowEvent(&command);
+      *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+      result = PR_TRUE;
+    }
+    break;
+
+    case EM_CANREDO:
+    {
+      nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_REDO,
+                                    this, PR_TRUE);
+      DispatchWindowEvent(&command);
+      *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
+      result = PR_TRUE;
+    }
+    break;
+#endif
 
     default:
     {
@@ -4558,6 +4539,117 @@ BOOL nsWindow::OnInputLangChange(HKL aHKL)
   return PR_FALSE;   // always pass to child window
 }
 
+void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
+{
+  if (wp == nsnull)
+    return;
+
+  // We only care about a resize, so filter out things like z-order
+  // changes. Note: there's a WM_MOVE handler above which is why we're
+  // not handling them here...
+  if (0 == (wp->flags & SWP_NOSIZE)) {
+    // XXX Why are we using the client size area? If the size notification
+    // is for the client area then the origin should be (0,0) and not
+    // the window origin in screen coordinates...
+    RECT r;
+    ::GetWindowRect(mWnd, &r);
+    PRInt32 newWidth, newHeight;
+    newWidth = PRInt32(r.right - r.left);
+    newHeight = PRInt32(r.bottom - r.top);
+    nsIntRect rect(wp->x, wp->y, newWidth, newHeight);
+
+#ifdef MOZ_XUL
+    if (eTransparencyTransparent == mTransparencyMode)
+      ResizeTranslucentWindow(newWidth, newHeight);
+#endif
+
+    if (newWidth > mLastSize.width)
+    {
+      RECT drect;
+
+      //getting wider
+      drect.left = wp->x + mLastSize.width;
+      drect.top = wp->y;
+      drect.right = drect.left + (newWidth - mLastSize.width);
+      drect.bottom = drect.top + newHeight;
+
+      ::RedrawWindow(mWnd, &drect, NULL,
+                     RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
+    }
+    if (newHeight > mLastSize.height)
+    {
+      RECT drect;
+
+      //getting taller
+      drect.left = wp->x;
+      drect.top = wp->y + mLastSize.height;
+      drect.right = drect.left + newWidth;
+      drect.bottom = drect.top + (newHeight - mLastSize.height);
+
+      ::RedrawWindow(mWnd, &drect, NULL,
+                     RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
+    }
+
+    mBounds.width  = newWidth;
+    mBounds.height = newHeight;
+    mLastSize.width = newWidth;
+    mLastSize.height = newHeight;
+
+    // If we're being minimized, don't send the resize event to Gecko because
+    // it will cause the scrollbar in the content area to go away and we'll
+    // forget the scroll position of the page.  Note that we need to check the
+    // toplevel window, because child windows seem to go to 0x0 on minimize.
+    HWND toplevelWnd = GetTopLevelHWND(mWnd);
+    if (mWnd == toplevelWnd && IsIconic(toplevelWnd)) {
+      result = PR_FALSE;
+      return;
+    }
+
+    // recalculate the width and height
+    // this time based on the client area
+    if (::GetClientRect(mWnd, &r)) {
+      rect.width  = PRInt32(r.right - r.left);
+      rect.height = PRInt32(r.bottom - r.top);
+    }
+    result = OnResize(rect);
+  }
+
+  // handle size mode changes - (the framechanged message seems a handy
+  // place to hook in, because it happens early enough (WM_SIZE is too
+  // late) and because in testing it seems an accurate harbinger of an
+  // impending min/max/restore change (WM_NCCALCSIZE would also work,
+  // but it's also sent when merely resizing.))
+  if (wp->flags & SWP_FRAMECHANGED && ::IsWindowVisible(mWnd)) {
+    nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+#ifndef WINCE
+    WINDOWPLACEMENT pl;
+    pl.length = sizeof(pl);
+    ::GetWindowPlacement(mWnd, &pl);
+
+    if (pl.showCmd == SW_SHOWMAXIMIZED)
+      event.mSizeMode = nsSizeMode_Maximized;
+    else if (pl.showCmd == SW_SHOWMINIMIZED)
+      event.mSizeMode = nsSizeMode_Minimized;
+    else
+      event.mSizeMode = nsSizeMode_Normal;
+#else
+    event.mSizeMode = mSizeMode;
+#endif
+    // Windows has just changed the size mode of this window. The following
+    // NS_SIZEMODE event will trigger a call into SetSizeMode where we will
+    // set the min/max window state again or for nsSizeMode_Normal, call
+    // SetWindow with a parameter of SW_RESTORE. There's no need however as
+    // this window's mode has already changed. Updating mSizeMode here
+    // insures the SetSizeMode call is a no-op. Addresses a bug on Win7 related
+    // to window docking. (bug 489258)
+    mSizeMode = event.mSizeMode;
+
+    InitEvent(event);
+
+    result = DispatchWindowEvent(&event);
+  }
+}
+
 #if !defined(WINCE)
 void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
 {
@@ -4823,6 +4915,10 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
     currentWindow = mWnd;
   }
 
+  // Keep track of whether or not the scroll notification is part of a series
+  // in order to calculate appropriate acceleration effect
+  UpdateMouseWheelSeriesCounter();
+
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
   scrollEvent.delta = 0;
   if (isVertical) {
@@ -4833,7 +4929,10 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
     } else {
       currentVDelta -= (short) HIWORD (wParam);
       if (PR_ABS(currentVDelta) >= iDeltaPerLine) {
-        scrollEvent.delta = currentVDelta / iDeltaPerLine;
+        // Compute delta to create acceleration effect
+        scrollEvent.delta = ComputeMouseWheelDelta(currentVDelta, 
+                                                   iDeltaPerLine, 
+                                                   ulScrollLines);
         currentVDelta %= iDeltaPerLine;
       }
     }
@@ -4870,6 +4969,64 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
   
   return PR_FALSE; // break;
 } 
+
+// Reset scrollSeriesCounter when timer finishes (scroll series has ended)
+void nsWindow::OnMouseWheelTimeout(nsITimer* aTimer, void* aClosure) 
+{
+  nsWindow* window = (nsWindow*) aClosure;
+  window->mScrollSeriesCounter = 0;
+}
+
+// Increment scrollSeriesCount and reset timer to keep count going
+void nsWindow::UpdateMouseWheelSeriesCounter() 
+{
+  mScrollSeriesCounter++;
+
+  int scrollSeriesTimeout = 80;
+  static nsITimer* scrollTimer;
+  if (!scrollTimer) {
+    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    if (!timer)
+      return;
+    timer.swap(scrollTimer);
+  }
+
+  scrollTimer->Cancel();
+  nsresult rv = 
+    scrollTimer->InitWithFuncCallback(OnMouseWheelTimeout, this,
+                                      scrollSeriesTimeout,
+                                      nsITimer::TYPE_ONE_SHOT);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "nsITimer::InitWithFuncCallback failed");
+}
+
+// If the scroll notification is part of a series of notifications we should
+// increase scollEvent.delta to create an acceleration effect
+int nsWindow::ComputeMouseWheelDelta(int currentVDelta,
+                                     int iDeltaPerLine,
+                                     ULONG ulScrollLines)
+{
+  // scrollAccelerationStart: click number at which acceleration starts
+  int scrollAccelerationStart = gScrollPrefObserver->GetScrollAccelerationStart();
+  // scrollNumlines: number of lines per scroll before acceleration
+  int scrollNumLines = gScrollPrefObserver->GetScrollNumLines();
+  // scrollAccelerationFactor: factor muliplied for constant acceleration
+  int scrollAccelerationFactor = gScrollPrefObserver->GetScrollAccelerationFactor();
+
+  // compute delta that obeys numlines pref
+  int ulScrollLinesInt = static_cast<int>(ulScrollLines);
+  // currentVDelta is a multiple of (iDeltaPerLine * ulScrollLinesInt)
+  int delta = scrollNumLines * currentVDelta / (iDeltaPerLine * ulScrollLinesInt);
+
+  // mScrollSeriesCounter: the index of the scroll notification in a series
+  if (mScrollSeriesCounter < scrollAccelerationStart ||
+      scrollAccelerationStart < 0 ||
+      scrollAccelerationFactor < 0)
+    return delta;
+  else
+    return int(0.5 + delta * mScrollSeriesCounter *
+           (double) scrollAccelerationFactor / 10);
+}
+
 #endif // !defined(WINCE_WINDOWS_MOBILE)
 
 static PRBool
@@ -5540,12 +5697,6 @@ PRBool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
 
 void nsWindow::OnSettingsChange(WPARAM wParam, LPARAM lParam)
 {
-#if defined(WINCE_WINDOWS_MOBILE)
-  if (wParam == SPI_SETSIPINFO) {
-    nsWindowCE::NotifySoftKbObservers();
-  }
-#endif
-
   nsWindowGfx::OnSettingsChangeGfx(wParam);
 }
 
