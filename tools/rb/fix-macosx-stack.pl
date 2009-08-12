@@ -219,6 +219,7 @@ sub nm_lookup($$) {
            };
 }
 
+select STDOUT; $| = 1; # make STDOUT unbuffered
 while (<>) {
     my $line = $_;
     if ($line =~ /^([ \|0-9-]*)(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$/) {
