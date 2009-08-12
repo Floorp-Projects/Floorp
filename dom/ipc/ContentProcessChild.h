@@ -26,6 +26,9 @@ public:
     virtual IFrameEmbeddingProtocolChild* IFrameEmbeddingConstructor(const MagicWindowHandle& hwnd);
     virtual nsresult IFrameEmbeddingDestructor(IFrameEmbeddingProtocolChild*);
 
+  virtual TestShellProtocolChild* TestShellConstructor();
+  virtual nsresult TestShellDestructor(TestShellProtocolChild*);
+
 private:
     static ContentProcessChild* sSingleton;
 

@@ -4,6 +4,10 @@
 #include "ContentProcessChild.h"
 #include "TabChild.h"
 
+#include "mozilla/ipc/TestShellChild.h"
+
+using namespace mozilla::ipc;
+
 namespace mozilla {
 namespace dom {
 
@@ -39,6 +43,19 @@ ContentProcessChild::IFrameEmbeddingDestructor(IFrameEmbeddingProtocolChild* ifr
 {
     delete iframe;
     return NS_OK;
+}
+
+TestShellProtocolChild*
+ContentProcessChild::TestShellConstructor()
+{
+  return new TestShellChild();
+}
+
+nsresult
+ContentProcessChild::TestShellDestructor(TestShellProtocolChild* shell)
+{
+  delete shell;
+  return NS_OK;
 }
 
 } // namespace dom

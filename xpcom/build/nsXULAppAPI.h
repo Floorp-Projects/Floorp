@@ -426,7 +426,6 @@ enum GeckoChildProcessType {
   GeckoChildProcess_Tab,
 
   GeckoChildProcess_TestHarness,
-  GeckoChildProcess_TestShell,
 
   GeckoChildProcess_End,
   GeckoChildProcess_Invalid = GeckoChildProcess_End
@@ -437,7 +436,6 @@ static const char* const kGeckoChildProcessTypeString[] = {
   "plugin",
   "tab",
   "testharness",
-  "testshell"
 };
 
 PR_STATIC_ASSERT(sizeof(kGeckoChildProcessTypeString) /
