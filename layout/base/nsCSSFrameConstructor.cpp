@@ -2688,6 +2688,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIFrame** aNewFrame)
 
   nsContainerFrame::SyncFrameViewProperties(mPresShell->GetPresContext(), viewportFrame,
                                             viewportPseudoStyle, rootView);
+  nsContainerFrame::SyncWindowProperties(mPresShell->GetPresContext(), viewportFrame,
+                                         rootView);
 
   // The viewport is the containing block for 'fixed' elements
   mFixedContainingBlock = viewportFrame;
