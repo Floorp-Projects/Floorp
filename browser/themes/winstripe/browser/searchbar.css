@@ -94,6 +94,11 @@
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
+.search-go-button:-moz-system-metric(touch-enabled) {
+  -moz-padding-start: 5px;
+  -moz-padding-end: 3px;
+}
+
 .search-go-button:-moz-locale-dir(rtl) {
   -moz-transform: scaleX(-1);
 }

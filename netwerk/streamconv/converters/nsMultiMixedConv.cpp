@@ -814,7 +814,7 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     if (mContentLength != LL_MAXUINT) {
         // make sure that we don't send more than the mContentLength
         // XXX why? perhaps the Content-Length header was actually wrong!!
-        if ((nsUint64(aLen) + mTotalSent) > mContentLength)
+        if ((PRUint64(aLen) + mTotalSent) > mContentLength)
             aLen = mContentLength - mTotalSent;
 
         if (aLen == 0)

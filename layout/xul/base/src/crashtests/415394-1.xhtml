@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml" 
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.execCommand("justifycenter", false, null);
+
+  var listboxbody = document.getElementById("lbb");
+  listboxbody.height = 9;
+  setTimeout(boom2, 0);
+
+  function boom2()
+  {
+    var td = document.createElementNS("http://www.w3.org/1999/xhtml", "td");
+    listboxbody.appendChild(td);
+    document.documentElement.removeAttribute("class");
+  }
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 0);" contenteditable="true"><xul:listboxbody id="lbb"><xul:hbox/><span><col style="width: 100px;" /></span></xul:listboxbody></body>
+
+</html>

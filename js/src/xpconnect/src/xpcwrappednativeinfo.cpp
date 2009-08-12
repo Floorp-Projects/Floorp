@@ -280,12 +280,12 @@ XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
         if(!iface2)
         {
             NS_ERROR("failed to add our interface!");
-            DestroyInstance(ccx, rt, iface);
+            DestroyInstance(iface);
             iface = nsnull;
         }
         else if(iface2 != iface)
         {
-            DestroyInstance(ccx, rt, iface);
+            DestroyInstance(iface);
             iface = iface2;
         }
     }
@@ -327,12 +327,12 @@ XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, nsIInterfaceInfo* info)
         if(!iface2)
         {
             NS_ERROR("failed to add our interface!");
-            DestroyInstance(ccx, rt, iface);
+            DestroyInstance(iface);
             iface = nsnull;
         }
         else if(iface2 != iface)
         {
-            DestroyInstance(ccx, rt, iface);
+            DestroyInstance(iface);
             iface = iface2;
         }
     }
@@ -535,8 +535,7 @@ XPCNativeInterface::NewInstance(XPCCallContext& ccx,
 
 // static
 void
-XPCNativeInterface::DestroyInstance(JSContext* cx, XPCJSRuntime* rt,
-                                    XPCNativeInterface* inst)
+XPCNativeInterface::DestroyInstance(XPCNativeInterface* inst)
 {
     inst->~XPCNativeInterface();
     delete [] (char*) inst;

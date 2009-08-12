@@ -548,7 +548,7 @@ var gPrivacyPane = {
     const Cc = Components.classes, Ci = Components.interfaces;
     var glue = Cc["@mozilla.org/browser/browserglue;1"]
                  .getService(Ci.nsIBrowserGlue);
-    glue.sanitize(window || null);
+    glue.sanitize(window);
 
     // reset the timeSpan pref
     if (aClearEverything)

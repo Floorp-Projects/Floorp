@@ -142,6 +142,7 @@ function test_paste(aCurrentTest) {
 
   // Focus the window.
   window.focus();
+  gBrowser.selectedBrowser.focus();
 
   // Focus the element and wait for focus event.
   info("About to focus " + element.id);

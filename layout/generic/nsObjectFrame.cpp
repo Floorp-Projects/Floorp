@@ -3329,10 +3329,14 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
 #ifdef XP_MACOSX
 
-static void InitializeEventRecord(EventRecord* event)
+static void InitializeEventRecord(EventRecord* event, Point* aMousePosition)
 {
   memset(event, 0, sizeof(EventRecord));
-  ::GetGlobalMouse(&event->where);
+  if (aMousePosition) {
+    event->where = *aMousePosition;
+  } else {
+    ::GetGlobalMouse(&event->where);
+  }
   event->when = ::TickCount();
   event->modifiers = ::GetCurrentEventKeyModifiers();
 }
@@ -3445,7 +3449,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
       EventRecord scrollEvent;
-      InitializeEventRecord(&scrollEvent);
+      InitializeEventRecord(&scrollEvent, nsnull);
       scrollEvent.what = NPEventType_ScrollingBeginsEvent;
 
       WindowRef window = FixUpPluginWindow(ePluginPaintDisable);
@@ -3468,7 +3472,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
     if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
       EventRecord scrollEvent;
-      InitializeEventRecord(&scrollEvent);
+      InitializeEventRecord(&scrollEvent, nsnull);
       scrollEvent.what = NPEventType_ScrollingEndsEvent;
 
       WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
@@ -3781,36 +3785,33 @@ static void find_dest_id(XID top, XID *root, XID *dest, int target_x, int target
   while (1) {
 loop:
     //printf("searching %x\n", target_id);
-    XQueryTree(GDK_DISPLAY(), target_id, root, &parent, &children, &nchildren);
-    if (nchildren > 0) {
-      for (unsigned int i=0; i<nchildren; i++) {
-        Window root;
-        int x, y;
-        unsigned int width, height;
-        unsigned int border_width, depth;
-        XGetGeometry(GDK_DISPLAY(), children[i], &root, &x, &y,
-            &width, &height, &border_width,
-            &depth);
-        //printf("target: %d %d\n", target_x, target_y);
-        //printf("geom: %dx%x @ %dx%d\n", width, height, x, y);
-        // XXX: we may need to be more careful here, i.e. if
-        // this condition matches more than one child
-        if (target_x >= x && target_y >= y &&
-            target_x <= x + int(width) &&
-            target_y <= y + int(height)) {
-          target_id = children[i];
-          // printf("found new target: %x\n", target_id);
-          XFree(children);
-          goto loop;
-        }
+    if (!XQueryTree(GDK_DISPLAY(), target_id, root, &parent, &children, &nchildren) ||
+        !nchildren)
+      break;
+    for (unsigned int i=0; i<nchildren; i++) {
+      Window root;
+      int x, y;
+      unsigned int width, height;
+      unsigned int border_width, depth;
+      XGetGeometry(GDK_DISPLAY(), children[i], &root, &x, &y,
+          &width, &height, &border_width,
+          &depth);
+      //printf("target: %d %d\n", target_x, target_y);
+      //printf("geom: %dx%x @ %dx%d\n", width, height, x, y);
+      // XXX: we may need to be more careful here, i.e. if
+      // this condition matches more than one child
+      if (target_x >= x && target_y >= y &&
+          target_x <= x + int(width) &&
+          target_y <= y + int(height)) {
+        target_id = children[i];
+        // printf("found new target: %x\n", target_id);
+        XFree(children);
+        goto loop;
       }
-      XFree(children);
-      /* no children contain the target */
-      break;
-    } else {
-      /* we have no children */
-      break;
     }
+    XFree(children);
+    /* no children contain the target */
+    break;
   }
   *dest = target_id;
 }
@@ -4048,11 +4049,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
   event.serial = 0;
   event.send_event = False;
 
-  PRBool eventHandled = PR_FALSE;
+#if 0
   /* we've sent the event via XSendEvent so don't send it directly to the plugin */
-  //mInstance->HandleEvent(&pluginEvent, &eventHandled);
+  PRBool eventHandled = PR_FALSE;
+  mInstance->HandleEvent(&pluginEvent, &eventHandled);
   if (eventHandled)
-      rv = nsEventStatus_eConsumeNoDefault;
+    rv = nsEventStatus_eConsumeNoDefault;
+#endif
 
   return rv;
 }
@@ -4079,12 +4082,30 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
       EventRecord carbonEvent;
       void* event = anEvent.nativeMsg;
       if (!event || (static_cast<EventRecord*>(event)->what == nullEvent)) {
-        InitializeEventRecord(&carbonEvent);
-        if (anEvent.message == NS_FOCUS_CONTENT || anEvent.message == NS_BLUR_CONTENT) {
-          carbonEvent.what = (anEvent.message == NS_FOCUS_CONTENT) ?
-                                NPEventType_GetFocusEvent : NPEventType_LoseFocusEvent;
-        }
         event = &carbonEvent;
+        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner);
+        nsPresContext* presContext = mOwner->PresContext();
+        nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
+                        presContext->AppUnitsToDevPixels(pt.y));
+        Point carbonPt = { ptPx.y + mPluginWindow->y, ptPx.x + mPluginWindow->x };
+        InitializeEventRecord(&carbonEvent, &carbonPt);
+
+        switch (anEvent.message) {
+        case NS_FOCUS_CONTENT:
+        case NS_BLUR_CONTENT:
+          carbonEvent.what = (anEvent.message == NS_FOCUS_CONTENT) ?
+            NPEventType_GetFocusEvent : NPEventType_LoseFocusEvent;
+          break;
+        case NS_MOUSE_MOVE:
+          carbonEvent.what = osEvt;
+          break;
+        case NS_MOUSE_BUTTON_DOWN:
+          carbonEvent.what = mouseDown;
+          break;
+        case NS_MOUSE_BUTTON_UP:
+          carbonEvent.what = mouseUp;
+          break;
+        }
       }
 
       if (anEvent.message == NS_FOCUS_CONTENT) {
@@ -4120,8 +4141,48 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   // have no nativeMsg
   nsPluginEvent pluginEvent;
   if (anEvent.eventStructType == NS_MOUSE_EVENT) {
-    // XXX we could synthesize Windows mouse events here for our
-    // synthetic mouse events (i.e. !pPluginEvent)
+    if (!pPluginEvent) {
+      // XXX Should extend this list to synthesize events for more event
+      // types
+      pluginEvent.event = 0;
+      const nsMouseEvent* mouseEvent = static_cast<const nsMouseEvent*>(&anEvent);
+      switch (anEvent.message) {
+      case NS_MOUSE_MOVE:
+        pluginEvent.event = WM_MOUSEMOVE;
+        break;
+      case NS_MOUSE_BUTTON_DOWN: {
+        static const int downMsgs[] =
+          { WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN };
+        pluginEvent.event = downMsgs[mouseEvent->button];
+        break;
+      }
+      case NS_MOUSE_BUTTON_UP: {
+        static const int upMsgs[] =
+          { WM_LBUTTONUP, WM_MBUTTONUP, WM_RBUTTONUP };
+        pluginEvent.event = upMsgs[mouseEvent->button];
+        break;
+      }
+      case NS_MOUSE_DOUBLECLICK: {
+        static const int dblClickMsgs[] =
+          { WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK };
+        pluginEvent.event = dblClickMsgs[mouseEvent->button];
+        break;
+      }
+      default:
+        break;
+      }
+      if (pluginEvent.event) {
+        pPluginEvent = &pluginEvent;
+        pluginEvent.wParam =
+          (::GetKeyState(VK_CONTROL) ? MK_CONTROL : 0) |
+          (::GetKeyState(VK_SHIFT) ? MK_SHIFT : 0) |
+          (::GetKeyState(VK_LBUTTON) ? MK_LBUTTON : 0) |
+          (::GetKeyState(VK_MBUTTON) ? MK_MBUTTON : 0) |
+          (::GetKeyState(VK_RBUTTON) ? MK_RBUTTON : 0) |
+          (::GetKeyState(VK_XBUTTON1) ? MK_XBUTTON1 : 0) |
+          (::GetKeyState(VK_XBUTTON2) ? MK_XBUTTON2 : 0);
+      }
+    }
     if (pPluginEvent) {
       // Make event coordinates relative to our enclosing widget,
       // not the widget they were received on.
@@ -4469,7 +4530,7 @@ void nsPluginInstanceOwner::Paint()
     WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
     if (window) {
       EventRecord updateEvent;
-      InitializeEventRecord(&updateEvent);
+      InitializeEventRecord(&updateEvent, nsnull);
       updateEvent.what = updateEvt;
       updateEvent.message = UInt32(window);
     
@@ -4791,7 +4852,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
       WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
       if (window) {
         EventRecord idleEvent;
-        InitializeEventRecord(&idleEvent);
+        InitializeEventRecord(&idleEvent, nsnull);
         idleEvent.what = nullEvent;
 
         // give a bogus 'where' field of our null event when hidden, so Flash

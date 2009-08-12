@@ -51,7 +51,6 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
-#include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
 #include "nsIOS2Locale.h"
 #include "nsCOMPtr.h"

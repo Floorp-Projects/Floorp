@@ -273,18 +273,13 @@ FeedConverter.prototype = {
           getService(Ci.nsIIOService);
       var chromeChannel;
 
-      // show the feed page if it wasn't sniffed and we have a document,
-      // or we have a document, title, and link or id
-      if (result.doc && (!this._sniffed ||
-          (result.doc.title && (result.doc.link || result.doc.id)))) {
+      // If there was no automatic handler, or this was a podcast,
+      // photostream or some other kind of application, show the preview page
+      // if the parser returned a document.
+      if (result.doc) {
 
-        // If there was no automatic handler, or this was a podcast,
-        // photostream or some other kind of application, we must always
-        // show the preview page.
-        
         // Store the result in the result service so that the display
         // page can access it.
-
         feedService.addFeedResult(result);
 
         // Now load the actual XUL document.

@@ -98,9 +98,12 @@ nsFocusController::GetControllers(nsIControllers** aResult)
   // knowledge of what object might have controllers.
   nsCOMPtr<nsIDOMElement> focusedElement;
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm)
-    fm->GetFocusedElement(getter_AddRefs(focusedElement));
+  if (!fm) {
+    *aResult = nsnull;
+    return NS_OK;
+  }
 
+  fm->GetFocusedElement(getter_AddRefs(focusedElement));
   if (focusedElement) {
 #ifdef MOZ_XUL
     nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(focusedElement));

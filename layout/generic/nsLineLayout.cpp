@@ -207,6 +207,10 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mSpanDepth = 0;
   mMaxTopBoxHeight = mMaxBottomBoxHeight = 0;
 
+  if (GetFlag(LL_GOTLINEBOX)) {
+    mLineBox->ClearHasBullet();
+  }
+
   PerSpanData* psd;
   NewPerSpanData(&psd);
   mCurrentSpan = mRootSpan = psd;
@@ -1327,6 +1331,10 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
                              const nsHTMLReflowMetrics& aMetrics)
 {
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
+  NS_ASSERTION(GetFlag(LL_GOTLINEBOX), "must have line box");
+
+  SetFlag(LL_HASBULLET, PR_TRUE);
+  mLineBox->SetHasBullet();
 
   PerFrameData* pfd;
   nsresult rv = NewPerFrameData(&pfd);
@@ -2008,43 +2016,28 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // in some cases in quirks mode:
     //  (1) if the root span contains non-whitespace text directly (this
     //      is handled by mZeroEffectiveSpanBox
-    //  (2) if this is the first line of an LI element (whether or not
-    //      there is a bullet (NN4/IE5 quirk)
+    //  (2) if this line has a bullet
     //  (3) if this is the last line of an LI, DT, or DD element
     //      (The last line before a block also counts, but not before a
     //      BR) (NN4/IE5 quirk)
-    PRBool applyMinLH = !(psd->mZeroEffectiveSpanBox); // (1) above
-    PRBool isFirstLine = !mLineNumber; // if the line number is 0
+
+    // (1) and (2) above
+    PRBool applyMinLH = !psd->mZeroEffectiveSpanBox || GetFlag(LL_HASBULLET);
     PRBool isLastLine = (!mLineBox->IsLineWrapped() && !GetFlag(LL_LINEENDSINBR));
-    PRBool foundLI = PR_FALSE;  // hack to fix bug 50480.
-    //XXX: rather than remembering if we've found an LI, we really should be checking
-    //     for the existence of a bullet frame.  Likewise, the code below should not
-    //     be checking for any particular content tag type, but rather should
-    //     be checking for the existence of a bullet frame to determine if it's a list element or not.
-    if (!applyMinLH && (isFirstLine || isLastLine)) {
+    if (!applyMinLH && isLastLine) {
       nsIContent* blockContent = mRootSpan->mFrame->mFrame->GetContent();
       if (blockContent) {
         nsIAtom *blockTagAtom = blockContent->Tag();
-        // (2) above, if the first line of LI
-        if (isFirstLine && blockTagAtom == nsGkAtoms::li) {
-          // if the line is empty, then don't force the min height
-          // (see bug 75963)
-          if (!IsZeroHeight()) {
-            applyMinLH = PR_TRUE;
-            foundLI = PR_TRUE;
-          }
-        }
         // (3) above, if the last line of LI, DT, or DD
-        else if (!applyMinLH && isLastLine &&
-                 ((blockTagAtom == nsGkAtoms::li) ||
-                  (blockTagAtom == nsGkAtoms::dt) ||
-                  (blockTagAtom == nsGkAtoms::dd))) {
+        if (blockTagAtom == nsGkAtoms::li ||
+            blockTagAtom == nsGkAtoms::dt ||
+            blockTagAtom == nsGkAtoms::dd) {
           applyMinLH = PR_TRUE;
         }
       }
     }
     if (applyMinLH) {
-      if (psd->mHasNonemptyContent || preMode || foundLI) {
+      if (psd->mHasNonemptyContent || preMode || GetFlag(LL_HASBULLET)) {
 #ifdef NOISY_VERTICAL_ALIGN
         printf("  [span]==> adjusting min/maxY: currentValues: %d,%d", minY, maxY);
 #endif

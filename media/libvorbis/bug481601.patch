@@ -2,11 +2,11 @@ diff --git a/media/libvorbis/include/vorbis/codec.h b/media/libvorbis/include/vo
 index b23fe0a..c62b2d5 100644
 --- a/media/libvorbis/include/vorbis/codec.h
 +++ b/media/libvorbis/include/vorbis/codec.h
-@@ -170,16 +170,17 @@ extern void     vorbis_comment_add(vorbis_comment *vc, char *comment);
+@@ -170,18 +170,19 @@ extern void     vorbis_comment_add(vorbis_comment *vc, char *comment);
  extern void     vorbis_comment_add_tag(vorbis_comment *vc,
- 				       char *tag, char *contents);
- extern char    *vorbis_comment_query(vorbis_comment *vc, char *tag, int count);
- extern int      vorbis_comment_query_count(vorbis_comment *vc, char *tag);
+                                        const char *tag, const char *contents);
+ extern char    *vorbis_comment_query(vorbis_comment *vc, const char *tag, int count);
+ extern int      vorbis_comment_query_count(vorbis_comment *vc, const char *tag);
  extern void     vorbis_comment_clear(vorbis_comment *vc);
  
  extern int      vorbis_block_init(vorbis_dsp_state *v, vorbis_block *vb);
@@ -14,7 +14,9 @@ index b23fe0a..c62b2d5 100644
 +extern void     vorbis_dsp_init(vorbis_dsp_state *v);
  extern void     vorbis_dsp_clear(vorbis_dsp_state *v);
  extern double   vorbis_granule_time(vorbis_dsp_state *v,
- 				    ogg_int64_t granulepos);
+                                     ogg_int64_t granulepos);
+ 
+ extern const char *vorbis_version_string(void);
  
  /* Vorbis PRIMITIVES: analysis/DSP layer ****************************/
  

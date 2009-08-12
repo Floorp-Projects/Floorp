@@ -1,0 +1,12 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+
+<binding id="xbl">
+
+<content>
+<mrow xmlns="http://www.w3.org/1998/Math/MathML" id="f">
+<box observes="f" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+</mrow>
+</content>
+
+</binding>
+</bindings>

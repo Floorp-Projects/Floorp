@@ -43,6 +43,20 @@
 
 #include "nsIAtom.h"
 
+// Is this pseudo-element a CSS2 pseudo-element that can be specified
+// with the single colon syntax (in addition to the double-colon syntax,
+// which can be used for all pseudo-elements)?
+#define CSS_PSEUDO_ELEMENT_IS_CSS2                (1<<0)
+// Is this pseudo-element a pseudo-element that can contain other
+// elements?
+// (Currently pseudo-elements are either leaves of the tree (relative to
+// real elements) or they contain other elements in a non-tree-like
+// manner (i.e., like incorrectly-nested start and end tags).  It's
+// possible that in the future there might be container pseudo-elements
+// that form a properly nested tree structure.  If that happens, we
+// should probably split this flag into two.)
+#define CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS      (1<<1)
+
 // Empty class derived from nsIAtom so that function signatures can
 // require an atom from this atom list.
 class nsICSSPseudoElement : public nsIAtom {};
@@ -54,11 +68,27 @@ public:
 
   static PRBool IsPseudoElement(nsIAtom *aAtom);
 
-  static PRBool IsCSS2PseudoElement(nsIAtom *aAtom);
+  static PRBool IsCSS2PseudoElement(nsIAtom *aAtom) {
+    return PseudoElementHasFlags(aAtom, CSS_PSEUDO_ELEMENT_IS_CSS2);
+  }
 
-#define CSS_PSEUDO_ELEMENT(_name, _value) static nsICSSPseudoElement* _name;
+  static PRBool PseudoElementContainsElements(nsIAtom *aAtom) {
+    return PseudoElementHasFlags(aAtom, CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS);
+  }
+
+#define CSS_PSEUDO_ELEMENT(_name, _value, _flags) \
+  static nsICSSPseudoElement* _name;
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
+
+private:
+  static PRUint32 FlagsForPseudoElement(nsIAtom *aAtom);
+
+  // Does the given pseudo-element have all of the flags given?
+  static PRBool PseudoElementHasFlags(nsIAtom *aAtom, PRUint32 aFlags)
+  {
+    return (FlagsForPseudoElement(aAtom) & aFlags) == aFlags;
+  }
 };
 
 #endif /* nsCSSPseudoElements_h___ */

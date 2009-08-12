@@ -204,15 +204,15 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     args = new char*[paramCount];
     if (!args)
       return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  // Add our parameters to our args array.
-  PRInt32 argPos = 0; 
-  for (nsXBLParameter* curr = uncompiledMethod->mParameters; 
-       curr; 
-       curr = curr->mNext) {
-    args[argPos] = curr->mName;
-    argPos++;
+    // Add our parameters to our args array.
+    PRInt32 argPos = 0; 
+    for (nsXBLParameter* curr = uncompiledMethod->mParameters; 
+         curr; 
+         curr = curr->mNext) {
+      args[argPos] = curr->mName;
+      argPos++;
+    }
   }
 
   // Get the body

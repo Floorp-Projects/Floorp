@@ -106,22 +106,34 @@ let gTests = [
    "foo bar ^", [1,2,3,5,10], ignoreTags],
 
   // Test restricting and matching searches with a term
-  ["6: foo ^ -> history",
+  ["6.1: foo ^ -> history",
    "foo ^", [1,2,3,5,10], ignoreTags],
-  ["7: foo * -> is star",
-   "foo *", [5,6,7,8,9,10,11]],
-  ["8: foo # -> in title",
-   "foo #", [1,3,5,7,8,9,10,11]],
-  ["9: foo @ -> in url",
-   "foo @", [2,3,6,7,10,11]],
+  ["6.2: foo | -> history (change pref)",
+   "foo |", [1,2,3,5,10], function() {ignoreTags(); changeRestrict("history", "|"); }],
+  ["7.1: foo * -> is star",
+   "foo *", [5,6,7,8,9,10,11], function() resetRestrict("history")],
+  ["7.2: foo | -> is star (change pref)",
+   "foo |", [5,6,7,8,9,10,11], function() changeRestrict("bookmark", "|")],
+  ["8.1: foo # -> in title",
+   "foo #", [1,3,5,7,8,9,10,11], function() resetRestrict("bookmark")],
+  ["8.2: foo | -> in title (change pref)",
+   "foo |", [1,3,5,7,8,9,10,11], function() changeRestrict("title", "|")],
+  ["9.1: foo @ -> in url",
+   "foo @", [2,3,6,7,10,11], function() resetRestrict("title")],
+  ["9.2: foo | -> in url (change pref)",
+   "foo |", [2,3,6,7,10,11], function() changeRestrict("url", "|")],
   ["10: foo + -> is tag",
-   "foo +", [8,9,10,11]],
-  ["10.1: foo ~ -> is typed",
-   "foo ~", [3,10]],
+   "foo +", [8,9,10,11], function() resetRestrict("url")],
+  ["10.2: foo | -> is tag (change pref)",
+   "foo |", [8,9,10,11], function() changeRestrict("tag", "|")],
+  ["10.3: foo ~ -> is typed",
+   "foo ~", [3,10], function() resetRestrict("tag")],
+  ["10.4: foo | -> is typed (change pref)",
+   "foo |", [3,10], function() changeRestrict("typed", "|")],
 
   // Test various pairs of special searches
   ["11: foo ^ * -> history, is star",
-   "foo ^ *", [5,10]],
+   "foo ^ *", [5,10], function() resetRestrict("typed")],
   ["12: foo ^ # -> history, in title",
    "foo ^ #", [1,3,5,10], ignoreTags],
   ["13: foo ^ @ -> history, in url",
@@ -174,4 +186,29 @@ function makeDefault(aDefault) {
     ignoreTags();
 
   prefs.setIntPref("browser.urlbar.default.behavior", aDefault);
+}
+
+function changeRestrict(aType, aChar)
+{
+  let branch = "browser.urlbar.";
+  // "title" and "url" are different from everything else, so special case them.
+  if (aType == "title" || aType == "url")
+    branch += "match.";
+  else
+    branch += "restrict.";
+
+  print("changing restrict for " + aType + " to '" + aChar + "'");
+  prefs.setCharPref(branch + aType, aChar);
+}
+
+function resetRestrict(aType)
+{
+  let branch = "browser.urlbar.";
+  // "title" and "url" are different from everything else, so special case them.
+  if (aType == "title" || aType == "url")
+    branch += "match.";
+  else
+    branch += "restrict.";
+
+  prefs.clearUserPref(branch + aType);
 }

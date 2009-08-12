@@ -40,7 +40,6 @@
 
 #include "inIFlasher.h"
 
-#include "nsIInspectorCSSUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIRenderingContext.h"
 

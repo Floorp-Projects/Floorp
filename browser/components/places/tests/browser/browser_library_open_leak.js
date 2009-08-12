@@ -56,6 +56,7 @@ let windowObserver = {
       win.addEventListener("load", function onLoad(event) {
         win.removeEventListener("load", onLoad, false);
         executeSoon(function () {
+          ok(true, "Library has been correctly opened");
           win.close();
           finish();
         });

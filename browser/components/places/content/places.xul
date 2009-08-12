@@ -75,6 +75,7 @@
         onunload="PlacesOrganizer.destroy();"
         width="&places.library.width;" height="&places.library.height;"
         screenX="10" screenY="10"
+        toggletoolbar="true"
         persist="width height screenX screenY sizemode">
 
   <script type="application/x-javascript"

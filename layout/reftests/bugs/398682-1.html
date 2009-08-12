@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  // Only this exact number of calls to bounce() triggers the bug,
+  // but changing the depth of the document changes the number of
+  // bounce() calls needed.  For example, removing the 'p' tag
+  // makes it so one additional bounce() is needed.
+
+  for (var i = 0; i < 7; ++i)
+    bounce();
+
+  var tr = document.getElementById("tr"); 
+  tr.style.display = "none";
+  document.documentElement.offsetHeight;
+  bounce();
+  document.documentElement.offsetHeight;
+  tr.style.display = "";
+
+  document.documentElement.offsetHeight;
+
+  var td = document.getElementById("td");
+  td.style.display = "none";
+  document.documentElement.offsetHeight;
+  bounce();
+  document.documentElement.offsetHeight;
+  td.style.display = "";
+}
+
+
+function bounce()
+{
+    var docElem = document.documentElement;
+    var docElemChildren = [];
+    while (docElem.firstChild) {
+        docElemChildren.push(docElem.firstChild);
+        docElem.removeChild(docElem.firstChild);
+    }
+
+    for (var i = 0; i < docElemChildren.length; ++i)
+        docElem.appendChild(docElemChildren[i]);
+}
+
+</script>
+
+<style type="text/css">
+#a { color: orange; }
+#b { color: blue; }
+</style>
+
+</head>
+
+<body onload="boom();">
+  <table border="10"><tr id="tr"><td id="td">
+    <p><span id="a">a</span><span id="b">b</span></p>
+  </td></tr></table>
+</body>
+
+</html>

@@ -1,4 +1,3 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -175,6 +174,17 @@ function do_timeout(delay, expr) {
   var timer = Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
   timer.initWithCallback(new _TimerCallback(expr), delay, timer.TYPE_ONE_SHOT);
+}
+
+function do_execute_soon(callback) {
+  var tm = Components.classes["@mozilla.org/thread-manager;1"]
+                     .getService(Components.interfaces.nsIThreadManager);
+
+  tm.mainThread.dispatch({
+    run: function() {
+      callback();
+    }
+  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
 }
 
 function do_throw(text, stack) {
@@ -354,4 +364,42 @@ function do_parse_document(aPath, aType) {
 function do_register_cleanup(aFunction)
 {
   _cleanupFunctions.push(aFunction);
+}
+
+/**
+ * Registers a directory with the profile service,
+ * and return the directory as an nsILocalFile.
+ *
+ * @return nsILocalFile of the profile directory.
+ */
+function do_get_profile() {
+  let env = Components.classes["@mozilla.org/process/environment;1"]
+                      .getService(Components.interfaces.nsIEnvironment);
+  // the python harness sets this in the environment for us
+  let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
+  let file = Components.classes["@mozilla.org/file/local;1"]
+                       .createInstance(Components.interfaces.nsILocalFile);
+  file.initWithPath(profd);
+
+  let dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                         .getService(Components.interfaces.nsIProperties);
+  let provider = {
+    getFile: function(prop, persistent) {
+      persistent.value = true;
+      if (prop == "ProfD" || prop == "ProfLD" || prop == "ProfDS") {
+        return file.clone();
+      }
+      throw Components.results.NS_ERROR_FAILURE;
+    },
+    QueryInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsIDirectoryProvider) ||
+          iid.equals(Components.interfaces.nsISupports)) {
+        return this;
+      }
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+  };
+  dirSvc.QueryInterface(Components.interfaces.nsIDirectoryService)
+        .registerProvider(provider);
+  return file.clone();
 }

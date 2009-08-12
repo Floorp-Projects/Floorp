@@ -846,7 +846,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                     if(str)
                     {
                         NS_ConvertUTF16toUTF8
-                            fname(JS_GetStringChars(str));
+                            fname(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str)));
                         JS_snprintf(name, sizeof(name),
                                     "JS Object (Function - %s)", fname.get());
                     }
@@ -1222,6 +1222,7 @@ nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
+    XPCLazyCallContext lccx(ccx);
 
     nsresult rv;
     if(!XPCConvert::NativeInterface2JSObject(ccx, aVal, aHolder, aCOMObj, aIID,
@@ -2238,9 +2239,10 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scope, nsIVariant* value, jsv
     XPCCallContext ccx(NATIVE_CALLER, ctx);
     if(!ccx.IsValid())
         return NS_ERROR_FAILURE;
+    XPCLazyCallContext lccx(ccx);
 
     nsresult rv = NS_OK;
-    if(!XPCVariant::VariantDataToJS(ccx, value, scope, &rv, _retval))
+    if(!XPCVariant::VariantDataToJS(lccx, value, scope, &rv, _retval))
     {
         if(NS_FAILED(rv)) 
             return rv;

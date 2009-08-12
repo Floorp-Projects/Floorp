@@ -173,7 +173,8 @@
              accesskey="&detailsProgressiveDisclosure.accesskey;"
              control="detailsExpander"/>
     </hbox>
-    <listbox id="itemList" rows="6" collapsed="true" persist="collapsed">
+    <listbox id="itemList" rows="6" collapsed="true" persist="collapsed"
+             flex="1">
       <listitem label="&itemHistoryAndDownloads.label;"
                 type="checkbox"
                 accesskey="&itemHistoryAndDownloads.accesskey;"
