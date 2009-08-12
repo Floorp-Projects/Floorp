@@ -388,12 +388,17 @@ public:
 
                 // notify state complete...
                 if (mCallback) {
-                    nsresult status = sourceCondition;
-                    if (NS_SUCCEEDED(status))
-                        status = sinkCondition;
-                    if (status == NS_BASE_STREAM_CLOSED)
-                        status = NS_OK;
-                    mCallback(mClosure, canceled ? cancelStatus : status);
+                    nsresult status;
+                    if (!canceled) {
+                        status = sourceCondition;
+                        if (NS_SUCCEEDED(status))
+                            status = sinkCondition;
+                        if (status == NS_BASE_STREAM_CLOSED)
+                            status = NS_OK;
+                    } else {
+                        status = cancelStatus; 
+                    }
+                    mCallback(mClosure, status);
                 }
                 break;
             }
