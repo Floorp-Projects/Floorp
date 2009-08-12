@@ -1515,6 +1515,10 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
         mode = SW_RESTORE;
     }
     ::ShowWindow(mWnd, mode);
+    // we dispatch an activate event here to ensure that the right child window
+    // is focused
+    if (mode == SW_RESTORE || mode == SW_MAXIMIZE)
+      DispatchFocusToTopLevelWindow(NS_ACTIVATE);
   }
   return rv;
 }
