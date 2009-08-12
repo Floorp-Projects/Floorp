@@ -382,7 +382,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     contentRect.origin.y -= (newWindowFrame.size.height - aRect.size.height);
 
     if (mWindowType != eWindowType_popup)
-      contentRect.origin.y -= ::GetMBarHeight();
+      contentRect.origin.y -= [[NSApp mainMenu] menuBarHeight];
   }
 
   // NSLog(@"Top-level window being created at Cocoa rect: %f, %f, %f, %f\n",
