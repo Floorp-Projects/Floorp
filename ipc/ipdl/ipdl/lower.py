@@ -50,6 +50,22 @@ def _protocolHeaderFilename(p, pname):
 def _protocolHeaderName(pname):
     return pname +'Protocol'
 
+def _makeForwardDecl(p, namesuffix=''):
+    clsname = p.decl.type.qname.baseid + namesuffix
+    
+    fd = cxx.ForwardDecl(clsname, cls=1)
+    if 0 == len(p.namespaces):
+        return fd
+
+    outerns = cxx.Namespace(p.namespaces[0].namespace)
+    innerns = outerns
+    for ns in p.namespaces[1:]:
+        tmpns = cxx.Namespace(ns.namespace)
+        innerns.addstmt(tmpns)
+        innerns = tmpns
+
+    innerns.addstmt(fd)
+    return outerns
 
 class _struct: pass
 
@@ -495,10 +511,15 @@ class GenerateProtocolActorHeader(Visitor):
 
     def visitProtocolInclude(self, pi):
         p = pi.tu.protocol
+
         if self.protocol.decl.type.isManagerOf(p.decl.type):
             header = _protocolHeaderFilename(
                 p, _protocolHeaderName(p.name)+ self.myside)
             self.file.addthing(cxx.CppDirective('include', '"'+ header +'"'))
+        else:
+            self.file.addthing(_makeForwardDecl(p, 'Protocol'+ self.myside))
+            
+        if p.decl.fullname is not None:
             self.typedefs.append(cxx.Typedef(
                 cxx.Type(_protocolHeaderName(p.decl.fullname) + self.myside),
                 cxx.Type(_protocolHeaderName(p.decl.shortname) + self.myside)))
@@ -559,7 +580,7 @@ class GenerateProtocolActorHeader(Visitor):
 
         if p.decl.type.isManaged():
             cls.addstmt(cxx.FriendClassDecl(
-                    _protocolHeaderName(p.decl.type.manager.name())
+                    _protocolHeaderName(p.decl.type.manager.fullname())
                                         + self.myside))
             cls.addstmt(cxx.Whitespace.NL)
 
