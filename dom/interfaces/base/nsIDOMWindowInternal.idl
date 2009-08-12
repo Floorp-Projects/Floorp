@@ -44,7 +44,7 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-[scriptable, uuid(62579239-b619-4bf2-8d39-0b73e8663a85)]
+[scriptable, uuid(c2f4433a-8b4c-4676-ab30-3bffd26fb29e)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -106,7 +106,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
            attribute long                        screenY;
   readonly attribute float                       mozInnerScreenX;
   readonly attribute float                       mozInnerScreenY;
-  readonly attribute float                       mozScreenPixelsPerCSSPixel;
 
   /* The offset in pixels by which the window is scrolled */
   readonly attribute long                        pageXOffset;

@@ -1,0 +1,20 @@
+<html contentEditable="true">
+<head>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var r = document.documentElement;
+  while(r.firstChild)
+    r.removeChild(r.firstChild);
+
+  document.execCommand("contentReadOnly", false, "");
+  document.documentElement.focus();
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

@@ -644,12 +644,13 @@ var HistoryMenu = {
       undoPopup.appendChild(m);
     }
 
-    // "Open All in Tabs"
+    // "Restore All Tabs"
     var strings = gNavigatorBundle;
     undoPopup.appendChild(document.createElement("menuseparator"));
     m = undoPopup.appendChild(document.createElement("menuitem"));
-    m.setAttribute("label", strings.getString("menuOpenAllInTabs.label"));
-    m.setAttribute("accesskey", strings.getString("menuOpenAllInTabs.accesskey"));
+    m.id = "menu_restoreAllTabs";
+    m.setAttribute("label", strings.getString("menuRestoreAllTabs.label"));
+    m.setAttribute("accesskey", strings.getString("menuRestoreAllTabs.accesskey"));
     m.addEventListener("command", function() {
       for (var i = 0; i < undoItems.length; i++)
         undoCloseTab();
@@ -718,6 +719,7 @@ var HistoryMenu = {
     // "Open All in Windows"
     undoPopup.appendChild(document.createElement("menuseparator"));
     let m = undoPopup.appendChild(document.createElement("menuitem"));
+    m.id = "menu_restoreAllWindows";
     m.setAttribute("label", gNavigatorBundle.getString("menuRestoreAllWindows.label"));
     m.setAttribute("accesskey", gNavigatorBundle.getString("menuRestoreAllWindows.accesskey"));
     m.setAttribute("oncommand",
@@ -879,6 +881,7 @@ var BookmarksEventHandler = {
     if (!target._endOptSeparator) {
       // create a separator before options
       target._endOptSeparator = document.createElement("menuseparator");
+      target._endOptSeparator.className = "bookmarks-actions-menuseparator";
       target._endMarker = target.childNodes.length;
       target.appendChild(target._endOptSeparator);
     }
@@ -886,6 +889,7 @@ var BookmarksEventHandler = {
     if (siteURIString && !target._endOptOpenSiteURI) {
       // Add "Open (Feed Name)" menuitem if it's a livemark with a siteURI
       target._endOptOpenSiteURI = document.createElement("menuitem");
+      target._endOptOpenSiteURI.className = "openlivemarksite-menuitem";
       target._endOptOpenSiteURI.setAttribute("siteURI", siteURIString);
       target._endOptOpenSiteURI.setAttribute("oncommand",
           "openUILink(this.getAttribute('siteURI'), event);");
@@ -905,6 +909,7 @@ var BookmarksEventHandler = {
         // Add the "Open All in Tabs" menuitem if there are
         // at least two menuitems with places result nodes.
         target._endOptOpenAllInTabs = document.createElement("menuitem");
+        target._endOptOpenAllInTabs.className = "openintabs-menuitem";
         target._endOptOpenAllInTabs.setAttribute("oncommand",
             "PlacesUIUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
         target._endOptOpenAllInTabs.setAttribute("onclick",

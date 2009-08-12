@@ -44,7 +44,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= docshell
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 XPIDL_MODULE	= docshell_base
 endif
 LIBRARY_NAME	= basedocshell_s

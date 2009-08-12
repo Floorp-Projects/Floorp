@@ -393,7 +393,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   // titlebar color (for unified windows), so use the special ToolbarWindow class. 
   // Note that we need to check the window type because we mark sheets as 
   // having titlebars.
-  if (mWindowType == eWindowType_toplevel &&
+  if ((mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) &&
       (features & NSTitledWindowMask))
     windowClass = [ToolbarWindow class];
   // If we're a popup window we need to use the PopupWindow class.
@@ -732,7 +732,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   }
   else {
     // roll up any popups if a top-level window is going away
-    if (mWindowType == eWindowType_toplevel)
+    if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)
       RollUpPopups();
 
     // now get rid of the window/sheet
@@ -1424,6 +1424,15 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+void nsCocoaWindow::SetShowsToolbarButton(PRBool aShow)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mWindow setShowsToolbarButton:aShow];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1827,7 +1836,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
     [super setBackgroundColor:mColor];
 
     mUnifiedToolbarHeight = 0.0f;
-    mSuppressPainting = NO;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -1905,12 +1913,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
-- (BOOL)isPaintingSuppressed
-{
-  return mSuppressPainting;
-}
-
-// Always show the toolbar pill button.
+// Returning YES here makes the setShowsToolbarButton method work even though
+// the window doesn't contain an NSToolbar.
 - (BOOL)_hasToolbar
 {
   return YES;
@@ -1991,14 +1995,16 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 
 @implementation ToolbarWindow(Private)
 
-// [self display] seems to be the only way to repaint a window's titlebar.
-// The bad thing about it is that it repaints all the window's subviews as well.
-// So we use a guard to prevent unnecessary redrawing.
 - (void)redrawTitlebar
 {
-  mSuppressPainting = YES;
-  [self display];
-  mSuppressPainting = NO;
+  NSView* borderView = [[self contentView] superview];
+  if (!borderView)
+    return;
+
+  NSRect rect = NSMakeRect(0, [[self contentView] bounds].size.height,
+                           [borderView bounds].size.width, [self titlebarHeight]);
+  // setNeedsDisplayInRect doesn't have any effect here, but displayRect does.
+  [borderView displayRect:rect];
 }
 
 @end
@@ -2077,8 +2083,8 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
     // Draw the one pixel border at the bottom of the titlebar.
     if ([window unifiedToolbarHeight] == 0) {
-      [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
-      NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
+      CGRect borderRect = CGRectMake(0.0f, titlebarOrigin, sPatternWidth, 1.0f);
+      DrawNativeGreyColorInRect(aContext, headerBorderGrey, borderRect, isMain);
     }
   } else {
     // if the titlebar color is not nil, just set and draw it normally.

@@ -670,12 +670,8 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
       }
     }
 
-    if (!XPCWrapper::GetOrSetNativeProperty(cx, obj, wn, id, vp, isSet,
-                                            JS_FALSE)) {
-      return JS_FALSE;
-    }
-
-    return XPC_XOW_RewrapIfNeeded(cx, obj, vp);
+    return XPCWrapper::GetOrSetNativeProperty(cx, obj, wn, id, vp, isSet,
+                                              JS_FALSE);
   }
 
   JSObject *proto = nsnull; // Initialize this to quiet GCC.

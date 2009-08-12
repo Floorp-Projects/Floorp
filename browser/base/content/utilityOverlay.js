@@ -95,16 +95,29 @@ function getBoolPref ( prefname, def )
 // window itself.
 function focusElement(aElement)
 {
+  var msg;
+
   // if a content window, focus the <browser> instead as window.focus()
   // raises the window
   if (aElement instanceof Window) {
     var browser = getBrowserFromContentWindow(aElement);
-    if (browser)
-      browser.focus();
+    if (!browser)
+      throw "aElement is not a content window";
+    browser.focus();
+    msg = "focusElement(content) is deprecated. Use gBrowser.selectedBrowser.focus() instead.";
   }
   else {
     aElement.focus();
+    msg = "focusElement(element) is deprecated. Use element.focus() instead.";
   }
+
+  var scriptError = Components.classes["@mozilla.org/scripterror;1"]
+                              .createInstance(Components.interfaces.nsIScriptError);
+  scriptError.init(msg, document.location.href, null, null, 
+                   null, scriptError.warningFlag, "chrome javascript");
+  Components.classes["@mozilla.org/consoleservice;1"]
+            .getService(Components.interfaces.nsIConsoleService)
+            .logMessage(scriptError);
 }
 
 // openUILink handles clicks on UI elements that cause URLs to load.
@@ -253,14 +266,10 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData, referrerUrl )
   // resulted in a new frontmost window (e.g. "javascript:window.open('');").
   var fm = Components.classes["@mozilla.org/focus-manager;1"].
              getService(Components.interfaces.nsIFocusManager);
-  if (window == fm.activeWindow) {
+  if (window == fm.activeWindow)
     w.content.focus();
-  }
-  else {
-    let browser = w.getBrowserFromContentWindow(w.content);
-    if (browser)
-      browser.focus();
-  }
+  else
+    w.gBrowser.selectedBrowser.focus();
 }
 
 // Used as an onclick handler for UI elements with link-like behavior.

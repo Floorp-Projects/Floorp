@@ -1,9 +1,0 @@
-From: <mscott@netscape.com>
-Subject: Test of the SMTP Protocol....
-Organization: Netscape Communications Co.
-
-This is a test of the smtp protocol. This message is being sent by the new
-SMTP protocol module. This message has been hard coded into a text file
-and then wrapped up into an nsSmtpUrl. 
-
--Scott

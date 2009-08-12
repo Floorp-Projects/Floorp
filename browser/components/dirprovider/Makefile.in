@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE               = browsercomps
 LIBRARY_NAME         = browserdirprovider
-ifneq ($(OS_ARCH),WINNT)
+ifeq (,$(filter WINNT WINCE,$(OS_ARCH)))
 SHORT_LIBNAME        = brwsrdir
 endif
 IS_COMPONENT         = 1

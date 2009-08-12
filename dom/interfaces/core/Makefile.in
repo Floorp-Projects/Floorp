@@ -80,7 +80,8 @@ XPIDLSRCS =                                     \
 	nsIDOMDOMConfiguration.idl		\
 	nsIDOMNSEditableElement.idl		\
 	nsIDOMNSElement.idl			\
-	nsIDOMNodeSelector.idl                  \
+	nsIDOMNodeSelector.idl			\
+	nsIDOMDOMTokenList.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

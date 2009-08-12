@@ -238,14 +238,14 @@ INT64_TO_DOUBLE(const int64 &v)
 
 // static
 JSBool
-XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
+XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                           const nsXPTType& type, const nsID* iid,
                           JSObject* scope, nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
 
-    JSContext* cx = ccx.GetJSContext();
+    JSContext* cx = lccx.GetJSContext();
 
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
@@ -456,7 +456,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                         if(!variant)
                             return JS_FALSE;
 
-                        return XPCVariant::VariantDataToJS(ccx, variant, 
+                        return XPCVariant::VariantDataToJS(lccx, variant, 
                                                            scope, pErr, d);
                     }
                     // else...
@@ -466,7 +466,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                     // global object will not have been collected, and
                     // therefore this NativeInterface2JSObject will not end up
                     // creating a new XPCNativeScriptableShared.
-                    if(!NativeInterface2JSObject(ccx, d, nsnull, iface, iid,
+                    if(!NativeInterface2JSObject(lccx, d, nsnull, iface, iid,
                                                  nsnull, nsnull, scope, PR_TRUE,
                                                  OBJ_IS_NOT_GLOBAL, pErr))
                         return JS_FALSE;
@@ -1045,12 +1045,12 @@ CreateHolderIfNeeded(XPCCallContext& ccx, JSObject* obj, jsval* d,
 /***************************************************************************/
 // static
 JSBool
-XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
+XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                      jsval* d,
                                      nsIXPConnectJSObjectHolder** dest,
                                      nsISupports* src,
                                      const nsID* iid,
-                                     XPCNativeInterface* Interface,
+                                     XPCNativeInterface** Interface,
                                      nsWrapperCache *cache,
                                      JSObject* scope,
                                      PRBool allowNativeWrapper,
@@ -1058,6 +1058,8 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                                      nsresult* pErr)
 {
     NS_ASSERTION(scope, "bad param");
+    NS_ASSERTION(!Interface || iid,
+                 "Need the iid if you pass in an XPCNativeInterface cache.");
 
     *d = JSVAL_NULL;
     if(dest)
@@ -1085,10 +1087,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 
         // verify that this wrapper is for the right interface
         nsCOMPtr<nsISupports> wrapper;
-        if(Interface)
-            src->QueryInterface(*Interface->GetIID(),
-                                (void**)getter_AddRefs(wrapper));
-        else if(iid)
+        if(iid)
             src->QueryInterface(*iid, (void**)getter_AddRefs(wrapper));
         else
             wrapper = do_QueryInterface(src);
@@ -1106,13 +1105,17 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
     else
 #endif /* XPC_DO_DOUBLE_WRAP */
     {
+        JSContext* cx = lccx.GetJSContext();
+
         XPCWrappedNativeScope* xpcscope =
-            XPCWrappedNativeScope::FindInJSObjectScope(ccx, scope);
+            XPCWrappedNativeScope::FindInJSObjectScope(cx, scope);
         if(!xpcscope)
             return JS_FALSE;
 
         if(!cache)
             CallQueryInterface(src, &cache);
+
+        PRBool tryConstructSlimWrapper = PR_FALSE;
         JSObject *flat;
         if(cache)
         {
@@ -1121,24 +1124,11 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             {
                 if(!flat)
                 {
-                    jsval slim;
-                    if(ConstructSlimWrapper(ccx, src, cache, Interface,
-                                            xpcscope, &slim))
-                    {
-                        *d = slim;
-                        return JS_TRUE;
-                    }
-
-                    // Even if ConstructSlimWrapper returns JS_FALSE it might
-                    // have created a wrapper (while calling the PreCreate
-                    // hook). In that case we need to fall through because we
-                    // either have a slim wrapper that needs to be morphed or
-                    // we have an XPCWrappedNative.
-                    flat = cache->GetWrapper();
+                    tryConstructSlimWrapper = PR_TRUE;
                 }
                 else if(!IS_WRAPPER_CLASS(STOBJ_GET_CLASS(flat)))
                 {
-                    JSObject* global = JS_GetGlobalForObject(ccx, flat);
+                    JSObject* global = JS_GetGlobalForObject(cx, flat);
                     if(global == xpcscope->GetGlobalJSObject())
                     {
                         *d = OBJECT_TO_JSVAL(flat);
@@ -1152,12 +1142,47 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             flat = nsnull;
         }
 
-        AutoMarkingNativeInterfacePtr iface(ccx, Interface);
-        if(!iface && iid)
+        if(tryConstructSlimWrapper)
         {
-            iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
-            if(!iface)
+            XPCCallContext &ccx = lccx.GetXPCCallContext();
+            if(!ccx.IsValid())
                 return JS_FALSE;
+
+            jsval slim;
+            if(ConstructSlimWrapper(ccx, src, cache, xpcscope, &slim))
+            {
+                *d = slim;
+                return JS_TRUE;
+            }
+
+            // Even if ConstructSlimWrapper returns JS_FALSE it might have created a
+            // wrapper (while calling the PreCreate hook). In that case we need to
+            // fall through because we either have a slim wrapper that needs to be
+            // morphed or we have an XPCWrappedNative.
+            flat = cache->GetWrapper();
+        }
+
+        AutoMarkingNativeInterfacePtr iface;
+        if(iid)
+        {
+            XPCCallContext &ccx = lccx.GetXPCCallContext();
+            if(!ccx.IsValid())
+                return JS_FALSE;
+
+            iface.Init(ccx);
+
+            if(Interface)
+                iface = *Interface;
+
+            if(!iface)
+            {
+                iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+                if(!iface)
+                    return JS_FALSE;
+
+                if(Interface)
+                    *Interface = iface;
+            }
         }
 
         nsresult rv;
@@ -1165,6 +1190,10 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         nsRefPtr<XPCWrappedNative> strongWrapper;
         if(!flat)
         {
+            XPCCallContext &ccx = lccx.GetXPCCallContext();
+            if(!ccx.IsValid())
+                return JS_FALSE;
+
             rv = XPCWrappedNative::GetNewOrUsed(ccx, src, xpcscope, iface,
                                                 cache, isGlobal,
                                                 getter_AddRefs(strongWrapper));
@@ -1180,8 +1209,12 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             // rooted in that case).
             if(dest)
                 strongWrapper = wrapper;
+            // If iface is not null we know lccx.GetXPCCallContext() returns
+            // a valid XPCCallContext because we checked when calling Init on
+            // iface.
             if(iface)
-                wrapper->FindTearOff(ccx, iface, JS_FALSE, &rv);
+                wrapper->FindTearOff(lccx.GetXPCCallContext(), iface, JS_FALSE,
+                                     &rv);
             else
                 rv = NS_OK;
         }
@@ -1189,6 +1222,11 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
         {
             NS_ASSERTION(IS_SLIM_WRAPPER(flat),
                          "What kind of wrapper is this?");
+
+            XPCCallContext &ccx = lccx.GetXPCCallContext();
+            if(!ccx.IsValid())
+                return JS_FALSE;
+
             SLIM_LOG(("***** morphing from XPCConvert::NativeInterface2JSObject"
                       "(%p)\n",
                       static_cast<nsISupports*>(xpc_GetJSPrivate(flat))));
@@ -1202,6 +1240,10 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             *pErr = rv;
         if(NS_SUCCEEDED(rv) && wrapper)
         {
+            XPCCallContext &ccx = lccx.GetXPCCallContext();
+            if(!ccx.IsValid())
+                return JS_FALSE;
+
             uint32 flags = 0;
             flat = wrapper->GetFlatJSObject();
             jsval v = OBJECT_TO_JSVAL(flat);
@@ -1886,7 +1928,7 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
 
 // static
 JSBool
-XPCConvert::NativeArray2JS(XPCCallContext& ccx,
+XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
                            jsval* d, const void** s,
                            const nsXPTType& type, const nsID* iid,
                            JSUint32 count, JSObject* scope,
@@ -1894,6 +1936,10 @@ XPCConvert::NativeArray2JS(XPCCallContext& ccx,
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
+
+    XPCCallContext& ccx = lccx.GetXPCCallContext();
+    if(!ccx.IsValid())
+        return JS_FALSE;
 
     JSContext* cx = ccx.GetJSContext();
 
@@ -2128,7 +2174,7 @@ failure:
 
 // static
 JSBool
-XPCConvert::NativeStringWithSize2JS(XPCCallContext& ccx,
+XPCConvert::NativeStringWithSize2JS(JSContext* cx,
                                     jsval* d, const void* s,
                                     const nsXPTType& type,
                                     JSUint32 count,
@@ -2136,8 +2182,6 @@ XPCConvert::NativeStringWithSize2JS(XPCCallContext& ccx,
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
-
-    JSContext* cx = ccx.GetJSContext();
 
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;

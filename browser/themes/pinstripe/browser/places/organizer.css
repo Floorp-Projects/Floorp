@@ -24,16 +24,12 @@
 }
 
 #placesList treechildren::-moz-tree-row(selected) {  
-  background-color: #6f81a9;
-  background-image: url("chrome://browser/skin/places/selected-gradient.png");
-  background-repeat: repeat-x;
-  background-position: bottom left;
+  background: -moz-linear-gradient(top, bottom, from(#B5B5B5), to(#8A8A8A)) repeat-x;
   border-top: 1px solid #979797;
 }
 
 #placesList treechildren::-moz-tree-row(selected,focus) {  
-  background-image: url("chrome://browser/skin/places/selected-focused-gradient.png");
-  background-color: #8a8a8a !important;
+  background: -moz-linear-gradient(top, bottom, from(#A2B1D0), to(#6E81A9)) repeat-x;
   border-top: 1px solid #91a0c0;
 }
 
@@ -329,7 +325,7 @@
 
 #organizerScopeBar {
   -moz-appearance: none;
-  background: url("chrome://global/skin/icons/find-bar-background.png") repeat-x top center #D0D0D0;
+  background: -moz-linear-gradient(top, bottom, from(#E8E8E8), to(#D0D0D0)) repeat-x;
   color: #474747;
   font-size: 105%;
   font-weight: bold;
@@ -369,6 +365,7 @@
 }
 
 #organizerScopeBar > toolbarbutton[checked="true"]  {
+  /* will be updated in bug 508728 */
   background: url("chrome://global/skin/icons/white-gray-gradient-active.gif") repeat-x -1px 50%;
   border-color:   #656565;
   color: #fff !important;

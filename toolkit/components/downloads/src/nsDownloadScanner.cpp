@@ -138,8 +138,6 @@
  *  * Get antivirus scanner status via WMI/registry
  */
 
-#define PREF_BDM_SKIPWINPOLICYCHECKS "browser.download.manager.skipWinSecurityPolicyChecks"
-
 // IAttachementExecute supports user definable settings for certain
 // security related prompts. This defines a general GUID for use in
 // all projects. Individual projects can define an individual guid
@@ -178,15 +176,8 @@ private:
   HANDLE mQuitEvent;
 };
 
-NS_IMPL_ISUPPORTS1(
-  nsDownloadScanner
-  , nsIObserver
-  )
-
 nsDownloadScanner::nsDownloadScanner() :
-  mOAVExists(PR_FALSE)
-  , mAESExists(PR_FALSE)
-  , mUseAttachmentExecute(PR_FALSE)
+  mAESExists(PR_FALSE)
 {
 }
  
@@ -207,20 +198,13 @@ nsDownloadScanner::Init()
   nsresult rv = NS_OK;
   CoInitialize(NULL);
 
-  // Check for the existence of IAE
-  mAESExists = IsAESAvailable();
-
-  // Init OAV scanner list
-  mOAVExists = EnumerateOAVProviders();
-  
-  CoUninitialize();
-
-  if (!mAESExists && !mOAVExists)
+  if (!IsAESAvailable()) {
+    CoUninitialize();
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  if (mAESExists)
-    mUseAttachmentExecute = PR_TRUE;
-  
+  mAESExists = PR_TRUE;
+
   // Initialize scanning
   mWatchdog = new nsDownloadScannerWatchdog();
   if (mWatchdog) {
@@ -233,30 +217,6 @@ nsDownloadScanner::Init()
   
   if (NS_FAILED(rv))
     return rv;
-
-  // If skipWinSecurityPolicyChecks is set, do not use attachement execute,
-  // fall back on the older interface. AE does virus scanning, applies
-  // security policy checks, and also adds security meta data to downloaded
-  // content.
-  PRBool skipPolicy = PR_FALSE;
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefs)
-    (void)prefs->GetBoolPref(PREF_BDM_SKIPWINPOLICYCHECKS, &skipPolicy);
-  if (skipPolicy)
-    mUseAttachmentExecute = PR_FALSE;
-  
-  // Setup a pref change even for the policy check pref.
-  nsCOMPtr<nsIPrefBranch2> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-  if (prefBranch)
-    (void)prefBranch->AddObserver(PREF_BDM_SKIPWINPOLICYCHECKS, this, PR_FALSE);
-
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  
-  if (observerService)
-    (void)observerService->AddObserver(this, "quit-application", PR_FALSE);
 
   return rv;
 }
@@ -276,67 +236,6 @@ nsDownloadScanner::IsAESAvailable()
   return PR_TRUE;
 }
 
-PRBool
-nsDownloadScanner::EnumerateOAVProviders()
-{
-  nsRefPtr<ICatInformation> catInfo;
-  HRESULT hr;
-  hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC,
-                        IID_ICatInformation, getter_AddRefs(catInfo));
-  if (FAILED(hr)) {
-    NS_WARNING("Could not create category information class\n");
-    return PR_FALSE;
-  }
-  nsRefPtr<IEnumCLSID> clsidEnumerator;
-  GUID guids [1] = { CATID_MSOfficeAntiVirus };
-  hr = catInfo->EnumClassesOfCategories(1, guids, 0, NULL,
-      getter_AddRefs(clsidEnumerator));
-  if (FAILED(hr)) {
-    NS_WARNING("Could not get class enumerator for category\n");
-    return PR_FALSE;
-  }
-
-  ULONG nReceived;
-  CLSID clsid;
-  while(clsidEnumerator->Next(1, &clsid, &nReceived) == S_OK && nReceived == 1)
-    mScanCLSID.AppendElement(clsid);
-
-  if (mScanCLSID.Length() == 0) {
-    // No installed Anti Virus program
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
-// XPCOM pref change observer - reset our default scanner settings.
-NS_IMETHODIMP
-nsDownloadScanner::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
-{
-  nsCOMPtr<nsIPrefBranch2> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-  if (aTopic && !strcmp(aTopic, "quit-application")) {
-    if (prefBranch)
-      (void)prefBranch->RemoveObserver(PREF_BDM_SKIPWINPOLICYCHECKS, this);
-
-    nsCOMPtr<nsIObserverService> observerService =
-      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-    
-    if (observerService)
-      (void)observerService->RemoveObserver(this, "quit-application");
-    return S_OK;
-  }
-  
-  PRBool skipPolicyCheck = PR_FALSE;
-  if (prefBranch)
-    (void)prefBranch->GetBoolPref(PREF_BDM_SKIPWINPOLICYCHECKS, &skipPolicyCheck);
-
-  mUseAttachmentExecute = !skipPolicyCheck && mAESExists;
-  
-  return NS_OK;
-}
-
 // If IAttachementExecute is available, use the CheckPolicy call to find out
 // if this download should be prevented due to Security Zone Policy settings.
 AVCheckPolicyState
@@ -344,7 +243,7 @@ nsDownloadScanner::CheckPolicy(nsIURI *aSource, nsIURI *aTarget)
 {
   nsresult rv;
 
-  if (!aSource || !aTarget || !mUseAttachmentExecute)
+  if (!mAESExists || !aSource || !aTarget)
     return AVPOLICY_DOWNLOAD;
 
   nsCAutoString source;
@@ -639,97 +538,12 @@ nsDownloadScanner::Scan::DoScanAES()
 }
 #pragma warning(default: 4509)
 
-PRBool
-nsDownloadScanner::Scan::DoScanOAV()
-{
-  HRESULT hr;
-  MSOAVINFO info;
-  info.cbsize = sizeof(MSOAVINFO);
-  info.fPath = TRUE;
-  info.fInstalled = FALSE;
-  info.fReadOnlyRequest = FALSE;
-  info.fHttpDownload = mIsHttpDownload;
-  info.hwnd = NULL;
-
-  info.pwzHostName = mName.BeginWriting();
-  info.u.pwzFullPath = mPath.BeginWriting();
-  info.pwzOrigURL = mOrigin.BeginWriting();
-
-  AVScanState newState = AVSCAN_GOOD;
-  // If we (somehow) already timed out, then don't bother scanning
-  if (CheckAndSetState(AVSCAN_SCANNING, AVSCAN_NOTSTARTED)) {
-    // This warning is for the destructor of vScanner which will not be invoked
-    // in the event of a win32 exception
-#pragma warning(disable: 4509)
-    for (PRUint32 i = 0; i < mDLScanner->mScanCLSID.Length(); i++) {
-      nsRefPtr<IOfficeAntiVirus> vScanner;
-      __try {
-        hr = CoCreateInstance(mDLScanner->mScanCLSID[i], NULL, CLSCTX_ALL,
-                              IID_IOfficeAntiVirus, getter_AddRefs(vScanner));
-      } __except(ExceptionFilterFunction(GetExceptionCode())) {
-        newState = AVSCAN_FAILED;
-        // Try the next one if there is one
-        continue;
-      }
-      if (FAILED(hr)) {
-        NS_WARNING("Could not instantiate antivirus scanner");
-        newState = AVSCAN_FAILED;
-      } else {
-        PRBool gotException = PR_FALSE;
-        newState = AVSCAN_SCANNING;
-
-        __try {
-          hr = vScanner->Scan(&info);
-        } __except(ExceptionFilterFunction(GetExceptionCode())) {
-          gotException = PR_TRUE;
-        }
-
-        // Invoke destructor
-        __try {
-          vScanner = NULL;
-        } __except(ExceptionFilterFunction(GetExceptionCode())) {
-          gotException = PR_TRUE;
-        }
-
-        if(gotException) {
-          newState = AVSCAN_FAILED;
-          continue;
-        } else if (hr == S_OK) { // Passed the scan
-          newState = AVSCAN_GOOD;
-          continue;
-        }
-        else if (hr == S_FALSE) { // Failed but cleaned up
-          newState = AVSCAN_UGLY;
-          continue;
-        }
-        else if (hr == ERROR_FILE_NOT_FOUND) {
-          NS_WARNING("Downloaded file disappeared before it could be scanned");
-          newState = AVSCAN_FAILED;
-          break;
-        }
-        else if (hr == E_FAIL) { // Failed
-          newState = AVSCAN_BAD;
-          break;
-        }
-        else {
-          newState = AVSCAN_FAILED;
-          break;
-        }
-      }
-    }
-#pragma warning(default: 4509)
-  }
-
-  // If the previous CheckAndSetState call failed, then this one will too
-  return CheckAndSetState(newState, AVSCAN_SCANNING);
-}
-
 void
 nsDownloadScanner::Scan::DoScan()
 {
   CoInitialize(NULL);
 
-  if (mDLScanner->mUseAttachmentExecute ? DoScanAES() : DoScanOAV()) {
+  if (DoScanAES()) {
     // We need to do a few more things on the main thread
     NS_DispatchToMainThread(this);
   } else {
@@ -785,7 +599,7 @@ nsDownloadScanner::Scan::CheckAndSetState(AVScanState newState, AVScanState expe
 nsresult
 nsDownloadScanner::ScanDownload(nsDownload *download)
 {
-  if (!mUseAttachmentExecute && !mOAVExists)
+  if (!mAESExists)
     return NS_ERROR_NOT_AVAILABLE;
 
   // No ref ptr, see comment below

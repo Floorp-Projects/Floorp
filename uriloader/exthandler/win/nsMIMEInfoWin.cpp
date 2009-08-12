@@ -146,7 +146,7 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile)
         if (ShellExecuteExW(&seinfo))
           return NS_OK;
 
-        switch ((int)seinfo.hInstApp) {
+        switch ((LONG_PTR)seinfo.hInstApp) {
           case 0:
           case SE_ERR_OOM:
             return NS_ERROR_OUT_OF_MEMORY;
@@ -326,7 +326,7 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
     }
     if (NS_SUCCEEDED(rv)) {
       BOOL result = ShellExecuteExW(&sinfo);
-      if (!result || ((int)sinfo.hInstApp) < 32)
+      if (!result || ((LONG_PTR)sinfo.hInstApp) < 32)
         rv = NS_ERROR_FAILURE;
     }
 #ifndef WINCE

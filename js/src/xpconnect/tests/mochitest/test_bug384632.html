@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=384632
+-->
+<head>
+  <title>Test for Bug 384632</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=384632">Mozilla Bug 384632</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 384632 **/
+var div = $('content');
+var obj = {};
+div.setUserData("foopy", obj, function() {});
+ok(div.getUserData("foopy") === obj, "getUserData works with regular objects");
+div.setUserData("foopy1", sidebar, function() {});
+ok(div.getUserData("foopy1") === sidebar, "getUserData works with bizarre objects");
+
+</script>
+</pre>
+</body>
+</html>

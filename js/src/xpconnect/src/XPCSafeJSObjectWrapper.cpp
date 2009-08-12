@@ -854,6 +854,10 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   jsval argsBuf[8];
   jsval *args = argsBuf;
 
+  tmp = ::JS_GetFunctionObject(callWrapper);
+  if (!tmp)
+    return JS_FALSE;
+
   if (argc > 7) {
     args = (jsval *)nsMemory::Alloc((argc + 2) * sizeof(jsval *));
     if (!args) {
@@ -861,12 +865,8 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
 
-  args[0] = OBJECT_TO_JSVAL(::JS_GetFunctionObject(callWrapper));
+  args[0] = OBJECT_TO_JSVAL(tmp);
   args[1] = OBJECT_TO_JSVAL(funToCall);
-
-  if (args[0] == JSVAL_NULL) {
-    return JS_FALSE;
-  }
 
   for (uintN i = 0; i < argc; ++i) {
     args[i + 2] = UnwrapJSValue(argv[i]);

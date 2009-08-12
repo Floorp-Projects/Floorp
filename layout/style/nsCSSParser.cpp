@@ -260,8 +260,16 @@ protected:
 #endif
 
   PRBool GetToken(PRBool aSkipWS);
-  PRBool GetURLToken();
   void UngetToken();
+
+  // get the part in paretheses of the url() function, which is really a
+  // part of a token in the CSS grammar, but we're using a combination
+  // of the parser and the scanner to do it to handle the backtracking
+  // required by the error handling of the tokenization (since if we
+  // fail to scan the full token, we should fall back to tokenizing as
+  // FUNCTION ... ')').
+  // Note that this function WILL WRITE TO aURL IN SOME FAILURE CASES.
+  PRBool GetURLInParens(nsString& aURL);
 
   void AssertInitialState() {
     NS_PRECONDITION(!mHTMLMediaMode, "Bad initial state");
@@ -1284,21 +1292,33 @@ CSSParserImpl::GetToken(PRBool aSkipWS)
 }
 
 PRBool
-CSSParserImpl::GetURLToken()
+CSSParserImpl::GetURLInParens(nsString& aURL)
 {
-  for (;;) {
-    // XXXldb This pushback code doesn't make sense.
-    if (! mHavePushBack) {
-      if (! mScanner.NextURL(mToken)) {
-        break;
-      }
+  if (!ExpectSymbol('(', PR_FALSE))
+    return PR_FALSE;
+
+  NS_ASSERTION(!mHavePushBack,
+               "ExpectSymbol returning success shouldn't leave pushback");
+  do {
+    if (! mScanner.NextURL(mToken)) {
+      return PR_FALSE;
     }
-    mHavePushBack = PR_FALSE;
-    if (eCSSToken_WhiteSpace != mToken.mType) {
-      return PR_TRUE;
-    }
+  } while (eCSSToken_WhiteSpace == mToken.mType);
+
+  aURL = mToken.mIdent;
+
+  if ((eCSSToken_String != mToken.mType && eCSSToken_URL != mToken.mType) ||
+      !ExpectSymbol(')', PR_TRUE)) {
+    // in the failure case, we have to match parentheses, as if this
+    // weren't treated as a URL token by the tokenization
+
+    // XXX We really need to push aURL back into the buffer before this
+    // SkipUntil!
+    SkipUntil(')');
+    return PR_FALSE;
   }
-  return PR_FALSE;
+
+  return PR_TRUE;
 }
 
 void
@@ -1505,14 +1525,8 @@ CSSParserImpl::GatherURL(nsString& aURL)
   }
   else if (eCSSToken_Function == mToken.mType &&
            mToken.mIdent.LowerCaseEqualsLiteral("url") &&
-           ExpectSymbol('(', PR_FALSE) &&
-           GetURLToken() &&
-           (eCSSToken_String == mToken.mType ||
-            eCSSToken_URL == mToken.mType)) {
-    aURL = mToken.mIdent;
-    if (ExpectSymbol(')', PR_TRUE)) {
-      return PR_TRUE;
-    }
+           GetURLInParens(aURL)) {
+    return PR_TRUE;
   }
   return PR_FALSE;
 }
@@ -1978,15 +1992,9 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
       cur->func = nsCSSDocumentRule::eDomain;
     }
 
-    if (!ExpectSymbol('(', PR_FALSE) ||
-        !GetURLToken() ||
-        (eCSSToken_String != mToken.mType &&
-         eCSSToken_URL != mToken.mType)) {
+    nsAutoString url;
+    if (!GetURLInParens(url)) {
       REPORT_UNEXPECTED_TOKEN(PEMozDocRuleNotURI);
-      delete urls;
-      return PR_FALSE;
-    }
-    if (!ExpectSymbol(')', PR_TRUE)) {
       delete urls;
       return PR_FALSE;
     }
@@ -1994,7 +2002,7 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
     // We could try to make the URL (as long as it's not domain())
     // canonical and absolute with NS_NewURI and GetSpec, but I'm
     // inclined to think we shouldn't.
-    CopyUTF16toUTF8(mToken.mIdent, cur->url);
+    CopyUTF16toUTF8(url, cur->url);
   } while (ExpectSymbol(',', PR_TRUE));
 
   nsRefPtr<nsCSSDocumentRule> rule(new nsCSSDocumentRule());
@@ -2038,18 +2046,10 @@ CSSParserImpl::ParseNameSpaceRule(RuleAppendFunc aAppendFunc, void* aData)
   }
   else if ((eCSSToken_Function == mToken.mType) &&
            (mToken.mIdent.LowerCaseEqualsLiteral("url"))) {
-    if (ExpectSymbol('(', PR_FALSE)) {
-      if (GetURLToken()) {
-        if ((eCSSToken_String == mToken.mType) || (eCSSToken_URL == mToken.mType)) {
-          url = mToken.mIdent;
-          if (ExpectSymbol(')', PR_TRUE)) {
-            if (ExpectSymbol(';', PR_TRUE)) {
-              ProcessNameSpace(prefix, url, aAppendFunc, aData);
-              return PR_TRUE;
-            }
-          }
-        }
-      }
+    if (GetURLInParens(url) &&
+        ExpectSymbol(';', PR_TRUE)) {
+      ProcessNameSpace(prefix, url, aAppendFunc, aData);
+      return PR_TRUE;
     }
   }
   REPORT_UNEXPECTED_TOKEN(PEAtNSUnexpected);
@@ -4738,17 +4738,8 @@ CSSParserImpl::ParseURL(nsCSSValue& aValue)
     return PR_FALSE;
   }
 
-  if (!ExpectSymbol('(', PR_FALSE))
-    return PR_FALSE;
-  if (!GetURLToken())
-    return PR_FALSE;
-
-  nsCSSToken* tk = &mToken;
-  if (eCSSToken_String != tk->mType && eCSSToken_URL != tk->mType)
-    return PR_FALSE;
-
-  nsString url = tk->mIdent;
-  if (!ExpectSymbol(')', PR_TRUE))
+  nsString url;
+  if (!GetURLInParens(url))
     return PR_FALSE;
 
   // Translate url into an absolute url if the url is relative to the

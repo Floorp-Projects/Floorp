@@ -45,10 +45,32 @@
 // Defines for various style related constants
 
 enum nsChangeHint {
-  nsChangeHint_RepaintFrame = 0x01,  // change was visual only (e.g., COLOR=)
-  nsChangeHint_ReflowFrame = 0x02,   // change requires reflow (e.g., WIDTH=)
-  nsChangeHint_SyncFrameView = 0x04, // change requires view to be updated, if there is one (e.g., clip:)
-  nsChangeHint_UpdateCursor = 0x08,  // The currently shown mouse cursor needs to be updated
+  // change was visual only (e.g., COLOR=)
+  nsChangeHint_RepaintFrame = 0x01,
+
+  // For reflow, we want flags to give us arbitrary FrameNeedsReflow behavior.
+  // just do a FrameNeedsReflow
+  nsChangeHint_NeedReflow = 0x02,
+
+  // Invalidate intrinsic widths on the frame's ancestors.  Must not be set
+  // without setting nsChangeHint_NeedReflow.
+  nsChangeHint_ClearAncestorIntrinsics = 0x04,
+
+  // Invalidate intrinsic widths on the frame's descendants.  Must not be set
+  // without also setting nsChangeHint_ClearAncestorIntrinsics.
+  nsChangeHint_ClearDescendantIntrinsics = 0x08,
+
+  // Force unconditional reflow of all descendants.  Must not be set without
+  // setting nsChangeHint_NeedReflow, but is independent of both the
+  // Clear*Intrinsics flags.
+  nsChangeHint_NeedDirtyReflow = 0x10,
+
+  // change requires view to be updated, if there is one (e.g., clip:)
+  nsChangeHint_SyncFrameView = 0x20,
+
+  // The currently shown mouse cursor needs to be updated
+  nsChangeHint_UpdateCursor = 0x40,
+
   /**
    * SVG filter/mask/clip effects need to be recomputed because the URI
    * in the filter/mask/clip-path property has changed. This wipes
@@ -58,14 +80,13 @@ enum nsChangeHint {
    * bounding-box for the filter result so that if the filter changes we can
    * invalidate the old covered area.
    */
-  nsChangeHint_UpdateEffects = 0x10,
-  nsChangeHint_ReconstructFrame = 0x20   // change requires frame change (e.g., display:)
-                                         // This subsumes all the above
-  // TBD: add nsChangeHint_ForceFrameView to force frame reconstruction if the frame doesn't yet
-  // have a view
+  nsChangeHint_UpdateEffects = 0x80,
+
+  // change requires frame change (e.g., display:).
+  // This subsumes all the above.
+  nsChangeHint_ReconstructFrame = 0x100
 };
 
-#ifdef DEBUG_roc
 // Redefine these operators to return nothing. This will catch any use
 // of these operators on hints. We should not be using these operators
 // on nsChangeHints
@@ -75,7 +96,6 @@ inline void operator!=(nsChangeHint s1, nsChangeHint s2) {}
 inline void operator==(nsChangeHint s1, nsChangeHint s2) {}
 inline void operator<=(nsChangeHint s1, nsChangeHint s2) {}
 inline void operator>=(nsChangeHint s1, nsChangeHint s2) {}
-#endif
 
 // Operators on nsChangeHints
 
@@ -108,11 +128,15 @@ inline PRBool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
   nsChangeHint(0)
 #define NS_STYLE_HINT_VISUAL \
   nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView)
+#define nsChangeHint_ReflowFrame                        \
+  nsChangeHint(nsChangeHint_NeedReflow |                \
+               nsChangeHint_ClearAncestorIntrinsics |   \
+               nsChangeHint_ClearDescendantIntrinsics | \
+               nsChangeHint_NeedDirtyReflow)
 #define NS_STYLE_HINT_REFLOW \
   nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_ReflowFrame)
 #define NS_STYLE_HINT_FRAMECHANGE \
   nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_ReconstructFrame)
-
 
 /**
  * |nsReStyleHint| is a bitfield for the result of |HasStateDependentStyle|

@@ -1,0 +1,23 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" style="-moz-binding:url(#xbl2)" class="reftest-wait">
+<tooltip/>
+
+<script id="script" xmlns="http://www.w3.org/1999/xhtml">
+function doe() {
+document.getElementsByTagName('tooltip')[0].setAttribute('style', '-moz-binding:url(#xbl)');
+document.getElementsByTagName('tooltip')[0].setAttribute('onDOMAttrModified', 'this.focus()');
+document.documentElement.removeAttribute("class");
+}
+setTimeout(doe, 1);
+</script>
+
+<bindings xmlns="http://www.mozilla.org/xbl" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<binding id="xbl">
+<content>
+<xul:box onbroadcast="document.documentElement.setAttribute('a','a')" id="g"/>
+<xul:box onDOMAttrModified="document.documentElement.style.display = 'none'" observes="g"/>
+</content>
+</binding>
+
+<binding id="xbl2"></binding>
+</bindings>
+</window>

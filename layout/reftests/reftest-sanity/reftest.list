@@ -9,6 +9,9 @@
 # test that zoom works (and really zooms, not just scales)
 == test-zoom.html test-zoom-ref.html
 
+# make sure we don't fall over if the root is missing
+== no-root.html about:blank
+
 # Makes sure that the file: protocol handler and HTTP server both
 # choose HTML vs. XHTML processing based on the file extensions.
 != html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.xhtml

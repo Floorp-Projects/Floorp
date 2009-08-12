@@ -42,7 +42,6 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
-#include "nsILocale.h"
 #include "nsIWin32Locale.h"
 #include <windows.h>
 

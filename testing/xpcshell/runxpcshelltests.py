@@ -37,11 +37,12 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-import re, sys, os, os.path, logging
+import re, sys, os, os.path, logging, shutil
 import tempfile
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
+from tempfile import mkdtemp
 
 from automationutils import addCommonOptions, checkForCrashes
 
@@ -223,10 +224,16 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
       # The test file will have to be loaded after the head files.
       cmdT = ['-e', 'const _TEST_FILE = ["%s"];' %
                       os.path.join(testdir, test).replace('\\', '/')]
+      # create a temp dir that the JS harness can stick a profile in
+      profd = mkdtemp()
+      env["XPCSHELL_TEST_PROFILE_DIR"] = profd
+
       proc = Popen(cmdH + cmdT + xpcsRunArgs,
                    stdout=pStdout, stderr=pStderr, env=env, cwd=testdir)
       # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
       stdout, stderr = proc.communicate()
+
+      shutil.rmtree(profd, True)
 
       if interactive:
         # not sure what else to do here...

@@ -373,12 +373,10 @@ nsLeafBoxFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::CharacterDataChanged(nsPresContext* aPresContext,
-                                     nsIContent*     aChild,
-                                     PRBool          aAppend)
+nsLeafBoxFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
   MarkIntrinsicWidthsDirty();
-  return nsLeafFrame::CharacterDataChanged(aPresContext, aChild, aAppend);
+  return nsLeafFrame::CharacterDataChanged(aInfo);
 }
 
 /* virtual */ nsSize

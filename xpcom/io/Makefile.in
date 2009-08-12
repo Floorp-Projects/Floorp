@@ -156,6 +156,7 @@ XPIDLSRCS	= \
 		nsIConverterInputStream.idl \
 		nsIConverterOutputStream.idl \
 		nsIIOUtil.idl \
+		nsISafeOutputStream.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

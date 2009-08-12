@@ -5,13 +5,13 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2007             *
+ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
  function: basic shared codebook operations
- last mod: $Id$
+ last mod: $Id: codebook.h 16227 2009-07-08 06:58:46Z xiphmont $
 
  ********************************************************************/
 
@@ -40,7 +40,7 @@ typedef struct static_codebook{
 
   /* mapping ***************************************************************/
   int    maptype;        /* 0=none
-                            1=implicitly populated values from map column 
+                            1=implicitly populated values from map column
                             2=listed arbitrary values */
 
   /* The below does a linear, single monotonic sequence mapping. */
@@ -71,15 +71,15 @@ typedef struct encode_aux_nearestmatch{
   long   *p;         /* decision points (each is an entry) */
   long   *q;         /* decision points (each is an entry) */
   long   aux;        /* number of tree entries */
-  long   alloc;       
+  long   alloc;
 } encode_aux_nearestmatch;
 
 /* assumes a maptype of 1; encode side only, so that's OK */
 typedef struct encode_aux_threshmatch{
   float *quantthresh;
   long   *quantmap;
-  int     quantvals; 
-  int     threshvals; 
+  int     quantvals;
+  int     threshvals;
 } encode_aux_threshmatch;
 
 typedef struct encode_aux_pigeonhole{
@@ -105,7 +105,7 @@ typedef struct codebook{
   /* for encode, the below are entry-ordered, fully populated */
   /* for decode, the below are ordered by bitreversed codeword and only
      used entries are populated */
-  float        *valuelist;  /* list of dim*entries actual entry values */  
+  float        *valuelist;  /* list of dim*entries actual entry values */
   ogg_uint32_t *codelist;   /* list of bitstream codewords for each entry */
 
   int          *dec_index;  /* only used if sparseness collapsed */
@@ -141,18 +141,18 @@ extern int vorbis_staticbook_unpack(oggpack_buffer *b,static_codebook *c);
 
 extern int vorbis_book_encode(codebook *book, int a, oggpack_buffer *b);
 extern int vorbis_book_errorv(codebook *book, float *a);
-extern int vorbis_book_encodev(codebook *book, int best,float *a, 
+extern int vorbis_book_encodev(codebook *book, int best,float *a,
                                oggpack_buffer *b);
 
 extern long vorbis_book_decode(codebook *book, oggpack_buffer *b);
-extern long vorbis_book_decodevs_add(codebook *book, float *a, 
+extern long vorbis_book_decodevs_add(codebook *book, float *a,
                                      oggpack_buffer *b,int n);
-extern long vorbis_book_decodev_set(codebook *book, float *a, 
+extern long vorbis_book_decodev_set(codebook *book, float *a,
                                     oggpack_buffer *b,int n);
-extern long vorbis_book_decodev_add(codebook *book, float *a, 
+extern long vorbis_book_decodev_add(codebook *book, float *a,
                                     oggpack_buffer *b,int n);
 extern long vorbis_book_decodevv_add(codebook *book, float **a,
-                                     long off,int ch, 
+                                     long off,int ch,
                                     oggpack_buffer *b,int n);
 
 
