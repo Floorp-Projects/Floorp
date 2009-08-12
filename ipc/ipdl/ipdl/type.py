@@ -541,12 +541,12 @@ class GatherDecls(TcheckVisitor):
         if mgsdecl is None:
             self.error(loc,
                        "protocol `%s', managed by `%s', has not been declared",
-                       mgsname, pdeclname)
+                       mgsname, pname)
         elif not isinstance(mgsdecl.type, ProtocolType):
             self.error(
                 loc,
                 "%s declares itself managing a non-`protocol' entity `%s' of type `%s'",
-                pdeclname, mgsname, mgsdecl.type.typename())
+                pname, mgsname, mgsdecl.type.typename())
         else:
             mgs.decl = mgsdecl
             pdecl.type.manages.append(mgsdecl.type)
