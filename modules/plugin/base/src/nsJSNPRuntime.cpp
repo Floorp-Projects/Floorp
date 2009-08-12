@@ -2082,7 +2082,10 @@ NPObjectMember_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     (NPObjectMemberPrivate *)::JS_GetInstancePrivate(cx, obj,
                                                      &sNPObjectMemberClass,
                                                      nsnull);
-  NS_ASSERTION(memberPrivate, "no Ambiguous Member Private data!");
+  if (!memberPrivate) {
+    NS_ERROR("no Ambiguous Member Private data!");
+    return JS_FALSE;
+  }
 
   switch (type) {
   case JSTYPE_VOID:
