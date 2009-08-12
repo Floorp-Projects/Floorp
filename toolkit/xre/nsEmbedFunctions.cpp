@@ -70,7 +70,7 @@
 #include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginThreadChild.h"
-#include "TabThread.h"
+#include "ContentProcessThread.h"
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/TestShellThread.h"
@@ -86,7 +86,7 @@ using mozilla::ipc::GeckoThread;
 using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::plugins::PluginThreadChild;
-using mozilla::tabs::TabThread;
+using mozilla::dom::ContentProcessThread;
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellThread;
 using mozilla::ipc::XPCShellEnvironment;
@@ -267,7 +267,7 @@ XRE_InitChildProcess(int aArgc,
       break;
 
     case GeckoChildProcess_Tab:
-      mainThread = new TabThread();
+      mainThread = new ContentProcessThread();
       break;
 
     case GeckoChildProcess_TestHarness:

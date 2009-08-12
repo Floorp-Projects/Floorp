@@ -55,7 +55,7 @@ class nsIURI;
 
 #ifdef MOZ_IPC
 namespace mozilla {
-  namespace tabs {
+  namespace dom {
     class TabParent;
   }
 }
@@ -118,7 +118,7 @@ private:
 
 #ifdef MOZ_IPC
   // XXX leaking
-  mozilla::tabs::TabParent* mChildProcess;
+  mozilla::dom::TabParent* mChildProcess;
   PRBool mTriedNewProcess;
 #endif
 };

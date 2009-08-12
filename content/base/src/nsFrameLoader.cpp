@@ -88,10 +88,11 @@
 #include "nsIView.h"
 
 #ifdef MOZ_IPC
+#include "ContentProcessParent.h"
 #include "TabParent.h"
 
 using namespace mozilla;
-using namespace mozilla::tabs;
+using namespace mozilla::dom;
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
@@ -1126,7 +1127,7 @@ nsFrameLoader::TryNewProcess()
   HWND parentwin =
     static_cast<HWND>(w->GetNativeData(NS_NATIVE_WINDOW));
 
-  mChildProcess = new TabParent(parentwin);
+  mChildProcess = ContentProcessParent::GetSingleton()->CreateTab(parentwin);
   mChildProcess->Move(0, 0,
                       presContext->AppUnitsToDevPixels(ourFrame->GetSize().width),
                       presContext->AppUnitsToDevPixels(ourFrame->GetSize().height));
@@ -1159,7 +1160,7 @@ nsFrameLoader::TryNewProcess()
 
   GdkNativeWindow id = gtk_socket_get_id((GtkSocket*)socket);
 
-  mChildProcess = new TabParent(id);
+  mChildProcess = ContentProcessParent::GetSingleton()->CreateTab(id);
 
   mChildProcess->Move(0, 0, alloc.width, alloc.height);
 

@@ -37,46 +37,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "TabThread.h"
+#ifndef dom_tabs_ContentProcessThread_h
+#define dom_tabs_ContentProcessThread_h 1
 
-#include "prlink.h"
+#include "chrome/common/child_thread.h"
+#include "base/file_path.h"
 
-#include "base/command_line.h"
-#include "base/string_util.h"
-#include "chrome/common/child_process.h"
-#include "chrome/common/chrome_switches.h"
+#include "mozilla/ipc/GeckoThread.h"
+#include "ContentProcessChild.h"
 
-using mozilla::ipc::GeckoThread;
+#undef _MOZ_LOG
+#define _MOZ_LOG(s)  printf("[ContentProcessThread] %s", s)
 
 namespace mozilla {
-namespace tabs {
+namespace dom {
 
-TabThread::TabThread() :
-    GeckoThread(),
-    mTab()
+/**
+ * ContentProcessThread is a singleton on the content process which represents
+ * a background thread where tab instances live.
+ */
+class ContentProcessThread : public mozilla::ipc::GeckoThread
 {
-}
+public:
+    ContentProcessThread();
+    ~ContentProcessThread();
 
-TabThread::~TabThread()
-{
-}
+private:
+    // Thread implementation:
+    virtual void Init();
+    virtual void CleanUp();
 
-void
-TabThread::Init()
-{
-    GeckoThread::Init();
+    ContentProcessChild mContentProcess;
+    IPC::Channel* mChannel;
 
-    // FIXME/cjones: set up channel stuff, etc.
-    
-    // FIXME owner_loop() is bad here
-    mTab.Init(owner_loop(), channel());
-}
+    DISALLOW_EVIL_CONSTRUCTORS(ContentProcessThread);
+};
 
-void
-TabThread::CleanUp()
-{
-    GeckoThread::CleanUp();
-}
+}  // namespace dom
+}  // namespace mozilla
 
-} // namespace tabs
-} // namespace mozilla
+#endif  // ifndef dom_tabs_ContentProcessThread_h

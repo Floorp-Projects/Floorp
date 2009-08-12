@@ -7,15 +7,10 @@
 using mozilla::ipc::BrowserProcessSubThread;
 
 namespace mozilla {
-namespace tabs {
+namespace dom {
 
-TabParent::TabParent(MagicWindowHandle parentWidget)
-    : mSubprocess(GeckoChildProcess_Tab)
+TabParent::TabParent()
 {
-    mSubprocess.SyncLaunch();
-    Open(mSubprocess.GetChannel());
-
-    Sendinit(parentWidget);
 }
 
 TabParent::~TabParent()

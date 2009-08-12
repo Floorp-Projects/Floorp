@@ -4,35 +4,27 @@
 #ifndef mozilla_tabs_TabParent_h
 #define mozilla_tabs_TabParent_h
 
-#include "TabTypes.h"
-#include "IFrameEmbeddingProtocol.h"
-#include "IFrameEmbeddingProtocolParent.h"
+#include "mozilla/dom/IFrameEmbeddingProtocolParent.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 class nsIURI;
 
 namespace mozilla {
-namespace tabs {
+namespace dom {
 
 class TabParent
-    : private IFrameEmbeddingProtocolParent
+    : public IFrameEmbeddingProtocolParent
 {
-private:
-    typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
-
 public:
-    TabParent(MagicWindowHandle parentWidget);
+    TabParent();
     virtual ~TabParent();
 
     void LoadURL(nsIURI* aURI);
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);
-
-private:
-    GeckoChildProcessHost mSubprocess;
 };
 
-} // namespace tabs
+} // namespace dom
 } // namespace mozilla
 
 #endif
