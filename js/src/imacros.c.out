@@ -628,56 +628,6 @@ static struct {
     },
 };
 static struct {
-    jsbytecode setprop[15];
-    jsbytecode setelem[15];
-} setelem_imacros = {
-    {
-/* 0*/  JSOP_DUP,
-/* 1*/  JSOP_PICK, 3,
-/* 3*/  JSOP_CALLBUILTIN, ((JSBUILTIN_SetProperty) & 0xff00) >> 8, ((JSBUILTIN_SetProperty) & 0xff),
-/* 6*/  JSOP_PICK, 4,
-/* 8*/  JSOP_PICK, 4,
-/*10*/  JSOP_CALL, 0, 2,
-/*13*/  JSOP_POP,
-/*14*/  JSOP_STOP,
-    },
-    {
-/* 0*/  JSOP_DUP,
-/* 1*/  JSOP_PICK, 3,
-/* 3*/  JSOP_CALLBUILTIN, ((JSBUILTIN_SetElement) & 0xff00) >> 8, ((JSBUILTIN_SetElement) & 0xff),
-/* 6*/  JSOP_PICK, 4,
-/* 8*/  JSOP_PICK, 4,
-/*10*/  JSOP_CALL, 0, 2,
-/*13*/  JSOP_POP,
-/*14*/  JSOP_STOP,
-    },
-};
-static struct {
-    jsbytecode initprop[15];
-    jsbytecode initelem[15];
-} initelem_imacros = {
-    {
-/* 0*/  JSOP_PICK, 2,
-/* 2*/  JSOP_DUP,
-/* 3*/  JSOP_CALLBUILTIN, ((JSBUILTIN_SetProperty) & 0xff00) >> 8, ((JSBUILTIN_SetProperty) & 0xff),
-/* 6*/  JSOP_PICK, 4,
-/* 8*/  JSOP_PICK, 4,
-/*10*/  JSOP_CALL, 0, 2,
-/*13*/  JSOP_POP,
-/*14*/  JSOP_STOP,
-    },
-    {
-/* 0*/  JSOP_PICK, 2,
-/* 2*/  JSOP_DUP,
-/* 3*/  JSOP_CALLBUILTIN, ((JSBUILTIN_SetElement) & 0xff00) >> 8, ((JSBUILTIN_SetElement) & 0xff),
-/* 6*/  JSOP_PICK, 4,
-/* 8*/  JSOP_PICK, 4,
-/*10*/  JSOP_CALL, 0, 2,
-/*13*/  JSOP_POP,
-/*14*/  JSOP_STOP,
-    },
-};
-static struct {
     jsbytecode instanceof[9];
 } instanceof_imacros = {
     {
@@ -744,7 +694,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_GETPROP */
     0,  /* JSOP_SETPROP */
     0,  /* JSOP_GETELEM */
-    2,  /* JSOP_SETELEM */
+    0,  /* JSOP_SETELEM */
     0,  /* JSOP_CALLNAME */
     3,  /* JSOP_CALL */
     0,  /* JSOP_NAME */
@@ -780,7 +730,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NEWINIT */
     0,  /* JSOP_ENDINIT */
     0,  /* JSOP_INITPROP */
-    2,  /* JSOP_INITELEM */
+    0,  /* JSOP_INITELEM */
     0,  /* JSOP_DEFSHARP */
     0,  /* JSOP_USESHARP */
     0,  /* JSOP_INCARG */
@@ -943,13 +893,11 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_MOD \
  || x == JSOP_NEG \
  || x == JSOP_POS \
- || x == JSOP_SETELEM \
  || x == JSOP_CALL \
  || x == JSOP_ITER \
  || x == JSOP_NEXTITER \
  || x == JSOP_APPLY \
  || x == JSOP_NEW \
- || x == JSOP_INITELEM \
  || x == JSOP_INSTANCEOF \
 )
 jsbytecode*
@@ -989,10 +937,6 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - iter_imacros.for_each_native) < 10) return iter_imacros.for_each_native;
     if (size_t(pc - nextiter_imacros.custom_iter_next) < 12) return nextiter_imacros.custom_iter_next;
     if (size_t(pc - nextiter_imacros.native_iter_next) < 12) return nextiter_imacros.native_iter_next;
-    if (size_t(pc - setelem_imacros.setprop) < 15) return setelem_imacros.setprop;
-    if (size_t(pc - setelem_imacros.setelem) < 15) return setelem_imacros.setelem;
-    if (size_t(pc - initelem_imacros.initprop) < 15) return initelem_imacros.initprop;
-    if (size_t(pc - initelem_imacros.initelem) < 15) return initelem_imacros.initelem;
     if (size_t(pc - instanceof_imacros.instanceof) < 9) return instanceof_imacros.instanceof;
     return NULL;
 }
