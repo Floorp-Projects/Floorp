@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=482260
+-->
+<head>
+  <title>Test for garbage data returned from location provider </title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=455327">Mozilla Bug 482260</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug  **/
+
+SimpleTest.waitForExplicitFinish();
+
+start_sending_garbage();
+
+function successCallback(pos){
+  ok(false, "success should have never been called.");
+  stop_sending_garbage();
+  SimpleTest.finish();
+}
+
+function errorCallback(err) {
+  ok(err.code == err.TIMEOUT, "ensure error is a timeout.");
+  stop_sending_garbage();
+  SimpleTest.finish();
+}
+
+
+var options = {
+    maximumAge: 0,
+    timeout: 1000,
+};
+
+navigator.geolocation.watchPosition(successCallback,
+                                    errorCallback,
+                                    options);
+
+setTimeout(clickNotificationButton, 10, kAcceptButton);
+
+</script>
+</pre>
+</body>
+</html>
