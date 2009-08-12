@@ -3164,6 +3164,11 @@ class RegExpNativeCompiler {
         if (alloc->outOfMemory() || oom ||
             js_OverfullFragmento(tm, fragmento)) {
             fragmento->clearFrags();
+#ifdef DEBUG
+    fragmento->labels->clear();
+    delete lirbuf->names;
+    lirbuf->names = new (&gc) LirNameMap(&gc, *alloc, fragmento->labels);
+#endif
             tm->reCodeAlloc->sweep();
             alloc->reset();
             lirbuf->clear();
