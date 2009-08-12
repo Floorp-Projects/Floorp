@@ -1959,7 +1959,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
             // Continue getting the next frame until the primary content for the frame
             // we are on changes - we don't want to be stuck in the same place
             frameTraversal->Next();
-            nsIFrame* newCaretFrame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+            newCaretFrame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
             if (nsnull == newCaretFrame)
               break;
             newCaretContent = newCaretFrame->GetContent();            
