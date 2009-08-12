@@ -179,6 +179,11 @@ class ProtocolType(IPDLType):
     def managedBy(self, mgr):
         self.manager = mgr
 
+    def toplevel(self):
+        if self.isToplevel():
+            return self
+        return self.manager.toplevel()
+
     def isManagerOf(self, pt):
         for managed in self.manages:
             if pt is managed:

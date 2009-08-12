@@ -534,8 +534,12 @@ class GenerateProtocolActorHeader(Visitor):
         if p.decl.type.isManager():
             self.file.addthing(cxx.CppDirective('include', '"base/id_map.h"'))
 
-        channel = _channelTable[p.decl.type.sendSemantics]
-        channellistener = _listenerTable[p.decl.type.sendSemantics]
+        # bug 510041: we need to claim to implement the listener
+        # interface for the top-level protocol's channel type, rather
+        # for the channel type that this protocol wants
+        sendsemantics = p.decl.type.toplevel().sendSemantics
+        channel = _channelTable[sendsemantics]
+        channellistener = _listenerTable[sendsemantics]
         channelname = '::'.join(channel)
         channelfile = '/'.join(channel) +'.h'
         if p.decl.type.isToplevel():
@@ -671,9 +675,9 @@ class GenerateProtocolActorHeader(Visitor):
         # incoming message dispatchers
         self.asyncswitch = cxx.StmtSwitch(
             cxx.ExprCall(cxx.ExprSelect(cxx.ExprVar('msg'), '.', 'type'), [ ]))
-        if p.decl.type.talksSync():
+        if p.decl.type.toplevel().talksSync():
             self.syncswitch = deepcopy(self.asyncswitch)
-            if p.decl.type.talksRpc():
+            if p.decl.type.toplevel().talksRpc():
                 self.rpcswitch = deepcopy(self.syncswitch)
 
         # implement child iface and add handlers to message switches
@@ -687,9 +691,9 @@ class GenerateProtocolActorHeader(Visitor):
         default.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgNotKnown')))
         
         self.asyncswitch.addcase(cxx.DefaultLabel(), default)
-        if p.decl.type.talksSync():
+        if p.decl.type.toplevel().talksSync():
             self.syncswitch.addcase(cxx.DefaultLabel(), default)
-            if p.decl.type.talksRpc():
+            if p.decl.type.toplevel().talksRpc():
                 self.rpcswitch.addcase(cxx.DefaultLabel(), default)
 
         asynchandler = cxx.MethodDefn(
@@ -698,12 +702,12 @@ class GenerateProtocolActorHeader(Visitor):
                 params=[ cxx.Decl(cxx.Type('Message', const=1, ref=1),'msg') ],
                 ret=cxx.Type('Result')))
 
-        if p.decl.type.talksSync():
+        if p.decl.type.toplevel().talksSync():
             synchandler = deepcopy(asynchandler)
             synchandler.decl.params.append(cxx.Decl(
                     cxx.Type('Message', ref=1, ptr=1), 'reply'))
 
-            if p.decl.type.talksRpc():
+            if p.decl.type.toplevel().talksRpc():
                 rpchandler = deepcopy(synchandler)
                 rpchandler.decl.name = 'OnCallReceived'
 
@@ -750,7 +754,7 @@ class GenerateProtocolActorHeader(Visitor):
         cls.addstmt(asynchandler)
         cls.addstmt(cxx.Whitespace.NL)
 
-        if p.decl.type.talksSync():
+        if p.decl.type.toplevel().talksSync():
             if dispatches:
                 addDispatcher(synchandler, 'OnMessageReceived',
                               [ cxx.ExprVar('msg'), cxx.ExprVar('reply') ])
@@ -761,7 +765,7 @@ class GenerateProtocolActorHeader(Visitor):
             cls.addstmt(synchandler)
             cls.addstmt(cxx.Whitespace.NL)
 
-            if p.decl.type.talksRpc():
+            if p.decl.type.toplevel().talksRpc():
                 if dispatches:
                     addDispatcher(rpchandler, 'OnCallReceived',
                                   [ cxx.ExprVar('msg'), cxx.ExprVar('reply') ])
