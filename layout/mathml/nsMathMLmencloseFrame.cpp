@@ -461,7 +461,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
   // content. Hence, we need to increase the size of the bounding box by a
   // factor of at least sqrt(2).
   if (IsToDraw(NOTATION_CIRCLE)) {
-    double ratio = (sqrt(2) - 1) / 2;
+    double ratio = (sqrt(2.0) - 1.0) / 2.0;
     nscoord padding2;
 
     // Update horizontal parameters
