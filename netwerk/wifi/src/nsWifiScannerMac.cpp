@@ -59,6 +59,8 @@ nsWifiMonitor::DoScan()
   void *apple_80211_library = dlopen(
       "/System/Library/PrivateFrameworks/Apple80211.framework/Apple80211",
       RTLD_LAZY);
+  if (!apple_80211_library)
+    return NS_ERROR_NOT_AVAILABLE;
 
   WirelessContextPtr wifi_context_;
 
@@ -66,11 +68,15 @@ nsWifiMonitor::DoScan()
   WirelessScanSplitFunction WirelessScanSplit_function_ = reinterpret_cast<WirelessScanSplitFunction>(dlsym(apple_80211_library, "WirelessScanSplit"));
   WirelessDetachFunction WirelessDetach_function_ = reinterpret_cast<WirelessDetachFunction>(dlsym(apple_80211_library, "WirelessDetach"));
   
-  if (!WirelessAttach_function_ || !WirelessScanSplit_function_ || !WirelessDetach_function_)
+  if (!WirelessAttach_function_ || !WirelessScanSplit_function_ || !WirelessDetach_function_) {
+    dlclose(apple_80211_library);
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  if ((*WirelessAttach_function_)(&wifi_context_, 0) != noErr)
+  if ((*WirelessAttach_function_)(&wifi_context_, 0) != noErr) {
+    dlclose(apple_80211_library);
     return NS_ERROR_FAILURE;
+  }
 
   // Regularly get the access point data.
     
@@ -136,9 +142,11 @@ nsWifiMonitor::DoScan()
     {
       PRUint32 resultCount = lastAccessPoints.Count();
       nsIWifiAccessPoint** result = static_cast<nsIWifiAccessPoint**> (nsMemory::Alloc(sizeof(nsIWifiAccessPoint*) * resultCount));
-      if (!result)
+      if (!result) {
+        dlclose(apple_80211_library);
         return NS_ERROR_OUT_OF_MEMORY;
-      
+      }
+
       for (PRUint32 i = 0; i < resultCount; i++)
         result[i] = lastAccessPoints[i];
 
