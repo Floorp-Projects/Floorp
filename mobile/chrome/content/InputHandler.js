@@ -134,7 +134,7 @@ function InputHandler(browserViewContainer) {
   //let useEarlyMouseMoves = gPrefService.getBoolPref("browser.ui.panning.fixup.mousemove");
 
   this.addModule(new MouseModule(this));
-  this.addModule(new ScrollwheelModule(this, Browser._browserView, browserViewContainer));
+  this.addModule(new ScrollwheelModule(this, browserViewContainer));
 }
 
 
@@ -182,7 +182,7 @@ InputHandler.prototype = {
    * grab(null) aborts all input handlers.  This is used in situations
    * like the page changing to a different URL where you want to abort
    * drags in progress or kinetic movement.
-   * 
+   *
    * Returns true if the grab succeeded, false otherwise.
    */
   grab: function grab(grabber) {
@@ -1067,16 +1067,15 @@ KineticController.prototype = {
  * Input module for basic scrollwheel input.  Currently just zooms the browser
  * view accordingly.
  */
-function ScrollwheelModule(owner, browserView, browserViewContainer) {
+function ScrollwheelModule(owner, browserViewContainer) {
   this._owner = owner;
-  this._browserView = browserView;
   this._browserViewContainer = browserViewContainer;
 }
 
 ScrollwheelModule.prototype = {
   handleEvent: function handleEvent(evInfo) {
     if (evInfo.event.type == "DOMMouseScroll") {
-      this._browserView.zoom(evInfo.event.detail);
+      Browser.zoom(evInfo.event.detail);
       evInfo.event.stopPropagation();
       evInfo.event.preventDefault();
     }
