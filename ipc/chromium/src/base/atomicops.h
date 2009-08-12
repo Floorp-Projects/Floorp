@@ -39,7 +39,7 @@ namespace subtle {
 #define __w64
 #endif
 typedef __w64 int32 Atomic32;
-#ifdef CPU_ARCH_64_BITS
+#ifdef ARCH_CPU_64_BITS
 typedef int64 Atomic64;
 #endif
 
@@ -98,7 +98,7 @@ Atomic32 Acquire_Load(volatile const Atomic32* ptr);
 Atomic32 Release_Load(volatile const Atomic32* ptr);
 
 // 64-bit atomic operations (only available on 64-bit processors).
-#ifdef CPU_ARCH_64_BITS
+#ifdef ARCH_CPU_64_BITS
 Atomic64 NoBarrier_CompareAndSwap(volatile Atomic64* ptr,
                                   Atomic64 old_value,
                                   Atomic64 new_value);

@@ -196,6 +196,19 @@ inline void NoBarrier_Store(volatile Atomic64* ptr, Atomic64 value) {
   *ptr = value;
 }
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+inline Atomic64 Acquire_CompareAndSwap(volatile Atomic64* ptr,
+                                       Atomic64 old_value,
+                                       Atomic64 new_value) {
+  Atomic64 x = NoBarrier_CompareAndSwap(ptr, old_value, new_value);
+  /* XXX/cjones: no idea if this is necessary... */
+  if (AtomicOps_Internalx86CPUFeatures.has_amd_lock_mb_bug) {
+    __asm__ __volatile__("lfence" : : : "memory");
+  }
+  return x;
+}
+#endif
+
 inline void Acquire_Store(volatile Atomic64* ptr, Atomic64 value) {
   *ptr = value;
   MemoryBarrier();
