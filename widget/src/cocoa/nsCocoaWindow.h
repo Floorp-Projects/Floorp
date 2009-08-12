@@ -103,7 +103,6 @@ typedef struct _nsCocoaWindowList {
   // NS_DEACTIVATE to Gecko for toplevel widgets.  Starts out
   // PR_FALSE.
   PRBool mToplevelActiveState;
-  BOOL mHasEverBeenZoomed;
 }
 + (void)paintMenubarForWindow:(NSWindow*)aWindow;
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
@@ -239,7 +238,8 @@ public:
     virtual void SetShowsToolbarButton(PRBool aShow);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
 
-    void DispatchSizeModeEvent();
+    // dispatch an NS_SIZEMODE event on miniaturize or deminiaturize
+    void DispatchSizeModeEvent(nsSizeMode aSizeMode);
 
     virtual gfxASurface* GetThebesSurface();
 
