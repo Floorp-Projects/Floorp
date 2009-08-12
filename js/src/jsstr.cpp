@@ -78,6 +78,15 @@
 
 #define JSSTRDEP_RECURSION_LIMIT        100
 
+static JS_ALWAYS_INLINE JSBool
+UWordInRootedValue(JSContext *cx, size_t i, jsval *vp)
+{
+    if (i >= (size_t)JSVAL_INT_MAX)
+        return js_NewNumberInRootedValue(cx, i, vp);
+    *vp = INT_TO_JSVAL(i);
+    return JS_TRUE;
+}
+
 static size_t
 MinimizeDependentStrings(JSString *str, int level, JSString **basep)
 {
@@ -1264,163 +1273,143 @@ str_trimRight(JSContext *cx, uintN argc, jsval *vp)
 /*
  * Perl-inspired string functions.
  */
-struct GlobData {
-    jsbytecode  *pc;            /* in: program counter resulting in us matching */
-    uintN       flags;          /* inout: mode and flag bits, see below */
-    uintN       optarg;         /* in: index of optional flags argument */
-    JSString    *str;           /* out: 'this' parameter object as string */
-    JSRegExp    *regexp;        /* out: regexp parameter object private data */
+
+/* Utility to extract the re/reobj pair from vp and manage the reference count. */
+class RegExpGuard
+{
+    RegExpGuard(const RegExpGuard &);
+    void operator=(const RegExpGuard &);
+
+    JSContext *mCx;
+    JSObject *mReobj;
+    JSRegExp *mRe;
+
+  public:
+    RegExpGuard() : mRe(NULL) {}
+
+    /*
+     * 'optarg' indicates in which argument position the flags will be found,
+     * if present. This is a Mozilla extension and not part of any ECMA spec.
+     *
+     * If 'flat' is set, the first argument is to be converted to a string to
+     * match in a "flat" sense (without regular expression metachars having
+     * special meanings) UNLESS the first arg is a RegExp object. This is the
+     * case with String.prototype.replace.
+     */
+    bool
+    initFromArgs(JSContext *cx, uintN optarg, bool flat, uintN argc, jsval *vp)
+    {
+        mCx = cx;
+        if (argc != 0 && VALUE_IS_REGEXP(cx, vp[2])) {
+            mReobj = JSVAL_TO_OBJECT(vp[2]);
+            mRe = (JSRegExp *) mReobj->getPrivate();
+            HOLD_REGEXP(cx, mRe);
+        } else {
+            JSString *src = ArgToRootedString(cx, argc, vp, 0);
+            if (!src)
+                return false;
+            JSString *opt;
+            if (optarg < argc) {
+                opt = js_ValueToString(cx, vp[2 + optarg]);
+                if (!opt)
+                    return false;
+            } else {
+                opt = NULL;
+            }
+            mRe = js_NewRegExpOpt(cx, src, opt, flat);
+            if (!mRe)
+                return false;
+            mReobj = NULL;
+        }
+        return true;
+    }
+
+    ~RegExpGuard() {
+        if (mRe)
+            DROP_REGEXP(mCx, mRe);
+    }
+
+    JSObject *reobj() const { return mReobj; }
+    JSRegExp *re() const { return mRe; }
 };
+
+/* js_ExecuteRegExp indicates success in two ways, based on the 'test' flag. */
+static JS_ALWAYS_INLINE bool
+Matched(bool test, jsval v)
+{
+    return test ? (v == JSVAL_TRUE) : !JSVAL_IS_NULL(v);
+}
+
+typedef bool (*DoMatchCallback)(JSContext *cx, uintN count, void *data);
 
 /*
- * Mode and flag bit definitions for match_or_replace's GlobData.flags field.
+ * BitOR-ing these flags allows the DoMatch caller to control when how the
+ * RegExp engine is called and when callbacks are fired.
  */
-#define MODE_MATCH      0x00    /* in: return match array on success */
-#define MODE_REPLACE    0x01    /* in: match and replace */
-#define MODE_SEARCH     0x02    /* in: search only, return match index or -1 */
-#define GET_MODE(f)     ((f) & 0x03)
-#define FORCE_FLAT      0x04    /* in: force flat (non-regexp) string match */
-#define KEEP_REGEXP     0x08    /* inout: keep GlobData.regexp alive for caller
-                                          of match_or_replace; if set on input
-                                          but clear on output, regexp ownership
-                                          does not pass to caller */
-#define GLOBAL_REGEXP   0x10    /* out: regexp had the 'g' flag */
+enum MatchControlFlags {
+   TEST_GLOBAL_BIT         = 0x1, /* use RegExp.test for global regexps */
+   TEST_SINGLE_BIT         = 0x2, /* use RegExp.test for non-global regexps */
+   CALLBACK_ON_SINGLE_BIT  = 0x4, /* fire callback on non-global match */
 
-typedef JSBool (*GlobFunc)(JSContext *cx, jsint count, GlobData *data);
-typedef JSBool (JS_REQUIRES_STACK *RedGlobFunc)(JSContext *cx, jsint count, GlobData *data);
-
-static inline JS_IGNORE_STACK GlobFunc
-globfunc_stack_cast(RedGlobFunc f)
-{
-    return f;
-}
-
-static JSBool
-match_or_replace(JSContext *cx,
-                 GlobFunc glob,
-                 GlobData *data, uintN argc, jsval *vp)
-{
-    JSString *str, *src, *opt;
-    JSObject *reobj;
-    JSRegExp *re;
-    size_t index, length;
-    JSBool ok, test;
-    jsint count;
-
-    NORMALIZE_THIS(cx, vp, str);
-    data->str = str;
-
-    if (argc != 0 && VALUE_IS_REGEXP(cx, vp[2])) {
-        reobj = JSVAL_TO_OBJECT(vp[2]);
-        re = (JSRegExp *) reobj->getPrivate();
-    } else {
-        src = ArgToRootedString(cx, argc, vp, 0);
-        if (!src)
-            return JS_FALSE;
-        if (data->optarg < argc) {
-            opt = js_ValueToString(cx, vp[2 + data->optarg]);
-            if (!opt)
-                return JS_FALSE;
-        } else {
-            opt = NULL;
-        }
-        re = js_NewRegExpOpt(cx, src, opt, (data->flags & FORCE_FLAT) != 0);
-        if (!re)
-            return JS_FALSE;
-        reobj = NULL;
-    }
-    /* From here on, all control flow must reach the matching DROP. */
-    data->regexp = re;
-    HOLD_REGEXP(cx, re);
-
-    if (re->flags & JSREG_GLOB)
-        data->flags |= GLOBAL_REGEXP;
-    index = 0;
-    if (GET_MODE(data->flags) == MODE_SEARCH) {
-        ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, vp);
-        if (ok) {
-            *vp = (*vp == JSVAL_TRUE)
-                  ? INT_TO_JSVAL(cx->regExpStatics.leftContext.length)
-                  : INT_TO_JSVAL(-1);
-        }
-    } else if (data->flags & GLOBAL_REGEXP) {
-        if (reobj)
-            js_ClearRegExpLastIndex(reobj);
-        length = str->length();
-        ok = true;
-        for (count = 0; index <= length; count++) {
-            ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, vp);
-            if (!ok || *vp != JSVAL_TRUE)
-                break;
-            ok = glob(cx, count, data);
-            if (!ok)
-                break;
-            if (cx->regExpStatics.lastMatch.length == 0) {
-                if (index == length)
-                    break;
-                index++;
-            }
-        }
-    } else {
-        if (GET_MODE(data->flags) == MODE_REPLACE) {
-            test = JS_TRUE;
-        } else {
-            /*
-             * MODE_MATCH implies str_match is being called from a script or a
-             * scripted function.  If the caller cares only about testing null
-             * vs. non-null return value, optimize away the array object that
-             * would normally be returned in *vp.
-             *
-             * Assume a full array result is required, then prove otherwise.
-             */
-            test = JS_FALSE;
-            if (data->pc && (*data->pc == JSOP_CALL || *data->pc == JSOP_NEW)) {
-                JS_ASSERT(js_CodeSpec[*data->pc].length == 3);
-                switch (data->pc[3]) {
-                  case JSOP_POP:
-                  case JSOP_IFEQ:
-                  case JSOP_IFNE:
-                  case JSOP_IFEQX:
-                  case JSOP_IFNEX:
-                    test = JS_TRUE;
-                    break;
-                  default:;
-                }
-            }
-        }
-        ok = js_ExecuteRegExp(cx, re, str, &index, test, vp);
-    }
-
-    DROP_REGEXP(cx, re);
-    if (reobj) {
-        /* Tell our caller that it doesn't need to destroy data->regexp. */
-        data->flags &= ~KEEP_REGEXP;
-    } else if (!ok || !(data->flags & KEEP_REGEXP)) {
-        /* Caller didn't want to keep data->regexp, so null and destroy it.  */
-        data->regexp = NULL;
-        js_DestroyRegExp(cx, re);
-    }
-
-    return ok;
-}
-
-struct MatchData {
-    GlobData    base;
-    jsval       *arrayval;      /* NB: local root pointer */
+   MATCH_ARGS    = TEST_GLOBAL_BIT,
+   MATCHALL_ARGS = CALLBACK_ON_SINGLE_BIT,
+   REPLACE_ARGS  = TEST_GLOBAL_BIT | TEST_SINGLE_BIT | CALLBACK_ON_SINGLE_BIT
 };
 
-static JSBool
-match_glob(JSContext *cx, jsint count, GlobData *data)
+/* Factor out looping and matching logic. */
+static bool
+DoMatch(JSContext *cx, jsval *vp, JSString *str, const RegExpGuard &g,
+        DoMatchCallback callback, void *data, MatchControlFlags flags)
 {
-    JS_ASSERT(count <= JSVAL_INT_MAX);
+    if (g.re()->flags & JSREG_GLOB) {
+        /* global matching ('g') */
+        bool testGlobal = flags & TEST_GLOBAL_BIT;
+        if (g.reobj())
+            js_ClearRegExpLastIndex(g.reobj());
+        for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
+            if (!js_ExecuteRegExp(cx, g.re(), str, &i, testGlobal, vp))
+                return false;
+            if (!Matched(testGlobal, *vp))
+                break;
+            if (!callback(cx, count, data))
+                return false;
+            if (cx->regExpStatics.lastMatch.length == 0)
+                ++i;
+        }
+    } else {
+        /* single match */
+        bool testSingle = flags & TEST_SINGLE_BIT,
+             callbackOnSingle = flags & CALLBACK_ON_SINGLE_BIT;
+        size_t i = 0;
+        if (!js_ExecuteRegExp(cx, g.re(), str, &i, testSingle, vp))
+            return false;
+        if (callbackOnSingle && Matched(testSingle, *vp) &&
+            !callback(cx, 0, data)) {
+            return false;
+        }
+    }
+    return true;
+}
 
-    MatchData *mdata = (MatchData *)data;
-    JSObject *arrayobj = JSVAL_TO_OBJECT(*mdata->arrayval);
+/*
+ * DoMatch will only callback on global matches, hence this function builds
+ * only the "array of matches" returned by match on global regexps.
+ */
+static bool
+MatchCallback(JSContext *cx, size_t count, void *p)
+{
+    if (count >= JSVAL_INT_MAX) {
+        js_ReportAllocationOverflow(cx);
+        return false;
+    }
+
+    jsval &arrayval = *static_cast<jsval *>(p);
+    JSObject *arrayobj = JSVAL_TO_OBJECT(arrayval);
     if (!arrayobj) {
         arrayobj = js_NewArrayObject(cx, 0, NULL);
         if (!arrayobj)
-            return JS_FALSE;
-        *mdata->arrayval = OBJECT_TO_JSVAL(arrayobj);
+            return false;
+        arrayval = OBJECT_TO_JSVAL(arrayobj);
     }
 
     JSString *str = cx->regExpStatics.input;
@@ -1429,7 +1418,7 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     JS_ASSERT(off >= 0 && size_t(off) <= str->length());
     JSString *matchstr = js_NewDependentString(cx, str, off, match.length);
     if (!matchstr)
-        return JS_FALSE;
+        return false;
 
     jsval v = STRING_TO_JSVAL(matchstr);
 
@@ -1438,57 +1427,63 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
 }
 
 static JSBool
-StringMatchHelper(JSContext *cx, uintN argc, jsval *vp, jsbytecode *pc)
-{
-    JSTempValueRooter tvr;
-    MatchData mdata;
-    JSBool ok;
-
-    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
-    mdata.base.pc = pc;
-    mdata.base.flags = MODE_MATCH;
-    mdata.base.optarg = 1;
-    mdata.arrayval = &tvr.u.value;
-    ok = match_or_replace(cx, match_glob, &mdata.base, argc, vp);
-    if (ok && !JSVAL_IS_NULL(*mdata.arrayval))
-        *vp = *mdata.arrayval;
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
-}
-
-static JSBool
 str_match(JSContext *cx, uintN argc, jsval *vp)
 {
-    return StringMatchHelper(cx, argc, vp, js_GetCurrentBytecodePC(cx));
+    JSString *str;
+    NORMALIZE_THIS(cx, vp, str);
+
+    RegExpGuard g;
+    if (!g.initFromArgs(cx, 1, false, argc, vp))
+        return false;
+
+    JSAutoTempValueRooter array(cx, JSVAL_NULL);
+    if (!DoMatch(cx, vp, str, g, MatchCallback, array.addr(), MATCH_ARGS))
+        return false;
+
+    /* When not global, DoMatch will leave the (RegEx.exec()) in *vp. */
+    if (g.re()->flags & JSREG_GLOB)
+        *vp = array.value();
+    return true;
 }
 
 static JSBool
 str_search(JSContext *cx, uintN argc, jsval *vp)
 {
-    GlobData data;
+    JSString *str;
+    NORMALIZE_THIS(cx, vp, str);
 
-    data.flags = MODE_SEARCH;
-    data.optarg = 1;
-    return match_or_replace(cx, NULL, &data, argc, vp);
+    RegExpGuard g;
+    if (!g.initFromArgs(cx, 1, false, argc, vp))
+        return false;
+
+    size_t i = 0;
+    if (!js_ExecuteRegExp(cx, g.re(), str, &i, true, vp))
+        return false;
+
+    if (*vp == JSVAL_TRUE)
+        return UWordInRootedValue(cx, cx->regExpStatics.leftContext.length, vp);
+    *vp = INT_TO_JSVAL(-1);
+    return true;
 }
 
 struct ReplaceData {
     ReplaceData(JSContext *cx) : cb(cx) {}
-    GlobData      base;           /* base struct state */
+    JSString      *str;           /* 'this' parameter object as a string */
+    RegExpGuard   g;              /* regexp parameter object and private data */
     JSObject      *lambda;        /* replacement function object or null */
     JSString      *repstr;        /* replacement string */
     jschar        *dollar;        /* null or pointer to first $ in repstr */
     jschar        *dollarEnd;     /* limit pointer for js_strchr_limit */
     jsint         index;          /* index in result of next replacement */
-    jsint         leftIndex;      /* left context index in base.str->chars */
-    JSSubString   dollarStr;      /* for "$$" interpret_dollar result */
-    bool          globCalled;     /* record whether replace_glob has been called */
-    JSCharBuffer  cb;             /* buffer built during match_or_replace */
+    jsint         leftIndex;      /* left context index in str->chars */
+    JSSubString   dollarStr;      /* for "$$" InterpretDollar result */
+    bool          calledBack;     /* record whether callback has been called */
+    JSCharBuffer  cb;             /* buffer built during DoMatch */
 };
 
 static JSSubString *
-interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
-                 size_t *skip)
+InterpretDollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData &rdata,
+                size_t *skip)
 {
     JSRegExpStatics *res;
     jschar dc, *cp;
@@ -1529,9 +1524,9 @@ interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
     *skip = 2;
     switch (dc) {
       case '$':
-        rdata->dollarStr.chars = dp;
-        rdata->dollarStr.length = 1;
-        return &rdata->dollarStr;
+        rdata.dollarStr.chars = dp;
+        rdata.dollarStr.length = 1;
+        return &rdata.dollarStr;
       case '&':
         return &res->lastMatch;
       case '+':
@@ -1557,7 +1552,7 @@ PushRegExpSubstr(JSContext *cx, const JSSubString &sub, jsval *&sp)
 }
 
 static bool
-find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
+FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
 {
     JSString *repstr;
     size_t replen, skip;
@@ -1565,7 +1560,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
     JSSubString *sub;
     JSObject *lambda;
 
-    lambda = rdata->lambda;
+    lambda = rdata.lambda;
     if (lambda) {
         uintN i, m, n;
 
@@ -1574,12 +1569,12 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         /*
          * In the lambda case, not only do we find the replacement string's
          * length, we compute repstr and return it via rdata for use within
-         * do_replace.  The lambda is called with arguments ($&, $1, $2, ...,
+         * DoReplace.  The lambda is called with arguments ($&, $1, $2, ...,
          * index, input), i.e., all the properties of a regexp match array.
          * For $&, etc., we must create string jsvals from cx->regExpStatics.
          * We grab up stack space to keep the newborn strings GC-rooted.
          */
-        uintN p = rdata->base.regexp->parenCount;
+        uintN p = rdata.g.re()->parenCount;
         uintN argc = 1 + p + 2;
         void *mark;
         jsval *invokevp = js_AllocStack(cx, 2 + argc, &mark);
@@ -1633,7 +1628,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
         /* Push match index and input string. */
         *sp++ = INT_TO_JSVAL((jsint)cx->regExpStatics.leftContext.length);
-        *sp++ = STRING_TO_JSVAL(rdata->base.str);
+        *sp++ = STRING_TO_JSVAL(rdata.str);
 
         if (!js_Invoke(cx, argc, invokevp, 0))
             goto lambda_out;
@@ -1641,13 +1636,13 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         /*
          * NB: we count on the newborn string root to hold any string
          * created by this js_ValueToString that would otherwise be GC-
-         * able, until we use rdata->repstr in do_replace.
+         * able, until we use rdata.repstr in DoReplace.
          */
         repstr = js_ValueToString(cx, *invokevp);
         if (!repstr)
             goto lambda_out;
 
-        rdata->repstr = repstr;
+        rdata.repstr = repstr;
         *sizep = repstr->length();
 
         ok = true;
@@ -1660,11 +1655,11 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         return ok;
     }
 
-    repstr = rdata->repstr;
+    repstr = rdata.repstr;
     replen = repstr->length();
-    for (dp = rdata->dollar, ep = rdata->dollarEnd; dp;
+    for (dp = rdata.dollar, ep = rdata.dollarEnd; dp;
          dp = js_strchr_limit(dp, '$', ep)) {
-        sub = interpret_dollar(cx, dp, ep, rdata, &skip);
+        sub = InterpretDollar(cx, dp, ep, rdata, &skip);
         if (sub) {
             replen += sub->length - skip;
             dp += skip;
@@ -1673,26 +1668,26 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
             dp++;
     }
     *sizep = replen;
-    return JS_TRUE;
+    return true;
 }
 
 static void
-do_replace(JSContext *cx, ReplaceData *rdata, jschar *chars)
+DoReplace(JSContext *cx, ReplaceData &rdata, jschar *chars)
 {
     JSString *repstr;
     jschar *bp, *cp, *dp, *ep;
     size_t len, skip;
     JSSubString *sub;
 
-    repstr = rdata->repstr;
+    repstr = rdata.repstr;
     bp = cp = repstr->chars();
-    for (dp = rdata->dollar, ep = rdata->dollarEnd; dp;
+    for (dp = rdata.dollar, ep = rdata.dollarEnd; dp;
          dp = js_strchr_limit(dp, '$', ep)) {
         len = dp - cp;
         js_strncpy(chars, cp, len);
         chars += len;
         cp = dp;
-        sub = interpret_dollar(cx, dp, ep, rdata, &skip);
+        sub = InterpretDollar(cx, dp, ep, rdata, &skip);
         if (sub) {
             len = sub->length;
             js_strncpy(chars, sub->chars, len);
@@ -1706,124 +1701,86 @@ do_replace(JSContext *cx, ReplaceData *rdata, jschar *chars)
     js_strncpy(chars, cp, repstr->length() - (cp - bp));
 }
 
-static JS_REQUIRES_STACK JSBool
-replace_glob(JSContext *cx, jsint count, GlobData *data)
+static bool
+ReplaceCallback(JSContext *cx, size_t count, void *p)
 {
-    ReplaceData *rdata;
-    JSString *str;
-    size_t leftoff, leftlen, replen, growth;
-    const jschar *left;
-    jschar *chars;
+    ReplaceData &rdata = *static_cast<ReplaceData *>(p);
 
-    rdata = (ReplaceData *)data;
-    rdata->globCalled = true;
-    str = data->str;
-    leftoff = rdata->leftIndex;
-    left = str->chars() + leftoff;
-    leftlen = cx->regExpStatics.lastMatch.chars - left;
-    rdata->leftIndex = cx->regExpStatics.lastMatch.chars - str->chars();
-    rdata->leftIndex += cx->regExpStatics.lastMatch.length;
-    if (!find_replen(cx, rdata, &replen))
-        return JS_FALSE;
-    growth = leftlen + replen;
-    if (!rdata->cb.growBy(growth))
-        return JS_FALSE;
-    chars = rdata->cb.begin() + rdata->index;
-    rdata->index += growth;
+    rdata.calledBack = true;
+    JSString *str = rdata.str;
+    size_t leftoff = rdata.leftIndex;
+    const jschar *left = str->chars() + leftoff;
+    size_t leftlen = cx->regExpStatics.lastMatch.chars - left;
+    rdata.leftIndex = cx->regExpStatics.lastMatch.chars - str->chars();
+    rdata.leftIndex += cx->regExpStatics.lastMatch.length;
+
+    size_t replen = 0;  /* silence 'unused' warning */
+    if (!FindReplaceLength(cx, rdata, &replen))
+        return false;
+
+    size_t growth = leftlen + replen;
+    if (!rdata.cb.growBy(growth))
+        return false;
+
+    jschar *chars = rdata.cb.begin() + rdata.index;
+    rdata.index += growth;
     js_strncpy(chars, left, leftlen);
     chars += leftlen;
-    do_replace(cx, rdata, chars);
-    return JS_TRUE;
+    DoReplace(cx, rdata, chars);
+    return true;
 }
 
 static JSBool
 str_replace(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSObject *lambda;
-    JSString *repstr;
+    ReplaceData rdata(cx);
+
+    NORMALIZE_THIS(cx, vp, rdata.str);
+
+    if (!rdata.g.initFromArgs(cx, 2, true, argc, vp))
+        return false;
 
     if (argc >= 2 && JS_TypeOfValue(cx, vp[3]) == JSTYPE_FUNCTION) {
-        lambda = JSVAL_TO_OBJECT(vp[3]);
-        repstr = NULL;
-    } else {
-        lambda = NULL;
-        repstr = ArgToRootedString(cx, argc, vp, 1);
-        if (!repstr)
-            return JS_FALSE;
-    }
-
-    return js_StringReplaceHelper(cx, argc, lambda, repstr, vp);
-}
-
-JSBool
-js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
-                       JSString *repstr, jsval *vp)
-{
-    ReplaceData rdata(cx);
-    JSBool ok;
-    size_t leftlen, length;
-    JSString *str;
-
-    /*
-     * For ECMA Edition 3, the first argument is to be converted to a string
-     * to match in a "flat" sense (without regular expression metachars having
-     * special meanings) UNLESS the first arg is a RegExp object.
-     */
-    rdata.base.flags = MODE_REPLACE | KEEP_REGEXP | FORCE_FLAT;
-    rdata.base.optarg = 2;
-
-    rdata.lambda = lambda;
-    rdata.repstr = repstr;
-    if (repstr) {
-        /* We're about to store pointers into the middle of our string. */
-        if (!js_MakeStringImmutable(cx, repstr))
-            return JS_FALSE;
-        rdata.dollarEnd = repstr->chars() + repstr->length();
-        rdata.dollar = js_strchr_limit(repstr->chars(), '$',
-                                       rdata.dollarEnd);
-    } else {
+        rdata.lambda = JSVAL_TO_OBJECT(vp[3]);
+        rdata.repstr = NULL;
         rdata.dollar = rdata.dollarEnd = NULL;
+    } else {
+        rdata.lambda = NULL;
+        rdata.repstr = ArgToRootedString(cx, argc, vp, 1);
+        if (!rdata.repstr)
+            return false;
+
+        /* We're about to store pointers into the middle of our string. */
+        if (!js_MakeStringImmutable(cx, rdata.repstr))
+            return false;
+        rdata.dollarEnd = rdata.repstr->chars() + rdata.repstr->length();
+        rdata.dollar = js_strchr_limit(rdata.repstr->chars(), '$',
+                                       rdata.dollarEnd);
     }
+
     rdata.index = 0;
     rdata.leftIndex = 0;
-    rdata.globCalled = false;
+    rdata.calledBack = false;
 
-    ok = match_or_replace(cx, globfunc_stack_cast(replace_glob), &rdata.base,
-                          argc, vp);
-    if (!ok)
-        return JS_FALSE;
+    if (!DoMatch(cx, vp, rdata.str, rdata.g, ReplaceCallback, &rdata, REPLACE_ARGS))
+        return false;
 
-    if (!rdata.globCalled) {
-        if ((rdata.base.flags & GLOBAL_REGEXP) || *vp != JSVAL_TRUE) {
-            /* Didn't match even once. */
-            *vp = STRING_TO_JSVAL(rdata.base.str);
-            goto out;
-        }
-        leftlen = cx->regExpStatics.leftContext.length;
-        ok = find_replen(cx, &rdata, &length);
-        if (!ok)
-            goto out;
-        length += leftlen;
-        if (!rdata.cb.growBy(length))
-            return JS_FALSE;
-        js_strncpy(rdata.cb.begin(), cx->regExpStatics.leftContext.chars, leftlen);
-        do_replace(cx, &rdata, rdata.cb.begin() + leftlen);
+    if (!rdata.calledBack) {
+        /* Didn't match, so the string is unmodified. */
+        *vp = STRING_TO_JSVAL(rdata.str);
+        return true;
     }
 
-    if (!rdata.cb.append(cx->regExpStatics.rightContext.chars,
-                         cx->regExpStatics.rightContext.length) ||
-        !(str = js_NewStringFromCharBuffer(cx, rdata.cb))) {
-        ok = JS_FALSE;
-        goto out;
-    }
+    JSSubString *sub = &cx->regExpStatics.rightContext;
+    if (!rdata.cb.append(sub->chars, sub->length))
+        return false;
 
-    *vp = STRING_TO_JSVAL(str);
+    JSString *retstr = js_NewStringFromCharBuffer(cx, rdata.cb);
+    if (!retstr)
+        return false;
 
-out:
-    /* If KEEP_REGEXP is still set, it's our job to destroy regexp now. */
-    if (rdata.base.flags & KEEP_REGEXP)
-        js_DestroyRegExp(cx, rdata.base.regexp);
-    return ok;
+    *vp = STRING_TO_JSVAL(retstr);
+    return true;
 }
 
 /*
@@ -1886,7 +1843,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
             /*
              * Empty string match: never split on an empty match at the start
              * of a find_split cycle.  Same rule as for an empty global match
-             * in match_or_replace.
+             * in DoMatch.
              */
             if (i == *ip) {
                 /*
