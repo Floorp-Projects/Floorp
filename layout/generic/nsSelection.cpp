@@ -3741,7 +3741,8 @@ nsTypedSelection::AddItem(nsIRange *aItem, PRInt32 *aOutIndex)
                                         aItem->GetEndParent(),
                                         aItem->EndOffset(), startIndex);
   if (sameRange) {
-    *aOutIndex = startIndex;
+    if (aOutIndex)
+      *aOutIndex = startIndex;
     return NS_OK;
   }
 
