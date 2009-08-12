@@ -65,6 +65,31 @@ interface imgIRequest : nsIRequest
   /**
    * Bits set in the return value from imageStatus
    * @name statusflags
+   *
+   * Meanings:
+   *
+   * STATUS_NONE: Nothing to report.
+   *
+   * STATUS_SIZE_AVAILABLE: We received enough image data
+   * from the network or filesystem that we know the width
+   * and height of the image, and have thus called SetSize()
+   * on the container.
+   *
+   * STATUS_LOAD_PARTIAL: Used internally by imgRequest to
+   * flag that a request is being cancelled as a result of
+   * a failure of a proxy holder and not an internal failure.
+   * At least I think that's what it does. Regardless, there's
+   * no reason for this flag to be public, and it should either
+   * go away or become a private state flag within imgRequest.
+   * Don't rely on it.
+   *
+   * STATUS_LOAD_COMPLETE: The data has been fully loaded
+   * to memory, but not necessarily fully decoded.
+   *
+   * STATUS_ERROR: An error occured loading the image.
+   *
+   * STATUS_FRAME_COMPLETE: The first frame has been
+   * completely decoded.
    */
   //@{
   const long STATUS_NONE             = 0x0;
