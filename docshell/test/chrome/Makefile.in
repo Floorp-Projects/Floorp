@@ -73,6 +73,12 @@ _TEST_FILES =	\
 		bug294258_testcase.html \
 		test_bug298622.xul \
 		bug298622_window.xul \
+		test_bug301397.xul \
+		bug301397_window.xul \
+		bug301397_1.html \
+		bug301397_2.html \
+		bug301397_3.html \
+		bug301397_4.html \
 		test_bug303267.xul \
 		bug303267.html \
 		bug303267_window.xul \
