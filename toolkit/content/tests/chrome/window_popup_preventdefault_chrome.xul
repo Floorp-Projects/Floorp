@@ -20,11 +20,18 @@ var gBlockHiding = true;
 var gShownNotAllowed = true;
 var gHiddenNotAllowed = true;
 
+var fm = Components.classes["@mozilla.org/focus-manager;1"].
+           getService(Components.interfaces.nsIFocusManager);
+
 var is = function(l, r, v) { window.opener.wrappedJSObject.SimpleTest.is(l, r, v); }
+var isnot = function(l, r, v) { window.opener.wrappedJSObject.SimpleTest.isnot(l, r, v); }
 
 function runTest()
 {
   var menu = document.getElementById("menu");
+
+  is(fm.activeWindow, window, "active window at start");
+  is(fm.focusedWindow, window, "focused window at start");
 
   is(window.windowState, window.STATE_NORMAL, "window is normal");
   // the minimizing test sometimes fails on Linux so don't test it there
@@ -34,6 +41,9 @@ function runTest()
   }
   window.minimize();
   is(window.windowState, window.STATE_MINIMIZED, "window is minimized");
+
+  isnot(fm.activeWindow, window, "active window after minimize");
+  isnot(fm.focusedWindow, window, "focused window after minimize");
 
   menu.open = true;
 
@@ -47,6 +57,9 @@ function runTestAfterMinimize()
 
   window.restore();
   is(window.windowState, window.STATE_NORMAL, "window is restored");
+
+  is(fm.activeWindow, window, "active window after restore");
+  is(fm.focusedWindow, window, "focused window after restore");
 
   menu.open = true;
 }
