@@ -1060,6 +1060,17 @@ var Browser = {
     return false;
   },
 
+  zoom: function zoom(aDirection) {
+    Browser._browserView.zoom(aDirection);
+    //Browser.forceChromeReflow();  // Zoom causes a width/height change to the
+                                    // BrowserView's containing element, but
+                                    // sometimes doesn't cause the reflow that
+                                    // resizes the parent right away, so we
+                                    // can preempt it here.  Not needed anywhere
+                                    // currently but if this becomes API or is
+                                    // needed then uncomment this line.
+  },
+
   zoomToElement: function zoomToElement(aElement) {
     const margin = 15;
 
@@ -1312,21 +1323,26 @@ Browser.MainDragger.prototype = {
       let odx = 0;
       let ody = 0;
 
+      let snappedX = false;
       if (dx > 0) {
-        let contentleft = Math.floor(Browser.contentScrollbox.getBoundingClientRect().left);
+        let contentleft = Math.round(Browser.contentScrollbox.getBoundingClientRect().left);
         odx = (contentleft > 0) ? Math.min(contentleft, dx) : dx;
+        snappedX = (contentleft > 0 && odx == contentleft);
       } else if (dx < 0) {
-        let contentright = Math.ceil(Browser.contentScrollbox.getBoundingClientRect().right);
+        let contentright = Math.round(Browser.contentScrollbox.getBoundingClientRect().right);
         let w = window.innerWidth;
         odx = (contentright < w) ? Math.max(contentright - w, dx) : dx;
+        snappedX = (contentright < w && odx == (contentright - w));
       }
 
       if (odx) {
         outrv = this.outerDragMove(odx, ody, Browser.controlsScrollboxScroller, doReturnDX);
       }
 
-      if (odx != dx || ody != dy) {
-        this.scrollingOuterX = false;
+      if (snappedX || ody != dy) {
+        if (snappedX)
+          this.scrollingOuterX = false;
+
         dx -= odx;
         dy -= ody;
       } else {
@@ -1360,6 +1376,9 @@ Browser.MainDragger.prototype = {
 
   outerDragMove: function outerDragMove(dx, dy, scroller, doReturnDX) {
     this.bv.onBeforeVisibleMove(dx, dy);
+
+    if (!this.floatedWhileDragging)
+      this.floatedWhileDragging = Browser.tryFloatToolbar();
 
     let [x0, y0] = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(dx, dy);
