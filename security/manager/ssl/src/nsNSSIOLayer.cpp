@@ -219,6 +219,7 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mHasCleartextPhase(PR_FALSE),
     mHandshakeInProgress(PR_FALSE),
     mAllowTLSIntoleranceTimeout(PR_TRUE),
+    mRememberClientAuthCertificate(PR_FALSE),
     mHandshakeStartTime(0),
     mPort(0)
 {
