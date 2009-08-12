@@ -367,8 +367,24 @@ function startTest() {
 // The frame causes an extra menu item, and prevents running the test
 // standalone (ie, clicking the test name in the Mochitest window) to see
 // success/failure messages.
+var painted = false, loaded = false;
+
+function waitForEvents(event)
+{
+  if (event.type == "MozAfterPaint")
+    painted = true;
+  else if (event.type == "load")
+    loaded = true;
+  if (painted && loaded) {
+    subwindow.removeEventListener("MozAfterPaint", waitForEvents, false);
+    subwindow.onload = null;
+    startTest();
+  }
+}
+
 var subwindow = window.open("./subtst_contextmenu.html", "contextmenu-subtext", "width=600,height=700");
-subwindow.onload = startTest;
+subwindow.addEventListener("MozAfterPaint", waitForEvents, false);
+subwindow.onload = waitForEvents;
 
 SimpleTest.waitForExplicitFinish();
 </script>
