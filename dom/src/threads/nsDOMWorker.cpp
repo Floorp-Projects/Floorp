@@ -58,6 +58,7 @@
 
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerEvents.h"
+#include "nsDOMWorkerLocation.h"
 #include "nsDOMWorkerNavigator.h"
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerScriptLoader.h"
@@ -695,6 +696,18 @@ nsDOMWorkerScope::GetNavigator(nsIWorkerNavigator** _retval)
   }
 
   NS_ADDREF(*_retval = mNavigator);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerScope::GetLocation(nsIWorkerLocation** _retval)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIWorkerLocation> location = mWorker->GetLocation();
+  NS_ASSERTION(location, "This should never be null!");
+
+  location.forget(_retval);
   return NS_OK;
 }
 
@@ -1742,6 +1755,24 @@ nsDOMWorker::ResumeFeatures()
   for (PRUint32 i = 0; i < count; i++) {
     features[i]->Resume();
   }
+}
+
+nsresult
+nsDOMWorker::SetURI(nsIURI* aURI)
+{
+  NS_ASSERTION(aURI, "Don't hand me a null pointer!");
+  NS_ASSERTION(!mURI && !mLocation, "Called more than once?!");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  mURI = aURI;
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+  NS_ENSURE_TRUE(url, NS_ERROR_NO_INTERFACE);
+
+  mLocation = nsDOMWorkerLocation::NewLocation(url);
+  NS_ENSURE_TRUE(mLocation, NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
 nsresult
