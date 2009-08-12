@@ -1041,7 +1041,7 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *rval)
  * which is an int-tagged pointer that js_Enumerate creates, we set not one
  * but two lowest bits when tagging a JSIndexIterState pointer -- see
  * INDEX_ITER_TAG usage below. Thus, when slowarray_enumerate receives a state
- * tagged with JSVAL_BOOLEAN or with two lowest bits set, it knows that this
+ * tagged with JSVAL_SPECIAL or with two lowest bits set, it knows that this
  * is a fast state so it calls array_enumerate to continue enumerating the
  * indexes present in the original fast array.
  */
@@ -1049,15 +1049,15 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *rval)
 #define PACKED_UINT_PAIR_BITS           14
 #define PACKED_UINT_PAIR_MASK           JS_BITMASK(PACKED_UINT_PAIR_BITS)
 
-#define UINT_PAIR_TO_BOOLEAN_JSVAL(i,j)                                       \
+#define UINT_PAIR_TO_SPECIAL_JSVAL(i,j)                                \
     (JS_ASSERT((uint32) (i) <= PACKED_UINT_PAIR_MASK),                        \
      JS_ASSERT((uint32) (j) <= PACKED_UINT_PAIR_MASK),                        \
      ((jsval) (i) << (PACKED_UINT_PAIR_BITS + JSVAL_TAGBITS)) |               \
      ((jsval) (j) << (JSVAL_TAGBITS)) |                                       \
-     (jsval) JSVAL_BOOLEAN)
+     (jsval) JSVAL_SPECIAL)
 
-#define BOOLEAN_JSVAL_TO_UINT_PAIR(v,i,j)                                     \
-    (JS_ASSERT(JSVAL_TAG(v) == JSVAL_BOOLEAN),                                \
+#define SPECIAL_JSVAL_TO_UINT_PAIR(v,i,j)                              \
+    (JS_ASSERT(JSVAL_IS_SPECIAL(v)),                                   \
      (i) = (uint32) ((v) >> (PACKED_UINT_PAIR_BITS + JSVAL_TAGBITS)),         \
      (j) = (uint32) ((v) >> JSVAL_TAGBITS) & PACKED_UINT_PAIR_MASK,           \
      JS_ASSERT((i) <= PACKED_UINT_PAIR_MASK))
@@ -1111,7 +1111,7 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!ii) {
             /* Array has no holes. */
             if (capacity <= PACKED_UINT_PAIR_MASK) {
-                *statep = UINT_PAIR_TO_BOOLEAN_JSVAL(0, capacity);
+                *statep = UINT_PAIR_TO_SPECIAL_JSVAL(0, capacity);
                 break;
             }
             ii = (JSIndexIterState *)
@@ -1127,11 +1127,11 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         break;
 
       case JSENUMERATE_NEXT:
-        if (JSVAL_TAG(*statep) == JSVAL_BOOLEAN) {
-            BOOLEAN_JSVAL_TO_UINT_PAIR(*statep, i, capacity);
+        if (JSVAL_IS_SPECIAL(*statep)) {
+            SPECIAL_JSVAL_TO_UINT_PAIR(*statep, i, capacity);
             if (i != capacity) {
                 *idp = INT_TO_JSID(i);
-                *statep = UINT_PAIR_TO_BOOLEAN_JSVAL(i + 1, capacity);
+                *statep = UINT_PAIR_TO_SPECIAL_JSVAL(i + 1, capacity);
                 break;
             }
         } else {
@@ -1153,7 +1153,7 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         /* FALL THROUGH */
 
       case JSENUMERATE_DESTROY:
-        if (JSVAL_TAG(*statep) != JSVAL_BOOLEAN) {
+        if (!JSVAL_IS_SPECIAL(*statep)) {
             JS_ASSERT((*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG);
             ii = (JSIndexIterState *) (*statep & ~INDEX_ITER_TAG);
             cx->free(ii);
@@ -1172,7 +1172,7 @@ slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     /* Are we continuing an enumeration that started when we were dense? */
     if (enum_op != JSENUMERATE_INIT) {
-        if (JSVAL_TAG(*statep) == JSVAL_BOOLEAN ||
+        if (JSVAL_IS_SPECIAL(*statep) ||
             (*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG) {
             return array_enumerate(cx, obj, enum_op, statep, idp);
         }

@@ -98,7 +98,7 @@ js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
  * The elements of the array after the first empty string define strings
  * corresponding to the two boolean literals, false and true, followed by the
  * JSType enumerators from jspubtd.h starting with "undefined" for JSTYPE_VOID
- * (which is pseudo-boolean 2) and continuing as initialized below. The static
+ * (which is special-value 2) and continuing as initialized below. The static
  * asserts check these relations.
  */
 JS_STATIC_ASSERT(JSTYPE_LIMIT == 8);
