@@ -150,7 +150,7 @@ NPPInstanceChild::AnswerNPP_SetWindow(const NPWindow& aWindow, NPError* rv)
     // code to determine the rest.  this code is possibly wrong on
     // some systems, in some conditions
 
-    GdkNativeWindow handle = (GdkNativeWindow) aWindow.window;
+    GdkNativeWindow handle = reinterpret_cast<uintptr_t>(aWindow.window);
     GdkWindow* gdkWindow = gdk_window_lookup(handle);
 
     mWindow.window = (void*) handle;

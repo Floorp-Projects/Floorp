@@ -934,7 +934,11 @@ static void StringAppendVT(StringType* dst,
   typename StringType::value_type stack_buf[1024];
 
   va_list backup_ap;
+#if !defined(CHROMIUM_MOZILLA_BUILD)
   base::va_copy(backup_ap, ap);
+#else
+  base_va_copy(backup_ap, ap);
+#endif	// !defined(CHROMIUM_MOZILLA_BUILD)
 
 #if !defined(OS_WIN)
   errno = 0;
@@ -981,7 +985,11 @@ static void StringAppendVT(StringType* dst,
     std::vector<typename StringType::value_type> mem_buf(mem_length);
 
     // Restore the va_list before we use it again.
+#if !defined(CHROMIUM_MOZILLA_BUILD)
     base::va_copy(backup_ap, ap);
+#else
+    base_va_copy(backup_ap, ap);
+#endif	// !defined(CHROMIUM_MOZILLA_BUILD)
 
     result = vsnprintfT(&mem_buf[0], mem_length, format, ap);
     va_end(backup_ap);
@@ -1473,6 +1481,9 @@ bool MatchPattern(const std::string& eval, const std::string& pattern) {
 // instead, requiring that long and int are compatible and equal-width.  They
 // are on our target platforms.
 
+// XXX Sigh.
+
+#if !defined(ARCH_CPU_64_BITS) || !defined(CHROMIUM_MOZILLA_BUILD)
 bool StringToInt(const std::string& input, int* output) {
   COMPILE_ASSERT(sizeof(int) == sizeof(long), cannot_strtol_to_int);
   return StringToNumber<StringToLongTraits>(input,
@@ -1485,6 +1496,28 @@ bool StringToInt(const string16& input, int* output) {
                                               reinterpret_cast<long*>(output));
 }
 
+#else
+bool StringToInt(const std::string& input, int* output) {
+  long tmp;
+  bool ok = StringToNumber<StringToLongTraits>(input, &tmp);
+  if (!ok || tmp > kint32max) {
+    return false;
+  }
+  *output = static_cast<int>(tmp);
+  return true;
+}
+
+bool StringToInt(const string16& input, int* output) {
+  long tmp;
+  bool ok = StringToNumber<String16ToLongTraits>(input, &tmp);
+  if (!ok || tmp > kint32max) {
+    return false;
+  }
+  *output = static_cast<int>(tmp);
+  return true;
+}
+#endif //  !defined(ARCH_CPU_64_BITS) || !defined(CHROMIUM_MOZILLA_BUILD)
+
 bool StringToInt64(const std::string& input, int64* output) {
   return StringToNumber<StringToInt64Traits>(input, output);
 }
@@ -1493,6 +1526,7 @@ bool StringToInt64(const string16& input, int64* output) {
   return StringToNumber<String16ToInt64Traits>(input, output);
 }
 
+#if !defined(ARCH_CPU_64_BITS) || !defined(CHROMIUM_MOZILLA_BUILD)
 bool HexStringToInt(const std::string& input, int* output) {
   COMPILE_ASSERT(sizeof(int) == sizeof(long), cannot_strtol_to_int);
   return StringToNumber<HexStringToLongTraits>(input,
@@ -1504,6 +1538,29 @@ bool HexStringToInt(const string16& input, int* output) {
   return StringToNumber<HexString16ToLongTraits>(
       input, reinterpret_cast<long*>(output));
 }
+
+#else
+bool HexStringToInt(const std::string& input, int* output) {
+  long tmp;
+  bool ok = StringToNumber<HexStringToLongTraits>(input, &tmp);
+  if (!ok || tmp > kint32max) {
+    return false;
+  }
+  *output = static_cast<int>(tmp);
+  return true;
+}
+
+bool HexStringToInt(const string16& input, int* output) {
+  long tmp;
+  bool ok = StringToNumber<HexString16ToLongTraits>(input, &tmp);
+  if (!ok || tmp > kint32max) {
+    return false;
+  }
+  *output = static_cast<int>(tmp);
+  return true;
+}
+
+#endif // !defined(ARCH_CPU_64_BITS) || !defined(CHROMIUM_MOZILLA_BUILD)
 
 namespace {
 

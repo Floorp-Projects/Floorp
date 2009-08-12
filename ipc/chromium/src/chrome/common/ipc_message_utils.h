@@ -218,6 +218,8 @@ struct ParamTraits<unsigned long> {
   }
 };
 
+#if !(defined(CHROMIUM_MOZILLA_BUILD) && defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
+// There size_t is a synonym for |unsigned long| ...
 template <>
 struct ParamTraits<size_t> {
   typedef size_t param_type;
@@ -231,6 +233,25 @@ struct ParamTraits<size_t> {
     l->append(StringPrintf(L"%u", p));
   }
 };
+
+#else
+// ... so we need to define traits for |unsigned int|.
+// XXX duplicating OS_MACOSX version below so as not to conflict
+template <>
+struct ParamTraits<uint32> {
+  typedef uint32 param_type;
+  static void Write(Message* m, const param_type& p) {
+    m->WriteUInt32(p);
+  }
+  static bool Read(const Message* m, void** iter, param_type* r) {
+    return m->ReadUInt32(iter, r);
+  }
+  static void Log(const param_type& p, std::wstring* l) {
+    l->append(StringPrintf(L"%u", p));
+  }
+};
+
+#endif // if !(defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
 
 #if defined(OS_MACOSX)
 // On Linux size_t & uint32 can be the same type.
@@ -250,6 +271,8 @@ struct ParamTraits<uint32> {
 };
 #endif  // defined(OS_MACOSX)
 
+#if !(defined(CHROMIUM_MOZILLA_BUILD) && defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
+// int64 is |long int| on 64-bit systems, uint64 is |unsigned long|
 template <>
 struct ParamTraits<int64> {
   typedef int64 param_type;
@@ -285,6 +308,7 @@ struct ParamTraits<uint64> {
 #endif // ifndef CHROMIUM_MOZILLA_BUILD
   }
 };
+#endif // if !(defined(CHROMIUM_MOZILLA_BUILD) && defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
 
 template <>
 struct ParamTraits<double> {

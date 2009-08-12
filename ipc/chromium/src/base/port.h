@@ -40,6 +40,7 @@ namespace base {
 // for this purpose.  MSVC does not provide va_copy, so define an
 // implementation here.  It is not guaranteed that assignment is a copy, so the
 // StringUtil.VariableArgsFunc unit test tests this capability.
+#if !defined(CHROMIUM_MOZILLA_BUILD)
 inline void va_copy(va_list& a, va_list& b) {
 #if defined(COMPILER_GCC)
   ::va_copy(a, b);
@@ -47,6 +48,19 @@ inline void va_copy(va_list& a, va_list& b) {
   a = b;
 #endif
 }
+
+#else
+// The C standard says that va_copy is a "macro", not a function.  Trying to 
+// use va_list as ref args to a function, as above, breaks some machines.
+#  if defined(COMPILER_GCC)
+#    define base_va_copy(_a, _b) ::va_copy(_a, _b)
+#  elif defined(COMPILER_MSVC)
+#    define base_va_copy(_a, _b) (_a = _b)
+#  else
+#    error No va_copy for your compiler
+#  endif
+
+#endif
 
 }  // namespace base
 

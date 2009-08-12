@@ -56,7 +56,9 @@ typedef short               int16;
 #define _INT32
 typedef int                 int32;
 #endif
+#if !(defined(CHROMIUM_MOZILLA_BUILD) && defined(PROTYPES_H))
 typedef long long           int64;
+#endif
 
 // NOTE: unsigned types are DANGEROUS in loops and other arithmetical
 // places.  Use the signed types unless your variable represents a bit
@@ -72,7 +74,9 @@ typedef unsigned short     uint16;
 #define _UINT32
 typedef unsigned int       uint32;
 #endif
+#if !(defined(CHROMIUM_MOZILLA_BUILD) && defined(PROTYPES_H))
 typedef unsigned long long uint64;
+#endif
 
 // A type to represent a Unicode code-point value. As of Unicode 4.0,
 // such values require up to 21 bits.
