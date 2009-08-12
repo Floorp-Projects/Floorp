@@ -215,6 +215,12 @@ def makeBuiltinUsing(tname):
 builtinUsing = [ makeBuiltinUsing(t) for t in builtin.Types ]
 builtinIncludes = [ CxxInclude(_builtinloc, f) for f in builtin.Includes ]
 
+def errormsg(loc, fmt, *args):
+    while not isinstance(loc, Loc):
+        if loc is None:  loc = Loc.NONE
+        else:            loc = loc.loc
+    return '%s: error: %s'% (str(loc), fmt % args)
+
 ##--------------------
 class SymbolTable:
     def __init__(self, errors):
@@ -325,10 +331,7 @@ class TcheckVisitor(Visitor):
         self.errors = errors
 
     def error(self, loc, fmt, *args):
-        while not isinstance(loc, Loc):
-            if loc is None:  loc = Loc.NONE
-            else:            loc = loc.loc
-        self.errors.append('%s: error: %s'% (str(loc), fmt % args))
+        self.errors.append(errormsg(loc, fmt, *args))
 
     def declare(self, loc, type, shortname=None, fullname=None, progname=None):
         d = Decl(loc)
