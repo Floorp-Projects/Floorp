@@ -767,10 +767,6 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 extern JSBool
 js_str_toString(JSContext *cx, uintN argc, jsval *vp);
 
-extern JSBool
-js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
-                       JSString *repstr, jsval *vp);
-
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
  * least 6 bytes long.  Return the number of UTF-8 bytes of data written.
