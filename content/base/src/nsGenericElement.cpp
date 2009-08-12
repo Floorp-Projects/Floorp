@@ -74,6 +74,7 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
+#include "nsDOMTokenList.h"
 #include "nsDOMError.h"
 #include "nsDOMString.h"
 #include "nsIScriptSecurityManager.h"
@@ -1064,6 +1065,24 @@ nsNSElementTearoff::GetChildren(nsIDOMNodeList** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSElementTearoff::GetClassList(nsIDOMDOMTokenList** aResult)
+{
+  nsGenericElement::nsDOMSlots *slots = mContent->GetDOMSlots();
+  NS_ENSURE_TRUE(slots, nsnull);
+
+  if (!slots->mClassList) {
+    nsCOMPtr<nsIAtom> classAttr = mContent->GetClassAttributeName();
+    NS_ENSURE_TRUE(classAttr, NS_OK);
+    slots->mClassList = new nsDOMTokenList(mContent, classAttr);
+    NS_ENSURE_TRUE(slots->mClassList, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  NS_ADDREF(*aResult = slots->mClassList);
+
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 
@@ -1756,6 +1775,10 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
 {
   if (mAttributeMap) {
     mAttributeMap->DropReference();
+  }
+
+  if (mClassList) {
+    mClassList->DropReference();
   }
 }
 
