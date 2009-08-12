@@ -147,6 +147,9 @@ nsObserverService::RemoveObserver(nsIObserver* anObserver, const char* aTopic)
     if (!observerList)
         return NS_ERROR_FAILURE;
 
+    /* This death grip is to protect against stupid consumers who call
+       RemoveObserver from their Destructor, see bug 485834/bug 325392. */
+    nsCOMPtr<nsIObserver> kungFuDeathGrip(anObserver);
     return observerList->RemoveObserver(anObserver);
 }
 
