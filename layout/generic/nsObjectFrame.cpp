@@ -4049,11 +4049,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
   event.serial = 0;
   event.send_event = False;
 
-  PRBool eventHandled = PR_FALSE;
+#if 0
   /* we've sent the event via XSendEvent so don't send it directly to the plugin */
-  //mInstance->HandleEvent(&pluginEvent, &eventHandled);
+  PRBool eventHandled = PR_FALSE;
+  mInstance->HandleEvent(&pluginEvent, &eventHandled);
   if (eventHandled)
-      rv = nsEventStatus_eConsumeNoDefault;
+    rv = nsEventStatus_eConsumeNoDefault;
+#endif
 
   return rv;
 }
