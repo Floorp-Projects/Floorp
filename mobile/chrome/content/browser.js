@@ -2274,7 +2274,7 @@ Tab.prototype = {
 
     if (this._loading) {
       // kick ourselves off 2s later while we're still loading
-      this._browserView.beginBatchOperation();
+      bv.beginBatchOperation();
       this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
     } else {
       delete this._loadingTimeout;
