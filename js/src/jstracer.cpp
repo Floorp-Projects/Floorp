@@ -3352,6 +3352,32 @@ TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
     guard(expected, cond, snapshot(exitType));
 }
 
+/*
+ * Determine whether any context associated with the same thread as cx is
+ * executing native code.
+ */
+static inline bool
+ProhibitFlush(JSContext* cx)
+{
+    if (cx->interpState) // early out if the given is in native code
+        return true;
+
+    JSCList *cl;
+
+#ifdef JS_THREADSAFE
+    JSThread* thread = cx->thread;
+    for (cl = thread->contextList.next; cl != &thread->contextList; cl = cl->next)
+        if (CX_FROM_THREAD_LINKS(cl)->interpState)
+            return true;
+#else
+    JSRuntime* rt = cx->runtime;
+    for (cl = rt->contextList.next; cl != &rt->contextList; cl = cl->next)
+        if (js_ContextFromLinkField(cl)->interpState)
+            return true;
+#endif
+    return false;
+}
+
 static JS_REQUIRES_STACK void
 FlushJITCache(JSContext* cx)
 {
@@ -3369,7 +3395,7 @@ FlushJITCache(JSContext* cx)
     }
     Fragmento* fragmento = tm->fragmento;
     if (fragmento) {
-        if (tm->prohibitFlush) {
+        if (ProhibitFlush(cx)) {
             debug_only_print0(LC_TMTracer, "Deferring fragmento flush due to deep bail.\n");
             tm->needFlush = JS_TRUE;
             return;
@@ -5395,10 +5421,6 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     if (!js_ReserveObjects(cx, MAX_CALL_STACK_ENTRIES))
         return NULL;
 
-#ifdef DEBUG
-    uintN savedProhibitFlush = JS_TRACE_MONITOR(cx).prohibitFlush;
-#endif
-
     /* Set up the interpreter state block, which is followed by the native global frame. */
     InterpState* state = (InterpState*)alloca(sizeof(InterpState) + (globalFrameSize+1)*sizeof(double));
     state->cx = cx;
@@ -5487,7 +5509,6 @@ ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount,
     JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
     tm->tracecx = NULL;
     LeaveTree(*state, lr);
-    JS_ASSERT(JS_TRACE_MONITOR(cx).prohibitFlush == savedProhibitFlush);
     return state->innermost;
 }
 
@@ -5623,9 +5644,6 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                                   + innermost->sp_adj / sizeof(jsdouble) - i);
             }
         }
-        JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-        if (tm->prohibitFlush && --tm->prohibitFlush == 0 && tm->needFlush)
-            FlushJITCache(cx);
         return;
     }
 
@@ -6699,10 +6717,7 @@ js_OverfullFragmento(JSTraceMonitor* tm, Fragmento *fragmento)
     jsuint maxsz = tm->maxCodeCacheBytes;
     VMAllocator *allocator = tm->allocator;
     CodeAlloc *codeAlloc = tm->codeAlloc;
-    if (fragmento == tm->fragmento) {
-        if (tm->prohibitFlush)
-            return false;
-    } else {
+    if (fragmento == tm->reFragmento) {
         /*
          * At the time of making the code cache size configurable, we were using
          * 16 MB for the main code cache and 1 MB for the regular expression code
@@ -6732,7 +6747,6 @@ js_DeepBail(JSContext *cx)
     JS_ASSERT(tracecx->bailExit);
 
     tm->tracecx = NULL;
-    tm->prohibitFlush++;
     debug_only_print0(LC_TMTracer, "Deep bail.\n");
     LeaveTree(*tracecx->interpState, tracecx->bailExit);
     tracecx->bailExit = NULL;
