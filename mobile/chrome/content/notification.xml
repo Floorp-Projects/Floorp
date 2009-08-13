@@ -53,9 +53,14 @@
               document.removeEventListener("TabClose", this, true);
               document.removeEventListener("TabSelect", this, true);
               control.removeNotification(this);
-            }
-            else
+            } else {
               this.hidden = true;
+            }
+            
+            // Fire an event when closing a notification
+            let event = document.createEvent("Events");
+            event.initEvent("AlertClose", true, true);
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
@@ -79,7 +84,7 @@
             }
           ]]>
         </body>
-      </method>
+      </method>      
     </implementation>
   </binding>
 

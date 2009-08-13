@@ -422,6 +422,14 @@ var Browser = {
     }
     window.addEventListener("fullscreen", fullscreenHandler, false);
 
+    function notificationHandler() {
+      // Let the view know that the layout might have changed
+      bv.onAfterVisibleMove();
+    }
+    let notifications = document.getElementById("notifications");
+    notifications.addEventListener("AlertActive", notificationHandler, false);
+    notifications.addEventListener("AlertClose", notificationHandler, false);
+
     // initialize input handling
     ih = new InputHandler(container);
 
