@@ -91,72 +91,13 @@ struct JSObjectMap {
     JSObjectOps *ops;           /* high level object operation vtable */
 };
 
-/* Shorthand macros for frequently-made calls. */
-#define OBJ_LOOKUP_PROPERTY(cx,obj,id,objp,propp)                             \
-    (obj)->map->ops->lookupProperty(cx,obj,id,objp,propp)
-#define OBJ_DEFINE_PROPERTY(cx,obj,id,value,getter,setter,attrs,propp)        \
-    (obj)->map->ops->defineProperty(cx,obj,id,value,getter,setter,attrs,propp)
-#define OBJ_GET_PROPERTY(cx,obj,id,vp)                                        \
-    (obj)->map->ops->getProperty(cx,obj,id,vp)
-#define OBJ_SET_PROPERTY(cx,obj,id,vp)                                        \
-    (obj)->map->ops->setProperty(cx,obj,id,vp)
-#define OBJ_GET_ATTRIBUTES(cx,obj,id,prop,attrsp)                             \
-    (obj)->map->ops->getAttributes(cx,obj,id,prop,attrsp)
-#define OBJ_SET_ATTRIBUTES(cx,obj,id,prop,attrsp)                             \
-    (obj)->map->ops->setAttributes(cx,obj,id,prop,attrsp)
-#define OBJ_DELETE_PROPERTY(cx,obj,id,rval)                                   \
-    (obj)->map->ops->deleteProperty(cx,obj,id,rval)
-#define OBJ_DEFAULT_VALUE(cx,obj,hint,vp)                                     \
-    (obj)->map->ops->defaultValue(cx,obj,hint,vp)
-#define OBJ_ENUMERATE(cx,obj,enum_op,statep,idp)                              \
-    (obj)->map->ops->enumerate(cx,obj,enum_op,statep,idp)
-#define OBJ_CHECK_ACCESS(cx,obj,id,mode,vp,attrsp)                            \
-    (obj)->map->ops->checkAccess(cx,obj,id,mode,vp,attrsp)
+const uint32 JS_INITIAL_NSLOTS = 5;
 
-/* These four are time-optimized to avoid stub calls. */
-#define OBJ_THIS_OBJECT(cx,obj)                                               \
-    ((obj)->map->ops->thisObject                                              \
-     ? (obj)->map->ops->thisObject(cx,obj)                                    \
-     : (obj))
-#define OBJ_DROP_PROPERTY(cx,obj,prop)                                        \
-    ((obj)->map->ops->dropProperty                                            \
-     ? (obj)->map->ops->dropProperty(cx,obj,prop)                             \
-     : (void)0)
-#define OBJ_GET_REQUIRED_SLOT(cx,obj,slot)                                    \
-    ((obj)->map->ops->getRequiredSlot                                         \
-     ? (obj)->map->ops->getRequiredSlot(cx, obj, slot)                        \
-     : JSVAL_VOID)
-#define OBJ_SET_REQUIRED_SLOT(cx,obj,slot,v)                                  \
-    ((obj)->map->ops->setRequiredSlot                                         \
-     ? (obj)->map->ops->setRequiredSlot(cx, obj, slot, v)                     \
-     : JS_TRUE)
+const uint32 JSSLOT_PROTO   = 0;
+const uint32 JSSLOT_PARENT  = 1;
+const uint32 JSSLOT_PRIVATE = 2;
 
-#define OBJ_TO_INNER_OBJECT(cx,obj)                                           \
-    JS_BEGIN_MACRO                                                            \
-        JSClass *clasp_ = OBJ_GET_CLASS(cx, obj);                             \
-        if (clasp_->flags & JSCLASS_IS_EXTENDED) {                            \
-            JSExtendedClass *xclasp_ = (JSExtendedClass*)clasp_;              \
-            if (xclasp_->innerObject)                                         \
-                obj = xclasp_->innerObject(cx, obj);                          \
-        }                                                                     \
-    JS_END_MACRO
-
-/*
- * The following macro has been copied to jsd/jsd_val.c. If making changes to
- * OBJ_TO_OUTER_OBJECT, please update jsd/jsd_val.c as well.
- */
-
-#define OBJ_TO_OUTER_OBJECT(cx,obj)                                           \
-    JS_BEGIN_MACRO                                                            \
-        JSClass *clasp_ = OBJ_GET_CLASS(cx, obj);                             \
-        if (clasp_->flags & JSCLASS_IS_EXTENDED) {                            \
-            JSExtendedClass *xclasp_ = (JSExtendedClass*)clasp_;              \
-            if (xclasp_->outerObject)                                         \
-                obj = xclasp_->outerObject(cx, obj);                          \
-        }                                                                     \
-    JS_END_MACRO
-
-#define JS_INITIAL_NSLOTS   5
+const uint32 JSSLOT_CLASS_MASK_BITS = 3;
 
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
@@ -194,11 +135,106 @@ struct JSObject {
     jsuword     classword;                  /* classword, see above */
     jsval       fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
     jsval       *dslots;                    /* dynamically allocated slots */
+
+    JSClass *getClass() const {
+        return (JSClass *) (classword & ~JSSLOT_CLASS_MASK_BITS);
+    }
+
+    /*
+     * Get private value previously assigned with setPrivate.
+     */
+    void *getAssignedPrivate() const {
+        JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
+
+        jsval v = fslots[JSSLOT_PRIVATE];
+        JS_ASSERT(JSVAL_IS_INT(v));
+        return JSVAL_TO_PRIVATE(v);
+    }
+
+    /*
+     * Get private value or null if the value has not yet been assigned.
+     */
+    void *getPrivate() const {
+        JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
+
+        jsval v = fslots[JSSLOT_PRIVATE];
+        if (JSVAL_IS_INT(v))
+            return JSVAL_TO_PRIVATE(v);
+        JS_ASSERT(JSVAL_IS_VOID(v));
+        return NULL;
+    }
+
+    void setPrivate(void *data) {
+        JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
+        fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(data);
+    }
+
+    JS_ALWAYS_INLINE JSBool lookupProperty(JSContext *cx, jsid id,
+                                           JSObject **objp, JSProperty **propp) {
+        return map->ops->lookupProperty(cx, this, id, objp, propp);
+    }
+
+    JS_ALWAYS_INLINE JSBool defineProperty(JSContext *cx, jsid id, jsval value,
+                                           JSPropertyOp getter, JSPropertyOp setter,
+                                           uintN attrs, JSProperty **propp) {
+        return map->ops->defineProperty(cx, this, id, value, getter, setter, attrs, propp);
+    }
+
+    JS_ALWAYS_INLINE JSBool getProperty(JSContext *cx, jsid id, jsval *vp) {
+        return map->ops->getProperty(cx, this, id, vp);
+    }
+
+    JS_ALWAYS_INLINE JSBool setProperty(JSContext *cx, jsid id, jsval *vp) {
+        return map->ops->setProperty(cx, this, id, vp);
+    }
+
+    JS_ALWAYS_INLINE JSBool getAttributes(JSContext *cx, jsid id, JSProperty *prop,
+                                          uintN *attrsp) {
+        return map->ops->getAttributes(cx, this, id, prop, attrsp);
+    }
+
+    JS_ALWAYS_INLINE JSBool setAttributes(JSContext *cx, jsid id, JSProperty *prop,
+                                          uintN *attrsp) {
+        return map->ops->setAttributes(cx, this, id, prop, attrsp);
+    }
+
+    JS_ALWAYS_INLINE JSBool deleteProperty(JSContext *cx, jsid id, jsval *rval) {
+        return map->ops->deleteProperty(cx, this, id, rval);
+    }
+
+    JS_ALWAYS_INLINE JSBool defaultValue(JSContext *cx, JSType hint, jsval *vp) {
+        return map->ops->defaultValue(cx, this, hint, vp);
+    }
+
+    JS_ALWAYS_INLINE JSBool enumerate(JSContext *cx, JSIterateOp op, jsval *statep,
+                                      jsid *idp) {
+        return map->ops->enumerate(cx, this, op, statep, idp);
+    }
+
+    JS_ALWAYS_INLINE JSBool checkAccess(JSContext *cx, jsid id, JSAccessMode mode, jsval *vp,
+                                        uintN *attrsp) {
+        return map->ops->checkAccess(cx, this, id, mode, vp, attrsp);
+    }
+
+    /* These four are time-optimized to avoid stub calls. */
+    JS_ALWAYS_INLINE JSObject *thisObject(JSContext *cx) {
+        return map->ops->thisObject ? map->ops->thisObject(cx, this) : this;
+    }
+
+    JS_ALWAYS_INLINE void dropProperty(JSContext *cx, JSProperty *prop) {
+        if (map->ops->dropProperty)
+            map->ops->dropProperty(cx, this, prop);
+    }
+
+    JS_ALWAYS_INLINE jsval getRequiredSlot(JSContext *cx, uint32 slot) {
+        return map->ops->getRequiredSlot ? map->ops->getRequiredSlot(cx, this, slot) : JSVAL_VOID;
+    }
+
+    JS_ALWAYS_INLINE JSBool setRequiredSlot(JSContext *cx, uint32 slot, jsval v) {
+        return map->ops->setRequiredSlot ? map->ops->setRequiredSlot(cx, this, slot, v) : JS_TRUE;
+    }
 };
 
-#define JSSLOT_PROTO        0
-#define JSSLOT_PARENT       1
-#define JSSLOT_PRIVATE      2
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \
                              : JSSLOT_PARENT + 1)
@@ -259,7 +295,7 @@ struct JSObject {
 JS_ALWAYS_INLINE JSClass*
 STOBJ_GET_CLASS(const JSObject* obj)
 {
-    return (JSClass *) (obj->classword & ~JSSLOT_CLASS_MASK_BITS);
+    return obj->getClass();
 }
 
 #define STOBJ_IS_DELEGATE(obj)  (((obj)->classword & 1) != 0)
@@ -268,10 +304,6 @@ STOBJ_GET_CLASS(const JSObject* obj)
     (!(obj) || STOBJ_SET_DELEGATE((JSObject*)obj))
 #define STOBJ_IS_SYSTEM(obj)    (((obj)->classword & 2) != 0)
 #define STOBJ_SET_SYSTEM(obj)   ((obj)->classword |= 2)
-
-#define STOBJ_GET_PRIVATE(obj)                                                \
-    (JS_ASSERT(JSVAL_IS_INT(STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE))),            \
-     JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE)))
 
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
     JS_ASSERT_IF(OBJ_IS_NATIVE(obj), slot < OBJ_SCOPE(obj)->freeslot)
@@ -328,9 +360,6 @@ STOBJ_GET_CLASS(const JSObject* obj)
 
 #define LOCKED_OBJ_GET_CLASS(obj) \
     STOBJ_GET_CLASS(obj)
-
-#define LOCKED_OBJ_GET_PRIVATE(obj) \
-    (OBJ_CHECK_SLOT(obj, JSSLOT_PRIVATE), STOBJ_GET_PRIVATE(obj))
 
 #ifdef JS_THREADSAFE
 
@@ -392,7 +421,6 @@ STOBJ_GET_CLASS(const JSObject* obj)
  * is necessary to read it. Same for the private slot.
  */
 #define OBJ_GET_CLASS(cx,obj)           STOBJ_GET_CLASS(obj)
-#define OBJ_GET_PRIVATE(cx,obj)         STOBJ_GET_PRIVATE(obj)
 
 /*
  * Test whether the object is native. FIXME bug 492938: consider how it would
@@ -402,6 +430,34 @@ STOBJ_GET_CLASS(const JSObject* obj)
     JS_LIKELY((ops) == &js_ObjectOps || !(ops)->objectMap)
 
 #define OBJ_IS_NATIVE(obj)  OPS_IS_NATIVE((obj)->map->ops)
+
+#ifdef __cplusplus
+JS_ALWAYS_INLINE void
+OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
+{
+    JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        if (xclasp->innerObject)
+            obj = xclasp->innerObject(cx, obj);
+    }
+}
+
+/*
+ * The following function has been copied to jsd/jsd_val.c. If making changes to
+ * OBJ_TO_OUTER_OBJECT, please update jsd/jsd_val.c as well.
+ */
+JS_ALWAYS_INLINE void
+OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
+{
+    JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        if (xclasp->outerObject)
+            obj = xclasp->outerObject(cx, obj);
+    }
+}
+#endif
 
 extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
 extern JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps;
@@ -445,7 +501,7 @@ OBJ_IS_CLONED_BLOCK(JSObject *obj)
  * With object that does not correspond to a stack slot, pass -1 for depth.
  *
  * When popping the stack across this object's "with" statement, client code
- * must call JS_SetPrivate(cx, withobj, NULL).
+ * must call withobj->setPrivate(NULL).
  */
 extern JS_REQUIRES_STACK JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
@@ -651,8 +707,8 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
  * On error, return false.  On success, if propp is non-null, return true with
  * obj locked and with a held property in *propp; if propp is null, return true
  * but release obj's lock first.  Therefore all callers who pass non-null propp
- * result parameters must later call OBJ_DROP_PROPERTY(cx, obj, *propp) both to
- * drop the held property, and to release the lock on obj.
+ * result parameters must later call obj->dropProperty(cx, *propp) both to drop
+ * the held property, and to release the lock on obj.
  */
 extern JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
@@ -676,7 +732,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
  * found, return true with *objp non-null and locked, and with a held property
  * stored in *propp. If successful but id was not found, return true with both
  * *objp and *propp null. Therefore all callers who receive a non-null *propp
- * must later call OBJ_DROP_PROPERTY(cx, *objp, *propp).
+ * must later call (*objp)->dropProperty(cx, *propp).
  */
 extern JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
@@ -690,6 +746,28 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 extern int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
+
+
+/*
+ * We cache name lookup results only for the global object or for native
+ * non-global objects without prototype or with prototype that never mutates,
+ * see bug 462734 and bug 487039.
+ */
+static inline bool
+js_IsCacheableNonGlobalScope(JSObject *obj)
+{
+    extern JS_FRIEND_DATA(JSClass) js_CallClass;
+    extern JS_FRIEND_DATA(JSClass) js_DeclEnvClass;
+    JS_ASSERT(STOBJ_GET_PARENT(obj));
+
+    JSClass *clasp = STOBJ_GET_CLASS(obj);
+    bool cacheable = (clasp == &js_CallClass ||
+                      clasp == &js_BlockClass ||
+                      clasp == &js_DeclEnvClass);
+
+    JS_ASSERT_IF(cacheable, obj->map->ops->lookupProperty == js_LookupProperty);
+    return cacheable;
+}
 
 /*
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.

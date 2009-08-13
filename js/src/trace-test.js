@@ -1859,6 +1859,16 @@ function testNegativeGETELEMIndex()
 testNegativeGETELEMIndex.expected = "ok";
 test(testNegativeGETELEMIndex);
 
+function testCallElem()
+{
+    var obj = {x0: function(){}};
+    var count = 0;
+    var m = "x" + count; // "x0" as a non-atom string
+    for (i = 0; i < 4; ++i)
+        obj[m]();
+}
+test(testCallElem);
+
 function doTestInvalidCharCodeAt(input)
 {
     var q = "";
@@ -5614,6 +5624,87 @@ function testBug507425() {
 }
 testBug507425.expected = "ok";
 test(testBug507425);
+
+function testNestedClosures() {
+    function f(a, b) {
+        function g(x, y) {
+            function h(m, n) {
+                function k(u, v) {
+                    var s = '';
+                    for (var i = 0; i < 5; ++i)
+                        s = a + ',' + b + ',' + x + ',' + y + ',' + m + ',' + n + ',' + u + ',' + v;
+                    return s;
+                }
+                return k(m+1, n+1);
+            }
+            return h(x+1, y+1);
+        }
+        return g(a+1, b+1);
+    }
+
+    var s1;
+    for (var i = 0; i < 5; ++i)
+        s1 = f(i, i+i);
+    return s1;
+}
+testNestedClosures.expected = '4,8,5,9,6,10,7,11';
+test(testNestedClosures);
+
+function testMultipleArgumentsObjects() {
+    var testargs = arguments;
+    var f = function (name, which) {
+        var args = [testargs, arguments];
+        return args[which][0];
+    };
+    var arr = [0, 0, 0, 0, 1];
+    for (var i = 0; i < arr.length; i++)
+        arr[i] = f("f", arr[i]);
+    return arr + '';
+}
+testMultipleArgumentsObjects.expected =  ",,,,f";
+test(testMultipleArgumentsObjects);
+
+function testClosureIncrSideExit() {
+    let(f = function (y) {
+        let(ff = function (g) {
+            for each(let h in g) {
+                if (++y > 5) {
+                    return 'ddd';
+                }
+            }
+            return 'qqq';
+        }) {
+            return ff(['', null, '', false, '', '', null]);
+        }
+    }) {
+        return f(-1);
+    }
+}
+testClosureIncrSideExit.expected =  "ddd";
+test(testClosureIncrSideExit);
+
+function parseIntHelper(n) {
+    var a;
+    for (var i = 0; i < 5; i++)
+      a = parseInt(n);
+    return a;
+}
+function doParseIntTests() {
+    var inputs = [0, -0, .1, -.1, .7, -.7, 1.3, -1.3];
+    var outputs = new Array(8);
+    //avoid jit, unrolled
+    outputs[0] = outputs[1] = outputs[2] = outputs[4] = 0;
+    outputs[3] = outputs[5] = -0;
+    outputs[6] = 1;
+    outputs[7] = -1;
+    for (var i = 0; i < 8; i++) {
+        var testfn = new Function('return parseIntHelper(' + uneval(inputs[i]) + ');');
+	testfn.name = 'testParseInt' + uneval(inputs[i]);
+	testfn.expected = outputs[i];
+	test(testfn);
+    }
+}
+doParseIntTests();
 
 /*****************************************************************************
  *                                                                           *

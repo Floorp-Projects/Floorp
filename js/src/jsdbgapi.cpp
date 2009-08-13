@@ -595,7 +595,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     script = FUN_SCRIPT(fun);
                 } else if (clasp == &js_ScriptClass) {
                     fun = NULL;
-                    script = (JSScript *) JS_GetPrivate(cx, closure);
+                    script = (JSScript *) closure->getAssignedPrivate();
                 } else {
                     fun = NULL;
                     script = NULL;
@@ -672,11 +672,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                       : wp->setter(cx, obj, userid, vp));
                 if (injectFrame) {
                     /* Evil code can cause us to have an arguments object. */
-                    if (frame.callobj)
-                        ok &= js_PutCallObject(cx, &frame);
-                    if (frame.argsobj)
-                        ok &= js_PutArgsObject(cx, &frame);
-
+                    ok &= frame.putActivationObjects(cx);
                     cx->fp = frame.down;
                     if (argv != smallv)
                         cx->free(argv);
@@ -791,16 +787,16 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             flags = sprop->flags;
             shortid = sprop->shortid;
         } else {
-            if (!OBJ_GET_PROPERTY(cx, pobj, propid, &value) ||
-                !OBJ_GET_ATTRIBUTES(cx, pobj, propid, prop, &attrs)) {
-                OBJ_DROP_PROPERTY(cx, pobj, prop);
+            if (!pobj->getProperty(cx, propid, &value) ||
+                !pobj->getAttributes(cx, propid, prop, &attrs)) {
+                pobj->dropProperty(cx, prop);
                 return JS_FALSE;
             }
             getter = setter = NULL;
             flags = 0;
             shortid = 0;
         }
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
+        pobj->dropProperty(cx, prop);
 
         /* Recall that obj is native, whether or not pobj is native. */
         if (!js_DefineNativeProperty(cx, obj, propid, value, getter, setter,
@@ -812,7 +808,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
 
     /*
      * At this point, prop/sprop exists in obj, obj is locked, and we must
-     * OBJ_DROP_PROPERTY(cx, obj, prop) before returning.
+     * obj->dropProperty(cx, prop) before returning.
      */
     ok = JS_TRUE;
     DBG_LOCK(rt);
@@ -865,7 +861,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     DBG_UNLOCK(rt);
 
 out:
-    OBJ_DROP_PROPERTY(cx, obj, prop);
+    obj->dropProperty(cx, prop);
     return ok;
 }
 
@@ -1171,7 +1167,7 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
         return NULL;
 
     JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee));
-    JS_ASSERT(OBJ_GET_PRIVATE(cx, fp->callee) == fp->fun);
+    JS_ASSERT(fp->callee->getAssignedPrivate() == fp->fun);
     return fp->callee;
 }
 
@@ -2017,7 +2013,7 @@ js_ResumeVtune(JSContext *cx, JSObject *obj,
 /*
  * Ethogram - Javascript wrapper for TraceVis state
  *
- * ethology: The scientific study of animal behavior, 
+ * ethology: The scientific study of animal behavior,
  *           especially as it occurs in a natural environment.
  * ethogram: A pictorial catalog of the behavioral patterns of
  *           an organism or a species.

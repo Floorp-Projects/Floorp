@@ -4253,13 +4253,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 inline void *
 xpc_GetJSPrivate(JSObject *obj)
 {
-    jsval v;
-
-    JS_ASSERT(STOBJ_GET_CLASS(obj)->flags & JSCLASS_HAS_PRIVATE);
-    v = obj->fslots[JSSLOT_PRIVATE];
-    if (!JSVAL_IS_INT(v))
-        return NULL;
-    return JSVAL_TO_PRIVATE(v);
+    return obj->getPrivate();
 }
 
 #ifndef XPCONNECT_STANDALONE

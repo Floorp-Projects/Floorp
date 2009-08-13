@@ -2029,8 +2029,8 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
                 return JS_FALSE;
             if (prop) {
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
-                if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
+                obj2->dropProperty(cx, prop);
+                if (!obj->getProperty(cx, id, &value))
                     return JS_FALSE;
             }
             if (!prop || !JSVAL_IS_OBJECT(value)) {
@@ -2527,8 +2527,7 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         /* Make sure to define this property on the inner object. */
         if (!JS_ValueToId(cx, *vp, &asId))
             return JS_FALSE;
-        return OBJ_DEFINE_PROPERTY(cx, cpx->inner, asId, *vp, NULL, NULL,
-                                   JSPROP_ENUMERATE, NULL);
+        return cpx->inner->defineProperty(cx, asId, *vp, NULL, NULL, JSPROP_ENUMERATE, NULL);
     }
     return JS_TRUE;
 }
@@ -2594,7 +2593,7 @@ split_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         /* Make sure to define this property on the inner object. */
         if (!JS_ValueToId(cx, *vp, &asId))
             return JS_FALSE;
-        return OBJ_DELETE_PROPERTY(cx, cpx->inner, asId, vp);
+        return cpx->inner->deleteProperty(cx, asId, vp);
     }
     return JS_TRUE;
 }
@@ -2656,10 +2655,10 @@ split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         if (!JS_ValueToId(cx, id, &asId))
             return JS_FALSE;
 
-        if (!OBJ_LOOKUP_PROPERTY(cx, cpx->inner, asId, objp, &prop))
+        if (!cpx->inner->lookupProperty(cx, asId, objp, &prop))
             return JS_FALSE;
         if (prop)
-            OBJ_DROP_PROPERTY(cx, cpx->inner, prop);
+            cpx->inner->dropProperty(cx, prop);
 
         return JS_TRUE;
     }

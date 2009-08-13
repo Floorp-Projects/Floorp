@@ -574,6 +574,14 @@ extern const char js_encodeURIComponent_str[];
 extern JSString *
 js_NewString(JSContext *cx, jschar *chars, size_t length);
 
+/*
+ * GC-allocate a string descriptor and steal the char buffer held by |cb|.
+ * This function takes responsibility for adding the terminating '\0' required
+ * by js_NewString.
+ */
+extern JSString *
+js_NewStringFromCharBuffer(JSContext *cx, JSCharVector &cb);
+
 extern JSString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,
                       size_t length);
@@ -608,12 +616,12 @@ extern JS_FRIEND_API(JSString *)
 js_ValueToString(JSContext *cx, jsval v);
 
 /*
- * This function implements E-262-3 section 9.8, toString.  Convert the given
- * value to a string of jschars appended to the given buffer.  On error, the
+ * This function implements E-262-3 section 9.8, toString. Convert the given
+ * value to a string of jschars appended to the given buffer. On error, the
  * passed buffer may have partial results appended.
  */
 extern JS_FRIEND_API(JSBool)
-js_ValueToStringBuffer(JSContext *, jsval, JSTempVector<jschar> &);
+js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &cb);
 
 /*
  * Convert a value to its source expression, returning null after reporting

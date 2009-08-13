@@ -37,59 +37,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#ifndef __nanojit_RegAlloc__
-#define __nanojit_RegAlloc__
-
+#include "nanojit.h"
 
 namespace nanojit
 {
-    inline RegisterMask rmask(Register r)
+    BitSet::BitSet(Allocator& allocator, int nbits)
+        : allocator(allocator)
+        , cap((nbits+63)>>6)
+        , bits((int64_t*)allocator.alloc(cap * sizeof(int64_t)))
     {
-        return 1 << r;
+        reset();
     }
 
-    class RegAlloc
+    void BitSet::reset()
     {
-        public:
-            RegAlloc() { clear(); }
-            void    clear();
-            bool    isFree(Register r);
-            void    addFree(Register r);
-            void    addActive(Register r, LIns* ins);
-            void    useActive(Register r);
-            void    removeActive(Register r);
-            void    retire(Register r);
-            bool    isValid() {
-                return (free|used) != 0;
-            }
+        for (int i=0, n=cap; i < n; i++)
+            bits[i] = 0;
+    }
 
-            int32_t getPriority(Register r) {
-                NanoAssert(r != UnknownReg && active[r]);
-                return usepri[r];
-            }
+    bool BitSet::setFrom(BitSet& other)
+    {
+        int c = other.cap;
+        if (c > cap)
+            grow(c);
+        int64_t *bits = this->bits;
+        int64_t *otherbits = other.bits;
+        int64_t newbits = 0;
+        for (int i=0; i < c; i++) {
+            int64_t b = bits[i];
+            int64_t b2 = otherbits[i];
+            newbits |= b2 & ~b; // bits in b2 that are not in b
+            bits[i] = b|b2;
+        }
+        return newbits != 0;
+    }
 
-            LIns* getActive(Register r) {
-                NanoAssert(r != UnknownReg);
-                return active[r];
-            }
-
-            debug_only( uint32_t    countFree(); )
-            debug_only( uint32_t    countActive(); )
-            debug_only( void        checkCount(); )
-            debug_only( bool        isConsistent(Register r, LIns* v); )
-            debug_only( uint32_t    count; )
-            debug_only( RegisterMask managed; )    // bitfield of 0..NJ_MAX_REGISTERS denoting which are under our management
-
-            LIns*    active[LastReg + 1];  // active[r] = OP that defines r
-            int32_t usepri[LastReg + 1]; // used priority. lower = more likely to spill.
-            RegisterMask    free;
-            RegisterMask    used;
-            int32_t         priority;
-
-            verbose_only( static void formatRegisters(RegAlloc& regs, char* s, Fragment*); )
-
-            DECLARE_PLATFORM_REGALLOC()
-    };
+    /** keep doubling the bitset length until w fits */
+    void BitSet::grow(int w)
+    {
+        int cap2 = cap;
+        do {
+            cap2 <<= 1;
+        } while (w > cap2);
+        int64_t *bits2 = (int64_t*) allocator.alloc(cap2 * sizeof(int64_t));
+        int j=0;
+        for (; j < cap; j++)
+            bits2[j] = bits[j];
+        for (; j < cap2; j++)
+            bits2[j] = 0;
+        cap = cap2;
+        bits = bits2;
+    }
 }
-#endif // __nanojit_RegAlloc__

@@ -137,14 +137,17 @@ typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 /*
  * Template declarations.
  *
- * jsprvtd.h can be included in both C and C++ translation units.  For C++, it
+ * jsprvtd.h can be included in both C and C++ translation units. For C++, it
  * may possibly be wrapped in an extern "C" block which does not agree with
  * templates.
  */
 #ifdef __cplusplus
 extern "C++" {
 
-template <class T> class JSTempVector;
+template <class T, size_t MinInlineCapacity = 0> class JSTempVector;
+
+/* Common JSTempVector instantiations: */
+typedef JSTempVector<jschar, 32> JSCharVector;
 
 }
 #endif  /* __cplusplus */
