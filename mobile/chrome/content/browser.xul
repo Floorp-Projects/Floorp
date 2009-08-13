@@ -232,6 +232,8 @@
           </toolbar>
         </box>
 
+        <notificationbox id="notifications"/>
+
         <!-- Content viewport -->
 	<box>
 	  <html:div id="tile-container" style="width: 800px; height: 480px; overflow: hidden;"
@@ -256,9 +258,6 @@
   </scrollbox>
 
   <box id="stack-toolbar-container" hidden="true" top="0" left="0"/>
-
-    <notificationbox id="notifications" top="0" left="0"/>
-
     <!-- popup for find toolbar -->
     <hbox id="findbar-container" hidden="true" top="0" left="0">
       <findbar id="findbar" flex="1"/>
