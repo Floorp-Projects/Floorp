@@ -2,7 +2,7 @@
 <!DOCTYPE html><html><head><noscript></noscript><style></style></head><frameset></frameset>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |     <noscript>
@@ -13,7 +13,7 @@
 <!DOCTYPE html><html><head><link><body></body></html>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |     <link>
@@ -23,7 +23,7 @@
 <!DOCTYPE html><html><link><body>#</body></html>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |     <link>
@@ -61,7 +61,7 @@ Unexpected start tag that belongs in head.
 Unexpected start tag that belongs in head.
 Expected closing tag after </.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |     <title>
@@ -79,7 +79,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tr><td></td><input><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -94,7 +94,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tr><td></td><input type="hidden"><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -110,7 +110,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tr><td></td><input tYPe="	hiDDen	"><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -126,7 +126,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tr><td></td><input tYPe="  hiDDen  "><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -142,7 +142,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tr><td></td><input type="text" type="hidden"><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -158,7 +158,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tr><td></td><input type="hidden" type="text"><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -174,7 +174,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tr><td></td><input id="one"><input type="hidden"><input id="two"><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -194,7 +194,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tr><td></td><input id="one" type="hidden"><input id="two"><input id="three" type="hidden"><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -216,7 +216,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><input><tr><td></td><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -231,7 +231,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><input type="hidden"><tr><td></td><td></td></tr></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -247,7 +247,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tbody><input><tr><td></td><td></td></tr></tbody></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -262,7 +262,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tbody><input type="hidden"><tr><td></td><td></td></tr></tbody></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -278,7 +278,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><thead><input><tr><td></td><td></td></tr></thead></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -293,7 +293,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><thead><input type="hidden"><tr><td></td><td></td></tr></thead></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -309,7 +309,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tfoot><input><tr><td></td><td></td></tr></tfoot></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -324,7 +324,7 @@ x { content:"</style" } "
 <!DOCTYPE html><body><table><tfoot><input type="hidden"><tr><td></td><td></td></tr></tfoot></table></body>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -340,7 +340,7 @@ x { content:"</style" } "
 <!DOCTYPE html><html><head></head><form><input></form><frameset rows="*"><frame></frameset></html>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <frameset>
@@ -351,7 +351,7 @@ x { content:"</style" } "
 <!DOCTYPE html><html><head></head><form><input type="text"></form><frameset rows="*"><frame></frameset></html>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -363,7 +363,7 @@ x { content:"</style" } "
 <!DOCTYPE html><html><head></head><form><input type="hidden"></form><frameset rows="*"><frame></frameset></html>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <frameset>
@@ -374,7 +374,7 @@ x { content:"</style" } "
 <!DOCTYPE html><html><head></head><form><input tYpE="	HIdDen	"></form><frameset rows="*"><frame></frameset></html>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <frameset>
@@ -385,7 +385,7 @@ x { content:"</style" } "
 <!DOCTYPE html><html><body><table><link><tr><td>Hi!</td></tr></table></html>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -400,7 +400,7 @@ x { content:"</style" } "
 <!DOCTYPE html><html><body><table><style>td { color: green }</style><tr><td>Hi!</tr></td></table>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -411,11 +411,12 @@ x { content:"</style" } "
 |         <tr>
 |           <td>
 |             "Hi!"
+
 #data
 <!DOCTYPE html><html><head></head><form><input type=" hidden"></form><frameset rows="*"><frame></frameset></html>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
