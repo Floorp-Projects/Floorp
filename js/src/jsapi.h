@@ -2347,17 +2347,6 @@ extern JS_FRIEND_API(JSBool)
 JS_IsAssigning(JSContext *cx);
 
 /*
- * Set the second return value, which should be a string or int jsval that
- * identifies a property in the returned object, to form an ECMA reference
- * type value (obj, id).  Only native methods can return reference types,
- * and if the returned value is used on the left-hand side of an assignment
- * op, the identified property will be set.  If the return value is in an
- * r-value, the interpreter just gets obj[id]'s value.
- */
-extern JS_PUBLIC_API(void)
-JS_SetCallReturnValue2(JSContext *cx, jsval v);
-
-/*
  * Saving and restoring frame chains.
  *
  * These two functions are used to set aside cx's call stack while that stack

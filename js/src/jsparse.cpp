@@ -3471,12 +3471,10 @@ BindDestructuringLHS(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         pn->pn_op = JSOP_SETNAME;
         break;
 
-#if JS_HAS_LVALUE_RETURN
       case TOK_LP:
         if (!MakeSetCall(cx, pn, tc, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return JS_FALSE;
         break;
-#endif
 
 #if JS_HAS_XML_SUPPORT
       case TOK_UNARYOP:
@@ -4673,9 +4671,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     ? (pn1->pn_type != TOK_RB || pn1->pn_count != 2)
                     : (pn1->pn_type != TOK_RB && pn1->pn_type != TOK_RC)) &&
 #endif
-#if JS_HAS_LVALUE_RETURN
                    pn1->pn_type != TOK_LP &&
-#endif
 #if JS_HAS_XML_SUPPORT
                    (pn1->pn_type != TOK_UNARYOP ||
                     pn1->pn_op != JSOP_XMLNAME) &&
@@ -4780,12 +4776,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
             if (!pn2) {
                 pn2 = pn1;
-#if JS_HAS_LVALUE_RETURN
                 if (pn2->pn_type == TOK_LP &&
                     !MakeSetCall(cx, pn2, tc, JSMSG_BAD_LEFTSIDE_OF_ASS)) {
                     return NULL;
                 }
-#endif
 #if JS_HAS_XML_SUPPORT
                 if (pn2->pn_type == TOK_UNARYOP)
                     pn2->pn_op = JSOP_BINDXMLNAME;
@@ -6012,10 +6006,8 @@ SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
 {
     if (kid->pn_type != TOK_NAME &&
         kid->pn_type != TOK_DOT &&
-#if JS_HAS_LVALUE_RETURN
         (kid->pn_type != TOK_LP ||
          (kid->pn_op != JSOP_CALL && kid->pn_op != JSOP_EVAL && kid->pn_op != JSOP_APPLY)) &&
-#endif
 #if JS_HAS_XML_SUPPORT
         (kid->pn_type != TOK_UNARYOP || kid->pn_op != JSOP_XMLNAME) &&
 #endif
@@ -6054,12 +6046,10 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              : (preorder ? JSOP_DECPROP : JSOP_PROPDEC);
         break;
 
-#if JS_HAS_LVALUE_RETURN
       case TOK_LP:
         if (!MakeSetCall(cx, kid, tc, JSMSG_BAD_INCOP_OPERAND))
             return JS_FALSE;
         /* FALL THROUGH */
-#endif
 #if JS_HAS_XML_SUPPORT
       case TOK_UNARYOP:
         if (kid->pn_op == JSOP_XMLNAME)

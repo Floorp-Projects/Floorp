@@ -5195,15 +5195,6 @@ JS_IsAssigning(JSContext *cx)
     return (js_CodeSpec[*fp->regs->pc].format & JOF_ASSIGNING) != 0;
 }
 
-JS_PUBLIC_API(void)
-JS_SetCallReturnValue2(JSContext *cx, jsval v)
-{
-#if JS_HAS_LVALUE_RETURN
-    cx->rval2 = v;
-    cx->rval2set = JS_TRUE;
-#endif
-}
-
 JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx)
 {
