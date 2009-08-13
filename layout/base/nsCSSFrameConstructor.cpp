@@ -6482,8 +6482,8 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
       // Except if we have an aChildFrame and its parent is not the right
       // thing, then we don't do this.  Pseudo frames are so much fun....
       if (!aChildFrame || aChildFrame->GetParent() == listBoxBodyFrame) {
-        listBoxBodyFrame->OnContentRemoved(aPresContext, aChildFrame,
-                                           aIndexInContainer);
+        listBoxBodyFrame->OnContentRemoved(aPresContext, aContainer,
+                                           aChildFrame, aIndexInContainer);
         return PR_TRUE;
       }
     } else {
