@@ -90,6 +90,7 @@ CPPSRCS		= \
 	nsIdleServiceWin.cpp \
 	nsSound.cpp \
 	nsIMM32Handler.cpp \
+	WindowHook.cpp \
 	$(NULL)
 
 ifdef NS_PRINTING
@@ -129,7 +130,7 @@ DEFINES		+= -DMOZ_STATIC_COMPONENT_LIBS
 endif # BUILD_STATIC_LIBS
 
 
-EXPORTS		= nsdefs.h
+EXPORTS		= nsdefs.h WindowHook.h
 
 LOCAL_INCLUDES	= \
 		-I. \
