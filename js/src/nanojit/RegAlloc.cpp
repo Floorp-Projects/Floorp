@@ -48,9 +48,7 @@ namespace nanojit
      */
     void RegAlloc::clear()
     {
-        free = 0;
-        used = 0;
-        memset(active, 0, (LastReg+1) * sizeof(LIns*));
+        VMPI_memset(this, 0, sizeof(*this));
     }
 
     bool RegAlloc::isFree(Register r)

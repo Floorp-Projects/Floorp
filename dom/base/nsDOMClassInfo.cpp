@@ -5171,9 +5171,17 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
         break;
       }
       case nsXPTType::T_I32:
+      {
+        if (!JS_NewNumberValue(cx, c->GetValue()->val.i32, &v)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        break;
+      }
       case nsXPTType::T_U32:
       {
-        v = INT_TO_JSVAL(c->GetValue()->val.u32);
+        if (!JS_NewNumberValue(cx, c->GetValue()->val.u32, &v)) {
+          return NS_ERROR_UNEXPECTED;
+        }
         break;
       }
       default:

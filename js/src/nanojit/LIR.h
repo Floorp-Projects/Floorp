@@ -55,6 +55,7 @@ namespace nanojit
 
     enum LOpcode
 #if defined(_MSC_VER) && _MSC_VER >= 1400
+#pragma warning(disable:4480) // nonstandard extension used: specifying underlying type for enum
           : unsigned
 #endif
     {
@@ -95,7 +96,6 @@ namespace nanojit
 
     struct GuardRecord;
     struct SideExit;
-    struct Page;
 
     enum AbiKind {
         ABI_FASTCALL,
@@ -140,10 +140,10 @@ namespace nanojit
         inline bool isIndirect() const {
             return _address < 256;
         }
-        inline uint32_t FASTCALL count_args() const {
+        inline uint32_t count_args() const {
             return _count_args(ARGSIZE_MASK_ANY);
         }
-        inline uint32_t FASTCALL count_iargs() const {
+        inline uint32_t count_iargs() const {
             return _count_args(ARGSIZE_MASK_INT);
         }
         // fargs = args - iargs
@@ -311,6 +311,8 @@ namespace nanojit
         LRK_I64,
         LRK_None    // this one is used for unused opcode numbers
     };
+
+    class LIns;
 
     // 0-operand form.  Used for LIR_start and LIR_label.
     class LInsOp0
@@ -494,7 +496,13 @@ namespace nanojit
     private:
         // Last word: fields shared by all LIns kinds.  The reservation fields
         // are read/written during assembly.
-        Reservation lastWord;
+        union {
+            Reservation lastWord;
+            // force sizeof(LIns)==8 and 8-byte alignment on 64-bit machines.
+            // this is necessary because sizeof(Reservation)==4 and we want all
+            // instances of LIns to be pointer-aligned.
+            void* dummy;
+        };
 
         // LIns-to-LInsXYZ converters.
         LInsOp0* toLInsOp0() const { return (LInsOp0*)( uintptr_t(this+1) - sizeof(LInsOp0) ); }
@@ -660,7 +668,6 @@ namespace nanojit
         double         imm64f()    const;
         Reservation*   resv()            { return &lastWord; }
         void*          payload()   const;
-        inline Page*   page()            { return (Page*) alignTo(this,NJ_PAGE_SIZE); }
         inline int32_t size()      const {
             NanoAssert(isop(LIR_ialloc));
             return toLInsI()->imm32 << 2;
@@ -769,6 +776,7 @@ namespace nanojit
     };
 
     typedef LIns* LInsp;
+    typedef SeqBuilder<LIns*> InsList;
 
     LIns* FASTCALL callArgN(LInsp i, uint32_t n);
     extern const uint8_t operandCount[];
@@ -847,58 +855,41 @@ namespace nanojit
     };
 
 
-    // Each page has a header;  the rest of it holds code.
-    #define NJ_PAGE_CODE_AREA_SZB       (NJ_PAGE_SIZE - sizeof(PageHeader))
-
-    // The first instruction on a page is always a start instruction, or a
-    // payload-less skip instruction linking to the previous page.  The
-    // biggest possible instruction would take up the entire rest of the page.
-    #define NJ_MAX_LINS_SZB             (NJ_PAGE_CODE_AREA_SZB - sizeof(LInsSk))
-
-    // The maximum skip payload size is determined by the maximum instruction
-    // size.  We require that a skip's payload be adjacent to the skip LIns
-    // itself.
-    #define NJ_MAX_SKIP_PAYLOAD_SZB     (NJ_MAX_LINS_SZB - sizeof(LInsSk))
-
-
 #ifdef NJ_VERBOSE
     extern const char* lirNames[];
 
     /**
      * map address ranges to meaningful names.
      */
-    class LabelMap MMGC_SUBCLASS_DECL
+    class LabelMap
     {
-        class Entry MMGC_SUBCLASS_DECL
+        Allocator& allocator;
+        class Entry
         {
         public:
-            Entry(int) : name(0), size(0), align(0) {}
-            Entry(avmplus::String *n, size_t s, size_t a) : name(n),size(s),align(a) {}
-            ~Entry();
-            DRCWB(avmplus::String*) name;
+            Entry(char *n, size_t s, size_t a) : name(n),size(s),align(a) {}
+            char* name;
             size_t size:29, align:3;
         };
-        avmplus::SortedMap<const void*, Entry*, avmplus::LIST_GCObjects> names;
-        bool addrs, pad[3];
+        TreeMap<const void*, Entry*> names;
+        LogControl *logc;
         char buf[1000], *end;
         void formatAddr(const void *p, char *buf);
     public:
-        avmplus::AvmCore *core;
-        LabelMap(avmplus::AvmCore *);
-        ~LabelMap();
+        LabelMap(Allocator& allocator, LogControl* logc);
         void add(const void *p, size_t size, size_t align, const char *name);
-        void add(const void *p, size_t size, size_t align, avmplus::String*);
         const char *dup(const char *);
         const char *format(const void *p);
-        void clear();
     };
 
-    class LirNameMap MMGC_SUBCLASS_DECL
+    class LirNameMap
     {
+        Allocator& alloc;
+
         template <class Key>
-        class CountMap: public avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects> {
+        class CountMap: public HashMap<Key, int> {
         public:
-            CountMap(GC*gc) : avmplus::SortedMap<Key, int, avmplus::LIST_NonGCObjects>(gc) {}
+            CountMap(Allocator& alloc) : HashMap<Key, int>(alloc) {}
             int add(Key k) {
                 int c = 1;
                 if (containsKey(k)) {
@@ -911,29 +902,26 @@ namespace nanojit
         CountMap<int> lircounts;
         CountMap<const CallInfo *> funccounts;
 
-        class Entry MMGC_SUBCLASS_DECL
+        class Entry
         {
         public:
-            Entry(int) : name(0) {}
-            Entry(avmplus::String *n) : name(n) {}
-            ~Entry();
-            DRCWB(avmplus::String*) name;
+            Entry(char* n) : name(n) {}
+            char* name;
         };
-        avmplus::SortedMap<LInsp, Entry*, avmplus::LIST_GCObjects> names;
+        HashMap<LInsp, Entry*> names;
         LabelMap *labels;
         void formatImm(int32_t c, char *buf);
     public:
 
-        LirNameMap(GC *gc, LabelMap *r)
-            : lircounts(gc),
-            funccounts(gc),
-            names(gc),
-            labels(r)
+        LirNameMap(Allocator& alloc, LabelMap *lm)
+            : alloc(alloc),
+            lircounts(alloc),
+            funccounts(alloc),
+            names(alloc),
+            labels(lm)
         {}
-        ~LirNameMap();
 
         void addName(LInsp i, const char *s);
-        bool addName(LInsp i, avmplus::String *s);
         void copyName(LInsp i, const char *s, int suffix);
         const char *formatRef(LIns *ref);
         const char *formatIns(LInsp i);
@@ -944,12 +932,12 @@ namespace nanojit
     class VerboseWriter : public LirWriter
     {
         InsList code;
-        DWB(LirNameMap*) names;
+        LirNameMap* names;
         LogControl* logc;
     public:
-        VerboseWriter(GC *gc, LirWriter *out,
+        VerboseWriter(Allocator& alloc, LirWriter *out,
                       LirNameMap* names, LogControl* logc)
-            : LirWriter(out), code(gc), names(names), logc(logc)
+            : LirWriter(out), code(alloc), names(names), logc(logc)
         {}
 
         LInsp add(LInsp i) {
@@ -966,12 +954,14 @@ namespace nanojit
 
         void flush()
         {
-            int n = code.size();
-            if (n) {
-                for (int i=0; i < n; i++)
-                    logc->printf("    %s\n",names->formatIns(code[i]));
+            if (!code.isEmpty()) {
+                int32_t count = 0;
+                for (Seq<LIns*>* p = code.get(); p != NULL; p = p->tail) {
+                    logc->printf("    %s\n",names->formatIns(p->head));
+                    count++;
+                }
                 code.clear();
-                if (n > 1)
+                if (count > 1)
                     logc->printf("\n");
             }
         }
@@ -1044,7 +1034,7 @@ namespace nanojit
         // don't start too large, will waste memory.
         static const uint32_t kInitialCap = 64;
 
-        LInsp *m_list; // explicit WB's are used, no DWB needed.
+        LInsp *m_list;
         uint32_t m_used, m_cap;
         GC* m_gc;
 
@@ -1064,7 +1054,6 @@ namespace nanojit
         LInsp findLoad(LOpcode v, LInsp a, int32_t b, uint32_t &i);
         LInsp findcall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &i);
         LInsp add(LInsp i, uint32_t k);
-        void replace(LInsp i);
         void clear();
 
         static uint32_t FASTCALL hashimm(int32_t);
@@ -1092,19 +1081,15 @@ namespace nanojit
         LIns* insGuard(LOpcode op, LInsp cond, LIns *x);
     };
 
-    class LirBuffer : public GCFinalizedObject
+    class LirBuffer
     {
         public:
-            DWB(Fragmento*)        _frago;
-            LirBuffer(Fragmento* frago);
-            virtual ~LirBuffer();
+            LirBuffer(Allocator&);
             void        clear();
-            void        rewind();
             uintptr_t   makeRoom(size_t szB);   // make room for an instruction
-            bool        outOMem() { return _noMem != 0; }
 
             debug_only (void validate() const;)
-            verbose_only(DWB(LirNameMap*) names;)
+            verbose_only(LirNameMap* names;)
 
             int32_t insCount();
             size_t  byteCount();
@@ -1121,19 +1106,37 @@ namespace nanojit
             LInsp savedRegs[NumSavedRegs];
             bool explicitSavedRegs;
 
-        protected:
-            Page*        pageAlloc();
-            void        moveToNewPage(uintptr_t addrOfLastLInsOnCurrentPage);
+            /** each chunk is just a raw area of LIns instances, with no header
+                and no more than 8-byte alignment.  The chunk size is somewhat arbitrary
+                as long as it's well larger than 2*sizeof(LInsSk) */
+            static const size_t CHUNK_SZB = 8000;
 
-            PageList    _pages;
-            Page*        _nextPage; // allocated in preperation of a needing to growing the buffer
-            uintptr_t   _unused;    // next unused instruction slot
-            int            _noMem;        // set if ran out of memory when writing to buffer
+            /** the first instruction on a chunk is always a start instruction, or a
+             *  payload-less skip instruction linking to the previous chunk.  The biggest
+             *  possible instruction would take up the entire rest of the chunk. */
+            static const size_t MAX_LINS_SZB = CHUNK_SZB - sizeof(LInsSk);
+
+            /** the maximum skip payload size is determined by the maximum instruction
+             *  size.  We require that a skip's payload be adjacent to the skip LIns
+             *  itself. */
+            static const size_t MAX_SKIP_PAYLOAD_SZB = MAX_LINS_SZB - sizeof(LInsSk);
+
+        protected:
+            friend class LirBufWriter;
+
+            /** get CHUNK_SZB more memory for LIR instructions */
+            void        chunkAlloc();
+            void        moveToNewChunk(uintptr_t addrOfLastLInsOnCurrentChunk);
+
+            Allocator&  _allocator;
+            uintptr_t   _unused;   // next unused instruction slot in the current LIR chunk
+            uintptr_t   _limit;    // one past the last usable byte of the current LIR chunk
+            size_t      _bytesAllocated;
     };
 
     class LirBufWriter : public LirWriter
     {
-        DWB(LirBuffer*)    _buf;        // underlying buffer housing the instructions
+        LirBuffer*    _buf;        // underlying buffer housing the instructions
 
         public:
             LirBufWriter(LirBuffer* buf)
@@ -1193,28 +1196,18 @@ namespace nanojit
 
     class Assembler;
 
-    void compile(Assembler *assm, Fragment *frag);
-    verbose_only(void live(GC *gc, LirBuffer *lirbuf);)
+    void compile(Assembler *assm, Fragment *frag, Allocator& alloc verbose_only(, LabelMap*));
+    verbose_only(void live(Allocator& alloc, Fragment *frag, LirBuffer *lirbuf);)
 
     class StackFilter: public LirFilter
     {
-        GC *gc;
         LirBuffer *lirbuf;
         LInsp sp;
-        avmplus::BitSet stk;
+        BitSet stk;
         int top;
         int getTop(LInsp br);
     public:
-        StackFilter(LirFilter *in, GC *gc, LirBuffer *lirbuf, LInsp sp);
-        virtual ~StackFilter() {}
-        LInsp read();
-    };
-
-    class CseReader: public LirFilter
-    {
-        LInsHashSet *exprs;
-    public:
-        CseReader(LirFilter *in, LInsHashSet *exprs);
+        StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp);
         LInsp read();
     };
 
@@ -1224,6 +1217,7 @@ namespace nanojit
     public:
         LInsp sp, rp;
         LInsHashSet exprs;
+
         void clear(LInsp p);
     public:
         LoadFilter(LirWriter *out, GC *gc)

@@ -194,7 +194,7 @@ js_NumberToString(JSContext *cx, jsdouble d);
  * append to the given buffer.
  */
 extern JSBool JS_FASTCALL
-js_NumberValueToStringBuffer(JSContext *, jsval, JSTempVector<jschar> &);
+js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &cb);
 
 /*
  * Convert a value to a number. On exit JSVAL_IS_NULL(*vp) iff there was an

@@ -676,6 +676,9 @@ enum {
 #define B_cond(_c,_t)                           \
     B_cond_chk(_c,_t,1)
 
+#define B_nochk(_t)                             \
+    B_cond_chk(AL,_t,0)
+
 // NB: don't use COND_AL here, we shift the condition into place!
 #define JMP(_t)                                 \
     B_cond_chk(AL,_t,1)

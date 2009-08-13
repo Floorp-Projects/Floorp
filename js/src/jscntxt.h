@@ -95,11 +95,14 @@ typedef struct VMSideExit VMSideExit;
 
 #ifdef __cplusplus
 namespace nanojit {
+    class Assembler;
+    class CodeAlloc;
     class Fragment;
     class Fragmento;
     class LirBuffer;
 }
 class TraceRecorder;
+class VMAllocator;
 extern "C++" { template<typename T> class Queue; }
 typedef Queue<uint16> SlotList;
 
@@ -130,7 +133,6 @@ struct JSTraceMonitor {
      * last-ditch GC and suppress calls to JS_ReportOutOfMemory.
      *
      * !tracecx && !recorder: not on trace
-     * !tracecx && !recorder && prohibitFlush: deep-bailed
      * !tracecx && recorder && !recorder->deepAborted: recording
      * !tracecx && recorder && recorder->deepAborted: deep aborted
      * tracecx && !recorder: executing a trace
@@ -140,6 +142,9 @@ struct JSTraceMonitor {
 
     CLS(nanojit::LirBuffer) lirbuf;
     CLS(nanojit::Fragmento) fragmento;
+    CLS(VMAllocator)        allocator;   // A chunk allocator for LIR.
+    CLS(nanojit::CodeAlloc) codeAlloc;   // A general allocator for native code.
+    CLS(nanojit::Assembler) assembler;
     CLS(TraceRecorder)      recorder;
     jsval                   *reservedDoublePool;
     jsval                   *reservedDoublePoolPtr;
@@ -158,22 +163,22 @@ struct JSTraceMonitor {
      * If nonzero, do not flush the JIT cache after a deep bail. That would
      * free JITted code pages that we will later return to. Instead, set the
      * needFlush flag so that it can be flushed later.
-     *
-     * NB: needFlush and useReservedObjects are packed together.
      */
-    uintN                   prohibitFlush;
-    JSPackedBool            needFlush;
+    JSBool                  needFlush;
 
     /*
      * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
      * The JIT uses this to ensure that leaving a trace tree can't fail.
      */
-    JSPackedBool            useReservedObjects;
+    JSBool                  useReservedObjects;
     JSObject                *reservedObjects;
 
-    /* Fragmento for the regular expression compiler. This is logically
+    /* Parts for the regular expression compiler. This is logically
      * a distinct compiler but needs to be managed in exactly the same
-     * way as the real tracing Fragmento. */
+     * way as the trace compiler. */
+    CLS(VMAllocator)        reAllocator;
+    CLS(nanojit::CodeAlloc) reCodeAlloc;
+    CLS(nanojit::Assembler) reAssembler;
     CLS(nanojit::LirBuffer) reLirBuf;
     CLS(nanojit::Fragmento) reFragmento;
 
@@ -327,8 +332,6 @@ typedef enum JSRuntimeState {
 typedef enum JSBuiltinFunctionId {
     JSBUILTIN_ObjectToIterator,
     JSBUILTIN_CallIteratorNext,
-    JSBUILTIN_GetProperty,
-    JSBUILTIN_GetElement,
     JSBUILTIN_SetProperty,
     JSBUILTIN_SetElement,
     JSBUILTIN_HasInstance,
