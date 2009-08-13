@@ -67,6 +67,7 @@
 
 class gfxASurface;
 class nsChildView;
+class nsCocoaWindow;
 union nsPluginPort;
 
 enum {
@@ -430,6 +431,7 @@ protected:
   // caller must retain.
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
+  nsCocoaWindow*    GetXULWindowWidget();
 
   virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                             PRInt32 aNativeKeyCode,
