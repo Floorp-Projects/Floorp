@@ -374,6 +374,14 @@ InputHandler.EventInfo.prototype = {
  *   dragMove(dx, dy, scroller)
  *     Signals an input attempt to drag by dx, dy.
  *
+ * Optionally, a custom dragger may define a boolean property
+ *
+ *   allowRealtimeDownUp
+ *
+ * that, when true, will prevent the mousedown and mouseup events corresponding
+ * to the beginning and end of a drag from being swallowed (propagation stopped
+ * and default prevented) by the MouseModule.
+ *
  * Between mousedown and mouseup, MouseModule incrementally drags and updates
  * the dragger accordingly, and also determines whether a [double-]click occured
  * (based on whether the input moves have moved outside of a certain drag disk
@@ -473,8 +481,10 @@ MouseModule.prototype = {
                                             : null;
     this._clicker = (targetClicker) ? targetClicker.customClicker : null;
 
-    evInfo.event.stopPropagation();
-    evInfo.event.preventDefault();
+    if (this._dragger && !this._dragger.allowRealtimeDownUp) {
+      evInfo.event.stopPropagation();
+      evInfo.event.preventDefault();
+    }
 
     this._owner.grab(this);
 
@@ -497,19 +507,21 @@ MouseModule.prototype = {
   _onMouseUp: function _onMouseUp(evInfo) {
     let dragData = this._dragData;
 
-    evInfo.event.stopPropagation();
-    evInfo.event.preventDefault();
+    if (this._dragger && !this._dragger.allowRealtimeDownUp) {
+      evInfo.event.stopPropagation();
+      evInfo.event.preventDefault();
 
-    // we are swallowing mousedown and mouseup, so we should swallow their
-    // potential corresponding click, too
-    this._owner.suppressNextClick();
+      // we have swallowed mousedown and mouseup, so we should swallow their
+      // potential corresponding click, too
+      this._owner.suppressNextClick();
+    }
 
     let [sX, sY] = [evInfo.event.screenX, evInfo.event.screenY];
 
     let movedOutOfRadius = dragData.isPointOutsideRadius(sX, sY);
 
-    if (dragData.dragging)
-      this._doDragStop(sX, sY);
+    if (dragData.dragging)       // XXX same check as this._dragger but we
+      this._doDragStop(sX, sY);  //  are using both, no good reason
 
     this._recordEvent(evInfo);
 
@@ -556,6 +568,10 @@ MouseModule.prototype = {
     this._downUpDispatchedIndex = len;
 
     this._owner.startListening();
+  },
+
+  _skipAllDownUpEvents: function _skipAllDownUpEvents() {
+    this._downUpDispatchedIndex = this._downUpEvents.length;
   },
 
   /**
@@ -662,12 +678,17 @@ MouseModule.prototype = {
    */
   _doClick: function _doClick(movedOutOfRadius) {
     let commitToClicker = this._clicker && !movedOutOfRadius;
+    let needToRedispatch = this._dragger && !this._dragger.allowRealtimeDownUp && !movedOutOfRadius;
 
     if (commitToClicker) {
       this._commitAnotherClick();  // commit this click to the doubleclick timewait buffer
     }
 
-    this._redispatchDownUpEvents();
+    if (needToRedispatch) {
+      this._redispatchDownUpEvents();
+    } else {
+      this._skipAllDownUpEvents();
+    }
 
     if (!commitToClicker) {
       this._cleanClickBuffer();    // clean the click buffer ourselves, since there was no clicker
