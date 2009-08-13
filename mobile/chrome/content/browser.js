@@ -353,6 +353,7 @@ var Browser = {
     let controlsScrollbox = this.controlsScrollbox = document.getElementById("scrollbox");
     this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     controlsScrollbox.customDragger = {
+      allowRealtimeDownUp: true,
       dragStart: function dragStart(cx, cy, target, scroller) {},
       dragStop: function dragStop(dx, dy, scroller) { return false; },
       dragMove: function dragMove(dx, dy, scroller) { return false; }
@@ -1241,6 +1242,8 @@ var Browser = {
 };
 
 Browser.MainDragger = function MainDragger(browserView) {
+  this.allowRealtimeDownUp = true;
+
   this.scrollingOuterX = true;
   this.bv = browserView;
   this.floatedWhileDragging = false;
@@ -1847,7 +1850,7 @@ const gPopupBlockerObserver = {
     gPrefService.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
     Browser.getNotificationBox().removeCurrentNotification();
   },
-  
+
   showPopupsForSite: function showPopupsForSite() {
     let uri = Browser.selectedBrowser.currentURI;
     let pageReport = Browser.selectedBrowser.pageReport;
@@ -1863,10 +1866,10 @@ const gPopupBlockerObserver = {
         if (popupURIspec == "" || popupURIspec == "about:blank" ||
             popupURIspec == uri.spec)
           continue;
-        
+
         let popupFeatures = pageReport[i].popupWindowFeatures;
         let popupName = pageReport[i].popupWindowName;
-        
+
         Browser.addTab(popupURIspec, false);
       }
     }

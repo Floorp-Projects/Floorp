@@ -884,7 +884,7 @@ var SelectHelper = {
     this._list.setAttribute("multiple", this._control.multiple ? "true" : "false");
 
     let firstSelected = null;
-    
+
     let optionIndex = 0;
     let children = this._control.children;
     for (let i=0; i<children.length; i++) {
@@ -940,10 +940,10 @@ var SelectHelper = {
           index = aIndex;
       }
     );
-    
+
     if (index == -1)
       return;
-    
+
     let itemHeight = aElement.getBoundingClientRect().height;
     let visibleItemsCount = this._list.boxObject.height / itemHeight;
     if ((index + 1) > visibleItemsCount) {
