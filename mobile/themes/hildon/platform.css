@@ -108,7 +108,7 @@ button[disabled="true"] {
 button.button-dark,
 notification button {
   color: #fff !important;
-  background-color: transparent !important;
+  background: transparent !important;
   -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
 }
 
