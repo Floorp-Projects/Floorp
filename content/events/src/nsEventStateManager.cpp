@@ -61,6 +61,7 @@
 #include "nsIEditorDocShell.h"
 #include "nsIFormControl.h"
 #include "nsIComboboxControlFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -2492,6 +2493,115 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+void
+nsEventStateManager::DecideGestureEvent(nsGestureNotifyEvent* aEvent,
+                                        nsIFrame* targetFrame)
+{
+
+  NS_ASSERTION(aEvent->message == NS_GESTURENOTIFY_EVENT_START,
+               "DecideGestureEvent called with a non-gesture event");
+
+  /* Check the ancestor tree to decide if any frame is willing* to receive
+   * a MozPixelScroll event. If that's the case, the current touch gesture
+   * will be used as a pan gesture; otherwise it will be a regular
+   * mousedown/mousemove/click event.
+   *
+   * *willing: determine if it makes sense to pan the element using scroll events:
+   *  - For web content: if there are any visible scrollbars on the touch point
+   *  - For XUL: if it's an scrollable element that can currently scroll in some
+    *    direction.
+   *
+   * Note: we'll have to one-off various cases to ensure a good usable behavior
+   */
+  nsGestureNotifyEvent::ePanDirection panDirection = nsGestureNotifyEvent::ePanNone;
+  PRBool displayPanFeedback = PR_FALSE;
+  for (nsIFrame* current = targetFrame; current;
+       current = nsLayoutUtils::GetCrossDocParentFrame(current)) {
+
+    nsIAtom* currentFrameType = current->GetType();
+
+    // Scrollbars should always be draggable
+    if (currentFrameType == nsGkAtoms::scrollbarFrame) {
+      panDirection = nsGestureNotifyEvent::ePanNone;
+      break;
+    }
+
+#ifdef MOZ_XUL
+    // Special check for trees
+    nsTreeBodyFrame* treeFrame = do_QueryFrame(current);
+    if (treeFrame) {
+      if (treeFrame->GetHorizontalOverflow()) {
+        panDirection = nsGestureNotifyEvent::ePanHorizontal;
+      }
+      if (treeFrame->GetVerticalOverflow()) {
+        panDirection = nsGestureNotifyEvent::ePanVertical;
+      }
+      break;
+    }
+#endif
+
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(current);
+    if (scrollableFrame) {
+      if (current->IsFrameOfType(nsIFrame::eXULBox)) {
+
+        nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
+        if (scrollableView) {
+
+          displayPanFeedback = PR_TRUE;
+
+          PRBool canScrollUp, canScrollDown, canScrollLeft, canScrollRight;
+          scrollableView->CanScroll(PR_FALSE, PR_TRUE,  canScrollDown);
+          scrollableView->CanScroll(PR_FALSE, PR_FALSE, canScrollUp);
+          scrollableView->CanScroll(PR_TRUE,  PR_TRUE,  canScrollRight);
+          scrollableView->CanScroll(PR_TRUE,  PR_FALSE, canScrollLeft);
+
+          if (targetFrame->GetType() == nsGkAtoms::menuFrame) {
+            // menu frames report horizontal scroll when they have submenus
+            // and we don't want that
+            canScrollRight = PR_FALSE;
+            canScrollLeft  = PR_FALSE;
+            displayPanFeedback = PR_FALSE;
+          }
+
+          //Vertical panning has priority over horizontal panning, so
+          //when a vertical movement is detected we can just finish the loop.
+          if (canScrollUp || canScrollDown) {
+            panDirection = nsGestureNotifyEvent::ePanVertical;
+            break;
+          }
+
+          if (canScrollLeft || canScrollRight) {
+            panDirection = nsGestureNotifyEvent::ePanHorizontal;
+            displayPanFeedback = PR_FALSE;
+          }
+        }
+
+      } else { //Not a XUL box
+
+        nsMargin scrollbarSizes = scrollableFrame->GetActualScrollbarSizes();
+
+        //Check if we have visible scrollbars
+        if (scrollbarSizes.LeftRight()) {
+          panDirection = nsGestureNotifyEvent::ePanVertical;
+          displayPanFeedback = PR_TRUE;
+          break;
+        }
+
+        if (scrollbarSizes.TopBottom()) {
+          panDirection = nsGestureNotifyEvent::ePanHorizontal;
+          displayPanFeedback = PR_TRUE;
+        }
+
+      }
+
+    } //scrollableFrame
+  } //ancestor chain
+
+  aEvent->displayPanFeedback = displayPanFeedback;
+  aEvent->panDirection = panDirection;
+
+}
+
 nsresult
 nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
                                             nsPresContext* aPresContext,
@@ -2795,6 +2905,13 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
         *aStatus = nsEventStatus_eConsumeNoDefault;
       }
+    }
+    break;
+
+  case NS_GESTURENOTIFY_EVENT_START:
+    {
+      if (nsEventStatus_eConsumeNoDefault != *aStatus)
+        DecideGestureEvent(static_cast<nsGestureNotifyEvent*>(aEvent), mCurrentTarget);
     }
     break;
 

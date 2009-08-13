@@ -414,6 +414,7 @@ protected:
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;
   int                   mScrollSeriesCounter;
+  PRPackedBool          mDisplayPanFeedback;
 
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
