@@ -86,7 +86,7 @@ button {
   min-height: 12mm !important; /* button size */
   color: #000;
   padding: 0.5mm 1mm;
-  border-width: 8px;
+  border-width: 8px !important;
   -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
   -moz-appearance: none !important;
 }
@@ -96,7 +96,7 @@ button:not([disabled="true"]):active {
 }
 
 button[disabled="true"] {
-  color: #aaa;
+  color: #aaa !important;
 }
 
 /* dark buttons ------------------------------------------------------------ */
@@ -107,8 +107,8 @@ button[disabled="true"] {
 
 button.button-dark,
 notification button {
-  color: #fff;
-  background-color: transparent;
+  color: #fff !important;
+  background-color: transparent !important;
   -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
 }
 
@@ -118,7 +118,7 @@ notification button:not([disabled="true"]):active {
 }
 
 button.button-dark[disabled="true"] {
-  color: #ddd;
+  color: #ddd !important;
 }
 
 /* toolbar buttons --------------------------------------------------------- */
