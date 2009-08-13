@@ -270,7 +270,24 @@ Resource.prototype = {
     let [chanOpen, chanCb] = Sync.withCb(channel.asyncOpen, channel);
     let listener = new ChannelListener(chanCb, this._onProgress, this._log);
     channel.requestMethod = action;
-    this._data = chanOpen(listener, null);
+
+    // The channel listener might get a failure code
+    try {
+      this._data = chanOpen(listener, null);
+    }
+    catch(ex) {
+      // Combine the channel stack with this request stack
+      let error = Error(ex.message);
+      let chanStack = ex.stack.trim().split(/\n/).slice(1);
+      let requestStack = error.stack.split(/\n/).slice(1);
+
+      // Strip out the args for the last 2 frames because they're usually HUGE!
+      for (let i = 0; i <= 1; i++)
+        requestStack[i] = requestStack[i].replace(/\(".*"\)@/, "(...)@");
+
+      error.stack = chanStack.concat(requestStack).join("\n");
+      throw error;
+    }
 
     if (!channel.requestSucceeded) {
       this._log.debug(action + " request failed (" + channel.responseStatus + ")");
@@ -347,9 +364,13 @@ ChannelListener.prototype = {
     this._data = '';
   },
 
-  onStopRequest: function Channel_onStopRequest(channel, ctx, time) {
+  onStopRequest: function Channel_onStopRequest(channel, context, status) {
     if (this._data == '')
       this._data = null;
+
+    // Throw the failure code name (and stop execution)
+    if (!Components.isSuccessCode(status))
+      this._onComplete.throw(Error(Components.Exception("", status).name));
 
     this._onComplete(this._data);
   },
