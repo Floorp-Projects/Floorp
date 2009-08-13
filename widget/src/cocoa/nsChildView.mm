@@ -679,6 +679,16 @@ void nsChildView::TearDownView()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+nsCocoaWindow*
+nsChildView::GetXULWindowWidget()
+{
+  id windowDelegate = [[mView nativeWindow] delegate];
+  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
+    return [(WindowDelegate *)windowDelegate geckoWidget];
+  }
+  return nsnull;
+}
+
 // create a nsChildView
 NS_IMETHODIMP nsChildView::Create(nsIWidget *aParent,
                       const nsIntRect &aRect,
@@ -817,15 +827,10 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
   BOOL isTransparent = aMode == eTransparencyTransparent;
   BOOL currentTransparency = ![[mView nativeWindow] isOpaque];
   if (isTransparent != currentTransparency) {
-    // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
-    // tell the nsCocoaWindow to set its background to transparent.
-    id windowDelegate = [[mView nativeWindow] delegate];
-    if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-      nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-      if (widget) {
-        widget->MakeBackgroundTransparent(aMode);
-        [(ChildView*)mView setTransparent:isTransparent];
-      }
+    nsCocoaWindow *widget = GetXULWindowWidget();
+    if (widget) {
+      widget->MakeBackgroundTransparent(aMode);
+      [(ChildView*)mView setTransparent:isTransparent];
     }
   }
 
@@ -838,14 +843,9 @@ NS_IMETHODIMP nsChildView::SetWindowShadowStyle(PRInt32 aStyle)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
-  // tell the nsCocoaWindow to set the shadow style.
-  id windowDelegate = [[mView nativeWindow] delegate];
-  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-    if (widget) {
-      widget->SetWindowShadowStyle(aStyle);
-    }
+  nsCocoaWindow *widget = GetXULWindowWidget();
+  if (widget) {
+    widget->SetWindowShadowStyle(aStyle);
   }
 
   return NS_OK;
@@ -1530,17 +1530,14 @@ NS_IMETHODIMP nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  id windowDelegate = [[mView nativeWindow] delegate];
-  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-    if (widget) {
-      nsMenuBarX* mb = widget->GetMenuBar();
-      if (mb) {
-        if (indexString.IsEmpty())
-          mb->ForceNativeMenuReload();
-        else
-          mb->ForceUpdateNativeMenuAt(indexString);
-      }
+  nsCocoaWindow *widget = GetXULWindowWidget();
+  if (widget) {
+    nsMenuBarX* mb = widget->GetMenuBar();
+    if (mb) {
+      if (indexString.IsEmpty())
+        mb->ForceNativeMenuReload();
+      else
+        mb->ForceUpdateNativeMenuAt(indexString);
     }
   }
   return NS_OK;
