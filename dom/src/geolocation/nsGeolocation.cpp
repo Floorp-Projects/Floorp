@@ -275,7 +275,7 @@ nsGeolocationRequest::Allow()
     PRInt32 tempAge;
     nsresult rv = mOptions->GetMaximumAge(&tempAge);
     if (NS_SUCCEEDED(rv)) {
-      if (tempAge >= 0)
+      if (tempAge > 0)
         maximumAge = tempAge;
     }
   }

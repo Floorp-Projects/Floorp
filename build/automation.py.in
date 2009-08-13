@@ -260,8 +260,6 @@ user_pref("media.cache_size", 100);
 user_pref("security.warn_viewing_mixed", false);
 
 user_pref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
-user_pref("geo.wifi.testing", true);
-
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 
 // Make url-classifier updates so rare that they won't affect tests
