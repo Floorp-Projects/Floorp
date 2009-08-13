@@ -572,13 +572,13 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #history-button[checked="true"] {
-  -moz-image-region: rect(69px, 252px, 92px, 216px);
+  -moz-image-region: rect(92px, 252px, 115px, 216px);
   background-color: transparent;
   border-color: transparent;
 }
 
 #history-button[checked="true"]:hover:active {
-  -moz-image-region: rect(92px, 252px, 115px, 216px);
+  -moz-image-region: rect(115px, 252px, 138px, 216px);
 }
 
 /* ----- DEFAULT BOOKMARKS BUTTON ----- */	
@@ -596,13 +596,13 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #bookmarks-button[checked="true"] {
-  -moz-image-region: rect(69px, 288px, 92px, 252px);
+  -moz-image-region: rect(92px, 288px, 115px, 252px);
   background-color: transparent;
   border-color: transparent;
 }
 
 #bookmarks-button[checked="true"]:hover:active {
-  -moz-image-region: rect(92px, 288px, 115px, 252px);
+  -moz-image-region: rect(115px, 288px, 138px, 252px);
 }
 
 /* ----- DEFAULT PRINT BUTTON ----- */	
