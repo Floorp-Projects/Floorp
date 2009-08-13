@@ -332,7 +332,7 @@ ifdef MOZ_SYNC_BUILD_FILES
 # belongs in the other as well.  If the change isn't right for both
 # places, then that's something to bring up with the other developers.
 #
-# Some files are reasonable to diverge; for example,
+# Some files are reasonable to diverge; for  example,
 # js/config/autoconf.mk.in doesn't need most of the stuff in
 # config/autoconf.mk.in.
 check-sync-dirs = $(PYTHON) $(srcdir)/config/check-sync-dirs.py
@@ -343,9 +343,8 @@ endif
 
 ifdef ENABLE_JIT
 check::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(DIST)/bin/js$(BIN_SUFFIX) -j -e \
-		"var gSrcdir='$(call normalizepath,$(srcdir))'; var gSkipSlowTests=true; var gReportSummary=false;" \
-		$(srcdir)/trace-test.js
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) $(srcdir)/trace-test/trace-test-py2.py \
+	        -x slow $(DIST)/bin/js$(BIN_SUFFIX)
 endif
 
 DIST_GARBAGE = config.cache config.log config.status \
