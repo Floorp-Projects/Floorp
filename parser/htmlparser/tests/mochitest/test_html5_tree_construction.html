@@ -15,28 +15,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366936
   <script type="application/javascript"
           src="html5_tree_construction_exceptions.js"></script>
   <script class="testbody" type="application/javascript;version=1.7">
-   var parserDatFiles = ["html5lib_tree_dat1.txt",
+   var parserDatFiles = ["html5lib_tree_dat1.txt", 
                          "html5lib_tree_dat2.txt",
                          "html5lib_tree_dat3.txt",
-                         "html5lib_tree_dat5.txt",
-                         "html5lib_tree_dat6.txt",
-                         "html5lib_tree_dat7.txt",
-                         "html5lib_tree_dat8.txt",
-                         "html5lib_tree_dat9.txt",
-                         "html5lib_tree_dat10.txt",
-                         "html5lib_tree_dat11.txt",
-                         "html5lib_tree_dat12.txt",
-                         "html5lib_tree_dat14.txt",
-                         "regressions.txt"
-                         ];
-                  
-   netscape.security.PrivilegeManager.
-            enablePrivilege("UniversalXPConnect");
-   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch);
-   var gOriginalHtml5Pref = prefs.getBoolPref("html5.enable");
-   prefs.setBoolPref("html5.enable", true);
-
+                         "regressions.txt"];
   </script>
   <script type="application/javascript;version=1.7"
           src="parser_web_testrunner.js"></script>

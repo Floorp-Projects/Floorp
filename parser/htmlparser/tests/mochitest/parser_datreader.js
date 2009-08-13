@@ -58,137 +58,6 @@ function trimString(s) {
   return(s.replace(/^\s+/,'').replace(/\s+$/,''));
 }
 
-function getLastLine(str) {
-  var str_array = str.split("\n");
-  let last_line = str_array[str_array.length - 1];
-  return last_line;
-}
-
-/**
- * Produces a string containing the expected output of a
- * JSON-formatted test, by running the "output" object
- * of the test through a serializer.
- *
- * @param buf string buffer containing the serialized output
- * @param obj the object to serialize
- * @param indent the current line indent
- */
-var gDumpMode;
-function dumpTree(buf, obj, indent) {
-  var buffer = buf;
-  if (typeof(obj) == "object" && (obj instanceof Array)) {
-    for each (var item in obj) {
-      [buffer, indent] = dumpTree(buffer, item, indent);
-    }
-    gDumpMode = -1;
-  }
-  else {
-    // Node.* constants are used here for convenience.
-    switch(obj) {
-      case "ParseError":
-        // no-op
-        break;
-      case "Character":
-        gDumpMode = Node.TEXT_NODE;
-        break;
-      case "StartTag":
-        gDumpMode = Node.ELEMENT_NODE;
-        break;
-      case "EndTag":
-        indent = indent.substring(2);
-        break;
-      case "Comment":
-        gDumpMode = Node.COMMENT_NODE;
-        break;
-      case "DOCTYPE":
-        gDumpMode = Node.DOCUMENT_TYPE_NODE;
-        break;
-      default:
-        switch(gDumpMode) {
-          case Node.DOCUMENT_TYPE_NODE:
-            buffer += "<!DOCTYPE " + obj + ">\n<html>\n  <head>\n  <body>";
-            indent += "    "
-            gDumpMode = -1;
-            break;
-          case Node.COMMENT_NODE:
-            if (buffer.length > 1) {
-              buffer += "\n";
-            }
-            buffer += indent + "<!-- " + obj + " -->";
-            gDumpMode = -1;
-            break;
-          case Node.ATTRIBUTE_NODE:
-            is(typeof(obj), "object", "obj not an object!");
-            indent += "  ";
-            for (var key in obj) {
-              buffer += "\n" + indent + key + "=\"" + obj[key] + "\"";
-            }
-            gDumpMode = -1;
-            break;
-          case Node.TEXT_NODE:
-            if (buffer.indexOf("<head>") == -1) {
-              buffer += "\n<html>\n  <head>\n  <body>";
-              indent += "    ";
-            }
-            // If this text is being appended to some earlier
-            // text, concatenate the two by chopping off the
-            // trailing quote before adding new string.
-            let last_line = trimString(getLastLine(buffer));
-            if (last_line[0] == "\"" && 
-              last_line[last_line.length - 1] == "\"") {
-              buffer = buffer.substring(0, buffer.length - 1);    
-            }
-            else {
-              buffer += "\n" + indent + "\"";  
-            }
-            buffer += obj + "\"";
-            break;
-          case Node.ELEMENT_NODE:
-            buffer += "\n" + indent + "<" + obj + ">";
-            gDumpMode = Node.ATTRIBUTE_NODE;
-            break;
-          default:
-            // no-op
-            break;
-        }
-        break;
-    }
-  }
-  return [buffer, indent];
-}
-
-/**
- * Parses an individual testcase in decoded JSON form, 
- * as for tokenizer tests.
- *
- * @param An object containing a single testcase
- */
-function parseJsonTestcase(testcase) {
-  gDumpMode = -1;
-  // If the test begins with something that looks like the
-  // beginning of a doctype, then don't add a standard doctype,
-  // otherwise do.
-  if (testcase["input"].toLowerCase().indexOf("<!doc") == 0) {
-    var test_output = dumpTree(
-      "", 
-      testcase["output"],
-      "");
-  } else {
-    var test_output = dumpTree(
-      "<!DOCTYPE html>\n<html>\n  <head>\n  <body>", 
-      testcase["output"],
-      "    ");
-  }
-  // Add html, head and body elements now if they
-  // haven't been added already.
-  if (test_output[0].indexOf("<head>") == -1) {
-    test_output[0] += "\n<html>\n  <head>\n  <body>";
-  }
-  return [testcase["input"], test_output[0], "",
-    testcase["description"],
-    JSON.stringify(testcase["output"])];
-}
-
 /**
  * Parses an individual testcase into an array containing the input
  * string, a string representing the expected tree (DOM), and a list
@@ -197,7 +66,6 @@ function parseJsonTestcase(testcase) {
  * @param A string containing a single testcase
  */
 function parseTestcase(testcase) {
-  var documentFragmentTest = false;
   var lines = testcase.split("\n");
   if (lines[0] != "#data") {
     log(lines);
@@ -206,15 +74,10 @@ function parseTestcase(testcase) {
   var input = [];
   var output = [];
   var errors = [];
-  var description = undefined;
-  var expectedTokenizerOutput = undefined;
   var currentList = input;
   for each (var line in lines) {
-    // allow blank lines in input
-    if ((line || currentList == input) && !(startsWith(line, "#errors") ||
+    if (line && !(startsWith(line, "#error") ||
 		  startsWith(line, "#document") ||
-		  startsWith(line, "#description") ||
-		  startsWith(line, "#expected") || 
 		  startsWith(line, "#data"))) {
       if (currentList == output && startsWith(line, "|")) {
       	currentList.push(line.substring(2));
@@ -225,20 +88,10 @@ function parseTestcase(testcase) {
       currentList = errors;
     } else if (line == "#document") {
       currentList = output;
-    } else if (line == "#document-fragment") {
-      documentFragmentTest = true;
     }
   }  
-  
-  // For #document-fragment tests, erase the output, so that the 
-  // test is skipped in makeTestChecker()...there is no good way
-  // to run fragment tests without direct access to the parser.
-  if (documentFragmentTest) {
-    output = [];
-  }
   //logger.log(input.length, output.length, errors.length);
-  return [input.join("\n"), output.join("\n"), errors, description,
-    expectedTokenizerOutput];
+  return [input.join("\n"), output.join("\n"), errors];
 }
 
 /**
@@ -314,29 +167,18 @@ function isAttributeLine(line) {
 }
 
 /**
- * A generator function that accepts a list of tests. Each list
+ * A generator function that accepts a list of strings. Each list
  * member corresponds to the contents of a ".dat" file from the
- * html5lib test suite, or an array of decoded JSON tests,
- * in the case of tokenizer "*.test" tests.
+ * html5lib test suite.
  *
  * @param The list of strings
  */
 function test_parser(testlist) {
-  var index = 1;
-  if (gTokenizerMode) {
-    for each (var test in testlist) {
-      var tmpArray = [index];
-      yield tmpArray.concat(parseJsonTestcase(test));
-      index++;
-    }
-  }
-  else {
-    for each (var testgroup in testlist) {
-      var tests = testgroup.split("#data\n");
-      tests = ["#data\n" + test for each(test in tests) if (test)];
-      for each (var test in tests) {
-        yield parseTestcase(test);
-      }
+  for each (var testgroup in testlist) {
+    var tests = testgroup.split("#data\n");
+    tests = ["#data\n" + test for each(test in tests) if (test)];
+    for each (var test in tests) {
+      yield parseTestcase(test);
     }
   }
 }
@@ -355,61 +197,29 @@ function docToTestOutput(doc) {
 function addLevels(walker, buf, indent) {
   if(walker.firstChild()) {
     do {
+      buf += indent;
       switch (walker.currentNode.nodeType) {
         case Node.ELEMENT_NODE:
-          buf += indent + "<";
-          // Prefix MathML element names with "math " to match
-          // the format of the expected output.
-          if (walker.currentNode.namespaceURI.toLowerCase().
-          indexOf("math") != -1) {
-            buf += "math " + walker.currentNode.tagName.toLowerCase() + ">\n";
-          }
-          else if (walker.currentNode.namespaceURI.toLowerCase().
-          indexOf("svg") != -1) {
-            buf += "svg " + walker.currentNode.tagName + ">\n";
-          }
-          else {
-            buf += walker.currentNode.tagName.toLowerCase() + ">\n";
-          }
+          buf += "<" + walker.currentNode.tagName.toLowerCase() + ">";
           if (walker.currentNode.hasAttributes()) {
             var attrs = walker.currentNode.attributes;
             for (var i=0; i < attrs.length; ++i) {
-              // Ignore the -moz-math-font-style attr, which
-              // Firefox automatically adds to every math element.
-              var attrname = attrs[i].name;
-              if (attrname != "-moz-math-font-style") {
-                buf += indent + "  " + attrname + 
-                       "=\"" + attrs[i].value +"\"\n";
-              }
+              buf += "\n" + indent + "  " + attrs[i].name + 
+                     "=\"" + attrs[i].value +"\"";
             }
           }
           break;
         case Node.DOCUMENT_TYPE_NODE:
-          if (!gJSCompatibilityMode) {
-            buf += indent + "<!DOCTYPE " + walker.currentNode.name + ">\n";
-          }
+          buf += "<!DOCTYPE " + walker.currentNode.name + ">";
           break;
         case Node.COMMENT_NODE:
-          if (!gJSCompatibilityMode) {
-            buf += indent + "<!-- " + walker.currentNode.nodeValue + " -->\n";
-          }
+          buf += "<!-- " + walker.currentNode.nodeValue + " -->";
           break;
         case Node.TEXT_NODE:
-          // If this text is being appended to some earlier
-          // text at the same indent level, concatenate the two by
-          // removing the trailing quote before adding new string.
-          let last_line = getLastLine(
-            buf.substring(0, buf.length - 1));
-          if (last_line[indent.length] == "\"" && 
-            last_line[last_line.length - 1] == "\"") {
-            buf = buf.substring(0, buf.length - 2);    
-          }
-          else {
-            buf += indent + "\"";
-          }
-          buf += walker.currentNode.nodeValue + "\"\n";
+          buf += "\"" + walker.currentNode.nodeValue + "\"";
           break;
       }
+      buf += "\n";
       buf = addLevels(walker, buf, indent + "  ");
     } while(walker.nextSibling());
     walker.parentNode();

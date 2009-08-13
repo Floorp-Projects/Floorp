@@ -39,14 +39,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHtml5TreeOperation.h"
-#include "nsContentUtils.h"
 #include "nsNodeUtils.h"
 #include "nsAttrName.h"
 #include "nsHtml5TreeBuilder.h"
-#include "nsIDOMMutationEvent.h"
-#include "mozAutoDocUpdate.h"
-#include "nsBindingManager.h"
-#include "nsXBLBinding.h"
 
 nsHtml5TreeOperation::nsHtml5TreeOperation()
  : mOpCode(eTreeOpAppend)
@@ -122,8 +117,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
     }
     case eTreeOpAddAttributes: {
       // mNode holds the new attributes and mParent is the target
-      nsIDocument* document = mParent->GetCurrentDoc();
-      
       PRUint32 len = mNode->GetAttrCount();
       for (PRUint32 i = 0; i < len; ++i) {
         const nsAttrName* attrName = mNode->GetAttrNameAt(i);
@@ -132,38 +125,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeBuilder* aBuilder)
         if (!mParent->HasAttr(nsuri, localName)) {
           nsAutoString value;
           mNode->GetAttr(nsuri, localName, value);
-          
-          // the manual notification code is based on nsGenericElement
-          
-          PRUint32 stateMask = PRUint32(mParent->IntrinsicState());
-          nsNodeUtils::AttributeWillChange(mParent, 
-                                           nsuri,
-                                           localName,
-                                           static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION));
-          
-          mParent->SetAttr(nsuri, localName, attrName->GetPrefix(), value, PR_FALSE);
-          
-          if (document || mParent->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
-            nsIDocument* ownerDoc = mParent->GetOwnerDoc();
-            if (ownerDoc) {
-              nsRefPtr<nsXBLBinding> binding =
-                ownerDoc->BindingManager()->GetBinding(mParent);
-              if (binding) {
-                binding->AttributeChanged(localName, nsuri, PR_FALSE, PR_FALSE);
-              }
-            }
-          }
-          
-          stateMask = stateMask ^ PRUint32(mParent->IntrinsicState());
-          if (stateMask && document) {
-            MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-            document->ContentStatesChanged(mParent, nsnull, stateMask);
-          }
-          nsNodeUtils::AttributeChanged(mParent, 
-                                        nsuri, 
-                                        localName, 
-                                        static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION),
-                                        stateMask);
+          mParent->SetAttr(nsuri, localName, attrName->GetPrefix(), value, PR_TRUE);
+          // XXX should not fire mutation event here
         }
       }
       return rv;
