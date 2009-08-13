@@ -46,20 +46,33 @@ function testmath(funcname, args, expected) {
         mapfunc(dummies_and_input);
         return dummies_and_input[RUNLOOP];
     }
-    testfunc.name = funcname + "(" + args + ")";
-    testfunc.expected = expected;
 
-    // Disable jitstats check. This never worked right. The actual part of the
-    // loop we cared about was never traced. We traced the filler parts early
-    // and then took a mismatch side exit on every subequent array read with
-    // a different type (gal, discovered when fixing bug 479110).
-    // testfunc.jitstats = {
-    //   recorderStarted: 1,
-    //   recorderAborted: 0,
-    //   traceTriggered: 1
-    // };
+    assertEq(close_enough(testfunc(), expected), true);
+}
 
-    test(testfunc);
+function close_enough(expected, actual)
+{
+  if (typeof expected != typeof actual)
+    return false;
+  if (typeof expected != 'number')
+    return actual == expected;
+
+  // Distinguish NaN from other values.  Using x != x comparisons here
+  // works even if tests redefine isNaN.
+  if (actual != actual)
+    return expected != expected
+  if (expected != expected)
+    return false;
+
+  // Tolerate a certain degree of error.
+  if (actual != expected)
+    return Math.abs(actual - expected) <= 1E-10;
+
+  // Distinguish 0 and -0.
+  if (actual == 0)
+    return (1 / actual > 0) == (1 / expected > 0);
+
+  return true;
 }
 
 testmath("Math.abs", "void 0", Number.NaN)
