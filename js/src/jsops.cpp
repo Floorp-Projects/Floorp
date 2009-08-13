@@ -2205,63 +2205,15 @@
             TRACE_0(NativeCallComplete);
 
           end_call:
-#if JS_HAS_LVALUE_RETURN
-            if (cx->rval2set) {
-                /*
-                 * Use the stack depth we didn't claim in our budget, but that
-                 * we know is there on account of [fun, this] already having
-                 * been pushed, at a minimum (if no args).  Those two slots
-                 * have been popped and [rval] has been pushed, which leaves
-                 * one more slot for rval2 before we might overflow.
-                 *
-                 * NB: rval2 must be the property identifier, and rval the
-                 * object from which to get the property.  The pair form an
-                 * ECMA "reference type", which can be used on the right- or
-                 * left-hand side of assignment ops.  Note well: only native
-                 * methods can return reference types.  See JSOP_SETCALL just
-                 * below for the left-hand-side case.
-                 */
-                PUSH_OPND(cx->rval2);
-                ELEMENT_OP(-1, obj->getProperty(cx, id, &rval));
-
-                regs.sp--;
-                STORE_OPND(-1, rval);
-                cx->rval2set = JS_FALSE;
-            }
-#endif /* JS_HAS_LVALUE_RETURN */
           END_CASE(JSOP_CALL)
 
-#if JS_HAS_LVALUE_RETURN
           BEGIN_CASE(JSOP_SETCALL)
             argc = GET_ARGC(regs.pc);
             vp = regs.sp - argc - 2;
-            ok = js_Invoke(cx, argc, vp, 0);
-            regs.sp = vp + 1;
-            CHECK_INTERRUPT_HANDLER();
-            if (!ok)
-                goto error;
-            if (!cx->rval2set) {
-                op2 = js_GetOpcode(cx, script, regs.pc + JSOP_SETCALL_LENGTH);
-                if (op2 != JSOP_DELELEM) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_BAD_LEFTSIDE_OF_ASS);
-                    goto error;
-                }
-
-                /*
-                 * Store true as the result of the emulated delete of a
-                 * non-existent property. NB: We don't METER_OP_PAIR here;
-                 * it doesn't seem worth the code for this obscure case.
-                 */
-                *vp = JSVAL_TRUE;
-                regs.pc += JSOP_SETCALL_LENGTH + JSOP_DELELEM_LENGTH;
-                op = (JSOp) *regs.pc;
-                DO_OP();
-            }
-            PUSH_OPND(cx->rval2);
-            cx->rval2set = JS_FALSE;
+            if (js_Invoke(cx, argc, vp, 0))
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_LEFTSIDE_OF_ASS);
+            goto error;
           END_CASE(JSOP_SETCALL)
-#endif
 
           BEGIN_CASE(JSOP_NAME)
           BEGIN_CASE(JSOP_CALLNAME)
