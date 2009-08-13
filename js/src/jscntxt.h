@@ -133,7 +133,6 @@ struct JSTraceMonitor {
      * last-ditch GC and suppress calls to JS_ReportOutOfMemory.
      *
      * !tracecx && !recorder: not on trace
-     * !tracecx && !recorder && prohibitFlush: deep-bailed
      * !tracecx && recorder && !recorder->deepAborted: recording
      * !tracecx && recorder && recorder->deepAborted: deep aborted
      * tracecx && !recorder: executing a trace
@@ -164,17 +163,14 @@ struct JSTraceMonitor {
      * If nonzero, do not flush the JIT cache after a deep bail. That would
      * free JITted code pages that we will later return to. Instead, set the
      * needFlush flag so that it can be flushed later.
-     *
-     * NB: needFlush and useReservedObjects are packed together.
      */
-    uintN                   prohibitFlush;
-    JSPackedBool            needFlush;
+    JSBool                  needFlush;
 
     /*
      * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
      * The JIT uses this to ensure that leaving a trace tree can't fail.
      */
-    JSPackedBool            useReservedObjects;
+    JSBool                  useReservedObjects;
     JSObject                *reservedObjects;
 
     /* Parts for the regular expression compiler. This is logically
