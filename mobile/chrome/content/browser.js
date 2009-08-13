@@ -563,46 +563,6 @@ var Browser = {
     return this._browsers;
   },
 
-  _resizeAndPaint: function() {
-    // !!! --- RESIZE HACK BEGIN -----
-    this._browserView.simulateMozAfterSizeChange();
-    // !!! --- RESIZE HACK END -----
-
-    this._browserView.zoomToPage();
-    this._browserView.commitBatchOperation();
-
-    if (this._pageLoading) {
-      // kick ourselves off 2s later while we're still loading
-      this._browserView.beginBatchOperation();
-      this._loadingTimeout = setTimeout(Util.bind(Browser._resizeAndPaint, Browser), 2000);
-    } else {
-      delete this._loadingTimeout;
-    }
-  },
-
-  startLoading: function() {
-    if (this._pageLoading)
-      throw "!@@!#!";
-
-    this._pageLoading = true;
-
-    if (!this._loadingTimeout) {
-      this._browserView.beginBatchOperation();
-      this._loadingTimeout = setTimeout(Util.bind(Browser._resizeAndPaint, Browser), 2000);
-    }
-  },
-
-  endLoading: function() {
-    if (!this._pageLoading)
-      alert("endLoading when page is already done\n");
-
-    this._pageLoading = false;
-    clearTimeout(this._loadingTimeout);
-    // in order to ensure we commit our current batch,
-    // we need to run this function here
-    this._resizeAndPaint();
-  },
-
   scrollContentToTop: function scrollContentToTop() {
     this.contentScrollboxScroller.scrollTo(0, 0);
     this._browserView.onAfterVisibleMove();
@@ -2184,9 +2144,9 @@ ProgressController.prototype = {
   },
 
   _networkStart: function _networkStart() {
-    this._tab.setLoading(true);
+    this._tab.startLoading();
+
     if (Browser.selectedBrowser == this.browser) {
-      Browser.startLoading();
       BrowserUI.update(TOOLBARSTATE_LOADING);
 
       // We increase the default text size to make the text more readable when
@@ -2202,12 +2162,11 @@ ProgressController.prototype = {
   },
 
   _networkStop: function _networkStop() {
-    this._tab.setLoading(false);
+    this._tab.endLoading();
 
     if (Browser.selectedBrowser == this.browser) {
       BrowserUI.update(TOOLBARSTATE_LOADED);
       this.browser.docShell.isOffScreenBrowser = true;
-      Browser.endLoading();
     }
 
     this._tab.updateThumbnail();
@@ -2300,12 +2259,53 @@ Tab.prototype = {
     return this._chromeTab;
   },
 
-  isLoading: function() {
-    return this._loading;
+
+  _resizeAndPaint: function() {
+    let bv = Browser._browserView;
+
+    if (this == Browser.selectedTab) {
+      // !!! --- RESIZE HACK BEGIN -----
+      bv.simulateMozAfterSizeChange();
+      // !!! --- RESIZE HACK END -----
+
+      bv.zoomToPage();
+    }
+    bv.commitBatchOperation();
+
+    if (this._loading) {
+      // kick ourselves off 2s later while we're still loading
+      this._browserView.beginBatchOperation();
+      this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
+    } else {
+      delete this._loadingTimeout;
+    }
   },
 
-  setLoading: function(b) {
-    this._loading = b;
+  startLoading: function() {
+    if (this._loading)
+      dump("!!! Already loading this tab, please file a bug\n");
+
+    this._loading = true;
+
+    if (!this._loadingTimeout) {
+      Browser._browserView.beginBatchOperation();
+      this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
+    }
+  },
+
+  endLoading: function() {
+    if (!this._loading)
+      dump("!!! Already finished loading this tab, please file a bug\n");
+
+    this._loading = false;
+    clearTimeout(this._loadingTimeout);
+    // in order to ensure we commit our current batch,
+    // we need to run this function here
+    this._resizeAndPaint();
+  },
+
+  isLoading: function() {
+    return this._loading;
   },
 
   load: function(uri) {
