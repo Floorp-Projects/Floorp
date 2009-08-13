@@ -3929,6 +3929,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #if defined(WINCE_HAVE_SOFTKB)
         if (mIsTopWidgetWindow && sSoftKeyboardState)
           nsWindowCE::ToggleSoftKB(fActive);
+        if (nsWindowCE::sShowSIPButton != TRI_TRUE && WA_INACTIVE != fActive) {
+          HWND hWndSIPB = FindWindowW(L"MS_SIPBUTTON", NULL ); 
+          if (hWndSIPB)
+            ShowWindow(hWndSIPB, SW_HIDE);
+        }
+
 #endif
 
         if (WA_INACTIVE == fActive) {
