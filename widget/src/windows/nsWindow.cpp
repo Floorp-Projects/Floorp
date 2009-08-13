@@ -436,6 +436,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
   mPopupType            = ePopupTypeAny;
+  mDisplayPanFeedback   = PR_FALSE;
   mLastPoint.x          = 0;
   mLastPoint.y          = 0;
   mLastSize.width       = 0;
@@ -714,20 +715,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel )
      nsWindowCE::CreateSoftKeyMenuBar(mWnd);
 #endif
-
-#if !defined(WINCE)
-  // Enable gesture support for this window.
-  if (mWindowType != eWindowType_invisible &&
-      mWindowType != eWindowType_plugin &&
-      mWindowType != eWindowType_java &&
-      mWindowType != eWindowType_toplevel) {
-    // eWindowType_toplevel is the top level main frame window. Gesture support
-    // there prevents the user from interacting with the title bar or nc
-    // areas using a single finger. Java and plugin windows can make their
-    // own calls.
-    mGesture.InitWinGestureSupport(mWnd);
-  }
-#endif // !defined(WINCE)
 
   return NS_OK;
 }
@@ -4148,6 +4135,31 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   case WM_GESTURE:
     result = OnGesture(wParam, lParam);
     break;
+
+  case WM_GESTURENOTIFY:
+    {
+      if (mWindowType != eWindowType_invisible &&
+          mWindowType != eWindowType_plugin &&
+          mWindowType != eWindowType_java &&
+          mWindowType != eWindowType_toplevel) {
+        // eWindowType_toplevel is the top level main frame window. Gesture support
+        // there prevents the user from interacting with the title bar or nc
+        // areas using a single finger. Java and plugin windows can make their
+        // own calls.
+        GESTURENOTIFYSTRUCT * gestureinfo = (GESTURENOTIFYSTRUCT*)lParam;
+        nsPointWin touchPoint;
+        touchPoint = gestureinfo->ptsLocation;
+        touchPoint.ScreenToClient(mWnd);
+        nsGestureNotifyEvent gestureNotifyEvent(PR_TRUE, NS_GESTURENOTIFY_EVENT_START, this);
+        gestureNotifyEvent.refPoint = touchPoint;
+        nsEventStatus status;
+        DispatchEvent(&gestureNotifyEvent, status);
+        mDisplayPanFeedback = gestureNotifyEvent.displayPanFeedback;
+        mGesture.SetWinGestureSupport(mWnd, gestureNotifyEvent.panDirection);
+      }
+      result = PR_FALSE; //should always bubble to DefWindowProc
+    }
+    break;
 #endif // !defined(WINCE)
 
     case WM_CLEAR:
@@ -4735,7 +4747,7 @@ PRBool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
       scrollOverflowY = event.scrollOverflow;
     }
 
-    if (mWindowType != eWindowType_popup) {
+    if (mDisplayPanFeedback) {
       mGesture.UpdatePanFeedbackX(mWnd, scrollOverflowX, endFeedback);
       mGesture.UpdatePanFeedbackY(mWnd, scrollOverflowY, endFeedback);
       mGesture.PanFeedbackFinalize(mWnd, endFeedback);
