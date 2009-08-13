@@ -1,8 +1,8 @@
 #data
-<!doctype html>Test
+<!DOCTYPE html>Test
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -11,9 +11,8 @@
 #data
 <textarea>test</div>test
 #errors
-10: missing document type declaration.
-17: unescaped '</' in CDATA or RCDATA block.
-25: unexpected end of file while parsing CDATA section for element textarea.
+Line: 1 Col: 10 Unexpected start tag (textarea). Expected DOCTYPE.
+Line: 1 Col: 24 Expected closing tag. Unexpected end of file.
 #document
 | <html>
 |   <head>
@@ -24,9 +23,9 @@
 #data
 <table><td>
 #errors
-7: missing document type declaration.
-11: required tr element start tag implied by unexpected td element start tag.
-12: unexpected end of file implied table element end tag.
+Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
+Line: 1 Col: 11 Unexpected table cell start tag (td) in the table body phase.
+Line: 1 Col: 11 Expected closing tag. Unexpected end of file.
 #document
 | <html>
 |   <head>
@@ -39,8 +38,8 @@
 #data
 <table><td>test</tbody></table>
 #errors
-missing document type declarattion
-Unexpected and of file
+Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
+Line: 1 Col: 11 Unexpected table cell start tag (td) in the table body phase.
 #document
 | <html>
 |   <head>
@@ -54,8 +53,8 @@ Unexpected and of file
 #data
 <frame>test
 #errors
-missing document type declaration
-frame element can't occur here
+Line: 1 Col: 7 Unexpected start tag (frame). Expected DOCTYPE.
+Line: 1 Col: 7 Unexpected start tag frame. Ignored.
 #document
 | <html>
 |   <head>
@@ -63,32 +62,34 @@ frame element can't occur here
 |     "test"
 
 #data
-<!doctype html><frameset>test
+<!DOCTYPE html><frameset>test
 #errors
-frameset can't contain text
-Unexpected end of file
+Line: 1 Col: 29 Unepxected characters in the frameset phase. Characters ignored.
+Line: 1 Col: 29 Expected closing tag. Unexpected end of file.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <frameset>
 
 #data
-<!doctype html><frameset><!doctype html>
+<!DOCTYPE html><frameset><!DOCTYPE html>
 #errors
-document type declaration can only occur at the start of a document
-Expected end tag </frameset>
+Line: 1 Col: 40 Unexpected DOCTYPE. Ignored.
+Line: 1 Col: 40 Expected closing tag. Unexpected end of file.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <frameset>
 
 #data
-<!doctype html><font><p><b>test</font>
+<!DOCTYPE html><font><p><b>test</font>
 #errors
+Line: 1 Col: 38 End tag (font) violates step 1, paragraph 3 of the adoption agency algorithm.
+Line: 1 Col: 38 End tag (font) violates step 1, paragraph 3 of the adoption agency algorithm.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -99,10 +100,11 @@ Expected end tag </frameset>
 |           "test"
 
 #data
-<!DOCTYPE htmL><dt><div><dd>
+<!DOCTYPE html><dt><div><dd>
 #errors
+Line: 1 Col: 28 Missing end tag (div, dt).
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -113,9 +115,8 @@ Expected end tag </frameset>
 #data
 <script></x
 #errors
-no document type
-</ in script
-Unexpected end of file. Expected </script> end tag.
+Line: 1 Col: 8 Unexpected start tag (script). Expected DOCTYPE.
+Line: 1 Col: 11 Unexpected end of file. Expected end tag (script).
 #document
 | <html>
 |   <head>
@@ -126,10 +127,9 @@ Unexpected end of file. Expected </script> end tag.
 #data
 <table><plaintext><td>
 #errors
-no document type
-<plaintext> directly inside table
-Characters inside table.
-Unexpected end of file.
+Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
+Line: 1 Col: 18 Unexpected start tag (plaintext) in table context caused voodoo mode.
+Line: 1 Col: 22 Unexpected end of file. Expected table content.
 #document
 | <html>
 |   <head>
@@ -141,8 +141,8 @@ Unexpected end of file.
 #data
 <plaintext></plaintext>
 #errors
-No DOCTYPE seen.
-Unexpected end of file.
+Line: 1 Col: 11 Unexpected start tag (plaintext). Expected DOCTYPE.
+Line: 1 Col: 23 Expected closing tag. Unexpected end of file.
 #document
 | <html>
 |   <head>
@@ -151,12 +151,12 @@ Unexpected end of file.
 |       "</plaintext>"
 
 #data
-<!doctype html><table><tr>TEST
+<!DOCTYPE html><table><tr>TEST
 #errors
-TEST can't occur in <tr>
-Unexpected end of file.
+Line: 1 Col: 30 Unexpected non-space characters in table context caused voodoo mode.
+Line: 1 Col: 30 Unexpected end of file. Expected table content.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -166,56 +166,52 @@ Unexpected end of file.
 |         <tr>
 
 #data
-<!doctype html><body t1=1><body t2=2><body t3=3 t4=4>
+<!DOCTYPE html><body t1=1><body t2=2><body t3=3 t4=4>
 #errors
-Unexpected start tag "body"
-Unexpected start tag "body"
+Line: 1 Col: 37 Unexpected start tag (body).
+Line: 1 Col: 53 Unexpected start tag (body).
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
-|     t4="4"
+|     t1="1"
 |     t2="2"
 |     t3="3"
-|     t1="1"
+|     t4="4"
 
 #data
 </b test
 #errors
-Unexpected EOF in attribute
-Unexpected attribute in end tag.
-No doctype.
-Unexpected end tag.
+Line: 1 Col: 8 Unexpected end of file in attribute name.
+Line: 1 Col: 8 End tag contains unexpected attributes.
+Line: 1 Col: 8 Unexpected end tag (b). Expected DOCTYPE.
+Line: 1 Col: 8 Unexpected end tag (b) after the (implied) root element.
 #document
 | <html>
 |   <head>
 |   <body>
 
 #data
-<!doctype HtML></b test<b &=&amp>X
+<!DOCTYPE html></b test<b &=&amp>X
 #errors
-Unexpected < in attribute
-End tag contains attributes.
-Unexpected end tag.
-Named entity didn't end with ;
-Unexpected EOF. Missing closing tag.
+Line: 1 Col: 32 Named entity didn't end with ';'.
+Line: 1 Col: 33 End tag contains unexpected attributes.
+Line: 1 Col: 33 Unexpected end tag (b) after the (implied) root element.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
-|     <b>
-|       &="&"
-|       "X"
+|     "X"
 
 #data
 <!doctypehtml><scrIPt type=text/x-foobar;baz>X</SCRipt
 #errors
-No space after literal DOCTYPE.
-Unexpected EOF in (end) tag name
+Line: 1 Col: 9 No space after literal string 'DOCTYPE'.
+Line: 1 Col: 54 Unexpected end of file in the tag name.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |     <script>
@@ -226,8 +222,7 @@ Unexpected EOF in (end) tag name
 #data
 &
 #errors
-No doctype.
-Unfinished entity.
+Line: 1 Col: 1 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -237,8 +232,8 @@ Unfinished entity.
 #data
 &#
 #errors
-No doctype.
-Unfinished numeric entity.
+Line: 1 Col: 1 Numeric entity expected. Got end of file instead.
+Line: 1 Col: 1 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -248,8 +243,8 @@ Unfinished numeric entity.
 #data
 &#X
 #errors
-No doctype.
-Unfinished hexadecimal entity.
+Line: 1 Col: 3 Numeric entity expected but none found.
+Line: 1 Col: 3 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -259,8 +254,8 @@ Unfinished hexadecimal entity.
 #data
 &#x
 #errors
-No doctype.
-Unfinished hexadecimal entity.
+Line: 1 Col: 3 Numeric entity expected but none found.
+Line: 1 Col: 3 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -270,8 +265,8 @@ Unfinished hexadecimal entity.
 #data
 &#45
 #errors
-No doctype.
-Numeric entity didn't end with ;
+Line: 1 Col: 4 Numeric entity didn't end with ';'.
+Line: 1 Col: 4 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -281,8 +276,8 @@ Numeric entity didn't end with ;
 #data
 &x-test
 #errors
-No doctype.
-Unfinished named entity.
+Line: 1 Col: 1 Named entity expected. Got none.
+Line: 1 Col: 1 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -292,9 +287,9 @@ Unfinished named entity.
 #data
 <!doctypehtml><p><li>
 #errors
-No space after literal DOCTYPE.
+Line: 1 Col: 9 No space after literal string 'DOCTYPE'.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -304,9 +299,9 @@ No space after literal DOCTYPE.
 #data
 <!doctypehtml><p><dt>
 #errors
-No space after literal DOCTYPE.
+Line: 1 Col: 9 No space after literal string 'DOCTYPE'.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -316,9 +311,9 @@ No space after literal DOCTYPE.
 #data
 <!doctypehtml><p><dd>
 #errors
-No space after literal DOCTYPE.
+Line: 1 Col: 9 No space after literal string 'DOCTYPE'.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -328,10 +323,10 @@ No space after literal DOCTYPE.
 #data
 <!doctypehtml><p><form>
 #errors
-No space after literal DOCTYPE.
-Unexpected EOF.
+Line: 1 Col: 9 No space after literal string 'DOCTYPE'.
+Line: 1 Col: 23 Expected closing tag. Unexpected end of file.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -339,31 +334,10 @@ Unexpected EOF.
 |     <form>
 
 #data
-<!doctype html><p><b><i><u></p> <p>X
-#errors
-Unexpected end tag </p>.
-Unexpected end EOF. Missing closing tags.
-#document
-| <!DOCTYPE HTML>
-| <html>
-|   <head>
-|   <body>
-|     <p>
-|       <b>
-|         <i>
-|           <u>
-|     " "
-|     <p>
-|       <b>
-|         <i>
-|           <u>
-|             "X"
-
-#data
-<!doctype html><p></P>X
+<!DOCTYPE html><p></P>X
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -373,8 +347,8 @@ Unexpected end EOF. Missing closing tags.
 #data
 &AMP
 #errors
-No doctype.
-No closing ; for the entity.
+Line: 1 Col: 4 Named entity didn't end with ';'.
+Line: 1 Col: 4 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -384,8 +358,8 @@ No closing ; for the entity.
 #data
 &AMp;
 #errors
-No doctype.
-Invalid entity.
+Line: 1 Col: 1 Named entity expected. Got none.
+Line: 1 Col: 1 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -393,45 +367,45 @@ Invalid entity.
 |     "&AMp;"
 
 #data
-<!doctype html><html><head></head><body><thisISasillyTESTelementNameToMakeSureCrazyTagNamesArePARSEDcorrectLY>
+<!DOCTYPE html><html><head></head><body><thisISasillyTESTelementNameToMakeSureCrazyTagNamesArePARSEDcorrectLY>
 #errors
-Unexpected end of file.
+Line: 1 Col: 110 Expected closing tag. Unexpected end of file.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
 |     <thisisasillytestelementnametomakesurecrazytagnamesareparsedcorrectly>
 
 #data
-<!doctype html>X</body>X
+<!DOCTYPE html>X</body>X
 #errors
-Unexpected non-space characters in the after body phase.
+Line: 1 Col: 24 Unexpected non-space characters in the after body phase.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
 |     "XX"
 
 #data
-<!doctype html><!-- X
+<!DOCTYPE html><!-- X
 #errors
-Unexpected end of file in comment.
+Line: 1 Col: 21 Unexpected end of file in comment.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <!--  X -->
 | <html>
 |   <head>
 |   <body>
 
 #data
-<!doctype html><table><caption>test TEST</caption><td>test
+<!DOCTYPE html><table><caption>test TEST</caption><td>test
 #errors
-Unexpected <td> in table body phase.
-Unexpected end of file.
+Line: 1 Col: 54 Unexpected table cell start tag (td) in the table body phase.
+Line: 1 Col: 58 Expected closing tag. Unexpected end of file.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -444,11 +418,11 @@ Unexpected end of file.
 |             "test"
 
 #data
-<!doctype html><select><option><optgroup>
+<!DOCTYPE html><select><option><optgroup>
 #errors
-Unexpected end of file. Missing closing tags.
+Line: 1 Col: 41 Expected closing tag. Unexpected end of file.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -457,12 +431,12 @@ Unexpected end of file. Missing closing tags.
 |       <optgroup>
 
 #data
-<!doctype html><select><optgroup><option></optgroup><option><select><option>
+<!DOCTYPE html><select><optgroup><option></optgroup><option><select><option>
 #errors
-Unexpected start tag <select> in <select>.
-Unexpected start tag <option>.
+Line: 1 Col: 68 Unexpected select start tag in the select phase treated as select end tag.
+Line: 1 Col: 76 Expected closing tag. Unexpected end of file.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -470,13 +444,14 @@ Unexpected start tag <option>.
 |       <optgroup>
 |         <option>
 |       <option>
+|     <option>
 
 #data
-<!doctype html><select><optgroup><option><optgroup>
+<!DOCTYPE html><select><optgroup><option><optgroup>
 #errors
-Unexpected end of file. Missing closing tags.
+Line: 1 Col: 51 Expected closing tag. Unexpected end of file.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -486,10 +461,10 @@ Unexpected end of file. Missing closing tags.
 |       <optgroup>
 
 #data
-<!doctype html><font><input><input></font>
+<!DOCTYPE html><font><input><input></font>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -498,31 +473,31 @@ Unexpected end of file. Missing closing tags.
 |       <input>
 
 #data
-<!DoctypE html><!-- XXX - XXX -->
+<!DOCTYPE html><!-- XXX - XXX -->
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <!--  XXX - XXX  -->
 | <html>
 |   <head>
 |   <body>
 
 #data
-<!DoctypE html><!-- XXX - XXX
+<!DOCTYPE html><!-- XXX - XXX
 #errors
-Unexpected EOF in comment.
+Line: 1 Col: 29 Unexpected end of file in comment (-)
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <!--  XXX - XXX -->
 | <html>
 |   <head>
 |   <body>
 
 #data
-<!DoctypE html><!-- XXX - XXX - XXX -->
+<!DOCTYPE html><!-- XXX - XXX - XXX -->
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <!--  XXX - XXX - XXX  -->
 | <html>
 |   <head>
@@ -531,27 +506,26 @@ Unexpected EOF in comment.
 #data
 <isindex test=x name=x>
 #errors
-No doctype
-<isindex> is not ok!
+Line: 1 Col: 23 Unexpected start tag (isindex). Expected DOCTYPE.
+Line: 1 Col: 23 Unexpected start tag isindex. Don't use it!
 #document
 | <html>
 |   <head>
 |   <body>
 |     <form>
 |       <hr>
-|       <p>
-|         <label>
-|           "This is a searchable index. Insert your search keywords here:"
-|           <input>
-|             test="x"
-|             name="isindex"
+|       <label>
+|         "This is a searchable index. Insert your search keywords here: "
+|         <input>
+|           name="isindex"
+|           test="x"
 |       <hr>
 
 #data
 test
 test
 #errors
-No doctype
+Line: 2 Col: 4 Unexpected non-space characters. Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -560,69 +534,40 @@ No doctype
 test"
 
 #data
-<p><b><i><u></p>
-<p>X
+<!DOCTYPE html><body><title>test</body></title>
 #errors
-No doctype
-Unexpected end tag p.
-Unexpected EOF.
 #document
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
-|     <p>
-|       <b>
-|         <i>
-|           <u>
-|     "
-"
-|     <p>
-|       <b>
-|         <i>
-|           <u>
-|             "X"
-
-#data
-<!doctype html><body><title>test</body></title>
-#errors
-Unexpected start tag that belongs in the head.
-Expected closing tag after </.
-#document
-| <!DOCTYPE HTML>
-| <html>
-|   <head>
 |     <title>
 |       "test</body>"
-|   <body>
 
 #data
-<!doctype html><body><title>X</title><meta name=z><link rel=foo><style>
+<!DOCTYPE html><body><title>X</title><meta name=z><link rel=foo><style>
 x { content:"</style" } </style>
 #errors
-Unexpected start tag that belongs in head.
-Unexpected start tag that belongs in head.
-Unexpected start tag that belongs in head.
-Expected closing tag after </.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
+|   <body>
 |     <title>
 |       "X"
 |     <meta>
 |       name="z"
 |     <link>
 |       rel="foo"
-|   <body>
 |     <style>
 |       "
 x { content:"</style" } "
 
 #data
-<!doctype html><select><optgroup></optgroup></select>
+<!DOCTYPE html><select><optgroup></optgroup></select>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -633,30 +578,27 @@ x { content:"</style" } "
  
  
 #errors
-No doctype.
+Line: 2 Col: 1 Unexpected End of file. Expected DOCTYPE.
 #document
-| " 
- "
 | <html>
 |   <head>
 |   <body>
 
 #data
-<!doctype html>  <html>
+<!DOCTYPE html>  <html>
 #errors
 #document
-| <!DOCTYPE HTML>
-| "  "
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
 
 #data
-<!doctype html><script>
+<!DOCTYPE html><script>
 </script>  <title>x</title>  </head>
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |     <script>
@@ -669,23 +611,23 @@ No doctype.
 |   <body>
 
 #data
-<!doctype html><html><body><html id=x>
+<!DOCTYPE html><html><body><html id=x>
 #errors
-duplicate html start tag
+Line: 1 Col: 38 html needs to be the first start tag.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   id="x"
 |   <head>
 |   <body>
 
 #data
-<!doctype html>X</body><html id="x">
+<!DOCTYPE html>X</body><html id="x">
 #errors
-Unexpected html start tag in the after body phase.
-html needs to be the first start tag.
+Line: 1 Col: 36 Unexpected start tag token (html) in the after body phase.
+Line: 1 Col: 36 html needs to be the first start tag.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   id="x"
 |   <head>
@@ -693,45 +635,43 @@ html needs to be the first start tag.
 |     "X"
 
 #data
-<!doctype html><head><html id=x>
+<!DOCTYPE html><head><html id=x>
 #errors
-html start tag too late
+Line: 1 Col: 32 html needs to be the first start tag.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   id="x"
 |   <head>
 |   <body>
 
 #data
-<!doctype html>X</html>X
+<!DOCTYPE html>X</html>X
 #errors
-Unexpected non-space characters. Expected end of file.
-Unexpected non-space characters in after body phase. Expected end of file.
+Line: 1 Col: 24 Unexpected non-space characters in the after body phase.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
 |     "XX"
 
 #data
-<!doctype html>X</html> 
+<!DOCTYPE html>X</html> 
 #errors
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
 |     "X "
 
 #data
-<!doctype html>X</html><p>X
+<!DOCTYPE html>X</html><p>X
 #errors
-Unexpected start tag <p> in trailing end phase.
-Unexpected start tag <p> in after body phase.
+Line: 1 Col: 26 Unexpected start tag (p).
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
@@ -740,29 +680,59 @@ Unexpected start tag <p> in after body phase.
 |       "X"
 
 #data
-<!doctype html>X<p/x/y/z>
+<!DOCTYPE html>X<p/x/y/z>
 #errors
-Solidus (/) incorrectly placed.
-Solidus (/) incorrectly placed.
-Solidus (/) incorrectly placed.
+Line: 1 Col: 19 Expected a > after the /.
+Line: 1 Col: 21 Solidus (/) incorrectly placed in tag.
+Line: 1 Col: 23 Solidus (/) incorrectly placed in tag.
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
 |     "X"
 |     <p>
-|       y=""
 |       x=""
+|       y=""
 |       z=""
 
 #data
-<!doctype html><!--x--
+<!DOCTYPE html><!--x--
 #errors
-Unexpected end of file in comment.
+Line: 1 Col: 22 Unexpected end of file in comment (--).
 #document
-| <!DOCTYPE HTML>
+| <!DOCTYPE html>
 | <!-- x -->
 | <html>
 |   <head>
 |   <body>
+
+#data
+<!DOCTYPE html><table><tr><td></p></table>
+#errors
+Line: 1 Col: 34 Unexpected end tag (p). Ignored.
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|             <p>
+
+#data
+<!DOCTYPE <!DOCTYPE HTML>><!--<!--x-->-->
+#errors
+Line: 1 Col: 20 Expected space or '>'. Got ''
+Line: 1 Col: 25 Erroneous DOCTYPE.
+Line: 1 Col: 35 Unexpected character in comment found.
+#document
+| <!DOCTYPE <!doctype>
+| <html>
+|   <head>
+|   <body>
+|     ">"
+|     <!-- <!--x -->
+|     "-->"

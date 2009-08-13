@@ -48,18 +48,70 @@
  * an iframe with id "testframe".
  */
 
-function writeErrorSummary(input, expected, got, isTodo) {
+function writeErrorSummary(input, expected, got, isTodo, description,
+  expectedTokenizerOutput) {
   if (!isTodo) {
     appendChildNodes($("display"), H2("Unexpected Failure:"));
   }
   appendChildNodes(
     $("display"), BR(),
-    SPAN("Matched: "), "" + (expected == got),
-    P("Input: " + input),
-    PRE("Expected:\n|" + expected +"|", "\n-\n",
-        "Output:\n|" + got + "|\n\n"),
+    SPAN("Matched: "), "" + (expected == got)
+  );
+  if (typeof(description) != "undefined") {
+    appendChildNodes(
+      $("display"), P("Description: " + description)
+    );
+  }
+  appendChildNodes(
+    $("display"), 
+    PRE("Input: " + input)
+  );
+  if (typeof(expectedTokenizerOutput) != "undefined") {
+    appendChildNodes(
+      $("display"), P("Expected raw tokenizer output: " +
+        expectedTokenizerOutput)
+    );
+  }
+  let expectedTitle = "Expected:";
+  let outputTitle = "Output:";
+  if (gJSCompatibilityMode) {
+    outputTitle = "Gecko parser output:";
+    expectedTitle = "JavaScript parser output:";
+  }
+  appendChildNodes(
+    $("display"),
+    PRE(expectedTitle + "\n|" + expected +"|", "\n-\n",
+        outputTitle + "\n|" + got + "|\n\n"),
     HR()
   );
+}
+
+function checkTests(input, expected, errors, description, 
+  expectedTokenizerOutput, testDocument) {
+  // For fragment tests, the expected output will be empty, so skip
+  // the test.
+  if (expected.length > 1) {    
+    var domAsString = docToTestOutput(testDocument);
+    // It's possible we need to reorder attributes to get these to match
+    if (expected == domAsString) {
+      is(domAsString, expected, "HTML5 expected success. " + new Date());
+    } else {
+      var reorderedDOM = reorderToMatchExpected(domAsString, expected);
+      if (!gJSCompatibilityMode && html5Exceptions[input]) {
+        todo(reorderedDOM == expected, "HTML5 expected failure. " + new Date());
+        writeErrorSummary(input, expected, reorderedDOM, true, description,
+          expectedTokenizerOutput);
+      } else {
+        if (reorderedDOM != expected) {
+          is(reorderedDOM, expected, "HTML5 unexpected failure. " + input + " " + new Date());
+          writeErrorSummary(input, expected, reorderedDOM, false,
+            description, expectedTokenizerOutput);
+        } else {
+          is(reorderedDOM, expected, "HTML5 expected success. " + new Date());
+        }
+      }
+    }
+  }    
 }
 
 /**
@@ -67,39 +119,55 @@ function writeErrorSummary(input, expected, got, isTodo) {
  * event handler returned by makeTestChecker() until the 'testcases'
  * iterator is spent.
  */
-function makeTestChecker(input, expected, errors) {
+function makeTestChecker(input, expected, errors, description, 
+  expectedTokenizerOutput) {
   return function (e) {
-    var domAsString = docToTestOutput(e.target.contentDocument);
-    // It's possible we need to reorder attributes to get these to match
-    if (expected == domAsString) {
-      is(domAsString, expected, "HTML5 expected success. " + new Date());
-    } else {
-      var reorderedDOM = reorderToMatchExpected(domAsString, expected);
-      if (html5Exceptions[input]) {
-        todo(reorderedDOM == expected, "HTML5 expected failure. " + new Date());
-        writeErrorSummary(input, expected, reorderedDOM, true);
-      } else {
-        if (reorderedDOM != expected) {
-          is(reorderedDOM, expected, "HTML5 unexpected failure. " + input + " " + new Date());
-          writeErrorSummary(input, expected, reorderedDOM, false);
-        } else {
-          is(reorderedDOM, expected, "HTML5 expected success. " + new Date());
-        }
-      }
+    if (!gJSCompatibilityMode) {
+      checkTests(input, expected, errors, description, 
+        expectedTokenizerOutput, e.target.contentDocument);
+      nextTest(e.target);
     }
-    nextTest(e.target);
-  } 
+    else {
+      window.parseHtmlDocument(input, $("jsframe").contentDocument,
+        function() {
+          expected = docToTestOutput($("jsframe").contentDocument);
+          checkTests(input, expected, errors, description, 
+            expectedTokenizerOutput, e.target.contentDocument);
+          nextTest(e.target);        
+        }, null);      
+    }
+  }
 }
 
 var testcases;
 function nextTest(testframe) {
   var test = 0;
   try {
-    var [input, output, errors] = testcases.next();
-    dataURL = "data:text/html;base64," + btoa(input);
-    testframe.onload = makeTestChecker(input, output, errors);
+    if (gTokenizerMode) {
+      // For tokenizer tests, testcases.next() return an extra paramter,
+      // the index of the test.  The dataURL points to a server-side js
+      // that returns the test data.
+      var [index, input, output, errors, description, expectedTokenizerOutput]
+        = testcases.next();
+      dataURL = "tokenizer_file_server.sjs?" + index + 
+        "&" + gTokenizerTestFile;
+    } else {
+      var [input, output, errors, description, expectedTokenizerOutput] = 
+        testcases.next();
+      dataURL = "data:text/html;base64," + btoa(input);
+    }
+    testframe.onload = makeTestChecker(input, output, errors, description,
+      expectedTokenizerOutput);
     testframe.src = dataURL;
   } catch (err if err instanceof StopIteration) {
+    // restore the original value of html5.enable if it was changed earlier
+    if (typeof(gOriginalHtml5Pref) == "boolean") {
+      netscape.security.PrivilegeManager
+                  .enablePrivilege("UniversalXPConnect");
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranch);
+      prefs.setBoolPref("html5.enable", gOriginalHtml5Pref);
+    }
     SimpleTest.finish();
   }
 }
@@ -121,14 +189,36 @@ function frameLoaded(e) {
  * Create an iframe for each dat file
  */
 function makeIFrames() {
-  for each (var filename in parserDatFiles) {
-    var datFrame = document.createElement("iframe");
-    datFrame.onload = frameLoaded;
-    datFrame.src = filename;
-    $("display").appendChild(datFrame);
+  // Set JavaScript compatibility mode if the function 
+  // window.parseHtmlDocument exists.
+  gJSCompatibilityMode = typeof(window.parseHtmlDocument) != "undefined";
+
+  if (gTokenizerMode) {
+    // For tokenizer tests, no additional frames need to be created.
+    appendChildNodes($("display"), BR(), "Results: ", HR());
+    testcases = test_parser(tokenizerTests["tests"]);    
+    nextTest($("testframe"));
   }
-  appendChildNodes($("display"), BR(), "Results: ", HR());
+  else {
+    for each (var filename in parserDatFiles) {
+      var datFrame = document.createElement("iframe");
+      datFrame.onload = frameLoaded;
+      datFrame.src = filename;
+      $("display").appendChild(datFrame);
+    }
+    appendChildNodes($("display"), BR(), "Results: ", HR());
+  }
 }
+
+// If gTokenizerMode is undefined, set it to false: this
+// isn't a tokenizer test.
+if (typeof(gTokenizerMode) == "undefined") {
+  gTokenizerMode = false;
+}
+
+// Global variable indicating whether or not the tests should
+// be run in JavaScript compatibility mode.
+var gJSCompatibilityMode;
 
 addLoadEvent(makeIFrames);
 SimpleTest.waitForExplicitFinish();
