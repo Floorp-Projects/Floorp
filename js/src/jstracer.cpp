@@ -5562,9 +5562,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
             JSOp op = (JSOp) *regs->pc;
             JS_ASSERT(op == JSOP_CALL || op == JSOP_APPLY || op == JSOP_NEW ||
                       op == JSOP_GETELEM || op == JSOP_CALLELEM ||
-                      op == JSOP_SETPROP || op == JSOP_SETNAME ||
-                      op == JSOP_SETELEM || op == JSOP_INITELEM ||
-                      op == JSOP_INSTANCEOF);
+                      op == JSOP_SETPROP || op == JSOP_SETNAME);
             const JSCodeSpec& cs = js_CodeSpec[op];
             regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
             regs->sp += cs.ndefs;
@@ -9881,66 +9879,53 @@ TraceRecorder::finishGetProp(LIns* obj_ins, LIns* vp_ins, LIns* ok_ins, jsval* o
     pendingUnboxSlot = outp;
 }
 
-static inline bool
-RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
-{
-    JSString* name = *namep;
-    if (name->isAtomized()) {
-        *idp = ATOM_TO_JSID((JSAtom*) STRING_TO_JSVAL(name));
-        return true;
-    }
-
-    JSAtom* atom = js_AtomizeString(cx, name, 0);
-    if (!atom)
-        return false;
-    *namep = ATOM_TO_STRING(atom); /* write back to GC root */
-    *idp = ATOM_TO_JSID(atom);
-    return true;
-}
-
 static JSBool FASTCALL
 GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, jsval* vp)
 {
     js_LeaveTraceIfGlobalObject(cx, obj);
 
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->getProperty(cx, id, vp)) {
-        js_SetBuiltinError(cx);
-        return JS_FALSE;
+    JSString* name = *namep;
+    if (name->isAtomized()) {
+        id = ATOM_TO_JSID((JSAtom*) STRING_TO_JSVAL(name));
+    } else {
+        JSAtom* atom = js_AtomizeString(cx, name, 0);
+        if (!atom)
+            goto error;
+        *namep = ATOM_TO_STRING(atom); /* write back to GC root */
+        id = ATOM_TO_JSID(atom);
     }
+
+    if (!obj->getProperty(cx, id, vp))
+        goto error;
     return cx->interpState->builtinStatus == 0;
+
+error:
+    js_SetBuiltinError(cx);
+    return JS_FALSE;
 }
 JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyByName, CONTEXT, OBJECT, STRINGPTR, JSVALPTR,
                      0, 0)
 
-// Convert the value in a slot to a string and store the resulting string back
-// in the slot (typically in order to root it).
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::primitiveToStringInPlace(jsval* vp)
-{
-    jsval v = *vp;
-    JS_ASSERT(JSVAL_IS_PRIMITIVE(v));
-
-    if (!JSVAL_IS_STRING(v)) {
-        // v is not a string. Turn it into one. js_ValueToString is safe
-        // because v is not an object.
-        JSString *str = js_ValueToString(cx, v);
-        if (!str)
-            ABORT_TRACE_ERROR("failed to stringify element id");
-        v = STRING_TO_JSVAL(str);
-        set(vp, stringify(*vp));
-
-        // Write the string back to the stack to save the interpreter some work
-        // and to ensure snapshots get the correct type for this slot.
-        *vp = v;
-    }
-    return JSRS_CONTINUE;
-}
-
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::getPropertyByName(LIns* obj_ins, jsval* idvalp, jsval* outp)
 {
-    CHECK_STATUS(primitiveToStringInPlace(idvalp));
+    jsval idval = *idvalp;
+    JS_ASSERT(JSVAL_IS_PRIMITIVE(idval));
+
+    if (!JSVAL_IS_STRING(idval)) {
+        // idval is not a string. Turn it into one.
+        // js_ValueToString is a safe because idval is not an object.
+        JSString *str = js_ValueToString(cx, idval);
+        if (!str)
+            ABORT_TRACE_ERROR("failed to stringify element id");
+        idval = STRING_TO_JSVAL(str);
+        set(idvalp, stringify(*idvalp));
+
+        // Write the string back to the stack to save the interpreter some work.
+        *idvalp = idval;
+    }
+
     enterDeepBailCall();
 
     // Call GetPropertyByName. The vp parameter points to stack because this is
@@ -10121,120 +10106,72 @@ TraceRecorder::record_JSOP_GETELEM()
 
 /* Functions used by JSOP_SETELEM */
 
-static JSBool FASTCALL
-SetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, jsval* vp)
+static JSBool
+SetProperty(JSContext *cx, uintN argc, jsval *vp)
 {
-    js_LeaveTraceIfGlobalObject(cx, obj);
-
+    jsval *argv;
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) || !obj->setProperty(cx, id, vp)) {
-        js_SetBuiltinError(cx);
+
+    JS_ASSERT(argc == 2);
+    argv = JS_ARGV(cx, vp);
+    JS_ASSERT(JSVAL_IS_STRING(argv[0]));
+    if (!js_ValueToStringId(cx, argv[0], &id))
         return JS_FALSE;
-    }
-    return cx->interpState->builtinStatus == 0;
+    argv[0] = ID_TO_VALUE(id);
+    if (!JS_THIS_OBJECT(cx, vp)->setProperty(cx, id, &argv[1]))
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, SetPropertyByName, CONTEXT, OBJECT, STRINGPTR, JSVALPTR,
-                     0, 0)
 
 static JSBool FASTCALL
-InitPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, jsval val)
+SetProperty_tn(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 {
-    js_LeaveTraceIfGlobalObject(cx, obj);
+    JSAutoTempValueRooter tvr(cx, v);
+    JSAutoTempIdRooter idr(cx);
 
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), idr.addr()) ||
+        !obj->setProperty(cx, idr.id(), tvr.addr())) {
+        js_SetBuiltinError(cx);
+    }
+    return JSVAL_TO_SPECIAL(JSVAL_VOID);
+}
+
+static JSBool
+SetElement(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
     jsid id;
-    if (!RootedStringToId(cx, namep, &id) ||
-        !obj->defineProperty(cx, id, val, NULL, NULL, JSPROP_ENUMERATE, NULL)) {
-        js_SetBuiltinError(cx);
+
+    JS_ASSERT(argc == 2);
+    argv = JS_ARGV(cx, vp);
+    JS_ASSERT(JSVAL_IS_NUMBER(argv[0]));
+    if (!JS_ValueToId(cx, argv[0], &id))
         return JS_FALSE;
-    }
-    return cx->interpState->builtinStatus == 0;
-}
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, InitPropertyByName, CONTEXT, OBJECT, STRINGPTR, JSVAL,
-                     0, 0)
-
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::initOrSetPropertyByName(LIns* obj_ins, jsval* idvalp, jsval* rvalp, bool init)
-{
-    CHECK_STATUS(primitiveToStringInPlace(idvalp));
-
-    LIns* rval_ins = get(rvalp);
-    box_jsval(*rvalp, rval_ins);
-
-    enterDeepBailCall();
-
-    LIns* ok_ins;
-    LIns* idvalp_ins = addName(addr(idvalp), "idvalp");
-    if (init) {
-        LIns* args[] = {rval_ins, idvalp_ins, obj_ins, cx_ins};
-        ok_ins = lir->insCall(&InitPropertyByName_ci, args);
-    } else {
-        // See note in getPropertyByName about vp.
-        LIns* vp_ins = addName(lir->insAlloc(sizeof(jsval)), "vp");
-        lir->insStorei(rval_ins, vp_ins, 0);
-        LIns* args[] = {vp_ins, idvalp_ins, obj_ins, cx_ins};
-        ok_ins = lir->insCall(&SetPropertyByName_ci, args);
-    }
-    guard(true, ok_ins, STATUS_EXIT);
-
-    leaveDeepBailCall();
-    return JSRS_CONTINUE;
+    argv[0] = ID_TO_VALUE(id);
+    if (!JS_THIS_OBJECT(cx, vp)->setProperty(cx, id, &argv[1]))
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
 }
 
 static JSBool FASTCALL
-SetPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, jsval* vp)
+SetElement_tn(JSContext* cx, JSObject* obj, int32 index, jsval v)
 {
-    js_LeaveTraceIfGlobalObject(cx, obj);
-
     JSAutoTempIdRooter idr(cx);
-    if (!js_Int32ToId(cx, index, idr.addr()) || !obj->setProperty(cx, idr.id(), vp)) {
-        js_SetBuiltinError(cx);
-        return JS_FALSE;
-    }
-    return cx->interpState->builtinStatus == 0;
-}
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, SetPropertyByIndex, CONTEXT, OBJECT, INT32, JSVALPTR, 0, 0)
+    JSAutoTempValueRooter tvr(cx, v);
 
-static JSBool FASTCALL
-InitPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, jsval val)
-{
-    js_LeaveTraceIfGlobalObject(cx, obj);
-
-    JSAutoTempIdRooter idr(cx);
     if (!js_Int32ToId(cx, index, idr.addr()) ||
-        !obj->defineProperty(cx, idr.id(), val, NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+        !obj->setProperty(cx, idr.id(), tvr.addr())) {
         js_SetBuiltinError(cx);
-        return JS_FALSE;
     }
-    return cx->interpState->builtinStatus == 0;
+    return JSVAL_TO_SPECIAL(JSVAL_VOID);
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, InitPropertyByIndex, CONTEXT, OBJECT, INT32, JSVAL, 0, 0)
 
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::initOrSetPropertyByIndex(LIns* obj_ins, LIns* index_ins, jsval* rvalp, bool init)
-{
-    index_ins = makeNumberInt32(index_ins);
-
-    LIns* rval_ins = get(rvalp);
-    box_jsval(*rvalp, rval_ins);
-
-    enterDeepBailCall();
-
-    LIns* ok_ins;
-    if (init) {
-        LIns* args[] = {rval_ins, index_ins, obj_ins, cx_ins};
-        ok_ins = lir->insCall(&InitPropertyByIndex_ci, args);
-    } else {
-        // See note in getPropertyByName about vp.
-        LIns* vp_ins = addName(lir->insAlloc(sizeof(jsval)), "vp");
-        lir->insStorei(rval_ins, vp_ins, 0);
-        LIns* args[] = {vp_ins, index_ins, obj_ins, cx_ins};
-        ok_ins = lir->insCall(&SetPropertyByIndex_ci, args);
-    }
-    guard(true, ok_ins, STATUS_EXIT);
-
-    leaveDeepBailCall();
-    return JSRS_CONTINUE;
-}
+JS_DEFINE_TRCINFO_1(SetProperty,
+    (4, (extern, BOOL_FAIL,     SetProperty_tn, CONTEXT, THIS, STRING, JSVAL,   0, 0)))
+JS_DEFINE_TRCINFO_1(SetElement,
+    (4, (extern, BOOL_FAIL,     SetElement_tn,  CONTEXT, THIS, INT32, JSVAL,    0, 0)))
 
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_SETELEM()
@@ -10251,42 +10188,59 @@ TraceRecorder::record_JSOP_SETELEM()
     LIns* obj_ins = get(&lval);
     LIns* idx_ins = get(&idx);
     LIns* v_ins = get(&v);
+    jsid id;
 
     if (!JSVAL_IS_INT(idx)) {
         if (!JSVAL_IS_PRIMITIVE(idx))
             ABORT_TRACE("non-primitive index");
-        CHECK_STATUS(initOrSetPropertyByName(obj_ins, &idx, &v,
-                                             *cx->fp->regs->pc == JSOP_INITELEM));
-    } else if (JSVAL_TO_INT(idx) < 0 || !OBJ_IS_DENSE_ARRAY(cx, obj)) {
-        CHECK_STATUS(initOrSetPropertyByIndex(obj_ins, idx_ins, &v,
-                                              *cx->fp->regs->pc == JSOP_INITELEM));
-    } else {
-        // Fast path: assigning to element of dense array.
 
-        // Make sure the array is actually dense.
-        if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
-            return JSRS_STOP;
+        // If index is not a string, turn it into a string.
+        if (!js_InternNonIntElementId(cx, obj, idx, &id))
+            ABORT_TRACE_ERROR("failed to intern non-int element id");
+        set(&idx, stringify(idx));
 
-        // The index was on the stack and is therefore a LIR float. Force it to
-        // be an integer.
-        idx_ins = makeNumberInt32(idx_ins);
+        // Store the interned string to the stack to save the interpreter from redoing this work.
+        idx = ID_TO_VALUE(id);
 
-        // Box the value so we can use one builtin instead of having to add one
-        // builtin for every storage type. Special case for integers though,
-        // since they are so common.
-        LIns* res_ins;
-        if (isNumber(v) && isPromoteInt(v_ins)) {
-            LIns* args[] = { ::demote(lir, v_ins), idx_ins, obj_ins, cx_ins };
-            res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
-        } else {
-            LIns* boxed_v_ins = v_ins;
-            box_jsval(v, boxed_v_ins);
+        // The object is not guaranteed to be a dense array at this point, so it might be the
+        // global object, which we have to guard against.
+        CHECK_STATUS(guardNotGlobalObject(obj, obj_ins));
 
-            LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
-            res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
-        }
-        guard(false, lir->ins_eq0(res_ins), MISMATCH_EXIT);
+        return call_imacro((*cx->fp->regs->pc == JSOP_INITELEM)
+                           ? initelem_imacros.initprop
+                           : setelem_imacros.setprop);
     }
+
+    if (JSVAL_TO_INT(idx) < 0 || !OBJ_IS_DENSE_ARRAY(cx, obj)) {
+        CHECK_STATUS(guardNotGlobalObject(obj, obj_ins));
+
+        return call_imacro((*cx->fp->regs->pc == JSOP_INITELEM)
+                           ? initelem_imacros.initelem
+                           : setelem_imacros.setelem);
+    }
+
+    // Make sure the array is actually dense.
+    if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
+        return JSRS_STOP;
+
+    // Fast path for dense arrays accessed with a non-negative integer index. In case the trace
+    // calculated the index using the FPU, force it to be an integer.
+    idx_ins = makeNumberInt32(idx_ins);
+
+    // Box the value so we can use one builtin instead of having to add one builtin for every
+    // storage type. Special case for integers though, since they are so common.
+    LIns* res_ins;
+    if (isNumber(v) && isPromoteInt(v_ins)) {
+        LIns* args[] = { ::demote(lir, v_ins), idx_ins, obj_ins, cx_ins };
+        res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
+    } else {
+        LIns* boxed_v_ins = v_ins;
+        box_jsval(v, boxed_v_ins);
+
+        LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
+        res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
+    }
+    guard(false, lir->ins_eq0(res_ins), MISMATCH_EXIT);
 
     jsbytecode* pc = cx->fp->regs->pc;
     if (*pc == JSOP_SETELEM && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
@@ -11615,38 +11569,41 @@ TraceRecorder::record_JSOP_IN()
     return JSRS_CONTINUE;
 }
 
+static JSBool
+HasInstance(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval *argv;
+    JS_ASSERT(argc == 1);
+    argv = JS_ARGV(cx, vp);
+    JSBool result = JS_FALSE;
+    JSObject* obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj->map->ops->hasInstance(cx, obj, argv[0], &result))
+        return JS_FALSE;
+    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(result));
+    return JS_TRUE;
+}
+
 static JSBool FASTCALL
-HasInstance(JSContext* cx, JSObject* ctor, jsval val)
+HasInstance_tn(JSContext* cx, JSObject* obj, jsval v)
 {
     JSBool result = JS_FALSE;
-    if (!ctor->map->ops->hasInstance(cx, ctor, val, &result))
+    if (!obj->map->ops->hasInstance(cx, obj, v, &result))
         js_SetBuiltinError(cx);
     return result;
 }
-JS_DEFINE_CALLINFO_3(static, BOOL_FAIL, HasInstance, CONTEXT, OBJECT, JSVAL, 0, 0)
+
+JS_DEFINE_TRCINFO_1(HasInstance,
+    (3, (extern, BOOL_FAIL, HasInstance_tn, CONTEXT, THIS, JSVAL, 0, 0)))
 
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_INSTANCEOF()
 {
-    // If the rhs isn't an object, we are headed for a TypeError.
-    jsval& ctor = stackval(-1);
-    if (JSVAL_IS_PRIMITIVE(ctor))
-        ABORT_TRACE("non-object on rhs of instanceof");
+    jsval& r = stackval(-1);
 
-    jsval& val = stackval(-2);
-    LIns* val_ins = get(&val);
-    box_jsval(val, val_ins);
+    if (!JSVAL_IS_PRIMITIVE(r))
+        return call_imacro(instanceof_imacros.instanceof);
 
-    enterDeepBailCall();
-    LIns* args[] = {val_ins, get(&ctor), cx_ins};
-    stack(-2, lir->insCall(&HasInstance_ci, args));
-    LIns* status_ins = lir->insLoad(LIR_ld,
-                                    lirbuf->state,
-                                    (int) offsetof(InterpState, builtinStatus));
-    guard(true, lir->ins_eq0(status_ins), STATUS_EXIT);
-    leaveDeepBailCall();
-
-    return JSRS_CONTINUE;
+    return JSRS_STOP;
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -12630,6 +12587,9 @@ static const struct BuiltinFunctionInfo {
 } builtinFunctionInfo[JSBUILTIN_LIMIT] = {
     {ObjectToIterator_trcinfo,   1},
     {CallIteratorNext_trcinfo,   0},
+    {SetProperty_trcinfo,        2},
+    {SetElement_trcinfo,         2},
+    {HasInstance_trcinfo,        1}
 };
 
 JSObject *
