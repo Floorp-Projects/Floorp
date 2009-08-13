@@ -99,7 +99,6 @@
 #define JS_HAS_UNEVAL           0       /* has uneval() top-level function */
 #define JS_HAS_CONST            0       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    0       /* has function expression statement */
-#define JS_HAS_LVALUE_RETURN    1       /* has o.item(i) = j; for native item */
 #define JS_HAS_NO_SUCH_METHOD   0       /* has o.__noSuchMethod__ handler */
 #define JS_HAS_XML_SUPPORT      0       /* has ECMAScript for XML support */
 #define JS_HAS_ARRAY_EXTRAS     0       /* has indexOf and Lispy extras */
@@ -132,7 +131,6 @@
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
 #define JS_HAS_CONST            1       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    1       /* has function expression statement */
-#define JS_HAS_LVALUE_RETURN    1       /* has o.item(i) = j; for native item */
 #define JS_HAS_NO_SUCH_METHOD   1       /* has o.__noSuchMethod__ handler */
 #define JS_HAS_XML_SUPPORT      0       /* has ECMAScript for XML support */
 #define JS_HAS_ARRAY_EXTRAS     0       /* has indexOf and Lispy extras */
@@ -161,7 +159,6 @@
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
 #define JS_HAS_CONST            1       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    1       /* has function expression statement */
-#define JS_HAS_LVALUE_RETURN    1       /* has o.item(i) = j; for native item */
 #define JS_HAS_NO_SUCH_METHOD   1       /* has o.__noSuchMethod__ handler */
 #define JS_HAS_XML_SUPPORT      1       /* has ECMAScript for XML support */
 #define JS_HAS_ARRAY_EXTRAS     1       /* has indexOf and Lispy extras */
@@ -190,7 +187,6 @@
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
 #define JS_HAS_CONST            1       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    1       /* has function expression statement */
-#define JS_HAS_LVALUE_RETURN    1       /* has o.item(i) = j; for native item */
 #define JS_HAS_NO_SUCH_METHOD   1       /* has o.__noSuchMethod__ handler */
 #define JS_HAS_XML_SUPPORT      1       /* has ECMAScript for XML support */
 #define JS_HAS_ARRAY_EXTRAS     1       /* has indexOf and Lispy extras */
@@ -219,7 +215,6 @@
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
 #define JS_HAS_CONST            1       /* has JS2 const as alternative var */
 #define JS_HAS_FUN_EXPR_STMT    1       /* has function expression statement */
-#define JS_HAS_LVALUE_RETURN    1       /* has o.item(i) = j; for native item */
 #define JS_HAS_NO_SUCH_METHOD   1       /* has o.__noSuchMethod__ handler */
 #define JS_HAS_XML_SUPPORT      1       /* has ECMAScript for XML support */
 #define JS_HAS_ARRAY_EXTRAS     1       /* has indexOf and Lispy extras */

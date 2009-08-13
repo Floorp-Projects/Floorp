@@ -3019,10 +3019,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
         /* Avoid keeping GC-ed junk stored in JSContext.exception. */
         acx->exception = JSVAL_NULL;
     }
-#if JS_HAS_LVALUE_RETURN
-    if (acx->rval2set)
-        JS_CALL_VALUE_TRACER(trc, acx->rval2, "rval2");
-#endif
 
     for (sh = acx->stackHeaders; sh; sh = sh->down) {
         METER(trc->context->runtime->gcStats.stackseg++);

@@ -948,21 +948,9 @@ struct JSContext {
      */
     JSDHashTable        *resolvingTable;
 
-#if JS_HAS_LVALUE_RETURN
-    /*
-     * Secondary return value from native method called on the left-hand side
-     * of an assignment operator.  The native should store the object in which
-     * to set a property in *rval, and return the property's id expressed as a
-     * jsval by calling JS_SetCallReturnValue2(cx, idval).
-     */
-    jsval               rval2;
-    JSPackedBool        rval2set;
-#endif
-
     /*
      * True if generating an error, to prevent runaway recursion.
-     * NB: generatingError packs with rval2set, #if JS_HAS_LVALUE_RETURN;
-     * with insideGCMarkCallback and with throwing below.
+     * NB: generatingError packs with insideGCMarkCallback and throwing below.
      */
     JSPackedBool        generatingError;
 
