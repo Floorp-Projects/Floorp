@@ -388,7 +388,6 @@ public:
   
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
-  NS_IMETHOD        SetWindowShadowStyle(PRInt32 aStyle);
   
   // Mac specific methods
   

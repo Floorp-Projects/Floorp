@@ -641,6 +641,8 @@ class nsIWidget : public nsISupports {
 
     /**
      * Set the shadow style of the window.
+     *
+     * Ignored on child widgets and on non-Mac platforms.
      */
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle) = 0;
 
