@@ -12920,8 +12920,8 @@ js_StopTraceVis(JSContext *cx, JSObject *obj,
 #endif /* MOZ_TRACEVIS */
 
 #define UNUSED(n)                                                             \
-    JS_REQUIRES_STACK bool                                                    \
+    JS_REQUIRES_STACK JSRecordingStatus                                       \
     TraceRecorder::record_JSOP_UNUSED##n() {                                  \
-        JS_NOT_REACHED("JSOP_UNUSED" # n);                                    \
-        return false;                                                         \
+        JS_NOT_REACHED("JSOP_UNUSED" #n);                                     \
+        return JSRS_STOP;                                                     \
     }

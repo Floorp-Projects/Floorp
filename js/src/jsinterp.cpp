@@ -1220,10 +1220,6 @@ have_fun:
         JSBool alreadyThrowing = cx->throwing;
 #endif
         JS_ASSERT(nslots == 0);
-#if JS_HAS_LVALUE_RETURN
-        /* Set by JS_SetCallReturnValue2, used to return reference types. */
-        cx->rval2set = JS_FALSE;
-#endif
         ok = ((JSFastNative) native)(cx, argc, vp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
@@ -1364,10 +1360,6 @@ have_fun:
         JSBool alreadyThrowing = cx->throwing;
 #endif
 
-#if JS_HAS_LVALUE_RETURN
-        /* Set by JS_SetCallReturnValue2, used to return reference types. */
-        cx->rval2set = JS_FALSE;
-#endif
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
