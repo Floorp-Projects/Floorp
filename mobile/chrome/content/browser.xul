@@ -407,7 +407,7 @@
       <vbox id="select-container-inner" class="panel-dark" flex="1">
         <scrollbox id="select-list" flex="1" orient="vertical"/>
         <hbox id="select-buttons">
-          <button label="&selectListDone.label;" oncommand="SelectHelper.close();"/>
+          <button class="button-dark" label="&selectListDone.label;" oncommand="SelectHelper.close();"/>
         </hbox>
       </vbox>
     </vbox>
