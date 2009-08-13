@@ -808,7 +808,6 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK void enterDeepBailCall();
     JS_REQUIRES_STACK void leaveDeepBailCall();
 
-    JS_REQUIRES_STACK JSRecordingStatus primitiveToStringInPlace(jsval* vp);
     JS_REQUIRES_STACK void finishGetProp(nanojit::LIns* obj_ins, nanojit::LIns* vp_ins,
                                          nanojit::LIns* ok_ins, jsval* outp);
     JS_REQUIRES_STACK JSRecordingStatus getPropertyByName(nanojit::LIns* obj_ins, jsval* idvalp,
@@ -825,12 +824,6 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
                                                     JSScopeProperty *sprop, nanojit::LIns *v_ins,
                                                     jsval v);
-    JS_REQUIRES_STACK JSRecordingStatus initOrSetPropertyByName(nanojit::LIns* obj_ins,
-                                                                jsval* idvalp, jsval* rvalp,
-                                                                bool init);
-    JS_REQUIRES_STACK JSRecordingStatus initOrSetPropertyByIndex(nanojit::LIns* obj_ins,
-                                                                 nanojit::LIns* index_ins,
-                                                                 jsval* rvalp, bool init);
 
     JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
     JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, VMSideExit* exit);

@@ -5706,36 +5706,6 @@ function doParseIntTests() {
 }
 doParseIntTests();
 
-function testSetelemWithFloatIndex() {
-    var x, a = {};
-    for (var i = 0; i < 9; i++)
-        x = a[-3.5] = "ok";
-    assertEq(x, "ok");
-}
-test(testSetelemWithFloatIndex);
-
-function testInitelemWithSetter() {  // bug 509843
-    Object.prototype.__defineSetter__(1, function () { throw "fabulous fit"; });
-    for (var i =0; i<9; i++)
-        ({1:'a'});
-}
-test(testInitelemWithSetter);
-
-function testDeepBailFromHasInstance() {
-    var arr = [StopIteration, StopIteration, StopIteration, StopIteration, {}];
-    var obj = {};
-    var x;
-    var result = 'no error';
-    try {
-        for (var i = 0; i < arr.length; i++)
-            x = (obj instanceof arr[i]);  // last iteration throws, triggering deep bail
-    } catch (exc) {
-        result = exc.constructor.name;
-    }
-    assertEq(result, 'TypeError');
-}
-test(testDeepBailFromHasInstance);
-
 /*****************************************************************************
  *                                                                           *
  *  _____ _   _  _____ ______ _____ _______                                  *

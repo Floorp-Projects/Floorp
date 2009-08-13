@@ -672,3 +672,66 @@
     .end
 
 .end nextiter
+
+.igroup setelem JSOP_SETELEM
+
+    .imacro setprop                                 # obj name val
+        dup                                         # obj name val val
+        pick 3                                      # name val val obj
+        callbuiltin (JSBUILTIN_SetProperty)         # name val val fun obj
+        pick 4                                      # val val fun obj name
+        pick 4                                      # val fun obj name val
+        call 2                                      # val junk
+        pop                                         # val
+        stop
+    .end
+
+    .imacro setelem                                 # obj i val
+        dup                                         # obj i val val
+        pick 3                                      # i val val obj
+        callbuiltin (JSBUILTIN_SetElement)          # i val val fun obj
+        pick 4                                      # val val fun obj i
+        pick 4                                      # val fun obj i val
+        call 2                                      # val junk
+        pop                                         # val
+        stop
+    .end
+
+.end setelem
+
+.igroup initelem JSOP_INITELEM
+
+    .imacro initprop                                # obj i val
+        pick 2                                      # i val obj
+        dup                                         # i val obj obj
+        callbuiltin (JSBUILTIN_SetProperty)         # i val obj fun obj
+        pick 4                                      # val obj fun obj i
+        pick 4                                      # obj fun obj i val
+        call 2                                      # obj junk
+        pop                                         # obj
+        stop
+    .end
+
+    .imacro initelem                                # obj i val
+        pick 2                                      # i val obj
+        dup                                         # i val obj obj
+        callbuiltin (JSBUILTIN_SetElement)          # i val obj fun obj
+        pick 4                                      # val obj fun obj i
+        pick 4                                      # obj fun obj i val
+        call 2                                      # obj junk
+        pop                                         # obj
+        stop
+    .end
+
+.end initelem
+
+.igroup instanceof JSOP_INSTANCEOF
+
+    .imacro instanceof                              # val obj
+        callbuiltin (JSBUILTIN_HasInstance)         # val fun obj
+        pick 2                                      # fun obj val
+        call 1                                      # bool
+        stop
+    .end
+
+.end instanceof
