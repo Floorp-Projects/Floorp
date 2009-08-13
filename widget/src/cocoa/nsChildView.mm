@@ -837,22 +837,6 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// This is called by nsContainerFrame on the root widget for all window types
-// except popup windows (when nsCocoaWindow::SetWindowShadowStyle is used instead).
-NS_IMETHODIMP nsChildView::SetWindowShadowStyle(PRInt32 aStyle)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsCocoaWindow *widget = GetXULWindowWidget();
-  if (widget) {
-    widget->SetWindowShadowStyle(aStyle);
-  }
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
 NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
