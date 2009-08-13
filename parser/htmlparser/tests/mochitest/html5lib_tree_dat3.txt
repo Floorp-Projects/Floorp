@@ -1,8 +1,8 @@
 #data
 <head></head><style></style>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
-Line: 1 Col: 20 Unexpected start tag (style) that can be in head. Moved.
+No DOCTYPE
+<style> in after-head mode
 #document
 | <html>
 |   <head>
@@ -12,8 +12,8 @@ Line: 1 Col: 20 Unexpected start tag (style) that can be in head. Moved.
 #data
 <head></head><script></script>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
-Line: 1 Col: 21 Unexpected start tag (script) that can be in head. Moved.
+No DOCTYPE
+<script> in after-head mode
 #document
 | <html>
 |   <head>
@@ -23,8 +23,8 @@ Line: 1 Col: 21 Unexpected start tag (script) that can be in head. Moved.
 #data
 <head></head><!-- --><style></style><!-- --><script></script>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
-Line: 1 Col: 28 Unexpected start tag (style) that can be in head. Moved.
+No DOCTYPE
+<style> in after-head mode
 #document
 | <html>
 |   <head>
@@ -37,7 +37,7 @@ Line: 1 Col: 28 Unexpected start tag (style) that can be in head. Moved.
 #data
 <head></head><!-- -->x<style></style><!-- --><script></script>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
+No DOCTYPE
 #document
 | <html>
 |   <head>
@@ -53,7 +53,7 @@ Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
 </pre></body></html>
 #errors
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
@@ -61,42 +61,31 @@ Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
 
 #data
 <!DOCTYPE html><html><head></head><body><pre>
-foo2</pre></body></html>
+
+foo</pre></body></html>
 #errors
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
 |     <pre>
-|       "foo2"
+|       "foo"
+
 
 #data
 <!DOCTYPE html><html><head></head><body><pre>
 
-foo3</pre></body></html>
-#errors
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <pre>
-|       "
-foo3"
-
-#data
-<!DOCTYPE html><html><head></head><body><pre>
-foo4
+foo
 </pre></body></html>
 #errors
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
 |     <pre>
-|       "foo4
+|       "foo
 "
 
 #data
@@ -104,7 +93,7 @@ foo4
 </span></body></html>
 #errors
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
@@ -119,7 +108,7 @@ foo4
 y</pre></body></html>
 #errors
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
@@ -131,9 +120,8 @@ y"
 <!DOCTYPE html><html><head></head><body><pre>x<div>
 y</pre></body></html>
 #errors
-Line: 2 Col: 7 End tag (pre) seen too early. Expected other end tag.
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
@@ -141,153 +129,4 @@ Line: 2 Col: 7 End tag (pre) seen too early. Expected other end tag.
 |       "x"
 |       <div>
 |         "
-y"
-
-#data
-<!DOCTYPE html><HTML><META><HEAD></HEAD></HTML>
-#errors
-Line: 1 Col: 33 Unexpected start tag head in existing head. Ignored.
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|     <meta>
-|   <body>
-
-#data
-<!DOCTYPE html><HTML><HEAD><head></HEAD></HTML>
-#errors
-Line: 1 Col: 33 Unexpected start tag head in existing head. Ignored.
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-
-#data
-<textarea>foo<span>bar</span><i>baz
-#errors
-Line: 1 Col: 10 Unexpected start tag (textarea). Expected DOCTYPE.
-Line: 1 Col: 35 Expected closing tag. Unexpected end of file.
-#document
-| <html>
-|   <head>
-|   <body>
-|     <textarea>
-|       "foo<span>bar</span><i>baz"
-
-#data
-<title>foo<span>bar</em><i>baz
-#errors
-Line: 1 Col: 7 Unexpected start tag (title). Expected DOCTYPE.
-Line: 1 Col: 30 Unexpected end of file. Expected end tag (title).
-#document
-| <html>
-|   <head>
-|     <title>
-|       "foo<span>bar</em><i>baz"
-|   <body>
-
-#data
-<!DOCTYPE html><textarea>
-</textarea>
-#errors
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <textarea>
-
-#data
-<!DOCTYPE html><textarea>
-foo</textarea>
-#errors
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <textarea>
-|       "foo"
-
-#data
-<!DOCTYPE html><textarea>
-
-foo</textarea>
-#errors
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <textarea>
-|       "
-foo"
-
-#data
-<!DOCTYPE html><html><head></head><body><ul><li><div><p><li></ul></body></html>
-#errors
-Line: 1 Col: 60 Missing end tag (div, li).
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <ul>
-|       <li>
-|         <div>
-|           <p>
-|       <li>
-
-#data
-<!doctype html><nobr><nobr><nobr>
-#errors
-Line: 1 Col: 27 Unexpected start tag (nobr) implies end tag (nobr).
-Line: 1 Col: 33 Unexpected start tag (nobr) implies end tag (nobr).
-Line: 1 Col: 33 Expected closing tag. Unexpected end of file.
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <nobr>
-|     <nobr>
-|     <nobr>
-
-#data
-<!doctype html><nobr><nobr></nobr><nobr>
-#errors
-Line: 1 Col: 27 Unexpected start tag (nobr) implies end tag (nobr).
-Line: 1 Col: 40 Expected closing tag. Unexpected end of file.
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <nobr>
-|     <nobr>
-|     <nobr>
-
-#data
-<!doctype html><html><body><p><table></table></body></html>
-#errors
-Not known
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <p>
-|     <table>
-
-#data
-<p><table></table>
-#errors
-Not known
-#document
-| <html>
-|   <head>
-|   <body>
-|     <p>
-|       <table>
+| y"
