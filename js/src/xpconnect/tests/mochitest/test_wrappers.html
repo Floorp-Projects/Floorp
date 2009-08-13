@@ -111,6 +111,15 @@
     is(XPCSafeJSObjectWrapper.prototype + '',
        "[object XPCSafeJSObjectWrapper]",
        "able to convert XPCSafeJSObjectWrapper.prototype to string");
+
+    try {
+        is((function(x) { return x+1; }).apply(this,
+                                               XPCSafeJSObjectWrapper([1])),
+           2);
+    } catch (e) {
+        ok(false,
+           "Unable to call apply() with a XPCSafeJSObjectWrapped array");
+    }
     </script>
 </body>
 </html>

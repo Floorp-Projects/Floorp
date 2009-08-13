@@ -53,7 +53,7 @@
 #define FLAG_RESOLVING 0x4
 
 #define HAS_FLAGS(_val, _flags) \
-  ((PRUint32(JSVAL_TO_INT(_val)) & (_flags)) != 0)
+  ((_val) != JSVAL_VOID && (PRUint32(JSVAL_TO_INT(_val)) & (_flags)) != 0)
 
 #define NATIVE_HAS_FLAG(_wn, _flag)                \
   ((_wn)->GetScriptableInfo() &&                   \

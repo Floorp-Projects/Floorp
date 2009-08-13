@@ -217,6 +217,9 @@ VPATH		+= $(srcdir)/nanojit
 INSTALLED_HEADERS += \
 		jsbuiltins.h    \
 		Assembler.h     \
+		Allocator.h     \
+		CodeAlloc.h     \
+		Containers.h    \
 		LIR.h		\
 		avmplus.h	\
 		Fragmento.h	\
@@ -229,6 +232,9 @@ INSTALLED_HEADERS += \
 CPPSRCS += \
 		jstracer.cpp \
 		Assembler.cpp  \
+		Allocator.cpp  \
+		CodeAlloc.cpp  \
+		Containers.cpp \
 		Fragmento.cpp  \
 		LIR.cpp        \
 		RegAlloc.cpp   \
@@ -257,8 +263,6 @@ INSTALLED_HEADERS += jscpucfg.h
 endif
 
 EXPORTS = $(INSTALLED_HEADERS)
-
-JS_SAFE_ARENA	= 1
 
 DASH_R		= -r
 
@@ -364,10 +368,6 @@ GARBAGE		+= jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 TARGETS		+= jscpucfg$(HOST_BIN_SUFFIX)
-endif
-
-ifdef JS_SAFE_ARENA
-DEFINES		+= -DJS_USE_SAFE_ARENA
 endif
 
 ifdef JS_THREADSAFE

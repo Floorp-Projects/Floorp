@@ -117,17 +117,9 @@ namespace nanojit
      * -------------------------------------------
      */
     class Fragment;
-    class LIns;
-    struct SideExit;
-    class RegAlloc;
-    struct Page;
     typedef avmplus::AvmCore AvmCore;
     typedef avmplus::OSDep OSDep;
     typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
-    typedef avmplus::SortedMap<SideExit*,RegAlloc*,avmplus::LIST_GCObjects> RegAllocMap;
-    typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>    InsList;
-    typedef avmplus::List<char*, avmplus::LIST_GCObjects> StringList;
-    typedef avmplus::List<Page*,avmplus::LIST_NonGCObjects>    PageList;
 
     const uint32_t MAXARGS = 8;
 
@@ -204,14 +196,14 @@ namespace nanojit
 #ifdef NJ_PROFILE
     #define counter_struct_begin()  struct {
     #define counter_struct_end()    } _stats;
-    #define counter_define(x)         int32_t x
+    #define counter_define(x)       int32_t x
     #define counter_value(x)        _stats.x
     #define counter_set(x,v)        (counter_value(x)=(v))
-    #define counter_adjust(x,i)        (counter_value(x)+=(int32_t)(i))
+    #define counter_adjust(x,i)     (counter_value(x)+=(int32_t)(i))
     #define counter_reset(x)        counter_set(x,0)
     #define counter_increment(x)    counter_adjust(x,1)
     #define counter_decrement(x)    counter_adjust(x,-1)
-    #define profile_only(x)            x
+    #define profile_only(x)         x
 #else
     #define counter_struct_begin()
     #define counter_struct_end()
@@ -229,16 +221,18 @@ namespace nanojit
 #define isU8(i)  ( int32_t(i) == uint8_t(i) )
 #define isS16(i) ( int32_t(i) == int16_t(i) )
 #define isU16(i) ( int32_t(i) == uint16_t(i) )
-#define isS24(i) ( ((int32_t(i)<<8)>>8) == (i) )
+#define isS24(i) ( (int32_t((i)<<8)>>8) == (i) )
+
+static inline bool isS32(intptr_t i) {
+    return int32_t(i) == i;
+}
+
+static inline bool isU32(uintptr_t i) {
+    return uint32_t(i) == i;
+}
 
 #define alignTo(x,s)        ((((uintptr_t)(x)))&~(((uintptr_t)s)-1))
 #define alignUp(x,s)        ((((uintptr_t)(x))+(((uintptr_t)s)-1))&~(((uintptr_t)s)-1))
-
-#define pageTop(x)          ( alignTo(x,NJ_PAGE_SIZE) )
-#define pageDataStart(x)    ( alignTo(x,NJ_PAGE_SIZE) + sizeof(PageHeader) )
-#define pageBottom(x)       ( alignTo(x,NJ_PAGE_SIZE) + NJ_PAGE_SIZE - 1 )
-#define samepage(x,y)       ( pageTop(x) == pageTop(y) )
-
 
 // -------------------------------------------------------------------
 // START debug-logging definitions
@@ -268,6 +262,7 @@ namespace nanojit {
            and below, so that callers can use bits 16 and above for
            themselves. */
         // TODO: add entries for the writer pipeline
+        LC_Activation  = 1<<7, // enable printActivationState
         LC_Liveness    = 1<<6, // (show LIR liveness analysis)
         LC_ReadLIR     = 1<<5, // As read from LirBuffer
         LC_AfterSF_SP  = 1<<4, // After StackFilter(sp)
@@ -295,8 +290,10 @@ namespace nanojit {
 // -------------------------------------------------------------------
 
 
-
+#include "Allocator.h"
+#include "Containers.h"
 #include "Native.h"
+#include "CodeAlloc.h"
 #include "LIR.h"
 #include "RegAlloc.h"
 #include "Fragmento.h"

@@ -37,59 +37,56 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#ifndef __nanojit_RegAlloc__
-#define __nanojit_RegAlloc__
-
+#include "nanojit.h"
 
 namespace nanojit
 {
-    inline RegisterMask rmask(Register r)
+    Allocator::Allocator()
+        : current_chunk(NULL)
+        , current_top(NULL)
+        , current_limit(NULL)
+    { }
+
+    Allocator::~Allocator()
     {
-        return 1 << r;
+        reset();
     }
 
-    class RegAlloc
+    void Allocator::reset()
     {
-        public:
-            RegAlloc() { clear(); }
-            void    clear();
-            bool    isFree(Register r);
-            void    addFree(Register r);
-            void    addActive(Register r, LIns* ins);
-            void    useActive(Register r);
-            void    removeActive(Register r);
-            void    retire(Register r);
-            bool    isValid() {
-                return (free|used) != 0;
-            }
+        Chunk *c = current_chunk;
+        while (c) {
+            Chunk *prev = c->prev;
+            this->freeChunk(c);
+            c = prev;
+        }
+        current_chunk = NULL;
+        current_top = NULL;
+        current_limit = NULL;
+        postReset();
+    }
 
-            int32_t getPriority(Register r) {
-                NanoAssert(r != UnknownReg && active[r]);
-                return usepri[r];
-            }
+    void* Allocator::allocSlow(size_t nbytes)
+    {
+        NanoAssert((nbytes & 7) == 0);
+        fill(nbytes);
+        NanoAssert(current_top + nbytes <= current_limit);
+        void* p = current_top;
+        current_top += nbytes;
+        return p;
+    }
 
-            LIns* getActive(Register r) {
-                NanoAssert(r != UnknownReg);
-                return active[r];
-            }
-
-            debug_only( uint32_t    countFree(); )
-            debug_only( uint32_t    countActive(); )
-            debug_only( void        checkCount(); )
-            debug_only( bool        isConsistent(Register r, LIns* v); )
-            debug_only( uint32_t    count; )
-            debug_only( RegisterMask managed; )    // bitfield of 0..NJ_MAX_REGISTERS denoting which are under our management
-
-            LIns*    active[LastReg + 1];  // active[r] = OP that defines r
-            int32_t usepri[LastReg + 1]; // used priority. lower = more likely to spill.
-            RegisterMask    free;
-            RegisterMask    used;
-            int32_t         priority;
-
-            verbose_only( static void formatRegisters(RegAlloc& regs, char* s, Fragment*); )
-
-            DECLARE_PLATFORM_REGALLOC()
-    };
+    void Allocator::fill(size_t nbytes)
+    {
+        const size_t minChunk = 2000;
+        if (nbytes < minChunk)
+            nbytes = minChunk;
+        size_t chunkbytes = sizeof(Chunk) + nbytes - sizeof(int64_t);
+        void* mem = allocChunk(chunkbytes);
+        Chunk* chunk = (Chunk*) mem;
+        chunk->prev = current_chunk;
+        current_chunk = chunk;
+        current_top = (char*)chunk->data;
+        current_limit = (char*)mem + chunkbytes;
+    }
 }
-#endif // __nanojit_RegAlloc__
