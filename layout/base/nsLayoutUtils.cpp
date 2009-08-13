@@ -3036,31 +3036,34 @@ nsLayoutUtils::HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
 }
 
 /* static */ nsTransparencyMode
-nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
-  if (aFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)
+nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
+                                    nsIFrame* aCSSRootFrame) {
+  if (aCSSRootFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)
     return eTransparencyTransparent;
 
-  if (HasNonZeroCorner(aFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
+  if (HasNonZeroCorner(aCSSRootFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
   nsTransparencyMode transparency;
-  if (aFrame->IsThemed(&transparency))
+  if (aCSSRootFrame->IsThemed(&transparency))
     return transparency;
 
-  if (aFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
+  if (aCSSRootFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;
 
   // We need an uninitialized window to be treated as opaque because
   // doing otherwise breaks window display effects on some platforms,
   // specifically Vista. (bug 450322)
-  if (aFrame->GetType() == nsGkAtoms::viewportFrame &&
-      !aFrame->GetFirstChild(nsnull)) {
+  if (aBackgroundFrame->GetType() == nsGkAtoms::viewportFrame &&
+      !aBackgroundFrame->GetFirstChild(nsnull)) {
     return eTransparencyOpaque;
   }
 
   const nsStyleBackground* bg;
-  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
+  if (!nsCSSRendering::FindBackground(aBackgroundFrame->PresContext(),
+                                      aBackgroundFrame, &bg)) {
     return eTransparencyTransparent;
+  }
   if (NS_GET_A(bg->mBackgroundColor) < 255 ||
       // bottom layer's clip is used for the color
       bg->BottomLayer().mClip != NS_STYLE_BG_CLIP_BORDER)

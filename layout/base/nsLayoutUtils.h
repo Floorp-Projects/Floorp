@@ -961,10 +961,16 @@ public:
 
   /**
    * Determine if a widget is likely to require transparency or translucency.
-   *   @param aFrame the frame of a <window>, <popup> or <menupopup> element.
+   *   @param aBackgroundFrame The frame that the background is set on. For
+   *                           <window>s, this will be the canvas frame.
+   *   @param aCSSRootFrame    The frame that holds CSS properties affecting
+   *                           the widget's transparency. For menupopups,
+   *                           aBackgroundFrame and aCSSRootFrame will be the
+   *                           same.
    *   @return a value suitable for passing to SetWindowTranslucency
    */
-  static nsTransparencyMode GetFrameTransparency(nsIFrame* aFrame);
+  static nsTransparencyMode GetFrameTransparency(nsIFrame* aBackgroundFrame,
+                                                 nsIFrame* aCSSRootFrame);
 
   /**
    * Get textrun construction flags determined by a given style; in particular
