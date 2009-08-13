@@ -539,14 +539,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
   if (!rootFrame)
     return;
 
-  nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(aFrame);
-  // The issue here is that the CSS 'background' propagates from the root
-  // element's frame (rootFrame) to the real root frame (nsViewportFrame),
-  // so we need to call GetFrameTransparency on that. But -moz-appearance
-  // does not propagate so we need to check that directly on rootFrame.
-  if (NS_THEME_WIN_GLASS == rootFrame->GetStyleDisplay()->mAppearance) {
-    mode = eTransparencyGlass;
-  }
+  nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(aFrame, rootFrame);
   nsIWidget* viewWidget = aView->GetWidget();
   viewWidget->SetTransparencyMode(mode);
   windowWidget->SetWindowShadowStyle(rootFrame->GetStyleUIReset()->mWindowShadow);
