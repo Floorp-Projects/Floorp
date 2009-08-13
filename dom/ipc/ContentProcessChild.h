@@ -1,4 +1,5 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8; -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: sw=4 ts=4 et : */
 
 #ifndef mozilla_dom_ContentProcessChild_h
 #define mozilla_dom_ContentProcessChild_h
@@ -9,19 +10,26 @@ namespace mozilla {
 namespace dom {
 
 class ContentProcessChild
-  : public ContentProcessProtocolChild
+    : public ContentProcessProtocolChild
 {
 public:
-  ContentProcessChild();
-  virtual ~ContentProcessChild();
+    ContentProcessChild();
+    virtual ~ContentProcessChild();
 
-  bool Init(MessageLoop* aIOLoop, IPC::Channel* aChannel);
+    bool Init(MessageLoop* aIOLoop, IPC::Channel* aChannel);
 
-  virtual IFrameEmbeddingProtocolChild* IFrameEmbeddingConstructor(const MagicWindowHandle& hwnd);
-  virtual nsresult IFrameEmbeddingDestructor(IFrameEmbeddingProtocolChild*);
+    static ContentProcessChild* GetSingleton() {
+        NS_ASSERTION(sSingleton, "not initialized");
+        return sSingleton;
+    }
+
+    virtual IFrameEmbeddingProtocolChild* IFrameEmbeddingConstructor(const MagicWindowHandle& hwnd);
+    virtual nsresult IFrameEmbeddingDestructor(IFrameEmbeddingProtocolChild*);
 
 private:
-  DISALLOW_EVIL_CONSTRUCTORS(ContentProcessChild);
+    static ContentProcessChild* sSingleton;
+
+    DISALLOW_EVIL_CONSTRUCTORS(ContentProcessChild);
 };
 
 } // namespace dom
