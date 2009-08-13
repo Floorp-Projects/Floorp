@@ -808,6 +808,8 @@ public:
   // we have not yet created the relevant frame.
   PRPackedBool              mHavePendingPopupgroup;
 
+  nsCOMArray<nsIContent>    mGeneratedTextNodesWithInitializer;
+
   // Constructor
   // Use the passed-in history state.
   nsFrameConstructorState(nsIPresShell*          aPresShell,
@@ -983,6 +985,10 @@ nsFrameConstructorState::~nsFrameConstructorState()
 #ifdef MOZ_XUL
   ProcessFrameInsertions(mPopupItems, nsGkAtoms::popupList);
 #endif
+  for (PRInt32 i = mGeneratedTextNodesWithInitializer.Count() - 1; i >= 0; --i) {
+    mGeneratedTextNodesWithInitializer[i]->
+      DeleteProperty(nsGkAtoms::genConInitializerProperty);
+  }
 }
 
 static nsIFrame*
@@ -1643,7 +1649,8 @@ DestroyGenConInitializer(void*    aFrame,
 }
 
 already_AddRefed<nsIContent>
-nsCSSFrameConstructor::CreateGenConTextNode(const nsString& aString,
+nsCSSFrameConstructor::CreateGenConTextNode(nsFrameConstructorState& aState,
+                                            const nsString& aString,
                                             nsCOMPtr<nsIDOMCharacterData>* aText,
                                             nsGenConInitializer* aInitializer)
 {
@@ -1662,12 +1669,14 @@ nsCSSFrameConstructor::CreateGenConTextNode(const nsString& aString,
   if (aInitializer) {
     content->SetProperty(nsGkAtoms::genConInitializerProperty, aInitializer,
                          DestroyGenConInitializer);
+    aState.mGeneratedTextNodesWithInitializer.AppendObject(content);
   }
   return content.forget();
 }
 
 already_AddRefed<nsIContent>
-nsCSSFrameConstructor::CreateGeneratedContent(nsIContent*     aParentContent,
+nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
+                                              nsIContent*     aParentContent,
                                               nsStyleContext* aStyleContext,
                                               PRUint32        aContentIndex)
 {
@@ -1698,8 +1707,9 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsIContent*     aParentContent,
 
   switch (type) {
   case eStyleContentType_String:
-    return CreateGenConTextNode(nsDependentString(data.mContent.mString), nsnull,
-                                nsnull);
+    return CreateGenConTextNode(aState,
+                                nsDependentString(data.mContent.mString),
+                                nsnull, nsnull);
 
   case eStyleContentType_Attr:
     {
@@ -1749,7 +1759,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsIContent*     aParentContent,
       nsGenConInitializer* initializer =
         new nsGenConInitializer(node, counterList,
                                 &nsCSSFrameConstructor::CountersDirty);
-      return CreateGenConTextNode(EmptyString(), &node->mText, initializer);
+      return CreateGenConTextNode(aState, EmptyString(), &node->mText,
+                                  initializer);
     }
 
   case eStyleContentType_Image:
@@ -1769,7 +1780,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsIContent*     aParentContent,
       nsGenConInitializer* initializer =
         new nsGenConInitializer(node, &mQuoteList,
                                 &nsCSSFrameConstructor::QuotesDirty);
-      return CreateGenConTextNode(EmptyString(), &node->mText, initializer);
+      return CreateGenConTextNode(aState, EmptyString(), &node->mText,
+                                  initializer);
     }
   
   case eStyleContentType_AltContent:
@@ -1798,7 +1810,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsIContent*     aParentContent,
         nsXPIDLString temp;
         nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                            "Submit", temp);
-        return CreateGenConTextNode(temp, nsnull, nsnull);
+        return CreateGenConTextNode(aState, temp, nsnull, nsnull);
       }
 
       break;
@@ -1866,7 +1878,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   PRUint32 contentCount = pseudoStyleContext->GetStyleContent()->ContentCount();
   for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
     nsCOMPtr<nsIContent> content =
-      CreateGeneratedContent(aParentContent, pseudoStyleContext, contentIndex);
+      CreateGeneratedContent(aState, aParentContent, pseudoStyleContext,
+                             contentIndex);
     if (content) {
       container->AppendChildTo(content, PR_FALSE);
     }
