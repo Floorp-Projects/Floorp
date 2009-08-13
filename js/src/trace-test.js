@@ -4410,14 +4410,12 @@ function testTableSwitch2() {
     }
     assertEq(s, arr.join(""));
 }
-if (jitstats.archIsIA32) {
-    testTableSwitch2.jitstats = {
-        recorderStarted: 1,
-        sideExitIntoInterpreter: 4,
-        recorderAborted: 0,
-        traceCompleted: 3
-    };
-}
+testTableSwitch2.jitstats = {
+    recorderStarted: 1,
+    sideExitIntoInterpreter: 4,
+    recorderAborted: 0,
+    traceCompleted: 3
+};
 test(testTableSwitch2);
 
 function testGeneratorDeepBail() {
