@@ -379,6 +379,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
 
 #tabs {
   -moz-appearance: none;
+  -moz-user-focus: none;
   margin: 0;
   padding: 0;
   background-color: transparent;
