@@ -105,6 +105,7 @@ class nsHashKey;
 #define NS_SIMPLE_GESTURE_EVENT           37
 #define NS_SELECTION_EVENT                38
 #define NS_CONTENT_COMMAND_EVENT          39
+#define NS_GESTURENOTIFY_EVENT            40
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -428,6 +429,9 @@ class nsHashKey;
 #define NS_CONTENT_COMMAND_DELETE       (NS_CONTENT_COMMAND_EVENT_START+3)
 #define NS_CONTENT_COMMAND_UNDO         (NS_CONTENT_COMMAND_EVENT_START+4)
 #define NS_CONTENT_COMMAND_REDO         (NS_CONTENT_COMMAND_EVENT_START+5)
+
+// Event to gesture notification
+#define NS_GESTURENOTIFY_EVENT_START 3900
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -1072,6 +1076,38 @@ public:
   PRInt32               scrollFlags;
   PRInt32               delta;
   PRInt32               scrollOverflow;
+};
+
+/*
+ * Gesture Notify Event:
+ *
+ * This event is the first event generated when the user touches
+ * the screen with a finger, and it's meant to decide what kind
+ * of action we'll use for that touch interaction.
+ *
+ * The event is dispatched to the layout and based on what is underneath
+ * the initial contact point it's then decided if we should pan
+ * (finger scrolling) or drag the target element.
+ */
+class nsGestureNotifyEvent : public nsGUIEvent
+{
+public:
+  enum ePanDirection {
+    ePanNone,
+    ePanVertical,
+    ePanHorizontal,
+    ePanBoth
+  };
+  
+  ePanDirection panDirection;
+  PRPackedBool  displayPanFeedback;
+  
+  nsGestureNotifyEvent(PRBool aIsTrusted, PRUint32 aMsg, nsIWidget *aWidget):
+    nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_GESTURENOTIFY_EVENT),
+    panDirection(ePanNone),
+    displayPanFeedback(PR_FALSE)
+  {
+  }
 };
 
 class nsQueryContentEvent : public nsGUIEvent
