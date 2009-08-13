@@ -555,7 +555,9 @@ DOMWorkerOperationCallback(JSContext* aCx)
     nsAutoMonitor mon(worker->Pool()->Monitor());
 
     // There's a small chance that the worker was canceled after our check
-    // above in which case we shouldn't wait here.
+    // above in which case we shouldn't wait here. We're guaranteed not to race
+    // here because the pool reenters its monitor after canceling each worker
+    // in order to notify its condition variable.
     if (!worker->IsCanceled()) {
       mon.Wait();
     }
