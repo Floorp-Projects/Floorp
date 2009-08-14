@@ -9,47 +9,87 @@
 == inline-table-horizontal-1.html inline-table-horizontal-1-ref.html
 != inline-table-horizontal-1.html inline-table-horizontal-1-noref.html
 == block-sibling-1a.html block-sibling-1-ref.html
+== block-sibling-1a.html block-sibling-1-ref2.html
 == block-sibling-1b.html block-sibling-1-ref.html
+== block-sibling-1b.html block-sibling-1-ref2.html
 == block-sibling-1c.html block-sibling-1-ref.html
+== block-sibling-1c.html block-sibling-1-ref2.html
 == block-sibling-2.html block-sibling-2-ref.html
+== block-sibling-2.html block-sibling-2-ref2.html
 == block-negative-1a.html block-negative-1-ref.html
 == block-negative-1b.html block-negative-1-ref.html
 == block-negative-2a.html block-negative-2-ref.html
 == block-negative-2b.html block-negative-2-ref.html
 == block-negative-3a.html block-negative-3-ref.html
+== block-negative-3a.html block-negative-3-ref2.html
 == block-negative-3b.html block-negative-3-ref.html
+== block-negative-3b.html block-negative-3-ref2.html
 == block-negative-4a.html block-negative-4-ref.html
+== block-negative-4a.html block-negative-4-ref2.html
 == block-negative-4b.html block-negative-4-ref.html
+== block-negative-4b.html block-negative-4-ref2.html
 == block-negative-5.html block-negative-5-ref.html
+== block-negative-5.html block-negative-5-ref2.html
 == block-non-sibling-1a.html block-non-sibling-1-ref.html
+== block-non-sibling-1a.html block-non-sibling-1-ref2.html
 == block-non-sibling-1b.html block-non-sibling-1-ref.html
+== block-non-sibling-1b.html block-non-sibling-1-ref2.html
 == block-non-sibling-1c.html block-non-sibling-1-ref.html
+== block-non-sibling-1c.html block-non-sibling-1-ref2.html
 == block-non-sibling-1d.html block-non-sibling-1-ref.html
+== block-non-sibling-1d.html block-non-sibling-1-ref2.html
 == block-non-sibling-1e.html block-non-sibling-1-ref.html
+== block-non-sibling-1e.html block-non-sibling-1-ref2.html
 == block-non-sibling-1f.html block-non-sibling-1-ref.html
+== block-non-sibling-1f.html block-non-sibling-1-ref2.html
 == block-non-sibling-2a.html block-non-sibling-2-ref.html
+== block-non-sibling-2a.html block-non-sibling-2-ref2.html
 == block-non-sibling-2b.html block-non-sibling-2-ref.html
+== block-non-sibling-2b.html block-non-sibling-2-ref2.html
 == block-non-sibling-2c.html block-non-sibling-2-ref.html
+== block-non-sibling-2c.html block-non-sibling-2-ref2.html
 == block-non-sibling-2d.html block-non-sibling-2-ref.html
+== block-non-sibling-2d.html block-non-sibling-2-ref2.html
 == block-non-sibling-2e.html block-non-sibling-2-ref.html
+== block-non-sibling-2e.html block-non-sibling-2-ref2.html
 == block-non-sibling-2f.html block-non-sibling-2-ref.html
+== block-non-sibling-2f.html block-non-sibling-2-ref2.html
 == block-non-sibling-3a.html block-non-sibling-3-ref.html
+== block-non-sibling-3a.html block-non-sibling-3-ref2.html
 == block-non-sibling-3b.html block-non-sibling-3-ref.html
+== block-non-sibling-3b.html block-non-sibling-3-ref2.html
 == block-non-sibling-3c.html block-non-sibling-3-ref.html
+== block-non-sibling-3c.html block-non-sibling-3-ref2.html
 == block-non-sibling-3d.html block-non-sibling-3-ref.html
+== block-non-sibling-3d.html block-non-sibling-3-ref2.html
 == block-non-sibling-4.html block-non-sibling-4-ref.html
+== block-non-sibling-4.html block-non-sibling-4-ref2.html
 == block-float-1a.html block-float-1a-ref.html
+== block-float-1a.html block-float-1a-ref2.html
+!= block-float-1a.html block-float-1a-noref.html
 == block-float-1b.html block-float-1b-ref.html
+== block-float-1b.html block-float-1b-ref2.html
+!= block-float-1b.html block-float-1b-noref.html
 == block-float-2a.html block-float-2a-ref.html
+!= block-float-2a.html block-float-2a-noref.html
 == block-float-2b.html block-float-2b-ref.html
+!= block-float-2b.html block-float-2b-noref.html
 == block-overflow-1.html block-overflow-1-ref.html
+== block-overflow-1.html block-overflow-1-ref2.html
 == block-overflow-2.html block-overflow-2-ref.html
+== block-overflow-2.html block-overflow-2-ref2.html
 == block-overflow-3.html block-overflow-3-ref.html
+== block-overflow-3.html block-overflow-3-ref2.html
 == block-overflow-4.html block-overflow-4-ref.html
+== block-overflow-4.html block-overflow-4-ref2.html
 == block-overflow-5a.html block-overflow-5-ref.html
+== block-overflow-5a.html block-overflow-5-ref2.html
 == block-overflow-5b.html block-overflow-5-ref.html
+== block-overflow-5b.html block-overflow-5-ref2.html
 == block-overflow-5c.html block-overflow-5c-ref.html
+== block-overflow-5c.html block-overflow-5c-ref2.html
 == block-overflow-5d.html block-overflow-5-ref.html
+== block-overflow-5d.html block-overflow-5-ref2.html
 fails == table-sibling-1a.html table-sibling-1-ref.html # Bug 372303
 fails == table-sibling-1b.html table-sibling-1-ref.html # Bug 372303
 fails == table-sibling-1c.html table-sibling-1-ref.html # Bug 372303
@@ -80,6 +120,7 @@ fails == caption-sibling-1c.html caption-sibling-1-ref.html # Bug 144517
 == fieldset-child-1.html fieldset-child-1-ref.html
 == block-abs-pos-1.html block-abs-pos-1-ref.html
 == block-abs-pos-2.html block-abs-pos-2-ref.html
+== block-abs-pos-2.html block-abs-pos-2-ref2.html
 == inline-block-sibling-1a.html inline-block-sibling-1-ref.html
 == inline-block-sibling-1b.html inline-block-sibling-1-ref.html
 == inline-block-sibling-1c.html inline-block-sibling-1-ref.html
@@ -121,6 +162,35 @@ fails == block-clear-1b.html block-clear-1b-ref.html # Bug 451791
 == block-clear-4d.html block-clear-4-ref-right.html
 == block-clear-4e.html block-clear-4-ref-right.html
 == block-clear-4f.html block-clear-4-ref-right.html
+== block-clear-5a.html block-clear-5-left-ref.html
+== block-clear-5b.html block-clear-5-left-ref.html
+== block-clear-5c.html block-clear-5-left-ref.html
+== block-clear-5d.html block-clear-5-left-ref.html
+== block-clear-5e.html block-clear-5-right-ref.html
+== block-clear-5f.html block-clear-5-right-ref.html
+== block-clear-5g.html block-clear-5-right-ref.html
+== block-clear-5h.html block-clear-5-right-ref.html
+fails == block-clear-6a-left.html block-clear-6abc-left-ref.html # Bug 493380
+== block-clear-6b-left.html block-clear-6abc-left-ref.html
+== block-clear-6c-left.html block-clear-6abc-left-ref.html
+fails == block-clear-6d-left.html block-clear-6def-left-ref1.html # Bug 493380
+fails == block-clear-6d-left.html block-clear-6def-left-ref2.html # Bug 493380
+== block-clear-6e-left.html block-clear-6def-left-ref1.html
+== block-clear-6e-left.html block-clear-6def-left-ref2.html
+== block-clear-6f-left.html block-clear-6def-left-ref1.html
+== block-clear-6f-left.html block-clear-6def-left-ref2.html
+fails == block-clear-7a-left.html block-clear-7abcd-left-ref.html # Bug 493380
+fails == block-clear-7b-left.html block-clear-7abcd-left-ref.html # Bug 493380
+fails == block-clear-7c-left.html block-clear-7abcd-left-ref.html # Bug 493380
+== block-clear-7d-left.html block-clear-7abcd-left-ref.html
+fails == block-clear-7e-left.html block-clear-7efgh-left-ref1.html # Bug 493380
+fails == block-clear-7e-left.html block-clear-7efgh-left-ref2.html # Bug 493380
+fails == block-clear-7f-left.html block-clear-7efgh-left-ref1.html # Bug 493380
+fails == block-clear-7f-left.html block-clear-7efgh-left-ref2.html # Bug 493380
+fails == block-clear-7g-left.html block-clear-7efgh-left-ref1.html # Bug 493380
+fails == block-clear-7g-left.html block-clear-7efgh-left-ref2.html # Bug 493380
+== block-clear-7h-left.html block-clear-7efgh-left-ref1.html
+== block-clear-7h-left.html block-clear-7efgh-left-ref2.html
 == block-root-1a.html block-root-1a-ref.html
 == block-root-1a.html block-root-1a-ref2.html
 != block-root-1a.html block-root-1a-noref1.html
@@ -130,5 +200,47 @@ fails == block-clear-1b.html block-clear-1b-ref.html # Bug 451791
 == block-html-body-1.html block-html-body-1-ref.html
 == block-html-body-1.html block-html-body-1-ref2.html
 != block-html-body-1.html block-html-body-1-noref.html
-# missing tests of min-height, max-height, etc.
+== block-last-child-1a.html block-last-child-1-ref.html
+== block-last-child-1b.html block-last-child-1-ref.html
+== block-last-child-1c.html block-last-child-1-ref.html
+== block-last-child-2a.html block-last-child-2-ref.html
+== block-last-child-2b.html block-last-child-2-ref.html
+== block-last-child-2c.html block-last-child-2-ref.html
+== block-last-child-2d.html block-last-child-2-ref.html
+== block-last-child-3a.html block-last-child-3-ref.html
+== block-last-child-3b.html block-last-child-3-ref.html
+== block-last-child-3c.html block-last-child-3-ref.html
+== block-last-child-3d.html block-last-child-3-ref.html
+== block-last-child-4a.html block-last-child-4-ref.html
+== block-last-child-4b.html block-last-child-4-ref.html
+== block-last-child-4c.html block-last-child-4-ref.html
+== block-last-child-4d.html block-last-child-4-ref.html
+== block-zero-min-height-1a.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1b.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1c.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1d.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1e.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1f.html block-zero-min-height-1-ref.html
+!= block-zero-min-height-1a.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1b.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1c.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1d.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1e.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1f.html block-zero-min-height-1-noref.html
+== block-zero-min-height-2a.html block-zero-min-height-2ab-ref.html
+== block-zero-min-height-2b.html block-zero-min-height-2ab-ref.html
+== block-zero-min-height-2c.html block-zero-min-height-2c-ref.html
+== block-zero-min-height-2d.html block-zero-min-height-2de-ref.html
+== block-zero-min-height-2e.html block-zero-min-height-2de-ref.html
+== block-zero-min-height-2f.html block-zero-min-height-2f-ref.html
+!= block-zero-min-height-2a.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2b.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2c.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2d.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2e.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2f.html block-zero-min-height-2-noref.html
+== block-zero-min-height-3a.html block-zero-min-height-3-ref.html
+== block-zero-min-height-3b.html block-zero-min-height-3-ref.html
+== block-zero-min-height-3c.html block-zero-min-height-3-ref.html
+== block-zero-min-height-3d.html block-zero-min-height-3-ref.html
 == block-percent-1.html block-percent-1-ref.html
