@@ -265,8 +265,6 @@ bin/components/libmozgnome.so
 ; [Browser Chrome Files]
 bin/chrome/browser.jar
 bin/chrome/browser.manifest
-bin/chrome/classic.jar
-bin/chrome/classic.manifest
 bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
 bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
@@ -277,8 +275,6 @@ bin/chrome/toolkit.manifest
 bin/chrome/icons/default/default16.png
 bin/chrome/icons/default/default32.png
 bin/chrome/icons/default/default48.png
-bin/chrome/reporter.manifest
-bin/chrome/reporter.jar
 bin/@PREF_DIR@/reporter.js
 
 ; shell icons
