@@ -6184,8 +6184,8 @@ js_DumpStackFrame(JSStackFrame *fp)
             fprintf(stderr, " iterator");
         if (fp->flags & JSFRAME_GENERATOR)
             fprintf(stderr, " generator");
-        if ((fp->flags >> JSFRAME_OVERRIDE_SHIFT) & JS_BITMASK(JSFRAME_OVERRIDE_BITS))
-            fprintf(stderr, " override_bits(0x%x)", (fp->flags >> JSFRAME_OVERRIDE_SHIFT) & JS_BITMASK(JSFRAME_OVERRIDE_BITS));
+        if (fp->flags & JSFRAME_OVERRIDE_ARGS)
+            fprintf(stderr, " overridden_args");
         fputc('\n', stderr);
 
         if (fp->scopeChain)

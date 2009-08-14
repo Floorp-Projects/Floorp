@@ -71,7 +71,8 @@ struct JSStackFrame {
     jsbytecode      *imacpc;        /* null or interpreter macro call pc */
     jsval           *slots;         /* variables, locals and operand stack */
     JSObject        *callobj;       /* lazily created Call object */
-    jsval           argsobj;        /* lazily created arguments object, must be JSVAL_OBJECT */
+    jsval           argsobj;        /* lazily created arguments object, must be
+                                       JSVAL_OBJECT */
     JSObject        *varobj;        /* variables object, where vars go */
     JSObject        *callee;        /* function or script object */
     JSScript        *script;        /* script being interpreted */
@@ -132,21 +133,17 @@ struct JSStackFrame {
 
     inline void assertValidStackDepth(uintN depth);
 
-    JSBool putActivationObjects(JSContext *cx) {
+    void putActivationObjects(JSContext *cx) {
         /*
          * The order of calls here is important as js_PutCallObject needs to
          * access argsobj.
          */
-        JSBool ok;
         if (callobj) {
-            ok = js_PutCallObject(cx, this);
+            js_PutCallObject(cx, this);
             JS_ASSERT(!argsobj);
         } else if (argsobj) {
-            ok = js_PutArgsObject(cx, this);
-        } else {
-            ok = JS_TRUE;
+            js_PutArgsObject(cx, this);
         }
-        return ok;
     }
 };
 
@@ -202,9 +199,7 @@ typedef struct JSInlineFrame {
 #define JSFRAME_YIELDING       0x40 /* js_Interpret dispatched JSOP_YIELD */
 #define JSFRAME_ITERATOR       0x80 /* trying to get an iterator for for-in */
 #define JSFRAME_GENERATOR     0x200 /* frame belongs to generator-iterator */
-
-#define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
-#define JSFRAME_OVERRIDE_BITS  8
+#define JSFRAME_OVERRIDE_ARGS 0x400 /* overridden arguments local variable */
 
 #define JSFRAME_SPECIAL       (JSFRAME_DEBUGGER | JSFRAME_EVAL)
 
