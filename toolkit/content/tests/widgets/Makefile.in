@@ -112,7 +112,6 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_videocontrols.html \
 		test_videocontrols_video_direction.html \
 		test_videocontrols_audio_direction.html \
-		test_richlist_direction.xul \
 		videocontrols_direction-1-ref.html \
 		videocontrols_direction-1a.html \
 		videocontrols_direction-1b.html \
