@@ -199,38 +199,40 @@
       <scrollbox id="tile-container-container" style="-moz-box-orient: vertical; overflow: hidden;" flex="1">
 
         <!-- Main Toolbar -->
-        <box id="toolbar-container">
-          <toolbar id="toolbar-main" class="panel-dark" flex="1">
-            <hbox id="urlbar-container" flex="1">
-              <box id="identity-box"
-                   onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
-                   onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-                <box id="urlbar-image-box">
-                  <image id="urlbar-throbber"/>
-                  <image id="urlbar-favicon" hidden="true"/>
+        <box id="toolbar-container" class="panel-dark">
+          <box id="toolbar-moveable-container">
+            <toolbar id="toolbar-main" class="panel-dark">
+              <hbox id="urlbar-container" flex="1">
+                <box id="identity-box"
+                     onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
+                     onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+                  <box id="urlbar-image-box">
+                    <image id="urlbar-throbber"/>
+                    <image id="urlbar-favicon" hidden="true"/>
+                  </box>
                 </box>
-              </box>
-              <hbox id="urlbar-editarea" flex="1">
-                <textbox id="urlbar-edit"
-                         type="autocomplete"
-                         autocompletesearch="history"
-                         autocompletepopup="popup_autocomplete"
-                         enablehistory="false"
-                         maxrows="6"
-                         completeselectedindex="true"
-                         minresultsforpopup="0"
-                         flex="1"
-                         ontextentered="BrowserUI.goToURI();"
-                         clickSelectsAll="true"/>
+                <hbox id="urlbar-editarea" flex="1">
+                  <textbox id="urlbar-edit"
+                           type="autocomplete"
+                           autocompletesearch="history"
+                           autocompletepopup="popup_autocomplete"
+                           enablehistory="false"
+                           maxrows="6"
+                           completeselectedindex="true"
+                           minresultsforpopup="0"
+                           flex="1"
+                           ontextentered="BrowserUI.goToURI();"
+                           clickSelectsAll="true"/>
+                </hbox>
+                <hbox id="urlbar-icons" mode="view">
+                  <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
+                  <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
+                  <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
+                </hbox>
               </hbox>
-              <hbox id="urlbar-icons" mode="view">
-                <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
-                <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
-                <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
-              </hbox>
-            </hbox>
-            <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
-          </toolbar>
+              <toolbarbutton id="tool-app-close" class="urlbar-button button-image" command="cmd_close"/>
+            </toolbar>
+          </box>
         </box>
 
         <notificationbox id="notifications"/>
@@ -258,7 +260,6 @@
     </hbox>
   </scrollbox>
 
-  <box id="stack-toolbar-container" hidden="true" top="0" left="0"/>
     <!-- popup for find toolbar -->
     <hbox id="findbar-container" hidden="true" top="0" left="0">
       <findbar id="findbar" flex="1"/>
