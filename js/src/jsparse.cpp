@@ -7728,7 +7728,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         ts->flags &= ~TSF_OPERAND;
         if (!matched) {
             for (index = 0; ; index++) {
-                if (index == ARRAY_INIT_LIMIT) {
+                if (index == JS_ARGS_LENGTH_MAX) {
                     js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_ARRAY_INIT_TOO_BIG);
                     return NULL;

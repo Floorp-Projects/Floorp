@@ -1103,6 +1103,8 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     JSInterpreterHook hook;
     void *hookData;
 
+    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+
     /* [vp .. vp + 2 + argc) must belong to the last JS stack arena. */
     JS_ASSERT((jsval *) cx->stackPool.current->base <= vp);
     JS_ASSERT(vp + 2 + argc <= (jsval *) cx->stackPool.current->avail);
@@ -1386,7 +1388,7 @@ out:
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
 
-    ok &= frame.putActivationObjects(cx);
+    frame.putActivationObjects(cx);
 
     *vp = frame.rval;
 

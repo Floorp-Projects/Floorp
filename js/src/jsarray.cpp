@@ -2398,7 +2398,7 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
     JS_ASSERT(length <= js_DenseArrayCapacity(obj));
 
     if (length == js_DenseArrayCapacity(obj)) {
-        if (length >= ARRAY_INIT_LIMIT) {
+        if (length > JS_ARGS_LENGTH_MAX) {
             JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
                                    JSMSG_ARRAY_INIT_TOO_BIG);
             return JS_FALSE;
