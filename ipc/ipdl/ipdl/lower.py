@@ -605,16 +605,27 @@ class GenerateProtocolActorHeader(Visitor):
                 if md.decl.type.isCtor():
                     meth.ret = objtype
                 else:
-                    meth.params.insert(0, cxx.Decl(objtype, '__a'))
+                    actordecl = cxx.Decl(objtype, '__a')
+                    meth.params.insert(0, actordecl)
                 cls.addstmt(cxx.StmtDecl(meth))
 
-            elif self.receivesMessage(md):
+            if self.receivesMessage(md) and not md.decl.type.isCtor():
                 if md.decl.type.isRpc():  pfx = 'Answer'
                 else:                     pfx = 'Recv'
-                meth = deepcopy(md._cxx.method);
-                meth.pure = True
+                meth = deepcopy(md._cxx.method)
                 meth.name = pfx + meth.name
-                cls.addstmt(cxx.StmtDecl(meth))
+                if md.decl.type.isDtor():
+                    # allow implementations to receive a notification
+                    # of "RecvDtor()" if they override this do-nothing
+                    # virtual method
+                    meth.params.insert(0, actordecl)
+                    meth.virtual = True
+                    dummyimpl = cxx.MethodDefn(meth)
+                    dummyimpl.addstmt(cxx.StmtReturn(cxx.ExprVar('NS_OK')))
+                    cls.addstmt(dummyimpl)
+                else:
+                    meth.pure = True
+                    cls.addstmt(cxx.StmtDecl(meth))
         cls.addstmt(cxx.Whitespace.NL)
 
         cls.addstmt(cxx.Label('private'))
@@ -1178,27 +1189,15 @@ class GenerateProtocolActorHeader(Visitor):
                 failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
                 block.addstmt(failif)
 
-                calldtor = cxx.ExprCall(
-                    cxx.ExprVar(md._cxx.method.name),
-                    ([ objvar ]
-                     + [ cxx.ExprVar(p.name) for p in md._cxx.params ]
-                     + [ cxx.ExprAddrOf(cxx.ExprVar(r.name)) for
-                         r in md._cxx.returns ]))
-                failif = cxx.StmtIf(cxx.ExprCall(
-                        cxx.ExprVar('NS_FAILED'), [ calldtor ]))
-                failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
-                block.addstmt(failif)
-                block.addstmt(cxx.StmtExpr(
-                        cxx.ExprCall(cxx.ExprVar('Unregister'), [ routevar ])))
-                block.addstmt(cxx.StmtExpr(
-                        cxx.ExprAssn(routevar, cxx.ExprLiteral.ZERO)))
-
-            else:
+            # call the C++ handler hook for messages other than ctors
+            if not md.decl.type.isCtor():
                 callimpl = cxx.ExprCall(
                     cxx.ExprVar(pfx + md.decl.progname), [ ])
+                if md.decl.type.isDtor():
+                    callimpl.args += [ objvar ]
                 callimpl.args += [ cxx.ExprVar(p.name) for p in md._cxx.params ]
                 callimpl.args += [ cxx.ExprAddrOf(cxx.ExprVar(r.name))
-                               for r in md._cxx.returns ]
+                                   for r in md._cxx.returns ]
                 errhandle = cxx.StmtIf(cxx.ExprCall(
                         cxx.ExprVar('NS_FAILED'), [ callimpl ]))
                 errhandle.ifb.addstmt(cxx.StmtReturn(
@@ -1224,6 +1223,21 @@ class GenerateProtocolActorHeader(Visitor):
                             cxx.ExprSelect(objvar, '->', 'mChannel'),
                             channelvar)))
                 block.addstmt(cxx.Whitespace.NL)
+            elif md.decl.type.isDtor():
+                calldtor = cxx.ExprCall(
+                    cxx.ExprVar(md._cxx.method.name),
+                    ([ objvar ]
+                     + [ cxx.ExprVar(p.name) for p in md._cxx.params ]
+                     + [ cxx.ExprAddrOf(cxx.ExprVar(r.name)) for
+                         r in md._cxx.returns ]))
+                failif = cxx.StmtIf(cxx.ExprCall(
+                        cxx.ExprVar('NS_FAILED'), [ calldtor ]))
+                failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
+                block.addstmt(failif)
+                block.addstmt(cxx.StmtExpr(
+                        cxx.ExprCall(cxx.ExprVar('Unregister'), [ routevar ])))
+                block.addstmt(cxx.StmtExpr(
+                        cxx.ExprAssn(routevar, cxx.ExprLiteral.ZERO)))
 
             if md.decl.type.hasReply():
                 if not md.decl.type.hasReply():
