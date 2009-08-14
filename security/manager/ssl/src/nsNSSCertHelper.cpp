@@ -1412,8 +1412,7 @@ ProcessCertificatePolicies(SECItem  *extData,
       // because we want to display the EV information string
       // next to the correct OID.
 
-      SECOidTag oid_tag = SECOID_FindOIDTag(&policyInfo->policyID);
-      if (oid_tag == ev_oid_tag) {
+      if (policyInfo->oid == ev_oid_tag) {
         text.Append(NS_LITERAL_STRING(":"));
         text.Append(NS_LITERAL_STRING(SEPARATOR));
         needColon = PR_FALSE;
