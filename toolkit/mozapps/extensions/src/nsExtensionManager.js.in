@@ -90,7 +90,6 @@ const FILE_CHROME_MANIFEST            = "chrome.manifest";
 
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
-const FILE_DEFAULT_THEME_JAR          = "classic.jar";
 const TOOLKIT_ID                      = "toolkit@mozilla.org"
 
 const KEY_PROFILEDIR                  = "ProfD";
@@ -7744,12 +7743,6 @@ ExtensionsDataSource.prototype = {
     var file = installLocation.getItemFile(id, fileName)
     if (file.exists())
       return gRDF.GetResource(getURLSpecFromFile(file));
-
-    if (id == stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI)) {
-      var jarFile = getFile(KEY_APPDIR, [DIR_CHROME, FILE_DEFAULT_THEME_JAR]);
-      var url = "jar:" + getURLSpecFromFile(jarFile) + "!/" + fileName;
-      return gRDF.GetResource(url);
-    }
 
     return fallbackURL ? gRDF.GetResource(fallbackURL) : null;
   },
