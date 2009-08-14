@@ -437,7 +437,7 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
                             }
                             break;
                         default:
-                            NS_ASSERTION(0, "Invalid pattern type");
+                            NS_ERROR("Invalid pattern type");
                     }
                 }                
             }

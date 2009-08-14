@@ -259,7 +259,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       break;
     
     default:
-      NS_ASSERTION(0, "Unknown file picker mode");
+      NS_ERROR("Unknown file picker mode");
       break;
   }
 

@@ -531,7 +531,7 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_GRAPHIC:
       // There isn't anything that makes sense to return here,
       // and it doesn't matter so just return nsnull.
-      NS_ASSERTION(0, "Requesting NS_NATIVE_GRAPHIC on a top-level window!");
+      NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a top-level window!");
       break;
   }
 

@@ -796,7 +796,7 @@ nsDownloadManager::InitDB()
       break;
 
     default:
-      NS_ASSERTION(0, "Unexpected value encountered for nsDownloadManager::mDBType");
+      NS_ERROR("Unexpected value encountered for nsDownloadManager::mDBType");
       break;
   }
   NS_ENSURE_SUCCESS(rv, rv);

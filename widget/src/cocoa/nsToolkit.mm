@@ -161,7 +161,7 @@ nsToolkit::RegisterForSleepWakeNotifcations()
 
   gRootPort = ::IORegisterForSystemPower(0, &notifyPortRef, ToolkitSleepWakeCallback, &mPowerNotifier);
   if (gRootPort == MACH_PORT_NULL) {
-    NS_ASSERTION(0, "IORegisterForSystemPower failed");
+    NS_ERROR("IORegisterForSystemPower failed");
     return NS_ERROR_FAILURE;
   }
 

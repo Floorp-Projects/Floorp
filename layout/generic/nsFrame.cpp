@@ -5405,7 +5405,7 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
         for (;lineFrameCount > 1;lineFrameCount --){
           result = it->GetNextSiblingOnLine(lastFrame, thisLine);
           if (NS_FAILED(result) || !lastFrame){
-            NS_ASSERTION(0,"should not be reached nsFrame\n");
+            NS_ERROR("should not be reached nsFrame\n");
             return NS_ERROR_FAILURE;
           }
         }

@@ -707,7 +707,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
       break;
     }
   default:
-    NS_ASSERTION(0, "how'd I get here");
+    NS_ERROR("how'd I get here");
   }
 
   return NPERR_NO_ERROR;

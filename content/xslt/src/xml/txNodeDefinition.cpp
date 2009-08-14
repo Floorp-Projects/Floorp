@@ -364,7 +364,7 @@ NodeDefinition::OrderInfo* NodeDefinition::getOrderInfo()
     }
   }
 
-  NS_ASSERTION(0, "unable to get childnumber");
+  NS_ERROR("unable to get childnumber");
   mOrderInfo->mOrder[lastElem] = 0;
   return mOrderInfo;
 }

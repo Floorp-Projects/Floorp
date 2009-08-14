@@ -239,7 +239,7 @@ MySecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISuppor
                     "security exception")));
             return NS_ERROR_FAILURE;
         default:
-            NS_ASSERTION(0,"bad case");
+            NS_ERROR("bad case");
             return NS_OK;
     }
 }
@@ -257,7 +257,7 @@ MySecMan::CanCreateInstance(JSContext * aJSContext, const nsCID & aCID)
                     "security exception")));
             return NS_ERROR_FAILURE;
         default:
-            NS_ASSERTION(0,"bad case");
+            NS_ERROR("bad case");
             return NS_OK;
     }
 }
@@ -275,7 +275,7 @@ MySecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
                     "security exception")));
             return NS_ERROR_FAILURE;
         default:
-            NS_ASSERTION(0,"bad case");
+            NS_ERROR("bad case");
             return NS_OK;
     }
 }
@@ -294,7 +294,7 @@ MySecMan::CanAccess(PRUint32 aAction, nsAXPCNativeCallContext *aCallContext, JSC
                     "security exception")));
             return NS_ERROR_FAILURE;
         default:
-            NS_ASSERTION(0,"bad case");
+            NS_ERROR("bad case");
             return NS_OK;
     }
 }
