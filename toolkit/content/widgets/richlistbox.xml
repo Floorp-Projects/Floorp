@@ -52,7 +52,7 @@
     <content>
       <children includes="listheader"/>
       <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
-                     flex="1" style="overflow: auto;">
+                     flex="1" style="overflow: auto;" xbl:inherits="dir,pack">
         <children/>
       </xul:scrollbox>
     </content>
@@ -113,6 +113,53 @@
             // always call this (allows a commandupdater without controller)
             document.commandDispatcher.updateCommands("richlistbox-select");
           ]]>
+        </body>
+      </method>
+
+      <!-- We override base-listbox here because those methods don't take dir
+           into account on listbox (which doesn't support dir yet) -->
+      <method name="getNextItem">
+        <parameter name="aStartItem"/>
+        <parameter name="aDelta"/>
+        <body>
+        <![CDATA[
+          var prop = this.dir == "reverse" && this._mayReverse ?
+                                                "previousSibling" :
+                                                "nextSibling";
+          while (aStartItem) {
+            aStartItem = aStartItem[prop];
+            if (aStartItem && aStartItem instanceof
+                Components.interfaces.nsIDOMXULSelectControlItemElement &&
+                (!this._userSelecting || this._canUserSelect(aStartItem))) {
+              --aDelta;
+              if (aDelta == 0)
+                return aStartItem;
+            }
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <method name="getPreviousItem">
+        <parameter name="aStartItem"/>
+        <parameter name="aDelta"/>
+        <body>
+        <![CDATA[
+          var prop = this.dir == "reverse" && this._mayReverse ?
+                                                "previousSibling" :
+                                                "nextSibling";
+          while (aStartItem) {
+            aStartItem = aStartItem[prop];
+            if (aStartItem && aStartItem instanceof
+                Components.interfaces.nsIDOMXULSelectControlItemElement &&
+                (!this._userSelecting || this._canUserSelect(aStartItem))) {
+              --aDelta;
+              if (aDelta == 0)
+                return aStartItem;
+            }
+          }
+          return null;
+        ]]>
         </body>
       </method>
 
@@ -303,9 +350,13 @@
         <getter>
           <![CDATA[
             var childNodes = [];
-            for (var child = this.firstChild; child; child = child.nextSibling) {
+            var isReverse = this.dir == "reverse" && this._mayReverse;
+            var child = isReverse ? this.lastChild : this.firstChild;
+            var prop = isReverse ? "previousSibling" : "nextSibling";
+            while (child) {
               if (child instanceof Components.interfaces.nsIDOMXULSelectControlItemElement)
                 childNodes.push(child);
+              child = child[prop];
             }
             return childNodes;
           ]]>
@@ -355,10 +406,16 @@
                 if (this.selType != "multiple" && this.selectedCount == 0)
                   this.selectedItem = currentItem;
 
-                if (this.scrollBoxObject.height)
+                if (this.scrollBoxObject.height) {
                   this.ensureElementIsVisible(currentItem);
-                else // XXX hack around a bug in ensureElementIsVisible
-                  this.ensureElementIsVisible(currentItem.previousSibling);
+                }
+                else {
+                  // XXX hack around a bug in ensureElementIsVisible as it will
+                  // scroll beyond the last element, bug 493645.
+                  var previousElement = this.dir == "reverse" ? currentItem.nextSibling :
+                                                                currentItem.previousSibling;
+                  this.ensureElementIsVisible(previousElement);
+                }
               }
               this._suppressOnSelect = suppressSelect;
               // XXX actually it's just a refresh, but at least
