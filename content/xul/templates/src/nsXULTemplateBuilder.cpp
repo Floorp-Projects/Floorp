@@ -1397,30 +1397,22 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     JSAutoRequest ar(jscontext);
 
-    nsIXPConnect *xpc = nsContentUtils::XPConnect();
-
-    JSObject* jselement = nsnull;
-
+    jsval v;
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = xpc->WrapNative(jscontext, scope, mRoot, NS_GET_IID(nsIDOMElement),
-                         getter_AddRefs(wrapper));
+    rv = nsContentUtils::WrapNative(jscontext, scope, mRoot,
+                                    &NS_GET_IID(nsIDOMElement), &v,
+                                    getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = wrapper->GetJSObject(&jselement);
-    NS_ENSURE_SUCCESS(rv, rv);
+    JSObject* jselement = JSVAL_TO_OBJECT(v);
 
     if (mDB) {
         // database
-        rv = xpc->WrapNative(jscontext, scope, mDB,
-                             NS_GET_IID(nsIRDFCompositeDataSource),
-                             getter_AddRefs(wrapper));
+        jsval jsdatabase;
+        rv = nsContentUtils::WrapNative(jscontext, scope, mDB,
+                                        &NS_GET_IID(nsIRDFCompositeDataSource),
+                                        &jsdatabase, getter_AddRefs(wrapper));
         NS_ENSURE_SUCCESS(rv, rv);
-
-        JSObject* jsobj;
-        rv = wrapper->GetJSObject(&jsobj);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        jsval jsdatabase = OBJECT_TO_JSVAL(jsobj);
 
         PRBool ok;
         ok = JS_SetProperty(jscontext, jselement, "database", &jsdatabase);
@@ -1431,18 +1423,13 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     {
         // builder
+        jsval jsbuilder;
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-        rv = xpc->WrapNative(jscontext, jselement,
-                             static_cast<nsIXULTemplateBuilder*>(this),
-                             NS_GET_IID(nsIXULTemplateBuilder),
-                             getter_AddRefs(wrapper));
+        rv = nsContentUtils::WrapNative(jscontext, jselement,
+                                        static_cast<nsIXULTemplateBuilder*>(this),
+                                        &NS_GET_IID(nsIXULTemplateBuilder),
+                                        &jsbuilder, getter_AddRefs(wrapper));
         NS_ENSURE_SUCCESS(rv, rv);
-
-        JSObject* jsobj;
-        rv = wrapper->GetJSObject(&jsobj);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        jsval jsbuilder = OBJECT_TO_JSVAL(jsobj);
 
         PRBool ok;
         ok = JS_SetProperty(jscontext, jselement, "builder", &jsbuilder);

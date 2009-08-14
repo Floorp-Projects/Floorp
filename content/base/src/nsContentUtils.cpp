@@ -166,6 +166,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsDOMDataTransfer.h"
 #include "nsHtml5Module.h"
 #include "nsPresContext.h"
+#include "nsLayoutStatics.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -5091,4 +5092,44 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
   NS_ENSURE_STATE(target);
   PRBool dummy;
   return target->DispatchEvent(event, &dummy);
+}
+
+// static
+nsresult
+nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
+                           const nsIID* aIID, jsval *vp,
+                           nsIXPConnectJSObjectHolder **aHolder,
+                           PRBool aAllowWrapping)
+{
+  if (!native) {
+    NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
+
+    *vp = JSVAL_NULL;
+
+    return NS_OK;
+  }
+
+  NS_ENSURE_TRUE(sXPConnect && sThreadJSContextStack, NS_ERROR_UNEXPECTED);
+
+  // Keep sXPConnect and sThreadJSContextStack alive.
+  nsLayoutStaticsRef layoutStaticsRef;
+
+  JSContext *topJSContext;
+  nsresult rv = sThreadJSContextStack->Peek(&topJSContext);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool push = topJSContext != cx;
+  if (push) {
+    rv = sThreadJSContextStack->Push(cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = sXPConnect->WrapNativeToJSVal(cx, scope, native, aIID, aAllowWrapping,
+                                     vp, aHolder);
+
+  if (push) {
+    sThreadJSContextStack->Pop(nsnull);
+  }
+
+  return rv;
 }

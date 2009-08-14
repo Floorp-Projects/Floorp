@@ -131,20 +131,16 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   JSContext* jscontext = (JSContext*)aContext->GetNativeContext();
   JSObject* global = sgo->GetGlobalJSObject();
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  rv = nsContentUtils::XPConnect()->WrapNative(jscontext, global,
-                                               aBoundElement,
-                                               NS_GET_IID(nsISupports),
-                                               getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
-  JSObject * object = nsnull;
-  rv = wrapper->GetJSObject(&object);
+  jsval v;
+  rv = nsContentUtils::WrapNative(jscontext, global, aBoundElement, &v,
+                                  getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // All of the above code was just obtaining the bound element's script object and its immediate
   // concrete base class.  We need to alter the object so that our concrete class is interposed
   // between the object and its base class.  We become the new base class of the object, and the
   // object's old base class becomes the new class' base class.
-  rv = aBinding->InitClass(mClassName, jscontext, global, object,
+  rv = aBinding->InitClass(mClassName, jscontext, global, JSVAL_TO_OBJECT(v),
                            aTargetClassObject);
   if (NS_FAILED(rv))
     return rv;
