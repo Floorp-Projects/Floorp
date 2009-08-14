@@ -11836,15 +11836,17 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
           OOM_EXIT);
     stack(0, call_ins);
 
-    JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
-    for (uint32 i = 0, n = uva->length; i < n; i++) {
-        jsval v;
-        LIns* upvar_ins = upvar(fun->u.i.script, uva, i, v);
-        if (!upvar_ins)
-            return JSRS_STOP;
-        box_jsval(v, upvar_ins);
-        LIns* dslots_ins = NULL;
-        stobj_set_dslot(call_ins, i, dslots_ins, upvar_ins, "fc upvar");
+    if (fun->u.i.script->upvarsOffset) {
+        JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
+        for (uint32 i = 0, n = uva->length; i < n; i++) {
+            jsval v;
+            LIns* upvar_ins = upvar(fun->u.i.script, uva, i, v);
+            if (!upvar_ins)
+                return JSRS_STOP;
+            box_jsval(v, upvar_ins);
+            LIns* dslots_ins = NULL;
+            stobj_set_dslot(call_ins, i, dslots_ins, upvar_ins, "fc upvar");
+        }
     }
 
     return JSRS_CONTINUE;
