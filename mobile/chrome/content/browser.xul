@@ -59,7 +59,7 @@
 #ifdef WINCE
         sizemode="fullscreen"
 #elifdef MOZ_PLATFORM_HILDON
-        sizemode="maximized"
+        sizemode="fullscreen"
 #else
         width="800"
         height="500"
