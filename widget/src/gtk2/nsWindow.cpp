@@ -1018,6 +1018,12 @@ nsWindow::Show(PRBool aState)
     // If someone is showing this window and it needs a resize then
     // resize the widget.
     if (aState) {
+        
+        // Sizemode can be set before the window is created.  If it is,
+        // we want to force fullscreen, if needed.
+        if (mSizeMode == nsSizeMode_Fullscreen)
+            MakeFullScreen(PR_TRUE);
+
         if (mNeedsMove) {
             LOG(("\tresizing\n"));
             NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
@@ -1280,6 +1286,10 @@ nsWindow::SetSizeMode(PRInt32 aMode)
     case nsSizeMode_Minimized:
         gtk_window_iconify(GTK_WINDOW(mShell));
         break;
+    case nsSizeMode_Fullscreen:
+        MakeFullScreen(PR_TRUE);
+        break;
+
     default:
         // nsSizeMode_Normal, really.
         if (mSizeState == nsSizeMode_Minimized)
@@ -3370,6 +3380,11 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
         event.mSizeMode = nsSizeMode_Maximized;
         mSizeState = nsSizeMode_Maximized;
     }
+    else if (aEvent->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) {
+        LOG(("\tFullscreen\n"));
+        event.mSizeMode = nsSizeMode_Fullscreen;
+        mSizeState = nsSizeMode_Fullscreen;
+    }
     else {
         LOG(("\tNormal\n"));
         event.mSizeMode = nsSizeMode_Normal;
@@ -4981,9 +4996,14 @@ nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(PRBool aFullScreen)
 {
+    LOG(("nsWindow::MakeFullScreen [%p] aFullScreen %d\n",
+         (void *)this, aFullScreen));
+
 #if GTK_CHECK_VERSION(2,2,0)
-    if (aFullScreen)
+    if (aFullScreen) {
+        mSizeMode = nsSizeMode_Fullscreen;
         gdk_window_fullscreen (mShell->window);
+    }
     else
         gdk_window_unfullscreen (mShell->window);
     return NS_OK;
