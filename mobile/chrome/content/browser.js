@@ -387,12 +387,8 @@ var Browser = {
       let spacers = document.getElementsByClassName("sidebar-spacer");
       for (let i = 0, len = spacers.length; i < len; i++) spacers[i].style.height = toolbarHeight + 'px';
 
-      let toolbarContainer = document.getElementById("toolbar-container");
-      let stackToolbarContainer = document.getElementById("stack-toolbar-container");
-      toolbarContainer.style.width = w + 'px';
-      toolbarContainer.style.height = toolbarHeight + 'px';
-      stackToolbarContainer.style.width = w + 'px';
-      stackToolbarContainer.style.height = toolbarHeight + 'px';
+      // toolbar UI
+      document.getElementById("toolbar-main").width = w;
 
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
@@ -975,58 +971,26 @@ var Browser = {
   },
 
   tryFloatToolbar: function tryFloatToolbar() {
-    let stackToolbarContainer = document.getElementById("stack-toolbar-container");
-    let toolbarMain = document.getElementById("toolbar-main");
-
-    if (toolbarMain.parentNode == stackToolbarContainer)
-      return true;
+    if (this.floatedWhileDragging)
+      return false;
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility();
-
     // XXX computeSideBarVisibility will normally return 0.0015... for ritevis
     if (leftvis > 0.002 || ritevis > 0.002) {
-      let toolbarContainer = document.getElementById("toolbar-container");
-
-      // XXX Hack to reset the value of the textbox after the appendChild below
-      // removes and adds it back into the document
-      let urlbar = document.getElementById("urlbar-edit");
-      let url = urlbar.value;
-      setTimeout(function() { urlbar.value = url; }, 0);
-
-      // if the toolbar isn't already inside of the stack toolbar then we move it there
-      dump("moving toolbar to stack\n");
-      stackToolbarContainer.appendChild(toolbarMain);
-      stackToolbarContainer.setAttribute("hidden", false);
-      return true;
+      document.getElementById("toolbar-moveable-container").top = 0;
+      this.floatedWhileDragging = true;
     }
-    return false;
   },
 
   tryUnfloatToolbar: function tryUnfloatToolbar() {
-    let toolbarContainer = document.getElementById("toolbar-container");
-    let toolbarMain = document.getElementById("toolbar-main");
-
-    if (toolbarMain.parentNode == toolbarContainer)
-      return true;
+    if (!this.floatedWhileDragging)
+      return;
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility();
-
     if (leftvis <= 0.002 && ritevis <= 0.002) {
-      let stackToolbarContainer = document.getElementById("stack-toolbar-container");
-
-      // XXX Hack to reset the value of the textbox after the appendChild below
-      // removes and adds it back into the document
-      let urlbar = document.getElementById("urlbar-edit");
-      let url = urlbar.value;
-      setTimeout(function() { urlbar.value = url; }, 0);
-
-      dump("moving toolbar to scrollbox\n");
-      document.getElementById("urlbar-edit").boxObject.setProperty("value", "hello");
-      toolbarContainer.appendChild(toolbarMain);
-      stackToolbarContainer.setAttribute("hidden", true);
-      return true;
+      document.getElementById("toolbar-moveable-container").top = "";
+      this.floatedWhileDragging = false;
     }
-    return false;
   },
 
   zoom: function zoom(aDirection) {
@@ -1268,7 +1232,6 @@ Browser.MainDragger.prototype = {
     }
 
     this.bv.pauseRendering();
-    this.floatedWhileDragging = false;
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
@@ -1279,7 +1242,6 @@ Browser.MainDragger.prototype = {
     Browser.tryUnfloatToolbar();
 
     this.bv.resumeRendering();
-    this.floatedWhileDragging = false;
 
     return (dx != 0) || (dy != 0);
   },
@@ -1323,8 +1285,7 @@ Browser.MainDragger.prototype = {
 
     this.bv.onBeforeVisibleMove(dx, dy);
 
-    if (!this.floatedWhileDragging)
-      this.floatedWhileDragging = Browser.tryFloatToolbar();
+    Browser.tryFloatToolbar();
 
     let [x0, y0] = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(dx, dy);
@@ -1348,8 +1309,7 @@ Browser.MainDragger.prototype = {
   outerDragMove: function outerDragMove(dx, dy, scroller, doReturnDX) {
     this.bv.onBeforeVisibleMove(dx, dy);
 
-    if (!this.floatedWhileDragging)
-      this.floatedWhileDragging = Browser.tryFloatToolbar();
+    Browser.tryFloatToolbar();
 
     let [x0, y0] = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(dx, dy);
