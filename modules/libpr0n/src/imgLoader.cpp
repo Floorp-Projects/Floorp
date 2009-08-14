@@ -49,6 +49,7 @@
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "nsIProgressEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsIFileURL.h"
@@ -118,6 +119,7 @@ static void PrintImageDecoders()
  * and forwards everything else to the channel's notification callbacks.
  */
 class nsProgressNotificationProxy : public nsIProgressEventSink
+                                  , public nsIChannelEventSink
                                   , public nsIInterfaceRequestor
 {
   public:
@@ -129,6 +131,7 @@ class nsProgressNotificationProxy : public nsIProgressEventSink
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROGRESSEVENTSINK
+    NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
   private:
     ~nsProgressNotificationProxy() {}
@@ -138,8 +141,9 @@ class nsProgressNotificationProxy : public nsIProgressEventSink
     nsCOMPtr<nsIRequest> mImageRequest;
 };
 
-NS_IMPL_ISUPPORTS2(nsProgressNotificationProxy,
+NS_IMPL_ISUPPORTS3(nsProgressNotificationProxy,
                      nsIProgressEventSink,
+                     nsIChannelEventSink,
                      nsIInterfaceRequestor)
 
 NS_IMETHODIMP
@@ -179,10 +183,39 @@ nsProgressNotificationProxy::OnStatus(nsIRequest* request,
 }
 
 NS_IMETHODIMP
+nsProgressNotificationProxy::OnChannelRedirect(nsIChannel *oldChannel,
+                                               nsIChannel *newChannel,
+                                               PRUint32 flags) {
+  // The 'old' channel should match the current one
+  NS_ABORT_IF_FALSE(oldChannel == mChannel,
+                    "old channel doesn't match current!");
+
+  // Save the new channel
+  mChannel = newChannel;
+
+  // Tell the original original callbacks about it too
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  nsCOMPtr<nsIChannelEventSink> target;
+  NS_QueryNotificationCallbacks(mOriginalCallbacks,
+                                loadGroup,
+                                NS_GET_IID(nsIChannelEventSink),
+                                getter_AddRefs(target));
+  if (!target)
+    return NS_OK;
+  return target->OnChannelRedirect(oldChannel, newChannel, flags);
+}
+
+NS_IMETHODIMP
 nsProgressNotificationProxy::GetInterface(const nsIID& iid,
                                           void** result) {
   if (iid.Equals(NS_GET_IID(nsIProgressEventSink))) {
     *result = static_cast<nsIProgressEventSink*>(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    *result = static_cast<nsIChannelEventSink*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }

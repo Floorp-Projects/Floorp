@@ -288,7 +288,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       }
 #endif
       else {
-        NS_ASSERTION(0, "unsupported mode"); 
+        NS_ERROR("unsupported mode"); 
       }
 #ifndef WINCE
     }

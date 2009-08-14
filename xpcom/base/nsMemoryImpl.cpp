@@ -92,7 +92,7 @@ mallocator(PRSize size, PRUint32& counter, PRUint32 max)
 {
     if (counter++ >= max) {
         counter = 0;
-        NS_ASSERTION(0, "about to fail allocation... watch out");
+        NS_ERROR("about to fail allocation... watch out");
         return nsnull;
     }
     return PR_Malloc(size);
@@ -103,7 +103,7 @@ reallocator(void* ptr, PRSize size, PRUint32& counter, PRUint32 max)
 {
     if (counter++ >= max) {
         counter = 0;
-        NS_ASSERTION(0, "about to fail reallocation... watch out");
+        NS_ERROR("about to fail reallocation... watch out");
         return nsnull;
     }
     return PR_Realloc(ptr, size);

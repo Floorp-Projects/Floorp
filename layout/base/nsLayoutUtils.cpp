@@ -648,6 +648,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
                   aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
                   aEvent->eventStructType != NS_DRAG_EVENT &&
                   aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
+                  aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
@@ -1134,12 +1135,12 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 }
 
 static void
-AccumulateItemInRegion(nsRegion* aRegion, const nsRect& aAreaRect,
+AccumulateItemInRegion(nsRegion* aRegion, const nsRect& aUpdateRect,
                        const nsRect& aItemRect, const nsRect& aExclude,
                        nsDisplayItem* aItem)
 {
   nsRect damageRect;
-  if (damageRect.IntersectRect(aAreaRect, aItemRect)) {
+  if (damageRect.IntersectRect(aUpdateRect, aItemRect)) {
     nsRegion r;
     r.Sub(damageRect, aExclude);
 #ifdef DEBUG
@@ -1156,7 +1157,7 @@ AccumulateItemInRegion(nsRegion* aRegion, const nsRect& aAreaRect,
 
 static void
 AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
-                 const nsRect& aRect, const nsRect& aClipRect, nsPoint aDelta,
+                 const nsRect& aUpdateRect, const nsRect& aClipRect, nsPoint aDelta,
                  nsRegion* aRegion)
 {
   for (nsDisplayItem* item = aList->GetBottom(); item; item = item->GetAbove()) {
@@ -1185,19 +1186,19 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
 
           // Invalidate the translation of the source area that was clipped out
           nsRegion clippedOutSource;
-          clippedOutSource.Sub(aRect, clip);
+          clippedOutSource.Sub(aUpdateRect - aDelta, clip);
           clippedOutSource.MoveBy(aDelta);
           aRegion->Or(*aRegion, clippedOutSource);
 
           // Invalidate the destination area that is clipped out
           nsRegion clippedOutDestination;
-          clippedOutDestination.Sub(aRect + aDelta, clip);
+          clippedOutDestination.Sub(aUpdateRect, clip);
           aRegion->Or(*aRegion, clippedOutDestination);
         }
-        AddItemsToRegion(aBuilder, sublist, aRect, clip, aDelta, aRegion);
+        AddItemsToRegion(aBuilder, sublist, aUpdateRect, clip, aDelta, aRegion);
       } else {
         // opacity, or a generic sublist
-        AddItemsToRegion(aBuilder, sublist, aRect, aClipRect, aDelta, aRegion);
+        AddItemsToRegion(aBuilder, sublist, aUpdateRect, aClipRect, aDelta, aRegion);
       }
     } else {
       nsRect r;
@@ -1209,7 +1210,7 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           if (item->IsVaryingRelativeToMovingFrame(aBuilder)) {
             // something like background-attachment:fixed that varies
             // its drawing when it moves
-            AccumulateItemInRegion(aRegion, aRect + aDelta, r, exclude, item);
+            AccumulateItemInRegion(aRegion, aUpdateRect, r, exclude, item);
           }
         } else {
           // not moving.
@@ -1219,11 +1220,11 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
             exclude.IntersectRect(r, r + aDelta);
           }
           // area where a non-moving element is visible must be repainted
-          AccumulateItemInRegion(aRegion, aRect + aDelta, r, exclude, item);
+          AccumulateItemInRegion(aRegion, aUpdateRect, r, exclude, item);
           // we may have bitblitted an area that was painted by a non-moving
           // element. This bitblitted data is invalid and was copied to
           // "r + aDelta".
-          AccumulateItemInRegion(aRegion, aRect + aDelta, r + aDelta,
+          AccumulateItemInRegion(aRegion, aUpdateRect, r + aDelta,
                                  exclude, item);
         }
       }
@@ -1235,7 +1236,8 @@ nsresult
 nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
                                            nsIFrame* aMovingFrame,
                                            nsPoint aDelta,
-                                           const nsRect& aCopyRect,
+                                           const nsRect& aUpdateRect,
+                                           nsRegion* aBlitRegion,
                                            nsRegion* aRepaintRegion)
 {
   NS_ASSERTION(aRootFrame != aMovingFrame,
@@ -1256,9 +1258,12 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // XXX but currently a non-moving clip item can incorrectly clip
   // moving items! See bug 428156.
   nsRect rect;
-  rect.UnionRect(aCopyRect, aCopyRect + aDelta);
+  rect.UnionRect(aUpdateRect, aUpdateRect - aDelta);
   nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
-  builder.SetMovingFrame(aMovingFrame, aDelta);
+  // Retrieve the area of the moving content that's visible. This is the
+  // only area that needs to be blitted or repainted.
+  nsRegion visibleRegionOfMovingContent;
+  builder.SetMovingFrame(aMovingFrame, aDelta, &visibleRegionOfMovingContent);
   nsDisplayList list;
 
   builder.EnterPresShell(aRootFrame, rect);
@@ -1280,8 +1285,8 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
 
   // Optimize for visibility, but frames under aMovingFrame will not be
   // considered opaque, so they don't cover non-moving frames.
-  nsRegion visibleRegion(aCopyRect);
-  visibleRegion.Or(visibleRegion, aCopyRect + aDelta);
+  nsRegion visibleRegion(aUpdateRect);
+  visibleRegion.Or(visibleRegion, aUpdateRect - aDelta);
   list.OptimizeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
@@ -1296,14 +1301,21 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // a) at their current location and b) offset by -aPt (their position in
   // the 'before' display list) (unless they're uniform and we can exclude them).
   // Also, any visible position-varying display items get added to the
-  // repaint region. All these areas are confined to aCopyRect+aDelta.
+  // repaint region. All these areas are confined to aUpdateRect.
   // We could do more work here: e.g., do another optimize-visibility pass
   // with the moving items taken into account, either on the before-list
   // or the after-list, or even both if we cloned the display lists ... but
   // it's probably not worth it.
-  AddItemsToRegion(&builder, &list, aCopyRect, rect, aDelta, aRepaintRegion);
+  AddItemsToRegion(&builder, &list, aUpdateRect, rect, aDelta, aRepaintRegion);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
+
+  // Finalize output regions. The region of moving content that's not
+  // visible --- hidden by overlaid opaque non-moving content --- need not
+  // be blitted or repainted.
+  visibleRegionOfMovingContent.And(visibleRegionOfMovingContent, aUpdateRect);
+  aRepaintRegion->And(*aRepaintRegion, visibleRegionOfMovingContent);
+  aBlitRegion->Sub(visibleRegionOfMovingContent, *aRepaintRegion);
   return NS_OK;
 }
 
@@ -3035,31 +3047,34 @@ nsLayoutUtils::HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
 }
 
 /* static */ nsTransparencyMode
-nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
-  if (aFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)
+nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
+                                    nsIFrame* aCSSRootFrame) {
+  if (aCSSRootFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)
     return eTransparencyTransparent;
 
-  if (HasNonZeroCorner(aFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
+  if (HasNonZeroCorner(aCSSRootFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
   nsTransparencyMode transparency;
-  if (aFrame->IsThemed(&transparency))
+  if (aCSSRootFrame->IsThemed(&transparency))
     return transparency;
 
-  if (aFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
+  if (aCSSRootFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;
 
   // We need an uninitialized window to be treated as opaque because
   // doing otherwise breaks window display effects on some platforms,
   // specifically Vista. (bug 450322)
-  if (aFrame->GetType() == nsGkAtoms::viewportFrame &&
-      !aFrame->GetFirstChild(nsnull)) {
+  if (aBackgroundFrame->GetType() == nsGkAtoms::viewportFrame &&
+      !aBackgroundFrame->GetFirstChild(nsnull)) {
     return eTransparencyOpaque;
   }
 
   const nsStyleBackground* bg;
-  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg))
+  if (!nsCSSRendering::FindBackground(aBackgroundFrame->PresContext(),
+                                      aBackgroundFrame, &bg)) {
     return eTransparencyTransparent;
+  }
   if (NS_GET_A(bg->mBackgroundColor) < 255 ||
       // bottom layer's clip is used for the color
       bg->BottomLayer().mClip != NS_STYLE_BG_CLIP_BORDER)

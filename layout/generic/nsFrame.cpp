@@ -1392,34 +1392,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   return rv;
 }
 
-class nsDisplaySummary : public nsDisplayItem
-{
-public:
-  nsDisplaySummary(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
-    MOZ_COUNT_CTOR(nsDisplaySummary);
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplaySummary() {
-    MOZ_COUNT_DTOR(nsDisplaySummary);
-  }
-#endif
-
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
-  NS_DISPLAY_DECL_NAME("Summary")
-};
-
-nsRect
-nsDisplaySummary::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
-}
-
-static void
-AddSummaryFrameToList(nsDisplayListBuilder* aBuilder,
-                      nsIFrame* aFrame, nsDisplayList* aList)
-{
-  aList->AppendNewToTop(new (aBuilder) nsDisplaySummary(aFrame));
-}
-
 nsresult
 nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                    nsIFrame*               aChild,
@@ -1501,27 +1473,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // situations where we're going to ignore a scrollframe's clipping;
       // we wouldn't want to clip the dirty area to the scrollframe's
       // bounds in that case.
-    }
-
-    // Note that aBuilder->GetRootMovingFrame() is non-null only if we're doing
-    // ComputeRepaintRegionForCopy.
-    if (aBuilder->GetRootMovingFrame() == this &&
-        !PresContext()->GetRenderedPositionVaryingContent()) {
-      // No position-varying content has been rendered in this prescontext.
-      // Therefore there is no need to descend into analyzing the moving frame's
-      // descendants looking for such content, because any bitblit will
-      // not be copying position-varying graphics. However, to keep things
-      // sane we still need display items representing the frame subtree.
-      // We need to add these summaries to every list that the child could
-      // contribute to. This avoids display list optimizations optimizing
-      // away entire lists because they appear to be empty.
-      AddSummaryFrameToList(aBuilder, aChild, aLists.BlockBorderBackgrounds());
-      AddSummaryFrameToList(aBuilder, aChild, aLists.BorderBackground());
-      AddSummaryFrameToList(aBuilder, aChild, aLists.Content());
-      AddSummaryFrameToList(aBuilder, aChild, aLists.Floats());
-      AddSummaryFrameToList(aBuilder, aChild, aLists.PositionedDescendants());      
-      AddSummaryFrameToList(aBuilder, aChild, aLists.Outlines());
-      return NS_OK;
     }
   }
 
@@ -5454,7 +5405,7 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
         for (;lineFrameCount > 1;lineFrameCount --){
           result = it->GetNextSiblingOnLine(lastFrame, thisLine);
           if (NS_FAILED(result) || !lastFrame){
-            NS_ASSERTION(0,"should not be reached nsFrame\n");
+            NS_ERROR("should not be reached nsFrame\n");
             return NS_ERROR_FAILURE;
           }
         }

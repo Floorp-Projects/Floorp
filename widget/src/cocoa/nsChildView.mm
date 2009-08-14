@@ -679,6 +679,16 @@ void nsChildView::TearDownView()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+nsCocoaWindow*
+nsChildView::GetXULWindowWidget()
+{
+  id windowDelegate = [[mView nativeWindow] delegate];
+  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
+    return [(WindowDelegate *)windowDelegate geckoWidget];
+  }
+  return nsnull;
+}
+
 // create a nsChildView
 NS_IMETHODIMP nsChildView::Create(nsIWidget *aParent,
                       const nsIntRect &aRect,
@@ -761,7 +771,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_GRAPHIC:
-      NS_ASSERTION(0, "Requesting NS_NATIVE_GRAPHIC on a Mac OS X child view!");
+      NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a Mac OS X child view!");
       retVal = nsnull;
       break;
 
@@ -817,40 +827,14 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
   BOOL isTransparent = aMode == eTransparencyTransparent;
   BOOL currentTransparency = ![[mView nativeWindow] isOpaque];
   if (isTransparent != currentTransparency) {
-    // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
-    // tell the nsCocoaWindow to set its background to transparent.
-    id windowDelegate = [[mView nativeWindow] delegate];
-    if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-      nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-      if (widget) {
-        widget->MakeBackgroundTransparent(aMode);
-        [(ChildView*)mView setTransparent:isTransparent];
-      }
+    nsCocoaWindow *widget = GetXULWindowWidget();
+    if (widget) {
+      widget->MakeBackgroundTransparent(aMode);
+      [(ChildView*)mView setTransparent:isTransparent];
     }
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// This is called by nsContainerFrame on the root widget for all window types
-// except popup windows (when nsCocoaWindow::SetWindowShadowStyle is used instead).
-NS_IMETHODIMP nsChildView::SetWindowShadowStyle(PRInt32 aStyle)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
-  // tell the nsCocoaWindow to set the shadow style.
-  id windowDelegate = [[mView nativeWindow] delegate];
-  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-    if (widget) {
-      widget->SetWindowShadowStyle(aStyle);
-    }
-  }
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
@@ -1039,9 +1023,14 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSWindow* window = [mView window];
-  if (window)
-    [window makeFirstResponder:mView];
+  // Don't so anything if we're invisible (if Show(PR_FALSE) has been
+  // called on us, or if Show(PR_TRUE) hasn't yet been called).  This
+  // resolves bug 504450.
+  if (mView && ![mView isHidden]) {
+    NSWindow* window = [mView window];
+    if (window)
+      [window makeFirstResponder:mView];
+  }
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1525,17 +1514,14 @@ NS_IMETHODIMP nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  id windowDelegate = [[mView nativeWindow] delegate];
-  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-    if (widget) {
-      nsMenuBarX* mb = widget->GetMenuBar();
-      if (mb) {
-        if (indexString.IsEmpty())
-          mb->ForceNativeMenuReload();
-        else
-          mb->ForceUpdateNativeMenuAt(indexString);
-      }
+  nsCocoaWindow *widget = GetXULWindowWidget();
+  if (widget) {
+    nsMenuBarX* mb = widget->GetMenuBar();
+    if (mb) {
+      if (indexString.IsEmpty())
+        mb->ForceNativeMenuReload();
+      else
+        mb->ForceUpdateNativeMenuAt(indexString);
     }
   }
   return NS_OK;
@@ -1711,7 +1697,8 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
   return NS_OK;
 }  
 
-void nsChildView::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+void nsChildView::Scroll(const nsIntPoint& aDelta,
+                         const nsTArray<nsIntRect>& aDestRects,
                          const nsTArray<Configuration>& aConfigurations)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1724,10 +1711,12 @@ void nsChildView::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
   if (mVisible) {
     viewWasDirty = [mView needsDisplay];
 
-    NSRect rect;
-    GeckoRectToNSRect(aSource, rect);
-    NSSize scrollVector = {aDelta.x, aDelta.y};
-    [mView scrollRect:rect by:scrollVector];
+    for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
+      NSRect rect;
+      GeckoRectToNSRect(aDestRects[i] - aDelta, rect);
+      NSSize scrollVector = {aDelta.x, aDelta.y};
+      [mView scrollRect:rect by:scrollVector];
+    }
   }
 
   // Don't force invalidation of the child if it's moving by the scroll

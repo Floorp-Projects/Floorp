@@ -2108,7 +2108,7 @@ nsP12Runnable::Run()
   nsCOMPtr<nsIFilePicker> filePicker = 
                         do_CreateInstance("@mozilla.org/filepicker;1", &rv);
   if (!filePicker) {
-    NS_ASSERTION(0, "Could not create a file picker when backing up certs.");
+    NS_ERROR("Could not create a file picker when backing up certs.");
     return rv;
   }
 
@@ -3014,7 +3014,7 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
   case -2:
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  NS_ASSERTION(0,"Bogus return value, this should never happen");
+  NS_ERROR("Bogus return value, this should never happen");
   return NS_ERROR_FAILURE;
 }
 

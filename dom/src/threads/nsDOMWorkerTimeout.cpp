@@ -307,15 +307,8 @@ nsDOMWorkerTimeout::Start()
     return NS_OK;
   }
 
-  PRInt32 type;
-  if (mIsInterval) {
-    type = nsITimer::TYPE_REPEATING_SLACK;
-  }
-  else {
-    type = nsITimer::TYPE_ONE_SHOT;
-  }
-
-  nsresult rv = mTimer->InitWithCallback(this, mInterval, type);
+  nsresult rv = mTimer->InitWithCallback(this, mInterval,
+                                         nsITimer::TYPE_ONE_SHOT);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStarted = PR_TRUE;
@@ -343,6 +336,9 @@ nsDOMWorkerTimeout::Run()
 
   if (mIsInterval) {
     mTargetTime = PR_Now() + mInterval * (PRTime)PR_USEC_PER_MSEC;
+    nsresult rv2 = mTimer->InitWithCallback(this, mInterval,
+                                            nsITimer::TYPE_ONE_SHOT);
+    NS_ENSURE_SUCCESS(rv2, rv2);
   }
 
   return rv;

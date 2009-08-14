@@ -73,7 +73,14 @@ public:
   /**
    * Retrieve the single focus manager.
    */
-  static nsIFocusManager* GetFocusManager() { return sInstance; }
+  static nsFocusManager* GetFocusManager() { return sInstance; }
+
+  /**
+   * A faster version of nsIFocusManager::GetFocusedElement, returning a
+   * raw nsIContent pointer (instead of having AddRef-ed nsIDOMElement
+   * pointer filled in to an out-parameter).
+   */
+  nsIContent* GetFocusedContent() { return mFocusedContent; }
 
   /**
    * Returns the content node that would be focused if aWindow was in an
@@ -437,7 +444,7 @@ protected:
   nsTArray<nsDelayedBlurOrFocusEvent> mDelayedBlurFocusEvents;
 
   // the single focus manager
-  static nsIFocusManager* sInstance;
+  static nsFocusManager* sInstance;
 };
 
 nsresult

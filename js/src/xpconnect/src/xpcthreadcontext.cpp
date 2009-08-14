@@ -464,7 +464,7 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
             if(PR_FAILURE ==
                PR_NewThreadPrivateIndex(&gTLSIndex, xpc_ThreadDataDtorCB))
             {
-                NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
+                NS_ERROR("PR_NewThreadPrivateIndex failed!");
                 gTLSIndex = BAD_TLS_INDEX;
                 return nsnull;
             }
@@ -477,14 +477,14 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
         data = new XPCPerThreadData();
         if(!data || !data->IsValid())
         {
-            NS_ASSERTION(0, "new XPCPerThreadData() failed!");
+            NS_ERROR("new XPCPerThreadData() failed!");
             if(data)
                 delete data;
             return nsnull;
         }
         if(PR_FAILURE == PR_SetThreadPrivate(gTLSIndex, data))
         {
-            NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
+            NS_ERROR("PR_SetThreadPrivate failed!");
             delete data;
             return nsnull;
         }

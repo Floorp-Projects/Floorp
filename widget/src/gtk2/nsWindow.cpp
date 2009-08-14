@@ -1741,7 +1741,8 @@ nsWindow::Update()
 }
 
 void
-nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+nsWindow::Scroll(const nsIntPoint& aDelta,
+                 const nsTArray<nsIntRect>& aDestRects,
                  const nsTArray<Configuration>& aConfigurations)
 {
     if (!mGdkWindow) {
@@ -1768,11 +1769,18 @@ nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
         }
     }
 
-    GdkRectangle gdkSource =
-      { aSource.x, aSource.y, aSource.width, aSource.height };
-    GdkRegion* region = gdk_region_rectangle(&gdkSource);
-    gdk_window_move_region(GDK_WINDOW(mGdkWindow), region, aDelta.x, aDelta.y);
-    gdk_region_destroy(region);
+    // gdk_window_move_region, up to GDK 2.16 at least, has a ghastly bug
+    // where it doesn't restrict blitting to the given region, and blits
+    // its full bounding box. So we have to work around that by
+    // blitting one rectangle at a time.
+    for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
+        const nsIntRect& r = aDestRects[i];
+        GdkRectangle gdkSource =
+            { r.x - aDelta.x, r.y - aDelta.y, r.width, r.height };
+        GdkRegion* region = gdk_region_rectangle(&gdkSource);
+        gdk_window_move_region(GDK_WINDOW(mGdkWindow), region, aDelta.x, aDelta.y);
+        gdk_region_destroy(region);
+    }
 
     ConfigureChildren(aConfigurations);
 

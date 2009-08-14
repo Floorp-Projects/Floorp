@@ -1038,7 +1038,6 @@ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
 				     const cairo_pattern_t *source)
 {
     CGRect clipBox = CGContextGetClipBoundingBox (surface->cgContext);
-    CGAffineTransform ctm;
     double x0, y0, w, h;
 
     cairo_surface_t *fallback;
@@ -1051,14 +1050,6 @@ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
     if (clipBox.size.width == 0.0f ||
 	clipBox.size.height == 0.0f)
 	return DO_NOTHING;
-
-    // the clipBox is in userspace, so:
-    ctm = CGContextGetCTM (surface->cgContext);
-    ctm = CGAffineTransformInvert (ctm);
-    clipBox = CGRectApplyAffineTransform (clipBox, ctm);
-
-    // get the Y flip right -- the CTM will always have a Y flip in place
-    clipBox.origin.y = surface->extents.height - (clipBox.origin.y + clipBox.size.height);
 
     x0 = floor(clipBox.origin.x);
     y0 = floor(clipBox.origin.y);
@@ -1722,8 +1713,10 @@ _cairo_quartz_surface_paint (void *abstract_surface,
 							  surface->extents.width,
 							  surface->extents.height));
     } else if (action == DO_SHADING) {
+	CGContextSaveGState (surface->cgContext);
 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
+	CGContextRestoreGState (surface->cgContext);
     } else if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
 	CGContextSaveGState (surface->cgContext);
 

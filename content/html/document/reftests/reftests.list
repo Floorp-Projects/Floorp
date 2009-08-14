@@ -2,3 +2,4 @@
 == bug448564-1_malformed.html bug448564-1_ideal.html
 
 == bug448564-4a.html          bug448564-4b.html
+== bug502168-1_malformed.html bug502168-1_well-formed.html

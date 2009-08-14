@@ -110,7 +110,7 @@ protected:
           mISupports = inRHS.mISupports.get();    // additional addref
           break;
         default:
-          NS_ASSERTION(0, "Unknown type");
+          NS_ERROR("Unknown type");
       }
     }
     
@@ -134,7 +134,7 @@ protected:
         case eISupportsType:    mISupports = nsnull;        break;    // clear the nsCOMPtr
         case eStringType:       delete mData.mCString; mData.mCString = nsnull;   break;
         default:
-          NS_ASSERTION(0, "Unknown type");
+          NS_ERROR("Unknown type");
       }
       
       mEntryType = inNewType;

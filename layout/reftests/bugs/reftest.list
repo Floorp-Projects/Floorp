@@ -690,6 +690,8 @@ fails == 386147-1.html 386147-1-ref.html # bug 447460
 == 387201-1.html 387201-1-ref.html
 == 387201-2.html about:blank  # Really an assertion test rather than a rendering test
 == 387201-3.html about:blank  # Really an assertion test rather than a rendering test
+== 387227-1.html 387227-1-ref.html
+== 387227-2.html 387227-2-ref.html
 == 387344-1.html 387344-1-ref.html
 == 387876-1.html 387876-1-ref.html
 random == 387876-2.html 387876-2-ref.html # bug 471630
