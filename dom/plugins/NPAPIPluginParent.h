@@ -259,15 +259,6 @@ private:
     // here, then wrap up the responses and send them back to the 
     // child process.
 
-    bool
-    NPN_SetProperty(NPP aInstance,
-                    NPObject* aObj,
-                    NPIdentifier aPropName,
-                    const NPVariant* aValue)
-    {
-        return mNPNIface->setproperty(aInstance, aObj, aPropName, aValue);
-    }
-
     NPIdentifier
     NPN_GetIntIdentifier(int32_t aInt)
     {
@@ -301,68 +292,6 @@ private:
     {
         return mNPNIface->intfromidentifier(aIdentifier);
     }
-
-    NPError
-    NPN_GetValue(NPP aInstance,
-                 NPNVariable aVariable,
-                 void* aValue)
-    {
-        return mNPNIface->getvalue(aInstance, aVariable, aValue);
-    }
-
-    NPError
-    NPN_SetValue(NPP aInstance,
-                 NPPVariable aVariable,
-                 void* aValue)
-    {
-        return mNPNIface->setvalue(aInstance, aVariable, aValue);
-    }
-
-    bool
-    NPN_HasProperty(NPP aInstance,
-                    NPObject* aObj,
-                    NPIdentifier aPropName)
-    {
-        return mNPNIface->hasproperty(aInstance, aObj, aPropName);
-    }
-
-    NPObject*
-    NPN_CreateObject(NPP aInstance,
-                     NPClass* aClass)
-    {
-        return mNPNIface->createobject(aInstance, aClass);
-    }
-
-    const char*
-    NPN_UserAgent(NPP aInstance)
-    {
-        return mNPNIface->uagent(aInstance);
-    }
-
-    NPObject*
-    NPN_RetainObject(NPObject* aObj)
-    {
-        return mNPNIface->retainobject(aObj);
-    }
-
-    void
-    NPN_ReleaseObject(NPObject* aObj)
-    {
-        return mNPNIface->releaseobject(aObj);
-    }
-
-    void*
-    NPN_MemAlloc(uint32_t aSize)
-    {
-        return mNPNIface->memalloc(aSize);
-    }
-
-    void
-    NPN_MemFree(void* aPtr)
-    {
-        return mNPNIface->memfree(aPtr);
-    }
-
 
     // NPRuntime bindings from Gecko->child and child->Gecko.
     static base::hash_map<int, PluginNPObject*> sNPObjects;
