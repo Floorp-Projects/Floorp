@@ -55,7 +55,7 @@
  */
 double txUnionPattern::getDefaultPriority()
 {
-    NS_ASSERTION(0, "Don't call getDefaultPriority on txUnionPattern");
+    NS_ERROR("Don't call getDefaultPriority on txUnionPattern");
     return Double::NaN;
 }
 

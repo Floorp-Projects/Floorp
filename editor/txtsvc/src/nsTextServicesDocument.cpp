@@ -1869,7 +1869,7 @@ nsTextServicesDocument::DeleteNode(nsIDOMNode *aChild)
     // next valid text node in the offset table, and if there
     // wasn't a next, it would've set mIteratorStatus to eIsDone.
 
-    NS_ASSERTION(0, "DeleteNode called for current iterator node."); 
+    NS_ERROR("DeleteNode called for current iterator node."); 
   }
 
   tcount = mOffsetTable.Length();
@@ -1932,7 +1932,7 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
 
   if (nsIDOMNode::TEXT_NODE != type)
   {
-    NS_ASSERTION(0, "JoinNode called with a non-text left node!");
+    NS_ERROR("JoinNode called with a non-text left node!");
     return NS_ERROR_FAILURE;
   }
 
@@ -1943,7 +1943,7 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
 
   if (nsIDOMNode::TEXT_NODE != type)
   {
-    NS_ASSERTION(0, "JoinNode called with a non-text right node!");
+    NS_ERROR("JoinNode called with a non-text right node!");
     return NS_ERROR_FAILURE;
   }
 
