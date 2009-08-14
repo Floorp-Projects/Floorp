@@ -1632,24 +1632,9 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-/* Personal toolbar */
+/* Bookmarks toolbar */
 .toolbar-drop-indicator {
-  width: 9px;
-  height: 18px;
-  margin-bottom: -6px;
-  position: relative;
-  background: url("chrome://browser/skin/places/toolbarDropMarker.png") 50% 50% no-repeat;
-}
-
-.toolbar-drop-indicator-bar {
-  visibility: hidden;
-  height: 18px;
-  margin-bottom: -18px;
-  position: relative;
-}
-
-.toolbar-drop-indicator-bar[dragging="true"] {
-  visibility: visible;
+  list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
 }
 
 toolbarbutton.bookmark-item[dragover="true"][open="true"] {

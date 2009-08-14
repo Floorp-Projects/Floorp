@@ -1184,7 +1184,7 @@
               /* In RTL UI, the tab is visually added to the left side of the
                * tabstrip. This means the tabstip has to be scrolled back in
                * order to make sure the same set of tabs is visible before and
-               * after the new tab is added */
+               * after the new tab is added.  See bug 508816. */
 
               this.tabContainer.mTabstrip.scrollByPixels(this.mTabs[0].clientWidth);
             }
