@@ -467,6 +467,9 @@ interface nsIXPConnect : nsISupports
      * asking for an nsISupports wrapper.
      * If aAllowWrapper, then the returned value will be wrapped in the proper
      * type of security wrapper on top of the XPCWrappedNative (if needed).
+     * This method doesn't push aJSContext on the context stack, so the caller
+     * is required to push it if the top of the context stack is not equal to
+     * aJSContext.
      */
     void
     wrapNativeToJSVal(in JSContextPtr aJSContext,
