@@ -1,18 +1,31 @@
 
+
+function start_sending_garbage()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  prefs.setCharPref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?action=respond-garbage");
+}
+
+function stop_sending_garbage()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  prefs.setCharPref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
+}
+
 function stop_geolocationProvider()
 {
-  var baseURL = "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", baseURL + "?action=stop-responding&latitude=3.14", false);
-  xhr.send(null);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  prefs.setCharPref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?action=stop-responding");
 }
 
 function resume_geolocationProvider()
 {
-  var baseURL = "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs";
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", baseURL + "?action=start-responding", false);
-  xhr.send(null);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  prefs.setCharPref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 }
 
 function check_geolocation(location) {
@@ -31,8 +44,15 @@ function check_geolocation(location) {
   ok("altitude" in coords, "Check to see if there is a altitude");
   ok("accuracy" in coords, "Check to see if there is a accuracy");
   ok("altitudeAccuracy" in coords, "Check to see if there is a alt accuracy");
-  ok("heading" in coords, "Check to see if there is a heading");
-  ok("speed" in coords, "Check to see if there is a speed");
+
+  // optional ok("heading" in coords, "Check to see if there is a heading");
+  // optional ok("speed" in coords, "Check to see if there is a speed");
+
+  ok (location.coords.latitude  == 37.41857, "lat matches known value");
+  ok (location.coords.longitude == -122.08769, "lon matches known value");
+  ok(location.coords.altitude == 42, "alt matches known value");
+  ok(location.coords.altitudeAccuracy == 42, "alt acc matches known value");
+
 }
 
 
