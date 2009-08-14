@@ -191,6 +191,10 @@ pref("accessibility.typeaheadfind.casesensitive", 0);
 // zoom key(F7) conflicts with caret browsing on maemo
 pref("accessibility.browsewithcaret_shortcut.enabled", false);
 
+// Whether or not we show a dialog box informing the user that the update was
+// successfully applied.
+pref("app.update.showInstalledUI", false);
+
 // pointer to the default engine name
 pref("browser.search.defaultenginename",      "chrome://browser/locale/region.properties");
 // SSL error page behaviour
