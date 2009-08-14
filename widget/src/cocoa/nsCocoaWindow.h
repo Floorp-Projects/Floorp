@@ -47,6 +47,7 @@
 #include "nsBaseWidget.h"
 #include "nsPIWidgetCocoa.h"
 #include "nsAutoPtr.h"
+#include "nsCocoaUtils.h"
 
 class nsCocoaWindow;
 class nsChildView;
@@ -80,7 +81,7 @@ typedef struct _nsCocoaWindowList {
   BOOL mIsContextMenu;
 }
 
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
 - (BOOL)isContextMenu;
 - (void)setIsContextMenu:(BOOL)flag;
@@ -266,7 +267,7 @@ public:
     NS_IMETHOD BeginSecureKeyboardInput();
     NS_IMETHOD EndSecureKeyboardInput();
 
-    static void UnifiedShading(void* aInfo, const float* aIn, float* aOut);
+    static void UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut);
 
 protected:
 
