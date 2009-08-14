@@ -381,4 +381,12 @@ typedef JSBool
 extern JSBool js_CStringsAreUTF8;
 #endif
 
+/*
+ * Maximum supported value of Arguments.length. It bounds the maximum number
+ * of arguments that can be supplied to the function call using
+ * Function.prototype.apply. This value also gives the maximum number of
+ * elements in the array initializer.
+ */
+#define JS_ARGS_LENGTH_MAX      (JS_BIT(24) - 1)
+
 #endif /* jsprvtd_h___ */

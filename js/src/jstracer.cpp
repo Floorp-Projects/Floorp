@@ -8560,17 +8560,14 @@ TraceRecorder::record_JSOP_RETURN()
      */
     if (cx->fp->argsobj) {
         LIns* argsobj_ins = get(&cx->fp->argsobj);
-        LIns* length_ins = INS_CONST(cx->fp->argc);
-        LIns* callee_ins = get(&cx->fp->argv[-2]);
         LIns* args_ins = cx->fp->argc ? lir->insAlloc(sizeof(jsval) * cx->fp->argc) : INS_CONSTPTR(0);
         for (uintN i = 0; i < cx->fp->argc; ++i) {
             LIns* arg_ins = get(&cx->fp->argv[i]);
             box_jsval(cx->fp->argv[i], arg_ins);
             lir->insStorei(arg_ins, args_ins, i * sizeof(jsval));
         }
-        LIns* args[] = { args_ins, callee_ins, length_ins, argsobj_ins, cx_ins };
-        LIns* call_ins = lir->insCall(&js_PutArguments_ci, args);
-        guard(false, lir->ins_eq0(call_ins), STATUS_EXIT);
+        LIns* args[] = { args_ins, argsobj_ins, cx_ins };
+        lir->insCall(&js_PutArguments_ci, args);
     }
 
     /* If we inlined this function call, make the return value available to the caller code. */
@@ -8623,10 +8620,14 @@ TraceRecorder::record_JSOP_IFNE()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_ARGUMENTS()
 {
-    LIns* a_ins = get(&cx->fp->argsobj);
     JSObject* global = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     LIns* global_ins = INS_CONSTPTR(global);
-    LIns* args[] = { a_ins, global_ins, cx_ins };
+    LIns* argc_ins = INS_CONST(cx->fp->argc);
+    LIns* callee_ins = get(&cx->fp->argv[-2]);
+    LIns* a_ins = get(&cx->fp->argsobj);
+
+    /* FIXME inline a_ins check in js_Arguments. */
+    LIns* args[] = { a_ins, callee_ins, argc_ins, global_ins, cx_ins };
     a_ins = lir->insCall(&js_Arguments_ci, args);
     guard(false, lir->ins_eq0(a_ins), OOM_EXIT);
     stack(0, a_ins);

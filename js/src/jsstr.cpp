@@ -2481,7 +2481,7 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
 
     argv = vp + 2;
-    JS_ASSERT(argc < ARRAY_INIT_LIMIT);
+    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     if (argc == 1 &&
         (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
         str = js_GetUnitStringForChar(cx, code);
