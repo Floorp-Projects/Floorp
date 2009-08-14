@@ -374,6 +374,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
 #tabs-container {
   -moz-padding-start: 0.6mm; /* allow the thumbnails to get close to the edge */
   -moz-padding-end: 1.1mm; /* core spacing */
+  padding-bottom: 1.1mm; /* core spacing */
   border-right: 3px solid #262629; /* keep pixels */
 }
 
@@ -387,7 +388,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-tags:after {
 
 #tabs-controls {
   margin-top: 1.1mm; /* core spacing */
-  -moz-box-pack: center;
+  -moz-box-pack: start;
 }
 
 richlistitem[type="documenttab"] {
