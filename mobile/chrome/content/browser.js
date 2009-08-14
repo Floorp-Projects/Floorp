@@ -1729,12 +1729,16 @@ IdentityHandler.prototype = {
 
     // Update the popup strings
     this.setPopupMessages(this._identityBox.getAttribute("mode") || this.IDENTITY_MODE_UNKNOWN);
+
+    BrowserUI.pushPopup(this, [this._identityPopup, this._identityBox]);
   },
 
   hide: function ih_hide() {
     this._identityPopup.hidden = true;
 
     this._identityBox.removeAttribute("open");
+
+    BrowserUI.popPopup();
   },
 
   /**
