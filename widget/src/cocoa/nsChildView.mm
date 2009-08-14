@@ -771,7 +771,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_GRAPHIC:
-      NS_ASSERTION(0, "Requesting NS_NATIVE_GRAPHIC on a Mac OS X child view!");
+      NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a Mac OS X child view!");
       retVal = nsnull;
       break;
 

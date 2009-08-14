@@ -395,7 +395,7 @@ HRESULT CControlSite::Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInit
 
     if (hwndParent == NULL)
     {
-        NS_ASSERTION(0, "No parent hwnd");
+        NS_ERROR("No parent hwnd");
         return E_INVALIDARG;
     }
 

@@ -11257,7 +11257,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
   if(isReflowing) {
     // don't ReframeContainingBlock, this will result in a crash
     // if we remove a tree that's in reflow - see bug 121368 for testcase
-    NS_ASSERTION(0, "Atemptted to nsCSSFrameConstructor::ReframeContainingBlock during a Reflow!!!");
+    NS_ERROR("Atemptted to nsCSSFrameConstructor::ReframeContainingBlock during a Reflow!!!");
     return NS_OK;
   }
 

@@ -203,7 +203,7 @@ nsJSID::NewID(const char* str)
 {
     if(!str)
     {
-        NS_ASSERTION(0,"no string");
+        NS_ERROR("no string");
         return nsnull;
     }
 
@@ -704,7 +704,7 @@ nsJSCID::NewID(const char* str)
 {
     if(!str)
     {
-        NS_ASSERTION(0,"no string");
+        NS_ERROR("no string");
         return nsnull;
     }
 

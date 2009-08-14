@@ -64,7 +64,7 @@ typedef long SHANDLE_PTR;
 #define ENSURE_BROWSER_IS_VALID() \
     if (!BrowserIsValid()) \
     { \
-        NS_ASSERTION(0, "Browser is not valid"); \
+        NS_ERROR("Browser is not valid"); \
         return SetErrorInfo(E_UNEXPECTED, L"Browser is not in a valid state"); \
     }
 
@@ -73,7 +73,7 @@ typedef long SHANDLE_PTR;
     nsresult rv = GetWebNavigation(getter_AddRefs(webNav)); \
     if (NS_FAILED(rv)) \
     { \
-        NS_ASSERTION(0, "Cannot get nsIWebNavigation"); \
+        NS_ERROR("Cannot get nsIWebNavigation"); \
         return SetErrorInfo(E_UNEXPECTED, L"Could not obtain nsIWebNavigation interface"); \
     }
 
@@ -236,7 +236,7 @@ public:
         // Extract the URL parameter
         if (URL == NULL)
         {
-            NS_ASSERTION(0, "No URL supplied");
+            NS_ERROR("No URL supplied");
             return SetErrorInfo(E_INVALIDARG);
         }
 
@@ -253,7 +253,7 @@ public:
             CComVariant vFlags;
             if ( vFlags.ChangeType(VT_I4, Flags) != S_OK )
             {
-                NS_ASSERTION(0, "Flags param is invalid");
+                NS_ERROR("Flags param is invalid");
                 return SetErrorInfo(E_INVALIDARG);
             }
             lFlags = vFlags.lVal;
@@ -380,7 +380,7 @@ public:
                     rv = stream->AdoptData(tmp, nSize);
                     if (NS_FAILED(rv) || !stream)
                     {
-                        NS_ASSERTION(0, "cannot create byte stream");
+                        NS_ERROR("cannot create byte stream");
                         nsMemory::Free(tmp);
                         return SetErrorInfo(E_UNEXPECTED);
                     }
@@ -416,7 +416,7 @@ public:
 
                     if (NS_FAILED(rv) || !headersStream)
                     {
-                        NS_ASSERTION(0, "cannot create byte stream");
+                        NS_ERROR("cannot create byte stream");
                         nsMemory::Free(tmp);
                     }
                 }
@@ -467,7 +467,7 @@ public:
         CComVariant vLevelAsInt;
         if ( vLevelAsInt.ChangeType(VT_I4, Level) != S_OK )
         {
-            NS_ASSERTION(0, "Cannot change refresh type to int");
+            NS_ERROR("Cannot change refresh type to int");
             return SetErrorInfo(E_UNEXPECTED);
         }
         iRefreshLevel = (OLECMDID_REFRESHFLAG) vLevelAsInt.iVal;
@@ -488,7 +488,7 @@ public:
             break;
         default:
             // No idea what refresh type this is supposed to be
-            NS_ASSERTION(0, "Unknown refresh type");
+            NS_ERROR("Unknown refresh type");
             return SetErrorInfo(E_UNEXPECTED);
         }
 

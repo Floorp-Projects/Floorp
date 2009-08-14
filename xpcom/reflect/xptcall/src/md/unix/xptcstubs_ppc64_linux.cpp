@@ -153,7 +153,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
             else if (type == nsXPTType::T_WCHAR)
                 dp->val.wc  = (wchar_t)  tempu64;
             else
-                NS_ASSERTION(0, "bad type");
+                NS_ERROR("bad type");
         }
 
         if (i >= 7)
@@ -238,7 +238,7 @@ __asm__ (                                                               \
 #define SENTINEL_ENTRY(n)                                               \
 nsresult nsXPTCStubBase::Sentinel##n()                                  \
 {                                                                       \
-    NS_ASSERTION(0,"nsXPTCStubBase::Sentinel called");                  \
+    NS_ERROR("nsXPTCStubBase::Sentinel called");                  \
     return NS_ERROR_NOT_IMPLEMENTED;                                    \
 }
 

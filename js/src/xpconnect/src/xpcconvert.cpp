@@ -481,7 +481,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                 break;
             }
         default:
-            NS_ASSERTION(0, "bad type");
+            NS_ERROR("bad type");
             return JS_FALSE;
         }
     }
@@ -620,7 +620,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
     default:
         if(!type.IsPointer())
         {
-            NS_ASSERTION(0,"unsupported type");
+            NS_ERROR("unsupported type");
             return JS_FALSE;
         }
 
@@ -628,7 +628,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         {
         case nsXPTType::T_VOID:
             XPC_LOG_ERROR(("XPCConvert::JSData2Native : void* params not supported"));
-            NS_ASSERTION(0,"void* params not supported");
+            NS_ERROR("void* params not supported");
             return JS_FALSE;
         case nsXPTType::T_IID:
         {
@@ -1017,7 +1017,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                                             nsnull, pErr);
         }
         default:
-            NS_ASSERTION(0, "bad type");
+            NS_ERROR("bad type");
             return JS_FALSE;
         }
     }
@@ -1597,7 +1597,7 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
 
         if(!obj)
         {
-            NS_ASSERTION(0, "when is an object not an object?");
+            NS_ERROR("when is an object not an object?");
             return NS_ERROR_FAILURE;
         }
 
@@ -1991,17 +1991,17 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
     case nsXPTType::T_BOOL          : POPULATE(PRBool);         break;
     case nsXPTType::T_CHAR          : POPULATE(char);           break;
     case nsXPTType::T_WCHAR         : POPULATE(jschar);         break;
-    case nsXPTType::T_VOID          : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_VOID          : NS_ERROR("bad type"); goto failure;
     case nsXPTType::T_IID           : POPULATE(nsID*);          break;
-    case nsXPTType::T_DOMSTRING     : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_DOMSTRING     : NS_ERROR("bad type"); goto failure;
     case nsXPTType::T_CHAR_STR      : POPULATE(char*);          break;
     case nsXPTType::T_WCHAR_STR     : POPULATE(jschar*);        break;
     case nsXPTType::T_INTERFACE     : POPULATE(nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(nsISupports*);   break;
-    case nsXPTType::T_UTF8STRING    : NS_ASSERTION(0,"bad type"); goto failure;
-    case nsXPTType::T_CSTRING       : NS_ASSERTION(0,"bad type"); goto failure;
-    case nsXPTType::T_ASTRING       : NS_ASSERTION(0,"bad type"); goto failure;
-    default                         : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_UTF8STRING    : NS_ERROR("bad type"); goto failure;
+    case nsXPTType::T_CSTRING       : NS_ERROR("bad type"); goto failure;
+    case nsXPTType::T_ASTRING       : NS_ERROR("bad type"); goto failure;
+    default                         : NS_ERROR("bad type"); goto failure;
     }
 
     if(pErr)
@@ -2124,17 +2124,17 @@ fill_array:
     case nsXPTType::T_BOOL          : POPULATE(na, PRBool);         break;
     case nsXPTType::T_CHAR          : POPULATE(na, char);           break;
     case nsXPTType::T_WCHAR         : POPULATE(na, jschar);         break;
-    case nsXPTType::T_VOID          : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_VOID          : NS_ERROR("bad type"); goto failure;
     case nsXPTType::T_IID           : POPULATE(fr, nsID*);          break;
-    case nsXPTType::T_DOMSTRING     : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_DOMSTRING     : NS_ERROR("bad type"); goto failure;
     case nsXPTType::T_CHAR_STR      : POPULATE(fr, char*);          break;
     case nsXPTType::T_WCHAR_STR     : POPULATE(fr, jschar*);        break;
     case nsXPTType::T_INTERFACE     : POPULATE(re, nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(re, nsISupports*);   break;
-    case nsXPTType::T_UTF8STRING    : NS_ASSERTION(0,"bad type"); goto failure;
-    case nsXPTType::T_CSTRING       : NS_ASSERTION(0,"bad type"); goto failure;
-    case nsXPTType::T_ASTRING       : NS_ASSERTION(0,"bad type"); goto failure;
-    default                         : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_UTF8STRING    : NS_ERROR("bad type"); goto failure;
+    case nsXPTType::T_CSTRING       : NS_ERROR("bad type"); goto failure;
+    case nsXPTType::T_ASTRING       : NS_ERROR("bad type"); goto failure;
+    default                         : NS_ERROR("bad type"); goto failure;
     }
 
     *d = array;

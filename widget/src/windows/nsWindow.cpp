@@ -897,7 +897,7 @@ DWORD nsWindow::WindowStyle()
       break;
 
     default:
-      NS_ASSERTION(0, "unknown border style");
+      NS_ERROR("unknown border style");
       // fall through
 
     case eWindowType_toplevel:
@@ -931,7 +931,7 @@ DWORD nsWindow::WindowExStyle()
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
 
     default:
-      NS_ASSERTION(0, "unknown border style");
+      NS_ERROR("unknown border style");
       // fall through
 
     case eWindowType_toplevel:

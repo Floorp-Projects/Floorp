@@ -86,7 +86,7 @@ nsCipherInfo::nsCipherInfo(PRUint16 aCipherId)
 
     if (!isGood)
     {
-      NS_ASSERTION(0, "unable to get info for implemented cipher");
+      NS_ERROR("unable to get info for implemented cipher");
       continue;
     }
     
