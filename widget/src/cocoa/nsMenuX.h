@@ -40,7 +40,9 @@
 #define nsMenuX_h_
 
 #import <Cocoa/Cocoa.h>
+#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
 #import <Carbon/Carbon.h>
+#endif
 
 #include "nsMenuBaseX.h"
 #include "nsMenuBarX.h"
@@ -58,7 +60,9 @@ class nsIWidget;
 @interface MenuDelegate : NSObject
 {
   nsMenuX* mGeckoMenu; // weak ref
+#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
   EventHandlerRef mEventHandler;
+#endif
 }
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu;
 @end
