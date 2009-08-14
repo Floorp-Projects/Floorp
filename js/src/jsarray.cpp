@@ -3292,6 +3292,15 @@ array_every(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
+static JSBool
+array_isArray(JSContext *cx, uintN argc, jsval *vp)
+{
+    *vp = BOOLEAN_TO_JSVAL(argc > 0 &&
+                           !JSVAL_IS_PRIMITIVE(vp[2]) &&
+                           OBJ_IS_ARRAY(cx, JSVAL_TO_OBJECT(vp[2])));
+    return JS_TRUE;
+}
+
 static JSPropertySpec array_props[] = {
     {js_length_str,   -1,   JSPROP_SHARED | JSPROP_PERMANENT,
                             array_length_getter,    array_length_setter},
@@ -3340,6 +3349,11 @@ static JSFunctionSpec array_methods[] = {
     JS_FN("every",              array_every,        1,JSFUN_GENERIC_NATIVE),
 #endif
 
+    JS_FS_END
+};
+
+static JSFunctionSpec array_static_methods[] = {
+    JS_FN("isArray",            array_isArray,      1,0),
     JS_FS_END
 };
 
@@ -3433,7 +3447,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     js_SlowArrayObjectOps.call = NULL;
 
     proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
-                         array_props, array_methods, NULL, NULL);
+                         array_props, array_methods, NULL, array_static_methods);
 
     /* Initialize the Array prototype object so it gets a length property. */
     if (!proto || !InitArrayObject(cx, proto, 0, NULL))
