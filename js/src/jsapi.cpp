@@ -5490,7 +5490,7 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
     JSCharBuffer cb(cx);
     if (!js_Stringify(cx, vp, replacer, space, cb))
         return false;
-    return callback(cb.begin(), cb.size(), data);
+    return callback(cb.begin(), cb.length(), data);
 }
 
 JS_PUBLIC_API(JSBool)
