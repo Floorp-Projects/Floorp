@@ -39,24 +39,15 @@
 @import url(chrome://global/skin/);
 
 /* hildon stuff ------------------------------------------------------------ */
+:root {
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  font-size: 16.75pt !important;
+}
+
 menu,
 menuitem {
   padding: 0px !important;
   margin: 0px !important;
-  font-family: "Nokia Sans", Tahoma, sans-serif !important;
-  font-size: 16.75pt !important;
-}
-
-label,
-description,
-textbox {
-  font-family: "Nokia Sans", Tahoma, sans-serif !important;
-  font-size: 16.75pt !important;
-}
-
-richlistitem {
-  font-family: "Nokia Sans", Tahoma, sans-serif !important;
-  font-size: 16.75pt !important;
 }
 
 /* panels ------------------------------------------------------------------ */
@@ -283,6 +274,52 @@ richlistbox {
 
 richlistitem {
   min-height: 14.4mm; /* row size */
+  padding: 5px;
+  border-bottom: 1px solid rgb(207,207,207);
+}
+
+richlistitem label.title,
+richlistitem description.title {
+  font-size: 80% !important;
+}
+
+richlistitem label.normal,
+richlistitem description.normal {
+  color: gray;
+  font-size: 60% !important;
+  white-space: pre-wrap;
+}
+
+richlistitem[selected="true"] {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+richlistitem.section-header,
+richlistitem[selected="true"].section-header {
+  font-weight: bold;
+  color: #000;
+  background-color: lightgray;
+}
+
+richlistitem .show-on-select {
+  visibility: collapse;
+}
+
+richlistitem[selected="true"] .show-on-select {
+  visibility: visible;
+}
+
+richlistitem .hide-on-select {
+  visibility: visible;
+}
+
+richlistitem[selected="true"] .hide-on-select {
+  visibility: collapse;
+}
+
+richlistitem[typeName="message"] {
+  border-bottom: 0px;
 }
 
 /* colorpicker ------------------------------------------------------------- */

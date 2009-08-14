@@ -1,12 +1,3 @@
-#browser-container > * {
-  -moz-stack-sizing: ignore;
-}
-
-#browser-container > spacer {
-  width: 1px;
-  height: 1px;
-}
-
 #urlbar-edit {
     -moz-binding: url("chrome://browser/content/bindings.xml#autocomplete-aligned");
 }
@@ -92,6 +83,11 @@ checkbox {
   -moz-binding: url("chrome://browser/content/checkbox.xml#checkbox-radio");
 }
 
+#select-list > option {
+  -moz-binding: url("chrome://browser/content/bindings.xml#chrome-select-option");
+}
+
+/* richlist defaults ------------------------------------------------------- */
 richlistitem[typeName="local"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-local");
 }
@@ -102,60 +98,6 @@ richlistitem[typeName="search"] {
 
 richlistitem[typeName="message"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-message");
-}
-
-#select-list > option {
-  -moz-binding: url("chrome://browser/content/bindings.xml#chrome-select-option");
-}
-
-/* richlist defaults ------------------------------------------------------- */
-richlistitem {
-  padding: 5px;
-  border-bottom: 1px solid rgb(207,207,207);
-}
-
-richlistitem label.title,
-richlistitem description.title {
-  font-size: 80% !important;
-}
-
-richlistitem label.normal,
-richlistitem description.normal {
-  color: gray;
-  font-size: 60% !important;
-  white-space: pre-wrap;
-}
-
-richlistitem[selected="true"] {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-}
-
-richlistitem .show-on-select {
-  visibility: collapse;
-}
-
-richlistitem[selected="true"] .show-on-select {
-  visibility: visible;
-}
-
-richlistitem .hide-on-select {
-  visibility: visible;
-}
-
-richlistitem[selected="true"] .hide-on-select {
-  visibility: collapse;
-}
-
-richlistitem.section-header,
-richlistitem[selected="true"].section-header {
-  font-weight: bold;
-  color: #000;
-  background-color: lightgray;
-}
-
-richlistitem[typeName="message"] {
-  border-bottom: 0px;
 }
 
 richlistitem[typeName="download"] {

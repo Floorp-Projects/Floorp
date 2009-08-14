@@ -745,12 +745,12 @@ richpref {
 
 /* XXX should be a richlistitem description.title */
 .preftitle {
-  font-size: 9pt !important;
+  font-size: 80% !important;
 }
 
 /* XXX should be a richlistitem description.normal */
 .prefdesc {
-  font-size: 8pt !important;
+  font-size: 60% !important;
   color: grey;
   background-color: white;
 }
@@ -766,7 +766,7 @@ richpref {
 }
 
 #alerts-text {
-  font-size: 85% !important;
+  font-size: 80% !important;
   white-space: pre-wrap;
 }
 
