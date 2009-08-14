@@ -1,6 +1,4 @@
 # trace-test.py -- Python harness for JavaScript trace tests.
-#
-# Requires Python 3.1
 
 import datetime, os, re, sys
 from subprocess import *
@@ -12,13 +10,13 @@ def find_tests(path):
         if path.endswith('.js'):
             return [ path ]
         else:
-            print('Not a javascript file: {0}'.format(path), file=sys.stderr)
+            print >> sys.stderr, 'Not a javascript file: %s'%path
             sys.exit(1)
 
     if os.path.isdir(path):
         return find_tests_dir(path)
 
-    print('Not a file or directory: {0}'.format(path), file=sys.stderr)
+    print >> sys.stderr, 'Not a file or directory: %s'%path
     sys.exit(1)
 
 def find_tests_dir(dir):
@@ -31,7 +29,7 @@ def find_tests_dir(dir):
                 continue
             if filename in ('shell.js', 'browser.js', 'jsref.js'):
                 continue
-            test = os.path.relpath(os.path.join(dirpath, filename))
+            test = os.path.join(dirpath, filename)
             ans.append(test)
     return ans
 
@@ -39,10 +37,9 @@ def get_test_cmd(path, lib_dir):
     libdir_var = lib_dir
     if not libdir_var.endswith('/'):
         libdir_var += '/'
-    expr = 'const platform="{}"; const libdir="{}";'.format(sys.platform, libdir_var)
-    cmd = '{JS} -j -e \'{expr}\' -f {prolog} -f {path}'.format(
-        JS=JS, path=path, expr=expr,
-        prolog=os.path.join(lib_dir, 'prolog.js'))
+    expr = 'const platform="%s"; const libdir="%s";'%(sys.platform, libdir_var)
+    cmd = '%s -j -e \'%s\' -f %s -f %s'%(
+        JS, expr, os.path.join(lib_dir, 'prolog.js'), path)
     return cmd
 
 def run_test(path, lib_dir):
@@ -92,7 +89,7 @@ def run_tests(tests, lib_dir):
 
             n = i + 1
             if pb:
-                pb.label = '[{:3}|{:3}|{:3}]'.format(n - len(failures), len(failures), n)
+                pb.label = '[%3d|%3d|%3d]'%(n - len(failures), len(failures), n)
                 pb.update(n)
         complete = True
     except KeyboardInterrupt:
@@ -105,17 +102,17 @@ def run_tests(tests, lib_dir):
         print('FAILURES:')
         for test in failures:
             if OPTIONS.show_failed:
-                print('    {}'.format(get_test_cmd(test, lib_dir)))
+                print('    ' + get_test_cmd(test, lib_dir))
             else:
-                print('    {}'.format(test))
+                print('    ' + test)
     else:
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user)'))
 
 if __name__ == '__main__':
     script_path = os.path.abspath(__file__)
     script_dir = os.path.dirname(script_path)
-    test_dir = os.path.relpath(os.path.join(script_dir, 'tests'))
-    lib_dir = os.path.relpath(os.path.join(script_dir, 'lib'))
+    test_dir = os.path.join(script_dir, 'tests')
+    lib_dir = os.path.join(script_dir, 'lib')
 
     # The [TESTS] optional arguments are paths of test files relative
     # to the trace-test/tests directory.
@@ -135,7 +132,7 @@ if __name__ == '__main__':
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
-    JS, *test_args = args
+    JS, test_args = args[0], args[1:]
 
     if test_args:
         test_list = []
@@ -144,7 +141,6 @@ if __name__ == '__main__':
     else:
         test_list = find_tests(test_dir)
 
-
     if OPTIONS.exclude:
         exclude_list = []
         for exclude in OPTIONS.exclude:
@@ -152,7 +148,7 @@ if __name__ == '__main__':
         test_list = [ test for test in test_list if test not in set(exclude_list) ]
 
     if not test_list:
-        print("No tests found matching command line arguments.", file=sys.stderr)
+        print >> sys.stderr, "No tests found matching command line arguments."
         sys.exit(0)
         
     run_tests(test_list, lib_dir)
