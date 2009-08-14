@@ -2096,7 +2096,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char *filename;
     JSBool ok;
     JSString *str, *arg;
-    JSTokenStream ts;
+    JSTokenStream ts(cx);
     JSPrincipals *principals;
     jschar *collected_args, *cp;
     void *mark;
@@ -2232,8 +2232,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* Initialize a tokenstream that reads from the given string. */
-        if (!js_InitTokenStream(cx, &ts, collected_args, args_length,
-                                NULL, filename, lineno)) {
+        if (!ts.init(cx, collected_args, args_length, NULL, filename, lineno)) {
             JS_ARENA_RELEASE(&cx->tempPool, mark);
             return JS_FALSE;
         }
@@ -2296,7 +2295,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_FORMAL);
         }
-        js_CloseTokenStream(cx, &ts);
+        ts.close(cx);
         JS_ARENA_RELEASE(&cx->tempPool, mark);
         if (state != OK)
             return JS_FALSE;

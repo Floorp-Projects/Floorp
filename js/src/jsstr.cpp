@@ -2737,7 +2737,7 @@ js_NewStringFromCharBuffer(JSContext *cx, JSCharBuffer &cb)
     if (cb.empty())
         return ATOM_TO_STRING(cx->runtime->atomState.emptyAtom);
 
-    size_t length = cb.size();
+    size_t length = cb.length();
     if (!cb.append('\0'))
         return NULL;
 
