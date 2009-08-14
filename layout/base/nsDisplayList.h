@@ -61,6 +61,7 @@ class nsRegion;
 class nsIRenderingContext;
 class nsIDeviceContext;
 class nsDisplayTableItem;
+class nsDisplayItem;
 
 /*
  * An nsIFrame can have many different visual parts. For example an image frame
@@ -160,10 +161,15 @@ public:
    * cover (during OptimizeVisibility) non-moving frames. E.g. when we're
    * constructing a display list to see what should be repainted during a
    * scroll operation, we specify the scrolled frame as the moving frame.
+   * @param aSaveVisibleRegionOfMovingContent if non-null,
+   *   this receives a bounding region for the visible moving content
+   * (considering the moving content both before and after the move)
    */
-  void SetMovingFrame(nsIFrame* aMovingFrame, const nsPoint& aMoveDelta) {
+  void SetMovingFrame(nsIFrame* aMovingFrame, const nsPoint& aMoveDelta,
+                      nsRegion* aSaveVisibleRegionOfMovingContent) {
     mMovingFrame = aMovingFrame;
     mMoveDelta = aMoveDelta;
+    mSaveVisibleRegionOfMovingContent = aSaveVisibleRegionOfMovingContent;
   }
 
   /**
@@ -179,6 +185,14 @@ public:
    * Only valid when GetRootMovingFrame() returns non-null.
    */
   const nsPoint& GetMoveDelta() { return mMoveDelta; }
+  /**
+   * Given the bounds of some moving content, and a visible region,
+   * intersect the bounds with the visible region and add it to the
+   * recorded region of visible moving content.
+   */
+  void AccumulateVisibleRegionOfMovingContent(const nsRegion& aMovingContent,
+                                              const nsRegion& aVisibleRegion);
+
   /**
    * @return PR_TRUE if aFrame is, or is a descendant of, the hypothetical
    * moving frame
@@ -277,6 +291,15 @@ public:
   void SetInTransform(PRBool aInTransform) { mInTransform = aInTransform; }
 
   /**
+   * Subtracts aRegion from *aVisibleRegion. We avoid letting
+   * aVisibleRegion become overcomplex by simplifying it if necessary ---
+   * unless mAccurateVisibleRegions is set, in which case we let it
+   * get arbitrarily complex.
+   */
+  void SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
+                                 const nsRegion& aRegion);
+
+  /**
    * Mark the frames in aFrames to be displayed if they intersect aDirtyRect
    * (which is relative to aDirtyFrame). If the frames have placeholders
    * that might not be displayed, we mark the placeholders and their ancestors
@@ -356,6 +379,7 @@ private:
   
   nsIFrame*                      mReferenceFrame;
   nsIFrame*                      mMovingFrame;
+  nsRegion*                      mSaveVisibleRegionOfMovingContent;
   nsIFrame*                      mIgnoreScrollFrame;
   nsPoint                        mMoveDelta; // only valid when mMovingFrame is non-null
   PLArenaPool                    mPool;
