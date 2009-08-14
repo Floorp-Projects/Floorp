@@ -441,6 +441,8 @@ mai_util_get_root(void)
         // (to avoid assert in spi_atk_tidy_windows())
         if (gail_get_root)
             return gail_get_root();
+
+        return nsnull;
     }
 
     nsRefPtr<nsApplicationAccessibleWrap> root =
