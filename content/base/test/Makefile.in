@@ -51,6 +51,7 @@ MODULE = content
 
 CPP_UNIT_TESTS = \
                  TestNativeXMLHttpRequest.cpp \
+                 TestGetURL.cpp \
                  TestPlainTextSerializer.cpp \
                  $(NULL)
 
