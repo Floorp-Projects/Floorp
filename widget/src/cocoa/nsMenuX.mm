@@ -312,56 +312,37 @@ nsresult nsMenuX::RemoveAll()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsEventStatus nsMenuX::MenuOpened(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenuX::MenuOpened()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  // Open the node.
+  mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
 
-  // Determine if this is the correct menu to handle the event
-  MenuRef selectedMenuHandle = (MenuRef)aMenuEvent.mCommand;
+  // Fire a handler. If we're told to stop, don't build the menu at all
+  PRBool keepProcessing = OnOpen();
 
-  // at this point, the carbon event handler was installed so there
-  // must be a carbon MenuRef to be had
-  if (_NSGetCarbonMenu(mNativeMenu) == selectedMenuHandle) {
-    // Open the node.
-    mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
+  if (!mNeedsRebuild || !keepProcessing)
+    return nsEventStatus_eConsumeNoDefault;
 
-    // Fire a handler. If we're told to stop, don't build the menu at all
-    PRBool keepProcessing = OnOpen();
+  if (!mConstructed || mNeedsRebuild) {
+    if (mNeedsRebuild)
+      RemoveAll();
 
-    if (!mNeedsRebuild || !keepProcessing)
-      return nsEventStatus_eConsumeNoDefault;
-
-    if (!mConstructed || mNeedsRebuild) {
-      if (mNeedsRebuild)
-        RemoveAll();
-
-      MenuConstruct();
-      mConstructed = true;
-    }
-
-    OnOpened();
-
-    return nsEventStatus_eConsumeNoDefault;  
-  }
-  else {
-    // Make sure none of our submenus are the ones that should be handling this
-    PRUint32 count = mMenuObjectsArray.Length();
-    for (PRUint32 i = 0; i < count; i++) {
-      nsMenuObjectX* menuObject = mMenuObjectsArray[i];
-      if (menuObject->MenuObjectType() == eSubmenuObjectType) {
-        nsEventStatus status = static_cast<nsMenuX*>(menuObject)->MenuOpened(aMenuEvent);
-        if (status != nsEventStatus_eIgnore)
-          return status;
-      }  
-    }
+    MenuConstruct();
+    mConstructed = true;
   }
 
-  return nsEventStatus_eIgnore;
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWN, nsnull, nsMouseEvent::eReal);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsEventStatus_eIgnore);
+  nsCOMPtr<nsIContent> popupContent;
+  GetMenuPopupContent(getter_AddRefs(popupContent));
+  nsIContent* dispatchTo = popupContent ? popupContent : mContent;
+  dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+  
+  return nsEventStatus_eConsumeNoDefault;
 }
 
-void nsMenuX::MenuClosed(const nsMenuEvent & aMenuEvent)
+void nsMenuX::MenuClosed()
 {
   if (mConstructed) {
     // Don't close if a handler tells us to stop.
@@ -373,8 +354,15 @@ void nsMenuX::MenuClosed(const nsMenuEvent & aMenuEvent)
 
     mContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::open, PR_TRUE);
 
-    OnClosed();
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDDEN, nsnull, nsMouseEvent::eReal);
 
+    nsCOMPtr<nsIContent> popupContent;
+    GetMenuPopupContent(getter_AddRefs(popupContent));
+    nsIContent* dispatchTo = popupContent ? popupContent : mContent;
+    dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
+
+    mDestroyHandlerCalled = PR_TRUE;
     mConstructed = false;
   }
 }
@@ -629,23 +617,6 @@ PRBool nsMenuX::OnOpen()
   return PR_TRUE;
 }
 
-PRBool nsMenuX::OnOpened()
-{
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWN, nsnull, nsMouseEvent::eReal);
-  
-  nsCOMPtr<nsIContent> popupContent;
-  GetMenuPopupContent(getter_AddRefs(popupContent));
-
-  nsresult rv = NS_OK;
-  nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
-  if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-    return PR_FALSE;  
-  
-  return PR_TRUE;
-}
-
 // Returns TRUE if we should keep processing the event, FALSE if the handler
 // wants to stop the closing of the menu.
 PRBool nsMenuX::OnClose()
@@ -655,27 +626,6 @@ PRBool nsMenuX::OnClose()
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDING, nsnull,
-                     nsMouseEvent::eReal);
-
-  nsCOMPtr<nsIContent> popupContent;
-  GetMenuPopupContent(getter_AddRefs(popupContent));
-
-  nsresult rv = NS_OK;
-  nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
-  
-  mDestroyHandlerCalled = PR_TRUE;
-  
-  if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-    return PR_FALSE;
-  
-  return PR_TRUE;
-}
-
-PRBool nsMenuX::OnClosed()
-{
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDDEN, nsnull,
                      nsMouseEvent::eReal);
 
   nsCOMPtr<nsIContent> popupContent;
@@ -881,15 +831,10 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
       gRollupListener->Rollup(nsnull, nsnull);
       return userCanceledErr;
     }
-    MenuRef menuRef;
-    ::GetEventParameter(event, kEventParamDirectObject, typeMenuRef, NULL, sizeof(menuRef), NULL, &menuRef);
-    nsMenuEvent menuEvent(PR_TRUE, NS_MENU_SELECTED, nsnull);
-    menuEvent.time = PR_IntervalNow();
-    menuEvent.mCommand = (PRUint32)menuRef;
     if (kind == kEventMenuOpening)
-      targetMenu->MenuOpened(menuEvent);
+      targetMenu->MenuOpened();
     else
-      targetMenu->MenuClosed(menuEvent);
+      targetMenu->MenuClosed();
     return noErr;
   }
   return eventNotHandledErr;
@@ -928,8 +873,9 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [super init])) {
+    NS_ASSERTION(geckoMenu, "Cannot initialize native menu delegate with NULL gecko menu! Will crash!");
     mGeckoMenu = geckoMenu;
-    mHaveInstalledCarbonEvents = FALSE;
+    mEventHandler = NULL;
   }
   return self;
 
@@ -941,7 +887,9 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  RemoveEventHandler(mEventHandler);
+  if (mEventHandler)
+    ::RemoveEventHandler(mEventHandler);
+
   [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -957,12 +905,10 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!mHaveInstalledCarbonEvents) {
+  if (!mEventHandler) {
     MenuRef myMenuRef = _NSGetCarbonMenu(aMenu);
-    if (myMenuRef) {
+    if (myMenuRef)
       InstallMyMenuEventHandler(myMenuRef, mGeckoMenu, &mEventHandler);
-      mHaveInstalledCarbonEvents = TRUE;
-    }
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
