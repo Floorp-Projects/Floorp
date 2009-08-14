@@ -97,8 +97,8 @@ inline void VERIFY_COORD(nscoord aCoord) {
  */
 inline nscoord NSCoordSaturatingMultiply(nscoord aCoord, float aVal) {
   VERIFY_COORD(aCoord);
-  NS_ABORT_IF_FALSE(aVal >= 0.0f,
-                    "negative scaling factors must be handled manually");
+  NS_ASSERTION(aVal >= 0.0f,
+               "negative scaling factors must be handled manually");
 #ifdef NS_COORD_IS_FLOAT
   return floorf(aCoord * aVal);
 #else
