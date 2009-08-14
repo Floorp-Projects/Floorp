@@ -308,7 +308,6 @@ class Inherit(Node):
 class FriendClassDecl(Node):
     def __init__(self, friend):
         Node.__init__(self)
-        print "FriendClassDecl: %r" % friend
         self.friend = friend
 
 class MethodDecl(Node):
