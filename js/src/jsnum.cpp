@@ -927,6 +927,14 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
              * octal).
              */
             str->getCharsAndEnd(bp, end);
+
+            /* ECMA doesn't allow signed hex numbers (bug 273467). */
+            bp = js_SkipWhiteSpace(bp, end);
+            if (bp + 2 < end && (*bp == '-' || *bp == '+') &&
+                bp[1] == '0' && (bp[2] == 'X' || bp[2] == 'x')) {
+                break;
+            }
+
             if ((!js_strtod(cx, bp, end, &ep, &d) ||
                  js_SkipWhiteSpace(ep, end) != end) &&
                 (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
