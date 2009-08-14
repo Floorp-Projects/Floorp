@@ -118,7 +118,8 @@ static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
 
 #define SIZE_PERSISTENCE_TIMEOUT 500 // msec
 
-nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
+nsWebShellWindow::nsWebShellWindow(PRUint32 aChromeFlags)
+  : nsXULWindow(aChromeFlags)
 {
   mSPTimerLock = PR_NewLock();
 }
@@ -224,7 +225,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   }
 
   if (nsnull != aUrl)  {
-    nsCAutoString tmpStr;
+    nsCString tmpStr;
 
     rv = aUrl->GetSpec(tmpStr);
     if (NS_FAILED(rv)) return rv;

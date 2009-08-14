@@ -295,7 +295,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 {
   *aResult = nsnull;
 
-  nsRefPtr<nsWebShellWindow> window = new nsWebShellWindow();
+  nsRefPtr<nsWebShellWindow> window = new nsWebShellWindow(aChromeMask);
   NS_ENSURE_TRUE(window, NS_ERROR_OUT_OF_MEMORY);
 
   nsWidgetInitData widgetInitData;
