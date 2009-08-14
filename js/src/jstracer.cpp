@@ -11836,7 +11836,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
           OOM_EXIT);
     stack(0, call_ins);
 
-    if (fun->u.i.script->upvarsOffset) {
+    if (fun->u.i.nupvars) {
         JSUpvarArray *uva = JS_SCRIPT_UPVARS(fun->u.i.script);
         for (uint32 i = 0, n = uva->length; i < n; i++) {
             jsval v;
