@@ -887,7 +887,7 @@ js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
      */
     size_t cstrlen = strlen(cstr);
     JS_ASSERT(cstrlen < arrSize);
-    size_t sizeBefore = cb.size();
+    size_t sizeBefore = cb.length();
     if (!cb.growBy(cstrlen))
         return JS_FALSE;
     jschar *appendBegin = cb.begin() + sizeBefore;

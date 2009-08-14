@@ -78,6 +78,7 @@
 #include "jsstr.h"
 #include "jsstaticcheck.h"
 #include "jslibmath.h"
+#include "jsvector.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -211,7 +212,7 @@ JSCompiler::init(const jschar *base, size_t length,
     JSContext *cx = context;
 
     tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
-    if (!js_InitTokenStream(cx, TS(this), base, length, fp, filename, lineno)) {
+    if (!tokenStream.init(cx, base, length, fp, filename, lineno)) {
         JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
         return false;
     }
@@ -231,7 +232,7 @@ JSCompiler::~JSCompiler()
     JS_ASSERT(tempRoot.u.compiler == this);
     JS_POP_TEMP_ROOT(cx, &tempRoot);
     JS_UNKEEP_ATOMS(cx->runtime);
-    js_CloseTokenStream(cx, TS(this));
+    tokenStream.close(cx);
     JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
 }
 
@@ -8206,11 +8207,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!pn)
             return NULL;
 
-        /* Token stream ensures that tokenbuf is NUL-terminated. */
-        JS_ASSERT(*ts->tokenbuf.ptr == (jschar) 0);
         obj = js_NewRegExpObject(cx, ts,
-                                 ts->tokenbuf.base,
-                                 ts->tokenbuf.ptr - ts->tokenbuf.base,
+                                 ts->tokenbuf.begin(),
+                                 ts->tokenbuf.length(),
                                  CURRENT_TOKEN(ts).t_reflags);
         if (!obj)
             return NULL;

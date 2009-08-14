@@ -2291,7 +2291,7 @@ class RegExpNativeCompiler {
     void targetCurrentPoint(LInsList &fails)
     {
         LIns *fail = lir->ins0(LIR_label);
-        for (size_t i = 0; i < fails.size(); ++i) {
+        for (size_t i = 0; i < fails.length(); ++i) {
             fails[i]->setTarget(fail);
         }
         fails.clear();

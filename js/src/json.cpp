@@ -807,7 +807,7 @@ PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, jsval value)
         }
     } else {
         ok = JS_DefineUCProperty(cx, parent, jp->objectKey.begin(),
-                                 jp->objectKey.size(), value,
+                                 jp->objectKey.length(), value,
                                  NULL, NULL, JSPROP_ENUMERATE);
         jp->objectKey.clear();
     }
@@ -982,7 +982,7 @@ HandleData(JSContext *cx, JSONParser *jp, JSONDataType type)
 
     switch (type) {
       case JSON_DATA_STRING:
-        ok = HandleString(cx, jp, jp->buffer.begin(), jp->buffer.size());
+        ok = HandleString(cx, jp, jp->buffer.begin(), jp->buffer.length());
         break;
 
       case JSON_DATA_KEYSTRING:
@@ -990,12 +990,12 @@ HandleData(JSContext *cx, JSONParser *jp, JSONDataType type)
         break;
 
       case JSON_DATA_NUMBER:
-        ok = HandleNumber(cx, jp, jp->buffer.begin(), jp->buffer.size());
+        ok = HandleNumber(cx, jp, jp->buffer.begin(), jp->buffer.length());
         break;
 
       default:
         JS_ASSERT(type == JSON_DATA_KEYWORD);
-        ok = HandleKeyword(cx, jp, jp->buffer.begin(), jp->buffer.size());
+        ok = HandleKeyword(cx, jp, jp->buffer.begin(), jp->buffer.length());
         break;
     }
 
