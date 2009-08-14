@@ -497,20 +497,21 @@ public:
   /**
    * @param aRootFrame the root frame of the tree to be displayed
    * @param aMovingFrame a frame that has moved
-   * @param aPt the amount by which aMovingFrame has moved and the rect will
-   * be copied
-   * @param aCopyRect a rectangle that will be copied, relative to aRootFrame
-   * @param aRepaintRegion a subregion of aCopyRect+aDelta that must be repainted
-   * after doing the bitblt
+   * @param aPt the amount by which aMovingFrame has moved
+   * @param aUpdateRect a rectangle that bounds the area to be updated,
+   * relative to aRootFrame
+   * @param aRepaintRegion output: a subregion of aUpdateRect that must be
+   * repainted after doing the blit
+   * @param aBlitRegion output: a subregion of aUpdateRect that should
+   * be repainted by blitting
    * 
-   * Ideally this function would actually have the rect-to-copy as an output
-   * rather than an input, but for now, scroll bitblitting is limited to
-   * the whole of a single widget, so we cannot choose the rect.
+   * If the caller does a bitblt copy of aBlitRegion-aPt to aBlitRegion,
+   * and then repaints aRepaintRegion, then the area aUpdateRect will be
+   * correctly up to date. aBlitRegion and aRepaintRegion do not intersect
+   * and are both contained within aUpdateRect.
    * 
-   * This function assumes that the caller will do a bitblt copy of aCopyRect
-   * to aCopyRect+aPt. It computes a region that must be repainted in order
-   * for the resulting rendering to be correct. Frame geometry must have
-   * already been adjusted for the scroll/copy operation.
+   * Frame geometry must have already been adjusted for the scroll/copy
+   * operation before this function is called.
    * 
    * Conceptually it works by computing a display list in the before-state
    * and a display list in the after-state and analyzing them to find the
@@ -519,25 +520,31 @@ public:
    * efficient), so we use some unfortunately tricky techniques to get by
    * with just the after-list.
    * 
-   * The output region consists of:
+   * We compute the "visible moving area": aUpdateRect minus any opaque
+   * areas of non-moving content that are above all moving content in
+   * z-order.
+   *
+   * The aRepaintRegion region consists of the visible moving area
+   * intersected with the union of the following areas:
    * a) any visible background-attachment:fixed areas in the after-move display
    * list
    * b) any visible areas of the before-move display list corresponding to
    * frames that will not move (translated by aDelta)
    * c) any visible areas of the after-move display list corresponding to
    * frames that did not move
-   * d) except that if the same display list element is visible in b) and c)
-   * for a frame that did not move and paints a uniform color within its
-   * bounds, then the intersection of its old and new bounds can be excluded
-   * when it is processed by b) and c).
    * 
-   * We may return a larger region if computing the above region precisely is
-   * too expensive.
+   * aBlitRegion is the visible moving area minus aRepaintRegion.
+   * 
+   * We may return a larger region for aRepaintRegion and/or aBlitRegion
+   * if computing the above regions precisely is too expensive.  (However,
+   * they will never intersect, since the regions that may be computed
+   * imprecisely are really the "visible moving area" and aRepaintRegion.)
    */
   static nsresult ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
                                               nsIFrame* aMovingFrame,
                                               nsPoint aDelta,
-                                              const nsRect& aCopyRect,
+                                              const nsRect& aUpdateRect,
+                                              nsRegion* aBlitRegion,
                                               nsRegion* aRepaintRegion);
 
   /**

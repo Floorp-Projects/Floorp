@@ -227,7 +227,8 @@ public:
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
-    virtual void Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+    virtual void Scroll(const nsIntPoint& aDelta,
+                        const nsTArray<nsIntRect>& aDestRects,
                         const nsTArray<Configuration>& aConfigurations);
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
