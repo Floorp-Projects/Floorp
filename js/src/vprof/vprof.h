@@ -101,7 +101,7 @@ typedef unsigned __int64   uint64_t;
 // portable align macro
 #if defined(_MSC_VER)
 	#define vprof_align8(t) __declspec(align(8)) t
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 	#define vprof_align8(t) t __attribute__ ((aligned (8)))
 #endif
 
