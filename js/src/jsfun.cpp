@@ -304,7 +304,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 /*
  * Traced versions of js_GetArgsObject and js_PutArgsObject.
  */
-JSObject * FASTCALL
+JSObject * JS_FASTCALL
 js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
              JSObject* cached)
 {
