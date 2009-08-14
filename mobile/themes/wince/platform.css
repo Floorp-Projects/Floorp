@@ -237,6 +237,52 @@ richlistbox {
 
 richlistitem {
   min-height: 7.2mm; /* row size */
+  padding: 5px;
+  border-bottom: 1px solid rgb(207,207,207);
+}
+
+richlistitem label.title,
+richlistitem description.title {
+  font-size: 9pt !important;
+}
+
+richlistitem label.normal,
+richlistitem description.normal {
+  color: gray;
+  font-size: 8pt !important;
+  white-space: pre-wrap;
+}
+
+richlistitem[selected="true"] {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+richlistitem.section-header,
+richlistitem[selected="true"].section-header {
+  font-weight: bold;
+  color: #000;
+  background-color: lightgray;
+}
+
+richlistitem .show-on-select {
+  visibility: collapse;
+}
+
+richlistitem[selected="true"] .show-on-select {
+  visibility: visible;
+}
+
+richlistitem .hide-on-select {
+  visibility: visible;
+}
+
+richlistitem[selected="true"] .hide-on-select {
+  visibility: collapse;
+}
+
+richlistitem[typeName="message"] {
+  border-bottom: 0px;
 }
 
 /* colorpicker ------------------------------------------------------------- */
