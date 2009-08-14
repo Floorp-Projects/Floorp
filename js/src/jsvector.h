@@ -79,7 +79,7 @@ template <class T> struct BitSize {
  */
 template <size_t N> struct MulOverflowMask {
     static const size_t result =
-        ~((1u << (BitSize<size_t>::result - CeilingLog2<N>::result)) - 1);
+        ~((size_t(1) << (BitSize<size_t>::result - CeilingLog2<N>::result)) - 1);
 };
 template <> struct MulOverflowMask<0> { /* Error */ };
 template <> struct MulOverflowMask<1> { static const size_t result = 0; };
