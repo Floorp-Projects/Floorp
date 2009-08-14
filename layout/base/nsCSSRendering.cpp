@@ -1981,10 +1981,6 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
     // If it's a fixed background attachment, then the image is placed
     // relative to the viewport, which is the area of the root frame
     // in a screen context or the page content frame in a print context.
-
-    // Remember that we've drawn position-varying content in this prescontext
-    aPresContext->SetRenderedPositionVaryingContent();
-
     nsIFrame* topFrame =
       aPresContext->PresShell()->FrameManager()->GetRootFrame();
     NS_ASSERTION(topFrame, "no root frame");
