@@ -35,8 +35,12 @@ function accept() {
 
 SimpleTest.waitForExplicitFinish();
 
+var options = {
+    maximumAge: 0,
+};
+
 // one-shot position requests
-navigator.geolocation.getCurrentPosition(successCallback, null, null);
+navigator.geolocation.getCurrentPosition(successCallback, null, options);
 
 setTimeout(accept, 50);
 
