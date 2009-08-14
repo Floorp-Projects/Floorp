@@ -5612,7 +5612,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
             JS_ASSERT(op == JSOP_CALL || op == JSOP_APPLY || op == JSOP_NEW ||
                       op == JSOP_GETELEM || op == JSOP_CALLELEM ||
                       op == JSOP_SETPROP || op == JSOP_SETNAME ||
-                      op == JSOP_SETELEM || op == JSOP_INITELEM);
+                      op == JSOP_SETELEM || op == JSOP_INITELEM ||
+                      op == JSOP_INSTANCEOF);
             const JSCodeSpec& cs = js_CodeSpec[op];
             regs->sp -= (cs.format & JOF_INVOKE) ? GET_ARGC(regs->pc) + 2 : cs.nuses;
             regs->sp += cs.ndefs;
@@ -11657,41 +11658,38 @@ TraceRecorder::record_JSOP_IN()
     return JSRS_CONTINUE;
 }
 
-static JSBool
-HasInstance(JSContext *cx, uintN argc, jsval *vp)
-{
-    jsval *argv;
-    JS_ASSERT(argc == 1);
-    argv = JS_ARGV(cx, vp);
-    JSBool result = JS_FALSE;
-    JSObject* obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj->map->ops->hasInstance(cx, obj, argv[0], &result))
-        return JS_FALSE;
-    JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(result));
-    return JS_TRUE;
-}
-
 static JSBool FASTCALL
-HasInstance_tn(JSContext* cx, JSObject* obj, jsval v)
+HasInstance(JSContext* cx, JSObject* ctor, jsval val)
 {
     JSBool result = JS_FALSE;
-    if (!obj->map->ops->hasInstance(cx, obj, v, &result))
+    if (!ctor->map->ops->hasInstance(cx, ctor, val, &result))
         js_SetBuiltinError(cx);
     return result;
 }
-
-JS_DEFINE_TRCINFO_1(HasInstance,
-    (3, (extern, BOOL_FAIL, HasInstance_tn, CONTEXT, THIS, JSVAL, 0, 0)))
+JS_DEFINE_CALLINFO_3(static, BOOL_FAIL, HasInstance, CONTEXT, OBJECT, JSVAL, 0, 0)
 
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_INSTANCEOF()
 {
-    jsval& r = stackval(-1);
+    // If the rhs isn't an object, we are headed for a TypeError.
+    jsval& ctor = stackval(-1);
+    if (JSVAL_IS_PRIMITIVE(ctor))
+        ABORT_TRACE("non-object on rhs of instanceof");
 
-    if (!JSVAL_IS_PRIMITIVE(r))
-        return call_imacro(instanceof_imacros.instanceof);
+    jsval& val = stackval(-2);
+    LIns* val_ins = get(&val);
+    box_jsval(val, val_ins);
 
-    return JSRS_STOP;
+    enterDeepBailCall();
+    LIns* args[] = {val_ins, get(&ctor), cx_ins};
+    stack(-2, lir->insCall(&HasInstance_ci, args));
+    LIns* status_ins = lir->insLoad(LIR_ld,
+                                    lirbuf->state,
+                                    (int) offsetof(InterpState, builtinStatus));
+    guard(true, lir->ins_eq0(status_ins), STATUS_EXIT);
+    leaveDeepBailCall();
+
+    return JSRS_CONTINUE;
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
@@ -12675,7 +12673,6 @@ static const struct BuiltinFunctionInfo {
 } builtinFunctionInfo[JSBUILTIN_LIMIT] = {
     {ObjectToIterator_trcinfo,   1},
     {CallIteratorNext_trcinfo,   0},
-    {HasInstance_trcinfo,        1}
 };
 
 JSObject *
