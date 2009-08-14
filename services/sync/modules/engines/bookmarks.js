@@ -139,14 +139,6 @@ BookmarksStore.prototype = {
     return this.__ts;
   },
 
-  __ans: null,
-  get _ans() {
-    if (!this.__ans)
-      this.__ans = Cc["@mozilla.org/browser/annotation-service;1"].
-                   getService(Ci.nsIAnnotationService);
-    return this.__ans;
-  },
-
   _getItemIdForGUID: function BStore__getItemIdForGUID(GUID) {
     if (GUID in kSpecialIds)
       return kSpecialIds[GUID];
@@ -235,20 +227,15 @@ BookmarksStore.prototype = {
                                        record.title);
       this._tagURI(uri, record.tags);
       this._bms.setKeywordForBookmark(newId, record.keyword);
-      if (record.description) {
-        this._ans.setItemAnnotation(newId, "bookmarkProperties/description",
-                                    record.description, 0,
-                                   this._ans.EXPIRE_NEVER);
-      }
+      if (record.description)
+        Utils.anno(newId, "bookmarkProperties/description", record.description);
 
       if (record.loadInSidebar)
-        this._ans.setItemAnnotation(newId, "bookmarkProperties/loadInSidebar",
-          true, 0, this._ans.EXPIRE_NEVER);
+        Utils.anno(newId, "bookmarkProperties/loadInSidebar", true);
 
       if (record.type == "microsummary") {
         this._log.debug("   \-> is a microsummary");
-        this._ans.setItemAnnotation(newId, "bookmarks/staticTitle",
-                                    record.staticTitle || "", 0, this._ans.EXPIRE_NEVER);
+        Utils.anno(newId, "bookmarks/staticTitle", record.staticTitle || "");
         let genURI = Utils.makeURI(record.generatorUri);
 	if (this._ms) {
           try {
@@ -370,16 +357,13 @@ BookmarksStore.prototype = {
         this._bms.setKeywordForBookmark(itemId, val);
         break;
       case "description":
-        this._ans.setItemAnnotation(itemId, "bookmarkProperties/description",
-                                    val, 0,
-                                    this._ans.EXPIRE_NEVER);
+        Utils.anno(itemId, "bookmarkProperties/description", val);
         break;
       case "loadInSidebar":
         if (val)
-          this._ans.setItemAnnotation(itemId, "bookmarkProperties/loadInSidebar",
-            true, 0, this._ans.EXPIRE_NEVER);
+          Utils.anno(itemId, "bookmarkProperties/loadInSidebar", true);
         else
-          this._ans.removeItemAnnotation(itemId, "bookmarkProperties/loadInSidebar");
+          Svc.Annos.removeItemAnnotation(itemId, "bookmarkProperties/loadInSidebar");
         break;
       case "generatorUri": {
         try {
@@ -451,19 +435,19 @@ BookmarksStore.prototype = {
 
   _getDescription: function BStore__getDescription(id) {
     try {
-      return this._ans.getItemAnnotation(id, "bookmarkProperties/description");
+      return Utils.anno(id, "bookmarkProperties/description");
     } catch (e) {
       return undefined;
     }
   },
 
   _isLoadInSidebar: function BStore__isLoadInSidebar(id) {
-    return this._ans.itemHasAnnotation(id, "bookmarkProperties/loadInSidebar");
+    return Svc.Annos.itemHasAnnotation(id, "bookmarkProperties/loadInSidebar");
   },
 
   _getStaticTitle: function BStore__getStaticTitle(id) {
     try {
-      return this._ans.getItemAnnotation(id, "bookmarks/staticTitle");
+      return Utils.anno(id, "bookmarks/staticTitle");
     } catch (e) {
       return "";
     }
