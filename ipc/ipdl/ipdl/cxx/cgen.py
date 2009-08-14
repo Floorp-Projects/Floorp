@@ -134,7 +134,6 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.write(inh.viz +' '+ inh.name)
 
     def visitFriendClassDecl(self, fcd):
-        print >>sys.stderr, "visitFriendClassDecl: %r" % fcd
         self.printdentln('friend class '+ fcd.friend +';')
 
     def visitMethodDecl(self, md):
