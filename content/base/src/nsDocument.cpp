@@ -3550,23 +3550,25 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
 
 #ifdef DEBUG
-    // We really shouldn't have a wrapper here but if we do we need to make sure
-    // it has the correct parent.
-    JSObject *obj = GetWrapper();
-    if (obj) {
-      JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
-      nsIScriptContext *scx = aScriptGlobalObject->GetContext();
-      JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
-      if (!cx) {
-        nsContentUtils::ThreadJSContextStack()->Peek(&cx);
+    if (!mWillReparent) {
+      // We really shouldn't have a wrapper here but if we do we need to make sure
+      // it has the correct parent.
+      JSObject *obj = GetWrapper();
+      if (obj) {
+        JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
+        nsIScriptContext *scx = aScriptGlobalObject->GetContext();
+        JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
         if (!cx) {
-          nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
-          NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
+          nsContentUtils::ThreadJSContextStack()->Peek(&cx);
+          if (!cx) {
+            nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+            NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
+          }
         }
-      }
-      if (cx) {
-        NS_ASSERTION(JS_GetGlobalForObject(cx, obj) == newScope,
-                     "Wrong scope, this is really bad!");
+        if (cx) {
+          NS_ASSERTION(JS_GetGlobalForObject(cx, obj) == newScope,
+                       "Wrong scope, this is really bad!");
+        }
       }
     }
 #endif

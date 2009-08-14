@@ -64,6 +64,7 @@
 #if defined(WINCE_HAVE_SOFTKB)
 PRBool          nsWindow::sSoftKeyMenuBar         = PR_FALSE;
 PRBool          nsWindow::sSoftKeyboardState      = PR_FALSE;
+PRBool          nsWindowCE::sSIPInTransition      = PR_FALSE;
 TriStateBool    nsWindowCE::sShowSIPButton        = TRI_UNKNOWN;
 #endif
 
@@ -103,6 +104,7 @@ void nsWindowCE::NotifySoftKbObservers(LPRECT visRect)
 
 void nsWindowCE::ToggleSoftKB(PRBool show)
 {
+  sSIPInTransition = PR_TRUE;
   HWND hWndSIP = FindWindowW(L"SipWndClass", NULL );
   if (hWndSIP)
     ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
@@ -156,6 +158,7 @@ void nsWindowCE::ToggleSoftKB(PRBool show)
   } else {
     NotifySoftKbObservers();
   }
+  sSIPInTransition = PR_FALSE;
 }
 
 void nsWindowCE::CreateSoftKeyMenuBar(HWND wnd)
@@ -289,7 +292,7 @@ DWORD nsWindow::WindowStyle()
       break;
 
     default:
-      NS_ASSERTION(0, "unknown border style");
+      NS_ERROR("unknown border style");
       // fall through
 
     case eWindowType_toplevel:
@@ -351,7 +354,12 @@ DWORD nsWindow::WindowStyle()
 // Maximize, minimize or restore the window.
 NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
 {
-
+#if defined(WINCE_HAVE_SOFTKB)
+  if (aMode == 0 && mSizeMode == 3  && nsWindowCE::sSIPInTransition) {
+      // ignore the size mode being set to normal by the SIP resizing us
+    return NS_OK;
+  }
+#endif
   nsresult rv;
 
   // Let's not try and do anything if we're already in that state.

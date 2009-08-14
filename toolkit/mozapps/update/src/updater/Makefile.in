@@ -83,7 +83,13 @@ endif
 
 ifeq ($(OS_ARCH),WINCE)
 USE_STATIC_LIBS = 1
-OS_LIBS += $(call EXPAND_LIBNAME,ws2)
+HAVE_PROGRESSUI = 1
+RCINCLUDE = updater_wince.rc
+CPPSRCS += \
+	updater_wince.cpp \
+	progressui_win.cpp \
+	$(NULL)
+OS_LIBS += $(call EXPAND_LIBNAME,commctrl ws2)
 DEFINES += -DUNICODE -D_UNICODE
 RCFLAGS += -I$(srcdir)
 REQUIRES += string
@@ -114,10 +120,6 @@ MOZ_WINCONSOLE = 1
 else
 MOZ_WINCONSOLE = 0
 endif
-endif
-
-ifeq ($(OS_ARCH), WINCE)
-CPPSRCS += updater_wince.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk

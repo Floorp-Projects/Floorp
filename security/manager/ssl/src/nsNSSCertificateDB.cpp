@@ -447,7 +447,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
     der.len = 0;
 
     if (!tmpCert2) {
-      NS_ASSERTION(0, "Couldn't create temp cert from DER blob\n");
+      NS_ERROR("Couldn't create temp cert from DER blob\n");
       continue;  // Let's try to import the rest of 'em
     }
     
@@ -1694,7 +1694,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
   der.len = 0;
 
   if (!tmpCert) {
-    NS_ASSERTION(0,"Couldn't create cert from DER blob\n");
+    NS_ERROR("Couldn't create cert from DER blob\n");
     return NS_ERROR_FAILURE;
   }
 

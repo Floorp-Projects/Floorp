@@ -71,6 +71,7 @@ CPPSRCS = \
   nsDOMThreadService.cpp \
   nsDOMWorker.cpp \
   nsDOMWorkerEvents.cpp \
+  nsDOMWorkerLocation.cpp \
   nsDOMWorkerMessageHandler.cpp \
   nsDOMWorkerNavigator.cpp \
   nsDOMWorkerPool.cpp \

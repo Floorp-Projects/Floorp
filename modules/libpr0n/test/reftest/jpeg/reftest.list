@@ -23,3 +23,4 @@ fails-if(MOZ_WIDGET_TOOLKIT=="windows") == jpg-gray.jpg jpg-gray.png
 # CMYK colorspace
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") == jpg-cmyk-1.jpg jpg-cmyk-1.png
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") == jpg-cmyk-2.jpg jpg-cmyk-2.png
+== jpg-srgb-icc.jpg jpg-srgb-icc.png

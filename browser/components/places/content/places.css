@@ -4,7 +4,6 @@ tree[type="places"] {
 
 hbox[type="places"] {
   -moz-binding: url("chrome://browser/content/places/toolbar.xml#places-bar");
-  overflow: hidden;
 }
 
 .bookmarks-toolbar-customize,
@@ -14,6 +13,11 @@ toolbarpaletteitem .bookmarks-toolbar-items {
 
 toolbarpaletteitem .bookmarks-toolbar-customize {
   display: -moz-box;
+}
+
+.toolbar-drop-indicator {
+  position: relative;
+  z-index: 1;
 }
 
 menupopup[type="places"] {

@@ -69,6 +69,14 @@ typedef unsigned int NSUInteger;
 
 #endif  /* NSINTEGER_DEFINED */
 
+#ifndef CGFLOAT_DEFINED
+typedef float CGFloat;
+# define CGFLOAT_MIN FLT_MIN
+# define CGFLOAT_MAX FLT_MAX
+# define CGFLOAT_IS_DOUBLE 0
+# define CGFLOAT_DEFINED 1
+#endif
+
 // Used to retain a Cocoa object for the remainder of a method's execution.
 class nsAutoRetainCocoaObject {
 public:

@@ -596,7 +596,7 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
       }
     }
   } else {
-    NS_ASSERTION(0,"Somehow got nsnull for mCertificate in nsNSSCertificate.");
+    NS_ERROR("Somehow got nsnull for mCertificate in nsNSSCertificate.");
     *aWindowTitle = nsnull;
   }
   return NS_OK;
@@ -1641,12 +1641,12 @@ nsNSSCertList::AddCert(nsIX509Cert *aCert)
 
   cert = nssCert->GetCert();
   if (cert == nsnull) {
-    NS_ASSERTION(0,"Somehow got nsnull for mCertificate in nsNSSCertificate.");
+    NS_ERROR("Somehow got nsnull for mCertificate in nsNSSCertificate.");
     return NS_ERROR_FAILURE;
   }
 
   if (mCertList == nsnull) {
-    NS_ASSERTION(0,"Somehow got nsnull for mCertList in nsNSSCertList.");
+    NS_ERROR("Somehow got nsnull for mCertList in nsNSSCertList.");
     return NS_ERROR_FAILURE;
   }
   CERT_AddCertToListTail(mCertList,cert);
@@ -1664,12 +1664,12 @@ nsNSSCertList::DeleteCert(nsIX509Cert *aCert)
   CERTCertListNode *node;
 
   if (cert == nsnull) {
-    NS_ASSERTION(0,"Somehow got nsnull for mCertificate in nsNSSCertificate.");
+    NS_ERROR("Somehow got nsnull for mCertificate in nsNSSCertificate.");
     return NS_ERROR_FAILURE;
   }
 
   if (mCertList == nsnull) {
-    NS_ASSERTION(0,"Somehow got nsnull for mCertList in nsNSSCertList.");
+    NS_ERROR("Somehow got nsnull for mCertList in nsNSSCertList.");
     return NS_ERROR_FAILURE;
   }
 

@@ -893,7 +893,7 @@ static SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
       while (*policyInfos != NULL) {
         policyInfo = *policyInfos++;
 
-        SECOidTag oid_tag = SECOID_FindOIDTag(&policyInfo->policyID);
+        SECOidTag oid_tag = policyInfo->oid;
         if (oid_tag == SEC_OID_UNKNOWN) // not in our list of OIDs accepted for EV
           continue;
 
@@ -1004,6 +1004,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
     | CERT_REV_M_ALLOW_NETWORK_FETCHING
     | CERT_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE
     | CERT_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE
+    | CERT_REV_M_IGNORE_MISSING_FRESH_INFO
     | CERT_REV_M_STOP_TESTING_ON_FRESH_INFO;
 
   PRUint64 revMethodIndependentFlags = 

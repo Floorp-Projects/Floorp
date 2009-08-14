@@ -141,39 +141,39 @@ struct NS_STACK_CLASS nsPeekOffsetStruct
   //            Used with: eSelectLine.
   nscoord mDesiredX;
 
-  // mJumpLines: Whether to allow jumping across line boundaries.
-  //             Used with: eSelectCharacter, eSelectWord.
-  PRBool mJumpLines;
-
-  // mScrollViewStop: Whether to stop when reaching a scroll view boundary.
-  //                  Used with: eSelectCharacter, eSelectWord, eSelectLine.
-  PRBool mScrollViewStop;
-
-  // mIsKeyboardSelect: Whether the peeking is done in response to a keyboard action.
-  //                    Used with: eSelectWord.
-  PRBool mIsKeyboardSelect;
-
-  // mVisual: Whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE).
-  //          Used with: eSelectCharacter, eSelectWord, eSelectBeginLine, eSelectEndLine.
-  PRBool mVisual;
-
   // mWordMovementType: An enum that determines whether to prefer the start or end of a word
   //                    or to use the default beahvior, which is a combination of 
   //                    direction and the platform-based pref
   //                    "layout.word_select.eat_space_to_next_word"
   EWordMovementType mWordMovementType;
 
+  // mJumpLines: Whether to allow jumping across line boundaries.
+  //             Used with: eSelectCharacter, eSelectWord.
+  PRPackedBool mJumpLines;
+
+  // mScrollViewStop: Whether to stop when reaching a scroll view boundary.
+  //                  Used with: eSelectCharacter, eSelectWord, eSelectLine.
+  PRPackedBool mScrollViewStop;
+
+  // mIsKeyboardSelect: Whether the peeking is done in response to a keyboard action.
+  //                    Used with: eSelectWord.
+  PRPackedBool mIsKeyboardSelect;
+
+  // mVisual: Whether bidi caret behavior is visual (PR_TRUE) or logical (PR_FALSE).
+  //          Used with: eSelectCharacter, eSelectWord, eSelectBeginLine, eSelectEndLine.
+  PRPackedBool mVisual;
+
   /*** Output arguments ***/
 
   // mResultContent: Content reached as a result of the peek.
   nsCOMPtr<nsIContent> mResultContent;
 
-  // mContentOffset: Offset into content reached as a result of the peek.
-  PRInt32 mContentOffset;
-
   // mResultFrame: Frame reached as a result of the peek.
   //               Used with: eSelectCharacter, eSelectWord.
   nsIFrame *mResultFrame;
+
+  // mContentOffset: Offset into content reached as a result of the peek.
+  PRInt32 mContentOffset;
 
   // mAttachForward: When the result position is between two frames,
   //                 indicates which of the two frames the caret should be painted in.

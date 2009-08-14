@@ -1279,8 +1279,15 @@ nsHttpChannel::DoReplaceWithProxy(nsIProxyInfo* pi)
         return rv;
 
     mStatus = NS_BINDING_REDIRECTED;
+
+    // disconnect from the old listeners...
     mListener = nsnull;
     mListenerContext = nsnull;
+
+    // ...and the old callbacks
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
+
     return rv;
 }
 

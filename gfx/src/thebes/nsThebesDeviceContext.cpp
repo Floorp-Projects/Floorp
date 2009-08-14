@@ -1256,7 +1256,7 @@ nsThebesDeviceContext::CalcPrintingSize()
     }
 #endif
     default:
-        NS_ASSERTION(0, "trying to print to unknown surface type");
+        NS_ERROR("trying to print to unknown surface type");
     }
 
     if (inPoints) {
@@ -1315,7 +1315,7 @@ nsThebesDeviceContext::GetPrintHDC()
 #endif
 
             default:
-                NS_ASSERTION(0, "invalid surface type in GetPrintHDC");
+                NS_ERROR("invalid surface type in GetPrintHDC");
                 break;
         }
     }
