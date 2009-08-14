@@ -516,7 +516,7 @@ MouseModule.prototype = {
       this._owner.suppressNextClick();
     }
 
-    let [sX, sY] = [evInfo.event.screenX, evInfo.event.screenY];
+    let [sX, sY] = dragData.lockAxis(evInfo.event.screenX, evInfo.event.screenY);
 
     let movedOutOfRadius = dragData.isPointOutsideRadius(sX, sY);
 
@@ -537,9 +537,10 @@ MouseModule.prototype = {
     let dragData = this._dragData;
 
     if (dragData.dragging) {
+      let [sX, sY] = dragData.lockAxis(evInfo.event.screenX, evInfo.event.screenY);
       evInfo.event.stopPropagation();
       evInfo.event.preventDefault();
-      this._doDragMove(evInfo.event.screenX, evInfo.event.screenY);
+      this._doDragMove(sX, sY);
     }
   },
 
@@ -862,15 +863,18 @@ MouseModule.prototype = {
 
 };
 
-
 /**
- * Drag Data is used by both chrome and content input modules
+ * DragData handles processing drags on the screen, handling both
+ * locking of movement on one axis, and click detection.
  */
 function DragData(owner, dragRadius, dragStartTimeoutLength) {
   this._owner = owner;
   this._dragRadius = dragRadius;
   this.reset();
 };
+
+/* milliseconds between mouse down and drag direction determined */
+const kMsUntilLock = 50;
 
 DragData.prototype = {
   reset: function reset() {
@@ -890,43 +894,58 @@ DragData.prototype = {
   },
 
   setDragStart: function setDragStart(screenX, screenY) {
-    this.setDragPosition(screenX, screenY);
-    this._originX = screenX;
-    this._originY = screenY;
+    this.sX = this._originX = screenX;
+    this.sY = this._originY = screenY;
     this.dragging = true;
+    this._dragStartTime = Date.now();
+    this.alreadyLocked = false;
   },
 
   endDrag: function endDrag() {
     this.dragging = false;
   },
 
-  lockMouseMove: function lockMouseMove(sX, sY) {
-    if (this.lockedX !== null)
-      sX = this.lockedX;
-    else if (this.lockedY !== null)
-      sY = this.lockedY;
-    return [sX, sY];
-  },
-
   lockAxis: function lockAxis(sX, sY) {
-    if (this.alreadyLocked)
-      return this.lockMouseMove(sX, sY);
+    if (this.alreadyLocked) {
+      if (this.lockedX !== null) {
+        sX = this.lockedX;
+      }
+      else if (this.lockedY !== null) {
+        sY = this.lockedY;
+      }
+      return [sX, sY];
+    }
+    // check to see if mouse move is after the timeout
+    let now = Date.now();
+    if (now - this._dragStartTime < kMsUntilLock) {
+      // Util.dumpLn("*** pre-lock, return no movement");
+      return [this.sX, this.sY];      
+    }
+     
+    // Util.dumpLn("*** this.sX/sY: ", this.sX, ",", this.sY, "   sX/sY: ", sX, ",", sY);
 
     // look at difference from stored coord to lock movement, but only
     // do it if initial movement is sufficient to detect intent
     let absX = Math.abs(this.sX - sX);
     let absY = Math.abs(this.sY - sY);
+    
+    // Util.dumpLn("*** determining lock with absX/Y: ", absX, ",", absY);
 
-    // lock panning if we move more than half of the drag radius and that direction
-    // contributed more than 2/3rd to the radial movement
-    if ((absX > (this._dragRadius / 2)) && ((absX * absX) > (2 * absY * absY))) {
+    // divide possibilty space into eight parts.  Diagonals will allow
+    // free movement, while moving towards a cardinal will lock that
+    // axis.  We pick a direction if you move more than twice as far
+    // on one axis than another, which should be an angle of about 30
+    // degrees from the axis
+    if (absX > 2 * absY) {
       this.lockedY = this.sY;
       sY = this.sY;
     }
-    else if ((absY > (this._dragRadius / 2)) && ((absY * absY) > (2 * absX * absX))) {
+    else if (absY > 2 * absX) {
       this.lockedX = this.sX;
       sX = this.sX;
     }
+
+    // don't try to lock again... if you moved diagonal, we're free
     this.alreadyLocked = true;
 
     return [sX, sY];
@@ -1086,7 +1105,7 @@ KineticController.prototype = {
     let mbLength = this.momentumBuffer.length;
     // avoid adding duplicates which would otherwise slow down the speed
     let now = Date.now();
-
+ 
     if (mbLength > 0) {
       let mbLast = this.momentumBuffer[mbLength - 1];
       if ((mbLast.sx == sx && mbLast.sy == sy) || mbLast.t == now)
