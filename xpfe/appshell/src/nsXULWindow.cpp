@@ -130,7 +130,7 @@ DevToCSSPixels(PRInt32 aPixels, PRInt32 aAppPerDev)
 //***    nsXULWindow: Object Management
 //*****************************************************************************
 
-nsXULWindow::nsXULWindow()
+nsXULWindow::nsXULWindow(PRUint32 aChromeFlags)
   : mChromeTreeOwner(nsnull), 
     mContentTreeOwner(nsnull),
     mPrimaryContentTreeOwner(nsnull),
@@ -147,7 +147,7 @@ nsXULWindow::nsXULWindow()
     mBlurSuppressionLevel(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
-    mChromeFlags(nsIWebBrowserChrome::CHROME_ALL),
+    mChromeFlags(aChromeFlags),
     // best guess till we have a widget
     mAppPerDev(nsPresContext::AppUnitsPerCSSPixel()) 
 {
@@ -1704,8 +1704,6 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 
-  newWindow->SetChromeFlags(aChromeFlags);
-
   *_retval = newWindow;
   NS_ADDREF(*_retval);
 
@@ -1754,8 +1752,6 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
                                 getter_AddRefs(newWindow));
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
-
-  newWindow->SetChromeFlags(aChromeFlags);
 
   // Specify that we want the window to remain locked until the chrome has loaded.
   nsXULWindow *xulWin = static_cast<nsXULWindow*>
