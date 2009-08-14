@@ -245,6 +245,30 @@ var BrowserUI = {
       document.getElementById("toolbar-main").removeAttribute("dialog");
   },
 
+  pushPopup: function pushPopup(aPanel, aElements) {
+    this._popup =  { "panel": aPanel, 
+                     "elements": (aElements instanceof Array) ? aElements : [aElements] };
+  },
+
+  popPopup: function popPopup() {
+    this._popup = null;
+  },
+
+  _updatePopup: function _updateContextualPanel(aEvent) {
+    if (!this._popup)
+      return;
+
+    let element = this._popup.elements;
+    let targetNode = aEvent.target;
+    while (targetNode && element.indexOf(targetNode) == -1)
+      targetNode = targetNode.parentNode;
+
+    if (targetNode == null) {
+      let panel = this._popup.panel;
+      (panel.hide) ? panel.hide() : this.popPopup();
+    }
+  },
+
   switchPane : function(id) {
     document.getElementById("panel-items").selectedPanel = document.getElementById(id);
   },
@@ -319,6 +343,9 @@ var BrowserUI = {
     // XXX these really want to listen to only the current browser
     browsers.addEventListener("DOMTitleChanged", this, true);
     browsers.addEventListener("DOMLinkAdded", this, true);
+    
+    // listening mousedown for automatically dismiss some popups (e.g. larry)
+    window.addEventListener("mousedown", this, true);
 
 
     ExtensionsView.init();
@@ -566,6 +593,8 @@ var BrowserUI = {
         }
         break;
       case "mousedown":
+        this._updatePopup(aEvent);
+
         if (aEvent.detail == 2 &&
             aEvent.button == 0 &&
             gPrefService.getBoolPref("browser.urlbar.doubleClickSelectsAll")) {
