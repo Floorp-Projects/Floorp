@@ -56,7 +56,6 @@ NO_PKG_FILES = \
 	xpidl* \
 	xpt_dump* \
 	xpt_link* \
-	res \
 	bloaturls.txt \
 	run-mozilla.sh \
 	nsinstall \
