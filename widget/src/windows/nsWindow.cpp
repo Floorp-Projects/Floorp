@@ -2169,7 +2169,8 @@ ClipRegionContainedInRect(const nsTArray<nsIntRect>& aClipRects,
 }
 
 void
-nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+nsWindow::Scroll(const nsIntPoint& aDelta,
+                 const nsTArray<nsIntRect>& aDestRects,
                  const nsTArray<Configuration>& aConfigurations)
 {
   // We use SW_SCROLLCHILDREN if all the windows that intersect the
@@ -2191,43 +2192,58 @@ nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
     w->SetWindowClipRegion(configuration.mClipRegion, PR_TRUE);
   }
 
-  // Now check if any of our children would be affected by
-  // SW_SCROLLCHILDREN but not supposed to scroll.
-  nsIntRect affectedRect;
-  affectedRect.UnionRect(aSource, aSource + aDelta);
-  // We pass SW_INVALIDATE because areas that get scrolled into view
-  // from offscreen (but inside the scroll area) need to be repainted.
-  UINT flags = SW_SCROLLCHILDREN | SW_INVALIDATE;
-  for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
-       w = static_cast<nsWindow*>(w->GetNextSibling())) {
-    if (w->mBounds.Intersects(affectedRect) &&
-        !scrolledWidgets.GetEntry(w)) {
-      flags &= ~SW_SCROLLCHILDREN;
-      break;
-    }
-  }
-
-  if (flags & SW_SCROLLCHILDREN) {
-    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
-      const Configuration& configuration = aConfigurations[i];
-      nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
-      // Widgets that will be scrolled by SW_SCROLLCHILDREN but which
-      // will be partly visible outside the scroll area after scrolling
-      // must be invalidated, because SW_SCROLLCHILDREN doesn't
-      // update parts of widgets outside the area it scrolled, even
-      // if it moved them.
-      if (w->mBounds.Intersects(affectedRect) &&
-          !ClipRegionContainedInRect(configuration.mClipRegion,
-                                     affectedRect - (w->mBounds.TopLeft() + aDelta))) {
-        w->Invalidate(PR_FALSE);
+  for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
+    nsIntRect affectedRect;
+    affectedRect.UnionRect(aDestRects[i], aDestRects[i] - aDelta);
+    // We pass SW_INVALIDATE because areas that get scrolled into view
+    // from offscreen (but inside the scroll area) need to be repainted.
+    UINT flags = SW_SCROLLCHILDREN | SW_INVALIDATE;
+    // Now check if any of our children would be affected by
+    // SW_SCROLLCHILDREN but not supposed to scroll.
+    for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
+         w = static_cast<nsWindow*>(w->GetNextSibling())) {
+      if (w->mBounds.Intersects(affectedRect)) {
+        // This child will be affected
+        nsPtrHashKey<nsWindow>* entry = scrolledWidgets.GetEntry(w);
+        if (entry) {
+          // It's supposed to be scrolled, so we can still use
+          // SW_SCROLLCHILDREN. But don't allow SW_SCROLLCHILDREN to be
+          // used on it again by a later rectangle in aDestRects, we
+          // don't want it to move twice!
+          scrolledWidgets.RawRemoveEntry(entry);
+        } else {
+          flags &= ~SW_SCROLLCHILDREN;
+          // We may have removed some children from scrolledWidgets even
+          // though we decide here to not use SW_SCROLLCHILDREN. That's OK,
+          // it just means that we might not use SW_SCROLLCHILDREN
+          // for a later rectangle when we could have.
+          break;
+        }
       }
     }
-  }
 
-  // Note that when SW_SCROLLCHILDREN is used, WM_MOVE messages are sent
-  // which will update the mBounds of the children.
-  RECT clip = { affectedRect.x, affectedRect.y, affectedRect.XMost(), affectedRect.YMost() };
-  ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, NULL, NULL, flags);
+    if (flags & SW_SCROLLCHILDREN) {
+      for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+        // Widgets that will be scrolled by SW_SCROLLCHILDREN but which
+        // will be partly visible outside the scroll area after scrolling
+        // must be invalidated, because SW_SCROLLCHILDREN doesn't
+        // update parts of widgets outside the area it scrolled, even
+        // if it moved them.
+        if (w->mBounds.Intersects(affectedRect) &&
+            !ClipRegionContainedInRect(configuration.mClipRegion,
+                                       affectedRect - (w->mBounds.TopLeft() + aDelta))) {
+          w->Invalidate(PR_FALSE);
+        }
+      }
+    }
+
+    // Note that when SW_SCROLLCHILDREN is used, WM_MOVE messages are sent
+    // which will update the mBounds of the children.
+    RECT clip = { affectedRect.x, affectedRect.y, affectedRect.XMost(), affectedRect.YMost() };
+    ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, NULL, NULL, flags);
+  }
 
   // Now make sure all children actually get positioned, sized and clipped
   // correctly. If SW_SCROLLCHILDREN already moved widgets to their correct

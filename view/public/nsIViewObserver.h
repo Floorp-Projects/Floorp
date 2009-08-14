@@ -97,7 +97,8 @@ public:
   NS_IMETHOD ComputeRepaintRegionForCopy(nsIView*      aRootView,
                                          nsIView*      aMovingView,
                                          nsPoint       aDelta,
-                                         const nsRect& aCopyRect,
+                                         const nsRect& aUpdateRect,
+                                         nsRegion*     aBlitRegion,
                                          nsRegion*     aRepaintRegion) = 0;
 
   /* called when the observer needs to handle an event

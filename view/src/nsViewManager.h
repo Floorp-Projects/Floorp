@@ -356,11 +356,12 @@ public: // NOT in nsIViewManager, so private to the view module
   void UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegion);
 
   /**
-   * Asks whether we can scroll a view using bitblt. If we say 'yes', we
-   * return in aUpdateRegion an area that must be updated (relative to aView
-   * after it has been scrolled).
+   * Given that the view aView has being moved by scrolling by aDelta
+   * (so we want to blit pixels by -aDelta), compute the regions that
+   * must be blitted and repainted to correctly update the screen.
    */
-  PRBool CanScrollWithBitBlt(nsView* aView, nsPoint aDelta, nsRegion* aUpdateRegion);
+  void GetRegionsForBlit(nsView* aView, nsPoint aDelta,
+                         nsRegion* aBlitRegion, nsRegion* aRepaintRegion);
 
   nsresult CreateRegion(nsIRegion* *result);
 
