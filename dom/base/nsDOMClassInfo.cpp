@@ -1648,27 +1648,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   return NS_OK;
 }
 
-// static
-nsresult
-nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
-                           const nsIID* aIID, PRBool aAllowWrapping, jsval *vp,
-                           nsIXPConnectJSObjectHolder **aHolder)
-{
-  if (!native) {
-    NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
-
-    *vp = JSVAL_NULL;
-
-    return NS_OK;
-  }
-
-  NS_ENSURE_TRUE(sXPConnect, NS_ERROR_UNEXPECTED);
-
-  return sXPConnect->WrapNativeToJSVal(cx, ::JS_GetGlobalForObject(cx, scope),
-                                       native, aIID, aAllowWrapping, vp,
-                                       aHolder);
-}
-
 static nsresult
 CreateExceptionFromResult(JSContext *cx, nsresult aResult)
 {

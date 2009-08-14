@@ -1679,6 +1679,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     nsCOMPtr<nsIDOMChromeWindow> thisChrome =
       do_QueryInterface(static_cast<nsIDOMWindow *>(this));
     nsCOMPtr<nsIXPConnectJSObjectHolder> navigatorHolder;
+    jsval nav;
 
     PRBool isChrome = PR_FALSE;
 
@@ -1757,9 +1758,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
           nsIDOMNavigator* navigator =
             static_cast<nsIDOMNavigator*>(mNavigator.get());
-          xpc->WrapNative(cx, currentInner->mJSObject, navigator,
-                          NS_GET_IID(nsIDOMNavigator),
-                          getter_AddRefs(navigatorHolder));
+          nsContentUtils::WrapNative(cx, currentInner->mJSObject, navigator,
+                                     &NS_GET_IID(nsIDOMNavigator), &nav,
+                                     getter_AddRefs(navigatorHolder));
         }
       }
 
@@ -1983,12 +1984,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
             if (navigatorHolder &&
                 st_id == nsIProgrammingLanguage::JAVASCRIPT) {
               // Restore window.navigator onto the new inner window.
-              JSObject *nav;
               JSAutoRequest ar(cx);
-              navigatorHolder->GetJSObject(&nav);
 
               ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
-                                  OBJECT_TO_JSVAL(nav), nsnull, nsnull,
+                                  nav, nsnull, nsnull,
                                   JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                   JSPROP_READONLY);
 
@@ -2000,7 +1999,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                 static_cast<nsIDOMNavigator*>(mNavigator);
 
               xpc->
-                ReparentWrappedNativeIfFound(cx, nav, newInnerWindow->mJSObject,
+                ReparentWrappedNativeIfFound(cx, JSVAL_TO_OBJECT(nav),
+                                             newInnerWindow->mJSObject,
                                              navigator,
                                              getter_AddRefs(navigatorHolder));
             }
