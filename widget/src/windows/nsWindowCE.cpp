@@ -354,11 +354,12 @@ DWORD nsWindow::WindowStyle()
 // Maximize, minimize or restore the window.
 NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
 {
+#if defined(WINCE_HAVE_SOFTKB)
   if (aMode == 0 && mSizeMode == 3  && nsWindowCE::sSIPInTransition) {
       // ignore the size mode being set to normal by the SIP resizing us
     return NS_OK;
-    
   }
+#endif
   nsresult rv;
 
   // Let's not try and do anything if we're already in that state.
