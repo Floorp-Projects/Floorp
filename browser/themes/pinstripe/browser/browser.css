@@ -1711,23 +1711,9 @@ tabpanels.plain {
 	background-color: #fff !important;
 }
 
-/* Personal toolbar */
+/* Bookmarks toolbar */
 .toolbar-drop-indicator {
-  width: 7px;
-  height: 17px;
-  position: relative;
-  background: url('chrome://browser/skin/places/toolbarDropMarker.png') 40% 50% no-repeat;
-}
-
-.toolbar-drop-indicator-bar {
-  visibility: hidden;
-  height: 17px;
-  margin-bottom: -17px;
-  position: relative;
-}
-
-.toolbar-drop-indicator-bar[dragging="true"] {
-  visibility: visible;
+  list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
 }
 
 /* Bookmark drag and drop styles */

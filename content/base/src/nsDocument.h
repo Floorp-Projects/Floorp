@@ -1273,6 +1273,11 @@ private:
 #ifdef MOZ_SMIL
   nsAutoPtr<nsSMILAnimationController> mAnimationController;
 #endif // MOZ_SMIL
+
+#ifdef DEBUG
+protected:
+  PRBool mWillReparent;
+#endif
 };
 
 #define NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                             \

@@ -1410,7 +1410,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 				break;
 
 			default:
-				NS_ASSERTION(0, "Invalid cursor type");
+				NS_ERROR("Invalid cursor type");
 				break;
 		}
 		NS_ASSERTION(newCursor != nsnull, "Cursor not stored in array properly!");

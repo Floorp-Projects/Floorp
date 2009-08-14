@@ -2,9 +2,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const TIMEOUT_INTERVAL_MS = 100;
 
-// Global Context
-var ctx = {};
-
 function handleRequest(request, response) {
 
   // Allow us to asynchronously construct the response with timeouts
@@ -13,17 +10,48 @@ function handleRequest(request, response) {
   response.processAsync();
 
   // Figure out whether the client wants to load the image, or just
-  // to tell us that it's ready for us to finish
+  // to tell us to finish the previous load
   var query = {};
   request.queryString.split('&').forEach(function (val) {
     var [name, value] = val.split('=');
     query[name] = unescape(value);
   });
   if (query["continue"] == "true") {
-    setState("doContinue", "yes");
+
+    // Get the context structure and finish the old request
+    getObjectState("context", function(obj) {
+
+      // magic or goop, depending on how you look at it
+      savedCtx = obj.wrappedJSObject;
+
+      // Write the rest of the data
+      savedCtx.ostream.writeFrom(savedCtx.istream, savedCtx.istream.available());
+
+      // Close the streams
+      savedCtx.ostream.close();
+      savedCtx.istream.close();
+
+      // Finish off 'the old response'
+      savedCtx.response.finish();
+    });
+
+    // Finish off 'the current response'
     response.finish();
     return;
   }
+
+  // Context structure - we need to set this up properly to pass to setObjectState
+  var ctx = {
+    QueryInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsISupports))
+        return this;
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+  };
+  ctx.wrappedJSObject = ctx;
+
+  // Save the response
+  ctx.response = response;
 
   // We're serving up a png
   response.setHeader("Content-Type", "image/png", false);
@@ -49,35 +77,9 @@ function handleRequest(request, response) {
   // Write the first 10 bytes, which is just boilerplate/magic bytes
   ctx.ostream.writeFrom(ctx.istream, 10);
 
-  // Mark that we haven't yet been instructed to continue
-  setState("doContinue", "no");
+  // Save the context structure for retrieval when we get pinged
+  setObjectState("context", ctx);
 
-  // Wait for the continue request, then finish
-  waitForContinueAndFinish();
+  // Now we play the waiting game...
 }
 
-function waitForContinueAndFinish() {
-
-  // If we can continue
-  if (getState("doContinue") == "yes")
-    return finishRequest();
-
-  // Wait 100 ms and check again
-  var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback(waitForContinueAndFinish,
-                         TIMEOUT_INTERVAL_MS, Ci.nsITimer.TYPE_ONE_SHOT);
-}
-
-
-function finishRequest() {
-
-  // Write the rest of the data
-  ctx.ostream.writeFrom(ctx.istream, ctx.istream.available());
-
-  // Close the streams
-  ctx.ostream.close();
-  ctx.istream.close();
-
-  // Finish off the response
-  response.finish();
-}

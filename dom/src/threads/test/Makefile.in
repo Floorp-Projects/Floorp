@@ -66,6 +66,8 @@ _TEST_FILES = \
   importScripts_worker_imported4.js \
   test_json.html \
   json_worker.js \
+  test_location.html \
+  location_worker.js \
   test_longThread.html \
   longThread_worker.js \
   test_navigator.html \

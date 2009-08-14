@@ -126,11 +126,15 @@ public:
                                        nsIView*        aView,
                                        const nsRect*   aCombinedArea,
                                        PRUint32        aFlags = 0);
-  
+
+  // Syncs properties to the top level view and window, like transparency and
+  // shadow.
+  static void SyncWindowProperties(nsPresContext*       aPresContext,
+                                   nsIFrame*            aFrame,
+                                   nsIView*             aView);
+
   // Sets the view's attributes from the frame style.
-  // - opacity
   // - visibility
-  // - content transparency
   // - clip
   // Call this when one of these styles changes or when the view has just
   // been created.

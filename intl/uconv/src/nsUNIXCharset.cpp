@@ -126,7 +126,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale
       return NS_OK;
     }
    }
-   NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
+   NS_ERROR("unable to convert locale to charset using deprecated config");
    mCharset.AssignLiteral("ISO-8859-1");
    oResult.AssignLiteral("ISO-8859-1");
    return NS_SUCCESS_USING_FALLBACK_LOCALE;
@@ -205,7 +205,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   if (NS_SUCCEEDED(res))
     return res;
 
-  NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
+  NS_ERROR("unable to convert locale to charset using deprecated config");
   oResult.AssignLiteral("ISO-8859-1");
   return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
@@ -302,7 +302,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
     }
   }
 
-  NS_ASSERTION(0, "unable to use nl_langinfo(CODESET)");
+  NS_ERROR("unable to use nl_langinfo(CODESET)");
 #endif
 
   //
@@ -345,7 +345,7 @@ nsPlatformCharset::Init()
   }
 
   // last resort fallback
-  NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
+  NS_ERROR("unable to convert locale to charset using deprecated config");
   mCharset.AssignLiteral("ISO-8859-1");
   return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
@@ -368,7 +368,7 @@ nsPlatformCharset::VerifyCharset(nsCString &aCharset)
   nsCOMPtr <nsIUnicodeEncoder> enc;
   res = charsetConverterManager->GetUnicodeEncoder(aCharset.get(), getter_AddRefs(enc));
   if (NS_FAILED(res)) {
-    NS_ASSERTION(0, "failed to create encoder");
+    NS_ERROR("failed to create encoder");
     return res;
   }
 
@@ -378,7 +378,7 @@ nsPlatformCharset::VerifyCharset(nsCString &aCharset)
   nsCOMPtr <nsIUnicodeDecoder> dec;
   res = charsetConverterManager->GetUnicodeDecoder(aCharset.get(), getter_AddRefs(dec));
   if (NS_FAILED(res)) {
-    NS_ASSERTION(0, "failed to create decoder");
+    NS_ERROR("failed to create decoder");
     return res;
   }
 

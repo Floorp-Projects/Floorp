@@ -1566,7 +1566,7 @@ nsXULElement::DestroyContent()
 void
 nsXULElement::List(FILE* out, PRInt32 aIndent) const
 {
-    nsCString prefix("<XUL");
+    nsCString prefix("XUL");
     if (HasSlots()) {
       prefix.Append('*');
     }

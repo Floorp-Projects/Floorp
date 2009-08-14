@@ -30,7 +30,7 @@ CurrentFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     txExecutionState* es = 
         static_cast<txExecutionState*>(aContext->getPrivateContext());
     if (!es) {
-        NS_ASSERTION(0,
+        NS_ERROR(
             "called xslt extension function \"current\" with wrong context");
         return NS_ERROR_UNEXPECTED;
     }

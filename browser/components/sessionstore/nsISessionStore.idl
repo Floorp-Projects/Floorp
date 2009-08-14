@@ -165,6 +165,9 @@ interface nsISessionStore : nsISupports
 
   /**
    * @param aIndex  is the index of the closed window to be removed (FIFO ordered).
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   when aIndex does not map to a closed window
    */
   nsIDOMNode forgetClosedWindow(in unsigned long aIndex);
 

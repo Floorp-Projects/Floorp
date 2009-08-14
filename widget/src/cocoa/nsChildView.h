@@ -67,6 +67,7 @@
 
 class gfxASurface;
 class nsChildView;
+class nsCocoaWindow;
 union nsPluginPort;
 
 enum {
@@ -346,7 +347,7 @@ public:
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
   virtual void            Scroll(const nsIntPoint& aDelta,
-                                 const nsIntRect& aSource,
+                                 const nsTArray<nsIntRect>& aDestRects,
                                  const nsTArray<Configuration>& aConfigurations);
   virtual nsIntPoint      WidgetToScreenOffset();
   virtual PRBool          ShowsResizeIndicator(nsIntRect* aResizerRect);
@@ -387,7 +388,6 @@ public:
   
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
-  NS_IMETHOD        SetWindowShadowStyle(PRInt32 aStyle);
   
   // Mac specific methods
   
@@ -430,6 +430,7 @@ protected:
   // caller must retain.
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
+  nsCocoaWindow*    GetXULWindowWidget();
 
   virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                             PRInt32 aNativeKeyCode,

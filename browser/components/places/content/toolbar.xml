@@ -57,44 +57,49 @@
     </resources>
 
     <content>
-      <xul:vbox>
-        <xul:hbox class="toolbar-drop-indicator-bar">
-          <xul:hbox class="toolbar-drop-indicator"/>
-        </xul:hbox>
-        <xul:hbox flex="1">
-          <xul:hbox class="bookmarks-toolbar-items" flex="1">
-            <children/>
-          </xul:hbox>
-          <xul:toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
-                             mousethrough="never"
-                             label="&bookmarksToolbarItem.label;"/>
-        </xul:hbox>
-      </xul:vbox>
-      <xul:hbox mousethrough="always"
-                flex="1"
-                pack="end">
-        <xul:toolbarbutton type="menu"
-                           class="chevron"
+        <xul:toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
                            mousethrough="never"
-                           collapsed="true"
-                           tooltiptext="&bookmarksToolbarChevron.tooltip;"
-                           onpopupshowing="chevronPopupShowing(event);">
-          <xul:menupopup anonid="chevronPopup"
-                         xbl:inherits="tooltip"
+                           label="&bookmarksToolbarItem.label;"/>
+        <xul:hbox flex="1">
+          <xul:hbox align="center">
+            <xul:image class="toolbar-drop-indicator"
+                       mousethrough="always"
+                       collapsed="true"/>
+          </xul:hbox>
+          <xul:scrollbox orient="horizontal"
+                         class="bookmarks-toolbar-items"
+                         flex="1">
+            <children/>
+          </xul:scrollbox>
+          <xul:hbox mousethrough="always"
+                    pack="end">
+            <xul:toolbarbutton type="menu"
+                               class="chevron"
+                               mousethrough="never"
+                               collapsed="true"
+                               tooltiptext="&bookmarksToolbarChevron.tooltip;"
+                               onpopupshowing="_onChevronPopupShowing(event);">
+              <xul:menupopup anonid="chevronPopup"
+                             xbl:inherits="tooltip"
 #ifndef XP_MACOSX
-                         context="placesContext"
+                             context="placesContext"
 #endif
-          />
-        </xul:toolbarbutton>
-      </xul:hbox>
+              />
+            </xul:toolbarbutton>
+          </xul:hbox>
+        </xul:hbox>
     </content>
 
-    <implementation implements="nsIAccessibleProvider, nsITimerCallback">
+    <implementation implements="nsIAccessibleProvider, nsITimerCallback, nsIDOMEventListener">
       <constructor><![CDATA[
         this._init();
       ]]></constructor>
 
       <destructor><![CDATA[
+        this._scrollbox.removeEventListener("overflow", this, false);
+        this._scrollbox.removeEventListener("underflow", this, false);
+        window.removeEventListener("resize", this, false);
+
         if (this._result) {
           this._result.viewer = null;
           this._result = null;
@@ -110,26 +115,40 @@
         this._controller = new PlacesController(this);
         this.controllers.appendController(this._controller);
 
-        var t = this;
-        window.addEventListener("resize",
-                                function f(e) { t.updateChevron(e); },
-                                false);
+        this._scrollbox.addEventListener("overflow", this, false);
+        this._scrollbox.addEventListener("underflow", this, false);
+        window.addEventListener("resize", this, false);
 
         if (this.hasAttribute("place")) {
-          // Do the initial build. 
+          // Do the initial build.
           this.place = this.place;
         }
         ]]></body>
       </method>
 
-      <field name="_dropIndicatorBar">document.getAnonymousElementByAttribute(this, "class", "toolbar-drop-indicator-bar")</field>
-      <field name="_chevron">document.getAnonymousElementByAttribute(this, "class", "chevron")</field>
+      <field name="_scrollbox">
+        document.getAnonymousElementByAttribute(this, "class",
+                                                "bookmarks-toolbar-items")
+      </field>
+      <field name="_dropIndicator">
+        document.getAnonymousElementByAttribute(this, "class",
+                                                "toolbar-drop-indicator")
+      </field>
+      <field name="_chevron">
+        document.getAnonymousElementByAttribute(this, "class", "chevron")
+      </field>
+      <field name="_chevronPopup">this._chevron.lastChild</field>
 
       <field name="_openedMenuButton">null</field>
       <field name="_allowPopupShowing">true</field>
 
       <field name="_result">null</field>
       <field name="_resultNode">null</field>
+
+      <field name="_isRTL">
+        document.defaultView.getComputedStyle(this.parentNode, "")
+                            .direction == "rtl"
+      </field>
 
       <!-- nsIPlacesView -->
       <method name="getResult">
@@ -147,7 +166,8 @@
 
       <method name="_rebuild">
         <body><![CDATA[
-          // Clear out references to existing nodes, since we'll be deleting and re-adding.
+          // Clear out references to existing nodes, since they will be removed
+          // and re-added.
           if (this._overFolder.node)
             this._clearOverFolder();
           this._openedMenuButton = null;
@@ -157,22 +177,18 @@
 
           var rootNode = this._result.root;
           var cc = rootNode.childCount;
-          for (var i = 0; i < cc; ++i)
+          for (let i = 0; i < cc; ++i)
             this.insertNewItem(rootNode.getChild(i), null);
 
-          var chevronPopup = this._chevron.lastChild;
-          if (chevronPopup.hasAttribute("type")) {
-            // Otherwise we'll set it when the chevron is enabled (see updateChevron)
-            chevronPopup.place = this.place;
+          if (this._chevronPopup.hasAttribute("type")) {
+            // Chevron has already been initialized, but since we are forcing
+            // a rebuild of the toolbar, it has to be rebuilt.
+            // Otherwise, it will be initialized when the toolbar overflows.
+            this._chevronPopup.place = this.place;
           }
 
           while (chevronPopup.hasChildNodes())
-            chevronPopup.removeChild(chevronPopup.lastChild);
-
-          // This needs to be in a timeout to make sure our boxObject has time
-          // to get its proper size
-          var t = this;
-          setTimeout(function() { t.updateChevron(); }, 0);
+            this._chevronPopup.removeChild(this._chevronPopup.lastChild);
         ]]></body>
       </method>
 
@@ -236,7 +252,7 @@
         <parameter name="child"/>
         <body><![CDATA[
           if (PlacesUtils.nodeIsContainer(child.node)) {
-            for (var i=0; i < this._containerNodesMap.length; i++) {
+            for (let i = 0; i < this._containerNodesMap.length; i++) {
               if (this._containerNodesMap[i].resultNode == child.node) {
                 this._containerNodesMap.splice(i, 1);
                 break;
@@ -253,76 +269,99 @@
         ]]></body>
       </method>
 
-      <method name="chevronPopupShowing">
-        <parameter name="aEvent"/>
+      <method name="_updateChevronPopupNodesVisibility">
         <body><![CDATA[
-          var popup = aEvent.target;
-          if (popup != this._chevron.firstChild)
-            return;
-
-          for (var i = 0; i < popup.childNodes.length; i++)
-            popup.childNodes[i].hidden = !this.childNodes[i].collapsed;
+          for (let i = 0; i < this._chevronPopup.childNodes.length; i++) {
+            this._chevronPopup.childNodes[i].hidden =
+              this.childNodes[i].style.visibility != "hidden";
+          }
         ]]></body>
       </method>
 
-      <method name="getElementWidth">
-        <parameter name="element"/>
+      <method name="_onChevronPopupShowing">
+        <parameter name="aEvent"/>
         <body><![CDATA[
-          var style = document.defaultView.getComputedStyle(element, "");
-          var leftMargin = style.getPropertyValue("margin-left");
-          leftMargin = leftMargin ? Math.round(parseFloat(leftMargin)) : 0;
-          var rightMargin = style.getPropertyValue("margin-right");
-          rightMargin = rightMargin ? Math.round(parseFloat(rightMargin)) : 0;
-          return element.boxObject.width + leftMargin + rightMargin;
+          // Handle popupshowing only for the chevron popup, not for
+          // nested ones.
+          if (aEvent.target != this._chevronPopup)
+            return;
+
+          this._updateChevronPopupNodesVisibility();
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // Both overflow/underflow and resize events should not be handled
+          // for descendant nodes.
+          if (aEvent.target != aEvent.currentTarget)
+            return;
+
+          switch (aEvent.type) {
+            case "resize":
+              // This handler updates nodes visibility in both the toolbar
+              // and the chevron popup when a window resize does not change
+              // the overflow status of the toolbar.
+              break;
+
+            case "overflow":
+              // Attach the popup binding to the chevron popup if it has not yet
+              // been initialized.
+              if (!this._chevronPopup.hasAttribute("type")) {
+                this._chevronPopup.setAttribute("place", this.place);
+                this._chevronPopup.setAttribute("type", "places");
+              }
+              this._chevron.collapsed = false;
+              break;
+
+            case "underflow":
+              this._chevron.collapsed = true;
+              break;
+          }
+
+          this.updateChevron();
         ]]></body>
       </method>
 
       <method name="updateChevron">
-        <parameter name="event"/>
         <body><![CDATA[
-          // Ignore events that aren't on the document or the window
-          // (html document, tooltips, etc)
-          // Do not ignore content window resizes, because they may
-          // be the result of the toolbar being shown/hidden
-          if (event && event.target != document && event.target != window &&
-              event.target != content)
+          // If the chevron is collapsed there's nothing to update.
+          if (this._chevron.collapsed)
             return;
 
-          if (this.childNodes.length == 0) {
-            this._chevron.collapsed = true;
-            return;
-          }
+          // XXX (bug 508816) Scrollbox does not handle correctly RTL mode.
+          // This workarounds the issue scrolling the box to the right.
+          if (this._isRTL)
+            this._scrollbox.scrollLeft = this._scrollbox.scrollWidth;
 
-          var spaceLeft = this.boxObject.width;
-          this._chevron.collapsed = false;
-          var chevronWidth = this._chevron.boxObject.width;
-          var overflowed = false;
-          for (var i = 0; i < this.childNodes.length; i++) {
-            var child = this.childNodes[i];
-            child.collapsed = false;
-            spaceLeft -= this.getElementWidth(child);
-            var spaceNeeded = (i == this.childNodes.length - 1) ? 0 : chevronWidth;
-            if (spaceLeft < spaceNeeded) {
-              overflowed = true;
-              child.collapsed = true;
+          // Update the chevron on a timer.  This will avoid repeated work when
+          // lot of changes happen in a small timeframe.
+          if (this._updateChevronTimer)
+            this._updateChevronTimer.cancel();
+          this._updateChevronTimer = this._setTimer(100);
+        ]]></body>
+      </method>
+
+      <method name="_updateChevronTimerCallback">
+        <body><![CDATA[
+          var scrollRect = this._scrollbox.getBoundingClientRect();
+          var childOverflowed = false;
+          for (let i = 0; i < this.childNodes.length; i++) {
+            let child = this.childNodes[i];
+            // Once a child overflows, all the next ones will.
+            if (!childOverflowed) {
+              let childRect = child.getBoundingClientRect();
+              childOverflowed = this._isRTL ? (childRect.left < scrollRect.left)
+                                            : (childRect.right > scrollRect.right);
             }
-          }
-          if (!(this._chevron.collapsed = !overflowed)) {
-            // Attach the popup binding to the chevron popup
-            var popup = this._chevron.firstChild;
-            if (!popup.hasAttribute("type")) {
-              popup.setAttribute("place", this.place);
-              popup.setAttribute("type", "places");
-            }
+            child.style.visibility = childOverflowed ? "hidden" : "visible";
           }
 
           // We rebuild the chevron on popupShowing, so if it is open
-          // we must force a rebuild
-          if (this._chevron.open) {
-            var popup = this._chevron.firstChild;
-            for (var i = 0; i < popup.childNodes.length; i++)
-              popup.childNodes[i].hidden = !this.childNodes[i].collapsed;
-          }
+          // we must update it.
+          if (this._chevron.open)
+            this._updateChevronPopupNodesVisibility();
         ]]></body>
       </method>
 
@@ -459,7 +498,7 @@
           if (this._self._resultNode == aNode)
             return this._self;
 
-          for (var i=0; i < this._self._containerNodesMap.length; i++) {
+          for (let i = 0; i < this._self._containerNodesMap.length; i++) {
             if (this._self._containerNodesMap[i].resultNode == aNode)
               return this._self._containerNodesMap[i].domNode;
           }
@@ -511,7 +550,7 @@
         itemRemoved: function TV_V_itemRemoved(aParentNode, aNode, aIndex) {
           if (aParentNode == this._self.getResultNode()) {
             var children = this._self.childNodes;
-            for (var i = 0; i < children.length; i++) {
+            for (let i = 0; i < children.length; i++) {
               if (children[i].node == aNode) {
                 this._self.removeItem(children[i]);
                 this._self.updateChevron();
@@ -525,7 +564,7 @@
               return;
 
             var children = popup.childNodes;
-            for (var i = popup._startMarker + 1; i < children.length; i++) {
+            for (let i = popup._startMarker + 1; i < children.length; i++) {
               if (children[i].node == aNode) {
                 this._self.removeItem(children[i]);
                 if (!popup.hasChildNodes() ||
@@ -550,14 +589,14 @@
 
           if (aNewParent == this._self.getResultNode()) {
             var children = this._self.childNodes;
-            var chevronPopup = this._self._chevron.firstChild;
-            for (var i = 0; i < children.length; i++) {
+            for (let i = 0; i < children.length; i++) {
               var button = children[i];
               if (button.node == aItem) {
                 this._self.removeChild(button);
                 this._self.insertBefore(button, children[aNewIndex]);
-                if (chevronPopup) {
-                  // Maintain chevron in sync
+                // If the chevron popup is open, keep it in sync.
+                if (this._self._chevron.open) {
+                  var chevronPopup = this._self._chevronPopup;
                   var menuitem = chevronPopup.childNodes[i];
                   chevronPopup.removeChild(menuitem);
                   chevronPopup.insertBefore(menuitem,
@@ -571,7 +610,7 @@
           else {
             var popup = this._getPopupForContainer(aNewParent);
             var children = popup.childNodes;
-            for (var i = popup._startMarker + 1; i < children.length; i++) {
+            for (let i = popup._startMarker + 1; i < children.length; i++) {
               var menuItem = children[i];
               if (menuItem.node == aItem) {
                 popup.removeChild(menuItem);
@@ -598,7 +637,7 @@
           if (parentNode == this._self.getResultNode()) {
             onToolbar = true;
             var children = this._self.childNodes;
-            for (var i = 0; i < children.length; i++) {
+            for (let i = 0; i < children.length; i++) {
               if (children[i].node == aNode) {
                 element = children[i];
                 break;
@@ -613,7 +652,7 @@
               return;
 
             var children = popup.childNodes;
-            for (var i = popup._startMarker + 1; i < children.length; i++) {
+            for (let i = popup._startMarker + 1; i < children.length; i++) {
               if (children[i].node == aNode) {
                 element = children[i];
                 break;
@@ -653,7 +692,7 @@
         function TV_V_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
           if (aParentNode == this._self.getResultNode()) {
             var children = this._self.childNodes;
-            for (var i = 0; i < children.length; i++) {
+            for (let i = 0; i < children.length; i++) {
               if (children[i].node == aOldNode) {
                 var next = children[i].nextSibling;
                 this._self.removeItem(children[i]);
@@ -691,7 +730,7 @@
           }
 
           var popupToRebuild = null;
-          for (var i=0; i < this._self._containerNodesMap.length; i++) {
+          for (let i = 0; i < this._self._containerNodesMap.length; i++) {
             var node = this._self._containerNodesMap[i].resultNode;
             
             if (node == aContainer)
@@ -771,8 +810,8 @@
             // the end of the menu, add the element before that.  Otherwise,
             // just add to the end.
             if (aParentPopup._endMarker != -1) {
-              aParentPopup.insertBefore(element,
-                                        aParentPopup.childNodes[aParentPopup._endMarker]);
+              let lastNode = aParentPopup.childNodes[aParentPopup._endMarker];
+              aParentPopup.insertBefore(element, lastNode);
             }
             else
               aParentPopup.appendChild(element);
@@ -810,7 +849,7 @@
             if (aPopup._emptyMenuItem)
               aPopup._emptyMenuItem.hidden = true;
 
-            for (var i = 0; i < cc; ++i) {
+            for (let i = 0; i < cc; ++i) {
               var child = resultNode.getChild(i);
               this.insertNewItemToPopup(child, aPopup, null);
             }
@@ -861,73 +900,86 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           // This function returns information about where to drop when
-          // dragging over this menu--insertion point, child index to drop
-          // before, and folder to drop into.
-          // Can't drop if the toolbar isn't a folder.
+          // dragging over the toolbar.
+          // The returned object has 3 properties:
+          // - ip: the insertion point for the bookmarks service.
+          // - beforeIndex: child index to drop before, for the drop indicator.
+          // - folderNode: the folder to drop into, if applicable.
           var result = this.getResult();
           if (!PlacesUtils.nodeIsFolder(result.root))
             return null;
 
-          var isRTL = document.defaultView
-                              .getComputedStyle(this.parentNode, "")
-                              .direction == "rtl";
-
           var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
-          // Loop through all the nodes to see which one this should
-          // get dropped in/next to
-          for (var i = 0; i < this.childNodes.length; i++) {
-            var xulNode = this.childNodes[i];
+          var xulNode = aEvent.target;
+          if (xulNode.node) {
+            let nodeRect = xulNode.getBoundingClientRect();
+            let nodeIndex = Array.indexOf(this.childNodes, xulNode);
             if (PlacesUtils.nodeIsFolder(xulNode.node) &&
                 !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
-              // This is a folder. If the mouse is in the left 25% of the
-              // node (or 25% of the right, in RTL UI), drop before the folder.
-              // If it's in the middle 50%, drop into the folder. If it's past
-              // that, drop after.
-              if ((isRTL && aEvent.clientX > xulNode.boxObject.x +
-                                             (xulNode.boxObject.width * 0.75)) ||
-                  (!isRTL && aEvent.clientX < xulNode.boxObject.x + 
-                                              (xulNode.boxObject.width * 0.25))) {
-                // Drop to the left of this folder.
+              // This is a folder.
+              // If we are in the middle of it, drop inside it.
+              // Otherwise, drop before it, with regards to RTL mode.
+              let threshold = nodeRect.width * 0.25;
+              if (this._isRTL ? (aEvent.clientX > nodeRect.right - threshold)
+                              : (aEvent.clientX < nodeRect.left + threshold)) {
+                // Drop before this folder.
                 dropPoint.ip =
                   new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-                                     i, -1);
-                dropPoint.beforeIndex = i;
-                return dropPoint;
+                                     nodeIndex, Ci.nsITreeView.DROP_BEFORE);
+                dropPoint.beforeIndex = nodeIndex;
               }
-              else if ((isRTL && aEvent.clientX > xulNode.boxObject.x + 
-                                                  (xulNode.boxObject.width * 0.25)) ||
-                       (!isRTL && aEvent.clientX < xulNode.boxObject.x +
-                                                   (xulNode.boxObject.width * 0.75))) {
+              else if (this._isRTL ? (aEvent.clientX > nodeRect.left + threshold)
+                                   : (aEvent.clientX < nodeRect.right - threshold)) {
                 // Drop inside this folder.
                 dropPoint.ip =
                   new InsertionPoint(PlacesUtils.getConcreteItemId(xulNode.node),
-                                     -1, 1,
+                                     -1, Ci.nsITreeView.DROP_ON,
                                      PlacesUtils.nodeIsTagQuery(xulNode.node));
-                dropPoint.beforeIndex = i;
+                dropPoint.beforeIndex = nodeIndex;
                 dropPoint.folderNode = xulNode;
-                return dropPoint;
+              }
+              else {
+                // Drop after this folder.
+                let beforeIndex =
+                  (nodeIndex == this.childNodes.length - 1) ? -1 : nodeIndex + 1;
+                dropPoint.ip =
+                  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+                                     beforeIndex, Ci.nsITreeView.DROP_BEFORE);
+                dropPoint.beforeIndex = beforeIndex;
               }
             }
             else {
-              // This is a non-folder node. If the mouse is left (or right, in
-              // RTL UI) of the middle, drop before the folder.  Otehrwise,
-              // we'll drop after
-              if ((isRTL && aEvent.clientX > xulNode.boxObject.x + (xulNode.boxObject.width / 2)) ||
-                  (!isRTL && aEvent.clientX < xulNode.boxObject.x + (xulNode.boxObject.width / 2))) {
+              // This is a non-folder node or a read-only folder.
+              // Drop before it with regards to RTL mode.
+              let threshold = nodeRect.width * 0.5;
+              if (this._isRTL ? (aEvent.clientX > nodeRect.left + threshold)
+                              : (aEvent.clientX < nodeRect.left + threshold)) {
                 // Drop before this bookmark.
                 dropPoint.ip =
 	                new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-	                                   i, -1);
-                dropPoint.beforeIndex = i;
-                return dropPoint;
+	                                   nodeIndex, Ci.nsITreeView.DROP_BEFORE);
+                dropPoint.beforeIndex = nodeIndex;
+              }
+              else {
+                // Drop after this bookmark.
+                let beforeIndex =
+                  nodeIndex == this.childNodes.length - 1 ? -1 : nodeIndex + 1;
+                dropPoint.ip =
+                  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+                                     beforeIndex, Ci.nsITreeView.DROP_BEFORE);
+                dropPoint.beforeIndex = beforeIndex;
               }
             }
           }
-          // Should drop after the last node.
-          dropPoint.ip =
-        	  new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
-	                             -1, 1);
-          dropPoint.beforeIndex = -1;
+          else {
+            // We are most likely dragging on the empty area of the
+            // toolbar, we should drop after the last node.
+            dropPoint.ip =
+              new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
+                                 -1, Ci.nsITreeView.DROP_BEFORE);
+            dropPoint.beforeIndex = -1;
+          }
+
           return dropPoint;
         ]]></body>
       </method>
@@ -947,14 +999,19 @@
         <body><![CDATA[
           // Function to process all timer notifications.
 
+          if (aTimer == this._updateChevronTimer) {
+            this._updateChevronTimer = null;
+            this._updateChevronTimerCallback();
+          }
+
           // * Timer to turn off indicator bar.
-          if (aTimer == this._ibTimer) {
-            this._dropIndicatorBar.removeAttribute('dragging');
+          else if (aTimer == this._ibTimer) {
+            this._dropIndicator.collapsed = true;
             this._ibTimer = null;
           }
 
           // * Timer to open a menubutton that's being dragged over.
-          if (aTimer == this._overFolder.openTimer) {
+          else if (aTimer == this._overFolder.openTimer) {
             // Set the autoopen attribute on the folder's menupopup so that
             // the menu will automatically close when the mouse drags off of it.
             this._overFolder.node.lastChild.setAttribute("autoopened", "true");
@@ -963,10 +1020,10 @@
           }
 
           // * Timer to close a menubutton that's been dragged off of.
-          if (aTimer == this._overFolder.closeTimer) {
-            // Only close the menubutton if the drag session isn't currently over
-            // it or one of its children.  (The autoopened attribute will let the menu
-            // know to close later if the menu is still being dragged over.)
+          else if (aTimer == this._overFolder.closeTimer) {
+            // Close the menubutton if we are not dragging over it or one of
+            // its children.  The autoopened attribute will let the menu know to
+            // close later if the menu is still being dragged over.
             var currentNode = PlacesControllerDragHelper.currentDropTarget;
             var inHierarchy = false;
             while (currentNode) {
@@ -1043,10 +1100,9 @@
         var dt = PlacesControllerDragHelper.currentDataTransfer =
                  event.dataTransfer;
 
-        var ib = this._dropIndicatorBar;
         var ip = this.insertionPoint;
         if (!ip || !PlacesControllerDragHelper.canDrop(ip)) {
-          ib.removeAttribute("dragging");
+          this._dropIndicator.collapsed = true;
           PlacesControllerDragHelper.currentDataTransfer = null;
           return;
         }
@@ -1072,43 +1128,41 @@
           if (!this._overFolder.node.hasAttribute("dragover"))
             this._overFolder.node.setAttribute("dragover", "true");
 
-          ib.removeAttribute("dragging");
+          this._dropIndicator.collapsed = true;
         }
         else {
           // Dragging over a normal toolbarbutton,
           // show indicator bar and move it to the appropriate drop point.
-          if (!ib.hasAttribute("dragging"))
-            ib.setAttribute("dragging", "true");
-          var ind = ib.firstChild;
-          var halfInd = ind.boxObject.width / 2;
-          var direction = document.defaultView.getComputedStyle(this.parentNode, "").direction;
-          if (direction == "ltr") {
+          let ind = this._dropIndicator;
+          let halfInd = ind.clientWidth / 2;
+          let translateX;
+          if (this._isRTL) {
             halfInd = Math.ceil(halfInd);
-          if (!this.childNodes.length)
-            ind.style.marginLeft = 0 - this.boxObject.x - halfInd + 'px'
-          else if (dropPoint.beforeIndex == -1)
-            ind.style.marginLeft = this.lastChild.boxObject.x + 
-                                   this.lastChild.boxObject.width - this.boxObject.x - halfInd + 'px';
-          else
-            ind.style.marginLeft = this.childNodes[dropPoint.beforeIndex].boxObject.x -
-                                   this.boxObject.x - halfInd + 'px';
+            translateX = 0 - this._scrollbox.getBoundingClientRect().right -
+                             halfInd;
+            if (dropPoint.beforeIndex == -1)
+              translateX += this.lastChild.getBoundingClientRect().left;
+            else if (this.childNodes.length) {
+              translateX += this.childNodes[dropPoint.beforeIndex]
+                                .getBoundingClientRect().right;
+            }
           }
           else {
             halfInd = Math.floor(halfInd);
-            if (this.childNodes.length == 0)
-              ind.style.marginRight = this.boxObject.width + 'px';
-            else if (dropPoint.beforeIndex == -1) {
-              ind.style.marginRight = this.boxObject.width -
-                                      (this.childNodes[this.childNodes.length - 1].boxObject.x +
-                                      halfInd) +'px';
-            }
-            else {
-              ind.style.marginRight = this.boxObject.width -
-                                      (this.childNodes[dropPoint.beforeIndex].boxObject.x +
-                                       this.childNodes[dropPoint.beforeIndex].boxObject.width -
-                                      this.boxObject.x + halfInd) + 'px';
+            translateX = 0 - this._scrollbox.getBoundingClientRect().left +
+                         halfInd;
+            if (dropPoint.beforeIndex == -1)
+              translateX += this.lastChild.getBoundingClientRect().right;
+            else if (this.childNodes.length) {
+              translateX += this.childNodes[dropPoint.beforeIndex]
+                                .getBoundingClientRect().left;
             }
           }
+
+          ind.style.MozTransform = "translate(" + Math.round(translateX) + "px)";
+          ind.style.MozMarginStart = (-ind.clientWidth) + "px";
+          ind.collapsed = false;
+
           // Clear out old folder information
           this._clearOverFolder();
         }

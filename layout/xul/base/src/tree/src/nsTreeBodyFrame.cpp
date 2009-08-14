@@ -4129,15 +4129,17 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
       nscoord rowHeightAsPixels =
         PresContext()->AppUnitsToDevPixels(mRowHeight);
       nsIntPoint deltaPt = nsIntPoint(0, -delta*rowHeightAsPixels);
+
       nsIntRect bounds;
       widget->GetBounds(bounds);
       bounds.x = bounds.y = 0;
-      nsIntRect source;
-      source.IntersectRect(bounds, bounds - deltaPt);
+      nsTArray<nsIntRect> destRects;
+      destRects.AppendElement(bounds);
+
       // No plugins have a tree widget as a parent so we don't need
       // configurations here.
       nsTArray<nsIWidget::Configuration> emptyConfigurations;
-      widget->Scroll(deltaPt, source, emptyConfigurations);
+      widget->Scroll(deltaPt, destRects, emptyConfigurations);
       nsIntRect invalid = bounds;
       if (deltaPt.y < 0) {
         invalid.y = bounds.height + deltaPt.y;
@@ -4184,15 +4186,17 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
     nsIWidget* widget = nsLeafBoxFrame::GetView()->GetWidget();
     if (widget) {
       nsIntPoint deltaPt(PresContext()->AppUnitsToDevPixels(-delta), 0);
+
       nsIntRect bounds;
       widget->GetBounds(bounds);
       bounds.x = bounds.y = 0;
-      nsIntRect source;
-      source.IntersectRect(bounds, bounds - deltaPt);
+      nsTArray<nsIntRect> destRects;
+      destRects.AppendElement(bounds);
+
       // No plugins have a tree widget as a parent so we don't need
       // configurations here.
       nsTArray<nsIWidget::Configuration> emptyConfigurations;
-      widget->Scroll(deltaPt, source, emptyConfigurations);
+      widget->Scroll(deltaPt, destRects, emptyConfigurations);
       nsIntRect invalid = bounds;
       if (deltaPt.x < 0) {
         invalid.x = bounds.width + deltaPt.x;

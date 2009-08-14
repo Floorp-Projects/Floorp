@@ -105,7 +105,7 @@ HRESULT CIEHtmlElementCollection::PopulateFromDOMHTMLCollection(nsIDOMHTMLCollec
         if (!childNode)
         {
             // Empty node (unexpected, but try and carry on anyway)
-            NS_ASSERTION(0, "Empty node");
+            NS_ERROR("Empty node");
             continue;
         }
 
@@ -131,7 +131,7 @@ HRESULT CIEHtmlElementCollection::PopulateFromDOMNode(nsIDOMNode *aDOMNode, BOOL
 {
     if (aDOMNode == nsnull)
     {
-        NS_ASSERTION(0, "No dom node");
+        NS_ERROR("No dom node");
         return E_INVALIDARG;
     }
 
@@ -196,14 +196,14 @@ HRESULT CIEHtmlElementCollection::CreateFromDOMHTMLCollection(CNode *pParentNode
 {
     if (pInstance == NULL || pParentNode == NULL)
     {
-        NS_ASSERTION(0, "No instance or parent node");
+        NS_ERROR("No instance or parent node");
         return E_INVALIDARG;
     }
 
     // Get the DOM node from the parent node
     if (!pParentNode->mDOMNode)
     {
-        NS_ASSERTION(0, "Parent has no DOM node");
+        NS_ERROR("Parent has no DOM node");
         return E_INVALIDARG;
     }
 
@@ -214,7 +214,7 @@ HRESULT CIEHtmlElementCollection::CreateFromDOMHTMLCollection(CNode *pParentNode
     CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
     if (pCollection == NULL)
     {
-        NS_ASSERTION(0, "Could not create collection");
+        NS_ERROR("Could not create collection");
         return E_OUTOFMEMORY;
     }
 
@@ -231,14 +231,14 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CNode *pParentNode, BOOL 
 {
     if (pInstance == NULL || pParentNode == NULL)
     {
-        NS_ASSERTION(0, "No instance or parent node");
+        NS_ERROR("No instance or parent node");
         return E_INVALIDARG;
     }
 
     // Get the DOM node from the parent node
     if (!pParentNode->mDOMNode)
     {
-        NS_ASSERTION(0, "Parent has no DOM node");
+        NS_ERROR("Parent has no DOM node");
         return E_INVALIDARG;
     }
 
@@ -249,7 +249,7 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CNode *pParentNode, BOOL 
     CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
     if (pCollection == NULL)
     {
-        NS_ASSERTION(0, "Could not create collection");
+        NS_ERROR("Could not create collection");
         return E_OUTOFMEMORY;
     }
 
@@ -267,7 +267,7 @@ HRESULT CIEHtmlElementCollection::AddNode(IDispatch *pNode)
 {
     if (pNode == NULL)
     {
-        NS_ASSERTION(0, "No node");
+        NS_ERROR("No node");
         return E_INVALIDARG;
     }
 
@@ -287,7 +287,7 @@ HRESULT CIEHtmlElementCollection::AddNode(IDispatch *pNode)
 
     if (mNodeList == NULL)
     {
-        NS_ASSERTION(0, "Could not realloc node list");
+        NS_ERROR("Could not realloc node list");
         return E_OUTOFMEMORY;
     }
 
@@ -342,7 +342,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get_length(long __RPC_FAR *p
             if (!childNode)
             {
                 // Empty node (unexpected, but try and carry on anyway)
-                NS_ASSERTION(0, "Empty node");
+                NS_ERROR("Empty node");
                 continue;
             }
 
@@ -381,7 +381,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_
     CComEnumVARIANT::CreateInstance(&pEnumVARIANT);
     if (pEnumVARIANT == NULL)
     {
-        NS_ASSERTION(0, "Could not creat Enum");
+        NS_ERROR("Could not creat Enum");
         return E_OUTOFMEMORY;
     }
 
@@ -393,7 +393,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_
     VARIANT *avObjects = new VARIANT[nObjects];
     if (avObjects == NULL)
     {
-        NS_ASSERTION(0, "Could not create variant array");
+        NS_ERROR("Could not create variant array");
         return E_OUTOFMEMORY;
     }
 
@@ -410,7 +410,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_
             if (!childNode)
             {
                 // Empty node (unexpected, but try and carry on anyway)
-                NS_ASSERTION(0, "Could not get node");
+                NS_ERROR("Could not get node");
                 continue;
             }
 
@@ -528,7 +528,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::item(VARIANT name, VARIANT i
             if (!childNode)
             {
                 // Empty node (unexpected, but try and carry on anyway)
-                NS_ASSERTION(0, "Could not get node");
+                NS_ERROR("Could not get node");
                 continue;
             }
 
@@ -638,7 +638,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::item(VARIANT name, VARIANT i
             IDispatch *pNode = mNodeList[idxForSearch];
             if (pNode == NULL)
             {
-                NS_ASSERTION(0, "No node");
+                NS_ERROR("No node");
                 return E_UNEXPECTED;
             }
             pNode->QueryInterface(IID_IDispatch, (void **) pdisp);
@@ -688,7 +688,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::tags(VARIANT tagName, IDispa
             if (!childNode)
             {
                 // Empty node (unexpected, but try and carry on anyway)
-                NS_ASSERTION(0, "Could not get node");
+                NS_ERROR("Could not get node");
                 continue;
             }
 

@@ -708,7 +708,7 @@ gfxFT2Font::GetMetrics()
         // save the space glyph
         mSpaceGlyph = gid;
     } else {
-        NS_ASSERTION(0, "blah");
+        NS_ERROR("blah");
     }
             
     // properties of 'x', also use its width as average width

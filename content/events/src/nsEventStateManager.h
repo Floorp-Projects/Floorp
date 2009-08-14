@@ -41,6 +41,7 @@
 
 #include "nsIEventStateManager.h"
 #include "nsEvent.h"
+#include "nsGUIEvent.h"
 #include "nsIContent.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -277,6 +278,16 @@ protected:
   nsresult ChangeTextSize(PRInt32 change);
   nsresult ChangeFullZoom(PRInt32 change);
   // end mousewheel functions
+
+  /*
+   * When a touch gesture is about to start, this function determines what
+   * kind of gesture interaction we will want to use, based on what is
+   * underneath the initial touch point.
+   * Currently it decides between panning (finger scrolling) or dragging
+   * the target element, as well as the orientation to trigger panning and
+   * display visual boundary feedback. The decision is stored back in aEvent.
+   */
+  void DecideGestureEvent(nsGestureNotifyEvent* aEvent, nsIFrame* targetFrame);
 
   // routines for the d&d gesture tracking state machine
   void BeginTrackingDragGesture ( nsPresContext* aPresContext, nsMouseEvent* inDownEvent,

@@ -368,13 +368,13 @@ MRESULT EXPENTRY nsDragWindowProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 
 NS_IMETHODIMP nsDragService::StartDragSession()
 {
-  NS_ASSERTION(0, "OS/2 version of StartDragSession() should never be called!");
+  NS_ERROR("OS/2 version of StartDragSession() should never be called!");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDragService::EndDragSession(PRBool aDragDone)
 {
-  NS_ASSERTION(0, "OS/2 version of EndDragSession() should never be called!");
+  NS_ERROR("OS/2 version of EndDragSession() should never be called!");
   return NS_OK;
 }
 

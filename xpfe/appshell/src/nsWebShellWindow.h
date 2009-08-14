@@ -56,7 +56,7 @@ class nsWebShellWindow : public nsXULWindow,
                          public nsIWebProgressListener
 {
 public:
-  nsWebShellWindow();
+  nsWebShellWindow(PRUint32 aChromeFlags);
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS_INHERITED

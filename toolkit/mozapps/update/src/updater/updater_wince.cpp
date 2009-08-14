@@ -120,7 +120,7 @@ int _access(const char* path, int amode)
 
 int _waccess(const WCHAR* path, int amode)
 {
-  if (amode == F_OK)
+  if (amode == F_OK || amode == R_OK)
     return (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES) ? -1 : 0;
   return -1;
 }

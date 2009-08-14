@@ -2033,7 +2033,7 @@ nsCanvasRenderingContext2D::GetTextAlign(nsAString& ta)
         ta.AssignLiteral("center");
         break;
     default:
-        NS_ASSERTION(0, "textAlign holds invalid value");
+        NS_ERROR("textAlign holds invalid value");
         return NS_ERROR_FAILURE;
     }
 
@@ -2086,7 +2086,7 @@ nsCanvasRenderingContext2D::GetTextBaseline(nsAString& tb)
         tb.AssignLiteral("bottom");
         break;
     default:
-        NS_ASSERTION(0, "textBaseline holds invalid value");
+        NS_ERROR("textBaseline holds invalid value");
         return NS_ERROR_FAILURE;
     }
 
@@ -2365,7 +2365,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
         anchorY = -fontMetrics.emDescent;
         break;
     default:
-        NS_ASSERTION(0, "mTextBaseline holds invalid value");
+        NS_ERROR("mTextBaseline holds invalid value");
         return NS_ERROR_FAILURE;
     }
 
