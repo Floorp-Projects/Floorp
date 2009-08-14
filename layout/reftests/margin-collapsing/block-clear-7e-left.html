@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+.separator {
+ height: 20px;
+ background-color: green;
+}
+#parent {
+ background-color: lime;
+ margin-bottom: 50px;
+}
+#float {
+ float: left;
+ width: 100px; height: 100px;
+ background-color: blue;
+}
+#clear {
+ clear: left;
+ margin-top: 10px;
+ margin-bottom: 20px;
+}
+#clear-sibling {
+ margin-top: 30px;
+ margin-bottom: 40px;
+}
+</style>
+</head>
+<body>
+<div class="separator"></div>
+<div id="parent">
+ <div id="float"></div>
+ <div id="clear"></div>
+ <div id="clear-sibling"></div>
+</div>
+<div class="separator"></div>
+</body>
+</html>
