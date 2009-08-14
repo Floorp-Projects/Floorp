@@ -784,6 +784,8 @@ nsresult nsMenuX::SetupIcon()
   return mIcon->SetupIcon();
 }
 
+#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
+
 //
 // Carbon event support
 //
@@ -862,6 +864,8 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
 }
 
+#endif
+
 //
 // MenuDelegate Objective-C class, used to set up Carbon events
 //
@@ -875,13 +879,16 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
   if ((self = [super init])) {
     NS_ASSERTION(geckoMenu, "Cannot initialize native menu delegate with NULL gecko menu! Will crash!");
     mGeckoMenu = geckoMenu;
+#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
     mEventHandler = NULL;
+#endif
   }
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+#if (MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_4)
 
 - (void)dealloc
 {
@@ -913,6 +920,46 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
+
+#endif
+
+#if defined(MAC_OS_X_VERSION_10_5) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
+
+- (void)menu:(NSMenu *)menu willHighlightItem:(NSMenuItem *)item
+{
+  if (!menu || !item || !mGeckoMenu)
+    return;
+
+  nsMenuObjectX* target = mGeckoMenu->GetVisibleItemAt((PRUint32)[menu indexOfItem:item]);
+  if (target && (target->MenuObjectType() == eMenuItemObjectType)) {
+    nsMenuItemX* targetMenuItem = static_cast<nsMenuItemX*>(target);
+    PRBool handlerCalledPreventDefault; // but we don't actually care
+    targetMenuItem->DispatchDOMEvent(NS_LITERAL_STRING("DOMMenuItemActive"), &handlerCalledPreventDefault);
+  }
+}
+
+- (void)menuWillOpen:(NSMenu *)menu
+{
+  if (!mGeckoMenu)
+    return;
+
+  if (gRollupListener && gRollupWidget) {
+    gRollupListener->Rollup(nsnull, nsnull);
+    [menu cancelTracking];
+    return;
+  }
+  mGeckoMenu->MenuOpened();
+}
+
+- (void)menuDidClose:(NSMenu *)menu
+{
+  if (!mGeckoMenu)
+    return;
+
+  mGeckoMenu->MenuClosed();
+}
+
+#endif
 
 @end
 
