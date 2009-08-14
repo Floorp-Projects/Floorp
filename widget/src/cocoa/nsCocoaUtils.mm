@@ -126,15 +126,15 @@ NSWindow* nsCocoaUtils::FindWindowUnderPoint(NSPoint aPoint)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  int windowCount;
+  NSInteger windowCount;
   NSCountWindows(&windowCount);
-  int* windowList = (int*)malloc(sizeof(int) * windowCount);
+  NSInteger* windowList = (NSInteger*)malloc(sizeof(NSInteger) * windowCount);
   if (!windowList)
     return nil;
   // The list we get back here is in order from front to back.
   NSWindowList(windowCount, windowList);
 
-  for (int i = 0; i < windowCount; i++) {
+  for (NSInteger i = 0; i < windowCount; i++) {
     NSWindow* currentWindow = [NSApp windowWithWindowNumber:windowList[i]];
     if (currentWindow && NSPointInRect(aPoint, [currentWindow frame])) {
       free(windowList);
