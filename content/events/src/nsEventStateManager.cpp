@@ -3927,15 +3927,9 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
     }
   }
 
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    nsCOMPtr<nsIDOMElement> focusedElement;
-    fm->GetFocusedElement(getter_AddRefs(focusedElement));
-
-    nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
-    if (aContent == focusedContent) {
-      aState |= NS_EVENT_STATE_FOCUS;
-    }
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm && aContent == fm->GetFocusedContent()) {
+    aState |= NS_EVENT_STATE_FOCUS;
   }
   if (aContent == mDragOverContent) {
     aState |= NS_EVENT_STATE_DRAGOVER;
