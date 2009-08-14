@@ -149,7 +149,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
-nsIFocusManager* nsFocusManager::sInstance = nsnull;
+nsFocusManager* nsFocusManager::sInstance = nsnull;
 
 nsFocusManager::nsFocusManager()
 { }
