@@ -97,7 +97,7 @@ debian/control: $(srcdir)/debian/control.in $(LIBXUL_DIST)/bin/platform.ini
 deb: debian/control
 	rm -rf $(DEBDESTDIR)/usr/local/*
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/local
-	cd $(DEBDESTDIR)/usr/local; cat $(DEPTH)/../../../../dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)  
+	cd $(DEBDESTDIR)/usr/local; bunzip2 -c $(DEPTH)/../../../../dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNPACK_TAR)  
 	rm -rf $(DEBDESTDIR)/usr/local/$(MOZ_APP_NAME)/xulrunner	
 	$(NSINSTALL)  debian/$(MOZ_APP_NAME).desktop $(DEBDESTDIR)/usr/share/applications/hildon/
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
