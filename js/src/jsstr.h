@@ -384,11 +384,6 @@ js_toLowerCase(JSContext *cx, JSString *str);
 extern JSString * JS_FASTCALL
 js_toUpperCase(JSContext *cx, JSString *str);
 
-typedef struct JSCharBuffer {
-    size_t          length;
-    jschar          *chars;
-} JSCharBuffer;
-
 struct JSSubString {
     size_t          length;
     const jschar    *chars;
@@ -593,7 +588,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length);
  * by js_NewString.
  */
 extern JSString *
-js_NewStringFromCharBuffer(JSContext *cx, JSCharVector &cb);
+js_NewStringFromCharBuffer(JSContext *cx, JSCharBuffer &cb);
 
 extern JSString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,
@@ -634,7 +629,7 @@ js_ValueToString(JSContext *cx, jsval v);
  * passed buffer may have partial results appended.
  */
 extern JS_FRIEND_API(JSBool)
-js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &cb);
+js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb);
 
 /*
  * Convert a value to its source expression, returning null after reporting

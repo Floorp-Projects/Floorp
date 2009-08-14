@@ -202,7 +202,7 @@ xml_isXMLName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static inline bool
-AppendString(JSCharVector &cb, JSString *str)
+AppendString(JSCharBuffer &cb, JSString *str)
 {
     const jschar *chars, *end;
     str->getCharsAndEnd(chars, end);
@@ -2130,7 +2130,7 @@ bad:
  * These functions mutate cb, leaving it empty.
  */
 static JSString *
-MakeXMLSpecialString(JSContext *cx, JSCharVector &cb,
+MakeXMLSpecialString(JSContext *cx, JSCharBuffer &cb,
                      JSString *str, JSString *str2,
                      const jschar *prefix, size_t prefixlength,
                      const jschar *suffix, size_t suffixlength)
@@ -2148,7 +2148,7 @@ MakeXMLSpecialString(JSContext *cx, JSCharVector &cb,
 }
 
 static JSString *
-MakeXMLCDATAString(JSContext *cx, JSCharVector &cb, JSString *str)
+MakeXMLCDATAString(JSContext *cx, JSCharBuffer &cb, JSString *str)
 {
     static const jschar cdata_prefix_ucNstr[] = {'<', '!', '[',
                                                  'C', 'D', 'A', 'T', 'A',
@@ -2161,7 +2161,7 @@ MakeXMLCDATAString(JSContext *cx, JSCharVector &cb, JSString *str)
 }
 
 static JSString *
-MakeXMLCommentString(JSContext *cx, JSCharVector &cb, JSString *str)
+MakeXMLCommentString(JSContext *cx, JSCharBuffer &cb, JSString *str)
 {
     static const jschar comment_prefix_ucNstr[] = {'<', '!', '-', '-'};
     static const jschar comment_suffix_ucNstr[] = {'-', '-', '>'};
@@ -2172,7 +2172,7 @@ MakeXMLCommentString(JSContext *cx, JSCharVector &cb, JSString *str)
 }
 
 static JSString *
-MakeXMLPIString(JSContext *cx, JSCharVector &cb, JSString *name,
+MakeXMLPIString(JSContext *cx, JSCharBuffer &cb, JSString *name,
                 JSString *value)
 {
     static const jschar pi_prefix_ucNstr[] = {'<', '?'};
@@ -2188,7 +2188,7 @@ MakeXMLPIString(JSContext *cx, JSCharVector &cb, JSString *name,
  * equals, a double quote, an attribute value, and a closing double quote.
  */
 static bool
-AppendAttributeValue(JSContext *cx, JSCharVector &cb, JSString *valstr)
+AppendAttributeValue(JSContext *cx, JSCharBuffer &cb, JSString *valstr)
 {
     if (!cb.append('='))
         return false;
@@ -2202,7 +2202,7 @@ AppendAttributeValue(JSContext *cx, JSCharVector &cb, JSString *valstr)
  * These functions mutate cb, leaving it empty.
  */
 static JSString *
-EscapeElementValue(JSContext *cx, JSCharVector &cb, JSString *str)
+EscapeElementValue(JSContext *cx, JSCharBuffer &cb, JSString *str)
 {
     size_t length;
     const jschar *start;
@@ -2237,7 +2237,7 @@ EscapeElementValue(JSContext *cx, JSCharVector &cb, JSString *str)
  * These functions mutate cb, leaving it empty.
  */
 static JSString *
-EscapeAttributeValue(JSContext *cx, JSCharVector &cb, JSString *str,
+EscapeAttributeValue(JSContext *cx, JSCharBuffer &cb, JSString *str,
                      JSBool quote)
 {
     size_t length;
@@ -2506,7 +2506,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                uint32 indentLevel)
 {
     JSBool pretty, indentKids;
-    JSCharVector cb(cx);
+    JSCharBuffer cb(cx);
     JSString *str, *prefix, *nsuri;
     uint32 i, n, nextIndentLevel;
     JSXMLArray empty, decls, ancdecls;
@@ -2878,7 +2878,7 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
         return js_ValueToString(cx, v);
 
     if (JSVAL_IS_STRING(v)) {
-        JSCharVector cb(cx);
+        JSCharBuffer cb(cx);
         return EscapeElementValue(cx, cb, JSVAL_TO_STRING(v));
     }
 
@@ -2889,7 +2889,7 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
         str = js_ValueToString(cx, v);
         if (!str)
             return NULL;
-        JSCharVector cb(cx);
+        JSCharBuffer cb(cx);
         return EscapeElementValue(cx, cb, str);
     }
 
@@ -7655,7 +7655,7 @@ js_ToAttributeName(JSContext *cx, jsval *vp)
 JSString *
 js_EscapeAttributeValue(JSContext *cx, JSString *str, JSBool quote)
 {
-    JSCharVector cb(cx);
+    JSCharBuffer cb(cx);
     return EscapeAttributeValue(cx, cb, str, quote);
 }
 
@@ -7706,7 +7706,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
 JSString *
 js_EscapeElementValue(JSContext *cx, JSString *str)
 {
-    JSCharVector cb(cx);
+    JSCharBuffer cb(cx);
     return EscapeElementValue(cx, cb, str);
 }
 
@@ -8186,21 +8186,21 @@ js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
 JSString *
 js_MakeXMLCDATAString(JSContext *cx, JSString *str)
 {
-    JSCharVector cb(cx);
+    JSCharBuffer cb(cx);
     return MakeXMLCDATAString(cx, cb, str);
 }
 
 JSString *
 js_MakeXMLCommentString(JSContext *cx, JSString *str)
 {
-    JSCharVector cb(cx);
+    JSCharBuffer cb(cx);
     return MakeXMLCommentString(cx, cb, str);
 }
 
 JSString *
 js_MakeXMLPIString(JSContext *cx, JSString *name, JSString *str)
 {
-    JSCharVector cb(cx);
+    JSCharBuffer cb(cx);
     return MakeXMLPIString(cx, cb, name, str);
 }
 

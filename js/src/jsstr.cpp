@@ -1487,7 +1487,7 @@ struct ReplaceData {
     jsint         leftIndex;      /* left context index in base.str->chars */
     JSSubString   dollarStr;      /* for "$$" interpret_dollar result */
     bool          globCalled;     /* record whether replace_glob has been called */
-    JSCharVector  cb;             /* buffer built during match_or_replace */
+    JSCharBuffer  cb;             /* buffer built during match_or_replace */
 };
 
 static JSSubString *
@@ -2730,7 +2730,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
 static const size_t sMinWasteSize = 16;
 
 JSString *
-js_NewStringFromCharBuffer(JSContext *cx, JSCharVector &cb)
+js_NewStringFromCharBuffer(JSContext *cx, JSCharBuffer &cb)
 {
     if (cb.empty())
         return ATOM_TO_STRING(cx->runtime->atomState.emptyAtom);
@@ -2921,18 +2921,18 @@ js_ValueToString(JSContext *cx, jsval v)
 }
 
 static inline JSBool
-pushAtom(JSAtom *atom, JSCharVector &buf)
+pushAtom(JSAtom *atom, JSCharBuffer &cb)
 {
     JSString *str = ATOM_TO_STRING(atom);
     const jschar *chars;
     size_t length;
     str->getCharsAndLength(chars, length);
-    return buf.append(chars, length);
+    return cb.append(chars, length);
 }
 
 /* This function implements E-262-3 section 9.8, toString. */
 JS_FRIEND_API(JSBool)
-js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
+js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 {
     if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
         return JS_FALSE;
@@ -2942,16 +2942,16 @@ js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
         const jschar *chars;
         size_t length;
         str->getCharsAndLength(chars, length);
-        return buf.append(chars, length);
+        return cb.append(chars, length);
     }
     if (JSVAL_IS_NUMBER(v))
-        return js_NumberValueToCharBuffer(cx, v, buf);
+        return js_NumberValueToCharBuffer(cx, v, cb);
     if (JSVAL_IS_BOOLEAN(v))
-        return js_BooleanToCharBuffer(cx, JSVAL_TO_BOOLEAN(v), buf);
+        return js_BooleanToCharBuffer(cx, JSVAL_TO_BOOLEAN(v), cb);
     if (JSVAL_IS_NULL(v))
-        return pushAtom(cx->runtime->atomState.nullAtom, buf);
+        return pushAtom(cx->runtime->atomState.nullAtom, cb);
     JS_ASSERT(JSVAL_IS_VOID(v));
-    return pushAtom(cx->runtime->atomState.typeAtoms[JSTYPE_VOID], buf);
+    return pushAtom(cx->runtime->atomState.typeAtoms[JSTYPE_VOID], cb);
 }
 
 JS_FRIEND_API(JSString *)
@@ -4820,56 +4820,14 @@ const bool js_alnum[] = {
 
 #define URI_CHUNK 64U
 
-/* Concatenate jschars onto the buffer */
-static JSBool
-AddCharsToURI(JSContext *cx, JSCharBuffer *buf,
-              const jschar *chars, size_t length)
+static inline bool
+TransferBufferToString(JSContext *cx, JSCharBuffer &cb, jsval *rval)
 {
-    size_t total;
-    jschar *newchars;
-
-    total = buf->length + length + 1;
-    if (!buf->chars ||
-        JS_HOWMANY(total, URI_CHUNK) > JS_HOWMANY(buf->length + 1, URI_CHUNK)) {
-        total = JS_ROUNDUP(total, URI_CHUNK);
-        newchars = (jschar *) cx->realloc(buf->chars,
-                                          total * sizeof(jschar));
-        if (!newchars)
-            return JS_FALSE;
-        buf->chars = newchars;
-    }
-    js_strncpy(buf->chars + buf->length, chars, length);
-    buf->length += length;
-    buf->chars[buf->length] = 0;
-    return JS_TRUE;
-}
-
-static JSBool
-TransferBufferToString(JSContext *cx, JSCharBuffer *cb, jsval *rval)
-{
-    jschar *chars;
-    size_t n;
-    JSString *str;
-
-    /*
-     * Shrinking realloc can fail (e.g., with a BSD-style allocator), but we
-     * don't worry about that case here.
-     */
-    n = cb->length;
-    chars = (jschar *) cx->realloc(cb->chars, (n + 1) * sizeof(jschar));
-    if (!chars)
-        chars = cb->chars;
-    str = js_NewString(cx, chars, n);
+    JSString *str = js_NewStringFromCharBuffer(cx, cb);
     if (!str)
-        return JS_FALSE;
-
-    /* Successful allocation transfer ownership of cb->chars to the string. */
-#ifdef DEBUG
-    memset(cb, JS_FREE_PATTERN, sizeof *cb);
-#endif
-
+        return false;
     *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    return true;;
 }
 
 /*
@@ -4884,7 +4842,7 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
        const jschar *unescapedSet2, jsval *rval)
 {
     size_t length, j, k, L;
-    JSCharBuffer cb;
+    JSCharBuffer cb(cx);
     const jschar *chars;
     jschar c, c2;
     uint32 v;
@@ -4898,9 +4856,6 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
         return JS_TRUE;
     }
 
-    cb.length = 0;
-    cb.chars = NULL;
-
     /* From this point the control must goto bad on failures. */
     hexBuf[0] = '%';
     hexBuf[3] = 0;
@@ -4908,13 +4863,13 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
         c = chars[k];
         if (js_strchr(unescapedSet, c) ||
             (unescapedSet2 && js_strchr(unescapedSet2, c))) {
-            if (!AddCharsToURI(cx, &cb, &c, 1))
-                goto bad;
+            if (!cb.append(c))
+                return JS_FALSE;
         } else {
             if ((c >= 0xDC00) && (c <= 0xDFFF)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_URI, NULL);
-                goto bad;
+                return JS_FALSE;
             }
             if (c < 0xD800 || c > 0xDBFF) {
                 v = c;
@@ -4923,13 +4878,13 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
                 if (k == length) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_URI, NULL);
-                    goto bad;
+                    return JS_FALSE;
                 }
                 c2 = chars[k];
                 if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_URI, NULL);
-                    goto bad;
+                    return JS_FALSE;
                 }
                 v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
             }
@@ -4937,27 +4892,20 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
             for (j = 0; j < L; j++) {
                 hexBuf[1] = HexDigits[utf8buf[j] >> 4];
                 hexBuf[2] = HexDigits[utf8buf[j] & 0xf];
-                if (!AddCharsToURI(cx, &cb, hexBuf, 3))
-                    goto bad;
+                if (!cb.append(hexBuf, 3))
+                    return JS_FALSE;
             }
         }
     }
 
-    if (!TransferBufferToString(cx, &cb, rval))
-        goto bad;
-
-    return JS_TRUE;
-
-  bad:
-    cx->free(cb.chars);
-    return JS_FALSE;
+    return TransferBufferToString(cx, cb, rval);
 }
 
 static JSBool
 Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
 {
     size_t length, start, k;
-    JSCharBuffer cb;
+    JSCharBuffer cb(cx);
     const jschar *chars;
     jschar c, H;
     uint32 v;
@@ -4970,9 +4918,6 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
         *rval = STRING_TO_JSVAL(cx->runtime->emptyString);
         return JS_TRUE;
     }
-
-    cb.length = 0;
-    cb.chars = NULL;
 
     /* From this point the control must goto bad on failures. */
     for (k = 0; k < length; k++) {
@@ -5015,36 +4960,31 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
                         goto report_bad_uri;
                     c = (jschar)((v & 0x3FF) + 0xDC00);
                     H = (jschar)((v >> 10) + 0xD800);
-                    if (!AddCharsToURI(cx, &cb, &H, 1))
-                        goto bad;
+                    if (!cb.append(H))
+                        return JS_FALSE;
                 } else {
                     c = (jschar)v;
                 }
             }
             if (js_strchr(reservedSet, c)) {
-                if (!AddCharsToURI(cx, &cb, &chars[start], (k - start + 1)))
-                    goto bad;
+                if (!cb.append(chars + start, k - start + 1))
+                    return JS_FALSE;
             } else {
-                if (!AddCharsToURI(cx, &cb, &c, 1))
-                    goto bad;
+                if (!cb.append(c))
+                    return JS_FALSE;
             }
         } else {
-            if (!AddCharsToURI(cx, &cb, &c, 1))
+            if (!cb.append(c))
                 return JS_FALSE;
         }
     }
 
-    if (!TransferBufferToString(cx, &cb, rval))
-        goto bad;
-
-    return JS_TRUE;
+    return TransferBufferToString(cx, cb, rval);
 
   report_bad_uri:
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_URI);
     /* FALL THROUGH */
 
-  bad:
-    cx->free(cb.chars);
     return JS_FALSE;
 }
 

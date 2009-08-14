@@ -866,7 +866,7 @@ js_NumberToString(JSContext *cx, jsdouble d)
 }
 
 JSBool JS_FASTCALL
-js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
+js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 {
     /* Convert to C-string. */
     static const size_t arrSize = DTOSTR_STANDARD_BUFFER_SIZE;
@@ -887,10 +887,10 @@ js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
      */
     size_t cstrlen = strlen(cstr);
     JS_ASSERT(cstrlen < arrSize);
-    size_t sizeBefore = buf.size();
-    if (!buf.growBy(cstrlen))
+    size_t sizeBefore = cb.size();
+    if (!cb.growBy(cstrlen))
         return JS_FALSE;
-    jschar *appendBegin = buf.begin() + sizeBefore;
+    jschar *appendBegin = cb.begin() + sizeBefore;
 #ifdef DEBUG
     size_t oldcstrlen = cstrlen;
     JSBool ok =
