@@ -54,7 +54,7 @@ js_InitJSONClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
 js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
-             JSCharVector &cb);
+             JSCharBuffer &cb);
 
 extern JSBool js_TryJSON(JSContext *cx, jsval *vp);
 

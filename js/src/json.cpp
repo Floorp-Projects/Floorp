@@ -140,7 +140,7 @@ js_json_stringify(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_ConvertArguments(cx, argc, argv, "v / o v", vp, &replacer, &space))
         return JS_FALSE;
 
-    JSCharVector cb(cx);
+    JSCharBuffer cb(cx);
 
     if (!js_Stringify(cx, vp, replacer, space, cb))
         return JS_FALSE;
@@ -180,7 +180,7 @@ static const char backslash = '\\';
 static const char unicodeEscape[] = "\\u00";
 
 static JSBool
-write_string(JSContext *cx, JSCharVector &cb, const jschar *buf, uint32 len)
+write_string(JSContext *cx, JSCharBuffer &cb, const jschar *buf, uint32 len)
 {
     if (!cb.append(quote))
         return JS_FALSE;
@@ -221,12 +221,12 @@ write_string(JSContext *cx, JSCharVector &cb, const jschar *buf, uint32 len)
 class StringifyContext
 {
 public:
-    StringifyContext(JSContext *cx, JSCharVector &cb, JSObject *replacer)
+    StringifyContext(JSContext *cx, JSCharBuffer &cb, JSObject *replacer)
     : cb(cb), gap(cx), replacer(replacer), depth(0)
     {}
 
-    JSCharVector &cb;
-    JSCharVector gap;
+    JSCharBuffer &cb;
+    JSCharBuffer gap;
     JSObject *replacer;
     uint32 depth;
 };
@@ -529,7 +529,7 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 }
 
 static JSBool
-InitializeGap(JSContext *cx, jsval space, JSCharVector &cb)
+InitializeGap(JSContext *cx, jsval space, JSCharBuffer &cb)
 {
     if (!JSVAL_IS_PRIMITIVE(space)) {
         JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(space));
@@ -554,7 +554,8 @@ InitializeGap(JSContext *cx, jsval space, JSCharVector &cb)
 
 JSBool
 js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
-             JSCharVector &cb) {
+             JSCharBuffer &cb)
+{
     // XXX stack
     JSObject *stack = JS_NewArrayObject(cx, 0, NULL);
     if (!stack)

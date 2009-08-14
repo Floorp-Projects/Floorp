@@ -5487,7 +5487,7 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data)
 {
     CHECK_REQUEST(cx);
-    JSCharVector cb(cx);
+    JSCharBuffer cb(cx);
     if (!js_Stringify(cx, vp, replacer, space, cb))
         return false;
     return callback(cb.begin(), cb.size(), data);

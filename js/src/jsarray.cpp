@@ -1331,9 +1331,9 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
 
 /* Transfer ownership of buffer to returned string. */
 static inline JSBool
-BufferToString(JSContext *cx, JSCharVector &buf, jsval *rval)
+BufferToString(JSContext *cx, JSCharBuffer &cb, jsval *rval)
 {
-    JSString *str = js_NewStringFromCharBuffer(cx, buf);
+    JSString *str = js_NewStringFromCharBuffer(cx, cb);
     if (!str)
         return false;
     *rval = STRING_TO_JSVAL(str);
@@ -1368,28 +1368,28 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
      * This object will take responsibility for the jschar buffer until the
      * buffer is transferred to the returned JSString.
      */
-    JSCharVector buf(cx);
+    JSCharBuffer cb(cx);
 
     /* Cycles/joins are indicated by sharp objects. */
 #if JS_HAS_SHARP_VARS
     if (IS_SHARP(he)) {
         JS_ASSERT(sharpchars != 0);
-        buf.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
+        cb.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
         goto make_string;
     } else if (sharpchars) {
         MAKE_SHARP(he);
-        buf.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
+        cb.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
     }
 #else
     if (IS_SHARP(he)) {
-        if (!js_AppendLiteral(buf, "[]"))
+        if (!js_AppendLiteral(cb, "[]"))
             goto out;
         cx->free(sharpchars);
         goto make_string;
     }
 #endif
 
-    if (!buf.append('['))
+    if (!cb.append('['))
         goto out;
 
     jsuint length;
@@ -1419,23 +1419,23 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
         str->getCharsAndLength(chars, charlen);
 
         /* Append element to buffer. */
-        if (!buf.append(chars, charlen))
+        if (!cb.append(chars, charlen))
             goto out;
         if (index + 1 != length) {
-            if (!js_AppendLiteral(buf, ", "))
+            if (!js_AppendLiteral(cb, ", "))
                 goto out;
         } else if (hole) {
-            if (!buf.append(','))
+            if (!cb.append(','))
                 goto out;
         }
     }
 
     /* Finalize the buffer. */
-    if (!buf.append(']'))
+    if (!cb.append(']'))
         goto out;
 
   make_string:
-    if (!BufferToString(cx, buf, vp))
+    if (!BufferToString(cx, cb, vp))
         goto out;
 
     ok = true;
@@ -1514,7 +1514,7 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
      * This object will take responsibility for the jschar buffer until the
      * buffer is transferred to the returned JSString.
      */
-    JSCharVector buf(cx);
+    JSCharBuffer cb(cx);
 
     jsuint length;
     if (!js_GetLengthProperty(cx, obj, &length))
@@ -1542,19 +1542,19 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
                     goto out;
             }
 
-            if (!js_ValueToCharBuffer(cx, *rval, buf))
+            if (!js_ValueToCharBuffer(cx, *rval, cb))
                 goto out;
         }
 
         /* Append the separator. */
         if (index + 1 != length) {
-            if (!buf.append(sep, seplen))
+            if (!cb.append(sep, seplen))
                 goto out;
         }
     }
 
     /* Finalize the buffer. */
-    if (!BufferToString(cx, buf, rval))
+    if (!BufferToString(cx, cb, rval))
         goto out;
 
     ok = true;
