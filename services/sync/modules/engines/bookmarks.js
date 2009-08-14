@@ -543,15 +543,6 @@ BookmarksStore.prototype = {
     return record;
   },
 
-  _createMiniRecord: function BStore__createMiniRecord(placesId, depthIndex) {
-    let foo = {id: this._bms.getItemGUID(placesId)};
-    if (depthIndex) {
-      foo.depth = this._itemDepth(placesId);
-      foo.sortindex = this._bms.getItemIndex(placesId);
-    }
-    return foo;
-  },
-
   _getWeaveParentIdForItem: function BStore__getWeaveParentIdForItem(itemId) {
     let parentid = this._bms.getFolderIdForItem(itemId);
     if (parentid == -1) {
@@ -562,9 +553,7 @@ BookmarksStore.prototype = {
     return this._getWeaveIdForItem(parentid);
   },
 
-  _getChildren: function BStore_getChildren(guid, depthIndex, items) {
-    if (typeof(items) == "undefined")
-      items = {};
+  _getChildren: function BStore_getChildren(guid, items) {
     let node = guid; // the recursion case
     if (typeof(node) == "string") // callers will give us the guid as the first arg
       node = this._getNode(this._getItemIdForGUID(guid));
@@ -573,35 +562,18 @@ BookmarksStore.prototype = {
         !this._ls.isLivemark(node.itemId)) {
       node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
       node.containerOpen = true;
+
+      // Remember all the children GUIDs and recursively get more
       for (var i = 0; i < node.childCount; i++) {
         let child = node.getChild(i);
-        let foo = this._createMiniRecord(child.itemId, true);
-        items[foo.id] = foo;
-        this._getChildren(child, depthIndex, items);
+        items[this._bms.getItemGUID(child.itemId)] = true;
+        this._getChildren(child, items);
       }
     }
 
     return items;
   },
 
-  _getSiblings: function BStore__getSiblings(guid, depthIndex, items) {
-    if (typeof(items) == "undefined")
-      items = {};
-
-    let parentid = this._bms.getFolderIdForItem(this._getItemIdForGUID(guid));
-    let parent = this._getNode(parentid);
-    parent.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-    parent.containerOpen = true;
-
-    for (var i = 0; i < parent.childCount; i++) {
-      let child = parent.getChild(i);
-      let foo = this._createMiniRecord(child.itemId, true);
-      items[foo.id] = foo;
-    }
-
-    return items;
-  },
-  
   _tagURI: function BStore_tagURI(bmkURI, tags) {
     // Filter out any null/undefined/empty tags
     tags = tags.filter(function(t) t);
@@ -618,13 +590,7 @@ BookmarksStore.prototype = {
     let items = {};
     for (let [weaveId, id] in Iterator(kSpecialIds))
       if (weaveId != "places" && weaveId != "tags")
-        this._getChildren(weaveId, true, items);
-    return items;
-  },
-
-  createMetaRecords: function BStore_createMetaRecords(guid, items) {
-    this._getChildren(guid, true, items);
-    this._getSiblings(guid, true, items);
+        this._getChildren(weaveId, items);
     return items;
   },
 

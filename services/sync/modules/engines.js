@@ -457,57 +457,39 @@ SyncEngine.prototype = {
     if (outnum) {
       // collection we'll upload
       let up = new Collection(this.engineURL);
-      let meta = {};
+      let count = 0;
+
+      // Upload what we've got so far in the collection
+      let doUpload = Utils.bind2(this, function(desc) {
+        this._log.info("Uploading " + desc + " of " + outnum + " records");
+        up.post();
+        if (up.data.modified > this.lastSync)
+          this.lastSync = up.data.modified;
+        up.clearRecords();
+      });
 
       // don't cache the outgoing items, we won't need them later
       this._store.cache.enabled = false;
 
-      let count = 0;
       for (let id in this._tracker.changedIDs) {
         let out = this._createRecord(id);
         this._log.trace("Outgoing:\n" + out);
 
-        // skip getting siblings of already processed and deleted records
-        if (!out.deleted && !(out.id in meta))
-          this._store.createMetaRecords(out.id, meta);
-
         out.encrypt(ID.get("WeaveCryptoID"));
         up.pushData(JSON.parse(out.serialize())); // FIXME: inefficient
 
-        if ((++count % MAX_UPLOAD_RECORDS) == 0) {
-          // partial upload
-          this._log.info("Uploading " + (count - MAX_UPLOAD_RECORDS) + " - " +
-                         count + " out of " + outnum + " records");
-          up.post();
-          if (up.data.modified > this.lastSync)
-            this.lastSync = up.data.modified;
-          up.clearRecords();
-        }
+        // Partial upload
+        if ((++count % MAX_UPLOAD_RECORDS) == 0)
+          doUpload((count - MAX_UPLOAD_RECORDS) + " - " + count + " out");
 
         Sync.sleep(0);
       }
 
+      // Final upload
+      if (count % MAX_UPLOAD_RECORDS > 0)
+        doUpload(count >= MAX_UPLOAD_RECORDS ? "last batch" : "all");
+
       this._store.cache.enabled = true;
-
-      // now add short depth-and-index-only records, except the ones we're
-      // sending as full records
-      let metaCount = 0;
-      for each (let obj in meta) {
-        if (!(obj.id in this._tracker.changedIDs)) {
-          up.pushData(obj);
-          metaCount++;
-        }
-      }
-
-      // final upload
-      if ((count % MAX_UPLOAD_RECORDS) + metaCount > 0) {
-        this._log.info("Uploading " +
-                       (count >= MAX_UPLOAD_RECORDS? "last batch of " : "") +
-                       count + " records, and " + metaCount + " index/depth records");
-        up.post();
-        if (up.data.modified > this.lastSync)
-          this.lastSync = up.data.modified;
-      }
     }
     this._tracker.clearChangedIDs();
   },
