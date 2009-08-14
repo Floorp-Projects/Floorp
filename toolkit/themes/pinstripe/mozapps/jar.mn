@@ -1,4 +1,4 @@
-classic.jar:
+toolkit.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/
   skin/classic/mozapps/downloads/buttons.png                      (downloads/buttons.png)
   skin/classic/mozapps/downloads/downloadIcon.png                 (downloads/downloadIcon.png)
