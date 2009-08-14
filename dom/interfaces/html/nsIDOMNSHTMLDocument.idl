@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(79beb289-3644-4b54-9432-9fb993945629)]
+[scriptable, uuid(43ac2f64-8a1e-488a-9468-01a2155caf63)]
 interface nsIDOMNSHTMLDocument : nsISupports
 {
   readonly attribute long                 width;
@@ -65,9 +65,7 @@ interface nsIDOMNSHTMLDocument : nsISupports
   nsIDOMDocument            open(in ACString aContentType,
                                  in boolean aReplace);
 
-  // Scriptable versions of write(), writeln(), clear().
-  void                      write();
-  void                      writeln();
+  // Scriptable version of clear().
   void                      clear();
 
   /**
