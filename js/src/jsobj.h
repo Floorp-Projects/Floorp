@@ -97,7 +97,7 @@ const uint32 JSSLOT_PROTO   = 0;
 const uint32 JSSLOT_PARENT  = 1;
 const uint32 JSSLOT_PRIVATE = 2;
 
-const uint32 JSSLOT_CLASS_MASK_BITS = 3;
+const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
 
 /*
  * JSObject struct, with members sized to fit in 32 bytes on 32-bit targets,
@@ -290,8 +290,6 @@ struct JSObject {
  * flags in the two least significant bits. We do *not* synchronize updates of
  * obj->classword -- API clients must take care.
  */
-#define JSSLOT_CLASS_MASK_BITS 3
-
 JS_ALWAYS_INLINE JSClass*
 STOBJ_GET_CLASS(const JSObject* obj)
 {
