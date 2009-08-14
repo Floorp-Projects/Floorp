@@ -298,7 +298,6 @@ With this information, it finally type checks the AST.'''
         # NB: no IPDL compile will EVER print a warning.  A program has
         # one of two attributes: it is either well typed, or not well typed.
         self.errors = [ ]       # [ string ]
-        self.symtab = SymbolTable(self.errors)
 
     def check(self, tu, errout=sys.stderr):
         def runpass(tcheckpass):
@@ -312,15 +311,15 @@ With this information, it finally type checks the AST.'''
 
         # tag each relevant node with "decl" information, giving type, name,
         # and location of declaration
-        if not runpass(GatherDecls(builtinUsing, self.symtab, self.errors)):
+        if not runpass(GatherDecls(builtinUsing, self.errors)):
             return False
 
         # now that the nodes have decls, type checking is much easier.
-        if not runpass(CheckTypes(self.symtab, self.errors)):
+        if not runpass(CheckTypes(self.errors)):
             return False
 
         if (tu.protocol.startState is not None
-            and not runpass(CheckStateMachine(self.symtab, self.errors))):
+            and not runpass(CheckStateMachine(self.errors))):
             return False
 
         return True
@@ -348,35 +347,35 @@ class TcheckVisitor(Visitor):
         return d
 
 class GatherDecls(TcheckVisitor):
-    def __init__(self, builtinUsing, symtab, errors):
-        TcheckVisitor.__init__(self, symtab, errors)
+    def __init__(self, builtinUsing, errors):
+        # |self.symtab| is the symbol table for the translation unit
+        # currently being visited
+        TcheckVisitor.__init__(self, None, errors)
         self.builtinUsing = builtinUsing
-        self.depth = 0
+
+    def declareBuiltins(self):
+        for using in self.builtinUsing:
+            fullname = str(using.type)
+            if using.type.basename() == fullname:
+                fullname = None
+            using.decl = self.declareLocalGlobal(
+                loc=using.loc,
+                type=BuiltinCxxType(using.type.spec),
+                shortname=using.type.basename(),
+                fullname=fullname)
+            self.symtab.declare(using.decl)
 
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
-        if hasattr(tu, '_tchecked') and tu._tchecked:
+        if hasattr(tu, 'symtab'):
             return
-        tu._tchecked = True
-        self.depth += 1
+        tu.symtab = SymbolTable(self.errors)
+        savedSymtab = self.symtab
+        self.symtab = tu.symtab
 
-        # bit of a hack here --- we want the builtin |using|
-        # statements to be added to the symbol table before anything
-        # else, but we also want them in the translation units' list
-        # of using stmts so that we can use them later down the pipe.
-        # so we add them to the symbol table before anything else, and
-        # prepend them to the TUs after visiting all their |using|
-        # decls
-        if 1 == self.depth:
-            for using in self.builtinUsing:
-                fullname = str(using.type)
-                if using.type.basename() == fullname:
-                    fullname = None
-                using.decl = self.declare(
-                    loc=using.loc,
-                    type=BuiltinCxxType(using.type.spec),
-                    shortname=using.type.basename(),
-                    fullname=fullname)
+        # pretend like the translation unit "using"-ed these for the
+        # sake of type checking and C++ code generation
+        tu.using = self.builtinUsing + tu.using
 
         p = tu.protocol
 
@@ -400,26 +399,21 @@ class GatherDecls(TcheckVisitor):
         for pinc in tu.protocolIncludes:
             pinc.accept(self)
 
-        # each protocol has its own scope for types brought in through |using|
-        self.symtab.enterScope(tu)
-
-        # and for all imported C++ types
+        # declare imported (and builtin) C++ types
         for using in tu.using:
             using.accept(self)
-
-        # (see long comment above)
-        tu.using = self.builtinUsing + tu.using
 
         # grab symbols in the protocol itself
         p.accept(self)
 
-        self.symtab.exitScope(tu)
-
         tu.type = VOID
-        self.depth -= 1
+
+        self.symtab = savedSymtab
+
 
     def visitProtocolInclude(self, pi):
         pi.tu.accept(self)
+        self.symtab.declare(pi.tu.protocol.decl)
 
     def visitUsingStmt(self, using):
         fullname = str(using.type)
@@ -679,8 +673,9 @@ class GatherDecls(TcheckVisitor):
 ##-----------------------------------------------------------------------------
 
 class CheckTypes(TcheckVisitor):
-    def __init__(self, symtab, errors):
-        TcheckVisitor.__init__(self, symtab, errors)
+    def __init__(self, errors):
+        # don't need the symbol table, we just want the error reporting
+        TcheckVisitor.__init__(self, None, errors)
         self.visited = set()
 
     def visitProtocolInclude(self, inc):
@@ -797,8 +792,9 @@ class CheckTypes(TcheckVisitor):
 ##-----------------------------------------------------------------------------
 
 class CheckStateMachine(TcheckVisitor):
-    def __init__(self, symtab, errors):
-        TcheckVisitor.__init__(self, symtab, errors)
+    def __init__(self, errors):
+        # don't need the symbol table, we just want the error reporting
+        TcheckVisitor.__init__(self, None, errors)
         self.p = None
 
     def visitProtocol(self, p):

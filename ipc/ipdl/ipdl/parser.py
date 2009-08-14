@@ -49,9 +49,19 @@ _thisdir, _ = os.path.split(_getcallerpath())
 class ParseError(Exception):
     def __init__(self, loc, fmt, *args):
         self.loc = loc
-        self.error = ('%s: error: %s'% (loc, fmt)) % args
+        self.error = ('%s%s: error: %s'% (
+            Parser.includeStackString(), loc, fmt)) % args
     def __str__(self):
         return self.error
+
+def _safeLinenoValue(t):
+    lineno, value = 0, '???'
+    if hasattr(t, 'lineno'): lineno = t.lineno
+    if hasattr(t, 'value'):  value = t.value
+    return lineno, value
+
+def _error(loc, fmt, *args):
+    raise ParseError(loc, fmt, *args)
 
 class Parser:
     # when we reach an |include protocol "foo.ipdl";| statement, we need to
@@ -109,7 +119,7 @@ class Parser:
 
     def resolveIncludePath(self, filepath):
         '''Return the absolute path from which the possibly partial
-|filepath| should be read, or |None| if |filepath| can't be located.'''
+|filepath| should be read, or |None| if |filepath| cannot be located.'''
         for incdir in self.includedirs +[ '' ]:
             realpath = os.path.join(incdir, filepath)
             if os.path.isfile(realpath):
@@ -189,10 +199,8 @@ def t_STRING(t):
     return t
 
 def t_error(t):
-    includeStackStr = Parser.includeStackString()
-    raise ParseError(
-        Loc(Parser.current.filename, t.lineno),
-        "%s: lexically invalid characters `%s'"% (includeStackStr, t.value))
+    _error(Loc(Parser.current.filename, t.lineno),
+           'lexically invalid characters `%s', t.value)
 
 ##-----------------------------------------------------------------------------
 
@@ -324,7 +332,7 @@ def p_MessageDirectionLabel(p):
 def p_MessageDecl(p):
     """MessageDecl : OptionalSendSemanticsQual MessageBody"""
     if Parser.current.direction is None:
-        p_error(p[1])
+        _error(locFromTok(p, 1), 'missing message direction')
 
     if 2 == len(p):
         msg = p[1]
@@ -499,7 +507,6 @@ def p_CxxTemplateInst(p):
     p[0] = (locFromTok(p, 1), str(p[1]) +'<'+ str(p[3]) +'>')
 
 def p_error(t):
-    includeStackStr = Parser.includeStackString()
-    raise ParseError(
-        Loc(Parser.current.filename, t.lineno),
-        "%s: bad syntax near `%s'"% (includeStackStr, t.value))
+    lineno, value = _safeLinenoValue(t)
+    _error(Loc(Parser.current.filename, lineno),
+           "bad syntax near `%s'", value)
