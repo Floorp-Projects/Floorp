@@ -26,15 +26,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366936
                          "html5lib_tree_dat10.txt",
                          "html5lib_tree_dat11.txt",
                          "html5lib_tree_dat12.txt",
-                         "html5lib_tree_dat14.txt",
-                         "regressions.txt"
+                         "html5lib_tree_dat14.txt"
                          ];
-                  
   </script>
+  <script type="application/javascript;version=1.7"
+          src="nu.validator.htmlparser.HtmlParser.nocache.js"></script>  
   <script type="application/javascript;version=1.7"
           src="parser_web_testrunner.js"></script>
   <script type="application/javascript;version=1.7">
-    var testRunner = new ParserTestRunner();
+    var testRunner = new JSCompareTestRunner();
     testRunner.startTest();
   </script>
 </head>
@@ -43,6 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366936
    target="_blank">Mozilla Bug 366936</a>
 <div id="content">
 <iframe src="" id="testframe"></iframe>  
+<iframe src="" id="jsframe"></iframe>
 </div>
 See html5lib.googlecode.com for original test data<br>
 <div id="display">

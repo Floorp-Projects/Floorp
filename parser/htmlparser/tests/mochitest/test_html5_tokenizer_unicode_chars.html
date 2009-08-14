@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=366936
 -->
 <head>
-  <title>Test for Bug 366936</title>
+  <title>HTML5 Tokenizer Tests</title>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" 
 	  src="/tests/SimpleTest/SimpleTest.js"></script>
@@ -14,37 +14,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366936
           src="parser_datreader.js"></script>
   <script type="application/javascript"
           src="html5_tree_construction_exceptions.js"></script>
-  <script class="testbody" type="application/javascript;version=1.7">
-   var parserDatFiles = ["html5lib_tree_dat1.txt",
-                         "html5lib_tree_dat2.txt",
-                         "html5lib_tree_dat3.txt",
-                         "html5lib_tree_dat5.txt",
-                         "html5lib_tree_dat6.txt",
-                         "html5lib_tree_dat7.txt",
-                         "html5lib_tree_dat8.txt",
-                         "html5lib_tree_dat9.txt",
-                         "html5lib_tree_dat10.txt",
-                         "html5lib_tree_dat11.txt",
-                         "html5lib_tree_dat12.txt",
-                         "html5lib_tree_dat14.txt",
-                         "regressions.txt"
-                         ];
-                  
-  </script>
+  <script type="application/javascript"
+          src="html5lib_tokenizer_unicode_chars.test"></script>
   <script type="application/javascript;version=1.7"
           src="parser_web_testrunner.js"></script>
   <script type="application/javascript;version=1.7">
-    var testRunner = new ParserTestRunner();
+    var testRunner = new TokenizerTestRunner("html5lib_tokenizer_unicode_chars.test");
     testRunner.startTest();
   </script>
+          
 </head>
 <body>
+<p>HTML5 Tokenizer Tests: Unicode Characters</p>
 <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=366936"
    target="_blank">Mozilla Bug 366936</a>
 <div id="content">
 <iframe src="" id="testframe"></iframe>  
 </div>
-See html5lib.googlecode.com for original test data<br>
+test data converted from http://code.google.com/p/html5lib/source/browse/testdata/tokenizer<br>
 <div id="display">
 
 </div>
