@@ -42,17 +42,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-// Annotation to use for shared bookmark folders, incoming and outgoing:
-const INCOMING_SHARED_ANNO = "weave/shared-incoming";
-const OUTGOING_SHARED_ANNO = "weave/shared-outgoing";
-const SERVER_PATH_ANNO = "weave/shared-server-path";
-// Standard names for shared files on the server
-const KEYRING_FILE_NAME = "keyring";
-const SHARED_BOOKMARK_FILE_NAME = "shared_bookmarks";
-// Information for the folder that contains all incoming shares
-const INCOMING_SHARE_ROOT_ANNO = "weave/mounted-shares-folder";
-const INCOMING_SHARE_ROOT_NAME = "Shared Folders";
-
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -277,20 +266,6 @@ BookmarksStore.prototype = {
       newId = this._bms.createFolder(parentId,
                                      record.title,
                                      record.sortindex);
-      // If folder is an outgoing share, put the annotations on it:
-      if ( record.outgoingSharedAnno != undefined ) {
-	this._ans.setItemAnnotation(newId,
-				    OUTGOING_SHARED_ANNO,
-                                    record.outgoingSharedAnno,
-				    0,
-				    this._ans.EXPIRE_NEVER);
-	this._ans.setItemAnnotation(newId,
-				    SERVER_PATH_ANNO,
-                                    record.serverPathAnno,
-				    0,
-				    this._ans.EXPIRE_NEVER);
-
-      }
       break;
     case "livemark":
       this._log.debug(" -> creating livemark \"" + record.title + "\"");
@@ -299,25 +274,6 @@ BookmarksStore.prototype = {
                                       Utils.makeURI(record.siteUri),
                                       Utils.makeURI(record.feedUri),
                                       record.sortindex);
-      break;
-    case "incoming-share":
-      /* even though incoming shares are folders according to the
-       * bookmarkService, _wrap() wraps them as type=incoming-share, so we
-       * handle them separately, like so: */
-      this._log.debug(" -> creating incoming-share \"" + record.title + "\"");
-      newId = this._bms.createFolder(parentId,
-                                     record.title,
-                                     record.sortindex);
-      this._ans.setItemAnnotation(newId,
-				  INCOMING_SHARED_ANNO,
-                                  record.incomingSharedAnno,
-				  0,
-				  this._ans.EXPIRE_NEVER);
-      this._ans.setItemAnnotation(newId,
-				  SERVER_PATH_ANNO,
-                                  record.serverPathAnno,
-				  0,
-				  this._ans.EXPIRE_NEVER);
       break;
     case "separator":
       this._log.debug(" -> creating separator");
@@ -445,21 +401,6 @@ BookmarksStore.prototype = {
       case "feedUri":
         this._ls.setFeedURI(itemId, Utils.makeURI(val));
         break;
-      case "outgoingSharedAnno":
-	this._ans.setItemAnnotation(itemId, OUTGOING_SHARED_ANNO,
-				    val, 0,
-				    this._ans.EXPIRE_NEVER);
-	break;
-      case "incomingSharedAnno":
-	this._ans.setItemAnnotation(itemId, INCOMING_SHARED_ANNO,
-				    val, 0,
-				    this._ans.EXPIRE_NEVER);
-	break;
-      case "serverPathAnno":
-	this._ans.setItemAnnotation(itemId, SERVER_PATH_ANNO,
-				    val, 0,
-				    this._ans.EXPIRE_NEVER);
-	break;
       }
     }
   },
