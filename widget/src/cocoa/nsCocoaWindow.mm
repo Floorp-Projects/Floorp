@@ -44,7 +44,6 @@
 #include "nsWidgetsCID.h"
 #include "nsGUIEvent.h"
 #include "nsIRollupListener.h"
-#include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsWindowMap.h"
 #include "nsAppShell.h"
@@ -1520,7 +1519,7 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 // Callback used by the default titlebar and toolbar shading.
 // *aIn == 0 at the top of the titlebar/toolbar, *aIn == 1 at the bottom
 /* static */ void
-nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
+nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 {
   UnifiedGradientInfo* info = (UnifiedGradientInfo*)aInfo;
   // The gradient percentage at the bottom of the titlebar / top of the toolbar
@@ -1844,7 +1843,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 // query the window for its titlebar height when drawing the toolbar.
 @implementation ToolbarWindow
 
-- (id)initWithContentRect:(NSRect)aContentRect styleMask:(unsigned int)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
+- (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -2141,7 +2140,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
   CGContextSetFillColorSpace(context, patternSpace);
   CGColorSpaceRelease(patternSpace);
-  float component = 1.0f;
+  CGFloat component = 1.0f;
   CGContextSetFillPattern(context, pattern, &component);
   CGPatternRelease(pattern);
 
@@ -2340,7 +2339,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
