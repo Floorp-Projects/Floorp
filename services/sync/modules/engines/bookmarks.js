@@ -211,10 +211,8 @@ BookmarksStore.prototype = {
       let uri = Utils.makeURI(record.bmkUri);
       this._log.debug(" -> -> ParentID is " + parentId);
       this._log.debug(" -> -> uri is " + record.bmkUri);
-      this._log.debug(" -> -> sortindex is " + record.sortindex);
       this._log.debug(" -> -> title is " + record.title);
-      newId = this._bms.insertBookmark(parentId, uri, record.sortindex,
-                                       record.title);
+      newId = this._bms.insertBookmark(parentId, uri, -1, record.title);
       this._tagURI(uri, record.tags);
       this._bms.setKeywordForBookmark(newId, record.keyword);
       if (record.description)
@@ -240,21 +238,16 @@ BookmarksStore.prototype = {
     } break;
     case "folder":
       this._log.debug(" -> creating folder \"" + record.title + "\"");
-      newId = this._bms.createFolder(parentId,
-                                     record.title,
-                                     record.sortindex);
+      newId = this._bms.createFolder(parentId, record.title, -1);
       break;
     case "livemark":
       this._log.debug(" -> creating livemark \"" + record.title + "\"");
-      newId = this._ls.createLivemark(parentId,
-                                      record.title,
-                                      Utils.makeURI(record.siteUri),
-                                      Utils.makeURI(record.feedUri),
-                                      record.sortindex);
+      newId = this._ls.createLivemark(parentId, record.title,
+        Utils.makeURI(record.siteUri), Utils.makeURI(record.feedUri), -1);
       break;
     case "separator":
       this._log.debug(" -> creating separator");
-      newId = this._bms.insertSeparator(parentId, record.sortindex);
+      newId = this._bms.insertSeparator(parentId, -1);
       break;
     case "item":
       this._log.debug(" -> got a generic places item.. do nothing?");
@@ -324,12 +317,11 @@ BookmarksStore.prototype = {
 
     this._log.trace("Updating " + record.id + " (" + itemId + ")");
 
-    if ((this._bms.getItemIndex(itemId) != record.sortindex) ||
-        (this._bms.getFolderIdForItem(itemId) !=
-         this._getItemIdForGUID(record.parentid))) {
-      this._log.trace("Moving item (changing folder/index)");
-      let parentid = this._getItemIdForGUID(record.parentid);
-      this._bms.moveItem(itemId, parentid, record.sortindex);
+    // FIXME check for predecessor changes
+    let parentid = this._getItemIdForGUID(record.parentid);
+    if (this._bms.getFolderIdForItem(itemId) != parentid) {
+      this._log.trace("Moving item (changing folder/position)");
+      this._bms.moveItem(itemId, parentid, -1);
     }
 
     for (let [key, val] in Iterator(record.cleartext)) {
@@ -518,7 +510,6 @@ BookmarksStore.prototype = {
 
     record.id = guid;
     record.parentid = this._getWeaveParentIdForItem(placeId);
-    record.sortindex = this._bms.getItemIndex(placeId);
     record.encryption = cryptoMetaURL;
 
     this.cache.put(guid, record);
