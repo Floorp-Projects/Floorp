@@ -2393,34 +2393,30 @@ GetUpvarStackOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDe
     return GetUpvarOnTrace<UpvarStackTraits>(cx, upvarLevel, slot, callDepth, result);
 }
 
-// Parameters needed to access a value from a closure on trace.
-struct ClosureVarInfo
-{
-    jsid     id;
-    uint32   scopeIndex;
-    uint32   slot;
-    uint32   callDepth;
-    uint32   resolveFlags;
-};
-
 /*
  * Generic function to read upvars from Call objects of active heavyweight functions.
  *     callee       Callee Function object in which the upvar is accessed.
+ *     scopeIndex   Number of parent steps to make from |callee| to find upvar definition.
+ *                  This must be at least 1 because |callee| is a Function and we must reach a Call.
+ *     slot         Slot in Call object to read.
+ *     callDepth    callDepth of current point relative to trace entry.
  */
 template<typename T>
 inline uint32
-GetFromClosure(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double* result)
+GetFromClosure(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth,
+               double* result)
 {
-    JS_ASSERT(cv->scopeIndex >= 1);
+    JS_ASSERT(scopeIndex >= 1);
     JS_ASSERT(OBJ_GET_CLASS(cx, callee) == &js_FunctionClass);
     JSObject* call = callee;
-    for (uint32 i = 0; i < cv->scopeIndex; ++i)
+
+    for (uint32 i = 0; i < scopeIndex; ++i)
         call = OBJ_GET_PARENT(cx, call);
 
     JS_ASSERT(OBJ_GET_CLASS(cx, call) == &js_CallClass);
 
     InterpState* state = cx->interpState;
-    FrameInfo** fip = state->rp + cv->callDepth;
+    FrameInfo** fip = state->rp + callDepth;
     while (--fip >= state->callstackBase) {
         FrameInfo* fi = *fip;
         if (fi->callee == call) {
@@ -2438,7 +2434,6 @@ GetFromClosure(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double
     /*
      * Here we specifically want to check the call object of the trace entry frame.
      */
-    uint32 slot = cv->slot;
     VOUCH_DOES_NOT_REQUIRE_STACK();
     if (cx->fp->callobj == call) {
         slot = T::adj_slot(cx->fp, slot);
@@ -2447,18 +2442,9 @@ GetFromClosure(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double
     }
 
     JSStackFrame* fp = (JSStackFrame*) call->getPrivate();
-    jsval v;
-    if (fp) {
-        v = T::slots(fp)[slot];
-    } else {
-        JS_ASSERT(cv->resolveFlags != JSRESOLVE_INFER);
-        JSAutoResolveFlags rf(cx, cv->resolveFlags);
-#ifdef DEBUG
-        JSBool rv =
-#endif
-            js_GetPropertyHelper(cx, call, cv->id, JS_FALSE, &v);
-        JS_ASSERT(rv);
-    }
+    if (!fp)
+        return TT_INVALID;
+    jsval v = T::slots(fp)[slot];
     JSTraceType type = getCoercedType(v);
     ValueToNative(cx, v, type, result);
     return type;
@@ -2473,9 +2459,10 @@ private:
 };
 
 uint32 JS_FASTCALL
-GetClosureArg(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double* result)
+GetClosureArg(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth,
+              double* result)
 {
-    return GetFromClosure<ArgClosureTraits>(cx, callee, cv, result);
+    return GetFromClosure<ArgClosureTraits>(cx, callee, scopeIndex, slot, callDepth, result);
 }
 
 struct VarClosureTraits
@@ -2487,9 +2474,10 @@ private:
 };
 
 uint32 JS_FASTCALL
-GetClosureVar(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double* result)
+GetClosureVar(JSContext* cx, JSObject* callee, uint32 scopeIndex, uint32 slot, uint32 callDepth,
+              double* result)
 {
-    return GetFromClosure<VarClosureTraits>(cx, callee, cv, result);
+    return GetFromClosure<VarClosureTraits>(cx, callee, scopeIndex, slot, callDepth, result);
 }
 
 /**
@@ -3653,7 +3641,7 @@ class SlotMap : public SlotVisitorBase
     checkType(unsigned i, JSTraceType t)
     {
         debug_only_printf(LC_TMTracer,
-                          "checkType slot %d: interp=%c typemap=%c isNum=%d promoteInt=%d\n",
+                          "checkType slot %d: interp=%c typemap=%c isNum=%d promoteInt=%d\n", 
                           i,
                           typeChar[getCoercedType(*slots[i].v)],
                           typeChar[t],
@@ -6821,8 +6809,10 @@ TraceRecorder::frameIfInRange(JSObject* obj, unsigned* depthp) const
     return NULL;
 }
 
-JS_DEFINE_CALLINFO_4(extern, UINT32, GetClosureVar, CONTEXT, OBJECT, CVIPTR, DOUBLEPTR, 0, 0)
-JS_DEFINE_CALLINFO_4(extern, UINT32, GetClosureArg, CONTEXT, OBJECT, CVIPTR, DOUBLEPTR, 0, 0)
+JS_DEFINE_CALLINFO_6(extern, UINT32, GetClosureVar, CONTEXT, OBJECT, UINT32,
+                     UINT32, UINT32, DOUBLEPTR, 0, 0)
+JS_DEFINE_CALLINFO_6(extern, UINT32, GetClosureArg, CONTEXT, OBJECT, UINT32,
+                     UINT32, UINT32, DOUBLEPTR, 0, 0)
 
 /*
  * Search the scope chain for a property lookup operation at the current PC and
@@ -6871,108 +6861,82 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
     if (wasDeepAborted())
         ABORT_TRACE("deep abort from property lookup");
 
-    if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass)
-        return callProp(obj, obj2, prop, ATOM_TO_JSID(atom), vp, ins, nr);
+    if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
+        JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
+        if (cfp) {
+            JSScopeProperty* sprop = (JSScopeProperty*) prop;
+
+            uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
+            if (setflags && (sprop->attrs & JSPROP_READONLY))
+                ABORT_TRACE("writing to a read-only property");
+
+            uintN slot = sprop->shortid;
+
+            vp = NULL;
+            uintN upvar_slot = SPROP_INVALID_SLOT;
+            if (sprop->getter == js_GetCallArg) {
+                JS_ASSERT(slot < cfp->fun->nargs);
+                vp = &cfp->argv[slot];
+                upvar_slot = slot;
+            } else if (sprop->getter == js_GetCallVar) {
+                JS_ASSERT(slot < cfp->script->nslots);
+                vp = &cfp->slots[slot];
+                upvar_slot = cx->fp->fun->nargs + slot;
+            }
+            obj2->dropProperty(cx, prop);
+            if (!vp)
+                ABORT_TRACE("dynamic property of Call object");
+
+            if (frameIfInRange(obj)) {
+                // At this point we are guaranteed to be looking at an active call object
+                // whose properties are stored in the corresponding JSStackFrame.
+                ins = get(vp);
+                nr.tracked = true;
+                return JSRS_CONTINUE;
+            }
+
+            // Compute number of scope chain links to result.
+            jsint scopeIndex = 0;
+            JSObject* tmp = JSVAL_TO_OBJECT(cx->fp->argv[-2]);
+            while (tmp != obj) {
+                tmp = OBJ_GET_PARENT(cx, tmp);
+                scopeIndex++;
+            }
+            JS_ASSERT(scopeIndex >= 1);
+
+            LIns* callee_ins = get(&cx->fp->argv[-2]);
+            LIns* outp = lir->insAlloc(sizeof(double));
+            LIns* args[] = {
+                outp,
+                INS_CONST(callDepth),
+                INS_CONST(slot),
+                INS_CONST(scopeIndex),
+                callee_ins,
+                cx_ins
+            };
+            const CallInfo* ci;
+            if (sprop->getter == js_GetCallArg)
+                ci = &GetClosureArg_ci;
+            else
+                ci = &GetClosureVar_ci;
+
+            LIns* call_ins = lir->insCall(ci, args);
+            JSTraceType type = getCoercedType(*vp);
+            guard(true,
+                  addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
+                          "guard(type-stable name access)"),
+                  BRANCH_EXIT);
+            ins = stackLoad(outp, type);
+            nr.tracked = false;
+            nr.obj = obj;
+            nr.scopeIndex = scopeIndex;
+            nr.sprop = sprop;
+            return JSRS_CONTINUE;
+        }
+    }
 
     obj2->dropProperty(cx, prop);
     ABORT_TRACE("fp->scopeChain is not global or active call object");
-}
-
-/*
- * Generate LIR to access a property of a Call object.
- */
-JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::callProp(JSObject* obj, JSObject* obj2, JSProperty* prop, jsid id, jsval*& vp, 
-                        LIns*& ins, NameResult& nr)
-{
-    JSScopeProperty *sprop = (JSScopeProperty*) prop;
-
-    uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
-    if (setflags && (sprop->attrs & JSPROP_READONLY))
-        ABORT_TRACE("writing to a read-only property");
-
-    uintN slot = sprop->shortid;
-
-    vp = NULL;
-    uintN upvar_slot = SPROP_INVALID_SLOT;
-    JSStackFrame* cfp = (JSStackFrame*) obj->getPrivate();
-    if (cfp) {
-        if (sprop->getter == js_GetCallArg) {
-            JS_ASSERT(slot < cfp->fun->nargs);
-            vp = &cfp->argv[slot];
-            upvar_slot = slot;
-            nr.v = *vp;
-        } else if (sprop->getter == js_GetCallVar) {
-            JS_ASSERT(slot < cfp->script->nslots);
-            vp = &cfp->slots[slot];
-            upvar_slot = cx->fp->fun->nargs + slot;
-            nr.v = *vp;
-        } else {
-            ABORT_TRACE("dynamic property of Call object");
-        }
-        obj2->dropProperty(cx, prop);
-
-        if (frameIfInRange(obj)) {
-            // At this point we are guaranteed to be looking at an active call oject
-            // whose properties are stored in the corresponding JSStackFrame.
-            ins = get(vp);
-            nr.tracked = true;
-            return JSRS_CONTINUE;
-        }
-    } else {
-#ifdef DEBUG
-        JSBool rv =
-#endif
-            js_GetPropertyHelper(cx, obj, sprop->id, JS_FALSE, &nr.v);
-        JS_ASSERT(rv);
-        obj2->dropProperty(cx, prop);
-    }
-
-    // Compute number of scope chain links to result.
-    jsint scopeIndex = 0;
-    JSObject* tmp = JSVAL_TO_OBJECT(cx->fp->argv[-2]);
-    while (tmp != obj) {
-        tmp = OBJ_GET_PARENT(cx, tmp);
-        scopeIndex++;
-    }
-    JS_ASSERT(scopeIndex >= 1);
-
-    LIns* cv_ins = lir_buf_writer->insSkip(sizeof(ClosureVarInfo));
-    ClosureVarInfo* cv = (ClosureVarInfo*) cv_ins->payload();
-    cv->id = id;
-    cv->scopeIndex = scopeIndex;
-    cv->slot = slot;
-    cv->callDepth = callDepth;
-    cv->resolveFlags = cx->resolveFlags == JSRESOLVE_INFER
-                     ? js_InferFlags(cx, 0)
-                     : cx->resolveFlags;
-
-    LIns* callee_ins = get(&cx->fp->argv[-2]);
-    LIns* outp = lir->insAlloc(sizeof(double));
-    LIns* args[] = {
-        outp,
-        INS_CONSTPTR(cv),
-        callee_ins,
-        cx_ins
-    };
-    const CallInfo* ci;
-    if (sprop->getter == js_GetCallArg)
-        ci = &GetClosureArg_ci;
-    else
-        ci = &GetClosureVar_ci;
-
-    LIns* call_ins = lir->insCall(ci, args);
-    JSTraceType type = getCoercedType(nr.v);
-    guard(true,
-          addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
-                  "guard(type-stable name access)"),
-          BRANCH_EXIT);
-    ins = stackLoad(outp, type);
-    nr.tracked = false;
-    nr.obj = obj;
-    nr.scopeIndex = scopeIndex;
-    nr.sprop = sprop;
-    return JSRS_CONTINUE;
 }
 
 JS_REQUIRES_STACK LIns*
@@ -9652,10 +9616,9 @@ TraceRecorder::incName(jsint incr, bool pre)
     LIns* v_ins;
     LIns* v_after;
     NameResult nr;
-
+    
     CHECK_STATUS(name(vp, v_ins, nr));
-    jsval v = nr.tracked ? *vp : nr.v;
-    CHECK_STATUS(incHelper(v, v_ins, v_after, incr));
+    CHECK_STATUS(incHelper(*vp, v_ins, v_after, incr));
     LIns* v_result = pre ? v_after : v_ins;
     if (nr.tracked) {
         set(vp, v_after);
@@ -9668,7 +9631,7 @@ TraceRecorder::incName(jsint incr, bool pre)
     LIns* callobj_ins = get(&cx->fp->argv[-2]);
     for (jsint i = 0; i < nr.scopeIndex; ++i)
         callobj_ins = stobj_get_parent(callobj_ins);
-    CHECK_STATUS(setCallProp(nr.obj, callobj_ins, nr.sprop, v_after, v));
+    CHECK_STATUS(setCallProp(nr.obj, callobj_ins, nr.sprop, v_after, *vp));
     stack(0, v_result);
     return JSRS_CONTINUE;
 }
