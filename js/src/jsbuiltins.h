@@ -116,8 +116,6 @@ struct JSTraceableNative {
 # define _JS_PTR_RETSIZE    nanojit::ARGSIZE_LO
 #endif
 
-class ClosureVarInfo;
-
 /*
  * Supported types for builtin functions.
  *
@@ -217,7 +215,6 @@ class ClosureVarInfo;
 #define _JS_CTYPE_FRAGMENT          _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CLASS             _JS_CTYPE(JSClass *,              _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_DOUBLEPTR         _JS_CTYPE(double *,               _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_CVIPTR            _JS_CTYPE(const ClosureVarInfo *, _JS_PTR, --, --, INFALLIBLE)
 
 #define _JS_EXPAND(tokens)  tokens
 

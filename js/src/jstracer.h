@@ -696,7 +696,6 @@ class TraceRecorder : public avmplus::GCObject {
         // is already in the tracker. The rest of the fields are set only if
         // |tracked| is false.
         bool             tracked;
-        jsval            v;              // current property value
         JSObject         *obj;           // Call object where name was found
         jsint            scopeIndex;     // scope chain links from callee to obj
         JSScopeProperty  *sprop;         // sprop name was resolved to
@@ -705,7 +704,6 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK nanojit::LIns* scopeChain() const;
     JS_REQUIRES_STACK JSStackFrame* frameIfInRange(JSObject* obj, unsigned* depthp = NULL) const;
     JS_REQUIRES_STACK JSRecordingStatus scopeChainProp(JSObject* obj, jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
-    JS_REQUIRES_STACK JSRecordingStatus callProp(JSObject* obj, JSObject* obj2, JSProperty* sprop, jsid id, jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
 
     JS_REQUIRES_STACK nanojit::LIns* arg(unsigned n);
     JS_REQUIRES_STACK void arg(unsigned n, nanojit::LIns* i);
@@ -732,7 +730,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus inc(jsval& v, jsint incr, bool pre = true);
     JS_REQUIRES_STACK JSRecordingStatus inc(jsval v, nanojit::LIns*& v_ins, jsint incr,
                                             bool pre = true);
-    JS_REQUIRES_STACK JSRecordingStatus incHelper(jsval v, nanojit::LIns* v_ins,
+    JS_REQUIRES_STACK JSRecordingStatus incHelper(jsval v, nanojit::LIns* v_ins, 
                                                   nanojit::LIns*& v_after, jsint incr);
     JS_REQUIRES_STACK JSRecordingStatus incProp(jsint incr, bool pre = true);
     JS_REQUIRES_STACK JSRecordingStatus incElem(jsint incr, bool pre = true);
