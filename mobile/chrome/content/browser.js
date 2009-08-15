@@ -897,9 +897,12 @@ var Browser = {
   /**
    * Compute the sidebar percentage visibility.
    *
+   * @param [optional] dx
+   * @param [optional] dy an offset distance at which to perform the visibility
+   * computation
    * @return [leftVisibility, rightVisiblity, leftTotalWidth, rightTotalWidth]
    */
-  computeSidebarVisibility: function computeSidebarVisibility() {
+  computeSidebarVisibility: function computeSidebarVisibility(dx, dy) {
     // XXX these should return 0 if the sidebars aren't visible
     function visibility(bar, visrect) {
       try {
@@ -912,11 +915,14 @@ var Browser = {
       }
     }
 
+    if (!dx) dx = 0;
+    if (!dy) dy = 0;
+
     let leftbarCBR = document.getElementById('tabs-container').getBoundingClientRect();
     let ritebarCBR = document.getElementById('browser-controls').getBoundingClientRect();
 
-    let leftbar = new wsRect(leftbarCBR.left, 0, leftbarCBR.width, 1);
-    let ritebar = new wsRect(ritebarCBR.left, 0, ritebarCBR.width, 1);
+    let leftbar = new wsRect(Math.round(leftbarCBR.left) - dx, 0, Math.round(leftbarCBR.width), 1);
+    let ritebar = new wsRect(Math.round(ritebarCBR.left) - dx, 0, Math.round(ritebarCBR.width), 1);
     let leftw = leftbar.width;
     let ritew = ritebar.width;
 
@@ -970,11 +976,11 @@ var Browser = {
     return snappedX;
   },
 
-  tryFloatToolbar: function tryFloatToolbar() {
+  tryFloatToolbar: function tryFloatToolbar(dx, dy) {
     if (this.floatedWhileDragging)
-      return false;
+      return;
 
-    let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility();
+    let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
     // XXX computeSideBarVisibility will normally return 0.0015... for ritevis
     if (leftvis > 0.002 || ritevis > 0.002) {
       document.getElementById("toolbar-moveable-container").top = 0;
@@ -982,11 +988,11 @@ var Browser = {
     }
   },
 
-  tryUnfloatToolbar: function tryUnfloatToolbar() {
+  tryUnfloatToolbar: function tryUnfloatToolbar(dx, dy) {
     if (!this.floatedWhileDragging)
       return;
 
-    let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility();
+    let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
     if (leftvis <= 0.002 && ritevis <= 0.002) {
       document.getElementById("toolbar-moveable-container").top = "";
       this.floatedWhileDragging = false;
@@ -1285,8 +1291,6 @@ Browser.MainDragger.prototype = {
 
     this.bv.onBeforeVisibleMove(dx, dy);
 
-    Browser.tryFloatToolbar();
-
     let [x0, y0] = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(dx, dy);
     let [x1, y1] = Browser.getScrollboxPosition(scroller);
@@ -1309,7 +1313,7 @@ Browser.MainDragger.prototype = {
   outerDragMove: function outerDragMove(dx, dy, scroller, doReturnDX) {
     this.bv.onBeforeVisibleMove(dx, dy);
 
-    Browser.tryFloatToolbar();
+    Browser.tryFloatToolbar(dx, dy);
 
     let [x0, y0] = Browser.getScrollboxPosition(scroller);
     scroller.scrollBy(dx, dy);
