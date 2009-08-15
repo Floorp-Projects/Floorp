@@ -2575,8 +2575,13 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
     consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
   }
 
-  nsIDOMWindow *window = GetWindow();
-  NS_ENSURE_TRUE(window, NS_OK);
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetScopeObject());
+  nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(window);
+  NS_ENSURE_TRUE(pwin, NS_OK);
+  NS_ASSERTION(pwin->IsInnerWindow(), "Should have inner window here!");
+  NS_ENSURE_TRUE(pwin->GetOuterWindow() &&
+                 pwin->GetOuterWindow()->GetCurrentInnerWindow() == pwin,
+                 NS_OK);
 
   nsCOMPtr<nsISelection> selection;
   nsresult rv = window->GetSelection(getter_AddRefs(selection));
