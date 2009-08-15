@@ -154,16 +154,6 @@ BookmarksStore.prototype = {
     return this._bms.getItemGUID(placeId);
   },
 
-  _isToplevel: function BStore__isToplevel(placeId) {
-    for (let [weaveId, id] in Iterator(kSpecialIds))
-      if (placeId == id)
-        return true;
-
-    if (this._bms.getFolderIdForItem(placeId) <= 0)
-      return true;
-    return false;
-  },
-
   itemExists: function BStore_itemExists(id) {
     return this._getItemIdForGUID(id) > 0;
   },
@@ -416,13 +406,6 @@ BookmarksStore.prototype = {
     return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
   },
 
-  // XXX a little inefficient - isToplevel calls getFolderIdForItem too
-  _itemDepth: function BStore__itemDepth(id) {
-    if (this._isToplevel(id))
-      return 0;
-    return this._itemDepth(this._bms.getFolderIdForItem(id)) + 1;
-  },
-
   _getTags: function BStore__getTags(uri) {
     try {
       if (typeof(uri) == "string")
@@ -535,7 +518,6 @@ BookmarksStore.prototype = {
 
     record.id = guid;
     record.parentid = this._getWeaveParentIdForItem(placeId);
-    record.depth = this._itemDepth(placeId);
     record.sortindex = this._bms.getItemIndex(placeId);
     record.encryption = cryptoMetaURL;
 

@@ -264,8 +264,6 @@ SyncEngine.prototype = {
   _recordLike: function SyncEngine__recordLike(a, b) {
     if (a.parentid != b.parentid)
       return false;
-    if (a.depth != b.depth)
-      return false;
     // note: sortindex ignored
     if (a.deleted || b.deleted)
       return false;
@@ -319,7 +317,7 @@ SyncEngine.prototype = {
     let newitems = new Collection(this.engineURL, this._recordObj);
     newitems.newer = this.lastSync;
     newitems.full = true;
-    newitems.sort = "depthindex";
+    newitems.sort = "index";
 
     let count = {applied: 0, reconciled: 0};
     this._lastSyncTmp = 0;
