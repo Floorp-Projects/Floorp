@@ -42,6 +42,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const PARENT_ANNO = "weave/parent";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -196,29 +197,48 @@ BookmarksStore.prototype = {
       }
     }
 
+    // Figure out the local id of the parent GUID if available
+    let parentGUID = record.parentid;
+    record._orphan = false;
+    if (parentGUID != null) {
+      let parentId = idForGUID(parentGUID);
+
+      // Default to unfiled if we don't have the parent yet
+      if (parentId <= 0) {
+        this._log.trace("Reparenting to unfiled until parent is synced");
+        record._orphan = true;
+        parentId = kSpecialIds.unfiled;
+      }
+
+      // Save the parent id for modifying the bookmark later
+      record._parent = parentId;
+    }
+
     // Do the normal processing of incoming records
     Store.prototype.applyIncoming.apply(this, arguments);
+
+    // Do some post-processing if we have an item
+    let itemId = idForGUID(record.id);
+    if (itemId > 0) {
+      // Create an annotation to remember that it needs a parent
+      // XXX Work around Bug 510628 by prepending parenT
+      if (record._orphan)
+        Utils.anno(itemId, PARENT_ANNO, "T" + parentGUID);
+    }
   },
 
   create: function BStore_create(record) {
     let newId;
-    let parentId = idForGUID(record.parentid);
-
-    if (parentId <= 0) {
-      this._log.warn("Creating node with unknown parent -> reparenting to root");
-      parentId = this._bms.bookmarksMenuFolder;
-    }
-
     switch (record.type) {
     case "bookmark":
     case "query":
     case "microsummary": {
       this._log.debug(" -> creating bookmark \"" + record.title + "\"");
       let uri = Utils.makeURI(record.bmkUri);
-      this._log.debug(" -> -> ParentID is " + parentId);
+      this._log.debug(" -> -> ParentID is " + record._parent);
       this._log.debug(" -> -> uri is " + record.bmkUri);
       this._log.debug(" -> -> title is " + record.title);
-      newId = this._bms.insertBookmark(parentId, uri, -1, record.title);
+      newId = this._bms.insertBookmark(record._parent, uri, -1, record.title);
       this._tagURI(uri, record.tags);
       this._bms.setKeywordForBookmark(newId, record.keyword);
       if (record.description)
@@ -244,16 +264,16 @@ BookmarksStore.prototype = {
     } break;
     case "folder":
       this._log.debug(" -> creating folder \"" + record.title + "\"");
-      newId = this._bms.createFolder(parentId, record.title, -1);
+      newId = this._bms.createFolder(record._parent, record.title, -1);
       break;
     case "livemark":
       this._log.debug(" -> creating livemark \"" + record.title + "\"");
-      newId = this._ls.createLivemark(parentId, record.title,
+      newId = this._ls.createLivemark(record._parent, record.title,
         Utils.makeURI(record.siteUri), Utils.makeURI(record.feedUri), -1);
       break;
     case "separator":
       this._log.debug(" -> creating separator");
-      newId = this._bms.insertSeparator(parentId, -1);
+      newId = this._bms.insertSeparator(record._parent, -1);
       break;
     case "item":
       this._log.debug(" -> got a generic places item.. do nothing?");
@@ -311,10 +331,9 @@ BookmarksStore.prototype = {
     this._log.trace("Updating " + record.id + " (" + itemId + ")");
 
     // FIXME check for predecessor changes
-    let parentid = idForGUID(record.parentid);
-    if (this._bms.getFolderIdForItem(itemId) != parentid) {
+    if (this._bms.getFolderIdForItem(itemId) != record._parent) {
       this._log.trace("Moving item (changing folder/position)");
-      this._bms.moveItem(itemId, parentid, -1);
+      this._bms.moveItem(itemId, record._parent, -1);
     }
 
     for (let [key, val] in Iterator(record.cleartext)) {
