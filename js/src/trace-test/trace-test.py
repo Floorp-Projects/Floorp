@@ -37,16 +37,17 @@ def get_test_cmd(path, lib_dir):
     libdir_var = lib_dir
     if not libdir_var.endswith('/'):
         libdir_var += '/'
-    expr = 'const platform="%s"; const libdir="%s";'%(sys.platform, libdir_var)
-    cmd = '%s -j -e \'%s\' -f %s -f %s'%(
-        JS, expr, os.path.join(lib_dir, 'prolog.js'), path)
-    return cmd
+    expr = "const platform=%r; const libdir=%r;"%(sys.platform, libdir_var)
+    return [ JS, '-j', '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
+             '-f', path ]
 
 def run_test(path, lib_dir):
     cmd = get_test_cmd(path, lib_dir)
     if OPTIONS.show_cmd:
         print(cmd)
-    p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+    # close_fds is not supported on Windows and will cause a ValueError.
+    close_fds = sys.platform != 'win32'
+    p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=close_fds)
     out, err = p.communicate()
     out, err = out.decode(), err.decode()
     if OPTIONS.show_output:
@@ -132,19 +133,20 @@ if __name__ == '__main__':
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
-    JS, test_args = args[0], args[1:]
+    # We need to make sure we are using backslashes on Windows.
+    JS, test_args = os.path.normpath(args[0]), args[1:]
 
     if test_args:
         test_list = []
         for arg in test_args:
-            test_list += find_tests(os.path.join(test_dir, arg))
+            test_list += find_tests(os.path.normpath(os.path.join(test_dir, arg)))
     else:
         test_list = find_tests(test_dir)
 
     if OPTIONS.exclude:
         exclude_list = []
         for exclude in OPTIONS.exclude:
-            exclude_list += find_tests(os.path.join(test_dir, exclude))
+            exclude_list += find_tests(os.path.normpath(os.path.join(test_dir, exclude)))
         test_list = [ test for test in test_list if test not in set(exclude_list) ]
 
     if not test_list:
