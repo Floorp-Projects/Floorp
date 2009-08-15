@@ -303,7 +303,9 @@ BookmarksStore.prototype = {
       let orphans = this._findAnnoItems(PARENT_ANNO, record.id);
       this._log.debug("Reparenting orphans " + orphans + " to " + record.title);
       orphans.forEach(function(orphan) {
+        // Move the orphan to the parent and drop the missing parent annotation
         Svc.Bookmark.moveItem(orphan, newId, -1);
+        Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
       });
     }
   },
