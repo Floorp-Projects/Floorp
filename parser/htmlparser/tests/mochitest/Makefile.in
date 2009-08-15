@@ -46,39 +46,11 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	parser_datreader.js \
 		parser_web_testrunner.js \
-		tokenizer_file_server.sjs \
-		html5lib_tokenizer_entities.test \
-		html5lib_tokenizer_numeric_entities.test \
-		html5lib_tokenizer_unicode_chars.test \
-		html5lib_tokenizer_test1.test \
-		html5lib_tokenizer_test2.test \
-		html5lib_tokenizer_test3.test \
-		html5lib_tokenizer_test4.test \
-		html5lib_tokenizer_test5.test \
 		html5lib_tree_dat1.txt \
 		html5lib_tree_dat2.txt \
 		html5lib_tree_dat3.txt \
-		html5lib_tree_dat5.txt \
-		html5lib_tree_dat6.txt \
-		html5lib_tree_dat7.txt \
-		html5lib_tree_dat8.txt \
-		html5lib_tree_dat9.txt \
-		html5lib_tree_dat10.txt \
-		html5lib_tree_dat11.txt \
-		html5lib_tree_dat12.txt \
-		html5lib_tree_dat14.txt \
 		html5_tree_construction_exceptions.js \
-		nu.validator.htmlparser.HtmlParser.nocache.js \
-		test_html5_tokenizer_entities.html \
-		test_html5_tokenizer_numeric_entities.html \
-		test_html5_tokenizer_test1.html \
-		test_html5_tokenizer_test2.html \
-		test_html5_tokenizer_test3.html \
-		test_html5_tokenizer_test4.html \
-		test_html5_tokenizer_test5.html \
-		test_html5_tokenizer_unicode_chars.html \
 		test_html5_tree_construction.html \
-		test_html5_tree_construction_js_compare.html \
 		test_bug174351.html \
 	 	test_bug339350.xhtml \
 		test_bug358797.html \

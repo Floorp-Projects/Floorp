@@ -1,7 +1,7 @@
 #data
 Test
 #errors
-Line: 1 Col: 4 Unexpected non-space characters. Expected DOCTYPE.
+5: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -11,7 +11,7 @@ Line: 1 Col: 4 Unexpected non-space characters. Expected DOCTYPE.
 #data
 <p>One<p>Two
 #errors
-Line: 1 Col: 3 Unexpected start tag (p). Expected DOCTYPE.
+3: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -24,7 +24,7 @@ Line: 1 Col: 3 Unexpected start tag (p). Expected DOCTYPE.
 #data
 Line1<br>Line2<br>Line3<br>Line4
 #errors
-Line: 1 Col: 5 Unexpected non-space characters. Expected DOCTYPE.
+7: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -40,7 +40,7 @@ Line: 1 Col: 5 Unexpected non-space characters. Expected DOCTYPE.
 #data
 <html>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -49,7 +49,7 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <head>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -58,7 +58,7 @@ Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
 #data
 <body>
 #errors
-Line: 1 Col: 6 Unexpected start tag (body). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -67,7 +67,7 @@ Line: 1 Col: 6 Unexpected start tag (body). Expected DOCTYPE.
 #data
 <html><head>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -76,7 +76,7 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <html><head></head>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -85,7 +85,7 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <html><head></head><body>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -94,7 +94,7 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <html><head></head><body></body>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -103,7 +103,7 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <html><head><body></body></html>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -112,9 +112,8 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <html><head></body></html>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
-Line: 1 Col: 19 Unexpected end tag (body).
-Line: 1 Col: 26 Unexpected end tag (html).
+6: missing document type declaration
+19: unexpected body element end tag in head
 #document
 | <html>
 |   <head>
@@ -123,7 +122,7 @@ Line: 1 Col: 26 Unexpected end tag (html).
 #data
 <html><head><body></html>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -132,7 +131,7 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <html><body></html>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -141,7 +140,7 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <body></html>
 #errors
-Line: 1 Col: 6 Unexpected start tag (body). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -150,8 +149,7 @@ Line: 1 Col: 6 Unexpected start tag (body). Expected DOCTYPE.
 #data
 <head></html>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
-Line: 1 Col: 13 Unexpected end tag (html). Ignored.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -160,7 +158,8 @@ Line: 1 Col: 13 Unexpected end tag (html). Ignored.
 #data
 </head>
 #errors
-Line: 1 Col: 7 Unexpected end tag (head). Expected DOCTYPE.
+7: missing document type declaration
+7: unexpected head element end tag
 #document
 | <html>
 |   <head>
@@ -169,8 +168,8 @@ Line: 1 Col: 7 Unexpected end tag (head). Expected DOCTYPE.
 #data
 </body>
 #errors
-Line: 1 Col: 7 Unexpected end tag (body). Expected DOCTYPE.
-Line: 1 Col: 7 Unexpected end tag (body) after the (implied) root element.
+7: missing document type declaration
+7: unexpected body element end tag
 #document
 | <html>
 |   <head>
@@ -179,8 +178,7 @@ Line: 1 Col: 7 Unexpected end tag (body) after the (implied) root element.
 #data
 </html>
 #errors
-Line: 1 Col: 7 Unexpected end tag (html). Expected DOCTYPE.
-Line: 1 Col: 7 Unexpected end tag (html) after the (implied) root element.
+7: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -189,10 +187,10 @@ Line: 1 Col: 7 Unexpected end tag (html) after the (implied) root element.
 #data
 <b><table><td><i></table>
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 14 Unexpected table cell start tag (td) in the table body phase.
-Line: 1 Col: 25 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 25 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+25: unexpected td element end tag implied other end tags
+26: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -207,11 +205,11 @@ Line: 1 Col: 25 Expected closing tag. Unexpected end of file.
 #data
 <b><table><td></b><i></table>X
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 14 Unexpected table cell start tag (td) in the table body phase.
-Line: 1 Col: 18 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 29 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 30 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+18: mismatched b element end tag (no matching start tag)
+29: unexpected td element end tag implied other end tags
+31: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -227,9 +225,9 @@ Line: 1 Col: 30 Expected closing tag. Unexpected end of file.
 #data
 <h1>Hello<h2>World
 #errors
-4: Start tag seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
-13: Heading cannot be a child of another heading.
-18: End of file seen and there were open elements.
+4: missing document type declaration
+13: h2 element start tag implying h1 element end tag
+19: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -242,10 +240,10 @@ Line: 1 Col: 30 Expected closing tag. Unexpected end of file.
 #data
 <a><p>X<a>Y</a>Z</p></a>
 #errors
-Line: 1 Col: 3 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 10 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 10 End tag (a) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 24 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
+3: missing document type declaration
+10: a element start tag implying a element end tag
+10: mismatched a element end tag (misnested tags)
+24: mismatched a element end tag (no matching start tag)
 #document
 | <html>
 |   <head>
@@ -261,8 +259,8 @@ Line: 1 Col: 24 End tag (a) violates step 1, paragraph 1 of the adoption agency 
 #data
 <b><button></b></button></b>
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 15 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
+3: missing document type declaration
+15: mismatched b element end tag (no matching start tag)
 #document
 | <html>
 |   <head>
@@ -273,12 +271,12 @@ Line: 1 Col: 15 End tag (b) violates step 1, paragraph 1 of the adoption agency 
 #data
 <p><b><div><marquee></p></b></div>X
 #errors
-Line: 1 Col: 3 Unexpected start tag (p). Expected DOCTYPE.
-Line: 1 Col: 11 Unexpected end tag (p). Ignored.
-Line: 1 Col: 24 Unexpected end tag (p). Ignored.
-Line: 1 Col: 28 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 34 End tag (div) seen too early. Expected other end tag.
-Line: 1 Col: 35 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+11: mismatched p element end tag
+24: mismatched p element end tag
+28: mismatched b element end tag (no matching start tag)
+34: mismatched div element end tag
+36: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -288,14 +286,13 @@ Line: 1 Col: 35 Expected closing tag. Unexpected end of file.
 |     <div>
 |       <b>
 |         <marquee>
-|           <p>
 |           "X"
 
 #data
 <script><div></script></div><title><p></title><p><p>
 #errors
-Line: 1 Col: 8 Unexpected start tag (script). Expected DOCTYPE.
-Line: 1 Col: 28 Unexpected end tag (div). Ignored.
+8: missing document type declaration
+28: unexpected div element end tag in head
 #document
 | <html>
 |   <head>
@@ -310,63 +307,56 @@ Line: 1 Col: 28 Unexpected end tag (div). Ignored.
 #data
 <!--><div>--<!-->
 #errors
-Line: 1 Col: 5 Incorrect comment.
-Line: 1 Col: 10 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 17 Incorrect comment.
-Line: 1 Col: 17 Expected closing tag. Unexpected end of file.
+13: unexpected character after two '-' characters while parsing comment
+18: missing document type declaration
 #document
-| <!--  -->
+| <!-- ><div>--<! -->
 | <html>
 |   <head>
 |   <body>
-|     <div>
-|       "--"
-|       <!--  -->
 
 #data
 <p><hr></p>
 #errors
-Line: 1 Col: 3 Unexpected start tag (p). Expected DOCTYPE.
-Line: 1 Col: 11 Unexpected end tag (p). Ignored.
+3: missing document type declaration
+11: mismatched p element end tag
 #document
 | <html>
 |   <head>
 |   <body>
 |     <p>
 |     <hr>
-|     <p>
 
 #data
 <select><b><option><select><option></b></select>X
 #errors
-Line: 1 Col: 8 Unexpected start tag (select). Expected DOCTYPE.
-Line: 1 Col: 11 Unexpected start tag token (b) in the select phase. Ignored.
-Line: 1 Col: 27 Unexpected select start tag in the select phase treated as select end tag.
-Line: 1 Col: 39 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 48 Unexpected end tag (select). Ignored.
-Line: 1 Col: 49 Expected closing tag. Unexpected end of file.
+8: missing document type declaration
+11: unexpected node in select element context
+27: select element start tag used as end tag
+35: unexpected option element start tag in body
+39: mismatched b element end tag (no matching start tag)
+48: mismatched special end tag select
 #document
 | <html>
 |   <head>
 |   <body>
 |     <select>
 |       <option>
-|     <option>
-|       "X"
+|     "X"
 
 #data
 <a><table><td><a><table></table><a></tr><a></table><b>X</b>C<a>Y
 #errors
-Line: 1 Col: 3 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 14 Unexpected table cell start tag (td) in the table body phase.
-Line: 1 Col: 35 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 40 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 43 Unexpected start tag (a) in table context caused voodoo mode.
-Line: 1 Col: 43 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 43 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 51 Unexpected implied end tag (a) in the table phase.
-Line: 1 Col: 63 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 64 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+35: a element start tag implying a element end tag
+40: unexpected td element end tag implied other end tags
+43: unexpected node in table context
+43: a element start tag implying a element end tag
+43: unexpected node in table context
+43: mismatched a element end tag (misnested tags across <table> tag)
+63: a element start tag implying a element end tag
+65: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -390,10 +380,10 @@ Line: 1 Col: 64 Expected closing tag. Unexpected end of file.
 #data
 <a X>0<b>1<a Y>2
 #errors
-Line: 1 Col: 5 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 15 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 15 End tag (a) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 16 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+15: a element start tag implying a element end tag
+15: mismatched a element end tag (misnested tags)
+17: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -411,14 +401,15 @@ Line: 1 Col: 16 Expected closing tag. Unexpected end of file.
 #data
 <!-----><font><div>hello<table>excite!<b>me!<th><i>please!</tr><!--X-->
 #errors
-Line: 1 Col: 7 Unexpected '-' after '--' found in comment.
-Line: 1 Col: 14 Unexpected start tag (font). Expected DOCTYPE.
-Line: 1 Col: 38 Unexpected non-space characters in table context caused voodoo mode.
-Line: 1 Col: 41 Unexpected start tag (b) in table context caused voodoo mode.
-Line: 1 Col: 48 Unexpected implied end tag (b) in the table phase.
-Line: 1 Col: 48 Unexpected table cell start tag (th) in the table body phase.
-Line: 1 Col: 63 Got table cell end tag (th) while required end tags are missing.
-Line: 1 Col: 71 Unexpected end of file. Expected table content.
+7: unexpected '-' character after two '-' characters while parsing comment
+14: missing document type declaration
+40: unexpected node in table context
+41: unexpected node in table context
+46: unexpected node in table context
+48: required tr element start tag implied by unexpected th element start tag
+63: unexpected th element end tag implied other end tags
+72: unexpected end of file implied table element end tag
+72: mismatched body element end tag (premature end of file?)
 #document
 | <!-- - -->
 | <html>
@@ -438,11 +429,10 @@ Line: 1 Col: 71 Unexpected end of file. Expected table content.
 |             <!-- X -->
 
 #data
-<!DOCTYPE html><li>hello<li>world<ul>how<li>do</ul>you</body><!--do-->
+<!DOCTYPE HTML><li>hello<li>world<ul>how<li>do</ul>you</body><!--do-->
 #errors
-Line: 1 Col: 61 Unexpected end tag (li). Missing end tag (body).
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
@@ -458,28 +448,26 @@ Line: 1 Col: 61 Unexpected end tag (li). Missing end tag (body).
 |   <!-- do -->
 
 #data
-<!DOCTYPE html>A<option>B<optgroup>C<select>D</option>E
+<!DOCTYPE HTML>A<option>B<optgroup>C<select>D</option>E
 #errors
-Line: 1 Col: 54 Unexpected end tag (option) in the select phase. Ignored.
-Line: 1 Col: 55 Expected closing tag. Unexpected end of file.
+24: unexpected option element start tag in body
+35: unexpected optgroup element start tag in body
+54: unexpected option element end tag
+56: required select element end tag implied by unexpected end of file
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
-|     "A"
-|     <option>
-|       "B"
-|     <optgroup>
-|       "C"
-|       <select>
-|         "DE"
+|     "ABC"
+|     <select>
+|       "DE"
 
 #data
 <
 #errors
-Line: 1 Col: 1 Expected tag name. Got something else instead
-Line: 1 Col: 1 Unexpected non-space characters. Expected DOCTYPE.
+2: unescaped '<' character
+2: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -489,8 +477,8 @@ Line: 1 Col: 1 Unexpected non-space characters. Expected DOCTYPE.
 #data
 <#
 #errors
-Line: 1 Col: 1 Expected tag name. Got something else instead
-Line: 1 Col: 1 Unexpected non-space characters. Expected DOCTYPE.
+2: unescaped '<' character
+3: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -500,8 +488,8 @@ Line: 1 Col: 1 Unexpected non-space characters. Expected DOCTYPE.
 #data
 </
 #errors
-Line: 1 Col: 2 Expected closing tag. Unexpected end of file.
-Line: 1 Col: 2 Unexpected non-space characters. Expected DOCTYPE.
+3: unescaped '<' character followed by '/' at EOF
+3: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -511,8 +499,8 @@ Line: 1 Col: 2 Unexpected non-space characters. Expected DOCTYPE.
 #data
 </#
 #errors
-Line: 1 Col: 2 Expected closing tag. Unexpected character '#' found.
-Line: 1 Col: 3 Unexpected End of file. Expected DOCTYPE.
+3: unescaped '<' character followed by '/'
+4: missing document type declaration
 #document
 | <!-- # -->
 | <html>
@@ -522,8 +510,8 @@ Line: 1 Col: 3 Unexpected End of file. Expected DOCTYPE.
 #data
 <?
 #errors
-Line: 1 Col: 1 Expected tag name. Got '?' instead. (HTML doesn't support processing instructions.)
-Line: 1 Col: 2 Unexpected End of file. Expected DOCTYPE.
+2: PIs are not supported in HTML5
+3: missing document type declaration
 #document
 | <!-- ? -->
 | <html>
@@ -533,8 +521,8 @@ Line: 1 Col: 2 Unexpected End of file. Expected DOCTYPE.
 #data
 <?#
 #errors
-Line: 1 Col: 1 Expected tag name. Got '?' instead. (HTML doesn't support processing instructions.)
-Line: 1 Col: 3 Unexpected End of file. Expected DOCTYPE.
+2: PIs are not supported in HTML5
+4: missing document type declaration
 #document
 | <!-- ?# -->
 | <html>
@@ -544,8 +532,8 @@ Line: 1 Col: 3 Unexpected End of file. Expected DOCTYPE.
 #data
 <!
 #errors
-Line: 1 Col: 2 Expected '--' or 'DOCTYPE'. Not found.
-Line: 1 Col: 2 Unexpected End of file. Expected DOCTYPE.
+3: markup declarations are not supported in HTML5
+3: missing document type declaration
 #document
 | <!--  -->
 | <html>
@@ -555,8 +543,8 @@ Line: 1 Col: 2 Unexpected End of file. Expected DOCTYPE.
 #data
 <!#
 #errors
-Line: 1 Col: 3 Expected '--' or 'DOCTYPE'. Not found.
-Line: 1 Col: 3 Unexpected End of file. Expected DOCTYPE.
+3: markup declarations are not supported in HTML5
+4: missing document type declaration
 #document
 | <!-- # -->
 | <html>
@@ -566,8 +554,8 @@ Line: 1 Col: 3 Unexpected End of file. Expected DOCTYPE.
 #data
 <?COMMENT?>
 #errors
-Line: 1 Col: 1 Expected tag name. Got '?' instead. (HTML doesn't support processing instructions.)
-Line: 1 Col: 11 Unexpected End of file. Expected DOCTYPE.
+2: PIs are not supported in HTML5
+12: missing document type declaration
 #document
 | <!-- ?COMMENT? -->
 | <html>
@@ -577,8 +565,8 @@ Line: 1 Col: 11 Unexpected End of file. Expected DOCTYPE.
 #data
 <!COMMENT>
 #errors
-Line: 1 Col: 2 Expected '--' or 'DOCTYPE'. Not found.
-Line: 1 Col: 10 Unexpected End of file. Expected DOCTYPE.
+3: markup declarations are not supported in HTML5
+11: missing document type declaration
 #document
 | <!-- COMMENT -->
 | <html>
@@ -588,8 +576,8 @@ Line: 1 Col: 10 Unexpected End of file. Expected DOCTYPE.
 #data
 </ COMMENT >
 #errors
-Line: 1 Col: 2 Expected closing tag. Unexpected character ' ' found.
-Line: 1 Col: 12 Unexpected End of file. Expected DOCTYPE.
+3: unescaped '<' character followed by '/'
+13: missing document type declaration
 #document
 | <!--  COMMENT  -->
 | <html>
@@ -599,8 +587,8 @@ Line: 1 Col: 12 Unexpected End of file. Expected DOCTYPE.
 #data
 <?COM--MENT?>
 #errors
-Line: 1 Col: 1 Expected tag name. Got '?' instead. (HTML doesn't support processing instructions.)
-Line: 1 Col: 13 Unexpected End of file. Expected DOCTYPE.
+2: PIs are not supported in HTML5
+14: missing document type declaration
 #document
 | <!-- ?COM--MENT? -->
 | <html>
@@ -610,8 +598,8 @@ Line: 1 Col: 13 Unexpected End of file. Expected DOCTYPE.
 #data
 <!COM--MENT>
 #errors
-Line: 1 Col: 2 Expected '--' or 'DOCTYPE'. Not found.
-Line: 1 Col: 12 Unexpected End of file. Expected DOCTYPE.
+3: markup declarations are not supported in HTML5
+13: missing document type declaration
 #document
 | <!-- COM--MENT -->
 | <html>
@@ -621,8 +609,8 @@ Line: 1 Col: 12 Unexpected End of file. Expected DOCTYPE.
 #data
 </ COM--MENT >
 #errors
-Line: 1 Col: 2 Expected closing tag. Unexpected character ' ' found.
-Line: 1 Col: 14 Unexpected End of file. Expected DOCTYPE.
+3: unescaped '<' character followed by '/'
+15: missing document type declaration
 #document
 | <!--  COM--MENT  -->
 | <html>
@@ -630,11 +618,11 @@ Line: 1 Col: 14 Unexpected End of file. Expected DOCTYPE.
 |   <body>
 
 #data
-<!DOCTYPE html><style> EOF
+<!DOCTYPE HTML><style> EOF
 #errors
-Line: 1 Col: 26 Unexpected end of file. Expected end tag (style).
+27: unexpected end of file while parsing CDATA section for element style
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |     <style>
@@ -642,23 +630,24 @@ Line: 1 Col: 26 Unexpected end of file. Expected end tag (style).
 |   <body>
 
 #data
-<!DOCTYPE html><script> <!-- </script> --> </script> EOF
+<!DOCTYPE HTML><script> <!-- </script> --> </script> EOF
 #errors
+52: unexpected script element end tag
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |     <script>
-|       " <!-- </script> --> "
+|       " <!-- "
 |     " "
 |   <body>
-|     "EOF"
+|     "-->  EOF"
 
 #data
 <b><p></b>TEST
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 10 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
+3: missing document type declaration
+10: mismatched b element end tag (misnested tags)
 #document
 | <html>
 |   <head>
@@ -671,9 +660,9 @@ Line: 1 Col: 10 End tag (b) violates step 1, paragraph 3 of the adoption agency 
 #data
 <p id=a><b><p id=b></b>TEST
 #errors
-Line: 1 Col: 8 Unexpected start tag (p). Expected DOCTYPE.
-Line: 1 Col: 19 Unexpected end tag (p). Ignored.
-Line: 1 Col: 23 End tag (b) violates step 1, paragraph 2 of the adoption agency algorithm.
+8: missing document type declaration
+19: mismatched p element end tag
+23: mismatched b element end tag (out-of-order end tags)
 #document
 | <html>
 |   <head>
@@ -688,10 +677,10 @@ Line: 1 Col: 23 End tag (b) violates step 1, paragraph 2 of the adoption agency 
 #data
 <b id=a><p><b id=b></p></b>TEST
 #errors
-Line: 1 Col: 8 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 23 Unexpected end tag (p). Ignored.
-Line: 1 Col: 27 End tag (b) violates step 1, paragraph 2 of the adoption agency algorithm.
-Line: 1 Col: 31 Expected closing tag. Unexpected end of file.
+8: missing document type declaration
+23: mismatched p element end tag
+27: mismatched b element end tag (out-of-order end tags)
+32: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -704,11 +693,11 @@ Line: 1 Col: 31 Expected closing tag. Unexpected end of file.
 |       "TEST"
 
 #data
-<!DOCTYPE html><title>U-test</title><body><div><p>Test<u></p></div></body>
+<!DOCTYPE HTML><title>U-test</title><body><div><p>Test<u></p></div></body>
 #errors
-Line: 1 Col: 61 Unexpected end tag (p). Ignored.
+61: mismatched p element end tag
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |     <title>
@@ -720,12 +709,12 @@ Line: 1 Col: 61 Unexpected end tag (p). Ignored.
 |         <u>
 
 #data
-<!DOCTYPE html><font><table></font></table></font>
+<!DOCTYPE HTML><font><table></font></table></font>
 #errors
-Line: 1 Col: 35 Unexpected end tag (font) in table context caused voodoo mode.
-Line: 1 Col: 35 End tag (font) violates step 1, paragraph 1 of the adoption agency algorithm.
+35: unexpected node in table context
+35: mismatched font element end tag (misnested tags across <table> tag)
 #document
-| <!DOCTYPE html>
+| <!DOCTYPE HTML>
 | <html>
 |   <head>
 |   <body>
@@ -735,10 +724,9 @@ Line: 1 Col: 35 End tag (font) violates step 1, paragraph 1 of the adoption agen
 #data
 <font><p>hello<b>cruel</font>world
 #errors
-Line: 1 Col: 6 Unexpected start tag (font). Expected DOCTYPE.
-Line: 1 Col: 29 End tag (font) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 29 End tag (font) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 34 Expected closing tag. Unexpected end of file.
+6: missing document type declaration
+29: mismatched font element end tag (misnested tags)
+35: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -755,9 +743,9 @@ Line: 1 Col: 34 Expected closing tag. Unexpected end of file.
 #data
 <b>Test</i>Test
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 11 End tag (i) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 15 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+11: mismatched i element end tag (no matching start tag)
+16: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -768,8 +756,8 @@ Line: 1 Col: 15 Expected closing tag. Unexpected end of file.
 #data
 <b>A<cite>B<div>C
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 17 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+18: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -784,9 +772,9 @@ Line: 1 Col: 17 Expected closing tag. Unexpected end of file.
 #data
 <b>A<cite>B<div>C</cite>D
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 24 Unexpected end tag (cite). Ignored.
-Line: 1 Col: 25 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+24: unexpected cite element end tag
+26: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -801,9 +789,9 @@ Line: 1 Col: 25 Expected closing tag. Unexpected end of file.
 #data
 <b>A<cite>B<div>C</b>D
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 21 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 22 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+21: mismatched b element end tag (misnested tags)
+23: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -820,9 +808,9 @@ Line: 1 Col: 22 Expected closing tag. Unexpected end of file.
 #data
 <cite><b><cite><i><cite><i><cite><i><div>X</b>TEST
 #errors
-Line: 1 Col: 6 Unexpected start tag (cite). Expected DOCTYPE.
-Line: 1 Col: 46 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 50 Expected closing tag. Unexpected end of file.
+6: missing document type declaration
+46: mismatched b element end tag (misnested tags)
+51: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -834,7 +822,6 @@ Line: 1 Col: 50 Expected closing tag. Unexpected end of file.
 |             <cite>
 |               <i>
 |                 <cite>
-|                   <i>
 |       <i>
 |         <i>
 |           <i>
@@ -846,7 +833,7 @@ Line: 1 Col: 50 Expected closing tag. Unexpected end of file.
 #data
 
 #errors
-Line: 1 Col: 0 Unexpected End of file. Expected DOCTYPE.
+1: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -855,8 +842,8 @@ Line: 1 Col: 0 Unexpected End of file. Expected DOCTYPE.
 #data
 <DIV>
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 5 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+6: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -866,8 +853,8 @@ Line: 1 Col: 5 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 9 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+10: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -878,8 +865,8 @@ Line: 1 Col: 9 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B>
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 13 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+14: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -891,8 +878,8 @@ Line: 1 Col: 13 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 17 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+18: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -905,8 +892,8 @@ Line: 1 Col: 17 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I>
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 21 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+22: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -920,8 +907,8 @@ Line: 1 Col: 21 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 25 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+26: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -936,8 +923,8 @@ Line: 1 Col: 25 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi <P>
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 29 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+30: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -953,8 +940,8 @@ Line: 1 Col: 29 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi <P> jkl
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 33 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+34: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -971,9 +958,9 @@ Line: 1 Col: 33 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi <P> jkl </B>
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 38 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 38 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+39: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -992,9 +979,9 @@ Line: 1 Col: 38 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi <P> jkl </B> mno
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 38 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 42 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+43: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1014,10 +1001,10 @@ Line: 1 Col: 42 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi <P> jkl </B> mno </I>
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 38 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 47 End tag (i) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 47 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+47: mismatched i element end tag (misnested tags)
+48: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1038,10 +1025,10 @@ Line: 1 Col: 47 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 38 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 47 End tag (i) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 51 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+47: mismatched i element end tag (misnested tags)
+52: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1063,10 +1050,10 @@ Line: 1 Col: 51 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr </P>
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 38 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 47 End tag (i) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 56 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+47: mismatched i element end tag (misnested tags)
+57: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1088,10 +1075,10 @@ Line: 1 Col: 56 Expected closing tag. Unexpected end of file.
 #data
 <DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr </P> stu
 #errors
-Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
-Line: 1 Col: 38 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 47 End tag (i) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 60 Expected closing tag. Unexpected end of file.
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+47: mismatched i element end tag (misnested tags)
+61: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1114,8 +1101,8 @@ Line: 1 Col: 60 Expected closing tag. Unexpected end of file.
 #data
 <test attribute---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
 #errors
-Line: 1 Col: 1040 Unexpected start tag (test). Expected DOCTYPE.
-Line: 1 Col: 1040 Expected closing tag. Unexpected end of file.
+1040: missing document type declaration
+1041: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1126,14 +1113,14 @@ Line: 1 Col: 1040 Expected closing tag. Unexpected end of file.
 #data
 <a href="blah">aba<table><a href="foo">br<tr><td></td></tr>x</table>aoe
 #errors
-Line: 1 Col: 15 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 39 Unexpected start tag (a) in table context caused voodoo mode.
-Line: 1 Col: 39 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 39 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 45 Unexpected implied end tag (a) in the table phase.
-Line: 1 Col: 68 Unexpected implied end tag (a) in the table phase.
-Line: 1 Col: 71 Expected closing tag. Unexpected end of file.
-
+15: missing document type declaration
+39: unexpected node in table context
+39: a element start tag implying a element end tag
+39: unexpected node in table context
+39: mismatched a element end tag (misnested tags across <table> tag)
+43: unexpected node in table context
+63: unexpected node in table context
+72: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1158,10 +1145,10 @@ Line: 1 Col: 71 Expected closing tag. Unexpected end of file.
 #data
 <a href="blah">aba<table><tr><td><a href="foo">br</td></tr>x</table>aoe
 #errors
-Line: 1 Col: 15 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 54 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 60 Unexpected non-space characters in table context caused voodoo mode.
-Line: 1 Col: 71 Expected closing tag. Unexpected end of file.
+15: missing document type declaration
+54: unexpected td element end tag implied other end tags
+63: unexpected node in table context
+72: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1181,12 +1168,12 @@ Line: 1 Col: 71 Expected closing tag. Unexpected end of file.
 #data
 <table><a href="blah">aba<tr><td><a href="foo">br</td></tr>x</table>aoe
 #errors
-Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
-Line: 1 Col: 22 Unexpected start tag (a) in table context caused voodoo mode.
-Line: 1 Col: 29 Unexpected implied end tag (a) in the table phase.
-Line: 1 Col: 54 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 68 Unexpected implied end tag (a) in the table phase.
-Line: 1 Col: 71 Expected closing tag. Unexpected end of file.
+7: missing document type declaration
+22: unexpected node in table context
+27: unexpected node in table context
+54: unexpected td element end tag implied other end tags
+63: unexpected node in table context
+72: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1211,9 +1198,9 @@ Line: 1 Col: 71 Expected closing tag. Unexpected end of file.
 #data
 <a href=a>aa<marquee>aa<a href=b>bb</marquee>aa
 #errors
-Line: 1 Col: 10 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 45 End tag (marquee) seen too early. Expected other end tag.
-Line: 1 Col: 47 Expected closing tag. Unexpected end of file.
+10: missing document type declaration
+45: mismatched marquee element end tag
+48: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1231,9 +1218,9 @@ Line: 1 Col: 47 Expected closing tag. Unexpected end of file.
 #data
 <wbr><strike><code></strike><code><strike></code>
 #errors
-Line: 1 Col: 5 Unexpected start tag (wbr). Expected DOCTYPE.
-Line: 1 Col: 28 End tag (strike) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 49 Unexpected end tag (code). Ignored.
+5: missing document type declaration
+28: mismatched strike element end tag (misnested tags)
+49: mismatched code element end tag
 #document
 | <html>
 |   <head>
@@ -1242,13 +1229,12 @@ Line: 1 Col: 49 Unexpected end tag (code). Ignored.
 |     <strike>
 |       <code>
 |     <code>
-|       <code>
-|         <strike>
+|       <strike>
 
 #data
 <title><meta></title><link><title><meta></title>
 #errors
-Line: 1 Col: 7 Unexpected start tag (title). Expected DOCTYPE.
+7: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -1262,20 +1248,22 @@ Line: 1 Col: 7 Unexpected start tag (title). Expected DOCTYPE.
 #data
 <style><!--</style><meta><script>--><link></script>
 #errors
-Line: 1 Col: 7 Unexpected start tag (style). Expected DOCTYPE.
-Line: 1 Col: 51 Unexpected end of file. Expected end tag (style).
+7: missing document type declaration
 #document
 | <html>
 |   <head>
 |     <style>
-|       "<!--</style><meta><script>--><link></script>"
+|       "<!--"
+|     <meta>
+|     <script>
+|       "--><link>"
 |   <body>
 
 #data
 <head><meta></head><link>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
-Line: 1 Col: 25 Unexpected start tag (link) that can be in head. Moved.
+6: missing document type declaration
+25: unexpected link element start tag
 #document
 | <html>
 |   <head>
@@ -1286,9 +1274,9 @@ Line: 1 Col: 25 Unexpected start tag (link) that can be in head. Moved.
 #data
 <table><tr><tr><td><td><span><th><span>X</table>
 #errors
-Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
-Line: 1 Col: 33 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 48 Got table cell end tag (th) while required end tags are missing.
+7: missing document type declaration
+33: unexpected td element end tag implied other end tags
+48: unexpected th element end tag implied other end tags
 #document
 | <html>
 |   <head>
@@ -1307,25 +1295,28 @@ Line: 1 Col: 48 Got table cell end tag (th) while required end tags are missing.
 #data
 <body><body><base><link><meta><title><p></title><body><p></body>
 #errors
-Line: 1 Col: 6 Unexpected start tag (body). Expected DOCTYPE.
-Line: 1 Col: 12 Unexpected start tag (body).
-Line: 1 Col: 54 Unexpected start tag (body).
-Line: 1 Col: 64 Unexpected end tag (p). Missing end tag (body).
+6: missing document type declaration
+12: unexpected body element start tag
+18: base element start tag out of place
+24: link element start tag out of place
+30: meta element start tag out of place
+37: title element start tag out of place
+54: unexpected body element start tag
 #document
 | <html>
 |   <head>
-|   <body>
 |     <base>
 |     <link>
 |     <meta>
 |     <title>
 |       "<p>"
+|   <body>
 |     <p>
 
 #data
 <textarea><p></textarea>
 #errors
-Line: 1 Col: 10 Unexpected start tag (textarea). Expected DOCTYPE.
+10: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -1336,8 +1327,8 @@ Line: 1 Col: 10 Unexpected start tag (textarea). Expected DOCTYPE.
 #data
 <p><image></p>
 #errors
-Line: 1 Col: 3 Unexpected start tag (p). Expected DOCTYPE.
-Line: 1 Col: 10 Unexpected start tag (image). Treated as img.
+3: missing document type declaration
+10: 'image' is not a valid element name, it should be 'img'
 #document
 | <html>
 |   <head>
@@ -1348,17 +1339,18 @@ Line: 1 Col: 10 Unexpected start tag (image). Treated as img.
 #data
 <a><table><a></table><p><a><div><a>
 #errors
-Line: 1 Col: 3 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 13 Unexpected start tag (a) in table context caused voodoo mode.
-Line: 1 Col: 13 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 13 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 21 Unexpected end tag (table). Expected end tag (a).
-Line: 1 Col: 27 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 27 End tag (a) violates step 1, paragraph 2 of the adoption agency algorithm.
-Line: 1 Col: 32 Unexpected end tag (p). Ignored.
-Line: 1 Col: 35 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 35 End tag (a) violates step 1, paragraph 2 of the adoption agency algorithm.
-Line: 1 Col: 35 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+13: unexpected node in table context
+13: a element start tag implying a element end tag
+13: unexpected node in table context
+13: mismatched a element end tag (misnested tags across <table> tag)
+21: mismatched table element end tag
+27: a element start tag implying a element end tag
+27: mismatched a element end tag (out-of-order end tags)
+32: mismatched p element end tag
+35: a element start tag implying a element end tag
+35: mismatched a element end tag (out-of-order end tags)
+36: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1374,8 +1366,8 @@ Line: 1 Col: 35 Expected closing tag. Unexpected end of file.
 #data
 <head></p><meta><p>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
-Line: 1 Col: 10 Unexpected end tag (p). Ignored.
+6: missing document type declaration
+10: unexpected p element end tag in head
 #document
 | <html>
 |   <head>
@@ -1386,22 +1378,24 @@ Line: 1 Col: 10 Unexpected end tag (p). Ignored.
 #data
 <head></html><meta><p>
 #errors
-Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
-Line: 1 Col: 19 Unexpected start tag (meta).
+6: missing document type declaration
+19: unexpected node at end of document
+19: unexpected node after body element end tag
+19: meta element start tag out of place
 #document
 | <html>
 |   <head>
-|   <body>
 |     <meta>
+|   <body>
 |     <p>
 
 #data
 <b><table><td><i></table>
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 14 Unexpected table cell start tag (td) in the table body phase.
-Line: 1 Col: 25 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 25 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+25: unexpected td element end tag implied other end tags
+26: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1416,11 +1410,11 @@ Line: 1 Col: 25 Expected closing tag. Unexpected end of file.
 #data
 <b><table><td></b><i></table>
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 14 Unexpected table cell start tag (td) in the table body phase.
-Line: 1 Col: 18 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 29 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 29 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+18: mismatched b element end tag (no matching start tag)
+29: unexpected td element end tag implied other end tags
+30: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1435,9 +1429,9 @@ Line: 1 Col: 29 Expected closing tag. Unexpected end of file.
 #data
 <h1><h2>
 #errors
-4: Start tag seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
-8: Heading cannot be a child of another heading.
-8: End of file seen and there were open elements.
+4: missing document type declaration
+8: h2 element start tag implying h1 element end tag
+9: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1448,10 +1442,10 @@ Line: 1 Col: 29 Expected closing tag. Unexpected end of file.
 #data
 <a><p><a></a></p></a>
 #errors
-Line: 1 Col: 3 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 9 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 9 End tag (a) violates step 1, paragraph 3 of the adoption agency algorithm.
-Line: 1 Col: 21 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
+3: missing document type declaration
+9: a element start tag implying a element end tag
+9: mismatched a element end tag (misnested tags)
+21: mismatched a element end tag (no matching start tag)
 #document
 | <html>
 |   <head>
@@ -1464,8 +1458,8 @@ Line: 1 Col: 21 End tag (a) violates step 1, paragraph 1 of the adoption agency 
 #data
 <b><button></b></button></b>
 #errors
-Line: 1 Col: 3 Unexpected start tag (b). Expected DOCTYPE.
-Line: 1 Col: 15 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
+3: missing document type declaration
+15: mismatched b element end tag (no matching start tag)
 #document
 | <html>
 |   <head>
@@ -1476,12 +1470,12 @@ Line: 1 Col: 15 End tag (b) violates step 1, paragraph 1 of the adoption agency 
 #data
 <p><b><div><marquee></p></b></div>
 #errors
-Line: 1 Col: 3 Unexpected start tag (p). Expected DOCTYPE.
-Line: 1 Col: 11 Unexpected end tag (p). Ignored.
-Line: 1 Col: 24 Unexpected end tag (p). Ignored.
-Line: 1 Col: 28 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 34 End tag (div) seen too early. Expected other end tag.
-Line: 1 Col: 34 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+11: mismatched p element end tag
+24: mismatched p element end tag
+28: mismatched b element end tag (no matching start tag)
+34: mismatched div element end tag
+35: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1491,13 +1485,12 @@ Line: 1 Col: 34 Expected closing tag. Unexpected end of file.
 |     <div>
 |       <b>
 |         <marquee>
-|           <p>
 
 #data
 <script></script></div><title></title><p><p>
 #errors
-Line: 1 Col: 8 Unexpected start tag (script). Expected DOCTYPE.
-Line: 1 Col: 23 Unexpected end tag (div). Ignored.
+8: missing document type declaration
+23: unexpected div element end tag in head
 #document
 | <html>
 |   <head>
@@ -1510,37 +1503,35 @@ Line: 1 Col: 23 Unexpected end tag (div). Ignored.
 #data
 <p><hr></p>
 #errors
-Line: 1 Col: 3 Unexpected start tag (p). Expected DOCTYPE.
-Line: 1 Col: 11 Unexpected end tag (p). Ignored.
+3: missing document type declaration
+11: mismatched p element end tag
 #document
 | <html>
 |   <head>
 |   <body>
 |     <p>
 |     <hr>
-|     <p>
 
 #data
 <select><b><option><select><option></b></select>
 #errors
-Line: 1 Col: 8 Unexpected start tag (select). Expected DOCTYPE.
-Line: 1 Col: 11 Unexpected start tag token (b) in the select phase. Ignored.
-Line: 1 Col: 27 Unexpected select start tag in the select phase treated as select end tag.
-Line: 1 Col: 39 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 48 Unexpected end tag (select). Ignored.
-Line: 1 Col: 48 Expected closing tag. Unexpected end of file.
+8: missing document type declaration
+11: unexpected node in select element context
+27: select element start tag used as end tag
+35: unexpected option element start tag in body
+39: mismatched b element end tag (no matching start tag)
+48: mismatched special end tag select
 #document
 | <html>
 |   <head>
 |   <body>
 |     <select>
 |       <option>
-|     <option>
 
 #data
 <html><head><title></title><body></body></html>
 #errors
-Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
+6: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -1550,17 +1541,17 @@ Line: 1 Col: 6 Unexpected start tag (html). Expected DOCTYPE.
 #data
 <a><table><td><a><table></table><a></tr><a></table><a>
 #errors
-Line: 1 Col: 3 Unexpected start tag (a). Expected DOCTYPE.
-Line: 1 Col: 14 Unexpected table cell start tag (td) in the table body phase.
-Line: 1 Col: 35 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 40 Got table cell end tag (td) while required end tags are missing.
-Line: 1 Col: 43 Unexpected start tag (a) in table context caused voodoo mode.
-Line: 1 Col: 43 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 43 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 51 Unexpected implied end tag (a) in the table phase.
-Line: 1 Col: 54 Unexpected start tag (a) implies end tag (a).
-Line: 1 Col: 54 End tag (a) violates step 1, paragraph 2 of the adoption agency algorithm.
-Line: 1 Col: 54 Expected closing tag. Unexpected end of file.
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+35: a element start tag implying a element end tag
+40: unexpected td element end tag implied other end tags
+43: unexpected node in table context
+43: a element start tag implying a element end tag
+43: unexpected node in table context
+43: mismatched a element end tag (misnested tags across <table> tag)
+54: a element start tag implying a element end tag
+54: mismatched a element end tag (out-of-order end tags)
+55: mismatched body element end tag (premature end of file?)
 #document
 | <html>
 |   <head>
@@ -1579,10 +1570,8 @@ Line: 1 Col: 54 Expected closing tag. Unexpected end of file.
 #data
 <ul><li></li><div><li></div><li><li><div><li><address><li><b><em></b><li></ul>
 #errors
-Line: 1 Col: 4 Unexpected start tag (ul). Expected DOCTYPE.
-Line: 1 Col: 45 Missing end tag (div, li).
-Line: 1 Col: 58 Missing end tag (address, li).
-Line: 1 Col: 69 End tag (b) violates step 1, paragraph 3 of the adoption agency algorithm.
+4: missing document type declaration
+69: mismatched b element end tag (misnested tags)
 #document
 | <html>
 |   <head>
@@ -1604,7 +1593,7 @@ Line: 1 Col: 69 End tag (b) violates step 1, paragraph 3 of the adoption agency 
 #data
 <frameset><frame><frameset><frame></frameset><noframes></noframes></frameset>
 #errors
-Line: 1 Col: 10 Unexpected start tag (frameset). Expected DOCTYPE.
+10: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -1615,13 +1604,34 @@ Line: 1 Col: 10 Unexpected start tag (frameset). Expected DOCTYPE.
 |     <noframes>
 
 #data
+<body><frame></frame></frame><frameset><frame><frameset><frame></frameset><noframes></frameset><noframes>
+#errors
+6: missing document type declaration
+13: unexpected frame element start tag in body
+21: unexpected frame element end tag
+29: unexpected frame element end tag
+39: unexpected frameset element start tag in body
+46: unexpected frame element start tag in body
+56: unexpected frameset element start tag in body
+63: unexpected frame element start tag in body
+74: unexpected frameset element end tag
+87: unescaped '</' in CDATA or RCDATA block
+106: unexpected end of file while parsing CDATA section for element noframes
+#document
+| <html>
+|   <head>
+|   <body>
+|     <noframes>
+|       "</frameset><noframes>"
+
+#data
 <h1><table><td><h3></table><h3></h1>
 #errors
-4: Start tag seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
-15: “td” start tag in table body.
-27: Unclosed elements.
-31: Heading cannot be a child of another heading.
-36: End tag “h1” seen but there were unclosed elements.
+4: missing document type declaration
+15: required tr element start tag implied by unexpected td element start tag
+27: unexpected td element end tag implied other end tags
+31: h3 element start tag implying h1 element end tag
+36: mismatched h1 element end tag
 #document
 | <html>
 |   <head>
@@ -1637,7 +1647,7 @@ Line: 1 Col: 10 Unexpected start tag (frameset). Expected DOCTYPE.
 #data
 <table><colgroup><col><colgroup><col><col><col><colgroup><col><col><thead><tr><td></table>
 #errors
-Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
+7: missing document type declaration
 #document
 | <html>
 |   <head>
@@ -1659,9 +1669,9 @@ Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
 #data
 <table><col><tbody><col><tr><col><td><col></table><col>
 #errors
-Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
-Line: 1 Col: 37 Unexpected table cell start tag (td) in the table body phase.
-Line: 1 Col: 55 Unexpected start tag col. Ignored.
+7: missing document type declaration
+37: required tr element start tag implied by unexpected td element start tag
+55: unexpected col element start tag in body
 #document
 | <html>
 |   <head>
@@ -1685,9 +1695,9 @@ Line: 1 Col: 55 Unexpected start tag col. Ignored.
 #data
 <table><colgroup><tbody><colgroup><tr><colgroup><td><colgroup></table><colgroup>
 #errors
-Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
-Line: 1 Col: 52 Unexpected table cell start tag (td) in the table body phase.
-Line: 1 Col: 80 Unexpected start tag colgroup. Ignored.
+7: missing document type declaration
+52: required tr element start tag implied by unexpected td element start tag
+80: unexpected colgroup element start tag in body
 #document
 | <html>
 |   <head>
@@ -1707,226 +1717,213 @@ Line: 1 Col: 80 Unexpected start tag colgroup. Ignored.
 #data
 </strong></b></em></i></u></strike></s></blink></tt></pre></big></small></font></select></h1></h2></h3></h4></h5></h6></body></br></a></img></title></span></style></script></table></th></td></tr></frame></area></link></param></hr></input></col></base></meta></basefont></bgsound></embed></spacer></p></dd></dt></caption></colgroup></tbody></tfoot></thead></address></blockquote></center></dir></div></dl></fieldset></listing></menu></ol></ul></li></nobr></wbr></form></button></marquee></object></html></frameset></head></iframe></image></isindex></noembed></noframes></noscript></optgroup></option></plaintext></textarea>
 #errors
-Line: 1 Col: 9 Unexpected end tag (strong). Expected DOCTYPE.
-Line: 1 Col: 9 Unexpected end tag (strong) after the (implied) root element.
-Line: 1 Col: 13 Unexpected end tag (b) after the (implied) root element.
-Line: 1 Col: 18 Unexpected end tag (em) after the (implied) root element.
-Line: 1 Col: 22 Unexpected end tag (i) after the (implied) root element.
-Line: 1 Col: 26 Unexpected end tag (u) after the (implied) root element.
-Line: 1 Col: 35 Unexpected end tag (strike) after the (implied) root element.
-Line: 1 Col: 39 Unexpected end tag (s) after the (implied) root element.
-Line: 1 Col: 47 Unexpected end tag (blink) after the (implied) root element.
-Line: 1 Col: 52 Unexpected end tag (tt) after the (implied) root element.
-Line: 1 Col: 58 Unexpected end tag (pre) after the (implied) root element.
-Line: 1 Col: 64 Unexpected end tag (big) after the (implied) root element.
-Line: 1 Col: 72 Unexpected end tag (small) after the (implied) root element.
-Line: 1 Col: 79 Unexpected end tag (font) after the (implied) root element.
-Line: 1 Col: 88 Unexpected end tag (select) after the (implied) root element.
-Line: 1 Col: 93 Unexpected end tag (h1) after the (implied) root element.
-Line: 1 Col: 98 Unexpected end tag (h2) after the (implied) root element.
-Line: 1 Col: 103 Unexpected end tag (h3) after the (implied) root element.
-Line: 1 Col: 108 Unexpected end tag (h4) after the (implied) root element.
-Line: 1 Col: 113 Unexpected end tag (h5) after the (implied) root element.
-Line: 1 Col: 118 Unexpected end tag (h6) after the (implied) root element.
-Line: 1 Col: 125 Unexpected end tag (body) after the (implied) root element.
-Line: 1 Col: 130 Unexpected end tag (br). Treated as br element.
-Line: 1 Col: 134 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 140 This element (img) has no end tag.
-Line: 1 Col: 148 Unexpected end tag (title). Ignored.
-Line: 1 Col: 155 Unexpected end tag (span). Ignored.
-Line: 1 Col: 163 Unexpected end tag (style). Ignored.
-Line: 1 Col: 172 Unexpected end tag (script). Ignored.
-Line: 1 Col: 180 Unexpected end tag (table). Ignored.
-Line: 1 Col: 185 Unexpected end tag (th). Ignored.
-Line: 1 Col: 190 Unexpected end tag (td). Ignored.
-Line: 1 Col: 195 Unexpected end tag (tr). Ignored.
-Line: 1 Col: 203 This element (frame) has no end tag.
-Line: 1 Col: 210 This element (area) has no end tag.
-Line: 1 Col: 217 Unexpected end tag (link). Ignored.
-Line: 1 Col: 225 This element (param) has no end tag.
-Line: 1 Col: 230 This element (hr) has no end tag.
-Line: 1 Col: 238 This element (input) has no end tag.
-Line: 1 Col: 244 Unexpected end tag (col). Ignored.
-Line: 1 Col: 251 Unexpected end tag (base). Ignored.
-Line: 1 Col: 258 Unexpected end tag (meta). Ignored.
-Line: 1 Col: 269 This element (basefont) has no end tag.
-Line: 1 Col: 279 This element (bgsound) has no end tag.
-Line: 1 Col: 287 This element (embed) has no end tag.
-Line: 1 Col: 296 This element (spacer) has no end tag.
-Line: 1 Col: 300 Unexpected end tag (p). Ignored.
-Line: 1 Col: 305 End tag (dd) seen too early. Expected other end tag.
-Line: 1 Col: 310 End tag (dt) seen too early. Expected other end tag.
-Line: 1 Col: 320 Unexpected end tag (caption). Ignored.
-Line: 1 Col: 331 Unexpected end tag (colgroup). Ignored.
-Line: 1 Col: 339 Unexpected end tag (tbody). Ignored.
-Line: 1 Col: 347 Unexpected end tag (tfoot). Ignored.
-Line: 1 Col: 355 Unexpected end tag (thead). Ignored.
-Line: 1 Col: 365 End tag (address) seen too early. Expected other end tag.
-Line: 1 Col: 378 End tag (blockquote) seen too early. Expected other end tag.
-Line: 1 Col: 387 End tag (center) seen too early. Expected other end tag.
-Line: 1 Col: 393 Unexpected end tag (dir). Ignored.
-Line: 1 Col: 399 End tag (div) seen too early. Expected other end tag.
-Line: 1 Col: 404 End tag (dl) seen too early. Expected other end tag.
-Line: 1 Col: 415 End tag (fieldset) seen too early. Expected other end tag.
-Line: 1 Col: 425 End tag (listing) seen too early. Expected other end tag.
-Line: 1 Col: 432 End tag (menu) seen too early. Expected other end tag.
-Line: 1 Col: 437 End tag (ol) seen too early. Expected other end tag.
-Line: 1 Col: 442 End tag (ul) seen too early. Expected other end tag.
-Line: 1 Col: 447 End tag (li) seen too early. Expected other end tag.
-Line: 1 Col: 454 End tag (nobr) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 460 This element (wbr) has no end tag.
-Line: 1 Col: 476 End tag (button) seen too early. Expected other end tag.
-Line: 1 Col: 486 End tag (marquee) seen too early. Expected other end tag.
-Line: 1 Col: 495 End tag (object) seen too early. Expected other end tag.
-Line: 1 Col: 513 Unexpected end tag (html). Ignored.
-Line: 1 Col: 513 Unexpected end tag (frameset). Ignored.
-Line: 1 Col: 520 Unexpected end tag (head). Ignored.
-Line: 1 Col: 529 Unexpected end tag (iframe). Ignored.
-Line: 1 Col: 537 This element (image) has no end tag.
-Line: 1 Col: 547 This element (isindex) has no end tag.
-Line: 1 Col: 557 Unexpected end tag (noembed). Ignored.
-Line: 1 Col: 568 Unexpected end tag (noframes). Ignored.
-Line: 1 Col: 579 Unexpected end tag (noscript). Ignored.
-Line: 1 Col: 590 Unexpected end tag (optgroup). Ignored.
-Line: 1 Col: 599 Unexpected end tag (option). Ignored.
-Line: 1 Col: 611 Unexpected end tag (plaintext). Ignored.
-Line: 1 Col: 622 Unexpected end tag (textarea). Ignored.
+9: missing document type declaration
+9: unexpected strong element end tag
+13: unexpected b element end tag
+18: unexpected em element end tag
+22: unexpected i element end tag
+26: unexpected u element end tag
+35: unexpected strike element end tag
+39: unexpected s element end tag
+47: unexpected blink element end tag
+52: unexpected tt element end tag
+58: unexpected pre element end tag
+64: unexpected big element end tag
+72: unexpected small element end tag
+79: unexpected font element end tag
+88: unexpected select element end tag
+93: unexpected h1 element end tag
+98: unexpected h2 element end tag
+103: unexpected h3 element end tag
+108: unexpected h4 element end tag
+113: unexpected h5 element end tag
+118: unexpected h6 element end tag
+125: unexpected body element end tag
+130: unexpected br element end tag
+134: unexpected a element end tag
+140: unexpected img element end tag
+148: unexpected title element end tag
+155: unexpected span element end tag
+163: unexpected style element end tag
+172: unexpected script element end tag
+180: unexpected table element end tag
+185: unexpected th element end tag
+190: unexpected td element end tag
+195: unexpected tr element end tag
+203: unexpected frame element end tag
+210: unexpected area element end tag
+217: unexpected link element end tag
+225: unexpected param element end tag
+230: unexpected hr element end tag
+238: unexpected input element end tag
+244: unexpected col element end tag
+251: unexpected base element end tag
+258: unexpected meta element end tag
+269: unexpected basefont element end tag
+279: unexpected bgsound element end tag
+287: unexpected embed element end tag
+296: unexpected spacer element end tag
+300: unexpected p element end tag
+305: unexpected dd element end tag
+310: unexpected dt element end tag
+320: unexpected caption element end tag
+331: unexpected colgroup element end tag
+339: unexpected tbody element end tag
+347: unexpected tfoot element end tag
+355: unexpected thead element end tag
+365: unexpected address element end tag
+378: unexpected blockquote element end tag
+387: unexpected center element end tag
+393: unexpected dir element end tag
+399: unexpected div element end tag
+404: unexpected dl element end tag
+415: unexpected fieldset element end tag
+425: unexpected listing element end tag
+432: unexpected menu element end tag
+437: unexpected ol element end tag
+442: unexpected ul element end tag
+447: unexpected li element end tag
+454: unexpected nobr element end tag
+460: unexpected wbr element end tag
+467: unexpected form element end tag
+476: unexpected button element end tag
+486: unexpected marquee element end tag
+495: unexpected object element end tag
+513: unexpected node at end of document
+513: unexpected node after body element end tag
+513: unexpected frameset element end tag
+520: unexpected head element end tag
+529: mismatched special end tag iframe
+537: unexpected image end tag (that element has no end tag, ever)
+547: unexpected isindex end tag (that element has no end tag, ever)
+557: mismatched special end tag noembed
+568: mismatched special end tag noframes
+579: mismatched special end tag noscript
+590: unexpected optgroup element end tag
+599: unexpected option element end tag
+611: unexpected plaintext element end tag
+622: mismatched special end tag textarea
 #document
 | <html>
 |   <head>
 |   <body>
-|     <br>
-|     <p>
 
 #data
 <table><tr></strong></b></em></i></u></strike></s></blink></tt></pre></big></small></font></select></h1></h2></h3></h4></h5></h6></body></br></a></img></title></span></style></script></table></th></td></tr></frame></area></link></param></hr></input></col></base></meta></basefont></bgsound></embed></spacer></p></dd></dt></caption></colgroup></tbody></tfoot></thead></address></blockquote></center></dir></div></dl></fieldset></listing></menu></ol></ul></li></nobr></wbr></form></button></marquee></object></html></frameset></head></iframe></image></isindex></noembed></noframes></noscript></optgroup></option></plaintext></textarea>
 #errors
-Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
-Line: 1 Col: 20 Unexpected end tag (strong) in table context caused voodoo mode.
-Line: 1 Col: 20 End tag (strong) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 24 Unexpected end tag (b) in table context caused voodoo mode.
-Line: 1 Col: 24 End tag (b) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 29 Unexpected end tag (em) in table context caused voodoo mode.
-Line: 1 Col: 29 End tag (em) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 33 Unexpected end tag (i) in table context caused voodoo mode.
-Line: 1 Col: 33 End tag (i) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 37 Unexpected end tag (u) in table context caused voodoo mode.
-Line: 1 Col: 37 End tag (u) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 46 Unexpected end tag (strike) in table context caused voodoo mode.
-Line: 1 Col: 46 End tag (strike) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 50 Unexpected end tag (s) in table context caused voodoo mode.
-Line: 1 Col: 50 End tag (s) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 58 Unexpected end tag (blink) in table context caused voodoo mode.
-Line: 1 Col: 58 Unexpected end tag (blink). Ignored.
-Line: 1 Col: 63 Unexpected end tag (tt) in table context caused voodoo mode.
-Line: 1 Col: 63 End tag (tt) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 69 Unexpected end tag (pre) in table context caused voodoo mode.
-Line: 1 Col: 69 End tag (pre) seen too early. Expected other end tag.
-Line: 1 Col: 75 Unexpected end tag (big) in table context caused voodoo mode.
-Line: 1 Col: 75 End tag (big) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 83 Unexpected end tag (small) in table context caused voodoo mode.
-Line: 1 Col: 83 End tag (small) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 90 Unexpected end tag (font) in table context caused voodoo mode.
-Line: 1 Col: 90 End tag (font) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 99 Unexpected end tag (select) in table context caused voodoo mode.
-Line: 1 Col: 99 Unexpected end tag (select). Ignored.
-Line: 1 Col: 104 Unexpected end tag (h1) in table context caused voodoo mode.
-Line: 1 Col: 104 End tag (h1) seen too early. Expected other end tag.
-Line: 1 Col: 109 Unexpected end tag (h2) in table context caused voodoo mode.
-Line: 1 Col: 109 End tag (h2) seen too early. Expected other end tag.
-Line: 1 Col: 114 Unexpected end tag (h3) in table context caused voodoo mode.
-Line: 1 Col: 114 End tag (h3) seen too early. Expected other end tag.
-Line: 1 Col: 119 Unexpected end tag (h4) in table context caused voodoo mode.
-Line: 1 Col: 119 End tag (h4) seen too early. Expected other end tag.
-Line: 1 Col: 124 Unexpected end tag (h5) in table context caused voodoo mode.
-Line: 1 Col: 124 End tag (h5) seen too early. Expected other end tag.
-Line: 1 Col: 129 Unexpected end tag (h6) in table context caused voodoo mode.
-Line: 1 Col: 129 End tag (h6) seen too early. Expected other end tag.
-Line: 1 Col: 136 Unexpected end tag (body) in the table row phase. Ignored.
-Line: 1 Col: 141 Unexpected end tag (br) in table context caused voodoo mode.
-Line: 1 Col: 141 Unexpected end tag (br). Treated as br element.
-Line: 1 Col: 145 Unexpected end tag (a) in table context caused voodoo mode.
-Line: 1 Col: 145 End tag (a) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 151 Unexpected end tag (img) in table context caused voodoo mode.
-Line: 1 Col: 151 This element (img) has no end tag.
-Line: 1 Col: 159 Unexpected end tag (title) in table context caused voodoo mode.
-Line: 1 Col: 159 Unexpected end tag (title). Ignored.
-Line: 1 Col: 166 Unexpected end tag (span) in table context caused voodoo mode.
-Line: 1 Col: 166 Unexpected end tag (span). Ignored.
-Line: 1 Col: 174 Unexpected end tag (style) in table context caused voodoo mode.
-Line: 1 Col: 174 Unexpected end tag (style). Ignored.
-Line: 1 Col: 183 Unexpected end tag (script) in table context caused voodoo mode.
-Line: 1 Col: 183 Unexpected end tag (script). Ignored.
-Line: 1 Col: 196 Unexpected end tag (th). Ignored.
-Line: 1 Col: 201 Unexpected end tag (td). Ignored.
-Line: 1 Col: 206 Unexpected end tag (tr). Ignored.
-Line: 1 Col: 214 This element (frame) has no end tag.
-Line: 1 Col: 221 This element (area) has no end tag.
-Line: 1 Col: 228 Unexpected end tag (link). Ignored.
-Line: 1 Col: 236 This element (param) has no end tag.
-Line: 1 Col: 241 This element (hr) has no end tag.
-Line: 1 Col: 249 This element (input) has no end tag.
-Line: 1 Col: 255 Unexpected end tag (col). Ignored.
-Line: 1 Col: 262 Unexpected end tag (base). Ignored.
-Line: 1 Col: 269 Unexpected end tag (meta). Ignored.
-Line: 1 Col: 280 This element (basefont) has no end tag.
-Line: 1 Col: 290 This element (bgsound) has no end tag.
-Line: 1 Col: 298 This element (embed) has no end tag.
-Line: 1 Col: 307 This element (spacer) has no end tag.
-Line: 1 Col: 311 Unexpected end tag (p). Ignored.
-Line: 1 Col: 316 End tag (dd) seen too early. Expected other end tag.
-Line: 1 Col: 321 End tag (dt) seen too early. Expected other end tag.
-Line: 1 Col: 331 Unexpected end tag (caption). Ignored.
-Line: 1 Col: 342 Unexpected end tag (colgroup). Ignored.
-Line: 1 Col: 350 Unexpected end tag (tbody). Ignored.
-Line: 1 Col: 358 Unexpected end tag (tfoot). Ignored.
-Line: 1 Col: 366 Unexpected end tag (thead). Ignored.
-Line: 1 Col: 376 End tag (address) seen too early. Expected other end tag.
-Line: 1 Col: 389 End tag (blockquote) seen too early. Expected other end tag.
-Line: 1 Col: 398 End tag (center) seen too early. Expected other end tag.
-Line: 1 Col: 404 Unexpected end tag (dir). Ignored.
-Line: 1 Col: 410 End tag (div) seen too early. Expected other end tag.
-Line: 1 Col: 415 End tag (dl) seen too early. Expected other end tag.
-Line: 1 Col: 426 End tag (fieldset) seen too early. Expected other end tag.
-Line: 1 Col: 436 End tag (listing) seen too early. Expected other end tag.
-Line: 1 Col: 443 End tag (menu) seen too early. Expected other end tag.
-Line: 1 Col: 448 End tag (ol) seen too early. Expected other end tag.
-Line: 1 Col: 453 End tag (ul) seen too early. Expected other end tag.
-Line: 1 Col: 458 End tag (li) seen too early. Expected other end tag.
-Line: 1 Col: 465 End tag (nobr) violates step 1, paragraph 1 of the adoption agency algorithm.
-Line: 1 Col: 471 This element (wbr) has no end tag.
-Line: 1 Col: 487 End tag (button) seen too early. Expected other end tag.
-Line: 1 Col: 497 End tag (marquee) seen too early. Expected other end tag.
-Line: 1 Col: 506 End tag (object) seen too early. Expected other end tag.
-Line: 1 Col: 524 Unexpected end tag (html). Ignored.
-Line: 1 Col: 524 Unexpected end tag (frameset). Ignored.
-Line: 1 Col: 531 Unexpected end tag (head). Ignored.
-Line: 1 Col: 540 Unexpected end tag (iframe). Ignored.
-Line: 1 Col: 548 This element (image) has no end tag.
-Line: 1 Col: 558 This element (isindex) has no end tag.
-Line: 1 Col: 568 Unexpected end tag (noembed). Ignored.
-Line: 1 Col: 579 Unexpected end tag (noframes). Ignored.
-Line: 1 Col: 590 Unexpected end tag (noscript). Ignored.
-Line: 1 Col: 601 Unexpected end tag (optgroup). Ignored.
-Line: 1 Col: 610 Unexpected end tag (option). Ignored.
-Line: 1 Col: 622 Unexpected end tag (plaintext). Ignored.
-Line: 1 Col: 633 Unexpected end tag (textarea). Ignored.
+7: missing document type declaration
+20: unexpected node in table context
+20: mismatched strong element end tag (no matching start tag)
+24: unexpected node in table context
+24: mismatched b element end tag (no matching start tag)
+29: unexpected node in table context
+29: mismatched em element end tag (no matching start tag)
+33: unexpected node in table context
+33: mismatched i element end tag (no matching start tag)
+37: unexpected node in table context
+37: mismatched u element end tag (no matching start tag)
+46: unexpected node in table context
+46: mismatched strike element end tag (no matching start tag)
+50: unexpected node in table context
+50: mismatched s element end tag (no matching start tag)
+58: unexpected node in table context
+58: unexpected blink element end tag
+63: unexpected node in table context
+63: mismatched tt element end tag (no matching start tag)
+69: unexpected node in table context
+69: mismatched pre element end tag
+75: unexpected node in table context
+75: mismatched big element end tag (no matching start tag)
+83: unexpected node in table context
+83: mismatched small element end tag (no matching start tag)
+90: unexpected node in table context
+90: mismatched font element end tag (no matching start tag)
+99: unexpected node in table context
+99: mismatched special end tag select
+104: unexpected node in table context
+104: mismatched h1 element end tag
+109: unexpected node in table context
+109: mismatched h2 element end tag
+114: unexpected node in table context
+114: mismatched h3 element end tag
+119: unexpected node in table context
+119: mismatched h4 element end tag
+124: unexpected node in table context
+124: mismatched h5 element end tag
+129: unexpected node in table context
+129: mismatched h6 element end tag
+136: unexpected body element end tag
+141: unexpected node in table context
+141: unexpected br end tag (that element has no end tag, ever)
+145: unexpected node in table context
+145: mismatched a element end tag (no matching start tag)
+151: unexpected node in table context
+151: unexpected img end tag (that element has no end tag, ever)
+159: unexpected node in table context
+159: unexpected title element end tag
+166: unexpected node in table context
+166: unexpected span element end tag
+174: unexpected node in table context
+174: unexpected style element end tag
+183: unexpected node in table context
+183: unexpected script element end tag
+196: unexpected th element end tag
+201: unexpected td element end tag
+206: unexpected tr element end tag
+214: unexpected frame element end tag
+221: unexpected area end tag (that element has no end tag, ever)
+228: unexpected link element end tag
+236: unexpected param end tag (that element has no end tag, ever)
+241: unexpected hr end tag (that element has no end tag, ever)
+249: unexpected input end tag (that element has no end tag, ever)
+255: unexpected col element end tag
+262: unexpected base element end tag
+269: unexpected meta element end tag
+280: unexpected basefont end tag (that element has no end tag, ever)
+290: unexpected bgsound end tag (that element has no end tag, ever)
+298: unexpected embed end tag (that element has no end tag, ever)
+307: unexpected spacer end tag (that element has no end tag, ever)
+311: mismatched p element end tag
+316: mismatched dd element end tag
+321: mismatched dt element end tag
+331: unexpected caption element end tag
+342: unexpected colgroup element end tag
+350: unexpected tbody element end tag
+358: unexpected tfoot element end tag
+366: unexpected thead element end tag
+376: mismatched address element end tag
+389: mismatched blockquote element end tag
+398: mismatched center element end tag
+404: mismatched dir element end tag
+410: mismatched div element end tag
+415: mismatched dl element end tag
+426: mismatched fieldset element end tag
+436: mismatched listing element end tag
+443: mismatched menu element end tag
+448: mismatched ol element end tag
+453: mismatched ul element end tag
+458: mismatched li element end tag
+465: mismatched nobr element end tag (no matching start tag)
+471: unexpected wbr end tag (that element has no end tag, ever)
+478: mismatched form element end tag
+524: unexpected node at end of document
+524: unexpected node after body element end tag
+524: unexpected frameset element end tag
+531: unexpected head element end tag
+540: mismatched special end tag iframe
+548: unexpected image end tag (that element has no end tag, ever)
+558: unexpected isindex end tag (that element has no end tag, ever)
+568: mismatched special end tag noembed
+579: mismatched special end tag noframes
+590: mismatched special end tag noscript
+601: unexpected optgroup element end tag
+610: unexpected option element end tag
+622: unexpected plaintext element end tag
+633: mismatched special end tag textarea
 #document
 | <html>
 |   <head>
 |   <body>
-|     <br>
 |     <table>
 |       <tbody>
 |         <tr>
-|     <p>
-
-#data
-<frameset>
-#errors
-Line: 1 Col: 10 Unexpected start tag (frameset). Expected DOCTYPE.
-Line: 1 Col: 10 Expected closing tag. Unexpected end of file.
-#document
-| <html>
-|   <head>
-|   <frameset>
