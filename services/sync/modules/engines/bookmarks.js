@@ -62,9 +62,22 @@ let kSpecialIds = {};
  ["tags", "tagsFolder"],
  ["toolbar", "toolbarFolder"],
  ["unfiled", "unfiledBookmarksFolder"],
-].forEach(function([weaveId, placeName]) {
-  Utils.lazy2(kSpecialIds, weaveId, function() Svc.Bookmark[placeName]);
+].forEach(function([guid, placeName]) {
+  Utils.lazy2(kSpecialIds, guid, function() Svc.Bookmark[placeName]);
 });
+
+// Create some helper functions to convert GUID/ids
+function idForGUID(guid) {
+  if (guid in kSpecialIds)
+    return kSpecialIds[guid];
+  return Svc.Bookmark.getItemIdForGUID(guid);
+}
+function GUIDForId(placeId) {
+  for (let [guid, id] in Iterator(kSpecialIds))
+    if (placeId == id)
+      return guid;
+  return Svc.Bookmark.getItemGUID(placeId);
+}
 
 function BookmarksEngine() {
   this._init();
@@ -139,23 +152,9 @@ BookmarksStore.prototype = {
     return this.__ts;
   },
 
-  _getItemIdForGUID: function BStore__getItemIdForGUID(GUID) {
-    if (GUID in kSpecialIds)
-      return kSpecialIds[GUID];
-
-    return this._bms.getItemIdForGUID(GUID);
-  },
-
-  _getWeaveIdForItem: function BStore__getWeaveIdForItem(placeId) {
-    for (let [weaveId, id] in Iterator(kSpecialIds))
-      if (placeId == id)
-        return weaveId;
-
-    return this._bms.getItemGUID(placeId);
-  },
 
   itemExists: function BStore_itemExists(id) {
-    return this._getItemIdForGUID(id) > 0;
+    return idForGUID(id) > 0;
   },
 
   _preprocess: function BStore_preprocess(record) {
@@ -196,7 +195,7 @@ BookmarksStore.prototype = {
     this._preprocess(record);
 
     let newId;
-    let parentId = this._getItemIdForGUID(record.parentid);
+    let parentId = idForGUID(record.parentid);
 
     if (parentId <= 0) {
       this._log.warn("Creating node with unknown parent -> reparenting to root");
@@ -258,7 +257,7 @@ BookmarksStore.prototype = {
     }
     if (newId) {
       this._log.trace("Setting GUID of new item " + newId + " to " + record.id);
-      let cur = this._bms.getItemGUID(newId);
+      let cur = GUIDForId(newId);
       if (cur == record.id)
         this._log.warn("Item " + newId + " already has GUID " + record.id);
       else
@@ -273,7 +272,7 @@ BookmarksStore.prototype = {
       return;
     }
 
-    var itemId = this._bms.getItemIdForGUID(record.id);
+    let itemId = idForGUID(record.id);
     if (itemId <= 0) {
       this._log.debug("Item " + record.id + " already removed");
       return;
@@ -304,7 +303,7 @@ BookmarksStore.prototype = {
     // Modify the record if necessary
     this._preprocess(record);
 
-    let itemId = this._getItemIdForGUID(record.id);
+    let itemId = idForGUID(record.id);
 
     if (record.id in kSpecialIds) {
       this._log.debug("Skipping update for root node.");
@@ -318,7 +317,7 @@ BookmarksStore.prototype = {
     this._log.trace("Updating " + record.id + " (" + itemId + ")");
 
     // FIXME check for predecessor changes
-    let parentid = this._getItemIdForGUID(record.parentid);
+    let parentid = idForGUID(record.parentid);
     if (this._bms.getFolderIdForItem(itemId) != parentid) {
       this._log.trace("Moving item (changing folder/position)");
       this._bms.moveItem(itemId, parentid, -1);
@@ -372,7 +371,7 @@ BookmarksStore.prototype = {
   },
 
   changeItemID: function BStore_changeItemID(oldID, newID) {
-    var itemId = this._getItemIdForGUID(oldID);
+    let itemId = idForGUID(oldID);
     if (itemId == null) // toplevel folder
       return;
     if (itemId <= 0) {
@@ -381,7 +380,7 @@ BookmarksStore.prototype = {
       return;
     }
 
-    var collision = this._getItemIdForGUID(newID);
+    let collision = idForGUID(newID);
     if (collision > 0) {
       this._log.warn("Can't change GUID " + oldID + " to " +
                       newID + ": new ID already in use");
@@ -434,7 +433,7 @@ BookmarksStore.prototype = {
     if (record)
       return record;
 
-    let placeId = this._bms.getItemIdForGUID(guid);
+    let placeId = idForGUID(guid);
     if (placeId <= 0) { // deleted item
       record = new PlacesItem();
       record.id = guid;
@@ -509,27 +508,27 @@ BookmarksStore.prototype = {
     }
 
     record.id = guid;
-    record.parentid = this._getWeaveParentIdForItem(placeId);
+    record.parentid = this._getParentGUIDForItemId(placeId);
     record.encryption = cryptoMetaURL;
 
     this.cache.put(guid, record);
     return record;
   },
 
-  _getWeaveParentIdForItem: function BStore__getWeaveParentIdForItem(itemId) {
+  _getParentGUIDForItemId: function BStore__getParentGUIDForItemId(itemId) {
     let parentid = this._bms.getFolderIdForItem(itemId);
     if (parentid == -1) {
       this._log.debug("Found orphan bookmark, reparenting to unfiled");
       parentid = this._bms.unfiledBookmarksFolder;
       this._bms.moveItem(itemId, parentid, -1);
     }
-    return this._getWeaveIdForItem(parentid);
+    return GUIDForId(parentid);
   },
 
   _getChildren: function BStore_getChildren(guid, items) {
     let node = guid; // the recursion case
     if (typeof(node) == "string") // callers will give us the guid as the first arg
-      node = this._getNode(this._getItemIdForGUID(guid));
+      node = this._getNode(idForGUID(guid));
 
     if (node.type == node.RESULT_TYPE_FOLDER &&
         !this._ls.isLivemark(node.itemId)) {
@@ -539,7 +538,7 @@ BookmarksStore.prototype = {
       // Remember all the children GUIDs and recursively get more
       for (var i = 0; i < node.childCount; i++) {
         let child = node.getChild(i);
-        items[this._bms.getItemGUID(child.itemId)] = true;
+        items[GUIDForId(child.itemId)] = true;
         this._getChildren(child, items);
       }
     }
@@ -561,15 +560,15 @@ BookmarksStore.prototype = {
 
   getAllIDs: function BStore_getAllIDs() {
     let items = {};
-    for (let [weaveId, id] in Iterator(kSpecialIds))
-      if (weaveId != "places" && weaveId != "tags")
-        this._getChildren(weaveId, items);
+    for (let [guid, id] in Iterator(kSpecialIds))
+      if (guid != "places" && guid != "tags")
+        this._getChildren(guid, items);
     return items;
   },
 
   wipe: function BStore_wipe() {
-    for (let [weaveId, id] in Iterator(kSpecialIds))
-      if (weaveId != "places")
+    for (let [guid, id] in Iterator(kSpecialIds))
+      if (guid != "places")
         this._bms.removeFolderChildren(id);
   }
 };
@@ -606,8 +605,8 @@ BookmarksTracker.prototype = {
     this.__proto__.__proto__._init.call(this);
 
     // Ignore changes to the special roots
-    for (let [weaveId, id] in Iterator(kSpecialIds))
-      this.ignoreID(this._bms.getItemGUID(id));
+    for (let guid in kSpecialIds)
+      this.ignoreID(guid);
 
     this._bms.addObserver(this, false);
   },
@@ -619,7 +618,7 @@ BookmarksTracker.prototype = {
    *        Places internal id of the bookmark to upload
    */
   _addId: function BMT__addId(itemId) {
-    if (this.addChangedID(this._bms.getItemGUID(itemId)))
+    if (this.addChangedID(GUIDForId(itemId)))
       this._upScore();
   },
 
@@ -646,7 +645,7 @@ BookmarksTracker.prototype = {
     if (folder == null)
       folder = this._bms.getFolderIdForItem(itemId);
 
-    let tags = this._bms.tagsFolder;
+    let tags = kSpecialIds.tags;
     // Ignore changes to tags (folders under the tags folder)
     if (folder == tags)
       return true;
