@@ -5767,12 +5767,10 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         return NewBinary(TOK_ASSIGN, op, pn, rhs, tc);
 #endif
-#if JS_HAS_LVALUE_RETURN
       case TOK_LP:
         if (!MakeSetCall(cx, pn, tc, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return NULL;
         break;
-#endif
 #if JS_HAS_XML_SUPPORT
       case TOK_UNARYOP:
         if (pn->pn_op == JSOP_XMLNAME) {
