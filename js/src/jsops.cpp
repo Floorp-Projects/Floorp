@@ -39,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* This file needs to be included in possibly multiple places. */
-
+            
 #if JS_THREADED_INTERP
   interrupt:
 #else /* !JS_THREADED_INTERP */
