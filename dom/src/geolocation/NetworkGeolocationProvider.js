@@ -3,7 +3,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
-var gLoggingEnabled = true;
+var gLoggingEnabled = false;
 var gTestingEnabled = false;
 
 function nowInSeconds()
