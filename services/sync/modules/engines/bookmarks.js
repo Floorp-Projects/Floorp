@@ -277,19 +277,14 @@ BookmarksStore.prototype = {
       break;
     case "item":
       this._log.debug(" -> got a generic places item.. do nothing?");
-      break;
+      return;
     default:
       this._log.error("_create: Unknown item type: " + record.type);
-      break;
+      return;
     }
-    if (newId) {
-      this._log.trace("Setting GUID of new item " + newId + " to " + record.id);
-      let cur = GUIDForId(newId);
-      if (cur == record.id)
-        this._log.warn("Item " + newId + " already has GUID " + record.id);
-      else
-        this._bms.setItemGUID(newId, record.id);
-    }
+
+    this._log.trace("Setting GUID of new item " + newId + " to " + record.id);
+    this._setGUID(newId, record.id);
   },
 
   remove: function BStore_remove(record) {
@@ -393,15 +388,17 @@ BookmarksStore.prototype = {
       return;
     }
 
-    let collision = idForGUID(newID);
-    if (collision > 0) {
-      this._log.warn("Can't change GUID " + oldID + " to " +
-                      newID + ": new ID already in use");
-      return;
-    }
-
     this._log.debug("Changing GUID " + oldID + " to " + newID);
-    this._bms.setItemGUID(itemId, newID);
+    this._setGUID(itemId, newID);
+  },
+
+  _setGUID: function BStore__setGUID(itemId, guid) {
+    let collision = idForGUID(guid);
+    if (collision != -1) {
+      this._log.warn("Freeing up GUID " + guid  + " used by " + collision);
+      Svc.Annos.removeItemAnnotation(collision, "placesInternal/GUID");
+    }
+    Svc.Bookmark.setItemGUID(itemId, guid);
   },
 
   _getNode: function BStore__getNode(folder) {
