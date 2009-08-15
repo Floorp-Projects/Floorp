@@ -157,7 +157,14 @@ BookmarksStore.prototype = {
     return idForGUID(id) > 0;
   },
 
-  _preprocess: function BStore_preprocess(record) {
+  applyIncoming: function BStore_applyIncoming(record) {
+    // Ignore (accidental?) root changes
+    if (record.id in kSpecialIds) {
+      this._log.debug("Skipping change to root node: " + record.id);
+      return;
+    }
+
+    // Preprocess the record before doing the normal apply
     switch (record.type) {
       case "query": {
         // Convert the query uri if necessary
@@ -188,12 +195,12 @@ BookmarksStore.prototype = {
         break;
       }
     }
+
+    // Do the normal processing of incoming records
+    Store.prototype.applyIncoming.apply(this, arguments);
   },
 
   create: function BStore_create(record) {
-    // Modify the record if necessary
-    this._preprocess(record);
-
     let newId;
     let parentId = idForGUID(record.parentid);
 
@@ -266,12 +273,6 @@ BookmarksStore.prototype = {
   },
 
   remove: function BStore_remove(record) {
-    if (record.id in kSpecialIds) {
-      this._log.warn("Attempted to remove root node (" + record.id +
-                     ").  Skipping record removal.");
-      return;
-    }
-
     let itemId = idForGUID(record.id);
     if (itemId <= 0) {
       this._log.debug("Item " + record.id + " already removed");
@@ -300,15 +301,8 @@ BookmarksStore.prototype = {
   },
 
   update: function BStore_update(record) {
-    // Modify the record if necessary
-    this._preprocess(record);
-
     let itemId = idForGUID(record.id);
 
-    if (record.id in kSpecialIds) {
-      this._log.debug("Skipping update for root node.");
-      return;
-    }
     if (itemId <= 0) {
       this._log.debug("Skipping update for unknown item: " + record.id);
       return;
