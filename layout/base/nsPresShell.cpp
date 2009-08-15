@@ -1394,7 +1394,11 @@ private:
                                            nsIntPoint& aTargetPt);
 
   void FireResizeEvent();
+  static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
+  nsCOMPtr<nsITimer> mAsyncResizeEventTimer;
+  PRPackedBool mAsyncResizeTimerIsActive;
+  PRPackedBool mInResize;
 
   typedef void (*nsPluginEnumCallback)(PresShell*, nsIContent*);
   void EnumeratePlugins(nsIDOMDocument *aDocument,
@@ -2029,6 +2033,10 @@ PresShell::Destroy()
   // plug-ins are involved(!).
   mReflowEvent.Revoke();
   mResizeEvent.Revoke();
+  if (mAsyncResizeTimerIsActive) {
+    mAsyncResizeEventTimer->Cancel();
+    mAsyncResizeTimerIsActive = PR_FALSE;
+  }
 
   CancelAllPendingReflows();
   CancelPostedReflowCallbacks();
@@ -2798,6 +2806,12 @@ PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
     self->UnsuppressPainting();
 }
 
+void
+PresShell::AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell)
+{
+  static_cast<PresShell*>(aPresShell)->FireResizeEvent();
+}
+
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
@@ -2862,11 +2876,24 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       nsRect(0, 0, aWidth, rootFrame->GetRect().height));
   }
 
-  if (!mIsDestroying && !mResizeEvent.IsPending()) {
-    nsRefPtr<nsRunnableMethod<PresShell> > resizeEvent =
-      NS_NEW_RUNNABLE_METHOD(PresShell, this, FireResizeEvent);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
-      mResizeEvent = resizeEvent;
+  if (!mIsDestroying && !mResizeEvent.IsPending() &&
+      !mAsyncResizeTimerIsActive) {
+    if (mInResize) {
+      if (!mAsyncResizeEventTimer) {
+        mAsyncResizeEventTimer = do_CreateInstance("@mozilla.org/timer;1");
+      }
+      if (mAsyncResizeEventTimer) {
+        mAsyncResizeTimerIsActive = PR_TRUE;
+        mAsyncResizeEventTimer->InitWithFuncCallback(AsyncResizeEventCallback,
+                                                     this, 15,
+                                                     nsITimer::TYPE_ONE_SHOT);
+      }
+    } else {
+      nsRefPtr<nsRunnableMethod<PresShell> > resizeEvent =
+        NS_NEW_RUNNABLE_METHOD(PresShell, this, FireResizeEvent);
+      if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
+        mResizeEvent = resizeEvent;
+      }
     }
   }
 
@@ -2876,6 +2903,10 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 void
 PresShell::FireResizeEvent()
 {
+  if (mAsyncResizeTimerIsActive) {
+    mAsyncResizeTimerIsActive = PR_FALSE;
+    mAsyncResizeEventTimer->Cancel();
+  }
   mResizeEvent.Revoke();
 
   if (mIsDocumentGone)
@@ -2887,8 +2918,10 @@ PresShell::FireResizeEvent()
 
   nsPIDOMWindow *window = mDocument->GetWindow();
   if (window) {
+    nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+    mInResize = PR_TRUE;
     nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
-    // |this| may now be destroyed
+    mInResize = PR_FALSE;
   }
 }
 
