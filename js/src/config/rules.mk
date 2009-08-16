@@ -833,6 +833,23 @@ LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(LIBS))
 HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))
 DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
+ifndef _LIBNAME_RELATIVE_PATHS
+
+LIBS_DEPS += $(filter -l%, $(LIBS))
+HOST_LIBS_DEPS += $(filter -l%, $(HOST_LIBS))
+DSO_LDOPTS_DEPS += $(filter -l%, $(EXTRA_DSO_LDOPTS))
+
+_LIBDIRS = $(patsubst -L%,%,$(filter -L%, $(LIBS) $(HOST_LIBS) $(EXTRA_DSO_LDOPTS)))
+ifneq (,$(_LIBDIRS))
+vpath $(LIB_PREFIX)%.$(LIB_SUFFIX) $(_LIBDIRS)
+ifdef IMPORT_LIB_SUFFIX
+vpath $(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX) $(_LIBDIRS)
+endif # IMPORT_LIB_SUFFIX
+vpath $(DLL_PREFIX)%$(DLL_SUFFIX) $(_LIBDIRS)
+endif # _LIBDIRS
+
+endif # _LIBNAME_RELATIVE_PATHS
+
 # Dependancies which, if modified, should cause everything to rebuild
 GLOBAL_DEPS += Makefile Makefile.in $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk
 
