@@ -63,7 +63,8 @@ public:
     FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
 
 protected:
-    virtual PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], const gfxFontStyle& aFontStyle);
+    virtual PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
+                                       PRBool anItalic, PRInt16 aStretch);
 
 public:
     nsString mName;
