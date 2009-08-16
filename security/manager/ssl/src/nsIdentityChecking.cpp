@@ -890,19 +890,21 @@ static SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
     
       policyInfos = policies->policyInfos;
 
+      PRBool found = PR_FALSE;
       while (*policyInfos != NULL) {
         policyInfo = *policyInfos++;
 
         SECOidTag oid_tag = policyInfo->oid;
-        if (oid_tag == SEC_OID_UNKNOWN) // not in our list of OIDs accepted for EV
-          continue;
-
-        if (!isEVPolicy(oid_tag))
-          continue;
-
-        outOidTag = oid_tag;
-        return SECSuccess;
+        if (oid_tag != SEC_OID_UNKNOWN && isEVPolicy(oid_tag)) {
+          // in our list of OIDs accepted for EV
+          outOidTag = oid_tag;
+          found = PR_TRUE;
+          break;
+        }
       }
+      CERT_DestroyCertificatePoliciesExtension(policies);
+      if (found)
+        return SECSuccess;
     }
   }
 
