@@ -907,6 +907,38 @@ DWORD nsWindow::WindowStyle()
       break;
   }
 
+  if (mBorderStyle != eBorderStyle_default && mBorderStyle != eBorderStyle_all) {
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_border))
+      style &= ~WS_BORDER;
+
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_title)) {
+      style &= ~WS_DLGFRAME;
+      style |= WS_POPUP;
+      style &= ~WS_CHILD;
+    }
+
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_close))
+      style &= ~0;
+    // XXX The close box can only be removed by changing the window class,
+    // as far as I know   --- roc+moz@cs.cmu.edu
+
+    if (mBorderStyle == eBorderStyle_none ||
+      !(mBorderStyle & (eBorderStyle_menu | eBorderStyle_close)))
+      style &= ~WS_SYSMENU;
+    // Looks like getting rid of the system menu also does away with the
+    // close box. So, we only get rid of the system menu if you want neither it
+    // nor the close box. How does the Windows "Dialog" window class get just
+    // closebox and no sysmenu? Who knows.
+
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_resizeh))
+      style &= ~WS_THICKFRAME;
+
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_minimize))
+      style &= ~WS_MINIMIZEBOX;
+
+    if (mBorderStyle == eBorderStyle_none || !(mBorderStyle & eBorderStyle_maximize))
+      style &= ~WS_MAXIMIZEBOX;
+  }
   VERIFY_WINDOW_STYLE(style);
   return style;
 }
