@@ -17,6 +17,7 @@ REQUIRES = \
 	pref \
 	xpcom \
 	unicharutil \
+	uconv \
 	$(LCMS_REQUIRES) \
 	qcms \
 	$(NULL)
@@ -35,6 +36,7 @@ CPPSRCS	= \
 	gfxPath.cpp \
 	gfxPattern.cpp \
 	gfxPlatform.cpp \
+	gfxPlatformFontList.cpp \
 	gfxRect.cpp \
 	gfxSkipChars.cpp \
 	gfxTextRunCache.cpp \
@@ -160,7 +162,7 @@ ifdef MOZ_CORETEXT
 CPPSRCS += gfxCoreTextFonts.cpp
 endif
 
-CMMSRCS = gfxQuartzFontCache.mm
+CMMSRCS = gfxMacPlatformFontList.mm
 
 # Always link with OpenGL/AGL
 EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime

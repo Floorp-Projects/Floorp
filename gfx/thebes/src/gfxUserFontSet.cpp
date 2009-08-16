@@ -63,8 +63,7 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
              PRUint32 aStretch, 
              PRUint32 aItalicStyle, 
              gfxSparseBitSet *aUnicodeRanges)
-    : gfxFontEntry(NS_LITERAL_STRING("Proxy")), mIsLoading(PR_FALSE),
-      mFamily(aFamily)
+    : gfxFontEntry(NS_LITERAL_STRING("Proxy"), aFamily), mIsLoading(PR_FALSE)
 {
     mIsProxy = PR_TRUE;
     mSrcList = aFontFaceSrcList;
@@ -79,35 +78,6 @@ gfxProxyFontEntry::~gfxProxyFontEntry()
 {
 
 }
-
-
-PRBool
-gfxMixedFontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], 
-                                        const gfxFontStyle& aFontStyle)
-{
-    PRBool italic = (aFontStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
-    PRBool matchesSomething;
-
-    for (PRUint32 j = 0; j < 2; j++) {
-        matchesSomething = PR_FALSE;
-        PRUint32 numFonts = mAvailableFonts.Length();
-        // build up an array of weights that match the italicness we're looking for
-        for (PRUint32 i = 0; i < numFonts; i++) {
-            gfxFontEntry *fe = mAvailableFonts[i];
-            PRUint32 weight = fe->mWeight/100;
-            if (fe->mItalic == italic) {
-                aFontsForWeights[weight] = fe;
-                matchesSomething = PR_TRUE;
-            }
-        }
-        if (matchesSomething)
-            break;
-        italic = !italic;
-    }
-
-    return matchesSomething;
-}
-
 
 gfxUserFontSet::gfxUserFontSet()
 {
@@ -219,7 +189,7 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
             gfxPlatform::GetPlatform()->MakePlatformFont(pe, aLoader,
                                                          aFontData, aLength);
         if (fe) {
-            pe->mFamily->ReplaceFontEntry(pe, fe);
+            static_cast<gfxMixedFontFamily*>(pe->mFamily)->ReplaceFontEntry(pe, fe);
             IncrementGeneration();
 #ifdef PR_LOGGING
             if (LOG_ENABLED()) {
@@ -302,7 +272,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(), 
                      NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get(), 
                      PRUint32(mGeneration)));
-                aProxyEntry->mFamily->ReplaceFontEntry(aProxyEntry, fe);
+                static_cast<gfxMixedFontFamily*>(aProxyEntry->mFamily)->ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {
                 LOG(("userfonts (%p) [src %d] failed local: (%s) for (%s)\n", 
@@ -361,9 +331,9 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
     LOG(("userfonts (%p) failed all src for (%s)\n", 
                this, NS_ConvertUTF16toUTF8(aProxyEntry->mFamily->Name()).get()));            
 
-    gfxMixedFontFamily *family = aProxyEntry->mFamily;
+    gfxMixedFontFamily *family = static_cast<gfxMixedFontFamily*>(aProxyEntry->mFamily);
 
-    aProxyEntry->mFamily->RemoveFontEntry(aProxyEntry);
+    family->RemoveFontEntry(aProxyEntry);
 
     // no more faces?  remove the entire family
     if (family->mAvailableFonts.Length() == 0) {
