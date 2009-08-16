@@ -94,7 +94,7 @@ nsMathMLmrootFrame::Init(nsIContent*      aContent,
   
   nsPresContext *presContext = PresContext();
 
-  // No need to tract the style context given to our MathML char. 
+  // No need to track the style context given to our MathML char. 
   // The Style System will use Get/SetAdditionalStyleContext() to keep it
   // up-to-date if dynamic changes arise.
   nsAutoString sqrChar; sqrChar.Assign(kSqrChar);

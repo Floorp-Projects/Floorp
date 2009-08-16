@@ -83,7 +83,7 @@ nsMathMLmfencedFrame::SetInitialChildList(nsIAtom*        aListName,
   nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aListName, aChildList);
   if (NS_FAILED(rv)) return rv;
 
-  // No need to tract the style contexts given to our MathML chars. 
+  // No need to track the style contexts given to our MathML chars. 
   // The Style System will use Get/SetAdditionalStyleContext() to keep them
   // up-to-date if dynamic changes arise.
   return CreateFencesAndSeparators(PresContext());

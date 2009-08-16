@@ -1045,7 +1045,7 @@ nsMathMLmoFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 // ----------------------
-// No need to tract the style context given to our MathML char. 
+// No need to track the style context given to our MathML char. 
 // the Style System will use these to pass the proper style context to our MathMLChar
 nsStyleContext*
 nsMathMLmoFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
