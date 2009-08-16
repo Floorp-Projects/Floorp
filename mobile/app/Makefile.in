@@ -122,8 +122,10 @@ else
 
 libs::
 	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
+ifndef SKIP_COPY_XULRUNNER
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
+endif # SKIP_COPY_XULRUNNER
 
 	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
 
