@@ -441,8 +441,7 @@ SyncEngine.prototype = {
       if (this._lastSyncTmp < item.modified)
         this._lastSyncTmp = item.modified;
     } catch (e) {
-      this._log.warn("Error while applying incoming record: " +
-                     (e.message? e.message : e));
+      this._log.warn("Error while applying record: " + Utils.stackTrace(e));
     } finally {
       this._tracker.ignoreAll = false;
     }
