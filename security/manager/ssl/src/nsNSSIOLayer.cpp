@@ -953,8 +953,8 @@ AppendErrorTextUntrusted(PRErrorCode errTrust,
   }
 }
 
-// returns TRUE if SAN was used to produce names
-// return FALSE if nothing was produced
+// returns PR_TRUE if SAN was used to produce names
+// return PR_FALSE if nothing was produced
 // names => a single name or a list of names
 // multipleNames => whether multiple names were delivered
 static PRBool
@@ -969,22 +969,22 @@ GetSubjectAltNames(CERTCertificate *nssCert,
   PRArenaPool *san_arena = nsnull;
   SECItem altNameExtension = {siBuffer, NULL, 0 };
   CERTGeneralName *sanNameList = nsnull;
+  PRBool ok = PR_FALSE;
+
+  san_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if (!san_arena)
+    return ok;
 
   nsresult rv;
   rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
                               &altNameExtension);
   if (rv != SECSuccess)
-    return PR_FALSE;
-
-  san_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!san_arena)
-    return PR_FALSE;
+    goto loser;
 
   sanNameList = CERT_DecodeAltNameExtension(san_arena, &altNameExtension);
-  if (!sanNameList)
-    return PR_FALSE;
-
   SECITEM_FreeItem(&altNameExtension, PR_FALSE);
+  if (!sanNameList)
+    goto loser;
 
   CERTGeneralName *current = sanNameList;
   do {
@@ -1031,9 +1031,11 @@ GetSubjectAltNames(CERTCertificate *nssCert,
     }
     current = CERT_GetNextGeneralName(current);
   } while (current != sanNameList); // double linked
+  ok = PR_TRUE;
 
+loser:
   PORT_FreeArena(san_arena, PR_FALSE);
-  return PR_TRUE;
+  return ok;
 }
 
 static void
