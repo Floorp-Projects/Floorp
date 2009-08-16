@@ -1490,7 +1490,6 @@
               if (aNewTab && gURLBar)
                 gURLBar.focus();
 
-              this.tabContainer.adjustTabstrip();
               // workaround for bug 345399
               this.tabContainer.mTabstrip._updateScrollButtonsDisabledState();
             }
@@ -1527,6 +1526,10 @@
             // ... and fix up the _tPos properties immediately.
             for (let i = aTab._tPos; i < this.mTabs.length; i++)
               this.mTabs[i]._tPos = i;
+
+            // update tab close buttons state
+            if (!this._windowIsClosing)
+              this.tabContainer.adjustTabstrip();
 
             // update first-tab/last-tab/beforeselected/afterselected attributes
             this.selectedTab._selected = true;
