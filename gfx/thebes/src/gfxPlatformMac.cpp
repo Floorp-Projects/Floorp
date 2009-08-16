@@ -42,7 +42,7 @@
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzImageSurface.h"
 
-#include "gfxQuartzFontCache.h"
+#include "gfxMacPlatformFontList.h"
 #include "gfxAtsuiFonts.h"
 #include "gfxUserFontSet.h"
 
@@ -100,6 +100,12 @@ gfxPlatformMac::~gfxPlatformMac()
 #endif
 }
 
+gfxPlatformFontList*
+gfxPlatformMac::CreatePlatformFontList()
+{
+    return new gfxMacPlatformFontList();
+}
+
 already_AddRefed<gfxASurface>
 gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxImageFormat imageFormat)
@@ -138,7 +144,7 @@ gfxPlatformMac::ResolveFontName(const nsAString& aFontName,
                                 void *aClosure, PRBool& aAborted)
 {
     nsAutoString resolvedName;
-    if (!gfxQuartzFontCache::SharedFontCache()->
+    if (!gfxPlatformFontList::PlatformFontList()->
              ResolveFontName(aFontName, resolvedName)) {
         aAborted = PR_FALSE;
         return NS_OK;
@@ -150,7 +156,7 @@ gfxPlatformMac::ResolveFontName(const nsAString& aFontName,
 nsresult
 gfxPlatformMac::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
 {
-    gfxQuartzFontCache::SharedFontCache()->GetStandardFamilyName(aFontName, aFamilyName);
+    gfxPlatformFontList::PlatformFontList()->GetStandardFamilyName(aFontName, aFamilyName);
     return NS_OK;
 }
 
@@ -170,12 +176,13 @@ gfxPlatformMac::CreateFontGroup(const nsAString &aFamilies,
 #endif
 }
 
+// these will move to gfxPlatform once all platforms support the fontlist
 gfxFontEntry* 
 gfxPlatformMac::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                 const nsAString& aFontName)
 {
-    return gfxQuartzFontCache::SharedFontCache()->LookupLocalFont(aProxyEntry, 
-                                                                  aFontName);
+    return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aProxyEntry, 
+                                                                    aFontName);
 }
 
 gfxFontEntry* 
@@ -183,7 +190,7 @@ gfxPlatformMac::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                  nsISupports *aLoader,
                                  const PRUint8 *aFontData, PRUint32 aLength)
 {
-    return gfxQuartzFontCache::SharedFontCache()->MakePlatformFont(aProxyEntry, aFontData, aLength);
+    return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aProxyEntry, aFontData, aLength);
 }
 
 PRBool
@@ -209,20 +216,20 @@ gfxPlatformMac::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
     return PR_TRUE;
 }
 
+// these will also move to gfxPlatform once all platforms support the fontlist
 nsresult
 gfxPlatformMac::GetFontList(const nsACString& aLangGroup,
                             const nsACString& aGenericFamily,
                             nsTArray<nsString>& aListOfFonts)
 {
-    gfxQuartzFontCache::SharedFontCache()->GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
-
+    gfxPlatformFontList::PlatformFontList()->GetFontList(aLangGroup, aGenericFamily, aListOfFonts);
     return NS_OK;
 }
 
 nsresult
 gfxPlatformMac::UpdateFontList()
 {
-    gfxQuartzFontCache::SharedFontCache()->UpdateFontList();
+    gfxPlatformFontList::PlatformFontList()->UpdateFontList();
     return NS_OK;
 }
 
@@ -231,7 +238,7 @@ gfxPlatformMac::OSXVersion()
 {
     if (!mOSXVersion) {
         // minor version is not accurate, use gestaltSystemVersionMajor, gestaltSystemVersionMinor, gestaltSystemVersionBugFix for these
-        OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*) &mOSXVersion);
+        OSErr err = ::Gestalt(gestaltSystemVersion, reinterpret_cast<SInt32*>(&mOSXVersion));
         if (err != noErr) {
             //This should probably be changed when our minimum version changes
             NS_ERROR("Couldn't determine OS X version, assuming 10.4");
@@ -402,7 +409,7 @@ gfxPlatformMac::GetPlatformCMSOutputProfile()
         FSRef fsRef;
         if (!FSpMakeFSRef(&device.u.fileLoc.spec, &fsRef)) {
             char path[512];
-            if (!FSRefMakePath(&fsRef, (UInt8*)(path), sizeof(path))) {
+            if (!FSRefMakePath(&fsRef, reinterpret_cast<UInt8*>(path), sizeof(path))) {
                 profile = qcms_profile_from_path(path);
 #ifdef DEBUG_tor
                 if (profile)

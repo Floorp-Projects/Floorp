@@ -179,24 +179,24 @@ FontFamily::FindFontEntry(const gfxFontStyle& aFontStyle)
 }
 
 PRBool
-FontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], const gfxFontStyle& aFontStyle)
+FontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
+                                PRBool anItalic, PRInt16 aStretch)
 {
-    PRBool italic = (aFontStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
     PRBool matchesSomething = PR_FALSE;
 
     for (PRUint32 j = 0; j < 2; j++) {
         // build up an array of weights that match the italicness we're looking for
-        for (PRUint32 i = 0; i < mFaces.Length(); i++) {
-            FontEntry *fe = mFaces[i];
+        for (PRUint32 i = 0; i < mAvailableFonts.Length(); i++) {
+            gfxFontEntry *fe = mAvailableFonts[i];
             const PRUint8 weight = (fe->mWeight / 100);
-            if (fe->mItalic == italic) {
+            if (fe->mItalic == anItalic) {
                 aFontsForWeights[weight] = fe;
                 matchesSomething = PR_TRUE;
             }
         }
         if (matchesSomething)
             break;
-        italic = !italic;
+        anItalic = !anItalic;
     }
 
     return matchesSomething;

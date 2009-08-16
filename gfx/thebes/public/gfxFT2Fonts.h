@@ -66,7 +66,6 @@ protected:
     virtual PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], const gfxFontStyle& aFontStyle);
 
 public:
-    nsTArray<nsRefPtr<FontEntry> > mFaces;
     nsString mName;
 };
 
