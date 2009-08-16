@@ -541,14 +541,15 @@ BookmarksStore.prototype = {
     }
 
     record.id = guid;
-    record.parentid = this._getParentGUIDForItemId(placeId);
+    record.parentid = this._getParentGUIDForId(placeId);
+    record.predecessorid = this._getPredecessorGUIDForId(placeId);
     record.encryption = cryptoMetaURL;
 
     this.cache.put(guid, record);
     return record;
   },
 
-  _getParentGUIDForItemId: function BStore__getParentGUIDForItemId(itemId) {
+  _getParentGUIDForId: function BStore__getParentGUIDForId(itemId) {
     let parentid = this._bms.getFolderIdForItem(itemId);
     if (parentid == -1) {
       this._log.debug("Found orphan bookmark, reparenting to unfiled");
@@ -556,6 +557,17 @@ BookmarksStore.prototype = {
       this._bms.moveItem(itemId, parentid, -1);
     }
     return GUIDForId(parentid);
+  },
+
+  _getPredecessorGUIDForId: function BStore__getPredecessorGUIDForId(itemId) {
+    // Figure out the predecessor, unless it's the first item
+    let itemPos = Svc.Bookmark.getItemIndex(itemId);
+    if (itemPos == 0)
+      return;
+
+    let parentId = Svc.Bookmark.getFolderIdForItem(itemId);
+    let predecessorId = Svc.Bookmark.getIdForItemAt(parentId, itemPos - 1);
+    return GUIDForId(predecessorId);
   },
 
   _getChildren: function BStore_getChildren(guid, items) {
