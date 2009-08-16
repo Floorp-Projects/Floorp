@@ -127,6 +127,7 @@ _TEST_FILES += \
     bug504644.ogv \
     bug506094.ogv \
 		seek.ogv \
+		short-video.ogv \
 		small-shot.ogg \
 		sound.ogg \
 		$(NULL)
