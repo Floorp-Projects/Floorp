@@ -52,8 +52,16 @@ function startTests() {
         setTimeout(startTests, 0);
       }
     }}(test, v);
+    v.prevTime = 0;
+    var timeUpdate = function(v) { return function() {
+      ok(v.prevTime <= v.currentTime,
+         test.name + " time should run forwards: p=" +
+         v.prevTime + " c=" + v.currentTime);
+      v.prevTime = v.currentTime;
+    }}(v);
     v.addEventListener("loadedmetadata", check, false);
     v.addEventListener("ended", checkEnded, false);
+    v.addEventListener("timeupdate", timeUpdate, false);
     ++testsWaiting;
     document.body.appendChild(v);
     v.play();
