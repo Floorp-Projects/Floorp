@@ -309,7 +309,7 @@ void gfxWindowsPlatform::AppendFacesFromFontFile(const PRUnichar *aFileName) {
                     ff = new FontFamily(name);
                     mFonts.Put(name, ff);
                 }
-                ff->mAvailableFonts.AppendElement(fe);
+                ff->AddFontEntry(fe);
                 ff->SetHasStyles(PR_TRUE);
             }
         }
@@ -774,13 +774,13 @@ FindFullName(nsStringHashKey::KeyType aKey,
     // if so, iterate over faces in this family to see if there is a match
     if (family.Equals(fullNameFamily)) {
 #ifdef MOZ_FT2_FONTS
-        int len = aFontFamily->mAvailableFonts.Length();
+        int len = aFontFamily->GetFontList().Length();
         int index = 0;
         for (; index < len && 
-                 !aFontFamily->mAvailableFonts[index]->Name().Equals(data->mFullName); index++);
+                 !aFontFamily->GetFontList()[index]->Name().Equals(data->mFullName); index++);
         if (index < len) {
             data->mFound = PR_TRUE;
-            data->mFontEntry = aFontFamily->mAvailableFonts[index];
+            data->mFontEntry = aFontFamily->GetFontList()[index];
         }
 #else
         HDC hdc;
