@@ -268,13 +268,12 @@ BookmarksStore.prototype = {
     case "bookmark":
     case "query":
     case "microsummary": {
-      this._log.debug(" -> creating bookmark \"" + record.title + "\"");
       let uri = Utils.makeURI(record.bmkUri);
-      this._log.debug(" -> -> ParentID is " + record._parent);
-      this._log.debug(" -> -> uri is " + record.bmkUri);
-      this._log.debug(" -> -> title is " + record.title);
       newId = this._bms.insertBookmark(record._parent, uri, record._insertPos,
         record.title);
+      this._log.debug(["created bookmark", newId, "under", record._parent, "at",
+        record._insertPos, "as", record.title, record.bmkUri].join(" "));
+
       this._tagURI(uri, record.tags);
       this._bms.setKeywordForBookmark(newId, record.keyword);
       if (record.description)
@@ -299,19 +298,23 @@ BookmarksStore.prototype = {
       }
     } break;
     case "folder":
-      this._log.debug(" -> creating folder \"" + record.title + "\"");
       newId = this._bms.createFolder(record._parent, record.title,
         record._insertPos);
+      this._log.debug(["created folder", newId, "under", record._parent, "at",
+        record._insertPos, "as", record.title].join(" "));
       break;
     case "livemark":
-      this._log.debug(" -> creating livemark \"" + record.title + "\"");
       newId = this._ls.createLivemark(record._parent, record.title,
         Utils.makeURI(record.siteUri), Utils.makeURI(record.feedUri),
         record._insertPos);
+      this._log.debug(["created livemark", newId, "under", record._parent, "at",
+        record._insertPos, "as", record.title, record.siteUri, record.feedUri].
+        join(" "));
       break;
     case "separator":
-      this._log.debug(" -> creating separator");
       newId = this._bms.insertSeparator(record._parent, record._insertPos);
+      this._log.debug(["created separator", newId, "under", record._parent,
+        "at", record._insertPos].join(" "));
       break;
     case "item":
       this._log.debug(" -> got a generic places item.. do nothing?");
