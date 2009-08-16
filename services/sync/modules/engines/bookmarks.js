@@ -43,6 +43,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const PARENT_ANNO = "weave/parent";
+const PREDECESSOR_ANNO = "weave/predecessor";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -214,6 +215,23 @@ BookmarksStore.prototype = {
       record._parent = parentId;
     }
 
+    // Default to append unless we're not an orphan with the predecessor
+    let predGUID = record.predecessorid;
+    record._insertPos = Svc.Bookmark.DEFAULT_INDEX;
+    if (!record._orphan) {
+      // No predecessor means it's the first item
+      if (predGUID == null)
+        record._insertPos = 0;
+      else {
+        // The insert position is one after the predecessor if we have it
+        let predId = idForGUID(predGUID);
+        if (predId != -1)
+          record._insertPos = Svc.Bookmark.getItemIndex(predId) + 1;
+        else
+          this._log.trace("Appending to end until predecessor is synced");
+      }
+    }
+
     // Do the normal processing of incoming records
     Store.prototype.applyIncoming.apply(this, arguments);
 
@@ -224,6 +242,11 @@ BookmarksStore.prototype = {
       // XXX Work around Bug 510628 by prepending parenT
       if (record._orphan)
         Utils.anno(itemId, PARENT_ANNO, "T" + parentGUID);
+
+      // Create an annotation if we have a predecessor but no position
+      // XXX Work around Bug 510628 by prepending predecessoR
+      if (predGUID != null && record._insertPos == Svc.Bookmark.DEFAULT_INDEX)
+        Utils.anno(itemId, PREDECESSOR_ANNO, "R" + predGUID);
     }
   },
 
@@ -250,7 +273,8 @@ BookmarksStore.prototype = {
       this._log.debug(" -> -> ParentID is " + record._parent);
       this._log.debug(" -> -> uri is " + record.bmkUri);
       this._log.debug(" -> -> title is " + record.title);
-      newId = this._bms.insertBookmark(record._parent, uri, -1, record.title);
+      newId = this._bms.insertBookmark(record._parent, uri, record._insertPos,
+        record.title);
       this._tagURI(uri, record.tags);
       this._bms.setKeywordForBookmark(newId, record.keyword);
       if (record.description)
@@ -276,16 +300,18 @@ BookmarksStore.prototype = {
     } break;
     case "folder":
       this._log.debug(" -> creating folder \"" + record.title + "\"");
-      newId = this._bms.createFolder(record._parent, record.title, -1);
+      newId = this._bms.createFolder(record._parent, record.title,
+        record._insertPos);
       break;
     case "livemark":
       this._log.debug(" -> creating livemark \"" + record.title + "\"");
       newId = this._ls.createLivemark(record._parent, record.title,
-        Utils.makeURI(record.siteUri), Utils.makeURI(record.feedUri), -1);
+        Utils.makeURI(record.siteUri), Utils.makeURI(record.feedUri),
+        record._insertPos);
       break;
     case "separator":
       this._log.debug(" -> creating separator");
-      newId = this._bms.insertSeparator(record._parent, -1);
+      newId = this._bms.insertSeparator(record._parent, record._insertPos);
       break;
     case "item":
       this._log.debug(" -> got a generic places item.. do nothing?");
@@ -304,7 +330,7 @@ BookmarksStore.prototype = {
       this._log.debug("Reparenting orphans " + orphans + " to " + record.title);
       orphans.forEach(function(orphan) {
         // Move the orphan to the parent and drop the missing parent annotation
-        Svc.Bookmark.moveItem(orphan, newId, -1);
+        Svc.Bookmark.moveItem(orphan, newId, Svc.Bookmark.DEFAULT_INDEX);
         Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
       });
     }
@@ -348,10 +374,11 @@ BookmarksStore.prototype = {
 
     this._log.trace("Updating " + record.id + " (" + itemId + ")");
 
-    // FIXME check for predecessor changes
-    if (this._bms.getFolderIdForItem(itemId) != record._parent) {
+    // Need to move if the parent or position isn't correct
+    if (Svc.Bookmark.getFolderIdForItem(itemId) != record._parent ||
+        Svc.Bookmark.getItemIndex(itemId) != record._insertPos) {
       this._log.trace("Moving item (changing folder/position)");
-      this._bms.moveItem(itemId, record._parent, -1);
+      this._bms.moveItem(itemId, record._parent, record._insertPos);
     }
 
     for (let [key, val] in Iterator(record.cleartext)) {
