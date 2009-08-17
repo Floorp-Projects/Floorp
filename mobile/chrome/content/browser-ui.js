@@ -280,6 +280,19 @@ var BrowserUI = {
     }
     return this._toolbarH;
   },
+  
+  get sidebarW() {
+    if (!this._sidebarW) {
+      let sidebar = document.getElementById("browser-controls");
+      this._sidebarW = sidebar.boxObject.width;
+    }
+    return this._sidebarW;
+  },
+  
+  get starButton() {
+    delete this.starButton;
+    return this.starButton = document.getElementById("tool-star");
+  },
 
   _initControls : false,
   sizeControls : function(windowW, windowH) {
@@ -315,6 +328,16 @@ var BrowserUI = {
     let bookmarks = document.getElementById("bookmarklist-container");
     bookmarks.height = windowH;
     bookmarks.width = windowW;
+    
+    // bookmark popup
+    let bookmarkPopup = document.getElementById("bookmark-popup");
+    let bookmarkPopupW = windowW / 4;
+    bookmarkPopup.height = windowH / 4;
+    bookmarkPopup.width = bookmarkPopupW;
+    let starRect = this.starButton.getBoundingClientRect();
+    let popupMargin = 10;
+    bookmarkPopup.top = starRect.top + popupMargin;
+    bookmarkPopup.left = windowW - this.sidebarW - bookmarkPopupW - popupMargin;
 
     // select list UI
     let selectlist = document.getElementById("select-container");
@@ -497,11 +520,10 @@ var BrowserUI = {
   },
 
   updateStar : function() {
-    var star = document.getElementById("tool-star");
     if (PlacesUtils.getMostRecentBookmarkForURI(Browser.selectedBrowser.currentURI) != -1)
-      star.setAttribute("starred", "true");
+      this.starButton.setAttribute("starred", "true");
     else
-      star.removeAttribute("starred");
+      this.starButton.removeAttribute("starred");
   },
 
   goToBookmark : function goToBookmark(aEvent) {
@@ -675,10 +697,10 @@ var BrowserUI = {
         break;
       case "cmd_star":
       {
-        this.hideControls();
-
         var bookmarkURI = browser.currentURI;
         var bookmarkTitle = browser.contentDocument.title || bookmarkURI.spec;
+
+        let autoClose = false;
 
         if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
           var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.unfiledBookmarksFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
@@ -688,10 +710,13 @@ var BrowserUI = {
           var faviconURI = ios.newURI(this._favicon.src, null, null);
 
           PlacesUtils.favicons.setAndLoadFaviconForPage(bookmarkURI, faviconURI, true);
+
+          // autoclose the bookmark popup
+          autoClose = true;
         }
-        else {
-          BookmarkHelper.edit(bookmarkURI);
-        }
+
+        // Show/hide bookmark popup
+        BookmarkPopup.toggle(autoClose);
         break;
       }
       case "cmd_bookmarks":
@@ -740,11 +765,52 @@ var BrowserUI = {
   }
 };
 
+var BookmarkPopup = {
+  get box() {
+    delete this.box;
+    return this.box = document.getElementById("bookmark-popup");
+  },
+
+  _bookmarkPopupTimeout: -1,
+
+  hide : function () {
+    if (this._bookmarkPopupTimeout != -1) {
+      clearTimeout(this._bookmarkPopupTimeout);
+      this._bookmarkPopupTimeout = -1;
+    }
+    this.box.hidden = true;
+  },
+  
+  show : function (aAutoClose) {
+    this.box.hidden = false;
+
+    if (aAutoClose) {
+      this._bookmarkPopupTimeout = setTimeout(function (self) {
+        self._bookmarkPopupTimeout = -1;
+        self.hide();
+      }, 2000, this);
+    }
+
+    // include starButton here, so that click-to-dismiss works as expected
+    BrowserUI.pushPopup(this, [this.box, BrowserUI.starButton]);
+  },
+  
+  toggle : function (aAutoClose) {
+    if (this.box.hidden)
+      this.show(aAutoClose);
+    else
+      this.hide();
+  }
+}
+
 var BookmarkHelper = {
   _panel: null,
   _editor: null,
 
   edit: function BH_edit(aURI) {
+    if (!aURI)
+      aURI = getBrowser().currentURI;
+
     let itemId = PlacesUtils.getMostRecentBookmarkForURI(aURI);
     if (itemId == -1)
       return;
@@ -1058,3 +1124,13 @@ var SelectHelper = {
     }
   }
 };
+
+function removeBookmarksForURI(aURI) {
+  //XXX blargle xpconnect! might not matter, but a method on
+  // nsINavBookmarksService that takes an array of items to
+  // delete would be faster. better yet, a method that takes a URI!
+  let itemIds = PlacesUtils.getBookmarksForURI(aURI);
+  itemIds.forEach(PlacesUtils.bookmarks.removeItem);
+
+  BrowserUI.updateStar();
+}

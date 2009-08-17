@@ -771,6 +771,7 @@ richpref {
 }
 
 /* alerts popup ----------------------------------------------------------- */
+#bookmark-popup,
 #alerts-container {
   color: #000;
   background-color: #fff;
