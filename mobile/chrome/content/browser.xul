@@ -440,9 +440,9 @@
       <label id="helperapp-target" value="" crop="center"/>
       <separator/>
       <hbox pack="center">
-        <button id="helperapp-open" label="&helperApp.open;" oncommand="HelperAppDialog.open();"/>
-        <button id="helperapp-save" label="&helperApp.save;" oncommand="HelperAppDialog.save();"/>
-        <button id="helperapp-nothing" label="&helperApp.nothing;" oncommand="HelperAppDialog.close();"/>
+        <button id="helperapp-open" class="button-dark" label="&helperApp.open;" oncommand="HelperAppDialog.open();"/>
+        <button id="helperapp-save" class="button-dark" label="&helperApp.save;" oncommand="HelperAppDialog.save();"/>
+        <button id="helperapp-nothing" class="button-dark" label="&helperApp.nothing;" oncommand="HelperAppDialog.close();"/>
       </hbox>
     </vbox>
 
