@@ -581,9 +581,12 @@ var Browser = {
 
     let dx = containerBCR.left;
     if (dx < 0)
-      dx = Math.min(containerBCR.right, 0);
+      dx = Math.min(containerBCR.right - window.innerWidth, 0);
 
     this.controlsScrollboxScroller.scrollBy(Math.round(dx), 0);
+
+    Browser.contentScrollbox.customDragger.scrollingOuterX = false; // XXX ugh.
+
     this._browserView.onAfterVisibleMove();
   },
 
@@ -862,11 +865,6 @@ var Browser = {
     }
 
     return {
-      // XXX whether we are zoomed in or out should be reset to false every time
-      // we call zoomToPage elsewhere.  basically, this variable isn't a great way
-      // to track state of zoomed in- our out-ness.
-      zoomIn: false,
-
       singleClick: function singleClick(cX, cY) {
         let browser = browserView.getBrowser();
         if (browser) {
@@ -876,22 +874,12 @@ var Browser = {
       },
 
       doubleClick: function doubleClick(cX1, cY1, cX2, cY2) {
-        let [x, y] = Browser.transformClientToBrowser(cX2, cY2);
-        let zoomElement = Browser.elementFromPoint(x, y);
-
-        if (zoomElement) {
-          dump('@@@ zoomElement is ' + zoomElement + ' :: ' + zoomElement.id + ' :: ' + zoomElement.name + '\n');
-          this.zoomIn = !this.zoomIn;
-
-          if (this.zoomIn)
-            Browser.zoomToElement(zoomElement);
-          else
-            Browser.zoomFromElement(zoomElement);
-        }
+	if (!Browser.zoomToPoint(cX2, cY2))
+	  Browser.zoomFromPoint(cX2, cY2);
       },
 
       toString: function toString() {
-        return "[ContentCustomClicker] { zoomed=" + this.zoomIn + " }";
+        return "[ContentCustomClicker] { }";
       }
     };
   },
@@ -962,8 +950,6 @@ var Browser = {
       } else {
         snappedX = leftvis * leftw;
       }
-
-      snappedX = Math.round(snappedX);
     }
     else if (ritevis != 0 && ritevis != 1) {
       if (ritevis >= 0.6666) {
@@ -971,11 +957,9 @@ var Browser = {
       } else {
         snappedX = -ritevis * ritew;
       }
-
-      snappedX = Math.round(snappedX);
     }
 
-    return snappedX;
+    return Math.round(snappedX);
   },
 
   tryFloatToolbar: function tryFloatToolbar(dx, dy) {
@@ -992,13 +976,15 @@ var Browser = {
 
   tryUnfloatToolbar: function tryUnfloatToolbar(dx, dy) {
     if (!this.floatedWhileDragging)
-      return;
+      return true;
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
     if (leftvis <= 0.002 && ritevis <= 0.002) {
       document.getElementById("toolbar-moveable-container").top = "";
       this.floatedWhileDragging = false;
+      return true;
     }
+    return false;
   },
 
   zoom: function zoom(aDirection) {
@@ -1012,76 +998,105 @@ var Browser = {
                                     // needed then uncomment this line.
   },
 
-  zoomToElement: function zoomToElement(aElement) {
+  zoomToPoint: function zoomToPoint(cX, cY) {
     const margin = 15;
 
+    let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
+    let aElement = Browser.elementFromPoint(elementX, elementY);
+
     let bv = Browser._browserView;
-    let vis = bv.getVisibleRect();
     let scroller = Browser.contentScrollboxScroller;
 
     let elRect = Browser.getBoundingContentRect(aElement);
     let elWidth = elRect.width;
+
+    let vis = bv.getVisibleRect();
     let vrWidth = vis.width;
+
     /* Try to set zoom-level such that once zoomed element is as wide
      *  as the visible rect */
-    let zoomLevel = vrWidth / (elWidth + (2 * margin));
+    let zoomLevel = BrowserView.Util.clampZoomLevel((vrWidth + (2 * margin)) / elWidth);
+    let oldZoomLevel = bv.getZoomLevel();
+
+    //dump("element width: " + elWidth + "\n");
+    //dump("old zoom level: " + oldZoomLevel + "\n");
+    //dump("new zoom level: " + zoomLevel + "\n");
+
+    /* If the new zoom level we've calculated is less than or equal to
+     * the current zoom level, return early and don't progress further.
+     * If the new zoom level is higher, continue to zoom inward.
+     */
+    if (oldZoomLevel >= zoomLevel)
+      return false;
 
     bv.beginBatchOperation();
 
+    /* XXX
+     * This isn't ideal.
+     */
+    this.hideSidebars();
+
     bv.setZoomLevel(zoomLevel);
 
-    /* If zoomLevel ends up clamped to less than asked for, calculate
-     * how many more screen pixels will fit horizontally in addition to
-     * element's width. This ensures that more of the webpage is
-     * showing instead of the navbar. Bug 480595. */
-    let screenW = vrWidth - bv.browserToViewport(elWidth);
-    let xpadding = Math.max(margin, screenW);
-
-    let x0 = vis.left;
-    let y0 = vis.top;
-
-    let x = bv.browserToViewport(elRect.left) - xpadding;
-    let y = bv.browserToViewport(elRect.top) - margin;
-
-    x = Math.floor(Math.max(x, 0));
-    y = Math.floor(Math.max(y, 0));
-
     bv.forceContainerResize();
-    Browser.forceChromeReflow();
+    //Browser.forceChromeReflow();
 
-    dump('zoom to element at ' + x + ', ' + y + ' by dragging ' + (x - x0) + ', ' + (y - y0) + '\n');
+    let dx = Math.round(bv.browserToViewport(elRect.left) - margin - vis.left);
+    let dy = Math.round(bv.browserToViewport(elementY) - (window.innerHeight / 2) - vis.top);
 
-    Browser.contentScrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
+    /*
+     * Animation code for zooming to zoom to the correct place
+     *
+    let callback = {
+      scroller: scroller,
+      sx: (dx > 0) ? 1 : -1,
+      sy: (dy > 0) ? 1 : -1,
+      dx: dx,
+      dy: dy,
+      notify: function kineticTimerCallback(timer) {
+	if (this.dx == 0 && this.dy == 0) {
+	  timer.cancel();
+	  return;
+	}
+	Browser.contentScrollbox.customDragger.dragMove(this.sx, this.sy, this.scroller);
+
+	if (this.dx != 0) this.dx -= this.sx;
+	if (this.dy != 0) this.dy -= this.sy;
+      }
+    };
+
+    this._zoomTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    //initialize our timer with updateInterval
+    this._zoomTimer.initWithCallback(callback,
+				     2,
+				     this._zoomTimer.TYPE_REPEATING_PRECISE);
+    */
+
+    Browser.contentScrollbox.customDragger.dragMove(dx, dy, scroller);
 
     bv.commitBatchOperation();
+
+    return true;
   },
 
-  zoomFromElement: function zoomFromElement(aElement) {
-    let bv = Browser._browserView;
-    let vis = bv.getVisibleRect();
-    let scroller = Browser.contentScrollboxScroller;
+  zoomFromPoint: function zoomFromPoint(cX, cY) {
+    let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
 
-    let elRect = Browser.getBoundingContentRect(aElement);
+    let bv = Browser._browserView;
 
     bv.beginBatchOperation();
 
     bv.zoomToPage();
 
-    let x0 = vis.left;
-    let y0 = vis.top;
-
-    let x = bv.browserToViewport(elRect.left);
-    let y = bv.browserToViewport(elRect.top);
-
-    x = Math.floor(Math.max(x, 0));
-    y = Math.floor(Math.max(y, 0));
-
     bv.forceContainerResize();
+
+    let dy = Math.round(bv.browserToViewport(elementY) - (window.innerHeight / 2) - bv.getVisibleRect().top);
+
+    this.contentScrollbox.customDragger.dragMove(0, dy, this.contentScrollboxScroller);
+
     Browser.forceChromeReflow();
 
-    dump('zoom from element at ' + x + ', ' + y + ' by dragging ' + (x - x0) + ', ' + (y - y0) + '\n');
-
-    Browser.contentScrollbox.customDragger.dragMove(x - x0, y - y0, scroller);
+    this.hideSidebars();
 
     bv.commitBatchOperation();
   },
@@ -1100,7 +1115,7 @@ var Browser = {
 
     let r = contentElem.getBoundingClientRect();
 
-    dump('getBoundingContentRect: clientRect is at ' + r.left + ', ' + r.top + '; scrolls are ' + scrollX.value + ', ' + scrollY.value + '\n');
+    //dump('getBoundingContentRect: clientRect is at ' + r.left + ', ' + r.top + '; scrolls are ' + scrollX.value + ', ' + scrollY.value + '\n');
 
     return new wsRect(r.left + scrollX.value,
                       r.top + scrollY.value,
@@ -1216,7 +1231,7 @@ var Browser = {
 Browser.MainDragger = function MainDragger(browserView) {
   this.allowRealtimeDownUp = true;
 
-  this.scrollingOuterX = true;
+  this.scrollingOuterX = false;
   this.bv = browserView;
   this.floatedWhileDragging = false;
   this.draggedFrame = null;
@@ -1247,7 +1262,13 @@ Browser.MainDragger.prototype = {
 
     dx += this.dragMove(Browser.snapSidebars(), 0, scroller, true);
 
-    Browser.tryUnfloatToolbar();
+    /* XXX
+     * Set scrollingOuterX to be true when the sidebars are open.
+     * We should really just take a look at our geometry at this point
+     * and determine this ourselves rather than relying on our helper
+     * functions to give us this information
+     */
+    this.scrollingOuterX = !Browser.tryUnfloatToolbar();
 
     this.bv.resumeRendering();
 
@@ -1260,6 +1281,7 @@ Browser.MainDragger.prototype = {
     if (this._panFrame(dx, dy))  // first see if we need to adjust internal IFRAME/FRAME
       return true;
 
+    //dump("enter drag move\n");
     if (this.scrollingOuterX) {
       let odx = 0;
       let ody = 0;
@@ -1276,6 +1298,8 @@ Browser.MainDragger.prototype = {
         snappedX = (contentright < w && odx == (contentright - w));
       }
 
+      //dump("  odx, ody, snappedX: " + odx + " " + ody + " " + snappedX + "\n");
+
       if (odx) {
         outrv = this.outerDragMove(odx, ody, Browser.controlsScrollboxScroller, doReturnDX);
       }
@@ -1290,6 +1314,7 @@ Browser.MainDragger.prototype = {
         return outrv;
       }
     }
+    //dump(" scrolling inner x\n");
 
     this.bv.onBeforeVisibleMove(dx, dy);
 
@@ -1301,6 +1326,8 @@ Browser.MainDragger.prototype = {
     let realdy = y1 - y0;
 
     this.bv.onAfterVisibleMove();
+
+    //dump(" dx, realdx: " + dx + " " + realdx + "\n");
 
     if (realdx != dx) {
       let restdx = dx - realdx;
