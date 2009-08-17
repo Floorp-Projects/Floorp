@@ -1124,7 +1124,7 @@ void
 nsContainerFrame::DestroyOverflowList(nsPresContext* aPresContext)
 {
   nsFrameList* list =
-    RemovePropTableFrames(aPresContext, nsGkAtoms::overflowList);
+    RemovePropTableFrames(aPresContext, nsGkAtoms::overflowProperty);
   if (list)
     list->Destroy();
 }
