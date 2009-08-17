@@ -114,11 +114,10 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
     tm->reservedDoublePoolPtr = tm->reservedDoublePool;
 
     /*
-     * FIXME: bug 506117. We should flush only if (cx->runtime->gcRegenShapes),
-     * but we can't yet, because traces may embed sprop and object references,
-     * and we don't yet mark such embedded refs.
+     * If we are about to regenerate shapes, we have to flush the JIT cache, too.
      */
-    tm->needFlush = JS_TRUE;
+    if (cx->runtime->gcRegenShapes)
+        tm->needFlush = JS_TRUE;
 
     if (tm->recorder)
         tm->recorder->deepAbort();
@@ -267,6 +266,15 @@ thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
     return JS_DHASH_NEXT;
 }
 
+static JSDHashOperator
+thread_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
+              void *arg)
+{
+    JSThread *thread = ((JSThreadsHashEntry *) hdr)->thread;
+    thread->data.mark((JSTracer *)arg);
+    return JS_DHASH_NEXT;
+}
+
 #endif /* JS_THREADSAFE */
 
 JSBool
@@ -305,6 +313,16 @@ js_PurgeThreads(JSContext *cx)
     JS_DHashTableEnumerate(&cx->runtime->threads, thread_purger, cx);
 #else
     PurgeThreadData(cx, &cx->runtime->threadData);
+#endif
+}
+
+void
+js_TraceThreads(JSRuntime *rt, JSTracer *trc)
+{
+#ifdef JS_THREADSAFE
+    JS_DHashTableEnumerate(&rt->threads, thread_tracer, trc);
+#else
+    rt->threadData.mark(trc);
 #endif
 }
 

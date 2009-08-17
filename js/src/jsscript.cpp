@@ -1635,11 +1635,12 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 #ifdef CHECK_SCRIPT_OWNER
             JS_ASSERT(script->owner == cx->thread);
 #endif
-#ifdef JS_TRACER
-            js_PurgeScriptFragments(cx, script);
-#endif
         }
     }
+
+#ifdef JS_TRACER
+    js_PurgeScriptFragments(cx, script);
+#endif
 
     cx->free(script);
 }
