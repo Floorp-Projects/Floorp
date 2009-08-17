@@ -8,7 +8,7 @@ function check_crash_list(tab, crashes) {
   let crashlinks = doc.getElementById("tbody").getElementsByTagName("a");
   is(crashlinks.length, crashes.length, "about:crashes lists correct number of crash reports");
   for(let i = 0; i < crashes.length; i++) {
-    is(crashlinks[i].firstChild.textContent, crashes[i].id, i + ": crash ID is correct");
+    is(crashlinks[i].firstChild.textContent, "bp-" + crashes[i].id, i + ": crash ID is correct");
   }
   cleanup_fake_appdir();
   gBrowser.removeTab(tab);
