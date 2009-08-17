@@ -257,6 +257,9 @@ BookmarksStore.prototype = {
     // XXX Work around Bug 510628 by prepending parenT
     if (anno == PARENT_ANNO)
       val = "T" + val;
+    // XXX Work around Bug 510628 by prepending predecessoR
+    else if (anno == PREDECESSOR_ANNO)
+      val = "R" + val;
 
     return Svc.Annos.getItemsWithAnnotation(anno, {}).filter(function(id)
       Utils.anno(id, anno) == val);
@@ -327,16 +330,73 @@ BookmarksStore.prototype = {
     this._log.trace("Setting GUID of new item " + newId + " to " + record.id);
     this._setGUID(newId, record.id);
 
+    // Remember which guids now have the correct parent
+    let parented = [];
+    if (!record._orphan)
+      parented.push(newId);
+
     // Find orphans and reunite with this new folder parent
     if (record.type == "folder") {
       let orphans = this._findAnnoItems(PARENT_ANNO, record.id);
       this._log.debug("Reparenting orphans " + orphans + " to " + record.title);
       orphans.forEach(function(orphan) {
+        // Append the orphan under the parent unless it's supposed to be first
+        let insertPos = Svc.Bookmark.DEFAULT_INDEX;
+        if (!Svc.Annos.itemHasAnnotation(orphan, PREDECESSOR_ANNO))
+          insertPos = 0;
+
         // Move the orphan to the parent and drop the missing parent annotation
-        Svc.Bookmark.moveItem(orphan, newId, Svc.Bookmark.DEFAULT_INDEX);
+        Svc.Bookmark.moveItem(orphan, newId, insertPos);
         Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
+        parented.push(orphan);
       });
     }
+
+    // Reposition all chains of siblings for the now correctly parented items
+    parented.forEach(function(predId) {
+      let predGUID = GUIDForId(predId);
+      let followers = this._findAnnoItems(PREDECESSOR_ANNO, predGUID);
+      if (followers.length > 1)
+        this._log.warn(predId + " has more than one followers: " + followers);
+
+      // Start at the first follower and move the chain of followers
+      let parent = Svc.Bookmark.getFolderIdForItem(predId);
+      followers.forEach(function(follow) {
+        this._log.debug("Repositioning " + follow + " behind " + predId);
+        if (Svc.Bookmark.getFolderIdForItem(follow) != parent) {
+          this._log.warn("Follower doesn't have the same parent: " + parent);
+          return;
+        }
+
+        // Remove the annotation now that we're putting it in the right spot
+        Svc.Annos.removeItemAnnotation(follow, PREDECESSOR_ANNO);
+
+        // Process each item in the chain until we loop back to the start
+        let insertAfter = predId;
+        do {
+          // Figure out what's next in the chain
+          let followPos = Svc.Bookmark.getItemIndex(follow);
+          let nextFollow = Svc.Bookmark.getIdForItemAt(parent, followPos + 1);
+
+          let insertPos = Svc.Bookmark.getItemIndex(insertAfter) + 1;
+          Svc.Bookmark.moveItem(follow, parent, insertPos);
+          this._log.trace(["Moved", follow, "to", insertPos, "after",
+            insertAfter, "with", nextFollow, "next"].join(" "));
+
+          // Move to the next item and check some stop conditions
+          insertAfter = follow;
+          follow = nextFollow;
+
+          // Stop if we ran off the end of the folder
+          if (follow == -1)
+            break;
+
+          // We're at the end of a chain if the item is looking for its pred.
+          if (Svc.Annos.itemHasAnnotation(follow, PREDECESSOR_ANNO))
+            break;
+        } while (follow != predId);
+      }, this);
+    }, this);
   },
 
   remove: function BStore_remove(record) {
