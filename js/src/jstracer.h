@@ -855,6 +855,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus guardNotGlobalObject(JSObject* obj,
                                                              nanojit::LIns* obj_ins);
     void clearFrameSlotsFromCache();
+    JS_REQUIRES_STACK void putArguments();
     JS_REQUIRES_STACK JSRecordingStatus guardCallee(jsval& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
                                                         unsigned *depthp);
