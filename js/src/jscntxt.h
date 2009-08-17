@@ -184,6 +184,12 @@ struct JSTraceMonitor {
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
+
+    /* Flush the JIT cache. */
+    void flush();
+
+    /* Mark all objects baked into native code in the code cache. */
+    void mark(JSTracer *trc);
 };
 
 typedef struct InterpStruct InterpStruct;
@@ -268,6 +274,12 @@ struct JSThreadData {
      */
     JSFreePointerListTask *deallocatorTask;
 #endif
+
+    void mark(JSTracer *trc) {
+#ifdef JS_TRACER
+        traceMonitor.mark(trc);
+#endif
+    }
 };
 
 #ifdef JS_THREADSAFE
@@ -1293,6 +1305,9 @@ js_FinishThreads(JSRuntime *rt);
 
 extern void
 js_PurgeThreads(JSContext *cx);
+
+extern void
+js_TraceThreads(JSRuntime *rt, JSTracer *trc);
 
 /*
  * Ensures the JSOPTION_XML and JSOPTION_ANONFUNFIX bits of cx->options are

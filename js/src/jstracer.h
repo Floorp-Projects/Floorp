@@ -496,6 +496,9 @@ public:
     unsigned                branchCount;
     Queue<VMSideExit*>      sideExits;
     UnstableExit*           unstableExits;
+    /* All embedded GC things are registered here so the GC can scan them. */
+    Queue<jsval>            gcthings;
+    Queue<JSScopeProperty*> sprops;
 #ifdef DEBUG
     const char*             treeFileName;
     uintN                   treeLineNumber;
@@ -658,6 +661,11 @@ class TraceRecorder : public avmplus::GCObject {
     jsbytecode*             outer;     /* outer trace header PC */
     uint32                  outerArgc; /* outer trace deepest frame argc */
     bool                    loop;
+
+    nanojit::LIns* insImmObj(JSObject* obj);
+    nanojit::LIns* insImmFun(JSFunction* fun);
+    nanojit::LIns* insImmStr(JSString* str);
+    nanojit::LIns* insImmSprop(JSScopeProperty* sprop);
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
