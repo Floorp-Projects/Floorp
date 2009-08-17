@@ -53,7 +53,7 @@ def run_test(path, lib_dir):
     if OPTIONS.show_output:
         sys.stdout.write(out)
         sys.stdout.write(err)
-    return check_output(out, err, p.returncode)
+    return (check_output(out, err, p.returncode), out, err)
 
 assert_re = re.compile(r'Assertion failed:')
 stat_re = re.compile(r'^Trace stats check failed')
@@ -85,8 +85,22 @@ def run_tests(tests, lib_dir):
     complete = False
     try:
         for i, test in enumerate(tests):
-            if not run_test(test, lib_dir):
+            ok, out, err = run_test(test, lib_dir)
+            if not ok:
                 failures.append(test)
+
+            if OPTIONS.tinderbox:
+                if ok:
+                    print('TEST-PASS | trace-test.py | %s'%test)
+                else:
+                    lines = [ _ for _ in out.split('\n') + err.split('\n')
+                              if _ != '' ]
+                    if len(lines) >= 1:
+                        msg = lines[-1]
+                    else:
+                        msg = ''
+                    print('TEST-UNEXPECTED-FAIL | trace-test.py | %s: %s'%
+                          (test, msg))
 
             n = i + 1
             if pb:
@@ -130,6 +144,8 @@ if __name__ == '__main__':
                   help='exclude given test dir or path')
     op.add_option('--no-progress', dest='hide_progress', action='store_true',
                   help='hide progress bar')
+    op.add_option('--tinderbox', dest='tinderbox', action='store_true',
+                  help='Tinderbox-parseable output format')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
