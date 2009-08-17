@@ -1,10 +1,3 @@
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-
-function url(spec) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  return ios.newURI(spec, null, null);
-}
 var gPageA = null;
 var gPageB = null;
 
@@ -17,27 +10,34 @@ var gTabMoveCount = 0;
 var gPageLoadCount = 0;
 
 function test() {
+  waitForExplicitFinish();      
+
+  if (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow !=
+      window) {
+    setTimeout(test, 0);
+    window.focus();
+    return;
+  }
+
   var windows = Application.windows;
   ok(windows, "Check access to browser windows");
-  ok(windows.length, "There should be at least one browser window open");
+  is(windows.length, 1, "There should be one browser window open");
 
   var activeWin = Application.activeWindow;
   activeWin.events.addListener("TabOpen", onTabOpen);
   activeWin.events.addListener("TabClose", onTabClose);
   activeWin.events.addListener("TabMove", onTabMove);
 
-  gPageA = activeWin.open(url("chrome://mochikit/content/browser/browser/fuel/test/ContentA.html"));
+  gPageA = activeWin.open(makeURI("chrome://mochikit/content/browser/browser/fuel/test/ContentA.html"));
   gPageA.events.addListener("load", onPageAFirstLoad);
 
   is(activeWin.tabs.length, 2, "Checking length of 'Browser.tabs' after opening 1 additional tab");
-
-  waitForExplicitFinish();
 
   function onPageAFirstLoad(event) {
     gPageA.events.removeListener("load", onPageAFirstLoad);
     is(gPageA.uri.spec, event.data.uri.spec, "Checking event browser tab is equal to page A");
 
-    gPageB = activeWin.open(url("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
+    gPageB = activeWin.open(makeURI("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
     gPageB.events.addListener("load", delayAfterOpen);
     gPageB.focus();
 
@@ -106,7 +106,7 @@ function test() {
     // test loading new content with a frame into a tab
     // the event will be checked in onPageBLoadComplete
     gPageB.events.addListener("load", onPageBLoadWithFrames);
-    gPageB.load(url("chrome://mochikit/content/browser/browser/fuel/test/ContentWithFrames.html"));
+    gPageB.load(makeURI("chrome://mochikit/content/browser/browser/fuel/test/ContentWithFrames.html"));
   }
 
   function onPageBLoadWithFrames(event) {
@@ -121,7 +121,7 @@ function test() {
     // test loading new content into a tab
     // the event will be checked in onPageASecondLoad
     gPageA.events.addListener("load", onPageASecondLoad);
-    gPageA.load(url("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
+    gPageA.load(makeURI("chrome://mochikit/content/browser/browser/fuel/test/ContentB.html"));
   }
 
   function onPageASecondLoad(event) {
