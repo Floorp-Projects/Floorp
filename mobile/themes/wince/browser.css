@@ -326,7 +326,7 @@ autocompleteresult {
 }
 
 .autocomplete-item-tags {
-  color :black;
+  color: black;
   font-size: 8pt !important;
   font-weight: lighter;
 }
