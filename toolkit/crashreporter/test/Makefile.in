@@ -50,10 +50,8 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
   browser/aboutcrashes_utils.js \
-  browser/crashreport.sjs \
   browser/browser_aboutCrashes.js \
   browser/browser_bug471404.js \
-  browser/browser_aboutCrashesResubmit.js \
   $(NULL)
 
 libs::  $(_BROWSER_FILES)
