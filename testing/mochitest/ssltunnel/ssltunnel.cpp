@@ -410,7 +410,7 @@ void HandleConnection(void* data)
           // to send those data anyway.
           buffers[s2].bufferhead = buffers[s2].buffertail = buffers[s2].buffer;
           continue;
-        } // PR_POLL_EXCEPT handling
+        } // PR_POLL_EXCEPT, PR_POLL_ERR, PR_POLL_HUP handling
 
         if (out_flags & PR_POLL_READ && buffers[s].free())
         {
