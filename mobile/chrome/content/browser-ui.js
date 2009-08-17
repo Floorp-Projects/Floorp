@@ -837,7 +837,7 @@ var BookmarkList = {
   openBookmark: function() {
     let item = this._bookmarks.activeItem;
     if (item.spec) {
-      this._panel.hidden = true;
+      this.close();
       BrowserUI.goToURI(item.spec);
     }
   },
