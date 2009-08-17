@@ -53,15 +53,18 @@ ifeq (WINNT,$(OS_TARGET))
 # Building the CRT from source
 CRT_OBJ_DIR = $(CURDIR)/crtsrc
 MOZ_CRT_DLL_NAME = mozcrt19
+MOZ_CRTCPP_DLL_NAME = mozcpp19
 MOZ_CRT_STATIC_LIBS = libcmt libcpmt
 MOZ_CRT_DLL = $(CRT_OBJ_DIR)/build/intel/$(MOZ_CRT_DLL_NAME).dll
 MOZ_CRT_IMPORT_LIB = $(CRT_OBJ_DIR)/build/intel/$(MOZ_CRT_DLL_NAME).lib
+MOZ_CRTCPP_DLL = $(CRT_OBJ_DIR)/build/intel/$(MOZ_CRTCPP_DLL_NAME).dll
+MOZ_CRTCPP_IMPORT_LIB = $(CRT_OBJ_DIR)/build/intel/$(MOZ_CRTCPP_DLL_NAME).lib
 
-# copy the CRT DLL to dist/bin,
-# copy the import lib to dist/lib
+# copy the CRT DLLs to dist/bin,
+# copy the import libs to dist/lib
 libs:: $(MOZ_CRT_DLL) $(MOZ_CRT_IMPORT_LIB)
-	$(INSTALL) $(MOZ_CRT_DLL) $(FINAL_TARGET)
-	$(INSTALL) $(MOZ_CRT_IMPORT_LIB) $(DIST)/lib
+	$(INSTALL) $(MOZ_CRT_DLL) $(MOZ_CRTCPP_DLL) $(FINAL_TARGET)
+	$(INSTALL) $(MOZ_CRT_IMPORT_LIB) $(MOZ_CRTCPP_IMPORT_LIB) $(DIST)/lib
 
 $(MOZ_CRT_IMPORT_LIB): $(MOZ_CRT_DLL)
 
