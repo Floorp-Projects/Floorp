@@ -335,8 +335,8 @@ var BrowserUI = {
     bookmarkPopup.height = windowH / 4;
     bookmarkPopup.width = bookmarkPopupW;
     let starRect = this.starButton.getBoundingClientRect();
-    let popupMargin = 10;
-    bookmarkPopup.top = starRect.top + popupMargin;
+    const popupMargin = 10;
+    bookmarkPopup.top = Math.round(starRect.top) + popupMargin;
     bookmarkPopup.left = windowW - this.sidebarW - bookmarkPopupW - popupMargin;
 
     // select list UI
