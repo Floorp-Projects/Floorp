@@ -52,6 +52,7 @@ bin\msvcp80.dll
 bin\msvcr80.dll
 #else
 bin\mozcrt19.dll
+bin\mozcpp19.dll
 #endif
 #endif
 
