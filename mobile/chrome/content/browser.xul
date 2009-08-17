@@ -285,6 +285,14 @@
       </vbox>
     </hbox>
 
+    <vbox id="bookmark-popup" hidden="true" class="panel-dark" oncommand="BookmarkPopup.hide()" align="center">
+      <label value="&bookmarkPopup.label;"/>
+      <vbox>
+        <button label="&bookmarkEdit.label;" oncommand="BookmarkHelper.edit(); BrowserUI.hideControls();"/>
+        <button label="&bookmarkRemove.label;" oncommand="removeBookmarksForURI(getBrowser().currentURI);"/>
+      </vbox>
+    </vbox>
+
     <vbox id="bookmark-container" hidden="true" class="panel-dark" top="0" left="0">
       <hbox id="bookmark-form" align="start">
         <image id="bookmark-image" src="chrome://browser/skin/images/starred-default-64.png"/>
