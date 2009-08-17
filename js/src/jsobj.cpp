@@ -1946,11 +1946,17 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    obj = js_ValueToNonNullObject(cx, vp[2]);
-    if (!obj)
+    if (JSVAL_IS_PRIMITIVE(vp[2])) {
+        char *bytes = js_DecompileValueGenerator(cx, -argc, vp[2], NULL);
+        if (!bytes)
+            return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_UNEXPECTED_TYPE, bytes, "not an object");
+        JS_free(cx, bytes);
         return JS_FALSE;
-    vp[2] = OBJECT_TO_JSVAL(obj);
+    }
 
+    obj = JSVAL_TO_OBJECT(vp[2]);
     return obj->checkAccess(cx, ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
                             JSACC_PROTO, vp, &attrs);
 }
