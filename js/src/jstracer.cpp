@@ -8697,6 +8697,9 @@ TraceRecorder::record_JSOP_IFNE()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_ARGUMENTS()
 {
+    if (cx->fp->flags & JSFRAME_OVERRIDE_ARGS)
+        ABORT_TRACE("Can't trace |arguments| if |arguments| is assigned to");
+
     LIns* global_ins = INS_CONSTOBJ(globalObj);
     LIns* argc_ins = INS_CONST(cx->fp->argc);
     LIns* callee_ins = get(&cx->fp->argv[-2]);
