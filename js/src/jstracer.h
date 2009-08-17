@@ -775,9 +775,9 @@ class TraceRecorder : public avmplus::GCObject {
                                                               jsuword& pcval);
 
     void stobj_set_fslot(nanojit::LIns *obj_ins, unsigned slot,
-                         nanojit::LIns* v_ins, const char *name);
+                         nanojit::LIns* v_ins);
     void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
-                         nanojit::LIns* v_ins, const char *name);
+                         nanojit::LIns* v_ins);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
                         nanojit::LIns* v_ins);
 
