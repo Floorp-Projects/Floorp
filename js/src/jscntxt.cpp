@@ -1675,13 +1675,13 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
     } else if (JSVAL_IS_VOID(v)) {
         ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                           js_GetErrorMessage, NULL,
-                                          JSMSG_NULL_OR_UNDEFINED, bytes,
+                                          JSMSG_UNEXPECTED_TYPE, bytes,
                                           js_undefined_str, NULL);
     } else {
         JS_ASSERT(JSVAL_IS_NULL(v));
         ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                           js_GetErrorMessage, NULL,
-                                          JSMSG_NULL_OR_UNDEFINED, bytes,
+                                          JSMSG_UNEXPECTED_TYPE, bytes,
                                           js_null_str, NULL);
     }
 
