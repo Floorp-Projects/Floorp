@@ -539,13 +539,17 @@ autocompleteresult {
 }
 
 .autocomplete-item-tags {
+  color: black;
   font-size: 11.75pt !important;
   font-weight: lighter;
 }
 
 .autocomplete-item-tags[favorite=true]:after {
+  float: right;
+  position: relative;
+  top: -3pt;
   content: url(images/star-24.png);
-  margin: 1.6mm 2mm 0mm 1.5mm;
+  margin: 0mm 2mm 0mm 1.5mm;
 }
 
 .autocomplete-item-image {
