@@ -1236,8 +1236,8 @@ gfxFontUtils::DecodeFontName(const PRUint8 *aNameData, PRInt32 aByteLen,
         PRUint32 strLen = aByteLen / 2;
 #ifdef IS_LITTLE_ENDIAN
         aName.SetLength(strLen);
-        CopySwapUTF16(reinterpret_cast<const PRUnichar*>(aNameData),
-                      aName.BeginWriting(), strLen);
+        CopySwapUTF16(reinterpret_cast<const PRUint16*>(aNameData),
+                      reinterpret_cast<PRUint16*>(aName.BeginWriting()), strLen);
 #else
         aName.Assign(reinterpret_cast<const PRUnichar*>(aNameData), strLen);
 #endif    
