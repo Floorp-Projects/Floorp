@@ -173,9 +173,14 @@ function run_test() {
   var lastModified = bmsvc.getItemLastModified(newId);
   do_check_eq(lastModified, dateAdded);
 
-  // the time before we set the title, in microseconds
+  // The time before we set the title, in microseconds.
   var beforeSetTitle = Date.now() * 1000;
   do_check_true(beforeSetTitle >= beforeInsert);
+
+  // Workaround possible VM timers issues moving lastModified and dateAdded
+  // to the past.
+  bmsvc.setItemLastModified(newId, --lastModified);
+  bmsvc.setItemDateAdded(newId, --dateAdded);
 
   // set bookmark title
   bmsvc.setItemTitle(newId, "Google");
@@ -194,10 +199,8 @@ function run_test() {
   LOG("beforeSetTitle = " + beforeSetTitle);
   LOG("lastModified = " + lastModified);
   LOG("lastModified2 = " + lastModified2);
-  // XXX bug 381240
-  //do_check_true(lastModified2 > lastModified);
-  //do_check_true(lastModified2 >= dateAdded);
-  //do_check_true(lastModified2 >= beforeSetTitle);
+  do_check_true(lastModified2 > lastModified);
+  do_check_true(lastModified2 > dateAdded);
 
   // get item title
   var title = bmsvc.getItemTitle(newId);
@@ -371,6 +374,11 @@ function run_test() {
     var lastModified = bmsvc.getItemLastModified(kwTestItemId);
     do_check_eq(lastModified, dateAdded);
 
+    // Workaround possible VM timers issues moving lastModified and dateAdded
+    // to the past.
+    bmsvc.setItemLastModified(kwTestItemId, --lastModified);
+    bmsvc.setItemDateAdded(kwTestItemId, --dateAdded);
+
     bmsvc.setKeywordForBookmark(kwTestItemId, "bar");
 
     var lastModified2 = bmsvc.getItemLastModified(kwTestItemId);
@@ -378,9 +386,8 @@ function run_test() {
     LOG("dateAdded = " + dateAdded);
     LOG("lastModified = " + lastModified);
     LOG("lastModified2 = " + lastModified2);
-    // XXX bug 381240
-    //do_check_true(lastModified2 > lastModified);
-    //do_check_true(lastModified2 >= dateAdded);
+    do_check_true(lastModified2 > lastModified);
+    do_check_true(lastModified2 > dateAdded);
   } catch(ex) {
     do_throw("setKeywordForBookmark: " + ex);
   }
@@ -494,6 +501,11 @@ function run_test() {
   var lastModified = bmsvc.getItemLastModified(newId10);
   do_check_eq(lastModified, dateAdded);
 
+  // Workaround possible VM timers issues moving lastModified and dateAdded
+  // to the past.
+  bmsvc.setItemLastModified(newId10, --lastModified);
+  bmsvc.setItemDateAdded(newId10, --dateAdded);
+
   bmsvc.changeBookmarkURI(newId10, uri("http://foo11.com/"));
 
   // check that lastModified is set after we change the bookmark uri
@@ -502,9 +514,8 @@ function run_test() {
   LOG("dateAdded = " + dateAdded);
   LOG("lastModified = " + lastModified);
   LOG("lastModified2 = " + lastModified2);
-  // XXX bug 381240
-  //do_check_true(lastModified2 > lastModified);
-  //do_check_true(lastModified2 >= dateAdded);
+  do_check_true(lastModified2 > lastModified);
+  do_check_true(lastModified2 > dateAdded);
 
   do_check_eq(observer._itemChangedId, newId10);
   do_check_eq(observer._itemChangedProperty, "uri");
@@ -656,36 +667,32 @@ function run_test() {
 
 function testSimpleFolderResult() {
   // the time before we create a folder, in microseconds
-  var beforeCreate = Date.now() * 1000;
+  // Workaround possible VM timers issues subtracting 1us.
+  var beforeCreate = Date.now() * 1000 - 1;
   do_check_true(beforeCreate > 0);
 
   // create a folder
   var parent = bmsvc.createFolder(root, "test", bmsvc.DEFAULT_INDEX);
 
   var dateCreated = bmsvc.getItemDateAdded(parent);
-  do_check_true(dateCreated > 0);
-  // dateCreated can equal beforeCreate
   LOG("check that the folder was created with a valid dateAdded");
   LOG("beforeCreate = " + beforeCreate);
   LOG("dateCreated = " + dateCreated);
-  // XXX bug 381240
-  //do_check_true(dateCreated >= beforeCreate);
+  do_check_true(dateCreated > beforeCreate);
 
   // the time before we insert, in microseconds
-  var beforeInsert = Date.now() * 1000;
+  // Workaround possible VM timers issues subtracting 1us.
+  var beforeInsert = Date.now() * 1000 - 1;
   do_check_true(beforeInsert > 0);
 
   // insert a separator 
   var sep = bmsvc.insertSeparator(parent, bmsvc.DEFAULT_INDEX);
 
   var dateAdded = bmsvc.getItemDateAdded(sep);
-  do_check_true(dateAdded > 0);
-  // dateAdded can equal beforeInsert
   LOG("check that the separator was created with a valid dateAdded");
   LOG("beforeInsert = " + beforeInsert);
   LOG("dateAdded = " + dateAdded);
-  // XXX bug 381240
-  //do_check_true(dateAdded >= beforeInsert);
+  do_check_true(dateAdded > beforeInsert);
 
   // re-set item title separately so can test nodes' last modified
   var item = bmsvc.insertBookmark(parent, uri("about:blank"),
