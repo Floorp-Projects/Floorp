@@ -1,8 +1,8 @@
+//-----------------------------------------------------------------------------
+// "Hello world" example
 namespace mozilla {
 namespace test {
 
-//-----------------------------------------------------------------------------
-// "Hello world" example
 protocol Test
 {
 child:
@@ -12,10 +12,18 @@ parent:
     World();
 };
 
+} // namespace test
+} // namespace mozilla
 
 //-----------------------------------------------------------------------------
 // Example solution to exercise
-/*
+ /*
+include "nsTArray.h";
+using nsTArray<nsCString>;
+
+namespace mozilla {
+namespace test {
+ 
 sync protocol Test
 {
 both:
@@ -23,13 +31,13 @@ both:
     Pong(int status);
 
 parent:
-    GetValue(String key);
-    GetValues(StringArray keys);
-    sync SetValue(String key, String val) returns (bool ok);
+    GetValue(nsCString key);
+    GetValues(nsTArray<nsCString> keys);
+    sync SetValue(nsCString key, nsCString val) returns (bool ok);
 
 child:
-    TellValue(String key, String val);
-    TellValues(StringArray keys, StringArray vals);
+    TellValue(nsCString key, nsCString val);
+    TellValues(nsTArray<nsCString> keys, nsTArray<nsCString> vals);
 
 state START:
     send Ping goto START;
@@ -58,9 +66,7 @@ state TELLING_VALUES:
 
     send TellValues goto HAVE_VALUES;
 };
-//
-*/
 
 } // namespace test
 } // namespace mozilla
-
+*/
