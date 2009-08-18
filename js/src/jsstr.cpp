@@ -1263,13 +1263,13 @@ str_trimRight(JSContext *cx, uintN argc, jsval *vp)
 /*
  * Perl-inspired string functions.
  */
-typedef struct GlobData {
+struct GlobData {
     jsbytecode  *pc;            /* in: program counter resulting in us matching */
     uintN       flags;          /* inout: mode and flag bits, see below */
     uintN       optarg;         /* in: index of optional flags argument */
     JSString    *str;           /* out: 'this' parameter object as string */
     JSRegExp    *regexp;        /* out: regexp parameter object private data */
-} GlobData;
+};
 
 /*
  * Mode and flag bit definitions for match_or_replace's GlobData.flags field.
@@ -1408,34 +1408,34 @@ match_or_replace(JSContext *cx,
     return ok;
 }
 
-typedef struct MatchData {
+struct MatchData {
     GlobData    base;
     jsval       *arrayval;      /* NB: local root pointer */
-} MatchData;
+};
 
 static JSBool
 match_glob(JSContext *cx, jsint count, GlobData *data)
 {
-    MatchData *mdata;
-    JSObject *arrayobj;
-    JSSubString *matchsub;
-    JSString *matchstr;
-    jsval v;
+    JS_ASSERT(count <= JSVAL_INT_MAX);
 
-    mdata = (MatchData *)data;
-    arrayobj = JSVAL_TO_OBJECT(*mdata->arrayval);
+    MatchData *mdata = (MatchData *)data;
+    JSObject *arrayobj = JSVAL_TO_OBJECT(*mdata->arrayval);
     if (!arrayobj) {
         arrayobj = js_NewArrayObject(cx, 0, NULL);
         if (!arrayobj)
             return JS_FALSE;
         *mdata->arrayval = OBJECT_TO_JSVAL(arrayobj);
     }
-    matchsub = &cx->regExpStatics.lastMatch;
-    matchstr = js_NewStringCopyN(cx, matchsub->chars, matchsub->length);
+
+    JSString *str = cx->regExpStatics.input;
+    JSSubString &match = cx->regExpStatics.lastMatch;
+    ptrdiff_t off = match.chars - str->chars();
+    JS_ASSERT(off >= 0 && size_t(off) <= str->length());
+    JSString *matchstr = js_NewDependentString(cx, str, off, match.length);
     if (!matchstr)
         return JS_FALSE;
-    v = STRING_TO_JSVAL(matchstr);
-    JS_ASSERT(count <= JSVAL_INT_MAX);
+
+    jsval v = STRING_TO_JSVAL(matchstr);
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
     return arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
@@ -1476,7 +1476,7 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
     return match_or_replace(cx, NULL, &data, argc, vp);
 }
 
-typedef struct ReplaceData {
+struct ReplaceData {
     ReplaceData(JSContext *cx) : cb(cx) {}
     GlobData      base;           /* base struct state */
     JSObject      *lambda;        /* replacement function object or null */
@@ -1488,7 +1488,7 @@ typedef struct ReplaceData {
     JSSubString   dollarStr;      /* for "$$" interpret_dollar result */
     bool          globCalled;     /* record whether replace_glob has been called */
     JSCharVector  cb;             /* buffer built during match_or_replace */
-} ReplaceData;
+};
 
 static JSSubString *
 interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
@@ -1548,7 +1548,19 @@ interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
     return NULL;
 }
 
-static JSBool
+static JS_ALWAYS_INLINE bool
+PushRegExpSubstr(JSContext *cx, const JSSubString &sub, jsval *&sp)
+{
+    JSString *whole = cx->regExpStatics.input;
+    size_t off = sub.chars - whole->chars();
+    JSString *str = js_NewDependentString(cx, whole, off, sub.length);
+    if (!str)
+        return false;
+    *sp++ = STRING_TO_JSVAL(str);
+    return true;
+}
+
+static bool
 find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 {
     JSString *repstr;
@@ -1559,21 +1571,9 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
     lambda = rdata->lambda;
     if (lambda) {
-        uintN argc, i, j, m, n, p;
-        jsval *invokevp, *sp;
-        void *mark;
-        JSBool ok;
+        uintN i, m, n;
 
         js_LeaveTrace(cx);
-
-        /*
-         * Save the regExpStatics from the current regexp, since they may be
-         * clobbered by a RegExp usage in the lambda function.  Note that all
-         * members of JSRegExpStatics are JSSubStrings, so not GC roots, save
-         * input, which is rooted otherwise via vp[1] in str_replace.
-         */
-        JSRegExpStatics save = cx->regExpStatics;
-        JSBool freeMoreParens = JS_FALSE;
 
         /*
          * In the lambda case, not only do we find the replacement string's
@@ -1583,48 +1583,53 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
          * For $&, etc., we must create string jsvals from cx->regExpStatics.
          * We grab up stack space to keep the newborn strings GC-rooted.
          */
-        p = rdata->base.regexp->parenCount;
-        argc = 1 + p + 2;
-        invokevp = js_AllocStack(cx, 2 + argc, &mark);
+        uintN p = rdata->base.regexp->parenCount;
+        uintN argc = 1 + p + 2;
+        void *mark;
+        jsval *invokevp = js_AllocStack(cx, 2 + argc, &mark);
         if (!invokevp)
-            return JS_FALSE;
+            return false;
+
+        MUST_FLOW_THROUGH("lambda_out");
+        bool ok = false;
+        bool freeMoreParens = false;
+
+        /*
+         * Save the regExpStatics from the current regexp, since they may be
+         * clobbered by a RegExp usage in the lambda function.  Note that all
+         * members of JSRegExpStatics are JSSubStrings, so not GC roots, save
+         * input, which is rooted otherwise via vp[1] in str_replace.
+         */
+        JSRegExpStatics save = cx->regExpStatics;
 
         /* Push lambda and its 'this' parameter. */
-        sp = invokevp;
+        jsval *sp = invokevp;
         *sp++ = OBJECT_TO_JSVAL(lambda);
         *sp++ = OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, lambda));
 
-#define PUSH_REGEXP_STATIC(sub)                                               \
-    JS_BEGIN_MACRO                                                            \
-        JSString *str = js_NewStringCopyN(cx,                                 \
-                                          cx->regExpStatics.sub.chars,        \
-                                          cx->regExpStatics.sub.length);      \
-        if (!str) {                                                           \
-            ok = JS_FALSE;                                                    \
-            goto lambda_out;                                                  \
-        }                                                                     \
-        *sp++ = STRING_TO_JSVAL(str);                                         \
-    JS_END_MACRO
-
         /* Push $&, $1, $2, ... */
-        PUSH_REGEXP_STATIC(lastMatch);
+        if (!PushRegExpSubstr(cx, cx->regExpStatics.lastMatch, sp))
+            goto lambda_out;
+
         i = 0;
         m = cx->regExpStatics.parenCount;
         n = JS_MIN(m, 9);
-        for (j = 0; i < n; i++, j++)
-            PUSH_REGEXP_STATIC(parens[j]);
-        for (j = 0; i < m; i++, j++)
-            PUSH_REGEXP_STATIC(moreParens[j]);
+        for (uintN j = 0; i < n; i++, j++) {
+            if (!PushRegExpSubstr(cx, cx->regExpStatics.parens[j], sp))
+                goto lambda_out;
+        }
+        for (uintN j = 0; i < m; i++, j++) {
+            if (!PushRegExpSubstr(cx, cx->regExpStatics.moreParens[j], sp))
+                goto lambda_out;
+        }
 
         /*
          * We need to clear moreParens in the top-of-stack cx->regExpStatics
-         * to it won't be possibly realloc'ed, leaving the bottom-of-stack
+         * so it won't be possibly realloc'ed, leaving the bottom-of-stack
          * moreParens pointing to freed memory.
          */
         cx->regExpStatics.moreParens = NULL;
-        freeMoreParens = JS_TRUE;
-
-#undef PUSH_REGEXP_STATIC
+        freeMoreParens = true;
 
         /* Make sure to push undefined for any unmatched parens. */
         for (; i < p; i++)
@@ -1634,21 +1639,22 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         *sp++ = INT_TO_JSVAL((jsint)cx->regExpStatics.leftContext.length);
         *sp++ = STRING_TO_JSVAL(rdata->base.str);
 
-        ok = js_Invoke(cx, argc, invokevp, 0);
-        if (ok) {
-            /*
-             * NB: we count on the newborn string root to hold any string
-             * created by this js_ValueToString that would otherwise be GC-
-             * able, until we use rdata->repstr in do_replace.
-             */
-            repstr = js_ValueToString(cx, *invokevp);
-            if (!repstr) {
-                ok = JS_FALSE;
-            } else {
-                rdata->repstr = repstr;
-                *sizep = repstr->length();
-            }
-        }
+        if (!js_Invoke(cx, argc, invokevp, 0))
+            goto lambda_out;
+
+        /*
+         * NB: we count on the newborn string root to hold any string
+         * created by this js_ValueToString that would otherwise be GC-
+         * able, until we use rdata->repstr in do_replace.
+         */
+        repstr = js_ValueToString(cx, *invokevp);
+        if (!repstr)
+            goto lambda_out;
+
+        rdata->repstr = repstr;
+        *sizep = repstr->length();
+
+        ok = true;
 
       lambda_out:
         js_FreeStack(cx, mark);
