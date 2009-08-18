@@ -659,8 +659,12 @@ public:
                   nsCompatibility aCompatMode);
   NS_IMETHOD Destroy();
 
-  virtual NS_HIDDEN_(void*) AllocateFrame(size_t aSize);
-  virtual NS_HIDDEN_(void)  FreeFrame(size_t aSize, void* aFreeChunk);
+  virtual NS_HIDDEN_(void*) AllocateFrame(size_t aSize, unsigned int aCode);
+  virtual NS_HIDDEN_(void)  FreeFrame(size_t aSize, unsigned int aCode,
+                                      void* aChunk);
+
+  virtual NS_HIDDEN_(void*) AllocateMisc(size_t aSize);
+  virtual NS_HIDDEN_(void)  FreeMisc(size_t aSize, void* aChunk);
 
   // Dynamic stack memory allocation
   virtual NS_HIDDEN_(void) PushStackMemory();
@@ -1967,13 +1971,30 @@ PresShell::AllocateStackMemory(size_t aSize)
 }
 
 void
-PresShell::FreeFrame(size_t aSize, void* aPtr)
+PresShell::FreeFrame(size_t aSize, unsigned int /*unused*/, void* aPtr)
 {
   mFrameArena.Free(aSize, aPtr);
 }
 
 void*
-PresShell::AllocateFrame(size_t aSize)
+PresShell::AllocateFrame(size_t aSize, unsigned int /*unused*/)
+{
+  void* result = mFrameArena.Allocate(aSize);
+
+  if (result) {
+    memset(result, 0, aSize);
+  }
+  return result;
+}
+
+void
+PresShell::FreeMisc(size_t aSize, void* aPtr)
+{
+  mFrameArena.Free(aSize, aPtr);
+}
+
+void*
+PresShell::AllocateMisc(size_t aSize)
 {
   return mFrameArena.Allocate(aSize);
 }
@@ -4581,7 +4602,7 @@ PresShell::IsThemeSupportEnabled()
 NS_IMETHODIMP
 PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
 {
-  void* result = AllocateFrame(sizeof(nsCallbackEventRequest));
+  void* result = AllocateMisc(sizeof(nsCallbackEventRequest));
   if (NS_UNLIKELY(!result)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -4625,7 +4646,7 @@ PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
           mLastCallbackEventRequest = before;
         }
 
-        FreeFrame(sizeof(nsCallbackEventRequest), toFree);
+        FreeMisc(sizeof(nsCallbackEventRequest), toFree);
       } else {
         before = node;
         node = node->next;
@@ -4645,7 +4666,7 @@ PresShell::CancelPostedReflowCallbacks()
       mLastCallbackEventRequest = nsnull;
     }
     nsIReflowCallback* callback = node->callback;
-    FreeFrame(sizeof(nsCallbackEventRequest), node);
+    FreeMisc(sizeof(nsCallbackEventRequest), node);
     if (callback) {
       callback->ReflowCallbackCanceled();
     }
@@ -4664,7 +4685,7 @@ PresShell::HandlePostedReflowCallbacks(PRBool aInterruptible)
        mLastCallbackEventRequest = nsnull;
      }
      nsIReflowCallback* callback = node->callback;
-     FreeFrame(sizeof(nsCallbackEventRequest), node);
+     FreeMisc(sizeof(nsCallbackEventRequest), node);
      if (callback) {
        if (callback->ReflowFinished()) {
          shouldFlush = PR_TRUE;
