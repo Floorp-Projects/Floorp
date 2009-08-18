@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * vim: sw=4 ts=4 et :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -52,6 +52,24 @@ namespace ipc {
 typedef intptr_t NPRemoteIdentifier;
 
 } /* namespace ipc */
+
+namespace plugins {
+
+/**
+ * This is NPByteRange without the linked list.
+ */
+struct IPCByteRange
+{
+  int32_t offset;
+  uint32_t length;
+};  
+
+typedef std::vector<IPCByteRange> IPCByteRanges;
+
+typedef nsCString Buffer;
+
+} /* namespace plugins */
+
 } /* namespace mozilla */
 
 namespace IPC {
@@ -343,6 +361,29 @@ struct ParamTraits<NPVariant>
     }
 
     NS_ERROR("Unsupported type!");
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::plugins::IPCByteRange>
+{
+  typedef mozilla::plugins::IPCByteRange paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.offset);
+    WriteParam(aMsg, aParam.length);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    paramType p;
+    if (ReadParam(aMsg, aIter, &p.offset) &&
+        ReadParam(aMsg, aIter, &p.length)) {
+      *aResult = p;
+      return true;
+    }
+    return false;
   }
 };
 

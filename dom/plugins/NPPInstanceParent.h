@@ -50,19 +50,23 @@
 namespace mozilla {
 namespace plugins {
 
+class NPBrowserStreamParent;
+
 class NPPInstanceParent :
     public NPPProtocolParent
 {
-public:
-    NPPInstanceParent(const NPNetscapeFuncs* mNPNIface) :
-        mNPNIface(mNPNIface)
-    {
+    friend class NPAPIPluginParent;
+    friend class mozilla::plugins::NPBrowserStreamParent;
 
+public:
+    NPPInstanceParent(NPP npp, const NPNetscapeFuncs* npniface)
+        : mNPP(npp)
+        , mNPNIface(npniface)
+    {
     }
 
     virtual ~NPPInstanceParent()
     {
-
     }
 
     virtual nsresult AnswerNPN_GetValue(const nsString& in, nsString* out)
@@ -77,6 +81,21 @@ public:
     NPObjectDestructor(NPObjectProtocolParent* aObject,
                        NPError* _retval);
 
+    virtual NPBrowserStreamProtocolParent*
+    NPBrowserStreamConstructor(const nsCString& url, const uint32_t& length,
+                               const uint32_t& lastmodified,
+                               const nsCString& headers,
+                               const nsCString& mimeType, const bool& seekable,
+                               NPError* rv, uint16_t *stype);
+
+    virtual nsresult
+    AnswerNPBrowserStreamDestructor(NPBrowserStreamProtocolParent* stream,
+                                    const NPError& reason, const bool& artificial);
+
+    virtual nsresult
+    NPBrowserStreamDestructor(NPBrowserStreamProtocolParent* stream,
+                              const NPError& reason, const bool& artificial);
+
     NPError NPP_SetWindow(NPWindow* aWindow);
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);
 
@@ -88,35 +107,8 @@ public:
 
 
     NPError NPP_NewStream(NPMIMEType type, NPStream* stream,
-                          NPBool seekable, uint16_t* stype)
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return 1;
-    }
-
-    NPError NPP_DestroyStream(NPStream* stream, NPReason reason)
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return 1;
-    }
-
-    int32_t NPP_WriteReady(NPStream* stream)
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return 0;
-    }
-
-    int32_t NPP_Write(NPStream* stream,
-                      int32_t offset, int32_t len, void* buffer)
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return 0;
-    }
-
-    void NPP_StreamAsFile(NPStream* stream, const char* fname)
-    {
-        _MOZ_LOG(__FUNCTION__);
-    }
+                          NPBool seekable, uint16_t* stype);
+    NPError NPP_DestroyStream(NPStream* stream, NPReason reason);
 
     void NPP_Print(NPPrint* platformPrint)
     {
@@ -135,6 +127,7 @@ public:
     }
 
 private:
+    NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
 };
 

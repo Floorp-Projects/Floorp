@@ -37,10 +37,42 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "NPPInstanceParent.h"
+#include "NPBrowserStreamParent.h"
 
-using mozilla::plugins::NPPInstanceParent;
-using mozilla::plugins::NPObjectParent;
-using mozilla::plugins::NPObjectProtocolParent;
+namespace mozilla {
+namespace plugins {
+
+NPBrowserStreamProtocolParent*
+NPPInstanceParent::NPBrowserStreamConstructor(const nsCString& url, const uint32_t& length,
+                                              const uint32_t& lastmodified,
+                                              const nsCString& headers,
+                                              const nsCString& mimeType,
+                                              const bool& seekable,
+                                              NPError* rv, uint16_t *stype)
+{
+    NS_RUNTIMEABORT("Not reachable");
+    return NULL;
+}
+
+nsresult
+NPPInstanceParent::AnswerNPBrowserStreamDestructor(NPBrowserStreamProtocolParent* stream,
+                                                   const NPError& reason,
+                                                   const bool& artificial)
+{
+    if (!artificial) {
+        static_cast<NPBrowserStreamParent*>(stream)->NPN_DestroyStream(reason);
+    }
+    return NS_OK;
+}
+
+nsresult
+NPPInstanceParent::NPBrowserStreamDestructor(NPBrowserStreamProtocolParent* stream,
+                                             const NPError& reason,
+                                             const bool& artificial)
+{
+    delete stream;
+    return NS_OK;
+}
 
 NPError
 NPPInstanceParent::NPP_SetWindow(NPWindow* aWindow)
@@ -75,6 +107,33 @@ NPPInstanceParent::NPP_GetValue(NPPVariable variable, void *ret_value)
     return NPERR_GENERIC_ERROR;
 }
 
+NPError
+NPPInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
+                                 NPBool seekable, uint16_t* stype)
+{
+    _MOZ_LOG(__FUNCTION__);
+        
+    NPError err;
+    CallNPBrowserStreamConstructor(new NPBrowserStreamParent(this, stream),
+                                   nsCString(stream->url),
+                                   stream->end,
+                                   stream->lastmodified,
+                                   nsCString(stream->headers),
+                                   nsCString(type), seekable, &err, stype);
+    return err;
+}    
+
+NPError
+NPPInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
+{
+    NPBrowserStreamParent* sp =
+        static_cast<NPBrowserStreamParent*>(stream->pdata);
+    if (sp->mNPP != this)
+        NS_RUNTIMEABORT("Mismatched plugin data");
+
+    return CallNPBrowserStreamDestructor(sp, reason, false);
+}
+
 NPObjectProtocolParent*
 NPPInstanceParent::NPObjectConstructor(NPError* _retval)
 {
@@ -89,3 +148,6 @@ NPPInstanceParent::NPObjectDestructor(NPObjectProtocolParent* aObject,
     NS_NOTYETIMPLEMENTED("NPPInstanceParent::NPObjectDestructor");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+} // namespace plugins
+} // namespace mozilla

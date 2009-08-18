@@ -1,0 +1,33 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+
+include protocol "NPP.ipdl";
+
+using mozilla::plugins::Buffer;
+using mozilla::plugins::IPCByteRanges;
+
+using NPError;
+
+namespace mozilla {
+namespace plugins {
+
+/**
+ * NPBrowserStream represents a NPStream sent from the browser to the plugin.
+ */
+
+rpc protocol NPBrowserStream
+{
+  manager NPP;
+
+child:
+  rpc NPP_WriteReady(int32_t newlength) returns (int32_t size);
+  rpc NPP_Write(int32_t offset, Buffer data)
+    returns (int32_t consumed);
+
+  rpc NPP_StreamAsFile(nsCString fname);
+
+parent:
+  rpc NPN_RequestRead(IPCByteRanges ranges) returns (NPError result);
+};
+
+} // namespace plugins
+} // namespace mozilla

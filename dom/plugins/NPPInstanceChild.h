@@ -60,6 +60,8 @@ class NPPInstanceChild : public NPPProtocolChild
 #endif
 
 protected:
+    friend class NPBrowserStreamChild;
+
     virtual nsresult AnswerNPP_SetWindow(const NPWindow& window, NPError* rv);
 
     virtual nsresult AnswerNPP_GetValue(const nsString& key, nsString* value);
@@ -71,6 +73,17 @@ protected:
     NPObjectDestructor(NPObjectProtocolChild* aObject,
                        NPError* _retval);
 
+
+    virtual NPBrowserStreamProtocolChild*
+    NPBrowserStreamConstructor(const nsCString& url, const uint32_t& length,
+                               const uint32_t& lastmodified,
+                               const nsCString& headers,
+                               const nsCString& mimeType, const bool& seekable,
+                               NPError* rv, uint16_t *stype);
+
+    virtual nsresult
+    NPBrowserStreamDestructor(NPBrowserStreamProtocolChild* stream,
+                              const NPError& reason, const bool& artificial);
 
 public:
     NPPInstanceChild(const NPPluginFuncs* aPluginIface) :
