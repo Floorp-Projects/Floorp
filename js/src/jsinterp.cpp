@@ -1488,7 +1488,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.callobj = down->callobj;
         frame.argsobj = down->argsobj;
         frame.varobj = down->varobj;
-        frame.fun = down->fun;
+        frame.fun = (script->staticLevel > 0) ? down->fun : NULL;
         frame.thisv = down->thisv;
         if (down->flags & JSFRAME_COMPUTED_THIS)
             flags |= JSFRAME_COMPUTED_THIS;
@@ -1541,9 +1541,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
             } else {
                 sharps[0] = sharps[1] = JSVAL_VOID;
             }
-        } else
+        }
 #endif
-            JS_ASSERT_IF(down, script->nfixed == 0);
     } else {
         frame.slots = NULL;
     }
