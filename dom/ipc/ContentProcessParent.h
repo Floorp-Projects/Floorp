@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: sw=4 ts=4 et : */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -91,11 +91,15 @@ private:
     ContentProcessParent();
     virtual ~ContentProcessParent();
 
-    virtual PIFrameEmbeddingParent* PIFrameEmbeddingConstructor(const MagicWindowHandle& parentWidget);
+    virtual PIFrameEmbeddingParent* PIFrameEmbeddingConstructor(
+            const MagicWindowHandle& parentWidget);
     virtual nsresult PIFrameEmbeddingDestructor(PIFrameEmbeddingParent* frame);
 
     virtual PTestShellParent* PTestShellConstructor();
     virtual nsresult PTestShellDestructor(PTestShellParent* shell);
+
+    virtual PNeckoParent* PNeckoConstructor();
+    virtual nsresult PNeckoDestructor(PNeckoParent* necko);
 
     mozilla::Monitor mMonitor;
 

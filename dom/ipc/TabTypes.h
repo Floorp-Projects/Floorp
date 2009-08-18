@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
+
 #ifndef mozilla_tabs_TabTypes_h
 #define mozilla_tabs_TabTypes_h
 
