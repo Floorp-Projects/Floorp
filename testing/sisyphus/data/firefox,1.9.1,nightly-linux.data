@@ -1,6 +1,6 @@
 product=firefox
 branch=1.9.1
-url=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0pre.en-US.linux-i686.tar.bz2
+url=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1/firefox-3.5.3pre.en-US.linux-i686.tar.bz2
 profilename=firefox-1.9.1-profile
 profiledirectory=/tmp/firefox-1.9.1-profile
 executablepath=/tmp/firefox-1.9.1

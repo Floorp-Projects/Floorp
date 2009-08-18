@@ -41,7 +41,7 @@ if [[ -z "$TEST_DIR" ]]; then
     cat <<EOF
 `basename $0`: error
 
-TEST_DIR, the location of the Sisyphus framework, 
+TEST_DIR, the location of the Sisyphus framework,
 is required to be set prior to calling this script.
 EOF
     exit 2
@@ -72,7 +72,7 @@ Outputs to stdout the universe data for this machine.
 variable            description
 ===============     ============================================================
 -p products         required. one or more of firefox, thunderbird, fennec, js
--b branches         required. one or more of 1.8.0, 1.8.1, 1.9.0, 1.9.1, 1.9.2
+-b branches         required. one or more of supported branches. set library.sh
 -R repositories     required. one or more of CVS, mozilla-central, ...
 -T buildtype        required. one or more of opt debug
 
@@ -82,15 +82,15 @@ EOF
 }
 
 while getopts "p:b:R:T:" optname
-do 
+do
     case $optname in
-        p) 
+        p)
             products=$OPTARG;;
-        b) 
+        b)
             branches=$OPTARG;;
         R)
             repos=$OPTARG;;
-        T) 
+        T)
             buildtypes=$OPTARG;;
     esac
 done
@@ -113,14 +113,14 @@ source $TEST_DIR/bin/library.sh
                 continue
             fi
 
-	        for buildtype in $buildtypes; do
-	            if [[ $product == "js" ]]; then
-		            testtype=shell
-	            else
-		            testtype=browser
-	            fi
-	            echo "TEST_OS=$OSID, TEST_KERNEL=$TEST_KERNEL, TEST_PROCESSORTYPE=$TEST_PROCESSORTYPE, TEST_MEMORY=$TEST_MEMORY, TEST_TIMEZONE=$TEST_TIMEZONE, TEST_BRANCH=$branch, TEST_REPO=$repo, TEST_BUILDTYPE=$buildtype, TEST_TYPE=$testtype"
-	        done
+            for buildtype in $buildtypes; do
+                if [[ $product == "js" ]]; then
+                    testtype=shell
+                else
+                    testtype=browser
+                fi
+                echo "TEST_OS=$OSID, TEST_KERNEL=$TEST_KERNEL, TEST_PROCESSORTYPE=$TEST_PROCESSORTYPE, TEST_MEMORY=$TEST_MEMORY, TEST_TIMEZONE=$TEST_TIMEZONE, TEST_BRANCH=$branch, TEST_REPO=$repo, TEST_BUILDTYPE=$buildtype, TEST_TYPE=$testtype"
+            done
         done
     done
 done) | sort -u

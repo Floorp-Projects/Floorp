@@ -64,8 +64,8 @@ usage()
 
 usage: set-build-env.sh -p product -b branch -T buildtype [-e extra]
 
--p product      one of js firefox thunderbird fennec
--b branch       one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
+-p product      one of js firefox.
+-b branch       one of supported branches. see library.sh
 -T buildtype    one of opt debug
 -e extra        extra qualifier to pick mozconfig and tree
 
@@ -78,7 +78,7 @@ myexit()
 
     case $0 in
         *bash*)
-	        # prevent "sourced" script calls from 
+            # prevent "sourced" script calls from
             # exiting the current shell.
             break 99;;
         *)
@@ -90,8 +90,8 @@ for step in step1; do # dummy loop for handling exits
 
     unset product branch buildtype extra
 
-    while getopts $options optname ; 
-      do 
+    while getopts $options optname ;
+      do
       case $optname in
           p) product=$OPTARG;;
           b) branch=$OPTARG;;
@@ -130,8 +130,12 @@ for step in step1; do # dummy loop for handling exits
     elif [[ $branch == "1.9.0" ]]; then
         export BRANCH_CO_FLAGS="";
     elif [[ $branch == "1.9.1" ]]; then
+        TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.1}
         export BRANCH_CO_FLAGS="";
     elif [[ $branch == "1.9.2" ]]; then
+        TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.2}
+        export BRANCH_CO_FLAGS="";
+    elif [[ $branch == "1.9.3" ]]; then
         TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
         export BRANCH_CO_FLAGS="";
     else
@@ -227,8 +231,9 @@ for step in step1; do # dummy loop for handling exits
                         startbat=start-msvc71.bat
                     fi
                     ;;
-                1.9.0|1.9.1|1.9.2)
+                *)
                     # msvc8 official, vc7.1, (2003), vc9 (2009) supported
+                    # for 1.9.0 and later
                     if [[ -n "$VC8DIR" ]]; then
                         startbat=start-msvc8.bat
                         # set VCINSTALLDIR for use in detecting the MS CRT
@@ -316,7 +321,7 @@ for step in step1; do # dummy loop for handling exits
             export buildbash="/bin/bash"
             export bashlogin=-l
 
-            # if a 64 bit linux system, assume the 
+            # if a 64 bit linux system, assume the
             # compiler is in the standard reference
             # location /tools/gcc/bin/
             case "$TEST_PROCESSORTYPE" in
@@ -339,16 +344,7 @@ for step in step1; do # dummy loop for handling exits
     export CONFIG_SHELL=$buildbash
     export CONFIGURE_ENV_ARGS=$buildbash
 
-    # note that thunderbird and fennec based on 1.9.1 can not be contained in the
-    # same tree as firefox since they come from different repositories.
-    case "$branch-$product" in
-        1.9.1-thunderbird)
-            export BUILDTREE="${BUILDTREE:-$BUILDDIR/$branch-$product$extra}"
-            ;;
-        *)
-            export BUILDTREE="${BUILDTREE:-$BUILDDIR/$branch$extra}"
-            ;;
-    esac
+    export BUILDTREE="${BUILDTREE:-$BUILDDIR/$branch$extra}"
 
     #
     # extras can't be placed in mozconfigs since not all parts
@@ -400,32 +396,14 @@ for step in step1; do # dummy loop for handling exits
                 export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.1}
                 ;;
             1.9.2)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.2}
+                ;;
+            1.9.3)
                 export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
                 ;;
         esac
         export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
 
-    elif [[ $product == "thunderbird" ]]; then
-        project=mail
-        case $branch in
-            1.8.*);;
-            1.9.0);;
-            *)
-                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/comm-central}
-                ;;
-        esac
-        export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-thunderbird-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
-    elif [[ $product == "fennec" ]]; then
-        project=mobile
-        case $branch in
-            1.9.1)
-                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.1}
-                ;;
-            1.9.2)
-                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
-                ;;
-        esac
-        export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-fennec-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
     else
         echo "Assuming project=browser for product: $product"
         project=browser
@@ -434,6 +412,9 @@ for step in step1; do # dummy loop for handling exits
                 export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.1}
                 ;;
             1.9.2)
+                export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.2}
+                ;;
+            1.9.3)
                 export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
                 ;;
         esac
@@ -471,31 +452,13 @@ for step in step1; do # dummy loop for handling exits
         js)
             jsshellsourcepath=${jsshellsourcepath:-$BUILDTREE/mozilla/js/src}
             ;;
-        thunderbird)
-            profilename=${profilename:-$product-$branch$extra-profile}
-            profiledirectory=${profiledirectory:-/tmp/$product-$branch$extra-profile}
-            userpreferences=${userpreferences:-$TEST_DIR/prefs/test-user.js}
-            extensiondir=${extensiondir:-$TEST_DIR/xpi}
-            if [[ $branch == "1.8.0" || $branch = "1.8.1" || $branch == "1.9.0" ]]; then
-                executablepath=${executablepath:-$BUILDTREE/mozilla/$product-$buildtype/dist}
-            else
-                executablepath=${executablepath:-$BUILDTREE/mozilla/$product-$buildtype/mozilla/dist}
-            fi
-            ;;
-        fennec)
-            profilename=${profilename:-$product-$branch$extra-profile}
-            profiledirectory=${profiledirectory:-/tmp/$product-$branch$extra-profile}
-            userpreferences=${userpreferences:-$TEST_DIR/prefs/test-user.js}
-            extensiondir=${extensiondir:-$TEST_DIR/xpi}
-            executablepath=${executablepath:-$BUILDTREE/mozilla/$product-$buildtype/mobile/dist}
-            ;;
     esac
 
     if [[ -n "$datafiles" && ! -e $datafiles ]]; then
         # if there is not already a data file for this configuration, create it
         # this will save this configuration for the tester.sh and other scripts
         # which use datafiles for passing configuration values.
-        
+
         echo product=\${product:-$product}                                          >> $datafiles
         echo branch=\${branch:-$branch}                                             >> $datafiles
         echo buildtype=\${buildtype:-$buildtype}                                    >> $datafiles
@@ -518,4 +481,3 @@ for step in step1; do # dummy loop for handling exits
     echo "mozconfig: $MOZCONFIG"
     cat $MOZCONFIG | sed 's/^/mozconfig: /'
 done
-

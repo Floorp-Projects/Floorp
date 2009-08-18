@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# This script contains a number of variables, functions, etc which 
+# This script contains a number of variables, functions, etc which
 # are reused across a number of scripts. It should be included in each
 # script prior to any other commands as follows:
 #
@@ -47,10 +47,10 @@ if [[ -n "$DEBUG" ]]; then
 fi
 
 # export variables
-set -a 
+set -a
 
-# in the event of an untrapped script error tail the test log, 
-# if it exists, to stderr then echo a FATAL ERROR message to the 
+# in the event of an untrapped script error tail the test log,
+# if it exists, to stderr then echo a FATAL ERROR message to the
 # test log and stderr.
 
 function _err()
@@ -94,13 +94,13 @@ error()
     local lineno=$2
 
     debug "error: $0:$LINENO"
-    
+
     echo -e "FATAL ERROR in script $0:$lineno $message\n" 1>&2
     if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
         return 0
     fi
     exit 2
-} 
+}
 
 
 if [[ -z "$LIBRARYSH" ]]; then
@@ -112,36 +112,22 @@ if [[ -z "$LIBRARYSH" ]]; then
         local branch=$2
 
         case $product in
-            js|firefox|thunderbird|fennec)
+            js|firefox)
                 ;;
             *)
-                error "product \"$product\" must be one of firefox, thunderbird, or fennec" $LINENO
+                error "product \"$product\" must be one of js or firefox" $LINENO
         esac
 
         case $branch in
-            1.8.0|1.8.1|1.9.0|1.9.1|1.9.2)
+            1.8.0|1.8.1|1.9.0|1.9.1|1.9.2|1.9.3)
                 ;;
             *)
-                error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0 1.9.1 1.9.2" $LINENO
+                error "branch \"$branch\" must be one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2 1.9.3" $LINENO
         esac
 
-        # special case thunderbird and fennec due to their different
-        # repository and build tree structures.
-        case "$product" in
-            "thunderbird")
-                if [[ $branch == "1.9.2" ]]; then
-                    error "thunderbird on branch 1.9.2 is not supported"
-                fi
-                ;;
-            "fennec")
-                if [[ $branch != "1.9.1" && "$branch" != "1.9.2" ]]; then
-                    error "fennec on branch $branch is not supported"
-                fi
-                ;;
-        esac
-     } 
+     }
 
-    # Darwin 8.11.1's |which| does not return a non-zero exit code if the 
+    # Darwin 8.11.1's |which| does not return a non-zero exit code if the
     # program can not be found. Therefore, kludge around it.
     findprogram()
     {
@@ -170,14 +156,14 @@ if [[ -z "$LIBRARYSH" ]]; then
     }
 
     # loaddata
-    # 
+    #
     # load data files into environment
     loaddata()
     {
         local datafiles="$@"
         local datafile
         if [[ -n "$datafiles" ]]; then
-            for datafile in $datafiles; do 
+            for datafile in $datafiles; do
                 if [[ ! -e "$datafile" ]]; then
                     error "datafile $datafile does not exist"
                 fi
@@ -227,7 +213,7 @@ if [[ -z "$LIBRARYSH" ]]; then
 
     # dumpvars varname1, ...
     #
-    # dumps name=value pairs to stdout for each variable named 
+    # dumps name=value pairs to stdout for each variable named
     # in argument list
 
     dumpvars()
@@ -267,9 +253,6 @@ if [[ -z "$LIBRARYSH" ]]; then
                 case "$OSID" in
                     darwin)
                         get_executable_filter="Contents/MacOS/$get_executable_product"
-                        if [[ "$get_executable_product" == "thunderbird" ]]; then
-                            get_executable_name="$get_executable_product-bin"
-                        fi
                         ;;
                     *)
                         get_executable_filter="$get_executable_product"
@@ -286,7 +269,7 @@ if [[ -z "$LIBRARYSH" ]]; then
                 error "get_executable $product $branch $executablepath returned empty path" $LINENO
             fi
 
-            if [[ ! -x "$executable" ]]; then 
+            if [[ ! -x "$executable" ]]; then
                 error "executable \"$executable\" is not executable" $LINENO
             fi
 
