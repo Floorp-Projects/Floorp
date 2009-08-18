@@ -72,6 +72,7 @@
 #include "jsstaticcheck.h"
 #include "jstracer.h"
 #include "jslibmath.h"
+#include "jsvector.h"
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"

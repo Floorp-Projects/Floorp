@@ -503,5 +503,6 @@ JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToNumber)
 JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToString)
 JS_DECLARE_CALLINFO(js_Arguments)
 JS_DECLARE_CALLINFO(js_NewNullClosure)
+JS_DECLARE_CALLINFO(js_ConcatN)
 
 #endif /* jsbuiltins_h___ */

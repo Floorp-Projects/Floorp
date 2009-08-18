@@ -1024,6 +1024,8 @@ public:
     friend class TypeCompatibilityVisitor;
     friend class SlotMap;
     friend class DefaultSlotMap;
+    friend jsval *js_ConcatPostImacroStackCleanup(uint32 argc, JSFrameRegs &regs,
+                                                  TraceRecorder *recorder);
 };
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 #define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
@@ -1193,6 +1195,10 @@ struct TraceVisStateObj {
 };
 
 #endif /* MOZ_TRACEVIS */
+
+extern jsval *
+js_ConcatPostImacroStackCleanup(uint32 argc, JSFrameRegs &regs,
+                                TraceRecorder *recorder);
 
 #else  /* !JS_TRACER */
 
