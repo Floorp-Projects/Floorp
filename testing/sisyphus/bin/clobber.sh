@@ -53,7 +53,7 @@ case $product in
             exit
         fi 
 
-        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk clobber" 2>&1; then
+        if ! $buildbash $bashlogin -c "export PATH=\"$BUILDPATH\"; cd $BUILDTREE/mozilla; make -f client.mk clobber" 2>&1; then
             echo "error during client.mk clobber" $LINENO
             echo "Forcing clobber" $LINENO
             rm -fR $BUILDTREE/mozilla/$product-$buildtype/

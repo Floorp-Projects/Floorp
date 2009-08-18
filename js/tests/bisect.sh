@@ -143,7 +143,15 @@ fi
 
 OPTIND=1
 
+# evaluate set-build-env.sh in this process to pick up the necessary environment
+# variables, but restore the PATH and PYTHON to prevent their interfering with
+# Sisyphus.
+
+savepath="$PATH"
+savepython="$PYTHON"
 eval source $TEST_DIR/bin/set-build-env.sh -p $bisect_product -b $bisect_branch $bisect_extraflag -T $bisect_buildtype > /dev/null
+PATH=$savepath
+PYTHON=$savepython
 
 # TEST_JSDIR must be set after set-build-env.sh is called
 # on Windows since TEST_DIR can be modified in set-build-env.sh
