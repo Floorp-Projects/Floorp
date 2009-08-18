@@ -3581,23 +3581,6 @@ JoinPeers(Assembler* assm, VMSideExit* exit, VMFragment* target)
     exit->root()->getTreeInfo()->linkedTrees.addUnique(target);
 }
 
-static bool
-JoinPeersIfCompatible(Assembler* assm, Fragment* stableFrag, TreeInfo* stableTree,
-                      VMSideExit* exit)
-{
-    JS_ASSERT(exit->numStackSlots == stableTree->nStackTypes);
-
-    /* Must have a matching type unstable exit. */
-    if ((exit->numGlobalSlots + exit->numStackSlots != stableTree->typeMap.length()) ||
-        memcmp(exit->fullTypeMap(), stableTree->typeMap.data(), stableTree->typeMap.length())) {
-       return false;
-    }
-
-    JoinPeers(assm, exit, (VMFragment*)stableFrag);
-
-    return true;
-}
-
 /* Results of trying to connect an arbitrary type A with arbitrary type B */
 enum TypeCheckResult
 {
@@ -3926,6 +3909,9 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
     JS_ASSERT(peer);
     joinEdgesToEntry(fragmento, peer);
 
+    debug_only_stmt(DumpPeerStability(traceMonitor, peer->ip, peer->globalObj,
+                                      peer->globalShape, peer->argc);)
+
     debug_only_print0(LC_TMTracer,
                       "updating specializations on dependent and linked trees\n");
     if (fragment->root->vmprivate)
@@ -3981,93 +3967,65 @@ TypeMapLinkability(JSContext* cx, const TypeMap& typeMap, VMFragment* peer)
     return consensus;
 }
 
+static unsigned
+FindUndemotesInTypemaps(JSContext* cx, const TypeMap& typeMap, TreeInfo* treeInfo,
+                        Queue<unsigned>& undemotes)
+{
+    undemotes.setLength(0);
+    unsigned minSlots = JS_MIN(typeMap.length(), treeInfo->typeMap.length());
+    for (unsigned i = 0; i < minSlots; i++) {
+        if (typeMap[i] == TT_INT32 && treeInfo->typeMap[i] == TT_DOUBLE) {
+            undemotes.add(i);
+        } else if (typeMap[i] != treeInfo->typeMap[i]) {
+            return 0;
+        }
+    }
+    for (unsigned i = 0; i < undemotes.length(); i++)
+        MarkSlotUndemotable(cx, treeInfo, undemotes[i]);
+    return undemotes.length();
+}
+
 JS_REQUIRES_STACK void
 TraceRecorder::joinEdgesToEntry(Fragmento* fragmento, VMFragment* peer_root)
 {
-    if (fragment->kind == LoopTrace) {
-        TreeInfo* ti;
-        Fragment* peer;
-        JSTraceType* t1;
-        JSTraceType* t2;
-        UnstableExit* uexit, **unext;
-        uint32* stackDemotes = (uint32*)alloca(sizeof(uint32) * treeInfo->nStackTypes);
-        uint32* globalDemotes = (uint32*)alloca(sizeof(uint32) * treeInfo->nGlobalTypes());
+    if (fragment->kind != LoopTrace)
+        return;
 
-        for (peer = peer_root; peer; peer = peer->peer) {
-            if (!peer->code())
-                continue;
-            ti = (TreeInfo*)peer->vmprivate;
-            uexit = ti->unstableExits;
-            unext = &ti->unstableExits;
-            while (uexit != NULL) {
-                Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-                bool remove = JoinPeersIfCompatible(assm, fragment, treeInfo, uexit->exit);
-                JS_ASSERT(!remove || fragment != peer);
-                debug_only_stmt(
-                    if (remove) {
-                        debug_only_printf(LC_TMTracer,
-                                          "Joining type-stable trace to target exit %p->%p.\n",
-                                          (void*)uexit->fragment, (void*)uexit->exit);
-                    }
-                )
-                if (!remove) {
-                    /*
-                     * See if this exit contains mismatch demotions, which
-                     * imply trashing a tree.  This is actually faster than
-                     * trashing the original tree as soon as the instability is
-                     * detected, since we could have compiled a fairly stable
-                     * tree that ran faster with integers.
-                     */
-                    unsigned stackCount = 0;
-                    unsigned globalCount = 0;
-                    t1 = treeInfo->stackTypeMap();
-                    t2 = uexit->exit->stackTypeMap();
-                    for (unsigned i = 0; i < uexit->exit->numStackSlots; i++) {
-                        if (t2[i] == TT_INT32 && t1[i] == TT_DOUBLE) {
-                            stackDemotes[stackCount++] = i;
-                        } else if (t2[i] != t1[i]) {
-                            stackCount = 0;
-                            break;
-                        }
-                    }
-                    t1 = treeInfo->globalTypeMap();
-                    t2 = uexit->exit->globalTypeMap();
-                    for (unsigned i = 0; i < uexit->exit->numGlobalSlots; i++) {
-                        if (t2[i] == TT_INT32 && t1[i] == TT_DOUBLE) {
-                            globalDemotes[globalCount++] = i;
-                        } else if (t2[i] != t1[i]) {
-                            globalCount = 0;
-                            stackCount = 0;
-                            break;
-                        }
-                    }
-                    if (stackCount || globalCount) {
-                        for (unsigned i = 0; i < stackCount; i++)
-                            oracle.markStackSlotUndemotable(cx, stackDemotes[i]);
-                        for (unsigned i = 0; i < globalCount; i++)
-                            oracle.markGlobalSlotUndemotable(cx, ti->globalSlots->get(globalDemotes[i]));
-                        JS_ASSERT(peer == uexit->fragment->root);
-                        if (fragment == peer)
-                            trashSelf = true;
-                        else
-                            whichTreesToTrash.addUnique(uexit->fragment->root);
-                        break;
-                    }
+    TypeMap typeMap;
+    Queue<unsigned> undemotes;
+
+    for (VMFragment* peer = peer_root; peer; peer = (VMFragment*)peer->peer) {
+        TreeInfo* ti = peer->getTreeInfo();
+        if (!ti)
+            continue;
+        UnstableExit* uexit = ti->unstableExits;
+        while (uexit != NULL) {
+            /* Build the full typemap for this unstable exit */
+            FullMapFromExit(typeMap, uexit->exit);
+            /* Check its compatibility against this tree */
+            TypeConsensus consensus = TypeMapLinkability(cx, typeMap, (VMFragment*)fragment->root);
+            JS_ASSERT_IF(consensus == TypeConsensus_Okay, peer != fragment);
+            if (consensus == TypeConsensus_Okay) {
+                debug_only_printf(LC_TMTracer,
+                                  "Joining type-stable trace to target exit %p->%p.\n",
+                                  (void*)uexit->fragment, (void*)uexit->exit);
+                /* It's okay! Link together and remove the unstable exit. */
+                JoinPeers(traceMonitor->assembler, uexit->exit, (VMFragment*)fragment);
+                uexit = ti->removeUnstableExit(uexit->exit);
+            } else {
+                /* Check for int32->double slots that suggest trashing. */
+                if (FindUndemotesInTypemaps(cx, typeMap, treeInfo, undemotes)) {
+                    JS_ASSERT(peer == uexit->fragment->root);
+                    if (fragment == peer)
+                        trashSelf = true;
+                    else
+                        whichTreesToTrash.addUnique(uexit->fragment->root);
+                    return;
                 }
-                if (remove) {
-                    *unext = uexit->next;
-                    delete uexit;
-                    uexit = *unext;
-                } else {
-                    unext = &uexit->next;
-                    uexit = uexit->next;
-                }
+                uexit = uexit->next;
             }
         }
     }
-
-    debug_only_stmt(DumpPeerStability(traceMonitor, peer_root->ip, peer_root->globalObj,
-                                      peer_root->globalShape, peer_root->argc);)
 }
 
 JS_REQUIRES_STACK void
@@ -4101,6 +4059,8 @@ TraceRecorder::endLoop(VMSideExit* exit)
                                                       root->globalObj,
                                                       root->globalShape,
                                                       root->argc));
+    debug_only_stmt(DumpPeerStability(traceMonitor, root->ip, root->globalObj,
+                                      root->globalShape, root->argc);)
 
     /*
      * Note: this must always be done, in case we added new globals on trace
