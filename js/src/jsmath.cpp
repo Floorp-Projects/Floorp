@@ -515,7 +515,7 @@ math_random(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #if defined _WIN32 && !defined WINCE && _MSC_VER < 1400
-/* Try to work around apparent _copysign bustage in VC6 and VC7. */
+/* Try to work around apparent _copysign bustage in VC7.x. */
 double
 js_copysign(double x, double y)
 {
