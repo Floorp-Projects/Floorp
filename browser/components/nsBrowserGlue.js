@@ -265,6 +265,22 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService2);
+
+    // if ioService is managing the offline status, then ioservice.offline
+    // is already set correctly. We will continue to allow the ioService
+    // to manage its offline state until the user uses the "Work Offline" UI.
+    if (!ioService.manageOfflineStatus) {
+      // set the initial state
+      try {
+        ioService.offline = this._prefs.getBoolPref("browser.offline");
+      }
+      catch (e) {
+        ioService.offline = false;
+      }
+    }
+
     this._observerService.notifyObservers(null, "browser-ui-startup-complete", "");
   },
 
