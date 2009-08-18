@@ -54,8 +54,8 @@ $SCRIPT -p product -b branch -x executablepath -N profilename -E extensiondir
 
 variable            description
 ===============     ============================================================
--p product          required. firefox, thunderbird or fennec
--b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
+-p product          required. firefox.
+-b branch           required. supported branch. see library.sh
 -x executablepath   required. directory-tree containing executable named
                     'product'
 -N profilename      required. profile name
