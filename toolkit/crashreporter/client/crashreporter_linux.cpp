@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <dlfcn.h>
@@ -879,7 +880,35 @@ bool UIFileExists(const string& path)
 
 bool UIMoveFile(const string& file, const string& newfile)
 {
-  return (rename(file.c_str(), newfile.c_str()) != -1);
+  if (!rename(file.c_str(), newfile.c_str()))
+    return true;
+  if (errno != EXDEV)
+    return false;
+
+  // use system /bin/mv instead, time to fork
+  pid_t pID = vfork();
+  if (pID < 0) {
+    // Failed to fork
+    return false;
+  }
+  if (pID == 0) {
+    char* const args[4] = {
+      "mv",
+      strdup(file.c_str()),
+      strdup(newfile.c_str()),
+      0
+    };
+    if (args[1] && args[2])
+      execve("/bin/mv", args, 0);
+    if (args[1])
+      free(args[1]);
+    if (args[2])
+      free(args[2]);
+    exit(-1);
+  }
+  int status;
+  waitpid(pID, &status, 0);
+  return UIFileExists(newfile);
 }
 
 bool UIDeleteFile(const string& file)
