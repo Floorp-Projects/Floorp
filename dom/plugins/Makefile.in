@@ -64,6 +64,8 @@ EXPORTS_mozilla/plugins = \
   NPObjectParent.h \
   NPPInstanceChild.h \
   NPPInstanceParent.h \
+  NPBrowserStreamChild.h \
+  NPBrowserStreamParent.h \
   PluginMessageUtils.h \
   PluginProcessParent.h \
   PluginThreadChild.h \
@@ -83,6 +85,8 @@ CPPSRCS =	 \
   NPObjectParent.cpp \
   NPPInstanceChild.cpp \
   NPPInstanceParent.cpp \
+  NPBrowserStreamParent.cpp \
+  NPBrowserStreamChild.cpp \
   PluginProcessParent.cpp \
   PluginThreadChild.cpp \
   $(NULL)
