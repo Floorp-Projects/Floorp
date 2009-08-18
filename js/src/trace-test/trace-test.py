@@ -53,22 +53,23 @@ def run_test(path, lib_dir):
     if OPTIONS.show_output:
         sys.stdout.write(out)
         sys.stdout.write(err)
-    return (check_output(out, err, p.returncode), out, err)
+    # Determine whether or not we can allow an out-of-memory condition.
+    allow_oom = 'allow_oom' in path
+    return (check_output(out, err, p.returncode, allow_oom), out, err)
 
-assert_re = re.compile(r'Assertion failed:')
-stat_re = re.compile(r'^Trace stats check failed')
-
-def check_output(out, err, rc):
-    if rc != 0:
-        return False
-
+def check_output(out, err, rc, allow_oom):
     for line in out.split('\n'):
-        if stat_re.match(line):
+        if line.startswith('Trace stats check failed'):
             return False
 
     for line in err.split('\n'):
-        if assert_re.match(line):
+        if 'Assertion failed:' in line:
             return False
+
+    if rc != 0:
+        # Allow a non-zero exit code if we want to allow OOM, but only if we
+        # actually got OOM.
+        return allow_oom and ': out of memory\n' in err
 
     return True
 
