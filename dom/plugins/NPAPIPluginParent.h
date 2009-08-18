@@ -186,6 +186,9 @@ private:
         return *static_cast<NPPInstanceParent*>(p);
     }
 
+    static NPPInstanceParent* InstCast(NPP instance);
+    static NPBrowserStreamParent* StreamCast(NPP instance, NPStream* s);
+
     static inline const NPPInstanceParent& InstCast(const void* p)
     {
         return *static_cast<const NPPInstanceParent*>(p);
@@ -202,28 +205,13 @@ private:
         return InstCast(instance->pdata).NPP_NewStream(type, stream, seekable, stype);
     }
 
-    NPError NPP_DestroyStream(NPP instance,
-                              NPStream* stream, NPReason reason)
-    {
-        return InstCast(instance->pdata).NPP_DestroyStream(stream, reason);
-    }
-
-    int32_t NPP_WriteReady(NPP instance, NPStream* stream)
-    {
-        return InstCast(instance->pdata).NPP_WriteReady(stream);
-    }
-
-    int32_t NPP_Write(NPP instance, NPStream* stream,
-                      int32_t offset, int32_t len, void* buffer)
-    {
-        return InstCast(instance->pdata).NPP_Write(stream, offset, len, buffer);
-    }
-
-    void NPP_StreamAsFile(NPP instance,
-                          NPStream* stream, const char* fname)
-    {
-        return InstCast(instance->pdata).NPP_StreamAsFile(stream, fname);
-    }
+    static NPError NPP_DestroyStream(NPP instance,
+                                     NPStream* stream, NPReason reason);
+    static int32_t NPP_WriteReady(NPP instance, NPStream* stream);
+    static int32_t NPP_Write(NPP instance, NPStream* stream,
+                             int32_t offset, int32_t len, void* buffer);
+    static void NPP_StreamAsFile(NPP instance,
+                                 NPStream* stream, const char* fname);
 
     void NPP_Print(NPP instance, NPPrint* platformPrint)
     {
@@ -572,26 +560,6 @@ private:
         {
             return HACK_target->NPP_NewStream(instance, type, stream,
                                               seekable, stype);
-        }
-        static NPError NPP_DestroyStream(NPP instance,
-                                         NPStream* stream, NPReason reason)
-        {
-            return HACK_target->NPP_DestroyStream(instance, stream, reason);
-        }
-        static int32_t NPP_WriteReady(NPP instance, NPStream* stream)
-        {
-            return HACK_target->NPP_WriteReady(instance, stream);
-        }
-        static int32_t NPP_Write(NPP instance, NPStream* stream,
-                                 int32_t offset, int32_t len, void* buffer)
-        {
-            return HACK_target->NPP_Write(instance, stream,
-                                          offset, len, buffer);
-        }
-        static void NPP_StreamAsFile(NPP instance,
-                                     NPStream* stream, const char* fname)
-        {
-            return HACK_target->NPP_StreamAsFile(instance, stream, fname);
         }
         static void NPP_Print(NPP instance, NPPrint* platformPrint)
         {

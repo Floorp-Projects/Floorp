@@ -37,10 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/plugins/NPAPIPluginParent.h"
+#include "mozilla/plugins/NPBrowserStreamParent.h"
 
-using mozilla::plugins::NPAPIPluginParent;
-using mozilla::plugins::NPPProtocolParent;
 using mozilla::SharedLibrary;
+
+namespace mozilla {
+namespace plugins {
 
 // HACKS
 NPAPIPluginParent* NPAPIPluginParent::Shim::HACK_target;
@@ -80,8 +82,8 @@ NPAPIPluginParent::NPPConstructor(const nsCString& aMimeType,
                                   const nsTArray<nsCString>& aValues,
                                   NPError* rv)
 {
-    _MOZ_LOG(__FUNCTION__);
-    return new NPPInstanceParent(mNPNIface);
+    NS_ERROR("Not reachable!");
+    return NULL;
 }
 
 nsresult
@@ -105,10 +107,10 @@ NPAPIPluginParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
     aFuncs->destroy = Shim::NPP_Destroy;
     aFuncs->setwindow = Shim::NPP_SetWindow;
     aFuncs->newstream = Shim::NPP_NewStream;
-    aFuncs->destroystream = Shim::NPP_DestroyStream;
-    aFuncs->asfile = Shim::NPP_StreamAsFile;
-    aFuncs->writeready = Shim::NPP_WriteReady;
-    aFuncs->write = Shim::NPP_Write;
+    aFuncs->destroystream = NPAPIPluginParent::NPP_DestroyStream;
+    aFuncs->asfile = NPAPIPluginParent::NPP_StreamAsFile;
+    aFuncs->writeready = NPAPIPluginParent::NPP_WriteReady;
+    aFuncs->write = NPAPIPluginParent::NPP_Write;
     aFuncs->print = Shim::NPP_Print;
     aFuncs->event = Shim::NPP_HandleEvent;
     aFuncs->urlnotify = Shim::NPP_URLNotify;
@@ -179,7 +181,8 @@ NPAPIPluginParent::NPP_New(NPMIMEType pluginType,
     NPError prv = NPERR_GENERIC_ERROR;
     nsAutoPtr<NPPInstanceParent> parentInstance(
         static_cast<NPPInstanceParent*>(
-            CallNPPConstructor(nsDependentCString(pluginType), mode, names,
+            CallNPPConstructor(new NPPInstanceParent(instance, mNPNIface),
+                               nsDependentCString(pluginType), mode, names,
                                values, &prv)));
     printf ("[NPAPIPluginParent] %s: got return value %hd\n", __FUNCTION__,
             prv);
@@ -258,3 +261,54 @@ NPAPIPluginParent::RecvNPN_GetStringIdentifiers(nsTArray<nsCString>* aNames,
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NPPInstanceParent*
+NPAPIPluginParent::InstCast(NPP instance)
+{
+    NPPInstanceParent* ip =
+        static_cast<NPPInstanceParent*>(instance->pdata);
+    if (instance != ip->mNPP)
+        NS_RUNTIMEABORT("Corrupted plugin data.");
+    return ip;
+}
+
+NPBrowserStreamParent*
+NPAPIPluginParent::StreamCast(NPP instance, NPStream* s)
+{
+    NPPInstanceParent* ip = InstCast(instance);
+    NPBrowserStreamParent* sp =
+        static_cast<NPBrowserStreamParent*>(s->pdata);
+    if (sp->mNPP != ip || s != sp->mStream)
+        NS_RUNTIMEABORT("Corrupted plugin stream data.");
+    return sp;
+}
+
+NPError
+NPAPIPluginParent::NPP_DestroyStream(NPP instance,
+                                     NPStream* stream, NPReason reason)
+{
+    return InstCast(instance)->NPP_DestroyStream(stream, reason);
+}
+
+int32_t
+NPAPIPluginParent::NPP_WriteReady(NPP instance, NPStream* stream)
+{
+    return StreamCast(instance, stream)->WriteReady();
+}
+
+int32_t
+NPAPIPluginParent::NPP_Write(NPP instance, NPStream* stream,
+                             int32_t offset, int32_t len, void* buffer)
+{
+    return StreamCast(instance, stream)->Write(offset, len, buffer);
+}
+
+void
+NPAPIPluginParent::NPP_StreamAsFile(NPP instance,
+                                    NPStream* stream, const char* fname)
+{
+    StreamCast(instance, stream)->StreamAsFile(fname);
+}
+
+} // namespace plugins
+} // namespace mozilla

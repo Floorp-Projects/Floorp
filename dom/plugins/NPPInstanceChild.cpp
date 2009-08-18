@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "NPPInstanceChild.h"
+#include "NPBrowserStreamChild.h"
 
 #if defined(OS_LINUX)
 
@@ -50,10 +51,6 @@
 #include <windows.h>
 
 #endif
-
-using mozilla::plugins::NPPInstanceChild;
-using mozilla::plugins::NPObjectChild;
-using mozilla::plugins::NPObjectProtocolChild;
 
 namespace {
 
@@ -90,6 +87,9 @@ NPNVariableToString(NPNVariable aVar)
 }
 
 } /* anonymous namespace */
+
+namespace mozilla {
+namespace plugins {
 
 NPPInstanceChild::~NPPInstanceChild()
 {
@@ -373,3 +373,27 @@ NPPInstanceChild::NPObjectDestructor(NPObjectProtocolChild* aObject,
     NS_NOTYETIMPLEMENTED("NPPInstanceChild::NPObjectDestructor");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NPBrowserStreamProtocolChild*
+NPPInstanceChild::NPBrowserStreamConstructor(const nsCString& url, const uint32_t& length,
+                                             const uint32_t& lastmodified,
+                                             const nsCString& headers,
+                                             const nsCString& mimeType,
+                                             const bool& seekable,
+                                             NPError* rv, uint16_t *stype)
+{
+    return new NPBrowserStreamChild(this, url, length, lastmodified, headers,
+                                    mimeType, seekable, rv, stype);
+}
+
+nsresult
+NPPInstanceChild::NPBrowserStreamDestructor(NPBrowserStreamProtocolChild* stream,
+                                            const NPError& reason,
+                                            const bool& artificial)
+{
+    delete stream;
+    return NS_OK;
+}
+
+} // namespace plugins
+} // namespace mozilla

@@ -247,10 +247,28 @@ NPP_SetWindow(NPP instance, NPWindow* window)
   return NPERR_NO_ERROR;
 }
 
+static intptr_t gStreamCounter = 0;
+
 NPError
 NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
-  *stype = NP_ASFILEONLY;
+  *stype = NP_NORMAL;
+
+  stream->pdata = reinterpret_cast<void*>(gStreamCounter++);
+
+  printf("x-test-ipc:NPP_NewStream(NPP:%p, type:%s, stream:%p, seekable:%i)\n"
+         "  {pdata:%i\n"
+         "   url:%s,\n"
+         "   end:%i,\n"
+         "   lastmodified:%i,\n"
+         "   notifyData:%p,\n"
+         "   headers:%s\n"
+         "  }\n",
+         instance, type, stream, seekable,
+         reinterpret_cast<intptr_t>(stream->pdata),
+         stream->url, stream->end, stream->lastmodified, stream->notifyData,
+         stream->headers);
+
   return NPERR_NO_ERROR;
 }
 
