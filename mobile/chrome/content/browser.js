@@ -538,7 +538,6 @@ var Browser = {
 
     bv.commitBatchOperation();
 
-
     dump("end startup\n");
   },
 

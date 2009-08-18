@@ -637,7 +637,6 @@ MouseModule.prototype = {
       this._kinetic.addData(sX, sY);
 
       this._kinetic.start();
-
     } else {               // now we're done, says our secret 3rd argument
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
       dragData.reset();
@@ -720,7 +719,6 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a single click and tell the clicker.
    */
   _doSingleClick: function _doSingleClick() {
-
     dump('doing single click with ' + this._downUpEvents.length + '\n');
     for (let i = 0; i < this._downUpEvents.length; ++i)
       dump('      ' + this._downUpEvents[i].event.type
@@ -736,7 +734,6 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a double click and tell the clicker.
    */
   _doDoubleClick: function _doDoubleClick() {
-
     dump('doing double click with ' + this._downUpEvents.length + '\n');
     for (let i = 0; i < this._downUpEvents.length; ++i)
       dump('      ' + this._downUpEvents[i].event.type
@@ -771,8 +768,9 @@ MouseModule.prototype = {
   _defaultDragger: {
     dragStart: function dragStart(cx, cy, target, scroller) {},
 
-    dragStop : function dragStop(dx, dy, scroller)
-    { return this.dragMove(dx, dy, scroller); },
+    dragStop : function dragStop(dx, dy, scroller) {
+      return this.dragMove(dx, dy, scroller);
+    },
 
     dragMove : function dragMove(dx, dy, scroller) {
       if (scroller.getPosition) {
@@ -813,14 +811,16 @@ MouseModule.prototype = {
 
     for (; elem; elem = elem.parentNode) {
       try {
+        if (elem.ignoreDrag) {
+          prev = elem;
+          break;
+        }
 
         if (elem.scrollBoxObject) {
-
           scrollbox = elem;
           qinterface = elem.scrollBoxObject;
           break;
         } else if (elem.boxObject) {
-
           let qi = (elem._cachedSBO) ? elem._cachedSBO
                                      : elem.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
           if (qi) {
@@ -860,7 +860,6 @@ MouseModule.prototype = {
       + '\n\ttargetScroller=' + this._targetScrollInterface + ', '
       + '\n\tclickTimeout=' + this._clickTimeout + '\n  }';
   }
-
 };
 
 /**
