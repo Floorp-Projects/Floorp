@@ -504,19 +504,14 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
    // Use the height calculated for the area frame so it includes both
    // the display and button heights.
   nscoord dropdownYOffset = GetRect().height;
-  nsPresContext* presContext = PresContext();
-// XXX: Enable this code to debug popping up above the display frame, rather than below it
   nsSize dropdownSize = mDropdownFrame->GetSize();
 
-  nscoord screenHeightInPixels = 0;
-  if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(presContext, screenHeightInPixels))) {
-    // Get the height of the dropdown list in pixels.
-    nscoord absoluteDropDownHeight = presContext->AppUnitsToDevPixels(dropdownSize.height);
-    // Check to see if the drop-down list will go offscreen
-    if (GetScreenRect().YMost() + absoluteDropDownHeight > screenHeightInPixels) {
-      // move the dropdown list up
-      dropdownYOffset = - (dropdownSize.height);
-    }
+  nsRect screen = nsFormControlFrame::GetUsableScreenRect(PresContext());
+
+  // Check to see if the drop-down list will go offscreen
+  if (GetScreenRectInAppUnits().YMost() + dropdownSize.height > screen.YMost()) {
+    // move the dropdown list up
+    dropdownYOffset = - (dropdownSize.height);
   }
 
   nsPoint dropdownPosition;

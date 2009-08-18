@@ -730,24 +730,22 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     // This all breaks down if the font of the combobox is a lot larger then the option items
     // or CSS style has set the height of the combobox to be rather large.
     // We can fix these cases later if they actually happen.
-    nscoord screenHeightInPixels = 0;
-    if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
-      nscoord screenHeight = aPresContext->DevPixelsToAppUnits(screenHeightInPixels);
-      
-      nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size
-      availDropHgt -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
-      
-      nscoord hgt = visibleHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
-      if (heightOfARow > 0) {
-        if (hgt > availDropHgt) {
-          visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
-        }
-        mNumDisplayRows = visibleHeight / heightOfARow;
-      } else {
-        // Hmmm, not sure what to do here. Punt, and make both of them one
-        visibleHeight   = 1;
-        mNumDisplayRows = 1;
+    nsRect screen = nsFormControlFrame::GetUsableScreenRect(aPresContext);
+    nscoord screenHeight = screen.height;
+
+    nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size
+    availDropHgt -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+
+    nscoord hgt = visibleHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+    if (heightOfARow > 0) {
+      if (hgt > availDropHgt) {
+        visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
       }
+      mNumDisplayRows = visibleHeight / heightOfARow;
+    } else {
+      // Hmmm, not sure what to do here. Punt, and make both of them one
+      visibleHeight   = 1;
+      mNumDisplayRows = 1;
     }
 
     state.SetComputedHeight(mNumDisplayRows * heightOfARow);
