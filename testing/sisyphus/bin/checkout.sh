@@ -122,7 +122,7 @@ case $product in
                         error "during checkout of $project mozconfig" $LINENO
                     fi
                 fi
-                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk checkout" 2>&1; then
+                if ! $buildbash $bashlogin -c "export PATH=\"$BUILDPATH\"; cd $BUILDTREE/mozilla; make -f client.mk checkout" 2>&1; then
                     error "during checkout of $project tree" $LINENO
                 fi
                 ;;
@@ -165,7 +165,7 @@ case $product in
                     fi
                 fi
 
-                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk checkout" 2>&1; then
+                if ! $buildbash $bashlogin -c "export PATH=\"$BUILDPATH\"; cd $BUILDTREE/mozilla; make -f client.mk checkout" 2>&1; then
                     error "during checkout of $project tree" $LINENO
                 fi
                 ;;
