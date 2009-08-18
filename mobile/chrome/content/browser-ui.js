@@ -361,6 +361,8 @@ var BrowserUI = {
     urlbarEditArea.addEventListener("click", this, false);
     urlbarEditArea.addEventListener("mousedown", this, false);
 
+    document.getElementById("toolbar-main").ignoreDrag = true;
+
     document.getElementById("tabs").addEventListener("TabSelect", this, true);
 
     let browsers = document.getElementById("browsers");
@@ -373,7 +375,6 @@ var BrowserUI = {
     
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
-
 
     ExtensionsView.init();
     DownloadsView.init();
