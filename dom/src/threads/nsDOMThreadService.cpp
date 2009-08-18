@@ -558,7 +558,7 @@ DOMWorkerOperationCallback(JSContext* aCx)
     // above in which case we shouldn't wait here. We're guaranteed not to race
     // here because the pool reenters its monitor after canceling each worker
     // in order to notify its condition variable.
-    if (!worker->IsCanceled()) {
+    if (worker->IsSuspended() && !worker->IsCanceled()) {
       mon.Wait();
     }
   }
