@@ -128,7 +128,7 @@ namespace nanojit
      * It may turn out that that this arrangement causes too much traffic
      * between d and i-caches and that we need to carve up the structure differently.
      */
-    class Fragment : public avmplus::GCFinalizedObject
+    class Fragment
     {
         public:
             Fragment(const void*);
