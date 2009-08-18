@@ -171,8 +171,8 @@ gfxQtPlatform::UpdateFontList()
             gPlatformFonts->Put(key, ff);
         }
 
-        nsRefPtr<FontEntry> fe = new FontEntry(ff->Name());
-        ff->mFaces.AppendElement(fe);
+        FontEntry *fe = new FontEntry(ff->Name());
+        ff->AddFontEntry(fe);
 
         if (FcPatternGetString(fs->fonts[i], FC_FILE, 0, (FcChar8 **) &str) == FcResultMatch) {
             fe->mFilename = nsDependentCString(str);
