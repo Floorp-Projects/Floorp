@@ -250,7 +250,7 @@ namespace nanojit
     Fragment *Fragmento::newFrag(const void* ip)
     {
         GC *gc = _core->gc;
-        Fragment *f = NJ_NEW(gc, Fragment)(ip);
+        Fragment *f = new Fragment(ip);
         f->blacklistLevel = 5;
         return f;
     }

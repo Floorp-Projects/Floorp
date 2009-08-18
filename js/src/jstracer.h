@@ -411,7 +411,7 @@ struct VMSideExit : public nanojit::SideExit
     }
 };
 
-struct VMAllocator : public nanojit::Allocator
+class VMAllocator : public nanojit::Allocator
 {
 
 public:
@@ -436,6 +436,36 @@ public:
      * and quite unsatisfactory approach to handling OOM in Nanojit.
      */
     uintptr_t mReserve[0x10000];
+};
+
+
+struct REHashKey {
+    size_t re_length;
+    uint16 re_flags;
+    const jschar* re_chars;
+
+    REHashKey(size_t re_length, uint16 re_flags, const jschar *re_chars)
+        : re_length(re_length)
+        , re_flags(re_flags)
+        , re_chars(re_chars)
+    {}
+
+    bool operator==(const REHashKey& other) const
+    {
+        return ((this->re_length == other.re_length) &&
+                (this->re_flags == other.re_flags) &&
+                !memcmp(this->re_chars, other.re_chars,
+                        this->re_length * sizeof(jschar)));
+    }
+};
+
+struct REHashFn {
+    static size_t hash(const REHashKey& k) {
+        return
+            k.re_length +
+            k.re_flags +
+            nanojit::murmurhash(k.re_chars, k.re_length * sizeof(jschar));
+    }
 };
 
 struct FrameInfo {
