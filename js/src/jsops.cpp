@@ -997,6 +997,53 @@
             }
           END_CASE(JSOP_ADD)
 
+          BEGIN_CASE(JSOP_CONCATN)
+          {
+            JS_ASSERT_IF(fp->imacpc,
+                         *fp->imacpc == JSOP_CONCATN && *regs.pc == JSOP_IMACOP);
+
+            /*
+             * This instruction can be executed in three contexts. (1) is normal
+             * execution. (2) is while recording, during an imacro 'imacop'.
+             * (3) is during a failed recording or when trace execution aborts
+             * during a recorded imacro.
+             *  1. !imacro              : N args on stack,   pc is regs.pc
+             *  2. imacro && recording  : N args on stack,   pc is fp->imacpc
+             *  3. imacro && !recording : N+2 args on stack, pc is fp->imacpc
+             */
+            bool imacro = fp->imacpc != NULL;
+            bool recording = TRACE_RECORDER(cx) != NULL;
+            if (imacro) {
+                argc = GET_ARGC(fp->imacpc);
+                if (!recording)
+                    js_ConcatPostImacroStackCleanup(argc, regs, NULL);
+            } else {
+                argc = GET_ARGC(regs.pc);
+            }
+
+            JSCharBuffer buf(cx);
+            for (vp = regs.sp - argc; vp < regs.sp; vp++) {
+                if ((!JSVAL_IS_PRIMITIVE(*vp) &&
+                     !JSVAL_TO_OBJECT(*vp)->defaultValue(cx, JSTYPE_VOID, vp)) ||
+                    !js_ValueToCharBuffer(cx, *vp, buf)) {
+                    goto error;
+                }
+            }
+
+            str = js_NewStringFromCharBuffer(cx, buf);
+            if (!str)
+                goto error;
+
+            regs.sp -= argc - 1;
+            STORE_OPND(-1, STRING_TO_JSVAL(str));
+
+            if (imacro) {
+                /* END_CASE does pc += CONCATN_LENGTH. (IMACOP YOU IDIOT!) */
+                regs.pc -= JSOP_CONCATN_LENGTH - JSOP_IMACOP_LENGTH;
+            }
+          }
+          END_CASE(JSOP_CONCATN)
+
 #define BINARY_OP(OP)                                                         \
     JS_BEGIN_MACRO                                                            \
         FETCH_NUMBER(cx, -2, d);                                              \

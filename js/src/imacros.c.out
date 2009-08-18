@@ -651,6 +651,33 @@ static struct {
 /*11*/  JSOP_STOP,
     },
 };
+static struct {
+    jsbytecode string[38];
+} defvalue_imacros = {
+    {
+/* 0*/  JSOP_SWAP,
+/* 1*/  JSOP_DUP,
+/* 2*/  JSOP_DUP,
+/* 3*/  JSOP_GETPROP, 0, COMMON_ATOM_INDEX(valueOf),
+/* 6*/  JSOP_IFPRIMTOP, 0, 18,
+/* 9*/  JSOP_SWAP,
+/*10*/  JSOP_STRING, 0, COMMON_TYPE_ATOM_INDEX(JSTYPE_VOID),
+/*13*/  JSOP_CALL, 0, 1,
+/*16*/  JSOP_IFPRIMTOP, 0, 17,
+/*19*/  JSOP_POP,
+/*20*/  JSOP_DUP,
+/*21*/  JSOP_GOTO, 0, 4,
+/*24*/  JSOP_POP,
+/*25*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(toString),
+/*28*/  JSOP_CALL, 0, 0,
+/*31*/  JSOP_PRIMTOP, (JSTYPE_VOID),
+/*33*/  JSOP_SWAP,
+/*34*/  JSOP_POP,
+/*35*/  JSOP_SWAP,
+/*36*/  JSOP_IMACOP,
+/*37*/  JSOP_STOP,
+    },
+};
 uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NOP */
     0,  /* JSOP_PUSH */
@@ -886,6 +913,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_DEFFUN_DBGFC */
     0,  /* JSOP_DEFLOCALFUN_DBGFC */
     0,  /* JSOP_LAMBDA_DBGFC */
+    3,  /* JSOP_CONCATN */
 };
 #define JSOP_IS_IMACOP(x) (0 \
  || x == JSOP_BITOR \
@@ -912,6 +940,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_NEXTITER \
  || x == JSOP_APPLY \
  || x == JSOP_NEW \
+ || x == JSOP_CONCATN \
 )
 jsbytecode*
 js_GetImacroStart(jsbytecode* pc) {
@@ -950,5 +979,6 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - iter_imacros.for_each_native) < 10) return iter_imacros.for_each_native;
     if (size_t(pc - nextiter_imacros.custom_iter_next) < 12) return nextiter_imacros.custom_iter_next;
     if (size_t(pc - nextiter_imacros.native_iter_next) < 12) return nextiter_imacros.native_iter_next;
+    if (size_t(pc - defvalue_imacros.string) < 38) return defvalue_imacros.string;
     return NULL;
 }
