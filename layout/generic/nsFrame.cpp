@@ -290,24 +290,17 @@ NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsFrame(aContext);
 }
 
-// Overloaded new operator. Initializes the memory to 0 and relies on an arena
-// (which comes from the presShell) to perform the allocation.
-void* 
+// Overloaded new operator. Relies on an arena (which comes from the
+// presShell) to perform the allocation.
+void*
 nsFrame::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
-  // Check the recycle list first.
-  void* result = aPresShell->AllocateFrame(sz);
-  
-  if (result) {
-    memset(result, 0, sz);
-  }
-
-  return result;
+  return aPresShell->AllocateFrame(sz, 0 /* dummy */);
 }
 
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
-void 
+void
 nsFrame::operator delete(void* aPtr, size_t sz)
 {
   // Don't let the memory be freed, since it will be recycled
@@ -477,7 +470,7 @@ nsFrame::Destroy()
   if (view) {
     // Break association between view and frame
     view->SetClientData(nsnull);
-    
+
     // Destroy the view
     view->Destroy();
   }
@@ -489,7 +482,7 @@ nsFrame::Destroy()
   // Now that we're totally cleaned out, we need to add ourselves to the presshell's
   // recycler.
   size_t* sz = (size_t*)this;
-  shell->FreeFrame(*sz, (void*)this);
+  shell->FreeFrame(*sz, 0 /* dummy */, (void*)this);
 }
 
 NS_IMETHODIMP
