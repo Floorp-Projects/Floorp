@@ -547,8 +547,10 @@
         <![CDATA[
           if (!aEvent.getPreventDefault()) {
             this._userSelecting = true;
+            this._mayReverse = true;
             this.moveByOffset(aOffset, !aEvent.ctrlKey, aEvent.shiftKey);
             this._userSelecting = false;
+            this._mayReverse = false;
             aEvent.preventDefault();
           }
         ]]>
@@ -575,6 +577,7 @@
 
       <field name="_suppressOnSelect">false</field>
       <field name="_userSelecting">false</field>
+      <field name="_mayReverse">false</field>
       <field name="_selectTimeout">null</field>
       <field name="_currentItem">null</field>
       <field name="_selectionStart">null</field>
@@ -588,17 +591,37 @@
                action="this._moveByOffsetFromUserEvent(1, event);"
                group="system"/>
       <handler event="keypress" keycode="VK_HOME" modifiers="control shift any"
-               action="this._moveByOffsetFromUserEvent(-this.currentIndex, event);"
-               group="system"/>
+               group="system">
+        <![CDATA[
+          this._mayReverse = true;
+          this._moveByOffsetFromUserEvent(-this.currentIndex, event);
+          this._mayReverse = false;
+        ]]>
+      </handler>
       <handler event="keypress" keycode="VK_END" modifiers="control shift any"
-               action="this._moveByOffsetFromUserEvent(this.getRowCount() - this.currentIndex - 1, event);"
-               group="system"/>
+               group="system">
+        <![CDATA[
+          this._mayReverse = true;
+          this._moveByOffsetFromUserEvent(this.getRowCount() - this.currentIndex - 1, event);
+          this._mayReverse = false;
+        ]]>
+      </handler>
       <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control shift any"
-               action="this._moveByOffsetFromUserEvent(this.scrollOnePage(-1), event);"
-               group="system"/>
+               group="system">
+        <![CDATA[
+          this._mayReverse = true;
+          this._moveByOffsetFromUserEvent(this.scrollOnePage(-1), event);
+          this._mayReverse = false;
+        ]]>
+      </handler>
       <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control shift any"
-               action="this._moveByOffsetFromUserEvent(this.scrollOnePage(1), event);"
-               group="system"/>
+               group="system">
+        <![CDATA[
+          this._mayReverse = true;
+          this._moveByOffsetFromUserEvent(this.scrollOnePage(1), event);
+          this._mayReverse = false;
+        ]]>
+      </handler>
       <handler event="keypress" key=" " modifiers="control" phase="target">
       <![CDATA[
         if (this.currentItem && this.selType == "multiple")
