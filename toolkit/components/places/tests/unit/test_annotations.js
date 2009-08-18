@@ -118,6 +118,8 @@ function run_test() {
     var lastModified = bmsvc.getItemLastModified(testItemId);
     // Verify that lastModified equals dateAdded before we set the annotation.
     do_check_eq(lastModified, bmsvc.getItemDateAdded(testItemId));
+    // Workaround possible VM timers issues moving last modified to the past.
+    bmsvc.setItemLastModified(testItemId, --lastModified);
     annosvc.setItemAnnotation(testItemId, testAnnoName, testAnnoVal, 0, 0);
     var lastModified2 = bmsvc.getItemLastModified(testItemId);
     // verify that setting the annotation updates the last modified time
@@ -129,7 +131,6 @@ function run_test() {
   do_check_eq(annoObserver.ITEM_lastSet_AnnoName, testAnnoName);
 
   try {
-    var lastModified = bmsvc.getItemLastModified(testItemId);
     var annoVal = annosvc.getItemAnnotation(testItemId, testAnnoName);
     // verify the anno value
     do_check_true(testAnnoVal === annoVal);
@@ -305,13 +306,14 @@ function run_test() {
   annosvc.setItemAnnotation(testItemId, testAnnoName, testAnnoVal, 0, 0);
   // verify that removing an annotation updates the last modified date
   var lastModified3 = bmsvc.getItemLastModified(testItemId);
+  // Workaround possible VM timers issues moving last modified to the past.
+  bmsvc.setItemLastModified(testItemId, --lastModified3);
   annosvc.removeItemAnnotation(testItemId, int32Key);
   var lastModified4 = bmsvc.getItemLastModified(testItemId);
   LOG("verify that removing an annotation updates the last modified date");
   LOG("lastModified3 = " + lastModified3);
   LOG("lastModified4 = " + lastModified4);
-  // XXX bug 381240
-  //do_check_true(lastModified4 >= lastModified3);
+  do_check_true(lastModified4 > lastModified3);
 
   do_check_eq(annoObserver.PAGE_lastRemoved_URI, testURI.spec);
   do_check_eq(annoObserver.PAGE_lastRemoved_AnnoName, int32Key);
