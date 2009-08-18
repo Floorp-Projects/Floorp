@@ -73,6 +73,7 @@
 #include "jsstr.h"
 #include "jsstaticcheck.h"
 #include "jstracer.h"
+#include "jsvector.h"
 
 #include "jsautooplen.h"
 
@@ -208,6 +209,8 @@ js_GetVariableStackUses(JSOp op, jsbytecode *pc)
     JS_ASSERT(js_CodeSpec[op].nuses == -1);
     switch (op) {
       case JSOP_POPN:
+        return GET_UINT16(pc);
+      case JSOP_CONCATN:
         return GET_UINT16(pc);
       case JSOP_LEAVEBLOCK:
         return GET_UINT16(pc);
@@ -3520,6 +3523,42 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = -2;
                 }
                 break;
+
+              case JSOP_CONCATN:
+              {
+                argc = GET_UINT16(pc);
+                JS_ASSERT(argc > 0);
+
+                JSTempVector<char *> argv(cx);
+                if (!argv.resize(argc))
+                    return NULL;
+
+                MUST_FLOW_THROUGH("out");
+                ok = JS_FALSE;
+
+                for (i = argc - 1; i >= 0; i--) {
+                    argv[i] = JS_strdup(cx, POP_STR());
+                    if (!argv[i])
+                        goto out;
+                }
+
+                todo = Sprint(&ss->sprinter, "%s", argv[0]);
+                if (todo < 0)
+                    goto out;
+                for (i = 1; i < argc; i++) {
+                    if (Sprint(&ss->sprinter, " + %s", argv[i]) < 0)
+                        goto out;
+                }
+
+                ok = JS_TRUE;
+
+              out:
+                for (i = 0; i < argc; i++)
+                    JS_free(cx, argv[i]);
+                if (!ok)
+                    return NULL;
+                break;
+              }
 
               case JSOP_NEW:
               case JSOP_CALL:

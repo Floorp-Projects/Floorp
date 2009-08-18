@@ -5883,6 +5883,37 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
         break;
 
+      case TOK_PLUS:
+        /* For TCF_IN_FUNCTION test, see TOK_RB concerning JSOP_NEWARRAY. */
+        if (pn->pn_arity == PN_LIST && pn->pn_count < JS_BIT(16) &&
+            (cg->flags & TCF_IN_FUNCTION)) {
+            /* Emit up to the first string literal conventionally. */
+            for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+                if (pn2->pn_type == TOK_STRING)
+                    break;
+                if (!js_EmitTree(cx, cg, pn2))
+                    return JS_FALSE;
+                if (pn2 != pn->pn_head && js_Emit1(cx, cg, JSOP_ADD) < 0)
+                    return JS_FALSE;
+            }
+
+            /* Emit remainder as a single JSOP_CONCATN. */
+            for (index = 0; pn2; pn2 = pn2->pn_next, index++) {
+                if (!js_EmitTree(cx, cg, pn2))
+                    return JS_FALSE;
+            }
+
+            if (index != 0) {
+                EMIT_UINT16_IMM_OP(JSOP_CONCATN, index);
+
+                /* If we had a prefix, we need to be added to it now. */
+                if (pn->pn_head->pn_type != TOK_STRING &&
+                    js_Emit1(cx, cg, JSOP_ADD) < 0) {
+                    return JS_FALSE;
+                }
+            }
+            break;
+        }
       case TOK_BITOR:
       case TOK_BITXOR:
       case TOK_BITAND:
@@ -5891,7 +5922,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_IN:
       case TOK_INSTANCEOF:
       case TOK_SHOP:
-      case TOK_PLUS:
       case TOK_MINUS:
       case TOK_STAR:
       case TOK_DIVOP:

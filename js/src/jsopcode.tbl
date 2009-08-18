@@ -589,3 +589,9 @@ OPDEF(JSOP_CALLUPVAR_DBG, 230,"callupvar_dbg", NULL,  3,  0,  2, 19,  JOF_UINT16
 OPDEF(JSOP_DEFFUN_DBGFC,     231,"deffun_dbgfc",     NULL,  3,  0,  0,  0,  JOF_OBJECT|JOF_DECLARING)
 OPDEF(JSOP_DEFLOCALFUN_DBGFC,232,"deflocalfun_dbgfc",NULL,  5,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING)
 OPDEF(JSOP_LAMBDA_DBGFC,     233,"lambda_dbgfc",     NULL,  3,  0,  1, 19,  JOF_OBJECT)
+
+/*
+ * Concatenate N values, coercing to string if necessary, where N is concatn's
+ * immediate.  See record_JSOP_CONCATN for recording behavior.
+ */
+OPDEF(JSOP_CONCATN,       234,"concatn",       NULL,  3, -1,  1,  0,  JOF_UINT16|JOF_TMPSLOT2)
