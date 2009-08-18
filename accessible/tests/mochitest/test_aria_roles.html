@@ -2,6 +2,7 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=481114
+https://bugzilla.mozilla.org/show_bug.cgi?id=469688
 -->
 <head>
   <title>Test weak ARIA roles</title>
@@ -39,6 +40,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481114
       for (l in weak_landmarks)
         testRole(weak_landmarks[l], ROLE_SECTION);
 
+      for (l in weak_landmarks) {
+        var id = weak_landmarks[l] + "_table";
+        testRole(id, ROLE_TABLE);
+        
+        var accessibleTable = getAccessible(id, [nsIAccessibleTable], null,
+                                            DONOTFAIL_IF_NO_INTERFACE);
+        ok(accessibleTable ? true : false,
+           "landmarked table should have nsIAccessibleTable");
+        
+        if (accessibleTable)
+          is(accessibleTable.cellRefAt(0,0).firstChild.name, "hi", "no cell");
+      }
+
       // test gEmptyRoleMap
       testRole("cell", ROLE_NOTHING);
 
@@ -52,6 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481114
 <body>
 
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481114">Mozilla Bug 481114</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 469688</a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -72,6 +87,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481114
   <div role="main" id="main">main</div>
   <div role="navigation" id="navigation">navigation</div>
   <div role="search" id="search">search</div>
+
+  <!-- landmarks are tables -->
+  <table role="application" id="application_table">application table
+    <tr><td>hi<td></tr></table>
+  <table role="banner" id="banner_table">banner table
+    <tr><td>hi<td></tr></table>
+  <table role="complementary" id="complementary_table">complementary table
+    <tr><td>hi<td></tr></table>
+  <table role="contentinfo" id="contentinfo_table">contentinfo table
+    <tr><td>hi<td></tr></table>
+  <table role="main" id="main_table">main table
+    <tr><td>hi<td></tr></table>
+  <table role="navigation" id="navigation_table">navigation table
+    <tr><td>hi<td></tr></table>
+  <table role="search" id="search_table">search table
+    <tr><td>hi<td></tr></table>
 
   <!-- test gEmptyRoleMap -->
   <table role="label">
