@@ -440,8 +440,8 @@ function displayResultSet(aRoot) {
   }
 
   for (var i=0; i < aRoot.childCount; ++i) {
-    LOG("Result Set URI: " + aRoot.getChild(i).uri + " Title: " +
-        aRoot.getChild(i).title);
+    LOG("Result Set URI: " + aRoot.getChild(i).uri + "   Title: " +
+        aRoot.getChild(i).title + "   Visit Time: " + aRoot.getChild(i).time);
   }
 }
 
