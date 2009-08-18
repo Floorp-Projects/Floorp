@@ -2143,7 +2143,7 @@ JSTraceMonitor::flush()
 void
 JSTraceMonitor::mark(JSTracer* trc)
 {
-    if (trc->context->runtime->state != JSRTS_LANDING) {
+    if (!trc->context->runtime->gcFlushCodeCaches) {
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
             VMFragment* f = vmfragments[i];
             while (f) {

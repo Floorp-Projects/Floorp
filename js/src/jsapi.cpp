@@ -834,6 +834,12 @@ bad:
 }
 
 JS_PUBLIC_API(void)
+JS_CommenceRuntimeShutDown(JSRuntime *rt)
+{
+    rt->gcFlushCodeCaches = true;
+}
+
+JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
