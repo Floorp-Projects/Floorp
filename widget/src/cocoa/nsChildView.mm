@@ -4175,17 +4175,39 @@ GetInputSourceIDFromKeyboardLayout(SInt32 aLayoutID)
   return sourceID;
 }
 
+static void
+GetKCHRData(KeyTranslateData &aKT)
+{
+  KeyboardLayoutRef kbRef;
+  OSStatus err =
+    ::KLGetKeyboardLayoutWithIdentifier(aKT.mLayoutID, &kbRef);
+  if (err != noErr)
+    return;
+
+  err = ::KLGetKeyboardLayoutProperty(kbRef, kKLKCHRData,
+                                      (const void**)&aKT.mKchr.mHandle);
+  if (err != noErr || !aKT.mKchr.mHandle)
+    return;
+
+  err = ::GetTextEncodingFromScriptInfo(aKT.mScript, kTextLanguageDontCare,
+                                        kTextRegionDontCare,
+                                        &aKT.mKchr.mEncoding);
+  if (err != noErr)
+    aKT.mKchr.mHandle = nsnull;
+}
+
 static PRUint32
 GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
-  KeyTranslateData kt;
-  Handle handle = ::GetResource('uchr', kKLUSKeyboard); // US keyboard layout
-  if (!handle || !(*handle)) {
-    NS_ERROR("US keyboard layout doesn't have uchr resource");
-    return 0;
-  }
+  KeyboardLayoutRef kbRef = nsnull;
+  OSStatus err = ::KLGetKeyboardLayoutWithIdentifier(kKLUSKeyboard, &kbRef);
+  NS_ENSURE_TRUE(err == noErr && kbRef, 0);
+  const UCKeyboardLayout* layout = nsnull;
+  err = ::KLGetKeyboardLayoutProperty(kbRef, kKLuchrData,
+                                      (const void**)&layout);
+  NS_ENSURE_TRUE(err == noErr && layout, 0);
   UInt32 kbType = 40; // ANSI, don't use actual layout
-  return UCKeyTranslateToUnicode((UCKeyboardLayout*)(*handle), aKeyCode,
+  return UCKeyTranslateToUnicode(layout, aKeyCode,
                                  aModifiers, kbType);
 }
 
@@ -4244,7 +4266,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
       }
 
-      CFDataRef uchr = NULL;
+      PRBool isUchrKeyboardLayout = PR_FALSE;
       // GetResource('uchr', kt.mLayoutID) fails on OS X 10.5
       if (nsToolkit::OnLeopardOrLater() &&
           Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
@@ -4252,6 +4274,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
           Leopard_TISCreateInputSourceList &&
           kOurTISPropertyUnicodeKeyLayoutData &&
           kOurTISPropertyInputSourceID) {
+        CFDataRef uchr = NULL;
         if (gOverrideKeyboardLayout.mOverrideEnabled) {
           CFStringRef sourceID = GetInputSourceIDFromKeyboardLayout(kt.mLayoutID);
           NS_ASSERTION(sourceID, "unable to map keyboard layout ID to input source ID");
@@ -4269,41 +4292,39 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
           TISInputSourceRef tis = Leopard_TISCopyCurrentKeyboardLayoutInputSource();
           uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
         }
+        if (uchr) {
+          // We should be here on OS X 10.5 for any Apple provided layout, as
+          // they are all uchr.  It may be possible to still use kchr resources
+          // from elsewhere, so they may be picked by GetKCHRData below
+          kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
+            (CFDataGetBytePtr(uchr));
+          isUchrKeyboardLayout = PR_TRUE;
+        }
+      } else {
+        // 10.4
+        KeyboardLayoutRef kbRef = nsnull;
+        OSStatus err = ::KLGetKeyboardLayoutWithIdentifier(kt.mLayoutID,
+                                                           &kbRef);
+        if (err == noErr && kbRef) {
+          SInt32 kind;
+          err = ::KLGetKeyboardLayoutProperty(kbRef, kKLKind,
+                                              (const void **)&kind);
+          if (err == noErr && kind != kKLKCHRKind) {
+            err = ::KLGetKeyboardLayoutProperty(kbRef, kKLuchrData,
+                      (const void**)&kt.mUchr.mLayout);
+            if (err != noErr) {
+              kt.mUchr.mLayout = nsnull;
+              // if the kind is kKLKCHRuchrKind, we can retry by KCHR.
+              isUchrKeyboardLayout = kind != kKLKCHRuchrKind;
+            } else {
+              isUchrKeyboardLayout = PR_TRUE;
+            }
+          }
+        }
       }
 
-      // This fails for Azeri on 10.4 even though kKLKind (2) indicates that
-      // the layout has a uchr resource.  Perhaps KLGetKeyboardLayoutProperty
-      // with kKLuchrData would be helpful here.
-      Handle handle = ::GetResource('uchr', kt.mLayoutID);
-      if (uchr) {
-        // We should be here on OS X 10.5 for any Apple provided layout, as
-        // they are all uchr.  It may be possible to still use kchr resources
-        // from elsewhere, so they may be picked by
-        // GetScriptManagerVariable(smKCHRCache) below
-        kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
-          (CFDataGetBytePtr(uchr));
-      } else if (handle) {
-        // uchr (Unicode) keyboard layout resource prior to 10.5.
-        kt.mUchr.mLayout = *((UCKeyboardLayout**)handle);
-      } else {
-        // kchr (non-Unicode) keyboard layout resource.
-
-        // There are no know cases where GetResource succeeds here, and so
-        // tests (gOverrideKeyboardLayout.mOverrideEnabled) currently end up
-        // with no keyboard layout.  KLGetKeyboardLayoutWithIdentifier and
-        // KLGetKeyboardLayoutProperty with kKLKCHRData would be useful here.
-        kt.mKchr.mHandle = ::GetResource('kchr', kt.mLayoutID);
-
-        if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout.mOverrideEnabled)
-          kt.mKchr.mHandle = (char**)::GetScriptManagerVariable(smKCHRCache);
-        if (kt.mKchr.mHandle) {
-          OSStatus err =
-            ::GetTextEncodingFromScriptInfo(kt.mScript, kTextLanguageDontCare,
-                                            kTextRegionDontCare,
-                                            &kt.mKchr.mEncoding);
-          if (err != noErr)
-            kt.mKchr.mHandle = nsnull;
-        }
+      if (!isUchrKeyboardLayout) {
+        GetKCHRData(kt);
       }
 
       // If a keyboard layout override is set, we also need to force the
