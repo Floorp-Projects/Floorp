@@ -123,24 +123,18 @@ else
             ;; 
 
         darwin)
-            # answer license prompt
-            result=`$TEST_DIR/bin/hdiutil-expect.ex $filename`
-            # Now get the volume data
-	        #result=`hdiutil attach $filename`
-            disk=`echo $result | sed 's@.*\(/dev/[^ ]*\).*/dev.*/dev.*@\1@'`
-            # remove the carriage return inserted by expect
-            volume=`echo $result | sed "s|[^a-zA-Z0-9/]||g" | sed 's@.*\(/Volumes/.*\)@\1@'`
-            echo "disk=$disk"
-            echo "volume=$volume"
-            if [[ -z "$disk" || -z "$volume" ]]; then
-                error "mounting disk image: $result" $LINENO
+            # assumes only 1 mount point
+            mkdir -p /tmp/sisyphus/mount
+            if ! hdiutil attach -mountpoint /tmp/sisyphus/mount $filename; then
+                error "mounting disk image" $LINENO
             fi
 
-            for app in $volume/*.app; do
+            for app in /tmp/sisyphus/mount/*.app; do
                 cp -R $app $executablepath
             done
 
-            hdiutil detach $disk
+            # requires 10.4 or later
+            hdiutil detach /tmp/sisyphus/mount
             ;;
     esac
 
