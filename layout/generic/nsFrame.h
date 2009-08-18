@@ -134,25 +134,29 @@ public:
    * Create a new "empty" frame that maps a given piece of content into a
    * 0,0 area.
    */
-  friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell, nsStyleContext* aContext);
+  friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell,
+                                    nsStyleContext* aContext);
 
-  // Overloaded new operator. Initializes the memory to 0 and relies on an arena
-  // (which comes from the presShell) to perform the allocation.
+  // Overloaded new operator. Relies on an arena (which comes from the
+  // presShell) to perform the allocation.
   void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
 
-  // Overridden to prevent the global delete from being called, since the memory
-  // came out of an arena instead of the global delete operator's heap.  
-  // XXX Would like to make this private some day, but our UNIX compilers can't 
-  // deal with it.
-  void operator delete(void* aPtr, size_t sz);
-
-  // We compute and store the HTML content's overflow area. So don't
-  // try to compute it in the box code.
-  virtual PRBool ComputesOwnOverflowArea() { return PR_TRUE; }
-
 private:
-  // The normal operator new is disallowed on nsFrames.
-  void* operator new(size_t sz) CPP_THROW_NEW { return nsnull; }
+  // Left undefined; nsFrame objects are never allocated from the heap.
+  void* operator new(size_t sz) CPP_THROW_NEW;
+
+protected:
+  // Overridden to prevent the global delete from being called, since
+  // the memory came out of an arena instead of the heap.
+  //
+  // Ideally this would be private and undefined, like the normal
+  // operator new.  Unfortunately, the C++ standard requires an
+  // overridden operator delete to be accessible to any subclass that
+  // defines a virtual destructor, so we can only make it protected;
+  // worse, some C++ compilers will synthesize calls to this function
+  // from the "deleting destructors" that they emit in case of
+  // delete-expressions, so it can't even be undefined.
+  void operator delete(void* aPtr, size_t sz);
 
 public:
 
@@ -370,6 +374,10 @@ public:
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState);
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
+
+  // We compute and store the HTML content's overflow area. So don't
+  // try to compute it in the box code.
+  virtual PRBool ComputesOwnOverflowArea() { return PR_TRUE; }
 
   //--------------------------------------------------
   // Additional methods
