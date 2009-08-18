@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla Firefox.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# The Mozilla Foundation <http://www.mozilla.org/>.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s):
+# Contributor(s):  Jason Duell
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,48 +34,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+IPDLSRCS =          \
+  PNecko.ipdl       \
+  $(NULL)
 
-include $(DEPTH)/config/autoconf.mk
-
-MODULE		= necko
-
-DIRS		= \
-		base \
-		cookie \
-		dns \
-		socket \
-		mime \
-		streamconv \
-		cache \
-		protocol \
-		system \
-        $(NULL)
-
-ifdef MOZ_IPC
-DIRS 		+= \
-	        ipc  \
-	        $(NULL)
-endif
-
-ifdef NECKO_WIFI
-DIRS 		+= wifi
-endif
-
-DIRS		+= \
-		build \
-		locales \
-		$(NULL)
-
-ifdef ENABLE_TESTS
-TOOL_DIRS  += test
-endif
-
-EXPORTS     = necko-config.h
-
-include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DIMPL_NS_NET

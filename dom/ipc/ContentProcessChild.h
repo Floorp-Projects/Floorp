@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: sw=4 ts=4 et : */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,11 +60,15 @@ public:
         return sSingleton;
     }
 
-    virtual PIFrameEmbeddingChild* PIFrameEmbeddingConstructor(const MagicWindowHandle& hwnd);
+    virtual PIFrameEmbeddingChild* PIFrameEmbeddingConstructor(
+            const MagicWindowHandle& hwnd);
     virtual nsresult PIFrameEmbeddingDestructor(PIFrameEmbeddingChild*);
 
     virtual PTestShellChild* PTestShellConstructor();
     virtual nsresult PTestShellDestructor(PTestShellChild*);
+
+    virtual PNeckoChild* PNeckoConstructor();
+    virtual nsresult PNeckoDestructor(PNeckoChild*);
 
     void Quit();
     virtual nsresult RecvQuit();
