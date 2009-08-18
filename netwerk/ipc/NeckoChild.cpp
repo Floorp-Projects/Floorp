@@ -1,5 +1,6 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8 -*- */
-/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 : */
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,14 +14,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Content App.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
+ *  The Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jason Duell <jduell.mcbugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,36 +38,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PIFrameEmbedding.ipdl";
-include protocol "PTestShell.ipdl";
-include protocol "PNecko.ipdl";
-
-include "mozilla/TabTypes.h";
-
-using MagicWindowHandle;
+#include "mozilla/net/NeckoChild.h"
+#include "mozilla/dom/ContentProcessChild.h"
+#include "mozilla/net/HttpChannelChild.h"
 
 namespace mozilla {
-namespace dom {
+namespace net {
 
-sync protocol PContentProcess
+PNeckoChild *gNeckoChild = nsnull;
+
+// C++ file contents
+NeckoChild::NeckoChild()
 {
-    manages PIFrameEmbedding;
-    manages PTestShell;
-    manages PNecko;
-
-child:
-    PIFrameEmbedding(MagicWindowHandle parentWidget);
-    ~PIFrameEmbedding();
-
-    PTestShell();
-    ~PTestShell();
-
-    Quit();
-
-parent:
-    PNecko();
-    ~PNecko();
-};
-
 }
+
+NeckoChild::~NeckoChild()
+{
 }
+
+void NeckoChild::InitNeckoChild()
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild * cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+    gNeckoChild = cpc->SendPNeckoConstructor(); 
+    NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
+  }
+}
+
+PHttpChannelChild* 
+NeckoChild::PHttpChannelConstructor()
+{
+  return new HttpChannelChild();
+}
+
+nsresult 
+NeckoChild::PHttpChannelDestructor(PHttpChannelChild* channel)
+{
+  delete channel;
+  return NS_OK;
+}
+
+}} // mozilla::net
+

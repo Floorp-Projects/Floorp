@@ -45,6 +45,8 @@ include $(topsrcdir)/config/rules.mk
 IPDLDIRS = \
   dom/plugins \
   dom/ipc \
+  netwerk/ipc \
+  netwerk/protocol/http/src \
   ipc/test-harness \
   ipc/testshell \
   $(NULL)
