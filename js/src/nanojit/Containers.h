@@ -159,16 +159,104 @@ namespace nanojit
         Seq<T>* last;
     };
 
+#ifdef NANOJIT_64BIT
+    static inline size_t murmurhash(const void *key, size_t len) {
+        const uint64_t m = 0xc6a4a7935bd1e995;
+        const int r = 47;
+
+        uint64_t h = seed ^ (len * m);
+
+        const uint64_t *data = (const uint64_t*)key;
+        const uint64_t *end = data + (len/8);
+
+        while(data != end)
+            {
+                uint64_t k = *data++;
+
+                k *= m;
+                k ^= k >> r;
+                k *= m;
+
+                h ^= k;
+                h *= m;
+            }
+
+        const unsigned char *data2 = (const unsigned char*)data;
+
+        switch(len & 7) {
+        case 7: h ^= uint64_t(data2[6]) << 48;
+        case 6: h ^= uint64_t(data2[5]) << 40;
+        case 5: h ^= uint64_t(data2[4]) << 32;
+        case 4: h ^= uint64_t(data2[3]) << 24;
+        case 3: h ^= uint64_t(data2[2]) << 16;
+        case 2: h ^= uint64_t(data2[1]) << 8;
+        case 1: h ^= uint64_t(data2[0]);
+            h *= m;
+        };
+
+        h ^= h >> r;
+        h *= m;
+        h ^= h >> r;
+
+        return (size_t)h;
+    }
+#else
+    static inline size_t murmurhash(const void * key, size_t len) {
+        const uint32_t m = 0x5bd1e995;
+        const int r = 24;
+        uint32_t h = 0;
+
+        const unsigned char * data = (const unsigned char *)key;
+        while(len >= 4) {
+            uint32_t k = *(size_t *)data;
+
+            k *= m;
+            k ^= k >> r;
+            k *= m;
+
+            h *= m;
+            h ^= k;
+
+            data += 4;
+            len -= 4;
+        }
+
+        switch(len) {
+        case 3: h ^= data[2] << 16;
+        case 2: h ^= data[1] << 8;
+        case 1: h ^= data[0];
+            h *= m;
+        };
+
+        h ^= h >> 13;
+        h *= m;
+        h ^= h >> 15;
+
+        return (size_t)h;
+    }
+#endif
+
+    template<class K> struct DefaultHash {
+        static size_t hash(const K &k) {
+            return murmurhash(&k, sizeof(K));
+        }
+    };
+
+    template<class K> struct DefaultHash<K*> {
+        static size_t hash(K* k) {
+            uintptr_t h = (uintptr_t) k;
+            // move the low 3 bits higher up since they're often 0
+            h = (h>>3) ^ (h<<((sizeof(uintptr_t) * 8) - 3));
+            return (size_t) h;
+        }
+    };
+
     /** Bucket hashtable with a fixed # of buckets (never rehash)
      *  Intended for use when a reasonable # of buckets can be estimated ahead of time.
-     *
-     *  K is hashed by casting to intptr_t then to int.  All users of this
-     *  class currently hash pointers and pointer-identity is okay.  When this
-     *  changes we can parameterize the hash function and equality function,
-     *  or the caller can create a K type with custom cast(intptr_t) and == operators.  */
-    template<class K, class T> class HashMap {
+     */
+    template<class K, class T, class H=DefaultHash<K> > class HashMap {
         Allocator& allocator;
-        uint32_t nbuckets;
+        size_t nbuckets;
         class Node {
         public:
             K key;
@@ -177,16 +265,9 @@ namespace nanojit
         };
         Seq<Node>** buckets;
 
-        /** optimized for the assumption that k is a 4-byte aligned pointer. */
-        uint32_t hash(K k) {
-            uintptr_t h = (uintptr_t) k;
-            h = (h>>3) ^ (h<<29); // move the low 3 bits higher up since they're often 0
-            return uint32_t(h) % nbuckets;
-        }
-
         /** return the node containing K, and the bucket index, or NULL if not found */
-        Node* find(K k, uint32_t &i) {
-            i = hash(k);
+        Node* find(K k, size_t &i) {
+            i = H::hash(k) % nbuckets;
             for (Seq<Node>* p = buckets[i]; p != NULL; p = p->tail) {
                 if (p->head.key == k)
                     return &p->head;
@@ -194,7 +275,7 @@ namespace nanojit
             return NULL;
         }
     public:
-        HashMap(Allocator& a, uint32_t nbuckets = 16)
+        HashMap(Allocator& a, size_t nbuckets = 16)
             : allocator(a)
             , nbuckets(nbuckets)
             , buckets(new (a) Seq<Node>*[nbuckets])
@@ -209,8 +290,8 @@ namespace nanojit
         }
 
         /** add (k,v) to the map.  If k is already in the map, replace the value */
-        void put(K k, T v) {
-            uint32_t i;
+        void put(const K& k, const T& v) {
+            size_t i;
             Node* n = find(k, i);
             if (n) {
                 n->value = v;
@@ -220,22 +301,22 @@ namespace nanojit
         }
 
         /** return v for element k, or T(0) if k is not present */
-        T get(K k) {
-            uint32_t i;
+        T get(const K& k) {
+            size_t i;
             Node* n = find(k, i);
             return n ? n->value : 0;
         }
 
         /** returns true if k is in the map. */
-        bool containsKey(K k) {
-            uint32_t i;
+        bool containsKey(const K& k) {
+            size_t i;
             return find(k, i) != 0;
         }
 
         /** remove k from the map, if it is present.  if not, remove()
          *  silently returns */
-        void remove(K k) {
-            uint32_t i = hash(k);
+        void remove(const K& k) {
+            size_t i = H::hash(k);
             Seq<Node>** prev = &buckets[i];
             for (Seq<Node>* p = buckets[i]; p != NULL; p = p->tail) {
                 if (p->head.key == k) {
@@ -260,12 +341,12 @@ namespace nanojit
          */
         class Iter {
             friend class HashMap;
-            const HashMap<K,T> &map;
+            const HashMap<K,T,H> &map;
             int bucket;
             const Seq<Node>* current;
 
         public:
-            Iter(HashMap<K,T>& map) : map(map), bucket(map.nbuckets-1), current(NULL)
+            Iter(HashMap<K,T,H>& map) : map(map), bucket(map.nbuckets-1), current(NULL)
             { }
 
             /** return true if more (k,v) remain to be visited */
@@ -278,13 +359,13 @@ namespace nanojit
             }
 
             /** return the current key */
-            K key() const {
+            const K& key() const {
                 NanoAssert(current != NULL);
                 return current->head.key;
             }
 
-            /** return the current value */ 
-            T value() const {
+            /** return the current value */
+            const T& value() const {
                 NanoAssert(current != NULL);
                 return current->head.value;
             }
