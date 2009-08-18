@@ -497,9 +497,10 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
       }
     }
   }
+  mLifeCycle = TERMINATED;
   mTokenizer->eof();
   mTokenizer->end();
-  mLifeCycle = TERMINATED;
+  mTreeBuilder->Flush();
   DropParserAndPerfHint();
   return NS_OK;
 }
@@ -765,9 +766,10 @@ NS_IMETHODIMP
 nsHtml5Parser::DidBuildModel()
 {
   NS_ASSERTION(mLifeCycle == STREAM_ENDING, "Bad life cycle.");
+  mLifeCycle = TERMINATED;
   mTokenizer->eof();
   mTokenizer->end();
-  mLifeCycle = TERMINATED;
+  mTreeBuilder->Flush();
   // This is comes from nsXMLContentSink
   DidBuildModelImpl();
   mDocument->ScriptLoader()->RemoveObserver(this);
