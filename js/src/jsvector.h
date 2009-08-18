@@ -43,6 +43,7 @@
 #include <string.h>
 #include <new>
 
+#include "jsutil.h"
 #include "jsbit.h"
 
 /* Library of template meta-programs for use in the C++ JS data-structures. */
