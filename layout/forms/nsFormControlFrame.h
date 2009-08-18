@@ -100,10 +100,10 @@ public:
   static nsresult RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg);
 
   /**
-   * Helper routine to that returns the height of the screen
-   *
+   * Returns the usable screen rect in app units, eg the rect where we can
+   * draw dropdowns.
    */
-  static nsresult GetScreenHeight(nsPresContext* aPresContext, nscoord& aHeight);
+  static nsRect GetUsableScreenRect(nsPresContext* aPresContext);
 
 protected:
 
