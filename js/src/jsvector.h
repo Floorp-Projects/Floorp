@@ -74,15 +74,52 @@ template <class T> struct BitSize {
 };
 
 /*
+ * Produce an N-bit mask, where N <= BitSize<size_t>::result.  Handle the
+ * language-undefined edge case when N = BitSize<size_t>::result.
+ */
+template <size_t N> struct NBitMask {
+    JS_STATIC_ASSERT(N < BitSize<size_t>::result);
+    static const size_t result = ~((size_t(1) << N) - 1);
+};
+template <> struct NBitMask<BitSize<size_t>::result> {
+    static const size_t result = size_t(-1);
+};
+
+/*
  * For the unsigned integral type size_t, compute a mask M for N such that
  * for all X, !(X & M) implies X * N will not overflow (w.r.t size_t)
  */
 template <size_t N> struct MulOverflowMask {
     static const size_t result =
-        ~((size_t(1) << (BitSize<size_t>::result - CeilingLog2<N>::result)) - 1);
+        NBitMask<BitSize<size_t>::result - CeilingLog2<N>::result>::result;
 };
 template <> struct MulOverflowMask<0> { /* Error */ };
 template <> struct MulOverflowMask<1> { static const size_t result = 0; };
+
+/*
+ * Safely subtract two pointers when it is known that end > begin.  This avoids
+ * the common compiler bug that if (size_t(end) - size_t(begin)) has the MSB
+ * set, the unsigned subtraction followed by right shift will produce -1, or
+ * size_t(-1), instead of the real difference.
+ */
+template <class T>
+size_t JS_ALWAYS_INLINE
+PointerRangeSize(T *begin, T *end) {
+    return (size_t(end) - size_t(begin)) / sizeof(T);
+}
+
+/*
+ * Generate a mask for T such that if (X & sUnsafeRangeSizeMask), an X-sized
+ * array of T's is big enough to cause a ptrdiff_t overflow when subtracting
+ * a pointer to the end of the array from the beginning.
+ */
+template <class T> struct UnsafeRangeSizeMask {
+    /*
+     * The '2' factor means the top bit is clear, sizeof(T) converts from
+     * units of elements to bytes.
+     */
+    static const size_t result = MulOverflowMask<2 * sizeof(T)>::result;
+};
 
 /*
  * Traits class for identifying POD types. Until C++0x, there is no automatic
@@ -149,6 +186,7 @@ struct JSTempVectorImpl
      * not overflow.
      */
     static inline bool growTo(JSTempVector<T> &v, size_t newcap) {
+        JS_ASSERT(!v.usingInlineStorage());
         T *newbuf = reinterpret_cast<T *>(v.mCx->malloc(newcap * sizeof(T)));
         if (!newbuf)
             return false;
@@ -156,7 +194,7 @@ struct JSTempVectorImpl
             new(dst) T(*src);
         JSTempVectorImpl::destroy(v.heapBegin(), v.heapEnd());
         v.mCx->free(v.heapBegin());
-        v.heapEnd() = newbuf + (v.heapEnd() - v.heapBegin());
+        v.heapEnd() = newbuf + v.heapSize();
         v.heapBegin() = newbuf;
         v.heapCapacity() = newcap;
         return true;
@@ -210,7 +248,7 @@ struct JSTempVectorImpl<T, N, true>
         T *newbuf = reinterpret_cast<T *>(v.mCx->realloc(v.heapBegin(), bytes));
         if (!newbuf)
             return false;
-        v.heapEnd() = newbuf + (v.heapEnd() - v.heapBegin());
+        v.heapEnd() = newbuf + v.heapSize();
         v.heapBegin() = newbuf;
         v.heapCapacity() = newcap;
         return true;
@@ -240,8 +278,9 @@ class JSTempVector
     typedef JSTempVectorImpl<T, N, JSUtils::IsPodType<T>::result> Impl;
     friend struct JSTempVectorImpl<T, N, JSUtils::IsPodType<T>::result>;
 
-    bool growHeapCapacityTo(size_t minCapacity);
-    bool convertToHeapStorage(size_t minCapacity);
+    bool calculateNewCapacity(size_t curSize, size_t sizeInc, size_t &newCap);
+    bool growHeapStorageBy(size_t sizeInc);
+    bool convertToHeapStorage(size_t sizeInc);
 
     /* magic constants */
 
@@ -304,8 +343,11 @@ class JSTempVector
     }
 
     /* Only valid when !usingInlineStorage() */
-    size_t heapSize() {
+    size_t heapSize() const {
         JS_ASSERT(!usingInlineStorage());
+        /* Guaranteed by calculateNewCapacity. */
+        JS_ASSERT(size_t(u.ptrs.mEnd - u.ptrs.mBegin) ==
+                  ((size_t(u.ptrs.mEnd) - size_t(u.ptrs.mBegin)) / sizeof(T)));
         return u.ptrs.mEnd - u.ptrs.mBegin;
     }
 
@@ -329,12 +371,12 @@ class JSTempVector
         return mSizeOrCapacity;
     }
 
-    T *const &heapBegin() const {
+    T *heapBegin() const {
         JS_ASSERT(!usingInlineStorage());
         return u.ptrs.mBegin;
     }
 
-    T *const &heapEnd() const {
+    T *heapEnd() const {
         JS_ASSERT(!usingInlineStorage());
         return u.ptrs.mEnd;
     }
@@ -377,11 +419,11 @@ class JSTempVector
     /* accessors */
 
     size_t size() const {
-        return usingInlineStorage() ? inlineSize() : (heapEnd() - heapBegin());
+        return usingInlineStorage() ? inlineSize() : heapSize();
     }
 
     bool empty() const {
-        return usingInlineStorage() ? inlineSize() == 0 : (heapBegin() == heapEnd());
+        return usingInlineStorage() ? inlineSize() == 0 : heapBegin() == heapEnd();
     }
 
     size_t capacity() const {
@@ -503,59 +545,84 @@ JSTempVector<T,N>::~JSTempVector()
     }
 }
 
+/*
+ * Calculate a new capacity size that is at least sizeInc greater than
+ * curSize and check for overflow.
+ */
 template <class T, size_t N>
 inline bool
-JSTempVector<T,N>::growHeapCapacityTo(size_t mincap)
+JSTempVector<T,N>::calculateNewCapacity(size_t curSize, size_t sizeInc, 
+                                        size_t &newCap)
 {
-    JS_ASSERT(mincap > heapCapacity());
+    size_t newMinCap = curSize + sizeInc;
 
-    /* Check for overflow in both CEILING_LOG2 and growTo. */
-    if (mincap & JSUtils::MulOverflowMask<2 * sizeof(T)>::result) {
+    /*
+     * Check for overflow in the above addition, below CEILING_LOG2, and later
+     * multiplication by sizeof(T).
+     */
+    if (newMinCap < curSize ||
+        newMinCap & JSUtils::MulOverflowMask<2 * sizeof(T)>::result) {
         js_ReportAllocationOverflow(mCx);
         return false;
     }
 
     /* Round up to next power of 2. */
-    size_t newcap;
-    JS_CEILING_LOG2(newcap, mincap);
-    JS_ASSERT(newcap < JSUtils::BitSize<size_t>::result);
-    newcap = size_t(1) << newcap;
+    size_t newCapLog2;
+    JS_CEILING_LOG2(newCapLog2, newMinCap);
+    JS_ASSERT(newCapLog2 < JSUtils::BitSize<size_t>::result);
+    newCap = size_t(1) << newCapLog2;
 
-    return Impl::growTo(*this, newcap);
+    /*
+     * Do not allow a buffer large enough that the expression ((char *)end() -
+     * (char *)begin()) overflows ptrdiff_t. See Bug 510319.
+     */
+    if (newCap & JSUtils::UnsafeRangeSizeMask<T>::result) {
+        js_ReportAllocationOverflow(mCx);
+        return false;
+    }
+    return true;
 }
 
+/*
+ * This function will grow the current heap capacity to have capacity
+ * (heapSize() + sizeInc) and fail on OOM or integer overflow.
+ */
 template <class T, size_t N>
 inline bool
-JSTempVector<T,N>::convertToHeapStorage(size_t mincap)
+JSTempVector<T,N>::growHeapStorageBy(size_t sizeInc)
 {
-    JS_ASSERT(mincap > sInlineCapacity);
+    size_t newCap;
+    return calculateNewCapacity(heapSize(), sizeInc, newCap) &&
+           Impl::growTo(*this, newCap);
+}
 
-    /* Check for overflow in both CEILING_LOG2 and malloc. */
-    if (mincap & JSUtils::MulOverflowMask<2 * sizeof(T)>::result) {
-        js_ReportAllocationOverflow(mCx);
+/*
+ * This function will create a new heap buffer with capacity (inlineSize() +
+ * sizeInc()), move all elements in the inline buffer to this new buffer,
+ * and fail on OOM or integer overflow.
+ */
+template <class T, size_t N>
+inline bool
+JSTempVector<T,N>::convertToHeapStorage(size_t sizeInc)
+{
+    size_t newCap;
+    if (!calculateNewCapacity(inlineSize(), sizeInc, newCap))
         return false;
-    }
-
-    /* Round up to next power of 2. */
-    size_t newcap;
-    JS_CEILING_LOG2(newcap, mincap);
-    JS_ASSERT(newcap < 32);
-    newcap = 1u << newcap;
 
     /* Allocate buffer. */
-    T *newbuf = reinterpret_cast<T *>(mCx->malloc(newcap * sizeof(T)));
-    if (!newbuf)
+    T *newBuf = reinterpret_cast<T *>(mCx->malloc(newCap * sizeof(T)));
+    if (!newBuf)
         return false;
 
     /* Copy inline elements into heap buffer. */
-    size_t size = inlineEnd() - inlineBegin();
-    Impl::copyConstruct(newbuf, inlineBegin(), inlineEnd());
+    size_t size = inlineSize();
+    Impl::copyConstruct(newBuf, inlineBegin(), inlineEnd());
     Impl::destroy(inlineBegin(), inlineEnd());
 
     /* Switch in heap buffer. */
-    mSizeOrCapacity = newcap;  /* marks us as !usingInlineStorage() */
-    heapBegin() = newbuf;
-    heapEnd() = newbuf + size;
+    mSizeOrCapacity = newCap;  /* marks us as !usingInlineStorage() */
+    heapBegin() = newBuf;
+    heapEnd() = newBuf + size;
     return true;
 }
 
@@ -566,10 +633,10 @@ JSTempVector<T,N>::reserve(size_t request)
     ReentrancyGuard g(*this);
     if (usingInlineStorage()) {
         if (request > sInlineCapacity)
-            return convertToHeapStorage(request);
+            return convertToHeapStorage(request - inlineSize());
     } else {
         if (request > heapCapacity())
-            return growHeapCapacityTo(request);
+            return growHeapStorageBy(request - heapSize());
     }
     return true;
 }
@@ -604,14 +671,14 @@ JSTempVector<T,N>::growBy(size_t incr)
             JS_ASSERT(usingInlineStorage());
             return true;
         }
-        if (!convertToHeapStorage(inlineSize() + incr))
+        if (!convertToHeapStorage(incr))
             return false;
     }
     else {
         /* grow if needed */
         size_t freespace = heapCapacity() - heapSize();
         if (incr > freespace) {
-            if (!growHeapCapacityTo(heapSize() + incr))
+            if (!growHeapStorageBy(incr))
                 return false;
         }
     }
@@ -663,10 +730,10 @@ JSTempVector<T,N>::append(const T &t)
             JS_ASSERT(usingInlineStorage());
             return true;
         }
-        if (!convertToHeapStorage(inlineSize() + 1))
+        if (!convertToHeapStorage(1))
             return false;
     } else {
-        if (heapSize() == heapCapacity() && !growHeapCapacityTo(heapSize() + 1))
+        if (heapSize() == heapCapacity() && !growHeapStorageBy(1))
             return false;
     }
 
@@ -689,11 +756,11 @@ JSTempVector<T,N>::appendN(const T &t, size_t needed)
             JS_ASSERT(usingInlineStorage());
             return true;
         }
-        if (!convertToHeapStorage(inlineSize() + needed))
+        if (!convertToHeapStorage(needed))
             return false;
     } else {
         size_t freespace = heapCapacity() - heapSize();
-        if (needed > freespace && !growHeapCapacityTo(heapSize() + needed))
+        if (needed > freespace && !growHeapStorageBy(needed))
             return false;
     }
 
@@ -710,7 +777,7 @@ inline bool
 JSTempVector<T,N>::append(const U *insBegin, const U *insEnd)
 {
     ReentrancyGuard g(*this);
-    size_t needed = insEnd - insBegin;
+    size_t needed = JSUtils::PointerRangeSize(insBegin, insEnd);
     if (usingInlineStorage()) {
         size_t freespace = sInlineCapacity - inlineSize();
         if (needed <= freespace) {
@@ -719,11 +786,11 @@ JSTempVector<T,N>::append(const U *insBegin, const U *insEnd)
             JS_ASSERT(usingInlineStorage());
             return true;
         }
-        if (!convertToHeapStorage(inlineSize() + needed))
+        if (!convertToHeapStorage(needed))
             return false;
     } else {
         size_t freespace = heapCapacity() - heapSize();
-        if (needed > freespace && !growHeapCapacityTo(heapSize() + needed))
+        if (needed > freespace && !growHeapStorageBy(needed))
             return false;
     }
 
