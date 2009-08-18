@@ -546,6 +546,9 @@ extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes);
 
 extern JS_PUBLIC_API(void)
+JS_CommenceRuntimeShutDown(JSRuntime *rt);
+
+extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);
 
 extern JS_PUBLIC_API(void)
