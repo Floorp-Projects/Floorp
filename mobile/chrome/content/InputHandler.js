@@ -476,6 +476,7 @@ MouseModule.prototype = {
 
     let targetClicker = this.getClickerFromElement(evInfo.event.target);
 
+    this._movedOutOfRadius = false;
     this._targetScrollInterface = targetScrollInterface;
     this._dragger = (targetScrollInterface) ? (targetScrollbox.customDragger || this._defaultDragger)
                                             : null;
@@ -518,14 +519,14 @@ MouseModule.prototype = {
 
     let [sX, sY] = dragData.lockAxis(evInfo.event.screenX, evInfo.event.screenY);
 
-    let movedOutOfRadius = dragData.isPointOutsideRadius(sX, sY);
+    this._movedOutOfRadius = this._movedOutOfRadius || dragData.isPointOutsideRadius(sX, sY);
 
     if (dragData.dragging)       // XXX same check as this._dragger but we
       this._doDragStop(sX, sY);  //  are using both, no good reason
 
     this._recordEvent(evInfo);
 
-    this._doClick(movedOutOfRadius);
+    this._doClick(this._movedOutOfRadius);
 
     this._owner.ungrab(this);
   },
@@ -542,6 +543,9 @@ MouseModule.prototype = {
       evInfo.event.preventDefault();
       this._doDragMove(sX, sY);
     }
+
+    this._movedOutOfRadius = this._movedOutOfRadius || 
+      dragData.isPointOutsideRadius(evInfo.event.screenX, evInfo.event.screenY);
   },
 
   /**
