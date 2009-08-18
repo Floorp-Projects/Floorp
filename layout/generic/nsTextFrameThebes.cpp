@@ -5922,7 +5922,7 @@ nsTextFrame::SetLength(PRInt32 aLength)
 PRBool
 nsTextFrame::IsFloatingFirstLetterChild()
 {
-  if (!GetStateBits() & TEXT_FIRST_LETTER)
+  if (!(GetStateBits() & TEXT_FIRST_LETTER))
     return PR_FALSE;
   nsIFrame* frame = GetParent();
   if (!frame || frame->GetType() != nsGkAtoms::letterFrame)
