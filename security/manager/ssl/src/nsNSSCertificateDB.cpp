@@ -1341,8 +1341,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
           if (sc) *sc = DELIM;
         }
       }
-      if (!namestr) namestr = "";
-      nsAutoString certname = NS_ConvertASCIItoUTF16(namestr);
+      nsAutoString certname = NS_ConvertASCIItoUTF16(namestr ? namestr : "");
       certstr.Append(PRUnichar(DELIM));
       certstr += certname;
       certstr.Append(PRUnichar(DELIM));

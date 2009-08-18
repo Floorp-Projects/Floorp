@@ -105,9 +105,9 @@ struct LiteralArray {
 #define GLYPHS LiteralArray
 
 struct TestEntry {
-    TestEntry (char *aUTF8FamilyString,
+    TestEntry (const char *aUTF8FamilyString,
                const gfxFontStyle& aFontStyle,
-               char *aString)
+               const char *aString)
         : utf8FamilyString(aUTF8FamilyString),
           fontStyle(aFontStyle),
           stringType(S_ASCII),
@@ -116,10 +116,10 @@ struct TestEntry {
     {
     }
 
-    TestEntry (char *aUTF8FamilyString,
+    TestEntry (const char *aUTF8FamilyString,
                const gfxFontStyle& aFontStyle,
                int stringType,
-               char *aString)
+               const char *aString)
         : utf8FamilyString(aUTF8FamilyString),
           fontStyle(aFontStyle),
           stringType(stringType),
@@ -211,11 +211,11 @@ struct TestEntry {
         return PR_TRUE;
     }
 
-    char *utf8FamilyString;
+    const char *utf8FamilyString;
     gfxFontStyle fontStyle;
 
     int stringType;
-    char *string;
+    const char *string;
     PRPackedBool isRTL;
 
     nsTArray<ExpectItem> expectItems;
@@ -237,10 +237,10 @@ MakeContext ()
 }
 
 TestEntry*
-AddTest (char *utf8FamilyString,
+AddTest (const char *utf8FamilyString,
          const gfxFontStyle& fontStyle,
          int stringType,
-         char *string)
+         const char *string)
 {
     TestEntry te (utf8FamilyString,
                   fontStyle,
@@ -302,7 +302,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     if (test->stringType == S_ASCII) {
         flags |= gfxTextRunFactory::TEXT_IS_ASCII | gfxTextRunFactory::TEXT_IS_8BIT;
         length = strlen(test->string);
-        textRun = gfxTextRunWordCache::MakeTextRun(reinterpret_cast<PRUint8*>(test->string), length, fontGroup, &params, flags);
+        textRun = gfxTextRunWordCache::MakeTextRun(reinterpret_cast<const PRUint8*>(test->string), length, fontGroup, &params, flags);
     } else {
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->string));
         length = str.Length();
