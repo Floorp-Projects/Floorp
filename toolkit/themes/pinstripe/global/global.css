@@ -202,10 +202,6 @@ separator.groove[orient="vertical"] {
   margin-left: 0.4em;
   margin-right: 0.4em;
 }
-
-.small-margin {
-  margin: 1px 2px;
-}
     
 .plain {
   -moz-appearance: none;
@@ -220,10 +216,7 @@ label {
 }
 
 label {
-  margin-top: 1px;
-  margin-bottom: 2px;
-  -moz-margin-start: 6px;
-  -moz-margin-end: 5px;
+  margin: 2px 6px;
 }
 
 label[disabled="true"] {
