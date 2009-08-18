@@ -51,11 +51,9 @@
  *
  * Date         Modified by     Description of modification
  * 05/03/2000   IBM Corp.       Observer events for reflow states
- */ 
+ */
 
 /* a presentation of a document, part 2 */
-
-#define PL_ARENA_CONST_ALIGN_MASK 3
 
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -117,6 +115,7 @@
 #include "nsIDOMNSHTMLInputElement.h" //optimization for ::DoXXX commands
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsViewsCID.h"
+#include "nsPresArena.h"
 #include "nsFrameManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -124,7 +123,6 @@
 #include "nsILineIterator.h" // for ScrollContentIntoView
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
-#include "plarena.h"
 #include "pldhash.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
@@ -434,9 +432,6 @@ protected:
 #define NS_MAX_REFLOW_TIME    1000000
 static PRInt32 gMaxRCProcessingTime = -1;
 
-// Largest chunk size we recycle
-static const size_t gMaxRecycledSize = 400;
-
 #define MARK_INCREMENT 50
 #define BLOCK_INCREMENT 4044 /* a bit under 4096, for malloc overhead */
 
@@ -631,135 +626,6 @@ StackArena::Pop()
 
   mCurBlock = mMarks[mStackTop].mBlock;
   mPos      = mMarks[mStackTop].mPos;
-}
-
-// Uncomment this to disable the frame arena.
-//#define DEBUG_TRACEMALLOC_FRAMEARENA 1
-
-// Memory is allocated 4-byte aligned. We have recyclers for chunks up to
-// 200 bytes
-class FrameArena {
-public:
-  FrameArena(PRUint32 aArenaSize = 4096);
-  ~FrameArena();
-
-  // Memory management functions
-  NS_HIDDEN_(void*) AllocateFrame(size_t aSize);
-  NS_HIDDEN_(void)  FreeFrame(size_t aSize, void* aPtr);
-
-private:
-#ifdef DEBUG
-  // Number of frames in the pool
-  PRUint32 mFrameCount;
-#endif
-
-#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  // Underlying arena pool
-  PLArenaPool mPool;
-
-  // The recycler array is sparse with the indices being multiples of 4,
-  // i.e., 0, 4, 8, 12, 16, 20, ...
-  void*       mRecyclers[gMaxRecycledSize >> 2];
-#endif
-};
-
-FrameArena::FrameArena(PRUint32 aArenaSize)
-#ifdef DEBUG
-  : mFrameCount(0)
-#endif
-{
-#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  // Initialize the arena pool
-  PL_INIT_ARENA_POOL(&mPool, "FrameArena", aArenaSize);
-
-  // Zero out the recyclers array
-  memset(mRecyclers, 0, sizeof(mRecyclers));
-#endif
-}
-
-FrameArena::~FrameArena()
-{
-  NS_ASSERTION(mFrameCount == 0,
-               "Some objects allocated with AllocateFrame were not freed");
- 
-#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  // Free the arena in the pool and finish using it
-  PL_FinishArenaPool(&mPool);
-#endif
-} 
-
-void*
-FrameArena::AllocateFrame(size_t aSize)
-{
-  void* result = nsnull;
-
-#if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-
-  result = PR_Malloc(aSize);
-
-#else
-
-  // Ensure we have correct alignment for pointers.  Important for Tru64
-  aSize = PR_ROUNDUP(aSize, sizeof(void*));
-
-  // Check recyclers first
-  if (aSize < gMaxRecycledSize) {
-    const int   index = aSize >> 2;
-
-    result = mRecyclers[index];
-    if (result) {
-      // Need to move to the next object
-      void* next = *((void**)result);
-      mRecyclers[index] = next;
-    }
-  }
-
-  if (!result) {
-    // Allocate a new chunk from the arena
-    PL_ARENA_ALLOCATE(result, &mPool, aSize);
-  }
-
-#endif
-
-#ifdef DEBUG
-  if (result != nsnull)
-    ++mFrameCount;
-#endif
-
-  return result;
-}
-
-void
-FrameArena::FreeFrame(size_t aSize, void* aPtr)
-{
-#ifdef DEBUG
-  --mFrameCount;
-
-  // Mark the memory with 0xdd in DEBUG builds so that there will be
-  // problems if someone tries to access memory that they've freed.
-  memset(aPtr, 0xdd, aSize);
-#endif
-#if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  PR_Free(aPtr);
-#else
-  // Ensure we have correct alignment for pointers.  Important for Tru64
-  aSize = PR_ROUNDUP(aSize, sizeof(void*));
-
-  // See if it's a size that we recycle
-  if (aSize < gMaxRecycledSize) {
-    const int   index = aSize >> 2;
-    void*       currentTop = mRecyclers[index];
-    mRecyclers[index] = aPtr;
-    *((void**)aPtr) = currentTop;
-  }
-#ifdef DEBUG_dbaron
-  else {
-    fprintf(stderr,
-            "WARNING: FrameArena::FreeFrame leaking chunk of %d bytes.\n",
-            aSize);
-  }
-#endif
-#endif
 }
 
 struct nsCallbackEventRequest
@@ -1184,7 +1050,7 @@ protected:
   nsRefPtr<nsCaret>             mCaret;
   nsRefPtr<nsCaret>             mOriginalCaret;
   PRInt16                       mSelectionFlags;
-  FrameArena                    mFrameArena;
+  nsPresArena                   mFrameArena;
   StackArena                    mStackArena;
   nsCOMPtr<nsIDragService>      mDragService;
   
@@ -2103,13 +1969,13 @@ PresShell::AllocateStackMemory(size_t aSize)
 void
 PresShell::FreeFrame(size_t aSize, void* aPtr)
 {
-  mFrameArena.FreeFrame(aSize, aPtr);
+  mFrameArena.Free(aSize, aPtr);
 }
 
 void*
 PresShell::AllocateFrame(size_t aSize)
 {
-  return mFrameArena.AllocateFrame(aSize);
+  return mFrameArena.Allocate(aSize);
 }
 
 void
