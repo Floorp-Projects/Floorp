@@ -1298,24 +1298,13 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
     }
     rt->gcLocksHash = NULL;     /* create lazily */
 
-    /*
-     * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
-     * for default backward API compatibility.
-     */
-    rt->gcMaxBytes = rt->gcMaxMallocBytes = maxbytes;
+    rt->gcMaxBytes = maxbytes;
     rt->gcEmptyArenaPoolLifespan = 30000;
 
     /*
-     * By default the trigger factor gets maximum possible value. This
-     * means that GC will not be triggered by growth of GC memory (gcBytes).
+     * Sample the current resident set size (RSS).
      */
-    rt->setGCTriggerFactor((uint32) -1);
-
-    /*
-     * The assigned value prevents GC from running when GC memory is too low
-     * (during JS engine start).
-     */
-    rt->setGCLastBytes(8192);
+    rt->gcLastRSS = js_GetRSS();
 
     METER(memset(&rt->gcStats, 0, sizeof rt->gcStats));
     return JS_TRUE;
@@ -1724,42 +1713,6 @@ static struct GCHist {
 unsigned gchpos = 0;
 #endif
 
-void
-JSRuntime::setGCTriggerFactor(uint32 factor)
-{
-    JS_ASSERT(factor >= 100);
-
-    gcTriggerFactor = factor;
-    setGCLastBytes(gcLastBytes);
-}
-
-void
-JSRuntime::setGCLastBytes(size_t lastBytes)
-{
-    gcLastBytes = lastBytes;
-    uint64 triggerBytes = uint64(lastBytes) * uint64(gcTriggerFactor / 100);
-    if (triggerBytes != size_t(triggerBytes))
-        triggerBytes = size_t(-1);
-    gcTriggerBytes = size_t(triggerBytes);
-}
-
-static JS_INLINE bool
-IsGCThresholdReached(JSRuntime *rt)
-{
-#ifdef JS_GC_ZEAL
-    if (rt->gcZeal >= 1)
-        return true;
-#endif
-
-    /*
-     * Since the initial value of the gcLastBytes parameter is not equal to
-     * zero (see the js_InitGC function) the return value is false when
-     * the gcBytes value is close to zero at the JS engine start.
-     */
-    return rt->gcMallocBytes >= rt->gcMaxMallocBytes ||
-           rt->gcBytes >= rt->gcTriggerBytes;
-}
-
 template <class T> static JS_INLINE T*
 NewGCThing(JSContext *cx, uintN flags)
 {
@@ -1776,7 +1729,6 @@ NewGCThing(JSContext *cx, uintN flags)
 #endif
 #ifdef JS_THREADSAFE
     JSBool gcLocked;
-    uintN localMallocBytes;
     JSGCThing **lastptr;
     JSGCThing *tmpthing;
     uint8 *tmpflagp;
@@ -1799,8 +1751,7 @@ NewGCThing(JSContext *cx, uintN flags)
 
     JSGCThing *&freeList = cx->thread->gcFreeLists[flindex];
     thing = freeList;
-    localMallocBytes = JS_THREAD_DATA(cx)->gcMallocBytes;
-    if (thing && rt->gcMaxMallocBytes - rt->gcMallocBytes > localMallocBytes) {
+    if (thing) {
         flagp = thing->flagp;
         freeList = thing->next;
         METER(astats->localalloc++);
@@ -1810,14 +1761,6 @@ NewGCThing(JSContext *cx, uintN flags)
     JS_LOCK_GC(rt);
     gcLocked = JS_TRUE;
 
-    /* Transfer thread-local counter to global one. */
-    if (localMallocBytes != 0) {
-        JS_THREAD_DATA(cx)->gcMallocBytes = 0;
-        if (rt->gcMaxMallocBytes - rt->gcMallocBytes < localMallocBytes)
-            rt->gcMallocBytes = rt->gcMaxMallocBytes;
-        else
-            rt->gcMallocBytes += localMallocBytes;
-    }
 #endif
     JS_ASSERT(!rt->gcRunning);
     if (rt->gcRunning) {
@@ -1832,7 +1775,7 @@ NewGCThing(JSContext *cx, uintN flags)
 #endif
 
     arenaList = &rt->gcArenaList[flindex];
-    doGC = IsGCThresholdReached(rt);
+    doGC = rt->gcIsNeeded;
     for (;;) {
         if (doGC
 #ifdef JS_TRACER
@@ -1861,13 +1804,10 @@ NewGCThing(JSContext *cx, uintN flags)
 #ifdef JS_THREADSAFE
             /*
              * Refill the local free list by taking several things from the
-             * global free list unless the free list is already populated or
-             * we are still at rt->gcMaxMallocBytes barrier. The former is
-             * caused via allocating new things in gcCallback(cx, JSGC_END).
-             * The latter happens when GC is canceled due to
-             * gcCallback(cx, JSGC_BEGIN) returning false.
+             * global free list unless the free list is already populated.
+             * This is caused by allocating new things in gcCallback(cx, JSGC_END).
              */
-            if (freeList || rt->gcMallocBytes >= rt->gcMaxMallocBytes)
+            if (freeList)
                 break;
 
             tmpthing = arenaList->freeList;
@@ -1937,7 +1877,7 @@ testReservedObjects:
          * arena. Prefer to order free things by ascending address in the
          * (unscientific) hope of better cache locality.
          */
-        if (freeList || rt->gcMallocBytes >= rt->gcMaxMallocBytes)
+        if (freeList)
             break;
         lastptr = &freeList;
         maxFreeThings = thingsLimit - arenaList->lastCount;
@@ -2064,7 +2004,7 @@ RefillDoubleFreeList(JSContext *cx)
         return NULL;
     }
 
-    if (IsGCThresholdReached(rt))
+    if (rt->gcIsNeeded)
         goto do_gc;
 
     /*
@@ -2250,45 +2190,6 @@ js_ReserveObjects(JSContext *cx, size_t nobjects)
     return JS_TRUE;
 }
 #endif
-
-JSBool
-js_AddAsGCBytes(JSContext *cx, size_t sz)
-{
-    JSRuntime *rt;
-
-    rt = cx->runtime;
-    if (rt->gcBytes >= rt->gcMaxBytes ||
-        sz > (size_t) (rt->gcMaxBytes - rt->gcBytes) ||
-        IsGCThresholdReached(rt)) {
-        if (JS_ON_TRACE(cx)) {
-            /*
-             * If we can't leave the trace, signal OOM condition, otherwise
-             * exit from trace and proceed with GC.
-             */
-            if (!js_CanLeaveTrace(cx)) {
-                JS_UNLOCK_GC(rt);
-                return JS_FALSE;
-            }
-            js_LeaveTrace(cx);
-        }
-        js_GC(cx, GC_LAST_DITCH);
-        if (rt->gcBytes >= rt->gcMaxBytes ||
-            sz > (size_t) (rt->gcMaxBytes - rt->gcBytes)) {
-            JS_UNLOCK_GC(rt);
-            JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
-        }
-    }
-    rt->gcBytes += (uint32) sz;
-    return JS_TRUE;
-}
-
-void
-js_RemoveAsGCBytes(JSRuntime *rt, size_t sz)
-{
-    JS_ASSERT((size_t) rt->gcBytes >= sz);
-    rt->gcBytes -= (uint32) sz;
-}
 
 /*
  * Shallow GC-things can be locked just by setting the GCF_LOCK bit, because
@@ -3496,9 +3397,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     /* Clear gcIsNeeded now, when we are about to start a normal GC cycle. */
     rt->gcIsNeeded = JS_FALSE;
 
-    /* Reset malloc counter. */
-    rt->gcMallocBytes = 0;
-
 #ifdef JS_DUMP_SCOPE_METERS
   { extern void js_DumpScopeMeters(JSRuntime *rt);
     js_DumpScopeMeters(rt);
@@ -3559,7 +3457,14 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     rt->gcMarkingTracer = NULL;
 
 #ifdef JS_THREADSAFE
-    cx->createDeallocatorTask();
+    /*
+     * Deallocations occur in the background. The background thread will set
+     * gcFreed once it is done. At the next GC we will substract the amount
+     * of data we freed in the background from the previous GC cycle's
+     * RSS sample.
+     */
+    rt->gcFreed = 0;
+    cx->createDeallocatorTask(&rt->gcFreed);
 #endif
 
     /*
@@ -3740,7 +3645,16 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     DestroyGCArenas(rt, emptyArenas);
 
+    /* Sample Resident Set Size (RSS). */
+    rt->gcLastRSS = js_GetRSS();
+
 #ifdef JS_THREADSAFE
+    /*
+     * It is important that we sample rt->gcLastRSS before submitting the
+     * deallocator task. This way we know that the RSS we sample ddoes not
+     * contain the bytes we will free in the background, which we will
+     * account for separately in rt->gcFreed.
+     */
     cx->submitDeallocatorTask();
 #endif
 
@@ -3798,7 +3712,6 @@ out:
         goto restart;
     }
 
-    rt->setGCLastBytes(rt->gcBytes);
   done_running:
     rt->gcLevel = 0;
     rt->gcRunning = rt->gcRegenShapes = false;
@@ -3850,3 +3763,134 @@ out:
         }
     }
 }
+
+void
+js_MaybeGC(JSContext *cx)
+{
+    JSRuntime *rt;
+
+    rt = cx->runtime;
+
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal > 0) {
+        JS_GC(cx);
+        return;
+    }
+#endif
+
+    size_t lastRSS = rt->gcLastRSS;
+    size_t freed = rt->gcFreed;
+    if (lastRSS > freed)
+        lastRSS -= freed;
+    size_t rss = js_GetRSS();
+    /* Trigger a GC if the working set grew by more than 32MB and at least 25%. */
+    if (rss > lastRSS + 32*1024*1024 && rss > lastRSS + lastRSS/4)
+        JS_GC(cx);
+}
+
+#ifdef JS_THREADSAFE
+void
+JSFreePointerListTask::add(void *ptr)
+{
+#ifdef DEBUG
+    memset(ptr, 0xcd, js_malloc_size(ptr));
+#endif
+    *(void**)ptr = head;
+    head = ptr;
+}
+
+void
+JSFreePointerListTask::run()
+{
+    size_t bytes = 0;
+    void *ptr = head;
+    while (ptr) {
+        void* next = *(void **)ptr;
+        bytes += js_malloc_size(ptr);
+        js_free(ptr);
+        ptr = next;
+    }
+    JS_ATOMIC_ADD(bytesp, bytes);
+}
+#endif
+
+#ifdef __APPLE__
+#include <mach/mach.h>
+#include <mach/task_info.h>
+size_t
+js_GetRSS()
+{
+    task_t task;
+    task_basic_info ti;
+    mach_msg_type_number_t count;
+
+    task_for_pid(mach_task_self (), getpid(), &task);
+    count = TASK_BASIC_INFO_COUNT;
+    task_info(task, TASK_BASIC_INFO, (task_info_t)&ti, &count);
+    return ti.resident_size;
+}
+#endif
+
+#ifdef WINCE
+#include "windows.h"
+
+size_t
+js_GetRSS()
+{
+    MEMORYSTATUS ms;
+    GlobalMemoryStatus(&ms);
+    return ms.dwTotalVirtual - ms.dwAvailVirtual;
+}
+#else
+#ifdef WIN32
+#include "windows.h"
+#include "psapi.h"
+size_t
+js_GetRSS()
+{
+    PROCESS_MEMORY_COUNTERS pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+    return pmc.WorkingSetSize;
+}
+#endif
+#endif
+
+#ifdef __linux__
+#include <unistd.h>
+#include <fcntl.h>
+static const char*
+skipFields(const char* p, unsigned n)
+{
+    while (*++p) {
+        if ((*p == ' ') && (--n == 0))
+            return p+1;
+    }
+    return NULL;
+}
+
+static int statfd = 0;
+
+size_t
+js_GetRSS()
+{
+    char buf[128];
+    if (!statfd) {
+        snprintf(buf, 100, "/proc/%d/stat", getpid());
+        statfd = open(buf, O_RDONLY);
+    }
+    if (statfd < 0)
+        return 0;
+    lseek(statfd, 0, SEEK_SET);
+    int n = read(statfd, buf, sizeof(buf)-1);
+    if (n < 0)
+        return 0;
+    buf[n] = 0;
+    const char* p = strrchr(buf, ')');
+    if (!p)
+        return 0;
+    p = skipFields(p + 2, 20);
+    if (!p)
+        return 0;
+    return atol(p);
+}
+#endif

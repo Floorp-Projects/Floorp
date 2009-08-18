@@ -262,12 +262,6 @@ struct JSThreadData {
     JSEvalCacheMeter    evalCacheMeter;
 #endif
 
-    /*
-     * Thread-local version of JSRuntime.gcMallocBytes to avoid taking
-     * locks on each JS_malloc.
-     */
-    size_t              gcMallocBytes;
-
 #ifdef JS_THREADSAFE
     /*
      * Deallocator task for this thread.
@@ -390,16 +384,14 @@ struct JSRuntime {
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     jsrefcount          gcKeepAtoms;
-    size_t              gcBytes;
-    size_t              gcLastBytes;
-    size_t              gcMaxBytes;
-    size_t              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcLevel;
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
-    uint32              gcTriggerFactor;
-    size_t              gcTriggerBytes;
+    size_t              gcBytes;
+    size_t              gcMaxBytes;
+    size_t              gcLastRSS;
+    size_t              gcFreed;
     volatile JSBool     gcIsNeeded;
     volatile JSBool     gcFlushCodeCaches;
 
@@ -429,7 +421,6 @@ struct JSRuntime {
 #endif
 
     JSGCCallback        gcCallback;
-    size_t              gcMallocBytes;
     JSGCArenaInfo       *gcUntracedArenaStackTop;
 #ifdef DEBUG
     size_t              gcTraceLaterCount;
@@ -717,9 +708,6 @@ struct JSRuntime {
     JSFunctionMeter     functionMeter;
     char                lastScriptFilename[1024];
 #endif
-
-    void setGCTriggerFactor(uint32 factor);
-    void setGCLastBytes(size_t lastBytes);
 
     inline void* malloc(size_t bytes) {
         return ::js_malloc(bytes);
@@ -1080,15 +1068,15 @@ struct JSContext {
 #endif
 
 #ifdef JS_THREADSAFE
-    inline void createDeallocatorTask() {
-        JSThreadData* tls = JS_THREAD_DATA(this);
+    inline void createDeallocatorTask(size_t *bytesp) {
+        JSThreadData *tls = JS_THREAD_DATA(this);
         JS_ASSERT(!tls->deallocatorTask);
         if (runtime->deallocatorThread && !runtime->deallocatorThread->busy())
-            tls->deallocatorTask = new JSFreePointerListTask();
+            tls->deallocatorTask = new JSFreePointerListTask(bytesp);
     }
 
     inline void submitDeallocatorTask() {
-        JSThreadData* tls = JS_THREAD_DATA(this);
+        JSThreadData *tls = JS_THREAD_DATA(this);
         if (tls->deallocatorTask) {
             runtime->deallocatorThread->schedule(tls->deallocatorTask);
             tls->deallocatorTask = NULL;
@@ -1096,46 +1084,32 @@ struct JSContext {
     }
 #endif
 
-    /* Call this after succesful malloc of memory for GC-related things. */
-    inline void updateMallocCounter(size_t nbytes) {
-        size_t *pbytes, bytes;
-
-        pbytes = &JS_THREAD_DATA(this)->gcMallocBytes;
-        bytes = *pbytes;
-        *pbytes = (size_t(-1) - bytes <= nbytes) ? size_t(-1) : bytes + nbytes;
-    }
-
-    inline void* malloc(size_t bytes) {
+    inline void *malloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
         void *p = runtime->malloc(bytes);
         if (!p) {
             JS_ReportOutOfMemory(this);
             return NULL;
         }
-        updateMallocCounter(bytes);
         return p;
     }
 
-    inline void* calloc(size_t bytes) {
+    inline void *calloc(size_t bytes) {
         JS_ASSERT(bytes != 0);
         void *p = runtime->calloc(bytes);
         if (!p) {
             JS_ReportOutOfMemory(this);
             return NULL;
         }
-        updateMallocCounter(bytes);
         return p;
     }
 
-    inline void* realloc(void* p, size_t bytes) {
-        void *orig = p;
+    inline void *realloc(void* p, size_t bytes) {
         p = runtime->realloc(p, bytes);
         if (!p) {
             JS_ReportOutOfMemory(this);
             return NULL;
         }
-        if (!orig)
-            updateMallocCounter(bytes);
         return p;
     }
 
