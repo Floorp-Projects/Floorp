@@ -70,7 +70,7 @@ dialog {
   -moz-box-align: start;
   height: 24px;
   width: 24px;
-  margin: 4px;
+  margin: 3px 4px;
 }
 
 .dialog-button[dlgtype="help"][disabled] {

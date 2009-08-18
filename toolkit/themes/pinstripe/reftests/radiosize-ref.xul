@@ -5,6 +5,7 @@ vbox { height: 50px; }
 box {
   -moz-appearance: radio;
   margin-left: 2px;
+  margin-top: 1px;
 }
 " type="text/css"?>
 
