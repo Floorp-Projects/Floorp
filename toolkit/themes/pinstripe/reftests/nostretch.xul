@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<!--
+ * This test tests whether you can put different widgets in the same
+ * hbox without stretching them, even if you don't set align="center".
+ * I.e. prior to the fix that added this patch, having a button and a
+ * menulist in the same hbox next to each other would stretch the menulist
+ * vertically because the button had such a big vertical margin.
+ *
+ * The test works like this: Two widgets are placed in a hbox, and the second
+ * widget is visibility: hidden. In the reference (nostretch-ref.xul), the
+ * second widget is display: none. If test and reference look the same,
+ * adding the second widget hasn't affected the appearance of the first widget,
+ * and everything's fine.
+ * -->
+<window title="Stretched controls test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:svg="http://www.w3.org/2000/svg"
+        orient="vertical"
+        class="reftest-wait"
+        onload="loaded()">
+
+<html:style><![CDATA[
+.regular {
+  font: -moz-dialog;
+}
+.small {
+  font: message-box;
+}
+.spacer {
+  height: 40px;
+}
+.foreground > :nth-child(2) {
+  visibility: hidden;
+}
+]]>
+</html:style>
+
+<script type="application/javascript;version=1.8"><![CDATA[
+
+function cE(elem) {
+  return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", elem);
+}
+function elWithValue(elem, val) {
+  let e = cE(elem);
+  e.setAttribute(elem == "label" || elem == "textbox" ? "value" : "label", val);
+  return e;
+}
+
+function allPairs(set) {
+  let ps = [];
+  for(let i = 0; i < set.length; ++i) {
+    for (let j = 0; j < set.length; ++j) {
+      if (i != j)
+        ps.push([set[i], set[j]]);
+    }
+  }
+  return ps;
+}
+
+function createLabel(v) elWithValue("label", v)
+function createRadio(v) elWithValue("radio", v)
+function createCheckbox(v) elWithValue("checkbox", v)
+function createButton(v) elWithValue("button", v)
+function createTextField(v) elWithValue("textbox", v)
+function createMenulist(v) {
+  let [list, popup, item] = [cE("menulist"), cE("menupopup"), elWithValue("menuitem", v)];
+  item.setAttribute("selected", "true");
+  popup.appendChild(item);
+  list.appendChild(popup);
+  return list;
+}
+function createEditableMenulist(v) {
+  let list = createMenulist(v);
+  list.setAttribute("editable", "true");
+  return list;
+}
+function loaded() {
+  let template = document.getElementById("template");
+  ["regular", "small"].forEach(function(size) {
+    let wrapper = document.querySelectorAll("#wrapper > ." + size)[0];
+    allPairs([
+      createButton, createMenulist, createTextField, createEditableMenulist,
+    ]).forEach(function(elemList) {
+      let newBox = template.cloneNode(true);
+      newBox.className = "spacer";
+      let foregroundRow = newBox.firstChild;
+      elemList.forEach(function(creator) {
+        foregroundRow.appendChild(creator("Label"));
+      });
+      wrapper.appendChild(newBox);
+    });
+  });
+  document.documentElement.className = "";
+}
+
+]]></script>
+    <vbox id="template">
+      <hbox class="foreground"/>
+    </vbox>
+  <hbox id="wrapper">
+    <vbox class="regular" width="500"/>
+    <vbox class="small" flex="1"/>
+  </hbox>
+
+  <spacer flex="1"/>
+
+</window>
