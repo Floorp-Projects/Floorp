@@ -107,7 +107,7 @@ if [[ -n "$TEST_MOZILLA_HG" ]]; then
         eval hg update $DATE_CO_FLAGS
         echo "Update to date $MOZ_CO_DATE `hg root` id `hg id`"
     fi
-    
+
 fi
 
 case $product in
@@ -127,89 +127,7 @@ case $product in
                 fi
                 ;;
 
-            1.9.1|1.9.2)
-
-                # do not use mozilla-build on windows systems as we 
-                # must use the cygwin python with the cygwin mercurial.
-
-                if ! python client.py checkout; then
-                    error "during checkout of $project tree" $LINENO
-                fi
-                ;;
-
             *)
-                error "branch $branch not yet supported"
-                ;;
-        esac
-        ;;
-
-    thunderbird)
-
-        case $branch in
-            1.8.*|1.9.0)
-                if [[ ! ( -d mozilla && \
-                    -e mozilla/client.mk && \
-                    -e "mozilla/$project/config/mozconfig" ) ]]; then
-                    if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
-                        mozilla/client.mk mozilla/$project/config/mozconfig; then
-                        error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS $project mozconfig" $LINENO
-                    fi
-                fi
-
-                if [[ ! ( -d mozilla && \
-                    -e mozilla/client.mk && \
-                    -e "mozilla/browser/config/mozconfig" ) ]]; then
-                    if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
-                        mozilla/client.mk mozilla/browser/config/mozconfig; then
-                        error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS browser mozconfig" $LINENO
-                    fi
-                fi
-
-                if ! $buildbash $bashlogin -c "export PATH=\"$BUILDPATH\"; cd $BUILDTREE/mozilla; make -f client.mk checkout" 2>&1; then
-                    error "during checkout of $project tree" $LINENO
-                fi
-                ;;
-
-            1.9.1|1.9.2)
-
-                # do not use mozilla-build on windows systems as we 
-                # must use the cygwin python with the cygwin mercurial.
-
-                if ! python client.py checkout; then
-                    error "during checkout of $project tree" $LINENO
-                fi
-                ;;
-
-            *)
-                error "branch $branch not yet supported"
-                ;;
-        esac
-        ;;
-
-    fennec)
-
-        case $branch in
-            1.9.1|1.9.2)
-
-                # XXX need to generalize the mobile-browser repository
-                if [[ ! -d mobile/.hg ]]; then
-                    if ! hg clone http://hg.mozilla.org/mobile-browser $BUILDTREE/mozilla/mobile; then
-                        error "during hg clone of http://hg.mozilla.org/mobile-browser" $LINENO
-                    fi
-                fi
-
-                cd mobile
-                hg pull
-                if [[ "$OSID" == "nt" ]]; then
-                    # remove spurious lock file
-                    rm -f .hg/wlock.lnk
-                fi
-                hg update -C
-
-                # XXX need to deal with mobile revisions from different repositories
-
-                cd ../
-
                 # do not use mozilla-build on windows systems as we
                 # must use the cygwin python with the cygwin mercurial.
 
@@ -217,14 +135,10 @@ case $product in
                     error "during checkout of $project tree" $LINENO
                 fi
                 ;;
-
-            *)
-                error "branch $branch not yet supported"
-                ;;
         esac
         ;;
 
-    js) 
+    js)
 
         case $branch in
             1.8.*|1.9.0)
@@ -247,9 +161,9 @@ case $product in
                 fi
                 ;;
 
-            1.9.1|1.9.2)
+            *)
 
-                # do not use mozilla-build on windows systems as we 
+                # do not use mozilla-build on windows systems as we
                 # must use the cygwin python with the cygwin mercurial.
 
                 if ! python client.py checkout; then
@@ -257,10 +171,6 @@ case $product in
                 fi
 
                 cd js/src
-                ;;
-
-            *)
-                error "branch $branch not yet supported"
                 ;;
         esac
         # end for js shell

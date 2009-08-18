@@ -41,7 +41,7 @@ source $TEST_DIR/bin/library.sh
 source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
-    firefox|thunderbird|fennec)
+    firefox)
         cd $BUILDTREE/mozilla
 
         if ! $buildbash $bashlogin -c "export PATH=\"$BUILDPATH\"; cd $BUILDTREE/mozilla; make -f client.mk build" 2>&1; then
@@ -64,18 +64,10 @@ case $product in
                 if [[ "$buildtype" == "debug" ]]; then
                     if [[ "$product" == "firefox" ]]; then
                         executablepath=$product-$buildtype/dist/FirefoxDebug.app/Contents/MacOS
-                    elif [[ "$product" == "thunderbird" ]]; then
-                        executablepath=$product-$buildtype/dist/ThunderbirdDebug.app/Contents/MacOS
-                    elif [[ "$product" == "fennec" ]]; then
-                        executablepath=$product-$buildtype/dist/FennecDebug.app/Contents/MacOS
                     fi
                 else
                     if [[ "$product" == "firefox" ]]; then
                         executablepath=$product-$buildtype/dist/Firefox.app/Contents/MacOS
-                    elif [[ "$product" == "thunderbird" ]]; then
-                        executablepath=$product-$buildtype/dist/Thunderbird.app/Contents/MacOS
-                    elif [[ "$product" == "fennec" ]]; then
-                        executablepath=$product-$buildtype/dist/Fennec.app/Contents/MacOS
                     fi
                 fi
                 ;;
@@ -84,7 +76,7 @@ case $product in
                 ;;
         esac
 
-        if [[ "$OSID" != "nt" && "$product" != "fennec" ]]; then
+        if [[ "$OSID" != "nt" ]]; then
             #
             # patch unix-like startup scripts to exec instead of 
             # forking new processes

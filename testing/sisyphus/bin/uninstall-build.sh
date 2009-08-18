@@ -46,18 +46,18 @@ options="p:b:x:d:"
 function usage()
 {
     cat <<EOF
-usage: 
+usage:
 $SCRIPT -p product -b branch  -x executablepath [-d datafiles]
 
 variable            description
 ===============     ============================================================
--p product          required. firefox, thunderbird or fennec
--b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
+-p product          required. firefox.
+-b branch           required. supported branch. see library.sh
 -x executablepath   required. directory where build is installed
--d datafiles        optional. one or more filenames of files containing 
+-d datafiles        optional. one or more filenames of files containing
                     environment variable definitions to be included.
 
-note that the environment variables should have the same names as in the 
+note that the environment variables should have the same names as in the
 "variable" column.
 
 Uninstalls build located in directory-tree 'executablepath'
@@ -69,8 +69,8 @@ EOF
 
 unset product branch executablepath datafiles
 
-while getopts $options optname ; 
-  do 
+while getopts $options optname ;
+  do
   case $optname in
       p) product=$OPTARG;;
       b) branch=$OPTARG;;
@@ -114,7 +114,7 @@ if [[ $OSID == "nt" ]]; then
                     if $uninstallexe; then true; fi
                 fi
             fi
-        elif [[ "$branch" == "1.8.1" || "$branch" == "1.9.0" || "$branch" == "1.9.1" || "$branch" == "1.9.2" ]]; then
+        else
             uninstalloldexe="$executabledir/uninstall/uninst.exe"
             uninstallnewexe="$executabledir/uninstall/helper.exe"
             if [[ -n "$uninstallnewexe" && -e "$uninstallnewexe" ]]; then
@@ -127,8 +127,6 @@ if [[ $OSID == "nt" ]]; then
                     if $uninstallexe /S /D=`cygpath -a -w "$executabledir"  | sed 's@\\\\@\\\\\\\\@g'`; then true; fi
                 fi
             fi
-        else
-            error "Unknown branch $branch" $LINENO
         fi
         # the NSIS uninstaller will copy itself, then fork to the new
         # copy so that it can delete itself. This causes a race condition
@@ -146,4 +144,3 @@ fi
 $TEST_DIR/bin/create-directory.sh -d "$executablepath" -n
 
 rm -fR "$executablepath"
-
