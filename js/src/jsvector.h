@@ -43,7 +43,6 @@
 #include <string.h>
 #include <new>
 
-#include "jsutil.h"
 #include "jsbit.h"
 
 /* Library of template meta-programs for use in the C++ JS data-structures. */
@@ -74,12 +73,16 @@ template <class T> struct BitSize {
     static const size_t result = sizeof(T) * JS_BITS_PER_BYTE;
 };
 
+/* Allow Assertions by only including the 'result' typedef if 'true'. */
+template <bool> struct StaticAssert {};
+template <> struct StaticAssert<true> { typedef int result; };
+
 /*
  * Produce an N-bit mask, where N <= BitSize<size_t>::result.  Handle the
  * language-undefined edge case when N = BitSize<size_t>::result.
  */
 template <size_t N> struct NBitMask {
-    JS_STATIC_ASSERT(N < BitSize<size_t>::result);
+    typedef typename StaticAssert<N < BitSize<size_t>::result>::result _;
     static const size_t result = ~((size_t(1) << N) - 1);
 };
 template <> struct NBitMask<BitSize<size_t>::result> {
