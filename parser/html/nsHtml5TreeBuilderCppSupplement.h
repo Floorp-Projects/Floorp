@@ -277,7 +277,6 @@ void
 nsHtml5TreeBuilder::end()
 {
   mFlushTimer->Cancel();
-  Flush();
 #ifdef DEBUG
   mActive = PR_FALSE;
 #endif
