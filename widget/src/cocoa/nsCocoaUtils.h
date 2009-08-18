@@ -139,7 +139,10 @@ class nsCocoaUtils
   // Determines if an event happened over a window, whether or not the event
   // is for the window. Does not take window z-order into account.
   static BOOL IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow);
-  
+
+  // Determines if the window should accept mouse events.
+  static BOOL WindowAcceptsEvent(NSWindow* aWindow, NSEvent* anEvent);
+
   // Events are set up so that their coordinates refer to the window to which they
   // were originally sent. If we reroute the event somewhere else, we'll have
   // to get the window coordinates this way. Do not call this unless the window
@@ -147,7 +150,7 @@ class nsCocoaUtils
   static NSPoint EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow);
   
   // Finds the foremost window that is under the mouse for the current application.
-  static NSWindow* FindWindowUnderPoint(NSPoint aPoint);
+  static NSWindow* FindWindowForEvent(NSEvent* anEvent, BOOL* isUnderMouse);
 
   // Hides the Menu bar and the Dock. Multiple hide/show requests can be nested.
   static void HideOSChromeOnScreen(PRBool aShouldHide, NSScreen* aScreen);
