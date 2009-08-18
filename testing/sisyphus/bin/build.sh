@@ -126,6 +126,8 @@ case $product in
                     AUTOCONF=autoconf-2.13
                 elif findprogram autoconf-2.13; then
                     AUTOCONF=autoconf-2.13
+                elif findprogram autoconf2.13; then
+                    AUTOCONF=autoconf2.13
                 elif findprogram autoconf213; then
                     AUTOCONF=autoconf213
                 else
