@@ -100,6 +100,7 @@ namespace nanojit {
     class Fragment;
     class Fragmento;
     class LirBuffer;
+    extern "C++" { template<typename K, typename V, typename H> class HashMap; }
 }
 class TraceRecorder;
 class VMAllocator;
@@ -113,6 +114,12 @@ typedef Queue<uint16> SlotList;
 
 #define FRAGMENT_TABLE_SIZE 512
 struct VMFragment;
+
+#ifdef __cplusplus
+struct REHashKey;
+struct REHashFn;
+typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
+#endif
 
 #define MONITOR_N_GLOBAL_STATES 4
 struct GlobalState {
@@ -181,6 +188,7 @@ struct JSTraceMonitor {
     CLS(nanojit::Assembler) reAssembler;
     CLS(nanojit::LirBuffer) reLirBuf;
     CLS(nanojit::Fragmento) reFragmento;
+    CLS(REHashMap)          reFragments;
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;

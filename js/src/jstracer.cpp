@@ -865,7 +865,7 @@ getLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalSh
 static Fragment*
 getAnchor(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalShape, uint32 argc)
 {
-    VMFragment *f = new (&gc) VMFragment(ip, globalObj, globalShape, argc);
+    VMFragment *f = new VMFragment(ip, globalObj, globalShape, argc);
     JS_ASSERT(f);
 
     Fragment *p = getVMFragment(tm, ip, globalObj, globalShape, argc);
@@ -6587,6 +6587,7 @@ js_InitJIT(JSTraceMonitor *tm)
                                               &js_LogController);
 
     if (!tm->reFragmento) {
+        tm->reFragments = new (reAlloc) REHashMap(reAlloc);
         Fragmento* fragmento = new (&gc) Fragmento(core, &js_LogController, 32, tm->reCodeAlloc);
         verbose_only(fragmento->labels = new (reAlloc) LabelMap(reAlloc, &js_LogController);)
         tm->reFragmento = fragmento;
