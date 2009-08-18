@@ -67,7 +67,7 @@ public:
   struct PrefTransform {
     CFStringRef   keyName;
     PrefType      type;
-    char*         targetPrefName;
+    const char*   targetPrefName;
     prefConverter prefSetterFunc;
     PRBool        prefHasValue;
     union {
