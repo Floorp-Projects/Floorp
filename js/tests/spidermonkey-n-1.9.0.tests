@@ -95,3 +95,5 @@ js1_7/geniter/regress-347739.js
 js1_7/geniter/regress-349012-01.js
 js1_7/geniter/regress-349331.js
 js1_7/iterable/regress-340526-02.js
+# bug 452498
+js1_5/decompilation/regress-352073.js
