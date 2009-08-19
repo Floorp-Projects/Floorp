@@ -185,7 +185,8 @@ enum LC_TMBits {
     LC_TMPatcher  = 1<<19,
     LC_TMAbort    = 1<<20,
     LC_TMStats    = 1<<21,
-    LC_TMRegexp   = 1<<22
+    LC_TMRegexp   = 1<<22,
+    LC_TMTreeVis  = 1<<23
 };
 
 #endif
