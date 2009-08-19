@@ -269,7 +269,7 @@ def p_NamespacedProtocolDefn(p):
         p[0] = protocol
 
 def p_ProtocolDefn(p):
-    """ProtocolDefn : OptionalSendSemanticsQual PROTOCOL ID '{' ManagerStmtOpt ManagesStmts MessageDecls TransitionStmts '}' ';'"""
+    """ProtocolDefn : OptionalSendSemanticsQual PROTOCOL ID '{' ManagerStmtOpt ManagesStmts OptionalMessageDecls TransitionStmts '}' ';'"""
     protocol = Protocol(locFromTok(p, 2))
     protocol.name = p[3]
     protocol.sendSemantics = p[1]
@@ -299,6 +299,14 @@ def p_ManagerStmtOpt(p):
 def p_ManagesStmt(p):
     """ManagesStmt : MANAGES ID ';'"""
     p[0] = ManagesStmt(locFromTok(p, 1), p[2])
+
+def p_OptionalMessageDecls(p):
+    """OptionalMessageDecls : MessageDecls
+                            | """
+    if 2 == len(p):
+        p[0] = p[1]
+    else:
+        p[0] = [ ]
 
 def p_MessageDecls(p):
     """MessageDecls : MessageDecls MessageDeclThing
