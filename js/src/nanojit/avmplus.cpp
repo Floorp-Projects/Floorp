@@ -178,7 +178,7 @@ nanojit::CodeAlloc::allocCodeChunk(size_t nbytes) {
 
 void
 nanojit::CodeAlloc::freeCodeChunk(void *p, size_t nbytes) {
-    free(p);
+    ::free(p);
 }
 
 #endif // WIN32
