@@ -403,12 +403,13 @@ def p_TransitionStmtsNonEmpty(p):
 
 def p_TransitionStmt(p):
     """TransitionStmt : OptionalStart STATE State ':' Transitions"""
+    p[3].start = p[1]
     p[0] = TransitionStmt(locFromTok(p, 2), p[3], p[5])
 
 def p_OptionalStart(p):
     """OptionalStart : START
                      | """
-    pass
+    p[0] = (len(p) == 2)                # True iff 'start' specified
 
 def p_Transitions(p):
     """Transitions : Transitions Transition
