@@ -5719,13 +5719,17 @@ function warnAboutClosingWindow() {
   os.notifyObservers(null, "browser-lastwindow-close-granted", null);
 
 #ifdef XP_MACOSX
-  // OS X doesn't quit the application when the last window is closed, but keeps
-  // the session alive. Hence don't prompt users to save tabs, but warn about
-  // closing multiple tabs.
-  return gBrowser.warnAboutClosingTabs(true);
+  // On OS X, always warn about closing multiple tabs, as closing the
+  // last window won't quit the application.
 #else
-  return true;
+  // If we're inside auto-started private browsing mode, always warn
+  // about closing multiple tabs (bug 502307).
+  if (gPrivateBrowsingUI.privateBrowsingEnabled &&
+      gPrivateBrowsingUI.autoStarted)
 #endif
+    return gBrowser.warnAboutClosingTabs(true);
+
+  return true;
 }
 
 var MailIntegration = {
@@ -7038,6 +7042,10 @@ let gPrivateBrowsingUI = {
 
   get privateBrowsingEnabled PBUI_get_privateBrowsingEnabled() {
     return this._privateBrowsingService.privateBrowsingEnabled;
+  },
+
+  get autoStarted PBUI_get_autoStarted() {
+    return this._privateBrowsingService.autoStarted;
   }
 };
 
