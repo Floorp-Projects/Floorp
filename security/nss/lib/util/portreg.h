@@ -19,6 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      Rob McCool  (original author)
+ *      Nelson Bolyard <nelson@bolyard.me>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +39,6 @@
 /*
  * shexp.h: Defines and prototypes for shell exp. match routines
  * 
- *
  * This routine will match a string with a shell expression. The expressions
  * accepted are based loosely on the expressions accepted by zsh.
  * 
@@ -45,15 +46,34 @@
  * o ? matches one character
  * o \ will escape a special character
  * o $ matches the end of the string
- * o [abc] matches one occurence of a, b, or c. The only character that needs
- *         to be escaped in this is ], all others are not special.
- * o [a-z] matches any character between a and z
- * o [^az] matches any character except a or z
- * o ~ followed by another shell expression will remove any pattern
- *     matching the shell expression from the match list
- * o (foo|bar) will match either the substring foo, or the substring bar.
- *             These can be shell expressions as well.
- * 
+ * Bracketed expressions:
+ * o [abc] matches one occurence of a, b, or c.  
+ * o [^abc] matches any character except a, b, or c.
+ *     To be matched between [ and ], these characters must be escaped: \ ]
+ *     No other characters need be escaped between brackets. 
+ *     Unnecessary escaping is permitted.
+ * o [a-z] matches any character between a and z, inclusive.
+ *     The two range-definition characters must be alphanumeric ASCII.
+ *     If one is upper case and the other is lower case, then the ASCII
+ *     non-alphanumeric characters between Z and a will also be in range.
+ * o [^a-z] matches any character except those between a and z, inclusive.
+ *     These forms cannot be combined, e.g [a-gp-z] does not work.
+ * o Exclusions:
+ *   As a top level, outter-most expression only, the expression
+ *   foo~bar will match the expression foo, provided it does not also 
+ *     match the expression bar.  Either expression or both may be a union.
+ *     Except between brackets, any unescaped ~ is an exclusion. 
+ *     At most one exclusion is permitted.
+ *     Exclusions cannot be nested (contain other exclusions).
+ *     example: *~abc will match any string except abc
+ * o Unions:
+ *   (foo|bar) will match either the expression foo, or the expression bar.
+ *     At least one '|' separator is required.  More are permitted.
+ *     Expressions inside unions may not include unions or exclusions.
+ *     Inside a union, to be matched and not treated as a special character,
+ *     these characters must be escaped: \ ( | ) [ ~ except when they occur
+ *     inside a bracketed expression, where only \ and ] require escaping.
+ *
  * The public interface to these routines is documented below.
  * 
  */

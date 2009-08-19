@@ -1358,18 +1358,35 @@ appendStringToBuf(char *dest, char *src, PRUint32 *pRemaining)
     return dest;
 }
 
+#undef NEEDS_HEX_ESCAPE
+#define NEEDS_HEX_ESCAPE(c) (c < 0x20)
+
 static char *
 appendItemToBuf(char *dest, SECItem *src, PRUint32 *pRemaining)
 {
-    if (dest && src && src->data && src->len && src->data[0] && 
-        *pRemaining > src->len + 1 ) {
+    if (dest && src && src->data && src->len && src->data[0]) {
 	PRUint32 len = src->len;
 	PRUint32 i;
-	for (i = 0; i < len && src->data[i] ; ++i)
-	    dest[i] = tolower(src->data[i]);
-	dest[len] = 0;
-	dest        += len + 1;
-	*pRemaining -= len + 1;
+	PRUint32 reqLen = len + 1;
+	/* are there any embedded control characters ? */
+	for (i = 0; i < len; i++) {
+	    if (NEEDS_HEX_ESCAPE(src->data[i]))
+	    	reqLen += 2;   
+	}
+	if (*pRemaining > reqLen) {
+	    for (i = 0; i < len; ++i) {
+		PRUint8 c = src->data[i];
+		if (NEEDS_HEX_ESCAPE(c)) {
+		    *dest++ = C_BACKSLASH;
+		    *dest++ = hexChars[ (c >> 4) & 0x0f ];
+		    *dest++ = hexChars[  c       & 0x0f ];
+		} else {
+		    *dest++ = tolower(c);
+	    	}
+	    }
+	    *dest++ = '\0';
+	    *pRemaining -= reqLen;
+	}
     }
     return dest;
 }
