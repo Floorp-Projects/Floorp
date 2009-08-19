@@ -2108,6 +2108,9 @@ oom:
 void
 JSTraceMonitor::flush()
 {
+#ifdef DEBUG
+        fprintf(stderr, "JSTraceMonitor::flush()\n");
+#endif
     if (fragmento) {
         fragmento->clearFrags();
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
@@ -2144,6 +2147,9 @@ void
 JSTraceMonitor::mark(JSTracer* trc)
 {
     if (!trc->context->runtime->gcFlushCodeCaches) {
+#ifdef DEBUG
+        fprintf(stderr, "JSTraceMonitor::mark()\n");
+#endif
         for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
             VMFragment* f = vmfragments[i];
             while (f) {

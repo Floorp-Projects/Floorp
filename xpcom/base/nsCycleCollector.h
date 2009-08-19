@@ -54,6 +54,7 @@ struct nsCycleCollectionLanguageRuntime
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb) = 0;
     virtual nsresult FinishCycleCollection() = 0;
     virtual nsCycleCollectionParticipant *ToParticipant(void *p) = 0;
+    virtual void CommenceShutdown() = 0;
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p) = 0;
 #endif
