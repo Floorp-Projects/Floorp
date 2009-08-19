@@ -2793,10 +2793,7 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
     return NS_OK;
   }
 
-  mFrameLoader = new nsFrameLoader(this);
-  if (!mFrameLoader)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  mFrameLoader = nsFrameLoader::Create(this);
   return NS_OK;
 }
 
