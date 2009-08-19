@@ -522,25 +522,52 @@ function removeDirRecursive(dir) {
 }
 
 /**
- * Logs a string to the error console.
+ * Logs a string to the error console and the text console if logging is
+ * enabled.
  * @param   string
- *          The string to write to the error console.
+ *          The log message.
  */
 function LOG(string) {
   if (gLoggingEnabled) {
-    dump("*** " + string + "\n");
+    dump("*** EM_LOG *** " + string + "\n");
     if (gConsole)
       gConsole.logStringMessage(string);
   }
 }
 
 /**
- * Logs a string to the error console and to a permanent log file. 
+ * Logs a warning to the error console and if logging is enabled to the text
+ * console.
  * @param   string
- *          The string to write out.
+ *          The warning message.
+ */
+function WARN(string) {
+  if (gLoggingEnabled)
+    dump("*** EM_WARN *** " + string + "\n");
+  if (gConsole) {
+    var message = Cc["@mozilla.org/scripterror;1"].
+                  createInstance(Ci.nsIScriptError);
+    message.init(string, null, null, 0, 0, Ci.nsIScriptError.warningFlag,
+                 "component javascript");
+    gConsole.logMessage(message);
+  }
+}
+
+/**
+ * Logs an error to the error console and to a permanent log file.
+ * @param   string
+ *          The error message.
  */  
 function ERROR(string) {
-  LOG(string);
+  if (gLoggingEnabled)
+    dump("*** EM_ERROR *** " + string + "\n");
+  if (gConsole) {
+    var message = Cc["@mozilla.org/scripterror;1"].
+                  createInstance(Ci.nsIScriptError);
+    message.init(string, null, null, 0, 0, Ci.nsIScriptError.errorFlag,
+                 "component javascript");
+    gConsole.logMessage(message);
+  }
   try {
     var tstamp = new Date();
     var logfile = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS_LOG]);
@@ -5910,8 +5937,8 @@ RDFItemUpdater.prototype = {
       var uri = newURI(dsURI);
     }
     catch (e) {
-      LOG("RDFItemUpdater:checkForUpdates: There was an error loading the \r\n" +
-          " update datasource for: " + dsURI + ", item = " + aItem.id + ", error: " + e);
+      WARN("RDFItemUpdater:checkForUpdates: There was an error loading the \r\n" +
+           " update datasource for: " + dsURI + ", item = " + aItem.id + ", error: " + e);
       this._updater.checkForDone(aItem,
                                  Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
       return;
@@ -5996,8 +6023,8 @@ RDFItemUpdater.prototype = {
     if (status == 0)
       statusText = "nsIXMLHttpRequest channel unavailable";
 
-    LOG("RDFItemUpdater:onError: There was an error loading the \r\n" +
-        "the update datasource for item " + aItem.id + ", error: " + statusText);
+    WARN("RDFItemUpdater:onError: There was an error loading the \r\n" +
+         "the update datasource for item " + aItem.id + ", error: " + statusText);
     this._updater.checkForDone(aItem,
                                Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
   },
@@ -6072,29 +6099,29 @@ RDFItemUpdater.prototype = {
                          getService(Ci.nsIDataSignatureVerifier);
           try {
             if (!verifier.verifyData(updateString, signature, aLocalItem.updateKey)) {
-              LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
-                  aLocalItem.id + " failed signature check.");
+              WARN("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
+                   aLocalItem.id + " failed signature check.");
               this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
               return;
             }
           }
           catch (e) {
-            LOG("RDFItemUpdater:onDatasourceLoaded: Failed to verify signature for " +
-                aLocalItem.id + ". This indicates a malformed update key or signature.");
+            WARN("RDFItemUpdater:onDatasourceLoaded: Failed to verify signature for " +
+                 aLocalItem.id + ". This indicates a malformed update key or signature.");
             this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
             return;
           }
         }
         catch (e) {
-          LOG("RDFItemUpdater:onDatasourceLoaded: Failed to generate signature " +
-              "string for " + aLocalItem.id + ". Serializer threw " + e);
+          WARN("RDFItemUpdater:onDatasourceLoaded: Failed to generate signature " +
+               "string for " + aLocalItem.id + ". Serializer threw " + e);
           this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
           return;
         }
       }
       else {
-        LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
-            aLocalItem.id + " did not contain a signature.");
+        WARN("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
+             aLocalItem.id + " did not contain a signature.");
         this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
         return;
       }
@@ -6203,15 +6230,15 @@ RDFItemUpdater.prototype = {
       updates = updates.QueryInterface(Ci.nsIRDFResource);
     }
     catch (e) {
-      LOG("RDFItemUpdater:_parseV20UpdateInfo: No updates were found for:\r\n" +
-          aLocalItem.id + "\r\n" +
-          "If you are an Extension developer and were expecting there to be\r\n" +
-          "updates, this could mean any number of things, since the RDF system\r\n" +
-          "doesn't give up much in the way of information when the load fails.\r\n" +
-          "\r\nTry checking that: \r\n" +
-          " 1. Your RDF File is correct - e.g. check that there is a top level\r\n" +
-          "    RDF Resource with a URI urn:mozilla:extension:{GUID}, and that\r\n" +
-          "    the <em:updates> listed all have matching GUIDs.");
+      WARN("RDFItemUpdater:_parseV20UpdateInfo: No updates were found for:\r\n" +
+           aLocalItem.id + "\r\n" +
+           "If you are an Extension developer and were expecting there to be\r\n" +
+           "updates, this could mean any number of things, since the RDF system\r\n" +
+           "doesn't give up much in the way of information when the load fails.\r\n" +
+           "\r\nTry checking that: \r\n" +
+           " 1. Your RDF File is correct - e.g. check that there is a top level\r\n" +
+           "    RDF Resource with a URI urn:mozilla:extension:{GUID}, and that\r\n" +
+           "    the <em:updates> listed all have matching GUIDs.");
       return null;
     }
 
@@ -6302,9 +6329,9 @@ RDFItemUpdater.prototype = {
          * the sha hashing algorithms as secure. */
         if (gCheckUpdateSecurity && updateLink.substring(0, 6) != "https:" && 
             (!updateHash || updateHash.substring(0, 3) != "sha")) {
-          LOG("RDFItemUpdater:_parseV20Update: Update for " + aLocalItem.id +
-              " at " + updateLink + " ignored because it is insecure. updateLink " +
-              " must be a https url or an updateHash must be specified.");
+          WARN("RDFItemUpdater:_parseV20Update: Update for " + aLocalItem.id +
+               " at " + updateLink + " ignored because it is insecure. updateLink " +
+               " must be a https url or an updateHash must be specified.");
           continue;
         }
       }
