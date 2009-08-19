@@ -3475,7 +3475,9 @@ TraceRecorder::copy(VMSideExit* copy)
      */
     if (exit->exitType == LOOP_EXIT)
         treeInfo->sideExits.add(exit);
+#if defined JS_JIT_SPEW
     TreevisLogExit(cx, exit);
+#endif
     return exit;
 }
 
