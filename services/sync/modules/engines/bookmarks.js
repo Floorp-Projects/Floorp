@@ -244,6 +244,9 @@ BookmarksStore.prototype = {
       // XXX Work around Bug 510628 by prepending parenT
       if (record._orphan)
         Utils.anno(itemId, PARENT_ANNO, "T" + parentGUID);
+      // It's now in the right folder, so move annotated items behind this
+      else
+        this._attachFollowers(itemId);
 
       // Create an annotation if we have a predecessor but no position
       // XXX Work around Bug 510628 by prepending predecessoR
@@ -291,6 +294,33 @@ BookmarksStore.prototype = {
       if (itemId == -1 || Svc.Annos.itemHasAnnotation(itemId, PREDECESSOR_ANNO))
         break;
     } while (itemId != stopId);
+  },
+
+  /**
+   * For the provided predecessor item, attach its followers to it
+   */
+  _attachFollowers: function BStore__attachFollowers(predId) {
+    let predGUID = GUIDForId(predId);
+    let followers = this._findAnnoItems(PREDECESSOR_ANNO, predGUID);
+    if (followers.length > 1)
+      this._log.warn(predId + " has more than one followers: " + followers);
+
+    // Start at the first follower and move the chain of followers
+    let parent = Svc.Bookmark.getFolderIdForItem(predId);
+    followers.forEach(function(follow) {
+      this._log.trace("Repositioning " + follow + " behind " + predId);
+      if (Svc.Bookmark.getFolderIdForItem(follow) != parent) {
+        this._log.warn("Follower doesn't have the same parent: " + parent);
+        return;
+      }
+
+      // Move the chain of followers to after the predecessor
+      let insertPos = Svc.Bookmark.getItemIndex(predId) + 1;
+      this._moveItemChain(follow, insertPos, predId);
+
+      // Remove the annotation now that we're putting it in the right spot
+      Svc.Annos.removeItemAnnotation(follow, PREDECESSOR_ANNO);
+    }, this);
   },
 
   create: function BStore_create(record) {
@@ -358,16 +388,11 @@ BookmarksStore.prototype = {
     this._log.trace("Setting GUID of new item " + newId + " to " + record.id);
     this._setGUID(newId, record.id);
 
-    // Remember which guids now have the correct parent
-    let parented = [];
-    if (!record._orphan)
-      parented.push(newId);
-
     // Find orphans and reunite with this new folder parent
     if (record.type == "folder") {
       let orphans = this._findAnnoItems(PARENT_ANNO, record.id);
       this._log.debug("Reparenting orphans " + orphans + " to " + record.title);
-      orphans.forEach(function(orphan) {
+      orphans.map(function(orphan) {
         // Append the orphan under the parent unless it's supposed to be first
         let insertPos = Svc.Bookmark.DEFAULT_INDEX;
         if (!Svc.Annos.itemHasAnnotation(orphan, PREDECESSOR_ANNO))
@@ -376,34 +401,11 @@ BookmarksStore.prototype = {
         // Move the orphan to the parent and drop the missing parent annotation
         Svc.Bookmark.moveItem(orphan, newId, insertPos);
         Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
-        parented.push(orphan);
-      });
+
+        // Return the now-parented orphan so it can attach its followers
+        return orphan;
+      }).forEach(this._attachFollowers, this);
     }
-
-    // Reposition all chains of siblings for the now correctly parented items
-    parented.forEach(function(predId) {
-      let predGUID = GUIDForId(predId);
-      let followers = this._findAnnoItems(PREDECESSOR_ANNO, predGUID);
-      if (followers.length > 1)
-        this._log.warn(predId + " has more than one followers: " + followers);
-
-      // Start at the first follower and move the chain of followers
-      let parent = Svc.Bookmark.getFolderIdForItem(predId);
-      followers.forEach(function(follow) {
-        this._log.debug("Repositioning " + follow + " behind " + predId);
-        if (Svc.Bookmark.getFolderIdForItem(follow) != parent) {
-          this._log.warn("Follower doesn't have the same parent: " + parent);
-          return;
-        }
-
-        // Move the chain of followers to after the predecessor
-        let insertPos = Svc.Bookmark.getItemIndex(predId) + 1;
-        this._moveItemChain(follow, insertPos, predId);
-
-        // Remove the annotation now that we're putting it in the right spot
-        Svc.Annos.removeItemAnnotation(follow, PREDECESSOR_ANNO);
-      }, this);
-    }, this);
   },
 
   remove: function BStore_remove(record) {
