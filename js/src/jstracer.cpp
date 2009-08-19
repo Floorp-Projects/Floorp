@@ -65,6 +65,7 @@
 #include "jsfun.h"
 #include "jsinterp.h"
 #include "jsiter.h"
+#include "jsmath.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsregexp.h"
@@ -9332,6 +9333,38 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     jsval* vp = &stackval(0 - (2 + argc));
     JSObject* funobj = JSVAL_TO_OBJECT(vp[0]);
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, funobj);
+    JSFastNative native = (JSFastNative)fun->u.n.native;
+
+    switch (argc) {
+      case 1:
+        if (native == js_math_ceil || native == js_math_floor || native == js_math_round) {
+            LIns* a = get(&vp[2]);
+            if (isPromote(a)) {
+                set(&vp[0], a);
+                pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                return JSRS_CONTINUE;
+            }
+        }
+        break;
+      case 2:
+        if (native == js_math_min || native == js_math_max) {
+            LIns* a = get(&vp[2]);
+            LIns* b = get(&vp[3]);
+            if (isPromote(a) && isPromote(b)) {
+                a = ::demote(lir, a);
+                b = ::demote(lir, b);
+                set(&vp[0],
+                    lir->ins1(LIR_i2f,
+                              lir->ins_choose(lir->ins2((native == js_math_min)
+                                                        ? LIR_lt
+                                                        : LIR_gt, a, b),
+                                              a, b)));
+                pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                return JSRS_CONTINUE;
+            }
+        }
+        break;
+    }
 
     if (fun->flags & JSFUN_TRACEABLE) {
         JSRecordingStatus status;
@@ -9339,7 +9372,6 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             return status;
     }
 
-    JSFastNative native = (JSFastNative)fun->u.n.native;
     if (native == js_fun_apply || native == js_fun_call)
         ABORT_TRACE("trying to call native apply or call");
 

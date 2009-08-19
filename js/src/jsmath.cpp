@@ -237,8 +237,8 @@ math_ceil_kernel(jsdouble x)
     return ceil(x);
 }
 
-static JSBool
-math_ceil(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_ceil(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -297,8 +297,8 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_floor(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_floor(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -335,8 +335,8 @@ math_log(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_max(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_max(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z = *cx->runtime->jsNegativeInfinity;
     jsval *argv;
@@ -365,8 +365,8 @@ math_max(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_min(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_min(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z = *cx->runtime->jsPositiveInfinity;
     jsval *argv;
@@ -486,8 +486,8 @@ js_copysign(double x, double y)
 }
 #endif
 
-static JSBool
-math_round(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_round(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -572,7 +572,6 @@ MATH_BUILTIN_1(atan)
 MATH_BUILTIN_1(sin)
 MATH_BUILTIN_1(cos)
 MATH_BUILTIN_1(sqrt)
-MATH_BUILTIN_1(floor)
 MATH_BUILTIN_1(tan)
 
 static jsdouble FASTCALL
@@ -690,25 +689,33 @@ math_ceil_tn(jsdouble x)
     return math_ceil_kernel(x);
 }
 
+static jsdouble FASTCALL
+math_floor_tn(jsdouble x)
+{
+    return floor(x);
+}
+
 JS_DEFINE_TRCINFO_1(math_acos,
     (1, (static, DOUBLE, math_acos_tn, DOUBLE,          1, 1)))
 JS_DEFINE_TRCINFO_1(math_asin,
     (1, (static, DOUBLE, math_asin_tn, DOUBLE,          1, 1)))
 JS_DEFINE_TRCINFO_1(math_atan2,
     (2, (static, DOUBLE, math_atan2_kernel, DOUBLE, DOUBLE, 1, 1)))
+JS_DEFINE_TRCINFO_1(js_math_floor,
+    (1, (static, DOUBLE, math_floor_tn, DOUBLE,         1, 1)))
 JS_DEFINE_TRCINFO_1(math_log,
     (1, (static, DOUBLE, math_log_tn, DOUBLE,           1, 1)))
-JS_DEFINE_TRCINFO_1(math_max,
+JS_DEFINE_TRCINFO_1(js_math_max,
     (2, (static, DOUBLE, math_max_tn, DOUBLE, DOUBLE,   1, 1)))
-JS_DEFINE_TRCINFO_1(math_min,
+JS_DEFINE_TRCINFO_1(js_math_min,
     (2, (static, DOUBLE, math_min_tn, DOUBLE, DOUBLE,   1, 1)))
 JS_DEFINE_TRCINFO_1(math_pow,
     (2, (static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, 1)))
 JS_DEFINE_TRCINFO_1(math_random,
     (1, (static, DOUBLE, math_random_tn, CONTEXT,       0, 0)))
-JS_DEFINE_TRCINFO_1(math_round,
+JS_DEFINE_TRCINFO_1(js_math_round,
     (1, (static, DOUBLE, math_round_tn, DOUBLE,         1, 1)))
-JS_DEFINE_TRCINFO_1(math_ceil,
+JS_DEFINE_TRCINFO_1(js_math_ceil,
     (1, (static, DOUBLE, math_ceil_tn, DOUBLE,          1, 1)))
 
 #endif /* JS_TRACER */
@@ -722,16 +729,16 @@ static JSFunctionSpec math_static_methods[] = {
     JS_TN("asin",           math_asin,            1, 0, math_asin_trcinfo),
     JS_TN("atan",           math_atan,            1, 0, math_atan_trcinfo),
     JS_TN("atan2",          math_atan2,           2, 0, math_atan2_trcinfo),
-    JS_TN("ceil",           math_ceil,            1, 0, math_ceil_trcinfo),
+    JS_TN("ceil",           math_ceil,            1, 0, js_math_ceil_trcinfo),
     JS_TN("cos",            math_cos,             1, 0, math_cos_trcinfo),
     JS_TN("exp",            math_exp,             1, 0, math_exp_trcinfo),
-    JS_TN("floor",          math_floor,           1, 0, math_floor_trcinfo),
+    JS_TN("floor",          math_floor,           1, 0, js_math_floor_trcinfo),
     JS_TN("log",            math_log,             1, 0, math_log_trcinfo),
-    JS_TN("max",            math_max,             2, 0, math_max_trcinfo),
-    JS_TN("min",            math_min,             2, 0, math_min_trcinfo),
+    JS_TN("max",            math_max,             2, 0, js_math_max_trcinfo),
+    JS_TN("min",            math_min,             2, 0, js_math_min_trcinfo),
     JS_TN("pow",            math_pow,             2, 0, math_pow_trcinfo),
     JS_TN("random",         math_random,          0, 0, math_random_trcinfo),
-    JS_TN("round",          math_round,           1, 0, math_round_trcinfo),
+    JS_TN("round",          math_round,           1, 0, js_math_round_trcinfo),
     JS_TN("sin",            math_sin,             1, 0, math_sin_trcinfo),
     JS_TN("sqrt",           math_sqrt,            1, 0, math_sqrt_trcinfo),
     JS_TN("tan",            math_tan,             1, 0, math_tan_trcinfo),
