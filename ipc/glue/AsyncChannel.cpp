@@ -73,7 +73,7 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
                   ::GetMessageLoop(BrowserProcessSubThread::IO);
         // FIXME assuming that the parent waits for the OnConnected event.
         // FIXME see GeckoChildProcessHost.cpp.  bad assumption!
-        mChannelState = ChannelIdle;
+        mChannelState = ChannelConnected;
     }
 
     mIOLoop = aIOLoop;
@@ -102,11 +102,10 @@ AsyncChannel::Close()
 bool
 AsyncChannel::Send(Message* msg)
 {
-    NS_ASSERTION(ChannelIdle == mChannelState
-                 || ChannelWaiting == mChannelState,
+    NS_ASSERTION(ChannelConnected == mChannelState,
                  "trying to Send() to a channel not yet open");
-
     NS_PRECONDITION(MSG_ROUTING_NONE != msg->routing_id(), "need a route");
+
     mIOLoop->PostTask(FROM_HERE,
                       NewRunnableMethod(this, &AsyncChannel::OnSend, msg));
     return true;
@@ -154,7 +153,7 @@ AsyncChannel::OnMessageReceived(const Message& msg)
 void
 AsyncChannel::OnChannelConnected(int32 peer_pid)
 {
-    mChannelState = ChannelIdle;
+    mChannelState = ChannelConnected;
 }
 
 void

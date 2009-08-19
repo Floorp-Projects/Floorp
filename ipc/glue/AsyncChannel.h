@@ -66,8 +66,7 @@ protected:
     enum ChannelState {
         ChannelClosed,
         ChannelOpening,
-        ChannelIdle,            // => connected
-        ChannelWaiting,         // => connected
+        ChannelConnected,
         ChannelError
     };
 

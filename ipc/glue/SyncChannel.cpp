@@ -57,64 +57,49 @@ namespace ipc {
 bool
 SyncChannel::Send(Message* msg, Message* reply)
 {
-    NS_ASSERTION(ChannelIdle == mChannelState
-                 || ChannelWaiting == mChannelState,
+    NS_ABORT_IF_FALSE(!ProcessingSyncMessage(),
+                      "violation of sync handler invariant");
+    NS_ASSERTION(ChannelConnected == mChannelState,
                  "trying to Send() to a channel not yet open");
-
     NS_PRECONDITION(msg->is_sync(), "can only Send() sync messages here");
 
     MutexAutoLock lock(mMutex);
 
-    mChannelState = ChannelWaiting;
     mPendingReply = msg->type() + 1;
     /*assert*/AsyncChannel::Send(msg);
 
-    while (1) {
-        // here we're waiting for something to happen.  it may be either:
-        //  (1) the reply we're waiting for (mPendingReply)
-        // or
-        //  (2) any other message
-        //
-        // In case (1), we return this reply back to the caller.
-        // In case (2), we defer processing of the message until our reply
-        // comes back.
-        mCvar.Wait();
+    // wait for the next sync message to arrive
+    mCvar.Wait();
 
-        if (mRecvd.is_reply() && mPendingReply == mRecvd.type()) {
-            // case (1)
-            mPendingReply = 0;
-            *reply = mRecvd;
+    // we just received a synchronous message from the other side.
+    // If it's not the reply we were awaiting, there's a serious
+    // error: either a mistimed/malformed message or a sync in-message
+    // that raced with our sync out-message.
+    // (NB: IPDL prevents the latter from occuring in actor code)
 
-            if (!WaitingForReply()) {
-                mChannelState = ChannelIdle;
-            }
+    // FIXME/cjones: real error handling
+    NS_ABORT_IF_FALSE(mRecvd.is_reply() && mPendingReply == mRecvd.type(),
+                      "unexpected sync message");
 
-            return true;
-        }
-        else {
-            // case (2)
-            NS_ASSERTION(!mRecvd.is_reply(), "can't process replies here");
-            // post a task to our own event loop; this delays processing
-            // of mRecvd
-            mWorkerLoop->PostTask(
-                FROM_HERE,
-                NewRunnableMethod(this, &SyncChannel::OnDispatchMessage, mRecvd));
-        }
-    }
+    mPendingReply = 0;
+    *reply = mRecvd;
+
+    return true;
 }
 
 void
 SyncChannel::OnDispatchMessage(const Message& msg)
 {
-    NS_ASSERTION(!msg.is_reply(), "can't process replies here");
-    NS_ASSERTION(!msg.is_rpc(), "sync or async only here");
-
-    if (!msg.is_sync()) {
-        return AsyncChannel::OnDispatchMessage(msg);
-    }
+    NS_ABORT_IF_FALSE(msg.is_sync(), "only sync messages here");
 
     Message* reply;
-    switch (static_cast<SyncListener*>(mListener)->OnMessageReceived(msg, reply)) {
+
+    mProcessingSyncMessage = true;
+    Result rv =
+        static_cast<SyncListener*>(mListener)->OnMessageReceived(msg, reply);
+    mProcessingSyncMessage = false;
+
+    switch (rv) {
     case MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this,
@@ -144,31 +129,23 @@ SyncChannel::OnDispatchMessage(const Message& msg)
 void
 SyncChannel::OnMessageReceived(const Message& msg)
 {
-    mMutex.Lock();
-
-    if (ChannelIdle == mChannelState) {
-        // wake up the worker, there's work to do
-        if (msg.is_sync()) {
-            mWorkerLoop->PostTask(
-                FROM_HERE,
-                NewRunnableMethod(this, &SyncChannel::OnDispatchMessage, msg));
-        }
-        else {
-            mMutex.Unlock();
-            return AsyncChannel::OnMessageReceived(msg);
-        }
+    if (!msg.is_sync()) {
+        return AsyncChannel::OnMessageReceived(msg);
     }
-    else if (ChannelWaiting == mChannelState) {
-        // let the worker know something new has happened
+
+    MutexAutoLock lock(mMutex);
+
+    if (!AwaitingSyncReply()) {
+        // wake up the worker, there's work to do
+        mWorkerLoop->PostTask(
+            FROM_HERE,
+            NewRunnableMethod(this, &SyncChannel::OnDispatchMessage, msg));
+    }
+    else {
+        // let the worker know a new sync message has arrived
         mRecvd = msg;
         mCvar.Notify();
     }
-    else {
-        // FIXME/cjones: could reach here in error conditions.  impl me
-        NOTREACHED();
-    }
-
-    mMutex.Unlock();
 }
 
 void
