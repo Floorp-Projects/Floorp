@@ -172,7 +172,7 @@ EnableWatchdog(JSContext *cx)
     if (!CreateTimerQueueTimer(&gTimerHandle,
                                NULL,
                                (WAITORTIMERCALLBACK)TimerCallback,
-                               rt,
+                               cx->runtime,
                                DWORD(1000),
                                0,
                                WT_EXECUTEINTIMERTHREAD | WT_EXECUTEONLYONCE))
