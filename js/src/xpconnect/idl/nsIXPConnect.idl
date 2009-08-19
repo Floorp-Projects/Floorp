@@ -394,17 +394,37 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(b76828b8-3ac5-469e-946d-3401c6a2104d)]
+[uuid(c29f5d27-21b1-4b87-8282-d724d535ef7b)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCONNECT_CID)
 %}
 
+    /**
+     * Initializes classes on a global object that has already been created.
+     */
     void
     initClasses(in JSContextPtr aJSContext,
                 in JSObjectPtr  aGlobalJSObj);
 
+    /**
+     * Like initClasses, but only does some of the initialization on the
+     * existing global. In particular this function assumes that the outer
+     * window has already been connected to an inner window, so
+     * re-initializing things like XPCNativeWrapper is useless.
+     */
+    void
+    initClassesForOuterObject(in JSContextPtr aJSContext,
+                              in JSObjectPtr  aGlobalJSObj);
+
+    /**
+     * Creates a new global object using the given aCOMObj as the global
+     * object. The object will be set up according to the flags (defined
+     * below). If you do not pass INIT_JS_STANDARD_CLASSES, then aCOMObj
+     * must implement nsIXPCScriptable so it can resolve the standard
+     * classes when asked by the JS engine.
+     */
     nsIXPConnectJSObjectHolder
     initClassesWithNewWrappedGlobal(
                   in JSContextPtr aJSContext,
