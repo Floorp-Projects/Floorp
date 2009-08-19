@@ -178,6 +178,10 @@ BrowserView.Util = {
 
   getBrowserDimensions: function getBrowserDimensions(browser) {
     let cdoc = browser.contentDocument;
+    if (cdoc instanceof SVGDocument) {
+      let rect = cdoc.rootElement.getBoundingClientRect();
+      return [Math.ceil(rect.width), Math.ceil(rect.height)];
+    }
 
     // These might not exist yet depending on page load state
     let body = cdoc.body || {};
