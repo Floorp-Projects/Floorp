@@ -54,7 +54,7 @@ class nsIURI;
 
 class nsFrameLoader : public nsIFrameLoader
 {
-public:
+protected:
   nsFrameLoader(nsIContent *aOwner) :
     mOwnerContent(aOwner),
     mDepthTooGreat(PR_FALSE),
@@ -64,10 +64,13 @@ public:
     mInSwap(PR_FALSE)
   {}
 
+public:
   ~nsFrameLoader() {
     mNeedsAsyncDestroy = PR_TRUE;
     nsFrameLoader::Destroy();
   }
+
+  static nsFrameLoader* Create(nsIContent* aOwner);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsFrameLoader)
