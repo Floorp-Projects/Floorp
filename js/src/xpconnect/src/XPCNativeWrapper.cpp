@@ -102,7 +102,7 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_EXTENDED,
+    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_EXTENDED | JSCLASS_CONSTRUCT_PROTOTYPE,
     XPC_NW_AddProperty, XPC_NW_DelProperty,
     XPC_NW_GetProperty, XPC_NW_SetProperty,
     XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
@@ -904,6 +904,16 @@ JSBool
 XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval)
 {
+  if (obj) {
+    JSObject *proto = STOBJ_GET_PROTO(obj);
+    if (proto && STOBJ_GET_CLASS(proto) != XPCNativeWrapper::GetJSClass()) {
+      // Deal with our prototype object specially.
+
+      return JS_SetPrivate(cx, obj, nsnull) &&
+             JS_SetReservedSlot(cx, obj, 0, JSVAL_ZERO);
+    }
+  }
+
   if (argc < 1) {
     return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
   }
