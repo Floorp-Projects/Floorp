@@ -595,6 +595,7 @@ modules/JSON.jsm
 LICENSE
 extensions/inspector@mozilla.org/chrome/chromelist.txt
 components/accessibility.xpt
+components/content.xpt
 components/crashreporter.xpt
 components/gksvgrenderer.xpt
 components/jsconsole.xpt
