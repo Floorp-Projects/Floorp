@@ -1730,8 +1730,6 @@ IdentityHandler.prototype = {
     this._identityPopup.hidden = true;
 
     this._identityBox.removeAttribute("open");
-
-    BrowserUI.popPopup();
   },
 
   /**
