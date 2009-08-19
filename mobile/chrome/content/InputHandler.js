@@ -402,7 +402,7 @@ InputHandler.EventInfo.prototype = {
  */
 function MouseModule(owner) {
   this._owner = owner;
-  this._dragData = new DragData(this, 50, 200);
+  this._dragData = new DragData(this, 15, 200);
 
   this._dragger = null;
   this._clicker = null;
