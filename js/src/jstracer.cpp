@@ -2630,8 +2630,10 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double
         for (; n != 0; fp = fp->down) {
             --n;
             if (fp->callee) {
-                if (fp->argsobj)
-                    JS_SetPrivate(cx, JSVAL_TO_OBJECT(fp->argsobj), fp);
+                // fp->argsobj->getPrivate() is NULL iff we created argsobj on trace.
+                if (fp->argsobj && !JSVAL_TO_OBJECT(fp->argsobj)->getPrivate()) {
+                    JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(fp);
+                }
 
                 /*
                  * We might return from trace with a different callee object, but it still
