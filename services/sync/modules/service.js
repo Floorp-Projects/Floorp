@@ -399,8 +399,8 @@ WeaveSvc.prototype = {
         break;
 
       case FIREFOX_ID:
-        engines = ["Bookmarks", "Cookie", "Extension", "Form", "History", 
-          "Input", "MicroFormat", "Password", "Plugin", "Prefs", "Tab", 
+        engines = ["Bookmarks", "Cookie", "Extension", "Form", "History",
+          "Input", "MicroFormat", "Password", "Plugin", "Prefs", "Tab",
           "Theme"];
         break;
 
@@ -532,7 +532,7 @@ WeaveSvc.prototype = {
       this._log.debug("Verifying passphrase");
       this.username = username;
       ID.get("WeaveID").setTempPassword(password);
-        
+
       try {
         let pubkey = PubKeys.getDefaultKey();
         let privkey = PrivKeys.get(pubkey.privateKeyUri);
@@ -551,7 +551,7 @@ WeaveSvc.prototype = {
     this._catch(this._notify("changepph", "", function() {
       let pubkey = PubKeys.getDefaultKey();
       let privkey = PrivKeys.get(pubkey.privateKeyUri);
-      
+
       /* Re-encrypt with new passphrase.
        * FIXME: verifyPassphrase first!
        */
@@ -559,17 +559,17 @@ WeaveSvc.prototype = {
           this.passphrase, privkey.payload.salt,
           privkey.payload.iv, newphrase);
       privkey.payload.keyData = newkey;
-      
+
       new Resource(privkey.uri).put(privkey.serialize());
       this.passphrase = newphrase;
-      
+
       return true;
     }))(),
-  
+
   changePassword: function WeaveSvc_changePassword(newpass)
     this._catch(this._notify("changepwd", "", function() {
       function enc(x) encodeURIComponent(x);
-      let message = "uid=" + enc(this.username) + "&password=" + 
+      let message = "uid=" + enc(this.username) + "&password=" +
         enc(this.password) + "&new=" + enc(newpass);
       let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/chpwd';
       let res = new Weave.Resource(url);
@@ -582,35 +582,35 @@ WeaveSvc.prototype = {
         this._log.info("Password change failed: " + resp);
         throw "Could not change password";
       }
-      
+
       this.password = newpass;
       return true;
     }))(),
-    
+
   resetPassphrase: function WeaveSvc_resetPassphrase(newphrase)
     this._catch(this._notify("resetpph", "", function() {
       /* Make remote commands ready so we have a list of clients beforehand */
       this.prepCommand("logout", []);
       let clientsBackup = Clients._store.clients;
-      
+
       /* Wipe */
       this.wipeServer();
-      
+
       /* Set remote commands before syncing */
       Clients._store.clients = clientsBackup;
       let username = this.username;
       let password = this.password;
       this.logout();
-      
+
       /* Set this so UI is updated on next run */
       this.passphrase = newphrase;
-      
+
       /* Login in sync: this also generates new keys */
       this.login(username, password, newphrase);
       this.sync(true);
       return true;
     }))(),
-  
+
   login: function WeaveSvc_login(username, password, passphrase)
     this._catch(this._lock(this._notify("login", "", function() {
       this._loggedIn = false;
@@ -659,37 +659,94 @@ WeaveSvc.prototype = {
     Svc.Observer.notifyObservers(null, "weave:service:logout:finish", "");
   },
 
+  _errorStr: function WeaveSvc__errorStr(code) {
+    switch (code) {
+    case "0":
+      return "uid-in-use";
+    case "-1":
+      return "invalid-http-method";
+    case "-2":
+      return "uid-missing";
+    case "-3":
+      return "uid-invalid";
+    case "-4":
+      return "mail-invalid";
+    case "-5":
+      return "mail-in-use";
+    case "-6":
+      return "captcha-challenge-missing";
+    case "-7":
+      return "captcha-response-missing";
+    case "-8":
+      return "password-missing";
+    case "-9":
+      return "internal-server-error";
+    case "-10":
+      return "server-quota-exceeded";
+    case "-11":
+      return "missing-new-field";
+    case "-12":
+      return "password-incorrect";
+    default:
+      return "generic-server-error";
+    }
+  },
+
+  checkUsername: function WeaveSvc_checkUsername(username) {
+    let url = Svc.Prefs.get('tmpServerURL') +
+      "0.3/api/register/checkuser/" + username;
+
+    let res = new Resource(url);
+    res.authenticator = new NoOpAuthenticator();
+    let data = res.get();
+
+    if (res.lastChannel.responseStatus == 200 && data == "0")
+        return "available";
+
+    return this._errorStr(data);
+  },
+
   createAccount: function WeaveSvc_createAccount(username, password, email,
                                                  captchaChallenge, captchaResponse) {
+    let ret = null;
+
     function enc(x) encodeURIComponent(x);
     let message = "uid=" + enc(username) + "&password=" + enc(password) +
       "&mail=" + enc(email) + "&recaptcha_challenge_field=" +
       enc(captchaChallenge) + "&recaptcha_response_field=" + enc(captchaResponse);
 
     let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/new';
-    let res = new Weave.Resource(url);
+    let res = new Resource(url);
     res.authenticator = new Weave.NoOpAuthenticator();
     res.setHeader("Content-Type", "application/x-www-form-urlencoded",
                   "Content-Length", message.length);
 
-    // fixme: Resource throws on error - it really shouldn't :-/
     let resp;
     try {
       resp = res.post(message);
-    }
-    catch(ex) {
-      this._log.trace("Create account error: " + ex);
-    }
+      ret = {
+        status: res.lastChannel.responseStatus,
+        response: resp
+      };
 
-    if (res.lastChannel.responseStatus != 200 &&
-        res.lastChannel.responseStatus != 201)
-      this._log.info("Failed to create account. " +
-                       "status: " + res.lastChannel.responseStatus + ", " +
-                       "response: " + resp);
-    else
+      if (res.lastChannel.responseStatus != 200 &&
+          res.lastChannel.responseStatus != 201)
+        throw "Server returned error code " + res.lastChannel.responseStatus;
+
       this._log.info("Account created: " + resp);
+      ret.error = false;
 
-    return res.lastChannel.responseStatus;
+    } catch(ex) {
+      this._log.warn("Failed to create account: " + Utils.exceptionStr(ex));
+
+      ret.error = "generic-server-error";
+      if (ret.status == 400)
+        ret.error = this._errorStr(ret.status);
+      else if (ret.status == 417)
+        ret.error = "captcha-incorrect";
+    }
+
+    return ret;
   },
 
   // stuff we need to to after login, before we can really do
@@ -703,7 +760,7 @@ WeaveSvc.prototype = {
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
 
-    this._log.debug(["Weave Version:", WEAVE_VERSION, "Compatible:", 
+    this._log.debug(["Weave Version:", WEAVE_VERSION, "Compatible:",
       COMPATIBLE_VERSION, "Remote:", remoteVersion].join(" "));
 
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
@@ -882,14 +939,14 @@ WeaveSvc.prototype = {
 
   /**
    * Call sync() on an idle timer
-   * 
+   *
    */
   syncOnIdle: function WeaveSvc_syncOnIdle() {
     this._log.debug("Idle timer created for sync, will sync after " +
                     IDLE_TIME + " seconds of inactivity.");
     Svc.Idle.addIdleObserver(this, IDLE_TIME);
   },
-  
+
   /**
    * Set a timer for the next sync
    */
@@ -902,7 +959,7 @@ WeaveSvc.prototype = {
       this._syncTimer.cancel();
     else
       this._syncTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    
+
     let listener = new Utils.EventListener(Utils.bind2(this,
       function WeaveSvc__scheduleNextSyncCallback(timer) {
         this._syncTimer = null;
@@ -919,7 +976,7 @@ WeaveSvc.prototype = {
    */
   _handleSyncError: function WeaveSvc__handleSyncError() {
     let shouldBackoff = false;
-    
+
     let err = Weave.Service.detailedStatus.sync;
     // we'll assume the server is just borked a little for these
     switch (err) {
@@ -931,16 +988,16 @@ WeaveSvc.prototype = {
 
     // specifcally handle 500, 502, 503, 504 errors
     // xxxmpc: what else should be in this list?
-    // this is sort of pseudocode, need a way to get at the 
-    if (!shouldBackoff && 
+    // this is sort of pseudocode, need a way to get at the
+    if (!shouldBackoff &&
         Utils.checkStatus(Records.lastResource.lastChannel.responseStatus, null, [500,[502,504]])) {
        shouldBackoff = true;
     }
-    
+
     // if this is a client error, do the next sync as normal and return
     if (!shouldBackoff) {
       this._scheduleNextSync();
-      return;      
+      return;
     }
 
     // ok, something failed connecting to the server, rev the counter
@@ -1279,7 +1336,7 @@ WeaveSvc.prototype = {
       // Process each command in order
       for each ({command: command, args: args} in commands) {
         this._log.debug("Processing command: " + command + "(" + args + ")");
-        
+
         let engines = [args[0]];
         switch (command) {
           case "resetAll":
