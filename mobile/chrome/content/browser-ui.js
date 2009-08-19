@@ -265,7 +265,9 @@ var BrowserUI = {
 
     if (targetNode == null) {
       let panel = this._popup.panel;
-      (panel.hide) ? panel.hide() : this.popPopup();
+      if (panel.hide)
+        panel.hide();
+      this.popPopup();
     }
   },
 
