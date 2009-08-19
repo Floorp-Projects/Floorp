@@ -771,6 +771,17 @@ BookmarksTracker.prototype = {
       this._upScore();
   },
 
+  /**
+   * Add the successor id for the item that follows the given item
+   */
+  _addSuccessor: function BMT__addSuccessor(itemId) {
+    let parentId = Svc.Bookmark.getFolderIdForItem(itemId);
+    let itemPos = Svc.Bookmark.getItemIndex(itemId);
+    let succId = Svc.Bookmark.getIdForItemAt(parentId, itemPos + 1);
+    if (succId != -1)
+      this._addId(succId);
+  },
+
   /* Every add/remove/change is worth 10 points */
   _upScore: function BMT__upScore() {
     this._score += 10;
@@ -813,6 +824,7 @@ BookmarksTracker.prototype = {
 
     this._log.trace("onItemAdded: " + itemId);
     this._addId(itemId);
+    this._addSuccessor(itemId);
   },
 
   onBeforeItemRemoved: function BMT_onBeforeItemRemoved(itemId) {
@@ -821,6 +833,7 @@ BookmarksTracker.prototype = {
 
     this._log.trace("onBeforeItemRemoved: " + itemId);
     this._addId(itemId);
+    this._addSuccessor(itemId);
   },
 
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
@@ -846,6 +859,12 @@ BookmarksTracker.prototype = {
 
     this._log.trace("onItemMoved: " + itemId);
     this._addId(itemId);
+    this._addSuccessor(itemId);
+
+    // Get the thing that's now at the old place
+    let oldSucc = Svc.Bookmark.getIdForItemAt(oldParent, oldIndex);
+    if (oldSucc != -1)
+      this._addId(oldSucc);
   },
 
   onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
