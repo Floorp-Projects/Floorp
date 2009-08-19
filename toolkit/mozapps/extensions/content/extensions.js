@@ -479,6 +479,8 @@ function showView(aView) {
 
   if (aView == "updates" || aView == "installs")
     gExtensionsView.selectedItem = gExtensionsView.children[0];
+  else if (isThemes)
+    gExtensionsView.selectedItem = getItemForInternalName(gCurrentTheme);
 
   if (showSkip) {
     var button = document.getElementById("installUpdatesAllButton");
