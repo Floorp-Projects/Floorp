@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Utils', 'Svc'];
+const EXPORTED_SYMBOLS = ['Utils', 'Svc', 'Str'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -44,6 +44,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/ext/Preferences.js");
 Cu.import("resource://weave/ext/Observers.js");
+Cu.import("resource://weave/ext/StringBundle.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/log4moz.js");
 
@@ -293,6 +294,11 @@ let Utils = {
       return dest[prop];
     };
     dest.__defineGetter__(prop, getter);
+  },
+
+  lazyStrings: function Weave_lazyStrings(name) {
+    let bundle = "chrome://weave/locale/" + name + ".properties";
+    return function() new StringBundle(bundle);
   },
 
   deepEquals: function eq(a, b) {
@@ -619,16 +625,16 @@ let Utils = {
       win = win.activeWindow;
     win["open" + type].apply(win, Array.slice(arguments, 2));
   },
-  
+
   _openChromeWindow: function Utils_openCWindow(name, uri, options, args) {
     Utils.openWindow(name, "chrome://weave/content/" + uri, options, args);
   },
-  
+
   openWindow: function Utils_openWindow(name, uri, options, args) {
     Utils._openWin(name, "Window", null, uri, "",
-    options || "centerscreen,chrome,dialog,resizable=yes", args);  
+    options || "centerscreen,chrome,dialog,resizable=yes", args);
   },
-    
+
   openDialog: function Utils_openDialog(name, uri, options, args) {
     Utils._openWin(name, "Dialog", "chrome://weave/content/" + uri, "",
       options || "centerscreen,chrome,dialog,modal,resizable=no", args);
@@ -646,7 +652,7 @@ let Utils = {
   openShare: function Utils_openShare() {
     Utils.openDialog("Share", "share.xul");
   },
-  
+
   openLog: function Utils_openLog() {
     Utils._openChromeWindow("Log", "log.xul");
   },
@@ -657,11 +663,11 @@ let Utils = {
   openSync: function Utils_openSync() {
     Utils._openChromeWindow("Sync", "pick-sync.xul");
   },
-  
+
   openWizard: function Utils_openWizard() {
     Utils._openChromeWindow("Wizard", "wizard.xul");
   },
-  
+
   // assumes an nsIConverterInputStream
   readStream: function Weave_readStream(is) {
     let ret = "", str = {};
@@ -738,3 +744,7 @@ Svc.Prefs = new Preferences(PREFS_BRANCH);
  ["WinMediator", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator"],
  ["WinWatcher", "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher"],
 ].forEach(function(lazy) Utils.lazySvc(Svc, lazy[0], lazy[1], Ci[lazy[2]]));
+
+let Str = {};
+["service", "about"]
+  .forEach(function(lazy) Utils.lazy2(Str, lazy, Utils.lazyStrings(lazy)));
