@@ -938,6 +938,10 @@ struct nsCycleCollectionXPCOMRuntime :
 
     inline nsCycleCollectionParticipant *ToParticipant(void *p);
 
+    void CommenceShutdown()
+    {
+    }
+
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p) {}
 #endif
@@ -2627,6 +2631,11 @@ nsCycleCollector::Shutdown()
 {
     // Here we want to run a final collection and then permanently
     // disable the collector because the program is shutting down.
+
+    for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
+        if (mRuntimes[i])
+            mRuntimes[i]->CommenceShutdown();
+    }
 
     Collect(SHUTDOWN_COLLECTIONS(mParams));
 
