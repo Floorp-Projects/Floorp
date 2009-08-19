@@ -938,18 +938,44 @@ class GenerateProtocolActorHeader(Visitor):
             impl = cxx.MethodDefn(mdecl)
 
             if md.decl.type.isCtor():
-                impl.addstmt(cxx.StmtDecl(cxx.Decl(objtype, '__a')))
+                #
+                # for ctor messages, we construct two interface methods:
+                #
+                #   Actor* SendActorCtor(...)
+                #   Actor* SendActorCtor(Actor*, ...)
+                #
+                # the first uses the ActorCtor() method provided
+                # by the subclass implementing this interface,
+                # and internally passes through to the second
+                # SendActorCtor(Actor*, ...) method
+                #
+                # the second relies on the user to pass in a valid
+                # concrete Actor* instantiation
+                #
+
+                # here |impl| is the first ctor interface above
+                callctor = cxx.ExprCall(cxx.ExprVar(md._cxx.method.name),
+                                        [ cxx.ExprVar(p.name) for
+                                          p in md._cxx.method.params ])
+                impl.addstmt(cxx.StmtReturn(
+                    cxx.ExprCall(cxx.ExprVar(mdecl.name),
+                                 ([ callctor ] +
+                                  [ cxx.ExprVar(p.name) for
+                                    p in md._cxx.method.params ]))))
+                self.cls.addstmt(impl)
+                self.cls.addstmt(cxx.Whitespace.NL)
+
+                # now we make the second ctor interface
+                mdecl2 = deepcopy(mdecl)
+                mdecl2.params.insert(0, cxx.Decl(objtype, '__a'))
+                impl = cxx.MethodDefn(mdecl2)
+
                 objvar = cxx.ExprVar('__a')
 
                 okcode = objvar
                 failerrcode = cxx.ExprLiteral.ZERO
                 valueerrcode = cxx.ExprLiteral.ZERO
 
-                impl.addstmt(cxx.StmtExpr(cxx.ExprAssn(
-                            objvar,
-                            cxx.ExprCall(cxx.ExprVar(md._cxx.method.name),
-                                         [ cxx.ExprVar(p.name) for
-                                           p in md._cxx.method.params ]))))
                 failif = cxx.StmtIf(cxx.ExprPrefixUnop(objvar, '!'))
                 failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprLiteral.ZERO))
                 impl.addstmt(failif)
