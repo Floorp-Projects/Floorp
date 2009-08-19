@@ -311,6 +311,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug466751.xhtml \
 		test_bug461555.html \
 		test_sync_xhr_timer.xhtml \
+		test_bug498240.html \
 		file_htmlserializer_ipv6.html \
 		file_htmlserializer_ipv6_out.html \
 		test_bug498433.html \
