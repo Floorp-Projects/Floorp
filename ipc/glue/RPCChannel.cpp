@@ -57,15 +57,14 @@ namespace ipc {
 bool
 RPCChannel::Call(Message* msg, Message* reply)
 {
-    NS_ASSERTION(ChannelIdle == mChannelState
-                 || ChannelWaiting == mChannelState,
+    NS_ABORT_IF_FALSE(!ProcessingSyncMessage(),
+                      "violation of sync handler invariant");
+    NS_ASSERTION(ChannelConnected == mChannelState,
                  "trying to Send() to a channel not yet open");
-
-    NS_PRECONDITION(msg->is_rpc(), "can only Call() RPC messages here");
+    NS_PRECONDITION(msg->is_rpc(),
+                    "can only Call() RPC messages here");
 
     mMutex.Lock();
-
-    mChannelState = ChannelWaiting;
 
     msg->set_rpc_remote_stack_depth(mRemoteStackDepth);
     mPending.push(*msg);
@@ -108,10 +107,6 @@ RPCChannel::Call(Message* msg, Message* reply)
                 *reply = recvd;
             }
 
-            if (!WaitingForReply()) {
-                mChannelState = ChannelIdle;
-            }
-
             mMutex.Unlock();
             return !isError;
         }
@@ -128,8 +123,6 @@ RPCChannel::Call(Message* msg, Message* reply)
             mMutex.Lock();
         }
     }
-
-    delete msg;
 
     return true;
 }
@@ -208,13 +201,22 @@ RPCChannel::OnMessageReceived(const Message& msg)
     MutexAutoLock lock(mMutex);
 
     if (0 == StackDepth()) {
-        // wake up the worker, there's work to do
+        // wake up the worker, there's a new in-call to process
 
         // NB: the interaction between this and SyncChannel is rather
-        // subtle.  We may be awaiting a synchronous reply when this
-        // code is executed.  If that's the case, posting this in-call
-        // to the worker will defer processing of the in-call until
-        // after the synchronous reply is received.
+        // subtle.  It's possible for us to send a sync message
+        // exactly when the other side sends an RPC in-call.  A sync
+        // handler invariant is that the sync message must be replied
+        // to before sending any other blocking message, so we know
+        // that the other side must reply ASAP to the sync message we
+        // just sent.  Thus by queuing this RPC in-call in that
+        // situation, we specify an order on the previously unordered
+        // messages and satisfy all invariants.
+        //
+        // It's not possible for us to otherwise receive an RPC
+        // in-call while awaiting a sync response in any case where
+        // both us and the other side are behaving legally.  Is it
+        // worth trying to detect this oddball case?
         mWorkerLoop->PostTask(FROM_HERE,
                               NewRunnableMethod(this,
                                                 &RPCChannel::OnIncall, msg));
