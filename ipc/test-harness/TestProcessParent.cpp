@@ -6,7 +6,7 @@ namespace test {
 
 
 TestProcessParent::TestProcessParent() :
-    GeckoChildProcessHost(GeckoChildProcess_TestHarness)
+    GeckoChildProcessHost(GeckoProcessType_TestHarness)
 {
 }
 

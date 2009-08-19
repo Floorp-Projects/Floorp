@@ -34,7 +34,7 @@ ContentProcessParent::CreateTestShell()
 }
 
 ContentProcessParent::ContentProcessParent()
-    : mSubprocess(GeckoChildProcess_Tab)
+    : mSubprocess(GeckoProcessType_Content)
 {
     // TODO: async launching!
     mSubprocess.SyncLaunch();

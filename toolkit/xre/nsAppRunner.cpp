@@ -753,6 +753,29 @@ nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
   return NS_OK;
 }
 
+// Ensure that the GeckoProcessType enum, defined in xpcom/build/nsXULAppAPI.h,
+// is synchronized with the const unsigned longs defined in
+// xpcom/system/nsIXULRuntime.idl.
+#define SYNC_ENUMS(a,b) \
+  PR_STATIC_ASSERT(nsIXULRuntime::PROCESS_TYPE_ ## a == \
+                   static_cast<int>(GeckoProcessType_ ## b));
+
+SYNC_ENUMS(DEFAULT, Default)
+SYNC_ENUMS(PLUGIN, Plugin)
+SYNC_ENUMS(CONTENT, Content)
+SYNC_ENUMS(TESTHARNESS, TestHarness)
+
+// .. and ensure that that is all of them:
+PR_STATIC_ASSERT(GeckoProcessType_TestHarness + 1 == GeckoProcessType_End);
+
+NS_IMETHODIMP
+nsXULAppInfo::GetProcessType(PRUint32* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = XRE_GetProcessType();
+  return NS_OK;
+}
+
 #ifdef XP_WIN
 // Matches the enum in WinNT.h for the Vista SDK but renamed so that we can
 // safely build with the Vista SDK and without it.

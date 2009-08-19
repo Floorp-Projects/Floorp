@@ -86,4 +86,17 @@ interface nsIXULRuntime : nsISupports
    * This is taken from the MOZ_WIDGET_TOOLKIT configure variable.
    */
   readonly attribute AUTF8String widgetToolkit;
+
+  /**
+   * The legal values of processType.
+   */
+  const unsigned long PROCESS_TYPE_DEFAULT = 0;
+  const unsigned long PROCESS_TYPE_PLUGIN = 1;
+  const unsigned long PROCESS_TYPE_CONTENT = 2;
+  const unsigned long PROCESS_TYPE_TESTHARNESS = 3;
+
+  /**
+   * The type of the caller's process.  Returns one of the values above.
+   */
+  readonly attribute unsigned long processType;
 };
