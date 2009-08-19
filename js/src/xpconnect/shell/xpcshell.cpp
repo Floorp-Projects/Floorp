@@ -150,86 +150,6 @@ static JSBool compileOnly = JS_FALSE;
 JSPrincipals *gJSPrincipals = nsnull;
 nsAutoString *gWorkingDirectory = nsnull;
 
-static JSContext *gWatchdogContext = nsnull;
-
-#ifdef XP_WIN
-static HANDLE gTimerHandle = 0;
-
-VOID CALLBACK
-TimerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
-{
-    JS_TriggerOperationCallback(gWatchdogContext);
-}
-
-static void
-EnableWatchdog(JSContext *cx)
-{
-    gWatchdogContext = cx;
-
-    if (gTimerHandle)
-        return;
-
-    if (!CreateTimerQueueTimer(&gTimerHandle,
-                               NULL,
-                               (WAITORTIMERCALLBACK)TimerCallback,
-                               cx->runtime,
-                               DWORD(1000),
-                               0,
-                               WT_EXECUTEINTIMERTHREAD | WT_EXECUTEONLYONCE))
-        gTimerHandle = 0;
-}
-
-static void
-DisableWatchdog()
-{
-    if (gTimerHandle) {
-        DeleteTimerQueueTimer(NULL, gTimerHandle, NULL);
-        gTimerHandle = 0;
-    }
-}
-#else
-static void
-AlarmHandler(int sig)
-{
-    JS_TriggerOperationCallback(gWatchdogContext);
-}
-
-static void
-EnableWatchdog(JSContext *cx)
-{
-    gWatchdogContext = cx;
-
-    signal(SIGALRM, AlarmHandler); /* set the Alarm signal capture */
-    alarm(1);
-}
-
-static void
-DisableWatchdog()
-{
-    alarm(0);
-    signal(SIGALRM, NULL);
-}
-#endif
-
-class Watchdog {
-public:
-    Watchdog(JSContext *cx) {
-        EnableWatchdog(cx);
-    }
-
-    ~Watchdog() {
-        DisableWatchdog();
-    }
-};
-
-static JSBool
-ShellOperationCallback(JSContext *cx)
-{
-    JS_MaybeGC(cx);
-
-    return JS_TRUE;
-}
-
 static JSBool
 GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -1598,7 +1518,6 @@ ContextCallback(JSContext *cx, uintN contextOp)
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
-        JS_SetOperationCallback(cx, ShellOperationCallback);
     }
     return JS_TRUE;
 }
@@ -1725,8 +1644,6 @@ main(int argc, char **argv, char **envp)
             printf("JS_NewContext failed!\n");
             return 1;
         }
-
-        Watchdog watchdog(cx);
 
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         if (!xpc) {
