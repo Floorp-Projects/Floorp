@@ -2532,15 +2532,9 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     // properties will be forwarded to the inner window.
     ::JS_ClearScope(mContext, global);
 
-    // Tell XPConnect to re-initialize the global object to do things like
-    // define the Components object on the global again and forget all
-    // old prototypes in this scope.
-    // XXX Except that now, the global is thawed and has an inner window. So
-    // anything that XPConnect does to our global will be forwarded. So I
-    // think the only thing that this does for real is to call SetGlobal on
-    // our XPCWrappedNativeScope. Perhaps XPConnect should have a more
-    // targeted API?
-    rv = xpc->InitClasses(mContext, global);
+    // Now that the inner and outer windows are connected, tell XPConnect to
+    // re-initialize the prototypes on the outer window's scope.
+    rv = xpc->InitClassesForOuterObject(mContext, global);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(aGlobalObject));
