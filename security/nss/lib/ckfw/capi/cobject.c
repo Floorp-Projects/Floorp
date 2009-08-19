@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cobject.c,v $ $Revision: 1.5 $ $Date: 2009/02/25 18:37:49 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cobject.c,v $ $Revision: 1.6 $ $Date: 2009/07/29 20:15:19 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -172,7 +172,7 @@ nss_ckcapi_DERUnwrap
       len = (len << 8) | (unsigned) *src++;
     }
   }
-  if (len + (src-start) > (unsigned int)size) {
+  if (len + ((unsigned char *)src-start) > (unsigned int)size) {
     return start;
   }
   if (next) {

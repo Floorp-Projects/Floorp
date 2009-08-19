@@ -41,7 +41,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.23 2008/08/22 01:33:05 wtc%google.com Exp $
+ * $Id: secport.c,v 1.24 2009/07/30 23:28:21 nelson%bolyard.com Exp $
  */
 
 #include "seccomon.h"
@@ -287,6 +287,8 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
     static const PRVersionDescription * pvd;
     static PRBool  doFreeArenaPool = PR_FALSE;
 
+    if (!pool)
+    	return;
     if (ARENAPOOL_MAGIC == pool->magic ) {
 	len  = sizeof *pool;
 	lock = pool->lock;

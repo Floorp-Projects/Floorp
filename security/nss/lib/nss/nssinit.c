@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.98 2009/05/29 19:23:30 wtc%google.com Exp $ */
+/* $Id: nssinit.c,v 1.99 2009/07/23 01:56:40 nelson%bolyard.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -774,6 +774,7 @@ NSS_RegisterShutdown(NSS_ShutdownFunc sFunc, void *appData)
 		(nssShutdownList.allocatedFuncs + NSS_SHUTDOWN_STEP) 
 		*sizeof(struct NSSShutdownFuncPair));
 	if (!funcs) {
+	    PZ_Unlock(nssShutdownList.lock);
 	    return SECFailure;
 	}
 	nssShutdownList.funcs = funcs;
