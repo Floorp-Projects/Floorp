@@ -1216,22 +1216,6 @@ class GenerateProtocolActorHeader(Visitor):
                 failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
                 block.addstmt(failif)
 
-            # call the C++ handler hook
-            callimpl = cxx.ExprCall(
-                cxx.ExprVar(pfx + md.decl.progname), [ ])
-            if md.decl.type.isCtor() or md.decl.type.isDtor():
-                callimpl.args += [ objvar ]
-            callimpl.args += [ cxx.ExprVar(p.name) for p in md._cxx.params ]
-            callimpl.args += [ cxx.ExprAddrOf(cxx.ExprVar(r.name))
-                               for r in md._cxx.returns ]
-            errhandle = cxx.StmtIf(cxx.ExprCall(
-                cxx.ExprVar('NS_FAILED'), [ callimpl ]))
-            errhandle.ifb.addstmt(cxx.StmtReturn(
-                cxx.ExprVar('MsgValueError')))
-            block.addstmt(errhandle)
-
-            block.addstmt(cxx.Whitespace.NL)
-
             if md.decl.type.isCtor():
                 othersideid = cxx.ExprSelect(ahvar, '.', 'mId')
                 block.addstmt(cxx.StmtExpr(
@@ -1249,7 +1233,24 @@ class GenerateProtocolActorHeader(Visitor):
                             cxx.ExprSelect(objvar, '->', 'mChannel'),
                             channelvar)))
                 block.addstmt(cxx.Whitespace.NL)
-            elif md.decl.type.isDtor():
+
+            # call the C++ handler hook
+            callimpl = cxx.ExprCall(
+                cxx.ExprVar(pfx + md.decl.progname), [ ])
+            if md.decl.type.isCtor() or md.decl.type.isDtor():
+                callimpl.args += [ objvar ]
+            callimpl.args += [ cxx.ExprVar(p.name) for p in md._cxx.params ]
+            callimpl.args += [ cxx.ExprAddrOf(cxx.ExprVar(r.name))
+                               for r in md._cxx.returns ]
+            errhandle = cxx.StmtIf(cxx.ExprCall(
+                cxx.ExprVar('NS_FAILED'), [ callimpl ]))
+            errhandle.ifb.addstmt(cxx.StmtReturn(
+                cxx.ExprVar('MsgValueError')))
+            block.addstmt(errhandle)
+
+            block.addstmt(cxx.Whitespace.NL)
+
+            if md.decl.type.isDtor():
                 calldtor = cxx.ExprCall(
                     cxx.ExprVar(md._cxx.method.name),
                     ([ objvar ]
