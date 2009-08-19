@@ -223,10 +223,12 @@ BookmarksStore.prototype = {
       if (predGUID == null)
         record._insertPos = 0;
       else {
-        // The insert position is one after the predecessor if we have it
+        // The insert position is one after the predecessor of the same parent
         let predId = idForGUID(predGUID);
-        if (predId != -1)
+        if (predId != -1 && this._getParentGUIDForId(predId) == parentGUID) {
           record._insertPos = Svc.Bookmark.getItemIndex(predId) + 1;
+          record._predId = predId;
+        }
         else
           this._log.trace("Appending to end until predecessor is synced");
       }
@@ -263,6 +265,32 @@ BookmarksStore.prototype = {
 
     return Svc.Annos.getItemsWithAnnotation(anno, {}).filter(function(id)
       Utils.anno(id, anno) == val);
+  },
+
+  /**
+   * Move an item and all of its followers to a new position until reaching an
+   * item that shouldn't be moved
+   */
+  _moveItemChain: function BStore__moveItemChain(itemId, insertPos, stopId) {
+    let parentId = Svc.Bookmark.getFolderIdForItem(itemId);
+
+    // Keep processing the item chain until it loops to the stop item
+    do {
+      // Figure out what's next in the chain
+      let itemPos = Svc.Bookmark.getItemIndex(itemId);
+      let nextId = Svc.Bookmark.getIdForItemAt(parentId, itemPos + 1);
+
+      Svc.Bookmark.moveItem(itemId, parentId, insertPos);
+      this._log.trace("Moved " + itemId + " to " + insertPos);
+
+      // Prepare for the next item in the chain
+      insertPos = Svc.Bookmark.getItemIndex(itemId) + 1;
+      itemId = nextId;
+
+      // Stop if we ran off the end or the item is looking for its pred.
+      if (itemId == -1 || Svc.Annos.itemHasAnnotation(itemId, PREDECESSOR_ANNO))
+        break;
+    } while (itemId != stopId);
   },
 
   create: function BStore_create(record) {
@@ -368,33 +396,12 @@ BookmarksStore.prototype = {
           return;
         }
 
+        // Move the chain of followers to after the predecessor
+        let insertPos = Svc.Bookmark.getItemIndex(predId) + 1;
+        this._moveItemChain(follow, insertPos, predId);
+
         // Remove the annotation now that we're putting it in the right spot
         Svc.Annos.removeItemAnnotation(follow, PREDECESSOR_ANNO);
-
-        // Process each item in the chain until we loop back to the start
-        let insertAfter = predId;
-        do {
-          // Figure out what's next in the chain
-          let followPos = Svc.Bookmark.getItemIndex(follow);
-          let nextFollow = Svc.Bookmark.getIdForItemAt(parent, followPos + 1);
-
-          let insertPos = Svc.Bookmark.getItemIndex(insertAfter) + 1;
-          Svc.Bookmark.moveItem(follow, parent, insertPos);
-          this._log.trace(["Moved", follow, "to", insertPos, "after",
-            insertAfter, "with", nextFollow, "next"].join(" "));
-
-          // Move to the next item and check some stop conditions
-          insertAfter = follow;
-          follow = nextFollow;
-
-          // Stop if we ran off the end of the folder
-          if (follow == -1)
-            break;
-
-          // We're at the end of a chain if the item is looking for its pred.
-          if (Svc.Annos.itemHasAnnotation(follow, PREDECESSOR_ANNO))
-            break;
-        } while (follow != predId);
       }, this);
     }, this);
   },
@@ -437,11 +444,18 @@ BookmarksStore.prototype = {
 
     this._log.trace("Updating " + record.id + " (" + itemId + ")");
 
-    // Need to move if the parent or position isn't correct
-    if (Svc.Bookmark.getFolderIdForItem(itemId) != record._parent ||
-        Svc.Bookmark.getItemIndex(itemId) != record._insertPos) {
-      this._log.trace("Moving item (changing folder/position)");
-      this._bms.moveItem(itemId, record._parent, record._insertPos);
+    // Move the bookmark to a new parent if necessary
+    if (Svc.Bookmark.getFolderIdForItem(itemId) != record._parent) {
+      this._log.trace("Moving item to a new parent");
+      Svc.Bookmark.moveItem(itemId, record._parent, record._insertPos);
+    }
+    // Move the chain of bookmarks to a new position
+    else if (Svc.Bookmark.getItemIndex(itemId) != record._insertPos &&
+             !record._orphan) {
+      this._log.trace("Moving item and followers to a new position");
+
+      // Stop moving at the predecessor unless we don't have one
+      this._moveItemChain(itemId, record._insertPos, record._predId || itemId);
     }
 
     for (let [key, val] in Iterator(record.cleartext)) {
