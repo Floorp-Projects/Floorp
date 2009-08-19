@@ -64,7 +64,9 @@ public:
     };
 
     RPCChannel(RPCListener* aListener) :
-        SyncChannel(aListener)
+        SyncChannel(aListener),
+        mPending(),
+        mRemoteStackDepth(0)
     {
     }
 
@@ -86,9 +88,67 @@ private:
         return mPending.size() > 0 || SyncChannel::WaitingForReply();
     }
 
-    void OnDispatchMessage(const Message& msg);
+    void OnIncall(const Message& msg);
+    void ProcessIncall(const Message& call, size_t stackDepth);
 
+    size_t StackDepth() {
+        mMutex.AssertCurrentThreadOwns();
+        NS_ABORT_IF_FALSE(
+            mPending.empty()
+            || (mPending.top().is_rpc() && !mPending.top().is_reply()),
+            "StackDepth() called from an inconsistent state");
+
+        return mPending.size();
+    }
+
+    //
+    // In quiescent states, |mPending| is a stack of all the RPC
+    // out-calls on which this RPCChannel is awaiting a response.
+    //
+    // The stack is also used by the IO thread to transfer received
+    // messages to the worker thread, only when the worker thread is
+    // awaiting an RPC response.  Until the worker pops the top of the
+    // stack, it may (legally) contain either of
+    //
+    // - RPC in-call (msg.is_rpc() && !msg.is_reply())
+    // - RPC reply (msg.is_rpc() && msg.is_reply())
+    //
+    // In both cases, the worker will pop the message off the stack
+    // and process it ASAP, returning |mPending| to a quiescent state.
+    //
     std::stack<Message> mPending;
+
+    //
+    // This is what we think the RPC stack depth is on the "other
+    // side" of this RPC channel.  We maintain this variable so that
+    // we can detect racy RPC calls.  With each RPC out-call sent, we
+    // send along what *we* think the stack depth of the remote side
+    // is *before* it will receive the RPC call.
+    //
+    // After sending the out-call, our stack depth is "incremented"
+    // by pushing that pending message onto mPending.
+    //
+    // Then when processing an in-call |c|, it must be true that
+    //
+    //   mPending.size() == c.remoteDepth
+    //
+    // i.e., my depth is actually the same as what the other side
+    // thought it was when it sent in-call |c|.  If this fails to
+    // hold, we have detected racy RPC calls.
+    //
+    // We then increment mRemoteStackDepth *just before* processing
+    // the in-call, since we know the other side is waiting on it, and
+    // decrement it *just after* finishing processing that in-call,
+    // since our response will pop the top of the other side's
+    // |mPending|.
+    //
+    // One nice aspect of this race detection is that it is symmetric;
+    // if one side detects a race, then the other side must also 
+    // detect the same race.
+    //
+    // TODO: and when we detect a race, what should we actually *do* ... ?
+    //
+    size_t mRemoteStackDepth;
 };
 
 
