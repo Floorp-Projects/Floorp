@@ -7791,11 +7791,26 @@ ExtensionsDataSource.prototype = {
 
   /**
    * If we're in safe mode, the item is disabled by the user or app, or the
-   * item is to be upgraded force the generic about dialog for the item.
+   * item is to not an extension then don't offer an options url.
+   */
+  _rdfGet_optionsURL: function EMDS__rdfGet_optionsURL(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    if (inSafeMode() || this.getItemProperty(id, "isDisabled") == "true" ||
+        this.getItemProperty(id, "type") != Ci.nsIUpdateItem.TYPE_EXTENSION)
+      return EM_L("");
+
+    return null;
+  },
+
+  /**
+   * If we're in safe mode, the item is disabled by the user or app, the item
+   * is not an extension, or the item is to be upgraded force the generic about
+   * dialog for the item.
    */
   _rdfGet_aboutURL: function EMDS__rdfGet_aboutURL(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     if (inSafeMode() || this.getItemProperty(id, "isDisabled") == "true" ||
+        this.getItemProperty(id, "type") != Ci.nsIUpdateItem.TYPE_EXTENSION ||
         this.getItemProperty(id, "opType") == OP_NEEDS_UPGRADE)
       return EM_L("");
 
