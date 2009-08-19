@@ -117,6 +117,7 @@
           if (item) {
             this._selectedItem = item;
             this._styleItem(this._selectedItem, true);
+            this._scrollBoxObject.ensureElementIsVisible(this._selectedItem);
           }
 
           return this._selectedIndex = val;
