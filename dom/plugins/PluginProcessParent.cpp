@@ -48,7 +48,7 @@ namespace plugins {
 
 
 PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
-    GeckoChildProcessHost(GeckoChildProcess_Plugin),
+    GeckoChildProcessHost(GeckoProcessType_Plugin),
     mPluginFilePath(aPluginFilePath)
 {
 }

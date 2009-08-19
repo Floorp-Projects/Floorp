@@ -59,7 +59,7 @@ main(int argc, char* argv[])
     MessageBox(NULL, L"Hi", L"Hi", MB_OK);
 #endif
 
-    GeckoChildProcessType proctype =
+    GeckoProcessType proctype =
         XRE_StringToChildProcessType(argv[argc - 1]);
 
     nsresult rv = XRE_InitChildProcess(argc - 1, argv, proctype);

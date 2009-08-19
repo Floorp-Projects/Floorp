@@ -49,9 +49,10 @@ void xxxNeverCalledXUL()
   XRE_CreateAppData(nsnull, nsnull);
   XRE_ParseAppData(nsnull, nsnull);
   XRE_FreeAppData(nsnull);
-  XRE_ChildProcessTypeToString(GeckoChildProcess_Default);
+  XRE_ChildProcessTypeToString(GeckoProcessType_Default);
   XRE_StringToChildProcessType("");
-  XRE_InitChildProcess(0, nsnull, GeckoChildProcess_Default);
+  XRE_InitChildProcess(0, nsnull, GeckoProcessType_Default);
   XRE_InitParentProcess(0, nsnull, nsnull, nsnull);
   XRE_RunTestShell(0, nsnull);
+  XRE_GetProcessType();
 }

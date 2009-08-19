@@ -212,30 +212,32 @@ XRE_TermEmbedding()
 }
 
 const char*
-XRE_ChildProcessTypeToString(GeckoChildProcessType aProcessType)
+XRE_ChildProcessTypeToString(GeckoProcessType aProcessType)
 {
-  return (aProcessType < GeckoChildProcess_End) ?
-    kGeckoChildProcessTypeString[aProcessType] : nsnull;
+  return (aProcessType < GeckoProcessType_End) ?
+    kGeckoProcessTypeString[aProcessType] : nsnull;
 }
 
-GeckoChildProcessType
+GeckoProcessType
 XRE_StringToChildProcessType(const char* aProcessTypeString)
 {
   for (int i = 0;
-       i < (int) NS_ARRAY_LENGTH(kGeckoChildProcessTypeString);
+       i < (int) NS_ARRAY_LENGTH(kGeckoProcessTypeString);
        ++i) {
-    if (!strcmp(kGeckoChildProcessTypeString[i], aProcessTypeString)) {
-      return static_cast<GeckoChildProcessType>(i);
+    if (!strcmp(kGeckoProcessTypeString[i], aProcessTypeString)) {
+      return static_cast<GeckoProcessType>(i);
     }
   }
-  return GeckoChildProcess_Invalid;
+  return GeckoProcessType_Invalid;
 }
 
 #ifdef MOZ_IPC
+static GeckoProcessType sChildProcessType = GeckoProcessType_Default;
+
 nsresult
 XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
-                     GeckoChildProcessType aProcess)
+                     GeckoProcessType aProcess)
 {
   NS_ENSURE_ARG_MIN(aArgc, 1);
   NS_ENSURE_ARG_POINTER(aArgv);
@@ -258,19 +260,19 @@ XRE_InitChildProcess(int aArgc,
     ChildThread* mainThread;
 
     switch (aProcess) {
-    case GeckoChildProcess_Default:
+    case GeckoProcessType_Default:
       mainThread = new GeckoThread();
       break;
 
-    case GeckoChildProcess_Plugin:
+    case GeckoProcessType_Plugin:
       mainThread = new PluginThreadChild();
       break;
 
-    case GeckoChildProcess_Tab:
+    case GeckoProcessType_Content:
       mainThread = new ContentProcessThread();
       break;
 
-    case GeckoChildProcess_TestHarness:
+    case GeckoProcessType_TestHarness:
       mainThread = new TestThreadChild();
       break;
 
@@ -278,6 +280,7 @@ XRE_InitChildProcess(int aArgc,
       NS_RUNTIMEABORT("Unknown main thread class");
     }
 
+    sChildProcessType = aProcess;
     ChildProcess process(mainThread);
 
     // Do IPC event loop
@@ -285,6 +288,12 @@ XRE_InitChildProcess(int aArgc,
   }
 
   return NS_OK;
+}
+
+GeckoProcessType
+XRE_GetProcessType()
+{
+  return sChildProcessType;
 }
 
 namespace {
