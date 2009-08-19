@@ -2831,6 +2831,9 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
   if (GetIsPrintPreview()) {
     return NS_OK;
   }
+  
+  // XXX wallpaper for bug 506349.
+  mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
 
   mTextZoom = aTextZoom;
 
