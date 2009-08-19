@@ -1997,8 +1997,8 @@ nsXULElement::LoadSrc()
     nsXULSlots* slots = static_cast<nsXULSlots*>(GetSlots());
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
     if (!slots->mFrameLoader) {
-        slots->mFrameLoader = new nsFrameLoader(this);
-        NS_ENSURE_TRUE(slots->mFrameLoader, NS_ERROR_OUT_OF_MEMORY);
+        slots->mFrameLoader = nsFrameLoader::Create(this);
+        NS_ENSURE_TRUE(slots->mFrameLoader, NS_OK);
     }
 
     return slots->mFrameLoader->LoadFrame();
