@@ -593,7 +593,7 @@ class GenerateProtocolActorHeader(Visitor):
             cls.addstmt(typedef)
         cls.addstmt(cxx.Whitespace.NL)
 
-        # constructor/destructor interface for subclass to impl
+        # message handlers the subclass has to impl
         for md in p.messageDecls:
             if md.decl.type.isCtor() or md.decl.type.isDtor():
                 objtype = cxx.Type(
@@ -602,22 +602,23 @@ class GenerateProtocolActorHeader(Visitor):
                     ptr=1)
                 meth = deepcopy(md._cxx.method)
                 meth.pure = True
+
+                actordecl = cxx.Decl(objtype, '__a')
                 if md.decl.type.isCtor():
                     meth.ret = objtype
                 else:
-                    actordecl = cxx.Decl(objtype, '__a')
                     meth.params.insert(0, actordecl)
                 cls.addstmt(cxx.StmtDecl(meth))
 
-            if self.receivesMessage(md) and not md.decl.type.isCtor():
+            if self.receivesMessage(md):
                 if md.decl.type.isRpc():  pfx = 'Answer'
                 else:                     pfx = 'Recv'
                 meth = deepcopy(md._cxx.method)
                 meth.name = pfx + meth.name
-                if md.decl.type.isDtor():
+                if md.decl.type.isCtor() or md.decl.type.isDtor():
                     # allow implementations to receive a notification
-                    # of "RecvDtor()" if they override this do-nothing
-                    # virtual method
+                    # of "RecvCtor()" or "RecvDtor()" if they override
+                    # this do-nothing virtual method
                     meth.params.insert(0, actordecl)
                     meth.virtual = True
                     dummyimpl = cxx.MethodDefn(meth)
@@ -637,8 +638,6 @@ class GenerateProtocolActorHeader(Visitor):
                                 cxx.Type('ChannelListener')))
         cls.addstmt(cxx.Whitespace.NL)
         
-        # TODO manager param to constructor, when protocol is managed
-
         cls.addstmt(cxx.Label('public'))
         ctor = cxx.ConstructorDefn(cxx.ConstructorDecl(self.clsname))
         if p.decl.type.isToplevel():
@@ -1189,6 +1188,8 @@ class GenerateProtocolActorHeader(Visitor):
                 block.addstmt(cxx.Whitespace.NL)
                 block.addstmt(cxx.StmtDecl(cxx.Decl(objtype, '__a')))
 
+                # call the concrete class's "factory" method to
+                # instantiate a concrete actor
                 block.addstmt(cxx.StmtExpr(cxx.ExprAssn(
                             objvar,
                             cxx.ExprCall(
@@ -1215,20 +1216,19 @@ class GenerateProtocolActorHeader(Visitor):
                 failif.ifb.addstmt(cxx.StmtReturn(cxx.ExprVar('MsgValueError')))
                 block.addstmt(failif)
 
-            # call the C++ handler hook for messages other than ctors
-            if not md.decl.type.isCtor():
-                callimpl = cxx.ExprCall(
-                    cxx.ExprVar(pfx + md.decl.progname), [ ])
-                if md.decl.type.isDtor():
-                    callimpl.args += [ objvar ]
-                callimpl.args += [ cxx.ExprVar(p.name) for p in md._cxx.params ]
-                callimpl.args += [ cxx.ExprAddrOf(cxx.ExprVar(r.name))
-                                   for r in md._cxx.returns ]
-                errhandle = cxx.StmtIf(cxx.ExprCall(
-                        cxx.ExprVar('NS_FAILED'), [ callimpl ]))
-                errhandle.ifb.addstmt(cxx.StmtReturn(
-                        cxx.ExprVar('MsgValueError')))
-                block.addstmt(errhandle)
+            # call the C++ handler hook
+            callimpl = cxx.ExprCall(
+                cxx.ExprVar(pfx + md.decl.progname), [ ])
+            if md.decl.type.isCtor() or md.decl.type.isDtor():
+                callimpl.args += [ objvar ]
+            callimpl.args += [ cxx.ExprVar(p.name) for p in md._cxx.params ]
+            callimpl.args += [ cxx.ExprAddrOf(cxx.ExprVar(r.name))
+                               for r in md._cxx.returns ]
+            errhandle = cxx.StmtIf(cxx.ExprCall(
+                cxx.ExprVar('NS_FAILED'), [ callimpl ]))
+            errhandle.ifb.addstmt(cxx.StmtReturn(
+                cxx.ExprVar('MsgValueError')))
+            block.addstmt(errhandle)
 
             block.addstmt(cxx.Whitespace.NL)
 
