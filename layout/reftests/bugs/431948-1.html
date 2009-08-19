@@ -1,0 +1,34 @@
+<!doctype html>
+<style>
+span { 
+  width: 50px; height: 50px; margin: 5px; 
+  display: inline-block; background-color: red;
+}
+
+/* A semicolon at the top level of a @media block should not cause the
+   whole @media block to be invalidated; in particular, valid rules
+   either before or after it should not be discarded.  (But a rule
+   immediately after the semicolon is consumed by error recovery.)  */
+@media screen {
+  #a { background-color: green }
+  ;
+}
+@media screen {
+  #b { background-color: green } 
+  ;
+  #b { background-color: yellow }
+  #c { background-color: green }
+}
+
+/* A stray close curly brace in the middle of a selector should not
+   be treated as a resynchronization point, however.  */
+#d { background-color: green }
+badselector( } #d { background-color:red } ) {}
+#e { background-color:green }
+
+</style>
+<span id="a"></span>
+<span id="b"></span>
+<span id="c"></span>
+<span id="d"></span>
+<span id="e"></span>

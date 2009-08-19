@@ -283,7 +283,7 @@ protected:
   nsSubstring* NextIdent();
   void SkipUntil(PRUnichar aStopSymbol);
   void SkipUntilOneOf(const PRUnichar* aStopSymbolChars);
-  void SkipRuleSet();
+  void SkipRuleSet(PRBool aInsideBraces);
   PRBool SkipAtRule();
   PRBool SkipDeclaration(PRBool aCheckForBraces);
   PRBool GetNonCloseParenToken(PRBool aSkipWS);
@@ -291,7 +291,8 @@ protected:
   PRBool PushGroup(nsICSSGroupRule* aRule);
   void PopGroup(void);
 
-  PRBool ParseRuleSet(RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParseRuleSet(RuleAppendFunc aAppendFunc, void* aProcessData,
+                      PRBool aInsideBraces = PR_FALSE);
   PRBool ParseAtRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseCharsetRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseImportRule(RuleAppendFunc aAppendFunc, void* aProcessData);
@@ -1923,7 +1924,7 @@ CSSParserImpl::ParseGroupRule(nsICSSGroupRule* aRule,
       continue;
     }
     UngetToken();
-    ParseRuleSet(AppendRuleToSheet, this);
+    ParseRuleSet(AppendRuleToSheet, this, PR_TRUE);
   }
   PopGroup();
 
@@ -2301,7 +2302,7 @@ CSSParserImpl::SkipDeclaration(PRBool aCheckForBraces)
 }
 
 void
-CSSParserImpl::SkipRuleSet()
+CSSParserImpl::SkipRuleSet(PRBool aInsideBraces)
 {
   nsCSSToken* tk = &mToken;
   for (;;) {
@@ -2311,11 +2312,14 @@ CSSParserImpl::SkipRuleSet()
     }
     if (eCSSToken_Symbol == tk->mType) {
       PRUnichar symbol = tk->mSymbol;
-      if ('{' == symbol) {
+      if ('}' == symbol && aInsideBraces) {
+        // leave block closer for higher-level grammar to consume
+        UngetToken();
+        break;
+      } else if ('{' == symbol) {
         SkipUntil('}');
         break;
-      }
-      if ('(' == symbol) {
+      } else if ('(' == symbol) {
         SkipUntil(')');
       } else if ('[' == symbol) {
         SkipUntil(']');
@@ -2355,7 +2359,8 @@ CSSParserImpl::AppendRule(nsICSSRule* aRule)
 }
 
 PRBool
-CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData)
+CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
+                            PRBool aInsideBraces)
 {
   // First get the list of selectors for the rule
   nsCSSSelectorList* slist = nsnull;
@@ -2363,7 +2368,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData)
   if (! ParseSelectorList(slist, PR_TRUE)) {
     REPORT_UNEXPECTED(PEBadSelectorRSIgnored);
     OUTPUT_ERROR();
-    SkipRuleSet();
+    SkipRuleSet(aInsideBraces);
     return PR_FALSE;
   }
   NS_ASSERTION(nsnull != slist, "null selector list");
