@@ -226,6 +226,7 @@ class Protocol(Node):
         self.managesStmts = [ ]
         self.messageDecls = [ ]
         self.transitionStmts = [ ]
+        self.startStates = [ ]
 
     def addOuterNamespace(self, namespace):
         self.namespaces.insert(0, namespace)
@@ -315,17 +316,20 @@ class ANSWER:
     def direction(cls): return IN
 
 class State(Node):
-    def __init__(self, loc, name):
+    def __init__(self, loc, name, start=False):
         Node.__init__(self, loc)
         self.name = name
+        self.start = start
     def __eq__(self, o):
-        return isinstance(o, State) and o.name == self.name
+        return (isinstance(o, State)
+                and o.name == self.name
+                and o.start == self.start)
     def __hash__(self):
         return hash(repr(self))
     def __ne__(self, o):
         return not (self == o)
-    def __repr__(self): return '<State %r>'% (self.name)
-    def __str__(self): return '<State %s>'% (self.name)
+    def __repr__(self): return '<State %r start=%s>'% (self.name, self.start)
+    def __str__(self): return '<State %s start=%s>'% (self.name, self.start)
 
 class Param(Node):
     def __init__(self, loc, typespec, name):
