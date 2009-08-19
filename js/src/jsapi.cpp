@@ -836,6 +836,9 @@ bad:
 JS_PUBLIC_API(void)
 JS_CommenceRuntimeShutDown(JSRuntime *rt)
 {
+#ifdef DEBUG
+    fprintf(stderr, "JS_CommenceRuntimeShutDown\n");
+#endif
     rt->gcFlushCodeCaches = true;
 }
 

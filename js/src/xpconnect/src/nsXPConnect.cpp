@@ -132,15 +132,12 @@ nsXPConnect::~nsXPConnect()
 
     JSContext *cx = nsnull;
     if (mRuntime) {
-        // Tell the JS engine that we are about to destroy the runtime.
-        JSRuntime *rt = mRuntime->GetJSRuntime();
-        JS_CommenceRuntimeShutDown(rt);
         // Create our own JSContext rather than an XPCCallContext, since
         // otherwise we will create a new safe JS context and attach a
         // components object that won't get GCed.
         // And do this before calling CleanupAllThreads, so that we
         // don't create an extra xpcPerThreadData.
-        cx = JS_NewContext(rt, 8192);
+        cx = JS_NewContext(mRuntime->GetJSRuntime(), 8192);
     }
 
     XPCPerThreadData::CleanupAllThreads();
@@ -605,6 +602,16 @@ nsCycleCollectionParticipant *
 nsXPConnect::ToParticipant(void *p)
 {
     return this;
+}
+
+void
+nsXPConnect::CommenceShutdown()
+{
+#ifdef DEBUG
+    fprintf(stderr, "nsXPConnect::CommenceShutdown()\n");
+#endif
+    // Tell the JS engine that we are about to destroy the runtime.
+    JS_CommenceRuntimeShutDown(mRuntime->GetJSRuntime());
 }
 
 NS_IMETHODIMP
