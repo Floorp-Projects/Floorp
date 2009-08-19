@@ -185,15 +185,14 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);
 extern JSObject *
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent);
 
-const uint32 JSSLOT_REGEXP_LAST_INDEX = JSSLOT_PRIVATE + 1;
-const uint32 REGEXP_CLASS_FIXED_RESERVED_SLOTS = 1;
+/*
+ * Get and set the per-object (clone or clone-parent) lastIndex slot.
+ */
+extern JSBool
+js_GetLastIndex(JSContext *cx, JSObject *obj, jsdouble *lastIndex);
 
-static inline void
-js_ClearRegExpLastIndex(JSObject *obj)
-{
-    JS_ASSERT(obj->getClass() == &js_RegExpClass);
-    obj->fslots[JSSLOT_REGEXP_LAST_INDEX] = JSVAL_ZERO;
-}
+extern JSBool
+js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex);
 
 JS_END_EXTERN_C
 
