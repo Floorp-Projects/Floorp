@@ -423,6 +423,7 @@ var Browser = {
 
     function notificationHandler() {
       // Let the view know that the layout might have changed
+      Browser.forceChromeReflow();
       bv.onAfterVisibleMove();
     }
     let notifications = document.getElementById("notifications");
