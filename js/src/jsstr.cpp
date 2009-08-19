@@ -1343,21 +1343,26 @@ match_or_replace(JSContext *cx,
                   : INT_TO_JSVAL(-1);
         }
     } else if (data->flags & GLOBAL_REGEXP) {
-        if (reobj)
-            js_ClearRegExpLastIndex(reobj);
-        length = str->length();
-        ok = true;
-        for (count = 0; index <= length; count++) {
-            ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, vp);
-            if (!ok || *vp != JSVAL_TRUE)
-                break;
-            ok = glob(cx, count, data);
-            if (!ok)
-                break;
-            if (cx->regExpStatics.lastMatch.length == 0) {
-                if (index == length)
+        if (reobj) {
+            /* Set the lastIndex property's reserved slot to 0. */
+            ok = js_SetLastIndex(cx, reobj, 0);
+        } else {
+            ok = JS_TRUE;
+        }
+        if (ok) {
+            length = str->length();
+            for (count = 0; index <= length; count++) {
+                ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, vp);
+                if (!ok || *vp != JSVAL_TRUE)
                     break;
-                index++;
+                ok = glob(cx, count, data);
+                if (!ok)
+                    break;
+                if (cx->regExpStatics.lastMatch.length == 0) {
+                    if (index == length)
+                        break;
+                    index++;
+                }
             }
         }
     } else {
