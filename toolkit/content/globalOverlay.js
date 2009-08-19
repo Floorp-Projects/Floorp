@@ -13,18 +13,19 @@ function closeWindow(aClose, aPromptFunction)
       break;
   }
 
-  var showPromptOverride = false;
-  if ("@mozilla.org/privatebrowsing;1" in Components.classes) {
+  var inPrivateBrowsing = false;
+  try {
     var pbSvc = Components.classes["@mozilla.org/privatebrowsing;1"]
                           .getService(Components.interfaces.nsIPrivateBrowsingService);
-    showPromptOverride = pbSvc.privateBrowsingEnabled &&
-                         pbSvc.autoStarted;
+    inPrivateBrowsing = pbSvc.privateBrowsingEnabled;
+  } catch(e) {
+    // safe to ignore
   }
 
   // If we're down to the last window and someone tries to shut down, check to make sure we can!
   if (windowCount == 1 && !canQuitApplication())
     return false;
-  else if (windowCount != 1 || showPromptOverride)
+  else if (windowCount != 1 || inPrivateBrowsing)
 #endif
     if (typeof(aPromptFunction) == "function" && !aPromptFunction())
       return false;
