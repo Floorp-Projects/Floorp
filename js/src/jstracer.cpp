@@ -362,6 +362,7 @@ InitJITLogController()
     if (strstr(tmf, "abort"))       bits |= LC_TMAbort;
     if (strstr(tmf, "stats"))       bits |= LC_TMStats;
     if (strstr(tmf, "regexp"))      bits |= LC_TMRegexp;
+    if (strstr(tmf, "treevis"))     bits |= LC_TMTreeVis;
 
     /* flags for nanojit */
     if (strstr(tmf, "liveness"))    bits |= LC_Liveness;
@@ -400,6 +401,7 @@ InitJITLogController()
     printf("   abort        show trace recording aborts\n");
     printf("   stats        show trace recording stats\n");
     printf("   regexp       show compilation & entry for regexps\n");
+    printf("   treevis      spew that tracevis/tree.py can parse\n");  
     printf("   ------ options for Nanojit ------\n");
     printf("   liveness     show LIR liveness at start of rdr pipeline\n");
     printf("   readlir      show LIR as it enters the reader pipeline\n");
@@ -1716,6 +1718,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
     debug_only_printf(LC_TMTracer, "globalObj=%p, shape=%d\n",
                       (void*)this->globalObj, OBJ_SHAPE(this->globalObj));
+    debug_only_printf(LC_TMTreeVis, "TREEVIS RECORD FRAG=%p ANCHOR=%p\n", fragment, anchor);
 
     /* Set up jitstats so that trace-test.js can determine which architecture
      * we're running on. */
@@ -3223,6 +3226,24 @@ public:
     }
 };
 
+#if defined JS_JIT_SPEW
+JS_REQUIRES_STACK static void
+TreevisLogExit(JSContext* cx, VMSideExit* exit)
+{
+    debug_only_printf(LC_TMTreeVis, "TREEVIS ADDEXIT EXIT=%p TYPE=%s FRAG=%p PC=%p FILE=\"%s\""
+                      " LINE=%d OFFS=%d", exit, getExitName(exit->exitType), exit->from,
+                      cx->fp->regs->pc, cx->fp->script->filename,
+                      js_FramePCToLineNumber(cx, cx->fp), FramePCOffset(cx->fp));
+    debug_only_print0(LC_TMTreeVis, " STACK=\"");
+    for (unsigned i = 0; i < exit->numStackSlots; i++)
+        debug_only_printf(LC_TMTreeVis, "%c", typeChar[exit->stackTypeMap()[i]]);
+    debug_only_print0(LC_TMTreeVis, "\" GLOBALS=\"");
+    for (unsigned i = 0; i < exit->numGlobalSlots; i++)
+        debug_only_printf(LC_TMTreeVis, "%c", typeChar[exit->globalTypeMap()[i]]);
+    debug_only_print0(LC_TMTreeVis, "\"\n");
+}
+#endif
+
 JS_REQUIRES_STACK VMSideExit*
 TraceRecorder::snapshot(ExitType exitType)
 {
@@ -3326,6 +3347,9 @@ TraceRecorder::snapshot(ExitType exitType)
                 ngslots == e->numGlobalSlots &&
                 !memcmp(exits[n]->fullTypeMap(), typemap, typemap_size)) {
                 AUDIT(mergedLoopExits);
+#if defined JS_JIT_SPEW
+                TreevisLogExit(cx, e);
+#endif
                 JS_ARENA_RELEASE(&cx->tempPool, mark);
                 return e;
             }
@@ -3372,6 +3396,10 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->nativeCalleeWord = 0;
     exit->lookupFlags = js_InferFlags(cx, 0);
     memcpy(exit->fullTypeMap(), typemap, typemap_size);
+
+#if defined JS_JIT_SPEW
+    TreevisLogExit(cx, exit);
+#endif
 
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return exit;
@@ -3447,6 +3475,7 @@ TraceRecorder::copy(VMSideExit* copy)
      */
     if (exit->exitType == LOOP_EXIT)
         treeInfo->sideExits.add(exit);
+    TreevisLogExit(cx, exit);
     return exit;
 }
 
@@ -3575,6 +3604,8 @@ JoinPeers(Assembler* assm, VMSideExit* exit, VMFragment* target)
 {
     exit->target = target;
     assm->patch(exit);
+
+    debug_only_printf(LC_TMTreeVis, "TREEVIS JOIN ANCHOR=%p FRAG=%p\n", exit, target);
 
     if (exit->root() == target)
         return;
@@ -3898,6 +3929,9 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
             treeInfo->linkedTrees.addUnique(peer);
         }
     } else {
+        exit->exitType = LOOP_EXIT;
+        debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", exit,
+                          getExitName(LOOP_EXIT));
         exit->target = fragment->root;
         fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), createGuardRecord(exit));
     }
@@ -3906,6 +3940,8 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
     Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
     if (assm->error() != nanojit::None)
         return false;
+
+    debug_only_printf(LC_TMTreeVis, "TREEVIS CLOSELOOP EXIT=%p PEER=%p\n", exit, peer);
 
     peer = getLoop(traceMonitor, root->ip, root->globalObj, root->globalShape, root->argc);
     JS_ASSERT(peer);
@@ -4055,6 +4091,8 @@ TraceRecorder::endLoop(VMSideExit* exit)
     if (assm->error() != nanojit::None)
         return;
 
+    debug_only_printf(LC_TMTreeVis, "TREEVIS ENDLOOP EXIT=%p\n", exit);
+
     VMFragment* root = (VMFragment*)fragment->root;
     joinEdgesToEntry(traceMonitor->fragmento, getLoop(traceMonitor,
                                                       root->ip,
@@ -4189,7 +4227,10 @@ TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
      * Guard that we come out of the inner tree along the same side exit we came out when
      * we called the inner tree at recording time.
      */
-    guard(true, lir->ins2(LIR_eq, ret, INS_CONSTPTR(exit)), NESTED_EXIT);
+    VMSideExit* nested = snapshot(NESTED_EXIT);
+    guard(true, lir->ins2(LIR_eq, ret, INS_CONSTPTR(exit)), nested);
+    debug_only_printf(LC_TMTreeVis, "TREEVIS TREECALL INNER=%p EXIT=%p GUARD=%p\n", inner, nested,
+                      exit);
 
     /* Register us as a dependent tree of the inner tree. */
     ((TreeInfo*)inner->vmprivate)->dependentTrees.addUnique(fragment->root);
@@ -4491,6 +4532,7 @@ TrashTree(JSContext* cx, Fragment* f)
 {
     JS_ASSERT((!f->code()) == (!f->vmprivate));
     JS_ASSERT(f == f->root);
+    debug_only_printf(LC_TMTreeVis, "TREEVIS TRASH FRAG=%p\n", f);
     if (!f->code())
         return;
     AUDIT(treesTrashed);
@@ -4772,6 +4814,17 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
     ti->treeLineNumber = js_FramePCToLineNumber(cx, cx->fp);
     ti->treePCOffset = FramePCOffset(cx->fp);
 #endif
+#ifdef JS_JIT_SPEW
+    debug_only_printf(LC_TMTreeVis, "TREEVIS CREATETREE ROOT=%p PC=%p FILE=\"%s\" LINE=%d OFFS=%d",
+                      f, f->ip, ti->treeFileName, ti->treeLineNumber, FramePCOffset(cx->fp));
+    debug_only_print0(LC_TMTreeVis, " STACK=\"");
+    for (unsigned i = 0; i < ti->nStackTypes; i++)
+        debug_only_printf(LC_TMTreeVis, "%c", typeChar[ti->typeMap[i]]);
+    debug_only_print0(LC_TMTreeVis, "\" GLOBALS=\"");
+    for (unsigned i = 0; i < ti->nGlobalTypes(); i++)
+        debug_only_printf(LC_TMTreeVis, "%c", typeChar[ti->typeMap[ti->nStackTypes + i]]);
+    debug_only_print0(LC_TMTreeVis, "\"\n");
+#endif
 
     /* Determine the native frame layout at the entry point. */
     unsigned entryNativeStackSlots = ti->nStackTypes;
@@ -4921,6 +4974,10 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
     Fragment* c;
     if (!(c = anchor->target)) {
         c = JS_TRACE_MONITOR(cx).fragmento->createBranch(anchor, cx->fp->regs->pc);
+        debug_only_printf(LC_TMTreeVis, "TREEVIS CREATEBRANCH ROOT=%p FRAG=%p PC=%p FILE=\"%s\""
+                          " LINE=%d ANCHOR=%p OFFS=%d\n",
+                          f, c, cx->fp->regs->pc, cx->fp->script->filename,
+                          js_FramePCToLineNumber(cx, cx->fp), anchor, FramePCOffset(cx->fp));
         c->spawnedFrom = anchor;
         c->parent = f;
         anchor->target = c;
