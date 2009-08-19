@@ -45,7 +45,7 @@
 
 #include "mozilla/Monitor.h"
 
-#include "nsXULAppAPI.h"        // for GeckoChildProcessType
+#include "nsXULAppAPI.h"        // for GeckoProcessType
 
 namespace mozilla {
 namespace ipc {
@@ -56,7 +56,7 @@ protected:
   typedef mozilla::Monitor Monitor;
 
 public:
-  GeckoChildProcessHost(GeckoChildProcessType aProcessType=GeckoChildProcess_Default);
+  GeckoChildProcessHost(GeckoProcessType aProcessType=GeckoProcessType_Default);
 
   bool SyncLaunch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
   bool AsyncLaunch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
@@ -76,7 +76,7 @@ public:
   }
 
 protected:
-  GeckoChildProcessType mProcessType;
+  GeckoProcessType mProcessType;
   Monitor mMonitor;
   bool mLaunched;
   FilePath mProcessPath;
