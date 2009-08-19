@@ -250,6 +250,9 @@ struct JSThreadData {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
+    /* Random number generator state, used by jsmath.cpp. */
+    int64               rngSeed;
+
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
     JSTraceMonitor      traceMonitor;
@@ -455,14 +458,6 @@ struct JSRuntime {
      * rt->gcLock.
      */
     JSSetSlotRequest    *setSlotRequests;
-
-    /* Random number generator state, used by jsmath.c. */
-    JSBool              rngInitialized;
-    int64               rngMultiplier;
-    int64               rngAddend;
-    int64               rngMask;
-    int64               rngSeed;
-    jsdouble            rngDscale;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     jsdouble            *jsNaN;

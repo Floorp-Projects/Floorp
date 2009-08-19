@@ -58,6 +58,7 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jslock.h"
+#include "jsmath.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -83,6 +84,7 @@ InitThreadData(JSThreadData *data)
 #ifdef JS_TRACER
     js_InitJIT(&data->traceMonitor);
 #endif
+    js_InitRandom(data);
 }
 
 static void
