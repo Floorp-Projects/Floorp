@@ -67,7 +67,11 @@ RPCChannel::Call(Message* msg, Message* reply)
 
     mChannelState = ChannelWaiting;
 
+    msg->set_rpc_remote_stack_depth(mRemoteStackDepth);
     mPending.push(*msg);
+
+    // bypass |SyncChannel::Send| b/c RPCChannel implements its own
+    // waiting semantics
     AsyncChannel::Send(msg);
 
     while (1) {
@@ -81,25 +85,22 @@ RPCChannel::Call(Message* msg, Message* reply)
         Message recvd = mPending.top();
         mPending.pop();
 
-        if (!recvd.is_rpc()) {
-            SyncChannel::OnDispatchMessage(recvd);
-            // FIXME/cjones: error handling
-        }
+        NS_ABORT_IF_FALSE(recvd.is_rpc(),
+                          "should have been delegated to SyncChannel");
+
         // RPC reply message
-        else if (recvd.is_reply()) {
+        if (recvd.is_reply()) {
             NS_ASSERTION(0 < mPending.size(), "invalid RPC stack");
 
             const Message& pending = mPending.top();
 
-#ifdef DEBUG
             if (recvd.type() != (pending.type()+1) && !recvd.is_reply_error()) {
                 // FIXME/cjones: handle error
                 NS_ASSERTION(0, "somebody's misbehavin'");
             }
-#endif
 
-            // we received a reply to our most recent message.  pop this
-            // frame and return the reply
+            // we received a reply to our most recent outstanding
+            // call.  pop this frame and return the reply
             mPending.pop();
 
             bool isError = recvd.is_reply_error();
@@ -116,10 +117,12 @@ RPCChannel::Call(Message* msg, Message* reply)
         }
         // RPC in-call
         else {
+            // "snapshot" the current stack depth while we own the Mutex
+            size_t stackDepth = StackDepth();
             mMutex.Unlock();
 
             // someone called in to us from the other side.  handle the call
-            OnDispatchMessage(recvd);
+            ProcessIncall(recvd, stackDepth);
             // FIXME/cjones: error handling
 
             mMutex.Lock();
@@ -132,14 +135,34 @@ RPCChannel::Call(Message* msg, Message* reply)
 }
 
 void
-RPCChannel::OnDispatchMessage(const Message& call)
+RPCChannel::OnIncall(const Message& call)
 {
-    if (!call.is_rpc()) {
-        return SyncChannel::OnDispatchMessage(call);
-    }
+    // We were called from the IO thread when StackDepth() == 0, and
+    // we were "idle".  That's the "snapshot" of the state of
+    // the RPCChannel we use when processing this message.
+    ProcessIncall(call, 0);
+}
+
+void
+RPCChannel::ProcessIncall(const Message& call, size_t stackDepth)
+{
+    mMutex.AssertNotCurrentThreadOwns();
+    NS_ABORT_IF_FALSE(call.is_rpc(),
+                      "should have been handled by SyncChannel");
+
+    // Race detection: see the long comment near mRemoteStackDepth 
+    // in RPCChannel.h
+    NS_ASSERTION(stackDepth == call.rpc_remote_stack_depth(),
+                 "RPC in-calls have raced!");
 
     Message* reply = nsnull;
-    switch (static_cast<RPCListener*>(mListener)->OnCallReceived(call, reply)) {
+
+    ++mRemoteStackDepth;
+    Result rv =
+        static_cast<RPCListener*>(mListener)->OnCallReceived(call, reply);
+    --mRemoteStackDepth;
+
+    switch (rv) {
     case MsgProcessed:
         mIOLoop->PostTask(FROM_HERE,
                           NewRunnableMethod(this,
@@ -178,14 +201,23 @@ RPCChannel::OnDispatchMessage(const Message& call)
 void
 RPCChannel::OnMessageReceived(const Message& msg)
 {
+    if (!msg.is_rpc()) {
+        return SyncChannel::OnMessageReceived(msg);
+    }
+
     MutexAutoLock lock(mMutex);
 
-    if (0 == mPending.size()) {
+    if (0 == StackDepth()) {
         // wake up the worker, there's work to do
+
+        // NB: the interaction between this and SyncChannel is rather
+        // subtle.  We may be awaiting a synchronous reply when this
+        // code is executed.  If that's the case, posting this in-call
+        // to the worker will defer processing of the in-call until
+        // after the synchronous reply is received.
         mWorkerLoop->PostTask(FROM_HERE,
                               NewRunnableMethod(this,
-                                                &RPCChannel::OnDispatchMessage,
-                                                msg));
+                                                &RPCChannel::OnIncall, msg));
     }
     else {
         // let the worker know something new has happened

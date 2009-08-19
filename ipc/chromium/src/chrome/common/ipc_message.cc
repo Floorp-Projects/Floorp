@@ -35,6 +35,9 @@ Message::Message(int32 routing_id, uint16 type, PriorityValue priority)
 #if defined(OS_POSIX)
   header()->num_fds = 0;
 #endif
+#if defined(CHROMIUM_MOZILLA_BUILD)
+  header()->rpc_remote_stack_depth_guess = static_cast<size_t>(-1);
+#endif
   InitLoggingVariables();
 }
 

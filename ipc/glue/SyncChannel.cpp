@@ -94,7 +94,8 @@ SyncChannel::Send(Message* msg, Message* reply)
         else {
             // case (2)
             NS_ASSERTION(!mRecvd.is_reply(), "can't process replies here");
-            // post a task to our own event loop
+            // post a task to our own event loop; this delays processing
+            // of mRecvd
             mWorkerLoop->PostTask(
                 FROM_HERE,
                 NewRunnableMethod(this, &SyncChannel::OnDispatchMessage, mRecvd));
@@ -143,7 +144,7 @@ SyncChannel::OnDispatchMessage(const Message& msg)
 void
 SyncChannel::OnMessageReceived(const Message& msg)
 {
-    MutexAutoLock lock(mMutex);
+    mMutex.Lock();
 
     if (ChannelIdle == mChannelState) {
         // wake up the worker, there's work to do
@@ -153,6 +154,7 @@ SyncChannel::OnMessageReceived(const Message& msg)
                 NewRunnableMethod(this, &SyncChannel::OnDispatchMessage, msg));
         }
         else {
+            mMutex.Unlock();
             return AsyncChannel::OnMessageReceived(msg);
         }
     }
@@ -165,6 +167,8 @@ SyncChannel::OnMessageReceived(const Message& msg)
         // FIXME/cjones: could reach here in error conditions.  impl me
         NOTREACHED();
     }
+
+    mMutex.Unlock();
 }
 
 void
