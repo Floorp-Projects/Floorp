@@ -2799,9 +2799,8 @@ public:
             if (*mTypemap == TT_JSVAL) {
                 mRecorder.import(mBase, mStackOffset, vp, TT_JSVAL,
                                  "jsval", i, fp);
-                LIns *vp_ins = mRecorder.get(vp);
-                mRecorder.unbox_jsval(*vp, vp_ins,
-                                      mRecorder.copy(mRecorder.anchor));
+                LIns *vp_ins = mRecorder.unbox_jsval(*vp, mRecorder.get(vp),
+                                                     mRecorder.copy(mRecorder.anchor));
                 mRecorder.set(vp, vp_ins);
             }
             vp++;
@@ -6079,7 +6078,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
     /* Handle one-shot request to unbox the result of a property get. */
     if (tr->pendingUnboxSlot) {
         LIns* val_ins = tr->get(tr->pendingUnboxSlot);
-        tr->unbox_jsval(*tr->pendingUnboxSlot, val_ins, tr->snapshot(BRANCH_EXIT));
+        val_ins = tr->unbox_jsval(*tr->pendingUnboxSlot, val_ins, tr->snapshot(BRANCH_EXIT));
         tr->set(tr->pendingUnboxSlot, val_ins);
         tr->pendingUnboxSlot = 0;
     }
@@ -7416,10 +7415,8 @@ TraceRecorder::incProp(jsint incr, bool pre)
     jsval& v = STOBJ_GET_SLOT(obj, slot);
     CHECK_STATUS(inc(v, v_ins, incr, pre));
 
-    box_jsval(v, v_ins);
-
     LIns* dslots_ins = NULL;
-    stobj_set_slot(obj_ins, slot, dslots_ins, v_ins);
+    stobj_set_slot(obj_ins, slot, dslots_ins, box_jsval(v, v_ins));
     return JSRS_CONTINUE;
 }
 
@@ -7441,8 +7438,7 @@ TraceRecorder::incElem(jsint incr, bool pre)
     if (!addr_ins) // if we read a hole, abort
         return JSRS_STOP;
     CHECK_STATUS(inc(*vp, v_ins, incr, pre));
-    box_jsval(*vp, v_ins);
-    lir->insStorei(v_ins, addr_ins, 0);
+    lir->insStorei(box_jsval(*vp, v_ins), addr_ins, 0);
     return JSRS_CONTINUE;
 }
 
@@ -8189,31 +8185,29 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
     return JSRS_CONTINUE;
 }
 
-JS_REQUIRES_STACK void
-TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
+JS_REQUIRES_STACK LIns*
+TraceRecorder::box_jsval(jsval v, LIns* v_ins)
 {
     if (isNumber(v)) {
         LIns* args[] = { v_ins, cx_ins };
         v_ins = lir->insCall(&js_BoxDouble_ci, args);
         guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)),
               OOM_EXIT);
-        return;
+        return v_ins;
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_SPECIAL:
-        v_ins = lir->ins2i(LIR_pior, lir->ins2i(LIR_pilsh, v_ins, JSVAL_TAGBITS), JSVAL_SPECIAL);
-        return;
+        return lir->ins2i(LIR_pior, lir->ins2i(LIR_pilsh, v_ins, JSVAL_TAGBITS), JSVAL_SPECIAL);
       case JSVAL_OBJECT:
-        return;
+        return v_ins;
       default:
         JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING);
-        v_ins = lir->ins2(LIR_pior, v_ins, INS_CONST(JSVAL_STRING));
-        return;
+        return lir->ins2(LIR_pior, v_ins, INS_CONST(JSVAL_STRING));
     }
 }
 
-JS_REQUIRES_STACK void
-TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
+JS_REQUIRES_STACK LIns*
+TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
 {
     if (isNumber(v)) {
         // JSVAL_IS_NUMBER(v)
@@ -8226,8 +8220,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
                                                 JSVAL_DOUBLE))),
               exit);
         LIns* args[] = { v_ins };
-        v_ins = lir->insCall(&js_UnboxDouble_ci, args);
-        return;
+        return lir->insCall(&js_UnboxDouble_ci, args);
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_SPECIAL:
@@ -8236,8 +8229,8 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
                          lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
                          JSVAL_SPECIAL),
               exit);
-        v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
-        return;
+        return lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
+
       case JSVAL_OBJECT:
         if (JSVAL_IS_NULL(v)) {
             // JSVAL_NULL maps to type TT_NULL, so insist that v_ins == 0 here.
@@ -8257,7 +8250,8 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
                             INS_CONSTPTR(&js_FunctionClass)),
                   exit);
         }
-        return;
+        return v_ins;
+
       default:
         JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING);
         guard(true,
@@ -8265,8 +8259,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins, VMSideExit* exit)
                         lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
                         JSVAL_STRING),
               exit);
-        v_ins = lir->ins2(LIR_piand, v_ins, INS_CONST(~JSVAL_TAGMASK));
-        return;
+        return lir->ins2(LIR_piand, v_ins, INS_CONST(~JSVAL_TAGMASK));
     }
 }
 
@@ -8495,8 +8488,7 @@ TraceRecorder::putArguments()
         LIns* argsobj_ins = get(&cx->fp->argsobj);
         LIns* args_ins = lir->insAlloc(sizeof(jsval) * cx->fp->argc);
         for (uintN i = 0; i < cx->fp->argc; ++i) {
-            LIns* arg_ins = get(&cx->fp->argv[i]);
-            box_jsval(cx->fp->argv[i], arg_ins);
+            LIns* arg_ins = box_jsval(cx->fp->argv[i], get(&cx->fp->argv[i]));
             lir->insStorei(arg_ins, args_ins, i * sizeof(jsval));
         }
         LIns* args[] = { args_ins, argsobj_ins, cx_ins };
@@ -8578,8 +8570,7 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_POPV()
 {
     jsval& rval = stackval(-1);
-    LIns *rval_ins = get(&rval);
-    box_jsval(rval, rval_ins);
+    LIns *rval_ins = box_jsval(rval, get(&rval));
 
     // Store it in cx->fp->rval. NB: Tricky dependencies. cx->fp is the right
     // frame because POPV appears only in global and eval code and we don't
@@ -9064,8 +9055,7 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
         LIns *dslots_ins = NULL;
         VMAllocator *alloc = traceMonitor->allocator;
         for (uint32 i = 0; i < argc && !alloc->outOfMemory(); i++) {
-            LIns *elt_ins = get(argv + i);
-            box_jsval(argv[i], elt_ins);
+            LIns *elt_ins = box_jsval(argv[i], get(&argv[i]));
             stobj_set_dslot(arr_ins, i, dslots_ins, elt_ins);
         }
 
@@ -9306,7 +9296,7 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
                 if (!VALUE_IS_FUNCTION(cx, arg))
                     goto next_specialization;
             } else if (argtype == 'v') {
-                box_jsval(arg, *argp);
+                *argp = box_jsval(arg, *argp);
             } else {
                 goto next_specialization;
             }
@@ -9438,15 +9428,14 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                                            this_ins);
             }
         }
-        box_jsval(vp[1], this_ins);
+        this_ins = box_jsval(vp[1], this_ins);
     }
     lir->insStorei(this_ins, invokevp_ins, 1 * sizeof(jsval));
 
     VMAllocator *alloc = traceMonitor->allocator;
     // Populate argv.
     for (uintN n = 2; n < 2 + argc; n++) {
-        LIns* i = get(&vp[n]);
-        box_jsval(vp[n], i);
+        LIns* i = box_jsval(vp[n], get(&vp[n]));
         lir->insStorei(i, invokevp_ins, n * sizeof(jsval));
 
         // For a very long argument list we might run out of LIR space, so
@@ -9798,10 +9787,8 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
 
     // Box the value to be stored, if necessary.
     LIns* boxed_ins = NULL;
-    if (!SPROP_HAS_STUB_SETTER(sprop) || (slot != SPROP_INVALID_SLOT && obj != globalObj)) {
-        boxed_ins = v_ins;
-        box_jsval(v, boxed_ins);
-    }
+    if (!SPROP_HAS_STUB_SETTER(sprop) || (slot != SPROP_INVALID_SLOT && obj != globalObj))
+        boxed_ins = box_jsval(v, v_ins);
 
     // Call the setter, if any.
     if (!SPROP_HAS_STUB_SETTER(sprop))
@@ -9814,12 +9801,6 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
         if (obj == globalObj) {
             if (!lazilyImportGlobalSlot(slot))
                 ABORT_TRACE("lazy import of global slot failed");
-
-            // If we called a native setter, unbox the result.
-            if (!SPROP_HAS_STUB_SETTER(sprop)) {
-                v_ins = boxed_ins;
-                unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins, snapshot(BRANCH_EXIT));
-            }
             set(&STOBJ_GET_SLOT(obj, slot), v_ins);
         } else {
             LIns* dslots_ins = NULL;
@@ -9933,9 +9914,8 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     else
         ABORT_TRACE("can't trace special CallClass setter");
 
-    box_jsval(v, v_ins);
     LIns* args[] = {
-        v_ins,
+        box_jsval(v, v_ins),
         INS_CONST(SPROP_USERID(sprop)),
         callobj_ins,
         cx_ins
@@ -10276,8 +10256,7 @@ TraceRecorder::initOrSetPropertyByName(LIns* obj_ins, jsval* idvalp, jsval* rval
 {
     CHECK_STATUS(primitiveToStringInPlace(idvalp));
 
-    LIns* rval_ins = get(rvalp);
-    box_jsval(*rvalp, rval_ins);
+    LIns* rval_ins = box_jsval(*rvalp, get(rvalp));
 
     enterDeepBailCall();
 
@@ -10333,8 +10312,7 @@ TraceRecorder::initOrSetPropertyByIndex(LIns* obj_ins, LIns* index_ins, jsval* r
 {
     index_ins = makeNumberInt32(index_ins);
 
-    LIns* rval_ins = get(rvalp);
-    box_jsval(*rvalp, rval_ins);
+    LIns* rval_ins = box_jsval(*rvalp, get(rvalp));
 
     enterDeepBailCall();
 
@@ -10398,10 +10376,7 @@ TraceRecorder::record_JSOP_SETELEM()
             LIns* args[] = { ::demote(lir, v_ins), idx_ins, obj_ins, cx_ins };
             res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
         } else {
-            LIns* boxed_v_ins = v_ins;
-            box_jsval(v, boxed_v_ins);
-
-            LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
+            LIns* args[] = { box_jsval(v, v_ins), idx_ins, obj_ins, cx_ins };
             res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
         }
         guard(false, lir->ins_eq0(res_ins), MISMATCH_EXIT);
@@ -10581,8 +10556,7 @@ TraceRecorder::record_JSOP_GETDSLOT()
     LIns* dslots_ins = NULL;
     LIns* v_ins = stobj_get_dslot(callee_ins, index, dslots_ins);
 
-    unbox_jsval(callee->dslots[index], v_ins, snapshot(BRANCH_EXIT));
-    stack(0, v_ins);
+    stack(0, unbox_jsval(callee->dslots[index], v_ins, snapshot(BRANCH_EXIT)));
     return JSRS_CONTINUE;
 }
 
@@ -10898,8 +10872,7 @@ TraceRecorder::record_NativeCallComplete()
          * about the top of the stack here, which is where we expected boxed values.
          */
         JS_ASSERT(&v == &cx->fp->regs->sp[-1] && get(&v) == v_ins);
-        unbox_jsval(v, v_ins, snapshot(BRANCH_EXIT));
-        set(&v, v_ins);
+        set(&v, unbox_jsval(v, v_ins, snapshot(BRANCH_EXIT)));
     } else if (JSTN_ERRTYPE(pendingTraceableNative) == FAIL_NEG) {
         /* Already added i2f in functionCall. */
         JS_ASSERT(JSVAL_IS_NUMBER(v));
@@ -11047,9 +11020,10 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                  * BIG FAT WARNING: This snapshot cannot be a BRANCH_EXIT, since
                  * the value to the top of the stack is not the value we unbox.
                  */
-                unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_SPECIAL,
-                            v_ins,
-                            snapshot(MISMATCH_EXIT));
+                v_ins =
+                    unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_SPECIAL,
+                                v_ins,
+                                snapshot(MISMATCH_EXIT));
                 return JSRS_CONTINUE;
             }
             if (setflags == 0 &&
@@ -11088,8 +11062,9 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     }
 
     LIns* dslots_ins = NULL;
-    v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
-    unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins, snapshot(BRANCH_EXIT));
+    v_ins = unbox_jsval(STOBJ_GET_SLOT(obj, slot),
+                        stobj_get_slot(obj_ins, slot, dslots_ins),
+                        snapshot(BRANCH_EXIT));
 
     return JSRS_CONTINUE;
 }
@@ -11184,8 +11159,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     vp = &obj->dslots[jsuint(idx)];
     addr_ins = lir->ins2(LIR_piadd, dslots_ins,
                          lir->ins2i(LIR_pilsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
-    v_ins = lir->insLoad(LIR_ldp, addr_ins, 0);
-    unbox_jsval(*vp, v_ins, exit);
+    v_ins = unbox_jsval(*vp, lir->insLoad(LIR_ldp, addr_ins, 0), exit);
 
     if (JSVAL_IS_SPECIAL(*vp)) {
         /*
@@ -11757,8 +11731,7 @@ TraceRecorder::record_JSOP_INSTANCEOF()
         ABORT_TRACE("non-object on rhs of instanceof");
 
     jsval& val = stackval(-2);
-    LIns* val_ins = get(&val);
-    box_jsval(val, val_ins);
+    LIns* val_ins = box_jsval(val, get(&val));
 
     enterDeepBailCall();
     LIns* args[] = {val_ins, get(&ctor), cx_ins};
@@ -11923,9 +11896,8 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
             LIns* upvar_ins = upvar(fun->u.i.script, uva, i, v);
             if (!upvar_ins)
                 return JSRS_STOP;
-            box_jsval(v, upvar_ins);
             LIns* dslots_ins = NULL;
-            stobj_set_dslot(call_ins, i, dslots_ins, upvar_ins);
+            stobj_set_dslot(call_ins, i, dslots_ins, box_jsval(v, upvar_ins));
         }
     }
 
@@ -12594,8 +12566,7 @@ TraceRecorder::record_JSOP_ARRAYPUSH()
     JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(arrayval)));
     LIns *array_ins = get(&arrayval);
     jsval &elt = stackval(-1);
-    LIns *elt_ins = get(&elt);
-    box_jsval(elt, elt_ins);
+    LIns *elt_ins = box_jsval(elt, get(&elt));
 
     LIns *args[] = { elt_ins, array_ins, cx_ins };
     LIns *ok_ins = lir->insCall(&js_ArrayCompPush_ci, args);
@@ -12883,8 +12854,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
         jsval& v = stackval(int(i) - int(len));
         if (v != JSVAL_HOLE)
             count++;
-        LIns* elt_ins = get(&v);
-        box_jsval(v, elt_ins);
+        LIns* elt_ins = box_jsval(v, get(&v));
         stobj_set_dslot(v_ins, i, dslots_ins, elt_ins);
     }
 
