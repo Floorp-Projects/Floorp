@@ -169,8 +169,9 @@ class nsWindow : public nsBaseWidget
    NS_IMETHOD              Invalidate( const nsIntRect & aRect, PRBool aIsSynchronous);
    NS_IMETHOD              Update();
    virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
-   virtual void            Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
-                                  const nsTArray<Configuration>& aConfigurations);
+   virtual void            Scroll(const nsIntPoint& aDelta,
+                                  const nsTArray<nsIntRect>& aDestRects,
+                                  const nsTArray<Configuration>& aReconfigureChildren);
    NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
 
    // Get a HWND or a HPS.
@@ -249,6 +250,7 @@ protected:
    PRUint32  mDragStatus;     // set while this object is being dragged over
    HPOINTER  mCssCursorHPtr;  // created by SetCursor(imgIContainer*)
    nsCOMPtr<imgIContainer> mCssCursorImg;  // saved by SetCursor(imgIContainer*)
+   nsIntRect mUnclippedBounds; // full size of clipped child windows
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
