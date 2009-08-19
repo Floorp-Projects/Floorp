@@ -5275,13 +5275,14 @@ CK_RV PKM_ForkCheck(int expected, CK_FUNCTION_LIST_PTR fList,
     CK_RV crv = CKR_OK;
 #ifndef NO_FORK_CHECK
     int rc = -1;
+    pid_t child, ret;
     NUMTESTS++; /* increment NUMTESTS */
     if (forkAssert) {
 	putenv("NSS_STRICT_NOFORK=1");
     } else {
 	putenv("NSS_STRICT_NOFORK=0");
     }
-    pid_t child = fork();
+    child = fork();
     switch (child) {
     case -1:
         PKM_Error("Fork failed.\n");
@@ -5316,7 +5317,7 @@ CK_RV PKM_ForkCheck(int expected, CK_FUNCTION_LIST_PTR fList,
         exit(expected & 255);
     default:
         PKM_LogIt("Fork succeeded.\n");
-        pid_t ret = wait(&rc);
+        ret = wait(&rc);
         if (ret != child || (!WIFEXITED(rc)) ||
             ( (expected & 255) != (WEXITSTATUS(rc) & 255)) ) {
             int retStatus = -1;

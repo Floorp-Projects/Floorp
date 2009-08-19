@@ -63,7 +63,7 @@ else
 	RC           = rc.exe
 	MT           = mt.exe
 	# Determine compiler version
-	_MSC_VER_6   = 1200	# MSVC 6
+	_MSC_VER_6   = 1200
 	_MSC_VER    := $(shell $(CC) 2>&1 | sed -ne \
                        's/.*[^0-9.]\([0-9]\{1,\}\)\.\([0-9]\{1,\}\).*/\1\2/p' )
 endif
