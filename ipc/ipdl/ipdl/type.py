@@ -318,7 +318,7 @@ With this information, it finally type checks the AST.'''
         if not runpass(CheckTypes(self.errors)):
             return False
 
-        if (tu.protocol.startState is not None
+        if (len(tu.protocol.startStates)
             and not runpass(CheckStateMachine(self.errors))):
             return False
 
@@ -471,9 +471,11 @@ class GatherDecls(TcheckVisitor):
 
         p.states = { }
         if len(p.transitionStmts):
-            p.startState = p.transitionStmts[0]
-        else:
-            p.startState = None
+            p.startStates = [ ts for ts in p.transitionStmts
+                              if ts.state.start ]
+            if 0 == len(p.startStates):
+                p.startStates = [ p.transitionStmts[0] ]
+                
         # declare each state before decorating their mention
         for trans in p.transitionStmts:
             p.states[trans.state] = trans
@@ -923,8 +925,9 @@ upon trigger |t|, or None if |t| is not a trigger in |S|.'''
             visited.add(ts.state)
             for outedge in ts.transitions:
                 explore(p.states[outedge.toState])
-        
-        explore(p.startState)
+
+        for root in p.startStates:
+            explore(root)
         for ts in p.transitionStmts:
             if ts.state not in visited:
                 self.error(ts.loc, "unreachable state `%s' in protocol `%s'",
