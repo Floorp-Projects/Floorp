@@ -47,6 +47,8 @@
         string void                     # any obj valueOf obj "void"
         call 1                          # any obj rval
         ifprimtop 3                     # any obj rval
+        pop                             # any obj
+        dup                             # any obj obj
         goto 2
 1:      pop                             # any obj obj
 2:      callprop toString               # any obj toString obj
@@ -68,6 +70,8 @@
         string void                     # any obj valueOf obj "void"
         call 1                          # any obj lval
         ifprimtop 3                     # any obj lval
+        pop                             # any obj
+        dup                             # any obj obj
         goto 2
 1:      pop                             # any obj obj
 2:      callprop toString               # any obj toString obj
@@ -93,6 +97,8 @@
         string number                   # any obj valueOf obj "number"
         call 1                          # any obj rval
         ifprimtop 3                     # any obj rval
+        pop                             # any obj
+        dup                             # any obj obj
         goto 2
 1:      pop                             # any obj obj
 2:      callprop toString               # any obj toString obj
@@ -138,6 +144,8 @@
         string number                   # obj2 obj1 valueOf obj1 "number"
         call 1                          # obj2 obj1 lval
         ifprimtop 3                     # obj2 obj1 lval
+        pop                             # obj2 obj1
+        dup                             # obj2 obj1 obj1
         goto 2
 1:      pop                             # obj2 obj1 obj1
 2:      callprop toString               # obj2 obj1 toString obj1
@@ -154,6 +162,8 @@
         string number                   # lval obj valueOf obj "number"
         call 1                          # lval obj rval
         ifprimtop 6                     # lval obj rval
+        pop                             # lval obj
+        dup                             # lval obj obj
         goto 5
 4:      pop                             # lval obj obj
 5:      callprop toString               # lval obj toString obj
@@ -175,9 +185,11 @@
         getprop valueOf                 # any obj obj valueOf
         ifprimtop 1                     # any obj obj valueOf
         swap                            # any obj valueOf obj
-        string void                     # lval obj valueOf obj "void"
+        string void                     # any obj valueOf obj "void"
         call 1                          # any obj rval
         ifprimtop 3                     # any obj rval
+        pop                             # any obj
+        dup                             # any obj obj
         goto 2
 1:      pop                             # any obj obj
 2:      callprop toString               # any obj toString obj
@@ -196,9 +208,11 @@
         getprop valueOf                 # any obj obj valueOf
         ifprimtop 1                     # any obj obj valueOf
         swap                            # any obj valueOf obj
-        string void                     # lval obj valueOf obj "void"
+        string void                     # any obj valueOf obj "void"
         call 1                          # any obj lval
         ifprimtop 3                     # any obj lval
+        pop                             # any obj
+        dup                             # any obj obj
         goto 2
 1:      pop                             # any obj obj
 2:      callprop toString               # any obj toString obj
@@ -218,18 +232,20 @@
         getprop valueOf                 # obj2 obj1 obj1 valueOf
         ifprimtop 1                     # obj2 obj1 obj1 valueOf
         swap                            # obj2 obj1 valueOf obj1
-        string void                     # lval obj valueOf obj "void"
+        string void                     # obj2 obj1 valueOf obj1 "void"
         call 1                          # obj2 obj1 lval
         ifprimtop 3                     # obj2 obj1 lval
+        pop                             # obj2 obj1
+        dup                             # obj2 obj1 obj1
         goto 2
 1:      pop                             # obj2 obj1 obj1
-2:      callprop toString               # obj2 obj toString obj1
-        call 0                          # obj2 obj lval
-        primtop (JSTYPE_VOID)           # obj2 obj lval
+2:      callprop toString               # obj2 obj1 toString obj1
+        call 0                          # obj2 obj1 lval
+        primtop (JSTYPE_VOID)           # obj2 obj1 lval
 3:      swap                            # obj2 lval obj1
         pop                             # obj2 lval
         swap                            # lval obj2
-        dup                             # lval obj1 obj1
+        dup                             # lval obj obj
         dup                             # lval obj obj obj
         getprop valueOf                 # lval obj obj valueOf
         ifprimtop 4                     # lval obj obj valueOf
@@ -237,6 +253,8 @@
         string void                     # lval obj valueOf obj "void"
         call 1                          # lval obj rval
         ifprimtop 6                     # lval obj rval
+        pop                             # lval obj
+        dup                             # lval obj obj
         goto 5
 4:      pop                             # lval obj obj
 5:      callprop toString               # lval obj toString obj
@@ -261,6 +279,8 @@
         string number                   # obj valueOf obj "number"
         call 1                          # obj lval
         ifprimtop 1                     # obj lval
+        pop                             # obj
+        dup                             # obj obj
         goto 3
 1:      swap                            # lval obj
         pop                             # lval
@@ -287,6 +307,8 @@
         swap                                # String this obj toString obj
         call 0                              # String this obj rval
         ifprimtop 3                         # String this obj rval
+        pop                                 # String this obj
+        dup                                 # String this obj obj
         goto 2
 1:      pop                                 # String this obj obj
 2:      callprop valueOf                    # String this obj valueOf obj
@@ -311,6 +333,8 @@
         swap                                # String this obj toString obj
         call 0                              # String this obj rval
         ifprimtop 3                         # String this obj rval
+        pop                                 # String this obj
+        dup                                 # String this obj obj
         goto 2
 1:      pop                                 # String this obj obj
 2:      callprop valueOf                    # String this obj valueOf obj
