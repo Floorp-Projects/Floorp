@@ -65,6 +65,9 @@ bin\LICENSE
 bin\README.txt
 bin\sqlite3.dll
 bin\blocklist.xml
+#ifdef MOZ_SPLASHSCREEN
+bin\splash.bmp
+#endif
 
 ; [Components]
 bin\components\alerts.xpt
