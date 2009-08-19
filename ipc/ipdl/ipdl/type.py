@@ -30,7 +30,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import sys
+import os, sys
 
 from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, TypeSpec, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
 import ipdl.builtin as builtin
@@ -378,6 +378,16 @@ class GatherDecls(TcheckVisitor):
         tu.using = self.builtinUsing + tu.using
 
         p = tu.protocol
+
+        # for everyone's sanity, enforce that the filename and
+        # protocol name match
+        basefilename = os.path.basename(tu.filename)
+        expectedfilename = '%s.ipdl'% (p.name)
+
+        if basefilename != expectedfilename:
+            self.error(p.loc,
+                       "expected file defining protocol `%s' to be named `%s'; instead it's named `%s'",
+                       p.name, expectedfilename, basefilename)
 
         # FIXME/cjones: it's a little weird and counterintuitive to put
         # both the namespace and non-namespaced name in the global scope.
