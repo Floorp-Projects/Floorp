@@ -1055,6 +1055,7 @@ fails == 428810-3e-rtl-insets.html 428810-empty-rtl-insets-ref.html # bug 179596
 == 431341-1.html 431341-1-ref.html
 == 431341-2.html 431341-2-ref.html
 == 431520-1.html 431520-1-ref.html
+== 431948-1.html 431948-1-ref.html
 == 440112.html 440112-ref.html
 == 433640-1.html 433640-1-ref.html
 == 433700.html 433700-ref.html
