@@ -64,11 +64,6 @@ CPPSRCS = nsAutoCompleteController.cpp \
           nsAutoCompleteSimpleResult.cpp \
           $(NULL)
 
-ifdef MOZ_MORK
-REQUIRES += mork
-CPPSRCS += nsAutoCompleteMdbResult.cpp
-endif
-
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
