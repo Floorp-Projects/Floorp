@@ -5540,15 +5540,16 @@ dnl = Check alsa availability on Linux if using sydneyaudio
 dnl ========================================================
 
 dnl If using sydneyaudio with Linux, ensure that the alsa library is available
-if test "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_SYDNEYAUDIO"; then
    case "$target_os" in
 linux*)
-      AC_CHECK_LIB(asound, snd_pcm_open,,AC_MSG_ERROR([Ogg support on Linux requires the alsa library]))
+      PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
+         [echo "$MOZ_ALSA_PKG_ERRORS"
+          AC_MSG_ERROR([Need alsa for Ogg or Wave decoding on Linux.  Disable with --disable-ogg --disable-wave.])])
       ;;
    esac
 fi
-fi
+AC_SUBST(MOZ_ALSA_LIBS)
 
 dnl ========================================================
 dnl Splashscreen
