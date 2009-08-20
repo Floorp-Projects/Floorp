@@ -133,7 +133,26 @@
     { rule: _("src: format(\"truetype\");"), d: {} },
     { rule: _("src: local(Mouse) format(\"truetype\");"), d: {} },
     { rule: _("src: local(Mouse, Rat);"), d: {} },
-    { rule: _("src: local(sans-serif);"), d: {} }
+    { rule: _("src: local(sans-serif);"), d: {} },
+
+    // Repeated descriptors
+    { rule: _("font-weight: 700; font-weight: 200;"),
+      d: {"font-weight" : "200"},
+      noncanonical: true },
+    { rule: _("src: url(\"/fonts/Cat\"); src: url(\"/fonts/Mouse\");"),
+      d: { "src" : "url(\"/fonts/Mouse\")" },
+      noncanonical: true },
+    { rule: _("src: local(Cat); src: local(Mouse)"),
+      d: { "src" : "local(\"Mouse\")" },
+      noncanonical: true },
+
+    // Correct parenthesis matching for local()
+    { rule: _("src: local(Mouse); src: local(Cat(); src: local(Rat); )"),
+      d: { "src" : "local(\"Mouse\")" },
+      noncanonical: true },
+    { rule: _("src: local(Mouse); src: local(\"Cat\"; src: local(Rat); )"),
+      d: { "src" : "local(\"Mouse\")" },
+      noncanonical: true },
 
     // unicode-range is not implemented (bug 443976).
     // tests for that omitted for now.
