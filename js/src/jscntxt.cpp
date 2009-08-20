@@ -1850,3 +1850,14 @@ js_GetCurrentBytecodePC(JSContext* cx)
      */
     return (*pc == JSOP_CALL && imacpc) ? imacpc : pc;
 }
+
+bool
+js_CurrentPCIsInImacro(JSContext *cx)
+{
+#ifdef JS_TRACER
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+    return (JS_ON_TRACE(cx) ? cx->bailExit->imacpc : cx->fp->imacpc) != NULL;
+#else
+    return false;
+#endif
+}
