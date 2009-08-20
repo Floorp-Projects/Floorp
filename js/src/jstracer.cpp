@@ -10423,9 +10423,15 @@ TraceRecorder::record_JSOP_SETELEM()
         // builtin for every storage type. Special case for integers though,
         // since they are so common.
         LIns* res_ins;
-        if (isNumber(v) && isPromoteInt(v_ins)) {
-            LIns* args[] = { ::demote(lir, v_ins), idx_ins, obj_ins, cx_ins };
-            res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
+        LIns* args[] = { NULL, idx_ins, obj_ins, cx_ins };
+        if (isNumber(v)) {
+            if (isPromoteInt(v_ins)) {
+                args[0] = ::demote(lir, v_ins);
+                res_ins = lir->insCall(&js_Array_dense_setelem_int_ci, args);
+            } else {
+                args[0] = v_ins;
+                res_ins = lir->insCall(&js_Array_dense_setelem_double_ci, args);
+            }
         } else {
             LIns* args[] = { box_jsval(v, v_ins), idx_ins, obj_ins, cx_ins };
             res_ins = lir->insCall(&js_Array_dense_setelem_ci, args);
