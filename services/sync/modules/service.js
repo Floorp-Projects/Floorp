@@ -542,11 +542,7 @@ WeaveSvc.prototype = {
       try {
         res.get();
       } catch (e) {}
-<<<<<<< local
 
-=======
-  
->>>>>>> other
       try {
         switch (res.lastChannel.responseStatus) {
           case 200:
@@ -656,20 +652,13 @@ WeaveSvc.prototype = {
       this.sync(true);
       return true;
     }))(),
-<<<<<<< local
 
-=======
-  
->>>>>>> other
   _autoConnectAttempts: 0,
   _autoConnect: function WeaveSvc__attemptAutoConnect() {
     try {
       if (!this.username || !this.password || !this.passphrase)
         return;
-<<<<<<< local
-=======
 
->>>>>>> other
       let failureReason;
       if (Svc.IO.offline)
         failureReason = "Application is offline";
@@ -692,33 +681,17 @@ WeaveSvc.prototype = {
         this._autoConnect();
       }));
     this._autoConnectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-<<<<<<< local
 
-=======
-    
->>>>>>> other
     // back off slowly, with some random fuzz to avoid repeated collisions
-<<<<<<< local
-    var interval = Math.floor(Math.random() * SCHEDULED_SYNC_INTERVAL +
-=======
-    var interval = Math.floor(Math.random() * SCHEDULED_SYNC_INTERVAL + 
->>>>>>> other
+    let interval = Math.floor(Math.random() * SCHEDULED_SYNC_INTERVAL +
                               SCHEDULED_SYNC_INTERVAL * this._autoConnectAttempts);
     this._autoConnectAttempts++;
     this._autoConnectTimer.initWithCallback(listener, interval,
                                             Ci.nsITimer.TYPE_ONE_SHOT);
-<<<<<<< local
     this._log.debug("Scheduling next autoconnect attempt in " +
-=======
-    this._log.debug("Scheduling next autoconnect attempt in " + 
->>>>>>> other
                     interval / 1000 + " seconds.");
   },
-<<<<<<< local
 
-=======
-  
->>>>>>> other
   login: function WeaveSvc_login(username, password, passphrase)
     this._catch(this._lock(this._notify("login", "", function() {
       this._loggedIn = false;
@@ -1102,11 +1075,7 @@ WeaveSvc.prototype = {
 
     // specifcally handle 500, 502, 503, 504 errors
     // xxxmpc: what else should be in this list?
-<<<<<<< local
     // this is sort of pseudocode, need a way to get at the
-=======
-    // this is sort of pseudocode, need a way to get at the 
->>>>>>> other
     if (!shouldBackoff) {
       try {
         shouldBackoff = Utils.checkStatus(Records.lastResource.lastChannel.responseStatus, null, [500,[502,504]]);
