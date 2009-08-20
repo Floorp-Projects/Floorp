@@ -109,6 +109,7 @@ function handleDialog(doc, testNum) {
   ok(true, "handleDialog running for test " + testNum);
 
   var clickOK = true;
+  var body = doc.getElementById("info.body");
   var userfield = doc.getElementById("loginTextbox");
   var passfield = doc.getElementById("password1Textbox");
   var username = userfield.getAttribute("value");
@@ -119,6 +120,9 @@ function handleDialog(doc, testNum) {
     case 1:
         is(username, "abc", "Checking provided username");
         userfield.setAttribute("value", "xyz");
+        is(doc.activeElement, userfield.inputField, "focus correct for test" + testNum);
+        doc.commandDispatcher.rewindFocus();
+        is(doc.activeElement, body, "description focusable");
         break;
 
     case 2:
@@ -128,6 +132,7 @@ function handleDialog(doc, testNum) {
     case 10:
         is(password, "inputpw", "Checking provided password");
         passfield.setAttribute("value", "secret");
+        is(doc.activeElement, passfield.inputField, "focus correct for test" + testNum);
         break;
 
     case 11:
