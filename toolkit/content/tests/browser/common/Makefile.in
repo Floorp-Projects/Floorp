@@ -35,30 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH          = ../../../..
+DEPTH          = ../../../../..
 topsrcdir      = @top_srcdir@
 srcdir         = @srcdir@
 VPATH          = @srcdir@
-relativesrcdir = toolkit/content/tests/browser
+relativesrcdir = toolkit/content/tests/browser/common
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = \
-  common \
-  data \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-_BROWSER_FILES = \
-  browser_save_post_data.js \
+# If you add files here, add them to "_loadAll.js" too.
+_COMMON_FILES = \
+  _loadAll.js \
+  mockFilePicker.js \
+  mockObjects.js \
+  mockTransferForContinuing.js \
+  testRunner.js \
+  toolkitFunctions.js \
   $(NULL)
 
-# browser_keyevents_during_autoscrolling.js cannot start the autoscrolling by
-# synthesizeMouse with middle button on linux, therefore, disable it temporarily
-ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-_BROWSER_FILES += browser_keyevents_during_autoscrolling.js
-endif
-
-libs:: $(_BROWSER_FILES)
+libs:: $(_COMMON_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

@@ -45,7 +45,7 @@ function handleRequest(request, response)
   var body =
    '<html>\
     <body>\
-    Outer POST data: ';
+    Inner POST data: ';
 
   var bodyStream = new BinaryInputStream(request.bodyInputStream);
   var bytes = [], avail = 0;
@@ -53,13 +53,10 @@ function handleRequest(request, response)
    body += String.fromCharCode.apply(String, bodyStream.readByteArray(avail));
 
   body +=
-    '<form id="postForm" action="bug471962_testpage_outer.sjs" method="post">\
-     <input type="text" name="inputfield" value="outer">\
+    '<form id="postForm" action="post_form_inner.sjs" method="post">\
+     <input type="text" name="inputfield" value="inner">\
      <input type="submit">\
      </form>\
-     \
-     <iframe id="innerFrame" src="bug471962_testpage_inner.sjs" width="400" height="200">\
-     \
      </body>\
      </html>';
 
