@@ -1341,7 +1341,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
     /* Define a top-level property 'undefined' with the undefined value. */
     atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, 
+                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT,
                              NULL)) {
         return JS_FALSE;
     }
@@ -1548,7 +1548,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     if (idstr == ATOM_TO_STRING(atom)) {
         *resolved = JS_TRUE;
         return obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                                   JS_PropertyStub, JS_PropertyStub, 
+                                   JS_PropertyStub, JS_PropertyStub,
                                    JSPROP_PERMANENT, NULL);
     }
 
@@ -1643,7 +1643,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!AlreadyHasOwnProperty(cx, obj, atom) &&
         !obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, 
+                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT,
                              NULL)) {
         return JS_FALSE;
     }
@@ -2971,7 +2971,7 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
         return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,
                                          attrs, flags, tinyid, NULL);
     }
-    return obj->defineProperty(cx, id, value, getter, setter, attrs, NULL);   
+    return obj->defineProperty(cx, id, value, getter, setter, attrs, NULL);
 }
 
 static JSBool
