@@ -60,7 +60,7 @@
           <description id="info.title" class="dialogTitle"/>
 #endif
           <description id="info.header" class="header"/>
-          <description id="info.body" context="contentAreaContextMenu" tabindex="-1"/>
+          <description id="info.body" context="contentAreaContextMenu"/>
         </vbox>
       </row>
       <row id="loginContainer" hidden="true" align="center">
