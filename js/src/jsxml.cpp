@@ -3478,7 +3478,7 @@ retry:
                 }
                 xobj = js_GetXMLObject(cx, kid);
                 vobj = js_GetXMLObject(cx, vkid);
-                if (!xobj || !vobj || 
+                if (!xobj || !vobj ||
                     !js_TestXMLEquality(cx, xobj, OBJECT_TO_JSVAL(vobj), bp))
                     return JS_FALSE;
                 if (!*bp)

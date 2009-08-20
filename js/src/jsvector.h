@@ -555,7 +555,7 @@ JSTempVector<T,N>::~JSTempVector()
  */
 template <class T, size_t N>
 inline bool
-JSTempVector<T,N>::calculateNewCapacity(size_t curSize, size_t sizeInc, 
+JSTempVector<T,N>::calculateNewCapacity(size_t curSize, size_t sizeInc,
                                         size_t &newCap)
 {
     size_t newMinCap = curSize + sizeInc;
