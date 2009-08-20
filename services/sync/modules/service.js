@@ -795,8 +795,6 @@ WeaveSvc.prototype = {
 
   createAccount: function WeaveSvc_createAccount(username, password, email,
                                                  captchaChallenge, captchaResponse) {
-    let ret = null;
-
     function enc(x) encodeURIComponent(x);
     let message = "uid=" + enc(username) + "&password=" + enc(password) +
       "&mail=" + enc(email) + "&recaptcha_challenge_field=" +
@@ -808,32 +806,31 @@ WeaveSvc.prototype = {
     res.setHeader("Content-Type", "application/x-www-form-urlencoded",
                   "Content-Length", message.length);
 
-    let resp;
+    let ret = {};
     try {
-      resp = res.post(message);
-      ret = {
-        status: res.lastChannel.responseStatus,
-        response: resp
-      };
+      ret.response = res.post(message);
+      ret.status = res.lastChannel.responseStatus;
 
-      if (res.lastChannel.responseStatus != 200 &&
-          res.lastChannel.responseStatus != 201)
-        throw "Server returned error code " + res.lastChannel.responseStatus;
-
-      this._log.info("Account created: " + resp);
-      ret.error = false;
-
-    } catch(ex) {
-      this._log.warn("Failed to create account: " + Utils.exceptionStr(ex));
-
-      ret.error = "generic-server-error";
-      if (ret.status == 400)
-        ret.error = this._errorStr(ret.status);
-      else if (ret.status == 417)
-        ret.error = "captcha-incorrect";
+      // No exceptions must have meant it was successful
+      this._log.info("Account created: " + ret.response);
+      return ret;
     }
-
-    return ret;
+    catch(ex) {
+      this._log.warn("Failed to create account: " + ex);
+      let status = ex.request.responseStatus;
+      switch (status) {
+        case 400:
+          ret.error = this._errorStr(status);
+          break;
+        case 417:
+          ret.error = "captcha-incorrect";
+          break;
+        default:
+          ret.error = "generic-server-error";
+          break;
+      }
+      return ret;
+    }
   },
 
   // stuff we need to to after login, before we can really do
