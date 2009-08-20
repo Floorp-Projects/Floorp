@@ -85,7 +85,7 @@ AboutWeaveService.prototype = {
   newChannel: function(aURI) {
     let ios = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService);
-    let ch = ios.newChannel("chrome://weave/content/weave.html", null, null);
+    let ch = ios.newChannel("chrome://weave/content/about/index.html", null, null);
     ch.originalURI = aURI;
     return ch;
   }
