@@ -280,6 +280,9 @@ EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
 endif
 
 ifdef MOZ_SYDNEYAUDIO
+ifeq ($(OS_ARCH),Linux)
+EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
+endif
 ifeq ($(OS_ARCH),Darwin)
 OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
 endif
