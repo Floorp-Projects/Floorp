@@ -65,12 +65,12 @@ const kIsLinux = navigator.platform.indexOf("Linux") == 0;
 var gFontMetrics = [];
 if (kIsWin) {
   gFontMetrics = [
-    { ascent: 13, offset: -2, lineHeight: 1, descentLimit:  3 },
-    { ascent: 17, offset: -2, lineHeight: 1, descentLimit:  5 },
-    { ascent: 26, offset: -4, lineHeight: 1, descentLimit:  6 },
-    { ascent: 34, offset: -4, lineHeight: 2, descentLimit: 10 },
-    { ascent: 42, offset: -7, lineHeight: 1, descentLimit: 10 },
-    { ascent: 56, offset: -7, lineHeight: 3, descentLimit: 17 }
+    { emHeight: 16, ascent: 13, offset: -2, lineHeight: 1, descentLimit:  3 },
+    { emHeight: 16, ascent: 17, offset: -2, lineHeight: 1, descentLimit:  5 },
+    { emHeight: 32, ascent: 26, offset: -4, lineHeight: 1, descentLimit:  6 },
+    { emHeight: 32, ascent: 34, offset: -4, lineHeight: 2, descentLimit: 10 },
+    { emHeight: 52, ascent: 42, offset: -7, lineHeight: 1, descentLimit: 10 },
+    { emHeight: 52, ascent: 56, offset: -7, lineHeight: 3, descentLimit: 17 }
   ];
 }
 
@@ -115,6 +115,17 @@ const kUnderlineStyles = [
   { color: "rgb(  0%,100%,100%)", isIMESelection: true  }
 ];
 
+var gDefaultFontSizeIndex = 0;
+const kDefaultFontSizes = [ 16, 20, 21, 50 ];
+
+function computeSpellcheckerUnderlineSize(aFontMetrics)
+{
+  var fontSize = Math.min(aFontMetrics.emHeight,
+                          kDefaultFontSizes[gDefaultFontSizeIndex - 1]);
+  fontSize = Math.max(fontSize, 1);
+  return Math.ceil(fontSize / 20);
+}
+
 function drawSelectionDecorationLines(aDocument, aStyle, aRelativeSize)
 {
   var index = 0;
@@ -126,12 +137,17 @@ function drawSelectionDecorationLines(aDocument, aStyle, aRelativeSize)
       var pt = { x: element.getBoundingClientRect().left,
                  y: element.getBoundingClientRect().top };
       var width = 120;
+      var lineHeight;
       if (underlineStyle.isIMESelection) {
         pt.x += 1;
         width -= 1;
+        lineHeight = fontMetrics.lineHeight;
+      } else {
+        // see bug 486735.
+        lineHeight = computeSpellcheckerUnderlineSize(fontMetrics);
       }
       drawDecorationLine(aDocument, underlineStyle.color, pt,
-        { width: width, height: fontMetrics.lineHeight * aRelativeSize },
+        { width: width, height: lineHeight * aRelativeSize },
         fontMetrics.ascent, fontMetrics.offset, aStyle,
         fontMetrics.descentLimit);
     }
@@ -280,14 +296,17 @@ var gTests = [
  { size: 2.0, style: kDecorationStyleWavy   }
 ];
 
+var gTestingIndex = 0;
+
 function run()
 {
-  var test = gTests.shift();
-
-  if (!test) {
-    SimpleTest.finish();
-    cleanup();
-    return;
+  if (gTestingIndex == gTests.length) {
+    if (gDefaultFontSizeIndex == kDefaultFontSizes.length) {
+      SimpleTest.finish();
+      cleanup();
+      return;
+    }
+    gTestingIndex = 0;
   }
 
   netscape.security.PrivilegeManager.enablePrivilege(
@@ -295,6 +314,13 @@ function run()
 
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
+
+  if (gTestingIndex == 0) {
+    prefs.setIntPref("font.size.variable.x-western",
+                     kDefaultFontSizes[gDefaultFontSizeIndex++]);
+  }
+
+  var test = gTests[gTestingIndex++];
 
   setPrefValue(prefs, "ui.SpellCheckerUnderlineRelativeSize", "float",
                test.size);
@@ -331,7 +357,8 @@ function doTest(aStyle, aSize)
     // when both canvases are loaded
     ok(result.compare(reference, true),
          "Rendering of reftest (style: " + kStyleNames[aStyle] +
-         ", size: " + aSize + ") is different\n" +
+         ", size: " + aSize + ", default font size: " +
+         kDefaultFontSizes[gDefaultFontSizeIndex - 1] + ") is different\n" +
          "RESULT=" + result.snapshotDataURL + "\n" +
          "REFERENCE=" + reference.snapshotDataURL + "\n");
 
@@ -393,6 +420,8 @@ function cleanup()
 
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
+
+  prefs.clearUserPref("font.size.variable.x-western");
 
   for (var i = 0; i < gPrefs.length; i++) {
     prefs.clearUserPref(gPrefs[i].name);
