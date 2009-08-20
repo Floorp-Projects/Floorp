@@ -67,7 +67,7 @@
 struct JSONParser
 {
     JSONParser(JSContext *cx)
-     : hexChar(), numHex(), statep(), stateStack(), rootVal(), objectStack(), 
+     : hexChar(), numHex(), statep(), stateStack(), rootVal(), objectStack(),
        objectKey(cx), buffer(cx)
     {}
 
@@ -195,7 +195,7 @@ write_string(JSContext *cx, JSCharBuffer &cb, const jschar *buf, uint32 len)
             }
             mark = i + 1;
         } else if (buf[i] <= 31 || buf[i] == 127) {
-            if (!cb.append(&buf[mark], i - mark) || 
+            if (!cb.append(&buf[mark], i - mark) ||
                 !js_AppendLiteral(cb, unicodeEscape)) {
                 return JS_FALSE;
             }
@@ -596,7 +596,7 @@ static JSBool
 Walk(JSContext *cx, jsid id, JSObject *holder, jsval reviver, jsval *vp)
 {
     JS_CHECK_RECURSION(cx, return JS_FALSE);
-    
+
     if (!holder->getProperty(cx, id, vp))
         return JS_FALSE;
 

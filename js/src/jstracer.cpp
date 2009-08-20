@@ -401,7 +401,7 @@ InitJITLogController()
     printf("   abort        show trace recording aborts\n");
     printf("   stats        show trace recording stats\n");
     printf("   regexp       show compilation & entry for regexps\n");
-    printf("   treevis      spew that tracevis/tree.py can parse\n");  
+    printf("   treevis      spew that tracevis/tree.py can parse\n");
     printf("   ------ options for Nanojit ------\n");
     printf("   liveness     show LIR liveness at start of rdr pipeline\n");
     printf("   readlir      show LIR as it enters the reader pipeline\n");
@@ -3734,7 +3734,7 @@ class SlotMap : public SlotVisitorBase
     checkType(unsigned i, JSTraceType t)
     {
         debug_only_printf(LC_TMTracer,
-                          "checkType slot %d: interp=%c typemap=%c isNum=%d promoteInt=%d\n", 
+                          "checkType slot %d: interp=%c typemap=%c isNum=%d promoteInt=%d\n",
                           i,
                           typeChar[getCoercedType(*slots[i].v)],
                           typeChar[t],
@@ -5852,7 +5852,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
         JS_ASSERT(innermost->root()->getTreeInfo()->nGlobalTypes() > innermost->numGlobalSlots);
         typeMap.ensure(ngslots);
 #ifdef DEBUG
-        unsigned check_ngslots = 
+        unsigned check_ngslots =
 #endif
         BuildGlobalTypeMapFromInnerTree(typeMap, innermost);
         JS_ASSERT(check_ngslots == ngslots);
@@ -9731,7 +9731,7 @@ TraceRecorder::incName(jsint incr, bool pre)
     LIns* v_ins;
     LIns* v_after;
     NameResult nr;
-    
+
     CHECK_STATUS(name(vp, v_ins, nr));
     CHECK_STATUS(incHelper(*vp, v_ins, v_after, incr));
     LIns* v_result = pre ? v_after : v_ins;
