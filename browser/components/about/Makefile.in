@@ -11,12 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Session-Restore
+# The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is
-#   Dietrich Ayala <dietrich@mozilla.com>
+# The Initial Developer of the Original Code is Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Ryan Flint <rflint@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -30,18 +32,31 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK ***** */
+# ***** END LICENSE BLOCK *****
 
-DEPTH     = ../../../..
+DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_PP_COMPONENTS = \
-	nsSessionStore.js \
-	nsSessionStartup.js \
-	$(NULL)
+MODULE = browserabout
+LIBRARY_NAME = browserabout_s
+FORCE_STATIC_LIB = 1
+FORCE_USE_PIC = 1
+ifndef MOZ_MEMORY
+USE_STATIC_LIBS = 1
+endif
+
+REQUIRES = xpcom string necko caps
+
+EXPORTS_NAMESPACES = mozilla/browser
+
+EXPORTS_mozilla/browser = AboutRedirector.h
+
+CPPSRCS = AboutRedirector.cpp
+
+LOCAL_INCLUDES = -I$(srcdir)/../build
 
 include $(topsrcdir)/config/rules.mk

@@ -61,6 +61,11 @@ XUL
 #endif
 @DLL_PREFIX@xpistub@DLL_SUFFIX@
 component.reg
+components/aboutCertError.js
+components/aboutPrivateBrowsing.js
+components/aboutRights.js
+components/aboutRobots.js
+components/aboutSessionRestore.js
 components/compreg.dat
 components/@DLL_PREFIX@myspell@DLL_SUFFIX@
 components/@DLL_PREFIX@spellchecker@DLL_SUFFIX@
