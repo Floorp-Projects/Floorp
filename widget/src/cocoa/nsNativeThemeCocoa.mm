@@ -1862,6 +1862,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     case NS_THEME_TAB_PANELS:
       DrawTabPanel(cgContext, macRect, aFrame);
       break;
+
+    case NS_THEME_RESIZER:
+      HIThemeGrowBoxDrawInfo drawInfo;
+      drawInfo.version = 0;
+      drawInfo.state = kThemeStateActive;
+      drawInfo.kind = kHIThemeGrowBoxKindNormal;
+      drawInfo.direction = kThemeGrowRight | kThemeGrowDown;
+      drawInfo.size = kHIThemeGrowBoxSizeNormal;
+      HIThemeDrawGrowBox(&macRect.origin, &drawInfo, cgContext, kHIThemeOrientationNormal);
+      break;
   }
 
   nativeDrawing.EndNativeDrawing();
@@ -2247,6 +2257,19 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       *aIsOverridable = PR_FALSE;
       break;
     }
+    case NS_THEME_RESIZER:
+    {
+      HIThemeGrowBoxDrawInfo drawInfo;
+      drawInfo.version = 0;
+      drawInfo.state = kThemeStateActive;
+      drawInfo.kind = kHIThemeGrowBoxKindNormal;
+      drawInfo.direction = kThemeGrowRight | kThemeGrowDown;
+      drawInfo.size = kHIThemeGrowBoxSizeNormal;
+      HIPoint pnt = { 0, 0 };
+      HIRect bounds;
+      HIThemeGetGrowBoxBounds(&pnt, &drawInfo, &bounds);
+      aResult->SizeTo(bounds.size.width, bounds.size.height);
+    }
   }
 
   return NS_OK;
@@ -2343,6 +2366,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_TOOLTIP:
+    case NS_THEME_RESIZER:
     
     case NS_THEME_CHECKBOX:
     case NS_THEME_CHECKBOX_CONTAINER:
