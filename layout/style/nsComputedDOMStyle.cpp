@@ -354,7 +354,35 @@ nsComputedDOMStyle::GetStyleContextForContent(nsIContent* aContent,
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eELEMENT),
                "aContent must be an element");
   if (!aPseudo) {
+    // If there's no pres shell, get it from the content
+    if (!aPresShell) {
+      aPresShell = GetPresShellForContent(aContent);
+      if (!aPresShell)
+        return nsnull;
+    }
+
     aPresShell->FlushPendingNotifications(Flush_Style);
+  }
+
+  return GetStyleContextForContentNoFlush(aContent, aPseudo, aPresShell);
+}
+
+/* static */
+already_AddRefed<nsStyleContext>
+nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
+                                                     nsIAtom* aPseudo,
+                                                     nsIPresShell* aPresShell)
+{
+  NS_ABORT_IF_FALSE(aContent, "NULL content node");
+
+  // If there's no pres shell, get it from the content
+  if (!aPresShell) {
+    aPresShell = GetPresShellForContent(aContent);
+    if (!aPresShell)
+      return nsnull;
+  }
+
+  if (!aPseudo) {
     nsIFrame* frame = aPresShell->GetPrimaryFrameFor(aContent);
     if (frame) {
       nsStyleContext* result = GetStyleContextForFrame(frame);
@@ -388,6 +416,17 @@ nsComputedDOMStyle::GetStyleContextForContent(nsIContent* aContent,
   }
 
   return styleSet->ResolveStyleFor(aContent, parentContext);
+}
+
+/* static */
+nsIPresShell*
+nsComputedDOMStyle::GetPresShellForContent(nsIContent* aContent)
+{
+  nsIDocument* currentDoc = aContent->GetCurrentDoc();
+  if (!currentDoc)
+    return nsnull;
+
+  return currentDoc->GetPrimaryShell();
 }
 
 NS_IMETHODIMP
