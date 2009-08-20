@@ -633,16 +633,16 @@ let Utils = {
       win = win.activeWindow;
     win["open" + type].apply(win, Array.slice(arguments, 2));
   },
-  
+
   _openChromeWindow: function Utils_openCWindow(name, uri, options, args) {
     Utils.openWindow(name, "chrome://weave/content/" + uri, options, args);
   },
-  
+
   openWindow: function Utils_openWindow(name, uri, options, args) {
     Utils._openWin(name, "Window", null, uri, "",
-    options || "centerscreen,chrome,dialog,resizable=yes", args);  
+    options || "centerscreen,chrome,dialog,resizable=yes", args);
   },
-    
+
   openDialog: function Utils_openDialog(name, uri, options, args) {
     Utils._openWin(name, "Dialog", "chrome://weave/content/" + uri, "",
       options || "centerscreen,chrome,dialog,modal,resizable=no", args);
@@ -660,7 +660,7 @@ let Utils = {
   openShare: function Utils_openShare() {
     Utils.openDialog("Share", "share.xul");
   },
-  
+
   openLog: function Utils_openLog() {
     Utils._openChromeWindow("Log", "log.xul");
   },
@@ -671,11 +671,11 @@ let Utils = {
   openSync: function Utils_openSync() {
     Utils._openChromeWindow("Sync", "pick-sync.xul");
   },
-  
+
   openWizard: function Utils_openWizard() {
     Utils._openChromeWindow("Wizard", "wizard.xul");
   },
-  
+
   // assumes an nsIConverterInputStream
   readStream: function Weave_readStream(is) {
     let ret = "", str = {};
