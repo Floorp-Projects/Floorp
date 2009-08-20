@@ -99,8 +99,13 @@ new TestCase( SECTION,
 
 new TestCase( SECTION,
 	      '- "-0x123456789abcde8"',
-	      81985529216486880,
+	      NaN,
 	      - "-0x123456789abcde8" );
+
+new TestCase( SECTION,
+	      '- "+0x123456789abcde8"',
+	      NaN,
+	      - "+0x123456789abcde8" );
 
 // Convert some large numbers to string
 
@@ -687,8 +692,13 @@ new TestCase( SECTION,
 
 new TestCase( SECTION,
 	      "- \"-0x123456789abcde8\"",
-	      81985529216486880,
+	      NaN,
 	      - "-0x123456789abcde8" );
+
+new TestCase( SECTION,
+	      "- \"+0x123456789abcde8\"",
+	      NaN,
+	      - "+0x123456789abcde8" );
 
 // the following two tests are not strictly ECMA 1.0
 
