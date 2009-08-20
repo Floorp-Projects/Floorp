@@ -22,6 +22,8 @@
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -252,10 +254,11 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
       aResult.Append(buffer);
     }
   }
-  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Counters) {
+  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Cubic_Bezier) {
     switch (unit) {
       case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");  break;
       case eCSSUnit_Counters: aResult.AppendLiteral("counters("); break;
+      case eCSSUnit_Cubic_Bezier: aResult.AppendLiteral("cubic-bezier("); break;
       default: break;
     }
 
@@ -271,7 +274,8 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
         }
       }
       if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {
-        if (unit == eCSSUnit_Array)
+        if (unit == eCSSUnit_Array &&
+            eCSSProperty_transition_timing_function != aProperty)
           aResult.AppendLiteral(" ");
         else
           aResult.AppendLiteral(", ");
@@ -283,6 +287,9 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
       if (AppendCSSValueToString(prop, array->Item(i), aResult)) {
         mark = PR_TRUE;
       }
+    }
+    if (eCSSUnit_Array == unit && aProperty == eCSSProperty_transition_timing_function) {
+      aResult.AppendLiteral(")");
     }
   }
   /* Although Function is backed by an Array, we'll handle it separately
@@ -350,6 +357,9 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
         }
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_REGISTER), aResult);
       }
+    }
+    else if (eCSSProperty_transition_property == aProperty) {
+      AppendASCIItoUTF16(nsCSSProps::GetStringValue((nsCSSProperty) aValue.GetIntValue()), aResult);
     }
     else {
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, aValue.GetIntValue());
@@ -465,6 +475,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_None:         aResult.AppendLiteral("none");     break;
     case eCSSUnit_Normal:       aResult.AppendLiteral("normal");   break;
     case eCSSUnit_System_Font:  aResult.AppendLiteral("-moz-use-system-font"); break;
+    case eCSSUnit_All:          aResult.AppendLiteral("all"); break;
     case eCSSUnit_Dummy:
     case eCSSUnit_DummyInherit:
     case eCSSUnit_RectIsAuto:
@@ -478,6 +489,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Image:        break;
     case eCSSUnit_Array:        break;
     case eCSSUnit_Attr:
+    case eCSSUnit_Cubic_Bezier:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
     case eCSSUnit_Local_Font:   break;
@@ -999,6 +1011,49 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
+    case eCSSProperty_transition: {
+#define NUM_TRANSITION_SUBPROPS 4
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+#ifdef DEBUG
+      for (int i = 0; i < NUM_TRANSITION_SUBPROPS; ++i) {
+        NS_ASSERTION(nsCSSProps::kTypeTable[subprops[i]] == eCSSType_ValueList,
+                     "type mismatch");
+      }
+      NS_ASSERTION(subprops[NUM_TRANSITION_SUBPROPS] == eCSSProperty_UNKNOWN,
+                   "length mismatch");
+#endif
+      const nsCSSValueList* val[NUM_TRANSITION_SUBPROPS];
+      for (int i = 0; i < NUM_TRANSITION_SUBPROPS; ++i) {
+        val[i] = *data->ValueListStorageFor(subprops[i]);
+      }
+      // Merge the lists of the subproperties into a single list.
+      for (;;) {
+        for (int i = 0; i < NUM_TRANSITION_SUBPROPS; ++i) {
+          AppendCSSValueToString(subprops[i], val[i]->mValue, aValue);
+          aValue.Append(PRUnichar(' '));
+          val[i] = val[i]->mNext;
+        }
+        // Remove the last space.
+        aValue.Truncate(aValue.Length() - 1);
+
+        PR_STATIC_ASSERT(NUM_TRANSITION_SUBPROPS == 4);
+        if (!val[0] || !val[1] || !val[2] || !val[3]) {
+          break;
+        }
+        aValue.AppendLiteral(", ");
+      }
+
+      PR_STATIC_ASSERT(NUM_TRANSITION_SUBPROPS == 4);
+      if (val[0] || val[1] || val[2] || val[3]) {
+        // The sublists are different lengths, so this can't be
+        // represented as the shorthand.
+        aValue.Truncate();
+      }
+#undef NUM_TRANSITION_SUBPROPS
+      break;
+    }
+
 #ifdef MOZ_SVG
     case eCSSProperty_marker: {
       const nsCSSValue &endValue =

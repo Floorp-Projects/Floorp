@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1109,6 +1110,15 @@ const PRInt32 nsCSSProps::kTextTransformKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kTransitionTimingFunctionKTable[] = {
+  eCSSKeyword_ease, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE,
+  eCSSKeyword_linear, NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR,
+  eCSSKeyword_ease_in, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN,
+  eCSSKeyword_ease_out, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT,
+  eCSSKeyword_ease_in_out, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kUnicodeBidiKTable[] = {
   eCSSKeyword_embed, NS_STYLE_UNICODE_BIDI_EMBED,
   eCSSKeyword_bidi_override, NS_STYLE_UNICODE_BIDI_OVERRIDE,
@@ -1906,6 +1916,14 @@ static const nsCSSProperty gMozPaddingEndSubpropTable[] = {
 static const nsCSSProperty gPauseSubpropTable[] = {
   eCSSProperty_pause_after,
   eCSSProperty_pause_before,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozTransitionSubpropTable[] = {
+  eCSSProperty_transition_property,
+  eCSSProperty_transition_duration,
+  eCSSProperty_transition_timing_function,
+  eCSSProperty_transition_delay,
   eCSSProperty_UNKNOWN
 };
 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -2030,6 +2031,47 @@ CSS_PROP_POSITION(
     mOffset.mTop,
     eCSSType_Value,
     nsnull)
+CSS_PROP_SHORTHAND(
+    -moz-transition,
+    transition,
+    MozTransition,
+    0)
+CSS_PROP_DISPLAY(
+    -moz-transition-delay,
+    transition_delay,
+    MozTransitionDelay,
+    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    Display,
+    mTransitionDelay,
+    eCSSType_ValueList,
+    nsnull)
+CSS_PROP_DISPLAY(
+    -moz-transition-duration,
+    transition_duration,
+    MozTransitionDuration,
+    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    Display,
+    mTransitionDuration,
+    eCSSType_ValueList,
+    nsnull)
+CSS_PROP_DISPLAY(
+    -moz-transition-property,
+    transition_property,
+    MozTransitionProperty,
+    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    Display,
+    mTransitionProperty,
+    eCSSType_ValueList /* list of CSS properties that have transitions ? */,
+    nsnull)
+CSS_PROP_DISPLAY(
+    -moz-transition-timing-function,
+    transition_timing_function,
+    MozTransitionTimingFunction,
+    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    Display,
+    mTransitionTimingFunction,
+    eCSSType_ValueList,
+    kTransitionTimingFunctionKTable)
 CSS_PROP_TEXTRESET(
     unicode-bidi,
     unicode_bidi,

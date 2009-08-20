@@ -23,6 +23,8 @@
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Rob Arnold <robarnold@mozilla.com>
+ *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1068,6 +1070,80 @@ struct nsStyleVisibility {
   }
 };
 
+struct nsTimingFunction {
+  explicit nsTimingFunction(PRInt32 aTimingFunctionType
+                              = NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE)
+  {
+    AssignFromKeyword(aTimingFunctionType);
+  }
+
+  nsTimingFunction(float x1, float y1, float x2, float y2)
+    : mX1(x1)
+    , mY1(y1)
+    , mX2(x2)
+    , mY2(y2)
+  {}
+
+  float mX1;
+  float mY1;
+  float mX2;
+  float mY2;
+
+  PRBool operator==(const nsTimingFunction& aOther) const
+  {
+    return !(*this != aOther);
+  }
+
+  PRBool operator!=(const nsTimingFunction& aOther) const
+  {
+    return mX1 != aOther.mX1 || mY1 != aOther.mY1 ||
+           mX2 != aOther.mX2 || mY2 != aOther.mY2;
+  }
+
+private:
+  void AssignFromKeyword(PRInt32 aTimingFunctionType);
+};
+
+struct nsTransition {
+  nsTransition() { /* leaves uninitialized; see also SetInitialValues */ }
+  explicit nsTransition(const nsTransition& aCopy);
+
+  void SetInitialValues();
+
+  // Delay and Duration are in milliseconds
+
+  nsTimingFunction& GetTimingFunction() { return mTimingFunction; }
+  const nsTimingFunction& GetTimingFunction() const { return mTimingFunction; }
+  float GetDelay() const { return mDelay; }
+  float GetDuration() const { return mDuration; }
+  nsCSSProperty GetProperty() const { return mProperty; }
+  nsIAtom* GetUnknownProperty() const { return mUnknownProperty; }
+
+  void SetTimingFunction(const nsTimingFunction& aTimingFunction)
+    { mTimingFunction = aTimingFunction; }
+  void SetDelay(float aDelay) { mDelay = aDelay; }
+  void SetDuration(float aDuration) { mDuration = aDuration; }
+  void SetProperty(nsCSSProperty aProperty)
+    {
+      NS_ASSERTION(aProperty != eCSSProperty_UNKNOWN, "invalid property");
+      mProperty = aProperty;
+    }
+  void SetUnknownProperty(const nsAString& aUnknownProperty);
+  void CopyPropertyFrom(const nsTransition& aOther)
+    {
+      mProperty = aOther.mProperty;
+      mUnknownProperty = aOther.mUnknownProperty;
+    }
+
+private:
+  nsTimingFunction mTimingFunction;
+  float mDuration;
+  float mDelay;
+  nsCSSProperty mProperty;
+  nsCOMPtr<nsIAtom> mUnknownProperty; // used when mProperty is
+                                      // eCSSProperty_UNKNOWN
+};
+
 struct nsStyleDisplay {
   nsStyleDisplay();
   nsStyleDisplay(const nsStyleDisplay& aOther); 
@@ -1114,6 +1190,13 @@ struct nsStyleDisplay {
   PRPackedBool mTransformPresent;  // [reset] Whether there is a -moz-transform.
   nsStyleTransformMatrix mTransform; // [reset] The stored transform matrix
   nsStyleCoord mTransformOrigin[2]; // [reset] percent, coord.
+  nsAutoTArray<nsTransition, 1> mTransitions; // [reset]
+  // The number of elements in mTransitions that are not from repeating
+  // a list due to another property being longer.
+  PRUint32 mTransitionTimingFunctionCount,
+           mTransitionDurationCount,
+           mTransitionDelayCount,
+           mTransitionPropertyCount;
 
   PRBool IsBlockInside() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||

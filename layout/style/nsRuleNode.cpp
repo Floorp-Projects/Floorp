@@ -28,6 +28,7 @@
  *   Christian Biesinger <cbiesinger@web.de>
  *   Michael Ventnor <m.ventnor@gmail.com>
  *   Keith Rarick <kr@xph.us>
+ *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3468,6 +3469,47 @@ static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
   return result;
 }
 
+// A simple helper function to get the length of a nsCSSValueList
+inline static PRUint32 GetValueListLength(nsCSSValueList* aValueList)
+{
+  PRUint32 len = 0;
+  nsCSSValueList* val = aValueList;
+  while (val) {
+    len++;
+    val = val->mNext;
+  }
+  return len;
+}
+
+// Information about each transition property that is constant.
+struct TransitionPropInfo {
+  // Location of the property's specified value.
+  nsCSSValueList* nsRuleDataDisplay::* rdList;
+  // Location of the count of the property's computed value.
+  PRUint32 nsStyleDisplay::* sdCount;
+};
+
+// Each property's index in this array must match its index in the
+// mutable array |transitionPropData| below.
+static const TransitionPropInfo transitionPropInfo[4] = {
+  { &nsRuleDataDisplay::mTransitionDelay,
+    &nsStyleDisplay::mTransitionDelayCount },
+  { &nsRuleDataDisplay::mTransitionDuration,
+    &nsStyleDisplay::mTransitionDurationCount },
+  { &nsRuleDataDisplay::mTransitionProperty,
+    &nsStyleDisplay::mTransitionPropertyCount },
+  { &nsRuleDataDisplay::mTransitionTimingFunction,
+    &nsStyleDisplay::mTransitionTimingFunctionCount },
+};
+
+// Information about each transition property that changes during
+// ComputeDisplayData.
+struct TransitionPropData {
+  nsCSSValueList *list;
+  PRBool inherited;
+  PRUint32 num;
+};
+
 const void*
 nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                const nsRuleDataStruct& aData, 
@@ -3478,6 +3520,248 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Display, (), display, parentDisplay,
                       Display, displayData)
+
+  // Each property's index in this array must match its index in the
+  // const array |transitionPropInfo| above.
+  TransitionPropData transitionPropData[4];
+  TransitionPropData& delay = transitionPropData[0];
+  TransitionPropData& duration = transitionPropData[1];
+  TransitionPropData& property = transitionPropData[2];
+  TransitionPropData& timingFunction = transitionPropData[3];
+
+#define FOR_ALL_TRANSITION_PROPS(var_) \
+                                      for (PRUint32 var_ = 0; var_ < 4; ++var_)
+
+  // CSS Transitions
+
+  // The four transition properties are stored in nsCSSDisplay in a
+  // single array for all properties.  The number of transitions is
+  // equal to the number of items in the longest property's value.
+  // Properties that have fewer values than the longest are filled in by
+  // repeating the list.  However, this repetition does not extend the
+  // computed value of that particular property (for purposes of
+  // inheritance, or, in our code, for when other properties are
+  // overridden by a more specific rule).
+
+  // But actually, since the spec isn't clear yet, we'll fully compute
+  // all of them (so we can switch easily later), but only care about
+  // the ones up to the number of items for 'transition-property', per
+  // http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html .
+
+  // Transitions are difficult to handle correctly because of this.  For
+  // example, we need to handle scenarios such as:
+  //  * a more general rule specifies transition-property: a, b, c;
+  //  * a more specific rule overrides as transition-property: d;
+  //
+  // If only the general rule applied, we would fill in the extra
+  // properties (duration, delay, etc) with initial values to create 3
+  // fully-specified transitions.  But when the more specific rule
+  // applies, we should only create a single transition.  In order to do
+  // this we need to remember which properties were explicitly specified
+  // and which ones were just filled in with initial values to get a
+  // fully-specified transition, which we do by remembering the number
+  // of values for each property.
+
+  PRUint32 numTransitions = 0;
+  FOR_ALL_TRANSITION_PROPS(p) {
+    const TransitionPropInfo& i = transitionPropInfo[p];
+    TransitionPropData& d = transitionPropData[p];
+
+    d.list = displayData.*(i.rdList);
+
+    // cache whether any of the properties are specified as 'inherit' so
+    // we can use it below
+    d.inherited = d.list && d.list->mValue.GetUnit() == eCSSUnit_Inherit;
+    d.num = 0;
+
+    // General algorithm to determine how many total transitions we need
+    // to build.  For each property:
+    //  - if there is no value specified in for the property in
+    //    displayData, use the values from the start struct, but only if
+    //    they were explicitly specified
+    //  - if there is a value specified for the property in displayData:
+    //    - if the value is 'inherit', count the number of values for
+    //      that property are specified by the parent, but only those
+    //      that were explicitly specified
+    //    - otherwise, count the number of values specified in displayData
+
+
+    // calculate number of elements
+    if (d.list) {
+      if (d.inherited) {
+        d.num = parentDisplay->*(i.sdCount);
+        canStoreInRuleTree = PR_FALSE;
+      } else {
+        d.num = GetValueListLength(d.list);
+      }
+    } else {
+      d.num = display->*(i.sdCount);
+    }
+    if (d.num > numTransitions)
+      numTransitions = d.num;
+  }
+
+  if (!display->mTransitions.SetLength(numTransitions)) {
+    NS_WARNING("failed to allocate transitions array");
+    display->mTransitions.SetLength(1);
+    NS_ABORT_IF_FALSE(display->mTransitions.Length() == 1,
+                      "could not allocate using auto array buffer");
+    numTransitions = 1;
+    FOR_ALL_TRANSITION_PROPS(p) {
+      TransitionPropData& d = transitionPropData[p];
+
+      d.num = 1;
+    }
+  }
+
+  FOR_ALL_TRANSITION_PROPS(p) {
+    const TransitionPropInfo& i = transitionPropInfo[p];
+    TransitionPropData& d = transitionPropData[p];
+
+    display->*(i.sdCount) = d.num;
+  }
+
+  // Fill in the transitions we just allocated with the appropriate values.
+  for (PRUint32 i = 0; i < numTransitions; ++i) {
+    nsTransition *transition = &display->mTransitions[i];
+
+    if (i >= delay.num) {
+      transition->SetDelay(display->mTransitions[i % delay.num].GetDelay());
+    } else if (delay.inherited) {
+      // FIXME (for all transition properties): write a test that
+      // detects when this was wrong for i >= delay.num if parent had
+      // count for this property not equal to length
+      NS_ABORT_IF_FALSE(i < parentDisplay->mTransitionDelayCount,
+                        "delay.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      transition->SetDelay(parentDisplay->mTransitions[i].GetDelay());
+    } else if (delay.list) {
+      switch (delay.list->mValue.GetUnit()) {
+        case eCSSUnit_Seconds:
+          transition->SetDelay(PR_MSEC_PER_SEC *
+                               delay.list->mValue.GetFloatValue());
+          break;
+        case eCSSUnit_Milliseconds:
+          transition->SetDelay(delay.list->mValue.GetFloatValue());
+          break;
+        case eCSSUnit_Initial:
+          transition->SetDelay(0.0);
+          break;
+        default:
+          NS_NOTREACHED("Invalid delay unit");
+      }
+    }
+
+    if (i >= duration.num) {
+      transition->SetDuration(
+        display->mTransitions[i % duration.num].GetDuration());
+    } else if (duration.inherited) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mTransitionDurationCount,
+                        "duration.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      transition->SetDuration(parentDisplay->mTransitions[i].GetDuration());
+    } else if (duration.list) {
+      switch (duration.list->mValue.GetUnit()) {
+        case eCSSUnit_Seconds:
+          transition->SetDuration(PR_MSEC_PER_SEC *
+                                  duration.list->mValue.GetFloatValue());
+          break;
+        case eCSSUnit_Milliseconds:
+          transition->SetDuration(duration.list->mValue.GetFloatValue());
+          break;
+        case eCSSUnit_Initial:
+          transition->SetDuration(0.0);
+          break;
+        default:
+          NS_NOTREACHED("Invalid duration unit");
+      }
+    }
+
+    if (i >= property.num) {
+      transition->CopyPropertyFrom(display->mTransitions[i % property.num]);
+    } else if (property.inherited) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mTransitionPropertyCount,
+                        "property.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      transition->CopyPropertyFrom(parentDisplay->mTransitions[i]);
+    } else if (property.list) {
+      switch (property.list->mValue.GetUnit()) {
+        case eCSSUnit_Ident:
+          {
+            nsDependentString
+              propertyStr(property.list->mValue.GetStringBufferValue());
+            nsCSSProperty prop = nsCSSProps::LookupProperty(propertyStr);
+            if (prop == eCSSProperty_UNKNOWN) {
+              transition->SetUnknownProperty(propertyStr);
+            } else {
+              transition->SetProperty(prop);
+            }
+          }
+          break;
+        case eCSSUnit_None:
+          transition->SetProperty(eCSSPropertyExtra_no_properties);
+          break;
+        case eCSSUnit_All:
+        case eCSSUnit_Initial:
+          transition->SetProperty(eCSSPropertyExtra_all_properties);
+          break;
+        default:
+          NS_NOTREACHED("Invalid transition property unit");
+      }
+    }
+
+    if (i >= timingFunction.num) {
+      transition->SetTimingFunction(
+        display->mTransitions[i % timingFunction.num].GetTimingFunction());
+    } else if (timingFunction.inherited) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mTransitionTimingFunctionCount,
+                        "timingFunction.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      transition->SetTimingFunction(
+        parentDisplay->mTransitions[i].GetTimingFunction());
+    } else if (timingFunction.list) {
+      switch (timingFunction.list->mValue.GetUnit()) {
+        case eCSSUnit_Enumerated:
+          transition->SetTimingFunction(
+            nsTimingFunction(timingFunction.list->mValue.GetIntValue()));
+          break;
+        case eCSSUnit_Cubic_Bezier:
+          {
+            nsCSSValue::Array* array =
+              timingFunction.list->mValue.GetArrayValue();
+            NS_ASSERTION(array && array->Count() == 4,
+                         "Need 4 control points");
+            transition->SetTimingFunction(
+              nsTimingFunction(array->Item(0).GetFloatValue(),
+                               array->Item(1).GetFloatValue(),
+                               array->Item(2).GetFloatValue(),
+                               array->Item(3).GetFloatValue()));
+          }
+          break;
+        case eCSSUnit_Initial:
+          transition->SetTimingFunction(
+            nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
+          break;
+        default:
+          NS_NOTREACHED("Invalid transition property unit");
+      }
+    }
+
+    FOR_ALL_TRANSITION_PROPS(p) {
+      const TransitionPropInfo& info = transitionPropInfo[p];
+      TransitionPropData& d = transitionPropData[p];
+
+      // if we're at the end of the list, start at the beginning and repeat
+      // until we're out of transitions to populate
+      if (d.list) { // could also check && !d.inherited if desired
+        d.list = d.list->mNext ? d.list->mNext : displayData.*(info.rdList);
+      }
+    }
+  }
 
   // opacity: factor, inherit, initial
   SetFactor(displayData.mOpacity, display->mOpacity, canStoreInRuleTree,
