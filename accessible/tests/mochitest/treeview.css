@@ -1,0 +1,15 @@
+treechildren::-moz-tree-checkbox(checked) {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+treechildren::-moz-tree-image(cyclerState1) {
+  list-style-image: url("chrome://global/skin/console/bullet-question.png");
+}
+
+treechildren::-moz-tree-image(cyclerState2) {
+  list-style-image: url("chrome://global/skin/console/bullet-warning.png");
+}
+
+treechildren::-moz-tree-image(cyclerState3) {
+  list-style-image: url("chrome://global/skin/console/bullet-error.png");
+}

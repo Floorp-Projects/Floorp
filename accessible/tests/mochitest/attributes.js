@@ -179,11 +179,11 @@ function testAttrsInternal(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs,
   } catch (e) { }
   
   if (!attrs) {
-    ok(false, "Can't get object attributes for " + aAccOrElmOrID);
+    ok(false, "Can't get object attributes for " + prettyName(aAccOrElmOrID));
     return;
   }
   
-  var errorMsg = " for " + aAccOrElmOrID;
+  var errorMsg = " for " + prettyName(aAccOrElmOrID);
   compareAttrs(errorMsg, attrs, aAttrs, aSkipUnexpectedAttrs, aAbsentAttrs);
 }
 
@@ -199,7 +199,7 @@ function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs,
         ok(false, "Unexpected attribute '" + prop.key + "' having '" +
            prop.value + "'" + aErrorMsg);
     } else {
-      var msg = "Attribute '" + prop.key + " 'has wrong value" + aErrorMsg;
+      var msg = "Attribute '" + prop.key + "' has wrong value" + aErrorMsg;
       var expectedValue = aExpectedAttrs[prop.key];
 
       if (typeof expectedValue == "function")
