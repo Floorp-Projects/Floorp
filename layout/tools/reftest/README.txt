@@ -164,14 +164,31 @@ must be one of the following:
 
    c. <type> is one of the following:
 
-      ==    The test passes if the images of the two renderings are the
-            SAME.
-      !=    The test passes if the images of the two renderings are 
-            DIFFERENT.
-      load  The test passes unconditionally if the page loads.  url_ref
-            must be omitted, and the test cannot be marked as fails or
-            random.  (Used to test for crashes, hangs, assertions, and
-            leaks.)
+      ==     The test passes if the images of the two renderings are the
+             SAME.
+      !=     The test passes if the images of the two renderings are 
+             DIFFERENT.
+      load   The test passes unconditionally if the page loads.  url_ref
+             must be omitted, and the test cannot be marked as fails or
+             random.  (Used to test for crashes, hangs, assertions, and
+             leaks.)
+      script The loaded page records the test's pass or failure status
+             in a JavaScript data structure accessible through the following
+             API.
+
+             getTestCases() returns an array of test result objects
+             representing the results of the tests performed by the page.
+
+             Each test result object has two methods:
+
+             testPassed() returns true if the test result object passed,
+             otherwise it returns false.
+
+             testDescription() returns a string describing the test
+             result.
+
+             url_ref must be omitted. The test may be marked as fails or
+             random. (Used to test the JavaScript Engine.)
 
    d. <url> is either a relative file path or an absolute URL for the
       test page
