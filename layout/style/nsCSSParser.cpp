@@ -7921,10 +7921,15 @@ CSSParserImpl::ParseFontSrc(nsCSSValue& aValue)
       break;
   }
 
+  if (values.Length() == 0)
+    return PR_FALSE;
+
   nsRefPtr<nsCSSValue::Array> srcVals
     = nsCSSValue::Array::Create(values.Length());
-  if (!srcVals)
+  if (!srcVals) {
+    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
+  }
 
   PRUint32 i;
   for (i = 0; i < values.Length(); i++)
