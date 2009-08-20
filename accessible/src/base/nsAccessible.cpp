@@ -94,7 +94,6 @@
 #include "nsNetUtil.h"
 
 #ifdef NS_DEBUG
-#include "nsIFrameDebug.h"
 #include "nsIDOMCharacterData.h"
 #endif
 

@@ -45,9 +45,6 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "prlog.h"
-#ifdef NS_DEBUG
-#include "nsIFrameDebug.h"
-#endif
 
 #include "nsIPresShell.h"
 #include "nsFrameSelection.h"
@@ -70,7 +67,7 @@
 #ifdef NS_DEBUG
 #define NS_FRAME_LOG(_bit,_args)                                \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsIFrameDebug::GetLogModuleInfo(),_bit)) { \
+    if (NS_FRAME_LOG_TEST(nsFrame::GetLogModuleInfo(),_bit)) {  \
       PR_LogPrint _args;                                        \
     }                                                           \
   PR_END_MACRO
@@ -87,14 +84,14 @@
 // XXX remove me
 #define NS_FRAME_TRACE_MSG(_bit,_args)                          \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsIFrameDebug::GetLogModuleInfo(),_bit)) { \
+    if (NS_FRAME_LOG_TEST(nsFrame::GetLogModuleInfo(),_bit)) {  \
       TraceMsg _args;                                           \
     }                                                           \
   PR_END_MACRO
 
 #define NS_FRAME_TRACE(_bit,_args)                              \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsIFrameDebug::GetLogModuleInfo(),_bit)) { \
+    if (NS_FRAME_LOG_TEST(nsFrame::GetLogModuleInfo(),_bit)) {  \
       TraceMsg _args;                                           \
     }                                                           \
   PR_END_MACRO
@@ -125,9 +122,6 @@ struct nsBoxLayoutMetrics;
  * behavior is to keep the frame and view position and size in sync.
  */
 class nsFrame : public nsBox
-#ifdef NS_DEBUG
-  , public nsIFrameDebug
-#endif
 {
 public:
   /**
@@ -232,12 +226,6 @@ public:
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
   virtual nsIAtom* GetType() const;
   virtual PRBool IsContainingBlock() const;
-#ifdef NS_DEBUG
-  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD  GetFrameName(nsAString& aResult) const;
-  NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
-  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent);
-#endif
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle) const;
@@ -445,17 +433,14 @@ public:
   }
   
   void ListTag(FILE* out) const {
-    ListTag(out, (nsIFrame*)this);
+    ListTag(out, this);
   }
 
-  static void ListTag(FILE* out, nsIFrame* aFrame) {
+  static void ListTag(FILE* out, const nsIFrame* aFrame) {
     nsAutoString tmp;
-    nsIFrameDebug*  frameDebug = do_QueryFrame(aFrame);
-    if (frameDebug) {
-      frameDebug->GetFrameName(tmp);
-    }
+    aFrame->GetFrameName(tmp);
     fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
-    fprintf(out, "@%p", static_cast<void*>(aFrame));
+    fprintf(out, "@%p", static_cast<const void*>(aFrame));
   }
 
   static void XMLQuote(nsString& aString);
@@ -631,6 +616,76 @@ private:
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
   virtual nsILineIterator* GetLineIterator();
+
+#ifdef NS_DEBUG
+public:
+  // Formerly the nsIFrameDebug interface
+
+  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const;
+  /**
+   * lists the frames beginning from the root frame
+   * - calls root frame's List(...)
+   */
+  static void RootFrameList(nsPresContext* aPresContext,
+                            FILE* out, PRInt32 aIndent);
+
+  static void DumpFrameTree(nsIFrame* aFrame);
+
+  /**
+   * Get a printable from of the name of the frame type.
+   * XXX This should be eliminated and we use GetType() instead...
+   */
+  NS_IMETHOD  GetFrameName(nsAString& aResult) const;
+  /**
+   * Return the state bits that are relevant to regression tests (that
+   * is, those bits which indicate a real difference when they differ
+   */
+  NS_IMETHOD_(nsFrameState)  GetDebugStateBits() const;
+  /**
+   * Called to dump out regression data that describes the layout
+   * of the frame and its children, and so on. The format of the
+   * data is dictated to be XML (using a specific DTD); the
+   * specific kind of data dumped is up to the frame itself, with
+   * the caveat that some base types are defined.
+   * For more information, see XXX.
+   */
+  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext,
+                                 FILE* out, PRInt32 aIndent);
+
+  /**
+   * See if style tree verification is enabled. To enable style tree
+   * verification add "styleverifytree:1" to your NSPR_LOG_MODULES
+   * environment variable (any non-zero debug level will work). Or,
+   * call SetVerifyStyleTreeEnable with PR_TRUE.
+   */
+  static PRBool GetVerifyStyleTreeEnable();
+
+  /**
+   * Set the verify-style-tree enable flag.
+   */
+  static void SetVerifyStyleTreeEnable(PRBool aEnabled);
+
+  /**
+   * The frame class and related classes share an nspr log module
+   * for logging frame activity.
+   *
+   * Note: the log module is created during library initialization which
+   * means that you cannot perform logging before then.
+   */
+  static PRLogModuleInfo* GetLogModuleInfo();
+
+  // Show frame borders when rendering
+  static void ShowFrameBorders(PRBool aEnable);
+  static PRBool GetShowFrameBorders();
+
+  // Show frame border of event target
+  static void ShowEventTargetFrameBorder(PRBool aEnable);
+  static PRBool GetShowEventTargetFrameBorder();
+
+  static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
+                               const nsDisplayList& aList);
+
+#endif
 };
 
 // Start Display Reflow Debugging

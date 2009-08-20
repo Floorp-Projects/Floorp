@@ -131,9 +131,6 @@
 #include "nsLayoutErrors.h"
 #include "nsLayoutUtils.h"
 #include "nsCSSRendering.h"
-#ifdef NS_DEBUG
-#include "nsIFrameDebug.h"
-#endif
   // for |#ifdef DEBUG| code
 #include "prenv.h"
 #include "nsIAttribute.h"
@@ -1455,7 +1452,7 @@ PRLogModuleInfo* PresShell::gLog;
 static void
 VerifyStyleTree(nsPresContext* aPresContext, nsFrameManager* aFrameManager)
 {
-  if (nsIFrameDebug::GetVerifyStyleTreeEnable()) {
+  if (nsFrame::GetVerifyStyleTreeEnable()) {
     nsIFrame* rootFrame = aFrameManager->GetRootFrame();
     aFrameManager->DebugVerifyStyleTree(rootFrame);
   }
@@ -6142,7 +6139,7 @@ PresShell::HandleEvent(nsIView         *aView,
 void
 PresShell::ShowEventTargetDebug()
 {
-  if (nsIFrameDebug::GetShowEventTargetFrameBorder() &&
+  if (nsFrame::GetShowEventTargetFrameBorder() &&
       GetCurrentEventFrame()) {
     if (mDrawEventTargetFrame) {
       mDrawEventTargetFrame->Invalidate(
@@ -7494,37 +7491,22 @@ static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
 {
-  printf("verifyreflow: ");
-  nsAutoString name;
-  if (nsnull != k1) {
-    nsIFrameDebug *frameDebug = do_QueryFrame(k1);
-    if (frameDebug) {
-     frameDebug->GetFrameName(name);
-    }
+  nsAutoString n1, n2;
+  if (k1) {
+    k1->GetFrameName(n1);
+  } else {
+    n1.Assign(NS_LITERAL_STRING("(null)"));
   }
-  else {
-    name.Assign(NS_LITERAL_STRING("(null)"));
+
+  if (k2) {
+    k2->GetFrameName(n2);
+  } else {
+    n2.Assign(NS_LITERAL_STRING("(null)"));
   }
-  fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
 
-  fprintf(stdout, " %p ", (void*)k1);
-
-  printf(" != ");
-
-  if (nsnull != k2) {
-    nsIFrameDebug *frameDebug = do_QueryFrame(k2);
-    if (frameDebug) {
-      frameDebug->GetFrameName(name);
-    }
-  }
-  else {
-    name.Assign(NS_LITERAL_STRING("(null)"));
-  }
-  fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
-
-  fprintf(stdout, " %p ", (void*)k2);
-
-  printf(" %s", aMsg);
+  printf("verifyreflow: %s %p != %s %p  %s\n",
+         NS_LossyConvertUTF16toASCII(n1).get(), (void*)k1,
+         NS_LossyConvertUTF16toASCII(n2).get(), (void*)k2, aMsg);
 }
 
 static void
@@ -7533,27 +7515,19 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 {
   printf("VerifyReflow Error:\n");
   nsAutoString name;
-  nsIFrameDebug *frameDebug = do_QueryFrame(k1);
-  if (frameDebug) {
-    fprintf(stdout, "  ");
-    frameDebug->GetFrameName(name);
-    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
-    fprintf(stdout, " %p ", (void*)k1);
+
+  if (k1) {
+    k1->GetFrameName(name);
+    printf("  %s %p ", NS_LossyConvertUTF16toASCII(name).get(), (void*)k1);
   }
-  printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
+  printf("{%d, %d, %d, %d} != \n", r1.x, r1.y, r1.width, r1.height);
 
-  printf(" != \n");
-
-  frameDebug = do_QueryFrame(k2);
-  if (frameDebug) {
-    fprintf(stdout, "  ");
-    frameDebug->GetFrameName(name);
-    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
-    fprintf(stdout, " %p ", (void*)k2);
+  if (k2) {
+    k2->GetFrameName(name);
+    printf("  %s %p ", NS_LossyConvertUTF16toASCII(name).get(), (void*)k2);
   }
-  printf("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
-
-  printf("  %s\n", aMsg);
+  printf("{%d, %d, %d, %d}\n  %s\n",
+         r2.x, r2.y, r2.width, r2.height, aMsg);
 }
 
 static void
@@ -7562,27 +7536,19 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 {
   printf("VerifyReflow Error:\n");
   nsAutoString name;
-  nsIFrameDebug *frameDebug = do_QueryFrame(k1);
-  if (frameDebug) {
-    fprintf(stdout, "  ");
-    frameDebug->GetFrameName(name);
-    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
-    fprintf(stdout, " %p ", (void*)k1);
+
+  if (k1) {
+    k1->GetFrameName(name);
+    printf("  %s %p ", NS_LossyConvertUTF16toASCII(name).get(), (void*)k1);
   }
-  printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
+  printf("{%d, %d, %d, %d} != \n", r1.x, r1.y, r1.width, r1.height);
 
-  printf(" != \n");
-
-  frameDebug = do_QueryFrame(k2);
-  if (frameDebug) {
-    fprintf(stdout, "  ");
-    frameDebug->GetFrameName(name);
-    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
-    fprintf(stdout, " %p ", (void*)k2);
+  if (k2) {
+    k2->GetFrameName(name);
+    printf("  %s %p ", NS_LossyConvertUTF16toASCII(name).get(), (void*)k2);
   }
-  printf("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
-
-  printf("  %s\n", aMsg);
+  printf("{%d, %d, %d, %d}\n  %s\n",
+         r2.x, r2.y, r2.width, r2.height, aMsg);
 }
 
 static PRBool
@@ -7935,15 +7901,9 @@ PresShell::VerifyIncrementalReflow()
   PRBool ok = CompareTrees(mPresContext, root1, cx, root2);
   if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
     printf("Verify reflow failed, primary tree:\n");
-    nsIFrameDebug*  frameDebug = do_QueryFrame(root1);
-    if (frameDebug) {
-      frameDebug->List(stdout, 0);
-    }
+    root1->List(stdout, 0);
     printf("Verification tree:\n");
-    frameDebug = do_QueryFrame(root2);
-    if (frameDebug) {
-      frameDebug->List(stdout, 0);
-    }
+    root2->List(stdout, 0);
   }
 
 #ifdef DEBUG_Eli
