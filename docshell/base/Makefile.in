@@ -82,6 +82,12 @@ XPIDLSRCS	= \
 
 EXPORTS		= nsDocShellLoadTypes.h
 
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla = \
+  IHistory.h \
+  $(NULL)
+
 CPPSRCS		= \
 		nsDocShell.cpp		\
 		nsDocShellLoadInfo.cpp		\
