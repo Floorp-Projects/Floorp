@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
   browser_passwordmgrdlg.js \
+  browser_passwordmgr_sort.js \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)
