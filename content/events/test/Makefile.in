@@ -76,6 +76,7 @@ _TEST_FILES = \
 		test_dragstart.html \
 		test_bug489671.html \
 		test_bug493251.html \
+		test_bug502818.html \
 		$(NULL)
 
 _CHROME_FILES = \
