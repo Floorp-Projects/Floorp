@@ -2614,8 +2614,10 @@ js_GetUnitStringForChar(JSContext *cx, jschar c)
         if (!str)
             return NULL;
         JS_LOCK_GC(rt);
-        if (!rt->unitStrings[c])
+        if (!rt->unitStrings[c]) {
+            str->flatSetAtomized();
             rt->unitStrings[c] = str;
+        }
 #ifdef DEBUG
         else
             str->initFlat(NULL, 0);  /* avoid later assertion (bug 479381) */

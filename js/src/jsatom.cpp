@@ -673,6 +673,12 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     JS_ASSERT(!(flags & ~(ATOM_PINNED|ATOM_INTERNED|ATOM_TMPSTR|ATOM_NOCOPY)));
     JS_ASSERT_IF(flags & ATOM_NOCOPY, flags & ATOM_TMPSTR);
 
+    if (str->length() == 1) {
+        jschar c = str->chars()[0];
+        if (c < UNIT_STRING_LIMIT)
+            return (JSAtom*) STRING_TO_JSVAL(js_GetUnitStringForChar(cx, c));
+    }
+
     state = &cx->runtime->atomState;
     table = &state->stringAtoms;
 
