@@ -59,6 +59,10 @@ ifndef JS_DISABLE_SHELL
 DIRS += shell
 endif
 
+ifdef ENABLE_TESTS
+DIRS += jsapi-tests
+endif
+
 MODULE		    = js
 LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static
