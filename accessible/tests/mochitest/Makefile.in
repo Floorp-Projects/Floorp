@@ -93,6 +93,7 @@ _TEST_FILES =\
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_doc.html \
+		test_events_draganddrop.html \
 		test_events_focus.xul \
 		test_events_mutation.html \
 		test_events_tree.xul \
