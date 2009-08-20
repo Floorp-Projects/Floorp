@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoknt.h,v 1.5 2009/01/27 23:13:21 rrelyea%redhat.com Exp $ */
+/* $Id: softoknt.h,v 1.6 2009/08/03 16:58:28 christophe.ravel.bugs%sun.com Exp $ */
 
 #ifndef _SOFTOKNT_H_
 #define _SOFTOKNT_H_
@@ -88,7 +88,7 @@ typedef enum {
     NSS_AUDIT_SELF_TEST,
     NSS_AUDIT_SET_PIN,
     NSS_AUDIT_UNWRAP_KEY,
-    NSS_AUDIT_WRAP_KEY,
+    NSS_AUDIT_WRAP_KEY
 } NSSAuditType;
 
 #endif /* _SOFTOKNT_H_ */

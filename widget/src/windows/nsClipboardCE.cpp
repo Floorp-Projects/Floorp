@@ -171,7 +171,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISupportsArray> flavorList;
-  mTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+  aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
 
   PRUint32 count, i;
   flavorList->Count(&count);

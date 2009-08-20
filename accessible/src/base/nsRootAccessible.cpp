@@ -736,11 +736,11 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       PRInt32 treeIndex = -1;
       multiSelect->GetCurrentIndex(&treeIndex);
       if (treeIndex >= 0) {
-        nsRefPtr<nsXULTreeAccessible> treeCache =
+        nsRefPtr<nsXULTreeAccessible> treeAcc =
           nsAccUtils::QueryAccessibleTree(accessible);
-        if (treeCache) {
-          treeCache->GetCachedTreeitemAccessible(treeIndex, nsnull,
-                                                 getter_AddRefs(treeItemAccessible));
+        if (treeAcc) {
+          treeAcc->GetTreeItemAccessible(treeIndex,
+                                         getter_AddRefs(treeItemAccessible));
           if (treeItemAccessible)
             accessible = treeItemAccessible;
         }

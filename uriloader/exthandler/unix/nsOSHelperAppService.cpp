@@ -1202,81 +1202,17 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
   return rv;
 }
 
-/* Looks up the handler for a specific scheme from prefs and returns the
- * file representing it in aApp. Note: This function doesn't guarantee the
- * existance of *aApp.
- */
-nsresult
-nsOSHelperAppService::GetHandlerAppFromPrefs(const char* aScheme, /*out*/ nsIFile** aApp)
-{
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> srv(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) // we have no pref service... that's bad
-    return rv;
-
-  nsCOMPtr<nsIPrefBranch> branch;
-  srv->GetBranch("network.protocol-handler.app.", getter_AddRefs(branch));
-  if (!branch) // No protocol handlers set up -> can't load url
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsXPIDLCString appPath;
-  rv = branch->GetCharPref(aScheme, getter_Copies(appPath));
-  if (NS_FAILED(rv))
-    return rv;
-
-  LOG(("   found app %s\n", appPath.get()));
-
-  // First, try to treat |appPath| as absolute path, if it starts with '/'
-  NS_ConvertUTF8toUTF16 utf16AppPath(appPath);
-  if (appPath.First() == '/') {
-    nsILocalFile* file;
-    rv = NS_NewLocalFile(utf16AppPath, PR_TRUE, &file);
-    *aApp = file;
-    // If this worked, we are finished
-    if (NS_SUCCEEDED(rv))
-      return NS_OK;
-  }
-
-  // Second, check for a file in the mozilla app directory
-  rv = NS_GetSpecialDirectory(NS_OS_CURRENT_PROCESS_DIR, aApp);
-  if (NS_SUCCEEDED(rv)) {
-    rv = (*aApp)->Append(utf16AppPath);
-    if (NS_SUCCEEDED(rv)) {
-      PRBool exists = PR_FALSE;
-      rv = (*aApp)->Exists(&exists);
-      if (NS_SUCCEEDED(rv) && exists)
-        return NS_OK;
-    }
-    NS_RELEASE(*aApp);
-  }
-
-  // Thirdly, search the path
-  return GetFileTokenForPath(utf16AppPath.get(), aApp);
-}
-
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
   LOG(("-- nsOSHelperAppService::OSProtocolHandlerExists for '%s'\n",
        aProtocolScheme));
   *aHandlerExists = PR_FALSE;
 
-  nsCOMPtr<nsIFile> app;
-  nsresult rv = GetHandlerAppFromPrefs(aProtocolScheme, getter_AddRefs(app));
-  if (NS_SUCCEEDED(rv)) {
-    PRBool isExecutable = PR_FALSE, exists = PR_FALSE;
-    nsresult rv1 = app->Exists(&exists);
-    nsresult rv2 = app->IsExecutable(&isExecutable);
-    *aHandlerExists = (NS_SUCCEEDED(rv1) && exists && NS_SUCCEEDED(rv2) && isExecutable);
-    LOG(("   handler exists: %s\n", *aHandlerExists ? "yes" : "no"));
-  }
-
 #ifdef MOZ_WIDGET_GTK2
   // Check the GConf registry for a protocol handler
-  if (!*aHandlerExists)
-    *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme);
+  *aHandlerExists = nsGNOMERegistry::HandlerExists(aProtocolScheme);
 #ifdef MOZ_PLATFORM_HILDON
-  if (!*aHandlerExists)
-    *aHandlerExists = nsMIMEInfoUnix::HandlerExists(aProtocolScheme);
+  *aHandlerExists = nsMIMEInfoUnix::HandlerExists(aProtocolScheme);
 #endif
 #endif
 
@@ -1285,12 +1221,6 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
 {
-  nsCOMPtr<nsIFile> appFile;
-  nsresult rv = GetHandlerAppFromPrefs(PromiseFlatCString(aScheme).get(),
-                                       getter_AddRefs(appFile));
-  if (NS_SUCCEEDED(rv))
-    return appFile->GetLeafName(_retval);
-
 #ifdef MOZ_WIDGET_GTK2
   nsGNOMERegistry::GetAppDescForScheme(aScheme, _retval);
   return _retval.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;

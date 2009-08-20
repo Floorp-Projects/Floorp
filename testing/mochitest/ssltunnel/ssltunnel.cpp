@@ -402,11 +402,15 @@ void HandleConnection(void* data)
         PRInt16 &in_flags2 = sockets[s2].in_flags;
         sockets[s].out_flags = 0;
 
-        if (out_flags & PR_POLL_EXCEPT)
+        if (out_flags & (PR_POLL_EXCEPT | PR_POLL_ERR | PR_POLL_HUP))
         {
           client_error = true;
+          // We got a fatal error state on the socket. Clear the output buffer
+          // for this socket to break the main loop, we will never more be able
+          // to send those data anyway.
+          buffers[s2].bufferhead = buffers[s2].buffertail = buffers[s2].buffer;
           continue;
-        } // PR_POLL_EXCEPT handling
+        } // PR_POLL_EXCEPT, PR_POLL_ERR, PR_POLL_HUP handling
 
         if (out_flags & PR_POLL_READ && buffers[s].free())
         {

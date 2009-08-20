@@ -338,11 +338,7 @@ ifdef MT
 endif	# MSVC with manifest tool
 endif
 else
-ifeq ($(OS_TARGET),RISCOS)
-	$(MKSHLIB) $@ $(OBJS) $(SUB_SHLOBJS)
-else
 	$(MKSHLIB) -o $@ $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
-endif
 	chmod +x $@
 ifeq ($(OS_TARGET),Darwin)
 ifdef MAPFILE

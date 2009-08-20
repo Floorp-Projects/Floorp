@@ -970,10 +970,12 @@ PKIX_Error *
 pkix_pl_OcspResponse_GetStatusForCert(
         PKIX_PL_OcspCertID *cid,
         PKIX_PL_OcspResponse *response,
+        PKIX_PL_Date *validity,
         PKIX_Boolean *pPassed,
         SECErrorCodes *pReturnCode,
         void *plContext)
 {
+        PRTime time = 0;
         SECStatus rv = SECFailure;
         SECStatus rvCache;
         PRBool certIDWasConsumed = PR_FALSE;
@@ -989,11 +991,19 @@ pkix_pl_OcspResponse_GetStatusForCert(
         PKIX_NULLCHECK_TWO(response->signerCert, response->request);
         PKIX_NULLCHECK_TWO(cid, cid->certID);
 
+        if (validity != NULL) {
+            PKIX_Error *er = pkix_pl_Date_GetPRTime(validity, &time, plContext);
+            PKIX_DECREF(er);
+        }
+        if (!time) {
+            time = PR_Now();
+        }
+
         rv = cert_ProcessOCSPResponse(response->handle,
                                       response->nssOCSPResponse,
                                       cid->certID,
                                       response->signerCert,
-                                      PR_Now(),
+                                      time,
                                       &certIDWasConsumed,
                                       &rvCache);
         if (certIDWasConsumed) {

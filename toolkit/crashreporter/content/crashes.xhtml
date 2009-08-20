@@ -28,8 +28,9 @@ th[chromedir="rtl"] {
 th:first-child {
   -moz-padding-end: 2em;
 }
-:link {
+:link, :visited {
   display: block;
+  min-height: 17px;
 }
 /* date */
 td:first-child + td {
@@ -49,147 +50,19 @@ td:last-child {
 #clear-reports[chromedir="rtl"] {
   float: left;
 }
+
+.submitting {
+  background-image: url(chrome://global/skin/icons/loading_16.png);
+  background-repeat: no-repeat;
+  background-position: right;
+}
 </style>
 <link rel="stylesheet" media="screen, projection" type="text/css"
       href="chrome://global/skin/dirListing/dirListing.css"/>
-<script type="application/javascript">
-<![CDATA[
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+<script type="application/x-javascript;version=1.8" src="chrome://global/content/crashes.js"/>
 
-var reportsDir;
-
-function findInsertionPoint(reports, date) {
-  if (reports.length == 0)
-    return 0;
-
-  var min = 0;
-  var max = reports.length - 1;
-  while (min < max) {
-    var mid = parseInt((min + max) / 2);
-    if (reports[mid].date < date)
-      max = mid - 1;
-    else if (reports[mid].date > date)
-      min = mid + 1;
-    else
-      return mid;
-  }
-  if (reports[min].date <= date)
-    return min;
-  return min+1;
-}
-
-function populateReportList() {
-  var prefService = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Ci.nsIPrefBranch);
-
-  var reportURL = null;
-  try {
-    reportURL = prefService.getCharPref("breakpad.reportURL");
-    // Ignore any non http/https urls
-    if (!/^https?:/i.test(reportURL))
-      reportURL = null;
-  }
-  catch (e) { }
-  if (!reportURL) {
-    document.getElementById("clear-reports").style.display = "none";
-    document.getElementById("reportList").style.display = "none";
-    document.getElementById("noConfig").style.display = "block";
-    return;
-  }
-  var directoryService = Cc["@mozilla.org/file/directory_service;1"].
-                         getService(Ci.nsIProperties);
-
-  reportsDir = directoryService.get("UAppData", Ci.nsIFile);
-  reportsDir.append("Crash Reports");
-  reportsDir.append("submitted");
-
-  var reports = [];
-  if (reportsDir.exists() && reportsDir.isDirectory()) {
-    var entries = reportsDir.directoryEntries;
-    while (entries.hasMoreElements()) {
-      var file = entries.getNext().QueryInterface(Ci.nsIFile);
-      var leaf = file.leafName;
-      if (leaf.substr(0, 3) == "bp-" &&
-          leaf.substr(-4) == ".txt") {
-        var entry = {
-          id: leaf.slice(0, -4),
-          date: file.lastModifiedTime
-        };
-        var pos = findInsertionPoint(reports, entry.date);
-        reports.splice(pos, 0, entry);
-      }
-    }
-  }
-
-  if (reports.length == 0) {
-    document.getElementById("clear-reports").style.display = "none";
-    document.getElementById("reportList").style.display = "none";
-    document.getElementById("noReports").style.display = "block";
-    return;
-  }
-
-  var formatter = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-                  createInstance(Ci.nsIScriptableDateFormat);
-  var body = document.getElementById("tbody");
-  for (var i = 0; i < reports.length; i++) {
-    var row = document.createElement("tr");
-    var cell = document.createElement("td");
-    row.appendChild(cell);
-    var link = document.createElement("a");
-    link.setAttribute("href", reportURL + reports[i].id);
-    link.appendChild(document.createTextNode(reports[i].id));
-    cell.appendChild(link);
-
-    var date = new Date(reports[i].date);
-    cell = document.createElement("td");
-    var datestr = formatter.FormatDate("",
-                                       Ci.nsIScriptableDateFormat.dateFormatShort,
-                                       date.getFullYear(),
-                                       date.getMonth() + 1,
-                                       date.getDate());
-    cell.appendChild(document.createTextNode(datestr));
-    row.appendChild(cell);
-    cell = document.createElement("td");
-    var timestr = formatter.FormatTime("",
-                                       Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
-                                       date.getHours(),
-                                       date.getMinutes(),
-                                       date.getSeconds());
-    cell.appendChild(document.createTextNode(timestr));
-    row.appendChild(cell);
-    body.appendChild(row);
-  }
-}
-
-function clearReports() {
-  var bundles = Cc["@mozilla.org/intl/stringbundle;1"].
-                getService(Ci.nsIStringBundleService);
-  var bundle = bundles.createBundle("chrome://global/locale/crashes.properties");
-  var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                getService(Ci.nsIPromptService);
-  if (!prompts.confirm(window,
-                       bundle.GetStringFromName("deleteconfirm.title"),
-                       bundle.GetStringFromName("deleteconfirm.description")))
-    return;
-
-  var entries = reportsDir.directoryEntries;
-  while (entries.hasMoreElements()) {
-    var file = entries.getNext().QueryInterface(Ci.nsIFile);
-    var leaf = file.leafName;
-    if (leaf.substr(0, 3) == "bp-" &&
-        leaf.substr(-4) == ".txt") {
-      file.remove(false);
-    }
-  }
-  document.getElementById("clear-reports").style.display = "none";
-  document.getElementById("reportList").style.display = "none";
-  document.getElementById("noReports").style.display = "block";
-}
-]]>
-</script>
 <title>&crashes.title;</title>
-</head><body onload="populateReportList()" dir="&locale.dir;">
+</head><body onload="init()" dir="&locale.dir;">
 <button chromedir="&locale.dir;" id="clear-reports"
         onclick="clearReports()">&clearAllReports.label;</button>
 <h1>&crashes.title;</h1>

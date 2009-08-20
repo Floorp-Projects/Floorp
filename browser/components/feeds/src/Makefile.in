@@ -60,9 +60,9 @@ EXTRA_PP_COMPONENTS = \
 	WebContentConverter.js \
 	$(NULL)
 
-REQUIRES = xpcom string necko caps js xpconnect mimetype
+REQUIRES = xpcom string necko mimetype
 
-CPPSRCS = nsFeedSniffer.cpp nsAboutFeeds.cpp
+CPPSRCS = nsFeedSniffer.cpp
 
 LOCAL_INCLUDES = -I$(srcdir)/../../build
 

@@ -213,6 +213,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mDragHps            = 0;
     mDragStatus         = 0;
     mCssCursorHPtr      = 0;
+    mUnclippedBounds    = nsIntRect(0,0,0,0);
 
     mIsTopWidgetWindow = PR_FALSE;
     mThebesSurface = nsnull;
@@ -891,7 +892,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
    //     have happened!
    mBounds = aRect;
    mBounds.height = aRect.height;
-
+   mUnclippedBounds = mBounds;
    mEventCallback = aHandleEventFunction;
 
    if( mParent)
@@ -1994,8 +1995,9 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     // create the bounding box
     const nsTArray<nsIntRect>& rects = configuration.mClipRegion;
     nsIntRect r;
-    for (PRUint32 i = 0; i < rects.Length(); ++i)
-      r.UnionRect(r, rects[i]);
+    for (PRUint32 j = 0; j < rects.Length(); ++j) {
+      r.UnionRect(r, rects[j]);
+    }
 
     // resize the widget to the dimensions of the bounding rectangle;
     // the sum of mBounds.x/y (the widget's unclipped origin) and
@@ -2018,6 +2020,10 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     // for future reference
     w->Show(!configuration.mClipRegion.IsEmpty());
     w->StoreWindowClipRegion(configuration.mClipRegion);
+
+    // mUnclippedBounds is used only by Scroll() to determine
+    // if the child is about to be scrolled
+    w->mUnclippedBounds = configuration.mBounds;
   }
 
   return NS_OK;
@@ -2028,10 +2034,28 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
-void nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
-                      const nsTArray<Configuration>& aConfigurations)
+
+static PRBool
+ClipRegionContainedInRect(const nsTArray<nsIntRect>& aClipRects,
+                          const nsIntRect& aRect)
 {
-  // Build the set of widgets that are to be moved by the scroll amount.
+  for (PRUint32 i = 0; i < aClipRects.Length(); ++i) {
+    if (!aRect.Contains(aClipRects[i])) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
+void
+nsWindow::Scroll(const nsIntPoint& aDelta,
+                 const nsTArray<nsIntRect>& aDestRects,
+                 const nsTArray<Configuration>& aConfigurations)
+{
+  // Build the set of widgets that are to be moved by the scroll
+  // amount.  Note that we use mUnclippedBounds because that's
+  // the position the caller expects the window to be at. mBounds
+  // contains the actual position of the window after "clipping".
   nsTHashtable<nsPtrHashKey<nsWindow> > scrolledWidgets;
   scrolledWidgets.Init();
   for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
@@ -2039,61 +2063,97 @@ void nsWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
     nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
     NS_ASSERTION(w->GetParent() == this,
                  "Configured widget is not a child");
-    if (configuration.mBounds.TopLeft() == w->mBounds.TopLeft() + aDelta)
+    if (configuration.mBounds == w->mUnclippedBounds + aDelta) {
       scrolledWidgets.PutEntry(w);
-  }
-
-  nsIntRect affectedRect;
-  affectedRect.UnionRect(aSource, aSource + aDelta);
-  ULONG flags = SW_INVALIDATERGN;
-
-  // We can use SW_SCROLLCHILDREN if all the windows that intersect
-  // the affected area are moving by the scroll amount.   Check if
-  // any of our children would be affected by SW_SCROLLCHILDREN but
-  // are not supposed to scroll.
-  for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
-       w = static_cast<nsWindow*>(w->GetNextSibling())) {
-    if (w->mBounds.Intersects(affectedRect)) {
-      flags |= SW_SCROLLCHILDREN;
-      if (!scrolledWidgets.GetEntry(w)) {
-        flags &= ~SW_SCROLLCHILDREN;
-        break;
-      }
     }
   }
 
-  RECTL clip;
-  clip.xLeft   = affectedRect.x;
-  clip.xRight  = affectedRect.x + affectedRect.width;
-  clip.yTop    = mBounds.height - affectedRect.y;
-  clip.yBottom = clip.yTop - affectedRect.height;
-
-  // this prevents screen corruption while scrolling during a
-  // Moz-originated drag - the hps isn't actually used but
-  // fetching it unlocks the screen so it can be updated
+  // This prevents screen corruption while scrolling during
+  // a Moz-originated drag - the hps isn't actually used but
+  // fetching it unlocks the screen so it can be updated.
   HPS hps = 0;
   CheckDragStatus(ACTION_SCROLL, &hps);
 
-  // send a WM_VRNDISABLED to the grandchildren of this window;
-  // if they're plugins that blit directly to the screen, this
-  // will halt their output during the scroll - if they're
-  // anything else, this will have no effect
-  HWND hChild;
-  HENUM hEnum = WinBeginEnumWindows(mWnd);
-  while ((hChild = WinGetNextWindow(hEnum)) != 0) {
-    HWND hGrandChild;
-    if ((hGrandChild = WinQueryWindow(hChild, QW_TOP)) != 0)
-      WinSendMsg(hGrandChild, WM_VRNDISABLED, 0, 0);
+  // Step through each rectangle to be scrolled.
+  for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
+    nsIntRect affectedRect;
+    affectedRect.UnionRect(aDestRects[i], aDestRects[i] - aDelta);
+
+    ULONG flags = SW_INVALIDATERGN;
+
+    // For each child window, see if it intersects the scroll rect.
+    for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
+         w = static_cast<nsWindow*>(w->GetNextSibling())) {
+
+      // If it intersects, we want to scroll it but only if it
+      // hasn't been scrolled previously;  keep track of this
+      // using the entries in scrolledWidgets.
+      if (w->mBounds.Intersects(affectedRect)) {
+        nsPtrHashKey<nsWindow>* entry = scrolledWidgets.GetEntry(w);
+
+        // If there's an entry for this child, it hasn't been
+        // scrolled yet, so enable SW_SCROLLCHILDREN & remove
+        // its entry to prevent it from being scrolled again.
+        if (entry) {
+          flags |= SW_SCROLLCHILDREN;
+          scrolledWidgets.RawRemoveEntry(entry);
+        } else {
+          // Otherwise, if it has already been scrolled (or wasn't supposed
+          // to be scrolled), disable SW_SCROLLCHILDREN.  This may result in
+          // some children not being scrolled when they should be.  That's
+          // OK because ConfigureChildren() will reposition them later.
+          flags &= ~SW_SCROLLCHILDREN;
+          break;
+        }
+      }
+    }
+
+    if (flags & SW_SCROLLCHILDREN) {
+      for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+
+        // If a widget straddles the scroll area, SW_SCROLLCHILDREN
+        // will cause the part in the scroll area to be updated,
+        // but not the part outside it [at least on Windows].  For
+        // these widgets, we have to invalidate them to get both
+        // parts updated after the scroll.
+        if (w->mBounds.Intersects(affectedRect)) {
+          if (!ClipRegionContainedInRect(configuration.mClipRegion,
+                                         affectedRect - (w->mBounds.TopLeft()
+                                                         + aDelta))) {
+            w->Invalidate(PR_FALSE);
+          }
+
+          // Send a WM_VRNDISABLED to the plugin child of this widget.
+          // If it's a plugin that blits directly to the screen, this
+          // will halt its output during the scroll.  If it's anything
+          // else, this will have no effect.
+          HWND hPlugin = WinQueryWindow(w->mWnd, QW_TOP);
+          if (hPlugin) {
+            WinSendMsg(hPlugin, WM_VRNDISABLED, 0, 0);
+          }
+        }
+      }
+    }
+
+    // Note that when SW_SCROLLCHILDREN is used, WM_MOVE messages
+    // are sent which will update the mBounds of the children.
+    RECTL clip;
+    clip.xLeft   = affectedRect.x;
+    clip.xRight  = affectedRect.x + affectedRect.width;
+    clip.yTop    = mBounds.height - affectedRect.y;
+    clip.yBottom = clip.yTop - affectedRect.height;
+
+    WinScrollWindow(mWnd, aDelta.x, -aDelta.y, &clip, &clip, NULL, NULL, flags);
+    Update();
   }
-  WinEndEnumWindows(hEnum);
 
-  // do it
-  WinScrollWindow(mWnd, aDelta.x, -aDelta.y, &clip, &clip, NULL, NULL, flags);
-
-  // Now make sure all children actually get positioned, sized, and clipped
-  // correctly.  If SW_SCROLLCHILDREN was in effect, they may already be.
+  // Make sure all children actually get positioned, sized & clipped
+  // correctly.  If SW_SCROLLCHILDREN already moved widgets to their
+  // correct locations, then the WinSetWindowPos calls this triggers
+  // will just be no-ops.
   ConfigureChildren(aConfigurations);
-  Update();
 
   if (hps)
     ReleaseIfDragHPS(hps);

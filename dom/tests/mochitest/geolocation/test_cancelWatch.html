@@ -36,7 +36,7 @@ function successCallback(position){
 
 SimpleTest.waitForExplicitFinish();
 
-watchID = navigator.geolocation.getCurrentPosition(successCallback, failureCallback, null);
+watchID = navigator.geolocation.watchPosition(successCallback, failureCallback, null);
 
 // click deny
 setTimeout(clickNotificationButton, 50, kDenyButton);

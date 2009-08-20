@@ -54,7 +54,7 @@
 <!ENTITY cmd.options.accesskey            "O">
 <!ENTITY cmd.options.tooltip              "Set Options for the selected Extension">
 <!ENTITY cmd.optionsUnix.label            "Preferences">
-<!ENTITY cmd.optionsUnix.accesskey        "r">
+<!ENTITY cmd.optionsUnix.accesskey        "P">
 <!ENTITY cmd.optionsUnix.tooltip          "Edit Preferences for the selected Extension">
 <!ENTITY cmd.enable.label                 "Enable">
 <!ENTITY cmd.enable.accesskey             "E">

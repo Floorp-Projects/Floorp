@@ -214,16 +214,24 @@ is(bd.getAttribute("bgcolor"), "red", "Bgcolor attribute didn't store the origin
 is(bd.bgColor, "red", ".bgColor didn't return the right value!");
 
 bd.setAttribute("bgcolor", "  red  ");
-todo_is(bd.getAttribute("bgcolor"), "  red  ", "Bgcolor attribute didn't store the original value");
-todo_is(bd.bgColor, "  red  ", ".bgColor didn't return the right value!");
+is(bd.getAttribute("bgcolor"), "  red  ", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "  red  ", ".bgColor didn't return the right value!");
 
 bd.setAttribute("bgcolor", "#ff0000");
 is(bd.getAttribute("bgcolor"), "#ff0000", "Bgcolor attribute didn't store the original value");
 is(bd.bgColor, "#ff0000", ".bgColor didn't return the right value!");
 
+bd.setAttribute("bgcolor", "#f00");
+is(bd.getAttribute("bgcolor"), "#f00", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "#f00", ".bgColor didn't return the right value!");
+
 bd.setAttribute("bgcolor", "  #ff0000  ");
-todo_is(bd.getAttribute("bgcolor"), "  #ff0000  ", "Bgcolor attribute didn't store the original value");
-todo_is(bd.bgColor, "  #ff0000  ", ".bgColor didn't return the right value!");
+is(bd.getAttribute("bgcolor"), "  #ff0000  ", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "  #ff0000  ", ".bgColor didn't return the right value!");
+
+bd.setAttribute("bgcolor", "nonsense(complete)");
+is(bd.getAttribute("bgcolor"), "nonsense(complete)", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "nonsense(complete)", ".bgColor didn't return the right value!");
 
 // same test again setting the prop
 bd.bgColor = "red";
@@ -231,16 +239,42 @@ is(bd.getAttribute("bgcolor"), "red", "Bgcolor attribute didn't store the origin
 is(bd.bgColor, "red", ".bgColor didn't return the right value!");
 
 bd.bgColor = "  red  ";
-todo_is(bd.getAttribute("bgcolor"), "  red  ", "Bgcolor attribute didn't store the original value");
-todo_is(bd.bgColor, "  red  ", ".bgColor didn't return the right value!");
+is(bd.getAttribute("bgcolor"), "  red  ", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "  red  ", ".bgColor didn't return the right value!");
 
 bd.bgColor = "#ff0000";
 is(bd.getAttribute("bgcolor"), "#ff0000", "Bgcolor attribute didn't store the original value");
 is(bd.bgColor, "#ff0000", ".bgColor didn't return the right value!");
 
+bd.bgColor = "#f00";
+is(bd.getAttribute("bgcolor"), "#f00", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "#f00", ".bgColor didn't return the right value!");
+
 bd.bgColor = "  #ff0000  ";
-todo_is(bd.getAttribute("bgcolor"), "  #ff0000  ", "Bgcolor attribute didn't store the original value");
-todo_is(bd.bgColor, "  #ff0000  ", ".bgColor didn't return the right value!");
+is(bd.getAttribute("bgcolor"), "  #ff0000  ", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "  #ff0000  ", ".bgColor didn't return the right value!");
+
+bd.bgColor = "nonsense(complete)";
+is(bd.getAttribute("bgcolor"), "nonsense(complete)", "Bgcolor attribute didn't store the original value");
+is(bd.bgColor, "nonsense(complete)", ".bgColor didn't return the right value!");
+
+// equal color, unequal string
+var f1 = document.createElement("font");
+var f2 = document.createElement("font");
+var f3 = document.createElement("font");
+f1.color = "#f00";
+f2.color = "#ff0000";
+f3.color = "red";
+isnot(f1.color, f2.color, "#f00 and #ff0000 should not compare equal");
+isnot(f1.color, f3.color, "#f00 and red should not compare equal");
+isnot(f2.color, f3.color, "#ff0000 and red should not compare equal");
+
+isnot(f1.getAttribute("color"), f2.getAttribute("color"),
+      "#f00 and #ff0000 should not compare equal [attr]");
+isnot(f1.getAttribute("color"), f3.getAttribute("color"),
+      "#f00 and red should not compare equal [attr]");
+isnot(f2.getAttribute("color"), f3.getAttribute("color"),
+      "#ff0000 and red should not compare equal [attr]");
 
 var video = document.createElement("video");
 video.setAttribute("playbackrate", "1");

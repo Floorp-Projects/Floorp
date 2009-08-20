@@ -55,14 +55,14 @@ void* nsFloatManager::sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
 static void*
 PSArenaAllocCB(size_t aSize, void* aClosure)
 {
-  return static_cast<nsIPresShell*>(aClosure)->AllocateFrame(aSize);
+  return static_cast<nsIPresShell*>(aClosure)->AllocateMisc(aSize);
 }
 
 // PresShell Arena free callback (for nsIntervalSet use below)
 static void
 PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 {
-  static_cast<nsIPresShell*>(aClosure)->FreeFrame(aSize, aPtr);
+  static_cast<nsIPresShell*>(aClosure)->FreeMisc(aSize, aPtr);
 }
 
 /////////////////////////////////////////////////////////////////////////////
