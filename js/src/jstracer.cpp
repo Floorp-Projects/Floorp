@@ -4007,7 +4007,7 @@ TypeMapLinkability(JSContext* cx, const TypeMap& typeMap, VMFragment* peer)
     return consensus;
 }
 
-static unsigned
+static JS_REQUIRES_STACK unsigned
 FindUndemotesInTypemaps(JSContext* cx, const TypeMap& typeMap, TreeInfo* treeInfo,
                         Queue<unsigned>& undemotes)
 {

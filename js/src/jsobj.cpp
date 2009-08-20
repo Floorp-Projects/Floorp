@@ -4256,7 +4256,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
             } else {
                 if (!JS_HAS_STRICT_OPTION(cx) ||
                     (op != JSOP_GETPROP && op != JSOP_GETELEM) ||
-                    cx->fp->imacpc) {
+                    js_CurrentPCIsInImacro(cx)) {
                     return JS_TRUE;
                 }
 
