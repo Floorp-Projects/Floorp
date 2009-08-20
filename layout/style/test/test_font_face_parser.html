@@ -120,7 +120,7 @@
       d: { "src" : "local(\"老鼠\"), url(\"/fonts/Mouse\") format(\"truetype\")" } },
 
     // Correct but unusual src:
-    { rule: _("src: local(Hoefler Text);"), 
+    { rule: _("src: local(Hoefler Text);"),
       d: {"src" : "local(\"Hoefler Text\")"}, noncanonical: true },
 
     // Incorrect src:
@@ -152,6 +152,16 @@
       noncanonical: true },
     { rule: _("src: local(Mouse); src: local(\"Cat\"; src: local(Rat); )"),
       d: { "src" : "local(\"Mouse\")" },
+      noncanonical: true },
+
+    // Correct parenthesis matching for format()
+    { rule: _("src: url(\"/fonts/Mouse\"); " +
+	      "src: url(\"/fonts/Cat\") format(Cat(); src: local(Rat); )"),
+      d: { "src" : "url(\"/fonts/Mouse\")" },
+      noncanonical: true },
+    { rule: _("src: url(\"/fonts/Mouse\"); " +
+	      "src: url(\"/fonts/Cat\") format(\"Cat\"; src: local(Rat); )"),
+      d: { "src" : "url(\"/fonts/Mouse\")" },
       noncanonical: true },
 
     // unicode-range is not implemented (bug 443976).

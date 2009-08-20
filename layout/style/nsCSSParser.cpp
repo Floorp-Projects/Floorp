@@ -7957,16 +7957,23 @@ CSSParserImpl::ParseFontSrcFormat(nsTArray<nsCSSValue> & values)
 
   do {
     if (!GetToken(PR_TRUE))
-      return PR_FALSE;
+      return PR_FALSE; // EOF - no need for SkipUntil
 
-    if (mToken.mType != eCSSToken_String)
+    if (mToken.mType != eCSSToken_String) {
+      SkipUntil(')');
       return PR_FALSE;
+    }
 
     nsCSSValue cur(mToken.mIdent, eCSSUnit_Font_Format);
     values.AppendElement(cur);
   } while (ExpectSymbol(',', PR_TRUE));
 
-  return ExpectSymbol(')', PR_TRUE);
+  if (!ExpectSymbol(')', PR_TRUE)) {
+    SkipUntil(')');
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 // font-ranges: urange ( ',' urange )*
