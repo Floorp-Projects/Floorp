@@ -243,9 +243,6 @@ WeaveSvc.prototype = {
   get isQuitting() { return this._isQuitting; },
   set isQuitting(value) { this._isQuitting = value; },
 
-  get cancelRequested() { return Engines.cancelRequested; },
-  set cancelRequested(value) { Engines.cancelRequested = value; },
-
   get keyGenEnabled() { return this._keyGenEnabled; },
   set keyGenEnabled(value) { this._keyGenEnabled = value; },
 
@@ -1224,7 +1221,6 @@ WeaveSvc.prototype = {
         this._log.info("Sync completed successfully");
       }
     } finally {
-      this.cancelRequested = false;
       this._syncError = false;
     }
   })))(),
@@ -1234,8 +1230,7 @@ WeaveSvc.prototype = {
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     try {
       engine.sync();
-      if (!this.cancelRequested)
-        return true;
+      return true;
     }
     catch(e) {
       // maybe a 401, cluster update needed?
