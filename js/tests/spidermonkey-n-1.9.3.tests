@@ -150,3 +150,12 @@ js1_7/regress/regress-350387.js
 # bug 457618
 js1_7/decompilation/regress-349634.js
 js1_7/extensions/regress-353214-02.js
+# bug 509098
+js1_5/decompilation/regress-352453.js
+js1_5/decompilation/regress-350670.js
+js1_5/Regress/regress-350253.js
+js1_5/Regress/regress-462292.js
+js1_5/Regress/regress-319391.js
+js1_7/decompilation/regress-352079.js
+js1_7/decompilation/regress-352272.js
+js1_8_1/decompilation/regress-352022.js
