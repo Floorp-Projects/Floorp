@@ -51,11 +51,9 @@
  *
  * Date         Modified by     Description of modification
  * 05/03/2000   IBM Corp.       Observer events for reflow states
- */ 
+ */
 
 /* a presentation of a document, part 2 */
-
-#define PL_ARENA_CONST_ALIGN_MASK 3
 
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -117,6 +115,7 @@
 #include "nsIDOMNSHTMLInputElement.h" //optimization for ::DoXXX commands
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsViewsCID.h"
+#include "nsPresArena.h"
 #include "nsFrameManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -124,7 +123,6 @@
 #include "nsILineIterator.h" // for ScrollContentIntoView
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
-#include "plarena.h"
 #include "pldhash.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
@@ -434,9 +432,6 @@ protected:
 #define NS_MAX_REFLOW_TIME    1000000
 static PRInt32 gMaxRCProcessingTime = -1;
 
-// Largest chunk size we recycle
-static const size_t gMaxRecycledSize = 400;
-
 #define MARK_INCREMENT 50
 #define BLOCK_INCREMENT 4044 /* a bit under 4096, for malloc overhead */
 
@@ -633,135 +628,6 @@ StackArena::Pop()
   mPos      = mMarks[mStackTop].mPos;
 }
 
-// Uncomment this to disable the frame arena.
-//#define DEBUG_TRACEMALLOC_FRAMEARENA 1
-
-// Memory is allocated 4-byte aligned. We have recyclers for chunks up to
-// 200 bytes
-class FrameArena {
-public:
-  FrameArena(PRUint32 aArenaSize = 4096);
-  ~FrameArena();
-
-  // Memory management functions
-  NS_HIDDEN_(void*) AllocateFrame(size_t aSize);
-  NS_HIDDEN_(void)  FreeFrame(size_t aSize, void* aPtr);
-
-private:
-#ifdef DEBUG
-  // Number of frames in the pool
-  PRUint32 mFrameCount;
-#endif
-
-#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  // Underlying arena pool
-  PLArenaPool mPool;
-
-  // The recycler array is sparse with the indices being multiples of 4,
-  // i.e., 0, 4, 8, 12, 16, 20, ...
-  void*       mRecyclers[gMaxRecycledSize >> 2];
-#endif
-};
-
-FrameArena::FrameArena(PRUint32 aArenaSize)
-#ifdef DEBUG
-  : mFrameCount(0)
-#endif
-{
-#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  // Initialize the arena pool
-  PL_INIT_ARENA_POOL(&mPool, "FrameArena", aArenaSize);
-
-  // Zero out the recyclers array
-  memset(mRecyclers, 0, sizeof(mRecyclers));
-#endif
-}
-
-FrameArena::~FrameArena()
-{
-  NS_ASSERTION(mFrameCount == 0,
-               "Some objects allocated with AllocateFrame were not freed");
- 
-#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  // Free the arena in the pool and finish using it
-  PL_FinishArenaPool(&mPool);
-#endif
-} 
-
-void*
-FrameArena::AllocateFrame(size_t aSize)
-{
-  void* result = nsnull;
-
-#if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-
-  result = PR_Malloc(aSize);
-
-#else
-
-  // Ensure we have correct alignment for pointers.  Important for Tru64
-  aSize = PR_ROUNDUP(aSize, sizeof(void*));
-
-  // Check recyclers first
-  if (aSize < gMaxRecycledSize) {
-    const int   index = aSize >> 2;
-
-    result = mRecyclers[index];
-    if (result) {
-      // Need to move to the next object
-      void* next = *((void**)result);
-      mRecyclers[index] = next;
-    }
-  }
-
-  if (!result) {
-    // Allocate a new chunk from the arena
-    PL_ARENA_ALLOCATE(result, &mPool, aSize);
-  }
-
-#endif
-
-#ifdef DEBUG
-  if (result != nsnull)
-    ++mFrameCount;
-#endif
-
-  return result;
-}
-
-void
-FrameArena::FreeFrame(size_t aSize, void* aPtr)
-{
-#ifdef DEBUG
-  --mFrameCount;
-
-  // Mark the memory with 0xdd in DEBUG builds so that there will be
-  // problems if someone tries to access memory that they've freed.
-  memset(aPtr, 0xdd, aSize);
-#endif
-#if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  PR_Free(aPtr);
-#else
-  // Ensure we have correct alignment for pointers.  Important for Tru64
-  aSize = PR_ROUNDUP(aSize, sizeof(void*));
-
-  // See if it's a size that we recycle
-  if (aSize < gMaxRecycledSize) {
-    const int   index = aSize >> 2;
-    void*       currentTop = mRecyclers[index];
-    mRecyclers[index] = aPtr;
-    *((void**)aPtr) = currentTop;
-  }
-#ifdef DEBUG_dbaron
-  else {
-    fprintf(stderr,
-            "WARNING: FrameArena::FreeFrame leaking chunk of %d bytes.\n",
-            aSize);
-  }
-#endif
-#endif
-}
-
 struct nsCallbackEventRequest
 {
   nsIReflowCallback* callback;
@@ -793,8 +659,12 @@ public:
                   nsCompatibility aCompatMode);
   NS_IMETHOD Destroy();
 
-  virtual NS_HIDDEN_(void*) AllocateFrame(size_t aSize);
-  virtual NS_HIDDEN_(void)  FreeFrame(size_t aSize, void* aFreeChunk);
+  virtual NS_HIDDEN_(void*) AllocateFrame(size_t aSize, unsigned int aCode);
+  virtual NS_HIDDEN_(void)  FreeFrame(size_t aSize, unsigned int aCode,
+                                      void* aChunk);
+
+  virtual NS_HIDDEN_(void*) AllocateMisc(size_t aSize);
+  virtual NS_HIDDEN_(void)  FreeMisc(size_t aSize, void* aChunk);
 
   // Dynamic stack memory allocation
   virtual NS_HIDDEN_(void) PushStackMemory();
@@ -1184,7 +1054,7 @@ protected:
   nsRefPtr<nsCaret>             mCaret;
   nsRefPtr<nsCaret>             mOriginalCaret;
   PRInt16                       mSelectionFlags;
-  FrameArena                    mFrameArena;
+  nsPresArena                   mFrameArena;
   StackArena                    mStackArena;
   nsCOMPtr<nsIDragService>      mDragService;
   
@@ -1394,7 +1264,11 @@ private:
                                            nsIntPoint& aTargetPt);
 
   void FireResizeEvent();
+  static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
+  nsCOMPtr<nsITimer> mAsyncResizeEventTimer;
+  PRPackedBool mAsyncResizeTimerIsActive;
+  PRPackedBool mInResize;
 
   typedef void (*nsPluginEnumCallback)(PresShell*, nsIContent*);
   void EnumeratePlugins(nsIDOMDocument *aDocument,
@@ -2029,6 +1903,10 @@ PresShell::Destroy()
   // plug-ins are involved(!).
   mReflowEvent.Revoke();
   mResizeEvent.Revoke();
+  if (mAsyncResizeTimerIsActive) {
+    mAsyncResizeEventTimer->Cancel();
+    mAsyncResizeTimerIsActive = PR_FALSE;
+  }
 
   CancelAllPendingReflows();
   CancelPostedReflowCallbacks();
@@ -2093,15 +1971,32 @@ PresShell::AllocateStackMemory(size_t aSize)
 }
 
 void
-PresShell::FreeFrame(size_t aSize, void* aPtr)
+PresShell::FreeFrame(size_t aSize, unsigned int /*unused*/, void* aPtr)
 {
-  mFrameArena.FreeFrame(aSize, aPtr);
+  mFrameArena.Free(aSize, aPtr);
 }
 
 void*
-PresShell::AllocateFrame(size_t aSize)
+PresShell::AllocateFrame(size_t aSize, unsigned int /*unused*/)
 {
-  return mFrameArena.AllocateFrame(aSize);
+  void* result = mFrameArena.Allocate(aSize);
+
+  if (result) {
+    memset(result, 0, aSize);
+  }
+  return result;
+}
+
+void
+PresShell::FreeMisc(size_t aSize, void* aPtr)
+{
+  mFrameArena.Free(aSize, aPtr);
+}
+
+void*
+PresShell::AllocateMisc(size_t aSize)
+{
+  return mFrameArena.Allocate(aSize);
 }
 
 void
@@ -2798,6 +2693,12 @@ PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
     self->UnsuppressPainting();
 }
 
+void
+PresShell::AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell)
+{
+  static_cast<PresShell*>(aPresShell)->FireResizeEvent();
+}
+
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
@@ -2862,11 +2763,24 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       nsRect(0, 0, aWidth, rootFrame->GetRect().height));
   }
 
-  if (!mIsDestroying && !mResizeEvent.IsPending()) {
-    nsRefPtr<nsRunnableMethod<PresShell> > resizeEvent =
-      NS_NEW_RUNNABLE_METHOD(PresShell, this, FireResizeEvent);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
-      mResizeEvent = resizeEvent;
+  if (!mIsDestroying && !mResizeEvent.IsPending() &&
+      !mAsyncResizeTimerIsActive) {
+    if (mInResize) {
+      if (!mAsyncResizeEventTimer) {
+        mAsyncResizeEventTimer = do_CreateInstance("@mozilla.org/timer;1");
+      }
+      if (mAsyncResizeEventTimer) {
+        mAsyncResizeTimerIsActive = PR_TRUE;
+        mAsyncResizeEventTimer->InitWithFuncCallback(AsyncResizeEventCallback,
+                                                     this, 15,
+                                                     nsITimer::TYPE_ONE_SHOT);
+      }
+    } else {
+      nsRefPtr<nsRunnableMethod<PresShell> > resizeEvent =
+        NS_NEW_RUNNABLE_METHOD(PresShell, this, FireResizeEvent);
+      if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
+        mResizeEvent = resizeEvent;
+      }
     }
   }
 
@@ -2876,6 +2790,10 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 void
 PresShell::FireResizeEvent()
 {
+  if (mAsyncResizeTimerIsActive) {
+    mAsyncResizeTimerIsActive = PR_FALSE;
+    mAsyncResizeEventTimer->Cancel();
+  }
   mResizeEvent.Revoke();
 
   if (mIsDocumentGone)
@@ -2887,8 +2805,10 @@ PresShell::FireResizeEvent()
 
   nsPIDOMWindow *window = mDocument->GetWindow();
   if (window) {
+    nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+    mInResize = PR_TRUE;
     nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
-    // |this| may now be destroyed
+    mInResize = PR_FALSE;
   }
 }
 
@@ -4682,7 +4602,7 @@ PresShell::IsThemeSupportEnabled()
 NS_IMETHODIMP
 PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
 {
-  void* result = AllocateFrame(sizeof(nsCallbackEventRequest));
+  void* result = AllocateMisc(sizeof(nsCallbackEventRequest));
   if (NS_UNLIKELY(!result)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -4726,7 +4646,7 @@ PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
           mLastCallbackEventRequest = before;
         }
 
-        FreeFrame(sizeof(nsCallbackEventRequest), toFree);
+        FreeMisc(sizeof(nsCallbackEventRequest), toFree);
       } else {
         before = node;
         node = node->next;
@@ -4746,7 +4666,7 @@ PresShell::CancelPostedReflowCallbacks()
       mLastCallbackEventRequest = nsnull;
     }
     nsIReflowCallback* callback = node->callback;
-    FreeFrame(sizeof(nsCallbackEventRequest), node);
+    FreeMisc(sizeof(nsCallbackEventRequest), node);
     if (callback) {
       callback->ReflowCallbackCanceled();
     }
@@ -4765,7 +4685,7 @@ PresShell::HandlePostedReflowCallbacks(PRBool aInterruptible)
        mLastCallbackEventRequest = nsnull;
      }
      nsIReflowCallback* callback = node->callback;
-     FreeFrame(sizeof(nsCallbackEventRequest), node);
+     FreeMisc(sizeof(nsCallbackEventRequest), node);
      if (callback) {
        if (callback->ReflowFinished()) {
          shouldFlush = PR_TRUE;

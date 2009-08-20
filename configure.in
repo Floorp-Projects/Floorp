@@ -1357,7 +1357,7 @@ x86_64 | ia64)
     ;;
 
 arm)
-    if test "$OS_TARGET" == "WINCE"; then
+    if test "$OS_TARGET" = "WINCE"; then
         CPU_ARCH="$OS_TEST"
     fi
     ;;

@@ -55,7 +55,7 @@
 #define js_copysign _copysign
 #elif defined _WIN32
 #if _MSC_VER < 1400
-/* Try to work around apparent _copysign bustage in VC6 and VC7. */
+/* Try to work around apparent _copysign bustage in VC7.x. */
 #define js_copysign js_copysign
 extern double js_copysign(double, double);
 #else

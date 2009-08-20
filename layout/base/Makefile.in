@@ -133,6 +133,7 @@ CPPSRCS		= \
 		nsLayoutDebugger.cpp \
 		nsLayoutHistoryState.cpp \
 		nsLayoutUtils.cpp \
+		nsPresArena.cpp \
 		nsPresContext.cpp \
 		nsPresShell.cpp \
 		nsPresState.cpp \

@@ -38,9 +38,8 @@
 #ifndef __nsXULTreeAccessibleWrap_h__
 #define __nsXULTreeAccessibleWrap_h__
 
-#include "nsXULTreeAccessible.h"
-typedef class nsXULTreeAccessible           nsXULTreeAccessibleWrap;
-typedef class nsXULTreeitemAccessible       nsXULTreeitemAccessibleWrap;
+#include "nsXULTreeGridAccessible.h"
+typedef class nsXULTreeGridAccessible      nsXULTreeGridAccessibleWrap;
 typedef class nsXULTreeColumnsAccessible   nsXULTreeColumnsAccessibleWrap;
 
 #endif

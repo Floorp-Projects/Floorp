@@ -334,23 +334,23 @@ GetArrayStringValue(CFArrayRef aArray, PRInt32 aIndex, nsAString& aResult)
 
 static
 nsSafariProfileMigrator::PrefTransform gTransforms[] = {
-  { CFSTR("AlwaysShowTabBar"),            _SPM(BOOL),     "browser.tabs.autoHide",          _SPM(SetBoolInverted), PR_FALSE, -1 },
-  { CFSTR("AutoFillPasswords"),           _SPM(BOOL),     "signon.rememberSignons",         _SPM(SetBool), PR_FALSE, -1 },
-  { CFSTR("OpenNewTabsInFront"),          _SPM(BOOL),     "browser.tabs.loadInBackground",  _SPM(SetBoolInverted), PR_FALSE, -1 },
-  { CFSTR("NSDefaultOpenDir"),            _SPM(STRING),   "browser.download.dir",           _SPM(SetDownloadFolder), PR_FALSE, -1 },
-  { CFSTR("AutoOpenSafeDownloads"),       _SPM(BOOL),     nsnull,                           _SPM(SetDownloadHandlers), PR_FALSE, -1 },
-  { CFSTR("DownloadsClearingPolicy"),     _SPM(INT),      "browser.download.manager.retention", _SPM(SetDownloadRetention), PR_FALSE, -1 },
-  { CFSTR("WebKitDefaultTextEncodingName"),_SPM(STRING),  "intl.charset.default",           _SPM(SetDefaultEncoding), PR_FALSE, -1 },
-  { CFSTR("WebKitStandardFont"),          _SPM(STRING),   "font.name.serif.",               _SPM(SetFontName), PR_FALSE, -1 },
-  { CFSTR("WebKitDefaultFontSize"),       _SPM(INT),      "font.size.serif.",               _SPM(SetFontSize), PR_FALSE, -1 },
-  { CFSTR("WebKitFixedFont"),             _SPM(STRING),   "font.name.fixed.",               _SPM(SetFontName), PR_FALSE, -1 },
-  { CFSTR("WebKitDefaultFixedFontSize"),  _SPM(INT),      "font.size.fixed.",               _SPM(SetFontSize), PR_FALSE, -1 },
-  { CFSTR("WebKitMinimumFontSize"),       _SPM(INT),      "font.minimum-size.",             _SPM(SetFontSize), PR_FALSE, -1 },
-  { CFSTR("WebKitDisplayImagesKey"),      _SPM(BOOL),     "permissions.default.image",      _SPM(SetDisplayImages), PR_FALSE, -1 },
-  { CFSTR("WebKitJavaEnabled"),           _SPM(BOOL),     "security.enable_java",           _SPM(SetBool), PR_FALSE, -1 },
-  { CFSTR("WebKitJavaScriptEnabled"),     _SPM(BOOL),     "javascript.enabled",             _SPM(SetBool), PR_FALSE, -1 },
+  { CFSTR("AlwaysShowTabBar"),            _SPM(BOOL),     "browser.tabs.autoHide",          _SPM(SetBoolInverted), PR_FALSE, { -1 } },
+  { CFSTR("AutoFillPasswords"),           _SPM(BOOL),     "signon.rememberSignons",         _SPM(SetBool), PR_FALSE, { -1 } },
+  { CFSTR("OpenNewTabsInFront"),          _SPM(BOOL),     "browser.tabs.loadInBackground",  _SPM(SetBoolInverted), PR_FALSE, { -1 } },
+  { CFSTR("NSDefaultOpenDir"),            _SPM(STRING),   "browser.download.dir",           _SPM(SetDownloadFolder), PR_FALSE, { -1 } },
+  { CFSTR("AutoOpenSafeDownloads"),       _SPM(BOOL),     nsnull,                           _SPM(SetDownloadHandlers), PR_FALSE, { -1 } },
+  { CFSTR("DownloadsClearingPolicy"),     _SPM(INT),      "browser.download.manager.retention", _SPM(SetDownloadRetention), PR_FALSE, { -1 } },
+  { CFSTR("WebKitDefaultTextEncodingName"),_SPM(STRING),  "intl.charset.default",           _SPM(SetDefaultEncoding), PR_FALSE, { -1 } },
+  { CFSTR("WebKitStandardFont"),          _SPM(STRING),   "font.name.serif.",               _SPM(SetFontName), PR_FALSE, { -1 } },
+  { CFSTR("WebKitDefaultFontSize"),       _SPM(INT),      "font.size.serif.",               _SPM(SetFontSize), PR_FALSE, { -1 } },
+  { CFSTR("WebKitFixedFont"),             _SPM(STRING),   "font.name.fixed.",               _SPM(SetFontName), PR_FALSE, { -1 } },
+  { CFSTR("WebKitDefaultFixedFontSize"),  _SPM(INT),      "font.size.fixed.",               _SPM(SetFontSize), PR_FALSE, { -1 } },
+  { CFSTR("WebKitMinimumFontSize"),       _SPM(INT),      "font.minimum-size.",             _SPM(SetFontSize), PR_FALSE, { -1 } },
+  { CFSTR("WebKitDisplayImagesKey"),      _SPM(BOOL),     "permissions.default.image",      _SPM(SetDisplayImages), PR_FALSE, { -1 } },
+  { CFSTR("WebKitJavaEnabled"),           _SPM(BOOL),     "security.enable_java",           _SPM(SetBool), PR_FALSE, { -1 } },
+  { CFSTR("WebKitJavaScriptEnabled"),     _SPM(BOOL),     "javascript.enabled",             _SPM(SetBool), PR_FALSE, { -1 } },
   { CFSTR("WebKitJavaScriptCanOpenWindowsAutomatically"),
-                                          _SPM(BOOL),     "dom.disable_open_during_load",   _SPM(SetBoolInverted), PR_FALSE, -1 }
+                                          _SPM(BOOL),     "dom.disable_open_during_load",   _SPM(SetBoolInverted), PR_FALSE, { -1 } }
 };
 
 nsresult

@@ -2673,16 +2673,16 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  // If there is no rollup widget we assume the OS routed the event correctly.
-  if (!gRollupWidget)
-    return YES;
-
   // Don't bother if we've been destroyed:  mWindow will now be nil, which
   // makes all our work here pointless, and can even cause us to resend the
   // event to ourselves in an infinte loop (since targetWindow == mWindow no
   // longer tests whether targetWindow is us).
   if (!mGeckoChild || !mWindow)
     return YES;
+
+  // Find the window that the event is over.
+  BOOL isUnderMouse;
+  NSWindow* targetWindow = nsCocoaUtils::FindWindowForEvent(anEvent, &isUnderMouse);
 
   // If this is the rollup widget and the event is not a mouse move then trust the OS routing.  
   // The reason for this trust is complicated.
@@ -2703,20 +2703,19 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   // action must have caused the rollup window to come into existence. In that case, we might need
   // to reroute the event if it is over the rollup window. That is why if we're not the rollup window
   // we don't return YES here.
-  NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (mWindow == rollupWindow && [anEvent type] != NSMouseMoved)
-    return YES;
+  if (gRollupWidget) {
+    NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if (mWindow == rollupWindow && [anEvent type] != NSMouseMoved)
+      return YES;
 
-  // Find the window that the event is over.
-  NSWindow* targetWindow = nsCocoaUtils::FindWindowUnderPoint(nsCocoaUtils::ScreenLocationForEvent(anEvent));
+    // If the event was not over any window, send it to the rollup window.
+    if (!isUnderMouse)
+      targetWindow = rollupWindow;
+  }
 
-  // If the event was not over any window, send it to the rollup window.
-  if (!targetWindow)
-    targetWindow = rollupWindow;
-
-  // At this point we've resolved a target window, if we are it then just return
+  // If there's no window that's more appropriate than our window then just return
   // yes so we handle it. No need to redirect.
-  if (targetWindow == mWindow)
+  if (!targetWindow || targetWindow == mWindow)
     return YES;
 
   // Send the event to its new destination.
@@ -3992,7 +3991,8 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   [self convertGenericCocoaEvent:aMouseEvent toGeckoEvent:outGeckoEvent];
 
   // convert point to view coordinate system
-  NSPoint localPoint = [self convertPoint:[aMouseEvent locationInWindow] fromView:nil];
+  NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, mWindow);
+  NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
   outGeckoEvent->refPoint.x = static_cast<nscoord>(localPoint.x);
   outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
 
@@ -4175,17 +4175,39 @@ GetInputSourceIDFromKeyboardLayout(SInt32 aLayoutID)
   return sourceID;
 }
 
+static void
+GetKCHRData(KeyTranslateData &aKT)
+{
+  KeyboardLayoutRef kbRef;
+  OSStatus err =
+    ::KLGetKeyboardLayoutWithIdentifier(aKT.mLayoutID, &kbRef);
+  if (err != noErr)
+    return;
+
+  err = ::KLGetKeyboardLayoutProperty(kbRef, kKLKCHRData,
+                                      (const void**)&aKT.mKchr.mHandle);
+  if (err != noErr || !aKT.mKchr.mHandle)
+    return;
+
+  err = ::GetTextEncodingFromScriptInfo(aKT.mScript, kTextLanguageDontCare,
+                                        kTextRegionDontCare,
+                                        &aKT.mKchr.mEncoding);
+  if (err != noErr)
+    aKT.mKchr.mHandle = nsnull;
+}
+
 static PRUint32
 GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
-  KeyTranslateData kt;
-  Handle handle = ::GetResource('uchr', kKLUSKeyboard); // US keyboard layout
-  if (!handle || !(*handle)) {
-    NS_ERROR("US keyboard layout doesn't have uchr resource");
-    return 0;
-  }
+  KeyboardLayoutRef kbRef = nsnull;
+  OSStatus err = ::KLGetKeyboardLayoutWithIdentifier(kKLUSKeyboard, &kbRef);
+  NS_ENSURE_TRUE(err == noErr && kbRef, 0);
+  const UCKeyboardLayout* layout = nsnull;
+  err = ::KLGetKeyboardLayoutProperty(kbRef, kKLuchrData,
+                                      (const void**)&layout);
+  NS_ENSURE_TRUE(err == noErr && layout, 0);
   UInt32 kbType = 40; // ANSI, don't use actual layout
-  return UCKeyTranslateToUnicode((UCKeyboardLayout*)(*handle), aKeyCode,
+  return UCKeyTranslateToUnicode(layout, aKeyCode,
                                  aModifiers, kbType);
 }
 
@@ -4244,7 +4266,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
       }
 
-      CFDataRef uchr = NULL;
+      PRBool isUchrKeyboardLayout = PR_FALSE;
       // GetResource('uchr', kt.mLayoutID) fails on OS X 10.5
       if (nsToolkit::OnLeopardOrLater() &&
           Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
@@ -4252,6 +4274,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
           Leopard_TISCreateInputSourceList &&
           kOurTISPropertyUnicodeKeyLayoutData &&
           kOurTISPropertyInputSourceID) {
+        CFDataRef uchr = NULL;
         if (gOverrideKeyboardLayout.mOverrideEnabled) {
           CFStringRef sourceID = GetInputSourceIDFromKeyboardLayout(kt.mLayoutID);
           NS_ASSERTION(sourceID, "unable to map keyboard layout ID to input source ID");
@@ -4269,41 +4292,39 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
           TISInputSourceRef tis = Leopard_TISCopyCurrentKeyboardLayoutInputSource();
           uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
         }
+        if (uchr) {
+          // We should be here on OS X 10.5 for any Apple provided layout, as
+          // they are all uchr.  It may be possible to still use kchr resources
+          // from elsewhere, so they may be picked by GetKCHRData below
+          kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
+            (CFDataGetBytePtr(uchr));
+          isUchrKeyboardLayout = PR_TRUE;
+        }
+      } else {
+        // 10.4
+        KeyboardLayoutRef kbRef = nsnull;
+        OSStatus err = ::KLGetKeyboardLayoutWithIdentifier(kt.mLayoutID,
+                                                           &kbRef);
+        if (err == noErr && kbRef) {
+          SInt32 kind;
+          err = ::KLGetKeyboardLayoutProperty(kbRef, kKLKind,
+                                              (const void **)&kind);
+          if (err == noErr && kind != kKLKCHRKind) {
+            err = ::KLGetKeyboardLayoutProperty(kbRef, kKLuchrData,
+                      (const void**)&kt.mUchr.mLayout);
+            if (err != noErr) {
+              kt.mUchr.mLayout = nsnull;
+              // if the kind is kKLKCHRuchrKind, we can retry by KCHR.
+              isUchrKeyboardLayout = kind != kKLKCHRuchrKind;
+            } else {
+              isUchrKeyboardLayout = PR_TRUE;
+            }
+          }
+        }
       }
 
-      // This fails for Azeri on 10.4 even though kKLKind (2) indicates that
-      // the layout has a uchr resource.  Perhaps KLGetKeyboardLayoutProperty
-      // with kKLuchrData would be helpful here.
-      Handle handle = ::GetResource('uchr', kt.mLayoutID);
-      if (uchr) {
-        // We should be here on OS X 10.5 for any Apple provided layout, as
-        // they are all uchr.  It may be possible to still use kchr resources
-        // from elsewhere, so they may be picked by
-        // GetScriptManagerVariable(smKCHRCache) below
-        kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
-          (CFDataGetBytePtr(uchr));
-      } else if (handle) {
-        // uchr (Unicode) keyboard layout resource prior to 10.5.
-        kt.mUchr.mLayout = *((UCKeyboardLayout**)handle);
-      } else {
-        // kchr (non-Unicode) keyboard layout resource.
-
-        // There are no know cases where GetResource succeeds here, and so
-        // tests (gOverrideKeyboardLayout.mOverrideEnabled) currently end up
-        // with no keyboard layout.  KLGetKeyboardLayoutWithIdentifier and
-        // KLGetKeyboardLayoutProperty with kKLKCHRData would be useful here.
-        kt.mKchr.mHandle = ::GetResource('kchr', kt.mLayoutID);
-
-        if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout.mOverrideEnabled)
-          kt.mKchr.mHandle = (char**)::GetScriptManagerVariable(smKCHRCache);
-        if (kt.mKchr.mHandle) {
-          OSStatus err =
-            ::GetTextEncodingFromScriptInfo(kt.mScript, kTextLanguageDontCare,
-                                            kTextRegionDontCare,
-                                            &kt.mKchr.mEncoding);
-          if (err != noErr)
-            kt.mKchr.mHandle = nsnull;
-        }
+      if (!isUchrKeyboardLayout) {
+        GetKCHRData(kt);
       }
 
       // If a keyboard layout override is set, we also need to force the

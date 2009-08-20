@@ -510,7 +510,7 @@ static int copy_file(const NS_tchar *spath, const NS_tchar *dpath)
 
   AutoFile sfile = NS_tfopen(spath, NS_T("rb"));
   if (sfile == NULL || fstat(fileno(sfile), &ss)) {
-    LOG(("copy_file: failed to open or stat: %p," LOG_S ",%d\n", sfile, spath, errno));
+    LOG(("copy_file: failed to open or stat: %p," LOG_S ",%d\n", sfile.get(), spath, errno));
     return READ_ERROR;
   }
 

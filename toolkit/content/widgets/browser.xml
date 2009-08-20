@@ -25,6 +25,7 @@
    -   Peter Parente <parente@cs.unc.edu>
    -   Christopher Thomas <cst@yecc.com>
    -   Michael Ventnor <m.ventnor@gmail.com>
+   -   Arpad Borsos <arpad.borsos@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -493,7 +494,7 @@
             if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
               this.fastFind.setDocShell(this.docShell);
 
-            if (this._scrollingView)
+            if (this._scrollable)
               this._autoScrollPopup.hidePopup();
          ]]>
         </body>
@@ -739,7 +740,7 @@
           
       <field name="_AUTOSCROLL_SPEED">3</field>
       <field name="_AUTOSCROLL_SNAP">10</field>
-      <field name="_scrollingView">null</field>
+      <field name="_scrollable">null</field>
       <field name="_autoScrollTimer">null</field>
       <field name="_startX">null</field>
       <field name="_startY">null</field>
@@ -751,8 +752,8 @@
       <method name="stopScroll">
         <body>
           <![CDATA[
-            if (this._scrollingView) {
-              this._scrollingView = null;
+            if (this._scrollable) {
+              this._scrollable = null;
               window.removeEventListener("mousemove", this, true);
               window.removeEventListener("mousedown", this, true);
               window.removeEventListener("mouseup", this, true);
@@ -804,16 +805,52 @@
               this._autoScrollPopup.setAttribute("translucent", /Win|Mac/.test(navigator.platform));
             }
 
-            this._scrollingView = event.originalTarget.ownerDocument.defaultView;
-            if (this._scrollingView.scrollMaxX > 0) {
-              this._autoScrollPopup.setAttribute("scrolldir", this._scrollingView.scrollMaxY > 0 ? "NSEW" : "EW");
+            // go upward in the DOM and find any parent element that has a overflow
+            // area and can therefore be scrolled
+            for (this._scrollable = event.originalTarget; this._scrollable;
+                 this._scrollable = this._scrollable.parentNode) {
+              // do not use overflow based autoscroll for <html> Elements
+              // or non-html elements such as svg or Document nodes
+              if (!(this._scrollable instanceof HTMLElement) ||
+                  (this._scrollable instanceof HTMLHtmlElement)) {
+                continue;
+              }
+
+              var overflowx = this._scrollable.ownerDocument.defaultView
+                                  .getComputedStyle(this._scrollable, '')
+                                  .getPropertyValue('overflow-x');
+              var overflowy = this._scrollable.ownerDocument.defaultView
+                                  .getComputedStyle(this._scrollable, '')
+                                  .getPropertyValue('overflow-y');
+              var scrollVert = this._scrollable.scrollHeight > this._scrollable.offsetHeight &&
+                               overflowy != 'hidden' && overflowy != 'visible';
+
+              // do not allow horizontal scrolling for select elements, it leads
+              // to visual artifacts and is not the expected behavior anyway
+              if (!(this._scrollable instanceof HTMLSelectElement) &&
+                  this._scrollable.scrollWidth > this._scrollable.offsetWidth &&
+                  overflowx != 'hidden' && overflowx != 'visible') {
+                this._autoScrollPopup.setAttribute("scrolldir", scrollVert ? "NSEW" : "EW");
+                break;
+              }
+              else if (scrollVert) {
+                this._autoScrollPopup.setAttribute("scrolldir", "NS");
+                break;
+              }
             }
-            else if (this._scrollingView.scrollMaxY > 0) {
-              this._autoScrollPopup.setAttribute("scrolldir", "NS");
-            }
-            else {
-              this._scrollingView = null; // abort scrolling
-              return;
+
+            if (!this._scrollable) {
+              this._scrollable = event.originalTarget.ownerDocument.defaultView;
+              if (this._scrollable.scrollMaxX > 0) {
+                this._autoScrollPopup.setAttribute("scrolldir", this._scrollable.scrollMaxY > 0 ? "NSEW" : "EW");
+              }
+              else if (this._scrollable.scrollMaxY > 0) {
+                this._autoScrollPopup.setAttribute("scrolldir", "NS");
+              }
+              else {
+                this._scrollable = null; // abort scrolling
+                return;
+              }
             }
 
             document.popupNode = null;
@@ -875,17 +912,30 @@
      <method name="autoScrollLoop">
        <body>
          <![CDATA[
-           var x = this._accelerate(this._screenX, this._startX);
-           var y = this._accelerate(this._screenY, this._startY);
+           var actualScrollX = 0;
+           var actualScrollY = 0;
+           // don't bother scrolling vertically when the scrolldir is only horizontal
+           // and the other way around
+           var scrolldir = this._autoScrollPopup.getAttribute("scrolldir");
+           if (scrolldir != 'EW') {
+             var y = this._accelerate(this._screenY, this._startY);
+             var desiredScrollY = this._scrollErrorY + y;
+             actualScrollY = this._roundToZero(desiredScrollY);
+             this._scrollErrorY = (desiredScrollY - actualScrollY);
+           }
+           if (scrolldir != 'NS') {
+             var x = this._accelerate(this._screenX, this._startX);
+             var desiredScrollX = this._scrollErrorX + x;
+             actualScrollX = this._roundToZero(desiredScrollX);
+             this._scrollErrorX = (desiredScrollX - actualScrollX);
+           }
 
-           var desiredScrollX = this._scrollErrorX + x;
-           var actualScrollX = this._roundToZero(desiredScrollX);
-           this._scrollErrorX = (desiredScrollX - actualScrollX);
-           var desiredScrollY = this._scrollErrorY + y;
-           var actualScrollY = this._roundToZero(desiredScrollY);
-           this._scrollErrorY = (desiredScrollY - actualScrollY);
-
-           this._scrollingView.scrollBy(actualScrollX, actualScrollY);
+           if (this._scrollable instanceof Window)
+             this._scrollable.scrollBy(actualScrollX, actualScrollY);
+           else { // an element with overflow
+             this._scrollable.scrollLeft += actualScrollX;
+             this._scrollable.scrollTop += actualScrollY;
+           }
          ]]>
        </body>
      </method>
@@ -930,7 +980,7 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          if (this._scrollingView) {
+          if (this._scrollable) {
             switch(aEvent.type) {
               case "mousemove": {
                 this._screenX = aEvent.screenX;
@@ -1071,7 +1121,7 @@
       </handler>
       <handler event="mousedown" phase="capturing">
         <![CDATA[
-          if (!this._scrollingView && event.button == 1) {
+          if (!this._scrollable && event.button == 1) {
             if (!this.autoscrollEnabled  ||
                 this.currentURI.spec == "about:blank"|| 
                 this.isAutoscrollBlocker(event.originalTarget))

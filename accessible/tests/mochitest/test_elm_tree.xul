@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tree hierarchy tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/treeview.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Accessible tree testers
+
+    function getTreeItemAccTree(aTableRole, aColumnsCount)
+    {
+      var treeItemRole;
+      switch (aTableRole) {
+        case ROLE_LIST:
+          treeItemRole = ROLE_LISTITEM;
+          break;
+        case ROLE_OUTLINE:
+          treeItemRole = ROLE_OUTLINEITEM;
+          break;
+        case ROLE_TABLE: case ROLE_TREE_TABLE:
+          treeItemRole = ROLE_ROW;
+          break;
+      }
+
+      var accTree = {
+        role: treeItemRole,
+        children: []
+      };
+
+      if (aTableRole == ROLE_TABLE || aTableRole == ROLE_TREE_TABLE) {
+        for (var idx = 0; idx < aColumnsCount; idx++) {
+          var cellAccTree = {
+            role: ROLE_GRID_CELL,
+            children: []
+          };
+          accTree.children.push(cellAccTree);
+        }
+      }
+
+      return accTree;
+    }
+
+    function testAccessibleTreeFor(aTree, aRole)
+    {
+      var accTreeForColumns = {
+        role: ROLE_LIST,
+        children: []
+      };
+
+      var accTreeForTree = {
+        role: aRole,
+        children: [
+          accTreeForColumns
+        ]
+      };
+
+      var treeBoxObject = aTree.treeBoxObject;
+      var view = treeBoxObject.view;
+      var columnsCount = treeBoxObject.columns.count;
+
+      for (var idx = 0; idx < columnsCount; idx++)
+        accTreeForColumns.children.push({ role: ROLE_COLUMNHEADER, children: []});
+      if (!aTree.hasAttribute("hidecolumnpicker"))
+        accTreeForColumns.children.push({ role: ROLE_PUSHBUTTON, children: []});
+
+      for (var idx = 0; idx < view.rowCount; idx++)
+        accTreeForTree.children.push(getTreeItemAccTree(aRole, columnsCount));
+
+      testAccessibleTree(aTree, accTreeForTree);
+    }
+
+    /**
+     * Event queue invoker object to test accessible tree for XUL tree element.
+     */
+    function treeChecker(aID, aView, aRole)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function invoke()
+      {
+        this.DOMNode.treeBoxObject.view = aView;
+      }
+      this.check = function check(aEvent)
+      {
+        testAccessibleTreeFor(this.DOMNode, aRole);
+      }
+      this.getID = function getID()
+      {
+        return "Tree testing of " + aID;
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    // gA11yEventDumpID = "debug";
+    var gQueue = null;
+
+    function doTest()
+    {
+      var gQueue = new eventQueue("TreeViewChanged");
+
+      gQueue.push(new treeChecker("list", new nsTableTreeView(3), ROLE_LIST));
+      gQueue.push(new treeChecker("tree", new nsTreeTreeView(), ROLE_OUTLINE));
+      gQueue.push(new treeChecker("table", new nsTableTreeView(3), ROLE_TABLE));
+      gQueue.push(new treeChecker("treetable", new nsTreeTreeView(), ROLE_TREE_TABLE));
+
+      gQueue.invoke(); // Will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=503727"
+         title="Reorganize implementation of XUL tree accessibility">
+        Mozilla Bug 503727
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tree id="list" flex="1" hidecolumnpicker="true">
+        <treecols>
+          <treecol id="col" flex="1" hideheader="true"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <tree id="tree" flex="1">
+        <treecols>
+          <treecol id="col" flex="1" primary="true" label="column"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <tree id="table" flex="1">
+        <treecols>
+          <treecol id="col1" flex="1" label="column"/>
+          <treecol id="col2" flex="1" label="column 2"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <tree id="treetable" flex="1">
+        <treecols>
+          <treecol id="col1" flex="1" primary="true" label="column"/>
+          <treecol id="col2" flex="1" label="column 2"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <vbox id="debug"/>
+    </vbox>
+  </hbox>
+
+</window>
+

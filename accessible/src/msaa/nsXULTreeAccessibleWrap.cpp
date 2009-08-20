@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Aaron Leventhal
+ *   Aaron Leventhal <aaronleventhal@moonset.net> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,124 +39,19 @@
 
 #include "nsXULTreeAccessibleWrap.h"
 
-#include "nsTextFormatter.h"
-#include "nsIFrame.h"
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTreeGridAccessibleWrap
+////////////////////////////////////////////////////////////////////////////////
 
-// --------------------------------------------------------
-// nsXULTreeAccessibleWrap
-// --------------------------------------------------------
-
-nsXULTreeAccessibleWrap::nsXULTreeAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
-nsXULTreeAccessible(aDOMNode, aShell)
+nsXULTreeGridAccessibleWrap::
+  nsXULTreeGridAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell) :
+  nsXULTreeGridAccessible(aDOMNode, aShell)
 {
 }
 
-nsresult
-nsXULTreeAccessibleWrap::GetRoleInternal(PRUint32 *aRole)
-{
-  NS_ENSURE_STATE(mTree);
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeGridAccessibleWrap,
+                             nsXULTreeGridAccessible)
 
-  nsCOMPtr<nsITreeColumns> cols;
-  mTree->GetColumns(getter_AddRefs(cols));
-  nsCOMPtr<nsITreeColumn> primaryCol;
-  if (cols) {
-    cols->GetPrimaryColumn(getter_AddRefs(primaryCol));
-  }
-  // No primary column means we're in a list
-  // In fact, history and mail turn off the primary flag when switching to a flat view
-  *aRole = primaryCol ? nsIAccessibleRole::ROLE_OUTLINE :
-                        nsIAccessibleRole::ROLE_LIST;
-
-  return NS_OK;
-}
-
-// --------------------------------------------------------
-// nsXULTreeitemAccessibleWrap Accessible
-// --------------------------------------------------------
-
-nsXULTreeitemAccessibleWrap::nsXULTreeitemAccessibleWrap(nsIAccessible *aParent, 
-                                                         nsIDOMNode *aDOMNode, 
-                                                         nsIWeakReference *aShell, 
-                                                         PRInt32 aRow, 
-                                                         nsITreeColumn* aColumn) :
-nsXULTreeitemAccessible(aParent, aDOMNode, aShell, aRow, aColumn)
-{
-}
-
-nsresult
-nsXULTreeitemAccessibleWrap::GetRoleInternal(PRUint32 *aRole)
-{
-  // No primary column means we're in a list
-  // In fact, history and mail turn off the primary flag when switching to a flat view
-  NS_ENSURE_STATE(mColumn);
-  PRBool isPrimary = PR_FALSE;
-  mColumn->GetPrimary(&isPrimary);
-  *aRole = isPrimary ? nsIAccessibleRole::ROLE_OUTLINEITEM :
-                       nsIAccessibleRole::ROLE_LISTITEM;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTreeitemAccessibleWrap::GetBounds(PRInt32 *aX, PRInt32 *aY,
-                                       PRInt32 *aWidth, PRInt32 *aHeight)
-{
-  NS_ENSURE_ARG_POINTER(aX);
-  *aX = 0;
-  NS_ENSURE_ARG_POINTER(aY);
-  *aY = 0;
-  NS_ENSURE_ARG_POINTER(aWidth);
-  *aWidth = 0;
-  NS_ENSURE_ARG_POINTER(aHeight);
-  *aHeight = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  // Get x coordinate and width from treechildren element, get y coordinate and
-  // height from tree cell.
-
-  nsCOMPtr<nsIBoxObject> boxObj = nsCoreUtils::GetTreeBodyBoxObject(mTree);
-  NS_ENSURE_STATE(boxObj);
-
-  PRInt32 cellStartX, cellWidth;
-  nsresult rv = mTree->GetCoordsForCellItem(mRow, mColumn, EmptyCString(),
-                                            &cellStartX, aY,
-                                            &cellWidth, aHeight);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  boxObj->GetWidth(aWidth);
-
-  PRInt32 tcX = 0, tcY = 0;
-  boxObj->GetScreenX(&tcX);
-  boxObj->GetScreenY(&tcY);
-
-  *aX = tcX;
-  *aY += tcY;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTreeitemAccessibleWrap::GetName(nsAString& aName)
-{
-  NS_ENSURE_STATE(mTree);
-  nsCOMPtr<nsITreeColumns> cols;
-  mTree->GetColumns(getter_AddRefs(cols));
-  if (!cols) {
-    return NS_OK;
-  }
-  nsCOMPtr<nsITreeColumn> column;
-  cols->GetFirstColumn(getter_AddRefs(column));
-  while (column) {
-    nsAutoString colText;
-    mTreeView->GetCellText(mRow, column, colText);
-    aName += colText + NS_LITERAL_STRING("  ");
-    nsCOMPtr<nsITreeColumn> nextColumn;
-    column->GetNext(getter_AddRefs(nextColumn));
-    column = nextColumn;
-  }
-
-  return NS_OK;
-}
-
+IMPL_IUNKNOWN_INHERITED1(nsXULTreeGridAccessibleWrap,
+                         nsAccessibleWrap,
+                         CAccessibleTable);

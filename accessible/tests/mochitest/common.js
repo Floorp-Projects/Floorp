@@ -163,7 +163,7 @@ const DONOTFAIL_IF_NO_INTERFACE = 2;
 
 /**
  * Return accessible for the given identifier (may be ID attribute or DOM
- * element or accessible object).
+ * element or accessible object) or null.
  *
  * @param aAccOrElmOrID      [in] identifier to get an accessible implementing
  *                           the given interfaces
@@ -177,7 +177,7 @@ const DONOTFAIL_IF_NO_INTERFACE = 2;
 function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
 {
   if (!aAccOrElmOrID)
-    return;
+    return null;
 
   var elm = null;
 

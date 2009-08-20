@@ -349,14 +349,14 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         FcPatternDestroy(fcPattern);
 
         if (fcMatch) {
-            if (fcW >= FC_WEIGHT_DEMIBOLD && GetName() == NS_LITERAL_STRING("Workplace Sans")) {
-                // if we are dealing with Workplace Sans and want a bold font, we
-                // need to artificially embolden it (no bold counterpart yet)
+            int w = FC_WEIGHT_REGULAR;
+            FcPatternGetInteger(fcMatch, FC_WEIGHT, 0, &w);
+            if (fcW >= FC_WEIGHT_DEMIBOLD && w < FC_WEIGHT_DEMIBOLD) {
+                // if we want a bold font, but the selected font doesn't have a
+                // bold counterpart, artificially embolden it
                 FcPatternAddBool(fcMatch, FC_EMBOLDEN, FcTrue);
-            } else {
-                // if we don't embolden, we can possibly switch off antialiasing
-                FcPatternAddBool(fcMatch, FC_ANTIALIAS, mAntialias);
             }
+            FcPatternAddBool(fcMatch, FC_ANTIALIAS, mAntialias);
             FcPatternAddInteger(fcMatch, FC_HINT_STYLE, mHinting);
 
             // and ask cairo to return a font face for this

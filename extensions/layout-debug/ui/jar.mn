@@ -1,10 +1,10 @@
 layoutdebug.jar:
 % content layoutdebug %content/layoutdebug/
+% overlay chrome://browser/content/browser.xul chrome://layoutdebug/content/layoutdebug-overlay.xul
+% overlay chrome://communicator/content/tasksOverlay.xul chrome://layoutdebug/content/layoutdebug-overlay.xul
 % locale layoutdebug en-US %locale/en-US/layoutdebug/
-  content/layoutdebug/contents.rdf                 (content/contents.rdf)
   content/layoutdebug/layoutdebug.xul              (content/layoutdebug.xul)
   content/layoutdebug/layoutdebug.js               (content/layoutdebug.js)
   content/layoutdebug/layoutdebug-overlay.xul      (content/layoutdebug-overlay.xul)
-  locale/en-US/layoutdebug/contents.rdf            (locale/en-US/contents.rdf)
   locale/en-US/layoutdebug/layoutdebug.dtd         (locale/en-US/layoutdebug.dtd)
   locale/en-US/layoutdebug/layoutdebug-overlay.dtd (locale/en-US/layoutdebug-overlay.dtd)

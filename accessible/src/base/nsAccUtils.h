@@ -58,7 +58,6 @@ class nsHTMLTableAccessible;
 class nsDocAccessible;
 #ifdef MOZ_XUL
 class nsXULTreeAccessible;
-class nsXULTreeitemAccessible;
 #endif
 
 class nsAccUtils
@@ -290,6 +289,28 @@ public:
   static void GetLiveAttrValue(PRUint32 aRule, nsAString& aValue);
 
   /**
+   * Query DestinationType from the given SourceType.
+   */
+  template<class DestinationType, class SourceType> static inline
+    already_AddRefed<DestinationType> QueryObject(SourceType *aObject)
+  {
+    DestinationType* object = nsnull;
+    if (aObject)
+      CallQueryInterface(aObject, &object);
+
+    return object;
+  }
+  template<class DestinationType, class SourceType> static inline
+    already_AddRefed<DestinationType> QueryObject(nsCOMPtr<SourceType>& aObject)
+  {
+    DestinationType* object = nsnull;
+    if (aObject)
+      CallQueryInterface(aObject, &object);
+
+    return object;
+  }
+
+  /**
    * Query nsAccessNode from the given nsIAccessible.
    */
   static already_AddRefed<nsAccessNode>
@@ -364,12 +385,6 @@ public:
    */
   static already_AddRefed<nsXULTreeAccessible>
     QueryAccessibleTree(nsIAccessible *aAccessible);
-
-  /**
-   * Query nsXULTreeitemAccessible from the given nsIAccessNode.
-   */
-  static already_AddRefed<nsXULTreeitemAccessible>
-    QueryAccessibleTreeitem(nsIAccessNode *aAccessNode);
 #endif
 
 #ifdef DEBUG_A11Y

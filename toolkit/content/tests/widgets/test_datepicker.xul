@@ -18,8 +18,9 @@
 <datepicker id="datepicker-grid" type="grid"/>
 </hbox>
 
+<!-- Test-only key bindings, but must not conflict with the application. -->
 <keyset id="mainKeyset">
-  <key id="key_alt_q" key="Q" oncommand="return" modifiers="alt"/>
+  <key id="key_alt_z" key="Z" oncommand="return" modifiers="alt"/>
   <key id="key_ctrl_q" key="Q" oncommand="return" modifiers="control"/>
   <key id="key_meta_e" key="E" oncommand="return" modifiers="meta"/>
 </keyset>
@@ -189,7 +190,7 @@ function testtag_datepicker_UI_fields(dp, testid)
   testtag_datepicker_UI_key(dp, testid, "2004-02-28", dp.dateField, 2004, 1, 29, 2004, 1, 28);
   testtag_datepicker_UI_key(dp, testid, "2100-02-28", dp.dateField, 2100, 1, 1, 2100, 1, 28);
 
-  synthesizeKeyExpectEvent('Q', { altKey: true }, $("key_alt_q"), "command", testid + " alt shortcut");
+  synthesizeKeyExpectEvent('Z', { altKey: true }, $("key_alt_z"), "command", testid + " alt shortcut");
   synthesizeKeyExpectEvent('Q', { ctrlKey: true }, $("key_ctrl_q"), "command", testid + " ctrl shortcut");
   synthesizeKeyExpectEvent('E', { metaKey: true }, $("key_meta_e"), "command", testid + " meta shortcut");
 }

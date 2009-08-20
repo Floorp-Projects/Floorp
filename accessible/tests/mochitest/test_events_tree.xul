@@ -31,6 +31,24 @@
     // Invoker's checkers
 
     /**
+     * Check TreeViewChanged event and run through accessible tree to ensure
+     * it's created.
+     */
+    function treeViewChangedChecker(aMsg)
+    {
+      this.type = "TreeViewChanged";
+      this.target = gTree;
+      this.check = function check(aEvent)
+      {
+        ensureAccessibleTree(gTree);
+      }
+      this.getID = function getID()
+      {
+        return "TreeViewChanged";
+      }
+    }
+
+    /**
      * Check TreeRowCountChanged event.
      */
     function rowCountChangedChecker(aMsg, aIdx, aCount)
@@ -93,13 +111,8 @@
       {
         var acc = getAccessible(gTree);
 
-        var tableAcc = getAccessible(acc, [nsIAccessibleTable], null,
-                                     DONOTFAIL_IF_NO_INTERFACE);
-
-        if (tableAcc)
-          return tableAcc.cellRefAt(aRow, aCol);
-
-        return acc.getChildAt(aRow + 1);
+        var tableAcc = getAccessible(acc, [nsIAccessibleTable]);
+        return tableAcc.cellRefAt(aRow, aCol);
       }
       this.getID = function getID()
       {
@@ -122,7 +135,7 @@
 
       this.getID = function setTreeView_getID() { return "TreeViewChanged"; }
 
-      this.eventSeq = [ new invokerChecker("TreeViewChanged", gTree) ];
+      this.eventSeq = [ new treeViewChangedChecker() ];
     };
 
     /**
@@ -133,7 +146,7 @@
     {
       this.invoke = function insertRow_invoke()
       {
-        ++gView.mRowCount;
+        gView.appendItem("last");
         gTreeBox.rowCountChanged(0, 1);
       }
 
@@ -154,18 +167,14 @@
       {
         // Make sure accessibles for the tree is created because it makes
         // sure accessible events will be fired.
-        var treeAcc = getAccessible(gTree);
-
-        // Makes sure tree children accessibles are created otherwise they won't
+        // Make sure tree children accessibles are created otherwise they won't
         // be a cause of name changed events.
-        var children = treeAcc.children;
+        ensureAccessibleTree(gTree);
 
         // Fire 'TreeInvalidated' event by InvalidateColumn()
         var firstCol = gTree.columns.getFirstColumn();
-        for (var i = 0; i < gView.mRowCount; i++) {
-          var key = String(i) + firstCol.id;
-          gView.mData[key] = key + "_col";
-        }
+        for (var i = 0; i < gView.rowCount; i++)
+          gView.setCellText(i, firstCol, "hey " + String(i) + "x0");
 
         gTreeBox.invalidateColumn(firstCol);
       }
@@ -193,9 +202,10 @@
       {
         // Fire 'TreeInvalidated' event by InvalidateRow()
         var colCount = gTree.columns.count;
-        for (var i = 0; i < colCount; i++) {
-          var key = "1" + gTree.columns.getColumnAt(i).id;
-          gView.mData[key] = key + "_row";
+        var column = gTree.columns.getFirstColumn();
+        while (column) {
+          gView.setCellText(1, column, "aloha 1x" + String(column.index));
+          column = column.getNext();
         }
 
         gTreeBox.invalidateRow(1);
@@ -204,6 +214,7 @@
       this.eventSeq =
       [
         new nameChangeChecker("invalidateColumn: ", 1, 0),
+        new nameChangeChecker("invalidateColumn: ", 1, 1),
         new treeInvalidatedChecker("invalidateColumn", 1, 1, null, null)
       ];
     }
@@ -223,9 +234,7 @@
       // Initialize the tree
       gTree = document.getElementById("tree");
       gTreeBox = gTree.treeBoxObject;
-
-      gView = new inTreeView();
-      gView.mRowCount = 5;
+      gView = new nsTableTreeView(5);
 
       // Perform actions
       gQueue = new eventQueue();
@@ -265,8 +274,8 @@
     <vbox id="debug"/>
     <tree id="tree" flex="1">
       <treecols>
-        <treecol id="col" flex="1" primary="true" label="column"/>
-        <treecol id="scol" flex="1" label="column 2"/>
+        <treecol id="col1" flex="1" primary="true" label="column"/>
+        <treecol id="col2" flex="1" label="column 2"/>
       </treecols>
       <treechildren id="treechildren"/>
     </tree>

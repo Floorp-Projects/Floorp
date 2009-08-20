@@ -207,6 +207,12 @@ function commonDialogOnLoad()
     document.documentElement.getButton(dButton).focus();
 #endif
   }
+  else {
+    if (gCommonDialogParam.GetInt(4) == 1)
+      document.getElementById("password1Textbox").select();
+    else
+      document.getElementById("loginTextbox").select();
+  }
 
   if (gCommonDialogParam.GetInt(6) != 0) // delay button enable
   {

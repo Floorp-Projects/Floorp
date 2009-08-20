@@ -44,13 +44,12 @@ relativesrcdir = browser/fuel/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# browser_Browser.js is disabled, because it times out occasionally. See bug 458688.
-
 _BROWSER_FILES =browser_Application.js \
 		browser_ApplicationPrefs.js \
 		browser_ApplicationStorage.js \
 		browser_ApplicationQuitting.js \
 		browser_Bookmarks.js \
+		browser_Browser.js \
 		browser_Extensions.js \
 		ContentA.html \
 		ContentB.html \

@@ -24,8 +24,11 @@ const ROLE_LABEL = nsIAccessibleRole.ROLE_LABEL;
 const ROLE_LINK = nsIAccessibleRole.ROLE_LINK;
 const ROLE_LIST = nsIAccessibleRole.ROLE_LIST;
 const ROLE_LISTBOX = nsIAccessibleRole.ROLE_LISTBOX;
+const ROLE_LISTITEM = nsIAccessibleRole.ROLE_LISTITEM;
 const ROLE_NOTHING = nsIAccessibleRole.ROLE_NOTHING;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
+const ROLE_OUTLINE = nsIAccessibleRole.ROLE_OUTLINE;
+const ROLE_OUTLINEITEM = nsIAccessibleRole.ROLE_OUTLINEITEM;
 const ROLE_PARAGRAPH = nsIAccessibleRole.ROLE_PARAGRAPH;
 const ROLE_PASSWORD_TEXT = nsIAccessibleRole.ROLE_PASSWORD_TEXT;
 const ROLE_PROGRESSBAR = nsIAccessibleRole.ROLE_PROGRESSBAR;
@@ -37,6 +40,7 @@ const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 const ROLE_TOGGLE_BUTTON = nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
+const ROLE_TREE_TABLE = nsIAccessibleRole.ROLE_TREE_TABLE;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public methods

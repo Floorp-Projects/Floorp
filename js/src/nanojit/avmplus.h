@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(AVMPLUS_UNIX)
+#if defined(AVMPLUS_UNIX) || defined(AVMPLUS_OS2)
 #include <unistd.h>
 #include <sys/mman.h>
 #endif

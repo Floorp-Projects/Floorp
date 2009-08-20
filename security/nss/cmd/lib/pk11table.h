@@ -74,7 +74,7 @@ typedef enum {
     F_Help,
     F_Quit,
     F_QuitIf,
-    F_QuitIfString,
+    F_QuitIfString
 } FunctionType;
 
 /*
@@ -103,7 +103,7 @@ typedef enum {
     ArgFile = 0x800,
     ArgStatic = 0x1000,
     ArgOpt = 0x2000,
-    ArgFull = 0x4000,
+    ArgFull = 0x4000
 } ArgType;
 
 typedef enum _constType

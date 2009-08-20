@@ -49,9 +49,9 @@
 
 struct iso_lang_map
 {
-  char*  iso_code;
-  short  mac_lang_code;
-  short  mac_script_code;
+  const char*  iso_code;
+  short        mac_lang_code;
+  short        mac_script_code;
 
 };
 typedef struct iso_lang_map iso_lang_map;
@@ -162,8 +162,8 @@ const iso_lang_map lang_list[] = {
 
 struct iso_country_map
 {
-  char*  iso_code;
-  short  mac_region_code;
+  const char*  iso_code;
+  short        mac_region_code;
 };
 
 typedef struct iso_country_map iso_country_map;

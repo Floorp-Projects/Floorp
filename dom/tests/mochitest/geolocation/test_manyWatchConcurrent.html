@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=482260
+-->
+<head>
+  <title>Test for watchPosition </title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=482260">Mozilla Bug 482260</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var completeCount = 100;
+
+var hasAccepted = false;
+
+
+function successCallback(position) {
+  check_geolocation(position);
+}
+
+function accept() {
+  hasAccepted = true;
+  clickNotificationButton(kAcceptButton);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// one-shot position requests
+
+var options = {
+    maximumAge: 0,
+};
+
+var y = completeCount;
+for (var x=0; x< y; x++)
+  navigator.geolocation.watchPosition(successCallback, null, options);
+
+setTimeout(accept, 50);
+setTimeout(done, 1000);
+
+function done() {
+  completeCount--;
+  ok(1, "Saw all successCallbacks");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

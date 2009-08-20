@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.30 2009/04/18 05:15:45 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certi.h,v 1.31 2009/07/31 18:35:30 christophe.ravel.bugs%sun.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -368,7 +368,7 @@ struct NamedCRLCacheEntryStr {
 typedef enum {
     certRevocationStatusRevoked = 0,
     certRevocationStatusValid = 1,
-    certRevocationStatusUnknown = 2,
+    certRevocationStatusUnknown = 2
 } CERTRevocationStatus;
 
 /* Returns detailed status of the cert(revStatus variable). Tells if
