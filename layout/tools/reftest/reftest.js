@@ -257,6 +257,7 @@ function ReadManifest(aURL)
     var sandbox = new Components.utils.Sandbox(aURL.spec);
     var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
     sandbox.MOZ_WIDGET_TOOLKIT = xr.widgetToolkit;
+    sandbox.isDebugBuild = gDebug.isDebugBuild;
     sandbox.xulRuntime = {widgetToolkit: xr.widgettoolkit, OS: xr.OS};
 
     // xr.XPCOMABI throws exception for configurations without full ABI support (mobile builds on ARM)
@@ -330,7 +331,7 @@ function ReadManifest(aURL)
                                           : Number(m[3].substring(1));
                 }
             } else {
-                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+                throw "Error 1 in manifest file " + aURL.spec + " line " + lineNo;
             }
 
             if (cond) {
@@ -363,7 +364,7 @@ function ReadManifest(aURL)
 
         if (items[0] == "include") {
             if (items.length != 2 || runHttp)
-                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+                throw "Error 2 in manifest file " + aURL.spec + " line " + lineNo;
             var incURI = gIOService.newURI(items[1], null, listURL);
             secMan.checkLoadURI(aURL, incURI,
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
@@ -374,7 +375,7 @@ function ReadManifest(aURL)
             if (items.length != 2 ||
                 (expected_status != EXPECTED_LOAD &&
                  expected_status != EXPECTED_DEATH))
-                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+                throw "Error 3 in manifest file " + aURL.spec + " line " + lineNo;
             var [testURI] = runHttp
                             ? ServeFiles(aURL, httpDepth,
                                          listURL.file.parent, [items[1]])
@@ -393,7 +394,7 @@ function ReadManifest(aURL)
                           url2: null } );
         } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
-                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+                throw "Error 4 in manifest file " + aURL.spec + " line " + lineNo;
             var [testURI, refURI] = runHttp
                                   ? ServeFiles(aURL, httpDepth,
                                                listURL.file.parent, [items[1], items[2]])
@@ -414,7 +415,7 @@ function ReadManifest(aURL)
                           url1: testURI,
                           url2: refURI } );
         } else {
-            throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+            throw "Error 5 in manifest file " + aURL.spec + " line " + lineNo;
         }
     } while (more);
 }
