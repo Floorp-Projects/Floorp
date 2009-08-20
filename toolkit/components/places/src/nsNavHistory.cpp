@@ -77,6 +77,7 @@
 #include "nsPlacesMacros.h"
 #include "SQLFunctions.h"
 #include "Helpers.h"
+#include "History.h"
 
 #ifdef MOZ_XUL
 #include "nsIAutoCompleteInput.h"
@@ -2799,6 +2800,9 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     if (obsService)
       obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
   }
+
+  // Because we implement IHistory, we always have to notify about the visit.
+  History::GetService()->NotifyVisited(aURI);
 
   return NS_OK;
 }
