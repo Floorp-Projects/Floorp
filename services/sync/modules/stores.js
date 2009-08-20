@@ -104,13 +104,6 @@ Store.prototype = {
     throw "override createRecord in a subclass";
   },
 
-  // override if depth and/or depthindex are used
-  // should return all objects potentially affected by change of guid, in
-  // short form (no full content, only id, depth, sortindex)
-  createMetaRecords: function Store_createMetaRecords(guid, items) {
-    return {};
-  },
-
   changeItemID: function Store_changeItemID(oldID, newID) {
     throw "override changeItemID in a subclass";
   },

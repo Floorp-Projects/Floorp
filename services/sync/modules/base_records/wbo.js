@@ -79,12 +79,6 @@ WBORecord.prototype = {
     return this.data.modified;
   },
 
-  get depth() {
-    if (this.data.depth)
-      return this.data.depth;
-    return 0;
-  },
-
   get sortindex() {
     if (this.data.sortindex)
       return this.data.sortindex;
@@ -117,14 +111,14 @@ WBORecord.prototype = {
   toString: function WBORec_toString() "{ " + [
       "id: " + this.id,
       "parent: " + this.parentid,
-      "depth: " + this.depth + ", index: " + this.sortindex,
+      "index: " + this.sortindex,
       "modified: " + this.modified,
       "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.payload))
     ].join("\n  ") + " }",
 };
 
-Utils.deferGetSet(WBORecord, "data", ["id", "parentid", "modified", "depth",
-  "sortindex", "payload"]);
+Utils.deferGetSet(WBORecord, "data", ["id", "parentid", "modified", "sortindex",
+  "payload"]);
 
 Utils.lazy(this, 'Records', RecordManager);
 

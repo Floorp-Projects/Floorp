@@ -106,7 +106,7 @@ CryptoWrapper.prototype = {
   toString: function CryptoWrap_toString() "{ " + [
       "id: " + this.id,
       "parent: " + this.parentid,
-      "depth: " + this.depth + ", index: " + this.sortindex,
+      "index: " + this.sortindex,
       "modified: " + this.modified,
       "payload: " + (this.deleted ? "DELETED" : JSON.stringify(this.cleartext))
     ].join("\n  ") + " }",

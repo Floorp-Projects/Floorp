@@ -131,6 +131,20 @@ let Utils = {
     return uuidgen.generateUUID().toString().replace(/[{}]/g, '');
   },
 
+  anno: function anno(id, anno, val, expire) {
+    switch (arguments.length) {
+      case 2:
+        // Get the annotation with 2 args
+        return Svc.Annos.getItemAnnotation(id, anno);
+      case 3:
+        expire = Svc.Annos.EXPIRE_NEVER;
+        // Fallthrough!
+      case 4:
+        // Set the annotation with 3 or 4 args
+        return Svc.Annos.setItemAnnotation(id, anno, val, 0, expire);
+    }
+  },
+
   // Returns a nsILocalFile representing a file relative to the
   // current user's profile directory.  If the argument is a string,
   // it should be a string with unix-style slashes for directory names
@@ -728,7 +742,8 @@ Utils.EventListener.prototype = {
 
 let Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
-[["AppInfo", "@mozilla.org/xre/app-info;1", "nsIXULAppInfo"],
+[["Annos", "@mozilla.org/browser/annotation-service;1", "nsIAnnotationService"],
+ ["AppInfo", "@mozilla.org/xre/app-info;1", "nsIXULAppInfo"],
  ["Bookmark", "@mozilla.org/browser/nav-bookmarks-service;1", "nsINavBookmarksService"],
  ["Crypto", "@labs.mozilla.com/Weave/Crypto;1", "IWeaveCrypto"],
  ["Directory", "@mozilla.org/file/directory_service;1", "nsIProperties"],
