@@ -319,6 +319,12 @@ private:
   nsresult GetColumnRuleStyle(nsIDOMCSSValue** aValue);
   nsresult GetColumnRuleColor(nsIDOMCSSValue** aValue);
 
+  /* CSS Transitions */
+  nsresult GetTransitionProperty(nsIDOMCSSValue** aValue);
+  nsresult GetTransitionDuration(nsIDOMCSSValue** aValue);
+  nsresult GetTransitionDelay(nsIDOMCSSValue** aValue);
+  nsresult GetTransitionTimingFunction(nsIDOMCSSValue** aValue);
+
 #ifdef MOZ_SVG
   /* SVG properties */
   nsresult GetSVGPaintFor(PRBool aFill, nsIDOMCSSValue** aValue);

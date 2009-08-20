@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435441
+-->
+<head>
+  <title>Test for Bug 435441</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435441">Mozilla Bug 435441</a>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 435441 **/
+
+
+/*
+ * test that when transition properties are inherited, the length of the
+ * computed value stays the same
+ */
+
+var p = document.getElementById("content");
+var c = document.createElement("div");
+p.appendChild(c);
+var cs = getComputedStyle(c, "");
+
+p.style.MozTransitionProperty = "margin-left, margin-right";
+c.style.MozTransitionProperty = "inherit";
+is(cs.MozTransitionProperty, "margin-left, margin-right",
+   "computed style match with no other properties");
+c.style.MozTransitionDuration = "5s";
+is(cs.MozTransitionProperty, "margin-left, margin-right",
+   "computed style match with shorter property");
+is(cs.MozTransitionDuration, "5s",
+   "shorter property not extended");
+c.style.MozTransitionDuration = "5s, 4s, 3s, 2000ms";
+is(cs.MozTransitionProperty, "margin-left, margin-right",
+   "computed style match with longer property");
+is(cs.MozTransitionDuration, "5s, 4s, 3s, 2s",
+   "longer property computed correctly");
+p.style.MozTransitionProperty = "";
+c.style.MozTransitionProperty = "";
+c.style.MozTransitionDuration = "";
+
+// and repeat the above set of tests with property and duration swapped
+p.style.MozTransitionDuration = "5s, 4s";
+c.style.MozTransitionDuration = "inherit";
+is(cs.MozTransitionDuration, "5s, 4s",
+   "computed style match with no other properties");
+c.style.MozTransitionProperty = "margin-left";
+is(cs.MozTransitionDuration, "5s, 4s",
+   "computed style match with shorter property");
+is(cs.MozTransitionProperty, "margin-left",
+   "shorter property not extended");
+c.style.MozTransitionProperty =
+  "margin-left, margin-right, margin-top, margin-bottom";
+is(cs.MozTransitionDuration, "5s, 4s",
+   "computed style match with longer property");
+is(cs.MozTransitionProperty,
+   "margin-left, margin-right, margin-top, margin-bottom",
+   "longer property computed correctly");
+p.style.MozTransitionDuration = "";
+c.style.MozTransitionDuration = "";
+c.style.MozTransitionProperty = "";
+
+</script>
+</pre>
+</body>
+</html>

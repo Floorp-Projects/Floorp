@@ -94,21 +94,23 @@ enum nsCSSUnit {
   eCSSUnit_None         = 4,      // (n/a) value is none
   eCSSUnit_Normal       = 5,      // (n/a) value is normal (algorithmic, different than auto)
   eCSSUnit_System_Font  = 6,      // (n/a) value is -moz-use-system-font
-  eCSSUnit_Dummy        = 7,      // (n/a) a fake but specified value, used
+  eCSSUnit_All          = 7,      // (n/a) value is all
+  eCSSUnit_Dummy        = 8,      // (n/a) a fake but specified value, used
                                   //       only in temporary values
-  eCSSUnit_DummyInherit = 8,      // (n/a) a fake but specified value, used
+  eCSSUnit_DummyInherit = 9,      // (n/a) a fake but specified value, used
                                   //       only in temporary values
-  eCSSUnit_RectIsAuto   = 9,      // (n/a) 'auto' for an entire rect()
-  eCSSUnit_String       = 10,     // (PRUnichar*) a string value
-  eCSSUnit_Ident        = 11,     // (PRUnichar*) a string value
-  eCSSUnit_Families     = 12,     // (PRUnichar*) a string value
-  eCSSUnit_Attr         = 13,     // (PRUnichar*) a attr(string) value
-  eCSSUnit_Local_Font   = 14,     // (PRUnichar*) a local font name
-  eCSSUnit_Font_Format  = 15,     // (PRUnichar*) a font format name
+  eCSSUnit_RectIsAuto   = 10,     // (n/a) 'auto' for an entire rect()
+  eCSSUnit_String       = 11,     // (PRUnichar*) a string value
+  eCSSUnit_Ident        = 12,     // (PRUnichar*) a string value
+  eCSSUnit_Families     = 13,     // (PRUnichar*) a string value
+  eCSSUnit_Attr         = 14,     // (PRUnichar*) a attr(string) value
+  eCSSUnit_Local_Font   = 15,     // (PRUnichar*) a local font name
+  eCSSUnit_Font_Format  = 16,     // (PRUnichar*) a font format name
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
   eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
-  eCSSUnit_Function     = 23,     // (nsCSSValue::Array*) a function with parameters.  First elem of array is name,
+  eCSSUnit_Cubic_Bezier = 23,     // (nsCSSValue::Array*) a list of float values
+  eCSSUnit_Function     = 24,     // (nsCSSValue::Array*) a function with parameters.  First elem of array is name,
                                   //  the rest of the values are arguments.
 
   eCSSUnit_URL          = 30,     // (nsCSSValue::URL*) value
@@ -170,7 +172,7 @@ public:
   struct Image;
   friend struct Image;
   
-  // for valueless units only (null, auto, inherit, none, normal)
+  // for valueless units only (null, auto, inherit, none, all, normal)
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
@@ -323,6 +325,7 @@ public:
   NS_HIDDEN_(void)  SetInheritValue();
   NS_HIDDEN_(void)  SetInitialValue();
   NS_HIDDEN_(void)  SetNoneValue();
+  NS_HIDDEN_(void)  SetAllValue();
   NS_HIDDEN_(void)  SetNormalValue();
   NS_HIDDEN_(void)  SetSystemFontValue();
   NS_HIDDEN_(void)  SetDummyValue();

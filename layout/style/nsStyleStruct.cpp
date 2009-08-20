@@ -23,6 +23,8 @@
  *   David Hyatt (hyatt@netscape.com)
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Michael Ventnor <m.ventnor@gmail.com>
+ *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -53,6 +55,7 @@
 #include "nsIWidget.h"
 #include "nsIStyleRule.h"
 #include "nsCRT.h"
+#include "nsCSSProps.h"
 
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
@@ -1586,6 +1589,54 @@ PRBool nsStyleBackground::Image::operator==(const Image& aOther) const
 // --------------------
 // nsStyleDisplay
 //
+void nsTimingFunction::AssignFromKeyword(PRInt32 aTimingFunctionType)
+{
+  PR_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE == 0);
+  PR_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR == 1);
+  PR_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN == 2);
+  PR_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT == 3);
+  PR_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT == 4);
+
+  static const float timingFunctionValues[5][4] = {
+    { 0.25, 0.10, 0.25, 1.00 }, // ease
+    { 0.00, 0.00, 1.00, 1.00 }, // linear
+    { 0.42, 0.00, 1.00, 1.00 }, // ease-in
+    { 0.00, 0.00, 0.58, 1.00 }, // ease-out
+    { 0.42, 0.00, 0.58, 1.00 }  // ease-in-out
+  };
+
+  NS_ABORT_IF_FALSE(0 <= aTimingFunctionType && aTimingFunctionType < 5,
+                    "keyword out of range");
+  mX1 = timingFunctionValues[aTimingFunctionType][0];
+  mY1 = timingFunctionValues[aTimingFunctionType][1];
+  mX2 = timingFunctionValues[aTimingFunctionType][2];
+  mY2 = timingFunctionValues[aTimingFunctionType][3];
+}
+
+nsTransition::nsTransition(const nsTransition& aCopy)
+  : mTimingFunction(aCopy.mTimingFunction)
+  , mDuration(aCopy.mDuration)
+  , mDelay(aCopy.mDelay)
+  , mProperty(aCopy.mProperty)
+{
+}
+
+void nsTransition::SetInitialValues()
+{
+  mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
+  mDuration = 0.0;
+  mDelay = 0.0;
+  mProperty = eCSSPropertyExtra_all_properties;
+}
+
+void nsTransition::SetUnknownProperty(const nsAString& aUnknownProperty)
+{
+  NS_ASSERTION(nsCSSProps::LookupProperty(aUnknownProperty) ==
+                 eCSSProperty_UNKNOWN,
+               "should be unknown property");
+  mProperty = eCSSProperty_UNKNOWN;
+  mUnknownProperty = do_GetAtom(aUnknownProperty);
+}
 
 nsStyleDisplay::nsStyleDisplay()
 {
@@ -1606,9 +1657,22 @@ nsStyleDisplay::nsStyleDisplay()
   mTransformPresent = PR_FALSE; // No transform
   mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
   mTransformOrigin[1].SetPercentValue(0.5f); 
+  mTransitions.AppendElement();
+  NS_ABORT_IF_FALSE(mTransitions.Length() == 1,
+                    "appending within auto buffer should never fail");
+  mTransitions[0].SetInitialValues();
+  mTransitionTimingFunctionCount = 1;
+  mTransitionDurationCount = 1;
+  mTransitionDelayCount = 1;
+  mTransitionPropertyCount = 1;
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
+  : mTransitions(aSource.mTransitions)
+  , mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount)
+  , mTransitionDurationCount(aSource.mTransitionDurationCount)
+  , mTransitionDelayCount(aSource.mTransitionDelayCount)
+  , mTransitionPropertyCount(aSource.mTransitionPropertyCount)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
   mAppearance = aSource.mAppearance;

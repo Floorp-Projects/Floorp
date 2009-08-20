@@ -232,6 +232,12 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
 
         break;
       }
+    case CSS_S :
+      {
+        tmpStr.AppendFloat(mValue.mFloat);
+        tmpStr.AppendLiteral("s");
+        break;
+      }
     case CSS_CM :
     case CSS_MM :
     case CSS_IN :
@@ -244,7 +250,6 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
     case CSS_RAD :
     case CSS_GRAD :
     case CSS_MS :
-    case CSS_S :
     case CSS_HZ :
     case CSS_KHZ :
     case CSS_DIMENSION :
