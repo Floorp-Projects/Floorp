@@ -4110,6 +4110,37 @@ GetTextDecorationStyle(const nsTextRangeStyle &aRangeStyle)
   }
 }
 
+static gfxFloat
+ComputeSelectionUnderlineHeight(nsPresContext* aPresContext,
+                                const gfxFont::Metrics& aFontMetrics,
+                                SelectionType aSelectionType)
+{
+  switch (aSelectionType) {
+    case nsISelectionController::SELECTION_IME_RAWINPUT:
+    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
+    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
+    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
+      return aFontMetrics.underlineSize;
+    case nsISelectionController::SELECTION_SPELLCHECK: {
+      // The thickness of the spellchecker underline shouldn't honor the font
+      // metrics.  It should be constant pixels value which is decided from the
+      // default font size.  Note that if the actual font size is smaller than
+      // the default font size, we should use the actual font size because the
+      // computed value from the default font size can be too thick for the
+      // current font size.
+      PRInt32 defaultFontSize =
+        aPresContext->AppUnitsToDevPixels(nsStyleFont(aPresContext).mFont.size);
+      gfxFloat fontSize = PR_MIN(gfxFloat(defaultFontSize),
+                                 aFontMetrics.emHeight);
+      fontSize = PR_MAX(fontSize, 1.0);
+      return NS_ceil(fontSize / 20);
+    }
+    default:
+      NS_WARNING("Requested underline style is not valid");
+      return aFontMetrics.underlineSize;
+  }
+}
+
 /**
  * This, plus SelectionTypesWithDecorations, encapsulates all knowledge about
  * drawing text decoration for selections.
@@ -4122,7 +4153,9 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
     gfxFloat aAscent, const gfxFont::Metrics& aFontMetrics)
 {
   gfxPoint pt(aPt);
-  gfxSize size(aWidth, aFontMetrics.underlineSize);
+  gfxSize size(aWidth,
+               ComputeSelectionUnderlineHeight(aTextPaintStyle.PresContext(),
+                                               aFontMetrics, aType));
   gfxFloat descentLimit =
     ComputeDescentLimitForSelectionUnderline(aTextPaintStyle.PresContext(),
                                              aFrame, aFontMetrics);
@@ -4925,7 +4958,8 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     }
     nsRect decorationArea;
     gfxSize size(aPresContext->AppUnitsToGfxUnits(aRect.width),
-                 metrics.underlineSize);
+                 ComputeSelectionUnderlineHeight(aPresContext,
+                                                 metrics, sd->mType));
     relativeSize = PR_MAX(relativeSize, 1.0f);
     size.height *= relativeSize;
     decorationArea =
