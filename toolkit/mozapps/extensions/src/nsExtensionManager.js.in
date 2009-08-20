@@ -7752,17 +7752,15 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
-   * Gets an URL to a theme's image file
+   * Gets an URL to an item's image file
    * @param   item
    *          The RDF Resource representing the item
    * @param   fileName
    *          The file to locate a URL for
-   * @param   fallbackURL
-   *          If the location fails, supply this URL instead
    * @returns An RDF Resource to the URL discovered, or the fallback
    *          if the discovery failed.
    */
-  _getThemeImageURL: function EMDS__getThemeImageURL(item, fileName, fallbackURL) {
+  _getImageURL: function EMDS__getImageURL(item, fileName) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var installLocation = this._em.getInstallLocation(id);
     if (!installLocation)
@@ -7771,7 +7769,7 @@ ExtensionsDataSource.prototype = {
     if (file.exists())
       return gRDF.GetResource(getURLSpecFromFile(file));
 
-    return fallbackURL ? gRDF.GetResource(fallbackURL) : null;
+    return null;
   },
 
   /**
@@ -7780,29 +7778,34 @@ ExtensionsDataSource.prototype = {
   _rdfGet_iconURL: function EMDS__rdfGet_iconURL(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var type = this.getItemProperty(id, "type");
-    if (type & Ci.nsIUpdateItem.TYPE_THEME)
-      return this._getThemeImageURL(item, "icon.png", URI_GENERIC_ICON_THEME);
 
-    if (inSafeMode())
-      return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
+    // Try to pick an icon from the item's install folder
+    iconURL = this._getImageURL(item, "icon.png");
+    if (iconURL)
+      return iconURL;
 
-    var hasIconURL = this._inner.hasArcOut(item, property);
-    // If the addon doesn't have an IconURL property or it is disabled use the
-    // generic icon URL instead.
-    if (!hasIconURL || this.getItemProperty(id, "isDisabled") == "true")
-      return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
-    var iconURL = stringData(this._inner.GetTarget(item, property, true));
-    try {
-      var uri = newURI(iconURL);
-      var scheme = uri.scheme;
-      // Only allow chrome URIs or when installing http(s) URIs.
-      if (scheme == "chrome" || (scheme == "http" || scheme == "https") &&
-          this._inner.hasArcOut(item, EM_R("downloadURL")))
-        return null;
+    if (type == Ci.nsIUpdateItem.TYPE_THEME)
+      return gRDF.GetResource(URI_GENERIC_ICON_THEME);
+
+    // Only look for an iconURL if the item is not disabled and safe mode isn't
+    // active
+    if (!inSafeMode() && this.getItemProperty(id, "isDisabled") != "true") {
+      var iconURL = stringData(this._inner.GetTarget(item, property, true));
+      if (iconURL) {
+        try {
+          var uri = newURI(iconURL);
+          var scheme = uri.scheme;
+          // Only allow chrome URIs normally. When an item is being installed
+          // allow http(s) URIs.
+          if (scheme == "chrome" || (scheme == "http" || scheme == "https") &&
+              this._inner.hasArcOut(item, EM_R("downloadURL")))
+            return null;
+        }
+        catch (e) {
+        }
+      }
     }
-    catch (e) {
-    }
-    // Use a generic icon URL for addons that have an invalid iconURL.
+
     return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
   },
 
@@ -7811,8 +7814,8 @@ ExtensionsDataSource.prototype = {
    */
   _rdfGet_previewImage: function EMDS__rdfGet_previewImage(item, property) {
     var type = this.getItemProperty(stripPrefix(item.Value, PREFIX_ITEM_URI), "type");
-    if (type != -1 && type & Ci.nsIUpdateItem.TYPE_THEME)
-      return this._getThemeImageURL(item, "preview.png", null);
+    if (type == Ci.nsIUpdateItem.TYPE_THEME)
+      return this._getImageURL(item, "preview.png");
     return null;
   },
 
