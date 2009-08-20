@@ -1,15 +1,4 @@
-/**
- * Print some debug message to the console. All arguments will be printed,
- * separated by spaces.
- *
- * @param [arg0, arg1, arg2, ...]
- *        Any number of arguments to print out
- * @usage _("Hello World") -> prints "Hello World"
- * @usage _(1, 2, 3) -> prints "1 2 3"
- */
-let _ = function(some, debug, text, to) print(Array.join(arguments, " "));
-
-Components.utils.import("resource://weave/engines/clientData.js");
+Cu.import("resource://weave/engines/clientData.js");
 
 function run_test() {
   _("Test that serializing client records results in uploadable ascii");
