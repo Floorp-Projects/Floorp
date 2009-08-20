@@ -53,13 +53,12 @@ XPIDLSRCS = \
 EXTRA_PP_COMPONENTS = \
 	nsBrowserContentHandler.js \
 	nsBrowserGlue.js \
-	aboutRights.js \
-	aboutRobots.js \
 	$(NULL)
 
 EXTRA_JS_MODULES = distribution.js
 
 DIRS = \
+	about \
 	certerror \
 	dirprovider \
 	microsummaries \

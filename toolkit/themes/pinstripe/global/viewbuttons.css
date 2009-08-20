@@ -58,7 +58,7 @@
   font: menu;
   text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
   margin: 0;
-  padding: 1px 4px 0;
+  padding: 0 4px;
   border: none;
   border-left: 1px solid rgba(0, 0, 0, 0.8);
   background: -moz-linear-gradient(top, bottom, from(#FFF), to(#ADADAD)) repeat-x;

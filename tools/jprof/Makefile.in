@@ -55,7 +55,7 @@ CPPSRCS = \
 	intcnt.cpp \
 	$(NULL)
 
-LIBS = \
+OS_LIBS = \
 	-lbfd \
 	-liberty \
 	$(NULL)

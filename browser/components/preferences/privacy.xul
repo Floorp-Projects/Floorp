@@ -178,8 +178,8 @@
         <vbox id="historyCustomPane">
           <separator class="thin"/>
           <checkbox id="privateBrowsingAutoStart" class="indent"
-                    label="&privateBrowsingAutoStart.label;"
-                    accesskey="&privateBrowsingAutoStart.accesskey;"
+                    label="&privateBrowsingPermanent.label;"
+                    accesskey="&privateBrowsingPermanent.accesskey;"
                     preference="browser.privatebrowsing.autostart"/>
 
           <vbox class="indent">

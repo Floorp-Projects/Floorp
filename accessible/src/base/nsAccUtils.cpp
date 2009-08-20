@@ -50,7 +50,7 @@
 #include "nsAccessibleTreeWalker.h"
 #include "nsAccessible.h"
 #include "nsARIAMap.h"
-#include "nsXULTreeAccessible.h"
+#include "nsXULTreeGridAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -776,16 +776,6 @@ nsAccUtils::QueryAccessibleTree(nsIAccessible *aAccessible)
   nsXULTreeAccessible* accessible = nsnull;
   if (aAccessible)
     CallQueryInterface(aAccessible, &accessible);
-
-  return accessible;
-}
-
-already_AddRefed<nsXULTreeitemAccessible>
-nsAccUtils::QueryAccessibleTreeitem(nsIAccessNode *aAccessNode)
-{
-  nsXULTreeitemAccessible* accessible = nsnull;
-  if (aAccessNode)
-    CallQueryInterface(aAccessNode, &accessible);
 
   return accessible;
 }

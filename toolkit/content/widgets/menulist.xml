@@ -181,11 +181,13 @@
         <setter>
           <![CDATA[
             var popup = this.menupopup;
-            if (popup && 0 <= val && val < popup.childNodes.length)
-              this.selectedItem = popup.childNodes[val];
+            if (popup && 0 <= val) {
+              if (val < popup.childNodes.length)
+                this.selectedItem = popup.childNodes[val];
+            }
             else
               this.selectedItem = null;
-            return val;    
+            return val;
           ]]>
         </setter>
       </property>

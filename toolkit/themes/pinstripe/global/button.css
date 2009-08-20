@@ -47,9 +47,9 @@
 
 button {
   -moz-appearance: button;
-  /* The margin used here come from the Aqua Human Interface Guidelines,
-     there should be 12 pixels between two buttons. */
-  margin: 6px;
+  /* The horizontal margin used here come from the Aqua Human Interface
+     Guidelines, there should be 12 pixels between two buttons. */
+  margin: 5px 6px 3px;
   min-width: 79px;
   color: ButtonText;
 }

@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Peter Naulls
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,12 +38,19 @@
 
 include $(CORE_DEPTH)/coreconf/UNIX.mk
 
-DLL_SUFFIX  = a
-MKSHLIB     = $(GCCSDK_INSTALL_CROSSBIN)/arm-unknown-riscos-ar cr
+LIB_SUFFIX  = a
+DLL_SUFFIX  = so
+AR          = ar cr $@ 
+LDOPTS     += -L$(SOURCE_LIB_DIR)
+MKSHLIB     = $(CC) $(DSO_LDOPTS) -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
 
 OS_RELEASE =
 OS_TARGET  = RISCOS
 
+DSO_CFLAGS              = -fPIC
+DSO_LDOPTS              = -shared
+DSO_LDFLAGS             =
+
 ifdef BUILD_OPT
-	OPTIMIZER = -O2 -mpoke-function-name
+	OPTIMIZER = -O3
 endif

@@ -1105,13 +1105,11 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 /**** folder tree ****/
 
 #editBMPanel_folderTree {
+  -moz-appearance: none;
   background-color: #333333;
-  border-top: 2px solid !important;
-  border-right: 0 !important;
-  border-bottom: 0 !important;
-  border-left: 0 !important;
+  border-top: 2px solid;
   -moz-border-top-colors: rgba(0,0,0,0.35) rgba(255,255,255,0.15);
-  color: #ffffff !important;
+  color: #ffffff;
   /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
   min-width: 27em;
 }
@@ -1122,26 +1120,23 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
   -moz-outline-radius: 1px;
 }
 
-#editBMPanel_folderTree treechildren::-moz-tree-twisty {
-  -moz-appearance: none !important;
+#editBMPanel_folderTree > treechildren::-moz-tree-twisty {
+  -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/hud-style-twisties.png");
   -moz-image-region: rect(0px, 10px, 10px, 0px);
   margin-top: 1px;
   -moz-margin-end: 1px;
 }
 
-#editBMPanel_folderTree treechildren::-moz-tree-twisty(open) {
-  -moz-appearance: none;
+#editBMPanel_folderTree > treechildren::-moz-tree-twisty(open) {
   -moz-image-region: rect(0px, 20px, 10px, 10px);
 }
 
-#editBMPanel_folderTree treechildren::-moz-tree-twisty(selected) {
-  -moz-appearance: none;
+#editBMPanel_folderTree > treechildren::-moz-tree-twisty(selected) {
   -moz-image-region: rect(0px, 30px, 10px, 20px);
 }
 
-#editBMPanel_folderTree treechildren::-moz-tree-twisty(selected, open) {
-  -moz-appearance: none;
+#editBMPanel_folderTree > treechildren::-moz-tree-twisty(selected, open) {
   -moz-image-region: rect(0px, 40px, 10px, 30px);
 }
 

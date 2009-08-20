@@ -130,6 +130,17 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+nsFrameLoader*
+nsFrameLoader::Create(nsIContent* aOwner)
+{
+  NS_ENSURE_TRUE(aOwner, nsnull);
+  nsIDocument* doc = aOwner->GetCurrentDoc();
+  NS_ENSURE_TRUE(doc && !doc->GetDisplayDocument() &&
+                 !doc->IsLoadedAsData(), nsnull);
+
+  return new nsFrameLoader(aOwner);
+}
+
 NS_IMETHODIMP
 nsFrameLoader::LoadFrame()
 {

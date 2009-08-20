@@ -89,6 +89,11 @@ public:
   static void NotifySoftKbObservers(LPRECT = NULL);
   static PRBool sSIPInTransition;
   static TriStateBool sShowSIPButton;
+  static void CheckKeyboardStatus();
+  static TriStateBool GetSliderStateOpen();
+private:
+  static TriStateBool sHardKBPresence;
+
 #endif
 };
 

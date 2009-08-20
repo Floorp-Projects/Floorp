@@ -194,6 +194,11 @@ ifdef NSS_DISABLE_DBM
 DEFINES += -DNSS_DISABLE_DBM
 endif
 
+ifdef NSS_NO_FORK_CHECK
+DEFINES += -DNO_FORK_CHECK
+DEFINES += -DNO_CHECK_FORK
+endif
+
 # Avoid building object leak test code for optimized library
 ifndef BUILD_OPT
 ifdef PKIX_OBJECT_LEAK_TEST

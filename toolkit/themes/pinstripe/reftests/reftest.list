@@ -1,3 +1,5 @@
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 482681.xul 482681-ref.xul
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == radiosize.xul radiosize-ref.xul
 skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == checkboxsize.xul checkboxsize-ref.xul
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == baseline.xul about:blank
+skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == nostretch.xul nostretch-ref.xul

@@ -5296,20 +5296,6 @@ var BrowserOffline = {
     var ioService = Components.classes["@mozilla.org/network/io-service;1"].
       getService(Components.interfaces.nsIIOService2);
 
-    // if ioService is managing the offline status, then ioservice.offline
-    // is already set correctly. We will continue to allow the ioService
-    // to manage its offline state until the user uses the "Work Offline" UI.
-    
-    if (!ioService.manageOfflineStatus) {
-      // set the initial state
-      var isOffline = false;
-      try {
-        isOffline = gPrefService.getBoolPref("browser.offline");
-      }
-      catch (e) { }
-      ioService.offline = isOffline;
-    }
-    
     this._updateOfflineUI(ioService.offline);
   },
 

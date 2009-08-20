@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible Table indexes tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/treeview.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/table.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    var gTree = null;
+    var gTreeBox = null;
+    var gTreeView = null;
+
+    // gA11yEventDumpID = "debug";
+
+    function doTest()
+    {
+      // Initialize the tree
+      gTree = document.getElementById("tree");
+      gTreeBox = gTree.treeBoxObject;
+      gView = new nsTableTreeView(3);
+
+      gTree.addEventListener("TreeViewChanged", continueTest, false);
+      gTreeBox.view = gView;
+    }
+
+    function continueTest()
+    {
+      gTree.removeEventListener("TreeViewChanged", continueTest, false);
+
+      var idxes = [
+        [0, 1],
+        [2, 3],
+        [4, 5]
+      ];
+      testTableIndexes(gTree, idxes);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=503727"
+         title="Reorganize implementation of XUL tree accessibility">
+        Mozilla Bug 503727
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox id="debug"/>
+    <tree id="tree" flex="1">
+      <treecols>
+        <treecol id="col" flex="1" primary="true" label="column"/>
+        <treecol id="scol" flex="1" label="column 2"/>
+      </treecols>
+      <treechildren id="treechildren"/>
+    </tree>
+  </hbox>
+
+</window>
+

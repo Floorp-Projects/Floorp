@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.54 $ $Date: 2009/05/21 19:50:27 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.54 $ $Date: 2009/05/21 19:50:27 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.55 $ $Date: 2009/08/13 23:40:29 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.55 $ $Date: 2009/08/13 23:40:29 $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -908,7 +908,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.54 $ $Date: 2009/05/21 19:50:27 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.54 $ $Date: 2009/05/21 19:50:27 $", (PRUint32)160 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.55 $ $Date: 2009/08/13 23:40:29 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.55 $ $Date: 2009/08/13 23:40:29 $", (PRUint32)160 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
@@ -17981,7 +17981,7 @@ static const NSSItem nss_builtins_items_266 [] = {
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
-  { (void *)"AC Ra+¡z Certic+ímara S.A.", (PRUint32)27 },
+  { (void *)"AC Ra\xC3\xADz Certic\xC3\xA1mara S.A.", (PRUint32)39 },
   { (void *)&ckc_x_509, (PRUint32)sizeof(CK_CERTIFICATE_TYPE) },
   { (void *)"\060\173\061\013\060\011\006\003\125\004\006\023\002\103\117\061"
 "\107\060\105\006\003\125\004\012\014\076\123\157\143\151\145\144"
@@ -18115,7 +18115,7 @@ static const NSSItem nss_builtins_items_267 [] = {
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
-  { (void *)"AC Ra+¡z Certic+ímara S.A.", (PRUint32)27 },
+  { (void *)"AC Ra\xC3\xADz Certic\xC3\xA1mara S.A.", (PRUint32)39 },
   { (void *)"\313\241\305\370\260\343\136\270\271\105\022\323\371\064\242\351"
 "\006\020\323\066"
 , (PRUint32)20 },

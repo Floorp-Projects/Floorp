@@ -356,9 +356,8 @@ function runKeyEventTests()
     testKey({layout:"German", keyCode:27, command:1, chars:"\u00df", unmodifiedChars:"\u00df"},
             "\u00df", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
     // Shift+SS is '?' but Cmd+Shift+SS is '/' on German layout.
-    // XXX this test failed on 10.4
-    //testKey({layout:"German", keyCode:27, command:1, shift:1, chars:"/", unmodifiedChars:"?"},
-    //        "?", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
+    testKey({layout:"German", keyCode:27, command:1, shift:1, chars:"/", unmodifiedChars:"?"},
+            "?", SHOULD_DELIVER_KEYDOWN_KEYPRESS);
 
     // Caps Lock key event
     // XXX keyup event of Caps Lock key is not fired.
@@ -618,9 +617,8 @@ function runXULKeyTests()
   
   // 432112
   if (IS_MAC) {
-// test currently does not work, getting the Swedish layout fails
-//  testKey({layout:"Swedish", keyCode:27, command:1, shift:1, chars:"+", unmodifiedChars:"?"},
-//          "question", true);
+    testKey({layout:"Swedish", keyCode:27, command:1, shift:1, chars:"+", unmodifiedChars:"?"},
+            "question", true);
   }
   else if (IS_WIN) {
     testKey({layout:"Swedish", keyCode:187, ctrl:1, shift:1, chars:""},
