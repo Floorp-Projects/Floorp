@@ -42,7 +42,7 @@ MOZ_APPRUNNER_NAME="./mozilla-bin"
 MOZ_VIEWER_NAME="./viewer"
 MOZ_PROGRAM=""
 
-exitcode=0
+exitcode=1
 #
 ##
 ## Functions
@@ -140,7 +140,7 @@ moz_run_program()
 	##
 	## Run the program
 	##
-	"$prog" ${1+"$@"}
+	exec "$prog" ${1+"$@"}
 	exitcode=$?
 }
 ##########################################################################
@@ -168,33 +168,24 @@ moz_debug_program()
 	fi
     if [ -x "$debugger" ] 
     then
-        tmpfile=`mktemp /tmp/mozargs.XXXXXX` || { echo "Cannot create temporary file" >&2; exit 1; }
-        trap " [ -f \"$tmpfile\" ] && /bin/rm -f -- \"$tmpfile\"" 0 1 2 3 13 15
-        # echo -n isn't portable, so pipe through perl -pe chomp instead
-        echo "set args" | perl -pe 'chomp' > $tmpfile
-        for PARAM in "$@"
-        do
-            echo " '$PARAM'" | perl -pe 'chomp' >> $tmpfile
-        done
-        echo >> $tmpfile
 # If you are not using ddd, gdb and know of a way to convey the arguments 
 # over to the prog then add that here- Gagan Saksena 03/15/00
         case `basename $debugger` in
-            gdb) echo "$debugger $prog -x $tmpfile"
-                $debugger "$prog" -x $tmpfile
+            gdb) echo "$debugger --args $prog" ${1+"$@"}
+                exec "$debugger" --args "$prog" ${1+"$@"}
 		exitcode=$?
                 ;;
-            ddd) echo "$debugger --debugger \"gdb -x $tmpfile\" $prog"
-                $debugger --debugger "gdb -x $tmpfile" "$prog"
+            ddd) echo "$debugger --gdb -- --args $prog" ${1+"$@"}
+		exec "$debugger" --gdb -- --args "$prog" ${1+"$@"}
 		exitcode=$?
                 ;;
             *) echo "$debugger $prog ${1+"$@"}"
-                $debugger "$prog" ${1+"$@"}
+                exec $debugger "$prog" ${1+"$@"}
 		exitcode=$?
                 ;;
         esac
     else
-        echo "Could not find a debugger on your system." 
+        moz_bail "Could not find a debugger on your system."
     fi
 }
 ##########################################################################
