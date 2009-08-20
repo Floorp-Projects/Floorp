@@ -156,6 +156,7 @@ reserved = set((
         'manager',
         'manages',
         'namespace',
+        'or',
         'parent',
         'protocol',
         'recv',
@@ -421,7 +422,7 @@ def p_Transitions(p):
         p[0] = [ p[1] ]
 
 def p_Transition(p):
-    """Transition : Trigger MessageId GOTO State ';'"""
+    """Transition : Trigger MessageId GOTO StateList ';'"""
     loc, trigger = p[1]
     p[0] = Transition(loc, trigger, p[2], p[4])
 
@@ -431,6 +432,15 @@ def p_Trigger(p):
                | CALL
                | ANSWER"""
     p[0] = [ locFromTok(p, 1), Transition.nameToTrigger(p[1]) ]
+
+def p_StateList(p):
+    """StateList : StateList OR State
+                 | State"""
+    if 2 == len(p):
+        p[0] = [ p[1] ]
+    else:
+        p[1].append(p[3])
+        p[0] = p[1]
 
 def p_State(p):
     """State : ID"""
