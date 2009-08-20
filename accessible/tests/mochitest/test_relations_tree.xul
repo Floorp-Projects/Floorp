@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tree relations tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/treeview.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/relations.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTestRelations()
+    {
+      var treeNode = getNode("tree");
+      treeNode.removeEventListener("TreeViewChanged", doTestRelations, false);
+
+      var tree = getAccessible(treeNode);
+      var treeitem1 = tree.firstChild.nextSibling;
+      testRelation(treeitem1, RELATION_NODE_CHILD_OF, [tree]);
+
+      var treeitem2 = treeitem1.nextSibling;
+      testRelation(treeitem2, RELATION_NODE_CHILD_OF, [tree]);
+
+      var treeitem3 = treeitem2.nextSibling;
+      testRelation(treeitem3, RELATION_NODE_CHILD_OF, [treeitem2]);
+
+      var treeitem4 = treeitem3.nextSibling;
+      testRelation(treeitem4, RELATION_NODE_CHILD_OF, [treeitem2]);
+
+      var treeitem5 = treeitem4.nextSibling;
+      testRelation(treeitem5, RELATION_NODE_CHILD_OF, [tree]);
+
+      var treeitem6 = treeitem5.nextSibling;
+      testRelation(treeitem6, RELATION_NODE_CHILD_OF, [tree]);
+
+      SimpleTest.finish();
+    }
+
+    function doTest()
+    {
+      var treeNode = getNode("tree");
+      treeNode.addEventListener("TreeViewChanged", doTestRelations, false);
+      treeNode.view = new nsTreeTreeView();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=503727"
+         title="Reorganize implementation of XUL tree accessibility">
+        Mozilla Bug 503727
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <tree id="tree" flex="1">
+        <treecols>
+          <treecol id="col" flex="1" primary="true" label="column"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+
+      <vbox id="debug"/>
+    </vbox>
+  </hbox>
+
+</window>
+

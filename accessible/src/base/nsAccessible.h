@@ -338,9 +338,52 @@ protected:
   // Hyperlink helpers
   virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);
 
-  // For accessibles that have actions
+  //////////////////////////////////////////////////////////////////////////////
+  // Action helpers
+
+  /**
+   * Used to describe click action target. See DoCommand() method.
+   */
+  struct nsCommandClosure
+  {
+    nsCommandClosure(nsAccessible *aAccessible, nsIContent *aContent,
+                     PRUint32 aActionIndex) :
+      accessible(aAccessible), content(aContent), actionIndex(aActionIndex) {}
+
+    nsRefPtr<nsAccessible> accessible;
+    nsCOMPtr<nsIContent> content;
+    PRUint32 actionIndex;
+  };
+
+  /**
+   * Prepares click action that will be invoked in timeout.
+   *
+   * @note  DoCommand() prepares an action in timeout because when action
+   *  command opens a modal dialog/window, it won't return until the
+   *  dialog/window is closed. If executing action command directly in
+   *  nsIAccessible::DoAction() method, it will block AT tools (e.g. GOK) that
+   *  invoke action of mozilla accessibles direclty (see bug 277888 for details).
+   *
+   * @param  aContent      [in, optional] element to click
+   * @param  aActionIndex  [in, optional] index of accessible action
+   */
+  nsresult DoCommand(nsIContent *aContent = nsnull, PRUint32 aActionIndex = 0);
+
+  /**
+   * Dispatch click event to target by calling DispatchClickEvent() method.
+   *
+   * @param  aTimer    [in] timer object
+   * @param  aClosure  [in] nsCommandClosure object describing a target.
+   */
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
-  nsresult DoCommand(nsIContent *aContent = nsnull);
+
+  /**
+   * Dispatch click event.
+   */
+  virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Helpers
 
   // Check the visibility across both parent content and chrome
   PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);

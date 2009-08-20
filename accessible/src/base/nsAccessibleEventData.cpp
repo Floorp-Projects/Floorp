@@ -266,8 +266,8 @@ nsAccEvent::GetAccessibleByNode()
   if (!accService)
     return nsnull;
 
-  nsIAccessible *accessible = nsnull;
-  accService->GetAccessibleFor(mDOMNode, &accessible);
+  nsCOMPtr<nsIAccessible> accessible;
+  accService->GetAccessibleFor(mDOMNode, getter_AddRefs(accessible));
 
 #ifdef MOZ_XUL
   // hack for xul tree table. We need a better way for firing delayed event
@@ -283,18 +283,16 @@ nsAccEvent::GetAccessibleByNode()
       PRInt32 treeIndex = -1;
       multiSelect->GetCurrentIndex(&treeIndex);
       if (treeIndex >= 0) {
-        nsRefPtr<nsXULTreeAccessible> treeCache =
+        nsRefPtr<nsXULTreeAccessible> treeAcc =
           nsAccUtils::QueryAccessibleTree(accessible);
-        if (treeCache) {
-          treeCache->GetCachedTreeitemAccessible(treeIndex, nsnull,
-                                                 &accessible);
-        }
+        if (treeAcc)
+          treeAcc->GetTreeItemAccessible(treeIndex, getter_AddRefs(accessible));
       }
     }
   }
 #endif
 
-  return accessible;
+  return accessible.forget();
 }
 
 /* static */
