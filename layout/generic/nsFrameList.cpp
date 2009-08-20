@@ -40,9 +40,6 @@
 
 #include "nsFrameList.h"
 #include "nsIFrame.h"
-#ifdef DEBUG
-#include "nsIFrameDebug.h"
-#endif
 #include "nsLayoutUtils.h"
 
 #ifdef IBMBIDI
@@ -424,10 +421,7 @@ nsFrameList::List(FILE* out) const
   fputs("<\n", out);
   for (nsIFrame* frame = mFirstChild; frame;
        frame = frame->GetNextSibling()) {
-    nsIFrameDebug *frameDebug = do_QueryFrame(frame);
-    if (frameDebug) {
-      frameDebug->List(out, 1);
-    }
+    frame->List(out, 1);
   }
   fputs(">\n", out);
 }

@@ -942,10 +942,10 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
 #ifdef DEBUG
   if (gDumpEventList) {
     fprintf(stderr, "Event handling --- (%d,%d):\n", aPt.x, aPt.y);
-    nsIFrameDebug::PrintDisplayList(&builder, list);
+    nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
-  
+
   nsDisplayItem::HitTestState hitTestState;
   nsIFrame* result = list.HitTest(&builder, aPt, &hitTestState);
   list.DeleteAll();
@@ -1114,20 +1114,20 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if (gDumpPaintList) {
     fprintf(stderr, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
             dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
-    nsIFrameDebug::PrintDisplayList(&builder, list);
+    nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
-  
+
   nsRegion visibleRegion = aDirtyRegion;
   list.OptimizeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
   if (gDumpPaintList) {
     fprintf(stderr, "Painting --- after optimization:\n");
-    nsIFrameDebug::PrintDisplayList(&builder, list);
+    nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
-  
+
   list.Paint(&builder, aRenderingContext, aDirtyRegion.GetBounds());
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
@@ -1279,7 +1279,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
     fprintf(stderr,
             "Repaint region for copy --- before optimization (area %d,%d,%d,%d, frame %p):\n",
             rect.x, rect.y, rect.width, rect.height, (void*)aMovingFrame);
-    nsIFrameDebug::PrintDisplayList(&builder, list);
+    nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
 
@@ -1292,7 +1292,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
 #ifdef DEBUG
   if (gDumpRepaintRegionForCopy) {
     fprintf(stderr, "Repaint region for copy --- after optimization:\n");
-    nsIFrameDebug::PrintDisplayList(&builder, list);
+    nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
 
