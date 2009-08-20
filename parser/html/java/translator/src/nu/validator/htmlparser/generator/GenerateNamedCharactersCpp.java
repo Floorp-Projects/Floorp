@@ -56,7 +56,7 @@ public class GenerateNamedCharactersCpp {
 
     private static final int LEAD_OFFSET = 0xD800 - (0x10000 >> 10);
 
-    private static final Pattern LINE_PATTERN = Pattern.compile("^\\s*<tr> <td> <code title=\"\">([^<]*)</code> </td> <td> U\\+(\\S*) </td> </tr>.*$");
+    private static final Pattern LINE_PATTERN = Pattern.compile("<td> <code title=\"\">([^<]*)</code> </td> <td> U\\+(\\S*) </td>");
 
     private static String toHexString(int c) {
         String hexString = Integer.toHexString(c);
@@ -85,7 +85,7 @@ public class GenerateNamedCharactersCpp {
         String line;
         while ((line = reader.readLine()) != null) {
             Matcher m = LINE_PATTERN.matcher(line);
-            if (m.matches()) {
+            while (m.find()) {
                 entities.put(m.group(1), m.group(2));
             }
         }
@@ -94,6 +94,7 @@ public class GenerateNamedCharactersCpp {
         File targetDirectory = new File(args[1]);
 
         generateH(targetDirectory, cppTypes, entities);
+        generateInclude(targetDirectory, cppTypes, entities);
         generateCpp(targetDirectory, cppTypes, entities);
     }
 
@@ -133,6 +134,96 @@ public class GenerateNamedCharactersCpp {
                 + "NamedCharacters_h__\n");
         out.flush();
         out.close();
+    }
+
+    private static void generateInclude(File targetDirectory, CppTypes cppTypes,
+            Map<String, String> entities)
+        throws IOException
+    {
+        File includeFile = new File(targetDirectory, cppTypes.classPrefix()
+                + "NamedCharactersInclude.h");
+        Writer out = new OutputStreamWriter(new FileOutputStream(includeFile),
+                "utf-8");
+
+        out.write("/* Data generated from the table of named character references found at\n");
+        out.write(" *\n");
+        out.write(" *   http://www.w3.org/TR/html5/named-character-references.html\n");
+        out.write(" *\n");
+        out.write(" * Files that #include this file must #define NAMED_CHARACTER_REFERENCE as a\n");
+        out.write(" * macro of five parameters:\n");
+        out.write(" *\n");
+        out.write(" *   1.  a unique integer N identifying the Nth [0,1,..] macro expansion in this file,\n");
+        out.write(" *   2.  a comma-separated sequence of characters comprising the character name,\n");
+        out.write(" *   3.  the length of this sequence of characters,\n");
+        out.write(" *   4.  a comma-separated sequence of PRUnichar literals (high to low) corresponding\n");
+        out.write(" *       to the code-point of the named character, and\n");
+        out.write(" *   5.  the length of this sequence of literals (either 1 or 2).\n");
+        out.write(" *\n");
+        out.write(" * The macro expansion doesn't have to refer to all or any of these parameters,\n");
+        out.write(" * but common sense dictates that it should involve at least one of them.\n");
+        out.write(" */\n");
+        out.write("\n");
+        out.write("// This #define allows the NAMED_CHARACTER_REFERENCE macro to accept comma-\n");
+        out.write("// separated sequences as single macro arguments.  Using commas directly would\n");
+        out.write("// split the sequence into multiple macro arguments.\n");
+        out.write("#define _ ,\n");
+        out.write("\n");
+
+        int i = 0;
+        for (Map.Entry<String, String> entity : entities.entrySet()) {
+            out.write("NAMED_CHARACTER_REFERENCE(" + i++ + ", ");
+            writeNameInitializer(out, entity, " _ ");
+            out.write(", " + entity.getKey().length() + ", ");
+            writeValueInitializer(out, entity, " _ ");
+            int numBytes = (Integer.parseInt(entity.getValue(), 16) <= 0xFFFF) ? 1 : 2;
+            out.write(", " + numBytes + ")\n");
+        }
+
+        out.write("\n");
+        out.write("#undef _\n");
+
+        out.flush();
+        out.close();
+    }
+
+    private static void writeNameInitializer(Writer out,
+            Map.Entry<String, String> entity,
+            String separator)
+        throws IOException
+    {
+        String name = entity.getKey();
+        for (int i = 0; i < name.length(); i++) {
+            out.write("'" + name.charAt(i) + "'");
+            if (i < name.length() - 1)
+                out.write(separator);
+        }
+    }
+
+    private static void writeValueInitializer(Writer out,
+            Map.Entry<String, String> entity,
+            String separator)
+        throws IOException
+    {
+        int value = Integer.parseInt(entity.getValue(), 16);
+        if (value <= 0xFFFF) {
+            out.write(toHexString(value));
+        } else {
+            int hi = (LEAD_OFFSET + (value >> 10));
+            int lo = (0xDC00 + (value & 0x3FF));
+            out.write(toHexString(hi));
+            out.write(separator);
+            out.write(toHexString(lo));
+        }
+    }
+
+    private static void defineMacroAndInclude(Writer out, String expansion,
+            String includeFile)
+        throws IOException
+    {
+        out.write("\n#define NAMED_CHARACTER_REFERENCE(N, CHARS, LEN, VALUE, SIZE) \\\n" +
+                  expansion + "\n");
+        out.write("#include \"" + includeFile + "\"\n");
+        out.write("#undef NAMED_CHARACTER_REFERENCE\n");
     }
 
     private static void writeStaticMemberDeclaration(Writer out,
@@ -211,45 +302,13 @@ public class GenerateNamedCharactersCpp {
         out.write("  0x0178\n");
         out.write("};\n");
 
-        int k = 0;
-        for (Map.Entry<String, String> entity : entities.entrySet()) {
-            String name = entity.getKey();
-            int value = Integer.parseInt(entity.getValue(), 16);
-
-            out.write("static " + cppTypes.charType() + " const NAME_" + k
-                    + "[] = {\n");
-            out.write("  ");
-
-            for (int j = 0; j < name.length(); j++) {
-                char c = name.charAt(j);
-                if (j != 0) {
-                    out.write(", ");
-                }
-                out.write('\'');
-                out.write(c);
-                out.write('\'');
-            }
-
-            out.write("\n};\n");
-
-            out.write("static " + cppTypes.charType() + " const VALUE_" + k
-                    + "[] = {\n");
-            out.write("  ");
-
-            if (value <= 0xFFFF) {
-                out.write(toHexString(value));
-            } else {
-                int hi = (LEAD_OFFSET + (value >> 10));
-                int lo = (0xDC00 + (value & 0x3FF));
-                out.write(toHexString(hi));
-                out.write(", ");
-                out.write(toHexString(lo));
-            }
-
-            out.write("\n};\n");
-
-            k++;
-        }
+        String includeFile = cppTypes.classPrefix() + "NamedCharactersInclude.h";
+        defineMacroAndInclude(out,
+                "static PRUnichar const NAME_##N[] = { CHARS };",
+                includeFile);
+        defineMacroAndInclude(out,
+                "static PRUnichar const VALUE_##N[] = { VALUE };",
+                includeFile);
 
         out.write("\n// XXX bug 501082: for some reason, msvc takes forever to optimize this function\n");
         out.write("#ifdef _MSC_VER\n");
@@ -264,26 +323,17 @@ public class GenerateNamedCharactersCpp {
                 + cppTypes.arrayTemplate() + "<" + cppTypes.charType() + ","
                 + cppTypes.intType() + ">," + cppTypes.intType() + ">("
                 + entities.size() + ");\n");
-        int i = 0;
-        for (Map.Entry<String, String> entity : entities.entrySet()) {
-            out.write("  NAMES[" + i + "] = " + cppTypes.arrayTemplate() + "<"
-                    + cppTypes.charType() + "," + cppTypes.intType() + ">(("
-                    + cppTypes.charType() + "*)NAME_" + i + ", "
-                    + entity.getKey().length() + ");\n");
-            i++;
-        }
-        out.write("  VALUES = new " + cppTypes.arrayTemplate() + "<"
+        defineMacroAndInclude(out,
+                "  NAMES[N] = jArray<PRUnichar,PRInt32>((PRUnichar*)NAME_##N, LEN);",
+                includeFile);
+
+        out.write("\n  VALUES = new " + cppTypes.arrayTemplate() + "<"
                 + cppTypes.charType() + "," + cppTypes.intType() + ">["
                 + entities.size() + "];\n");
-        i = 0;
-        for (Map.Entry<String, String> entity : entities.entrySet()) {
-            int value = Integer.parseInt(entity.getValue(), 16);
-            out.write("  VALUES[" + i + "] = " + cppTypes.arrayTemplate() + "<"
-                    + cppTypes.charType() + "," + cppTypes.intType() + ">(("
-                    + cppTypes.charType() + "*)VALUE_" + i + ", "
-                    + ((value <= 0xFFFF) ? "1" : "2") + ");\n");
-            i++;
-        }
+        defineMacroAndInclude(out,
+                "  VALUES[N] = jArray<PRUnichar,PRInt32>((PRUnichar*)VALUE_##N, SIZE);",
+                includeFile);
+
         out.write("\n");
         out.write("  WINDOWS_1252 = new " + cppTypes.charType() + "*[32];\n");
         out.write("  for (" + cppTypes.intType() + " i = 0; i < 32; ++i) {\n");

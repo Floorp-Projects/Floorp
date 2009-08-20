@@ -48,5 +48,11 @@ sync:: \
 ; ../sync-src.sh $(SVN_BASE)/translator-src && \
   ../sync-files.sh $(SVN_BASE) LICENSE.txt README.txt
 
+named_characters:: libs \
+; java -cp translator.jar \
+    nu.validator.htmlparser.generator.GenerateNamedCharactersCpp \
+      named-character-references.html \
+      ../..
+
 clean:: \
 ; rm -rf bin translator.jar
