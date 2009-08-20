@@ -4183,6 +4183,26 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
     }
 }
 
+static unsigned
+BuildGlobalTypeMapFromInnerTree(Queue<JSTraceType>& typeMap, VMSideExit* inner)
+{
+#if defined DEBUG
+    unsigned initialSlots = typeMap.length();
+#endif
+    /* First, use the innermost exit's global typemap. */
+    typeMap.add(inner->globalTypeMap(), inner->numGlobalSlots);
+
+    /* Add missing global types from the innermost exit's tree. */
+    TreeInfo* innerTree = inner->root()->getTreeInfo();
+    unsigned slots = inner->numGlobalSlots;
+    if (slots < innerTree->nGlobalTypes()) {
+        typeMap.add(innerTree->globalTypeMap() + slots, innerTree->nGlobalTypes() - slots);
+        slots = innerTree->nGlobalTypes();
+    }
+    JS_ASSERT(typeMap.length() - initialSlots == slots);
+    return slots;
+}
+
 /* Record a call to an inner tree. */
 JS_REQUIRES_STACK void
 TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
@@ -4210,12 +4230,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
      */
     TypeMap fullMap;
     fullMap.add(exit->stackTypeMap(), exit->numStackSlots);
-    fullMap.add(exit->globalTypeMap(), exit->numGlobalSlots);
-    TreeInfo* innerTree = exit->root()->getTreeInfo();
-    if (exit->numGlobalSlots < innerTree->nGlobalTypes()) {
-        fullMap.add(innerTree->globalTypeMap() + exit->numGlobalSlots,
-                    innerTree->nGlobalTypes() - exit->numGlobalSlots);
-    }
+    BuildGlobalTypeMapFromInnerTree(fullMap, exit);
     import(ti, inner_sp_ins, exit->numStackSlots, fullMap.length() - exit->numStackSlots,
            exit->calldepth, fullMap.data());
 
@@ -5026,35 +5041,9 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
             fullMap.add(e1->stackTypeMap(), e1->numStackSlotsBelowCurrentFrame);
             fullMap.add(e2->stackTypeMap(), e2->numStackSlots);
             stackSlots = fullMap.length();
-            fullMap.add(e2->globalTypeMap(), e2->numGlobalSlots);
-            if (e2->numGlobalSlots < e1->numGlobalSlots) {
-                /*
-                 * Watch out for an extremely rare case (bug 502714). The sequence of events is:
-                 *
-                 * 1) Inner tree compiles not knowing about global X (which has type A).
-                 * 2) Inner tree learns about global X and specializes it to a different type
-                 *    (type B).
-                 * 3) Outer tree records inner tree with global X as type A, exiting as B.
-                 * 4) Outer tree now has a nesting guard with typeof(X)=B.
-                 * 5) Inner tree takes its original exit that does not know about X.
-                 *
-                 * In this case, the nesting guard fails, and now it is illegal to use the nested
-                 * typemap entry for X. The correct entry is in the inner guard's TreeInfo,
-                 * analogous to the solution for bug 476653.
-                 */
-                TreeInfo* innerTree = e2->root()->getTreeInfo();
-                unsigned slots = e2->numGlobalSlots;
-                if (innerTree->nGlobalTypes() > slots) {
-                    unsigned addSlots = JS_MIN(innerTree->nGlobalTypes() - slots,
-                                               e1->numGlobalSlots - slots);
-                    fullMap.add(innerTree->globalTypeMap() + e2->numGlobalSlots, addSlots);
-                    slots += addSlots;
-                }
-                if (slots < e1->numGlobalSlots)
-                    fullMap.add(e1->globalTypeMap() + slots, e1->numGlobalSlots - slots);
-                JS_ASSERT(slots == e1->numGlobalSlots);
-            }
-            ngslots = e1->numGlobalSlots;
+            ngslots = BuildGlobalTypeMapFromInnerTree(fullMap, e2);
+            JS_ASSERT(ngslots >= e1->numGlobalSlots); // inner tree must have all globals
+            JS_ASSERT(ngslots == fullMap.length() - stackSlots);
             typeMap = fullMap.data();
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
@@ -5847,6 +5836,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     JSTraceType* globalTypeMap;
 
     /* Are there enough globals? */
+    Queue<JSTraceType> typeMap(0);
     if (innermost->numGlobalSlots == ngslots) {
         /* Yes. This is the ideal fast path. */
         globalTypeMap = innermost->globalTypeMap();
@@ -5858,14 +5848,15 @@ LeaveTree(InterpState& state, VMSideExit* lr)
          * is lazily added into a tree, all dependent and linked trees are
          * immediately specialized (see bug 476653).
          */
-        TreeInfo* ti = innermost->root()->getTreeInfo();
-        JS_ASSERT(ti->nGlobalTypes() == ngslots);
-        JS_ASSERT(ti->nGlobalTypes() > innermost->numGlobalSlots);
-        globalTypeMap = (JSTraceType*)alloca(ngslots * sizeof(JSTraceType));
-        memcpy(globalTypeMap, innermost->globalTypeMap(), innermost->numGlobalSlots);
-        memcpy(globalTypeMap + innermost->numGlobalSlots,
-               ti->globalTypeMap() + innermost->numGlobalSlots,
-               ti->nGlobalTypes() - innermost->numGlobalSlots);
+        JS_ASSERT(innermost->root()->getTreeInfo()->nGlobalTypes() == ngslots);
+        JS_ASSERT(innermost->root()->getTreeInfo()->nGlobalTypes() > innermost->numGlobalSlots);
+        typeMap.ensure(ngslots);
+#ifdef DEBUG
+        unsigned check_ngslots = 
+#endif
+        BuildGlobalTypeMapFromInnerTree(typeMap, innermost);
+        JS_ASSERT(check_ngslots == ngslots);
+        globalTypeMap = typeMap.data();
     }
 
     /* Write back the topmost native stack frame. */
