@@ -374,6 +374,12 @@ void nsCSSValue::SetNoneValue()
   mUnit = eCSSUnit_None;
 }
 
+void nsCSSValue::SetAllValue()
+{
+  Reset();
+  mUnit = eCSSUnit_All;
+}
+
 void nsCSSValue::SetNormalValue()
 {
   Reset();

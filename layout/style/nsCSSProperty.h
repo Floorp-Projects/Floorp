@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -63,6 +64,14 @@ enum nsCSSProperty {
   #undef CSS_PROP_SHORTHAND
 
   eCSSProperty_COUNT,
+
+  // Some of the values below could probably overlap with each other and
+  // with eCSSProperty_COUNT if we had a need for them to do so.
+
+  // Extra values for use in the values of the 'transition-property'
+  // property.
+  eCSSPropertyExtra_no_properties,
+  eCSSPropertyExtra_all_properties,
 
   // Extra dummy values for nsCSSParser internal use.
   eCSSPropertyExtra_x_none_value
