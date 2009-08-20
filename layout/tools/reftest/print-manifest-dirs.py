@@ -72,7 +72,7 @@ def parseManifest(manifest, dirs):
     if items[0] == "include":
       parseManifest(os.path.join(manifestdir, items[1]), dirs)
       continue
-    elif items[0] == "load":
+    elif items[0] == "load" or items[0] == "script":
       testURLs = [items[1]]
     elif items[0] == "==" or items[0] == "!=":
       testURLs = items[1:3]
