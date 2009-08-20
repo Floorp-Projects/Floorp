@@ -472,7 +472,9 @@ WeaveSvc.prototype = {
     let res = new Resource(this.baseURL + "api/register/chknode/" + username);
     try {
       res.get();
-
+    } catch(ex) {}
+    
+    try {
       switch (res.lastChannel.responseStatus) {
         case 404:
           this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
@@ -483,9 +485,11 @@ WeaveSvc.prototype = {
           this._log.debug("Unexpected response code trying to find cluster: " + res.lastChannel.responseStatus);
           break;
       }
-    } catch(ex) { /* if the channel failed to start we'll get here, just return false */}
-
-    return false;
+    } catch (e) {
+      this._log.debug("Network error on findCluster");
+      this._setSyncFailure(LOGIN_FAILED_NETWORK_ERROR);
+      throw e;
+    }
   },
 
   // gets cluster from central LDAP server and sets this.clusterURL
