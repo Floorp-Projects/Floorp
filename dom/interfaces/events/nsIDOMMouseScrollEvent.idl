@@ -36,10 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIDOMMouseEvent.idl"
 
-[scriptable, uuid(f172af88-48c3-4989-b814-60449823fc7d)]
-interface nsIDOMMouseScrollEvent : nsISupports
+[scriptable, uuid(ba8d1a7e-b475-4542-8d32-01e7ea7b8091)]
+interface nsIDOMMouseScrollEvent : nsIDOMMouseEvent
 {
   const long HORIZONTAL_AXIS = 1;
   const long VERTICAL_AXIS = 2;
