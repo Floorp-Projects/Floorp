@@ -178,6 +178,8 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSi
 #ifdef NECKO_WIFI
 
 #include "nsWifiMonitor.h"
+#undef LOG
+#undef LOG_ENABLED
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWifiMonitor)
 
 #endif
@@ -223,6 +225,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #ifdef NECKO_PROTOCOL_http
 // http/https
 #include "nsHttpHandler.h"
+#undef LOG
+#undef LOG_ENABLED
 #include "nsHttpAuthManager.h"
 #include "nsHttpBasicAuth.h"
 #include "nsHttpDigestAuth.h"
