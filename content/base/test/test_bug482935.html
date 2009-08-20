@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 482935</title>
+  <script type="text/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body onload="onWindowLoad()">
+<script class="testbody" type="text/javascript">
+
+var url = "bug482935.sjs";
+
+function clearCache() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    Components.classes["@mozilla.org/network/cache-service;1"].
+               getService(Components.interfaces.nsICacheService).
+               evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
+    netscape.security.PrivilegeManager.disablePrivilege("UniversalXPConnect");
+}
+
+// Tests that the response is cached if the request is cancelled
+// after it has reached state 4
+function testCancelInPhase4() {
+    
+    clearCache();
+
+    // First request - should be loaded from server
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("readystatechange", function(e) {
+      if (xhr.readyState >= 4)
+        xhr.abort();
+    }, false);
+
+    xhr.open("GET", url, true);
+    xhr.setRequestHeader("X-Request", "0", false);
+    try { xhr.send(); }
+    catch(e) {
+      is("Nothing", "Exception", "Boom: " + e);
+    }
+
+    setTimeout(function f() {
+      // We know the request is sent, so only these two states are relevant
+      if (xhr.readyState == 2 || xhr.readyState == 3) {
+        setTimeout(f, 100);
+        return;
+      }
+
+      // This request was cancelled, so the responseText should be empty string
+      is(xhr.responseText, "", "Expected empty response to cancelled request");
+
+      // Second request - should be found in cache
+      var xhr2 = new XMLHttpRequest();
+      xhr2.open("GET", url, false); // note : synch-request
+      xhr2.setRequestHeader("X-Request", "1", false);
+
+      try { xhr2.send(); }
+      catch(e) {
+        is(xhr2.status, "200", "Exception!");
+      }
+
+      is(xhr2.responseText, "0", "Received fresh value for second request");
+
+      testCancelBeforePhase4();
+    }, 100);
+}
+
+// Tests that response is NOT cached if the request is cancelled
+// before it has reached state 4
+function testCancelBeforePhase4() {
+
+  clearCache();
+
+  // First request - should be loaded from server
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener("readystatechange", function(e) {
+    if (xhr.readyState == 3)
+      xhr.abort();
+  }, false);
+
+  xhr.open("GET", url, true);
+  xhr.setRequestHeader("X-Request", "0", false);
+  try { xhr.send(); }
+  catch(e) {
+    is("Nothing", "Exception", "Boom: " + e);
+  }
+
+  setTimeout(function f() {
+    // We know the request is sent, so only this state is relevant
+    if (xhr.readyState == 2) {
+      setTimeout(f, 100);
+      return;
+    }
+
+    // This request was cancelled, so the responseText should be empty string
+    is(xhr.responseText, "", "Expected empty response to cancelled request");
+
+    // Second request - should NOT be found in cache
+    var xhr2 = new XMLHttpRequest();
+    xhr2.open("GET", url, false); // note : synch-request
+    xhr2.setRequestHeader("X-Request", "1", false);
+
+    try { xhr2.send(); }
+    catch(e) {
+      is(xhr2.status, "200", "Exception!");
+    }
+
+    is(xhr2.responseText, "1", "Received cached value for second request");
+
+    SimpleTest.finish();
+  }, 100);
+}
+
+function onWindowLoad() {
+  testCancelInPhase4();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>
