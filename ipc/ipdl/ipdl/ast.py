@@ -280,11 +280,11 @@ class TransitionStmt(Node):
         self.transitions = transitions
 
 class Transition(Node):
-    def __init__(self, loc, trigger, msg, toState):
+    def __init__(self, loc, trigger, msg, toStates):
         Node.__init__(self, loc)
         self.trigger = trigger
         self.msg = msg
-        self.toState = toState
+        self.toStates = toStates
 
     @staticmethod
     def nameToTrigger(name):
@@ -321,14 +321,14 @@ class State(Node):
         self.name = name
         self.start = start
     def __eq__(self, o):
-        return (isinstance(o, State)
-                and o.name == self.name
-                and o.start == self.start)
+         return (isinstance(o, State)
+                 and o.name == self.name
+                 and o.start == self.start)
     def __hash__(self):
         return hash(repr(self))
     def __ne__(self, o):
         return not (self == o)
-    def __repr__(self): return '<State %r start=%s>'% (self.name, self.start)
+    def __repr__(self): return '<State %r start=%r>'% (self.name, self.start)
     def __str__(self): return '<State %s start=%s>'% (self.name, self.start)
 
 class Param(Node):
