@@ -45,7 +45,8 @@ const EXPORTED_SYMBOLS = ["WEAVE_VERSION", "COMPATIBLE_VERSION",
                           'WEAVE_STATUS_PARTIAL', 'SERVER_LOW_QUOTA',
                           'SERVER_DOWNTIME', 'SERVER_UNREACHABLE',
                           'LOGIN_FAILED_NO_USERNAME', 'LOGIN_FAILED_NO_PASSWORD',
-                          'LOGIN_FAILED_REJECTED', 'METARECORD_DOWNLOAD_FAIL',
+                          'LOGIN_FAILED_NETWORK_ERROR','LOGIN_FAILED_INVALID_PASSPHRASE', 
+                          'LOGIN_FAILED_LOGIN_REJECTED', 'METARECORD_DOWNLOAD_FAIL',
                           'VERSION_OUT_OF_DATE', 'DESKTOP_VERSION_OUT_OF_DATE',
                           'KEYS_DOWNLOAD_FAIL', 'NO_KEYS_NO_KEYGEN', 'KEYS_UPLOAD_FAIL',
                           'SETUP_FAILED_NO_PASSPHRASE', 'ABORT_SYNC_COMMAND',
@@ -97,7 +98,9 @@ const SERVER_UNREACHABLE = "Weave server is unreachable.";
 // Ways that a sync can fail during setup or login:
 const LOGIN_FAILED_NO_USERNAME = "No username set, login failed.";
 const LOGIN_FAILED_NO_PASSWORD = "No password set, login failed.";
-const LOGIN_FAILED_REJECTED = "Incorrect username or password.";
+const LOGIN_FAILED_NETWORK_ERROR = "Weave failed to connect to the server.";
+const LOGIN_FAILED_INVALID_PASSPHRASE = "Incorrect passphrase given.";
+const LOGIN_FAILED_LOGIN_REJECTED = "Incorrect username or password.";
 const METARECORD_DOWNLOAD_FAIL = "Can't download metadata record, HTTP error.";
 const VERSION_OUT_OF_DATE = "This copy of Weave needs to be updated.";
 const DESKTOP_VERSION_OUT_OF_DATE = "Weave needs updating on your desktop browser.";
