@@ -42,16 +42,12 @@ VPATH          = @srcdir@
 relativesrcdir = toolkit/content/tests/browser
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = \
-  common \
-  data \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
-  browser_save_post_data.js \
+  bug471962_testpage_inner.sjs \
+  bug471962_testpage_outer.sjs \
+  browser_bug471962.js \
   $(NULL)
 
 # browser_keyevents_during_autoscrolling.js cannot start the autoscrolling by
