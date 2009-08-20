@@ -135,6 +135,14 @@ public class GenerateNamedCharactersCpp {
         out.close();
     }
 
+    private static void writeStaticMemberDeclaration(Writer out,
+            CppTypes cppTypes, String type, String name)
+        throws IOException
+    {
+        out.write(type + " " + cppTypes.classPrefix() + "NamedCharacters::"
+                + name + ";\n");
+    }
+
     private static void generateCpp(File targetDirectory, CppTypes cppTypes,
             Map<String, String> entities) throws IOException {
         File hFile = new File(targetDirectory, cppTypes.classPrefix()
@@ -156,10 +164,17 @@ public class GenerateNamedCharactersCpp {
                 + "NamedCharacters.h\"\n");
         out.write("\n");
 
-        out.write("" + cppTypes.arrayTemplate() + "<"
+        String staticMemberType = cppTypes.arrayTemplate() + "<"
                 + cppTypes.arrayTemplate() + "<" + cppTypes.charType() + ","
-                + cppTypes.intType() + ">," + cppTypes.intType() + "> "
-                + cppTypes.classPrefix() + "NamedCharacters::NAMES;\n");
+                + cppTypes.intType() + ">," + cppTypes.intType() + ">";
+        writeStaticMemberDeclaration(out, cppTypes, staticMemberType, "NAMES");
+
+        staticMemberType = cppTypes.arrayTemplate() + "<"
+                + cppTypes.charType() + "," + cppTypes.intType() + ">*";
+        writeStaticMemberDeclaration(out, cppTypes, staticMemberType, "VALUES");
+
+        staticMemberType = cppTypes.charType() + "**";
+        writeStaticMemberDeclaration(out, cppTypes, staticMemberType, "WINDOWS_1252");
 
         out.write("static " + cppTypes.charType() + " const WINDOWS_1252_DATA[] = {\n");
         out.write("  0x20AC,\n");
