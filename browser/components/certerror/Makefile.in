@@ -47,9 +47,4 @@ ifdef ENABLE_TESTS
 DIRS += test
 endif
 
-# EXTRA_COMPONENTS installs components written in JS to dist/bin/components
-EXTRA_PP_COMPONENTS = \
-         aboutCertError.js \
-         $(NULL)
-
 include $(topsrcdir)/config/rules.mk

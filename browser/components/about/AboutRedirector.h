@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is about:robots.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Gagan Saksena (original author)
  *   Ryan Flint <rflint@mozilla.com>
- *   Justin Dolske <dolske@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,40 +36,31 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+#ifndef AboutRedirector_h__
+#define AboutRedirector_h__
 
-function AboutRights() {}
-AboutRights.prototype = {
-  classDescription: "about:rights",
-  contractID: "@mozilla.org/network/protocol/about;1?what=rights",
-  classID: Components.ID("{89e9da80-4c03-46a0-a357-cf77bbef98b9}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+#include "nsIAboutModule.h"
+
+namespace mozilla {
+namespace browser {
+
+class AboutRedirector : public nsIAboutModule
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIABOUTMODULE
  
-  getURIFlags: function(aURI) {
-    return (Ci.nsIAboutModule.ALLOW_SCRIPT |
-            Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT);
-  },
+  AboutRedirector() {}
+  virtual ~AboutRedirector() {}
 
-  newChannel: function(aURI) {
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
+  static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                 getService(Ci.nsIScriptSecurityManager);
-
-    var channel = ios.newChannel("chrome://browser/content/aboutRights.xhtml",
-                                 null, null);
-    var principal = secMan.getCodebasePrincipal(aURI);
-
-    channel.originalURI = aURI;
-    channel.owner = principal;
-
-    return channel;
-  }
+protected:
 };
 
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([AboutRights]);
+} // namespace browser
+} // namespace mozilla
+
+#endif // AboutRedirector_h__
