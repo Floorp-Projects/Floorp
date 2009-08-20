@@ -149,13 +149,26 @@ nsAlertsService::Init()
   if ([GrowlApplicationBridge isGrowlInstalled] == NO)
     return NS_ERROR_SERVICE_NOT_AVAILABLE;
 
+  NS_ASSERTION([GrowlApplicationBridge growlDelegate] == nil,
+               "We already registered with Growl!");
+
   nsresult rv;
   nsCOMPtr<nsIObserverService> os =
     do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = os->AddObserver(this, "final-ui-startup", PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsNotificationsList> notifications = new nsNotificationsList();
+
+  if (notifications)
+    (void)os->NotifyObservers(notifications, "before-growl-registration", nsnull);
+
+  mDelegate = new GrowlDelegateWrapper();
+
+  if (notifications)
+    notifications->informController(mDelegate->delegate);
+
+  // registers with Growl
+  [GrowlApplicationBridge setGrowlDelegate: mDelegate->delegate];
 
   (void)os->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, PR_FALSE);
   (void)os->AddObserver(this, "profile-before-change", PR_FALSE);
@@ -227,32 +240,15 @@ nsAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (strcmp(aTopic, "final-ui-startup") == 0) {
-    NS_ASSERTION([GrowlApplicationBridge growlDelegate] == nil,
-                 "We already registered with Growl!");
+  if (!mDelegate)
+    return NS_OK;
 
-    nsRefPtr<nsNotificationsList> notifications = new nsNotificationsList();
-
-    if (notifications) {
-      nsCOMPtr<nsIObserverService> os =
-        do_GetService("@mozilla.org/observer-service;1");
-      (void)os->NotifyObservers(notifications, "before-growl-registration", nsnull);
-    }
-
-    mDelegate = new GrowlDelegateWrapper();
-
-    if (notifications)
-      notifications->informController(mDelegate->delegate);
-
-    // registers with Growl
-    [GrowlApplicationBridge setGrowlDelegate: mDelegate->delegate];
-  }
-  else if (strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) == 0 && mDelegate) {
+  if (strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) == 0) {
     nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(aSubject));
     if (window)
       [mDelegate->delegate forgetObserversForWindow:window];
   }
-  else if (strcmp(aTopic, "profile-before-change") == 0 && mDelegate) {
+  else if (strcmp(aTopic, "profile-before-change") == 0) {
     [mDelegate->delegate forgetObservers];
   }
 
