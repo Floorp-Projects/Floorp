@@ -40,9 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAutoCompleteController.h"
-#ifdef MOZ_MORK
-#include "nsAutoCompleteMdbResult.h"
-#endif
 #include "nsAutoCompleteSimpleResult.h"
 
 #include "nsNetCID.h"
@@ -1564,9 +1561,6 @@ nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIn
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteSimpleResult)
-#ifdef MOZ_MORK
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteMdbResult)
-#endif
 
 static const nsModuleComponentInfo components[] =
 {
@@ -1579,13 +1573,6 @@ static const nsModuleComponentInfo components[] =
     NS_AUTOCOMPLETESIMPLERESULT_CID,
     NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID,
     nsAutoCompleteSimpleResultConstructor },
-
-#ifdef MOZ_MORK
-  { "AutoComplete Mdb Result",
-    NS_AUTOCOMPLETEMDBRESULT_CID,
-    NS_AUTOCOMPLETEMDBRESULT_CONTRACTID,
-    nsAutoCompleteMdbResultConstructor },
-#endif
 };
 
 NS_IMPL_NSGETMODULE(tkAutoCompleteModule, components)
