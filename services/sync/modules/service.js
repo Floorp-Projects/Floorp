@@ -340,12 +340,8 @@ WeaveSvc.prototype = {
 
     this._genKeyURLs();
 
-    if (Svc.Prefs.get("autoconnect") && this.username) {
-      try {
-        if (this.login())
-          this.syncOnIdle();
-      } catch (e) {}
-    }
+    if (Svc.Prefs.get("autoconnect"))
+      this._autoConnect();
   },
 
   _initLogs: function WeaveSvc__initLogs() {
@@ -476,24 +472,30 @@ WeaveSvc.prototype = {
     let res = new Resource(this.baseURL + "api/register/chknode/" + username);
     try {
       res.get();
-    }
-    catch(ex) { /* we check status below */ }
 
-    if (res.lastChannel.responseStatus == 404) {
-      this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
-      return Svc.Prefs.get("serverURL");
-    }
+      switch (res.lastChannel.responseStatus) {
+        case 404:
+          this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
+          return Svc.Prefs.get("serverURL");
+        case 200:
+          return "https://" + res.data + "/";
+        default:
+          this._log.debug("Unexpected response code trying to find cluster: " + res.lastChannel.responseStatus);
+          break;
+      }
+    } catch(ex) { /* if the channel failed to start we'll get here, just return false */}
 
-    if (res.lastChannel.responseStatus == 200)
-      return "https://" + res.data + "/";
-
-    return null;
+    return false;
   },
 
   // gets cluster from central LDAP server and sets this.clusterURL
   setCluster: function WeaveSvc_setCluster(username) {
     let cluster = this.findCluster(username);
+
     if (cluster) {
+      if (cluster == this.clusterURL)
+        return false;
+
       this._log.debug("Saving cluster setting");
       this.clusterURL = cluster;
       return true;
@@ -508,9 +510,10 @@ WeaveSvc.prototype = {
     let cTime = Date.now();
     let lastUp = parseFloat(Svc.Prefs.get("lastClusterUpdate"));
     if (!lastUp || ((cTime - lastUp) >= CLUSTER_BACKOFF)) {
-      this.setCluster(username);
-      Svc.Prefs.set("lastClusterUpdate", cTime.toString());
-      return true;
+      if (this.setCluster(username)) {
+        Svc.Prefs.set("lastClusterUpdate", cTime.toString());
+        return true;
+      }
     }
     return false;
   },
@@ -538,18 +541,32 @@ WeaveSvc.prototype = {
       // login may fail because of cluster change
       try {
         res.get();
-      } catch (e) {
-        if (res.lastChannel.responseStatus == 401) {
-          if (this.updateCluster(username))
-            return this.verifyLogin(username, password, passphrase, isLogin);
+      } catch (e) {}
+  
+      try {
+        switch (res.lastChannel.responseStatus) {
+          case 200:
+            if (passphrase && !this.verifyPassphrase(username, password, passphrase)) {
+              this._setSyncFailure(LOGIN_FAILED_INVALID_PASSPHRASE);
+              return false;
+            }
+            return true;
+          case 401:
+            if (this.updateCluster(username))
+              return this.verifyLogin(username, password, passphrase, isLogin);
+
+            this._setSyncFailure(LOGIN_FAILED_LOGIN_REJECTED);
+            this._log.debug("verifyLogin failed: login failed")
+            return false;
+          default:
+            throw "unexpected HTTP response: " + res.lastChannel.responseStatus;
         }
+      } catch (e) {
+        // if we get here, we have either a busted channel or a network error
+        this._log.debug("verifyLogin failed: " + e)
+        this._setSyncFailure(LOGIN_FAILED_NETWORK_ERROR);
         throw e;
       }
-
-      if (passphrase)
-        return this.verifyPassphrase(username, password, passphrase);
-      else
-        return true;
     }))(),
 
   verifyPassphrase: function WeaveSvc_verifyPassphrase(username, password, passphrase)
@@ -636,10 +653,51 @@ WeaveSvc.prototype = {
       return true;
     }))(),
   
+  _autoConnectAttempts: 0,
+  _autoConnect: function WeaveSvc__attemptAutoConnect() {
+    try {
+      if (!this.username || !this.password || !this.passphrase)
+        return;
+
+      let failureReason;
+      if (Svc.IO.offline)
+        failureReason = "Application is offline";
+      else if (this.login()) {
+        this.syncOnIdle();
+        return;
+      }
+
+      failureReason = this.detailedStatus.sync;
+    }
+    catch (ex) {
+      failureReason = ex;
+    }
+
+    this._log.debug("Autoconnect failed: " + failureReason);
+
+    let listener = new Utils.EventListener(Utils.bind2(this,
+      function WeaveSvc__autoConnectCallback(timer) {
+        this._autoConnectTimer = null;
+        this._autoConnect();
+      }));
+    this._autoConnectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    
+    // back off slowly, with some random fuzz to avoid repeated collisions
+    var interval = Math.floor(Math.random() * SCHEDULED_SYNC_INTERVAL + 
+                              SCHEDULED_SYNC_INTERVAL * this._autoConnectAttempts);
+    this._autoConnectAttempts++;
+    this._autoConnectTimer.initWithCallback(listener, interval,
+                                            Ci.nsITimer.TYPE_ONE_SHOT);
+    this._log.debug("Scheduling next autoconnect attempt in " + 
+                    interval / 1000 + " seconds.");
+  },
+  
   login: function WeaveSvc_login(username, password, passphrase)
     this._catch(this._lock(this._notify("login", "", function() {
       this._loggedIn = false;
       this._detailedStatus = new StatusRecord();
+      if (Svc.IO.offline)
+        throw "Application is offline, login should not be called";
 
       if (typeof(username) != "undefined")
         this.username = username;
@@ -660,13 +718,17 @@ WeaveSvc.prototype = {
 
       if (!(this.verifyLogin(this.username, this.password,
         passphrase, true))) {
-        this._setSyncFailure(LOGIN_FAILED_REJECTED);
-        throw "Login failed";
+        // verifyLogin sets the failure states here
+        throw "Login failed: " + this.detailedStatus.sync;
       }
 
       // Try starting the sync timer now that we're logged in
       this._loggedIn = true;
       this._checkSyncStatus();
+      if (this._autoConnectTimer) {
+        this._autoConnectTimer.cancel();
+        this._autoConnectTimer = null;
+      }
 
       return true;
     })))(),
@@ -957,9 +1019,14 @@ WeaveSvc.prototype = {
     // specifcally handle 500, 502, 503, 504 errors
     // xxxmpc: what else should be in this list?
     // this is sort of pseudocode, need a way to get at the 
-    if (!shouldBackoff && 
-        Utils.checkStatus(Records.lastResource.lastChannel.responseStatus, null, [500,[502,504]])) {
-       shouldBackoff = true;
+    if (!shouldBackoff) {
+      try {
+        shouldBackoff = Utils.checkStatus(Records.lastResource.lastChannel.responseStatus, null, [500,[502,504]]);
+      }
+      catch (e) {
+        // if responseStatus throws, we have a network issue in play
+        shouldBackoff = true;
+      }
     }
     
     // if this is a client error, do the next sync as normal and return
