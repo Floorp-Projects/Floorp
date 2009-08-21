@@ -176,6 +176,8 @@ function populateDB(aArray) {
           stmt.params.url = qdata.uri;
           try {
             stmt.execute();
+            // Force a notification so results are updated.
+            histsvc.runInBatchMode({runBatched: function(){}}, null);
           }
           finally {
             stmt.finalize();
@@ -193,6 +195,8 @@ function populateDB(aArray) {
           stmt.params.url = qdata.uri;
           try {
             stmt.execute();
+            // Force a notification so results are updated.
+            histsvc.runInBatchMode({runBatched: function(){}}, null);
           }
           finally {
             stmt.finalize();

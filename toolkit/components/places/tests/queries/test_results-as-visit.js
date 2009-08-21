@@ -36,24 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 var testData = [];
-
+var now = Date.now() * 1000;
 function createTestData() {
-  function generateVisits(aObj, aNum) {
-    for(var i=0; i < aNum; i++)
-      testData.push(aObj);
+  function generateVisits(aPage) {
+    for (var i = 0; i < aPage.visitCount; i++) {
+      testData.push({ isInQuery: aPage.inQuery,
+                      isVisit: true,
+                      title: aPage.title,
+                      uri: aPage.uri,
+                      lastVisit: now++,
+                      isTag: aPage.tags && aPage.tags.length > 0,
+                      tagArray: aPage.tags });
+    }
   }
-  generateVisits({isInQuery: true, isDetails: true, title: "amo",
-                 uri: "http://foo.com/", lastVisit: lastweek, isTag: true,
-                 tagArray: ["moz"]}, 3);
-  generateVisits({isInQuery: true, isDetails: true, isTag: true,
-                 title: "bMoz", tagArray: ["bugzilla"], uri: "http://moilla.com/",
-                 lastVisit: yesterday}, 5);
-  generateVisits({isInQuery: true, isDetails: true, title: "C Moz",
-                 uri: "http://foo.mail.com/changeme1.html"}, 7);
-  generateVisits({isInQuery: false, isVisit: true, isTag: true, tagArray: ["moz"],
-                 uri: "http://foo.change.co/changeme2.html"}, 1);
-  generateVisits({isInQuery: false, isVisit: true, isDetails: true,
-                 title: "zydeco", uri: "http://foo.com/changeme3.html"}, 5);
+  
+  var pages = [
+    { uri: "http://foo.com/", title: "amo", tags: ["moz"], visitCount: 3, inQuery: true },
+    { uri: "http://moilla.com/", title: "bMoz", tags: ["bugzilla"], visitCount: 5, inQuery: true },
+    { uri: "http://foo.mail.com/changeme1.html", title: "c Moz", visitCount: 7, inQuery: true },
+    { uri: "http://foo.mail.com/changeme2.html", tags: ["moz"], title: "", visitCount: 1, inQuery: false },
+    { uri: "http://foo.mail.com/changeme3.html", title: "zydeco", visitCount: 5, inQuery: false },
+  ];
+  pages.forEach(generateVisits);
 }
 
  /**
@@ -89,8 +93,9 @@ function createTestData() {
    LOG("Adding item to query")
    var tmp = [];
    for (var i=0; i < 2; i++) {
-     tmp.push({isVisit: true, isDetails: true, uri: "http://foo.com/added.html",
-              title: "ab moz"});
+     tmp.push({ isVisit: true,
+                uri: "http://foo.com/added.html",
+                title: "ab moz" });
    }
    populateDB(tmp);
    for (var i=0; i < 2; i++)
@@ -98,8 +103,9 @@ function createTestData() {
 
    // Update an existing URI
    LOG("Updating Item");
-   var change2 = [{isVisit: true, isDetails: true, title: "moz",
-                 uri: "http://foo.change.co/changeme2.html"}];
+   var change2 = [{ isVisit: true,
+                    title: "moz",
+                    uri: "http://foo.mail.com/changeme2.html" }];
    populateDB(change2);
    do_check_true(isInResult(change2, root));
 
@@ -108,21 +114,29 @@ function createTestData() {
    LOG("Updating Items in batch");
    var updateBatch = {
      runBatched: function (aUserData) {
-       batchchange = [{isDetails: true, uri: "http://foo.mail.com/changeme1.html",
-                       title: "foo"},
-                      {isTag: true, uri: "http://foo.com/changeme3.html",
-                       tagArray: ["foo", "moz"]}];
+       batchchange = [{ isVisit: true,
+                        lastVisit: now++,
+                        uri: "http://foo.mail.com/changeme1.html",
+                        title: "foo"},
+                      { isVisit: true,
+                        lastVisit: now++,
+                        uri: "http://foo.mail.com/changeme3.html",
+                        title: "moz",
+                        isTag: true,
+                        tagArray: ["foo", "moz"] }];
        populateDB(batchchange);
      }
    };
    histsvc.runInBatchMode(updateBatch, null);
    do_check_false(isInResult({uri: "http://foo.mail.com/changeme1.html"}, root));
-   do_check_true(isInResult({uri: "http://foo.com/changeme3.html"}, root));
+   do_check_true(isInResult({uri: "http://foo.mail.com/changeme3.html"}, root));
 
    // And now, delete one
    LOG("Delete item outside of batch");
-   var change4 = [{isDetails: true, uri: "http://moilla.com/",
-                   title: "mo,z"}];
+   var change4 = [{ isVisit: true,
+                    lastVisit: now++,
+                    uri: "http://moilla.com/",
+                    title: "mo,z" }];
    populateDB(change4);
    do_check_false(isInResult(change4, root));
 }
