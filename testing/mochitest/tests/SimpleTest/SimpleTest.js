@@ -34,7 +34,7 @@ SimpleTest._stopOnLoad = true;
  * Something like assert.
 **/
 SimpleTest.ok = function (condition, name, diag) {
-    var test = {'result': !!condition, 'name': name, 'diag': diag || ""};
+    var test = {'result': !!condition, 'name': name, 'diag': diag};
     if (SimpleTest._logEnabled)
         SimpleTest._logResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
     SimpleTest._tests.push(test);
@@ -56,7 +56,7 @@ SimpleTest.isnot = function (a, b, name) {
 //  --------------- Test.Builder/Test.More todo() -----------------
 
 SimpleTest.todo = function(condition, name, diag) {
-  var test = {'result': !!condition, 'name': name, 'diag': diag || "", todo: true};
+  var test = {'result': !!condition, 'name': name, 'diag': diag, todo: true};
   if (SimpleTest._logEnabled)
       SimpleTest._logResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
   SimpleTest._tests.push(test);
@@ -68,9 +68,7 @@ SimpleTest._logResult = function(test, passString, failString) {
   if (parentRunner.currentTestURL)
     msg += parentRunner.currentTestURL;
   msg += " | " + test.name;
-  var diag = "";
-  if (test.diag)
-    diag = " - " + test.diag;
+  var diag = test.diag ? " - " + test.diag : "";
   if (test.result) {
       if (test.todo)
           parentRunner.logger.error(msg + diag);
@@ -116,18 +114,19 @@ SimpleTest.report = function () {
     var results = MochiKit.Base.map(
         function (test) {
             var cls, msg;
+            var diag = test.diag ? " - " + test.diag : "";
             if (test.todo && !test.result) {
                 todo++;
                 cls = "test_todo";
-                msg = "todo - " + test.name + " " + test.diag;
+                msg = "todo | " + test.name + diag;
             } else if (test.result && !test.todo) {
                 passed++;
                 cls = "test_ok";
-                msg = "ok - " + test.name;
+                msg = "passed | " + test.name;
             } else {
                 failed++;
                 cls = "test_not_ok";
-                msg = "not ok - " + test.name + " " + test.diag;
+                msg = "failed | " + test.name + diag;
             }
             return DIV({"class": cls}, msg);
         },
@@ -468,7 +467,7 @@ var isDeeply = SimpleTest.isDeeply;
 const oldOnError = window.onerror;
 window.onerror = function (ev) {
   // Log the error.
-  ok(false, "[SimpleTest/SimpleTest.js, window.onerror] An error occurred: [ " + ev + " ]");
+  ok(false, "[SimpleTest/SimpleTest.js, window.onerror] An error occurred", ev);
 
   // Call previous handler.
   if (oldOnError) {
@@ -476,7 +475,7 @@ window.onerror = function (ev) {
       oldOnError(ev);
     } catch (e) {
       // Log the exception.
-      ok(false, "[SimpleTest/SimpleTest.js, window.onerror] Exception thrown by oldOnError(): [ " + e + " ]");
+      ok(false, "[SimpleTest/SimpleTest.js, window.onerror] Exception thrown by oldOnError()", e);
     }
   }
 
