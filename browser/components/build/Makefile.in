@@ -98,7 +98,7 @@ ifndef MOZ_ENABLE_LIBXUL
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 # Doesn't work, couldn't figure out why
 #EXTRA_DSO_LIBS += thebes
-EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/lib/$(LIB_PREFIX)thebes.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/lib/$(LIB_PREFIX)thebes.$(IMPORT_LIB_SUFFIX)
 endif
 endif
 
