@@ -11,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Application Update..
+ * The Original Code is MOZCE Lib.
  *
- * The Initial Developer of the Original Code is
- * Brad Lassey <blassey@mozilla.com>.
- *
+ * The Initial Developer of the Original Code is Doug Turner <dougt@meer.net>.
+
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Robert Strong <robert.bugzilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef UPDATER_WINCE_H
-#define UPDATER_WINCE_H
+/* environment.h and environment.cpp are also included by app update */
 
-#include "environment.h"
+#ifndef MOZCE_ENVIRONMENT_H
+#define MOZCE_ENVIRONMENT_H
 
-#define _S_IFDIR    0040000 /* stat, is a directory */
-#define _S_IFREG    0100000 /* stat, is a normal file */
-#define _S_IREAD    0000400 /* stat, can read */
-#define _S_IWRITE   0000200 /* stat, can write */
-#define _S_IEXEC    0000100
-
-#define BUFSIZ 1024
-#define _putenv putenv
-
-struct stat {
-  unsigned short st_mode;
-  size_t st_size;
-  time_t st_ctime;
-  time_t st_atime;
-  time_t st_mtime;
-};
-extern int errno;
-int _wchmod(const WCHAR* path, unsigned int mode);
-int fstat(FILE* handle, struct stat* buff);
-int stat(const char* path, struct stat* buf);
-int _wstat(const WCHAR* path, struct stat* buf);
-int _wmkdir(const WCHAR* path);
-int access(const char* path, int amode);
-int _waccess(const WCHAR* path, int amode);
-int _wremove(const WCHAR* wpath);
-int _wchdir(const unsigned short* path);
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+/* Environment stuff */
+char* getenv(const char* inName);
+int putenv(const char *a);
+char SetEnvironmentVariableW(const unsigned short * name, const unsigned short * value );
+char GetEnvironmentVariableW(const unsigned short * lpName, unsigned short* lpBuffer, unsigned long nSize);
+
+unsigned int ExpandEnvironmentStringsW(const unsigned short* lpSrc,
+				       unsigned short* lpDst,
+				       unsigned int nSize);
+
+unsigned short* mozce_GetEnvironmentCL();
+
+#ifdef __cplusplus
+};
+#endif
+
+#endif //MOZCE_ENVIRONMENT_H

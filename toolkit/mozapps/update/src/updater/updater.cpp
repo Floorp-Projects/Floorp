@@ -56,7 +56,9 @@
 # define W_OK 02
 # define R_OK 04
 # define access _access
+#ifndef WINCE
 # define putenv _putenv
+#endif
 # define snprintf _snprintf
 # define fchmod(a,b)
 
@@ -1244,6 +1246,11 @@ LaunchWinPostProcess(const WCHAR *appExe)
 static void
 LaunchCallbackApp(const NS_tchar *workingDir, int argc, NS_tchar **argv)
 {
+  // Windows CE uses a mock environment by passing environment variable with
+  // the command line. It is the responsibility of the application to provide
+  // the working directory and other environment variables used by the
+  // application which is then passed back to the application when the updater
+  // launches it.
   putenv(const_cast<char*>("NO_EM_RESTART="));
   putenv(const_cast<char*>("MOZ_LAUNCHED_CHILD=1"));
 
@@ -1444,6 +1451,8 @@ int NS_main(int argc, NS_tchar **argv)
 
   gSourcePath = argv[1];
 #ifdef WINCE
+  // This is the working directory to apply the update and is required on WinCE
+  // since it doesn't have the concept of a working directory.
   gDestPath = argv[3];
 #endif
 

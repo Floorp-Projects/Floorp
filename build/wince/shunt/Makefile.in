@@ -63,6 +63,7 @@ EXPORTS_mozce_shunt = \
   include/fcntl.h \
   include/io.h \
   include/mbstring.h \
+  include/environment.h \
   include/mozce_shunt.h \
   include/process.h \
   include/signal.h \

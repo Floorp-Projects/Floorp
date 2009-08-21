@@ -82,6 +82,7 @@ REQUIRES += string
 endif
 
 ifeq ($(OS_ARCH),WINCE)
+export NO_SHUNT = 1
 USE_STATIC_LIBS = 1
 HAVE_PROGRESSUI = 1
 CPPSRCS += \
@@ -95,9 +96,11 @@ RCINCLUDE = updater_winmo.rc
 else
 RCINCLUDE = updater_wince.rc
 endif
-DEFINES += -DUNICODE -D_UNICODE
+DEFINES += -DUNICODE -D_UNICODE -DWINCE_SKIP_SHUNT_INCLUDE
 RCFLAGS += -I$(srcdir)
 REQUIRES += string
+LOCAL_INCLUDES += -I$(topsrcdir)/build/wince/shunt/include \
+                  -I$(topsrcdir)/build/wince/shunt
 endif
 
 ifneq ($(MOZ_ENABLE_GTK2),)
