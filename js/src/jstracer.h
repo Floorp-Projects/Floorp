@@ -483,36 +483,37 @@ struct REHashFn {
 };
 
 struct FrameInfo {
-    JSObject*       callee;     // callee function object
     JSObject*       block;      // caller block chain head
     jsbytecode*     pc;         // caller fp->regs->pc
     jsbytecode*     imacpc;     // caller fp->imacpc
-    uint16          spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
+    uint32          spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
 
     /*
      * Bit  15 (0x8000) is a flag that is set if constructing (called through new).
      * Bits 0-14 are the actual argument count. This may be less than fun->nargs.
+     * NB: This is argc for the callee, not the caller.
      */
-    uint16          argc;
+    uint32          argc;
 
     /*
-     * Stack pointer adjustment needed for navigation of native stack in
-     * js_GetUpvarOnTrace. spoffset is the number of slots in the native
-     * stack frame for the caller *before* the slots covered by spdist.
-     * This may be negative if the caller is the top level script.
-     * The key fact is that if we let 'cpos' be the start of the caller's
-     * native stack frame, then (cpos + spoffset) points to the first
-     * non-argument slot in the callee's native stack frame.
+     * Number of stack slots in the caller, not counting slots pushed when
+     * invoking the callee. That is, slots after JSOP_CALL completes but
+     * without the return value. This is also equal to the number of slots
+     * between fp->down->argv[-2] (calleR fp->callee) and fp->argv[-2]
+     * (calleE fp->callee).
      */
-    int32          spoffset;
+    uint32          callerHeight;
+
+    /* argc of the caller */
+    uint32          callerArgc;
 
     // Safer accessors for argc.
-    enum { CONSTRUCTING_MASK = 0x8000 };
+    enum { CONSTRUCTING_FLAG = 0x10000 };
     void   set_argc(uint16 argc, bool constructing) {
-        this->argc = argc | (constructing ? CONSTRUCTING_MASK : 0);
+        this->argc = uint32(argc) | (constructing ? CONSTRUCTING_FLAG: 0);
     }
-    uint16 get_argc() const { return argc & ~CONSTRUCTING_MASK; }
-    bool   is_constructing() const { return (argc & CONSTRUCTING_MASK) != 0; }
+    uint16 get_argc() const { return argc & ~CONSTRUCTING_FLAG; }
+    bool   is_constructing() const { return (argc & CONSTRUCTING_FLAG) != 0; }
 
     // The typemap just before the callee is called.
     JSTraceType* get_typemap() { return (JSTraceType*) (this+1); }
