@@ -316,7 +316,7 @@ namespace nanojit
         /** remove k from the map, if it is present.  if not, remove()
          *  silently returns */
         void remove(const K& k) {
-            size_t i = H::hash(k);
+            size_t i = H::hash(k) % nbuckets;
             Seq<Node>** prev = &buckets[i];
             for (Seq<Node>* p = buckets[i]; p != NULL; p = p->tail) {
                 if (p->head.key == k) {
