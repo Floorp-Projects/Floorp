@@ -24,12 +24,18 @@ strftime
 time
 
 #ifdef MOZ_MEMORY
+;; std::nothrow object
+?nothrow@std@@3Unothrow_t@1@B
 ;; operator new
 ??2@YAPAXI@Z
+;; operator new nothrow
+??2@YAPAXIABUnothrow_t@std@@@Z
 ;; operator delete
 ??3@YAXPAX@Z
 ;; operator new[]
 ??_U@YAPAXI@Z
+;; operator new[] nothrow
+??_U@YAPAXIABUnothrow_t@std@@@Z
 ;; operator delete[]
 ??_V@YAXPAX@Z
 malloc
