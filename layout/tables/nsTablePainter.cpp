@@ -202,7 +202,7 @@ TableBackgroundPainter::TableBackgroundData::ShouldSetBCBorder()
   }
 
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, mBackground) {
-    if (mBackground->mLayers[i].mImage.GetType() != eBackgroundImage_Null)
+    if (!mBackground->mLayers[i].mImage.IsEmpty())
       return PR_TRUE;
   }
   return PR_FALSE;

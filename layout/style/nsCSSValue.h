@@ -44,6 +44,7 @@
 #include "nsString.h"
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
+#include "nsCSSKeywords.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -333,6 +334,11 @@ public:
   NS_HIDDEN_(void)  SetRectIsAutoValue();
   NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument)
                                    const;  // Not really const, but pretending
+
+  // Initializes as a function value with the specified function id.
+  NS_HIDDEN_(Array*) InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs);
+  // Checks if this is a function value with the specified function id.
+  NS_HIDDEN_(PRBool) EqualsFunction(nsCSSKeyword aFunctionId) const;
 
   // Returns an already addrefed buffer.  Can return null on allocation
   // failure.

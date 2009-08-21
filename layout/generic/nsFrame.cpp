@@ -4025,7 +4025,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   const nsStyleBackground *bg = GetStyleBackground();
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     const nsStyleBackground::Layer &layer = bg->mLayers[i];
-    if (layer.mImage.GetType() != eBackgroundImage_Null &&
+    if (!layer.mImage.IsEmpty() &&
         (layer.mPosition.mXIsPercent || layer.mPosition.mYIsPercent)) {
       Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
