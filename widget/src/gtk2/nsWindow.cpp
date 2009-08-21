@@ -6554,8 +6554,14 @@ nsWindow::IMEGetContext()
 static PRBool
 IsIMEEnabledState(PRUint32 aState)
 {
+#ifdef MOZ_PLATFORM_HILDON
+    return aState == nsIWidget::IME_STATUS_ENABLED ||
+           aState == nsIWidget::IME_STATUS_PLUGIN  ||
+           aState == nsIWidget::IME_STATUS_PASSWORD;
+#else
     return aState == nsIWidget::IME_STATUS_ENABLED ||
            aState == nsIWidget::IME_STATUS_PLUGIN;
+#endif
 }
 
 PRBool
@@ -6762,19 +6768,21 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
             // user previous entered passwds, so lets make completions invisible
             // in these cases.
             int mode;
-            g_object_get (G_OBJECT(focusedIm), "hildon-input-mode", &mode, NULL);
+            g_object_get (G_OBJECT(IMEGetContext()), "hildon-input-mode", &mode, NULL);
 
-            if (mIMEData->mEnabled == IME_STATUS_ENABLED)
+
+            if (mIMEData->mEnabled == nsIWidget::IME_STATUS_ENABLED ||
+                mIMEData->mEnabled == nsIWidget::IME_STATUS_PLUGIN)
                 mode &= ~HILDON_GTK_INPUT_MODE_INVISIBLE;
             else if (mIMEData->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
                mode |= HILDON_GTK_INPUT_MODE_INVISIBLE;
 
-            g_object_set (G_OBJECT(focusedIm), "hildon-input-mode", (HildonGtkInputMode)mode, NULL);
+            g_object_set (G_OBJECT(IMEGetContext()), "hildon-input-mode", (HildonGtkInputMode)mode, NULL);
             gIMEVirtualKeyboardOpened = PR_TRUE;
-            hildon_gtk_im_context_show (focusedIm);
+            hildon_gtk_im_context_show (IMEGetContext());
         } else {
             gIMEVirtualKeyboardOpened = PR_FALSE;
-            hildon_gtk_im_context_hide (focusedIm);
+            hildon_gtk_im_context_hide (IMEGetContext());
         }
 #endif
 
@@ -6928,8 +6936,7 @@ IM_commit_cb(GtkIMContext *aContext,
     // if gFocusWindow is null, use the last focused gIMEFocusWindow
     nsRefPtr<nsWindow> window = gFocusWindow ? gFocusWindow : gIMEFocusWindow;
 
-    if (!window || IM_get_input_context(window) != aContext &&
-        !(window->mIMEData && window->mIMEData->mEnabled == nsIWidget::IME_STATUS_PASSWORD)) 
+    if (!window || IM_get_input_context(window) != aContext)
         return;
 
     /* If IME doesn't change they keyevent that generated this commit,
@@ -7113,7 +7120,11 @@ IM_get_input_context(nsWindow *aWindow)
         data->mEnabled == nsIWidget::IME_STATUS_PLUGIN)
         return data->mContext;
     if (data->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
+#ifdef MOZ_PLATFORM_HILDON
+        return data->mContext;
+#else
         return data->mSimpleContext;
+#endif
     return data->mDummyContext;
 }
 
