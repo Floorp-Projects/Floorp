@@ -192,6 +192,106 @@ private:
   nsStyleGradient& operator=(const nsStyleGradient& aOther);
 };
 
+enum nsStyleImageType {
+  eStyleImageType_Null,
+  eStyleImageType_Image,
+  eStyleImageType_Gradient
+};
+
+/**
+ * Represents a paintable image of one of the following types.
+ * (1) A real image loaded from an external source.
+ * (2) A CSS linear or radial gradient.
+ * (*) Optionally a crop rect can be set to paint a partial (rectangular)
+ * region of an image. (Currently, this feature is only supported with an
+ * image of type (1)).
+ *
+ * This struct is currently used only for 'background-image', but it may be
+ * used by other CSS properties such as 'border-image', 'list-style-image', and
+ * 'content' in the future (bug 507052).
+ */
+struct nsStyleImage {
+  nsStyleImage();
+  ~nsStyleImage();
+  nsStyleImage(const nsStyleImage& aOther);
+  nsStyleImage& operator=(const nsStyleImage& aOther);
+
+  void SetNull();
+  void SetImageData(imgIRequest* aImage);
+  void SetGradientData(nsStyleGradient* aGradient);
+  void SetCropRect(nsStyleSides* aCropRect);
+
+  nsStyleImageType GetType() const {
+    return mType;
+  }
+  imgIRequest* GetImageData() const {
+    NS_ASSERTION(mType == eStyleImageType_Image, "Data is not an image!");
+    return mImage;
+  }
+  nsStyleGradient* GetGradientData() const {
+    NS_ASSERTION(mType == eStyleImageType_Gradient, "Data is not a gradient!");
+    return mGradient;
+  }
+  nsStyleSides* GetCropRect() const {
+    NS_ASSERTION(mType == eStyleImageType_Image,
+                 "Only image data can have a crop rect");
+    return mCropRect;
+  }
+
+  /**
+   * Compute the actual crop rect in pixels, using the source image bounds.
+   * The computation involves converting percentage unit to pixel unit and
+   * clamping each side value to fit in the source image bounds.
+   * @param aActualCropRect the computed actual crop rect.
+   * @param aIsEntireImage PR_TRUE iff |aActualCropRect| is identical to the
+   * source image bounds.
+   * @return PR_TRUE iff |aActualCropRect| holds a meaningful value.
+   */
+  PRBool ComputeActualCropRect(nsIntRect& aActualCropRect,
+                               PRBool* aIsEntireImage = nsnull) const;
+
+  /**
+   * @return PR_TRUE if the item is definitely opaque --- i.e., paints every
+   * pixel within its bounds opaquely, and the bounds contains at least a pixel.
+   */
+  PRBool IsOpaque() const;
+  /**
+   * @return PR_TRUE if this image is fully loaded, and its size is calculated;
+   * always returns PR_TRUE if |mType| is |eStyleImageType_Gradient|.
+   */
+  PRBool IsComplete() const;
+  /**
+   * @return PR_TRUE if it is 100% confident that this image contains no pixel
+   * to draw.
+   */
+  PRBool IsEmpty() const {
+    // There are some other cases when the image will be empty, for example
+    // when the crop rect is empty. However, checking the emptiness of crop
+    // rect is non-trivial since each side value can be specified with
+    // percentage unit, which can not be evaluated until the source image size
+    // is available. Therefore, we currently postpone the evaluation of crop
+    // rect until the actual rendering time --- alternatively until IsOpaque()
+    // is called.
+    return mType == eStyleImageType_Null;
+  }
+
+  PRBool operator==(const nsStyleImage& aOther) const;
+  PRBool operator!=(const nsStyleImage& aOther) const {
+    return !(*this == aOther);
+  }
+
+private:
+  void DoCopy(const nsStyleImage& aOther);
+
+  nsStyleImageType mType;
+  union {
+    imgIRequest* mImage;
+    nsStyleGradient* mGradient;
+  };
+  // This is _currently_ used only in conjunction with eStyleImageType_Image.
+  nsAutoPtr<nsStyleSides> mCropRect;
+};
+
 struct nsStyleColor {
   nsStyleColor(nsPresContext* aPresContext);
   nsStyleColor(const nsStyleColor& aOther);
@@ -215,12 +315,6 @@ struct nsStyleColor {
   // Don't add ANY members to this struct!  We can achieve caching in the rule
   // tree (rather than the style tree) by letting color stay by itself! -dwh
   nscolor mColor;                 // [inherited]
-};
-
-enum nsStyleBackgroundImageType {
-  eBackgroundImage_Null,
-  eBackgroundImage_Image,
-  eBackgroundImage_Gradient
 };
 
 struct nsStyleBackground {
@@ -304,46 +398,6 @@ struct nsStyleBackground {
     }
   };
 
-  struct Image;
-  friend struct Image;
-  struct Image {
-  public:
-    Image();
-    ~Image();
-    Image(const Image& aOther);
-    Image& operator=(const Image& aOther);
-
-    void SetImageData(imgIRequest* aImage);
-    void SetGradientData(nsStyleGradient* aGradient);
-    void SetNull();
-
-    nsStyleBackgroundImageType GetType() const {
-      return mType;
-    };
-    imgIRequest* GetImageData() const {
-      NS_ASSERTION(mType == eBackgroundImage_Image, "Data is not an image!");
-      return mImage;
-    };
-    nsStyleGradient* GetGradientData() const {
-      NS_ASSERTION(mType == eBackgroundImage_Gradient, "Data is not a gradient!");
-      return mGradient;
-    };
-
-    PRBool operator==(const Image& aOther) const;
-    PRBool operator!=(const Image& aOther) const {
-      return !(*this == aOther);
-    }
-
-  private:
-    void DoCopy(const Image& aOther);
-
-    nsStyleBackgroundImageType mType;
-    union {
-      imgIRequest* mImage;
-      nsStyleGradient* mGradient;
-    };
-  };
-
   struct Layer;
   friend struct Layer;
   struct Layer {
@@ -352,7 +406,7 @@ struct nsStyleBackground {
     PRUint8 mOrigin;                    // [reset] See nsStyleConsts.h
     PRUint8 mRepeat;                    // [reset] See nsStyleConsts.h
     Position mPosition;                 // [reset]
-    Image mImage;                       // [reset]
+    nsStyleImage mImage;                // [reset]
     Size mSize;                         // [reset]
 
     // Initializes only mImage

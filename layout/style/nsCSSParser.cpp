@@ -111,6 +111,7 @@
 #define VARIANT_GRADIENT        0x200000  // eCSSUnit_Gradient
 #define VARIANT_CUBIC_BEZIER    0x400000  // CSS transition timing function
 #define VARIANT_ALL             0x800000  //
+#define VARIANT_IMAGE_RECT    0x01000000  // eCSSUnit_Function
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -529,9 +530,11 @@ protected:
                                      const PRInt32 aKeywordTable[]);
   PRBool ParseCounter(nsCSSValue& aValue);
   PRBool ParseAttr(nsCSSValue& aValue);
+  PRBool SetValueToURL(nsCSSValue& aValue, const nsString& aURL);
   PRBool ParseURL(nsCSSValue& aValue);
   PRBool TranslateDimension(nsCSSValue& aValue, PRInt32 aVariantMask,
                             float aNumber, const nsString& aUnit);
+  PRBool ParseImageRect(nsCSSValue& aImage);
   PRBool ParseGradientStop(nsCSSValueGradient* aGradient);
   PRBool ParseGradient(nsCSSValue& aValue, PRBool aIsRadial);
 
@@ -1327,7 +1330,8 @@ CSSParserImpl::GetURLInParens(nsString& aURL)
     // weren't treated as a URL token by the tokenization
 
     // XXX We really need to push aURL back into the buffer before this
-    // SkipUntil!
+    // SkipUntil, but we won't do it as it will make no difference anyway,
+    // and it will make parsing slower.
     SkipUntil(')');
     return PR_FALSE;
   }
@@ -4551,6 +4555,11 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     if (tk->mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient"))
       return ParseGradient(aValue, PR_TRUE);
   }
+  if ((aVariantMask & VARIANT_IMAGE_RECT) != 0 &&
+      eCSSToken_Function == tk->mType &&
+      tk->mIdent.LowerCaseEqualsLiteral("-moz-image-rect")) {
+    return ParseImageRect(aValue);
+  }
   if ((aVariantMask & VARIANT_COLOR) != 0) {
     if ((mNavQuirkMode && !IsParsingCompoundProperty()) || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
         (eCSSToken_ID == tk->mType) ||
@@ -4763,7 +4772,7 @@ CSSParserImpl::ParseAttr(nsCSSValue& aValue)
 }
 
 PRBool
-CSSParserImpl::ParseURL(nsCSSValue& aValue)
+CSSParserImpl::SetValueToURL(nsCSSValue& aValue, const nsString& aURL)
 {
   if (!mSheetPrincipal) {
     NS_NOTREACHED("Codepaths that expect to parse URLs MUST pass in an "
@@ -4771,16 +4780,12 @@ CSSParserImpl::ParseURL(nsCSSValue& aValue)
     return PR_FALSE;
   }
 
-  nsString url;
-  if (!GetURLInParens(url))
-    return PR_FALSE;
-
   // Translate url into an absolute url if the url is relative to the
   // style sheet.
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), url, nsnull, mBaseURL);
+  NS_NewURI(getter_AddRefs(uri), aURL, nsnull, mBaseURL);
 
-  nsStringBuffer* buffer = nsCSSValue::BufferFromString(url);
+  nsStringBuffer* buffer = nsCSSValue::BufferFromString(aURL);
   if (NS_UNLIKELY(!buffer)) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
@@ -4795,6 +4800,80 @@ CSSParserImpl::ParseURL(nsCSSValue& aValue)
   }
   aValue.SetURLValue(urlVal);
   return PR_TRUE;
+}
+
+PRBool
+CSSParserImpl::ParseURL(nsCSSValue& aValue)
+{
+  nsAutoString url;
+  if (!GetURLInParens(url))
+    return PR_FALSE;
+
+  return SetValueToURL(aValue, url);
+}
+
+/**
+ * Parse the arguments of -moz-image-rect() function.
+ * -moz-image-rect(<uri>, <top>, <right>, <bottom>, <left>)
+ */
+PRBool
+CSSParserImpl::ParseImageRect(nsCSSValue& aImage)
+{
+  if (!ExpectSymbol('(', PR_TRUE))
+    return PR_FALSE;
+
+  // A non-iterative for loop to break out when an error occurs.
+  for (;;) {
+    nsCSSValue newFunction;
+    static const PRUint32 kNumArgs = 5;
+    nsCSSValue::Array* func =
+      newFunction.InitFunction(eCSSKeyword__moz_image_rect, kNumArgs);
+    if (!func) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      break;
+    }
+
+    // func->Item(0) is reserved for the function name.
+    nsCSSValue& url    = func->Item(1);
+    nsCSSValue& top    = func->Item(2);
+    nsCSSValue& right  = func->Item(3);
+    nsCSSValue& bottom = func->Item(4);
+    nsCSSValue& left   = func->Item(5);
+
+    if (!GetToken(PR_TRUE))
+      break;
+    if (mToken.mType == eCSSToken_String) {
+      if (!SetValueToURL(url, mToken.mIdent))
+        break;
+    } else if (mToken.mType == eCSSToken_Function &&
+               mToken.mIdent.LowerCaseEqualsLiteral("url")) {
+      if (!ParseURL(url))
+        break;
+    } else {
+      break;
+    }
+    if (!ExpectSymbol(',', PR_TRUE))
+      break;
+
+    static const PRInt32 VARIANT_SIDE = VARIANT_NUMBER | VARIANT_PERCENT;
+    if (!ParseNonNegativeVariant(top, VARIANT_SIDE, nsnull) ||
+        !ExpectSymbol(',', PR_TRUE) ||
+        !ParseNonNegativeVariant(right, VARIANT_SIDE, nsnull) ||
+        !ExpectSymbol(',', PR_TRUE) ||
+        !ParseNonNegativeVariant(bottom, VARIANT_SIDE, nsnull) ||
+        !ExpectSymbol(',', PR_TRUE) ||
+        !ParseNonNegativeVariant(left, VARIANT_SIDE, nsnull) ||
+        !ExpectSymbol(')', PR_TRUE))
+      break;
+
+    aImage = newFunction;
+    return PR_TRUE;
+  }
+
+  // If we detect a syntax error, we must match the opening parenthesis of the
+  // function with the closing parenthesis and skip all the tokens in between.
+  SkipUntil(')');
+  return PR_FALSE;
 }
 
 PRBool
@@ -5647,7 +5726,9 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HC, nsnull);
   case eCSSProperty_background_image:
     // Used only internally.
-    return ParseVariant(aValue, VARIANT_HUO | VARIANT_GRADIENT, nsnull);
+    return ParseVariant(aValue,
+                        VARIANT_HUO | VARIANT_GRADIENT | VARIANT_IMAGE_RECT,
+                        nsnull);
   case eCSSProperty__moz_background_inline_policy:
     return ParseVariant(aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundInlinePolicyKTable);
@@ -6430,7 +6511,8 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundItem& aItem,
     } else if (eCSSToken_Function == tt &&
                (mToken.mIdent.LowerCaseEqualsLiteral("url") ||
                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
-                mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient"))) {
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient") ||
+                mToken.mIdent.LowerCaseEqualsLiteral("-moz-image-rect"))) {
       if (haveImage)
         return PR_FALSE;
       haveImage = PR_TRUE;

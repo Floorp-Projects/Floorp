@@ -438,6 +438,37 @@ PRBool nsCSSValue::IsNonTransparentColor() const
     (mUnit == eCSSUnit_EnumColor);
 }
 
+nsCSSValue::Array*
+nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs)
+{
+  nsRefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
+  if (!func) {
+    return nsnull;
+  }
+
+  func->Item(0).SetIntValue(aFunctionId, eCSSUnit_Enumerated);
+  SetArrayValue(func, eCSSUnit_Function);
+
+  return func;
+}
+
+PRBool
+nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
+{
+  if (mUnit != eCSSUnit_Function) {
+    return PR_FALSE;
+  }
+
+  nsCSSValue::Array* func = mValue.mArray;
+  NS_ABORT_IF_FALSE(func && func->Count() >= 1 &&
+                    func->Item(0).GetUnit() == eCSSUnit_Enumerated,
+                    "illegally structured function value");
+
+  nsCSSKeyword thisFunctionId =
+    static_cast<nsCSSKeyword>(func->Item(0).GetIntValue());
+  return thisFunctionId == aFunctionId;
+}
+
 // static
 nsStringBuffer*
 nsCSSValue::BufferFromString(const nsString& aValue)

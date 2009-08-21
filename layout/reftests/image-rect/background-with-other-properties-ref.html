@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+-->
+<html>
+  <head>
+    <title>Testcases: -moz-image-rect() [bug 113577]</title>
+    <style>
+      div.wrapper {
+        width: 32px;
+        height: 32px;
+        margin: 10px;
+        background-color: red;
+      }
+      #test1 {
+        width: 32px;
+        height: 32px;
+        background-color: #00ff00;
+      }
+      #test2 {
+        width: 16px;
+        height: 16px;
+        background-color: #00ff00;
+      }
+      #test3 {
+        width: 32px;
+        height: 16px;
+        background-image: url('green-16x16-in-blue-32x32.png');
+      }
+      #test4 {
+        width: 16px;
+        height: 16px;
+        background-color: #00ff00;
+      }
+      #test5 {
+        width: 32px;
+        height: 32px;
+        background-color: #00ff00;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper"><div id="test1"></div></div>
+    <div class="wrapper"><div id="test2"></div></div>
+    <div class="wrapper"><div id="test3"></div></div>
+    <div class="wrapper"><div id="test4"></div></div>
+    <div class="wrapper"><div id="test5"></div></div>
+  </body>
+</html>

@@ -144,6 +144,9 @@ private:
 
   nsresult GetCSSGradientString(const nsStyleGradient* aGradient,
                                 nsAString& aString);
+  nsresult GetImageRectString(nsIURI* aURI,
+                              const nsStyleSides& aCropRect,
+                              nsString& aString);
 
   /* Properties Queryable as CSSValues */
 
@@ -378,6 +381,8 @@ private:
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
   nsresult SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
+  nsresult SetValueToStyleImage(const nsStyleImage& aStyleImage,
+                                nsROCSSPrimitiveValue* aValue);
   
   /**
    * A method to get a percentage base for a percentage value.  Returns PR_TRUE
