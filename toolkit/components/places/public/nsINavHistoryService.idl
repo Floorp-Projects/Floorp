@@ -956,6 +956,8 @@ interface nsINavHistoryQueryOptions : nsISupports
    * will have type "FullVisit".  This is used for the attributes that are not
    * commonly accessed to save space in the common case (the lists can be very
    * long).
+   *
+   * @note Not yet implemented. See bug 409662.
    */
   const unsigned short RESULTS_AS_FULL_VISIT = 2;
 
@@ -1113,8 +1115,9 @@ interface nsINavHistoryQueryOptions : nsISupports
 
   const unsigned short QUERY_TYPE_HISTORY = 0;
   const unsigned short QUERY_TYPE_BOOKMARKS = 1;
+  /* Unified queries are not yet implemented. See bug 378798 */
   const unsigned short QUERY_TYPE_UNIFIED = 2;
-  
+
   /**
    * The type of search to use when querying the DB; This attribute is only
    * honored by query nodes. It is silently ignored for simple folder queries.
