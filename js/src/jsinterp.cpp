@@ -2780,7 +2780,7 @@ js_Interpret(JSContext *cx)
        the recorder to be destroyed when we return. */
     if (tr) {
         if (tr->wasDeepAborted())
-            tr->removeFragmentoReferences();
+            tr->removeFragmentReferences();
         else
             tr->pushAbortStack();
     }
