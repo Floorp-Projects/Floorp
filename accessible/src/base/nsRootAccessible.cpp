@@ -38,6 +38,8 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
 #include "nsAccessibleEventData.h"
+#include "nsApplicationAccessibleWrap.h"
+
 #include "nsHTMLSelectAccessible.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
@@ -80,12 +82,6 @@
 #include "nsXULTreeAccessible.h"
 #include "nsIXULDocument.h"
 #include "nsIXULWindow.h"
-#endif
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsAppRootAccessible.h"
-#else
-#include "nsApplicationAccessibleWrap.h"
 #endif
 
 // Expanded version of NS_IMPL_ISUPPORTS_INHERITED2 
