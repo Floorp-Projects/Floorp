@@ -458,9 +458,12 @@ interface nsINavBookmarksService : nsISupports
    *
    * WARNING: This is API is intended for scenarios such as folder sorting,
    *          where the caller manages the indices of *all* items in the folder.
+   *          You must always ensure each index is unique after a reordering.
    *
    *  @param aItemId    The id of the item to modify
    *  @param aNewIndex  The new index
+   * 
+   *  @throws If aNewIndex is out of bounds.
    */
   void setItemIndex(in long long aItemId, in long aNewIndex);
 
