@@ -1,5 +1,7 @@
 chrome/classic.jar
 chrome/classic.manifest
+chrome/comm.jar
+chrome/comm.manifest
 chrome/reporter.jar
 chrome/reporter.manifest
 chrome/US.jar
