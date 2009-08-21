@@ -56,10 +56,11 @@
 #endif
 
 template <typename T>
-class Queue : public avmplus::GCObject {
+class Queue {
     T* _data;
     unsigned _len;
     unsigned _max;
+    nanojit::Allocator* alloc;
 
 public:
     void ensure(unsigned size) {
@@ -67,23 +68,34 @@ public:
             _max = 16;
         while (_max < size)
             _max <<= 1;
-        _data = (T*)realloc(_data, _max * sizeof(T));
+        if (alloc) {
+            T* tmp = new (*alloc) T[_max];
+            memcpy(tmp, _data, _len * sizeof(T));
+            _data = tmp;
+        } else {
+            _data = (T*)realloc(_data, _max * sizeof(T));
+        }
 #if defined(DEBUG)
         memset(&_data[_len], 0xcd, _max - _len);
 #endif
     }
 
-    Queue(unsigned max = 16) {
+    Queue(nanojit::Allocator* alloc, unsigned max = 16)
+        : alloc(alloc)
+    {
         this->_max = max;
         this->_len = 0;
         if (max)
-            this->_data = (T*)malloc(max * sizeof(T));
+            this->_data = (alloc ?
+                           new (*alloc) T[max] :
+                           (T*)malloc(max * sizeof(T)));
         else
             this->_data = NULL;
     }
 
     ~Queue() {
-        free(_data);
+        if (!alloc)
+            free(_data);
     }
 
     bool contains(T a) {
@@ -311,6 +323,7 @@ typedef Queue<uint16> SlotList;
 
 class TypeMap : public Queue<JSTraceType> {
 public:
+    TypeMap(nanojit::Allocator* alloc) : Queue<JSTraceType>(alloc) {}
     JS_REQUIRES_STACK void captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth);
     JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots,
                                                      unsigned stackSlots);
@@ -411,7 +424,7 @@ struct VMSideExit : public nanojit::SideExit
     }
 };
 
-struct VMAllocator : public nanojit::Allocator
+class VMAllocator : public nanojit::Allocator
 {
 
 public:
@@ -428,6 +441,7 @@ public:
 
     bool mOutOfMemory;
     size_t mSize;
+
     /*
      * FIXME: Area the LIR spills into if we encounter an OOM mid-way
      * through compilation; we must check mOutOfMemory before we run out
@@ -436,6 +450,36 @@ public:
      * and quite unsatisfactory approach to handling OOM in Nanojit.
      */
     uintptr_t mReserve[0x10000];
+};
+
+
+struct REHashKey {
+    size_t re_length;
+    uint16 re_flags;
+    const jschar* re_chars;
+
+    REHashKey(size_t re_length, uint16 re_flags, const jschar *re_chars)
+        : re_length(re_length)
+        , re_flags(re_flags)
+        , re_chars(re_chars)
+    {}
+
+    bool operator==(const REHashKey& other) const
+    {
+        return ((this->re_length == other.re_length) &&
+                (this->re_flags == other.re_flags) &&
+                !memcmp(this->re_chars, other.re_chars,
+                        this->re_length * sizeof(jschar)));
+    }
+};
+
+struct REHashFn {
+    static size_t hash(const REHashKey& k) {
+        return
+            k.re_length +
+            k.re_flags +
+            nanojit::murmurhash(k.re_chars, k.re_length * sizeof(jschar));
+    }
 };
 
 struct FrameInfo {
@@ -481,7 +525,7 @@ struct UnstableExit
     UnstableExit* next;
 };
 
-class TreeInfo MMGC_SUBCLASS_DECL {
+class TreeInfo {
 public:
     nanojit::Fragment* const      fragment;
     JSScript*               script;
@@ -507,19 +551,25 @@ public:
     uintN                   treePCOffset;
 #endif
 
-    TreeInfo(nanojit::Fragment* _fragment,
+    TreeInfo(nanojit::Allocator* alloc,
+             nanojit::Fragment* _fragment,
              SlotList* _globalSlots)
-      : fragment(_fragment),
-        script(NULL),
-        maxNativeStackSlots(0),
-        nativeStackBase(0),
-        maxCallDepth(0),
-        nStackTypes(0),
-        globalSlots(_globalSlots),
-        branchCount(0),
-        unstableExits(NULL)
-            {}
-    ~TreeInfo();
+        : fragment(_fragment),
+          script(NULL),
+          maxNativeStackSlots(0),
+          nativeStackBase(0),
+          maxCallDepth(0),
+          typeMap(alloc),
+          nStackTypes(0),
+          globalSlots(_globalSlots),
+          dependentTrees(alloc),
+          linkedTrees(alloc),
+          branchCount(0),
+          sideExits(alloc),
+          unstableExits(NULL),
+          gcthings(alloc),
+          sprops(alloc)
+    {}
 
     inline unsigned nGlobalTypes() {
         return typeMap.length() - nStackTypes;
@@ -935,9 +985,7 @@ public:
     JS_REQUIRES_STACK bool closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus &consensus);
     JS_REQUIRES_STACK void endLoop();
     JS_REQUIRES_STACK void endLoop(VMSideExit* exit);
-    JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
-                                            VMFragment* peer_root);
-    void blacklist() { fragment->blacklist(); }
+    JS_REQUIRES_STACK void joinEdgesToEntry(VMFragment* peer_root);
     JS_REQUIRES_STACK void adjustCallerTypes(nanojit::Fragment* f);
     JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f);
     JS_REQUIRES_STACK void prepareTreeCall(nanojit::Fragment* inner);
@@ -945,7 +993,7 @@ public:
     unsigned getCallDepth() const;
     void pushAbortStack();
     void popAbortStack();
-    void removeFragmentoReferences();
+    void removeFragmentReferences();
     void deepAbort();
 
     JS_REQUIRES_STACK JSRecordingStatus record_EnterFrame();
@@ -1022,7 +1070,7 @@ extern void
 js_PurgeScriptFragments(JSContext* cx, JSScript* script);
 
 extern bool
-js_OverfullFragmento(JSTraceMonitor* tm, nanojit::Fragmento *frago);
+js_OverfullJITCache(JSTraceMonitor* tm, bool reCache);
 
 extern void
 js_PurgeJITOracle();
