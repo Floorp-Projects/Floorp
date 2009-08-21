@@ -1014,6 +1014,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
     STOBJ_SET_SLOT(proto, JSSLOT_ITER_STATE, JSVAL_NULL);
+    STOBJ_SET_SLOT(proto, JSSLOT_ITER_FLAGS, JSVAL_ZERO);
 
 #if JS_HAS_GENERATORS
     /* Initialize the generator internals if configured. */
