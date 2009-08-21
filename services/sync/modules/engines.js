@@ -368,7 +368,8 @@ SyncEngine.prototype = {
 
   _isEqual: function SyncEngine__isEqual(item) {
     let local = this._createRecord(item.id);
-    this._log.trace("Local record: \n" + local);
+    if (this._log.level <= Log4Moz.Level.Trace)
+      this._log.trace("Local record: " + local);
     if (item.parentid == local.parentid &&
         item.sortindex == local.sortindex &&
         item.deleted == local.deleted &&
@@ -434,7 +435,8 @@ SyncEngine.prototype = {
 
   // Apply incoming records
   _applyIncoming: function SyncEngine__applyIncoming(item) {
-    this._log.trace("Incoming:\n" + item);
+    if (this._log.level <= Log4Moz.Level.Trace)
+      this._log.trace("Incoming: " + item);
     try {
       this._tracker.ignoreAll = true;
       this._store.applyIncoming(item);
@@ -470,7 +472,8 @@ SyncEngine.prototype = {
 
       for (let id in this._tracker.changedIDs) {
         let out = this._createRecord(id);
-        this._log.trace("Outgoing:\n" + out);
+        if (this._log.level <= Log4Moz.Level.Trace)
+          this._log.trace("Outgoing: " + out);
 
         out.encrypt(ID.get("WeaveCryptoID"));
         up.pushData(JSON.parse(out.serialize())); // FIXME: inefficient
