@@ -781,8 +781,6 @@ namespace nanojit
     LIns* FASTCALL callArgN(LInsp i, uint32_t n);
     extern const uint8_t operandCount[];
 
-    class Fragmento;    // @todo remove this ; needed for minbuild for some reason?!?  Should not be compiling this code at all
-
     // make it a GCObject so we can explicitly delete it early
     class LirWriter : public GCObject
     {
