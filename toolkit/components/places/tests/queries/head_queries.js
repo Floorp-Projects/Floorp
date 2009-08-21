@@ -218,27 +218,46 @@ function populateDB(aArray) {
       }
 
       if (qdata.isPageAnnotation) {
-        annosvc.setPageAnnotation(uri(qdata.uri), qdata.annoName, qdata.annoVal,
-                                  qdata.annoFlags, qdata.annoExpiration);
+        if (qdata.removeAnnotation) 
+          annosvc.removePageAnnotation(uri(qdata.uri), qdata.annoName);
+        else {
+          annosvc.setPageAnnotation(uri(qdata.uri),
+                                    qdata.annoName, qdata.annoVal,
+                                    qdata.annoFlags, qdata.annoExpiration);
+        }
       }
 
       if (qdata.isItemAnnotation) {
-        annosvc.setItemAnnotation(qdata.itemId, qdata.annoName, qdata.annoVal,
-                                  qdata.annoFlags, qdata.annoExpiration);
+        if (qdata.removeAnnotation)
+          annosvc.removeItemAnnotation(qdata.itemId, qdata.annoName);
+        else {
+          annosvc.setItemAnnotation(qdata.itemId, qdata.annoName, qdata.annoVal,
+                                    qdata.annoFlags, qdata.annoExpiration);
+        }
       }
 
       if (qdata.isPageBinaryAnnotation) {
-        annosvc.setPageAnnotationBinary(uri(qdata.uri), qdata.annoName,
-                                        qdata.binarydata, qdata.binaryDataLength,
-                                        qdata.annoMimeType, qdata.annoFlags,
-                                        qdata.annoExpiration);
+        if (qdata.removeAnnotation)
+          annosvc.removePageAnnotation(uri(qdata.uri), qdata.annoName);
+        else {
+          annosvc.setPageAnnotationBinary(uri(qdata.uri), qdata.annoName,
+                                          qdata.binarydata,
+                                          qdata.binaryDataLength,
+                                          qdata.annoMimeType, qdata.annoFlags,
+                                          qdata.annoExpiration);
+        }
       }
 
       if (qdata.isItemBinaryAnnotation) {
-        annosvc.setItemAnnotationBinary(qdata.itemId, qdata.annoName,
-                                        qdata.binaryData, qdata.binaryDataLength,
-                                        qdata.annoMimeType, qdata.annoFlags,
-                                        qdata.annoExpiration);
+        if (qdata.removeAnnotation)
+          annosvc.removeItemAnnotation(qdata.itemId, qdata.annoName);
+        else {
+          annosvc.setItemAnnotationBinary(qdata.itemId, qdata.annoName,
+                                          qdata.binaryData,
+                                          qdata.binaryDataLength,
+                                          qdata.annoMimeType, qdata.annoFlags,
+                                          qdata.annoExpiration);
+        }
       }
 
       if (qdata.isFavicon) {
@@ -317,6 +336,7 @@ function queryData(obj) {
   this.markPageAsTyped = obj.markPageAsTyped ? obj.markPageAsTyped : false;
   this.hidePage = obj.hidePage ? obj.hidePage : false;
   this.isPageAnnotation = obj.isPageAnnotation ? obj.isPageAnnotation : false;
+  this.removeAnnotation= obj.removeAnnotation ? true : false;
   this.annoName = obj.annoName ? obj.annoName : "";
   this.annoVal = obj.annoVal ? obj.annoVal : "";
   this.annoFlags = obj.annoFlags ? obj.annoFlags : 0;
