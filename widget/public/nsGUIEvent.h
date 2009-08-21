@@ -421,8 +421,6 @@ class nsHashKey;
 // Clear any previous selection and set the given range as the selection
 #define NS_SELECTION_SET                (NS_SELECTION_EVENT_START)
 
-#define NS_ORIENTATION_EVENT            3800
-
 // Events of commands for the contents
 #define NS_CONTENT_COMMAND_EVENT_START  3800
 #define NS_CONTENT_COMMAND_CUT          (NS_CONTENT_COMMAND_EVENT_START)
@@ -434,6 +432,8 @@ class nsHashKey;
 
 // Event to gesture notification
 #define NS_GESTURENOTIFY_EVENT_START 3900
+
+#define NS_ORIENTATION_EVENT         4000
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
