@@ -344,10 +344,10 @@ stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@mkdir $(DIST)/$(MOZ_PKG_DIR)
 ifdef MOZ_PKG_MANIFEST
 	$(RM) -rf $(DIST)/xpt
-	$(call PACKAGER_COPY, "$(DIST)",\
-		 "$(DIST)/$(MOZ_PKG_DIR)", \
+	$(call PACKAGER_COPY, "$(call core_abspath,$(DIST))",\
+		 "$(call core_abspath,$(DIST)/$(MOZ_PKG_DIR))", \
 		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
-	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/components -v -x "$(XPIDL_LINK)"
+	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_DIR)/$(_BINPATH)/components -v -x "$(XPIDL_LINK)" --debug=10
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 # If UNIVERSAL_BINARY, the package will be made from an already-prepared
