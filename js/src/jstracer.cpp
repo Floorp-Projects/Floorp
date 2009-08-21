@@ -5000,7 +5000,6 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
                           " LINE=%d ANCHOR=%p OFFS=%d\n",
                           f, c, cx->fp->regs->pc, cx->fp->script->filename,
                           js_FramePCToLineNumber(cx, cx->fp), anchor, FramePCOffset(cx->fp));
-        c->spawnedFrom = anchor;
         c->parent = f;
         anchor->target = c;
         c->root = f;

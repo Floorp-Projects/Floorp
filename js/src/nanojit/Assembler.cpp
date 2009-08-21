@@ -735,7 +735,6 @@ namespace nanojit
             prev = &vbr;
         )
 
-        verbose_only(_thisfrag->compileNbr++; )
         _inExit = false;
 
         LabelStateMap labels(alloc);
