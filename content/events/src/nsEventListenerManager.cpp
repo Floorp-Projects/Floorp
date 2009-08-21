@@ -470,6 +470,10 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                    kAllMutationBits :
                                    MutationBitForEventType(aType));
     }
+  } else if (aTypeAtom == nsGkAtoms::onMozOrientation) {
+    nsPIDOMWindow* window = GetInnerWindowForTarget();
+    if (window)
+      window->SetHasOrientationEventListener();
   }
 
   return NS_OK;
