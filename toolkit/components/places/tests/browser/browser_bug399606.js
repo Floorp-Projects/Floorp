@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,25 +36,34 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
-function test()
-{
-  const TEST_URI = "http://example.com/tests/toolkit/components/places/tests/browser/399606-history.go-0.html";
+function test() {
+  // Due to LAZY_ADD this is an async test.
+  waitForExplicitFinish();
+  const LAZY_ADD_TIMER = 3000;
 
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
+  var URIs = [
+    "http://example.com/tests/toolkit/components/places/tests/browser/399606-window.location.href.html",
+    "http://example.com/tests/toolkit/components/places/tests/browser/399606-history.go-0.html",
+    "http://example.com/tests/toolkit/components/places/tests/browser/399606-location.replace.html",
+    "http://example.com/tests/toolkit/components/places/tests/browser/399606-location.reload.html",
+    "http://example.com/tests/toolkit/components/places/tests/browser/399606-httprefresh.html",
+    "http://example.com/tests/toolkit/components/places/tests/browser/399606-window.location.html",
+  ];
+  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsINavHistoryService);
 
-  // create and add history observer
-  var observer = {
+  // Create and add history observer.
+  var historyObserver = {
+    visitCount: Array(),
     onBeginUpdateBatch: function() {},
     onEndUpdateBatch: function() {},
     onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
                       aTransitionType) {
-      info("onVisit: " + aURI.spec);
-      confirm_results();
-
-      histsvc.removeObserver(observer, false);
-      win.content.document.location.href = "about:blank";
-      finish();
+      info("Received onVisit: " + aURI.spec);
+      if (aURI.spec in this.visitCount)
+        this.visitCount[aURI.spec]++;
+      else
+        this.visitCount[aURI.spec] = 1;
     },
     onTitleChanged: function(aURI, aPageTitle) {},
     onBeforeDeleteURI: function(aURI) {},
@@ -61,56 +71,41 @@ function test()
     onClearHistory: function() {},
     onPageChanged: function(aURI, aWhat, aValue) {},
     onPageExpired: function(aURI, aVisitTime, aWholeEntry) {},
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsINavHistoryObserver) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
   };
-  
-  histsvc.addObserver(observer, false);
-  
-  // If LAZY_ADD is ever disabled, this function will not be correct
-  var loadCount = 0;
+  hs.addObserver(historyObserver, false);
+
   function confirm_results() {
-    var options = histsvc.getNewQueryOptions();
-    options.resultType = options.RESULTS_AS_VISIT;
-    options.includeHidden = true;
-    var query = histsvc.getNewQuery();
-    var uri = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService).
-              newURI(TEST_URI, null, null);
-    info("query uri is " + uri.spec);
-    query.uri = uri;
-    var result = histsvc.executeQuery(query, options);
-    var root = result.root;
-    root.containerOpen = true;
-    var cc = root.childCount;
-    is(cc, 1, "Visit count is what we expect");
-    ok(loadCount > 1, "Load count is greater than 1");
-    root.containerOpen = false;
+    hs.removeObserver(historyObserver, false);
+    for (let aURI in historyObserver.visitCount) {
+      is(historyObserver.visitCount[aURI], 1, "onVisit has been received right number of times for " + aURI);
+    }
+    hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
+    finish();
   }
 
-  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("navigator:browser");
-
+  var loadCount = 0;
   function handleLoad(aEvent) {
-    info("location is " + aEvent.originalTarget.location.href);
     loadCount++;
     info("new load count is " + loadCount);
 
-    if (loadCount == 3)
-      win.getBrowser().removeEventListener("DOMContentLoaded", handleLoad, false);
+    if (loadCount == 3) {
+      window.getBrowser().removeEventListener("DOMContentLoaded", handleLoad, true);
+      window.content.document.location.href = "about:blank";
+      executeSoon(check_next_uri);
+    }
   }
 
-  win.getBrowser().addEventListener("DOMContentLoaded", handleLoad, false);
-
-  // load page
-  win.content.document.location.href = TEST_URI;
-
-  // let our load handler handle the rest of the test
-  waitForExplicitFinish();
+  function check_next_uri() {
+    if (URIs.length) {
+      let uri = URIs.shift();
+      loadCount = 0;
+      window.getBrowser().addEventListener("DOMContentLoaded", handleLoad, true);
+      window.content.document.location.href = uri;
+    }
+    else {
+      setTimeout(confirm_results, LAZY_ADD_TIMER * 2);
+    }
+  }
+  executeSoon(check_next_uri);
 }
