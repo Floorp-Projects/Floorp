@@ -217,6 +217,7 @@ bin/components/nsHelperAppDlg.js
 bin/components/nsDownloadManagerUI.js
 bin/components/nsProxyAutoConfig.js
 bin/components/NetworkGeolocationProvider.js
+bin/components/GPSDGeolocationProvider.js
 bin/components/nsSidebar.js
 bin/components/nsExtensionManager.js
 bin/components/nsBlocklistService.js
