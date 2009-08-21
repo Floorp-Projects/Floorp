@@ -73,12 +73,6 @@ WBORecord.prototype = {
     this.baseUri = Utils.makeURI(foo.join('/') + '/');
   },
 
-  get modified() {
-    if (typeof(this.data.modified) == "string")
-      this.data.modified = parseInt(this.data.modified);
-    return this.data.modified;
-  },
-
   get sortindex() {
     if (this.data.sortindex)
       return this.data.sortindex;
