@@ -231,22 +231,6 @@ HistoryStore.prototype = {
 
     query.minVisits = 1;
     options.maxResults = 100;
-    /*
-    dump("SORT_BY_DATE_DESCENDING is " + options.SORT_BY_DATE_DESCENDING + "\n");
-    dump("SORT_BY_ANNOTATIOn_DESCENDING is " + options.SORT_BY_ANNOTATION_DESCENDING + "\n");
-    dump("BEFORE SETTING, options.sortingMode is " + options.sortingMode + "\n");
-
-    for ( let z = -1; z < 20; z++) {
-      try {
-	options.sortingMode = z;
-	dump("  -> Can set to " + z + " OK...\n");
-      } catch (e) {
-	dump("  -> Setting to " + z + " raises exception.\n");
-      }
-    }
-    dump("AFTER SETTING, options.sortingMode is " + options.sortingMode + "\n");
-     */
-     // TODO the following line throws exception on Fennec; see above.
     options.sortingMode = options.SORT_BY_DATE_DESCENDING;
     options.queryType = options.QUERY_TYPE_HISTORY;
 
