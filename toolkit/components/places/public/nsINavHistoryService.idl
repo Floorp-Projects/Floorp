@@ -948,6 +948,8 @@ interface nsINavHistoryQueryOptions : nsISupports
    * "Visit" results, with one for each time a page was visited (this will
    * often give you multiple results for one URI). Individual result nodes will
    * have type "Visit"
+   *
+   * @note This result type is only supported by QUERY_TYPE_HISTORY.
    */
   const unsigned short RESULTS_AS_VISIT = 1;
 
@@ -958,6 +960,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * long).
    *
    * @note Not yet implemented. See bug 409662.
+   * @note This result type is only supported by QUERY_TYPE_HISTORY.
    */
   const unsigned short RESULTS_AS_FULL_VISIT = 2;
 
@@ -965,6 +968,8 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This returns query nodes for each predefined date range where we 
    * had visits. The node contains information how to load its content:
    * - visits for the given date range will be loaded.
+   *
+   * @note This result type is only supported by QUERY_TYPE_HISTORY.
    */
   const unsigned short RESULTS_AS_DATE_QUERY = 3;
 
@@ -972,6 +977,8 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This returns nsINavHistoryQueryResultNode nodes for each site where we 
    * have visits. The node contains information how to load its content:
    * - last visit for each url in the given host will be loaded.
+   *
+   * @note This result type is only supported by QUERY_TYPE_HISTORY.
    */
   const unsigned short RESULTS_AS_SITE_QUERY = 4;
 
@@ -979,6 +986,8 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This returns nsINavHistoryQueryResultNode nodes for each day where we 
    * have visits. The node contains information how to load its content:
    * - list of hosts visited in the given period will be loaded.
+   *
+   * @note This result type is only supported by QUERY_TYPE_HISTORY.
    */
   const unsigned short RESULTS_AS_DATE_SITE_QUERY = 5;
 
@@ -986,7 +995,8 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This returns nsINavHistoryQueryResultNode nodes for each tag.
    * The node contains information how to load its content:
    * - list of bookmarks with the given tag will be loaded.
-   * Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
+   *
+   * @note Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
    */
   const unsigned short RESULTS_AS_TAG_QUERY = 6;
 
@@ -994,7 +1004,8 @@ interface nsINavHistoryQueryOptions : nsISupports
    * This is a container with an URI result type that contains the last
    * modified bookmarks for the given tag.
    * Tag folder id must be defined in the query.
-   * Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
+   *
+   * @note Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
    */
   const unsigned short RESULTS_AS_TAG_CONTENTS = 7;
 
