@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript">
+  <![CDATA[
+    var gOpenerWnd = window.opener.wrappedJSObject;
+
+    function ok(aCond, aMsg) {
+      gOpenerWnd.SimpleTest.ok(aCond, aMsg);
+    }
+
+    function is(aExpected, aActual, aMsg) {
+      gOpenerWnd.SimpleTest.is(aExpected, aActual, aMsg);
+    }
+
+    // Hack to make xul:tabbrowser work.
+    var XULBrowserWindow = {
+      isBusy: false,
+      setOverLink: function (link, b) {
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invoker implementation.
+
+    function switchTabSelectChecker(aInvoker)
+    {
+      this.type = "select";
+      this.target getter = function() { return aInvoker.getTabsElm(); }
+      this.getID = function() { return "switch tab, select event"; }
+    }
+
+    function switchTabFocusChecker(aInvoker)
+    {
+      this.type = gOpenerWnd.EVENT_FOCUS;
+      this.target getter = function() { return aInvoker.getContentDoc(); }
+      this.check = function(aEvent)
+      {
+        is(gOpenerWnd.getAccessible(document).name, "about:mozilla" + aEvent.accessible.name,
+           "Oops almost :)");
+      }
+      this.getID = function() { return "switch tab, focus event"; }
+    }
+
+    function switchTabInvoker(aTabBrowser)
+    {
+      this.invoke = function switchTabInvoker_invoke()
+      {
+        gOpenerWnd.synthesizeKey("VK_TAB", { ctrlKey: true });
+      }
+
+      this.eventSeq = [
+        new switchTabSelectChecker(this),
+        new switchTabFocusChecker(this)
+      ];
+
+      this.getContentDoc = function switchTabInvoker_getContentDoc()
+      {
+        return aTabBrowser.getBrowserAtIndex(1).contentDocument;
+      }
+      this.getTabsElm = function switchTabInvoker_getTabsElm()
+      {
+        return aTabBrowser.tabContainer;
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Tests
+
+    var gQueue = null;
+
+    const Ci = Components.interfaces;
+
+    function onload()
+    {
+      var tabBrowser = document.getElementById("content");
+      tabBrowser.loadURI("about:");
+      tabBrowser.addTab("about:mozilla");
+
+      gQueue = new gOpenerWnd.eventQueue();
+      gQueue.push(new switchTabInvoker(tabBrowser));
+      gQueue.onFinish = function() { window.close(); }
+      gQueue.invoke();
+    }
+  ]]>
+  </script>
+
+  <!-- Hack to make xul:tabbrowser work -->
+  <menubar>
+    <menu label="menu">
+      <menupopup>
+        <menuitem label="close window hook" id="menu_closeWindow"/>
+        <menuitem label="close hook" id="menu_close"/>
+      </menupopup>
+    </menu>
+  </menubar>
+
+  <tabbrowser type="content-primary" flex="1" id="content"/>
+
+</window>

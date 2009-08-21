@@ -41,7 +41,6 @@
 #include "nsApplicationAccessibleWrap.h"
 
 #include "nsHTMLSelectAccessible.h"
-#include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
@@ -55,6 +54,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMDataContainerEvent.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
@@ -111,7 +111,6 @@ nsRootAccessible::~nsRootAccessible()
 {
 }
 
-// helpers
 /* readonly attribute AString name; */
 NS_IMETHODIMP
 nsRootAccessible::GetName(nsAString& aName)
@@ -129,22 +128,8 @@ nsRootAccessible::GetName(nsAString& aName)
     }
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
-
-  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(treeOwner));
-  if (baseWindow) {
-    nsXPIDLString title;
-    baseWindow->GetTitle(getter_Copies(title));
-    aName.Assign(title);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMNSDocument> document(do_QueryInterface(mDocument));
+  return document->GetTitle(aName);
 }
 
 /* readonly attribute nsIAccessible accParent; */
