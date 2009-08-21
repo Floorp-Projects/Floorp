@@ -78,10 +78,22 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBoxObject)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(BoxObject)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBoxObject)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+PR_STATIC_CALLBACK(PLDHashOperator)
+PropertyTraverser(const nsAString& aKey, nsISupports* aProperty, void* userArg)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
 
+  cb->NoteXPCOMChild(aProperty);
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsBoxObject)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBoxObject)
+  if (tmp->mPropertyTable) {
+    tmp->mPropertyTable->EnumerateRead(PropertyTraverser, &cb);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // Constructors/Destructors
