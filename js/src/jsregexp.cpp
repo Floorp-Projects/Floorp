@@ -2005,42 +2005,35 @@ typedef JSTempVector<LIns *> LInsList;
 
 /* Dummy GC for nanojit placement new. */
 static GC gc;
+static avmplus::AvmCore s_core = avmplus::AvmCore();
+static avmplus::AvmCore* core = &s_core;
 
-static void *
-HashRegExp(uint16 flags, const jschar *s, size_t n)
-{
-    uint32 h;
-
-    for (h = 0; n; s++, n--)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
-    return (void *)(h + flags);
-}
-
-struct RESideExit : public SideExit {
-    size_t re_length;
-    uint16 re_flags;
-    jschar re_chars[1];
-};
-
-/* Return the cached fragment for the given regexp, or NULL. */
+/* Return the cached fragment for the given regexp, or create one. */
 static Fragment*
-LookupNativeRegExp(JSContext* cx, void* hash, uint16 re_flags,
+LookupNativeRegExp(JSContext* cx, uint16 re_flags,
                    const jschar* re_chars, size_t re_length)
 {
-    Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
-    Fragment* fragment = fragmento->getLoop(hash);
-    while (fragment) {
-        if (fragment->lastIns) {
-            RESideExit *exit = (RESideExit*)fragment->lastIns->record()->exit;
-            if (exit->re_flags == re_flags &&
-                exit->re_length == re_length &&
-                !memcmp(exit->re_chars, re_chars, re_length * sizeof(jschar))) {
-                return fragment;
-            }
-        }
-        fragment = fragment->peer;
+    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    VMAllocator &alloc = *tm->reAllocator;
+    REHashMap &table = *tm->reFragments;
+
+    REHashKey k(re_length, re_flags, re_chars);
+    Fragment *frag = table.get(k);
+
+    if (!frag) {
+        frag = new (alloc) Fragment(0);
+        frag->lirbuf = tm->reLirBuf;
+        frag->root = frag;
+        /*
+         * Copy the re_chars portion of the hash key into the Allocator, so
+         * its lifecycle is disconnected from the lifecycle of the
+         * underlying regexp.
+         */
+        k.re_chars = (const jschar*) new (alloc) jschar[re_length];
+        memcpy((void*) k.re_chars, re_chars, re_length * sizeof(jschar));
+        table.put(k, frag);
     }
-    return NULL;
+    return frag;
 }
 
 static JSBool
@@ -3065,16 +3058,13 @@ class RegExpNativeCompiler {
     GuardRecord* insertGuard(const jschar* re_chars, size_t re_length)
     {
         LIns* skip = lirBufWriter->insSkip(sizeof(GuardRecord) +
-                                           sizeof(RESideExit) +
+                                           sizeof(SideExit) +
                                            (re_length-1) * sizeof(jschar));
         GuardRecord* guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
-        RESideExit* exit = (RESideExit*)(guard+1);
+        SideExit* exit = (SideExit*)(guard+1);
         guard->exit = exit;
         guard->exit->target = fragment;
-        exit->re_flags = re->flags;
-        exit->re_length = re_length;
-        memcpy(exit->re_chars, re_chars, re_length * sizeof(jschar));
         fragment->lastIns = lir->insGuard(LIR_loop, NULL, skip);
         return guard;
     }
@@ -3092,7 +3082,6 @@ class RegExpNativeCompiler {
         size_t re_length;
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         Assembler *assm = tm->reAssembler;
-        Fragmento* fragmento = tm->reFragmento;
         VMAllocator& alloc = *tm->reAllocator;
 
         re->source->getCharsAndLength(re_chars, re_length);
@@ -3148,7 +3137,7 @@ class RegExpNativeCompiler {
 
         if (alloc.outOfMemory())
             goto fail;
-        ::compile(assm, fragment, alloc verbose_only(, fragmento->labels));
+        ::compile(assm, fragment, alloc verbose_only(, tm->reLabels));
         if (assm->error() != nanojit::None) {
             oom = assm->error() == nanojit::OutOMem;
             goto fail;
@@ -3162,20 +3151,25 @@ class RegExpNativeCompiler {
         return JS_TRUE;
     fail:
         if (alloc.outOfMemory() || oom ||
-            js_OverfullFragmento(tm, fragmento)) {
-            fragmento->clearFrags();
+            js_OverfullJITCache(tm, true)) {
+            delete lirBufWriter;
             tm->reCodeAlloc->sweep();
             alloc.reset();
+            tm->reFragments = new (alloc) REHashMap(alloc);
+            tm->reLirBuf = new (alloc) LirBuffer(alloc);
 #ifdef DEBUG
-            fragmento->labels = new (alloc) LabelMap(alloc, &js_LogController);
-            lirbuf->names = new (alloc) LirNameMap(alloc, fragmento->labels);
+            tm->reLabels = new (alloc) LabelMap(alloc, &js_LogController);
+            tm->reLirBuf->names = new (alloc) LirNameMap(alloc, tm->reLabels);
+            tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core,
+                                                    &js_LogController);
+#else
+            tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core, NULL);
 #endif
-            lirbuf->clear();
         } else {
             if (!guard) insertGuard(re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
+            delete lirBufWriter;
         }
-        delete lirBufWriter;
 #ifdef NJ_VERBOSE
         debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
                              delete lir; )
@@ -3216,19 +3210,11 @@ typedef void *(FASTCALL *NativeRegExp)(REGlobalData*, const jschar *);
 static NativeRegExp
 GetNativeRegExp(JSContext* cx, JSRegExp* re)
 {
-    Fragment *fragment;
     const jschar *re_chars;
     size_t re_length;
-    Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
-
     re->source->getCharsAndLength(re_chars, re_length);
-    void* hash = HashRegExp(re->flags, re_chars, re_length);
-    fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length);
-    if (!fragment) {
-        fragment = fragmento->getAnchor(hash);
-        fragment->lirbuf = JS_TRACE_MONITOR(cx).reLirBuf;
-        fragment->root = fragment;
-    }
+    Fragment *fragment = LookupNativeRegExp(cx, re->flags, re_chars, re_length);
+    JS_ASSERT(fragment);
     if (!fragment->code()) {
         if (!CompileRegExpToNative(cx, re, fragment))
             return NULL;
