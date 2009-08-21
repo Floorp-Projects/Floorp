@@ -132,16 +132,29 @@ let Utils = {
   },
 
   anno: function anno(id, anno, val, expire) {
+    // Figure out if we have a bookmark or page
+    let annoFunc = (typeof id == "number" ? "Item" : "Page") + "Annotation";
+
+    // Convert to a nsIURI if necessary
+    if (typeof id == "string")
+      id = Utils.makeURI(id);
+
+    if (id == null)
+      throw "Null id for anno! (invalid uri)";
+
     switch (arguments.length) {
       case 2:
         // Get the annotation with 2 args
-        return Svc.Annos.getItemAnnotation(id, anno);
+        return Svc.Annos["get" + annoFunc](id, anno);
       case 3:
-        expire = Svc.Annos.EXPIRE_NEVER;
+        expire = "NEVER";
         // Fallthrough!
       case 4:
+        // Convert to actual EXPIRE value
+        expire = Svc.Annos["EXPIRE_" + expire];
+
         // Set the annotation with 3 or 4 args
-        return Svc.Annos.setItemAnnotation(id, anno, val, 0, expire);
+        return Svc.Annos["set" + annoFunc](id, anno, val, 0, expire);
     }
   },
 
