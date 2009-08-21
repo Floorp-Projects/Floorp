@@ -84,12 +84,17 @@ endif
 ifeq ($(OS_ARCH),WINCE)
 USE_STATIC_LIBS = 1
 HAVE_PROGRESSUI = 1
-RCINCLUDE = updater_wince.rc
 CPPSRCS += \
 	updater_wince.cpp \
 	progressui_win.cpp \
 	$(NULL)
 OS_LIBS += $(call EXPAND_LIBNAME,commctrl ws2)
+ifdef WINCE_WINDOWS_MOBILE
+OS_LIBS += $(call EXPAND_LIBNAME,aygshell)
+RCINCLUDE = updater_winmo.rc
+else
+RCINCLUDE = updater_wince.rc
+endif
 DEFINES += -DUNICODE -D_UNICODE
 RCFLAGS += -I$(srcdir)
 REQUIRES += string
