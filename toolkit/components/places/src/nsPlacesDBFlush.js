@@ -222,7 +222,7 @@ nsPlacesDBFlush.prototype = {
     this._timer = this._newTimer();
 
     // We need to sync now
-    this._delayedFlushWithQueries([kQuerySyncPlacesId, kQuerySyncHistoryVisitsId]);
+    this._flushWithQueries([kQuerySyncPlacesId, kQuerySyncHistoryVisitsId]);
   },
 
   onItemAdded: function(aItemId, aParentId, aIndex)
@@ -231,14 +231,14 @@ nsPlacesDBFlush.prototype = {
     // least amount of queries as possible here for performance reasons.
     if (!this._inBatchMode &&
         this._bs.getItemType(aItemId) == this._bs.TYPE_BOOKMARK)
-      this._delayedFlushWithQueries([kQuerySyncPlacesId]);
+      this._flushWithQueries([kQuerySyncPlacesId]);
   },
 
   onItemChanged: function DBFlush_onItemChanged(aItemId, aProperty,
                                                 aIsAnnotationProperty, aValue)
   {
     if (!this._inBatchMode && aProperty == "uri")
-      this._delayedFlushWithQueries([kQuerySyncPlacesId]);
+      this._flushWithQueries([kQuerySyncPlacesId]);
   },
 
   onBeforeItemRemoved: function() { },
@@ -348,22 +348,6 @@ nsPlacesDBFlush.prototype = {
 
     // Execute sync statements async in a transaction
     this._db.executeAsync(statements, statements.length, this);
-  },
-
-  /**
-   * Enqueues a flush to the main thread, used in observers to avoid flushing
-   * while the original method is still notifying.
-   */
-  _delayedFlushWithQueries: function DBFlush_delayedflushWithQueries(aQueryNames)
-  {
-    let tm = Cc["@mozilla.org/thread-manager;1"].
-             getService(Ci.nsIThreadManager);
-    let self = this;
-    tm.mainThread.dispatch({
-      run: function() {
-        self._flushWithQueries(aQueryNames);
-      }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   /**
