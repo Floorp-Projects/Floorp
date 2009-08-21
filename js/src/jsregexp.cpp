@@ -2005,6 +2005,8 @@ typedef JSTempVector<LIns *> LInsList;
 
 /* Dummy GC for nanojit placement new. */
 static GC gc;
+static avmplus::AvmCore s_core = avmplus::AvmCore();
+static avmplus::AvmCore* core = &s_core;
 
 /* Return the cached fragment for the given regexp, or create one. */
 static Fragment*
@@ -3080,7 +3082,6 @@ class RegExpNativeCompiler {
         size_t re_length;
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         Assembler *assm = tm->reAssembler;
-        Fragmento* fragmento = tm->reFragmento;
         VMAllocator& alloc = *tm->reAllocator;
 
         re->source->getCharsAndLength(re_chars, re_length);
@@ -3136,7 +3137,7 @@ class RegExpNativeCompiler {
 
         if (alloc.outOfMemory())
             goto fail;
-        ::compile(assm, fragment, alloc verbose_only(, fragmento->labels));
+        ::compile(assm, fragment, alloc verbose_only(, tm->reLabels));
         if (assm->error() != nanojit::None) {
             oom = assm->error() == nanojit::OutOMem;
             goto fail;
@@ -3150,20 +3151,25 @@ class RegExpNativeCompiler {
         return JS_TRUE;
     fail:
         if (alloc.outOfMemory() || oom ||
-            js_OverfullFragmento(tm, fragmento)) {
+            js_OverfullJITCache(tm, true)) {
+            delete lirBufWriter;
             tm->reCodeAlloc->sweep();
             alloc.reset();
             tm->reFragments = new (alloc) REHashMap(alloc);
+            tm->reLirBuf = new (alloc) LirBuffer(alloc);
 #ifdef DEBUG
-            fragmento->labels = new (alloc) LabelMap(alloc, &js_LogController);
-            lirbuf->names = new (alloc) LirNameMap(alloc, fragmento->labels);
+            tm->reLabels = new (alloc) LabelMap(alloc, &js_LogController);
+            tm->reLirBuf->names = new (alloc) LirNameMap(alloc, tm->reLabels);
+            tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core,
+                                                    &js_LogController);
+#else
+            tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core, NULL);
 #endif
-            lirbuf->clear();
         } else {
             if (!guard) insertGuard(re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
+            delete lirBufWriter;
         }
-        delete lirBufWriter;
 #ifdef NJ_VERBOSE
         debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
                              delete lir; )

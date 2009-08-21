@@ -46,74 +46,6 @@
 namespace nanojit
 {
     struct GuardRecord;
-    class Assembler;
-
-    typedef avmplus::GCSortedMap<const void*, uint32_t, avmplus::LIST_NonGCObjects> BlockSortedMap;
-    class BlockHist: public BlockSortedMap
-    {
-    public:
-        BlockHist(avmplus::GC*gc) : BlockSortedMap(gc)
-        {
-        }
-        uint32_t count(const void *p) {
-            uint32_t c = 1+get(p);
-            put(p, c);
-            return c;
-        }
-    };
-
-    struct fragstats;
-    /*
-     *
-     * This is the main control center for creating and managing fragments.
-     */
-    class Fragmento : public avmplus::GCFinalizedObject
-    {
-        public:
-            Fragmento(AvmCore* core, LogControl* logc, uint32_t cacheSizeLog2, CodeAlloc *codeAlloc);
-            ~Fragmento();
-
-            AvmCore*    core();
-
-            Fragment*   getLoop(const void* ip);
-            Fragment*   getAnchor(const void* ip);
-            // Remove one fragment. The caller is responsible for making sure
-            // that this does not destroy any resources shared with other
-            // fragments (such as a LirBuffer or this fragment itself as a
-            // jump target).
-            void        clearFrags();    // clear all fragments from the cache
-            Fragment*   createBranch(SideExit *exit, const void* ip);
-            Fragment*   newFrag(const void* ip);
-            Fragment*   newBranch(Fragment *from, const void* ip);
-
-            verbose_only ( uint32_t pageCount(); )
-            verbose_only( void addLabel(Fragment* f, const char *prefix, int id); )
-
-            // stats
-            struct
-            {
-                uint32_t    pages;                    // pages consumed
-                uint32_t    flushes, ilsize, abcsize, compiles, totalCompiles;
-            }
-            _stats;
-
-            verbose_only( DWB(BlockHist*)        enterCounts; )
-            verbose_only( DWB(BlockHist*)        mergeCounts; )
-            verbose_only( LabelMap*        labels; )
-
-            #ifdef AVMPLUS_VERBOSE
-            void    drawTrees(char *fileName);
-            #endif
-
-            void        clearFragment(Fragment *f);
-        private:
-            AvmCore*        _core;
-            CodeAlloc*      _codeAlloc;
-            FragmentMap     _frags;        /* map from ip -> Fragment ptr  */
-
-            const uint32_t _max_pages;
-            uint32_t _pagesGrowth;
-    };
 
     enum TraceKind {
         LoopTrace,
@@ -132,19 +64,12 @@ namespace nanojit
     {
         public:
             Fragment(const void*);
-            ~Fragment();
 
             NIns*            code()                            { return _code; }
             void            setCode(NIns* codee)               { _code = codee; }
             int32_t&        hits()                             { return _hits; }
-            void            blacklist();
-            bool            isBlacklisted()        { return _hits < 0; }
-            void            releaseLirBuffer();
-            void            releaseCode(CodeAlloc *alloc);
-            void            releaseTreeMem(CodeAlloc *alloc);
             bool            isAnchor() { return anchor == this; }
             bool            isRoot() { return root == this; }
-            void            onDestroy();
 
             verbose_only( uint32_t        _called; )
             verbose_only( uint32_t        _native; )
@@ -176,11 +101,9 @@ namespace nanojit
             uint32_t guardCount;
             uint32_t xjumpCount;
             uint32_t recordAttempts;
-            int32_t blacklistLevel;
             NIns* fragEntry;
             NIns* loopEntry;
             void* vmprivate;
-            CodeList* codeList;
 
         private:
             NIns*            _code;        // ptr to start of code
