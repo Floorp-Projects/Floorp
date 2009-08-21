@@ -40,8 +40,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const GUID_ANNO = "weave/guid";
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
@@ -49,6 +50,24 @@ Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/base_records/collection.js");
 Cu.import("resource://weave/type_records/history.js");
+
+// Create some helper functions to handle GUIDs
+function setGUID(uri, guid) {
+  if (arguments.length == 1)
+    guid = Utils.makeGUID();
+  Utils.anno(uri, GUID_ANNO, guid, "WITH_HISTORY");
+  return guid;
+}
+function GUIDForUri(uri) {
+  try {
+    // Use the existing GUID if it exists
+    return Utils.anno(uri, GUID_ANNO);
+  }
+  catch (ex) {
+    // Give the uri a GUID if it doesn't have one
+    return setGUID(uri);
+  }
+}
 
 function HistoryEngine() {
   this._init();
@@ -126,13 +145,6 @@ HistoryStore.prototype = {
     return hsvc;
   },
 
-  get _anno() {
-    let anno = Cc["@mozilla.org/browser/annotation-service;1"].
-      getService(Ci.nsIAnnotationService);
-    this.__defineGetter__("_ans", function() anno);
-    return anno;
-  },
-
   get _db() {
     return this._hsvc.DBConnection;
   },
@@ -162,7 +174,7 @@ HistoryStore.prototype = {
         "WHERE content = :guid AND anno_attribute_id = (" +
           "SELECT id " +
           "FROM moz_anno_attributes " +
-          "WHERE name = 'weave/guid'))");
+          "WHERE name = '" + GUID_ANNO + "'))");
     this.__defineGetter__("_urlStm", function() stm);
     return stm;
   },
@@ -186,21 +198,6 @@ HistoryStore.prototype = {
     return visits;
   },
 
-  _getGUID: function HistStore__getGUID(uri) {
-    if (typeof(uri) == "string")
-      uri = Utils.makeURI(uri);
-    try {
-      return this._anno.getPageAnnotation(uri, "weave/guid");
-    } catch (e) {
-      // FIXME
-      // if (e != NS_ERROR_NOT_AVAILABLE)
-      // throw e;
-    }
-    let guid = Utils.makeGUID();
-    this._anno.setPageAnnotation(uri, "weave/guid", guid, 0, this._anno.EXPIRE_WITH_HISTORY);
-    return guid;
-  },
-
   // See bug 468732 for why we use SQL here
   _findURLByGUID: function HistStore__findURLByGUID(guid) {
     try {
@@ -216,12 +213,7 @@ HistoryStore.prototype = {
   },
 
   changeItemID: function HStore_changeItemID(oldID, newID) {
-    try {
-      let uri = Utils.makeURI(this._findURLByGUID(oldID).url);
-      this._anno.setPageAnnotation(uri, "weave/guid", newID, 0, 0);
-    } catch (e) {
-      this._log.debug("Could not change item ID: " + e);
-    }
+    setGUID(this._findURLByGUID(oldID).url, newID);
   },
 
 
@@ -241,7 +233,7 @@ HistoryStore.prototype = {
     let items = {};
     for (let i = 0; i < root.childCount; i++) {
       let item = root.getChild(i);
-      let guid = this._getGUID(item.uri);
+      let guid = GUIDForUri(item.uri);
       items[guid] = item.uri;
     }
     return items;
@@ -279,7 +271,7 @@ HistoryStore.prototype = {
     this._hsvc.setPageTitle(uri, record.title);
 
     // Equalize IDs
-    let localId = this._getGUID(record.histUri);
+    let localId = GUIDForUri(record.histUri);
     if (localId != record.id)
       this.changeItemID(localId, record.id);
 
@@ -337,13 +329,6 @@ HistoryTracker.prototype = {
     return hsvc;
   },
 
-  // FIXME: hack!
-  get _store() {
-    let store = new HistoryStore();
-    this.__defineGetter__("_store", function() store);
-    return store;
-  },
-
   _init: function HT__init() {
     Tracker.prototype._init.call(this);
     this._hsvc.addObserver(this, false);
@@ -365,7 +350,7 @@ HistoryTracker.prototype = {
     if (this.ignoreAll)
       return;
     this._log.trace("onVisit: " + uri.spec);
-    if (this.addChangedID(this._store._getGUID(uri)))
+    if (this.addChangedID(GUIDForUri(uri)))
       this._upScore();
   },
   onPageExpired: function HT_onPageExpired(uri, time, entry) {
