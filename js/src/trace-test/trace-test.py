@@ -1,6 +1,7 @@
 # trace-test.py -- Python harness for JavaScript trace tests.
 
 import datetime, os, re, sys
+import subprocess
 from subprocess import *
 
 JS = None
@@ -118,7 +119,7 @@ def run_tests(tests, lib_dir):
         print('FAILURES:')
         for test in failures:
             if OPTIONS.show_failed:
-                print('    ' + get_test_cmd(test, lib_dir))
+                print('    ' + subprocess.list2cmdline(get_test_cmd(test, lib_dir)))
             else:
                 print('    ' + test)
     else:
