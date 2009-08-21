@@ -98,12 +98,14 @@ public:
         cx = createContext();
         if (!cx)
             return false;
+        JS_BeginRequest(cx);
         global = createGlobal();
         return global != NULL;
     }
 
     virtual void uninit() {
         if (cx) {
+            JS_EndRequest(cx);
             JS_DestroyContext(cx);
             cx = NULL;
         }
