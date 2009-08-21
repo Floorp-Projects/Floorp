@@ -66,6 +66,7 @@
 #include "nsBidiUtils.h"
 
 #include "imgIRequest.h"
+#include "imgIContainer.h"
 #include "prlog.h"
 
 // Make sure we have enough bits in NS_STYLE_INHERIT_MASK.
@@ -1319,6 +1320,242 @@ nsStyleGradient::nsStyleGradient(void)
 }
 
 // --------------------
+// nsStyleImage
+//
+
+nsStyleImage::nsStyleImage()
+  : mType(eStyleImageType_Null)
+  , mCropRect(nsnull)
+{
+  MOZ_COUNT_CTOR(nsStyleImage);
+}
+
+nsStyleImage::~nsStyleImage()
+{
+  MOZ_COUNT_DTOR(nsStyleImage);
+  if (mType != eStyleImageType_Null)
+    SetNull();
+}
+
+nsStyleImage::nsStyleImage(const nsStyleImage& aOther)
+  : mType(eStyleImageType_Null)
+  , mCropRect(nsnull)
+{
+  // We need our own copy constructor because we don't want
+  // to copy the reference count
+  MOZ_COUNT_CTOR(nsStyleImage);
+  DoCopy(aOther);
+}
+
+nsStyleImage&
+nsStyleImage::operator=(const nsStyleImage& aOther)
+{
+  if (this != &aOther)
+    DoCopy(aOther);
+
+  return *this;
+}
+
+void
+nsStyleImage::DoCopy(const nsStyleImage& aOther)
+{
+  SetNull();
+
+  if (aOther.mType == eStyleImageType_Image)
+    SetImageData(aOther.mImage);
+  else if (aOther.mType == eStyleImageType_Gradient)
+    SetGradientData(aOther.mGradient);
+
+  SetCropRect(aOther.mCropRect);
+}
+
+void
+nsStyleImage::SetNull()
+{
+  if (mType == eStyleImageType_Gradient)
+    mGradient->Release();
+  else if (mType == eStyleImageType_Image)
+    NS_RELEASE(mImage);
+
+  mType = eStyleImageType_Null;
+  mCropRect = nsnull;
+}
+
+void
+nsStyleImage::SetImageData(imgIRequest* aImage)
+{
+  NS_IF_ADDREF(aImage);
+
+  if (mType != eStyleImageType_Null)
+    SetNull();
+
+  if (aImage) {
+    mImage = aImage;
+    mType = eStyleImageType_Image;
+  }
+}
+
+void
+nsStyleImage::SetGradientData(nsStyleGradient* aGradient)
+{
+  if (aGradient)
+    aGradient->AddRef();
+
+  if (mType != eStyleImageType_Null)
+    SetNull();
+
+  if (aGradient) {
+    mGradient = aGradient;
+    mType = eStyleImageType_Gradient;
+  }
+}
+
+void
+nsStyleImage::SetCropRect(nsStyleSides* aCropRect)
+{
+  if (aCropRect) {
+    mCropRect = new nsStyleSides(*aCropRect);
+    // There is really not much we can do if 'new' fails
+  } else {
+    mCropRect = nsnull;
+  }
+}
+
+static PRInt32
+ConvertToPixelCoord(const nsStyleCoord& aCoord, PRInt32 aPercentScale)
+{
+  double pixelValue;
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_Percent:
+      pixelValue = aCoord.GetPercentValue() * aPercentScale;
+      break;
+    case eStyleUnit_Factor:
+      pixelValue = aCoord.GetFactorValue();
+      break;
+    default:
+      NS_NOTREACHED("unexpected unit for image crop rect");
+      return 0;
+  }
+  NS_ABORT_IF_FALSE(pixelValue >= 0, "we ensured non-negative while parsing");
+  pixelValue = PR_MIN(pixelValue, PR_INT32_MAX); // avoid overflow
+  return NS_lround(pixelValue);
+}
+
+PRBool
+nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
+                                    PRBool* aIsEntireImage) const
+{
+  if (mType != eStyleImageType_Image)
+    return PR_FALSE;
+
+  nsCOMPtr<imgIContainer> imageContainer;
+  mImage->GetImage(getter_AddRefs(imageContainer));
+  if (!imageContainer)
+    return PR_FALSE;
+
+  nsIntSize imageSize;
+  imageContainer->GetWidth(&imageSize.width);
+  imageContainer->GetHeight(&imageSize.height);
+  if (imageSize.width <= 0 || imageSize.height <= 0)
+    return PR_FALSE;
+
+  PRInt32 left   = ConvertToPixelCoord(mCropRect->GetLeft(),   imageSize.width);
+  PRInt32 top    = ConvertToPixelCoord(mCropRect->GetTop(),    imageSize.height);
+  PRInt32 right  = ConvertToPixelCoord(mCropRect->GetRight(),  imageSize.width);
+  PRInt32 bottom = ConvertToPixelCoord(mCropRect->GetBottom(), imageSize.height);
+
+  // IntersectRect() returns an empty rect if we get negative width or height
+  nsIntRect cropRect(left, top, right - left, bottom - top);
+  nsIntRect imageRect(nsIntPoint(0, 0), imageSize);
+  aActualCropRect.IntersectRect(imageRect, cropRect);
+
+  if (aIsEntireImage)
+    *aIsEntireImage = (aActualCropRect == imageRect);
+  return PR_TRUE;
+}
+
+PRBool
+nsStyleImage::IsOpaque() const
+{
+  if (!IsComplete())
+    return PR_FALSE;
+
+  if (mType == eStyleImageType_Gradient) {
+    // We could check if every stop color of the gradient is non-transparent.
+    return PR_FALSE;
+  }
+
+  NS_ABORT_IF_FALSE(mType == eStyleImageType_Image, "unexpected image type");
+
+  nsCOMPtr<imgIContainer> imageContainer;
+  mImage->GetImage(getter_AddRefs(imageContainer));
+  NS_ABORT_IF_FALSE(imageContainer, "IsComplete() said image container is ready");
+
+  // Check if the crop region of the current image frame is opaque
+  PRBool isOpaque;
+  if (NS_SUCCEEDED(imageContainer->GetCurrentFrameIsOpaque(&isOpaque)) &&
+      isOpaque) {
+    if (!mCropRect)
+      return PR_TRUE;
+
+    // Must make sure if mCropRect contains at least a pixel.
+    // XXX Is this optimization worth it? Maybe I should just return PR_FALSE.
+    nsIntRect actualCropRect;
+    PRBool rv = ComputeActualCropRect(actualCropRect);
+    NS_ASSERTION(rv, "ComputeActualCropRect() can not fail here");
+    return rv && !actualCropRect.IsEmpty();
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
+nsStyleImage::IsComplete() const
+{
+  switch (mType) {
+    case eStyleImageType_Null:
+      return PR_FALSE;
+    case eStyleImageType_Gradient:
+      return PR_TRUE;
+    case eStyleImageType_Image:
+    {
+      PRUint32 status = imgIRequest::STATUS_ERROR;
+      return NS_SUCCEEDED(mImage->GetImageStatus(&status)) &&
+             (status & imgIRequest::STATUS_SIZE_AVAILABLE) &&
+             (status & imgIRequest::STATUS_FRAME_COMPLETE);
+    }
+    default:
+      NS_NOTREACHED("unexpected image type");
+      return PR_FALSE;
+  }
+}
+
+static inline PRBool
+EqualRects(const nsStyleSides* aRect1, const nsStyleSides* aRect2)
+{
+  return aRect1 == aRect2 || /* handles null== null, and optimize */
+         (aRect1 && aRect2 && *aRect1 == *aRect2);
+}
+
+PRBool
+nsStyleImage::operator==(const nsStyleImage& aOther) const
+{
+  if (mType != aOther.mType)
+    return PR_FALSE;
+
+  if (!EqualRects(mCropRect, aOther.mCropRect))
+    return PR_FALSE;
+
+  if (mType == eStyleImageType_Image)
+    return EqualImages(mImage, aOther.mImage);
+
+  if (mType == eStyleImageType_Gradient)
+    return *mGradient == *aOther.mGradient;
+
+  return PR_TRUE;
+}
+
+// --------------------
 // nsStyleBackground
 //
 
@@ -1400,7 +1637,7 @@ PRBool nsStyleBackground::HasFixedBackground() const
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, this) {
     const Layer &layer = mLayers[i];
     if (layer.mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
-        layer.mImage.GetType() != eBackgroundImage_Null) {
+        !layer.mImage.IsEmpty()) {
       return PR_TRUE;
     }
   }
@@ -1409,7 +1646,7 @@ PRBool nsStyleBackground::HasFixedBackground() const
 
 PRBool nsStyleBackground::IsTransparent() const
 {
-  return BottomLayer().mImage.GetType() == eBackgroundImage_Null &&
+  return BottomLayer().mImage.IsEmpty() &&
          mImageCount == 1 &&
          NS_GET_A(mBackgroundColor) == 0;
 }
@@ -1492,98 +1729,6 @@ PRBool nsStyleBackground::Layer::operator==(const Layer& aOther) const
          mPosition == aOther.mPosition &&
          mSize == aOther.mSize &&
          mImage == aOther.mImage;
-}
-
-nsStyleBackground::Image::Image()
-{
-  MOZ_COUNT_CTOR(nsStyleBackground::Image);
-  mType = eBackgroundImage_Null;
-}
-
-nsStyleBackground::Image::~Image()
-{
-  MOZ_COUNT_DTOR(nsStyleBackground::Image);
-  if (mType != eBackgroundImage_Null)
-    SetNull();
-}
-
-nsStyleBackground::Image::Image(const nsStyleBackground::Image& aOther)
-{
-  // We need our own copy constructor because we don't want
-  // to copy the reference count
-  MOZ_COUNT_CTOR(nsStyleBackground::Image);
-  mType = eBackgroundImage_Null;
-  DoCopy(aOther);
-}
-
-nsStyleBackground::Image&
-nsStyleBackground::Image::operator=(const nsStyleBackground::Image& aOther)
-{
-  if (this != &aOther)
-    DoCopy(aOther);
-
-  return *this;
-}
-
-void nsStyleBackground::Image::DoCopy(const nsStyleBackground::Image& aOther)
-{
-  SetNull();
-
-  if (aOther.mType == eBackgroundImage_Image)
-    SetImageData(aOther.mImage);
-  else if (aOther.mType == eBackgroundImage_Gradient)
-    SetGradientData(aOther.mGradient);
-}
-
-void nsStyleBackground::Image::SetImageData(imgIRequest* aImage)
-{
-  NS_IF_ADDREF(aImage);
-
-  if (mType != eBackgroundImage_Null)
-    SetNull();
-
-  if (aImage) {
-    mImage = aImage;
-    mType = eBackgroundImage_Image;
-  }
-}
-
-void nsStyleBackground::Image::SetGradientData(nsStyleGradient* aGradient)
-{
-  if (aGradient)
-    aGradient->AddRef();
-
-  if (mType != eBackgroundImage_Null)
-    SetNull();
-
-  if (aGradient) {
-    mGradient = aGradient;
-    mType = eBackgroundImage_Gradient;
-  }
-}
-
-void nsStyleBackground::Image::SetNull()
-{
-  if (mType == eBackgroundImage_Gradient)
-    mGradient->Release();
-  else if (mType == eBackgroundImage_Image)
-    NS_RELEASE(mImage);
-
-  mType = eBackgroundImage_Null;
-}
-
-PRBool nsStyleBackground::Image::operator==(const Image& aOther) const
-{
-  if (mType != aOther.mType)
-    return PR_FALSE;
-
-  if (mType == eBackgroundImage_Image)
-    return EqualImages(mImage, aOther.mImage);
-
-  if (mType == eBackgroundImage_Gradient)
-    return *mGradient == *aOther.mGradient;
-
-  return PR_TRUE;
 }
 
 // --------------------

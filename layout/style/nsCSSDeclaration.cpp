@@ -300,7 +300,15 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     NS_ASSERTION(array->Count() >= 1, "Functions must have at least one element for the name.");
 
     /* Append the function name. */
-    AppendCSSValueToString(aProperty, array->Item(0), aResult);
+    const nsCSSValue& functionName = array->Item(0);
+    if (functionName.GetUnit() == eCSSUnit_Enumerated) {
+      // We assume that the first argument is always of nsCSSKeyword type.
+      const nsCSSKeyword functionId =
+        static_cast<nsCSSKeyword>(functionName.GetIntValue());
+      AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(functionId), aResult);
+    } else {
+      AppendCSSValueToString(aProperty, functionName, aResult);
+    }
     aResult.AppendLiteral("(");
 
     /* Now, step through the function contents, writing each of them as we go. */

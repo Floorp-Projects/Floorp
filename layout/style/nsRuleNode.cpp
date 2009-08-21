@@ -396,6 +396,31 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   return result;
 }
 
+// This inline function offers a shortcut for SetCoord() by refusing to accept
+// SETCOORD_LENGTH and SETCOORD_INHERIT masks.
+static inline PRBool SetAbsCoord(const nsCSSValue& aValue,
+                                 nsStyleCoord& aCoord,
+                                 PRInt32 aMask)
+{
+  NS_ABORT_IF_FALSE((aMask & SETCOORD_LH) == 0,
+                    "does not handle SETCOORD_LENGTH and SETCOORD_INHERIT");
+
+  // The values of the following variables will never be used; so it does not
+  // matter what to set.
+  const nsStyleCoord dummyParentCoord;
+  nsStyleContext* dummyStyleContext = nsnull;
+  nsPresContext* dummyPresContext = nsnull;
+  PRBool dummyCanStoreInRuleTree = PR_TRUE;
+
+  PRBool rv = SetCoord(aValue, aCoord, dummyParentCoord, aMask,
+                       dummyStyleContext, dummyPresContext,
+                       dummyCanStoreInRuleTree);
+  NS_ABORT_IF_FALSE(dummyCanStoreInRuleTree,
+                    "SetCoord() should not modify dummyCanStoreInRuleTree.");
+
+  return rv;
+}
+
 /* Given an enumerated value that represents a box position, converts it to
  * a float representing the percentage of the box it corresponds to.  For
  * example, "center" becomes 0.5f.
@@ -553,6 +578,72 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
              aContext, stop.mColor, aCanStoreInRuleTree);
 
     aResult.mStops.AppendElement(stop);
+  }
+}
+
+// -moz-image-rect(<uri>, <top>, <right>, <bottom>, <left>)
+static void SetStyleImageToImageRect(const nsCSSValue& aValue,
+                                     nsStyleImage& aResult)
+{
+  NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Function &&
+                    aValue.EqualsFunction(eCSSKeyword__moz_image_rect),
+                    "the value is not valid -moz-image-rect()");
+
+  nsCSSValue::Array* arr = aValue.GetArrayValue();
+  NS_ABORT_IF_FALSE(arr && arr->Count() == 6, "invalid number of arguments");
+
+  // <uri>
+  if (arr->Item(1).GetUnit() == eCSSUnit_Image) {
+    aResult.SetImageData(arr->Item(1).GetImageValue());
+  } else {
+    NS_WARNING("nsCSSValue::Image::Image() failed?");
+  }
+
+  // <top>, <right>, <bottom>, <left>
+  nsStyleSides cropRect;
+  NS_FOR_CSS_SIDES(side) {
+    nsStyleCoord coord;
+    const nsCSSValue& val = arr->Item(2 + side);
+    PRBool unitOk = SetAbsCoord(val, coord, SETCOORD_FACTOR | SETCOORD_PERCENT);
+    NS_ABORT_IF_FALSE(unitOk, "Incorrect data structure created by CSS parser");
+    cropRect.Set(side, coord);
+  }
+  aResult.SetCropRect(&cropRect);
+}
+
+static void SetStyleImage(nsStyleContext* aStyleContext,
+                          const nsCSSValue& aValue,
+                          nsStyleImage& aResult,
+                          PRBool& aCanStoreInRuleTree)
+{
+  aResult.SetNull();
+
+  switch (aValue.GetUnit()) {
+    case eCSSUnit_Image:
+      aResult.SetImageData(aValue.GetImageValue());
+      break;
+    case eCSSUnit_Function:
+      if (aValue.EqualsFunction(eCSSKeyword__moz_image_rect)) {
+        SetStyleImageToImageRect(aValue, aResult);
+      } else {
+        NS_NOTREACHED("-moz-image-rect() is the only expected function");
+      }
+      break;
+    case eCSSUnit_Gradient:
+    {
+      nsStyleGradient* gradient = new nsStyleGradient();
+      if (gradient) {
+        SetGradient(aValue, aStyleContext->PresContext(), aStyleContext,
+                    *gradient, aCanStoreInRuleTree);
+        aResult.SetGradientData(gradient);
+      }
+      break;
+    }
+    case eCSSUnit_None:
+      break;
+    default:
+      NS_NOTREACHED("unexpected unit; maybe nsCSSValue::Image::Image() failed?");
+      break;
   }
 }
 
@@ -4186,31 +4277,15 @@ struct BackgroundItemComputer<nsCSSValueList, PRUint8>
 };
 
 NS_SPECIALIZE_TEMPLATE
-struct BackgroundItemComputer<nsCSSValueList, nsStyleBackground::Image>
+struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
                            const nsCSSValueList* aSpecifiedValue,
-                           nsStyleBackground::Image& aComputedValue,
+                           nsStyleImage& aComputedValue,
                            PRBool& aCanStoreInRuleTree)
   {
-    const nsCSSValue &value = aSpecifiedValue->mValue;
-    if (eCSSUnit_Image == value.GetUnit()) {
-      aComputedValue.SetImageData(value.GetImageValue());
-    }
-    else if (eCSSUnit_Gradient == value.GetUnit()) {
-      nsStyleGradient* gradient = new nsStyleGradient();
-      if (gradient) {
-        SetGradient(value, aStyleContext->PresContext(), aStyleContext,
-                    *gradient, aCanStoreInRuleTree);
-        aComputedValue.SetGradientData(gradient);
-      } else {
-        aComputedValue.SetNull();
-      }
-    }
-    else {
-      NS_ASSERTION(eCSSUnit_None == value.GetUnit(), "unexpected unit");
-      aComputedValue.SetNull();
-    }
+    SetStyleImage(aStyleContext, aSpecifiedValue->mValue, aComputedValue,
+                  aCanStoreInRuleTree);
   }
 };
 
@@ -4449,7 +4524,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
   PRBool rebuild = PR_FALSE;
 
   // background-image: url (stored as image), none, inherit [list]
-  nsStyleBackground::Image initialImage;
+  nsStyleImage initialImage;
   SetBackgroundList(aContext, colorData.mBackImage, bg->mLayers,
                     parentBG->mLayers, &nsStyleBackground::Layer::mImage,
                     initialImage, parentBG->mImageCount, bg->mImageCount,
@@ -4807,10 +4882,8 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     
     // the numbers saying where to split the image
     NS_FOR_CSS_SIDES(side) {
-      // an uninitialized parentCoord is ok because I'm not passing SETCOORD_INHERIT
-      if (SetCoord(arr->Item(1 + side), coord, nsStyleCoord(),
-                   SETCOORD_FACTOR | SETCOORD_PERCENT, aContext,
-                   mPresContext, canStoreInRuleTree)) {
+      if (SetAbsCoord(arr->Item(1 + side), coord,
+                      SETCOORD_FACTOR | SETCOORD_PERCENT)) {
         border->mBorderImageSplit.Set(side, coord);
       }
     }

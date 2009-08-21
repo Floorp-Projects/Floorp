@@ -1268,7 +1268,7 @@ nsPresContext::SetupBackgroundImageLoaders(nsIFrame* aFrame,
 {
   nsRefPtr<nsImageLoader> loaders;
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, aStyleBackground) {
-    if (aStyleBackground->mLayers[i].mImage.GetType() == eBackgroundImage_Image) {
+    if (aStyleBackground->mLayers[i].mImage.GetType() == eStyleImageType_Image) {
       imgIRequest *image = aStyleBackground->mLayers[i].mImage.GetImageData();
       loaders = nsImageLoader::Create(aFrame, image, PR_FALSE, loaders);
     }
