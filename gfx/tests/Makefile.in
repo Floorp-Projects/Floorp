@@ -51,19 +51,16 @@ REQUIRES	= xpcom \
 		  gfx \
 		  $(NULL)
 
-CPPSRCS		= \
+CPP_UNIT_TESTS	= \
 		TestColorNames.cpp \
 		TestRect.cpp \
 		$(NULL)
-
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LIBS		= \
 		$(call EXPAND_LIBNAME_PATH,gkgfx,../src) \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(TK_LIBS) \
-		$(NSPR_LIBS) \
 		$(NULL)
 
 XPCSHELL_TESTS = unit
