@@ -137,137 +137,33 @@ HistoryStore.prototype = {
     return this._hsvc.DBConnection;
   },
 
-  _fetchRow: function HistStore__fetchRow(stm, params, retparams) {
-    try {
-      for (let key in params) {
-        stm.params[key] = params[key];
-      }
-      if (!stm.step())
-        return null;
-      if (retparams.length == 1)
-        return stm.row[retparams[0]];
-      let ret = {};
-      for each (let key in retparams) {
-        ret[key] = stm.row[key];
-      }
-      return ret;
-    } finally {
-      stm.reset();
-    }
-  },
-
-  // Check for table existance manually because
-  // mozIStorageConnection.tableExists() gives us false negatives
-  tableExists: function HistStore__tableExists(tableName) {
-    let statement = this._db.createStatement(
-      "SELECT count(*) as count FROM sqlite_temp_master WHERE type='table' " +
-      "AND name='" + tableName + "'");
-    statement.step();
-    let num = statement.row["count"];
-    return num != 0;
-  },
-
   get _visitStm() {
     this._log.trace("Creating SQL statement: _visitStm");
-    let stm;
-    if (this.tableExists("moz_historyvisits_temp")) {
-      stm = this._db.createStatement(
-        "SELECT * FROM ( " +
-          "SELECT visit_type AS type, visit_date AS date " +
-          "FROM moz_historyvisits_temp " +
-          "WHERE place_id = :placeid " +
-          "ORDER BY visit_date DESC " +
-          "LIMIT 10 " +
-        ") " +
-        "UNION ALL " +
-        "SELECT * FROM ( " +
-          "SELECT visit_type AS type, visit_date AS date " +
-          "FROM moz_historyvisits " +
-          "WHERE place_id = :placeid " +
-          "AND id NOT IN (SELECT id FROM moz_historyvisits_temp) " +
-          "ORDER BY visit_date DESC " +
-          "LIMIT 10 " +
-        ") " +
-        "ORDER BY 2 DESC LIMIT 10"); /* 2 is visit_date */
-    } else {
-      stm = this._db.createStatement(
-	"SELECT visit_type AS type, visit_date AS date " +
-	"FROM moz_historyvisits " +
-	"WHERE place_id = :placeid " +
-	"ORDER BY visit_date DESC LIMIT 10"
-      );
-    }
+    let stm = this._db.createStatement(
+      "SELECT visit_type type, visit_date date " +
+      "FROM moz_historyvisits_view " +
+      "WHERE place_id = (" +
+        "SELECT id " +
+        "FROM moz_places_view " +
+        "WHERE url = :url) " +
+      "ORDER BY date DESC LIMIT 10");
     this.__defineGetter__("_visitStm", function() stm);
-    return stm;
-  },
-
-  get _pidStm() {
-    this._log.trace("Creating SQL statement: _pidStm");
-    let stm;
-    // See comment in get _urlStm()
-    if (this.tableExists("moz_places_temp")) {
-      stm = this._db.createStatement(
-        "SELECT * FROM " +
-          "(SELECT id FROM moz_places_temp WHERE url = :url LIMIT 1) " +
-        "UNION ALL " +
-        "SELECT * FROM ( " +
-          "SELECT id FROM moz_places WHERE url = :url " +
-          "AND id NOT IN (SELECT id from moz_places_temp) " +
-          "LIMIT 1 " +
-        ") " +
-        "LIMIT 1");
-    } else {
-      stm = this._db.createStatement(
-	"SELECT id FROM moz_places WHERE url = :url LIMIT 1"
-      );
-    }
-    this.__defineGetter__("_pidStm", function() stm);
     return stm;
   },
 
   get _urlStm() {
     this._log.trace("Creating SQL statement: _urlStm");
-    /* On Fennec, there is no table called moz_places_temp.
-     * (We think there should be; we're not sure why there's not.)
-     * As a workaround until we figure out why, we'll check if the table
-     * exists first, and if it doesn't we'll use a simpler query without
-     * that table.
-     */
-    let stm;
-    if (this.tableExists("moz_places_temp")) {
-      stm = this._db.createStatement(
-      "SELECT * FROM " +
-        "(SELECT url,title FROM moz_places_temp WHERE id = :id LIMIT 1) " +
-      "UNION ALL " +
-      "SELECT * FROM ( " +
-        "SELECT url,title FROM moz_places WHERE id = :id " +
-        "AND id NOT IN (SELECT id from moz_places_temp) " +
-        "LIMIT 1 " +
-      ") " +
-      "LIMIT 1");
-    } else {
-      stm = this._db.createStatement(
-	"SELECT url,title FROM moz_places WHERE id = :id LIMIT 1"
-      );
-    }
+    let stm = this._db.createStatement(
+      "SELECT url, title " +
+      "FROM moz_places_view " +
+      "WHERE id = (" +
+        "SELECT place_id " +
+        "FROM moz_annos " +
+        "WHERE content = :guid AND anno_attribute_id = (" +
+          "SELECT id " +
+          "FROM moz_anno_attributes " +
+          "WHERE name = 'weave/guid'))");
     this.__defineGetter__("_urlStm", function() stm);
-    return stm;
-  },
-
-  get _annoAttrIdStm() {
-    this._log.trace("Creating SQL statement: _annoAttrIdStm");
-    let stm = this._db.createStatement(
-      "SELECT id from moz_anno_attributes WHERE name = :name");
-    this.__defineGetter__("_annoAttrIdStm", function() stm);
-    return stm;
-  },
-
-  get _findPidByAnnoStm() {
-    this._log.trace("Creating SQL statement: _findPidByAnnoStm");
-    let stm = this._db.createStatement(
-      "SELECT place_id AS id FROM moz_annos " +
-        "WHERE anno_attribute_id = :attr AND content = :content");
-    this.__defineGetter__("_findPidByAnnoStm", function() stm);
     return stm;
   },
 
@@ -277,14 +173,8 @@ HistoryStore.prototype = {
     if (typeof(uri) != "string")
       uri = uri.spec;
 
-    let placeid = this._fetchRow(this._pidStm, {url: uri}, ['id']);
-    if (!placeid) {
-      this._log.debug("Could not find place ID for history URL: " + placeid);
-      return visits;
-    }
-
     try {
-      this._visitStm.params.placeid = placeid;
+      this._visitStm.params.url = uri;
       while (this._visitStm.step()) {
         visits.push({date: this._visitStm.row.date,
                      type: this._visitStm.row.type});
@@ -314,26 +204,13 @@ HistoryStore.prototype = {
   // See bug 468732 for why we use SQL here
   _findURLByGUID: function HistStore__findURLByGUID(guid) {
     try {
-      this._annoAttrIdStm.params.name = "weave/guid";
-      if (!this._annoAttrIdStm.step())
-        return null;
-      let annoId = this._annoAttrIdStm.row.id;
-
-      this._findPidByAnnoStm.params.attr = annoId;
-      this._findPidByAnnoStm.params.content = guid;
-      if (!this._findPidByAnnoStm.step())
-        return null;
-      let placeId = this._findPidByAnnoStm.row.id;
-
-      this._urlStm.params.id = placeId;
+      this._urlStm.params.guid = guid;
       if (!this._urlStm.step())
         return null;
 
       return {url: this._urlStm.row.url,
               title: this._urlStm.row.title};
     } finally {
-      this._annoAttrIdStm.reset();
-      this._findPidByAnnoStm.reset();
       this._urlStm.reset();
     }
   },
