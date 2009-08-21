@@ -82,6 +82,7 @@ CPPSRCS		= \
 		nsWidgetAtoms.cpp \
 		nsIdleService.cpp \
 		nsClipboardPrivacyHandler.cpp \
+		nsAccelerometer.cpp \
 		$(NULL)
 
 ifneq (,$(filter beos os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
