@@ -36,7 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* environment.h and environment.cpp are also included by app update */
+
+// WINCE_SKIP_SHUNT_INCLUDE is used by app update to prevent including of
+// mozce_shunt.h when it includes environment.cpp
+#ifndef WINCE_SKIP_SHUNT_INCLUDE
 #include "include/mozce_shunt.h"
+#endif
+#include "include/environment.h"
 #include "time_conversions.h"
 #include <stdlib.h>
 #include "Windows.h"
