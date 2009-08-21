@@ -3153,7 +3153,8 @@ class RegExpNativeCompiler {
         if (alloc.outOfMemory() || oom ||
             js_OverfullJITCache(tm, true)) {
             delete lirBufWriter;
-            tm->reCodeAlloc->sweep();
+            delete tm->reCodeAlloc;
+            tm->reCodeAlloc = new CodeAlloc();
             alloc.reset();
             tm->reFragments = new (alloc) REHashMap(alloc);
             tm->reLirBuf = new (alloc) LirBuffer(alloc);

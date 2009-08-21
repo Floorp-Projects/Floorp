@@ -2101,7 +2101,8 @@ JSTraceMonitor::flush()
            FRAGMENT_TABLE_SIZE * sizeof(VMFragment*));
 
     allocator->reset();
-    codeAlloc->sweep();
+    delete codeAlloc;
+    codeAlloc = new CodeAlloc();
 
     Allocator& alloc = *allocator;
 
