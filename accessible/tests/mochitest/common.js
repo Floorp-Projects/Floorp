@@ -253,6 +253,23 @@ function isAccessible(aAccOrElmOrID, aInterfaces)
 }
 
 /**
+ * Return root accessible for the given identifier.
+ */
+function getRootAccessible(aAccOrElmOrID)
+{
+  var acc = getAccessible(aAccOrElmOrID ? aAccOrElmOrID : document);
+  while (acc) {
+    var parent = acc.parent;
+    if (parent && !parent.parent)
+      return acc;
+
+    acc = parent;
+  }
+
+  return null;
+}
+
+/**
  * Run through accessible tree of the given identifier so that we ensure
  * accessible tree is created.
  */
