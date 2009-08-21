@@ -38,6 +38,7 @@
 
 #include "nsAccessibleEventData.h"
 #include "nsAccessibilityAtoms.h"
+#include "nsApplicationAccessibleWrap.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessNode.h"
@@ -111,7 +112,17 @@ void nsAccEvent::CaptureIsFromUserInput(PRBool aIsAsynch)
   nsCOMPtr<nsIDOMNode> eventNode;
   GetDOMNode(getter_AddRefs(eventNode));
   if (!eventNode) {
-    NS_NOTREACHED("There should always be a DOM node for an event");
+#ifdef DEBUG
+    // XXX: remove this hack during reorganization of 506907. Meanwhile we
+    // want to get rid an assertion for application accessible events which
+    // don't have DOM node (see bug 506206).
+    nsRefPtr<nsApplicationAccessibleWrap> applicationAcc =
+      nsAccessNode::GetApplicationAccessible();
+
+    if (mAccessible != static_cast<nsIAccessible*>(applicationAcc.get()))
+      NS_ASSERTION(eventNode, "There should always be a DOM node for an event");
+#endif
+
     return;
   }
 
