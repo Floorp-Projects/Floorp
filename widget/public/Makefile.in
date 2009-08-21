@@ -81,6 +81,7 @@ EXPORTS		+= \
 endif
 
 XPIDLSRCS	= \
+		nsIAccelerometer.idl \
 		nsIAppShell.idl \
 		nsIFilePicker.idl \
 		nsIToolkit.idl \

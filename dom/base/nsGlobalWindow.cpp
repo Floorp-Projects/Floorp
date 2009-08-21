@@ -85,6 +85,8 @@
 #include "nsICanvasFrame.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
+#include "nsIAccelerometer.h"
+#include "nsWidgetsCID.h"
 #include "nsIContent.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -616,6 +618,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mIsChrome(PR_FALSE),
     mNeedsFocus(PR_TRUE),
     mHasFocus(PR_FALSE),
+    mHasAcceleration(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -863,6 +866,12 @@ nsGlobalWindow::CleanUp()
 
   if (inner) {
     inner->CleanUp();
+  }
+
+  if (mHasAcceleration) {
+    nsCOMPtr<nsIAccelerometer> ac = do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (ac)
+      ac->RemoveWindowListener(this);
   }
 
   PRUint32 scriptIndex;
@@ -8706,15 +8715,27 @@ nsGlobalWindow::TimeoutSuspendCount()
 NS_IMETHODIMP
 nsGlobalWindow::GetScriptTypeID(PRUint32 *aScriptType)
 {
-    NS_ERROR("No default script type here - ask some element");
-    return nsIProgrammingLanguage::UNKNOWN;
+  NS_ERROR("No default script type here - ask some element");
+  return nsIProgrammingLanguage::UNKNOWN;
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
 {
-    NS_ERROR("Can't change default script type for a document");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ERROR("Can't change default script type for a document");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+nsGlobalWindow::SetHasOrientationEventListener()
+{
+  nsCOMPtr<nsIAccelerometer> ac = 
+    do_GetService(NS_ACCELEROMETER_CONTRACTID);
+
+  if (ac) {
+    mHasAcceleration = PR_TRUE;
+    ac->AddWindowListener(this);
+  }
 }
 
 // nsGlobalChromeWindow implementation

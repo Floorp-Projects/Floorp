@@ -77,8 +77,8 @@ class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x50cada82, 0x2350, 0x4bb5, \
-  { 0xb4, 0x72, 0xc8, 0xca, 0x8d, 0x39, 0x31, 0x77 } }
+{ 0x249423c9, 0x42a6, 0x8243, \
+  { 0x49, 0x45, 0x71, 0x7f, 0x8d, 0x28, 0x84, 0x43 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -457,6 +457,12 @@ public:
    * method must be called on an inner window.
    */
   virtual nsresult DispatchAsyncHashchange() = 0;
+
+
+  /**
+   * Tell this window that there is an observer for orientation changes
+   */
+  virtual void SetHasOrientationEventListener() = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
