@@ -45,33 +45,32 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWi
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function nsFastStartupObserver() {
-  this.fastStartObserver = null;
-}
-
 function getPreferredBrowserURI() {
   let chromeURI;
   try {
+    let prefs = Cc["@mozilla.org/preferences-service;1"].
+                getService(Ci.nsIPrefBranch);
     chromeURI = prefs.getCharPref("toolkit.defaultChromeURI");
   } catch (e) { }
   return chromeURI;
 }
 
-nsFastStartupObserver.prototype = {
-  _browserWindowCount: 0,
-  _memCleanupTimer: null,
+function nsFastStartupObserver() {
+  let _browserWindowCount = 0;
+  let _memCleanupTimer = 0;
 
-  stopMemoryCleanup: function() {
-    if (this._memCleanupTimer) {
-      this._memCleanupTimer.cancel();
-      this._memCleanupTimer = null;
+  function stopMemoryCleanup() {
+    if (_memCleanupTimer) {
+      _memCleanupTimer.cancel();
+      _memCleanupTimer = null;
     }
-  },
+  }
 
-  scheduleMemoryCleanup: function() {
-    this.stopMemoryCleanup();
+  function scheduleMemoryCleanup() {
+    stopMemoryCleanup();
 
     function memoryCleanup() {
+/* XXX Disabling due to crashiness
       var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
 
       // Do this 3 times, because of a comment in TestGtkEmbed that says this
@@ -79,20 +78,20 @@ nsFastStartupObserver.prototype = {
       os.notifyObservers(null, "memory-pressure", "heap-minimize");
       os.notifyObservers(null, "memory-pressure", "heap-minimize");
       os.notifyObservers(null, "memory-pressure", "heap-minimize");
-
+*/
       // XXX start our long (15 min?) stub restart timer here
-      this.fastStartObserver._memCleanupTimer = null;
-    };
+      _memCleanupTimer = null;
+    }
 
     // wait 30s until firing off the memory cleanup, in case the user
     // opens another window right away
-    this._memCleanupTimer = new Timer(memoryCleanup, 30000, Ci.nsITimer.TYPE_ONE_SHOT);
-  },
+    _memCleanupTimer = new Timer(memoryCleanup, 30000, Ci.nsITimer.TYPE_ONE_SHOT);
+  }
 
   //
   // nsIObserver
   //
-  observe: function fs_observe(subject, topic, data) {
+  this.observe = function observe(subject, topic, data) {
     var win = subject;
 
     // XXX the window at this point won't actually have its document loaded --
@@ -101,8 +100,8 @@ nsFastStartupObserver.prototype = {
     if (topic == "domwindowopened") {
       var loadListener = function(e) {
         if (win.document.documentURI == getPreferredBrowserURI()) {
-          this.fastStartObserver.stopMemoryCleanup();
-          this.fastStartObserver._browserWindowCount++;
+          stopMemoryCleanup();
+          _browserWindowCount++;
         }
         win.removeEventListener("load", loadListener, false);
         return false;
@@ -111,20 +110,18 @@ nsFastStartupObserver.prototype = {
       win.addEventListener("load", loadListener, false);
     } else if (topic == "domwindowclosed") {
       if (win.document.documentURI == getPreferredBrowserURI()) {
-        this.fastStartObserver._browserWindowCount--;
-        if (this.fastStartObserver._browserWindowCount == 0)
-          this.fastStartObserver.scheduleMemoryCleanup();
+        _browserWindowCount--;
+        if (_browserWindowCount == 0)
+          scheduleMemoryCleanup();
       }
     }
-  },
+  }
 
   // QI
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
-};
-
-function nsFastStartupCLH() {
-  inited = false;
+  this.QueryInterface = XPCOMUtils.generateQI([Ci.nsIObserver]);
 }
+
+function nsFastStartupCLH() { }
 
 nsFastStartupCLH.prototype = {
   //
