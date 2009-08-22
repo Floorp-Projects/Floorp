@@ -55,11 +55,11 @@ EXTRA_COMPONENTS = \
 	alertsService.js \
 	xpiDialogService.js \
 	downloadManagerUI.js \
-    helperAppDialog.js \
+        helperAppDialog.js \
 	$(NULL)
 
 DIRS = protocols \
-	$(NULL)
+       $(NULL)
 
 ifdef WINCE
 DIRS += phone

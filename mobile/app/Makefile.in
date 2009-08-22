@@ -84,6 +84,7 @@ REDIT_PATH = $(LIBXUL_DIST)/bin
 endif
 
 APP_BINARY = $(MOZ_APP_NAME)$(BIN_SUFFIX)
+APP_BINARY_FASTSTART = $(MOZ_APP_NAME)faststart$(BIN_SUFFIX)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
@@ -122,6 +123,9 @@ else
 
 libs::
 	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
+ifdef MOZ_FASTSTART
+	cp $(LIBXUL_DIST)/bin/faststartstub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY_FASTSTART)
+endif
 ifndef SKIP_COPY_XULRUNNER
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
