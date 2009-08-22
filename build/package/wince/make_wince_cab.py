@@ -86,6 +86,7 @@ import string
 import shutil
 
 CompressFlag = "/compress"
+FaststartFlag = 0
 
 class FileEntry:
     def __init__(self, dirpath, dircount, filename, filecount, actual_filename):
