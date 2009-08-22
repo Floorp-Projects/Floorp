@@ -509,6 +509,37 @@ BrowserView.prototype = {
     this.setZoomLevel(bvs.zoomLevel + zoomDelta);
   },
 
+  /**
+   * Render a rectangle within the browser viewport to the destination canvas
+   * under the given scale.
+   *
+   * @param destCanvas The destination canvas into which the image is rendered.
+   * @param destWidth Destination width
+   * @param destHeight Destination height
+   * @param srcRect [optional] The source rectangle in BrowserView coordinates.
+   * This defaults to the visible rect rooted at the x,y of the critical rect.
+   */
+  renderToCanvas: function renderToCanvas(destCanvas, destWidth, destHeight, srcRect) {
+    let bvs = this._browserViewportState;
+    if (!bvs) {
+      throw "Browser viewport state null in call to renderToCanvas (probably no browser set on BrowserView).";
+    }
+
+    if (!srcRect) {
+      let vr = this.getVisibleRect();
+      let cr = BrowserView.Util.visibleRectToCriticalRect(vr, bvs);
+      vr.x = cr.left;
+      vr.y = cr.top;
+      srcRect = vr;
+    }
+
+    let scalex = (destWidth / srcRect.width) || 1;
+    let scaley = (destHeight / srcRect.height) || 1;
+
+    srcRect.restrictTo(bvs.viewportRect);
+    this._tileManager.renderRectToCanvas(srcRect, destCanvas, scalex, scaley);
+  },
+
   viewportToBrowser: function viewportToBrowser(x) {
     let bvs = this._browserViewportState;
 

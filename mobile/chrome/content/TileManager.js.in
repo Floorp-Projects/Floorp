@@ -305,6 +305,46 @@ TileManager.prototype = {
     });
   },
 
+  renderRectToCanvas: function renderRectToCanvas(srcRect, destCanvas, scalex, scaley) {
+    let tc = this._tileCache;
+    let ctx = destCanvas.getContext("2d");
+
+    let completed = (function breakableLoop() {
+      BEGIN_FOREACH_IN_RECT(srcRect, tc, tile)
+
+      if (tile.isDirty())
+        return false;
+
+      let dx = Math.round(scalex * (tile.boundRect.left - srcRect.left));
+      let dy = Math.round(scaley * (tile.boundRect.top - srcRect.top));
+
+      ctx.drawImage(tile._canvas, dx, dy,
+                    Math.round(scalex * kTileWidth),
+                    Math.round(scaley * kTileHeight));
+
+      END_FOREACH_IN_RECT
+
+      return true;
+    })();
+
+    if (!completed) {
+      let bv = this._browserView;
+
+      bv.viewportToBrowserRect(srcRect);
+
+      ctx.save();
+
+      bv.browserToViewportCanvasContext(ctx);
+      ctx.scale(scalex, scaley);
+      ctx.drawWindow(bv._contentWindow,
+                     0, 0, srcRect.width, srcRect.height,
+                     "white",
+                     (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
+
+      ctx.restore();
+    }
+  },
+
   _renderTile: function _renderTile(tile) {
     if (tile.isDirty())
       tile.render(this._browserView);
