@@ -172,7 +172,7 @@ function onDebugKeyPress(ev) {
     return;
 
   // use capitals so we require SHIFT here too
-  
+
   const a = 65;   // debug all critical tiles
   const b = 66;   // dump an ASCII graphic of the tile map
   const c = 67;   // set tilecache capacity
@@ -2431,8 +2431,7 @@ Tab.prototype = {
     if (!this._browser)
       return;
 
-    // XXX draw from the tiles in to the source
-    let srcCanvas = (Browser.selectedBrowser == this._browser) ? document.getElementById("browser-canvas") : null;
-    this._chromeTab.updateThumbnail(this._browser, srcCanvas);
+    let browserView = (Browser.selectedBrowser == this._browser) ? Browser._browserView : null;
+    this._chromeTab.updateThumbnail(this._browser, browserView);
   }
 };
