@@ -12,9 +12,7 @@
     <content>
       <xul:stack anonid="page" class="documenttab-container" flex="1">
         <html:canvas anonid="canvas" class="documenttab-canvas" left="8" width="106" height="64"/>
-        <xul:vbox left="0" top="24">
-          <xul:image anonid="close" class="documenttab-close"/>
-        </xul:vbox>
+        <xul:image left="0" top="24" anonid="close" class="documenttab-close"/>
       </xul:stack>
     </content>
     <implementation>
