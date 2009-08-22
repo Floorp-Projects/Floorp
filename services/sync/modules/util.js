@@ -672,10 +672,6 @@ let Utils = {
     this.openDialog("ChangeSomething", "generic-change.xul");
   },
 
-  openLogin: function Utils_openLogin() {
-    Utils.openDialog("Login", "login.xul");
-  },
-
   openShare: function Utils_openShare() {
     Utils.openDialog("Share", "share.xul");
   },
@@ -689,10 +685,6 @@ let Utils = {
 
   openSync: function Utils_openSync() {
     Utils._openChromeWindow("Sync", "pick-sync.xul");
-  },
-
-  openWizard: function Utils_openWizard() {
-    Utils._openChromeWindow("Wizard", "wizard.xul");
   },
 
   // assumes an nsIConverterInputStream

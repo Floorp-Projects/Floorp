@@ -131,18 +131,5 @@ Identity.prototype = {
 
   setTempPassword: function Id_setTempPassword(value) {
     this._password = value;
-  },
-
-  // we'll call this if set to call out to the ui to prompt the user
-  // This function takes a callback function to pass back the password
-  onGetPassword: null,
-
-  // Attempts to get the password from the user if not set
-  getPassword: function Identity_getPassword() {
-    if (this.password)
-      return this.password;
-
-    if (typeof this.onGetPassword == "function")
-      return this.password = Sync(this.onGetPassword)();
   }
 };

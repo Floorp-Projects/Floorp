@@ -201,14 +201,6 @@ WeaveSvc.prototype = {
     ID.get('WeaveCryptoID').password = value;
   },
 
-  // chrome-provided callbacks for when the service needs a password/passphrase
-  set onGetPassword(value) {
-    ID.get('WeaveID').onGetPassword = value;
-  },
-  set onGetPassphrase(value) {
-    ID.get('WeaveCryptoID').onGetPassword = value;
-  },
-
   get baseURL() {
     let url = Svc.Prefs.get("serverURL");
     if (!url)
@@ -952,7 +944,7 @@ WeaveSvc.prototype = {
       }
 
       let passphrase = ID.get("WeaveCryptoID");
-      if (passphrase.getPassword()) {
+      if (passphrase.password) {
         let keys = PubKeys.createKeypair(passphrase, PubKeys.defaultKeyUri,
                                          PrivKeys.defaultKeyUri);
         try {

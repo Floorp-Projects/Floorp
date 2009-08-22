@@ -1,28 +1,7 @@
 <!ENTITY prefpane.label                     "Weave">
-<!ENTITY accountTab.label                   "Account">
 <!ENTITY syncTab.label                      "Data">
 <!ENTITY clientsTab.label		    "Clients">
-<!ENTITY addonsTab.label                    "Add-ons">
 <!ENTITY advancedTab.label                  "Advanced">
-
-<!ENTITY alreadyHaveAccount.description     "Already have a Weave account?">
-<!ENTITY signIntoAccount.description        "Sign into your account to use Weave on this computer.">
-<!ENTITY signInButton.label                 "Sign In...">
-<!ENTITY signedIn.label                     "Status">
-<!ENTITY signOutButton.label                "Sign Out">
-<!ENTITY autoconnectCheckbox.label          "Automatically connect each time you start Firefox">
-<!ENTITY createAccount.description          "Create an account">
-<!ENTITY signUpForAccount.description       "To use Weave you must first create an account.">
-<!ENTITY createAccountButton.label          "Create Account...">
-<!ENTITY accountSettings.label              "Settings">
-<!ENTITY changePassword.caption             "Change Password">
-<!ENTITY changePassword.description         "Change the password you use to sign into Weave.">
-<!ENTITY oldPassword.label                  "Current Password:">
-<!ENTITY newPassword.label                  "New Password:">
-<!ENTITY newPasswordAgain.label             "Re-enter:">
-<!ENTITY showPasswords.label                "Show Passwords">
-<!ENTITY changePasswordButton.label         "Change Password">
-<!ENTITY changePassphraseButton.label       "Change Passphrase">
 
 <!ENTITY backUpCheckbox.label               "Back up and securely synchronize my data to a Weave server">
 <!ENTITY encryptOnServerCheckbox.label      "Encrypt locally and only store encrypted data on server">
@@ -40,13 +19,9 @@
 <!ENTITY pluginsCheckbox.label              "Search Plugins">
 <!ENTITY microformatsCheckbox.label         "Microformats">
 
-<!ENTITY instanceName.description         "Please choose a unique name for this computer so you will be able to distinguish it from your other computers.">
 <!ENTITY instanceName.label               "Computer name:">
 <!ENTITY clientList.label                 "Computers that are synchronizing with this Weave account:">
 <!ENTITY examples.label                   "Examples: &quot;Home&quot;, &quot;Work&quot;">
-
-
-<!ENTITY addonsGroupbox.description         "This is where you will find, install, and manage Weave add-ons.">
 
 <!ENTITY serverSettingsCaption.label        "Server Settings">
 <!ENTITY serverLocation.label               "Server Location:">
@@ -57,44 +32,12 @@
 <!ENTITY defaultServerRequiresEncryption.description "Note: Encryption is required by default in this version.">
 <!ENTITY resetServerURLButton.label         "Reset to Default">
 
-<!ENTITY debugButton.label                  "Advanced...">
-
 <!ENTITY debugCaption.label                 "Debugging Tools">
-<!ENTITY debugGroupbox.description          "The following actions cannot be undone and should be used by advanced testers and developers only.">
-<!ENTITY resetCredentialsButton.label       "Reset Login">
-<!ENTITY resetCredentialsButton.description "Delete username and password from Password Manager">
-<!ENTITY resetServerLockButton.label        "Reset Server Lock">
-<!ENTITY resetServerLockButton.description  "Removes the write lock on server">
-<!ENTITY resetServerDataButton.label        "Reset Server Data">
-<!ENTITY resetServerDataButton.description  "Delete all user data on server">
-<!ENTITY resetClientDataButton.label        "Reset Client Data">
-<!ENTITY resetClientDataButton.description  "Delete all locally stored bookmarks and history data">
-
 <!ENTITY eraseServerDataButton.label        "Erase Server Data...">
 <!ENTITY eraseServerDataButton.description  "Erase all data on the server">
 
-<!ENTITY logsCaption.label                  "Logs">
 <!ENTITY openActivityLogButton.label        "Open...">
 <!ENTITY openActivityLogButton.description  "Detailed activity log">
-<!ENTITY runSetupWizardButton.label         "Run...">
-<!ENTITY runSetupWizardButton.description   "Setup wizard">
-
-<!ENTITY advancedDialogButton.label         "Advanced...">
-
-<!ENTITY footerNotice.description           "Weave is an experimental prototype from Mozilla Labs.  Use at your own risk.">
-
-<!ENTITY extensions.weave.enabled.title "Enable Weave">
-<!ENTITY extensions.weave.enabled.description "Sync your session">
-<!ENTITY extensions.weave.username.title "User name">
-<!ENTITY extensions.weave.username.description "Weave will log into the server with this username">
-<!ENTITY extensions.weave.password.title "Password">
-<!ENTITY extensions.weave.password.description "Weave will log into the server with this password">
-<!ENTITY extensions.weave.passphrase.title "Passphrase">
-<!ENTITY extensions.weave.passphrase.description "Weave will encrypt your data with this passphrase">
-<!ENTITY extensions.weave.client.name.title "Client name">
-<!ENTITY extensions.weave.client.name.description "Distinguishes your clients from each other">
-<!ENTITY extensions.weave.serverURL.title "Server URL">
-<!ENTITY extensions.weave.serverURL.description "Sync your sessions using a different server">
 
 <!ENTITY fennecOpenPrefsCmd.label "Open Weave Preferences">
 <!ENTITY fennecOpenPrefsButton.label "Details...">
@@ -107,8 +50,3 @@
 <!ENTITY fennecPrefs.weaveUserAccount.label "Weave User Account">
 <!ENTITY fennecPrefs.youAreUser.label "You are user: ">
 <!ENTITY fennecPrefs.changeUser.label "Change User">
-
-<!ENTITY tabs.sortBy.date.label "Date">
-<!ENTITY tabs.sortBy.title.label "Title">
-<!ENTITY tabs.sortBy.source.label "Source">
-<!ENTITY tabs.sortBy.label "Sort by: ">
