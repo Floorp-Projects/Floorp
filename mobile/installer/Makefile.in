@@ -111,7 +111,9 @@ installer: deb
 
 endif
 
-
+ifdef MOZ_FASTSTART
+CABARGS += -faststart
+endif
 
 ifeq ($(OS_TARGET),WINCE)
 
@@ -121,7 +123,6 @@ UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
 
 installer: stage-package package-xulrunner
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	cd $(DIST) && $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" "$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(PKG_PATH)$(PKG_BASENAME).cab" && $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
-	@echo Installer $(PKG_PATH)$(PKG_BASENAME).cab created!
+	cd $(DIST) && $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py $(CABARGS) "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" "$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(PKG_PATH)$(PKG_BASENAME).cab" && $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR) && echo "Installer $(PKG_PATH)$(PKG_BASENAME).cab created!"
 
 endif
