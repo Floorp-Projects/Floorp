@@ -189,7 +189,7 @@ struct JSTempVectorImpl
      * newcap has not overflowed, and (2) multiplying newcap by sizeof(T) will
      * not overflow.
      */
-    static inline bool growTo(JSTempVector<T> &v, size_t newcap) {
+    static inline bool growTo(JSTempVector<T,N> &v, size_t newcap) {
         JS_ASSERT(!v.usingInlineStorage());
         T *newbuf = reinterpret_cast<T *>(v.mCx->malloc(newcap * sizeof(T)));
         if (!newbuf)
