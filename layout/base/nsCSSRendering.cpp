@@ -1963,10 +1963,6 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
     }
   }
 
-  nsSize imageSize = imageRenderer.ComputeSize(bgPositioningArea.Size());
-  if (imageSize.width <= 0 || imageSize.height <= 0)
-    return;
-
   // Compute the anchor point.
   //
   // relative to aBorderArea.TopLeft() (which is where the top-left
@@ -2006,6 +2002,10 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   } else {
     offset = bgPositioningArea.TopLeft();
   }
+
+  nsSize imageSize = imageRenderer.ComputeSize(bgPositioningArea.Size());
+  if (imageSize.width <= 0 || imageSize.height <= 0)
+    return;
      
   // Scale the image as specified for background-size and as required for
   // proper background positioning when background-position is defined with
