@@ -53,6 +53,7 @@ _TEST_FILES = \
 
 _CHROME_FILES = \
         test_bug413909.html \
+        test_bug480619.html \
         $(NULL)
 
 libs:: $(_TEST_FILES)
