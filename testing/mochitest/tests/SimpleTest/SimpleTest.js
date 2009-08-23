@@ -465,17 +465,23 @@ var todo_isnot = SimpleTest.todo_isnot;
 var isDeeply = SimpleTest.isDeeply;
 
 const oldOnError = window.onerror;
-window.onerror = function (ev) {
-  // Log the error.
-  ok(false, "[SimpleTest/SimpleTest.js, window.onerror] An error occurred", ev);
+window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
+  var funcIdentifier = "[SimpleTest/SimpleTest.js, window.onerror] ";
+
+  // Log the message.
+  ok(false, funcIdentifier + "An error occurred", errorMsg);
+  // There is no Components.stack.caller to log. (See bug 511888.)
 
   // Call previous handler.
   if (oldOnError) {
     try {
-      oldOnError(ev);
+      oldOnError(errorMsg, url, lineNumber);
     } catch (e) {
-      // Log the exception.
-      ok(false, "[SimpleTest/SimpleTest.js, window.onerror] Exception thrown by oldOnError()", e);
+      // Log the error.
+      ok(false, funcIdentifier + "Exception thrown by oldOnError()", e);
+      // Log its stack.
+      if (e.stack)
+        ok(false, funcIdentifier + "JavaScript error stack:\n" + e.stack);
     }
   }
 
