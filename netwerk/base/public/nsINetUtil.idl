@@ -46,7 +46,7 @@ interface nsIPrefBranch;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(a50d5516-5c0a-4f08-b427-703ca0c44ac3)]
+[scriptable, uuid(ca68c485-9db3-4c12-82a6-4fab7948e2d5)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -94,6 +94,13 @@ interface nsINetUtil : nsISupports
    * that case it will return null.
    */
   nsIURI toImmutableURI(in nsIURI aURI);
+
+  /**
+   * Create a simple nested URI using the result of
+   * toImmutableURI on the passed-in aURI which may not be null.
+   * Note: The return URI will not have had its spec set yet.
+   */
+  nsIURI newSimpleNestedURI(in nsIURI aURI);
 
   /** Escape every character with its %XX-escaped equivalent */
   const unsigned long ESCAPE_ALL = 0;
