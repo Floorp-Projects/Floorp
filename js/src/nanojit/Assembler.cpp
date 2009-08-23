@@ -1306,6 +1306,7 @@ namespace nanojit
                 }
             }
 
+#ifdef NJ_VERBOSE
             // We have to do final LIR printing inside this loop.  If we do it
             // before this loop, we we end up printing a lot of dead LIR
             // instructions.
@@ -1328,6 +1329,7 @@ namespace nanojit
                             _thisfrag->lirbuf->names->formatIns(ins->oprnd1()));
                 }
             }
+#endif
 
             if (error())
                 return;
