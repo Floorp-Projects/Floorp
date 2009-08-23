@@ -19,7 +19,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,30 +34,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const CC = Components.Constructor;
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
+/**
+ * This file loads the entire library of testing objects and functions.
+ */
 
-function handleRequest(request, response)
-{
-  var body =
-   '<html>\
-    <body>\
-    Inner POST data: ';
+// Define the shortcuts required by the included files.
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+const Cm = Components.manager;
 
-  var bodyStream = new BinaryInputStream(request.bodyInputStream);
-  var bytes = [], avail = 0;
-  while ((avail = bodyStream.available()) > 0)
-   body += String.fromCharCode.apply(String, bodyStream.readByteArray(avail));
+// Execute the following code while keeping the current scope clean.
+void(function (scriptScope) {
+  const kBaseUrl =
+    "chrome://mochikit/content/browser/toolkit/content/tests/browser/common/";
 
-  body +=
-    '<form id="postForm" action="bug471962_testpage_inner.sjs" method="post">\
-     <input type="text" name="inputfield" value="inner">\
-     <input type="submit">\
-     </form>\
-     </body>\
-     </html>';
+  // If you add files here, add them to "Makefile.in" too.
+  var scriptNames = [
+    "mockObjects.js",
+    "testRunner.js",
 
-  response.bodyOutputStream.write(body, body.length);
-}
+    // To be included after the files above.
+    "mockFilePicker.js",
+    "mockTransferForContinuing.js",
+    "toolkitFunctions.js",
+  ];
+
+  // Include all the required scripts.
+  var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+                     getService(Ci.mozIJSSubScriptLoader);
+  for (let [, scriptName] in Iterator(scriptNames)) {
+    // Ensure that the subscript is loaded in the scope where this script is
+    // being executed, which is not necessarily the global scope.
+    scriptLoader.loadSubScript(kBaseUrl + scriptName, scriptScope);
+  }
+}(this));
