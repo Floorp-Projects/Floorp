@@ -67,7 +67,7 @@
 #include "nsIRecyclingAllocator.h"
 #include "nsISocketTransport.h"
 #include "nsCRT.h"
-#include "nsINestedURI.h"
+#include "nsSimpleNestedURI.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsIPermissionManager.h"
@@ -937,6 +937,19 @@ nsIOService::ToImmutableURI(nsIURI* uri, nsIURI** result)
 
     NS_TryToSetImmutable(*result);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::NewSimpleNestedURI(nsIURI* aURI, nsIURI** aResult)
+{
+    NS_ENSURE_ARG(aURI);
+
+    nsCOMPtr<nsIURI> safeURI;
+    nsresult rv = NS_EnsureSafeToReturn(aURI, getter_AddRefs(safeURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_IF_ADDREF(*aResult = new nsSimpleNestedURI(safeURI));
+    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
