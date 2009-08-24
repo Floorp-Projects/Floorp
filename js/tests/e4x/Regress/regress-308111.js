@@ -941,7 +941,6 @@ var xml = <prefs>
 <pref><name>network.http.accept-encoding</name></pref>
 <pref><name>capability.policy.default.Window.length</name></pref>
 <pref><name>font.default.x-mlym</name></pref>
-<pref><name>security.enable_java</name></pref>
 <pref><name>network.standard-url.escape-utf8</name></pref>
 <pref><name>network.standard-url.encode-utf8</name></pref>
 <pref><name>network.IDN.whitelist.info</name></pref>
