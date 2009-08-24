@@ -549,7 +549,6 @@ pref("javascript.options.mem.high_water_mark", 32);
 pref("javascript.options.mem.gc_frequency",   1600);
 
 // advanced prefs
-pref("security.enable_java",                true);
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
 
