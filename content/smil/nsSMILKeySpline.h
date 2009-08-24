@@ -38,16 +38,14 @@
 #ifndef NS_SMILKEYSPLINE_H_
 #define NS_SMILKEYSPLINE_H_
 
-#include "prtypes.h"
-
 /**
  * Utility class to provide scaling defined in a keySplines element.
  */
 class nsSMILKeySpline
 {
 public:
-  /*
-   * Create a new key spline control point description.
+  /**
+   * Creates a new key spline control point description.
    *
    * aX1, etc. are the x1, y1, x2, y2 cubic Bezier control points as defined by
    * SMILANIM 3.2.3. They must each be in the range 0.0 <= x <= 1.0
@@ -55,10 +53,11 @@ public:
   nsSMILKeySpline(double aX1, double aY1,
                   double aX2, double aY2);
 
-  /*
-   * Get the output (y) value for an input (x).
+  /**
+   * Gets the output (y) value for an input (x).
    *
-   * x should be a floating-point number between 0 and 1 (inclusive).
+   * @param aX  The input x value. A floating-point number between 0 and
+   *            1 (inclusive).
    */
   double GetSplineValue(double aX) const;
 
@@ -66,14 +65,26 @@ private:
   void
   CalcSampleValues();
 
+  /**
+   * Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
+   */
   static double
   CalcBezier(double aT, double aA1, double aA2);
 
+  /**
+   * Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
+   */
   static double
   GetSlope(double aT, double aA1, double aA2);
 
   double
   GetTForX(double aX) const;
+
+  double
+  NewtonRaphsonIterate(double aX, double aGuessT) const;
+
+  double
+  BinarySubdivide(double aX, double aA, double aB) const;
 
   static double
   A(double aA1, double aA2)
