@@ -13,7 +13,6 @@ user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0);
 user_pref("dom.max_chrome_script_run_time", 0);
-user_pref("javascript.allow.mailnews", true);
 user_pref("javascript.options.showInConsole", true);
 user_pref("layout.css.report_errors", true);
 user_pref("security.enable_java", false);
