@@ -8637,12 +8637,13 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_GOTO()
 {
     /*
-     * If we hit a break, end the loop and generate an always taken loop exit guard.
-     * For other downward gotos (like if/else) continue recording.
+     * If we hit a break or a continue to an outer loop, end the loop and
+     * generate an always-taken loop exit guard.  For other downward gotos
+     * (like if/else) continue recording.
      */
     jssrcnote* sn = js_GetSrcNote(cx->fp->script, cx->fp->regs->pc);
 
-    if (sn && SN_TYPE(sn) == SRC_BREAK) {
+    if (sn && (SN_TYPE(sn) == SRC_BREAK || SN_TYPE(sn) == SRC_CONT2LABEL)) {
         AUDIT(breakLoopExits);
         endLoop();
         return JSRS_STOP;
