@@ -95,6 +95,10 @@ for (var i in canvasNames) {
 
 // Stage 1 - Load the reference image for the broken icon
 function loadBrokenIconReference() {
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 1 called\n");};
+
   testImageElem.src = baseURL + brokenIconFilename;
   stageTransition();
 }
@@ -111,6 +115,10 @@ function drawBrokenIconReference() {
 
 // Stage 3 - Load the reference image for the loading icon
 function loadLoadingIconReference() {
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 3 called\n");};
+
   testImageElem.src = baseURL + loadIconFilename;
   stageTransition();
 }
@@ -142,6 +150,10 @@ function drawBrokenIcon() {
 // Stage 7 - Load the reference image for the test image
 function loadImageReference() {
   resetImage();
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 7 called\n");};
+
   testImageElem.src = baseURL + imageFilename;
   stageTransition();
 }
