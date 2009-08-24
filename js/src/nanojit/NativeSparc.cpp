@@ -68,6 +68,7 @@ namespace nanojit
     static const int kcalleeAreaSize = 80; // The max size.
     static const int NJ_PAGE_SIZE_SPARC = 8192; // Use sparc page size here.
 
+#define TODO(x) do{ verbose_only(outputf(#x);) NanoAssertMsgf(false, "%s", #x); } while(0)
 #define BIT_ROUND_UP(v,q)      ( (((uintptr_t)v)+(q)-1) & ~((q)-1) )
 
     void Assembler::nInit(AvmCore* core)
@@ -1071,7 +1072,6 @@ namespace nanojit
         }
     }
 
-/*
     void Assembler::asm_ret(LInsp ins)
     {
         if (_nIns != _epilogue) {
@@ -1085,7 +1085,11 @@ namespace nanojit
             findSpecificRegFor(val, F0);
         }
     }
-*/
+
+    void Assembler::asm_promote(LIns *) {
+        // i2q or u2q
+        TODO(asm_promote);
+    }
 
 #endif /* FEATURE_NANOJIT */
 }
