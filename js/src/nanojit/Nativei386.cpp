@@ -63,6 +63,8 @@ namespace nanojit
         };
     #endif
 
+    #define TODO(x) do{ verbose_only(outputf(#x);) NanoAssertMsgf(false, "%s", #x); } while(0)
+
     const Register Assembler::argRegs[] = { ECX, EDX };
     const Register Assembler::retRegs[] = { EAX, EDX };
     const Register Assembler::savedRegs[] = { EBX, ESI, EDI };
@@ -1696,6 +1698,28 @@ namespace nanojit
             JMP(eip);
         }
     }
+
+    void Assembler::asm_ret(LInsp ins)
+    {
+        if (_nIns != _epilogue) {
+            JMP(_epilogue);
+        }
+        assignSavedRegs();
+        LIns *val = ins->oprnd1();
+        if (ins->isop(LIR_ret)) {
+            findSpecificRegFor(val, retRegs[0]);
+        } else {
+            findSpecificRegFor(val, FST0);
+            fpu_pop();
+        }
+    }
+
+    void Assembler::asm_promote(LIns *) {
+        // i2q or u2q
+        TODO(asm_promote);
+    }
+
+
 
     #endif /* FEATURE_NANOJIT */
 }

@@ -270,6 +270,7 @@ namespace nanojit
             void        asm_spill(Register rr, int d, bool pop, bool quad);
             void        asm_load64(LInsp i);
             void        asm_pusharg(LInsp p);
+            void        asm_ret(LInsp p);
             void        asm_quad(LInsp i);
             void        asm_loop(LInsp i, NInsList& loopJumps);
             void        asm_fcond(LInsp i);
@@ -287,6 +288,7 @@ namespace nanojit
             void        asm_fop(LInsp ins);
             void        asm_i2f(LInsp ins);
             void        asm_u2f(LInsp ins);
+            void        asm_promote(LIns *ins);
             Register    asm_prep_fcall(Reservation *rR, LInsp ins);
             void        asm_nongp_copy(Register r, Register s);
             void        asm_call(LInsp);
