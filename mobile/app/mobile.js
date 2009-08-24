@@ -330,3 +330,6 @@ pref("browser.console.showInPanel", false);
 pref("browser.ui.kinetic.updateInterval", 33);
 pref("browser.ui.kinetic.ema.alphaValue", 8);
 pref("browser.ui.kinetic.decelerationRate", 15);
+
+// Disable default plugin
+pref("plugin.default_plugin_disabled", true);
