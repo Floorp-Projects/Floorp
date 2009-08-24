@@ -108,7 +108,47 @@ VMPI_setPageProtection(void *address,
     NanoAssert((oldProtectFlags & PAGE_GUARD) == 0);
 }
 
-#else // !WIN32
+#elif defined(AVMPLUS_OS2)
+
+void
+VMPI_setPageProtection(void *address,
+                       size_t size,
+                       bool executableFlag,
+                       bool writeableFlag)
+{
+    ULONG flags = PAG_READ;
+    if (executableFlag) {
+        flags |= PAG_EXECUTE;
+    }
+    if (writeableFlag) {
+        flags |= PAG_WRITE;
+    }
+    address = (void*)((size_t)address & ~(0xfff));
+    size = (size + 0xfff) & ~(0xfff);
+
+    ULONG attribFlags = PAG_FREE;
+    while (size) {
+        ULONG attrib;
+        ULONG range = size;
+        ULONG retval = DosQueryMem(address, &range, &attrib);
+        AvmAssert(retval == 0);
+
+        // exit if this is the start of the next memory object
+        if (attrib & attribFlags) {
+            break;
+        }
+        attribFlags |= PAG_BASE;
+
+        range = size > range ? range : size;
+        retval = DosSetMem(address, range, flags);
+        AvmAssert(retval == 0);
+
+        address = (char*)address + range;
+        size -= range;
+    }
+}
+
+#else // !WIN32 && !AVMPLUS_OS2
 
 void VMPI_setPageProtection(void *address,
                             size_t size,
@@ -152,6 +192,28 @@ nanojit::CodeAlloc::freeCodeChunk(void *p, size_t nbytes) {
     VirtualFree(p, 0, MEM_RELEASE);
 }
 
+#elif defined(AVMPLUS_OS2)
+
+void*
+nanojit::CodeAlloc::allocCodeChunk(size_t nbytes) {
+
+    // alloc from high memory, fallback to low memory if that fails
+    void * addr;
+    if (DosAllocMem(&addr, nbytes, OBJ_ANY |
+                    PAG_COMMIT | PAG_READ | PAG_WRITE | PAG_EXECUTE)) {
+        if (DosAllocMem(&addr, nbytes,
+                        PAG_COMMIT | PAG_READ | PAG_WRITE | PAG_EXECUTE)) {
+            return 0;
+        }
+    }
+    return addr;
+}
+
+void
+nanojit::CodeAlloc::freeCodeChunk(void *p, size_t nbytes) {
+    DosFreeMem(p);
+}
+
 #elif defined(AVMPLUS_UNIX)
 
 void*
@@ -169,7 +231,7 @@ nanojit::CodeAlloc::freeCodeChunk(void *p, size_t nbytes) {
     munmap((maddr_ptr)p, nbytes);
 }
 
-#else // !WIN32 && !AVMPLUS_UNIX
+#else // !WIN32 && !AVMPLUS_OS2 && !AVMPLUS_UNIX
 
 void*
 nanojit::CodeAlloc::allocCodeChunk(size_t nbytes) {
