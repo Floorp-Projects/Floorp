@@ -709,11 +709,6 @@ var BrowserUI = {
           var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.unfiledBookmarksFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
           this.updateStar();
 
-          var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-          var faviconURI = ios.newURI(this._favicon.src, null, null);
-
-          PlacesUtils.favicons.setAndLoadFaviconForPage(bookmarkURI, faviconURI, true);
-
           // autoclose the bookmark popup
           autoClose = true;
         }
