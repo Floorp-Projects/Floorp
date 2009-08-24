@@ -256,8 +256,6 @@ namespace nanojit
 
             bool        _inExit, vpad2[3];
 
-            void        asm_cmp(LIns *cond);
-            void        asm_fcmp(LIns *cond);
             void        asm_setcc(Register res, LIns *cond);
             NIns *      asm_jmpcc(bool brOnFalse, LIns *cond, NIns *target);
             void        asm_mmq(Register rd, int dd, Register rs, int ds);
