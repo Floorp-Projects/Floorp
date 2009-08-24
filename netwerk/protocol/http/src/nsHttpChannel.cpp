@@ -2106,6 +2106,7 @@ nsHttpChannel::CheckCache()
     }
 
     PRBool doValidation = PR_FALSE;
+    PRBool canAddImsHeader = PR_TRUE;
 
     // Be optimistic: assume that we won't need to do validation
     mRequestHead.ClearHeader(nsHttp::If_Modified_Since);
@@ -2146,6 +2147,7 @@ nsHttpChannel::CheckCache()
 
     else if (ResponseWouldVary()) {
         LOG(("Validating based on Vary headers returning TRUE\n"));
+        canAddImsHeader = PR_FALSE;
         doValidation = PR_TRUE;
     }
     
@@ -2229,10 +2231,13 @@ nsHttpChannel::CheckCache()
              mRequestHead.Method() == nsHttp::Head)) {
             const char *val;
             // Add If-Modified-Since header if a Last-Modified was given
-            val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
-            if (val)
-                mRequestHead.SetHeader(nsHttp::If_Modified_Since,
-                                       nsDependentCString(val));
+            // and we are allowed to do this (see bugs 510359 and 269303)
+            if (canAddImsHeader) {
+                val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
+                if (val)
+                    mRequestHead.SetHeader(nsHttp::If_Modified_Since,
+                                           nsDependentCString(val));
+            }
             // Add If-None-Match header if an ETag was given in the response
             val = mCachedResponseHead->PeekHeader(nsHttp::ETag);
             if (val)
