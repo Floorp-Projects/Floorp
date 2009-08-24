@@ -46,4 +46,4 @@ skip-if(MOZ_WIDGET_TOOLKIT!="cocoa") == select-mirrored-when-rtl.html select-mir
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(MOZ_WIDGET_TOOLKIT!="windows") == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT!="windows") == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme-ref.html
+skip-if(MOZ_WIDGET_TOOLKIT!="windows") != scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme-ref.html
