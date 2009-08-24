@@ -503,7 +503,7 @@ nsXHTMLContentSerializer::AfterElementStart(nsIContent * aContent,
     PRUint32 i, childCount = aContent->GetChildCount();
     for (i = 0; i < childCount; ++i) {
       nsIContent* child = aContent->GetChildAt(i);
-      if (child->IsNodeOfType(nsINode::eHTML) &&
+      if (child->IsHTML() &&
           child->Tag() == nsGkAtoms::meta &&
           child->HasAttr(kNameSpaceID_None, nsGkAtoms::content)) {
         nsAutoString header;

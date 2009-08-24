@@ -437,13 +437,6 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
         if (aNode.mNode->IsNodeOfType(nsINode::eELEMENT)) {
             nsINodeInfo* nodeInfo = aNode.Content()->NodeInfo();
             nodeInfo->GetLocalName(aLocalName);
-
-            // Check for html
-            if (nodeInfo->NamespaceEquals(kNameSpaceID_None) &&
-                aNode.mNode->IsNodeOfType(nsINode::eHTML)) {
-                ToUpperCase(aLocalName);
-            }
-
             return;
         }
 
@@ -465,7 +458,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
 
     // Check for html
     if (aNode.Content()->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
-        aNode.Content()->IsNodeOfType(nsINode::eHTML)) {
+        aNode.Content()->IsHTML()) {
         ToUpperCase(aLocalName);
     }
 }
@@ -486,11 +479,9 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
             nodeInfo->GetQualifiedName(aName);
 
             // Check for html
-            if (nodeInfo->NamespaceEquals(kNameSpaceID_None) &&
-                aNode.Content()->IsNodeOfType(nsINode::eHTML)) {
+            if (aNode.Content()->IsHTML()) {
                 ToUpperCase(aName);
             }
-
             return;
         }
 
@@ -510,8 +501,7 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
     aNode.Content()->GetAttrNameAt(aNode.mIndex)->GetQualifiedName(aName);
 
     // Check for html
-    if (aNode.Content()->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
-        aNode.Content()->IsNodeOfType(nsINode::eHTML)) {
+    if (aNode.Content()->IsHTML()) {
         ToUpperCase(aName);
     }
 }

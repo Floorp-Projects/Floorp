@@ -79,7 +79,7 @@ public:
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
   static nsGenericHTMLElement* FromContent(nsIContent *aContent)
   {
-    if (aContent->IsNodeOfType(eHTML))
+    if (aContent->IsHTML())
       return static_cast<nsGenericHTMLElement*>(aContent);
     return nsnull;
   }

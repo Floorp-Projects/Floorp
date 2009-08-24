@@ -760,7 +760,7 @@ nsCoreUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
 nsIContent*
 nsCoreUtils::GetLabelContent(nsIContent *aForNode)
 {
-  if (aForNode->IsNodeOfType(nsINode::eXUL))
+  if (aForNode->IsXUL())
     return FindNeighbourPointingToNode(aForNode, nsAccessibilityAtoms::control,
                                        nsAccessibilityAtoms::label);
 

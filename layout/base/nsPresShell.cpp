@@ -1424,7 +1424,7 @@ public:
        nsIContent* root = aContent->GetCurrentDoc()->GetRootContent();
        while (aContent && aContent->IsInNativeAnonymousSubtree()) {
          nsIContent* parent = aContent->GetParent();
-         if (parent == root && aContent->IsNodeOfType(nsINode::eXUL)) {
+         if (parent == root && aContent->IsXUL()) {
            nsIAtom* tag = aContent->Tag();
            return tag == nsGkAtoms::scrollbar || tag == nsGkAtoms::scrollcorner;
          }
@@ -3744,7 +3744,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         content = do_QueryInterface(node);
         if (content) {
           if (content->Tag() == nsGkAtoms::a &&
-              content->IsNodeOfType(nsINode::eHTML)) {
+              content->IsHTML()) {
             break;
           }
           content = nsnull;

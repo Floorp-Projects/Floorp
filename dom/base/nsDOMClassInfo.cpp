@@ -7000,7 +7000,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   nsISupports *native_parent;
 
   PRBool slimWrappers = PR_TRUE;
-  if (node->IsNodeOfType(nsINode::eELEMENT | nsINode::eXUL)) {
+  PRBool nodeIsElement = node->IsNodeOfType(nsINode::eELEMENT);
+  if (nodeIsElement && static_cast<nsIContent*>(node)->IsXUL()) {
     // For XUL elements, use the parent, if any.
     native_parent = node->GetParent();
 
@@ -7016,9 +7017,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     native_parent = doc;
 
     // But for HTML form controls, use the form as scope parent.
-    if (node->IsNodeOfType(nsINode::eELEMENT |
-                           nsIContent::eHTML |
-                           nsIContent::eHTML_FORM_CONTROL)) {
+    if (nodeIsElement &&
+        node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
       nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
 
       if (form_control) {

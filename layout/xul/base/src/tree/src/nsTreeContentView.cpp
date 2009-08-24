@@ -517,18 +517,18 @@ nsTreeContentView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& _re
 
   nsIAtom *rowTag = row->mContent->Tag();
   if (rowTag == nsGkAtoms::option &&
-      row->mContent->IsNodeOfType(nsINode::eHTML)) {
+      row->mContent->IsHTML()) {
     // Use the text node child as the label
     nsCOMPtr<nsIDOMHTMLOptionElement> elem = do_QueryInterface(row->mContent);
     elem->GetText(_retval);
   }
   else if (rowTag == nsGkAtoms::optgroup &&
-           row->mContent->IsNodeOfType(nsINode::eHTML)) {
+           row->mContent->IsHTML()) {
     nsCOMPtr<nsIDOMHTMLOptGroupElement> elem = do_QueryInterface(row->mContent);
     elem->GetLabel(_retval);
   }
   else if (rowTag == nsGkAtoms::treeitem &&
-           row->mContent->IsNodeOfType(nsINode::eXUL)) {
+           row->mContent->IsXUL()) {
     nsIContent* realRow =
       nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
     if (realRow) {
@@ -588,7 +588,7 @@ nsTreeContentView::ToggleOpenState(PRInt32 aIndex)
   Row* row = mRows[aIndex];
 
   if (row->mContent->Tag() == nsGkAtoms::optgroup &&
-      row->mContent->IsNodeOfType(nsINode::eHTML)) {
+      row->mContent->IsHTML()) {
     // we don't use an attribute for optgroup's open state
     if (row->IsOpen())
       CloseContainer(aIndex);
@@ -794,7 +794,7 @@ nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
                                         PRInt32 aStateMask)
 {
   if (!aContent1 || !mSelection ||
-      !aContent1->IsNodeOfType(nsINode::eHTML) ||
+      !aContent1->IsHTML() ||
       !(aStateMask & NS_EVENT_STATE_CHECKED))
     return;
 
@@ -823,7 +823,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
     mBoxObject->Invalidate();
   }
 
-  if (aContent->IsNodeOfType(nsINode::eXUL)) {
+  if (aContent->IsXUL()) {
     if (tag != nsGkAtoms::treecol &&
         tag != nsGkAtoms::treeitem &&
         tag != nsGkAtoms::treeseparator &&
@@ -842,8 +842,8 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
     if (!element)
       return; // this is not for us
     nsIAtom *parentTag = element->Tag();
-    if ((element->IsNodeOfType(nsINode::eXUL) && parentTag == nsGkAtoms::tree) ||
-        (element->IsNodeOfType(nsINode::eHTML) && parentTag == nsGkAtoms::select))
+    if ((element->IsXUL() && parentTag == nsGkAtoms::tree) ||
+        (element->IsHTML() && parentTag == nsGkAtoms::select))
       return; // this is not for us
   }
 
@@ -984,12 +984,12 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   // First check the tag to see if it's one that we care about.
   nsIAtom *childTag = aChild->Tag();
 
-  if (aChild->IsNodeOfType(nsINode::eHTML)) {
+  if (aChild->IsHTML()) {
     if (childTag != nsGkAtoms::option &&
         childTag != nsGkAtoms::optgroup)
       return;
   }
-  else if (aChild->IsNodeOfType(nsINode::eXUL)) {
+  else if (aChild->IsXUL()) {
     if (childTag != nsGkAtoms::treeitem &&
         childTag != nsGkAtoms::treeseparator &&
         childTag != nsGkAtoms::treechildren &&
@@ -1008,8 +1008,8 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
     if (!element)
       return; // this is not for us
     nsIAtom *parentTag = element->Tag();
-    if ((element->IsNodeOfType(nsINode::eXUL) && parentTag == nsGkAtoms::tree) ||
-        (element->IsNodeOfType(nsINode::eHTML) && parentTag == nsGkAtoms::select))
+    if ((element->IsXUL() && parentTag == nsGkAtoms::tree) ||
+        (element->IsHTML() && parentTag == nsGkAtoms::select))
       return; // this is not for us
   }
 
@@ -1067,12 +1067,12 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
   // First check the tag to see if it's one that we care about.
   nsIAtom *tag = aChild->Tag();
 
-  if (aChild->IsNodeOfType(nsINode::eHTML)) {
+  if (aChild->IsHTML()) {
     if (tag != nsGkAtoms::option &&
         tag != nsGkAtoms::optgroup)
       return;
   }
-  else if (aChild->IsNodeOfType(nsINode::eXUL)) {
+  else if (aChild->IsXUL()) {
     if (tag != nsGkAtoms::treeitem &&
         tag != nsGkAtoms::treeseparator &&
         tag != nsGkAtoms::treechildren &&
@@ -1091,8 +1091,8 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
     if (!element)
       return; // this is not for us
     nsIAtom *parentTag = element->Tag();
-    if ((element->IsNodeOfType(nsINode::eXUL) && parentTag == nsGkAtoms::tree) ||
-        (element->IsNodeOfType(nsINode::eHTML) && parentTag == nsGkAtoms::select))
+    if ((element->IsXUL() && parentTag == nsGkAtoms::tree) ||
+        (element->IsHTML() && parentTag == nsGkAtoms::select))
       return; // this is not for us
   }
 
@@ -1154,13 +1154,13 @@ nsTreeContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex,
     nsIAtom *tag = content->Tag();
     PRInt32 count = aRows.Length();
 
-    if (content->IsNodeOfType(nsINode::eXUL)) {
+    if (content->IsXUL()) {
       if (tag == nsGkAtoms::treeitem)
         SerializeItem(content, aParentIndex, aIndex, aRows);
       else if (tag == nsGkAtoms::treeseparator)
         SerializeSeparator(content, aParentIndex, aIndex, aRows);
     }
-    else if (content->IsNodeOfType(nsINode::eHTML)) {
+    else if (content->IsHTML()) {
       if (tag == nsGkAtoms::option)
         SerializeOption(content, aParentIndex, aIndex, aRows);
       else if (tag == nsGkAtoms::optgroup)
@@ -1271,7 +1271,7 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
 
     nsIAtom *tag = content->Tag();
 
-    if (content->IsNodeOfType(nsINode::eXUL)) {
+    if (content->IsXUL()) {
       if (tag == nsGkAtoms::treeitem) {
         if (! content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                                    nsGkAtoms::_true, eCaseMatters)) {
@@ -1293,7 +1293,7 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
           (*aIndex)++;
       }
     }
-    else if (content->IsNodeOfType(nsINode::eHTML)) {
+    else if (content->IsHTML()) {
       if (tag == nsGkAtoms::optgroup) {
         (*aIndex)++;
         GetIndexInSubtree(content, aContent, aIndex);
@@ -1365,8 +1365,8 @@ nsTreeContentView::InsertRowFor(nsIContent* aParent, nsIContent* aChild)
   nsCOMPtr<nsIContent> grandParent = aParent->GetParent();
   nsIAtom* grandParentTag = grandParent->Tag();
 
-  if ((grandParent->IsNodeOfType(nsINode::eXUL) && grandParentTag == nsGkAtoms::tree) ||
-      (grandParent->IsNodeOfType(nsINode::eHTML) && grandParentTag == nsGkAtoms::select)
+  if ((grandParent->IsXUL() && grandParentTag == nsGkAtoms::tree) ||
+      (grandParent->IsHTML() && grandParentTag == nsGkAtoms::select)
      ) {
     // Allow insertion to the outermost container.
     insertRow = PR_TRUE;
@@ -1399,13 +1399,13 @@ nsTreeContentView::InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIContent* a
 {
   nsAutoTArray<Row*, 8> rows;
   nsIAtom *tag = aContent->Tag();
-  if (aContent->IsNodeOfType(nsINode::eXUL)) {
+  if (aContent->IsXUL()) {
     if (tag == nsGkAtoms::treeitem)
       SerializeItem(aContent, aParentIndex, &aIndex, rows);
     else if (tag == nsGkAtoms::treeseparator)
       SerializeSeparator(aContent, aParentIndex, &aIndex, rows);
   }
-  else if (aContent->IsNodeOfType(nsINode::eHTML)) {
+  else if (aContent->IsHTML()) {
     if (tag == nsGkAtoms::option)
       SerializeOption(aContent, aParentIndex, &aIndex, rows);
     else if (tag == nsGkAtoms::optgroup)

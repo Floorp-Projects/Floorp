@@ -331,7 +331,7 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
 static PRBool IsOptGroup(nsIContent *aContent)
 {
   return (aContent->NodeInfo()->Equals(nsGkAtoms::optgroup) &&
-          aContent->IsNodeOfType(nsINode::eHTML));
+          aContent->IsHTML());
 }
 
 // If the document is such that recursing over these options gets us

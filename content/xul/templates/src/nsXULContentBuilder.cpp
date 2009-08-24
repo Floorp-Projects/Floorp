@@ -1302,7 +1302,7 @@ PRBool
 nsXULContentBuilder::IsOpen(nsIContent* aElement)
 {
     // Determine if this is a <treeitem> or <menu> element
-    if (!aElement->IsNodeOfType(nsINode::eXUL))
+    if (!aElement->IsXUL())
         return PR_TRUE;
 
     // XXXhyatt Use the XBL service to obtain a base tag.

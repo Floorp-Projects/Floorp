@@ -145,23 +145,23 @@ nsScriptElement::ContentInserted(nsIDocument *aDocument,
 }
 
 static PRBool
-InNonScriptingContainer(nsINode* aNode)
+InNonScriptingContainer(nsIContent* aNode)
 {
-  aNode = aNode->GetNodeParent();
+  aNode = aNode->GetParent();
   while (aNode) {
     // XXX noframes and noembed are currently unconditionally not
     // displayed and processed. This might change if we support either
     // prefs or per-document container settings for not allowing
     // frames or plugins.
-    if (aNode->IsNodeOfType(nsINode::eHTML)) {
-      nsIAtom *localName = static_cast<nsIContent*>(aNode)->Tag();
+    if (aNode->IsHTML()) {
+      nsIAtom *localName = aNode->Tag();
       if (localName == nsGkAtoms::iframe ||
           localName == nsGkAtoms::noframes ||
           localName == nsGkAtoms::noembed) {
         return PR_TRUE;
       }
     }
-    aNode = aNode->GetNodeParent();
+    aNode = aNode->GetParent();
   }
 
   return PR_FALSE;

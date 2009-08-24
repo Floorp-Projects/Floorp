@@ -237,7 +237,7 @@ IsCell(nsIContent *aContent, PRInt32 aNamespaceID,
   nsIAtom* tag = aContent->Tag();
 
   return ((tag == nsGkAtoms::td || tag == nsGkAtoms::th) &&
-          aContent->IsNodeOfType(nsINode::eHTML));
+          aContent->IsHTML());
 }
 
 NS_IMETHODIMP
