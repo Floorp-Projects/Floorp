@@ -12,7 +12,6 @@ user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.max_script_run_time", 0);
 user_pref("extensions.update.enabled", false);
 user_pref("extensions.update.notifyUser", false);
-user_pref("javascript.allow.mailnews", true);
 user_pref("mail.startup.enabledMailCheckOnce", false);
 user_pref("security.enable_java", false);
 user_pref("security.warn_submit_insecure", false);
