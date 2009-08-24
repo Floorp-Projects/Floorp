@@ -969,7 +969,7 @@ var Browser = {
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
     // XXX computeSideBarVisibility will normally return 0.0015... for ritevis
     if (leftvis > 0.002 || ritevis > 0.002) {
-      document.getElementById("toolbar-moveable-container").top = 0;
+      BrowserUI.lockToolbar();
       this.floatedWhileDragging = true;
     }
   },
@@ -980,7 +980,7 @@ var Browser = {
 
     let [leftvis, ritevis, leftw, ritew] = Browser.computeSidebarVisibility(dx, dy);
     if (leftvis <= 0.002 && ritevis <= 0.002) {
-      document.getElementById("toolbar-moveable-container").top = "";
+      BrowserUI.unlockToolbar();
       this.floatedWhileDragging = false;
       return true;
     }
@@ -1724,12 +1724,14 @@ IdentityHandler.prototype = {
     this.setPopupMessages(this._identityBox.getAttribute("mode") || this.IDENTITY_MODE_UNKNOWN);
 
     BrowserUI.pushPopup(this, [this._identityPopup, this._identityBox]);
+    BrowserUI.lockToolbar();
   },
 
   hide: function ih_hide() {
     this._identityPopup.hidden = true;
-
     this._identityBox.removeAttribute("open");
+    
+    BrowserUI.unlockToolbar();
   },
 
   /**
