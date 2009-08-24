@@ -1,0 +1,297 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL keySplines</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="-100" cy="20" r="15" fill="blue" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for SMIL keySplines **/
+
+/* Global Variables */
+const svgns="http://www.w3.org/2000/svg";
+var svg = document.getElementById("svg");
+var circle = document.getElementById('circle');
+
+SimpleTest.waitForExplicitFinish();
+
+function createAnim() {
+  var anim = document.createElementNS(svgns,'animate');
+  anim.setAttribute('attributeName','cx');
+  anim.setAttribute('dur','10s');
+  anim.setAttribute('begin','0s');
+  anim.setAttribute('fill', 'freeze');
+  return circle.appendChild(anim);
+}
+
+function main() {
+  svg.pauseAnimations();
+  var tests =
+    [ testSimpleA, // these first four are from SVG 1.1
+      testSimpleB,
+      testSimpleC,
+      testSimpleD,
+      testSimpleE, // bug 501569
+      testMultipleIntervalsA,
+      testMultipleIntervalsB,
+      testMultipleIntervalsC,
+      testOneValue,
+      testFromTo,
+      testWrongNumSplines,
+      testToAnimation,
+      testOkSyntax,
+      testBadSyntaxA,
+      testBadSyntaxB
+    ];
+  for (var i = 0; i < tests.length; i++) {
+    var anim = createAnim();
+    svg.setCurrentTime(0);
+    tests[i](anim);
+    removeElement(anim);
+  }
+  SimpleTest.finish();
+}
+
+function checkSample(time, expectedValue) {
+  svg.setCurrentTime(time);
+  is(circle.cx.animVal.value, expectedValue);
+}
+
+function checkSampleRough(time, expectedValue, precision) {
+  const defaultPrecision = 0.00001;
+  if (typeof precision == "undefined") {
+    precision = defaultPrecision;
+  }
+  svg.setCurrentTime(time);
+  var diff = Math.abs(expectedValue - circle.cx.animVal.value);
+  ok(diff <= precision, 
+    "Unexpected sample value got " + circle.cx.animVal.value
+      + ", expected " + expectedValue + " [error: " + diff
+      + " > tolerance: " + precision + "]");
+}
+
+/*
+ * These first four tests are the examples given in SVG 1.1, section 19.2.7
+ */
+
+function testSimpleA(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '10; 20');
+  anim.setAttribute('keyTimes', '0; 1');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '0 0 1 1');
+  checkSample(0, 10);
+  checkSample(1, 12.5);
+  checkSample(2, 15);
+  checkSample(3, 17.5);
+  checkSample(4, 20);
+}
+
+function testSimpleB(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '10; 20');
+  anim.setAttribute('keyTimes', '0; 1');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '.5 0 .5 1');
+  checkSample(0, 10);
+  checkSampleRough(1, 11.058925);
+  checkSample(2, 15);
+  checkSampleRough(3, 18.941075);
+  checkSample(4, 20);
+}
+
+function testSimpleC(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '10; 20');
+  anim.setAttribute('keyTimes', '0; 1');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '0 .75 .25 1');
+  checkSample(0, 10);
+  checkSampleRough(1, 18.101832);
+  checkSampleRough(2, 19.413430);
+  checkSampleRough(3, 19.886504);
+  checkSample(4, 20);
+}
+
+function testSimpleD(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '10; 20');
+  anim.setAttribute('keyTimes', '0; 1');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '1 0 .25 .25');
+  checkSample(0, 10);
+  checkSampleRough(1, 10.076925);
+  checkSampleRough(2, 10.644369);
+  checkSampleRough(3, 16.908699);
+  checkSample(4, 20);
+}
+
+// Bug 501569 -- nsSMILKeySpline(1, 0, 0, 1) miscalculates values just under 0.5
+function testSimpleE(anim) {
+  anim.setAttribute('dur','10s');
+  anim.setAttribute('values', '0; 10');
+  anim.setAttribute('keyTimes', '0; 1');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '1 0 0 1');
+  checkSample(0, 0);
+  checkSampleRough(0.001, 0);
+  checkSampleRough(4.95, 3.409174);
+  checkSampleRough(4.98, 3.819443);
+  checkSampleRough(4.99, 4.060174);
+  checkSampleRough(4.999, 4.562510);
+  checkSample(5, 5);
+  checkSampleRough(5.001, 5.437490);
+  checkSampleRough(5.01, 5.939826);
+  checkSampleRough(5.015, 6.075002);
+  checkSampleRough(5.02, 6.180557);
+  checkSampleRough(9.9999, 10);
+  checkSample(10, 10);
+}
+
+function testMultipleIntervalsA(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '10; 20; 30');
+  anim.setAttribute('keyTimes', '0; 0.25; 1');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '0 0 1 1; .5 0 .5 1;');
+  checkSample(0.5, 15);
+  checkSampleRough(0.999, 20, 0.02);
+  checkSample(1, 20);
+  checkSampleRough(1.001, 20, 0.05);
+  checkSample(2.5, 25);
+  checkSampleRough(3.25, 29, 0.1);
+}
+
+function testMultipleIntervalsB(anim) {
+  // as above but without keyTimes
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '10; 20; 30');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '0 0 1 1; .5 0 .5 1;');
+  checkSample(1, 15);
+  checkSampleRough(1.999, 20, 0.01);
+  checkSample(2, 20);
+  checkSampleRough(2.001, 20, 0.01);
+  checkSample(3, 25);
+  checkSampleRough(3.5, 29, 0.1);
+}
+
+function testMultipleIntervalsC(anim) {
+  // test some unusual (but valid) syntax
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '10; 20; 30');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', ' 0 .75 0.25 1 ; 1, 0 ,.25 .25  \t');
+  checkSampleRough(3.5, 26.9, 0.2);
+}
+
+function testOneValue(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '5');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '0 0 1 1');
+  checkSample(0, 5);
+  checkSample(1.5, 5);
+}
+
+function testFromTo(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('from', '10');
+  anim.setAttribute('to', '20');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '.5 0 .5 1');
+  checkSample(0, 10);
+  checkSampleRough(1, 11, 0.1);
+}
+
+function testWrongNumSplines(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('from', '10');
+  anim.setAttribute('to', '20');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '.5 0 .5 1; 0 0 1 1');
+  // animation is in error, should do nothing
+  checkSample(1.5, -100);
+}
+
+function testToAnimation(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('to', '20');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', '.5 0 .5 1');
+  checkSample(0, -100);
+  checkSampleRough(1, -87.3, 0.1);
+}
+
+function testOkSyntax(anim) {
+  var okStrs = ['0,0,0,0', // all commas
+                '  0 0   , 0  ,0  ', // mix of separators
+                '0 0 0 0;', // trailing semi-colon
+                '0 0 0 0 ;']; //   "      "
+
+  for (var i = 0; i < okStrs.length; i++) {
+    testAnim = createAnim();
+    testAnim.setAttribute('dur','4s');
+    testAnim.setAttribute('from', '0');
+    testAnim.setAttribute('to', '20');
+    testAnim.setAttribute('calcMode', 'spline');
+    testAnim.setAttribute('keySplines', okStrs[i]);
+    checkSample(4, 20);
+  }
+}
+
+function testBadSyntaxA(anim) {
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('from', '0');
+  anim.setAttribute('to', '20');
+  anim.setAttribute('calcMode', 'spline');
+
+  var badStrs = ['', // empty
+                 '    ', // whitespace only
+                 '0,1.1,0,0', // bad range
+                 '0,0,0,-0.1', // "   "
+                 '  0 0   , 0  0   ,', // stray comma
+                 '1-1 0 0', // path-style separators
+                 '0 0 0', // wrong number of values
+                 '0 0 0 0 0', //  "     "
+                 '0 0 0 0 0 0 0 0', //  "     "
+                 '0 0 0; 0 0 0 0', //  "     "
+                 '0 0 0; 0', // mis-placed semi-colon
+                 ';0 0 0 0']; //    "    "
+
+  for (var i = 0; i < badStrs.length; i++) {
+    testAnim = createAnim();
+    testAnim.setAttribute('dur','4s');
+    testAnim.setAttribute('from', '0');
+    testAnim.setAttribute('to', '20');
+    testAnim.setAttribute('calcMode', 'spline');
+    testAnim.setAttribute('keySplines', badStrs[i]);
+    checkSample(4, -100);
+  }
+}
+
+function testBadSyntaxB(anim) {
+  // test some illegal syntax
+  anim.setAttribute('dur','4s');
+  anim.setAttribute('values', '10; 20; 30');
+  anim.setAttribute('calcMode', 'spline');
+  anim.setAttribute('keySplines', ' 0 .75 0.25 1 ; 1, A0 ,.25 .25  \t');
+  // animation is in error, should do nothing
+  checkSample(3.5, -100);
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>
