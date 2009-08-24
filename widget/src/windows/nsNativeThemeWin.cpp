@@ -2000,22 +2000,32 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
 #endif
         (*aResult).width = (*aResult).height = 15;
       break;
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:        
+    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
 #ifndef WINCE
-      (*aResult).width = ::GetSystemMetrics(SM_CYVTHUMB);
+      (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
+      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB);
 #else
       (*aResult).width = 15;
+      (*aResult).height = 15;
 #endif
-      (*aResult).height = (*aResult).width >> 1;
+      // Without theming, divide the thumb size by two in order to look more
+      // native
+      if (!GetTheme(aWidgetType))
+        (*aResult).height >>= 1;
       *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
 #ifndef WINCE
-      (*aResult).height = ::GetSystemMetrics(SM_CXHTHUMB);
+      (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB);
+      (*aResult).height = ::GetSystemMetrics(SM_CYHSCROLL);
 #else
+      (*aResult).width = 15;
       (*aResult).height = 15;
 #endif
-      (*aResult).width = (*aResult).height >> 1;
+      // Without theming, divide the thumb size by two in order to look more
+      // native
+      if (!GetTheme(aWidgetType))
+        (*aResult).width >>= 1;
       *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
