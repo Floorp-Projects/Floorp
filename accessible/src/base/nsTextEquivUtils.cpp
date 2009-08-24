@@ -219,7 +219,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
     return NS_OK;
   }
   
-  if (aContent->IsNodeOfType(nsINode::eHTML) &&
+  if (aContent->IsHTML() &&
       aContent->NodeInfo()->Equals(nsAccessibilityAtoms::br)) {
     aString->AppendLiteral("\r\n");
     return NS_OK;
@@ -393,7 +393,7 @@ nsTextEquivUtils::AppendFromDOMNode(nsIContent *aContent, nsAString *aString)
   if (rv != NS_OK_NO_NAME_CLAUSE_HANDLED)
     return NS_OK;
 
-  if (aContent->IsNodeOfType(nsINode::eXUL)) {
+  if (aContent->IsXUL()) {
     nsAutoString textEquivalent;
     nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl =
       do_QueryInterface(aContent);

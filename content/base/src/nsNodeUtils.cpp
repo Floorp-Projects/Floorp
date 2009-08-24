@@ -712,7 +712,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   // cloning, so kids of the new node aren't confused about whether they're
   // in a document.
 #ifdef MOZ_XUL
-  if (aClone && !aParent && aNode->IsNodeOfType(nsINode::eXUL)) {
+  if (aClone && !aParent && aNode->IsNodeOfType(nsINode::eELEMENT) && static_cast<nsIContent*>(aNode)->IsXUL()) {
     nsXULElement *xulElem = static_cast<nsXULElement*>(elem);
     if (!xulElem->mPrototype || xulElem->IsInDoc()) {
       clone->SetFlags(NODE_FORCE_XBL_BINDINGS);

@@ -1453,7 +1453,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     return InitAccessible(newAcc, aAccessible, nsnull);
   }
 
-  PRBool isHTML = content->IsNodeOfType(nsINode::eHTML);
+  PRBool isHTML = content->IsHTML();
   if (isHTML && content->Tag() == nsAccessibilityAtoms::map) {
     // Create hyper text accessible for HTML map if it is used to group links
     // (see http://www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass). If the HTML

@@ -899,7 +899,7 @@ nsresult
 nsXBLContentSink::AddAttributes(const PRUnichar** aAtts,
                                 nsIContent* aContent)
 {
-  if (aContent->IsNodeOfType(nsINode::eXUL))
+  if (aContent->IsXUL())
     return NS_OK; // Nothing to do, since the proto already has the attrs.
 
   return nsXMLContentSink::AddAttributes(aAtts, aContent);

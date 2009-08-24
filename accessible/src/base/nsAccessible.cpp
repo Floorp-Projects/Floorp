@@ -298,9 +298,9 @@ nsAccessible::GetName(nsAString& aName)
 
   nsIAtom *tooltipAttr = nsnull;
 
-  if (content->IsNodeOfType(nsINode::eHTML))
+  if (content->IsHTML())
     tooltipAttr = nsAccessibilityAtoms::title;
-  else if (content->IsNodeOfType(nsINode::eXUL))
+  else if (content->IsXUL())
     tooltipAttr = nsAccessibilityAtoms::tooltiptext;
   else
     return NS_OK;
@@ -342,7 +342,7 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (description.IsEmpty()) {
-      PRBool isXUL = content->IsNodeOfType(nsINode::eXUL);
+      PRBool isXUL = content->IsXUL();
       if (isXUL) {
         // Try XUL <description control="[id]">description text</description>
         nsIContent *descriptionContent =
@@ -1009,7 +1009,7 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   // if someone sets it on another attribute, 
   // it seems reasonable to consider it unavailable
   PRBool isDisabled;
-  if (content->IsNodeOfType(nsINode::eHTML)) {
+  if (content->IsHTML()) {
     // In HTML, just the presence of the disabled attribute means it is disabled,
     // therefore disabled="false" indicates disabled!
     isDisabled = content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled);
@@ -1049,7 +1049,7 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_FLOATING;
 
   // Check if a XUL element has the popup attribute (an attached popup menu).
-  if (content->IsNodeOfType(nsINode::eXUL))
+  if (content->IsXUL())
     if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::popup))
       *aState |= nsIAccessibleStates::STATE_HASPOPUP;
 
@@ -2413,7 +2413,7 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
   case nsIAccessibleRelation::RELATION_LABEL_FOR:
     {
       if (content->Tag() == nsAccessibilityAtoms::label) {
-        nsIAtom *IDAttr = content->IsNodeOfType(nsINode::eHTML) ?
+        nsIAtom *IDAttr = content->IsHTML() ?
           nsAccessibilityAtoms::_for : nsAccessibilityAtoms::control;
         rv = nsRelUtils::
           AddTargetFromIDRefAttr(aRelationType, aRelation, content, IDAttr);
@@ -2470,7 +2470,7 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
         return NS_OK; // XXX bug 381599, avoid performance problems
 
       if (content->Tag() == nsAccessibilityAtoms::description &&
-          content->IsNodeOfType(nsINode::eXUL)) {
+          content->IsXUL()) {
         // This affectively adds an optional control attribute to xul:description,
         // which only affects accessibility, by allowing the description to be
         // tied to a control.
@@ -2554,7 +2554,7 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
 
   case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
     {
-      if (content->IsNodeOfType(nsINode::eHTML)) {
+      if (content->IsHTML()) {
         // HTML form controls implements nsIFormControl interface.
         nsCOMPtr<nsIFormControl> control(do_QueryInterface(content));
         if (control) {
@@ -3101,10 +3101,10 @@ nsAccessible::GetNameInternal(nsAString& aName)
   if (!content)
     return NS_OK;
 
-  if (content->IsNodeOfType(nsINode::eHTML))
+  if (content->IsHTML())
     return GetHTMLName(aName);
 
-  if (content->IsNodeOfType(nsINode::eXUL))
+  if (content->IsXUL())
     return GetXULName(aName);
 
   return NS_OK;
@@ -3231,7 +3231,7 @@ nsAccessible::GetActionRule(PRUint32 aStates)
     return eJumpAction;
 
   // Return "click" action on elements that have an attached popup menu.
-  if (content->IsNodeOfType(nsINode::eXUL))
+  if (content->IsXUL())
     if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::popup))
       return eClickAction;
 
