@@ -41,9 +41,6 @@ Components.utils.import("resource://gre/modules/utils.js");
 const TOOLBARSTATE_LOADING  = 1;
 const TOOLBARSTATE_LOADED   = 2;
 
-const URLBAR_FORCE  = 1;
-const URLBAR_EDIT   = 2;
-
 const kDefaultFavIconURL = "chrome://browser/skin/images/favicon-default-30.png";
 
 [
@@ -169,20 +166,9 @@ var BrowserUI = {
     this._favicon.src = faviconURI.spec;
   },
 
-  showToolbar : function showToolbar(aFlags) {
+  showToolbar : function showToolbar(aEdit) {
     this.hidePanel();
-
-    aFlags = aFlags || 0;
-
-    if (aFlags & URLBAR_FORCE) {
-      //ws.freeze("toolbar-main");
-      //ws.moveFrozenTo("toolbar-main", 0, 0);
-    }
-    else {
-      //ws.unfreeze("toolbar-main");
-    }
-
-    this._editToolbar(aFlags & URLBAR_EDIT);
+    this._editToolbar(aEdit);
   },
 
   _toolbarLocked: 0,
@@ -372,7 +358,6 @@ var BrowserUI = {
 
   init : function() {
     this._edit = document.getElementById("urlbar-edit");
-    this._edit.addEventListener("keypress", this, true);
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
@@ -396,6 +381,9 @@ var BrowserUI = {
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
 
+    // listening escape to dismiss dialog on VK_ESCAPE
+    window.addEventListener("keypress", this, true);
+
     ExtensionsView.init();
     DownloadsView.init();
   },
@@ -411,10 +399,7 @@ var BrowserUI = {
     switch (aState) {
       case TOOLBARSTATE_LOADED:
         icons.setAttribute("mode", "view");
-        if (uri.spec == "about:blank")
-          this.showToolbar(URLBAR_EDIT);
-        else
-          this.showToolbar();
+        this.showToolbar(uri.spec == "about:blank");
 
         if (!this._faviconLink)
           this._faviconLink = uri.prePath + "/favicon.ico";
@@ -424,7 +409,7 @@ var BrowserUI = {
         break;
 
       case TOOLBARSTATE_LOADING:
-        this.showToolbar(URLBAR_FORCE);
+        this.showToolbar();
         // Force the mode back to "loading"
         icons.setAttribute("mode", "loading");
 
@@ -635,8 +620,9 @@ var BrowserUI = {
         break;
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
-          this._edit.reset();
-          this._editToolbar(false);
+          let dialog = BrowserUI.activeDialog;
+          if (dialog)
+            dialog.close();
         }
         break;
       case "mousedown":
@@ -713,7 +699,7 @@ var BrowserUI = {
         this.goToURI();
         break;
       case "cmd_openLocation":
-        this.showToolbar(URLBAR_EDIT | URLBAR_FORCE);
+        this.showToolbar(true);
         setTimeout(function () { BrowserUI.showAutoComplete(); }, 0);
         break;
       case "cmd_star":
@@ -859,12 +845,9 @@ var BookmarkHelper = {
       self._editor.init(itemId);
       self._editor.startEditing();
     }, 0);
-
-    window.addEventListener("keypress", this, true);
   },
 
   close: function BH_close() {
-    window.removeEventListener("keypress", this, true);
     BrowserUI.updateStar();
 
     // Note: the _editor will have already saved the data, if needed, by the time
@@ -875,11 +858,6 @@ var BookmarkHelper = {
     this._panel.hidden = true;
     BrowserUI.popDialog();
   },
-
-  handleEvent: function BH_handleEvent(aEvent) {
-    if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
-      this.close();
-  }
 };
 
 var BookmarkList = {
@@ -896,12 +874,9 @@ var BookmarkList = {
     this._bookmarks = document.getElementById("bookmark-items");
     this._bookmarks.manageUI = false;
     this._bookmarks.openFolder();
-
-    window.addEventListener("keypress", this, true);
   },
 
   close: function() {
-    window.removeEventListener("keypress", this, true);
     BrowserUI.updateStar();
 
     if (this._bookmarks.isEditing)
@@ -923,11 +898,6 @@ var BookmarkList = {
       BrowserUI.goToURI(item.spec);
     }
   },
-
-  handleEvent: function(aEvent) {
-    if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
-      this.close();
-  }
 };
 
 var FolderPicker = {
