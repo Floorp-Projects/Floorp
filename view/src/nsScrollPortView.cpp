@@ -847,15 +847,20 @@ nsScrollPortView::IncrementalScroll()
   if (!mAsyncScroll)
     return;
 
+  nsWeakView thisView = this;
   if (mAsyncScroll->mIsSmoothScroll) {
     if (mAsyncScroll->mFrameIndex < SMOOTH_SCROLL_FRAMES) {
       ScrollToImpl(mOffsetX + mAsyncScroll->mVelocities[mAsyncScroll->mFrameIndex*2],
                    mOffsetY + mAsyncScroll->mVelocities[mAsyncScroll->mFrameIndex*2 + 1]);
+      if (!thisView.IsAlive())
+        return;
       mAsyncScroll->mFrameIndex++;
       return;
     }
   } else {
     ScrollToImpl(mDestinationX, mDestinationY);
+    if (!thisView.IsAlive())
+      return;
   }
   delete mAsyncScroll;
   mAsyncScroll = nsnull;
