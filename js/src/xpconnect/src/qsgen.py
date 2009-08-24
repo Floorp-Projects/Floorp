@@ -751,40 +751,43 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
 
     if customMethodCall is not None:
         f.write("%s\n" % customMethodCall['code'])
-        f.write("#ifdef DEBUG\n")
-        f.write("    nsresult debug_rv;\n")
-        f.write("    nsCOMPtr<%s> debug_self = do_QueryInterface(self);\n"
-                % member.iface.name);
-        prefix = 'debug_'
-    else:
-        prefix = ''
 
-    resultname = prefix + 'result'
-    selfname = prefix + 'self'
-    nsresultname = prefix + 'rv'
-
-    # Prepare out-parameter.
-    if isMethod or isGetter:
-        writeResultDecl(f, member.realtype, resultname)
-
-    # Call the method.
-    if isMethod:
-        comName = header.methodNativeName(member)
-        argv = ['arg' + str(i) for i, p in enumerate(member.params)]
-        if not isVoidType(member.realtype):
-            argv.append(outParamForm(resultname, member.realtype))
-        args = ', '.join(argv)
-    else:
-        comName = header.attributeNativeName(member, isGetter)
-        if isGetter:
-            args = outParamForm(resultname, member.realtype)
+    if customMethodCall is None or isGetter:
+        if customMethodCall is not None:
+            f.write("#ifdef DEBUG\n")
+            f.write("    nsresult debug_rv;\n")
+            f.write("    nsCOMPtr<%s> debug_self = do_QueryInterface(self);\n"
+                    % member.iface.name);
+            prefix = 'debug_'
         else:
-            args = "arg0"
+            prefix = ''
 
-    f.write("    %s = %s->%s(%s);\n" % (nsresultname, selfname, comName, args))
+        resultname = prefix + 'result'
+        selfname = prefix + 'self'
+        nsresultname = prefix + 'rv'
 
-    if customMethodCall is not None:
+        # Prepare out-parameter.
         if isMethod or isGetter:
+            writeResultDecl(f, member.realtype, resultname)
+
+        # Call the method.
+        if isMethod:
+            comName = header.methodNativeName(member)
+            argv = ['arg' + str(i) for i, p in enumerate(member.params)]
+            if not isVoidType(member.realtype):
+                argv.append(outParamForm(resultname, member.realtype))
+            args = ', '.join(argv)
+        else:
+            comName = header.attributeNativeName(member, isGetter)
+            if isGetter:
+                args = outParamForm(resultname, member.realtype)
+            else:
+                args = "arg0"
+
+        f.write("    %s = %s->%s(%s);\n"
+                % (nsresultname, selfname, comName, args))
+
+        if customMethodCall is not None:
             checkSuccess = "NS_SUCCEEDED(debug_rv)"
             if canFail:
                 checkSuccess += " == NS_SUCCEEDED(rv)"
@@ -792,7 +795,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                     "xpc_qsSameResult(debug_result, result),\n"
                     "                 \"Got the wrong answer from the custom "
                     "method call!\");\n" % checkSuccess)
-        f.write("#endif\n")
+            f.write("#endif\n")
 
     if canFail:
         # Check for errors.
@@ -1087,33 +1090,28 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
 
     if customMethodCall is not None:
         f.write("%s\n" % customMethodCall['code'])
-        f.write("#ifdef DEBUG\n")
-        f.write("    nsresult debug_rv;\n")
-        f.write("    nsCOMPtr<%s> debug_self = do_QueryInterface(self);\n"
-                % member.iface.name);
-        prefix = 'debug_'
     else:
         if not rvdeclared:
             f.write("    nsresult rv;\n")
             rvdeclared = True
         prefix = ''
 
-    resultname = prefix + 'result'
-    selfname = prefix + 'self'
-    nsresultname = prefix + 'rv'
+        resultname = prefix + 'result'
+        selfname = prefix + 'self'
+        nsresultname = prefix + 'rv'
 
-    # Prepare out-parameter.
-    writeResultDecl(f, member.realtype, resultname)
+        # Prepare out-parameter.
+        writeResultDecl(f, member.realtype, resultname)
 
-    # Call the method.
-    comName = header.methodNativeName(member)
-    if not isVoidType(member.realtype):
-        argNames.append(outParamForm(resultname, member.realtype))
-    args = ', '.join(argNames)
+        # Call the method.
+        comName = header.methodNativeName(member)
+        if not isVoidType(member.realtype):
+            argNames.append(outParamForm(resultname, member.realtype))
+        args = ', '.join(argNames)
 
-    f.write("    %s = %s->%s(%s);\n" % (nsresultname, selfname, comName, args))
+        f.write("    %s = %s->%s(%s);\n"
+                % (nsresultname, selfname, comName, args))
 
-    if customMethodCall is None:
         # Check for errors.
         f.write("    if (NS_FAILED(rv)) {\n")
         if haveCcx:
@@ -1123,12 +1121,6 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
             f.write("        xpc_qsThrowMethodFailedWithDetails(cx, rv, "
                     "\"%s\", \"%s\");\n" % (member.iface.name, member.name))
         writeFailure(f, getTraceInfoDefaultReturn(member.type), 2)
-    else:
-        f.write("    NS_ASSERTION(NS_SUCCEEDED(debug_rv) && "
-                "xpc_qsSameResult(debug_result, result),\n"
-                "                 \"Got the wrong answer from the custom "
-                "method call!\");\n")
-        f.write("#endif\n")
 
     # Convert the return value.
     writeTraceableResultConv(f, member.realtype)
