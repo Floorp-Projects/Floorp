@@ -128,10 +128,11 @@ _TEST_FILES =\
 		test_role_nsHyperTextAcc.html \
 		test_role_table_cells.html \
 		test_states.html \
-		test_states_editablebody.html \
 		test_states_doc.html \
 		test_states_docarticle.html \
+		test_states_editablebody.html \
 		test_states_frames.html \
+		test_states_popup.xul \
 		test_states_tree.xul \
 		test_table_1.html \
 		test_table_2.html \
