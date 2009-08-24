@@ -4893,7 +4893,7 @@ nsDocument::GetHtmlContent()
 {
   nsIContent* rootContent = GetRootContent();
   if (rootContent && rootContent->Tag() == nsGkAtoms::html &&
-      rootContent->IsNodeOfType(nsINode::eHTML))
+      rootContent->IsHTML())
     return rootContent;
   return nsnull;
 }
@@ -4909,14 +4909,14 @@ nsDocument::GetHtmlChildContent(nsIAtom* aTag)
   // forwards to find the first such element.
   for (PRUint32 i = 0; i < html->GetChildCount(); ++i) {
     nsIContent* result = html->GetChildAt(i);
-    if (result->Tag() == aTag && result->IsNodeOfType(nsINode::eHTML))
+    if (result->Tag() == aTag && result->IsHTML())
       return result;
   }
   return nsnull;
 }
 
 nsIContent*
-nsDocument::GetTitleContent(PRUint32 aNodeType)
+nsDocument::GetTitleContent(PRUint32 aNamespace)
 {
   // mMayHaveTitleElement will have been set to true if any HTML or SVG
   // <title> element has been bound to this document. So if it's false,
@@ -4938,15 +4938,15 @@ nsDocument::GetTitleContent(PRUint32 aNodeType)
     nsIContent* elem = list->Item(i, PR_FALSE);
     if (!elem)
       return nsnull;
-    if (elem->IsNodeOfType(aNodeType))
+    if (elem->IsInNamespace(aNamespace))
       return elem;
   }
 }
 
 void
-nsDocument::GetTitleFromElement(PRUint32 aNodeType, nsAString& aTitle)
+nsDocument::GetTitleFromElement(PRUint32 aNamespace, nsAString& aTitle)
 {
-  nsIContent* title = GetTitleContent(aNodeType);
+  nsIContent* title = GetTitleContent(aNamespace);
   if (!title)
     return;
   nsContentUtils::GetNodeTextContent(title, PR_FALSE, aTitle);
@@ -4972,12 +4972,12 @@ nsDocument::GetTitle(nsAString& aTitle)
 #ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       if (rootContent->Tag() == nsGkAtoms::svg) {
-        GetTitleFromElement(nsINode::eSVG, tmp);
+        GetTitleFromElement(kNameSpaceID_SVG, tmp);
         break;
       } // else fall through
 #endif
     default:
-      GetTitleFromElement(nsINode::eHTML, tmp);
+      GetTitleFromElement(kNameSpaceID_XHTML, tmp);
       break;
   }
 
@@ -5009,7 +5009,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
   // element" under us
   mozAutoDocUpdate updateBatch(this, UPDATE_CONTENT_MODEL, PR_TRUE);
 
-  nsIContent* title = GetTitleContent(nsINode::eHTML);
+  nsIContent* title = GetTitleContent(kNameSpaceID_XHTML);
   if (!title) {
     nsIContent *head = GetHeadContent();
     if (!head)
@@ -5088,7 +5088,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   nsIDocument* doc = content->GetOwnerDoc();
   NS_ENSURE_TRUE(doc == this, NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
 
-  if (!mHasWarnedAboutBoxObjects && !content->IsNodeOfType(eXUL)) {
+  if (!mHasWarnedAboutBoxObjects && !content->IsXUL()) {
     mHasWarnedAboutBoxObjects = PR_TRUE;
     nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
                                     "UseOfGetBoxObjectForWarning",

@@ -1426,7 +1426,7 @@ public:
        nsIContent* root = aContent->GetCurrentDoc()->GetRootContent();
        while (aContent && aContent->IsInNativeAnonymousSubtree()) {
          nsIContent* parent = aContent->GetParent();
-         if (parent == root && aContent->IsNodeOfType(nsINode::eXUL)) {
+         if (parent == root && aContent->IsXUL()) {
            nsIAtom* tag = aContent->Tag();
            return tag == nsGkAtoms::scrollbar || tag == nsGkAtoms::scrollcorner;
          }
@@ -3747,8 +3747,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
         // Ensure it's an anchor element
         content = do_QueryInterface(node);
         if (content) {
-          if (content->Tag() == nsGkAtoms::a &&
-              content->IsNodeOfType(nsINode::eHTML)) {
+          if (content->Tag() == nsGkAtoms::a && content->IsHTML()) {
             break;
           }
           content = nsnull;
@@ -6156,7 +6155,7 @@ PresShell::HandleEvent(nsIView         *aView,
       // special case for <select> as it needs to capture on the dropdown list,
       // so get the frame for the dropdown list instead.
       if (!captureRetarget && capturingContent->Tag() == nsGkAtoms::select &&
-          capturingContent->IsNodeOfType(nsINode::eHTML)) {
+          capturingContent->IsHTML()) {
         nsIFrame* selectFrame = GetPrimaryFrameFor(capturingContent);
         if (selectFrame) {
           nsIFrame* childframe = selectFrame->GetChildList(nsGkAtoms::selectPopupList).FirstChild();

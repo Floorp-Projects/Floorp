@@ -448,14 +448,14 @@ static inline PRBool
 IsOptGroup(nsIContent *aContent)
 {
   return (aContent->NodeInfo()->Equals(nsGkAtoms::optgroup) &&
-          aContent->IsNodeOfType(nsINode::eHTML));
+          aContent->IsHTML());
 }
 
 static inline PRBool
 IsOption(nsIContent *aContent)
 {
   return (aContent->NodeInfo()->Equals(nsGkAtoms::option) &&
-          aContent->IsNodeOfType(nsINode::eHTML));
+          aContent->IsHTML());
 }
 
 static PRUint32
