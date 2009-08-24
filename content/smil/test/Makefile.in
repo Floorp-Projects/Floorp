@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = 	test_smilRestart.xhtml \
 	  test_smilGetStartTime.xhtml \
 	  test_smilGetSimpleDuration.xhtml \
+	  test_smilKeySplines.xhtml \
 	  test_smilSetCurrentTime.xhtml \
 	  test_smilSync.xhtml \
 	  test_smilSyncTransform.xhtml \

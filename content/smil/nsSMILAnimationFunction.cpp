@@ -245,6 +245,10 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
   if (NS_FAILED(rv))
     return;
 
+  // GetValues may update the error state
+  if (mErrorFlags != 0)
+    return;
+
   // If this interval is active, we must have a non-negative
   // mSampleTime and a resolved or indefinite mSimpleDuration.
   // (Otherwise, we're probably just frozen.)
