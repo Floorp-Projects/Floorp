@@ -476,7 +476,7 @@ public:
     /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
     static nsXULElement* FromContent(nsIContent *aContent)
     {
-        if (aContent->IsNodeOfType(eXUL))
+        if (aContent->IsXUL())
             return static_cast<nsXULElement*>(aContent);
         return nsnull;
     }

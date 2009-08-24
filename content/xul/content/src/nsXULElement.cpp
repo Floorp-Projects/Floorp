@@ -2152,7 +2152,7 @@ nsXULElement::GetBindingParent() const
 PRBool
 nsXULElement::IsNodeOfType(PRUint32 aFlags) const
 {
-    return !(aFlags & ~(eCONTENT | eELEMENT | eXUL));
+    return !(aFlags & ~(eCONTENT | eELEMENT));
 }
 
 static void

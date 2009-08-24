@@ -699,7 +699,7 @@ nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 PRBool
 nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT | eSVG));
+  return !(aFlags & ~(eCONTENT | eELEMENT));
 }
 
 already_AddRefed<nsIURI>
