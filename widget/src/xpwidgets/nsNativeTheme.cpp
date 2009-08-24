@@ -77,7 +77,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   PRBool isXULCheckboxRadio = 
     (aWidgetType == NS_THEME_CHECKBOX ||
      aWidgetType == NS_THEME_RADIO) &&
-    aFrame->GetContent()->IsNodeOfType(nsINode::eXUL);
+    aFrame->GetContent()->IsXUL();
   if (isXULCheckboxRadio)
     aFrame = aFrame->GetParent();
 
@@ -109,7 +109,7 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   if (!content)
     return PR_FALSE;
 
-  if (content->IsNodeOfType(nsINode::eHTML))
+  if (content->IsHTML())
     return content->HasAttr(kNameSpaceID_None, aAtom);
 
   // For XML/XUL elements, an attribute must be equal to the literal
@@ -142,7 +142,7 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
 
   nsIContent* content = aFrame->GetContent();
 
-  if (content->IsNodeOfType(nsINode::eXUL)) {
+  if (content->IsXUL()) {
     // For a XUL checkbox or radio button, the state of the parent determines
     // the checked state
     aFrame = aFrame->GetParent();
@@ -179,7 +179,7 @@ nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
 
   nsIContent* content = aFrame->GetContent();
 
-  if (content->IsNodeOfType(nsINode::eXUL)) {
+  if (content->IsXUL()) {
     // For a XUL checkbox or radio button, the state of the parent determines
     // the state
     return CheckBooleanAttr(aFrame->GetParent(), nsWidgetAtoms::indeterminate);
@@ -207,7 +207,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
           aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
           aWidgetType == NS_THEME_LISTBOX ||
           aWidgetType == NS_THEME_DROPDOWN) &&
-         aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) &&
+         aFrame->GetContent()->IsHTML() &&
          aPresContext->HasAuthorSpecifiedRules(aFrame,
                                                NS_AUTHOR_SPECIFIED_BORDER |
                                                NS_AUTHOR_SPECIFIED_BACKGROUND);

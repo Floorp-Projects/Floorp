@@ -338,7 +338,8 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
   if (aEditor)
     *aEditor = nsnull;
   for (nsINode* node = this; node; node = node->GetNodeParent()) {
-    if (!node->IsNodeOfType(eHTML))
+    if (!node->IsNodeOfType(eELEMENT) ||
+        !static_cast<nsIContent*>(node)->IsHTML())
       continue;
 
     nsCOMPtr<nsIEditor> editor;
@@ -1144,7 +1145,7 @@ nsNSElementTearoff::GetScrollInfo(nsIScrollableView **aScrollableView,
   *aScrollableView = nsnull;
 
   // it isn't clear what to return for SVG nodes, so just return nothing
-  if (mContent->IsNodeOfType(nsINode::eSVG)) {
+  if (mContent->IsSVG()) {
     if (aFrame)
       *aFrame = nsnull;
     return;
@@ -1296,7 +1297,7 @@ nsNSElementTearoff::GetScrollHeight(PRInt32* aScrollHeight)
   NS_ENSURE_ARG_POINTER(aScrollHeight);
   *aScrollHeight = 0;
 
-  if (mContent->IsNodeOfType(nsINode::eSVG))
+  if (mContent->IsSVG())
     return NS_OK;
 
   nsIScrollableView *scrollView;
@@ -1327,7 +1328,7 @@ nsNSElementTearoff::GetScrollWidth(PRInt32* aScrollWidth)
   NS_ENSURE_ARG_POINTER(aScrollWidth);
   *aScrollWidth = 0;
 
-  if (mContent->IsNodeOfType(nsINode::eSVG))
+  if (mContent->IsSVG())
     return NS_OK;
 
   nsIScrollableView *scrollView;
@@ -1358,7 +1359,7 @@ nsNSElementTearoff::GetClientAreaRect()
   nsIFrame *frame;
 
   // it isn't clear what to return for SVG nodes, so just return 0
-  if (mContent->IsNodeOfType(nsINode::eSVG))
+  if (mContent->IsSVG())
     return nsRect(0, 0, 0, 0);
 
   GetScrollInfo(&scrollView, &frame);
@@ -3949,7 +3950,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
       }
     }
 
-    if (!newContent->IsNodeOfType(eXUL)) {
+    if (!newContent->IsXUL()) {
       nsContentUtils::ReparentContentWrapper(newContent, aParent,
                                              container->GetOwnerDoc(),
                                              container->GetOwnerDoc());
@@ -4008,7 +4009,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
-  if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
+  if (tmp->HasProperties() && tmp->IsXUL()) {
     tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
     tmp->DeleteProperty(nsGkAtoms::popuplistener);
   }
@@ -4038,7 +4039,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
         slots->mAttributeMap->DropReference();
         slots->mAttributeMap = nsnull;
       }
-      if (tmp->IsNodeOfType(nsINode::eXUL))
+      if (tmp->IsXUL())
         NS_IF_RELEASE(slots->mControllers);
       slots->mChildrenList = nsnull;
     }
@@ -4076,7 +4077,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
 
-  if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
+  if (tmp->HasProperties() && tmp->IsXUL()) {
     nsISupports* property =
       static_cast<nsISupports*>
                  (tmp->GetProperty(nsGkAtoms::contextmenulistener));
@@ -4118,7 +4119,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mAttributeMap");
       cb.NoteXPCOMChild(slots->mAttributeMap.get());
 
-      if (tmp->IsNodeOfType(nsINode::eXUL))
+      if (tmp->IsXUL())
         cb.NoteXPCOMChild(slots->mControllers);
       cb.NoteXPCOMChild(
         static_cast<nsIDOMNodeList*>(slots->mChildrenList.get()));

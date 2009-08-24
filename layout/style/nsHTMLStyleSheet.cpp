@@ -462,7 +462,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       }
       else if (tag == nsGkAtoms::col) {
         nsIContent* parent = aData->mParentContent;
-        if (parent && parent->IsNodeOfType(nsIContent::eHTML) &&
+        if (parent && parent->IsHTML() &&
             parent->Tag() == nsGkAtoms::colgroup) {
           ruleWalker->Forward(mTableColRule);
         } else {
@@ -533,7 +533,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
   if (aData->mAttribute == nsGkAtoms::href &&
       (mLinkRule || mVisitedRule || mActiveRule) &&
       content &&
-      content->IsNodeOfType(nsINode::eHTML) &&
+      content->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a) {
     *aResult = eReStyle_Self;
     return NS_OK;

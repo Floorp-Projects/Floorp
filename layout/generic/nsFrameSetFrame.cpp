@@ -383,7 +383,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
     // IMPORTANT: This must match the conditions in
     // nsCSSFrameConstructor::ContentAppended/Inserted/Removed    
-    if (!child->IsNodeOfType(nsINode::eHTML))
+    if (!child->IsHTML())
       continue;
 
     nsIAtom *tag = child->Tag();
@@ -736,7 +736,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
   if (content) { 
     nsCOMPtr<nsIContent> contentParent = content->GetParent();
 
-    if (contentParent && contentParent->IsNodeOfType(nsINode::eHTML) &&
+    if (contentParent && contentParent->IsHTML() &&
         contentParent->Tag() == nsGkAtoms::frameset) {
       nsIFrame* fptr = aChild->GetParent();
       parent = (nsHTMLFramesetFrame*) fptr;
@@ -1393,7 +1393,7 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   for (childIndex = 0; childIndex < numChildren; childIndex++) {
     nsIContent *child = mContent->GetChildAt(childIndex);
 
-    if (child->IsNodeOfType(nsINode::eHTML)) {
+    if (child->IsHTML()) {
       nsINodeInfo *ni = child->NodeInfo();
 
       if (ni->Equals(nsGkAtoms::frameset)) {

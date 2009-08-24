@@ -1249,7 +1249,7 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* aDocument,
     if (xuldoc)
         xuldoc->SetTemplateBuilderFor(mRoot, this);
 
-    if (!mRoot->IsNodeOfType(nsINode::eXUL)) {
+    if (!mRoot->IsXUL()) {
         // Hmm. This must be an HTML element. Try to set it as a
         // JS property "by hand".
         InitHTMLTemplateRoot();
