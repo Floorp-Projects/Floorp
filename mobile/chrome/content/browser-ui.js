@@ -253,14 +253,14 @@ var BrowserUI = {
 
   popDialog : function popDialog() {
     // Passing null means we pop the topmost dialog
-    if (this._dialogs.length)
+    if (this._dialogs.length) {
       this._dialogs.pop();
+      this.unlockToolbar();
+    }
 
     // If no more dialogs are being displayed, remove the attr for CSS
     if (!this._dialogs.length)
       document.getElementById("toolbar-main").removeAttribute("dialog");
-
-    this.unlockToolbar();
   },
 
   pushPopup: function pushPopup(aPanel, aElements) {
