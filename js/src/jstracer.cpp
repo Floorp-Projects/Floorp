@@ -4147,6 +4147,7 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     inner_sp_ins = lirbuf->sp;
+    VMSideExit* exit = snapshot(OOM_EXIT);
 
     /*
      * The inner tree expects to be called from the current frame. If the outer
@@ -4177,12 +4178,12 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
                 - treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
                 + ti->maxNativeStackSlots * sizeof(double)); /* plus the inner tree's stack */
-        guard(true, lir->ins2(LIR_lt, sp_top, eos_ins), OOM_EXIT);
+        guard(true, lir->ins2(LIR_lt, sp_top, eos_ins), exit);
 
         /* Guard that we have enough call stack space. */
         LIns* rp_top = lir->ins2i(LIR_piadd, lirbuf->rp, rp_adj +
                 ti->maxCallDepth * sizeof(FrameInfo*));
-        guard(true, lir->ins2(LIR_lt, rp_top, eor_ins), OOM_EXIT);
+        guard(true, lir->ins2(LIR_lt, rp_top, eor_ins), exit);
 
         /* We have enough space, so adjust sp and rp to their new level. */
         lir->insStorei(inner_sp_ins = lir->ins2i(LIR_piadd, lirbuf->sp,
@@ -4193,6 +4194,15 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
         lir->insStorei(lir->ins2i(LIR_piadd, lirbuf->rp, rp_adj),
                 lirbuf->state, offsetof(InterpState, rp));
     }
+
+    /*
+     * The inner tree will probably access stack slots. So tell nanojit not to
+     * discard or defer stack writes before calling js_CallTree.
+     *
+     * (The ExitType of this snapshot is nugatory. The exit can't be taken.)
+     */
+    LIns* guardRec = createGuardRecord(exit);
+    lir->insGuard(LIR_xbarrier, NULL, guardRec);
 }
 
 static unsigned
