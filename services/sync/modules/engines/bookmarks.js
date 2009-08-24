@@ -656,6 +656,13 @@ BookmarksStore.prototype = {
   },
 
   _getParentGUIDForId: function BStore__getParentGUIDForId(itemId) {
+    // Give the parent annotation if it exists
+    try {
+      // XXX Work around Bug 510628 by removing prepended parenT
+      return Utils.anno(itemId, PARENT_ANNO).slice(1);
+    }
+    catch(ex) {}
+
     let parentid = this._bms.getFolderIdForItem(itemId);
     if (parentid == -1) {
       this._log.debug("Found orphan bookmark, reparenting to unfiled");
@@ -666,6 +673,13 @@ BookmarksStore.prototype = {
   },
 
   _getPredecessorGUIDForId: function BStore__getPredecessorGUIDForId(itemId) {
+    // Give the predecessor annotation if it exists
+    try {
+      // XXX Work around Bug 510628 by removing prepended predecessoR
+      return Utils.anno(itemId, PREDECESSOR_ANNO).slice(1);
+    }
+    catch(ex) {}
+
     // Figure out the predecessor, unless it's the first item
     let itemPos = Svc.Bookmark.getItemIndex(itemId);
     if (itemPos == 0)
