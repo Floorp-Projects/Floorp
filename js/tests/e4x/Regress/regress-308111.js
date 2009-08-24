@@ -308,7 +308,6 @@ var xml = <prefs>
 <pref><name>dom.popup_maximum</name></pref>
 <pref><name>security.warn_entering_secure</name></pref>
 <pref><name>mousewheel.horizscroll.withaltkey.numlines</name></pref>
-<pref><name>javascript.allow.mailnews</name></pref>
 <pref><name>browser.tabs.warnOnCloseOther</name></pref>
 <pref><name>intl.accept_charsets</name></pref>
 <pref><name>font.name.monospace.x-central-euro</name></pref>
