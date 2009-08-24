@@ -2387,6 +2387,40 @@ Assembler::asm_int(LInsp ins)
     asm_ld_imm(rr, ins->imm32());
 }
 
+void
+Assembler::asm_ret(LIns *ins)
+{
+    if (_nIns != _epilogue) {
+        B(_epilogue);
+    }
+    assignSavedRegs();
+    LIns *value = ins->oprnd1();
+    if (ins->isop(LIR_ret)) {
+        findSpecificRegFor(value, R0);
+    }
+    else {
+        NanoAssert(ins->isop(LIR_fret));
+#ifdef NJ_ARM_VFP
+        Register reg = findRegFor(value, FpRegs);
+        FMRRD(R0, R1, reg);
+#else
+        NanoAssert(value->isop(LIR_qjoin));
+        findSpecificRegFor(value->oprnd1(), R0); // lo
+        findSpecificRegFor(value->oprnd2(), R1); // hi
+#endif
+    }
+}
+
+void
+Assembler::asm_promote(LIns *ins)
+{
+    /* The LIR opcodes that result in a call to asm_promote are only generated
+     * if NANOJIT_64BIT is #define'd, which it never is for ARM.
+     */
+    (void)ins;
+    NanoAssert(0);
+}
+
 }
 
 #endif /* FEATURE_NANOJIT */
