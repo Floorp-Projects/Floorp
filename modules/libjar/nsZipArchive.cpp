@@ -568,72 +568,37 @@ nsZipItem* nsZipArchive::CreateZipItem(PRUint16 namelen)
 //---------------------------------------------
 nsresult nsZipArchive::BuildFileList()
 {
-  PRUint8   *buf;
-  //-----------------------------------------------------------------------
-  // locate the central directory via the End record
-  //-----------------------------------------------------------------------
+  // Get archive size using end pos
+  PRUint8* buf;
+  PRUint8* endp = mFd->mFileData + mFd->mLen;
 
-  //-- get archive size using end pos
-  PRInt32  pos = (PRInt32) mFd->mLen;
-
-  PRInt32 central = -1;
-  while (central == -1)
+  for (buf = endp - ZIPEND_SIZE; xtolong(buf) != ENDSIG; buf--)
   {
-    //-- read backwards in 1K-sized chunks (unless file is less than 1K)
-    PRInt32  bufsize = pos > BR_BUF_SIZE ? BR_BUF_SIZE : pos;
-    pos -= bufsize;
-
-    buf = mFd->mFileData + pos;
-
-    //-- scan for ENDSIG
-    PRUint8 *endp = buf + bufsize;
-    for (endp -= ZIPEND_SIZE; endp >= buf; endp--)
-    {
-      if (xtolong(endp) == ENDSIG)
-      { 
-        //-- Seek to start of central directory
-        central = xtolong(((ZipEnd *) endp)->offset_central_dir);
-        break;
-      }
-    }
-
-    if (central != -1)
-      break;
-
-    if (pos <= 0)
-      //-- We're at the beginning of the file, and still no sign
-      //-- of the end signature.  File must be corrupted!
+    if (buf == mFd->mFileData) {
+      // We're at the beginning of the file, and still no sign
+      // of the end signature.  File must be corrupted!
       return ZIP_ERR_CORRUPT;
+    }
+  }
+  PRUint32 central = xtolong(((ZipEnd *)buf)->offset_central_dir);
 
-    //-- backward read must overlap ZipEnd length
-    pos += ZIPEND_SIZE;
-
-  } /* while looking for end signature */
-
-
-  //-------------------------------------------------------
-  // read the central directory headers
-  //-------------------------------------------------------
-  PRInt32 byteCount = mFd->mLen - central;
+  //-- Read the central directory headers
   buf = mFd->mFileData + central;
-  pos = 0;
   PRUint32 sig = xtolong(buf);
   while (sig == CENTRALSIG) {
-    //-- make sure we've read enough
-    if (byteCount - pos < ZIPCENTRAL_SIZE)
+    // Make sure there is enough data available.
+    if (endp - buf < ZIPCENTRAL_SIZE)
       return ZIP_ERR_CORRUPT;
 
-    //-------------------------------------------------------
-    // read the fixed-size data
-    //-------------------------------------------------------
-    ZipCentral* central = (ZipCentral*)(buf+pos);
+    // Read the fixed-size data.
+    ZipCentral* central = (ZipCentral*)buf;
 
     PRUint16 namelen = xtoint(central->filename_len);
     PRUint16 extralen = xtoint(central->extrafield_len);
     PRUint16 commentlen = xtoint(central->commentfield_len);
 
-    //-- sanity check variable sizes and refuse to deal with
-    //-- anything too big: it's likely a corrupt archive
+    // Sanity check variable sizes and refuse to deal with
+    // anything too big: it's likely a corrupt archive.
     if (namelen > BR_BUF_SIZE || extralen > BR_BUF_SIZE || commentlen > 2*BR_BUF_SIZE)
       return ZIP_ERR_CORRUPT;
 
@@ -650,48 +615,33 @@ nsresult nsZipArchive::BuildFileList()
     item->date          = xtoint(central->date);
     item->isSynthetic   = PR_FALSE;
     item->hasDataOffset = PR_FALSE;
-
-    PRUint16 compression = xtoint(central->method);
-    item->compression   = (compression < UNSUPPORTED) ? (PRUint8)compression
-                                                      : UNSUPPORTED;
-
-    item->mode = ExtractMode(central->external_attributes);
+    item->compression   = PR_MIN(xtoint(central->method), UNSUPPORTED);
+    item->mode          = ExtractMode(central->external_attributes);
 #if defined(XP_UNIX) || defined(XP_BEOS)
     // Check if item is a symlink
     item->isSymlink = IsSymlink(central->external_attributes);
 #endif
 
-    pos += ZIPCENTRAL_SIZE;
-    //-------------------------------------------------------
-    // get the item name
-    //-------------------------------------------------------
-    memcpy(item->name, buf+pos, namelen);
+    buf += ZIPCENTRAL_SIZE;
+
+    // Get the item name
+    memcpy(item->name, buf, namelen);
     item->name[namelen] = 0;
-    //-- an item whose name ends with '/' is a directory
+    // An item whose name ends with '/' is a directory
     item->isDirectory = ('/' == item->name[namelen - 1]);
 
-    //-- add item to file table
-    //-- note that an explicit entry for a directory will override
-    //-- a fake entry created for that directory (as in the case
-    //-- of processing foo/bar.txt and then foo/) -- this will
-    //-- preserve an explicit directory's metadata at the cost of
-    //-- an extra nsZipItem (and that only happens if we process a
-    //-- file inside that directory before processing the directory
-    //-- entry itself)
+    // Add item to file table
     PRUint32 hash = HashName(item->name);
     item->next = mFiles[hash];
     mFiles[hash] = item;
 
-    //-------------------------------------------------------
-    // set up to process the next item at the top of loop
-    //-------------------------------------------------------
-    pos += namelen + extralen + commentlen;
-    sig = xtolong(buf+pos);
+    // Point to the next item at the top of loop
+    buf += namelen + extralen + commentlen;
+    sig = xtolong(buf);
   } /* while reading central directory records */
 
   if (sig != ENDSIG)
     return ZIP_ERR_CORRUPT;
-
   return ZIP_OK;
 }
 
