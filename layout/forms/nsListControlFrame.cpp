@@ -1479,12 +1479,13 @@ nsListControlFrame::AddOption(PRInt32 aIndex)
     }
   }
   
+  // Make sure we scroll to the selected option as needed
+  mNeedToReset = PR_TRUE;
+
   if (!mHasBeenInitialized) {
     return NS_OK;
   }
 
-  // Make sure we scroll to the selected option as needed
-  mNeedToReset = PR_TRUE;
   mPostChildrenLoadedReset = mIsAllContentHere;
   return NS_OK;
 }
