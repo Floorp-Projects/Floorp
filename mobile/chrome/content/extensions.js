@@ -433,7 +433,7 @@ var ExtensionsView = {
 
     let strings = document.getElementById("bundle_browser");
     if (aAddons.length == 0) {
-      this.displaySectionMessage("repo", strings.getString("addonsSearchNone.label"), null, true);
+      this.displaySectionMessage("repo", strings.getString("addonsSearchNone.label"), strings.getString("addonsSearchSuccess.button"), true);
       return;
     }
 
