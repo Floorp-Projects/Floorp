@@ -192,6 +192,11 @@ toolbarbutton.page-button {
     -moz-box-orient: vertical;
     -moz-box-pack: center;
   }
+
+  /* let the buttons in a selected addon wrap */
+  #addons-list > richlistitem .buttons-box {
+    display: block;
+  }
 }
 
 /* console panel UI   ------------------------------------------------------ */
@@ -299,6 +304,10 @@ placeitem .button-text {
   min-height: 7.2mm; /* row size */
 }
 
+#autocomplete_navbuttons autorepeatbutton {
+  display: none;
+}
+
 .autocomplete-items {
   background-color: white;
 }
@@ -306,7 +315,7 @@ placeitem .button-text {
 autocompleteresult {
   padding: 0.25mm 0.1mm;
   border-bottom: 0.05mm solid rgb(207,207,207);
-  min-height: 7.2mm; /* row size */
+  min-height: 9.2mm; /* row size */
 }
 
 .autocompleteresult-selected {

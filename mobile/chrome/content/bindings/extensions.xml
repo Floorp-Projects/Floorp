@@ -23,7 +23,7 @@
           <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
         </xul:vbox>
       </xul:hbox>
-      <xul:hbox class="show-on-select">
+      <xul:hbox class="show-on-select buttons-box">
         <xul:button anonid="options-button" class="addon-options" label="&addonOptions.label;"
                     oncommand="document.getBindingParent(this).toggleOptions();"/>
         <xul:spacer flex="1"/>
