@@ -228,11 +228,11 @@ JSTokenStream::close(JSContext *cx)
 
 /* Use the fastest available getc. */
 #if defined(HAVE_GETC_UNLOCKED)
-#define fast_getc getc_unlocked
+# define fast_getc getc_unlocked
 #elif defined(HAVE__GETC_NOLOCK)
-#define fast_getc _getc_nolock
+# define fast_getc _getc_nolock
 #else
-#define fast_getc getc
+# define fast_getc getc
 #endif
 
 JS_FRIEND_API(int)
