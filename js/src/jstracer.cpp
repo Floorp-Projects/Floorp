@@ -5707,6 +5707,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
             JSFrameRegs* regs = cx->fp->regs;
             JSOp op = (JSOp) *regs->pc;
             JS_ASSERT(op == JSOP_CALL || op == JSOP_APPLY || op == JSOP_NEW ||
+                      op == JSOP_GETPROP || op == JSOP_GETTHISPROP || op == JSOP_GETARGPROP ||
+                      op == JSOP_GETLOCALPROP || op == JSOP_LENGTH ||
                       op == JSOP_GETELEM || op == JSOP_CALLELEM ||
                       op == JSOP_SETPROP || op == JSOP_SETNAME ||
                       op == JSOP_SETELEM || op == JSOP_INITELEM ||
@@ -7427,7 +7429,7 @@ TraceRecorder::incProp(jsint incr, bool pre)
 
     uint32 slot;
     LIns* v_ins;
-    CHECK_STATUS(prop(obj, obj_ins, slot, v_ins));
+    CHECK_STATUS(prop(obj, obj_ins, &slot, &v_ins, NULL));
 
     if (slot == SPROP_INVALID_SLOT)
         ABORT_TRACE("incProp on invalid slot");
@@ -10110,6 +10112,45 @@ TraceRecorder::getPropertyByIndex(LIns* obj_ins, LIns* index_ins, jsval* outp)
     return JSRS_CONTINUE;
 }
 
+static JSBool FASTCALL
+GetPropertyById(JSContext* cx, JSObject* obj, jsid id, jsval* vp)
+{
+    js_LeaveTraceIfGlobalObject(cx, obj);
+    if (!obj->getProperty(cx, id, vp)) {
+        js_SetBuiltinError(cx);
+        return JS_FALSE;
+    }
+    return cx->interpState->builtinStatus == 0;
+}
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyById, CONTEXT, OBJECT, JSVAL, JSVALPTR, 0, 0)
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::getPropertyById(LIns* obj_ins, jsval* outp)
+{
+    // Find the atom.
+    JSAtom* atom;
+    jsbytecode* pc = cx->fp->regs->pc;
+    const JSCodeSpec& cs = js_CodeSpec[*pc];
+    if (*pc == JSOP_LENGTH) {
+        atom = cx->runtime->atomState.lengthAtom;
+    } else if (JOF_TYPE(cs.format) == JOF_ATOM) {
+        atom = atoms[GET_INDEX(pc)];
+    } else {
+        JS_ASSERT(JOF_TYPE(cs.format) == JOF_SLOTATOM);
+        atom = atoms[GET_INDEX(pc + SLOTNO_LEN)];
+    }
+
+    // Call GetPropertyById. See note in getPropertyByName about vp.
+    enterDeepBailCall();
+    jsid id = ATOM_TO_JSID(atom);
+    LIns* vp_ins = addName(lir->insAlloc(sizeof(jsval)), "vp");
+    LIns* args[] = {vp_ins, INS_CONSTWORD(id), obj_ins, cx_ins};
+    LIns* ok_ins = lir->insCall(&GetPropertyById_ci, args);
+    finishGetProp(obj_ins, vp_ins, ok_ins, outp);
+    leaveDeepBailCall();
+    return JSRS_CONTINUE;
+}
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_GETELEM()
 {
@@ -10962,9 +11003,19 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
     return JSRS_CONTINUE;
 }
 
+/*
+ * Get a property. The current opcode has JOF_ATOM.
+ *
+ * There are two modes. The caller must pass nonnull pointers for either outp
+ * or both slotp and v_insp. In the latter case, we require a plain old
+ * property with a slot; if the property turns out to be anything else, abort
+ * tracing (rather than emit a call to a native getter or GetAnyProperty).
+ */
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
+TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, jsval *outp)
 {
+    JS_ASSERT((slotp && v_insp && !outp) || (!slotp && !v_insp && outp));
+
     /*
      * Can't specialize to assert obj != global, must guard to avoid aliasing
      * stale homes of stacked global variables.
@@ -10982,6 +11033,9 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     /* Check for non-existent property reference, which results in undefined. */
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     if (PCVAL_IS_NULL(pcval)) {
+        if (slotp)
+            ABORT_TRACE("property not found");
+
         /*
          * We could specialize to guard on just JSClass.getProperty, but a mere
          * class guard is simpler and slightly faster.
@@ -11013,15 +11067,14 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 ABORT_TRACE("non-native object involved in undefined property access");
         } while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit));
 
-        v_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
-        slot = SPROP_INVALID_SLOT;
+        set(outp, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID)), true);
         return JSRS_CONTINUE;
     }
 
     uint32 setflags = (cs.format & (JOF_INCDEC | JOF_FOR));
     JS_ASSERT(!(cs.format & JOF_SET));
 
-    /* Don't trace getter or setter calls, our caller wants a direct slot. */
+    uint32 slot;
     if (PCVAL_IS_SPROP(pcval)) {
         JSScopeProperty* sprop = PCVAL_TO_SPROP(pcval);
 
@@ -11029,37 +11082,12 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
             ABORT_TRACE("non-stub setter");
         if (setflags && (sprop->attrs & JSPROP_READONLY))
             ABORT_TRACE("writing to a readonly property");
-        if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop)) {
-            // FIXME 450335: generalize this away from regexp built-in getters.
-            if (setflags == 0 &&
-                sprop->getter == js_RegExpClass.getProperty &&
-                sprop->shortid < 0) {
-                if (sprop->shortid == REGEXP_LAST_INDEX)
-                    ABORT_TRACE("can't trace RegExp.lastIndex yet");
-                LIns* args[] = { INS_CONSTSPROP(sprop), obj_ins, cx_ins };
-                v_ins = lir->insCall(&js_CallGetter_ci, args);
-                guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
-
-                /*
-                 * BIG FAT WARNING: This snapshot cannot be a BRANCH_EXIT, since
-                 * the value to the top of the stack is not the value we unbox.
-                 */
-                v_ins =
-                    unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_SPECIAL,
-                                v_ins,
-                                snapshot(MISMATCH_EXIT));
-                return JSRS_CONTINUE;
-            }
-            if (setflags == 0 &&
-                sprop->getter == js_StringClass.getProperty &&
-                sprop->id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-                if (!guardClass(obj, obj_ins, &js_StringClass, snapshot(MISMATCH_EXIT)))
-                    ABORT_TRACE("can't trace String.length on non-String objects");
-                LIns* str_ins = stobj_get_private(obj_ins, JSVAL_TAGMASK);
-                v_ins = lir->ins1(LIR_i2f, getStringLength(str_ins));
-                return JSRS_CONTINUE;
-            }
-            ABORT_TRACE("non-stub getter");
+        if (!SPROP_HAS_STUB_GETTER(sprop)) {
+            if (slotp)
+                ABORT_TRACE("can't trace non-stub getter for this opcode");
+            if (sprop->attrs & JSPROP_GETTER)
+                ABORT_TRACE("script getter");
+            return getPropertyById(obj_ins, outp);
         }
         if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2)))
             ABORT_TRACE("no valid slot");
@@ -11086,10 +11114,16 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     }
 
     LIns* dslots_ins = NULL;
-    v_ins = unbox_jsval(STOBJ_GET_SLOT(obj, slot),
-                        stobj_get_slot(obj_ins, slot, dslots_ins),
-                        snapshot(BRANCH_EXIT));
+    LIns* v_ins = unbox_jsval(STOBJ_GET_SLOT(obj, slot),
+                              stobj_get_slot(obj_ins, slot, dslots_ins),
+                              snapshot(BRANCH_EXIT));
 
+    if (slotp) {
+        *slotp = slot;
+        *v_insp = v_ins;
+    }
+    if (outp)
+        set(outp, v_ins, true);
     return JSRS_CONTINUE;
 }
 
@@ -11205,14 +11239,9 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::getProp(JSObject* obj, LIns* obj_ins)
 {
-    uint32 slot;
-    LIns* v_ins;
-    CHECK_STATUS(prop(obj, obj_ins, slot, v_ins));
-
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     JS_ASSERT(cs.ndefs == 1);
-    stack(-cs.nuses, v_ins);
-    return JSRS_CONTINUE;
+    return prop(obj, obj_ins, NULL, NULL, &stackval(-cs.nuses));
 }
 
 JS_REQUIRES_STACK JSRecordingStatus

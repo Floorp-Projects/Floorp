@@ -857,8 +857,8 @@ class TraceRecorder : public avmplus::GCObject {
     nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
 
     JS_REQUIRES_STACK JSRecordingStatus name(jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
-    JS_REQUIRES_STACK JSRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot,
-                                             nanojit::LIns*& v_ins);
+    JS_REQUIRES_STACK JSRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins, uint32 *slotp,
+                                             nanojit::LIns** v_insp, jsval* outp);
     JS_REQUIRES_STACK JSRecordingStatus denseArrayElement(jsval& oval, jsval& idx, jsval*& vp,
                                                           nanojit::LIns*& v_ins,
                                                           nanojit::LIns*& addr_ins);
@@ -876,6 +876,7 @@ class TraceRecorder : public avmplus::GCObject {
                                                           jsval* outp);
     JS_REQUIRES_STACK JSRecordingStatus getPropertyByIndex(nanojit::LIns* obj_ins,
                                                            nanojit::LIns* index_ins, jsval* outp);
+    JS_REQUIRES_STACK JSRecordingStatus getPropertyById(nanojit::LIns* obj_ins, jsval* outp);
 
     JS_REQUIRES_STACK JSRecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                   JSScopeProperty* sprop,
