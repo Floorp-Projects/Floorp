@@ -3115,9 +3115,10 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([fchmod flockfile getpagesize lchown localtime_r lstat64 \
-                memmove random rint sbrk snprintf stat64 statvfs statvfs64 \
-                strerror strtok_r truncate64])
+
+AC_CHECK_FUNCS([fchmod flockfile getc_unlocked _getc_nolock getpagesize \
+                lchown localtime_r lstat64 memmove random rint sbrk snprintf \
+                stat64 statvfs statvfs64 strerror strtok_r truncate64])
 
 dnl Windows functions, for mingw.
 AC_TRY_LINK([#include <windows.h>],
