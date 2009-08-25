@@ -218,7 +218,7 @@ var BrowserUI = {
     if (dialog)
       dialog.close();
     else
-      CommandUpdater.doCommand("cmd_quit");
+      window.close();
   },
 
   get activeDialog() {
