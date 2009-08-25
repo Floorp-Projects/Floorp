@@ -75,8 +75,8 @@ function checkSampleRough(time, expectedValue, precision) {
   var diff = Math.abs(expectedValue - circle.cx.animVal.value);
   ok(diff <= precision, 
     "Unexpected sample value got " + circle.cx.animVal.value
-      + ", expected " + expectedValue + " [error: " + diff
-      + " > tolerance: " + precision + "]");
+      + ", expected " + expectedValue + " [error is " + diff
+      + ", tolerance is " + precision + "]");
 }
 
 /*
