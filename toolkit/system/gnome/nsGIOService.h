@@ -15,12 +15,12 @@
  * The Original Code is the Mozilla GNOME integration code.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Red Hat, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *  Jan Horak <jhorak@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,50 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGConfService.h"
-#include "nsGnomeVFSService.h"
-#include "nsGIOService.h"
-#include "nsToolkitCompsCID.h"
-#include "nsIGenericFactory.h"
+#ifndef nsGIOService_h_
+#define nsGIOService_h_
 
-#ifdef MOZ_ENABLE_LIBNOTIFY
-#include "nsAlertsService.h"
-#endif
+#include "nsIGIOService.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)
-#ifdef MOZ_ENABLE_GNOMEVFS
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
-#endif
-#ifdef MOZ_ENABLE_GIO
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGIOService, Init)
-#endif
-#ifdef MOZ_ENABLE_LIBNOTIFY
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAlertsService, Init)
-#endif
+#define NS_GIOSERVICE_CID \
+{0xe3a1f3c9, 0x3ae1, 0x4b40, {0xa5, 0xe0, 0x7b, 0x45, 0x7f, 0xc9, 0xa9, 0xad}}
 
-static const nsModuleComponentInfo components[] = {
-  { "GConf Service",
-    NS_GCONFSERVICE_CID,
-    NS_GCONFSERVICE_CONTRACTID,
-    nsGConfServiceConstructor },
-#ifdef MOZ_ENABLE_GNOMEVFS
-  { "GnomeVFS Service",
-    NS_GNOMEVFSSERVICE_CID,
-    NS_GNOMEVFSSERVICE_CONTRACTID,
-    nsGnomeVFSServiceConstructor },
-#endif
-#ifdef MOZ_ENABLE_GIO
-  { "GIO Service",
-    NS_GIOSERVICE_CID,
-    NS_GIOSERVICE_CONTRACTID,
-    nsGIOServiceConstructor },
-#endif
-#ifdef MOZ_ENABLE_LIBNOTIFY
-  { "Gnome Alerts Service",
-    NS_SYSTEMALERTSSERVICE_CID,
-    NS_SYSTEMALERTSERVICE_CONTRACTID,
-    nsAlertsServiceConstructor },
-#endif
+class nsGIOService : public nsIGIOService
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIGIOSERVICE
+
+  NS_HIDDEN_(nsresult) Init();
 };
 
-NS_IMPL_NSGETMODULE(mozgnome, components)
+#endif
+
