@@ -239,15 +239,6 @@ nsUnknownContentTypeDialog.prototype = {
 
       picker.appendFilters( nsIFilePicker.filterAll );
 
-      var inPrivateBrowsing = false;
-      try {
-        var pbs = Components.classes["@mozilla.org/privatebrowsing;1"]
-                            .getService(Components.interfaces.nsIPrivateBrowsingService);
-        inPrivateBrowsing = pbs.privateBrowsingEnabled;
-      }
-      catch (e) {
-      }
-
       // Default to lastDir if it is valid, otherwise use the user's default
       // downloads directory.  userDownloadsDirectory should always return a
       // valid directory, so we can safely default to it.
@@ -257,12 +248,7 @@ nsUnknownContentTypeDialog.prototype = {
 
       // The last directory preference may not exist, which will throw.
       try {
-        var lastDir;
-        if (inPrivateBrowsing && gDownloadLastDir.file)
-          lastDir = gDownloadLastDir.file;
-        else
-          lastDir = prefs.getComplexValue("browser.download.lastDir",
-                          Components.interfaces.nsILocalFile);
+        var lastDir = gDownloadLastDir.file;
         if (isUsableDirectory(lastDir))
           picker.displayDirectory = lastDir;
       }
@@ -291,10 +277,7 @@ nsUnknownContentTypeDialog.prototype = {
         var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
 
         // Do not store the last save directory as a pref inside the private browsing mode
-        if (inPrivateBrowsing)
-          gDownloadLastDir.file = newDir;
-        else
-          prefs.setComplexValue("browser.download.lastDir", Components.interfaces.nsILocalFile, newDir);
+        gDownloadLastDir.file = newDir;
 
         result = this.validateLeafName(newDir, result.leafName, null);
       }
