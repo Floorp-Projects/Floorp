@@ -123,8 +123,6 @@ public:
  
   virtual NS_HIDDEN_(nsContentList*) GetFormControls();
  
-  virtual PRBool IsCaseSensitive();
-
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
 
@@ -179,10 +177,6 @@ public:
   virtual PRInt32 GetNumFormsSynchronous();
   virtual void TearingDownEditor(nsIEditor *aEditor);
   virtual void SetIsXHTML(PRBool aXHTML) { mIsRegularHTML = !aXHTML; }
-  PRBool IsXHTML()
-  {
-    return !mIsRegularHTML;
-  }
 
   nsresult ChangeContentEditableCount(nsIContent *aElement, PRInt32 aChange);
 

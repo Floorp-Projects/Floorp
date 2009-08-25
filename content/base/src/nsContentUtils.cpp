@@ -3588,7 +3588,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIDocument> document = node->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
   
-  PRBool bCaseSensitive = document->IsCaseSensitive();
+  PRBool bCaseSensitive = !document->IsHTML();
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
   PRBool isHTML = htmlDoc && !bCaseSensitive;

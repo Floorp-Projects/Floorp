@@ -121,9 +121,8 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   // HTML5 parser stored them in the order they were parsed so we want to
   // loop forward in that case.
   nsIDocument* doc = aContent->GetOwnerDocument();
-  PRBool caseSensitive = doc && doc->IsCaseSensitive();
   PRBool loopForward = PR_FALSE;
-  if (!caseSensitive) {
+  if (!doc || doc->IsHTML()) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
     if (htmlDoc) {
       loopForward = nsHtml5Module::sEnabled;
