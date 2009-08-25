@@ -6,6 +6,39 @@ from subprocess import *
 
 JS = None
 
+class Test:
+    def __init__(self, path, slow, allow_oom):
+        """  path        path to test file
+             slow        True means the test is slow-running
+             allow_oom   True means OOM should not be considered a failure """
+        self.path = path
+        self.slow = slow
+        self.allow_oom = allow_oom
+
+    COOKIE = '|trace-test|'
+
+    @classmethod
+    def from_file(cls, path):
+        slow = allow_oom = False
+
+        line = open(path).readline()
+        i = line.find(cls.COOKIE)
+        if i != -1:
+            meta = line[i + len(cls.COOKIE):].strip('\n')
+            parts = meta.split(';')
+            for part in parts:
+                part = part.strip()
+                if not part:
+                    continue
+                if part == 'slow':
+                    slow = True
+                elif part == 'allow-oom':
+                    allow_oom = True
+                else:
+                    print('warning: unrecognized |trace-test| attribute %s'%part)
+
+        return cls(path, slow, allow_oom)
+
 def find_tests(path):
     if os.path.isfile(path):
         if path.endswith('.js'):
@@ -42,8 +75,8 @@ def get_test_cmd(path, lib_dir):
     return [ JS, '-j', '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'),
              '-f', path ]
 
-def run_test(path, lib_dir):
-    cmd = get_test_cmd(path, lib_dir)
+def run_test(test, lib_dir):
+    cmd = get_test_cmd(test.path, lib_dir)
     if OPTIONS.show_cmd:
         print(cmd)
     # close_fds is not supported on Windows and will cause a ValueError.
@@ -54,9 +87,7 @@ def run_test(path, lib_dir):
     if OPTIONS.show_output:
         sys.stdout.write(out)
         sys.stdout.write(err)
-    # Determine whether or not we can allow an out-of-memory condition.
-    allow_oom = 'allow_oom' in path
-    return (check_output(out, err, p.returncode, allow_oom), out, err)
+    return (check_output(out, err, p.returncode, test.allow_oom), out, err)
 
 def check_output(out, err, rc, allow_oom):
     for line in out.split('\n'):
@@ -89,11 +120,11 @@ def run_tests(tests, lib_dir):
         for i, test in enumerate(tests):
             ok, out, err = run_test(test, lib_dir)
             if not ok:
-                failures.append(test)
+                failures.append(test.path)
 
             if OPTIONS.tinderbox:
                 if ok:
-                    print('TEST-PASS | trace-test.py | %s'%test)
+                    print('TEST-PASS | trace-test.py | %s'%test.path)
                 else:
                     lines = [ _ for _ in out.split('\n') + err.split('\n')
                               if _ != '' ]
@@ -144,6 +175,8 @@ if __name__ == '__main__':
                   help='show output from js shell')
     op.add_option('-x', '--exclude', dest='exclude', action='append',
                   help='exclude given test dir or path')
+    op.add_option('--no-slow', dest='run_slow', action='store_false',
+                  help='do not run tests marked as slow')
     op.add_option('--no-progress', dest='hide_progress', action='store_true',
                   help='hide progress bar')
     op.add_option('--tinderbox', dest='tinderbox', action='store_true',
@@ -171,4 +204,8 @@ if __name__ == '__main__':
         print >> sys.stderr, "No tests found matching command line arguments."
         sys.exit(0)
         
+    test_list = [ Test.from_file(_) for _ in test_list ]
+    if not OPTIONS.run_slow:
+        test_list = [ _ for _ in test_list if not _.slow ]
+
     run_tests(test_list, lib_dir)

@@ -30,8 +30,7 @@ For more options:
 * CREATING NEW TESTS
 
 Simply create a JS file under the 'tests/' directory. Most tests should go in
-'tests/basic/'. Tests that run a long time (many seconds) should go in
-'tests/slow/' so they can be easily excluded from test runs.
+'tests/basic/'.
 
 All tests are run with 'lib/prolog.js' included first on the command line. The
 command line also creates a global variable 'libdir' that is set to the path
@@ -39,3 +38,26 @@ of the 'lib' directory. To include a file 'foo.js' from the lib directory in a
 test case:
 
     load(libdir + 'foo.js')
+
+* TEST METALINES
+
+The first line of a test case can contain a special comment controlling how the
+test is run. For example:
+
+    // |trace-test| allow-oom;
+
+The general format in EBNF is:
+
+    metaline ::= cookie { item ";" }
+    cookie   ::= "|trace-test|"
+    item     ::= "slow" | "allow-oom"
+
+The metaline may appear anywhere in the first line of the file: this allows it
+to be placed inside any kind of comment.
+
+The meaning of the items:
+
+    slow         Test runs slowly. Do not run if the --no-slow option is given.
+    allow-oom    If the test runs out of memory, it counts as passing.
+
+* END

@@ -1,3 +1,4 @@
+// |trace-test| allow-oom; 
 function testBug507425() {
     var r = /x/;
     for (var i = 0; i < 3; i++)
