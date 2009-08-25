@@ -473,4 +473,7 @@ XRE_API(int,
         XRE_RunIPCTestHarness, (int aArgc,
                                 char* aArgv[]))
 
+XRE_API(void,
+        XRE_ShutdownChildProcess, ())
+
 #endif // _nsXULAppAPI_h__
