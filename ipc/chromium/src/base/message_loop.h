@@ -26,6 +26,10 @@
 #include "base/message_pump_libevent.h"
 #endif
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+class DoWorkRunnable;
+#endif
+
 // A MessageLoop is used to process events for a particular thread.  There is
 // at most one MessageLoop instance per thread.
 //
@@ -57,7 +61,12 @@
 // are stable and accessible before calling SetNestableTasksAllowed(true).
 //
 class MessageLoop : public base::MessagePump::Delegate {
- public:
+
+#ifdef CHROMIUM_MOZILLA_BUILD
+  friend class DoWorkRunnable;
+#endif
+
+public:
   static void EnableHistogrammer(bool enable_histogrammer);
 
   // A DestructionObserver is notified when the current MessageLoop is being
