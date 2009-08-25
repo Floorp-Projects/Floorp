@@ -2871,10 +2871,8 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
               (fp->fun && JSFUN_THISP_FLAGS(fp->fun->flags)));
     JS_CALL_VALUE_TRACER(trc, (jsval)fp->thisp, "this");
 
-    if (fp->callee)
-        JS_CALL_OBJECT_TRACER(trc, fp->callee, "callee");
-
     if (fp->argv) {
+        JS_CALL_VALUE_TRACER(trc, fp->argv[-2], "callee");
         nslots = fp->argc;
         skip = 0;
         if (fp->fun) {

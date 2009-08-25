@@ -735,7 +735,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* Copy call-invariant script and function references. */
     gen->frame.script = fp->script;
-    gen->frame.callee = fp->callee;
     gen->frame.fun = fp->fun;
 
     /* Use slots to carve space out of gen->slots. */

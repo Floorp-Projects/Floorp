@@ -74,7 +74,6 @@ struct JSStackFrame {
     jsval           argsobj;        /* lazily created arguments object, must be
                                        JSVAL_OBJECT */
     JSObject        *varobj;        /* variables object, where vars go */
-    JSObject        *callee;        /* function or script object */
     JSScript        *script;        /* script being interpreted */
     JSFunction      *fun;           /* function being called or null */
     JSObject        *thisp;         /* "this" pointer if in method */
@@ -144,6 +143,10 @@ struct JSStackFrame {
         } else if (argsobj) {
             js_PutArgsObject(cx, this);
         }
+    }
+
+    JSObject *callee() {
+        return argv ? JSVAL_TO_OBJECT(argv[-2]) : NULL;
     }
 };
 

@@ -6122,8 +6122,8 @@ js_DumpStackFrame(JSStackFrame *fp)
 
     for (; fp; fp = fp->down) {
         fprintf(stderr, "JSStackFrame at %p\n", (void *) fp);
-        if (fp->callee)
-            dumpValue(OBJECT_TO_JSVAL(fp->callee));
+        if (fp->argv)
+            dumpValue(fp->argv[-2]);
         else
             fprintf(stderr, "global frame, no callee");
         fputc('\n', stderr);

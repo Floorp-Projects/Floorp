@@ -1289,7 +1289,6 @@ have_fun:
     frame.callobj = NULL;
     frame.argsobj = NULL;
     frame.script = script;
-    frame.callee = funobj;
     frame.fun = fun;
     frame.argc = argc;
     frame.argv = argv;
@@ -1517,7 +1516,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.callobj = down->callobj;
         frame.argsobj = down->argsobj;
         frame.varobj = down->varobj;
-        frame.callee = down->callee;
         frame.fun = down->fun;
         frame.thisp = down->thisp;
         if (down->flags & JSFRAME_COMPUTED_THIS)
@@ -1536,7 +1534,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
                 obj = tmp;
         }
         frame.varobj = obj;
-        frame.callee = NULL;
         frame.fun = NULL;
         frame.thisp = chain;
         frame.argc = 0;
