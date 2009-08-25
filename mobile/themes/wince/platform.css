@@ -48,7 +48,7 @@
 .dialog-dark {
   color: #fff;
   background-color: #36373b;
-  -moz-border-radius: 0 0 1.0mm 1.0mm;
+  -moz-border-radius: 0 0 1mm 1mm;
   padding: 8px;
   -moz-box-shadow: black 0 0.25mm 0.25mm;
 }
@@ -57,43 +57,88 @@
 .button-text,
 .toolbarbutton-text {
   font-weight: bold !important;
-  font-size: 9pt !important;
+  font-size: 8pt !important;
 }
 
 button {
-  min-width: 6.0mm !important; /* button size */
-  min-height: 6.0mm !important; /* button size */
-  color: #36373b;
+  min-width: 6mm !important; /* button size */
+  min-height: 6mm !important; /* button size */
+  color: #000;
   padding: 0.25mm 0.5mm;
-  -moz-border-radius: 1.0mm;
-  -moz-border-top-colors: -moz-initial;
-  -moz-border-right-colors: -moz-initial;
-  -moz-border-left-colors: -moz-initial;
-  -moz-border-bottom-colors: -moz-initial;
-  border: 0.05mm solid #36373b;
-  background: #efefef;
+  -moz-appearance: none !important;
 }
 
 button[disabled="true"] {
-  color: #ccc;
-  -moz-border-top-colors: -moz-initial !important;
-  -moz-border-right-colors: -moz-initial !important;
-  -moz-border-left-colors: -moz-initial !important;
-  -moz-border-bottom-colors: -moz-initial !important;
-  border: 0.05mm solid #ccc;
-  background: #fff;
+  color: #aaa !important;
 }
 
-/* XXX needs to be updated */
-button:active {
-  -moz-border-top-colors: -moz-initial;
-  -moz-border-right-colors: -moz-initial;
-  -moz-border-left-colors: -moz-initial;
-  -moz-border-bottom-colors: -moz-initial;
-  border: 0.05mm solid #aaa;
-  background: #ddd;
+/* hi-res screens */
+@media all and (min-device-width: 401px) {
+  button {
+    border-width: 8px !important;
+    -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
+  }
+  
+  button:not([disabled="true"]):active {
+    -moz-border-image: url("chrome://browser/skin/images/button-active-64.png") 8 repeat repeat;
+  }
 }
 
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+  button {
+    border-width: 4px !important;
+    -moz-border-image: url("chrome://browser/skin/images/button-default-36.png") 4 repeat repeat;
+  }
+  
+  button:not([disabled="true"]):active {
+    -moz-border-image: url("chrome://browser/skin/images/button-active-36.png") 4 repeat repeat;
+  }
+}
+
+/* dark buttons ------------------------------------------------------------ */
+/*
+  we set notification buttons here as well, since the style can't be set in
+  scoped CSS file, like notification.css, when the buttons are added later
+*/
+
+button.button-dark,
+notification button {
+  color: #fff !important;
+  background: transparent !important;
+}
+
+button.button-dark[disabled="true"] {
+  color: #ddd !important;
+}
+
+/* high-res screens */
+@media all and (min-device-width: 401px) {
+  button.button-dark,
+  notification button {
+    -moz-border-image: url("chrome://browser/skin/images/buttondark-default-64.png") 8 repeat repeat;
+  }
+  
+  button.button-dark:not([disabled="true"]):active,
+  notification button:not([disabled="true"]):active {
+    -moz-border-image: url("chrome://browser/skin/images/buttondark-active-64.png") 8 repeat repeat;
+  }
+}
+
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+  button.button-dark,
+  notification button {
+    -moz-border-image: url("chrome://browser/skin/images/buttondark-default-36.png") 4 repeat repeat;
+  }
+  
+  button.button-dark:not([disabled="true"]):active,
+  notification button:not([disabled="true"]):active {
+    -moz-border-image: url("chrome://browser/skin/images/buttondark-active-36.png") 4 repeat repeat;
+  }
+}
+
+/* toolbar buttons --------------------------------------------------------- */
 toolbarbutton {
   -moz-appearance: none !important;
   margin: 0;
@@ -106,7 +151,7 @@ toolbarbutton:not(.show-text) .toolbarbutton-text {
 
 toolbarbutton:not(.show-text) .toolbarbutton-icon,
 toolbarbutton:not([image]) .toolbarbutton-icon,
-toolbarbutton[image=''] .toolbarbutton-icon {
+toolbarbutton[image=""] .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
@@ -118,45 +163,59 @@ toolbarbutton[open="true"] {
 
 /* high-res screens */
 @media all and (min-device-width: 401px) {
-toolbarbutton {
-  min-width: 64px !important; /* primary button size (match image pixels)*/
-  min-height: 64px !important; /* primary button size (match image pixels) */
-}
+  toolbarbutton {
+    min-width: 64px !important; /* primary button size (match image pixels)*/
+    min-height: 64px !important; /* primary button size (match image pixels) */
+  }
 }
 
 /* low-res screens */
 @media all and (max-device-width: 400px) {
-toolbarbutton {
-  min-width: 36px !important; /* primary button size (match image pixels) */
-  min-height: 36px !important; /* primary button size (match image pixels) */
-}
+  toolbarbutton {
+    min-width: 36px !important; /* primary button size (match image pixels) */
+    min-height: 36px !important; /* primary button size (match image pixels) */
+  }
 }
 
 /* dark buttons ------------------------------------------------------------ */
-.button-dark {
+toolbarbutton.button-dark {
   color: #fff;
   padding: 0.25mm 0.5mm;
-  -moz-border-radius: 1.0mm;
-  border: 1px solid #777 !important;
-  background: #525252;
 }
 
-.button-dark:active {
-  border: 1px solid #202020 !important;
-  background: #303030;
+toolbarbutton.button-dark[disabled="true"] {
+  color: #ddd;
 }
 
-.button-dark[disabled="true"],
-.button-dark[disabled="true"]:active {
-  border: 1px solid #515151;
-  background: #36373b;
-}
-
-.button-dark[checked="true"] {
+toolbarbutton.button-dark[checked="true"] {
   /* checked overrides */
   border: 0.05mm solid #202020 !important;
   background: #303030 !important;
   padding: 0.25mm 0.5mm !important;
+}
+
+/* high-res screens */
+@media all and (min-device-width: 401px) {
+  toolbarbutton.button-dark {
+    border-width: 10px;
+    -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-64.png") 10 repeat repeat;
+  }
+  
+  toolbarbutton.button-dark:not([disabled="true"]):active {
+    -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-active-64.png") 10 repeat repeat;
+  }
+}
+
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+  toolbarbutton.button-dark {
+    border-width: 6px;
+    -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-36.png") 6 repeat repeat;
+  }
+  
+  toolbarbutton.button-dark:not([disabled="true"]):active {
+    -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-active-36.png") 6 repeat repeat;
+  }
 }
 
 /* image buttons ----------------------------------------------------------- */
@@ -173,61 +232,192 @@ radiogroup {
 
 .radio-label {
   font-weight: bold !important;
-  font-size: 9pt !important;
+  font-size: 8pt !important;
 }
 
 radio {
-  min-width: 6.0mm !important; /* button size */
-  min-height: 6.0mm !important; /* button size */
   color: #36373b;
+  min-width: 6mm !important; /* button size */
+  min-height: 6mm !important; /* button size */
   padding: 0.5mm 1.1mm 0.1mm 0.5mm !important;
   margin: 0;
-  border: 0.05mm solid #36373b;
   -moz-box-align: center;
   -moz-appearance: none;
-  background: #fff;
 }
 
-radio[selected] {
-  color: #fff;
-  border: 0.05mm solid #91875a;
-  background-color: #DDC763;
-}
-
-radio .radio-check-box1, radio .radio-icon, radio .radio-check {
+radio .radio-icon, radio .radio-check {
   display: none;
 }
 
-radio:first-child {
-  -moz-border-radius-topleft: 1.0mm;
-  -moz-border-radius-bottomleft: 1.0mm;
+radio[selected] {
+  color: #000;
 }
 
-radio:last-child {
-  -moz-border-radius-topright: 1.0mm;
-  -moz-border-radius-bottomright: 1.0mm;
+/* high-res screens */
+@media all and (min-device-width: 401px) {
+  radio {
+    border-width: 8px;
+    -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-64.png") 8 repeat repeat;
+  }
+  
+  radio[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat;
+  }
+  
+  radio:first-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-64.png") 8 repeat repeat;
+  }
+  
+  radio:first-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-64.png") 8 repeat repeat;
+  }
+  
+  radio:last-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-64.png") 8 repeat repeat;
+  }
+  
+  radio:last-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleright-active-64.png") 8 repeat repeat;
+  }
 }
 
-radiogroup[orient=vertical] radio:first-child {
-  -moz-border-radius-topright: 1.0mm;
-  -moz-border-radius-bottomleft: 0;
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+  radio {
+    border-width: 4px;
+    -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-36.png") 4 repeat repeat;
+  }
+
+  radio[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-36.png") 4 repeat repeat;
+  }
+  
+  radio:first-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggleleft-inactive-36.png") 4 repeat repeat;
+  }
+  
+  radio:first-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleleft-active-36.png") 4 repeat repeat;
+  }
+  
+  radio:last-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggleright-inactive-36.png") 4 repeat repeat;
+  }
+  
+  radio:last-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleright-active-36.png") 4 repeat repeat;
+  }
 }
 
-radiogroup[orient=vertical] radio:last-child {
-  -moz-border-radius-bottomleft: 1.0mm;
-  -moz-border-radius-topright: 0;
+/* checkbox radios --------------------------------------------------------- */
+checkbox {
+  margin: 1px 5px 2px 5px; /* match platform style for buttons */
+}
+
+radio.checkbox-radio-on[selected] {
+  color: #fff;
+}
+
+radio.checkbox-radio-on:not([selected]) .radio-label-box,
+radio.checkbox-radio-off:not([selected]) .radio-label-box {
+  visibility: hidden;
+}
+
+/* high-res screens */
+@media all and (min-device-width: 401px) {
+  radio.checkbox-radio-on {
+    -moz-border-image: url("chrome://browser/skin/images/toggleon-inactive-64.png") 8 repeat repeat;
+  }
+  
+  radio.checkbox-radio-on[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleon-active-64.png") 8 repeat repeat;
+  }
+  
+  radio.checkbox-radio-off {
+    -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-64.png") 8 repeat repeat;
+  }
+  
+  radio.checkbox-radio-off[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-64.png") 8 repeat repeat;
+  }
+}
+
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+  radio.checkbox-radio-on {
+    -moz-border-image: url("chrome://browser/skin/images/toggleon-inactive-36.png") 4 repeat repeat;
+  }
+  
+  radio.checkbox-radio-on[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleon-active-36.png") 4 repeat repeat;
+  }
+  
+  radio.checkbox-radio-off {
+    -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-36.png") 4 repeat repeat;
+  }
+  
+  radio.checkbox-radio-off[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-36.png") 4 repeat repeat;
+  }
 }
 
 /* dark radios ------------------------------------------------------------- */
 .toggle-dark radio {
   color: #fff;
-  border: 0.05mm solid #777;
-  background-color: #525252;
 }
 
-.toggle-dark radio[selected] {
-  border: 0.05mm solid #202020;
-  background-color: #303030;
+/* high-res screens */
+@media all and (min-device-width: 401px) {
+  .toggle-dark radio {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-inactive-64.png") 8 repeat repeat;
+  }
+  
+  .toggle-dark radio[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-active-64.png") 8 repeat repeat;
+  }
+  
+  .toggle-dark radio:first-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-inactive-64.png") 8 repeat repeat;
+  }
+  
+  .toggle-dark radio:first-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-64.png") 8 repeat repeat;
+  }
+  
+  .toggle-dark radio:last-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkright-inactive-64.png") 8 repeat repeat;
+  }
+  
+  .toggle-dark radio:last-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-64.png") 8 repeat repeat;
+  }
+}
+
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+  .toggle-dark radio {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-inactive-36.png") 4 repeat repeat;
+  }
+  
+  .toggle-dark radio[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkmiddle-active-36.png") 4 repeat repeat;
+  }
+  
+  .toggle-dark radio:first-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-inactive-36.png") 4 repeat repeat;
+  }
+  
+  .toggle-dark radio:first-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkleft-active-36.png") 4 repeat repeat;
+  }
+  
+  .toggle-dark radio:last-child {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkright-inactive-36.png") 4 repeat repeat;
+  }
+  
+  .toggle-dark radio:last-child[selected] {
+    -moz-border-image: url("chrome://browser/skin/images/toggledarkright-active-36.png") 4 repeat repeat;
+  }
 }
 
 /* richlistbox ------------------------------------------------------------- */
