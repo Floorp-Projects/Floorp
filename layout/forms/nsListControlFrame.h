@@ -443,11 +443,15 @@ protected:
   // about the extra member on listboxes?
   nscoord mLastDropdownComputedHeight;
 
+  // At the time of our last dropdown, the backstop color to draw in case we
+  // are translucent.
+  nscolor mLastDropdownBackstopColor;
+  
   nsRefPtr<nsListEventListener> mEventListener;
 
   static nsListControlFrame * mFocused;
   static nsString * sIncrementalString;
-  
+
 #ifdef DO_REFLOW_COUNTER
   PRInt32 mReflowId;
 #endif
