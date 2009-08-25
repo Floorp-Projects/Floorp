@@ -634,7 +634,6 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     memset(&frame, 0, sizeof(frame));
                     frame.script = script;
                     frame.regs = NULL;
-                    frame.callee = closure;
                     frame.fun = fun;
                     frame.argv = argv + 2;
                     frame.down = js_GetTopStackFrame(cx);
@@ -1019,8 +1018,8 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
     if (fp->fun) {
         callbacks = JS_GetSecurityCallbacks(cx);
         if (callbacks && callbacks->findObjectPrincipals) {
-            if (FUN_OBJECT(fp->fun) != fp->callee)
-                return callbacks->findObjectPrincipals(cx, fp->callee);
+            if (FUN_OBJECT(fp->fun) != fp->callee())
+                return callbacks->findObjectPrincipals(cx, fp->callee());
             /* FALL THROUGH */
         }
     }
@@ -1037,7 +1036,7 @@ JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
 
     callbacks = JS_GetSecurityCallbacks(cx);
     if (callbacks && callbacks->findObjectPrincipals) {
-        principals = callbacks->findObjectPrincipals(cx, fp->callee);
+        principals = callbacks->findObjectPrincipals(cx, fp->callee());
     } else {
         principals = NULL;
     }
@@ -1166,9 +1165,9 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
     if (!fp->fun)
         return NULL;
 
-    JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee));
-    JS_ASSERT(fp->callee->getAssignedPrivate() == fp->fun);
-    return fp->callee;
+    JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee()));
+    JS_ASSERT(fp->callee()->getAssignedPrivate() == fp->fun);
+    return fp->callee();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1180,7 +1179,7 @@ JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->callee;
+    return fp->callee();
 }
 
 JS_PUBLIC_API(JSBool)
