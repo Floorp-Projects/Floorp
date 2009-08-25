@@ -847,12 +847,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     }
   }
 
-  // ignore all resource:// URIs
+  // This will ignore all resource, chrome, data, file, moz-icon, and anno
+  // protocols. Local resources are treated as trusted.
   if (uri && ioService) {
     PRBool hasFlag;
     nsresult rv = 
       ioService->URIChainHasFlags(uri, 
-                                  nsIProtocolHandler::URI_IS_UI_RESOURCE, 
+                                  nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                                   &hasFlag);
     if (NS_SUCCEEDED(rv) && hasFlag) {
       isSubDocumentRelevant = PR_FALSE;
