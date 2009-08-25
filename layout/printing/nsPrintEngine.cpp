@@ -2676,7 +2676,7 @@ PRBool nsPrintEngine::HasFramesetChild(nsIContent* aContent)
   for (PRUint32 i = 0; i < numChildren; ++i) {
     nsIContent *child = aContent->GetChildAt(i);
     if (child->Tag() == nsGkAtoms::frameset &&
-        child->IsHTML()) {
+        child->IsNodeOfType(nsINode::eHTML)) {
       return PR_TRUE;
     }
   }

@@ -265,7 +265,7 @@ nsIContent*
 nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
 {
 #ifdef MOZ_XUL
-  if (aContent->IsXUL()) {
+  if (aContent->IsNodeOfType(nsINode::eXUL)) {
     nsCOMPtr<nsIDOMNode> inputField;
 
     nsCOMPtr<nsIDOMXULTextBoxElement> textbox = do_QueryInterface(aContent);
@@ -1254,7 +1254,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags)
   if (!frame)
     return nsnull;
 
-  if (aContent->Tag() == nsGkAtoms::area && aContent->IsHTML()) {
+  if (aContent->Tag() == nsGkAtoms::area && aContent->IsNodeOfType(nsINode::eHTML)) {
     // HTML areas do not have their own frame, and the img frame we get from
     // GetPrimaryFrameFor() is not relevant as to whether it is focusable or
     // not, so we have to do all the relevant checks manually for them.
@@ -2074,7 +2074,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
   if (startContent) {
     nsIFrame* frame = presShell->GetPrimaryFrameFor(startContent);
     if (startContent->Tag() == nsGkAtoms::area &&
-        startContent->IsHTML())
+        startContent->IsNodeOfType(nsINode::eHTML))
       startContent->IsFocusable(&tabIndex);
     else if (frame)
       frame->IsFocusable(&tabIndex, 0);
@@ -2354,7 +2354,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
         frameTraversal->Last();
     }
     else if (!aStartContent || aStartContent->Tag() != nsGkAtoms::area ||
-             !aStartContent->IsHTML()) {
+             !aStartContent->IsNodeOfType(nsINode::eHTML)) {
       // Need to do special check in case we're in an imagemap which has multiple
       // content nodes per frame, so don't skip over the starting frame.
       if (aForward)
@@ -2638,7 +2638,7 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
       for (PRUint32 i = 0; i < childCount; ++i) {
         nsIContent *childContent = rootContent->GetChildAt(i);
         nsINodeInfo *ni = childContent->NodeInfo();
-        if (childContent->IsHTML() &&
+        if (childContent->IsNodeOfType(nsINode::eHTML) &&
             ni->Equals(nsGkAtoms::frameset))
           return nsnull;
       }

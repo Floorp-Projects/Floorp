@@ -6047,7 +6047,7 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
       isFocusable = mContent->IsFocusable(&tabIndex);
       if (!isFocusable && !aWithMouse &&
           GetType() == nsGkAtoms::scrollFrame &&
-          mContent->IsHTML() &&
+          mContent->IsNodeOfType(nsINode::eHTML) &&
           !mContent->IsRootOfNativeAnonymousSubtree() &&
           mContent->GetParent() &&
           !mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {

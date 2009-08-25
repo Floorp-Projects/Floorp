@@ -1798,7 +1798,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
         return content.forget();
       }
 
-      if (aParentContent->IsHTML() &&
+      if (aParentContent->IsNodeOfType(nsINode::eHTML) &&
           aParentContent->NodeInfo()->Equals(nsGkAtoms::input)) {
         if (aParentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
           nsCOMPtr<nsIContent> content;
@@ -2407,7 +2407,7 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
   // of the viewport
   // XXX what about XHTML?
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
-  if (!htmlDoc || !docElement->IsHTML()) {
+  if (!htmlDoc || !docElement->IsNodeOfType(nsINode::eHTML)) {
     return nsnull;
   }
   
@@ -2540,7 +2540,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIContent*              aDocEle
 
   // Check whether we need to build a XUL box or SVG root frame
 #ifdef MOZ_XUL
-  if (aDocElement->IsXUL()) {
+  if (aDocElement->IsNodeOfType(nsINode::eXUL)) {
     contentFrame = NS_NewDocElementBoxFrame(mPresShell, styleContext);
     if (NS_UNLIKELY(!contentFrame)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2799,7 +2799,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
         
   if (!isPaginated) {
 #ifdef MOZ_XUL
-    if (aDocElement->IsXUL())
+    if (aDocElement->IsNodeOfType(nsINode::eXUL))
     {
       // pass a temporary stylecontext, the correct one will be set later
       rootFrame = NS_NewRootBoxFrame(mPresShell, viewportPseudoStyle);
@@ -2838,11 +2838,11 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   //  3) nsIScrollable::Scrollbar_Always = scrollbars always
   // Only need to create a scroll frame/view for cases 2 and 3.
 
-  PRBool isHTML = aDocElement->IsHTML();
+  PRBool isHTML = aDocElement->IsNodeOfType(nsINode::eHTML);
   PRBool isXUL = PR_FALSE;
 
   if (!isHTML) {
-    isXUL = aDocElement->IsXUL();
+    isXUL = aDocElement->IsNodeOfType(nsINode::eXUL);
   }
 
   // Never create scrollbars for XUL documents
@@ -3656,7 +3656,7 @@ nsCSSFrameConstructor::FindHTMLData(nsIContent* aContent,
   // Ignore the tag if it's not HTML content and if it doesn't extend (via XBL)
   // a valid HTML namespace.  This check must match the one in
   // ShouldHaveFirstLineStyle.
-  if (!aContent->IsHTML() &&
+  if (!aContent->IsNodeOfType(nsINode::eHTML) &&
       aNameSpaceID != kNameSpaceID_XHTML) {
     return nsnull;
   }
@@ -4496,7 +4496,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
   // make this function static.
   PRBool propagatedScrollToViewport = PR_FALSE;
   if (aContent->NodeInfo()->Equals(nsGkAtoms::body) &&
-      aContent->IsHTML()) {
+      aContent->IsNodeOfType(nsINode::eHTML)) {
     propagatedScrollToViewport =
       PropagateScrollToViewport() == aContent;
   }
@@ -6064,7 +6064,7 @@ static PRBool
 IsSpecialFramesetChild(nsIContent* aContent)
 {
   // IMPORTANT: This must match the conditions in nsHTMLFramesetFrame::Init.
-  return aContent->IsHTML() &&
+  return aContent->IsNodeOfType(nsINode::eHTML) &&
     (aContent->Tag() == nsGkAtoms::frameset ||
      aContent->Tag() == nsGkAtoms::frame);
 }
@@ -6081,8 +6081,8 @@ MaybeGetListBoxBodyFrame(nsIContent* aContainer, nsIContent* aChild)
   if (!aContainer)
     return nsnull;
 
-  if (aContainer->IsXUL() &&
-      aChild->IsXUL() &&
+  if (aContainer->IsNodeOfType(nsINode::eXUL) &&
+      aChild->IsNodeOfType(nsINode::eXUL) &&
       aContainer->Tag() == nsGkAtoms::listbox &&
       aChild->Tag() == nsGkAtoms::listitem) {
     nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(aContainer);
@@ -7556,7 +7556,7 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
 
     // Check whether it's an HTML body
     if (node->Tag() != nsGkAtoms::body ||
-        !node->IsHTML()) {
+        !node->IsNodeOfType(nsINode::eHTML)) {
       return;
     }
   }
@@ -8833,7 +8833,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
   // have to look at insertionElement here...
   if (aMultiple && !*aMultiple) {
     nsIContent* content = insertionElement ? insertionElement : container;
-    if (content->IsHTML() &&
+    if (content->IsNodeOfType(nsINode::eHTML) &&
         content->Tag() == nsGkAtoms::fieldset) {
       *aMultiple = PR_TRUE;
     }
@@ -9194,7 +9194,7 @@ nsCSSFrameConstructor::ShouldHaveFirstLineStyle(nsIContent* aContent,
     // This check must match the one in FindHTMLData.
     hasFirstLine = tag != nsGkAtoms::fieldset ||
       (namespaceID != kNameSpaceID_XHTML &&
-       !aContent->IsHTML());
+       !aContent->IsNodeOfType(nsINode::eHTML));
   }
 
   return hasFirstLine;

@@ -432,7 +432,7 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent,
                                nsILinkHandler *aLinkHandler,
                                nsLinkState *aState)
 {
-  NS_ASSERTION(aContent->IsHTML(),
+  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eHTML),
                "Only use this function with HTML elements");
   NS_ASSERTION(aState, "null arg in IsHTMLLink");
 

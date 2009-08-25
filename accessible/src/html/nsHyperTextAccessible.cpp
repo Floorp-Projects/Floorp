@@ -633,7 +633,7 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
   nsCOMPtr<nsIAccessible> descendantAccessible;
   if (findNode) {
     nsCOMPtr<nsIContent> findContent = do_QueryInterface(findNode);
-    if (findContent->IsHTML() && 
+    if (findContent->IsNodeOfType(nsINode::eHTML) && 
         findContent->NodeInfo()->Equals(nsAccessibilityAtoms::br)) {
       nsIContent *parent = findContent->GetParent();
       if (parent &&

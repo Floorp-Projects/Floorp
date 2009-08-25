@@ -308,14 +308,14 @@ txMozillaXMLOutput::endElement()
 
     // Handle html-elements
     if (!mNoFixup) {
-        if (element->IsHTML()) {
+        if (element->IsNodeOfType(nsINode::eHTML)) {
             rv = endHTMLElement(element);
             NS_ENSURE_SUCCESS(rv, rv);
         }
 
         // Handle script elements
         if (element->Tag() == nsGkAtoms::script &&
-            (element->IsHTML() ||
+            (element->IsNodeOfType(nsINode::eHTML) ||
             element->GetNameSpaceID() == kNameSpaceID_SVG)) {
 
             rv = element->DoneAddingChildren(PR_TRUE);

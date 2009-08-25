@@ -772,7 +772,7 @@ nsXMLContentSerializer::IsJavaScript(nsIContent * aContent, nsIAtom* aAttrNameAt
                                      PRInt32 aAttrNamespaceID, const nsAString& aValueString)
 {
   PRInt32 namespaceID = aContent->GetNameSpaceID();
-  PRBool isHtml = aContent->IsHTML();
+  PRBool isHtml = aContent->IsNodeOfType(nsINode::eHTML);
 
   if (aAttrNamespaceID == kNameSpaceID_None &&
       (isHtml ||

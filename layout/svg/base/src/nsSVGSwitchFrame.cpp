@@ -191,7 +191,7 @@ nsSVGSwitchFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
   if (svgKid) {
     nsIContent *content = kid->GetContent();
     gfxMatrix transform = aToBBoxUserspace;
-    if (content->IsSVG()) {
+    if (content->IsNodeOfType(nsINode::eSVG)) {
       transform = static_cast<nsSVGElement*>(content)->
                     PrependLocalTransformTo(aToBBoxUserspace);
     }

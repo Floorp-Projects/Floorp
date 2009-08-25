@@ -289,7 +289,7 @@ float
 nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame, PRUint8 aUnitType) const
 {
   nsIContent* content = aFrame->GetContent();
-  if (content->IsSVG())
+  if (content->IsNodeOfType(nsINode::eSVG))
     return GetUnitScaleFactor(static_cast<nsSVGElement*>(content), aUnitType);
 
   switch (aUnitType) {
