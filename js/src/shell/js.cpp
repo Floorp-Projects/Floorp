@@ -3983,15 +3983,6 @@ static JSPropertySpec its_props[] = {
 };
 
 static JSBool
-its_item(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    *rval = OBJECT_TO_JSVAL(obj);
-    if (argc != 0)
-        JS_SetCallReturnValue2(cx, argv[0]);
-    return JS_TRUE;
-}
-
-static JSBool
 its_bindMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
@@ -4019,7 +4010,6 @@ its_bindMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSFunctionSpec its_methods[] = {
-    {"item",            its_item,       0,0,0},
     {"bindMethod",      its_bindMethod, 2,0,0},
     {NULL,NULL,0,0,0}
 };

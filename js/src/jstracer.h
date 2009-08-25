@@ -56,33 +56,46 @@
 #endif
 
 template <typename T>
-class Queue : public avmplus::GCObject {
+class Queue {
     T* _data;
     unsigned _len;
     unsigned _max;
+    nanojit::Allocator* alloc;
 
+public:
     void ensure(unsigned size) {
         if (!_max)
             _max = 16;
         while (_max < size)
             _max <<= 1;
-        _data = (T*)realloc(_data, _max * sizeof(T));
+        if (alloc) {
+            T* tmp = new (*alloc) T[_max];
+            memcpy(tmp, _data, _len * sizeof(T));
+            _data = tmp;
+        } else {
+            _data = (T*)realloc(_data, _max * sizeof(T));
+        }
 #if defined(DEBUG)
         memset(&_data[_len], 0xcd, _max - _len);
 #endif
     }
-public:
-    Queue(unsigned max = 16) {
+
+    Queue(nanojit::Allocator* alloc, unsigned max = 16)
+        : alloc(alloc)
+    {
         this->_max = max;
         this->_len = 0;
         if (max)
-            this->_data = (T*)malloc(max * sizeof(T));
+            this->_data = (alloc ?
+                           new (*alloc) T[max] :
+                           (T*)malloc(max * sizeof(T)));
         else
             this->_data = NULL;
     }
 
     ~Queue() {
-        free(_data);
+        if (!alloc)
+            free(_data);
     }
 
     bool contains(T a) {
@@ -185,7 +198,8 @@ enum LC_TMBits {
     LC_TMPatcher  = 1<<19,
     LC_TMAbort    = 1<<20,
     LC_TMStats    = 1<<21,
-    LC_TMRegexp   = 1<<22
+    LC_TMRegexp   = 1<<22,
+    LC_TMTreeVis  = 1<<23
 };
 
 #endif
@@ -309,6 +323,7 @@ typedef Queue<uint16> SlotList;
 
 class TypeMap : public Queue<JSTraceType> {
 public:
+    TypeMap(nanojit::Allocator* alloc) : Queue<JSTraceType>(alloc) {}
     JS_REQUIRES_STACK void captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth);
     JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots,
                                                      unsigned stackSlots);
@@ -409,7 +424,7 @@ struct VMSideExit : public nanojit::SideExit
     }
 };
 
-struct VMAllocator : public nanojit::Allocator
+class VMAllocator : public nanojit::Allocator
 {
 
 public:
@@ -426,6 +441,7 @@ public:
 
     bool mOutOfMemory;
     size_t mSize;
+
     /*
      * FIXME: Area the LIR spills into if we encounter an OOM mid-way
      * through compilation; we must check mOutOfMemory before we run out
@@ -436,37 +452,68 @@ public:
     uintptr_t mReserve[0x10000];
 };
 
+
+struct REHashKey {
+    size_t re_length;
+    uint16 re_flags;
+    const jschar* re_chars;
+
+    REHashKey(size_t re_length, uint16 re_flags, const jschar *re_chars)
+        : re_length(re_length)
+        , re_flags(re_flags)
+        , re_chars(re_chars)
+    {}
+
+    bool operator==(const REHashKey& other) const
+    {
+        return ((this->re_length == other.re_length) &&
+                (this->re_flags == other.re_flags) &&
+                !memcmp(this->re_chars, other.re_chars,
+                        this->re_length * sizeof(jschar)));
+    }
+};
+
+struct REHashFn {
+    static size_t hash(const REHashKey& k) {
+        return
+            k.re_length +
+            k.re_flags +
+            nanojit::murmurhash(k.re_chars, k.re_length * sizeof(jschar));
+    }
+};
+
 struct FrameInfo {
-    JSObject*       callee;     // callee function object
     JSObject*       block;      // caller block chain head
     jsbytecode*     pc;         // caller fp->regs->pc
     jsbytecode*     imacpc;     // caller fp->imacpc
-    uint16          spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
+    uint32          spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
 
     /*
      * Bit  15 (0x8000) is a flag that is set if constructing (called through new).
      * Bits 0-14 are the actual argument count. This may be less than fun->nargs.
+     * NB: This is argc for the callee, not the caller.
      */
-    uint16          argc;
+    uint32          argc;
 
     /*
-     * Stack pointer adjustment needed for navigation of native stack in
-     * js_GetUpvarOnTrace. spoffset is the number of slots in the native
-     * stack frame for the caller *before* the slots covered by spdist.
-     * This may be negative if the caller is the top level script.
-     * The key fact is that if we let 'cpos' be the start of the caller's
-     * native stack frame, then (cpos + spoffset) points to the first
-     * non-argument slot in the callee's native stack frame.
+     * Number of stack slots in the caller, not counting slots pushed when
+     * invoking the callee. That is, slots after JSOP_CALL completes but
+     * without the return value. This is also equal to the number of slots
+     * between fp->down->argv[-2] (calleR fp->callee) and fp->argv[-2]
+     * (calleE fp->callee).
      */
-    int32          spoffset;
+    uint32          callerHeight;
+
+    /* argc of the caller */
+    uint32          callerArgc;
 
     // Safer accessors for argc.
-    enum { CONSTRUCTING_MASK = 0x8000 };
+    enum { CONSTRUCTING_FLAG = 0x10000 };
     void   set_argc(uint16 argc, bool constructing) {
-        this->argc = argc | (constructing ? CONSTRUCTING_MASK : 0);
+        this->argc = uint32(argc) | (constructing ? CONSTRUCTING_FLAG: 0);
     }
-    uint16 get_argc() const { return argc & ~CONSTRUCTING_MASK; }
-    bool   is_constructing() const { return (argc & CONSTRUCTING_MASK) != 0; }
+    uint16 get_argc() const { return argc & ~CONSTRUCTING_FLAG; }
+    bool   is_constructing() const { return (argc & CONSTRUCTING_FLAG) != 0; }
 
     // The typemap just before the callee is called.
     JSTraceType* get_typemap() { return (JSTraceType*) (this+1); }
@@ -479,7 +526,7 @@ struct UnstableExit
     UnstableExit* next;
 };
 
-class TreeInfo MMGC_SUBCLASS_DECL {
+class TreeInfo {
 public:
     nanojit::Fragment* const      fragment;
     JSScript*               script;
@@ -496,25 +543,34 @@ public:
     unsigned                branchCount;
     Queue<VMSideExit*>      sideExits;
     UnstableExit*           unstableExits;
+    /* All embedded GC things are registered here so the GC can scan them. */
+    Queue<jsval>            gcthings;
+    Queue<JSScopeProperty*> sprops;
 #ifdef DEBUG
     const char*             treeFileName;
     uintN                   treeLineNumber;
     uintN                   treePCOffset;
 #endif
 
-    TreeInfo(nanojit::Fragment* _fragment,
+    TreeInfo(nanojit::Allocator* alloc,
+             nanojit::Fragment* _fragment,
              SlotList* _globalSlots)
-      : fragment(_fragment),
-        script(NULL),
-        maxNativeStackSlots(0),
-        nativeStackBase(0),
-        maxCallDepth(0),
-        nStackTypes(0),
-        globalSlots(_globalSlots),
-        branchCount(0),
-        unstableExits(NULL)
-            {}
-    ~TreeInfo();
+        : fragment(_fragment),
+          script(NULL),
+          maxNativeStackSlots(0),
+          nativeStackBase(0),
+          maxCallDepth(0),
+          typeMap(alloc),
+          nStackTypes(0),
+          globalSlots(_globalSlots),
+          dependentTrees(alloc),
+          linkedTrees(alloc),
+          branchCount(0),
+          sideExits(alloc),
+          unstableExits(NULL),
+          gcthings(alloc),
+          sprops(alloc)
+    {}
 
     inline unsigned nGlobalTypes() {
         return typeMap.length() - nStackTypes;
@@ -659,6 +715,11 @@ class TraceRecorder : public avmplus::GCObject {
     uint32                  outerArgc; /* outer trace deepest frame argc */
     bool                    loop;
 
+    nanojit::LIns* insImmObj(JSObject* obj);
+    nanojit::LIns* insImmFun(JSFunction* fun);
+    nanojit::LIns* insImmStr(JSString* str);
+    nanojit::LIns* insImmSprop(JSScopeProperty* sprop);
+
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(jsval* p) const;
@@ -730,7 +791,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus inc(jsval& v, jsint incr, bool pre = true);
     JS_REQUIRES_STACK JSRecordingStatus inc(jsval v, nanojit::LIns*& v_ins, jsint incr,
                                             bool pre = true);
-    JS_REQUIRES_STACK JSRecordingStatus incHelper(jsval v, nanojit::LIns* v_ins, 
+    JS_REQUIRES_STACK JSRecordingStatus incHelper(jsval v, nanojit::LIns* v_ins,
                                                   nanojit::LIns*& v_after, jsint incr);
     JS_REQUIRES_STACK JSRecordingStatus incProp(jsint incr, bool pre = true);
     JS_REQUIRES_STACK JSRecordingStatus incElem(jsint incr, bool pre = true);
@@ -767,9 +828,9 @@ class TraceRecorder : public avmplus::GCObject {
                                                               jsuword& pcval);
 
     void stobj_set_fslot(nanojit::LIns *obj_ins, unsigned slot,
-                         nanojit::LIns* v_ins, const char *name);
+                         nanojit::LIns* v_ins);
     void stobj_set_dslot(nanojit::LIns *obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
-                         nanojit::LIns* v_ins, const char *name);
+                         nanojit::LIns* v_ins);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
                         nanojit::LIns* v_ins);
 
@@ -808,6 +869,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK void enterDeepBailCall();
     JS_REQUIRES_STACK void leaveDeepBailCall();
 
+    JS_REQUIRES_STACK JSRecordingStatus primitiveToStringInPlace(jsval* vp);
     JS_REQUIRES_STACK void finishGetProp(nanojit::LIns* obj_ins, nanojit::LIns* vp_ins,
                                          nanojit::LIns* ok_ins, jsval* outp);
     JS_REQUIRES_STACK JSRecordingStatus getPropertyByName(nanojit::LIns* obj_ins, jsval* idvalp,
@@ -824,9 +886,15 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
                                                     JSScopeProperty *sprop, nanojit::LIns *v_ins,
                                                     jsval v);
+    JS_REQUIRES_STACK JSRecordingStatus initOrSetPropertyByName(nanojit::LIns* obj_ins,
+                                                                jsval* idvalp, jsval* rvalp,
+                                                                bool init);
+    JS_REQUIRES_STACK JSRecordingStatus initOrSetPropertyByIndex(nanojit::LIns* obj_ins,
+                                                                 nanojit::LIns* index_ins,
+                                                                 jsval* rvalp, bool init);
 
-    JS_REQUIRES_STACK void box_jsval(jsval v, nanojit::LIns*& v_ins);
-    JS_REQUIRES_STACK void unbox_jsval(jsval v, nanojit::LIns*& v_ins, VMSideExit* exit);
+    JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
+    JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
                                       VMSideExit* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
@@ -840,6 +908,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus guardNotGlobalObject(JSObject* obj,
                                                              nanojit::LIns* obj_ins);
     void clearFrameSlotsFromCache();
+    JS_REQUIRES_STACK void putArguments();
     JS_REQUIRES_STACK JSRecordingStatus guardCallee(jsval& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
                                                         unsigned *depthp);
@@ -917,9 +986,7 @@ public:
     JS_REQUIRES_STACK bool closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus &consensus);
     JS_REQUIRES_STACK void endLoop();
     JS_REQUIRES_STACK void endLoop(VMSideExit* exit);
-    JS_REQUIRES_STACK void joinEdgesToEntry(nanojit::Fragmento* fragmento,
-                                            VMFragment* peer_root);
-    void blacklist() { fragment->blacklist(); }
+    JS_REQUIRES_STACK void joinEdgesToEntry(VMFragment* peer_root);
     JS_REQUIRES_STACK void adjustCallerTypes(nanojit::Fragment* f);
     JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f);
     JS_REQUIRES_STACK void prepareTreeCall(nanojit::Fragment* inner);
@@ -927,7 +994,7 @@ public:
     unsigned getCallDepth() const;
     void pushAbortStack();
     void popAbortStack();
-    void removeFragmentoReferences();
+    void removeFragmentReferences();
     void deepAbort();
 
     JS_REQUIRES_STACK JSRecordingStatus record_EnterFrame();
@@ -1004,7 +1071,7 @@ extern void
 js_PurgeScriptFragments(JSContext* cx, JSScript* script);
 
 extern bool
-js_OverfullFragmento(JSTraceMonitor* tm, nanojit::Fragmento *frago);
+js_OverfullJITCache(JSTraceMonitor* tm, bool reCache);
 
 extern void
 js_PurgeJITOracle();

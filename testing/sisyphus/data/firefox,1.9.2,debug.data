@@ -6,5 +6,5 @@ profiledirectory=${profiledirectory:-/tmp/firefox-1.9.2-profile}
 executablepath=${executablepath:-/work/mozilla/builds/1.9.2/mozilla/firefox-debug/dist}
 userpreferences=${userpreferences:-/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js}
 extensiondir=${extensiondir:-/work/mozilla/mozilla.com/test.mozilla.com/www/xpi}
-TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
+TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.2}
 TEST_MOZILLA_HG_REV=${TEST_MOZILLA_HG_REV:-tip}

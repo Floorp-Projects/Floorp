@@ -1263,13 +1263,13 @@ str_trimRight(JSContext *cx, uintN argc, jsval *vp)
 /*
  * Perl-inspired string functions.
  */
-typedef struct GlobData {
+struct GlobData {
     jsbytecode  *pc;            /* in: program counter resulting in us matching */
     uintN       flags;          /* inout: mode and flag bits, see below */
     uintN       optarg;         /* in: index of optional flags argument */
     JSString    *str;           /* out: 'this' parameter object as string */
     JSRegExp    *regexp;        /* out: regexp parameter object private data */
-} GlobData;
+};
 
 /*
  * Mode and flag bit definitions for match_or_replace's GlobData.flags field.
@@ -1343,26 +1343,21 @@ match_or_replace(JSContext *cx,
                   : INT_TO_JSVAL(-1);
         }
     } else if (data->flags & GLOBAL_REGEXP) {
-        if (reobj) {
-            /* Set the lastIndex property's reserved slot to 0. */
-            ok = js_SetLastIndex(cx, reobj, 0);
-        } else {
-            ok = JS_TRUE;
-        }
-        if (ok) {
-            length = str->length();
-            for (count = 0; index <= length; count++) {
-                ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, vp);
-                if (!ok || *vp != JSVAL_TRUE)
+        if (reobj)
+            js_ClearRegExpLastIndex(reobj);
+        length = str->length();
+        ok = true;
+        for (count = 0; index <= length; count++) {
+            ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, vp);
+            if (!ok || *vp != JSVAL_TRUE)
+                break;
+            ok = glob(cx, count, data);
+            if (!ok)
+                break;
+            if (cx->regExpStatics.lastMatch.length == 0) {
+                if (index == length)
                     break;
-                ok = glob(cx, count, data);
-                if (!ok)
-                    break;
-                if (cx->regExpStatics.lastMatch.length == 0) {
-                    if (index == length)
-                        break;
-                    index++;
-                }
+                index++;
             }
         }
     } else {
@@ -1408,34 +1403,34 @@ match_or_replace(JSContext *cx,
     return ok;
 }
 
-typedef struct MatchData {
+struct MatchData {
     GlobData    base;
     jsval       *arrayval;      /* NB: local root pointer */
-} MatchData;
+};
 
 static JSBool
 match_glob(JSContext *cx, jsint count, GlobData *data)
 {
-    MatchData *mdata;
-    JSObject *arrayobj;
-    JSSubString *matchsub;
-    JSString *matchstr;
-    jsval v;
+    JS_ASSERT(count <= JSVAL_INT_MAX);
 
-    mdata = (MatchData *)data;
-    arrayobj = JSVAL_TO_OBJECT(*mdata->arrayval);
+    MatchData *mdata = (MatchData *)data;
+    JSObject *arrayobj = JSVAL_TO_OBJECT(*mdata->arrayval);
     if (!arrayobj) {
         arrayobj = js_NewArrayObject(cx, 0, NULL);
         if (!arrayobj)
             return JS_FALSE;
         *mdata->arrayval = OBJECT_TO_JSVAL(arrayobj);
     }
-    matchsub = &cx->regExpStatics.lastMatch;
-    matchstr = js_NewStringCopyN(cx, matchsub->chars, matchsub->length);
+
+    JSString *str = cx->regExpStatics.input;
+    JSSubString &match = cx->regExpStatics.lastMatch;
+    ptrdiff_t off = match.chars - str->chars();
+    JS_ASSERT(off >= 0 && size_t(off) <= str->length());
+    JSString *matchstr = js_NewDependentString(cx, str, off, match.length);
     if (!matchstr)
         return JS_FALSE;
-    v = STRING_TO_JSVAL(matchstr);
-    JS_ASSERT(count <= JSVAL_INT_MAX);
+
+    jsval v = STRING_TO_JSVAL(matchstr);
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
     return arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
@@ -1476,7 +1471,7 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
     return match_or_replace(cx, NULL, &data, argc, vp);
 }
 
-typedef struct ReplaceData {
+struct ReplaceData {
     ReplaceData(JSContext *cx) : cb(cx) {}
     GlobData      base;           /* base struct state */
     JSObject      *lambda;        /* replacement function object or null */
@@ -1487,8 +1482,8 @@ typedef struct ReplaceData {
     jsint         leftIndex;      /* left context index in base.str->chars */
     JSSubString   dollarStr;      /* for "$$" interpret_dollar result */
     bool          globCalled;     /* record whether replace_glob has been called */
-    JSCharVector  cb;             /* buffer built during match_or_replace */
-} ReplaceData;
+    JSCharBuffer  cb;             /* buffer built during match_or_replace */
+};
 
 static JSSubString *
 interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
@@ -1548,7 +1543,19 @@ interpret_dollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData *rdata,
     return NULL;
 }
 
-static JSBool
+static JS_ALWAYS_INLINE bool
+PushRegExpSubstr(JSContext *cx, const JSSubString &sub, jsval *&sp)
+{
+    JSString *whole = cx->regExpStatics.input;
+    size_t off = sub.chars - whole->chars();
+    JSString *str = js_NewDependentString(cx, whole, off, sub.length);
+    if (!str)
+        return false;
+    *sp++ = STRING_TO_JSVAL(str);
+    return true;
+}
+
+static bool
 find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 {
     JSString *repstr;
@@ -1559,21 +1566,9 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
     lambda = rdata->lambda;
     if (lambda) {
-        uintN argc, i, j, m, n, p;
-        jsval *invokevp, *sp;
-        void *mark;
-        JSBool ok;
+        uintN i, m, n;
 
         js_LeaveTrace(cx);
-
-        /*
-         * Save the regExpStatics from the current regexp, since they may be
-         * clobbered by a RegExp usage in the lambda function.  Note that all
-         * members of JSRegExpStatics are JSSubStrings, so not GC roots, save
-         * input, which is rooted otherwise via vp[1] in str_replace.
-         */
-        JSRegExpStatics save = cx->regExpStatics;
-        JSBool freeMoreParens = JS_FALSE;
 
         /*
          * In the lambda case, not only do we find the replacement string's
@@ -1583,48 +1578,53 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
          * For $&, etc., we must create string jsvals from cx->regExpStatics.
          * We grab up stack space to keep the newborn strings GC-rooted.
          */
-        p = rdata->base.regexp->parenCount;
-        argc = 1 + p + 2;
-        invokevp = js_AllocStack(cx, 2 + argc, &mark);
+        uintN p = rdata->base.regexp->parenCount;
+        uintN argc = 1 + p + 2;
+        void *mark;
+        jsval *invokevp = js_AllocStack(cx, 2 + argc, &mark);
         if (!invokevp)
-            return JS_FALSE;
+            return false;
+
+        MUST_FLOW_THROUGH("lambda_out");
+        bool ok = false;
+        bool freeMoreParens = false;
+
+        /*
+         * Save the regExpStatics from the current regexp, since they may be
+         * clobbered by a RegExp usage in the lambda function.  Note that all
+         * members of JSRegExpStatics are JSSubStrings, so not GC roots, save
+         * input, which is rooted otherwise via vp[1] in str_replace.
+         */
+        JSRegExpStatics save = cx->regExpStatics;
 
         /* Push lambda and its 'this' parameter. */
-        sp = invokevp;
+        jsval *sp = invokevp;
         *sp++ = OBJECT_TO_JSVAL(lambda);
         *sp++ = OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, lambda));
 
-#define PUSH_REGEXP_STATIC(sub)                                               \
-    JS_BEGIN_MACRO                                                            \
-        JSString *str = js_NewStringCopyN(cx,                                 \
-                                          cx->regExpStatics.sub.chars,        \
-                                          cx->regExpStatics.sub.length);      \
-        if (!str) {                                                           \
-            ok = JS_FALSE;                                                    \
-            goto lambda_out;                                                  \
-        }                                                                     \
-        *sp++ = STRING_TO_JSVAL(str);                                         \
-    JS_END_MACRO
-
         /* Push $&, $1, $2, ... */
-        PUSH_REGEXP_STATIC(lastMatch);
+        if (!PushRegExpSubstr(cx, cx->regExpStatics.lastMatch, sp))
+            goto lambda_out;
+
         i = 0;
         m = cx->regExpStatics.parenCount;
         n = JS_MIN(m, 9);
-        for (j = 0; i < n; i++, j++)
-            PUSH_REGEXP_STATIC(parens[j]);
-        for (j = 0; i < m; i++, j++)
-            PUSH_REGEXP_STATIC(moreParens[j]);
+        for (uintN j = 0; i < n; i++, j++) {
+            if (!PushRegExpSubstr(cx, cx->regExpStatics.parens[j], sp))
+                goto lambda_out;
+        }
+        for (uintN j = 0; i < m; i++, j++) {
+            if (!PushRegExpSubstr(cx, cx->regExpStatics.moreParens[j], sp))
+                goto lambda_out;
+        }
 
         /*
          * We need to clear moreParens in the top-of-stack cx->regExpStatics
-         * to it won't be possibly realloc'ed, leaving the bottom-of-stack
+         * so it won't be possibly realloc'ed, leaving the bottom-of-stack
          * moreParens pointing to freed memory.
          */
         cx->regExpStatics.moreParens = NULL;
-        freeMoreParens = JS_TRUE;
-
-#undef PUSH_REGEXP_STATIC
+        freeMoreParens = true;
 
         /* Make sure to push undefined for any unmatched parens. */
         for (; i < p; i++)
@@ -1634,21 +1634,22 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         *sp++ = INT_TO_JSVAL((jsint)cx->regExpStatics.leftContext.length);
         *sp++ = STRING_TO_JSVAL(rdata->base.str);
 
-        ok = js_Invoke(cx, argc, invokevp, 0);
-        if (ok) {
-            /*
-             * NB: we count on the newborn string root to hold any string
-             * created by this js_ValueToString that would otherwise be GC-
-             * able, until we use rdata->repstr in do_replace.
-             */
-            repstr = js_ValueToString(cx, *invokevp);
-            if (!repstr) {
-                ok = JS_FALSE;
-            } else {
-                rdata->repstr = repstr;
-                *sizep = repstr->length();
-            }
-        }
+        if (!js_Invoke(cx, argc, invokevp, 0))
+            goto lambda_out;
+
+        /*
+         * NB: we count on the newborn string root to hold any string
+         * created by this js_ValueToString that would otherwise be GC-
+         * able, until we use rdata->repstr in do_replace.
+         */
+        repstr = js_ValueToString(cx, *invokevp);
+        if (!repstr)
+            goto lambda_out;
+
+        rdata->repstr = repstr;
+        *sizep = repstr->length();
+
+        ok = true;
 
       lambda_out:
         js_FreeStack(cx, mark);
@@ -2481,7 +2482,7 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
 
     argv = vp + 2;
-    JS_ASSERT(argc < ARRAY_INIT_LIMIT);
+    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     if (argc == 1 &&
         (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
         str = js_GetUnitStringForChar(cx, code);
@@ -2608,8 +2609,10 @@ js_GetUnitStringForChar(JSContext *cx, jschar c)
         if (!str)
             return NULL;
         JS_LOCK_GC(rt);
-        if (!rt->unitStrings[c])
+        if (!rt->unitStrings[c]) {
+            str->flatSetAtomized();
             rt->unitStrings[c] = str;
+        }
 #ifdef DEBUG
         else
             str->initFlat(NULL, 0);  /* avoid later assertion (bug 479381) */
@@ -2724,12 +2727,12 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
 static const size_t sMinWasteSize = 16;
 
 JSString *
-js_NewStringFromCharBuffer(JSContext *cx, JSCharVector &cb)
+js_NewStringFromCharBuffer(JSContext *cx, JSCharBuffer &cb)
 {
     if (cb.empty())
         return ATOM_TO_STRING(cx->runtime->atomState.emptyAtom);
 
-    size_t length = cb.size();
+    size_t length = cb.length();
     if (!cb.append('\0'))
         return NULL;
 
@@ -2915,18 +2918,18 @@ js_ValueToString(JSContext *cx, jsval v)
 }
 
 static inline JSBool
-pushAtom(JSAtom *atom, JSCharVector &buf)
+pushAtom(JSAtom *atom, JSCharBuffer &cb)
 {
     JSString *str = ATOM_TO_STRING(atom);
     const jschar *chars;
     size_t length;
     str->getCharsAndLength(chars, length);
-    return buf.append(chars, length);
+    return cb.append(chars, length);
 }
 
 /* This function implements E-262-3 section 9.8, toString. */
 JS_FRIEND_API(JSBool)
-js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
+js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 {
     if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
         return JS_FALSE;
@@ -2936,16 +2939,16 @@ js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
         const jschar *chars;
         size_t length;
         str->getCharsAndLength(chars, length);
-        return buf.append(chars, length);
+        return cb.append(chars, length);
     }
     if (JSVAL_IS_NUMBER(v))
-        return js_NumberValueToCharBuffer(cx, v, buf);
+        return js_NumberValueToCharBuffer(cx, v, cb);
     if (JSVAL_IS_BOOLEAN(v))
-        return js_BooleanToCharBuffer(cx, JSVAL_TO_BOOLEAN(v), buf);
+        return js_BooleanToCharBuffer(cx, JSVAL_TO_BOOLEAN(v), cb);
     if (JSVAL_IS_NULL(v))
-        return pushAtom(cx->runtime->atomState.nullAtom, buf);
+        return pushAtom(cx->runtime->atomState.nullAtom, cb);
     JS_ASSERT(JSVAL_IS_VOID(v));
-    return pushAtom(cx->runtime->atomState.typeAtoms[JSTYPE_VOID], buf);
+    return pushAtom(cx->runtime->atomState.typeAtoms[JSTYPE_VOID], cb);
 }
 
 JS_FRIEND_API(JSString *)
@@ -4814,56 +4817,14 @@ const bool js_alnum[] = {
 
 #define URI_CHUNK 64U
 
-/* Concatenate jschars onto the buffer */
-static JSBool
-AddCharsToURI(JSContext *cx, JSCharBuffer *buf,
-              const jschar *chars, size_t length)
+static inline bool
+TransferBufferToString(JSContext *cx, JSCharBuffer &cb, jsval *rval)
 {
-    size_t total;
-    jschar *newchars;
-
-    total = buf->length + length + 1;
-    if (!buf->chars ||
-        JS_HOWMANY(total, URI_CHUNK) > JS_HOWMANY(buf->length + 1, URI_CHUNK)) {
-        total = JS_ROUNDUP(total, URI_CHUNK);
-        newchars = (jschar *) cx->realloc(buf->chars,
-                                          total * sizeof(jschar));
-        if (!newchars)
-            return JS_FALSE;
-        buf->chars = newchars;
-    }
-    js_strncpy(buf->chars + buf->length, chars, length);
-    buf->length += length;
-    buf->chars[buf->length] = 0;
-    return JS_TRUE;
-}
-
-static JSBool
-TransferBufferToString(JSContext *cx, JSCharBuffer *cb, jsval *rval)
-{
-    jschar *chars;
-    size_t n;
-    JSString *str;
-
-    /*
-     * Shrinking realloc can fail (e.g., with a BSD-style allocator), but we
-     * don't worry about that case here.
-     */
-    n = cb->length;
-    chars = (jschar *) cx->realloc(cb->chars, (n + 1) * sizeof(jschar));
-    if (!chars)
-        chars = cb->chars;
-    str = js_NewString(cx, chars, n);
+    JSString *str = js_NewStringFromCharBuffer(cx, cb);
     if (!str)
-        return JS_FALSE;
-
-    /* Successful allocation transfer ownership of cb->chars to the string. */
-#ifdef DEBUG
-    memset(cb, JS_FREE_PATTERN, sizeof *cb);
-#endif
-
+        return false;
     *rval = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    return true;;
 }
 
 /*
@@ -4878,7 +4839,7 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
        const jschar *unescapedSet2, jsval *rval)
 {
     size_t length, j, k, L;
-    JSCharBuffer cb;
+    JSCharBuffer cb(cx);
     const jschar *chars;
     jschar c, c2;
     uint32 v;
@@ -4892,9 +4853,6 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
         return JS_TRUE;
     }
 
-    cb.length = 0;
-    cb.chars = NULL;
-
     /* From this point the control must goto bad on failures. */
     hexBuf[0] = '%';
     hexBuf[3] = 0;
@@ -4902,13 +4860,13 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
         c = chars[k];
         if (js_strchr(unescapedSet, c) ||
             (unescapedSet2 && js_strchr(unescapedSet2, c))) {
-            if (!AddCharsToURI(cx, &cb, &c, 1))
-                goto bad;
+            if (!cb.append(c))
+                return JS_FALSE;
         } else {
             if ((c >= 0xDC00) && (c <= 0xDFFF)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_URI, NULL);
-                goto bad;
+                return JS_FALSE;
             }
             if (c < 0xD800 || c > 0xDBFF) {
                 v = c;
@@ -4917,13 +4875,13 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
                 if (k == length) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_URI, NULL);
-                    goto bad;
+                    return JS_FALSE;
                 }
                 c2 = chars[k];
                 if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_URI, NULL);
-                    goto bad;
+                    return JS_FALSE;
                 }
                 v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
             }
@@ -4931,27 +4889,20 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
             for (j = 0; j < L; j++) {
                 hexBuf[1] = HexDigits[utf8buf[j] >> 4];
                 hexBuf[2] = HexDigits[utf8buf[j] & 0xf];
-                if (!AddCharsToURI(cx, &cb, hexBuf, 3))
-                    goto bad;
+                if (!cb.append(hexBuf, 3))
+                    return JS_FALSE;
             }
         }
     }
 
-    if (!TransferBufferToString(cx, &cb, rval))
-        goto bad;
-
-    return JS_TRUE;
-
-  bad:
-    cx->free(cb.chars);
-    return JS_FALSE;
+    return TransferBufferToString(cx, cb, rval);
 }
 
 static JSBool
 Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
 {
     size_t length, start, k;
-    JSCharBuffer cb;
+    JSCharBuffer cb(cx);
     const jschar *chars;
     jschar c, H;
     uint32 v;
@@ -4964,9 +4915,6 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
         *rval = STRING_TO_JSVAL(cx->runtime->emptyString);
         return JS_TRUE;
     }
-
-    cb.length = 0;
-    cb.chars = NULL;
 
     /* From this point the control must goto bad on failures. */
     for (k = 0; k < length; k++) {
@@ -5009,36 +4957,31 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
                         goto report_bad_uri;
                     c = (jschar)((v & 0x3FF) + 0xDC00);
                     H = (jschar)((v >> 10) + 0xD800);
-                    if (!AddCharsToURI(cx, &cb, &H, 1))
-                        goto bad;
+                    if (!cb.append(H))
+                        return JS_FALSE;
                 } else {
                     c = (jschar)v;
                 }
             }
             if (js_strchr(reservedSet, c)) {
-                if (!AddCharsToURI(cx, &cb, &chars[start], (k - start + 1)))
-                    goto bad;
+                if (!cb.append(chars + start, k - start + 1))
+                    return JS_FALSE;
             } else {
-                if (!AddCharsToURI(cx, &cb, &c, 1))
-                    goto bad;
+                if (!cb.append(c))
+                    return JS_FALSE;
             }
         } else {
-            if (!AddCharsToURI(cx, &cb, &c, 1))
+            if (!cb.append(c))
                 return JS_FALSE;
         }
     }
 
-    if (!TransferBufferToString(cx, &cb, rval))
-        goto bad;
-
-    return JS_TRUE;
+    return TransferBufferToString(cx, cb, rval);
 
   report_bad_uri:
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_URI);
     /* FALL THROUGH */
 
-  bad:
-    cx->free(cb.chars);
     return JS_FALSE;
 }
 

@@ -1,6 +1,0 @@
-product=${product:-js}
-branch=${branch:-1.9.1}
-buildtype=${buildtype:-opt}
-jsshellsourcepath=${jsshellsourcepath:-/work/mozilla/builds/1.9.1-actionmonkey/mozilla/js/src}
-TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/actionmonkey}
-TEST_MOZILLA_HG_REV=${TEST_MOZILLA_HG_REV:-tip}
