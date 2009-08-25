@@ -337,8 +337,8 @@ XRE_InitParentProcess(int aArgc,
 
   base::AtExitManager exitManager;
   CommandLine::Init(aArgc, aArgv);
-  ScopedXREEmbed embed;
   MessageLoopForUI mainMessageLoop;
+  ScopedXREEmbed embed;
 
   {
     // Make chromium's IPC thread
@@ -422,15 +422,20 @@ TestShellMain(int argc, char** argv)
   NS_ENSURE_TRUE(env, 1);
 
   ContentProcessParent* childProcess = ContentProcessParent::GetSingleton();
-  if (!childProcess)
-    return 1;
+  NS_ENSURE_TRUE(childProcess, 1);
 
   TestShellParent* testShellParent = childProcess->CreateTestShell();
+  NS_ENSURE_TRUE(testShellParent, 1);
 
-  env->DefineIPCCommands(testShellParent);
+  testShellParent->SetXPCShell(env);
+
+  bool ok = env->DefineIPCCommands(testShellParent);
+  NS_ENSURE_TRUE(ok, 1);
 
   const char* filename = argc > 1 ? argv[1] : nsnull;
   env->Process(filename);
+
+  testShellParent->SetXPCShell(nsnull);
 
   return env->ExitCode();
 }

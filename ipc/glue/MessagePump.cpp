@@ -69,10 +69,23 @@ TimerCallback(nsITimer* aTimer,
 
 } /* anonymous namespace */
 
+class DoWorkRunnable : public nsRunnable
+{
+public:
+  NS_IMETHOD Run() {
+    MessageLoop* loop = MessageLoop::current();
+    NS_ASSERTION(loop, "Shouldn't be null!");
+    if (loop) {
+      loop->DoWork();
+    }
+    return NS_OK;
+  }
+};
+
 MessagePump::MessagePump()
 : mThread(nsnull)
 {
-  mDummyEvent = new nsRunnable();
+  mDummyEvent = new DoWorkRunnable();
   // I'm tired of adding OOM checks.
   NS_ADDREF(mDummyEvent);
 }

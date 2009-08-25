@@ -36,17 +36,24 @@
  * ***** END LICENSE BLOCK ***** */
 
 include protocol "ContentProcess.ipdl";
+include protocol "TestShellCommand.ipdl";
 
 namespace mozilla {
 namespace ipc {
 
-sync protocol TestShell
+protocol TestShell
 {
   manager ContentProcess;
 
+  manages TestShellCommand;
+
 child:
-  async SendCommand(nsString aCommand);
-  sync SendCommandWithResponse(nsString aCommand) returns (nsString aResponse);
+  ExecuteCommand(nsString aCommand);
+
+  TestShellCommand(nsString aCommand);
+
+parent:
+  ~TestShellCommand(nsString aResponse);
 };
 
 } // namespace ipc
