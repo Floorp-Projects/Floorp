@@ -126,7 +126,6 @@ struct JSStackFrame {
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
-    JSObject        *xmlNamespace;  /* null or default xml namespace in E4X */
     JSStackFrame    *displaySave;   /* previous value of display entry for
                                        script->staticLevel */
 

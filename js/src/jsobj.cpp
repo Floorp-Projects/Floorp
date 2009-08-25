@@ -6200,8 +6200,6 @@ js_DumpStackFrame(JSStackFrame *fp)
 
         if (fp->sharpDepth)
             fprintf(stderr, "  sharpDepth: %u\n", (unsigned) fp->sharpDepth);
-        if (fp->xmlNamespace)
-            fprintf(stderr, "  xmlNamespace: (JSObject *) %p\n", (void *) fp->xmlNamespace);
 
         if (fp->dormantNext)
             fprintf(stderr, "  dormantNext: (JSStackFrame *) %p\n", (void *) fp->dormantNext);
