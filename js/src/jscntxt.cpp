@@ -1799,6 +1799,7 @@ js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked)
     if (!gcLocked)
         JS_LOCK_GC(rt);
 #endif
+
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)))
         JS_TriggerOperationCallback(acx);
