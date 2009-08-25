@@ -91,8 +91,10 @@ CPPSRCS += \
 	nsClipboard.cpp      \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
-	nsTextStore.cpp \
 	$(NULL)
+ifdef NS_ENABLE_TSF
+CPPSRCS		+= nsTextStore.cpp
+endif
 endif
 
 

@@ -74,11 +74,6 @@
 #include "nsIAccessible.h"
 #endif
 
-// Text Services Framework support
-#if !defined(WINCE)
-#define NS_ENABLE_TSF
-#endif // !defined(WINCE)
-
 /**
  * Forward class definitions
  */
