@@ -5683,7 +5683,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
          */
         if (!cx->fp->script) {
             JSStackFrame *fp = cx->fp;
-            JS_ASSERT(FUN_SLOW_NATIVE(GET_FUNCTION_PRIVATE(cx, fp->callee())));
+            JS_ASSERT(FUN_SLOW_NATIVE(fp->fun));
             JS_ASSERT(fp->regs == NULL);
             JS_ASSERT(fp->down->regs != &((JSInlineFrame *) fp)->callerRegs);
             cx->fp = fp->down;
