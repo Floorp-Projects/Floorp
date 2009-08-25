@@ -282,7 +282,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
         global = parent;
 
     JS_ASSERT(fp->argv);
-    argsobj = NewArguments(cx, global, fp->argc, fp->argv[-2]);
+    argsobj = NewArguments(cx, global, fp->argc, JSVAL_TO_OBJECT(fp->argv[-2]));
     if (!argsobj)
         return argsobj;
 
