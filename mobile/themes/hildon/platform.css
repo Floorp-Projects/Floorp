@@ -38,7 +38,7 @@
 /* global skin ------------------------------------------------------------- */
 @import url(chrome://global/skin/);
 
-/* hildon stuff ------------------------------------------------------------ */
+/* general stuff ------------------------------------------------------------ */
 :root {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-size: 16.75pt !important;
@@ -48,6 +48,13 @@ menu,
 menuitem {
   padding: 0px !important;
   margin: 0px !important;
+}
+
+description,
+label {
+  /* force mac to use the same margins as windows and linux */
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
 }
 
 /* panels ------------------------------------------------------------------ */
