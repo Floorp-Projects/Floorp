@@ -4696,7 +4696,6 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newifp->frame.sharpArray = NULL;
     newifp->frame.flags = constructing ? JSFRAME_CONSTRUCTING : 0;
     newifp->frame.dormantNext = NULL;
-    newifp->frame.xmlNamespace = NULL;
     newifp->frame.blockChain = NULL;
     newifp->mark = newmark;
     newifp->frame.thisp = NULL; // will be updated in FlushNativeStackFrame
@@ -4782,7 +4781,6 @@ SynthesizeSlowNativeFrame(JSContext *cx, VMSideExit *exit)
     fp->sharpArray = NULL;
     fp->flags = exit->constructing() ? JSFRAME_CONSTRUCTING : 0;
     fp->dormantNext = NULL;
-    fp->xmlNamespace = NULL;
     fp->displaySave = NULL;
 
     ifp->mark = mark;

@@ -7557,10 +7557,10 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
 /*
  * Note the asymmetry between js_GetDefaultXMLNamespace and js_SetDefaultXML-
  * Namespace.  Get searches fp->scopeChain for JS_DEFAULT_XML_NAMESPACE_ID,
- * while Set sets JS_DEFAULT_XML_NAMESPACE_ID in fp->varobj (unless fp is a
- * lightweight function activation).  There's no requirement that fp->varobj
- * lie directly on fp->scopeChain, although it should be reachable using the
- * prototype chain from a scope object (cf. JSOPTION_VAROBJFIX in jsapi.h).
+ * while Set sets JS_DEFAULT_XML_NAMESPACE_ID in fp->varobj. There's no
+ * requirement that fp->varobj lie directly on fp->scopeChain, although it
+ * should be reachable using the prototype chain from a scope object (cf.
+ * JSOPTION_VAROBJFIX in jsapi.h).
  *
  * If Get can't find JS_DEFAULT_XML_NAMESPACE_ID along the scope chain, it
  * creates a default namespace via 'new Namespace()'.  In contrast, Set uses
@@ -7577,11 +7577,6 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     jsval v;
 
     fp = js_GetTopStackFrame(cx);
-    ns = fp->xmlNamespace;
-    if (ns) {
-        *vp = OBJECT_TO_JSVAL(ns);
-        return JS_TRUE;
-    }
 
     obj = NULL;
     for (tmp = fp->scopeChain; tmp; tmp = OBJ_GET_PARENT(cx, tmp)) {
@@ -7591,7 +7586,6 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         if (!tmp->getProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, &v))
             return JS_FALSE;
         if (!JSVAL_IS_PRIMITIVE(v)) {
-            fp->xmlNamespace = JSVAL_TO_OBJECT(v);
             *vp = v;
             return JS_TRUE;
         }
@@ -7602,12 +7596,10 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
     if (!ns)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
-    if (obj &&
-        !obj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v, JS_PropertyStub, JS_PropertyStub,
+    if (!obj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v, JS_PropertyStub, JS_PropertyStub,
                              JSPROP_PERMANENT, NULL)) {
         return JS_FALSE;
     }
-    fp->xmlNamespace = ns;
     *vp = v;
     return JS_TRUE;
 }
@@ -7628,15 +7620,10 @@ js_SetDefaultXMLNamespace(JSContext *cx, jsval v)
 
     fp = js_GetTopStackFrame(cx);
     varobj = fp->varobj;
-    if (varobj) {
-        if (!varobj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v,
-                                    JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, NULL)) {
-            return JS_FALSE;
-        }
-    } else {
-        JS_ASSERT(fp->fun && !JSFUN_HEAVYWEIGHT_TEST(fp->fun->flags));
+    if (!varobj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v,
+                                JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, NULL)) {
+        return JS_FALSE;
     }
-    fp->xmlNamespace = JSVAL_TO_OBJECT(v);
     return JS_TRUE;
 }
 
