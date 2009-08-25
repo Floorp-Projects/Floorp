@@ -10122,7 +10122,8 @@ GetPropertyById(JSContext* cx, JSObject* obj, jsid id, jsval* vp)
     }
     return cx->interpState->builtinStatus == 0;
 }
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyById, CONTEXT, OBJECT, JSVAL, JSVALPTR, 0, 0)
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyById,
+                     CONTEXT, OBJECT, JSVAL, JSVALPTR,                  0, 0)
 
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::getPropertyById(LIns* obj_ins, jsval* outp)
@@ -10146,6 +10147,53 @@ TraceRecorder::getPropertyById(LIns* obj_ins, jsval* outp)
     LIns* vp_ins = addName(lir->insAlloc(sizeof(jsval)), "vp");
     LIns* args[] = {vp_ins, INS_CONSTWORD(id), obj_ins, cx_ins};
     LIns* ok_ins = lir->insCall(&GetPropertyById_ci, args);
+    finishGetProp(obj_ins, vp_ins, ok_ins, outp);
+    leaveDeepBailCall();
+    return JSRS_CONTINUE;
+}
+
+/* Manually inlined, specialized copy of js_NativeGet. */
+static JSBool FASTCALL
+GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, jsval* vp)
+{
+    js_LeaveTraceIfGlobalObject(cx, obj);
+
+#ifdef DEBUG
+    JSProperty* prop;
+    JSObject* pobj;
+    JS_ASSERT(obj->lookupProperty(cx, sprop->id, &pobj, &prop));
+    JS_ASSERT(prop == (JSProperty*) sprop);
+    obj->dropProperty(cx, prop);
+#endif
+
+    // js_GetSprop contains a special case for With objects. We can elide it
+    // here because With objects are, we claim, never on the operand stack.
+    JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_WithClass);
+
+    *vp = JSVAL_VOID;
+    if (!sprop->getter(cx, obj, SPROP_USERID(sprop), vp)) {
+        js_SetBuiltinError(cx);
+        return JS_FALSE;
+    }
+    return cx->interpState->builtinStatus == 0;
+}
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, GetPropertyWithNativeGetter,
+                     CONTEXT, OBJECT, SCOPEPROP, JSVALPTR,              0, 0)
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, JSScopeProperty* sprop, jsval* outp)
+{
+    JS_ASSERT(!(sprop->attrs & JSPROP_GETTER));
+    JS_ASSERT(sprop->slot == SPROP_INVALID_SLOT);
+    JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
+
+    // Call GetPropertyWithNativeGetter. See note in getPropertyByName about vp.
+    // FIXME - We should call the getter directly. Using a builtin function for
+    // now because it buys some extra asserts. See bug 508310.
+    enterDeepBailCall();
+    LIns* vp_ins = addName(lir->insAlloc(sizeof(jsval)), "vp");
+    LIns* args[] = {vp_ins, INS_CONSTPTR(sprop), obj_ins, cx_ins};
+    LIns* ok_ins = lir->insCall(&GetPropertyWithNativeGetter_ci, args);
     finishGetProp(obj_ins, vp_ins, ok_ins, outp);
     leaveDeepBailCall();
     return JSRS_CONTINUE;
@@ -11087,6 +11135,8 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
                 ABORT_TRACE("can't trace non-stub getter for this opcode");
             if (sprop->attrs & JSPROP_GETTER)
                 ABORT_TRACE("script getter");
+            if (sprop->slot == SPROP_INVALID_SLOT)
+                return getPropertyWithNativeGetter(obj_ins, sprop, outp);
             return getPropertyById(obj_ins, outp);
         }
         if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2)))
@@ -11098,9 +11148,10 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
         slot = PCVAL_TO_SLOT(pcval);
     }
 
+    /* We have a slot. */
     if (obj2 != obj) {
         if (setflags)
-            ABORT_TRACE("JOF_SET opcode hit prototype chain");
+            ABORT_TRACE("JOF_INCDEC|JOF_FOR opcode hit prototype chain");
 
         /*
          * We're getting a proto-property. Walk up the prototype chain emitting

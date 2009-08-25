@@ -877,6 +877,9 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK JSRecordingStatus getPropertyByIndex(nanojit::LIns* obj_ins,
                                                            nanojit::LIns* index_ins, jsval* outp);
     JS_REQUIRES_STACK JSRecordingStatus getPropertyById(nanojit::LIns* obj_ins, jsval* outp);
+    JS_REQUIRES_STACK JSRecordingStatus getPropertyWithNativeGetter(nanojit::LIns* obj_ins,
+                                                                    JSScopeProperty* sprop,
+                                                                    jsval* outp);
 
     JS_REQUIRES_STACK JSRecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                   JSScopeProperty* sprop,
