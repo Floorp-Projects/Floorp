@@ -6,9 +6,7 @@
 
 #include "mozilla/ipc/TestShellChild.h"
 
-#include "mozilla/XPCOM.h"
-#include "nsXPFEComponentsCID.h"
-#include "nsIAppStartup.h"
+#include "nsXULAppAPI.h"
 
 using namespace mozilla::ipc;
 
@@ -78,10 +76,7 @@ ContentProcessChild::Quit()
     mIFrames.Clear();
     mTestShells.Clear();
 
-    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
-    if (appStartup) {
-        appStartup->Quit(nsIAppStartup::eForceQuit);
-    }
+    XRE_ShutdownChildProcess();
 }
 
 } // namespace dom

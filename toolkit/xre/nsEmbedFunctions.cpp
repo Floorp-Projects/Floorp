@@ -42,6 +42,7 @@
 #include "prenv.h"
 
 #include "nsIAppShell.h"
+#include "nsIAppStartup.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
@@ -56,6 +57,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsWidgetsCID.h"
+#include "nsXPFEComponentsCID.h"
 #include "nsXREDirProvider.h"
 
 #ifdef MOZ_IPC
@@ -496,4 +498,14 @@ XRE_RunIPCTestHarness(int aArgc, char* aArgv[])
     NS_ENSURE_SUCCESS(rv, 1);
     return 0;
 }
+
+void
+XRE_ShutdownChildProcess()
+{
+    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+    if (appStartup) {
+        appStartup->Quit(nsIAppStartup::eForceQuit);
+    }
+}
+
 #endif
