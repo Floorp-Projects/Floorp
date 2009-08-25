@@ -865,6 +865,12 @@ BookmarksTracker.prototype = {
     if (this._ignore(itemId))
       return;
 
+    // Make sure to remove items that now have the exclude annotation
+    if (property == "places/excludeFromBackup") {
+      this.removeChangedID(GUIDForId(itemId));
+      return;
+    }
+
     // ignore annotations except for the ones that we sync
     let annos = ["bookmarkProperties/description",
       "bookmarkProperties/loadInSidebar", "bookmarks/staticTitle",
