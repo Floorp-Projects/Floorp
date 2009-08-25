@@ -94,7 +94,6 @@ public:
     return nsObjectFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
 
-  virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
   virtual PRBool NeedsView() { return PR_TRUE; }
   virtual nsresult CreateWidgetForView(nsIView* aView);
 
