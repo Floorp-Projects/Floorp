@@ -137,34 +137,22 @@ namespace nanojit
     Register Assembler::registerAlloc(RegisterMask allow)
     {
         RegAlloc &regs = _allocator;
-//      RegisterMask prefer = livePastCall(_ins) ? saved : scratch;
-        RegisterMask prefer = SavedRegs & allow;
-        RegisterMask free = regs.free & allow;
+        RegisterMask allowedAndFree = allow & regs.free;
 
-        RegisterMask set = prefer;
-        if (set == 0) set = allow;
-
-        if (free)
+        if (allowedAndFree)
         {
-            // at least one is free
-            set &= free;
-
-            // ok we have at least 1 free register so let's try to pick
-            // the best one given the profile of the instruction
-            if (!set)
-            {
-                // desired register class is not free so pick first of any class
-                set = free;
-            }
-            NanoAssert((set & allow) != 0);
+            // At least one usable register is free -- no need to steal.  
+            // Pick a preferred one if possible.
+            RegisterMask preferredAndFree = allowedAndFree & SavedRegs;
+            RegisterMask set = ( preferredAndFree ? preferredAndFree : allowedAndFree );
             Register r = nRegisterAllocFromSet(set);
             regs.used |= rmask(r);
             return r;
         }
-        counter_increment(steals);
 
         // nothing free, steal one
         // LSRA says pick the one with the furthest use
+        counter_increment(steals);
         LIns* vic = findVictim(regs, allow);
         NanoAssert(vic != NULL);
 
@@ -313,22 +301,16 @@ namespace nanojit
         }
         else
         {
-            Register rb = UnknownReg;
             resvb = getresv(ib);
-            if (resvb && (rb = resvb->reg) != UnknownReg) {
-                if (allow & rmask(rb)) {
-                    // ib already assigned to an allowable reg, keep that one
-                    allow &= ~rmask(rb);
-                } else {
-                    // ib assigned to unusable reg, pick a different one below
-                    rb = UnknownReg;
-                }
+            bool rbDone = (resvb && resvb->reg != UnknownReg && (allow & rmask(resvb->reg)));
+            if (rbDone) {
+                // ib already assigned to an allowable reg, keep that one
+                allow &= ~rmask(resvb->reg);
             }
             Register ra = findRegFor(ia, allow);
             resva = getresv(ia);
             NanoAssert(error() || (resva != 0 && ra != UnknownReg));
-            if (rb == UnknownReg)
-            {
+            if (!rbDone) {
                 allow &= ~rmask(ra);
                 findRegFor(ib, allow);
                 resvb = getresv(ib);
