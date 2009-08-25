@@ -92,11 +92,7 @@ void	free(void *ptr);
 
 int	posix_memalign(void **memptr, size_t alignment, size_t size);
 void	*memalign(size_t alignment, size_t size);
-#ifdef __linux
-size_t	malloc_usable_size(void *ptr);
-#else
 size_t	malloc_usable_size(const void *ptr);
-#endif
 void	jemalloc_stats(jemalloc_stats_t *stats);
 
 /* The x*() functions never return NULL. */
