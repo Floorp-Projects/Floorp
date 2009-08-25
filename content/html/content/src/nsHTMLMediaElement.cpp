@@ -436,7 +436,7 @@ static PRBool HasSourceChildren(nsIContent *aElement)
     NS_ASSERTION(child, "GetChildCount lied!");
     if (child &&
         child->Tag() == nsGkAtoms::source &&
-        child->IsHTML())
+        child->IsNodeOfType(nsINode::eHTML))
     {
       return PR_TRUE;
     }
@@ -1626,7 +1626,7 @@ void nsHTMLMediaElement::Thaw()
 PRBool
 nsHTMLMediaElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT | eMEDIA));
+  return !(aFlags & ~(eCONTENT | eELEMENT | eHTML | eMEDIA));
 }
 
 void nsHTMLMediaElement::NotifyAddedSource()
@@ -1679,7 +1679,7 @@ already_AddRefed<nsIURI> nsHTMLMediaElement::GetNextSource()
     // If child is a <source> element, it may be the next candidate.
     if (child &&
         child->Tag() == nsGkAtoms::source &&
-        child->IsHTML())
+        child->IsNodeOfType(nsINode::eHTML))
     {
       nsCOMPtr<nsIURI> uri;
       nsAutoString src,type;

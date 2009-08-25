@@ -789,7 +789,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 
 PRBool nsFind::IsBlockNode(nsIContent* aContent)
 {
-  if (!aContent->IsHTML()) {
+  if (!aContent->IsNodeOfType(nsINode::eHTML)) {
     return PR_FALSE;
   }
 
@@ -854,7 +854,7 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
   // We may not need to skip comment nodes,
   // now that IsTextNode distinguishes them from real text nodes.
   return (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
-          (aContent->IsHTML() &&
+          (aContent->IsNodeOfType(nsINode::eHTML) &&
            (atom == sScriptAtom ||
             atom == sNoframesAtom ||
             atom == sSelectAtom)));
@@ -871,7 +871,7 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
     atom = content->Tag();
 
     if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
-        (content->IsHTML() &&
+        (content->IsNodeOfType(nsINode::eHTML) &&
          (atom == sScriptAtom ||
           atom == sNoframesAtom ||
           atom == sSelectAtom)))

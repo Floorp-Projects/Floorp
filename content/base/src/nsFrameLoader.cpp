@@ -400,7 +400,7 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
   nsAutoString value;
   PRBool isContent = PR_FALSE;
 
-  if (aOwningContent->IsXUL()) {
+  if (aOwningContent->IsNodeOfType(nsINode::eXUL)) {
       aOwningContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
   }
 

@@ -141,7 +141,7 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
 // we don't want to include the bogus BRs at the end.
 static PRBool IsContentBR(nsIContent* aContent)
 {
-  return aContent->IsHTML() &&
+  return aContent->IsNodeOfType(nsINode::eHTML) &&
          aContent->Tag() == nsGkAtoms::br &&
          !aContent->AttrValueIs(kNameSpaceID_None,
                                 nsGkAtoms::type,
@@ -857,12 +857,12 @@ static void AdjustRangeForSelection(nsIContent* aRoot,
     node = node->GetParent();
     offset = node->IndexOf(*aNode) + (offset ? 1 : 0);
   }
-  
-  nsIContent* brContent = node->GetChildAt(offset - 1);
-  while (brContent && brContent->IsHTML()) {
+  nsINode* brNode = node->GetChildAt(offset - 1);
+  while (brNode && brNode->IsNodeOfType(nsINode::eHTML)) {
+    nsIContent* brContent = static_cast<nsIContent*>(brNode);
     if (brContent->Tag() != nsGkAtoms::br || IsContentBR(brContent))
       break;
-    brContent = node->GetChildAt(--offset - 1);
+    brNode = node->GetChildAt(--offset - 1);
   }
   *aNode = node;
   *aOffset = PR_MAX(offset, 0);

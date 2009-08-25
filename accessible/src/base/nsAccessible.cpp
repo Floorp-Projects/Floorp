@@ -298,9 +298,9 @@ nsAccessible::GetName(nsAString& aName)
 
   nsIAtom *tooltipAttr = nsnull;
 
-  if (content->IsHTML())
+  if (content->IsNodeOfType(nsINode::eHTML))
     tooltipAttr = nsAccessibilityAtoms::title;
-  else if (content->IsXUL())
+  else if (content->IsNodeOfType(nsINode::eXUL))
     tooltipAttr = nsAccessibilityAtoms::tooltiptext;
   else
     return NS_OK;
@@ -342,7 +342,7 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (description.IsEmpty()) {
-      PRBool isXUL = content->IsXUL();
+      PRBool isXUL = content->IsNodeOfType(nsINode::eXUL);
       if (isXUL) {
         // Try XUL <description control="[id]">description text</description>
         nsIContent *descriptionContent =
@@ -1009,7 +1009,7 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   // if someone sets it on another attribute, 
   // it seems reasonable to consider it unavailable
   PRBool isDisabled;
-  if (content->IsHTML()) {
+  if (content->IsNodeOfType(nsINode::eHTML)) {
     // In HTML, just the presence of the disabled attribute means it is disabled,
     // therefore disabled="false" indicates disabled!
     isDisabled = content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled);
@@ -2410,7 +2410,7 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
   case nsIAccessibleRelation::RELATION_LABEL_FOR:
     {
       if (content->Tag() == nsAccessibilityAtoms::label) {
-        nsIAtom *IDAttr = content->IsHTML() ?
+        nsIAtom *IDAttr = content->IsNodeOfType(nsINode::eHTML) ?
           nsAccessibilityAtoms::_for : nsAccessibilityAtoms::control;
         rv = nsRelUtils::
           AddTargetFromIDRefAttr(aRelationType, aRelation, content, IDAttr);
@@ -2467,7 +2467,7 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
         return NS_OK; // XXX bug 381599, avoid performance problems
 
       if (content->Tag() == nsAccessibilityAtoms::description &&
-          content->IsXUL()) {
+          content->IsNodeOfType(nsINode::eXUL)) {
         // This affectively adds an optional control attribute to xul:description,
         // which only affects accessibility, by allowing the description to be
         // tied to a control.
@@ -2551,7 +2551,7 @@ nsAccessible::GetRelationByType(PRUint32 aRelationType,
 
   case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
     {
-      if (content->IsHTML()) {
+      if (content->IsNodeOfType(nsINode::eHTML)) {
         // HTML form controls implements nsIFormControl interface.
         nsCOMPtr<nsIFormControl> control(do_QueryInterface(content));
         if (control) {
@@ -3098,10 +3098,10 @@ nsAccessible::GetNameInternal(nsAString& aName)
   if (!content)
     return NS_OK;
 
-  if (content->IsHTML())
+  if (content->IsNodeOfType(nsINode::eHTML))
     return GetHTMLName(aName);
 
-  if (content->IsXUL())
+  if (content->IsNodeOfType(nsINode::eXUL))
     return GetXULName(aName);
 
   return NS_OK;

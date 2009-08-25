@@ -1853,7 +1853,7 @@ nsPlainTextSerializer::IsCurrentNodeConverted(const nsIParserNode* aNode)
 PRInt32
 nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
 {
-  if (!aContent->IsHTML()) {
+  if (!aContent->IsNodeOfType(nsINode::eHTML)) {
     return eHTMLTag_unknown;
   }
 

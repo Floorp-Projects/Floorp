@@ -6552,7 +6552,7 @@ PRBool
 nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 {
   nsIContent* content = aFrame->GetContent();
-  if (!content || !content->IsHTML())
+  if (!content || !content->IsNodeOfType(nsINode::eHTML))
     return PR_FALSE;
 
   nsIAtom *localName = content->NodeInfo()->NameAtom();

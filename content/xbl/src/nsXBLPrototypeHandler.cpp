@@ -481,7 +481,8 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsPIDOMEventTarget* aTarget, nsIDOMEve
     // element is focused and has a parent.
     if (focusedContent && focusedContent->GetParent()) {
       while (content) {
-        if (content->Tag() == nsGkAtoms::a && content->IsHTML()) {
+        if (content->Tag() == nsGkAtoms::a &&
+            content->IsNodeOfType(nsINode::eHTML)) {
           isLink = PR_TRUE;
           break;
         }

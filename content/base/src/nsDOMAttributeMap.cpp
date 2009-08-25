@@ -354,7 +354,7 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
     iAttribute->SetMap(this);
 
     if (!aWithNS && ni->NamespaceID() == kNameSpaceID_None &&
-        mContent->IsHTML()) {
+        mContent->IsNodeOfType(nsINode::eHTML)) {
       // Set via setAttribute(), which may do normalization on the
       // attribute name for HTML
       nsCOMPtr<nsIDOMElement> ourElement(do_QueryInterface(mContent));

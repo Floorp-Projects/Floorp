@@ -158,7 +158,8 @@ nsIContent*
 nsHTMLOptGroupElement::GetSelect()
 {
   nsIContent* parent = this;
-  while ((parent = parent->GetParent()) && parent->IsHTML()) {
+  while ((parent = parent->GetParent()) &&
+         parent->IsNodeOfType(eHTML)) {
     if (parent->Tag() == nsGkAtoms::select) {
       return parent;
     }

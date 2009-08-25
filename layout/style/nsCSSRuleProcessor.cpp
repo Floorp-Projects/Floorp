@@ -956,7 +956,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     // NOTE: optimization: cannot be an XLink if no attributes (since it needs an 
     if(!mIsLink &&
        mHasAttributes && 
-       !(mIsHTMLContent || aContent->IsXUL()) && 
+       !(mIsHTMLContent || aContent->IsNodeOfType(nsINode::eXUL)) && 
        nsStyleUtil::IsLink(aContent, linkHandler, &mLinkState)) {
       mIsLink = PR_TRUE;
     } 
@@ -1012,7 +1012,7 @@ const nsString* RuleProcessorData::GetLang()
         // XHTML1 section C.7).
         PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
                                           *mLanguage);
-        if (!hasAttr && content->IsHTML()) {
+        if (!hasAttr && content->IsNodeOfType(nsINode::eHTML)) {
           hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
                                      *mLanguage);
         }
@@ -1434,7 +1434,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       if (element) {
         do {
           child = element->GetChildAt(++index);
-          if (child && child->IsHTML() &&
+          if (child && child->IsNodeOfType(nsINode::eHTML) &&
               child->Tag() == nsGkAtoms::param &&
               child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                  NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {

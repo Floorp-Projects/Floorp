@@ -1788,7 +1788,7 @@ nsObjectLoadingContent::ShouldShowDefaultPlugin(nsIContent* aContent,
 nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
                                               const nsCString& aContentType)
 {
-  if (!aContent->IsHTML()) {
+  if (!aContent->IsNodeOfType(nsINode::eHTML)) {
     return ePluginOtherState;
   }
 
@@ -1805,7 +1805,7 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
     nsIContent* child = aContent->GetChildAt(i);
     NS_ASSERTION(child, "GetChildCount lied!");
 
-    if (child->IsHTML() &&
+    if (child->IsNodeOfType(nsINode::eHTML) &&
         child->Tag() == nsGkAtoms::param) {
       if (child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                              NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {

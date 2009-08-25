@@ -442,7 +442,7 @@ nsHTMLOptionElement::GetSelect()
 {
   nsIContent* parent = this;
   while ((parent = parent->GetParent()) &&
-         parent->IsHTML()) {
+         parent->IsNodeOfType(eHTML)) {
     if (parent->Tag() == nsGkAtoms::select) {
       return parent;
     }

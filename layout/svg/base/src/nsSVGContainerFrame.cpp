@@ -269,7 +269,7 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspac
       // nsSVGGlyphFrame's mContent is a nsTextNode!
       if (kid->GetType() != nsGkAtoms::svgGlyphFrame) {
         nsIContent *content = kid->GetContent();
-        if (content->IsSVG()) {
+        if (content->IsNodeOfType(nsINode::eSVG)) {
           transform = static_cast<nsSVGElement*>(content)->
                         PrependLocalTransformTo(aToBBoxUserspace);
         }
