@@ -395,6 +395,9 @@ SyncEngine.prototype = {
   //    case when syncing for the first time two machines that already have the
   //    same bookmarks.  In this case we change the IDs to match.
   _reconcile: function SyncEngine__reconcile(item) {
+    if (this._log.level <= Log4Moz.Level.Trace)
+      this._log.trace("Incoming: " + item);
+
     // Step 1: Check for conflicts
     //         If same as local record, do not upload
     this._log.trace("Reconcile step 1");
@@ -435,8 +438,6 @@ SyncEngine.prototype = {
 
   // Apply incoming records
   _applyIncoming: function SyncEngine__applyIncoming(item) {
-    if (this._log.level <= Log4Moz.Level.Trace)
-      this._log.trace("Incoming: " + item);
     try {
       this._tracker.ignoreAll = true;
       this._store.applyIncoming(item);
