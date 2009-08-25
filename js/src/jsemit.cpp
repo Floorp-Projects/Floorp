@@ -2446,9 +2446,7 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 #if JS_HAS_XML_SUPPORT
               case TOK_DBLDOT:
 #endif
-#if JS_HAS_LVALUE_RETURN
               case TOK_LP:
-#endif
               case TOK_LB:
                 /* All these delete addressing modes have effects too. */
                 *answer = JS_TRUE;
@@ -3675,7 +3673,6 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             break;
 
           default:
-#if JS_HAS_LVALUE_RETURN || JS_HAS_XML_SUPPORT
           {
             ptrdiff_t top;
 
@@ -3688,7 +3685,7 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
           }
-#endif
+
           case JSOP_ENUMELEM:
             JS_ASSERT(0);
         }
@@ -4722,7 +4719,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         return JS_FALSE;
                 } else
 #endif
-#if JS_HAS_LVALUE_RETURN
                 if (pn3->pn_type == TOK_LP) {
                     JS_ASSERT(pn3->pn_op == JSOP_SETCALL);
                     if (!js_EmitTree(cx, cg, pn3))
@@ -4730,7 +4726,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
                 } else
-#endif
 #if JS_HAS_XML_SUPPORT
                 if (pn3->pn_type == TOK_UNARYOP) {
                     JS_ASSERT(pn3->pn_op == JSOP_BINDXMLNAME);
@@ -5632,12 +5627,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case TOK_RC:
             break;
 #endif
-#if JS_HAS_LVALUE_RETURN
           case TOK_LP:
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
             break;
-#endif
 #if JS_HAS_XML_SUPPORT
           case TOK_UNARYOP:
             JS_ASSERT(pn2->pn_op == JSOP_SETXMLNAME);
@@ -5714,9 +5707,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
                 break;
               case TOK_LB:
-#if JS_HAS_LVALUE_RETURN
               case TOK_LP:
-#endif
 #if JS_HAS_XML_SUPPORT
               case TOK_UNARYOP:
 #endif
@@ -5768,9 +5759,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             EMIT_INDEX_OP(PN_OP(pn2), atomIndex);
             break;
           case TOK_LB:
-#if JS_HAS_LVALUE_RETURN
           case TOK_LP:
-#endif
             if (js_Emit1(cx, cg, JSOP_SETELEM) < 0)
                 return JS_FALSE;
             break;
@@ -6032,7 +6021,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!EmitElemOp(cx, pn2, op, cg))
                 return JS_FALSE;
             break;
-#if JS_HAS_LVALUE_RETURN
           case TOK_LP:
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
@@ -6043,7 +6031,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (js_Emit1(cx, cg, op) < 0)
                 return JS_FALSE;
             break;
-#endif
 #if JS_HAS_XML_SUPPORT
           case TOK_UNARYOP:
             JS_ASSERT(pn2->pn_op == JSOP_SETXMLNAME);
@@ -6087,17 +6074,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
 #endif
-#if JS_HAS_LVALUE_RETURN
-          case TOK_LP:
-            top = CG_OFFSET(cg);
-            if (!js_EmitTree(cx, cg, pn2))
-                return JS_FALSE;
-            if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
-                return JS_FALSE;
-            if (js_Emit1(cx, cg, JSOP_DELELEM) < 0)
-                return JS_FALSE;
-            break;
-#endif
           case TOK_LB:
             if (!EmitElemOp(cx, pn2, JSOP_DELELEM, cg))
                 return JS_FALSE;
@@ -6113,6 +6089,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!useful) {
                 off = noteIndex = -1;
             } else {
+                if (pn2->pn_op == JSOP_SETCALL)
+                    pn2->pn_op = JSOP_CALL;
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
                 off = CG_OFFSET(cg);

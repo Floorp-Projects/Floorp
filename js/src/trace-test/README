@@ -1,0 +1,41 @@
+JS Trace Test Suite
+
+* PURPOSE
+
+This is a test suite for testing TraceMonkey. All tests are run in the JS shell
+with tracing enabled (-j).
+
+* REQUIREMENTS
+
+Python 3.1: http://www.python.org
+
+* RUNNING THE TESTS
+
+Basic usage:
+
+    python3.1 trace-test.py <path-to-js-shell>
+
+The progress bar shows [#tests passed, #tests failed, #tests run] at the left.
+If all tests pass, the output is 'PASSED ALL'. The test suite can be interrupted
+at any time with Ctrl+C and partial results will be printed.
+
+To run only the basic tests, not including the slow tests:
+
+    python3.1 trace-test.py <path-to-js-shell> basic
+
+For more options:
+
+    python3.1 trace-test.py -h
+
+* CREATING NEW TESTS
+
+Simply create a JS file under the 'tests/' directory. Most tests should go in
+'tests/basic/'. Tests that run a long time (many seconds) should go in
+'tests/slow/' so they can be easily excluded from test runs.
+
+All tests are run with 'lib/prolog.js' included first on the command line. The
+command line also creates a global variable 'libdir' that is set to the path
+of the 'lib' directory. To include a file 'foo.js' from the lib directory in a 
+test case:
+
+    load(libdir + 'foo.js')

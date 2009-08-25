@@ -1,9 +1,0 @@
-product=firefox
-branch=1.8.1
-url=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla1.8/firefox-2.0.0.15pre.en-US.win32.zip
-profilename=firefox-1.8.1-profile
-profiledirectory=/tmp/firefox-1.8.1-profile
-executablepath=/tmp/firefox-1.8.1
-userpreferences=${TEST_DIR}/prefs/test-user.js
-extensiondir=${TEST_DIR}/xpi
-buildtype=nightly

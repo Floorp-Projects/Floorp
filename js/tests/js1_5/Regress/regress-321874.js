@@ -239,38 +239,3 @@ catch(ex)
   actual = 'error';
 } 
 reportCompare(expect, actual, summary + section);
-
-if (typeof it != 'undefined')
-{
-  printStatus('Shell tests: it.item() can return a reference type');
-
-  expect = 'foo';
-  section = ': for(it.item(0) in b);';
-  printStatus(section);
-  try
-  {
-    eval('for (it.item(0) in b);');
-    actual = it.item(0);
-  }
-  catch(ex)
-  {
-    printStatus(ex+'');
-    actual = 'error';
-  } 
-  reportCompare(expect, actual, summary + section);
-
-  expect = 'foo';
-  section = ': function foo(){for(it.item(0) in b);};foo();';
-  printStatus(section);
-  try
-  {
-    eval('function foo(){ for (it.item(0) in b);};foo();');
-    actual = it.item(0);
-  }
-  catch(ex)
-  {
-    printStatus(ex+'');
-    actual = 'error';
-  } 
-  reportCompare(expect, actual, summary + section);
-}

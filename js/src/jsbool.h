@@ -74,7 +74,7 @@ extern JSString *
 js_BooleanToString(JSContext *cx, JSBool b);
 
 extern JSBool
-js_BooleanToCharBuffer(JSContext *cx, JSBool b, JSCharVector &buf);
+js_BooleanToCharBuffer(JSContext *cx, JSBool b, JSCharBuffer &cb);
 
 extern JSBool
 js_ValueToBoolean(jsval v);

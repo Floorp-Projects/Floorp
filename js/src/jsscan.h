@@ -48,6 +48,7 @@
 #include "jsopcode.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsvector.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -161,73 +162,6 @@ typedef enum JSTokenType {
 # define TOKEN_TYPE_IS_DECL(tt) ((tt) == TOK_VAR)
 #endif
 
-struct JSStringBuffer {
-    jschar      *base;
-    jschar      *limit;         /* length limit for quick bounds check */
-    jschar      *ptr;           /* slot for next non-NUL char to store */
-    void        *data;
-    JSBool      (*grow)(JSStringBuffer *sb, size_t newlength);
-    void        (*free)(JSStringBuffer *sb);
-};
-
-#define STRING_BUFFER_ERROR_BASE        ((jschar *) 1)
-#define STRING_BUFFER_OK(sb)            ((sb)->base != STRING_BUFFER_ERROR_BASE)
-#define STRING_BUFFER_OFFSET(sb)        ((sb)->ptr -(sb)->base)
-
-extern void
-js_InitStringBuffer(JSStringBuffer *sb);
-
-extern void
-js_FinishStringBuffer(JSStringBuffer *sb);
-
-static inline void
-js_RewindStringBuffer(JSStringBuffer *sb)
-{
-    JS_ASSERT(STRING_BUFFER_OK(sb));
-    sb->ptr = sb->base;
-}
-
-#define ENSURE_STRING_BUFFER(sb,n) \
-    ((sb)->ptr + (n) <= (sb)->limit || sb->grow(sb, n))
-
-/*
- * NB: callers are obligated to test STRING_BUFFER_OK(sb) after this returns,
- * before calling it again -- but not necessarily before calling other sb ops
- * declared in this header file.
- *
- * Thus multiple calls, to ops other than this one that check STRING_BUFFER_OK
- * and suppress updating sb if true, can consolidate the final STRING_BUFFER_OK
- * test that conditions a JS_ReportOutOfMemory (if necessary -- the grow hook
- * can report OOM early, obviating the need for the callers to report).
- *
- * This style of error checking is not obviously better, and it could be worse
- * in efficiency, than the propagated failure return code style used elsewhere
- * in the engine. I view it as a failed experiment. /be
- */
-static inline void
-js_FastAppendChar(JSStringBuffer *sb, jschar c)
-{
-    JS_ASSERT(STRING_BUFFER_OK(sb));
-    if (!ENSURE_STRING_BUFFER(sb, 1))
-        return;
-    *sb->ptr++ = c;
-}
-
-extern void
-js_AppendChar(JSStringBuffer *sb, jschar c);
-
-extern void
-js_RepeatChar(JSStringBuffer *sb, jschar c, uintN count);
-
-extern void
-js_AppendCString(JSStringBuffer *sb, const char *asciiz);
-
-extern void
-js_AppendUCString(JSStringBuffer *sb, const jschar *buf, uintN len);
-
-extern void
-js_AppendJSString(JSStringBuffer *sb, JSString *str);
-
 struct JSTokenPtr {
     uint32              index;          /* index of char in physical line */
     uint32              lineno;         /* physical line number */
@@ -320,7 +254,6 @@ struct JSTokenStream {
     uint32              linepos;        /* linebuf offset in physical line */
     JSTokenBuf          linebuf;        /* line buffer for diagnostics */
     JSTokenBuf          userbuf;        /* user input buffer if !file */
-    JSStringBuffer      tokenbuf;       /* current token string buffer */
     const char          *filename;      /* input filename or null */
     FILE                *file;          /* stdio stream if reading from file */
     JSSourceHandler     listener;       /* callback for source; eg debugger */
@@ -328,6 +261,29 @@ struct JSTokenStream {
     void                *listenerTSData;/* listener data for this TokenStream */
     jschar              *saveEOL;       /* save next end of line in userbuf, to
                                            optimize for very long lines */
+    JSCharBuffer        tokenbuf;       /* current token string buffer */
+
+    /*
+     * To construct a JSTokenStream, first call the constructor, which is
+     * infallible, then call |init|, which can fail. To destroy a JSTokenStream,
+     * first call |close| then call the destructor. If |init| fails, do not call
+     * |close|.
+     *
+     * This class uses JSContext.tempPool to allocate internal buffers. The
+     * caller should JS_ARENA_MARK before calling |init| and JS_ARENA_RELEASE
+     * after calling |close|.
+     */
+    JSTokenStream(JSContext *);
+
+    /*
+     * Create a new token stream, either from an input buffer or from a file.
+     * Return false on file-open or memory-allocation failure.
+     */
+    bool init(JSContext *, const jschar *base, size_t length,
+              FILE *fp, const char *filename, uintN lineno);
+
+    void close(JSContext *);
+    ~JSTokenStream() {}
 };
 
 #define CURRENT_TOKEN(ts)       ((ts)->tokens[(ts)->cursor])
@@ -379,19 +335,6 @@ struct JSTokenStream {
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
 #define PARA_SEPARATOR  0x2029
-
-/*
- * Create a new token stream, either from an input buffer or from a file.
- * Return null on file-open or memory-allocation failure.
- *
- * The function uses JSContext.tempPool to allocate internal buffers. The
- * caller should release them using JS_ARENA_RELEASE after it has finished
- * with the token stream and has called js_CloseTokenStream.
- */
-extern JSBool
-js_InitTokenStream(JSContext *cx, JSTokenStream *ts,
-                   const jschar *base, size_t length,
-                   FILE *fp, const char *filename, uintN lineno);
 
 extern void
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts);

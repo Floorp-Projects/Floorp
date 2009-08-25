@@ -1,0 +1,10 @@
+product=firefox
+branch=1.9.3
+url=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.7a1pre.en-US.linux-i686.tar.bz2
+profilename=firefox-1.9.3-profile
+profiledirectory=/tmp/firefox-1.9.3-profile
+executablepath=/tmp/firefox-1.9.3
+userpreferences=${TEST_DIR}/prefs/test-user.js
+extensiondir=${TEST_DIR}/xpi
+buildtype=nightly
+TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central

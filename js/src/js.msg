@@ -301,7 +301,7 @@ MSG_DEF(JSMSG_EMPTY_ARRAY_REDUCE,     218, 0, JSEXN_TYPEERR, "reduce of empty ar
 MSG_DEF(JSMSG_NON_LIST_XML_METHOD,    219, 2, JSEXN_TYPEERR, "cannot call {0} method on an XML list with {1} elements")
 MSG_DEF(JSMSG_BAD_DELETE_OPERAND,     220, 0, JSEXN_SYNTAXERR, "invalid delete operand")
 MSG_DEF(JSMSG_BAD_INCOP_OPERAND,      221, 0, JSEXN_SYNTAXERR, "invalid increment/decrement operand")
-MSG_DEF(JSMSG_NULL_OR_UNDEFINED,      222, 2, JSEXN_TYPEERR, "{0} is {1}")
+MSG_DEF(JSMSG_UNEXPECTED_TYPE,        222, 2, JSEXN_TYPEERR, "{0} is {1}")
 MSG_DEF(JSMSG_LET_DECL_NOT_IN_BLOCK,  223, 0, JSEXN_SYNTAXERR, "let declaration not directly within block")
 MSG_DEF(JSMSG_BAD_OBJECT_INIT,        224, 0, JSEXN_SYNTAXERR, "invalid object initializer")
 MSG_DEF(JSMSG_CANT_SET_ARRAY_ATTRS,   225, 0, JSEXN_INTERNALERR, "can't set attributes on indexed array properties")

@@ -866,7 +866,7 @@ js_NumberToString(JSContext *cx, jsdouble d)
 }
 
 JSBool JS_FASTCALL
-js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
+js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 {
     /* Convert to C-string. */
     static const size_t arrSize = DTOSTR_STANDARD_BUFFER_SIZE;
@@ -887,10 +887,10 @@ js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharVector &buf)
      */
     size_t cstrlen = strlen(cstr);
     JS_ASSERT(cstrlen < arrSize);
-    size_t sizeBefore = buf.size();
-    if (!buf.growBy(cstrlen))
+    size_t sizeBefore = cb.length();
+    if (!cb.growBy(cstrlen))
         return JS_FALSE;
-    jschar *appendBegin = buf.begin() + sizeBefore;
+    jschar *appendBegin = cb.begin() + sizeBefore;
 #ifdef DEBUG
     size_t oldcstrlen = cstrlen;
     JSBool ok =
@@ -927,6 +927,14 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
              * octal).
              */
             str->getCharsAndEnd(bp, end);
+
+            /* ECMA doesn't allow signed hex numbers (bug 273467). */
+            bp = js_SkipWhiteSpace(bp, end);
+            if (bp + 2 < end && (*bp == '-' || *bp == '+') &&
+                bp[1] == '0' && (bp[2] == 'X' || bp[2] == 'x')) {
+                break;
+            }
+
             if ((!js_strtod(cx, bp, end, &ep, &d) ||
                  js_SkipWhiteSpace(ep, end) != end) &&
                 (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||

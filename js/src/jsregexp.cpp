@@ -2005,42 +2005,35 @@ typedef JSTempVector<LIns *> LInsList;
 
 /* Dummy GC for nanojit placement new. */
 static GC gc;
+static avmplus::AvmCore s_core = avmplus::AvmCore();
+static avmplus::AvmCore* core = &s_core;
 
-static void *
-HashRegExp(uint16 flags, const jschar *s, size_t n)
-{
-    uint32 h;
-
-    for (h = 0; n; s++, n--)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
-    return (void *)(h + flags);
-}
-
-struct RESideExit : public SideExit {
-    size_t re_length;
-    uint16 re_flags;
-    jschar re_chars[1];
-};
-
-/* Return the cached fragment for the given regexp, or NULL. */
+/* Return the cached fragment for the given regexp, or create one. */
 static Fragment*
-LookupNativeRegExp(JSContext* cx, void* hash, uint16 re_flags,
+LookupNativeRegExp(JSContext* cx, uint16 re_flags,
                    const jschar* re_chars, size_t re_length)
 {
-    Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
-    Fragment* fragment = fragmento->getLoop(hash);
-    while (fragment) {
-        if (fragment->lastIns) {
-            RESideExit *exit = (RESideExit*)fragment->lastIns->record()->exit;
-            if (exit->re_flags == re_flags &&
-                exit->re_length == re_length &&
-                !memcmp(exit->re_chars, re_chars, re_length * sizeof(jschar))) {
-                return fragment;
-            }
-        }
-        fragment = fragment->peer;
+    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    VMAllocator &alloc = *tm->reAllocator;
+    REHashMap &table = *tm->reFragments;
+
+    REHashKey k(re_length, re_flags, re_chars);
+    Fragment *frag = table.get(k);
+
+    if (!frag) {
+        frag = new (alloc) Fragment(0);
+        frag->lirbuf = tm->reLirBuf;
+        frag->root = frag;
+        /*
+         * Copy the re_chars portion of the hash key into the Allocator, so
+         * its lifecycle is disconnected from the lifecycle of the
+         * underlying regexp.
+         */
+        k.re_chars = (const jschar*) new (alloc) jschar[re_length];
+        memcpy((void*) k.re_chars, re_chars, re_length * sizeof(jschar));
+        table.put(k, frag);
     }
-    return NULL;
+    return frag;
 }
 
 static JSBool
@@ -2298,7 +2291,7 @@ class RegExpNativeCompiler {
     void targetCurrentPoint(LInsList &fails)
     {
         LIns *fail = lir->ins0(LIR_label);
-        for (size_t i = 0; i < fails.size(); ++i) {
+        for (size_t i = 0; i < fails.length(); ++i) {
             fails[i]->setTarget(fail);
         }
         fails.clear();
@@ -3065,16 +3058,13 @@ class RegExpNativeCompiler {
     GuardRecord* insertGuard(const jschar* re_chars, size_t re_length)
     {
         LIns* skip = lirBufWriter->insSkip(sizeof(GuardRecord) +
-                                           sizeof(RESideExit) +
+                                           sizeof(SideExit) +
                                            (re_length-1) * sizeof(jschar));
         GuardRecord* guard = (GuardRecord *) skip->payload();
         memset(guard, 0, sizeof(*guard));
-        RESideExit* exit = (RESideExit*)(guard+1);
+        SideExit* exit = (SideExit*)(guard+1);
         guard->exit = exit;
         guard->exit->target = fragment;
-        exit->re_flags = re->flags;
-        exit->re_length = re_length;
-        memcpy(exit->re_chars, re_chars, re_length * sizeof(jschar));
         fragment->lastIns = lir->insGuard(LIR_loop, NULL, skip);
         return guard;
     }
@@ -3092,7 +3082,6 @@ class RegExpNativeCompiler {
         size_t re_length;
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         Assembler *assm = tm->reAssembler;
-        Fragmento* fragmento = tm->reFragmento;
         VMAllocator& alloc = *tm->reAllocator;
 
         re->source->getCharsAndLength(re_chars, re_length);
@@ -3148,7 +3137,7 @@ class RegExpNativeCompiler {
 
         if (alloc.outOfMemory())
             goto fail;
-        ::compile(assm, fragment, alloc verbose_only(, fragmento->labels));
+        ::compile(assm, fragment, alloc verbose_only(, tm->reLabels));
         if (assm->error() != nanojit::None) {
             oom = assm->error() == nanojit::OutOMem;
             goto fail;
@@ -3162,20 +3151,26 @@ class RegExpNativeCompiler {
         return JS_TRUE;
     fail:
         if (alloc.outOfMemory() || oom ||
-            js_OverfullFragmento(tm, fragmento)) {
-            fragmento->clearFrags();
-            tm->reCodeAlloc->sweep();
+            js_OverfullJITCache(tm, true)) {
+            delete lirBufWriter;
+            delete tm->reCodeAlloc;
+            tm->reCodeAlloc = new CodeAlloc();
             alloc.reset();
+            tm->reFragments = new (alloc) REHashMap(alloc);
+            tm->reLirBuf = new (alloc) LirBuffer(alloc);
 #ifdef DEBUG
-            fragmento->labels = new (alloc) LabelMap(alloc, &js_LogController);
-            lirbuf->names = new (alloc) LirNameMap(alloc, fragmento->labels);
+            tm->reLabels = new (alloc) LabelMap(alloc, &js_LogController);
+            tm->reLirBuf->names = new (alloc) LirNameMap(alloc, tm->reLabels);
+            tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core,
+                                                    &js_LogController);
+#else
+            tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core, NULL);
 #endif
-            lirbuf->clear();
         } else {
             if (!guard) insertGuard(re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
+            delete lirBufWriter;
         }
-        delete lirBufWriter;
 #ifdef NJ_VERBOSE
         debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
                              delete lir; )
@@ -3216,19 +3211,11 @@ typedef void *(FASTCALL *NativeRegExp)(REGlobalData*, const jschar *);
 static NativeRegExp
 GetNativeRegExp(JSContext* cx, JSRegExp* re)
 {
-    Fragment *fragment;
     const jschar *re_chars;
     size_t re_length;
-    Fragmento* fragmento = JS_TRACE_MONITOR(cx).reFragmento;
-
     re->source->getCharsAndLength(re_chars, re_length);
-    void* hash = HashRegExp(re->flags, re_chars, re_length);
-    fragment = LookupNativeRegExp(cx, hash, re->flags, re_chars, re_length);
-    if (!fragment) {
-        fragment = fragmento->getAnchor(hash);
-        fragment->lirbuf = JS_TRACE_MONITOR(cx).reLirBuf;
-        fragment->root = fragment;
-    }
+    Fragment *fragment = LookupNativeRegExp(cx, re->flags, re_chars, re_length);
+    JS_ASSERT(fragment);
     if (!fragment->code()) {
         if (!CompileRegExpToNative(cx, re, fragment))
             return NULL;
@@ -4995,6 +4982,34 @@ out:
 
 /************************************************************************/
 
+static jsdouble
+GetRegExpLastIndex(JSObject *obj)
+{
+    JS_ASSERT(obj->getClass() == &js_RegExpClass);
+
+    jsval v = obj->fslots[JSSLOT_REGEXP_LAST_INDEX];
+    if (JSVAL_IS_INT(v))
+        return JSVAL_TO_INT(v);
+    JS_ASSERT(JSVAL_IS_DOUBLE(v));
+    return *JSVAL_TO_DOUBLE(v);
+}
+
+static jsval
+GetRegExpLastIndexValue(JSObject *obj)
+{
+    JS_ASSERT(obj->getClass() == &js_RegExpClass);
+    return obj->fslots[JSSLOT_REGEXP_LAST_INDEX];
+}
+
+static JSBool
+SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
+{
+    JS_ASSERT(obj->getClass() == &js_RegExpClass);
+
+    return JS_NewNumberValue(cx, lastIndex,
+                             &obj->fslots[JSSLOT_REGEXP_LAST_INDEX]);
+}
+
 static JSBool
 regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -5009,8 +5024,10 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             return JS_TRUE;
     }
     slot = JSVAL_TO_INT(id);
-    if (slot == REGEXP_LAST_INDEX)
-        return JS_GetReservedSlot(cx, obj, 0, vp);
+    if (slot == REGEXP_LAST_INDEX) {
+        *vp = GetRegExpLastIndexValue(obj);
+        return JS_TRUE;
+    }
 
     JS_LOCK_OBJ(cx, obj);
     re = (JSRegExp *) obj->getPrivate();
@@ -5057,8 +5074,7 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (!JS_ValueToNumber(cx, *vp, &lastIndex))
             return JS_FALSE;
         lastIndex = js_DoubleToInteger(lastIndex);
-        ok = JS_NewNumberValue(cx, lastIndex, vp) &&
-             JS_SetReservedSlot(cx, obj, 0, *vp);
+        ok = SetRegExpLastIndex(cx, obj, lastIndex);
     }
     return ok;
 }
@@ -5328,8 +5344,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         if (!re)
             return JS_FALSE;
         obj->setPrivate(re);
-        if (!js_SetLastIndex(xdr->cx, obj, 0))
-            return JS_FALSE;
+        js_ClearRegExpLastIndex(obj);
         *objp = obj;
     }
     return JS_TRUE;
@@ -5351,7 +5366,8 @@ regexp_trace(JSTracer *trc, JSObject *obj)
 
 JSClass js_RegExpClass = {
     js_RegExp_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(REGEXP_CLASS_FIXED_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     JS_PropertyStub,    JS_PropertyStub,
     JS_PropertyStub,    JS_PropertyStub,
@@ -5540,13 +5556,12 @@ created:
     JS_LOCK_OBJ(cx, obj);
     oldre = (JSRegExp *) obj->getPrivate();
     obj->setPrivate(re);
-
-    JSBool ok = js_SetLastIndex(cx, obj, 0);
+    js_ClearRegExpLastIndex(obj);
     JS_UNLOCK_OBJ(cx, obj);
     if (oldre)
         js_DestroyRegExp(cx, oldre);
     *rval = OBJECT_TO_JSVAL(obj);
-    return ok;
+    return JS_TRUE;
 }
 
 static JSBool
@@ -5581,14 +5596,10 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     /* NB: we must reach out: after this paragraph, in order to drop re. */
     HOLD_REGEXP(cx, re);
     sticky = (re->flags & JSREG_STICKY) != 0;
-    if (re->flags & (JSREG_GLOB | JSREG_STICKY)) {
-        ok = js_GetLastIndex(cx, obj, &lastIndex);
-    } else {
-        lastIndex = 0;
-    }
+    lastIndex = (re->flags & (JSREG_GLOB | JSREG_STICKY))
+                ? GetRegExpLastIndex(obj)
+                : 0;
     JS_UNLOCK_OBJ(cx, obj);
-    if (!ok)
-        goto out;
 
     /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
     if (argc == 0) {
@@ -5618,14 +5629,17 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     if (lastIndex < 0 || str->length() < lastIndex) {
-        ok = js_SetLastIndex(cx, obj, 0);
+        js_ClearRegExpLastIndex(obj);
         *rval = JSVAL_NULL;
     } else {
         i = (size_t) lastIndex;
         ok = js_ExecuteRegExp(cx, re, str, &i, test, rval);
         if (ok &&
             ((re->flags & JSREG_GLOB) || (*rval != JSVAL_NULL && sticky))) {
-            ok = js_SetLastIndex(cx, obj, (*rval == JSVAL_NULL) ? 0 : i);
+            if (*rval == JSVAL_NULL)
+                js_ClearRegExpLastIndex(obj);
+            else
+                ok = SetRegExpLastIndex(cx, obj, i);
         }
     }
 
@@ -5741,8 +5755,7 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
         return NULL;
     }
     obj->setPrivate(re);
-    if (!js_SetLastIndex(cx, obj, 0))
-        return NULL;
+    js_ClearRegExpLastIndex(obj);
     return obj;
 }
 
@@ -5759,26 +5772,9 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent)
     re = (JSRegExp *) obj->getPrivate();
     if (re) {
         clone->setPrivate(re);
+        js_ClearRegExpLastIndex(clone);
         HOLD_REGEXP(cx, re);
     }
     return clone;
-}
-
-JSBool
-js_GetLastIndex(JSContext *cx, JSObject *obj, jsdouble *lastIndex)
-{
-    jsval v;
-
-    return JS_GetReservedSlot(cx, obj, 0, &v) &&
-           JS_ValueToNumber(cx, v, lastIndex);
-}
-
-JSBool
-js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
-{
-    jsval v;
-
-    return JS_NewNumberValue(cx, lastIndex, &v) &&
-           JS_SetReservedSlot(cx, obj, 0, v);
 }
 

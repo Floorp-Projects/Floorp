@@ -2,5 +2,5 @@ product=${product:-js}
 branch=${branch:-1.9.2}
 buildtype=${buildtype:-debug}
 jsshellsourcepath=${jsshellsourcepath:-/work/mozilla/builds/1.9.2/mozilla/js/src}
-TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central}
+TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/releases/mozilla-1.9.2}
 TEST_MOZILLA_HG_REV=${TEST_MOZILLA_HG_REV:-tip}

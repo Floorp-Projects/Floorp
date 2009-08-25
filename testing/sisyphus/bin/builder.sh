@@ -53,8 +53,8 @@ $SCRIPT -p products -b branches -B buildcommands -T buildtypes [-e extra] [-d da
 
 variable            description
 ===============     ===========================================================
--p products         required. one or more of js firefox thunderbird fennec
--b branches         required. one or more of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
+-p products         required. one or more of js firefox
+-b branches         required. one or more of supported branches. see library.sh.
 -B buildcommands    required. one or more of clean clobber checkout build
 -T buildtypes       required. one or more of opt debug
 -e extra            optional. extra qualifier to pick build tree and mozconfig.

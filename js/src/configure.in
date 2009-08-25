@@ -5215,6 +5215,7 @@ MAKEFILES="
   Makefile
   shell/Makefile
   lirasm/Makefile
+  jsapi-tests/Makefile
   config/Makefile
   config/autoconf.mk
   config/mkdepend/Makefile

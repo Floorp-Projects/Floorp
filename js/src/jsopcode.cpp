@@ -2024,11 +2024,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                           case JSOP_ENUMCONSTELEM:
                             op = JSOP_GETELEM;
                             break;
-#if JS_HAS_LVALUE_RETURN
                           case JSOP_SETCALL:
                             op = JSOP_CALL;
                             break;
-#endif
                           case JSOP_GETTHISPROP:
                             /*
                              * NB: JSOP_GETTHISPROP can't fail due to |this|
@@ -3527,9 +3525,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALL:
               case JSOP_EVAL:
               case JSOP_APPLY:
-#if JS_HAS_LVALUE_RETURN
               case JSOP_SETCALL:
-#endif
                 argc = GET_ARGC(pc);
                 argv = (char **)
                     cx->malloc((size_t)(argc + 1) * sizeof *argv);
@@ -3594,13 +3590,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 cx->free(argv);
                 if (!ok)
                     return NULL;
-#if JS_HAS_LVALUE_RETURN
                 if (op == JSOP_SETCALL) {
                     if (!PushOff(ss, todo, op))
                         return NULL;
                     todo = Sprint(&ss->sprinter, "");
                 }
-#endif
                 break;
 
               case JSOP_DELNAME:

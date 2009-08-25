@@ -41,7 +41,7 @@ source $TEST_DIR/bin/library.sh
 source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
-    firefox|thunderbird|fennec)
+    firefox)
 
         if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk clean" 2>&1; then
             error "during client.mk clean" $LINENO
@@ -69,7 +69,7 @@ case $product in
                 fi
 
                 cd "$BUILDTREE/mozilla/js/src"
-                eval "$AUTOCONF" 
+                eval "$AUTOCONF"
 
             fi
 

@@ -67,14 +67,6 @@ struct JSXMLArray {
 #define JSXML_CAPACITY_MASK     JS_BITMASK(31)
 #define JSXML_CAPACITY(array)   ((array)->capacity & JSXML_CAPACITY_MASK)
 
-struct JSXMLArrayCursor {
-    JSXMLArray          *array;
-    uint32              index;
-    JSXMLArrayCursor    *next;
-    JSXMLArrayCursor    **prevp;
-    void                *root;
-};
-
 /*
  * NB: don't reorder this enum without changing all array initializers that
  * depend on it in jsxml.c.

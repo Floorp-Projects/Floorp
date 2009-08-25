@@ -1,0 +1,10 @@
+product=firefox
+branch=1.9.2
+url=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.2/firefox-3.6a2pre.en-US.mac.dmg
+profilename=firefox-1.9.2-profile
+profiledirectory=/tmp/firefox-1.9.2-profile
+executablepath=/tmp/firefox-1.9.2
+userpreferences=${TEST_DIR}/prefs/test-user.js
+extensiondir=${TEST_DIR}/xpi
+buildtype=nightly
+TEST_MOZILLA_HG=http://hg.mozilla.org/releases/mozilla-1.9.2

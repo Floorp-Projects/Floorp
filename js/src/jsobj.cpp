@@ -1946,11 +1946,17 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    obj = js_ValueToNonNullObject(cx, vp[2]);
-    if (!obj)
+    if (JSVAL_IS_PRIMITIVE(vp[2])) {
+        char *bytes = js_DecompileValueGenerator(cx, -argc, vp[2], NULL);
+        if (!bytes)
+            return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_UNEXPECTED_TYPE, bytes, "not an object");
+        JS_free(cx, bytes);
         return JS_FALSE;
-    vp[2] = OBJECT_TO_JSVAL(obj);
+    }
 
+    obj = JSVAL_TO_OBJECT(vp[2]);
     return obj->checkAccess(cx, ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
                             JSACC_PROTO, vp, &attrs);
 }
@@ -2284,7 +2290,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
     script = cx->fp->script;
     endpc = script->code + script->length;
     for (;; pc += js_CodeSpec[op].length) {
-        JS_ASSERT(pc < endpc);
+        JS_ASSERT_IF(!cx->fp->imacpc, script->code <= pc && pc < endpc);
 
         /* General case: a branch or equality op follows the access. */
         op = js_GetOpcode(cx, script, pc);
@@ -4254,7 +4260,8 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                 flags = JSREPORT_ERROR;
             } else {
                 if (!JS_HAS_STRICT_OPTION(cx) ||
-                    (op != JSOP_GETPROP && op != JSOP_GETELEM)) {
+                    (op != JSOP_GETPROP && op != JSOP_GETELEM) ||
+                    js_CurrentPCIsInImacro(cx)) {
                     return JS_TRUE;
                 }
 
@@ -6115,8 +6122,8 @@ js_DumpStackFrame(JSStackFrame *fp)
 
     for (; fp; fp = fp->down) {
         fprintf(stderr, "JSStackFrame at %p\n", (void *) fp);
-        if (fp->callee)
-            dumpValue(OBJECT_TO_JSVAL(fp->callee));
+        if (fp->argv)
+            dumpValue(fp->argv[-2]);
         else
             fprintf(stderr, "global frame, no callee");
         fputc('\n', stderr);
@@ -6188,8 +6195,8 @@ js_DumpStackFrame(JSStackFrame *fp)
             fprintf(stderr, " iterator");
         if (fp->flags & JSFRAME_GENERATOR)
             fprintf(stderr, " generator");
-        if ((fp->flags >> JSFRAME_OVERRIDE_SHIFT) & JS_BITMASK(JSFRAME_OVERRIDE_BITS))
-            fprintf(stderr, " override_bits(0x%x)", (fp->flags >> JSFRAME_OVERRIDE_SHIFT) & JS_BITMASK(JSFRAME_OVERRIDE_BITS));
+        if (fp->flags & JSFRAME_OVERRIDE_ARGS)
+            fprintf(stderr, " overridden_args");
         fputc('\n', stderr);
 
         if (fp->scopeChain)

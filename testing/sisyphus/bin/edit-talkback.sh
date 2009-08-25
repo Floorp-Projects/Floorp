@@ -46,20 +46,20 @@ options="p:b:x:i:d:"
 function usage()
 {
     cat <<EOF
-usage: 
+usage:
 $SCRIPT -p product -b branch -x executablepath -i talkbackid [-d datafiles]
 
 variable            description
 ===============     ============================================================
--p product          required. firefox|thunderbird
+-p product          required. firefox.
 -b branch           required. one of 1.8.0 1.8.1
--x executablepath   required. directory-tree containing executable named 
+-x executablepath   required. directory-tree containing executable named
                     'product'
 -i talkbackid       required. identifier to add to talkback url
--d datafiles        optional. one or more filenames of files containing 
+-d datafiles        optional. one or more filenames of files containing
                     environment variable definitions to be included.
 
-note that the environment variables should have the same names as in the 
+note that the environment variables should have the same names as in the
 "variable" column.
 
 EOF
@@ -68,8 +68,8 @@ EOF
 
 unset product branch executablepath talkbackid datafiles
 
-while getopts $options optname ; 
-  do 
+while getopts $options optname ;
+  do
   case $optname in
       p) product=$OPTARG;;
       b) branch=$OPTARG;;
@@ -105,9 +105,9 @@ elif [[ -e "$executablepath/extensions/talkback@mozilla.org/components/talkback/
     cd "$executablepath/extensions/talkback@mozilla.org/components/talkback/"
 elif [[ -e "$executablepath/components/master.ini" ]]; then
     cd "$executablepath/components"
-else 
+else
     # talkback not found
-    talkback=0 
+    talkback=0
 fi
 
 if [[ $talkback -eq 1 ]]; then
@@ -153,7 +153,7 @@ if [[ $talkback -eq 1 ]]; then
     fi
 
     mkdir -p "$talkbackdir"
-    
+
     case $OSID in
         nt)
             talkbackinidir="$talkbackdir/$vendorid/$productid/$platformid/$buildid"
@@ -162,7 +162,7 @@ if [[ $talkback -eq 1 ]]; then
             talkbackinidir="$talkbackdir/$vendorid$productid$platformid$buildid"
             ;;
     esac
-    
+
     if [[ ! -d "$talkbackinidir" ]]; then
         create-directory.sh -d "$talkbackinidir" -n
     fi

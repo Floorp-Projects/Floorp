@@ -735,7 +735,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 
     /* Copy call-invariant script and function references. */
     gen->frame.script = fp->script;
-    gen->frame.callee = fp->callee;
     gen->frame.fun = fp->fun;
 
     /* Use slots to carve space out of gen->slots. */
@@ -1014,6 +1013,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
     STOBJ_SET_SLOT(proto, JSSLOT_ITER_STATE, JSVAL_NULL);
+    STOBJ_SET_SLOT(proto, JSSLOT_ITER_FLAGS, JSVAL_ZERO);
 
 #if JS_HAS_GENERATORS
     /* Initialize the generator internals if configured. */

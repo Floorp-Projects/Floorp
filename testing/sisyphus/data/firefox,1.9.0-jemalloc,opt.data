@@ -1,8 +1,0 @@
-product=${product:-firefox}
-branch=${branch:-1.9.0}
-buildtype=${buildtype:-opt}
-profilename=${profilename:-firefox-1.9.0-jemalloc-profile}
-profiledirectory=${profiledirectory:-/tmp/firefox-1.9.0-jemalloc-profile}
-executablepath=${executablepath:-/work/mozilla/builds/1.9.0-jemalloc/mozilla/firefox-opt/dist}
-userpreferences=${userpreferences:-/work/mozilla/builds/hg.mozilla.org/mozilla-central-test/testing/sisyphus/prefs/test-user.js}
-extensiondir=${extensiondir:-/work/mozilla/builds/hg.mozilla.org/mozilla-central-test/testing/sisyphus/xpi}

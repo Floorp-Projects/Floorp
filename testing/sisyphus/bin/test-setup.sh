@@ -46,20 +46,20 @@ options="p:b:u:f:c:B:T:x:N:D:L:U:E:d:"
 function usage()
 {
     cat<<EOF
-usage: 
+usage:
 $SCRIPT -p product -b branch
-       [-u url [-f filepath] [-c credentials]] 
-       [-B buildcommands -T buildtype] 
+       [-u url [-f filepath] [-c credentials]]
+       [-B buildcommands -T buildtype]
        [-x executablepath]
-       [-N profilename [-D profiledirectory [-L profiletemplate 
+       [-N profilename [-D profiledirectory [-L profiletemplate
          [-U userpreferences]]]]
        [-E extensiondir]
-       [-d datafiles] 
+       [-d datafiles]
 
 variable            description
 ===============     ===========================================================
--p product          required. one of js firefox, thunderbird or fennec
--b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
+-p product          required. one of js firefox.
+-b branch           required. supported branch. see library.sh
 -u url              optional. url where to download build
 -f filepath         optional. location to save downloaded build or to find
                     previously downloaded build. If not specified, the
@@ -68,32 +68,32 @@ variable            description
                     filepath will be /tmp/\$product-\$branch-file.
 -B buildcommands    optional. one or more of clean checkout build
 -T buildtype        optional. one of opt debug
--x executablepath   optional. directory tree containing executable with same 
-                    name as product. If the build is downloaded and executable 
-                    path is not specified, it will be defaulted to 
-                    /tmp/\$product-\$branch. 
-                    For cvs builds it will be defaulted to the appropriate 
-                    directory in 
+-x executablepath   optional. directory tree containing executable with same
+                    name as product. If the build is downloaded and executable
+                    path is not specified, it will be defaulted to
+                    /tmp/\$product-\$branch.
+                    For cvs builds it will be defaulted to the appropriate
+                    directory in
                     ${BUILDDIR}/\$branch/mozilla/\$product-\$buildtype/
--N profilename      optional. profilename. profilename is required if 
+-N profilename      optional. profilename. profilename is required if
                     profiledirectory or extensiondir are specified.
--D profiledirectory optional. If profiledirectory is specified, a new profile 
+-D profiledirectory optional. If profiledirectory is specified, a new profile
                     will be created in the directory.
--L profiletemplate  optional. If a new profile is created, profiletemplate is 
-                    the path to an existing profile which will be copied over 
+-L profiletemplate  optional. If a new profile is created, profiletemplate is
+                    the path to an existing profile which will be copied over
                     the new profile.
--U userpreferences  optional. If a new profile is created, userpreferences is 
-                    the path to a user.js file to be copied into the new 
+-U userpreferences  optional. If a new profile is created, userpreferences is
+                    the path to a user.js file to be copied into the new
                     profile.
-                    If userpreferences is not specified when a new profile is 
+                    If userpreferences is not specified when a new profile is
                     created, it is defaulted to
                     ${TEST_DIR}/prefs/test-user.js
--E extensiondir     optional. path to directory tree containing extensions to 
+-E extensiondir     optional. path to directory tree containing extensions to
                     be installed.
--d datafiles        optional. one or more filenames of files containing 
+-d datafiles        optional. one or more filenames of files containing
                     environment variable definitions to be included.
 
-note that the environment variables should have the same 
+note that the environment variables should have the same
 names as in the "variable" column.
 
 EOF
@@ -102,8 +102,8 @@ EOF
 
 unset product branch url filepath credentials buildcommands buildtype executablepath profilename profiledirectory profiletemplate userpreferences extenstiondir datafiles
 
-while getopts $options optname ; 
-  do 
+while getopts $options optname ;
+  do
   case $optname in
       p) product="$OPTARG";;
       b) branch="$OPTARG";;
@@ -176,7 +176,7 @@ if [[ (-n "$profiledirectory" || -n "$extensiondir" ) && -z "$profilename" ]]; t
 fi
 
 # if the url is specified but not the filepath
-# generate a default path where to save the 
+# generate a default path where to save the
 # downloaded build.
 if [[ -n "$url" && -z "$filepath" ]]; then
     filepath=`basename $url`
@@ -212,10 +212,6 @@ if [[ -n "$buildcommands" ]]; then
         mac)
             if [[ "$product" == "firefox" ]]; then
                 App=Firefox
-            elif [[ "$product" == "thunderbird" ]]; then
-                App=Thunderbird
-            elif [[ "$product" == "fennec" ]]; then
-                App=Fennec
             fi
             if [[ "$buildtype" == "debug" ]]; then
                 AppType=Debug

@@ -46,23 +46,23 @@ options="p:b:x:D:N:L:U:d:"
 function usage()
 {
     cat <<EOF
-usage: 
-$SCRIPT -p product -b branch -x executablepath -D directory -N profilename 
+usage:
+$SCRIPT -p product -b branch -x executablepath -D directory -N profilename
        [-L profiletemplate] [-U user] [-d datafiles]
 
 variable            description
 ===============     ============================================================
--p product          required. firefox, thunderbird or fennec
--b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
+-p product          required. firefox.
+-b branch           required. supported branch. see library.sh
 -x executablepath   required. directory-tree containing executable 'product'
 -D directory        required. directory where profile is to be created.
--N profilename      required. profile name 
--L profiletemplate  optional. location of a template profile to be used. 
+-N profilename      required. profile name
+-L profiletemplate  optional. location of a template profile to be used.
 -U user             optional. user.js preferences file.
--d datafiles        optional. one or more filenames of files containing 
+-d datafiles        optional. one or more filenames of files containing
                     environment variable definitions to be included.
 
-note that the environment variables should have the same names as in the 
+note that the environment variables should have the same names as in the
 "variable" column.
 
 EOF
@@ -71,8 +71,8 @@ EOF
 
 unset product branch executablepath directory profilename profiletemplate user datafiles
 
-while getopts $options optname ; 
-  do 
+while getopts $options optname ;
+  do
   case $optname in
       p) product=$OPTARG;;
       b) branch=$OPTARG;;
@@ -97,7 +97,7 @@ checkProductBranch $product $branch
 
 executable=`get_executable $product $branch $executablepath`
 
-$TEST_DIR/bin/create-directory.sh -d "$directory" -n 
+$TEST_DIR/bin/create-directory.sh -d "$directory" -n
 
 if echo "$profilename" | egrep -qiv '[a-z0-9_]'; then
     error "profile name \"$profilename\" must consist of letters, digits or _" $LINENO
@@ -106,7 +106,7 @@ fi
 if [ $OSID == "nt" ]; then
     directoryospath=`cygpath -a -w $directory`
     if [[ -z "$directoryospath" ]]; then
-	    error "unable to convert unix path to windows path" $LINENO
+        error "unable to convert unix path to windows path" $LINENO
     fi
 else
     directoryospath="$directory"
@@ -120,17 +120,17 @@ while ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" \
         $executable -CreateProfile "$profilename $directoryospath"; do
     let tries=tries+1
     if [ "$tries" -gt $TEST_STARTUP_TRIES ]; then
-	    error "Failed to create profile $directory Exiting..." $LINENO
+        error "Failed to create profile $directory Exiting..." $LINENO
     fi
     sleep 30
 done
 
 if [[ -n $profiletemplate ]]; then
-	if [[ ! -d $profiletemplate ]]; then
-	    error "profile template directory $profiletemplate does not exist" $LINENO
-	fi
-	echo "copying template profile $profiletemplate to $directory"
-	cp -R $profiletemplate/* $directory
+    if [[ ! -d $profiletemplate ]]; then
+        error "profile template directory $profiletemplate does not exist" $LINENO
+    fi
+    echo "copying template profile $profiletemplate to $directory"
+    cp -R $profiletemplate/* $directory
 fi
 
 if [[ ! -z $user ]]; then

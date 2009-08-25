@@ -1103,6 +1103,8 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     JSInterpreterHook hook;
     void *hookData;
 
+    JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
+
     /* [vp .. vp + 2 + argc) must belong to the last JS stack arena. */
     JS_ASSERT((jsval *) cx->stackPool.current->base <= vp);
     JS_ASSERT(vp + 2 + argc <= (jsval *) cx->stackPool.current->avail);
@@ -1220,10 +1222,6 @@ have_fun:
         JSBool alreadyThrowing = cx->throwing;
 #endif
         JS_ASSERT(nslots == 0);
-#if JS_HAS_LVALUE_RETURN
-        /* Set by JS_SetCallReturnValue2, used to return reference types. */
-        cx->rval2set = JS_FALSE;
-#endif
         ok = ((JSFastNative) native)(cx, argc, vp);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
@@ -1291,7 +1289,6 @@ have_fun:
     frame.callobj = NULL;
     frame.argsobj = NULL;
     frame.script = script;
-    frame.callee = funobj;
     frame.fun = fun;
     frame.argc = argc;
     frame.argv = argv;
@@ -1364,10 +1361,6 @@ have_fun:
         JSBool alreadyThrowing = cx->throwing;
 #endif
 
-#if JS_HAS_LVALUE_RETURN
-        /* Set by JS_SetCallReturnValue2, used to return reference types. */
-        cx->rval2set = JS_FALSE;
-#endif
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
@@ -1394,7 +1387,7 @@ out:
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
 
-    ok &= frame.putActivationObjects(cx);
+    frame.putActivationObjects(cx);
 
     *vp = frame.rval;
 
@@ -1523,7 +1516,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.callobj = down->callobj;
         frame.argsobj = down->argsobj;
         frame.varobj = down->varobj;
-        frame.callee = down->callee;
         frame.fun = down->fun;
         frame.thisp = down->thisp;
         if (down->flags & JSFRAME_COMPUTED_THIS)
@@ -1542,7 +1534,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
                 obj = tmp;
         }
         frame.varobj = obj;
-        frame.callee = NULL;
         frame.fun = NULL;
         frame.thisp = chain;
         frame.argc = 0;
@@ -2786,7 +2777,7 @@ js_Interpret(JSContext *cx)
        the recorder to be destroyed when we return. */
     if (tr) {
         if (tr->wasDeepAborted())
-            tr->removeFragmentoReferences();
+            tr->removeFragmentReferences();
         else
             tr->pushAbortStack();
     }
@@ -3027,7 +3018,7 @@ js_Interpret(JSContext *cx)
 /********************** Here we include the operations ***********************/
 #include "jsops.cpp"
 /*****************************************************************************/
-              
+
 #if !JS_THREADED_INTERP
           default:
 #endif

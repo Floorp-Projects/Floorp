@@ -49,8 +49,10 @@ my $ulimit_virtualmemory = 0;
 my $test_memory = 0;
 
 # hack around lack of available environment entries in both
-# cygwin perl and redhat perl
-open OSTYPE, "set | grep OSTYPE |" || die "Unable to open OSTYPE: $!";
+# cygwin perl and redhat perl.
+# Note the bash -c set is required for ubuntu 9.04 otherwise the
+# OSTYPE file will return no data. I don't know why.
+open OSTYPE, "bash -c set | grep OSTYPE |" || die "Unable to open OSTYPE: $!";
 while (<OSTYPE>)
 {
     chomp;

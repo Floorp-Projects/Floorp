@@ -87,6 +87,15 @@ if [[ "$OS_ARCH" == "CYGWIN32_NT" ]]; then
     OS_ARCH="WINNT"
 fi
 
+if echo "$OS_ARCH" | grep -iq MINGW32_NT; then
+    OS_RELEASE="`echo $OS_ARCH|sed 's/MINGW32_NT-//'`"
+    OS_ARCH="WINNT"
+fi
+
+if [[ "$OS_ARCH" == "MINGW32_NT" ]]; then
+    OS_ARCH="WINNT"
+fi
+
 # Virtually all Linux versions are identical.
 # Any distinctions are handled in linux.h
 

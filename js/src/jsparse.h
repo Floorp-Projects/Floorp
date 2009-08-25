@@ -822,8 +822,8 @@ struct JSCompiler {
     JSTempValueRooter   tempRoot;       /* root to trace traceListHead */
 
     JSCompiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
-      : context(cx), aleFreeList(NULL), principals(NULL), callerFrame(cfp),
-        nodeList(NULL), functionCount(0), traceListHead(NULL)
+      : context(cx), aleFreeList(NULL), tokenStream(cx), principals(NULL),
+        callerFrame(cfp), nodeList(NULL), functionCount(0), traceListHead(NULL)
     {
         memset(tempFreeList, 0, sizeof tempFreeList);
         setPrincipals(prin);
@@ -833,7 +833,7 @@ struct JSCompiler {
     ~JSCompiler();
 
     /*
-     * Initialize a compiler. Parameters are passed on to js_InitTokenStream.
+     * Initialize a compiler. Parameters are passed on to init tokenStream.
      * The compiler owns the arena pool "tops-of-stack" space above the current
      * JSContext.tempPool mark. This means you cannot allocate from tempPool
      * and save the pointer beyond the next JSCompiler destructor invocation.
