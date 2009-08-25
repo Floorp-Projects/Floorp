@@ -65,14 +65,14 @@ public:
     static XPCShellEnvironment* CreateEnvironment();
     static void DestroyEnvironment(XPCShellEnvironment* aEnv);
 
-    void Process(const char* aFilename = nsnull,
-                 JSBool aIsInteractive = JS_FALSE);
+    void Process(const char* aFilename = nsnull);
 
     bool DefineIPCCommands(TestShellChild* aChild);
     bool DefineIPCCommands(TestShellParent* aParent);
 
     JSBool DoSendCommand(const nsString& aCommand,
-                         nsString* aResult = nsnull);
+                         JSContext* aCx = nsnull,
+                         jsval aCallback = JSVAL_VOID);
 
     bool EvaluateString(const nsString& aString,
                         nsString* aResult = nsnull);
@@ -113,6 +113,25 @@ public:
         return mCompileOnly;
     }
 
+    int EventLoopDepth() {
+        return mEventLoopDepth;
+    }
+    void IncrementEventLoopDepth() {
+        ++mEventLoopDepth;
+    }
+    void DecrementEventLoopDepth() {
+        --mEventLoopDepth;
+    }
+
+    class AutoContextPusher
+    {
+    public:
+        AutoContextPusher(XPCShellEnvironment* aEnv);
+        ~AutoContextPusher();
+    private:
+        XPCShellEnvironment* mEnv;
+    };
+
 protected:
     XPCShellEnvironment();
     ~XPCShellEnvironment();
@@ -126,6 +145,7 @@ private:
     JSPrincipals* mJSPrincipals;
 
     int mExitCode;
+    int mEventLoopDepth;
     JSBool mQuitting;
     JSBool mReportWarnings;
     JSBool mCompileOnly;

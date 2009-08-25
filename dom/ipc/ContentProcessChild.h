@@ -6,6 +6,9 @@
 
 #include "mozilla/dom/ContentProcessProtocolChild.h"
 
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -26,11 +29,16 @@ public:
     virtual IFrameEmbeddingProtocolChild* IFrameEmbeddingConstructor(const MagicWindowHandle& hwnd);
     virtual nsresult IFrameEmbeddingDestructor(IFrameEmbeddingProtocolChild*);
 
-  virtual TestShellProtocolChild* TestShellConstructor();
-  virtual nsresult TestShellDestructor(TestShellProtocolChild*);
+    virtual TestShellProtocolChild* TestShellConstructor();
+    virtual nsresult TestShellDestructor(TestShellProtocolChild*);
+
+    void Quit();
 
 private:
     static ContentProcessChild* sSingleton;
+
+    nsTArray<nsAutoPtr<IFrameEmbeddingProtocolChild> > mIFrames;
+    nsTArray<nsAutoPtr<TestShellProtocolChild> > mTestShells;
 
     DISALLOW_EVIL_CONSTRUCTORS(ContentProcessChild);
 };

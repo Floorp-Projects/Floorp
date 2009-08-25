@@ -64,6 +64,7 @@
 #include "nsIXPCScriptable.h"
 
 #include "nsJSUtils.h"
+#include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
 #include "TestShellChild.h"
@@ -75,10 +76,11 @@
 using mozilla::ipc::XPCShellEnvironment;
 using mozilla::ipc::TestShellChild;
 using mozilla::ipc::TestShellParent;
+using mozilla::ipc::TestShellCommandProtocolParent;
 
 namespace {
 
-static const char kDefaultRuntimeScriptFilename[] = "xpcshell.js";
+static const char kDefaultRuntimeScriptFilename[] = "ipcshell.js";
 
 class FullTrustSecMan : public nsIScriptSecurityManager
 {
@@ -774,6 +776,7 @@ ProcessFile(JSContext *cx,
             JSBool forceTTY)
 {
     XPCShellEnvironment* env = Environment(cx);
+    XPCShellEnvironment::AutoContextPusher pusher(env);
 
     JSScript *script;
     jsval result;
@@ -874,6 +877,86 @@ ProcessFile(JSContext *cx,
 
     fprintf(stdout, "\n");
 }
+
+static JSBool
+SendCommand(JSContext *cx,
+            JSObject *obj,
+            uintN argc,
+            jsval *argv,
+            jsval *rval)
+{
+    if (argc == 0) {
+        JS_ReportError(cx, "Function takes at least one argument!");
+        return JS_FALSE;
+    }
+
+    JSString* str = JS_ValueToString(cx, argv[0]);
+    if (!str) {
+        JS_ReportError(cx, "Could not convert argument 1 to string!");
+        return JS_FALSE;
+    }
+
+    nsDependentJSString command(str);
+    JSBool ok;
+
+    if (argc > 1) {
+        if (JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
+            JS_ReportError(cx, "Could not convert argument 2 to function!");
+            return JS_FALSE;
+        }
+        ok = Environment(cx)->DoSendCommand(command, cx, argv[1]);
+        if (ok) {
+            Environment(cx)->IncrementEventLoopDepth();
+        }
+    }
+    else {
+        ok = Environment(cx)->DoSendCommand(command);
+    }
+
+    if (!ok) {
+        JS_ReportError(cx, "Failed to send command!");
+        return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
+static JSBool
+RunEventLoop(JSContext *cx,
+             JSObject *obj,
+             uintN argc,
+             jsval *argv,
+             jsval *rval)
+{
+    NS_ASSERTION(Environment(cx)->EventLoopDepth() >= 0, "Bad depth!");
+    Environment(cx)->IncrementEventLoopDepth();
+    return JS_TRUE;
+}
+
+static JSBool
+StopEventLoop(JSContext *cx,
+              JSObject *obj,
+              uintN argc,
+              jsval *argv,
+              jsval *rval)
+{
+    XPCShellEnvironment* env = Environment(cx);
+    if (env->EventLoopDepth() < 1) {
+        JS_ReportError(cx, "Mismatched call to DecrementEventLoopDepth");
+        return JS_FALSE;
+    }
+
+    env->DecrementEventLoopDepth();
+    return JS_TRUE;
+}
+
+JSFunctionSpec gParentFunctions[] =
+{
+    {"sendCommand",             SendCommand,             1, 0, 0},
+    {"runEventLoop",            RunEventLoop,            0, 0, 0},
+    {"stopEventLoop",           StopEventLoop,           0, 0, 0},
+    {nsnull,                    nsnull,                  0, 0, 0}
+};
 
 } /* anonymous namespace */
 
@@ -1179,6 +1262,26 @@ XPCShellDirProvider::GetFile(const char *prop,
     return NS_ERROR_FAILURE;
 }
 
+XPCShellEnvironment::
+AutoContextPusher::AutoContextPusher(XPCShellEnvironment* aEnv)
+{
+    NS_ASSERTION(aEnv->mCx, "Null context?!");
+
+    if (NS_SUCCEEDED(aEnv->mCxStack->Push(aEnv->mCx))) {
+        mEnv = aEnv;
+    }
+}
+
+XPCShellEnvironment::
+AutoContextPusher::~AutoContextPusher()
+{
+    if (mEnv) {
+        JSContext* cx;
+        mEnv->mCxStack->Pop(&cx);
+        NS_ASSERTION(cx == mEnv->mCx, "Wrong context on the stack!");
+    }
+}
+
 // static
 XPCShellEnvironment*
 XPCShellEnvironment::CreateEnvironment()
@@ -1202,6 +1305,7 @@ XPCShellEnvironment::XPCShellEnvironment()
 :   mCx(NULL),
     mJSPrincipals(NULL),
     mExitCode(0),
+    mEventLoopDepth(0),
     mQuitting(JS_FALSE),
     mReportWarnings(JS_TRUE),
     mCompileOnly(JS_FALSE),
@@ -1222,13 +1326,7 @@ XPCShellEnvironment::~XPCShellEnvironment()
 
         JS_GC(mCx);
 
-        if (mCxStack) {
-            JSContext *oldCx;
-            mCxStack->Pop(&oldCx);
-            NS_ASSERTION(oldCx == mCx, "JS thread context push/pop mismatch");
-
-            JS_GC(mCx);
-        }
+        mCxStack = nsnull;
 
         if (mJSPrincipals) {
             JSPRINCIPALS_DROP(mCx, mJSPrincipals);
@@ -1326,12 +1424,9 @@ XPCShellEnvironment::Init()
         NS_ERROR("failed to get the nsThreadJSContextStack service!");
         return false;
     }
-
-    if(NS_FAILED(cxStack->Push(cx))) {
-        NS_ERROR("failed to push the current JSContext on the nsThreadJSContextStack!");
-        return false;
-    }
     mCxStack = cxStack;
+
+    AutoContextPusher pusher(this);
 
     nsCOMPtr<nsIXPCScriptable> backstagePass;
     rv = rtsvc->GetBackstagePass(getter_AddRefs(backstagePass));
@@ -1392,13 +1487,12 @@ XPCShellEnvironment::Init()
 }
 
 void
-XPCShellEnvironment::Process(const char* aFilename,
-                             JSBool aIsInteractive)
+XPCShellEnvironment::Process(const char* aFilename)
 {
     NS_ASSERTION(GetGlobalObject(), "Should never be null!");
 
     FILE* file;
-    if (!aFilename || aIsInteractive) {
+    if (!aFilename) {
         file = stdin;
     } else {
         file = fopen(aFilename, "r");
@@ -1411,76 +1505,20 @@ XPCShellEnvironment::Process(const char* aFilename,
         }
     }
 
-    ProcessFile(mCx, GetGlobalObject(), aFilename, file, aIsInteractive);
-    if (file != stdin)
+    ProcessFile(mCx, GetGlobalObject(), aFilename, file, !aFilename);
+    if (file != stdin) {
         fclose(file);
+    }
+
+    if (EventLoopDepth()) {
+        nsCOMPtr<nsIThread> currentThread;
+        NS_GetCurrentThread(getter_AddRefs(currentThread));
+
+        while (EventLoopDepth()) {
+            NS_ProcessNextEvent(currentThread, PR_TRUE);
+        }
+    }
 }
-
-namespace {
-
-static JSBool
-SendCommand(JSContext *cx,
-            JSObject *obj,
-            uintN argc,
-            jsval *argv,
-            jsval *rval)
-{
-  if (argc != 1) {
-    JS_ReportError(cx, "Function takes only one argument!");
-    return JS_FALSE;
-  }
-
-  JSString* str = JS_ValueToString(cx, argv[0]);
-  if (!str) {
-    JS_ReportError(cx, "Could not convert argument to string!");
-    return JS_FALSE;
-  }
-
-  nsDependentJSString command(str);
-  if (!Environment(cx)->DoSendCommand(command)) {
-    JS_ReportError(cx, "Failed to send command!");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-static JSBool
-SendCommandWithResponse(JSContext *cx,
-                        JSObject *obj,
-                        uintN argc,
-                        jsval *argv,
-                        jsval *rval)
-{
-  if (argc != 1) {
-    JS_ReportError(cx, "Function takes only one argument!");
-    return JS_FALSE;
-  }
-
-  JSString* str = JS_ValueToString(cx, argv[0]);
-  if (!str) {
-    JS_ReportError(cx, "Could not convert argument to string!");
-    return JS_FALSE;
-  }
-
-  nsDependentJSString command(str);
-  nsAutoString result;
-  if (!Environment(cx)->DoSendCommand(command, &result)) {
-    JS_ReportError(cx, "Failed to send command!");
-    return JS_FALSE;
-  }
-
-  JSString* resultStr = JS_NewUCStringCopyN(cx, result.get(), result.Length());
-  if (!resultStr) {
-    JS_ReportError(cx, "Failed to convert response to string!");
-    return JS_FALSE;
-  }
-
-  *rval = STRING_TO_JSVAL(resultStr);
-  return JS_TRUE;
-}
-
-} /* anonymous namespace */
 
 bool
 XPCShellEnvironment::DefineIPCCommands(TestShellChild* aChild)
@@ -1502,18 +1540,9 @@ XPCShellEnvironment::DefineIPCCommands(TestShellParent* aParent)
 
     JSAutoRequest ar(mCx);
 
-    JSFunction* fun = JS_DefineFunction(mCx, global, "sendCommand",
-                                        SendCommand, 1, JSPROP_ENUMERATE);
-    if (!fun) {
-      NS_WARNING("Failed to define sendCommand function!");
-      return false;
-    }
-
-    fun = JS_DefineFunction(mCx, global, "sendCommandWithResponse",
-                            SendCommandWithResponse, 1, JSPROP_ENUMERATE);
-    if (!fun) {
-      NS_WARNING("Failed to define sendCommandWithResponse function!");
-      return false;
+    if (!JS_DefineFunctions(mCx, global, gParentFunctions)) {
+        NS_ERROR("JS_DefineFunctions failed!");
+        return false;
     }
 
     return true;
@@ -1521,13 +1550,25 @@ XPCShellEnvironment::DefineIPCCommands(TestShellParent* aParent)
 
 JSBool
 XPCShellEnvironment::DoSendCommand(const nsString& aCommand,
-                                   nsString* aResult)
+                                   JSContext* aCx,
+                                   jsval aCallback)
 {
-  nsresult rv = aResult ?
-                mParent->SendSendCommandWithResponse(aCommand, aResult) :
-                mParent->SendSendCommand(aCommand);
+  if (aCx) {
+      TestShellCommandParent* command = static_cast<TestShellCommandParent*>(
+          mParent->SendTestShellCommandConstructor(aCommand));
+      NS_ENSURE_TRUE(command, JS_FALSE);
 
-  return NS_SUCCEEDED(rv) ? JS_TRUE : JS_FALSE;
+      if (!command->SetCallback(aCx, aCallback)) {
+          NS_WARNING("Failed to set callback!");
+          return JS_FALSE;
+      }
+  }
+  else {
+      nsresult rv = mParent->SendExecuteCommand(aCommand);
+      NS_ENSURE_SUCCESS(rv, JS_FALSE);
+  }
+
+  return JS_TRUE;
 }
 
 bool

@@ -6,6 +6,10 @@
 
 #include "mozilla/ipc/TestShellChild.h"
 
+#include "mozilla/XPCOM.h"
+#include "nsXPFEComponentsCID.h"
+#include "nsIAppStartup.h"
+
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -35,27 +39,49 @@ ContentProcessChild::Init(MessageLoop* aIOLoop, IPC::Channel* aChannel)
 IFrameEmbeddingProtocolChild*
 ContentProcessChild::IFrameEmbeddingConstructor(const MagicWindowHandle& hwnd)
 {
-    return new TabChild(hwnd);
+    IFrameEmbeddingProtocolChild* iframe = new TabChild(hwnd);
+    if (iframe && mIFrames.AppendElement(iframe)) {
+        return iframe;
+    }
+    delete iframe;
+    return nsnull;
 }
 
 nsresult
 ContentProcessChild::IFrameEmbeddingDestructor(IFrameEmbeddingProtocolChild* iframe)
 {
-    delete iframe;
+    mIFrames.RemoveElement(iframe);
     return NS_OK;
 }
 
 TestShellProtocolChild*
 ContentProcessChild::TestShellConstructor()
 {
-  return new TestShellChild();
+    TestShellProtocolChild* testshell = new TestShellChild();
+    if (testshell && mTestShells.AppendElement(testshell)) {
+        return testshell;
+    }
+    delete testshell;
+    return nsnull;
 }
 
 nsresult
 ContentProcessChild::TestShellDestructor(TestShellProtocolChild* shell)
 {
-  delete shell;
-  return NS_OK;
+    mTestShells.RemoveElement(shell);
+    return NS_OK;
+}
+
+void
+ContentProcessChild::Quit()
+{
+    mIFrames.Clear();
+    mTestShells.Clear();
+
+    nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+    if (appStartup) {
+        appStartup->Quit(nsIAppStartup::eForceQuit);
+    }
 }
 
 } // namespace dom

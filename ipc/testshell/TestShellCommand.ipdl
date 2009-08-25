@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,46 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _IPC_TESTSHELL_TESTSHELLCHILD_H_
-#define _IPC_TESTSHELL_TESTSHELLCHILD_H_
-
-#include "mozilla/ipc/TestShellProtocolChild.h"
-#include "mozilla/ipc/TestShellCommandProtocolChild.h"
+include protocol "TestShell.ipdl";
 
 namespace mozilla {
 namespace ipc {
 
-class XPCShellEnvironment;
-
-class TestShellChild : public TestShellProtocolChild
+protocol TestShellCommand
 {
-public:
-  TestShellChild();
-  ~TestShellChild();
-
-  nsresult
-  RecvExecuteCommand(const nsString& aCommand);
-
-  TestShellCommandProtocolChild*
-  TestShellCommandConstructor(const nsString& aCommand);
-
-  nsresult
-  RecvTestShellCommandConstructor(TestShellCommandProtocolChild* aActor,
-                                  const nsString& aCommand);
-
-  nsresult
-  TestShellCommandDestructor(TestShellCommandProtocolChild* aCommand,
-                             const nsString& aResponse);
-
-  void SetXPCShell(XPCShellEnvironment* aXPCShell) {
-    mXPCShell = aXPCShell;
-  }
-
-private:
-  XPCShellEnvironment* mXPCShell;
+  manager TestShell;
 };
 
-} /* namespace ipc */
-} /* namespace mozilla */
-
-#endif /* _IPC_TESTSHELL_TESTSHELLCHILD_H_ */
+} // namespace ipc
+} // namespace mozilla
