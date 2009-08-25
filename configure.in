@@ -128,6 +128,7 @@ GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
 LIBGNOME_VERSION=2.0
+GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.6.16
@@ -5154,6 +5155,7 @@ then
         PKG_CHECK_MODULES(MOZ_GNOMEVFS, gnome-vfs-2.0 >= $GNOMEVFS_VERSION gnome-vfs-module-2.0 >= $GNOMEVFS_VERSION,[
             MOZ_GNOMEVFS_LIBS=`echo $MOZ_GNOMEVFS_LIBS | sed 's/-llinc\>//'`
             MOZ_ENABLE_GNOMEVFS=1
+            AC_DEFINE(MOZ_ENABLE_GNOMEVFS)
         ],[
             if test "$MOZ_ENABLE_GNOMEVFS" = "force"
             then
@@ -5185,17 +5187,32 @@ then
     AC_SUBST(MOZ_GCONF_CFLAGS)
     AC_SUBST(MOZ_GCONF_LIBS)
 
-    # The GNOME component is built if gtk2, gconf and gnome-vfs
-    # are all available.
+    dnl ========================================================
+    dnl = GIO support module
+    dnl ========================================================
+    MOZ_ARG_ENABLE_BOOL(gio,
+    [  --enable-gio            Enable GIO support (default: disabled)],
+        MOZ_ENABLE_GIO=force,
+        MOZ_ENABLE_GIO=)
 
-    if test "$MOZ_ENABLE_GTK2" -a "$MOZ_ENABLE_GCONF" -a \
-            "$MOZ_ENABLE_GNOMEVFS"; then
-      MOZ_ENABLE_GNOME_COMPONENT=1
-    else
-      MOZ_ENABLE_GNOME_COMPONENT=
+    if test "$MOZ_ENABLE_GIO" -a "$MOZ_ENABLE_GTK2"
+    then
+        PKG_CHECK_MODULES(MOZ_GIO, gio-2.0 >= $GIO_VERSION,[
+            MOZ_GIO_LIBS=`echo $MOZ_GIO_LIBS | sed 's/-llinc\>//'`
+            MOZ_ENABLE_GIO=1
+            AC_DEFINE(MOZ_ENABLE_GIO)
+        ],[
+            if test "$MOZ_ENABLE_GIO" = "force"
+            then
+                AC_MSG_ERROR([* * * Could not find gio-2.0 >= $GIO_VERSION])
+            fi
+            MOZ_ENABLE_GIO=
+        ])
     fi
 
-    AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
+    AC_SUBST(MOZ_ENABLE_GIO)
+    AC_SUBST(MOZ_GIO_CFLAGS)
+    AC_SUBST(MOZ_GIO_LIBS)
 fi
 
 dnl ========================================================
@@ -5229,6 +5246,18 @@ then
     if test "$MOZ_ENABLE_GNOMEUI"; then
         AC_DEFINE(MOZ_ENABLE_GNOMEUI)
     fi
+
+    # The GNOME component is built if gtk2, gconf and gnome-vfs
+    # are all available.
+
+    if test "$MOZ_ENABLE_GTK2" -a "$MOZ_ENABLE_GCONF" && \
+            (test "$MOZ_ENABLE_GNOMEVFS" || test "$MOZ_ENABLE_GIO"); then
+      MOZ_ENABLE_GNOME_COMPONENT=1
+    else
+      MOZ_ENABLE_GNOME_COMPONENT=
+    fi
+
+    AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
 fi
 AC_SUBST(MOZ_ENABLE_GNOMEUI)
 AC_SUBST(MOZ_GNOMEUI_CFLAGS)
@@ -5747,6 +5776,14 @@ if test -z "$MOZ_ENABLE_GNOMEVFS" && test `echo "$MOZ_EXTENSIONS" | grep -c gnom
         AC_MSG_WARN([Cannot build gnomevfs without required libraries. Removing gnomevfs from MOZ_EXTENSIONS.])
     fi
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gnomevfs||'`
+fi
+
+if test -z "$MOZ_ENABLE_GIO" && test `echo "$MOZ_EXTENSIONS" | grep -c gio` -ne 0; then
+    # Suppress warning on non-X11 platforms
+    if test -n "$MOZ_X11"; then
+        AC_MSG_WARN([Cannot build gio without required libraries. Removing gio from MOZ_EXTENSIONS.])
+    fi
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gio||'`
 fi
 
 if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
