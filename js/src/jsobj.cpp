@@ -4976,6 +4976,11 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             JS_ASSERT(ne->cursor == (jsword) length);
             if (allocated != 0) {
                 JS_LOCK_GC(cx->runtime);
+                if (!js_AddAsGCBytes(cx, allocated)) {
+                    /* js_AddAsGCBytes releases the GC lock on failures. */
+                    cx->free(ne);
+                    return JS_FALSE;
+                }
                 ne->next = cx->runtime->nativeEnumerators;
                 cx->runtime->nativeEnumerators = ne;
                 JS_ASSERT(((jsuword) ne & (jsuword) 1) == (jsuword) 0);
@@ -5064,6 +5069,7 @@ js_TraceNativeEnumerators(JSTracer *trc)
                 js_TraceId(trc, *cursor);
             } while (++cursor != end);
         } else if (doGC) {
+            js_RemoveAsGCBytes(rt, NativeEnumeratorSize(ne->length));
             *nep = ne->next;
             trc->context->free(ne);
             continue;
