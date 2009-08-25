@@ -54,13 +54,6 @@ ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME  = mozuconv
 endif
 
-REQUIRES	= xpcom \
-		  string \
-		  intl \
-		  locale \
-		  unicharutil \
-		  necko \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsUConvModule.cpp \

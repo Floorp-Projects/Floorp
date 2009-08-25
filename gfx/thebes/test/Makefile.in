@@ -45,17 +45,6 @@ MOZILLA_INTERNAL_API = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES = \
-	xpcom \
-	string \
-	thebes \
-	cairo \
-	pref \
-	necko \
-	unicharutil \
-	nspr \
-	qcms \
-	$(NULL)
 
 # All platforms
 CPPSRCS = \

@@ -55,17 +55,6 @@ CPP_UNIT_TESTS = \
                  TestPlainTextSerializer.cpp \
                  $(NULL)
 
-REQUIRES += \
-  caps \
-  content \
-  dom \
-  js \
-  netwerk \
-  string \
-  xpcom \
-  xpconnect \
-  htmlparser \
-  $(NULL)
 
 XPCSHELL_TESTS = \
                unit \

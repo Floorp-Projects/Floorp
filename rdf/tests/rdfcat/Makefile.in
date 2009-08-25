@@ -45,10 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= rdfcat$(BIN_SUFFIX)
 
 CPPSRCS		= rdfcat.cpp
-REQUIRES	= xpcom \
-		  rdf \
-		  necko \
-		  $(NULL)
 
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \

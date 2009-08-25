@@ -45,9 +45,6 @@ CPPSRCS = \
 	plugin.cpp		\
 	$(NULL)
 
-REQUIRES = \
-		plugin		\
-		$(NULL)
 
 LOCAL_INCLUDES  = -I$(srcdir)/.. -I$(srcdir)/../../public \
 		  -I/usr/lib/glib/include 

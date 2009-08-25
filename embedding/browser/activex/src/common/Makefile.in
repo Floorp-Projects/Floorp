@@ -47,17 +47,6 @@ MODULE          = ax_common
 LIBRARY_NAME    = ax_common_s
 XPIDL_MODULE    = ax_common
 
-REQUIRES        = \
-                xpcom \
-                string \
-                dom \
-                js \
-                widget \
-                gfx \
-                layout \
-                content \
-                necko \
-                $(NULL)
 
 CPPSRCS         = \
                 IEHtmlNode.cpp \

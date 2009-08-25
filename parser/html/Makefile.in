@@ -45,27 +45,6 @@ MODULE		= html5
 LIBRARY_NAME	= html5p_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= \
-		gfx \
-		thebes \
-		locale \
-		js \
-		pref \
-		necko \
-		xpcom \
-		string \
-		htmlparser \
-		content \
-		layout \
-		widget \
-		dom \
-		uconv \
-		xpconnect \
-		util \
-		webshell \
-		docshell \
-		chardet \
-		$(NULL)
 
 EXPORTS		= \
 		nsHtml5Module.h \

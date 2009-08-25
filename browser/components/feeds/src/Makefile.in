@@ -60,7 +60,6 @@ EXTRA_PP_COMPONENTS = \
 	WebContentConverter.js \
 	$(NULL)
 
-REQUIRES = xpcom string necko mimetype
 
 CPPSRCS = nsFeedSniffer.cpp
 

@@ -50,13 +50,6 @@ LIBXUL_LIBRARY   = 1
 IS_COMPONENT     = 1
 EXPORT_LIBRARY   = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  appshell \
-		  rdf \
-		  dom \
-		  docshell \
-		  $(NULL)
 
 CPPSRCS = nsWindowDataSource.cpp
 

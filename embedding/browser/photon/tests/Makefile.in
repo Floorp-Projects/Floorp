@@ -43,30 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES    = xpcom \
-    	      string \
-		      docshell \
-		      webshell \
-		      necko \
-		      widget \
-		      dom \
-		      gfx \
-		      layout \
-		      content \
-		      uriloader \
-		      webbrwsr \
-		      shistory \
-		      embed_base \
-		      pref \
-			  view\
-			  windowwatcher \
-			  appshell \
-			  exthandler \
-			  mozcomps \
-			  find \
-			  appcomps \
-			  mimetype \
- 	          $(NULL)
 
 CPPSRCS		= \
 		TestPhEmbed.cpp

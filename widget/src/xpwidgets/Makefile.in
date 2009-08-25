@@ -46,24 +46,6 @@ MODULE		= widget
 LIBRARY_NAME	= xpwidgets_s
 LIBXUL_LIBRARY  = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  gfx \
-		  layout \
-		  content \
-		  dom \
-		  imglib2 \
-		  pref \
-		  locale \
-		  necko \
-		  htmlparser \
-		  uconv \
-		  unicharutil \
-		  view \
-		  windowwatcher \
-		  qcms \
-		  thebes \
-		  $(NULL)
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT
 

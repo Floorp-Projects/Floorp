@@ -46,23 +46,6 @@ MODULE		= webbrowserpersist
 LIBRARY_NAME	= webbrowserpersist_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  content \
-		  layout \
-		  necko \
-		  widget \
-		  exthandler \
-		  uriloader \
-		  mimetype \
-		  intl \
-		  unicharutil \
-		  docshell \
-		  shistory \
-		  imglib2 \
-		  gfx \
-		  $(NULL)
 
 CPPSRCS		= nsWebBrowserPersist.cpp \
                   $(NULL)

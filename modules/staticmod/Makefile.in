@@ -51,7 +51,6 @@ FORCE_SHARED_LIB = 1
 
 CPPSRCS		= nsMetaModule.cpp
 
-REQUIRES = xpcom
 
 include $(topsrcdir)/config/config.mk
 

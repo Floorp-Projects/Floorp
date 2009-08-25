@@ -44,9 +44,6 @@ include $(srcdir)/../src/objs.mk
 
 MODULE		= profdirserviceprovider
 LIBRARY_NAME	= profdirserviceprovidersa_s
-REQUIRES	= xpcom \
-		  string \
-		  $(NULL)
 
 CPPSRCS		= $(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)
 

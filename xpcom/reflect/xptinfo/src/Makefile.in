@@ -46,9 +46,6 @@ MODULE		= xpcom
 LIBRARY_NAME	= xptinfo
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= \
-		  string \
-		  $(NULL)
 
 CPPSRCS		= \
 		xptiFile.cpp	\
