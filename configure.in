@@ -6353,17 +6353,6 @@ fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
 
-PKG_CHECK_MODULES(MOZ_LOCATION, [liblocation gpsbt],
-                  NS_MAEMO_LOCATION=1,
-                  NS_MAEMO_LOCATION=)
-
-if test $NS_MAEMO_LOCATION; then
-  AC_DEFINE(NS_MAEMO_LOCATION)
-fi
-
-AC_SUBST(MOZ_LOCATION_CFLAGS)
-AC_SUBST(MOZ_LOCATION_LIBS)
-
 dnl ========================================================
 dnl = faststripe theme
 dnl ========================================================

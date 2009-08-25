@@ -61,11 +61,6 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/dom/base \
 		$(NULL)
 
-ifdef NS_MAEMO_LOCATION
-CPPSRCS		+= MaemoLocationProvider.cpp
-LOCAL_INCLUDES	+= $(MOZ_LOCATION_CFLAGS)
-endif
-
 ifdef WINCE_WINDOWS_MOBILE
 CPPSRCS         += WinMobileLocationProvider.cpp
 endif
