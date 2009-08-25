@@ -687,6 +687,32 @@ let Utils = {
     Utils._openChromeWindow("Sync", "pick-sync.xul");
   },
 
+  __errorBundle: null,
+  get _errorBundle() {
+    if (!this.__errorBundle) {
+      this.__errorBundle = new StringBundle("chrome://weave/locales/errors.properties");
+    }
+    return this.__errorBundle;
+  },
+
+  getErrorString: function Utils_getErrorString(error, args) {
+    switch (error) {
+      case Weave.LOGIN_FAILED_NETWORK_ERROR:
+        errorString = "error.login.reason.network";
+        break;
+      case Weave.LOGIN_FAILED_INVALID_PASSPHRASE:
+        errorString = "error.login.reason.passphrase";
+        break;
+      case Weave.LOGIN_FAILED_LOGIN_REJECTED:
+        errorString = "error.login.reason.password";
+        break;
+      default:
+        errorString = "error.login.reason.unknown";
+        break;
+    }
+    return this._errorBundle.get(errorString, args || null);
+  },
+
   // assumes an nsIConverterInputStream
   readStream: function Weave_readStream(is) {
     let ret = "", str = {};
