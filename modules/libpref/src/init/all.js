@@ -1597,12 +1597,14 @@ pref("intl.jis0208.map", "CP932");
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);
 
+#ifdef NS_ENABLE_TSF
 // Enable/Disable TSF support
 pref("intl.enable_tsf_support", false);
 
 // We need to notify the layout change to TSF, but we cannot check the actual
 // change now, therefore, we always notify it by this fequency.
 pref("intl.tsf.on_layout_change_interval", 100);
+#endif
 
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
 pref("ui.panel.default_level_parent", false);

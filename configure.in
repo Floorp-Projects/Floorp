@@ -2318,7 +2318,7 @@ case "$target" in
 
         AC_LANG_SAVE
         AC_LANG_CPLUSPLUS
-        AC_CHECK_HEADERS(atlbase.h wpcapi.h)
+        AC_CHECK_HEADERS(atlbase.h)
         AC_LANG_RESTORE
         ;;
     esac
@@ -4552,9 +4552,16 @@ esac
 
 case "$target_os" in
     msvc*|mks*|cygwin*|mingw*)
+        NS_ENABLE_TSF=1
         if test -z "$GNU_CC"; then 
+            if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+                NS_ENABLE_TSF=
+            fi
             XPC_IDISPATCH_SUPPORT=1
             MOZ_NO_ACTIVEX_SUPPORT=
+        fi
+        if test -n "$NS_ENABLE_TSF"; then
+            AC_DEFINE(NS_ENABLE_TSF)
         fi
         ;;
 esac
@@ -8220,6 +8227,7 @@ AC_SUBST(USE_N32)
 AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
+AC_SUBST(NS_ENABLE_TSF)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
