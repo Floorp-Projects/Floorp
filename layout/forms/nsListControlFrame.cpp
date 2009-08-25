@@ -233,6 +233,16 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame");
 
+  if (IsInDropDownMode()) {
+    // XXX Because we have an opaque widget and we get called to paint with
+    // this frame as the root of a stacking context we need make sure to draw
+    // some opaque color over the whole widget. (Bug 511323)
+    aLists.BorderBackground()->AppendNewToBottom(
+      new (aBuilder) nsDisplaySolidColor(
+        this, nsRect(aBuilder->ToReferenceFrame(this), GetSize()),
+        mLastDropdownBackstopColor));
+  }
+
   // REVIEW: The selection visibility code that used to be here is what
   // we already do by default.
   // REVIEW: There was code here to paint the theme background. But as far
@@ -1731,6 +1741,9 @@ nsListControlFrame::SyncViewWithFrame()
 void
 nsListControlFrame::AboutToDropDown()
 {
+  NS_ASSERTION(IsInDropDownMode(),
+    "AboutToDropDown called without being in dropdown mode");
+
   if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
     ScrollToIndex(GetSelectedIndex());
 #ifdef ACCESSIBILITY
@@ -1738,6 +1751,28 @@ nsListControlFrame::AboutToDropDown()
 #endif
   }
   mItemSelectionStarted = PR_FALSE;
+
+  // Our widget doesn't get invalidated on changes to the rest of the document,
+  // so compute and store this color at the start of a dropdown so we don't
+  // get weird painting behaviour.
+  // We start looking for backgrounds above the combobox frame to avoid
+  // duplicating the combobox frame's background and compose each background
+  // color we find underneath until we have an opaque color, or run out of
+  // backgrounds. We compose with the PresContext default background color,
+  // which is always opaque, in case we don't end up with an opaque color.
+  // This gives us a very poor approximation of translucency.
+  nsIFrame* comboboxFrame = do_QueryFrame(mComboboxFrame);
+  nsStyleContext* context = comboboxFrame->GetStyleContext()->GetParent();
+  mLastDropdownBackstopColor = NS_RGBA(0,0,0,0);
+  while (NS_GET_A(mLastDropdownBackstopColor) < 255 && context) {
+    mLastDropdownBackstopColor =
+      NS_ComposeColors(context->GetStyleBackground()->mBackgroundColor,
+                       mLastDropdownBackstopColor);
+    context = context->GetParent();
+  }
+  mLastDropdownBackstopColor =
+    NS_ComposeColors(PresContext()->DefaultBackgroundColor(),
+                     mLastDropdownBackstopColor);
 }
 
 // We are about to be rolledup from the outside (ComboboxFrame)
