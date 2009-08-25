@@ -2795,9 +2795,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
     if (fp->sharpArray)
         JS_CALL_OBJECT_TRACER(trc, fp->sharpArray, "sharp array");
-
-    if (fp->xmlNamespace)
-        JS_CALL_OBJECT_TRACER(trc, fp->xmlNamespace, "xmlNamespace");
 }
 
 static void

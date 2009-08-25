@@ -768,7 +768,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->frame.sharpArray = NULL;
     gen->frame.flags = (fp->flags & ~JSFRAME_ROOTED_ARGV) | JSFRAME_GENERATOR;
     gen->frame.dormantNext = NULL;
-    gen->frame.xmlNamespace = NULL;
     /* JSOP_GENERATOR appears in the prologue, outside all blocks.  */
     JS_ASSERT(!fp->blockChain);
     gen->frame.blockChain = NULL;

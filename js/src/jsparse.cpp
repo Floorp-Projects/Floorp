@@ -5410,6 +5410,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                         JSMSG_BAD_DEFAULT_XML_NAMESPACE);
             return NULL;
         }
+
+        /* Is this an E4X dagger I see before me? */
+        tc->flags |= TCF_FUN_HEAVYWEIGHT;
         pn2 = Expr(cx, ts, tc);
         if (!pn2)
             return NULL;
