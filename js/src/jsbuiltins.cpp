@@ -334,17 +334,6 @@ js_HasNamedPropertyInt32(JSContext* cx, JSObject* obj, int32 index)
 }
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_HasNamedPropertyInt32, CONTEXT, OBJECT, INT32, 0, 0)
 
-jsval FASTCALL
-js_CallGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
-{
-    JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
-    jsval v;
-    if (!js_GetSprop(cx, sprop, obj, &v))
-        return JSVAL_ERROR_COOKIE;
-    return v;
-}
-JS_DEFINE_CALLINFO_3(extern, JSVAL, js_CallGetter, CONTEXT, OBJECT, SCOPEPROP, 0, 0)
-
 JSString* FASTCALL
 js_TypeOfObject(JSContext* cx, JSObject* obj)
 {
