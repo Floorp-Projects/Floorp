@@ -1271,17 +1271,30 @@ typedef enum JSGCParamKey {
     /* Maximum nominal heap before last ditch GC. */
     JSGC_MAX_BYTES          = 0,
 
+    /* Number of JS_malloc bytes before last ditch GC. */
+    JSGC_MAX_MALLOC_BYTES   = 1,
+
     /* Hoard stackPools for this long, in ms, default is 30 seconds. */
-    JSGC_STACKPOOL_LIFESPAN = 1,
+    JSGC_STACKPOOL_LIFESPAN = 2,
+
+    /*
+     * The factor that defines when the GC is invoked. The factor is a
+     * percent of the memory allocated by the GC after the last run of
+     * the GC. When the current memory allocated by the GC is more than
+     * this percent then the GC is invoked. The factor cannot be less
+     * than 100 since the current memory allocated by the GC cannot be less
+     * than the memory allocated after the last run of the GC.
+     */
+    JSGC_TRIGGER_FACTOR = 3,
 
     /* Amount of bytes allocated by the GC. */
-    JSGC_BYTES = 2,
+    JSGC_BYTES = 4,
 
     /* Number of times when GC was invoked. */
-    JSGC_NUMBER = 3,
+    JSGC_NUMBER = 5,
 
     /* Max size of the code cache in bytes. */
-    JSGC_MAX_CODE_CACHE_BYTES = 4
+    JSGC_MAX_CODE_CACHE_BYTES = 6
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)
