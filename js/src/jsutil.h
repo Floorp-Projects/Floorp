@@ -202,26 +202,6 @@ static JS_INLINE void js_free(void* p) {
     free(p);
 }
 
-#ifdef XP_UNIX
-#ifdef __APPLE__
-#include <malloc/malloc.h>
-static JS_INLINE size_t js_malloc_size(void* p) {
-    return malloc_size(p);
-}
-#else
-#include <malloc.h>
-static JS_INLINE size_t js_malloc_size(void* p) {
-    return malloc_usable_size(p);
-}
-#endif
-#endif
-#ifdef XP_WIN
-#include <malloc.h>
-static JS_INLINE size_t js_malloc_size(void* p) {
-    return _msize(p);
-}
-#endif
-
 JS_END_EXTERN_C
 
 #endif /* jsutil_h___ */
