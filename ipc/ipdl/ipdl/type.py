@@ -790,6 +790,12 @@ class CheckTypes(TcheckVisitor):
 
         loc = md.decl.loc
 
+        if mtype.isSync() and (mtype.isOut() or mtype.isInout()):
+            self.error(
+                loc,
+                "sync parent-to-child messages are verboten (here, message `%s' in protocol `%s')",
+                mname, pname)
+
         if mtype.needsMoreJuiceThan(ptype):
             self.error(
                 loc,
@@ -838,7 +844,7 @@ def unique_pairs(s):
         for j in xrange(i+1, n):
             yield (e1, s[j])
 
-def cross_product(s1, s2):
+def cartesian_product(s1, s2):
     for e1 in s1:
         for e2 in s2:
             yield (e1, e2)
@@ -950,7 +956,7 @@ upon trigger |t|, or { } if |t| is not a trigger in |S|.'''
             t1_out = t1.toStates
             t2_out = t2.toStates
 
-            for (T1, T2) in cross_product(t1_out, t2_out):
+            for (T1, T2) in cartesian_product(t1_out, t2_out):
                 U1 = triggerTargets(T1, t2)
                 U2 = triggerTargets(T2, t1)
 
