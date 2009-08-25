@@ -682,6 +682,22 @@ enum {
 #define B_nochk(_t)                             \
     B_cond_chk(AL,_t,0)
 
+#define B(t)    B_cond(AL,t)
+#define BHI(t)  B_cond(HI,t)
+#define BLS(t)  B_cond(LS,t)
+#define BHS(t)  B_cond(HS,t)
+#define BLO(t)  B_cond(LO,t)
+#define BEQ(t)  B_cond(EQ,t)
+#define BNE(t)  B_cond(NE,t)
+#define BLT(t)  B_cond(LT,t)
+#define BGE(t)  B_cond(GE,t)
+#define BLE(t)  B_cond(LE,t)
+#define BGT(t)  B_cond(GT,t)
+#define BVS(t)  B_cond(VS,t)
+#define BVC(t)  B_cond(VC,t)
+#define BCC(t)  B_cond(CC,t)
+#define BCS(t)  B_cond(CS,t)
+
 // NB: don't use COND_AL here, we shift the condition into place!
 #define JMP(_t)                                 \
     B_cond_chk(AL,_t,1)
