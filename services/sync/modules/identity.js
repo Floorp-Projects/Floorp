@@ -51,12 +51,9 @@ Utils.lazy(this, 'ID', IDManager);
 // For storing identities we'll use throughout Weave
 function IDManager() {
   this._ids = {};
-  this._aliases = {};
 }
 IDManager.prototype = {
   get: function IDMgr_get(name) {
-    if (name in this._aliases)
-      return this._ids[this._aliases[name]];
     if (name in this._ids)
       return this._ids[name];
     return null;
@@ -67,15 +64,6 @@ IDManager.prototype = {
   },
   del: function IDMgr_del(name) {
     delete this._ids[name];
-  },
-  getAlias: function IDMgr_getAlias(alias) {
-    return this._aliases[alias];
-  },
-  setAlias: function IDMgr_setAlias(name, alias) {
-    this._aliases[alias] = name;
-  },
-  delAlias: function IDMgr_delAlias(alias) {
-    delete this._aliases[alias];
   }
 };
 

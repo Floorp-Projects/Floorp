@@ -126,7 +126,6 @@ RecordManager.prototype = {
   _init: function RegordMgr__init() {
     this._log = Log4Moz.repository.getLogger(this._logName);
     this._records = {};
-    this._aliases = {};
   },
 
   import: function RecordMgr_import(url) {
@@ -148,17 +147,10 @@ RecordManager.prototype = {
   },
 
   get: function RecordMgr_get(url) {
-    // Note: using url object directly as key for this._records cache does not
-    // work because different url objects (even pointing to the same place) are
-    // different objects and therefore not equal. So always use the string, not
-    // the object, as a key.
-    // TODO: use the string as key for this._aliases as well?  (Don't know)
+    // Use a url string as the key to the hash
     let spec = url.spec ? url.spec : url;
     if (spec in this._records)
       return this._records[spec];
-
-    if (url in this._aliases)
-      url = this._aliases[url];
     return this.import(url);
   },
 
@@ -168,10 +160,7 @@ RecordManager.prototype = {
   },
 
   contains: function RegordMgr_contains(url) {
-    let record = null;
-    if (url in this._aliases)
-      url = this._aliases[url];
-    if (url in this._records)
+    if ((url.spec || url) in this._records)
       return true;
     return false;
   },
@@ -182,14 +171,5 @@ RecordManager.prototype = {
 
   del: function RegordMgr_del(url) {
     delete this._records[url];
-  },
-  getAlias: function RegordMgr_getAlias(alias) {
-    return this._aliases[alias];
-  },
-  setAlias: function RegordMgr_setAlias(url, alias) {
-    this._aliases[alias] = url;
-  },
-  delAlias: function RegordMgr_delAlias(alias) {
-    delete this._aliases[alias];
   }
 };
