@@ -54,8 +54,6 @@ MODULE_NAME	= nsAccessibilityModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  $(NULL)
 
 CPPSRCS		= nsAccessibilityFactory.cpp
 

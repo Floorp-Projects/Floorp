@@ -63,12 +63,6 @@ LIBRARY_NAME=XUL
 MAKE_FRAMEWORK=1
 endif
 
-REQUIRES = \
-	xpcom \
-	string \
-	$(ZLIB_REQUIRES) \
-	xulapp \
-	$(NULL)
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 CPPSRCS += dlldeps-xul.cpp

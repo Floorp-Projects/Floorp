@@ -63,39 +63,6 @@ EXTRA_DSO_LIBS	= gkgfx
 endif
 EXTRA_DSO_LIBS	+= thebes
 
-REQUIRES	= xpcom \
-		  string \
-		  content \
-		  gfx \
-		  widget \
-		  view \
-		  locale \
-		  necko \
-		  dom \
-		  storage \
-		  editor \
-		  txmgr \
-		  webshell \
-		  docshell \
-		  htmlparser \
-		  js \
-		  xpconnect \
-		  caps \
-		  rdf \
-		  xuldoc \
-		  imglib2 \
-		  pref \
-		  unicharutil \
-		  xultmpl \
-		  lwbrk \
-		  plugin \
-		  commandhandler \
-		  webbrwsr \
-		  uconv \
-		  txtsvc \
-		  thebes \
-		  html5 \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsLayoutModule.cpp \

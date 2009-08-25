@@ -45,11 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= rdfpoll$(BIN_SUFFIX)
 CPPSRCS		= rdfpoll.cpp
 
-REQUIRES	= xpcom \
-		  string \
-		  rdf \
-		  necko \
-		  $(NULL)
 
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \

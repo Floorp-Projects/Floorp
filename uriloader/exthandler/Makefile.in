@@ -71,22 +71,6 @@ VPATH		:= $(srcdir) $(srcdir)/$(OSDIR)
 MODULE = exthandler
 LIBRARY_NAME    = exthandler_s
 LIBXUL_LIBRARY  = 1
-REQUIRES	= xpcom \
-		  string \
-		  unicharutil \
-		  mimetype \
-		  uriloader \
-		  necko \
-		  webshell \
-		  plugin \
-		  pref \
-		  intl \
-		  uconv \
-		  docshell \
-		  windowwatcher \
-		  embed_base \
-		  dom \
-		  $(NULL)
 
 ifdef MOZ_PHOENIX
 REQUIRES	+= toolkitcomps

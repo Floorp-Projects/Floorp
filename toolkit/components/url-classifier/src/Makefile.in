@@ -12,16 +12,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
 
-REQUIRES = docshell \
-           necko \
-           storage \
-           string \
-           uriloader \
-           xpcom \
-           pipnss \
-           sqlite3 \
-           $(ZLIB_REQUIRES) \
-           $(NULL)
 
 CPPSRCS = \
           nsUrlClassifierDBService.cpp \

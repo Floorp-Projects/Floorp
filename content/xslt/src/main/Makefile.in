@@ -49,11 +49,6 @@ ifdef MARK_INC
 SIMPLE_PROGRAMS += txXSLTMarkDriver$(BIN_SUFFIX)
 endif
 
-REQUIRES = string \
-	   xpcom \
-	   expat \
-	   jprof \
-	   $(NULL)
 
 CPP_PROG_LINK          = 1
 

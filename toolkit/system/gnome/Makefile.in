@@ -47,18 +47,6 @@ LIBRARY_NAME	= mozgnome
 FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1
 
-REQUIRES = \
-	xpcom \
-	string \
-	necko \
-	alerts \
-	gfx \
-	imglib2 \
-	intl \
-	widget \
-	thebes \
-	cairo \
-	$(NULL)
 
 CPPSRCS = \
 	nsGConfService.cpp \

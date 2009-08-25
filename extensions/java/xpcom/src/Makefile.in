@@ -50,10 +50,6 @@ ifndef MOZ_ENABLE_LIBXUL
 DEFINES += -DIMPL_XREAPI
 endif
 
-REQUIRES	= xpcom \
-		  string \
-		  xulapp \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsAppFileLocProviderProxy.cpp \

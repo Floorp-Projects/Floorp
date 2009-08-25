@@ -51,9 +51,6 @@ MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue_s
 DIST_INSTALL	= 1
 
-REQUIRES = \
-		string \
-		$(NULL)
 
 ifdef NS_TRACE_MALLOC
 REQUIRES += tracemalloc

@@ -7,10 +7,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES = \
-  string \
-  xpcom \
-  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -46,12 +46,6 @@ MODULE		= imgicon
 LIBRARY_NAME	= imgiconbeos_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  intl \
-		  mimetype \
-		  $(NULL)
 
 CPPSRCS		= nsIconChannel.cpp
 

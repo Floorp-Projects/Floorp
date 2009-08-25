@@ -50,13 +50,6 @@ ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
 endif
 
-REQUIRES = \
-	xpcom \
-	string \
-	necko \
-	js \
-	xpconnect \
-	$(NULL)
 
 CPPSRCS = \
 	nsPrivateBrowsingServiceWrapper.cpp \

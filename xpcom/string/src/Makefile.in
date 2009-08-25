@@ -49,8 +49,6 @@ MODULE		= string
 LIBRARY_NAME	= string_s
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= xpcom \
-		  $(NULL)
 
 CPPSRCS		=				\
 		nsDependentString.cpp		\

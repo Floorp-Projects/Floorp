@@ -48,21 +48,6 @@ LIBXUL_LIBRARY = 1
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-REQUIRES = \
-        xpcom \
-		content \
-        layout \
-		pref \
-		widget \
-		string \
-		dom \
-		js \
-		caps \
-		xpconnect\
-		intl \
-		necko \
-		windowwatcher \
-		$(NULL)
 
 CPPSRCS		= \
 		nsGeolocation.cpp \

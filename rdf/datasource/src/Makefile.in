@@ -46,10 +46,6 @@ MODULE		= rdf
 LIBRARY_NAME	= rdfdatasource_s
 LIBXUL_LIBRARY  = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsLocalStore.cpp \
