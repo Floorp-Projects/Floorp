@@ -2092,7 +2092,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
     }
 
     if (content->Tag() == nsGkAtoms::form &&
-        content->IsHTML()) {
+        content->IsNodeOfType(nsINode::eHTML)) {
       // The child is contained within a form, but not the right form
       // so we ignore it.
 

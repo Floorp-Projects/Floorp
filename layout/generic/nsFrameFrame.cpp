@@ -394,7 +394,7 @@ nsSubDocumentFrame::GetIntrinsicWidth()
     return 0;  // HTML <frame> has no useful intrinsic width
   }
 
-  if (mContent->IsXUL()) {
+  if (mContent->IsNodeOfType(nsINode::eXUL)) {
     return 0;  // XUL <iframe> and <browser> have no useful intrinsic width
   }
 
@@ -412,7 +412,7 @@ nsSubDocumentFrame::GetIntrinsicHeight()
   // <frame> processing does not use this routine, only <iframe>
   NS_ASSERTION(IsInline(), "Shouldn't have been called");
 
-  if (mContent->IsXUL()) {
+  if (mContent->IsNodeOfType(nsINode::eXUL)) {
     return 0;
   }
 
@@ -685,7 +685,7 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
     if (!mFrameLoader) 
       return NS_OK;
 
-    if (!mContent->IsXUL()) {
+    if (!mContent->IsNodeOfType(nsINode::eXUL)) {
       return NS_OK;
     }
 

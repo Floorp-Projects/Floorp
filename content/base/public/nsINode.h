@@ -293,21 +293,28 @@ public:
     ePROCESSING_INSTRUCTION = 1 << 5,
     /** comment nodes */
     eCOMMENT             = 1 << 6,
+    /** html elements */
+    eHTML                = 1 << 7,
     /** form control elements */
-    eHTML_FORM_CONTROL   = 1 << 7,
+    eHTML_FORM_CONTROL   = 1 << 8,
     /** XUL elements */
+    eXUL                 = 1 << 9,
+    /** svg elements */
+    eSVG                 = 1 << 10,
     /** document fragments */
-    eDOCUMENT_FRAGMENT   = 1 << 8,
+    eDOCUMENT_FRAGMENT   = 1 << 11,
     /** data nodes (comments, PIs, text). Nodes of this type always
      returns a non-null value for nsIContent::GetText() */
-    eDATA_NODE           = 1 << 9,
+    eDATA_NODE           = 1 << 12,
+    /** nsMathMLElement */
+    eMATHML              = 1 << 13,
     /** nsHTMLMediaElement */
-    eMEDIA               = 1 << 10
+    eMEDIA               = 1 << 14
   };
 
   /**
    * API for doing a quick check if a content is of a given
-   * type, such as Text, Document, Comment ...  Use this when you can instead of
+   * type, such as HTML, XUL, Text, ...  Use this when you can instead of
    * checking the tag.
    *
    * @param aFlags what types you want to test for (see above)

@@ -175,7 +175,7 @@ nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
   if (nsEvent)
     nsEvent->GetOriginalTarget(getter_AddRefs(target));
   nsCOMPtr<nsIContent> content(do_QueryInterface(target));
-  if (content && !content->IsXUL()) {
+  if (content && !content->IsNodeOfType(nsINode::eXUL)) {
     eEventAction action = ::GetActionForEvent(aEvent);
     switch (action) {
       case eEventAction_Tab:

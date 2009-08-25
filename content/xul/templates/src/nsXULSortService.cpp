@@ -112,7 +112,7 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
   for (PRUint32 childIndex = 0; childIndex < numChildren; ++childIndex) {
     nsIContent *child = content->GetChildAt(childIndex);
 
-    if (child->IsXUL()) {
+    if (child->IsNodeOfType(nsINode::eXUL)) {
       nsIAtom *tag = child->Tag();
 
       if (tag == nsGkAtoms::treecols) {

@@ -1220,7 +1220,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
       // There is a content node that wants a frame.
       nsIContent *nextContent = parentContent->GetChildAt(i + aOffset + 1);
 
-      if (!nextContent->IsXUL() ||
+      if (!nextContent->IsNodeOfType(nsINode::eXUL) ||
           nextContent->Tag() != nsGkAtoms::listitem)
         return GetNextItemBox(aBox, ++aOffset, aCreated);
 

@@ -214,7 +214,7 @@ mozSanitizingHTMLSerializer::IsContainer(PRInt32 aId)
 PRInt32
 mozSanitizingHTMLSerializer::GetIdForContent(nsIContent* aContent)
 {
-  if (!aContent->IsHTML()) {
+  if (!aContent->IsNodeOfType(nsINode::eHTML)) {
     return eHTMLTag_unknown;
   }
 

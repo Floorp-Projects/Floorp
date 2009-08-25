@@ -1592,7 +1592,7 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
   // body.
   if (!newBody || !(newBody->Tag() == nsGkAtoms::body ||
                     newBody->Tag() == nsGkAtoms::frameset) ||
-      !root || !root->IsHTML() ||
+      !root || !root->IsNodeOfType(nsINode::eHTML) ||
       root->Tag() != nsGkAtoms::html) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
@@ -2824,7 +2824,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
   nsIContent *e = entry->GetIdContent();
 
-  if (e && e->IsHTML()) {
+  if (e && e->IsNodeOfType(nsINode::eHTML)) {
     nsIAtom *tag = e->Tag();
 
     if ((tag == nsGkAtoms::embed  ||
