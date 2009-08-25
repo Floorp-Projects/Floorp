@@ -70,6 +70,7 @@ _TEST_FILES = \
         test_bug383369.html \
         test_bug455367.html \
         test_bug472986.html \
+        test_bug477118.html \
         test_cssBefore1.html \
         test_cssContent1.html \
         test_cssContent2.html \
