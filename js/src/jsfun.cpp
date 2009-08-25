@@ -281,7 +281,8 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
     while ((parent = OBJ_GET_PARENT(cx, global)) != NULL)
         global = parent;
 
-    argsobj = NewArguments(cx, global, fp->argc, fp->callee);
+    JS_ASSERT(fp->argv);
+    argsobj = NewArguments(cx, global, fp->argc, fp->argv[-2]);
     if (!argsobj)
         return argsobj;
 
@@ -808,8 +809,9 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 
         /* Root env before js_DefineNativeProperty (-> JSClass.addProperty). */
         fp->scopeChain = env;
+        JS_ASSERT(fp->argv);
         if (!js_DefineNativeProperty(cx, fp->scopeChain, ATOM_TO_JSID(lambdaName),
-                                     OBJECT_TO_JSVAL(fp->callee),
+                                     fp->argv[-2],
                                      CalleeGetter, NULL,
                                      JSPROP_PERMANENT | JSPROP_READONLY,
                                      0, 0, NULL)) {
@@ -824,8 +826,9 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     }
 
     callobj->setPrivate(fp);
-    JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->callee));
-    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, OBJECT_TO_JSVAL(fp->callee));
+    JS_ASSERT(fp->argv);
+    JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2])));
+    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, fp->argv[-2]);
     fp->callobj = callobj;
 
     /*
@@ -1190,7 +1193,8 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
         if (fp) {
             JS_ASSERT(fp->fun);
-            *vp = OBJECT_TO_JSVAL(fp->callee);
+            JS_ASSERT(fp->argv);
+            *vp = fp->argv[-2];
         }
     }
     return JS_TRUE;
@@ -1323,7 +1327,8 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 return JS_TRUE;
             }
 
-            *vp = OBJECT_TO_JSVAL(fp->down->callee);
+            JS_ASSERT(fp->down->argv);
+            *vp = fp->down->argv[-2];
         } else {
             *vp = JSVAL_NULL;
         }

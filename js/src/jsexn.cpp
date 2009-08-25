@@ -281,7 +281,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
         if (fp->fun && fp->argv) {
             v = JSVAL_NULL;
             if (checkAccess &&
-                !checkAccess(cx, fp->callee, callerid, JSACC_READ, &v)) {
+                !checkAccess(cx, fp->callee(), callerid, JSACC_READ, &v)) {
                 break;
             }
             valueCount += fp->argc;

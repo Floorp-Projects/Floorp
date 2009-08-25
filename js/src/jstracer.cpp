@@ -1362,7 +1362,7 @@ VisitFrameSlots(Visitor &visitor, unsigned depth, JSStackFrame *fp,
     if (depth > 0 && !VisitFrameSlots(visitor, depth-1, fp->down, fp))
         return false;
 
-    if (fp->callee) {
+    if (fp->argv) {
         if (depth == 0) {
             visitor.setStackSlotKind("args");
             if (!visitor.visitStackSlots(&fp->argv[-2], argSlots(fp) + 2, fp))
@@ -1527,10 +1527,10 @@ NativeStackSlots(JSContext *cx, unsigned callDepth)
          */
         unsigned operands = fp->regs->sp - StackBase(fp);
         slots += operands;
-        if (fp->callee)
+        if (fp->argv)
             slots += fp->script->nfixed + 1 /*argsobj*/;
         if (depth-- == 0) {
-            if (fp->callee)
+            if (fp->argv)
                 slots += 2/*callee,this*/ + argSlots(fp);
 #ifdef DEBUG
             CountSlotsVisitor visitor;
@@ -2644,7 +2644,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double
         }
         for (; n != 0; fp = fp->down) {
             --n;
-            if (fp->callee) {
+            if (fp->argv) {
                 // fp->argsobj->getPrivate() is NULL iff we created argsobj on trace.
                 if (fp->argsobj && !JSVAL_TO_OBJECT(fp->argsobj)->getPrivate()) {
                     JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(fp);
@@ -2657,9 +2657,8 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double
                 JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
                 JS_ASSERT(HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(fp->argv[-2])));
                 JS_ASSERT(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2])) ==
-                          GET_FUNCTION_PRIVATE(cx, fp->callee));
-                JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee) == fp->fun);
-                fp->callee = JSVAL_TO_OBJECT(fp->argv[-2]);
+                          GET_FUNCTION_PRIVATE(cx, fp->callee()));
+                JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee()) == fp->fun);
 
                 /*
                  * SynthesizeFrame sets scopeChain to NULL, because we can't calculate the
@@ -2667,7 +2666,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSTraceType* mp, double
                  * scope object here.
                  */
                 if (!fp->scopeChain) {
-                    fp->scopeChain = OBJ_GET_PARENT(cx, fp->callee);
+                    fp->scopeChain = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
                     if (fp->fun->flags & JSFUN_HEAVYWEIGHT) {
                         /*
                          * Set hookData to null because the failure case for js_GetCallObject
@@ -3393,9 +3392,9 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->calldepth = callDepth;
     exit->numGlobalSlots = ngslots;
     exit->numStackSlots = stackSlots;
-    exit->numStackSlotsBelowCurrentFrame = cx->fp->callee
-        ? nativeStackOffset(&cx->fp->argv[-2])/sizeof(double)
-        : 0;
+    exit->numStackSlotsBelowCurrentFrame = cx->fp->argv ?
+                                           nativeStackOffset(&cx->fp->argv[-2]) / sizeof(double) :
+                                           0;
     exit->exitType = exitType;
     exit->block = fp->blockChain;
     if (fp->blockChain)
@@ -4654,7 +4653,6 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     newifp->frame.argsobj = NULL;
     newifp->frame.varobj = NULL;
     newifp->frame.script = script;
-    newifp->frame.callee = callee;
     newifp->frame.fun = fun;
 
     bool constructing = fi.is_constructing();
@@ -4758,13 +4756,12 @@ SynthesizeSlowNativeFrame(JSContext *cx, VMSideExit *exit)
     fp->callobj = NULL;
     fp->argsobj = NULL;
     fp->varobj = cx->fp->varobj;
-    fp->callee = exit->nativeCallee();
     fp->script = NULL;
-    fp->fun = GET_FUNCTION_PRIVATE(cx, fp->callee);
     // fp->thisp is really a jsval, so reinterpret_cast here, not JSVAL_TO_OBJECT.
     fp->thisp = (JSObject *) cx->nativeVp[1];
     fp->argc = cx->nativeVpLen - 2;
     fp->argv = cx->nativeVp + 2;
+    fp->fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
     fp->rval = JSVAL_VOID;
     fp->down = cx->fp;
     fp->annotation = NULL;
@@ -5678,7 +5675,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
          */
         if (!cx->fp->script) {
             JSStackFrame *fp = cx->fp;
-            JS_ASSERT(FUN_SLOW_NATIVE(GET_FUNCTION_PRIVATE(cx, fp->callee)));
+            JS_ASSERT(FUN_SLOW_NATIVE(GET_FUNCTION_PRIVATE(cx, fp->callee())));
             JS_ASSERT(fp->regs == NULL);
             JS_ASSERT(fp->down->regs != &((JSInlineFrame *) fp)->callerRegs);
             cx->fp = fp->down;
@@ -5900,7 +5897,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 #ifdef DEBUG
     /* Verify that our state restoration worked. */
     for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
-        JS_ASSERT_IF(fp->callee, JSVAL_IS_OBJECT(fp->argv[-1]));
+        JS_ASSERT_IF(fp->argv, JSVAL_IS_OBJECT(fp->argv[-1]));
     }
 #endif
 #ifdef JS_JIT_SPEW
@@ -8285,7 +8282,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      * js_ComputeThisForFrame updates cx->fp->argv[-1], so sample it into 'original' first.
      */
     jsval original = JSVAL_NULL;
-    if (cx->fp->callee) {
+    if (cx->fp->argv) {
         original = cx->fp->argv[-1];
         if (!JSVAL_IS_PRIMITIVE(original) &&
             guardClass(JSVAL_TO_OBJECT(original), get(&cx->fp->argv[-1]), &js_WithClass, snapshot(MISMATCH_EXIT))) {
@@ -8298,7 +8295,7 @@ TraceRecorder::getThis(LIns*& this_ins)
         ABORT_TRACE_ERROR("js_ComputeThisForName failed");
 
     /* In global code, bake in the global object as 'this' object. */
-    if (!cx->fp->callee) {
+    if (!cx->fp->callee()) {
         JS_ASSERT(callDepth == 0);
         this_ins = INS_CONSTOBJ(thisObj);
 
@@ -8478,7 +8475,7 @@ TraceRecorder::clearFrameSlotsFromCache()
      * This doesn't do layout arithmetic, but it must clear out all the slots defined as
      * imported by VisitFrameSlots.
      */
-    if (fp->callee) {
+    if (fp->argv) {
         vp = &fp->argv[-2];
         vpstop = &fp->argv[argSlots(fp)];
         while (vp < vpstop)
@@ -10570,7 +10567,7 @@ TraceRecorder::record_JSOP_CALLUPVAR()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_GETDSLOT()
 {
-    JSObject* callee = cx->fp->callee;
+    JSObject* callee = JSVAL_TO_OBJECT(cx->fp->argv[-2]);
     LIns* callee_ins = get(&cx->fp->argv[-2]);
 
     unsigned index = GET_UINT16(cx->fp->regs->pc);
@@ -11606,7 +11603,7 @@ TraceRecorder::record_JSOP_BINDNAME()
 
         // In non-heavyweight functions, we can safely skip the call
         // object, if any.
-        obj = OBJ_GET_PARENT(cx, fp->callee);
+        obj = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
     } else {
         obj = fp->scopeChain;
 

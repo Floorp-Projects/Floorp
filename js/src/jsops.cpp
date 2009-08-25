@@ -2054,7 +2054,6 @@
                     newifp->frame.argsobj = NULL;
                     newifp->frame.varobj = NULL;
                     newifp->frame.script = script;
-                    newifp->frame.callee = obj;
                     newifp->frame.fun = fun;
                     newifp->frame.argc = argc;
                     newifp->frame.argv = vp + 2;
@@ -2374,7 +2373,7 @@
                  * contains JS_SCRIPT_REGEXPS(script)->length reserved slots
                  * for the cloned regexps; see fun_reserveSlots, jsfun.c.
                  */
-                funobj = fp->callee;
+                funobj = JSVAL_TO_OBJECT(fp->argv[-2]);
                 slot += JSCLASS_RESERVED_SLOTS(&js_FunctionClass);
                 if (script->upvarsOffset != 0)
                     slot += JS_SCRIPT_UPVARS(script)->length;
@@ -2743,7 +2742,8 @@
 
           BEGIN_CASE(JSOP_GETDSLOT)
           BEGIN_CASE(JSOP_CALLDSLOT)
-            obj = fp->callee;
+            JS_ASSERT(fp->argv);
+            obj = JSVAL_TO_OBJECT(fp->argv[-2]);
             JS_ASSERT(obj);
             JS_ASSERT(obj->dslots);
 
@@ -3187,7 +3187,7 @@
           END_CASE(JSOP_LAMBDA_DBGFC)
 
           BEGIN_CASE(JSOP_CALLEE)
-            PUSH_OPND(OBJECT_TO_JSVAL(fp->callee));
+            PUSH_OPND(fp->argv[-2]);
           END_CASE(JSOP_CALLEE)
 
 #if JS_HAS_GETTER_SETTER
