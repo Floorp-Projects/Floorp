@@ -47,27 +47,6 @@ GRE_MODULE	= 1
 LIBRARY_NAME	= gkprinting_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  content \
-		  dom \
-		  widget \
-		  gfx \
-		  thebes \
-		  view \
-		  necko \
-		  webshell \
-		  docshell \
-		  uriloader \
-		  webbrwsr \
-		  locale \
-		  intl \
-		  imglib2 \
-		  windowwatcher \
-		  htmlparser \
-		  js \
-		  pref \
-		  $(NULL)
 
 XPIDLSRCS	= \
 		nsIPrintProgress.idl  \

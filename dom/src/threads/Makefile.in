@@ -48,24 +48,6 @@ LIBRARY_NAME     = domthreads_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
-REQUIRES = \
-  caps \
-  content \
-  docshell \
-  gfx \
-  js \
-  layout \
-  locale \
-  necko \
-  plugin \
-  pref \
-  string \
-  thebes \
-  uconv \
-  widget \
-  xpcom \
-  xpconnect \
-  $(NULL)
 
 CPPSRCS = \
   nsDOMThreadService.cpp \

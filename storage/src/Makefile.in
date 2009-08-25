@@ -53,13 +53,6 @@ FORCE_STATIC_LIB = 1
 GRE_MODULE       = 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES = xpcom \
-           string \
-           sqlite3 \
-           js \
-           xpconnect \
-           necko \
-           $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/storage
 

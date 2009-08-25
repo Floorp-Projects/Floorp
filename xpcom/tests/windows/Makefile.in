@@ -44,10 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 
-REQUIRES	= \
-		string \
-		xpcom \
-		$(NULL)
 
 include $(topsrcdir)/config/config.mk
 

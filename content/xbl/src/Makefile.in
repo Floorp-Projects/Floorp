@@ -46,29 +46,6 @@ MODULE		= content
 LIBRARY_NAME	= gkconxbl_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  js \
-		  dom \
-		  gfx \
-		  thebes \
-		  layout \
-		  xultmpl \
-		  widget \
-		  caps \
-		  htmlparser \
-		  necko \
-		  xpconnect \
-		  pref \
-		  docshell \
-		  webshell \
-		  xuldoc \
-		  rdf \
-		  imglib2 \
-		  unicharutil \
-		  locale \
-		  util \
-		  $(NULL)
 
 CPPSRCS		= \
     nsXBLBinding.cpp \

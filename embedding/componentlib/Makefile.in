@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom \
-		  $(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)
 

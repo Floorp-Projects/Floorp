@@ -52,8 +52,6 @@ LIBRARY_NAME	= xpcomthreads_s
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= string \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsEventQueue.cpp \

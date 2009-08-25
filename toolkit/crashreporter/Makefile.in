@@ -45,10 +45,6 @@ MODULE = crashreporter
 LIBXUL_LIBRARY = 1
 LIBRARY_NAME = exception_handler_s
 
-REQUIRES = \
-	xpcom \
-	string \
-	$(NULL)
 
 DIRS = \
 	$(NULL)

@@ -52,34 +52,6 @@ GRE_MODULE	= 1
 LIBRARY_NAME	= gkbase_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  content \
-		  xuldoc \
-		  gfx \
-		  widget \
-		  view \
-		  necko \
-		  docshell \
-		  webshell \
-		  webbrwsr \
-		  uriloader \
-		  js \
-		  xpconnect \
-		  plugin \
-		  locale \
-		  pref \
-		  imglib2 \
-		  unicharutil \
-		  htmlparser \
-		  util \
-		  windowwatcher \
-		  shistory \
-		  caps \
-		  thebes \
-		  qcms \
-		  $(NULL)
 
 ifdef ACCESSIBILITY
 REQUIRES	+= accessibility

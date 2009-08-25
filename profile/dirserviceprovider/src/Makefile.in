@@ -46,9 +46,6 @@ MODULE		= profdirserviceprovider
 LIBRARY_NAME	= profdirserviceprovider_s
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  $(NULL)
 
 CPPSRCS		= $(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)
 

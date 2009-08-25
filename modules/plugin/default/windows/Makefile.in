@@ -48,10 +48,6 @@ RESFILE		= npnul32.res
 DEFFILE		= $(win_srcdir)/npnul32.def
 GRE_MODULE	= 1
 
-REQUIRES	= java \
-		  xpcom \
-		  pref \
-		  $(NULL)
 
 CPPSRCS		= \
 		maindll.cpp \

@@ -53,10 +53,6 @@ CPPSRCS = \
 
 PROGRAM = updater$(BIN_SUFFIX)
 
-REQUIRES	= \
-		libmar \
-		$(BZ2_REQUIRES) \
-		$(NULL)
 
 LIBS += \
 	$(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \

@@ -52,18 +52,6 @@ ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
 endif
 
-REQUIRES	= \
-		  xpcom \
-		  string \
-		  necko \
-		  browsercomps \
-		  toolkitcomps \
-		  unicharutil \
-		  htmlparser \
-		  content \
-		  places \
-		  microsummaries \
-		  $(NULL)
 
 CPPSRCS = nsPlacesImportExportService.cpp
 

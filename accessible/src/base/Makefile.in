@@ -46,31 +46,6 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_base_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= appshell \
-		  commandhandler \
-		  composer \
-		  content \
-		  docshell \
-		  dom \
-		  editor \
-		  gfx \
-		  thebes \
-		  intl \
-		  layout \
-		  locale \
-		  necko \
-		  plugin \
-		  pref \
-		  string \
-		  unicharutil \
-		  uriloader \
-		  view \
-		  webshell \
-		  widget \
-		  xpcom \
-		  xuldoc \
-		  imglib2 \
-		  $(NULL)
 
 CPPSRCS = \
   nsAccessNode.cpp \

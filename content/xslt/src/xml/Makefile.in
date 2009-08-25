@@ -46,10 +46,6 @@ MODULE = transformiix
 LIBRARY_NAME = txxml_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= \
-		  string \
-		  xpcom \
-		  $(NULL)
 
 ifndef MOZ_XSLT_STANDALONE
 REQUIRES += \

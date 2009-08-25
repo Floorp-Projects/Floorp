@@ -46,9 +46,6 @@ MODULE       = nptest
 LIBRARY_NAME = nptest
 MODULE_NAME  = TestPlugin
 
-REQUIRES = \
-  plugin \
-  $(NULL)
 
 # Need to custom install plugins
 NO_DIST_INSTALL	= 1

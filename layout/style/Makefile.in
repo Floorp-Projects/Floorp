@@ -51,29 +51,6 @@ MODULE		= layout
 LIBRARY_NAME	= gkstyle_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  content \
-		  gfx \
-		  thebes \
-		  widget \
-		  caps \
-		  locale \
-		  unicharutil \
-		  js \
-		  necko \
-		  mimetype \
-		  webshell \
-		  uconv \
-		  xuldoc \
-		  xpconnect \
-		  view \
-		  intl \
-		  pref \
-		  imglib2 \
-		  docshell \
-		  $(NULL)
 
 EXPORTS		= \
 		nsCSSAnonBoxList.h \

@@ -18,21 +18,6 @@ ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
 endif
 
-REQUIRES = \
-	xpcom \
-	string \
-	rdf \
-	uriloader \
-	intl \
-	necko \
-	shellservice \
-	xulapp \
-	places \
-	browserplaces \
-	microsummaries \
-	privatebrowsing \
-	browserabout \
-	$(NULL)
 
 EXPORTS = nsBrowserCompsCID.h
 

@@ -49,28 +49,6 @@ LIBRARY_NAME	= gkconxulcon_s
 LIBXUL_LIBRARY	= 1
 endif
 
-REQUIRES	= xpcom \
-		  string \
-		  gfx \
-		  thebes \
-		  layout \
-		  content \
-		  widget \
-		  necko \
-		  dom \
-		  js \
-		  caps \
-		  rdf \
-		  xpconnect \
-		  pref \
-		  locale \
-		  xuldoc \
-		  xultmpl \
-		  webshell \
-		  view \
-		  htmlparser \
-		  docshell \
-		  $(NULL)
 
 ifdef MOZ_XUL
 CPPSRCS		+= \

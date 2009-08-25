@@ -51,30 +51,6 @@ MODULE_NAME	= nsPluginModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  xpconnect \
-		  string \
-		  java \
-		  pref \
-		  necko \
-		  caps \
-		  intl \
-		  uconv \
-		  unicharutil \
-		  dom \
-		  gfx \
-		  thebes \
-		  content \
-		  widget \
-		  mimetype \
-		  exthandler \
-		  docshell \
-		  windowwatcher \
-		  imglib2 \
-		  layout \
-		  js \
-		  locale \
-		  $(NULL)
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES	+= gtkxtbin

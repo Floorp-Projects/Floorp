@@ -46,11 +46,6 @@ MODULE = system-pref
 LIBRARY_NAME = system-pref
 LIBXUL_LIBRARY = 1
 
-REQUIRES        = pref \
-		  string \
-		  xpcom \
-		  embedcomponents \
-		  $(NULL)
 
 CPPSRCS =   \
 	nsSystemPrefService.cpp       \

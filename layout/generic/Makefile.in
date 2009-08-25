@@ -49,33 +49,6 @@ MODULE		= layout
 LIBRARY_NAME	= gkgeneric_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  content \
-		  thebes \
-		  gfx \
-		  widget \
-		  locale \
-		  view \
-		  necko \
-		  js \
-		  caps \
-		  pref \
-		  htmlparser \
-		  webshell \
-		  plugin \
-		  docshell \
-		  webbrwsr \
-		  unicharutil \
-		  lwbrk \
-		  imglib2 \
-		  xpconnect \
-		  java \
-		  intl \
-		  thebes \
-		  cairo \
-		  $(NULL)
 
 ifdef ACCESSIBILITY
 REQUIRES	+= accessibility
