@@ -3197,8 +3197,11 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   PRErrorCode errorCodeTrust = SECSuccess;
   PRErrorCode errorCodeMismatch = SECSuccess;
   PRErrorCode errorCodeExpired = SECSuccess;
-  
+
   char *hostname = SSL_RevealURL(sslSocket);
+  if (!hostname)
+    return cancel_and_failure(infoObject);
+
   charCleaner hostnameCleaner(hostname); 
   nsDependentCString hostString(hostname);
 
@@ -3212,7 +3215,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   NS_ConvertUTF8toUTF16 hostWithPortStringUTF16(hostWithPortString);
 
   // Check the name field against the desired hostname.
-  if (hostname && hostname[0] &&
+  if (hostname[0] &&
       CERT_VerifyCertName(peerCert, hostname) != SECSuccess) {
     collected_errors |= nsICertOverrideService::ERROR_MISMATCH;
     errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
