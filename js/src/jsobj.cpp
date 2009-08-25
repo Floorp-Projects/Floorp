@@ -4449,8 +4449,10 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
                     if (cacheResult)
                         TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, sprop);
                     return JS_TRUE;
+#ifdef JS_TRACER
                 error: // TRACE_2 jumps here in case of error.
                     return JS_FALSE;
+#endif
                 }
 
                 /* Strict mode: report a read-only strict warning. */
