@@ -349,16 +349,12 @@ XPC_XOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(rv, cx);
   }
 
+#ifdef DEBUG
   JSNative native = JS_GetFunctionNative(cx, fun);
   NS_ASSERTION(native, "How'd we get here with a scripted function?");
+#endif
 
-  // A trick! Calling the native directly doesn't push the native onto the
-  // JS stack, so interested onlookers will only see us, meaning that they
-  // will compute *our* subject principal.
-
-  argv[-2] = funToCall;
-  argv[-1] = OBJECT_TO_JSVAL(wrappedObj);
-  if (!native(cx, wrappedObj, argc, argv, rval)) {
+  if (!JS_CallFunctionValue(cx, wrappedObj, funToCall, argc, argv, rval)) {
     return JS_FALSE;
   }
 

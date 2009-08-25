@@ -129,19 +129,7 @@ for testlogfile in `ls $testlogfiles`; do
 
     debug "buildtype=$buildtype"
 
-    case "$testlogfile" in
-        *,1.8.0*) branch=1.8.0;;
-        *,1.8.1*) branch=1.8.1;;
-        *,1.9.0*) branch=1.9.0;;
-        *,1.9.1*) branch=1.9.1;;
-        *,1.9.2*) branch=1.9.2;;
-        *) 
-            branch=`grep -m 1 '^environment: TEST_BRANCH=' $worktestlogfile | sed 's|.*TEST_BRANCH=\(.*\)|\1|'`
-            if [[ -z "$branch" ]]; then
-                error "unknown branch in logfile $testlogfile" $LINENO
-            fi
-            ;;
-    esac
+    branch=`echo $testlogfile | sed 's|.*,\([0-9]\.[0-9]*\.[0-9]*\).*|\1|'`
 
     debug "branch=$branch"
 

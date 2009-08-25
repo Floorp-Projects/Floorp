@@ -84,6 +84,7 @@
 #include "jsdbgapi.h"
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
+#include "jsvector.h"
 
 #if JS_HAS_FILE_OBJECT
 #include "jsfile.h"
@@ -833,6 +834,12 @@ bad:
 }
 
 JS_PUBLIC_API(void)
+JS_CommenceRuntimeShutDown(JSRuntime *rt)
+{
+    rt->gcFlushCodeCaches = true;
+}
+
+JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
@@ -1334,7 +1341,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
     /* Define a top-level property 'undefined' with the undefined value. */
     atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, 
+                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT,
                              NULL)) {
         return JS_FALSE;
     }
@@ -1541,7 +1548,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     if (idstr == ATOM_TO_STRING(atom)) {
         *resolved = JS_TRUE;
         return obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                                   JS_PropertyStub, JS_PropertyStub, 
+                                   JS_PropertyStub, JS_PropertyStub,
                                    JSPROP_PERMANENT, NULL);
     }
 
@@ -1636,7 +1643,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!AlreadyHasOwnProperty(cx, obj, atom) &&
         !obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, 
+                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT,
                              NULL)) {
         return JS_FALSE;
     }
@@ -2964,7 +2971,7 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
         return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,
                                          attrs, flags, tinyid, NULL);
     }
-    return obj->defineProperty(cx, id, value, getter, setter, attrs, NULL);   
+    return obj->defineProperty(cx, id, value, getter, setter, attrs, NULL);
 }
 
 static JSBool
@@ -5195,15 +5202,6 @@ JS_IsAssigning(JSContext *cx)
     return (js_CodeSpec[*fp->regs->pc].format & JOF_ASSIGNING) != 0;
 }
 
-JS_PUBLIC_API(void)
-JS_SetCallReturnValue2(JSContext *cx, jsval v)
-{
-#if JS_HAS_LVALUE_RETURN
-    cx->rval2 = v;
-    cx->rval2set = JS_TRUE;
-#endif
-}
-
 JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx)
 {
@@ -5489,7 +5487,10 @@ JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSONWriteCallback callback, void *data)
 {
     CHECK_REQUEST(cx);
-    return js_Stringify(cx, vp, replacer, space, callback, data);
+    JSCharBuffer cb(cx);
+    if (!js_Stringify(cx, vp, replacer, space, cb))
+        return false;
+    return callback(cb.begin(), cb.length(), data);
 }
 
 JS_PUBLIC_API(JSBool)

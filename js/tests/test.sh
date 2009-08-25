@@ -41,7 +41,7 @@ if [[ -z "$TEST_DIR" ]]; then
     cat <<EOF
 `basename $0`: error
 
-TEST_DIR, the location of the Sisyphus framework, 
+TEST_DIR, the location of the Sisyphus framework,
 is required to be set prior to calling this script.
 EOF
     exit 2
@@ -81,40 +81,40 @@ usage: test.sh -p product -b branch -T buildtype -x executablepath -N profilenam
 variable            description
 ===============     ============================================================
 -p product          required. firefox|thunderbird|js|fennec
--b branch           required. one of 1.8.0 1.8.1 1.9.0 1.9.1 1.9.2
+-b branch           required. one of supported branches. see library.sh.
 -s jsshellsourcepath       required for shell. path to js shell source directory mozilla/js/src
 -T buildtype        required. one of opt debug
 -x executablepath   required for browser. directory-tree containing executable 'product'
--N profilename      required for browser. profile name 
--X excludetests     optional. By default the test will exclude the 
-                    tests listed in spidermonkey-n-\$branch.tests, 
+-N profilename      required for browser. profile name
+-X excludetests     optional. By default the test will exclude the
+                    tests listed in spidermonkey-n-\$branch.tests,
                     performance-\$branch.tests. excludetests is a list of either
-                    individual tests, manifest files or sub-directories which 
+                    individual tests, manifest files or sub-directories which
                     will override the default exclusion list.
--I includetests     optional. By default the test will include the 
+-I includetests     optional. By default the test will include the
                     JavaScript tests appropriate for the branch. includetests is a
-                    list of either individual tests, manifest files or 
-                    sub-directories which will override the default inclusion 
+                    list of either individual tests, manifest files or
+                    sub-directories which will override the default inclusion
                     list.
--c                  optional. By default the test will exclude tests 
-                    which crash on this branch, test type, build type and 
-                    operating system. -c will include tests which crash. 
-                    Typically this should only be used in combination with -R. 
+-c                  optional. By default the test will exclude tests
+                    which crash on this branch, test type, build type and
+                    operating system. -c will include tests which crash.
+                    Typically this should only be used in combination with -R.
                     This has no effect on shell based tests which execute crash
                     tests regardless.
--t                  optional. By default the test will exclude tests 
-                    which time out on this branch, test type, build type and 
+-t                  optional. By default the test will exclude tests
+                    which time out on this branch, test type, build type and
                     operating system. -t will include tests which timeout.
 -J jsoptions        optional. Set JavaScript options:
-                    -Z n Set gczeal to n. Currently, only valid for 
+                    -Z n Set gczeal to n. Currently, only valid for
                     debug builds of Gecko 1.8.1.15, 1.9.0 and later.
                     -z optional. use split objects in the shell.
                     -j optional. use JIT in the shell. Only available on 1.9.1 and later
 -F                  optional. Just generate file lists without running any tests.
--d datafiles        optional. one or more filenames of files containing 
+-d datafiles        optional. one or more filenames of files containing
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
+                    note that the environment variables should have the same
                     names as in the "variable" column.
 
 if an argument contains more than one value, it must be quoted.
@@ -123,29 +123,29 @@ EOF
 }
 
 while getopts "p:b:s:T:x:N:d:X:I:J:RctF" optname
-do 
+do
     case $optname in
-        p) 
+        p)
             product=$OPTARG;;
-        b) 
+        b)
             branch=$OPTARG;;
-        T) 
+        T)
             buildtype=$OPTARG;;
-        s) 
+        s)
             jsshellsourcepath=$OPTARG;;
-        N) 
+        N)
             profilename=$OPTARG;;
-        x) 
+        x)
             executablepath=$OPTARG;;
-        X) 
+        X)
             excludetests=$OPTARG;;
-        I) 
+        I)
             includetests=$OPTARG;;
-        c) 
+        c)
             crashes=1;;
-        t) 
+        t)
             timeouts=1;;
-        F) 
+        F)
             filesonly=1;;
         J)
             javascriptoptions=$OPTARG
@@ -158,7 +158,7 @@ if [[ -n "$javascriptoptions" ]]; then
     unset OPTIND
     while getopts "Z:jz" optname $javascriptoptions; do
         case $optname in
-            Z)  
+            Z)
                 gczealshell="-Z $OPTARG"
                 gczealbrowser=";gczeal=$OPTARG"
                 ;;
@@ -175,7 +175,7 @@ fi
 
 # include environment variables
 if [[ -n "$datafiles" ]]; then
-    for datafile in $datafiles; do 
+    for datafile in $datafiles; do
         source $datafile
     done
 fi
@@ -310,7 +310,7 @@ if [[ -z "$includetests" ]]; then
     # by default include tests appropriate for the branch
     includetests="e4x ecma ecma_2 ecma_3 js1_1 js1_2 js1_3 js1_4 js1_5 js1_6"
 
-    case "$branch" in 
+    case "$branch" in
         1.8.0)
             ;;
         1.8.1)
@@ -323,6 +323,9 @@ if [[ -z "$includetests" ]]; then
             includetests="$includetests js1_7 js1_8 ecma_3_1 js1_8_1"
             ;;
         1.9.2)
+            includetests="$includetests js1_7 js1_8 ecma_3_1 js1_8_1"
+            ;;
+        1.9.3)
             includetests="$includetests js1_7 js1_8 ecma_3_1 js1_8_1"
             ;;
     esac
@@ -481,7 +484,7 @@ EOF
             if ! grep -q $jsfile $excludetestsfile; then
 
                 version=";version=`browserfileversion $jsfile`"
-                
+
                 echo "http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczealbrowser$jitbrowser" >> $urllist
                 echo "<li><a href='http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczealbrowser$jitbrowser'>$jsfile</a></li>" >> $urlhtml
             fi
@@ -497,8 +500,8 @@ EOF
 
         if [[ -z "$filesonly" ]]; then
             echo "JavaScriptTest: Begin Run"
-            cat "$urllist" | while read url; 
-            do 
+            cat "$urllist" | while read url;
+            do
                 edit-talkback.sh -p "$product" -b "$branch" -x "$executablepath" -i "$url"
                 jsfile=`echo $url | sed "s|http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=\([^;]*\);.*|\1|"`
                 echo "JavaScriptTest: Begin Test $jsfile"

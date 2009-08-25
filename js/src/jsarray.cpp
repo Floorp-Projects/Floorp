@@ -955,6 +955,25 @@ js_Array_dense_setelem_int(JSContext* cx, JSObject* obj, jsint i, int32 j)
     return dense_grow(cx, obj, i, v);
 }
 JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_int, CONTEXT, OBJECT, INT32, INT32, 0, 0)
+
+JSBool FASTCALL
+js_Array_dense_setelem_double(JSContext* cx, JSObject* obj, jsint i, jsdouble d)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
+
+    jsval v;
+    jsint j;
+
+    if (JS_LIKELY(JSDOUBLE_IS_INT(d, j) && INT_FITS_IN_JSVAL(j))) {
+        v = INT_TO_JSVAL(j);
+    } else {
+        if (!js_NewDoubleInRootedValue(cx, d, &v))
+            return JS_FALSE;
+    }
+
+    return dense_grow(cx, obj, i, v);
+}
+JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_double, CONTEXT, OBJECT, INT32, DOUBLE, 0, 0)
 #endif
 
 static JSBool
@@ -1331,9 +1350,9 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
 
 /* Transfer ownership of buffer to returned string. */
 static inline JSBool
-BufferToString(JSContext *cx, JSCharVector &buf, jsval *rval)
+BufferToString(JSContext *cx, JSCharBuffer &cb, jsval *rval)
 {
-    JSString *str = js_NewStringFromCharBuffer(cx, buf);
+    JSString *str = js_NewStringFromCharBuffer(cx, cb);
     if (!str)
         return false;
     *rval = STRING_TO_JSVAL(str);
@@ -1368,28 +1387,28 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
      * This object will take responsibility for the jschar buffer until the
      * buffer is transferred to the returned JSString.
      */
-    JSCharVector buf(cx);
+    JSCharBuffer cb(cx);
 
     /* Cycles/joins are indicated by sharp objects. */
 #if JS_HAS_SHARP_VARS
     if (IS_SHARP(he)) {
         JS_ASSERT(sharpchars != 0);
-        buf.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
+        cb.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
         goto make_string;
     } else if (sharpchars) {
         MAKE_SHARP(he);
-        buf.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
+        cb.replaceRawBuffer(sharpchars, js_strlen(sharpchars));
     }
 #else
     if (IS_SHARP(he)) {
-        if (!js_AppendLiteral(buf, "[]"))
+        if (!js_AppendLiteral(cb, "[]"))
             goto out;
         cx->free(sharpchars);
         goto make_string;
     }
 #endif
 
-    if (!buf.append('['))
+    if (!cb.append('['))
         goto out;
 
     jsuint length;
@@ -1419,23 +1438,23 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
         str->getCharsAndLength(chars, charlen);
 
         /* Append element to buffer. */
-        if (!buf.append(chars, charlen))
+        if (!cb.append(chars, charlen))
             goto out;
         if (index + 1 != length) {
-            if (!js_AppendLiteral(buf, ", "))
+            if (!js_AppendLiteral(cb, ", "))
                 goto out;
         } else if (hole) {
-            if (!buf.append(','))
+            if (!cb.append(','))
                 goto out;
         }
     }
 
     /* Finalize the buffer. */
-    if (!buf.append(']'))
+    if (!cb.append(']'))
         goto out;
 
   make_string:
-    if (!BufferToString(cx, buf, vp))
+    if (!BufferToString(cx, cb, vp))
         goto out;
 
     ok = true;
@@ -1514,7 +1533,7 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
      * This object will take responsibility for the jschar buffer until the
      * buffer is transferred to the returned JSString.
      */
-    JSCharVector buf(cx);
+    JSCharBuffer cb(cx);
 
     jsuint length;
     if (!js_GetLengthProperty(cx, obj, &length))
@@ -1542,19 +1561,19 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
                     goto out;
             }
 
-            if (!js_ValueToCharBuffer(cx, *rval, buf))
+            if (!js_ValueToCharBuffer(cx, *rval, cb))
                 goto out;
         }
 
         /* Append the separator. */
         if (index + 1 != length) {
-            if (!buf.append(sep, seplen))
+            if (!cb.append(sep, seplen))
                 goto out;
         }
     }
 
     /* Finalize the buffer. */
-    if (!BufferToString(cx, buf, rval))
+    if (!BufferToString(cx, cb, rval))
         goto out;
 
     ok = true;
@@ -2398,7 +2417,7 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
     JS_ASSERT(length <= js_DenseArrayCapacity(obj));
 
     if (length == js_DenseArrayCapacity(obj)) {
-        if (length >= ARRAY_INIT_LIMIT) {
+        if (length > JS_ARGS_LENGTH_MAX) {
             JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
                                    JSMSG_ARRAY_INIT_TOO_BIG);
             return JS_FALSE;
@@ -3292,6 +3311,15 @@ array_every(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
+static JSBool
+array_isArray(JSContext *cx, uintN argc, jsval *vp)
+{
+    *vp = BOOLEAN_TO_JSVAL(argc > 0 &&
+                           !JSVAL_IS_PRIMITIVE(vp[2]) &&
+                           OBJ_IS_ARRAY(cx, JSVAL_TO_OBJECT(vp[2])));
+    return JS_TRUE;
+}
+
 static JSPropertySpec array_props[] = {
     {js_length_str,   -1,   JSPROP_SHARED | JSPROP_PERMANENT,
                             array_length_getter,    array_length_setter},
@@ -3340,6 +3368,11 @@ static JSFunctionSpec array_methods[] = {
     JS_FN("every",              array_every,        1,JSFUN_GENERIC_NATIVE),
 #endif
 
+    JS_FS_END
+};
+
+static JSFunctionSpec array_static_methods[] = {
+    JS_FN("isArray",            array_isArray,      1,0),
     JS_FS_END
 };
 
@@ -3433,7 +3466,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     js_SlowArrayObjectOps.call = NULL;
 
     proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
-                         array_props, array_methods, NULL, NULL);
+                         array_props, array_methods, NULL, array_static_methods);
 
     /* Initialize the Array prototype object so it gets a length property. */
     if (!proto || !InitArrayObject(cx, proto, 0, NULL))

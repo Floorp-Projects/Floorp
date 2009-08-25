@@ -1272,7 +1272,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                     if(fp)
                     {
                         script = fp->script;
-                        callee = fp->callee;
+                        callee = fp->callee();
                     }
                 }
                 else if(ccx.GetXPCContext()->CallerTypeIsNative())
