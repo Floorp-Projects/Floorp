@@ -108,6 +108,7 @@ class nsIDragSession;
 class nsPIDOMWindow;
 class nsPIDOMEventTarget;
 class nsIPresShell;
+class nsIXPConnectJSObjectHolder;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -1466,6 +1467,25 @@ public:
    * method returns PR_TRUE, otherwise PR_FALSE.
    */
   static PRBool CanAccessNativeAnon();
+
+  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+                             nsISupports *native, const nsIID* aIID, jsval *vp,
+                             // If non-null aHolder will keep the jsval alive
+                             // while there's a ref to it
+                             nsIXPConnectJSObjectHolder** aHolder = nsnull,
+                             PRBool aAllowWrapping = PR_FALSE);
+
+  // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
+  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+                             nsISupports *native,  jsval *vp,
+                             // If non-null aHolder will keep the jsval alive
+                             // while there's a ref to it
+                             nsIXPConnectJSObjectHolder** aHolder = nsnull,
+                             PRBool aAllowWrapping = PR_FALSE)
+  {
+    return WrapNative(cx, scope, native, nsnull, vp, aHolder, aAllowWrapping);
+  }
+
 private:
 
   static PRBool InitializeEventTable();

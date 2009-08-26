@@ -45,12 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= imgicon
 LIBRARY_NAME	= imgicongtk_s
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  intl \
-		  mimetype \
-		  $(NULL)
 
 CPPSRCS		= nsIconChannel.cpp
 

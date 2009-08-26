@@ -143,12 +143,31 @@ IsIdent(PRInt32 ch) {
   return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_IDENT) != 0);
 }
 
+static inline PRUint32
+DecimalDigitValue(PRInt32 ch)
+{
+  return ch - '0';
+}
+
+static inline PRUint32
+HexDigitValue(PRInt32 ch)
+{
+  if (IsDigit(ch)) {
+    return DecimalDigitValue(ch);
+  } else {
+    // Note: c&7 just keeps the low three bits which causes
+    // upper and lower case alphabetics to both yield their
+    // "relative to 10" value for computing the hex value.
+    return (ch & 0x7) + 9;
+  }
+}
+
 nsCSSToken::nsCSSToken()
 {
   mType = eCSSToken_Symbol;
 }
 
-void 
+void
 nsCSSToken::AppendToString(nsString& aBuffer)
 {
   switch (mType) {
@@ -160,6 +179,7 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_URL:
     case eCSSToken_InvalidURL:
     case eCSSToken_HTMLComment:
+    case eCSSToken_URange:
       aBuffer.Append(mIdent);
       break;
     case eCSSToken_Number:
@@ -694,6 +714,10 @@ nsCSSScanner::Next(nsCSSToken& aToken)
       return PR_FALSE;
     }
 
+    // UNICODE-RANGE
+    if ((ch == 'u' || ch == 'U') && Peek() == '+')
+      return ParseURange(ch, aToken);
+
     // IDENT
     if (StartsIdent(ch, Peek()))
       return ParseIdent(ch, aToken);
@@ -921,14 +945,7 @@ nsCSSScanner::ParseAndAppendEscape(nsString& aOutput)
         Pushback(ch);
         break;
       } else if (IsHexDigit(ch)) {
-        if (IsDigit(ch)) {
-          rv = rv * 16 + (ch - '0');
-        } else {
-          // Note: c&7 just keeps the low three bits which causes
-          // upper and lower case alphabetics to both yield their
-          // "relative to 10" value for computing the hex value.
-          rv = rv * 16 + ((ch & 0x7) + 9);
-        }
+        rv = rv * 16 + HexDigitValue(ch);
       } else {
         NS_ASSERTION(IsWhitespace(ch), "bad control flow");
         // single space ends escape
@@ -1069,8 +1086,6 @@ nsCSSScanner::ParseAtKeyword(PRInt32 aChar, nsCSSToken& aToken)
   return GatherIdent(0, aToken.mIdent);
 }
 
-#define CHAR_TO_DIGIT(_c) ((_c) - '0')
-
 PRBool
 nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
 {
@@ -1109,7 +1124,7 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
     // Parse the integer part of the mantisssa
     NS_ASSERTION(IsDigit(c), "Why did we get called?");
     do {
-      intPart = 10*intPart + CHAR_TO_DIGIT(c);
+      intPart = 10*intPart + DecimalDigitValue(c);
       c = Read();
       // The IsDigit check will do the right thing even if Read() returns < 0
     } while (IsDigit(c));
@@ -1124,7 +1139,7 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
     // Power of ten by which we need to divide our next digit
     float divisor = 10;
     do {
-      fracPart += CHAR_TO_DIGIT(c) / divisor;
+      fracPart += DecimalDigitValue(c) / divisor;
       divisor *= 10;
       c = Read();
       // The IsDigit check will do the right thing even if Read() returns < 0
@@ -1149,7 +1164,7 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
       c = Read();
       NS_ASSERTION(IsDigit(c), "Peek() must have lied");
       do {
-        exponent = 10*exponent + CHAR_TO_DIGIT(c);
+        exponent = 10*exponent + DecimalDigitValue(c);
         c = Read();
         // The IsDigit check will do the right thing even if Read() returns < 0
       } while (IsDigit(c));
@@ -1274,5 +1289,97 @@ nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)
       aToken.mIdent.Append(ch);
     }
   }
+  return PR_TRUE;
+}
+
+// UNICODE-RANGE tokens match the regular expression
+//
+//     u\+[0-9a-f?]{1,6}(-[0-9a-f]{1,6})?
+//
+// However, some such tokens are "invalid".  There are three valid forms:
+//
+//     u+[0-9a-f]{x}              1 <= x <= 6
+//     u+[0-9a-f]{x}\?{y}         1 <= x+y <= 6
+//     u+[0-9a-f]{x}-[0-9a-f]{y}  1 <= x <= 6, 1 <= y <= 6
+//
+// All unicode-range tokens have their text recorded in mIdent; valid ones
+// are also decoded into mInteger and mInteger2, and mIntegerValid is set.
+
+PRBool
+nsCSSScanner::ParseURange(PRInt32 aChar, nsCSSToken& aResult)
+{
+  PRInt32 intro2 = Read();
+  PRInt32 ch = Peek();
+
+  // We should only ever be called if these things are true.
+  NS_ASSERTION(aChar == 'u' || aChar == 'U',
+               "unicode-range called with improper introducer (U)");
+  NS_ASSERTION(intro2 == '+',
+               "unicode-range called with improper introducer (+)");
+
+  // If the character immediately after the '+' is not a hex digit or
+  // '?', this is not really a unicode-range token; push everything
+  // back and scan the U as an ident.
+  if (!IsHexDigit(ch) && ch != '?') {
+    Pushback(intro2);
+    Pushback(aChar);
+    return ParseIdent(aChar, aResult);
+  }
+
+  aResult.mIdent.Truncate();
+  aResult.mIdent.Append(aChar);
+  aResult.mIdent.Append(intro2);
+
+  PRBool valid = PR_TRUE;
+  PRBool haveQues = PR_FALSE;
+  PRUint32 low = 0;
+  PRUint32 high = 0;
+  int i = 0;
+
+  for (;;) {
+    ch = Read();
+    i++;
+    if (i == 7 || !(IsHexDigit(ch) || ch == '?')) {
+      break;
+    }
+
+    aResult.mIdent.Append(ch);
+    if (IsHexDigit(ch)) {
+      if (haveQues) {
+        valid = PR_FALSE; // all question marks should be at the end
+      }
+      low = low*16 + HexDigitValue(ch);
+      high = high*16 + HexDigitValue(ch);
+    } else {
+      haveQues = PR_TRUE;
+      low = low*16 + 0x0;
+      high = high*16 + 0xF;
+    }
+  }
+
+  if (ch == '-' && IsHexDigit(Peek())) {
+    if (haveQues) {
+      valid = PR_FALSE;
+    }
+
+    aResult.mIdent.Append(ch);
+    high = 0;
+    i = 0;
+    for (;;) {
+      ch = Read();
+      i++;
+      if (i == 7 || !IsHexDigit(ch)) {
+        break;
+      }
+      aResult.mIdent.Append(ch);
+      high = high*16 + HexDigitValue(ch);
+    }
+  }
+  Pushback(ch);
+
+  aResult.mInteger = low;
+  aResult.mInteger2 = high;
+  aResult.mIntegerValid = valid;
+  aResult.mType = eCSSToken_URange;
   return PR_TRUE;
 }

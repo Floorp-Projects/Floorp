@@ -46,21 +46,6 @@ MODULE		= layout
 LIBRARY_NAME	= gktable_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  content \
-		  gfx \
-		  thebes \
-		  widget \
-		  locale \
-		  view \
-		  necko \
-		  webshell \
-		  js \
-		  pref \
-		  docshell \
-		  $(NULL)
 
 ifdef ACCESSIBILITY
 REQUIRES	+= accessibility

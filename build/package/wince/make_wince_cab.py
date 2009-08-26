@@ -86,6 +86,7 @@ import string
 import shutil
 
 CompressFlag = "/compress"
+FaststartFlag = 0
 
 class FileEntry:
     def __init__(self, dirpath, dircount, filename, filecount, actual_filename):
@@ -285,8 +286,10 @@ HKCU,Software\%AppName%,MinorVersion,0x00010001,0
 
 
 def output_shortcuts_section(f, app_name):
-    f.write("[Shortcuts]                         ; Shortcut created in destination dir, %CE14%\n")
-    f.write("%%AppName%%,0,%s\n" % app_name)
+    f.write("[Shortcuts]\n")
+    f.write("%%AppName%%,0,%s,%%CE11%%\n" % app_name)
+    if FaststartFlag:
+        f.write("%%AppName%%faststart,0,%sfaststart.exe,%%CE4%%\n" % os.path.splitext(app_name)[0]);
 
 
 def output_inf_file(program_name, app_name):
@@ -327,7 +330,7 @@ ERROR: CAB FILE NOT CREATED.
  this may mean that your PYTHON is outputting Windows files WITHOUT CR-LF
  line endings.  Please verify that your INF file has CR-LF line endings.
 ***************************************************************************"""
-        return
+        sys.exit(2)
 
     print "INFORMATION: Executing command to move %s.CAB to %s" % (program_name, cab_final_name)
     sys.stdout.flush()
@@ -343,8 +346,8 @@ def purge_copied_files():
 
 def main():
     args = sys.argv
-    if len(args) < 4 or len(args) > 6:
-        print >> sys.stderr, "Usage: %s [-s] [CABWIZ_PATH] SOURCE_DIR PROGRAM_NAME CAB_FINAL_NAME" % args[0]
+    if len(args) < 4 or len(args) > 7:
+        print >> sys.stderr, "Usage: %s [-s] [-faststart] [CABWIZ_PATH] SOURCE_DIR PROGRAM_NAME CAB_FINAL_NAME" % args[0]
         print >> sys.stderr, "Example: %s /c/Program\ Files/Microsoft\ Visual\ Studio\ 9.0/ fennec Fennec fennec-0.11.en-US.wince-arm.cab" % args[0]
         sys.exit(1)
 
@@ -353,6 +356,11 @@ def main():
     if args[0] == "-s":
         global CompressFlag
         CompressFlag = ""
+        args = args[1:]
+
+    if args[0] == "-faststart":
+        global FaststartFlag
+        FaststartFlag = 1
         args = args[1:]
 
     cabwiz_path = None

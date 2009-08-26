@@ -83,6 +83,12 @@ ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 EXTRA_DSO_LDOPTS += -lcups
 endif
 
+ifdef MOZ_SYDNEYAUDIO
+ifeq ($(OS_ARCH),Linux)
+EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
+endif
+endif
+
 export:: dlldeps.cpp
 
 dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp

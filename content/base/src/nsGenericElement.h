@@ -949,11 +949,6 @@ public:
     };
 
     /**
-     * Weak reference to this node
-     */
-    nsNodeWeakReference* mWeakReference;
-
-    /**
      * An object implementing the .children property for this element.
      */
     nsRefPtr<nsContentList> mChildrenList;

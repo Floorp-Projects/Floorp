@@ -50,9 +50,6 @@ MODULE		= xremoteclient
 LIBRARY_NAME = xremote_client_s
 FORCE_STATIC_LIB = 1
 
-REQUIRES = \
-	xpcom \
-	$(NULL)
 
 ifdef MOZ_ENABLE_PHOTON
 	CPPSRCS		+= PhRemoteClient.cpp

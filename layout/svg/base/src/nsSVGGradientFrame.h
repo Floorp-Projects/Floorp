@@ -71,7 +71,6 @@ public:
                               PRInt32         aModType);
 
 #ifdef DEBUG
-  // nsIFrameDebug interface:
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGGradient"), aResult);
@@ -168,7 +167,6 @@ public:
                               PRInt32         aModType);
 
 #ifdef DEBUG
-  // nsIFrameDebug interface:
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGLinearGradient"), aResult);
@@ -209,7 +207,6 @@ public:
                               PRInt32         aModType);
 
 #ifdef DEBUG
-  // nsIFrameDebug interface:
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGRadialGradient"), aResult);

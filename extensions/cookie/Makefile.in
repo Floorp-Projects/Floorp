@@ -50,19 +50,6 @@ MODULE_NAME	= nsCookieModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  dom \
-		  content \
-		  widget \
-		  pref \
-		  windowwatcher \
-		  docshell \
-		  appshell \
-		  caps \
-		  storage \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsCookieModule.cpp \

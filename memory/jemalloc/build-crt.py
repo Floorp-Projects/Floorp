@@ -5,7 +5,7 @@ from subprocess import Popen, STDOUT, PIPE
 
 if 'MAKEFLAGS' in os.environ:
   del os.environ['MAKEFLAGS']
-proc = Popen(['nmake', 'dll_', 'mt'], stdout=PIPE, stderr=STDOUT,
+proc = Popen(['nmake', 'dll_', 'dll_p', 'mt'], stdout=PIPE, stderr=STDOUT,
              cwd=sys.argv[1])
 
 while True:

@@ -48,26 +48,6 @@ SHORT_LIBNAME	= metrics_s
 
 XPI_NAME	= metrics
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  pref \
-		  uriloader \
-		  dom \
-		  docshell \
-		  layout \
-		  widget \
-		  $(BZ2_REQUIRES) \
-		  xulapp \
-		  extensions \
-		  rdf \
-		  plugin \
-		  content \
-		  autocomplete \
-		  places \
-		  toolkitcomps \
-		  locale \
-		  $(NULL)
 
 CSRCS		= \
 		md5.c \

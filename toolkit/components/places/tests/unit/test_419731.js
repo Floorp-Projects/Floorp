@@ -66,9 +66,6 @@ try {
 
 // main
 function run_test() {
-  // TODO bug 442778 - re-enable test once PR_Now() issue is resolved
-  return;
-
   var uri1 = uri("http://foo.bar/");
 
   // create 2 bookmarks
@@ -113,6 +110,9 @@ function run_test() {
 
   // change bookmark 2 title
   bmsvc.setItemTitle(bookmark2id, "new title 2");
+  // Workaround VM timers issues.
+  var bookmark1LastMod = bmsvc.getItemLastModified(bookmark1id);
+  bmsvc.setItemLastModified(bookmark2id, bookmark1LastMod + 1);
 
   // check that tag container contains new title
   options = histsvc.getNewQueryOptions();

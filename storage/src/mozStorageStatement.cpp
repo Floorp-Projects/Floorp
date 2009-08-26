@@ -392,14 +392,22 @@ Statement::Finalize()
   // queued up statements run first.  Dispatch an event to the background thread
   // that will do this for us.
   if (mCachedAsyncStatement) {
-    nsCOMPtr<nsIRunnable> event =
-      new AsyncStatementFinalizer(mCachedAsyncStatement);
-    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
     nsCOMPtr<nsIEventTarget> target = mDBConnection->getAsyncExecutionTarget();
-    nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mCachedAsyncStatement = NULL;
+    if (!target) {
+      // However, if we cannot get the background thread, we have to assume it
+      // has been shutdown (or is in the process of doing so).  As a result, we
+      // should just finalize it here and now.
+      (void)::sqlite3_finalize(mCachedAsyncStatement);
+    }
+    else {
+      nsCOMPtr<nsIRunnable> event =
+        new AsyncStatementFinalizer(mCachedAsyncStatement);
+      NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+      nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
+      NS_ENSURE_SUCCESS(rv, rv);
+      mCachedAsyncStatement = NULL;
+    }
   }
 
   // We are considered dead at this point, so any wrappers for row or params

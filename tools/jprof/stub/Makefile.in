@@ -58,7 +58,6 @@ EXPORTS         = \
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 
-REQUIRES	= xpcom
 
 include $(topsrcdir)/config/rules.mk
 

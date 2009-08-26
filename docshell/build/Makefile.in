@@ -52,32 +52,6 @@ EXPORT_LIBRARY = 1
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  shistory \
-		  necko \
-		  nkcache \
-		  gfx \
-		  thebes \
-		  content \
-		  layout \
-		  webshell \
-		  widget \
-		  pref \
-		  intl \
-		  htmlparser \
-		  chardet \
-		  find \
-		  composer \
-		  editor \
-		  commandhandler \
-		  uriloader \
-		  exthandler \
-		  mimetype \
-		  prefetch \
-		  imglib2 \
-		  $(NULL)
 
 EXPORTS = \
 		  nsDocShellCID.h \

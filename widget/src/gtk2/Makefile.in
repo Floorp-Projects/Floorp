@@ -52,25 +52,6 @@ LIBXUL_LIBRARY = 1
 
 NATIVE_THEME_SUPPORT = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  gfx \
-		  pref \
-		  dom \
-		  docshell \
-		  necko \
-		  uconv \
-		  intl \
-		  imglib2 \
-		  view \
-		  content \
-		  layout \
-		  util \
-		  locale \
-		  thebes \
-		  cairo \
-		  qcms \
-		  $(NULL)
 
 ifdef MOZ_X11
 REQUIRES += gtkxtbin

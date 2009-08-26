@@ -176,12 +176,12 @@ public:
    */
 
   /**
-   * Indicates if the animation is currently active. Inactive animations will
-   * not contribute to the composed result.
+   * Indicates if the animation is currently active or frozen. Inactive
+   * animations will not contribute to the composed result.
    *
-   * @return  True if the animation active, false otherwise.
+   * @return  True if the animation is active or frozen, false otherwise.
    */
-  PRBool IsActive() const
+  PRBool IsActiveOrFrozen() const
   {
     /*
      * - Frozen animations should be considered active for the purposes of

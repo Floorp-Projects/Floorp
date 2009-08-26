@@ -45,38 +45,6 @@ MODULE		= content
 LIBRARY_NAME	= gkconmedia_s
 LIBXUL_LIBRARY 	= 1
 
-REQUIRES	= \
-		xpcom \
-		string \
-		gfx \
-		content \
-		thebes \
-		layout \
-		widget \
-		dom \
-		js \
-		locale \
-		unicharutil \
-		webshell \
-		uriloader \
-		htmlparser \
-		necko \
-		view \
-		pref \
-		docshell \
-		xpconnect \
-		xuldoc \
-		caps \
-		editor \
-		imglib2 \
-		mimetype \
-		exthandler \
-		uconv \
-		intl \
-		plugin \
-		cairo \
-		libpixman \
-		$(NULL)
 
 EXPORTS		= \
 		nsMediaDecoder.h \

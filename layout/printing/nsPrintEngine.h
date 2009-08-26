@@ -104,7 +104,7 @@ public:
   nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint, 
                       nsISupports*            aContainer,
                       nsIDocument*            aDocument,
-                      nsIDeviceContext*       aDevContext,
+                      float                   aScreenDPI,
                       nsIWidget*              aParentWidget,
                       FILE*                   aDebugFile);
 
@@ -282,7 +282,7 @@ protected:
 
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
   nsISupports*            mContainer;      // [WEAK] it owns me!
-  nsIDeviceContext*       mDeviceContext;  // not ref counted
+  float                   mScreenDPI;
   
   nsPrintData*            mPrt;
   nsPagePrintTimer*       mPagePrintTimer;

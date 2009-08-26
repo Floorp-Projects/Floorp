@@ -49,26 +49,6 @@ ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
 endif
 
-REQUIRES	= \
-		  xpcom \
-		  string \
-		  necko \
-		  libreg \
-		  browsercomps \
-		  toolkitcomps \
-		  loginmgr \
-		  pref \
-		  rdf \
-		  satchel \
-		  intl \
-		  unicharutil \
-		  windowwatcher \
-		  dom \
-		  docshell \
-		  xulapp \
-      places \
-      browserplaces \
-		  $(NULL)
 
 CPPSRCS  = nsProfileMigrator.cpp \
            nsBrowserProfileMigratorUtils.cpp \

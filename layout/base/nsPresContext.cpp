@@ -1268,7 +1268,7 @@ nsPresContext::SetupBackgroundImageLoaders(nsIFrame* aFrame,
 {
   nsRefPtr<nsImageLoader> loaders;
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, aStyleBackground) {
-    if (aStyleBackground->mLayers[i].mImage.GetType() == eBackgroundImage_Image) {
+    if (aStyleBackground->mLayers[i].mImage.GetType() == eStyleImageType_Image) {
       imgIRequest *image = aStyleBackground->mLayers[i].mImage.GetImageData();
       loaders = nsImageLoader::Create(aFrame, image, PR_FALSE, loaders);
     }
@@ -2299,17 +2299,17 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
     if (gDumpPluginList) {
       fprintf(stderr, "Plugins --- before optimization (bounds %d,%d,%d,%d):\n",
           bounds.x, bounds.y, bounds.width, bounds.height);
-      nsIFrameDebug::PrintDisplayList(&builder, list);
+      nsFrame::PrintDisplayList(&builder, list);
     }
 #endif
-  
+
     nsRegion visibleRegion(bounds);
     list.OptimizeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
     if (gDumpPluginList) {
       fprintf(stderr, "Plugins --- after optimization:\n");
-      nsIFrameDebug::PrintDisplayList(&builder, list);
+      nsFrame::PrintDisplayList(&builder, list);
     }
 #endif
 

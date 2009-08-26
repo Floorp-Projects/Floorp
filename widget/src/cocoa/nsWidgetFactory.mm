@@ -57,6 +57,7 @@
 
 #include "nsLookAndFeel.h"
 
+#include "nsAccelerometerX.h"
 #include "nsSound.h"
 #include "nsIdleServiceX.h"
 
@@ -71,6 +72,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
@@ -125,6 +127,10 @@ static const nsModuleComponentInfo gComponents[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
+  { "Accelerometer",
+    NS_ACCELEROMETER_CID,
+    NS_ACCELEROMETER_CONTRACTID,
+    nsAccelerometerXConstructor },
   { "Transferable",
     NS_TRANSFERABLE_CID,
     "@mozilla.org/widget/transferable;1",

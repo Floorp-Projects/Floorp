@@ -46,8 +46,10 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	\
 		test_handlerApps.xhtml \
+		test_unsafeBidiChars.xhtml \
 		handlerApps.js \
 		handlerApp.xhtml \
+		unsafeBidiFileName.sjs \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

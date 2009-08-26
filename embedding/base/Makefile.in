@@ -49,10 +49,6 @@ XPIDL_MODULE	= embed_base
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom \
-		  intl \
-		  embedcomponents \
-		  $(NULL)
 
 DEFINES += -DMOZILLA_STRICT_API
 

@@ -607,23 +607,8 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
       !nsCSSRendering::IsCanvasFrame(mFrame))
     return PR_TRUE;
 
-  if (bottomLayer.mRepeat == NS_STYLE_BG_REPEAT_XY) {
-    if (bottomLayer.mImage.GetType() == eBackgroundImage_Image) {
-      nsCOMPtr<imgIContainer> container;
-      bottomLayer.mImage.GetImageData()->GetImage(getter_AddRefs(container));
-      if (container) {
-        PRBool animated;
-        container->GetAnimated(&animated);
-        if (!animated) {
-          PRBool isOpaque;
-          if (NS_SUCCEEDED(container->GetCurrentFrameIsOpaque(&isOpaque)))
-            return isOpaque;
-        }
-      }
-    }
-  }
-
-  return PR_FALSE;
+  return bottomLayer.mRepeat == NS_STYLE_BG_REPEAT_XY &&
+         bottomLayer.mImage.IsOpaque();
 }
 
 PRBool
@@ -637,7 +622,7 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
   if (!hasBG)
     return PR_TRUE;
-  if (bg->BottomLayer().mImage.GetType() == eBackgroundImage_Null &&
+  if (bg->BottomLayer().mImage.IsEmpty() &&
       bg->mImageCount == 1 &&
       !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
       bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER)

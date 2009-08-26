@@ -50,20 +50,6 @@ EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
 LIBXUL_LIBRARY  = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  editor \
-		  content \
-		  gfx \
-		  layout \
-		  dom \
-		  necko \
-		  widget \
-		  pref \
-		  txtsvc \
-		  uconv \
-		  unicharutil \
-		  $(NULL)
 
 CPPSRCS		= \
 		mozSpellCheckerFactory.cpp	\

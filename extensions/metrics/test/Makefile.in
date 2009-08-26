@@ -43,13 +43,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_metrics
 
-REQUIRES	= \
-		xpcom \
-		metrics \
-		necko \
-		dom \
-		content \
-		$(NULL)
 
 CPPSRCS		= \
 		TestMetricsConfig.cpp \

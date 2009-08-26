@@ -51,42 +51,6 @@ LIBRARY_NAME	= basedocshell_s
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  caps \
-		  necko \
-		  gfx \
-		  thebes \
-		  layout \
-		  content \
-		  dom \
-		  js \
-		  uriloader \
-		  exthandler \
-		  htmlparser \
-		  view \
-		  pref \
-		  locale \
-		  webbrwsr \
-		  xpconnect \
-		  widget \
-		  shistory \
-		  intl \
-		  plugin \
-		  webshell \
-		  chardet \
-		  uconv \
-		  xuldoc \
-		  find \
-		  nkcache \
-		  composer \
-		  commandhandler \
-		  editor \
-		  windowwatcher \
-		  imglib2 \
-		  jar \
-		  prefetch \
-		  $(NULL)
 
 SDK_XPIDLSRCS = \
 		nsIGlobalHistory.idl \

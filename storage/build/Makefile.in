@@ -52,13 +52,6 @@ IS_COMPONENT = 1
 MODULE_NAME = mozStorageModule
 LIBXUL_LIBRARY = 1
 
-REQUIRES = \
-	sqlite3 \
-	xpcom \
-	string \
-	js \
-	xpconnect \
-	$(NULL)
 
 EXPORTS = mozStorageCID.h
 
