@@ -36,7 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/utils.js");
+Cu.import("resource://gre/modules/utils.js");
+Cu.import("resource://gre/modules/PluralForm.jsm");
 
 const TOOLBARSTATE_LOADING  = 1;
 const TOOLBARSTATE_LOADED   = 2;
@@ -368,7 +369,9 @@ var BrowserUI = {
 
     document.getElementById("toolbar-main").ignoreDrag = true;
 
-    document.getElementById("tabs").addEventListener("TabSelect", this, true);
+    let tabs = document.getElementById("tabs");
+    tabs.addEventListener("TabSelect", this, true);
+    tabs.addEventListener("TabOpen", this, true);
 
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("DOMWindowClose", this, true);
@@ -587,6 +590,11 @@ var BrowserUI = {
 */
   },
 
+  isTabsVisible: function isTabsVisible() {
+    let [leftvis,,,] = Browser.computeSidebarVisibility();
+    return (leftvis > 0.002);
+  },
+
   showPanel: function showPanel(aPage) {
     let panelUI = document.getElementById("panel-container");
 
@@ -620,6 +628,10 @@ var BrowserUI = {
         break;
       case "TabSelect":
         this._tabSelect(aEvent);
+        break;
+      case "TabOpen":
+        if (!this.isTabsVisible())
+          NewTabPopup.show(aEvent.target);
         break;
       // URL textbox events
       case "click":
@@ -773,6 +785,55 @@ var BrowserUI = {
     }
   }
 };
+
+var NewTabPopup = {
+  _timeout: 0,
+  _tabs: [],
+
+  get box() {
+    delete this.box;
+    return this.box = document.getElementById("newtab-popup");
+  },
+
+  _updateLabel: function() {
+    let newtabStrings = document.getElementById("bundle_browser").getString("newtabpopup.opened");
+    let label = PluralForm.get(this._tabs.length, newtabStrings).replace("#1", this._tabs.length);
+
+    this.box.firstChild.setAttribute("value", label);
+  },
+
+  hide: function() {
+    if (this._timeout) {
+      clearTimeout(this._timeout);
+      this._timeout = 0;
+    }
+
+    this._tabs = [];
+    this.box.hidden = true;
+  },
+  
+  show: function(aTab) {
+    this._tabs.push(aTab);
+    this._updateLabel();
+
+    this.box.top = aTab.getBoundingClientRect().top + (aTab.getBoundingClientRect().height / 3);
+    this.box.hidden = false;
+
+    if (this._timeout)
+      clearTimeout(this._timeout);
+
+    this._timeout = setTimeout(function(self) {
+      self.hide();
+    }, 2000, this);
+
+    BrowserUI.pushPopup(this, this.box);
+  },
+
+  selectTab: function() {
+    BrowserUI.selectTab(this._tabs.pop());
+    this.hide();
+  }
+}
 
 var BookmarkPopup = {
   get box() {
