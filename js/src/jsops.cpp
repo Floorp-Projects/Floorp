@@ -654,8 +654,7 @@
             rval = FETCH_OPND(-1);
             if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), rval,
                                      JS_PropertyStub, JS_PropertyStub,
-                                     JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
-                                     NULL)) {
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
                 goto error;
             }
           END_SET_CASE(JSOP_SETCONST);
@@ -667,8 +666,7 @@
             FETCH_ELEMENT_ID(obj, -1, id);
             if (!obj->defineProperty(cx, id, rval,
                                      JS_PropertyStub, JS_PropertyStub,
-                                     JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
-                                     NULL)) {
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
                 goto error;
             }
             regs.sp -= 3;
@@ -2814,6 +2812,7 @@
              */
             index += atoms - script->atomMap.vector;
             obj = fp->varobj;
+            JS_ASSERT(obj->map->ops->defineProperty == js_DefineProperty);
             attrs = JSPROP_ENUMERATE;
             if (!(fp->flags & JSFRAME_EVAL))
                 attrs |= JSPROP_PERMANENT;
@@ -2828,8 +2827,8 @@
 
             /* Bind a variable only if it's not yet defined. */
             if (!prop) {
-                if (!obj->defineProperty(cx, id, JSVAL_VOID, JS_PropertyStub, JS_PropertyStub,
-                                         attrs, &prop)) {
+                if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID, JS_PropertyStub, JS_PropertyStub,
+                                             attrs, 0, 0, &prop)) {
                     goto error;
                 }
                 JS_ASSERT(prop);
@@ -3012,7 +3011,7 @@
             }
             ok = doSet
                  ? parent->setProperty(cx, id, &rval)
-                 : parent->defineProperty(cx, id, rval, getter, setter, attrs, NULL);
+                 : parent->defineProperty(cx, id, rval, getter, setter, attrs);
 
           restore_scope:
             /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
@@ -3064,8 +3063,7 @@
                                                 (flags & JSPROP_SETTER)
                                                 ? JS_EXTENSION (JSPropertyOp) obj
                                                 : JS_PropertyStub,
-                                                attrs,
-                                                NULL);
+                                                attrs);
                 }
             }
 
@@ -3278,7 +3276,7 @@
             if (!js_CheckRedeclaration(cx, obj, id, attrs, NULL, NULL))
                 goto error;
 
-            if (!obj->defineProperty(cx, id, JSVAL_VOID, getter, setter, attrs, NULL))
+            if (!obj->defineProperty(cx, id, JSVAL_VOID, getter, setter, attrs))
                 goto error;
 
             regs.sp += i;
@@ -3501,7 +3499,7 @@
                     goto error;
                 }
             } else {
-                if (!obj->defineProperty(cx, id, rval, NULL, NULL, JSPROP_ENUMERATE, NULL))
+                if (!obj->defineProperty(cx, id, rval, NULL, NULL, JSPROP_ENUMERATE))
                     goto error;
             }
             regs.sp -= 2;
@@ -3526,7 +3524,7 @@
                                      JSMSG_BAD_SHARP_DEF, numBuf);
                 goto error;
             }
-            if (!obj->defineProperty(cx, id, rval, NULL, NULL, JSPROP_ENUMERATE, NULL))
+            if (!obj->defineProperty(cx, id, rval, NULL, NULL, JSPROP_ENUMERATE))
                 goto error;
           END_CASE(JSOP_DEFSHARP)
 

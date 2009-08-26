@@ -623,10 +623,8 @@ args_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
          * XXX ECMA specs DontEnum even for indexed properties, contrary to
          * other array-like objects.
          */
-        if (!js_DefineProperty(cx, obj, id, JSVAL_VOID, ArgGetter, ArgSetter,
-                               JSPROP_SHARED, NULL)) {
+        if (!js_DefineProperty(cx, obj, id, JSVAL_VOID, ArgGetter, ArgSetter, JSPROP_SHARED))
             return JS_FALSE;
-        }
         *objp = obj;
     }
     return true;
@@ -2496,10 +2494,8 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
     fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom),
-                             OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
-                             gsop, gsop,
-                             attrs & ~JSFUN_FLAGS_MASK, NULL)) {
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
+                             gsop, gsop, attrs & ~JSFUN_FLAGS_MASK)) {
         return NULL;
     }
     return fun;

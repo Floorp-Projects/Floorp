@@ -297,20 +297,11 @@ typedef JSBool
 
 /*
  * Define obj[id], a direct property of obj named id, having the given initial
- * value, with the specified getter, setter, and attributes.  If the propp out
- * param is non-null, *propp on successful return contains an opaque property
- * pointer usable as a speedup hint with JSAttributesOp.  But note that propp
- * may be null, indicating that the caller is not interested in recovering an
- * opaque pointer to the newly-defined property.
- *
- * If propp is non-null and JSDefinePropOp succeeds, its caller must be sure
- * to drop *propp using JSObjectOps.dropProperty in short order, just as with
- * JSLookupPropOp.
+ * value, with the specified getter, setter, and attributes.
  */
 typedef JSBool
 (* JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                   JSProperty **propp);
+                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
 /*
  * Get, set, or delete obj[id], returning false on error or exception, true
