@@ -227,6 +227,10 @@ WeaveSvc.prototype = {
     this._genKeyURLs();
   },
 
+  get userURL() {
+    return this.clusterURL + this.username;
+  },
+
   get userPath() { return ID.get('WeaveID').username; },
 
   get isLoggedIn() { return this._loggedIn; },
@@ -260,7 +264,7 @@ WeaveSvc.prototype = {
   },
 
   _genKeyURLs: function WeaveSvc__genKeyURLs() {
-    let url = this.clusterURL + this.username;
+    let url = this.userURL;
     PubKeys.defaultKeyUri = url + "/storage/keys/pubkey";
     PrivKeys.defaultKeyUri = url + "/storage/keys/privkey";
   },
@@ -457,12 +461,11 @@ WeaveSvc.prototype = {
   findCluster: function WeaveSvc_findCluster(username) {
     this._log.debug("Finding cluster for user " + username);
 
-    let res = new Resource(this.baseURL + "user/1/" +
-      username + '/node/weave');
+    let res = new Resource(this.baseURL + "user/1/" + username + "/node/weave");
     try {
       res.get();
     } catch(ex) {}
-    
+
     try {
       switch (res.lastChannel.responseStatus) {
         case 404:
@@ -519,8 +522,7 @@ WeaveSvc.prototype = {
       if (isLogin)
         this.clusterURL = url;
 
-      let res = new Resource(this.clusterURL + username + 
-        '/info/collections');
+      let res = new Resource(this.userURL + "/info/collections");
       res.authenticator = {
         onRequest: function(headers) {
           headers['Authorization'] = 'Basic ' + btoa(username + ':' + password);
@@ -783,7 +785,7 @@ WeaveSvc.prototype = {
   },
 
   createAccount: function WeaveSvc_createAccount(username, password, email,
-                                            captchaChallenge, captchaResponse) 
+                                            captchaChallenge, captchaResponse)
   {
     let payload = JSON.stringify({
       "password": password, "email": email,
@@ -827,8 +829,7 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.debug("Fetching global metadata record");
-    let meta = Records.import(this.clusterURL + this.username + 
-      "/storage/meta/global");
+    let meta = Records.import(this.userURL + "/storage/meta/global");
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
@@ -1239,8 +1240,7 @@ WeaveSvc.prototype = {
     Sync.sleep(2000);
 
     this._log.debug("Uploading new metadata record");
-    meta = new WBORecord(this.clusterURL + 
-      this.username + "/storage/meta/global");
+    meta = new WBORecord(this.userURL + "/storage/meta/global");
     meta.payload.syncID = Clients.syncID;
     this._updateRemoteVersion(meta);
   },
@@ -1265,7 +1265,7 @@ WeaveSvc.prototype = {
   wipeServer: function WeaveSvc_wipeServer(engines)
     this._catch(this._notify("wipe-server", "", function() {
       // Grab all the collections for the user
-      let userURL = this.clusterURL + this.username + "/";
+      let userURL = this.userURL + "/";
       let res = new Resource(userURL);
       res.get();
 
