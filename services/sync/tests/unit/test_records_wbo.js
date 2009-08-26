@@ -48,7 +48,7 @@ function run_test() {
     log.info("Getting a WBO record");
 
     let res = new Resource("http://localhost:8080/record");
-    res.get();
+    let resp = res.get();
 
     let rec = new WBORecord();
     rec.deserialize(res.data);
@@ -60,7 +60,7 @@ function run_test() {
     do_check_eq(rec.modified, 2454725.98283);
     do_check_eq(typeof(rec.payload), "object");
     do_check_eq(rec.payload.cheese, "roquefort");
-    do_check_eq(res.lastChannel.responseStatus, 200);
+    do_check_eq(resp.status, 200);
 
     log.info("Getting a WBO record using the record manager");
 
@@ -69,7 +69,7 @@ function run_test() {
     do_check_eq(rec2.modified, 2454725.98284);
     do_check_eq(typeof(rec2.payload), "object");
     do_check_eq(rec2.payload.cheese, "gruyere");
-    do_check_eq(Records.lastResource.lastChannel.responseStatus, 200);
+    do_check_eq(Records.response.status, 200);
 
     log.info("Done!");
   }

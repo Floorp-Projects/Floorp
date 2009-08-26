@@ -131,12 +131,13 @@ RecordManager.prototype = {
   import: function RecordMgr_import(url) {
     this._log.trace("Importing record: " + (url.spec ? url.spec : url));
     try {
-      this.lastResource = new Resource(url);
-      this.lastResource.get();
+      // Clear out the last response with empty object if GET fails
+      this.response = {};
+      this.response = new Resource(url).get();
 
       let record = new this._recordType();
-      record.deserialize(this.lastResource.data);
-      record.uri = url; // NOTE: may override id in this.lastResource.data
+      record.deserialize(this.response);
+      record.uri = url;
 
       return this.set(url, record);
     }
