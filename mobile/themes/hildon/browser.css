@@ -679,6 +679,10 @@ findbar .findbar-closebutton {
 
 /* Identity popup   -------------------------------------------------------- */
 #identity-container {
+  border-bottom: 0.2mm solid grey;
+}
+
+#identity-popup-container {
   padding: 2.2mm; /* core spacing */
 }
 
@@ -733,6 +737,22 @@ findbar .findbar-closebutton {
 #identity-container[mode="verifiedIdentity"] > vbox > #identity-popup-encryption-icon ,
 #identity-container[mode="verifiedDomain"] > vbox > #identity-popup-encryption-icon {
   list-style-image: url("chrome://browser/skin/images/lock-40.png");
+}
+
+/* search popup   ---------------------------------------------------------- */
+#search-container {
+  border-top: 0.1mm solid rgb(207,207,207);
+  padding: 2.2mm; /* core spacing */
+  margin-top: 2mm;
+}
+
+#search-engine-label-add {
+  font-size: 80%;
+}
+
+.search-engine-button .button-icon {
+  width: 16px;
+  height: 16px;
 }
 
 /* Preferences window   ---------------------------------------------------- */

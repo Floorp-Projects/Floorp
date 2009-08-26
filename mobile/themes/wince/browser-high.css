@@ -105,6 +105,11 @@
   background: url("images/leftcapSSL-active-64.png");
 }
 
+.search-engine-button .button-icon {
+  width: 16px;
+  height: 16px;
+}
+
 #urlbar-throbber[loading] {
   list-style-image: url("chrome://browser/skin/images/throbber.png");
 }

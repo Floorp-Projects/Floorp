@@ -1478,6 +1478,97 @@ nsBrowserAccess.prototype = {
   }
 };
 
+const BrowserSearch = {
+  engines: null,
+  _allEngines: [],
+
+  get _currentEngines() {
+    let doc = getBrowser().contentDocument;
+    return this._allEngines.filter(function(element) element.doc === doc, this);
+  },
+
+  addPageSearchEngine: function (aEngine, aDocument) {
+    // Clean the engine referenced for document that didn't exist anymore
+    let browsers = Browser.browsers;
+    this._allEngines = this._allEngines.filter(function(element) {
+       return browsers.some(function (browser) browser.contentDocument == element.doc);
+    }, this);
+
+    // Prevent duplicate
+    if (!this._allEngines.some(function (e) {
+        return (e.engine.title == aEngine.title) && (e.doc == aDocument);
+    })) this._allEngines.push( {engine:aEngine, doc:aDocument});
+  },
+
+  updatePageSearchEngines: function() {
+    // Check to see whether we've already added an engine with this title in
+    // the search list
+    let newEngines = this._currentEngines.filter(function(element) {
+      return !this.engines.some(function (e) e.name == element.engine.title);
+    }, this);
+
+    let container = document.getElementById('search-container');
+    let buttons = container.getElementsByAttribute("class", "search-engine-button button-dark");
+    for (let i=0; i<buttons.length; i++)
+      container.removeChild(buttons[i]);
+
+    if (newEngines.length == 0) {
+      container.hidden = true;
+      return;
+    }
+
+    // XXX limit to the first search engine for now
+    for (let i = 0; i<1; i++) {
+      let button = document.createElement("button");
+      button.className = "search-engine-button button-dark";
+      button.setAttribute("oncommand", "BrowserSearch.addPermanentSearchEngine(this.engine);this.parentNode.hidden=true;");
+      
+      let engine = newEngines[i];
+      button.engine = engine.engine;
+      button.setAttribute("label", engine.engine.title);
+      button.setAttribute("image", BrowserUI._favicon.src);
+
+      container.appendChild(button);
+    }
+
+    container.hidden = false;
+  },
+
+  addPermanentSearchEngine: function (aEngine) {
+    var searchService = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
+    let iconURL = BrowserUI._favicon.src;
+    searchService.addEngine(aEngine.href, Ci.nsISearchEngine.DATA_XML, iconURL, false);
+
+    this.engines = null;
+  },
+
+  updateSearchButtons: function() {
+    if (this.engines)
+      return;
+
+    var searchService = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
+    var engines = searchService.getVisibleEngines({ });
+    this.engines = engines;
+
+    // Clean the previous search engines button
+    var container = document.getElementById("search-buttons");
+    while (container.hasChildNodes())
+      container.removeChild(container.lastChild);
+
+    for (var e = 0; e < engines.length; e++) {
+      var button = document.createElement("radio");
+      var engine = engines[e];
+      button.id = engine.name;
+      button.setAttribute("label", engine.name);
+      button.className = "searchengine";
+      if (engine.iconURI)
+        button.setAttribute("src", engine.iconURI.spec);
+      container.appendChild(button);
+      button.engine = engine;
+    }
+  }
+}
+
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
  */
@@ -1711,6 +1802,9 @@ IdentityHandler.prototype = {
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
+
+    // Update the search engines results
+    BrowserSearch.updatePageSearchEngines();
   },
 
   show: function ih_show() {
