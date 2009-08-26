@@ -54,7 +54,7 @@ class nsCSSFrameConstructor;
 class nsIComboboxControlFrame : public nsQueryFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIComboboxControlFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIComboboxControlFrame)
 
   /**
    * Indicates whether the list is dropped down

@@ -59,7 +59,7 @@ public:
   
 public:
   NS_DECL_QUERYFRAME
-  NS_DECLARE_FRAME_ACCESSOR(nsSVGTextContainerFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsSVGTextContainerFrame)
 
   // nsIFrame
   NS_IMETHOD InsertFrames(nsIAtom*        aListName,

@@ -76,7 +76,7 @@ class nsAnonymousBlockFrame;
 class nsInlineFrame : public nsInlineFrameSuper
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsInlineFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsInlineFrame)
   NS_DECL_QUERYFRAME
 
   friend nsIFrame* NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
