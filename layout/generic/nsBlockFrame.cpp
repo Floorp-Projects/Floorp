@@ -607,7 +607,7 @@ static PRBool IsContinuationPlaceholder(nsIFrame* aFrame)
 static void ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent,
                           nsIFrame* aNewParent) {
   NS_ASSERTION(aOldParent == aFrame->GetParent(),
-               "Parent not consistent with exepectations");
+               "Parent not consistent with expectations");
 
   aFrame->SetParent(aNewParent);
 
