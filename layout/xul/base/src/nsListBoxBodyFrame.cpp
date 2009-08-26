@@ -503,7 +503,6 @@ nsListBoxBodyFrame::GetIndexOfFirstVisibleRow(PRInt32 *aResult)
 nsresult
 nsListBoxBodyFrame::EnsureIndexIsVisible(PRInt32 aRowIndex)
 {
-  NS_ASSERTION(aRowIndex >= 0, "Ensure row is visible called with a negative number!");
   if (aRowIndex < 0)
     return NS_ERROR_ILLEGAL_VALUE;
 
