@@ -283,7 +283,9 @@ SyncEngine.prototype = {
       meta.generateIV();
       meta.addUnwrappedKey(pubkey, symkey);
       let res = new Resource(meta.uri);
-      res.put(meta.serialize());
+      let resp = res.put(meta.serialize());
+      if (!resp.success)
+        throw resp;
 
       // Cache the cryto meta that we just put on the server
       CryptoMetas.set(meta.uri, meta);
@@ -341,7 +343,9 @@ SyncEngine.prototype = {
       Sync.sleep(0);
     });
 
-    newitems.get();
+    let resp = newitems.get();
+    if (!resp.success)
+      throw resp;
 
     if (this.lastSync < this._lastSyncTmp)
         this.lastSync = this._lastSyncTmp;
@@ -462,7 +466,10 @@ SyncEngine.prototype = {
       // Upload what we've got so far in the collection
       let doUpload = Utils.bind2(this, function(desc) {
         this._log.info("Uploading " + desc + " of " + outnum + " records");
-        up.post();
+        let resp = up.post();
+        if (!resp.success)
+          throw resp;
+
         if (up.data.modified > this.lastSync)
           this.lastSync = up.data.modified;
         up.clearRecords();
