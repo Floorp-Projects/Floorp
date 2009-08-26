@@ -285,6 +285,10 @@
       </vbox>
     </hbox>
 
+    <vbox id="newtab-popup" hidden="true" class="panel-dark" onclick="NewTabPopup.selectTab()" align="center" left="21">
+      <label/>
+    </vbox>
+
     <vbox id="bookmark-popup" hidden="true" class="panel-dark" oncommand="BookmarkPopup.hide()" align="center">
       <label value="&bookmarkPopup.label;"/>
       <vbox>
