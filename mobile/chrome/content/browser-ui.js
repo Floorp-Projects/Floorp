@@ -556,8 +556,11 @@ var BrowserUI = {
   },
 
   newTab : function newTab(aURI) {
-    let tab = Browser.addTab(aURI || "about:blank", true);
-    this.showAutoComplete();
+    aURI = aURI || "about:blank";
+    let tab = Browser.addTab(aURI, true);
+
+    if (aURI == "about:blank")
+      this.showAutoComplete();
     return tab;
   },
 

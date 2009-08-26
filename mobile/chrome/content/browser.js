@@ -1450,7 +1450,7 @@ nsBrowserAccess.prototype = {
     }
     else {
       if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB)
-        newWindow = BrowserUI.newTab().browser.contentWindow;
+        newWindow = Browser.addTab("about:blank", true).browser.contentWindow;
       else
         newWindow = aOpener ? aOpener.top : browser.contentWindow;
     }
