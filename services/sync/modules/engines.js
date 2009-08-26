@@ -218,10 +218,7 @@ SyncEngine.prototype = {
   __proto__: Engine.prototype,
 
   _recordObj: CryptoWrapper,
-  
-  _alerts: "",
-  get alerts() { return this._alerts; },
-  
+
   get baseURL() {
     let url = Svc.Prefs.get("clusterURL");
     if (!url)
@@ -344,15 +341,8 @@ SyncEngine.prototype = {
       Sync.sleep(0);
     });
 
-    let resp = newitems.get();
-    try {
-      // we only need to store the latest alert
-      this._alerts = resp.getHeader("X-Weave-Alert");
-    } catch (e) {
-      // no alert headers were present
-      this._alerts = "";
-    }
-    
+    newitems.get();
+
     if (this.lastSync < this._lastSyncTmp)
         this.lastSync = this._lastSyncTmp;
 
