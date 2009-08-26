@@ -54,6 +54,14 @@ zombie-face.patch: bug 486974; leak and possible crash with @font-face{src:url()
 
 win32-raster.patch: bug 498689; use scanline rasterizer on win32
 
+quartz-falback.patch: try to fix Quartz fallback-to-pixman path; possiby incorrect and obsoleted by Andrea Canciani patch
+
+quartz-repeating-radial-gradients.patch: use Quartz to render repeating radial gradients instead of falling back
+
+quartz-const-globals.patch: make some Quartz color function data const globals instead of local variables
+
+quartz-minimze-gradient-repeat.patch: reduce the number of gradient stop repetitions we use, to improve quality of Quartz's gradient rendering
+
 ==== pixman patches ====
 
 pixman-neon.patch: add ARM NEON optimized compositing functions
