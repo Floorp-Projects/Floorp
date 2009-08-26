@@ -2782,7 +2782,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       wantsSplash = PR_TRUE;
     }
   }
-#endif
+#endif //WINCE
 
   if (wantsSplash && !isNoSplash)
     splashScreen = nsSplashScreen::GetOrCreate();
@@ -2795,9 +2795,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // for the startup mutex on this thread if we need to.
   if (needsMutexLock)
     winStartupMutex.Lock();
-#endif
+#endif //WINCE
 
-#endif
+#endif //MOZ_SPLASHSCREEN
 
 
   ScopedLogging log;
@@ -3204,7 +3204,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     rv = dirProvider.SetProfile(profD, profLD);
     NS_ENSURE_SUCCESS(rv, 1);
 
-#ifdef WINCE
+#if defined(WINCE) && defined(MOZ_SPLASHSCREEN)
     // give up the mutex, let other app startups happen
     winStartupMutex.Unlock();
 #endif
