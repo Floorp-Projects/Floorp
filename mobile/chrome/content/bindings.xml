@@ -136,14 +136,15 @@
           if (this._popupOpen)
             return;
 
+          BrowserUI.pushDialog(this);
+
           this._input = aInput;
+          this._input.select();
 
           if (this.hidden)
             this.hidden = false;
           this.collapsed = false;
           this._popupOpen = true;
-
-          BrowserUI.pushDialog(this);
 
           this.invalidate();
         ]]></body>
