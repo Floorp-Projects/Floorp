@@ -729,32 +729,24 @@ WeaveSvc.prototype = {
 
   _errorStr: function WeaveSvc__errorStr(code) {
     switch (code.toString()) {
-    case "0":
-      return "uid-in-use";
-    case "-1":
-      return "invalid-http-method";
-    case "-2":
-      return "uid-missing";
-    case "-3":
-      return "uid-invalid";
-    case "-4":
-      return "mail-invalid";
-    case "-5":
-      return "mail-in-use";
-    case "-6":
-      return "captcha-challenge-missing";
-    case "-7":
-      return "captcha-response-missing";
-    case "-8":
-      return "password-missing";
-    case "-9":
-      return "internal-server-error";
-    case "-10":
-      return "server-quota-exceeded";
-    case "-11":
-      return "missing-new-field";
-    case "-12":
-      return "password-incorrect";
+    case "1":
+      return "illegal-method";
+    case "2":
+      return "invalid-captcha";
+    case "3":
+      return "invalid-username";
+    case "4":
+      return "cannot-overwrite-resource";
+    case "5":
+      return "userid-mismatch";
+    case "6":
+      return "json-parse-failure";
+    case "7":
+      return "invalid-password";
+    case "8":
+      return "invalid-record";
+    case "9":
+      return "weak-password";
     default:
       return "generic-server-error";
     }
