@@ -886,8 +886,6 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_DEFFUN_DBGFC */
     0,  /* JSOP_DEFLOCALFUN_DBGFC */
     0,  /* JSOP_LAMBDA_DBGFC */
-    0,  /* JSOP_SETMETHOD */
-    0,  /* JSOP_INITMETHOD */
 };
 #define JSOP_IS_IMACOP(x) (0 \
  || x == JSOP_BITOR \
