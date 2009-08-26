@@ -504,7 +504,7 @@ placeitem .button-text {
 }
 
 #autocomplete_navbuttons {
-  margin: 2.2mm; /* core spacing */
+  padding: 2.2mm; /* core spacing */
   min-height: 14.4mm; /* row size */
 }
 
