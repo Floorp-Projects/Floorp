@@ -67,16 +67,27 @@ namespace nanojit
 #define OPDEF64(op, number, args, repkind) \
         LIR_##op = ((number) | LIR64),
 #include "LIRopcode.tbl"
-        LIR_sentinel
+        LIR_sentinel,
 #undef OPDEF
 #undef OPDEF64
-    };
 
 #ifdef NANOJIT_64BIT
 #  define PTR_SIZE(a,b)  b
 #else
 #  define PTR_SIZE(a,b)  a
 #endif
+
+        // pointer op aliases
+        LIR_peq     = PTR_SIZE(LIR_eq,     LIR_qeq),
+        LIR_plt     = PTR_SIZE(LIR_lt,     LIR_qlt),
+        LIR_pgt     = PTR_SIZE(LIR_gt,     LIR_qgt),
+        LIR_ple     = PTR_SIZE(LIR_le,     LIR_qle),
+        LIR_pge     = PTR_SIZE(LIR_ge,     LIR_qge),
+        LIR_pult    = PTR_SIZE(LIR_ult,    LIR_qult),
+        LIR_pugt    = PTR_SIZE(LIR_ugt,    LIR_qugt),
+        LIR_pule    = PTR_SIZE(LIR_ule,    LIR_qule),
+        LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge)
+    };
 
     #if defined NANOJIT_64BIT
     #define LIR_ldp     LIR_ldq
