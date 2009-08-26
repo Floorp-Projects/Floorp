@@ -55,7 +55,7 @@ class nsBoxLayoutState;
 class nsIScrollableFrame : public nsIScrollableViewProvider {
 public:
 
-  NS_DECLARE_FRAME_ACCESSOR(nsIScrollableFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIScrollableFrame)
 
   /**
    * Get the frame that we are scrolling within the scrollable frame.

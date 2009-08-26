@@ -48,11 +48,6 @@ LIBRARY_NAME	= nkcache_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY  = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  pref \
-		  $(NULL)
 
 EXPORTS		= \
 		nsCacheService.h \

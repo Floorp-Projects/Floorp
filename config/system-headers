@@ -1016,3 +1016,6 @@ hildon-mime.h
 #ifdef NS_OSSO
 libosso.h
 #endif
+#ifdef MOZ_ENABLE_GIO
+gio/gio.h
+#endif

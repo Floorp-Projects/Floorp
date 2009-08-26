@@ -847,12 +847,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     }
   }
 
-  // ignore all resource:// URIs
+  // This will ignore all resource, chrome, data, file, moz-icon, and anno
+  // protocols. Local resources are treated as trusted.
   if (uri && ioService) {
     PRBool hasFlag;
     nsresult rv = 
       ioService->URIChainHasFlags(uri, 
-                                  nsIProtocolHandler::URI_IS_UI_RESOURCE, 
+                                  nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                                   &hasFlag);
     if (NS_SUCCEEDED(rv) && hasFlag) {
       isSubDocumentRelevant = PR_FALSE;
@@ -1094,9 +1095,20 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         prevContentSecurity->SetCountSubRequestsBrokenSecurity(saveSubBroken);
         prevContentSecurity->SetCountSubRequestsNoSecurity(saveSubNo);
       }
-  
+
+      PRBool retrieveAssociatedState = PR_FALSE;
+
       if (securityInfo &&
-          (aProgressStateFlags & nsIWebProgressListener::STATE_RESTORING) != 0)
+          (aProgressStateFlags & nsIWebProgressListener::STATE_RESTORING) != 0) {
+        retrieveAssociatedState = PR_TRUE;
+      } else {
+        nsCOMPtr<nsIWyciwygChannel> wyciwygRequest(do_QueryInterface(aRequest));
+        if (wyciwygRequest) {
+          retrieveAssociatedState = PR_TRUE;
+        }
+      }
+
+      if (retrieveAssociatedState)
       {
         // When restoring from bfcache, we will not get events for the 
         // page's sub elements, so let's load the state of sub elements

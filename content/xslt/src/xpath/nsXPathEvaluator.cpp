@@ -224,7 +224,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     nsXPathEvaluatorParseContext pContext(*this, aResolver, aNamespaceIDs,
                                           aContractIDs, aState,
-                                          !doc || doc->IsCaseSensitive());
+                                          !(doc && doc->IsHTML()));
 
     nsAutoPtr<Expr> expression;
     rv = txExprParser::createExpr(PromiseFlatString(aExpression), &pContext,

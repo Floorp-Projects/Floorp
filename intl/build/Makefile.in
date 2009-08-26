@@ -49,14 +49,6 @@ MODULE_NAME	= nsI18nModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  unicharutil \
-		  uconv \
-		  lwbrk \
-		  intl \
-		  locale \
-		  $(NULL)
 
 CPPSRCS		= \
 			nsI18nModule.cpp \

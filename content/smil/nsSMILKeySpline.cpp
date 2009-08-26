@@ -36,9 +36,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSMILKeySpline.h"
+#include "prtypes.h"
 #include <math.h>
 
-#define NEWTON_ITERATIONS   4
+#define NEWTON_ITERATIONS          4
+#define NEWTON_MIN_SLOPE           0.02
+#define SUBDIVISION_PRECISION      0.0000001
+#define SUBDIVISION_MAX_ITERATIONS 10
 
 const double nsSMILKeySpline::kSampleStepSize =
                                         1.0 / double(kSplineTableSize - 1);
@@ -68,7 +72,7 @@ nsSMILKeySpline::GetSplineValue(double aX) const
 void
 nsSMILKeySpline::CalcSampleValues()
 {
-  for (int i = 0; i < kSplineTableSize; ++i) {
+  for (PRUint32 i = 0; i < kSplineTableSize; ++i) {
     mSampleValues[i] = CalcBezier(double(i) * kSampleStepSize, mX1, mX2);
   }
 }
@@ -87,35 +91,78 @@ nsSMILKeySpline::GetSlope(double aT,
                           double aA1,
                           double aA2)
 {
-  double denom = (3.0 * A(aA1, aA2)*aT*aT + 2.0 * B(aA1, aA2) * aT + C(aA1));
-  return (denom == 0.0) ? 0.0 : 1.0 / denom;
+  return 3.0 * A(aA1, aA2)*aT*aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
 }
 
 double
 nsSMILKeySpline::GetTForX(double aX) const
 {
-  int i;
+  // Find interval where t lies
+  double intervalStart = 0.0;
+  const double* currentSample = &mSampleValues[1];
+  const double* const lastSample = &mSampleValues[kSplineTableSize - 1];
+  for (; currentSample != lastSample && *currentSample <= aX;
+        ++currentSample) {
+    intervalStart += kSampleStepSize;
+  }
+  --currentSample; // t now lies between *currentSample and *currentSample+1
 
-  // Get an initial guess.
-  //
-  // Note: This is better than just taking x as our initial guess as cases such
-  // as where the control points are (1, 1), (0, 0) will take some 20 iterations
-  // to converge to a good accuracy. By taking an initial guess in this way we
-  // only need 3~4 iterations depending on the size of the table.
-  for (i = 0; i < kSplineTableSize - 2 && mSampleValues[i] < aX; ++i);
-  double currentT =
-    double(i) * kSampleStepSize + (aX - mSampleValues[i]) * kSampleStepSize;
+  // Interpolate to provide an initial guess for t
+  double dist = (aX - *currentSample) /
+                (*(currentSample+1) - *currentSample);
+  double guessForT = intervalStart + dist * kSampleStepSize;
 
-  // Refine with Newton-Raphson iteration
-  for (i = 0; i < NEWTON_ITERATIONS; ++i) {
-    double currentX = CalcBezier(currentT, mX1, mX2);
-    double currentSlope = GetSlope(currentT, mX1, mX2);
+  // Check the slope to see what strategy to use. If the slope is too small
+  // Newton-Raphson iteration won't converge on a root so we use bisection
+  // instead.
+  double initialSlope = GetSlope(guessForT, mX1, mX2);
+  if (initialSlope >= NEWTON_MIN_SLOPE) {
+    return NewtonRaphsonIterate(aX, guessForT);
+  } else if (initialSlope == 0.0) {
+    return guessForT;
+  } else {
+    return BinarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize);
+  }
+}
+
+double
+nsSMILKeySpline::NewtonRaphsonIterate(double aX, double aGuessT) const
+{
+  // Refine guess with Newton-Raphson iteration
+  for (PRUint32 i = 0; i < NEWTON_ITERATIONS; ++i) {
+    // We're trying to find where f(t) = aX,
+    // so we're actually looking for a root for: CalcBezier(t) - aX
+    double currentX = CalcBezier(aGuessT, mX1, mX2) - aX;
+    double currentSlope = GetSlope(aGuessT, mX1, mX2);
 
     if (currentSlope == 0.0)
-      return currentT;
+      return aGuessT;
 
-    currentT -= (currentX - aX) * currentSlope;
+    aGuessT -= currentX / currentSlope;
   }
+
+  return aGuessT;
+}
+
+double
+nsSMILKeySpline::BinarySubdivide(double aX, double aA, double aB) const
+{
+  double currentX;
+  double currentT;
+  PRUint32 i = 0;
+
+  do
+  {
+    currentT = aA + (aB - aA) / 2.0;
+    currentX = CalcBezier(currentT, mX1, mX2) - aX;
+
+    if (currentX > 0.0) {
+      aB = currentT;
+    } else {
+      aA = currentT;
+    }
+  } while (fabs(currentX) > SUBDIVISION_PRECISION
+           && ++i < SUBDIVISION_MAX_ITERATIONS);
 
   return currentT;
 }

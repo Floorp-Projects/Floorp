@@ -935,9 +935,6 @@ NS_QUERYFRAME_HEAD(nsHTMLScrollFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollableViewProvider)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
-#ifdef DEBUG
-  NS_QUERYFRAME_ENTRY(nsIFrameDebug)
-#endif
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
@@ -1278,9 +1275,6 @@ NS_QUERYFRAME_HEAD(nsXULScrollFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollableViewProvider)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
-#ifdef DEBUG
-  NS_QUERYFRAME_ENTRY(nsIFrameDebug)
-#endif
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
  
 //-------------------- Inner ----------------------

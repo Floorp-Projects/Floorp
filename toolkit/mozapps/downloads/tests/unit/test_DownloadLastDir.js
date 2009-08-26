@@ -47,6 +47,10 @@ function run_test()
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   let tmpDir = dirSvc.get("TmpD", Ci.nsILocalFile);
+  let newDir = tmpDir.clone();
+  newDir.append("testdir" + Math.floor(Math.random() * 10000));
+  newDir.QueryInterface(Ci.nsILocalFile);
+  newDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0700);
 
   gDownloadLastDir.file = tmpDir;
   do_check_eq(gDownloadLastDir.file.path, tmpDir.path);
@@ -66,16 +70,20 @@ function run_test()
   }
 
   pb.privateBrowsingEnabled = true;
-  do_check_eq(gDownloadLastDir.file, null);
-
-  pb.privateBrowsingEnabled = false;
-  do_check_eq(gDownloadLastDir.file, null);
-  pb.privateBrowsingEnabled = true;
-
-  gDownloadLastDir.file = tmpDir;
   do_check_eq(gDownloadLastDir.file.path, tmpDir.path);
   do_check_neq(gDownloadLastDir.file, tmpDir);
 
   pb.privateBrowsingEnabled = false;
-  do_check_eq(gDownloadLastDir.file, null);
+  do_check_eq(gDownloadLastDir.file.path, tmpDir.path);
+  pb.privateBrowsingEnabled = true;
+
+  gDownloadLastDir.file = newDir;
+  do_check_eq(gDownloadLastDir.file.path, newDir.path);
+  do_check_neq(gDownloadLastDir.file, newDir);
+
+  pb.privateBrowsingEnabled = false;
+  do_check_eq(gDownloadLastDir.file.path, tmpDir.path);
+  do_check_neq(gDownloadLastDir.file, tmpDir);
+
+  newDir.remove(true);
 }

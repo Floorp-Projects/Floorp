@@ -49,10 +49,6 @@ LIBRARY_NAME  = morkreader_external_s
 MOZILLA_INTERNAL_API = 1
 FORCE_STATIC_LIB = 1
 
-REQUIRES = xpcom \
-           string \
-           necko \
-           $(NULL)
 
 CPPSRCS = nsMorkReader.cpp
 

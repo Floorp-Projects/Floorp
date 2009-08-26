@@ -3321,7 +3321,6 @@ PlacesSQLQueryBuilder::SelectAsVisit()
     "WHERE h.id NOT IN (SELECT id FROM moz_places_temp) "
       "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
       "{ADDITIONAL_CONDITIONS} "
-      "AND h.id NOT IN (SELECT id FROM moz_places_temp) "
     "UNION ALL "
     "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
       "v.visit_date, f.url, v.session, null "

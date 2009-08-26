@@ -47,24 +47,24 @@ LIBRARY_NAME	= mozgnome
 FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1
 
-REQUIRES = \
-	xpcom \
-	string \
-	necko \
-	alerts \
-	gfx \
-	imglib2 \
-	intl \
-	widget \
-	thebes \
-	cairo \
-	$(NULL)
 
 CPPSRCS = \
 	nsGConfService.cpp \
-	nsGnomeVFSService.cpp \
 	nsGnomeModule.cpp \
 	$(NULL)
+	
+
+ifdef MOZ_ENABLE_GNOMEVFS
+CPPSRCS += \
+	nsGnomeVFSService.cpp \
+	$(NULL)
+endif
+
+ifdef MOZ_ENABLE_GIO
+CPPSRCS += \
+	nsGIOService.cpp \
+	$(NULL)
+endif
 
 ifdef MOZ_ENABLE_LIBNOTIFY
 REQUIRES += thebes
@@ -82,6 +82,7 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_GNOMEVFS_LIBS) \
 		$(GLIB_LIBS) \
 		$(MOZ_LIBNOTIFY_LIBS) \
+		$(MOZ_GIO_LIBS) \
 		$(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/build/
@@ -93,4 +94,5 @@ CXXFLAGS += \
 	$(MOZ_GNOMEVFS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(MOZ_LIBNOTIFY_CFLAGS) \
+	$(MOZ_GTK2_CFLAGS) \
 	$(NULL)

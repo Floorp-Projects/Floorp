@@ -46,12 +46,6 @@ MODULE		= gfx
 LIBRARY_NAME	= gfxpsshar
 EXPORT_LIBRARY	= 1
 GRE_MODULE	= 1
-REQUIRES	= pref \
-		  string \
-		  widget \
-		  xpcom \
-		  thebes \
-		  $(NULL)
 LIBXUL_LIBRARY = 1
 
 EXPORTS		= nsCUPSShim.h \

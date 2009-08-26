@@ -2423,7 +2423,7 @@ gfxWindowsFontGroup::WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >&
             continue;
         if (fe->HasCharacter(ch)) {
             nsRefPtr<gfxWindowsFont> font =
-                gfxWindowsFont::GetOrMakeFont(fe, &mStyle, mFontNeedsBold[i]);
+                gfxWindowsFont::GetOrMakeFont(fe, &mStyle);
             // Check that the font is still usable.
             if (!font->IsValid())
                 continue;

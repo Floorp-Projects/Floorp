@@ -169,10 +169,14 @@ function setLDAPVersion(version) {
 function getLDAPAttributes(host, base, filter, attribs) {
     
     try {
-        var url = Components.classes[LDAPURLContractID].createInstance(nsILDAPURL);
-    
-        url.spec = "ldap://" + host + "/" + base + "?" + attribs 
-                   + "?sub?" +  filter;
+        var urlSpec = "ldap://" + host + "/" + base + "?" + attribs + "?sub?" +
+                      filter;
+
+        var url = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService)
+                            .newURI(urlSpec, null, null)
+                            .QueryInterface(Components.interfaces.nsILDAPURL);
+
         var ldapquery = Components.classes[LDAPSyncQueryContractID]
                                   .createInstance(nsILDAPSyncQuery);
         // default to LDAP v3

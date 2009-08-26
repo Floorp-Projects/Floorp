@@ -490,7 +490,7 @@ typedef PRBool nsDidReflowStatus;
 class nsIFrame : public nsQueryFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
   nsPresContext* PresContext() const {
     return GetStyleContext()->GetRuleNode()->GetPresContext();
@@ -2467,6 +2467,16 @@ protected:
 private:
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
   void SetOverflowRect(const nsRect& aRect);
+
+#ifdef NS_DEBUG
+public:
+  // Formerly nsIFrameDebug
+  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const = 0;
+  NS_IMETHOD  GetFrameName(nsAString& aResult) const = 0;
+  NS_IMETHOD_(nsFrameState)  GetDebugStateBits() const = 0;
+  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext,
+                                 FILE* out, PRInt32 aIndent) = 0;
+#endif
 };
 
 //----------------------------------------------------------------------

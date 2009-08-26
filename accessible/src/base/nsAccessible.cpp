@@ -94,7 +94,6 @@
 #include "nsNetUtil.h"
 
 #ifdef NS_DEBUG
-#include "nsIFrameDebug.h"
 #include "nsIDOMCharacterData.h"
 #endif
 
@@ -1048,6 +1047,11 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   nsIFrame *frame = GetFrame();
   if (frame && (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW))
     *aState |= nsIAccessibleStates::STATE_FLOATING;
+
+  // Check if a XUL element has the popup attribute (an attached popup menu).
+  if (content->IsNodeOfType(nsINode::eXUL))
+    if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::popup))
+      *aState |= nsIAccessibleStates::STATE_HASPOPUP;
 
   // Add 'linked' state for simple xlink.
   if (nsCoreUtils::IsXLink(content))
@@ -3222,6 +3226,11 @@ nsAccessible::GetActionRule(PRUint32 aStates)
   // Check if it's simple xlink.
   if (nsCoreUtils::IsXLink(content))
     return eJumpAction;
+
+  // Return "click" action on elements that have an attached popup menu.
+  if (content->IsNodeOfType(nsINode::eXUL))
+    if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::popup))
+      return eClickAction;
 
   // Has registered 'click' event handler.
   PRBool isOnclick = nsCoreUtils::HasListener(content,

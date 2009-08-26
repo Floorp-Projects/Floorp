@@ -95,6 +95,10 @@ for (var i in canvasNames) {
 
 // Stage 1 - Load the reference image for the broken icon
 function loadBrokenIconReference() {
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 1 called\n");};
+
   testImageElem.src = baseURL + brokenIconFilename;
   stageTransition();
 }
@@ -111,6 +115,10 @@ function drawBrokenIconReference() {
 
 // Stage 3 - Load the reference image for the loading icon
 function loadLoadingIconReference() {
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 3 called\n");};
+
   testImageElem.src = baseURL + loadIconFilename;
   stageTransition();
 }
@@ -142,6 +150,10 @@ function drawBrokenIcon() {
 // Stage 7 - Load the reference image for the test image
 function loadImageReference() {
   resetImage();
+
+  // Debugging - Let's see if setting onload after src is a problem
+  testImageElem.onload = function(event) { dump("test_bug507902.html DEBUG - uh oh, placeholder onload 7 called\n");};
+
   testImageElem.src = baseURL + imageFilename;
   stageTransition();
 }
@@ -158,6 +170,9 @@ function startServerLoad() {
   // Reset the image
   resetImage();
 
+  // Debugging info so we can figure out the hang
+  dump("test_bug507902.html DEBUG - starting server load\n");
+
   // Load the image
   testImageElem.src = baseURL + serverFilename;
   stageTransition();
@@ -166,12 +181,20 @@ function startServerLoad() {
 // Stage 10 - Draw the screen to a canvas. This should hopefully be the loading
 // icon.
 function drawLoadingIcon() {
+
+  // Debugging info so we can figure out the hang
+  dump("test_bug507902.html DEBUG - drawing loading icon\n");
+
   drawWindowToCanvas("loadingIconTest");
   stageTransition();
 }
 
 // Stage 11 - Tell the server to continue.
 function signalServerContinue() {
+
+  // Debugging info so we can figure out the hang
+  dump("test_bug507902.html DEBUG - signaling server to continue\n");
+
   pingImage.src = baseURL + serverFilename + serverContinueFlag;
   stageTransition();
 }
@@ -239,6 +262,9 @@ var currentStage = 0;
 // Transition function called at the end of each stage
 function stageTransition() {
 
+  // Debugging info so we can figure out the hang
+  dump("test_bug507902.html DEBUG - Current Stage: " + currentStage + "\n");
+
   // What's our transition?
   var trans = testStages[currentStage++].trans;
 
@@ -279,6 +305,9 @@ function stageTransition() {
 
 // Lots if asynchronous behavior here
 SimpleTest.waitForExplicitFinish();
+
+// Catch somebody's eye
+dump("This test is failing intermittently, see bug 510001 - If you see orange here, please paste the following debugging output on the bug!\n");
 
 // Kick off the test by invoking the first stage. The stages call each other
 testStages[0].fn();

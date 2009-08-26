@@ -61,24 +61,6 @@ endif
 DEFFILE         = npmozax.def
 GRE_MODULE	= 1
 
-REQUIRES = \
-    xpcom \
-    plugin \
-    string \
-    dom \
-    content \
-    layout \
-    widget \
-    gfx \
-    js \
-    pref \
-    xpconnect \
-    docshell \
-    webshell \
-    necko \
-    windowwatcher \
-    ax_common \
-    $(NULL)
 
 ifdef XPC_IDISPATCH_SUPPORT
 REQUIRES += \

@@ -257,7 +257,7 @@ protected:
 class xpc_qsDOMString : public xpc_qsBasicString<nsAString, nsDependentString>
 {
 public:
-    xpc_qsDOMString(JSContext *cx, jsval *pval);
+    xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval);
 };
 
 /**
@@ -267,7 +267,7 @@ public:
 class xpc_qsAString : public xpc_qsBasicString<nsAString, nsDependentString>
 {
 public:
-    xpc_qsAString(JSContext *cx, jsval *pval);
+    xpc_qsAString(JSContext *cx, jsval v, jsval *pval);
 };
 
 /**
@@ -277,7 +277,7 @@ public:
 class xpc_qsACString : public xpc_qsBasicString<nsACString, nsCString>
 {
 public:
-    xpc_qsACString(JSContext *cx, jsval *pval);
+    xpc_qsACString(JSContext *cx, jsval v, jsval *pval);
 };
 
 struct xpc_qsSelfRef
@@ -314,10 +314,10 @@ struct xpc_qsArgValArray
  *     null or undefined. Unicode data is garbled as with JS_GetStringBytes.
  */
 JSBool
-xpc_qsJsvalToCharStr(JSContext *cx, jsval *pval, char **pstr);
+xpc_qsJsvalToCharStr(JSContext *cx, jsval v, jsval *pval, char **pstr);
 
 JSBool
-xpc_qsJsvalToWcharStr(JSContext *cx, jsval *pval, PRUnichar **pstr);
+xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr);
 
 
 /** Convert an nsAString to jsval, returning JS_TRUE on success. */

@@ -63,17 +63,6 @@ CPPSRCS = \
 	nsFormSigningDialog.cpp \
 	$(NULL)
 
-REQUIRES	= nspr \
-		  xpcom \
-		  string \
-		  dom \
-		  intl \
-		  locale \
-		  windowwatcher \
-		  necko \
-		  pipnss \
-		  layout \
-		  $(NULL)
 
 INCLUDES	+= \
 		-I$(DIST)/public/nss \

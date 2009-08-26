@@ -39,10 +39,6 @@
 #ifndef gtkmozembed_h
 #define gtkmozembed_h
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <stddef.h>
 #include <gtk/gtk.h>
 
@@ -80,6 +76,10 @@ extern "C" {
 #endif
 
 #endif /* XPCOM_GLUE */
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 #define GTK_TYPE_MOZ_EMBED             (gtk_moz_embed_get_type())
 #define GTK_MOZ_EMBED(obj)             G_TYPE_CHECK_INSTANCE_CAST((obj), GTK_TYPE_MOZ_EMBED, GtkMozEmbed)

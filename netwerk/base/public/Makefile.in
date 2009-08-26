@@ -85,8 +85,6 @@ XPIDLSRCS	= \
                 nsIIOService2.idl \
 		nsIMIMEInputStream.idl \
                 nsINetworkLinkService.idl \
-		nsIPasswordManager.idl \
-		nsIPasswordManagerInternal.idl \
 		nsIPermission.idl \
 		nsIPermissionManager.idl \
 		nsIPrivateBrowsingService.idl \
@@ -144,8 +142,6 @@ EXPORTS		= \
 		nsChannelProperties.h \
 		nsURIHashKey.h \
 		nsReadLine.h \
-		nsCPasswordManager.h \
-		nsCPasswordManagerInternal.h \
 		nsASocketHandler.h \
 		$(NULL)
 

@@ -168,29 +168,29 @@ static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStar
 
 #include "prenv.h"
 
-// start nsIFrameDebug
+// Formerly the nsIFrameDebug interface
 
 #ifdef NS_DEBUG
 static PRBool gShowFrameBorders = PR_FALSE;
 
-void nsIFrameDebug::ShowFrameBorders(PRBool aEnable)
+void nsFrame::ShowFrameBorders(PRBool aEnable)
 {
   gShowFrameBorders = aEnable;
 }
 
-PRBool nsIFrameDebug::GetShowFrameBorders()
+PRBool nsFrame::GetShowFrameBorders()
 {
   return gShowFrameBorders;
 }
 
 static PRBool gShowEventTargetFrameBorder = PR_FALSE;
 
-void nsIFrameDebug::ShowEventTargetFrameBorder(PRBool aEnable)
+void nsFrame::ShowEventTargetFrameBorder(PRBool aEnable)
 {
   gShowEventTargetFrameBorder = aEnable;
 }
 
-PRBool nsIFrameDebug::GetShowEventTargetFrameBorder()
+PRBool nsFrame::GetShowEventTargetFrameBorder()
 {
   return gShowEventTargetFrameBorder;
 }
@@ -206,7 +206,7 @@ static PRLogModuleInfo* gStyleVerifyTreeLogModuleInfo;
 static PRBool gStyleVerifyTreeEnable = PRBool(0x55);
 
 PRBool
-nsIFrameDebug::GetVerifyStyleTreeEnable()
+nsFrame::GetVerifyStyleTreeEnable()
 {
   if (gStyleVerifyTreeEnable == PRBool(0x55)) {
     if (nsnull == gStyleVerifyTreeLogModuleInfo) {
@@ -218,13 +218,13 @@ nsIFrameDebug::GetVerifyStyleTreeEnable()
 }
 
 void
-nsIFrameDebug::SetVerifyStyleTreeEnable(PRBool aEnabled)
+nsFrame::SetVerifyStyleTreeEnable(PRBool aEnabled)
 {
   gStyleVerifyTreeEnable = aEnabled;
 }
 
 PRLogModuleInfo*
-nsIFrameDebug::GetLogModuleInfo()
+nsFrame::GetLogModuleInfo()
 {
   if (nsnull == gLogModule) {
     gLogModule = PR_NewLogModule("frame");
@@ -233,29 +233,26 @@ nsIFrameDebug::GetLogModuleInfo()
 }
 
 void
-nsIFrameDebug::DumpFrameTree(nsIFrame* aFrame)
+nsFrame::DumpFrameTree(nsIFrame* aFrame)
 {
     RootFrameList(aFrame->PresContext(), stdout, 0);
 }
 
 void
-nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
+nsFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
-  if((nsnull == aPresContext) || (nsnull == out))
+  if (!aPresContext || !out)
     return;
 
   nsIPresShell *shell = aPresContext->GetPresShell();
-  if (nsnull != shell) {
+  if (shell) {
     nsIFrame* frame = shell->FrameManager()->GetRootFrame();
-    if(nsnull != frame) {
-      nsIFrameDebug* debugFrame = do_QueryFrame(frame);
-      if (debugFrame)
-        debugFrame->List(out, aIndent);
+    if(frame) {
+      frame->List(out, aIndent);
     }
   }
 }
 #endif
-// end nsIFrameDebug
 
 void
 NS_MergeReflowStatusInto(nsReflowStatus* aPrimary, nsReflowStatus aSecondary)
@@ -334,10 +331,7 @@ nsFrame::~nsFrame()
 
 NS_QUERYFRAME_HEAD(nsFrame)
   NS_QUERYFRAME_ENTRY(nsIFrame)
-#ifdef DEBUG
-  NS_QUERYFRAME_ENTRY(nsIFrameDebug)
-#endif
-NS_QUERYFRAME_TAIL
+NS_QUERYFRAME_TAIL_INHERITANCE_ROOT
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
@@ -1212,12 +1206,12 @@ DisplayDebugBorders(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     const nsDisplayListSet& aLists) {
   // Draw a border around the child
   // REVIEW: From nsContainerFrame::PaintChild
-  if (nsIFrameDebug::GetShowFrameBorders() && !aFrame->GetRect().IsEmpty()) {
+  if (nsFrame::GetShowFrameBorders() && !aFrame->GetRect().IsEmpty()) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aFrame, PaintDebugBorder, "DebugBorder"));
   }
   // Draw a border around the current event target
-  if (nsIFrameDebug::GetShowEventTargetFrameBorder() &&
+  if (nsFrame::GetShowEventTargetFrameBorder() &&
       aFrame->PresContext()->PresShell()->GetDrawEventTargetFrame() == aFrame) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aFrame, PaintEventTargetBorder, "EventTargetBorder"));
@@ -4031,7 +4025,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   const nsStyleBackground *bg = GetStyleBackground();
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     const nsStyleBackground::Layer &layer = bg->mLayers[i];
-    if (layer.mImage.GetType() != eBackgroundImage_Null &&
+    if (!layer.mImage.IsEmpty() &&
         (layer.mPosition.mXIsPercent || layer.mPosition.mYIsPercent)) {
       Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
@@ -4391,10 +4385,7 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
       }
       aIndent++;
       while (kid) {
-        nsIFrameDebug* frameDebug = do_QueryFrame(kid);
-        if (kid) {
-          frameDebug->DumpRegressionData(aPresContext, out, aIndent);
-        }
+        kid->DumpRegressionData(aPresContext, out, aIndent);
         kid = kid->GetNextSibling();
       }
       aIndent--;
@@ -6742,13 +6733,7 @@ nsAdaptorPrintReason(nsHTMLReflowState& aReflowState)
 void
 nsFrame::GetBoxName(nsAutoString& aName)
 {
-   nsIFrameDebug*  frameDebug;
-   nsAutoString name;
-   if (NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-      frameDebug->GetFrameName(name);
-   }
-
-  aName = name;
+  GetFrameName(aName);
 }
 #endif
 
@@ -7288,10 +7273,9 @@ void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
       printf(" ");
     }
     if(!strcmp(frameTypeInfo->mNameAbbrev, "unknown")) {
-      nsAutoString  name;
-      nsIFrameDebug* frameDebug = do_QueryFrame(aFrame);
-      if (frameDebug) {
-       frameDebug->GetFrameName(name);
+      if (aFrame) {
+       nsAutoString  name;
+       aFrame->GetFrameName(name);
        printf("%s %p ", NS_LossyConvertUTF16toASCII(name).get(), (void*)aFrame);
       }
       else {

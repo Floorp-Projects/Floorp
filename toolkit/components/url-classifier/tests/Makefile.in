@@ -48,12 +48,6 @@ MODULE = test_url-classifier
 
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES = \
-	string \
-	url-classifier \
-	xpcom \
-	necko \
-	$(NULL)
 
 # mochitest tests
 DIRS += mochitest \

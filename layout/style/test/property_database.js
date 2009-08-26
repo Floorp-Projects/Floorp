@@ -1733,6 +1733,47 @@ var gCSSProperties = {
 		other_values: [ "32px", "-3em", "12%" ],
 		invalid_values: []
 	},
+	"-moz-transition": {
+		domProp: "MozTransition",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [ "-moz-transition-property", "-moz-transition-duration", "-moz-transition-timing-function", "-moz-transition-delay" ],
+		initial_values: [ "all 0s ease 0s" ],
+		other_values: [ "width 1s linear 2s", "width 1s 2s linear", "width linear 1s 2s", "linear width 1s 2s", "linear 1s width 2s", "linear 1s 2s width", "1s width linear 2s", "1s width 2s linear", "1s 2s width linear", "1s linear width 2s", "1s linear 2s width", "1s 2s linear width", "width linear 1s", "width 1s linear", "linear width 1s", "linear 1s width", "1s width linear", "1s linear width", "1s 2s width", "1s width 2s", "width 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "width 1s", "1s width", "linear 1s", "1s linear", "1s 2s", "2s 1s", "width", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s width, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)" ],
+		invalid_values: [ "2s, 1s width", "1s width, 2s", "2s all, 1s width", "1s width, 2s all", "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "2s all, 1s width", "2s width, 1s all" ]
+	},
+	"-moz-transition-delay": {
+		domProp: "MozTransitionDelay",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0", "0s", "0ms" ],
+		other_values: [ "1s", "250ms", "-100ms", "-1s", "1s, 250ms, 2.3s"],
+		invalid_values: []
+	},
+	"-moz-transition-duration": {
+		domProp: "MozTransitionDuration",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0", "0s", "0ms" ],
+		other_values: [ "1s", "250ms", "-1ms", "-2s", "1s, 250ms, 2.3s"],
+		invalid_values: []
+	},
+	"-moz-transition-property": {
+		domProp: "MozTransitionProperty",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "all" ],
+		other_values: [ "none", "left", "top", "color", "width, height, opacity", "foobar", "auto" ],
+		invalid_values: [ "none, none", "all, all", "color, none", "none, color", "all, color", "color, all", "inherit, color", "color, inherit", "initial, color", "color, initial", "none, color", "color, none", "all, color", "color, all" ]
+	},
+	"-moz-transition-timing-function": {
+		domProp: "MozTransitionTimingFunction",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "ease", "cubic-bezier(0.25, 0.1, 0.25, 1.0)" ],
+		other_values: [ "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)" ],
+		invalid_values: [ "none", "auto" ]
+	},
 	"unicode-bidi": {
 		domProp: "unicodeBidi",
 		inherited: false,

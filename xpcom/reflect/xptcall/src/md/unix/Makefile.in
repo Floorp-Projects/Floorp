@@ -46,7 +46,6 @@ MODULE		= xpcom
 LIBRARY_NAME	= xptcmd
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES = string
 
 #
 # The default is this buildable, but non-functioning code.

@@ -89,6 +89,9 @@ include ib-split/reftest.list
 # image/
 include image/reftest.list
 
+# image-rect/
+include image-rect/reftest.list
+
 # image-region/
 include image-region/reftest.list
 

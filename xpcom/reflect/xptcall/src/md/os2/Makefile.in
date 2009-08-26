@@ -50,7 +50,6 @@ CPPSRCS		= \
 		../unix/xptcinvoke_gcc_x86_unix.cpp \
 		xptcstubs_gcc_x86_os2.cpp \
 		$(NULL)
-REQUIRES = string
 LOCAL_INCLUDES = \
 		-I$(srcdir)/../unix \
 		-I$(srcdir)/../../../../xptinfo/src \

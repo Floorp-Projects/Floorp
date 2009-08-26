@@ -1,0 +1,135 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for Handling of unsafe bidi chars</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<iframe id="test"></iframe>
+<script type="text/javascript">
+<![CDATA[
+
+var unsafeBidiChars = {
+  LRE: "\xe2\x80\xaa",
+  RLE: "\xe2\x80\xab",
+  PDF: "\xe2\x80\xac",
+  LRO: "\xe2\x80\xad",
+  RLO: "\xe2\x80\xae"
+};
+
+var tests = [
+  "{1}.test",
+  "{1}File.test",
+  "Fi{1}le.test",
+  "File{1}.test",
+  "File.{1}test",
+  "File.te{1}st",
+  "File.test{1}",
+  "File.{1}",
+];
+
+function replace(name, x) {
+  return name.replace(/\{1\}/, x);
+}
+
+function sanitize(name) {
+  return replace(name, '_');
+}
+
+var gTests = [];
+function make_test(param, expected) {
+  gTests.push({
+    param: param,
+    expected: expected,
+  });
+}
+
+var iframe = document.getElementById("test");
+var gCallback = null;
+function run_test(test, cb) {
+  iframe.src = "unsafeBidiFileName.sjs?name=" + encodeURIComponent(test.param);
+  gCallback = cb;
+}
+
+var gCounter = -1;
+function run_next_test() {
+  if (++gCounter == gTests.length)
+    finish_test();
+  else
+    run_test(gTests[gCounter], run_next_test);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+const HELPERAPP_DIALOG_CID = "@mozilla.org/helperapplauncherdialog;1";
+const HELPERAPP_DIALOG_ID = Components.ID(Components.classes[HELPERAPP_DIALOG_CID].number);
+const HELPERAPP_DIALOG_DESCRIPTION = "Helper App Dialog Test Service";
+
+function HelperAppLauncherDialog() {}
+HelperAppLauncherDialog.prototype = {
+  REASON_CANTHANDLE: 0,
+  REASON_SERVERREQUEST: 1,
+  REASON_TYPESNIFFED: 2,
+  show: function(aLauncher, aWindowContext, aReason) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var test = gTests[gCounter];
+    is(aLauncher.suggestedFileName, test.expected,
+       "The filename should be correctly sanitized");
+    gCallback();
+  },
+  promptForSaveToFile: function(aLauncher, aWindowContext, aDefaultFileName, aSuggestedFileExtension, aForcePrompt) {
+    return null;
+  },
+  QueryInterface: function(aIID) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (aIID.equals(Components.interfaces.nsISupports) ||
+        aIID.equals(Components.interfaces.nsIHelperAppLauncherDialog))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+};
+
+var factory = {
+  createInstance: function(aOuter, aIID) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (aOuter != null)
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
+    return new HelperAppLauncherDialog().QueryInterface(aIID);
+  }
+};
+
+Components.manager
+          .QueryInterface(Components.interfaces.nsIComponentRegistrar)
+          .registerFactory(HELPERAPP_DIALOG_ID,
+                           HELPERAPP_DIALOG_DESCRIPTION,
+                           HELPERAPP_DIALOG_CID,
+                           factory);
+
+function finish_test() {
+  Components.manager
+            .QueryInterface(Components.interfaces.nsIComponentRegistrar)
+            .unregisterFactory(HELPERAPP_DIALOG_ID,
+                               factory);
+  SimpleTest.finish();
+}
+
+var i,j;
+
+for (i = 0; i < tests.length; ++i) {
+  for (j in unsafeBidiChars) {
+    make_test(replace(tests[i], unsafeBidiChars[j]),
+              sanitize(tests[i]));
+  }
+}
+
+run_next_test();
+
+]]>
+</script>
+</body>
+</html>
+

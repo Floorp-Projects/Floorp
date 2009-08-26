@@ -98,7 +98,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
-#include "nsIFrameDebug.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIParser.h"
 #include "nsGUIEvent.h"
@@ -2316,7 +2315,11 @@ DocumentViewerImpl::FindContainerView()
           parentDocShell->GetPresShell(getter_AddRefs(parentPresShell));
         }
       }
-      if (content && parentPresShell) {
+      if (!content) {
+        NS_WARNING("Subdocument container has no content");
+      } else if (!parentPresShell) {
+        NS_WARNING("Subdocument container has no presshell");
+      } else {
         nsIFrame* f = parentPresShell->GetRealPrimaryFrameFor(content);
         if (f) {
           nsIFrame* subdocFrame = f->GetContentInsertionFrame();
@@ -2330,7 +2333,11 @@ DocumentViewerImpl::FindContainerView()
             nsIView* innerView = subdocFrameView->GetFirstChild();
             NS_ASSERTION(innerView, "Subdoc frames must have an inner view too");
             containerView = innerView;
+          } else {
+            NS_WARNING("Subdocument container has non-subdocument frame");
           }
+        } else {
+          NS_WARNING("Subdocument container has no frame");
         }
       }
     }
@@ -3688,7 +3695,10 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPrintEngine->Initialize(this, docShell, mDocument, 
-                                  mDeviceContext, mParentWidget,
+                                  float(mDeviceContext->AppUnitsPerInch()) /
+                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
+                                  mPageZoom,
+                                  mParentWidget,
 #ifdef NS_DEBUG
                                   mDebugFile
 #else
@@ -3751,7 +3761,10 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPrintEngine->Initialize(this, docShell, mDocument,
-                                  mDeviceContext, mParentWidget,
+                                  float(mDeviceContext->AppUnitsPerInch()) /
+                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
+                                  mPageZoom,
+                                  mParentWidget,
 #ifdef NS_DEBUG
                                   mDebugFile
 #else

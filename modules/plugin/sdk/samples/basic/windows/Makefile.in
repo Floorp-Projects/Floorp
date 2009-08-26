@@ -47,8 +47,6 @@ LIBRARY_NAME = npbasic
 
 NO_DIST_INSTALL = 1
 
-REQUIRES = plugin \
-           $(NULL)
 
 CPPSRCS = plugin.cpp
 

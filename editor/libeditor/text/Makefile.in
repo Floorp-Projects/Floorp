@@ -50,23 +50,6 @@ MODULE		= editor
 LIBRARY_NAME	= texteditor_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  locale \
-		  layout \
-		  content \
-		  txmgr \
-		  txtsvc \
-		  necko \
-		  pref \
-		  lwbrk \
-		  view \
-		  gfx \
-		  thebes \
-		  widget \
-		  unicharutil \
-		  $(NULL)
 
 CPPSRCS		=                           \
 		nsPlaintextDataTransfer.cpp \

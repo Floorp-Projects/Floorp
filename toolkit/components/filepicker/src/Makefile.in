@@ -52,14 +52,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsFileViewModule
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= \
-		xpcom \
-		layout \
-		dom \
-		string \
-		locale \
-		autocomplete \
-		$(NULL)
 
 CPPSRCS		= \
 		nsFileView.cpp \

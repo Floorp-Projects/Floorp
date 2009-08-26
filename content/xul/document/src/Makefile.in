@@ -46,33 +46,6 @@ MODULE		= xuldoc
 LIBRARY_NAME	= gkconxuldoc_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  exthandler \
-		  mimetype \
-		  gfx \
-		  thebes \
-		  layout \
-		  content \
-		  widget \
-		  dom \
-		  rdf \
-		  js \
-		  xpconnect \
-		  caps \
-		  locale \
-		  view \
-		  necko \
-		  htmlparser \
-		  docshell \
-		  pref \
-		  xultmpl \
-		  webshell \
-		  unicharutil \
-		  appshell \
-		  util \
-		  uriloader \
-		  $(NULL)
 
 CPPSRCS		= nsXULControllers.cpp
 

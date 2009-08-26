@@ -46,8 +46,6 @@ MODULE       = plugin
 LIBRARY_NAME = nullplugin
 GRE_MODULE   = 1
 
-REQUIRES	= java \
-		  $(NULL)
 
 CSRCS		= \
 		npshell.c\

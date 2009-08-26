@@ -60,22 +60,6 @@ CPPSRCS = \
 	nsSecurityWarningDialogs.cpp \
 	$(NULL)
 
-REQUIRES	= nspr \
-		  xpcom \
-		  string \
-		  necko \
-		  uriloader \
-		  dom \
-		  intl \
-		  docshell \
-		  widget \
-		  layout \
-		  content \
-		  caps \
-		  pref \
-		  pipnss \
-		  imglib2 \
-		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

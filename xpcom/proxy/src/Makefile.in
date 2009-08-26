@@ -46,8 +46,6 @@ MODULE		= xpcom
 LIBRARY_NAME	= xpcomproxy_s
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= string \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsProxyEvent.cpp \

@@ -41,6 +41,7 @@
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 #include "nsAccUtils.h"
+#include "nsApplicationAccessibleWrap.h"
 #include "nsARIAGridAccessibleWrap.h"
 #include "nsARIAMap.h"
 #include "nsIContentViewer.h"
@@ -104,12 +105,6 @@
 #ifndef DISABLE_XFORMS_HOOKS
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
-#endif
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsAppRootAccessible.h"
-#else
-#include "nsApplicationAccessibleWrap.h"
 #endif
 
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nsnull;

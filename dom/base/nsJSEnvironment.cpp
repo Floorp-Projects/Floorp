@@ -1893,12 +1893,7 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget, void *aScope, JSObject 
   // later.
   nsresult rv;
   jsval v;
-  rv = nsContentUtils::XPConnect()->WrapNativeToJSVal(mContext,
-                                                      (JSObject *)aScope,
-                                                      aTarget,
-                                                      &NS_GET_IID(nsISupports),
-                                                      PR_FALSE,
-                                                      &v, nsnull);
+  rv = nsContentUtils::WrapNative(mContext, (JSObject *)aScope, aTarget, &v);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef NS_DEBUG
@@ -2551,9 +2546,9 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(aGlobalObject));
 
     if (ci) {
-      rv = xpc->WrapNative(mContext, global, aGlobalObject,
-                           NS_GET_IID(nsISupports),
-                           getter_AddRefs(holder));
+      jsval v;
+      rv = nsContentUtils::WrapNative(mContext, global, aGlobalObject, &v,
+                                      getter_AddRefs(holder));
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(holder));
@@ -2699,15 +2694,11 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                        "Don't pass nsISupportsPrimitives - use nsIVariant!");
 #endif
           nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-          rv = xpc->WrapNative(mContext, (JSObject *)aScope, arg,
-                               NS_GET_IID(nsISupports),
-                               getter_AddRefs(wrapper));
+          jsval v;
+          rv = nsContentUtils::WrapNative(mContext, (JSObject *)aScope, arg,
+                                          &v, getter_AddRefs(wrapper));
           if (NS_SUCCEEDED(rv)) {
-            JSObject *obj;
-            rv = wrapper->GetJSObject(&obj);
-            if (NS_SUCCEEDED(rv)) {
-              *thisval = OBJECT_TO_JSVAL(obj);
-            }
+            *thisval = v;
           }
         }
       }
@@ -2906,20 +2897,14 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
 
       AutoFree iidGuard(iid); // Free iid upon destruction.
 
-      nsresult rv;
-      nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-      NS_ENSURE_SUCCESS(rv, rv);
-
       nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-      rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), data,
-                           *iid, getter_AddRefs(wrapper));
+      jsval v;
+      nsresult rv = nsContentUtils::WrapNative(cx, ::JS_GetGlobalObject(cx),
+                                               data, iid, &v,
+                                               getter_AddRefs(wrapper));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      JSObject *obj;
-      rv = wrapper->GetJSObject(&obj);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      *aArgv = OBJECT_TO_JSVAL(obj);
+      *aArgv = v;
 
       break;
     }

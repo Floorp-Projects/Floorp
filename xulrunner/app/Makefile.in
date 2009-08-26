@@ -74,13 +74,6 @@ ifdef TARGET_XPCOM_ABI
 DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
 endif
 
-REQUIRES = \
-        xpcom \
-        string \
-        appshell \
-        xulapp \
-        xulrunner \
-	$(NULL)
 
 CPPSRCS = nsXULRunnerApp.cpp
 

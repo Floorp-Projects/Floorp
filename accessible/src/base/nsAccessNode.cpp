@@ -41,6 +41,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsHashtable.h"
 #include "nsAccessibilityService.h"
+#include "nsApplicationAccessibleWrap.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -67,12 +68,6 @@
 #include "nsRootAccessible.h"
 #include "nsFocusManager.h"
 #include "nsIObserverService.h"
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsAppRootAccessible.h"
-#else
-#include "nsApplicationAccessibleWrap.h"
-#endif
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html

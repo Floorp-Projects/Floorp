@@ -104,7 +104,7 @@ struct nsFramesetDrag {
 class nsHTMLFramesetFrame : public nsHTMLContainerFrame
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsHTMLFramesetFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsHTMLFramesetFrame)
 
   nsHTMLFramesetFrame(nsStyleContext* aContext);
 

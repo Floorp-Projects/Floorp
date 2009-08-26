@@ -53,10 +53,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
-REQUIRES = xpcom \
-           string \
-           necko \
-           $(NULL)
 
 EXPORTS = nsMorkReader.h
 CPPSRCS = nsMorkReader.cpp

@@ -747,6 +747,7 @@ Blocklist.prototype = {
       matches: {},
       versions: []
     };
+    var hasMatch = false;
     for (var x = 0; x < matchNodes.length; ++x) {
       var matchElement = matchNodes.item(x);
       if (!(matchElement instanceof Ci.nsIDOMElement))
@@ -754,11 +755,19 @@ Blocklist.prototype = {
       if (matchElement.localName == "match") {
         var name = matchElement.getAttribute("name");
         var exp = matchElement.getAttribute("exp");
-        blockEntry.matches[name] = new RegExp(exp, "m");
+        try {
+          blockEntry.matches[name] = new RegExp(exp, "m");
+          hasMatch = true;
+        } catch (e) {
+          // Ignore invalid regular expressions
+        }
       }
       if (matchElement.localName == "versionRange")
         blockEntry.versions.push(new BlocklistItemData(matchElement));
     }
+    // Plugin entries require *something* to match to an actual plugin
+    if (!hasMatch)
+      return;
     // Add a default versionRange if there wasn't one specified
     if (blockEntry.versions.length == 0)
       blockEntry.versions.push(new BlocklistItemData(null));

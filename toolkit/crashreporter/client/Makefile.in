@@ -46,8 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM = crashreporter$(BIN_SUFFIX)
 DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
-REQUIRES	= \
-		$(NULL)
 
 LOCAL_INCLUDES = -I$(srcdir)/../google-breakpad/src
 
@@ -85,10 +83,6 @@ LIBS += \
 LOCAL_INCLUDES += -I$(srcdir)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
 OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
-ifdef MOZ_ENABLE_GCONF
-OS_CXXFLAGS += $(MOZ_GCONF_CFLAGS)
-OS_LIBS += $(MOZ_GCONF_LIBS)
-endif
 CPPSRCS += http_upload.cc
 FORCE_USE_PIC=1
 endif
@@ -101,10 +95,6 @@ LIBS += \
 LOCAL_INCLUDES += -I$(srcdir)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
 OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
-ifdef MOZ_ENABLE_GCONF
-OS_CXXFLAGS += $(MOZ_GCONF_CFLAGS)
-OS_LIBS += $(MOZ_GCONF_LIBS)
-endif
 CPPSRCS += http_upload.cc
 FORCE_USE_PIC=1
 endif

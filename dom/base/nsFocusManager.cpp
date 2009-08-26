@@ -434,6 +434,14 @@ nsFocusManager::MoveFocus(nsIDOMWindow* aWindow, nsIDOMElement* aStartElement,
   PRINTTAGF(">> $[[%s]]\n", mFocusedContent);
 #endif
 
+  // use FLAG_BYMOVEFOCUS when switching focus with MoveFocus unless one of
+  // the other focus methods is already set, or we're just moving to the root
+  // or caret position.
+  if (aType != MOVEFOCUS_ROOT && aType != MOVEFOCUS_CARET &&
+      (aFlags & FOCUSMETHOD_MASK) == 0) {
+    aFlags |= FLAG_BYMOVEFOCUS;
+  }
+
   nsCOMPtr<nsPIDOMWindow> window;
   nsCOMPtr<nsIContent> startContent;
   if (aStartElement) {

@@ -46,38 +46,6 @@ MODULE		= content
 LIBRARY_NAME	= gkconhtmldoc_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  gfx \
-		  thebes \
-		  layout \
-		  widget \
-		  dom \
-		  necko \
-		  htmlparser \
-		  locale \
-		  view \
-		  js \
-		  intl \
-		  webshell \
-		  docshell \
-		  caps \
-		  util \
-		  uconv \
-		  pref \
-		  chardet \
-		  nkcache \
-		  imglib2 \
-		  xpconnect \
-		  unicharutil \
-		  commandhandler \
-		  composer \
-		  editor \
-		  plugin \
-		  txtsvc \
-		  uriloader \
-		  html5 \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsHTMLContentSink.cpp \

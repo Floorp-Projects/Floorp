@@ -56,7 +56,9 @@
 # define W_OK 02
 # define R_OK 04
 # define access _access
+#ifndef WINCE
 # define putenv _putenv
+#endif
 # define snprintf _snprintf
 # define fchmod(a,b)
 
@@ -1247,9 +1249,13 @@ LaunchCallbackApp(const NS_tchar *workingDir, int argc, NS_tchar **argv)
   putenv(const_cast<char*>("NO_EM_RESTART="));
   putenv(const_cast<char*>("MOZ_LAUNCHED_CHILD=1"));
 
-  // Run from the specified working directory (see bug 312360).
+#ifndef WINCE
+  // Run from the specified working directory (see bug 312360). This is not
+  // necessary on Windows CE since the application that launches the updater
+  // passes the working directory as an --environ: command line argument.
   if(NS_tchdir(workingDir) != 0)
     LOG(("Warning: chdir failed\n"));
+#endif
 
 #if defined(USE_EXECV)
   execv(argv[0], argv);
@@ -1309,6 +1315,23 @@ UpdateThreadFunc(void *param)
   LOG(("calling QuitProgressUI\n"));
   QuitProgressUI();
 }
+
+#ifdef WINCE
+static char*
+AllocConvertUTF16toUTF8(const WCHAR *arg)
+{
+  // be generous... UTF16 units can expand up to 3 UTF8 units
+  int len = wcslen(arg);
+  char *s = new char[len * 3 + 1];
+  if (!s)
+    return NULL;
+
+  ConvertUTF16toUTF8 convert(s);
+  convert.write(arg, len);
+  convert.write_terminator();
+  return s;
+}
+#endif
 
 int NS_main(int argc, NS_tchar **argv)
 {
@@ -1444,6 +1467,8 @@ int NS_main(int argc, NS_tchar **argv)
 
   gSourcePath = argv[1];
 #ifdef WINCE
+  // This is the working directory to apply the update and is required on WinCE
+  // since it doesn't have the concept of a working directory.
   gDestPath = argv[3];
 #endif
 
@@ -1473,12 +1498,42 @@ int NS_main(int argc, NS_tchar **argv)
   }
 #endif
 
-  // The callback to execute is given as the last N arguments of our command
-  // line.  The first of those arguments specifies the working directory for
-  // the callback.
-  if (argc > 4)
-    LaunchCallbackApp(argv[3], argc - 4, argv + 4);
+  // The callback is the last N command line arguments starting from argOffset.
+  // The argument specified by argOffset is the callback executable and the
+  // argument prior to argOffset is the working directory.
+  const int argOffset = 4;
+  if (argc > argOffset) {
+#ifdef WINCE
+    // Support the mock environment used on Windows CE.
+    int i;
+    int winceArgc = 0;
+    WCHAR **winceArgv;
+    for (i = argOffset; i < argc; ++i) {
+      if (wcsncmp(argv[i], L"--environ:", 10) != 0)
+        winceArgc++;
+    }
 
+    winceArgv = (WCHAR**) malloc(sizeof(WCHAR*) * (winceArgc + 1));
+    if (!winceArgv)
+      return 1;
+
+    for (i = argOffset; i < argc; ++i) {
+      if (wcsncmp(argv[i], L"--environ:", 10) == 0) {
+        char* key_val = AllocConvertUTF16toUTF8(wcsdup(argv[i] + 10));
+        putenv(key_val);
+        delete [] key_val;
+      }
+      else {
+        winceArgv[i - argOffset] = argv[i];
+      }
+    }
+    winceArgv[winceArgc + 1] = NULL;
+    LaunchCallbackApp(argv[3], winceArgc, winceArgv);
+    free(winceArgv);
+#else
+    LaunchCallbackApp(argv[3], argc - argOffset, argv + argOffset);
+#endif
+  }
   return 0;
 }
 

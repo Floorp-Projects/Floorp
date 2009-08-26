@@ -66,10 +66,6 @@ MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif
 
-REQUIRES        = $(PNG_REQUIRES) \
-                  $(ZLIB_REQUIRES) \
-                  libpixman \
-                  $(NULL)
 
 CSRCS   = \
         cairo.c \

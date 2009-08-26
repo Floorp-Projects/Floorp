@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Makes sure that no image is drawn when an empty region of the source image
+    is specified by -moz-image-rect().
+-->
+<html>
+  <head>
+    <title>Testcases: -moz-image-rect() [bug 113577]</title>
+    <style>
+      div.wrapper {
+        width: 32px;
+        height: 32px;
+        margin: 10px;
+        background-color: red;
+      }
+      div.wrapper div {
+        width: 32px;
+        height: 32px;
+        background: no-repeat;
+      }
+      /* Zero width and height */
+      #test1 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 0, 0, 0, 0);
+      }
+      /* Negative height */
+      #test2 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 32, 32, 0, 0);
+      }
+      /* Image rect outside the source image */
+      #test3 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 100, 200, 200, 100);
+      }
+      /* Negative height */
+      #test4 {
+        /* It is only after the source image size is available that it can be
+           determined if this image is empty or not. */
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 16, 32, 50%, 16);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper"><div id="test1"></div></div>
+    <div class="wrapper"><div id="test2"></div></div>
+    <div class="wrapper"><div id="test3"></div></div>
+    <div class="wrapper"><div id="test4"></div></div>
+  </body>
+</html>
