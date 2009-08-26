@@ -583,7 +583,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
         if (!str1)
             return JS_FALSE;
         if (!obj->defineProperty(cx, INT_TO_JSID(i), STRING_TO_JSVAL(str1), NULL, NULL,
-                                 STRING_ELEMENT_ATTRS, NULL)) {
+                                 STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
     }
@@ -611,7 +611,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         if (!str1)
             return JS_FALSE;
         if (!obj->defineProperty(cx, INT_TO_JSID(slot), STRING_TO_JSVAL(str1), NULL, NULL,
-                                 STRING_ELEMENT_ATTRS, NULL)) {
+                                 STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
         *objp = obj;

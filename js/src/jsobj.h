@@ -175,9 +175,8 @@ struct JSObject {
     }
 
     JS_ALWAYS_INLINE JSBool defineProperty(JSContext *cx, jsid id, jsval value,
-                                           JSPropertyOp getter, JSPropertyOp setter,
-                                           uintN attrs, JSProperty **propp) {
-        return map->ops->defineProperty(cx, this, id, value, getter, setter, attrs, propp);
+                                           JSPropertyOp getter, JSPropertyOp setter, uintN attrs) {
+        return map->ops->defineProperty(cx, this, id, value, getter, setter, attrs);
     }
 
     JS_ALWAYS_INLINE JSBool getProperty(JSContext *cx, jsid id, jsval *vp) {
@@ -701,6 +700,16 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
                              JSScopeProperty *sprop, uintN attrs, uintN mask,
                              JSPropertyOp getter, JSPropertyOp setter);
 
+extern JSBool
+js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
+                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
+
+/*
+ * Flags for the defineHow parameter of js_DefineNativeProperty.
+ */
+const uintN JSDNP_CACHE_RESULT = 1; /* an interpreter call from JSOP_INITPROP */
+const uintN JSDNP_DONT_PURGE   = 2; /* suppress js_PurgeScopeChain */
+
 /*
  * On error, return false.  On success, if propp is non-null, return true with
  * obj locked and with a held property in *propp; if propp is null, return true
@@ -709,28 +718,17 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
  * the held property, and to release the lock on obj.
  */
 extern JSBool
-js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                  JSProperty **propp);
-
-/*
- * Flags for the defineHow parameter of js_DefineNativeProperty.
- */
-const uintN JSDNP_CACHE_RESULT = 1; /* an interpreter call from JSOP_INITPROP */
-const uintN JSDNP_DONT_PURGE   = 2; /* suppress js_PurgeScopeChain */
-
-extern JSBool
 js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
                         uintN flags, intN shortid, JSProperty **propp,
                         uintN defineHow = 0);
 
 /*
- * Unlike js_DefineProperty, propp must be non-null. On success, and if id was
- * found, return true with *objp non-null and locked, and with a held property
- * stored in *propp. If successful but id was not found, return true with both
- * *objp and *propp null. Therefore all callers who receive a non-null *propp
- * must later call (*objp)->dropProperty(cx, *propp).
+ * Unlike js_DefineNativeProperty, propp must be non-null. On success, and if
+ * id was found, return true with *objp non-null and locked, and with a held
+ * property stored in *propp. If successful but id was not found, return true
+ * with both *objp and *propp null. Therefore all callers who receive a
+ * non-null *propp must later call (*objp)->dropProperty(cx, *propp).
  */
 extern JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,

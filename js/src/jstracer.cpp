@@ -10402,7 +10402,7 @@ InitPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, jsval val)
 
     jsid id;
     if (!RootedStringToId(cx, namep, &id) ||
-        !obj->defineProperty(cx, id, val, NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+        !obj->defineProperty(cx, id, val, NULL, NULL, JSPROP_ENUMERATE)) {
         js_SetBuiltinError(cx);
         return JS_FALSE;
     }
@@ -10459,7 +10459,7 @@ InitPropertyByIndex(JSContext* cx, JSObject* obj, int32 index, jsval val)
 
     JSAutoTempIdRooter idr(cx);
     if (!js_Int32ToId(cx, index, idr.addr()) ||
-        !obj->defineProperty(cx, idr.id(), val, NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+        !obj->defineProperty(cx, idr.id(), val, NULL, NULL, JSPROP_ENUMERATE)) {
         js_SetBuiltinError(cx);
         return JS_FALSE;
     }

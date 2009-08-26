@@ -1843,10 +1843,8 @@ js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return obj->defineProperty(cx, id, JSVAL_VOID,
-                               js_CastAsPropertyOp(JSVAL_TO_OBJECT(fval)),
-                               JS_PropertyStub,
-                               JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED,
-                               NULL);
+                               js_CastAsPropertyOp(JSVAL_TO_OBJECT(fval)), JS_PropertyStub,
+                               JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
 }
 
 JS_FRIEND_API(JSBool)
@@ -1878,10 +1876,8 @@ js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return obj->defineProperty(cx, id, JSVAL_VOID,
-                               JS_PropertyStub,
-                               js_CastAsPropertyOp(JSVAL_TO_OBJECT(fval)),
-                               JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED,
-                               NULL);
+                               JS_PropertyStub, js_CastAsPropertyOp(JSVAL_TO_OBJECT(fval)),
+                               JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
 }
 
 static JSBool
@@ -2902,8 +2898,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
                                         JS_PropertyStub, JS_PropertyStub,
                                         (clasp->flags & JSCLASS_IS_ANONYMOUS)
                                         ? JSPROP_READONLY | JSPROP_PERMANENT
-                                        : 0,
-                                        NULL);
+                                        : 0);
             if (!named)
                 goto bad;
         }
@@ -3596,11 +3591,10 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
 
 JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                  JSProperty **propp)
+                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
     return js_DefineNativeProperty(cx, obj, id, value, getter, setter, attrs,
-                                   0, 0, propp);
+                                   0, 0, NULL);
 }
 
 /*
@@ -5395,7 +5389,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
      */
     if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
                               OBJECT_TO_JSVAL(proto), JS_PropertyStub, JS_PropertyStub,
-                              attrs, NULL)) {
+                              attrs)) {
         return JS_FALSE;
     }
 
@@ -5404,8 +5398,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto,
      * for a user-defined function f, is DontEnum.
      */
     return proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                                 OBJECT_TO_JSVAL(ctor), CheckCtorGetAccess, CheckCtorSetAccess,
-                                 0, NULL);
+                                 OBJECT_TO_JSVAL(ctor), CheckCtorGetAccess, CheckCtorSetAccess, 0);
 }
 
 JSBool

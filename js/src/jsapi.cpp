@@ -1295,7 +1295,7 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
             goto out;
         }
         obj->defineProperty(cx, ATOM_TO_JSID(CLASS_ATOM(cx, Function)),
-                            OBJECT_TO_JSVAL(ctor), 0, 0, 0, NULL);
+                            OBJECT_TO_JSVAL(ctor), 0, 0, 0);
     }
 
     /* Initialize the object class next so Object.prototype works. */
@@ -1341,8 +1341,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
     /* Define a top-level property 'undefined' with the undefined value. */
     atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT,
-                             NULL)) {
+                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
 
@@ -1549,7 +1548,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
         *resolved = JS_TRUE;
         return obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
                                    JS_PropertyStub, JS_PropertyStub,
-                                   JSPROP_PERMANENT, NULL);
+                                   JSPROP_PERMANENT);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
@@ -1643,8 +1642,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!AlreadyHasOwnProperty(cx, obj, atom) &&
         !obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT,
-                             NULL)) {
+                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
 
@@ -2971,7 +2969,7 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
         return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,
                                          attrs, flags, tinyid, NULL);
     }
-    return obj->defineProperty(cx, id, value, getter, setter, attrs, NULL);
+    return obj->defineProperty(cx, id, value, getter, setter, attrs);
 }
 
 static JSBool
@@ -3015,7 +3013,7 @@ DefineUCProperty(JSContext *cx, JSObject *obj,
                                          getter, setter, attrs, flags, tinyid,
                                          NULL);
     }
-    return obj->defineProperty(cx, ATOM_TO_JSID(atom), value, getter, setter, attrs, NULL);
+    return obj->defineProperty(cx, ATOM_TO_JSID(atom), value, getter, setter, attrs);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -3804,8 +3802,7 @@ JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
 
     CHECK_REQUEST(cx);
-    return obj->defineProperty(cx, INT_TO_JSID(index), value,
-                               getter, setter, attrs, NULL);
+    return obj->defineProperty(cx, INT_TO_JSID(index), value, getter, setter, attrs);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4886,7 +4883,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     if (obj &&
         funAtom &&
         !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), OBJECT_TO_JSVAL(FUN_OBJECT(fun)),
-                             NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+                             NULL, NULL, JSPROP_ENUMERATE)) {
         fun = NULL;
     }
 
