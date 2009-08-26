@@ -207,7 +207,6 @@ WeaveSvc.prototype = {
       throw "No server URL set";
     if (url[url.length-1] != '/')
       url += '/';
-    url += "0.3/";
     return url;
   },
   set baseURL(value) {
@@ -220,7 +219,7 @@ WeaveSvc.prototype = {
       return null;
     if (url[url.length-1] != '/')
       url += '/';
-    url += "0.3/user/";
+    url += "0.5/";
     return url;
   },
   set clusterURL(value) {
@@ -262,8 +261,8 @@ WeaveSvc.prototype = {
 
   _genKeyURLs: function WeaveSvc__genKeyURLs() {
     let url = this.clusterURL + this.username;
-    PubKeys.defaultKeyUri = url + "/keys/pubkey";
-    PrivKeys.defaultKeyUri = url + "/keys/privkey";
+    PubKeys.defaultKeyUri = url + "/storage/keys/pubkey";
+    PrivKeys.defaultKeyUri = url + "/storage/keys/privkey";
   },
 
   _checkCrypto: function WeaveSvc__checkCrypto() {
@@ -458,7 +457,8 @@ WeaveSvc.prototype = {
   findCluster: function WeaveSvc_findCluster(username) {
     this._log.debug("Finding cluster for user " + username);
 
-    let res = new Resource(this.baseURL + "api/register/chknode/" + username);
+    let res = new Resource(this.baseURL + "user/1/" +
+      username + '/node/weave');
     try {
       res.get();
     } catch(ex) {}
@@ -519,11 +519,8 @@ WeaveSvc.prototype = {
       if (isLogin)
         this.clusterURL = url;
 
-      if (url[url.length-1] != '/')
-        url += '/';
-      url += "0.3/user/";
-
-      let res = new Resource(url + username);
+      let res = new Resource(this.clusterURL + username + 
+        '/info/collections');
       res.authenticator = {
         onRequest: function(headers) {
           headers['Authorization'] = 'Basic ' + btoa(username + ':' + password);
@@ -603,16 +600,12 @@ WeaveSvc.prototype = {
 
   changePassword: function WeaveSvc_changePassword(newpass)
     this._catch(this._notify("changepwd", "", function() {
-      function enc(x) encodeURIComponent(x);
-      let message = "uid=" + enc(this.username) + "&password=" +
-        enc(this.password) + "&new=" + enc(newpass);
-      let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/chpwd';
+      let url = Svc.Prefs.get('tmpServerURL') + 'user/1/' +
+                username + "/password";
       let res = new Weave.Resource(url);
       res.authenticator = new Weave.NoOpAuthenticator();
-      res.setHeader("Content-Type", "application/x-www-form-urlencoded",
-                    "Content-Length", message.length);
 
-      let resp = res.post(message);
+      let resp = res.post(newpass);
       if (res.lastChannel.responseStatus != 200) {
         this._log.info("Password change failed: " + resp);
         throw "Could not change password";
@@ -773,9 +766,7 @@ WeaveSvc.prototype = {
   },
 
   checkUsername: function WeaveSvc_checkUsername(username) {
-    let url = Svc.Prefs.get('tmpServerURL') +
-      "0.3/api/register/checkuser/" + username;
-
+    let url = Svc.Prefs.get('tmpServerURL') + "/user/1/" + username;
     let res = new Resource(url);
     res.authenticator = new NoOpAuthenticator();
 
@@ -792,28 +783,27 @@ WeaveSvc.prototype = {
   },
 
   createAccount: function WeaveSvc_createAccount(username, password, email,
-                                                 captchaChallenge, captchaResponse) {
-    function enc(x) encodeURIComponent(x);
-    let message = "uid=" + enc(username) + "&password=" + enc(password) +
-      "&mail=" + enc(email) + "&recaptcha_challenge_field=" +
-      enc(captchaChallenge) + "&recaptcha_response_field=" + enc(captchaResponse);
+                                            captchaChallenge, captchaResponse) 
+  {
+    let payload = JSON.stringify({
+      "password": password, "email": email,
+      "captcha_challenge": captchaChallenge,
+      "captcha_response": captchaResponse
+    });
 
-    let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/new';
+    let url = Svc.Prefs.get('tmpServerURL') + 'user/1/' + username;
     let res = new Resource(url);
     res.authenticator = new Weave.NoOpAuthenticator();
-    res.setHeader("Content-Type", "application/x-www-form-urlencoded",
-                  "Content-Length", message.length);
 
     let ret = {};
     try {
-      ret.response = res.post(message);
+      ret.response = res.put(payload);
       ret.status = res.lastChannel.responseStatus;
 
       // No exceptions must have meant it was successful
       this._log.info("Account created: " + ret.response);
       return ret;
-    }
-    catch(ex) {
+    } catch(ex) {
       this._log.warn("Failed to create account: " + ex);
       let status = ex.request.responseStatus;
       switch (status) {
@@ -837,7 +827,8 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.debug("Fetching global metadata record");
-    let meta = Records.import(this.clusterURL + this.username + "/meta/global");
+    let meta = Records.import(this.clusterURL + this.username + 
+      "/storage/meta/global");
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
@@ -1248,7 +1239,8 @@ WeaveSvc.prototype = {
     Sync.sleep(2000);
 
     this._log.debug("Uploading new metadata record");
-    meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
+    meta = new WBORecord(this.clusterURL + 
+      this.username + "/storage/meta/global");
     meta.payload.syncID = Clients.syncID;
     this._updateRemoteVersion(meta);
   },
