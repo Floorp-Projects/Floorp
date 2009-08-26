@@ -374,7 +374,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
         *vp = OBJECT_TO_JSVAL(iterobj);
     } else {
         atom = cx->runtime->atomState.iteratorAtom;
-        if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), false, vp))
+        if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), 0, vp))
             goto bad;
         if (JSVAL_IS_VOID(*vp)) {
           default_iter:

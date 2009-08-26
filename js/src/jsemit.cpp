@@ -6492,7 +6492,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 ale = cg->atomList.add(cg->compiler, pn3->pn_atom);
                 if (!ale)
                     return JS_FALSE;
-                EMIT_INDEX_OP(JSOP_INITPROP, ALE_INDEX(ale));
+
+                JSOp initOp = (PN_OP(pn2->pn_right) == JSOP_LAMBDA
+#if JS_HAS_GETTER_SETTER
+                               && op != JSOP_GETTER && op != JSOP_SETTER
+#endif
+                               )
+                              ? JSOP_INITMETHOD
+                              : JSOP_INITPROP;
+                EMIT_INDEX_OP(initOp, ALE_INDEX(ale));
             }
         }
 
