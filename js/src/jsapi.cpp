@@ -3527,7 +3527,7 @@ JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  jsval *vp)
 {
     CHECK_REQUEST(cx);
-    if (!js_GetMethod(cx, obj, id, JSGET_METHOD_BARRIER, vp))
+    if (!js_GetMethod(cx, obj, id, false, vp))
         return JS_FALSE;
     if (objp)
         *objp = obj;
