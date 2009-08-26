@@ -4852,7 +4852,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
 #define DEFVAL(val, id) {                                                     \
     ok = js_DefineProperty(cx, obj, id, val,                                  \
                            JS_PropertyStub, JS_PropertyStub,                  \
-                           JSPROP_ENUMERATE, NULL);                           \
+                           JSPROP_ENUMERATE);                                 \
     if (!ok) {                                                                \
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;                             \
         cx->weakRoots.newborn[GCX_STRING] = NULL;                             \
@@ -4917,9 +4917,8 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             if (test)
                 continue;
             if (parsub->index == -1) {
-                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
-                                       JSVAL_VOID, NULL, NULL,
-                                       JSPROP_ENUMERATE, NULL);
+                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1), JSVAL_VOID, NULL, NULL,
+                                       JSPROP_ENUMERATE);
             } else {
                 parstr = js_NewDependentString(cx, str,
                                                gData.cpbegin + parsub->index -
@@ -4931,9 +4930,8 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                     ok = JS_FALSE;
                     goto out;
                 }
-                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
-                                       STRING_TO_JSVAL(parstr), NULL, NULL,
-                                       JSPROP_ENUMERATE, NULL);
+                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1), STRING_TO_JSVAL(parstr),
+                                       NULL, NULL, JSPROP_ENUMERATE);
             }
             if (!ok) {
                 cx->weakRoots.newborn[GCX_OBJECT] = NULL;

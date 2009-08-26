@@ -4881,21 +4881,15 @@ xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 
 static JSBool
 xml_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                   JSProperty **propp)
+                   JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
     if (VALUE_IS_FUNCTION(cx, value) || getter || setter ||
         (attrs & JSPROP_ENUMERATE) == 0 ||
         (attrs & (JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED))) {
-        return js_DefineProperty(cx, obj, id, value, getter, setter, attrs,
-                                 propp);
+        return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
     }
 
-    if (!PutProperty(cx, obj, ID_TO_VALUE(id), &value))
-        return JS_FALSE;
-    if (propp)
-        *propp = NULL;
-    return JS_TRUE;
+    return PutProperty(cx, obj, ID_TO_VALUE(id), &value);
 }
 
 static JSBool
@@ -7597,7 +7591,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         return JS_FALSE;
     v = OBJECT_TO_JSVAL(ns);
     if (!obj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v, JS_PropertyStub, JS_PropertyStub,
-                             JSPROP_PERMANENT, NULL)) {
+                             JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
     *vp = v;
@@ -7621,7 +7615,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, jsval v)
     fp = js_GetTopStackFrame(cx);
     varobj = fp->varobj;
     if (!varobj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v,
-                                JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT, NULL)) {
+                                JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
     return JS_TRUE;

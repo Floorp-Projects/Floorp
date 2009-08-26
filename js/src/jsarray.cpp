@@ -625,7 +625,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!OBJ_IS_ARRAY(cx, obj)) {
         jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
 
-        return obj->defineProperty(cx, lengthId, *vp, NULL, NULL, JSPROP_ENUMERATE, NULL);
+        return obj->defineProperty(cx, lengthId, *vp, NULL, NULL, JSPROP_ENUMERATE);
     }
 
     newlen = ValueIsLength(cx, vp);
@@ -978,8 +978,7 @@ JS_DEFINE_CALLINFO_4(extern, BOOL, js_Array_dense_setelem_double, CONTEXT, OBJEC
 
 static JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                     JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
-                     JSProperty **propp)
+                     JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
     uint32 i;
     JSBool isIndex;
@@ -991,7 +990,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (!isIndex || attrs != JSPROP_ENUMERATE || !OBJ_IS_DENSE_ARRAY(cx, obj) || INDEX_TOO_SPARSE(obj, i)) {
         if (!ENSURE_SLOW_ARRAY(cx, obj))
             return JS_FALSE;
-        return js_DefineProperty(cx, obj, id, value, getter, setter, attrs, propp);
+        return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
     }
 
     return array_setProperty(cx, obj, id, &value);
