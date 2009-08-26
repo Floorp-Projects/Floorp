@@ -1267,19 +1267,18 @@ WeaveSvc.prototype = {
   wipeServer: function WeaveSvc_wipeServer(engines)
     this._catch(this._notify("wipe-server", "", function() {
       // Grab all the collections for the user
-      let userURL = this.userURL + "/";
-      let res = new Resource(userURL);
+      let res = new Resource(this.userURL + "/info/collections");
       res.get();
 
       // Get the array of collections and delete each one
       let allCollections = JSON.parse(res.data);
-      for each (let name in allCollections) {
+      for (let name in allCollections) {
         try {
           // If we have a list of engines, make sure it's one we want
           if (engines && engines.indexOf(name) == -1)
             continue;
 
-          new Resource(userURL + name).delete();
+          new Resource(this.userURL + "/storage/" + name).delete();
         }
         catch(ex) {
           this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));
