@@ -468,24 +468,15 @@ SyncEngine.prototype = {
       // Upload what we've got so far in the collection
       let doUpload = Utils.bind2(this, function(desc) {
         this._log.info("Uploading " + desc + " of " + outnum + " records");
-<<<<<<< local
-        up.post();
-=======
         let resp = up.post();
         if (!resp.success)
           throw resp;
->>>>>>> other
 
-<<<<<<< local
         // Record the modified time of the upload
-        let modified = up._lastChannel.getResponseHeader("X-Weave-Timestamp");
+        let modified = resp.headers["X-Weave-Timestamp"];
         if (modified > this.lastSync)
           this.lastSync = modified;
 
-=======
-        if (up.data.modified > this.lastSync)
-          this.lastSync = up.data.modified;
->>>>>>> other
         up.clearRecords();
       });
 
