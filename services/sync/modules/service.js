@@ -472,6 +472,8 @@ WeaveSvc.prototype = {
           this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
           return Svc.Prefs.get("serverURL");
         case 200:
+          // The server gives JSON of a string literal, but JS doesn't allow it
+          res.data = res.data.replace(/"/g, "");
           return "https://" + res.data + "/";
         default:
           this._log.debug("Unexpected response code trying to find cluster: " + res.lastChannel.responseStatus);
