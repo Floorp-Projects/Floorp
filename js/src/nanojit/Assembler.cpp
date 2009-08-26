@@ -1253,6 +1253,17 @@ namespace nanojit
                 case LIR_ule:
                 case LIR_ugt:
                 case LIR_uge:
+#ifdef NANOJIT_64BIT
+                case LIR_qeq:
+                case LIR_qle:
+                case LIR_qlt:
+                case LIR_qgt:
+                case LIR_qge:
+                case LIR_qult:
+                case LIR_qule:
+                case LIR_qugt:
+                case LIR_quge:
+#endif
                 {
                     countlir_alu();
                     asm_cond(ins);
