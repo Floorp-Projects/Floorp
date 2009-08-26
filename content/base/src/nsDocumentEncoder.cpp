@@ -1185,7 +1185,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   
   // also consider ourselves in a text widget if we can't find an html document
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-  if (!htmlDoc || mDocument->IsCaseSensitive())
+  if (!(htmlDoc && mDocument->IsHTML()))
     mIsTextWidget = PR_TRUE;
   
   // normalize selection if we are not in a widget

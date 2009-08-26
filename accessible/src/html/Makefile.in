@@ -47,26 +47,6 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_html_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= composer \
-		  content \
-		  docshell \
-		  dom \
-		  editor \
-		  gfx \
-		  imglib2 \
-		  intl \
-		  js \
-		  layout \
-		  locale \
-		  necko \
-		  string \
-		  thebes \
-		  view \
-		  webshell \
-		  widget \
-		  xpcom \
-		  xpconnect \
-		  $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 REQUIRES += editor

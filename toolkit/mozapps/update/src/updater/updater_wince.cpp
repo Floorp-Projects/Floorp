@@ -37,10 +37,13 @@
 
 #include <windows.h>
 #include "updater_wince.h"
+#include "environment.cpp"
 
 # define F_OK 00
 # define W_OK 02
 # define R_OK 04
+
+int errno = 0;
 
 int chmod(const char* path, unsigned int mode) 
 {

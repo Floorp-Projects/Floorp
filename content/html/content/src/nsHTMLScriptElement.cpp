@@ -224,22 +224,13 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
 
   // wrap the target object...
   JSContext *cx = (JSContext *)scriptContext->GetNativeContext();
-  JSObject *scriptObject = nsnull;
   JSObject *scope = sgo->GetGlobalJSObject();
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsContentUtils::XPConnect()->WrapNative(cx, scope,
-                                          aTargetObject,
-                                          NS_GET_IID(nsISupports),
-                                          getter_AddRefs(holder));
-  if (holder) {
-    holder->GetJSObject(&scriptObject);
-  }
-
-  // Fail if wrapping the native object failed...
-  if (!scriptObject) {
-    return NS_ERROR_FAILURE;
-  }
+  jsval v;
+  rv = nsContentUtils::WrapNative(cx, scope, aTargetObject, &v,
+                                  getter_AddRefs(holder));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Build up the array of argument names...
   //
@@ -277,7 +268,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
   void* funcObject = nsnull;
   NS_NAMED_LITERAL_CSTRING(funcName, "anonymous");
 
-  rv = scriptContext->CompileFunction(scriptObject,
+  rv = scriptContext->CompileFunction(JSVAL_TO_OBJECT(v),
                                       funcName,   // method name
                                       argc,       // no of arguments
                                       args,       // argument names

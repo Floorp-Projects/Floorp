@@ -50,10 +50,10 @@ load 421393-1.html
 load 421813-1.html
 load 423270-1.html
 load 429899-1.html
+load 441360.html
 load 463307-1.html
 load 467703-1.xhtml
 load 467873-1.html
 load 470418-1.html
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") load 441360.html # filed bug 455463 for gtk2
 load 487549-1.html
 load 490777-1.html

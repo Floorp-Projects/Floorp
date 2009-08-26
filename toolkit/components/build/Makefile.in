@@ -55,35 +55,6 @@ ALERTS_SERVICE=1
 DEFINES += -DALERTS_SERVICE
 endif
 
-REQUIRES = 	\
-		xpcom \
-		string \
-		widget \
-		layout \
-		dom \
-		intl \
-		docshell \
-		appcomps \
-		downloads \
-		fastfind \
-		mimetype \
-		webbrowserpersist \
-		necko \
-		uriloader \
-		xulapp \
-		embed_base \
-		content \
-		find \
-		gfx \
-		thebes \
-		locale \
-		unicharutil \
-		xuldoc \
-		feeds \
-		storage \
-		pipnss \
-		places \
-		$(NULL)
 
 ifdef ALERTS_SERVICE
 REQUIRES	+= alerts

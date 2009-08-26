@@ -49,9 +49,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsTransactionManagerModule
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsTransactionItem.cpp \

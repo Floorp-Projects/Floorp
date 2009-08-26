@@ -45,27 +45,6 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_toolkit_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= content \
-		  docshell \
-		  dom \
-		  editor \
-		  gfx \
-		  thebes \
-		  htmlparser \
-		  intl \
-		  layout \
-		  locale \
-		  necko \
-		  plugin \
-		  pref \
-		  string \
-		  uriloader \
-		  view \
-		  webshell \
-		  widget \
-		  xpcom \
-		  xuldoc \
-		  $(NULL)
 
 CPPSRCS = \
   nsAccessNodeWrap.cpp \

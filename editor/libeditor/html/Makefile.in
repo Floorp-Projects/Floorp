@@ -50,25 +50,6 @@ MODULE		= editor
 LIBRARY_NAME	= htmleditor_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  js \
-		  layout \
-		  locale \
-		  unicharutil \
-		  content \
-		  txmgr \
-		  txtsvc \
-		  htmlparser \
-		  necko \
-		  pref \
-		  gfx \
-		  thebes \
-		  widget \
-		  view \
-		  webshell \
-		  $(NULL)
 
 # Building the full blown HTML Editor  so add its source files and objects:
 

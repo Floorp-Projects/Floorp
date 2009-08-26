@@ -74,6 +74,9 @@
 
 #ifdef WIN32
 #include <windows.h>
+#elif defined(AVMPLUS_OS2)
+#define INCL_DOSMEMMGR
+#include <os2.h>
 #endif
 
 #if defined(DEBUG) || defined(MOZ_NO_VARADIC_MACROS)

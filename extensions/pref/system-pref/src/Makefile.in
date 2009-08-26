@@ -52,11 +52,6 @@ endif
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES        = xpcom \
-		  string \
-		  embedcomponents \
-		  pref \
-		  $(NULL)
 
 ifdef MOZ_ENABLE_GTK2
 DIRS		= gconf

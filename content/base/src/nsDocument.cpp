@@ -4080,7 +4080,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
   nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ASSERTION(IsCaseSensitive(),
+  NS_ASSERTION(!IsHTML(),
                "nsDocument::CreateElement() called on document that is not "
                "case sensitive. Fix caller, or fix "
                "nsDocument::CreateElement()!");
@@ -6367,7 +6367,7 @@ nsDocument::GetRadioGroup(const nsAString& aName,
                           nsRadioGroupStruct **aRadioGroup)
 {
   nsAutoString tmKey(aName);
-  if(!IsCaseSensitive())
+  if(IsHTML())
      ToLowerCase(tmKey); //should case-insensitive.
   if (mRadioGroups.Get(tmKey, aRadioGroup))
     return NS_OK;

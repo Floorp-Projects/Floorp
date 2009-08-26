@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -617,6 +618,13 @@
 #define NS_STYLE_TEXT_TRANSFORM_CAPITALIZE      1
 #define NS_STYLE_TEXT_TRANSFORM_LOWERCASE       2
 #define NS_STYLE_TEXT_TRANSFORM_UPPERCASE       3
+
+// See nsStyleDisplay
+#define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE         0
+#define NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR       1
+#define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN      2
+#define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT     3
+#define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT  4
 
 // See nsStyleText
 // Note: these values pickup after the text-align values because there

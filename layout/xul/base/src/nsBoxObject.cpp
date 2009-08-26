@@ -65,18 +65,36 @@
 
 // Implement our nsISupports methods
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsBoxObject)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBoxObject)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBoxObject)
+
 // QueryInterface implementation for nsBoxObject
-NS_INTERFACE_MAP_BEGIN(nsBoxObject)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsIBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsPIBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(BoxObject)
 NS_INTERFACE_MAP_END
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+PropertyTraverser(const nsAString& aKey, nsISupports* aProperty, void* userArg)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
 
-NS_IMPL_ADDREF(nsBoxObject)
-NS_IMPL_RELEASE(nsBoxObject)
+  cb->NoteXPCOMChild(aProperty);
 
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsBoxObject)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBoxObject)
+  if (tmp->mPropertyTable) {
+    tmp->mPropertyTable->EnumerateRead(PropertyTraverser, &cb);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // Constructors/Destructors
 nsBoxObject::nsBoxObject(void)

@@ -8,8 +8,6 @@ LIBRARY_NAME	= SimpleTest
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= testy
-REQUIRES	= \
-		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/.. \

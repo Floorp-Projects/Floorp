@@ -49,10 +49,6 @@ IS_COMPONENT	= 1
 MODULE_NAME = xpconnect_sample
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES = XPCOM \
-	XPCONNECT \
-	JS \
-	$(NULL)
 
 XPIDLSRCS = \
 	xpcsample1.idl \

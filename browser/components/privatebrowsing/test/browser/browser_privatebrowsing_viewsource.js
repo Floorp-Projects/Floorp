@@ -79,9 +79,7 @@ function test() {
 
     function openViewSource() {
       // invoke the View Source command
-      let event = document.createEvent("Events");
-      event.initEvent("command", true, true);
-      document.getElementById("View:PageSource").dispatchEvent(event);
+      document.getElementById("View:PageSource").doCommand();
     }
 
     function step1() {

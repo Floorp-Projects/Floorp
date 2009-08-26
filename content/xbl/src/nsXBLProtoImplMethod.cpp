@@ -295,16 +295,13 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   JSObject* globalObject = global->GetGlobalJSObject();
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+  jsval v;
   nsresult rv =
-    nsContentUtils::XPConnect()->WrapNative(cx, globalObject,
-                                            aBoundElement,
-                                            NS_GET_IID(nsISupports),
-                                            getter_AddRefs(wrapper));
+    nsContentUtils::WrapNative(cx, globalObject, aBoundElement, &v,
+                               getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSObject* thisObject;
-  rv = wrapper->GetJSObject(&thisObject);
-  NS_ENSURE_SUCCESS(rv, rv);
+  JSObject* thisObject = JSVAL_TO_OBJECT(v);
 
   JSAutoRequest ar(cx);
 

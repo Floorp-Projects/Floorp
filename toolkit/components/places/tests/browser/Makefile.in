@@ -46,24 +46,19 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
-  browser_bug413985-httprefresh.js \
-#  browser_bug413985-location.reload.js \
-#  browser_bug413985-location.replace.js \
-  browser_bug413985-window.location.href.js \
-  browser_bug413985-window.location.js \
-  browser_bug413985-history.go-0.js \
-  $(NULL)
+	browser_bug399606.js \
+	$(NULL)
 
 # These are files that need to be loaded via the HTTP proxy server
 # Access them through http://example.com/
 _HTTP_FILES = \
-  399606-httprefresh.html \
-  399606-location.reload.html \
-  399606-location.replace.html \
-  399606-window.location.href.html \
-  399606-window.location.html \
-  399606-history.go-0.html \
-  $(NULL)
+	bug_399606/399606-httprefresh.html \
+	bug_399606/399606-location.reload.html \
+	bug_399606/399606-location.replace.html \
+	bug_399606/399606-window.location.href.html \
+	bug_399606/399606-window.location.html \
+	bug_399606/399606-history.go-0.html \
+	$(NULL)
 
 libs:: $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

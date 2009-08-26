@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -236,6 +237,7 @@ public:
   static const PRInt32 kTextAlignKTable[];
   static const PRInt32 kTextDecorationKTable[];
   static const PRInt32 kTextTransformKTable[];
+  static const PRInt32 kTransitionTimingFunctionKTable[];
   static const PRInt32 kUnicodeBidiKTable[];
   static const PRInt32 kUserFocusKTable[];
   static const PRInt32 kUserInputKTable[];

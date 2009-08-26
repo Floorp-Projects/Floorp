@@ -49,23 +49,6 @@ LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
 DEFINES += -DIMPL_XREAPI
 
-REQUIRES	= xpcom \
-		  content \
-		  string \
-		  docshell \
-		  necko \
-		  widget \
-		  dom \
-		  gfx \
-		  layout \
-		  uriloader \
-		  webbrwsr \
-		  shistory \
-		  embed_base \
-		  windowwatcher \
-		  profdirserviceprovider \
-		  xulapp \
-		  $(NULL)
 
 ifdef ACCESSIBILITY
 REQUIRES        += accessibility

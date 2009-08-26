@@ -53,6 +53,7 @@
 class nsIDocument;
 class nsPresContext;
 class nsIContent;
+class nsStyleContext;
 class nsStyleCoord;
 class nsFrameList;
 class nsIFrame;
@@ -203,11 +204,13 @@ public:
    */
   static float GetFontSize(nsIContent *aContent);
   static float GetFontSize(nsIFrame *aFrame);
+  static float GetFontSize(nsStyleContext *aStyleContext);
   /*
    * Get an x-height of of an nsIContent
    */
   static float GetFontXHeight(nsIContent *aContent);
   static float GetFontXHeight(nsIFrame *aFrame);
+  static float GetFontXHeight(nsStyleContext *aStyleContext);
 
   /*
    * Converts image data from premultipled to unpremultiplied alpha

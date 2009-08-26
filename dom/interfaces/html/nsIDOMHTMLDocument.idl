@@ -73,12 +73,8 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   [noscript] void           open();
   void                      close();
 
-  // The methods write() and writeln() must be callable from JS with
-  // no arguments for backwards compatibility, thus they are marked
-  // [noscript] here. The JS versions of these methods are defined in
-  // nsIDOMNSHTMLDocument.
-  [noscript] void           write(in DOMString text);
-  [noscript] void           writeln(in DOMString text);
+  void                      write([optional] in DOMString text);
+  void                      writeln([optional] in DOMString text);
 
   nsIDOMNodeList            getElementsByName(in DOMString elementName);
 };

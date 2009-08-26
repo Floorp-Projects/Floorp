@@ -48,22 +48,6 @@ LIBRARY_NAME	= directory_s
 LIBXUL_LIBRARY	= 1
 
 XPIDLSRCS	= nsIHTTPIndex.idl
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  rdf \
-		  content \
-		  layout \
-		  js \
-		  xpconnect \
-		  docshell \
-		  widget \
-		  dom \
-		  webshell \
-		  uconv \
-		  pref \
-		  windowwatcher \
-		  $(NULL)
 
 CPPSRCS		= nsDirectoryViewer.cpp
 

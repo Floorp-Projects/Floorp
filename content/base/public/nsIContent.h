@@ -217,7 +217,7 @@ public:
   {
     nsIDocument* doc = GetOwnerDoc();
     return doc && // XXX clean up after bug 335998 lands
-           !doc->IsCaseSensitive();
+           doc->IsHTML();
   }
 
   /**

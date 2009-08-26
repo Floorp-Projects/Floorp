@@ -50,19 +50,6 @@ SHORT_LIBNAME = accproxy
 endif
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= \
-		  xpcom \
-		  string \
-		  docshell \
-		  dom \
-		  widget \
-		  gfx \
-		  layout \
-		  content \
-		  uriloader \
-		  pref \
-		  embedcomponents \
-		  $(NULL)
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME	= nsAccessProxy

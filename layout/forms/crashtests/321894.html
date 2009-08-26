@@ -1,0 +1,17 @@
+<html><head>
+<title>
+Testcase bug 321894 - ASSERTION: RemovedAsPrimaryFrame called after PreDestroy: 'PR_FALSE'
+</title>
+</head>
+<body>
+This shouldn't assert in a debug build
+<span> 
+  <script>var x=document.body.offsetHeight;</script>
+  <div>
+    <span style="float:left;">
+      <input type="text">
+    </span>
+  </div>
+</span>
+</body>
+</html>

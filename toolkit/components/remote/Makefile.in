@@ -51,21 +51,6 @@ MODULE_NAME    = RemoteServiceModule
 
 LIBXUL_LIBRARY = 1
 
-REQUIRES = \
-	xpcom \
-	string \
-	appcomps \
-	toolkitcomps \
-	appshell \
-	layout \
-	xulapp \
-	widget \
-	gfx \
-	dom \
-	content \
-	layout \
-	docshell \
-	$(NULL)
 
 XPIDLSRCS = nsIRemoteService.idl
 

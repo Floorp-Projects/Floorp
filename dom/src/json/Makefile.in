@@ -46,17 +46,6 @@ MODULE         = dom
 LIBRARY_NAME   = json_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES       = xpcom         \
-                 string        \
-                 content       \
-                 js            \
-                 layout        \
-                 necko         \
-                 pref          \
-                 uconv         \
-                 widget        \
-                 xpconnect     \
-                 $(NULL)
 
 CPPSRCS =                      \
        nsJSON.cpp              \

@@ -86,6 +86,13 @@ public:
   GetStyleContextForContent(nsIContent* aContent, nsIAtom* aPseudo,
                             nsIPresShell* aPresShell);
 
+  static already_AddRefed<nsStyleContext>
+  GetStyleContextForContentNoFlush(nsIContent* aContent, nsIAtom* aPseudo,
+                                   nsIPresShell* aPresShell);
+
+  static nsIPresShell*
+  GetPresShellForContent(nsIContent* aContent);
+
 private:
   void AssertFlushedPendingReflows() {
     NS_ASSERTION(mFlushedPendingReflows,
@@ -137,6 +144,9 @@ private:
 
   nsresult GetCSSGradientString(const nsStyleGradient* aGradient,
                                 nsAString& aString);
+  nsresult GetImageRectString(nsIURI* aURI,
+                              const nsStyleSides& aCropRect,
+                              nsString& aString);
 
   /* Properties Queryable as CSSValues */
 
@@ -319,6 +329,12 @@ private:
   nsresult GetColumnRuleStyle(nsIDOMCSSValue** aValue);
   nsresult GetColumnRuleColor(nsIDOMCSSValue** aValue);
 
+  /* CSS Transitions */
+  nsresult GetTransitionProperty(nsIDOMCSSValue** aValue);
+  nsresult GetTransitionDuration(nsIDOMCSSValue** aValue);
+  nsresult GetTransitionDelay(nsIDOMCSSValue** aValue);
+  nsresult GetTransitionTimingFunction(nsIDOMCSSValue** aValue);
+
 #ifdef MOZ_SVG
   /* SVG properties */
   nsresult GetSVGPaintFor(PRBool aFill, nsIDOMCSSValue** aValue);
@@ -365,6 +381,8 @@ private:
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);
   nsresult SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
+  nsresult SetValueToStyleImage(const nsStyleImage& aStyleImage,
+                                nsROCSSPrimitiveValue* aValue);
   
   /**
    * A method to get a percentage base for a percentage value.  Returns PR_TRUE

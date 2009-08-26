@@ -47,31 +47,6 @@ MODULE = xulapp
 LIBRARY_NAME = xulapp_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES = \
-	appcomps \
-	toolkitcomps \
-	appshell \
-	chrome \
-	content \
-	docshell \
-	dom \
-	embed_base \
-	embedcomponents \
-	extensions \
-	gfx \
-	intl \
-	js \
-	necko \
-	pref \
-	profile \
-	string \
-	uriloader \
-	widget \
-	windowwatcher \
-	xpcom \
-	xpconnect \
-	xpinstall \
-	$(NULL)
 
 ifdef MOZ_JPROF
 REQUIRES += jprof

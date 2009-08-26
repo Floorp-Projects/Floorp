@@ -88,9 +88,10 @@ public:
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHtml5Parser)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHtml5Parser) \
-  NS_INTERFACE_TABLE_INHERITED3(nsHtml5Parser, 
+  NS_INTERFACE_TABLE_INHERITED4(nsHtml5Parser, 
                                 nsIParser, 
                                 nsIStreamListener, 
+                                nsICharsetDetectionObserver, 
                                 nsIContentSink)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsContentSink)
 

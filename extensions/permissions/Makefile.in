@@ -49,19 +49,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsPermissionsModule
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  dom \
-		  widget \
-		  content \
-		  layout \
-		  pref \
-		  docshell \
-		  caps \
-		  xpconnect \
-		  js \
-		  $(NULL)
 
 CPPSRCS		= \
 		  nsModuleFactory.cpp \

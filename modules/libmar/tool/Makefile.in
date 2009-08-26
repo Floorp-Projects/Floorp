@@ -53,7 +53,6 @@ endif
 # Mozilla distribution.
 HOST_PROGRAM	= mar$(HOST_BIN_SUFFIX)
 
-REQUIRES	= libmar
 
 HOST_CSRCS	= \
 		mar.c \

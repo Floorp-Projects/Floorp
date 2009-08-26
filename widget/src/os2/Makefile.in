@@ -51,24 +51,6 @@ MODULE_NAME	= nsWidgetOS2Module
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= gfx \
-		  xpcom \
-		  string \
-		  dom \
-		  necko \
-		  uconv \
-		  intl \
-		  pref \
-		  plugin \
-		  docshell \
-		  webbrowserpersist \
-		  content \
-		  imglib2 \
-		  unicharutil \
-		  layout \
-		  cairo \
-		  thebes \
-		  $(NULL)
 
 ifdef BUILD_STATIC_LIBS
 EXPORTS		= wdgtos2rc.h

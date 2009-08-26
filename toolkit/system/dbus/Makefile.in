@@ -48,11 +48,6 @@ GRE_MODULE = 1
 IS_COMPONENT = 1
 FORCE_SHARED_LIB = 1
 
-REQUIRES  = xpcom \
-                      string \
-                      necko \
-                      embedcomponents \
-            $(NULL)
 
 EXTRA_DSO_LDOPTS = \
 	$(XPCOM_GLUE_LDOPTS) \

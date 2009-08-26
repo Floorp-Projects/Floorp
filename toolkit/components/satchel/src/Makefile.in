@@ -54,25 +54,6 @@ EXTRA_COMPONENTS = \
 	nsFormAutoComplete.js \
 	$(NULL)
 
-REQUIRES =	\
-		xpcom \
-		string \
-		autocomplete \
-		dom \
-		layout \
-		docshell \
-		gfx \
-		thebes \
-		morkreader \
-		necko \
-		widget \
-		content \
-		locale \
-		unicharutil \
-		pref \
-		storage \
-		loginmgr \
-		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
           nsStorageFormHistory.cpp \

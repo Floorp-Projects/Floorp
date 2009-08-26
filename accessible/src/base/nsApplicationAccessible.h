@@ -48,7 +48,7 @@
 
 /**
  * nsApplicationAccessible is for the whole application of Mozilla.
- * Only one instance of nsAppRootAccessible exists for one Mozilla instance.
+ * Only one instance of nsApplicationAccessible exists for one Mozilla instance.
  * And this one should be created when Mozilla Startup (if accessibility
  * feature has been enabled) and destroyed when Mozilla Shutdown.
  *

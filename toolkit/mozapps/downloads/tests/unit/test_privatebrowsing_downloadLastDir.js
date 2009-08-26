@@ -221,8 +221,8 @@ function run_test()
   do_check_eq(observer.displayDirectory.path, tmpDir.path);
   // browser.download.lastDir should be modified before entering the private browsing mode
   do_check_eq(prefs.getComplexValue("lastDir", Ci.nsILocalFile).path, dir1.path);
-  // gDownloadLastDir should not be used outside of the private browsing mode
-  do_check_eq(gDownloadLastDir.file, null);
+  // gDownloadLastDir should be usable outside of the private browsing mode
+  do_check_eq(gDownloadLastDir.file.path, dir1.path);
 
   pb.privateBrowsingEnabled = true;
   do_check_eq(prefs.getComplexValue("lastDir", Ci.nsILocalFile).path, dir1.path);
@@ -239,7 +239,7 @@ function run_test()
 
   pb.privateBrowsingEnabled = false;
   // gDownloadLastDir should be cleared after leaving the private browsing mode
-  do_check_eq(gDownloadLastDir.file, null);
+  do_check_eq(gDownloadLastDir.file.path, dir1.path);
   observer.file = file3;
   observer.displayDirectory = null;
   file = launcher.promptForSaveToFile(null, context, null, null, null);
@@ -248,8 +248,8 @@ function run_test()
   do_check_eq(observer.displayDirectory.path, dir1.path);
   // browser.download.lastDir should be modified after leaving the private browsing mode
   do_check_eq(prefs.getComplexValue("lastDir", Ci.nsILocalFile).path, dir3.path);
-  // gDownloadLastDir should not be used after leaving the private browsing mode
-  do_check_eq(gDownloadLastDir.file, null);
+  // gDownloadLastDir should be usable after leaving the private browsing mode
+  do_check_eq(gDownloadLastDir.file.path, dir3.path);
 
   // cleanup
   [dir1, dir2, dir3].forEach(function(dir) dir.remove(true));

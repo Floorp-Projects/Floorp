@@ -399,7 +399,6 @@ nsDogbertProfileMigrator::PrefTransform gTransforms[] = {
   { "browser.anchor_color",           0, F(GetString),   F(SetString), PR_FALSE, { -1 } },
   { "browser.visited_color",          0, F(GetString),   F(SetString), PR_FALSE, { -1 } },
   { "browser.startup.homepage",       0, F(GetString),   F(SetString), PR_FALSE, { -1 } },
-  { "security.enable_java",           0, F(GetBool),     F(SetBool),   PR_FALSE, { -1 } },
   { "network.cookie.cookieBehavior",  0, F(GetInt),      F(SetInt),    PR_FALSE, { -1 } },
   { "network.cookie.warnAboutCookies",0, F(GetBool),     F(SetBool),   PR_FALSE, { -1 } },
   { "javascript.enabled",             0, F(GetBool),     F(SetBool),   PR_FALSE, { -1 } },

@@ -51,12 +51,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= xpconnect_test
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= xpconnect \
-		  xpcom \
-		  string \
-		  js \
-		  xpconnect_tests \
-		  $(NULL)
 
 CPPSRCS		= \
 		xpctest_array.cpp \
