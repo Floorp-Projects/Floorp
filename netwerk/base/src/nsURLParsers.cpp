@@ -617,7 +617,7 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, PRInt32 serverinfoLen,
             PRInt32 err;
            *port = buf.ToInteger(&err);
             if (NS_FAILED(err))
-               return NS_ERROR_MALFORMED_URI;
+               *port = -1;
         }
     }
     else {
