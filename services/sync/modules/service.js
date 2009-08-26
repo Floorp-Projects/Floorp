@@ -202,25 +202,21 @@ WeaveSvc.prototype = {
   },
 
   get baseURL() {
-    let url = Svc.Prefs.get("serverURL");
-    if (!url)
-      throw "No server URL set";
-    if (url[url.length-1] != '/')
-      url += '/';
-    return url;
+    return Utils.getURLPref("serverURL");
   },
   set baseURL(value) {
     Svc.Prefs.set("serverURL", value);
   },
 
+  get miscURL() {
+    return Utils.getURLPref("miscURL");
+  },
+  set miscURL(value) {
+    Svc.Prefs.set("miscURL", value);
+  },
+
   get clusterURL() {
-    let url = Svc.Prefs.get("clusterURL");
-    if (!url)
-      return null;
-    if (url[url.length-1] != '/')
-      url += '/';
-    url += "0.5/";
-    return url;
+    return Utils.getURLPref("clusterURL", null, "0.5/");
   },
   set clusterURL(value) {
     Svc.Prefs.set("clusterURL", value);
@@ -461,7 +457,7 @@ WeaveSvc.prototype = {
   findCluster: function WeaveSvc_findCluster(username) {
     this._log.debug("Finding cluster for user " + username);
 
-    let res = new Resource(this.baseURL + "user/1/" + username + "/node/weave");
+    let res = new Resource(this.baseURL + "1/" + username + "/node/weave");
     try {
       res.get();
     } catch(ex) {}
@@ -470,11 +466,9 @@ WeaveSvc.prototype = {
       switch (res.lastChannel.responseStatus) {
         case 404:
           this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
-          return Svc.Prefs.get("serverURL");
+          return this.baseURL;
         case 200:
-          // The server gives JSON of a string literal, but JS doesn't allow it
-          res.data = res.data.replace(/"/g, "");
-          return "https://" + res.data + "/";
+          return res.data;
         default:
           this._log.debug("Unexpected response code trying to find cluster: " + res.lastChannel.responseStatus);
           break;
@@ -604,8 +598,7 @@ WeaveSvc.prototype = {
 
   changePassword: function WeaveSvc_changePassword(newpass)
     this._catch(this._notify("changepwd", "", function() {
-      let url = Svc.Prefs.get('tmpServerURL') + 'user/1/' +
-                username + "/password";
+      let url = this.baseURL + '1/' + username + "/password";
       let res = new Weave.Resource(url);
       res.authenticator = new Weave.NoOpAuthenticator();
 
@@ -770,7 +763,7 @@ WeaveSvc.prototype = {
   },
 
   checkUsername: function WeaveSvc_checkUsername(username) {
-    let url = Svc.Prefs.get('tmpServerURL') + "/user/1/" + username;
+    let url = this.baseURL + "1/" + username;
     let res = new Resource(url);
     res.authenticator = new NoOpAuthenticator();
 
@@ -795,7 +788,7 @@ WeaveSvc.prototype = {
       "captcha_response": captchaResponse
     });
 
-    let url = Svc.Prefs.get('tmpServerURL') + 'user/1/' + username;
+    let url = this.baseURL + '1/' + username;
     let res = new Resource(url);
     res.authenticator = new Weave.NoOpAuthenticator();
 

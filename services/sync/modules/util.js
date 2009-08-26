@@ -488,6 +488,25 @@ let Utils = {
     return url;
   },
 
+  // ensures url ends with a slash, optionally adds an extra string at the end
+  slashify: function Weave_slashify(url, extra) {
+    if (url[url.length-1] != '/')
+      url += '/';
+    if (extra)
+      url += extra;
+    return url;
+  },
+
+  //
+  getURLPref: function Weave_getURLPref(pref, def, extra) {
+    let url = Svc.Prefs.get(pref);
+    if (!url && typeof(def) == "undefined")
+      throw pref + " not set";
+    else if (!url)
+      return def;
+    return Utils.slashify(url, extra);
+  },
+
   xpath: function Weave_xpath(xmlDoc, xpathString) {
     let root = xmlDoc.ownerDocument == null ?
       xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement;
