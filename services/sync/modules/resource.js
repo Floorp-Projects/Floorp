@@ -50,6 +50,23 @@ Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/auth.js");
 
+// = RequestResponse =
+//
+// This object is returned on a successful
+// HTTP response (codes 200-300) and encapsulates
+// returned headers and the actual response text
+function RequestResponse(channel, response) {
+  this._channel = channel;
+  this._response = response;
+}
+RequestResponse.prototype = {
+  get response() { return this._response },
+  get status() { return this._channel.responseStatus },
+  getHeader: function ReqRe_getHeader(which) {
+    return this._channel.getResponseHeader(which);
+  }
+};
+
 // = RequestException =
 //
 // This function raises an exception through the call
@@ -293,7 +310,7 @@ Resource.prototype = {
       this._log.debug(action + " request failed (" + channel.responseStatus + ")");
       if (this._data)
         this._log.debug("Error response: " + this._data);
-      throw new RequestException(this, action, channel);
+      return new RequestResponse(channel, this._data);
 
     } else {
       this._log.debug(action + " request successful (" + channel.responseStatus  + ")");
@@ -313,7 +330,7 @@ Resource.prototype = {
       }
     }
 
-    return this._data;
+    return new RequestResponse(channel, this._data);
   },
 
   // ** {{{ Resource.get }}} **
