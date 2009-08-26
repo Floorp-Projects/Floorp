@@ -68,7 +68,7 @@ class nsTableRowFrame : public nsHTMLContainerFrame
 {
 public:
 
-  NS_DECL_QUERYFRAME_TARGET(nsTableRowFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsTableRowFrame)
   NS_DECL_QUERYFRAME
 
   virtual ~nsTableRowFrame();

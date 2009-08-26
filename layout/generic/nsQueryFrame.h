@@ -40,34 +40,23 @@
 
 #include "nscore.h"
 
-#define NS_DECL_QUERYFRAME_TARGET(classname)                    \
+#define NS_DECLARE_FRAME_ACCESSOR(classname) \
   static const nsQueryFrame::FrameIID kFrameIID = nsQueryFrame::classname##_id;
 
-#define NS_DECL_QUERYFRAME                                      \
+#define NS_DECL_QUERYFRAME \
   virtual void* QueryFrame(FrameIID id);
 
-#define NS_QUERYFRAME_HEAD(class)                               \
-  void* class::QueryFrame(FrameIID id) { switch (id) {
+#define NS_QUERYFRAME_HEAD(class) \
+  void* class::QueryFrame(FrameIID id) {
 
-#define NS_QUERYFRAME_ENTRY(class)                              \
-  case class::kFrameIID: return static_cast<class*>(this);
+#define NS_QUERYFRAME_ENTRY(class) \
+  if (class::kFrameIID == id) \
+    return static_cast<class*>(this);
 
-#define NS_QUERYFRAME_ENTRY_CONDITIONAL(class, condition)       \
-  case class::kFrameIID:                                        \
-  if (condition) return static_cast<class*>(this);              \
-  break;
+#define NS_QUERYFRAME_TAIL_INHERITING(class) \
+  return class::QueryFrame(id); }
 
-#define NS_QUERYFRAME_TAIL_INHERITING(class)                    \
-  default: break;                                               \
-  }                                                             \
-  return class::QueryFrame(id);                                 \
-}
-
-#define NS_QUERYFRAME_TAIL_INHERITANCE_ROOT                     \
-  default: break;                                               \
-  }                                                             \
-  return nsnull;                                                \
-}
+#define NS_QUERYFRAME_TAIL return nsnull; }
 
 class nsQueryFrame
 {
@@ -75,6 +64,7 @@ public:
   enum FrameIID {
     BRFrame_id,
     CanvasFrame_id,
+    nsAreaFrame_id,
     nsAutoRepeatBoxFrame_id,
     nsBCTableCellFrame_id,
     nsBlockFrame_id,
@@ -158,7 +148,6 @@ public:
     nsMathMLmactionFrame_id,
     nsMathMLmathBlockFrame_id,
     nsMathMLmathInlineFrame_id,
-    nsMathMLmencloseFrame_id,
     nsMathMLmfencedFrame_id,
     nsMathMLmfracFrame_id,
     nsMathMLmmultiscriptsFrame_id,
@@ -248,7 +237,6 @@ public:
     nsTreeBodyFrame_id,
     nsTreeColFrame_id,
     nsVideoFrame_id,
-    nsXULLabelFrame_id,
     nsXULScrollFrame_id,
     SpacerFrame_id,
     ViewportFrame_id
