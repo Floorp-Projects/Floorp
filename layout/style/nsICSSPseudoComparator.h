@@ -48,7 +48,7 @@ struct nsCSSSelector;
 class nsICSSPseudoComparator
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsICSSPseudoComparator)
+  NS_DECLARE_FRAME_ACCESSOR(nsICSSPseudoComparator)
 
   NS_IMETHOD  PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult)=0;
 };
