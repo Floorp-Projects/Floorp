@@ -65,6 +65,5 @@ int _wmkdir(const WCHAR* path);
 int access(const char* path, int amode);
 int _waccess(const WCHAR* path, int amode);
 int _wremove(const WCHAR* wpath);
-int _wchdir(const unsigned short* path);
 
 #endif

@@ -50,10 +50,6 @@ int chmod(const char* path, unsigned int mode)
   return 0;
 }
 
-int _wchdir(const WCHAR* path) {
-  return SetEnvironmentVariableW(L"CWD", path);
-}
-
 int _wchmod(const WCHAR* path, unsigned int mode) 
 {
   return 0;
