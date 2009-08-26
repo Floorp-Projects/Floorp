@@ -49,10 +49,10 @@
 #include "nsCSSStyleSheet.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsCSSRules.h"
 
 struct RuleCascadeData;
 struct nsCSSSelectorList;
-class nsCSSFontFaceRule;
 
 /**
  * The CSS style rule processor provides a mechanism for sibling style

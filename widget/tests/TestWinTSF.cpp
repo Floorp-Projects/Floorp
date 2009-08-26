@@ -49,6 +49,7 @@
 
 #include <msctf.h>
 #include <textstor.h>
+#include <richedit.h>
 
 #include "TestHarness.h"
 
@@ -58,7 +59,10 @@
 // some of the includes make use of internal string types
 #define nsAString_h___
 #define nsString_h___
+#define nsStringFwd_h___
 #define nsReadableUtils_h___
+class nsACString;
+class nsAString;
 class nsAFlatString;
 class nsAFlatCString;
 class nsAdoptingString;
@@ -138,6 +142,7 @@ protected:
   PRBool TestComposition(void);
   PRBool TestNotification(void);
   PRBool TestContentEvents(void);
+  PRBool TestEditMessages(void);
 
   PRBool TestApp::TestSelectionInternal(char* aTestName,
                                         LONG aStart,
@@ -154,6 +159,8 @@ protected:
                                     LONG aOldEnd,
                                     LONG aNewEnd);
   nsresult GetSelCon(nsISelectionController** aSelCon);
+
+  PRBool GetWidget(nsIWidget** aWidget);
 
   PRBool mFailed;
   nsString mTestString;
@@ -1654,6 +1661,8 @@ TestApp::OnStateChange(nsIWebProgress *aWebProgress,
     printf("Testing content events...\n");
     if (TestContentEvents())
       passed("TestContentEvents");
+    if (RunTest(&TestApp::TestEditMessages))
+      passed("TestEditMessages");
 
     if (RunTest(&TestApp::TestFocus, PR_FALSE))
       passed("TestFocus");
@@ -2661,19 +2670,7 @@ TestApp::TestNotification(void)
   }
 
   nsCOMPtr<nsIWidget> widget;
-  nsCOMPtr<nsIDocShell> docShell;
-  nsr = mWindow->GetDocShell(getter_AddRefs(docShell));
-  if (NS_SUCCEEDED(nsr) && docShell) {
-    nsCOMPtr<nsIPresShell> presShell;
-    nsr = docShell->GetPresShell(getter_AddRefs(presShell));
-    if (NS_SUCCEEDED(nsr) && presShell) {
-      nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
-      if (viewManager) {
-        nsr = viewManager->GetRootWidget(getter_AddRefs(widget));
-      }
-    }
-  }
-  if (!(NS_SUCCEEDED(nsr) && widget)) {
+  if (!GetWidget(getter_AddRefs(widget))) {
     fail("TestNotification: get nsIWidget");
     return PR_FALSE;
   }
@@ -2728,31 +2725,19 @@ TestApp::TestContentEvents(void)
   mTextArea->Focus();
 
   nsCOMPtr<nsIWidget> widget;
-  nsCOMPtr<nsIDocShell> docShell;
-  nsresult nsr = mWindow->GetDocShell(getter_AddRefs(docShell));
-  if (NS_SUCCEEDED(nsr) && docShell) {
-    nsCOMPtr<nsIPresShell> presShell;
-    nsr = docShell->GetPresShell(getter_AddRefs(presShell));
-    if (NS_SUCCEEDED(nsr) && presShell) {
-      nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
-      if (viewManager) {
-        nsr = viewManager->GetRootWidget(getter_AddRefs(widget));
-      }
-    }
-  }
-  if (NS_FAILED(nsr) || !widget) {
+  if (!GetWidget(getter_AddRefs(widget))) {
     fail("TestContentEvents: get nsIWidget");
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIWidget> topLevel = widget->GetTopLevelWidget(nsnull);
+  nsCOMPtr<nsIWidget> topLevel = widget->GetTopLevelWidget();
   if (!topLevel) {
     fail("TestContentEvents: get top level widget");
     return PR_FALSE;
   }
 
   nsIntRect widgetRect, topLevelRect;
-  nsr = widget->GetScreenBounds(widgetRect);
+  nsresult nsr = widget->GetScreenBounds(widgetRect);
   if (NS_FAILED(nsr)) {
     fail("TestContentEvents: get widget rect");
     return PR_FALSE;
@@ -2864,6 +2849,215 @@ TestApp::TestContentEvents(void)
     }
   }
   return result;
+}
+
+PRBool
+TestApp::TestEditMessages(void)
+{
+  mTestString = NS_LITERAL_STRING(
+    "This is a test of\nthe native editing command messages");
+  // 0123456789012345678901 2345678901234567890123456789012
+  // 0         1         2          3         4         5
+
+  // The native text string is increased by converting \n to \r\n.
+  PRUint32 testStringLength = mTestString.Length() + 1;
+
+  mTextArea->SetValue(mTestString);
+  mTextArea->Focus();
+
+  nsCOMPtr<nsIWidget> widget;
+  if (!GetWidget(getter_AddRefs(widget))) {
+    fail("TestEditMessages: get nsIWidget");
+    return PR_FALSE;
+  }
+
+  HWND wnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
+  PRBool result = PR_TRUE;
+
+  if (!::SendMessage(wnd, EM_CANUNDO, 0, 0)) {
+    fail("TestEditMessages: EM_CANUNDO");
+    return PR_FALSE;
+  }
+
+  if (::SendMessage(wnd, EM_CANREDO, 0, 0)) {
+    fail("TestEditMessages: EM_CANREDO #1");
+    return PR_FALSE;
+  }
+
+
+  if (!::SendMessage(wnd, EM_UNDO, 0, 0)) {
+    fail("TestEditMessages: EM_UNDO #1");
+    return PR_FALSE;
+  }
+
+  nsAutoString str;
+  mTextArea->GetValue(str);
+  if (str == mTestString) {
+    fail("TestEditMessage: EM_UNDO #1, failed to execute");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  if (!::SendMessage(wnd, EM_CANREDO, 0, 0)) {
+    fail("TestEditMessages: EM_CANREDO #2");
+    return PR_FALSE;
+  }
+
+  if (!::SendMessage(wnd, EM_REDO, 0, 0)) {
+    fail("TestEditMessages: EM_REDO #1");
+    return PR_FALSE;
+  }
+
+  mTextArea->GetValue(str);
+  if (str != mTestString) {
+    fail("TestEditMessage: EM_REDO #1, failed to execute");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  TS_SELECTION_ACP sel;
+  HRESULT hr;
+
+  sel.acpStart = 0;
+  sel.acpEnd = testStringLength;
+  sel.style.ase = TS_AE_END;
+  sel.style.fInterimChar = FALSE;
+  hr = mMgr->GetFocusedStore()->SetSelection(1, &sel);
+  if (!(SUCCEEDED(hr))) {
+    fail("TestEditMessages: SetSelection #1");
+    return PR_FALSE;
+  }
+
+  ::SendMessage(wnd, WM_CUT, 0, 0);
+  mTextArea->GetValue(str);
+  if (!str.IsEmpty()) {
+    fail("TestEditMessages: WM_CUT");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  ::SendMessage(wnd, WM_PASTE, 0, 0);
+  mTextArea->GetValue(str);
+  if (str != mTestString) {
+    fail("TestEditMessages: WM_PASTE #1");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  ::SendMessage(wnd, WM_PASTE, 0, 0);
+  mTextArea->GetValue(str);
+  nsAutoString expectedStr(mTestString);
+  expectedStr += mTestString;
+  if (str != expectedStr) {
+    fail("TestEditMessages: WM_PASTE #2");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  sel.acpStart = 0;
+  sel.acpEnd = testStringLength;
+  hr = mMgr->GetFocusedStore()->SetSelection(1, &sel);
+  if (!(SUCCEEDED(hr))) {
+    fail("TestEditMessages: SetSelection #2");
+    return PR_FALSE;
+  }
+
+  ::SendMessage(wnd, WM_CLEAR, 0, 0);
+  mTextArea->GetValue(str);
+  if (str != mTestString) {
+    fail("TestEditMessages: WM_CLEAR #1");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  sel.acpStart = 4;
+  sel.acpEnd = testStringLength;
+  hr = mMgr->GetFocusedStore()->SetSelection(1, &sel);
+  if (!(SUCCEEDED(hr))) {
+    fail("TestEditMessages: SetSelection #3");
+    return PR_FALSE;
+  }
+
+  ::SendMessage(wnd, WM_COPY, 0, 0);
+  mTextArea->GetValue(str);
+  if (str != mTestString) {
+    fail("TestEditMessages: WM_COPY");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  if (!::SendMessage(wnd, EM_CANPASTE, 0, 0)) {
+    fail("TestEditMessages: EM_CANPASTE #1");
+    return PR_FALSE;
+  }
+
+  if (!::SendMessage(wnd, EM_CANPASTE, CF_TEXT, 0)) {
+    fail("TestEditMessages: EM_CANPASTE #2");
+    return PR_FALSE;
+  }
+
+  if (!::SendMessage(wnd, EM_CANPASTE, CF_UNICODETEXT, 0)) {
+    fail("TestEditMessages: EM_CANPASTE #3");
+    return PR_FALSE;
+  }
+
+  ::SendMessage(wnd, WM_PASTE, 0, 0);
+  mTextArea->GetValue(str);
+  if (str != mTestString) {
+    fail("TestEditMessages: WM_PASTE #3");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  sel.acpStart = 4;
+  sel.acpEnd = testStringLength;
+  hr = mMgr->GetFocusedStore()->SetSelection(1, &sel);
+  if (!(SUCCEEDED(hr))) {
+    fail("TestEditMessages: SetSelection #3");
+    return PR_FALSE;
+  }
+
+  ::SendMessage(wnd, WM_CLEAR, 0, 0);
+  mTextArea->GetValue(str);
+  if (str != NS_LITERAL_STRING("This")) {
+    fail("TestEditMessages: WM_CLEAR #2");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  ::SendMessage(wnd, WM_PASTE, 0, 0);
+  mTextArea->GetValue(str);
+  if (str != mTestString) {
+    fail("TestEditMessages: WM_PASTE #4");
+    printf("Current Str: \"%s\"\n", NS_ConvertUTF16toUTF8(str).get());
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+PRBool
+TestApp::GetWidget(nsIWidget** aWidget)
+{
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = mWindow->GetDocShell(getter_AddRefs(docShell));
+  if (NS_FAILED(rv) || !docShell) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = docShell->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(rv) || !presShell) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
+  if (!viewManager) {
+    return PR_FALSE;
+  }
+
+  rv = viewManager->GetRootWidget(aWidget);
+  return (NS_SUCCEEDED(rv) && aWidget);
 }
 
 nsresult

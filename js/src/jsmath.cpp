@@ -237,8 +237,8 @@ math_ceil_kernel(jsdouble x)
     return ceil(x);
 }
 
-static JSBool
-math_ceil(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_ceil(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -297,8 +297,8 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_floor(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_floor(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -335,8 +335,8 @@ math_log(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_max(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_max(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z = *cx->runtime->jsNegativeInfinity;
     jsval *argv;
@@ -365,8 +365,8 @@ math_max(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_min(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_min(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z = *cx->runtime->jsPositiveInfinity;
     jsval *argv;
@@ -427,95 +427,52 @@ math_pow(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
+static const int64 RNG_MULTIPLIER = 0x5DEECE66DLL;
+static const int64 RNG_ADDEND = 0xBLL;
+static const int64 RNG_MASK = (1LL << 48) - 1;
+static const jsdouble RNG_DSCALE = jsdouble(1LL << 53);
+
 /*
  * Math.random() support, lifted from java.util.Random.java.
  */
-static void
-random_setSeed(JSRuntime *rt, int64 seed)
+static inline void
+random_setSeed(JSThreadData *data, int64 seed)
 {
-    int64 tmp;
-
-    JSLL_I2L(tmp, 1000);
-    JSLL_DIV(seed, seed, tmp);
-    JSLL_XOR(tmp, seed, rt->rngMultiplier);
-    JSLL_AND(rt->rngSeed, tmp, rt->rngMask);
+    data->rngSeed = (seed ^ RNG_MULTIPLIER) & RNG_MASK;
 }
 
 void
-js_random_init(JSRuntime *rt)
+js_InitRandom(JSThreadData *data)
 {
-    int64 tmp, tmp2;
-
-    /* Do at most once. */
-    if (rt->rngInitialized)
-        return;
-    rt->rngInitialized = JS_TRUE;
-
-    /* rt->rngMultiplier = 0x5DEECE66DL */
-    JSLL_ISHL(tmp, 0x5, 32);
-    JSLL_UI2L(tmp2, 0xDEECE66DL);
-    JSLL_OR(rt->rngMultiplier, tmp, tmp2);
-
-    /* rt->rngAddend = 0xBL */
-    JSLL_I2L(rt->rngAddend, 0xBL);
-
-    /* rt->rngMask = (1L << 48) - 1 */
-    JSLL_I2L(tmp, 1);
-    JSLL_SHL(tmp2, tmp, 48);
-    JSLL_SUB(rt->rngMask, tmp2, tmp);
-
-    /* rt->rngDscale = (jsdouble)(1L << 53) */
-    JSLL_SHL(tmp2, tmp, 53);
-    JSLL_L2D(rt->rngDscale, tmp2);
-
     /* Finally, set the seed from current time. */
-    random_setSeed(rt, PRMJ_Now());
+    random_setSeed(data, PRMJ_Now() / 1000);
 }
 
-static uint32
-random_next(JSRuntime *rt, int bits)
+static inline uint64
+random_next(JSThreadData *data, int bits)
 {
-    int64 nextseed, tmp;
-    uint32 retval;
-
-    JSLL_MUL(nextseed, rt->rngSeed, rt->rngMultiplier);
-    JSLL_ADD(nextseed, nextseed, rt->rngAddend);
-    JSLL_AND(nextseed, nextseed, rt->rngMask);
-    rt->rngSeed = nextseed;
-    JSLL_USHR(tmp, nextseed, 48 - bits);
-    JSLL_L2I(retval, tmp);
-    return retval;
+    uint64 nextseed = data->rngSeed * RNG_MULTIPLIER;
+    nextseed += RNG_ADDEND;
+    nextseed &= RNG_MASK;
+    data->rngSeed = nextseed;
+    return nextseed >> (48 - bits);
 }
 
-jsdouble
-js_random_nextDouble(JSRuntime *rt)
+static inline jsdouble
+random_nextDouble(JSThreadData *data)
 {
-    int64 tmp, tmp2;
-    jsdouble d;
-
-    JSLL_ISHL(tmp, random_next(rt, 26), 27);
-    JSLL_UI2L(tmp2, random_next(rt, 27));
-    JSLL_ADD(tmp, tmp, tmp2);
-    JSLL_L2D(d, tmp);
-    return d / rt->rngDscale;
+    return jsdouble((random_next(data, 26) << 27) + random_next(data, 27)) / RNG_DSCALE;
 }
 
 static JSBool
 math_random(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSRuntime *rt;
-    jsdouble z;
-
-    rt = cx->runtime;
-    JS_LOCK_RUNTIME(rt);
-    js_random_init(rt);
-    z = js_random_nextDouble(rt);
-    JS_UNLOCK_RUNTIME(rt);
+    jsdouble z = random_nextDouble(JS_THREAD_DATA(cx));
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
 #if defined _WIN32 && !defined WINCE && _MSC_VER < 1400
-/* Try to work around apparent _copysign bustage in VC6 and VC7. */
+/* Try to work around apparent _copysign bustage in VC7.x. */
 double
 js_copysign(double x, double y)
 {
@@ -529,8 +486,8 @@ js_copysign(double x, double y)
 }
 #endif
 
-static JSBool
-math_round(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_round(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -615,7 +572,6 @@ MATH_BUILTIN_1(atan)
 MATH_BUILTIN_1(sin)
 MATH_BUILTIN_1(cos)
 MATH_BUILTIN_1(sqrt)
-MATH_BUILTIN_1(floor)
 MATH_BUILTIN_1(tan)
 
 static jsdouble FASTCALL
@@ -716,13 +672,9 @@ math_pow_tn(jsdouble d, jsdouble p)
 }
 
 static jsdouble FASTCALL
-math_random_tn(JSRuntime* rt)
+math_random_tn(JSContext *cx)
 {
-    JS_LOCK_RUNTIME(rt);
-    js_random_init(rt);
-    jsdouble z = js_random_nextDouble(rt);
-    JS_UNLOCK_RUNTIME(rt);
-    return z;
+    return random_nextDouble(JS_THREAD_DATA(cx));
 }
 
 static jsdouble FASTCALL
@@ -737,25 +689,33 @@ math_ceil_tn(jsdouble x)
     return math_ceil_kernel(x);
 }
 
+static jsdouble FASTCALL
+math_floor_tn(jsdouble x)
+{
+    return floor(x);
+}
+
 JS_DEFINE_TRCINFO_1(math_acos,
     (1, (static, DOUBLE, math_acos_tn, DOUBLE,          1, 1)))
 JS_DEFINE_TRCINFO_1(math_asin,
     (1, (static, DOUBLE, math_asin_tn, DOUBLE,          1, 1)))
 JS_DEFINE_TRCINFO_1(math_atan2,
     (2, (static, DOUBLE, math_atan2_kernel, DOUBLE, DOUBLE, 1, 1)))
+JS_DEFINE_TRCINFO_1(js_math_floor,
+    (1, (static, DOUBLE, math_floor_tn, DOUBLE,         1, 1)))
 JS_DEFINE_TRCINFO_1(math_log,
     (1, (static, DOUBLE, math_log_tn, DOUBLE,           1, 1)))
-JS_DEFINE_TRCINFO_1(math_max,
+JS_DEFINE_TRCINFO_1(js_math_max,
     (2, (static, DOUBLE, math_max_tn, DOUBLE, DOUBLE,   1, 1)))
-JS_DEFINE_TRCINFO_1(math_min,
+JS_DEFINE_TRCINFO_1(js_math_min,
     (2, (static, DOUBLE, math_min_tn, DOUBLE, DOUBLE,   1, 1)))
 JS_DEFINE_TRCINFO_1(math_pow,
     (2, (static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, 1)))
 JS_DEFINE_TRCINFO_1(math_random,
-    (1, (static, DOUBLE, math_random_tn, RUNTIME,       0, 0)))
-JS_DEFINE_TRCINFO_1(math_round,
+    (1, (static, DOUBLE, math_random_tn, CONTEXT,       0, 0)))
+JS_DEFINE_TRCINFO_1(js_math_round,
     (1, (static, DOUBLE, math_round_tn, DOUBLE,         1, 1)))
-JS_DEFINE_TRCINFO_1(math_ceil,
+JS_DEFINE_TRCINFO_1(js_math_ceil,
     (1, (static, DOUBLE, math_ceil_tn, DOUBLE,          1, 1)))
 
 #endif /* JS_TRACER */
@@ -769,16 +729,16 @@ static JSFunctionSpec math_static_methods[] = {
     JS_TN("asin",           math_asin,            1, 0, math_asin_trcinfo),
     JS_TN("atan",           math_atan,            1, 0, math_atan_trcinfo),
     JS_TN("atan2",          math_atan2,           2, 0, math_atan2_trcinfo),
-    JS_TN("ceil",           math_ceil,            1, 0, math_ceil_trcinfo),
+    JS_TN("ceil",           js_math_ceil,         1, 0, js_math_ceil_trcinfo),
     JS_TN("cos",            math_cos,             1, 0, math_cos_trcinfo),
     JS_TN("exp",            math_exp,             1, 0, math_exp_trcinfo),
-    JS_TN("floor",          math_floor,           1, 0, math_floor_trcinfo),
+    JS_TN("floor",          js_math_floor,        1, 0, js_math_floor_trcinfo),
     JS_TN("log",            math_log,             1, 0, math_log_trcinfo),
-    JS_TN("max",            math_max,             2, 0, math_max_trcinfo),
-    JS_TN("min",            math_min,             2, 0, math_min_trcinfo),
+    JS_TN("max",            js_math_max,          2, 0, js_math_max_trcinfo),
+    JS_TN("min",            js_math_min,          2, 0, js_math_min_trcinfo),
     JS_TN("pow",            math_pow,             2, 0, math_pow_trcinfo),
     JS_TN("random",         math_random,          0, 0, math_random_trcinfo),
-    JS_TN("round",          math_round,           1, 0, math_round_trcinfo),
+    JS_TN("round",          js_math_round,        1, 0, js_math_round_trcinfo),
     JS_TN("sin",            math_sin,             1, 0, math_sin_trcinfo),
     JS_TN("sqrt",           math_sqrt,            1, 0, math_sqrt_trcinfo),
     JS_TN("tan",            math_tan,             1, 0, math_tan_trcinfo),

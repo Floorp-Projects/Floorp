@@ -165,6 +165,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMDragEvent.h"
 #include "nsDOMDataTransfer.h"
 #include "nsHtml5Module.h"
+#include "nsPresContext.h"
+#include "nsLayoutStatics.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -501,7 +503,7 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onMozRotateGestureUpdate,      { NS_SIMPLE_GESTURE_ROTATE_UPDATE, EventNameType_None } },
     { &nsGkAtoms::onMozRotateGesture,            { NS_SIMPLE_GESTURE_ROTATE, EventNameType_None } },
     { &nsGkAtoms::onMozTapGesture,               { NS_SIMPLE_GESTURE_TAP, EventNameType_None } },
-    { &nsGkAtoms::onMozPressTapGesture,          { NS_SIMPLE_GESTURE_PRESSTAP, EventNameType_None } }
+    { &nsGkAtoms::onMozPressTapGesture,          { NS_SIMPLE_GESTURE_PRESSTAP, EventNameType_None } },
   };
 
   sEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
@@ -3587,7 +3589,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIDocument> document = node->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
   
-  PRBool bCaseSensitive = document->IsCaseSensitive();
+  PRBool bCaseSensitive = !document->IsHTML();
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
   PRBool isHTML = htmlDoc && !bCaseSensitive;
@@ -5026,6 +5028,8 @@ nsContentUtils::CanAccessNativeAnon()
     // Some code is running, we can't make the assumption, as above, but we
     // can't use a native frame, so clear fp.
     fp = nsnull;
+  } else if (!fp->script) {
+    fp = nsnull;
   }
 
   void *annotation = fp ? JS_GetFrameAnnotation(cx, fp) : nsnull;
@@ -5088,4 +5092,44 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
   NS_ENSURE_STATE(target);
   PRBool dummy;
   return target->DispatchEvent(event, &dummy);
+}
+
+// static
+nsresult
+nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
+                           const nsIID* aIID, jsval *vp,
+                           nsIXPConnectJSObjectHolder **aHolder,
+                           PRBool aAllowWrapping)
+{
+  if (!native) {
+    NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
+
+    *vp = JSVAL_NULL;
+
+    return NS_OK;
+  }
+
+  NS_ENSURE_TRUE(sXPConnect && sThreadJSContextStack, NS_ERROR_UNEXPECTED);
+
+  // Keep sXPConnect and sThreadJSContextStack alive.
+  nsLayoutStaticsRef layoutStaticsRef;
+
+  JSContext *topJSContext;
+  nsresult rv = sThreadJSContextStack->Peek(&topJSContext);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool push = topJSContext != cx;
+  if (push) {
+    rv = sThreadJSContextStack->Push(cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = sXPConnect->WrapNativeToJSVal(cx, scope, native, aIID, aAllowWrapping,
+                                     vp, aHolder);
+
+  if (push) {
+    sThreadJSContextStack->Pop(nsnull);
+  }
+
+  return rv;
 }

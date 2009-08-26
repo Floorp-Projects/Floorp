@@ -46,18 +46,18 @@ options="p:b:x:d:"
 function usage()
 {
     cat <<EOF
-usage: 
+usage:
 $SCRIPT -p product -b branch  -x executablepath [-d datafiles]
 
 variable            description
 ===============     ============================================================
--p product          required. firefox, thunderbird or fennec
--b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
+-p product          required. firefox.
+-b branch           required. supported branch. see library.sh
 -x executablepath   required. directory where build is installed
--d datafiles        optional. one or more filenames of files containing 
+-d datafiles        optional. one or more filenames of files containing
                     environment variable definitions to be included.
 
-note that the environment variables should have the same names as in the 
+note that the environment variables should have the same names as in the
 "variable" column.
 
 Uninstalls build located in directory-tree 'executablepath'
@@ -69,8 +69,8 @@ EOF
 
 unset product branch executablepath datafiles
 
-while getopts $options optname ; 
-  do 
+while getopts $options optname ;
+  do
   case $optname in
       p) product=$OPTARG;;
       b) branch=$OPTARG;;
@@ -88,7 +88,8 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" ]]
 fi
 
 
-if [[ ! ls "$executablepath/*" 2> /dev/null ]]; then
+if ! ls $executablepath/* > /dev/null 2>&1; then
+    echo "uninstall-build.sh: ignoring missing $executablepath"
     exit 0
 fi
 
@@ -100,7 +101,7 @@ if [[ $OSID == "nt" ]]; then
     # see http://nsis.sourceforge.net/Docs/Chapter3.html
 
     # if the directory already exists, attempt to uninstall
-    # any existing installation.
+    # any existing installation. Suppress failures.
 
     if [[ -d "$executabledir/uninstall" ]]; then
 
@@ -108,30 +109,24 @@ if [[ $OSID == "nt" ]]; then
             uninstallexe="$executabledir/uninstall/uninstall.exe"
             uninstallini="$executabledir/uninstall/uninstall.ini"
             if [[ -n "$uninstallexe"  && -e "$uninstallexe" ]]; then
-                if sed -i.bak 's/Run Mode=Normal/Run Mode=Silent/' $uninstallini; 
+                if sed -i.bak 's/Run Mode=Normal/Run Mode=Silent/' $uninstallini;
                     then
-                    # uninstall.exe will return non zero exit codes 
-                    # for no damn reason.
-                    if $uninstallexe; then
-                        true
-                    fi
-                fi
-            fi
-        elif [[ "$branch" == "1.8.1" || "$branch" == "1.9.0" || "$branch" == "1.9.1" ]]; then
-            uninstalloldexe="$executabledir/uninstall/uninst.exe"
-            uninstallnewexe="$executabledir/uninstall/helper.exe"
-            if [[ -n "$uninstallnewexe" && -e "$uninstallnewexe" ]]; then
-                $uninstallnewexe /S /D=`cygpath -a -w $executabledir | sed 's@\\\\@\\\\\\\\@g'`
-            elif [[ -n "$uninstalloldexe" && -e "$uninstalloldexe" ]]; then
-                $uninstalloldexe /S /D=`cygpath -a -w $executabledir | sed 's@\\\\@\\\\\\\\@g'`
-            else
-                uninstallexe="$executabledir/$product/uninstall/uninstaller.exe"
-                if [[ -n "$uninstallexe" && -e "$uninstallexe" ]]; then
-                    $uninstallexe /S /D=`cygpath -a -w "$executabledir"  | sed 's@\\\\@\\\\\\\\@g'`
+                    if $uninstallexe; then true; fi
                 fi
             fi
         else
-            error "Unknown branch $branch" $LINENO
+            uninstalloldexe="$executabledir/uninstall/uninst.exe"
+            uninstallnewexe="$executabledir/uninstall/helper.exe"
+            if [[ -n "$uninstallnewexe" && -e "$uninstallnewexe" ]]; then
+                if $uninstallnewexe /S /D=`cygpath -a -w $executabledir | sed 's@\\\\@\\\\\\\\@g'`; then true; fi
+            elif [[ -n "$uninstalloldexe" && -e "$uninstalloldexe" ]]; then
+                if $uninstalloldexe /S /D=`cygpath -a -w $executabledir | sed 's@\\\\@\\\\\\\\@g'`; then true; fi
+            else
+                uninstallexe="$executabledir/$product/uninstall/uninstaller.exe"
+                if [[ -n "$uninstallexe" && -e "$uninstallexe" ]]; then
+                    if $uninstallexe /S /D=`cygpath -a -w "$executabledir"  | sed 's@\\\\@\\\\\\\\@g'`; then true; fi
+                fi
+            fi
         fi
         # the NSIS uninstaller will copy itself, then fork to the new
         # copy so that it can delete itself. This causes a race condition
@@ -149,4 +144,3 @@ fi
 $TEST_DIR/bin/create-directory.sh -d "$executablepath" -n
 
 rm -fR "$executablepath"
-

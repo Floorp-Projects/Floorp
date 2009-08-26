@@ -49,11 +49,6 @@ SHORT_LIBNAME	= metrics
 
 XPI_NAME	= metrics
 
-REQUIRES	= \
-		xpcom \
-		necko \
-		content \
-		$(NULL)
 
 CPPSRCS		= \
 		nsMetricsModule.cpp \

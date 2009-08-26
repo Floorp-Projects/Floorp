@@ -45,15 +45,16 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
-		test_innerScreen.xul \
-		test_offsets.html \
-		test_offsets.xul \
-		test_offsets.js \
+		497633.html \
+		test_497898.html \
+		test_bug504220.html \
 		test_domWindowUtils.html \
 		test_domWindowUtils_scrollXY.html \
-		test_497898.html \
-		497633.html \
-		test_bug504220.html \
+		test_innerScreen.xul \
+		test_offsets.html \
+		test_offsets.js \
+		test_offsets.xul \
+		test_windowProperties.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

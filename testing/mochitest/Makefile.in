@@ -98,6 +98,14 @@ TEST_HARNESS_BINS := \
   pk12util$(BIN_SUFFIX) \
   $(NULL)
 
+ifeq ($(OS_ARCH),Darwin)
+TEST_HARNESS_BINS += fix-macosx-stack.pl
+endif
+
+ifeq ($(OS_ARCH),Linux)
+TEST_HARNESS_BINS += fix-linux-stack.pl
+endif
+
 # Components / typelibs that don't get packaged with
 # the build, but that we need for the test harness.
 TEST_HARNESS_COMPONENTS := \

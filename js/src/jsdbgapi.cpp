@@ -595,7 +595,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     script = FUN_SCRIPT(fun);
                 } else if (clasp == &js_ScriptClass) {
                     fun = NULL;
-                    script = (JSScript *) JS_GetPrivate(cx, closure);
+                    script = (JSScript *) closure->getAssignedPrivate();
                 } else {
                     fun = NULL;
                     script = NULL;
@@ -634,7 +634,6 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     memset(&frame, 0, sizeof(frame));
                     frame.script = script;
                     frame.regs = NULL;
-                    frame.callee = closure;
                     frame.fun = fun;
                     frame.argv = argv + 2;
                     frame.down = js_GetTopStackFrame(cx);
@@ -672,11 +671,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                       : wp->setter(cx, obj, userid, vp));
                 if (injectFrame) {
                     /* Evil code can cause us to have an arguments object. */
-                    if (frame.callobj)
-                        ok &= js_PutCallObject(cx, &frame);
-                    if (frame.argsobj)
-                        ok &= js_PutArgsObject(cx, &frame);
-
+                    frame.putActivationObjects(cx);
                     cx->fp = frame.down;
                     if (argv != smallv)
                         cx->free(argv);
@@ -791,16 +786,16 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             flags = sprop->flags;
             shortid = sprop->shortid;
         } else {
-            if (!OBJ_GET_PROPERTY(cx, pobj, propid, &value) ||
-                !OBJ_GET_ATTRIBUTES(cx, pobj, propid, prop, &attrs)) {
-                OBJ_DROP_PROPERTY(cx, pobj, prop);
+            if (!pobj->getProperty(cx, propid, &value) ||
+                !pobj->getAttributes(cx, propid, prop, &attrs)) {
+                pobj->dropProperty(cx, prop);
                 return JS_FALSE;
             }
             getter = setter = NULL;
             flags = 0;
             shortid = 0;
         }
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
+        pobj->dropProperty(cx, prop);
 
         /* Recall that obj is native, whether or not pobj is native. */
         if (!js_DefineNativeProperty(cx, obj, propid, value, getter, setter,
@@ -812,7 +807,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
 
     /*
      * At this point, prop/sprop exists in obj, obj is locked, and we must
-     * OBJ_DROP_PROPERTY(cx, obj, prop) before returning.
+     * obj->dropProperty(cx, prop) before returning.
      */
     ok = JS_TRUE;
     DBG_LOCK(rt);
@@ -865,7 +860,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
     DBG_UNLOCK(rt);
 
 out:
-    OBJ_DROP_PROPERTY(cx, obj, prop);
+    obj->dropProperty(cx, prop);
     return ok;
 }
 
@@ -1023,8 +1018,8 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
     if (fp->fun) {
         callbacks = JS_GetSecurityCallbacks(cx);
         if (callbacks && callbacks->findObjectPrincipals) {
-            if (FUN_OBJECT(fp->fun) != fp->callee)
-                return callbacks->findObjectPrincipals(cx, fp->callee);
+            if (FUN_OBJECT(fp->fun) != fp->callee())
+                return callbacks->findObjectPrincipals(cx, fp->callee());
             /* FALL THROUGH */
         }
     }
@@ -1041,7 +1036,7 @@ JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
 
     callbacks = JS_GetSecurityCallbacks(cx);
     if (callbacks && callbacks->findObjectPrincipals) {
-        principals = callbacks->findObjectPrincipals(cx, fp->callee);
+        principals = callbacks->findObjectPrincipals(cx, fp->callee());
     } else {
         principals = NULL;
     }
@@ -1170,9 +1165,9 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
     if (!fp->fun)
         return NULL;
 
-    JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee));
-    JS_ASSERT(OBJ_GET_PRIVATE(cx, fp->callee) == fp->fun);
-    return fp->callee;
+    JS_ASSERT(HAS_FUNCTION_CLASS(fp->callee()));
+    JS_ASSERT(fp->callee()->getAssignedPrivate() == fp->fun);
+    return fp->callee();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1184,7 +1179,7 @@ JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->callee;
+    return fp->callee();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2012,3 +2007,435 @@ js_ResumeVtune(JSContext *cx, JSObject *obj,
 }
 
 #endif /* MOZ_VTUNE */
+
+#ifdef MOZ_TRACEVIS
+/*
+ * Ethogram - Javascript wrapper for TraceVis state
+ *
+ * ethology: The scientific study of animal behavior,
+ *           especially as it occurs in a natural environment.
+ * ethogram: A pictorial catalog of the behavioral patterns of
+ *           an organism or a species.
+ *
+ */
+#if defined(XP_WIN)
+#include <windows.h>
+#else
+#include <sys/time.h>
+#endif
+#include "jstracer.h"
+
+#define ETHOGRAM_BUF_SIZE 65536
+
+static JSBool
+ethogram_construct(JSContext *cx, JSObject *obj,
+                   uintN argc, jsval *argv, jsval *rval);
+static void
+ethogram_finalize(JSContext *cx, JSObject *obj);
+
+static JSClass ethogram_class = {
+    "Ethogram",
+    JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, ethogram_finalize,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+struct EthogramEvent {
+    TraceVisState s;
+    TraceVisExitReason r;
+    int ts;
+    int tus;
+    JSString *filename;
+    int lineno;
+};
+
+static int
+compare_strings(const void *k1, const void *k2)
+{
+    return strcmp((const char *) k1, (const char *) k2) == 0;
+}
+
+class EthogramEventBuffer {
+private:
+    EthogramEvent mBuf[ETHOGRAM_BUF_SIZE];
+    int mReadPos;
+    int mWritePos;
+    JSObject *mFilenames;
+    int mStartSecond;
+
+    struct EthogramScriptEntry {
+        char *filename;
+        JSString *jsfilename;
+
+        EthogramScriptEntry *next;
+    };
+    EthogramScriptEntry *mScripts;
+
+public:
+    friend JSBool
+    ethogram_construct(JSContext *cx, JSObject *obj,
+                       uintN argc, jsval *argv, jsval *rval);
+
+    inline void push(TraceVisState s, TraceVisExitReason r, char *filename, int lineno) {
+        mBuf[mWritePos].s = s;
+        mBuf[mWritePos].r = r;
+#if defined(XP_WIN)
+        FILETIME now;
+        GetSystemTimeAsFileTime(&now);
+        unsigned long long raw_us = 0.1 *
+            (((unsigned long long) now.dwHighDateTime << 32ULL) |
+             (unsigned long long) now.dwLowDateTime);
+        unsigned int sec = raw_us / 1000000L;
+        unsigned int usec = raw_us % 1000000L;
+        mBuf[mWritePos].ts = sec - mStartSecond;
+        mBuf[mWritePos].tus = usec;
+#else
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        mBuf[mWritePos].ts = tv.tv_sec - mStartSecond;
+        mBuf[mWritePos].tus = tv.tv_usec;
+#endif
+
+        JSString *jsfilename = findScript(filename);
+        mBuf[mWritePos].filename = jsfilename;
+        mBuf[mWritePos].lineno = lineno;
+
+        mWritePos = (mWritePos + 1) % ETHOGRAM_BUF_SIZE;
+        if (mWritePos == mReadPos) {
+            mReadPos = (mWritePos + 1) % ETHOGRAM_BUF_SIZE;
+        }
+    }
+
+    inline EthogramEvent *pop() {
+        EthogramEvent *e = &mBuf[mReadPos];
+        mReadPos = (mReadPos + 1) % ETHOGRAM_BUF_SIZE;
+        return e;
+    }
+
+    bool isEmpty() {
+        return (mReadPos == mWritePos);
+    }
+
+    EthogramScriptEntry *addScript(JSContext *cx, JSObject *obj, char *filename, JSString *jsfilename) {
+        JSHashNumber hash = JS_HashString(filename);
+        JSHashEntry **hep = JS_HashTableRawLookup(traceVisScriptTable, hash, filename);
+        if (*hep != NULL)
+            return JS_FALSE;
+
+        JS_HashTableRawAdd(traceVisScriptTable, hep, hash, filename, this);
+
+        EthogramScriptEntry * entry = (EthogramScriptEntry *) JS_malloc(cx, sizeof(EthogramScriptEntry));
+        if (entry == NULL)
+            return NULL;
+
+        entry->next = mScripts;
+        mScripts = entry;
+        entry->filename = filename;
+        entry->jsfilename = jsfilename;
+
+        return mScripts;
+    }
+
+    void removeScripts(JSContext *cx) {
+        EthogramScriptEntry *se = mScripts;
+        while (se != NULL) {
+            char *filename = se->filename;
+
+            JSHashNumber hash = JS_HashString(filename);
+            JSHashEntry **hep = JS_HashTableRawLookup(traceVisScriptTable, hash, filename);
+            JSHashEntry *he = *hep;
+            if (he) {
+                /* we hardly knew he */
+                JS_HashTableRawRemove(traceVisScriptTable, hep, he);
+            }
+
+            EthogramScriptEntry *se_head = se;
+            se = se->next;
+            JS_free(cx, se_head);
+        }
+    }
+
+    JSString *findScript(char *filename) {
+        EthogramScriptEntry *se = mScripts;
+        while (se != NULL) {
+            if (compare_strings(se->filename, filename))
+                return (se->jsfilename);
+            se = se->next;
+        }
+        return NULL;
+    }
+
+    JSObject *filenames() {
+        return mFilenames;
+    }
+
+    int length() {
+        if (mWritePos < mReadPos)
+            return (mWritePos + ETHOGRAM_BUF_SIZE) - mReadPos;
+        else
+            return mWritePos - mReadPos;
+    }
+};
+
+static char jstv_empty[] = "<null>";
+
+inline char *
+jstv_Filename(JSStackFrame *fp)
+{
+    while (fp && fp->script == NULL)
+        fp = fp->down;
+    return (fp && fp->script && fp->script->filename)
+           ? (char *)fp->script->filename
+           : jstv_empty;
+}
+inline uintN
+jstv_Lineno(JSContext *cx, JSStackFrame *fp)
+{
+    while (fp && fp->regs == NULL)
+        fp = fp->down;
+    return (fp && fp->regs) ? js_FramePCToLineNumber(cx, fp) : 0;
+}
+
+/* Collect states here and distribute to a matching buffer, if any */
+JS_FRIEND_API(void)
+js_StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
+{
+    JSStackFrame *fp = cx->fp;
+
+    char *script_file = jstv_Filename(fp);
+    JSHashNumber hash = JS_HashString(script_file);
+
+    JSHashEntry **hep = JS_HashTableRawLookup(traceVisScriptTable, hash, script_file);
+    /* update event buffer, flag if overflowed */
+    JSHashEntry *he = *hep;
+    if (he) {
+        EthogramEventBuffer *p;
+        p = (EthogramEventBuffer *) he->value;
+
+        p->push(s, r, script_file, jstv_Lineno(cx, fp));
+    }
+}
+
+static JSBool
+ethogram_construct(JSContext *cx, JSObject *obj,
+                   uintN argc, jsval *argv, jsval *rval)
+{
+    EthogramEventBuffer *p;
+
+    p = (EthogramEventBuffer *) JS_malloc(cx, sizeof(EthogramEventBuffer));
+
+    p->mReadPos = p->mWritePos = 0;
+    p->mScripts = NULL;
+    p->mFilenames = JS_NewArrayObject(cx, 0, NULL);
+
+#if defined(XP_WIN)
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    unsigned long long raw_us = 0.1 *
+        (((unsigned long long) now.dwHighDateTime << 32ULL) |
+         (unsigned long long) now.dwLowDateTime);
+    unsigned int s = raw_us / 1000000L;
+    p->mStartSecond = s;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    p->mStartSecond = tv.tv_sec;
+#endif
+    jsval filenames = OBJECT_TO_JSVAL(p->filenames());
+    if (!JS_DefineProperty(cx, obj, "filenames", filenames,
+                           NULL, NULL, JSPROP_READONLY|JSPROP_PERMANENT))
+        return JS_FALSE;
+
+    if (!JS_IsConstructing(cx)) {
+        obj = JS_NewObject(cx, &ethogram_class, NULL, NULL);
+        if (!obj)
+            return JS_FALSE;
+        *rval = OBJECT_TO_JSVAL(obj);
+    }
+    JS_SetPrivate(cx, obj, p);
+    return JS_TRUE;
+}
+
+static void
+ethogram_finalize(JSContext *cx, JSObject *obj)
+{
+    EthogramEventBuffer *p;
+    p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, NULL);
+    if (!p)
+        return;
+
+    p->removeScripts(cx);
+
+    JS_free(cx, p);
+}
+
+static JSBool
+ethogram_addScript(JSContext *cx, JSObject *obj,
+                   uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    char *filename = NULL;
+    if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
+        str = JSVAL_TO_STRING(argv[0]);
+        filename = js_DeflateString(cx,
+                                    str->chars(),
+                                    str->length());
+    }
+
+    /* silently ignore no args */
+    if (!filename)
+        return JS_TRUE;
+
+    EthogramEventBuffer *p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
+
+    p->addScript(cx, obj, filename, str);
+    JS_CallFunctionName(cx, p->filenames(), "push", 1, argv, rval);
+    return JS_TRUE;
+}
+
+static JSBool
+ethogram_getAllEvents(JSContext *cx, JSObject *obj,
+                      uintN argc, jsval *argv, jsval *rval)
+{
+    EthogramEventBuffer *p;
+
+    p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
+    if (!p)
+        return JS_FALSE;
+
+    if (p->isEmpty()) {
+        *rval = JSVAL_NULL;
+        return JS_TRUE;
+    }
+
+    JSObject *rarray = JS_NewArrayObject(cx, 0, NULL);
+    if (rarray == NULL) {
+        *rval = JSVAL_NULL;
+        return JS_TRUE;
+    }
+
+    *rval = OBJECT_TO_JSVAL(rarray);
+
+    for (int i = 0; !p->isEmpty(); i++) {
+
+        JSObject *x = JS_NewObject(cx, NULL, NULL, NULL);
+        if (x == NULL)
+            return JS_FALSE;
+
+        EthogramEvent *e = p->pop();
+
+        jsval state = INT_TO_JSVAL(e->s);
+        jsval reason = INT_TO_JSVAL(e->r);
+        jsval ts = INT_TO_JSVAL(e->ts);
+        jsval tus = INT_TO_JSVAL(e->tus);
+
+        jsval filename = STRING_TO_JSVAL(e->filename);
+        jsval lineno = INT_TO_JSVAL(e->lineno);
+
+        if (!JS_SetProperty(cx, x, "state", &state))
+            return JS_FALSE;
+        if (!JS_SetProperty(cx, x, "reason", &reason))
+            return JS_FALSE;
+        if (!JS_SetProperty(cx, x, "ts", &ts))
+            return JS_FALSE;
+        if (!JS_SetProperty(cx, x, "tus", &tus))
+            return JS_FALSE;
+
+        if (!JS_SetProperty(cx, x, "filename", &filename))
+            return JS_FALSE;
+        if (!JS_SetProperty(cx, x, "lineno", &lineno))
+            return JS_FALSE;
+
+        jsval element = OBJECT_TO_JSVAL(x);
+        JS_SetElement(cx, rarray, i, &element);
+    }
+
+    return JS_TRUE;
+}
+
+static JSBool
+ethogram_getNextEvent(JSContext *cx, JSObject *obj,
+                      uintN argc, jsval *argv, jsval *rval)
+{
+    EthogramEventBuffer *p;
+
+    p = (EthogramEventBuffer *) JS_GetInstancePrivate(cx, obj, &ethogram_class, argv);
+    if (!p)
+        return JS_FALSE;
+
+    JSObject *x = JS_NewObject(cx, NULL, NULL, NULL);
+    if (x == NULL)
+        return JS_FALSE;
+
+    if (p->isEmpty()) {
+        *rval = JSVAL_NULL;
+        return JS_TRUE;
+    }
+
+    EthogramEvent *e = p->pop();
+    jsval state = INT_TO_JSVAL(e->s);
+    jsval reason = INT_TO_JSVAL(e->r);
+    jsval ts = INT_TO_JSVAL(e->ts);
+    jsval tus = INT_TO_JSVAL(e->tus);
+
+    jsval filename = STRING_TO_JSVAL(e->filename);
+    jsval lineno = INT_TO_JSVAL(e->lineno);
+
+    if (!JS_SetProperty(cx, x, "state", &state))
+        return JS_FALSE;
+    if (!JS_SetProperty(cx, x, "reason", &reason))
+        return JS_FALSE;
+    if (!JS_SetProperty(cx, x, "ts", &ts))
+        return JS_FALSE;
+    if (!JS_SetProperty(cx, x, "tus", &tus))
+        return JS_FALSE;
+    if (!JS_SetProperty(cx, x, "filename", &filename))
+        return JS_FALSE;
+
+    if (!JS_SetProperty(cx, x, "lineno", &lineno))
+        return JS_FALSE;
+
+    *rval = OBJECT_TO_JSVAL(x);
+
+    return JS_TRUE;
+}
+
+static JSFunctionSpec ethogram_methods[] = {
+    {"addScript",    ethogram_addScript,    1},
+    {"getAllEvents", ethogram_getAllEvents, 0},
+    {"getNextEvent", ethogram_getNextEvent, 0},
+    {0}
+};
+
+/*
+ * An |Ethogram| organizes the output of a collection of files that should be
+ * monitored together. A single object gets events for the group.
+ */
+JS_FRIEND_API(JSBool)
+js_InitEthogram(JSContext *cx, JSObject *obj,
+                uintN argc, jsval *argv, jsval *rval)
+{
+    if (!traceVisScriptTable) {
+        traceVisScriptTable = JS_NewHashTable(8, JS_HashString, compare_strings,
+                                         NULL, NULL, NULL);
+    }
+
+    JS_InitClass(cx, JS_GetGlobalObject(cx), NULL, &ethogram_class,
+                 ethogram_construct, 0, NULL, ethogram_methods,
+                 NULL, NULL);
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ShutdownEthogram(JSContext *cx, JSObject *obj,
+                    uintN argc, jsval *argv, jsval *rval)
+{
+    if (traceVisScriptTable)
+        JS_HashTableDestroy(traceVisScriptTable);
+
+    return JS_TRUE;
+}
+
+#endif /* MOZ_TRACEVIS */

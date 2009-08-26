@@ -50,6 +50,11 @@
           ID: "buttonmenu",
           actionName: "press",
           events: CLICK_EVENTS
+        },
+        {
+          ID: "labelWithPopup",
+          actionName: "click",
+          events: CLICK_EVENTS
         }/*, // XXX: bug 490288
         {
           ID: "buttonmenu_item",
@@ -73,6 +78,11 @@
          title="nsIAccessible actions testing">
         Mozilla Bug 410765
       </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=504252"
+         title="Expose STATE_HASPOPUP on XUL elements that have an @popup attribute">
+        Mozilla Bug 504252
+      </a><br/>
       <p id="display"></p>
       <div id="content" style="display: none">
       </div>
@@ -102,6 +112,10 @@
           <menuitem label="item1"/>
         </menupopup>
       </button>
+
+      <label id="labelWithPopup" value="file name"
+             popup="fileContext"
+             tabindex="0"/>
     </vbox>
   </hbox>
 </window>

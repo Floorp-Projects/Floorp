@@ -131,8 +131,9 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
 
     # These variables are necessary for correct application startup; change
     # via the commandline at your own risk.
+    # NO_EM_RESTART: will do a '-silent' run instead.
     browserEnv["NO_EM_RESTART"] = "1"
-    browserEnv["XPCOM_DEBUG_BREAK"] = "warn"
+    browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
     if automation.UNIXISH:
       browserEnv["LD_LIBRARY_PATH"] = options.xrePath
       browserEnv["MOZILLA_FIVE_HOME"] = options.xrePath
@@ -147,9 +148,9 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     automation.log.info("REFTEST INFO | runreftest.py | Performing extension manager registration: start.\n")
     # Don't care about this |status|: |runApp()| reporting it should be enough.
     status = automation.runApp(None, browserEnv, options.app, profileDir,
-                               extraArgs = ["-silent"],
-                               symbolsPath=options.symbolsPath,
-                               xrePath=options.xrePath)
+                               ["-silent"],
+                               xrePath=options.xrePath,
+                               symbolsPath=options.symbolsPath)
     # We don't care to call |automation.processLeakLog()| for this step.
     automation.log.info("\nREFTEST INFO | runreftest.py | Performing extension manager registration: end.")
 
@@ -162,9 +163,9 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
     automation.log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
     reftestlist = getFullPath(args[0])
     status = automation.runApp(None, browserEnv, options.app, profileDir,
-                               extraArgs = ["-reftest", reftestlist],
-                               symbolsPath=options.symbolsPath,
-                               xrePath=options.xrePath)
+                               ["-reftest", reftestlist],
+                               xrePath=options.xrePath,
+                               symbolsPath=options.symbolsPath)
     automation.processLeakLog(leakLogFile, options.leakThreshold)
     automation.log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
   finally:

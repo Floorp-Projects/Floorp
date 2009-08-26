@@ -81,6 +81,7 @@ public:
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap);
+  virtual nscoord GetBaseline() const;
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -670,4 +671,14 @@ nsFieldSetFrame::ReParentFrameList(const nsFrameList& aFrameList)
     frameManager->ReParentStyleContext(e.get());
   }
   mContentFrame->AddStateBits(GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
+}
+
+nscoord
+nsFieldSetFrame::GetBaseline() const
+{
+  // We know mContentFrame is a block, so calling GetBaseline() on it will do
+  // the right thing (that being to return the baseline of the last line).
+  NS_ASSERTION(nsLayoutUtils::GetAsBlock(mContentFrame),
+               "Unexpected mContentFrame");
+  return mContentFrame->GetPosition().y + mContentFrame->GetBaseline();
 }

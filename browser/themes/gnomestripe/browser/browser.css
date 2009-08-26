@@ -146,23 +146,9 @@ menuitem.bookmark-item {
   background-color: Highlight;
 }
 
+/* Bookmarks toolbar */
 .toolbar-drop-indicator {
-  width: 9px;
-  height: 18px;
-  margin-bottom: -6px;
-  position: relative;
-  background: url("chrome://browser/skin/places/toolbarDropMarker.png") 50% 50% no-repeat;
-}
-
-.toolbar-drop-indicator-bar {
-  visibility: hidden;
-  height: 18px;
-  margin-bottom: -18px;
-  position: relative;
-}
-
-.toolbar-drop-indicator-bar[dragging="true"] {
-  visibility: visible;
+  list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
 }
 
 /* Bookmark items */
@@ -627,6 +613,10 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled");
 }
 
+#fullscreen-button {
+  list-style-image: url("moz-icon://stock/gtk-fullscreen?size=toolbar");
+}
+
 /* 16px primary toolbar buttons */
 toolbar[iconsize="small"] .toolbarbutton-1 {
   -moz-box-orient: vertical;
@@ -651,7 +641,7 @@ toolbar[iconsize="small"] #back-button[disabled="true"] {
 toolbar[iconsize="small"] #back-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
 }
-menupopup:-moz-locale-dir(rtl) > .unified-nav-back[_moz-menuactive] {
+.unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu") !important;
 }
 toolbar[iconsize="small"] #back-button[disabled="true"]:-moz-locale-dir(rtl) {
@@ -671,7 +661,7 @@ toolbar[iconsize="small"] #forward-button[disabled="true"] {
 toolbar[iconsize="small"] #forward-button:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
 }
-menupopup:-moz-locale-dir(rtl) > .unified-nav-forward[_moz-menuactive] {
+.unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu") !important;
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"]:-moz-locale-dir(rtl) {
@@ -762,6 +752,10 @@ toolbar[iconsize="small"] #paste-button {
 }
 toolbar[iconsize="small"] #paste-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-paste?size=menu&state=disabled");
+}
+
+toolbar[iconsize="small"] #fullscreen-button {
+  list-style-image: url("moz-icon://stock/gtk-fullscreen?size=menu");
 }
 
 /* Fullscreen window controls */
@@ -932,13 +926,13 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #identity-popup-content-box > description,
 #identity-popup-encryption-label {
   white-space: pre-wrap;
-  padding-left: 15px;
+  -moz-padding-start: 15px;
   margin: 2px 0 4px;
 }
 
 #identity-popup-content-box > label {
   white-space: pre-wrap;
-  padding-left: 15px;
+  -moz-padding-start: 15px;
   margin: 0;
 }
 
@@ -964,7 +958,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption ,
 #identity-popup-content-box.verifiedDomain > #identity-popup-encryption {
   margin-top: 10px;
-  margin-left: -18px;
+  -moz-margin-start: -18px;
 }
 
 #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
@@ -1338,8 +1332,8 @@ toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
 }
 
-toolbarbutton.chevron:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/toolbar/chevron-rtl.gif") !important;
+toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  -moz-transform: scaleX(-1);
 }
 
 toolbarbutton.chevron > .toolbarbutton-text,

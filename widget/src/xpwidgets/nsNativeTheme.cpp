@@ -161,6 +161,17 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
 }
 
 PRBool
+nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  nsIContent* content = aFrame->GetContent();
+  return content->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::type,
+                              NS_LITERAL_STRING("menu"), eCaseMatters);
+}
+
+PRBool
 nsNativeTheme::GetIndeterminate(nsIFrame* aFrame)
 {
   if (!aFrame)

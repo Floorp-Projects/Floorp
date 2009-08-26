@@ -188,8 +188,10 @@ PRBool nsHashtable::Exists(nsHashKey *aKey)
 {
     if (mLock) PR_Lock(mLock);
 
-    if (!mHashtable.ops)
+    if (!mHashtable.ops) {
+        if (mLock) PR_Unlock(mLock);
         return PR_FALSE;
+    }
     
     PLDHashEntryHdr *entry =
         PL_DHashTableOperate(&mHashtable, aKey, PL_DHASH_LOOKUP);

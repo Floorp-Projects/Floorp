@@ -218,7 +218,7 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
  */
 #define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
     (JS_ASSERT(HAS_FUNCTION_CLASS(funobj)),                                   \
-     (JSFunction *) OBJ_GET_PRIVATE(cx, funobj))
+     (JSFunction *) (funobj)->getAssignedPrivate())
 
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
@@ -273,7 +273,7 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags);
 extern JSObject *
 js_GetCallObject(JSContext *cx, JSStackFrame *fp);
 
-extern JS_FRIEND_API(JSBool)
+extern void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
@@ -316,7 +316,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp);
 extern JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
 
-extern JS_FRIEND_API(JSBool)
+extern void
 js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool

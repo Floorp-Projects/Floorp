@@ -53,9 +53,6 @@ LIBXUL_LIBRARY = 1
 
 DIRS            = component
 
-REQUIRES	= xpcom \
-		  string \
-		  $(NULL)
 
 CPPSRCS         = \
 		nsFileSpec.cpp \

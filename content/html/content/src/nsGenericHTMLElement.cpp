@@ -652,7 +652,7 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
         nsDependentCString(NS_DOC_ENCODER_CONTRACTID_BASE) +
         NS_ConvertUTF16toUTF8(contentType)
       ).get());
-  if (!docEncoder && doc->IsCaseSensitive()) {
+  if (!(docEncoder || doc->IsHTML())) {
     // This could be some type for which we create a synthetic document.  Try
     // again as XML
     contentType.AssignLiteral("application/xml");
@@ -2793,10 +2793,7 @@ nsGenericHTMLFrameElement::EnsureFrameLoader()
     return NS_OK;
   }
 
-  mFrameLoader = new nsFrameLoader(this);
-  if (!mFrameLoader)
-    return NS_ERROR_OUT_OF_MEMORY;
-
+  mFrameLoader = nsFrameLoader::Create(this);
   return NS_OK;
 }
 

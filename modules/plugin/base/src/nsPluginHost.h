@@ -341,9 +341,6 @@ private:
 
   // calls PostPluginUnloadEvent for each library in mUnusedLibraries
   void UnloadUnusedLibraries();
-
-  // Add our pref observer
-  nsresult AddPrefObserver();
   
   char *mPluginPath;
   nsRefPtr<nsPluginTag> mPlugins;

@@ -269,12 +269,13 @@ void nsMediaDecoder::Paint(gfxContext* aContext,
   // outside the bounds of the video image.
   gfxPattern::GraphicsExtend extend = gfxPattern::EXTEND_PAD;
 
-  // PAD is too slow with X11 surfaces, so prefer speed over correctness and
-  // use NONE.
+  // PAD is slow with X11 and Quartz surfaces, so prefer speed over correctness
+  // and use NONE.
   nsRefPtr<gfxASurface> target = aContext->CurrentSurface();
   gfxASurface::gfxSurfaceType type = target->GetType();
   if (type == gfxASurface::SurfaceTypeXlib ||
-      type == gfxASurface::SurfaceTypeXcb) {
+      type == gfxASurface::SurfaceTypeXcb ||
+      type == gfxASurface::SurfaceTypeQuartz) {
     extend = gfxPattern::EXTEND_NONE;
   }
 

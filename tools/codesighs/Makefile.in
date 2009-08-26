@@ -43,7 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES = $(NULL)
 
 CSRCS += \
 		codesighs.c \

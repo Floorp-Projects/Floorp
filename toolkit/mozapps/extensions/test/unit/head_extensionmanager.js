@@ -45,10 +45,6 @@ const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 const PREFIX_NS_CHROME                = "http://www.mozilla.org/rdf/chrome#";
 const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
 
-const NS_APP_USER_PROFILE_50_DIR      = "ProfD";
-const NS_APP_PROFILE_DIR_STARTUP      = "ProfDS";
-const NS_OS_TEMP_DIR                  = "TmpD";
-
 const NS_INSTALL_LOCATION_APPPROFILE = "app-profile";
 
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
@@ -115,9 +111,9 @@ function intData(literal) {
 /**
  * Gets a RDF Resource for item with the given ID
  * @param   id
- *          The GUID of the item to construct a RDF resource to the 
+ *          The GUID of the item to construct a RDF resource to the
  *          active item for
- * @returns The RDF Resource to the Active item. 
+ * @returns The RDF Resource to the Active item.
  */
 function getResourceForID(id) {
   return gRDF.GetResource(PREFIX_ITEM_URI + id);
@@ -172,17 +168,17 @@ function createAppInfo(id, name, version, platformVersion)
     logConsoleErrors: true,
     OS: "XPCShell",
     XPCOMABI: "noarch-spidermonkey",
-    
+
     QueryInterface: function QueryInterface(iid) {
       if (iid.equals(Components.interfaces.nsIXULAppInfo)
        || iid.equals(Components.interfaces.nsIXULRuntime)
        || iid.equals(Components.interfaces.nsISupports))
         return this;
-    
+
       throw Components.results.NS_ERROR_NO_INTERFACE;
     }
   };
-  
+
   var XULAppInfoFactory = {
     createInstance: function (outer, iid) {
       if (outer != null)
@@ -204,10 +200,10 @@ function startupEM()
   // Make sure the update service is initialised.
   var updateSvc = Components.classes["@mozilla.org/updates/update-service;1"]
                             .getService(Components.interfaces.nsISupports);
-  
+
   gEM = Components.classes["@mozilla.org/extensions/manager;1"]
                   .getService(Components.interfaces.nsIExtensionManager);
-  
+
   gEM.QueryInterface(Components.interfaces.nsIObserver);
   gEM.observe(null, "profile-after-change", "startup");
 
@@ -235,7 +231,6 @@ function startupEM()
 function shutdownEM()
 {
   // xpcshell calls xpcom-shutdown so we don't actually do anything here.
-  gDirSvc.unregisterProvider(dirProvider);
   gEM = null;
 }
 
@@ -254,30 +249,7 @@ var gDirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                         .getService(Components.interfaces.nsIProperties);
 
 // Need to create and register a profile folder.
-var gProfD = do_get_cwd();
-gProfD.append("profile");
-if (gProfD.exists())
-  gProfD.remove(true);
-gProfD.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
-
-var dirProvider = {
-  getFile: function(prop, persistent) {
-    persistent.value = true;
-    if (prop == NS_APP_USER_PROFILE_50_DIR ||
-        prop == NS_APP_PROFILE_DIR_STARTUP)
-      return gProfD.clone();
-    return null;
-  },
-  QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIDirectoryServiceProvider) ||
-        iid.equals(Components.interfaces.nsISupports)) {
-      return this;
-    }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
-};
-gDirSvc.QueryInterface(Components.interfaces.nsIDirectoryService)
-       .registerProvider(dirProvider);
+var gProfD = do_get_profile();
 
 var gPrefs = Components.classes["@mozilla.org/preferences;1"]
                    .getService(Components.interfaces.nsIPrefBranch);

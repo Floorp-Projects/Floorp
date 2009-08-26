@@ -108,7 +108,7 @@ function test_removeItem()
 function test_removeFolder()
 {
   // First we add the item we are going to remove.
-  let id = bs.createFolder(bs.unfiledBookmarsFolder, "t", bs.DEFAULT_INDEX);
+  let id = bs.createFolder(bs.unfiledBookmarksFolder, "t", bs.DEFAULT_INDEX);
 
   // Add our observer, and remove it.
   let observer = new Observer(id);
@@ -123,7 +123,7 @@ function test_removeFolder()
 function test_removeFolderChildren()
 {
   // First we add the item we are going to remove.
-  let fid = bs.createFolder(bs.unfiledBookmarsFolder, "tf", bs.DEFAULT_INDEX);
+  let fid = bs.createFolder(bs.unfiledBookmarksFolder, "tf", bs.DEFAULT_INDEX);
   let id = bs.insertBookmark(fid, uri("http://mozilla.org"), bs.DEFAULT_INDEX,
                              "t");
 

@@ -112,7 +112,17 @@ public:
   NS_HIDDEN_(already_AddRefed<nsStyleContext>)
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules);
 
-  PRBool    HasTextDecorations() { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATIONS); }
+  // Does this style context or any of its ancestors have text
+  // decorations?
+  PRBool HasTextDecorations() const
+    { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATIONS); }
+
+  // Does this style context represent the style for a pseudo-element or
+  // inherit data from such a style context?  Whether this returns true
+  // is equivalent to whether it or any of its ancestors returns
+  // non-null for GetPseudoType.
+  PRBool HasPseudoElementData() const
+    { return !!(mBits & NS_STYLE_HAS_PSEUDO_ELEMENT_DATA); }
 
   NS_HIDDEN_(void) SetStyle(nsStyleStructID aSID, void* aStruct);
 

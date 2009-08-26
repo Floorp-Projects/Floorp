@@ -125,6 +125,43 @@ is(e.style.background, "", "should not have background shorthand (origin:content
 e.setAttribute("style", "background: red; -moz-background-inline-policy: each-box");
 isnot(e.style.background, "", "should have background shorthand (-moz-background-inline-policy not relevant)");
 
+// Check that we only serialize background when the lists (of layers) for
+// the subproperties are the same length.
+// XXX Should change background-clip to border,padding,border and
+// background-origin to border,padding,padding once serialization does
+// clip/origin.
+e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+isnot(e.style.background, "", "should have background shorthand (all lists length 3)");
+e.setAttribute("style", "-moz-background-clip: border, border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-clip too long)");
+e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: border, padding; -moz-background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-origin too short)");
+e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png), none; background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-image too long)");
+e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-attachment too short)");
+e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px, bottom; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (background-position too long)");
+e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: cover, auto, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat");
+is(e.style.background, "", "should not have background shorthand (background-repeat too short)");
+e.setAttribute("style", "-moz-background-clip: border, border, border; -moz-background-origin: padding, padding, padding; -moz-background-size: cover, auto, contain, cover; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
+is(e.style.background, "", "should not have background shorthand (-moz-background-size too long)");
+
+// Check that we only serialize transition when the lists are the same length.
+e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s");
+isnot(e.style.MozTransition, "", "should have -moz-transition shorthand (lists same length)");
+e.setAttribute("style", "-moz-transition-property: color, width, left; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s");
+is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
+e.setAttribute("style", "-moz-transition-property: all; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s");
+is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
+e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms, 300ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s");
+is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
+e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear, ease-out; -moz-transition-delay: 0, 1s");
+is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
+e.setAttribute("style", "-moz-transition-property: color, width; -moz-transition-duration: 1s, 200ms; -moz-transition-timing-function: ease-in, linear; -moz-transition-delay: 0, 1s, 0");
+is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists different lengths)");
+
+
 </script>
 </pre>
 </body>

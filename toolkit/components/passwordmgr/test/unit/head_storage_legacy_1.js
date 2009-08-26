@@ -5,39 +5,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
-
-
 // Various functions common to the tests.
 const LoginTest = {
-
-  /*
-   * makeDirectoryService
-   *
-   */
-  makeDirectoryService : function () {
-    // Register our own provider for the profile directory.
-    // It will simply return the current directory.
-    const provider = {
-        getFile : function(prop, persistent) {
-            persistent.value = true;
-            if (prop == NS_APP_USER_PROFILE_50_DIR) {
-                return dirSvc.get("CurProcD", Ci.nsIFile);
-            }
-            throw Cr.NS_ERROR_FAILURE;
-        },
-
-        QueryInterface : function(iid) {
-            if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-                iid.equals(Ci.nsISupports)) {
-                return this;
-            }
-            throw Cr.NS_ERROR_NO_INTERFACE;
-        }
-    };
-
-    dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-  },
-
 
   /*
    * initStorage
@@ -207,7 +176,7 @@ const LoginTest = {
 
     var line = { value : null };
     var lineCount = 1; // Empty files were dealt with above.
-    while (lineStream.readLine(line)) 
+    while (lineStream.readLine(line))
         lineCount++;
 
     return lineCount;
@@ -217,9 +186,9 @@ const LoginTest = {
     var ID;
 
     if (STORAGE_TYPE == "legacy")
-        ID = "@mozilla.org/login-manager/storage/legacy;1"; 
+        ID = "@mozilla.org/login-manager/storage/legacy;1";
     else if (STORAGE_TYPE == "mozStorage")
-        ID = "@mozilla.org/login-manager/storage/mozStorage;1"; 
+        ID = "@mozilla.org/login-manager/storage/mozStorage;1";
     else
         throw "Unknown STORAGE_TYPE";
 
@@ -271,22 +240,8 @@ const LoginTest = {
   }
 };
 
-
-// If there's no location registered for the profile direcotry, register one
-var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
-try {
-    var profileDir = dirSvc.get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile);
-} catch (e) { }
-
-if (!profileDir) {
-    LoginTest.makeDirectoryService();
-    profileDir = dirSvc.get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile);
-}
-
-
 // nsIFiles...
-var PROFDIR = profileDir;
+var PROFDIR = do_get_profile();
 var DATADIR = do_get_file("data/");
 // string versions...
 var OUTDIR = PROFDIR.path;

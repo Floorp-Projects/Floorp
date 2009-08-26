@@ -56,19 +56,24 @@ let haveIDs = {};
 // We match up needIDs with haveIDs at the end because static variables are
 // not present in the .members array of a type
 
-function process_decl(d)
+function process_tree_decl(d)
 {
-  if (d.name) {
-    if (frameIIDRE(d.name)) {
-      haveIDs[d.memberOf.name] = 1;
-    }
-    else if (queryFrameRE(d.name) && d.template === undefined) {
-      let templtype = d.type.type.type;
-      while (templtype.typedef !== undefined)
-        templtype = templtype.typedef;
+  d = dehydra_convert(d);
+  
+  if (d.name && frameIIDRE(d.name)) {
+    haveIDs[d.memberOf.name] = 1;
+  }
+}
+
+function process_cp_pre_genericize(d)
+{
+  d = dehydra_convert(d);
+  if (queryFrameRE(d.name) && d.template === undefined) {
+    let templtype = d.type.type.type;
+    while (templtype.typedef !== undefined)
+      templtype = templtype.typedef;
       
-      needIDs.push([templtype.name, d.loc]);
-    }
+    needIDs.push([templtype.name, d.loc]);
   }
 }
 

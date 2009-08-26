@@ -46,29 +46,6 @@ MODULE		= content
 LIBRARY_NAME	= gkconxmldoc_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  js \
-		  dom \
-		  gfx \
-		  thebes \
-		  layout \
-		  widget \
-		  caps \
-		  htmlparser \
-		  necko \
-		  imglib2 \
-		  docshell \
-		  webshell \
-		  pref \
-		  xpconnect \
-		  uconv \
-		  exthandler \
-		  mimetype \
-		  unicharutil \
-		  locale \
-		  util \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsXMLContentSink.cpp \

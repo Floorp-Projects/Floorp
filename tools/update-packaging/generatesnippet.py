@@ -85,7 +85,7 @@ def main():
             parser.error('You must specify %s' % msg)
 
     if not options.downloadBaseURL or options.downloadBaseURL == '':
-        options.downloadBaseURL = 'http://ftp.mozilla.org/pub/mozilla.org/nightly'
+        options.downloadBaseURL = 'http://ftp.mozilla.org/pub/mozilla.org/%s/nightly' % options.product
 
     snippet = generateSnippet(options.marPath,
                               options.applicationIniFile,

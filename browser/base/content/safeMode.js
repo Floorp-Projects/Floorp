@@ -111,7 +111,7 @@ function onOK() {
   try {
     if (document.getElementById("resetUserPrefs").checked)
       clearAllPrefs();
-    if (document.getElementById("resetBookmarks").checked)
+    if (document.getElementById("deleteBookmarks").checked)
       restoreDefaultBookmarks();
     if (document.getElementById("resetToolbars").checked)
       deleteLocalstore();
@@ -139,7 +139,7 @@ function onLoad() {
 function UpdateOKButtonState() {
   document.documentElement.getButton("accept").disabled = 
     !document.getElementById("resetUserPrefs").checked &&
-    !document.getElementById("resetBookmarks").checked &&
+    !document.getElementById("deleteBookmarks").checked &&
     !document.getElementById("resetToolbars").checked &&
     !document.getElementById("disableAddons").checked &&
     !document.getElementById("restoreSearch").checked;

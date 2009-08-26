@@ -213,9 +213,9 @@
               <label class="previewText">&previewNoPreviewImage.label;</label>
             </vbox>
             <vbox id="previewImageContainer" align="center" pack="center">
-              <description>
+              <hbox>
                 <image id="previewImage"/>
-              </description>
+              </hbox>
             </vbox>
             <vbox id="infoNoAddonSelected" align="center" pack="center">
               <label class="previewText">&infoNoAddonSelected.label;</label>

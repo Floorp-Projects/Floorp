@@ -58,6 +58,8 @@
 
 class nsIURI;
 class nsCSSFontFaceRule;
+class nsRuleWalker;
+struct RuleProcessorData;
 
 class nsEmptyStyleRule : public nsIStyleRule
 {
@@ -95,9 +97,16 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(nsIContent* aContent, nsStyleContext* aParentContext);
 
-  // get a style context from some rules
+  // Get a style context (with the given parent and pseudo-tag) for a
+  // sequence of style rules consisting of the concatenation of:
+  //  (1) the rule sequence represented by aRuleNode (which is the empty
+  //      sequence if aRuleNode is null or the root of the rule tree), and
+  //  (2) the rules in the |aRules| array.
   already_AddRefed<nsStyleContext>
-  ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArray<nsIStyleRule> &rules);
+  ResolveStyleForRules(nsStyleContext* aParentContext,
+                       nsIAtom* aPseudoTag,
+                       nsRuleNode *aRuleNode,
+                       const nsCOMArray<nsIStyleRule> &aRules);
 
   // Get a style context for a non-element (which no rules will match),
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame

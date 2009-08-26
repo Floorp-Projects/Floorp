@@ -50,7 +50,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=8
-MOD_PATCH_VERSION=0
+MOD_PATCH_VERSION=1
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -1684,6 +1684,7 @@ tools are selected during the Xcode/Developer Tools installation.])
         DSO_LDOPTS=-DEBUG -DEBUGTYPE:CV
     fi
     _DEBUG_FLAGS=-Zi
+    _OPTIMIZE_FLAGS=-O2
     ;;
 
 *-ncr-sysv*)

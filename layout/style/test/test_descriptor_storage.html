@@ -40,9 +40,6 @@ function fake_set_property(descriptor, value) {
 
 function xfail_parse(descriptor, value) {
   switch (descriptor) {
-    case "unicode-range":
-      // not yet implemented
-      return true;
     case "src":
       // not clear whether this is an error or not, so mark todo for now
       return value == "local(serif)";

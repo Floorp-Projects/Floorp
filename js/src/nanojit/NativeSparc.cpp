@@ -151,7 +151,7 @@ namespace nanojit
         underrunProtect(8);
         NOP();
 
-        ArgSize sizes[10];
+        ArgSize sizes[MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
 
         NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));
@@ -585,8 +585,6 @@ namespace nanojit
     {
         (void)ins;
         JMP_long_placeholder(); // jump to SOT
-        verbose_only( if ((_logc->lcbits & LC_Assembly) && _outputCache) {
-                          _outputCache->removeLast(); outputf("         jmp   SOT"); } );
 
         loopJumps.add(_nIns);
 
@@ -1060,20 +1058,6 @@ namespace nanojit
     {
         if (!_nIns)         _nIns       = pageAlloc();
         if (!_nExitIns)  _nExitIns = pageAlloc(true);
-    }
-
-    // Reset the _nIns pointer to the starting value. This can be used to roll
-    // back the instruction pointer in case an error occurred during the code
-    // generation.
-    void Assembler::resetInstructionPointer()
-    {
-        _nIns = _startingIns;
-    }
-
-    // Store the starting _nIns value so that it can be reset later.
-    void Assembler::recordStartingInstructionPointer()
-    {
-        _startingIns = _nIns;
     }
 
     void

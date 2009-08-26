@@ -123,7 +123,7 @@ protected:
                   PRBool inDisabled, ThemeButtonValue inValue,
                   ThemeButtonAdornment inAdornment, PRInt32 inState, nsIFrame* aFrame);
   void DrawDropdown(CGContextRef context, const HIRect& inBoxRect, PRInt32 inState,
-                    PRBool aIsEditable, nsIFrame* aFrame);
+                    PRUint8 aWidgetType, nsIFrame* aFrame);
   void DrawSpinButtons(CGContextRef context, ThemeButtonKind inKind,
                        const HIRect& inBoxRect,
                        PRBool inDisabled, ThemeDrawState inDrawState,

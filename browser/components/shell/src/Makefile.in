@@ -49,21 +49,6 @@ ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
 endif
 
-REQUIRES	= \
-		  xpcom \
-		  string \
-		  uriloader \
-		  webbrowserpersist \
-		  dom \
-		  intl \
-		  necko \
-		  content \
-		  imglib2 \
-		  gfx \
-		  widget \
-		  pref \
-		  layout \
-		  $(NULL)
 
 ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
 CPPSRCS = nsWindowsShellService.cpp

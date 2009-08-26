@@ -44,7 +44,6 @@
 #include "nsWidgetsCID.h"
 #include "nsGUIEvent.h"
 #include "nsIRollupListener.h"
-#include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsWindowMap.h"
 #include "nsAppShell.h"
@@ -382,7 +381,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     contentRect.origin.y -= (newWindowFrame.size.height - aRect.size.height);
 
     if (mWindowType != eWindowType_popup)
-      contentRect.origin.y -= ::GetMBarHeight();
+      contentRect.origin.y -= [[NSApp mainMenu] menuBarHeight];
   }
 
   // NSLog(@"Top-level window being created at Cocoa rect: %f, %f, %f, %f\n",
@@ -393,7 +392,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   // titlebar color (for unified windows), so use the special ToolbarWindow class. 
   // Note that we need to check the window type because we mark sheets as 
   // having titlebars.
-  if (mWindowType == eWindowType_toplevel &&
+  if ((mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) &&
       (features & NSTitledWindowMask))
     windowClass = [ToolbarWindow class];
   // If we're a popup window we need to use the PopupWindow class.
@@ -532,7 +531,7 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_GRAPHIC:
       // There isn't anything that makes sense to return here,
       // and it doesn't matter so just return nsnull.
-      NS_ASSERTION(0, "Requesting NS_NATIVE_GRAPHIC on a top-level window!");
+      NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a top-level window!");
       break;
   }
 
@@ -732,7 +731,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   }
   else {
     // roll up any popups if a top-level window is going away
-    if (mWindowType == eWindowType_toplevel)
+    if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)
       RollUpPopups();
 
     // now get rid of the window/sheet
@@ -852,11 +851,12 @@ nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 }
 
 void
-nsCocoaWindow::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+nsCocoaWindow::Scroll(const nsIntPoint& aDelta,
+                      const nsTArray<nsIntRect>& aDestRects,
                       const nsTArray<Configuration>& aConfigurations)
 {
   if (mPopupContentView) {
-    mPopupContentView->Scroll(aDelta, aSource, aConfigurations);
+    mPopupContentView->Scroll(aDelta, aDestRects, aConfigurations);
   }
 }
 
@@ -1271,11 +1271,20 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   return NS_OK;
 }
 
+static nsSizeMode
+GetWindowSizeMode(NSWindow* aWindow) {
+  if ([aWindow isMiniaturized])
+    return nsSizeMode_Minimized;
+  if (([aWindow styleMask] & NSResizableWindowMask) && [aWindow isZoomed])
+    return nsSizeMode_Maximized;
+  return nsSizeMode_Normal;
+}
+
 void
-nsCocoaWindow::DispatchSizeModeEvent(nsSizeMode aSizeMode)
+nsCocoaWindow::DispatchSizeModeEvent()
 {
   nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
-  event.mSizeMode = aSizeMode;
+  event.mSizeMode = GetWindowSizeMode(mWindow);
   event.time = PR_IntervalNow();
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -1424,6 +1433,15 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+void nsCocoaWindow::SetShowsToolbarButton(PRBool aShow)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mWindow setShowsToolbarButton:aShow];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -1501,7 +1519,7 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 // Callback used by the default titlebar and toolbar shading.
 // *aIn == 0 at the top of the titlebar/toolbar, *aIn == 1 at the bottom
 /* static */ void
-nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
+nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 {
   UnifiedGradientInfo* info = (UnifiedGradientInfo*)aInfo;
   // The gradient percentage at the bottom of the titlebar / top of the toolbar
@@ -1574,6 +1592,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   [super init];
   mGeckoWindow = geckoWind;
   mToplevelActiveState = PR_FALSE;
+  mHasEverBeenZoomed = PR_FALSE;
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -1591,6 +1610,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   if (!mGeckoWindow || mGeckoWindow->IsResizing())
     return;
 
+  // Resizing might have changed our zoom state.
+  mGeckoWindow->DispatchSizeModeEvent();
   mGeckoWindow->ReportSizeEvent();
 }
 
@@ -1691,13 +1712,22 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 - (void)windowDidMiniaturize:(NSNotification *)aNotification
 {
   if (mGeckoWindow)
-    mGeckoWindow->DispatchSizeModeEvent(nsSizeMode_Minimized);
+    mGeckoWindow->DispatchSizeModeEvent();
 }
 
 - (void)windowDidDeminiaturize:(NSNotification *)aNotification
 {
   if (mGeckoWindow)
-    mGeckoWindow->DispatchSizeModeEvent(nsSizeMode_Normal);
+    mGeckoWindow->DispatchSizeModeEvent();
+}
+
+- (BOOL)windowShouldZoom:(NSWindow *)window toFrame:(NSRect)proposedFrame
+{
+  if (!mHasEverBeenZoomed && [window isZoomed])
+    return NO; // See bug 429954.
+
+  mHasEverBeenZoomed = YES;
+  return YES;
 }
 
 - (void)sendFocusEvent:(PRUint32)eventType
@@ -1813,7 +1843,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 // query the window for its titlebar height when drawing the toolbar.
 @implementation ToolbarWindow
 
-- (id)initWithContentRect:(NSRect)aContentRect styleMask:(unsigned int)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
+- (id)initWithContentRect:(NSRect)aContentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -1827,7 +1857,6 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
     [super setBackgroundColor:mColor];
 
     mUnifiedToolbarHeight = 0.0f;
-    mSuppressPainting = NO;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -1905,12 +1934,8 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
 }
 
-- (BOOL)isPaintingSuppressed
-{
-  return mSuppressPainting;
-}
-
-// Always show the toolbar pill button.
+// Returning YES here makes the setShowsToolbarButton method work even though
+// the window doesn't contain an NSToolbar.
 - (BOOL)_hasToolbar
 {
   return YES;
@@ -1991,14 +2016,16 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
 
 @implementation ToolbarWindow(Private)
 
-// [self display] seems to be the only way to repaint a window's titlebar.
-// The bad thing about it is that it repaints all the window's subviews as well.
-// So we use a guard to prevent unnecessary redrawing.
 - (void)redrawTitlebar
 {
-  mSuppressPainting = YES;
-  [self display];
-  mSuppressPainting = NO;
+  NSView* borderView = [[self contentView] superview];
+  if (!borderView)
+    return;
+
+  NSRect rect = NSMakeRect(0, [[self contentView] bounds].size.height,
+                           [borderView bounds].size.width, [self titlebarHeight]);
+  // setNeedsDisplayInRect doesn't have any effect here, but displayRect does.
+  [borderView displayRect:rect];
 }
 
 @end
@@ -2077,8 +2104,8 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
     // Draw the one pixel border at the bottom of the titlebar.
     if ([window unifiedToolbarHeight] == 0) {
-      [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
-      NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
+      CGRect borderRect = CGRectMake(0.0f, titlebarOrigin, sPatternWidth, 1.0f);
+      DrawNativeGreyColorInRect(aContext, headerBorderGrey, borderRect, isMain);
     }
   } else {
     // if the titlebar color is not nil, just set and draw it normally.
@@ -2113,7 +2140,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
   CGContextSetFillColorSpace(context, patternSpace);
   CGColorSpaceRelease(patternSpace);
-  float component = 1.0f;
+  CGFloat component = 1.0f;
   CGContextSetFillPattern(context, pattern, &component);
   CGPatternRelease(pattern);
 
@@ -2312,7 +2339,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;

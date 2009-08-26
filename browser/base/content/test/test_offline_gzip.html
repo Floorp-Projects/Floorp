@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=501422
+
+When content which was transported over the network with
+Content-Type: gzip is added to the offline 
+cache, it can be fetched from the cache successfully.
+-->
+<head>
+  <title>Test gzipped offline resources</title>
+  <script type="text/javascript" 
+          src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="loaded()">
+<p id="display">
+<iframe name="testFrame" src="gZipOfflineChild.html"></iframe>
+
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var cacheCount = 0;
+var intervalID = 0;
+
+window.addEventListener("message", handleMessageEvents, false);
+SimpleTest.waitForExplicitFinish();
+
+function finishTest() {
+  // Clean up after ourselves.
+  netscape.security.PrivilegeManager
+          .enablePrivilege("UniversalXPConnect");
+  var pm = Components.classes["@mozilla.org/permissionmanager;1"].
+           getService(Components.interfaces.nsIPermissionManager);
+
+  pm.remove("localhost", "offline-app");
+  
+  window.removeEventListener("message", handleMessageEvents, false);
+
+  SimpleTest.finish();  
+}
+
+////
+// Handle "message" events which are posted from the iframe upon
+// offline cache events.
+//
+function handleMessageEvents(event) {
+  cacheCount++;
+  switch (cacheCount) {
+    case 1:
+      // This is the initial caching off offline data.  
+      is(event.data, "oncache", "Child was successfully cached.");
+      // Reload the frame; this will generate an error message
+      // in the case of bug 501422.
+      frames.testFrame.window.location.reload();
+      // Use setInterval to repeatedly call a function which
+      // checks that one of two things has occurred:  either
+      // the offline cache is udpated (which means our iframe
+      // successfully reloaded), or the string "error" appears
+      // in the iframe, as in the case of bug 501422.
+      intervalID = setInterval(function() {
+        netscape.security.PrivilegeManager
+                .enablePrivilege("UniversalXPConnect");
+        // Sometimes document.body may not exist, and trying to access
+        // it will throw an exception, so handle this case.
+        try {
+          var bodyInnerHTML = frames.testFrame.document.body.innerHTML;
+        }
+        catch (e) {
+          var bodyInnerHTML = "";
+        }
+        if (cacheCount == 2 || (bodyInnerHTML.indexOf("error") != -1)) {
+          clearInterval(intervalID);
+          is(cacheCount, 2, "frame not reloaded successfully");
+          if (cacheCount != 2) {
+            finishTest();
+          }
+        }
+      }, 100);
+      break;
+    case 2:    
+      is(event.data, "onupdate", "Child was successfully updated.");
+      finishTest();
+      break;
+    default:
+      // how'd we get here?
+      ok(false, "cacheCount not 1 or 2");
+  }
+}
+
+function loaded() {
+  // Click the notification bar's "Allow" button.  This should kick
+  // off updates, which will eventually lead to getting messages from
+  // the iframe.
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+           getService(Components.interfaces.nsIWindowMediator);
+  var win = wm.getMostRecentWindow("navigator:browser");
+  var notificationBox = win.gBrowser.getNotificationBox();
+
+  var notification = notificationBox
+    .getNotificationWithValue("offline-app-requested-localhost");
+  notification.childNodes[0].click();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

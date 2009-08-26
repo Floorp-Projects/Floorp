@@ -71,7 +71,7 @@ function test()
   compareSource(expect, actual, summary);
 
   f = function() { delete(p(3)) } 
-  expect = 'function() { delete p(3); }';
+  expect = 'function() { p(3), true; }';
   actual = f + '';
   compareSource(expect, actual, summary);
 

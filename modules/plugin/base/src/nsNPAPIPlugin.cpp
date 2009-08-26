@@ -568,19 +568,25 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 #endif
 
 #if defined(XP_MACOSX)
+#ifndef __LP64__
   short appRefNum = ::CurResFile();
   short pluginRefNum;
+#endif
 
   nsCOMPtr<nsILocalFile> pluginPath;
   NS_NewNativeLocalFile(nsDependentCString(aFilePath), PR_TRUE,
                         getter_AddRefs(pluginPath));
-
   nsPluginFile pluginFile(pluginPath);
+
+#ifndef __LP64__
   pluginRefNum = pluginFile.OpenPluginResource();
+#endif
 
   SharedLibrary* pluginLib = GetNewSharedLibrary(aFilePath, aLibrary);
   nsNPAPIPlugin* plugin = new nsNPAPIPlugin(nsnull, pluginLib, aLibrary, nsnull);
+#ifndef __LP64__
   ::UseResFile(appRefNum);
+#endif
   if (!plugin)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -592,7 +598,9 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
     return NS_ERROR_FAILURE;
   }
 
+#ifndef __LP64__
   plugin->SetPluginRefNum(pluginRefNum);
+#endif
 #endif
 
 #ifdef XP_BEOS
@@ -759,7 +767,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
       break;
     }
   default:
-    NS_ASSERTION(0, "how'd I get here");
+    NS_ERROR("how'd I get here");
   }
 
   return NPERR_NO_ERROR;
@@ -2170,8 +2178,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 #ifdef XP_MACOSX
     case NPPVpluginDrawingModel: {
       if (inst) {
-        int dModelValue = (int)result;
-        inst->SetDrawingModel((NPDrawingModel)dModelValue);
+        inst->SetDrawingModel((NPDrawingModel)NS_PTR_TO_INT32(result));
         return NPERR_NO_ERROR;
       }
       else {

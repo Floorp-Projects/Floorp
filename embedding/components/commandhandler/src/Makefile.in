@@ -43,16 +43,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= commandhandler
-REQUIRES	= string \
-		  xpcom \
-		  dom \
-		  content \
-		  widget \
-		  xuldoc \
-		  caps \
-		  xpconnect \
-		  js \
-		  $(NULL)
 
 LIBRARY_NAME	= commandhandler_s
 LIBXUL_LIBRARY	= 1

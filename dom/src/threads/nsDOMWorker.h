@@ -266,9 +266,7 @@ private:
     return mURI;
   }
 
-  void SetURI(nsIURI* aURI) {
-    mURI = aURI;
-  }
+  nsresult SetURI(nsIURI* aURI);
 
   nsresult FireCloseRunnable(PRIntervalTime aTimeoutInterval,
                              PRBool aClearQueue,
@@ -276,6 +274,10 @@ private:
   nsresult Close();
 
   nsresult TerminateInternal(PRBool aFromFinalize);
+
+  nsIWorkerLocation* GetLocation() {
+    return mLocation;
+  }
 
 private:
 
@@ -313,6 +315,8 @@ private:
   PRIntervalTime mExpirationTime;
 
   nsCOMPtr<nsITimer> mKillTimer;
+
+  nsCOMPtr<nsIWorkerLocation> mLocation;
 
   PRPackedBool mSuspended;
   PRPackedBool mCompileAttempted;

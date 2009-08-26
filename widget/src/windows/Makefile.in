@@ -46,33 +46,6 @@ MODULE		= widget
 LIBRARY_NAME	= widget_windows
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-			string \
-			dom \
-			accessibility \
-			content \
-			content_xul \
-			gfx \
-			necko \
-			pref \
-			plugin \
-			timer \
-			uconv \
-			intl \
-			locale \
-			webshell \
-			docshell \
-			layout \
-			xuldoc \
-			view \
-			imglib2 \
-			uriloader \
-			webbrowserpersist \
-			unicharutil \
-			thebes \
-			cairo \
-			qcms \
-			$(NULL)
 
 CPPSRCS		= \
 	nsWindow.cpp \
@@ -90,6 +63,7 @@ CPPSRCS		= \
 	nsIdleServiceWin.cpp \
 	nsSound.cpp \
 	nsIMM32Handler.cpp \
+	WindowHook.cpp \
 	$(NULL)
 
 ifdef NS_PRINTING
@@ -117,8 +91,10 @@ CPPSRCS += \
 	nsClipboard.cpp      \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
-	nsTextStore.cpp \
 	$(NULL)
+ifdef NS_ENABLE_TSF
+CPPSRCS		+= nsTextStore.cpp
+endif
 endif
 
 
@@ -129,7 +105,7 @@ DEFINES		+= -DMOZ_STATIC_COMPONENT_LIBS
 endif # BUILD_STATIC_LIBS
 
 
-EXPORTS		= nsdefs.h
+EXPORTS		= nsdefs.h WindowHook.h
 
 LOCAL_INCLUDES	= \
 		-I. \

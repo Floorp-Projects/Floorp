@@ -55,7 +55,7 @@ function test()
  
   var f = function () { (delete r(s)).t = a; }
 
-  expect = 'function () { (delete r(s)).t = a; }';
+  expect = 'function () { (r(s), true).t = a; }';
   actual = f + '';
   compareSource(expect, actual, summary);
 

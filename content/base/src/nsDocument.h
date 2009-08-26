@@ -1055,6 +1055,7 @@ protected:
   nsIContent* GetHeadContent() {
     return GetHtmlChildContent(nsGkAtoms::head);
   }
+
   // Get the first <title> element with the given IsNodeOfType type, or
   // return null if there isn't one
   nsIContent* GetTitleContent(PRUint32 aNodeType);
@@ -1172,10 +1173,7 @@ protected:
   PRPackedBool mVisible:1;
   // True if document has ever had script handling object.
   PRPackedBool mHasHadScriptHandlingObject:1;
-  // True if this is a regular (non-XHTML) HTML document
-  // XXXbz should this be reset if someone manually calls
-  // SetContentType() on this document?
-  PRPackedBool mIsRegularHTML:1;
+
   // True if this document has ever had an HTML or SVG <title> element
   // bound to it
   PRPackedBool mMayHaveTitleElement:1;
@@ -1273,6 +1271,11 @@ private:
 #ifdef MOZ_SMIL
   nsAutoPtr<nsSMILAnimationController> mAnimationController;
 #endif // MOZ_SMIL
+
+#ifdef DEBUG
+protected:
+  PRBool mWillReparent;
+#endif
 };
 
 #define NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                             \

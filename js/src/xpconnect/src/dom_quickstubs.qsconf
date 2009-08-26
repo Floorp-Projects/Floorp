@@ -332,6 +332,8 @@ members = [
     'nsIDOMHTMLDocument.forms',
     'nsIDOMHTMLDocument.cookie',
     'nsIDOMHTMLDocument.images',
+    'nsIDOMHTMLDocument.write',
+    'nsIDOMHTMLDocument.writeln',
     'nsIDOMHTMLElement.className',
     'nsIDOMHTMLElement.id',
     'nsIDOMHTMLElement.title',
@@ -428,8 +430,6 @@ members = [
     'nsIDOMNSHTMLDocument.domain',
     'nsIDOMNSHTMLDocument.getSelection',
     'nsIDOMNSHTMLDocument.designMode',
-    #'nsIDOMNSHTMLDocument.write',  # uses GetCurrentNativeCallContext
-    #'nsIDOMNSHTMLDocument.writeln',  # uses GetCurrentNativeCallContext
     'nsIDOMNSHTMLElement.contentEditable',
     'nsIDOMNSHTMLElement.offsetParent',
     'nsIDOMNSHTMLElement.innerHTML',
@@ -529,8 +529,20 @@ customIncludes = [
 
 nsIDOMNode_GetChildNodes_customMethodCallCode = """
     nsIDOMNodeList* result = self->GetChildNodesList();
-    if (!result)
-        return xpc_qsThrowGetterSetterFailed(cx, NS_ERROR_OUT_OF_MEMORY, JSVAL_TO_OBJECT(*vp), id);
+    rv = result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+"""
+
+nsIDOMHTMLDocument_Write_customMethodCallCode = """
+    nsAString &str = arg0;
+    for (uintN i = 1; i < argc; ++i) {
+      xpc_qsDOMString next_arg(cx, argv[i], &argv[i]);
+      if (!next_arg.IsValid())
+        return JS_FALSE;
+
+      str.Append(next_arg);
+    }
+
+    rv = self->%s(arg0);
 """
 
 customMethodCalls = {
@@ -544,7 +556,8 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetChildNodes': {
         'thisType': 'nsINode',
-        'code': nsIDOMNode_GetChildNodes_customMethodCallCode
+        'code':      nsIDOMNode_GetChildNodes_customMethodCallCode,
+        'canFail':   True
         },
     'nsIDOMNode_GetPreviousSibling': {
         'thisType': 'nsINode',
@@ -565,5 +578,13 @@ customMethodCalls = {
     'nsIDOMNodeList_Item': {
         'thisType': 'nsINodeList',
         'code': '    nsINode* result = self->GetNodeAt(arg0);'
+        },
+    'nsIDOMHTMLDocument_Write': {
+        'code':      nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write',
+        'canFail':   True
+        },
+    'nsIDOMHTMLDocument_Writeln': {
+        'code':      nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln',
+        'canFail':   True
         }
     }

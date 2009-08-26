@@ -57,7 +57,7 @@ interface nsIVariant;
  * These functions can be called from triggers, too.
  *
  */
-[scriptable, uuid(9ff02465-21cb-49f3-b975-7d5b38ceec73)]
+[scriptable, function, uuid(9ff02465-21cb-49f3-b975-7d5b38ceec73)]
 interface mozIStorageFunction : nsISupports {
   /**
    * onFunctionCall is called when execution of a custom

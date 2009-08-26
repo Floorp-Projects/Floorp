@@ -46,8 +46,6 @@
 
 #include "prprf.h"
 
-static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
-
 ///////////////////////////////////////////////////////////////////////////////
 
 inFlasher::inFlasher() :

@@ -37,11 +37,12 @@ function doTests()
   ok(!readable, "window pixels per css pixel shouldn't be readable to content");
 
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var devPxPerCSSPx = window.mozScreenPixelsPerCSSPixel;
+  var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
   var windowBO = document.documentElement.boxObject;
- // isRounded(window.mozInnerScreenX*devPxPerCSSPx, windowBO.screenX,
- //           "window screen X");
+  isRounded(window.mozInnerScreenX*devPxPerCSSPx, windowBO.screenX,
+            "window screen X");
   isRounded(window.mozInnerScreenY*devPxPerCSSPx, windowBO.screenY,
             "window screen Y");
 
@@ -60,7 +61,9 @@ function doTests()
             "frame screen Y");
 
   fmudv.fullZoom *= 2;
-  is(f.contentWindow.mozScreenPixelsPerCSSPixel, 2*devPxPerCSSPx,
+  var frameDomWindowUtils = f.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  is(frameDomWindowUtils.screenPixelsPerCSSPixel, 2*devPxPerCSSPx,
      "frame screen pixels per CSS pixel");
 
   isRounded(f.contentWindow.mozInnerScreenX*2,

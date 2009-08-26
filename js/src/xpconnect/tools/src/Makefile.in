@@ -47,11 +47,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpctools
 LIBRARY_NAME	= xpctools
 
-REQUIRES	= xpcom \
-		  xpconnect \
-		  js \
-		  string \
-		  $(NULL)
 MODULE_NAME	= xpctools
 IS_COMPONENT	= 1
 FORCE_SHARED_LIB = 1

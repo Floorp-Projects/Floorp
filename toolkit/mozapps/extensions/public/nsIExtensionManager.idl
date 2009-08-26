@@ -198,7 +198,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface,
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(c6838785-ddb5-4886-8c05-4dd6424a01ac)]
+[scriptable, uuid(27571455-f0d3-4293-bb9c-4af60adfe9b9)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -346,8 +346,6 @@ interface nsIExtensionManager : nsISupports
   /**
    * Retrieves a list of nsIUpdateItems of items that are incompatible
    * with the supplied parameters.
-   * @param   id
-   *          The id of the application to check compatibility against
    * @param   appVersion
    *          The version of the application to check compatibility against
    * @param   platformVersion
@@ -361,8 +359,7 @@ interface nsIExtensionManager : nsISupports
    *          The XPCJS reference to the number of items returned.
    * @returns An array of incompatible nsIUpdateItems.
    */
-  void getIncompatibleItemList(in AString id,
-                               in AString appVersion,
+  void getIncompatibleItemList(in AString appVersion,
                                in AString platformVersion,
                                in unsigned long type,
                                in boolean includeDisabled,

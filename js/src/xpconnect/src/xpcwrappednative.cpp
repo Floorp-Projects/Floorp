@@ -2289,7 +2289,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             secAction = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
             break;
         default:
-            NS_ASSERTION(0,"bad value");
+            NS_ERROR("bad value");
             return JS_FALSE;
     }
 
@@ -2769,7 +2769,8 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
         if(isArray)
         {
-            if(!XPCConvert::NativeArray2JS(ccx, &v, (const void**)&dp->val,
+            XPCLazyCallContext lccx(ccx);
+            if(!XPCConvert::NativeArray2JS(lccx, &v, (const void**)&dp->val,
                                            datum_type, &param_iid,
                                            array_count, ccx.GetCurrentJSObject(),
                                            &err))
@@ -2851,7 +2852,7 @@ done:
                                               i, GET_LENGTH, dispatchParams,
                                               &array_count))
                     {
-                        NS_ASSERTION(0,"failed to get array length, we'll leak here");
+                        NS_ERROR("failed to get array length, we'll leak here");
                         continue;
                     }
                     if(dp->IsValAllocated())
@@ -3729,7 +3730,7 @@ XPCJSObjectHolder::newHolder(XPCCallContext& ccx, JSObject* obj)
 {
     if(!obj)
     {
-        NS_ASSERTION(0, "bad param");
+        NS_ERROR("bad param");
         return nsnull;
     }
     return new XPCJSObjectHolder(ccx, obj);
@@ -3758,8 +3759,7 @@ static PRUint32 sSlimWrappers;
 
 JSBool
 ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p, nsWrapperCache *cache,
-                     XPCNativeInterface *iface, XPCWrappedNativeScope* xpcScope,
-                     jsval *rval)
+                     XPCWrappedNativeScope* xpcScope, jsval *rval)
 {
     nsCOMPtr<nsISupports> identityObj = do_QueryInterface(p);
 

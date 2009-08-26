@@ -1539,6 +1539,22 @@ PK11_IsInternal(PK11SlotInfo *slot)
 }
 
 PRBool
+PK11_IsInternalKeySlot(PK11SlotInfo *slot)
+{
+    PK11SlotInfo *int_slot;
+    PRBool result;
+
+    if (!slot->isInternal) {
+	return PR_FALSE;
+    }
+
+    int_slot = PK11_GetInternalKeySlot();
+    result = (int_slot == slot) ? PR_TRUE : PR_FALSE;
+    PK11_FreeSlot(int_slot);
+    return result;
+}
+
+PRBool
 PK11_NeedLogin(PK11SlotInfo *slot)
 {
     return slot->needLogin;

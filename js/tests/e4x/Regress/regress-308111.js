@@ -308,7 +308,6 @@ var xml = <prefs>
 <pref><name>dom.popup_maximum</name></pref>
 <pref><name>security.warn_entering_secure</name></pref>
 <pref><name>mousewheel.horizscroll.withaltkey.numlines</name></pref>
-<pref><name>javascript.allow.mailnews</name></pref>
 <pref><name>browser.tabs.warnOnCloseOther</name></pref>
 <pref><name>intl.accept_charsets</name></pref>
 <pref><name>font.name.monospace.x-central-euro</name></pref>
@@ -942,7 +941,6 @@ var xml = <prefs>
 <pref><name>network.http.accept-encoding</name></pref>
 <pref><name>capability.policy.default.Window.length</name></pref>
 <pref><name>font.default.x-mlym</name></pref>
-<pref><name>security.enable_java</name></pref>
 <pref><name>network.standard-url.escape-utf8</name></pref>
 <pref><name>network.standard-url.encode-utf8</name></pref>
 <pref><name>network.IDN.whitelist.info</name></pref>

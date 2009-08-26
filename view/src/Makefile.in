@@ -49,18 +49,6 @@ MODULE_NAME	= nsViewModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  gfx \
-		  widget \
-		  dom \
-		  pref \
-		  thebes \
-		  cairo \
-		  content \
-		  js \
-		  layout \
-		  $(NULL)
 
 EXTRA_DSO_LIBS = gkgfx
 

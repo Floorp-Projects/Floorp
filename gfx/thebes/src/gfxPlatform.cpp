@@ -41,7 +41,6 @@
 #include "gfxWindowsPlatform.h"
 #elif defined(XP_MACOSX)
 #include "gfxPlatformMac.h"
-#include "gfxQuartzFontCache.h"
 #elif defined(MOZ_WIDGET_GTK2)
 #include "gfxPlatformGtk.h"
 #elif defined(MOZ_WIDGET_QT)
@@ -52,6 +51,7 @@
 #include "gfxOS2Platform.h"
 #endif
 
+#include "gfxPlatformFontList.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxTextRunCache.h"
@@ -184,10 +184,10 @@ gfxPlatform::Init()
 
     nsresult rv;
 
-#if defined(XP_MACOSX)
-    rv = gfxQuartzFontCache::Init();
+#if defined(XP_MACOSX) // temporary, until this is implemented on others
+    rv = gfxPlatformFontList::Init();
     if (NS_FAILED(rv)) {
-        NS_ERROR("Could not initialize gfxQuartzFontCache");
+        NS_ERROR("Could not initialize gfxPlatformFontList");
         Shutdown();
         return rv;
     }
@@ -234,8 +234,8 @@ gfxPlatform::Shutdown()
     gfxTextRunCache::Shutdown();
     gfxTextRunWordCache::Shutdown();
     gfxFontCache::Shutdown();
-#if defined(XP_MACOSX)
-    gfxQuartzFontCache::Shutdown();
+#if defined(XP_MACOSX) // temporary, until this is implemented on others
+    gfxPlatformFontList::Shutdown();
 #endif
 
     // Free the various non-null transforms and loaded profiles

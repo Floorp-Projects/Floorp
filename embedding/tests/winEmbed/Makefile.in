@@ -41,23 +41,6 @@ RESFILE		= winEmbed.res
 
 MODULE		= winEmbed
 
-REQUIRES	= xpcom \
-		  string \
-		  embed_base \
-		  webbrwsr \
-		  webshell \
-		  windowwatcher \
-		  profile \
-		  necko \
-		  docshell \
-		  dom \
-		  widget \
-		  uriloader \
-		  shistory \
-		  webbrowserpersist \
-		  profdirserviceprovider \
-		  xulapp \
-		  $(NULL)
 
 CPPSRCS		= \
 		winEmbed.cpp \

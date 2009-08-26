@@ -45,13 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= TestOutput$(BIN_SUFFIX)
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  htmlparser \
-		  necko \
-		  layout \
-		  content \
-		  $(NULL)
 
 CPPSRCS		= \
 		Convert.cpp \

@@ -70,37 +70,11 @@ function get_cache_service() {
                  getService(Ci.nsICacheService);
 }
 
-function setup_profile_dir() {
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  var dir = dirSvc.get("TmpD", Ci.nsILocalFile);
-  dir.append("Cache" + Math.floor(Math.random() * 10000));
-  dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0700);
 
-  var provider = {
-    getFile: function(prop, persistent) {
-      persistent.value = true;
 
-      if (prop == "ProfLD" ||
-          prop == "ProfD" ||
-          prop == "cachePDir")
-        return dir;
 
-      throw Cr.NS_ERROR_FAILURE;
-    },
 
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIDirectoryProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
 
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-  };
-
-  dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
 
 function check_devices_available(devices) {
   var cs = get_cache_service();
@@ -234,7 +208,7 @@ function run_test() {
           kTestContent = "test content";
 
     // Simulate a profile dir for xpcshell
-    setup_profile_dir();
+    do_get_profile();
 
     var cs = get_cache_service();
 

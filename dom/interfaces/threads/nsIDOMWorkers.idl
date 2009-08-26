@@ -83,6 +83,21 @@ interface nsIWorkerErrorEvent : nsIDOMEvent
                       in unsigned long aLinenoArg);
 };
 
+[scriptable, uuid(17a005c3-4f2f-4bb6-b169-c181fa6873de)]
+interface nsIWorkerLocation : nsISupports
+{
+  readonly attribute AUTF8String href;
+  readonly attribute AUTF8String protocol;
+  readonly attribute AUTF8String host;
+  readonly attribute AUTF8String hostname;
+  readonly attribute AUTF8String port;
+  readonly attribute AUTF8String pathname;
+  readonly attribute AUTF8String search;
+  readonly attribute AUTF8String hash;
+
+  AUTF8String toString();
+};
+
 [scriptable, uuid(74fb665a-e477-4ce2-b3c6-c58b1b28b6c3)]
 interface nsIWorkerNavigator : nsISupports
 {
@@ -92,11 +107,12 @@ interface nsIWorkerNavigator : nsISupports
   readonly attribute DOMString userAgent;
 };
 
-[scriptable, uuid(d7d7cf59-6c8a-4598-8753-630953ae7409)]
+[scriptable, uuid(c111e7d3-8044-4458-aa7b-637696ffb841)]
 interface nsIWorkerGlobalScope : nsISupports
 {
   readonly attribute nsIWorkerGlobalScope self;
   readonly attribute nsIWorkerNavigator navigator;
+  readonly attribute nsIWorkerLocation location;
 
   attribute nsIDOMEventListener onerror;
 };

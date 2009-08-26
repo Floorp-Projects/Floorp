@@ -97,14 +97,14 @@ PRBool ResizeBuffer(int requested_size, BYTE **buffer)
 
 #ifdef WINCE
 int PerformQuery(HANDLE &ndis_handle,
-                 TCHAR *device_name,
+                 const TCHAR *device_name,
                  BYTE *buffer,
                  DWORD buffer_size,
                  BYTE *&data,
                  DWORD *bytes_out) {
   // Form the query parameters.
   NDISUIO_QUERY_OID *query = (NDISUIO_QUERY_OID*)(buffer);
-  query->ptcDeviceName = device_name;
+  query->ptcDeviceName = const_cast<PTCHAR>(device_name);
   query->Oid = OID_802_11_BSSID_LIST;
   
   if (!DeviceIoControl(ndis_handle,
@@ -201,7 +201,7 @@ int PerformQuery(HANDLE adapter_handle,
   return ERROR_SUCCESS;
 }
 
-HANDLE GetFileHandle(const unsigned short* device_name) {
+HANDLE GetFileHandle(const PRUnichar* device_name) {
   // We access a device with DOS path \Device\<device_name> at
   // \\.\<device_name>. 
 
@@ -219,7 +219,7 @@ HANDLE GetFileHandle(const unsigned short* device_name) {
 }
 
 
-bool UndefineDosDevice(const unsigned short* device_name) {
+bool UndefineDosDevice(const PRUnichar* device_name) {
   // We remove only the mapping we use, that is \Device\<device_name>.
   nsString target_path;
   target_path.Assign(L"\\Device\\");
@@ -230,14 +230,14 @@ bool UndefineDosDevice(const unsigned short* device_name) {
                           target_path.get()) == TRUE;
 }
 
-bool DefineDosDeviceIfNotExists(unsigned short* device_name, bool* dosDeviceDefined) {
+bool DefineDosDeviceIfNotExists(const PRUnichar* device_name, bool* dosDeviceDefined) {
 
   // We create a DOS device name for the device at \Device\<device_name>.
   nsString target_path;
   target_path.Assign(L"\\Device\\");
   target_path.Append(device_name);
 
-  unsigned short target[kStringLength];
+  WCHAR target[kStringLength];
 
   if (QueryDosDeviceW(device_name, target, kStringLength) > 0 && target_path.Equals(target)) {     
     // Device already exists.
@@ -273,7 +273,7 @@ void GetNetworkInterfaces(nsStringArray& interfaces)
     }   
   
   for (int i = 0; ; ++i) {
-    unsigned short name[kStringLength];
+    WCHAR name[kStringLength];
     DWORD name_size = kStringLength;
     FILETIME time;
     
@@ -299,7 +299,7 @@ void GetNetworkInterfaces(nsStringArray& interfaces)
         break;
       }
     
-    unsigned short service_name[kStringLength];
+    PRUnichar service_name[kStringLength];
     DWORD service_name_size = kStringLength;
     DWORD type = 0;
     
@@ -362,7 +362,7 @@ nsWifiMonitor::DoScan()
       
       for (int i = 0; i < interfaces.Count(); i++) {
         nsString *s = interfaces.StringAt(i);
-        unsigned short *service_name = (PRUnichar*) s->get();
+        const PRUnichar *service_name = s->get();
         
 #ifndef WINCE        
         bool dosDeviceDefined = false;
@@ -382,9 +382,13 @@ nsWifiMonitor::DoScan()
         // Get the data.
         
         BYTE *buffer = (BYTE*)malloc(oid_buffer_size_);
-        if (buffer == NULL)
+        if (buffer == NULL) {
+#ifdef WINCE
+          CloseHandle(ndis_handle);
+#endif
           return NS_ERROR_OUT_OF_MEMORY;
-          
+        }
+
         DWORD bytes_out;
         int result;
         
@@ -429,7 +433,6 @@ nsWifiMonitor::DoScan()
 #endif
           
           // Walk through the BSS IDs.
-          int found = 0;
           const uint8 *iterator = (const uint8*)&bssid_list->Bssid[0];
           const uint8 *end_of_buffer = (const uint8*)buffer + oid_buffer_size_;
           for (int i = 0; i < static_cast<int>(bssid_list->NumberOfItems); ++i) {
@@ -492,9 +495,13 @@ nsWifiMonitor::DoScan()
 
       PRUint32 resultCount = lastAccessPoints.Count();
       nsIWifiAccessPoint** result = static_cast<nsIWifiAccessPoint**> (nsMemory::Alloc(sizeof(nsIWifiAccessPoint*) * resultCount));
-      if (!result)
+      if (!result) {
+#ifdef WINCE
+        CloseHandle(ndis_handle);
+#endif
         return NS_ERROR_OUT_OF_MEMORY;
-      
+      }
+
       for (PRUint32 i = 0; i < resultCount; i++)
         result[i] = lastAccessPoints[i];
       

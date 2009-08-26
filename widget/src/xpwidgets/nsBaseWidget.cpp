@@ -284,16 +284,12 @@ nsIWidget* nsBaseWidget::GetParent(void)
 // Get this nsBaseWidget top level widget
 //
 //-------------------------------------------------------------------------
-nsIWidget* nsBaseWidget::GetTopLevelWidget(PRInt32* aLevelsUp)
+nsIWidget* nsBaseWidget::GetTopLevelWidget()
 {
   nsIWidget *topLevelWidget = nsnull, *widget = this;
-  if (aLevelsUp)
-    *aLevelsUp = -1;
   while (widget) {
     topLevelWidget = widget;
     widget = widget->GetParent();
-    if (aLevelsUp)
-      ++*aLevelsUp;
   }
   return topLevelWidget;
 }

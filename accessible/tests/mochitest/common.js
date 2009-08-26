@@ -163,7 +163,7 @@ const DONOTFAIL_IF_NO_INTERFACE = 2;
 
 /**
  * Return accessible for the given identifier (may be ID attribute or DOM
- * element or accessible object).
+ * element or accessible object) or null.
  *
  * @param aAccOrElmOrID      [in] identifier to get an accessible implementing
  *                           the given interfaces
@@ -177,7 +177,7 @@ const DONOTFAIL_IF_NO_INTERFACE = 2;
 function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
 {
   if (!aAccOrElmOrID)
-    return;
+    return null;
 
   var elm = null;
 
@@ -250,6 +250,23 @@ function isAccessible(aAccOrElmOrID, aInterfaces)
   return getAccessible(aAccOrElmOrID, aInterfaces, null,
                        DONOTFAIL_IF_NO_ACC | DONOTFAIL_IF_NO_INTERFACE) ?
     true : false;
+}
+
+/**
+ * Return root accessible for the given identifier.
+ */
+function getRootAccessible(aAccOrElmOrID)
+{
+  var acc = getAccessible(aAccOrElmOrID ? aAccOrElmOrID : document);
+  while (acc) {
+    var parent = acc.parent;
+    if (parent && !parent.parent)
+      return acc;
+
+    acc = parent;
+  }
+
+  return null;
 }
 
 /**

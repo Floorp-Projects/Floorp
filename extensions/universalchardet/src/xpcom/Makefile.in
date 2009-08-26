@@ -55,11 +55,6 @@ SHORT_LIBNAME	= ucdet
 endif
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  uconv \
-		  chardet \
-		  $(NULL)
 
 CPPSRCS = \
 		nsUniversalCharDetModule.cpp \

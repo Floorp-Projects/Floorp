@@ -5,7 +5,6 @@ DEHYDRA_SCRIPT = $(topsrcdir)/config/static-checking.js
 
 DEHYDRA_MODULES = \
   $(topsrcdir)/xpcom/analysis/final.js \
-  $(topsrcdir)/layout/generic/frame-verify.js \
   $(NULL)
 
 TREEHYDRA_MODULES = \
@@ -13,6 +12,7 @@ TREEHYDRA_MODULES = \
   $(topsrcdir)/xpcom/analysis/stack.js \
   $(topsrcdir)/xpcom/analysis/flow.js \
   $(topsrcdir)/js/src/jsstack.js \
+  $(topsrcdir)/layout/generic/frame-verify.js \
   $(NULL)
 
 DEHYDRA_ARGS = \

@@ -239,10 +239,7 @@ moz_container_map (GtkWidget *widget)
 void
 moz_container_unmap (GtkWidget *widget)
 {
-    MozContainer *container;
-
     g_return_if_fail (IS_MOZ_CONTAINER (widget));
-    container = MOZ_CONTAINER (widget);
   
     GTK_WIDGET_UNSET_FLAGS (widget, GTK_MAPPED);
 

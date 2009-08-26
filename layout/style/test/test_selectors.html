@@ -490,6 +490,20 @@ function run() {
             return result;
         }
     }
+    function classset(classes) { // takes an array of classes
+        return function classset_filter(doc) {
+            var i, j, els;
+            var result = [];
+            for (i = 0; i < classes.length; i++) {
+                els = doc.getElementsByClassName(classes[i]);
+                for (j = 0; j < els.length; j++) {
+                    result.push(els[j]);
+                }
+            }
+            return result;
+        }
+    }
+    function emptyset(doc) { return []; }
     test_parseable(":first-child");
     test_parseable(":last-child");
     test_parseable(":only-child");
@@ -578,6 +592,27 @@ function run() {
                           idset(["d"]), idset(["a", "b", "c"]));
     test_selector_in_html("#a > #c div", four_children,
                           idset([]), idset(["a", "b", "c", "d"]));
+
+    // More descendant combinator greediness (bug 511147)
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="b"></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b"]));
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="b"></div><div class="x"></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b", "x"]));
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="b"><p>filler filler <i>filler</i> filler</p></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b", "x"]));
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="x"><p>filler filler <i>filler</i> filler</p></div><div></div><div class="b"></div><div></div><div class="x"><p>filler filler <i>filler</i> filler</p></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b", "x"]));
+    test_selector_in_html(".a > .b ~ .match", '<div class="a"><div class="b"></div><div class="match"></div><div class="match"></div></div>',
+                         classset(["match"]), classset(["a", "b"]));
+
+    test_selector_in_html(".a > .b ~ .nomatch", '<div class="a"><div><div class="b"></div><div class="nomatch"></div></div></div>',
+                         emptyset, classset(["a", "b", "nomatch"]));
+    test_selector_in_html(".a > .b ~ .nomatch", '<div class="a"><div><div class="b"></div><div class="nomatch"></div></div><div class="nomatch"></div></div>',
+                         emptyset, classset(["a", "b", "nomatch"]));
+    test_selector_in_html(".a > .b ~ .nomatch", '<div class="a"><div class="b"></div><div><div class="nomatch"></div></div><div></div></div>',
+                         emptyset, classset(["a", "b", "nomatch"]));
+    test_selector_in_html(".a > .b ~ .nomatch", '<div class="a"><div class="b"></div></div><div class="nomatch"></div>',
+                         emptyset, classset(["a", "b", "nomatch"]));
 
     // Test serialization of pseudo-elements.
     should_serialize_to("p:first-letter", "p:first-letter");
@@ -678,4 +713,3 @@ function deferred_tests_onload(event)
 </pre>
 </body>
 </html>
-

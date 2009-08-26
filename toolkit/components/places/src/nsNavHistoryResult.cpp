@@ -525,8 +525,16 @@ nsNavHistoryContainerResultNode::CloseContainer(PRBool aUpdateView)
   // If this is the root container of a result, we can tell the result to stop
   // observing changes, otherwise the result will stay in memory and updates
   // itself till it is cycle collected.
-  if (result->mRootNode == this)
+  if (result->mRootNode == this) {
     result->StopObserving();
+    // When reopening this node its result will be out of sync.
+    // We must clear our children to ensure we will call FillChildren
+    // again in such a case.
+    if (this->IsQuery())
+      this->GetAsQuery()->ClearChildren(PR_TRUE);
+    else if (this->IsFolder())
+      this->GetAsFolder()->ClearChildren(PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -1642,13 +1650,6 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
   }
   if (matches.Count() == 0)
     return;
-
-  SortComparator comparator = nsnull;
-  nsCAutoString sortingAnnotation;
-  if (aUpdateSort) {
-    comparator = GetSortingComparator(GetSortType());
-    GetSortingAnnotation(sortingAnnotation);
-  }
 
   // PERFORMANCE: This updates each container for each child in it that
   // changes. In some cases, many elements have changed inside the same
@@ -3931,14 +3932,6 @@ nsNavHistoryResult::StopObserving()
       mIsHistoryObserver = PR_FALSE;
     }
   }
-
-  // We stop observing when root node is closed, but when reopening it result
-  // will be out of sync.  Ensure we will call FillChildren again in such a
-  // case.
-  if (mRootNode->IsQuery())
-    mRootNode->GetAsQuery()->ClearChildren(PR_TRUE);
-  else if (mRootNode->IsFolder())
-    mRootNode->GetAsFolder()->ClearChildren(PR_TRUE);
 }
 
 // nsNavHistoryResult::Init

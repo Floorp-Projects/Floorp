@@ -46,8 +46,6 @@ LIBRARY_NAME = plugingate_s
 
 NO_DIST_INSTALL = 1
 
-REQUIRES = plugin \
-           $(NULL)
 
 CPPSRCS = npn_gate.cpp \
           npp_gate.cpp \

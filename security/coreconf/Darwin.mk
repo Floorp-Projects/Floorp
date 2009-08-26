@@ -113,6 +113,9 @@ ifeq (11,$(ALLOW_OPT_CODE_SIZE)$(OPT_CODE_SIZE))
 else
 	OPTIMIZER	= -O2
 endif
+ifdef MOZ_DEBUG_SYMBOLS
+	OPTIMIZER  += -gdwarf-2 -gfull
+endif
 endif
 
 ARCH		= darwin

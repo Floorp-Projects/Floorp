@@ -74,6 +74,18 @@ class nsIDocShellTreeItem;
 typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsIAccessNode>
         nsAccessNodeHashtable;
 
+// What we want is: NS_INTERFACE_MAP_ENTRY(self) for static IID accessors,
+// but some of our classes have an ambiguous base class of nsISupports which
+// prevents this from working (the default macro converts it to nsISupports,
+// then addrefs it, then returns it). Therefore, we expand the macro here and
+// change it so that it works. Yuck.
+#define NS_INTERFACE_MAP_STATIC_AMBIGUOUS(_class) \
+  if (aIID.Equals(NS_GET_IID(_class))) { \
+  NS_ADDREF(this); \
+  *aInstancePtr = this; \
+  return NS_OK; \
+  } else
+
 #define NS_OK_DEFUNCT_OBJECT \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x22)
 

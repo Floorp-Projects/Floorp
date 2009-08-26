@@ -59,7 +59,7 @@ public:
   NS_DECL_NSITOOLKIT
 
   // Returns the OS X version as returned from Gestalt(gestaltSystemVersion, ...)
-  static long        OSXVersion();
+  static PRInt32     OSXVersion();
   
   // Convenience functions to check the OS version
   static PRBool      OnLeopardOrLater();

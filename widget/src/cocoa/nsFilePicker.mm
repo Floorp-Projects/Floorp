@@ -259,7 +259,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       break;
     
     default:
-      NS_ASSERTION(0, "Unknown file picker mode");
+      NS_ERROR("Unknown file picker mode");
       break;
   }
 
@@ -344,7 +344,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NS_ENSURE_ARG(outFile);
+  NS_ENSURE_ARG_POINTER(outFile);
   *outFile = nsnull;
   
   PRInt16 retVal = (PRInt16)returnCancel;
@@ -397,7 +397,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NS_ENSURE_ARG(outFile);
+  NS_ENSURE_ARG_POINTER(outFile);
   *outFile = nsnull;
 
   PRInt16 retVal = returnCancel;

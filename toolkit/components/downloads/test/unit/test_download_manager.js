@@ -112,12 +112,12 @@ function test_addDownload_cancel()
   do_check_eq(nsIDownloadManager.DOWNLOAD_CANCELED, dl.state);
 }
 
-// This test is actually ran by the observer 
+// This test is actually ran by the observer
 function test_dm_getDownload(aDl)
 {
   // this will get it from the database
   var dl = dm.getDownload(aDl.id);
-  
+
   do_check_eq(aDl.displayName, dl.displayName);
 }
 
@@ -130,7 +130,7 @@ var httpserv = null;
 function run_test()
 {
   httpserv = new nsHttpServer();
-  httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
+  httpserv.registerDirectory("/", do_get_cwd());
   httpserv.start(4444);
 
   // our download listener
@@ -161,6 +161,4 @@ function run_test()
 
   for (var i = 0; i < tests.length; i++)
     tests[i]();
-
-  cleanup();
 }

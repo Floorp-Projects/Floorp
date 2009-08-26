@@ -183,7 +183,7 @@ static NSView* NativeViewForFrame(nsIFrame* aFrame)
   return (NSView*)widget->GetNativeData(NS_NATIVE_WIDGET);
 }
 
-static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, int* aLevelsUp = NULL,
+static NSWindow* NativeWindowForFrame(nsIFrame* aFrame,
                                       nsIWidget** aTopLevelWidget = NULL)
 {
   if (!aFrame)
@@ -193,7 +193,7 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, int* aLevelsUp = NULL,
   if (!widget)
     return nil;
 
-  nsIWidget* topLevelWidget = widget->GetTopLevelWidget(aLevelsUp);
+  nsIWidget* topLevelWidget = widget->GetTopLevelWidget();
   if (aTopLevelWidget)
     *aTopLevelWidget = topLevelWidget;
 
@@ -203,7 +203,7 @@ static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, int* aLevelsUp = NULL,
 static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
 {
   nsIWidget* topLevelWidget = NULL;
-  NSWindow* win = NativeWindowForFrame(aFrame, NULL, &topLevelWidget);
+  NSWindow* win = NativeWindowForFrame(aFrame, &topLevelWidget);
   if (!topLevelWidget || !win)
     return YES;
 
@@ -866,18 +866,21 @@ static const CellRenderSettings editableMenulistSettings = {
 
 void
 nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 PRInt32 inState, PRBool aIsEditable, nsIFrame* aFrame)
+                                 PRInt32 inState, PRUint8 aWidgetType, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSCell* cell = aIsEditable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
+  [mDropdownCell setPullsDown:(aWidgetType == NS_THEME_BUTTON)];
+
+  BOOL isEditable = (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD);
+  NSCell* cell = isEditable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
 
   [cell setEnabled:!IsDisabled(aFrame)];
   [cell setShowsFirstResponder:(IsFocused(aFrame) || (inState & NS_EVENT_STATE_FOCUS))];
   [cell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
   [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
 
-  const CellRenderSettings& settings = aIsEditable ? editableMenulistSettings : dropdownSettings;
+  const CellRenderSettings& settings = isEditable ? editableMenulistSettings : dropdownSettings;
   DrawCellWithSnapping(cell, cgContext, inBoxRect, settings,
                        0.5f, NativeViewForFrame(aFrame), IsFrameRTL(aFrame));
 
@@ -1325,6 +1328,17 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
   return scrollbarFrame;
 }
 
+static BOOL DrawingAtWindowTop(CGContextRef cgContext, float viewHeight, float yPos)
+{
+  // Ignore all non-trivial transforms.
+  CGAffineTransform ctm = CGContextGetCTM(cgContext);
+  if (ctm.a != 1.0f || ctm.b != 0.0f || ctm.c != 0.0f || ctm.d != -1.0f)
+    return NO;
+
+  // ctm.ty contains the vertical offset from the window's bottom edge.
+  return ctm.ty - yPos >= viewHeight;
+}
+
 void
 nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                                        nsIFrame *aFrame)
@@ -1332,12 +1346,10 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   float titlebarHeight = 0;
-  int levelsUp = 0;
-  NSWindow* win = NativeWindowForFrame(aFrame, &levelsUp);
+  NSWindow* win = NativeWindowForFrame(aFrame);
 
-  // If the toolbar is directly below the titlebar in the top level view of a ToolbarWindow
-  if ([win isKindOfClass:[ToolbarWindow class]] && levelsUp == 0 &&
-      inBoxRect.origin.y <= 0) {
+  if ([win isKindOfClass:[ToolbarWindow class]] &&
+      DrawingAtWindowTop(cgContext, [[win contentView] bounds].size.height, inBoxRect.origin.y)) {
     // Consider the titlebar height when calculating the gradient.
     titlebarHeight = [(ToolbarWindow*)win titlebarHeight];
     // Notify the window about the toolbar's height so that it can draw the
@@ -1345,7 +1357,7 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
     [(ToolbarWindow*)win setUnifiedToolbarHeight:inBoxRect.size.height];
   }
   
-  BOOL isMain = win ? [win isMainWindow] : YES;
+  BOOL isMain = [win isMainWindow] || ![NSView focusView];
 
   // Draw the gradient
   UnifiedGradientInfo info = { titlebarHeight, inBoxRect.size.height, isMain, NO };
@@ -1365,9 +1377,10 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   CGShadingRelease(shading);
 
   // Draw the border at the bottom of the toolbar.
-  [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
-  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y +
-                        inBoxRect.size.height - 1.0f, inBoxRect.size.width, 1.0f));
+  CGRect borderRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y +
+                                 inBoxRect.size.height - 1.0f,
+                                 inBoxRect.size.width, 1.0f);
+  DrawNativeGreyColorInRect(cgContext, headerBorderGrey, borderRect, isMain);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1419,15 +1432,14 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
   if (inBoxRect.size.height < 2.0f)
     return;
 
-  BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow];
+  BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow] || ![NSView focusView];
 
   // Draw the borders at the top of the statusbar.
-  [NativeGreyColorAsNSColor(statusbarFirstTopBorderGrey, isMain) set];
-  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y,
-                        inBoxRect.size.width, 1.0f));
-  [NativeGreyColorAsNSColor(statusbarSecondTopBorderGrey, isMain) set];
-  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y + 1.0f,
-                        inBoxRect.size.width, 1.0f));
+  CGRect rect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y,
+                           inBoxRect.size.width, 1.0f);
+  DrawNativeGreyColorInRect(cgContext, statusbarFirstTopBorderGrey, rect, isMain);
+  rect.origin.y += 1.0f;
+  DrawNativeGreyColorInRect(cgContext, statusbarSecondTopBorderGrey, rect, isMain);
 
   // Draw the gradient.
   DrawGreyGradient(cgContext, CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y + 2.0f,
@@ -1579,6 +1591,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       if (IsDefaultButton(aFrame)) {
         DrawButton(cgContext, kThemePushButton, macRect, true, IsDisabled(aFrame), 
                    kThemeButtonOff, kThemeAdornmentNone, eventState, aFrame);
+      } else if (IsButtonTypeMenu(aFrame)) {
+        DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
       } else {
         DrawPushButton(cgContext, macRect, IsDisabled(aFrame), eventState, aFrame);
       }
@@ -1624,22 +1638,22 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_TOOLBAR: {
-      BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow];
+      BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow] || ![NSView focusView];
+      CGRect drawRect = macRect;
 
       // top border
-      [NativeGreyColorAsNSColor(toolbarTopBorderGrey, isMain) set];
-      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y,
-                            macRect.size.width, 1.0f));
+      drawRect.size.height = 1.0f;
+      DrawNativeGreyColorInRect(cgContext, toolbarTopBorderGrey, drawRect, isMain);
 
       // background
-      [NativeGreyColorAsNSColor(headerEndGrey, isMain) set];
-      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y + 1.0f,
-                            macRect.size.width, macRect.size.height - 2.0f));
+      drawRect.origin.y += drawRect.size.height;
+      drawRect.size.height = macRect.size.height - 2.0f;
+      DrawNativeGreyColorInRect(cgContext, headerEndGrey, drawRect, isMain);
 
       // bottom border
-      [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
-      NSRectFill(NSMakeRect(macRect.origin.x, macRect.origin.y +
-                            macRect.size.height - 1.0f, macRect.size.width, 1.0f));
+      drawRect.origin.y += drawRect.size.height;
+      drawRect.size.height = 1.0f;
+      DrawNativeGreyColorInRect(cgContext, headerBorderGrey, drawRect, isMain);
     }
       break;
 
@@ -1655,8 +1669,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_TEXTFIELD:
-      DrawDropdown(cgContext, macRect, eventState,
-                   (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD), aFrame);
+      DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
       break;
 
     case NS_THEME_DROPDOWN_BUTTON:
@@ -1849,6 +1862,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     case NS_THEME_TAB_PANELS:
       DrawTabPanel(cgContext, macRect, aFrame);
       break;
+
+    case NS_THEME_RESIZER:
+      HIThemeGrowBoxDrawInfo drawInfo;
+      drawInfo.version = 0;
+      drawInfo.state = kThemeStateActive;
+      drawInfo.kind = kHIThemeGrowBoxKindNormal;
+      drawInfo.direction = kThemeGrowRight | kThemeGrowDown;
+      drawInfo.size = kHIThemeGrowBoxSizeNormal;
+      HIThemeDrawGrowBox(&macRect.origin, &drawInfo, cgContext, kHIThemeOrientationNormal);
+      break;
   }
 
   nativeDrawing.EndNativeDrawing();
@@ -1884,7 +1907,11 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     {
-      aResult->SizeTo(7, 1, 7, 3);
+      if (IsButtonTypeMenu(aFrame)) {
+        *aResult = RTLAwareMargin(kAquaDropdownBorder, aFrame);
+      } else {
+        aResult->SizeTo(7, 1, 7, 3);
+      }
       break;
     }
 
@@ -2230,6 +2257,19 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       *aIsOverridable = PR_FALSE;
       break;
     }
+    case NS_THEME_RESIZER:
+    {
+      HIThemeGrowBoxDrawInfo drawInfo;
+      drawInfo.version = 0;
+      drawInfo.state = kThemeStateActive;
+      drawInfo.kind = kHIThemeGrowBoxKindNormal;
+      drawInfo.direction = kThemeGrowRight | kThemeGrowDown;
+      drawInfo.size = kHIThemeGrowBoxSizeNormal;
+      HIPoint pnt = { 0, 0 };
+      HIRect bounds;
+      HIThemeGetGrowBoxBounds(&pnt, &drawInfo, &bounds);
+      aResult->SizeTo(bounds.size.width, bounds.size.height);
+    }
   }
 
   return NS_OK;
@@ -2326,6 +2366,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_TOOLTIP:
+    case NS_THEME_RESIZER:
     
     case NS_THEME_CHECKBOX:
     case NS_THEME_CHECKBOX_CONTAINER:

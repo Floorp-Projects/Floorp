@@ -50,25 +50,6 @@ MODULE		= editor
 LIBRARY_NAME	= editorbase_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  locale \
-		  layout \
-		  content \
-		  txmgr \
-		  txtsvc \
-		  htmlparser \
-		  necko \
-		  pref \
-		  view \
-		  gfx \
-		  thebes \
-		  widget \
-		  unicharutil \
-		  commandhandler \
-		  docshell \
-		  $(NULL)
 
 # Internal header files, needed by other editor sublibs:
 INTERNAL_HDR_DIR = ../internal

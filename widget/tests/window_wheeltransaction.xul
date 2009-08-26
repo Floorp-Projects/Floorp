@@ -698,6 +698,7 @@ function initTestList()
         { func: testOneTimeScroll, delay: gEnoughForIgnoreMoveDelay,
           offset: kPtInSubView1ForV,
           isForward: true, isVertical: true, expectedView: gSubView1,
+          canFailRandomly: { possibleView: gRootView },
           description: "Reset transaction by a mouse move event (v-9)" }
       ]
     },
@@ -772,6 +773,7 @@ function initTestList()
         { func: testOneTimeScroll, delay: gEnoughForIgnoreMoveDelay,
           offset: kPtInSubView1ForH,
           isForward: true, isVertical: false, expectedView: gSubView1,
+          canFailRandomly: { possibleView: gRootView },
           description: "Reset transaction by a mouse move event (h-9)" }
       ]
     },

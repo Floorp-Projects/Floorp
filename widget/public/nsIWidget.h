@@ -102,10 +102,9 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_TSF_DISPLAY_ATTR_MGR 102
 #endif
 
-// {5F8D1A5E-C380-4c60-978A-030335BE1D6A}
 #define NS_IWIDGET_IID \
-  { 0x5f8d1a5e, 0xc380, 0x4c60, \
-    { 0x97, 0x8a, 0x03, 0x03, 0x35, 0xbe, 0x1d, 0x6a } }
+  { 0xb681539f, 0x5dac, 0x45af, \
+    { 0x8a, 0x25, 0xdf, 0xd7, 0x14, 0xe0, 0x9f, 0x43 } }
 
 /*
  * Window shadow styles
@@ -293,11 +292,9 @@ class nsIWidget : public nsISupports {
     /**
      * Return the top level Widget of this Widget
      *
-     * @param     aLevelsUp   returns the number of GetParent() calls that
-     *                        were necessary to get to the top level widget
      * @return the top level widget
      */
-    virtual nsIWidget* GetTopLevelWidget(PRInt32* aLevelsUp = NULL) = 0;
+    virtual nsIWidget* GetTopLevelWidget() = 0;
 
     /**
      * Return the top (non-sheet) parent of this Widget if it's a sheet,
@@ -643,8 +640,18 @@ class nsIWidget : public nsISupports {
 
     /**
      * Set the shadow style of the window.
+     *
+     * Ignored on child widgets and on non-Mac platforms.
      */
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle) = 0;
+
+    /*
+     * On Mac OS X, this method shows or hides the pill button in the titlebar
+     * that's used to collapse the toolbar.
+     *
+     * Ignored on child widgets and on non-Mac platforms.
+     */
+    virtual void SetShowsToolbarButton(PRBool aShow) = 0;
 
     /** 
      * Hide window chrome (borders, buttons) for this widget.
@@ -710,7 +717,7 @@ class nsIWidget : public nsISupports {
     virtual nsIToolkit* GetToolkit() = 0;    
 
     /**
-     * Scroll a rectangle in this widget and (as simultaneously as
+     * Scroll a set of rectangles in this widget and (as simultaneously as
      * possible) modify the specified child widgets.
      * 
      * This will invalidate areas of the children that have changed, unless
@@ -718,16 +725,23 @@ class nsIWidget : public nsISupports {
      * invalidate any part of this widget, except where the scroll
      * operation fails to blit because part of the window is unavailable
      * (e.g. partially offscreen).
+     * 
+     * The caller guarantees that the rectangles in aDestRects are ordered
+     * so that copying from aDestRects[i] - aDelta to aDestRects[i] does
+     * not alter anything in aDestRects[j] - aDelta for j > i. That is,
+     * it's safe to just copy the rectangles in the order given in
+     * aDestRects.
      *
      * @param aDelta amount to scroll (device pixels)
-     * @param aSource rectangle to copy (device pixels relative to this
-     * widget)
+     * @param aDestRects rectangles to copy into
+     * (device pixels relative to this widget)
      * @param aReconfigureChildren commands to set the bounds and clip
      * region of a subset of the children of this widget; these should
      * be performed simultaneously with the scrolling, as far as possible,
      * to avoid visual artifacts.
      */
-    virtual void Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+    virtual void Scroll(const nsIntPoint& aDelta,
+                        const nsTArray<nsIntRect>& aDestRects,
                         const nsTArray<Configuration>& aReconfigureChildren) = 0;
 
     /** 

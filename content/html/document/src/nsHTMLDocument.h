@@ -123,8 +123,6 @@ public:
  
   virtual NS_HIDDEN_(nsContentList*) GetFormControls();
  
-  virtual PRBool IsCaseSensitive();
-
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
 
@@ -179,10 +177,6 @@ public:
   virtual PRInt32 GetNumFormsSynchronous();
   virtual void TearingDownEditor(nsIEditor *aEditor);
   virtual void SetIsXHTML(PRBool aXHTML) { mIsRegularHTML = !aXHTML; }
-  PRBool IsXHTML()
-  {
-    return !mIsRegularHTML;
-  }
 
   nsresult ChangeContentEditableCount(nsIContent *aElement, PRInt32 aChange);
 
@@ -252,7 +246,6 @@ protected:
 
   nsresult WriteCommon(const nsAString& aText,
                        PRBool aNewlineTerminate);
-  nsresult ScriptWriteCommon(PRBool aNewlineTerminate);
   nsresult OpenCommon(const nsACString& aContentType, PRBool aReplace);
 
   nsresult CreateAndAddWyciwygChannel(void);

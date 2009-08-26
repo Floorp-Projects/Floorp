@@ -208,7 +208,11 @@ ParseIntDouble(jsdouble d)
 {
     if (!JSDOUBLE_IS_FINITE(d))
         return js_NaN;
-    return floor(d);
+    if (d > 0)
+        return floor(d);
+    if (d < 0)
+    	return -floor(-d);
+    return 0;
 }
 #endif
 
@@ -240,7 +244,7 @@ static JSFunctionSpec number_functions[] = {
 
 JSClass js_NumberClass = {
     js_Number_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Number),
+    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Number),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -267,12 +271,11 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         v = JSVAL_ZERO;
     }
-    if (!JS_IsConstructing(cx)) {
+    if (!JS_IsConstructing(cx))
         *rval = v;
-        return JS_TRUE;
-    }
-    STOBJ_SET_SLOT(obj, JSSLOT_PRIVATE, v);
-    return JS_TRUE;
+    else
+        obj->fslots[JSSLOT_PRIVATE] = v;
+    return true;
 }
 
 #if JS_HAS_TOSOURCE
@@ -514,7 +517,7 @@ num_valueOf(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
-    *vp = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    *vp = obj->fslots[JSSLOT_PRIVATE];
     return JS_TRUE;
 }
 
@@ -761,7 +764,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
-    STOBJ_SET_SLOT(proto, JSSLOT_PRIVATE, JSVAL_ZERO);
+    proto->fslots[JSSLOT_PRIVATE] = JSVAL_ZERO;
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 
@@ -863,7 +866,7 @@ js_NumberToString(JSContext *cx, jsdouble d)
 }
 
 JSBool JS_FASTCALL
-js_NumberValueToStringBuffer(JSContext *cx, jsval v, JSTempVector<jschar> &buf)
+js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 {
     /* Convert to C-string. */
     static const size_t arrSize = DTOSTR_STANDARD_BUFFER_SIZE;
@@ -884,10 +887,10 @@ js_NumberValueToStringBuffer(JSContext *cx, jsval v, JSTempVector<jschar> &buf)
      */
     size_t cstrlen = strlen(cstr);
     JS_ASSERT(cstrlen < arrSize);
-    size_t sizeBefore = buf.size();
-    if (!buf.growBy(cstrlen))
+    size_t sizeBefore = cb.length();
+    if (!cb.growBy(cstrlen))
         return JS_FALSE;
-    jschar *appendBegin = buf.begin() + sizeBefore;
+    jschar *appendBegin = cb.begin() + sizeBefore;
 #ifdef DEBUG
     size_t oldcstrlen = cstrlen;
     JSBool ok =
@@ -924,6 +927,14 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
              * octal).
              */
             str->getCharsAndEnd(bp, end);
+
+            /* ECMA doesn't allow signed hex numbers (bug 273467). */
+            bp = js_SkipWhiteSpace(bp, end);
+            if (bp + 2 < end && (*bp == '-' || *bp == '+') &&
+                bp[1] == '0' && (bp[2] == 'X' || bp[2] == 'x')) {
+                break;
+            }
+
             if ((!js_strtod(cx, bp, end, &ep, &d) ||
                  js_SkipWhiteSpace(ep, end) != end) &&
                 (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
@@ -959,10 +970,10 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
 
         /*
          * vp roots obj so we cannot use it as an extra root for
-         * OBJ_DEFAULT_VALUE result when calling the hook.
+         * obj->defaultValue result when calling the hook.
          */
         JS_PUSH_SINGLE_TEMP_ROOT(cx, v, &tvr);
-        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_NUMBER, &tvr.u.value))
+        if (!obj->defaultValue(cx, JSTYPE_NUMBER, &tvr.u.value))
             obj = NULL;
         else
             v = *vp = tvr.u.value;

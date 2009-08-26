@@ -80,8 +80,10 @@ const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
 const KEY_APPDIR          = "XCurProcD";
 const KEY_GRED            = "GreD";
 #ifdef XP_WIN
+#ifndef WINCE
 const KEY_UPDROOT         = "UpdRootD";
 const KEY_UAPPDATA        = "UAppData";
+#endif
 #endif
 
 const DIR_UPDATES         = "updates";
@@ -242,12 +244,14 @@ function getDirInternal(key, pathArray, shouldCreate, update) {
                     getService(Ci.nsIProperties);
   var dir = fileLocator.get(key, Ci.nsIFile);
 #ifdef XP_WIN
+#ifndef WINCE
   if (update) {
     try {
       dir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
     } catch (e) {
     }
   }
+#endif
 #endif
   for (var i = 0; i < pathArray.length; ++i) {
     dir.append(pathArray[i]);
@@ -356,10 +360,12 @@ function getUpdatesDir(key) {
   else {
     updateDir = fileLocator.get(KEY_APPDIR, Ci.nsIFile);
 #ifdef XP_WIN
+#ifndef WINCE
     try {
       updateDir = fileLocator.get(KEY_UPDROOT, Ci.nsIFile);
     } catch (e) {
     }
+#endif
 #endif
   }
   updateDir.append(DIR_UPDATES);
@@ -1196,6 +1202,7 @@ UpdateService.prototype = {
 
     var updRootKey = null;
 #ifdef XP_WIN
+#ifndef WINCE
     function findPreviousUpdate(key) {
       var updateDir = getUpdatesDir(key);
       if (updateDir.exists()) {
@@ -1216,6 +1223,7 @@ UpdateService.prototype = {
     // required to migrate from older versions.
     if (status == null)
       findPreviousUpdate(KEY_APPDIR);
+#endif
 #endif
 
     if (status == STATE_DOWNLOADING) {
@@ -1520,14 +1528,14 @@ UpdateService.prototype = {
                getService(Ci.nsIExtensionManager);
     // Get the add-ons that are incompatible with the update's application
     // version and toolkit version.
-    var currentAddons = em.getIncompatibleItemList("", this._update.extensionVersion,
+    var currentAddons = em.getIncompatibleItemList(this._update.extensionVersion,
                                                    this._update.platformVersion,
                                                    Ci.nsIUpdateItem.TYPE_ANY,
                                                    false, { });
     if (currentAddons.length > 0) {
       // Get the add-ons that are incompatible with the current application
       // version and toolkit version.
-      var previousAddons = em.getIncompatibleItemList("", null, null,
+      var previousAddons = em.getIncompatibleItemList(null, null,
                                                       Ci.nsIUpdateItem.TYPE_ANY,
                                                       false, { });
       // Don't include add-ons that are already incompatible with the current
@@ -1647,6 +1655,8 @@ UpdateService.prototype = {
     if (gCanUpdate !== null)
       return gCanUpdate;
 
+// On Windows CE skip the write access checks and assume we have write access
+#ifndef WINCE
     try {
       var appDirFile = getUpdateFile([FILE_PERMS_TEST]);
       LOG("UpdateService", "canUpdate - testing " + appDirFile.path);
@@ -1737,13 +1747,15 @@ UpdateService.prototype = {
           actualAppDirFile.remove(false);
         }
       }
-#endif
+#endif //XP_WIN
     }
     catch (e) {
        LOG("UpdateService", "canUpdate - unable to update. Exception: " + e);
       // No write privileges to install directory
       return gCanUpdate = false;
     }
+#endif //WINCE
+
     // If the administrator has locked the app update functionality
     // OFF - this is not just a user setting, so disable the manual
     // UI too.

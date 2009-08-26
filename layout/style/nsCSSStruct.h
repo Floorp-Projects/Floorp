@@ -375,6 +375,10 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mOpacity;
   nsCSSValueList *mTransform; // List of Arrays containing transform information
   nsCSSValuePair mTransformOrigin;
+  nsCSSValueList* mTransitionProperty;
+  nsCSSValueList* mTransitionDuration;
+  nsCSSValueList* mTransitionTimingFunction;
+  nsCSSValueList* mTransitionDelay;
 
   // temp fix for bug 24000 
   nsCSSValue mBreakBefore;

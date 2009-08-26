@@ -1224,7 +1224,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
           {
               // working backwards, the first thing we see is the start of a tag
               // so StartFragment is bad, so we need to update it.
-              NS_ASSERTION(0, "StartFragment byte count in the clipboard looks bad, see bug #228879");
+              NS_ERROR("StartFragment byte count in the clipboard looks bad, see bug #228879");
               startFragment = curPos - 1;
           }
           break;

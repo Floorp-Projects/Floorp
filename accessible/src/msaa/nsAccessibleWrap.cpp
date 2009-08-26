@@ -1294,6 +1294,15 @@ __try {
                "MSAA role map skewed");
 
   *aRole = gWindowsRoleMap[xpRole].ia2Role;
+
+  // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
+  // the IA2 role a ROLE_OUTLINEITEM.
+  if (xpRole == nsIAccessibleRole::ROLE_ROW) {
+    nsCOMPtr<nsIAccessible> parent = GetParent();
+    if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE)
+      *aRole = ROLE_SYSTEM_OUTLINEITEM;
+  }
+
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }

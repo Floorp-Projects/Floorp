@@ -55,6 +55,8 @@
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown"/>
       <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift" command="cmd_selectPageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="alt" command="cmd_movePageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="alt" command="cmd_movePageDown"/>
 
       <handler event="keypress" keycode="VK_UP"   modifiers="accel" command="cmd_moveTop"/>
       <handler event="keypress" keycode="VK_DOWN" modifiers="accel" command="cmd_moveBottom"/>
@@ -122,6 +124,8 @@
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown"/>
       <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift" command="cmd_selectPageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="alt" command="cmd_movePageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="alt" command="cmd_movePageDown"/>
 
       <handler event="keypress" keycode="VK_LEFT"  modifiers="alt" command="cmd_wordPrevious" /> 
       <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_wordNext" /> 

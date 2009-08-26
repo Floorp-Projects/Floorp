@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Tests image rects that run off the source image bounds.
+-->
+<html>
+  <head>
+    <title>Testcases: -moz-image-rect() [bug 113577]</title>
+    <style>
+      div.wrapper {
+        width: 32px;
+        height: 32px;
+        margin: 10px;
+        background-color: red;
+      }
+      div.wrapper div {
+        width: 32px;
+        height: 32px;
+        background: no-repeat;
+      }
+      /* The final crop rect is computed by intersecting an image rect and the
+         source image bounds, so the following tests should display the bottom
+         right 16x16 corner of the image. */
+      #test1 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 16, 50, 50, 16);
+      }
+      #test2 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 50.000001%, 1000000%, 1000000%, 50.000001%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper"><div id="test1"></div></div>
+    <div class="wrapper"><div id="test2"></div></div>
+  </body>
+</html>

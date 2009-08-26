@@ -56,27 +56,6 @@ ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	= mozutil_s
 endif
 
-REQUIRES	= js \
-		  xpcom \
-		  string \
-		  windowwatcher \
-		  webbrwsr \
-		  gfx \
-		  widget \
-		  webbrowserpersist \
-		  find \
-		  htmlparser \
-		  embed_base \
-		  dom \
-		  lwbrk \
-		  mimetype \
-		  content \
-		  layout \
-		  uriloader \
-		  necko \
-		  commandhandler \
-		  xuldoc \
-		  $(NULL)
 
 CPPSRCS		= nsEmbeddingModule.cpp
 

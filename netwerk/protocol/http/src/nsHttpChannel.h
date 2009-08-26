@@ -285,7 +285,7 @@ private:
 
     PRUint32                          mLoadFlags;
     PRUint32                          mStatus;
-    nsUint64                          mLogicalOffset;
+    PRUint64                          mLogicalOffset;
     PRUint8                           mCaps;
     PRInt16                           mPriority;
 

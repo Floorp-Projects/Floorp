@@ -55,18 +55,12 @@ JS_BEGIN_EXTERN_C
  * Type tags stored in the low bits of a jsval.
  */
 typedef enum jsvaltag {
-    JSVAL_OBJECT  =         0x0,     /* untagged reference to object */
-    JSVAL_INT     =         0x1,     /* tagged 31-bit integer value */
-    JSVAL_DOUBLE  =         0x2,     /* tagged reference to double */
-    JSVAL_STRING  =         0x4,     /* tagged reference to string */
-    JSVAL_BOOLEAN =         0x6      /* tagged boolean value */
+    JSVAL_OBJECT  =             0x0,     /* untagged reference to object */
+    JSVAL_INT     =             0x1,     /* tagged 31-bit integer value */
+    JSVAL_DOUBLE  =             0x2,     /* tagged reference to double */
+    JSVAL_STRING  =             0x4,     /* tagged reference to string */
+    JSVAL_SPECIAL =             0x6      /* tagged boolean or private value */
 } jsvaltag;
-
-#define JSVAL_OBJECT ((jsvaltag)0x0)
-#define JSVAL_INT ((jsvaltag)0x1)
-#define JSVAL_DOUBLE ((jsvaltag)0x2)
-#define JSVAL_STRING ((jsvaltag)0x4)
-#define JSVAL_BOOLEAN ((jsvaltag)0x6)
 
 /* Type tag bitfield length and derived macros. */
 #define JSVAL_TAGBITS           3
@@ -92,22 +86,21 @@ JSVAL_CLRTAG(jsval v)
 #define JSVAL_NULL              ((jsval) 0)
 #define JSVAL_ZERO              INT_TO_JSVAL(0)
 #define JSVAL_ONE               INT_TO_JSVAL(1)
-#define JSVAL_FALSE             PSEUDO_BOOLEAN_TO_JSVAL(JS_FALSE)
-#define JSVAL_TRUE              PSEUDO_BOOLEAN_TO_JSVAL(JS_TRUE)
-#define JSVAL_VOID              PSEUDO_BOOLEAN_TO_JSVAL(2)
+#define JSVAL_FALSE             SPECIAL_TO_JSVAL(JS_FALSE)
+#define JSVAL_TRUE              SPECIAL_TO_JSVAL(JS_TRUE)
+#define JSVAL_VOID              SPECIAL_TO_JSVAL(2)
 
 /*
- * A pseudo-boolean is a 29-bit (for 32-bit jsval) or 61-bit (for 64-bit jsval)
- * value other than 0 or 1 encoded as a jsval whose tag is JSVAL_BOOLEAN.
+ * A "special" value is a 29-bit (for 32-bit jsval) or 61-bit (for 64-bit jsval)
+ * value whose tag is JSVAL_SPECIAL.  These values include the booleans 0 and 1.
  *
- * JSVAL_VOID happens to be defined as a jsval encoding a pseudo-boolean, but
- * embedders MUST NOT rely on this. All other possible pseudo-boolean values
- * are implementation-reserved and MUST NOT be constructed by any embedding of
- * SpiderMonkey.
+ * JSVAL_VOID is a non-boolean special value, but embedders MUST NOT rely on
+ * this. All other possible special values are implementation-reserved
+ * and MUST NOT be constructed by any embedding of SpiderMonkey.
  */
-#define JSVAL_TO_PSEUDO_BOOLEAN(v) ((JSBool) ((v) >> JSVAL_TAGBITS))
-#define PSEUDO_BOOLEAN_TO_JSVAL(b)                                            \
-    JSVAL_SETTAG((jsval) (b) << JSVAL_TAGBITS, JSVAL_BOOLEAN)
+#define JSVAL_TO_SPECIAL(v) ((JSBool) ((v) >> JSVAL_TAGBITS))
+#define SPECIAL_TO_JSVAL(b)                                                   \
+    JSVAL_SETTAG((jsval) (b) << JSVAL_TAGBITS, JSVAL_SPECIAL)
 
 /* Predicates for type testing. */
 static JS_ALWAYS_INLINE JSBool
@@ -141,9 +134,15 @@ JSVAL_IS_STRING(jsval v)
 }
 
 static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_SPECIAL(jsval v)
+{
+    return JSVAL_TAG(v) == JSVAL_SPECIAL;
+}
+
+static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_BOOLEAN(jsval v)
 {
-    return (v & ~((jsval)1 << JSVAL_TAGBITS)) == JSVAL_BOOLEAN;
+    return (v & ~((jsval)1 << JSVAL_TAGBITS)) == JSVAL_SPECIAL;
 }
 
 static JS_ALWAYS_INLINE JSBool
@@ -168,7 +167,7 @@ JSVAL_IS_PRIMITIVE(jsval v)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_GCTHING(jsval v)
 {
-    return !(v & JSVAL_INT) && JSVAL_TAG(v) != JSVAL_BOOLEAN;
+    return !(v & JSVAL_INT) && JSVAL_TAG(v) != JSVAL_SPECIAL;
 }
 
 static JS_ALWAYS_INLINE void *
@@ -234,29 +233,39 @@ STRING_TO_JSVAL(JSString *str)
 #define JSVAL_INT_MAX           (JSVAL_INT_POW2(30) - 1)
 
 /* Not a function, because we have static asserts that use it */
-#define INT_FITS_IN_JSVAL(i)    ((jsuint)(i) - (jsuint)JSVAL_INT_MIN <=      \
+#define INT_FITS_IN_JSVAL(i)    ((jsuint)(i) - (jsuint)JSVAL_INT_MIN <=       \
                                  (jsuint)(JSVAL_INT_MAX - JSVAL_INT_MIN))
-/* Not a function, because we have static asserts that use it */
-/* FIXME:  Bug 506721, since that means we can't assert JSVAL_IS_INT(v) */
-#define JSVAL_TO_INT(v)         ((jsint)(v) >> 1)
+
+static JS_ALWAYS_INLINE jsint
+JSVAL_TO_INT(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_INT(v));
+    return (jsint) v >> 1;
+}
 
 /* Not a function, because we have static asserts that use it */
-/* FIXME:  Bug 506721, since that means we can't assert INT_FITS_IN_JSVAL(i) */
-#define INT_TO_JSVAL(i)         (((jsval)(i) << 1) | JSVAL_INT)
+#define INT_TO_JSVAL_CONSTEXPR(i)  (((jsval)(i) << 1) | JSVAL_INT)
+
+static JS_ALWAYS_INLINE jsval
+INT_TO_JSVAL(jsint i)
+{
+    JS_ASSERT(INT_FITS_IN_JSVAL(i));
+    return INT_TO_JSVAL_CONSTEXPR(i);
+}
 
 /* Convert between boolean and jsval, asserting that inputs are valid. */
 static JS_ALWAYS_INLINE JSBool
 JSVAL_TO_BOOLEAN(jsval v)
 {
     JS_ASSERT(v == JSVAL_TRUE || v == JSVAL_FALSE);
-    return JSVAL_TO_PSEUDO_BOOLEAN(v);
+    return JSVAL_TO_SPECIAL(v);
 }
 
 static JS_ALWAYS_INLINE jsval
 BOOLEAN_TO_JSVAL(JSBool b)
 {
     JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
-    return PSEUDO_BOOLEAN_TO_JSVAL(b);
+    return SPECIAL_TO_JSVAL(b);
 }
 
 /* A private data pointer (2-byte-aligned) can be stored as an int jsval. */
@@ -535,6 +544,9 @@ JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2);
 
 extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes);
+
+extern JS_PUBLIC_API(void)
+JS_CommenceRuntimeShutDown(JSRuntime *rt);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt);
@@ -2336,17 +2348,6 @@ JS_IsConstructing(JSContext *cx);
  */
 extern JS_FRIEND_API(JSBool)
 JS_IsAssigning(JSContext *cx);
-
-/*
- * Set the second return value, which should be a string or int jsval that
- * identifies a property in the returned object, to form an ECMA reference
- * type value (obj, id).  Only native methods can return reference types,
- * and if the returned value is used on the left-hand side of an assignment
- * op, the identified property will be set.  If the return value is in an
- * r-value, the interpreter just gets obj[id]'s value.
- */
-extern JS_PUBLIC_API(void)
-JS_SetCallReturnValue2(JSContext *cx, jsval v);
 
 /*
  * Saving and restoring frame chains.

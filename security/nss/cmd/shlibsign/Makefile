@@ -80,7 +80,9 @@ endif
 
 CHECKLIBS = $(DIST)/lib/$(DLL_PREFIX)softokn3.$(DLL_SUFFIX)
 CHECKLIBS += $(wildcard $(DIST)/lib/$(DLL_PREFIX)freebl*3.$(DLL_SUFFIX))
+ifndef NSS_DISABLE_DBM
 CHECKLIBS += $(DIST)/lib/$(DLL_PREFIX)nssdbm3.$(DLL_SUFFIX)
+endif
 CHECKLOC = $(CHECKLIBS:.$(DLL_SUFFIX)=.chk)
 
 MD_LIB_RELEASE_FILES = $(CHECKLOC)

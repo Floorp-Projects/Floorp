@@ -48,7 +48,6 @@ MOZILLA_INTERNAL_API = 1
 
 DIRS		= md
 
-REQUIRES = string
 
 CPPSRCS		= xptcall.cpp
 

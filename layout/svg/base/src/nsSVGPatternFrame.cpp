@@ -592,8 +592,8 @@ nsSVGPatternFrame::GetTargetGeometry(gfxMatrix *aCTM,
   } else {
     *aTargetContent = static_cast<nsSVGElement*>(aTarget->GetContent());
   }
-  NS_ASSERTION(aTargetContent,"Caller does not have any content!");
-  if (!aTargetContent)
+  NS_ASSERTION(*aTargetContent,"Caller does not have any content!");
+  if (!*aTargetContent)
     return NS_ERROR_FAILURE;
 
   if (callerType == nsGkAtoms::svgGlyphFrame) {

@@ -84,8 +84,12 @@ PROCESS_MAP_FILE = grep -v ';+' $< | grep -v ';-' | \
          sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,+e ,' > $@
 
 DSO_LDOPTS		= -b +h $(notdir $@)
-ifeq ($(USE_64), 1)
-RPATH   = +b '$$ORIGIN'
+RPATH			= +b '$$ORIGIN'
+ifneq ($(OS_TEST),ia64)
+# pa-risc
+ifndef USE_64
+RPATH   =
+endif
 endif
 DSO_LDFLAGS		=
 

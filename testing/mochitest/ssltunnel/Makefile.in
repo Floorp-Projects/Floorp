@@ -50,10 +50,6 @@ CPPSRCS = ssltunnel.cpp
 # Despite not catching exceptions, we're using STL
 ENABLE_CXX_EXCEPTIONS=1
 
-REQUIRES = \
-	nspr \
-	nss \
-	$(NULL)
 
 # Use local includes because they are inserted before INCLUDES
 # so that Mozilla's nss.h is used, not glibc's

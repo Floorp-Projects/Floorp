@@ -168,29 +168,29 @@ static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStar
 
 #include "prenv.h"
 
-// start nsIFrameDebug
+// Formerly the nsIFrameDebug interface
 
 #ifdef NS_DEBUG
 static PRBool gShowFrameBorders = PR_FALSE;
 
-void nsIFrameDebug::ShowFrameBorders(PRBool aEnable)
+void nsFrame::ShowFrameBorders(PRBool aEnable)
 {
   gShowFrameBorders = aEnable;
 }
 
-PRBool nsIFrameDebug::GetShowFrameBorders()
+PRBool nsFrame::GetShowFrameBorders()
 {
   return gShowFrameBorders;
 }
 
 static PRBool gShowEventTargetFrameBorder = PR_FALSE;
 
-void nsIFrameDebug::ShowEventTargetFrameBorder(PRBool aEnable)
+void nsFrame::ShowEventTargetFrameBorder(PRBool aEnable)
 {
   gShowEventTargetFrameBorder = aEnable;
 }
 
-PRBool nsIFrameDebug::GetShowEventTargetFrameBorder()
+PRBool nsFrame::GetShowEventTargetFrameBorder()
 {
   return gShowEventTargetFrameBorder;
 }
@@ -206,7 +206,7 @@ static PRLogModuleInfo* gStyleVerifyTreeLogModuleInfo;
 static PRBool gStyleVerifyTreeEnable = PRBool(0x55);
 
 PRBool
-nsIFrameDebug::GetVerifyStyleTreeEnable()
+nsFrame::GetVerifyStyleTreeEnable()
 {
   if (gStyleVerifyTreeEnable == PRBool(0x55)) {
     if (nsnull == gStyleVerifyTreeLogModuleInfo) {
@@ -218,13 +218,13 @@ nsIFrameDebug::GetVerifyStyleTreeEnable()
 }
 
 void
-nsIFrameDebug::SetVerifyStyleTreeEnable(PRBool aEnabled)
+nsFrame::SetVerifyStyleTreeEnable(PRBool aEnabled)
 {
   gStyleVerifyTreeEnable = aEnabled;
 }
 
 PRLogModuleInfo*
-nsIFrameDebug::GetLogModuleInfo()
+nsFrame::GetLogModuleInfo()
 {
   if (nsnull == gLogModule) {
     gLogModule = PR_NewLogModule("frame");
@@ -233,29 +233,26 @@ nsIFrameDebug::GetLogModuleInfo()
 }
 
 void
-nsIFrameDebug::DumpFrameTree(nsIFrame* aFrame)
+nsFrame::DumpFrameTree(nsIFrame* aFrame)
 {
     RootFrameList(aFrame->PresContext(), stdout, 0);
 }
 
 void
-nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
+nsFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
-  if((nsnull == aPresContext) || (nsnull == out))
+  if (!aPresContext || !out)
     return;
 
   nsIPresShell *shell = aPresContext->GetPresShell();
-  if (nsnull != shell) {
+  if (shell) {
     nsIFrame* frame = shell->FrameManager()->GetRootFrame();
-    if(nsnull != frame) {
-      nsIFrameDebug* debugFrame = do_QueryFrame(frame);
-      if (debugFrame)
-        debugFrame->List(out, aIndent);
+    if(frame) {
+      frame->List(out, aIndent);
     }
   }
 }
 #endif
-// end nsIFrameDebug
 
 void
 NS_MergeReflowStatusInto(nsReflowStatus* aPrimary, nsReflowStatus aSecondary)
@@ -290,24 +287,17 @@ NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsFrame(aContext);
 }
 
-// Overloaded new operator. Initializes the memory to 0 and relies on an arena
-// (which comes from the presShell) to perform the allocation.
-void* 
+// Overloaded new operator. Relies on an arena (which comes from the
+// presShell) to perform the allocation.
+void*
 nsFrame::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
-  // Check the recycle list first.
-  void* result = aPresShell->AllocateFrame(sz);
-  
-  if (result) {
-    memset(result, 0, sz);
-  }
-
-  return result;
+  return aPresShell->AllocateFrame(sz, 0 /* dummy */);
 }
 
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
-void 
+void
 nsFrame::operator delete(void* aPtr, size_t sz)
 {
   // Don't let the memory be freed, since it will be recycled
@@ -341,9 +331,6 @@ nsFrame::~nsFrame()
 
 NS_QUERYFRAME_HEAD(nsFrame)
   NS_QUERYFRAME_ENTRY(nsIFrame)
-#ifdef DEBUG
-  NS_QUERYFRAME_ENTRY(nsIFrameDebug)
-#endif
 NS_QUERYFRAME_TAIL
 
 /////////////////////////////////////////////////////////////////////////////
@@ -477,7 +464,7 @@ nsFrame::Destroy()
   if (view) {
     // Break association between view and frame
     view->SetClientData(nsnull);
-    
+
     // Destroy the view
     view->Destroy();
   }
@@ -489,7 +476,7 @@ nsFrame::Destroy()
   // Now that we're totally cleaned out, we need to add ourselves to the presshell's
   // recycler.
   size_t* sz = (size_t*)this;
-  shell->FreeFrame(*sz, (void*)this);
+  shell->FreeFrame(*sz, 0 /* dummy */, (void*)this);
 }
 
 NS_IMETHODIMP
@@ -532,11 +519,8 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     const nsStyleBackground *oldBG = aOldStyleContext->GetStyleBackground();
     const nsStyleBackground *newBG = GetStyleBackground();
     NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, oldBG) {
-      imgIRequest *oldImage = oldBG->mLayers[i].mImage;
-      imgIRequest *newImage = i < newBG->mImageCount
-                                ? newBG->mLayers[i].mImage.get()
-                                : nsnull;
-      if (oldImage && !EqualImages(oldImage, newImage)) {
+      if (i >= newBG->mImageCount ||
+          oldBG->mLayers[i].mImage != newBG->mLayers[i].mImage) {
         // stop the image loading for the frame, the image has changed
         PresContext()->SetImageLoaders(this,
           nsPresContext::BACKGROUND_IMAGE, nsnull);
@@ -1222,12 +1206,12 @@ DisplayDebugBorders(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     const nsDisplayListSet& aLists) {
   // Draw a border around the child
   // REVIEW: From nsContainerFrame::PaintChild
-  if (nsIFrameDebug::GetShowFrameBorders() && !aFrame->GetRect().IsEmpty()) {
+  if (nsFrame::GetShowFrameBorders() && !aFrame->GetRect().IsEmpty()) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aFrame, PaintDebugBorder, "DebugBorder"));
   }
   // Draw a border around the current event target
-  if (nsIFrameDebug::GetShowEventTargetFrameBorder() &&
+  if (nsFrame::GetShowEventTargetFrameBorder() &&
       aFrame->PresContext()->PresShell()->GetDrawEventTargetFrame() == aFrame) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aFrame, PaintEventTargetBorder, "EventTargetBorder"));
@@ -1395,34 +1379,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   return rv;
 }
 
-class nsDisplaySummary : public nsDisplayItem
-{
-public:
-  nsDisplaySummary(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
-    MOZ_COUNT_CTOR(nsDisplaySummary);
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplaySummary() {
-    MOZ_COUNT_DTOR(nsDisplaySummary);
-  }
-#endif
-
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
-  NS_DISPLAY_DECL_NAME("Summary")
-};
-
-nsRect
-nsDisplaySummary::GetBounds(nsDisplayListBuilder* aBuilder) {
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
-}
-
-static void
-AddSummaryFrameToList(nsDisplayListBuilder* aBuilder,
-                      nsIFrame* aFrame, nsDisplayList* aList)
-{
-  aList->AppendNewToTop(new (aBuilder) nsDisplaySummary(aFrame));
-}
-
 nsresult
 nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                    nsIFrame*               aChild,
@@ -1504,27 +1460,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // situations where we're going to ignore a scrollframe's clipping;
       // we wouldn't want to clip the dirty area to the scrollframe's
       // bounds in that case.
-    }
-
-    // Note that aBuilder->GetRootMovingFrame() is non-null only if we're doing
-    // ComputeRepaintRegionForCopy.
-    if (aBuilder->GetRootMovingFrame() == this &&
-        !PresContext()->GetRenderedPositionVaryingContent()) {
-      // No position-varying content has been rendered in this prescontext.
-      // Therefore there is no need to descend into analyzing the moving frame's
-      // descendants looking for such content, because any bitblit will
-      // not be copying position-varying graphics. However, to keep things
-      // sane we still need display items representing the frame subtree.
-      // We need to add these summaries to every list that the child could
-      // contribute to. This avoids display list optimizations optimizing
-      // away entire lists because they appear to be empty.
-      AddSummaryFrameToList(aBuilder, aChild, aLists.BlockBorderBackgrounds());
-      AddSummaryFrameToList(aBuilder, aChild, aLists.BorderBackground());
-      AddSummaryFrameToList(aBuilder, aChild, aLists.Content());
-      AddSummaryFrameToList(aBuilder, aChild, aLists.Floats());
-      AddSummaryFrameToList(aBuilder, aChild, aLists.PositionedDescendants());      
-      AddSummaryFrameToList(aBuilder, aChild, aLists.Outlines());
-      return NS_OK;
     }
   }
 
@@ -3411,9 +3346,7 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::CharacterDataChanged(nsPresContext* aPresContext,
-                              nsIContent*     aChild,
-                              PRBool          aAppend)
+nsFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
   NS_NOTREACHED("should only be called for text frames");
   return NS_OK;
@@ -4092,7 +4025,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   const nsStyleBackground *bg = GetStyleBackground();
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
     const nsStyleBackground::Layer &layer = bg->mLayers[i];
-    if (layer.mImage &&
+    if (!layer.mImage.IsEmpty() &&
         (layer.mPosition.mXIsPercent || layer.mPosition.mYIsPercent)) {
       Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
@@ -4452,10 +4385,7 @@ nsFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 
       }
       aIndent++;
       while (kid) {
-        nsIFrameDebug* frameDebug = do_QueryFrame(kid);
-        if (kid) {
-          frameDebug->DumpRegressionData(aPresContext, out, aIndent);
-        }
+        kid->DumpRegressionData(aPresContext, out, aIndent);
         kid = kid->GetNextSibling();
       }
       aIndent--;
@@ -5459,7 +5389,7 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
         for (;lineFrameCount > 1;lineFrameCount --){
           result = it->GetNextSiblingOnLine(lastFrame, thisLine);
           if (NS_FAILED(result) || !lastFrame){
-            NS_ASSERTION(0,"should not be reached nsFrame\n");
+            NS_ERROR("should not be reached nsFrame\n");
             return NS_ERROR_FAILURE;
           }
         }
@@ -6717,15 +6647,6 @@ nsFrame::SetParent(const nsIFrame* aParent)
   else if (wasBoxWrapped && !IsBoxWrapped())
     DeleteProperty(nsGkAtoms::boxMetricsProperty);
 
-  if (aParent && aParent->IsBoxFrame()) {
-    if (aParent->ChildrenMustHaveWidgets()) {
-        nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
-        nsIView* view = GetView();
-        if (!view->HasWidget())
-          CreateWidgetForView(view);
-    }
-  }
-
   return NS_OK;
 }
 
@@ -6812,13 +6733,7 @@ nsAdaptorPrintReason(nsHTMLReflowState& aReflowState)
 void
 nsFrame::GetBoxName(nsAutoString& aName)
 {
-   nsIFrameDebug*  frameDebug;
-   nsAutoString name;
-   if (NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-      frameDebug->GetFrameName(name);
-   }
-
-  aName = name;
+  GetFrameName(aName);
 }
 #endif
 
@@ -7358,10 +7273,9 @@ void DR_State::DisplayFrameTypeInfo(nsIFrame* aFrame,
       printf(" ");
     }
     if(!strcmp(frameTypeInfo->mNameAbbrev, "unknown")) {
-      nsAutoString  name;
-      nsIFrameDebug* frameDebug = do_QueryFrame(aFrame);
-      if (frameDebug) {
-       frameDebug->GetFrameName(name);
+      if (aFrame) {
+       nsAutoString  name;
+       aFrame->GetFrameName(name);
        printf("%s %p ", NS_LossyConvertUTF16toASCII(name).get(), (void*)aFrame);
       }
       else {

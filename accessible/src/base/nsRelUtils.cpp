@@ -42,6 +42,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMDocumentXBL.h"
 
 #include "nsAutoPtr.h"
 #include "nsArrayUtils.h"
@@ -99,7 +100,8 @@ nsRelUtils::AddTargetFromContent(PRUint32 aRelationType,
 nsresult
 nsRelUtils::AddTargetFromIDRefAttr(PRUint32 aRelationType,
                                    nsIAccessibleRelation **aRelation,
-                                   nsIContent *aContent, nsIAtom *aAttr)
+                                   nsIContent *aContent, nsIAtom *aAttr,
+                                   PRBool aMayBeAnon)
 {
   nsAutoString id;
   if (!aContent->GetAttr(kNameSpaceID_None, aAttr, id))
@@ -112,7 +114,18 @@ nsRelUtils::AddTargetFromIDRefAttr(PRUint32 aRelationType,
     return NS_OK_NO_RELATION_TARGET;
 
   nsCOMPtr<nsIDOMElement> refElm;
-  document->GetElementById(id, getter_AddRefs(refElm));
+  if (aMayBeAnon && aContent->GetBindingParent()) {
+    nsCOMPtr<nsIDOMDocumentXBL> documentXBL(do_QueryInterface(document));
+    nsCOMPtr<nsIDOMElement> bindingParent =
+      do_QueryInterface(aContent->GetBindingParent());
+    documentXBL->GetAnonymousElementByAttribute(bindingParent,
+                                                NS_LITERAL_STRING("id"),
+                                                id,
+                                                getter_AddRefs(refElm));
+  }
+  else {
+    document->GetElementById(id, getter_AddRefs(refElm));
+  }
 
   nsCOMPtr<nsIContent> refContent(do_QueryInterface(refElm));
   return AddTargetFromContent(aRelationType, aRelation, refContent);

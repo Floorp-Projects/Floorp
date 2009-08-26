@@ -103,14 +103,13 @@ struct nsPoint;
 struct nsRect;
 struct nsSize;
 struct nsMargin;
+struct CharacterDataChangeInfo;
 
 typedef class nsIFrame nsIBox;
 
-// IID for the nsIFrame interface
-// 2871104e-2738-4ad7-b86a-ede63c71f1c2
 #define NS_IFRAME_IID \
-  { 0x2871104e, 0x2738, 0x4ad7,                       \
-    { 0xb8, 0x6a, 0xed, 0xe6, 0x3c, 0x71, 0xf1, 0xc2 } }
+  { 0x7e9018b5, 0x5405, 0x4e2b, \
+    { 0x87, 0x67, 0xe2, 0xb4, 0xb1, 0x3e, 0xc1, 0x69 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -839,7 +838,7 @@ public:
    * Get the position of the frame's baseline, relative to the top of
    * the frame (its top border edge).  Only valid when Reflow is not
    * needed and when the frame returned nsHTMLReflowMetrics::
-   * ASK_FOR_ASCENT as ascent in its reflow metrics.
+   * ASK_FOR_BASELINE as ascent in its reflow metrics.
    */
   virtual nscoord GetBaseline() const = 0;
 
@@ -1122,17 +1121,10 @@ public:
   void RemoveStateBits(nsFrameState aBits) { mState &= ~aBits; }
 
   /**
-   * This call is invoked when content is changed in the content tree.
-   * The first frame that maps that content is asked to deal with the
-   * change by generating an incremental reflow command.
-   *
-   * @param aPresContext the presentation context
-   * @param aContent     the content node that was changed
-   * @param aAppend      a hint to the frame about the change
+   * This call is invoked on the primary frame for a character data content
+   * node, when it is changed in the content tree.
    */
-  NS_IMETHOD  CharacterDataChanged(nsPresContext* aPresContext,
-                                   nsIContent*     aChild,
-                                   PRBool          aAppend) = 0;
+  NS_IMETHOD  CharacterDataChanged(CharacterDataChangeInfo* aInfo) = 0;
 
   /**
    * This call is invoked when the value of a content objects's attribute
@@ -2290,9 +2282,6 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
   NS_IMETHOD DumpBox(FILE* out)=0;
 #endif
 
-  // Only nsDeckFrame requires that all its children have widgets
-  virtual PRBool ChildrenMustHaveWidgets() const { return PR_FALSE; }
-
   /**
    * @return PR_TRUE if this text frame ends with a newline character.  It
    * should return PR_FALSE if this is not a text frame.
@@ -2478,6 +2467,16 @@ protected:
 private:
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
   void SetOverflowRect(const nsRect& aRect);
+
+#ifdef NS_DEBUG
+public:
+  // Formerly nsIFrameDebug
+  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const = 0;
+  NS_IMETHOD  GetFrameName(nsAString& aResult) const = 0;
+  NS_IMETHOD_(nsFrameState)  GetDebugStateBits() const = 0;
+  NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext,
+                                 FILE* out, PRInt32 aIndent) = 0;
+#endif
 };
 
 //----------------------------------------------------------------------

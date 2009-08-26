@@ -110,14 +110,8 @@ public:
 
 static PRBool IsViewVisible(nsView *aView)
 {
-  for (nsIView *view = aView; view; view = view->GetParent()) {
-    // We don't check widget visibility here because in the future (with
-    // the better approach to this that's in attachment 160801 on bug
-    // 227361), callers of the equivalent to this function should be able
-    // to rely on being notified when the result of this function changes.
-    if (view->GetVisibility() == nsViewVisibility_kHide)
-      return PR_FALSE;
-  }
+  if (!aView->IsEffectivelyVisible())
+    return PR_FALSE;
 
   // Find out if the root view is visible by asking the view observer
   // (this won't be needed anymore if we link view trees across chrome /
@@ -587,8 +581,9 @@ NS_IMETHODIMP nsViewManager::Composite()
   if (!IsRootVM()) {
     return RootViewManager()->Composite();
   }
-  
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE  
   if (UpdateCount() > 0)
+#endif
     {
       ForceUpdate();
       ClearUpdateCount();
@@ -1107,11 +1102,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         nsView* view = baseView;
         PRBool capturedEvent = PR_FALSE;
         
-        if (!NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
-            !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_FOCUS_EVENT(aEvent) &&
-            !NS_IS_QUERY_CONTENT_EVENT(aEvent) && !NS_IS_PLUGIN_EVENT(aEvent) &&
-            !NS_IS_SELECTION_EVENT(aEvent) &&
-             aEvent->eventStructType != NS_ACCESSIBLE_EVENT) {
+        if (NS_IsEventUsingCoordinates(aEvent)) {
           // will dispatch using coordinates. Pretty bogus but it's consistent
           // with what presshell does.
           view = GetDisplayRootFor(baseView);
@@ -1231,8 +1222,7 @@ NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 
   // Along with nsView::SetVisibility, we enforce that the mouse grabber
   // can never be a hidden view.
-  if (aView && static_cast<nsView*>(aView)->GetVisibility()
-               == nsViewVisibility_kHide) {
+  if (aView && !static_cast<nsView*>(aView)->IsEffectivelyVisible()) {
     aView = nsnull;
   }
 
@@ -1525,35 +1515,35 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   return NS_OK;
 }
 
-static double GetArea(const nsRect& aRect)
-{
-  return double(aRect.width)*double(aRect.height);
-}
-
-PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
-                                          nsRegion* aUpdateRegion)
+void nsViewManager::GetRegionsForBlit(nsView* aView, nsPoint aDelta,
+                                      nsRegion* aBlitRegion,
+                                      nsRegion* aRepaintRegion)
 {
   NS_ASSERTION(!IsPainting(),
                "View manager shouldn't be scrolling during a paint");
-  if (IsPainting() || !mObserver) {
-    return PR_FALSE; // do the safe thing
-  }
 
   nsView* displayRoot = GetDisplayRootFor(aView);
   nsPoint displayOffset = aView->GetParent()->GetOffsetTo(displayRoot);
   nsRect parentBounds = aView->GetParent()->GetDimensions() + displayOffset;
-  // The rect we're going to scroll is intersection of the parent bounds with its
-  // preimage
-  nsRect toScroll;
-  toScroll.IntersectRect(parentBounds + aDelta, parentBounds);
-  nsresult rv =
-    mObserver->ComputeRepaintRegionForCopy(displayRoot, aView, -aDelta, toScroll,
-                                           aUpdateRegion);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  if (IsPainting() || !mObserver) {
+    // Be simple and safe
+    aBlitRegion->SetEmpty();
+    *aRepaintRegion = parentBounds;
+  } else {
+    nsresult rv =
+      mObserver->ComputeRepaintRegionForCopy(displayRoot, aView, -aDelta,
+                                             parentBounds,
+                                             aBlitRegion,
+                                             aRepaintRegion);
+    if (NS_FAILED(rv)) {
+      aBlitRegion->SetEmpty();
+      *aRepaintRegion = nsRegion(parentBounds);
+      return;
+    }
+  }
 
-  aUpdateRegion->MoveBy(-displayOffset);
-
-  return GetArea(aUpdateRegion->GetBounds()) < GetArea(parentBounds)/2;
+  aBlitRegion->MoveBy(-displayOffset);
+  aRepaintRegion->MoveBy(-displayOffset);
 }
 
 NS_IMETHODIMP nsViewManager::SetViewFloating(nsIView *aView, PRBool aFloating)
@@ -1585,16 +1575,6 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
         else {
           UpdateView(view, NS_VMREFRESH_NO_SYNC);
         }
-      }
-    }
-
-    // Any child views not associated with frames might not get their visibility
-    // updated, so propagate our visibility to them. This is important because
-    // hidden views should have all hidden children.
-    for (nsView* childView = view->GetFirstChild(); childView;
-         childView = childView->GetNextSibling()) {
-      if (!childView->GetClientData()) {
-        childView->SetVisibility(aVisible);
       }
     }
   }
@@ -1967,7 +1947,7 @@ NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView,
   }
 
   // is this view even visible?
-  if (view->GetVisibility() == nsViewVisibility_kHide) {
+  if (!view->IsEffectivelyVisible()) {
     return NS_OK; 
   }
 

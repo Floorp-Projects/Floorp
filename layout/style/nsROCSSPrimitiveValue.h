@@ -182,6 +182,13 @@ public:
     }
   }
 
+  void SetTime(float aValue)
+  {
+    Reset();
+    mValue.mFloat = aValue;
+    mType = CSS_S;
+  }
+
   void Reset(void)
   {
     switch (mType) {

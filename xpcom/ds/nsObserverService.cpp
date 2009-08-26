@@ -102,9 +102,7 @@ nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanc
 
     nsRefPtr<nsObserverService> os = new nsObserverService();
 
-    // The cast is required for MSVC6, otherwise it complains about calling
-    // a private function.
-    if (!os || !((nsObserverService*) os)->mObserverTopicTable.IsInitialized())
+    if (!os || !os->mObserverTopicTable.IsInitialized())
         return NS_ERROR_OUT_OF_MEMORY;
 
     return os->QueryInterface(aIID, aInstancePtr);
@@ -149,6 +147,9 @@ nsObserverService::RemoveObserver(nsIObserver* anObserver, const char* aTopic)
     if (!observerList)
         return NS_ERROR_FAILURE;
 
+    /* This death grip is to protect against stupid consumers who call
+       RemoveObserver from their Destructor, see bug 485834/bug 325392. */
+    nsCOMPtr<nsIObserver> kungFuDeathGrip(anObserver);
     return observerList->RemoveObserver(anObserver);
 }
 

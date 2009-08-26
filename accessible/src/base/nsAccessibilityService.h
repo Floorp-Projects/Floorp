@@ -136,6 +136,15 @@ private:
   nsresult GetAccessibleForDeckChildren(nsIDOMNode *aNode,
                                         nsIAccessible **aAccessible);
 
+#ifdef MOZ_XUL
+  /**
+   * Create accessible for XUL tree element.
+   */
+  nsresult GetAccessibleForXULTree(nsIDOMNode *aNode,
+                                   nsIWeakReference *aWeakShell,
+                                   nsIAccessible **aAccessible);
+#endif
+  
   static nsAccessibilityService *gAccessibilityService;
 
   /**

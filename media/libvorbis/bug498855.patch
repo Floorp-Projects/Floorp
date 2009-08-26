@@ -26,7 +26,7 @@ index b7b2399..05774fd 100644
 +  if (!vd || !b || !vi || !ci || !opb) {
 +    return OV_EBADPACKET;
 +  }
-  
+ 
    /* first things first.  Make sure decode is ready */
    _vorbis_block_ripcord(vb);
    oggpack_readinit(opb,op->packet,op->bytes);

@@ -194,7 +194,6 @@ JS_BEGIN_EXTERN_C
  *                          pn_kid: primary function, paren, name, object or
  *                                  array literal expressions
  * TOK_USESHARP nullary     pn_num: jsint value of n in #n#
- * TOK_RP       unary       pn_kid: parenthesized expression
  * TOK_NAME,    name        pn_atom: name, string, or object atom
  * TOK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
  *                                 JSOP_REGEXP
@@ -291,7 +290,8 @@ struct JSDefinition;
 struct JSParseNode {
     uint32              pn_type:16,     /* TOK_* type, see jsscan.h */
                         pn_op:8,        /* see JSOp enum and jsopcode.tbl */
-                        pn_arity:6,     /* see JSParseNodeArity enum */
+                        pn_arity:5,     /* see JSParseNodeArity enum */
+                        pn_parens:1,    /* this expr was enclosed in parens */
                         pn_used:1,      /* name node is on a use-chain */
                         pn_defn:1;      /* this node is a JSDefinition */
 
@@ -822,8 +822,8 @@ struct JSCompiler {
     JSTempValueRooter   tempRoot;       /* root to trace traceListHead */
 
     JSCompiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
-      : context(cx), aleFreeList(NULL), principals(NULL), callerFrame(cfp),
-        nodeList(NULL), functionCount(0), traceListHead(NULL)
+      : context(cx), aleFreeList(NULL), tokenStream(cx), principals(NULL),
+        callerFrame(cfp), nodeList(NULL), functionCount(0), traceListHead(NULL)
     {
         memset(tempFreeList, 0, sizeof tempFreeList);
         setPrincipals(prin);
@@ -833,7 +833,7 @@ struct JSCompiler {
     ~JSCompiler();
 
     /*
-     * Initialize a compiler. Parameters are passed on to js_InitTokenStream.
+     * Initialize a compiler. Parameters are passed on to init tokenStream.
      * The compiler owns the arena pool "tops-of-stack" space above the current
      * JSContext.tempPool mark. This means you cannot allocate from tempPool
      * and save the pointer beyond the next JSCompiler destructor invocation.

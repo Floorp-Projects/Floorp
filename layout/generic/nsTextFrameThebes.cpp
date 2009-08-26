@@ -1546,7 +1546,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   const void* textPtr = aTextBuffer;
   PRBool anySmallcapsStyle = PR_FALSE;
   PRBool anyTextTransformStyle = PR_FALSE;
-  nsIContent* lastContent = nsnull;
   PRInt32 endOfLastContent = 0;
   PRUint32 textFlags = nsTextFrameUtils::TEXT_NO_BREAKS;
 
@@ -1667,7 +1666,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     currentTransformedTextOffset =
       (static_cast<const PRUint8*>(aTextBuffer) - static_cast<const PRUint8*>(textPtr)) >> mDoubleByteText;
 
-    lastContent = content;
     endOfLastContent = contentEnd;
   }
 
@@ -1688,22 +1686,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
   PRUint32 transformedLength = currentTransformedTextOffset;
 
-//  Disable this because it breaks the word cache. Disable at least until
-//  we have a CharacterDataWillChange notification.
-//
-//  if (!(textFlags & nsTextFrameUtils::TEXT_WAS_TRANSFORMED) &&
-//      mMappedFlows.Length() == 1) {
-//    // The textrun maps one continuous, unmodified run of DOM text. It can
-//    // point to the DOM text directly.
-//    const nsTextFragment* frag = lastContent->GetText();
-//    if (frag->Is2b()) {
-//      textPtr = frag->Get2b() + mMappedFlows[0].mContentOffset;
-//    } else {
-//      textPtr = frag->Get1b() + mMappedFlows[0].mContentOffset;
-//    }
-//    textFlags |= gfxTextRunFactory::TEXT_IS_PERSISTENT;
-//  }
-//
   // Now build the textrun
   nsTextFrame* firstFrame = mMappedFlows[0].mStartFrame;
   gfxFontGroup* fontGroup = GetFontGroupForFrame(firstFrame);
@@ -1939,7 +1921,6 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
 void
 BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
 {
-  nsIContent* lastContent = nsnull;
   PRUint32 i;
   for (i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
@@ -1973,9 +1954,6 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
     // Set this bit now; we can't set it any earlier because
     // f->ClearTextRun() might clear it out.
     startFrame->AddStateBits(TEXT_IN_TEXTRUN_USER_DATA);
-    // BuildTextRunForFrames mashes together mapped flows for the same element,
-    // so we do that here too.
-    lastContent = startFrame->GetContent();
   }
 }
 
@@ -3789,16 +3767,14 @@ ClearTextRunsInFlowChain(nsTextFrame* aFrame)
 }
 
 NS_IMETHODIMP
-nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
-                                  nsIContent*     aChild,
-                                  PRBool          aAppend)
+nsTextFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
   ClearTextRunsInFlowChain(this);
 
   nsTextFrame* targetTextFrame;
   PRInt32 nodeLength = mContent->GetText()->GetLength();
 
-  if (aAppend) {
+  if (aInfo->mAppend) {
     targetTextFrame = static_cast<nsTextFrame*>(GetLastContinuation());
     targetTextFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
   } else {
@@ -3824,9 +3800,9 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
   }
 
   // Ask the parent frame to reflow me.
-  aPresContext->GetPresShell()->FrameNeedsReflow(targetTextFrame,
-                                                 nsIPresShell::eStyleChange,
-                                                 NS_FRAME_IS_DIRTY);
+  PresContext()->GetPresShell()->FrameNeedsReflow(targetTextFrame,
+                                                  nsIPresShell::eStyleChange,
+                                                  NS_FRAME_IS_DIRTY);
 
   return NS_OK;
 }
@@ -4134,6 +4110,37 @@ GetTextDecorationStyle(const nsTextRangeStyle &aRangeStyle)
   }
 }
 
+static gfxFloat
+ComputeSelectionUnderlineHeight(nsPresContext* aPresContext,
+                                const gfxFont::Metrics& aFontMetrics,
+                                SelectionType aSelectionType)
+{
+  switch (aSelectionType) {
+    case nsISelectionController::SELECTION_IME_RAWINPUT:
+    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
+    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
+    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
+      return aFontMetrics.underlineSize;
+    case nsISelectionController::SELECTION_SPELLCHECK: {
+      // The thickness of the spellchecker underline shouldn't honor the font
+      // metrics.  It should be constant pixels value which is decided from the
+      // default font size.  Note that if the actual font size is smaller than
+      // the default font size, we should use the actual font size because the
+      // computed value from the default font size can be too thick for the
+      // current font size.
+      PRInt32 defaultFontSize =
+        aPresContext->AppUnitsToDevPixels(nsStyleFont(aPresContext).mFont.size);
+      gfxFloat fontSize = PR_MIN(gfxFloat(defaultFontSize),
+                                 aFontMetrics.emHeight);
+      fontSize = PR_MAX(fontSize, 1.0);
+      return NS_ceil(fontSize / 20);
+    }
+    default:
+      NS_WARNING("Requested underline style is not valid");
+      return aFontMetrics.underlineSize;
+  }
+}
+
 /**
  * This, plus SelectionTypesWithDecorations, encapsulates all knowledge about
  * drawing text decoration for selections.
@@ -4146,7 +4153,9 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
     gfxFloat aAscent, const gfxFont::Metrics& aFontMetrics)
 {
   gfxPoint pt(aPt);
-  gfxSize size(aWidth, aFontMetrics.underlineSize);
+  gfxSize size(aWidth,
+               ComputeSelectionUnderlineHeight(aTextPaintStyle.PresContext(),
+                                               aFontMetrics, aType));
   gfxFloat descentLimit =
     ComputeDescentLimitForSelectionUnderline(aTextPaintStyle.PresContext(),
                                              aFrame, aFontMetrics);
@@ -4949,7 +4958,8 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     }
     nsRect decorationArea;
     gfxSize size(aPresContext->AppUnitsToGfxUnits(aRect.width),
-                 metrics.underlineSize);
+                 ComputeSelectionUnderlineHeight(aPresContext,
+                                                 metrics, sd->mType));
     relativeSize = PR_MAX(relativeSize, 1.0f);
     size.height *= relativeSize;
     decorationArea =
@@ -5946,7 +5956,7 @@ nsTextFrame::SetLength(PRInt32 aLength)
 PRBool
 nsTextFrame::IsFloatingFirstLetterChild()
 {
-  if (!GetStateBits() & TEXT_FIRST_LETTER)
+  if (!(GetStateBits() & TEXT_FIRST_LETTER))
     return PR_FALSE;
   nsIFrame* frame = GetParent();
   if (!frame || frame->GetType() != nsGkAtoms::letterFrame)

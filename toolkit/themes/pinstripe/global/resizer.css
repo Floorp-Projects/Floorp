@@ -17,6 +17,7 @@ resizer[dir="topleft"] {
 resizer[dir="bottomright"],
 resizer[dir="bottomend"]:-moz-locale-dir(ltr) {
   cursor: se-resize;
+  -moz-appearance: resizer;
 }
 
 resizer[dir="topright"] {
