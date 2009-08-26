@@ -2417,14 +2417,15 @@ function BrowserOnCommand(event) {
         gBrowser.loadURIWithFlags(content.location.href,
                                   nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
                                   null, null, null);
-        var buttons = [{
+        let buttons = [{
           label: gNavigatorBundle.getString("safebrowsing.getMeOutOfHereButton.label"),
           accessKey: gNavigatorBundle.getString("safebrowsing.getMeOutOfHereButton.accessKey"),
           callback: function() { getMeOutOfHere(); }
         }];
-        
+
+        let title;
         if (isMalware) {
-          var title = gNavigatorBundle.getString("safebrowsing.reportedAttackSite");
+          title = gNavigatorBundle.getString("safebrowsing.reportedAttackSite");
           buttons[1] = {
             label: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.label"),
             accessKey: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.accessKey"),
@@ -2443,10 +2444,16 @@ function BrowserOnCommand(event) {
           };
         }
         
-        var notificationBox = gBrowser.getNotificationBox();
+        let notificationBox = gBrowser.getNotificationBox();
+        let value = "blocked-badware-page";
+
+        let previousNotification = notificationBox.getNotificationWithValue(value);
+        if (previousNotification)
+          notificationBox.removeNotification(previousNotification);
+
         notificationBox.appendNotification(
           title,
-          "blocked-badware-page",
+          value,
           "chrome://global/skin/icons/blacklist_favicon.png",
           notificationBox.PRIORITY_CRITICAL_HIGH,
           buttons
