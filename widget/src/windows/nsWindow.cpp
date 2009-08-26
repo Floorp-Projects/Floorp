@@ -375,6 +375,18 @@ PRLogModuleInfo* gWindowsLog                      = nsnull;
 static KeyboardLayout gKbdLayout;
 #endif
 
+#ifdef WINCE_WINDOWS_MOBILE
+// HTC Navigation Wheel Event
+// This is the defined value for Gesture Mode
+const int WM_HTCNAV = 0x0400 + 200;
+
+typedef int (__stdcall * HTCApiNavOpen)(HANDLE, int);
+typedef int (__stdcall * HTCApiNavSetMode)(HANDLE, unsigned int);
+
+HTCApiNavOpen    gHTCApiNavOpen = nsnull;
+HTCApiNavSetMode gHTCApiNavSetMode = nsnull;
+#endif
+
 // The last user input event time in microseconds. If
 // there are any pending native toolkit input events
 // it returns the current time. The value is compatible
@@ -3556,9 +3568,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   PRBool result = PR_FALSE;    // call the default nsWindow proc
   *aRetValue = 0;
 
-#if !defined (WINCE_WINDOWS_MOBILE)
   static PRBool getWheelInfo = PR_TRUE;
-#endif
 
 #if defined(EVENT_DEBUG_OUTPUT)
   // First param shows all events, second param indicates whether
@@ -4048,8 +4058,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
             MakeFullScreen(TRUE);
         }
       }
+#ifdef WINCE_WINDOWS_MOBILE
+      if (gHTCApiNavOpen == nsnull) {
+          HINSTANCE library;
+          library = LoadLibrary(L"HTCAPI.dll"); 
+          
+          gHTCApiNavOpen    = (HTCApiNavOpen)    GetProcAddress(library, "HTCNavOpen"); 
+          gHTCApiNavSetMode = (HTCApiNavSetMode) GetProcAddress(library ,"HTCNavSetMode"); 
+        }
+      
+      if (gHTCApiNavOpen != NULL)
+        gHTCApiNavOpen(mWnd, 1 /* undocumented value */);
+      
+      if (gHTCApiNavSetMode != NULL)
+        gHTCApiNavSetMode ( mWnd, 4);
+      // 4 is Gesture Mode. This will generate WM_HTCNAV events to the window
+      
+#endif
       break;
-
+      
 #ifndef WINCE
     case WM_MOUSEACTIVATE:
       if (mWindowType == eWindowType_popup) {
@@ -4180,7 +4207,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     break;
 #endif
 
-#if !defined (WINCE_WINDOWS_MOBILE)
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
     {
@@ -4194,7 +4220,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         return result;
     }
     break;
-#endif
 
 #ifndef WINCE
   case WM_DWMCOMPOSITIONCHANGED:
@@ -4331,6 +4356,22 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       result = PR_TRUE;
     }
     break;
+#endif
+
+#ifdef WINCE_WINDOWS_MOBILE
+   //HTC NAVIGATION WHEEL EVENT
+   case WM_HTCNAV:
+   {
+     int distance = wParam & 0x000000FF;
+     if ( (wParam & 0x000000100) != 0) // Counter Clockwise
+       distance *= -1;
+     if (OnMouseWheel(WM_MOUSEWHEEL, MAKEWPARAM(0, distance), 
+                      MAKELPARAM(GetSystemMetrics(SM_CXSCREEN) / 2, 
+                                 GetSystemMetrics(SM_CYSCREEN) / 2), 
+                      getWheelInfo, result, aRetValue))
+        return result;
+   }
+   break;
 #endif
 
     default:
@@ -4875,7 +4916,6 @@ PRBool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
  * within the message case block. If returning true result should be returned
  * immediately (no more processing).
  */
-#if !defined (WINCE_WINDOWS_MOBILE)
 PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& getWheelInfo, PRBool& result, LRESULT *aRetValue)
 {
   // Handle both flavors of mouse wheel events.
@@ -5129,8 +5169,6 @@ int nsWindow::ComputeMouseWheelDelta(int currentVDelta,
     return int(0.5 + delta * mScrollSeriesCounter *
            (double) scrollAccelerationFactor / 10);
 }
-
-#endif // !defined(WINCE_WINDOWS_MOBILE)
 
 static PRBool
 StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
