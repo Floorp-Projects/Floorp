@@ -58,7 +58,7 @@ template <class T> class nsTArray;
 class nsIAnonymousContentCreator
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsIAnonymousContentCreator)
+  NS_DECLARE_FRAME_ACCESSOR(nsIAnonymousContentCreator)
 
   /**
    * Creates "native" anonymous content and adds the created content to

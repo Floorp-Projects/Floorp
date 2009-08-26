@@ -49,7 +49,7 @@ class nsPresContext;
 class nsICheckboxControlFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsICheckboxControlFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsICheckboxControlFrame)
   
   /**
    * Called by content when checkbox "checked" changes
