@@ -774,8 +774,8 @@ WeaveSvc.prototype = {
   {
     let payload = JSON.stringify({
       "password": password, "email": email,
-      "captcha_challenge": captchaChallenge,
-      "captcha_response": captchaResponse
+      "captcha-challenge": captchaChallenge,
+      "captcha-response": captchaResponse
     });
 
     let url = this.baseURL + '1/' + username;
