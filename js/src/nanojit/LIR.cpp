@@ -459,7 +459,9 @@ namespace nanojit
 
     bool LIns::isCmp() const {
         LOpcode op = opcode();
-        return (op >= LIR_eq && op <= LIR_uge) || (op >= LIR_feq && op <= LIR_fge);
+        return (op >= LIR_eq && op <= LIR_uge) ||
+               (op >= LIR_qeq && op <= LIR_quge) ||
+               (op >= LIR_feq && op <= LIR_fge);
     }
 
     bool LIns::isCond() const {
@@ -468,9 +470,11 @@ namespace nanojit
     }
 
     bool LIns::isQuad() const {
-#ifdef AVMPLUS_64BIT
+#ifdef NANOJIT_64BIT
+        LOpcode op = opcode();
         // callh in 64bit cpu's means a call that returns an int64 in a single register
-        return (opcode() & LIR64) != 0 || opcode() == LIR_callh;
+        return (!(op >= LIR_qeq && op <= LIR_quge) && (op & LIR64) != 0) ||
+               op == LIR_callh;
 #else
         // callh in 32bit cpu's means the 32bit MSW of an int64 result in 2 registers
         return (opcode() & LIR64) != 0;
@@ -1786,15 +1790,15 @@ namespace nanojit
             case LIR_lsh:
             case LIR_rsh:
             case LIR_ush:
-            case LIR_eq:
-            case LIR_lt:
-            case LIR_le:
-            case LIR_gt:
-            case LIR_ge:
-            case LIR_ult:
-            case LIR_ule:
-            case LIR_ugt:
-            case LIR_uge:
+            case LIR_eq:        case LIR_qeq:
+            case LIR_lt:        case LIR_qlt:
+            case LIR_le:        case LIR_qle:
+            case LIR_gt:        case LIR_qgt:
+            case LIR_ge:        case LIR_qge:
+            case LIR_ult:       case LIR_qult:
+            case LIR_ule:       case LIR_qule:
+            case LIR_ugt:       case LIR_qugt:
+            case LIR_uge:       case LIR_quge:
             case LIR_feq:
             case LIR_flt:
             case LIR_fle:
