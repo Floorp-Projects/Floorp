@@ -49,7 +49,7 @@ class nsIDOMHTMLOptionElement;
 class nsISelectControlFrame : public nsQueryFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsISelectControlFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsISelectControlFrame)
 
   /**
    * Adds an option to the list at index

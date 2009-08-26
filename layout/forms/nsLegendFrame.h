@@ -42,7 +42,7 @@
 
 class nsLegendFrame : public nsBlockFrame {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsLegendFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsLegendFrame)
 
   nsLegendFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
 

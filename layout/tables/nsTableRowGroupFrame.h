@@ -97,7 +97,7 @@ class nsTableRowGroupFrame
   , public nsILineIterator
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsTableRowGroupFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsTableRowGroupFrame)
   NS_DECL_QUERYFRAME
 
   /** instantiate a new instance of nsTableRowFrame.
