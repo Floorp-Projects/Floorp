@@ -465,8 +465,12 @@ SyncEngine.prototype = {
       let doUpload = Utils.bind2(this, function(desc) {
         this._log.info("Uploading " + desc + " of " + outnum + " records");
         up.post();
-        if (up.data.modified > this.lastSync)
-          this.lastSync = up.data.modified;
+
+        // Record the modified time of the upload
+        let modified = up._lastChannel.getResponseHeader("X-Weave-Timestamp");
+        if (modified > this.lastSync)
+          this.lastSync = modified;
+
         up.clearRecords();
       });
 
