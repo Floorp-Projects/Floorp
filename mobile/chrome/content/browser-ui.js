@@ -183,7 +183,7 @@ var BrowserUI = {
       return;
     
     this._toolbarLocked--;
-    if(!this._toolbarLocked)
+    if (!this._toolbarLocked)
       document.getElementById("toolbar-moveable-container").top = "";
   },
 
@@ -202,9 +202,7 @@ var BrowserUI = {
       // IME state to be set properly. Testing shows we only really need to
       // do this the first time.
       this._edit.inputField.blur();
-
       this._edit.inputField.focus();
-      this._edit.select();
     }
     else if (!aEdit && icons.getAttribute("mode") != "view") {
       icons.setAttribute("mode", "view");
