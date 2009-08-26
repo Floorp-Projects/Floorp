@@ -172,10 +172,6 @@ WeaveSvc.prototype = {
   // Timer object for automagically syncing
   _syncTimer: null,
 
-  // Current alerts
-  _alerts: "[]",
-  get alerts() { return JSON.parse(this._alerts); },
-  
   get username() {
     return Svc.Prefs.get("username", "");
   },
@@ -536,37 +532,16 @@ WeaveSvc.prototype = {
       };
 
       // login may fail because of cluster change
-      let response;
       try {
-        response = res.get();
+        res.get();
       } catch (e) {}
 
-      if (response) {
-        switch (response.status) {
+      try {
+        switch (res.lastChannel.responseStatus) {
           case 200:
-            if (passphrase &&
-              !this.verifyPassphrase(username, password, passphrase)) {
+            if (passphrase && !this.verifyPassphrase(username, password, passphrase)) {
               this._setSyncFailure(LOGIN_FAILED_INVALID_PASSPHRASE);
               return false;
-            }
-            
-            // check for alerts
-            try {
-              let alerts = response.getHeader("X-Weave-Alert");
-              if (this._alerts != alerts) {
-                this._alerts = alerts;
-                Svc.Observer.notifyObservers(
-                  null, "weave:service:alerts:changed", ""
-                );
-              }
-            } catch (e) {
-              // no alert headers were present
-              if (this.alerts.length != 0) {
-                this._alerts = "";
-                Svc.Observer.notifyObservers(
-                  null, "weave:service:alerts:changed", ""
-                );
-              }
             }
             return true;
           case 401:
@@ -579,9 +554,9 @@ WeaveSvc.prototype = {
           default:
             throw "unexpected HTTP response: " + res.lastChannel.responseStatus;
         }
-      } else {
+      } catch (e) {
         // if we get here, we have either a busted channel or a network error
-        this._log.debug("verifyLogin failed: network error");
+        this._log.debug("verifyLogin failed: " + e)
         this._setSyncFailure(LOGIN_FAILED_NETWORK_ERROR);
         throw e;
       }
@@ -1247,12 +1222,6 @@ WeaveSvc.prototype = {
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     try {
       engine.sync();
-      if (this._alerts != engine.alerts) {
-        this._alerts = engine.alerts;
-        Svc.Observer.notifyObservers(
-          null, "weave:service:alerts:changed", ""
-        );
-      }
       return true;
     }
     catch(e) {
