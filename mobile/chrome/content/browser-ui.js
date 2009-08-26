@@ -124,6 +124,15 @@ var BrowserUI = {
       if (this._favicon.src != "")
         this._setIcon(this._faviconLink);
     }
+    else if (/\bsearch\b/i(link.rel)) {
+      var type = link.type && link.type.toLowerCase();
+      type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
+      if (type == "application/opensearchdescription+xml" && link.title && /^(?:https?|ftp):/i.test(link.href)) {
+        var engine = { title: link.title, href: link.href };
+
+        BrowserSearch.addPageSearchEngine(engine, link.ownerDocument);
+      }
+    }
   },
 
   _updateButtons : function(aBrowser) {
@@ -492,7 +501,7 @@ var BrowserUI = {
   },
 
   showAutoComplete : function(showDefault) {
-    this.updateSearchEngines();
+    BrowserSearch.updateSearchButtons();
     this._edit.showHistoryPopup();
   },
 
@@ -506,30 +515,6 @@ var BrowserUI = {
 
     var submission = button.engine.getSubmission(value, null);
     getBrowser().loadURI(submission.uri.spec, null, submission.postData, false);
-  },
-
-  engines : null,
-  updateSearchEngines : function() {
-    if (this.engines)
-      return;
-
-    var searchService = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
-    var engines = searchService.getVisibleEngines({ });
-    this.engines = engines;
-
-    const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    var container = document.getElementById("search-buttons");
-    for (var e = 0; e < engines.length; e++) {
-      var button = document.createElementNS(kXULNS, "radio");
-      var engine = engines[e];
-      button.id = engine.name;
-      button.setAttribute("label", engine.name);
-      button.className = "searchengine";
-      if (engine.iconURI)
-        button.setAttribute("src", engine.iconURI.spec);
-      container.appendChild(button);
-      button.engine = engine;
-    }
   },
 
   updateStar : function() {
