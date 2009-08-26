@@ -87,7 +87,7 @@ public:
   nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
   ~nsTreeBodyFrame();
 
-  NS_DECLARE_FRAME_ACCESSOR(nsTreeBodyFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsTreeBodyFrame)
 
   NS_DECL_QUERYFRAME
 

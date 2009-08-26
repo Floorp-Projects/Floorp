@@ -47,7 +47,7 @@ class nsIScrollbarFrame;
 class nsIScrollbarMediator
 {
 public:
-  NS_DECLARE_FRAME_ACCESSOR(nsIScrollbarMediator)
+  NS_DECL_QUERYFRAME_TARGET(nsIScrollbarMediator)
 
   // The nsIFrame aScrollbar argument below denotes the
   // scrollbar that's firing the notification. It should be
