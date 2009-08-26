@@ -48,7 +48,7 @@ class nsIPresShell;
 class nsIRootBox
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsIRootBox)
+  NS_DECLARE_FRAME_ACCESSOR(nsIRootBox)
 
   virtual nsPopupSetFrame* GetPopupSetFrame() = 0;
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) = 0;

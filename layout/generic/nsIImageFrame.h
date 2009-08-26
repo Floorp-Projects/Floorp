@@ -51,7 +51,7 @@ class nsIImageMap;
 class nsIImageFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsIImageFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsIImageFrame)
 
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize) = 0;
 
