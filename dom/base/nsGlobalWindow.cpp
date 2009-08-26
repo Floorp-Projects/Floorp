@@ -240,6 +240,10 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
 // The shortest interval/timeout we permit
 #define DOM_MIN_TIMEOUT_VALUE 10 // 10ms
 
+// The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
+// uses 5.
+#define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5
+
 // The longest interval (as PRIntervalTime) we permit, or that our
 // timer code can handle, really. See DELAY_INTERVAL_LIMIT in
 // nsTimerImpl.h for details.
@@ -7665,6 +7669,8 @@ nsGlobalWindow::ClearWindowScope(nsISupports *aWindow)
 // nsGlobalWindow: Timeout Functions
 //*****************************************************************************
 
+PRUint32 sNestingLevel;
+
 nsresult
 nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
                                      PRInt32 interval,
@@ -7679,7 +7685,9 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
     return NS_OK;
   }
 
-  if (interval < DOM_MIN_TIMEOUT_VALUE) {
+  PRUint32 nestingLevel = sNestingLevel + 1;
+  if (interval < DOM_MIN_TIMEOUT_VALUE &&
+      (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL)) {
     // Don't allow timeouts less than DOM_MIN_TIMEOUT_VALUE from
     // now...
 
@@ -7780,6 +7788,10 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   }
 
   timeout->mWindow = this;
+
+  if (!aIsInterval) {
+    timeout->mNestingLevel = nestingLevel;
+  }
 
   // No popups from timeouts by default
   timeout->mPopupState = openAbused;
@@ -7998,6 +8010,13 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     ++gRunningTimeoutDepth;
     ++mTimeoutFiringDepth;
 
+    PRBool trackNestingLevel = !timeout->mInterval;
+    PRUint32 nestingLevel;
+    if (trackNestingLevel) {
+      nestingLevel = sNestingLevel;
+      sNestingLevel = timeout->mNestingLevel;
+    }
+
     nsCOMPtr<nsIScriptTimeoutHandler> handler(timeout->mScriptHandler);
     void *scriptObject = handler->GetScriptObject();
     if (!scriptObject) {
@@ -8037,6 +8056,10 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
     }
     handler = nsnull; // drop reference before dropping timeout refs.
+
+    if (trackNestingLevel) {
+      sNestingLevel = nestingLevel;
+    }
 
     --mTimeoutFiringDepth;
     --gRunningTimeoutDepth;

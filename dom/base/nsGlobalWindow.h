@@ -185,6 +185,9 @@ struct nsTimeout : PRCList
   // stack depth at which timeout is firing
   PRUint32 mFiringDepth;
 
+  // 
+  PRUint32 mNestingLevel;
+
   // The popup state at timeout creation time if not created from
   // another timeout
   PopupControlState mPopupState;
