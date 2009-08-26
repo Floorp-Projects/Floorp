@@ -386,7 +386,6 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     nsIContent* content = GetTextEditorRootContent();
     if (content)
       return content;
-    NS_ERROR("Editor is not found!");
   }
 
   nsPresContext* presContext = aPresShell->GetPresContext();
