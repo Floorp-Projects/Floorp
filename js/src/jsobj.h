@@ -815,14 +815,14 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
 extern JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
                      jsval *vp);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp);
 
 /*
@@ -832,7 +832,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp);
 extern JS_FRIEND_API(JSBool)
 js_CheckUndeclaredVarAssignment(JSContext *cx);
 
-extern JSBool
+extern JS_REQUIRES_STACK JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      jsval *vp);
 
