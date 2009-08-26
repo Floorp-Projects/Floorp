@@ -62,7 +62,7 @@ nsFileSpecImpl::nsFileSpecImpl()
 	:	mInputStream(nsnull)
 	,	mOutputStream(nsnull)
 {
-//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
+//    NS_ERROR("nsFileSpec is unsupported - use nsIFile!");
 
 }
 
@@ -73,7 +73,7 @@ nsFileSpecImpl::nsFileSpecImpl(const nsFileSpec& inSpec)
 	,	mInputStream(nsnull)
 	,	mOutputStream(nsnull)
 {
-//    NS_ASSERTION(0, "nsFileSpec is unsupported - use nsIFile!");
+//    NS_ERROR("nsFileSpec is unsupported - use nsIFile!");
 
 }
 

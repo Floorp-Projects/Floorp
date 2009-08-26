@@ -38,7 +38,6 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
-#include "nsILocale.h"
 #include "nsPosixLocale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"

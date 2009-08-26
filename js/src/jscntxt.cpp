@@ -58,6 +58,7 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jslock.h"
+#include "jsmath.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
@@ -83,6 +84,7 @@ InitThreadData(JSThreadData *data)
 #ifdef JS_TRACER
     js_InitJIT(&data->traceMonitor);
 #endif
+    js_InitRandom(data);
 }
 
 static void
@@ -114,11 +116,10 @@ PurgeThreadData(JSContext *cx, JSThreadData *data)
     tm->reservedDoublePoolPtr = tm->reservedDoublePool;
 
     /*
-     * FIXME: bug 506117. We should flush only if (cx->runtime->gcRegenShapes),
-     * but we can't yet, because traces may embed sprop and object references,
-     * and we don't yet mark such embedded refs.
+     * If we are about to regenerate shapes, we have to flush the JIT cache, too.
      */
-    tm->needFlush = JS_TRUE;
+    if (cx->runtime->gcRegenShapes)
+        tm->needFlush = JS_TRUE;
 
     if (tm->recorder)
         tm->recorder->deepAbort();
@@ -267,6 +268,15 @@ thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
     return JS_DHASH_NEXT;
 }
 
+static JSDHashOperator
+thread_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
+              void *arg)
+{
+    JSThread *thread = ((JSThreadsHashEntry *) hdr)->thread;
+    thread->data.mark((JSTracer *)arg);
+    return JS_DHASH_NEXT;
+}
+
 #endif /* JS_THREADSAFE */
 
 JSBool
@@ -305,6 +315,16 @@ js_PurgeThreads(JSContext *cx)
     JS_DHashTableEnumerate(&cx->runtime->threads, thread_purger, cx);
 #else
     PurgeThreadData(cx, &cx->runtime->threadData);
+#endif
+}
+
+void
+js_TraceThreads(JSRuntime *rt, JSTracer *trc)
+{
+#ifdef JS_THREADSAFE
+    JS_DHashTableEnumerate(&rt->threads, thread_tracer, trc);
+#else
+    rt->threadData.mark(trc);
 #endif
 }
 
@@ -1657,13 +1677,13 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
     } else if (JSVAL_IS_VOID(v)) {
         ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                           js_GetErrorMessage, NULL,
-                                          JSMSG_NULL_OR_UNDEFINED, bytes,
+                                          JSMSG_UNEXPECTED_TYPE, bytes,
                                           js_undefined_str, NULL);
     } else {
         JS_ASSERT(JSVAL_IS_NULL(v));
         ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                           js_GetErrorMessage, NULL,
-                                          JSMSG_NULL_OR_UNDEFINED, bytes,
+                                          JSMSG_UNEXPECTED_TYPE, bytes,
                                           js_null_str, NULL);
     }
 
@@ -1829,4 +1849,15 @@ js_GetCurrentBytecodePC(JSContext* cx)
      * imacro, for the benefit of callers doing bytecode inspection.
      */
     return (*pc == JSOP_CALL && imacpc) ? imacpc : pc;
+}
+
+bool
+js_CurrentPCIsInImacro(JSContext *cx)
+{
+#ifdef JS_TRACER
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+    return (JS_ON_TRACE(cx) ? cx->bailExit->imacpc : cx->fp->imacpc) != NULL;
+#else
+    return false;
+#endif
 }

@@ -222,7 +222,7 @@ protected:
   PRBool HasDescendant(const nsAString& aTagName, PRBool aAllowEmpty = PR_TRUE);
 
 #ifdef SHOW_LAYOUT_HEURISTIC
-  nsAutoString mLayoutHeuristic;
+  nsString mLayoutHeuristic;
 #endif
 };
 

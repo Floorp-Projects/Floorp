@@ -56,11 +56,11 @@ class nsIScrollableView;
 const PRUint32 kDefaultCacheSize = 256;
 
 #define NS_DOCACCESSIBLE_IMPL_CID                       \
-{  /* 0ed1be1d-52a7-4bfd-b4f5-0de7caed4617 */           \
-  0x0ed1be1d,                                           \
-  0x52a7,                                               \
-  0x4bfd,                                               \
-  { 0xb4, 0xf5, 0x0d, 0xe7, 0xca, 0xed, 0x46, 0x17 }    \
+{  /* 9735bc5f-a4b6-4668-ab73-6f8434c8e750 */           \
+  0x9735bc5f,                                           \
+  0xa4b6,                                               \
+  0x4668,                                               \
+  { 0xab, 0x73, 0x6f, 0x84, 0x34, 0xc8, 0xe7, 0x50 }    \
 }
 
 class nsDocAccessible : public nsHyperTextAccessibleWrap,
@@ -159,6 +159,11 @@ public:
    * @param  aAccessNode  [in] accessible to cache
    */
   void CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode);
+
+  /**
+   * Remove the given access node from document cache.
+   */
+  void RemoveAccessNodeFromCache(nsIAccessNode *aAccessNode);
 
   /**
    * Fires pending events.

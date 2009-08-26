@@ -531,26 +531,14 @@ CallWithoutStatics(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
   JSTempValueRooter tvr;
   js_SaveRegExpStatics(cx, &statics, &tvr);
   JS_ClearRegExpStatics(cx);
+  JSStackFrame *fp = JS_SaveFrameChain(cx);
+  uint32 options =
+    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
   JSBool ok = ::JS_CallFunctionValue(cx, obj, fval, argc, argv, rval);
+  JS_SetOptions(cx, options);
+  JS_RestoreFrameChain(cx, fp);
   js_RestoreRegExpStatics(cx, &statics, &tvr);
   return ok;
-}
-
-// Call wrapper to help with wrapping calls to functions or callable
-// objects in a scripted function (see XPC_SJOW_Call()). The first
-// argument passed to this method is the unsafe function to call, the
-// rest are the arguments to pass to the function we're calling.
-static JSBool
-XPC_SJOW_CallWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                     jsval *rval)
-{
-  // Make sure we've got at least one argument (which may not be the
-  // case if someone's monkeying with this function directly from JS).
-  if (argc < 1) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
-
-  return CallWithoutStatics(cx, obj, argv[0], argc - 1, argv + 1, rval);
 }
 
 static JSBool
@@ -813,67 +801,25 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  JSFunction *callWrapper;
-  jsval cwval;
-
-  // Check if we've cached the call wrapper on the scripted function
-  // already. If so, use the cached call wrapper.
-  if (!::JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(scriptedFunVal), 0, &cwval)) {
-    return JS_FALSE;
-  }
-
-  if (JSVAL_IS_PRIMITIVE(cwval)) {
-    // No cached call wrapper found.
-    callWrapper =
-      ::JS_NewFunction(cx, XPC_SJOW_CallWrapper, 0, 0, callThisObj,
-                       "XPC_SJOW_CallWrapper");
-    if (!callWrapper) {
-      return JS_FALSE;
-    }
-
-    // Cache the call wrapper function, this will also ensure it
-    // doesn't get collected early. We piggy-back on one of the
-    // reserved slots in JS functions here, and that's ok since we
-    // know the scripted function we're storing it on is a function
-    // compiled by the JS engine and the reserved slots are unused.
-    JSObject *callWrapperObj = ::JS_GetFunctionObject(callWrapper);
-    if (!::JS_SetReservedSlot(cx, JSVAL_TO_OBJECT(scriptedFunVal), 0,
-                              OBJECT_TO_JSVAL(callWrapperObj))) {
-      return JS_FALSE;
-    }
-  } else {
-    // Found a cached call wrapper, extract the function.
-    callWrapper = ::JS_ValueToFunction(cx, cwval);
-
-    if (!callWrapper) {
-      return ThrowException(NS_ERROR_UNEXPECTED, cx);
-    }
-  }
-
   // Build up our argument array per earlier comment.
   jsval argsBuf[8];
   jsval *args = argsBuf;
 
   if (argc > 7) {
-    args = (jsval *)nsMemory::Alloc((argc + 2) * sizeof(jsval *));
+    args = (jsval *)nsMemory::Alloc((argc + 1) * sizeof(jsval *));
     if (!args) {
       return ThrowException(NS_ERROR_OUT_OF_MEMORY, cx);
     }
   }
 
-  args[0] = OBJECT_TO_JSVAL(::JS_GetFunctionObject(callWrapper));
-  args[1] = OBJECT_TO_JSVAL(funToCall);
-
-  if (args[0] == JSVAL_NULL) {
-    return JS_FALSE;
-  }
+  args[0] = OBJECT_TO_JSVAL(funToCall);
 
   for (uintN i = 0; i < argc; ++i) {
-    args[i + 2] = UnwrapJSValue(argv[i]);
+    args[i + 1] = UnwrapJSValue(argv[i]);
   }
 
   jsval val;
-  JSBool ok = CallWithoutStatics(cx, callThisObj, scriptedFunVal, argc + 2,
+  JSBool ok = CallWithoutStatics(cx, callThisObj, scriptedFunVal, argc + 1,
                                  args, &val);
 
   if (args != argsBuf) {

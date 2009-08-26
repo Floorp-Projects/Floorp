@@ -82,7 +82,7 @@ function LoadRejects() {
 
   // sort and display the table
   rejectsTree.treeBoxObject.view = rejectsTreeView;
-  RejectColumnSort('host');
+  RejectColumnSort(lastRejectSortColumn);
 
   var element = document.getElementById("removeAllRejects");
   if (rejects.length == 0) {
@@ -126,7 +126,7 @@ function HandleRejectKeyPress(e) {
   }
 }
 
-var lastRejectSortColumn = "";
+var lastRejectSortColumn = "host";
 var lastRejectSortAscending = false;
 
 function RejectColumnSort(column) {
@@ -134,4 +134,9 @@ function RejectColumnSort(column) {
     SortTree(rejectsTree, rejectsTreeView, rejects,
                  column, lastRejectSortColumn, lastRejectSortAscending);
   lastRejectSortColumn = column;
+
+  // set the sortDirection attribute to get the styling going
+  var sortedCol = document.getElementById("rejectCol");
+  sortedCol.setAttribute("sortDirection", lastRejectSortAscending ?
+                                          "ascending" : "descending");
 }

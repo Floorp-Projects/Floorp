@@ -65,7 +65,6 @@ CPPSRCS		= xptcinvoke.cpp xptcstubs.cpp
 
 endif
 
-REQUIRES = string
 
 LOCAL_INCLUDES += -I$(srcdir)/../../../../xptinfo/src
 

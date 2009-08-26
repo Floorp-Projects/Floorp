@@ -26,6 +26,8 @@
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Michael Ventnor <m.ventnor@gmail.com>
+ *   Jonathon Jongsma <jonathon.jongsma@collabora.co.uk>, Collabora Ltd.
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,6 +49,7 @@
 
 #include "nsDOMError.h"
 #include "nsDOMString.h"
+#include "nsPrintfCString.h"
 #include "nsIDOMNSCSS2Properties.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSPrimitiveValue.h"
@@ -70,7 +73,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
 #include "imgIRequest.h"
-#include "nsInspectorCSSUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameManager.h"
 #include "prlog.h"
@@ -95,8 +97,6 @@ NS_NewComputedDOMStyle(nsIDOMElement *aElement, const nsAString &aPseudoElt,
                        nsIPresShell *aPresShell,
                        nsComputedDOMStyle **aComputedStyle)
 {
-  NS_ENSURE_ARG_POINTER(aComputedStyle);
-
   nsRefPtr<nsComputedDOMStyle> computedStyle;
   if (sCachedComputedDOMStyle) {
     // There's an unused nsComputedDOMStyle cached, use it.
@@ -158,11 +158,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsComputedDOMStyle)
 NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsComputedDOMStyle)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_ROOT_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsComputedDOMStyle)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsComputedDOMStyle)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsComputedDOMStyle)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsComputedDOMStyle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -302,7 +305,6 @@ nsComputedDOMStyle::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsComputedDOMStyle::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  NS_ENSURE_ARG_POINTER(aParentRule);
   *aParentRule = nsnull;
 
   return NS_OK;
@@ -327,12 +329,112 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   return rv;
 }
 
+static nsStyleContext*
+GetStyleContextForFrame(nsIFrame* aFrame)
+{
+  nsStyleContext* styleContext = aFrame->GetStyleContext();
+
+  /* For tables the primary frame is the "outer frame" but the style
+   * rules are applied to the "inner frame".  Luckily, the "outer
+   * frame" actually inherits style from the "inner frame" so we can
+   * just move one level up in the style context hierarchy....
+   */
+  if (aFrame->GetType() == nsGkAtoms::tableOuterFrame)
+    return styleContext->GetParent();
+
+  return styleContext;
+}    
+
+/* static */
+already_AddRefed<nsStyleContext>
+nsComputedDOMStyle::GetStyleContextForContent(nsIContent* aContent,
+                                              nsIAtom* aPseudo,
+                                              nsIPresShell* aPresShell)
+{
+  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eELEMENT),
+               "aContent must be an element");
+  if (!aPseudo) {
+    // If there's no pres shell, get it from the content
+    if (!aPresShell) {
+      aPresShell = GetPresShellForContent(aContent);
+      if (!aPresShell)
+        return nsnull;
+    }
+
+    aPresShell->FlushPendingNotifications(Flush_Style);
+  }
+
+  return GetStyleContextForContentNoFlush(aContent, aPseudo, aPresShell);
+}
+
+/* static */
+already_AddRefed<nsStyleContext>
+nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
+                                                     nsIAtom* aPseudo,
+                                                     nsIPresShell* aPresShell)
+{
+  NS_ABORT_IF_FALSE(aContent, "NULL content node");
+
+  // If there's no pres shell, get it from the content
+  if (!aPresShell) {
+    aPresShell = GetPresShellForContent(aContent);
+    if (!aPresShell)
+      return nsnull;
+  }
+
+  if (!aPseudo) {
+    nsIFrame* frame = aPresShell->GetPrimaryFrameFor(aContent);
+    if (frame) {
+      nsStyleContext* result = GetStyleContextForFrame(frame);
+      // Don't use the style context if it was influenced by
+      // pseudo-elements, since then it's not the primary style
+      // for this element.
+      if (!result->HasPseudoElementData()) {
+        // this function returns an addrefed style context
+        result->AddRef();
+        return result;
+      }
+    }
+  }
+
+  // No frame has been created or we have a pseudo, so resolve the
+  // style ourselves
+  nsRefPtr<nsStyleContext> parentContext;
+  nsIContent* parent = aPseudo ? aContent : aContent->GetParent();
+  // Don't resolve parent context for document fragments.
+  if (parent && parent->IsNodeOfType(nsINode::eELEMENT))
+    parentContext = GetStyleContextForContent(parent, nsnull, aPresShell);
+
+  nsPresContext *presContext = aPresShell->GetPresContext();
+  if (!presContext)
+    return nsnull;
+
+  nsStyleSet *styleSet = aPresShell->StyleSet();
+
+  if (aPseudo) {
+    return styleSet->ResolvePseudoStyleFor(aContent, aPseudo, parentContext);
+  }
+
+  return styleSet->ResolveStyleFor(aContent, parentContext);
+}
+
+/* static */
+nsIPresShell*
+nsComputedDOMStyle::GetPresShellForContent(nsIContent* aContent)
+{
+  nsIDocument* currentDoc = aContent->GetCurrentDoc();
+  if (!currentDoc)
+    return nsnull;
+
+  return currentDoc->GetPrimaryShell();
+}
 
 NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
                                         nsIDOMCSSValue** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ASSERTION(!mStyleContextHolder, "bad state");
+
   *aReturn = nsnull;
 
   nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak);
@@ -377,14 +479,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
   mOuterFrame = mPresShell->GetPrimaryFrameFor(mContent);
   mInnerFrame = mOuterFrame;
-  if (!mOuterFrame || mPseudo) {
-    // Need to resolve a style context
-    mStyleContextHolder =
-      nsInspectorCSSUtils::GetStyleContextForContent(mContent,
-                                                     mPseudo,
-                                                     mPresShell);
-    NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
-  } else {
+  if (mOuterFrame && !mPseudo) {
     nsIAtom* type = mOuterFrame->GetType();
     if (type == nsGkAtoms::tableOuterFrame) {
       // If the frame is an outer table frame then we should get the style
@@ -398,6 +493,33 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
     mStyleContextHolder = mInnerFrame->GetStyleContext();
     NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
+  }
+
+  if (!mStyleContextHolder || mStyleContextHolder->HasPseudoElementData()) {
+#ifdef DEBUG
+    if (mStyleContextHolder) {
+      // We want to check that going through this path because of
+      // HasPseudoElementData is rare, because it slows us down a good
+      // bit.  So check that we're really inside something associated
+      // with a pseudo-element that contains elements.
+      nsStyleContext *topWithPseudoElementData = mStyleContextHolder;
+      while (topWithPseudoElementData->GetParent()->HasPseudoElementData()) {
+        topWithPseudoElementData = topWithPseudoElementData->GetParent();
+      }
+      NS_ASSERTION(nsCSSPseudoElements::PseudoElementContainsElements(
+                     topWithPseudoElementData->GetPseudoType()),
+                   "we should be in a pseudo-element that is expected to "
+                   "contain elements");
+    }
+#endif
+    // Need to resolve a style context
+    mStyleContextHolder =
+      nsComputedDOMStyle::GetStyleContextForContent(mContent,
+                                                    mPseudo,
+                                                    mPresShell);
+    NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
+    NS_ASSERTION(mPseudo || !mStyleContextHolder->HasPseudoElementData(),
+                 "should not have pseudo-element data");
   }
 
   // Call our pointer-to-member-function.
@@ -1250,6 +1372,178 @@ nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
   return CallQueryInterface(val, aValue);
 }
 
+static void
+AppendCSSGradientLength(const nsStyleCoord& aValue,
+                        nsROCSSPrimitiveValue* aPrimitive,
+                        nsAString& aString)
+{
+  nsAutoString tokenString;
+  if (aValue.GetUnit() == eStyleUnit_Coord)
+    aPrimitive->SetAppUnits(aValue.GetCoordValue());
+  else
+    aPrimitive->SetPercent(aValue.GetPercentValue());
+  aPrimitive->GetCssText(tokenString);
+  aString.Append(tokenString);
+}
+
+static void
+AppendCSSGradientRadius(const nscoord aValue,
+                        nsROCSSPrimitiveValue* aPrimitive,
+                        nsAString& aString)
+{
+  nsAutoString tokenString;
+  aPrimitive->SetAppUnits(aValue);
+  aPrimitive->GetCssText(tokenString);
+  aString.Append(tokenString);
+}
+
+nsresult
+nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
+                                         nsAString& aString)
+{
+  if (aGradient->mIsRadial)
+    aString.AssignLiteral("-moz-radial-gradient(");
+  else
+    aString.AssignLiteral("-moz-linear-gradient(");
+
+  nsROCSSPrimitiveValue *tmpVal = GetROCSSPrimitiveValue();
+  if (!tmpVal)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // starting X position
+  AppendCSSGradientLength(aGradient->mStartX, tmpVal, aString);
+  aString.AppendLiteral(" ");
+
+  // starting Y position
+  AppendCSSGradientLength(aGradient->mStartY, tmpVal, aString);
+  aString.AppendLiteral(", ");
+
+  // starting radius
+  if (aGradient->mIsRadial) {
+    AppendCSSGradientRadius(aGradient->mStartRadius, tmpVal, aString);
+    aString.AppendLiteral(", ");
+  }
+
+  // ending X position
+  AppendCSSGradientLength(aGradient->mEndX, tmpVal, aString);
+  aString.AppendLiteral(" ");
+
+  // ending Y position
+  AppendCSSGradientLength(aGradient->mEndY, tmpVal, aString);
+
+  // ending radius
+  if (aGradient->mIsRadial) {
+    aString.AppendLiteral(", ");
+    AppendCSSGradientRadius(aGradient->mStartRadius, tmpVal, aString);
+  }
+
+  // color stops
+  for (PRUint32 i = 0; i < aGradient->mStops.Length(); ++i) {
+    nsAutoString tokenString;
+    aString.AppendLiteral(", color-stop(");
+
+    tmpVal->SetPercent(aGradient->mStops[i].mPosition);
+    tmpVal->GetCssText(tokenString);
+    aString.Append(tokenString);
+    aString.AppendLiteral(", ");
+
+    nsresult rv = SetToRGBAColor(tmpVal, aGradient->mStops[i].mColor);
+    if (NS_FAILED(rv)) {
+      delete tmpVal;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    tmpVal->GetCssText(tokenString);
+    aString.Append(tokenString);
+    aString.AppendLiteral(")");
+  }
+
+  delete tmpVal;
+  aString.AppendLiteral(")");
+  return NS_OK;
+}
+
+// -moz-image-rect(<uri>, <top>, <right>, <bottom>, <left>)
+nsresult
+nsComputedDOMStyle::GetImageRectString(nsIURI* aURI,
+                                       const nsStyleSides& aCropRect,
+                                       nsString& aString)
+{
+  nsDOMCSSValueList* valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  // <uri>
+  nsROCSSPrimitiveValue *valURI = GetROCSSPrimitiveValue();
+  if (!valURI || !valueList->AppendCSSValue(valURI)) {
+    delete valURI;
+    delete valueList;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  valURI->SetURI(aURI);
+
+  // <top>, <right>, <bottom>, <left>
+  NS_FOR_CSS_SIDES(side) {
+    nsROCSSPrimitiveValue *valSide = GetROCSSPrimitiveValue();
+    if (!valSide || !valueList->AppendCSSValue(valSide)) {
+      delete valSide;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    SetValueToCoord(valSide, aCropRect.Get(side));
+  }
+
+  nsAutoString argumentString;
+  valueList->GetCssText(argumentString);
+  delete valueList;
+
+  aString = NS_LITERAL_STRING("-moz-image-rect(") +
+            argumentString +
+            NS_LITERAL_STRING(")");
+  return NS_OK;
+}
+
+nsresult
+nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
+                                         nsROCSSPrimitiveValue* aValue)
+{
+  switch (aStyleImage.GetType()) {
+    case eStyleImageType_Image:
+    {
+      imgIRequest *req = aStyleImage.GetImageData();
+      nsCOMPtr<nsIURI> uri;
+      req->GetURI(getter_AddRefs(uri));
+
+      const nsStyleSides* cropRect = aStyleImage.GetCropRect();
+      if (cropRect) {
+        nsAutoString imageRectString;
+        nsresult rv = GetImageRectString(uri, *cropRect, imageRectString);
+        NS_ENSURE_SUCCESS(rv, rv);
+        aValue->SetString(imageRectString);
+      } else {
+        aValue->SetURI(uri);
+      }
+      break;
+    }
+    case eStyleImageType_Gradient:
+    {
+      nsAutoString gradientString;
+      nsresult rv = GetCSSGradientString(aStyleImage.GetGradientData(),
+                                         gradientString);
+      NS_ENSURE_SUCCESS(rv, rv);
+      aValue->SetString(gradientString);
+      break;
+    }
+    case eStyleImageType_Null:
+      aValue->SetIdent(eCSSKeyword_none);
+      break;
+    default:
+      NS_NOTREACHED("unexpected image type");
+      return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
 {
@@ -1266,13 +1560,11 @@ nsComputedDOMStyle::GetBackgroundImage(nsIDOMCSSValue** aValue)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    imgIRequest *image = bg->mLayers[i].mImage;
-    if (!image) {
-      val->SetIdent(eCSSKeyword_none);
-    } else {
-      nsCOMPtr<nsIURI> uri;
-      image->GetURI(getter_AddRefs(uri));
-      val->SetURI(uri);
+    const nsStyleImage& image = bg->mLayers[i].mImage;
+    nsresult rv = SetValueToStyleImage(image, val);
+    if (NS_FAILED(rv)) {
+      delete valueList;
+      return rv;
     }
   }
 
@@ -4130,6 +4422,124 @@ nsComputedDOMStyle::GetMask(nsIDOMCSSValue** aValue)
 
 #endif // MOZ_SVG
 
+nsresult
+nsComputedDOMStyle::GetTransitionDelay(nsIDOMCSSValue** aValue)
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ABORT_IF_FALSE(display->mTransitionDelayCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsTransition *transition = &display->mTransitions[i];
+    nsROCSSPrimitiveValue* delay = GetROCSSPrimitiveValue();
+    if (!delay || !valueList->AppendCSSValue(delay)) {
+      delete valueList;
+      delete delay;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    delay->SetTime((float)transition->GetDelay() / (float)PR_MSEC_PER_SEC);
+  } while (++i < display->mTransitionDelayCount);
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetTransitionDuration(nsIDOMCSSValue** aValue)
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ABORT_IF_FALSE(display->mTransitionDurationCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsTransition *transition = &display->mTransitions[i];
+    nsROCSSPrimitiveValue* duration = GetROCSSPrimitiveValue();
+    if (!duration || !valueList->AppendCSSValue(duration)) {
+      delete valueList;
+      delete duration;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    duration->SetTime((float)transition->GetDuration() / (float)PR_MSEC_PER_SEC);
+  } while (++i < display->mTransitionDurationCount);
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetTransitionProperty(nsIDOMCSSValue** aValue)
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ABORT_IF_FALSE(display->mTransitionPropertyCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsTransition *transition = &display->mTransitions[i];
+    nsROCSSPrimitiveValue* property = GetROCSSPrimitiveValue();
+    if (!property || !valueList->AppendCSSValue(property)) {
+      delete valueList;
+      delete property;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nsCSSProperty cssprop = transition->GetProperty();
+    if (cssprop == eCSSPropertyExtra_all_properties)
+      property->SetIdent(eCSSKeyword_all);
+    else if (cssprop == eCSSPropertyExtra_no_properties)
+      property->SetIdent(eCSSKeyword_none);
+    else if (cssprop == eCSSProperty_UNKNOWN)
+    {
+      const char *str;
+      transition->GetUnknownProperty()->GetUTF8String(&str);
+      property->SetString(nsDependentCString(str)); // really want SetIdent
+    }
+    else
+      property->SetString(nsCSSProps::GetStringValue(cssprop));
+  } while (++i < display->mTransitionPropertyCount);
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetTransitionTimingFunction(nsIDOMCSSValue** aValue)
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ABORT_IF_FALSE(display->mTransitionTimingFunctionCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsTransition *transition = &display->mTransitions[i];
+    nsROCSSPrimitiveValue* timingFunction = GetROCSSPrimitiveValue();
+    if (!timingFunction || !valueList->AppendCSSValue(timingFunction)) {
+      delete valueList;
+      delete timingFunction;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // set the value from the cubic-bezier control points
+    // (We could try to regenerate the keywords if we want.)
+    const nsTimingFunction& tf = transition->GetTimingFunction();
+    timingFunction->SetString(
+      nsPrintfCString(64, "cubic-bezier(%f, %f, %f, %f)",
+                          tf.mX1, tf.mY1, tf.mX2, tf.mY2));
+  } while (++i < display->mTransitionTimingFunctionCount);
+
+  return CallQueryInterface(valueList, aValue);
+}
 
 #define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)              \
   { eCSSProperty_##_prop, &nsComputedDOMStyle::Get##_method, PR_FALSE }
@@ -4332,6 +4742,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),
     COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect),
+    COMPUTED_STYLE_MAP_ENTRY(transition_delay,              TransitionDelay),
+    COMPUTED_STYLE_MAP_ENTRY(transition_duration,           TransitionDuration),
+    COMPUTED_STYLE_MAP_ENTRY(transition_property,           TransitionProperty),
+    COMPUTED_STYLE_MAP_ENTRY(transition_timing_function,    TransitionTimingFunction),
     COMPUTED_STYLE_MAP_ENTRY(_moz_window_shadow,            WindowShadow),
     COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap)
 

@@ -124,6 +124,13 @@ nsCSSValue::nsCSSValue(nsCSSValue::Image* aValue)
   mValue.mImage->AddRef();
 }
 
+nsCSSValue::nsCSSValue(nsCSSValueGradient* aValue)
+  : mUnit(eCSSUnit_Gradient)
+{
+  mValue.mGradient = aValue;
+  mValue.mGradient->AddRef();
+}
+
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
@@ -154,6 +161,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_Image == mUnit) {
     mValue.mImage = aCopy.mValue.mImage;
     mValue.mImage->AddRef();
+  }
+  else if (eCSSUnit_Gradient == mUnit) {
+    mValue.mGradient = aCopy.mValue.mGradient;
+    mValue.mGradient->AddRef();
   }
   else {
     NS_NOTREACHED("unknown unit");
@@ -193,6 +204,9 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Image == mUnit) {
       return *mValue.mImage == *aOther.mValue.mImage;
+    }
+    else if (eCSSUnit_Gradient == mUnit) {
+      return *mValue.mGradient == *aOther.mValue.mGradient;
     }
     else {
       return mValue.mFloat == aOther.mValue.mFloat;
@@ -243,6 +257,8 @@ void nsCSSValue::DoReset()
     mValue.mURL->Release();
   } else if (eCSSUnit_Image == mUnit) {
     mValue.mImage->Release();
+  } else if (eCSSUnit_Gradient == mUnit) {
+    mValue.mGradient->Release();
   }
   mUnit = eCSSUnit_Null;
 }
@@ -326,6 +342,14 @@ void nsCSSValue::SetImageValue(nsCSSValue::Image* aValue)
   mValue.mImage->AddRef();
 }
 
+void nsCSSValue::SetGradientValue(nsCSSValueGradient* aValue)
+{
+  Reset();
+  mUnit = eCSSUnit_Gradient;
+  mValue.mGradient = aValue;
+  mValue.mGradient->AddRef();
+}
+
 void nsCSSValue::SetAutoValue()
 {
   Reset();
@@ -348,6 +372,12 @@ void nsCSSValue::SetNoneValue()
 {
   Reset();
   mUnit = eCSSUnit_None;
+}
+
+void nsCSSValue::SetAllValue()
+{
+  Reset();
+  mUnit = eCSSUnit_All;
 }
 
 void nsCSSValue::SetNormalValue()
@@ -408,6 +438,37 @@ PRBool nsCSSValue::IsNonTransparentColor() const
     (mUnit == eCSSUnit_EnumColor);
 }
 
+nsCSSValue::Array*
+nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, PRUint32 aNumArgs)
+{
+  nsRefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
+  if (!func) {
+    return nsnull;
+  }
+
+  func->Item(0).SetIntValue(aFunctionId, eCSSUnit_Enumerated);
+  SetArrayValue(func, eCSSUnit_Function);
+
+  return func;
+}
+
+PRBool
+nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
+{
+  if (mUnit != eCSSUnit_Function) {
+    return PR_FALSE;
+  }
+
+  nsCSSValue::Array* func = mValue.mArray;
+  NS_ABORT_IF_FALSE(func && func->Count() >= 1 &&
+                    func->Item(0).GetUnit() == eCSSUnit_Enumerated,
+                    "illegally structured function value");
+
+  nsCSSKeyword thisFunctionId =
+    static_cast<nsCSSKeyword>(func->Item(0).GetIntValue());
+  return thisFunctionId == aFunctionId;
+}
+
 // static
 nsStringBuffer*
 nsCSSValue::BufferFromString(const nsString& aValue)
@@ -439,15 +500,12 @@ nsCSSValue::URL::URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
     mRefCnt(0)
 {
   NS_PRECONDITION(aOriginPrincipal, "Must have an origin principal");
-  
   mString->AddRef();
-  MOZ_COUNT_CTOR(nsCSSValue::URL);
 }
 
 nsCSSValue::URL::~URL()
 {
   mString->Release();
-  MOZ_COUNT_DTOR(nsCSSValue::URL);
 }
 
 PRBool
@@ -485,8 +543,6 @@ nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
                          nsIDocument* aDocument)
   : URL(aURI, aString, aReferrer, aOriginPrincipal)
 {
-  MOZ_COUNT_CTOR(nsCSSValue::Image);
-
   if (mURI &&
       nsContentUtils::CanLoadImage(mURI, aDocument, aDocument,
                                    aOriginPrincipal)) {
@@ -498,5 +554,38 @@ nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
 
 nsCSSValue::Image::~Image()
 {
-  MOZ_COUNT_DTOR(nsCSSValue::Image);
+}
+
+nsCSSValueGradientStop::nsCSSValueGradientStop(const nsCSSValue& aLocation,
+                                               const nsCSSValue& aColor)
+  : mLocation(aLocation),
+    mColor(aColor)
+{ 
+  MOZ_COUNT_CTOR(nsCSSValueGradientStop);
+}
+
+nsCSSValueGradientStop::nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther)
+  : mLocation(aOther.mLocation),
+    mColor(aOther.mColor)
+{ 
+  MOZ_COUNT_CTOR(nsCSSValueGradientStop);
+}
+
+nsCSSValueGradientStop::~nsCSSValueGradientStop()
+{
+  MOZ_COUNT_DTOR(nsCSSValueGradientStop);
+}
+
+nsCSSValueGradient::nsCSSValueGradient(PRBool aIsRadial, const nsCSSValue& aStartX,
+           const nsCSSValue& aStartY, const nsCSSValue& aStartRadius, const nsCSSValue& aEndX,
+           const nsCSSValue& aEndY, const nsCSSValue& aEndRadius)
+  : mIsRadial(aIsRadial),
+    mStartX(aStartX),
+    mStartY(aStartY),
+    mEndX(aEndX),
+    mEndY(aEndY),
+    mStartRadius(aStartRadius),
+    mEndRadius(aEndRadius),
+    mRefCnt(0)
+{ 
 }

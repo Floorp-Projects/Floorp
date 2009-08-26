@@ -1601,8 +1601,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
             } else {
                 JS_ASSERT(cg->flags & TCF_COMPILE_N_GO);
                 obj = cg->scopeChain;
-                ok = OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &objbox,
-                                         &prop);
+                ok = obj->lookupProperty(cx, ATOM_TO_JSID(atom), &objbox, &prop);
                 if (!ok)
                     return JS_FALSE;
                 if (objbox == obj) {
@@ -1612,15 +1611,14 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                      * variable object.  Therefore we can get constant values
                      * from our variable object here.
                      */
-                    ok = OBJ_GET_ATTRIBUTES(cx, obj, ATOM_TO_JSID(atom), prop,
-                                            &attrs);
+                    ok = obj->getAttributes(cx, ATOM_TO_JSID(atom), prop, &attrs);
                     if (ok && IS_CONSTANT_PROPERTY(attrs)) {
-                        ok = OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), vp);
+                        ok = obj->getProperty(cx, ATOM_TO_JSID(atom), vp);
                         JS_ASSERT_IF(ok, *vp != JSVAL_HOLE);
                     }
                 }
                 if (prop)
-                    OBJ_DROP_PROPERTY(cx, objbox, prop);
+                    objbox->dropProperty(cx, prop);
                 if (!ok)
                     return JS_FALSE;
                 if (prop)
@@ -2433,10 +2431,6 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
       case PN_UNARY:
         switch (pn->pn_type) {
-          case TOK_RP:
-            ok = CheckSideEffects(cx, cg, pn->pn_kid, answer);
-            break;
-
           case TOK_DELETE:
             pn2 = pn->pn_kid;
             switch (pn2->pn_type) {
@@ -2452,9 +2446,7 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 #if JS_HAS_XML_SUPPORT
               case TOK_DBLDOT:
 #endif
-#if JS_HAS_LVALUE_RETURN
               case TOK_LP:
-#endif
               case TOK_LB:
                 /* All these delete addressing modes have effects too. */
                 *answer = JS_TRUE;
@@ -3632,10 +3624,6 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
     jsuint slot;
 
-    /* Skip any parenthesization. */
-    while (pn->pn_type == TOK_RP)
-        pn = pn->pn_kid;
-
     /*
      * Now emit the lvalue opcode sequence.  If the lvalue is a nested
      * destructuring initialiser-form, call ourselves to handle it, then
@@ -3685,7 +3673,6 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             break;
 
           default:
-#if JS_HAS_LVALUE_RETURN || JS_HAS_XML_SUPPORT
           {
             ptrdiff_t top;
 
@@ -3698,7 +3685,7 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
           }
-#endif
+
           case JSOP_ENUMELEM:
             JS_ASSERT(0);
         }
@@ -3860,7 +3847,7 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
         }
 
         /* MaybeEmitGroupAssignment won't call us if rhs is holey. */
-        JS_ASSERT(pn->pn_type != TOK_COMMA);
+        JS_ASSERT(!(pn->pn_type == TOK_COMMA && pn->pn_arity == PN_NULLARY));
         if (!js_EmitTree(cx, cg, pn))
             return JS_FALSE;
         ++limit;
@@ -4732,7 +4719,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         return JS_FALSE;
                 } else
 #endif
-#if JS_HAS_LVALUE_RETURN
                 if (pn3->pn_type == TOK_LP) {
                     JS_ASSERT(pn3->pn_op == JSOP_SETCALL);
                     if (!js_EmitTree(cx, cg, pn3))
@@ -4740,7 +4726,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
                 } else
-#endif
 #if JS_HAS_XML_SUPPORT
                 if (pn3->pn_type == TOK_UNARYOP) {
                     JS_ASSERT(pn3->pn_op == JSOP_BINDXMLNAME);
@@ -5606,7 +5591,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * stack, which impose pervasive runtime "GetValue" costs.
          */
         pn2 = pn->pn_left;
-        JS_ASSERT(pn2->pn_type != TOK_RP);
         atomIndex = (jsatomid) -1;              /* quell GCC overwarning */
         switch (pn2->pn_type) {
           case TOK_NAME:
@@ -5643,12 +5627,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case TOK_RC:
             break;
 #endif
-#if JS_HAS_LVALUE_RETURN
           case TOK_LP:
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
             break;
-#endif
 #if JS_HAS_XML_SUPPORT
           case TOK_UNARYOP:
             JS_ASSERT(pn2->pn_op == JSOP_SETXMLNAME);
@@ -5725,9 +5707,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
                 break;
               case TOK_LB:
-#if JS_HAS_LVALUE_RETURN
               case TOK_LP:
-#endif
 #if JS_HAS_XML_SUPPORT
               case TOK_UNARYOP:
 #endif
@@ -5779,9 +5759,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             EMIT_INDEX_OP(PN_OP(pn2), atomIndex);
             break;
           case TOK_LB:
-#if JS_HAS_LVALUE_RETURN
           case TOK_LP:
-#endif
             if (js_Emit1(cx, cg, JSOP_SETELEM) < 0)
                 return JS_FALSE;
             break;
@@ -5985,12 +5963,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
         pn2 = pn->pn_kid;
-        if (op == JSOP_TYPEOF) {
-            for (pn3 = pn2; pn3->pn_type == TOK_RP; pn3 = pn3->pn_kid)
-                continue;
-            if (pn3->pn_type != TOK_NAME)
-                op = JSOP_TYPEOFEXPR;
-        }
+        if (op == JSOP_TYPEOF && pn2->pn_type != TOK_NAME)
+            op = JSOP_TYPEOFEXPR;
         oldflags = cg->flags;
         cg->flags &= ~TCF_IN_FOR_INIT;
         if (!js_EmitTree(cx, cg, pn2))
@@ -6047,7 +6021,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!EmitElemOp(cx, pn2, op, cg))
                 return JS_FALSE;
             break;
-#if JS_HAS_LVALUE_RETURN
           case TOK_LP:
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
@@ -6058,7 +6031,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (js_Emit1(cx, cg, op) < 0)
                 return JS_FALSE;
             break;
-#endif
 #if JS_HAS_XML_SUPPORT
           case TOK_UNARYOP:
             JS_ASSERT(pn2->pn_op == JSOP_SETXMLNAME);
@@ -6102,17 +6074,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             break;
 #endif
-#if JS_HAS_LVALUE_RETURN
-          case TOK_LP:
-            top = CG_OFFSET(cg);
-            if (!js_EmitTree(cx, cg, pn2))
-                return JS_FALSE;
-            if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
-                return JS_FALSE;
-            if (js_Emit1(cx, cg, JSOP_DELELEM) < 0)
-                return JS_FALSE;
-            break;
-#endif
           case TOK_LB:
             if (!EmitElemOp(cx, pn2, JSOP_DELELEM, cg))
                 return JS_FALSE;
@@ -6128,6 +6089,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!useful) {
                 off = noteIndex = -1;
             } else {
+                if (pn2->pn_op == JSOP_SETCALL)
+                    pn2->pn_op = JSOP_CALL;
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
                 off = CG_OFFSET(cg);
@@ -6438,7 +6401,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
             if (op == JSOP_NEWINIT && !EmitNumberOp(cx, atomIndex, cg))
                 return JS_FALSE;
-            if (pn2->pn_type == TOK_COMMA) {
+            if (pn2->pn_type == TOK_COMMA && pn2->pn_arity == PN_NULLARY) {
                 if (js_Emit1(cx, cg, JSOP_HOLE) < 0)
                     return JS_FALSE;
             } else {
@@ -6562,23 +6525,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         EMIT_UINT16_IMM_OP(JSOP_USESHARP, (jsatomid) pn->pn_num);
         break;
 #endif /* JS_HAS_SHARP_VARS */
-
-      case TOK_RP:
-      {
-        uintN oldflags;
-
-        /*
-         * The node for (e) has e as its kid, enabling users who want to nest
-         * assignment expressions in conditions to avoid the error correction
-         * done by Condition (from x = y to x == y) by double-parenthesizing.
-         */
-        oldflags = cg->flags;
-        cg->flags &= ~TCF_IN_FOR_INIT;
-        if (!js_EmitTree(cx, cg, pn->pn_kid))
-            return JS_FALSE;
-        cg->flags |= oldflags & TCF_IN_FOR_INIT;
-        break;
-      }
 
       case TOK_NAME:
         /*

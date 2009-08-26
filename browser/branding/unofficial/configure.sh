@@ -1,1 +1,1 @@
-MOZ_APP_DISPLAYNAME="Shiretoko"
+MOZ_APP_DISPLAYNAME="Namoroka"

@@ -95,11 +95,17 @@ typedef struct VMSideExit VMSideExit;
 
 #ifdef __cplusplus
 namespace nanojit {
+    class Assembler;
+    class CodeAlloc;
     class Fragment;
-    class Fragmento;
     class LirBuffer;
+#ifdef DEBUG
+    class LabelMap;
+#endif
+    extern "C++" { template<typename K, typename V, typename H> class HashMap; }
 }
 class TraceRecorder;
+class VMAllocator;
 extern "C++" { template<typename T> class Queue; }
 typedef Queue<uint16> SlotList;
 
@@ -110,6 +116,12 @@ typedef Queue<uint16> SlotList;
 
 #define FRAGMENT_TABLE_SIZE 512
 struct VMFragment;
+
+#ifdef __cplusplus
+struct REHashKey;
+struct REHashFn;
+typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
+#endif
 
 #define MONITOR_N_GLOBAL_STATES 4
 struct GlobalState {
@@ -130,7 +142,6 @@ struct JSTraceMonitor {
      * last-ditch GC and suppress calls to JS_ReportOutOfMemory.
      *
      * !tracecx && !recorder: not on trace
-     * !tracecx && !recorder && prohibitFlush: deep-bailed
      * !tracecx && recorder && !recorder->deepAborted: recording
      * !tracecx && recorder && recorder->deepAborted: deep aborted
      * tracecx && !recorder: executing a trace
@@ -139,7 +150,13 @@ struct JSTraceMonitor {
     JSContext               *tracecx;
 
     CLS(nanojit::LirBuffer) lirbuf;
-    CLS(nanojit::Fragmento) fragmento;
+    CLS(VMAllocator)        allocator;   // A chunk allocator for LIR.
+    CLS(nanojit::CodeAlloc) codeAlloc;   // A general allocator for native code.
+    CLS(nanojit::Assembler) assembler;
+#ifdef DEBUG
+    CLS(nanojit::LabelMap)  labels;
+#endif
+
     CLS(TraceRecorder)      recorder;
     jsval                   *reservedDoublePool;
     jsval                   *reservedDoublePoolPtr;
@@ -158,27 +175,36 @@ struct JSTraceMonitor {
      * If nonzero, do not flush the JIT cache after a deep bail. That would
      * free JITted code pages that we will later return to. Instead, set the
      * needFlush flag so that it can be flushed later.
-     *
-     * NB: needFlush and useReservedObjects are packed together.
      */
-    uintN                   prohibitFlush;
-    JSPackedBool            needFlush;
+    JSBool                  needFlush;
 
     /*
      * reservedObjects is a linked list (via fslots[0]) of preallocated JSObjects.
      * The JIT uses this to ensure that leaving a trace tree can't fail.
      */
-    JSPackedBool            useReservedObjects;
+    JSBool                  useReservedObjects;
     JSObject                *reservedObjects;
 
-    /* Fragmento for the regular expression compiler. This is logically
+    /* Parts for the regular expression compiler. This is logically
      * a distinct compiler but needs to be managed in exactly the same
-     * way as the real tracing Fragmento. */
+     * way as the trace compiler. */
+    CLS(VMAllocator)        reAllocator;
+    CLS(nanojit::CodeAlloc) reCodeAlloc;
+    CLS(nanojit::Assembler) reAssembler;
     CLS(nanojit::LirBuffer) reLirBuf;
-    CLS(nanojit::Fragmento) reFragmento;
+    CLS(REHashMap)          reFragments;
+#ifdef DEBUG
+    CLS(nanojit::LabelMap)  reLabels;
+#endif
 
     /* Keep a list of recorders we need to abort on cache flush. */
     CLS(TraceRecorder)      abortStack;
+
+    /* Flush the JIT cache. */
+    void flush();
+
+    /* Mark all objects baked into native code in the code cache. */
+    void mark(JSTracer *trc);
 };
 
 typedef struct InterpStruct InterpStruct;
@@ -239,6 +265,9 @@ struct JSThreadData {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
+    /* Random number generator state, used by jsmath.cpp. */
+    int64               rngSeed;
+
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
     JSTraceMonitor      traceMonitor;
@@ -263,6 +292,12 @@ struct JSThreadData {
      */
     JSFreePointerListTask *deallocatorTask;
 #endif
+
+    void mark(JSTracer *trc) {
+#ifdef JS_TRACER
+        traceMonitor.mark(trc);
+#endif
+    }
 };
 
 #ifdef JS_THREADSAFE
@@ -327,11 +362,6 @@ typedef enum JSRuntimeState {
 typedef enum JSBuiltinFunctionId {
     JSBUILTIN_ObjectToIterator,
     JSBUILTIN_CallIteratorNext,
-    JSBUILTIN_GetProperty,
-    JSBUILTIN_GetElement,
-    JSBUILTIN_SetProperty,
-    JSBUILTIN_SetElement,
-    JSBUILTIN_HasInstance,
     JSBUILTIN_LIMIT
 } JSBuiltinFunctionId;
 
@@ -389,6 +419,7 @@ struct JSRuntime {
     uint32              gcTriggerFactor;
     size_t              gcTriggerBytes;
     volatile JSBool     gcIsNeeded;
+    volatile JSBool     gcFlushCodeCaches;
 
     /*
      * NB: do not pack another flag here by claiming gcPadding unless the new
@@ -442,14 +473,6 @@ struct JSRuntime {
      * rt->gcLock.
      */
     JSSetSlotRequest    *setSlotRequests;
-
-    /* Random number generator state, used by jsmath.c. */
-    JSBool              rngInitialized;
-    int64               rngMultiplier;
-    int64               rngAddend;
-    int64               rngMask;
-    int64               rngSeed;
-    jsdouble            rngDscale;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     jsdouble            *jsNaN;
@@ -945,21 +968,9 @@ struct JSContext {
      */
     JSDHashTable        *resolvingTable;
 
-#if JS_HAS_LVALUE_RETURN
-    /*
-     * Secondary return value from native method called on the left-hand side
-     * of an assignment operator.  The native should store the object in which
-     * to set a property in *rval, and return the property's id expressed as a
-     * jsval by calling JS_SetCallReturnValue2(cx, idval).
-     */
-    jsval               rval2;
-    JSPackedBool        rval2set;
-#endif
-
     /*
      * True if generating an error, to prevent runaway recursion.
-     * NB: generatingError packs with rval2set, #if JS_HAS_LVALUE_RETURN;
-     * with insideGCMarkCallback and with throwing below.
+     * NB: generatingError packs with insideGCMarkCallback and throwing below.
      */
     JSPackedBool        generatingError;
 
@@ -1303,6 +1314,9 @@ js_FinishThreads(JSRuntime *rt);
 extern void
 js_PurgeThreads(JSContext *cx);
 
+extern void
+js_TraceThreads(JSRuntime *rt, JSTracer *trc);
+
 /*
  * Ensures the JSOPTION_XML and JSOPTION_ANONFUNFIX bits of cx->options are
  * reflected in cx->version, since each bit must travel with a script that has
@@ -1583,6 +1597,9 @@ js_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
 
 extern jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx);
+
+extern bool
+js_CurrentPCIsInImacro(JSContext *cx);
 
 #ifdef JS_TRACER
 /*

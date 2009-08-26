@@ -40,19 +40,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#include "nsCOMPtr.h"
-#include "nsFrame.h"
-#include "nsPresContext.h"
-#include "nsStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
-#include "nsIFontMetrics.h"
-
 #include "nsMathMLmsqrtFrame.h"
 
 //
-// <msqrt> and <mroot> -- form a radical - implementation
+// <msqrt> -- form a radical - implementation
 //
 
 //NOTE:
@@ -64,11 +55,6 @@
 //  MathML  engine. Assuming that authors have the free fonts is part of the
 //  deal. We are not responsible for cases of misconfigurations out there.
 
-// additional style context to be used by our MathMLChar.
-#define NS_SQR_CHAR_STYLE_CONTEXT_INDEX   0
-
-static const PRUnichar kSqrChar = PRUnichar(0x221A);
-
 nsIFrame*
 NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -76,9 +62,7 @@ NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 nsMathMLmsqrtFrame::nsMathMLmsqrtFrame(nsStyleContext* aContext) :
-  nsMathMLContainerFrame(aContext),
-  mSqrChar(),
-  mBarRect()
+  nsMathMLmencloseFrame(aContext)
 {
 }
 
@@ -92,252 +76,17 @@ nsMathMLmsqrtFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
-                                             
-  nsPresContext *presContext = PresContext();
-
-  // No need to tract the style context given to our MathML char. 
-  // The Style System will use Get/SetAdditionalStyleContext() to keep it
-  // up-to-date if dynamic changes arise.
-  nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
-  mSqrChar.SetData(presContext, sqrChar);
-  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mSqrChar, PR_TRUE);
+  AllocateMathMLChar(NOTATION_RADICAL);
+  mNotationsToDraw |= NOTATION_RADICAL;
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::InheritAutomaticData(nsIFrame* aParent)
+nsMathMLmsqrtFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aModType)
 {
-  // let the base class get the default from our parent
-  nsMathMLContainerFrame::InheritAutomaticData(aParent);
-
-  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsMathMLmsqrtFrame::TransmitAutomaticData()
-{
-  // 1. The REC says:
-  //    The <msqrt> element leaves both attributes [displaystyle and scriptlevel]
-  //    unchanged within all its arguments.
-  // 2. The TeXBook (Ch 17. p.141) says that \sqrt is cramped 
-  UpdatePresentationDataFromChildAt(0, -1,
-     NS_MATHML_COMPRESSED,
-     NS_MATHML_COMPRESSED);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMathMLmsqrtFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                     const nsRect&           aDirtyRect,
-                                     const nsDisplayListSet& aLists)
-{
-  /////////////
-  // paint the content we are square-rooting
-  nsresult rv = nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  /////////////
-  // paint the sqrt symbol
-  if (!NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    rv = mSqrChar.Display(aBuilder, this, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = DisplayBar(aBuilder, this, mBarRect, aLists);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-    // for visual debug
-    nsRect rect;
-    mSqrChar.GetRect(rect);
-    nsBoundingMetrics bm;
-    mSqrChar.GetBoundingMetrics(bm);
-    rv = DisplayBoundingMetrics(aBuilder, this, rect.TopLeft(), bm, aLists);
-#endif
-  }
-
-  return rv;
-}
-
-/* virtual */ nsresult
-nsMathMLmsqrtFrame::Place(nsIRenderingContext& aRenderingContext,
-                          PRBool               aPlaceOrigin,
-                          nsHTMLReflowMetrics& aDesiredSize)
-{
-  ///////////////
-  // Measure the size of our content using the base class to format like an
-  // inferred mrow.
-  nsHTMLReflowMetrics baseSize;
-  nsresult rv =
-    nsMathMLContainerFrame::Place(aRenderingContext, PR_FALSE, baseSize);
-  if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
-    DidReflowChildren(GetFirstChild(nsnull));
-    return rv;
-  }
-
-  nsBoundingMetrics bmSqr, bmBase;
-  bmBase = baseSize.mBoundingMetrics;
-
-  ////////////
-  // Prepare the radical symbol and the overline bar
-
-  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull,
-                            PresContext()->GetUserFontSet());
-  nsCOMPtr<nsIFontMetrics> fm;
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
-
-  // For radical glyphs from TeX fonts and some of the radical glyphs from
-  // Mathematica fonts, the thickness of the overline can be obtained from the
-  // ascent of the glyph.  Most fonts however have radical glyphs above the
-  // baseline so no assumption can be made about the meaning of the ascent.
-  nscoord ruleThickness, leading, em;
-  GetRuleThickness(aRenderingContext, fm, ruleThickness);
-
-  nsBoundingMetrics bmOne;
-  aRenderingContext.GetBoundingMetrics(NS_LITERAL_STRING("1").get(), 1, bmOne);
-
-  // get the leading to be left at the top of the resulting frame
-  // this seems more reliable than using fm->GetLeading() on suspicious fonts
-  GetEmHeight(fm, em);
-  leading = nscoord(0.2f * em); 
-
-  // Rule 11, App. G, TeXbook
-  // psi = clearance between rule and content
-  nscoord phi = 0, psi = 0;
-  if (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags))
-    fm->GetXHeight(phi);
-  else
-    phi = ruleThickness;
-  psi = ruleThickness + phi/4;
-
-  // built-in: adjust clearance psi to emulate \mathstrut using '1' (TexBook, p.131)
-  if (bmOne.ascent > bmBase.ascent)
-    psi += bmOne.ascent - bmBase.ascent;
-
-  // make sure that the rule appears on the screen
-  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-  if (ruleThickness < onePixel) {
-    ruleThickness = onePixel;
-  }
-
-  // adjust clearance psi to get an exact number of pixels -- this
-  // gives a nicer & uniform look on stacked radicals (bug 130282)
-  nscoord delta = psi % onePixel;
-  if (delta)
-    psi += onePixel - delta; // round up
-
-  // Stretch the radical symbol to the appropriate height if it is not big enough.
-  nsBoundingMetrics contSize = bmBase;
-  contSize.ascent = ruleThickness;
-  contSize.descent = bmBase.ascent + bmBase.descent + psi;
-
-  // height(radical) should be >= height(base) + psi + ruleThickness
-  nsBoundingMetrics radicalSize;
-  mSqrChar.Stretch(PresContext(), aRenderingContext,
-                   NS_STRETCH_DIRECTION_VERTICAL, 
-                   contSize, radicalSize,
-                   NS_STRETCH_LARGER);
-  // radicalSize have changed at this point, and should match with
-  // the bounding metrics of the char
-  mSqrChar.GetBoundingMetrics(bmSqr);
-
-  nscoord dx = 0, dy = 0;
-  // place the radical symbol and the radical bar
-  dy = leading; // leave a leading at the top
-  mSqrChar.SetRect(nsRect(dx, dy, bmSqr.width, bmSqr.ascent + bmSqr.descent));
-  dx = bmSqr.width;
-  mBarRect.SetRect(dx, dy, bmBase.width, ruleThickness);
-
-  // Update the desired size for the container.
-  // the baseline will be that of the base.
-  mBoundingMetrics.ascent = bmBase.ascent + psi + ruleThickness;
-  mBoundingMetrics.descent = 
-    PR_MAX(bmBase.descent,
-           (bmSqr.ascent + bmSqr.descent - mBoundingMetrics.ascent));
-  mBoundingMetrics.width = bmSqr.width + bmBase.width;
-  mBoundingMetrics.leftBearing = bmSqr.leftBearing;
-  mBoundingMetrics.rightBearing = bmSqr.width + 
-    PR_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
-
-  aDesiredSize.ascent = mBoundingMetrics.ascent + leading;
-  aDesiredSize.height = aDesiredSize.ascent +
-    PR_MAX(baseSize.height - baseSize.ascent,
-           mBoundingMetrics.descent + ruleThickness);
-  aDesiredSize.width = mBoundingMetrics.width;
-  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
-
-  mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
-
-  if (aPlaceOrigin) {
-    //////////////////
-    // Finish reflowing child frames, positioning their origins so as to leave
-    // room for the sqrt char and the overline bar.
-    PositionRowChildFrames(radicalSize.width, aDesiredSize.ascent);
-  }
-
-  return NS_OK;
-}
-
-/* virtual */ nscoord
-nsMathMLmsqrtFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext)
-{
-  // The child frames form an mrow
-  nscoord width = nsMathMLContainerFrame::GetIntrinsicWidth(aRenderingContext);
-  // Add the width of the radical symbol
-  width += mSqrChar.GetMaxWidth(PresContext(), *aRenderingContext);
-
-  return width;
-}
-
-/* virtual */ nsresult
-nsMathMLmsqrtFrame::MeasureChildFrames(nsIRenderingContext& aRenderingContext,
-                                       nsHTMLReflowMetrics& aDesiredSize)
-{
-  return nsMathMLContainerFrame::Place(aRenderingContext, PR_FALSE,
-                                       aDesiredSize);
-}
-
-
-nscoord
-nsMathMLmsqrtFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
-{
-  nscoord gap = nsMathMLContainerFrame::FixInterFrameSpacing(aDesiredSize);
-  if (!gap) return 0;
-
-  nsRect rect;
-  mSqrChar.GetRect(rect);
-  rect.MoveBy(gap, 0);
-  mSqrChar.SetRect(rect);
-  mBarRect.MoveBy(gap, 0);
-  return gap;
-}
-
-// ----------------------
-// the Style System will use these to pass the proper style context to our MathMLChar
-nsStyleContext*
-nsMathMLmsqrtFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
-{
-  switch (aIndex) {
-  case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
-    return mSqrChar.GetStyleContext();
-    break;
-  default:
-    return nsnull;
-  }
-}
-
-void
-nsMathMLmsqrtFrame::SetAdditionalStyleContext(PRInt32          aIndex, 
-                                              nsStyleContext*  aStyleContext)
-{
-  switch (aIndex) {
-  case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
-    mSqrChar.SetStyleContext(aStyleContext);
-    break;
-  }
+  return nsMathMLContainerFrame::
+    AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }

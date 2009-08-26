@@ -43,7 +43,6 @@
 #include "nsDataDocumentContentPolicy.h"
 #include "nsNoDataProtocolContentPolicy.h"
 #include "nsDOMCID.h"
-#include "nsInspectorCSSUtils.h"
 #include "nsHTMLContentSerializer.h"
 #include "nsHTMLParts.h"
 #include "nsGenericHTMLElement.h"
@@ -530,7 +529,6 @@ MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTF
 MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXMLContentBuilder)
 #endif
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
@@ -1052,11 +1050,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_SUBTREEITERATOR_CID,
     "@mozilla.org/content/subtree-content-iterator;1",
     CreateSubtreeIterator },
-
-  { "Inspector CSS Utils",
-    NS_INSPECTORCSSUTILS_CID,
-    nsnull,
-    nsInspectorCSSUtilsConstructor },
 
   // Needed to support "new Option;", "new Image;" and "new Audio;" in JavaScript
   { "HTML img element",

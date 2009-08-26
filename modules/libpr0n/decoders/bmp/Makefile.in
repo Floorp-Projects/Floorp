@@ -49,12 +49,6 @@ FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsBMPModule
 LIBXUL_LIBRARY  = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  gfx \
-		  thebes \
-		  imglib2 \
-		  $(NULL)
 
 CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp
 

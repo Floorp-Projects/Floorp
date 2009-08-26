@@ -143,7 +143,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIWebBrowserChrome.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
-#include "nsIFrameDebug.h"
 #include "nsILayoutHistoryState.h"
 #include "nsFrameManager.h"
 #include "nsIParser.h"
@@ -259,7 +258,7 @@ nsPrintEngine::nsPrintEngine() :
   mIsDoingPrintPreview(PR_FALSE),
   mProgressDialogIsShown(PR_FALSE),
   mContainer(nsnull),
-  mDeviceContext(nsnull),
+  mScreenDPI(115.0f),
   mPrt(nsnull),
   mPagePrintTimer(nsnull),
   mPageSeqFrame(nsnull),
@@ -317,20 +316,19 @@ void nsPrintEngine::DestroyPrintingData()
 nsresult nsPrintEngine::Initialize(nsIDocumentViewerPrint* aDocViewerPrint, 
                                    nsISupports*            aContainer,
                                    nsIDocument*            aDocument,
-                                   nsIDeviceContext*       aDevContext,
+                                   float                   aScreenDPI,
                                    nsIWidget*              aParentWidget,
                                    FILE*                   aDebugFile)
 {
   NS_ENSURE_ARG_POINTER(aDocViewerPrint);
   NS_ENSURE_ARG_POINTER(aContainer);
   NS_ENSURE_ARG_POINTER(aDocument);
-  NS_ENSURE_ARG_POINTER(aDevContext);
   NS_ENSURE_ARG_POINTER(aParentWidget);
 
   mDocViewerPrint = aDocViewerPrint;
   mContainer      = aContainer;      // weak reference
   mDocument       = aDocument;
-  mDeviceContext  = aDevContext;     // weak reference
+  mScreenDPI      = aScreenDPI;
   mParentWidget   = aParentWidget;    
 
   mDebugFile      = aDebugFile;      // ok to be NULL
@@ -1992,9 +1990,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   // Calculate scale factor from printer to screen
   float printDPI = float(mPrt->mPrintDC->AppUnitsPerInch()) /
                    float(mPrt->mPrintDC->AppUnitsPerDevPixel());
-  float screenDPI = float(mDeviceContext->AppUnitsPerInch()) /
-                    float(mDeviceContext->AppUnitsPerDevPixel());
-  aPO->mPresContext->SetPrintPreviewScale(screenDPI / printDPI);
+  aPO->mPresContext->SetPrintPreviewScale(mScreenDPI / printDPI);
 
   rv = aPO->mPresShell->InitialReflow(adjSize.width, adjSize.height);
 
@@ -2176,10 +2172,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
 #ifdef NS_DEBUG
       // output the regression test
       nsIFrame* root = poPresShell->FrameManager()->GetRootFrame();
-      nsIFrameDebug* fdbg = do_QueryFrame(root);
-      if (fdbg) {
-        fdbg->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0);
-      }
+      root->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0);
       fclose(mPrt->mDebugFilePtr);
       SetIsPrinting(PR_FALSE);
 #endif
@@ -3338,9 +3331,7 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
   if (shell) {
     nsIFrame* frame = shell->FrameManager()->GetRootFrame();
     if (frame) {
-      nsIFrameDebug* debugFrame = do_QueryFrame(frame);
-      if (debugFrame)
-        debugFrame->List(aPresContext, out, aIndent);
+      frame->List(aPresContext, out, aIndent);
     }
   }
 }
@@ -3365,11 +3356,7 @@ static void DumpFrames(FILE*                 out,
      fprintf(out, "  ");
     }
     nsAutoString tmp;
-
-    nsIFrameDebug* frameDebug = do_QueryFrame(child);
-    if (frameDebug) {
-      frameDebug->GetFrameName(tmp);
-    }
+    child->GetFrameName(tmp);
     fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
     PRBool isSelected;
     if (NS_SUCCEEDED(child->IsVisibleForPainting(aPresContext, *aRendContext, PR_TRUE, &isSelected))) {

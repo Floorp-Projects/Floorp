@@ -49,21 +49,6 @@ MODULE_NAME	= javascript__protocol
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  js \
-		  dom \
-		  layout \
-		  necko \
-		  caps \
-		  widget \
-		  appshell \
-		  xpconnect \
-		  uconv \
-		  docshell \
-		  content \
-		  pref \
-		  $(NULL)
 
 XPIDLSRCS	= \
 		$(NULL)

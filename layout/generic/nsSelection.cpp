@@ -849,7 +849,7 @@ nsFrameSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested b
 {
   if (!mShell)
   {
-    NS_ASSERTION(0,"fetch desired X failed\n");
+    NS_ERROR("fetch desired X failed\n");
     return NS_ERROR_FAILURE;
   }
   if (mDesiredXSet)
@@ -975,7 +975,6 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
   nsresult result;
   nsCOMPtr<nsIDOMNode> anchorNode;
   PRInt32 anchorOffset = 0;
-  PRInt32 anchorFrameOffset = 0;
 
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   if (!mDomSelections[index])
@@ -994,15 +993,11 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
   if (NS_FAILED(result))
     return result;
 
-  nsIFrame *anchorFrame = 0;
   nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode);
 
   if (!anchorContent)
     return NS_ERROR_FAILURE;
   
-  anchorFrame = GetFrameForNodeOffset(anchorContent, anchorOffset,
-                                      mHint, &anchorFrameOffset);
-
   //
   // Now find the root of the subtree containing the anchor's content.
   //
@@ -3746,7 +3741,8 @@ nsTypedSelection::AddItem(nsIRange *aItem, PRInt32 *aOutIndex)
                                         aItem->GetEndParent(),
                                         aItem->EndOffset(), startIndex);
   if (sameRange) {
-    *aOutIndex = startIndex;
+    if (aOutIndex)
+      *aOutIndex = startIndex;
     return NS_OK;
   }
 
@@ -4187,7 +4183,10 @@ nsTypedSelection::SelectAllFramesForContent(nsIContentIterator *aInnerIter,
                                   PRBool aSelected)
 {
   if (!mFrameSelection)
-    return NS_OK;//nothing to do
+    return NS_OK; // nothing to do
+  nsIPresShell* shell = mFrameSelection->GetShell();
+  if (!shell)
+    return NS_OK;
   nsresult result;
   if (!aInnerIter)
     return NS_ERROR_NULL_POINTER;
@@ -4196,7 +4195,7 @@ nsTypedSelection::SelectAllFramesForContent(nsIContentIterator *aInnerIter,
   if (NS_SUCCEEDED(result))
   {
     // First select frame of content passed in
-    frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(aContent);
+    frame = shell->GetPrimaryFrameFor(aContent);
     if (frame)
     {
       frame->SetSelected(aSelected, mType);
@@ -4215,7 +4214,7 @@ nsTypedSelection::SelectAllFramesForContent(nsIContentIterator *aInnerIter,
       nsCOMPtr<nsIContent> innercontent =
         do_QueryInterface(aInnerIter->GetCurrentNode());
 
-      frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(innercontent);
+      frame = shell->GetPrimaryFrameFor(innercontent);
       if (frame)
       {
         frame->SetSelected(aSelected, mType);
@@ -4236,8 +4235,17 @@ nsTypedSelection::SelectAllFramesForContent(nsIContentIterator *aInnerIter,
 nsresult
 nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, PRBool aFlags)
 {
-  if (!mFrameSelection)
-    return NS_OK;//nothing to do
+  if (!mFrameSelection || !aPresContext)
+    return NS_OK; // nothing to do
+  nsIPresShell *presShell = aPresContext->GetPresShell();
+  if (!presShell)
+    return NS_OK;
+  // Ensure all frames are properly constructed
+  presShell->FlushPendingNotifications(Flush_Frames);
+  // Re-get shell because the flush might have destroyed it 
+  presShell = aPresContext->GetPresShell();
+  if (!presShell)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMRange> domRange = do_QueryInterface(aRange);
   if (!domRange || !aPresContext) 
@@ -4256,7 +4264,6 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, PR
 
   if ((NS_SUCCEEDED(result)) && iter && inneriter)
   {
-    nsIPresShell *presShell = aPresContext->GetPresShell();
     result = iter->Init(aRange);
 
     // loop through the content iterator for each content node
@@ -4270,7 +4277,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, PR
     nsIFrame *frame;
     if (content->IsNodeOfType(nsINode::eTEXT))
     {
-      frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
+      frame = presShell->GetPrimaryFrameFor(content);
       // The frame could be an SVG text frame, in which case we'll ignore
       // it.
       if (frame && frame->GetType() == nsGkAtoms::textFrame)
@@ -4307,7 +4314,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, PR
 
       if (content->IsNodeOfType(nsINode::eTEXT))
       {
-        frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
+        frame = presShell->GetPrimaryFrameFor(content);
         // The frame could be an SVG text frame, in which case we'll
         // ignore it.
         if (frame && frame->GetType() == nsGkAtoms::textFrame)
@@ -5341,7 +5348,7 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
   PRInt32 focusOffset = GetFocusOffset();
 
   if (focusNode == aParentNode && focusOffset == aOffset)
-    return NS_ERROR_FAILURE;//same node nothing to do!
+    return NS_OK; //same node nothing to do!
 
   res = mAnchorFocusRange->CloneRange(getter_AddRefs(range));
   if (NS_FAILED(res))
@@ -5412,9 +5419,7 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
     res = CopyRangeToAnchorFocus(range);
     if (NS_FAILED(res))
       return res;
-    RemoveItem(mAnchorFocusRange);
     selectFrames(presContext, difRange, PR_FALSE); // deselect now
-    AddItem(mAnchorFocusRange);
     difRange->SetEnd(range->GetEndParent(), range->EndOffset());
     selectFrames(presContext, difRange, PR_TRUE); // must reselect last node maybe more
   }
@@ -5437,9 +5442,7 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
       if (NS_FAILED(res))
         return res;
       //deselect from 1 to a
-      RemoveItem(mAnchorFocusRange);
       selectFrames(presContext, difRange , PR_FALSE);
-      AddItem(mAnchorFocusRange);
     }
     else
     {
@@ -5464,9 +5467,7 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
     res = CopyRangeToAnchorFocus(range);
     if (NS_FAILED(res))
       return res;
-    RemoveItem(mAnchorFocusRange);
     selectFrames(presContext, difRange , PR_FALSE);
-    AddItem(mAnchorFocusRange);
     difRange->SetStart(range->GetStartParent(), range->StartOffset());
     selectFrames(presContext, difRange, PR_TRUE);//must reselect last node
   }
@@ -5485,9 +5486,7 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
       res |= CopyRangeToAnchorFocus(range);
       if (NS_FAILED(res))
         return res;
-      RemoveItem(mAnchorFocusRange);
-      selectFrames(presContext, difRange, 0);
-      AddItem(mAnchorFocusRange);
+      selectFrames(presContext, difRange, PR_FALSE);
     }
     else
     {

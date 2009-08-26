@@ -12,15 +12,6 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsJSShModule
 
-REQUIRES	= \
-		xpcom \
-		js \
-		xpconnect \
-		string \
-		necko \
-		caps \
-		dom \
-		$(NULL)
 
 CPPSRCS		= \
 		nsJSShServer.cpp \

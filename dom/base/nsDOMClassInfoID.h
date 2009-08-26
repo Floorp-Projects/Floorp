@@ -64,6 +64,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_DocumentType_id,
   eDOMClassInfo_DOMImplementation_id,
   eDOMClassInfo_DOMException_id,
+  eDOMClassInfo_DOMTokenList_id,
   eDOMClassInfo_DocumentFragment_id,
   eDOMClassInfo_Element_id,
   eDOMClassInfo_Attr_id,
@@ -84,6 +85,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_DragEvent_id,
   eDOMClassInfo_KeyboardEvent_id,
   eDOMClassInfo_PopupBlockedEvent_id,
+  eDOMClassInfo_OrientationEvent_id,
 
   // HTML classes
   eDOMClassInfo_HTMLDocument_id,

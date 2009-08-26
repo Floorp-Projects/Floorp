@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body > div { color: green; }
+      .toremove { color: red; }
+    </style>
+  </head>
+  <body>
+    <div class="toremove">
+      This should be green
+    </div>
+    <script>
+      document.body.firstElementChild.classList.remove("toremove");
+    </script>
+  </body>
+</html>

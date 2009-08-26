@@ -59,6 +59,7 @@ _TEST_FILES =\
 		name.css \
 		name.js \
 		name.xbl \
+		name_nsRootAcc_wnd.xul \
 		namerules.xml \
  		nsIAccessible_selects.js \
 		nsIAccessibleEditableText.js \
@@ -68,9 +69,11 @@ _TEST_FILES =\
 		table.js \
 		value.js \
 		test_accessnode_invalidation.html \
+		test_actions.xul \
 		test_actions_aria.html \
 		test_actions_inputs.html \
-		test_actions.xul \
+		test_actions_tree.xul \
+		test_actions_treegrid.xul \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
@@ -78,6 +81,7 @@ _TEST_FILES =\
 		test_aria_roles.html \
 		test_aria_roles.xul \
 		test_aria_token_attrs.html \
+		test_attrs_elm_tree.xul \
 		test_bug420863.html \
 	$(warning   test_childAtPoint.html temporarily disabled) \
 	$(warning	test_childAtPoint.xul temporarily disabled) \
@@ -86,9 +90,11 @@ _TEST_FILES =\
 		test_elm_filectrl.html \
 	$(warning   test_elm_media.html temporarily disabled) \
 		test_elm_table.html \
+		test_elm_tree.xul \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_doc.html \
+		test_events_draganddrop.html \
 		test_events_focus.xul \
 		test_events_mutation.html \
 		test_events_tree.xul \
@@ -100,6 +106,7 @@ _TEST_FILES =\
 		test_name_button.html \
 		test_name_link.html \
 		test_name_markup.html \
+		test_name_nsRootAcc.xul \
 		test_nsIAccessible_applicationAccessible.html \
 	$(warning test_nsIAccessible_comboboxes.xul temporarily disabled) \
  		test_nsIAccessible_selects.html \
@@ -117,26 +124,32 @@ _TEST_FILES =\
 		test_relations.html \
 		test_relations.xul \
 		test_relations_table.html \
+		test_relations_tree.xul \
 		test_role_nsHyperTextAcc.html \
 		test_role_table_cells.html \
 		test_states.html \
-		test_states_editablebody.html \
 		test_states_doc.html \
 		test_states_docarticle.html \
+		test_states_editablebody.html \
 		test_states_frames.html \
+		test_states_popup.xul \
+		test_states_tree.xul \
 		test_table_1.html \
 		test_table_2.html \
 		test_table_4.html \
 		test_table_indexes.html \
 		test_table_indexes_ariagrid.html \
+		test_table_indexes_tree.xul \
 		test_table_layoutguess.html \
 		test_table_sels.html \
 		test_table_sels_ariagrid.html \
+		test_table_sels_tree.xul \
 		test_textattrs.html \
 		test_textboxes.html \
 		test_textboxes.xul \
 		test_value.xul \
 		testTextboxes.js \
+		treeview.css \
 		treeview.js \
 		z_states_frame.html \
 		z_states_framearticle.html \

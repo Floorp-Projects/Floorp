@@ -88,6 +88,9 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE),
   mIsLoadCompleteFired(PR_FALSE), mInFlushPendingEvents(PR_FALSE)
 {
+  // XXX aaronl should we use an algorithm for the initial cache size?
+  mAccessNodeCache.Init(kDefaultCacheSize);
+
   // For GTK+ native window, we do nothing here.
   if (!mDOMNode)
     return;
@@ -112,9 +115,6 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
       }
     }
   }
-
-  // XXX aaronl should we use an algorithm for the initial cache size?
-  mAccessNodeCache.Init(kDefaultCacheSize);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
@@ -149,18 +149,6 @@ ElementTraverser(const void *aKey, nsIAccessNode *aAccessNode,
   cb->NoteXPCOMChild(aAccessNode);
   return PL_DHASH_NEXT;
 }
-
-// What we want is: NS_INTERFACE_MAP_ENTRY(self) for static IID accessors,
-// but some of our classes have an ambiguous base class of nsISupports which
-// prevents this from working (the default macro converts it to nsISupports,
-// then addrefs it, then returns it). Therefore, we expand the macro here and
-// change it so that it works. Yuck.
-#define NS_INTERFACE_MAP_STATIC_AMBIGUOUS(_class) \
-  if (aIID.Equals(NS_GET_IID(_class))) { \
-    NS_ADDREF(this); \
-    *aInstancePtr = this; \
-    return NS_OK; \
-  } else
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocAccessible)
 
@@ -579,6 +567,17 @@ nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
   }
 
   PutCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode);
+}
+
+void
+nsDocAccessible::RemoveAccessNodeFromCache(nsIAccessNode *aAccessNode)
+{
+  if (!aAccessNode)
+    return;
+
+  void *uniqueID = nsnull;
+  aAccessNode->GetUniqueID(&uniqueID);
+  mAccessNodeCache.Remove(uniqueID);
 }
 
 NS_IMETHODIMP nsDocAccessible::GetParent(nsIAccessible **aParent)
@@ -1351,6 +1350,15 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     // COM says we cannot change what interfaces are supported on-the-fly,
     // so invalidate this object. A new one will be created on demand.
     InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
+    return;
+  }
+
+  // For aria drag and drop changes we fire a generic attribute change event;
+  // at least until native API comes up with a more meaningful event.
+  if (aAttribute == nsAccessibilityAtoms::aria_grabbed ||
+      aAttribute == nsAccessibilityAtoms::aria_dropeffect) {
+    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED,
+                           targetNode);
   }
 }
 
@@ -1797,12 +1805,11 @@ nsDocAccessible::FlushPendingEvents()
     }
   }
   mEventsToFire.Clear(); // Clear out array
+  mInFlushPendingEvents = PR_FALSE;
   NS_RELEASE_THIS(); // Release kung fu death grip
 
   // After a flood of events, reset so that user input flag is off
   nsAccEvent::ResetLastInputState();
-
-  mInFlushPendingEvents = PR_FALSE;
 }
 
 void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)

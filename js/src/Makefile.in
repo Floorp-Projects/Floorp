@@ -41,6 +41,7 @@ DEPTH		= .
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 
+run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 include $(DEPTH)/config/autoconf.mk
 
 DIRS		= config
@@ -56,6 +57,10 @@ endif
 # editline needs to get built before the shell
 ifndef JS_DISABLE_SHELL
 DIRS += shell
+endif
+
+ifdef ENABLE_TESTS
+DIRS += jsapi-tests
 endif
 
 MODULE		    = js
@@ -216,6 +221,9 @@ VPATH		+= $(srcdir)/nanojit
 INSTALLED_HEADERS += \
 		jsbuiltins.h    \
 		Assembler.h     \
+		Allocator.h     \
+		CodeAlloc.h     \
+		Containers.h    \
 		LIR.h		\
 		avmplus.h	\
 		Fragmento.h	\
@@ -228,6 +236,9 @@ INSTALLED_HEADERS += \
 CPPSRCS += \
 		jstracer.cpp \
 		Assembler.cpp  \
+		Allocator.cpp  \
+		CodeAlloc.cpp  \
+		Containers.cpp \
 		Fragmento.cpp  \
 		LIR.cpp        \
 		RegAlloc.cpp   \
@@ -239,6 +250,7 @@ CPPSRCS += \
 ifdef WINCE
 # don't need -c
 AS_DASH_C_FLAG =
+ASFLAGS += -arch 6
 ASFILES += jswince.asm
 endif
 
@@ -256,8 +268,6 @@ INSTALLED_HEADERS += jscpucfg.h
 endif
 
 EXPORTS = $(INSTALLED_HEADERS)
-
-JS_SAFE_ARENA	= 1
 
 DASH_R		= -r
 
@@ -327,7 +337,7 @@ ifdef MOZ_SYNC_BUILD_FILES
 # belongs in the other as well.  If the change isn't right for both
 # places, then that's something to bring up with the other developers.
 #
-# Some files are reasonable to diverge; for example,
+# Some files are reasonable to diverge; for  example,
 # js/config/autoconf.mk.in doesn't need most of the stuff in
 # config/autoconf.mk.in.
 check-sync-dirs = $(PYTHON) $(srcdir)/config/check-sync-dirs.py
@@ -338,9 +348,8 @@ endif
 
 ifdef ENABLE_JIT
 check::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(DIST)/bin/js$(BIN_SUFFIX) -j -e \
-		"var gSrcdir='$(call normalizepath,$(srcdir))'; var gSkipSlowTests=true; var gReportSummary=false;" \
-		$(srcdir)/trace-test.js
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) $(srcdir)/trace-test/trace-test.py \
+	        -x slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
 endif
 
 DIST_GARBAGE = config.cache config.log config.status \
@@ -363,10 +372,6 @@ GARBAGE		+= jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 TARGETS		+= jscpucfg$(HOST_BIN_SUFFIX)
-endif
-
-ifdef JS_SAFE_ARENA
-DEFINES		+= -DJS_USE_SAFE_ARENA
 endif
 
 ifdef JS_THREADSAFE

@@ -559,8 +559,8 @@ GeckoProtocolChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 
     // XXX can this use real 64-bit ints?
     if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
-        mProgressSink->OnProgress(this, nsnull, nsUint64(offset + count),
-                                  nsUint64(mContentLength));
+        mProgressSink->OnProgress(this, nsnull, PRUint64(offset + count),
+                                  PRUint64(mContentLength));
 
     return rv; // let the pump cancel on failure
 }

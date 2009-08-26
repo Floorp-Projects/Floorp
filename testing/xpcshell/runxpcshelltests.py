@@ -37,11 +37,12 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-import re, sys, os, os.path, logging
+import re, sys, os, os.path, logging, shutil
 import tempfile
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
+from tempfile import mkdtemp
 
 from automationutils import addCommonOptions, checkForCrashes
 
@@ -86,6 +87,9 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
     # nothing to test!
     print >>sys.stderr, "Error: No test dirs or test manifest specified!"
     return False
+
+  passCount = 0
+  failCount = 0
 
   testharnessdir = os.path.dirname(os.path.abspath(__file__))
   xpcshell = os.path.abspath(xpcshell)
@@ -154,7 +158,6 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
   xpcsCmd = [xpcshell, '-g', xrePath, '-j', '-s'] + \
             ['-e', 'const _HTTPD_JS_PATH = "%s";' % httpdJSPath,
              '-f', os.path.join(testharnessdir, 'head.js')]
-  xpcsTailFile = [os.path.join(testharnessdir, 'tail.js')]
 
   # |testPath| will be the optional path only, or |None|.
   # |singleFile| will be the optional test only, or |None|.
@@ -181,7 +184,6 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
     testdirs = readManifest(os.path.abspath(manifest))
 
   # Process each test directory individually.
-  success = True
   for testdir in testdirs:
     if testPath and not testdir.endswith(testPath):
       continue
@@ -211,7 +213,7 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
     cmdH = ", ".join(['"' + f.replace('\\', '/') + '"'
                        for f in testHeadFiles])
     cmdT = ", ".join(['"' + f.replace('\\', '/') + '"'
-                       for f in (testTailFiles + xpcsTailFile)])
+                       for f in testTailFiles])
     cmdH = xpcsCmd + \
            ['-e', 'const _HEAD_FILES = [%s];' % cmdH] + \
            ['-e', 'const _TAIL_FILES = [%s];' % cmdT]
@@ -221,10 +223,16 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
       # The test file will have to be loaded after the head files.
       cmdT = ['-e', 'const _TEST_FILE = ["%s"];' %
                       os.path.join(testdir, test).replace('\\', '/')]
+      # create a temp dir that the JS harness can stick a profile in
+      profd = mkdtemp()
+      env["XPCSHELL_TEST_PROFILE_DIR"] = profd
+
       proc = Popen(cmdH + cmdT + xpcsRunArgs,
                    stdout=pStdout, stderr=pStderr, env=env, cwd=testdir)
       # |stderr == None| as |pStderr| was either |None| or redirected to |stdout|.
       stdout, stderr = proc.communicate()
+
+      shutil.rmtree(profd, True)
 
       if interactive:
         # not sure what else to do here...
@@ -236,9 +244,10 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
   %s
   <<<<<<<""" % (test, proc.returncode, stdout)
         checkForCrashes(testdir, symbolsPath, testName=test)
-        success = False
+        failCount += 1
       else:
         print "TEST-PASS | %s | test passed" % test
+        passCount += 1
 
       leakReport = processLeakLog(leakLogFile)
 
@@ -257,7 +266,15 @@ def runTests(xpcshell, testdirs=[], xrePath=None, testPath=None,
       if os.path.exists(leakLogFile):
         os.remove(leakLogFile)
 
-  return success
+  if passCount == 0 and failCount == 0:
+    print "TEST-UNEXPECTED-FAIL | runxpcshelltests.py | No tests run. Did you pass an invalid --test-path?"
+    failCount = 1
+
+  print """INFO | Result summary:
+INFO | Passed: %d
+INFO | Failed: %d""" % (passCount, failCount)
+
+  return failCount == 0
 
 def main():
   """Process command line arguments and call runTests() to do the real work."""

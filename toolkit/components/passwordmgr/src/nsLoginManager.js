@@ -1244,13 +1244,17 @@ LoginManager.prototype = {
      */
     _notifyFoundLogins : function (didntFillReason, usernameField,
                                    passwordField, foundLogins, selectedLogin) {
+        // We need .setProperty(), which is a method on the original
+        // nsIWritablePropertyBag. Strangley enough, nsIWritablePropertyBag2
+        // doesn't inherit from that, so the additional QI is needed.
         let formInfo = Cc["@mozilla.org/hash-property-bag;1"].
-                       createInstance(Ci.nsIWritablePropertyBag2);
+                       createInstance(Ci.nsIWritablePropertyBag2).
+                       QueryInterface(Ci.nsIWritablePropertyBag);
 
         formInfo.setPropertyAsACString("didntFillReason", didntFillReason);
         formInfo.setPropertyAsInterface("usernameField", usernameField);
         formInfo.setPropertyAsInterface("passwordField", passwordField);
-        formInfo.setPropertyAsInterface("foundLogins", foundLogins.concat());
+        formInfo.setProperty("foundLogins", foundLogins.concat());
         formInfo.setPropertyAsInterface("selectedLogin", selectedLogin);
 
         this._observerService.notifyObservers(formInfo,

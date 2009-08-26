@@ -604,6 +604,16 @@ nsXPConnect::ToParticipant(void *p)
     return this;
 }
 
+void
+nsXPConnect::CommenceShutdown()
+{
+#ifdef DEBUG
+    fprintf(stderr, "nsXPConnect::CommenceShutdown()\n");
+#endif
+    // Tell the JS engine that we are about to destroy the runtime.
+    JS_CommenceRuntimeShutDown(mRuntime->GetJSRuntime());
+}
+
 NS_IMETHODIMP
 nsXPConnect::RootAndUnlinkJSObjects(void *p)
 {
@@ -846,7 +856,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                     if(str)
                     {
                         NS_ConvertUTF16toUTF8
-                            fname(JS_GetStringChars(str));
+                            fname(reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str)));
                         JS_snprintf(name, sizeof(name),
                                     "JS Object (Function - %s)", fname.get());
                     }
@@ -1187,6 +1197,30 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     return NS_OK;
 }
 
+static nsresult
+NativeInterface2JSObject(XPCLazyCallContext & lccx,
+                         JSObject * aScope,
+                         nsISupports *aCOMObj,
+                         const nsIID * aIID,
+                         PRBool aAllowWrapping,
+                         jsval *aVal,
+                         nsIXPConnectJSObjectHolder **aHolder)
+{
+    nsresult rv;
+    if(!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, aCOMObj, aIID,
+                                             nsnull, nsnull, aScope,
+                                             aAllowWrapping, OBJ_IS_NOT_GLOBAL,
+                                             &rv))
+        return rv;
+
+#ifdef DEBUG
+    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(JSVAL_TO_OBJECT(*aVal)),
+                 "Shouldn't be returning a native wrapper here");
+#endif
+    
+    return NS_OK;
+}
+
 /* nsIXPConnectJSObjectHolder wrapNative (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDRef aIID); */
 NS_IMETHODIMP
 nsXPConnect::WrapNative(JSContext * aJSContext,
@@ -1196,10 +1230,18 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
                         nsIXPConnectJSObjectHolder **aHolder)
 {
     NS_ASSERTION(aHolder, "bad param");
+    NS_ASSERTION(aJSContext, "bad param");
+    NS_ASSERTION(aScope, "bad param");
+    NS_ASSERTION(aCOMObj, "bad param");
+
+    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
+    if(!ccx.IsValid())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+    XPCLazyCallContext lccx(ccx);
 
     jsval v;
-    return WrapNativeToJSVal(aJSContext, aScope, aCOMObj, &aIID, PR_FALSE,
-                             &v, aHolder);
+    return NativeInterface2JSObject(lccx, aScope, aCOMObj, &aIID, PR_FALSE, &v,
+                                    aHolder);
 }
 
 /* void wrapNativeToJSVal (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDPtr aIID, out JSVal aVal, out nsIXPConnectJSObjectHolder aHolder); */
@@ -1219,22 +1261,10 @@ nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
     if(aHolder)
         *aHolder = nsnull;
 
-    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    if(!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
+    XPCLazyCallContext lccx(NATIVE_CALLER, aJSContext);
 
-    nsresult rv;
-    if(!XPCConvert::NativeInterface2JSObject(ccx, aVal, aHolder, aCOMObj, aIID,
-                                             nsnull, nsnull, aScope, aAllowWrapping,
-                                             OBJ_IS_NOT_GLOBAL, &rv))
-        return rv;
-
-#ifdef DEBUG
-    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(JSVAL_TO_OBJECT(*aVal)),
-                 "Shouldn't be returning a native wrapper here");
-#endif
-    
-    return NS_OK;
+    return NativeInterface2JSObject(lccx, aScope, aCOMObj, aIID, aAllowWrapping,
+                                    aVal, aHolder);
 }
 
 /* void wrapJS (in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
@@ -2238,9 +2268,10 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scope, nsIVariant* value, jsv
     XPCCallContext ccx(NATIVE_CALLER, ctx);
     if(!ccx.IsValid())
         return NS_ERROR_FAILURE;
+    XPCLazyCallContext lccx(ccx);
 
     nsresult rv = NS_OK;
-    if(!XPCVariant::VariantDataToJS(ccx, value, scope, &rv, _retval))
+    if(!XPCVariant::VariantDataToJS(lccx, value, scope, &rv, _retval))
     {
         if(NS_FAILED(rv)) 
             return rv;

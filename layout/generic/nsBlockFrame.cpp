@@ -439,10 +439,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
       }
       fputs("<\n", out);
       while (kid) {
-        nsIFrameDebug *frameDebug = do_QueryFrame(kid);
-        if (frameDebug) {
-          frameDebug->List(out, aIndent + 1);
-        }
+        kid->List(out, aIndent + 1);
         kid = kid->GetNextSibling();
       }
       IndentBy(out, aIndent);
@@ -610,7 +607,7 @@ static PRBool IsContinuationPlaceholder(nsIFrame* aFrame)
 static void ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent,
                           nsIFrame* aNewParent) {
   NS_ASSERTION(aOldParent == aFrame->GetParent(),
-               "Parent not consistent with exepectations");
+               "Parent not consistent with expectations");
 
   aFrame->SetParent(aNewParent);
 
@@ -2256,7 +2253,28 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
     // There are no lines so we have to fake up some y motion so that
     // we end up with *some* height.
-    aState.mY += metrics.height;
+
+    if (metrics.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE &&
+        !nsLayoutUtils::GetFirstLineBaseline(mBullet, &metrics.ascent)) {
+      metrics.ascent = metrics.height;
+    }
+
+    nsIRenderingContext *rc = aState.mReflowState.rendContext;
+    nsLayoutUtils::SetFontFromStyle(rc, GetStyleContext());
+    nsCOMPtr<nsIFontMetrics> fm;
+    rc->GetFontMetrics(*getter_AddRefs(fm));
+
+    nscoord minAscent =
+      nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
+    nscoord minDescent = aState.mMinLineHeight - minAscent;
+
+    aState.mY += PR_MAX(minAscent, metrics.ascent) +
+                 PR_MAX(minDescent, metrics.height - metrics.ascent);
+
+    nscoord offset = minAscent - metrics.ascent;
+    if (offset > 0) {
+      mBullet->SetRect(mBullet->GetRect() + nsPoint(0, offset));
+    }
   }
 
   if (foundAnyClears) {
@@ -2768,6 +2786,10 @@ nsBlockFrame::IsSelfEmpty()
                      padding->mPadding.GetTop()) ||
       !IsPaddingZero(padding->mPadding.GetBottomUnit(),
                      padding->mPadding.GetBottom())) {
+    return PR_FALSE;
+  }
+
+  if (HaveOutsideBullet()) {
     return PR_FALSE;
   }
 
@@ -6820,7 +6842,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   if ((!equal || lineFloats.Length() != storedFloats.Length()) && !anyLineDirty) {
     NS_WARNING("nsBlockFrame::CheckFloats: Explicit float list is out of sync with float cache");
 #if defined(DEBUG_roc)
-    nsIFrameDebug::RootFrameList(PresContext(), stdout, 0);
+    nsFrame::RootFrameList(PresContext(), stdout, 0);
     for (i = 0; i < lineFloats.Length(); ++i) {
       printf("Line float: %p\n", lineFloats.ElementAt(i));
     }

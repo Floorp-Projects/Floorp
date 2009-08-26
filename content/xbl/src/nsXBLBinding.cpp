@@ -1089,17 +1089,15 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             pusher.Push(cx);
 
             nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-            nsresult rv = nsContentUtils::XPConnect()->
-              WrapNative(cx, global->GetGlobalJSObject(),
-                         mBoundElement, NS_GET_IID(nsISupports),
-                         getter_AddRefs(wrapper));
+            jsval v;
+            nsresult rv =
+              nsContentUtils::WrapNative(cx, global->GetGlobalJSObject(),
+                                         mBoundElement, &v,
+                                         getter_AddRefs(wrapper));
             if (NS_FAILED(rv))
               return;
 
-            JSObject* scriptObject = nsnull;
-            rv = wrapper->GetJSObject(&scriptObject);
-            if (NS_FAILED(rv))
-              return;
+            JSObject* scriptObject = JSVAL_TO_OBJECT(v);
 
             // XXX Stay in sync! What if a layered binding has an
             // <interface>?!

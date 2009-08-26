@@ -2871,10 +2871,8 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
               (fp->fun && JSFUN_THISP_FLAGS(fp->fun->flags)));
     JS_CALL_VALUE_TRACER(trc, (jsval)fp->thisp, "this");
 
-    if (fp->callee)
-        JS_CALL_OBJECT_TRACER(trc, fp->callee, "callee");
-
     if (fp->argv) {
+        JS_CALL_VALUE_TRACER(trc, fp->argv[-2], "callee");
         nslots = fp->argc;
         skip = 0;
         if (fp->fun) {
@@ -3019,10 +3017,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
         /* Avoid keeping GC-ed junk stored in JSContext.exception. */
         acx->exception = JSVAL_NULL;
     }
-#if JS_HAS_LVALUE_RETURN
-    if (acx->rval2set)
-        JS_CALL_VALUE_TRACER(trc, acx->rval2, "rval2");
-#endif
 
     for (sh = acx->stackHeaders; sh; sh = sh->down) {
         METER(trc->context->runtime->gcStats.stackseg++);
@@ -3115,6 +3109,8 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
         js_TraceContext(trc, acx);
+
+    js_TraceThreads(rt, trc);
 
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);

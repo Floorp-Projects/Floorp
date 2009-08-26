@@ -118,7 +118,7 @@ nsINIParserImpl::GetSections(nsIUTF8StringEnumerator* *aResult)
 
   nsresult rv = mParser.GetSections(SectionCB, strings);
   if (NS_SUCCEEDED(rv))
-    rv = NS_NewUTF8StringEnumerator(aResult, strings);
+    rv = NS_NewAdoptingUTF8StringEnumerator(aResult, strings);
 
   if (NS_FAILED(rv))
     delete strings;
@@ -146,7 +146,7 @@ nsINIParserImpl::GetKeys(const nsACString& aSection,
   nsresult rv = mParser.GetStrings(PromiseFlatCString(aSection).get(),
                                    KeyCB, strings);
   if (NS_SUCCEEDED(rv))
-    rv = NS_NewUTF8StringEnumerator(aResult, strings);
+    rv = NS_NewAdoptingUTF8StringEnumerator(aResult, strings);
 
   if (NS_FAILED(rv))
     delete strings;

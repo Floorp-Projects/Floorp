@@ -134,7 +134,10 @@ LogSlimWrapperWillMorph(JSContext *cx, JSObject *obj, const char *propname,
 {
     if(obj && IS_SLIM_WRAPPER(obj))
     {
-        printf("***** morphing from %s", functionName);
+        XPCNativeScriptableInfo *si =
+            GetSlimWrapperProto(obj)->GetScriptableInfo();
+        printf("***** morphing %s from %s", si->GetJSClass()->name,
+               functionName);
         if(propname)
             printf(" for %s", propname);
         printf(" (%p, %p)\n", obj,
@@ -146,8 +149,15 @@ LogSlimWrapperWillMorph(JSContext *cx, JSObject *obj, const char *propname,
 void
 LogSlimWrapperNotCreated(JSContext *cx, nsISupports *obj, const char *reason)
 {
-    printf("***** refusing to create slim wrapper, reason: %s (%p)\n",
-           reason, obj);
+    char* className = nsnull;
+    nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(obj);
+    if(ci)
+        ci->GetClassDescription(&className);
+    printf("***** refusing to create slim wrapper%s%s, reason: %s (%p)\n",
+           className ? " for " : "", className ? className : "", reason, obj);
+    if(className)
+        PR_Free(className);
+    AutoJSRequestWithNoCallContext autoRequest(cx);
     xpc_DumpJSStack(cx, JS_FALSE, JS_FALSE, JS_FALSE);
 }
 #endif

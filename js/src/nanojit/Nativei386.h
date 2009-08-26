@@ -840,7 +840,7 @@ namespace nanojit
   IMM32( (uint32_t)offset );    \
   *(--_nIns) = 0xE8;        \
   verbose_only(asm_output("call %s",(c->_name));) \
-  debug_only(if ((c->_argtypes&3)==ARGSIZE_F) fpu_push();)\
+  debug_only(if ((c->_argtypes & ARGSIZE_MASK_ANY)==ARGSIZE_F) fpu_push();)\
 } while (0)
 
 // indirect call thru register
@@ -849,7 +849,7 @@ namespace nanojit
   underrunProtect(2);\
   ALU(0xff, 2, (r));\
   verbose_only(asm_output("call %s",gpn(r));) \
-  debug_only(if ((c->_argtypes&3)==ARGSIZE_F) fpu_push();)\
+  debug_only(if ((c->_argtypes & ARGSIZE_MASK_ANY)==ARGSIZE_F) fpu_push();)\
 } while (0)
 
 

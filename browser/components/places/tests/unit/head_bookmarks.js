@@ -54,26 +54,14 @@ function LOG(aMsg) {
   print(aMsg);
 }
 
+var gProfD = do_get_profile();
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties);
-// Remove '/unit/*.js'.
-var gTestRoot = __LOCATION__.parent.parent;
-gTestRoot.normalize();
-
-// Need to create and register a profile folder.
-var gProfD = gTestRoot.clone();
-gProfD.append("profile");
-if (gProfD.exists())
-  gProfD.remove(true);
-gProfD.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
 var dirProvider = {
   getFile: function(prop, persistent) {
     persistent.value = true;
-    if (prop == NS_APP_USER_PROFILE_50_DIR ||
-        prop == NS_APP_PROFILE_DIR_STARTUP)
-      return gProfD.clone();
-    else if (prop == NS_APP_BOOKMARKS_50_FILE) {
+    if (prop == NS_APP_BOOKMARKS_50_FILE) {
       var bmarks = gProfD.clone();
       bmarks.append("bookmarks.html");
       return bmarks;

@@ -65,11 +65,7 @@
 
       // Search for some text that's on the second page (but not on
       // the first page), and verify that it can be found.
-      var findFocused = false;
       gFindBar = document.getElementById("FindToolbar");
-      gFindBar._findField.inputField.onfocus = function () {
-        findFocused = true;
-      };
       document.getElementById("cmd_find").doCommand();
       ok(!gFindBar.hidden, "failed to open findbar");
       gFindBar._findField.value = "A generic page";
@@ -91,8 +87,6 @@
       }, nextTest, 20);
       yield;
 
-      ok(findFocused, 
-        "find input field doesn't have the focus, find operation will fail!");
       is(gFindBar._findField.inputField.value, "A generic page",
         "expected text not present in find input field");
       is(TestWindow.getWindow().getSelection().toString().toLowerCase(),

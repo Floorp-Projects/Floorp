@@ -538,29 +538,16 @@ sub parse_options {
         usage "missing outputprefix";
     }
 
-    if ($branch eq "1.8.0") {
-        $knownfailurebranchpattern = "(1\\.8\\.0|\\.\\*)";
-        $failurebranchpattern      = "1\\.8\\.0";
-    }
-    elsif ($branch eq "1.8.1") {
-        $knownfailurebranchpattern = "(1\\.8\\.1|\\.\\*)";
-        $failurebranchpattern      = "1\\.8\\.1";
-    }
-    elsif ($branch eq "1.9.0") {
-        $knownfailurebranchpattern = "(1\\.9\\.0|\\.\\*)";
-        $failurebranchpattern      = "1\\.9\\.0";
-    }
-    elsif ($branch eq "1.9.1") {
-        $knownfailurebranchpattern = "(1\\.9\\.1|\\.\\*)";
-        $failurebranchpattern      = "1\\.9\\.1";
-    }
-    elsif ($branch eq "1.9.2") {
-        $knownfailurebranchpattern = "(1\\.9\\.2|\\.\\*)";
-        $failurebranchpattern      = "1\\.9\\.2";
-    }
-    elsif ($branch eq "all") {
+    if ($branch eq "all") {
         $knownfailurebranchpattern = "[^,]*";
         $failurebranchpattern      = "[^,]*";
+    }
+    else {
+        $knownfailurebranchpattern = "($branch|.*)";
+        $knownfailurebranchpattern =~ s/\./\\./g;
+
+        $failurebranchpattern = "$branch";
+        $failurebranchpattern =~ s/\./\\./g;
     }
 
     if ($repo eq "all" || $repo eq ".*") {

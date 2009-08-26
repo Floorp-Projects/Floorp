@@ -1,0 +1,3 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="document.getElementById('label').control='c';">
+<label id="label"><hbox><listboxbody><hbox/><tooltip/></listboxbody><autorepeatbutton/></hbox></label>
+</window>

@@ -79,19 +79,26 @@ _TEST_FILES = \
 		$(warning test_bug421839-1.html disabled because it calls finish twice which can cause timeouts) \
 		test_bug421839-2.html \
 		bug421839-2-page.html \
+		test_bug438840.html \
 		test_bug448860.html \
 		test_bug460532.html \
 		test_bug468167.html \
 		test_bug469613.xul \
 		test_bug470212.html \
+		test_bug507902.html \
 		test_movement_by_characters.html \
 		test_movement_by_words.html \
 		test_plugin_clipping.xhtml \
 		test_plugin_clipping2.xhtml \
 		test_plugin_clipping_transformed.xhtml \
 		test_plugin_clipping_table.xhtml \
+		test_plugin_mouse_coords.html \
 		test_plugin_position.xhtml \
 		test_selection_underline.html \
+		file_BrokenImageReference.png \
+		file_Dolske.png \
+		file_IconTestServer.sjs \
+		file_LoadingImageReference.png \
 		$(NULL)
 # disabled temporarily
 #		test_bug488417.html \

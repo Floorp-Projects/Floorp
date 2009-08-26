@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="301397Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="setTimeout(nextTest,0);"
+        title="bug 301397 test">
+
+  <script type="application/javascript"
+    src=
+  "chrome://mochikit/content/chrome/docshell/test/chrome/docshell_helpers.js">
+  </script>
+
+  <script type="application/javascript"><![CDATA[
+  
+    // Define the generator-iterator for the tests.
+    var tests = testIterator();
+
+    ////
+    // Execute the next test in the generator function.
+    //
+    function nextTest() {
+      tests.next();
+    }
+    
+    ////
+    // Return the document element with the specified id.
+    //
+    function $(id) { return TestWindow.getDocument().getElementById(id); }
+
+    ////
+    // Verifies that the given string exists in the innerHTML of the iframe
+    // content.
+    //
+    function verifyIframeInnerHtml(string) {
+      var iframeInnerHtml = $("iframe").contentDocument.body.innerHTML;
+      ok(iframeInnerHtml.indexOf(string) != -1,
+        "iframe contains wrong document: " + iframeInnerHtml);    
+    }
+    
+    ////
+    // Generator function for test steps for bug 301397:  
+    // The correct page should be displayed in an iframe when
+    // navigating back and forwards, when the parent page
+    // occupies multiple spots in the session history.
+    //
+    function testIterator()
+    {
+      // Make sure the bfcache is enabled.
+      enableBFCache(8);
+
+      // Load a dummy page.
+      doPageNavigation({
+        uri: getHttpUrl("generic.html"),
+        onNavComplete: nextTest
+      });
+      yield;
+      
+      // Load a page containing an iframe.
+      doPageNavigation({
+        uri: getHttpUrl("bug301397_1.html"),
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "generic page",
+                            persisted: true },
+                          { type: "pageshow",
+                            title: "iframe content #1",
+                            persisted: false },   // false on initial load
+                          { type: "pageshow",
+                            title: "iframe parent",
+                            persisted: false } ], // false on initial load
+        onNavComplete: nextTest
+      });
+      yield;
+      
+      // Click a link in the iframe to cause the iframe to navigate
+      // to a new page, and wait until the related pagehide/pageshow
+      // events have occurred.
+      waitForPageEvents({
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "iframe content #1",
+                            persisted: false },   // false, subframe nav
+                          { type: "pageshow",
+                            title: "iframe content #2",
+                            persisted: false } ], // false on initial load
+        onNavComplete: nextTest
+      });
+      var link = $("iframe").contentDocument.getElementById("link");
+      var event = $("iframe").contentDocument.createEvent("MouseEvents");
+      event.initMouseEvent("click", true, true, $("iframe").contentWindow,
+          0, 0, 0, 0, 0,
+          false, false, false, false,
+          0, null);
+      link.dispatchEvent(event);
+      yield;
+       
+      // Load another dummy page.  Verify that both the outgoing parent and
+      // iframe pages are stored in the bfcache.
+      doPageNavigation({
+        uri: getHttpUrl("bug301397_4.html"),
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "iframe parent",
+                            persisted: true },
+                          { type: "pagehide",
+                            title: "iframe content #2",
+                            persisted: true },
+                          { type: "pageshow",
+                            title: "dummy page, no iframe",
+                            persisted: false } ],  // false on initial load
+        onNavComplete: nextTest
+      });
+      yield;
+      
+      // Go back.  The iframe should show the second page loaded in it. 
+      // Both the parent and the iframe pages should be loaded from
+      // the bfcache.
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "dummy page, no iframe",
+                            persisted: true },
+                          { type: "pageshow",
+                            persisted: true,
+                            title: "iframe content #2" },
+                          { type: "pageshow",
+                            persisted: true,
+                            title: "iframe parent" } ],
+        onNavComplete: nextTest
+      });
+      yield;
+      
+      verifyIframeInnerHtml("You made it");
+      
+      // Go gack again.  The iframe should show the first page loaded in it.
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "iframe content #2",
+                            persisted: false },  // false, subframe nav
+                          { type: "pageshow",
+                            title: "iframe content #1",
+                            // false since this page was never stored
+                            // in the bfcache in the first place
+                            persisted: false } ], 
+        onNavComplete: nextTest
+      });
+      yield;
+      
+      verifyIframeInnerHtml("go to next page");
+      
+      // Go back to the generic page.  Now go forward to the last page,
+      // again verifying that the iframe shows the first and second
+      // pages in order.
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "iframe parent",
+                            persisted: true },
+                          { type: "pagehide",
+                            title: "iframe content #1",
+                            persisted: true },
+                          { type: "pageshow",
+                            title: "generic page",
+                            persisted: true } ], 
+        onNavComplete: nextTest
+      });
+      yield;
+
+      doPageNavigation({
+        forward: true,
+        eventsToListenFor: ["pageshow"],
+        expectedEvents: [ {type: "pageshow",
+                           title: "iframe content #1",
+                           persisted: true},
+                          {type: "pageshow",
+                           title: "iframe parent",
+                           persisted: true} ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      verifyIframeInnerHtml("go to next page");
+      
+      doPageNavigation({
+        forward: true,
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "iframe content #1",
+                            persisted: false },   // false, subframe nav
+                          { type: "pageshow",
+                            title: "iframe content #2",
+                            // false because the page wasn't stored in 
+                            // bfcache last time it was unloaded
+                            persisted: false } ], 
+        onNavComplete: nextTest
+      });
+      yield;
+
+      verifyIframeInnerHtml("You made it");
+      
+      doPageNavigation({
+        forward: true,
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "iframe parent",
+                            persisted: true },
+                          { type: "pagehide",
+                            title: "iframe content #2",
+                            persisted: true },
+                          { type: "pageshow",
+                            title: "dummy page, no iframe",
+                            persisted: true } ],
+        onNavComplete: nextTest
+      });
+      yield;
+
+      // Go back once more, and again verify that the iframe shows the
+      // second page loaded in it.
+      doPageNavigation({
+        back: true,
+        eventsToListenFor: ["pageshow", "pagehide"],
+        expectedEvents: [ { type: "pagehide",
+                            title: "dummy page, no iframe",
+                            persisted: true },
+                          { type: "pageshow",
+                            persisted: true,
+                            title: "iframe content #2" },
+                          { type: "pageshow",
+                            persisted: true,
+                            title: "iframe parent" } ],
+        onNavComplete: nextTest
+      });
+      yield;
+      
+      verifyIframeInnerHtml("You made it");
+      
+      // Tell the framework the test is finished.  Include the final 'yield' 
+      // statement to prevent a StopIteration exception from being thrown.
+      finish();
+      yield;
+    }
+    
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

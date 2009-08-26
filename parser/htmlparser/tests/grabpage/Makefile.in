@@ -44,10 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= grabpage$(BIN_SUFFIX)
 
-REQUIRES        = xpcom \
-                  string \
-                  necko \
-                  $(NULL)
 
 CPPSRCS		= grabpage.cpp
 

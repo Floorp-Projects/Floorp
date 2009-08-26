@@ -29,24 +29,23 @@ function next() {
     win.addEventListener("load", function () {
       win.removeEventListener("load", arguments.callee, false);
 
-      win.gBrowser.addEventListener("pageshow", function() {
-        win.gBrowser.removeEventListener("pageshow", arguments.callee, false);
+      var _delayedStartup = win.delayedStartup;
+      win.delayedStartup = function delayedStartup() {
+        _delayedStartup.apply(win, arguments);
+        win.delayedStartup = _delayedStartup;
 
-        // wait for delayedStartup
-        win.setTimeout(function () {
-          is(win.gBrowser.currentURI.spec, uri, uri + ": uri loaded in detached tab");
-          is(win.document.activeElement, win.gBrowser.selectedBrowser, uri + ": browser is focused");
-          is(win.gURLBar.value, "", uri + ": urlbar is empty");
-          ok(win.gURLBar.emptyText, uri + ": emptytext is present");
-          ok(win.gURLBar.hasAttribute("isempty"), uri + ": emptytext is displayed");
+        is(win.gBrowser.currentURI.spec, uri, uri + ": uri loaded in detached tab");
+        is(win.document.activeElement, win.gBrowser.selectedBrowser, uri + ": browser is focused");
+        is(win.gURLBar.value, "", uri + ": urlbar is empty");
+        ok(win.gURLBar.emptyText, uri + ": emptytext is present");
+        ok(win.gURLBar.hasAttribute("isempty"), uri + ": emptytext is displayed");
 
-          win.close();
-          if (uris.length)
-            next();
-          else
-            executeSoon(finish);
-        }, 100);
-      }, false);
+        win.close();
+        if (uris.length)
+          next();
+        else
+          executeSoon(finish);
+      };
     }, false);
   }
 }

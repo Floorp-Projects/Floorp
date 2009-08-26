@@ -51,7 +51,6 @@
 
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
-#include "nsSwitchToUIThread.h"
 #include "nsToolkit.h"
 #include "nsIEventListener.h"
 #include "nsString.h"
@@ -68,15 +67,12 @@
 #include "nsWindowCE.h"
 #endif
 
+#include "WindowHook.h"
+
 #ifdef ACCESSIBILITY
 #include "OLEACC.H"
 #include "nsIAccessible.h"
 #endif
-
-// Text Services Framework support
-#if !defined(WINCE)
-#define NS_ENABLE_TSF
-#endif // !defined(WINCE)
 
 /**
  * Forward class definitions
@@ -91,9 +87,9 @@ class imgIContainer;
  * Native WIN32 window wrapper.
  */
 
-class nsWindow : public nsSwitchToUIThread,
-                 public nsBaseWidget
+class nsWindow : public nsBaseWidget
 {
+  typedef mozilla::widget::WindowHook WindowHook;
 public:
   nsWindow();
   virtual ~nsWindow();
@@ -147,7 +143,8 @@ public:
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD              Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD              Update();
-  virtual void            Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+  virtual void            Scroll(const nsIntPoint& aDelta,
+                                 const nsTArray<nsIntRect>& aDestRects,
                                  const nsTArray<Configuration>& aReconfigureChildren);
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual void            FreeNativeData(void * data, PRUint32 aDataType);
@@ -185,11 +182,6 @@ public:
 #endif // NS_ENABLE_TSF
 
   /**
-   * nsSwitchToUIThread interface
-   */
-  virtual BOOL            CallMethod(MethodInfo *info);
-
-  /**
    * Statics used in other classes
    */
   static PRInt32          GetWindowsVersion();
@@ -224,6 +216,8 @@ public:
   static HWND             GetTopLevelHWND(HWND aWnd, PRBool aStopOnDialogOrPopup = PR_FALSE);
   HWND                    GetWindowHandle() { return mWnd; }
   WNDPROC                 GetPrevWindowProc() { return mPrevWndProc; }
+  static nsWindow*        GetNSWindowPtr(HWND aWnd);
+  WindowHook&             GetWindowHook() { return mWindowHook; }
 
   /**
    * Misc.
@@ -253,7 +247,6 @@ protected:
   /**
    * Window utilities
    */
-  static nsWindow*        GetNSWindowPtr(HWND aWnd);
   static BOOL             SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
   LPARAM                  lParamToScreen(LPARAM lParam);
   LPARAM                  lParamToClient(LPARAM lParam);
@@ -318,6 +311,7 @@ protected:
   BOOL                    OnInputLangChange(HKL aHKL);
   void                    OnSettingsChange(WPARAM wParam, LPARAM lParam);
   virtual PRBool          OnPaint(HDC aDC = nsnull);
+  void                    OnWindowPosChanged(WINDOWPOS *wp, PRBool& aResult);
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
   PRBool                  OnPaintImageDDraw16();
 #endif // defined(CAIRO_HAS_DDRAW_SURFACE)
@@ -325,6 +319,11 @@ protected:
   PRBool                  OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, 
                                        PRBool& result, PRBool& getWheelInfo,
                                        LRESULT *aRetValue);
+  static void             OnMouseWheelTimeout(nsITimer* aTimer, void* aClosure);
+  void                    UpdateMouseWheelSeriesCounter();
+  int                     ComputeMouseWheelDelta(int currentVDelta,
+                                                 int iDeltaPerLine,
+                                                 ULONG ulScrollLines);
 #endif // !defined(WINCE_WINDOWS_MOBILE)
 #if !defined(WINCE)
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
@@ -389,22 +388,6 @@ protected:
 #endif // ACCESSIBILITY
 
 protected:
-
-  /**
-   * nsSwitchToUIThread
-   */
-  enum {
-    // Enumeration of the methods which are accessible on the "main GUI thread"
-    // via the CallMethod(...) mechanism. (see nsSwitchToUIThread)
-    CREATE = 0x0101,
-    CREATE_NATIVE,
-    DESTROY,
-    SET_FOCUS,
-    SET_CURSOR,
-    CREATE_HACK
-  };
-
-protected:
   nsIntSize             mLastSize;
   nsIntPoint            mLastPoint;
   HWND                  mWnd;
@@ -430,6 +413,9 @@ protected:
   nsNativeDragTarget*   mNativeDragTarget;
   HKL                   mLastKeyboardLayout;
   nsPopupType           mPopupType;
+  int                   mScrollSeriesCounter;
+  PRPackedBool          mDisplayPanFeedback;
+  WindowHook            mWindowHook;
 
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;

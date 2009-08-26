@@ -215,6 +215,26 @@ ExposeWidget(GtkWidget* widget, GdkEventExpose* event,
 }
 
 static gboolean
+MotionEvent(GtkWidget* widget, GdkEventMotion* event,
+            gpointer user_data)
+{
+  InstanceData* instanceData = static_cast<InstanceData*>(user_data);
+  instanceData->lastMouseX = event->x;
+  instanceData->lastMouseY = event->y;
+  return TRUE;
+}
+
+static gboolean
+ButtonEvent(GtkWidget* widget, GdkEventButton* event,
+            gpointer user_data)
+{
+  InstanceData* instanceData = static_cast<InstanceData*>(user_data);
+  instanceData->lastMouseX = event->x;
+  instanceData->lastMouseY = event->y;
+  return TRUE;
+}
+
+static gboolean
 DeleteWidget(GtkWidget* widget, GdkEvent* event, gpointer user_data)
 {
   InstanceData* instanceData = static_cast<InstanceData*>(user_data);
@@ -256,8 +276,15 @@ pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
   GTK_WIDGET_SET_FLAGS (GTK_WIDGET(plug), GTK_CAN_FOCUS);
 
   /* all the events that our widget wants to receive */
-  gtk_widget_add_events(plug, GDK_EXPOSURE_MASK);
+  gtk_widget_add_events(plug, GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK |
+                              GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
   g_signal_connect(G_OBJECT(plug), "expose-event", G_CALLBACK(ExposeWidget),
+                   instanceData);
+  g_signal_connect(G_OBJECT(plug), "motion_notify_event", G_CALLBACK(MotionEvent),
+                   instanceData);
+  g_signal_connect(G_OBJECT(plug), "button_press_event", G_CALLBACK(ButtonEvent),
+                   instanceData);
+  g_signal_connect(G_OBJECT(plug), "button_release_event", G_CALLBACK(ButtonEvent),
                    instanceData);
   g_signal_connect(G_OBJECT(plug), "delete-event", G_CALLBACK(DeleteWidget),
                    instanceData);
@@ -271,20 +298,38 @@ int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
 {
 #ifdef MOZ_X11
-  XEvent *nsEvent = (XEvent *)event;
+  XEvent* nsEvent = (XEvent*)event;
 
-  if (nsEvent->type != GraphicsExpose)
-    return 0;
+  switch (nsEvent->type) {
+  case GraphicsExpose: {
+    XGraphicsExposeEvent* expose = &nsEvent->xgraphicsexpose;
+    instanceData->window.window = (void*)(expose->drawable);
 
-  XGraphicsExposeEvent *expose = &nsEvent->xgraphicsexpose;
-  instanceData->window.window = (void*)(expose->drawable);
-
-  GdkNativeWindow nativeWinId =
-    reinterpret_cast<XID>(instanceData->window.window);
-  GdkDrawable* gdkWindow = GDK_DRAWABLE(gdk_window_foreign_new(nativeWinId));  
-  pluginDrawWindow(instanceData, gdkWindow);
-  g_object_unref(gdkWindow);
+    GdkNativeWindow nativeWinId =
+      reinterpret_cast<XID>(instanceData->window.window);
+    GdkDrawable* gdkWindow = GDK_DRAWABLE(gdk_window_foreign_new(nativeWinId));  
+    pluginDrawWindow(instanceData, gdkWindow);
+    g_object_unref(gdkWindow);
+    break;
+  }
+  case MotionNotify: {
+    XMotionEvent* motion = &nsEvent->xmotion;
+    instanceData->lastMouseX = motion->x;
+    instanceData->lastMouseY = motion->y;
+    break;
+  }
+  case ButtonPress:
+  case ButtonRelease: {
+    XButtonEvent* button = &nsEvent->xbutton;
+    instanceData->lastMouseX = button->x;
+    instanceData->lastMouseY = button->y;
+    break;
+  }
+  default:
+    break;
+  }
 #endif
+
   return 0;
 }
 

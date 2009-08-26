@@ -667,6 +667,24 @@ nsFrameManager::ClearAllUndisplayedContentIn(nsIContent* aParentContent)
   if (mUndisplayedMap) {
     mUndisplayedMap->RemoveNodesFor(aParentContent);
   }
+
+  // Need to look at aParentContent's content list due to XBL insertions.
+  // Nodes in aParentContent's content list do not have aParentContent as a
+  // parent, but are treated as children of aParentContent. We get access to
+  // the content list via GetXBLChildNodesFor and just ignore any nodes we
+  // don't care about.
+  nsINodeList* list =
+    aParentContent->GetOwnerDoc()->BindingManager()->GetXBLChildNodesFor(aParentContent);
+  if (list) {
+    PRUint32 length;
+    list->GetLength(&length);
+    for (PRUint32 i = 0; i < length; ++i) {
+      nsIContent* child = list->GetNodeAt(i);
+      if (child->GetParent() != aParentContent) {
+        ClearUndisplayedContentIn(child, child->GetParent());
+      }
+    }
+  }
 }
 
 void
@@ -748,11 +766,8 @@ DumpContext(nsIFrame* aFrame, nsStyleContext* aContext)
   if (aFrame) {
     fputs("frame: ", stdout);
     nsAutoString  name;
-    nsIFrameDebug *frameDebug = do_QueryFrame(aFrame);
-    if (frameDebug) {
-      frameDebug->GetFrameName(name);
-      fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
-    }
+    aFrame->GetFrameName(name);
+    fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
     fprintf(stdout, " (%p)", static_cast<void*>(aFrame));
   }
   if (aContext) {
@@ -1062,6 +1077,10 @@ CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
               nsChangeHint aChangeToAssume)
 {
   nsChangeHint ourChange = aOldContext->CalcStyleDifference(aNewContext);
+  NS_ASSERTION(!(ourChange & nsChangeHint_ReflowFrame) ||
+               (ourChange & nsChangeHint_NeedReflow),
+               "Reflow hint bits set without actually asking for a reflow");
+
   NS_UpdateHint(ourChange, aChangeToAssume);
   if (NS_UpdateHint(aMinChange, ourChange)) {
     aChangeList->AppendChange(aFrame, aContent, ourChange);
@@ -1085,6 +1104,24 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                                       nsChangeHint       aMinChange,
                                       PRBool             aFireAccessibilityEvents)
 {
+  if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aMinChange)) {
+    // If aMinChange doesn't include nsChangeHint_NeedDirtyReflow, clear out
+    // all the reflow change bits from it, so that we'll make sure to append a
+    // change to the list for ourselves if we need a reflow.  We need this
+    // because the parent may or may not actually end up reflowing us
+    // otherwise.
+    aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_ReflowFrame);
+  } else if (!NS_IsHintSubset(nsChangeHint_ClearDescendantIntrinsics,
+                              aMinChange)) {
+    // If aMinChange doesn't include nsChangeHint_ClearDescendantIntrinsics,
+    // clear out the nsChangeHint_ClearAncestorIntrinsics flag, since it's
+    // possible that we had some random ancestor that cleared ancestor
+    // intrinsic widths, but we still need to clear intrinsic widths on frames
+    // that are our ancestors but its descendants.
+    aMinChange =
+      NS_SubtractHint(aMinChange, nsChangeHint_ClearAncestorIntrinsics);
+  }
+  
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|
   // and |pseudoContent| in sensible ways as well as making what

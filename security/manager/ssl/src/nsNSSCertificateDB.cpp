@@ -447,7 +447,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
     der.len = 0;
 
     if (!tmpCert2) {
-      NS_ASSERTION(0, "Couldn't create temp cert from DER blob\n");
+      NS_ERROR("Couldn't create temp cert from DER blob\n");
       continue;  // Let's try to import the rest of 'em
     }
     
@@ -1341,8 +1341,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
           if (sc) *sc = DELIM;
         }
       }
-      if (!namestr) namestr = "";
-      nsAutoString certname = NS_ConvertASCIItoUTF16(namestr);
+      nsAutoString certname = NS_ConvertASCIItoUTF16(namestr ? namestr : "");
       certstr.Append(PRUnichar(DELIM));
       certstr += certname;
       certstr.Append(PRUnichar(DELIM));
@@ -1694,7 +1693,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
   der.len = 0;
 
   if (!tmpCert) {
-    NS_ASSERTION(0,"Couldn't create cert from DER blob\n");
+    NS_ERROR("Couldn't create cert from DER blob\n");
     return NS_ERROR_FAILURE;
   }
 

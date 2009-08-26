@@ -2286,7 +2286,7 @@ nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
     }
   }
 
-  NS_ASSERTION(0, "We should never get here!");
+  NS_ERROR("We should never get here!");
 
   return NS_ERROR_FAILURE;
 }

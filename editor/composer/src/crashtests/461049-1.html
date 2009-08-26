@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function uu()
+{
+  document.removeEventListener("DOMSubtreeModified", uu, false);
+  document.execCommand("undo", false, null);
+}
+
+function boom()
+{
+  document.execCommand("selectAll", false, null);
+  document.execCommand("strikethrough", false, null);
+  document.addEventListener("DOMSubtreeModified", uu, false);
+  document.execCommand("undo", false, null);
+}
+
+</script>
+</head>
+
+<body contenteditable="true" onload="boom();"><div></div></body>
+
+</html>

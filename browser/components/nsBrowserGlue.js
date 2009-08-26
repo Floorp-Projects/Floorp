@@ -25,6 +25,7 @@
 #   Marco Bonardo <mak77@bonardo.net>
 #   Dietrich Ayala <dietrich@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Nils Maier <maierman@web.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -102,6 +103,12 @@ function BrowserGlue() {
   this._init();
 }
 
+#ifndef XP_MACOSX
+# OS X has the concept of zero-window sessions and therefore ignores the
+# browser-lastwindow-close-* topics.
+#define OBSERVE_LASTWINDOW_CLOSE_TOPICS 1
+#endif
+
 BrowserGlue.prototype = {
   
   _saveSession: false,
@@ -151,6 +158,17 @@ BrowserGlue.prototype = {
         // and history synchronization could fail.
         this._onProfileShutdown();
         break;
+#ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
+      case "browser-lastwindow-close-requested":
+        // The application is not actually quitting, but the last full browser
+        // window is about to be closed.
+        this._onQuitRequest(subject, "lastwindow");
+        break;
+      case "browser-lastwindow-close-granted":
+        if (this._saveSession)
+          this._setPrefToSaveSession();
+        break;
+#endif
       case "session-save":
         this._setPrefToSaveSession();
         subject.QueryInterface(Ci.nsISupportsPRBool);
@@ -189,6 +207,10 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "browser:purge-session-history", false);
     osvr.addObserver(this, "quit-application-requested", false);
     osvr.addObserver(this, "quit-application-granted", false);
+#ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
+    osvr.addObserver(this, "browser-lastwindow-close-requested", false);
+    osvr.addObserver(this, "browser-lastwindow-close-granted", false);
+#endif
     osvr.addObserver(this, "session-save", false);
     osvr.addObserver(this, "places-init-complete", false);
     osvr.addObserver(this, "places-database-locked", false);
@@ -205,6 +227,10 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "sessionstore-windows-restored");
     osvr.removeObserver(this, "browser:purge-session-history");
     osvr.removeObserver(this, "quit-application-requested");
+#ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
+    osvr.removeObserver(this, "browser-lastwindow-close-requested");
+    osvr.removeObserver(this, "browser-lastwindow-close-granted");
+#endif
     osvr.removeObserver(this, "quit-application-granted");
     osvr.removeObserver(this, "session-save");
   },
@@ -238,6 +264,22 @@ BrowserGlue.prototype = {
 
     // handle any UI migration
     this._migrateUI();
+
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService2);
+
+    // if ioService is managing the offline status, then ioservice.offline
+    // is already set correctly. We will continue to allow the ioService
+    // to manage its offline state until the user uses the "Work Offline" UI.
+    if (!ioService.manageOfflineStatus) {
+      // set the initial state
+      try {
+        ioService.offline = this._prefs.getBoolPref("browser.offline");
+      }
+      catch (e) {
+        ioService.offline = false;
+      }
+    }
 
     this._observerService.notifyObservers(null, "browser-ui-startup-complete", "");
   },
@@ -338,7 +380,6 @@ BrowserGlue.prototype = {
     if (!showPrompt || inPrivateBrowsing)
       return false;
 
-    var buttonChoice = 0;
     var quitBundle = this._bundleService.createBundle("chrome://browser/locale/quitDialog.properties");
     var brandBundle = this._bundleService.createBundle("chrome://branding/locale/brand.properties");
 
@@ -377,9 +418,11 @@ BrowserGlue.prototype = {
       button2Title = quitBundle.GetStringFromName("quitTitle");
     }
 
-    buttonChoice = promptService.confirmEx(null, quitDialogTitle, message,
-                                 flags, button0Title, button1Title, button2Title,
-                                 neverAskText, neverAsk);
+    var mostRecentBrowserWindow = wm.getMostRecentWindow("navigator:browser");
+    var buttonChoice =
+      promptService.confirmEx(mostRecentBrowserWindow, quitDialogTitle, message,
+                              flags, button0Title, button1Title, button2Title,
+                              neverAskText, neverAsk);
 
     switch (buttonChoice) {
     case 2: // Quit
@@ -1090,8 +1133,9 @@ GeolocationPrompt.prototype = {
       var buttons = [{
               label: browserBundle.GetStringFromName("geolocation.shareLocation"),
               accessKey: browserBundle.GetStringFromName("geolocation.shareLocation.accesskey"),
-              callback: function(notification) {                  
-                  if (notification.getElementsByClassName("rememberChoice")[0].checked)
+              callback: function(notification) {
+                  var elements = notification.getElementsByClassName("rememberChoice");
+                  if (elements.length && elements[0].checked)
                       setPagePermission(request.requestingURI, true);
                   request.allow(); 
               },
@@ -1100,7 +1144,8 @@ GeolocationPrompt.prototype = {
               label: browserBundle.GetStringFromName("geolocation.dontShareLocation"),
               accessKey: browserBundle.GetStringFromName("geolocation.dontShareLocation.accesskey"),
               callback: function(notification) {
-                  if (notification.getElementsByClassName("rememberChoice")[0].checked)
+                  var elements = notification.getElementsByClassName("rememberChoice");
+                  if (elements.length && elements[0].checked)
                       setPagePermission(request.requestingURI, false);
                   request.cancel();
               },
@@ -1121,11 +1166,17 @@ GeolocationPrompt.prototype = {
       // bar.
       function geolocation_hacks_to_notification () {
 
-        var checkbox = newBar.ownerDocument.createElementNS(XULNS, "checkbox");
-        checkbox.className = "rememberChoice";
-        checkbox.setAttribute("label", browserBundle.GetStringFromName("geolocation.remember"));
-        checkbox.setAttribute("accesskey", browserBundle.GetStringFromName("geolocation.remember.accesskey"));
-        newBar.appendChild(checkbox);
+        // Never show a remember checkbox inside the private browsing mode
+        var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
+                                getService(Ci.nsIPrivateBrowsingService).
+                                privateBrowsingEnabled;
+        if (!inPrivateBrowsing) {
+          var checkbox = newBar.ownerDocument.createElementNS(XULNS, "checkbox");
+          checkbox.className = "rememberChoice";
+          checkbox.setAttribute("label", browserBundle.GetStringFromName("geolocation.remember"));
+          checkbox.setAttribute("accesskey", browserBundle.GetStringFromName("geolocation.remember.accesskey"));
+          newBar.appendChild(checkbox);
+        }
 
         var link = newBar.ownerDocument.createElementNS(XULNS, "label");
         link.className = "text-link";

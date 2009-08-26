@@ -75,9 +75,12 @@ static float NativeGreyColorAsFloat(ColorName name, BOOL isMain)
   return NativeGreyColorAsInt(name, isMain) / 255.0f;
 }
 
-static NSColor* NativeGreyColorAsNSColor(ColorName name, BOOL isMain)
+static void DrawNativeGreyColorInRect(CGContextRef context, ColorName name,
+                                      CGRect rect, BOOL isMain)
 {
-  return [NSColor colorWithDeviceWhite:NativeGreyColorAsFloat(name, isMain) alpha:1.0f];
+  float grey = NativeGreyColorAsFloat(name, isMain);
+  CGContextSetRGBFillColor(context, grey, grey, grey, 1.0f);
+  CGContextFillRect(context, rect);
 }
 
 #endif // nsNativeThemeColors_h_

@@ -99,8 +99,8 @@ else
 bug473417dir = test_bug473417
 endif
 
-libs:: unit/test_0040_general.js.in
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $^ > $(TESTROOT)/unit/test_0040_general.js
+libs:: unit/head_update.js.in
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/head_update.js
 
 check::
 	$(RM) -rf $(DEPTH)/_tests/updater/ && $(NSINSTALL) -D $(DEPTH)/_tests/updater/$(bug473417dir)/

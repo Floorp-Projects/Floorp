@@ -557,7 +557,7 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
             *vp = OBJECT_TO_JSVAL(obj);
         break;
       }
-      case JSVAL_BOOLEAN: {
+      case JSVAL_SPECIAL: {
         uint32 b;
         if (xdr->mode == JSXDR_ENCODE)
             b = (uint32) JSVAL_TO_BOOLEAN(*vp);
@@ -604,7 +604,6 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 {
     jsval v;
     uint32 type;
-    jsdouble d;
 
     if (xdr->mode == JSXDR_ENCODE) {
         v = ATOM_KEY(*atomp);
@@ -621,6 +620,7 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
         return js_XDRStringAtom(xdr, atomp);
 
     if (type == JSVAL_DOUBLE) {
+        jsdouble d = 0;
         if (!XDRDoubleValue(xdr, &d))
             return JS_FALSE;
         *atomp = js_AtomizeDouble(xdr->cx, d);

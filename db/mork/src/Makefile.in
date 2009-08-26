@@ -44,8 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mork
 LIBRARY_NAME	= msgmork_s
-REQUIRES	= xpcom \
-		  $(NULL)
 FORCE_STATIC_LIB=1
 LIBXUL_LIBRARY	= 1
 

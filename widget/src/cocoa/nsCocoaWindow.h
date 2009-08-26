@@ -47,6 +47,7 @@
 #include "nsBaseWidget.h"
 #include "nsPIWidgetCocoa.h"
 #include "nsAutoPtr.h"
+#include "nsCocoaUtils.h"
 
 class nsCocoaWindow;
 class nsChildView;
@@ -80,7 +81,7 @@ typedef struct _nsCocoaWindowList {
   BOOL mIsContextMenu;
 }
 
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)styleMask
       backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
 - (BOOL)isContextMenu;
 - (void)setIsContextMenu:(BOOL)flag;
@@ -103,6 +104,7 @@ typedef struct _nsCocoaWindowList {
   // NS_DEACTIVATE to Gecko for toplevel widgets.  Starts out
   // PR_FALSE.
   PRBool mToplevelActiveState;
+  BOOL mHasEverBeenZoomed;
 }
 + (void)paintMenubarForWindow:(NSWindow*)aWindow;
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
@@ -152,13 +154,11 @@ struct UnifiedGradientInfo {
 {
   TitlebarAndBackgroundColor *mColor;
   float mUnifiedToolbarHeight;
-  BOOL mSuppressPainting;
 }
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
 - (void)setUnifiedToolbarHeight:(float)aToolbarHeight;
 - (float)unifiedToolbarHeight;
 - (float)titlebarHeight;
-- (BOOL)isPaintingSuppressed;
 // This method is also available on NSWindows (via a category), and is the 
 // preferred way to check the background color of a window.
 - (NSColor*)windowBackgroundColor;
@@ -228,7 +228,8 @@ public:
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
-    virtual void Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+    virtual void Scroll(const nsIntPoint& aDelta,
+                        const nsTArray<nsIntRect>& aDestRects,
                         const nsTArray<Configuration>& aConfigurations);
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
@@ -237,10 +238,10 @@ public:
     virtual nsTransparencyMode GetTransparencyMode();
     virtual void SetTransparencyMode(nsTransparencyMode aMode);
     NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle);
+    virtual void SetShowsToolbarButton(PRBool aShow);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
 
-    // dispatch an NS_SIZEMODE event on miniaturize or deminiaturize
-    void DispatchSizeModeEvent(nsSizeMode aSizeMode);
+    void DispatchSizeModeEvent();
 
     virtual gfxASurface* GetThebesSurface();
 
@@ -266,7 +267,7 @@ public:
     NS_IMETHOD BeginSecureKeyboardInput();
     NS_IMETHOD EndSecureKeyboardInput();
 
-    static void UnifiedShading(void* aInfo, const float* aIn, float* aOut);
+    static void UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut);
 
 protected:
 

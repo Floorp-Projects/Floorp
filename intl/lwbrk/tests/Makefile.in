@@ -44,9 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= TestLineBreak$(BIN_SUFFIX)
 
-REQUIRES	= xpcom \
-		  string \
-		  $(NULL)
 
 CPPSRCS		= TestLineBreak.cpp
 

@@ -118,7 +118,7 @@ script_toSource(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
     }
 
-    script = (JSScript *) JS_GetPrivate(cx, obj);
+    script = (JSScript *) obj->getPrivate();
 
     /* Let n count the source string length, j the "front porch" length. */
     j = JS_snprintf(buf, sizeof buf, "(new %s(", js_ScriptClass.name);
@@ -180,7 +180,7 @@ script_toString(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, vp + 2))
         return JS_FALSE;
-    script = (JSScript *) JS_GetPrivate(cx, obj);
+    script = (JSScript *) obj->getPrivate();
     if (!script) {
         *vp = STRING_TO_JSVAL(cx->runtime->emptyString);
         return JS_TRUE;
@@ -200,7 +200,6 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSString *str;
     JSObject *scopeobj;
-    jsval v;
     JSScript *script, *oldscript;
     JSStackFrame *caller;
     const char *file;
@@ -284,9 +283,8 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     /* Swap script for obj's old script, if any. */
-    v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-    oldscript = (JSScript*) (!JSVAL_IS_VOID(v) ? JSVAL_TO_PRIVATE(v) : NULL);
-    LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(script));
+    oldscript = (JSScript*) obj->getPrivate();
+    obj->setPrivate(script);
     JS_UNLOCK_OBJ(cx, obj);
 
     if (oldscript)
@@ -380,7 +378,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     AdjustScriptExecDepth(cx, obj, 1);
 
     /* Must get to out label after this */
-    script = (JSScript *) JS_GetPrivate(cx, obj);
+    script = (JSScript *) obj->getPrivate();
     if (!script) {
         ok = JS_FALSE;
         goto out;
@@ -696,7 +694,7 @@ script_freeze(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, vp + 2))
         return JS_FALSE;
-    script = (JSScript *) JS_GetPrivate(cx, obj);
+    script = (JSScript *) obj->getPrivate();
     if (!script)
         return JS_TRUE;
 
@@ -820,9 +818,8 @@ script_thaw(JSContext *cx, uintN argc, jsval *vp)
     }
 
     /* Swap script for obj's old script, if any. */
-    v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-    oldscript = !JSVAL_IS_VOID(v) ? JSVAL_TO_PRIVATE(v) : NULL;
-    LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(script));
+    oldscript = (JSScript *) obj->getPrivate();
+    obj->setPrivate(script);
     JS_UNLOCK_OBJ(cx, obj);
 
     if (oldscript)
@@ -871,9 +868,7 @@ static JSFunctionSpec script_methods[] = {
 static void
 script_finalize(JSContext *cx, JSObject *obj)
 {
-    JSScript *script;
-
-    script = (JSScript *) JS_GetPrivate(cx, obj);
+    JSScript *script = (JSScript *) obj->getPrivate();
     if (script)
         js_DestroyScript(cx, script);
 }
@@ -891,9 +886,7 @@ script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static void
 script_trace(JSTracer *trc, JSObject *obj)
 {
-    JSScript *script;
-
-    script = (JSScript *) JS_GetPrivate(trc->context, obj);
+    JSScript *script = (JSScript *) obj->getPrivate();
     if (script)
         js_TraceScript(trc, script);
 }
@@ -1642,11 +1635,12 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 #ifdef CHECK_SCRIPT_OWNER
             JS_ASSERT(script->owner == cx->thread);
 #endif
-#ifdef JS_TRACER
-            js_PurgeScriptFragments(cx, script);
-#endif
         }
     }
+
+#ifdef JS_TRACER
+    js_PurgeScriptFragments(cx, script);
+#endif
 
     cx->free(script);
 }

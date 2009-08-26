@@ -38,6 +38,7 @@
 
 #include "nsAccessibleEventData.h"
 #include "nsAccessibilityAtoms.h"
+#include "nsApplicationAccessibleWrap.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessNode.h"
@@ -111,7 +112,17 @@ void nsAccEvent::CaptureIsFromUserInput(PRBool aIsAsynch)
   nsCOMPtr<nsIDOMNode> eventNode;
   GetDOMNode(getter_AddRefs(eventNode));
   if (!eventNode) {
-    NS_NOTREACHED("There should always be a DOM node for an event");
+#ifdef DEBUG
+    // XXX: remove this hack during reorganization of 506907. Meanwhile we
+    // want to get rid an assertion for application accessible events which
+    // don't have DOM node (see bug 506206).
+    nsRefPtr<nsApplicationAccessibleWrap> applicationAcc =
+      nsAccessNode::GetApplicationAccessible();
+
+    if (mAccessible != static_cast<nsIAccessible*>(applicationAcc.get()))
+      NS_ASSERTION(eventNode, "There should always be a DOM node for an event");
+#endif
+
     return;
   }
 
@@ -266,8 +277,8 @@ nsAccEvent::GetAccessibleByNode()
   if (!accService)
     return nsnull;
 
-  nsIAccessible *accessible = nsnull;
-  accService->GetAccessibleFor(mDOMNode, &accessible);
+  nsCOMPtr<nsIAccessible> accessible;
+  accService->GetAccessibleFor(mDOMNode, getter_AddRefs(accessible));
 
 #ifdef MOZ_XUL
   // hack for xul tree table. We need a better way for firing delayed event
@@ -283,18 +294,16 @@ nsAccEvent::GetAccessibleByNode()
       PRInt32 treeIndex = -1;
       multiSelect->GetCurrentIndex(&treeIndex);
       if (treeIndex >= 0) {
-        nsRefPtr<nsXULTreeAccessible> treeCache =
+        nsRefPtr<nsXULTreeAccessible> treeAcc =
           nsAccUtils::QueryAccessibleTree(accessible);
-        if (treeCache) {
-          treeCache->GetCachedTreeitemAccessible(treeIndex, nsnull,
-                                                 &accessible);
-        }
+        if (treeAcc)
+          treeAcc->GetTreeItemAccessible(treeIndex, getter_AddRefs(accessible));
       }
     }
   }
 #endif
 
-  return accessible;
+  return accessible.forget();
 }
 
 /* static */

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test delivering mouse events to plugins</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>    
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+  embed { width:200px; height:200px; display:block; }
+  iframe { border:none; }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: block">
+  <embed id="p1" type="application/x-test"
+         style="position:absolute; left:300px; top:10px;"></embed></div>
+  <iframe id="f1" style="position:absolute; left:0; top:250px;"
+          src="data:text/html,&lt;embed id='p2' type='application/x-test' style='position:absolute; left:10px; top:10px'&gt;"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function doTest() {
+  var p1 = document.getElementById("p1");
+  synthesizeMouse(p1, 15, 18, { type:"mousedown" });
+  is(p1.getLastMouseX(), 15, "p1 mouse down X");
+  is(p1.getLastMouseY(), 18, "p1 mouse down Y");
+  synthesizeMouse(p1, 15, 38, { type:"mousemove" });
+  is(p1.getLastMouseX(), 15, "p1 mouse move X");
+  is(p1.getLastMouseY(), 38, "p1 mouse move Y");
+  synthesizeMouse(p1, 15, 28, { type:"mouseup" });
+  is(p1.getLastMouseX(), 15, "p1 mouse up X");
+  is(p1.getLastMouseY(), 28, "p1 mouse up Y");
+
+  var f1 = document.getElementById("f1");
+  var p2 = f1.contentDocument.getElementById("p2");
+  synthesizeMouse(p2, 15, 18, { type:"mousedown" }, f1.contentWindow);
+  is(p2.getLastMouseX(), 15, "p2 mouse down X");
+  is(p2.getLastMouseY(), 18, "p2 mouse down Y");
+  synthesizeMouse(p2, 15, 38, { type:"mousemove" }, f1.contentWindow);
+  is(p2.getLastMouseX(), 15, "p2 mouse move X");
+  is(p2.getLastMouseY(), 38, "p2 mouse move Y");
+  synthesizeMouse(p2, 15, 28, { type:"mouseup" }, f1.contentWindow);
+  is(p2.getLastMouseX(), 15, "p2 mouse up X");
+  is(p2.getLastMouseY(), 28, "p2 mouse up Y");
+
+  SimpleTest.finish();
+}
+// Need to run 'doTest' after painting is unsuppressed, or we'll set clip
+// regions to empty.
+addLoadEvent(function() { setTimeout(doTest, 0); } );
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

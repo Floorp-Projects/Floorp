@@ -1064,15 +1064,13 @@ nsProtocolProxyService::LoadHostFilters(const char *filters)
         const char *portLocation = 0; 
         const char *maskLocation = 0;
 
-        //
-        // XXX this needs to be fixed to support IPv6 address literals,
-        // which in this context will need to be []-escaped.
-        //
         while (*endhost && (*endhost != ',' && !IS_ASCII_SPACE(*endhost))) {
             if (*endhost == ':')
                 portLocation = endhost;
             else if (*endhost == '/')
                 maskLocation = endhost;
+            else if (*endhost == ']') // IPv6 address literals
+                portLocation = 0;
             endhost++;
         }
 

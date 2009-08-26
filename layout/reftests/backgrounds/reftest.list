@@ -24,6 +24,7 @@
 == continuous-inline-4b.html continuous-inline-4-ref.html
 == continuous-inline-5a.html continuous-inline-5-ref.html
 == continuous-inline-5b.html continuous-inline-5-ref.html
+== background-redraw-237766.html background-redraw-237766-ref.html
 
 == background-size-auto-auto.html background-size-auto-ref.html
 == background-size-auto.html background-size-auto-ref.html
@@ -79,13 +80,23 @@
 != background-size-cover-continuous.html background-size-cover-bounding-box.html
 != background-size-cover-each-box.html background-size-cover-bounding-box.html
 
+== background-size-monster-ch.html background-size-monster-ref.html
+random == background-size-monster-cm.html background-size-monster-ref.html
+== background-size-monster-em.html background-size-monster-ref.html
+== background-size-monster-ex.html background-size-monster-ref.html
+random == background-size-monster-inches.html background-size-monster-ref.html
+random == background-size-monster-mm.html background-size-monster-ref.html
+random == background-size-monster-pc.html background-size-monster-ref.html
+random == background-size-monster-pt.html background-size-monster-ref.html
+== background-size-monster-px.html background-size-monster-ref.html
+== background-size-monster-rem.html background-size-monster-ref.html
 
 # There seems to be a pixel-snapping problem here, where the repeated background
 # image isn't being snapped at its boundaries.  Note that the boundaries within
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 # background-size affects images without intrinsic dimensions specially; we may
 # not support such image formats right now, but when we do, we want

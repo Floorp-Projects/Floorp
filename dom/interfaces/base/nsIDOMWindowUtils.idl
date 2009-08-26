@@ -48,7 +48,7 @@
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
-[scriptable, uuid(a5e155c8-ef18-4e70-881b-d2fe8aa13fec)]
+[scriptable, uuid(99d904c0-3b9e-44b7-b1e0-372766d18308)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -373,4 +373,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * Get IME status, see above IME_STATUS_* definitions.
    */
   readonly attribute unsigned long IMEStatus;
+
+  /**
+   * Get the number of screen pixels per CSS pixel.
+   */
+  readonly attribute float screenPixelsPerCSSPixel;
 };

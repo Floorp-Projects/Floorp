@@ -48,8 +48,8 @@
 <!ENTITY resetToolbars.label          "Reset toolbars and controls">
 <!ENTITY resetToolbars.accesskey      "R">
 
-<!ENTITY resetBookmarks.label         "Reset bookmarks to &brandShortName; defaults">
-<!ENTITY resetBookmarks.accesskey     "b">
+<!ENTITY deleteBookmarks.label        "Delete all bookmarks except for backups">
+<!ENTITY deleteBookmarks.accesskey    "b">
 
 <!ENTITY resetUserPrefs.label         "Reset all user preferences to &brandShortName; defaults">
 <!ENTITY resetUserPrefs.accesskey     "p">

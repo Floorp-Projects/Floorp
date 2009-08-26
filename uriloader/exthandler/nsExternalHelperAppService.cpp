@@ -1119,6 +1119,19 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
   // replace platform specific path separator and illegal characters to avoid any confusion
   mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
   mTempFileExtension.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
+
+  // Remove unsafe bidi characters which might have spoofing implications (bug 511521).
+  const PRUnichar unsafeBidiCharacters[] = {
+    PRUnichar(0x202a), // Left-to-Right Embedding
+    PRUnichar(0x202b), // Right-to-Left Embedding
+    PRUnichar(0x202c), // Pop Directional Formatting
+    PRUnichar(0x202d), // Left-to-Right Override
+    PRUnichar(0x202e)  // Right-to-Left Override
+  };
+  for (int i = 0; i < NS_ARRAY_LENGTH(unsafeBidiCharacters); ++i) {
+    mSuggestedFileName.ReplaceChar(unsafeBidiCharacters[i], '_');
+    mTempFileExtension.ReplaceChar(unsafeBidiCharacters[i], '_');
+  }
   
   // Make sure extension is correct.
   EnsureSuggestedFileName();
@@ -2494,6 +2507,14 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
       rv = FillMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
       LOG(("Searched extras (by ext), rv 0x%08X\n", rv));
     }
+    // If that still didn't work, set the file description to "ext File"
+    if (NS_FAILED(rv) && !aFileExt.IsEmpty()) {
+      // XXXzpao This should probably be localized
+      nsCAutoString desc(aFileExt);
+      desc.Append(" File");
+      (*_retval)->SetDescription(NS_ConvertASCIItoUTF16(desc));
+      LOG(("Falling back to 'File' file description\n"));
+    }
   }
 
   // Finally, check if we got a file extension and if yes, if it is an
@@ -2573,8 +2594,13 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
   // Let's see if an extension added something
   nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
   if (catMan) {
+    // The extension in the category entry is always stored as lowercase
+    nsCAutoString lowercaseFileExt(aFileExt);
+    ToLowerCase(lowercaseFileExt);
+    // Read the MIME type from the category entry, if available
     nsXPIDLCString type;
-    rv = catMan->GetCategoryEntry("ext-to-type-mapping", flatExt.get(), getter_Copies(type));
+    rv = catMan->GetCategoryEntry("ext-to-type-mapping", lowercaseFileExt.get(),
+                                  getter_Copies(type));
     aContentType = type;
   }
   else {

@@ -145,7 +145,7 @@ FunctionCall::toString(nsAString& aDest)
     nsAutoString functionName;
     if (NS_FAILED(getNameAtom(getter_AddRefs(functionNameAtom))) ||
         NS_FAILED(functionNameAtom->ToString(functionName))) {
-        NS_ASSERTION(0, "Can't get function name.");
+        NS_ERROR("Can't get function name.");
         return;
     }
 

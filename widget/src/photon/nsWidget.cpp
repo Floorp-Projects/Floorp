@@ -245,7 +245,7 @@ NS_METHOD nsWidget::Show( PRBool bState ) {
 
 		  if( mWidget->rid == -1 ) {
 			  //EnableDamage( mWidget, PR_TRUE );
-			  NS_ASSERTION(0,"nsWidget::Show mWidget's rid == -1\n");
+			  NS_ERROR("nsWidget::Show mWidget's rid == -1\n");
 			  mShown = PR_FALSE; 
 			  return NS_ERROR_FAILURE;
 		  	}
@@ -544,7 +544,7 @@ NS_METHOD nsWidget::SetCursor( nsCursor aCursor ) {
 		  break;
 
 		default:
-		  NS_ASSERTION(0, "Invalid cursor type");
+		  NS_ERROR("Invalid cursor type");
 		  break;
   		}
 

@@ -48,9 +48,6 @@ LIBRARY_NAME	= ucvibm_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  uconv \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsCP850ToUnicode.cpp \

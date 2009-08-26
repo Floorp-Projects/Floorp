@@ -234,6 +234,52 @@ class JarMaker(object):
       pass
     return
 
+  def makeJars(self, infiles, l10nbases,
+               jardir='',
+               sourcedirs=[], topsourcedir='', localedirs=None):
+    '''makeJars is the second main entry point to JarMaker.
+
+    It takes an iterable sequence of input file names, the l10nbases,
+    the output directory, the source dirs and the
+    top source dir as argument, and optionally the l10n dirs.
+
+    It iterates over all inputs, guesses srcdir and l10ndir from the
+    path and topsourcedir and calls into makeJar.
+
+    The l10ndirs are created by guessing the relativesrcdir, and resolving
+    that against the l10nbases. l10nbases can either be path strings, or 
+    callables. In the latter case, that will be called with the 
+    relativesrcdir as argument, and is expected to return a path string.
+    '''
+    topsourcedir = os.path.normpath(os.path.abspath(topsourcedir))
+    def resolveL10nBase(relpath):
+      def _resolve(base):
+        if isinstance(base, basestring):
+          return os.path.join(base, relpath)
+        if callable(base):
+          return base(relpath)
+        return base
+      return _resolve
+    for infile in infiles:
+      srcdir = os.path.normpath(os.path.abspath(os.path.dirname(infile)))
+      l10ndir = srcdir
+      if os.path.basename(srcdir) == 'locales':
+        l10ndir = os.path.dirname(l10ndir)
+      assert srcdir.startswith(topsourcedir), "src dir %s not in topsourcedir %s" % (srcdir, topsourcedir)
+      rell10ndir = l10ndir[len(topsourcedir):].lstrip(os.sep)
+      
+      l10ndirs = map(resolveL10nBase(rell10ndir), l10nbases)
+      if localedirs is not None:
+        l10ndirs += [os.path.normpath(os.path.abspath(s))
+                     for s in localedirs]
+      srcdirs = [os.path.normpath(os.path.abspath(s))
+                 for s in sourcedirs] + [srcdir]
+      self.makeJar(infile=infile,
+                   sourcedirs=srcdirs, topsourcedir=topsourcedir,
+                   localedirs=l10ndirs,
+                   jardir=jardir)
+
+
   def processJarSection(self, jarfile, lines,
                         jardir, sourcedirs, topsourcedir, localedirs):
     '''Internal method called by makeJar to actually process a section
@@ -436,28 +482,11 @@ def main():
                sourcedirs=options.s, topsourcedir=topsrc,
                localedirs=options.l10n_src,
                jardir=options.j)
-    return
-  for infile in args:
-    # guess srcdir and l10n dirs from jar.mn path and topsrcdir
-    # srcdir is the dir of the jar.mn and
-    # the l10n dirs are the relative path of topsrcdir to srcdir
-    # resolved against all l10n base dirs.
-    srcdir = os.path.normpath(os.path.abspath(os.path.dirname(infile)))
-    l10ndir = srcdir
-    if os.path.basename(srcdir) == 'locales':
-      l10ndir = os.path.dirname(l10ndir)
-    assert srcdir.startswith(topsrc), "src dir %s not in topsrcdir %s" % (srcdir, topsrc)
-    rell10ndir = l10ndir[len(topsrc):].lstrip(os.sep)
-    l10ndirs = map(lambda d: os.path.join(d, rell10ndir), options.l10n_base)
-    if options.l10n_src is not None:
-      l10ndirs += map(lambda s: os.path.normpath(os.path.abspath(s)),
-                      options.l10n_src)
-    srcdirs = map(lambda s: os.path.normpath(os.path.abspath(s)), options.s) + \
-        [srcdir]
-    jm.makeJar(infile=infile,
-               sourcedirs=srcdirs, topsourcedir=topsrc,
-               localedirs=l10ndirs,
-               jardir=options.j)
+  else:
+    jm.makeJars(args, options.l10n_base,
+                jardir=options.j,
+                sourcedirs=options.s, topsourcedir=topsrc,
+                localedirs=options.l10n_src)
 
 if __name__ == "__main__":
   main()

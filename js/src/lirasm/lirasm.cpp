@@ -568,7 +568,7 @@ FragmentAssembler::assemble_call(const string &op)
     for (size_t i = 0; i < mTokens.size(); ++i) {
         args[i] = ref(mTokens[mTokens.size() - (i+1)]);
         ci->_argtypes |= args[i]->isQuad() ? ARGSIZE_F : ARGSIZE_LO;
-        ci->_argtypes <<= 2;
+        ci->_argtypes <<= ARGSIZE_SHIFT;
     }
 
     // Select return type from opcode.

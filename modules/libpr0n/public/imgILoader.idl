@@ -67,7 +67,7 @@ interface imgILoader : nsISupports
    * @param aInitialDocumentURI the URI that 'initiated' the load -- used for 3rd party cookie blocking
    * @param aReferrerURI the 'referring' URI
    * @param aLoadGroup Loadgroup to put the image load into
-   * @param aObserver the observer
+   * @param aObserver the observer (may be null)
    * @param aCX some random data
    * @param aLoadFlags Load flags for the request
    * @param aCacheKey cache key to use for a load if the original
@@ -96,7 +96,7 @@ interface imgILoader : nsISupports
    * @param aChannel the channel to load the image from.  This must
    *                 already be opened before ths method is called, and there
    *                 must have been no OnDataAvailable calls for it yet.   
-   * @param aObserver the observer
+   * @param aObserver the observer (may be null)
    * @param cx some random data
    * @param aListener [out]
    *        A listener that should receive the data. Can be null, in which

@@ -102,6 +102,20 @@ getClipRegionRectCount(), this will throw an error. The coordinates are
 the same as for getEdge. See getClipRegionRectCount() above for
 notes on platform plugin limitations.
 
+== Mouse events ==
+
+The test plugin supports the following scriptable methods:
+
+* getLastMouseX()
+Returns the X coordinate of the last mouse event (move, button up, or
+button down), relative to the left edge of the plugin, or -1 if no mouse
+event has been received.
+
+* getLastMouseX()
+Returns the Y coordinate of the last mouse event (move, button up, or
+button down), relative to the top edge of the plugin, or -1 if no mouse
+event has been received.
+
 == Instance lifecycle ==
 
 The test plugin supports the following scriptable methods:

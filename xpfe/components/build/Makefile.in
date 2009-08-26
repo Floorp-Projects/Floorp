@@ -49,15 +49,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= application
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  rdf \
-		  necko \
-		  uriloader \
-		  docshell \
-		  webshell \
-		  browser \
-		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
 

@@ -94,6 +94,9 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
                "must have content");
   NS_ASSERTION(!aContent || aContent->IsNodeOfType(nsINode::eELEMENT),
                "Shouldn't be trying to restyle non-elements directly");
+  NS_ASSERTION(!(aHint & nsChangeHint_ReflowFrame) ||
+               (aHint & nsChangeHint_NeedReflow),
+               "Reflow hint bits set without actually asking for a reflow");
 
   if ((0 < mCount) && (aHint & nsChangeHint_ReconstructFrame)) { // filter out all other changes for same content
     if (aContent) {

@@ -297,18 +297,18 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
     // Check that we know how the lookup op will behave.
     for (JSObject* pobj = obj; pobj; pobj = OBJ_GET_PROTO(cx, pobj)) {
         if (pobj->map->ops->lookupProperty != js_LookupProperty)
-            return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+            return JSVAL_TO_SPECIAL(JSVAL_VOID);
         JSClass* clasp = OBJ_GET_CLASS(cx, pobj);
         if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
-            return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+            return JSVAL_TO_SPECIAL(JSVAL_VOID);
     }
 
     JSObject* obj2;
     JSProperty* prop;
     if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_QUALIFIED, &obj2, &prop) < 0)
-        return JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID);
+        return JSVAL_TO_SPECIAL(JSVAL_VOID);
     if (prop)
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        obj2->dropProperty(cx, prop);
     return prop != NULL;
 }
 
@@ -357,7 +357,7 @@ JSString* FASTCALL
 js_TypeOfBoolean(JSContext* cx, int32 unboxed)
 {
     /* Watch out for pseudo-booleans. */
-    jsval boxed = PSEUDO_BOOLEAN_TO_JSVAL(unboxed);
+    jsval boxed = SPECIAL_TO_JSVAL(unboxed);
     JS_ASSERT(JSVAL_IS_VOID(boxed) || JSVAL_IS_BOOLEAN(boxed));
     JSType type = JS_TypeOfValue(cx, boxed);
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
@@ -367,7 +367,7 @@ JS_DEFINE_CALLINFO_2(extern, STRING, js_TypeOfBoolean, CONTEXT, INT32, 1, 1)
 jsdouble FASTCALL
 js_BooleanOrUndefinedToNumber(JSContext* cx, int32 unboxed)
 {
-    if (unboxed == JSVAL_TO_PSEUDO_BOOLEAN(JSVAL_VOID))
+    if (unboxed == JSVAL_TO_SPECIAL(JSVAL_VOID))
         return js_NaN;
     JS_ASSERT(unboxed == JS_TRUE || unboxed == JS_FALSE);
     return unboxed;
@@ -381,15 +381,6 @@ js_BooleanOrUndefinedToString(JSContext *cx, int32 unboxed)
     return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[unboxed]);
 }
 JS_DEFINE_CALLINFO_2(extern, STRING, js_BooleanOrUndefinedToString, CONTEXT, INT32, 1, 1)
-
-JSObject* FASTCALL
-js_Arguments(JSContext* cx, JSObject* parent, JSObject* cached)
-{
-    if (cached)
-        return cached;
-    return js_NewObject(cx, &js_ArgumentsClass, NULL, NULL);
-}
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, OBJECT, 0, 0)
 
 JSObject* FASTCALL
 js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* parent)

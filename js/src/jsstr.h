@@ -135,7 +135,11 @@ private:
      *
      * ATOMIZED is used only with flat, immutable strings.
      */
-    enum {
+    enum
+#if defined(_MSC_VER) && defined(_WIN64)
+    : size_t /* VC++ 64-bit incorrectly defaults this enum's size to int. */
+#endif
+    {
         DEPENDENT =     JSSTRING_BIT(JS_BITS_PER_WORD - 1),
         PREFIX =        JSSTRING_BIT(JS_BITS_PER_WORD - 2),
         MUTABLE =       PREFIX,
@@ -145,7 +149,12 @@ private:
         LENGTH_BITS =   JS_BITS_PER_WORD - 4,
         LENGTH_MASK =   JSSTRING_BITMASK(LENGTH_BITS),
 
-        DEPENDENT_LENGTH_BITS = LENGTH_BITS / 2,
+        /*
+         * VC++ 64-bit incorrectly produces the compiler error "Conversion to
+         * enumeration type requires an explicit cast" unless we cast to size_t
+         * here.
+         */
+        DEPENDENT_LENGTH_BITS = size_t(LENGTH_BITS) / 2,
         DEPENDENT_LENGTH_MASK = JSSTRING_BITMASK(DEPENDENT_LENGTH_BITS),
         DEPENDENT_START_BITS =  LENGTH_BITS - DEPENDENT_LENGTH_BITS,
         DEPENDENT_START_SHIFT = DEPENDENT_LENGTH_BITS,
@@ -157,7 +166,11 @@ private:
     }
 
 public:
-    enum {
+    enum
+#if defined(_MSC_VER) && defined(_WIN64)
+    : size_t /* VC++ 64-bit incorrectly defaults this enum's size to int. */
+#endif
+    {
         MAX_LENGTH = LENGTH_MASK,
         MAX_DEPENDENT_START = DEPENDENT_START_MASK,
         MAX_DEPENDENT_LENGTH = DEPENDENT_LENGTH_MASK
@@ -371,11 +384,6 @@ js_toLowerCase(JSContext *cx, JSString *str);
 extern JSString * JS_FASTCALL
 js_toUpperCase(JSContext *cx, JSString *str);
 
-typedef struct JSCharBuffer {
-    size_t          length;
-    jschar          *chars;
-} JSCharBuffer;
-
 struct JSSubString {
     size_t          length;
     const jschar    *chars;
@@ -574,6 +582,14 @@ extern const char js_encodeURIComponent_str[];
 extern JSString *
 js_NewString(JSContext *cx, jschar *chars, size_t length);
 
+/*
+ * GC-allocate a string descriptor and steal the char buffer held by |cb|.
+ * This function takes responsibility for adding the terminating '\0' required
+ * by js_NewString.
+ */
+extern JSString *
+js_NewStringFromCharBuffer(JSContext *cx, JSCharBuffer &cb);
+
 extern JSString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,
                       size_t length);
@@ -608,12 +624,12 @@ extern JS_FRIEND_API(JSString *)
 js_ValueToString(JSContext *cx, jsval v);
 
 /*
- * This function implements E-262-3 section 9.8, toString.  Convert the given
- * value to a string of jschars appended to the given buffer.  On error, the
+ * This function implements E-262-3 section 9.8, toString. Convert the given
+ * value to a string of jschars appended to the given buffer. On error, the
  * passed buffer may have partial results appended.
  */
 extern JS_FRIEND_API(JSBool)
-js_ValueToStringBuffer(JSContext *, jsval, JSTempVector<jschar> &);
+js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb);
 
 /*
  * Convert a value to its source expression, returning null after reporting

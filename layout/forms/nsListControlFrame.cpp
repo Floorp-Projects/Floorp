@@ -95,8 +95,9 @@
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
 const PRInt32 kNothingSelected          = -1;
 
-
+// Static members
 nsListControlFrame * nsListControlFrame::mFocused = nsnull;
+nsString * nsListControlFrame::sIncrementalString = nsnull;
 
 // Using for incremental typing navigation
 #define INCREMENTAL_SEARCH_KEYPRESS_TIME 1000
@@ -231,6 +232,16 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame");
+
+  if (IsInDropDownMode()) {
+    // XXX Because we have an opaque widget and we get called to paint with
+    // this frame as the root of a stacking context we need make sure to draw
+    // some opaque color over the whole widget. (Bug 511323)
+    aLists.BorderBackground()->AppendNewToBottom(
+      new (aBuilder) nsDisplaySolidColor(
+        this, nsRect(aBuilder->ToReferenceFrame(this), GetSize()),
+        mLastDropdownBackstopColor));
+  }
 
   // REVIEW: The selection visibility code that used to be here is what
   // we already do by default.
@@ -729,24 +740,22 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     // This all breaks down if the font of the combobox is a lot larger then the option items
     // or CSS style has set the height of the combobox to be rather large.
     // We can fix these cases later if they actually happen.
-    nscoord screenHeightInPixels = 0;
-    if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
-      nscoord screenHeight = aPresContext->DevPixelsToAppUnits(screenHeightInPixels);
-      
-      nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size
-      availDropHgt -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
-      
-      nscoord hgt = visibleHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
-      if (heightOfARow > 0) {
-        if (hgt > availDropHgt) {
-          visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
-        }
-        mNumDisplayRows = visibleHeight / heightOfARow;
-      } else {
-        // Hmmm, not sure what to do here. Punt, and make both of them one
-        visibleHeight   = 1;
-        mNumDisplayRows = 1;
+    nsRect screen = nsFormControlFrame::GetUsableScreenRect(aPresContext);
+    nscoord screenHeight = screen.height;
+
+    nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size
+    availDropHgt -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+
+    nscoord hgt = visibleHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+    if (heightOfARow > 0) {
+      if (hgt > availDropHgt) {
+        visibleHeight = (availDropHgt / heightOfARow) * heightOfARow;
       }
+      mNumDisplayRows = visibleHeight / heightOfARow;
+    } else {
+      // Hmmm, not sure what to do here. Punt, and make both of them one
+      visibleHeight   = 1;
+      mNumDisplayRows = 1;
     }
 
     state.SetComputedHeight(mNumDisplayRows * heightOfARow);
@@ -1480,12 +1489,13 @@ nsListControlFrame::AddOption(PRInt32 aIndex)
     }
   }
   
+  // Make sure we scroll to the selected option as needed
+  mNeedToReset = PR_TRUE;
+
   if (!mHasBeenInitialized) {
     return NS_OK;
   }
 
-  // Make sure we scroll to the selected option as needed
-  mNeedToReset = PR_TRUE;
   mPostChildrenLoadedReset = mIsAllContentHere;
   return NS_OK;
 }
@@ -1731,6 +1741,9 @@ nsListControlFrame::SyncViewWithFrame()
 void
 nsListControlFrame::AboutToDropDown()
 {
+  NS_ASSERTION(IsInDropDownMode(),
+    "AboutToDropDown called without being in dropdown mode");
+
   if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
     ScrollToIndex(GetSelectedIndex());
 #ifdef ACCESSIBILITY
@@ -1738,6 +1751,28 @@ nsListControlFrame::AboutToDropDown()
 #endif
   }
   mItemSelectionStarted = PR_FALSE;
+
+  // Our widget doesn't get invalidated on changes to the rest of the document,
+  // so compute and store this color at the start of a dropdown so we don't
+  // get weird painting behaviour.
+  // We start looking for backgrounds above the combobox frame to avoid
+  // duplicating the combobox frame's background and compose each background
+  // color we find underneath until we have an opaque color, or run out of
+  // backgrounds. We compose with the PresContext default background color,
+  // which is always opaque, in case we don't end up with an opaque color.
+  // This gives us a very poor approximation of translucency.
+  nsIFrame* comboboxFrame = do_QueryFrame(mComboboxFrame);
+  nsStyleContext* context = comboboxFrame->GetStyleContext()->GetParent();
+  mLastDropdownBackstopColor = NS_RGBA(0,0,0,0);
+  while (NS_GET_A(mLastDropdownBackstopColor) < 255 && context) {
+    mLastDropdownBackstopColor =
+      NS_ComposeColors(context->GetStyleBackground()->mBackgroundColor,
+                       mLastDropdownBackstopColor);
+    context = context->GetParent();
+  }
+  mLastDropdownBackstopColor =
+    NS_ComposeColors(PresContext()->DefaultBackgroundColor(),
+                     mLastDropdownBackstopColor);
 }
 
 // We are about to be rolledup from the outside (ComboboxFrame)
@@ -2143,8 +2178,6 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   UpdateInListState(aMouseEvent);
 
-  mButtonDown = PR_TRUE;
-
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     return NS_OK;
   }
@@ -2169,6 +2202,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   PRInt32 selectedIndex;
   if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
     // Handle Like List
+    mButtonDown = PR_TRUE;
     CaptureMouseEvents(PR_TRUE);
     mChangesSinceDragStart = HandleListSelection(aMouseEvent, selectedIndex);
 #ifdef ACCESSIBILITY
@@ -2452,8 +2486,17 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 aStartIndex,
 nsAString& 
 nsListControlFrame::GetIncrementalString()
 { 
-  static nsString incrementalString;
-  return incrementalString; 
+  if (sIncrementalString == nsnull)
+    sIncrementalString = new nsString();
+
+  return *sIncrementalString;
+}
+
+void
+nsListControlFrame::Shutdown()
+{
+  delete sIncrementalString;
+  sIncrementalString = nsnull;
 }
 
 void

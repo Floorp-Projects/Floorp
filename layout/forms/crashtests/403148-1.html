@@ -1,0 +1,22 @@
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("ce").contentEditable = true;
+  document.documentElement.offsetHeight;
+  document.getElementById("finput").setAttribute("type", "");
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<input id="finput" type="file" disabled>
+
+<span id="ce"></span>
+
+</body>
+</html>

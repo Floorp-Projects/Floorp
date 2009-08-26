@@ -23,6 +23,7 @@
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *   Michael Kraft <morac99-firefox@yahoo.com>
  *   Paul O’Shannessy <paul@oshannessy.com>
+ *   Nils Maier <maierman@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -74,6 +75,7 @@ const NOTIFY_WINDOWS_RESTORED = "sessionstore-windows-restored";
 const OBSERVING = [
   "domwindowopened", "domwindowclosed",
   "quit-application-requested", "quit-application-granted",
+  "browser-lastwindow-close-granted",
   "quit-application", "browser:purge-session-history",
   "private-browsing", "browser:purge-domain-data",
   "private-browsing-change-granted"
@@ -114,6 +116,12 @@ function debug(aMsg) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
                                      .logStringMessage(aMsg);
 }
+
+__defineGetter__("NetUtil", function() {
+  delete this.NetUtil;
+  Cu.import("resource://gre/modules/NetUtil.jsm");
+  return NetUtil;
+});
 
 /* :::::::: The Service ::::::::::::::: */
 
@@ -169,6 +177,11 @@ SessionStoreService.prototype = {
   // whether we clearing history on shutdown
   _clearingOnShutdown: false,
 
+#ifndef XP_MACOSX
+  // whether the last window was closed and should be restored
+  _restoreLastWindow: false,
+#endif
+
 /* ........ Global Event Handlers .............. */
 
   /**
@@ -187,11 +200,11 @@ SessionStoreService.prototype = {
                        getService(Ci.nsIPrefService).getBranch("browser.");
     this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
-    var observerService = Cc["@mozilla.org/observer-service;1"].
-                          getService(Ci.nsIObserverService);
+    this._observerService = Cc["@mozilla.org/observer-service;1"].
+                            getService(Ci.nsIObserverService);
 
     OBSERVING.forEach(function(aTopic) {
-      observerService.addObserver(this, aTopic, true);
+      this._observerService.addObserver(this, aTopic, true);
     }, this);
 
     var pbs = Cc["@mozilla.org/privatebrowsing;1"].
@@ -329,6 +342,15 @@ SessionStoreService.prototype = {
       // freeze the data at what we've got (ignoring closing windows)
       this._loadState = STATE_QUITTING;
       break;
+#ifndef XP_MACOSX
+    case "browser-lastwindow-close-granted":
+      // last browser window is quitting.
+      // remember to restore the last window when another browser window is openend
+      // do not account for pref(resume_session_once) at this point, as it might be
+      // set by another observer getting this notice after us
+      this._restoreLastWindow = true;
+      break;
+#endif
     case "quit-application":
       if (aData == "restart") {
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
@@ -340,8 +362,8 @@ SessionStoreService.prototype = {
     case "browser:purge-session-history": // catch sanitization 
       let openWindows = {};
       this._forEachBrowserWindow(function(aWindow) {
-        Array.forEach(aWindow.getBrowser().browsers, function(aBrowser) {
-          delete aBrowser.parentNode.__SS_data;
+        Array.forEach(aWindow.gBrowser.browsers, function(aBrowser) {
+          delete aBrowser.__SS_data;
         });
         openWindows[aWindow.__SSi] = true;
       });
@@ -494,36 +516,35 @@ SessionStoreService.prototype = {
    * Implement nsIDOMEventListener for handling various window and tab events
    */
   handleEvent: function sss_handleEvent(aEvent) {
+    var win = aEvent.currentTarget.ownerDocument.defaultView;
     switch (aEvent.type) {
       case "load":
       case "pageshow":
-        this.onTabLoad(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
+        this.onTabLoad(win, aEvent.currentTarget, aEvent);
         break;
       case "change":
       case "input":
       case "DOMAutoComplete":
-        this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget);
+        this.onTabInput(win, aEvent.currentTarget);
         break;
       case "scroll":
-        this.onTabScroll(aEvent.currentTarget.ownerDocument.defaultView);
+        this.onTabScroll(win);
         break;
       case "TabOpen":
       case "TabClose":
-        var panelID = aEvent.originalTarget.linkedPanel;
-        var tabpanel = aEvent.originalTarget.ownerDocument.getElementById(panelID);
+        let browser = aEvent.originalTarget.linkedBrowser;
         if (aEvent.type == "TabOpen") {
-          this.onTabAdd(aEvent.currentTarget.ownerDocument.defaultView, tabpanel);
+          this.onTabAdd(win, browser);
         }
         else {
           // aEvent.detail determines if the tab was closed by moving to a different window
           if (!aEvent.detail)
-            this.onTabClose(aEvent.currentTarget.ownerDocument.defaultView, aEvent.originalTarget);
-          this.onTabRemove(aEvent.currentTarget.ownerDocument.defaultView, tabpanel);
+            this.onTabClose(win, aEvent.originalTarget);
+          this.onTabRemove(win, browser);
         }
         break;
       case "TabSelect":
-        var tabpanels = aEvent.currentTarget.mPanelContainer;
-        this.onTabSelect(aEvent.currentTarget.ownerDocument.defaultView, tabpanels);
+        this.onTabSelect(win);
         break;
     }
   },
@@ -568,14 +589,13 @@ SessionStoreService.prototype = {
         this.restoreWindow(aWindow, this._initialState, this._isCmdLineEmpty(aWindow));
         delete this._initialState;
         
-        // mark ourselves as running
+        // _loadState changed from "stopped" to "running"
+        // force a save operation so that crashes happening during startup are correctly counted
         this.saveState(true);
       }
       else {
         // Nothing to restore, notify observers things are complete.
-        var observerService = Cc["@mozilla.org/observer-service;1"].
-                              getService(Ci.nsIObserverService);
-        observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+        this._observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
         
         // the next delayed save request should execute immediately
         this._lastSaveTime -= this._interval;
@@ -586,13 +606,43 @@ SessionStoreService.prototype = {
       let followUp = this._statesToRestore[aWindow.__SS_restoreID].windows.length == 1;
       this.restoreWindow(aWindow, this._statesToRestore[aWindow.__SS_restoreID], true, followUp);
     }
-    
-    var tabbrowser = aWindow.getBrowser();
-    var tabpanels = tabbrowser.mPanelContainer;
+#ifndef XP_MACOSX
+    else if (this._restoreLastWindow && aWindow.toolbar.visible &&
+             this._closedWindows.length && this._doResumeSession() &&
+             !this._inPrivateBrowsing) {
+
+      // default to the most-recently closed window
+      // don't use popup windows
+      let state = null;
+      this._closedWindows = this._closedWindows.filter(function(aWinState) {
+        if (!state && !aWinState.isPopup) {
+          state = aWinState;
+          return false;
+        }
+        return true;
+      });
+      if (state) {
+        delete state.hidden;
+        state = { windows: [state] };
+        this._restoreCount = 1;
+        this.restoreWindow(aWindow, state, this._isCmdLineEmpty(aWindow));
+      }
+      // we actually restored the session just now.
+      this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
+    }
+    if (this._restoreLastWindow && aWindow.toolbar.visible) {
+      // always reset (if not a popup window)
+      // we don't want to restore a window directly after, for example,
+      // undoCloseWindow was executed.
+      this._restoreLastWindow = false;
+    }
+#endif
+
+    var tabbrowser = aWindow.gBrowser;
     
     // add tab change listeners to all already existing tabs
-    for (var i = 0; i < tabpanels.childNodes.length; i++) {
-      this.onTabAdd(aWindow, tabpanels.childNodes[i], true);
+    for (let i = 0; i < tabbrowser.browsers.length; i++) {
+      this.onTabAdd(aWindow, tabbrowser.browsers[i], true);
     }
     // notification of tab add/remove/selection
     tabbrowser.addEventListener("TabOpen", this, true);
@@ -627,8 +677,7 @@ SessionStoreService.prototype = {
       delete this.windowToFocus;
     }
     
-    var tabbrowser = aWindow.getBrowser();
-    var tabpanels = tabbrowser.mPanelContainer;
+    var tabbrowser = aWindow.gBrowser;
 
     tabbrowser.removeEventListener("TabOpen", this, true);
     tabbrowser.removeEventListener("TabClose", this, true);
@@ -660,8 +709,8 @@ SessionStoreService.prototype = {
       this.saveStateDelayed();
     }
     
-    for (var i = 0; i < tabpanels.childNodes.length; i++) {
-      this.onTabRemove(aWindow, tabpanels.childNodes[i], true);
+    for (let i = 0; i < tabbrowser.browsers.length; i++) {
+      this.onTabRemove(aWindow, tabbrowser.browsers[i], true);
     }
     
     // cache the window state until the window is completely gone
@@ -674,18 +723,18 @@ SessionStoreService.prototype = {
    * set up listeners for a new tab
    * @param aWindow
    *        Window reference
-   * @param aPanel
-   *        TabPanel reference
+   * @param aBrowser
+   *        Browser reference
    * @param aNoNotification
    *        bool Do not save state if we're updating an existing tab
    */
-  onTabAdd: function sss_onTabAdd(aWindow, aPanel, aNoNotification) {
-    aPanel.addEventListener("load", this, true);
-    aPanel.addEventListener("pageshow", this, true);
-    aPanel.addEventListener("change", this, true);
-    aPanel.addEventListener("input", this, true);
-    aPanel.addEventListener("DOMAutoComplete", this, true);
-    aPanel.addEventListener("scroll", this, true);
+  onTabAdd: function sss_onTabAdd(aWindow, aBrowser, aNoNotification) {
+    aBrowser.addEventListener("load", this, true);
+    aBrowser.addEventListener("pageshow", this, true);
+    aBrowser.addEventListener("change", this, true);
+    aBrowser.addEventListener("input", this, true);
+    aBrowser.addEventListener("DOMAutoComplete", this, true);
+    aBrowser.addEventListener("scroll", this, true);
     
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -696,20 +745,20 @@ SessionStoreService.prototype = {
    * remove listeners for a tab
    * @param aWindow
    *        Window reference
-   * @param aPanel
-   *        TabPanel reference
+   * @param aBrowser
+   *        Browser reference
    * @param aNoNotification
    *        bool Do not save state if we're updating an existing tab
    */
-  onTabRemove: function sss_onTabRemove(aWindow, aPanel, aNoNotification) {
-    aPanel.removeEventListener("load", this, true);
-    aPanel.removeEventListener("pageshow", this, true);
-    aPanel.removeEventListener("change", this, true);
-    aPanel.removeEventListener("input", this, true);
-    aPanel.removeEventListener("DOMAutoComplete", this, true);
-    aPanel.removeEventListener("scroll", this, true);
+  onTabRemove: function sss_onTabRemove(aWindow, aBrowser, aNoNotification) {
+    aBrowser.removeEventListener("load", this, true);
+    aBrowser.removeEventListener("pageshow", this, true);
+    aBrowser.removeEventListener("change", this, true);
+    aBrowser.removeEventListener("input", this, true);
+    aBrowser.removeEventListener("DOMAutoComplete", this, true);
+    aBrowser.removeEventListener("scroll", this, true);
     
-    delete aPanel.__SS_data;
+    delete aBrowser.__SS_data;
     
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -721,7 +770,7 @@ SessionStoreService.prototype = {
    * @param aWindow
    *        Window reference
    * @param aTab
-   *        TabPanel reference
+   *        Tab reference
    */
   onTabClose: function sss_onTabClose(aWindow, aTab) {
     // notify the tabbrowser that the tab state will be retrieved for the last time
@@ -762,19 +811,19 @@ SessionStoreService.prototype = {
    * When a tab loads, save state.
    * @param aWindow
    *        Window reference
-   * @param aPanel
-   *        TabPanel reference
+   * @param aBrowser
+   *        Browser reference
    * @param aEvent
    *        Event obj
    */
-  onTabLoad: function sss_onTabLoad(aWindow, aPanel, aEvent) { 
+  onTabLoad: function sss_onTabLoad(aWindow, aBrowser, aEvent) { 
     // react on "load" and solitary "pageshow" events (the first "pageshow"
     // following "load" is too late for deleting the data caches)
     if (aEvent.type != "load" && !aEvent.persisted) {
       return;
     }
     
-    delete aPanel.__SS_data;
+    delete aBrowser.__SS_data;
     this.saveStateDelayed(aWindow);
     
     // attempt to update the current URL we send in a crash report
@@ -782,21 +831,21 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * Called when a tabpanel sends the "input" notification 
+   * Called when a browser sends the "input" notification 
    * @param aWindow
    *        Window reference
-   * @param aPanel
-   *        TabPanel reference
+   * @param aBrowser
+   *        Browser reference
    */
-  onTabInput: function sss_onTabInput(aWindow, aPanel) {
-    if (aPanel.__SS_data)
-      delete aPanel.__SS_data._formDataSaved;
+  onTabInput: function sss_onTabInput(aWindow, aBrowser) {
+    if (aBrowser.__SS_data)
+      delete aBrowser.__SS_data._formDataSaved;
     
     this.saveStateDelayed(aWindow, 3000);
   },
 
   /**
-   * Called when a tabpanel sends a "scroll" notification 
+   * Called when a browser sends a "scroll" notification 
    * @param aWindow
    *        Window reference
    */
@@ -808,12 +857,10 @@ SessionStoreService.prototype = {
    * When a tab is selected, save session data
    * @param aWindow
    *        Window reference
-   * @param aPanels
-   *        TabPanel reference
    */
-  onTabSelect: function sss_onTabSelect(aWindow, aPanels) {
+  onTabSelect: function sss_onTabSelect(aWindow) {
     if (this._loadState == STATE_RUNNING) {
-      this._windows[aWindow.__SSi].selected = aPanels.selectedIndex;
+      this._windows[aWindow.__SSi].selected = aWindow.gBrowser.tabContainer.selectedIndex;
       this.saveStateDelayed(aWindow);
 
       // attempt to update the current URL we send in a crash report
@@ -995,6 +1042,16 @@ SessionStoreService.prototype = {
     return window;
   },
 
+  forgetClosedWindow: function sss_forgetClosedWindow(aIndex) {
+    // default to the most-recently closed window
+    aIndex = aIndex || 0;
+    if (!(aIndex in this._closedWindows))
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    // remove closed window from the array
+    this._closedWindows.splice(aIndex, 1);
+  },
+
   getWindowValue: function sss_getWindowValue(aWindow, aKey) {
     if (aWindow.__SSi) {
       var data = this._windows[aWindow.__SSi].extData || {};
@@ -1089,9 +1146,9 @@ SessionStoreService.prototype = {
     if (!browser || !browser.currentURI)
       // can happen when calling this function right after .addTab()
       return tabData;
-    else if (browser.parentNode.__SS_data && browser.parentNode.__SS_data._tabStillLoading)
+    else if (browser.__SS_data && browser.__SS_data._tabStillLoading)
       // use the data to be restored when the tab hasn't been completely loaded
-      return browser.parentNode.__SS_data;
+      return browser.__SS_data;
     
     var history = null;
     try {
@@ -1101,10 +1158,10 @@ SessionStoreService.prototype = {
     
     // XXXzeniko anchor navigation doesn't reset __SS_data, so we could reuse
     //           data even when we shouldn't (e.g. Back, different anchor)
-    if (history && browser.parentNode.__SS_data &&
-        browser.parentNode.__SS_data.entries[history.index] &&
+    if (history && browser.__SS_data &&
+        browser.__SS_data.entries[history.index] &&
         history.index < this._sessionhistory_max_entries - 1 && !aFullData) {
-      tabData = browser.parentNode.__SS_data;
+      tabData = browser.__SS_data;
       tabData.index = history.index + 1;
     }
     else if (history && history.count > 0) {
@@ -1115,7 +1172,7 @@ SessionStoreService.prototype = {
 
       // make sure not to cache privacy sensitive data which shouldn't get out
       if (!aFullData)
-        browser.parentNode.__SS_data = tabData;
+        browser.__SS_data = tabData;
     }
     else if (browser.currentURI.spec != "about:blank" ||
              browser.contentDocument.body.hasChildNodes()) {
@@ -1341,8 +1398,8 @@ SessionStoreService.prototype = {
     for (var i = 0; i < browsers.length; i++) {
       try {
         var tabData = this._windows[aWindow.__SSi].tabs[i];
-        if (browsers[i].parentNode.__SS_data &&
-            browsers[i].parentNode.__SS_data._tabStillLoading)
+        if (browsers[i].__SS_data &&
+            browsers[i].__SS_data._tabStillLoading)
           continue; // ignore incompletely initialized tabs
         this._updateTextAndScrollDataForTab(aWindow, browsers[i], tabData);
       }
@@ -1546,9 +1603,6 @@ SessionStoreService.prototype = {
         aHash[aHost] = {};
       if (!aHash[aHost][aPath])
         aHash[aHost][aPath] = {};
-      if (!aHash[aHost][aPath][aName])
-        aHash[aHost][aPath][aName] = {};
-
       aHash[aHost][aPath][aName] = aCookie;
     }
 
@@ -1569,14 +1623,9 @@ SessionStoreService.prototype = {
           if (cookie.isSession && _this._checkPrivacyLevel(cookie.isSecure)) {
             // use the cookie's host, path, and name as keys into a hash,
             // to make sure we serialize each cookie only once
-            var isInHash = false;
-            try {
-              if (jscookies[cookie.host][cookie.path][cookie.name])
-                isInHash = true;
-            } catch (e) {
-              // not in hash yet
-            }
-            if (!isInHash) {
+            if (!(cookie.host in jscookies &&
+                  cookie.path in jscookies[cookie.host] &&
+                  cookie.name in jscookies[cookie.host][cookie.path])) {
               var jscookie = { "host": cookie.host, "value": cookie.value };
               // only add attributes with non-default values (saving a few bits)
               if (cookie.path) jscookie.path = cookie.path;
@@ -1911,7 +1960,7 @@ SessionStoreService.prototype = {
       
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
-      browser.parentNode.__SS_data = aTabData[t];
+      browser.__SS_data = aTabData[t];
     }
     
     if (aTabs.length > 0) {
@@ -2480,9 +2529,8 @@ SessionStoreService.prototype = {
     // parentheses are for backwards compatibility with Firefox 2.0 and 3.0
     stateString.data = "(" + this._toJSONString(aStateObj) + ")";
 
-    var observerService = Cc["@mozilla.org/observer-service;1"].
-                          getService(Ci.nsIObserverService);
-    observerService.notifyObservers(stateString, "sessionstore-state-write", "");
+    this._observerService.notifyObservers(stateString,
+                                          "sessionstore-state-write", "");
 
     // don't touch the file if an observer has deleted all state data
     if (stateString.data)
@@ -2756,9 +2804,7 @@ SessionStoreService.prototype = {
       this._restoreCount--;
       if (this._restoreCount == 0) {
         // This was the last window restored at startup, notify observers.
-        var observerService = Cc["@mozilla.org/observer-service;1"].
-                              getService(Ci.nsIObserverService);
-        observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+        this._observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
       }
     }
   },
@@ -2821,25 +2867,26 @@ SessionStoreService.prototype = {
    *        String data
    */
   _writeFile: function sss_writeFile(aFile, aData) {
-    // init stream
-    var stream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-                 createInstance(Ci.nsIFileOutputStream);
-    stream.init(aFile, 0x02 | 0x08 | 0x20, 0600, 0);
+    // Initialize the file output stream.
+    var ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                  createInstance(Ci.nsIFileOutputStream);
+    ostream.init(aFile, 0x02 | 0x08 | 0x20, 0600, 0);
 
-    // convert to UTF-8
+    // Obtain a converter to convert our data to a UTF-8 encoded input stream.
     var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
                     createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
-    var convertedData = converter.ConvertFromUnicode(aData);
-    convertedData += converter.Finish();
 
-    // write and close stream
-    stream.write(convertedData, convertedData.length);
-    if (stream instanceof Ci.nsISafeOutputStream) {
-      stream.finish();
-    } else {
-      stream.close();
-    }
+    // Asynchronously copy the data to the file.
+    var istream = converter.convertToInputStream(aData);
+    var self = this;
+    NetUtil.asyncCopy(istream, ostream, function(rc) {
+      if (Components.isSuccessCode(rc)) {
+        self._observerService.notifyObservers(null,
+                                              "sessionstore-state-write-complete",
+                                              "");
+      }
+    });
   }
 };
 

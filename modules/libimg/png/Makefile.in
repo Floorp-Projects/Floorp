@@ -56,8 +56,6 @@ OS_COMPILE_CFLAGS += -GL-
 endif
 endif
 
-REQUIRES	= $(ZLIB_REQUIRES) \
-		  $(NULL)
 
 CSRCS		= \
 		png.c \

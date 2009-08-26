@@ -54,11 +54,6 @@ IS_COMPONENT	= 1
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom  \
-		  xpcom_obsolete \
-		  string \
-		  libreg \
-		  $(NULL)
 
 CPPSRCS         = \
 		nsXPCOMObsolete.cpp \

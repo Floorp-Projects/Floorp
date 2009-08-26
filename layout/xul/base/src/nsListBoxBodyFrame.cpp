@@ -71,6 +71,7 @@
 #include "nsLayoutUtils.h"
 #include "nsPIListBoxObject.h"
 #include "nsContentUtils.h"
+#include "nsChildIterator.h"
 
 /////////////// nsListScrollSmoother //////////////////
 
@@ -502,7 +503,6 @@ nsListBoxBodyFrame::GetIndexOfFirstVisibleRow(PRInt32 *aResult)
 nsresult
 nsListBoxBodyFrame::EnsureIndexIsVisible(PRInt32 aRowIndex)
 {
-  NS_ASSERTION(aRowIndex >= 0, "Ensure row is visible called with a negative number!");
   if (aRowIndex < 0)
     return NS_ERROR_ILLEGAL_VALUE;
 
@@ -580,13 +580,11 @@ nsListBoxBodyFrame::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
     *_retval = 0;
     nsCOMPtr<nsIContent> itemContent(do_QueryInterface(aItem));
 
-    nsIContent* listbox = mContent->GetBindingParent();
-    NS_ENSURE_STATE(listbox);
-
-    PRUint32 childCount = listbox->GetChildCount();
-    for (PRUint32 childIndex = 0; childIndex < childCount; childIndex++) {
-      nsIContent *child = listbox->GetChildAt(childIndex);
-
+    ChildIterator iter, last;
+    for (ChildIterator::Init(mContent, &iter, &last);
+         iter != last;
+         ++iter) {
+      nsIContent *child = (*iter);
       // we hit a list row, count it
       if (child->Tag() == nsGkAtoms::listitem) {
         // is this it?
@@ -610,15 +608,12 @@ nsListBoxBodyFrame::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aItem)
   if (aIndex < 0)
     return NS_OK;
   
-  nsIContent* listbox = mContent->GetBindingParent();
-  NS_ENSURE_STATE(listbox);
-
-  PRUint32 childCount = listbox->GetChildCount();
-
   PRInt32 itemCount = 0;
-  for (PRUint32 childIndex = 0; childIndex < childCount; childIndex++) {
-    nsIContent *child = listbox->GetChildAt(childIndex);
-
+  ChildIterator iter, last;
+  for (ChildIterator::Init(mContent, &iter, &last);
+       iter != last;
+       ++iter) {
+    nsIContent *child = (*iter);
     // we hit a list row, check if it is the one we are looking for
     if (child->Tag() == nsGkAtoms::listitem) {
       // is this it?
@@ -735,13 +730,13 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
     if (styleContext->GetStyleMargin()->GetMargin(margin))
       width += margin.LeftRight();
 
-    nsIContent* listbox = mContent->GetBindingParent();
-    NS_ENSURE_TRUE(listbox, largestWidth);
 
-    PRUint32 childCount = listbox->GetChildCount();
-
-    for (PRUint32 i = 0; i < childCount && i < 100; ++i) {
-      nsIContent *child = listbox->GetChildAt(i);
+    ChildIterator iter, last;
+    PRUint32 i = 0;
+    for (ChildIterator::Init(mContent, &iter, &last);
+         iter != last && i < 100;
+         ++iter, ++i) {
+      nsIContent *child = (*iter);
 
       if (child->Tag() == nsGkAtoms::listitem) {
         nsIRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
@@ -776,12 +771,12 @@ void
 nsListBoxBodyFrame::ComputeTotalRowCount()
 {
   mRowCount = 0;
-  nsIContent* listbox = mContent->GetBindingParent();
-  ENSURE_TRUE(listbox);
 
-  PRUint32 childCount = listbox->GetChildCount();
-  for (PRUint32 i = 0; i < childCount; i++) {
-    if (listbox->GetChildAt(i)->Tag() == nsGkAtoms::listitem)
+  ChildIterator iter, last;
+  for (ChildIterator::Init(mContent, &iter, &last);
+       iter != last;
+       ++iter) {
+    if ((*iter)->Tag() == nsGkAtoms::listitem)
       ++mRowCount;
   }
 }
@@ -1232,6 +1227,9 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset,
       nsIFrame* existingFrame =
         presContext->GetPresShell()->GetPrimaryFrameFor(nextContent);
 
+      if (existingFrame && existingFrame->GetParent() != this)
+        return GetNextItemBox(aBox, ++aOffset, aCreated);
+
       if (!existingFrame) {
         // Either append the new frame, or insert it after the current frame
         PRBool isAppend = result != mLinkupFrame && mRowsToPrepend <= 0;
@@ -1385,7 +1383,10 @@ nsListBoxBodyFrame::OnContentInserted(nsPresContext* aPresContext, nsIContent* a
 // Called by nsCSSFrameConstructor when listitem content is removed.
 //
 void
-nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChildFrame, PRInt32 aIndex)
+nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext,
+                                     nsIContent* aContainer,
+                                     nsIFrame* aChildFrame,
+                                     PRInt32 aIndex)
 {
   NS_ASSERTION(!aChildFrame || aChildFrame->GetParent() == this,
                "Removing frame that's not our child... Not good");
@@ -1393,12 +1394,11 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChi
   if (mRowCount >= 0)
     --mRowCount;
 
-  nsIContent* listBoxContent = mContent->GetBindingParent();
-  if (listBoxContent) {
+  if (aContainer) {
     if (!aChildFrame) {
       // The row we are removing is out of view, so we need to try to
       // determine the index of its next sibling.
-      nsIContent *oldNextSiblingContent = listBoxContent->GetChildAt(aIndex);
+      nsIContent *oldNextSiblingContent = aContainer->GetChildAt(aIndex);
   
       PRInt32 siblingIndex = -1;
       if (oldNextSiblingContent) {
@@ -1422,9 +1422,11 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChi
       // down by one, and we will have to insert a new frame at the top.
       
       // if the last content node has a frame, we are scrolled to the bottom
-      PRUint32 childCount = listBoxContent->GetChildCount();
-      if (childCount > 0) {
-        nsIContent *lastChild = listBoxContent->GetChildAt(childCount - 1);
+      ChildIterator iter, last;
+      ChildIterator::Init(mContent, &iter, &last);
+      if (last.position() > 0) {
+        iter.seek(last.position() - 1);
+        nsIContent *lastChild = *iter;
         nsIFrame* lastChildFrame = 
           aPresContext->PresShell()->GetPrimaryFrameFor(lastChild);
       
@@ -1458,14 +1460,13 @@ void
 nsListBoxBodyFrame::GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent)
 {
   *aContent = nsnull;
-  nsIContent* listboxContent = mContent->GetBindingParent();
-  ENSURE_TRUE(listboxContent);
 
-  PRUint32 childCount = listboxContent->GetChildCount();
   PRInt32 itemsFound = 0;
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent *kid = listboxContent->GetChildAt(i);
-
+  ChildIterator iter, last;
+  for (ChildIterator::Init(mContent, &iter, &last);
+       iter != last;
+       ++iter) {
+    nsIContent *kid = (*iter);
     if (kid->Tag() == nsGkAtoms::listitem) {
       ++itemsFound;
       if (itemsFound-1 == aIndex) {
@@ -1473,7 +1474,6 @@ nsListBoxBodyFrame::GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent)
         NS_IF_ADDREF(*aContent);
         return;
       }
-        
     }
   }
 }
@@ -1483,13 +1483,12 @@ nsListBoxBodyFrame::GetListItemNextSibling(nsIContent* aListItem, nsIContent** a
 {
   *aContent = nsnull;
   aSiblingIndex = -1;
-  nsIContent* listboxContent = mContent->GetBindingParent();
-  ENSURE_TRUE(listboxContent);
-
-  PRUint32 childCount = listboxContent->GetChildCount();
   nsIContent *prevKid = nsnull;
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent *kid = listboxContent->GetChildAt(i);
+  ChildIterator iter, last;
+  for (ChildIterator::Init(mContent, &iter, &last);
+       iter != last;
+       ++iter) {
+    nsIContent *kid = (*iter);
 
     if (kid->Tag() == nsGkAtoms::listitem) {
       ++aSiblingIndex;
@@ -1498,7 +1497,6 @@ nsListBoxBodyFrame::GetListItemNextSibling(nsIContent* aListItem, nsIContent** a
         NS_IF_ADDREF(*aContent);
         return;
       }
-        
     }
     prevKid = kid;
   }
@@ -1510,16 +1508,21 @@ void
 nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
                                      nsIFrame         *aFrame)
 {
+  if (!mFrames.ContainsFrame(aFrame)) {
+    NS_ERROR("tried to remove a child frame which isn't our child");
+    return;
+  }
+
+  if (aFrame == GetContentInsertionFrame()) {
+    // Don't touch that one
+    return;
+  }
+  
   nsPresContext* presContext = PresContext();
   nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
   fc->RemoveMappingsForFrameSubtree(aFrame);
 
-#ifdef DEBUG
-  PRBool removed =
-#endif
-    mFrames.RemoveFrame(aFrame);
-  NS_ASSERTION(removed,
-               "Going to destroy a frame we didn't remove.  Prepare to crash");
+  mFrames.RemoveFrame(aFrame);
   if (mLayoutManager)
     mLayoutManager->ChildrenRemoved(this, aState, aFrame);
   aFrame->Destroy();

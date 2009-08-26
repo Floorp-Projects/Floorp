@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta http-equiv="msthemecompatible" content="no">
+<div style="width: 200px; height: 200px; overflow: scroll;">
+  <div style="width: 3725px; height: 3725px"></div>
+</div>
+<!--
+The size of the inner div is computed as follow:
+
+Input:
+  outer_div_size: size of the div containing the scrollbar
+  button_size: size of the scrollbar arrow buttons
+  scrollbar_thickness: width/height of a vertical/horizontal scrollbar respectively
+  thumb_size: height/width of the thumb of a vertical/horizontal scrollbar respectively
+Output:
+  inner_div_size: size of the div to be scrolled
+
+Formula:
+  slider_size = outer_div_size - 2 * button_size - scrollbar_thickness
+  thumb_size = slider_size * (outer_div_size / inner_div_size)
+ which gives:
+  inner_div_size = (outer_div_size - 2 * button_size - scrollbar_thickness) * (outer_div_size / thumb_size)
+
+Testcase constants:
+  outer_div_size = 200
+
+On XP/Vista at 96 dpi with theme disabled:
+  thumb_size = 8 (minimum size)
+  button_size = 17
+  scrollbar_thickness = 17
+
+  inner_div_size = (200 - 2 * 17 - 17) * (200 / 8) = 3725
+-->

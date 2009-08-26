@@ -194,7 +194,7 @@ public:
   nsWinGesture();
 
 public:
-  PRBool InitWinGestureSupport(HWND hWnd);
+  PRBool SetWinGestureSupport(HWND hWnd, nsGestureNotifyEvent::ePanDirection aDirection);
   PRBool ShutdownWinGestureSupport();
   PRBool IsAvailable();
   

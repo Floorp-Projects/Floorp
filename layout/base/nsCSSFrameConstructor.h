@@ -215,8 +215,8 @@ public:
                           RemoveFlags aFlags,
                           PRBool*     aDidReconstruct);
 
-  nsresult CharacterDataChanged(nsIContent*     aContent,
-                                PRBool          aAppend);
+  nsresult CharacterDataChanged(nsIContent* aContent,
+                                CharacterDataChangeInfo* aInfo);
 
   nsresult ContentStatesChanged(nsIContent*     aContent1,
                                 nsIContent*     aContent2,
@@ -463,7 +463,8 @@ private:
    * Create a text node containing the given string. If aText is non-null
    * then we also set aText to the returned node.
    */
-  already_AddRefed<nsIContent> CreateGenConTextNode(const nsString& aString,  
+  already_AddRefed<nsIContent> CreateGenConTextNode(nsFrameConstructorState& aState,
+                                                    const nsString& aString,
                                                     nsCOMPtr<nsIDOMCharacterData>* aText,
                                                     nsGenConInitializer* aInitializer);
 
@@ -476,7 +477,8 @@ private:
    * style context
    * @param aContentIndex is the index of the content item to create
    */
-  already_AddRefed<nsIContent> CreateGeneratedContent(nsIContent*     aParentContent,
+  already_AddRefed<nsIContent> CreateGeneratedContent(nsFrameConstructorState& aState,
+                                                      nsIContent*     aParentContent,
                                                       nsStyleContext* aStyleContext,
                                                       PRUint32        aContentIndex);
 
@@ -1409,16 +1411,18 @@ private:
                         PRBool                   aBuildCombobox,
                         nsFrameItems&            aFrameItems);
 
-  nsresult MaybeRecreateFramesForContent(nsIContent*      aContent);
+  nsresult MaybeRecreateFramesForContent(nsIContent* aContent);
 
-  nsresult RecreateFramesForContent(nsIContent*      aContent);
+  // If aAsyncInsert is true then a restyle event will be posted to handle the
+  // required ContentInserted call instead of doing it immediately.
+  nsresult RecreateFramesForContent(nsIContent* aContent, PRBool aAsyncInsert);
 
   // If removal of aFrame from the frame tree requires reconstruction of some
   // containing block (either of aFrame or of its parent) due to {ib} splits or
   // table pseudo-frames, recreate the relevant frame subtree.  The return value
   // indicates whether this happened.  If this method returns true, *aResult is
   // the return value of ReframeContainingBlock or RecreateFramesForContent.
-  // If this method returns false, the value of *aResult is no affected.
+  // If this method returns false, the value of *aResult is not affected.
   // aFrame and aResult must not be null.  aFrame must be the result of a
   // GetPrimaryFrameFor() call (which means its parent is also not null).
   PRBool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
@@ -1539,7 +1543,7 @@ private:
 
   nsresult ReframeContainingBlock(nsIFrame* aFrame);
 
-  nsresult StyleChangeReflow(nsIFrame* aFrame);
+  nsresult StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
 
   /** Helper function that searches the immediate child frames 
     * (and their children if the frames are "special")

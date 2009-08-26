@@ -38,7 +38,6 @@
 #include "nsDOMDataTransfer.h"
 
 #include "prlog.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsIVariant.h"
@@ -216,6 +215,52 @@ NS_IMETHODIMP
 nsDOMDataTransfer::GetMozUserCancelled(PRBool* aUserCancelled)
 {
   *aUserCancelled = mUserCancelled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMDataTransfer::GetFiles(nsIDOMFileList** aFileList)
+{
+  *aFileList = nsnull;
+
+  if (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP)
+    return NS_OK;
+
+  if (!mFiles) {
+    mFiles = new nsDOMFileList();
+    NS_ENSURE_TRUE(mFiles, NS_ERROR_OUT_OF_MEMORY);
+
+    PRUint32 count = mItems.Length();
+
+    for (PRUint32 i = 0; i < count; i++) {
+      nsCOMPtr<nsIVariant> variant;
+      nsresult rv = MozGetDataAt(NS_ConvertUTF8toUTF16(kFileMime), i, getter_AddRefs(variant));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!variant)
+        continue;
+
+      nsCOMPtr<nsISupports> supports;
+      rv = variant->GetAsISupports(getter_AddRefs(supports));
+
+      if (NS_FAILED(rv))
+        continue;
+
+      nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
+
+      if (!file)
+        continue;
+
+      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(file);
+      NS_ENSURE_TRUE(domFile, NS_ERROR_OUT_OF_MEMORY);
+
+      if (!mFiles->Append(domFile))
+        return NS_ERROR_FAILURE;
+    }
+  }
+
+  *aFileList = mFiles;
+  NS_ADDREF(*aFileList);
   return NS_OK;
 }
 
@@ -407,7 +452,7 @@ nsDOMDataTransfer::MozSetDataAt(const nsAString& aFormat,
   // XXX perhaps this should also limit any non-string type as well
   if ((aFormat.EqualsLiteral("application/x-moz-file-promise") ||
        aFormat.EqualsLiteral("application/x-moz-file")) &&
-       !nsContentUtils::IsCallerChrome()) {
+       !nsContentUtils::IsCallerTrustedForCapability("UniversalXPConnect")) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
