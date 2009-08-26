@@ -51,7 +51,7 @@ class nsIPrintSettings;
 class nsIPageSequenceFrame : public nsQueryFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsIPageSequenceFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsIPageSequenceFrame)
 
   /**
    * Print the set of pages.

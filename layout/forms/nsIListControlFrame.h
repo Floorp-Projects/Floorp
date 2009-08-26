@@ -50,7 +50,7 @@ class nsIContent;
 class nsIListControlFrame : public nsQueryFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsIListControlFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsIListControlFrame)
 
   /**
    * Sets the ComboBoxFrame
