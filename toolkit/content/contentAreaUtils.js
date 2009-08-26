@@ -532,132 +532,136 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
   }
 }
 
+/** 
+ * Given the Filepicker Parameters (aFpP), show the file picker dialog,
+ * prompting the user to confirm (or change) the fileName.
+ * @param aFpP
+ *        A structure (see definition in internalSave(...) method)
+ *        containing all the data used within this method.
+ * @param aSkipPrompt
+ *        If true, attempt to save the file automatically to the user's default
+ *        download directory, thus skipping the explicit prompt for a file name,
+ *        but only if the associated preference is set.
+ *        If false, don't save the file automatically to the user's
+ *        default download directory, even if the associated preference
+ *        is set, but ask for the target explicitly.
+ * @return true if the user confirmed a filename in the picker or the picker
+ *         was not displayed; false if they dismissed the picker.
+ */
 function getTargetFile(aFpP, /* optional */ aSkipPrompt)
 {
   if (typeof gDownloadLastDir != "object")
     Components.utils.import("resource://gre/modules/DownloadLastDir.jsm");
 
-  const prefSvcContractID = "@mozilla.org/preferences-service;1";
-  const prefSvcIID = Components.interfaces.nsIPrefService;                              
-  var prefs = Components.classes[prefSvcContractID]
-                        .getService(prefSvcIID).getBranch("browser.download.");
-
+  var prefs = getPrefsBrowserDownload("browser.download.");
+  var useDownloadDir = prefs.getBoolPref("useDownloadDir");
   const nsILocalFile = Components.interfaces.nsILocalFile;
 
-  var inPrivateBrowsing = false;
-  try {
-    var pbs = Components.classes["@mozilla.org/privatebrowsing;1"]
-                        .getService(Components.interfaces.nsIPrivateBrowsingService);
-    inPrivateBrowsing = pbs.privateBrowsingEnabled;
-  }
-  catch (e) {
-  }
+  if (!aSkipPrompt)
+    useDownloadDir = false;
 
-  // For information on download folder preferences, see
-  // mozilla/browser/components/preferences/main.js
-  
-  var useDownloadDir = prefs.getBoolPref("useDownloadDir");
-  var dir = null;
-  
-  // Default to lastDir if useDownloadDir is false, and lastDir
-  // is configured and valid. Otherwise, use the user's default
-  // downloads directory configured through download prefs.
-  var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
-                          .getService(Components.interfaces.nsIDownloadManager);
-  try {                          
-    var lastDir;
-    if (inPrivateBrowsing && gDownloadLastDir.file)
-      lastDir = gDownloadLastDir.file;
-    else
-      lastDir = prefs.getComplexValue("lastDir", nsILocalFile);
-    if ((!aSkipPrompt || !useDownloadDir) && lastDir.exists())
-      dir = lastDir;
-    else
-      dir = dnldMgr.userDownloadsDirectory;
-  } catch(ex) {
-    dir = dnldMgr.userDownloadsDirectory;
-  }
+  // Default to the user's default downloads directory configured
+  // through download prefs.
+  var dlMgr = Components.classes["@mozilla.org/download-manager;1"]
+                        .getService(Components.interfaces.nsIDownloadManager);
+  var dir = dlMgr.userDownloadsDirectory;
+  var dirExists = dir && dir.exists();
 
-  if (!aSkipPrompt || !useDownloadDir || !dir || (dir && !dir.exists())) {
-    if (!dir || (dir && !dir.exists())) {
-      // Default to desktop.
-      var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                                  .getService(Components.interfaces.nsIProperties);
-      dir = fileLocator.get("Desk", nsILocalFile);
-    }
-
-    var fp = makeFilePicker();
-    var titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
-    var bundle = getStringBundle();
-    fp.init(window, bundle.GetStringFromName(titleKey), 
-            Components.interfaces.nsIFilePicker.modeSave);
-    
-    fp.defaultExtension = aFpP.fileInfo.fileExt;
-    fp.defaultString = getNormalizedLeafName(aFpP.fileInfo.fileName,
-                                             aFpP.fileInfo.fileExt);
-    appendFiltersForContentType(fp, aFpP.contentType, aFpP.fileInfo.fileExt,
-                                aFpP.saveMode);
-
-    if (dir)
-      fp.displayDirectory = dir;
-    
-    if (aFpP.saveMode != SAVEMODE_FILEONLY) {
-      try {
-        fp.filterIndex = prefs.getIntPref("save_converter_index");
-      }
-      catch (e) {
-      }
-    }
-
-    if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
-      return false;
-
-    // Do not store the last save directory as a pref inside the private browsing mode
-    var directory = fp.file.parent.QueryInterface(nsILocalFile);
-    if (inPrivateBrowsing)
-      gDownloadLastDir.file = directory;
-    else
-      prefs.setComplexValue("lastDir", nsILocalFile, directory);
-
-    fp.file.leafName = validateFileName(fp.file.leafName);
-    aFpP.saveAsType = fp.filterIndex;
-    aFpP.file = fp.file;
-
-    if (aFpP.saveMode != SAVEMODE_FILEONLY)
-      prefs.setIntPref("save_converter_index", aFpP.saveAsType);
-  }
-  else {
+  if (useDownloadDir && dirExists) {
     dir.append(getNormalizedLeafName(aFpP.fileInfo.fileName,
                                      aFpP.fileInfo.fileExt));
-    var file = dir;
-    
-    // Since we're automatically downloading, we don't get the file picker's 
-    // logic to check for existing files, so we need to do that here.
-    //
-    // Note - this code is identical to that in
-    //   mozilla/toolkit/mozapps/downloads/src/nsHelperAppDlg.js.in
-    // If you are updating this code, update that code too! We can't share code
-    // here since that code is called in a js component.
-    var collisionCount = 0;
-    while (file.exists()) {
-      collisionCount++;
-      if (collisionCount == 1) {
-        // Append "(2)" before the last dot in (or at the end of) the filename
-        // special case .ext.gz etc files so we don't wind up with .tar(2).gz
-        if (file.leafName.match(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i))
-          file.leafName = file.leafName.replace(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i, "(2)$&");
-        else
-          file.leafName = file.leafName.replace(/(\.[^\.]*)?$/, "(2)$&");
-      }
-      else {
-        // replace the last (n) in the filename with (n+1)
-        file.leafName = file.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount+1) + ")");
-      }
-    }
-    aFpP.file = file;
+    aFpP.file = uniqueFile(dir);
+    return true;
   }
 
+  // We must prompt for the file name explicitly.
+  // If we must prompt because we were asked to...
+  if (!useDownloadDir) try {
+    // ...find the directory that was last used for saving, and use it in the
+    // file picker if it is still valid. Otherwise, keep the default of the
+    // user's default downloads directory. If it doesn't exist, it will be
+    // changed to the user's desktop later.
+    var lastDir = gDownloadLastDir.file;
+    if (lastDir.exists()) {
+      dir = lastDir;
+      dirExists = true;
+    }
+  } catch(e) {}
+
+  if (!dirExists) {
+    // Default to desktop.
+    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                .getService(Components.interfaces.nsIProperties);
+    dir = fileLocator.get("Desk", nsILocalFile);
+  }
+
+  var fp = makeFilePicker();
+  var titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
+  var bundle = getStringBundle();
+  fp.init(window, bundle.GetStringFromName(titleKey),
+          Components.interfaces.nsIFilePicker.modeSave);
+
+  fp.displayDirectory = dir;
+  fp.defaultExtension = aFpP.fileInfo.fileExt;
+  fp.defaultString = getNormalizedLeafName(aFpP.fileInfo.fileName,
+                                           aFpP.fileInfo.fileExt);
+  appendFiltersForContentType(fp, aFpP.contentType, aFpP.fileInfo.fileExt,
+                              aFpP.saveMode);
+
+  // The index of the selected filter is only preserved and restored if there's
+  // more than one filter in addition to "All Files".
+  if (aFpP.saveMode != SAVEMODE_FILEONLY) {
+    try {
+      fp.filterIndex = prefs.getIntPref("save_converter_index");
+    }
+    catch (e) {
+    }
+  }
+
+  if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
+    return false;
+
+  if (aFpP.saveMode != SAVEMODE_FILEONLY)
+    prefs.setIntPref("save_converter_index", fp.filterIndex);
+
+  // Do not store the last save directory as a pref inside the private browsing mode
+  var directory = fp.file.parent.QueryInterface(nsILocalFile);
+  gDownloadLastDir.file = directory;
+
+  fp.file.leafName = validateFileName(fp.file.leafName);
+  
+  aFpP.saveAsType = fp.filterIndex;
+  aFpP.file = fp.file;
+  aFpP.fileURL = fp.fileURL;
   return true;
+}
+
+// Since we're automatically downloading, we don't get the file picker's
+// logic to check for existing files, so we need to do that here.
+//
+// Note - this code is identical to that in
+//   mozilla/toolkit/mozapps/downloads/src/nsHelperAppDlg.js.in
+// If you are updating this code, update that code too! We can't share code
+// here since that code is called in a js component.
+function uniqueFile(aLocalFile)
+{
+  var collisionCount = 0;
+  while (aLocalFile.exists()) {
+    collisionCount++;
+    if (collisionCount == 1) {
+      // Append "(2)" before the last dot in (or at the end of) the filename
+      // special case .ext.gz etc files so we don't wind up with .tar(2).gz
+      if (aLocalFile.leafName.match(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i))
+        aLocalFile.leafName = aLocalFile.leafName.replace(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i, "(2)$&");
+      else
+        aLocalFile.leafName = aLocalFile.leafName.replace(/(\.[^\.]*)?$/, "(2)$&");
+    }
+    else {
+      // replace the last (n) in the filename with (n+1)
+      aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount + 1) + ")");
+    }
+  }
+  return aLocalFile;
 }
 
 // We have no DOM, and can only save the URL as is.
@@ -763,6 +767,14 @@ function getStringBundle()
   return Components.classes["@mozilla.org/intl/stringbundle;1"]
                    .getService(Components.interfaces.nsIStringBundleService)
                    .createBundle("chrome://global/locale/contentAreaCommands.properties");
+}
+
+// Get the preferences branch ("browser.download." for normal 'save' mode)...
+function getPrefsBrowserDownload(branch)
+{
+  const prefSvcContractID = "@mozilla.org/preferences-service;1";
+  const prefSvcIID = Components.interfaces.nsIPrefService;                              
+  return Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch(branch);
 }
 
 function makeWebBrowserPersist()

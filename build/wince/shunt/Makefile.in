@@ -63,6 +63,7 @@ EXPORTS_mozce_shunt = \
   include/fcntl.h \
   include/io.h \
   include/mbstring.h \
+  include/environment.h \
   include/mozce_shunt.h \
   include/process.h \
   include/signal.h \
@@ -96,4 +97,6 @@ include $(topsrcdir)/config/rules.mk
 
 mozce_shunt.def: mozce_shunt.def.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@
+
+.NOTPARALLEL:
 

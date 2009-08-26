@@ -526,6 +526,7 @@ public:
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
+    virtual void CommenceShutdown();
     virtual PRBool Collect();
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
@@ -1084,6 +1085,25 @@ private:
     XPCCallContext(const XPCCallContext& r); // not implemented
     XPCCallContext& operator= (const XPCCallContext& r); // not implemented
 
+    friend class XPCLazyCallContext;
+    XPCCallContext(XPCContext::LangType callerLanguage,
+                   JSContext* cx,
+                   JSBool callBeginRequest,
+                   JSObject* obj,
+                   JSObject* currentJSObject,
+                   XPCWrappedNative* wn,
+                   XPCWrappedNativeTearOff* tearoff);
+
+    void Init(XPCContext::LangType callerLanguage,
+              JSBool callBeginRequest,
+              JSObject* obj,
+              JSObject* funobj,
+              JSBool getWrappedNative,
+              jsval name,
+              uintN argc,
+              jsval *argv,
+              jsval *rval);
+
 private:
     // posible values for mState
     enum State {
@@ -1174,6 +1194,113 @@ private:
     // calling the constructors and destructors when the strings
     // aren't being used.
     char mStringWrapperData[sizeof(StringWrapperEntry) * XPCCCX_STRING_CACHE_SIZE];
+};
+
+class XPCLazyCallContext
+{
+public:
+    XPCLazyCallContext(XPCCallContext& ccx)
+        : mCallBeginRequest(DONT_CALL_BEGINREQUEST),
+          mCcx(&ccx),
+          mCcxToDestroy(nsnull)
+          
+    {
+    }
+    XPCLazyCallContext(XPCContext::LangType callerLanguage, JSContext* cx,
+                       JSObject* obj = nsnull,
+                       JSObject* currentJSObject = nsnull,
+                       XPCWrappedNative* wrapper = nsnull,
+                       XPCWrappedNativeTearOff* tearoff = nsnull)
+        : mCallBeginRequest(callerLanguage == NATIVE_CALLER ?
+                            CALL_BEGINREQUEST : DONT_CALL_BEGINREQUEST),
+          mCcx(nsnull),
+          mCcxToDestroy(nsnull),
+          mCx(cx),
+          mCallerLanguage(callerLanguage),
+          mObj(obj),
+          mCurrentJSObject(currentJSObject),
+          mWrapper(wrapper),
+          mTearOff(tearoff)
+    {
+        NS_ASSERTION(cx, "Need a JS context!");
+        NS_ASSERTION(callerLanguage == NATIVE_CALLER ||
+                     callerLanguage == JS_CALLER,
+                     "Can't deal with unknown caller language!");
+#ifdef DEBUG
+        AssertContextIsTopOfStack(cx);
+#endif
+    }
+    ~XPCLazyCallContext()
+    {
+        if(mCcxToDestroy)
+            mCcxToDestroy->~XPCCallContext();
+        else if(mCallBeginRequest == CALLED_BEGINREQUEST)
+            JS_EndRequest(mCx);
+    }
+    void SetWrapper(JSObject* currentJSObject,
+                    XPCWrappedNative* wrapper,
+                    XPCWrappedNativeTearOff* tearoff)
+    {
+        mCurrentJSObject = currentJSObject;
+        mWrapper = wrapper;
+        mTearOff = tearoff;
+    }
+
+    JSContext *GetJSContext()
+    {
+        if(mCcx)
+            return mCcx->GetJSContext();
+
+        if(mCallBeginRequest == CALL_BEGINREQUEST) {
+            JS_BeginRequest(mCx);
+            mCallBeginRequest = CALLED_BEGINREQUEST;
+        }
+
+        return mCx;
+    }
+    JSObject *GetCurrentJSObject() const
+    {
+        return mCurrentJSObject;
+    }
+    XPCCallContext &GetXPCCallContext()
+    {
+        if(!mCcx)
+        {
+            mCcxToDestroy = mCcx =
+                new (mData) XPCCallContext(mCallerLanguage, mCx,
+                                           mCallBeginRequest == CALL_BEGINREQUEST,
+                                           mObj,
+                                           mCurrentJSObject, mWrapper,
+                                           mTearOff);
+            if(!mCcx->IsValid())
+            {
+                NS_ERROR("This is not supposed to fail!");
+            }
+        }
+
+        return *mCcx;
+    }
+
+private:
+#ifdef DEBUG
+    static void AssertContextIsTopOfStack(JSContext* cx);
+#endif
+
+    enum {
+        DONT_CALL_BEGINREQUEST,
+        CALL_BEGINREQUEST,
+        CALLED_BEGINREQUEST
+    } mCallBeginRequest;
+
+    XPCCallContext *mCcx;
+    XPCCallContext *mCcxToDestroy;
+    JSContext *mCx;
+    XPCContext::LangType mCallerLanguage;
+    JSObject *mObj;
+    JSObject *mCurrentJSObject;
+    XPCWrappedNative *mWrapper;
+    XPCWrappedNativeTearOff *mTearOff;
+    char mData[sizeof(XPCCallContext)];
 };
 
 /***************************************************************************
@@ -1524,8 +1651,7 @@ public:
     inline void TraceJS(JSTracer* trc) {}
     inline void AutoTrace(JSTracer* trc) {}
 
-    static void DestroyInstance(JSContext* cx, XPCJSRuntime* rt,
-                                XPCNativeInterface* inst);
+    static void DestroyInstance(XPCNativeInterface* inst);
 
 protected:
     static XPCNativeInterface* NewInstance(XPCCallContext& ccx,
@@ -2078,7 +2204,6 @@ extern JSBool XPC_SWN_Equality(JSContext *cx, JSObject *obj, jsval v,
 
 extern JSBool ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p,
                                    nsWrapperCache *cache,
-                                   XPCNativeInterface *iface,
                                    XPCWrappedNativeScope* xpcScope,
                                    jsval *rval);
 extern JSBool MorphSlimWrapper(JSContext *cx, JSObject *obj);
@@ -2837,7 +2962,15 @@ public:
      */    
     static JSBool NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                                 const nsXPTType& type, const nsID* iid,
-                                JSObject* scope, nsresult* pErr);
+                                JSObject* scope, nsresult* pErr)
+    {
+        XPCLazyCallContext lccx(ccx);
+        return NativeData2JS(lccx, d, s, type, iid, scope, pErr);
+    }
+    static JSBool NativeData2JS(XPCLazyCallContext& lccx, jsval* d,
+                                const void* s, const nsXPTType& type,
+                                const nsID* iid, JSObject* scope,
+                                nsresult* pErr);
 
     static JSBool JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                                 const nsXPTType& type,
@@ -2850,11 +2983,15 @@ public:
      * @param ccx the context for the whole procedure
      * @param dest [out] the resulting JSObject
      * @param src the native object we're working with
-     * @param iid the interface of src that we want
+     * @param iid the interface of src that we want (may be null)
+     * @param Interface the interface of src that we want
+     * @param cache the wrapper cache for src (may be null, in which case src
+     *              will be QI'ed to get the cache)
      * @param scope the default scope to put on the new JSObject's __parent__
      *        chain
      * @param allowNativeWrapper if true, this method may wrap the resulting
      *        JSObject in an XPCNativeWrapper and return that, as needed.
+     * @param isGlobal
      * @param pErr [out] relevant error code, if any.
      */
     static JSBool NativeInterface2JSObject(XPCCallContext& ccx,
@@ -2862,7 +2999,24 @@ public:
                                            nsIXPConnectJSObjectHolder** dest,
                                            nsISupports* src,
                                            const nsID* iid,
-                                           XPCNativeInterface* Interface,
+                                           XPCNativeInterface** Interface,
+                                           nsWrapperCache *cache,
+                                           JSObject* scope,
+                                           PRBool allowNativeWrapper,
+                                           PRBool isGlobal,
+                                           nsresult* pErr)
+    {
+        XPCLazyCallContext lccx(ccx);
+        return NativeInterface2JSObject(lccx, d, dest, src, iid, Interface,
+                                        cache, scope, allowNativeWrapper,
+                                        isGlobal, pErr);
+    }
+    static JSBool NativeInterface2JSObject(XPCLazyCallContext& lccx,
+                                           jsval* d,
+                                           nsIXPConnectJSObjectHolder** dest,
+                                           nsISupports* src,
+                                           const nsID* iid,
+                                           XPCNativeInterface** Interface,
                                            nsWrapperCache *cache,
                                            JSObject* scope,
                                            PRBool allowNativeWrapper,
@@ -2893,7 +3047,7 @@ public:
      *        chain
      * @param pErr [out] relevant error code, if any.
      */    
-    static JSBool NativeArray2JS(XPCCallContext& ccx,
+    static JSBool NativeArray2JS(XPCLazyCallContext& ccx,
                                  jsval* d, const void** s,
                                  const nsXPTType& type, const nsID* iid,
                                  JSUint32 count, JSObject* scope,
@@ -2905,7 +3059,7 @@ public:
                                  JSBool useAllocator, const nsID* iid,
                                  uintN* pErr);
 
-    static JSBool NativeStringWithSize2JS(XPCCallContext& ccx,
+    static JSBool NativeStringWithSize2JS(JSContext* cx,
                                           jsval* d, const void* s,
                                           const nsXPTType& type,
                                           JSUint32 count,
@@ -3830,9 +3984,16 @@ class AutoMarkingPtr
 public:
     AutoMarkingPtr(XPCCallContext& ccx)
         : mNext(nsnull), mTLS(ccx.GetThreadData()) {Link();}
+    AutoMarkingPtr()
+        : mNext(nsnull), mTLS(nsnull) {}
 
     virtual ~AutoMarkingPtr() {Unlink();}
-    
+
+    void Init(XPCCallContext& ccx)
+        {NS_ASSERTION(!mTLS, "Already init'ed!");
+         mTLS = ccx.GetThreadData();
+         Link();}
+
     void Link() 
         {if(!mTLS) return;
          AutoMarkingPtr** list = mTLS->GetAutoRootsAdr(); 
@@ -3865,6 +4026,8 @@ protected:
 class class_ : public AutoMarkingPtr                                         \
 {                                                                            \
 public:                                                                      \
+    class_ ()                                                                \
+        : AutoMarkingPtr(), mPtr(nsnull) {}                                  \
     class_ (XPCCallContext& ccx, type_ * ptr = nsnull)                       \
         : AutoMarkingPtr(ccx), mPtr(ptr) {}                                  \
     virtual ~ class_ () {}                                                   \
@@ -3885,7 +4048,8 @@ public:                                                                      \
     type_ * operator->() const  {return mPtr;}                               \
                                                                              \
     class_ & operator =(type_ * p)                                           \
-        {mPtr = p; return *this;}                                            \
+        {NS_ASSERTION(mTLS, "Hasn't been init'ed!");                         \
+         mPtr = p; return *this;}                                            \
                                                                              \
 protected:                                                                   \
     type_ * mPtr;                                                            \
@@ -4007,7 +4171,7 @@ public:
 
     jsval GetJSVal() const {return mJSVal;}
 
-    XPCVariant(jsval aJSVal);
+    XPCVariant(XPCCallContext& ccx, jsval aJSVal);
 
     /**
      * Convert a variant into a jsval.
@@ -4019,7 +4183,7 @@ public:
      * @param pErr [out] relevant error code, if any.
      * @param pJSVal [out] the resulting jsval.
      */    
-    static JSBool VariantDataToJS(XPCCallContext& ccx, 
+    static JSBool VariantDataToJS(XPCLazyCallContext& lccx, 
                                   nsIVariant* variant,
                                   JSObject* scope, nsresult* pErr,
                                   jsval* pJSVal);
@@ -4032,6 +4196,7 @@ protected:
 protected:
     nsDiscriminatedUnion mData;
     jsval                mJSVal;
+    JSBool               mReturnRawObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)
@@ -4040,10 +4205,10 @@ class XPCTraceableVariant: public XPCVariant,
                            public XPCRootSetElem
 {
 public:
-    XPCTraceableVariant(XPCJSRuntime *runtime, jsval aJSVal)
-        : XPCVariant(aJSVal)
+    XPCTraceableVariant(XPCCallContext& ccx, jsval aJSVal)
+        : XPCVariant(ccx, aJSVal)
     {
-        runtime->AddVariantRoot(this);
+        ccx.GetRuntime()->AddVariantRoot(this);
     }
 
     virtual ~XPCTraceableVariant();
@@ -4089,13 +4254,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 inline void *
 xpc_GetJSPrivate(JSObject *obj)
 {
-    jsval v;
-
-    JS_ASSERT(STOBJ_GET_CLASS(obj)->flags & JSCLASS_HAS_PRIVATE);
-    v = obj->fslots[JSSLOT_PRIVATE];
-    if (!JSVAL_IS_INT(v))
-        return NULL;
-    return JSVAL_TO_PRIVATE(v);
+    return obj->getPrivate();
 }
 
 #ifndef XPCONNECT_STANDALONE

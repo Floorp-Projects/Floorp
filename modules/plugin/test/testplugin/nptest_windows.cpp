@@ -35,6 +35,7 @@
 #include "nptest_platform.h"
 
 #include <windows.h>
+#include <windowsx.h>
 
 #pragma comment(lib, "msimg32.lib")
 
@@ -367,22 +368,43 @@ pluginGetClipRegionRectEdge(InstanceData* instanceData,
 
 /* windowless plugin events */
 
+static bool
+handleEventInternal(InstanceData* instanceData, NPEvent* pe)
+{
+  switch ((UINT)pe->event) {
+    case WM_PAINT:
+      pluginDraw(instanceData);
+      return true;
+
+    case WM_MOUSEMOVE:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP: {
+      int x = instanceData->hasWidget ? 0 : instanceData->window.x;
+      int y = instanceData->hasWidget ? 0 : instanceData->window.y;
+      instanceData->lastMouseX = GET_X_LPARAM(pe->lParam) - x;
+      instanceData->lastMouseY = GET_Y_LPARAM(pe->lParam) - y;
+      return true;
+    }
+
+    default:
+      return false;
+  }
+}
+
 int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
 {
-  NPEvent * pe = (NPEvent*) event;
+  NPEvent* pe = (NPEvent*)event;
 
   if (pe == NULL || instanceData == NULL ||
       instanceData->window.type != NPWindowTypeDrawable)
     return 0;   
 
-  switch((UINT)pe->event) {
-    case WM_PAINT:
-      pluginDraw(instanceData);   
-      return 1;
-  }
-  
-  return 0;
+  return handleEventInternal(instanceData, pe);
 }
 
 /* windowed plugin events */
@@ -396,10 +418,10 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
   if (!pInstance)
     return 0;
 
-  if (uMsg == WM_PAINT) {
-    pluginDraw(pInstance);
+  NPEvent event = { uMsg, wParam, lParam };
+
+  if (handleEventInternal(pInstance, &event))
     return 0;
-  }
 
   if (uMsg == WM_CLOSE) {
     ClearSubclass((HWND)pInstance->window.window);

@@ -66,11 +66,6 @@ endif
 endif
 endif
 
-REQUIRES = \
-	xpcom \
-	string \
-	storage \
-	$(NULL)
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../src \
@@ -84,3 +79,7 @@ LIBS = \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef SOLARIS_SUNPRO_CXX
+CXXFLAGS += -features=extensions -D__FUNCTION__=__func__
+endif

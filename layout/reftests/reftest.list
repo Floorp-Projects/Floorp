@@ -41,8 +41,14 @@ include css-import/reftest.list
 # css character encoding tests
 include css-charset/reftest.list
 
+# css gradients
+include css-gradients/reftest.list
+
 # css media queries (tests for print mode)
 include css-mediaqueries/reftest.list
+
+# css namespaces
+include css-namespace/reftest.list
 
 # css values and units
 include css-valuesandunits/reftest.list
@@ -82,6 +88,9 @@ include ib-split/reftest.list
 
 # image/
 include image/reftest.list
+
+# image-rect/
+include image-rect/reftest.list
 
 # image-region/
 include image-region/reftest.list
@@ -167,6 +176,9 @@ include text-transform/reftest.list
 
 # -moz-transform/
 include transform/reftest.list
+
+# widget/
+include ../../widget/reftests/reftest.list
 
 # xml-stylesheet/
 include ../../content/test/reftest/xml-stylesheet/reftest.list

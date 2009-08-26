@@ -272,15 +272,17 @@ nsTreeSelection::~nsTreeSelection()
     mSelectTimer->Cancel();
 }
 
+NS_IMPL_CYCLE_COLLECTION_1(nsTreeSelection, mCurrentColumn)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeSelection)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeSelection)
+
 // QueryInterface implementation for nsBoxObject
-NS_INTERFACE_MAP_BEGIN(nsTreeSelection)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeSelection)
   NS_INTERFACE_MAP_ENTRY(nsITreeSelection)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeSelection)
 NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsTreeSelection)
-NS_IMPL_RELEASE(nsTreeSelection)
 
 NS_IMETHODIMP nsTreeSelection::GetTree(nsITreeBoxObject * *aTree)
 {

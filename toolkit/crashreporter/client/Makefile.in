@@ -46,8 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM = crashreporter$(BIN_SUFFIX)
 DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
-REQUIRES	= \
-		$(NULL)
 
 LOCAL_INCLUDES = -I$(srcdir)/../google-breakpad/src
 

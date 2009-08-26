@@ -173,11 +173,8 @@ function test() {
             let testCounter = 0;
 
             function setFilter(string) {
-                // make sure that the the window is focused first
-                filter.ownerDocument.defaultView.focus();
-                filter.focus();
                 filter.value = string;
-                EventUtils.synthesizeKey("VK_RETURN", {}, win);
+                filter.doCommand();
             }
 
             function runOneTest(test) {

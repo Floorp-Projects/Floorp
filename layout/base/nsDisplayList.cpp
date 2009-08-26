@@ -65,6 +65,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
       mMovingFrame(nsnull),
+      mSaveVisibleRegionOfMovingContent(nsnull),
       mIgnoreScrollFrame(nsnull),
       mCurrentTableItem(nsnull),
       mBuildCaret(aBuildCaret),
@@ -155,6 +156,16 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
   PL_FinishArenaPool(&mPool);
 }
 
+void
+nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
+                                                const nsRegion& aRegion)
+{
+  aVisibleRegion->Sub(*aVisibleRegion, aRegion);
+  if (!GetAccurateVisibleRegions()) {
+    aVisibleRegion->SimplifyOutward(15);
+  }
+}
+
 PRBool
 nsDisplayListBuilder::IsMovingFrame(nsIFrame* aFrame)
 {
@@ -236,6 +247,26 @@ nsDisplayListBuilder::Allocate(size_t aSize) {
   return tmp;
 }
 
+void
+nsDisplayListBuilder::AccumulateVisibleRegionOfMovingContent(const nsRegion& aMovingContent,
+                                                             const nsRegion& aVisibleRegion)
+{
+  if (!mSaveVisibleRegionOfMovingContent)
+    return;
+
+  // Grab the union of aMovingContent (after the move) with
+  // aMovingContent - mMoveDelta (before the move)
+  nsRegion r = aMovingContent;
+  r.MoveBy(-mMoveDelta);
+  r.Or(r, aMovingContent);
+  // Reduce to the part that's visible after the move
+  r.And(r, aVisibleRegion);
+  // Accumulate it into our result
+  mSaveVisibleRegionOfMovingContent->Or(
+      *mSaveVisibleRegionOfMovingContent, r);
+  mSaveVisibleRegionOfMovingContent->SimplifyOutward(15);
+}
+
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
 {
   aDestination.BorderBackground()->AppendToTop(BorderBackground());
@@ -266,11 +297,7 @@ nsDisplayItem::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
       // before state and in the after state.
       opaqueArea.IntersectRect(bounds - aBuilder->GetMoveDelta(), bounds);
     }
-    if (aBuilder->GetAccurateVisibleRegions()) {
-      aVisibleRegion->Sub(*aVisibleRegion, opaqueArea);
-    } else {
-      aVisibleRegion->SimpleSubtract(opaqueArea);
-    }
+    aBuilder->SubtractFromVisibleRegion(aVisibleRegion, nsRegion(opaqueArea));
   }
 
   return PR_TRUE;
@@ -304,6 +331,12 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   nsAutoTArray<nsDisplayItem*, 512> elements;
   FlattenTo(&elements);
 
+  // Accumulate the bounds of all moving content we find in this list
+  nsRect movingContentAccumulatedBounds;
+  // Store an overapproximation of the visible region for the moving
+  // content in this list
+  nsRegion movingContentVisibleRegion;
+
   for (PRInt32 i = elements.Length() - 1; i >= 0; --i) {
     nsDisplayItem* item = elements[i];
     nsDisplayItem* belowItem = i < 1 ? nsnull : elements[i - 1];
@@ -313,13 +346,26 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
       elements.ReplaceElementsAt(i - 1, 1, item);
       continue;
     }
-    
+
+    nsIFrame* f = item->GetUnderlyingFrame();
+    if (f && aBuilder->IsMovingFrame(f)) {
+      if (movingContentAccumulatedBounds.IsEmpty()) {
+        // *aVisibleRegion can only shrink during this loop, so storing
+        // the first one we see is a sound overapproximation
+        movingContentVisibleRegion = *aVisibleRegion;
+      }
+      movingContentAccumulatedBounds.UnionRect(movingContentAccumulatedBounds,
+                                               item->GetBounds(aBuilder));
+    }
     if (item->OptimizeVisibility(aBuilder, aVisibleRegion)) {
       AppendToBottom(item);
     } else {
       item->~nsDisplayItem();
     }
   }
+
+  aBuilder->AccumulateVisibleRegionOfMovingContent(
+      nsRegion(movingContentAccumulatedBounds), movingContentVisibleRegion);
 }
 
 void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
@@ -561,23 +607,8 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
       !nsCSSRendering::IsCanvasFrame(mFrame))
     return PR_TRUE;
 
-  if (bottomLayer.mRepeat == NS_STYLE_BG_REPEAT_XY) {
-    if (bottomLayer.mImage) {
-      nsCOMPtr<imgIContainer> container;
-      bottomLayer.mImage->GetImage(getter_AddRefs(container));
-      if (container) {
-        PRBool animated;
-        container->GetAnimated(&animated);
-        if (!animated) {
-          PRBool isOpaque;
-          if (NS_SUCCEEDED(container->GetCurrentFrameIsOpaque(&isOpaque)))
-            return isOpaque;
-        }
-      }
-    }
-  }
-
-  return PR_FALSE;
+  return bottomLayer.mRepeat == NS_STYLE_BG_REPEAT_XY &&
+         bottomLayer.mImage.IsOpaque();
 }
 
 PRBool
@@ -591,7 +622,7 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg);
   if (!hasBG)
     return PR_TRUE;
-  if (!bg->BottomLayer().mImage &&
+  if (bg->BottomLayer().mImage.IsEmpty() &&
       bg->mImageCount == 1 &&
       !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
       bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER)
@@ -835,7 +866,7 @@ void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
 static nsresult
 WrapDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList, nsDisplayWrapper* aWrapper) {
-  if (!aList->GetTop())
+  if (!aList->GetTop() && !aBuilder->HasMovingFrames())
     return NS_OK;
   nsDisplayItem* item = aWrapper->WrapList(aBuilder, aFrame, aList);
   if (!item)
@@ -1024,15 +1055,25 @@ PRBool nsDisplayClip::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
                                          nsRegion* aVisibleRegion) {
   nsRegion clipped;
   clipped.And(*aVisibleRegion, mClip);
+
+  if (aBuilder->HasMovingFrames() &&
+      !aBuilder->IsMovingFrame(mClippingFrame)) {
+    // There may be some clipped moving children that were visible before
+    // but are clipped out now. Conservatively assume they were there
+    // and add their possible area to the visible region of moving
+    // content.
+    // Compute the after-move region of moving content that could have been
+    // totally clipped out.
+    nsRegion r;
+    r.Sub(mClip + aBuilder->GetMoveDelta(), mClip);
+    aBuilder->AccumulateVisibleRegionOfMovingContent(r, *aVisibleRegion);
+  }
+
   nsRegion rNew(clipped);
   PRBool anyVisible = nsDisplayWrapList::OptimizeVisibility(aBuilder, &rNew);
   nsRegion subtracted;
   subtracted.Sub(clipped, rNew);
-  if (aBuilder->GetAccurateVisibleRegions()) {
-    aVisibleRegion->Sub(*aVisibleRegion, subtracted);
-  } else {
-    aVisibleRegion->SimpleSubtract(subtracted);
-  }
+  aBuilder->SubtractFromVisibleRegion(aVisibleRegion, subtracted);
   return anyVisible;
 }
 

@@ -91,22 +91,6 @@ function getBoolPref ( prefname, def )
   }
 }
 
-// Change focus for this browser window to |aElement|, without focusing the
-// window itself.
-function focusElement(aElement)
-{
-  // if a content window, focus the <browser> instead as window.focus()
-  // raises the window
-  if (aElement instanceof Window) {
-    var browser = getBrowserFromContentWindow(aElement);
-    if (browser)
-      browser.focus();
-  }
-  else {
-    aElement.focus();
-  }
-}
-
 // openUILink handles clicks on UI elements that cause URLs to load.
 function openUILink( url, e, ignoreButton, ignoreAlt, allowKeywordFixup, postData, referrerUrl )
 {
@@ -253,14 +237,10 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData, referrerUrl )
   // resulted in a new frontmost window (e.g. "javascript:window.open('');").
   var fm = Components.classes["@mozilla.org/focus-manager;1"].
              getService(Components.interfaces.nsIFocusManager);
-  if (window == fm.activeWindow) {
+  if (window == fm.activeWindow)
     w.content.focus();
-  }
-  else {
-    let browser = w.getBrowserFromContentWindow(w.content);
-    if (browser)
-      browser.focus();
-  }
+  else
+    w.gBrowser.selectedBrowser.focus();
 }
 
 // Used as an onclick handler for UI elements with link-like behavior.
@@ -549,16 +529,6 @@ function makeURLAbsolute(aBase, aUrl)
 {
   // Note:  makeURI() will throw if aUri is not a valid URI
   return makeURI(aUrl, null, makeURI(aBase)).spec;
-}
-
-function getBrowserFromContentWindow(aContentWindow)
-{
-  var browsers = gBrowser.browsers;
-  for (var i = 0; i < browsers.length; i++) {
-    if (browsers[i].contentWindow == aContentWindow)
-      return browsers[i];
-  }
-  return null;
 }
 
 

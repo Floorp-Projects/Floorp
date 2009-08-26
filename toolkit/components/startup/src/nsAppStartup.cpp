@@ -162,17 +162,6 @@ nsAppStartup::DestroyHiddenWindow()
   return appShellService->DestroyHiddenWindow();
 }
 
-PRInt32
-nsAppStartup::RealQuitStoppers()
-{
-#ifdef XP_MACOSX
-  // When attempting quit is set we must subtract the hidden window
-  return mConsiderQuitStopper - (mAttemptingQuit ? 0 : 1);
-#else
-  return mConsiderQuitStopper;
-#endif
-}
-
 NS_IMETHODIMP
 nsAppStartup::Run(void)
 {
@@ -250,10 +239,16 @@ nsAppStartup::Quit(PRUint32 aMode)
   if (ferocity == eAttemptQuit || ferocity == eForceQuit) {
 
     obsService = do_GetService("@mozilla.org/observer-service;1");
-    if (obsService)
-      obsService->NotifyObservers(nsnull, "quit-application-granted", nsnull);
 
-    AttemptingQuit(PR_TRUE);
+    if (!mAttemptingQuit) {
+      mAttemptingQuit = PR_TRUE;
+#ifdef XP_MACOSX
+      // now even the Mac wants to quit when the last window is closed
+      ExitLastWindowClosingSurvivalArea();
+#endif
+      if (obsService)
+        obsService->NotifyObservers(nsnull, "quit-application-granted", nsnull);
+    }
 
     /* Enumerate through each open window and close it. It's important to do
        this before we forcequit because this can control whether we really quit
@@ -337,27 +332,6 @@ nsAppStartup::Quit(PRUint32 aMode)
 }
 
 
-/* We know we're trying to quit the app, but may not be able to do so
-   immediately. Enter a state where we're more ready to quit.
-   (Does useful work only on the Mac.) */
-void
-nsAppStartup::AttemptingQuit(PRBool aAttempt)
-{
-#ifdef XP_MACOSX
-  if (aAttempt) {
-    // now even the Mac wants to quit when the last window is closed
-    if (!mAttemptingQuit)
-      ExitLastWindowClosingSurvivalArea();
-  } else {
-    // changed our mind. back to normal.
-    if (mAttemptingQuit)
-      EnterLastWindowClosingSurvivalArea();
-  }
-#endif
-
-  mAttemptingQuit = aAttempt;
-}
-
 void
 nsAppStartup::CloseAllWindows()
 {
@@ -379,23 +353,8 @@ nsAppStartup::CloseAllWindows()
 
     nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(isupports);
     NS_ASSERTION(window, "not an nsIDOMWindowInternal");
-    if (window) {
-#ifdef XP_MACOSX
-      PRInt32 quitStoppers = RealQuitStoppers();
-#endif
+    if (window)
       window->Close();
-#ifdef XP_MACOSX
-      if (!mAttemptingQuit) {
-        PRInt32 currentQuitStoppers = RealQuitStoppers();
-        // If the current number of windows is smaller or same then the number
-        // recorded before window close, we must re-attempt quit. 
-        // 'Or same' condition is here because the actual window deregisters
-        // later asynchronously.
-        if (currentQuitStoppers <= quitStoppers)
-          AttemptingQuit(PR_TRUE);
-      }
-#endif
-    }
   }
 }
 
@@ -413,13 +372,8 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
   NS_ASSERTION(mConsiderQuitStopper > 0, "consider quit stopper out of bounds");
   --mConsiderQuitStopper;
 
-#ifdef XP_MACOSX
-  if (!mShuttingDown && mRunning && (mConsiderQuitStopper <= 1))
+  if (mRunning)
     Quit(eConsiderQuit);
-#else
-  if (!mShuttingDown && mRunning && (mConsiderQuitStopper == 0))
-    Quit(eConsiderQuit);
-#endif
 
   return NS_OK;
 }
@@ -465,6 +419,10 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
   NS_ENSURE_ARG_POINTER(_retval);
   *aCancel = PR_FALSE;
   *_retval = 0;
+
+  // Non-modal windows cannot be opened if we are attempting to quit
+  if (mAttemptingQuit && (aChromeFlags & nsIWebBrowserChrome::CHROME_MODAL) == 0)
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
 
   nsCOMPtr<nsIXULWindow> newWindow;
 
@@ -525,7 +483,6 @@ nsAppStartup::Observe(nsISupports *aSubject,
     }
   } else if (!strcmp(aTopic, "xul-window-registered")) {
     EnterLastWindowClosingSurvivalArea();
-    AttemptingQuit(PR_FALSE);
   } else if (!strcmp(aTopic, "xul-window-destroyed")) {
     ExitLastWindowClosingSurvivalArea();
   } else {

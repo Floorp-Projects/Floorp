@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><title>Handling of un-terminated long tokens in CSS</title>
+
+<style>#ax,#bx,#cx,#dx{display:none}</style>
+
+<style>#ad{color:/*}#ao{display:none}#ax{display:inline}</style>
+
+<style>#bd{background:url("xxx"}#bo{display:none}#bx{display:inline}</style>
+
+<style>#cd{background:url('xxx'}#co{display:none}#cx{display:inline}</style>
+
+<style>#dd{background:url(xxx}#do{display:none}#dx{display:inline}</style>
+
+</head><body>
+
+<div>This CSS parser <span id="ao">does not</span>
+  backtrack<span id="ax">s</span> for unterminated comments.</div>
+
+<div>It <span id="bo">does not</span>
+  backtrack<span id="bx">s</span> for unterminated double-quoted url().</div>
+
+<div>It <span id="co">does not</span>
+  backtrack<span id="cx">s</span> for unterminated single-quoted url().</div>
+
+<div>It <span id="do">does not</span>
+  backtrack<span id="dx">s</span> for unterminated unquoted url().</div>
+
+</body></html>
+

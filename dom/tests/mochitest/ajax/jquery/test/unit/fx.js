@@ -77,7 +77,8 @@ test("stop()", function() {
 });
 
 test("stop() - several in queue", function() {
-	expect(4);
+// Merge from jquery test 1.3.2
+	expect(3);
 	stop();
 
 	var $foo = $("#nothiddendiv");
@@ -95,7 +96,8 @@ test("stop() - several in queue", function() {
 
 		nw = $foo.width();
 		ok( nw != w, "Stop didn't reset the animation " + nw + "px " + w + "px");
-		equals( $foo.queue().length, 2, "The next animation continued" );
+    // Merged from 1.3.2, commented out for being flaky in 1.3.2 test suite
+		//equals( $foo.queue().length, 2, "The next animation continued" );
 		$foo.stop(true);
 		start();
 	}, 100);
@@ -129,7 +131,8 @@ test("stop(clearQueue)", function() {
 });
 
 test("stop(clearQueue, gotoEnd)", function() {
-	expect(3);
+  // Merge from 1.3.2 - this test marked as being flaky
+	expect(1);
 	stop();
 
 	var $foo = $("#nothiddendiv");
@@ -146,10 +149,12 @@ test("stop(clearQueue, gotoEnd)", function() {
 		$foo.stop(false, true);
 
 		nw = $foo.width();
-		equals( nw, 200, "Stop() reset the animation" );
+		// Merge from 1.3.2 - marked as flaky in that release
+		//equals( nw, 200, "Stop() reset the animation" );
 
 		setTimeout(function(){
-			equals( $foo.queue().length, 3, "The next animation continued" );
+		  // Merge from 1.3.2 - marked as flaky in that release
+			//equals( $foo.queue().length, 3, "The next animation continued" );
 			$foo.stop(true);
 			start();
 		}, 100);

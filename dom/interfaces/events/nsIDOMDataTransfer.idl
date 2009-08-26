@@ -38,8 +38,9 @@
 #include "domstubs.idl"
 
 interface nsIVariant;
+interface nsIDOMFileList;
 
-[scriptable, uuid(E4970BA1-9567-455C-8B4E-4607D7E741BB)]
+[scriptable, uuid(34042440-60A8-4992-AE5C-798E69148955)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**
@@ -89,6 +90,13 @@ interface nsIDOMDataTransfer : nsISupports
    * Assigning any other value has no effect and retains the old value.
    */
   attribute DOMString effectAllowed;
+
+  /**
+   * Holds a list of all the local files available on this data transfer.
+   * A dataTransfer containing no files will return an empty list, and an
+   * invalid index access on the resulting file list will return null. 
+   */
+  readonly attribute nsIDOMFileList files;
 
   /**
    * Holds a list of the format types of the data that is stored for the first

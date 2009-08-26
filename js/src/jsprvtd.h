@@ -127,7 +127,6 @@ typedef struct JSScope              JSScope;
 typedef struct JSScopeOps           JSScopeOps;
 typedef struct JSScopeProperty      JSScopeProperty;
 typedef struct JSStackHeader        JSStackHeader;
-typedef struct JSStringBuffer       JSStringBuffer;
 typedef struct JSSubString          JSSubString;
 typedef struct JSTraceableNative    JSTraceableNative;
 typedef struct JSXML                JSXML;
@@ -137,14 +136,17 @@ typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 /*
  * Template declarations.
  *
- * jsprvtd.h can be included in both C and C++ translation units.  For C++, it
+ * jsprvtd.h can be included in both C and C++ translation units. For C++, it
  * may possibly be wrapped in an extern "C" block which does not agree with
  * templates.
  */
 #ifdef __cplusplus
 extern "C++" {
 
-template <class T> class JSTempVector;
+template <class T, size_t MinInlineCapacity = 0> class JSTempVector;
+
+/* Common JSTempVector instantiations: */
+typedef JSTempVector<jschar, 32> JSCharBuffer;
 
 }
 #endif  /* __cplusplus */
@@ -377,5 +379,13 @@ typedef JSBool
 #else
 extern JSBool js_CStringsAreUTF8;
 #endif
+
+/*
+ * Maximum supported value of Arguments.length. It bounds the maximum number
+ * of arguments that can be supplied to the function call using
+ * Function.prototype.apply. This value also gives the maximum number of
+ * elements in the array initializer.
+ */
+#define JS_ARGS_LENGTH_MAX      (JS_BIT(24) - 1)
 
 #endif /* jsprvtd_h___ */

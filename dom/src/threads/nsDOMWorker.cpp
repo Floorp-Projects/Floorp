@@ -58,6 +58,7 @@
 
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerEvents.h"
+#include "nsDOMWorkerLocation.h"
 #include "nsDOMWorkerNavigator.h"
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerScriptLoader.h"
@@ -309,24 +310,17 @@ nsDOMWorkerFunctions::NewXMLHttpRequest(JSContext* aCx,
     return JS_FALSE;
   }
 
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-
   nsCOMPtr<nsIXPConnectJSObjectHolder> xhrWrapped;
-  rv = xpc->WrapNative(aCx, aObj, static_cast<nsIXMLHttpRequest*>(xhr),
-                       NS_GET_IID(nsISupports), getter_AddRefs(xhrWrapped));
+  jsval v;
+  rv = nsContentUtils::WrapNative(aCx, aObj,
+                                  static_cast<nsIXMLHttpRequest*>(xhr), &v,
+                                  getter_AddRefs(xhrWrapped));
   if (NS_FAILED(rv)) {
     JS_ReportError(aCx, "Failed to wrap XMLHttpRequest!");
     return JS_FALSE;
   }
 
-  JSObject* xhrJSObj;
-  rv = xhrWrapped->GetJSObject(&xhrJSObj);
-  if (NS_FAILED(rv)) {
-    JS_ReportError(aCx, "Failed to get JSObject from wrapper!");
-    return JS_FALSE;
-  }
-
-  *aRval = OBJECT_TO_JSVAL(xhrJSObj);
+  *aRval = v;
   return JS_TRUE;
 }
 
@@ -376,24 +370,16 @@ nsDOMWorkerFunctions::NewWorker(JSContext* aCx,
     return JS_FALSE;
   }
 
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-
   nsCOMPtr<nsIXPConnectJSObjectHolder> workerWrapped;
-  rv = xpc->WrapNative(aCx, aObj, static_cast<nsIWorker*>(newWorker),
-                       NS_GET_IID(nsISupports), getter_AddRefs(workerWrapped));
+  jsval v;
+  rv = nsContentUtils::WrapNative(aCx, aObj, static_cast<nsIWorker*>(newWorker),
+                                  &v, getter_AddRefs(workerWrapped));
   if (NS_FAILED(rv)) {
     JS_ReportError(aCx, "Failed to wrap new worker!");
     return JS_FALSE;
   }
 
-  JSObject* workerJSObj;
-  rv = workerWrapped->GetJSObject(&workerJSObj);
-  if (NS_FAILED(rv)) {
-    JS_ReportError(aCx, "Failed to get JSObject from wrapper!");
-    return JS_FALSE;
-  }
-
-  *aRval = OBJECT_TO_JSVAL(workerJSObj);
+  *aRval = v;
   return JS_TRUE;
 }
 
@@ -695,6 +681,18 @@ nsDOMWorkerScope::GetNavigator(nsIWorkerNavigator** _retval)
   }
 
   NS_ADDREF(*_retval = mNavigator);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerScope::GetLocation(nsIWorkerLocation** _retval)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIWorkerLocation> location = mWorker->GetLocation();
+  NS_ASSERTION(location, "This should never be null!");
+
+  location.forget(_retval);
   return NS_OK;
 }
 
@@ -1201,12 +1199,11 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
 
   NS_ASSERTION(!mGlobal, "Already got a global?!");
 
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-
   nsCOMPtr<nsIXPConnectJSObjectHolder> thisWrapped;
-  nsresult rv = xpc->WrapNative(aCx, aObj, static_cast<nsIWorker*>(this),
-                                NS_GET_IID(nsISupports),
-                                getter_AddRefs(thisWrapped));
+  jsval v;
+  nsresult rv = nsContentUtils::WrapNative(aCx, aObj,
+                                           static_cast<nsIWorker*>(this), &v,
+                                           getter_AddRefs(thisWrapped));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(mWrappedNative, "Post-create hook should have set this!");
@@ -1742,6 +1739,24 @@ nsDOMWorker::ResumeFeatures()
   for (PRUint32 i = 0; i < count; i++) {
     features[i]->Resume();
   }
+}
+
+nsresult
+nsDOMWorker::SetURI(nsIURI* aURI)
+{
+  NS_ASSERTION(aURI, "Don't hand me a null pointer!");
+  NS_ASSERTION(!mURI && !mLocation, "Called more than once?!");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  mURI = aURI;
+
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+  NS_ENSURE_TRUE(url, NS_ERROR_NO_INTERFACE);
+
+  mLocation = nsDOMWorkerLocation::NewLocation(url);
+  NS_ENSURE_TRUE(mLocation, NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
 nsresult

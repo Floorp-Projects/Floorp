@@ -48,7 +48,6 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
-#include "nsILocaleService.h"
 #include "nsIComponentManager.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIStreamListener.h"

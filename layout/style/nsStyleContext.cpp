@@ -43,18 +43,13 @@
 #include "nsString.h"
 #include "nsPresContext.h"
 #include "nsIStyleRule.h"
-#include "nsCRT.h"
 
 #include "nsCOMPtr.h"
 #include "nsStyleSet.h"
 #include "nsIPresShell.h"
-#include "prenv.h"
 
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
-#include "imgIRequest.h"
-
-#include "nsPrintfCString.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -308,6 +303,9 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
     }
   }
   char* dataSlot = resetOrInherit + info.mInheritResetOffset;
+  NS_ASSERTION(!*reinterpret_cast<void**>(dataSlot) ||
+               (mBits & nsCachedStyleData::GetBitForSID(aSID)),
+               "Going to leak style data");
   *reinterpret_cast<void**>(dataSlot) = aStruct;
 }
 
@@ -324,6 +322,10 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
     if (text->mTextDecoration != NS_STYLE_TEXT_DECORATION_NONE &&
         text->mTextDecoration != NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL)
       mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
+  }
+
+  if ((mParent && mParent->HasPseudoElementData()) || mPseudoTag) {
+    mBits |= NS_STYLE_HAS_PSEUDO_ELEMENT_DATA;
   }
 
   // Correct tables.

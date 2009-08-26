@@ -64,7 +64,9 @@
 #if defined(WINCE_HAVE_SOFTKB)
 PRBool          nsWindow::sSoftKeyMenuBar         = PR_FALSE;
 PRBool          nsWindow::sSoftKeyboardState      = PR_FALSE;
+PRBool          nsWindowCE::sSIPInTransition      = PR_FALSE;
 TriStateBool    nsWindowCE::sShowSIPButton        = TRI_UNKNOWN;
+TriStateBool    nsWindowCE::sHardKBPresence       = TRI_UNKNOWN;
 #endif
 
 /**************************************************************
@@ -78,28 +80,42 @@ TriStateBool    nsWindowCE::sShowSIPButton        = TRI_UNKNOWN;
  **************************************************************/
 
 #ifdef WINCE_HAVE_SOFTKB
-void nsWindowCE::NotifySoftKbObservers()
+void nsWindowCE::NotifySoftKbObservers(LPRECT visRect)
 {
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
-  if (observerService) {
+  if (!visRect) {
     SIPINFO sipInfo;
-    wchar_t rectBuf[256];
     memset(&sipInfo, 0, sizeof(SIPINFO));
     sipInfo.cbSize = sizeof(SIPINFO);
-    if (SipGetInfo(&sipInfo)) {
-      _snwprintf(rectBuf, 256, L"{\"left\": %d, \"top\": %d,"
-                 L" \"right\": %d, \"bottom\": %d}", 
-                 sipInfo.rcVisibleDesktop.left, 
-                 sipInfo.rcVisibleDesktop.top, 
-                 sipInfo.rcVisibleDesktop.right, 
-                 sipInfo.rcVisibleDesktop.bottom);
-      observerService->NotifyObservers(nsnull, "softkb-change", rectBuf);
-    }
+    if (SipGetInfo(&sipInfo)) 
+      visRect = &(sipInfo.rcVisibleDesktop);
+    else
+      return;
+  }
+  
+  
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    wchar_t rectBuf[256];
+    _snwprintf(rectBuf, 256, L"{\"left\": %d, \"top\": %d,"
+               L" \"right\": %d, \"bottom\": %d}", 
+               visRect->left, visRect->top, visRect->right, visRect->bottom);
+    observerService->NotifyObservers(nsnull, "softkb-change", rectBuf);
   }
 }
 
 void nsWindowCE::ToggleSoftKB(PRBool show)
 {
+  if (sHardKBPresence == TRI_UNKNOWN)
+    CheckKeyboardStatus();
+
+  if (sHardKBPresence == TRI_TRUE) {
+    if (GetSliderStateOpen() != TRI_FALSE) {
+      show = PR_FALSE;
+      sShowSIPButton = TRI_FALSE;
+    }
+  }
+
+  sSIPInTransition = PR_TRUE;
   HWND hWndSIP = FindWindowW(L"SipWndClass", NULL );
   if (hWndSIP)
     ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
@@ -131,10 +147,29 @@ void nsWindowCE::ToggleSoftKB(PRBool show)
     GetWindowRect(hWndSIP, &sipRect);
     int sipH = sipRect.bottom - sipRect.top;
     int sipW = sipRect.right - sipRect.left;
-    MoveWindow(hWndSIP, (sX - sipW)/2, sY - sipH, sX, sY, TRUE);
-  } 
-
-  NotifySoftKbObservers();
+    sipRect.left = (sX - sipW)/2;
+    sipRect.top =  sY - sipH;
+    sipRect.bottom = sY;
+    sipRect.right = sipRect.left + sipW;
+    MoveWindow(hWndSIP, (sX - sipW)/2, sY - sipH, sipW, sipH, TRUE);
+    SIPINFO sipInfo;
+    RECT visRect;
+    visRect.top = 0;
+    visRect.left = 0;
+    visRect.bottom = show ? sipRect.top : sY;
+    visRect.right = sX;
+    sipInfo.cbSize = sizeof(SIPINFO);
+    sipInfo.fdwFlags = SIPF_DOCKED | SIPF_LOCKED | (show ? SIPF_ON : SIPF_OFF);
+    sipInfo.rcSipRect = sipRect;
+    sipInfo.rcVisibleDesktop = visRect;
+    sipInfo.dwImDataSize = 0;
+    sipInfo.pvImData = NULL;
+    SipSetInfo(&sipInfo);
+    NotifySoftKbObservers(&visRect);
+  } else {
+    NotifySoftKbObservers();
+  }
+  sSIPInTransition = PR_FALSE;
 }
 
 void nsWindowCE::CreateSoftKeyMenuBar(HWND wnd)
@@ -178,6 +213,78 @@ void nsWindowCE::CreateSoftKeyMenuBar(HWND wnd)
   
   sSoftKeyMenuBar = mbi.hwndMB;
 }
+
+void nsWindowCE::CheckKeyboardStatus()
+{
+  HKEY  hKey = 0;
+  LONG  result = 0;
+  DWORD entryType = 0;
+  DWORD hwkbd = 0;
+  DWORD paramSize = sizeof(DWORD);
+ 
+  result = RegOpenKeyExW(HKEY_CURRENT_USER, 
+                           L"SOFTWARE\\Microsoft\\Shell", 
+                           0, 
+                           KEY_READ,
+                           &hKey); 
+
+  if (result != ERROR_SUCCESS)
+  {
+    sHardKBPresence = TRI_FALSE;
+    return;
+  }
+
+  result = RegQueryValueEx(hKey,
+                             L"HasKeyboard",
+                             NULL, 
+                             &entryType, 
+                             (LPBYTE)&hwkbd, 
+                             &paramSize);
+
+  if (result != ERROR_SUCCESS)
+  {
+    RegCloseKey(hKey);
+    sHardKBPresence = TRI_FALSE;
+    return;
+  }
+    
+  sHardKBPresence = hwkbd ? TRI_TRUE : TRI_FALSE;
+}
+
+TriStateBool nsWindowCE::GetSliderStateOpen()
+{
+
+  HKEY  hKey = 0;
+  LONG  result = 0;
+  DWORD entryType = 0;
+  DWORD sliderStateOpen = 0;
+  DWORD paramSize = sizeof(DWORD);
+
+  result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+                           L"System\\GDI\\Rotation", 
+                           0, 
+                           KEY_READ,
+                           &hKey); 
+
+  if (result != ERROR_SUCCESS)
+    return TRI_UNKNOWN;
+
+  result = RegQueryValueEx(hKey,
+                             L"Slidekey",
+                             NULL, 
+                             &entryType, 
+                             (LPBYTE)&sliderStateOpen, 
+                             &paramSize);
+
+  if (result != ERROR_SUCCESS)
+  {
+     RegCloseKey(hKey);
+     return TRI_UNKNOWN;
+  }
+    
+  return  sliderStateOpen ? TRI_TRUE : TRI_FALSE;
+}
+
 #endif  //defined(WINCE_HAVE_SOFTKB)
 
 typedef struct ECWWindows
@@ -268,7 +375,7 @@ DWORD nsWindow::WindowStyle()
       break;
 
     default:
-      NS_ASSERTION(0, "unknown border style");
+      NS_ERROR("unknown border style");
       // fall through
 
     case eWindowType_toplevel:
@@ -330,7 +437,12 @@ DWORD nsWindow::WindowStyle()
 // Maximize, minimize or restore the window.
 NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode)
 {
-
+#if defined(WINCE_HAVE_SOFTKB)
+  if (aMode == 0 && mSizeMode == 3  && nsWindowCE::sSIPInTransition) {
+      // ignore the size mode being set to normal by the SIP resizing us
+    return NS_OK;
+  }
+#endif
   nsresult rv;
 
   // Let's not try and do anything if we're already in that state.

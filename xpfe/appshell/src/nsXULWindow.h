@@ -104,7 +104,7 @@ protected:
      PAD_SIZE =         0x4
    };
 
-   nsXULWindow();
+   nsXULWindow(PRUint32 aChromeFlags);
    virtual ~nsXULWindow();
 
    NS_IMETHOD EnsureChromeTreeOwner();
@@ -119,14 +119,11 @@ protected:
    PRBool     LoadPositionFromXUL();
    PRBool     LoadSizeFromXUL();
    PRBool     LoadMiscPersistentAttributesFromXUL();
-   nsresult   LoadChromeHidingFromXUL();
-   NS_IMETHOD LoadWindowClassFromXUL();
-   NS_IMETHOD LoadIconFromXUL();
+   void       SyncAttributesToWidget();
    NS_IMETHOD SavePersistentAttributes();
 
    NS_IMETHOD GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow);
    NS_IMETHOD GetWindowDOMElement(nsIDOMElement** aDOMElement);
-   NS_IMETHOD GetDOMElementById(char* aID, nsIDOMElement** aDOMElement);
 
    // See nsIDocShellTreeOwner for docs on next two methods
    NS_HIDDEN_(nsresult) ContentShellAdded(nsIDocShellTreeItem* aContentShell,

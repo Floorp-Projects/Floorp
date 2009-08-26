@@ -21,12 +21,15 @@ pref("security.ssl3.rsa_1024_rc4_56_sha", false);
 pref("security.ssl3.rsa_1024_des_cbc_sha", false);
 pref("security.ssl3.rsa_rc4_40_md5", false);
 pref("security.ssl3.rsa_rc2_40_md5", false);
+// Camellia is broken on Windows CE for now, see bug 508113
+#ifndef WINCE
 pref("security.ssl3.dhe_rsa_camellia_256_sha", true);
 pref("security.ssl3.dhe_dss_camellia_256_sha", true);
 pref("security.ssl3.rsa_camellia_256_sha", true);
 pref("security.ssl3.dhe_rsa_camellia_128_sha", true);
 pref("security.ssl3.dhe_dss_camellia_128_sha", true);
 pref("security.ssl3.rsa_camellia_128_sha", true);
+#endif
 pref("security.ssl3.dhe_rsa_aes_256_sha", true);
 pref("security.ssl3.dhe_dss_aes_256_sha", true);
 pref("security.ssl3.rsa_aes_256_sha", true);
@@ -59,6 +62,7 @@ pref("security.ssl3.dhe_rsa_des_sha", false);
 pref("security.ssl3.dhe_dss_des_sha", false);
 pref("security.ssl3.rsa_null_sha", false);
 pref("security.ssl3.rsa_null_md5", false);
+pref("security.ssl3.rsa_seed_sha", true);
 
 pref("security.default_personal_cert",   "Ask Every Time");
 pref("security.remember_cert_checkbox_default_setting", true);

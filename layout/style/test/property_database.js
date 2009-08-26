@@ -625,7 +625,7 @@ var gCSSProperties = {
 		initial_values: [ "transparent", "none", "repeat", "scroll", "0% 0%", "top left", "left top", "transparent none", "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "transparent none repeat scroll top left", "left top repeat none scroll transparent" ],
 		other_values: [
 		        /* without multiple backgrounds */
-		        "green", "none green repeat scroll left top", "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "repeat url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==') transparent left top scroll", "repeat-x", "repeat-y", "no-repeat", "none repeat-y transparent scroll 0% 0%", "fixed", "0% top transparent fixed repeat none", "top", "left", "50% 50%", "center", "bottom right scroll none transparent repeat", "50% transparent", "transparent 50%", "50%",
+		        "green", "none green repeat scroll left top", "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "repeat url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==') transparent left top scroll", "repeat-x", "repeat-y", "no-repeat", "none repeat-y transparent scroll 0% 0%", "fixed", "0% top transparent fixed repeat none", "top", "left", "50% 50%", "center", "bottom right scroll none transparent repeat", "50% transparent", "transparent 50%", "50%", "-moz-radial-gradient(10% bottom, 30px, 20px 20px, 10px, from(#ffffff), to(black)) scroll no-repeat", "-moz-linear-gradient(10px 10px, 20px 20px, from(red), to(blue)) repeat",
 		        /* multiple backgrounds */
 		        "url(404.png), url(404.png)",
 		        "url(404.png), url(404.png) transparent",
@@ -633,6 +633,7 @@ var gCSSProperties = {
 		        "repeat-x, fixed, none",
 		        "0% top url(404.png), url(404.png) 0% top",
 		        "fixed repeat-y top left url(404.png), repeat-x green",
+		        "url(404.png), -moz-linear-gradient(20px 20px, 30px 30px, from(blue), to(green)) black",
 		        /* test cases with clip+origin in the shorthand */
     // This is commented out for now until we change
     // -moz-background-clip to background-clip, -moz-background-origin
@@ -688,9 +689,30 @@ var gCSSProperties = {
 			"none, none, none, none, none",
 			"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
 			"none, url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), none",
-			"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)"
+			"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
+
+            "-moz-radial-gradient(45px 60px, 10px, 52px 50px, 30px, from(red), color-stop(90%, #019f62), to(rgba(1, 159, 98, 0)))",
+            "-moz-linear-gradient(20% center, left bottom, color-stop(0, #ffff00), to(green))",
+            "-moz-radial-gradient(50% 50%, 60px, 10% 20%, 20px, to(red), from(pink), color-stop(0.94, goldenrod))",
+            "-moz-linear-gradient(20px 10px, 100px top, from(rgb(10, 100, 0)), color-stop(1, rgba(10, 20, 30, 0.4)))",
+            "-moz-radial-gradient(center top, 10px, right bottom, 20px, color-stop(0.7, green), color-stop(20%, #ccddee), from(rgb(1, 2, 3)), color-stop(0.95, #aa0012))",
+            "-moz-linear-gradient(10px 20%, -50px -10%, from(green))",
+            "-moz-linear-gradient(10px 10px, 20px 20px)",
+            "-moz-linear-gradient(10px 10px, 20px 20px, color-stop(314%, blue))",
+            "-moz-linear-gradient(10px 10px, 20px 20px, color-stop(-0.2, green))",
+            "-moz-linear-gradient( 10px  10px  , 40px 20px ,  from(blue)  )"
 		],
-		invalid_values: []
+		invalid_values: [ "-moz-linear-gradient(10px 10px, 20px, 30px 30px, 40px, from(blue), to(red))",
+                          "-moz-radial-gradient(20px 20px, 10px 10px, from(green), to(#ff00ff))",
+                          "-moz-radial-gradient(10px 10px, 20%, 40px 40px, 10px, from(green), to(#ff00ff))",
+                          "-moz-linear-gradient(10px, 20px, 30px, 40px, color-stop(0.5, #00ccff))",
+                          "-moz-linear-gradient(20px 20px, from(blue), to(red))",
+                          "-moz-linear-gradient(40px 40px, 10px 10px, from(blue) to(red) color-stop(10%, fuchsia))",
+                          "-moz-linear-gradient(20px 20px 30px, 10px 10px, from(red), to(#ff0000))",
+                          "-moz-radial-gradient(left top, center, 20px 20px, 10px, from(blue), to(red))",
+                          "-moz-linear-gradient(left left, top top, from(blue))",
+                          "-moz-linear-gradient(inherit, 10px 10px, from(blue))",
+                          "-moz-linear-gradient()" ]
 	},
 	"background-position": {
 		domProp: "backgroundPosition",
@@ -1710,6 +1732,47 @@ var gCSSProperties = {
 		initial_values: [ "auto" ],
 		other_values: [ "32px", "-3em", "12%" ],
 		invalid_values: []
+	},
+	"-moz-transition": {
+		domProp: "MozTransition",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [ "-moz-transition-property", "-moz-transition-duration", "-moz-transition-timing-function", "-moz-transition-delay" ],
+		initial_values: [ "all 0s ease 0s" ],
+		other_values: [ "width 1s linear 2s", "width 1s 2s linear", "width linear 1s 2s", "linear width 1s 2s", "linear 1s width 2s", "linear 1s 2s width", "1s width linear 2s", "1s width 2s linear", "1s 2s width linear", "1s linear width 2s", "1s linear 2s width", "1s 2s linear width", "width linear 1s", "width 1s linear", "linear width 1s", "linear 1s width", "1s width linear", "1s linear width", "1s 2s width", "1s width 2s", "width 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "width 1s", "1s width", "linear 1s", "1s linear", "1s 2s", "2s 1s", "width", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s width, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)" ],
+		invalid_values: [ "2s, 1s width", "1s width, 2s", "2s all, 1s width", "1s width, 2s all", "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "2s all, 1s width", "2s width, 1s all" ]
+	},
+	"-moz-transition-delay": {
+		domProp: "MozTransitionDelay",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0", "0s", "0ms" ],
+		other_values: [ "1s", "250ms", "-100ms", "-1s", "1s, 250ms, 2.3s"],
+		invalid_values: []
+	},
+	"-moz-transition-duration": {
+		domProp: "MozTransitionDuration",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0", "0s", "0ms" ],
+		other_values: [ "1s", "250ms", "-1ms", "-2s", "1s, 250ms, 2.3s"],
+		invalid_values: []
+	},
+	"-moz-transition-property": {
+		domProp: "MozTransitionProperty",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "all" ],
+		other_values: [ "none", "left", "top", "color", "width, height, opacity", "foobar", "auto" ],
+		invalid_values: [ "none, none", "all, all", "color, none", "none, color", "all, color", "color, all", "inherit, color", "color, inherit", "initial, color", "color, initial", "none, color", "color, none", "all, color", "color, all" ]
+	},
+	"-moz-transition-timing-function": {
+		domProp: "MozTransitionTimingFunction",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "ease", "cubic-bezier(0.25, 0.1, 0.25, 1.0)" ],
+		other_values: [ "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)" ],
+		invalid_values: [ "none", "auto" ]
 	},
 	"unicode-bidi": {
 		domProp: "unicodeBidi",

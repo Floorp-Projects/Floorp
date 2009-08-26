@@ -123,6 +123,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMDOMStringList.h"
+#include "nsIDOMDOMTokenList.h"
 #include "nsIDOMNameList.h"
 #include "nsIDOMNSElement.h"
 
@@ -319,6 +320,7 @@
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsDOMCSSValueList.h"
+#include "nsIDOMOrientationEvent.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMRangeException.h"
@@ -512,7 +514,6 @@ static const char kDOMStringBundleURL[] =
   (NODE_SCRIPTABLE_FLAGS |                                                    \
    nsIXPCScriptable::WANT_POSTCREATE |                                        \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
-   nsIXPCScriptable::WANT_DELPROPERTY |                                       \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_ENUMERATE)
 
@@ -622,6 +623,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(DOMTokenList, nsDOMTokenListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DocumentFragment, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Element, nsElementSH,
@@ -658,6 +661,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(KeyboardEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(PopupBlockedEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(OrientationEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // Misc HTML classes
@@ -1448,8 +1453,6 @@ jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
 static const JSClass *sObjectClass = nsnull;
 const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
 
-static PRBool sDoSecurityCheckInAddProperty = PR_TRUE;
-
 /**
  * Set our JSClass pointer for the Object class
  */
@@ -1643,27 +1646,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sPackages_id,        cx, "Packages");
 
   return NS_OK;
-}
-
-// static
-nsresult
-nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
-                           const nsIID* aIID, PRBool aAllowWrapping, jsval *vp,
-                           nsIXPConnectJSObjectHolder **aHolder)
-{
-  if (!native) {
-    NS_ASSERTION(!aHolder || !*aHolder, "*aHolder should be null!");
-
-    *vp = JSVAL_NULL;
-
-    return NS_OK;
-  }
-
-  NS_ENSURE_TRUE(sXPConnect, NS_ERROR_UNEXPECTED);
-
-  return sXPConnect->WrapNativeToJSVal(cx, ::JS_GetGlobalForObject(cx, scope),
-                                       native, aIID, aAllowWrapping, vp,
-                                       aHolder);
 }
 
 static nsresult
@@ -2065,6 +2047,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(DOMTokenList, nsIDOMDOMTokenList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMTokenList)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(DocumentFragment, nsIDOMDocumentFragment)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentFragment)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
@@ -2131,6 +2117,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(PopupBlockedEvent, nsIDOMPopupBlockedEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopupBlockedEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(OrientationEvent, nsIDOMOrientationEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMOrientationEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -3667,10 +3658,7 @@ nsDOMClassInfo::Init()
     RegisterClassProtos(i);
   }
 
-  PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-  sDoSecurityCheckInAddProperty = PR_FALSE;
   RegisterExternalClasses();
-  sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
   sDisableDocumentAllSupport =
     nsContentUtils::GetBoolPref("browser.dom.document.all.disabled");
@@ -4228,7 +4216,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
 
   // Don't overwrite a property set by content.
   JSBool found;
-  if (!::JS_AlreadyHasOwnUCProperty(cx, global, mData->mNameUTF16,
+  if (!::JS_AlreadyHasOwnUCProperty(cx, global, reinterpret_cast<const jschar*>(mData->mNameUTF16),
                                     nsCRT::strlen(mData->mNameUTF16), &found)) {
     return NS_ERROR_FAILURE;
   }
@@ -4955,19 +4943,6 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  // If we're in a state where we're not supposed to do a security
-  // check, return early.
-  if (!sDoSecurityCheckInAddProperty) {
-    return NS_OK;
-  }
-
-  if (id == sLocation_id) {
-    // Don't allow adding a window.location setter or getter, allowing
-    // that could lead to security bugs (see bug 143369).
-
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   return nsEventReceiverSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
@@ -5013,13 +4988,6 @@ nsWindowSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       return NS_OK;
     }
-  }
-
-  if (id == sLocation_id) {
-    // Don't allow deleting window.location, allowing that could lead
-    // to security bugs (see bug 143369).
-
-    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   // Notify any XOWs on our outer window.
@@ -5190,9 +5158,17 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
         break;
       }
       case nsXPTType::T_I32:
+      {
+        if (!JS_NewNumberValue(cx, c->GetValue()->val.i32, &v)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        break;
+      }
       case nsXPTType::T_U32:
       {
-        v = INT_TO_JSVAL(c->GetValue()->val.u32);
+        if (!JS_NewNumberValue(cx, c->GetValue()->val.u32, &v)) {
+          return NS_ERROR_UNEXPECTED;
+        }
         break;
       }
       default:
@@ -5314,16 +5290,12 @@ public:
 
   nsresult Install(JSContext *cx, JSObject *target, jsval thisAsVal)
   {
-    PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-    sDoSecurityCheckInAddProperty = PR_FALSE;
-
     JSBool ok =
       ::JS_DefineUCProperty(cx, target,
                             reinterpret_cast<const jschar *>(mClassName),
                             nsCRT::strlen(mClassName), thisAsVal, nsnull,
                             nsnull, JSPROP_PERMANENT);
 
-    sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
     return ok ? NS_OK : NS_ERROR_UNEXPECTED;
   }
 
@@ -5686,18 +5658,12 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
                                          getter_AddRefs(constructor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-  sDoSecurityCheckInAddProperty = PR_FALSE;
-
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
   jsval v;
 
   rv = nsDOMClassInfo::WrapNative(cx, obj, constructor,
                                   &NS_GET_IID(nsIDOMDOMConstructor),
                                   PR_FALSE, &v, getter_AddRefs(holder));
-
-  sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
-
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (install) {
@@ -5879,17 +5845,10 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
                                   getter_AddRefs(constructor));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-    sDoSecurityCheckInAddProperty = PR_FALSE;
-
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     jsval v;
-
     rv = WrapNative(cx, obj, constructor, &NS_GET_IID(nsIDOMDOMConstructor),
                     PR_FALSE, &v, getter_AddRefs(holder));
-
-    sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
-
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = constructor->Install(cx, obj, v);
@@ -6042,15 +6001,11 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-    sDoSecurityCheckInAddProperty = PR_FALSE;
-
     JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                       ::JS_GetStringLength(str),
                                       prop_val, nsnull, nsnull,
                                       JSPROP_ENUMERATE);
 
-    sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
     *did_resolve = PR_TRUE;
 
     return ok ? NS_OK : NS_ERROR_FAILURE;
@@ -6181,13 +6136,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // A numeric property accessed and the numeric property is a
         // child frame. Define a property for this index.
 
-        PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-        sDoSecurityCheckInAddProperty = PR_FALSE;
-
         *_retval = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID,
                                       nsnull, nsnull, 0);
-
-        sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
         if (*_retval) {
           *objp = obj;
@@ -6228,20 +6178,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       JSObject *realObj;
       wrapper->GetJSObject(&realObj);
 
-      // Resolving a standard class won't do any evil, and it's possible
-      // for caps to get the answer wrong, so disable the security check
-      // for this case.
-    
-      PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-      sDoSecurityCheckInAddProperty = PR_FALSE;
-
       // Don't resolve standard classes on XPCNativeWrapper etc, only
       // resolve them if we're resolving on the real global object.
       ok = obj == realObj ?
            ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
            JS_TRUE;
-
-      sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
       if (!ok) {
         // Trust the JS engine (or the script security manager) to set
@@ -6341,18 +6282,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         }
 #endif
 
-        // Script is accessing a child frame and this access can
-        // potentially come from a context from a different domain.
-        // ::JS_DefineUCProperty() will call
-        // nsWindowSH::AddProperty(), and that method will do a
-        // security check and that security check will fail since
-        // other domains can't add properties to a global object in
-        // this domain. Set the sDoSecurityCheckInAddProperty flag to
-        // false (and set it to true immediagtely when we're done) to
-        // tell nsWindowSH::AddProperty() that defining this new
-        // property is 'ok' in this case, even if the call comes from
-        // a different context.
-
         JSAutoRequest ar(cx);
 
         PRBool ok = ::JS_DefineUCProperty(cx, obj, chars,
@@ -6451,8 +6380,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       wrapper->GetJSObject(&scope);
     }
 
-    jsval v;
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    jsval v;
     rv = WrapNative(cx, scope, location, &NS_GET_IID(nsIDOMLocation), PR_TRUE,
                     &v, getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -6466,16 +6395,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 #endif
 
-    PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-    sDoSecurityCheckInAddProperty = PR_FALSE;
-
     JSAutoRequest ar(cx);
 
     JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                       ::JS_GetStringLength(str), v, nsnull,
                                       nsnull, JSPROP_ENUMERATE);
-
-    sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
     if (!ok) {
       return NS_ERROR_FAILURE;
@@ -6572,9 +6496,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       JSAutoRequest ar(cx);
 
-      PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-      sDoSecurityCheckInAddProperty = PR_FALSE;
-
       jsval winVal = OBJECT_TO_JSVAL(win->GetGlobalJSObject());
       if (!win->IsChromeWindow()) {
         JSObject *scope;
@@ -6598,8 +6519,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                               winVal, JS_PropertyStub, JS_PropertyStub,
                               JSPROP_READONLY | JSPROP_ENUMERATE);
 
-      sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
-
       if (!ok) {
         return NS_ERROR_FAILURE;
       }
@@ -6614,16 +6533,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       if (!isResolvingJavaProperties) {
         isResolvingJavaProperties = PR_TRUE;
 
-        PRBool oldVal = sDoSecurityCheckInAddProperty;
-        sDoSecurityCheckInAddProperty = PR_FALSE;
-
         // Tell the window to initialize the Java properties. The
         // window needs to do this as we need to do this only once,
         // and detecting that reliably from here is hard.
 
         win->InitJavaProperties(); 
-
-        sDoSecurityCheckInAddProperty = oldVal;
 
         PRBool hasProp;
         PRBool ok = ::JS_HasProperty(cx, obj, ::JS_GetStringBytes(str),
@@ -7000,18 +6914,12 @@ nsNodeSH::DefineVoidProp(JSContext* cx, JSObject* obj, jsval id,
 
   JSString* str = JSVAL_TO_STRING(id);
 
-  // We might have a document here.
-  PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-  sDoSecurityCheckInAddProperty = PR_FALSE;
-
   // We want this to be as invisible to content script as possible.  So
   // don't enumerate this, and set is as JSPROP_SHARED so it won't get
   // cached on the object.
   JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                     ::JS_GetStringLength(str), JSVAL_VOID,
                                     nsnull, nsnull, JSPROP_SHARED);
-
-  sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
   if (!ok) {
     return NS_ERROR_FAILURE;
@@ -8017,6 +7925,19 @@ nsStringListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 }
 
 
+// DOMTokenList scriptable helper
+
+nsresult
+nsDOMTokenListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                              nsAString& aResult)
+{
+  nsCOMPtr<nsIDOMDOMTokenList> list(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
+
+  return list->Item(aIndex, aResult);
+}
+
+
 // Named Array helper
 
 NS_IMETHODIMP
@@ -8179,44 +8100,6 @@ nsContentListSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
   return list->GetNamedItem(aName, aResult);
 }
 
-// Document helper for document.location and document.on*
-
-NS_IMETHODIMP
-nsDocumentSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, jsval id, jsval *vp,
-                          PRBool *_retval)
-{
-  // If we're in a state where we're not supposed to do a security
-  // check, return early.
-  if (!sDoSecurityCheckInAddProperty) {
-    return NS_OK;
-  }
-
-  if (id == sLocation_id) {
-    // Don't allow adding a document.location setter or getter, allowing
-    // that could lead to security bugs (see bug 143369).
-
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, jsval id, jsval *vp,
-                          PRBool *_retval)
-{
-  if (id == sLocation_id) {
-    // Don't allow deleting document.location, allowing that could lead
-    // to security bugs (see bug 143369).
-
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, PRUint32 flags,
@@ -8225,10 +8108,8 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsresult rv;
 
   if (id == sLocation_id) {
-    // This must be done even if we're just getting the value of
-    // document.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
-    // here) since we must define document.location to prevent the
-    // getter from being overriden (for security reasons).
+    // Define the location property on the document object itself so
+    // that we can intercept getting and setting of document.location.
 
     nsCOMPtr<nsIDOMNSDocument> doc(do_QueryWrappedNative(wrapper, obj));
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
@@ -8244,17 +8125,12 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                     &v, getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-    sDoSecurityCheckInAddProperty = PR_FALSE;
-
     JSAutoRequest ar(cx);
 
     JSString *str = JSVAL_TO_STRING(id);
     JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                       ::JS_GetStringLength(str), v, nsnull,
                                       nsnull, JSPROP_ENUMERATE);
-
-    sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
     if (!ok) {
       return NS_ERROR_FAILURE;

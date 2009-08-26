@@ -53,12 +53,10 @@
 #include <string.h>
 #include <direct.h>
 
-// These are not defined by VC6.
-#ifndef CSIDL_LOCAL_APPDATA
-#define CSIDL_LOCAL_APPDATA             0x001C
-#endif
-#ifndef CSIDL_PROGRAM_FILES
-#define CSIDL_PROGRAM_FILES             0x0026
+#ifdef WINCE
+// CSIDL_LOCAL_APPDATA is not defined on WinCE:
+// fall back to CSIDL_APPDATA.
+#define CSIDL_LOCAL_APPDATA CSIDL_APPDATA
 #endif
 
 #elif defined(XP_OS2)

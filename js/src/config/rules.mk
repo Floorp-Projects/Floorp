@@ -179,7 +179,7 @@ check-interactive:
           -I$(topsrcdir)/build \
           $(testxpcsrcdir)/runxpcshelltests.py \
           --symbols-path=$(DIST)/crashreporter-symbols \
-          --test=$(SOLO_FILE) \
+          --test-path=$(SOLO_FILE) \
           --interactive \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
@@ -190,7 +190,7 @@ check-one:
           -I$(topsrcdir)/build \
           $(testxpcsrcdir)/runxpcshelltests.py \
           --symbols-path=$(DIST)/crashreporter-symbols \
-          --test=$(SOLO_FILE) \
+          --test-path=$(SOLO_FILE) \
           $(DIST)/bin/xpcshell \
           $(foreach dir,$(XPCSHELL_TESTS),$(testxpcobjdir)/$(MODULE)/$(dir))
 
@@ -833,6 +833,23 @@ LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(LIBS))
 HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))
 DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
+ifndef _LIBNAME_RELATIVE_PATHS
+
+LIBS_DEPS += $(filter -l%, $(LIBS))
+HOST_LIBS_DEPS += $(filter -l%, $(HOST_LIBS))
+DSO_LDOPTS_DEPS += $(filter -l%, $(EXTRA_DSO_LDOPTS))
+
+_LIBDIRS = $(patsubst -L%,%,$(filter -L%, $(LIBS) $(HOST_LIBS) $(EXTRA_DSO_LDOPTS)))
+ifneq (,$(_LIBDIRS))
+vpath $(LIB_PREFIX)%.$(LIB_SUFFIX) $(_LIBDIRS)
+ifdef IMPORT_LIB_SUFFIX
+vpath $(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX) $(_LIBDIRS)
+endif # IMPORT_LIB_SUFFIX
+vpath $(DLL_PREFIX)%$(DLL_SUFFIX) $(_LIBDIRS)
+endif # _LIBDIRS
+
+endif # _LIBNAME_RELATIVE_PATHS
+
 # Dependancies which, if modified, should cause everything to rebuild
 GLOBAL_DEPS += Makefile Makefile.in $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk
 
@@ -1017,7 +1034,11 @@ ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
-		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
+		if test -f "$(srcdir)/$@.manifest"; then \
+			mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" $@.manifest -OUTPUTRESOURCE:$@\;1; \
+		else \
+			mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
+		fi; \
 		rm -f $@.manifest; \
 	fi
 endif	# MSVC with manifest tool
@@ -1487,7 +1508,7 @@ else
 #  on it, then merge with the rest of the path.
 root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\1|")
 non-root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\2|")
-normalizepath = $(foreach p,$(1),$(if $(filter /%,$(1)),$(shell cd $(call root-path,$(1)) && pwd -W)$(call non-root-path,$(1)),$(1)))
+normalizepath = $(foreach p,$(1),$(if $(filter /%,$(1)),$(patsubst %/,%,$(shell cd $(call root-path,$(1)) && pwd -W))/$(call non-root-path,$(1)),$(1)))
 endif
 else
 normalizepath = $(1)

@@ -49,8 +49,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsMorkModule
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  $(NULL)
 
 CPPSRCS		= nsMorkFactory.cpp
 

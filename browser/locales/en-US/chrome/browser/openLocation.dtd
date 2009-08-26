@@ -4,7 +4,7 @@
 <!ENTITY chooseFile.label "Choose File…">
 <!ENTITY newWindow.label "New Window">
 <!ENTITY newTab.label "New Tab">
-<!ENTITY topWindow.label "Current Window">
+<!ENTITY topTab.label "Current Tab">
 <!ENTITY caption.label "Open Web Location">
 <!ENTITY openWhere.label "Open in:">
 <!ENTITY openBtn.label "Open">

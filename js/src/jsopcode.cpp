@@ -2024,11 +2024,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                           case JSOP_ENUMCONSTELEM:
                             op = JSOP_GETELEM;
                             break;
-#if JS_HAS_LVALUE_RETURN
                           case JSOP_SETCALL:
                             op = JSOP_CALL;
                             break;
-#endif
                           case JSOP_GETTHISPROP:
                             /*
                              * NB: JSOP_GETTHISPROP can't fail due to |this|
@@ -3527,9 +3525,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALL:
               case JSOP_EVAL:
               case JSOP_APPLY:
-#if JS_HAS_LVALUE_RETURN
               case JSOP_SETCALL:
-#endif
                 argc = GET_ARGC(pc);
                 argv = (char **)
                     cx->malloc((size_t)(argc + 1) * sizeof *argv);
@@ -3594,13 +3590,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 cx->free(argv);
                 if (!ok)
                     return NULL;
-#if JS_HAS_LVALUE_RETURN
                 if (op == JSOP_SETCALL) {
                     if (!PushOff(ss, todo, op))
                         return NULL;
                     todo = Sprint(&ss->sprinter, "");
                 }
-#endif
                 break;
 
               case JSOP_DELNAME:
@@ -5333,6 +5327,10 @@ SimulateOp(JSContext *cx, JSScript *script, JSOp op, const JSCodeSpec *cs,
 }
 
 #ifdef JS_TRACER
+
+#undef LOCAL_ASSERT
+#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_CUSTOM(expr, goto failure);
+
 static intN
 SimulateImacroCFG(JSContext *cx, JSScript *script,
                   uintN pcdepth, jsbytecode *pc, jsbytecode *target,
@@ -5386,6 +5384,9 @@ SimulateImacroCFG(JSContext *cx, JSScript *script,
     cx->free(tmp_pcstack);
     return -1;
 }
+
+#undef LOCAL_ASSERT
+#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
 
 static intN
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,

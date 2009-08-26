@@ -85,6 +85,11 @@ function run_test()
           try { file.remove(false); } catch(e) { /* stupid windows box */ }
           do_test_finished();
           break;
+        case dm.DOWNLOAD_FAILED:
+        case dm.DOWNLOAD_CANCELED:
+          do_throw("Unexpected download state change received, state: " +
+                   aDownload.state);
+          break;
       }
     }
   };

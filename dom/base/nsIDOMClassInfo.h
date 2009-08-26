@@ -51,7 +51,6 @@
   (nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |                          \
    nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY |                          \
    nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY |                          \
-   nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE |                      \
    nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE |                        \
    nsIXPCScriptable::DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                    \
    nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES)

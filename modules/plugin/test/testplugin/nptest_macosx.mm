@@ -237,11 +237,23 @@ int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
 {
   EventRecord* carbonEvent = (EventRecord*)event;
-  if (carbonEvent && (carbonEvent->what == updateEvt)) {
+  if (!carbonEvent)
+    return 0;
+
+  NPWindow* w = &instanceData->window;
+  switch (carbonEvent->what) {
+  case updateEvt:
     pluginDraw(instanceData);
     return 1;
+  case mouseDown:
+  case mouseUp:
+  case osEvt:
+    instanceData->lastMouseX = carbonEvent->where.h - w->x;
+    instanceData->lastMouseY = carbonEvent->where.v - w->y;
+    return 1;
+  default:
+    return 0;
   }
-  return 0;
 }
 
 int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)

@@ -194,8 +194,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
-- (BOOL)isPaintingSuppressed;
-
 - (void)maybeInvalidateShadow;
 - (void)invalidateShadow;
 
@@ -681,6 +679,16 @@ void nsChildView::TearDownView()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+nsCocoaWindow*
+nsChildView::GetXULWindowWidget()
+{
+  id windowDelegate = [[mView nativeWindow] delegate];
+  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
+    return [(WindowDelegate *)windowDelegate geckoWidget];
+  }
+  return nsnull;
+}
+
 // create a nsChildView
 NS_IMETHODIMP nsChildView::Create(nsIWidget *aParent,
                       const nsIntRect &aRect,
@@ -763,7 +771,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_GRAPHIC:
-      NS_ASSERTION(0, "Requesting NS_NATIVE_GRAPHIC on a Mac OS X child view!");
+      NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a Mac OS X child view!");
       retVal = nsnull;
       break;
 
@@ -819,40 +827,14 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
   BOOL isTransparent = aMode == eTransparencyTransparent;
   BOOL currentTransparency = ![[mView nativeWindow] isOpaque];
   if (isTransparent != currentTransparency) {
-    // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
-    // tell the nsCocoaWindow to set its background to transparent.
-    id windowDelegate = [[mView nativeWindow] delegate];
-    if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-      nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-      if (widget) {
-        widget->MakeBackgroundTransparent(aMode);
-        [(ChildView*)mView setTransparent:isTransparent];
-      }
+    nsCocoaWindow *widget = GetXULWindowWidget();
+    if (widget) {
+      widget->MakeBackgroundTransparent(aMode);
+      [(ChildView*)mView setTransparent:isTransparent];
     }
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// This is called by nsContainerFrame on the root widget for all window types
-// except popup windows (when nsCocoaWindow::SetWindowShadowStyle is used instead).
-NS_IMETHODIMP nsChildView::SetWindowShadowStyle(PRInt32 aStyle)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
-  // tell the nsCocoaWindow to set the shadow style.
-  id windowDelegate = [[mView nativeWindow] delegate];
-  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-    if (widget) {
-      widget->SetWindowShadowStyle(aStyle);
-    }
-  }
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
@@ -1041,9 +1023,14 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSWindow* window = [mView window];
-  if (window)
-    [window makeFirstResponder:mView];
+  // Don't so anything if we're invisible (if Show(PR_FALSE) has been
+  // called on us, or if Show(PR_TRUE) hasn't yet been called).  This
+  // resolves bug 504450.
+  if (mView && ![mView isHidden]) {
+    NSWindow* window = [mView window];
+    if (window)
+      [window makeFirstResponder:mView];
+  }
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1527,17 +1514,14 @@ NS_IMETHODIMP nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  id windowDelegate = [[mView nativeWindow] delegate];
-  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-    if (widget) {
-      nsMenuBarX* mb = widget->GetMenuBar();
-      if (mb) {
-        if (indexString.IsEmpty())
-          mb->ForceNativeMenuReload();
-        else
-          mb->ForceUpdateNativeMenuAt(indexString);
-      }
+  nsCocoaWindow *widget = GetXULWindowWidget();
+  if (widget) {
+    nsMenuBarX* mb = widget->GetMenuBar();
+    if (mb) {
+      if (indexString.IsEmpty())
+        mb->ForceNativeMenuReload();
+      else
+        mb->ForceUpdateNativeMenuAt(indexString);
     }
   }
   return NS_OK;
@@ -1713,7 +1697,8 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
   return NS_OK;
 }  
 
-void nsChildView::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
+void nsChildView::Scroll(const nsIntPoint& aDelta,
+                         const nsTArray<nsIntRect>& aDestRects,
                          const nsTArray<Configuration>& aConfigurations)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1726,10 +1711,12 @@ void nsChildView::Scroll(const nsIntPoint& aDelta, const nsIntRect& aSource,
   if (mVisible) {
     viewWasDirty = [mView needsDisplay];
 
-    NSRect rect;
-    GeckoRectToNSRect(aSource, rect);
-    NSSize scrollVector = {aDelta.x, aDelta.y};
-    [mView scrollRect:rect by:scrollVector];
+    for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
+      NSRect rect;
+      GeckoRectToNSRect(aDestRects[i] - aDelta, rect);
+      NSSize scrollVector = {aDelta.x, aDelta.y};
+      [mView scrollRect:rect by:scrollVector];
+    }
   }
 
   // Don't force invalidation of the child if it's moving by the scroll
@@ -2329,158 +2316,6 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-// Find the nearest scrollable view for this ChildView
-// (recall that views are not refcounted)
-- (nsIScrollableView*) getScrollableView
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
-
-  nsIScrollableView* scrollableView = nsnull;
-
-  ChildView* currView = self;
-  // we have to loop up through superviews in case the view that received the
-  // mouseDown is in fact a plugin view with no scrollbars
-  while (currView) {
-    nsIWidget* widget = [currView widget];
-    if (widget) {
-      void* clientData;
-      if (NS_SUCCEEDED(widget->GetClientData(clientData))) {
-        nsISupports* data = (nsISupports*)clientData;
-        nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
-        if (req) {
-          req->GetInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
-          if (scrollableView)
-            break;
-        }
-      }
-    }
-
-    NSView* superview = [currView superview];
-    if (superview && [superview isMemberOfClass:[ChildView class]])
-        currView = (ChildView*)superview;
-    else
-        currView = nil;
-  }
-
-  return scrollableView;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
-}
-
-// set the closed hand cursor and record the starting scroll positions
-- (void) startHandScroll:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mGeckoChild)
-    return;
-
-  mHandScrollStartMouseLoc = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
-
-  nsIScrollableView* aScrollableView = [self getScrollableView]; 
-
-  // if we succeeded in getting aScrollableView
-  if (aScrollableView) {
-    aScrollableView->GetScrollPosition(mHandScrollStartScrollX, mHandScrollStartScrollY);
-    mGeckoChild->SetCursor(eCursor_grabbing);
-    mInHandScroll = TRUE;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// update the scroll position based on the new mouse coordinates
-- (void) updateHandScroll:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mGeckoChild)
-    return;
-
-  nsIScrollableView* aScrollableView = [self getScrollableView];
-  if (!aScrollableView)
-    return;
-
-  NSPoint newMouseLoc = [[self window] convertBaseToScreen:[theEvent locationInWindow]];
-
-  PRInt32 deltaX = (PRInt32)(mHandScrollStartMouseLoc.x - newMouseLoc.x);
-  PRInt32 deltaY = (PRInt32)(newMouseLoc.y - mHandScrollStartMouseLoc.y);
-
-  // convert to the nsIView coordinates
-  PRInt32 p2a = mGeckoChild->GetDeviceContext()->AppUnitsPerDevPixel();
-  nscoord newX = mHandScrollStartScrollX + NSIntPixelsToAppUnits(deltaX, p2a);
-  nscoord newY = mHandScrollStartScrollY + NSIntPixelsToAppUnits(deltaY, p2a);
-  aScrollableView->ScrollTo(newX, newY, 0);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// Return true if the correct modifiers are pressed to perform hand scrolling.
-+ (BOOL) areHandScrollModifiers:(unsigned int)modifiers
-{
-  // The command and option key should be held down.  Ignore capsLock by
-  // setting it explicitly to match.
-  modifiers |= NSAlphaShiftKeyMask;
-  return (modifiers & NSDeviceIndependentModifierFlagsMask) ==
-      (NSAlphaShiftKeyMask | NSCommandKeyMask | NSAlternateKeyMask);
-}
-
-// If the user is pressing the hand scroll modifiers, then set
-// the hand scroll cursor.
-- (void) setHandScrollCursor:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mGeckoChild)
-    return;
-
-  BOOL inMouseView = NO;
-
-  // check to see if the user has hand scroll modifiers held down; if so, 
-  // find out if the cursor is in an ChildView
-  if ([ChildView areHandScrollModifiers:nsCocoaUtils::GetCocoaEventModifierFlags(theEvent)]) {
-    NSPoint pointInWindow = [[self window] mouseLocationOutsideOfEventStream];
-
-    NSView* mouseView = [[[self window] contentView] hitTest:pointInWindow];
-    inMouseView = (mouseView != nil && [mouseView isMemberOfClass:[ChildView class]]);   
-  }
-  if (inMouseView) {
-      mGeckoChild->SetCursor(eCursor_grab);
-  } else {
-    nsCursor cursor = mGeckoChild->GetCursor();
-    if (!mInHandScroll) {
-      if (cursor == eCursor_grab || cursor == eCursor_grabbing)
-        mGeckoChild->SetCursor(eCursor_standard);
-    }
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// reset the scroll flag and cursor
-- (void) stopHandScroll:(NSEvent*)theEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  mInHandScroll = FALSE;
-  [self setHandScrollCursor:theEvent];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-// When smooth scrolling is turned on on panther, the parent of a scrollbar (which
-// I guess they assume is a NSScrollView) gets called with this method. I have no
-// idea what the correct return value is, but we have to have this otherwise the scrollbar
-// will not continuously respond when the mouse is held down in the pageup/down area.
--(float)_destinationFloatValueForScroller:(id)scroller
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  return [scroller floatValue];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0.0);
-}
-
 // Make the origin of this view the topLeft corner (gecko origin) rather
 // than the bottomLeft corner (standard cocoa origin).
 - (BOOL)isFlipped
@@ -2661,13 +2496,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   mNeedsShadowInvalidation = NO;
 }
 
-- (BOOL)isPaintingSuppressed
-{
-  NSWindow* win = [self window];
-  return ([win isKindOfClass:[ToolbarWindow class]] &&
-          [(ToolbarWindow*)win isPaintingSuppressed]);
-}
-
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2676,7 +2504,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
   PRBool isVisible;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
-      !isVisible || [self isPaintingSuppressed])
+      !isVisible)
     return;
 
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
@@ -2845,16 +2673,16 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  // If there is no rollup widget we assume the OS routed the event correctly.
-  if (!gRollupWidget)
-    return YES;
-
   // Don't bother if we've been destroyed:  mWindow will now be nil, which
   // makes all our work here pointless, and can even cause us to resend the
   // event to ourselves in an infinte loop (since targetWindow == mWindow no
   // longer tests whether targetWindow is us).
   if (!mGeckoChild || !mWindow)
     return YES;
+
+  // Find the window that the event is over.
+  BOOL isUnderMouse;
+  NSWindow* targetWindow = nsCocoaUtils::FindWindowForEvent(anEvent, &isUnderMouse);
 
   // If this is the rollup widget and the event is not a mouse move then trust the OS routing.  
   // The reason for this trust is complicated.
@@ -2875,20 +2703,19 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   // action must have caused the rollup window to come into existence. In that case, we might need
   // to reroute the event if it is over the rollup window. That is why if we're not the rollup window
   // we don't return YES here.
-  NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (mWindow == rollupWindow && [anEvent type] != NSMouseMoved)
-    return YES;
+  if (gRollupWidget) {
+    NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if (mWindow == rollupWindow && [anEvent type] != NSMouseMoved)
+      return YES;
 
-  // Find the window that the event is over.
-  NSWindow* targetWindow = nsCocoaUtils::FindWindowUnderPoint(nsCocoaUtils::ScreenLocationForEvent(anEvent));
+    // If the event was not over any window, send it to the rollup window.
+    if (!isUnderMouse)
+      targetWindow = rollupWindow;
+  }
 
-  // If the event was not over any window, send it to the rollup window.
-  if (!targetWindow)
-    targetWindow = rollupWindow;
-
-  // At this point we've resolved a target window, if we are it then just return
+  // If there's no window that's more appropriate than our window then just return
   // yes so we handle it. No need to redirect.
-  if (targetWindow == mWindow)
+  if (!targetWindow || targetWindow == mWindow)
     return YES;
 
   // Send the event to its new destination.
@@ -3231,17 +3058,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   if ([self maybeRollup:theEvent])
     return;
 
-  unsigned int modifierFlags = nsCocoaUtils::GetCocoaEventModifierFlags(theEvent);
-
-  // if the command and alt keys are held down, initiate hand scrolling
-  if ([ChildView areHandScrollModifiers:modifierFlags]) {
-    [self startHandScroll:theEvent];
-    // needed to change the focus, among other things, since we don't
-    // get to do that below.
-    [super mouseDown:theEvent];
-    return; // do not pass this mousedown event to gecko
-  }
-
 #if USE_CLICK_HOLD_CONTEXTMENU
   // fire off timer to check for click-hold after two seconds. retains |theEvent|
   [self performSelector:@selector(clickHoldCallback:) withObject:theEvent afterDelay:2.0];
@@ -3254,7 +3070,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
-  if (modifierFlags & NSControlKeyMask)
+  if (nsCocoaUtils::GetCocoaEventModifierFlags(theEvent) & NSControlKeyMask)
     geckoEvent.button = nsMouseEvent::eRightButton;
   else
     geckoEvent.button = nsMouseEvent::eLeftButton;
@@ -3278,12 +3094,6 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 - (void)mouseUp:(NSEvent *)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mInHandScroll) {
-    [self updateHandScroll:theEvent];
-    [self stopHandScroll:theEvent];
-    return;
-  }
 
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
@@ -3451,16 +3261,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
     // mark this view as the last view entered
     sLastViewEntered = (NSView*)self;
-
-    // checks to see if we should change to the hand cursor
-    [self setHandScrollCursor:theEvent];
   }
-
-  // check if we are in a hand scroll or if the user
-  // has command and alt held down; if so,  we do not want
-  // gecko messing with the cursor.
-  if ([ChildView areHandScrollModifiers:nsCocoaUtils::GetCocoaEventModifierFlags(theEvent)])
-    return;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -3488,12 +3289,6 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   if (!mGeckoChild)
     return;
-
-  // if the handscroll flag is set, steal this event
-  if (mInHandScroll) {
-    [self updateHandScroll:theEvent];
-    return;
-  }
 
   gLastDragView = self;
   gLastDragEvent = theEvent;
@@ -4196,7 +3991,8 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   [self convertGenericCocoaEvent:aMouseEvent toGeckoEvent:outGeckoEvent];
 
   // convert point to view coordinate system
-  NSPoint localPoint = [self convertPoint:[aMouseEvent locationInWindow] fromView:nil];
+  NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, mWindow);
+  NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
   outGeckoEvent->refPoint.x = static_cast<nscoord>(localPoint.x);
   outGeckoEvent->refPoint.y = static_cast<nscoord>(localPoint.y);
 
@@ -4379,17 +4175,39 @@ GetInputSourceIDFromKeyboardLayout(SInt32 aLayoutID)
   return sourceID;
 }
 
+static void
+GetKCHRData(KeyTranslateData &aKT)
+{
+  KeyboardLayoutRef kbRef;
+  OSStatus err =
+    ::KLGetKeyboardLayoutWithIdentifier(aKT.mLayoutID, &kbRef);
+  if (err != noErr)
+    return;
+
+  err = ::KLGetKeyboardLayoutProperty(kbRef, kKLKCHRData,
+                                      (const void**)&aKT.mKchr.mHandle);
+  if (err != noErr || !aKT.mKchr.mHandle)
+    return;
+
+  err = ::GetTextEncodingFromScriptInfo(aKT.mScript, kTextLanguageDontCare,
+                                        kTextRegionDontCare,
+                                        &aKT.mKchr.mEncoding);
+  if (err != noErr)
+    aKT.mKchr.mHandle = nsnull;
+}
+
 static PRUint32
 GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
-  KeyTranslateData kt;
-  Handle handle = ::GetResource('uchr', kKLUSKeyboard); // US keyboard layout
-  if (!handle || !(*handle)) {
-    NS_ERROR("US keyboard layout doesn't have uchr resource");
-    return 0;
-  }
+  KeyboardLayoutRef kbRef = nsnull;
+  OSStatus err = ::KLGetKeyboardLayoutWithIdentifier(kKLUSKeyboard, &kbRef);
+  NS_ENSURE_TRUE(err == noErr && kbRef, 0);
+  const UCKeyboardLayout* layout = nsnull;
+  err = ::KLGetKeyboardLayoutProperty(kbRef, kKLuchrData,
+                                      (const void**)&layout);
+  NS_ENSURE_TRUE(err == noErr && layout, 0);
   UInt32 kbType = 40; // ANSI, don't use actual layout
-  return UCKeyTranslateToUnicode((UCKeyboardLayout*)(*handle), aKeyCode,
+  return UCKeyTranslateToUnicode(layout, aKeyCode,
                                  aModifiers, kbType);
 }
 
@@ -4448,7 +4266,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
       }
 
-      CFDataRef uchr = NULL;
+      PRBool isUchrKeyboardLayout = PR_FALSE;
       // GetResource('uchr', kt.mLayoutID) fails on OS X 10.5
       if (nsToolkit::OnLeopardOrLater() &&
           Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
@@ -4456,6 +4274,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
           Leopard_TISCreateInputSourceList &&
           kOurTISPropertyUnicodeKeyLayoutData &&
           kOurTISPropertyInputSourceID) {
+        CFDataRef uchr = NULL;
         if (gOverrideKeyboardLayout.mOverrideEnabled) {
           CFStringRef sourceID = GetInputSourceIDFromKeyboardLayout(kt.mLayoutID);
           NS_ASSERTION(sourceID, "unable to map keyboard layout ID to input source ID");
@@ -4473,41 +4292,39 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
           TISInputSourceRef tis = Leopard_TISCopyCurrentKeyboardLayoutInputSource();
           uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
         }
+        if (uchr) {
+          // We should be here on OS X 10.5 for any Apple provided layout, as
+          // they are all uchr.  It may be possible to still use kchr resources
+          // from elsewhere, so they may be picked by GetKCHRData below
+          kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
+            (CFDataGetBytePtr(uchr));
+          isUchrKeyboardLayout = PR_TRUE;
+        }
+      } else {
+        // 10.4
+        KeyboardLayoutRef kbRef = nsnull;
+        OSStatus err = ::KLGetKeyboardLayoutWithIdentifier(kt.mLayoutID,
+                                                           &kbRef);
+        if (err == noErr && kbRef) {
+          SInt32 kind;
+          err = ::KLGetKeyboardLayoutProperty(kbRef, kKLKind,
+                                              (const void **)&kind);
+          if (err == noErr && kind != kKLKCHRKind) {
+            err = ::KLGetKeyboardLayoutProperty(kbRef, kKLuchrData,
+                      (const void**)&kt.mUchr.mLayout);
+            if (err != noErr) {
+              kt.mUchr.mLayout = nsnull;
+              // if the kind is kKLKCHRuchrKind, we can retry by KCHR.
+              isUchrKeyboardLayout = kind != kKLKCHRuchrKind;
+            } else {
+              isUchrKeyboardLayout = PR_TRUE;
+            }
+          }
+        }
       }
 
-      // This fails for Azeri on 10.4 even though kKLKind (2) indicates that
-      // the layout has a uchr resource.  Perhaps KLGetKeyboardLayoutProperty
-      // with kKLuchrData would be helpful here.
-      Handle handle = ::GetResource('uchr', kt.mLayoutID);
-      if (uchr) {
-        // We should be here on OS X 10.5 for any Apple provided layout, as
-        // they are all uchr.  It may be possible to still use kchr resources
-        // from elsewhere, so they may be picked by
-        // GetScriptManagerVariable(smKCHRCache) below
-        kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
-          (CFDataGetBytePtr(uchr));
-      } else if (handle) {
-        // uchr (Unicode) keyboard layout resource prior to 10.5.
-        kt.mUchr.mLayout = *((UCKeyboardLayout**)handle);
-      } else {
-        // kchr (non-Unicode) keyboard layout resource.
-
-        // There are no know cases where GetResource succeeds here, and so
-        // tests (gOverrideKeyboardLayout.mOverrideEnabled) currently end up
-        // with no keyboard layout.  KLGetKeyboardLayoutWithIdentifier and
-        // KLGetKeyboardLayoutProperty with kKLKCHRData would be useful here.
-        kt.mKchr.mHandle = ::GetResource('kchr', kt.mLayoutID);
-
-        if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout.mOverrideEnabled)
-          kt.mKchr.mHandle = (char**)::GetScriptManagerVariable(smKCHRCache);
-        if (kt.mKchr.mHandle) {
-          OSStatus err =
-            ::GetTextEncodingFromScriptInfo(kt.mScript, kTextLanguageDontCare,
-                                            kTextRegionDontCare,
-                                            &kt.mKchr.mEncoding);
-          if (err != noErr)
-            kt.mKchr.mHandle = nsnull;
-        }
+      if (!isUchrKeyboardLayout) {
+        GetKCHRData(kt);
       }
 
       // If a keyboard layout override is set, we also need to force the
@@ -5692,9 +5509,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
     gLastModifierState = modifiers;
   }
-
-  // check if the hand scroll cursor needs to be set/unset
-  [self setHandScrollCursor:theEvent];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

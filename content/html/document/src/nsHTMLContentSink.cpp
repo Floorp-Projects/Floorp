@@ -1363,11 +1363,16 @@ SinkContext::FlushTags()
                       mStack[stackPos].mNumFlushed, stackPos));
         }
 #endif
-        if ((mStack[stackPos].mInsertionPoint != -1) &&
-            (mStackPos > (stackPos + 1))) {
+        if (mStack[stackPos].mInsertionPoint != -1) {
+          // We might have popped the child off our stack already
+          // but not notified on it yet, which is why we have to get it
+          // directly from its parent node.
+
           PRInt32 childIndex = mStack[stackPos].mInsertionPoint - 1;
-          nsIContent* child = mStack[stackPos + 1].mContent;
-          NS_ASSERTION(content->GetChildAt(childIndex) == child,
+          nsIContent* child = content->GetChildAt(childIndex);
+          // Child not on stack anymore; can't assert it's correct
+          NS_ASSERTION(!(mStackPos > (stackPos + 1)) ||
+                       (child == mStack[stackPos + 1].mContent),
                        "Flushing the wrong child.");
           mSink->NotifyInsert(content, child, childIndex);
         } else {

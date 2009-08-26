@@ -74,13 +74,6 @@ ifdef TARGET_XPCOM_ABI
 DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
 endif
 
-REQUIRES = \
-        xpcom \
-        string \
-        appshell \
-        xulapp \
-        xulrunner \
-	$(NULL)
 
 CPPSRCS = nsXULRunnerApp.cpp
 
@@ -270,8 +263,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/xulrunner.ico
-	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/app.ico
-	cp $(srcdir)/document-os2.ico  $(DIST)/branding/document.ico
 endif
 
 libs::

@@ -219,7 +219,7 @@ nsNavBookmarks::InitStatements()
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT b.id "
       "FROM moz_bookmarks b "
-      "WHERE b.type = 1 AND b.fk = ( "
+      "WHERE b.type = ?2 AND b.fk = ( "
         "SELECT id FROM moz_places_temp "
         "WHERE url = ?1 "
         "UNION "
@@ -260,9 +260,12 @@ nsNavBookmarks::InitStatements()
     getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBFolderCount: count all of the children of a given folder
+  // mDBFolderCount: count all of the children of a given folder and checks
+  // that it exists.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT COUNT(*) FROM moz_bookmarks WHERE parent = ?1"),
+      "SELECT COUNT(*), "
+      "(SELECT id FROM moz_bookmarks WHERE id = ?1) "
+      "FROM moz_bookmarks WHERE parent = ?1"),
     getter_AddRefs(mDBFolderCount));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1120,9 +1123,14 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 index;
-  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
-    index = FolderCount(aFolder);
-  } else {
+  PRInt32 folderCount;
+  rv = FolderCount(aFolder, &folderCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX ||
+      aIndex >= folderCount) {
+    index = folderCount;
+  }
+  else {
     index = aIndex;
     rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1392,9 +1400,12 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId, PRInt64 aParent,
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRInt32 index;
-  nsresult rv;
-  if (*aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
-    index = FolderCount(aParent);
+  PRInt32 folderCount;
+  nsresult rv = FolderCount(aParent, &folderCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (*aIndex == nsINavBookmarksService::DEFAULT_INDEX ||
+      *aIndex >= folderCount) {
+    index = folderCount;
   } else {
     index = *aIndex;
     rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
@@ -1432,9 +1443,12 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex,
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRInt32 index;
-  nsresult rv;
-  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
-    index = FolderCount(aParent);
+  PRInt32 folderCount;
+  nsresult rv = FolderCount(aParent, &folderCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX ||
+      aIndex >= folderCount) {
+    index = folderCount;
   } else {
     index = aIndex;
     rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
@@ -1963,8 +1977,12 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
 
   // calculate new index
   PRInt32 newIndex;
-  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
-    newIndex = FolderCount(aNewParent);
+  PRInt32 folderCount;
+  rv = FolderCount(aNewParent, &folderCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX ||
+      aIndex >= folderCount) {
+    newIndex = folderCount;
     // If the parent remains the same, then the folder is really being moved
     // to count - 1 (since it's being removed from the old position)
     if (oldParent == aNewParent) {
@@ -2509,19 +2527,25 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
   return NS_OK;
 }
 
-PRInt32
-nsNavBookmarks::FolderCount(PRInt64 aFolder)
+nsresult
+nsNavBookmarks::FolderCount(PRInt64 aFolderId, PRInt32 *aFolderCount)
 {
+  *aFolderCount = 0;
   mozStorageStatementScoper scope(mDBFolderCount);
 
-  nsresult rv = mDBFolderCount->BindInt64Parameter(0, aFolder);
-  NS_ENSURE_SUCCESS(rv, 0);
+  nsresult rv = mDBFolderCount->BindInt64Parameter(0, aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool results;
   rv = mDBFolderCount->ExecuteStep(&results);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mDBFolderCount->AsInt32(0);
+  // Ensure that the folder we are looking for exists.
+  NS_ENSURE_TRUE(mDBFolderCount->AsInt64(1) == aFolderId, NS_ERROR_INVALID_ARG);
+
+  *aFolderCount = mDBFolderCount->AsInt32(0);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2716,7 +2740,8 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI *aURI,
 
   nsresult rv = BindStatementURI(mDBFindURIBookmarks, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
-  mDBFindURIBookmarks->BindInt32Parameter(1, TYPE_BOOKMARK);
+  rv = mDBFindURIBookmarks->BindInt32Parameter(1, TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool more;
   while (NS_SUCCEEDED((rv = mDBFindURIBookmarks->ExecuteStep(&more))) && more) {
@@ -2783,6 +2808,7 @@ NS_IMETHODIMP
 nsNavBookmarks::SetItemIndex(PRInt64 aItemId, PRInt32 aNewIndex)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_MIN(aNewIndex, 0);
 
   nsresult rv;
   PRInt32 oldIndex = 0;
@@ -2802,6 +2828,12 @@ nsNavBookmarks::SetItemIndex(PRInt64 aItemId, PRInt32 aNewIndex)
     oldIndex = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Position);
     parent = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
   }
+
+  // Ensure we are not going out of range.
+  PRInt32 folderCount;
+  rv = FolderCount(parent, &folderCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(aNewIndex < folderCount, NS_ERROR_INVALID_ARG);
 
   mozStorageStatementScoper scoper(mDBSetItemIndex);
   rv = mDBSetItemIndex->BindInt64Parameter(0, aItemId);

@@ -128,9 +128,10 @@ GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
 LIBGNOME_VERSION=2.0
+GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.6.14.2
+SQLITE_VERSION=3.6.16
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -549,9 +550,7 @@ case "$target" in
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
             AC_MSG_ERROR([The major versions of \$CC and \$CXX do not match.])
         fi
-        if test "$_CC_MAJOR_VERSION" = "12"; then
-            _CC_SUITE=6
-        elif test "$_CC_MAJOR_VERSION" = "13"; then
+        if test "$_CC_MAJOR_VERSION" = "13"; then
             _CC_SUITE=7
         elif test "$_CC_MAJOR_VERSION" = "14"; then
             _CC_SUITE=8
@@ -955,36 +954,8 @@ tools are selected during the Xcode/Developer Tools installation.])
 
   GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
   if test "$GCC_VERSION_MAJOR" -lt "4" ; then
-    SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include -F${MACOS_SDK_DIR}/System/Library/Frameworks"
-    if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
-      SDK_C_INCLUDE="$SDK_C_INCLUDE -F${MACOS_SDK_DIR}/Library/Frameworks"
-    fi
-    SDK_CXX_INCLUDE="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++ -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/ppc-darwin -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/backward"
-
-    CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
-    CXXFLAGS="$CXXFLAGS -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
-
-    dnl CPP/CXXCPP needs to be set for AC_CHECK_HEADER.
-    CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
-    CXXCPP="$CXXCPP -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
-
-    dnl ld support for -syslibroot is compiler-agnostic, but only available
-    dnl on Tiger.  Although it's possible to switch on the build host's
-    dnl OS release to use ld -syslibroot when available, ld -syslibroot will
-    dnl cause warnings as long as NEXT_ROOT is set.  NEXT_ROOT should be
-    dnl set because both the compiler and linker use it.
-    LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin -L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
-    export NEXT_ROOT=$MACOS_SDK_DIR
-
-    if test -n "$CROSS_COMPILE" ; then
-      dnl NEXT_ROOT will be in the environment, but it shouldn't be set for
-      dnl the build host.  HOST_CXX is presently unused.
-      HOST_CC="NEXT_ROOT= $HOST_CC"
-      HOST_CXX="NEXT_ROOT= $HOST_CXX"
-    fi
+    AC_MSG_ERROR([You need to upgrade the compiler version to 4.x])
   else
-    dnl gcc >= 4.0 uses different paths than above, but knows how to find
-    dnl them itself.
     CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
     CXXFLAGS="$CXXFLAGS -isysroot ${MACOS_SDK_DIR}"
 
@@ -1380,6 +1351,12 @@ sun4u | sparc*)
 
 x86_64 | ia64)
     CPU_ARCH="$OS_TEST"
+    ;;
+
+arm)
+    if test "$OS_TARGET" = "WINCE"; then
+        CPU_ARCH="$OS_TEST"
+    fi
     ;;
 esac
 
@@ -2004,7 +1981,7 @@ case "$target" in
     ;;
 
 *-wince*)
-
+    TARGET_COMPILER_ABI=msvc
     MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
     AR_LIST="$AR -list"
     AR_EXTRACT="$AR -extract"
@@ -2075,7 +2052,6 @@ case "$target" in
 
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
-    AC_DEFINE(_WIN32)
     AC_DEFINE(WIN32)
     AC_DEFINE(XP_WIN)
     AC_DEFINE(XP_WIN32)
@@ -2155,6 +2131,9 @@ case "$target" in
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS
+        _USE_CPP_INCLUDE_FLAG=1
+        _DEFINES_CFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
+        _DEFINES_CXXFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
@@ -2194,7 +2173,6 @@ case "$target" in
     MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/modules/libimg/png)'
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
-    AC_DEFINE(_WIN32)
     AC_DEFINE(WIN32)
     AC_DEFINE(XP_WIN)
     AC_DEFINE(XP_WIN32)
@@ -2336,7 +2314,7 @@ case "$target" in
 
         AC_LANG_SAVE
         AC_LANG_CPLUSPLUS
-        AC_CHECK_HEADERS(atlbase.h wpcapi.h)
+        AC_CHECK_HEADERS(atlbase.h)
         AC_LANG_RESTORE
         ;;
     esac
@@ -4528,18 +4506,10 @@ MOZ_PLUGINS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PSM=1
-MOZ_PYTHON_EXTENSIONS="xpcom dom"
-MOZ_PYTHON=
-MOZ_PYTHON_DEBUG_SUFFIX=
-MOZ_PYTHON_DLL_SUFFIX=
-MOZ_PYTHON_INCLUDES=
-MOZ_PYTHON_LIBS=
-MOZ_PYTHON_PREFIX=
-MOZ_PYTHON_VER=
-MOZ_PYTHON_VER_DOTTED=
 MOZ_RDF=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
+MOZ_FASTSTART=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
@@ -4578,9 +4548,16 @@ esac
 
 case "$target_os" in
     msvc*|mks*|cygwin*|mingw*)
+        NS_ENABLE_TSF=1
         if test -z "$GNU_CC"; then 
+            if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
+                NS_ENABLE_TSF=
+            fi
             XPC_IDISPATCH_SUPPORT=1
             MOZ_NO_ACTIVEX_SUPPORT=
+        fi
+        if test -n "$NS_ENABLE_TSF"; then
+            AC_DEFINE(NS_ENABLE_TSF)
         fi
         ;;
 esac
@@ -5181,6 +5158,7 @@ then
         PKG_CHECK_MODULES(MOZ_GNOMEVFS, gnome-vfs-2.0 >= $GNOMEVFS_VERSION gnome-vfs-module-2.0 >= $GNOMEVFS_VERSION,[
             MOZ_GNOMEVFS_LIBS=`echo $MOZ_GNOMEVFS_LIBS | sed 's/-llinc\>//'`
             MOZ_ENABLE_GNOMEVFS=1
+            AC_DEFINE(MOZ_ENABLE_GNOMEVFS)
         ],[
             if test "$MOZ_ENABLE_GNOMEVFS" = "force"
             then
@@ -5212,17 +5190,32 @@ then
     AC_SUBST(MOZ_GCONF_CFLAGS)
     AC_SUBST(MOZ_GCONF_LIBS)
 
-    # The GNOME component is built if gtk2, gconf and gnome-vfs
-    # are all available.
+    dnl ========================================================
+    dnl = GIO support module
+    dnl ========================================================
+    MOZ_ARG_ENABLE_BOOL(gio,
+    [  --enable-gio            Enable GIO support (default: disabled)],
+        MOZ_ENABLE_GIO=force,
+        MOZ_ENABLE_GIO=)
 
-    if test "$MOZ_ENABLE_GTK2" -a "$MOZ_ENABLE_GCONF" -a \
-            "$MOZ_ENABLE_GNOMEVFS"; then
-      MOZ_ENABLE_GNOME_COMPONENT=1
-    else
-      MOZ_ENABLE_GNOME_COMPONENT=
+    if test "$MOZ_ENABLE_GIO" -a "$MOZ_ENABLE_GTK2"
+    then
+        PKG_CHECK_MODULES(MOZ_GIO, gio-2.0 >= $GIO_VERSION,[
+            MOZ_GIO_LIBS=`echo $MOZ_GIO_LIBS | sed 's/-llinc\>//'`
+            MOZ_ENABLE_GIO=1
+            AC_DEFINE(MOZ_ENABLE_GIO)
+        ],[
+            if test "$MOZ_ENABLE_GIO" = "force"
+            then
+                AC_MSG_ERROR([* * * Could not find gio-2.0 >= $GIO_VERSION])
+            fi
+            MOZ_ENABLE_GIO=
+        ])
     fi
 
-    AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
+    AC_SUBST(MOZ_ENABLE_GIO)
+    AC_SUBST(MOZ_GIO_CFLAGS)
+    AC_SUBST(MOZ_GIO_LIBS)
 fi
 
 dnl ========================================================
@@ -5256,6 +5249,18 @@ then
     if test "$MOZ_ENABLE_GNOMEUI"; then
         AC_DEFINE(MOZ_ENABLE_GNOMEUI)
     fi
+
+    # The GNOME component is built if gtk2, gconf and gnome-vfs
+    # are all available.
+
+    if test "$MOZ_ENABLE_GTK2" -a "$MOZ_ENABLE_GCONF" && \
+            (test "$MOZ_ENABLE_GNOMEVFS" || test "$MOZ_ENABLE_GIO"); then
+      MOZ_ENABLE_GNOME_COMPONENT=1
+    else
+      MOZ_ENABLE_GNOME_COMPONENT=
+    fi
+
+    AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
 fi
 AC_SUBST(MOZ_ENABLE_GNOMEUI)
 AC_SUBST(MOZ_GNOMEUI_CFLAGS)
@@ -5594,15 +5599,16 @@ dnl = Check alsa availability on Linux if using sydneyaudio
 dnl ========================================================
 
 dnl If using sydneyaudio with Linux, ensure that the alsa library is available
-if test "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_SYDNEYAUDIO"; then
    case "$target_os" in
 linux*)
-      AC_CHECK_LIB(asound, snd_pcm_open,,AC_MSG_ERROR([Ogg support on Linux requires the alsa library]))
+      PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
+         [echo "$MOZ_ALSA_PKG_ERRORS"
+          AC_MSG_ERROR([Need alsa for Ogg or Wave decoding on Linux.  Disable with --disable-ogg --disable-wave.])])
       ;;
    esac
 fi
-fi
+AC_SUBST(MOZ_ALSA_LIBS)
 
 dnl ========================================================
 dnl Splashscreen
@@ -5799,6 +5805,14 @@ if test -z "$MOZ_ENABLE_GNOMEVFS" && test `echo "$MOZ_EXTENSIONS" | grep -c gnom
         AC_MSG_WARN([Cannot build gnomevfs without required libraries. Removing gnomevfs from MOZ_EXTENSIONS.])
     fi
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gnomevfs||'`
+fi
+
+if test -z "$MOZ_ENABLE_GIO" && test `echo "$MOZ_EXTENSIONS" | grep -c gio` -ne 0; then
+    # Suppress warning on non-X11 platforms
+    if test -n "$MOZ_X11"; then
+        AC_MSG_WARN([Cannot build gio without required libraries. Removing gio from MOZ_EXTENSIONS.])
+    fi
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gio||'`
 fi
 
 if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
@@ -6289,6 +6303,18 @@ fi
 AC_SUBST(MOZ_SAFE_BROWSING)
 
 dnl ========================================================
+dnl = Enable faststart component
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(faststart,
+[  --enable-faststart            Enable the faststart component],
+    MOZ_FASTSTART=1,
+    MOZ_FASTSTART= )
+if test -n "$MOZ_FASTSTART"; then
+    AC_DEFINE(MOZ_FASTSTART)
+fi
+AC_SUBST(MOZ_FASTSTART)
+
+dnl ========================================================
 dnl = Enable url-classifier
 dnl ========================================================
 dnl Implicitly enabled by default if building with safe-browsing
@@ -6348,17 +6374,6 @@ if test $NS_OSSO; then
 fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
-
-PKG_CHECK_MODULES(MOZ_LOCATION, [liblocation gpsbt],
-                  NS_MAEMO_LOCATION=1,
-                  NS_MAEMO_LOCATION=)
-
-if test $NS_MAEMO_LOCATION; then
-  AC_DEFINE(NS_MAEMO_LOCATION)
-fi
-
-AC_SUBST(MOZ_LOCATION_CFLAGS)
-AC_SUBST(MOZ_LOCATION_LIBS)
 
 dnl ========================================================
 dnl = faststripe theme
@@ -6672,8 +6687,7 @@ if test "$MOZ_MEMORY"; then
     WIN32_CRT_SRC_DIR=`cd "$WIN32_CRT_SRC_DIR" && pwd -W`
     _objdir_win=`pwd -W`
     WIN32_CUSTOM_CRT_DIR="$_objdir_win/memory/jemalloc/crtsrc/build/intel"
-    dnl Statically link the C++ stdlib.  We only use this for Breakpad anyway.
-    MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -DEFAULTLIB:mozcrt19"
+    MOZ_MEMORY_LDFLAGS="-MANIFEST:NO -LIBPATH:\"$WIN32_CUSTOM_CRT_DIR\" -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt19 -DEFAULTLIB:mozcpp19"
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
@@ -6717,6 +6731,17 @@ dnl ========================================================
 MOZ_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc=DIR  Location of malloc wrapper library],
     WRAP_MALLOC_LIB=$withval)
+
+dnl ========================================================
+dnl = Use TraceVis
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(tracevis,
+[  --enable-tracevis       Enable TraceVis tracing tool (default=no)],
+    MOZ_TRACEVIS=1,
+    MOZ_TRACEVIS= )
+if test -n "$MOZ_TRACEVIS"; then
+    AC_DEFINE(MOZ_TRACEVIS)
+fi
 
 dnl ========================================================
 dnl = Use Valgrind
@@ -7412,9 +7437,12 @@ if test "$_cpp_md_flag"; then
   fi
 else
   COMPILER_DEPEND=
-  _USE_CPP_INCLUDE_FLAG=
-  _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-  _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+  dnl Don't override this for MSVC
+  if test -z "$_WIN32_MSVC"; then
+    _USE_CPP_INCLUDE_FLAG=
+    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+    _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
+  fi
 fi
 fi # MOZ_AUTO_DEPS
 MDDEPDIR='.deps'
@@ -7781,106 +7809,6 @@ else
 fi
 
 AC_SUBST(MOZ_XUL)
-
-dnl ========================================================
-dnl Two ways to enable Python support:
-dnl   --enable-extensions=python # select all available.
-dnl    (MOZ_PYTHON_EXTENSIONS contains the list of extensions)
-dnl or:
-dnl   --enable-extensions=python/xpcom,... # select individual ones
-dnl
-dnl If either is used, we locate the Python to use.
-dnl ========================================================
-dnl
-dnl If 'python' appears anywhere in the extensions list, go lookin'...
-if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
-    dnl Allow PYTHON to point to the Python interpreter to use
-    dnl (note that it must be the python executable - which we
-    dnl run to locate the relevant paths etc)
-    dnl If not set, we use whatever Python we can find.
-    MOZ_PYTHON=$PYTHON
-    dnl Ask Python what its version number is
-    changequote(,)
-    MOZ_PYTHON_VER=`$PYTHON -c "import sys;print '%d%d' % sys.version_info[0:2]"`
-    MOZ_PYTHON_VER_DOTTED=`$PYTHON -c "import sys;print '%d.%d' % sys.version_info[0:2]"`
-    changequote([,])
-    dnl Ask for the Python "prefix" (ie, home/source dir)
-    MOZ_PYTHON_PREFIX=`$PYTHON -c "import sys; print sys.prefix"`
-    dnl Setup the include and library directories.
-    if test "$OS_ARCH" = "WINNT"; then
-        MOZ_PYTHON_PREFIX=`$CYGPATH_W $MOZ_PYTHON_PREFIX | $CYGPATH_S`
-        dnl Source trees have "include" and "PC" for .h, and "PCbuild" for .lib
-        dnl Binary trees have "include" for .h, and "libs" for .lib
-        dnl We add 'em both - along with quotes, to handle spaces.
-        MOZ_PYTHON_DLL_SUFFIX=.pyd
-        MOZ_PYTHON_INCLUDES="\"-I$MOZ_PYTHON_PREFIX/include\" \"-I$MOZ_PYTHON_PREFIX/PC\""
-        MOZ_PYTHON_LIBS="\"/libpath:$MOZ_PYTHON_PREFIX/PCBuild\" \"/libpath:$MOZ_PYTHON_PREFIX/libs\""
-    else
-        dnl Non-Windows include and libs
-        MOZ_PYTHON_DLL_SUFFIX=$DLL_SUFFIX
-        MOZ_PYTHON_INCLUDES="-I$MOZ_PYTHON_PREFIX/include/python$MOZ_PYTHON_VER_DOTTED"
-        dnl Check for dynamic Python lib
-        dnl - A static Python is no good - multiple dynamic libraries (xpcom
-        dnl - core, xpcom loader, pydom etc) all need to share Python.
-        dnl - Python 2.3's std --enable-shared configure option will
-        dnl   create a libpython2.3.so.1.0. We should first try this
-        dnl   dotted versioned .so file because this is the one that
-        dnl   the PyXPCOM build mechanics tries to link to.
-        dnl   XXX Should find a better way than hardcoding "1.0".
-        dnl - Python developement tree dir layouts are NOT allowed here
-        dnl   because the PyXPCOM build just dies on it later anyway.
-        dnl - Fixes to the above by Python/*nix knowledgable people welcome!
-        if test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
-            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
-        elif test -f "$MOZ_PYTHON_PREFIX/lib64/libpython$MOZ_PYTHON_VER_DOTTED.so.1.0"; then
-            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib64 -lpython$MOZ_PYTHON_VER_DOTTED"
-        elif test -f "$MOZ_PYTHON_PREFIX/lib/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
-            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX/lib -lpython$MOZ_PYTHON_VER_DOTTED"
-        elif test -f "$MOZ_PYTHON_PREFIX/libpython$MOZ_PYTHON_VER_DOTTED.so"; then
-            dnl Don't Python development tree directory layout.
-            MOZ_PYTHON_LIBS="-L$MOZ_PYTHON_PREFIX -lpython$MOZ_PYTHON_VER_DOTTED"
-            AC_MSG_ERROR([The Python at $MOZ_PYTHON_PREFIX looks like a dev tree. The PyXPCOM build cannot handle this yet. You must 'make install' Python and use the installed tree.])
-        elif test "$OS_ARCH" = "Darwin"; then
-            dnl We do Darwin last, so if a custom non-framework build of
-            dnl python is used on OSX, then it will be picked up first by
-            dnl the logic above.
-            MOZ_PYTHON_LIBS="-framework Python"
-        else
-            AC_MSG_ERROR([Could not find build shared libraries for Python at $MOZ_PYTHON_PREFIX.  This is required for PyXPCOM.])
-        fi
-        if test "$OS_ARCH" = "Linux"; then
-            MOZ_PYTHON_LIBS="$MOZ_PYTHON_LIBS -lutil"
-        fi
-    fi
-    dnl Handle "_d" on Windows
-    if test "$OS_ARCH" = "WINNT" && test -n "$MOZ_DEBUG"; then
-        MOZ_PYTHON_DEBUG_SUFFIX="_d"
-    else
-        MOZ_PYTHON_DEBUG_SUFFIX=
-    fi
-    AC_MSG_RESULT(Building Python extensions using python-$MOZ_PYTHON_VER_DOTTED from $MOZ_PYTHON_PREFIX)
-fi
-
-dnl If the user asks for the 'python' extension, then we add
-dnl MOZ_PYTHON_EXTENSIONS to MOZ_EXTENSIONS - but with the leading 'python/'
-dnl Note the careful regex - it must match 'python' followed by anything
-dnl other than a '/', including the end-of-string.
-if test `echo "$MOZ_EXTENSIONS" | grep -c 'python\([[^/]]\|$\)'` -ne 0; then
-    for pyext in $MOZ_PYTHON_EXTENSIONS; do
-        MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS python/$pyext`
-    done
-fi
-dnl Later we may allow MOZ_PYTHON_EXTENSIONS to be specified on the
-dnl command-line, but not yet
-AC_SUBST(MOZ_PYTHON_EXTENSIONS)
-AC_SUBST(MOZ_PYTHON)
-AC_SUBST(MOZ_PYTHON_PREFIX)
-AC_SUBST(MOZ_PYTHON_INCLUDES)
-AC_SUBST(MOZ_PYTHON_LIBS)
-AC_SUBST(MOZ_PYTHON_VER)
-AC_SUBST(MOZ_PYTHON_VER_DOTTED)
-AC_SUBST(MOZ_PYTHON_DEBUG_SUFFIX)
-AC_SUBST(MOZ_PYTHON_DLL_SUFFIX)
 
 dnl ========================================================
 dnl disable profile locking
@@ -8307,6 +8235,7 @@ AC_SUBST(USE_N32)
 AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
+AC_SUBST(NS_ENABLE_TSF)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'

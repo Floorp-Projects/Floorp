@@ -56,26 +56,19 @@ function test() {
 
   is(searchBar.value, kTestSearchString,
     "entering the private browsing mode should not clear the search bar");
-  /*
-    XXXehsan: uncomment this code when bug 418874 is fixed.
-              can't use todo, because it would pass unexpectedly!
-
   ok(searchBar.textbox.editor.transactionManager.numberOfUndoItems > 0,
     "entering the private browsing mode should not reset the undo list of the searchbar control");
-  */
+
+  // Change the search bar value inside the private browsing mode
+  searchBar.value = "something else";
 
   // leave private browsing mode
   pb.privateBrowsingEnabled = false;
 
-  is(searchBar.value, "",
-    "leaving the private browsing mode should clear the search bar");
-  /*
-    XXXehsan: uncomment this code when bug 418874 is fixed.
-              can't use todo_is, because it would pass unexpectedly!
-
-  is(searchBar.textbox.editor.transactionManager.numberOfUndoItems, 0,
-    "leaving the private browsing mode should reset the undo list of the searchbar control");
-  */
+  is(searchBar.value, kTestSearchString,
+    "leaving the private browsing mode should restore the search bar contents");
+  is(searchBar.textbox.editor.transactionManager.numberOfUndoItems, 1,
+    "leaving the private browsing mode should only leave 1 item in the undo list of the searchbar control");
 
   // cleanup
   prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");

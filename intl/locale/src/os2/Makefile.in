@@ -48,13 +48,6 @@ EXPORT_LIBRARY = 1
 FORCE_STATIC_LIB	= 1
 LIBXUL_LIBRARY  = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  unicharutil \
-		  pref \
-		  uconv \
-		  intl \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsOS2Locale.cpp \

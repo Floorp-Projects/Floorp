@@ -1,0 +1,31 @@
+﻿<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var odiv = document.createElement("div");
+  odiv.style.height = "30px";
+  var idiv = document.createElement("div");
+  idiv.style.MozColumnWidth = "1px";
+  var table = document.createElement("TABLE");
+  var x = document.createTextNode("x");
+  table.appendChild(x);
+  var tr = document.createElement("TR");
+  var td = document.createElement("TD");
+  tr.appendChild(td);
+  table.appendChild(tr);
+  idiv.appendChild(table);
+  odiv.appendChild(idiv);
+  document.body.appendChild(odiv);
+  
+  document.body.offsetHeight;
+  
+  td.style.fontFamily = "X";
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

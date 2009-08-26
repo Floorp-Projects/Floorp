@@ -65,7 +65,8 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TREECOLUMN_IMPL_CID)
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsTreeColumn)
   NS_DECL_NSITREECOLUMN
 
   friend class nsTreeBodyFrame;
@@ -107,7 +108,10 @@ protected:
 
   nsTreeColumn* GetNext() { return mNext; }
   nsTreeColumn* GetPrevious() { return mPrevious; }
-  void SetNext(nsTreeColumn* aNext) { NS_IF_ADDREF(mNext = aNext); }
+  void SetNext(nsTreeColumn* aNext) {
+    NS_ASSERTION(!mNext, "already have a next sibling");
+    NS_IF_ADDREF(mNext = aNext);
+  }
   void SetPrevious(nsTreeColumn* aPrevious) { mPrevious = aPrevious; }
 
 private:

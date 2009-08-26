@@ -48,6 +48,7 @@
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "nsIScriptGlobalObject.h"
+#include "nsContentUtils.h"
 
 class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
@@ -137,7 +138,11 @@ public:
                              PRBool aAllowWrapping, jsval *vp,
                              // If non-null aHolder will keep the jsval alive
                              // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nsnull);
+                             nsIXPConnectJSObjectHolder** aHolder = nsnull)
+  {
+    return nsContentUtils::WrapNative(cx, scope, native, aIID, vp, aHolder,
+                                      aAllowWrapping);
+  }
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
@@ -899,10 +904,6 @@ public:
   }
 
 public:
-  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
@@ -1331,6 +1332,31 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsStringListSH(aData);
+  }
+};
+
+
+// DOMTokenList scriptable helper
+
+class nsDOMTokenListSH : public nsStringArraySH
+{
+protected:
+  nsDOMTokenListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
+  {
+  }
+
+  virtual ~nsDOMTokenListSH()
+  {
+  }
+
+  virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                               nsAString& aResult);
+
+public:
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsDOMTokenListSH(aData);
   }
 };
 

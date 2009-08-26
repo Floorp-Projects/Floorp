@@ -1566,7 +1566,7 @@ nsXULElement::DestroyContent()
 void
 nsXULElement::List(FILE* out, PRInt32 aIndent) const
 {
-    nsCString prefix("<XUL");
+    nsCString prefix("XUL");
     if (HasSlots()) {
       prefix.Append('*');
     }
@@ -1586,7 +1586,9 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         (aVisitor.mEvent->message == NS_MOUSE_CLICK ||
          aVisitor.mEvent->message == NS_MOUSE_DOUBLECLICK ||
          aVisitor.mEvent->message == NS_XUL_COMMAND ||
-         aVisitor.mEvent->message == NS_CONTEXTMENU)) {
+         aVisitor.mEvent->message == NS_CONTEXTMENU ||
+         aVisitor.mEvent->message == NS_DRAGDROP_START ||
+         aVisitor.mEvent->message == NS_DRAGDROP_GESTURE)) {
         // Don't propagate these events from native anonymous scrollbar.
         aVisitor.mCanHandle = PR_TRUE;
         aVisitor.mParentTarget = nsnull;
@@ -1995,8 +1997,8 @@ nsXULElement::LoadSrc()
     nsXULSlots* slots = static_cast<nsXULSlots*>(GetSlots());
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
     if (!slots->mFrameLoader) {
-        slots->mFrameLoader = new nsFrameLoader(this);
-        NS_ENSURE_TRUE(slots->mFrameLoader, NS_ERROR_OUT_OF_MEMORY);
+        slots->mFrameLoader = nsFrameLoader::Create(this);
+        NS_ENSURE_TRUE(slots->mFrameLoader, NS_OK);
     }
 
     return slots->mFrameLoader->LoadFrame();

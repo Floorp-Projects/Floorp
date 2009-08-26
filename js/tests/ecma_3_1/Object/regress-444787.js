@@ -118,18 +118,11 @@ function test()
 
   var objects = [
     {instance: [0], type: Array},
-    {instance: true, type: Boolean},
-    {instance: false, type: Boolean},
     {instance: (function () {}), type: Function},
     {instance: eval, type: Function},
     {instance: parseInt, type: Function},
-    {instance: 1.0, type: Number},
-    {instance: Infinity, type: Number},
-    {instance: NaN, type: Number},
-    {instance: Math.PI, type: Number},
     {instance: {a: ''}, type: Object},
-    {instance: /foo/, type: RegExp},
-    {instance: "bar", type: String}
+    {instance: /foo/, type: RegExp}
     ];
 
   for (i = 0; i < objects.length; i++)
@@ -139,6 +132,23 @@ function test()
     expect   = type.prototype;
     actual   = Object.getPrototypeOf(instance);
     reportCompare(expect, actual, summary + ' instance: ' + instance + ', type: ' + type.name);
+  }
+
+  var non_objects = [ true, false, 1.0, Infinity, NaN, Math.PI, "bar" ];
+
+  for (i = 0; i < non_objects.length; i++)
+  {
+    instance = non_objects[i];
+    expect = 'TypeError: instance is not an object';
+    try
+    {
+      actual = Object.getPrototypeOf(instance);
+    }
+    catch(ex)
+    {
+      actual = ex + '';
+    }
+    reportCompare(expect, actual, summary + ' non-object: ' + actual);
   }
 
   exitFunc ('test');

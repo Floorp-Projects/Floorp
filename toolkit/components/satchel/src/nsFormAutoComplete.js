@@ -75,14 +75,16 @@ FormAutoComplete.prototype = {
         return this.__observerService;
     },
 
-    _prefBranch        : null,
-    _debug             : false, // mirrors browser.formfill.debug
-    _enabled           : true,  // mirrors browser.formfill.enable preference
-    _agedWeight        : 2,
-    _bucketSize        : 5,
-    _maxTimeGroupings  : 25,
-    _timeGroupingSize  : 7 * 24 * 60 * 60 * 1000 * 1000,
-    _expireDays        : null,
+    _prefBranch         : null,
+    _debug              : false, // mirrors browser.formfill.debug
+    _enabled            : true,  // mirrors browser.formfill.enable preference
+    _agedWeight         : 2,
+    _bucketSize         : 1,
+    _maxTimeGroupings   : 25,
+    _timeGroupingSize   : 7 * 24 * 60 * 60 * 1000 * 1000,
+    _expireDays         : null,
+    _boundaryWeight     : 25,
+    _prefixWeight       : 5,
 
     init : function() {
         // Preferences. Add observer so we get notified of changes.
@@ -136,6 +138,12 @@ FormAutoComplete.prototype = {
                     case "bucketSize":
                         self._bucketSize = self._prefBranch.getIntPref(prefName);
                         break;
+                    case "boundaryWeight":
+                        self._boundaryWeight = self._prefBranch.getIntPref(prefName);
+                        break;
+                    case "prefixWeight":
+                        self._prefixWeight = self._prefBranch.getIntPref(prefName);
+                        break;
                     default:
                         self.log("Oops! Pref not handled, change ignored.");
                 }
@@ -164,46 +172,62 @@ FormAutoComplete.prototype = {
      * autoCompleteSearch
      *
      * aInputName    -- |name| attribute from the form input being autocompleted.
-     * aSearchString -- current value of the input
+     * aUntrimmedSearchString -- current value of the input
+     * aField -- nsIDOMHTMLInputElement being autocompleted (may be null if from chrome)
      * aPreviousResult -- previous search result, if any.
      *
      * Returns: an nsIAutoCompleteResult
      */
-    autoCompleteSearch : function (aInputName, aSearchString, aPreviousResult) {
+    autoCompleteSearch : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult) {
+        function sortBytotalScore (a, b) {
+            let x = a.totalScore;
+            let y = b.totalScore;
+            return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+        }
+
         if (!this._enabled)
             return null;
 
-        this.log("AutoCompleteSearch invoked. Search is: " + aSearchString);
-
+        this.log("AutoCompleteSearch invoked. Search is: " + aUntrimmedSearchString);
+        let searchString = aUntrimmedSearchString.trim().toLowerCase();
         let result = null;
 
-        if (aPreviousResult &&
-                aSearchString.substr(0, aPreviousResult.searchString.length) == aPreviousResult.searchString) {
+        // reuse previous results if:
+        // a) length greater than one character (others searches are special cases) AND
+        // b) the the new results will be a subset of the previous results
+        if (aPreviousResult && aPreviousResult.searchString.trim().length > 1 &&
+            searchString.indexOf(aPreviousResult.searchString.trim().toLowerCase()) >= 0) {
             this.log("Using previous autocomplete result");
             result = aPreviousResult;
-            result.wrappedJSObject.searchString = aSearchString;
+            result.wrappedJSObject.searchString = aUntrimmedSearchString;
 
+            let searchTokens = searchString.split(/\s+/);
             // We have a list of results for a shorter search string, so just
-            // filter them further based on the new search string.
-            // Count backwards, because result.matchCount is decremented
-            // when we remove an entry.
-            for (let i = result.matchCount - 1; i >= 0; i--) {
-                let match = result.getValueAt(i);
-
-                // Remove results that are too short, or have different prefix.
+            // filter them further based on the new search string and add to a new array.
+            let entries = result.wrappedJSObject.entries;
+            let filteredEntries = [];
+            for (let i = 0; i < entries.length; i++) {
+                let entry = entries[i];
+                // Remove results that do not contain the token
                 // XXX bug 394604 -- .toLowerCase can be wrong for some intl chars
-                if (aSearchString.length > match.length ||
-                    aSearchString.toLowerCase() !=
-                        match.substr(0, aSearchString.length).toLowerCase())
-                {
-                    this.log("Removing autocomplete entry '" + match + "'");
-                    result.removeValueAt(i, false);
-                }
+                if(searchTokens.some(function (tok) entry.textLowerCase.indexOf(tok) < 0))
+                    continue;
+                this._calculateScore(entry, searchString, searchTokens);
+                this.log("Reusing autocomplete entry '" + entry.text +
+                         "' (" + entry.frecency +" / " + entry.totalScore + ")");
+                filteredEntries.push(entry);
             }
+            filteredEntries.sort(sortBytotalScore);
+            result.wrappedJSObject.entries = filteredEntries;
         } else {
             this.log("Creating new autocomplete search result.");
-            let entries = this.getAutoCompleteValues(aInputName, aSearchString);
-            result = new FormAutoCompleteResult(this._formHistory, entries, aInputName, aSearchString);
+            let entries = this.getAutoCompleteValues(aInputName, searchString);
+            result = new FormAutoCompleteResult(this._formHistory, entries, aInputName, aUntrimmedSearchString);
+            if (aField && aField.maxLength > -1) {
+                let original = result.wrappedJSObject.entries;
+                let filtered = original.filter(function (el) el.text.length <= this.maxLength, aField);
+                result.wrappedJSObject.entries = filtered;
+            }
         }
 
         return result;
@@ -211,6 +235,46 @@ FormAutoComplete.prototype = {
 
     getAutoCompleteValues : function (fieldName, searchString) {
         let values = [];
+        let searchTokens;
+
+        let params = {
+            agedWeight:         this._agedWeight,
+            bucketSize:         this._bucketSize,
+            expiryDate:         1000 * (Date.now() - this._expireDays * 24 * 60 * 60 * 1000),
+            fieldname:          fieldName,
+            maxTimeGroupings:   this._maxTimeGroupings,
+            now:                Date.now() * 1000,          // convert from ms to microseconds
+            timeGroupingSize:   this._timeGroupingSize
+        }
+
+        // only do substring matching when more than one character is typed
+        let where = ""
+        let boundaryCalc = "";
+        if (searchString.length > 1) {
+            searchTokens = searchString.split(/\s+/);
+
+            // build up the word boundary and prefix match bonus calculation
+            boundaryCalc = "MAX(1, :prefixWeight * (value LIKE :valuePrefix ESCAPE '/') + (";
+            // for each word, calculate word boundary weights for the SELECT clause and
+            // add word to the WHERE clause of the query
+            let tokenCalc = [];
+            for (let i = 0; i < searchTokens.length; i++) {
+                tokenCalc.push("(value LIKE :tokenBegin" + i + " ESCAPE '/') + " +
+                                "(value LIKE :tokenBoundary" + i + " ESCAPE '/')");
+                where += "AND (value LIKE :tokenContains" + i + " ESCAPE '/') ";
+            }
+            // add more weight if we have a traditional prefix match and
+            // multiply boundary bonuses by boundary weight
+            boundaryCalc += tokenCalc.join(" + ") + ") * :boundaryWeight)";
+            params.prefixWeight = this._prefixWeight;
+            params.boundaryWeight = this._boundaryWeight;
+        } else if (searchString.length == 1) {
+            where = "AND (value LIKE :valuePrefix ESCAPE '/') ";
+            boundaryCalc = "1";
+        } else {
+            where = "";
+            boundaryCalc = "1";
+        }
         /* Three factors in the frecency calculation for an entry (in order of use in calculation):
          * 1) average number of times used - items used more are ranked higher
          * 2) how recently it was last used - items used recently are ranked higher
@@ -220,27 +284,18 @@ FormAutoComplete.prototype = {
          * with a very similar frecency are bucketed together with an alphabetical sort. This is
          * to reduce the amount of moving around by entries while typing.
          */
+
         let query = "SELECT value, " +
                     "ROUND( " +
                         "timesUsed / MAX(1.0, (lastUsed - firstUsed) / :timeGroupingSize) * " +
                         "MAX(1.0, :maxTimeGroupings - (:now - lastUsed) / :timeGroupingSize) * "+
                         "MAX(1.0, :agedWeight * (firstUsed < :expiryDate)) / " +
                         ":bucketSize "+
-                    ") AS frecency " +
+                    ", 3) AS frecency, " +
+                    boundaryCalc + " AS boundaryBonuses " +
                     "FROM moz_formhistory " +
-                    "WHERE fieldname=:fieldname AND value LIKE :valuePrefix ESCAPE '/' " +
-                    "ORDER BY frecency DESC, UPPER(value) ASC";
-
-        let params = {
-            agedWeight:         this._agedWeight,
-            bucketSize:         this._bucketSize,
-            expiryDate:         1000 * (Date.now() - this._expireDays * 24 * 60 * 60 * 1000),
-            fieldname:          fieldName,
-            maxTimeGroupings:   this._maxTimeGroupings,
-            now:                Date.now() * 1000,          // convert from ms to microseconds
-            timeGroupingSize:   this._timeGroupingSize,
-            valuePrefix:        null                        // set below...
-        }
+                    "WHERE fieldname=:fieldname " + where +
+                    "ORDER BY ROUND(frecency * boundaryBonuses) DESC, UPPER(value) ASC";
 
         let stmt;
         try {
@@ -248,10 +303,29 @@ FormAutoComplete.prototype = {
 
             // Chicken and egg problem: Need the statement to escape the params we
             // pass to the function that gives us the statement. So, fix it up now.
-            stmt.params.valuePrefix = stmt.escapeStringForLIKE(searchString, "/") + "%";
+            if (searchString.length >= 1)
+                stmt.params.valuePrefix = stmt.escapeStringForLIKE(searchString, "/") + "%";
+            if (searchString.length > 1) {
+                for (let i = 0; i < searchTokens.length; i++) {
+                    let escapedToken = stmt.escapeStringForLIKE(searchTokens[i], "/");
+                    stmt.params["tokenBegin" + i] = escapedToken + "%";
+                    stmt.params["tokenBoundary" + i] =  "% " + escapedToken + "%";
+                    stmt.params["tokenContains" + i] = "%" + escapedToken + "%";
+                }
+            } else {
+                // no addional params need to be substituted into the query when the
+                // length is zero or one
+            }
 
-            while (stmt.step())
-                values.push(stmt.row.value);
+            while (stmt.step()) {
+                let entry = {
+                    text:           stmt.row.value,
+                    textLowerCase:  stmt.row.value.toLowerCase(),
+                    frecency:       stmt.row.frecency,
+                    totalScore:     Math.round(stmt.row.frecency * stmt.row.boundaryBonuses)
+                }
+                values.push(entry);
+            }
 
         } catch (e) {
             this.log("getValues failed: " + e.name + " : " + e.message);
@@ -290,6 +364,31 @@ FormAutoComplete.prototype = {
             return prefsBranch.getIntPref("browser.formfill.expire_days");
         else
             return prefsBranch.getIntPref("browser.history_expire_days");
+    },
+
+    /*
+     * _calculateScore
+     *
+     * entry    -- an nsIAutoCompleteResult entry
+     * aSearchString -- current value of the input (lowercase)
+     * searchTokens -- array of tokens of the search string
+     *
+     * Returns: an int
+     */
+    _calculateScore : function (entry, aSearchString, searchTokens) {
+        let boundaryCalc = 0;
+        // for each word, calculate word boundary weights
+        for each (let token in searchTokens) {
+            boundaryCalc += (entry.textLowerCase.indexOf(token) == 0);
+            boundaryCalc += (entry.textLowerCase.indexOf(" " + token) >= 0);
+        }
+        boundaryCalc = boundaryCalc * this._boundaryWeight;
+        // now add more weight if we have a traditional prefix match and
+        // multiply boundary bonuses by boundary weight
+        boundaryCalc += this._prefixWeight *
+                        (entry.textLowerCase.
+                         indexOf(aSearchString) == 0);
+        entry.totalScore = Math.round(entry.frecency * Math.max(1, boundaryCalc));
     }
 
 }; // end of FormAutoComplete implementation
@@ -303,11 +402,6 @@ function FormAutoCompleteResult (formHistory, entries, fieldName, searchString) 
     this.entries = entries;
     this.fieldName = fieldName;
     this.searchString = searchString;
-
-    if (entries.length > 0) {
-        this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
-        this.defaultIndex = 0;
-    }
 }
 
 FormAutoCompleteResult.prototype = {
@@ -332,16 +426,25 @@ FormAutoCompleteResult.prototype = {
 
     // Interfaces from idl...
     searchString : null,
-    searchResult : Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
-    defaultIndex : -1,
     errorDescription : "",
+    get defaultIndex() {
+        if (entries.length == 0)
+            return -1;
+        else
+            return 0;
+    },
+    get searchResult() {
+        if (this.entries.length == 0)
+            return Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+        return Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
+    },
     get matchCount() {
         return this.entries.length;
     },
 
     getValueAt : function (index) {
         this._checkIndexBounds(index);
-        return this.entries[index];
+        return this.entries[index].text;
     },
 
     getCommentAt : function (index) {
@@ -364,11 +467,8 @@ FormAutoCompleteResult.prototype = {
 
         let [removedEntry] = this.entries.splice(index, 1);
 
-        if (this.defaultIndex > this.entries.length)
-            this.defaultIndex--;
-
         if (removeFromDB)
-            this.formHistory.removeEntry(this.fieldName, removedEntry);
+            this.formHistory.removeEntry(this.fieldName, removedEntry.text);
     }
 };
 

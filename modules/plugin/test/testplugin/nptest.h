@@ -64,6 +64,8 @@ typedef struct InstanceData {
   bool hasWidget;
   uint32_t timerID1;
   uint32_t timerID2;
+  int32_t lastMouseX;
+  int32_t lastMouseY;
 } InstanceData;
 
 #endif // nptest_h_

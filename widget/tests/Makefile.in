@@ -44,7 +44,7 @@ relativesrcdir  = widget/tests
 include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifneq ($(OS_ARCH), WINCE)
+ifdef NS_ENABLE_TSF
 CPP_UNIT_TESTS += TestWinTSF.cpp  \
                   $(NULL)
 REQUIRES += appshell content docshell \

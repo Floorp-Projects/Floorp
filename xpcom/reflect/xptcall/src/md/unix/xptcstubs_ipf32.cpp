@@ -124,7 +124,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
     case nsXPTType::T_CHAR   : dp->val.c   = *(iargs); break;
     case nsXPTType::T_WCHAR  : dp->val.wc  = *(iargs); break;
     default:
-      NS_ASSERTION(0, "bad type");
+      NS_ERROR("bad type");
       break;
     }
     if (i < 7)
@@ -175,7 +175,7 @@ PRUint64 a8) \
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
 { \
-    NS_ASSERTION(0,"nsXPTCStubBase::Sentinel called"); \
+    NS_ERROR("nsXPTCStubBase::Sentinel called"); \
     return NS_ERROR_NOT_IMPLEMENTED; \
 }
 

@@ -48,35 +48,6 @@ RESFILE		= MozillaControl.res
 DEFFILE		= L_mozctl.def
 FORCE_SHARED_LIB= 1
 
-REQUIRES = \
-    xpcom \
-    string \
-    js \
-    widget \
-    gfx \
-    view \
-    necko \
-    pref \
-    webbrwsr \
-    docshell \
-    dom \
-    uriloader \
-    layout \
-    content \
-    editor \
-    webshell \
-    profile \
-    embed_base \
-    necko \
-    windowwatcher \
-    webbrowserpersist \
-    exthandler \
-    mimetype \
-    composer \
-    commandhandler \
-    ax_common \
-    locale \
-    $(NULL)
 
 CPPSRCS = \
     StdAfx.cpp             \

@@ -166,7 +166,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex,
                 dp->val.wc  = *((PRUint32*)a_ov ), a_ov++;
             break;
         default:
-            NS_ASSERTION(0, "bad type");
+            NS_ERROR("bad type");
             break;
         }
     }
@@ -207,7 +207,7 @@ nsresult nsXPTCStubBase::Stub##n() \
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
 { \
-    NS_ASSERTION(0,"nsXPTCStubBase::Sentinel called"); \
+    NS_ERROR("nsXPTCStubBase::Sentinel called"); \
     return NS_ERROR_NOT_IMPLEMENTED; \
 }
 

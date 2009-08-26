@@ -130,7 +130,7 @@ DevToCSSPixels(PRInt32 aPixels, PRInt32 aAppPerDev)
 //***    nsXULWindow: Object Management
 //*****************************************************************************
 
-nsXULWindow::nsXULWindow()
+nsXULWindow::nsXULWindow(PRUint32 aChromeFlags)
   : mChromeTreeOwner(nsnull), 
     mContentTreeOwner(nsnull),
     mPrimaryContentTreeOwner(nsnull),
@@ -147,7 +147,7 @@ nsXULWindow::nsXULWindow()
     mBlurSuppressionLevel(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
-    mChromeFlags(nsIWebBrowserChrome::CHROME_ALL),
+    mChromeFlags(aChromeFlags),
     // best guess till we have a widget
     mAppPerDev(nsPresContext::AppUnitsPerCSSPixel()) 
 {
@@ -968,10 +968,7 @@ void nsXULWindow::OnChromeLoaded()
   if (NS_SUCCEEDED(rv)) {
     mChromeLoaded = PR_TRUE;
     ApplyChromeFlags();
-
-    LoadChromeHidingFromXUL();
-    LoadWindowClassFromXUL();
-    LoadIconFromXUL();
+    SyncAttributesToWidget();
     LoadSizeFromXUL();
     if (mIntrinsicallySized) {
       // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
@@ -995,8 +992,6 @@ void nsXULWindow::OnChromeLoaded()
       positionSet = LoadPositionFromXUL();
     LoadMiscPersistentAttributesFromXUL();
 
-    //LoadContentAreas();
-
     if (mCenterAfterLoad && !positionSet)
       Center(parentWindow, parentWindow ? PR_FALSE : PR_TRUE, PR_FALSE);
 
@@ -1004,25 +999,6 @@ void nsXULWindow::OnChromeLoaded()
       SetVisibility(PR_TRUE);
   }
   mPersistentAttributesMask |= PAD_POSITION | PAD_SIZE | PAD_MISC;
-}
-
-nsresult nsXULWindow::LoadChromeHidingFromXUL()
-{
-  NS_ENSURE_STATE(mWindow);
-
-  // Get <window> element.
-  nsCOMPtr<nsIDOMElement> windowElement;
-  GetWindowDOMElement(getter_AddRefs(windowElement));
-  NS_ENSURE_TRUE(windowElement, NS_ERROR_FAILURE);
-
-  nsAutoString attr;
-  nsresult rv = windowElement->GetAttribute(NS_LITERAL_STRING("hidechrome"), attr);
-
-  if (NS_SUCCEEDED(rv) && attr.LowerCaseEqualsLiteral("true")) {
-    mWindow->HideWindowChrome(PR_TRUE);
-  }
-
-  return NS_OK;
 }
 
 PRBool nsXULWindow::LoadPositionFromXUL()
@@ -1358,82 +1334,39 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
   } while (keepTrying);
 }
 
-NS_IMETHODIMP nsXULWindow::LoadWindowClassFromXUL()
+void nsXULWindow::SyncAttributesToWidget()
 {
-  nsCOMPtr<nsIDOMElement> docShellElement;
-  GetWindowDOMElement(getter_AddRefs(docShellElement));
-  NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
-
-  nsAutoString windowType;
-
-  docShellElement->GetAttribute(NS_LITERAL_STRING("windowtype"),
-                                windowType);
-
-  if (!windowType.IsEmpty()) {
-    mWindow->SetWindowClass(windowType);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULWindow::LoadIconFromXUL()
-{
-  NS_ENSURE_STATE(mWindow);
-
-  // Get <window> element.
   nsCOMPtr<nsIDOMElement> windowElement;
   GetWindowDOMElement(getter_AddRefs(windowElement));
-  NS_ENSURE_TRUE(windowElement, NS_ERROR_FAILURE);
+  if (!windowElement)
+    return;
 
-  // XXX The following code is being #if 0'd out since it
-  // basically does nothing until bug 70974 is fixed.
-  // After bug 70974 is fixed, we will also need to implement
-  // computed style for that property before this will
-  // be of any use.  And even then, it will *still* 
-  // do nothing on platforms which don't implement 
-  // nsWindow::SetIcon(). See bug 76211 for that.
-  // Also see bug 57576 and its dependency tree.
-#if 0
-  // Get document in which this <window> is contained.
-  nsCOMPtr<nsIDOMDocument> document;
-  windowElement->GetOwnerDocument(getter_AddRefs(document));
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+  nsAutoString attr;
 
-  // Get document view.
-  nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(document));
-  NS_ENSURE_TRUE(docView, NS_ERROR_FAILURE);
-
-  // Get default/abstract view.
-  nsCOMPtr<nsIDOMAbstractView> abstractView;
-  docView->GetDefaultView(getter_AddRefs(abstractView));
-  NS_ENSURE_TRUE(abstractView, NS_ERROR_FAILURE);
-
-  // Get "view CSS."
-  nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(abstractView));
-  NS_ENSURE_TRUE(viewCSS, NS_ERROR_FAILURE);
-
-  // Next, get CSS style declaration.
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  viewCSS->GetComputedStyle(windowElement, EmptyString(),
-                            getter_AddRefs(cssDecl));
-  NS_ENSURE_TRUE(cssDecl, NS_ERROR_FAILURE);
-
-  // Whew.  Now get "list-style-image" property value.
-  nsAutoString windowIcon;
-  windowIcon.AssignLiteral("-moz-window-icon");
-  nsAutoString icon;
-  cssDecl->GetPropertyValue(windowIcon, icon);
-#endif
-
-  nsAutoString id;
-  windowElement->GetAttribute(NS_LITERAL_STRING("id"), id);
-
-  if (id.IsEmpty()) {
-    id.AssignLiteral("default");
+  // "hidechrome" attribute
+  nsresult rv = windowElement->GetAttribute(NS_LITERAL_STRING("hidechrome"), attr);
+  if (NS_SUCCEEDED(rv) && attr.EqualsLiteral("true")) {
+    mWindow->HideWindowChrome(PR_TRUE);
   }
 
-  mWindow->SetIcon(id);
-  return NS_OK;
+  // "windowtype" attribute
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("windowtype"), attr);
+  if (NS_SUCCEEDED(rv) && !attr.IsEmpty()) {
+    mWindow->SetWindowClass(attr);
+  }
+
+  // "id" attribute for icon
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("id"), attr);
+  if (NS_FAILED(rv) || attr.IsEmpty()) {
+    attr.AssignLiteral("default");
+  }
+  mWindow->SetIcon(attr);
+
+  // "toggletoolbar" attribute
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("toggletoolbar"), attr);
+  if (NS_SUCCEEDED(rv)) {
+    mWindow->SetShowsToolbarButton(attr.LowerCaseEqualsLiteral("true"));
+  }
 }
 
 NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
@@ -1593,34 +1526,6 @@ NS_IMETHODIMP nsXULWindow::GetWindowDOMElement(nsIDOMElement** aDOMElement)
 
   domdoc->GetDocumentElement(aDOMElement);
   NS_ENSURE_TRUE(*aDOMElement, NS_ERROR_FAILURE);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElement)
-{
-  NS_ENSURE_STATE(mDocShell);
-  NS_ENSURE_ARG_POINTER(aDOMElement);
-
-  *aDOMElement = nsnull;
-
-  nsCOMPtr<nsIContentViewer> cv;
-
-  mDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (!cv)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-  if (!docv)   
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocument> doc;
-  docv->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-  if (!domdoc) 
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_SUCCESS(domdoc->GetElementById(NS_ConvertASCIItoUTF16(aID), aDOMElement), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -1799,8 +1704,6 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 
-  newWindow->SetChromeFlags(aChromeFlags);
-
   *_retval = newWindow;
   NS_ADDREF(*_retval);
 
@@ -1849,8 +1752,6 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
                                 getter_AddRefs(newWindow));
 
   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
-
-  newWindow->SetChromeFlags(aChromeFlags);
 
   // Specify that we want the window to remain locked until the chrome has loaded.
   nsXULWindow *xulWin = static_cast<nsXULWindow*>

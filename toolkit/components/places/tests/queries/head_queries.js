@@ -59,36 +59,27 @@ function LOG(aMsg) {
 
 // If there's no location registered for the profile directory, register one now.
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-var profileDir = null;
-try {
- profileDir = dirSvc.get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile);
-} catch (e) {}
-if (!profileDir) {
- // Register our own provider for the profile directory.
- // It will simply return the current directory.
- var provider = {
-   getFile: function(prop, persistent) {
-     persistent.value = true;
-     if (prop == NS_APP_USER_PROFILE_50_DIR) {
-       return dirSvc.get("CurProcD", Ci.nsIFile);
-     }
-     if (prop == NS_APP_HISTORY_50_FILE) {
-       var histFile = dirSvc.get("CurProcD", Ci.nsIFile);
-       histFile.append("history.dat");
-       return histFile;
-     }
-     throw Cr.NS_ERROR_FAILURE;
-   },
-   QueryInterface: function(iid) {
-     if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-         iid.equals(Ci.nsISupports)) {
-       return this;
-     }
-     throw Cr.NS_ERROR_NO_INTERFACE;
-   }
- };
- dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
-}
+var profileDir = do_get_profile();
+
+var provider = {
+  getFile: function(prop, persistent) {
+    persistent.value = true;
+    if (prop == NS_APP_HISTORY_50_FILE) {
+      var histFile = profileDir.clone();
+      histFile.append("history.dat");
+      return histFile;
+    }
+    throw Cr.NS_ERROR_FAILURE;
+  },
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
+        iid.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
+dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 
 var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
@@ -185,6 +176,8 @@ function populateDB(aArray) {
           stmt.params.url = qdata.uri;
           try {
             stmt.execute();
+            // Force a notification so results are updated.
+            histsvc.runInBatchMode({runBatched: function(){}}, null);
           }
           finally {
             stmt.finalize();
@@ -202,6 +195,8 @@ function populateDB(aArray) {
           stmt.params.url = qdata.uri;
           try {
             stmt.execute();
+            // Force a notification so results are updated.
+            histsvc.runInBatchMode({runBatched: function(){}}, null);
           }
           finally {
             stmt.finalize();
@@ -223,27 +218,46 @@ function populateDB(aArray) {
       }
 
       if (qdata.isPageAnnotation) {
-        annosvc.setPageAnnotation(uri(qdata.uri), qdata.annoName, qdata.annoVal,
-                                  qdata.annoFlags, qdata.annoExpiration);
+        if (qdata.removeAnnotation) 
+          annosvc.removePageAnnotation(uri(qdata.uri), qdata.annoName);
+        else {
+          annosvc.setPageAnnotation(uri(qdata.uri),
+                                    qdata.annoName, qdata.annoVal,
+                                    qdata.annoFlags, qdata.annoExpiration);
+        }
       }
 
       if (qdata.isItemAnnotation) {
-        annosvc.setItemAnnotation(qdata.itemId, qdata.annoName, qdata.annoVal,
-                                  qdata.annoFlags, qdata.annoExpiration);
+        if (qdata.removeAnnotation)
+          annosvc.removeItemAnnotation(qdata.itemId, qdata.annoName);
+        else {
+          annosvc.setItemAnnotation(qdata.itemId, qdata.annoName, qdata.annoVal,
+                                    qdata.annoFlags, qdata.annoExpiration);
+        }
       }
 
       if (qdata.isPageBinaryAnnotation) {
-        annosvc.setPageAnnotationBinary(uri(qdata.uri), qdata.annoName,
-                                        qdata.binarydata, qdata.binaryDataLength,
-                                        qdata.annoMimeType, qdata.annoFlags,
-                                        qdata.annoExpiration);
+        if (qdata.removeAnnotation)
+          annosvc.removePageAnnotation(uri(qdata.uri), qdata.annoName);
+        else {
+          annosvc.setPageAnnotationBinary(uri(qdata.uri), qdata.annoName,
+                                          qdata.binarydata,
+                                          qdata.binaryDataLength,
+                                          qdata.annoMimeType, qdata.annoFlags,
+                                          qdata.annoExpiration);
+        }
       }
 
       if (qdata.isItemBinaryAnnotation) {
-        annosvc.setItemAnnotationBinary(qdata.itemId, qdata.annoName,
-                                        qdata.binaryData, qdata.binaryDataLength,
-                                        qdata.annoMimeType, qdata.annoFlags,
-                                        qdata.annoExpiration);
+        if (qdata.removeAnnotation)
+          annosvc.removeItemAnnotation(qdata.itemId, qdata.annoName);
+        else {
+          annosvc.setItemAnnotationBinary(qdata.itemId, qdata.annoName,
+                                          qdata.binaryData,
+                                          qdata.binaryDataLength,
+                                          qdata.annoMimeType, qdata.annoFlags,
+                                          qdata.annoExpiration);
+        }
       }
 
       if (qdata.isFavicon) {
@@ -258,7 +272,9 @@ function populateDB(aArray) {
       }
 
       if (qdata.isFolder) {
-        bmsvc.createFolder(qdata.parentFolder, qdata.title, qdata.index);
+        let folderId = bmsvc.createFolder(qdata.parentFolder, qdata.title, qdata.index);
+        if (qdata.readOnly)
+          bmsvc.setFolderReadonly(folderId, true);
       }
 
       if (qdata.isLivemark) {
@@ -320,6 +336,7 @@ function queryData(obj) {
   this.markPageAsTyped = obj.markPageAsTyped ? obj.markPageAsTyped : false;
   this.hidePage = obj.hidePage ? obj.hidePage : false;
   this.isPageAnnotation = obj.isPageAnnotation ? obj.isPageAnnotation : false;
+  this.removeAnnotation= obj.removeAnnotation ? true : false;
   this.annoName = obj.annoName ? obj.annoName : "";
   this.annoVal = obj.annoVal ? obj.annoVal : "";
   this.annoFlags = obj.annoFlags ? obj.annoFlags : 0;
@@ -351,6 +368,7 @@ function queryData(obj) {
   this.dateAdded = obj.dateAdded ? obj.dateAdded : today;
   this.keyword = obj.keyword ? obj.keyword : "";
   this.visitCount = obj.visitCount ? obj.visitCount : 0;
+  this.readOnly = obj.readOnly ? obj.readOnly : false;
 
   // And now, the attribute for whether or not this object should appear in the
   // resulting query
@@ -449,8 +467,8 @@ function displayResultSet(aRoot) {
   }
 
   for (var i=0; i < aRoot.childCount; ++i) {
-    LOG("Result Set URI: " + aRoot.getChild(i).uri + " Title: " +
-        aRoot.getChild(i).title);
+    LOG("Result Set URI: " + aRoot.getChild(i).uri + "   Title: " +
+        aRoot.getChild(i).title + "   Visit Time: " + aRoot.getChild(i).time);
   }
 }
 

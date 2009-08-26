@@ -1,4 +1,0 @@
-IMPORTS
-    WinQueryProperty        = PMMERGE.5450
-    WinRemoveProperty       = PMMERGE.5451
-    WinSetProperty          = PMMERGE.5452

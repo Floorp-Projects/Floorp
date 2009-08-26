@@ -215,6 +215,27 @@ nsWindow::ReleaseGlobals()
 NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget, nsISupportsWeakReference)
 
 NS_IMETHODIMP
+nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& aConfigurations)
+{
+    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+        NS_ASSERTION(w->GetParent() == this,
+                     "Configured widget is not a child");
+
+        if (w->mBounds.Size() != configuration.mBounds.Size()) {
+            w->Resize(configuration.mBounds.x, configuration.mBounds.y,
+                      configuration.mBounds.width, configuration.mBounds.height,
+                      PR_TRUE);
+        } else if (w->mBounds.TopLeft() != configuration.mBounds.TopLeft()) {
+            w->Move(configuration.mBounds.x, configuration.mBounds.y);
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWindow::Create(nsIWidget        *aParent,
                  const nsIntRect     &aRect,
                  EVENT_CALLBACK   aHandleEventFunction,
@@ -672,26 +693,43 @@ nsWindow::Update()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::Scroll(PRInt32  aDx,
-                 PRInt32  aDy,
-                 nsIntRect  *aClipRect)
+void
+nsWindow::Scroll(const nsIntPoint& aDelta,
+                 const nsIntRect& aSource,
+                 const nsTArray<nsIWidget::Configuration>& aConfigurations)
 {
-    if (!mWidget)
-        return NS_OK;
-
-    mWidget->scroll(aDx, aDy);
-
-    // Update bounds on our child windows
-    for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-        nsIntRect bounds;
-        kid->GetBounds(bounds);
-        bounds.x += aDx;
-        bounds.y += aDy;
-        static_cast<nsBaseWidget*>(kid)->SetBounds(bounds);
+    if (!mWidget) {
+        NS_ERROR("No widget to scroll.");
+        return;
     }
 
-    return NS_OK;
+    nsAutoTArray<nsWindow*,1> windowsToShow;
+    // Hide any widgets that are becoming invisible or that are moving.
+    // Moving widgets are hidden for the duration of the scroll so that
+    // the XCopyArea treats their drawn pixels as part of the window
+    // that should be scrolled. This works well when the widgets are
+    // moving because they're being scrolled, which is normally true.
+    for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
+        const Configuration& configuration = aConfigurations[i];
+        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
+        NS_ASSERTION(w->GetParent() == this,
+                     "Configuration widget is not a child");
+        if (w->mIsShown &&
+            (configuration.mClipRegion.IsEmpty() ||
+             configuration.mBounds != w->mBounds)) {
+            w->NativeShow(PR_FALSE);
+            windowsToShow.AppendElement(w);
+        }
+    }
+
+    QRect rect(aSource.x, aSource.y, aSource.width, aSource.height);
+    mWidget->scroll(aDelta.x, aDelta.y, rect);
+    ConfigureChildren(aConfigurations);
+
+    // Show windows again...
+    for (PRUint32 i = 0; i < windowsToShow.Length(); ++i) {
+        windowsToShow[i]->NativeShow(PR_TRUE);
+    }
 }
 
 void*
@@ -1732,6 +1770,15 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
         mWidget->update();
 }
 
+void
+nsWindow::NativeShow(PRBool aAction)
+{
+    if (aAction == PR_TRUE)
+        mWidget->show();
+    else
+        mWidget->hide();
+}
+
 NS_IMETHODIMP
 nsWindow::SetHasTransparentBackground(PRBool aTransparent)
 {
@@ -1869,7 +1916,7 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // is visible.
     PRBool wasVisible = PR_FALSE;
     if (mWidget->isVisible()) {
-        mWidget->hide();
+        NativeShow(PR_FALSE);
         wasVisible = PR_TRUE;
     }
 
@@ -1880,7 +1927,7 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
         wmd = ConvertBorderStyles(mBorderStyle);
 
     if (wasVisible) {
-        mWidget->show();
+        NativeShow(PR_TRUE);
     }
 
     // For some window managers, adding or removing window decorations

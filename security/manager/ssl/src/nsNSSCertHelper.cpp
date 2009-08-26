@@ -109,7 +109,7 @@ GetIntValue(SECItem *versionItem,
 
   srv = SEC_ASN1DecodeInteger(versionItem,version);
   if (srv != SECSuccess) {
-    NS_ASSERTION(0,"Could not decode version of cert");
+    NS_ERROR("Could not decode version of cert");
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -155,7 +155,7 @@ ProcessVersion(SECItem         *versionItem,
     rv = nssComponent->GetPIPNSSBundleString("CertDumpVersion3", text);
     break;
   default:
-    NS_ASSERTION(0,"Bad value for cert version");
+    NS_ERROR("Bad value for cert version");
     rv = NS_ERROR_FAILURE;
   }
     
@@ -1412,8 +1412,7 @@ ProcessCertificatePolicies(SECItem  *extData,
       // because we want to display the EV information string
       // next to the correct OID.
 
-      SECOidTag oid_tag = SECOID_FindOIDTag(&policyInfo->policyID);
-      if (oid_tag == ev_oid_tag) {
+      if (policyInfo->oid == ev_oid_tag) {
         text.Append(NS_LITERAL_STRING(":"));
         text.Append(NS_LITERAL_STRING(SEPARATOR));
         needColon = PR_FALSE;

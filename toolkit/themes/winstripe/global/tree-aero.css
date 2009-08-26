@@ -28,18 +28,18 @@ treechildren::-moz-tree-twisty(hover, open) {
   list-style-image: url("chrome://global/skin/tree/twisty-open-hover.png");
 }
 
-tree:-moz-locale-dir(rtl) > treechildren::-moz-tree-twisty {
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty {
   list-style-image: url("chrome://global/skin/tree/twisty-clsd-rtl.png");
 }
 
-tree:-moz-locale-dir(rtl) > treechildren::-moz-tree-twisty(open) {
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open) {
   list-style-image: url("chrome://global/skin/tree/twisty-open-rtl.png");
 }
 
-tree:-moz-locale-dir(rtl) > treechildren::-moz-tree-twisty(hover) {
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover) {
   list-style-image: url("chrome://global/skin/tree/twisty-clsd-hover-rtl.png");
 }
 
-tree:-moz-locale-dir(rtl) > treechildren::-moz-tree-twisty(hover, open) {
+treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
   list-style-image: url("chrome://global/skin/tree/twisty-open-hover-rtl.png");
 }

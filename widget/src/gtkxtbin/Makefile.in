@@ -58,7 +58,6 @@ endif
 
 EXPORTS         = gtk2xtbin.h 
 
-REQUIRES	= xpcom
 
 include $(topsrcdir)/config/rules.mk
 

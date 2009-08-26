@@ -1,4 +1,4 @@
-classic.jar:
+browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
   skin/classic/browser/sanitizeDialog.css                   (sanitizeDialog.css)
 * skin/classic/browser/aboutPrivateBrowsing.css             (aboutPrivateBrowsing.css)
@@ -50,7 +50,6 @@ classic.jar:
   skin/classic/browser/Secure-statusbar-broken.png
   skin/classic/browser/Secure-background.gif
   skin/classic/browser/Toolbar.png
-  skin/classic/browser/Toolbar-rtl.png
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png                 (feeds/feedIcon16.png)
@@ -100,8 +99,6 @@ classic.jar:
   skin/classic/browser/places/twisty-open.gif               (places/twisty-open.gif)
   skin/classic/browser/places/twisty-closed.gif             (places/twisty-closed.gif)
   skin/classic/browser/places/tag.png                       (places/tag.png)
-  skin/classic/browser/places/selected-gradient.png         (places/selected-gradient.png)
-  skin/classic/browser/places/selected-focused-gradient.png (places/selected-focused-gradient.png)
   skin/classic/browser/places/expander-closed-active.png    (places/expander-closed-active.png)
   skin/classic/browser/places/expander-closed.png           (places/expander-closed.png)
   skin/classic/browser/places/expander-open-active.png      (places/expander-open-active.png)
@@ -168,5 +165,3 @@ classic.jar:
   skin/classic/browser/urlbar/textfield-mid.png                          (urlbar/textfield-mid.png)
   skin/classic/browser/urlbar/textfield-mid-focused.png                  (urlbar/textfield-mid-focused.png)
   skin/classic/browser/urlbar/textfield-mid-focused-graphite.png         (urlbar/textfield-mid-focused-graphite.png)
-  icon.png
-  preview.png

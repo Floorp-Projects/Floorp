@@ -123,7 +123,7 @@ namespace nanojit
     void Assembler::nFragExit(LInsp guard)
     {
         SideExit *exit = guard->record()->exit;
-        bool trees = _frago->core()->config.tree_opt;
+        bool trees = config.tree_opt;
         Fragment *frag = exit->target;
         GuardRecord *lr = 0;
         bool destKnown = (frag && frag->fragEntry);
@@ -175,6 +175,12 @@ namespace nanojit
         uint32_t iargs = call->count_iargs();
         int32_t fargs = call->count_args() - iargs;
 
+        bool indirect = call->isIndirect();
+        if (indirect) {
+            // target arg isn't pushed, its consumed in the call
+            iargs --;
+        }
+
         uint32_t max_regs = max_abi_regs[call->_abi];
         if (max_regs > iargs)
             max_regs = iargs;
@@ -204,7 +210,16 @@ namespace nanojit
         }
 
         NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));
-        CALL(call);
+        if (!indirect) {
+            CALL(call);
+        }
+        else {
+            // indirect call.  x86 Calling conventions don't use EAX as an
+            // argument, and do use EAX as a return value.  We need a register
+            // for the address to call, so we use EAX since it will always be
+            // available
+            CALLr(call, EAX);
+        }
 
         // make sure fpu stack is empty before call (restoreCallerSaved)
         NanoAssert(_allocator.isFree(FST0));
@@ -213,8 +228,12 @@ namespace nanojit
         // pre-assign registers to the first N 4B args based on the calling convention
         uint32_t n = 0;
 
-        ArgSize sizes[2*MAXARGS];
+        ArgSize sizes[MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
+        if (indirect) {
+            argc--;
+            asm_arg(ARGSIZE_P, ins->arg(argc), EAX);
+        }
 
         for(uint32_t i=0; i < argc; i++)
         {
@@ -229,52 +248,6 @@ namespace nanojit
 
         if (extra > 0)
             SUBi(SP, extra);
-    }
-
-    void Assembler::nMarkExecute(Page* page, int flags)
-    {
-        NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
-        #if defined WIN32 || defined WIN64
-            DWORD dwIgnore;
-            static const DWORD kProtFlags[4] =
-            {
-                PAGE_READONLY,            // 0
-                PAGE_READWRITE,            // PAGE_WRITE
-                PAGE_EXECUTE_READ,        // PAGE_EXEC
-                PAGE_EXECUTE_READWRITE    // PAGE_EXEC|PAGE_WRITE
-            };
-            DWORD prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
-            BOOL res = VirtualProtect(page, NJ_PAGE_SIZE, prot, &dwIgnore);
-            if (!res)
-            {
-                // todo: we can't abort or assert here, we have to fail gracefully.
-                NanoAssertMsg(false, "FATAL ERROR: VirtualProtect() failed\n");
-            }
-        #elif defined AVMPLUS_UNIX || defined AVMPLUS_MAC
-            static const int kProtFlags[4] =
-            {
-                PROT_READ,                        // 0
-                PROT_READ|PROT_WRITE,            // PAGE_WRITE
-                PROT_READ|PROT_EXEC,            // PAGE_EXEC
-                PROT_READ|PROT_WRITE|PROT_EXEC    // PAGE_EXEC|PAGE_WRITE
-            };
-            int prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
-            intptr_t addr = (intptr_t)page;
-            addr &= ~((uintptr_t)NJ_PAGE_SIZE - 1);
-            NanoAssert(addr == (intptr_t)page);
-            #if defined SOLARIS
-            if (mprotect((char *)addr, NJ_PAGE_SIZE, prot) == -1)
-            #else
-            if (mprotect((void *)addr, NJ_PAGE_SIZE, prot) == -1)
-            #endif
-            {
-                // todo: we can't abort or assert here, we have to fail gracefully.
-                NanoAssertMsg(false, "FATAL ERROR: mprotect(PROT_EXEC) failed\n");
-                abort();
-            }
-        #else
-            (void)page;
-        #endif
     }
 
     Register Assembler::nRegisterAllocFromSet(int set)
@@ -1283,7 +1256,7 @@ namespace nanojit
                 NanoAssert(0); // not supported
             }
         }
-        else if (sz == ARGSIZE_LO)
+        else if (sz == ARGSIZE_I || sz == ARGSIZE_U)
         {
             if (r != UnknownReg) {
                 // arg goes in specific register
@@ -1704,36 +1677,22 @@ namespace nanojit
 
     void Assembler::nativePageSetup()
     {
-        if (!_nIns)         _nIns       = pageAlloc();
-        if (!_nExitIns)  _nExitIns = pageAlloc(true);
-    }
-
-    // Reset the _nIns pointer to the starting value. This can be used to roll
-    // back the instruction pointer in case an error occurred during the code
-    // generation.
-    void Assembler::resetInstructionPointer()
-    {
-        _nIns = _startingIns;
-    }
-
-    // Store the starting _nIns value so that it can be reset later.
-    void Assembler::recordStartingInstructionPointer()
-    {
-        _startingIns = _nIns;
+        if (!_nIns) codeAlloc(codeStart, codeEnd, _nIns);
+        if (!_nExitIns) codeAlloc(exitStart, exitEnd, _nExitIns);
     }
 
     // enough room for n bytes
     void Assembler::underrunProtect(int n)
     {
+        NIns *eip = _nIns;
         NanoAssertMsg(n<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small");
-        NIns *eip = this->_nIns;
-        Page *p = (Page*)pageTop(eip-1);
-        NIns *top = (NIns*) &p->code[0];
-        if (eip - n < top) {
+        if (eip - n < (_inExit ? exitStart : codeStart)) {
             // We are done with the current page.  Tell Valgrind that new code
             // has been generated.
-            VALGRIND_DISCARD_TRANSLATIONS(pageTop(p), NJ_PAGE_SIZE);
-            _nIns = pageAlloc(_inExit);
+            if (_inExit)
+                codeAlloc(exitStart, exitEnd, _nIns);
+            else
+                codeAlloc(codeStart, codeEnd, _nIns);
             JMP(eip);
         }
     }

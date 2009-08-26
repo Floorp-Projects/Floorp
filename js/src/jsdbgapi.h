@@ -495,6 +495,15 @@ js_ResumeVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 #endif /* MOZ_VTUNE */
 
+#ifdef MOZ_TRACEVIS
+extern JS_FRIEND_API(JSBool)
+js_InitEthogram(JSContext *cx, JSObject *obj,
+                uintN argc, jsval *argv, jsval *rval);
+extern JS_FRIEND_API(JSBool)
+js_ShutdownEthogram(JSContext *cx, JSObject *obj,
+                    uintN argc, jsval *argv, jsval *rval);
+#endif /* MOZ_TRACEVIS */
+
 JS_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

@@ -51,10 +51,22 @@ extern JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj);
 
 extern void
-js_random_init(JSRuntime *rt);
+js_InitRandom(JSThreadData *data);
 
-extern jsdouble
-js_random_nextDouble(JSRuntime *rt);
+extern JSBool
+js_math_ceil(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_math_floor(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_math_max(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_math_min(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_math_round(JSContext *cx, uintN argc, jsval *vp);
 
 JS_END_EXTERN_C
 

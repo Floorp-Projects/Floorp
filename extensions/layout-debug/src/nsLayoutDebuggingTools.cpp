@@ -58,7 +58,6 @@
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIFrame.h"
-#include "nsIFrameDebug.h"
 
 #include "nsILayoutDebugger.h"
 #include "nsLayoutCID.h"
@@ -429,15 +428,13 @@ nsLayoutDebuggingTools::DumpContent()
 static void
 DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
 {
+#ifdef DEBUG
     fprintf(out, "webshell=%p \n", static_cast<void*>(aDocShell));
     nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
     if (shell) {
         nsIFrame* root = shell->GetRootFrame();
         if (root) {
-            nsIFrameDebug* fdbg = do_QueryFrame(root);
-            if (fdbg) {
-                fdbg->List(out, 0);
-            }
+            root->List(out, 0);
         }
     }
     else {
@@ -456,6 +453,7 @@ DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
             DumpFramesRecur(childAsShell, out);
         }
     }
+#endif
 }
 
 NS_IMETHODIMP

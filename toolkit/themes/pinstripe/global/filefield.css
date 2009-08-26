@@ -45,18 +45,24 @@
 }
 
 filefield {
-  margin: 2px 4px 2px 27px;
+  margin: 4px;
+  -moz-margin-start: 27px;
   -moz-appearance: textfield;
 }
 
 .fileFieldContentBox {
-  background-color: -moz-Dialog;
+  margin: -3px;
+  background-color: rgba(230, 230, 230, 0.6);
   color: -moz-DialogText;
-  padding: 0px 0px 0px 3px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 3px;
 }
 
 .fileFieldLabel {
   -moz-appearance: none;
   background-color: transparent;
   border: none;
+  margin: 0 4px;
 }

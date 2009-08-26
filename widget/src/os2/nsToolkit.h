@@ -46,8 +46,6 @@
 #include <stdio.h>
 #endif
 
-struct MethodInfo;
-
 /**
  * Wrapper around the thread running the message pump.
  * The toolkit abstraction is necessary because the message pump must
@@ -63,35 +61,9 @@ class nsToolkit : public nsIToolkit
 
                             nsToolkit();
             NS_IMETHOD      Init(PRThread *aThread);
-            void            CallMethod(MethodInfo *info);
-            MRESULT         SendMsg(HWND hwnd, ULONG msg, MPARAM mp1 = 0, MPARAM mp2 = 0);
-            // Return whether the current thread is the application's Gui thread.  
-            PRBool          IsGuiThread(void)      { return (PRBool)(mGuiThread == PR_GetCurrentThread());}
-            PRThread*       GetGuiThread(void)       { return mGuiThread;   }
-            HWND            GetDispatchWindow(void)  { return mDispatchWnd; }
-            void            CreateInternalWindow(PRThread *aThread);
 
 private:
                             ~nsToolkit();
-            void            CreateUIThread(void);
-
-public:
-
-protected:
-    // Handle of the window used to receive dispatch messages.
-    HWND        mDispatchWnd;
-    // Thread Id of the "main" Gui thread.
-    PRThread    *mGuiThread;
-    // Monitor used to coordinate dispatch
-    PRMonitor *mMonitor;
 };
-
-#define WM_CALLMETHOD   (WM_USER+1)
-
-inline void nsToolkit::CallMethod(MethodInfo *info)
-{
-    NS_PRECONDITION(::WinIsWindow((HAB)0, mDispatchWnd), "Invalid window handle");
-    ::WinSendMsg(mDispatchWnd, WM_CALLMETHOD, (MPARAM)0, MPFROMP(info));
-}
 
 #endif  // TOOLKIT_H

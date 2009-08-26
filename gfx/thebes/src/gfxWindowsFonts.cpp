@@ -197,11 +197,11 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     gfxWindowsFontType feType = FontEntry::DetermineFontType(metrics, fontType);
 
     FontEntry *fe = nsnull;
-    for (PRUint32 i = 0; i < ff->mVariations.Length(); ++i) {
-        fe = ff->mVariations[i];
+    for (PRUint32 i = 0; i < ff->mAvailableFonts.Length(); ++i) {
+        fe = static_cast<FontEntry*>(ff->mAvailableFonts[i].get());
         if (feType > fe->mFontType) {
             // if the new type is better than the old one, remove the old entries
-            ff->mVariations.RemoveElementAt(i);
+            ff->mAvailableFonts.RemoveElementAt(i);
             --i;
         } else if (feType < fe->mFontType) {
             // otherwise if the new type is worse, skip it
@@ -209,8 +209,8 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         }
     }
 
-    for (PRUint32 i = 0; i < ff->mVariations.Length(); ++i) {
-        fe = ff->mVariations[i];
+    for (PRUint32 i = 0; i < ff->mAvailableFonts.Length(); ++i) {
+        fe = static_cast<FontEntry*>(ff->mAvailableFonts[i].get());
         // check if we already know about this face
         if (fe->mWeight == logFont.lfWeight &&
             fe->mItalic == (logFont.lfItalic == 0xFF)) {
@@ -227,7 +227,7 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     if (!fe)
         return 1;
 
-    ff->mVariations.AppendElement(fe);
+    ff->mAvailableFonts.AppendElement(fe);
 
     // mark the charset bit
     fe->mCharset[metrics.tmCharSet] = 1;
@@ -282,11 +282,11 @@ FontFamily::FindStyleVariations()
 
     EnumFontFamiliesExW(hdc, &logFont, (FONTENUMPROCW)FontFamily::FamilyAddStylesProc, (LPARAM)&faspd, 0);
 #ifdef DEBUG
-    if (mVariations.Length() == 0) {
+    if (mAvailableFonts.Length() == 0) {
         char msgBuf[256];
         (void)sprintf(msgBuf, "no styles available in family \"%s\"",
                       NS_ConvertUTF16toUTF8(mName).get());
-        NS_ASSERTION(mVariations.Length() != 0, msgBuf);
+        NS_ASSERTION(mAvailableFonts.Length() != 0, msgBuf);
     }
 #endif
 
@@ -297,8 +297,8 @@ FontFamily::FindStyleVariations()
     FontEntry *darkestItalic = nsnull;
     FontEntry *darkestNonItalic = nsnull;
     PRUint8 highestItalic = 0, highestNonItalic = 0;
-    for (PRUint32 i = 0; i < mVariations.Length(); i++) {
-        FontEntry *fe = mVariations[i];
+    for (PRUint32 i = 0; i < mAvailableFonts.Length(); i++) {
+        FontEntry *fe = static_cast<FontEntry*>(mAvailableFonts[i].get());
         if (fe->mItalic) {
             if (!darkestItalic || fe->mWeight > darkestItalic->mWeight)
                 darkestItalic = fe;
@@ -311,12 +311,12 @@ FontFamily::FindStyleVariations()
     if (darkestItalic && darkestItalic->mWeight < 600) {
         FontEntry *newEntry = new FontEntry(*darkestItalic);
         newEntry->mWeight = 600;
-        mVariations.AppendElement(newEntry);
+        mAvailableFonts.AppendElement(newEntry);
     }
     if (darkestNonItalic && darkestNonItalic->mWeight < 600) {
         FontEntry *newEntry = new FontEntry(*darkestNonItalic);
         newEntry->mWeight = 600;
-        mVariations.AppendElement(newEntry);
+        mAvailableFonts.AppendElement(newEntry);
     }
 }
 
@@ -329,28 +329,24 @@ FontFamily::FindFontEntry(const gfxFontStyle& aFontStyle)
 }
 
 PRBool
-FontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], const gfxFontStyle& aFontStyle)
+FontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
+                                PRBool anItalic, PRInt16 aStretch)
 {
-    if (!mHasStyles)
-        FindStyleVariations();
-
-    PRBool italic = (aFontStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
-    PRBool matchesSomething;
+    PRBool matchesSomething = PR_FALSE;
 
     for (PRUint32 j = 0; j < 2; j++) {
-        matchesSomething = PR_FALSE;
         // build up an array of weights that match the italicness we're looking for
-        for (PRUint32 i = 0; i < mVariations.Length(); i++) {
-            FontEntry *fe = mVariations[i];
+        for (PRUint32 i = 0; i < mAvailableFonts.Length(); i++) {
+            gfxFontEntry *fe = mAvailableFonts[i];
             const PRUint8 weight = (fe->mWeight / 100);
-            if (fe->mItalic == italic) {
+            if (fe->mItalic == anItalic) {
                 aFontsForWeights[weight] = fe;
                 matchesSomething = PR_TRUE;
             }
         }
         if (matchesSomething)
             break;
-        italic = !italic;
+        anItalic = !anItalic;
     }
 
     return matchesSomething;
@@ -2427,7 +2423,7 @@ gfxWindowsFontGroup::WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >&
             continue;
         if (fe->HasCharacter(ch)) {
             nsRefPtr<gfxWindowsFont> font =
-                gfxWindowsFont::GetOrMakeFont(fe, &mStyle, mFontNeedsBold[i]);
+                gfxWindowsFont::GetOrMakeFont(fe, &mStyle);
             // Check that the font is still usable.
             if (!font->IsValid())
                 continue;

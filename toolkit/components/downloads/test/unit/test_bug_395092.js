@@ -64,7 +64,7 @@ var timer = null;
 function run_test()
 {
   httpserv = new nsHttpServer();
-  httpserv.registerDirectory("/", dirSvc.get("ProfD", Ci.nsILocalFile));
+  httpserv.registerDirectory("/", do_get_cwd());
   httpserv.start(4444);
 
   // our download listener

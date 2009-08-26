@@ -90,7 +90,6 @@ const FILE_CHROME_MANIFEST            = "chrome.manifest";
 
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
-const FILE_DEFAULT_THEME_JAR          = "classic.jar";
 const TOOLKIT_ID                      = "toolkit@mozilla.org"
 
 const KEY_PROFILEDIR                  = "ProfD";
@@ -523,25 +522,52 @@ function removeDirRecursive(dir) {
 }
 
 /**
- * Logs a string to the error console.
+ * Logs a string to the error console and the text console if logging is
+ * enabled.
  * @param   string
- *          The string to write to the error console.
+ *          The log message.
  */
 function LOG(string) {
   if (gLoggingEnabled) {
-    dump("*** " + string + "\n");
+    dump("*** EM_LOG *** " + string + "\n");
     if (gConsole)
       gConsole.logStringMessage(string);
   }
 }
 
 /**
- * Logs a string to the error console and to a permanent log file. 
+ * Logs a warning to the error console and if logging is enabled to the text
+ * console.
  * @param   string
- *          The string to write out.
+ *          The warning message.
+ */
+function WARN(string) {
+  if (gLoggingEnabled)
+    dump("*** EM_WARN *** " + string + "\n");
+  if (gConsole) {
+    var message = Cc["@mozilla.org/scripterror;1"].
+                  createInstance(Ci.nsIScriptError);
+    message.init(string, null, null, 0, 0, Ci.nsIScriptError.warningFlag,
+                 "component javascript");
+    gConsole.logMessage(message);
+  }
+}
+
+/**
+ * Logs an error to the error console and to a permanent log file.
+ * @param   string
+ *          The error message.
  */  
 function ERROR(string) {
-  LOG(string);
+  if (gLoggingEnabled)
+    dump("*** EM_ERROR *** " + string + "\n");
+  if (gConsole) {
+    var message = Cc["@mozilla.org/scripterror;1"].
+                  createInstance(Ci.nsIScriptError);
+    message.init(string, null, null, 0, 0, Ci.nsIScriptError.errorFlag,
+                 "component javascript");
+    gConsole.logMessage(message);
+  }
   try {
     var tstamp = new Date();
     var logfile = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS_LOG]);
@@ -3624,10 +3650,9 @@ ExtensionManager.prototype = {
       installData.error = INSTALLERROR_INSECURE_UPDATE;
       return installData;
     }
-      
-    // Check that the target application range allows compatibility with the app
-    if (gCheckCompatibility &&
-        !this.datasource.isCompatible(installManifest, gInstallManifestRoot, undefined)) {
+
+    // Check that the item is compatible with the application.
+    if (!this.datasource.isCompatible(installManifest, gInstallManifestRoot, false)) {
       installData.error = INSTALLERROR_INCOMPATIBLE_VERSION;
       return installData;
     }
@@ -4818,10 +4843,9 @@ ExtensionManager.prototype = {
    */
   _isUsableItem: function EM__isUsableItem(id) {
     var ds = this.datasource;
-    /* If we're not compatibility checking or if the item is compatible
-     * and if it isn't blocklisted and has all dependencies satisfied then
-     * proceed to the security check */
-    if ((!gCheckCompatibility || ds.getItemProperty(id, "compatible") == "true") &&
+    /* If the item is compatible and if it isn't blocklisted and has all
+     * dependencies satisfied then proceed to the security check */
+    if (ds.isCompatible(ds, getResourceForID(id), false) &&
         ds.getItemProperty(id, "blocklisted") == "false" &&
         ds.getItemProperty(id, "satisfiesDependencies") == "true") {
 
@@ -4984,12 +5008,12 @@ ExtensionManager.prototype = {
   },
 
   /* See nsIExtensionManager.idl */
-  getIncompatibleItemList: function EM_getIncompatibleItemList(id, appVersion,
+  getIncompatibleItemList: function EM_getIncompatibleItemList(appVersion,
                                                                platformVersion,
                                                                type,
                                                                includeDisabled,
                                                                countRef) {
-    var items = this.datasource.getIncompatibleItemList(id, appVersion ? appVersion : undefined,
+    var items = this.datasource.getIncompatibleItemList(appVersion ? appVersion : undefined,
                                                         platformVersion ? platformVersion : undefined,
                                                         type, includeDisabled);
     countRef.value = items.length;
@@ -5913,8 +5937,8 @@ RDFItemUpdater.prototype = {
       var uri = newURI(dsURI);
     }
     catch (e) {
-      LOG("RDFItemUpdater:checkForUpdates: There was an error loading the \r\n" +
-          " update datasource for: " + dsURI + ", item = " + aItem.id + ", error: " + e);
+      WARN("RDFItemUpdater:checkForUpdates: There was an error loading the \r\n" +
+           " update datasource for: " + dsURI + ", item = " + aItem.id + ", error: " + e);
       this._updater.checkForDone(aItem,
                                  Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
       return;
@@ -5999,8 +6023,8 @@ RDFItemUpdater.prototype = {
     if (status == 0)
       statusText = "nsIXMLHttpRequest channel unavailable";
 
-    LOG("RDFItemUpdater:onError: There was an error loading the \r\n" +
-        "the update datasource for item " + aItem.id + ", error: " + statusText);
+    WARN("RDFItemUpdater:onError: There was an error loading the \r\n" +
+         "the update datasource for item " + aItem.id + ", error: " + statusText);
     this._updater.checkForDone(aItem,
                                Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
   },
@@ -6075,29 +6099,29 @@ RDFItemUpdater.prototype = {
                          getService(Ci.nsIDataSignatureVerifier);
           try {
             if (!verifier.verifyData(updateString, signature, aLocalItem.updateKey)) {
-              LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
-                  aLocalItem.id + " failed signature check.");
+              WARN("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
+                   aLocalItem.id + " failed signature check.");
               this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
               return;
             }
           }
           catch (e) {
-            LOG("RDFItemUpdater:onDatasourceLoaded: Failed to verify signature for " +
-                aLocalItem.id + ". This indicates a malformed update key or signature.");
+            WARN("RDFItemUpdater:onDatasourceLoaded: Failed to verify signature for " +
+                 aLocalItem.id + ". This indicates a malformed update key or signature.");
             this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
             return;
           }
         }
         catch (e) {
-          LOG("RDFItemUpdater:onDatasourceLoaded: Failed to generate signature " +
-              "string for " + aLocalItem.id + ". Serializer threw " + e);
+          WARN("RDFItemUpdater:onDatasourceLoaded: Failed to generate signature " +
+               "string for " + aLocalItem.id + ". Serializer threw " + e);
           this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
           return;
         }
       }
       else {
-        LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
-            aLocalItem.id + " did not contain a signature.");
+        WARN("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
+             aLocalItem.id + " did not contain a signature.");
         this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
         return;
       }
@@ -6206,15 +6230,15 @@ RDFItemUpdater.prototype = {
       updates = updates.QueryInterface(Ci.nsIRDFResource);
     }
     catch (e) {
-      LOG("RDFItemUpdater:_parseV20UpdateInfo: No updates were found for:\r\n" +
-          aLocalItem.id + "\r\n" +
-          "If you are an Extension developer and were expecting there to be\r\n" +
-          "updates, this could mean any number of things, since the RDF system\r\n" +
-          "doesn't give up much in the way of information when the load fails.\r\n" +
-          "\r\nTry checking that: \r\n" +
-          " 1. Your RDF File is correct - e.g. check that there is a top level\r\n" +
-          "    RDF Resource with a URI urn:mozilla:extension:{GUID}, and that\r\n" +
-          "    the <em:updates> listed all have matching GUIDs.");
+      WARN("RDFItemUpdater:_parseV20UpdateInfo: No updates were found for:\r\n" +
+           aLocalItem.id + "\r\n" +
+           "If you are an Extension developer and were expecting there to be\r\n" +
+           "updates, this could mean any number of things, since the RDF system\r\n" +
+           "doesn't give up much in the way of information when the load fails.\r\n" +
+           "\r\nTry checking that: \r\n" +
+           " 1. Your RDF File is correct - e.g. check that there is a top level\r\n" +
+           "    RDF Resource with a URI urn:mozilla:extension:{GUID}, and that\r\n" +
+           "    the <em:updates> listed all have matching GUIDs.");
       return null;
     }
 
@@ -6305,9 +6329,9 @@ RDFItemUpdater.prototype = {
          * the sha hashing algorithms as secure. */
         if (gCheckUpdateSecurity && updateLink.substring(0, 6) != "https:" && 
             (!updateHash || updateHash.substring(0, 3) != "sha")) {
-          LOG("RDFItemUpdater:_parseV20Update: Update for " + aLocalItem.id +
-              " at " + updateLink + " ignored because it is insecure. updateLink " +
-              " must be a https url or an updateHash must be specified.");
+          WARN("RDFItemUpdater:_parseV20Update: Update for " + aLocalItem.id +
+               " at " + updateLink + " ignored because it is insecure. updateLink " +
+               " must be a https url or an updateHash must be specified.");
           continue;
         }
       }
@@ -6588,6 +6612,10 @@ ExtensionsDataSource.prototype = {
    *          datasource or an Install Manifest.
    * @param   source
    *          The RDF Resource of the item to inspect for compatibility.
+   * @param   alwaysCheckVersion
+   *          Set to true to only obey the compatibility information in the
+   *          datasource. When false the compatibility range may be ignored
+   *          if compatibility checking is disabled.
    * @param   appVersion
    *          The version of the application we are checking for compatibility
    *          against. If this parameter is undefined, the version of the running
@@ -6597,9 +6625,15 @@ ExtensionsDataSource.prototype = {
    * @returns true if the item is compatible with this version of the
    *          application, false, otherwise.
    */
-  isCompatible: function EMDS_isCompatible(datasource, source, appVersion, platformVersion) {
+  isCompatible: function EMDS_isCompatible(datasource, source, alwaysCheckVersion,
+                                           appVersion, platformVersion) {
     // The Default Theme is always compatible.
     if (source.EqualsNode(this._defaultTheme))
+      return true;
+
+    // Items pending install have no target application info in the datasource
+    if (datasource === this &&
+        this._getItemProperty(source, "opType") == OP_NEEDS_INSTALL)
       return true;
 
     var appID = gApp.ID;
@@ -6620,12 +6654,16 @@ ExtensionsDataSource.prototype = {
       var minVersion  = stringData(datasource.GetTarget(targetApp, minVersionRes, true));
       var maxVersion  = stringData(datasource.GetTarget(targetApp, maxVersionRes, true));
       if (id == appID) {
+        if (!alwaysCheckVersion && !gCheckCompatibility)
+          return true;
         rv = (versionChecker.compare(appVersion, minVersion) >= 0) &&
              (versionChecker.compare(appVersion, maxVersion) <= 0);
         return rv; // App takes precedence over toolkit.
       }
 
       if (id == TOOLKIT_ID) {
+        if (!alwaysCheckVersion && !gCheckCompatibility)
+          return true;
         rv =  (versionChecker.compare(platformVersion, minVersion) >= 0) &&
               (versionChecker.compare(platformVersion, maxVersion) <= 0);
         // Keep looping, in case the app id is later.
@@ -6636,8 +6674,6 @@ ExtensionsDataSource.prototype = {
 
   /**
    * Gets a list of items that are incompatible with a specific application version.
-   * @param   appID
-   *          The ID of the application - XXXben unused?
    * @param   appVersion
    *          The Version of the application to check for incompatibility against.
    * @param   platformVersion
@@ -6649,8 +6685,7 @@ ExtensionsDataSource.prototype = {
    * @returns An array of nsIUpdateItems that are incompatible with the application
    *          ID/Version supplied.
    */
-  getIncompatibleItemList: function EMDS_getIncompatibleItemList(appID,
-                                                                 appVersion,
+  getIncompatibleItemList: function EMDS_getIncompatibleItemList(appVersion,
                                                                  platformVersion,
                                                                  desiredType,
                                                                  includeDisabled) {
@@ -6678,7 +6713,7 @@ ExtensionsDataSource.prototype = {
         continue;
 
       if (type != -1 && (type & desiredType) &&
-          !this.isCompatible(this, item, appVersion, platformVersion))
+          !this.isCompatible(this, item, true, appVersion, platformVersion))
         items.push(this.getItemForID(id));
     }
     return items;
@@ -7717,17 +7752,15 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
-   * Gets an URL to a theme's image file
+   * Gets an URL to an item's image file
    * @param   item
    *          The RDF Resource representing the item
    * @param   fileName
    *          The file to locate a URL for
-   * @param   fallbackURL
-   *          If the location fails, supply this URL instead
    * @returns An RDF Resource to the URL discovered, or the fallback
    *          if the discovery failed.
    */
-  _getThemeImageURL: function EMDS__getThemeImageURL(item, fileName, fallbackURL) {
+  _getImageURL: function EMDS__getImageURL(item, fileName) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var installLocation = this._em.getInstallLocation(id);
     if (!installLocation)
@@ -7736,13 +7769,7 @@ ExtensionsDataSource.prototype = {
     if (file.exists())
       return gRDF.GetResource(getURLSpecFromFile(file));
 
-    if (id == stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI)) {
-      var jarFile = getFile(KEY_APPDIR, [DIR_CHROME, FILE_DEFAULT_THEME_JAR]);
-      var url = "jar:" + getURLSpecFromFile(jarFile) + "!/" + fileName;
-      return gRDF.GetResource(url);
-    }
-
-    return fallbackURL ? gRDF.GetResource(fallbackURL) : null;
+    return null;
   },
 
   /**
@@ -7751,29 +7778,34 @@ ExtensionsDataSource.prototype = {
   _rdfGet_iconURL: function EMDS__rdfGet_iconURL(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var type = this.getItemProperty(id, "type");
-    if (type & Ci.nsIUpdateItem.TYPE_THEME)
-      return this._getThemeImageURL(item, "icon.png", URI_GENERIC_ICON_THEME);
 
-    if (inSafeMode())
-      return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
+    // Try to pick an icon from the item's install folder
+    iconURL = this._getImageURL(item, "icon.png");
+    if (iconURL)
+      return iconURL;
 
-    var hasIconURL = this._inner.hasArcOut(item, property);
-    // If the addon doesn't have an IconURL property or it is disabled use the
-    // generic icon URL instead.
-    if (!hasIconURL || this.getItemProperty(id, "isDisabled") == "true")
-      return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
-    var iconURL = stringData(this._inner.GetTarget(item, property, true));
-    try {
-      var uri = newURI(iconURL);
-      var scheme = uri.scheme;
-      // Only allow chrome URIs or when installing http(s) URIs.
-      if (scheme == "chrome" || (scheme == "http" || scheme == "https") &&
-          this._inner.hasArcOut(item, EM_R("downloadURL")))
-        return null;
+    if (type == Ci.nsIUpdateItem.TYPE_THEME)
+      return gRDF.GetResource(URI_GENERIC_ICON_THEME);
+
+    // Only look for an iconURL if the item is not disabled and safe mode isn't
+    // active
+    if (!inSafeMode() && this.getItemProperty(id, "isDisabled") != "true") {
+      var iconURL = stringData(this._inner.GetTarget(item, property, true));
+      if (iconURL) {
+        try {
+          var uri = newURI(iconURL);
+          var scheme = uri.scheme;
+          // Only allow chrome URIs normally. When an item is being installed
+          // allow http(s) URIs.
+          if (scheme == "chrome" || (scheme == "http" || scheme == "https") &&
+              this._inner.hasArcOut(item, EM_R("downloadURL")))
+            return null;
+        }
+        catch (e) {
+        }
+      }
     }
-    catch (e) {
-    }
-    // Use a generic icon URL for addons that have an invalid iconURL.
+
     return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
   },
 
@@ -7782,18 +7814,33 @@ ExtensionsDataSource.prototype = {
    */
   _rdfGet_previewImage: function EMDS__rdfGet_previewImage(item, property) {
     var type = this.getItemProperty(stripPrefix(item.Value, PREFIX_ITEM_URI), "type");
-    if (type != -1 && type & Ci.nsIUpdateItem.TYPE_THEME)
-      return this._getThemeImageURL(item, "preview.png", null);
+    if (type == Ci.nsIUpdateItem.TYPE_THEME)
+      return this._getImageURL(item, "preview.png");
     return null;
   },
 
   /**
    * If we're in safe mode, the item is disabled by the user or app, or the
-   * item is to be upgraded force the generic about dialog for the item.
+   * item is to not an extension then don't offer an options url.
+   */
+  _rdfGet_optionsURL: function EMDS__rdfGet_optionsURL(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    if (inSafeMode() || this.getItemProperty(id, "isDisabled") == "true" ||
+        this.getItemProperty(id, "type") != Ci.nsIUpdateItem.TYPE_EXTENSION)
+      return EM_L("");
+
+    return null;
+  },
+
+  /**
+   * If we're in safe mode, the item is disabled by the user or app, the item
+   * is not an extension, or the item is to be upgraded force the generic about
+   * dialog for the item.
    */
   _rdfGet_aboutURL: function EMDS__rdfGet_aboutURL(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     if (inSafeMode() || this.getItemProperty(id, "isDisabled") == "true" ||
+        this.getItemProperty(id, "type") != Ci.nsIUpdateItem.TYPE_EXTENSION ||
         this.getItemProperty(id, "opType") == OP_NEEDS_UPGRADE)
       return EM_L("");
 
@@ -7813,23 +7860,8 @@ ExtensionsDataSource.prototype = {
    * Get the em:compatible property (whether or not this item is compatible)
    */
   _rdfGet_compatible: function EMDS__rdfGet_compatible(item, property) {
-    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-    var targetAppInfo = this.getTargetApplicationInfo(id, this);
-    if (!targetAppInfo) {
-      // When installing a new addon targetAppInfo does not exist yet
-      if (this.getItemProperty(id, "opType") == OP_NEEDS_INSTALL)
-        return EM_L("true");
-      return EM_L("false");
-    }
-
-    getVersionChecker();
-    var appVersion = targetAppInfo.appID == TOOLKIT_ID ? gApp.platformVersion : gApp.version;
-    if (gVersionChecker.compare(targetAppInfo.maxVersion, appVersion) < 0 ||
-        gVersionChecker.compare(appVersion, targetAppInfo.minVersion) < 0) {
-      // OK, this item is incompatible.
-      return EM_L("false");
-    }
-    return EM_L("true");
+    var compatible = this.isCompatible(this, item, true);
+    return compatible ? EM_L("true") : EM_L("false");
   },
 
   /**

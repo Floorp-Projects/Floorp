@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Checks if huge values that overflow when converted to PRInt32 and small
+    non-zero values do not cause a crash or an unexpected behavior.
+-->
+<html>
+  <head>
+    <title>Testcases: -moz-image-rect() [bug 113577]</title>
+    <style>
+      div.wrapper {
+        width: 32px;
+        height: 32px;
+        margin: 10px;
+        background-color: red;
+      }
+      div.wrapper div {
+        width: 32px;
+        height: 32px;
+      }
+      /* Huge values that exceed PR_INT32_MAX are clamped to PR_INT32_MAX, so
+         all the tests below should display the entire 32x32 image. */
+      #test1 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 0, 10000000000, 32, 0);
+      }
+      #test2 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 0%, 10000000000%, 100%, 0%);
+      }
+      /* Small values (smaller than machine epsilon) are rounded to zero, so
+         all the tests below should display the entire 32x32 image. */
+      #test3 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 0.00000000001, 32, 32, 0);
+      }
+      #test4 {
+        background-image: -moz-image-rect(url(green-16x16-in-blue-32x32.png), 0.00000000001%, 100%, 100%, 0%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper"><div id="test1"></div></div>
+    <div class="wrapper"><div id="test2"></div></div>
+    <div class="wrapper"><div id="test3"></div></div>
+    <div class="wrapper"><div id="test4"></div></div>
+  </body>
+</html>

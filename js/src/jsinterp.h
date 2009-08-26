@@ -71,9 +71,9 @@ struct JSStackFrame {
     jsbytecode      *imacpc;        /* null or interpreter macro call pc */
     jsval           *slots;         /* variables, locals and operand stack */
     JSObject        *callobj;       /* lazily created Call object */
-    jsval           argsobj;        /* lazily created arguments object, must be JSVAL_OBJECT */
+    jsval           argsobj;        /* lazily created arguments object, must be
+                                       JSVAL_OBJECT */
     JSObject        *varobj;        /* variables object, where vars go */
-    JSObject        *callee;        /* function or script object */
     JSScript        *script;        /* script being interpreted */
     JSFunction      *fun;           /* function being called or null */
     JSObject        *thisp;         /* "this" pointer if in method */
@@ -131,6 +131,23 @@ struct JSStackFrame {
                                        script->staticLevel */
 
     inline void assertValidStackDepth(uintN depth);
+
+    void putActivationObjects(JSContext *cx) {
+        /*
+         * The order of calls here is important as js_PutCallObject needs to
+         * access argsobj.
+         */
+        if (callobj) {
+            js_PutCallObject(cx, this);
+            JS_ASSERT(!argsobj);
+        } else if (argsobj) {
+            js_PutArgsObject(cx, this);
+        }
+    }
+
+    JSObject *callee() {
+        return argv ? JSVAL_TO_OBJECT(argv[-2]) : NULL;
+    }
 };
 
 #ifdef __cplusplus
@@ -185,17 +202,14 @@ typedef struct JSInlineFrame {
 #define JSFRAME_YIELDING       0x40 /* js_Interpret dispatched JSOP_YIELD */
 #define JSFRAME_ITERATOR       0x80 /* trying to get an iterator for for-in */
 #define JSFRAME_GENERATOR     0x200 /* frame belongs to generator-iterator */
-
-#define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
-#define JSFRAME_OVERRIDE_BITS  8
+#define JSFRAME_OVERRIDE_ARGS 0x400 /* overridden arguments local variable */
 
 #define JSFRAME_SPECIAL       (JSFRAME_DEBUGGER | JSFRAME_EVAL)
 
 /*
  * Property cache with structurally typed capabilities for invalidation, for
- * polymorphic callsite method/get/set speedups.
- *
- * See bug https://bugzilla.mozilla.org/show_bug.cgi?id=365851.
+ * polymorphic callsite method/get/set speedups.  For details, see
+ * <https://developer.mozilla.org/en/SpiderMonkey/Internals/Property_cache>.
  */
 #define PROPERTY_CACHE_LOG2     12
 #define PROPERTY_CACHE_SIZE     JS_BIT(PROPERTY_CACHE_LOG2)
@@ -213,7 +227,7 @@ typedef struct JSInlineFrame {
 #define PROPERTY_CACHE_HASH_PC(pc,kshape)                                     \
     PROPERTY_CACHE_HASH(pc, kshape)
 
-#define PROPERTY_CACHE_HASH_ATOM(atom,obj,pobj)                               \
+#define PROPERTY_CACHE_HASH_ATOM(atom,obj)                                    \
     PROPERTY_CACHE_HASH((jsuword)(atom) >> 2, OBJ_SHAPE(obj))
 
 /*

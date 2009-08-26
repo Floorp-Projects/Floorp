@@ -74,11 +74,13 @@
 
 #include "rdf.h"
 #include "nsFeedSniffer.h"
-#include "nsAboutFeeds.h"
+#include "AboutRedirector.h"
 #include "nsIAboutModule.h"
 
 #include "nsPrivateBrowsingServiceWrapper.h"
 #include "nsNetCID.h"
+
+using namespace mozilla::browser;
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -148,11 +150,42 @@ static const nsModuleComponentInfo components[] =
     nsFeedSnifferConstructor,
     nsFeedSniffer::Register },
 
-  { "about:feeds Page",
-    NS_ABOUTFEEDS_CID,
+#ifdef MOZ_SAFE_BROWSING
+  { "about:blocked",
+    NS_BROWSER_ABOUT_REDIRECTOR_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "blocked",
+    AboutRedirector::Create },
+#endif
+
+  { "about:certerror",
+    NS_BROWSER_ABOUT_REDIRECTOR_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "certerror",
+    AboutRedirector::Create },
+
+  { "about:feeds",
+    NS_BROWSER_ABOUT_REDIRECTOR_CID,
     NS_ABOUT_MODULE_CONTRACTID_PREFIX "feeds",
-    nsAboutFeeds::Create
-  },
+    AboutRedirector::Create },
+
+  { "about:privatebrowsing",
+    NS_BROWSER_ABOUT_REDIRECTOR_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "privatebrowsing",
+    AboutRedirector::Create },
+
+  { "about:rights",
+    NS_BROWSER_ABOUT_REDIRECTOR_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "rights",
+    AboutRedirector::Create },
+
+  { "about:robots",
+    NS_BROWSER_ABOUT_REDIRECTOR_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "robots",
+    AboutRedirector::Create },
+
+  { "about:sessionrestore",
+    NS_BROWSER_ABOUT_REDIRECTOR_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "sessionrestore",
+    AboutRedirector::Create },
 
 #ifndef WINCE
 

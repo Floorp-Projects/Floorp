@@ -792,6 +792,12 @@ int ParseFTPList(const char *line, struct list_state *state,
 
         if (*tokens[2] != '<') /* not <DIR> or <JUNCTION> */
         {
+          // try to handle correctly spaces at the beginning of the filename
+          // filesize (token[2]) must end at offset 38
+          if (tokens[2] + toklen[2] - line == 38) {
+            result->fe_fname = &(line[39]);
+            result->fe_fnlen = p - result->fe_fname;
+          }
           result->fe_type = 'f';
           pos = toklen[2];
           while (pos > (sizeof(result->fe_size)-1))
@@ -799,29 +805,40 @@ int ParseFTPList(const char *line, struct list_state *state,
           memcpy( result->fe_size, tokens[2], pos );
           result->fe_size[pos] = '\0';
         }
-        else if ((tokens[2][1]) != 'D') /* not <DIR> */
-        {
-          result->fe_type = '?'; /* unknown until junc for sure */
-          if (result->fe_fnlen > 4)
+        else {
+          // try to handle correctly spaces at the beginning of the filename
+          // token[2] must begin at offset 24, the length is 5 or 10
+          // token[3] must begin at offset 39 or higher
+          if (tokens[2] - line == 24 && (toklen[2] == 5 || toklen[2] == 10) &&
+              tokens[3] - line >= 39) {
+            result->fe_fname = &(line[39]);
+            result->fe_fnlen = p - result->fe_fname;
+          }
+
+          if ((tokens[2][1]) != 'D') /* not <DIR> */
           {
-            p = result->fe_fname;
-            for (pos = result->fe_fnlen - 4; pos > 0; pos--)
+            result->fe_type = '?'; /* unknown until junc for sure */
+            if (result->fe_fnlen > 4)
             {
-              if (p[0] == ' ' && p[3] == ' ' && p[2] == '>' &&
-                  (p[1] == '=' || p[1] == '-'))
+              p = result->fe_fname;
+              for (pos = result->fe_fnlen - 4; pos > 0; pos--)
               {
-                result->fe_type = 'l';
-                result->fe_fnlen = p - result->fe_fname;
-                result->fe_lname = p + 4;
-                result->fe_lnlen = &(line[linelen]) 
-                                   - result->fe_lname;
-                break;
+                if (p[0] == ' ' && p[3] == ' ' && p[2] == '>' &&
+                    (p[1] == '=' || p[1] == '-'))
+                {
+                  result->fe_type = 'l';
+                  result->fe_fnlen = p - result->fe_fname;
+                  result->fe_lname = p + 4;
+                  result->fe_lnlen = &(line[linelen]) 
+                                     - result->fe_lname;
+                  break;
+                }
+                p++;
               }
-              p++;
-            }    
+            }
           }
         }
-      
+
         result->fe_time.tm_month = atoi(tokens[0]+0);
         if (result->fe_time.tm_month != 0)
         {
@@ -989,6 +1006,8 @@ int ParseFTPList(const char *line, struct list_state *state,
        * "drwxr-xr-x  2 0  0  512 May 28 22:17 etc"
       */
     
+      PRBool is_old_Hellsoft = PR_FALSE;
+    
       if (numtoks >= 6)
       {
         /* there are two perm formats (Hellsoft/NetWare and *IX strmode(3)).
@@ -1014,6 +1033,8 @@ int ParseFTPList(const char *line, struct list_state *state,
             {
               /* rest is FMA[S] or AFM[S] */
               lstyle = 'U'; /* very likely one of the NetWare servers */
+              if (toklen[0] == 10)
+                is_old_Hellsoft = PR_TRUE;
             }
           }
         }
@@ -1162,7 +1183,13 @@ int ParseFTPList(const char *line, struct list_state *state,
        
         } /* time/year */
         
-        result->fe_fname = tokens[tokmarker+4];
+        // there is exacly 1 space between filename and previous token in all
+        // outputs except old Hellsoft
+        if (!is_old_Hellsoft)
+          result->fe_fname = tokens[tokmarker+3] + toklen[tokmarker+3] + 1;
+        else
+          result->fe_fname = tokens[tokmarker+4];
+
         result->fe_fnlen = (&(line[linelen]))
                            - (result->fe_fname);
 

@@ -4,6 +4,7 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 
 var gLoggingEnabled = false;
+var gTestingEnabled = false;
 
 function nowInSeconds()
 {
@@ -11,13 +12,12 @@ function nowInSeconds()
 }
 
 function LOG(aMsg) {
-
-    if (gLoggingEnabled)
-    {
-        aMsg = ("*** WIFI GEO: " + aMsg);
-        Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
-        dump(aMsg);
-    }
+  if (gLoggingEnabled)
+  {
+    aMsg = ("*** WIFI GEO: " + aMsg);
+    Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
+    dump(aMsg);
+  }
 }
 
 function WifiGeoAddressObject(streetNumber, street, premises, city, county, region, country, countryCode, postalCode) {
@@ -51,10 +51,12 @@ WifiGeoAddressObject.prototype = {
     flags: Ci.nsIClassInfo.DOM_OBJECT,
 };
 
-function WifiGeoCoordsObject(lat, lon, acc) {
+function WifiGeoCoordsObject(lat, lon, acc, alt, altacc) {
     this.latitude = lat;
     this.longitude = lon;
     this.accuracy = acc;
+    this.altitude = alt;
+    this.altitudeAccuracy = altacc;
 };
 
 WifiGeoCoordsObject.prototype = {
@@ -77,27 +79,29 @@ WifiGeoCoordsObject.prototype = {
     latitude: 0,
     longitude: 0,
     accuracy: 0,
-
     altitude: 0,
     altitudeAccuracy: 0,
-    heading: 0,
-    speed: 0,
+
 };
 
-function WifiGeoPositionObject(lat, lon, acc, address) {
+function WifiGeoPositionObject(location, address) {
 
-    this.coords = new WifiGeoCoordsObject(lat, lon, acc);
+    this.coords = new WifiGeoCoordsObject(location.latitude,
+                                          location.longitude,
+                                          location.accuracy || 12450, // .5 * circumference of earth.
+                                          location.altitude || 0,
+                                          location.altitude_accuracy || 0);
 
     if (address) {
-        this.address = new WifiGeoAddressObject(address.street_number,
-                                                address.street,
-                                                address.premises,
-                                                address.city,
-                                                address.county,
-                                                address.region,
-                                                address.country,
-                                                address.country_code,
-                                                address.postal_code);
+        this.address = new WifiGeoAddressObject(address.street_number || null,
+                                                address.street || null,
+                                                address.premises || null,
+                                                address.city || null,
+                                                address.county || null,
+                                                address.region || null,
+                                                address.country || null,
+                                                address.country_code || null,
+                                                address.postal_code || null);
     }
     else
       this.address = null;
@@ -132,6 +136,11 @@ function WifiGeoPositionProvider() {
     try {
         gLoggingEnabled = this.prefService.getBoolPref("geo.wifi.logging.enabled");
     } catch (e) {}
+
+    try {
+        gTestingEnabled = this.prefService.getBoolPref("geo.wifi.testing");
+    } catch (e) {}
+
 };
 
 WifiGeoPositionProvider.prototype = {
@@ -165,9 +174,15 @@ WifiGeoPositionProvider.prototype = {
         LOG("provider url = " + this.provider_url);
 
         // if we don't see anything in 5 seconds, kick of one IP geo lookup.
+        // if we are testing, just hammer this callback so that we are more or less
+        // always sending data.  It doesn't matter if we have an access point or not.
         this.hasSeenWiFi = false;
         this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        this.timer.initWithCallback(this, 5000, this.timer.TYPE_ONE_SHOT);
+        if (gTestingEnabled == false)
+            this.timer.initWithCallback(this, 5000, this.timer.TYPE_ONE_SHOT);
+        else
+            this.timer.initWithCallback(this, 200, this.timer.TYPE_REPEATING_SLACK);
+
 
         let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
         os.addObserver(this, "private-browsing", false);
@@ -292,10 +307,9 @@ WifiGeoPositionProvider.prototype = {
                 LOG("No address in response");
             }
 
-            var newLocation = new WifiGeoPositionObject(response.location.latitude,
-                                                        response.location.longitude,
-                                                        response.location.accuracy,
-                                                        address);
+            LOG("sending update to geolocation.");
+
+            var newLocation = new WifiGeoPositionObject(response.location, address);
 
             var update = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationUpdate);
             update.update(newLocation);
@@ -322,7 +336,9 @@ WifiGeoPositionProvider.prototype = {
         var jsonString = JSON.stringify(request);
         LOG("client sending: " + jsonString);
 
-        xhr.send(jsonString);
+        try {
+          xhr.send(jsonString);
+        } catch (e) {}
     },
 
     onError: function (code) {

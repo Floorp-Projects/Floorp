@@ -317,6 +317,20 @@ public:
   PRBool ResizeReflowOptimizationDisabled() const {
     return mFlags.mResizeReflowOptimizationDisabled;
   }
+
+  // mHasBullet bit
+  void SetHasBullet() {
+    mFlags.mHasBullet = PR_TRUE;
+    InvalidateCachedIsEmpty();
+  }
+  void ClearHasBullet() {
+    mFlags.mHasBullet = PR_FALSE;
+    InvalidateCachedIsEmpty();
+  }
+  PRBool HasBullet() const {
+    return mFlags.mHasBullet;
+  }
+  
   
   // mChildCount value
   PRInt32 GetChildCount() const {
@@ -484,9 +498,12 @@ public:
     PRUint32 mResizeReflowOptimizationDisabled: 1;  // default 0 = means that the opt potentially applies to this line. 1 = never skip reflowing this line for a resize reflow
     PRUint32 mEmptyCacheValid: 1;
     PRUint32 mEmptyCacheState: 1;
+    // mHasBullet indicates that this is an inline line whose block's
+    // bullet is adjacent to this line.
+    PRUint32 mHasBullet : 1;
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 18;
+    PRUint32 mChildCount : 17;
   };
 
   struct ExtraData {

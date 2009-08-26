@@ -47,13 +47,6 @@ LIBRARY_NAME	= nkgnomevfs
 SHORT_LIBNAME	= nkgnomevfs
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  intl \
-		  mimetype \
-		  pref \
-		  $(NULL)
 
 CPPSRCS		= \
 		nsGnomeVFSProtocolHandler.cpp \

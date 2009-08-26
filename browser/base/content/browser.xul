@@ -83,6 +83,7 @@
         windowtype="navigator:browser"
         screenX="4" screenY="4"
         browsingmode="normal"
+        toggletoolbar="true"
         persist="screenX screenY width height sizemode"> 
 
 # All JS files which are not content (only) dependent that browser.xul
@@ -378,7 +379,6 @@
                  showimagecolumn="true"
                  enablehistory="true"
                  maxrows="6"
-                 timeout="75"
                  newlines="stripsurroundingwhitespace"
                  oninput="gBrowser.userTypedValue = this.value;"
                  ontextentered="this.handleCommand(param);"
@@ -511,7 +511,13 @@
                        label="&pasteCmd.label;"
                        command="cmd_paste"
                        tooltiptext="&pasteButton.tooltip;"/>
-
+#ifndef XP_MACOSX
+        <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       observes="View:FullScreen"
+                       type="checkbox"
+                       label="&fullScreenCmd.label;"
+                       tooltiptext="&fullScreenButton.tooltip;"/>
+#endif
     </toolbarpalette>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"

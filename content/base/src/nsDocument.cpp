@@ -2607,7 +2607,7 @@ nsDocument::ElementFromPointHelper(PRInt32 aX, PRInt32 aY,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
   // As per the the spec, we return null if either coord is negative
-  if (aX < 0 || aY < 0)
+  if (!aIgnoreRootScrollFrame && (aX < 0 || aY < 0))
     return NS_OK;
 
   nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
@@ -3550,23 +3550,25 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
 
 #ifdef DEBUG
-    // We really shouldn't have a wrapper here but if we do we need to make sure
-    // it has the correct parent.
-    JSObject *obj = GetWrapper();
-    if (obj) {
-      JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
-      nsIScriptContext *scx = aScriptGlobalObject->GetContext();
-      JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
-      if (!cx) {
-        nsContentUtils::ThreadJSContextStack()->Peek(&cx);
+    if (!mWillReparent) {
+      // We really shouldn't have a wrapper here but if we do we need to make sure
+      // it has the correct parent.
+      JSObject *obj = GetWrapper();
+      if (obj) {
+        JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
+        nsIScriptContext *scx = aScriptGlobalObject->GetContext();
+        JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
         if (!cx) {
-          nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
-          NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
+          nsContentUtils::ThreadJSContextStack()->Peek(&cx);
+          if (!cx) {
+            nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
+            NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
+          }
         }
-      }
-      if (cx) {
-        NS_ASSERTION(JS_GetGlobalForObject(cx, obj) == newScope,
-                     "Wrong scope, this is really bad!");
+        if (cx) {
+          NS_ASSERTION(JS_GetGlobalForObject(cx, obj) == newScope,
+                       "Wrong scope, this is really bad!");
+        }
       }
     }
 #endif
@@ -4078,7 +4080,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
   nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ASSERTION(IsCaseSensitive(),
+  NS_ASSERTION(!IsHTML(),
                "nsDocument::CreateElement() called on document that is not "
                "case sensitive. Fix caller, or fix "
                "nsDocument::CreateElement()!");
@@ -6365,7 +6367,7 @@ nsDocument::GetRadioGroup(const nsAString& aName,
                           nsRadioGroupStruct **aRadioGroup)
 {
   nsAutoString tmKey(aName);
-  if(!IsCaseSensitive())
+  if(IsHTML())
      ToLowerCase(tmKey); //should case-insensitive.
   if (mRadioGroups.Get(tmKey, aRadioGroup))
     return NS_OK;

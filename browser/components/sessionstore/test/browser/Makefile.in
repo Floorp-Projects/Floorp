@@ -58,6 +58,7 @@ _BROWSER_TEST_FILES = \
 	browser_346337.js \
 	browser_346337_sample.html \
 	browser_350525.js \
+	browser_354894.js \
 	browser_367052.js \
 	browser_393716.js \
 	browser_394759.js \
@@ -90,6 +91,7 @@ _BROWSER_TEST_FILES = \
 	browser_485563.js \
 	browser_490040.js \
 	browser_491168.js \
+	browser_491577.js \
 	browser_493467.js \
 	browser_495495.js \
 	$(NULL)

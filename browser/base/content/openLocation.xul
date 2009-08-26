@@ -79,7 +79,7 @@
         <label value="&openWhere.label;"/>
         <menulist id="openWhereList">
           <menupopup>
-            <menuitem value="0" id="currentWindow" label="&topWindow.label;"/>
+            <menuitem value="0" id="currentWindow" label="&topTab.label;"/>
             <menuitem value="1" label="&newWindow.label;"/>
             <menuitem value="3" label="&newTab.label;"/>
           </menupopup>

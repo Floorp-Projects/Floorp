@@ -60,7 +60,6 @@
       <preference id="dom.disable_open_during_load"   name="dom.disable_open_during_load"   type="bool"/>
       <preference id="permissions.default.image"      name="permissions.default.image"      type="int"/>
       <preference id="javascript.enabled"             name="javascript.enabled"             type="bool"/>
-      <preference id="security.enable_java"           name="security.enable_java"           type="bool"/>
 
       <preference id="pref.advanced.images.disable_button.view_image"
                   name="pref.advanced.images.disable_button.view_image"
@@ -128,14 +127,6 @@
                       accesskey="&advancedJS.accesskey;"
                       oncommand="gContentPane.showAdvancedJS();"
                       preference="pref.advanced.javascript.disable_button.advanced"/>
-            </vbox>
-          </row>
-          <row id="enableJavaRow">
-            <vbox align="start">
-              <checkbox id="enableJava"
-                        label="&enableJava.label;"
-                        accesskey="&enableJava.accesskey;"
-                        preference="security.enable_java"/>
             </vbox>
           </row>
         </rows>

@@ -149,7 +149,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
-nsIFocusManager* nsFocusManager::sInstance = nsnull;
+nsFocusManager* nsFocusManager::sInstance = nsnull;
 
 nsFocusManager::nsFocusManager()
 { }
@@ -1959,7 +1959,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
             // Continue getting the next frame until the primary content for the frame
             // we are on changes - we don't want to be stuck in the same place
             frameTraversal->Next();
-            nsIFrame* newCaretFrame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
+            newCaretFrame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
             if (nsnull == newCaretFrame)
               break;
             newCaretContent = newCaretFrame->GetContent();            
@@ -2445,8 +2445,13 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
           // it. Also, if the next content node is the root content, then
           // return it. This latter case would happen only if someone made a
           // popup focusable.
-          else if (currentContent != aStartContent ||
-                   currentContent == aRootContent) {
+          // Also, when going backwards, check to ensure that the focus
+          // wouldn't be redirected. Otherwise, for example, when an input in
+          // a textbox is focused, the enclosing textbox would be found and
+          // the same inner input would be returned again.
+          else if (currentContent == aRootContent ||
+                   (currentContent != aStartContent &&
+                    (aForward || !GetRedirectedFocus(currentContent)))) {
             NS_ADDREF(*aResultContent = currentContent);
             return NS_OK;
           }

@@ -185,6 +185,8 @@ AllowedToAct(JSContext *cx, jsval idval)
     // Some code is running, we can't make the assumption, as above, but we
     // can't use a native frame, so clear fp.
     fp = nsnull;
+  } else if (!fp->script) {
+    fp = nsnull;
   }
 
   void *annotation = fp ? JS_GetFrameAnnotation(cx, fp) : nsnull;
@@ -698,6 +700,13 @@ JSBool
 XPC_SOW_WrapObject(JSContext *cx, JSObject *parent, jsval v,
                    jsval *vp)
 {
+  // Slim wrappers don't expect to be wrapped, so morph them to fat wrappers
+  // if we're about to wrap one.
+  JSObject *innerObj = JSVAL_TO_OBJECT(v);
+  if (IS_SLIM_WRAPPER(innerObj) && !MorphSlimWrapper(cx, innerObj)) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   JSObject *wrapperObj =
     JS_NewObjectWithGivenProto(cx, &sXPC_SOW_JSClass.base, NULL, parent);
   if (!wrapperObj) {

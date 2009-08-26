@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(AVMPLUS_UNIX)
+#if defined(AVMPLUS_UNIX) || defined(AVMPLUS_OS2)
 #include <unistd.h>
 #include <sys/mman.h>
 #endif
@@ -74,6 +74,9 @@
 
 #ifdef WIN32
 #include <windows.h>
+#elif defined(AVMPLUS_OS2)
+#define INCL_DOSMEMMGR
+#include <os2.h>
 #endif
 
 #if defined(DEBUG) || defined(MOZ_NO_VARADIC_MACROS)
@@ -288,11 +291,24 @@ namespace MMgc {
 
 #define MMGC_MEM_TYPE(x)
 
+#define VMPI_strlen strlen
+#define VMPI_strcat strcat
+#define VMPI_strcpy strcpy
+#define VMPI_sprintf sprintf
+#define VMPI_memset memset
+
+extern void VMPI_setPageProtection(void *address,
+                                   size_t size,
+                                   bool executableFlag,
+                                   bool writeableFlag);
+
 namespace avmplus {
 
     using namespace MMgc;
 
     typedef int FunctionID;
+
+    extern void AvmLog(char const *msg, ...);
 
     class String
     {
@@ -539,7 +555,7 @@ namespace avmplus {
         const T *getData() const { return data; }
 
         // 'this' steals the guts of 'that' and 'that' gets reset.
-        void FASTCALL become(List& that)
+        void become(List& that)
         {
             this->destroy();
 
@@ -551,7 +567,7 @@ namespace avmplus {
             that.len = 0;
         that.capacity = 0;
         }
-        uint32_t FASTCALL add(T value)
+        uint32_t add(T value)
         {
             if (len >= capacity) {
                 grow();
@@ -576,7 +592,7 @@ namespace avmplus {
             return *(T*)(data + index);
         }
 
-        void FASTCALL set(uint32_t index, T value)
+        void set(uint32_t index, T value)
         {
             AvmAssert(index < capacity);
             if (index >= len)
@@ -602,7 +618,7 @@ namespace avmplus {
             len = 0;
         }
 
-        int FASTCALL indexOf(T value) const
+        int indexOf(T value) const
         {
             for(uint32_t i=0; i<len; i++)
                 if (get(i) == value)
@@ -610,7 +626,7 @@ namespace avmplus {
             return -1;
         }
 
-        int FASTCALL lastIndexOf(T value) const
+        int lastIndexOf(T value) const
         {
             for(int32_t i=len-1; i>=0; i--)
                 if (get(i) == value)
@@ -623,7 +639,7 @@ namespace avmplus {
             return get(len-1);
         }
 
-        T FASTCALL removeLast()
+        T removeLast()
         {
             if(isEmpty())
                 return undef_list_val();
@@ -639,7 +655,7 @@ namespace avmplus {
             return get(index);
         }
 
-        void FASTCALL ensureCapacity(uint32_t cap)
+        void ensureCapacity(uint32_t cap)
         {
             if (cap > capacity) {
                 if (data == NULL) {
@@ -652,7 +668,7 @@ namespace avmplus {
             }
         }
 
-        void FASTCALL insert(uint32_t index, T value, uint32_t count = 1)
+        void insert(uint32_t index, T value, uint32_t count = 1)
         {
             AvmAssert(index <= len);
             AvmAssert(count > 0);
@@ -662,7 +678,7 @@ namespace avmplus {
             len += count;
         }
 
-        T FASTCALL removeAt(uint32_t index)
+        T removeAt(uint32_t index)
         {
             T old = get(index);
             // dec the refcount on the one we're removing
@@ -673,7 +689,7 @@ namespace avmplus {
         }
 
     private:
-        void FASTCALL grow()
+        void grow()
         {
             // growth is fast at first, then slows at larger list sizes.
             uint32_t newMax = 0;
@@ -713,7 +729,7 @@ namespace avmplus {
             *slot = (GCObject*)*value;
         }
 
-        void FASTCALL wb(uint32_t index, T value)
+        void wb(uint32_t index, T value)
         {
             AvmAssert(index < capacity);
             AvmAssert(data != NULL);
@@ -725,7 +741,7 @@ namespace avmplus {
         // like
         //  for (uint32_t u = index; u < index_end; ++u)
         //      wb(u, value);
-        void FASTCALL wbzm(uint32_t index, uint32_t index_end, T value)
+        void wbzm(uint32_t index, uint32_t index_end, T value)
         {
             AvmAssert(index < capacity);
             AvmAssert(index_end <= capacity);
@@ -741,7 +757,7 @@ namespace avmplus {
             return index * sizeof(T);
         }
 
-        void FASTCALL zero_range(uint32_t _first, uint32_t _count)
+        void zero_range(uint32_t _first, uint32_t _count)
         {
             memset(data + _first, 0, factor(_count));
         }
@@ -958,12 +974,12 @@ namespace avmplus {
                         bits.ar[i] = 0;
             }
 
-            void set(GC *gc, int bitNbr)
+            void set(int bitNbr)
             {
                 int index = bitNbr / kUnit;
                 int bit = bitNbr % kUnit;
                 if (index >= capacity)
-                    grow(gc, index+1);
+                    grow(index+1);
 
                 if (capacity > kDefaultCapacity)
                     bits.ptr[index] |= (1<<bit);
@@ -1001,7 +1017,7 @@ namespace avmplus {
 
         private:
             // Grow the array until at least newCapacity big
-            void grow(GC *gc, int newCapacity)
+            void grow(int newCapacity)
             {
                 // create vector that is 2x bigger than requested
                 newCapacity *= 2;

@@ -91,7 +91,7 @@ def parsecommandlineargs(args):
 
             stmts.append(SetVariable(vnameexp, token=t,
                                      value=val, valueloc=Location('<command-line>', i, len(vname) + len(t)),
-                                     targetexp=None, source=data.Variables.SOURCE_COMMANDLINE))
+                                     targetexp=None, source=data.Variables.SOURCE_COMMANDLINE, endloc=None))
         else:
             r.append(a)
 
@@ -210,13 +210,11 @@ class Command(Statement):
 class SetVariable(Statement):
     __slots__ = ('vnameexp', 'token', 'value', 'valueloc', 'targetexp', 'source')
 
-    def __init__(self, vnameexp, token, value, valueloc, targetexp, source=None):
+    def __init__(self, vnameexp, token, value, valueloc, targetexp, source,
+                 endloc):
         assert isinstance(vnameexp, (data.Expansion, data.StringExpansion))
         assert isinstance(value, str)
         assert targetexp is None or isinstance(targetexp, (data.Expansion, data.StringExpansion))
-
-        if source is None:
-            source = data.Variables.SOURCE_MAKEFILE
 
         self.vnameexp = vnameexp
         self.token = token
@@ -224,6 +222,7 @@ class SetVariable(Statement):
         self.valueloc = valueloc
         self.targetexp = targetexp
         self.source = source
+        self.endloc = endloc
 
     def execute(self, makefile, context):
         vname = self.vnameexp.resolvestr(makefile, makefile.variables)
@@ -267,7 +266,7 @@ class SetVariable(Statement):
             v.set(vname, flavor, self.source, value)
 
     def dump(self, fd, indent):
-        print >>fd, "%sSetVariable<%s> %s %s\n%s %r" % (indent, self.valueloc, self.vnameexp, self.token, indent, self.value)
+        print >>fd, "%sSetVariable<%s-%s> %s %s\n%s %r" % (indent, self.valueloc, self.endloc, self.vnameexp, self.token, indent, self.value)
 
 class Condition(object):
     """
@@ -368,6 +367,9 @@ class ConditionBlock(Statement):
             statements.dump(fd, indent2)
             print >>fd, "%s ~Condition" % (indent,)
         print >>fd, "%s~ConditionBlock" % (indent,)
+
+    def __iter__(self):
+        return iter(self._groups)
 
 class Include(Statement):
     __slots__ = ('exp', 'required')
@@ -486,3 +488,9 @@ class StatementList(list):
         fd = StringIO()
         self.dump(fd, '')
         return fd.getvalue()
+
+def iterstatements(stmts):
+    for s in stmts:
+        yield s
+        if isinstance(s, ConditionBlock):
+            for c, ss in iterstatements(s): yield ss

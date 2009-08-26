@@ -85,6 +85,8 @@
 #include "nsICanvasFrame.h"
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
+#include "nsIAccelerometer.h"
+#include "nsWidgetsCID.h"
 #include "nsIContent.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -616,6 +618,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mIsChrome(PR_FALSE),
     mNeedsFocus(PR_TRUE),
     mHasFocus(PR_FALSE),
+    mHasAcceleration(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -863,6 +866,12 @@ nsGlobalWindow::CleanUp()
 
   if (inner) {
     inner->CleanUp();
+  }
+
+  if (mHasAcceleration) {
+    nsCOMPtr<nsIAccelerometer> ac = do_GetService(NS_ACCELEROMETER_CONTRACTID);
+    if (ac)
+      ac->RemoveWindowListener(this);
   }
 
   PRUint32 scriptIndex;
@@ -1670,6 +1679,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     nsCOMPtr<nsIDOMChromeWindow> thisChrome =
       do_QueryInterface(static_cast<nsIDOMWindow *>(this));
     nsCOMPtr<nsIXPConnectJSObjectHolder> navigatorHolder;
+    jsval nav;
 
     PRBool isChrome = PR_FALSE;
 
@@ -1748,9 +1758,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
           nsIDOMNavigator* navigator =
             static_cast<nsIDOMNavigator*>(mNavigator.get());
-          xpc->WrapNative(cx, currentInner->mJSObject, navigator,
-                          NS_GET_IID(nsIDOMNavigator),
-                          getter_AddRefs(navigatorHolder));
+          nsContentUtils::WrapNative(cx, currentInner->mJSObject, navigator,
+                                     &NS_GET_IID(nsIDOMNavigator), &nav,
+                                     getter_AddRefs(navigatorHolder));
         }
       }
 
@@ -1974,12 +1984,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
             if (navigatorHolder &&
                 st_id == nsIProgrammingLanguage::JAVASCRIPT) {
               // Restore window.navigator onto the new inner window.
-              JSObject *nav;
               JSAutoRequest ar(cx);
-              navigatorHolder->GetJSObject(&nav);
 
               ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
-                                  OBJECT_TO_JSVAL(nav), nsnull, nsnull,
+                                  nav, nsnull, nsnull,
                                   JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                   JSPROP_READONLY);
 
@@ -1991,7 +1999,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                 static_cast<nsIDOMNavigator*>(mNavigator);
 
               xpc->
-                ReparentWrappedNativeIfFound(cx, nav, newInnerWindow->mJSObject,
+                ReparentWrappedNativeIfFound(cx, JSVAL_TO_OBJECT(nav),
+                                             newInnerWindow->mJSObject,
                                              navigator,
                                              getter_AddRefs(navigatorHolder));
             }
@@ -3387,29 +3396,6 @@ nsGlobalWindow::GetMozInnerScreenY(float* aScreenY)
 
   nsRect r = GetInnerScreenRect();
   *aScreenY = nsPresContext::AppUnitsToFloatCSSPixels(r.y);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetMozScreenPixelsPerCSSPixel(float* aScreenPixels)
-{
-  FORWARD_TO_OUTER(GetMozScreenPixelsPerCSSPixel,
-      (aScreenPixels), NS_ERROR_NOT_INITIALIZED);
-
-  *aScreenPixels = 1;
-
-  if (!nsContentUtils::IsCallerTrustedForRead())
-    return NS_ERROR_DOM_SECURITY_ERR;
-  if (!mDocShell)
-    return NS_OK;
-  nsCOMPtr<nsPresContext> presContext;
-  mDocShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext)
-    return NS_OK;
-
-  *aScreenPixels = float(nsPresContext::AppUnitsPerCSSPixel())/
-      presContext->AppUnitsPerDevPixel();
-
   return NS_OK;
 }
 
@@ -8729,15 +8715,27 @@ nsGlobalWindow::TimeoutSuspendCount()
 NS_IMETHODIMP
 nsGlobalWindow::GetScriptTypeID(PRUint32 *aScriptType)
 {
-    NS_ERROR("No default script type here - ask some element");
-    return nsIProgrammingLanguage::UNKNOWN;
+  NS_ERROR("No default script type here - ask some element");
+  return nsIProgrammingLanguage::UNKNOWN;
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
 {
-    NS_ERROR("Can't change default script type for a document");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ERROR("Can't change default script type for a document");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+nsGlobalWindow::SetHasOrientationEventListener()
+{
+  nsCOMPtr<nsIAccelerometer> ac = 
+    do_GetService(NS_ACCELEROMETER_CONTRACTID);
+
+  if (ac) {
+    mHasAcceleration = PR_TRUE;
+    ac->AddWindowListener(this);
+  }
 }
 
 // nsGlobalChromeWindow implementation
@@ -8986,7 +8984,7 @@ nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalModalWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalModalWindow,
                                                   nsGlobalWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArguments)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mReturnValue)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGlobalModalWindow)
@@ -9460,7 +9458,31 @@ nsNavigator::GetBuildID(nsAString& aBuildID)
 NS_IMETHODIMP
 nsNavigator::JavaEnabled(PRBool *aReturn)
 {
-  *aReturn = nsContentUtils::GetBoolPref("security.enable_java");
+  // Return true if we have a handler for "application/x-java-vm",
+  // otherwise return false.
+  *aReturn = PR_FALSE;
+
+  if (!mMimeTypes) {
+    mMimeTypes = new nsMimeTypeArray(this);
+    if (!mMimeTypes)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  RefreshMIMEArray();
+
+  PRUint32 count;
+  mMimeTypes->GetLength(&count);
+  for (PRUint32 i = 0; i < count; i++) {
+    nsresult rv;
+    nsIDOMMimeType* type = mMimeTypes->GetItemAt(i, &rv);
+    nsAutoString mimeString;
+    if (type && NS_SUCCEEDED(type->GetType(mimeString))) {
+      if (mimeString.EqualsLiteral("application/x-java-vm")) {
+        *aReturn = PR_TRUE;
+        break;
+      }
+    }
+  }
 
   return NS_OK;
 }

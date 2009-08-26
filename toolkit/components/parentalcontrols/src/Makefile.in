@@ -49,12 +49,6 @@ LIBRARY_NAME = parentalcontrols_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-REQUIRES  = xpcom \
-  string \
-  pref \
-  gfx \
-  widget \
-  $(NULL)
 
 CPPSRCS   = \
   nsParentalControlsServiceWin.cpp \

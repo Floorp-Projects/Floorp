@@ -42,9 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom \
-		  chardet \
-		  $(NULL)
 
 PROGRAM		= DetectCharset$(BIN_SUFFIX)
 

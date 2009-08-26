@@ -36,72 +36,66 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-} catch(ex) {
-  do_throw("Could not get nav-bookmarks-service\n");
+
+var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+         getService(Ci.nsINavBookmarksService);
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+         getService(Ci.nsINavHistoryService);
+
+function check_queries_results(aQueries, aOptions, aExpectedItemIds) {
+  var result = hs.executeQueries(aQueries, aQueries.length, aOptions);
+  var root = result.root;
+  root.containerOpen = true;
+
+  // Dump found nodes.
+  for (let i = 0; i < root.childCount; i++) {
+    dump("nodes[" + i + "]: " + root.getChild(0).title + "\n");
+  }
+
+  do_check_eq(root.childCount, aExpectedItemIds.length);
+  for (let i = 0; i < root.childCount; i++) {
+    do_check_eq(root.getChild(i).itemId, aExpectedItemIds[i]);
+  }
+
+  root.containerOpen = false;
 }
-
-// Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
-
 
 // main
 function run_test() {
-  // get bookmarks root id
-  var root = bmsvc.bookmarksMenuFolder;
+  var id1 = bs.insertBookmark(bs.bookmarksMenuFolder, uri("http://foo.tld"),
+                              bs.DEFAULT_INDEX, "123 0");
+  var id2 = bs.insertBookmark(bs.bookmarksMenuFolder, uri("http://foo.tld"),
+                              bs.DEFAULT_INDEX, "456");
+  var id3 = bs.insertBookmark(bs.bookmarksMenuFolder, uri("http://foo.tld"),
+                              bs.DEFAULT_INDEX, "123 456");
+  var id4 = bs.insertBookmark(bs.bookmarksMenuFolder, uri("http://foo.tld"),
+                              bs.DEFAULT_INDEX, "789 456");
 
   /**
    * All of the query objects are ORed together. Within a query, all the terms
    * are ANDed together. See nsINavHistory.idl.
    */
-  var id1 = bmsvc.insertBookmark(root, uri("http://foo.tld"),
-                                 bmsvc.DEFAULT_INDEX, "123 0");
-  var id2 = bmsvc.insertBookmark(root, uri("http://foo.tld"),
-                                 bmsvc.DEFAULT_INDEX, "456");
-  var id3 = bmsvc.insertBookmark(root, uri("http://foo.tld"),
-                                 bmsvc.DEFAULT_INDEX, "123 456");
-  var id4 = bmsvc.insertBookmark(root, uri("http://foo.tld"),
-                                 bmsvc.DEFAULT_INDEX, "789 456");
-
   var queries = [];
-  queries.push(histsvc.getNewQuery());
-  queries[0].searchTerms = "123";
-  queries.push(histsvc.getNewQuery());
-  queries[1].searchTerms = "789";
-
-  var options = histsvc.getNewQueryOptions();
+  queries.push(hs.getNewQuery());
+  queries.push(hs.getNewQuery());
+  var options = hs.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
 
-  var result = histsvc.executeQueries(queries, queries.length, options);
-  var root = result.root;
-  root.containerOpen = true;
-  do_check_eq(root.childCount, 3);
-  do_check_eq(root.getChild(0).itemId, id1);
-  do_check_eq(root.getChild(1).itemId, id3);
-  do_check_eq(root.getChild(2).itemId, id4);
+  // Test 1
+  dump("Test searching for 123 OR 789\n");
+  queries[0].searchTerms = "123";
+  queries[1].searchTerms = "789";
+  check_queries_results(queries, options, [id1, id3, id4]);
 
+  // Test 2
+  dump("Test searching for 123 OR 456\n");
   queries[0].searchTerms = "123";
   queries[1].searchTerms = "456";
-  result = histsvc.executeQueries(queries, queries.length, options);
-  root = result.root;
-  root.containerOpen = true;
-  do_check_eq(root.childCount, 4);
-  do_check_eq(root.getChild(0).itemId, id1);
-  do_check_eq(root.getChild(1).itemId, id2);
-  do_check_eq(root.getChild(2).itemId, id3);
-  do_check_eq(root.getChild(3).itemId, id4);
+  check_queries_results(queries, options, [id1, id2, id3, id4]);
 
+  // Test 3
+  dump("Test searching for 00 OR 789\n");
   queries[0].searchTerms = "00";
   queries[1].searchTerms = "789";
-  result = histsvc.executeQueries(queries, queries.length, options);
-  root = result.root;
-  root.containerOpen = true;
-  do_check_eq(root.childCount, 1);
-  do_check_eq(root.getChild(0).itemId, id4);
+  check_queries_results(queries, options, [id4]);
 }

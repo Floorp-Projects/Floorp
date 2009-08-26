@@ -278,7 +278,7 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
     XPCJSRuntime* rt = ccx.GetRuntime();
     XPCContext* xpcc = ccx.GetXPCContext();
     XPCPerThreadData* tls = ccx.GetThreadData();
-    
+
     jsval* argv = ccx.GetArgv();
     uintN argc = ccx.GetArgc();
 
@@ -305,7 +305,7 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
             secAction = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
             break;
         default:
-            NS_ASSERTION(0,"bad value");
+            NS_ERROR("bad value");
             return JS_FALSE;
     }
     jsval name = member->GetName();
@@ -377,29 +377,9 @@ JSBool XPCDispObject::Invoke(XPCCallContext & ccx, CallMode mode)
             }
         }
     }
-    // If this is a parameterized property
     if(member->IsParameterizedProperty())
     {
-        // We need to get a parameterized property object to return to JS
-        // NewInstance takes ownership of params
-        if(XPCDispParamPropJSClass::NewInstance(ccx, wrapper,
-                                                member->GetDispID(),
-                                                params, &val))
-        {
-            ccx.SetRetVal(val);
-            if(!JS_IdToValue(ccx, 1, &val))
-            {
-                // This shouldn't fail
-                NS_ERROR("JS_IdToValue failed in XPCDispParamPropJSClass::NewInstance");
-                return JS_FALSE;
-            }
-            JS_SetCallReturnValue2(ccx, val);
-            return JS_TRUE;
-        }
-        // NewInstance would only fail if there was an out of memory problem
-        JS_ReportOutOfMemory(ccx);
-        delete params;
-        return JS_FALSE;
+        mode = CALL_GETTER;
     }
     JSBool retval = Dispatch(ccx, pObj, member->GetDispID(), mode, params, &val, member, rt);
     if(retval && mode == CALL_SETTER)

@@ -1,3 +1,5 @@
+== default-size.html default-size-ref.html
+
 == image-rendering-test.html image-rendering-ref.html
 
 != text-ltr-left.html text-blank.html

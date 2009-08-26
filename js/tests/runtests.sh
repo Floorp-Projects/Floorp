@@ -41,7 +41,7 @@ if [[ -z "$TEST_DIR" ]]; then
     cat <<EOF
 `basename $0`: error
 
-TEST_DIR, the location of the Sisyphus framework, 
+TEST_DIR, the location of the Sisyphus framework,
 is required to be set prior to calling this script.
 EOF
     exit 2
@@ -74,39 +74,38 @@ usage: runtests.sh -p products -b branches -e extra\\
 variable            description
 ===============     ============================================================
 -p products         space separated list of js, firefox, fennec
--b branches         space separated list of branches 1.8.0, 1.8.1, 1.9.0, 1.9.1,
-                    1.9.2.
+-b branches         space separated list of supported branches. see library.sh
 -e extra            optional. extra qualifier to pick build tree and mozconfig.
 -T buildtypes       space separated list of build types opt debug
 -B buildcommands    optional space separated list of build commands
                     clean, checkout, build. If not specified, defaults to
-                    'clean checkout build'. 
+                    'clean checkout build'.
                     If you wish to skip any build steps, simply specify a value
                     not containing any of the build commands, e.g. 'none'.
 -v                  optional. verbose - copies log file output to stdout.
 -S                  optional. summary - output tailered for use with
                     Buildbot|Tinderbox
--X excludetests     optional. By default the test will exclude the 
-                    tests listed in spidermonkey-n-\$branch.tests, 
+-X excludetests     optional. By default the test will exclude the
+                    tests listed in spidermonkey-n-\$branch.tests,
                     performance-\$branch.tests. excludetests is a list of either
-                    individual tests, manifest files or sub-directories which 
+                    individual tests, manifest files or sub-directories which
                     will override the default exclusion list.
--I includetests     optional. By default the test will include the 
+-I includetests     optional. By default the test will include the
                     JavaScript tests appropriate for the branch. includetests is a
-                    list of either individual tests, manifest files or 
-                    sub-directories which will override the default inclusion 
+                    list of either individual tests, manifest files or
+                    sub-directories which will override the default inclusion
                     list.
--c                  optional. By default the test will exclude tests 
-                    which crash on this branch, test type, build type and 
-                    operating system. -c will include tests which crash. 
-                    Typically this should only be used in combination with -R. 
+-c                  optional. By default the test will exclude tests
+                    which crash on this branch, test type, build type and
+                    operating system. -c will include tests which crash.
+                    Typically this should only be used in combination with -R.
                     This has no effect on shell based tests which execute crash
                     tests regardless.
--t                  optional. By default the test will exclude tests 
-                    which time out on this branch, test type, build type and 
+-t                  optional. By default the test will exclude tests
+                    which time out on this branch, test type, build type and
                     operating system. -t will include tests which timeout.
 -J jsoptions        optional. Set JavaScript options:
-                    -Z n Set gczeal to n. Currently, only valid for 
+                    -Z n Set gczeal to n. Currently, only valid for
                     debug builds of Gecko 1.8.1.15, 1.9.0 and later.
                     -z optional. use split objects in the shell.
                     -j optional. use JIT in the shell. Only available on 1.9.1 and later
@@ -165,7 +164,7 @@ trap "_exit; rm -f $testlogfilelist" EXIT
 export testlogfiles
 export testlogfile
 
-# because without pipefail, the pipe will not return a non-zero 
+# because without pipefail, the pipe will not return a non-zero
 # exit code, we must pipe stderr from tester.sh to stdout and then
 # look into the testlogfilelist for the error
 
@@ -204,14 +203,8 @@ for testlogfile in $testlogfiles; do
         *) error "unknown buildtype in logfile $testlogfile" $LINENO;;
     esac
 
-    case "$testlogfile" in
-        *,1.8.0*) branch=1.8.0;;
-        *,1.8.1*) branch=1.8.1;;
-        *,1.9.0*) branch=1.9.0;;
-        *,1.9.1*) branch=1.9.1;;
-        *,1.9.2*) branch=1.9.2;;
-        *) error "unknown branch in logfile $testlogfile" $LINENO;;
-    esac
+    branch=`echo $testlogfile | sed 's|.*,\([0-9]\.[0-9]*\.[0-9]*\).*|\1|'`
+
 
     repo=`grep -m 1 '^environment: TEST_MOZILLA_HG=' $testlogfile | sed 's|.*TEST_MOZILLA_HG=http://hg.mozilla.org.*/\([^\/]*\)|\1|'`
     if [[ -z "$repo" ]]; then

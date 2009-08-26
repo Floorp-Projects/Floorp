@@ -139,7 +139,8 @@ public:
   NS_IMETHOD ListBoxAppendFrames(nsFrameList& aFrameList);
   NS_IMETHOD ListBoxInsertFrames(nsIFrame* aPrevFrame, nsFrameList& aFrameList);
   void OnContentInserted(nsPresContext* aPresContext, nsIContent* aContent);
-  void OnContentRemoved(nsPresContext* aPresContext,  nsIFrame* aChildFrame, PRInt32 aIndex);
+  void OnContentRemoved(nsPresContext* aPresContext,  nsIContent* aContainer,
+                        nsIFrame* aChildFrame, PRInt32 aIndex);
 
   void GetListItemContentAt(PRInt32 aIndex, nsIContent** aContent);
   void GetListItemNextSibling(nsIContent* aListItem, nsIContent** aContent, PRInt32& aSiblingIndex);

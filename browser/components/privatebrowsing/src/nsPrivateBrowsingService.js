@@ -117,23 +117,25 @@ PrivateBrowsingService.prototype = {
   // Make sure we don't allow re-enterant changing of the private mode
   _alreadyChangingMode: false,
 
-  // Whether we're entering the private browsing mode at application startup
-  _autoStart: false,
-
-  // Whether the private browsing mode has been started automatically
+  // Whether the private browsing mode has been started automatically (ie. always-on)
   _autoStarted: false,
+
+  // List of view source window URIs for restoring later
+  _viewSrcURLs: [],
 
   // XPCOM registration
   classDescription: "PrivateBrowsing Service",
   contractID: "@mozilla.org/privatebrowsing;1",
   classID: Components.ID("{c31f4883-839b-45f6-82ad-a6a9bc5ad599}"),
   _xpcom_categories: [
+    { category: "command-line-handler", entry: "m-privatebrowsing" },
     { category: "app-startup", service: true }
   ],
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrivateBrowsingService, 
                                          Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsICommandLineHandler]),
 
   _unload: function PBS__destroy() {
     // Force an exit from the private browsing mode on shutdown
@@ -143,8 +145,8 @@ PrivateBrowsingService.prototype = {
   },
 
   _onBeforePrivateBrowsingModeChange: function PBS__onBeforePrivateBrowsingModeChange() {
-    // nothing needs to be done here if we're auto-starting
-    if (!this._autoStart) {
+    // nothing needs to be done here if we're enabling at startup
+    if (!this._autoStarted) {
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].
                getService(Ci.nsISessionStore);
       let blankState = JSON.stringify({
@@ -177,6 +179,22 @@ PrivateBrowsingService.prototype = {
 
       this._closePageInfoWindows();
 
+      // save view-source windows URIs and close them
+      let viewSrcWindowsEnum = Cc["@mozilla.org/appshell/window-mediator;1"].
+                               getService(Ci.nsIWindowMediator).
+                               getEnumerator("navigator:view-source");
+      while (viewSrcWindowsEnum.hasMoreElements()) {
+        let win = viewSrcWindowsEnum.getNext();
+        if (this._inPrivateBrowsing) {
+          let plainURL = win.getBrowser().currentURI.spec;
+          if (plainURL.indexOf("view-source:") == 0) {
+            plainURL = plainURL.substr(12);
+            this._viewSrcURLs.push(plainURL);
+          }
+        }
+        win.close();
+      }
+
       if (!this._quitting && this._saveSession) {
         let browserWindow = this._getBrowserWindow();
 
@@ -203,9 +221,9 @@ PrivateBrowsingService.prototype = {
   },
 
   _onAfterPrivateBrowsingModeChange: function PBS__onAfterPrivateBrowsingModeChange() {
-    // nothing to do here if we're auto-starting or the current session is being
+    // nothing to do here if we're enabling at startup or the current session is being
     // used
-    if (!this._autoStart && this._saveSession) {
+    if (!this._autoStarted && this._saveSession) {
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].
                getService(Ci.nsISessionStore);
       // if we have transitioned out of private browsing mode and the session is
@@ -215,6 +233,28 @@ PrivateBrowsingService.prototype = {
         this._savedBrowserState = null;
 
         this._closePageInfoWindows();
+
+        // re-open all view-source windows
+        let windowWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+                            getService(Ci.nsIWindowWatcher);
+        this._viewSrcURLs.forEach(function(uri) {
+          let args = Cc["@mozilla.org/supports-array;1"].
+                     createInstance(Ci.nsISupportsArray);
+          let str = Cc["@mozilla.org/supports-string;1"].
+                    createInstance(Ci.nsISupportsString);
+          str.data = uri;
+          args.AppendElement(str);
+          args.AppendElement(null); // charset
+          args.AppendElement(null); // page descriptor
+          args.AppendElement(null); // line number
+          let forcedCharset = Cc["@mozilla.org/supports-PRBool;1"].
+                              createInstance(Ci.nsISupportsPRBool);
+          forcedCharset.data = false;
+          args.AppendElement(forcedCharset);
+          windowWatcher.openWindow(null, "chrome://global/content/viewSource.xul",
+            "_blank", "all,dialog=no", args);
+        });
+        this._viewSrcURLs = [];
       }
       else {
         // otherwise, if we have transitioned into private browsing mode, load
@@ -276,11 +316,10 @@ PrivateBrowsingService.prototype = {
         // private browsing mode upon startup.
         // This won't interfere with the session store component, because
         // that component will be initialized on final-ui-startup.
-        this._autoStart = this._prefs.getBoolPref("browser.privatebrowsing.autostart");
-        if (this._autoStart) {
-          this._autoStarted = true;
-          this.privateBrowsingEnabled = true;
-          this._autoStart = false;
+        if (!this._autoStarted) {
+          this._autoStarted = this._prefs.getBoolPref("browser.privatebrowsing.autostart");
+          if (this._autoStarted)
+            this.privateBrowsingEnabled = true;
         }
         this._obs.removeObserver(this, "profile-after-change");
         break;
@@ -307,6 +346,19 @@ PrivateBrowsingService.prototype = {
         }
         break;
     }
+  },
+
+  // nsICommandLineHandler
+
+  handle: function PBS_handle(aCmdLine) {
+    if (aCmdLine.handleFlag("private", false)) {
+      this.privateBrowsingEnabled = true;
+      this._autoStarted = true;
+    }
+  },
+
+  get helpInfo PBS_get_helpInfo() {
+    return "  -private            Enable private browsing mode.\n";
   },
 
   // nsIPrivateBrowsingService
@@ -343,8 +395,7 @@ PrivateBrowsingService.prototype = {
             return;
         }
 
-        this._autoStarted = val ?
-          this._prefs.getBoolPref("browser.privatebrowsing.autostart") : false;
+        this._autoStarted = this._prefs.getBoolPref("browser.privatebrowsing.autostart");
         this._inPrivateBrowsing = val != false;
 
         let data = val ? "enter" : "exit";
@@ -376,7 +427,7 @@ PrivateBrowsingService.prototype = {
    * Whether private browsing has been started automatically.
    */
   get autoStarted PBS_get_autoStarted() {
-    return this._autoStarted;
+    return this._inPrivateBrowsing && this._autoStarted;
   },
 
   removeDataFromDomain: function PBS_removeDataFromDomain(aDomain)

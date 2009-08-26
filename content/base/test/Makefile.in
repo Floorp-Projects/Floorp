@@ -51,20 +51,10 @@ MODULE = content
 
 CPP_UNIT_TESTS = \
                  TestNativeXMLHttpRequest.cpp \
+                 TestGetURL.cpp \
                  TestPlainTextSerializer.cpp \
                  $(NULL)
 
-REQUIRES += \
-  caps \
-  content \
-  dom \
-  js \
-  netwerk \
-  string \
-  xpcom \
-  xpconnect \
-  htmlparser \
-  $(NULL)
 
 XPCSHELL_TESTS = \
                unit \
@@ -310,6 +300,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug466751.xhtml \
 		test_bug461555.html \
 		test_sync_xhr_timer.xhtml \
+		test_bug498240.html \
 		file_htmlserializer_ipv6.html \
 		file_htmlserializer_ipv6_out.html \
 		test_bug498433.html \
@@ -322,6 +313,7 @@ _TEST_FILES = 	test_bug5141.html \
 		bug466409-page.html \
 		bug466409-empty.css \
 		test_bug466409.html \
+		test_classList.html \
 		$(NULL)
 # Disabled; see bug 492181
 #		test_plugin_freezing.html

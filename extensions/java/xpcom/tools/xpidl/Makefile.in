@@ -46,9 +46,6 @@ MODULE		= javaxpcom
 PROGRAM		= java_xpidl$(BIN_SUFFIX)
 INTERNAL_TOOLS	= 1
 
-REQUIRES = \
-	xpcom \
-	$(NULL)
 
 # glib and libIDL link against the non-debug msvcrt
 MOZ_NO_DEBUG_RTL=1

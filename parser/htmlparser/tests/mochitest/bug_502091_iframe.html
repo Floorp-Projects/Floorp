@@ -1,0 +1,17 @@
+<html>
+<head>
+<title>Crash [@ nsContentSink::ProcessHeaderData] with meta in innerHTML</title>
+</head>
+<body>
+<div id="testdiv">
+  testdiv
+  </div>
+<script>
+var x=document.createElement('div');
+x.innerHTML = '<meta http-equiv="Content-Type" content="text/html;"></meta>';
+document.getElementById("testdiv").appendChild(x);
+</script>
+some text here
+</body>
+</html>
+

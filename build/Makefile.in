@@ -97,4 +97,14 @@ libs:: bloaturls.txt
 # autocycling of URLs.
 libs:: bloatcycle.html
 	$(INSTALL) $< $(DIST)/bin/res
+
+ifeq ($(OS_ARCH),Darwin)
+libs:: $(topsrcdir)/tools/rb/fix-macosx-stack.pl
+	$(INSTALL) $< $(DIST)/bin
+endif
+
+ifeq ($(OS_ARCH),Linux)
+libs:: $(topsrcdir)/tools/rb/fix-linux-stack.pl
+	$(INSTALL) $< $(DIST)/bin
+endif
 endif

@@ -262,6 +262,15 @@ public:
     eMetric_WindowsClassic,
 
     /*
+     * A Boolean value to determine whether the device is a touch enabled
+     * device. Currently this is only supported by the Windows 7 Touch API.
+     *
+     * Platforms that do not support this metric should return
+     * NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eMetric_TouchEnabled,
+
+    /*
      * A Boolean value to determine whether the Mac graphite theme is
      * being used.
      *

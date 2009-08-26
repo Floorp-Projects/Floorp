@@ -34,12 +34,19 @@ AUTOMATION_PPARGS = 	\
 			-DPROFILE_DIR=\"$(_PROFILE_DIR)\" \
 			-DCERTS_SRC_DIR=\"$(_CERTS_SRC_DIR)\" \
 			-DSYMBOLS_PATH=\"$(_SYMBOLS_PATH)\" \
+			-DPERL=\"$(PERL)\" \
 			$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)
 AUTOMATION_PPARGS += -DIS_MAC=1
 else
 AUTOMATION_PPARGS += -DIS_MAC=0
+endif
+
+ifeq ($(OS_ARCH),Linux)
+AUTOMATION_PPARGS += -DIS_LINUX=1
+else
+AUTOMATION_PPARGS += -DIS_LINUX=0
 endif
 
 ifeq ($(MOZ_BUILD_APP),camino)

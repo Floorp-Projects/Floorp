@@ -46,19 +46,6 @@ MODULE = inspector
 LIBRARY_NAME = inspector_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  gfx \
-		  thebes \
-		  layout \
-		  content \
-		  widget \
-		  locale \
-		  necko \
-		  docshell \
-		  webshell \
-		  $(NULL)
 
 ifdef ACCESSIBILITY
 REQUIRES        += accessibility
@@ -85,5 +72,10 @@ endif
 FORCE_STATIC_LIB = 1
 # This library is used by other shared libs in a static build
 FORCE_USE_PIC = 1
+
+LOCAL_INCLUDES	+= \
+		-I$(srcdir)/../../style \
+		-I$(topsrcdir)/content/xbl/src \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

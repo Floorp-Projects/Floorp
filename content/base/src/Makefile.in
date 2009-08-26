@@ -46,46 +46,6 @@ MODULE		= content
 LIBRARY_NAME	= gkconbase_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  gfx \
-		  thebes \
-		  layout \
-		  widget \
-		  view \
-		  locale \
-		  htmlparser \
-		  js \
-		  webshell \
-		  necko \
-		  nkcache \
-		  mimetype \
-		  exthandler \
-		  chardet \
-		  caps \
-		  lwbrk \
-		  uconv \
-		  docshell \
-		  pref \
-		  xpconnect \
-		  unicharutil \
-		  intl \
-		  webbrowserpersist \
-		  imglib2 \
-		  plugin \
-		  prefetch \
-		  xuldoc \
-		  uriloader \
-		  rdf \
-		  xultmpl \
-		  util \
-		  appshell \
-		  shistory \
-		  editor \
-		  windowwatcher \
-		  html5 \
-		  $(NULL)
 
 ifdef ACCESSIBILITY
 REQUIRES	+= accessibility
@@ -130,6 +90,7 @@ CPPSRCS		= \
 		nsDOMLists.cpp \
 		nsDOMParser.cpp \
 		nsDOMSerializer.cpp \
+		nsDOMTokenList.cpp \
 		nsDocument.cpp \
 		nsDocumentEncoder.cpp \
 		nsDocumentFragment.cpp \
