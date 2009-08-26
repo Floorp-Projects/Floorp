@@ -456,6 +456,14 @@ typedef JSUintPtr JSUword;
 # define JS_DATA_TO_FUNC_PTR(type, ptr) ((type) (void *) (ptr))
 #endif
 
+#ifdef __GNUC__
+# define JS_EXTENSION __extension__
+# define JS_EXTENSION_(s) __extension__ ({ s; })
+#else
+# define JS_EXTENSION
+# define JS_EXTENSION_(s) s
+#endif
+
 JS_END_EXTERN_C
 
 #endif /* jstypes_h___ */
