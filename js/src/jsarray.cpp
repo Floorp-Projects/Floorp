@@ -791,7 +791,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (prop) {
             if (OBJ_IS_NATIVE(obj2)) {
                 sprop = (JSScopeProperty *) prop;
-                if (!js_NativeGet(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, vp))
+                if (!js_NativeGet(cx, obj, obj2, sprop, vp))
                     return JS_FALSE;
             }
             obj2->dropProperty(cx, prop);
