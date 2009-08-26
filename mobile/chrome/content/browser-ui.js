@@ -399,7 +399,11 @@ var BrowserUI = {
     switch (aState) {
       case TOOLBARSTATE_LOADED:
         icons.setAttribute("mode", "view");
-        this.showToolbar(uri.spec == "about:blank");
+        
+        // We handle showing the toolbar for new tabs in BrowserUI.newTab()
+        if (uri.spec != "about:blank") {
+          this.showToolbar(false);
+        }
 
         if (!this._faviconLink)
           this._faviconLink = uri.prePath + "/favicon.ico";
@@ -410,7 +414,9 @@ var BrowserUI = {
 
       case TOOLBARSTATE_LOADING:
         this.showToolbar();
-        // Force the mode back to "loading"
+        
+        // Force the mode back to "loading" since showToolbar() changes it to "view"
+        // and that messes up the CSS rules depending on the "mode" attribute
         icons.setAttribute("mode", "loading");
 
         this._favicon.src = "";
@@ -549,8 +555,9 @@ var BrowserUI = {
   },
 
   newTab : function newTab(aURI) {
-    //ws.panTo(0, -this.toolbarH);
-    return Browser.addTab(aURI || "about:blank", true);
+    let tab = Browser.addTab(aURI || "about:blank", true);
+    this.showAutoComplete();
+    return tab;
   },
 
   closeTab : function closeTab(aTab) {
@@ -700,7 +707,7 @@ var BrowserUI = {
         break;
       case "cmd_openLocation":
         this.showToolbar(true);
-        setTimeout(function () { BrowserUI.showAutoComplete(); }, 0);
+        BrowserUI.showAutoComplete();
         break;
       case "cmd_star":
       {
