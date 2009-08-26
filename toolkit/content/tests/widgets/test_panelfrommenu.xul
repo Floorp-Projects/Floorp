@@ -30,6 +30,8 @@
   </menupopup>
 </menu>
 
+<panel id="hiddenpanel" hidden="true"/>
+
 <panel id="panel" onpopupshown="panelOpened()"
                   onpopuphidden="$('button').focus(); $('button').open = true">
   <textbox/>
@@ -56,6 +58,8 @@ SimpleTest.waitForExplicitFinish();
 
 function runTests()
 {
+  is($("hiddenpanel").state, "closed", "hidden popup is closed");
+
   var menu = $("menu");
   menu.open = true;
 }
