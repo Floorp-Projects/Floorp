@@ -145,9 +145,6 @@ _TEST_FILES_0 += \
 _TEST_FILES_0 += \
 	test_2d.gradient.radial.outside2.html \
 	test_2d.gradient.radial.outside3.html \
-	test_2d.gradient.radial.cone.shape2.html \
-	test_2d.gradient.radial.cone.behind.html \
-	test_2d.gradient.radial.cone.beside.html \
 	$(NULL)
 
 # still need bug numbers
@@ -161,6 +158,13 @@ endif
 # test_2d.gradient.radial.touch2.html \
 # test_2d.gradient.radial.touch3.html \
 # test_2d.gradient.radial.equal.html \
+
+# These tests do not pass on any platform; Quartz backend won't pass them
+# because we fall back to pixman when one circle doesn't contain the other.
+# See bug 512647.
+#	test_2d.gradient.radial.cone.shape2.html \
+#	test_2d.gradient.radial.cone.behind.html \
+#	test_2d.gradient.radial.cone.beside.html \
 
 # This test is bogus according to the spec; see bug 407107
 # test_2d.path.rect.zero.6.html
