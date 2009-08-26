@@ -130,8 +130,7 @@ function InputHandler(browserViewContainer) {
   this.listenFor(browserViewContainer, "keydown");
   this.listenFor(browserViewContainer, "keyup");
   this.listenFor(browserViewContainer, "DOMMouseScroll");
-
-  //let useEarlyMouseMoves = gPrefService.getBoolPref("browser.ui.panning.fixup.mousemove");
+  this.listenFor(browserViewContainer, "MozMousePixelScroll");
 
   this.addModule(new MouseModule(this));
   this.addModule(new ScrollwheelModule(this, browserViewContainer));
@@ -1130,12 +1129,23 @@ function ScrollwheelModule(owner, browserViewContainer) {
 }
 
 ScrollwheelModule.prototype = {
+  pendingEvent : 0,
   handleEvent: function handleEvent(evInfo) {
-    if (evInfo.event.type == "DOMMouseScroll") {
-      Browser.zoom(evInfo.event.detail);
+    if (evInfo.event.type == "DOMMouseScroll" || evInfo.event.type == "MozMousePixelScroll") {
+      /*
+      * If events come too fast we don't want their handling to lag the zoom in/zoom out execution.
+      * With the timeout the zoom is executed as we scroll.
+      */
+      if (this.pendingEvent)
+        clearTimeout(this.pendingEvent);
+      this.pendingEvent = setTimeout(this.handleEventImpl, 0, evInfo.event.detail);
       evInfo.event.stopPropagation();
       evInfo.event.preventDefault();
     }
+  },
+  handleEventImpl: function handleEventImpl(zoomlevel) {
+	this.pendingEvent = 0;
+	Browser.zoom(zoomlevel);
   },
 
   /* We don't have much state to reset if we lose event focus */
