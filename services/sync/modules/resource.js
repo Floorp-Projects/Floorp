@@ -50,27 +50,6 @@ Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/auth.js");
 
-// = RequestException =
-//
-// This function raises an exception through the call
-// stack for a failed network request.
-function RequestException(resource, action, request) {
-  this._resource = resource;
-  this._action = action;
-  this._request = request;
-  this.location = Components.stack.caller;
-}
-RequestException.prototype = {
-  get resource() { return this._resource; },
-  get action() { return this._action; },
-  get request() { return this._request; },
-  get status() { return this._request.status; },
-  toString: function ReqEx_toString() {
-    return "Could not " + this._action + " resource " + this._resource.spec +
-      " (" + this._request.responseStatus + ")";
-  }
-};
-
 // = Resource =
 //
 // Represents a remote network resource, identified by a URI.
@@ -122,8 +101,6 @@ Resource.prototype = {
     return this._uri;
   },
   set uri(value) {
-    this._dirty = true;
-    this._downloaded = false;
     if (typeof value == 'string')
       this._uri = Utils.makeURI(value);
     else
@@ -145,16 +122,8 @@ Resource.prototype = {
   _data: null,
   get data() this._data,
   set data(value) {
-    this._dirty = true;
     this._data = value;
   },
-
-  _lastChannel: null,
-  _downloaded: false,
-  _dirty: false,
-  get lastChannel() this._lastChannel,
-  get downloaded() this._downloaded,
-  get dirty() this._dirty,
 
   // ** {{{ Resource.filters }}} **
   //
@@ -188,18 +157,15 @@ Resource.prototype = {
   // to obtain a request channel.
   //
   _createRequest: function Res__createRequest() {
-    this._lastChannel = Svc.IO.newChannel(this.spec, null, null).
-      QueryInterface(Ci.nsIRequest);
+    let channel = Svc.IO.newChannel(this.spec, null, null).
+      QueryInterface(Ci.nsIRequest).QueryInterface(Ci.nsIHttpChannel);
 
     // Always validate the cache:
-    let loadFlags = this._lastChannel.loadFlags;
-    loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
-    loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
-    this._lastChannel.loadFlags = loadFlags;
-    this._lastChannel = this._lastChannel.QueryInterface(Ci.nsIHttpChannel);
+    channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     
     // Setup a callback to handle bad HTTPS certificates.
-    this._lastChannel.notificationCallbacks = new badCertListener();
+    channel.notificationCallbacks = new badCertListener();
     
     // Avoid calling the authorizer more than once
     let headers = this.headers; 
@@ -208,9 +174,9 @@ Resource.prototype = {
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
         this._log.trace("HTTP Header " + key + ": " + headers[key]);
-      this._lastChannel.setRequestHeader(key, headers[key], false);
+      channel.setRequestHeader(key, headers[key], false);
     }
-    return this._lastChannel;
+    return channel;
   },
 
   _onProgress: function Res__onProgress(channel) {},
@@ -289,31 +255,44 @@ Resource.prototype = {
       throw error;
     }
 
-    if (!channel.requestSucceeded) {
-      this._log.debug(action + " request failed (" + channel.responseStatus + ")");
-      if (this._data)
-        this._log.debug("Error response: " + this._data);
-      throw new RequestException(this, action, channel);
-
-    } else {
-      this._log.debug(action + " request successful (" + channel.responseStatus  + ")");
-
-      switch (action) {
-      case "DELETE":
-        if (Utils.checkStatus(channel.responseStatus, null, [[200,300],404])){
-          this._dirty = false;
-          this._data = null;
+    // Set some default values in-case there's no response header
+    let headers = {};
+    let status = 0;
+    let success = true;
+    try {
+      // Read out the response headers if available
+      channel.visitResponseHeaders({
+        visitHeader: function visitHeader(header, value) {
+          headers[header] = value;
         }
-        break;
-      case "GET":
-      case "POST":
-        this._log.trace(action + " Body: " + this._data);
-        this.filterDownload();
-        break;
+      });
+      status = channel.responseStatus;
+      success = channel.requestSucceeded;
+
+      if (success) {
+        this._log.debug(action + " success: " + status);
+        switch (action) {
+          case "GET":
+          case "POST":
+            if (this._log.level <= Log4Moz.Level.Trace)
+              this._log.trace(action + " Body: " + this._data);
+            this.filterDownload();
+            break;
+        }
       }
+      else
+        this._log.debug(action + " fail: " + status + " " + this._data);
+    }
+    // Got a response but no header; must be cached (use default values)
+    catch(ex) {
+      this._log.debug(action + " cached: " + status);
     }
 
-    return this._data;
+    let ret = new String(this._data);
+    ret.headers = headers;
+    ret.status = status;
+    ret.success = success;
+    return ret;
   },
 
   // ** {{{ Resource.get }}} **
