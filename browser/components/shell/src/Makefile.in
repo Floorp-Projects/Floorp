@@ -58,10 +58,6 @@ CPPSRCS = nsMacShellService.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 CPPSRCS = nsGNOMEShellService.cpp
-REQUIRES	+= \
-		mozgnome \
-		thebes \
-		$(NULL)
 endif
 endif
 endif
