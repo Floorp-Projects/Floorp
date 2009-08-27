@@ -3,6 +3,8 @@
 <!DOCTYPE bindings [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
 ]>
 
 <bindings
@@ -18,6 +20,8 @@
           <xul:hbox align="center">
             <xul:label class="title" xbl:inherits="value=name"/>
             <xul:label class="normal" xbl:inherits="value=version"/>
+            <xul:spacer flex="1"/>
+            <xul:label class="normal" crop="end" xbl:inherits="value=typeLabel"/>            
           </xul:hbox>
           <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
           <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
@@ -108,6 +112,8 @@
         <xul:hbox align="center">
           <xul:label class="title" xbl:inherits="value=name"/>
           <xul:label class="normal" xbl:inherits="value=version"/>
+          <xul:spacer flex="1"/>
+          <xul:hbox class="addon-type-or-rating" align="center" xbl:inherits="rating"/>            
         </xul:hbox>
         <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
         <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
@@ -115,7 +121,7 @@
           <xul:button class="addon-install hide-on-install hide-on-restart" label="&addonShowPage.label;"
                       oncommand="ExtensionsView.showPage(document.getBindingParent(this));"/>
           <xul:spacer flex="1"/>
-          <xul:button class="addon-install hide-on-install hide-on-restart" label="&addonInstall.label;"
+          <xul:button class="addon-install hide-on-install hide-on-restart" label="&addonInstall2.label;"
                       oncommand="ExtensionsView.installFromRepo(document.getBindingParent(this));"/>
         </xul:hbox>
         <xul:progressmeter class="show-on-install" mode="normal" value="0" xbl:inherits="value=progress"/>
@@ -130,6 +136,18 @@
         <xul:label class="normal" xbl:inherits="value=message"/>
       </xul:hbox>
       <xul:button xbl:inherits="label=button,hidden=hidebutton" oncommand="ExtensionsView.resetSearch();"/>
+    </content>
+  </binding>
+
+  <binding id="extension-search-recommended">
+    <content>
+      <xul:label class="normal" value="&addonsSearch.recommended;" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="extension-search-rating">
+    <content>
+      <xul:image class="addon-rating" xbl:inherits="rating"/>
     </content>
   </binding>
 
