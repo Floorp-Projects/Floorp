@@ -11732,61 +11732,114 @@ TraceRecorder::record_JSOP_POPN()
     return JSRS_CONTINUE;
 }
 
+/*
+ * Generate LIR to reach |obj2| from |obj| by traversing the scope chain. The generated code
+ * also ensures that any call objects found have not changed shape.
+ *
+ *      obj               starting object
+ *      obj_ins           LIR instruction representing obj
+ *      obj2              end object for traversal
+ *      obj2_ins   [out]  LIR instruction representing obj2
+ */
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *obj2, LIns *&obj2_ins)
+{
+    for (;;) {
+        if (obj != globalObj) {
+            if (!js_IsCacheableNonGlobalScope(obj))
+                ABORT_TRACE("scope chain lookup crosses non-cacheable object");
+
+            // We must guard on the shape of all call objects for heavyweight functions
+            // that we traverse on the scope chain: if the shape changes, a variable with
+            // the same name may have been inserted in the scope chain.
+            if (STOBJ_GET_CLASS(obj) == &js_CallClass &&
+                JSFUN_HEAVYWEIGHT_TEST(js_GetCallObjectFunction(obj)->flags)) {
+                LIns* map_ins = map(obj_ins);
+                LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
+                                          "obj_shape");
+                guard(true,
+                      addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(obj)), "guard_shape"),
+                      BRANCH_EXIT);
+            }
+        }
+
+        if (obj == obj2)
+            break;
+
+        obj = STOBJ_GET_PARENT(obj);
+        if (!obj)
+            ABORT_TRACE("target object not reached on scope chain");
+        obj_ins = stobj_get_parent(obj_ins);
+    }
+
+    obj2_ins = obj_ins;
+    return JSRS_CONTINUE;
+}
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_BINDNAME()
 {
     JSStackFrame *fp = cx->fp;
     JSObject *obj;
 
-    if (fp->fun) {
-        // We can't trace BINDNAME in functions that contain direct
-        // calls to eval, as they might add bindings which
-        // previously-traced references would have to see.
-        if (JSFUN_HEAVYWEIGHT_TEST(fp->fun->flags))
-            ABORT_TRACE("Can't trace JSOP_BINDNAME in heavyweight functions.");
-
-        // In non-heavyweight functions, we can safely skip the call
-        // object, if any.
-        obj = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
-    } else {
+    if (!fp->fun) {
         obj = fp->scopeChain;
 
-        // In global code, fp->scopeChain can only contain blocks
-        // whose values are still on the stack.  We never use BINDNAME
-        // to refer to these.
+        // In global code, fp->scopeChain can only contain blocks whose values
+        // are still on the stack.  We never use BINDNAME to refer to these.
         while (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
             // The block's values are still on the stack.
             JS_ASSERT(obj->getAssignedPrivate() == fp);
-
             obj = OBJ_GET_PARENT(cx, obj);
-
             // Blocks always have parents.
             JS_ASSERT(obj);
         }
-    }
 
-    if (obj != globalObj) {
-        if (OBJ_GET_CLASS(cx, obj) != &js_CallClass)
-            ABORT_TRACE("Can only trace JSOP_BINDNAME with global or call object");
+        if (obj != globalObj)
+            ABORT_TRACE("BINDNAME in global code resolved to non-global object");
 
         /*
-         * The interpreter version of JSOP_BINDNAME does the full lookup. We
-         * don't need to do that on trace because we will leave trace if the
-         * scope ever changes, so the result of the lookup cannot change.
+         * The trace is specialized to this global object. Furthermore, we know it
+         * is the sole 'global' object on the scope chain: we set globalObj to the
+         * scope chain element with no parent, and we reached it starting from the
+         * function closure or the current scopeChain, so there is nothing inner to
+         * it. Therefore this must be the right base object.
          */
-        JS_ASSERT(obj == cx->fp->scopeChain || obj == OBJ_GET_PARENT(cx, cx->fp->scopeChain));
-        stack(0, stobj_get_parent(get(&cx->fp->argv[-2])));
+        stack(0, INS_CONSTOBJ(obj));
         return JSRS_CONTINUE;
     }
 
-    /*
-     * The trace is specialized to this global object. Furthermore, we know it
-     * is the sole 'global' object on the scope chain: we set globalObj to the
-     * scope chain element with no parent, and we reached it starting from the
-     * function closure or the current scopeChain, so there is nothing inner to
-     * it. Therefore this must be the right base object.
-     */
-    stack(0, INS_CONSTOBJ(obj));
+    // We can't trace BINDNAME in functions that contain direct calls to eval,
+    // as they might add bindings which previously-traced references would have
+    // to see.
+    if (JSFUN_HEAVYWEIGHT_TEST(fp->fun->flags))
+        ABORT_TRACE("BINDNAME in heavyweight function.");
+
+    // We don't have the scope chain on trace, so instead we get a start object
+    // that is on the scope chain and doesn't skip the target object (the one
+    // that contains the property).
+    jsval *callee = &cx->fp->argv[-2];
+    obj = STOBJ_GET_PARENT(JSVAL_TO_OBJECT(*callee));
+    if (obj == globalObj) {
+        stack(0, INS_CONSTOBJ(obj));
+        return JSRS_CONTINUE;
+    }
+    LIns *obj_ins = stobj_get_parent(get(callee));
+
+    // Find the target object.
+    JSAtom *atom = atoms[GET_INDEX(cx->fp->regs->pc)];
+    jsid id = ATOM_TO_JSID(atom);
+    JSObject *obj2 = js_FindIdentifierBase(cx, fp->scopeChain, id);
+    if (obj2 != globalObj && STOBJ_GET_CLASS(obj2) != &js_CallClass)
+        ABORT_TRACE("BINDNAME on non-global, non-call object");
+
+    // Generate LIR to get to the target object from the start object.
+    LIns *obj2_ins;
+    CHECK_STATUS(traverseScopeChain(obj, obj_ins, obj2, obj2_ins));
+
+    // If |obj2| is the global object, we can refer to it directly instead of walking up
+    // the scope chain. There may still be guards on intervening call objects.
+    stack(0, obj2 == globalObj ? INS_CONSTOBJ(obj2) : obj2_ins);
     return JSRS_CONTINUE;
 }
 
