@@ -999,6 +999,7 @@
 
           BEGIN_CASE(JSOP_CONCATN)
           {
+#ifdef JS_TRACER
             JS_ASSERT_IF(fp->imacpc,
                          *fp->imacpc == JSOP_CONCATN && *regs.pc == JSOP_IMACOP);
 
@@ -1018,8 +1019,11 @@
                 if (!recording)
                     js_ConcatPostImacroStackCleanup(argc, regs, NULL);
             } else {
+#endif  /* JS_TRACER */
                 argc = GET_ARGC(regs.pc);
+#ifdef JS_TRACER
             }
+#endif  /* JS_TRACER */
 
             JSCharBuffer buf(cx);
             for (vp = regs.sp - argc; vp < regs.sp; vp++) {
@@ -1037,10 +1041,12 @@
             regs.sp -= argc - 1;
             STORE_OPND(-1, STRING_TO_JSVAL(str));
 
+#ifdef JS_TRACER
             if (imacro) {
                 /* END_CASE does pc += CONCATN_LENGTH. (IMACOP YOU IDIOT!) */
                 regs.pc -= JSOP_CONCATN_LENGTH - JSOP_IMACOP_LENGTH;
             }
+#endif  /* JS_TRACER */
           }
           END_CASE(JSOP_CONCATN)
 
