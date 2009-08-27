@@ -1,13 +1,3 @@
-<!ENTITY prefpane.label                     "Weave">
-
-<!ENTITY eraseServerDataButton.label        "Erase Server Data...">
-<!ENTITY eraseServerDataButton.description  "Erase all data on the server">
-
-<!ENTITY backUpCheckbox.label               "Back up and securely synchronize my data to a Weave server">
-<!ENTITY syncNowButton.label                "Sync Now...">
-<!ENTITY syncItemsList.label                "Synchronize these items:">
-
-
 <!ENTITY fennecOpenPrefsCmd.label "Open Weave Preferences">
 <!ENTITY fennecOpenPrefsButton.label "Details...">
 <!ENTITY fennecPrefsHeader.title "Sync Data with Weave...">

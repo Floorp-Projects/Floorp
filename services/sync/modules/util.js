@@ -691,10 +691,6 @@ let Utils = {
     this.openDialog("ChangeSomething", "generic-change.xul");
   },
 
-  openShare: function Utils_openShare() {
-    Utils.openDialog("Share", "share.xul");
-  },
-
   openLog: function Utils_openLog() {
     Utils._openChromeWindow("Log", "log.xul");
   },
