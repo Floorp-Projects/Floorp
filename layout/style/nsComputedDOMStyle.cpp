@@ -2632,6 +2632,24 @@ nsComputedDOMStyle::GetWordWrap(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetPointerEvents(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+  
+  const nsStyleVisibility* visibility = GetStyleVisibility();
+  
+  if (visibility->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
+    val->SetIdent(nsCSSProps::ValueToKeywordEnum(visibility->mPointerEvents,
+                                                 nsCSSProps::kPointerEventsKTable));
+  } else {
+    val->SetIdent(eCSSKeyword_none);
+  }
+  
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetVisibility(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4273,25 +4291,6 @@ nsComputedDOMStyle::GetImageRendering(nsIDOMCSSValue** aValue)
 }
 
 nsresult
-nsComputedDOMStyle::GetPointerEvents(nsIDOMCSSValue** aValue)
-{
-  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
-
-  const nsStyleSVG* svg = GetStyleSVG();
-
-  if (svg->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
-    val->SetIdent(
-      nsCSSProps::ValueToKeywordEnum(svg->mPointerEvents,
-                                     nsCSSProps::kPointerEventsKTable));
-  } else {
-    val->SetIdent(eCSSKeyword_none);
-  }
-
-  return CallQueryInterface(val, aValue);
-}
-
-nsresult
 nsComputedDOMStyle::GetShapeRendering(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -4665,6 +4664,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     // COMPUTED_STYLE_MAP_ENTRY(pause_before,               PauseBefore),
     // COMPUTED_STYLE_MAP_ENTRY(pitch,                      Pitch),
     // COMPUTED_STYLE_MAP_ENTRY(pitch_range,                PitchRange),
+    COMPUTED_STYLE_MAP_ENTRY(pointer_events,                PointerEvents),
     COMPUTED_STYLE_MAP_ENTRY(position,                      Position),
     COMPUTED_STYLE_MAP_ENTRY(quotes,                        Quotes),
     // COMPUTED_STYLE_MAP_ENTRY(richness,                   Richness),
@@ -4768,7 +4768,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(marker_end,                    MarkerEnd),
     COMPUTED_STYLE_MAP_ENTRY(marker_mid,                    MarkerMid),
     COMPUTED_STYLE_MAP_ENTRY(marker_start,                  MarkerStart),
-    COMPUTED_STYLE_MAP_ENTRY(pointer_events,                PointerEvents),
     COMPUTED_STYLE_MAP_ENTRY(shape_rendering,               ShapeRendering),
     COMPUTED_STYLE_MAP_ENTRY(stop_color,                    StopColor),
     COMPUTED_STYLE_MAP_ENTRY(stop_opacity,                  StopOpacity),

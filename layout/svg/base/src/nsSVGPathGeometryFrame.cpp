@@ -494,10 +494,11 @@ nsSVGPathGeometryFrame::GetHittestMask()
 {
   PRUint16 mask = 0;
 
-  switch(GetStyleSVG()->mPointerEvents) {
+  switch(GetStyleVisibility()->mPointerEvents) {
     case NS_STYLE_POINTER_EVENTS_NONE:
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
+    case NS_STYLE_POINTER_EVENTS_AUTO:
       if (GetStyleVisibility()->IsVisible()) {
         if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
           mask |= HITTEST_MASK_FILL;
