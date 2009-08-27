@@ -76,10 +76,6 @@ tier_external_dirs	+= gfx/qcms
 # tier "gecko" - core components
 #
 
-ifdef MOZ_IPC
-tier_gecko_dirs += ipc
-endif
-
 tier_gecko_dirs += \
 		js/src/xpconnect \
 		intl/chardet \
