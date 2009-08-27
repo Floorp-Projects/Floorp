@@ -73,6 +73,7 @@
 #include "mozilla/plugins/PluginThreadChild.h"
 #include "ContentProcessThread.h"
 #include "ContentProcessParent.h"
+#include "ContentProcessChild.h"
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
@@ -88,6 +89,7 @@ using mozilla::ipc::ScopedXREEmbed;
 using mozilla::plugins::PluginThreadChild;
 using mozilla::dom::ContentProcessThread;
 using mozilla::dom::ContentProcessParent;
+using mozilla::dom::ContentProcessChild;
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::XPCShellEnvironment;
 
@@ -476,13 +478,49 @@ XRE_RunIPCTestHarness(int aArgc, char* aArgv[])
     return 0;
 }
 
-void
-XRE_ShutdownChildProcess()
+template<>
+struct RunnableMethodTraits<ContentProcessChild>
 {
+    static void RetainCallee(ContentProcessChild* obj) { }
+    static void ReleaseCallee(ContentProcessChild* obj) { }
+};
+
+void
+XRE_ShutdownChildProcess(MessageLoop* aUILoop)
+{
+    if (aUILoop) {
+        NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+        aUILoop->PostTask(FROM_HERE,
+            NewRunnableMethod(ContentProcessChild::GetSingleton(),
+                              &ContentProcessChild::Quit));
+        return;
+    }
+
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
     if (appStartup) {
         appStartup->Quit(nsIAppStartup::eForceQuit);
     }
+}
+
+ContentProcessParent*
+XRE_GetContentProcessParent()
+{
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        return ContentProcessParent::GetSingleton();
+    }
+    NS_WARNING("Called XRE_GetContentProcessParent in child process!");
+    return nsnull;
+}
+
+ContentProcessChild*
+XRE_GetContentProcessChild()
+{
+    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+        return ContentProcessChild::GetSingleton();
+    }
+    NS_WARNING("Called XRE_GetContentProcessChild in parent process!");
+    return nsnull;
 }
 
 #endif
