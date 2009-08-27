@@ -335,10 +335,11 @@ class ConditionBlock(Statement):
         self.addcondition(loc, condition)
 
     def getloc(self):
-        return self._groups[0][0].loc
+        return self.loc
 
     def addcondition(self, loc, condition):
         assert isinstance(condition, Condition)
+        condition.loc = loc
 
         if len(self._groups) and isinstance(self._groups[-1][0], ElseCondition):
             raise parser.SyntaxError("Multiple else conditions for block starting at %s" % self.loc, loc)
@@ -370,6 +371,12 @@ class ConditionBlock(Statement):
 
     def __iter__(self):
         return iter(self._groups)
+
+    def __len__(self):
+        return len(self._groups)
+
+    def __getitem__(self, i):
+        return self._groups[i]
 
 class Include(Statement):
     __slots__ = ('exp', 'required')

@@ -1296,8 +1296,7 @@ ifdef EMBED_MANIFEST_AT
 endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
 endif	# WINNT && !GCC
-ifeq ($(OS_ARCH),Darwin)
-else # non-Darwin
+ifneq ($(OS_ARCH),Darwin)
 	@rm -f $(SUB_SHLOBJS)
 endif # Darwin
 	@rm -f foodummyfilefoo $(DELETE_AFTER_LINK)

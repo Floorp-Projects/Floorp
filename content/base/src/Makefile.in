@@ -47,8 +47,6 @@ LIBRARY_NAME	= gkconbase_s
 LIBXUL_LIBRARY	= 1
 
 
-ifdef ACCESSIBILITY
-endif
 
 EXPORTS		= \
 		nsAtomListUtils.h \

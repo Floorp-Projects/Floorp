@@ -54,8 +54,6 @@ endif
 
 # REQUIRES	= java js
 
-ifndef JSD_STANDALONE
-endif
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \

@@ -52,8 +52,6 @@ LIBRARY_NAME	= xpcomglue_s
 DIST_INSTALL	= 1
 
 
-ifdef NS_TRACE_MALLOC
-endif
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../build \
