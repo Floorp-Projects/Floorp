@@ -202,30 +202,29 @@ WeaveSvc.prototype = {
   },
 
   get baseURL() {
-    let url = Svc.Prefs.get("serverURL");
-    if (!url)
-      throw "No server URL set";
-    if (url[url.length-1] != '/')
-      url += '/';
-    url += "0.3/";
-    return url;
+    return Utils.getURLPref("serverURL");
   },
   set baseURL(value) {
     Svc.Prefs.set("serverURL", value);
   },
 
+  get miscURL() {
+    return Utils.getURLPref("miscURL");
+  },
+  set miscURL(value) {
+    Svc.Prefs.set("miscURL", value);
+  },
+
   get clusterURL() {
-    let url = Svc.Prefs.get("clusterURL");
-    if (!url)
-      return null;
-    if (url[url.length-1] != '/')
-      url += '/';
-    url += "0.3/user/";
-    return url;
+    return Utils.getURLPref("clusterURL", null, "0.5/");
   },
   set clusterURL(value) {
     Svc.Prefs.set("clusterURL", value);
     this._genKeyURLs();
+  },
+
+  get userURL() {
+    return this.clusterURL + this.username;
   },
 
   get userPath() { return ID.get('WeaveID').username; },
@@ -261,9 +260,9 @@ WeaveSvc.prototype = {
   },
 
   _genKeyURLs: function WeaveSvc__genKeyURLs() {
-    let url = this.clusterURL + this.username;
-    PubKeys.defaultKeyUri = url + "/keys/pubkey";
-    PrivKeys.defaultKeyUri = url + "/keys/privkey";
+    let url = this.userURL;
+    PubKeys.defaultKeyUri = url + "/storage/keys/pubkey";
+    PrivKeys.defaultKeyUri = url + "/storage/keys/privkey";
   },
 
   _checkCrypto: function WeaveSvc__checkCrypto() {
@@ -458,16 +457,16 @@ WeaveSvc.prototype = {
   findCluster: function WeaveSvc_findCluster(username) {
     this._log.debug("Finding cluster for user " + username);
 
-    let res = new Resource(this.baseURL + "api/register/chknode/" + username);
+    let res = new Resource(this.baseURL + "1/" + username + "/node/weave");
     try {
       let node = res.get();
       switch (node.status) {
         case 404:
           this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
-          return Svc.Prefs.get("serverURL");
+          return this.baseURL;
         case 0:
         case 200:
-          return "https://" + node + "/";
+          return node;
         default:
           this._log.debug("Unexpected response code: " + node.status);
           break;
@@ -517,11 +516,7 @@ WeaveSvc.prototype = {
       if (isLogin)
         this.clusterURL = url;
 
-      if (url[url.length-1] != '/')
-        url += '/';
-      url += "0.3/user/";
-
-      let res = new Resource(url + username);
+      let res = new Resource(this.userURL + "/info/collections");
       res.authenticator = {
         onRequest: function(headers) {
           headers['Authorization'] = 'Basic ' + btoa(username + ':' + password);
@@ -601,16 +596,11 @@ WeaveSvc.prototype = {
 
   changePassword: function WeaveSvc_changePassword(newpass)
     this._catch(this._notify("changepwd", "", function() {
-      function enc(x) encodeURIComponent(x);
-      let message = "uid=" + enc(this.username) + "&password=" +
-        enc(this.password) + "&new=" + enc(newpass);
-      let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/chpwd';
+      let url = this.baseURL + '1/' + username + "/password";
       let res = new Weave.Resource(url);
       res.authenticator = new Weave.NoOpAuthenticator();
-      res.setHeader("Content-Type", "application/x-www-form-urlencoded",
-                    "Content-Length", message.length);
 
-      let resp = res.post(message);
+      let resp = res.post(newpass);
       if (resp.status != 200) {
         this._log.info("Password change failed: " + resp);
         throw "Could not change password";
@@ -739,41 +729,31 @@ WeaveSvc.prototype = {
 
   _errorStr: function WeaveSvc__errorStr(code) {
     switch (code.toString()) {
-    case "0":
-      return "uid-in-use";
-    case "-1":
-      return "invalid-http-method";
-    case "-2":
-      return "uid-missing";
-    case "-3":
-      return "uid-invalid";
-    case "-4":
-      return "mail-invalid";
-    case "-5":
-      return "mail-in-use";
-    case "-6":
-      return "captcha-challenge-missing";
-    case "-7":
-      return "captcha-response-missing";
-    case "-8":
-      return "password-missing";
-    case "-9":
-      return "internal-server-error";
-    case "-10":
-      return "server-quota-exceeded";
-    case "-11":
-      return "missing-new-field";
-    case "-12":
-      return "password-incorrect";
+    case "1":
+      return "illegal-method";
+    case "2":
+      return "invalid-captcha";
+    case "3":
+      return "invalid-username";
+    case "4":
+      return "cannot-overwrite-resource";
+    case "5":
+      return "userid-mismatch";
+    case "6":
+      return "json-parse-failure";
+    case "7":
+      return "invalid-password";
+    case "8":
+      return "invalid-record";
+    case "9":
+      return "weak-password";
     default:
       return "generic-server-error";
     }
   },
 
   checkUsername: function WeaveSvc_checkUsername(username) {
-    let url = Svc.Prefs.get('tmpServerURL') +
-      "0.3/api/register/checkuser/" + username;
-
+    let url = this.baseURL + "1/" + username;
     let res = new Resource(url);
     res.authenticator = new NoOpAuthenticator();
 
@@ -790,35 +770,29 @@ WeaveSvc.prototype = {
   },
 
   createAccount: function WeaveSvc_createAccount(username, password, email,
-                                                 captchaChallenge, captchaResponse) {
-    function enc(x) encodeURIComponent(x);
-    let message = "uid=" + enc(username) + "&password=" + enc(password) +
-      "&mail=" + enc(email) + "&recaptcha_challenge_field=" +
-      enc(captchaChallenge) + "&recaptcha_response_field=" + enc(captchaResponse);
+                                            captchaChallenge, captchaResponse)
+  {
+    let payload = JSON.stringify({
+      "password": password, "email": email,
+      "captcha-challenge": captchaChallenge,
+      "captcha-response": captchaResponse
+    });
 
-    let url = Svc.Prefs.get('tmpServerURL') + '0.3/api/register/new';
+    let url = this.baseURL + '1/' + username;
     let res = new Resource(url);
     res.authenticator = new Weave.NoOpAuthenticator();
-    res.setHeader("Content-Type", "application/x-www-form-urlencoded",
-                  "Content-Length", message.length);
 
     let error = "generic-server-error";
     try {
-      let register = res.post(message);
+      let register = res.put(payload);
       if (register.success) {
         this._log.info("Account created: " + register);
         return;
       }
 
       // Must have failed, so figure out the reason
-      switch (register.status) {
-        case 400:
-          error = this._errorStr(register);
-          break;
-        case 417:
-          error = "captcha-incorrect";
-          break;
-      }
+      if (register.status == 400)
+        error = this._errorStr(register);
     }
     catch(ex) {
       this._log.warn("Failed to create account: " + ex);
@@ -833,7 +807,7 @@ WeaveSvc.prototype = {
     let reset = false;
 
     this._log.debug("Fetching global metadata record");
-    let meta = Records.import(this.clusterURL + this.username + "/meta/global");
+    let meta = Records.import(this.userURL + "/storage/meta/global");
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
       meta.payload.storageVersion : "";
@@ -1238,7 +1212,7 @@ WeaveSvc.prototype = {
     Sync.sleep(2000);
 
     this._log.debug("Uploading new metadata record");
-    meta = new WBORecord(this.clusterURL + this.username + "/meta/global");
+    meta = new WBORecord(this.userURL + "/storage/meta/global");
     meta.payload.syncID = Clients.syncID;
     this._updateRemoteVersion(meta);
   },
@@ -1264,19 +1238,18 @@ WeaveSvc.prototype = {
   wipeServer: function WeaveSvc_wipeServer(engines)
     this._catch(this._notify("wipe-server", "", function() {
       // Grab all the collections for the user
-      let userURL = this.clusterURL + this.username + "/";
-      let res = new Resource(userURL);
+      let res = new Resource(this.userURL + "/info/collections");
       res.get();
 
       // Get the array of collections and delete each one
       let allCollections = JSON.parse(res.data);
-      for each (let name in allCollections) {
+      for (let name in allCollections) {
         try {
           // If we have a list of engines, make sure it's one we want
           if (engines && engines.indexOf(name) == -1)
             continue;
 
-          new Resource(userURL + name).delete();
+          new Resource(this.userURL + "/storage/" + name).delete();
         }
         catch(ex) {
           this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));
