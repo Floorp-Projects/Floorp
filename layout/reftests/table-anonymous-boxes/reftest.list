@@ -55,6 +55,7 @@ fails == 156888-1.html 156888-1-ref.html # bug 484825
 == cols-test-1.html 3x3-cols-ref.html
 == cols-test-2.html 3x3-cols-ref.html
 == cols-test-3.html 3x3-cols-ref.html
+== dynamic-abs-pos-tbody.html dynamic-abs-pos-tbody-ref.html
 == dynamic-removal-1.html 3x3-ref.html
 == dynamic-removal-2.html 3x3-ref.html
 == dynamic-removal-3.html 3x3-ref.html
