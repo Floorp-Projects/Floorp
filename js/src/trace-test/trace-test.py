@@ -7,19 +7,21 @@ from subprocess import *
 JS = None
 
 class Test:
-    def __init__(self, path, slow, allow_oom):
+    def __init__(self, path, slow, allow_oom, tmflags):
         """  path        path to test file
              slow        True means the test is slow-running
              allow_oom   True means OOM should not be considered a failure """
         self.path = path
         self.slow = slow
         self.allow_oom = allow_oom
+        self.tmflags = tmflags
 
     COOKIE = '|trace-test|'
 
     @classmethod
     def from_file(cls, path):
         slow = allow_oom = False
+        tmflags = ''
 
         line = open(path).readline()
         i = line.find(cls.COOKIE)
@@ -30,14 +32,22 @@ class Test:
                 part = part.strip()
                 if not part:
                     continue
-                if part == 'slow':
-                    slow = True
-                elif part == 'allow-oom':
-                    allow_oom = True
+                name, _, value = part.partition(':')
+                if value:
+                    value = value.strip()
+                    if name == 'TMFLAGS':
+                        tmflags = value
+                    else:
+                        print('warning: unrecognized |trace-test| attribute %s'%part)
                 else:
-                    print('warning: unrecognized |trace-test| attribute %s'%part)
+                    if name == 'slow':
+                        slow = True
+                    elif name == 'allow-oom':
+                        allow_oom = True
+                    else:
+                        print('warning: unrecognized |trace-test| attribute %s'%part)
 
-        return cls(path, slow, allow_oom)
+        return cls(path, slow, allow_oom, tmflags)
 
 def find_tests(path):
     if os.path.isfile(path):
@@ -76,12 +86,17 @@ def get_test_cmd(path, lib_dir):
              '-f', path ]
 
 def run_test(test, lib_dir):
+    if test.tmflags:
+        env = os.environ.copy()
+        env['TMFLAGS'] = test.tmflags
+    else:
+        env = None
     cmd = get_test_cmd(test.path, lib_dir)
     if OPTIONS.show_cmd:
         print(cmd)
     # close_fds is not supported on Windows and will cause a ValueError.
     close_fds = sys.platform != 'win32'
-    p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=close_fds)
+    p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=close_fds, env=env)
     out, err = p.communicate()
     out, err = out.decode(), err.decode()
     if OPTIONS.show_output:

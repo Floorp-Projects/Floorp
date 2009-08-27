@@ -1,3 +1,5 @@
+// |trace-test| TMFLAGS: full
+
 function testSideExitInConstructor() {
     var FCKConfig = {};
     FCKConfig.CoreStyles =
