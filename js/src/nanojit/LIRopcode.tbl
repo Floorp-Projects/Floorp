@@ -194,7 +194,7 @@ OPDEF64(unused9_64, 9,-1, None)
 
 OPDEF64(ldq,    LIR_ld, 1, Ld)      // 64-bit (quad) load
 
-OPDEF64(unused11_64, 11,-1, None)
+OPDEF64(qalloc,LIR_ialloc,0, I)      // allocate some stack space (value is 64bit address)
 
 OPDEF64(stqi,   LIR_sti, 2, Sti)    // 64-bit (quad) store
 OPDEF64(fret,   LIR_ret, 1, Op1)
