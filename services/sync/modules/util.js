@@ -792,6 +792,7 @@ Utils.EventListener.prototype = {
 
 let Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
+Svc.GPrefs = new Preferences();
 [["Annos", "@mozilla.org/browser/annotation-service;1", "nsIAnnotationService"],
  ["AppInfo", "@mozilla.org/xre/app-info;1", "nsIXULAppInfo"],
  ["Bookmark", "@mozilla.org/browser/nav-bookmarks-service;1", "nsINavBookmarksService"],
