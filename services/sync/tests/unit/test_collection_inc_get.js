@@ -9,7 +9,7 @@ function run_test() {
 
   _("Parse empty string payload as deleted");
   called = false;
-  stream._data = '[{"payload":""}]';
+  stream._data = '{"payload":""}\n';
   coll.recordHandler = function(rec) {
     called = true;
     _("Got record:", JSON.stringify(rec));
@@ -23,7 +23,7 @@ function run_test() {
 
   _("Parse record with payload");
   called = false;
-  stream._data = '[{"payload":"{\\"value\\":123}"}]';
+  stream._data = '{"payload":"{\\"value\\":123}"}\n';
   coll.recordHandler = function(rec) {
     called = true;
     _("Got record:", JSON.stringify(rec));
@@ -39,7 +39,7 @@ function run_test() {
   called = false;
   recCount = 0;
   sum = 0;
-  stream._data = '[{"payload":"{\\"value\\":100}"},{"payload":"{\\"value\\":10}"},{"payload":"{\\"value\\":1}"}]';
+  stream._data = '{"payload":"{\\"value\\":100}"}\n{"payload":"{\\"value\\":10}"}\n{"payload":"{\\"value\\":1}"}\n';
   coll.recordHandler = function(rec) {
     called = true;
     _("Got record:", JSON.stringify(rec));
@@ -76,7 +76,7 @@ function run_test() {
   called = false;
   recCount = 0;
   sum = 0;
-  stream._data = '[{"payl';
+  stream._data = '{"payl';
   coll.recordHandler = function(rec) {
     called = true;
     do_throw("shouldn't have gotten a record..");
@@ -92,7 +92,7 @@ function run_test() {
 
   _("adding more data enough for one record..");
   called = false;
-  stream._data += 'oad":"{\\"value\\":100}"},';
+  stream._data += 'oad":"{\\"value\\":100}"}\n';
   coll.recordHandler = function(rec) {
     called = true;
     _("Got record:", JSON.stringify(rec));
@@ -126,7 +126,7 @@ function run_test() {
 
   _("add data for two records..");
   called = false;
-  stream._data += '},{"payload":"{\\"value\\":1}"}';
+  stream._data += '}\n{"payload":"{\\"value\\":1}"}\n';
   coll.recordHandler = function(rec) {
     called = true;
     _("Got record:", JSON.stringify(rec));
@@ -155,9 +155,9 @@ function run_test() {
   do_check_true(called);
   _();
 
-  _("add ending array bracket");
+  _("add no extra data");
   called = false;
-  stream._data += ']';
+  stream._data += '';
   coll.recordHandler = function(rec) {
     called = true;
     do_throw("shouldn't have gotten a record..");
@@ -166,7 +166,7 @@ function run_test() {
   _("should still have 3 records with sum 111");
   do_check_eq(recCount, 3);
   do_check_eq(sum, 111);
-  _("should have consumed the last array bracket");
+  _("should have consumed nothing but still have nothing");
   do_check_eq(stream._data, "");
   do_check_false(called);
   _("\n");
