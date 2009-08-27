@@ -1177,16 +1177,6 @@ nsGenericHTMLElement::GetBaseURI() const
     return uri;
   }
 
-  // If we are a plain old HTML element (not XHTML), don't bother asking the
-  // base class -- our base URI is determined solely by the document base.
-  if (IsInHTMLDocument()) {
-    // If we got here, GetOwnerDoc() is not null
-    nsIURI *uri = GetOwnerDoc()->GetBaseURI();
-    NS_IF_ADDREF(uri);
-
-    return uri;
-  }
-
   return nsGenericHTMLElementBase::GetBaseURI();
 }
 
