@@ -55,7 +55,6 @@ LIBXUL_LIBRARY = 1
 
 
 ifndef MOZ_NO_XPCOM_OBSOLETE
-REQUIRES	+= xpcom_obsolete
 endif
 
 include $(topsrcdir)/config/config.mk
