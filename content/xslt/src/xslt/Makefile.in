@@ -47,9 +47,6 @@ LIBRARY_NAME = txxslt_s
 LIBXUL_LIBRARY = 1
 
 
-ifndef MOZ_XSLT_STANDALONE
-else
-endif
 
 CPPSRCS = \
         txNodeSorter.cpp \

@@ -215,20 +215,12 @@ ifeq ($(first_match), $(MODULE))
   _DEBUG_CFLAGS += $(MOZ_DEBUG_FLAGS)
   _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
 else
-  ifeq ($(first_match), ^$(MODULE))
-    # the user specified explicitly that this module 
-    # should not be compiled with -g (nothing to do)
-  else
+  ifneq ($(first_match), ^$(MODULE))
     ifeq ($(first_match), ALL_MODULES)
       # the user didn't mention this module explicitly, 
       # but wanted all modules to be compiled with -g
       _DEBUG_CFLAGS += $(MOZ_DEBUG_FLAGS)
       _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)      
-    else
-      ifeq ($(first_match), ^ALL_MODULES)
-        # the user didn't mention this module explicitly, 
-        # but wanted all modules to be compiled without -g (nothing to do)
-      endif
     endif
   endif
 endif

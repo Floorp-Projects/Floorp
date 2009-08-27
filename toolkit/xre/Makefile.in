@@ -48,14 +48,8 @@ LIBRARY_NAME = xulapp_s
 LIBXUL_LIBRARY = 1
 
 
-ifdef MOZ_JPROF
-endif
 
-ifdef NS_TRACE_MALLOC
-endif
 
-ifdef MOZ_CRASHREPORTER
-endif
 
 FORCE_STATIC_LIB = 1
 
