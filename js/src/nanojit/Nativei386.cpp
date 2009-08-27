@@ -291,21 +291,17 @@ namespace nanojit
         debug_only( a.managed = a.free; )
     }
 
-    NIns* Assembler::nPatchBranch(NIns* branch, NIns* targ)
+    void Assembler::nPatchBranch(NIns* branch, NIns* targ)
     {
-        NIns* was = 0;
         intptr_t offset = intptr_t(targ) - intptr_t(branch);
         if (branch[0] == JMP32) {
-            was = branch + *(int32_t*)&branch[1] + 5;
             *(int32_t*)&branch[1] = offset - 5;
             VALGRIND_DISCARD_TRANSLATIONS(&branch[1], sizeof(int32_t));
         } else if (branch[0] == JCC32) {
-            was = branch + *(int32_t*)&branch[2] + 6;
             *(int32_t*)&branch[2] = offset - 6;
             VALGRIND_DISCARD_TRANSLATIONS(&branch[2], sizeof(int32_t));
         } else
             NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
-        return was;
     }
 
     RegisterMask Assembler::hint(LIns* i, RegisterMask allow)
