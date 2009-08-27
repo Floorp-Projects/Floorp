@@ -754,6 +754,7 @@ namespace nanojit
             switch (v) {
             case LIR_add:
             case LIR_iaddp:
+            case LIR_qaddp:
             case LIR_mul:
             case LIR_fadd:
             case LIR_fmul:
@@ -1764,6 +1765,8 @@ namespace nanojit
             case LIR_ov:
             case LIR_not:
             case LIR_mod:
+            case LIR_i2q:
+            case LIR_u2q:
                 VMPI_sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
                 break;
 
@@ -1776,7 +1779,7 @@ namespace nanojit
                 break;
 
             case LIR_add:
-            case LIR_iaddp:
+            case LIR_iaddp:     case LIR_qaddp:
             case LIR_sub:
              case LIR_mul:
             case LIR_div:
@@ -1786,10 +1789,10 @@ namespace nanojit
             case LIR_fdiv:
             case LIR_and:
             case LIR_or:
-            case LIR_xor:
+            case LIR_xor:       case LIR_qxor:
             case LIR_lsh:
-            case LIR_rsh:
-            case LIR_ush:
+            case LIR_rsh:       case LIR_qirsh:
+            case LIR_ush:       case LIR_qursh:
             case LIR_eq:        case LIR_qeq:
             case LIR_lt:        case LIR_qlt:
             case LIR_le:        case LIR_qle:

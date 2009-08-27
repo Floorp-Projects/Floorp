@@ -188,7 +188,7 @@ OPDEF64(xtbl,       4, 1, Op2)      // exit via indirect jump
 
 OPDEF64(unused5_64, 5,-1, None)
 OPDEF64(unused6_64, 6,-1, None)
-OPDEF64(unused7_64, 7,-1, None)
+OPDEF64(qaddp, LIR_iaddp, 2, Op2)    // integer addition for temp pointer calculations (64bit only)
 OPDEF64(unused8_64, 8,-1, None)
 OPDEF64(unused9_64, 9,-1, None)
 
@@ -219,10 +219,10 @@ OPDEF64(unused23_64, 23,-1, None)
 OPDEF64(quad,   LIR_int,  0, I64)   // 64-bit (quad) constant value
 OPDEF64(qcmov,  LIR_cmov, 3, Op3)   // 64-bit conditional move
 
-OPDEF64(unused26_64, 26,-1, None)
-OPDEF64(unused27_64, 27,-1, None)
-OPDEF64(unused28_64, 28,-1, None)
-OPDEF64(unused29_64, 29,-1, None)
+OPDEF64(i2q,    26,      1, Op1)    // sign-extend i32 to i64
+OPDEF64(u2q,    27,      1, Op1)    // zero-extend u32 to u64
+OPDEF64(i2f,    28,      1, Op1)    // convert a signed 32-bit integer to a float
+OPDEF64(u2f,    29,      1, Op1)    // convert an unsigned 32-bit integer to a float
 OPDEF64(unused30_64, 30,-1, None)
 OPDEF64(unused31_64, 31,-1, None)
 OPDEF64(unused32_64, 32,-1, None)
@@ -238,18 +238,16 @@ OPDEF64(fdiv,   LIR_div, 2, Op2)    // floating-point division
 OPDEF64(fmod,   LIR_mod, 2, Op2)    // floating-point modulus(?)
 
 OPDEF64(qiand,  41,      2, Op2)    // 64-bit bitwise AND
-OPDEF64(qiadd,  42,      2, Op2)    // 64-bit bitwise ADD
-OPDEF64(qior,   43,      2, Op2)    // 64-bit bitwise OR
+OPDEF64(qior,   42,      2, Op2)    // 64-bit bitwise OR
+OPDEF64(qxor,   43,      2, Op2)    // 64-bit bitwise XOR
+OPDEF64(unused44_64, 44,-1, None)
+OPDEF64(qilsh,  45,      2, Op2)    // 64-bit left shift
+OPDEF64(qirsh,  46,      2, Op2)    // 64-bit signed right shift
+OPDEF64(qursh,  47,      2, Op2)    // 64-bit unsigned right shift
+OPDEF64(qiadd,  48,      2, Op2)    // 64-bit bitwise ADD
 
-OPDEF64(qilsh,  44,      2, Op2)    // 64-bit left shift
-OPDEF64(qjoin,  45,      2, Op2)    // join two 32-bit values (1st arg is low bits, 2nd is high)
-
-OPDEF64(i2f,    46,      1, Op1)    // convert a signed 32-bit integer to a float
-OPDEF64(u2f,    47,      1, Op1)    // convert an unsigned 32-bit integer to a float
-
-OPDEF64(unused48_64, 48,-1, None)
 OPDEF64(unused49_64, 49,-1, None)
-OPDEF64(unused50_64, 50,-1, None)
+OPDEF64(qjoin,  50,      2, Op2)    // join two 32-bit values (1st arg is low bits, 2nd is high)
 OPDEF64(unused51_64, 51,-1, None)
 OPDEF64(unused52_64, 52,-1, None)
 OPDEF64(unused53_64, 53,-1, None)
