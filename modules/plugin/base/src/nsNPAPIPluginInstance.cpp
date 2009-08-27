@@ -876,6 +876,11 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
 #else
     mDrawingModel(NPDrawingModelQuickDraw),
 #endif
+#ifdef NP_NO_CARBON
+    mEventModel(NPEventModelCocoa),
+#else
+    mEventModel(NPEventModelCarbon),
+#endif
 #endif
     mWindowless(PR_FALSE),
     mTransparent(PR_FALSE),
@@ -885,7 +890,9 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
     mInPluginInitCall(PR_FALSE),
     mLibrary(aLibrary),
     mStreams(nsnull),
-    mMIMEType(nsnull)
+    mMIMEType(nsnull),
+    mOwner(nsnull),
+    mCurrentPluginEvent(nsnull)
 {
   NS_ASSERTION(mCallbacks != NULL, "null callbacks");
 
@@ -1204,20 +1211,27 @@ nsNPAPIPluginInstance::InitializePlugin()
 
 NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(nsPluginWindow* window)
 {
-  // XXX NPAPI plugins don't want a SetWindow(NULL).
+  // NPAPI plugins don't want a SetWindow(NULL).
   if (!window || !mStarted)
     return NS_OK;
 
-  NPError error;
-
-#if defined (MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
   // bug 108347, flash plugin on linux doesn't like window->width <=
   // 0, but Java needs wants this call.
   if (!nsPluginHost::IsJavaMIMEType(mMIMEType) && window->type == nsPluginWindowType_Window &&
       (window->width <= 0 || window->height <= 0)) {
     return NS_OK;
   }
-#endif // MOZ_WIDGET
+#elif defined(XP_MACOSX)
+  // Under the Cocoa event model the context and the window in SetWindow calls 
+  // should always be NULL. For now NULL them out here but in the future we can
+  // optimize to not set them in the first place and only make SetWindow calls
+  // when size or position changes.
+  if (GetEventModel() == NPEventModelCocoa) {
+    window->window->cgPort.context = NULL;
+    window->window->cgPort.window = NULL;
+  }
+#endif
 
   if (mCallbacks->setwindow) {
     PluginDestructionGuard guard(this);
@@ -1230,6 +1244,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(nsPluginWindow* window)
     PRBool oldVal = mInPluginInitCall;
     mInPluginInitCall = PR_TRUE;
 
+    NPError error;
     NS_TRY_SAFE_CALL_RETURN(error, (*mCallbacks->setwindow)(&mNPP, (NPWindow*)window), mLibrary, this);
 
     mInPluginInitCall = oldVal;
@@ -1238,10 +1253,6 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(nsPluginWindow* window)
     ("NPP SetWindow called: this=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d], return=%d\n",
     this, window->x, window->y, window->width, window->height,
     window->clipRect.top, window->clipRect.bottom, window->clipRect.left, window->clipRect.right, error));
-      
-    // XXX In the old code, we'd just ignore any errors coming
-    // back from the plugin's SetWindow(). Is this the correct
-    // behavior?!?
   }
   return NS_OK;
 }
@@ -1351,27 +1362,27 @@ NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* h
   PRInt16 result = 0;
   
   if (mCallbacks->event) {
+    mCurrentPluginEvent = event;
 #ifdef XP_MACOSX
     result = (*mCallbacks->event)(&mNPP, (void*)event->event);
-
 #elif defined(XP_WIN) || defined(XP_OS2)
-      NPEvent npEvent;
-      npEvent.event = event->event;
-      npEvent.wParam = event->wParam;
-      npEvent.lParam = event->lParam;
+    NPEvent npEvent;
+    npEvent.event = event->event;
+    npEvent.wParam = event->wParam;
+    npEvent.lParam = event->lParam;
 
-      NS_TRY_SAFE_CALL_RETURN(result, (*mCallbacks->event)(&mNPP, (void*)&npEvent), mLibrary, this);
-
+    NS_TRY_SAFE_CALL_RETURN(result, (*mCallbacks->event)(&mNPP, (void*)&npEvent), mLibrary, this);
 #else // MOZ_X11 or other
-      result = (*mCallbacks->event)(&mNPP, (void*)&event->event);
+    result = (*mCallbacks->event)(&mNPP, (void*)&event->event);
 #endif
 
-      NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
+    NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
       ("NPP HandleEvent called: this=%p, npp=%p, event=%d, return=%d\n", 
       this, &mNPP, event->event, result));
 
-      *handled = result;
-    }
+    *handled = result;
+    mCurrentPluginEvent = nsnull;
+  }
 
   return NS_OK;
 }
@@ -1409,12 +1420,16 @@ NS_IMETHODIMP nsNPAPIPluginInstance::GetValue(nsPluginInstanceVariable variable,
       break;
 
     case nsPluginInstanceVariable_CallSetWindowAfterDestroyBool:
-      *(PRBool *)value = 0;  // not supported for 4.x plugins
+      *(PRBool *)value = 0;  // not supported for NPAPI plugins
       break;
 
 #ifdef XP_MACOSX
     case nsPluginInstanceVariable_DrawingModel:
       *(NPDrawingModel*)value = mDrawingModel;
+      break;
+
+    case nsPluginInstanceVariable_EventModel:
+      *(NPEventModel*)value = mEventModel;
       break;
 #endif
 
@@ -1472,6 +1487,16 @@ void nsNPAPIPluginInstance::SetDrawingModel(NPDrawingModel aModel)
 NPDrawingModel nsNPAPIPluginInstance::GetDrawingModel()
 {
   return mDrawingModel;
+}
+
+void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
+{
+  mEventModel = aModel;
+}
+
+NPEventModel nsNPAPIPluginInstance::GetEventModel()
+{
+  return mEventModel;
 }
 #endif
 
@@ -1727,6 +1752,27 @@ nsNPAPIPluginInstance::UnscheduleTimer(uint32_t timerID)
 
   // delete timer
   delete t;
+}
+
+// Show the context menu at the location for the current event.
+// This can only be called from within an NPP_SendEvent call.
+NPError
+nsNPAPIPluginInstance::PopUpContextMenu(NPMenu* menu)
+{
+  if (mOwner && mCurrentPluginEvent)
+    return mOwner->ShowNativeContextMenu(menu, mCurrentPluginEvent);
+
+  return NPERR_GENERIC_ERROR;
+}
+
+NPBool
+nsNPAPIPluginInstance::ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                                    double *destX, double *destY, NPCoordinateSpace destSpace)
+{
+  if (mOwner)
+    return mOwner->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
+
+  return PR_FALSE;
 }
 
 nsresult
