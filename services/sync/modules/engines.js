@@ -225,16 +225,18 @@ SyncEngine.prototype = {
       return null;
     if (url[url.length-1] != '/')
       url += '/';
-    url += "0.3/user/";
+    url += "0.5/";
     return url;
   },
 
   get engineURL() {
-    return this.baseURL + ID.get('WeaveID').username + '/' + this.name + '/';
+    return this.baseURL + ID.get('WeaveID').username +
+      '/storage/' + this.name + '/';
   },
 
   get cryptoMetaURL() {
-    return this.baseURL + ID.get('WeaveID').username + '/crypto/' + this.name;
+    return this.baseURL + ID.get('WeaveID').username +
+      '/storage/crypto/' + this.name;
   },
 
   get lastSync() {
@@ -470,8 +472,11 @@ SyncEngine.prototype = {
         if (!resp.success)
           throw resp;
 
-        if (up.data.modified > this.lastSync)
-          this.lastSync = up.data.modified;
+        // Record the modified time of the upload
+        let modified = resp.headers["X-Weave-Timestamp"];
+        if (modified > this.lastSync)
+          this.lastSync = modified;
+
         up.clearRecords();
       });
 
