@@ -127,10 +127,6 @@ EXTRA_DEPS += \
 	$(topsrcdir)/intl/unicharutil/util/objs.mk \
 	$(NULL)
 
-REQUIRES += \
-	uconv \
-	unicharutil \
-	$(NULL)
 
 CPPSRCS += \
 	$(INTL_UNICHARUTIL_UTIL_LCPPSRCS) \

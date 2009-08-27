@@ -70,7 +70,6 @@ CPPSRCS		= \
 		$(NULL)
 
 ifdef MOZ_USE_NATIVE_UCONV
-REQUIRES	+= ucnative
 else
 CPPSRCS         += \
 		nsISO88591ToUnicode.cpp \

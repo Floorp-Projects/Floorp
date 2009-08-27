@@ -92,10 +92,6 @@ else
 PROGRAM = $(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
 endif
 
-REQUIRES = \
-	xpcom \
-	string \
-	$(NULL)
 
 CPPSRCS = nsBrowserApp.cpp
 

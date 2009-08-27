@@ -51,7 +51,6 @@ DEFINES += -DIMPL_XREAPI
 
 
 ifdef ACCESSIBILITY
-REQUIRES        += accessibility
 endif
 
 CPPSRCS		= \
