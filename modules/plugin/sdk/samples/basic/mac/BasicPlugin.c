@@ -28,7 +28,7 @@ typedef struct PluginInstance {
   NPWindow window;
 } PluginInstance;
 
-void drawPlugin(NPP instance);
+void drawPlugin(NPP instance, NPCocoaEvent* event);
 
 // Symbol called once by the browser to initialize the plugin
 NPError NP_Initialize(NPNetscapeFuncs* browserFuncs)
@@ -77,14 +77,23 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc
   newInstance->npp = instance;
   instance->pdata = newInstance;
 
-  NPBool supportsCoreGraphics;
-  if (browser->getvalue(instance, NPNVsupportsCoreGraphicsBool, &supportsCoreGraphics) != NPERR_NO_ERROR)
-    supportsCoreGraphics = FALSE;
-
-  if (!supportsCoreGraphics)
+  // select the right drawing model if necessary
+  NPBool supportsCoreGraphics = false;
+  if (browser->getvalue(instance, NPNVsupportsCoreGraphicsBool, &supportsCoreGraphics) == NPERR_NO_ERROR && supportsCoreGraphics) {
+    browser->setvalue(instance, NPPVpluginDrawingModel, (void*)NPDrawingModelCoreGraphics);
+  } else {
+    printf("CoreGraphics drawing model not supported, can't create a plugin instance.\n");
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
+  }
 
-  browser->setvalue(instance, NPPVpluginDrawingModel, (void *)NPDrawingModelCoreGraphics);
+  // select the Cocoa event model
+  NPBool supportsCocoaEvents = false;
+  if (browser->getvalue(instance, NPNVsupportsCocoaBool, &supportsCocoaEvents) == NPERR_NO_ERROR && supportsCocoaEvents) {
+    browser->setvalue(instance, NPPVpluginEventModel, (void*)NPEventModelCocoa);
+  } else {
+    printf("Cocoa event model not supported, can't create a plugin instance.\n");
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
+  }
 
   if (!browserUAString) {
     const char* ua = browser->uagent(instance);
@@ -146,9 +155,11 @@ void NPP_Print(NPP instance, NPPrint* platformPrint)
 
 int16_t NPP_HandleEvent(NPP instance, void* event)
 {
-  EventRecord* carbonEvent = (EventRecord*)event;
-	if (carbonEvent && (carbonEvent->what == updateEvt))
-    drawPlugin(instance);
+  NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)event;
+  if (cocoaEvent && (cocoaEvent->type == NPCocoaEventDrawRect)) {
+    drawPlugin(instance, (NPCocoaEvent*)event);
+    return 1;
+  }
 
   return 0;
 }
@@ -168,14 +179,16 @@ NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
   return NPERR_GENERIC_ERROR;
 }
 
-void drawPlugin(NPP instance)
+void drawPlugin(NPP instance, NPCocoaEvent* event)
 {
   if (!browserUAString)
     return;
 
   PluginInstance* currentInstance = (PluginInstance*)(instance->pdata);
-  CGContextRef cgContext = ((NP_CGContext*)(currentInstance->window.window))->context;
-  
+  CGContextRef cgContext = event->data.draw.context;
+  if (!cgContext)
+    return;
+
   float windowWidth = currentInstance->window.width;
   float windowHeight = currentInstance->window.height;
   

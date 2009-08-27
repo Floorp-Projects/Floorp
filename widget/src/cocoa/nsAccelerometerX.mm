@@ -151,7 +151,7 @@ void nsAccelerometerX::Startup()
   if (mUpdateTimer)
     mUpdateTimer->InitWithFuncCallback(UpdateHandler,
                                        this,
-                                       200, /* todo -- we want to pref this?  or maybe add this to some API? */
+                                       mUpdateInterval,
                                        nsITimer::TYPE_REPEATING_SLACK);
 }
 

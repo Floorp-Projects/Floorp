@@ -1203,7 +1203,14 @@ public:
         : mCallBeginRequest(DONT_CALL_BEGINREQUEST),
           mCcx(&ccx),
           mCcxToDestroy(nsnull)
-          
+#ifdef DEBUG
+          , mCx(nsnull)
+          , mCallerLanguage(JS_CALLER)
+          , mObj(nsnull)
+          , mCurrentJSObject(nsnull)
+          , mWrapper(nsnull)
+          , mTearOff(nsnull)
+#endif
     {
     }
     XPCLazyCallContext(XPCContext::LangType callerLanguage, JSContext* cx,
@@ -1260,6 +1267,9 @@ public:
     }
     JSObject *GetCurrentJSObject() const
     {
+        if(mCcx)
+            return mCcx->GetCurrentJSObject();
+
         return mCurrentJSObject;
     }
     XPCCallContext &GetXPCCallContext()

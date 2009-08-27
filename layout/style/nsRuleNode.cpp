@@ -4193,6 +4193,13 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
               SETDSC_ENUMERATED, parentVisibility->mVisible,
               NS_STYLE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
 
+  // pointer-events: enum, none, inherit, initial
+  SetDiscrete(displayData.mPointerEvents, visibility->mPointerEvents,
+              canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentVisibility->mPointerEvents,
+              NS_STYLE_POINTER_EVENTS_AUTO, 0,
+              NS_STYLE_POINTER_EVENTS_NONE, 0, 0);
+  
   // lang: string, inherit
   // this is not a real CSS property, it is a html attribute mapped to CSS struture
   if (eCSSUnit_Ident == displayData.mLang.GetUnit()) {
@@ -5813,12 +5820,6 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     canStoreInRuleTree = PR_FALSE;
     svg->mMarkerStart = parentSVG->mMarkerStart;
   }
-
-  // pointer-events: enum, none, inherit, initial
-  SetDiscrete(SVGData.mPointerEvents, svg->mPointerEvents, canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_NONE, parentSVG->mPointerEvents,
-              NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED, 0,
-              NS_STYLE_POINTER_EVENTS_NONE, 0, 0);
 
   // shape-rendering: enum, auto, inherit
   SetDiscrete(SVGData.mShapeRendering, svg->mShapeRendering, canStoreInRuleTree,
