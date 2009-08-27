@@ -100,7 +100,7 @@ NPError NS_NPAPI_ShowCocoaContextMenu(void* menu, nsIWidget* widget, NPCocoaEven
       eventType == NPCocoaEventMouseEntered ||
       eventType == NPCocoaEventMouseExited ||
       eventType == NPCocoaEventMouseDragged) {
-    cocoaEventType = event->data.mouse.buttonNumber;
+    cocoaEventType = (NSEventType)event->data.mouse.buttonNumber;
     cocoaModifierFlags = event->data.mouse.modifierFlags;
     x = event->data.mouse.pluginX;
     y = event->data.mouse.pluginY;
