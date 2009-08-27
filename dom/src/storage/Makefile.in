@@ -47,8 +47,6 @@ LIBRARY_NAME   = jsdomstorage_s
 LIBXUL_LIBRARY = 1
 
 
-ifdef MOZ_STORAGE
-endif
 
 CPPSRCS =                  \
        nsDOMStorage.cpp    \

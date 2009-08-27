@@ -69,8 +69,7 @@ CPPSRCS		= \
 		nsScriptableUConv.cpp \
 		$(NULL)
 
-ifdef MOZ_USE_NATIVE_UCONV
-else
+ifndef MOZ_USE_NATIVE_UCONV
 CPPSRCS         += \
 		nsISO88591ToUnicode.cpp \
 		nsCP1252ToUnicode.cpp \

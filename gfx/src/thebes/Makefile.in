@@ -54,8 +54,6 @@ GRE_MODULE = 1
 LIBXUL_LIBRARY = 1
 
 
-ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-endif
 
 CPPSRCS		= \
 		nsThebesDeviceContext.cpp \

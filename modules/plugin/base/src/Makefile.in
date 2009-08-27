@@ -52,8 +52,6 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-endif
 
 CPPSRCS		= \
 		nsNPAPIPlugin.cpp \

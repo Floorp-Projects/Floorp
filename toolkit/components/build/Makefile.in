@@ -56,8 +56,6 @@ DEFINES += -DALERTS_SERVICE
 endif
 
 
-ifdef ALERTS_SERVICE
-endif
 
 EXPORTS = nsToolkitCompsCID.h
 

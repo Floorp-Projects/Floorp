@@ -64,8 +64,6 @@ CPPSRCS = \
         nsScriptableRegion.cpp \
         $(NULL)
 
-ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-endif
 
 EXTRA_DSO_LDOPTS = \
         $(MOZ_UNICHARUTIL_LIBS) \
