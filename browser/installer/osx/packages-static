@@ -111,7 +111,6 @@
 @BINPATH@/components/exthelper.xpt
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
-@BINPATH@/components/filepicker.xpt
 @BINPATH@/components/find.xpt
 @BINPATH@/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
@@ -155,7 +154,6 @@
 @BINPATH@/components/prefetch.xpt
 @BINPATH@/components/pref.xpt
 @BINPATH@/components/proxyObjInst.xpt
-@BINPATH@/components/toolkitremote.xpt
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
@@ -212,7 +210,6 @@
 @BINPATH@/components/storage-mozStorage.js
 @BINPATH@/components/jsconsole-clhandler.js
 @BINPATH@/components/nsTryToClose.js
-@BINPATH@/components/nsFilePicker.js
 @BINPATH@/components/nsHelperAppDlg.js
 @BINPATH@/components/nsDownloadManagerUI.js
 @BINPATH@/components/nsProxyAutoConfig.js
@@ -227,8 +224,6 @@
 @BINPATH@/components/update.xpt
 @BINPATH@/components/nsSessionStartup.js
 @BINPATH@/components/nsSessionStore.js
-@BINPATH@/components/aboutPrivateBrowsing.js
-@BINPATH@/components/aboutSessionRestore.js
 @BINPATH@/components/sessionstore.xpt
 @BINPATH@/components/nsURLFormatter.js
 @BINPATH@/components/urlformatter.xpt
@@ -244,11 +239,9 @@
 @BINPATH@/components/nsContentDispatchChooser.js
 @BINPATH@/components/nsHandlerService.js
 @BINPATH@/components/nsWebHandlerApp.js
-@BINPATH@/components/aboutRights.js
-@BINPATH@/components/aboutRobots.js
-@BINPATH@/components/aboutCertError.js
 @BINPATH@/components/nsBadCertHandler.js
 @BINPATH@/components/nsFormAutoComplete.js
+@BINPATH@/components/libalerts_s.dylib
 
 ; Modules
 @BINPATH@/modules/*
@@ -265,8 +258,6 @@
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
-@BINPATH@/chrome/comm.jar
-@BINPATH@/chrome/comm.manifest
 @BINPATH@/chrome/toolkit.jar
 @BINPATH@/chrome/toolkit.manifest
 @BINPATH@/@PREF_DIR@/reporter.js
