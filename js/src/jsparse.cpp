@@ -6866,7 +6866,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (!pn3)
                 return NULL;
             tt = PN_TYPE(pn3);
-            if (tt == TOK_NAME) {
+            if (tt == TOK_NAME && !pn3->pn_parens) {
                 pn3->pn_type = TOK_STRING;
                 pn3->pn_arity = PN_NULLARY;
                 pn3->pn_op = JSOP_QNAMEPART;
