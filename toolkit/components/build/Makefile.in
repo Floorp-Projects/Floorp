@@ -89,7 +89,6 @@ SHARED_LIBRARY_LIBS += ../parentalcontrols/src/$(LIB_PREFIX)parentalcontrols_s.$
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../parentalcontrols/src \
 	$(NULL)
-REQUIRES += parentalcontrols
 endif
 endif
 

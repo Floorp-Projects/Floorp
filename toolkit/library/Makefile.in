@@ -145,10 +145,6 @@ EXTRA_DEPS += \
 	$(topsrcdir)/rdf/util/src/objs.mk \
 	$(NULL)
 
-REQUIRES += \
-	rdf \
-	rdfutil \
-	$(NULL)
 
 CPPSRCS += \
 	$(RDF_UTIL_SRC_LCPPSRCS) \
