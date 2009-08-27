@@ -135,6 +135,10 @@ RecordManager.prototype = {
       this.response = {};
       this.response = new Resource(url).get();
 
+      // Don't parse and save the record on failure
+      if (!this.response.success)
+        return null;
+
       let record = new this._recordType();
       record.deserialize(this.response);
       record.uri = url;
