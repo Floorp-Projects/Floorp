@@ -645,18 +645,20 @@ static JSConstDoubleSpec number_constants[] = {
 
 jsdouble js_NaN;
 
-#if (defined XP_WIN || defined XP_OS2) &&                                     \
-    !defined WINCE &&                                                         \
-    !defined __MWERKS__ &&                                                    \
-    (defined _M_IX86 ||                                                       \
-     (defined __GNUC__ && !defined __MINGW32__))
+
+#if (defined __GNUC__ && defined __i486__)
 
 /*
  * Set the exception mask to mask all exceptions and set the FPU precision
- * to 53 bit mantissa.
- * On Alpha platform this is handled via Compiler option.
+ * to 53 bit mantissa (64 bit doubles).
  */
-#define FIX_FPU() _control87(_MCW_EM | _PC_53, _MCW_EM | _MCW_PC)
+inline void FIX_FPU() {
+    short control;
+    asm("fstcw %0" : "=m" (control) : );
+    control &= ~0x300; // Lower bits 8 and 9 (precision control).
+    control |= 0x2f3;  // Raise bits 0-5 (exception masks) and 9 (64-bit precision).
+    asm("fldcw %0" : : "m" (control) );
+}
 
 #else
 
