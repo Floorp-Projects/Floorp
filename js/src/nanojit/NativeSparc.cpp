@@ -215,7 +215,7 @@ namespace nanojit
         }
     }
 
-    Register Assembler::nRegisterAllocFromSet(int set)
+    Register Assembler::nRegisterAllocFromSet(RegisterMask set)
     {
         // need to implement faster way
         int i=0;
