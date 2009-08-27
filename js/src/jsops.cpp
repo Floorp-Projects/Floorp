@@ -999,6 +999,7 @@
 
           BEGIN_CASE(JSOP_CONCATN)
           {
+#ifdef JS_TRACER
             JS_ASSERT_IF(fp->imacpc,
                          *fp->imacpc == JSOP_CONCATN && *regs.pc == JSOP_IMACOP);
 
@@ -1018,8 +1019,11 @@
                 if (!recording)
                     js_ConcatPostImacroStackCleanup(argc, regs, NULL);
             } else {
+#endif  /* JS_TRACER */
                 argc = GET_ARGC(regs.pc);
+#ifdef JS_TRACER
             }
+#endif  /* JS_TRACER */
 
             JSCharBuffer buf(cx);
             for (vp = regs.sp - argc; vp < regs.sp; vp++) {
@@ -1037,10 +1041,12 @@
             regs.sp -= argc - 1;
             STORE_OPND(-1, STRING_TO_JSVAL(str));
 
+#ifdef JS_TRACER
             if (imacro) {
                 /* END_CASE does pc += CONCATN_LENGTH. (IMACOP YOU IDIOT!) */
                 regs.pc -= JSOP_CONCATN_LENGTH - JSOP_IMACOP_LENGTH;
             }
+#endif  /* JS_TRACER */
           }
           END_CASE(JSOP_CONCATN)
 
@@ -1074,7 +1080,7 @@
 #endif
                 if (d == 0 || JSDOUBLE_IS_NaN(d))
                     rval = DOUBLE_TO_JSVAL(rt->jsNaN);
-                else if ((JSDOUBLE_HI32(d) ^ JSDOUBLE_HI32(d2)) >> 31)
+                else if (JSDOUBLE_IS_NEG(d) != JSDOUBLE_IS_NEG(d2))
                     rval = DOUBLE_TO_JSVAL(rt->jsNegativeInfinity);
                 else
                     rval = DOUBLE_TO_JSVAL(rt->jsPositiveInfinity);
@@ -1132,16 +1138,7 @@
                     JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[-1]) ||
                               regs.sp[-1] == JSVAL_TRUE);
                 }
-#ifdef HPUX
-                /*
-                 * Negation of a zero doesn't produce a negative
-                 * zero on HPUX. Perform the operation by bit
-                 * twiddling.
-                 */
-                JSDOUBLE_HI32(d) ^= JSDOUBLE_HI32_SIGNBIT;
-#else
                 d = -d;
-#endif
                 if (!js_NewNumberInRootedValue(cx, d, &regs.sp[-1]))
                     goto error;
             }

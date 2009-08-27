@@ -215,7 +215,7 @@ namespace nanojit
         }
     }
 
-    Register Assembler::nRegisterAllocFromSet(int set)
+    Register Assembler::nRegisterAllocFromSet(RegisterMask set)
     {
         // need to implement faster way
         int i=0;
@@ -233,16 +233,12 @@ namespace nanojit
         debug_only( a.managed = a.free; )
             }
 
-    NIns *Assembler::nPatchBranch(NIns* branch, NIns* location)
+    void Assembler::nPatchBranch(NIns* branch, NIns* location)
     {
-        NIns *was;
-
-        was = (NIns*)(((*(uint32_t*)&branch[0] & 0x3FFFFF) << 10) | (*(uint32_t*)&branch[1] & 0x3FF ));
         *(uint32_t*)&branch[0] &= 0xFFC00000;
         *(uint32_t*)&branch[0] |= ((intptr_t)location >> 10) & 0x3FFFFF;
         *(uint32_t*)&branch[1] &= 0xFFFFFC00;
         *(uint32_t*)&branch[1] |= (intptr_t)location & 0x3FF;
-        return was;
     }
 
     RegisterMask Assembler::hint(LIns* i, RegisterMask allow)
@@ -288,7 +284,7 @@ namespace nanojit
     void Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
     {
         underrunProtect(24);
-        if (i->isop(LIR_ialloc)) {
+        if (i->isop(LIR_alloc)) {
             ADD(FP, L2, r);
             SET32(disp(resv), L2);
             verbose_only(if (_logc->lcbits & LC_RegAlloc) {
@@ -329,7 +325,7 @@ namespace nanojit
                 // make sure what is in a register
                 Reservation *rA, *rB;
                 Register ra, rb;
-                if (base->isop(LIR_ialloc)) {
+                if (base->isop(LIR_alloc)) {
                     rb = FP;
                     dr += findMemFor(base);
                     ra = findRegFor(value, GpRegs);
@@ -370,7 +366,7 @@ namespace nanojit
 
         int dr = disp(resv);
         Register rb;
-        if (base->isop(LIR_ialloc)) {
+        if (base->isop(LIR_alloc)) {
             rb = FP;
             db += findMemFor(base);
         } else {
@@ -420,7 +416,7 @@ namespace nanojit
 
                 int da = findMemFor(value);
                 Register rb;
-                if (base->isop(LIR_ialloc)) {
+                if (base->isop(LIR_alloc)) {
                     rb = FP;
                     dr += findMemFor(base);
                 } else {
@@ -431,7 +427,7 @@ namespace nanojit
             }
 
         Register rb;
-        if (base->isop(LIR_ialloc)) {
+        if (base->isop(LIR_alloc)) {
             rb = FP;
             dr += findMemFor(base);
         } else {
@@ -652,7 +648,7 @@ namespace nanojit
                 }
                 allow &= ~rmask(rb);
             }
-        else if ((op == LIR_add||op == LIR_iaddp) && lhs->isop(LIR_ialloc) && rhs->isconst()) {
+        else if ((op == LIR_add||op == LIR_iaddp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
             // add alloc+const, use lea
             Register rr = prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->imm32();

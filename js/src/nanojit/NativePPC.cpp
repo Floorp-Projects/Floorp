@@ -580,7 +580,7 @@ namespace nanojit
 
     void Assembler::asm_restore(LIns *i, Reservation *resv, Register r) {
         int d;
-        if (i->isop(LIR_ialloc)) {
+        if (i->isop(LIR_alloc)) {
             d = disp(resv);
             ADDI(r, FP, d);
         }
@@ -734,7 +734,7 @@ namespace nanojit
                     if (rA->reg == UnknownReg) {
                         // load it into the arg reg
                         int d = findMemFor(p);
-                        if (p->isop(LIR_ialloc)) {
+                        if (p->isop(LIR_alloc)) {
                             NanoAssert(isS16(d));
                             ADDI(r, FP, d);
                         } else if (p->isQuad()) {
