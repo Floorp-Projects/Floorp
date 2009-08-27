@@ -94,7 +94,8 @@ namespace nanojit
         LIR_pult    = PTR_SIZE(LIR_ult,    LIR_qult),
         LIR_pugt    = PTR_SIZE(LIR_ugt,    LIR_qugt),
         LIR_pule    = PTR_SIZE(LIR_ule,    LIR_qule),
-        LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge)
+        LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge),
+        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc)
     };
 
     #if defined NANOJIT_64BIT
@@ -466,7 +467,7 @@ namespace nanojit
         LIns* getLIns() { return (LIns*)&ins; };
     };
 
-    // Used for LIR_int and LIR_ialloc.
+    // Used for LIR_int and LIR_alloc.
     class LInsI
     {
     private:
@@ -680,7 +681,7 @@ namespace nanojit
         Reservation*   resv()            { return &lastWord; }
         void*          payload()   const;
         inline int32_t size()      const {
-            NanoAssert(isop(LIR_ialloc));
+            NanoAssert(isop(LIR_alloc));
             return toLInsI()->imm32 << 2;
         }
 
