@@ -108,7 +108,6 @@ BrowserProcessSubThread::BrowserProcessSubThread(ID aId) :
     mIdentifier(aId),
     mNotificationService(NULL)
 {
-    Init();
     AutoLock lock(sLock);
     DCHECK(aId >= 0 && aId < ID_COUNT);
     DCHECK(sBrowserThreads[aId] == NULL);
@@ -118,7 +117,6 @@ BrowserProcessSubThread::BrowserProcessSubThread(ID aId) :
 BrowserProcessSubThread::~BrowserProcessSubThread()
 {
     Stop();
-    CleanUp();
     {AutoLock lock(sLock);
         sBrowserThreads[mIdentifier] = NULL;
     }
