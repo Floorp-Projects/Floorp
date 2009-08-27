@@ -41,9 +41,6 @@
 /*
  * JS number type and wrapper class.
  */
-#if defined(XP_WIN) || defined(XP_OS2)
-#include <float.h>
-#endif
 #ifdef XP_OS2
 #define _PC_53  PC_53
 #define _MCW_EM MCW_EM
