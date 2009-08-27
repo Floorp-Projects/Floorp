@@ -55,7 +55,6 @@ LIBXUL_LIBRARY = 1
 
 
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-REQUIRES += uconv
 endif
 
 CPPSRCS		= \
@@ -83,10 +82,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsSystemFontsWin.cpp \
 		   $(NULL)
 
-REQUIRES	+= \
-		cairo \
-		qcms \
-		$(NULL)
 
 _OS_LIBS	= usp10
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))

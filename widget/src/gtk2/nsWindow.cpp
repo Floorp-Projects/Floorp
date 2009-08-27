@@ -383,6 +383,8 @@ nsWindow::nsWindow()
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
+    mLastSizeMode        = nsSizeMode_Normal;
+
 #ifdef MOZ_X11
     mOldFocusWindow      = 0;
 #endif /* MOZ_X11 */
@@ -5001,11 +5003,19 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
 
 #if GTK_CHECK_VERSION(2,2,0)
     if (aFullScreen) {
+        if (mSizeMode != nsSizeMode_Fullscreen)
+            mLastSizeMode = mSizeMode;
+
         mSizeMode = nsSizeMode_Fullscreen;
         gdk_window_fullscreen (mShell->window);
     }
-    else
+    else {
+        mSizeMode = mLastSizeMode;
         gdk_window_unfullscreen (mShell->window);
+    }
+
+    NS_ASSERTION(mLastSizeMode != nsSizeMode_Fullscreen,
+                 "mLastSizeMode should never be fullscreen");
     return NS_OK;
 #else
     return nsBaseWidget::MakeFullScreen(aFullScreen);

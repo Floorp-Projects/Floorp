@@ -54,7 +54,7 @@ protected:
     nsSVGContainerFrameBase(aContext) {}
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGContainerFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsSVGContainerFrame)
   
   NS_DECL_QUERYFRAME
 
@@ -88,7 +88,7 @@ protected:
     nsSVGContainerFrame(aContext) {}
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayContainerFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsSVGDisplayContainerFrame)
 
   NS_DECL_QUERYFRAME
 

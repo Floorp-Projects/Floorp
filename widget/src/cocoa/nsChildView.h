@@ -128,9 +128,9 @@ enum {
   // the nsChildView that created the view. It retains this NSView, so
   // the link back to it must be weak.
   nsChildView* mGeckoChild;
-    
-  // Whether we're a plugin view.
+
   BOOL mIsPluginView;
+  BOOL mSendCarbonPluginEvents; // true if we should send carbon events to plugins
 
   // The following variables are only valid during key down event processing.
   // Their current usage needs to be fixed to avoid problems with nested event
@@ -385,7 +385,10 @@ public:
   NS_IMETHOD        StartDrawPlugin();
   NS_IMETHOD        EndDrawPlugin();
   NS_IMETHOD        SetPluginInstanceOwner(nsIPluginInstanceOwner* aInstanceOwner);
-  
+
+  NS_IMETHOD        SetPluginEventModel(int inEventModel);
+  NS_IMETHOD        GetPluginEventModel(int* outEventModel);
+
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
   
