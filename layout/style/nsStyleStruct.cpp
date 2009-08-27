@@ -810,7 +810,6 @@ nsStyleSVG::nsStyleSVG()
     mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
     mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
     mImageRendering          = NS_STYLE_IMAGE_RENDERING_AUTO;
-    mPointerEvents           = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
     mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
     mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
     mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
@@ -859,7 +858,6 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mColorInterpolationFilters = aSource.mColorInterpolationFilters;
   mFillRule = aSource.mFillRule;
   mImageRendering = aSource.mImageRendering;
-  mPointerEvents = aSource.mPointerEvents;
   mShapeRendering = aSource.mShapeRendering;
   mStrokeLinecap = aSource.mStrokeLinecap;
   mStrokeLinejoin = aSource.mStrokeLinejoin;
@@ -1933,6 +1931,7 @@ nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
 
   mLangGroup = aPresContext->GetLangGroup();
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
+  mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
@@ -1941,6 +1940,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
   mDirection = aSource.mDirection;
   mVisible = aSource.mVisible;
   mLangGroup = aSource.mLangGroup;
+  mPointerEvents = aSource.mPointerEvents;
 } 
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const

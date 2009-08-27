@@ -48,7 +48,6 @@ LIBXUL_LIBRARY = 1
 
 
 ifdef ACCESSIBILITY
-REQUIRES        += accessibility
 endif
 
 CPPSRCS= \
@@ -61,9 +60,6 @@ CPPSRCS= \
 	$(NULL)
 
 ifdef MOZ_XUL
-REQUIRES += \
-  xul \
-  $(NULL)
 CPPSRCS += \
   inDOMView.cpp \
   $(NULL)

@@ -63,10 +63,14 @@ ifneq (,$(BUILD_STATIC_LIBS)$(MOZ_ENABLE_LIBXUL))
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 MOZ_PKG_MANIFEST_P = $(srcdir)/windows/packages-static
 else
-ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
+ifeq (Darwin,$(OS_ARCH))
+MOZ_PKG_MANIFEST_P = $(srcdir)/osx/packages-static
+else
+ifneq (OS2, $(OS_ARCH))
 MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
-endif
-endif
+endif # !OS2
+endif # Darwin
+endif # Windows
 else
 define message
 You need to build with --enable-libxul (the default, unless you specify
@@ -110,6 +114,13 @@ INSTALL_SDK = 1
 endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+
+ifeq (Darwin, $(OS_ARCH))
+DEFINES += \
+  -DBINPATH=$(_BINPATH) \
+  -DAPPNAME=$(_APPNAME) \
+  $(NULL)
+endif
 
 libs::
 	$(MAKE) -C $(DEPTH)/browser/locales langpack PKG_LANGPACK_PATH=

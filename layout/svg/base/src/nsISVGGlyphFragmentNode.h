@@ -53,7 +53,7 @@ class nsIDOMSVGPoint;
 class nsISVGGlyphFragmentNode : public nsQueryFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsISVGGlyphFragmentNode)
+  NS_DECLARE_FRAME_ACCESSOR(nsISVGGlyphFragmentNode)
 
   virtual PRUint32 GetNumberOfChars()=0;
   virtual float GetComputedTextLength()=0;

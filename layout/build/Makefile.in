@@ -160,9 +160,6 @@ ifndef MOZ_NO_INSPECTOR_APIS
 LOCAL_INCLUDES  += \
       -I$(srcdir)/../inspector/src \
       $(NULL)
-REQUIRES += \
-      inspector \
-      $(NULL)
 SHARED_LIBRARY_LIBS += ../inspector/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX)
 else
 DEFINES += -DMOZ_NO_INSPECTOR_APIS

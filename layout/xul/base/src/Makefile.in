@@ -48,10 +48,6 @@ LIBXUL_LIBRARY	= 1
 
 
 ifdef MOZ_ENABLE_CANVAS
-REQUIRES        += \
-                cairo \
-                libpixman \
-                $(NULL)
 endif
 
 ifdef MOZ_XUL
