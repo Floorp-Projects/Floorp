@@ -252,7 +252,7 @@ namespace nanojit
             SUBi(SP, extra);
     }
 
-    Register Assembler::nRegisterAllocFromSet(int set)
+    Register Assembler::nRegisterAllocFromSet(RegisterMask set)
     {
         Register r;
         RegAlloc &regs = _allocator;
