@@ -42,9 +42,14 @@
 interface nsIPluginInstance;
 interface nsIDocument;
 
-[ref] native nsIPluginInstanceRef(nsIPluginInstance *);
+%{C++
+#include "npapi.h"
+class nsPluginEvent;
+%}
 
-[uuid(2e6cc23b-7d4e-4b0a-ad45-f2281c937f5c)]
+[ref] native nsIPluginInstanceRef(nsIPluginInstance*);
+
+[uuid(109BAD0E-7071-4907-B657-4507C834E448)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -66,7 +71,6 @@ interface nsIPluginInstanceOwner : nsISupports
   /**
    * Get the display mode for the plugin instance.
    */
-  //void getMode(nsPluginMode *aMode);
   readonly attribute nsPluginMode mode;
 
   /**
@@ -87,23 +91,20 @@ interface nsIPluginInstanceOwner : nsISupports
          void *aPostData, PRUint32 aPostDataLen, 
          void *aHeadersData, PRUint32 aHeadersDataLen, 
          PRBool aIsFile = PR_FALSE) = 0;
-
 %}
+
   /**
    * Show a status message in the host environment.
    */
   void showStatus(in string aStatusMsg);
 
 %{C++
-  NS_IMETHOD
-  ShowStatus(const PRUnichar *aStatusMsg) = 0;
-
+  NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg) = 0;
 %}
 
   /**
    * Get the associated document.
    */
-  //void getDocument(nsIDocument* *aDocument);
   readonly attribute nsIDocument document;
 
   /**
@@ -125,4 +126,13 @@ interface nsIPluginInstanceOwner : nsISupports
    * Get NetscapeWindow, corresponds to NPNVnetscapeWindow
    */
   void getNetscapeWindow(in voidPtr aValue);
+
+  /**
+   * Show native context menu
+   */
+%{C++
+  virtual NPError ShowNativeContextMenu(NPMenu* menu, nsPluginEvent* event) = 0;
+  virtual NPBool  ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                               double *destX, double *destY, NPCoordinateSpace destSpace) = 0;
+%}
 };

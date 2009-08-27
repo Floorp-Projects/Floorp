@@ -50,7 +50,7 @@ class nsIPluginInstance;
 class nsIObjectFrame : public nsQueryFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsIObjectFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsIObjectFrame)
 
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance) = 0;
 

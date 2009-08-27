@@ -255,6 +255,8 @@ nsNPAPIPlugin::CheckClassInitialized(void)
   CALLBACKS.getauthenticationinfo = ((NPN_GetAuthenticationInfoPtr)_getauthenticationinfo);
   CALLBACKS.scheduletimer = ((NPN_ScheduleTimerPtr)_scheduletimer);
   CALLBACKS.unscheduletimer = ((NPN_UnscheduleTimerPtr)_unscheduletimer);
+  CALLBACKS.popupcontextmenu = ((NPN_PopUpContextMenuPtr)_popupcontextmenu);
+  CALLBACKS.convertpoint = ((NPN_ConvertPointPtr)_convertpoint);
 
   if (!sPluginThreadAsyncCallLock)
     sPluginThreadAsyncCallLock = nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
@@ -1999,6 +2001,19 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     
     return NPERR_NO_ERROR;
   }
+
+#ifndef NP_NO_CARBON
+  case NPNVsupportsCarbonBool: {
+    *(NPBool*)result = PR_TRUE;
+
+    return NPERR_NO_ERROR;
+  }
+#endif
+  case NPNVsupportsCocoaBool: {
+    *(NPBool*)result = PR_TRUE;
+
+    return NPERR_NO_ERROR;
+  }
 #endif
 
   // we no longer hand out any XPCOM objects, except on WINCE,
@@ -2119,6 +2134,16 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     case NPPVpluginDrawingModel: {
       if (inst) {
         inst->SetDrawingModel((NPDrawingModel)NS_PTR_TO_INT32(result));
+        return NPERR_NO_ERROR;
+      }
+      else {
+        return NPERR_GENERIC_ERROR;
+      }
+    }
+
+    case NPPVpluginEventModel: {
+      if (inst) {
+        inst->SetEventModel((NPEventModel)NS_PTR_TO_INT32(result));
         return NPERR_NO_ERROR;
       }
       else {
@@ -2533,6 +2558,26 @@ _unscheduletimer(NPP instance, uint32_t timerID)
     return;
 
   inst->UnscheduleTimer(timerID);
+}
+
+NPError NP_CALLBACK
+_popupcontextmenu(NPP instance, NPMenu* menu)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return NPERR_GENERIC_ERROR;
+
+  return inst->PopUpContextMenu(menu);
+}
+
+NPBool NP_CALLBACK
+_convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return PR_FALSE;
+
+  return inst->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 }
 
 void

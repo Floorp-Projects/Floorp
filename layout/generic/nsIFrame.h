@@ -490,7 +490,7 @@ typedef PRBool nsDidReflowStatus;
 class nsIFrame : public nsQueryFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsIFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsIFrame)
 
   nsPresContext* PresContext() const {
     return GetStyleContext()->GetRuleNode()->GetPresContext();

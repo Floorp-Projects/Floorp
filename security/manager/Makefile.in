@@ -229,6 +229,13 @@ ifdef MACOS_SDK_DIR
 DEFAULT_GMAKE_FLAGS += MACOS_SDK_DIR=$(MACOS_SDK_DIR)
 endif
 endif
+# Build libfreebl3.so the same way it's built in Fedora, so that Fedora's
+# /lib/libcrypt.so.1 can get the NSSRAWHASH_3.12.3 symbols it needs from
+# our libfreebl3.so.
+ifeq ($(OS_ARCH),Linux)
+DEFAULT_GMAKE_FLAGS += FREEBL_NO_DEPEND=1
+endif
+
 ifdef CROSS_COMPILE
 
 ifdef WINCE
