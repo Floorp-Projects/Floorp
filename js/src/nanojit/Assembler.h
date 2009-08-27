@@ -306,7 +306,7 @@ namespace nanojit
             void        nInit(AvmCore *);
             Register    nRegisterAllocFromSet(int32_t set);
             void        nRegisterResetAll(RegAlloc& a);
-            NIns*        nPatchBranch(NIns* branch, NIns* location);
+            static void nPatchBranch(NIns* branch, NIns* location);
             void        nFragExit(LIns* guard);
 
             // platform specific methods

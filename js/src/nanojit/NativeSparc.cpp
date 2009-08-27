@@ -233,16 +233,12 @@ namespace nanojit
         debug_only( a.managed = a.free; )
             }
 
-    NIns *Assembler::nPatchBranch(NIns* branch, NIns* location)
+    void Assembler::nPatchBranch(NIns* branch, NIns* location)
     {
-        NIns *was;
-
-        was = (NIns*)(((*(uint32_t*)&branch[0] & 0x3FFFFF) << 10) | (*(uint32_t*)&branch[1] & 0x3FF ));
         *(uint32_t*)&branch[0] &= 0xFFC00000;
         *(uint32_t*)&branch[0] |= ((intptr_t)location >> 10) & 0x3FFFFF;
         *(uint32_t*)&branch[1] &= 0xFFFFFC00;
         *(uint32_t*)&branch[1] |= (intptr_t)location & 0x3FF;
-        return was;
     }
 
     RegisterMask Assembler::hint(LIns* i, RegisterMask allow)

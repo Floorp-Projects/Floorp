@@ -974,7 +974,7 @@ Assembler::nRegisterResetAll(RegAlloc& a)
     debug_only(a.managed = a.free);
 }
 
-NIns*
+void
 Assembler::nPatchBranch(NIns* at, NIns* target)
 {
     // Patch the jump in a loop, as emitted by JMP_far.
@@ -1048,8 +1048,6 @@ Assembler::nPatchBranch(NIns* at, NIns* target)
 #ifdef AVMPLUS_PORTING_API
     NanoJIT_PortAPI_FlushInstructionCache(at, at+3);
 #endif
-
-    return was;
 }
 
 RegisterMask
