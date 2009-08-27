@@ -209,6 +209,11 @@
 
 #ifdef MOZ_IPC
 #include "base/command_line.h"
+#include "base/thread.h"
+#include "mozilla/ipc/GeckoThread.h"
+
+using mozilla::ipc::BrowserProcessSubThread;
+using mozilla::ipc::GeckoThread;
 #endif
 
 #ifdef WINCE
@@ -3048,7 +3053,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   MOZ_SPLASHSCREEN_UPDATE(20);
 
-#if defined(MOZ_IPC) && !defined(OS_WIN)
+#ifdef MOZ_IPC
   // FIXME: this and its constituents leak
   char** canonArgs = new char*[gArgc];
 
@@ -3525,6 +3530,27 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
           MOZ_SPLASHSCREEN_UPDATE(90);
           {
+#if 0 && defined(OS_LINUX)
+            // The lifetime of the BACKGROUND_X11 thread is a subset
+            // of the IO thread so we start it now.
+             scoped_ptr<base::Thread> x11Thread(
+               new BrowserProcessSubThread(BrowserProcessSubThread::BACKGROUND_X11));
+             if (NS_UNLIKELY(!x11Thread->Start())) {
+               NS_ERROR("Failed to create chromium's X11 thread!");
+               return NS_ERROR_FAILURE;
+             }
+#endif
+#ifdef MOZ_IPC
+            scoped_ptr<base::Thread> ipcThread(
+              new BrowserProcessSubThread(BrowserProcessSubThread::IO));
+            base::Thread::Options options;
+            options.message_loop_type = MessageLoop::TYPE_IO;
+            if (NS_UNLIKELY(!ipcThread->StartWithOptions(options))) {
+              NS_ERROR("Failed to create chromium's IO thread!");
+              return NS_ERROR_FAILURE;
+            }
+#endif
+
             NS_TIMELINE_ENTER("appStartup->Run");
             rv = appStartup->Run();
             NS_TIMELINE_LEAVE("appStartup->Run");
