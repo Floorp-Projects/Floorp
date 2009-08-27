@@ -64,6 +64,7 @@
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/message_loop.h"
+#include "base/thread.h"
 #include "chrome/common/child_process.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -73,7 +74,6 @@
 #include "mozilla/plugins/PluginThreadChild.h"
 #include "ContentProcessThread.h"
 #include "ContentProcessParent.h"
-#include "ContentProcessChild.h"
 
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
@@ -82,6 +82,7 @@
 #include "mozilla/test/TestThreadChild.h"
 #include "mozilla/Monitor.h"
 
+using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::ipc::GeckoThread;
 using mozilla::ipc::ScopedXREEmbed;
@@ -89,7 +90,6 @@ using mozilla::ipc::ScopedXREEmbed;
 using mozilla::plugins::PluginThreadChild;
 using mozilla::dom::ContentProcessThread;
 using mozilla::dom::ContentProcessParent;
-using mozilla::dom::ContentProcessChild;
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::XPCShellEnvironment;
 
@@ -337,11 +337,32 @@ XRE_InitParentProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
+  base::AtExitManager exitManager;
   CommandLine::Init(aArgc, aArgv);
-
+  MessageLoopForUI mainMessageLoop;
   ScopedXREEmbed embed;
 
   {
+    // Make chromium's IPC thread
+#if defined(OS_LINUX)
+    // The lifetime of the BACKGROUND_X11 thread is a subset of the IO thread so
+    // we start it now.
+    scoped_ptr<base::Thread> x11Thread(
+      new BrowserProcessSubThread(BrowserProcessSubThread::BACKGROUND_X11));
+    if (NS_UNLIKELY(!x11Thread->Start())) {
+      NS_ERROR("Failed to create chromium's X11 thread!");
+      return NS_ERROR_FAILURE;
+    }
+#endif
+    scoped_ptr<base::Thread> ipcThread(
+      new BrowserProcessSubThread(BrowserProcessSubThread::IO));
+    base::Thread::Options options;
+    options.message_loop_type = MessageLoop::TYPE_IO;
+    if (NS_UNLIKELY(!ipcThread->StartWithOptions(options))) {
+      NS_ERROR("Failed to create chromium's IO thread!");
+      return NS_ERROR_FAILURE;
+    }
+
     embed.Start();
 
     nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
@@ -478,49 +499,13 @@ XRE_RunIPCTestHarness(int aArgc, char* aArgv[])
     return 0;
 }
 
-template<>
-struct RunnableMethodTraits<ContentProcessChild>
-{
-    static void RetainCallee(ContentProcessChild* obj) { }
-    static void ReleaseCallee(ContentProcessChild* obj) { }
-};
-
 void
-XRE_ShutdownChildProcess(MessageLoop* aUILoop)
+XRE_ShutdownChildProcess()
 {
-    if (aUILoop) {
-        NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-        aUILoop->PostTask(FROM_HERE,
-            NewRunnableMethod(ContentProcessChild::GetSingleton(),
-                              &ContentProcessChild::Quit));
-        return;
-    }
-
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
     if (appStartup) {
         appStartup->Quit(nsIAppStartup::eForceQuit);
     }
-}
-
-ContentProcessParent*
-XRE_GetContentProcessParent()
-{
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-        return ContentProcessParent::GetSingleton();
-    }
-    NS_WARNING("Called XRE_GetContentProcessParent in child process!");
-    return nsnull;
-}
-
-ContentProcessChild*
-XRE_GetContentProcessChild()
-{
-    if (XRE_GetProcessType() != GeckoProcessType_Default) {
-        return ContentProcessChild::GetSingleton();
-    }
-    NS_WARNING("Called XRE_GetContentProcessChild in parent process!");
-    return nsnull;
 }
 
 #endif
