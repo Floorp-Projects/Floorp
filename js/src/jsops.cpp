@@ -1080,7 +1080,7 @@
 #endif
                 if (d == 0 || JSDOUBLE_IS_NaN(d))
                     rval = DOUBLE_TO_JSVAL(rt->jsNaN);
-                else if ((JSDOUBLE_HI32(d) ^ JSDOUBLE_HI32(d2)) >> 31)
+                else if (JSDOUBLE_IS_NEG(d) != JSDOUBLE_IS_NEG(d2))
                     rval = DOUBLE_TO_JSVAL(rt->jsNegativeInfinity);
                 else
                     rval = DOUBLE_TO_JSVAL(rt->jsPositiveInfinity);
@@ -1138,16 +1138,7 @@
                     JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[-1]) ||
                               regs.sp[-1] == JSVAL_TRUE);
                 }
-#ifdef HPUX
-                /*
-                 * Negation of a zero doesn't produce a negative
-                 * zero on HPUX. Perform the operation by bit
-                 * twiddling.
-                 */
-                JSDOUBLE_HI32(d) ^= JSDOUBLE_HI32_SIGNBIT;
-#else
                 d = -d;
-#endif
                 if (!js_NewNumberInRootedValue(cx, d, &regs.sp[-1]))
                     goto error;
             }
