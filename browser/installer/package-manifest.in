@@ -1,4 +1,4 @@
-; Package file for OS X Firefox build. 
+; Package file for the Firefox build. 
 ;
 ; File format:
 ;
@@ -10,18 +10,19 @@
 
 #filter substitution
 
+#ifdef XP_MACOSX
 ; Mac bundle stuff
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
 @APPNAME@/Contents/Plug-Ins/
 @APPNAME@/Contents/Resources/
+#endif
 @BINPATH@/.autoreg
 
 [@AB_CD@]
 @BINPATH@/chrome/@AB_CD@.jar
 @BINPATH@/chrome/@AB_CD@.manifest
 @BINPATH@/@PREF_DIR@/firefox-l10n.js
-@BINPATH@/defaults/existing-profile-defaults.js
 @BINPATH@/browserconfig.properties
 @BINPATH@/searchplugins/*
 @BINPATH@/defaults/profile/bookmarks.html
@@ -32,34 +33,82 @@
 @BINPATH@/update.locale
 @BINPATH@/updater.ini
 @BINPATH@/dictionaries/*
+#ifdef XP_WIN32
+#ifndef WINCE
+@BINPATH@/uninstall/helper.exe
+#endif
+#endif
 
 [xpcom]
-@BINPATH@/libmozjs.dylib
-@BINPATH@/libplc4.dylib
-@BINPATH@/libplds4.dylib
-@BINPATH@/libxpcom.dylib
-@BINPATH@/libnspr4.dylib
-#ifdef MOZ_ENABLE_LIBXUL
+#ifdef XP_WIN32
+@BINPATH@/js3250.dll
+#else
+@BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
+#endif
+@BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
+#ifdef XP_MACOSX
 @BINPATH@/XUL
 #else
-@BINPATH@/libxpcom_core.dylib
-@BINPATH@/components/libxpinstall.dylib
-@BINPATH@/components/libjar50.dylib
+@BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
+#endif
+#ifdef WINCE
+@BINPATH@/mozce_shunt.dll
+#elifdef XP_WIN32
+#ifndef MOZ_MEMORY
+@BINPATH@/Microsoft.VC80.CRT.manifest
+@BINPATH@/msvcm80.dll
+@BINPATH@/msvcp80.dll
+@BINPATH@/msvcr80.dll
+#else
+@BINPATH@/mozcrt19.dll
+@BINPATH@/mozcpp19.dll
+#endif
 #endif
 
 [browser]
 ; [Base Browser Files]
+#ifdef XP_WIN32
+@BINPATH@/@MOZ_APP_NAME@.exe
+#else
 @BINPATH@/@MOZ_APP_NAME@-bin
+#endif
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
+#ifdef XP_MACOSX
 @BINPATH@/plugins/DefaultPlugin.plugin/
-@BINPATH@/libsqlite3.dylib
+#elifdef XP_UNIX
+@BINPATH@/plugins/libnullplugin.so
+#elifdef XP_WIN32
+#ifndef WINCE
+@BINPATH@/plugins/npnul32.dll
+#endif
+#endif
+@BINPATH@/@DLL_PREFIX@sqlite3@DLL_SUFFIX@
 @BINPATH@/README.txt
+@BINPATH@/LICENSE
 @BINPATH@/blocklist.xml
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+@BINPATH@/mozilla-xremote-client
+@BINPATH@/run-mozilla.sh
+#endif
+#endif
+#ifdef MOZ_SPLASHSCREEN
+@BINPATH@/splash.bmp
+#endif
 
 ; [Components]
 @BINPATH@/components/alerts.xpt
+#ifdef ACCESSIBILITY
+#ifdef XP_WIN32
+@BINPATH/AccessibleMarshal.dll
+@BINPATH@/components/accessibility-msaa.xpt
+#endif
 @BINPATH@/components/accessibility.xpt
+#endif
 @BINPATH@/components/appshell.xpt
 @BINPATH@/components/appstartup.xpt
 @BINPATH@/components/autocomplete.xpt
@@ -82,7 +131,12 @@
 @BINPATH@/components/contentprefs.xpt
 @BINPATH@/components/cookie.xpt
 @BINPATH@/components/directory.xpt
+#ifdef XP_WIN32
+;XXX: this is stupid. fix this.
+@BINPATH@/components/docshell_base.xpt
+#else
 @BINPATH@/components/docshell.xpt
+#endif
 @BINPATH@/components/dom.xpt
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_canvas.xpt
@@ -107,31 +161,41 @@
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt
 @BINPATH@/components/embed_base.xpt
+@BINPATH@/components/extensions.xpt
 @BINPATH@/components/exthandler.xpt
 @BINPATH@/components/exthelper.xpt
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
+#ifdef MOZ_GTK2
+@BINPATH@/components/filepicker.xpt
+#endif
 @BINPATH@/components/find.xpt
 @BINPATH@/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
 @BINPATH@/components/htmlparser.xpt
 @BINPATH@/components/imglib2.xpt
-; @BINPATH@/components/imgicon.xpt
+@BINPATH@/components/imgicon.xpt
+@BINPATH@/components/inspector.xpt
 @BINPATH@/components/intl.xpt
 @BINPATH@/components/jar.xpt
-#ifndef MOZ_ENABLE_LIBXUL
-@BINPATH@/components/libjsd.dylib
-#endif
 @BINPATH@/components/jsdservice.xpt
 @BINPATH@/components/layout_base.xpt
+#ifdef NS_PRINTING
 @BINPATH@/components/layout_printing.xpt
+#endif
 @BINPATH@/components/layout_xul_tree.xpt
 @BINPATH@/components/layout_xul.xpt
-@BINPATH@/components/inspector.xpt
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+@BINPATH@/components/libimgicon.so
+#endif
+#endif
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/lwbrk.xpt
 @BINPATH@/components/microsummaries.xpt
+#ifndef WINCE
 @BINPATH@/components/migration.xpt
+#endif
 @BINPATH@/components/mimetype.xpt
 @BINPATH@/components/mozbrwsr.xpt
 @BINPATH@/components/mozfind.xpt
@@ -151,23 +215,38 @@
 @BINPATH@/components/loginmgr.xpt
 @BINPATH@/components/places.xpt
 @BINPATH@/components/plugin.xpt
-@BINPATH@/components/prefetch.xpt
 @BINPATH@/components/pref.xpt
+@BINPATH@/components/prefetch.xpt
+@BINPATH@/components/profile.xpt
+;XXX: stupid, fix this!
+#ifdef XP_WIN32
+@BINPATH@/components/proxyObject.xpt
+#else
 @BINPATH@/components/proxyObjInst.xpt
+#endif
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
+@BINPATH@/components/sessionstore.xpt
+@BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
 @BINPATH@/components/storage.xpt
-@BINPATH@/components/profile.xpt
 @BINPATH@/components/toolkitprofile.xpt
+#ifdef MOZ_ENABLE_XREMOTE
+@BINPATH@/components/toolkitremote.xpt
+#endif
 @BINPATH@/components/toolkitsearch.xpt
 @BINPATH@/components/txtsvc.xpt
 @BINPATH@/components/txmgr.xpt
+#ifdef MOZ_USE_NATIVE_UCONV
+@BINPATH@/components/ucnative.xpt
+#endif
 @BINPATH@/components/uconv.xpt
 @BINPATH@/components/unicharutil.xpt
+@BINPATH@/components/update.xpt
 @BINPATH@/components/uriloader.xpt
+@BINPATH@/components/urlformatter.xpt
 @BINPATH@/components/webBrowser_core.xpt
 @BINPATH@/components/webbrowserpersist.xpt
 @BINPATH@/components/webshell_idls.xpt
@@ -179,7 +258,12 @@
 @BINPATH@/components/xpcom_components.xpt
 @BINPATH@/components/xpcom_ds.xpt
 @BINPATH@/components/xpcom_io.xpt
+;XXX: stupid, fix this!
+#ifdef XP_WIN32
+@BINPATH@/components/xpcom_thread.xpt
+#else
 @BINPATH@/components/xpcom_threads.xpt
+#endif
 @BINPATH@/components/xpcom_xpti.xpt
 @BINPATH@/components/xpconnect.xpt
 @BINPATH@/components/xpinstall.xpt
@@ -187,7 +271,7 @@
 @BINPATH@/components/xuldoc.xpt
 @BINPATH@/components/xultmpl.xpt
 @BINPATH@/components/zipwriter.xpt
-@BINPATH@/components/shellservice.xpt
+
 ; JavaScript components
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/FeedConverter.js
@@ -203,13 +287,16 @@
 @BINPATH@/components/nsPrivateBrowsingService.js
 @BINPATH@/components/nsSearchService.js
 @BINPATH@/components/nsSearchSuggestions.js
+@BINPATH@/components/nsTryToClose.js
 @BINPATH@/components/nsLoginInfo.js
 @BINPATH@/components/nsLoginManager.js
 @BINPATH@/components/nsLoginManagerPrompter.js
 @BINPATH@/components/storage-Legacy.js
 @BINPATH@/components/storage-mozStorage.js
 @BINPATH@/components/jsconsole-clhandler.js
-@BINPATH@/components/nsTryToClose.js
+#ifdef MOZ_GTK2
+@BINPATH@/components/nsFilePicker.js
+#endif
 @BINPATH@/components/nsHelperAppDlg.js
 @BINPATH@/components/nsDownloadManagerUI.js
 @BINPATH@/components/nsProxyAutoConfig.js
@@ -220,15 +307,16 @@
 @BINPATH@/components/nsBlocklistService.js
 @BINPATH@/components/nsUpdateService.js
 @BINPATH@/components/pluginGlue.js
-@BINPATH@/components/extensions.xpt
-@BINPATH@/components/update.xpt
 @BINPATH@/components/nsSessionStartup.js
 @BINPATH@/components/nsSessionStore.js
-@BINPATH@/components/sessionstore.xpt
 @BINPATH@/components/nsURLFormatter.js
-@BINPATH@/components/urlformatter.xpt
-@BINPATH@/components/libbrowserdirprovider.dylib
-@BINPATH@/components/libbrowsercomps.dylib
+@BINPATH@/components/@DLL_PREFIX@browserdirprovider@DLL_SUFFIX@
+#ifdef XP_WIN32
+;XXX: lame, kill use_short_libname
+@BINPATH@/components/brwsrcmp.dll
+#else
+@BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
+#endif
 @BINPATH@/components/txEXSLTRegExFunctions.js
 @BINPATH@/components/nsLivemarkService.js
 @BINPATH@/components/nsTaggingService.js
@@ -241,7 +329,12 @@
 @BINPATH@/components/nsWebHandlerApp.js
 @BINPATH@/components/nsBadCertHandler.js
 @BINPATH@/components/nsFormAutoComplete.js
+#ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
+#endif
+#ifdef MOZ_ENABLE_DBUS
+@BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
+#endif
 
 ; Modules
 @BINPATH@/modules/*
@@ -251,6 +344,11 @@
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
 @BINPATH@/components/url-classifier.xpt
+
+; GNOME hooks
+#ifdef MOZ_ENABLE_GNOME_COMPONENT
+@BINPATH@/components/@DLL_PREFIX@mozgnome@DLL_SUFFIX@
+#endif
 
 ; [Browser Chrome Files]
 @BINPATH@/chrome/browser.jar
@@ -263,8 +361,10 @@
 @BINPATH@/@PREF_DIR@/reporter.js
 
 ; shell icons
+#ifndef XP_WIN32
 @BINPATH@/icons/*.xpm
 @BINPATH@/icons/*.png
+#endif
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
@@ -312,7 +412,9 @@
 @BINPATH@/res/arrow.gif
 @BINPATH@/res/loading-image.png
 @BINPATH@/res/broken-image.png
+#ifdef XP_MACOSX
 @BINPATH@/res/cursors/*
+#endif
 @BINPATH@/res/fonts/*
 @BINPATH@/res/dtd/*
 @BINPATH@/res/html/*
@@ -320,9 +422,15 @@
 @BINPATH@/res/charsetData.properties
 @BINPATH@/res/langGroups.properties
 @BINPATH@/res/language.properties
-@BINPATH@/res/maccharset.properties
 @BINPATH@/res/entityTables/*
+#ifdef XP_MACOSX
+@BINPATH@/res/maccharset.properties
 @BINPATH@/res/MainMenu.nib/
+#elifdef XP_UNIX
+@BINPATH@/res/unixcharset.properties
+#elifdef XP_WIN32
+@BINPATH@/res/wincharset.properties
+#endif
 
 ; svg
 @BINPATH@/res/svg.css
@@ -333,28 +441,58 @@
 
 ; [Personal Security Manager]
 ;
-@BINPATH@/libnssckbi.dylib
+@BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
 @BINPATH@/components/pipboot.xpt
 @BINPATH@/components/pipnss.xpt
 @BINPATH@/components/pippki.xpt
-@BINPATH@/libnss3.dylib
-@BINPATH@/libnssutil3.dylib
-@BINPATH@/libsmime3.dylib
-@BINPATH@/libsoftokn3.chk
-@BINPATH@/libsoftokn3.dylib
-@BINPATH@/libfreebl3.chk
-@BINPATH@/libfreebl3.dylib
-@BINPATH@/libssl3.dylib
-@BINPATH@/libnssdbm3.dylib
-@BINPATH@/libnssdbm3.chk
+@BINPATH@/@DLL_PREFIX@nss3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@nssutil3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@smime3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@softokn3.chk
+@BINPATH@/@DLL_PREFIX@softokn3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@freebl3.chk
+@BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@ssl3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@nssdbm3@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@nssdbm3.chk
 @BINPATH@/chrome/pippki.jar
 @BINPATH@/chrome/pippki.manifest
 
+; for Solaris SPARC
+#ifdef SOLARIS
+bin/libfreebl_32fpu_3.chk
+bin/libfreebl_32fpu_3.so
+bin/libfreebl_32int_3.chk
+bin/libfreebl_32int_3.so
+bin/libfreebl_32int64_3.chk
+bin/libfreebl_32int64_3.so
+#endif
+
 ; [Updater]
 ;
+#ifdef XP_MACOSX
 @BINPATH@/updater.app/
+#else
+@BINPATH@/updater@BIN_SUFFIX@
+#endif
 
 ; [Crash Reporter]
 ;
+#ifdef MOZ_CRASHREPORTER
+#ifdef XP_MACOSX
 @BINPATH@/crashreporter.app/
+#else
+@BINPATH@/crashreporter@BIN_SUFFIX@
+@BINPATH@/crashreporter.ini
+#ifdef XP_UNIX
+@BINPATH@/Throbber-small.gif
+#endif
+#endif
 @BINPATH@/crashreporter-override.ini
+#endif
+
+; [Extensions]
+;
+#ifdef MOZ_ENABLE_GNOMEVFS
+bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
+#endif
