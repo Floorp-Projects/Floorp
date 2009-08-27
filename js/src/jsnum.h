@@ -40,6 +40,7 @@
 #ifndef jsnum_h___
 #define jsnum_h___
 
+#include <float.h>
 #include <math.h>
 
 /*
