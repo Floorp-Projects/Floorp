@@ -93,6 +93,8 @@ public:
 #ifdef XP_MACOSX
   void SetDrawingModel(NPDrawingModel aModel);
   NPDrawingModel GetDrawingModel();
+  void SetEventModel(NPEventModel aModel);
+  NPEventModel GetEventModel();
 #endif
 
   nsresult NewNotifyStream(nsIPluginStreamListener** listener, 
@@ -120,6 +122,8 @@ public:
   nsNPAPITimer* TimerWithID(uint32_t id, PRUint32* index);
   uint32_t      ScheduleTimer(uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
   void          UnscheduleTimer(uint32_t timerID);
+  NPError       PopUpContextMenu(NPMenu* menu);
+  NPBool        ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
 protected:
   nsresult InitializePlugin();
 
@@ -144,6 +148,7 @@ protected:
 
 #ifdef XP_MACOSX
   NPDrawingModel mDrawingModel;
+  NPEventModel   mEventModel;
 #endif
 
   // these are used to store the windowless properties
@@ -170,6 +175,9 @@ private:
   nsIPluginInstanceOwner *mOwner;
 
   nsTArray<nsNPAPITimer*> mTimers;
+
+  // non-null during a HandleEvent call
+  nsPluginEvent* mCurrentPluginEvent;
 };
 
 #endif // nsNPAPIPluginInstance_h_

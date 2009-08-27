@@ -136,6 +136,12 @@ CPPSRCS		+= \
 		$(NULL)
 endif
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+CMMSRCS		+= \
+		nsPluginUtilsOSX.mm \
+		$(NULL)
+endif
+
 RESOURCES_HTML = \
 		$(srcdir)/folder.png \
 		$(NULL)
