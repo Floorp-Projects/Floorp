@@ -13043,7 +13043,7 @@ static const uint32 sMaxConcatNSize = 32;
  * Copy the result of defvalue.string back into concatn's arguments, clean the
  * stack, and return a pointer to the argument that was just overwritten.
  */
-jsval *
+JS_REQUIRES_STACK jsval *
 js_ConcatPostImacroStackCleanup(uint32 argc, JSFrameRegs &regs,
                                 TraceRecorder *recorder)
 {
