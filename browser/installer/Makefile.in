@@ -59,18 +59,8 @@ include $(topsrcdir)/config/rules.mk
 
 MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 
-ifneq (,$(BUILD_STATIC_LIBS)$(MOZ_ENABLE_LIBXUL))
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-MOZ_PKG_MANIFEST_P = $(srcdir)/windows/packages-static
-else
-ifeq (Darwin,$(OS_ARCH))
-MOZ_PKG_MANIFEST_P = $(srcdir)/osx/packages-static
-else
-ifneq (OS2, $(OS_ARCH))
-MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
-endif # !OS2
-endif # Darwin
-endif # Windows
+ifdef MOZ_ENABLE_LIBXUL
+MOZ_PKG_MANIFEST_P = $(srcdir)/package-manifest.in
 else
 define message
 You need to build with --enable-libxul (the default, unless you specify
@@ -92,9 +82,16 @@ MOZ_OPTIONAL_PKG_LIST = \
 	$(NULL)
 
 DEFINES += -DAB_CD=$(AB_CD) -DMOZ_APP_NAME=$(MOZ_APP_NAME) -DPREF_DIR=$(PREF_DIR)
+ifdef MOZ_ENABLE_GNOME_COMPONENT
+DEFINES += -DMOZ_ENABLE_GNOME_COMPONENT=1
+endif
+
+ifeq (gtk2, $(MOZ_WIDGET_TOOLKIT))
+DEFINES += -DMOZ_GTK2=1
+endif
 
 ifdef MOZ_PKG_MANIFEST_P
-MOZ_PKG_MANIFEST = packages-static
+MOZ_PKG_MANIFEST = package-manifest
 
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
@@ -120,6 +117,9 @@ DEFINES += \
   -DBINPATH=$(_BINPATH) \
   -DAPPNAME=$(_APPNAME) \
   $(NULL)
+else
+# Every other platform just winds up in dist/bin
+DEFINES += -DBINPATH=bin
 endif
 
 libs::
