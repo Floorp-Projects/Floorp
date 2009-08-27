@@ -46,7 +46,6 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		test_animLengthObjectIdentity.xhtml \
-		test_animLengthReadonly.xhtml \
 		test_animLengthRelativeUnits.xhtml \
 		test_animLengthUnits.xhtml \
 		test_bbox.xhtml \
