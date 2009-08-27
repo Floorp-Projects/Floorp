@@ -1,3 +1,5 @@
+// |trace-test| TMFLAGS: full
+
 function arith()
 {
   var accum = 0;

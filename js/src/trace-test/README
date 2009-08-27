@@ -48,9 +48,15 @@ test is run. For example:
 
 The general format in EBNF is:
 
-    metaline ::= cookie { item ";" }
-    cookie   ::= "|trace-test|"
-    item     ::= "slow" | "allow-oom"
+    metaline  ::= cookie { item ";" }
+    cookie    ::= "|trace-test|"
+    item      ::= flag | attribute
+
+    flag      ::= "slow" | "allow-oom"
+
+    attribute ::= name ":" value
+    name      ::= "TMFLAGS"
+    value     ::= <string>
 
 The metaline may appear anywhere in the first line of the file: this allows it
 to be placed inside any kind of comment.
@@ -59,5 +65,6 @@ The meaning of the items:
 
     slow         Test runs slowly. Do not run if the --no-slow option is given.
     allow-oom    If the test runs out of memory, it counts as passing.
+    TMFLAGS      Set the environment variable TMFLAGS to the given value.
 
 * END
