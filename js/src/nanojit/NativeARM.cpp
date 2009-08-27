@@ -752,7 +752,7 @@ Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
                 if (rA->reg == UnknownReg) {
                     // load it into the arg reg
                     int d = findMemFor(p);
-                    if (p->isop(LIR_ialloc)) {
+                    if (p->isop(LIR_alloc)) {
                         asm_add_imm(r, FP, d, 0);
                     } else {
                         LDR(r, FP, d);
@@ -818,7 +818,7 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
         int d = findMemFor(arg);
         if (!isQuad) {
             STR(IP, SP, stkd);
-            if (arg->isop(LIR_ialloc)) {
+            if (arg->isop(LIR_alloc)) {
                 asm_add_imm(IP, FP, d);
             } else {
                 LDR(IP, FP, d);
@@ -1092,7 +1092,7 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
 {
     Reservation *rA, *rB;
     Register ra, rb;
-    if (base->isop(LIR_ialloc)) {
+    if (base->isop(LIR_alloc)) {
         rb = FP;
         dr += findMemFor(base);
         ra = findRegFor(value, GpRegs);
@@ -1113,7 +1113,7 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
 void
 Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 {
-    if (i->isop(LIR_ialloc)) {
+    if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, disp(resv));
     } else if (IsFpReg(r)) {
         NanoAssert(AvmCore::config.vfp);
@@ -2140,7 +2140,7 @@ Assembler::asm_arith(LInsp ins)
     // trace-tests.js so it is very unlikely to be worthwhile implementing it.
     if (rhs->isconst() && op != LIR_mul)
     {
-        if ((op == LIR_add || op == LIR_iaddp) && lhs->isop(LIR_ialloc)) {
+        if ((op == LIR_add || op == LIR_iaddp) && lhs->isop(LIR_alloc)) {
             // Add alloc+const. The result should be the address of the
             // allocated space plus a constant.
             Register    rs = prepResultReg(ins, allow);
