@@ -150,13 +150,17 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 #include "base/command_line.h"
 #include "base/message_loop.h"
 
+#include "mozilla/ipc/GeckoThread.h"
+
 using base::AtExitManager;
+using mozilla::ipc::BrowserProcessSubThread;
 
 namespace {
 
 static AtExitManager* sExitManager;
 static MessageLoop* sMessageLoop;
 static bool sCommandLineWasInitialized;
+static BrowserProcessSubThread* sIOThread;
 
 } /* anonymous namespace */
 #endif
@@ -587,6 +591,18 @@ NS_InitXPCOM3(nsIServiceManager* *result,
         sMessageLoop = new MessageLoopForUI();
         NS_ENSURE_STATE(sMessageLoop);
     }
+
+    if (!BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)) {
+        scoped_ptr<BrowserProcessSubThread> ioThread(
+            new BrowserProcessSubThread(BrowserProcessSubThread::IO));
+        NS_ENSURE_TRUE(ioThread.get(), NS_ERROR_OUT_OF_MEMORY);
+
+        base::Thread::Options options;
+        options.message_loop_type = MessageLoop::TYPE_IO;
+        NS_ENSURE_TRUE(ioThread->StartWithOptions(options), NS_ERROR_FAILURE);
+
+        sIOThread = ioThread.release();
+    }
 #endif
 
     NS_LogInit();
@@ -962,6 +978,10 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
 
 #ifdef MOZ_IPC
+    if (sIOThread) {
+        delete sIOThread;
+        sIOThread = nsnull;
+    }
     if (sMessageLoop) {
         delete sMessageLoop;
         sMessageLoop = nsnull;

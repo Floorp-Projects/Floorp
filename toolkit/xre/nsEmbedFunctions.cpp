@@ -64,7 +64,6 @@
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/message_loop.h"
-#include "base/thread.h"
 #include "chrome/common/child_process.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -82,7 +81,6 @@
 #include "mozilla/test/TestThreadChild.h"
 #include "mozilla/Monitor.h"
 
-using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::ipc::GeckoThread;
 using mozilla::ipc::ScopedXREEmbed;
@@ -337,32 +335,11 @@ XRE_InitParentProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
-  base::AtExitManager exitManager;
   CommandLine::Init(aArgc, aArgv);
-  MessageLoopForUI mainMessageLoop;
+
   ScopedXREEmbed embed;
 
   {
-    // Make chromium's IPC thread
-#if defined(OS_LINUX)
-    // The lifetime of the BACKGROUND_X11 thread is a subset of the IO thread so
-    // we start it now.
-    scoped_ptr<base::Thread> x11Thread(
-      new BrowserProcessSubThread(BrowserProcessSubThread::BACKGROUND_X11));
-    if (NS_UNLIKELY(!x11Thread->Start())) {
-      NS_ERROR("Failed to create chromium's X11 thread!");
-      return NS_ERROR_FAILURE;
-    }
-#endif
-    scoped_ptr<base::Thread> ipcThread(
-      new BrowserProcessSubThread(BrowserProcessSubThread::IO));
-    base::Thread::Options options;
-    options.message_loop_type = MessageLoop::TYPE_IO;
-    if (NS_UNLIKELY(!ipcThread->StartWithOptions(options))) {
-      NS_ERROR("Failed to create chromium's IO thread!");
-      return NS_ERROR_FAILURE;
-    }
-
     embed.Start();
 
     nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
