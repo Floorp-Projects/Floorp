@@ -942,7 +942,7 @@ Assembler::asm_call(LInsp ins)
 }
 
 Register
-Assembler::nRegisterAllocFromSet(int set)
+Assembler::nRegisterAllocFromSet(RegisterMask set)
 {
     NanoAssert(set != 0);
 
