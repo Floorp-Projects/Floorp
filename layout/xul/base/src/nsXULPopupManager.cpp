@@ -1043,7 +1043,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
       fm->GetFocusedElement(getter_AddRefs(currentFocusElement));
       nsCOMPtr<nsIContent> currentFocus = do_QueryInterface(currentFocusElement);
       if (doc && currentFocus &&
-          !nsContentUtils::ContentIsDescendantOf(currentFocus, aPopup)) {
+          !nsContentUtils::ContentIsCrossDocDescendantOf(currentFocus, aPopup)) {
         fm->ClearFocus(doc->GetWindow());
       }
     }
@@ -1101,7 +1101,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
       fm->GetFocusedElement(getter_AddRefs(currentFocusElement));
       nsCOMPtr<nsIContent> currentFocus = do_QueryInterface(currentFocusElement);
       if (doc && currentFocus &&
-          nsContentUtils::ContentIsDescendantOf(currentFocus, aPopup)) {
+          nsContentUtils::ContentIsCrossDocDescendantOf(currentFocus, aPopup)) {
         fm->ClearFocus(doc->GetWindow());
       }
     }
