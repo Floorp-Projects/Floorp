@@ -3827,12 +3827,20 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 nsresult
 nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsAutoString eventType;
-  aEvent->GetType(eventType);
-
   if (mInstance) {
-    nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
-    if (dragEvent) {
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
+    nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
+    if (privateEvent && dragEvent) {
+      nsEvent* ievent = privateEvent->GetInternalNSEvent();
+      if (ievent && NS_IS_TRUSTED_EVENT(ievent) &&
+          (ievent->message == NS_DRAGDROP_ENTER || ievent->message == NS_DRAGDROP_OVER)) {
+        // set the allowed effect to none here. The plugin should set it if necessary
+        nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
+        dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
+        if (dataTransfer)
+          dataTransfer->SetEffectAllowed(NS_LITERAL_STRING("none"));
+      }
+
       // Let the plugin handle drag events.
       aEvent->PreventDefault();
       aEvent->StopPropagation();
