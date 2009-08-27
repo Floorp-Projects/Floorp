@@ -96,6 +96,14 @@ richlistitem[typeName="search"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search");
 }
 
+richlistitem[typeName="search"] hbox.addon-type-or-rating {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search-recommended");
+}
+
+richlistitem[typeName="search"] hbox.addon-type-or-rating[rating] {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search-rating");
+}
+
 richlistitem[typeName="message"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-message");
 }

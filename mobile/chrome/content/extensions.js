@@ -50,6 +50,7 @@ var ExtensionsView = {
   _pref: null,
   _rdf: null,
   _ios: null,
+  _strings: {},
   _repo: null,
   _list: null,
   _localItem: null,
@@ -97,6 +98,7 @@ var ExtensionsView = {
     item.setAttribute("addonID", aAddon.id);
     item.setAttribute("typeName", aTypeName);
     item.setAttribute("type", aAddon.type);
+    item.setAttribute("typeLabel", this._strings["addonType." + aAddon.type]);
     item.setAttribute("name", aAddon.name);
     item.setAttribute("version", aAddon.version);
     item.setAttribute("iconURL", aAddon.iconURL);
@@ -241,6 +243,11 @@ var ExtensionsView = {
       this.showRestart();
       this._restartCount--; // showRestart() always increments
     }
+    
+    let strings = document.getElementById("bundle_browser");
+    this._strings["addonType.2"] = strings.getString("addonType.2");
+    this._strings["addonType.4"] = strings.getString("addonType.4");
+    this._strings["addonType.8"] = strings.getString("addonType.8");
 
     let self = this;
     setTimeout(function() {
@@ -459,6 +466,8 @@ var ExtensionsView = {
       listitem.setAttribute("homepageURL", addon.homepageURL);
       listitem.setAttribute("xpiURL", addon.xpiURL);
       listitem.setAttribute("xpiHash", addon.xpiHash);
+      if (!aIsRecommended)
+        listitem.setAttribute("rating", addon.rating);
       this._list.appendChild(listitem);
     }
 

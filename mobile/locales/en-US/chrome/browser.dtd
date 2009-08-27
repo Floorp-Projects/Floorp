@@ -1,20 +1,11 @@
 <!ENTITY back.label            "Back">
-<!ENTITY back.tooltip          "Back">
 <!ENTITY forward.label         "Forward">
-<!ENTITY forward.tooltip       "Forward">
 <!ENTITY reload.label          "Reload">
-<!ENTITY reload.tooltip        "Reload">
 <!ENTITY stop.label            "Stop">
-<!ENTITY stop.tooltip          "Stop">
 <!ENTITY search.label          "Search">
-<!ENTITY search.tooltip        "Search">
 <!ENTITY go.label              "Go">
-<!ENTITY go.tooltip            "Go">
 <!ENTITY openLocation.label    "Open location">
-<!ENTITY openLocation.tooltip  "Open location">
 <!ENTITY star.label            "Star">
-<!ENTITY star.tooltip          "Bookmark this page">
-<!ENTITY bookmarks.tooltip     "View bookmarks">
 
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
@@ -55,12 +46,13 @@
 <!ENTITY addonsRepo.label          "Get Add-ons">
 <!ENTITY addonsRecommended.label   "Recommended">
 <!ENTITY addonsSearch.label        "Search">
-<!ENTITY addonsSearch.emptytext    "Search all add-ons">
+<!ENTITY addonsSearch2.emptytext   "Search Catalog">
+<!ENTITY addonsSearch.recommended  "Recommended">
 
 <!ENTITY addonOptions.label        "Options">
 <!ENTITY addonEnable.label         "Enable">
 <!ENTITY addonDisable.label        "Disable">
-<!ENTITY addonInstall.label        "Install">
+<!ENTITY addonInstall2.label       "Add to &brandShortName;">
 <!ENTITY addonUninstall.label      "Uninstall">
 <!ENTITY addonCancel.label         "Cancel">
 <!ENTITY addonShowPage.label       "Go to Page">
@@ -70,7 +62,7 @@
 <!ENTITY downloadsSortSite.label   "Site">
 <!ENTITY downloadsSortName.label   "Name">
 <!ENTITY downloadsSearch.label     "Search">
-<!ENTITY downloadsSearch.emptytext "Search for downloaded file">
+<!ENTITY downloadsSearch2.emptytext "Search">
 
 <!ENTITY downloadShowPage.label    "Go to Page">
 <!ENTITY downloadShow2.label       "Find">
