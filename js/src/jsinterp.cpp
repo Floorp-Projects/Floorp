@@ -1583,6 +1583,11 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     cx->fp = &frame;
     if (!down) {
+        OBJ_TO_INNER_OBJECT(cx, chain);
+        if (!chain)
+            return JS_FALSE;
+        frame.scopeChain = chain;
+
         frame.thisp = frame.thisp->thisObject(cx);
         if (!frame.thisp) {
             ok = JS_FALSE;
