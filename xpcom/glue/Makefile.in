@@ -53,7 +53,6 @@ DIST_INSTALL	= 1
 
 
 ifdef NS_TRACE_MALLOC
-REQUIRES += tracemalloc
 endif
 
 LOCAL_INCLUDES	= \

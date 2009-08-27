@@ -49,7 +49,6 @@ LIBXUL_LIBRARY = 1
 MODULE_NAME	= nsBrowserModule
 
 ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
-REQUIRES += toolkitcomps
 endif
 
 CPPSRCS		= \

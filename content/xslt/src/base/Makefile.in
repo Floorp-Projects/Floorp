@@ -48,18 +48,6 @@ LIBXUL_LIBRARY = 1
 
 
 ifndef MOZ_XSLT_STANDALONE
-REQUIRES	+= unicharutil \
-		  dom \
-		  content \
-		  layout \
-		  pref \
-		  widget \
-		  necko \
-		  caps \
-		  xpconnect \
-		  js \
-		  htmlparser \
-		  $(NULL)
 endif
 
 CPPSRCS	= txDouble.cpp \

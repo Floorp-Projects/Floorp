@@ -49,15 +49,12 @@ LIBXUL_LIBRARY = 1
 
 
 ifdef MOZ_JPROF
-REQUIRES += jprof
 endif
 
 ifdef NS_TRACE_MALLOC
-REQUIRES += tracemalloc
 endif
 
 ifdef MOZ_CRASHREPORTER
-REQUIRES += crashreporter
 endif
 
 FORCE_STATIC_LIB = 1

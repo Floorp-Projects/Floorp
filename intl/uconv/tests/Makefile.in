@@ -48,12 +48,6 @@ XPCSHELL_TESTS	= unit
 ifndef MOZ_ENABLE_LIBXUL
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= \
-		string \
-		xpcom \
-		uconv \
-		locale \
-		$(NULL)
 
 CPPSRCS		= \
 		TestUConv.cpp \
