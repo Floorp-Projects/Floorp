@@ -7037,6 +7037,9 @@ if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
     AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, or symlink])
 fi
 
+if test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
+   AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
+fi
 dnl ========================================================
 dnl = Define default location for MOZILLA_FIVE_HOME
 dnl ========================================================
