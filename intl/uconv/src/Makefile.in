@@ -70,7 +70,6 @@ CPPSRCS		= \
 		$(NULL)
 
 ifdef MOZ_USE_NATIVE_UCONV
-REQUIRES	+= ucnative
 else
 CPPSRCS         += \
 		nsISO88591ToUnicode.cpp \
@@ -82,11 +81,6 @@ CPPSRCS         += \
 		$(NULL)
 
 endif
-
-EXPORT_RESOURCE	= \
-		charsetalias.properties \
-		charsetData.properties \
-		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS			+= nsOS2Charset.cpp

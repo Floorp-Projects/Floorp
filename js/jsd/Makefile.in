@@ -55,13 +55,6 @@ endif
 # REQUIRES	= java js
 
 ifndef JSD_STANDALONE
-REQUIRES += \
-		  string \
-		  xpcom \
-		  xpconnect \
-		  widget \
-		  dom \
-		  $(NULL)
 endif
 
 EXTRA_DSO_LDOPTS += \

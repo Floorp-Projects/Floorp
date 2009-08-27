@@ -142,7 +142,7 @@ class nsIntervalSet;
 class nsBlockFrame : public nsBlockFrameSuper
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsBlockFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsBlockFrame)
 
   typedef nsLineList::iterator                  line_iterator;
   typedef nsLineList::const_iterator            const_line_iterator;

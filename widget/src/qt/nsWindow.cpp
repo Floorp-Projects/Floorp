@@ -695,7 +695,7 @@ nsWindow::Update()
 
 void
 nsWindow::Scroll(const nsIntPoint& aDelta,
-                 const nsIntRect& aSource,
+                 const nsTArray<nsIntRect>& aDestRects,
                  const nsTArray<nsIWidget::Configuration>& aConfigurations)
 {
     if (!mWidget) {
@@ -722,8 +722,12 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
         }
     }
 
-    QRect rect(aSource.x, aSource.y, aSource.width, aSource.height);
-    mWidget->scroll(aDelta.x, aDelta.y, rect);
+    for ( unsigned int i = 0; i < aDestRects.Length(); ++i)
+    {
+        const nsIntRect & r = aDestRects[i];
+        QRect rect(r.x - aDelta.x, r.y - aDelta.y, r.width, r.height);
+        mWidget->scroll(aDelta.x, aDelta.y, rect);
+    }
     ConfigureChildren(aConfigurations);
 
     // Show windows again...

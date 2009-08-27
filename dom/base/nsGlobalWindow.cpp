@@ -407,11 +407,13 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCEOWNER
 
-  // XXXjst: What's up with nsIPluginInstanceOwner and these functions?
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData,
                     PRUint32 aPostDataLen, void *aHeadersData,
                     PRUint32 aHeadersDataLen, PRBool aIsFile = PR_FALSE);
   NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
+  NPError ShowNativeContextMenu(NPMenu* menu, nsPluginEvent* event);
+  NPBool ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                      double *destX, double *destY, NPCoordinateSpace destSpace);
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDummyJavaPluginOwner)
 
@@ -503,6 +505,19 @@ NS_IMETHODIMP
 nsDummyJavaPluginOwner::ShowStatus(const PRUnichar *aStatusMsg)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NPError
+nsDummyJavaPluginOwner::ShowNativeContextMenu(NPMenu* menu, nsPluginEvent* event)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NPBool
+nsDummyJavaPluginOwner::ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+                                     double *destX, double *destY, NPCoordinateSpace destSpace)
+{
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

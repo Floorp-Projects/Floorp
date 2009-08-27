@@ -773,6 +773,11 @@ components/xulapp.xpt
 components/xuldoc.xpt
 components/xultmpl.xpt
 components/zipwriter.xpt
+components/firefox.xpt
+run-mozilla.sh
+firefox
+dependentlibs.list
+components/nsProgressDialog.js
 #endif
 #ifdef XP_UNIX
 #ifndef XP_MACOSX

@@ -64,7 +64,7 @@ class nsListBoxBodyFrame : public nsBoxFrame,
   virtual ~nsListBoxBodyFrame();
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsListBoxBodyFrame)
+  NS_DECLARE_FRAME_ACCESSOR(nsListBoxBodyFrame)
 
   NS_DECL_QUERYFRAME
 

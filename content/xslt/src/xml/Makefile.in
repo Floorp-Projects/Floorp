@@ -48,21 +48,7 @@ LIBXUL_LIBRARY = 1
 
 
 ifndef MOZ_XSLT_STANDALONE
-REQUIRES += \
-		  js \
-		  xpconnect \
-		  dom \
-		  content \
-		  layout \
-		  pref \
-		  widget \
-		  unicharutil \
-		  necko \
-		  htmlparser \
-		  caps \
-		  $(NULL)
 else
-REQUIRES += expat
 endif
 
 CPPSRCS	= \

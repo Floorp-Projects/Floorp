@@ -54,7 +54,6 @@ NATIVE_THEME_SUPPORT = 1
 
 
 ifdef MOZ_X11
-REQUIRES += gtkxtbin
 endif
 
 CSRCS		= \
@@ -108,7 +107,6 @@ endif
 
 # build our subdirs, too
 ifdef ACCESSIBILITY
-REQUIRES	+= accessibility
 endif
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
