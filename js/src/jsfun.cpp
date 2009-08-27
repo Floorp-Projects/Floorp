@@ -838,8 +838,8 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     return callobj;
 }
 
-static JSFunction *
-GetCallObjectFunction(JSObject *obj)
+JSFunction *
+js_GetCallObjectFunction(JSObject *obj)
 {
     jsval v;
 
@@ -867,7 +867,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     }
 
     JSFunction *fun = fp->fun;
-    JS_ASSERT(fun == GetCallObjectFunction(callobj));
+    JS_ASSERT(fun == js_GetCallObjectFunction(callobj));
     uintN n = fun->countArgsAndVars();
 
     /*
@@ -911,7 +911,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSObject *pobj;
     JSProperty *prop;
 
-    fun = GetCallObjectFunction(obj);
+    fun = js_GetCallObjectFunction(obj);
     n = fun ? fun->countArgsAndVars() : 0;
     if (n == 0)
         return JS_TRUE;
@@ -972,7 +972,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     if (STOBJ_GET_CLASS(obj) != &js_CallClass)
         return JS_TRUE;
 
-    fun = GetCallObjectFunction(obj);
+    fun = js_GetCallObjectFunction(obj);
     fp = (JSStackFrame *) obj->getPrivate();
 
     if (kind == JSCPK_ARGUMENTS) {
@@ -1203,7 +1203,7 @@ call_reserveSlots(JSContext *cx, JSObject *obj)
 {
     JSFunction *fun;
 
-    fun = GetCallObjectFunction(obj);
+    fun = js_GetCallObjectFunction(obj);
     return fun->countArgsAndVars();
 }
 

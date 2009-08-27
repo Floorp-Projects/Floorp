@@ -276,6 +276,9 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp);
 extern void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 
+extern JSFunction *
+js_GetCallObjectFunction(JSObject *obj);
+
 extern JSBool
 js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
