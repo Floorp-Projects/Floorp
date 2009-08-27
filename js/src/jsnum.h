@@ -40,8 +40,10 @@
 #ifndef jsnum_h___
 #define jsnum_h___
 
-#include <float.h>
 #include <math.h>
+#if defined(XP_WIN) || defined(XP_OS2)
+#include <float.h>
+#endif
 
 /*
  * JS number (IEEE double) interface.
@@ -94,6 +96,17 @@ JSDOUBLE_IS_FINITE(jsdouble d)
     return _finite(d);
 #else
     return finite(d);
+#endif
+}
+
+static inline int
+JSDOUBLE_IS_INFINITE(jsdouble d)
+{
+#ifdef WIN32
+    int c = _fpclass(d);
+    return c == _FPCLASS_NINF || c == _FPCLASS_PINF;
+#else
+    return isinf(d);
 #endif
 }
 
