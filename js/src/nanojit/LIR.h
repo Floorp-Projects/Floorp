@@ -78,6 +78,14 @@ namespace nanojit
 #endif
 
         // pointer op aliases
+        LIR_piadd   = PTR_SIZE(LIR_add,    LIR_qiadd),
+        LIR_piand   = PTR_SIZE(LIR_and,    LIR_qiand),
+        LIR_pilsh   = PTR_SIZE(LIR_lsh,    LIR_qilsh),
+        LIR_pirsh   = PTR_SIZE(LIR_rsh,    LIR_qirsh),
+        LIR_pursh   = PTR_SIZE(LIR_ush,    LIR_qursh),
+        LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
+        LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
+        LIR_addp    = PTR_SIZE(LIR_iaddp,  LIR_qaddp),
         LIR_peq     = PTR_SIZE(LIR_eq,     LIR_qeq),
         LIR_plt     = PTR_SIZE(LIR_lt,     LIR_qlt),
         LIR_pgt     = PTR_SIZE(LIR_gt,     LIR_qgt),
@@ -91,18 +99,10 @@ namespace nanojit
 
     #if defined NANOJIT_64BIT
     #define LIR_ldp     LIR_ldq
-    #define LIR_piadd   LIR_qiadd
-    #define LIR_piand   LIR_qiand
-    #define LIR_pilsh   LIR_qilsh
     #define LIR_pcmov    LIR_qcmov
-    #define LIR_pior    LIR_qior
     #else
     #define LIR_ldp     LIR_ld
-    #define LIR_piadd   LIR_add
-    #define LIR_piand   LIR_and
-    #define LIR_pilsh   LIR_lsh
     #define LIR_pcmov    LIR_cmov
-    #define LIR_pior    LIR_or
     #endif
 
     struct GuardRecord;
