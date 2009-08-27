@@ -36,37 +36,27 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMNSHTMLAnchorElement2.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"
-#include "nsIURL.h"
-#include "nsIEventStateManager.h"
-#include "nsIDOMEvent.h"
-#include "nsNetUtil.h"
-#include "nsCRT.h"
 
 // For GetText().
 #include "nsIContentIterator.h"
 #include "nsIDOMText.h"
-#include "nsIEnumerator.h"
-
-#include "nsCOMPtr.h"
-#include "nsIPresShell.h"
-#include "nsIDocument.h"
 
 #include "nsHTMLDNSPrefetch.h"
 
-nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
+nsresult NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult);
 
 class nsHTMLAnchorElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLAnchorElement,
@@ -378,19 +368,17 @@ nsHTMLAnchorElement::GetText(nsAString& aText)
   // The nsIContentIterator does exactly what we want, if we start the 
   // iteration from the end.
   nsCOMPtr<nsIContentIterator> iter;
-  nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
+  nsresult rv = NS_NewPreContentIterator(getter_AddRefs(iter));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the content iterator with the children of the anchor
   iter->Init(this);
 
-  // Position the iterator. Last() is the anchor itself, this is not what we 
-  // want. Prev() positions the iterator to the last child of the anchor,
+  // Last() positions the iterator to the last child of the anchor,
   // starting at the deepest level of children, just like NS4 does.
   iter->Last();
-  iter->Prev();
 
-  while(!iter->IsDone()) {
+  while (!iter->IsDone()) {
     nsCOMPtr<nsIDOMText> textNode(do_QueryInterface(iter->GetCurrentNode()));
     if(textNode) {
       // The current node is a text node. Get its value and break the loop.

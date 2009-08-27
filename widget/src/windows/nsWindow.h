@@ -314,6 +314,7 @@ protected:
   void                    OnWindowPosChanged(WINDOWPOS *wp, PRBool& aResult);
 #if defined(CAIRO_HAS_DDRAW_SURFACE)
   PRBool                  OnPaintImageDDraw16();
+  HRESULT                 PaintRectImageDDraw16(RECT aRect, nsPaintEvent* aEvent);
 #endif // defined(CAIRO_HAS_DDRAW_SURFACE)
   PRBool                  OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, 
                                        PRBool& result, PRBool& getWheelInfo,
@@ -380,6 +381,8 @@ protected:
   static void             SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifiers);
   nsresult                SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                                               PRBool aIntersectWithExisting);
+  nsCOMPtr<nsIRegion>     GetRegionToPaint(PRBool aForceFullRepaint, 
+                                           PAINTSTRUCT ps, HDC aDC);
 
 #ifdef ACCESSIBILITY
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
@@ -414,7 +417,9 @@ protected:
   int                   mScrollSeriesCounter;
   PRPackedBool          mDisplayPanFeedback;
   WindowHook            mWindowHook;
-
+#ifdef WINCE_WINDOWS_MOBILE
+  nsCOMPtr<nsIRegion>   mInvalidatedRegion; 
+#endif
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
   static nsWindow*      sCurrentWindow;

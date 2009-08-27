@@ -80,7 +80,6 @@ CPPSRCS += \
 	nsDiskCacheDeviceSQL.cpp \
 	$(NULL)
 
-REQUIRES += storage
 DEFINES += -DNECKO_OFFLINE_CACHE
 endif
 

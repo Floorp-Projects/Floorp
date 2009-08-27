@@ -49,7 +49,6 @@ LIBXUL_LIBRARY = 1
 
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-REQUIRES += editor
 endif
 
 CPPSRCS = \

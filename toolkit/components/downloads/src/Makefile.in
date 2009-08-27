@@ -57,7 +57,6 @@ CPPSRCS   = \
 ifndef GNU_CXX
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsDownloadScanner.cpp
-REQUIRES += xulapp
 endif
 endif
 

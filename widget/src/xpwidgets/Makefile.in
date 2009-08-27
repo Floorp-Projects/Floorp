@@ -73,7 +73,6 @@ endif
 
 ifneq (,$(filter beos qt gtk2 os2 cocoa photon windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseFilePicker.cpp
-REQUIRES += docshell view intl
 endif
 
 ifneq (,$(filter qt gtk2 windows cocoa,$(MOZ_WIDGET_TOOLKIT)))

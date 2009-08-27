@@ -1029,6 +1029,19 @@ const PRInt32 nsCSSProps::kPitchKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
+  eCSSKeyword_visiblepainted, NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED,
+  eCSSKeyword_visiblefill, NS_STYLE_POINTER_EVENTS_VISIBLEFILL,
+  eCSSKeyword_visiblestroke, NS_STYLE_POINTER_EVENTS_VISIBLESTROKE,
+  eCSSKeyword_visible, NS_STYLE_POINTER_EVENTS_VISIBLE,
+  eCSSKeyword_painted, NS_STYLE_POINTER_EVENTS_PAINTED,
+  eCSSKeyword_fill, NS_STYLE_POINTER_EVENTS_FILL,
+  eCSSKeyword_stroke, NS_STYLE_POINTER_EVENTS_STROKE,
+  eCSSKeyword_all, NS_STYLE_POINTER_EVENTS_ALL,
+  eCSSKeyword_auto, NS_STYLE_POINTER_EVENTS_AUTO,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const PRInt32 nsCSSProps::kPositionKTable[] = {
   eCSSKeyword_static, NS_STYLE_POSITION_STATIC,
   eCSSKeyword_relative, NS_STYLE_POSITION_RELATIVE,
@@ -1277,18 +1290,6 @@ const PRInt32 nsCSSProps::kImageRenderingKTable[] = {
   eCSSKeyword_optimizespeed, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED,
   eCSSKeyword_optimizequality, NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY,
   eCSSKeyword__moz_crisp_edges, NS_STYLE_IMAGE_RENDERING_CRISPEDGES,
-  eCSSKeyword_UNKNOWN, -1
-};
-
-const PRInt32 nsCSSProps::kPointerEventsKTable[] = {
-  eCSSKeyword_visiblepainted, NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED,
-  eCSSKeyword_visiblefill, NS_STYLE_POINTER_EVENTS_VISIBLEFILL,
-  eCSSKeyword_visiblestroke, NS_STYLE_POINTER_EVENTS_VISIBLESTROKE,
-  eCSSKeyword_visible, NS_STYLE_POINTER_EVENTS_VISIBLE,
-  eCSSKeyword_painted, NS_STYLE_POINTER_EVENTS_PAINTED,
-  eCSSKeyword_fill, NS_STYLE_POINTER_EVENTS_FILL,
-  eCSSKeyword_stroke, NS_STYLE_POINTER_EVENTS_STROKE,
-  eCSSKeyword_all, NS_STYLE_POINTER_EVENTS_ALL,
   eCSSKeyword_UNKNOWN, -1
 };
 
