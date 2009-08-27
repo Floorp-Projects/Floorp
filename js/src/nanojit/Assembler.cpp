@@ -1033,7 +1033,11 @@ namespace nanojit
                 case LIR_qiadd:
                 case LIR_qiand:
                 case LIR_qilsh:
+                case LIR_qursh:
+                case LIR_qirsh:
                 case LIR_qior:
+                case LIR_qaddp:
+                case LIR_qxor:
                 {
                     asm_qbinop(ins);
                     break;
@@ -1082,6 +1086,13 @@ namespace nanojit
                 {
                     countlir_fpu();
                     asm_u2f(ins);
+                    break;
+                }
+                case LIR_i2q:
+                case LIR_u2q:
+                {
+                    countlir_alu();
+                    asm_promote(ins);
                     break;
                 }
                 case LIR_sti:
