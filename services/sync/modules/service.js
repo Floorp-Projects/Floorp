@@ -596,10 +596,8 @@ WeaveSvc.prototype = {
 
   changePassword: function WeaveSvc_changePassword(newpass)
     this._catch(this._notify("changepwd", "", function() {
-      let url = this.baseURL + '1/' + username + "/password";
+      let url = this.baseURL + '1/' + this.username + "/password";
       let res = new Weave.Resource(url);
-      res.authenticator = new Weave.NoOpAuthenticator();
-
       let resp = res.post(newpass);
       if (resp.status != 200) {
         this._log.info("Password change failed: " + resp);
