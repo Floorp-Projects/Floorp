@@ -3521,8 +3521,7 @@ HashFindPropValKey(JSDHashTable *table, const void *key)
 
     ASSERT_VALID_PROPERTY_KEY(pnkey);
     return (pnkey->pn_type == TOK_NUMBER)
-           ? (JSDHashNumber) (JSDOUBLE_HI32(pnkey->pn_dval) ^
-                              JSDOUBLE_LO32(pnkey->pn_dval))
+           ? (JSDHashNumber) JS_HASH_DOUBLE(pnkey->pn_dval)
            : ATOM_HASH(pnkey->pn_atom);
 }
 
@@ -8402,7 +8401,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
 #endif
             if (d == 0 || JSDOUBLE_IS_NaN(d))
                 d = *cx->runtime->jsNaN;
-            else if ((JSDOUBLE_HI32(d) ^ JSDOUBLE_HI32(d2)) >> 31)
+            else if (JSDOUBLE_IS_NEG(d) != JSDOUBLE_IS_NEG(d2))
                 d = *cx->runtime->jsNegativeInfinity;
             else
                 d = *cx->runtime->jsPositiveInfinity;
@@ -9017,16 +9016,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 break;
 
               case JSOP_NEG:
-#ifdef HPUX
-                /*
-                 * Negation of a zero doesn't produce a negative
-                 * zero on HPUX. Perform the operation by bit
-                 * twiddling.
-                 */
-                JSDOUBLE_HI32(d) ^= JSDOUBLE_HI32_SIGNBIT;
-#else
                 d = -d;
-#endif
                 break;
 
               case JSOP_POS:
