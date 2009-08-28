@@ -339,67 +339,65 @@ namespace nanojit
             findMemFor(i);
         }
 
-        Reservation* resv = getresv(i);
-        Register r;
+        Reservation* resv = i->resv();
+        Register r = resv->reg;
 
-        // if we have an existing reservation and it has a non-unknown
-        // register allocated, and that register is in our allowed mask,
-        // return it.
-        if (resv && (r=resv->reg) != UnknownReg && (rmask(r) & allow)) {
-            _allocator.useActive(r);
-            return r;
-        }
-
-        // figure out what registers are preferred for this instruction
-        RegisterMask prefer = hint(i, allow);
-
-        // if we didn't have a reservation, initialize one now
-        if (!resv) {
-            (resv = i->resv())->init();
-        }
-
-        r = resv->reg;
-
-#ifdef AVMPLUS_IA32
-        if (r != UnknownReg &&
-            (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
-                 ((rmask(r)&x87Regs) && !(allow&x87Regs))))
-        {
-            // x87 <-> xmm copy required
-            //_nvprof("fpu-evict",1);
-            evict(r);
-            r = UnknownReg;
-        }
-#endif
-
-        if (r == UnknownReg)
-        {
+        if (!resv->used) {
+            // No reservation.  Create one, and do a fresh allocation.
+            RegisterMask prefer = hint(i, allow);
+            resv->init();
+            fprintf(stderr, "XXX: %d\n", prefer & _allocator.free);
             r = resv->reg = registerAlloc(prefer);
             _allocator.addActive(r, i);
-            return r;
-        }
-        else
-        {
-            // the already-allocated register isn't in the allowed mask;
-            // we need to grab a new one and then copy over the old
-            // contents to the new.
-            resv->reg = UnknownReg;
-            _allocator.retire(r);
-            Register s = resv->reg = registerAlloc(prefer);
-            _allocator.addActive(s, i);
-            if ((rmask(r) & GpRegs) && (rmask(s) & GpRegs)) {
-#ifdef NANOJIT_ARM
-                MOV(r, s);
-#else
-                MR(r, s);
+
+        } else if (r == UnknownReg) {
+            // Existing reservation with an unknown register.  Do a fresh
+            // allocation.
+            RegisterMask prefer = hint(i, allow);
+            r = resv->reg = registerAlloc(prefer);
+            _allocator.addActive(r, i);
+
+        } else if (rmask(r) & allow) {
+            // Existing reservation with a known register allocated, and
+            // that register is allowed.  Use it.
+            _allocator.useActive(r);
+
+        } else {
+            // Existing reservation with a known register allocated, but
+            // the register is not allowed.
+            RegisterMask prefer = hint(i, allow);
+#ifdef AVMPLUS_IA32
+            if (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
+                ((rmask(r)&x87Regs) && !(allow&x87Regs)))
+            {
+                // x87 <-> xmm copy required
+                //_nvprof("fpu-evict",1);
+                evict(r);
+                r = resv->reg = registerAlloc(prefer);
+                _allocator.addActive(r, i);
+            } else
 #endif
+            {
+                // Grab a new register and copy the old contents to the new.
+                _allocator.retire(r);
+                Register s = r;
+                r = resv->reg = registerAlloc(prefer);
+                _allocator.addActive(r, i);
+                if ((rmask(s) & GpRegs) && (rmask(r) & GpRegs)) {
+#ifdef NANOJIT_ARM
+                    MOV(s, r);
+#else
+                    MR(s, r);
+#endif
+                }
+                else {
+                    asm_nongp_copy(s, r);
+                }
             }
-            else {
-                asm_nongp_copy(r, s);
-            }
-            return s;
         }
+        return r;
     }
+
 
     int Assembler::findMemFor(LIns *i)
     {
