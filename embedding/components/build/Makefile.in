@@ -52,11 +52,6 @@ MODULE_NAME	= embedcomponents
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS	= mozutil_s
-endif
-
-
 CPPSRCS		= nsEmbeddingModule.cpp
 
 SHARED_LIBRARY_LIBS = \

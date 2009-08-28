@@ -62,7 +62,6 @@
 #include "nsIContentSink.h"
 #include "prlog.h"
 #include "nsIRequest.h"
-#include "nsTimer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsThreadUtils.h"
 
@@ -399,9 +398,6 @@ protected:
 
   nsRevocableEventPtr<nsNonOwningRunnableMethod<nsContentSink> >
     mProcessLinkHeaderEvent;
-
-  // Measures content model creation time for current document
-  MOZ_TIMER_DECLARE(mWatch)
 };
 
 // sanitizing content sink whitelists
