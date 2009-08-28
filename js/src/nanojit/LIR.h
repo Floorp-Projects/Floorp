@@ -78,11 +78,15 @@ namespace nanojit
 #endif
 
         // pointer op aliases
+        LIR_ldp     = PTR_SIZE(LIR_ld,     LIR_ldq),
+        LIR_ldcp    = PTR_SIZE(LIR_ldc,    LIR_ldqc),
+        LIR_stpi    = PTR_SIZE(LIR_sti,    LIR_stqi),
         LIR_piadd   = PTR_SIZE(LIR_add,    LIR_qiadd),
         LIR_piand   = PTR_SIZE(LIR_and,    LIR_qiand),
         LIR_pilsh   = PTR_SIZE(LIR_lsh,    LIR_qilsh),
         LIR_pirsh   = PTR_SIZE(LIR_rsh,    LIR_qirsh),
         LIR_pursh   = PTR_SIZE(LIR_ush,    LIR_qursh),
+        LIR_pcmov   = PTR_SIZE(LIR_cmov,   LIR_qcmov),
         LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
         LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
         LIR_addp    = PTR_SIZE(LIR_iaddp,  LIR_qaddp),
@@ -95,16 +99,10 @@ namespace nanojit
         LIR_pugt    = PTR_SIZE(LIR_ugt,    LIR_qugt),
         LIR_pule    = PTR_SIZE(LIR_ule,    LIR_qule),
         LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge),
-        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc)
+        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
+        LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
+        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam)
     };
-
-    #if defined NANOJIT_64BIT
-    #define LIR_ldp     LIR_ldq
-    #define LIR_pcmov    LIR_qcmov
-    #else
-    #define LIR_ldp     LIR_ld
-    #define LIR_pcmov    LIR_cmov
-    #endif
 
     struct GuardRecord;
     struct SideExit;
@@ -467,7 +465,7 @@ namespace nanojit
         LIns* getLIns() { return (LIns*)&ins; };
     };
 
-    // Used for LIR_int and LIR_alloc.
+    // Used for LIR_int and LIR_ialloc.
     class LInsI
     {
     private:
@@ -632,7 +630,7 @@ namespace nanojit
         }
         void initLInsP(int32_t arg, int32_t kind) {
             lastWord.clear();
-            lastWord.opcode = LIR_iparam;
+            lastWord.opcode = LIR_param;
             NanoAssert(isU8(arg) && isU8(kind));
             toLInsP()->arg = arg;
             toLInsP()->kind = kind;
@@ -671,8 +669,8 @@ namespace nanojit
         }
 
         inline LOpcode opcode()    const { return lastWord.opcode; }
-        inline uint8_t paramArg()  const { NanoAssert(isop(LIR_iparam)); return toLInsP()->arg; }
-        inline uint8_t paramKind() const { NanoAssert(isop(LIR_iparam)); return toLInsP()->kind; }
+        inline uint8_t paramArg()  const { NanoAssert(isop(LIR_param)); return toLInsP()->arg; }
+        inline uint8_t paramKind() const { NanoAssert(isop(LIR_param)); return toLInsP()->kind; }
         inline int32_t imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
         inline int32_t imm64_0()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_0; }
         inline int32_t imm64_1()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_1; }
@@ -684,6 +682,7 @@ namespace nanojit
             NanoAssert(isop(LIR_alloc));
             return toLInsI()->imm32 << 2;
         }
+        void           setSize(int32_t nbytes);
 
         LIns* arg(uint32_t i);
 
@@ -699,7 +698,7 @@ namespace nanojit
 
         inline void* constvalp() const
         {
-        #ifdef AVMPLUS_64BIT
+        #ifdef NANOJIT_64BIT
             return (void*)imm64();
         #else
             return (void*)imm32();
@@ -731,8 +730,8 @@ namespace nanojit
         bool isFloat() const;
         bool isCmp() const;
         bool isCall() const {
-            LOpcode op = LOpcode(opcode() & ~LIR64);
-            return op == LIR_call;
+            LOpcode op = opcode();
+            return (op & ~LIR64) == LIR_icall || op == LIR_qcall;
         }
         bool isStore() const {
             LOpcode op = LOpcode(opcode() & ~LIR64);
@@ -759,6 +758,14 @@ namespace nanojit
         bool isconstp() const;
         bool isBranch() const {
             return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
+        }
+
+        bool isPtr() {
+#ifdef NANOJIT_64BIT
+            return isQuad();
+#else
+            return !isQuad();
+#endif
         }
 
         // Return true if removal of 'ins' from a LIR fragment could
@@ -791,7 +798,7 @@ namespace nanojit
     typedef SeqBuilder<LIns*> InsList;
 
     LIns* FASTCALL callArgN(LInsp i, uint32_t n);
-    extern const uint8_t operandCount[];
+    extern const int8_t operandCount[];
 
     // make it a GCObject so we can explicitly delete it early
     class LirWriter : public GCObject

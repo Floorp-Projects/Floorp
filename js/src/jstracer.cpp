@@ -956,7 +956,7 @@ isi2f(LIns* i)
 
     if (nanojit::AvmCore::config.soft_float &&
         i->isop(LIR_qjoin) &&
-        i->oprnd1()->isop(LIR_call) &&
+        i->oprnd1()->isop(LIR_pcall) &&
         i->oprnd2()->isop(LIR_callh)) {
         if (i->oprnd1()->callInfo() == &i2f_ci)
             return true;
@@ -973,7 +973,7 @@ isu2f(LIns* i)
 
     if (nanojit::AvmCore::config.soft_float &&
         i->isop(LIR_qjoin) &&
-        i->oprnd1()->isop(LIR_call) &&
+        i->oprnd1()->isop(LIR_pcall) &&
         i->oprnd2()->isop(LIR_callh)) {
         if (i->oprnd1()->callInfo() == &u2f_ci)
             return true;
