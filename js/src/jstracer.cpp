@@ -826,15 +826,21 @@ struct VMFragment : public Fragment
 {
     VMFragment(const void* _ip, JSObject* _globalObj, uint32 _globalShape, uint32 _argc) :
         Fragment(_ip),
+        first(NULL),
         next(NULL),
+        peer(NULL),
         globalObj(_globalObj),
         globalShape(_globalShape),
         argc(_argc)
-    {}
+    { }
+
     inline TreeInfo* getTreeInfo() {
         return (TreeInfo*)vmprivate;
     }
+
+    VMFragment* first;
     VMFragment* next;
+    VMFragment* peer;
     JSObject* globalObj;
     uint32 globalShape;
     uint32 argc;
@@ -862,18 +868,18 @@ getLoop(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalSh
     return getVMFragment(tm, ip, globalObj, globalShape, argc);
 }
 
-static Fragment*
+static VMFragment*
 getAnchor(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 globalShape, uint32 argc)
 {
     VMFragment *f = new (*tm->allocator) VMFragment(ip, globalObj, globalShape, argc);
     JS_ASSERT(f);
 
-    Fragment *p = getVMFragment(tm, ip, globalObj, globalShape, argc);
+    VMFragment *p = getVMFragment(tm, ip, globalObj, globalShape, argc);
 
     if (p) {
         f->first = p;
         /* append at the end of the peer list */
-        Fragment* next;
+        VMFragment* next;
         while ((next = p->peer) != NULL)
             p = next;
         p->peer = f;
@@ -884,9 +890,7 @@ getAnchor(JSTraceMonitor* tm, const void *ip, JSObject* globalObj, uint32 global
         f->next = tm->vmfragments[h];
         tm->vmfragments[h] = f;
     }
-    f->anchor = f;
     f->root = f;
-    f->kind = LoopTrace;
     return f;
 }
 
@@ -902,7 +906,7 @@ AssertTreeIsUnique(JSTraceMonitor* tm, VMFragment* f, TreeInfo* ti)
      * properly connecting peer edges.
      */
     TreeInfo* ti_other;
-    for (Fragment* peer = getLoop(tm, f->ip, f->globalObj, f->globalShape, f->argc);
+    for (VMFragment* peer = getLoop(tm, f->ip, f->globalObj, f->globalShape, f->argc);
          peer != NULL;
          peer = peer->peer) {
         if (!peer->code() || peer == f)
@@ -924,7 +928,7 @@ AttemptCompilation(JSContext *cx, JSTraceMonitor* tm, JSObject* globalObj, jsbyt
     ResetRecordingAttempts(cx, pc);
 
     /* Breathe new life into all peer fragments at the designated loop header. */
-    Fragment* f = (VMFragment*)getLoop(tm, pc, globalObj, OBJ_SHAPE(globalObj), argc);
+    VMFragment* f = (VMFragment*)getLoop(tm, pc, globalObj, OBJ_SHAPE(globalObj), argc);
     if (!f) {
         /*
          * If the global object's shape changed, we can't easily find the
@@ -4063,7 +4067,7 @@ FindUndemotesInTypemaps(JSContext* cx, const TypeMap& typeMap, TreeInfo* treeInf
 JS_REQUIRES_STACK void
 TraceRecorder::joinEdgesToEntry(VMFragment* peer_root)
 {
-    if (fragment->kind != LoopTrace)
+    if (fragment->root != fragment)
         return;
 
     TypeMap typeMap(NULL);
@@ -4166,7 +4170,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
 JS_REQUIRES_STACK void
-TraceRecorder::prepareTreeCall(Fragment* inner)
+TraceRecorder::prepareTreeCall(VMFragment* inner)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     inner_sp_ins = lirbuf->sp;
@@ -4250,7 +4254,7 @@ BuildGlobalTypeMapFromInnerTree(Queue<JSTraceType>& typeMap, VMSideExit* inner)
 
 /* Record a call to an inner tree. */
 JS_REQUIRES_STACK void
-TraceRecorder::emitTreeCall(Fragment* inner, VMSideExit* exit)
+TraceRecorder::emitTreeCall(VMFragment* inner, VMSideExit* exit)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
 
@@ -4811,7 +4815,7 @@ SynthesizeSlowNativeFrame(JSContext *cx, VMSideExit *exit)
 }
 
 static JS_REQUIRES_STACK bool
-RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f, jsbytecode* outer,
+RecordTree(JSContext* cx, JSTraceMonitor* tm, VMFragment* f, jsbytecode* outer,
            uint32 outerArgc, JSObject* globalObj, uint32 globalShape,
            SlotList* globalSlots, uint32 argc)
 {
@@ -4913,8 +4917,8 @@ FindLoopEdgeTarget(JSContext* cx, VMSideExit* exit, VMFragment** peerp)
             MarkSlotUndemotable(cx, from_ti, i);
     }
 
-    VMFragment* firstPeer = (VMFragment*)from->first;
-    for (VMFragment* peer = firstPeer; peer; peer = (VMFragment*)peer->peer) {
+    VMFragment* firstPeer = ((VMFragment*)from)->first;
+    for (VMFragment* peer = firstPeer; peer; peer = peer->peer) {
         TreeInfo* peer_ti = peer->getTreeInfo();
         if (!peer_ti)
             continue;
@@ -5023,15 +5027,12 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
     if (!(c = anchor->target)) {
         Allocator& alloc = *JS_TRACE_MONITOR(cx).allocator;
         c = new (alloc) Fragment(cx->fp->regs->pc);
-        c->kind = BranchTrace;
-        c->anchor = anchor->from->anchor;
         c->root = anchor->from->root;
         debug_only_printf(LC_TMTreeVis, "TREEVIS CREATEBRANCH ROOT=%p FRAG=%p PC=%p FILE=\"%s\""
                           " LINE=%d ANCHOR=%p OFFS=%d\n",
                           (void*)f, (void*)c, (void*)cx->fp->regs->pc, cx->fp->script->filename,
                           js_FramePCToLineNumber(cx, cx->fp), (void*)anchor,
                           FramePCOffset(cx->fp));
-        c->parent = f;
         anchor->target = c;
         c->root = f;
     }
@@ -5126,8 +5127,8 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
     VMFragment* root = (VMFragment*)r->getFragment()->root;
 
     /* Does this branch go to an inner loop? */
-    Fragment* first = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc,
-                              root->globalObj, root->globalShape, cx->fp->argc);
+    VMFragment* first = getLoop(&JS_TRACE_MONITOR(cx), cx->fp->regs->pc,
+                                root->globalObj, root->globalShape, cx->fp->argc);
     if (!first) {
         /* Not an inner loop we can call, abort trace. */
         AUDIT(returnToDifferentLoopHeader);
@@ -5164,7 +5165,7 @@ RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
                       FramePCOffset(cx->fp));
 
     // Find a matching inner tree. If none can be found, compile one.
-    Fragment* f = r->findNestedCompatiblePeer(first);
+    VMFragment* f = r->findNestedCompatiblePeer(first);
     if (!f || !f->code()) {
         AUDIT(noCompatInnerTrees);
 
@@ -5347,8 +5348,8 @@ public:
     }
 };
 
-JS_REQUIRES_STACK Fragment*
-TraceRecorder::findNestedCompatiblePeer(Fragment* f)
+JS_REQUIRES_STACK VMFragment*
+TraceRecorder::findNestedCompatiblePeer(VMFragment* f)
 {
     JSTraceMonitor* tm;
 
@@ -5461,8 +5462,8 @@ CheckEntryTypes(JSContext* cx, JSObject* globalObj, TreeInfo* ti)
  * @param nodemote      If true, will try to find a peer that does not require demotion.
  * @out   count         Number of fragments consulted.
  */
-static JS_REQUIRES_STACK Fragment*
-FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, Fragment* f, uintN& count)
+static JS_REQUIRES_STACK VMFragment*
+FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, VMFragment* f, uintN& count)
 {
     count = 0;
     for (; f != NULL; f = f->peer) {
@@ -6012,7 +6013,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     jsbytecode* pc = cx->fp->regs->pc;
     uint32 argc = cx->fp->argc;
 
-    Fragment* f = getLoop(tm, pc, globalObj, globalShape, argc);
+    VMFragment* f = getLoop(tm, pc, globalObj, globalShape, argc);
     if (!f)
         f = getAnchor(tm, pc, globalObj, globalShape, argc);
 
@@ -6790,7 +6791,7 @@ js_PurgeScriptFragments(JSContext* cx, JSScript* script)
 
                 JS_ASSERT(frag->root == frag);
                 VMFragment* next = frag->next;
-                for (Fragment *p = frag; p; p = p->peer)
+                for (VMFragment *p = frag; p; p = p->peer)
                     TrashTree(cx, p);
                 *f = next;
             } else {
@@ -13285,7 +13286,7 @@ void
 DumpPeerStability(JSTraceMonitor* tm, const void* ip, JSObject* globalObj, uint32 globalShape,
                   uint32 argc)
 {
-    Fragment* f;
+    VMFragment* f;
     TreeInfo* ti;
     bool looped = false;
     unsigned length = 0;

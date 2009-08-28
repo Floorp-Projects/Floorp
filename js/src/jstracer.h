@@ -1000,9 +1000,9 @@ public:
     JS_REQUIRES_STACK void endLoop(VMSideExit* exit);
     JS_REQUIRES_STACK void joinEdgesToEntry(VMFragment* peer_root);
     JS_REQUIRES_STACK void adjustCallerTypes(nanojit::Fragment* f);
-    JS_REQUIRES_STACK nanojit::Fragment* findNestedCompatiblePeer(nanojit::Fragment* f);
-    JS_REQUIRES_STACK void prepareTreeCall(nanojit::Fragment* inner);
-    JS_REQUIRES_STACK void emitTreeCall(nanojit::Fragment* inner, VMSideExit* exit);
+    JS_REQUIRES_STACK VMFragment* findNestedCompatiblePeer(VMFragment* f);
+    JS_REQUIRES_STACK void prepareTreeCall(VMFragment* inner);
+    JS_REQUIRES_STACK void emitTreeCall(VMFragment* inner, VMSideExit* exit);
     unsigned getCallDepth() const;
     void pushAbortStack();
     void popAbortStack();

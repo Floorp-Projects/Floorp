@@ -47,12 +47,6 @@ namespace nanojit
 {
     struct GuardRecord;
 
-    enum TraceKind {
-        LoopTrace,
-        BranchTrace,
-        MergeTrace
-    };
-
     /**
      * Fragments are linear sequences of native code that have a single entry
      * point at the start of the fragment and may have one or more exit points
@@ -68,18 +62,12 @@ namespace nanojit
             NIns*           code()                          { return _code; }
             void            setCode(NIns* codee)            { _code = codee; }
             int32_t&        hits()                          { return _hits; }
-            bool            isAnchor() { return anchor == this; }
             bool            isRoot() { return root == this; }
 
-            Fragment*      anchor;
             Fragment*      root;
-            Fragment*      parent;
-            Fragment*      first;
-            Fragment*      peer;
             LirBuffer*     lirbuf;
             LIns*          lastIns;
 
-            TraceKind kind;
             const void* ip;
             uint32_t recordAttempts;
             NIns* fragEntry;
