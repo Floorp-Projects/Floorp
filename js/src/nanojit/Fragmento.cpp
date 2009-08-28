@@ -53,14 +53,9 @@ namespace nanojit
     //
     Fragment::Fragment(const void* _ip)
         :
-          anchor(NULL),
           root(NULL),
-          parent(NULL),
-          first(NULL),
-          peer(NULL),
           lirbuf(NULL),
           lastIns(NULL),
-          kind(LoopTrace),
           ip(_ip),
           recordAttempts(0),
           fragEntry(NULL),
