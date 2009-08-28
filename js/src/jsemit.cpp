@@ -1525,7 +1525,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
             continue;
 
         obj = stmt->blockObj;
-        JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
+        JS_ASSERT(obj->getClass() == &js_BlockClass);
         scope = OBJ_SCOPE(obj);
         sprop = scope->lookup(ATOM_TO_JSID(atom));
         if (sprop) {

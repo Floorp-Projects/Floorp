@@ -723,18 +723,7 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     jsword me;
 #endif
 
-    /*
-     * We handle non-native objects via JSObjectOps.getRequiredSlot, treating
-     * all slots starting from 0 as required slots.  A property definition or
-     * some prior arrangement must have allocated slot.
-     *
-     * Note once again (see jspubtd.h, before JSGetRequiredSlotOp's typedef)
-     * the crucial distinction between a |required slot number| that's passed
-     * to the get/setRequiredSlot JSObjectOps, and a |reserved slot index|
-     * passed to the JS_Get/SetReservedSlot APIs.
-     */
-    if (!OBJ_IS_NATIVE(obj))
-        return obj->getRequiredSlot(cx, slot);
+    OBJ_CHECK_SLOT(obj, slot);
 
     /*
      * Native object locking is inlined here to optimize the single-threaded
@@ -815,20 +804,13 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     jsword me;
 #endif
 
+    OBJ_CHECK_SLOT(obj, slot);
+
     /* Any string stored in a thread-safe object must be immutable. */
     if (JSVAL_IS_STRING(v) &&
         !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
         /* FIXME bug 363059: See comments in js_FinishSharingScope. */
         v = JSVAL_NULL;
-    }
-
-    /*
-     * We handle non-native objects via JSObjectOps.setRequiredSlot, as above
-     * for the Get case.
-     */
-    if (!OBJ_IS_NATIVE(obj)) {
-        obj->setRequiredSlot(cx, slot, v);
-        return;
     }
 
     /*

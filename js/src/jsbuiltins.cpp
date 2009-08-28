@@ -394,9 +394,9 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
 
     closure->map = &scope->map;
     closure->classword = jsuword(&js_FunctionClass);
-    closure->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    closure->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
-    closure->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fun);
+    closure->setProto(proto);
+    closure->setParent(parent);
+    closure->setPrivate(fun);
     for (unsigned i = JSSLOT_PRIVATE + 1; i != JS_INITIAL_NSLOTS; ++i)
         closure->fslots[i] = JSVAL_VOID;
     closure->dslots = NULL;

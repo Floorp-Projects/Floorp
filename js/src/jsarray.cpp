@@ -764,7 +764,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return IndexToValue(cx, obj->fslots[JSSLOT_ARRAY_LENGTH], vp);
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.protoAtom)) {
-        *vp = STOBJ_GET_SLOT(obj, JSSLOT_PROTO);
+        *vp = OBJECT_TO_JSVAL(obj->getProto());
         return JS_TRUE;
     }
 
@@ -876,7 +876,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
      * exists. If we hit the end of the prototype chain, it's safe to set the
      * element on the original object.
      */
-   while ((obj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO])) != NULL) {
+    while ((obj = obj->getProto()) != NULL) {
         /*
          * If the prototype is a non-native object (possibly a dense array), or
          * a native object (possibly a slow array) that has indexed properties,
@@ -1217,20 +1217,13 @@ array_trace(JSTracer *trc, JSObject *obj)
     jsval v;
 
     JS_ASSERT(js_IsDenseArray(obj));
+    obj->traceProtoAndParent(trc);
 
     capacity = js_DenseArrayCapacity(obj);
     for (i = 0; i < capacity; i++) {
         v = obj->dslots[i];
         if (JSVAL_IS_TRACEABLE(v)) {
             JS_SET_TRACING_INDEX(trc, "array_dslots", i);
-            JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
-        }
-    }
-
-    for (i = JSSLOT_PROTO; i <= JSSLOT_PARENT; ++i) {
-        v = STOBJ_GET_SLOT(obj, i);
-        if (JSVAL_IS_TRACEABLE(v)) {
-            JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
             JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
         }
     }
@@ -1250,7 +1243,6 @@ JSObjectOps js_ArrayObjectOps = {
     NULL,                 array_dropProperty,
     NULL,                 NULL,
     js_HasInstance,       array_trace,
-    NULL,                 NULL,
     NULL
 };
 
@@ -3425,8 +3417,8 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     /* Initialize all fields of JSObject. */
     obj->map = const_cast<JSObjectMap *>(&SharedArrayMap);
     obj->classword = jsuword(&js_ArrayClass);
-    obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    obj->fslots[JSSLOT_PARENT] = proto->fslots[JSSLOT_PARENT];
+    obj->setProto(proto);
+    obj->setParent(proto->getParent());
 
     obj->fslots[JSSLOT_ARRAY_LENGTH] = 0;
     obj->fslots[JSSLOT_ARRAY_COUNT] = 0;
