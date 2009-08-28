@@ -283,10 +283,15 @@ public:
   static PRUint8 GetAttributeCharacteristics(nsIAtom* aAtom);
 
   /**
-   * Return the 'live' or 'container-live' object attribute value from the given
+   * Get the 'live' or 'container-live' object attribute value from the given
    * ELiveAttrRule constant.
+   *
+   * @param  aRule   [in] rule constant (see ELiveAttrRule in nsAccMap.h)
+   * @param  aValue  [out] object attribute value
+   *
+   * @return         true if object attribute should be exposed
    */
-  static void GetLiveAttrValue(PRUint32 aRule, nsAString& aValue);
+  static PRBool GetLiveAttrValue(PRUint32 aRule, nsAString& aValue);
 
   /**
    * Query DestinationType from the given SourceType.
