@@ -485,15 +485,6 @@ function cleanUpUpdatesDir(key) {
       LOG("General", "cleanUpUpdatesDir - failed to remove file " + f.path);
     }
   }
-  try {
-    updateDir.remove(false);
-  } catch (e) {
-    LOG("General", "cleanUpUpdatesDir - failed to remove update directory: " +
-        updateDir.path + " - This is almost always bad. Exception = " + e);
-    throw e;
-  }
-  LOG("General", "cleanUpUpdatesDir - successfully removed update directory: " +
-      updateDir.path);
 }
 
 /**
