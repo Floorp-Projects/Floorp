@@ -55,6 +55,12 @@
 
 JS_BEGIN_EXTERN_C
 
+/*
+ * Maximum character code for which we will create a pinned unit string on
+ * demand -- see JSRuntime.unitStrings in jscntxt.h.
+ */
+#define UNIT_STRING_LIMIT 256U
+
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
 
@@ -70,6 +76,13 @@ class TraceRecorder;
 
 extern jschar *
 js_GetDependentStringChars(JSString *str);
+
+/*
+ * Make the independent string containing only the character code c, which must
+ * be less than UNIT_STRING_LIMIT, and cache it in the runtime.
+ */
+extern JSString *
+js_MakeUnitString(JSContext *cx, jschar c);
 
 /*
  * The GC-thing "string" type.
@@ -364,6 +377,9 @@ public:
         JS_ASSERT(isDependent() && dependentIsPrefix());
         mBase = bstr;
     }
+
+    static JSString *getUnitString(JSContext *cx, jschar c);
+    static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
 };
 
 extern const jschar *
@@ -534,26 +550,6 @@ js_InitRuntimeStringState(JSContext *cx);
 
 extern JSBool
 js_InitDeflatedStringCache(JSRuntime *rt);
-
-/*
- * Maximum character code for which we will create a pinned unit string on
- * demand -- see JSRuntime.unitStrings in jscntxt.h.
- */
-#define UNIT_STRING_LIMIT 256U
-
-/*
- * Get the independent string containing only character code at index in str
- * (backstopped with a zero character as usual for independent strings).
- */
-extern JSString *
-js_GetUnitString(JSContext *cx, JSString *str, size_t index);
-
-/*
- * Get the independent string containing only the character code c, which must
- * be less than UNIT_STRING_LIMIT.
- */
-extern JSString *
-js_GetUnitStringForChar(JSContext *cx, jschar c);
 
 extern void
 js_FinishUnitStrings(JSRuntime *rt);
