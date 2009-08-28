@@ -1128,8 +1128,13 @@ mozInlineSpellChecker::SkipSpellCheckForNode(nsIEditor* aEditor,
 
       if (parentTagName.Equals(NS_LITERAL_STRING("blockquote"), nsCaseInsensitiveStringComparator()))
       {
-        *checkSpelling = PR_FALSE;
-        break;
+        nsAutoString quotetype;
+        parentElement->GetAttribute(NS_LITERAL_STRING("type"), quotetype);
+        if (quotetype.Equals(NS_LITERAL_STRING("cite"), nsCaseInsensitiveStringComparator()))
+        {
+          *checkSpelling = PR_FALSE;
+          break;
+        }
       }
       else if (parentTagName.Equals(NS_LITERAL_STRING("pre"), nsCaseInsensitiveStringComparator()))
       {
