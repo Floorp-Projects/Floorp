@@ -473,7 +473,24 @@ XRE_API(int,
         XRE_RunIPCTestHarness, (int aArgc,
                                 char* aArgv[]))
 
+XRE_API(nsresult,
+        XRE_RunAppShell, ())
+
+class MessageLoop;
+
 XRE_API(void,
-        XRE_ShutdownChildProcess, ())
+        XRE_ShutdownChildProcess, (MessageLoop* aUILoop = 0))
+
+namespace mozilla {
+namespace dom {
+class ContentProcessParent;
+class ContentProcessChild;
+}
+}
+
+XRE_API(mozilla::dom::ContentProcessParent*,
+        XRE_GetContentProcessParent, ())
+XRE_API(mozilla::dom::ContentProcessChild*,
+        XRE_GetContentProcessChild, ())
 
 #endif // _nsXULAppAPI_h__
