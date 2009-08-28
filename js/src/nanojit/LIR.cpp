@@ -51,7 +51,7 @@ namespace nanojit
     using namespace avmplus;
     #ifdef FEATURE_NANOJIT
 
-    const uint8_t operandCount[] = {
+    const int8_t operandCount[] = {
 #define OPDEF(op, number, operands, repkind) \
         operands,
 #define OPDEF64(op, number, operands, repkind) \
@@ -73,7 +73,7 @@ namespace nanojit
         0
     };
 
-        const uint8_t insSizes[] = {
+    extern const uint8_t insSizes[] = {
 #define OPDEF(op, number, operands, repkind) \
             sizeof(LIns##repkind),
 #define OPDEF64(op, number, operands, repkind) \
@@ -82,7 +82,7 @@ namespace nanojit
 #undef OPDEF
 #undef OPDEF64
             0
-        };
+    };
 
     // LIR verbose specific
     #ifdef NJ_VERBOSE
@@ -261,7 +261,8 @@ namespace nanojit
 
     LInsp LirBufWriter::insBranch(LOpcode op, LInsp condition, LInsp toLabel)
     {
-        NanoAssert(condition);
+        NanoAssert((op == LIR_j && !condition) ||
+                   ((op == LIR_jf || op == LIR_jt) && condition));
         return ins2(op, condition, toLabel);
     }
 
@@ -356,11 +357,9 @@ namespace nanojit
                     i -= insSizes[((LInsp)i)->opcode()];
                     break;
 
-#if defined NANOJIT_64BIT
-                case LIR_callh:
-#endif
-                case LIR_call:
-                case LIR_fcall: {
+                case LIR_icall:
+                case LIR_fcall:
+                case LIR_qcall: {
                     int argc = ((LInsp)i)->argc();
                     i -= sizeof(LInsC);         // step over the instruction
                     i -= argc*sizeof(LInsp);    // step over the arguments
@@ -493,7 +492,7 @@ namespace nanojit
 
     bool LIns::isconstp() const
     {
-#ifdef AVMPLUS_64BIT
+#ifdef NANOJIT_64BIT
         return isconstq();
 #else
         return isconst();
@@ -557,6 +556,12 @@ namespace nanojit
         // Move to the start of the LInsC, then move back one word per argument.
         LInsp* argSlot = (LInsp*)(uintptr_t(toLInsC()) - (i+1)*sizeof(void*));
         return *argSlot;
+    }
+
+    void LIns::setSize(int32_t nbytes) {
+        NanoAssert(isop(LIR_alloc));
+        NanoAssert(nbytes > 0);
+        toLInsI()->imm32 = (nbytes+3)>>2; // # of required 32bit words
     }
 
     LIns* LirWriter::ins2i(LOpcode v, LIns* oprnd1, int32_t imm)
@@ -952,7 +957,11 @@ namespace nanojit
 
     LIns* LirWriter::insImmPtr(const void *ptr)
     {
-        return sizeof(ptr) == 8 ? insImmq((uintptr_t)ptr) : insImm((intptr_t)ptr);
+#ifdef NANOJIT_64BIT
+        return insImmq((uint64_t)ptr);
+#else
+        return insImm((int32_t)ptr);
+#endif
     }
 
     LIns* LirWriter::ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse)
@@ -979,7 +988,7 @@ namespace nanojit
     {
         static const LOpcode k_callmap[] = {
         //  ARGSIZE_NONE  ARGSIZE_F  ARGSIZE_LO  ARGSIZE_Q  (4)        (5)        ARGSIZE_U  (7)
-            LIR_call,     LIR_fcall, LIR_call,   LIR_callh, LIR_skip,  LIR_skip,  LIR_call,  LIR_skip
+            LIR_pcall,    LIR_fcall, LIR_icall,  LIR_qcall, LIR_pcall, LIR_pcall, LIR_icall, LIR_pcall
         };
 
         uint32_t argt = ci->_argtypes;
@@ -1006,7 +1015,7 @@ namespace nanojit
         LInsC* insC = (LInsC*)(uintptr_t(newargs) + argc*sizeof(LInsp));
         LIns*  ins  = insC->getLIns();
 #ifndef NANOJIT_64BIT
-        ins->initLInsC(op==LIR_callh ? LIR_call : op, argc, ci);
+        ins->initLInsC(op==LIR_callh ? LIR_icall : op, argc, ci);
 #else
         ins->initLInsC(op, argc, ci);
 #endif
@@ -1137,16 +1146,14 @@ namespace nanojit
             case LIR_quad:
                 return hashimmq(i->imm64());
 
-            case LIR_call:
+            case LIR_icall:
             case LIR_fcall:
-#if defined NANOJIT_64BIT
-            case LIR_callh:
-#endif
+            case LIR_qcall:
             {
-                LInsp args[10];
-                int32_t argc = i->argc();
-                NanoAssert(argc < 10);
-                for (int32_t j=0; j < argc; j++)
+                LInsp args[MAXARGS];
+                uint32_t argc = i->argc();
+                NanoAssert(argc < MAXARGS);
+                for (uint32_t j=0; j < argc; j++)
                     args[j] = i->arg(j);
                 return hashcall(i->callInfo(), argc, args);
             }
@@ -1187,11 +1194,9 @@ namespace nanojit
             {
                 return a->imm64() == b->imm64();
             }
-            case LIR_call:
+            case LIR_icall:
             case LIR_fcall:
-#if defined NANOJIT_64BIT
-            case LIR_callh:
-#endif
+            case LIR_qcall:
             {
                 if (a->callInfo() != b->callInfo()) return false;
                 uint32_t argc=a->argc();
@@ -1698,11 +1703,9 @@ namespace nanojit
                 VMPI_sprintf(s, "%s", lirNames[op]);
                 break;
 
-#if defined NANOJIT_64BIT
-            case LIR_callh:
-#endif
+            case LIR_qcall:
             case LIR_fcall:
-            case LIR_call: {
+            case LIR_icall: {
                 const CallInfo* call = i->callInfo();
                 int32_t argc = i->argc();
                 if (call->isIndirect())
@@ -1718,7 +1721,7 @@ namespace nanojit
                 break;
             }
 
-            case LIR_iparam: {
+            case LIR_param: {
                 uint32_t arg = i->paramArg();
                 if (!i->paramKind()) {
                     if (arg < sizeof(Assembler::argRegs)/sizeof(Assembler::argRegs[0])) {

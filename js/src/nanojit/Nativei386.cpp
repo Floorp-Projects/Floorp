@@ -211,7 +211,7 @@ namespace nanojit
             }
         }
 
-        NanoAssert(ins->isop(LIR_call) || ins->isop(LIR_fcall));
+        NanoAssert(ins->isop(LIR_pcall) || ins->isop(LIR_fcall));
         if (!indirect) {
             CALL(call);
         }
@@ -308,13 +308,13 @@ namespace nanojit
     {
         uint32_t op = i->opcode();
         int prefer = allow;
-        if (op == LIR_call) {
+        if (op == LIR_icall) {
             prefer &= rmask(retRegs[0]);
         }
         else if (op == LIR_fcall) {
             prefer &= rmask(FST0);
         }
-        else if (op == LIR_iparam) {
+        else if (op == LIR_param) {
             uint32_t max_regs = max_abi_regs[_thisfrag->lirbuf->abi];
             if (i->paramArg() < max_regs)
                 prefer &= rmask(Register(i->paramArg()));
@@ -704,8 +704,7 @@ namespace nanojit
             if (c == 0 && cond->isop(LIR_eq)) {
                 Register r = findRegFor(lhs, GpRegs);
                 TEST(r,r);
-            }
-            else if (!rhs->isQuad()) {
+            } else if (!rhs->isQuad()) {
                 Register r = getBaseReg(lhs, c, GpRegs);
                 CMPi(r, c);
             }
@@ -847,7 +846,7 @@ namespace nanojit
 
             switch (op) {
             case LIR_add:
-            case LIR_iaddp:
+            case LIR_addp:
                 ADD(rr, rb);
                 break;
             case LIR_sub:
@@ -887,7 +886,7 @@ namespace nanojit
         {
             int c = rhs->imm32();
             switch (op) {
-            case LIR_iaddp:
+            case LIR_addp:
                 // this doesn't set cc's, only use it when cc's not required.
                 LEA(rr, c, ra);
                 ra = rr; // suppress mov
