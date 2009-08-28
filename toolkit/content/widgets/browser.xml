@@ -811,10 +811,8 @@
                  this._scrollable = this._scrollable.parentNode) {
               // do not use overflow based autoscroll for <html> Elements
               // or non-html elements such as svg or Document nodes
-              // also make sure to skip select elements that are not multiline
               if (!(this._scrollable instanceof HTMLElement) ||
-                  (this._scrollable instanceof HTMLHtmlElement) ||
-                  ((this._scrollable instanceof HTMLSelectElement) && !this._scrollable.multiple)) {
+                  (this._scrollable instanceof HTMLHtmlElement)) {
                 continue;
               }
 
