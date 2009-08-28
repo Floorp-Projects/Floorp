@@ -17,9 +17,11 @@ load 404470-1.html
 load 411603-1.html
 load 413274-1.xhtml
 load 416461-1.xul
+load 418007-1.xhtml
 load 431705-1.xul
 load 432561-1.html
 load 437170-1.html
+load 437532-1.html
 skip load 439184-1.html # skip until we figure out how to test this
 load 444237-1.html
 load 444848-1.html 
@@ -27,6 +29,7 @@ load 447776-1.html
 load 447783-1.html
 load 448161-1.html
 load 448161-2.html
+load 452150-1.xhtml
 load 456196.html
 load 460217-1.html
 load 466845-1.html

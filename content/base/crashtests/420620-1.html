@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var a = document.documentElement;
+  var b = document.body;
+
+  document.removeChild(a);
+  b.contentEditable = "true";
+  document.appendChild(a);
+
+  function t() {
+    document.removeEventListener("DOMAttrModified", t, false);
+    document.removeChild(a);
+  } 
+
+  document.addEventListener("DOMAttrModified", t, false);
+  document.execCommand("insertunorderedlist", false, "<h1>");
+  document.removeEventListener("DOMAttrModified", t, false);
+}
+
+</script>
+</head>
+
+<body onload="boom()"></body>
+</html>
