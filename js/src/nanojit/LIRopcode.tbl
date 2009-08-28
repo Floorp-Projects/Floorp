@@ -90,9 +90,9 @@ OPDEF(ret,      13, 1, Op1)     // return a word-sized value
 OPDEF(live,     14, 1, Op1)     // extend live range of reference
 OPDEF(unused15, 15, 0, C)
 OPDEF(icall,    16, 0, C)       // subroutine call returning a 32-bit value
+OPDEF(unused17, 17, 0, None)
 
 /* guards */
-OPDEF(loop,     17, 0, Op2)     // loop fragment
 OPDEF(x,        18, 0, Op2)     // exit always
 
 /* branches */

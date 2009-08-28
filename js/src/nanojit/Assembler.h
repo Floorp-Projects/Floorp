@@ -272,7 +272,6 @@ namespace nanojit
             void        asm_pusharg(LInsp p);
             void        asm_ret(LInsp p);
             void        asm_quad(LInsp i);
-            void        asm_loop(LInsp i, NInsList& loopJumps);
             void        asm_fcond(LInsp i);
             void        asm_cond(LInsp i);
             void        asm_arith(LInsp i);

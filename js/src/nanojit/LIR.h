@@ -745,7 +745,7 @@ namespace nanojit
         bool isGuard() const {
             LOpcode op = opcode();
             return op == LIR_x || op == LIR_xf || op == LIR_xt ||
-                   op == LIR_loop || op == LIR_xbarrier || op == LIR_xtbl;
+                   op == LIR_xbarrier || op == LIR_xtbl;
         }
         // True if the instruction is a 32-bit or smaller constant integer.
         bool isconst() const { return opcode() == LIR_int; }
@@ -778,7 +778,7 @@ namespace nanojit
             return isGuard() || isBranch() ||
                    (isCall() && !isCse()) ||
                    isStore() ||
-                   isop(LIR_loop) || isop(LIR_label) || isop(LIR_live) ||
+                   isop(LIR_label) || isop(LIR_live) ||
                    isRet();
         }
 
@@ -865,7 +865,7 @@ namespace nanojit
         LIns*        ins_eq0(LIns* oprnd1);
         // Inserts a binary operation where the second operand is an
         // integer immediate.
-        LIns*       ins2i(LOpcode op, LIns *oprnd1, int32_t);
+        LIns*        ins2i(LOpcode op, LIns *oprnd1, int32_t);
         LIns*        qjoin(LInsp lo, LInsp hi);
         LIns*        insImmPtr(const void *ptr);
         LIns*        insImmf(double f);
@@ -1121,7 +1121,6 @@ namespace nanojit
             AbiKind abi;
             LInsp state,param1,sp,rp;
             LInsp savedRegs[NumSavedRegs];
-            bool explicitSavedRegs;
 
             /** each chunk is just a raw area of LIns instances, with no header
                 and no more than 8-byte alignment.  The chunk size is somewhat arbitrary
