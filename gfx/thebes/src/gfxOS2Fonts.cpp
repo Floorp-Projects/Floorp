@@ -104,6 +104,41 @@ gfxOS2Font::~gfxOS2Font()
     mMetrics = nsnull;
 }
 
+// fill font metrics structure with default values in case of error
+static void FillMetricsDefaults(gfxFont::Metrics *aMetrics)
+{
+    aMetrics->emAscent = 0.8 * aMetrics->emHeight;
+    aMetrics->emDescent = 0.2 * aMetrics->emHeight;
+    aMetrics->maxAscent = aMetrics->emAscent;
+    aMetrics->maxDescent = aMetrics->maxDescent;
+    aMetrics->maxHeight = aMetrics->emHeight;
+    aMetrics->internalLeading = 0.0;
+    aMetrics->externalLeading = 0.2 * aMetrics->emHeight;
+    aMetrics->spaceWidth = 0.5 * aMetrics->emHeight;
+    aMetrics->maxAdvance = aMetrics->spaceWidth;
+    aMetrics->aveCharWidth = aMetrics->spaceWidth;
+    aMetrics->zeroOrAveCharWidth = aMetrics->spaceWidth;
+    aMetrics->xHeight = 0.5 * aMetrics->emHeight;
+    aMetrics->underlineSize = aMetrics->emHeight / 14.0;
+    aMetrics->underlineOffset = -aMetrics->underlineSize;
+    aMetrics->strikeoutOffset = 0.25 * aMetrics->emHeight;
+    aMetrics->strikeoutSize = aMetrics->underlineSize;
+    aMetrics->superscriptOffset = aMetrics->xHeight;
+    aMetrics->subscriptOffset = aMetrics->xHeight;
+}
+
+// Snap a line to pixels while keeping the center and size of the
+// line as close to the original position as possible.
+static void SnapLineToPixels(gfxFloat& aOffset, gfxFloat& aSize)
+{
+    gfxFloat snappedSize = PR_MAX(NS_floor(aSize + 0.5), 1.0);
+    // Correct offset for change in size
+    gfxFloat offset = aOffset - 0.5 * (aSize - snappedSize);
+    // Snap offset
+    aOffset = NS_floor(offset + 0.5);
+    aSize = snappedSize;
+}
+
 // gfxOS2Font::GetMetrics()
 // return the metrics of the current font using the gfxFont metrics structure.
 // If the metrics are not available yet, compute them using the FreeType
@@ -120,14 +155,17 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
 
     // whatever happens below, we can always create the metrics
     mMetrics = new gfxFont::Metrics;
-    mMetrics->emHeight = GetStyle()->size;
     mSpaceGlyph = 0;
+
+    // round size to integer pixels, this is to get full pixels for layout
+    // together with internal/external leading (see below)
+    mMetrics->emHeight = NS_floor(GetStyle()->size + 0.5);
 
     FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
     if (!face) {
         // Abort here already, otherwise we crash in the following
         // this can happen if the font-size requested is zero.
-        // The metrics will be incomplete, but then we don't care.
+        FillMetricsDefaults(mMetrics);
         return *mMetrics;
     }
     if (!face->charmap) {
@@ -135,12 +173,14 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         // lookups won't work. This happens for fonts without Unicode
         // charmap.
         cairo_ft_scaled_font_unlock_face(CairoScaledFont());
+        FillMetricsDefaults(mMetrics);
         return *mMetrics;
     }
 
-    double emUnit = 1.0 * face->units_per_EM;
-    double xScale = face->size->metrics.x_ppem / emUnit;
-    double yScale = face->size->metrics.y_ppem / emUnit;
+    // compute font scaling factors
+    gfxFloat emUnit = 1.0 * face->units_per_EM;
+    gfxFloat xScale = face->size->metrics.x_ppem / emUnit;
+    gfxFloat yScale = face->size->metrics.y_ppem / emUnit;
 
     FT_UInt gid; // glyph ID
 
@@ -151,12 +191,13 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         // 26.6 fractional pixel format which is what is used for all other
         // characters in gfxOS2FontGroup::CreateGlyphRunsFT.
         FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
-        // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
+        // glyph width doesn't work for spaces, use advance instead
         mMetrics->spaceWidth = face->glyph->advance.x >> 6;
         // save the space glyph
         mSpaceGlyph = gid;
     } else {
         NS_ASSERTION(gid, "this font doesn't have a space glyph!");
+        mMetrics->spaceWidth = face->max_advance_width * xScale;
     }
 
     // properties of 'x', also use its width as average width
@@ -165,7 +206,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         // Load glyph into glyph slot. Here, use no_scale to get font units.
         FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
         mMetrics->xHeight = face->glyph->metrics.height * yScale;
-        mMetrics->aveCharWidth = face->glyph->metrics.width * xScale;
+        mMetrics->aveCharWidth = face->glyph->metrics.horiAdvance * xScale;
     } else {
         // this font doesn't have an 'x'...
         // fake these metrics using a fraction of the font size
@@ -179,8 +220,8 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
         mMetrics->zeroOrAveCharWidth = face->glyph->metrics.horiAdvance * xScale;
     } else {
-         // this font doesn't have a '0'
-         mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
+        // this font doesn't have a '0'
+        mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
     }
 
     // compute an adjusted size if we need to
@@ -190,17 +231,17 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         mMetrics->emHeight = mAdjustedSize;
     }
 
-    // now load the OS/2 TrueType table to load access some more properties
+    // now load the OS/2 TrueType table to access some more properties
     TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
     if (os2 && os2->version != 0xFFFF) { // should be there if not old Mac font
         // if we are here we can improve the avgCharWidth
-        mMetrics->aveCharWidth = os2->xAvgCharWidth * xScale;
+        mMetrics->aveCharWidth = PR_MAX(mMetrics->aveCharWidth,
+                                        os2->xAvgCharWidth * xScale);
 
-        mMetrics->superscriptOffset = os2->ySuperscriptYOffset * yScale;
-        mMetrics->superscriptOffset = PR_MAX(1, mMetrics->superscriptOffset);
+        mMetrics->superscriptOffset = PR_MAX(os2->ySuperscriptYOffset * yScale, 1.0);
         // some fonts have the incorrect sign (from gfxPangoFonts)
-        mMetrics->subscriptOffset   = fabs(os2->ySubscriptYOffset * yScale);
-        mMetrics->subscriptOffset   = PR_MAX(1, fabs(mMetrics->subscriptOffset));
+        mMetrics->subscriptOffset   = PR_MAX(fabs(os2->ySubscriptYOffset * yScale),
+                                             1.0);
         mMetrics->strikeoutOffset   = os2->yStrikeoutPosition * yScale;
         mMetrics->strikeoutSize     = os2->yStrikeoutSize * yScale;
     } else {
@@ -210,6 +251,8 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         mMetrics->strikeoutOffset   = mMetrics->emHeight * 0.3;
         mMetrics->strikeoutSize     = face->underline_thickness * yScale;
     }
+    SnapLineToPixels(mMetrics->strikeoutOffset, mMetrics->strikeoutSize);
+
     // seems that underlineOffset really has to be negative
     mMetrics->underlineOffset = face->underline_position * yScale;
     mMetrics->underlineSize   = face->underline_thickness * yScale;
@@ -218,17 +261,22 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     mMetrics->emAscent        = face->ascender * yScale;
     mMetrics->emDescent       = -face->descender * yScale;
     mMetrics->maxHeight       = face->height * yScale;
-    mMetrics->maxAscent       = face->bbox.yMax * yScale;
-    mMetrics->maxDescent      = -face->bbox.yMin * yScale;
-    mMetrics->maxAdvance      = face->max_advance_width * xScale;
-    // leading are not available directly (only for WinFNTs)
-    double lineHeight = mMetrics->maxAscent + mMetrics->maxDescent;
-    if (lineHeight > mMetrics->emHeight) {
-        mMetrics->internalLeading = lineHeight - mMetrics->emHeight;
-    } else {
-        mMetrics->internalLeading = 0;
-    }
-    mMetrics->externalLeading = 0; // normal value for OS/2 fonts, too
+    // the max units determine frame heights, better be generous
+    mMetrics->maxAscent       = PR_MAX(face->bbox.yMax * yScale,
+                                       mMetrics->emAscent);
+    mMetrics->maxDescent      = PR_MAX(-face->bbox.yMin * yScale,
+                                       mMetrics->emDescent);
+    mMetrics->maxAdvance      = PR_MAX(face->max_advance_width * xScale,
+                                       mMetrics->aveCharWidth);
+
+    // leadings are not available directly (only for WinFNTs);
+    // better compute them on our own, to get integer values and make
+    // layout happy (see // LockedFTFace::GetMetrics in gfxPangoFonts.cpp)
+    mMetrics->internalLeading = NS_floor(mMetrics->maxHeight
+                                         - mMetrics->emHeight + 0.5);
+    gfxFloat lineHeight = NS_floor(mMetrics->maxHeight + 0.5);
+    mMetrics->externalLeading = lineHeight
+                              - mMetrics->internalLeading - mMetrics->emHeight;
 
     SanitizeMetrics(mMetrics, PR_FALSE);
 
@@ -237,7 +285,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
            "  %s (%s)\n"
            "  emHeight=%f == %f=gfxFont::style.size == %f=adjSz\n"
            "  maxHeight=%f  xHeight=%f\n"
-           "  aveCharWidth=%f==xWidth  spaceWidth=%f\n"
+           "  aveCharWidth=%f(x) zeroOrAveWidth=%f(0) spaceWidth=%f\n"
            "  supOff=%f SubOff=%f   strOff=%f strSz=%f\n"
            "  undOff=%f undSz=%f    intLead=%f extLead=%f\n"
            "  emAsc=%f emDesc=%f maxH=%f\n"
@@ -247,7 +295,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
            os2 && os2->version != 0xFFFF ? "has OS/2 table" : "no OS/2 table!",
            mMetrics->emHeight, GetStyle()->size, mAdjustedSize,
            mMetrics->maxHeight, mMetrics->xHeight,
-           mMetrics->aveCharWidth, mMetrics->spaceWidth,
+           mMetrics->aveCharWidth, mMetrics->zeroOrAveCharWidth, mMetrics->spaceWidth,
            mMetrics->superscriptOffset, mMetrics->subscriptOffset,
            mMetrics->strikeoutOffset, mMetrics->strikeoutSize,
            mMetrics->underlineOffset, mMetrics->underlineSize,
