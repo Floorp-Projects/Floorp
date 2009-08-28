@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="boom();" class="reftest-wait">
+<script type="text/javascript">
+// <![CDATA[
+
+var HTML_NS   = "http://www.w3.org/1999/xhtml";
+var MATHML_NS = "http://www.w3.org/1998/Math/MathML";
+var XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+function boom()
+{
+    var listbox = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "listbox");
+    var listitem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "listitem");
+    listbox.appendChild(listitem);
+    document.documentElement.appendChild(listbox);
+    var hbox = document.createElementNS(XUL_NS, "hbox");
+    listbox.appendChild(hbox);
+    var mphantom = document.createElementNS(MATHML_NS, 'mphantom');
+    listbox.appendChild(mphantom);
+    var wax = document.createElementNS(MATHML_NS, 'wax');
+    hbox.appendChild(wax);
+    var msub = document.createElementNS(MATHML_NS, 'msub');
+    wax.appendChild(msub);
+    var merror = document.createElementNS(MATHML_NS, 'merror');
+    wax.appendChild(merror);
+    var span = document.createElementNS(HTML_NS, 'span');
+    mphantom.appendChild(span);
+    var vbox = document.createElementNS(XUL_NS, 'vbox');
+    span.appendChild(vbox);
+
+    setTimeout(boom2, 0);
+
+    function boom2()
+    {
+        var munderover = document.createElementNS(MATHML_NS, 'munderover'); 
+        msub.appendChild(munderover);
+        var mtext = document.createElementNS(MATHML_NS, 'mtext');
+        span.appendChild(mtext);
+
+        document.documentElement.removeAttribute("class");
+    }
+}
+
+// ]]>
+</script>
+</window>

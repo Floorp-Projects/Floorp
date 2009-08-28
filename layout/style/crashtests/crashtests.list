@@ -15,6 +15,7 @@ load 397022-1.html
 load 399289-1.svg
 load 404470-1.html
 load 411603-1.html
+load 412588-1.html
 load 413274-1.xhtml
 load 416461-1.xul
 load 418007-1.xhtml
@@ -33,6 +34,7 @@ load 452150-1.xhtml
 load 456196.html
 load 460217-1.html
 load 466845-1.html
+load 469432-1.xhtml
 load 472195-1.html
 load 472237-1.html # will fail, test for leak (474704)
 HTTP(..) load 472237-1.html
