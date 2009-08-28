@@ -48,7 +48,6 @@ nsGREResProperties::nsGREResProperties(const nsACString& aFile)
   nsCOMPtr<nsIInputStream> inStr;
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIChannel> channel;
-  printf("nsGREResProperties %s\n", aFile.BeginReading());
   if (NS_FAILED(rv))
     return;
 
