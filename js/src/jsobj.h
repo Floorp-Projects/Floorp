@@ -83,8 +83,6 @@ struct JSObjectOps {
     JSHasInstanceOp     hasInstance;
     JSTraceOp           trace;
     JSFinalizeOp        clear;
-    JSGetRequiredSlotOp getRequiredSlot;
-    JSSetRequiredSlotOp setRequiredSlot;
 };
 
 struct JSObjectMap {
@@ -106,7 +104,8 @@ const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
  *
  * The classword member stores the JSClass pointer for this object, with the
  * least two bits encoding whether this object is a "delegate" or a "system"
- * object.
+ * object. We do *not* synchronize updates of classword -- API clients must
+ * take care.
  *
  * An object is a delegate if it is on another object's prototype (linked by
  * JSSLOT_PROTO) or scope (JSSLOT_PARENT) chain, and therefore the delegate
@@ -124,7 +123,7 @@ const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
  * any such association.
  *
  * Both these classword tag bits are initially zero; they may be set or queried
- * using the STOBJ_(IS|SET)_(DELEGATE|SYSTEM) macros.
+ * using the (is|set)(Delegate|System) inline methods.
  *
  * The dslots member is null or a pointer into a dynamically allocated vector
  * of jsvals for reserved and dynamic slots. If dslots is not null, dslots[-1]
@@ -138,6 +137,63 @@ struct JSObject {
 
     JSClass *getClass() const {
         return (JSClass *) (classword & ~JSSLOT_CLASS_MASK_BITS);
+    }
+
+    bool isDelegate() const {
+        return (classword & jsuword(1)) != jsuword(0);
+    }
+
+    void setDelegate() {
+        classword |= jsuword(1);
+    }
+
+    static void setDelegateNullSafe(JSObject *obj) {
+        if (obj)
+            obj->setDelegate();
+    }
+
+    bool isSystem() const {
+        return (classword & jsuword(2)) != jsuword(0);
+    }
+
+    void setSystem() {
+        classword |= jsuword(2);
+    }
+
+    JSObject *getProto() const {
+        return JSVAL_TO_OBJECT(fslots[JSSLOT_PROTO]);
+    }
+
+    void clearProto() {
+        fslots[JSSLOT_PROTO] = JSVAL_NULL;
+    }
+
+    void setProto(JSObject *newProto) {
+        setDelegateNullSafe(newProto);
+        fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(newProto);
+    }
+
+    JSObject *getParent() const {
+        return JSVAL_TO_OBJECT(fslots[JSSLOT_PARENT]);
+    }
+
+    void clearParent() {
+        fslots[JSSLOT_PARENT] = JSVAL_NULL;
+    }
+
+    void setParent(JSObject *newParent) {
+        setDelegateNullSafe(newParent);
+        fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(newParent);
+    }
+
+    void traceProtoAndParent(JSTracer *trc) const {
+        JSObject *proto = getProto();
+        if (proto)
+            JS_CALL_OBJECT_TRACER(trc, proto, "__proto__");
+
+        JSObject *parent = getParent();
+        if (parent)
+            JS_CALL_OBJECT_TRACER(trc, parent, "__parent__");
     }
 
     /*
@@ -169,70 +225,80 @@ struct JSObject {
         fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(data);
     }
 
-    JS_ALWAYS_INLINE JSBool lookupProperty(JSContext *cx, jsid id,
-                                           JSObject **objp, JSProperty **propp) {
+    JSBool lookupProperty(JSContext *cx, jsid id,
+                          JSObject **objp, JSProperty **propp) {
         return map->ops->lookupProperty(cx, this, id, objp, propp);
     }
 
-    JS_ALWAYS_INLINE JSBool defineProperty(JSContext *cx, jsid id, jsval value,
-                                           JSPropertyOp getter, JSPropertyOp setter, uintN attrs) {
+    JSBool defineProperty(JSContext *cx, jsid id, jsval value,
+                          JSPropertyOp getter, JSPropertyOp setter,
+                          uintN attrs) {
         return map->ops->defineProperty(cx, this, id, value, getter, setter, attrs);
     }
 
-    JS_ALWAYS_INLINE JSBool getProperty(JSContext *cx, jsid id, jsval *vp) {
+    JSBool getProperty(JSContext *cx, jsid id, jsval *vp) {
         return map->ops->getProperty(cx, this, id, vp);
     }
 
-    JS_ALWAYS_INLINE JSBool setProperty(JSContext *cx, jsid id, jsval *vp) {
+    JSBool setProperty(JSContext *cx, jsid id, jsval *vp) {
         return map->ops->setProperty(cx, this, id, vp);
     }
 
-    JS_ALWAYS_INLINE JSBool getAttributes(JSContext *cx, jsid id, JSProperty *prop,
-                                          uintN *attrsp) {
+    JSBool getAttributes(JSContext *cx, jsid id, JSProperty *prop,
+                         uintN *attrsp) {
         return map->ops->getAttributes(cx, this, id, prop, attrsp);
     }
 
-    JS_ALWAYS_INLINE JSBool setAttributes(JSContext *cx, jsid id, JSProperty *prop,
-                                          uintN *attrsp) {
+    JSBool setAttributes(JSContext *cx, jsid id, JSProperty *prop,
+                         uintN *attrsp) {
         return map->ops->setAttributes(cx, this, id, prop, attrsp);
     }
 
-    JS_ALWAYS_INLINE JSBool deleteProperty(JSContext *cx, jsid id, jsval *rval) {
+    JSBool deleteProperty(JSContext *cx, jsid id, jsval *rval) {
         return map->ops->deleteProperty(cx, this, id, rval);
     }
 
-    JS_ALWAYS_INLINE JSBool defaultValue(JSContext *cx, JSType hint, jsval *vp) {
+    JSBool defaultValue(JSContext *cx, JSType hint, jsval *vp) {
         return map->ops->defaultValue(cx, this, hint, vp);
     }
 
-    JS_ALWAYS_INLINE JSBool enumerate(JSContext *cx, JSIterateOp op, jsval *statep,
-                                      jsid *idp) {
+    JSBool enumerate(JSContext *cx, JSIterateOp op, jsval *statep,
+                     jsid *idp) {
         return map->ops->enumerate(cx, this, op, statep, idp);
     }
 
-    JS_ALWAYS_INLINE JSBool checkAccess(JSContext *cx, jsid id, JSAccessMode mode, jsval *vp,
-                                        uintN *attrsp) {
+    JSBool checkAccess(JSContext *cx, jsid id, JSAccessMode mode, jsval *vp,
+                       uintN *attrsp) {
         return map->ops->checkAccess(cx, this, id, mode, vp, attrsp);
     }
 
     /* These four are time-optimized to avoid stub calls. */
-    JS_ALWAYS_INLINE JSObject *thisObject(JSContext *cx) {
+    JSObject *thisObject(JSContext *cx) {
         return map->ops->thisObject ? map->ops->thisObject(cx, this) : this;
     }
 
-    JS_ALWAYS_INLINE void dropProperty(JSContext *cx, JSProperty *prop) {
+    void dropProperty(JSContext *cx, JSProperty *prop) {
         if (map->ops->dropProperty)
             map->ops->dropProperty(cx, this, prop);
     }
-
-    JS_ALWAYS_INLINE jsval getRequiredSlot(JSContext *cx, uint32 slot) {
-        return map->ops->getRequiredSlot ? map->ops->getRequiredSlot(cx, this, slot) : JSVAL_VOID;
-    }
-
-    JS_ALWAYS_INLINE JSBool setRequiredSlot(JSContext *cx, uint32 slot, jsval v) {
-        return map->ops->setRequiredSlot ? map->ops->setRequiredSlot(cx, this, slot, v) : JS_TRUE;
-    }
 };
+
+/* Compatibility macros. */
+#define STOBJ_GET_PROTO(obj)            ((obj)->getProto())
+#define STOBJ_SET_PROTO(obj,proto)      ((obj)->setProto(proto))
+#define STOBJ_CLEAR_PROTO(obj)          ((obj)->clearProto())
+
+#define STOBJ_GET_PARENT(obj)           ((obj)->getParent())
+#define STOBJ_SET_PARENT(obj,parent)    ((obj)->setParent(parent))
+#define STOBJ_CLEAR_PARENT(obj)         ((obj)->clearParent())
+
+#define OBJ_GET_PROTO(cx,obj)           STOBJ_GET_PROTO(obj)
+#define OBJ_SET_PROTO(cx,obj,proto)     STOBJ_SET_PROTO(obj, proto)
+#define OBJ_CLEAR_PROTO(cx,obj)         STOBJ_CLEAR_PROTO(obj)
+
+#define OBJ_GET_PARENT(cx,obj)          STOBJ_GET_PARENT(obj)
+#define OBJ_SET_PARENT(cx,obj,parent)   STOBJ_SET_PARENT(obj, parent)
+#define OBJ_CLEAR_PARENT(cx,obj)        STOBJ_CLEAR_PARENT(obj)
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \
@@ -268,42 +334,14 @@ struct JSObject {
      : (JS_ASSERT((slot) < (uint32)(obj)->dslots[-1]),                        \
         (obj)->dslots[(slot) - JS_INITIAL_NSLOTS] = (value)))
 
-#define STOBJ_GET_PROTO(obj)                                                  \
-    JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PROTO])
-#define STOBJ_SET_PROTO(obj,proto)                                            \
-    (void)(STOBJ_NULLSAFE_SET_DELEGATE(proto),                                \
-           (obj)->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto))
-#define STOBJ_CLEAR_PROTO(obj)                                                \
-    ((obj)->fslots[JSSLOT_PROTO] = JSVAL_NULL)
-
-#define STOBJ_GET_PARENT(obj)                                                 \
-    JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PARENT])
-#define STOBJ_SET_PARENT(obj,parent)                                          \
-    (void)(STOBJ_NULLSAFE_SET_DELEGATE(parent),                               \
-           (obj)->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent))
-#define STOBJ_CLEAR_PARENT(obj)                                               \
-    ((obj)->fslots[JSSLOT_PARENT] = JSVAL_NULL)
-
-/*
- * We use JSObject.classword to store both JSClass* and the delegate and system
- * flags in the two least significant bits. We do *not* synchronize updates of
- * obj->classword -- API clients must take care.
- */
-JS_ALWAYS_INLINE JSClass*
+inline JSClass*
 STOBJ_GET_CLASS(const JSObject* obj)
 {
     return obj->getClass();
 }
 
-#define STOBJ_IS_DELEGATE(obj)  (((obj)->classword & 1) != 0)
-#define STOBJ_SET_DELEGATE(obj) ((obj)->classword |= 1)
-#define STOBJ_NULLSAFE_SET_DELEGATE(obj)                                      \
-    (!(obj) || STOBJ_SET_DELEGATE((JSObject*)obj))
-#define STOBJ_IS_SYSTEM(obj)    (((obj)->classword & 2) != 0)
-#define STOBJ_SET_SYSTEM(obj)   ((obj)->classword |= 2)
-
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
-    JS_ASSERT_IF(OBJ_IS_NATIVE(obj), slot < OBJ_SCOPE(obj)->freeslot)
+    (JS_ASSERT(OBJ_IS_NATIVE(obj)), JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot))
 
 #define LOCKED_OBJ_GET_SLOT(obj,slot)                                         \
     (OBJ_CHECK_SLOT(obj, slot), STOBJ_GET_SLOT(obj, slot))
@@ -345,32 +383,19 @@ STOBJ_GET_CLASS(const JSObject* obj)
         GC_POKE(cx, oldval);                                                  \
     JS_END_MACRO
 
-#define LOCKED_OBJ_GET_PROTO(obj) \
-    (OBJ_CHECK_SLOT(obj, JSSLOT_PROTO), STOBJ_GET_PROTO(obj))
-#define LOCKED_OBJ_SET_PROTO(obj,proto) \
-    (OBJ_CHECK_SLOT(obj, JSSLOT_PROTO), STOBJ_SET_PROTO(obj, proto))
-
-#define LOCKED_OBJ_GET_PARENT(obj) \
-    (OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_GET_PARENT(obj))
-#define LOCKED_OBJ_SET_PARENT(obj,parent) \
-    (OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_SET_PARENT(obj, parent))
-
-#define LOCKED_OBJ_GET_CLASS(obj) \
-    STOBJ_GET_CLASS(obj)
-
 #ifdef JS_THREADSAFE
 
 /* Thread-safe functions and wrapper macros for accessing slots in obj. */
 #define OBJ_GET_SLOT(cx,obj,slot)                                             \
     (OBJ_CHECK_SLOT(obj, slot),                                               \
-     (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->title.ownercx == cx)              \
+     (OBJ_SCOPE(obj)->title.ownercx == cx)                                    \
      ? LOCKED_OBJ_GET_SLOT(obj, slot)                                         \
      : js_GetSlotThreadSafe(cx, obj, slot))
 
 #define OBJ_SET_SLOT(cx,obj,slot,value)                                       \
     JS_BEGIN_MACRO                                                            \
         OBJ_CHECK_SLOT(obj, slot);                                            \
-        if (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->title.ownercx == cx)        \
+        if (OBJ_SCOPE(obj)->title.ownercx == cx)                              \
             LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, value);                      \
         else                                                                  \
             js_SetSlotThreadSafe(cx, obj, slot, value);                       \
@@ -401,18 +426,6 @@ STOBJ_GET_CLASS(const JSObject* obj)
 
 #endif /* !JS_THREADSAFE */
 
-/* Thread-safe delegate, proto, parent, and class access macros. */
-#define OBJ_IS_DELEGATE(cx,obj)         STOBJ_IS_DELEGATE(obj)
-#define OBJ_SET_DELEGATE(cx,obj)        STOBJ_SET_DELEGATE(obj)
-
-#define OBJ_GET_PROTO(cx,obj)           STOBJ_GET_PROTO(obj)
-#define OBJ_SET_PROTO(cx,obj,proto)     STOBJ_SET_PROTO(obj, proto)
-#define OBJ_CLEAR_PROTO(cx,obj)         STOBJ_CLEAR_PROTO(obj)
-
-#define OBJ_GET_PARENT(cx,obj)          STOBJ_GET_PARENT(obj)
-#define OBJ_SET_PARENT(cx,obj,parent)   STOBJ_SET_PARENT(obj, parent)
-#define OBJ_CLEAR_PARENT(cx,obj)        STOBJ_CLEAR_PARENT(obj)
-
 /*
  * Class is invariant and comes from the fixed clasp member. Thus no locking
  * is necessary to read it. Same for the private slot.
@@ -429,7 +442,7 @@ STOBJ_GET_CLASS(const JSObject* obj)
 #define OBJ_IS_NATIVE(obj)  OPS_IS_NATIVE((obj)->map->ops)
 
 #ifdef __cplusplus
-JS_ALWAYS_INLINE void
+inline void
 OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
 {
     JSClass *clasp = OBJ_GET_CLASS(cx, obj);
@@ -444,7 +457,7 @@ OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
  * The following function has been copied to jsd/jsd_val.c. If making changes to
  * OBJ_TO_OUTER_OBJECT, please update jsd/jsd_val.c as well.
  */
-JS_ALWAYS_INLINE void
+inline void
 OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
 {
     JSClass *clasp = OBJ_GET_CLASS(cx, obj);
@@ -676,7 +689,7 @@ js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id);
 static JS_INLINE void
 js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
 {
-    if (OBJ_IS_DELEGATE(cx, obj))
+    if (obj->isDelegate())
         js_PurgeScopeChainHelper(cx, obj, id);
 }
 #endif
@@ -906,11 +919,11 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 extern void
 js_Clear(JSContext *cx, JSObject *obj);
 
-extern jsval
-js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
+extern bool
+js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 
-extern JSBool
-js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
+bool
+js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v);
 
 /*
  * Precondition: obj must be locked.

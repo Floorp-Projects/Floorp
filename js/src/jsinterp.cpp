@@ -207,7 +207,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
 #ifdef DEBUG_notme
                     fprintf(stderr,
                             "branding %p (%s) for funobj %p (%s), shape %lu\n",
-                            pobj, LOCKED_OBJ_GET_CLASS(pobj)->name,
+                            pobj, pobj->getClass()->name,
                             JSVAL_TO_OBJECT(v),
                             JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
                             OBJ_SHAPE(obj));
@@ -332,7 +332,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
              * platforms where another CPU can fail to see this write, it's OK
              * because the property cache and JIT cache are thread-local.
              */
-            OBJ_SET_DELEGATE(cx, obj);
+            obj->setDelegate();
         }
     }
 

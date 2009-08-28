@@ -2727,13 +2727,13 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj)
 {
-    return OBJ_GET_CLASS(cx, obj);
+    return obj->getClass();
 }
 #else
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSObject *obj)
 {
-    return LOCKED_OBJ_GET_CLASS(obj);
+    return obj->getClass();
 }
 #endif
 
@@ -4140,50 +4140,18 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     return obj->checkAccess(cx, id, mode, vp, attrsp);
 }
 
-static JSBool
-ReservedSlotIndexOK(JSContext *cx, JSObject *obj, JSClass *clasp,
-                    uint32 index, uint32 limit)
-{
-    /* Check the computed, possibly per-instance, upper bound. */
-    if (clasp->reserveSlots)
-        JS_LOCK_OBJ_VOID(cx, obj, limit += clasp->reserveSlots(cx, obj));
-    if (index >= limit) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_RESERVED_SLOT_RANGE);
-        return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {
-    JSClass *clasp;
-    uint32 limit, slot;
-
     CHECK_REQUEST(cx);
-    clasp = OBJ_GET_CLASS(cx, obj);
-    limit = JSCLASS_RESERVED_SLOTS(clasp);
-    if (index >= limit && !ReservedSlotIndexOK(cx, obj, clasp, index, limit))
-        return JS_FALSE;
-    slot = JSSLOT_START(clasp) + index;
-    *vp = obj->getRequiredSlot(cx, slot);
-    return JS_TRUE;
+    return js_GetReservedSlot(cx, obj, index, vp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
 {
-    JSClass *clasp;
-    uint32 limit, slot;
-
     CHECK_REQUEST(cx);
-    clasp = OBJ_GET_CLASS(cx, obj);
-    limit = JSCLASS_RESERVED_SLOTS(clasp);
-    if (index >= limit && !ReservedSlotIndexOK(cx, obj, clasp, index, limit))
-        return JS_FALSE;
-    slot = JSSLOT_START(clasp) + index;
-    return obj->setRequiredSlot(cx, slot, v);
+    return js_SetReservedSlot(cx, obj, index, v);
 }
 
 #ifdef JS_THREADSAFE

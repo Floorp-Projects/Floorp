@@ -256,7 +256,7 @@ jsdtrace_object_finalize(JSObject *obj)
 {
     JSClass *clasp;
 
-    clasp = LOCKED_OBJ_GET_CLASS(obj);
+    clasp = obj->getClass();
 
     /* the first arg is NULL - reserved for future use (filename?) */
     JAVASCRIPT_OBJECT_FINALIZE(NULL, (char *)clasp->name, (uintptr_t)obj);

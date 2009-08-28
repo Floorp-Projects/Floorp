@@ -1714,7 +1714,7 @@ JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags)
 JS_PUBLIC_API(JSBool)
 JS_IsSystemObject(JSContext *cx, JSObject *obj)
 {
-    return STOBJ_IS_SYSTEM(obj);
+    return obj->isSystem();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1725,7 +1725,7 @@ JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 
     obj = js_NewObject(cx, clasp, proto, parent);
     if (obj && system)
-        STOBJ_SET_SYSTEM(obj);
+        obj->setSystem();
     return obj;
 }
 

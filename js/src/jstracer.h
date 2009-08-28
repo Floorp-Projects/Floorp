@@ -850,6 +850,10 @@ class TraceRecorder : public avmplus::GCObject {
                          lir->insImmPtr((void*) ~mask));
     }
 
+    nanojit::LIns* stobj_get_proto(nanojit::LIns* obj_ins) {
+        return stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+    }
+
     nanojit::LIns* stobj_get_parent(nanojit::LIns* obj_ins) {
         return stobj_get_fslot(obj_ins, JSSLOT_PARENT);
     }

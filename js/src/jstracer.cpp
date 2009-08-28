@@ -8096,7 +8096,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         guardDenseArray(obj, obj_ins, BRANCH_EXIT);
         aobj = OBJ_GET_PROTO(cx, obj);
-        obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+        obj_ins = stobj_get_proto(obj_ins);
     }
 
     LIns* map_ins = map(obj_ins);
@@ -8235,7 +8235,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
         LIns* obj2_ins;
         if (PCVCAP_TAG(entry->vcap) == 1) {
             // Duplicate the special case in PROPERTY_CACHE_TEST.
-            obj2_ins = addName(stobj_get_fslot(obj_ins, JSSLOT_PROTO), "proto");
+            obj2_ins = addName(stobj_get_proto(obj_ins), "proto");
             guard(false, lir->ins_eq0(obj2_ins), BRANCH_EXIT);
         } else {
             obj2_ins = INS_CONSTOBJ(obj2);
@@ -8532,8 +8532,8 @@ TraceRecorder::guardHasPrototype(JSObject* obj, LIns* obj_ins,
                                  JSObject** pobj, LIns** pobj_ins,
                                  VMSideExit* exit)
 {
-    *pobj = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROTO]);
-    *pobj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+    *pobj = obj->getProto();
+    *pobj_ins = stobj_get_proto(obj_ins);
 
     bool cond = *pobj == NULL;
     guard(cond, addName(lir->ins_eq0(*pobj_ins), "guard(proto-not-null)"), exit);
@@ -10812,7 +10812,7 @@ TraceRecorder::guardCallee(jsval& callee)
           branchExit);
     guard(true,
           lir->ins2(LIR_eq,
-                    stobj_get_fslot(callee_ins, JSSLOT_PARENT),
+                    stobj_get_parent(callee_ins),
                     INS_CONSTOBJ(OBJ_GET_PARENT(cx, callee_obj))),
           branchExit);
     return JSRS_CONTINUE;
@@ -11270,7 +11270,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
          * obj_ins the last proto-load.
          */
         while (obj != obj2) {
-            obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+            obj_ins = stobj_get_proto(obj_ins);
             obj = STOBJ_GET_PROTO(obj);
         }
     }

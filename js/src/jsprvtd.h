@@ -343,25 +343,6 @@ typedef void
 (* JSPropertyRefOp)(JSContext *cx, JSObject *obj, JSProperty *prop);
 
 /*
- * Get and set a required slot, one that should already have been allocated.
- * These operations are infallible, so required slots must be pre-allocated,
- * or implementations must suppress out-of-memory errors.  The native ops
- * (js_ObjectOps, see jsobj.c) access slots reserved by including a call to
- * the JSCLASS_HAS_RESERVED_SLOTS(n) macro in the JSClass.flags initializer.
- *
- * NB: the slot parameter is a zero-based index into obj slots, unlike the
- * index parameter to the JS_GetReservedSlot and JS_SetReservedSlot API entry
- * points, which is a zero-based index into the JSCLASS_RESERVED_SLOTS(clasp)
- * reserved slots that come after the initial well-known slots: proto, parent,
- * class, and optionally, the private data slot.
- */
-typedef jsval
-(* JSGetRequiredSlotOp)(JSContext *cx, JSObject *obj, uint32 slot);
-
-typedef JSBool
-(* JSSetRequiredSlotOp)(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
-
-/*
  * The following determines whether JS_EncodeCharacters and JS_DecodeBytes
  * treat char[] as utf-8 or simply as bytes that need to be inflated/deflated.
  */
