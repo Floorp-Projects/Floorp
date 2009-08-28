@@ -166,7 +166,7 @@ nsGeolocationRequest::Init()
   nsRefPtr<nsGeolocationService> geoService = nsGeolocationService::GetInstance();
   if (!geoService->HasGeolocationProvider()) {
     NotifyError(nsIDOMGeoPositionError::POSITION_UNAVAILABLE);
-    return NS_ERROR_FAILURE;;
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -363,12 +363,13 @@ GeoEnabledChangedCallback(const char *aPrefName, void *aClosure)
   return 0;
 }
 
-nsGeolocationService::nsGeolocationService()
+nsresult nsGeolocationService::Init()
 {
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
-  if (obs) {
-    obs->AddObserver(this, "quit-application", false);
-  }
+  if (!obs)
+    return NS_ERROR_FAILURE;
+
+  obs->AddObserver(this, "quit-application", false);
 
   mTimeout = nsContentUtils::GetIntPref("geo.timeout", 6000);
 
@@ -379,7 +380,7 @@ nsGeolocationService::nsGeolocationService()
   GeoEnabledChangedCallback("geo.enabled", nsnull);
 
   if (sGeoEnabled == PR_FALSE)
-    return;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIGeolocationProvider> provider = do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
   if (provider)
@@ -389,7 +390,7 @@ nsGeolocationService::nsGeolocationService()
   // look up any providers that were registered via the category manager
   nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
   if (!catMan)
-    return;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISimpleEnumerator> geoproviders;
   catMan->EnumerateCategory("geolocation-provider", getter_AddRefs(geoproviders));
@@ -429,6 +430,7 @@ nsGeolocationService::nsGeolocationService()
   if (provider)
     mProviders.AppendObject(provider);
 #endif
+  return NS_OK;
 }
 
 nsGeolocationService::~nsGeolocationService()
@@ -652,6 +654,13 @@ nsGeolocationService::GetInstance()
   if (!nsGeolocationService::gService) {
     nsGeolocationService::gService = new nsGeolocationService();
     NS_ASSERTION(nsGeolocationService::gService, "null nsGeolocationService.");
+
+    if (nsGeolocationService::gService) {
+      if (NS_FAILED(nsGeolocationService::gService->Init())) {
+        delete nsGeolocationService::gService;
+        nsGeolocationService::gService = nsnull;
+      }        
+    }
   }
   return nsGeolocationService::gService;
 }
@@ -660,7 +669,7 @@ nsGeolocationService*
 nsGeolocationService::GetGeolocationService()
 {
   nsGeolocationService* inst = nsGeolocationService::GetInstance();
-  NS_ADDREF(inst);
+  NS_IF_ADDREF(inst);
   return inst;
 }
 
