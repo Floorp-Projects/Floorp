@@ -577,7 +577,8 @@ var BrowserUI = {
   },
 
   isTabsVisible: function isTabsVisible() {
-    let [leftvis,,,] = Browser.computeSidebarVisibility();
+    // The _1, _2 and _3 are to make the js2 emacs mode happy
+    let [leftvis,_1,_2,_3] = Browser.computeSidebarVisibility();
     return (leftvis > 0.002);
   },
 

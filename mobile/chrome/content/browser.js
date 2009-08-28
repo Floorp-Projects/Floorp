@@ -404,10 +404,9 @@ var Browser = {
         }
       }
 
-      Browser.hideSidebars();
-
-      bv.onAfterVisibleMove();
       bv.zoomToPage();
+      Browser.hideSidebars();
+      // hidesidebars calls bv.onAfterVisibleMove();
       bv.commitBatchOperation();
     }
     window.addEventListener("resize", resizeHandler, false);
@@ -578,11 +577,13 @@ var Browser = {
     let container = document.getElementById("tile-container");
     let containerBCR = container.getBoundingClientRect();
 
-    let dx = containerBCR.left;
+    // round here because when going to full screen, this value tends
+    // to be very small but negative
+    let dx = Math.round(containerBCR.left);
     if (dx < 0)
-      dx = Math.min(containerBCR.right - window.innerWidth, 0);
+      dx = Math.min(Math.round(containerBCR.right - window.innerWidth), 0);
 
-    this.controlsScrollboxScroller.scrollBy(Math.round(dx), 0);
+    this.controlsScrollboxScroller.scrollBy(dx, 0);
 
     Browser.contentScrollbox.customDragger.scrollingOuterX = false; // XXX ugh.
 
