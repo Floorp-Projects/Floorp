@@ -1868,7 +1868,7 @@
                 str = JSVAL_TO_STRING(lval);
                 i = JSVAL_TO_INT(rval);
                 if ((size_t)i < str->length()) {
-                    str = js_GetUnitString(cx, str, (size_t)i);
+                    str = JSString::getUnitString(cx, str, size_t(i));
                     if (!str)
                         goto error;
                     rval = STRING_TO_JSVAL(str);
