@@ -1710,6 +1710,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->outerArgc = outerArgc;
     this->pendingTraceableNative = NULL;
     this->newobj_ins = NULL;
+    this->loopLabel = NULL;
     this->generatedTraceableNative = new JSTraceableNative();
     JS_ASSERT(generatedTraceableNative);
 
@@ -1771,6 +1772,16 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
 
     if (!nanojit::AvmCore::config.tree_opt || fragment->root == fragment)
         lirbuf->state = addName(lir->insParam(0, 0), "state");
+
+    for (int i = 0; i < NumSavedRegs; ++i)
+        lir->insParam(i, 1);
+#ifdef DEBUG
+    for (int i = 0; i < NumSavedRegs; ++i)
+        addName(lirbuf->savedRegs[i], regNames[Assembler::savedRegs[i]]);
+#endif
+
+    if (fragment == fragment->root)
+        loopLabel = lir->ins0(LIR_label);
 
     lirbuf->sp = addName(lir->insLoad(LIR_ldp, lirbuf->state, (int)offsetof(InterpState, sp)), "sp");
     lirbuf->rp = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)), "rp");
@@ -3951,8 +3962,15 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit, TypeConsensus& cons
         exit->exitType = LOOP_EXIT;
         debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", (void*)exit,
                           getExitName(LOOP_EXIT));
+
+        JS_ASSERT((fragment == fragment->root) == !!loopLabel);
+        if (loopLabel) {
+            lir->insBranch(LIR_j, NULL, loopLabel);
+            lir->ins1(LIR_live, lirbuf->state);
+        }
+
         exit->target = fragment->root;
-        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), createGuardRecord(exit));
+        fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
     }
     compile(traceMonitor);
 

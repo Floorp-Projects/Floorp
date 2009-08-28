@@ -3055,8 +3055,15 @@ class RegExpNativeCompiler {
      * of the fields are not used. The important part is the regexp source
      * and flags, which we use as the fragment lookup key.
      */
-    GuardRecord* insertGuard(const jschar* re_chars, size_t re_length)
+    GuardRecord* insertGuard(LIns* loopLabel, const jschar* re_chars, size_t re_length)
     {
+        if (loopLabel) {
+            lir->insBranch(LIR_j, NULL, loopLabel);
+            LirBuffer* lirbuf = fragment->lirbuf;
+            lir->ins1(LIR_live, lirbuf->state);
+            lir->ins1(LIR_live, lirbuf->param1);
+        }
+
         LIns* skip = lirBufWriter->insSkip(sizeof(GuardRecord) +
                                            sizeof(SideExit) +
                                            (re_length-1) * sizeof(jschar));
@@ -3065,7 +3072,7 @@ class RegExpNativeCompiler {
         SideExit* exit = (SideExit*)(guard+1);
         guard->exit = exit;
         guard->exit->target = fragment;
-        fragment->lastIns = lir->insGuard(LIR_loop, NULL, skip);
+        fragment->lastIns = lir->insGuard(LIR_x, NULL, skip);
         return guard;
     }
 
@@ -3083,6 +3090,7 @@ class RegExpNativeCompiler {
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         Assembler *assm = tm->reAssembler;
         VMAllocator& alloc = *tm->reAllocator;
+        LIns* loopLabel = NULL;
 
         re->source->getCharsAndLength(re_chars, re_length);
         /*
@@ -3119,6 +3127,14 @@ class RegExpNativeCompiler {
         lir->ins0(LIR_start);
         lirbuf->state = state = addName(lirbuf, lir->insParam(0, 0), "state");
         lirbuf->param1 = cpend = addName(lirbuf, lir->insParam(1, 0), "cpend");
+        for (int i = 0; i < NumSavedRegs; ++i)
+            lir->insParam(i, 1);
+#ifdef DEBUG
+        for (int i = 0; i < NumSavedRegs; ++i)
+            addName(lirbuf, lirbuf->savedRegs[i], regNames[Assembler::savedRegs[i]]);
+#endif
+
+        loopLabel = lir->ins0(LIR_label);
 
         pos = addName(lirbuf,
                       lir->insLoad(LIR_ldp, state,
@@ -3133,7 +3149,7 @@ class RegExpNativeCompiler {
                 goto fail;
         }
 
-        guard = insertGuard(re_chars, re_length);
+        guard = insertGuard(loopLabel, re_chars, re_length);
 
         if (alloc.outOfMemory())
             goto fail;
@@ -3167,7 +3183,7 @@ class RegExpNativeCompiler {
             tm->reAssembler = new (alloc) Assembler(*tm->reCodeAlloc, alloc, core, NULL);
 #endif
         } else {
-            if (!guard) insertGuard(re_chars, re_length);
+            if (!guard) insertGuard(loopLabel, re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
             delete lirBufWriter;
         }
