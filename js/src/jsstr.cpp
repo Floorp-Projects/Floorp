@@ -74,6 +74,7 @@
 #include "jsstr.h"
 #include "jsbit.h"
 #include "jsvector.h"
+#include "jsstrinlines.h"
 
 #define JSSTRDEP_RECURSION_LIMIT        100
 
@@ -607,7 +608,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     slot = JSVAL_TO_INT(id);
     if ((size_t)slot < str->length()) {
-        str1 = js_GetUnitString(cx, str, (size_t)slot);
+        str1 = JSString::getUnitString(cx, str, size_t(slot));
         if (!str1)
             return JS_FALSE;
         if (!obj->defineProperty(cx, INT_TO_JSID(slot), STRING_TO_JSVAL(str1), NULL, NULL,
@@ -943,7 +944,7 @@ str_charAt(JSContext *cx, uintN argc, jsval *vp)
         i = (jsint) d;
     }
 
-    str = js_GetUnitString(cx, str, (size_t)i);
+    str = JSString::getUnitString(cx, str, size_t(i));
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -2137,7 +2138,7 @@ str_slice(JSContext *cx, uintN argc, jsval *vp)
                 str = cx->runtime->emptyString;
             } else {
                 str = (length == 1)
-                      ? js_GetUnitString(cx, str, begin)
+                      ? JSString::getUnitString(cx, str, begin)
                       : js_NewDependentString(cx, str, begin, length);
                 if (!str)
                     return JS_FALSE;
@@ -2358,7 +2359,7 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
 {
     if ((size_t)i >= str->length())
         return NULL;
-    return js_GetUnitString(cx, str, (size_t)i);
+    return JSString::getUnitString(cx, str, size_t(i));
 }
 #endif
 
@@ -2485,7 +2486,7 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     if (argc == 1 &&
         (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
-        str = js_GetUnitStringForChar(cx, code);
+        str = JSString::getUnitString(cx, code);
         if (!str)
             return JS_FALSE;
         *vp = STRING_TO_JSVAL(str);
@@ -2519,7 +2520,7 @@ String_fromCharCode(JSContext* cx, int32 i)
     JS_ASSERT(JS_ON_TRACE(cx));
     jschar c = (jschar)i;
     if (c < UNIT_STRING_LIMIT)
-        return js_GetUnitStringForChar(cx, c);
+        return JSString::getUnitString(cx, c);
     return js_NewStringCopyN(cx, &c, 1);
 }
 #endif
@@ -2572,7 +2573,7 @@ js_InitDeflatedStringCache(JSRuntime *rt)
 }
 
 JSString *
-js_GetUnitStringForChar(JSContext *cx, jschar c)
+js_MakeUnitString(JSContext *cx, jschar c)
 {
     jschar *cp, i;
     JSRuntime *rt;
@@ -2620,18 +2621,6 @@ js_GetUnitStringForChar(JSContext *cx, jschar c)
         JS_UNLOCK_GC(rt);
     }
     return rt->unitStrings[c];
-}
-
-JSString *
-js_GetUnitString(JSContext *cx, JSString *str, size_t index)
-{
-    jschar c;
-
-    JS_ASSERT(index < str->length());
-    c = str->chars()[index];
-    if (c >= UNIT_STRING_LIMIT)
-        return js_NewDependentString(cx, str, index, 1);
-    return js_GetUnitStringForChar(cx, c);
 }
 
 void

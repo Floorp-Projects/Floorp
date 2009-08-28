@@ -58,6 +58,7 @@
 #include "jsscan.h"
 #include "jsstr.h"
 #include "jsversion.h"
+#include "jsstrinlines.h"
 
 /*
  * ATOM_HASH assumes that JSHashNumber is 32-bit even on 64-bit systems.
@@ -688,7 +689,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     if (str->length() == 1) {
         jschar c = str->chars()[0];
         if (c < UNIT_STRING_LIMIT) {
-            JSString *str = js_GetUnitStringForChar(cx, c);
+            JSString *str = JSString::getUnitString(cx, c);
             return str ? (JSAtom *) STRING_TO_JSVAL(str) : NULL;
         }
     }
@@ -826,7 +827,7 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
     if (length == 1) {
         jschar c = *chars;
         if (c < UNIT_STRING_LIMIT) {
-            JSString *str = js_GetUnitStringForChar(cx, c);
+            JSString *str = JSString::getUnitString(cx, c);
             return str ? (JSAtom *) STRING_TO_JSVAL(str) : NULL;
         }
     }
