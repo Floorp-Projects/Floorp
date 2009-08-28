@@ -6286,6 +6286,12 @@ js_AbortRecording(JSContext* cx, const char* reason)
 static bool
 CheckForSSE2()
 {
+    char *c = getenv("X86_FORCE_SSE2");
+    if (c)
+        return (!strcmp(c, "true") ||
+                !strcmp(c, "1") ||
+                !strcmp(c, "yes"));
+
     int features = 0;
 #if defined _MSC_VER
     __asm
