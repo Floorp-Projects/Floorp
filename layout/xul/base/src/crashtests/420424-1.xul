@@ -1,0 +1,6 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="document.getElementById('a').ensureElementIsVisible(null);">
+
+<listbox id="a"/>
+
+</window>

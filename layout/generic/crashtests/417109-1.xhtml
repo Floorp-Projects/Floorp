@@ -1,0 +1,28 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo">
+    <content><html:span> &#x200F;&#x0643;&#xCA84;<children/></html:span></content>
+  </binding>
+  <binding id="empty">
+    <content></content>
+  </binding>
+</bindings>
+
+
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  document.getElementById("b").style.MozBinding = "url('#empty')";
+}
+
+]]>
+</script>
+</head>
+
+<body onload="boom();"><table style="-moz-binding: url(#foo)"><td id="b"/></table></body>
+
+</html>

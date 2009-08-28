@@ -42,8 +42,11 @@ load 400763-1.html
 load 407818.html
 load 410860-1.xml
 load 416734-1.html
+load 418928-1.html
+load 420620-1.html
 load 424276-1.html
 load 426987-1.html
+load 443538-1.svg
 skip load 458637-1.html # sporadically fails -- see bug 473680
 load 472593-1.html
 load 474041-1.svg
