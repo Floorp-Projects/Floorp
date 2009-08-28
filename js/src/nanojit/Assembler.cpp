@@ -100,8 +100,7 @@ namespace nanojit
      *    - merging paths ( build a graph? ), possibly use external rep to drive codegen
      */
     Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore *core, LogControl* logc)
-        : hasLoop(0)
-        , codeList(0)
+        : codeList(0)
         , alloc(alloc)
         , _codeAlloc(codeAlloc)
         , config(core->config)
@@ -596,7 +595,6 @@ namespace nanojit
         _stats.pages = 0;
         _stats.codeStart = _nIns-1;
         _stats.codeExitStart = _nExitIns-1;
-        //nj_dprintf("pageReset %d start %x exit start %x\n", _stats.pages, (int)_stats.codeStart, (int)_stats.codeExitStart);
 #endif /* PERFM */
 
         _epilogue = genEpilogue();
@@ -660,7 +658,6 @@ namespace nanojit
         NInsMap patches(alloc);
         gen(prev, loopJumps, labels, patches);
         frag->loopEntry = _nIns;
-        //nj_dprintf(stderr, "assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 
         if (!error()) {
             // patch all branches
@@ -1146,7 +1143,6 @@ namespace nanojit
                     }
                     else {
                         // backwards jump
-                        hasLoop = true;
                         handleLoopCarriedExprs(pending_lives);
                         if (!label) {
                             // save empty register state at loop header
@@ -1175,7 +1171,6 @@ namespace nanojit
                     }
                     else {
                         // back edge.
-                        hasLoop = true;
                         handleLoopCarriedExprs(pending_lives);
                         if (!label) {
                             // evict all registers, most conservative approach.
@@ -1201,7 +1196,6 @@ namespace nanojit
                     }
                     else {
                         // we're at the top of a loop
-                        hasLoop = true;
                         NanoAssert(label->addr == 0 && label->regs.isValid());
                         //evictRegs(~_allocator.free);
                         intersectRegisterState(label->regs);
