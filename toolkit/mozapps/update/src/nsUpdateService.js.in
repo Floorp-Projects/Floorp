@@ -95,6 +95,7 @@ const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
 const FILE_PERMS_TEST     = "update.test";
 const FILE_LAST_LOG       = "last-update.log";
+const FILE_BACKUP_LOG     = "backup-update.log";
 const FILE_UPDATE_LOCALE  = "update.locale";
 
 const MODE_RDONLY   = 0x01;
@@ -457,12 +458,21 @@ function cleanUpUpdatesDir(key) {
         var dir = f.parent.parent;
         var logFile = dir.clone();
         logFile.append(FILE_LAST_LOG);
-        if (logFile.exists())
-          logFile.remove(false);
-        f.copyTo(dir, FILE_LAST_LOG);
+        if (logFile.exists()) {
+          try {
+            logFile.moveTo(dir, FILE_BACKUP_LOG);
+          }
+          catch (e) {
+            LOG("General", "cleanUpUpdatesDir - failed to rename file " +
+                logFile.path + " to " + FILE_BACKUP_LOG);
+          }
+        }
+        f.moveTo(dir, FILE_LAST_LOG);
+        continue;
       }
       catch (e) {
-        LOG("General", "cleanUpUpdatesDir - failed to copy file: " + f.path);
+        LOG("General", "cleanUpUpdatesDir - failed to move file " + f.path +
+            " to " + dir.path + " and rename it to " + FILE_LAST_LOG);
       }
     }
     // Now, recursively remove this file.  The recusive removal is really
@@ -472,7 +482,7 @@ function cleanUpUpdatesDir(key) {
       f.remove(true);
     }
     catch (e) {
-      LOG("General", "cleanUpUpdatesDir - failed to remove file: " + f.path);
+      LOG("General", "cleanUpUpdatesDir - failed to remove file " + f.path);
     }
   }
   try {
