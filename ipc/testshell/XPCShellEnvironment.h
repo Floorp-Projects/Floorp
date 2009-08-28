@@ -41,11 +41,11 @@
 
 #include <string>
 #include <stdio.h>
+
+#include "nsAutoJSValHolder.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsAutoJSValHolder.h"
-
-#include "mozilla/ipc/TestShellProtocol.h"
+#include "nsStringGlue.h"
 
 struct JSContext;
 struct JSObject;
@@ -56,23 +56,11 @@ class nsIJSContextStack;
 namespace mozilla {
 namespace ipc {
 
-class TestShellChild;
-class TestShellParent;
-
 class XPCShellEnvironment
 {
 public:
     static XPCShellEnvironment* CreateEnvironment();
-    static void DestroyEnvironment(XPCShellEnvironment* aEnv);
-
-    void Process(const char* aFilename = nsnull);
-
-    bool DefineIPCCommands(TestShellChild* aChild);
-    bool DefineIPCCommands(TestShellParent* aParent);
-
-    JSBool DoSendCommand(const nsString& aCommand,
-                         JSContext* aCx = nsnull,
-                         jsval aCallback = JSVAL_VOID);
+    ~XPCShellEnvironment();
 
     bool EvaluateString(const nsString& aString,
                         nsString* aResult = nsnull);
@@ -113,16 +101,6 @@ public:
         return mCompileOnly;
     }
 
-    int EventLoopDepth() {
-        return mEventLoopDepth;
-    }
-    void IncrementEventLoopDepth() {
-        ++mEventLoopDepth;
-    }
-    void DecrementEventLoopDepth() {
-        --mEventLoopDepth;
-    }
-
     class AutoContextPusher
     {
     public:
@@ -134,8 +112,6 @@ public:
 
 protected:
     XPCShellEnvironment();
-    ~XPCShellEnvironment();
-
     bool Init();
 
 private:
@@ -145,12 +121,9 @@ private:
     JSPrincipals* mJSPrincipals;
 
     int mExitCode;
-    int mEventLoopDepth;
     JSBool mQuitting;
     JSBool mReportWarnings;
     JSBool mCompileOnly;
-
-    TestShellParent* mParent;
 };
 
 } /* namespace ipc */

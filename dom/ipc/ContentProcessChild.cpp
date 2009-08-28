@@ -75,8 +75,6 @@ ContentProcessChild::Quit()
 {
     mIFrames.Clear();
     mTestShells.Clear();
-
-    XRE_ShutdownChildProcess();
 }
 
 } // namespace dom

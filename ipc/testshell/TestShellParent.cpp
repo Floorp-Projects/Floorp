@@ -37,12 +37,10 @@
 #include "TestShellParent.h"
 
 #include "nsAutoPtr.h"
-#include "XPCShellEnvironment.h"
 
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::TestShellCommandProtocolParent;
-using mozilla::ipc::XPCShellEnvironment;
 
 TestShellCommandProtocolParent*
 TestShellParent::TestShellCommandConstructor(const nsString& aCommand)
@@ -66,23 +64,10 @@ TestShellParent::RecvTestShellCommandDestructor(TestShellCommandProtocolParent* 
   NS_ENSURE_ARG_POINTER(aActor);
 
   TestShellCommandParent* command =
-    static_cast<TestShellCommandParent*>(aActor);
+    reinterpret_cast<TestShellCommandParent*>(aActor);
 
   JSBool ok = command->RunCallback(aResponse);
   command->ReleaseCallback();
-
-  if (!mXPCShell) {
-    NS_WARNING("Processing a child message after exiting, need to spin events "
-               "somehow to process this result");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  NS_WARN_IF_FALSE(mXPCShell->EventLoopDepth(), "EventLoopDepth mismatch!");
-  if (mXPCShell->EventLoopDepth()) {
-    mXPCShell->DecrementEventLoopDepth();
-  }
-
-  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
   return NS_OK;
 }
