@@ -113,7 +113,9 @@ public:
   NS_DECL_NSIGEOLOCATIONUPDATE
   NS_DECL_NSIOBSERVER
 
-  nsGeolocationService();
+  nsGeolocationService() {mTimeout = 6000;};
+
+  nsresult Init();
 
   // Management of the nsGeolocation objects
   void AddLocator(nsGeolocation* locator);
