@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/basictypes.h"
+
 #include "nsXULAppAPI.h"
 
 #include <stdlib.h>
@@ -90,6 +92,7 @@ using mozilla::dom::ContentProcessThread;
 using mozilla::dom::ContentProcessParent;
 using mozilla::dom::ContentProcessChild;
 using mozilla::ipc::TestShellParent;
+using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::XPCShellEnvironment;
 
 using mozilla::test::TestParent;
@@ -365,93 +368,6 @@ XRE_InitParentProcess(int aArgc,
   return NS_OK;
 }
 
-NS_SPECIALIZE_TEMPLATE
-class nsAutoRefTraits<XPCShellEnvironment> :
-  public nsPointerRefTraits<XPCShellEnvironment>
-{
-public:
-  void Release(XPCShellEnvironment* aEnv) {
-    XPCShellEnvironment::DestroyEnvironment(aEnv);
-  }
-};
-
-namespace {
-
-class QuitRunnable : public nsRunnable
-{
-public:
-  NS_IMETHOD Run() {
-    nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
-    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
-
-    return appShell->Exit();
-  }
-};
-
-int
-TestShellMain(int argc, char** argv)
-{
-  // Make sure we quit when we exit this function.
-  nsIRunnable* quitRunnable = new QuitRunnable();
-  NS_ENSURE_TRUE(quitRunnable, 1);
-
-  nsresult rv = NS_DispatchToCurrentThread(quitRunnable);
-  NS_ENSURE_SUCCESS(rv, 1);
-
-  nsAutoRef<XPCShellEnvironment> env(XPCShellEnvironment::CreateEnvironment());
-  NS_ENSURE_TRUE(env, 1);
-
-  ContentProcessParent* childProcess = ContentProcessParent::GetSingleton();
-  NS_ENSURE_TRUE(childProcess, 1);
-
-  TestShellParent* testShellParent = childProcess->CreateTestShell();
-  NS_ENSURE_TRUE(testShellParent, 1);
-
-  testShellParent->SetXPCShell(env);
-
-  bool ok = env->DefineIPCCommands(testShellParent);
-  NS_ENSURE_TRUE(ok, 1);
-
-  const char* filename = argc > 1 ? argv[1] : nsnull;
-  env->Process(filename);
-
-  testShellParent->SetXPCShell(nsnull);
-
-  return env->ExitCode();
-}
-
-struct TestShellData {
-  int* result;
-  int argc;
-  char** argv;
-};
-
-void
-TestShellMainWrapper(void* aData)
-{
-  NS_ASSERTION(aData, "Don't give me a null pointer!");
-  TestShellData& testShellData = *static_cast<TestShellData*>(aData);
-
-  *testShellData.result =
-    TestShellMain(testShellData.argc, testShellData.argv);
-}
-
-} /* anonymous namespace */
-
-int
-XRE_RunTestShell(int aArgc, char* aArgv[])
-{
-    int result;
-
-    TestShellData data = { &result, aArgc, aArgv };
-
-    nsresult rv =
-      XRE_InitParentProcess(aArgc, aArgv, TestShellMainWrapper, &data);
-    NS_ENSURE_SUCCESS(rv, 1);
-
-    return result;
-}
-
 //-----------------------------------------------------------------------------
 // TestHarness
 
@@ -496,40 +412,49 @@ struct RunnableMethodTraits<ContentProcessChild>
 void
 XRE_ShutdownChildProcess(MessageLoop* aUILoop)
 {
+    NS_ASSERTION(aUILoop, "Shouldn't be null!");
     if (aUILoop) {
         NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
         aUILoop->PostTask(FROM_HERE,
             NewRunnableMethod(ContentProcessChild::GetSingleton(),
                               &ContentProcessChild::Quit));
-        return;
-    }
-
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-    nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
-    if (appShell) {
-        appShell->Exit();
     }
 }
 
-ContentProcessParent*
-XRE_GetContentProcessParent()
-{
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-        return ContentProcessParent::GetSingleton();
-    }
-    NS_WARNING("Called XRE_GetContentProcessParent in child process!");
-    return nsnull;
+namespace {
+TestShellParent* gTestShellParent = nsnull;
 }
 
-ContentProcessChild*
-XRE_GetContentProcessChild()
+bool
+XRE_SendTestShellCommand(JSContext* aCx,
+                         JSString* aCommand,
+                         void* aCallback)
 {
-    if (XRE_GetProcessType() != GeckoProcessType_Default) {
-        return ContentProcessChild::GetSingleton();
+    if (!gTestShellParent) {
+        ContentProcessParent* parent = ContentProcessParent::GetSingleton();
+        NS_ENSURE_TRUE(parent, false);
+
+        gTestShellParent = parent->CreateTestShell();
+        NS_ENSURE_TRUE(gTestShellParent, false);
     }
-    NS_WARNING("Called XRE_GetContentProcessChild in parent process!");
-    return nsnull;
+
+    nsDependentString command((PRUnichar*)JS_GetStringChars(aCommand),
+                              JS_GetStringLength(aCommand));
+    if (!aCallback) {
+        if (NS_FAILED(gTestShellParent->SendExecuteCommand(command))) {
+            return false;
+        }
+        return true;
+    }
+
+    TestShellCommandParent* callback = static_cast<TestShellCommandParent*>(
+        gTestShellParent->SendTestShellCommandConstructor(command));
+    NS_ENSURE_TRUE(callback, false);
+
+    jsval callbackVal = *reinterpret_cast<jsval*>(aCallback);
+    NS_ENSURE_TRUE(callback->SetCallback(aCx, callbackVal), false);
+
+    return true;
 }
 
 #endif

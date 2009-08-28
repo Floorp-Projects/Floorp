@@ -47,8 +47,6 @@
 namespace mozilla {
 namespace ipc {
 
-class XPCShellEnvironment;
-
 class TestShellCommandParent : public TestShellCommandProtocolParent
 {
 public:
@@ -69,13 +67,6 @@ private:
 class TestShellParent : public TestShellProtocolParent
 {
 public:
-  TestShellParent() : mXPCShell(nsnull) { }
-
-  void
-  SetXPCShell(XPCShellEnvironment* aXPCShell) {
-    mXPCShell = aXPCShell;
-  }
-
   TestShellCommandProtocolParent*
   TestShellCommandConstructor(const nsString& aCommand);
 
@@ -86,9 +77,6 @@ public:
   nsresult
   RecvTestShellCommandDestructor(TestShellCommandProtocolParent* aActor,
                                  const nsString& aResponse);
-
-private:
-  XPCShellEnvironment* mXPCShell;
 };
 
 } /* namespace ipc */

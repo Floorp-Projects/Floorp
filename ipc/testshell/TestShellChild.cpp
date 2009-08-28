@@ -36,31 +36,13 @@
 
 #include "TestShellChild.h"
 
-#include "XPCShellEnvironment.h"
-
 using mozilla::ipc::TestShellChild;
 using mozilla::ipc::TestShellCommandProtocolChild;
 using mozilla::ipc::XPCShellEnvironment;
 
 TestShellChild::TestShellChild()
-: mXPCShell(nsnull)
+: mXPCShell(XPCShellEnvironment::CreateEnvironment())
 {
-  XPCShellEnvironment* env = XPCShellEnvironment::CreateEnvironment();
-  if (env) {
-    if (env->DefineIPCCommands(this)) {
-      mXPCShell = env;
-    }
-    else {
-      XPCShellEnvironment::DestroyEnvironment(env);
-    }
-  }
-}
-
-TestShellChild::~TestShellChild()
-{
-  if (mXPCShell) {
-    XPCShellEnvironment::DestroyEnvironment(mXPCShell);
-  }
 }
 
 nsresult

@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/XPCOM.h"
+#include "nsXULAppAPI.h"
 
 #include "nsXPCOMPrivate.h"
 #include "nsXPCOMCIDInternal.h"
@@ -592,7 +593,8 @@ NS_InitXPCOM3(nsIServiceManager* *result,
         NS_ENSURE_STATE(sMessageLoop);
     }
 
-    if (!BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default &&
+        !BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)) {
         scoped_ptr<BrowserProcessSubThread> ioThread(
             new BrowserProcessSubThread(BrowserProcessSubThread::IO));
         NS_ENSURE_TRUE(ioThread.get(), NS_ERROR_OUT_OF_MEMORY);
