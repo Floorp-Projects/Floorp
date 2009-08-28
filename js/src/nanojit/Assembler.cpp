@@ -841,7 +841,6 @@ namespace nanojit
     {
         // trace must end with LIR_x, LIR_loop, LIR_[f]ret, LIR_xtbl, or LIR_live
         NanoAssert(reader->pos()->isop(LIR_x) ||
-                   reader->pos()->isop(LIR_loop) ||
                    reader->pos()->isop(LIR_ret) ||
                    reader->pos()->isop(LIR_fret) ||
                    reader->pos()->isop(LIR_xtbl) ||
@@ -1241,19 +1240,9 @@ namespace nanojit
                 case LIR_x:
                 {
                     countlir_x();
-                    verbose_only( if (_logc->lcbits & LC_Assembly)
-                                      asm_output("FIXME-whats-this?\n"); )
                     // generate the side exit branch on the main trace.
                     NIns *exit = asm_exit(ins);
                     JMP( exit );
-                    break;
-                }
-                case LIR_loop:
-                {
-                    countlir_loop();
-                    asm_loop(ins, loopJumps);
-                    assignSavedRegs();
-                    assignParamRegs();
                     break;
                 }
 

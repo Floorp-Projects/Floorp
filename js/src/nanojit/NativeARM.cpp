@@ -476,12 +476,6 @@ Assembler::genPrologue()
 
     uint32_t savingMask = rmask(FP) | rmask(LR);
 
-    if (!_thisfrag->lirbuf->explicitSavedRegs) {
-        for (int i = 0; i < NumSavedRegs; ++i)
-            savingMask |= rmask(savedRegs[i]);
-        savingCount += NumSavedRegs;
-    }
-
     // so for alignment purposes we've pushed return addr and fp
     uint32_t stackPushed = STACK_GRANULARITY * savingCount;
     uint32_t aligned = alignUp(stackNeeded + stackPushed, NJ_ALIGN_STACK);
@@ -556,9 +550,6 @@ Assembler::genEpilogue()
     NanoAssert(AvmCore::config.arch >= 5);
 
     RegisterMask savingMask = rmask(FP) | rmask(PC);
-    if (!_thisfrag->lirbuf->explicitSavedRegs)
-        for (int i = 0; i < NumSavedRegs; ++i)
-            savingMask |= rmask(savedRegs[i]);
 
     POP_mask(savingMask); // regs
 
@@ -2045,20 +2036,6 @@ Assembler::asm_cmpi(Register r, int32_t imm)
             asm_ld_imm(IP, imm);
         }
     }
-}
-
-void
-Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
-{
-    // XXX asm_loop should be in Assembler.cpp!
-
-    JMP_far(0);
-    loopJumps.add(_nIns);
-
-    // If the target we are looping to is in a different fragment, we have to restore
-    // SP since we will target fragEntry and not loopEntry.
-    if (ins->record()->exit->target != _thisfrag)
-        MOV(SP,FP);
 }
 
 void

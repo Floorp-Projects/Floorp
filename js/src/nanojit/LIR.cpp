@@ -128,7 +128,6 @@ namespace nanojit
         _stats.lir = 0;
         for (int i = 0; i < NumSavedRegs; ++i)
             savedRegs[i] = NULL;
-        explicitSavedRegs = false;
         chunkAlloc();
     }
 
@@ -283,7 +282,6 @@ namespace nanojit
         if (kind) {
             NanoAssert(arg < NumSavedRegs);
             _buf->savedRegs[arg] = ins;
-            _buf->explicitSavedRegs = true;
         }
         return ins;
     }
@@ -1698,7 +1696,6 @@ namespace nanojit
                 break;
             }
 
-            case LIR_loop:
             case LIR_start:
                 VMPI_sprintf(s, "%s", lirNames[op]);
                 break;
