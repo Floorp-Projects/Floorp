@@ -1,0 +1,38 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function s()
+{
+  var x = document.getElementById("x");
+  x.style.MozBinding = "url(401993-1.xml#foo)";
+  
+  setTimeout(boom, 0);
+  
+  function boom()
+  {
+    var nodes = document.getAnonymousNodes(x);
+    if (!nodes) {
+      setTimeout(boom, 10);
+      return;
+    }
+
+    var newSpan = document.createElement("span");
+    newSpan.contentEditable = "true";
+    nodes[0].appendChild(newSpan);
+    x.parentNode.removeChild(x);
+    
+    document.documentElement.removeAttribute("class");
+  }
+}
+</script>
+</head>
+
+<body onload="s();">
+
+<span contenteditable="true"></span>
+
+<div id="x"></div>
+
+</body>
+</html>
