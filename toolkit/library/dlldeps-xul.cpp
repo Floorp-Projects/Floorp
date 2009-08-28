@@ -56,4 +56,8 @@ void xxxNeverCalledXUL()
   XRE_RunTestShell(0, nsnull);
   XRE_GetProcessType();
   XRE_ShutdownChildProcess();
+  XRE_RunAppShell();
+  XRE_ShutdownChildProcess();
+  XRE_GetContentProcessParent();
+  XRE_GetContentProcessChild();
 }
