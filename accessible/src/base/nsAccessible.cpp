@@ -1748,8 +1748,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     nsAutoString live;
     nsAccUtils::GetAccAttr(attributes, nsAccessibilityAtoms::live, live);
     if (live.IsEmpty()) {
-      nsAccUtils::GetLiveAttrValue(mRoleMapEntry->liveAttRule, live);
-      nsAccUtils::SetAccAttr(attributes, nsAccessibilityAtoms::live, live);
+      if (nsAccUtils::GetLiveAttrValue(mRoleMapEntry->liveAttRule, live))
+        nsAccUtils::SetAccAttr(attributes, nsAccessibilityAtoms::live, live);
     }
   }
 
