@@ -97,9 +97,9 @@
 
 #include "nsXPFEComponentsCID.h"
 
-// If DEBUG, NS_BUILD_REFCNT_LOGGING, MOZ_PERF_METRICS, or MOZ_JPROF is
+// If DEBUG, NS_BUILD_REFCNT_LOGGING, or MOZ_JPROF is
 // defined, enable the PageCycler.
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_PERF_METRICS) || defined(MOZ_JPROF)
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_JPROF)
 #define ENABLE_PAGE_CYCLER
 #endif
 

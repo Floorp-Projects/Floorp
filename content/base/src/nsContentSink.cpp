@@ -87,7 +87,6 @@
 #include "nsWeakReference.h"
 #include "nsUnicharUtils.h"
 #include "nsNodeInfoManager.h"
-#include "nsTimer.h"
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
@@ -1369,11 +1368,7 @@ nsContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
   }
 
   mInNotification++;
-
-  MOZ_TIMER_DEBUGLOG(("Save and stop: nsHTMLContentSink::NotifyAppend()\n"));
-  MOZ_TIMER_SAVE(mWatch)
-  MOZ_TIMER_STOP(mWatch);
-
+  
   {
     // Scope so we call EndUpdate before we decrease mInNotification
     MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_MODEL, !mBeganUpdate);
@@ -1381,18 +1376,12 @@ nsContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
     mLastNotificationTime = PR_Now();
   }
 
-  MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyAppend()\n"));
-  MOZ_TIMER_RESTORE(mWatch);
-
   mInNotification--;
 }
 
 NS_IMETHODIMP
 nsContentSink::Notify(nsITimer *timer)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::Notify()\n"));
-  MOZ_TIMER_START(mWatch);
-
   if (mParsing) {
     // We shouldn't interfere with our normal DidProcessAToken logic
     mDroppedTimer = PR_TRUE;
@@ -1430,8 +1419,6 @@ nsContentSink::Notify(nsITimer *timer)
   }
 
   mNotificationTimer = nsnull;
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Notify()\n"));
-  MOZ_TIMER_STOP(mWatch);
   return NS_OK;
 }
 

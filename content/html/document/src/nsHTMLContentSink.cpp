@@ -1628,17 +1628,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIChannel* aChannel)
 {
   NS_ENSURE_TRUE(aContainer, NS_ERROR_NULL_POINTER);
-
-
-  MOZ_TIMER_DEBUGLOG(("Reset and start: nsHTMLContentSink::Init(), this=%p\n",
-                      this));
-  MOZ_TIMER_RESET(mWatch);
-  MOZ_TIMER_START(mWatch);
-
+  
   nsresult rv = nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
   if (NS_FAILED(rv)) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
-    MOZ_TIMER_STOP(mWatch);
     return rv;
   }
 
@@ -1692,8 +1684,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   } else {
     mRoot = NS_NewHTMLHtmlElement(nodeInfo);
     if (!mRoot) {
-      MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
-      MOZ_TIMER_STOP(mWatch);
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(mRoot);
@@ -1711,8 +1701,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   mHead = NS_NewHTMLHeadElement(nodeInfo);
   if (NS_FAILED(rv)) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
-    MOZ_TIMER_STOP(mWatch);
     return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(mHead);
@@ -1731,10 +1719,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
              ("HTMLContentSink::Init: this=%p url='%s'",
               this, spec.get()));
 #endif
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return NS_OK;
 }
 
@@ -1773,15 +1757,6 @@ HTMLContentSink::WillBuildModel(nsDTDMode aDTDMode)
 NS_IMETHODIMP
 HTMLContentSink::DidBuildModel(void)
 {
-  // NRA Dump stopwatch stop info here
-#ifdef MOZ_PERF_METRICS
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::DidBuildModel(), this=%p\n",
-                      this));
-  MOZ_TIMER_STOP(mWatch);
-  MOZ_TIMER_LOG(("Content creation time (this=%p): ", this));
-  MOZ_TIMER_PRINT(mWatch);
-#endif
-
   DidBuildModelImpl();
 
   // Reflow the last batch of content
@@ -1853,16 +1828,11 @@ HTMLContentSink::IsFormOnStack()
 NS_IMETHODIMP
 HTMLContentSink::BeginContext(PRInt32 aPosition)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::BeginContext()\n"));
-  MOZ_TIMER_START(mWatch);
   NS_PRECONDITION(aPosition > -1, "out of bounds");
 
   // Create new context
   SinkContext* sc = new SinkContext(this);
   if (!sc) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::BeginContext()\n"));
-    MOZ_TIMER_STOP(mWatch);
-
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1901,18 +1871,12 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
 
   mContextStack.AppendElement(mCurrentContext);
   mCurrentContext = sc;
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::BeginContext()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLContentSink::EndContext(PRInt32 aPosition)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::EndContext()\n"));
-  MOZ_TIMER_START(mWatch);
   NS_PRECONDITION(mCurrentContext && aPosition > -1, "non-existing context");
 
   PRUint32 n = mContextStack.Length() - 1;
@@ -1959,18 +1923,12 @@ HTMLContentSink::EndContext(PRInt32 aPosition)
 
   mCurrentContext = sc;
   mContextStack.RemoveElementAt(n);
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::EndContext()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return NS_OK;
 }
 
 nsresult
 HTMLContentSink::CloseHTML()
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseHTML()\n"));
-  MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                  "HTMLContentSink::CloseHTML", 
                  eHTMLTag_html, 0, this);
@@ -1992,32 +1950,19 @@ HTMLContentSink::CloseHTML()
     mHeadContext = nsnull;
   }
 
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseHTML()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return NS_OK;
 }
 
 nsresult
 HTMLContentSink::OpenHead()
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenHead()\n"));
-  MOZ_TIMER_START(mWatch);
-
   nsresult rv = OpenHeadContext();
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return rv;
 }
 
 nsresult
 HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenBody()\n"));
-  MOZ_TIMER_START(mWatch);
-
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenBody", 
                   eHTMLTag_body,
@@ -2029,28 +1974,18 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   // Add attributes, if any, to the current BODY node
   if (mBody) {
     AddAttributes(aNode, mBody, PR_TRUE, PR_TRUE);
-
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
-    MOZ_TIMER_STOP(mWatch);
-
     return NS_OK;
   }
 
   nsresult rv = mCurrentContext->OpenContainer(aNode);
 
   if (NS_FAILED(rv)) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
-    MOZ_TIMER_STOP(mWatch);
-
     return rv;
   }
 
   mBody = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
 
   NS_ADDREF(mBody);
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
-  MOZ_TIMER_STOP(mWatch);
 
   if (mCurrentContext->mStackPos > 1) {
     PRInt32 parentIndex    = mCurrentContext->mStackPos - 2;
@@ -2088,8 +2023,6 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 nsresult
 HTMLContentSink::CloseBody()
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseBody()\n"));
-  MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseBody", 
                   eHTMLTag_body,
@@ -2099,9 +2032,6 @@ HTMLContentSink::CloseBody()
   PRBool didFlush;
   nsresult rv = mCurrentContext->FlushTextAndRelease(&didFlush);
   if (NS_FAILED(rv)) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseBody()\n"));
-    MOZ_TIMER_STOP(mWatch);
-
     return rv;
   }
 
@@ -2112,18 +2042,12 @@ HTMLContentSink::CloseBody()
   mCurrentContext->FlushTags();
   mCurrentContext->CloseContainer(eHTMLTag_body, PR_FALSE);
 
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseBody()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return NS_OK;
 }
 
 nsresult
 HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenForm()\n"));
-  MOZ_TIMER_START(mWatch);
-
   nsresult result = NS_OK;
 
   mCurrentContext->FlushTextAndRelease();
@@ -2154,18 +2078,12 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     result = mCurrentContext->OpenContainer(aNode);
   }
 
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenForm()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return result;
 }
 
 nsresult
 HTMLContentSink::CloseForm()
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseForm()\n"));
-  MOZ_TIMER_START(mWatch);
-
   nsresult result = NS_OK;
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
@@ -2184,17 +2102,12 @@ HTMLContentSink::CloseForm()
     mCurrentForm = nsnull;
   }
 
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseForm()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return result;
 }
 
 nsresult
 HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenFrameset()\n"));
-  MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenFrameset", 
                   eHTMLTag_frameset,
@@ -2207,9 +2120,6 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
   nsGenericHTMLElement* oldFrameset = mFrameset;
   nsresult rv = mCurrentContext->OpenContainer(aNode);
   PRBool isFirstFrameset = NS_SUCCEEDED(rv) && mFrameset != oldFrameset;
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenFrameset()\n"));
-  MOZ_TIMER_STOP(mWatch);
 
   if (isFirstFrameset && mCurrentContext->mStackPos > 1) {
     NS_ASSERTION(mFrameset, "Must have frameset!");
@@ -2248,8 +2158,6 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 nsresult
 HTMLContentSink::CloseFrameset()
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseFrameset()\n"));
-  MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                    "HTMLContentSink::CloseFrameset", 
                    eHTMLTag_frameset,
@@ -2265,9 +2173,6 @@ HTMLContentSink::CloseFrameset()
     PRBool didFlush;
     rv = sc->FlushTextAndRelease(&didFlush);
     if (NS_FAILED(rv)) {
-      MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseFrameset()\n"));
-      MOZ_TIMER_STOP(mWatch);
-
       return rv;
     }
 
@@ -2279,9 +2184,6 @@ HTMLContentSink::CloseFrameset()
   }
 
   rv = sc->CloseContainer(eHTMLTag_frameset, PR_FALSE);    
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseFrameset()\n"));
-  MOZ_TIMER_STOP(mWatch);
 
   if (done && mFramesEnabled) {
     StartLayout(PR_FALSE);
@@ -2309,9 +2211,6 @@ HTMLContentSink::IsEnabled(PRInt32 aTag, PRBool* aReturn)
 NS_IMETHODIMP
 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenContainer()\n"));
-  MOZ_TIMER_START(mWatch);
-
   nsresult rv = NS_OK;
 
   switch (aNode.GetNodeType()) {
@@ -2347,18 +2246,12 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       break;
   }
 
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenContainer()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return rv;
 }
 
 NS_IMETHODIMP
 HTMLContentSink::CloseContainer(const eHTMLTags aTag)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseContainer()\n"));
-  MOZ_TIMER_START(mWatch);
-
   nsresult rv = NS_OK;
 
   switch (aTag) {
@@ -2382,9 +2275,6 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
       break;
   }
 
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseContainer()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return rv;
 }
 
@@ -2397,9 +2287,6 @@ HTMLContentSink::CloseMalformedContainer(const eHTMLTags aTag)
 NS_IMETHODIMP
 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddLeaf()\n"));
-  MOZ_TIMER_START(mWatch);
-
   nsresult rv;
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
@@ -2415,9 +2302,6 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     break;
   }
 
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::AddLeaf()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
   return rv;
 }
 
@@ -2430,13 +2314,7 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 nsresult
 HTMLContentSink::AddComment(const nsIParserNode& aNode)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddComment()\n"));
-  MOZ_TIMER_START(mWatch);
-
   nsresult rv = mCurrentContext->AddComment(aNode);
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::AddComment()\n"));
-  MOZ_TIMER_STOP(mWatch);
 
   return rv;
 }
@@ -2451,11 +2329,7 @@ nsresult
 HTMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-
-  MOZ_TIMER_START(mWatch);
   // Implementation of AddProcessingInstruction() should start here
-
-  MOZ_TIMER_STOP(mWatch);
 
   return result;
 }
@@ -2468,9 +2342,6 @@ HTMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddDocTypeDecl()\n"));
-  MOZ_TIMER_START(mWatch);
-
   nsAutoString docTypeStr(aNode.GetText());
   nsresult rv = NS_OK;
 
@@ -2690,9 +2561,6 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
       mDocument->InsertChildAt(content, 0, PR_TRUE);
     }
   }
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::AddDocTypeDecl()\n"));
-  MOZ_TIMER_STOP(mWatch);
 
   return rv;
 }
@@ -2979,10 +2847,6 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
 
   mInNotification++;
 
-  MOZ_TIMER_DEBUGLOG(("Save and stop: nsHTMLContentSink::NotifyInsert()\n"));
-  MOZ_TIMER_SAVE(mWatch)
-  MOZ_TIMER_STOP(mWatch);
-
   {
     // Scope so we call EndUpdate before we decrease mInNotification
     MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_MODEL, !mBeganUpdate);
@@ -2990,9 +2854,6 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
                                  aChildContent, aIndexInContainer);
     mLastNotificationTime = PR_Now();
   }
-
-  MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyInsert()\n"));
-  MOZ_TIMER_RESTORE(mWatch);
 
   mInNotification--;
 }

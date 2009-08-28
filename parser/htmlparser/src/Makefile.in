@@ -56,10 +56,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DEPTH)/parser/xml/src/$(LIB_PREFIX)saxp.$(LIB_SUFFIX) \
 		$(NULL)
 
-ifdef MOZ_PERF_METRICS
-SHARED_LIBRARY_LIBS +=	$(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
-endif
-
 CPPSRCS = \
 		nsScannerString.cpp \
 		nsDTDUtils.cpp      \

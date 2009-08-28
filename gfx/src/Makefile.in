@@ -68,7 +68,6 @@ ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 endif
 
 EXTRA_DSO_LDOPTS = \
-        $(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
         $(MOZ_UNICHARUTIL_LIBS) \
         $(MOZ_COMPONENT_LIBS) \
         $(MOZ_JS_LIBS) \

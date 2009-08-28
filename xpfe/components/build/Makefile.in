@@ -54,10 +54,6 @@ CPPSRCS		= nsModule.cpp
 
 include $(topsrcdir)/config/config.mk
 
-ifdef MOZ_PERF_METRICS
-SHARED_LIBRARY_LIBS += $(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
-endif
-
 # General includes
 SHARED_LIBRARY_LIBS += ../directory/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../directory
