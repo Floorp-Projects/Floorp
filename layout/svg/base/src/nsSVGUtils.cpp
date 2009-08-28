@@ -229,19 +229,6 @@ NS_SMILEnabled()
 }
 #endif // MOZ_SMIL
 
-static nsIFrame*
-GetFrameForContent(nsIContent* aContent)
-{
-  if (!aContent)
-    return nsnull;
-
-  nsIDocument *doc = aContent->GetCurrentDoc();
-  if (!doc)
-    return nsnull;
-
-  return nsGenericElement::GetPrimaryFrameFor(aContent, doc);
-}
-
 nsIContent*
 nsSVGUtils::GetParentElement(nsIContent *aContent)
 {
