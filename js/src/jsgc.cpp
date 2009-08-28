@@ -2406,37 +2406,22 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
 JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
 {
-    JSObject *obj;
-    size_t nslots, i;
-    jsval v;
-    JSString *str;
-
     switch (kind) {
-      case JSTRACE_OBJECT:
+      case JSTRACE_OBJECT: {
         /* If obj has no map, it must be a newborn. */
-        obj = (JSObject *) thing;
+        JSObject *obj = (JSObject *) thing;
         if (!obj->map)
             break;
-        if (obj->map->ops->trace) {
-            obj->map->ops->trace(trc, obj);
-        } else {
-            nslots = STOBJ_NSLOTS(obj);
-            for (i = 0; i != nslots; ++i) {
-                v = STOBJ_GET_SLOT(obj, i);
-                if (JSVAL_IS_TRACEABLE(v)) {
-                    JS_SET_TRACING_INDEX(trc, "slot", i);
-                    JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v),
-                                  JSVAL_TRACE_KIND(v));
-                }
-            }
-        }
+        obj->map->ops->trace(trc, obj);
         break;
+      }
 
-      case JSTRACE_STRING:
-        str = (JSString *)thing;
+      case JSTRACE_STRING: {
+        JSString *str = (JSString *) thing;
         if (str->isDependent())
             JS_CALL_STRING_TRACER(trc, str->dependentBase(), "base");
         break;
+      }
 
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
@@ -3168,10 +3153,10 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
 
     pobj = ssr->pobj;
     if (slot == JSSLOT_PROTO) {
-        STOBJ_SET_PROTO(obj, pobj);
+        obj->setProto(pobj);
     } else {
         JS_ASSERT(slot == JSSLOT_PARENT);
-        STOBJ_SET_PARENT(obj, pobj);
+        obj->setParent(pobj);
     }
 }
 

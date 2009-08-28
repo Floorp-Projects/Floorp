@@ -1751,7 +1751,7 @@
                                  * above and inline compensation code here,
                                  * depending on real-world workloads.
                                  */
-                                JS_ASSERT(!(LOCKED_OBJ_GET_CLASS(obj)->flags &
+                                JS_ASSERT(!(obj->getClass()->flags &
                                             JSCLASS_SHARE_ALL_PROPERTIES));
 
                                 PCMETER(cache->pchits++);
@@ -3378,8 +3378,7 @@
             obj = JSVAL_TO_OBJECT(lval);
             JS_ASSERT(OBJ_IS_NATIVE(obj));
             JS_ASSERT(!OBJ_GET_CLASS(cx, obj)->reserveSlots);
-            JS_ASSERT(!(LOCKED_OBJ_GET_CLASS(obj)->flags &
-                        JSCLASS_SHARE_ALL_PROPERTIES));
+            JS_ASSERT(!(obj->getClass()->flags & JSCLASS_SHARE_ALL_PROPERTIES));
 
             do {
                 JSScope *scope;

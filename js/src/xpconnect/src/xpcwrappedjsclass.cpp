@@ -253,7 +253,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     // interface (i.e. whether the interface is scriptable) and most content
     // objects don't have QI implementations anyway. Also see bug 503926.
     if(XPCPerThreadData::IsMainThread(ccx) &&
-       !STOBJ_IS_SYSTEM(JS_GetGlobalForObject(ccx, jsobj)))
+       !JS_GetGlobalForObject(ccx, jsobj)->isSystem())
     {
         nsCOMPtr<nsIPrincipal> objprin;
         nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();

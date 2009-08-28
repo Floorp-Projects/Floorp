@@ -99,7 +99,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
      * birth, and runtime clone of a block objects are never mutated.
      */
     JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_BlockClass);
-    newscope = JSScope::create(cx, scope->map.ops, LOCKED_OBJ_GET_CLASS(obj), obj);
+    newscope = JSScope::create(cx, scope->map.ops, obj->getClass(), obj);
     if (!newscope)
         return NULL;
     JS_LOCK_SCOPE(cx, newscope);
