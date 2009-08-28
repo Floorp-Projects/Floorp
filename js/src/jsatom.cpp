@@ -823,6 +823,14 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
     JSAtomState *state;
     JSDHashEntryHdr *hdr;
 
+    if (length == 1) {
+        jschar c = *chars;
+        if (c < UNIT_STRING_LIMIT) {
+            JSString *str = js_GetUnitStringForChar(cx, c);
+            return str ? (JSAtom *) STRING_TO_JSVAL(str) : NULL;
+        }
+    }
+
     str.initFlat((jschar *)chars, length);
     state = &cx->runtime->atomState;
 
