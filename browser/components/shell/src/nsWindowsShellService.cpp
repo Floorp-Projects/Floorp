@@ -216,11 +216,11 @@ typedef struct {
 #define APP_REG_NAME L"Firefox"
 #define CLS_HTML "FirefoxHTML"
 #define CLS_URL "FirefoxURL"
-#define CPL_DESKTOP L"\\Control Panel\\Desktop"
+#define CPL_DESKTOP L"Control Panel\\Desktop"
 #define VAL_OPEN "\"%APPPATH%\" -requestPending -osint -url \"%1\""
 #define VAL_FILE_ICON "%APPPATH%,1"
 #else
-#define CPL_DESKTOP L"\\ControlPanel\\Desktop"
+#define CPL_DESKTOP L"ControlPanel\\Desktop"
 #define VAL_OPEN "\"%APPPATH%\" -osint -url \"%1\""
 #define VAL_FILE_ICON "%APPPATH%,-2"
 #endif
