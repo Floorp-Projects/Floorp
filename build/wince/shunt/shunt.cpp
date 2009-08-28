@@ -115,17 +115,19 @@ int errno = 0;
 
 unsigned short * _wgetcwd(unsigned short * dir, unsigned long size)
 {
-  if (!dir)
-    return 0;
   unsigned short tmp[MAX_PATH] = {0};
   GetEnvironmentVariableW(L"CWD", tmp, size);
   if (tmp && tmp[0]) {
     if (wcslen(tmp) > size)
       return 0;
+    if (!dir)
+      dir = (unsigned short*)malloc(sizeof(unsigned short) * (wcslen(tmp) + 1));
     wcscpy(dir, tmp);
     return dir;
   }
   unsigned long i;
+  if (!dir)
+      dir = (unsigned short*)malloc(sizeof(unsigned short) * (MAX_PATH + 1));
   GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
   for (i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
   dir[i + 1] = TCHAR('\0');
