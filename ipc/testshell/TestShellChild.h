@@ -39,6 +39,9 @@
 
 #include "mozilla/ipc/TestShellProtocolChild.h"
 #include "mozilla/ipc/TestShellCommandProtocolChild.h"
+#include "mozilla/ipc/XPCShellEnvironment.h"
+
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -49,7 +52,6 @@ class TestShellChild : public TestShellProtocolChild
 {
 public:
   TestShellChild();
-  ~TestShellChild();
 
   nsresult
   RecvExecuteCommand(const nsString& aCommand);
@@ -70,7 +72,7 @@ public:
   }
 
 private:
-  XPCShellEnvironment* mXPCShell;
+  nsAutoPtr<XPCShellEnvironment> mXPCShell;
 };
 
 } /* namespace ipc */

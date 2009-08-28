@@ -466,10 +466,6 @@ XRE_API(nsresult,
                                 void* aMainFunctionExtraData))
 
 XRE_API(int,
-        XRE_RunTestShell, (int aArgc,
-                           char* aArgv[]))
-
-XRE_API(int,
         XRE_RunIPCTestHarness, (int aArgc,
                                 char* aArgv[]))
 
@@ -479,18 +475,14 @@ XRE_API(nsresult,
 class MessageLoop;
 
 XRE_API(void,
-        XRE_ShutdownChildProcess, (MessageLoop* aUILoop = 0))
+        XRE_ShutdownChildProcess, (MessageLoop* aUILoop))
 
-namespace mozilla {
-namespace dom {
-class ContentProcessParent;
-class ContentProcessChild;
-}
-}
+struct JSContext;
+struct JSString;
 
-XRE_API(mozilla::dom::ContentProcessParent*,
-        XRE_GetContentProcessParent, ())
-XRE_API(mozilla::dom::ContentProcessChild*,
-        XRE_GetContentProcessChild, ())
+XRE_API(bool,
+        XRE_SendTestShellCommand, (JSContext* aCx,
+                                   JSString* aCommand,
+                                   void* aCallback))
 
 #endif // _nsXULAppAPI_h__

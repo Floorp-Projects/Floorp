@@ -80,7 +80,7 @@ using mozilla::ipc::TestShellCommandProtocolParent;
 
 namespace {
 
-static const char kDefaultRuntimeScriptFilename[] = "ipcshell.js";
+static const char kDefaultRuntimeScriptFilename[] = "xpcshell.js";
 
 class FullTrustSecMan : public nsIScriptSecurityManager
 {
@@ -274,52 +274,6 @@ GetLine(char *bufp,
     if (!fgets(line, sizeof line, file))
         return JS_FALSE;
     strcpy(bufp, line);
-    return JS_TRUE;
-}
-
-static JSBool
-ReadLine(JSContext *cx,
-         JSObject *obj,
-         uintN argc,
-         jsval *argv,
-         jsval *rval)
-{
-    // While 4096 might be quite arbitrary, this is something to be fixed in
-    // bug 105707. It is also the same limit as in ProcessFile.
-    char buf[4096];
-    JSString *str;
-
-    /* If a prompt was specified, construct the string */
-    if (argc > 0) {
-        str = JS_ValueToString(cx, argv[0]);
-        if (!str)
-            return JS_FALSE;
-        argv[0] = STRING_TO_JSVAL(str);
-    } else {
-        str = JSVAL_TO_STRING(JS_GetEmptyStringValue(cx));
-    }
-
-    /* Get a line from the infile */
-    if (!GetLine(buf, stdin, JS_GetStringBytes(str)))
-        return JS_FALSE;
-
-    /* Strip newline character added by GetLine() */
-    unsigned int buflen = strlen(buf);
-    if (buflen == 0) {
-        if (feof(stdin)) {
-            *rval = JSVAL_NULL;
-            return JS_TRUE;
-        }
-    } else if (buf[buflen - 1] == '\n') {
-        --buflen;
-    }
-
-    /* Turn buf into a JSString */
-    str = JS_NewStringCopyN(cx, buf, buflen);
-    if (!str)
-        return JS_FALSE;
-
-    *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 
@@ -576,7 +530,6 @@ Clear(JSContext *cx,
 JSFunctionSpec gGlobalFunctions[] =
 {
     {"print",           Print,          0,0,0},
-    {"readline",        ReadLine,       1,0,0},
     {"load",            Load,           1,0,0},
     {"quit",            Quit,           0,0,0},
     {"version",         Version,        1,0,0},
@@ -600,135 +553,6 @@ JSFunctionSpec gGlobalFunctions[] =
     {"dumpCallgrind",   js_DumpCallgrind,   1,0,0},
 #endif
     {nsnull,nsnull,0,0,0}
-};
-
-JSClass gGlobalClass =
-{
-    "global", 0,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
-};
-
-static JSBool
-EnvironmentSetProperty(JSContext *cx,
-                       JSObject *obj,
-                       jsval id,
-                       jsval *vp)
-{
-/* XXX porting may be easy, but these don't seem to supply setenv by default */
-#if !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS
-    JSString *idstr, *valstr;
-    const char *name, *value;
-    int rv;
-
-    idstr = JS_ValueToString(cx, id);
-    valstr = JS_ValueToString(cx, *vp);
-    if (!idstr || !valstr)
-        return JS_FALSE;
-    name = JS_GetStringBytes(idstr);
-    value = JS_GetStringBytes(valstr);
-#if defined XP_WIN || defined HPUX || defined OSF1 || defined IRIX \
-    || defined SCO
-    {
-        char *waste = JS_smprintf("%s=%s", name, value);
-        if (!waste) {
-            JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
-        }
-        rv = putenv(waste);
-#ifdef XP_WIN
-        /*
-         * HPUX9 at least still has the bad old non-copying putenv.
-         *
-         * Per mail from <s.shanmuganathan@digital.com>, OSF1 also has a putenv
-         * that will crash if you pass it an auto char array (so it must place
-         * its argument directly in the char *environ[] array).
-         */
-        free(waste);
-#endif
-    }
-#else
-    rv = setenv(name, value, 1);
-#endif
-    if (rv < 0) {
-        JS_ReportError(cx, "can't set envariable %s to %s", name, value);
-        return JS_FALSE;
-    }
-    *vp = STRING_TO_JSVAL(valstr);
-#endif /* !defined XP_BEOS && !defined XP_OS2 && !defined SOLARIS */
-    return JS_TRUE;
-}
-
-static JSBool
-EnvironmentEnumerate(JSContext *cx,
-                     JSObject *obj)
-{
-    static JSBool reflected;
-    char **evp, *name, *value;
-    JSString *valstr;
-    JSBool ok;
-
-    if (reflected)
-        return JS_TRUE;
-
-    for (evp = (char **)JS_GetPrivate(cx, obj); (name = *evp) != NULL; evp++) {
-        value = strchr(name, '=');
-        if (!value)
-            continue;
-        *value++ = '\0';
-        valstr = JS_NewStringCopyZ(cx, value);
-        if (!valstr) {
-            ok = JS_FALSE;
-        } else {
-            ok = JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
-                                   NULL, NULL, JSPROP_ENUMERATE);
-        }
-        value[-1] = '=';
-        if (!ok)
-            return JS_FALSE;
-    }
-
-    reflected = JS_TRUE;
-    return JS_TRUE;
-}
-
-static JSBool
-EnvironmentResolve(JSContext *cx,
-                   JSObject *obj,
-                   jsval id,
-                   uintN flags,
-            JSObject **objp)
-{
-    JSString *idstr, *valstr;
-    const char *name, *value;
-
-    if (flags & JSRESOLVE_ASSIGNING)
-        return JS_TRUE;
-
-    idstr = JS_ValueToString(cx, id);
-    if (!idstr)
-        return JS_FALSE;
-    name = JS_GetStringBytes(idstr);
-    value = getenv(name);
-    if (value) {
-        valstr = JS_NewStringCopyZ(cx, value);
-        if (!valstr)
-            return JS_FALSE;
-        if (!JS_DefineProperty(cx, obj, name, STRING_TO_JSVAL(valstr),
-                               NULL, NULL, JSPROP_ENUMERATE)) {
-            return JS_FALSE;
-        }
-        *objp = obj;
-    }
-    return JS_TRUE;
-}
-
-JSClass gEnvironmentClass =
-{
-    "environment", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
-    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, EnvironmentSetProperty,
-    EnvironmentEnumerate, (JSResolveOp) EnvironmentResolve, JS_ConvertStub,
-    JS_FinalizeStub
 };
 
 typedef enum JSShellErrNum
@@ -758,14 +582,6 @@ GetErrorMessage(void *userRef,
         return &gErrorFormatString[errorNumber];
 
     return NULL;
-}
-
-static int
-PrintUsage(void)
-{
-    fprintf(stderr, "%s\n", JS_GetImplementationVersion());
-    fprintf(stderr, "usage: xpcshell [-g gredir] [-PswWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
-    return 2;
 }
 
 static void
@@ -877,86 +693,6 @@ ProcessFile(JSContext *cx,
 
     fprintf(stdout, "\n");
 }
-
-static JSBool
-SendCommand(JSContext *cx,
-            JSObject *obj,
-            uintN argc,
-            jsval *argv,
-            jsval *rval)
-{
-    if (argc == 0) {
-        JS_ReportError(cx, "Function takes at least one argument!");
-        return JS_FALSE;
-    }
-
-    JSString* str = JS_ValueToString(cx, argv[0]);
-    if (!str) {
-        JS_ReportError(cx, "Could not convert argument 1 to string!");
-        return JS_FALSE;
-    }
-
-    nsDependentJSString command(str);
-    JSBool ok;
-
-    if (argc > 1) {
-        if (JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
-            JS_ReportError(cx, "Could not convert argument 2 to function!");
-            return JS_FALSE;
-        }
-        ok = Environment(cx)->DoSendCommand(command, cx, argv[1]);
-        if (ok) {
-            Environment(cx)->IncrementEventLoopDepth();
-        }
-    }
-    else {
-        ok = Environment(cx)->DoSendCommand(command);
-    }
-
-    if (!ok) {
-        JS_ReportError(cx, "Failed to send command!");
-        return JS_FALSE;
-    }
-
-    return JS_TRUE;
-}
-
-static JSBool
-RunEventLoop(JSContext *cx,
-             JSObject *obj,
-             uintN argc,
-             jsval *argv,
-             jsval *rval)
-{
-    NS_ASSERTION(Environment(cx)->EventLoopDepth() >= 0, "Bad depth!");
-    Environment(cx)->IncrementEventLoopDepth();
-    return JS_TRUE;
-}
-
-static JSBool
-StopEventLoop(JSContext *cx,
-              JSObject *obj,
-              uintN argc,
-              jsval *argv,
-              jsval *rval)
-{
-    XPCShellEnvironment* env = Environment(cx);
-    if (env->EventLoopDepth() < 1) {
-        JS_ReportError(cx, "Mismatched call to DecrementEventLoopDepth");
-        return JS_FALSE;
-    }
-
-    env->DecrementEventLoopDepth();
-    return JS_TRUE;
-}
-
-JSFunctionSpec gParentFunctions[] =
-{
-    {"sendCommand",             SendCommand,             1, 0, 0},
-    {"runEventLoop",            RunEventLoop,            0, 0, 0},
-    {"stopEventLoop",           StopEventLoop,           0, 0, 0},
-    {nsnull,                    nsnull,                  0, 0, 0}
-};
 
 } /* anonymous namespace */
 
@@ -1294,22 +1030,13 @@ XPCShellEnvironment::CreateEnvironment()
     return env;
 }
 
-// static
-void
-XPCShellEnvironment::DestroyEnvironment(XPCShellEnvironment* aEnv)
-{
-    delete aEnv;
-}
-
 XPCShellEnvironment::XPCShellEnvironment()
 :   mCx(NULL),
     mJSPrincipals(NULL),
     mExitCode(0),
-    mEventLoopDepth(0),
     mQuitting(JS_FALSE),
     mReportWarnings(JS_TRUE),
-    mCompileOnly(JS_FALSE),
-    mParent(nsnull)
+    mCompileOnly(JS_FALSE)
 {
 }
 
@@ -1461,16 +1188,6 @@ XPCShellEnvironment::Init()
             NS_ERROR("JS_DefineFunctions failed!");
             return false;
         }
-
-#if 0 // Just until we care enough to get then environment strings.
-        JSObject *envObj = JS_DefineObject(cx, globalObj, "environment",
-                                           &gEnvironmentClass, NULL, 0);
-        if (!envObj || !JS_SetPrivate(cx, envObj, envp)) {
-            NS_ERROR("Failed to make environment object!");
-            return false;
-        }
-#endif
-
     }
 
     mGlobalHolder = globalObj;
@@ -1484,91 +1201,6 @@ XPCShellEnvironment::Init()
     }
 
     return true;
-}
-
-void
-XPCShellEnvironment::Process(const char* aFilename)
-{
-    NS_ASSERTION(GetGlobalObject(), "Should never be null!");
-
-    FILE* file;
-    if (!aFilename) {
-        file = stdin;
-    } else {
-        file = fopen(aFilename, "r");
-        if (!file) {
-            JS_ReportErrorNumber(mCx, GetErrorMessage, NULL,
-                                 JSSMSG_CANT_OPEN,
-                                 aFilename, strerror(errno));
-            mExitCode = EXITCODE_FILE_NOT_FOUND;
-            return;
-        }
-    }
-
-    ProcessFile(mCx, GetGlobalObject(), aFilename, file, !aFilename);
-    if (file != stdin) {
-        fclose(file);
-    }
-
-    if (EventLoopDepth()) {
-        nsCOMPtr<nsIThread> currentThread;
-        NS_GetCurrentThread(getter_AddRefs(currentThread));
-
-        while (EventLoopDepth()) {
-            NS_ProcessNextEvent(currentThread, PR_TRUE);
-        }
-    }
-}
-
-bool
-XPCShellEnvironment::DefineIPCCommands(TestShellChild* aChild)
-{
-    NS_ASSERTION(aChild, "Don't hand me null!");
-
-    // XXXbent Nothing here yet, soon though!
-    return true;
-}
-
-bool
-XPCShellEnvironment::DefineIPCCommands(TestShellParent* aParent)
-{
-    NS_ASSERTION(aParent, "Don't hand me null!");
-
-    mParent = aParent;
-
-    JSObject* global = GetGlobalObject();
-
-    JSAutoRequest ar(mCx);
-
-    if (!JS_DefineFunctions(mCx, global, gParentFunctions)) {
-        NS_ERROR("JS_DefineFunctions failed!");
-        return false;
-    }
-
-    return true;
-}
-
-JSBool
-XPCShellEnvironment::DoSendCommand(const nsString& aCommand,
-                                   JSContext* aCx,
-                                   jsval aCallback)
-{
-  if (aCx) {
-      TestShellCommandParent* command = static_cast<TestShellCommandParent*>(
-          mParent->SendTestShellCommandConstructor(aCommand));
-      NS_ENSURE_TRUE(command, JS_FALSE);
-
-      if (!command->SetCallback(aCx, aCallback)) {
-          NS_WARNING("Failed to set callback!");
-          return JS_FALSE;
-      }
-  }
-  else {
-      nsresult rv = mParent->SendExecuteCommand(aCommand);
-      NS_ENSURE_SUCCESS(rv, JS_FALSE);
-  }
-
-  return JS_TRUE;
 }
 
 bool
