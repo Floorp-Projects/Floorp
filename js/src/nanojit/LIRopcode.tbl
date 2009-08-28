@@ -63,6 +63,9 @@
  *
  * This file is best viewed with 128 columns:
 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
+ *
+ * Aliases for pointer-sized operations that choose 32bit or 64bit instructions
+ * are given in the LOpcode enum in LIR.h just after including LIRopcodes.tbl.
  */
 
 /*    op    val name        operands */
@@ -77,16 +80,16 @@ OPDEF(unused5,   5,-1, None)
 OPDEF(unused6,   6,-1, None)
 
 /* non-pure operations */
-OPDEF(iaddp,     7, 2, Op2)     // 32-bit integer addition for temporary pointer calculations
-OPDEF(iparam,    8, 0, P)       // load a parameter (32-bit register or stack location)
+OPDEF(iaddp,     7, 2, Op2)     // integer addition for temporary pointer calculations (32bit only)
+OPDEF(iparam,    8, 0, P)       // load a parameter (32bit register or stk location)
 OPDEF(unused9,   9,-1, None)
 OPDEF(ld,       10, 1, Ld)      // 32-bit load
-OPDEF(ialloc,   11, 0, I)       // alloca some stack space
+OPDEF(ialloc,   11, 0, I)       // alloc some stack space (value is 32bit address)
 OPDEF(sti,      12, 2, Sti)     // 32-bit store
 OPDEF(ret,      13, 1, Op1)     // return a word-sized value
 OPDEF(live,     14, 1, Op1)     // extend live range of reference
 OPDEF(unused15, 15, 0, C)
-OPDEF(call,     16, 0, C)       // subroutine call returning a 32-bit value
+OPDEF(icall,    16, 0, C)       // subroutine call returning a 32-bit value
 
 /* guards */
 OPDEF(loop,     17, 0, Op2)     // loop fragment
@@ -108,11 +111,7 @@ OPDEF(ji,       23,-1, None)    // indirect jump (currently not implemented)
 
 OPDEF(int,      24, 0, I)       // constant 32-bit integer
 OPDEF(cmov,     25, 3, Op3)     // conditional move
-#if defined(NANOJIT_64BIT)
-OPDEF(callh,    26,-1, None)    // unused on 64-bit machines
-#else
-OPDEF(callh,    26, 1, Op1)     // get the high 32 bits of a call returning a 64-bit value
-#endif
+OPDEF(callh,    26, 1, Op1)     // get the high 32 bits of a call returning a 64-bit value in two 32bit registers
 
 /*
  * feq though fge must only be used on float arguments.  They return integers.
@@ -162,7 +161,7 @@ OPDEF(ov,       53, 1, Op1)     // test for overflow;  value must have just been
 
 OPDEF(unused53, 54,-1, None)
 
-// Integer (all sizes) relational operators.  (op ^ 1) is the op which flips the
+// Integer (32 bit) relational operators.  (op ^ 1) is the op which flips the
 // left and right sides of the comparison, so (lt ^ 1) == gt, or the operator
 // "<" is xored with 1 to get ">".  Similarly, (op ^ 3) is the complement of
 // op, so (lt ^ 1) == ge, or the complement of the operator "<" is ">=" xored
@@ -189,7 +188,7 @@ OPDEF64(xtbl,       4, 1, Op2)      // exit via indirect jump
 OPDEF64(unused5_64, 5,-1, None)
 OPDEF64(unused6_64, 6,-1, None)
 OPDEF64(qaddp, LIR_iaddp, 2, Op2)    // integer addition for temp pointer calculations (64bit only)
-OPDEF64(unused8_64, 8,-1, None)
+OPDEF64(qparam,LIR_iparam,0, P)      // load a parameter (64bit register or stk location)
 OPDEF64(unused9_64, 9,-1, None)
 
 OPDEF64(ldq,    LIR_ld, 1, Ld)      // 64-bit (quad) load
@@ -202,9 +201,9 @@ OPDEF64(fret,   LIR_ret, 1, Op1)
 OPDEF64(unused14_64, 14,-1, None)
 OPDEF64(unused15_64, 15,-1, None)
 
-OPDEF64(fcall,  LIR_call,  0, C)    // subroutine call returning 64-bit (quad) value
+OPDEF64(fcall,  LIR_icall,  0, C)   // subroutine call returning 64-bit (quad) double value
+OPDEF64(qcall,  17,         0, C)   // subroutine call returning 64-bit (quad) integer value
 
-OPDEF64(unused17_64, 17,-1, None)
 OPDEF64(unused18_64, 18,-1, None)
 OPDEF64(unused19_64, 19,-1, None)
 OPDEF64(unused20_64, 20,-1, None)
