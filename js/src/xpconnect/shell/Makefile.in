@@ -64,7 +64,8 @@ NSDISTMODE = copy
 
 ifdef _MSC_VER
 ifdef WINCE
-WIN32_EXE_LDFLAGS += -ENTRY:mainACRTStartup
+WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre/
 endif
 endif
 

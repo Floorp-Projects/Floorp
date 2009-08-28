@@ -1565,9 +1565,19 @@ GetCurrentWorkingDirectory(nsAString& workingDirectory)
     return true;
 }
 
+#ifdef WINCE
+#include "nsWindowsWMain.cpp"
+#endif
+
 int
+#ifndef WINCE
 main(int argc, char **argv, char **envp)
 {
+#else
+main(int argc, char **argv)
+{
+	char **envp = 0;
+#endif
 #ifdef XP_MACOSX
     InitAutoreleasePool();
 #endif
