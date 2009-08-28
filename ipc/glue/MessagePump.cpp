@@ -36,7 +36,6 @@
 
 #include "MessagePump.h"
 
-#include "nsIAppShell.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
 
@@ -45,7 +44,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
-#include "nsWidgetsCID.h"
+#include "nsXULAppAPI.h"
 #include "pratom.h"
 #include "prthread.h"
 
@@ -54,8 +53,6 @@
 
 using mozilla::ipc::MessagePump;
 using mozilla::ipc::MessagePumpForChildProcess;
-
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 namespace {
 
@@ -189,13 +186,8 @@ MessagePumpForChildProcess::Run(MessagePump::Delegate* aDelegate)
     gFirstDelegate = aDelegate;
 #endif
     mFirstRun = false;
-    nsCOMPtr<nsIAppShell> appShell(do_GetService(kAppShellCID));
-    NS_WARN_IF_FALSE(appShell, "Failed to get app shell?!");
-    if (appShell) {
-      nsresult rv = appShell->Run();
-      if (NS_FAILED(rv)) {
+    if (NS_FAILED(XRE_RunAppShell())) {
         NS_WARNING("Failed to run app shell?!");
-      }
     }
 #ifdef DEBUG
     NS_ASSERTION(aDelegate && aDelegate == gFirstDelegate, "Huh?!");

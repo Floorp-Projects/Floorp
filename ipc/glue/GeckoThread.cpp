@@ -40,8 +40,6 @@
 
 #include "nsXPCOM.h"
 
-#include "nsRegion.h"
-
 #if defined(OS_WIN)
 #include <objbase.h>
 #endif
