@@ -5698,6 +5698,10 @@ JS_ClearRegExpStatics(JSContext *cx)
     res->parenCount = 0;
     res->lastMatch = res->lastParen = js_EmptySubString;
     res->leftContext = res->rightContext = js_EmptySubString;
+    if (res->moreParens) {
+      cx->free(res->moreParens);
+      res->moreParens = NULL;
+    }
     cx->runtime->gcPoke = JS_TRUE;
 }
 
