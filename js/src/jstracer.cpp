@@ -8577,6 +8577,59 @@ TraceRecorder::guardNotGlobalObject(JSObject* obj, LIns* obj_ins)
     return JSRS_CONTINUE;
 }
 
+JSRecordingStatus
+TraceRecorder::guardPrototypeProperty(JSObject* ctor, LIns* ctor_ins, LIns*& prototype_ins)
+{
+    JSAtom *atom = cx->runtime->atomState.classPrototypeAtom;
+
+    JSScope *scope = OBJ_SCOPE(ctor);
+#ifdef JS_THREADSAFE
+    if (scope->title.ownercx != cx)
+        ABORT_TRACE("shared object");
+#endif
+    if (!scope->owned()) {
+        scope = js_GetMutableScope(cx, ctor);
+        if (!scope)
+            ABORT_TRACE_ERROR("js_GetMutableScope failed");
+    }
+
+    JSScopeProperty *sprop;
+    if (!(sprop = scope->lookup(ATOM_TO_JSID(atom)))) {
+        /* No ctor.prototype yet, inline and optimize fun_resolve's prototype code. */
+        JSObject* proto = js_NewObject(cx, OBJ_GET_CLASS(cx, ctor), NULL, OBJ_GET_PARENT(cx, ctor));
+        if (!proto)
+            ABORT_TRACE_ERROR("js_NewObject failed");
+        if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
+            ABORT_TRACE_ERROR("js_SetClassPrototype failed");
+        if (!OBJ_IS_NATIVE(proto))
+            ABORT_TRACE("not-native prototype");
+        sprop = scope->lookup(ATOM_TO_JSID(atom));
+        JS_ASSERT(sprop);
+    }
+
+    /* The shape of the ctor object must not change. */
+    LIns* map_ins = map(ctor_ins);
+    LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
+    guard(true,
+          addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SHAPE(ctor)), "guard(shape)"),
+          BRANCH_EXIT);
+
+    /* Read the .prototype property on trace. */
+    LIns* dslots_ins = NULL;
+    LIns* value = stobj_get_slot(ctor_ins, sprop->slot, dslots_ins);
+
+    /* Primitive value in .prototype means we use Object.prototype for proto. */
+    JSObject* Object_proto;
+    if (!js_GetClassPrototype(cx, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]),
+                              INT_TO_JSID(JSProto_Object), &Object_proto))
+        ABORT_TRACE_ERROR("js_GetClassPrototype failed");
+
+    prototype_ins = lir->ins_choose(lir->ins_eq0(lir->ins2i(LIR_piand, value, JSVAL_TAGMASK)),
+                                    value,
+                                    INS_CONSTOBJ(Object_proto));
+    return JSRS_CONTINUE;
+}
+
 JS_REQUIRES_STACK void
 TraceRecorder::clearFrameSlotsFromCache()
 {
@@ -9107,14 +9160,13 @@ TraceRecorder::record_JSOP_OBJTOP()
 }
 
 JSRecordingStatus
-TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
+TraceRecorder::getClassPrototype(JSObject* ctor, JSObject*& proto, LIns*& proto_ins)
 {
     jsval pval;
 
     if (!ctor->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom), &pval))
         ABORT_TRACE_ERROR("error getting prototype from constructor");
-    if (JSVAL_TAG(pval) != JSVAL_OBJECT)
-        ABORT_TRACE("got primitive prototype from constructor");
+    JS_ASSERT(JSVAL_TAG(pval) == JSVAL_OBJECT);
 #ifdef DEBUG
     JSBool ok, found;
     uintN attrs;
@@ -9123,14 +9175,14 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     JS_ASSERT(found);
     JS_ASSERT((~attrs & (JSPROP_READONLY | JSPROP_PERMANENT)) == 0);
 #endif
-    proto_ins = INS_CONSTOBJ(JSVAL_TO_OBJECT(pval));
+    proto = JSVAL_TO_OBJECT(pval);
+    proto_ins = INS_CONSTOBJ(proto);
     return JSRS_CONTINUE;
 }
 
 JSRecordingStatus
-TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
+TraceRecorder::getClassPrototype(JSProtoKey key, JSObject*& proto, LIns*& proto_ins)
 {
-    JSObject* proto;
     if (!js_GetClassPrototype(cx, globalObj, INT_TO_JSID(key), &proto))
         ABORT_TRACE_ERROR("error in js_GetClassPrototype");
     proto_ins = INS_CONSTOBJ(proto);
@@ -9138,6 +9190,39 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
 }
 
 #define IGNORE_NATIVE_CALL_COMPLETE_CALLBACK ((JSTraceableNative*)1)
+
+JSRecordingStatus
+TraceRecorder::newObject(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
+{
+    JS_ASSERT(argc == 0);
+
+    LIns* parent_ins = INS_CONSTOBJ(OBJ_GET_PARENT(cx, ctor));
+
+    JSObject* proto;
+    LIns* proto_ins;
+    CHECK_STATUS(getClassPrototype(ctor, proto, proto_ins));
+
+    LIns* args[] = { parent_ins, proto_ins, INS_CONSTPTR(&js_ObjectClass), cx_ins };
+    LIns* obj_ins = lir->insCall(&js_NewNativeObject_ci, args);
+    guard(false, lir->ins_eq0(obj_ins), OOM_EXIT);
+
+    set(rval, obj_ins);
+    pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+    return JSRS_CONTINUE;
+}
+
+JSObject * FASTCALL
+js_String_tn(JSContext *cx, JSObject *proto, JSObject *parent, JSString *str)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+    JSObject* obj = js_NewNativeObject(cx, &js_StringClass, proto, parent);
+    if (!obj)
+        return NULL;
+
+    obj->fslots[JSSLOT_PRIVATE] = STRING_TO_JSVAL(str);
+    return obj;
+}
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_String_tn, CONTEXT, OBJECT, OBJECT, STRING, 0, 0)
 
 JSRecordingStatus
 TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
@@ -9149,10 +9234,13 @@ TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
         return call_imacro(new_imacros.String);
     }
 
+    JSObject* proto;
     LIns* proto_ins;
-    CHECK_STATUS(getClassPrototype(ctor, proto_ins));
+    CHECK_STATUS(getClassPrototype(ctor, proto, proto_ins));
 
-    LIns* args[] = { stringify(argv[0]), proto_ins, cx_ins };
+    LIns* parent_ins = INS_CONSTPTR(OBJ_GET_PARENT(cx, proto));
+
+    LIns* args[] = { stringify(argv[0]), parent_ins, proto_ins, cx_ins };
     LIns* obj_ins = lir->insCall(&js_String_tn_ci, args);
     guard(false, lir->ins_eq0(obj_ins), OOM_EXIT);
 
@@ -9164,8 +9252,9 @@ TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
 JSRecordingStatus
 TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
 {
+    JSObject* proto;
     LIns *proto_ins;
-    CHECK_STATUS(getClassPrototype(ctor, proto_ins));
+    CHECK_STATUS(getClassPrototype(ctor, proto, proto_ins));
 
     LIns *arr_ins;
     if (argc == 0 || (argc == 1 && JSVAL_IS_NUMBER(argv[0]))) {
@@ -9348,7 +9437,6 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
     JSStackFrame* fp = cx->fp;
     jsbytecode *pc = fp->regs->pc;
 
-    jsval& fval = stackval(0 - (2 + argc));
     jsval& tval = stackval(0 - (1 + argc));
 
     LIns* this_ins = get(&tval);
@@ -9384,12 +9472,6 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
                 if (!JSVAL_IS_STRING(tval))
                     goto next_specialization;
                 *argp = this_ins;
-            } else if (argtype == 'f') {
-                *argp = INS_CONSTOBJ(JSVAL_TO_OBJECT(fval));
-            } else if (argtype == 'p') {
-                CHECK_STATUS(getClassPrototype(JSVAL_TO_OBJECT(fval), *argp));
-            } else if (argtype == 'R') {
-                *argp = INS_CONSTPTR(cx->runtime);
             } else if (argtype == 'P') {
                 // FIXME: Set pc to imacpc when recording JSOP_CALL inside the
                 //        JSOP_GETELEM imacro (bug 476559).
@@ -9417,17 +9499,8 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
                     goto next_specialization;
                 if (argtype == 'i')
                     *argp = f2i(*argp);
-            } else if (argtype == 'o') {
-                if (JSVAL_IS_PRIMITIVE(arg))
-                    goto next_specialization;
             } else if (argtype == 's') {
                 if (!JSVAL_IS_STRING(arg))
-                    goto next_specialization;
-            } else if (argtype == 'r') {
-                if (!VALUE_IS_REGEXP(cx, arg))
-                    goto next_specialization;
-            } else if (argtype == 'f') {
-                if (!VALUE_IS_FUNCTION(cx, arg))
                     goto next_specialization;
             } else if (argtype == 'v') {
                 *argp = box_jsval(arg, *argp);
@@ -9521,7 +9594,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             clasp = &js_ObjectClass;
         JS_ASSERT(((jsuword) clasp & 3) == 0);
 
-        // Abort on |new Function|. js_NewInstance would allocate a regular-
+        // Abort on |new Function|. js_NewNativeObject would allocate a regular-
         // sized JSObject, not a Function-sized one. (The Function ctor would
         // deep-bail anyway but let's not go there.)
         if (clasp == &js_FunctionClass)
@@ -9530,11 +9603,14 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         if (clasp->getObjectOps)
             ABORT_TRACE("new with non-native ops");
 
-        args[0] = INS_CONSTOBJ(funobj);
-        args[1] = INS_CONSTPTR(clasp);
-        args[2] = cx_ins;
-        newobj_ins = lir->insCall(&js_NewInstance_ci, args);
+        args[0] = INS_CONSTOBJ(OBJ_GET_PARENT(cx, funobj));
+        CHECK_STATUS(guardPrototypeProperty(funobj, get(&vp[0]), args[1]));
+        args[2] = INS_CONSTPTR(clasp);
+        args[3] = cx_ins;
+
+        newobj_ins = lir->insCall(&js_NewNativeObject_ci, args);
         guard(false, lir->ins_eq0(newobj_ins), OOM_EXIT);
+
         this_ins = newobj_ins; /* boxing an object is a no-op */
     } else if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
         this_ins = INS_CONSTWORD(OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, funobj)));
@@ -9685,10 +9761,16 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
 
     if (FUN_INTERPRETED(fun)) {
         if (mode == JSOP_NEW) {
-            LIns* args[] = { get(&fval), INS_CONSTPTR(&js_ObjectClass), cx_ins };
-            LIns* tv_ins = lir->insCall(&js_NewInstance_ci, args);
-            guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
-            set(&tval, tv_ins);
+            JSObject* ctor = JSVAL_TO_OBJECT(fval);
+            LIns* parent_ins = INS_CONSTOBJ(OBJ_GET_PARENT(cx, ctor));
+            LIns* prototype_ins;
+            CHECK_STATUS(guardPrototypeProperty(ctor, get(&fval), prototype_ins));
+
+            LIns* args[] = { parent_ins, prototype_ins, INS_CONSTPTR(&js_ObjectClass), cx_ins };
+            LIns* obj_ins = lir->insCall(&js_NewNativeObject_ci, args);
+            guard(false, lir->ins_eq0(obj_ins), OOM_EXIT);
+
+            set(&tval, obj_ins);
         }
         return interpretedFunctionCall(fval, fun, argc, mode == JSOP_NEW);
     }
@@ -9696,6 +9778,8 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
     if (FUN_SLOW_NATIVE(fun)) {
         JSNative native = fun->u.n.native;
         jsval* argv = &tval + 1;
+        if (native == js_Object && argc == 0)
+            return newObject(JSVAL_TO_OBJECT(fval), argc, argv, &fval);
         if (native == js_Array)
             return newArray(JSVAL_TO_OBJECT(fval), argc, argv, &fval);
         if (native == js_String && argc == 1) {
@@ -11011,7 +11095,7 @@ TraceRecorder::record_JSOP_APPLY()
 }
 
 static JSBool FASTCALL
-CatchStopIteration_tn(JSContext* cx, JSBool ok, jsval* vp)
+CatchStopIteration(JSContext* cx, JSBool ok, jsval* vp)
 {
     if (!ok && cx->throwing && js_ValueIsStopIteration(cx->exception)) {
         cx->throwing = JS_FALSE;
@@ -11022,8 +11106,7 @@ CatchStopIteration_tn(JSContext* cx, JSBool ok, jsval* vp)
     return ok;
 }
 
-JS_DEFINE_TRCINFO_1(CatchStopIteration_tn,
-    (3, (static, BOOL, CatchStopIteration_tn, CONTEXT, BOOL, JSVALPTR, 0, 0)))
+JS_DEFINE_CALLINFO_3(static, BOOL, CatchStopIteration, CONTEXT, BOOL, JSVALPTR, 0, 0)
 
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_NativeCallComplete()
@@ -11068,7 +11151,7 @@ TraceRecorder::record_NativeCallComplete()
             if (uintptr_t(pc - nextiter_imacros.custom_iter_next) <
                 sizeof(nextiter_imacros.custom_iter_next)) {
                 LIns* args[] = { native_rval_ins, ok_ins, cx_ins }; /* reverse order */
-                ok_ins = lir->insCall(&CatchStopIteration_tn_ci, args);
+                ok_ins = lir->insCall(&CatchStopIteration_ci, args);
             }
 
             /*
@@ -11595,14 +11678,23 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_NEWINIT()
 {
     JSProtoKey key = JSProtoKey(GET_INT8(cx->fp->regs->pc));
-    LIns *proto_ins;
-    CHECK_STATUS(getClassPrototype(key, proto_ins));
 
-    LIns* args[] = { proto_ins, cx_ins };
-    const CallInfo *ci = (key == JSProto_Array) ? &js_NewEmptyArray_ci : &js_Object_tn_ci;
-    LIns* v_ins = lir->insCall(ci, args);
-    guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
-    stack(0, v_ins);
+    JSObject *proto;
+    LIns *proto_ins;
+    CHECK_STATUS(getClassPrototype(key, proto, proto_ins));
+
+    LIns* obj_ins;
+    if (key == JSProto_Array) {
+        LIns* args[] = { proto_ins, cx_ins };
+        obj_ins = lir->insCall(&js_NewEmptyArray_ci, args);
+    } else {
+        LIns *parent_ins = INS_CONSTOBJ(OBJ_GET_PARENT(cx, proto));
+        LIns* args[] = { parent_ins, proto_ins, INS_CONSTPTR(&js_ObjectClass), cx_ins };
+        obj_ins = lir->insCall(&js_NewNativeObject_ci, args);
+    }
+    guard(false, lir->ins_eq0(obj_ins), OOM_EXIT);
+    stack(0, obj_ins);
+
     return JSRS_CONTINUE;
 }
 
@@ -12126,8 +12218,9 @@ TraceRecorder::record_JSOP_LAMBDA()
     JS_GET_SCRIPT_FUNCTION(cx->fp->script, getFullIndex(), fun);
 
     if (FUN_NULL_CLOSURE(fun) && OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) == globalObj) {
+        JSObject* proto;
         LIns *proto_ins;
-        CHECK_STATUS(getClassPrototype(JSProto_Function, proto_ins));
+        CHECK_STATUS(getClassPrototype(JSProto_Function, proto, proto_ins));
 
         LIns* args[] = { INS_CONSTOBJ(globalObj), proto_ins, INS_CONSTFUN(fun), cx_ins };
         LIns* x = lir->insCall(&js_NewNullClosure_ci, args);
@@ -12252,8 +12345,9 @@ TraceRecorder::record_DefLocalFunSetSlot(uint32 slot, JSObject* obj)
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, obj);
 
     if (FUN_NULL_CLOSURE(fun) && OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) == globalObj) {
+        JSObject* proto;
         LIns *proto_ins;
-        CHECK_STATUS(getClassPrototype(JSProto_Function, proto_ins));
+        CHECK_STATUS(getClassPrototype(JSProto_Function, proto, proto_ins));
 
         LIns* args[] = { INS_CONSTOBJ(globalObj), proto_ins, INS_CONSTFUN(fun), cx_ins };
         LIns* x = lir->insCall(&js_NewNullClosure_ci, args);
@@ -13107,8 +13201,9 @@ TraceRecorder::record_JSOP_LENGTH()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_NEWARRAY()
 {
+    JSObject* proto;
     LIns *proto_ins;
-    CHECK_STATUS(getClassPrototype(JSProto_Array, proto_ins));
+    CHECK_STATUS(getClassPrototype(JSProto_Array, proto, proto_ins));
 
     uint32 len = GET_UINT16(cx->fp->regs->pc);
     cx->fp->assertValidStackDepth(len);
