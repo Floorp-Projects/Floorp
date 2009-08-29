@@ -398,14 +398,8 @@ else
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(dist_bindir)
 endif
 endif
-ifeq ($(MOZ_BITS),16)
-	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/lib
-	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/bin
-endif
 
 ifeq ($(BUILD_AIX_RTL_LIBC),1)
 $(AIX_RTL_LIBC): /usr/ccs/lib/libc.a
 	rtl_enable -o $@ $<
 endif
-
-

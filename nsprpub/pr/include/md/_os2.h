@@ -450,10 +450,12 @@ extern struct PRThread * _MD_CURRENT_THREAD(void);
 #define _MD_INIT_STACK(stack, redzone)
 #define _MD_CLEAR_STACK(stack)
 
-/* --- Memory-mapped files stuff --- not implemented on OS/2 */
-
+/* --- Memory-mapped files stuff --- */
+/* ReadOnly and WriteCopy modes are simulated on OS/2;
+ * ReadWrite mode is not supported.
+ */
 struct _MDFileMap {
-    PRInt8 unused;
+    PROffset64  maxExtent;
 };
 
 extern PRStatus _MD_CreateFileMap(struct PRFileMap *fmap, PRInt64 size);
