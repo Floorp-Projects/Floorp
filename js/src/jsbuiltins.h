@@ -77,8 +77,6 @@ enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
  * 'i': an integer argument
  * 's': a JSString* argument
  * 'o': a JSObject* argument
- * 'r': a JSObject* argument that is of class js_RegExpClass
- * 'f': a JSObject* argument that is of class js_FunctionClass
  * 'v': a jsval argument (boxing whatever value is actually being passed in)
  */
 struct JSTraceableNative {
