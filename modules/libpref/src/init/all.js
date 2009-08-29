@@ -1125,7 +1125,7 @@ pref("layout.css.dpi", -1);
 // automatically based on the DPI. A positive value is used as-is. This effectively
 // controls the size of a CSS "px". This is only used for pixel-based
 // (screen) output devices.
-pref("layout.css.devPixelsPerPx", -1);
+pref("layout.css.devPixelsPerPx", "-1");
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction

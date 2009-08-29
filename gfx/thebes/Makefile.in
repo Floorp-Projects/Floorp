@@ -8,7 +8,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= thebes
 
-DIRS	= public src
+DIRS	= public src mochitest
 
 ifdef ENABLE_TESTS
 ifndef MOZ_ENABLE_LIBXUL
