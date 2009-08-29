@@ -9437,6 +9437,7 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
     JSStackFrame* fp = cx->fp;
     jsbytecode *pc = fp->regs->pc;
 
+    jsval& fval = stackval(0 - (2 + argc));
     jsval& tval = stackval(0 - (1 + argc));
 
     LIns* this_ins = get(&tval);
@@ -9472,6 +9473,8 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
                 if (!JSVAL_IS_STRING(tval))
                     goto next_specialization;
                 *argp = this_ins;
+            } else if (argtype == 'f') {
+                *argp = INS_CONSTOBJ(JSVAL_TO_OBJECT(fval));
             } else if (argtype == 'P') {
                 // FIXME: Set pc to imacpc when recording JSOP_CALL inside the
                 //        JSOP_GETELEM imacro (bug 476559).
@@ -9501,9 +9504,6 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
                     *argp = f2i(*argp);
             } else if (argtype == 's') {
                 if (!JSVAL_IS_STRING(arg))
-                    goto next_specialization;
-            } else if (argtype == 'f') {
-                if (!VALUE_IS_FUNCTION(cx, arg))
                     goto next_specialization;
             } else if (argtype == 'v') {
                 *argp = box_jsval(arg, *argp);
