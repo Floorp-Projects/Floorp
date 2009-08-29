@@ -649,6 +649,7 @@ if test -n "$CROSS_COMPILE"; then
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin ;;
+        riscos*)      OS_ARCH=RISCOS ;;
     esac
 else
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -1679,9 +1680,9 @@ tools are selected during the Xcode/Developer Tools installation.])
 
     DLLFLAGS='-OUT:"$@"'
     if test -n "$MOZ_DEBUG_SYMBOLS"; then
-        OS_LDFLAGS=-DEBUG -DEBUGTYPE:CV
-        OS_DLLFLAGS=-DEBUG -DEBUGTYPE:CV
-        DSO_LDOPTS=-DEBUG -DEBUGTYPE:CV
+        OS_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
+        OS_DLLFLAGS='-DEBUG -DEBUGTYPE:CV'
+        DSO_LDOPTS='-DEBUG -DEBUGTYPE:CV'
     fi
     _DEBUG_FLAGS=-Zi
     _OPTIMIZE_FLAGS=-O2
@@ -1881,8 +1882,9 @@ mips-sony-newsos*)
     USE_PTHREADS=1
     MDCPUCFG_H=_riscos.cfg
     PR_MD_CSRCS=riscos.c
-    DLL_SUFFIX=a
-    LD="/home/riscos/env/ro-ar cr"
+    DSO_CFLAGS=-fPIC
+    DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     ;;
 
 *-*-sco*)
@@ -2229,7 +2231,6 @@ mips-sony-newsos*)
     if test -n "$MOZ_OPTIMIZE"; then
       DSO_LDOPTS="$DSO_LDOPTS -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
     fi
-    OS_LIBS="-lsocket"
     IMPLIB='emximp -o'
     FILTER='emxexp -o'
     if test -n "$MOZ_OS2_HIGH_MEMORY"; then
@@ -2279,9 +2280,10 @@ dnl AC_CHECK_LIB(vms_jackets, main)
 dnl We don't want anything to link with libdl even if it's present on OS X, 
 dnl since it's not used and not part of the default installation.
 dnl The same goes for BeOS.
+dnl OS/2 has dlfcn in libc.
 
 case $target in
-*-darwin*|*-beos*)
+*-darwin*|*-beos*|*-os2*)
     ;;
 *)
     AC_CHECK_LIB(dl, dlopen,

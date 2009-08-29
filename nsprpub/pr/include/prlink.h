@@ -165,6 +165,8 @@ typedef struct PRLibSpec {
 #define PR_LD_NOW    0x2  /* equivalent to RTLD_NOW on Unix */
 #define PR_LD_GLOBAL 0x4  /* equivalent to RTLD_GLOBAL on Unix */
 #define PR_LD_LOCAL  0x8  /* equivalent to RTLD_LOCAL on Unix */
+/* The following is equivalent to LOAD_WITH_ALTERED_SEARCH_PATH on Windows */
+#define PR_LD_ALT_SEARCH_PATH  0x10  
 /*                0x8000     reserved for NSPR internal use */
 
 /*
