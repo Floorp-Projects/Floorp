@@ -523,11 +523,11 @@ static inline bool
 JS_ISSPACE(jschar c)
 {
     uint32 w = uint32(c);
-    if (w < 256) {
+
+    if (w < 256)
         return w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD));
-    } else {
-        return (JS_CCODE(w) & 0x00070000) == 0x00040000;
-    }
+
+    return (JS_CCODE(w) & 0x00070000) == 0x00040000;
 }
 
 #define JS_ISPRINT(c)   ((c) < 128 && isprint(c))

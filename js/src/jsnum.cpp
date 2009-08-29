@@ -1124,23 +1124,6 @@ js_ValueToUint16(JSContext *cx, jsval *vp)
     return u;
 }
 
-jsdouble
-js_DoubleToInteger(jsdouble d)
-{
-    JSBool neg;
-
-    if (d == 0)
-        return d;
-    if (!JSDOUBLE_IS_FINITE(d)) {
-        if (JSDOUBLE_IS_NaN(d))
-            return 0;
-        return d;
-    }
-    neg = (d < 0);
-    d = floor(neg ? -d : d);
-    return neg ? -d : d;
-}
-
 JSBool
 js_strtod(JSContext *cx, const jschar *s, const jschar *send,
           const jschar **ep, jsdouble *dp)
