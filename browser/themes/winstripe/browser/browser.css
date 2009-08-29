@@ -427,13 +427,10 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #home-button {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
-#home-button:not([disabled="true"]):hover {
+#home-button:hover {
   -moz-image-region: rect(24px 120px 48px 96px);
 }
-#home-button[disabled="true"] {
-  -moz-image-region: rect(48px 120px 72px 96px);
-}
-#home-button:not([disabled="true"]):hover:active {
+#home-button:hover:active {
   -moz-image-region: rect(96px 120px 120px 96px);
 }
 
@@ -442,13 +439,10 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #downloads-button {
   -moz-image-region: rect(0px 144px 24px 120px);
 }
-#downloads-button:not([disabled="true"]):hover {
+#downloads-button:hover {
   -moz-image-region: rect(24px 144px 48px 120px);
 }
-#downloads-button[disabled="true"] {
-  -moz-image-region: rect(48px 144px 72px 120px);
-}
-#downloads-button:not([disabled="true"]):hover:active {
+#downloads-button:hover:active {
   -moz-image-region: rect(96px 144px 120px 120px);
 }
 
@@ -457,16 +451,13 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #history-button {
   -moz-image-region: rect(0px 168px 24px 144px);
 }
-#history-button:not([disabled="true"]):not([checked="true"]):hover {
+#history-button:not([checked="true"]):hover {
   -moz-image-region: rect(24px 168px 48px 144px);
-}
-#history-button[disabled="true"] {
-  -moz-image-region: rect(48px 168px 72px 144px);
 }
 #history-button[checked="true"] {
   -moz-image-region: rect(72px 168px 96px 144px);
 }
-#history-button:not([disabled="true"]):not([checked="true"]):hover:active {
+#history-button:not([checked="true"]):hover:active {
   -moz-image-region: rect(96px 168px 120px 144px);
 }
 
@@ -475,16 +466,13 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #bookmarks-button {
   -moz-image-region: rect(0px 192px 24px 168px);
 }
-#bookmarks-button:not([disabled="true"]):not([checked="true"]):hover {
+#bookmarks-button:not([checked="true"]):hover {
   -moz-image-region: rect(24px 192px 48px 168px);
-}
-#bookmarks-button[disabled="true"] {
-  -moz-image-region: rect(48px 192px 72px 168px);
 }
 #bookmarks-button[checked="true"] {
   -moz-image-region: rect(72px 192px 96px 168px);
 }
-#bookmarks-button:not([disabled="true"]):not([checked="true"]):hover:active {
+#bookmarks-button:not([checked="true"]):hover:active {
   -moz-image-region: rect(96px 192px 120px 168px);
 }
 
@@ -508,13 +496,10 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #new-tab-button {
   -moz-image-region: rect(0px 240px 24px 216px);
 }
-#new-tab-button:not([disabled="true"]):hover {
+#new-tab-button:hover {
   -moz-image-region: rect(24px 240px 48px 216px);
 }
-#new-tab-button[disabled="true"] {
-  -moz-image-region: rect(48px 240px 72px 216px);
-}
-#new-tab-button:not([disabled="true"]):hover:active {
+#new-tab-button:hover:active {
   -moz-image-region: rect(96px 240px 120px 216px);
 }
 
@@ -523,13 +508,10 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #new-window-button {
   -moz-image-region: rect(0px 264px 24px 240px);
 }
-#new-window-button:not([disabled="true"]):hover {
+#new-window-button:hover {
   -moz-image-region: rect(24px 264px 48px 240px);
 }
-#new-window-button[disabled="true"] {
-  -moz-image-region: rect(48px 264px 72px 240px);
-}
-#new-window-button:not([disabled="true"]):hover:active {
+#new-window-button:hover:active {
   -moz-image-region: rect(96px 264px 120px 240px);
 }
 
@@ -689,16 +671,12 @@ toolbar[iconsize="small"] #home-button ,
 #home-button.bookmark-item {
   -moz-image-region: rect(0px 80px 16px 64px);
 }
-toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover ,
-#home-button.bookmark-item:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #home-button:hover ,
+#home-button.bookmark-item:hover {
   -moz-image-region: rect(16px 80px 32px 64px);
 }
-toolbar[iconsize="small"] #home-button[disabled="true"] ,
-#home-button.bookmark-item[disabled="true"] {
-  -moz-image-region: rect(32px 80px 48px 64px);
-}
-toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover:active ,
-#home-button.bookmark-item:not([disabled="true"]):hover:active {
+toolbar[iconsize="small"] #home-button:hover:active ,
+#home-button.bookmark-item:hover:active {
   -moz-image-region: rect(64px 80px 80px 64px);
 }
 
@@ -707,13 +685,10 @@ toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover:active ,
 toolbar[iconsize="small"] #downloads-button {
   -moz-image-region: rect(0px 96px 16px 80px);
 }
-toolbar[iconsize="small"] #downloads-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #downloads-button:hover {
   -moz-image-region: rect(16px 96px 32px 80px);
 }
-toolbar[iconsize="small"] #downloads-button[disabled="true"] {
-  -moz-image-region: rect(32px 96px 48px 80px);
-}
-toolbar[iconsize="small"] #downloads-button:not([disabled="true"]):hover:active {
+toolbar[iconsize="small"] #downloads-button:hover:active {
   -moz-image-region: rect(64px 96px 80px 80px);
 }
 
@@ -722,16 +697,13 @@ toolbar[iconsize="small"] #downloads-button:not([disabled="true"]):hover:active 
 toolbar[iconsize="small"] #history-button {
   -moz-image-region: rect(0px 112px 16px 96px);
 }
-toolbar[iconsize="small"] #history-button:not([disabled="true"]):not([checked="true"]):hover {
+toolbar[iconsize="small"] #history-button:not([checked="true"]):hover {
   -moz-image-region: rect(16px 112px 32px 96px);
-}
-toolbar[iconsize="small"] #history-button[disabled="true"] {
-  -moz-image-region: rect(32px 112px 48px 96px);
 }
 toolbar[iconsize="small"] #history-button[checked="true"] {
   -moz-image-region: rect(48px 112px 64px 96px);
 }
-toolbar[iconsize="small"] #history-button:not([disabled="true"]):not([checked="true"]):hover:active {
+toolbar[iconsize="small"] #history-button:not([checked="true"]):hover:active {
   -moz-image-region: rect(64px 112px 80px 96px);
 }
 
@@ -740,16 +712,13 @@ toolbar[iconsize="small"] #history-button:not([disabled="true"]):not([checked="t
 toolbar[iconsize="small"] #bookmarks-button {
   -moz-image-region: rect(0px 128px 16px 112px);
 }
-toolbar[iconsize="small"] #bookmarks-button:not([disabled="true"]):not([checked="true"]):hover {
+toolbar[iconsize="small"] #bookmarks-button:not([checked="true"]):hover {
   -moz-image-region: rect(16px 128px 32px 112px);
-}
-toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
-  -moz-image-region: rect(32px 128px 48px 112px);
 }
 toolbar[iconsize="small"] #bookmarks-button[checked="true"] {
   -moz-image-region: rect(48px 128px 64px 112px);
 }
-toolbar[iconsize="small"] #bookmarks-button:not([disabled="true"]):not([checked="true"]):hover:active {
+toolbar[iconsize="small"] #bookmarks-button:not([checked="true"]):hover:active {
   -moz-image-region: rect(64px 128px 80px 112px);
 }
 
@@ -773,13 +742,10 @@ toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover:active {
 toolbar[iconsize="small"] #new-tab-button {
   -moz-image-region: rect(0px 160px 16px 144px);
 }
-toolbar[iconsize="small"] #new-tab-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #new-tab-button:hover {
   -moz-image-region: rect(16px 160px 32px 144px);
 }
-toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
-  -moz-image-region: rect(32px 160px 48px 144px);
-}
-toolbar[iconsize="small"] #new-tab-button:not([disabled="true"]):hover:active {
+toolbar[iconsize="small"] #new-tab-button:hover:active {
   -moz-image-region: rect(64px 160px 80px 144px);
 }
 
@@ -788,13 +754,10 @@ toolbar[iconsize="small"] #new-tab-button:not([disabled="true"]):hover:active {
 toolbar[iconsize="small"] #new-window-button {
   -moz-image-region: rect(0px 176px 16px 160px);
 }
-toolbar[iconsize="small"] #new-window-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #new-window-button:hover {
   -moz-image-region: rect(16px 176px 32px 160px);
 }
-toolbar[iconsize="small"] #new-window-button[disabled="true"] {
-  -moz-image-region: rect(32px 176px 48px 160px);
-}
-toolbar[iconsize="small"] #new-window-button:not([disabled="true"]):hover:active {
+toolbar[iconsize="small"] #new-window-button:hover:active {
   -moz-image-region: rect(64px 176px 80px 160px);
 }
 
