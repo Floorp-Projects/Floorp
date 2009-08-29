@@ -9502,6 +9502,9 @@ TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructin
             } else if (argtype == 's') {
                 if (!JSVAL_IS_STRING(arg))
                     goto next_specialization;
+            } else if (argtype == 'f') {
+                if (!VALUE_IS_FUNCTION(cx, arg))
+                    goto next_specialization;
             } else if (argtype == 'v') {
                 *argp = box_jsval(arg, *argp);
             } else {
