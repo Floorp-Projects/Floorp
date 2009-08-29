@@ -614,17 +614,11 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                            JSObject *parent, size_t objectSize = 0);
 
 /*
- * Allocate a new native object and initialize all fslots with JSVAL_VOID
- * starting with the specified slot. The parent slot is set to the value of
- * proto's parent slot.
- *
- * Note that this is the correct global object for native class instances, but
- * not for user-defined functions called as constructors.  Functions used as
- * constructors must create instances parented by the parent of the function
- * object, not by the parent of its .prototype object value.
+ * Allocate a new native object, set proto and parent, and initialize all
+ * remainting fslots with JSVAL_VOID.
  */
-extern JSObject*
-js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, uint32 slot);
+extern JSObject* JS_FASTCALL
+js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).

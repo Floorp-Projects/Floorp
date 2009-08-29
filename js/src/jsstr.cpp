@@ -2456,23 +2456,6 @@ js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-#ifdef JS_TRACER
-
-JSObject* FASTCALL
-js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = js_NewNativeObject(cx, &js_StringClass, proto, JSSLOT_PRIVATE + 1);
-    if (!obj)
-        return NULL;
-
-    obj->fslots[JSSLOT_PRIVATE] = STRING_TO_JSVAL(str);
-    return obj;
-}
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0, 0)
-
-#endif /* !JS_TRACER */
-
 static JSBool
 str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 {

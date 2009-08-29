@@ -919,19 +919,24 @@ class TraceRecorder : public avmplus::GCObject {
                                                                              ExitType exitType);
     JS_REQUIRES_STACK JSRecordingStatus guardNotGlobalObject(JSObject* obj,
                                                              nanojit::LIns* obj_ins);
+    JS_REQUIRES_STACK JSRecordingStatus guardPrototypeProperty(JSObject* ctor,
+                                                               nanojit::LIns* ctor_ins,
+                                                               nanojit::LIns*& prototype_ins);
     void clearFrameSlotsFromCache();
     JS_REQUIRES_STACK void putArguments();
     JS_REQUIRES_STACK JSRecordingStatus guardCallee(jsval& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
                                                         unsigned *depthp);
-    JS_REQUIRES_STACK JSRecordingStatus getClassPrototype(JSObject* ctor,
+    JS_REQUIRES_STACK JSRecordingStatus getClassPrototype(JSObject* ctor, JSObject*& proto,
                                                           nanojit::LIns*& proto_ins);
-    JS_REQUIRES_STACK JSRecordingStatus getClassPrototype(JSProtoKey key,
+    JS_REQUIRES_STACK JSRecordingStatus getClassPrototype(JSProtoKey key, JSObject*& proto,
                                                           nanojit::LIns*& proto_ins);
-    JS_REQUIRES_STACK JSRecordingStatus newArray(JSObject* ctor, uint32 argc, jsval* argv,
-                                                 jsval* rval);
+    JS_REQUIRES_STACK JSRecordingStatus newObject(JSObject* ctor, uint32 argc, jsval* argv,
+                                                  jsval* rval);
     JS_REQUIRES_STACK JSRecordingStatus newString(JSObject* ctor, uint32 argc, jsval* argv,
                                                   jsval* rval);
+    JS_REQUIRES_STACK JSRecordingStatus newArray(JSObject* ctor, uint32 argc, jsval* argv,
+                                                 jsval* rval);
     JS_REQUIRES_STACK JSRecordingStatus interpretedFunctionCall(jsval& fval, JSFunction* fun,
                                                                 uintN argc, bool constructing);
     JS_REQUIRES_STACK void propagateFailureToBuiltinStatus(nanojit::LIns *ok_ins,
