@@ -456,6 +456,10 @@ EXTRA_LIBS = -ldl
 endif
 endif
 
+ifeq ($(OS_ARCH),RISCOS)
+EXTRA_LIBS = -ldl
+endif
+
 ifeq ($(USE_PTHREADS),1)
 LIBPTHREAD = -lpthread
 ifeq ($(OS_ARCH),AIX)
