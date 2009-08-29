@@ -44,7 +44,9 @@
 
 JS_BEGIN_EXTERN_C
 
-inline JSString *JSString::getUnitString(JSContext *cx, jschar c) {
+inline JSString *
+JSString::getUnitString(JSContext *cx, jschar c)
+{
     JS_ASSERT(c < UNIT_STRING_LIMIT);
     JSRuntime *rt = cx->runtime;
     JSString **unitStrings = rt->unitStrings;
@@ -54,7 +56,9 @@ inline JSString *JSString::getUnitString(JSContext *cx, jschar c) {
     return js_MakeUnitString(cx, c);
 }
 
-inline JSString *JSString::getUnitString(JSContext *cx, JSString *str, size_t index) {
+inline JSString *
+JSString::getUnitString(JSContext *cx, JSString *str, size_t index)
+{
     JS_ASSERT(index < str->length());
     jschar c = str->chars()[index];
     if (c >= UNIT_STRING_LIMIT)
