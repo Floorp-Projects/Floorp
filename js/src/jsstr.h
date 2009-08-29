@@ -519,9 +519,17 @@ extern const bool js_alnum[];
 
 #define JS_ISDIGIT(c)   (JS_CTYPE(c) == JSCT_DECIMAL_DIGIT_NUMBER)
 
-/* XXXbe unify on A/X/Y tbls, avoid ctype.h? */
-/* XXXbe fs, etc. ? */
-#define JS_ISSPACE(c)   ((JS_CCODE(c) & 0x00070000) == 0x00040000)
+static inline bool
+JS_ISSPACE(jschar c)
+{
+    uint32 w = uint32(c);
+    if (w < 256) {
+        return w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD));
+    } else {
+        return (JS_CCODE(w) & 0x00070000) == 0x00040000;
+    }
+}
+
 #define JS_ISPRINT(c)   ((c) < 128 && isprint(c))
 
 #define JS_ISUPPER(c)   (JS_CTYPE(c) == JSCT_UPPERCASE_LETTER)
@@ -686,8 +694,14 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 /*
  * Return s advanced past any Unicode white space characters.
  */
-extern const jschar *
-js_SkipWhiteSpace(const jschar *s, const jschar *end);
+static inline const jschar *
+js_SkipWhiteSpace(const jschar *s, const jschar *end)
+{
+    JS_ASSERT(s <= end);
+    while (s != end && JS_ISSPACE(*s))
+        s++;
+    return s;
+}
 
 /*
  * Inflate bytes to JS chars and vice versa.  Report out of memory via cx
