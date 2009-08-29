@@ -529,9 +529,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 #home-button {
   -moz-image-region: rect(0px, 180px, 23px, 144px);
 }
-#home-button[disabled="true"] {
-  -moz-image-region: rect(23px, 180px, 46px, 144px) !important;
-}
 #home-button:hover:active {
   -moz-image-region: rect(46px, 180px, 69px, 144px);
 }
@@ -550,9 +547,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 #downloads-button {
   -moz-image-region: rect(0px, 216px, 23px, 180px);
 }
-#downloads-button[disabled="true"] {
-  -moz-image-region: rect(23px, 216px, 46px, 180px);
-}
 #downloads-button:hover:active {
   -moz-image-region: rect(46px, 216px, 69px, 180px);
 }
@@ -561,9 +555,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 
 #history-button {
   -moz-image-region: rect(0px, 252px, 23px, 216px);
-}
-#history-button[disabled="true"] {
-  -moz-image-region: rect(23px, 252px, 46px, 216px);
 }
 #history-button:hover:active { 
   -moz-image-region: rect(46px, 252px, 69px, 216px);
@@ -585,9 +576,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 
 #bookmarks-button {
   -moz-image-region: rect(0px, 288px, 23px, 252px);
-}
-#bookmarks-button[disabled="true"] {
-  -moz-image-region: rect(23px, 288px, 46px, 252px);
 }
 #bookmarks-button:hover:active {
   -moz-image-region: rect(46px, 288px, 69px, 252px);
@@ -622,9 +610,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 #new-tab-button {
   -moz-image-region: rect(0px, 360px, 23px, 324px);
 }
-#new-tab-button[disabled="true"] {
-  -moz-image-region: rect(23px, 360px, 46px, 324px);
-}
 #new-tab-button:hover:active {
   -moz-image-region: rect(46px, 360px, 69px, 324px);
 }
@@ -633,9 +618,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 
 #new-window-button {
   -moz-image-region: rect(0px, 396px, 23px, 360px);
-}
-#new-window-button[disabled="true"] {
-  -moz-image-region: rect(23px, 396px, 46px, 360px);
 }
 #new-window-button:hover:active {
   -moz-image-region: rect(46px, 396px, 69px, 360px);
