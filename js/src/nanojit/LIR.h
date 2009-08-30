@@ -144,7 +144,7 @@ namespace nanojit
         AbiKind     _abi:3;
         verbose_only ( const char* _name; )
 
-        uint32_t FASTCALL _count_args(uint32_t mask) const;
+        uint32_t _count_args(uint32_t mask) const;
         uint32_t get_sizes(ArgSize*) const;
 
         inline bool isIndirect() const {
@@ -797,7 +797,10 @@ namespace nanojit
     typedef LIns* LInsp;
     typedef SeqBuilder<LIns*> InsList;
 
-    LIns* FASTCALL callArgN(LInsp i, uint32_t n);
+    inline LIns* callArgN(LInsp i, uint32_t n) {
+        return i->arg(i->argc()-n-1);
+    }
+
     extern const int8_t operandCount[];
 
     // make it a GCObject so we can explicitly delete it early
@@ -1055,10 +1058,10 @@ namespace nanojit
         uint32_t m_used, m_cap;
         Allocator& alloc;
 
-        static uint32_t FASTCALL hashcode(LInsp i);
-        uint32_t FASTCALL find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap);
-        static bool FASTCALL equals(LInsp a, LInsp b);
-        void FASTCALL grow();
+        static uint32_t hashcode(LInsp i);
+        uint32_t find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap);
+        static bool equals(LInsp a, LInsp b);
+        void grow();
 
     public:
 
@@ -1073,13 +1076,13 @@ namespace nanojit
         LInsp add(LInsp i, uint32_t k);
         void clear();
 
-        static uint32_t FASTCALL hashimm(int32_t);
-        static uint32_t FASTCALL hashimmq(uint64_t);
-        static uint32_t FASTCALL hash1(LOpcode v, LInsp);
-        static uint32_t FASTCALL hash2(LOpcode v, LInsp, LInsp);
-        static uint32_t FASTCALL hash3(LOpcode v, LInsp, LInsp, LInsp);
-        static uint32_t FASTCALL hashLoad(LOpcode v, LInsp, int32_t);
-        static uint32_t FASTCALL hashcall(const CallInfo *call, uint32_t argc, LInsp args[]);
+        static uint32_t hashimm(int32_t);
+        static uint32_t hashimmq(uint64_t);
+        static uint32_t hash1(LOpcode v, LInsp);
+        static uint32_t hash2(LOpcode v, LInsp, LInsp);
+        static uint32_t hash3(LOpcode v, LInsp, LInsp, LInsp);
+        static uint32_t hashLoad(LOpcode v, LInsp, int32_t);
+        static uint32_t hashcall(const CallInfo *call, uint32_t argc, LInsp args[]);
     };
 
     class CseFilter: public LirWriter

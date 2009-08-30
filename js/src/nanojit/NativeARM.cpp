@@ -40,10 +40,6 @@
 
 #include "nanojit.h"
 
-#ifdef AVMPLUS_PORTING_API
-#include "portapi_nanojit.h"
-#endif
-
 #ifdef UNDER_CE
 #include <cmnintrin.h>
 #endif
