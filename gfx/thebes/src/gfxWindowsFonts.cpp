@@ -515,15 +515,14 @@ public:
 /* static */
 FontEntry* 
 FontEntry::LoadFont(const gfxProxyFontEntry &aProxyEntry, 
-                    nsISupports *aLoader,const PRUint8 *aFontData, 
-                    PRUint32 aLength) {
+                    const PRUint8 *aFontData, 
+                    PRUint32 aLength)
+{
     // if calls aren't available, bail
     if (!TTLoadEmbeddedFontPtr || !TTDeleteEmbeddedFontPtr)
         return nsnull;
 
-    PRBool isCFF;
-    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength, &isCFF))
-        return nsnull;
+    PRBool isCFF = gfxFontUtils::IsCffFont(aFontData);
         
     nsresult rv;
     HANDLE fontRef = nsnull;

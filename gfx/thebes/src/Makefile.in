@@ -154,9 +154,11 @@ CMMSRCS = gfxMacPlatformFontList.mm
 EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime
 endif
 
+CSRCS += woff.c
+
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
-DEFINES += -DIMPL_THEBES
+DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT
 
 include $(topsrcdir)/config/rules.mk
 
