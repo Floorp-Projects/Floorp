@@ -617,7 +617,8 @@ var BrowserUI = {
         this._tabSelect(aEvent);
         break;
       case "TabOpen":
-        if (!this.isTabsVisible())
+        if (!this.isTabsVisible() && 
+            Browser.selectedTab.chromeTab != aEvent.target)
           NewTabPopup.show(aEvent.target);
         break;
       // URL textbox events
