@@ -1664,7 +1664,7 @@ namespace nanojit
         {
             case LIR_int:
             {
-                VMPI_sprintf(s, "%s", formatRef(i));
+                VMPI_sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], i->imm32());
                 break;
             }
 
@@ -1675,7 +1675,8 @@ namespace nanojit
 
             case LIR_quad:
             {
-                VMPI_sprintf(s, "#%X:%X /* %g */", i->imm64_1(), i->imm64_0(), i->imm64f());
+                VMPI_sprintf(s, "%s = %s #%X:%X /* %g */", formatRef(i), lirNames[op],
+                             i->imm64_1(), i->imm64_0(), i->imm64f());
                 break;
             }
 
