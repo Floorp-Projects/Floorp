@@ -74,7 +74,6 @@ var gPrevCharset = null;
 var gProxyFavIcon = null;
 var gLastValidURLStr = "";
 var gProgressCollapseTimer = null;
-var appCore = null;
 var gSidebarCommand = "";
 var gInPrintPreviewMode = false;
 let gDownloadMgr = null;
@@ -921,10 +920,6 @@ function BrowserStartup() {
 
   prepareForStartup();
 
-#ifdef ENABLE_PAGE_CYCLER
-  appCore.startPageCycler();
-#else
-# only load url passed in when we're not page cycling
   if (uriToLoad && !isLoadingBlank) { 
     if (uriToLoad instanceof Ci.nsISupportsArray) {
       let count = uriToLoad.Count();
@@ -961,7 +956,6 @@ function BrowserStartup() {
     else
       loadOneOrMoreURIs(uriToLoad);
   }
-#endif
 
   if (window.opener && !window.opener.closed) {
     let openerFindBar = window.opener.gFindBar;
@@ -1106,12 +1100,6 @@ function prepareForStartup() {
 
   var webNavigation;
   try {
-    // Create the browser instance component.
-    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
-                        .createInstance(Components.interfaces.nsIBrowserInstance);
-    if (!appCore)
-      throw "couldn't create a browser instance";
-
     webNavigation = getWebNavigation();
     if (!webNavigation)
       throw "no XBL binding for browser";
@@ -1143,9 +1131,6 @@ function prepareForStartup() {
       }
     }
   }
-
-  // Initialize browser instance..
-  appCore.setWebShellWindow(window);
 
   // Manually hook up session and global history for the first browser
   // so that we don't have to load global history before bringing up a
@@ -1434,10 +1419,6 @@ function BrowserShutdown()
         .getInterface(Components.interfaces.nsIXULWindow)
         .XULBrowserWindow = null;
   window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = null;
-
-  // Close the app core.
-  if (appCore)
-    appCore.close();
 }
 
 #ifdef XP_MACOSX
