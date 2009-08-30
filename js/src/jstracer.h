@@ -80,17 +80,12 @@ public:
 #endif
     }
 
-    Queue(nanojit::Allocator* alloc, unsigned max = 16)
+    Queue(nanojit::Allocator* alloc)
         : alloc(alloc)
     {
-        this->_max = max;
+        this->_max =
         this->_len = 0;
-        if (max)
-            this->_data = (alloc ?
-                           new (*alloc) T[max] :
-                           (T*)malloc(max * sizeof(T)));
-        else
-            this->_data = NULL;
+        this->_data = NULL;
     }
 
     ~Queue() {
