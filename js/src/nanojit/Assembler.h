@@ -177,8 +177,8 @@ namespace nanojit
             Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
             ~Assembler() {}
 
-            void        assemble(Fragment* frag, NInsList& loopJumps);
-            void        endAssembly(Fragment* frag, NInsList& loopJumps);
+            void        assemble(Fragment* frag);
+            void        endAssembly(Fragment* frag);
             void        beginAssembly(Fragment *frag, RegAllocMap* map);
             void        copyRegisters(RegAlloc* copyTo);
             void        releaseRegisters();
@@ -202,8 +202,7 @@ namespace nanojit
 
         private:
 
-            void        gen(LirFilter* toCompile, NInsList& loopJumps, LabelStateMap& labels,
-                            NInsMap& patches);
+            void        gen(LirFilter* toCompile, LabelStateMap& labels, NInsMap& patches);
             NIns*       genPrologue();
             NIns*       genEpilogue();
 

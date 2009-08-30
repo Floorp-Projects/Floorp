@@ -71,7 +71,6 @@ namespace nanojit
             const void* ip;
             uint32_t recordAttempts;
             NIns* fragEntry;
-            NIns* loopEntry;
             void* vmprivate;
 
         private:
