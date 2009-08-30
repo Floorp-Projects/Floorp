@@ -59,7 +59,6 @@ namespace nanojit
           ip(_ip),
           recordAttempts(0),
           fragEntry(NULL),
-          loopEntry(NULL),
           vmprivate(NULL),
           _code(NULL),
           _hits(0)
