@@ -841,13 +841,18 @@ gfxWindowsPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
 gfxFontEntry* 
 gfxWindowsPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
-                                     nsISupports *aLoader,
                                      const PRUint8 *aFontData, PRUint32 aLength)
 {
 #ifdef MOZ_FT2_FONTS
-    return FontEntry::CreateFontEntry(*aProxyEntry, aLoader, aFontData, aLength);
+    // The FT2 font needs the font data to persist, so we do NOT free it here
+    // but instead pass ownership to the font entry.
+    // Deallocation will happen later, when the font face is destroyed.
+    return FontEntry::CreateFontEntry(*aProxyEntry, aFontData, aLength);
 #else
-    return FontEntry::LoadFont(*aProxyEntry, aLoader, aFontData, aLength);
+    // With GDI, we can free the downloaded data after activating the font
+    gfxFontEntry *fe = FontEntry::LoadFont(*aProxyEntry, aFontData, aLength);
+    NS_Free((void*)aFontData);
+    return fe;
 #endif    
 }
 
