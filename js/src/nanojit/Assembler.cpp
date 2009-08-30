@@ -604,7 +604,7 @@ namespace nanojit
         verbose_only( asm_output("[epilogue]"); )
     }
 
-    void Assembler::assemble(Fragment* frag,  NInsList& loopJumps)
+    void Assembler::assemble(Fragment* frag)
     {
         if (error()) return;
         _thisfrag = frag;
@@ -656,8 +656,7 @@ namespace nanojit
 
         LabelStateMap labels(alloc);
         NInsMap patches(alloc);
-        gen(prev, loopJumps, labels, patches);
-        frag->loopEntry = _nIns;
+        gen(prev, labels, patches);
 
         if (!error()) {
             // patch all branches
@@ -686,7 +685,7 @@ namespace nanojit
         )
     }
 
-    void Assembler::endAssembly(Fragment* frag, NInsList& loopJumps)
+    void Assembler::endAssembly(Fragment* frag)
     {
         // don't try to patch code if we are in an error state since we might have partially
         // overwritten the code cache already
@@ -696,21 +695,6 @@ namespace nanojit
             _codeAlloc.free(exitStart, exitEnd);
             _codeAlloc.free(codeStart, codeEnd);
             return;
-        }
-
-        NIns* SOT = 0;
-        if (frag->isRoot()) {
-            SOT = frag->loopEntry;
-            verbose_only( verbose_outputf("%010lx:", (unsigned long)_nIns); )
-        } else {
-            SOT = frag->root->fragEntry;
-        }
-        AvmAssert(SOT);
-        for (Seq<NIns*>* p = loopJumps.get(); p != NULL; p = p->tail) {
-            NIns* loopJump = p->head;
-            verbose_only( verbose_outputf("## patching branch at %010lx to %010lx",
-                                          loopJump, SOT); )
-            nPatchBranch(loopJump, SOT);
         }
 
         NIns* fragEntry = genPrologue();
@@ -830,8 +814,7 @@ namespace nanojit
 #define countlir_call()
 #endif
 
-    void Assembler::gen(LirFilter* reader,  NInsList& loopJumps, LabelStateMap& labels,
-                        NInsMap& patches)
+    void Assembler::gen(LirFilter* reader, LabelStateMap& labels, NInsMap& patches)
     {
         // trace must end with LIR_x, LIR_loop, LIR_[f]ret, LIR_xtbl, or LIR_live
         NanoAssert(reader->pos()->isop(LIR_x) ||

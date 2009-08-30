@@ -2017,7 +2017,6 @@ namespace nanojit
         verbose_only( assm->_outputCache = &asmOutput; )
 
         RegAllocMap regMap(alloc);
-        NInsList loopJumps(alloc);
         assm->beginAssembly(frag, &regMap);
         if (assm->error())
             return;
@@ -2033,7 +2032,7 @@ namespace nanojit
             logc->printf("=== -- Compile trunk %s: begin\n",
                          labels->format(frag));
         })
-        assm->assemble(frag, loopJumps);
+        assm->assemble(frag);
         verbose_only( if (anyVerb) {
             logc->printf("=== -- Compile trunk %s: end\n",
                          labels->format(frag));
@@ -2044,7 +2043,7 @@ namespace nanojit
                 assm->outputf("## compiling trunk %s",
                               labels->format(frag));
         )
-        assm->endAssembly(frag, loopJumps);
+        assm->endAssembly(frag);
 
         // reverse output so that assembly is displayed low-to-high
         // Up to this point, assm->_outputCache has been non-NULL, and so
@@ -2065,10 +2064,8 @@ namespace nanojit
             logc->printf("=== Aggregated assembly output: END\n");
         });
 
-        if (assm->error()) {
+        if (assm->error())
             frag->fragEntry = 0;
-            frag->loopEntry = 0;
-        }
 
         /* BEGIN decorative postamble */
         verbose_only( if (anyVerb) {
