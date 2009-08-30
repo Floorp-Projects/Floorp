@@ -53,6 +53,10 @@ ifdef ENABLE_TESTS
 DIRS += content/test
 endif
 
+EXTRA_JS_MODULES = \
+	content/openLocationLastURL.jsm \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 PRE_RELEASE_SUFFIX := $(shell $(PYTHON) $(topsrcdir)/config/printprereleasesuffix.py \
