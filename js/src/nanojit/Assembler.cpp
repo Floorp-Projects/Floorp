@@ -41,10 +41,6 @@
 
 #ifdef FEATURE_NANOJIT
 
-#ifdef AVMPLUS_PORTING_API
-#include "portapi_nanojit.h"
-#endif
-
 namespace nanojit
 {
 #ifdef NJ_VERBOSE
@@ -1796,7 +1792,6 @@ namespace nanojit
         }
     #endif // verbose
 
-#if defined(FEATURE_NANOJIT) || defined(NJ_VERBOSE)
     uint32_t CallInfo::_count_args(uint32_t mask) const
     {
         uint32_t argc = 0;
@@ -1835,4 +1830,3 @@ namespace nanojit
         return labels.get(label);
     }
 }
-#endif // FEATURE_NANOJIT

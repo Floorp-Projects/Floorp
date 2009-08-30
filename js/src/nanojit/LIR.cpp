@@ -1133,21 +1133,61 @@ namespace nanojit
         m_used = 0;
     }
 
-    /*static*/ uint32_t FASTCALL LInsHashSet::hashcode(LInsp i)
+
+    inline uint32_t LInsHashSet::hashimm(int32_t a) {
+        return _hashfinish(_hash32(0,a));
+    }
+
+    inline uint32_t LInsHashSet::hashimmq(uint64_t a) {
+        uint32_t hash = _hash32(0, uint32_t(a >> 32));
+        return _hashfinish(_hash32(hash, uint32_t(a)));
+    }
+
+    inline uint32_t LInsHashSet::hash1(LOpcode op, LInsp a) {
+        uint32_t hash = _hash8(0,uint8_t(op));
+        return _hashfinish(_hashptr(hash, a));
+    }
+
+    inline uint32_t LInsHashSet::hash2(LOpcode op, LInsp a, LInsp b) {
+        uint32_t hash = _hash8(0,uint8_t(op));
+        hash = _hashptr(hash, a);
+        return _hashfinish(_hashptr(hash, b));
+    }
+
+    inline uint32_t LInsHashSet::hash3(LOpcode op, LInsp a, LInsp b, LInsp c) {
+        uint32_t hash = _hash8(0,uint8_t(op));
+        hash = _hashptr(hash, a);
+        hash = _hashptr(hash, b);
+        return _hashfinish(_hashptr(hash, c));
+    }
+
+    inline uint32_t LInsHashSet::hashLoad(LOpcode op, LInsp a, int32_t d) {
+        uint32_t hash = _hash8(0,uint8_t(op));
+        hash = _hashptr(hash, a);
+        return _hashfinish(_hash32(hash, d));
+    }
+
+    inline uint32_t LInsHashSet::hashcall(const CallInfo *ci, uint32_t argc, LInsp args[]) {
+        uint32_t hash = _hashptr(0, ci);
+        for (int32_t j=argc-1; j >= 0; j--)
+            hash = _hashptr(hash,args[j]);
+        return _hashfinish(hash);
+    }
+
+    uint32_t LInsHashSet::hashcode(LInsp i)
     {
         const LOpcode op = i->opcode();
-        switch (op)
-        {
+        uint32_t operands = operandCount[i->opcode()];
+
+        switch (operands) {
+        case 0:
+            switch (op) {
             case LIR_int:
                 return hashimm(i->imm32());
-
             case LIR_quad:
                 return hashimmq(i->imm64());
-
-            case LIR_icall:
-            case LIR_fcall:
-            case LIR_qcall:
-            {
+            default:
+                NanoAssert(i->isCall());
                 LInsp args[MAXARGS];
                 uint32_t argc = i->argc();
                 NanoAssert(argc < MAXARGS);
@@ -1155,78 +1195,61 @@ namespace nanojit
                     args[j] = i->arg(j);
                 return hashcall(i->callInfo(), argc, args);
             }
-
-            case LIR_ld:
-            case LIR_ldcb:
-            case LIR_ldcs:
-            case LIR_ldc:
-            case LIR_ldq:
-            case LIR_ldqc:
-                return hashLoad(op, i->oprnd1(), i->disp());
-
-            default:
-                if (operandCount[op] == 3)
-                    return hash3(op, i->oprnd1(), i->oprnd2(), i->oprnd3());
-                else if (operandCount[op] == 2)
-                    return hash2(op, i->oprnd1(), i->oprnd2());
-                else
-                    return hash1(op, i->oprnd1());
+        case 1:
+            return (repKinds[op] == LRK_Ld)
+                ? hashLoad(op, i->oprnd1(), i->disp())
+                : hash1(op, i->oprnd1());
+        case 2:
+            return hash2(op, i->oprnd1(), i->oprnd2());
+        default:
+            NanoAssert(i->isLInsOp3());
+            return hash3(op, i->oprnd1(), i->oprnd2(), i->oprnd3());
         }
+        NanoAssert(0);
     }
 
-    /*static*/ bool FASTCALL LInsHashSet::equals(LInsp a, LInsp b)
+    inline bool LInsHashSet::equals(LInsp a, LInsp b)
     {
-        if (a==b)
+        if (a == b)
             return true;
-        if (a->opcode() != b->opcode())
-            return false;
-        AvmAssert(a->opcode() == b->opcode());
+
         const LOpcode op = a->opcode();
-        switch (op)
-        {
+        if (op != b->opcode())
+            return false;
+
+        const uint32_t operands = operandCount[op];
+        switch (operands) {
+        case 0:
+            switch (op) {
             case LIR_int:
-            {
                 return a->imm32() == b->imm32();
-            }
             case LIR_quad:
-            {
                 return a->imm64() == b->imm64();
-            }
-            case LIR_icall:
-            case LIR_fcall:
-            case LIR_qcall:
-            {
-                if (a->callInfo() != b->callInfo()) return false;
-                uint32_t argc=a->argc();
+            default:
+                NanoAssert(a->isCall());
+                if (a->callInfo() != b->callInfo())
+                    return false;
+                uint32_t argc = a->argc();
                 NanoAssert(argc == b->argc());
-                for (uint32_t i=0; i < argc; i++)
+                for (uint32_t i = 0; i < argc; i++)
                     if (a->arg(i) != b->arg(i))
                         return false;
                 return true;
             }
-
-            case LIR_ld:
-            case LIR_ldq:
-            case LIR_ldcb:
-            case LIR_ldcs:
-            case LIR_ldc:
-            case LIR_ldqc:
-                return
-                    (a->oprnd1() == b->oprnd1() && a->disp() == b->disp() ? true : false );
-
-            default:
-            {
-                const uint32_t count = operandCount[op];
-                if ((count >= 1 && a->oprnd1() != b->oprnd1()) ||
-                    (count >= 2 && a->oprnd2() != b->oprnd2()) ||
-                    (count >= 3 && a->oprnd3() != b->oprnd3()))
-                    return false;
-                return true;
-            }
+        case 1:
+            if (repKinds[op] == LRK_Ld)
+                return (a->oprnd1() == b->oprnd1() && a->disp() == b->disp());
+            return a->oprnd1() == b->oprnd1();
+        case 2:
+            return a->oprnd1() == b->oprnd1() && a->oprnd2() == b->oprnd2();
+        default:
+            NanoAssert(a->isLInsOp3());
+            return a->oprnd1() == b->oprnd1() && a->oprnd2() == b->oprnd2() && a->oprnd3() == b->oprnd3();
         }
+        NanoAssert(0);
     }
 
-    void FASTCALL LInsHashSet::grow()
+    void LInsHashSet::grow()
     {
         const uint32_t newcap = m_cap << 1;
         LInsp *newlist = new (alloc) LInsp[newcap];
@@ -1242,7 +1265,7 @@ namespace nanojit
         m_list = newlist;
     }
 
-    uint32_t FASTCALL LInsHashSet::find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap)
+    uint32_t LInsHashSet::find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap)
     {
         const uint32_t bitmask = (cap - 1) & ~0x1;
 
@@ -1268,46 +1291,6 @@ namespace nanojit
         NanoAssert(!m_list[k]);
         m_used++;
         return m_list[k] = name;
-    }
-
-    uint32_t LInsHashSet::hashimm(int32_t a) {
-        return _hashfinish(_hash32(0,a));
-    }
-
-    uint32_t LInsHashSet::hashimmq(uint64_t a) {
-        uint32_t hash = _hash32(0, uint32_t(a >> 32));
-        return _hashfinish(_hash32(hash, uint32_t(a)));
-    }
-
-    uint32_t LInsHashSet::hash1(LOpcode op, LInsp a) {
-        uint32_t hash = _hash8(0,uint8_t(op));
-        return _hashfinish(_hashptr(hash, a));
-    }
-
-    uint32_t LInsHashSet::hash2(LOpcode op, LInsp a, LInsp b) {
-        uint32_t hash = _hash8(0,uint8_t(op));
-        hash = _hashptr(hash, a);
-        return _hashfinish(_hashptr(hash, b));
-    }
-
-    uint32_t LInsHashSet::hash3(LOpcode op, LInsp a, LInsp b, LInsp c) {
-        uint32_t hash = _hash8(0,uint8_t(op));
-        hash = _hashptr(hash, a);
-        hash = _hashptr(hash, b);
-        return _hashfinish(_hashptr(hash, c));
-    }
-
-    uint32_t LInsHashSet::hashLoad(LOpcode op, LInsp a, int32_t d) {
-        uint32_t hash = _hash8(0,uint8_t(op));
-        hash = _hashptr(hash, a);
-        return _hashfinish(_hash32(hash, d));
-    }
-
-    uint32_t LInsHashSet::hashcall(const CallInfo *ci, uint32_t argc, LInsp args[]) {
-        uint32_t hash = _hashptr(0, ci);
-        for (int32_t j=argc-1; j >= 0; j--)
-            hash = _hashptr(hash,args[j]);
-        return _hashfinish(hash);
     }
 
     LInsp LInsHashSet::find32(int32_t a, uint32_t &i)
@@ -1978,11 +1961,6 @@ namespace nanojit
             return exprs.add(out->insCall(ci, args), k);
         }
         return out->insCall(ci, args);
-    }
-
-    LIns* FASTCALL callArgN(LIns* i, uint32_t n)
-    {
-        return i->arg(i->argc()-n-1);
     }
 
     void compile(Assembler* assm, Fragment* frag, Allocator& alloc verbose_only(, LabelMap* labels))
