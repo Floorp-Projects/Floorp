@@ -690,27 +690,13 @@ public:
 };
 
 gfxFontEntry* 
-gfxMacPlatformFontList::MakePlatformFont(const gfxFontEntry *aProxyEntry, 
-                                     const PRUint8 *aFontData, PRUint32 aLength)
+gfxMacPlatformFontList::MakePlatformFont(const gfxFontEntry *aProxyEntry,
+                                         const PRUint8 *aFontData,
+                                         PRUint32 aLength)
 {
     OSStatus err;
     
-    NS_ASSERTION(aFontData && aLength != 0, 
-                 "MakePlatformFont called with null data ptr");
-                 
-    // do simple validation check on font data before 
-    // attempting to activate it
-    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength)) {
-#if DEBUG
-        char warnBuf[1024];
-        const gfxProxyFontEntry *proxyEntry = 
-            static_cast<const gfxProxyFontEntry*> (aProxyEntry);
-        sprintf(warnBuf, "downloaded font error, invalid font data for (%s)",
-                NS_ConvertUTF16toUTF8(proxyEntry->mFamily->Name()).get());
-        NS_WARNING(warnBuf);
-#endif    
-        return nsnull;
-    }
+    NS_ASSERTION(aFontData, "MakePlatformFont called with null data");
 
     ATSFontRef fontRef;
     ATSFontContainerRef containerRef;
@@ -720,7 +706,7 @@ gfxMacPlatformFontList::MakePlatformFont(const gfxFontEntry *aProxyEntry,
     const PRUint32 kMaxRetries = 3;
     PRUint32 retryCount = 0;
     while (retryCount++ < kMaxRetries) {
-        err = ::ATSFontActivateFromMemory(const_cast<PRUint8*>(aFontData), aLength, 
+        err = ::ATSFontActivateFromMemory(const_cast<PRUint8*>(aFontData), aLength,
                                           kPrivateATSFontContextPrivate,
                                           kATSFontFormatUnspecified,
                                           NULL, 

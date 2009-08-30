@@ -308,15 +308,10 @@ gfxPlatformGtk::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
 gfxFontEntry* 
 gfxPlatformGtk::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry, 
-                                 nsISupports *aLoader,
                                  const PRUint8 *aFontData, PRUint32 aLength)
 {
-    // Just being consistent with other platforms.
-    // This will mean that only fonts in SFNT formats will be accepted.
-    if (!gfxFontUtils::ValidateSFNTHeaders(aFontData, aLength))
-        return nsnull;
-
-    return gfxPangoFontGroup::NewFontEntry(*aProxyEntry, aLoader,
+    // passing ownership of the font data to the new font entry
+    return gfxPangoFontGroup::NewFontEntry(*aProxyEntry,
                                            aFontData, aLength);
 }
 

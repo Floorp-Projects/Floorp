@@ -197,7 +197,9 @@ public:
     // aDownloadStatus == NS_OK ==> download succeeded, error otherwise
     // returns true if platform font creation sucessful (or local()
     // reference was next in line)
-    PRBool OnLoadComplete(gfxFontEntry *aFontToLoad, nsISupports *aLoader,
+    // Ownership of aFontData is passed in here; the font set must
+    // ensure that it is eventually deleted with NS_Free().
+    PRBool OnLoadComplete(gfxFontEntry *aFontToLoad,
                           const PRUint8 *aFontData, PRUint32 aLength,
                           nsresult aDownloadStatus);
 
