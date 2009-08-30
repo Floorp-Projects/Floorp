@@ -2012,12 +2012,13 @@ static bool
 AllocSlots(JSContext *cx, JSObject *obj, size_t nslots);
 
 static inline bool
-InitScopeForObject(JSContext* cx, JSObject* obj, JSClass* clasp, JSObject* proto, JSObjectOps* ops)
+InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* ops)
 {
     JS_ASSERT(OPS_IS_NATIVE(ops));
     JS_ASSERT(proto == OBJ_GET_PROTO(cx, obj));
 
     /* Share proto's emptyScope only if obj is similar to proto. */
+    JSClass *clasp = OBJ_GET_CLASS(cx, obj);
     JSScope *scope;
     if (proto && js_ObjectIsSimilarToProto(cx, obj, ops, clasp, proto)) {
         scope = OBJ_SCOPE(proto)->getEmptyScope(cx, clasp);
@@ -2106,7 +2107,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     obj->dslots = NULL;
 
     if (OPS_IS_NATIVE(ops)) {
-        if (!InitScopeForObject(cx, obj, clasp, proto, ops)) {
+        if (!InitScopeForObject(cx, obj, proto, ops)) {
             obj = NULL;
             goto out;
         }
@@ -2185,6 +2186,86 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
+
+#ifdef JS_TRACER
+
+static inline JSObject*
+NewNativeObject(JSContext* cx, JSClass* clasp, JSObject* proto, JSObject *parent)
+{
+    JS_ASSERT(JS_ON_TRACE(cx));
+    JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
+    if (!obj)
+        return NULL;
+
+    obj->classword = jsuword(clasp);
+    obj->setProto(proto);
+    obj->setParent(parent);
+    for (unsigned i = JSSLOT_PRIVATE; i < JS_INITIAL_NSLOTS; ++i)
+        obj->fslots[i] = JSVAL_VOID;
+
+    obj->dslots = NULL;
+    return InitScopeForObject(cx, obj, proto, &js_ObjectOps) ? obj : NULL;
+}
+
+JSObject* FASTCALL
+js_Object_tn(JSContext* cx, JSObject* proto)
+{
+    return NewNativeObject(cx, &js_ObjectClass, proto, JSVAL_TO_OBJECT(proto->fslots[JSSLOT_PARENT]));
+}
+
+JS_DEFINE_TRCINFO_1(js_Object,
+    (2, (extern, CONSTRUCTOR_RETRY, js_Object_tn, CONTEXT, CALLEE_PROTOTYPE, 0, 0)))
+
+JSObject* FASTCALL
+js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
+{
+    JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
+
+    JSAtom *atom = cx->runtime->atomState.classPrototypeAtom;
+
+    JSScope *scope = OBJ_SCOPE(ctor);
+#ifdef JS_THREADSAFE
+    if (scope->title.ownercx != cx)
+        return NULL;
+#endif
+    if (!scope->owned()) {
+        scope = js_GetMutableScope(cx, ctor);
+        if (!scope)
+            return NULL;
+    }
+
+    JSScopeProperty *sprop = scope->lookup(ATOM_TO_JSID(atom));
+    jsval pval = sprop ? STOBJ_GET_SLOT(ctor, sprop->slot) : JSVAL_HOLE;
+
+    JSObject *proto;
+    if (!JSVAL_IS_PRIMITIVE(pval)) {
+        /* An object in ctor.prototype, let's use it as the new instance's proto. */
+        proto = JSVAL_TO_OBJECT(pval);
+    } else if (pval == JSVAL_HOLE) {
+        /* No ctor.prototype yet, inline and optimize fun_resolve's prototype code. */
+        proto = js_NewObject(cx, clasp, NULL, OBJ_GET_PARENT(cx, ctor));
+        if (!proto)
+            return NULL;
+        if (!js_SetClassPrototype(cx, ctor, proto, JSPROP_ENUMERATE | JSPROP_PERMANENT))
+            return NULL;
+    } else {
+        /* Primitive value in .prototype means we use Object.prototype for proto. */
+        if (!js_GetClassPrototype(cx, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]),
+                                  INT_TO_JSID(JSProto_Object), &proto)) {
+            return NULL;
+        }
+    }
+
+    return NewNativeObject(cx, clasp, proto, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]));
+}
+
+JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0, 0)
+
+#else  /* !JS_TRACER */
+
+# define js_Object_trcinfo NULL
+
+#endif /* !JS_TRACER */
 
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
@@ -3032,29 +3113,34 @@ js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp)
     return JS_TRUE;
 }
 
-JSObject* FASTCALL
-js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+JSObject*
+js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, uint32 slot)
 {
     JS_ASSERT(!clasp->getObjectOps);
+    JS_ASSERT(proto->map->ops == &js_ObjectOps);
+    JS_ASSERT(OBJ_GET_CLASS(cx, proto) == clasp);
 
     JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
     if (!obj)
         return NULL;
 
-    jsval* fslots = obj->fslots;
-    fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent);
-    for (uint32 n = JSSLOT_PRIVATE; n < JS_INITIAL_NSLOTS; ++n)
-        fslots[n] = JSVAL_VOID;
+    JSScope *scope = OBJ_SCOPE(proto)->getEmptyScope(cx, clasp);
+    if (!scope) {
+        obj->map = NULL;
+        return NULL;
+    }
+    obj->map = &scope->map;
+    obj->classword = jsuword(clasp);
+    obj->setProto(proto);
+    obj->setParent(proto->getParent());
+
+    JS_ASSERT(slot >= JSSLOT_PRIVATE);
+    while (slot < JS_INITIAL_NSLOTS)
+        obj->fslots[slot++] = JSVAL_VOID;
 
     obj->dslots = NULL;
-
-    obj->classword = jsuword(clasp);
-    return InitScopeForObject(cx, obj, clasp, proto, &js_ObjectOps) ? obj : NULL;
+    return obj;
 }
-
-JS_DEFINE_CALLINFO_4(extern, CONSTRUCTOR_RETRY, js_NewNativeObject, CONTEXT, CLASS,
-                     OBJECT, OBJECT, 0, 0)
 
 JS_BEGIN_EXTERN_C
 
