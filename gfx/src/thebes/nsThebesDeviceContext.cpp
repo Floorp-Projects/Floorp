@@ -267,7 +267,7 @@ nsresult nsFontCache::Compact()
         NS_RELEASE(fm); // this will reset fm to nsnull
         // if the font is really gone, it would have called back in
         // FontMetricsDeleted() and would have removed itself
-        if (mFontMetrics.IndexOf(oldfm) >= 0) {
+        if (mFontMetrics.IndexOf(oldfm) != mFontMetrics.NoIndex) { 
             // nope, the font is still there, so let's hold onto it too
             NS_ADDREF(oldfm);
         }
