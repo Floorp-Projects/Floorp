@@ -5777,7 +5777,7 @@ static bool
 ReservedSlotIndexOK(JSContext *cx, JSObject *obj, JSClass *clasp,
                     uint32 index, uint32 limit)
 {
-    JS_IS_OBJ_LOCKED(cx, obj);
+    JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
 
     /* Check the computed, possibly per-instance, upper bound. */
     if (clasp->reserveSlots)
