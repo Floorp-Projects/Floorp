@@ -83,7 +83,7 @@ namespace nanojit
             RegisterMask    free;
             int32_t         priority;
 
-            verbose_only( static void formatRegisters(RegAlloc& regs, char* s, Fragment*); )
+            verbose_only( void formatRegisters(char* s, Fragment*); )
 
             DECLARE_PLATFORM_REGALLOC()
     };

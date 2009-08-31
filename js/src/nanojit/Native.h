@@ -110,7 +110,7 @@ namespace nanojit {
                    memset(outline, (int)' ', 10+3); \
                 sprintf(&outline[13], ##__VA_ARGS__); \
                 Assembler::outputAlign(outline, 35); \
-                RegAlloc::formatRegisters(_allocator, outline, _thisfrag); \
+                _allocator.formatRegisters(outline, _thisfrag); \
                 Assembler::output_asm(outline); \
                 outputAddr=(_logc->lcbits & LC_NoCodeAddrs) ? false : true;    \
             } \

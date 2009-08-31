@@ -188,7 +188,6 @@ namespace nanojit
     static const RegisterMask AllowableFlagRegs = GpRegs;
 
 #define nextreg(r)        Register(r+1)
-#define prevreg(r)        Register(r-1)
 
     verbose_only( extern const char* regNames[]; )
 
