@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html class="reftest-print">
+<style type="text/css">
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.step {
+  height: 1in;
+  border: 15px aqua;
+  border-style: none solid;
+}
+.float {
+  float: right;
+  width: 15px;
+  background: aqua;
+  height: 4in;
+}
+.L {
+  float: left;
+}
+
+.container {
+  width: 100%;
+  background: red;
+}
+
+.clear {
+  clear: left;
+  height: 0;
+  background: red;
+}
+.bar {
+  border-bottom: orange solid;
+}
+</style>
+
+<div class="step"></div>
+<div class="container">
+  <div class="float L"></div>
+  <div class="float R"></div>
+</div>
+<div class="clear"><div class="bar"></div></div>
