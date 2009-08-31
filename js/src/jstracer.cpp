@@ -9247,11 +9247,11 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
 
     CallInfo* ci = (CallInfo*) lir->insSkip(sizeof(struct CallInfo))->payload();
     ci->_address = uintptr_t(setflag ? sprop->setter : sprop->getter);
-    ci->_argtypes = ARGSIZE_LO << (0*ARGSIZE_SHIFT) |
-                    ARGSIZE_LO << (1*ARGSIZE_SHIFT) |
-                    ARGSIZE_LO << (2*ARGSIZE_SHIFT) |
-                    ARGSIZE_LO << (3*ARGSIZE_SHIFT) |
-                    ARGSIZE_LO << (4*ARGSIZE_SHIFT);
+    ci->_argtypes = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
+                    ARGSIZE_P << (1*ARGSIZE_SHIFT) |
+                    ARGSIZE_P << (2*ARGSIZE_SHIFT) |
+                    ARGSIZE_P << (3*ARGSIZE_SHIFT) |
+                    ARGSIZE_P << (4*ARGSIZE_SHIFT);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
 #ifdef DEBUG
@@ -9600,10 +9600,10 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         args[0] = invokevp_ins;
         args[1] = lir->insImm(argc);
         args[2] = cx_ins;
-        types = ARGSIZE_LO << (0*ARGSIZE_SHIFT) |
-                ARGSIZE_LO << (1*ARGSIZE_SHIFT) |
-                ARGSIZE_LO << (2*ARGSIZE_SHIFT) |
-                ARGSIZE_LO << (3*ARGSIZE_SHIFT);
+        types = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (1*ARGSIZE_SHIFT) |
+                ARGSIZE_I << (2*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (3*ARGSIZE_SHIFT);
     } else {
         native_rval_ins = lir->ins2i(LIR_piadd, invokevp_ins, int32_t((vplen - 1) * sizeof(jsval)));
         args[0] = native_rval_ins;
@@ -9611,12 +9611,12 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         args[2] = lir->insImm(argc);
         args[3] = this_ins;
         args[4] = cx_ins;
-        types = ARGSIZE_LO << (0*ARGSIZE_SHIFT) |
-                ARGSIZE_LO << (1*ARGSIZE_SHIFT) |
-                ARGSIZE_LO << (2*ARGSIZE_SHIFT) |
-                ARGSIZE_LO << (3*ARGSIZE_SHIFT) |
-                ARGSIZE_LO << (4*ARGSIZE_SHIFT) |
-                ARGSIZE_LO << (5*ARGSIZE_SHIFT);
+        types = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (1*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (2*ARGSIZE_SHIFT) |
+                ARGSIZE_I << (3*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (4*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (5*ARGSIZE_SHIFT);
     }
 
     // Generate CallInfo and a JSTraceableNative structure on the fly.  Do not
@@ -11104,7 +11104,7 @@ TraceRecorder::record_NativeCallComplete()
     } else {
         /* Convert the result to double if the builtin returns int32. */
         if (JSVAL_IS_NUMBER(v) &&
-            (pendingTraceableNative->builtin->_argtypes & ARGSIZE_MASK_ANY) == ARGSIZE_LO) {
+            (pendingTraceableNative->builtin->_argtypes & ARGSIZE_MASK_ANY) == ARGSIZE_I) {
             set(&v, lir->ins1(LIR_i2f, v_ins));
         }
     }

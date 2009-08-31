@@ -105,16 +105,12 @@ struct JSTraceableNative {
 #define _JS_CI_NAME(op)
 #endif
 
-#define  _JS_I32_ARGSIZE    nanojit::ARGSIZE_LO
-#define  _JS_I32_RETSIZE    nanojit::ARGSIZE_LO
-#define  _JS_F64_ARGSIZE    nanojit::ARGSIZE_F
-#define  _JS_F64_RETSIZE    nanojit::ARGSIZE_F
-#define  _JS_PTR_ARGSIZE    nanojit::ARGSIZE_LO
-#if defined AVMPLUS_64BIT
-# define _JS_PTR_RETSIZE    nanojit::ARGSIZE_Q
-#else
-# define _JS_PTR_RETSIZE    nanojit::ARGSIZE_LO
-#endif
+#define _JS_I32_ARGSIZE    nanojit::ARGSIZE_I
+#define _JS_I32_RETSIZE    nanojit::ARGSIZE_I
+#define _JS_F64_ARGSIZE    nanojit::ARGSIZE_F
+#define _JS_F64_RETSIZE    nanojit::ARGSIZE_F
+#define _JS_PTR_ARGSIZE    nanojit::ARGSIZE_P
+#define _JS_PTR_RETSIZE    nanojit::ARGSIZE_P
 
 class ClosureVarInfo;
 
