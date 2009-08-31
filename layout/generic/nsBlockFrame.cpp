@@ -991,6 +991,14 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   if (state.mFloatContinuations.NotEmpty())
     mFloats.AppendFrames(nsnull, state.mFloatContinuations);
 
+  // If we end in a BR with clear and affected floats continue,
+  // we need to continue, too.
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
+      NS_FRAME_IS_COMPLETE(state.mReflowStatus) &&
+      state.mFloatManager->ClearContinues(FindTrailingClear())) {
+    NS_FRAME_SET_INCOMPLETE(state.mReflowStatus);
+  }
+
   if (!NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
     if (GetOverflowLines()) {
       state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
@@ -1690,7 +1698,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   nsresult rv = NS_OK;
   PRBool keepGoing = PR_TRUE;
   PRBool repositionViews = PR_FALSE; // should we really need this?
-  PRBool foundAnyClears = PR_FALSE;
+  PRBool foundAnyClears = aState.mFloatBreakType != NS_STYLE_CLEAR_NONE;
   PRBool willReflowAgain = PR_FALSE;
 
 #ifdef DEBUG
@@ -1725,10 +1733,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // recompute the carried out margin before the line if we want to
     // reflow it or if its previous margin is dirty
   PRBool needToRecoverState = PR_FALSE;
-  PRBool reflowedFloat = PR_FALSE;
+    // Float continuations were reflowed in ReflowFloatContinuations
+  PRBool reflowedFloat = mFloats.NotEmpty() && mFloats.FirstChild()->GetPrevInFlow();
   PRBool lastLineMovedUp = PR_FALSE;
   // We save up information about BR-clearance here
-  PRUint8 inlineFloatBreakType = NS_STYLE_CLEAR_NONE;
+  PRUint8 inlineFloatBreakType = aState.mFloatBreakType;
 
   line_iterator line = begin_lines(), line_end = end_lines();
 
@@ -2854,9 +2863,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowState);
 
   PRUint8 breakType = display->mBreakType;
-  // If a float split and its prev-in-flow was followed by a <BR>, then combine 
-  // the <BR>'s break type with the block's break type (the block will be the very 
-  // next frame after the split float).
   if (NS_STYLE_CLEAR_NONE != aState.mFloatBreakType) {
     breakType = nsLayoutUtils::CombineBreakType(breakType,
                                                 aState.mFloatBreakType);
@@ -5657,6 +5663,20 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   return NS_OK;
 }
 
+PRUint8
+nsBlockFrame::FindTrailingClear()
+{
+  // find the break type of the last line
+  for (nsIFrame* b = this; b; b = b->GetPrevInFlow()) {
+    nsBlockFrame* block = static_cast<nsBlockFrame*>(b);
+    line_iterator endLine = block->end_lines();
+    if (endLine != block->begin_lines()) {
+      --endLine;
+      return endLine->GetBreakTypeAfter();
+    }
+  }
+}
+
 nsresult
 nsBlockFrame::ReflowFloatContinuations(nsBlockReflowState& aState,
                                        nsRect&             aBounds,
@@ -5701,6 +5721,12 @@ nsBlockFrame::ReflowFloatContinuations(nsBlockReflowState& aState,
     }
 
     ConsiderChildOverflow(aBounds, f);
+  }
+
+  // If there are continued floats, then we may need to continue BR clearance
+  if (0 != aState.ClearFloats(0, NS_STYLE_CLEAR_LEFT_AND_RIGHT)) {
+    aState.mFloatBreakType = static_cast<nsBlockFrame*>(GetPrevInFlow())
+                               ->FindTrailingClear();
   }
 
   return rv;
