@@ -328,7 +328,7 @@ namespace nanojit
         Register rr = resv->reg;
 
         if (rr != UnknownReg && (rmask(rr) & FpRegs))
-            evict(rr);
+            evict(rr, ins);
 
         if (hi->isconst())
         {
@@ -756,7 +756,7 @@ namespace nanojit
             /* LIR_mod expects the LIR_div to be near (no interference from the register allocator) */
             findSpecificRegFor(lhs, EDX);
             prepResultReg(ins, 1<<EDX);
-            evict(EAX);
+            evictIfActive(EAX);
             return;
         }
 
@@ -771,7 +771,7 @@ namespace nanojit
             forceReg = true;
             rb = findRegFor(rhs, (GpRegs ^ (rmask(EAX)|rmask(EDX))));
             allow = 1<<EAX;
-            evict(EDX);
+            evictIfActive(EDX);
             break;
         case LIR_mul:
             forceReg = true;
@@ -1304,7 +1304,7 @@ namespace nanojit
              * than once.  In this case FST0 will not have been evicted and the multiple pop
              * actions will unbalance the FPU stack.  A quick fix is to always evict FST0 manually.
              */
-            evict(FST0);
+            evictIfActive(FST0);
         }
         SUBi(ESP,8);
     }
@@ -1411,7 +1411,7 @@ namespace nanojit
         if (rR) {
             Register rr;
             if ((rr=rR->reg) != UnknownReg && (rmask(rr) & XmmRegs))
-                evict(rr);
+                evict(rr, ins);
         }
         return prepResultReg(ins, rmask(FST0));
     }
@@ -1602,7 +1602,7 @@ namespace nanojit
                 SSE_UCOMISD(r, r);
             }
             else {
-                evict(EAX);
+                evictIfActive(EAX);
                 TEST_AH(mask);
                 LAHF();
                 Reservation *rA, *rB;
@@ -1612,7 +1612,7 @@ namespace nanojit
         }
         else
         {
-            evict(EAX);
+            evictIfActive(EAX);
             TEST_AH(mask);
             FNSTSW_AX();
             NanoAssert(lhs->isQuad() && rhs->isQuad());
