@@ -101,12 +101,13 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0xe9f3f2c1, 0x2d94, 0x4722, \
-  { 0xbb, 0xd4, 0x2b, 0xf6, 0xfd, 0xf4, 0x2f, 0x48 } }
+{ /* {6afecd40-0b9a-4cfd-8c42-0f645cd91829} */ \
+  0x6afecd40, 0x0b9a, 0x4cfd, \
+  { 0x8c, 0x42, 0x0f, 0x64, 0x5c, 0xd9, 0x18, 0x29 } }
 
 /**
-  * The global object which keeps a script context for each supported script
-  * language. This often used to store per-window global state.
++  * The global object which keeps a script context for each supported script
++  * language. This often used to store per-window global state.
  */
 
 class nsIScriptGlobalObject : public nsISupports
@@ -165,8 +166,15 @@ public:
    */
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
 
-  /**
-   * Handle a script error.  Generally called by a script context.
+  /** Set a new arguments object for this window. This will be set on
+   * the window right away (if there's an existing document) and it
+   * will also be installed on the window when the next document is
+   * loaded.  Each language impl is responsible for converting to
+   * an array of args as appropriate for that language.
+   */
+  virtual nsresult SetNewArguments(nsIArray *aArguments) = 0;
+
+  /** Handle a script error.  Generally called by a script context.
    */
   virtual nsresult HandleScriptError(nsScriptErrorEvent *aErrorEvent,
                                      nsEventStatus *aEventStatus) {
