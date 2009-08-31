@@ -13,7 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=464848
 <a target="_blank"
    href="https://bugzilla.mozilla.org/show_bug.cgi?id=464848">Mozilla Bug 464848</a>
 <p id="display">
-  <input id="fileList" type="file"></input>
 </p>
 <div id="content" style="display: none">
   
@@ -32,32 +31,6 @@ testDoc2.appendChild(testDoc2.createComment(" doc 2 "));
 testDoc2.appendChild(testDoc2.createElement("res"));
 testDoc2.documentElement.appendChild(testDoc2.createTextNode("text"));
 is(testDoc2.inputEncoding, null, "wrong encoding");
-
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-var testData = "blahblahblahblahblahblahblaaaaaaaah. blah.";
-testFileTxt = createFileWithDataExt(testData, ".txt");
-testFilePng = createFileWithDataExt(testData, ".png");
-testFileJpg = createFileWithDataExt(testData, ".jpg");
-testFileGif = createFileWithDataExt(testData, ".gif");
-testFilePdf = createFileWithDataExt(testData, ".pdf");
-testFileXml = createFileWithDataExt(testData, ".xml");
-testFileUnknown = createFileWithDataExt(testData, "noext");
-
-function createFileWithDataExt(fileData, extension) {
-  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-  var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
-  testFile.append("testfile" + extension);
-  var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-  outStream.init(testFile, 0x02 | 0x08 | 0x20, 0666, 0);
-  outStream.write(fileData, fileData.length);
-  outStream.close();
-
-  var fileList = document.getElementById('fileList');
-  fileList.value = testFile.path;
-
-  return fileList.files[0];
-}
 
 tests = [{ body: null,
            resBody: "",
@@ -136,105 +109,30 @@ tests = [{ body: null,
            resBody: "<!-- doc 2 -->\n<res>text</res>",
            resContentType: "foo/bar; charset=uTf-8",
          },
-         { body: testFileTxt,
-           resBody: testData,
-           resContentType: testFileTxt.mediaType,
-           resContentLength: testData.length,
-         },
-         { body: testFilePng,
-           resBody: testData,
-           resContentType: testFilePng.mediaType,
-           resContentLength: testData.length,
-         },
-         { body: testFileJpg,
-           resBody: testData,
-           resContentType: testFileJpg.mediaType,
-           resContentLength: testData.length,
-         },
-         { body: testFileGif,
-           resBody: testData,
-           resContentType: testFileGif.mediaType,
-           resContentLength: testData.length,
-         },
-         { body: testFilePdf,
-           resBody: testData,
-           resContentType: testFilePdf.mediaType,
-           resContentLength: testData.length,
-         },
-         { body: testFileXml,
-           resBody: testData,
-           resContentType: testFileXml.mediaType,
-           resContentLength: testData.length,
-         },
-         { body: testFileUnknown,
-           resBody: testData,
-           resContentType: "",
-           resContentLength: testData.length,
-         },
-         { //will trigger a redirect test server-side
-           body: ("TEST_REDIRECT_STR&url=" + window.location.host + window.location.pathname),
-           redirect: true,
-         },
          ];
 
-try {
-  for each(test in tests) {
-    xhr = new XMLHttpRequest;
-    xhr.open("POST", "file_XHRSendData.sjs", false);
-    if (test.contentType)
-      xhr.setRequestHeader("Content-Type", test.contentType);
-    xhr.send(test.body);
+for each(test in tests) {
+  xhr = new XMLHttpRequest;
+  xhr.open("POST", "file_XHRSendData.sjs", false);
+  if (test.contentType)
+    xhr.setRequestHeader("Content-Type", test.contentType);
+  xhr.send(test.body);
 
-    if (test.resContentType) {
-      is(xhr.getResponseHeader("Result-Content-Type"), test.resContentType,
-         "Wrong Content-Type sent");
-    }
-    else {
-      is(xhr.getResponseHeader("Result-Content-Type"), null);
-    }
+  if (test.resContentType) {
+    is(xhr.getResponseHeader("Result-Content-Type"), test.resContentType,
+       "Wrong Content-Type sent");
+  }
+  else {
+    is(xhr.getResponseHeader("Result-Content-Type"), null);
+  }
 
-    if (test.resContentLength) {
-      is(xhr.getResponseHeader("Result-Content-Length"), test.resContentLength, "Wrong Content-Length sent");
-    }
-
-    if (test.body instanceof Document) {
-      is(xhr.responseText.replace("\r\n", "\n"), test.resBody, "Wrong body");
-    }
-    else if (!test.redirect) {
-      is(xhr.responseText, test.resBody, "Wrong body");
-    }
-    else {
-      // If we're testing redirect, determine whether the body is
-      // this document by looking for the relevant bug url
-      is(xhr.responseText.indexOf("https://bugzilla.mozilla.org/show_bug.cgi?id=464848") >= 0, true,
-                                  "Wrong page for redirect");
-    }
+  if (test.body instanceof Document) {
+    is(xhr.responseText.replace("\r\n", "\n"), test.resBody, "Wrong body");
+  }
+  else {
+    is(xhr.responseText, test.resBody, "Wrong body");
   }
 }
-finally {
-  cleanUpData();
-}
-
-function cleanUpData() {
-  removeFileWithExt(".txt");
-  removeFileWithExt(".png");
-  removeFileWithExt(".jpg");
-  removeFileWithExt(".gif");
-  removeFileWithExt(".pdf");
-  removeFileWithExt(".xml");
-  removeFileWithExt("noext");
-}
-
-function removeFileWithExt(extension)
-{
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");    
-    var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
-
-    testFile.append("testfile" + extension);
-    testFile.remove(false);
-}
-
 
 </script>
 </pre>
