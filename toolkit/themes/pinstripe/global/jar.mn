@@ -16,8 +16,8 @@ toolkit.jar:
 +  skin/classic/global/dropmarker.css
 +  skin/classic/global/filefield.css
 +  skin/classic/global/filepicker.css
-+  skin/classic/global/findBar.css
-+  skin/classic/global/global.css
+*  skin/classic/global/findBar.css
+*  skin/classic/global/global.css
 +  skin/classic/global/groupbox.css
 +  skin/classic/global/linkTree.css
 +  skin/classic/global/listbox.css
@@ -71,7 +71,7 @@ toolkit.jar:
 +  skin/classic/global/checkbox/cbox-check-dis.gif                    (checkbox/cbox-check-dis.gif)
 +  skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)
 +  skin/classic/global/console/console-error-dash.gif                 (console/console-error-dash.gif)
-+  skin/classic/global/console/console.css                            (console/console.css)
+*  skin/classic/global/console/console.css                            (console/console.css)
 +  skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
 +  skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
 +  skin/classic/global/dirListing/local.png                           (dirListing/local.png)
