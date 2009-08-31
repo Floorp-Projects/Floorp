@@ -105,6 +105,7 @@ namespace nanojit
         verbose_only( _logc = logc; )
         verbose_only( _outputCache = 0; )
         verbose_only( outlineEOL[0] = '\0'; )
+        verbose_only( outputAddr = false; )
 
         reset();
     }
@@ -538,7 +539,6 @@ namespace nanojit
         swapptrs();
         _inExit = true;
 
-        //verbose_only( verbose_outputf("         LIR_xend swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
         debug_only( _sv_fpuStkDepth = _fpuStkDepth; _fpuStkDepth = 0; )
 
         nFragExit(guard);
@@ -612,11 +612,10 @@ namespace nanojit
         _stats.codeExitStart = _nExitIns-1;
 #endif /* PERFM */
 
-        _epilogue = genEpilogue();
         _branchStateMap = branchStateMap;
+        _epilogue = NULL;
 
-        verbose_only( outputAddr=true; )
-        verbose_only( asm_output("[epilogue]"); )
+        nBeginAssembly();
     }
 
     void Assembler::assemble(Fragment* frag)
