@@ -942,13 +942,13 @@ namespace nanojit
                 if (condop == LIR_feq)
                     FBNE(0, tt);
                 else if (condop == LIR_fle)
-                    FBG(0, tt);
+                    FBUG(0, tt);
                 else if (condop == LIR_flt)
-                    FBGE(0, tt);
+                    FBUGE(0, tt);
                 else if (condop == LIR_fge)
-                    FBL(0, tt);
+                    FBUL(0, tt);
                 else //if (condop == LIR_fgt)
-                    FBLE(0, tt);
+                    FBULE(0, tt);
             }
         else // op == LIR_xt
             {
