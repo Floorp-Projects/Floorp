@@ -74,9 +74,13 @@
  * @retval non-zero on error 
  */
 
-#if defined(linux) || defined(SOLARIS)
+#if defined(linux) || defined(SOLARIS) || defined(AIX) || defined(__FreeBSD__)
 #include <semaphore.h>
+#if defined(__FreeBSD__) 
+#define SEM_CREATE(p,s) sem_init(&(p), 0, s)  
+#else
 #define SEM_CREATE(p,s) sem_init(&(p), 1, s)
+#endif
 #define SEM_SIGNAL(p)   sem_post(&(p))
 #define SEM_WAIT(p)     sem_wait(&(p))
 #define SEM_CLOSE(p)    sem_destroy(&(p))
