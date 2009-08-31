@@ -60,7 +60,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIDOMModalContentWindow.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
@@ -574,21 +573,11 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   SizeSpec sizeSpec;
   CalcSizeSpec(features.get(), sizeSpec);
 
+  PRBool isCallerChrome = PR_FALSE;
   nsCOMPtr<nsIScriptSecurityManager>
     sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-
-  // Remember who's calling us. This code used to assume a null
-  // subject principal if it failed to get the principal, but that's
-  // just not safe, so bail on errors here.
-  nsCOMPtr<nsIPrincipal> callerPrincipal;
-  rv = sm->GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool isCallerChrome = PR_TRUE;
-  if (callerPrincipal) {
-    rv = sm->IsSystemPrincipal(callerPrincipal, &isCallerChrome);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  if (sm)
+    sm->SubjectPrincipalIsSystem(&isCallerChrome);
 
   JSContext *cx = GetJSContextFromWindow(aParent);
 
@@ -767,10 +756,9 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
   if ((aDialog || windowIsModalContentDialog) && argv) {
     // Set the args on the new window.
-    nsCOMPtr<nsPIDOMWindow> piwin(do_QueryInterface(*_retval));
-    NS_ENSURE_TRUE(piwin, NS_ERROR_UNEXPECTED);
-
-    rv = piwin->SetArguments(argv, callerPrincipal);
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(*_retval));
+    NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_UNEXPECTED);
+    rv = scriptGlobal->SetNewArguments(argv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
