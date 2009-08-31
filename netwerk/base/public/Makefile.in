@@ -111,6 +111,7 @@ XPIDLSRCS	= \
 		nsISyncStreamListener.idl \
 		nsISystemProxySettings.idl \
 		nsIUnicharStreamLoader.idl \
+		nsIUploadChannel2.idl \
 		nsIStandardURL.idl \
 		nsINestedURI.idl \
 		nsIURLParser.idl \
