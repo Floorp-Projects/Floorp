@@ -648,7 +648,10 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
 {
   nsIContent *content = nsCoreUtils::GetRoleContent(aNode);
   nsAutoString roleString;
-  if (!content || !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString)) {
+  if (!content ||
+      !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString) ||
+      roleString.IsEmpty()) {
+    // We treat role="" as if the role attribute is absent (per aria spec:8.1.1)
     return nsnull;
   }
 
@@ -674,7 +677,7 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
     }
   }
 
-  // Always use some entry if there is a role string
+  // Always use some entry if there is a non-empty role string
   // To ensure an accessible object is created
   return &nsARIAMap::gLandmarkRoleMap;
 }
