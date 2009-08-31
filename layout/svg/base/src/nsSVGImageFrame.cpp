@@ -85,6 +85,7 @@ public:
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
 
   // nsSVGPathGeometryFrame methods:
+  NS_IMETHOD UpdateCoveredRegion();
   virtual PRUint16 GetHittestMask();
 
   // nsIFrame interface:
@@ -306,7 +307,26 @@ nsSVGImageFrame::GetType() const
 //----------------------------------------------------------------------
 // nsSVGPathGeometryFrame methods:
 
-// Lie about our fill/stroke so that hit detection works properly
+// Lie about our fill/stroke so that covered region and hit detection work properly
+
+NS_IMETHODIMP
+nsSVGImageFrame::UpdateCoveredRegion()
+{
+  mRect.Empty();
+
+  gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
+
+  GeneratePath(&context);
+  context.IdentityMatrix();
+
+  gfxRect extent = context.GetUserPathExtent();
+
+  if (!extent.IsEmpty()) {
+    mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
+  }
+
+  return NS_OK;
+}
 
 PRUint16
 nsSVGImageFrame::GetHittestMask()

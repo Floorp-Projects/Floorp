@@ -112,11 +112,11 @@ protected:
 
 protected:
   virtual PRUint16 GetHittestMask();
+  void GeneratePath(gfxContext *aContext,
+                    const gfxMatrix *aOverrideTransform = nsnull);
 
 private:
   void Render(nsSVGRenderState *aContext);
-  void GeneratePath(gfxContext *aContext,
-                    const gfxMatrix *aOverrideTransform = nsnull);
 
   struct MarkerProperties {
     nsSVGMarkerProperty* mMarkerStart;
