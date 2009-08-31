@@ -1,6 +1,6 @@
 # trace-test.py -- Python harness for JavaScript trace tests.
 
-import datetime, os, re, sys
+import datetime, os, re, sys, traceback
 import subprocess
 from subprocess import *
 
@@ -130,7 +130,7 @@ def check_output(out, err, rc, allow_oom):
 
     return True
 
-def run_tests(tests, lib_dir):
+def run_tests(tests, test_dir, lib_dir):
     pb = None
     if not OPTIONS.hide_progress and not OPTIONS.show_cmd:
         try:
@@ -172,6 +172,18 @@ def run_tests(tests, lib_dir):
         pb.finish()
 
     if failures:
+        if OPTIONS.write_failures:
+            try:
+                out = open(OPTIONS.write_failures, 'w')
+                for test in failures:
+                    out.write(os.path.relpath(test, test_dir) + '\n')
+                out.close()
+            except IOError:
+                sys.stderr.write("Exception thrown trying to write failure file '%s'\n"%
+                                 OPTIONS.write_failures)
+                traceback.print_exc()
+                sys.stderr.write('---\n')
+
         print('FAILURES:')
         for test in failures:
             if OPTIONS.show_failed:
@@ -206,17 +218,47 @@ if __name__ == '__main__':
                   help='hide progress bar')
     op.add_option('--tinderbox', dest='tinderbox', action='store_true',
                   help='Tinderbox-parseable output format')
+    op.add_option('-w', '--write-failures', dest='write_failures', metavar='FILE',
+                  help='Write a list of failed tests to [FILE]')
+    op.add_option('-r', '--read-tests', dest='read_tests', metavar='FILE',
+                  help='Run test files listed in [FILE]')
+    op.add_option('-R', '--retest', dest='retest', metavar='FILE',
+                  help='Retest using test list file [FILE]')
     (OPTIONS, args) = op.parse_args()
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
     # We need to make sure we are using backslashes on Windows.
     JS, test_args = os.path.normpath(args[0]), args[1:]
 
+    if OPTIONS.retest:
+        OPTIONS.read_tests = OPTIONS.retest
+        OPTIONS.write_failures = OPTIONS.retest
+
+    test_list = []
+    read_all = True
+
     if test_args:
-        test_list = []
+        read_all = False
         for arg in test_args:
             test_list += find_tests(test_dir, arg)
-    else:
+
+    if OPTIONS.read_tests:
+        read_all = False
+        try:
+            f = open(OPTIONS.read_tests)
+            for line in f:
+                test_list.append(os.path.join(test_dir, line.strip('\n')))
+            f.close()
+        except IOError:
+            if OPTIONS.retest:
+                read_all = True
+            else:
+                sys.stderr.write("Exception thrown trying to read test file '%s'\n"%
+                                 OPTIONS.read_tests)
+                traceback.print_exc()
+                sys.stderr.write('---\n')
+
+    if read_all:
         test_list = find_tests(test_dir)
 
     if OPTIONS.exclude:
@@ -233,4 +275,4 @@ if __name__ == '__main__':
     if not OPTIONS.run_slow:
         test_list = [ _ for _ in test_list if not _.slow ]
 
-    run_tests(test_list, lib_dir)
+    run_tests(test_list, test_dir, lib_dir)
