@@ -1,7 +1,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 notification {
-  padding: 4px 3px 5px;
+  padding: 3px 3px 4px;
 }
 
 notification[type="info"] {
