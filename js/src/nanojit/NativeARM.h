@@ -66,10 +66,6 @@ const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
 
-// TODO: I can't find an instance in any back-end to nanojit where this isn't
-// set to 0. Can we remove it?
-const int NJ_STACK_OFFSET = 0;
-
 #define NJ_CONSTANT_POOLS
 const int NJ_MAX_CPOOL_OFFSET = 4096;
 const int NJ_CPOOL_SIZE = 16;
