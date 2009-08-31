@@ -452,7 +452,8 @@ protected:
 
 #define IS_TRUE_OVERFLOW_CONTAINER(frame)                      \
   (  (frame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)  \
-  && !(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)           )
+  && !( (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&      \
+        frame->GetStyleDisplay()->IsAbsolutelyPositioned()  )  )
 //XXXfr This check isn't quite correct, because it doesn't handle cases
 //      where the out-of-flow has overflow.. but that's rare.
 //      We'll need to revisit the way abspos continuations are handled later

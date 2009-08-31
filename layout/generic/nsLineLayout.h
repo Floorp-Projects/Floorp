@@ -213,7 +213,7 @@ public:
                   nscoord         aAvailableWidth,
                   nsReflowStatus& aReflowStatus)
   {
-    return mBlockRS->AddFloat(*this, aFloat, aAvailableWidth, aReflowStatus);
+    return mBlockRS->AddFloat(this, aFloat, aAvailableWidth, aReflowStatus);
   }
 
   void SetTrimmableWidth(nscoord aTrimmableWidth) {
