@@ -3,6 +3,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=454997
 https://bugzilla.mozilla.org/show_bug.cgi?id=467387
+https://bugzilla.mozilla.org/show_bug.cgi?id=509696
 -->
 <head>
   <title>states of document</title>
@@ -21,6 +22,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467387
   <script type="application/javascript">
     function doTest()
     {
+      // Bug 509696
+      testStates(document, STATE_READONLY); // role=""
+      todo(false, "enable commented tests when we support body role changes");
+/*
+      document.body.setAttribute("role","banner"); // no platform mapping
+      testStates(document, STATE_READONLY);
+      document.body.setAttribute("role","foo"); // bogus role
+      testStates(document, STATE_READONLY);
+      document.body.removeAttribute("role");
+      testStates(document, STATE_READONLY);
+*/
+      
+      // Bugs 454997 and 467387
       testStates(document, STATE_READONLY);
       testStates("document", STATE_READONLY);
       testStates("editable_document", 0, EXT_STATE_EDITABLE);
@@ -46,14 +60,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467387
   </script>
 </head>
 
-<body>
+<body role="">
 
   <a target="_blank"
-     title="nsIAccessible states tests of editable document"
+     title="<body contenteditable='true'> exposed incorrectly"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=454997">Mozilla Bug 454997</a>
    <a target="_blank"
      title="nsIAccessible states tests of editable document"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=467387">Mozilla Bug 467387</a>
+   <a target="_blank"
+     title="Role attribute on body with empty string causes DocAccessible not to have read-only state."
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=509696">Mozilla Bug 509696</a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
