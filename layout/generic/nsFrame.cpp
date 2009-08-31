@@ -5879,9 +5879,9 @@ nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
   // For out-of-flow frames, we must resolve underneath the
   // placeholder's parent.
   nsIFrame* oofFrame = this;
-  if ((oofFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
-      && (oofFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-    // Out of flows that are overflow containers do not
+  if ((oofFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+      GetPrevInFlow()) {
+    // Out of flows that are continuations do not
     // have placeholders. Use their first-in-flow's placeholder.
     oofFrame = oofFrame->GetFirstInFlow();
   }

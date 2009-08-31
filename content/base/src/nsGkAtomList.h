@@ -1645,6 +1645,7 @@ GK_ATOM(boxMetricsProperty, "BoxMetricsProperty") // nsBoxLayoutMetrics*
 GK_ATOM(changeListProperty, "ChangeListProperty") // void*
 GK_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
 GK_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
+GK_ATOM(floatContinuationProperty, "FloatContinuationProperty") // nsFrameList*
 GK_ATOM(floatRegionProperty, "FloatRegionProperty") // nsRect*
 GK_ATOM(generatedContent, "GeneratedContentProperty")  // nsCOMArray<nsIContent>*
 #ifdef MOZ_MATHML
@@ -1663,7 +1664,6 @@ GK_ATOM(overflowContainersProperty, "OverflowContainersProperty")             //
 GK_ATOM(excessOverflowContainersProperty, "ExcessOverflowContainersProperty") // nsFrameList*
 GK_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
 GK_ATOM(overflowOutOfFlowsProperty, "OverflowOutOfFlowsProperty")      // nsFrameList*
-GK_ATOM(overflowPlaceholdersProperty, "OverflowPlaceholdersProperty")  // nsFrameList*
 GK_ATOM(preEffectsBBoxProperty, "PreEffectsBBoxProperty") // nsRect*
 GK_ATOM(preTransformBBoxProperty, "PreTransformBBoxProperty") // nsRect*
 GK_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
