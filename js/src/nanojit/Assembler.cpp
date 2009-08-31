@@ -748,11 +748,6 @@ namespace nanojit
         _branchStateMap = 0;
     }
 
-    void Assembler::copyRegisters(RegAlloc* copyTo)
-    {
-        *copyTo = _allocator;
-    }
-
     void Assembler::releaseRegisters()
     {
         for (Register r = FirstReg; r <= LastReg; r = nextreg(r))

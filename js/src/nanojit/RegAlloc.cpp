@@ -99,21 +99,17 @@ namespace nanojit
     }
 
     #ifdef  NJ_VERBOSE
-    /* static */ void RegAlloc::formatRegisters(RegAlloc& regs, char* s, Fragment *frag)
+    void RegAlloc::formatRegisters(char* s, Fragment *frag)
     {
         if (!frag || !frag->lirbuf)
             return;
         LirNameMap *names = frag->lirbuf->names;
-        for(int i=0; i<(LastReg+1); i++)
+        for (Register r = FirstReg; r <= LastReg; r = nextreg(r))
         {
-            LIns* ins = regs.active[i];
-            Register r = (Register)i;
-            if (ins && regs.isFree(r))
-                { NanoAssertMsg( 0, "Coding error; register is both free and active! " ); }
-            //if (!ins && !regs.isFree(r))
-            //    { NanoAssertMsg( 0, "Coding error; register is not in the free list when it should be" ); }
+            LIns *ins = getActive(r);
             if (!ins)
                 continue;
+            NanoAssertMsg(!isFree(r), "Coding error; register is both free and active! " );
 
             s += strlen(s);
             const char* rname = ins->isQuad() ? fpn(r) : gpn(r);

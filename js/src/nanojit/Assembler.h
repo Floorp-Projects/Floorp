@@ -180,7 +180,6 @@ namespace nanojit
             void        assemble(Fragment* frag);
             void        endAssembly(Fragment* frag);
             void        beginAssembly(Fragment *frag, RegAllocMap* map);
-            void        copyRegisters(RegAlloc* copyTo);
             void        releaseRegisters();
             void        patch(GuardRecord *lr);
             void        patch(SideExit *exit);
