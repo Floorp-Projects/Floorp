@@ -543,12 +543,12 @@ protected:
   // Computes the border-box width of the float
   nscoord ComputeFloatWidth(nsBlockReflowState& aState,
                             const nsRect&       aFloatAvailableSpace,
-                            nsPlaceholderFrame* aPlaceholder);
+                            nsIFrame*           aFloat);
   // An incomplete aReflowStatus indicates the float should be split
   // but only if the available height is constrained.
   nsresult ReflowFloat(nsBlockReflowState& aState,
                        const nsRect&       aFloatAvailableSpace,
-                       nsPlaceholderFrame* aPlaceholder,
+                       nsIFrame*           aFloat,
                        nsMargin&           aFloatMargin,
                        nsReflowStatus&     aReflowStatus);
 

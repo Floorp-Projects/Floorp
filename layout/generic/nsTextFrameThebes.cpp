@@ -77,6 +77,7 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsFrame.h"
+#include "nsPlaceholderFrame.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
 #include "nsFrameManager.h"
