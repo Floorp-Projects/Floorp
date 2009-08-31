@@ -44,6 +44,9 @@
 #if defined(XP_WIN) || defined(XP_OS2)
 #include <float.h>
 #endif
+#ifdef SOLARIS
+#include <ieeefp.h>
+#endif
 
 /*
  * JS number (IEEE double) interface.
@@ -105,6 +108,8 @@ JSDOUBLE_IS_INFINITE(jsdouble d)
 #ifdef WIN32
     int c = _fpclass(d);
     return c == _FPCLASS_NINF || c == _FPCLASS_PINF;
+#elif defined(SOLARIS)
+    return !finite(d) && !isnan(d);
 #else
     return isinf(d);
 #endif
@@ -115,6 +120,8 @@ JSDOUBLE_IS_NEGZERO(jsdouble d)
 {
 #ifdef WIN32
     return (d == 0 && (_fpclass(d) & _FPCLASS_NZ));
+#elif defined(SOLARIS)
+    return (d == 0 && copysign (1, d) < 0);
 #else
     return (d == 0 && signbit(d));
 #endif
@@ -137,6 +144,8 @@ JSDOUBLE_IS_NEG(jsdouble d)
 {
 #ifdef WIN32
     return JSDOUBLE_IS_NEGZERO(d) || d < 0;
+#elif defined(SOLARIS)
+    return copysign (1, d) < 0;
 #else
     return signbit(d);
 #endif
