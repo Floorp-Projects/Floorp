@@ -250,6 +250,12 @@ public:
    */
   nscoord ClearFloats(nscoord aY, PRUint8 aBreakType) const;
 
+  /**
+   * Checks if clear would pass into the floats' BFC's next-in-flow,
+   * i.e. whether floats affecting this clear have continuations.
+   */
+  PRBool ClearContinues(PRUint8 aBreakType) const;
+
   void AssertStateMatches(SavedState *aState) const
   {
     NS_ASSERTION(aState->mX == mX && aState->mY == mY &&
