@@ -20,61 +20,61 @@
   margin: 0;
 }
 
-#placesList treechildren::-moz-tree-row {
+#placesList > treechildren::-moz-tree-row {
   background-color: transparent;
   border-color: transparent;
 }
 
-#placesList treechildren::-moz-tree-row(selected) {  
+#placesList > treechildren::-moz-tree-row(selected) {  
   background: @sidebarItemBackground@;
   border-top: @sidebarItemBorderTop@;
 }
 
-#placesList treechildren::-moz-tree-row(selected,focus) {  
+#placesList > treechildren::-moz-tree-row(selected,focus) {  
   background: @sidebarItemFocusedBackground@;
   border-top: @sidebarItemFocusedBorderTop@;
 }
 
-#placesList:-moz-system-metric(mac-graphite-theme) treechildren::-moz-tree-row(selected) {
+#placesList:-moz-system-metric(mac-graphite-theme) > treechildren::-moz-tree-row(selected) {
   background: @sidebarItemGraphiteBackground@;
   border-top: @sidebarItemGraphiteBorderTop@;
 }
 
-#placesList:-moz-system-metric(mac-graphite-theme) treechildren::-moz-tree-row(selected,focus) {
+#placesList:-moz-system-metric(mac-graphite-theme) > treechildren::-moz-tree-row(selected,focus) {
   background: @sidebarItemGraphiteFocusedBackground@;
   border-top: @sidebarItemGraphiteFocusedBorderTop@;
 }
 
-window:not([active="true"]) #placesList treechildren::-moz-tree-row(selected) {
+window:not([active="true"]) #placesList > treechildren::-moz-tree-row(selected) {
   background: @sidebarItemInactiveBackground@;
   border-top: @sidebarItemInactiveBorderTop@;
 }
 
-#placesList treechildren::-moz-tree-row(History),
-#placesList treechildren::-moz-tree-row(history)  {
+#placesList > treechildren::-moz-tree-row(History),
+#placesList > treechildren::-moz-tree-row(history)  {
   background-color: blue;
 }
 
-#placesList treechildren::-moz-tree-cell(leaf) ,
-#placesList treechildren::-moz-tree-image(leaf) {
+#placesList > treechildren::-moz-tree-cell(leaf) ,
+#placesList > treechildren::-moz-tree-image(leaf) {
   cursor: pointer;
 }
 
-#placesList treechildren::-moz-tree-cell-text(leaf, hover) {
+#placesList > treechildren::-moz-tree-cell-text(leaf, hover) {
   cursor: pointer;
   text-decoration: underline;
 }
 
-#placesList treechildren::-moz-tree-cell(separator) {
+#placesList > treechildren::-moz-tree-cell(separator) {
   cursor: default;
 }
 
-#placesList treechildren::-moz-tree-separator {
+#placesList > treechildren::-moz-tree-separator {
   border-top: 1px solid #505d6d;
   margin: 0 10px;
 }
 
-#placesList treechildren::-moz-tree-cell-text(selected) {  
+#placesList > treechildren::-moz-tree-cell-text(selected) {  
   font-weight: bold !important;
   color: #ffffff !important;
 }
@@ -266,32 +266,32 @@ window:not([active="true"]) #placesList treechildren::-moz-tree-row(selected) {
   border: 0px;
 }
 
-#placeContent treechildren::-moz-tree-row {
+#placeContent > treechildren::-moz-tree-row {
   border-top: none !important;
   padding-top: 1px;
 }
 
-#placeContent treechildren::-moz-tree-row(odd) {
+#placeContent > treechildren::-moz-tree-row(odd) {
   background-color: #edf3fe;
 }
 
-#placeContent treechildren::-moz-tree-row(selected),
-#placeContent treechildren::-moz-tree-row(odd, selected) {
+#placeContent > treechildren::-moz-tree-row(selected),
+#placeContent > treechildren::-moz-tree-row(odd, selected) {
   background-color: -moz-mac-secondaryhighlight;
 }
 
-#placeContent treechildren::-moz-tree-row(selected, focus), 
-#placeContent treechildren::-moz-tree-row(odd, selected, focus) {
+#placeContent > treechildren::-moz-tree-row(selected, focus), 
+#placeContent > treechildren::-moz-tree-row(odd, selected, focus) {
   background-color: Highlight;
   color: HighlightText !important;
 }
 
-#placeContent treechildren::-moz-tree-cell,
-#placeContent treechildren::-moz-tree-column {
+#placeContent > treechildren::-moz-tree-cell,
+#placeContent > treechildren::-moz-tree-column {
   border-right: 1px solid #d7dad7;
 }
 
-#placeContent treechildren::-moz-tree-cell(separator) {
+#placeContent > treechildren::-moz-tree-cell(separator) {
   border-color: transparent;
 }
 
