@@ -198,23 +198,6 @@ namespace nanojit
             }
     }
 
-    void Assembler::nMarkExecute(Page* page, int flags)
-    {
-        static const int kProtFlags[4] = {
-            PROT_READ,                        // 0
-            PROT_READ|PROT_WRITE,            // PAGE_WRITE
-            PROT_READ|PROT_EXEC,            // PAGE_EXEC
-            PROT_READ|PROT_WRITE|PROT_EXEC    // PAGE_EXEC|PAGE_WRITE
-        };
-        int prot = kProtFlags[flags & (PAGE_WRITE|PAGE_EXEC)];
-        intptr_t addr = (intptr_t)page;
-        addr &= ~((uintptr_t)NJ_PAGE_SIZE_SPARC - 1);
-        if (mprotect((char *)addr, NJ_PAGE_SIZE_SPARC, prot) == -1) {
-            // todo: we can't abort or assert here, we have to fail gracefully.
-            NanoAssertMsg(false, "FATAL ERROR: mprotect(PROT_EXEC) failed\n");
-        }
-    }
-
     Register Assembler::nRegisterAllocFromSet(RegisterMask set)
     {
         // need to implement faster way
@@ -1039,18 +1022,22 @@ namespace nanojit
 
     void Assembler::nativePageSetup()
     {
-        if (!_nIns)         _nIns       = pageAlloc();
-        if (!_nExitIns)  _nExitIns = pageAlloc(true);
+        if (!_nIns) codeAlloc(codeStart, codeEnd, _nIns);
+        if (!_nExitIns) codeAlloc(exitStart, exitEnd, _nExitIns);
     }
 
     void
-    Assembler::underrunProtect(int bytes)
+    Assembler::underrunProtect(int n)
     {
-        intptr_t u = bytes + sizeof(PageHeader)/sizeof(NIns) + 16;
-        if (!samepage((intptr_t)_nIns-u,_nIns)) {
-            NIns* target = _nIns;
-            _nIns = pageAlloc(_inExit);
-            JMP_long_nocheck((intptr_t)target);
+        NIns *eip = _nIns;
+        if (eip - n < (_inExit ? exitStart : codeStart)) {
+            // We are done with the current page.  Tell Valgrind that new code
+            // has been generated.
+            if (_inExit)
+                codeAlloc(exitStart, exitEnd, _nIns);
+            else
+                codeAlloc(codeStart, codeEnd, _nIns);
+            JMP_long_nocheck((intptr_t)eip);
         }
     }
 
