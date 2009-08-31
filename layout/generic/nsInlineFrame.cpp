@@ -714,10 +714,12 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       }
     }
   }
-  else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+  else if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
     if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
       nsBlockReflowState* blockRS = lineLayout->mBlockRS;
-      NS_ASSERTION(0, "float splitting unimplemented"); // SplitFloat XXXfr
+      nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
+      rv = blockRS->mBlock->SplitFloat(*blockRS, placeholder->GetOutOfFlowFrame(),
+                                       aStatus);
       // Allow the parent to continue reflowing
       aStatus = NS_FRAME_COMPLETE;
     }

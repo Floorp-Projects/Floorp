@@ -909,8 +909,10 @@ nsFloatCacheFreeList::DeleteAll()
 }
 
 nsFloatCache*
-nsFloatCacheFreeList::Alloc()
+nsFloatCacheFreeList::Alloc(nsIFrame* aFloat)
 {
+  NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+                  "This is a float cache, why isn't the frame out-of-flow?");
   nsFloatCache* fc = mHead;
   if (mHead) {
     if (mHead == mTail) {
@@ -924,6 +926,7 @@ nsFloatCacheFreeList::Alloc()
   else {
     fc = new nsFloatCache();
   }
+  fc->mFloat = aFloat;
   return fc;
 }
 
