@@ -93,11 +93,7 @@ BookmarksEngine.prototype = {
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
 
-  _sync: function BookmarksEngine__sync() {
-    Svc.Bookmark.runInBatchMode({
-      runBatched: Utils.bind2(this, SyncEngine.prototype._sync)
-    }, null);
-  }
+  _sync: Utils.batchSync("Bookmark", SyncEngine)
 };
 
 function BookmarksStore() {

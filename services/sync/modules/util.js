@@ -124,6 +124,29 @@ let Utils = {
     };
   },
 
+  batchSync: function batchSync(service, engineType) {
+    return function batchedSync() {
+      let engine = this;
+      let batchEx = null;
+
+      // Try running sync in batch mode
+      Svc[service].runInBatchMode({
+        runBatched: function wrappedSync() {
+          try {
+            engineType.prototype._sync.call(engine);
+          }
+          catch(ex) {
+            batchEx = ex;
+          }
+        }
+      }, null);
+
+      // Expose the exception if something inside the batch failed
+      if (batchEx!= null)
+        throw batchEx;
+    };
+  },
+
   // Generates a brand-new globally unique identifier (GUID).
   makeGUID: function makeGUID() {
     let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
