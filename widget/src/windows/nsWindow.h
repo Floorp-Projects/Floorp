@@ -281,6 +281,9 @@ protected:
   // Convert nsEventStatus value to a windows boolean
   static PRBool           ConvertStatus(nsEventStatus aStatus);
   static void             PostSleepWakeNotification(const char* aNotification);
+  PRBool                  HandleScrollingPlugins(UINT aMsg, WPARAM aWParam, 
+                                                 LPARAM aLParam,
+                                                 PRBool& aResult);
 
   /**
    * Event handlers
@@ -304,7 +307,7 @@ protected:
                                     PRUint32 aFlags = 0,
                                     const MSG *aMsg = nsnull,
                                     PRBool *aEventDispatched = nsnull);
-  virtual PRBool          OnScroll(UINT scrollCode, int cPos);
+  virtual PRBool          OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
   virtual HBRUSH          OnControlColor();
   PRBool                  OnGesture(WPARAM wParam, LPARAM lParam);
   PRBool                  OnHotKey(WPARAM wParam, LPARAM lParam);
@@ -399,7 +402,7 @@ protected:
   PRPackedBool          mInDtor;
   PRPackedBool          mIsVisible;
   PRPackedBool          mIsInMouseCapture;
-  PRPackedBool          mInWheelProcessing;
+  PRPackedBool          mInScrollProcessing;
   PRPackedBool          mUnicodeWidget;
   PRPackedBool          mIsPluginWindow;
   PRPackedBool          mPainting;
