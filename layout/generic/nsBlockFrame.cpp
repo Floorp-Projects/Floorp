@@ -4907,17 +4907,17 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
     return mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   }
   else if (nsGkAtoms::floatList == aListName) {
-    nsIFrame* curFrame = aOldFrame;
-    // Make sure to delete all the continuations for the float frame
+    // Make sure to mark affected lines dirty for the float frame
     // we are removing; this way is a bit messy, but so is the rest of the code.
     // See bug 390762.
-    do {
-      nsIFrame* continuation = curFrame->GetNextContinuation();
-      nsBlockFrame* curParent = static_cast<nsBlockFrame*>(curFrame->GetParent());
-      curParent->RemoveFloat(curFrame);
-      MarkSameFloatManagerLinesDirty(curParent);
-      curFrame = continuation;
-    } while (curFrame);
+    NS_ASSERTION(!aOldFrame->GetPrevContinuation(),
+                 "RemoveFrame should not be called on float continuations.");
+    for (nsIFrame* f = aOldFrame;
+         f && !(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER);
+         f = f->GetNextContinuation()) {
+      MarkSameFloatManagerLinesDirty(static_cast<nsBlockFrame*>(f->GetParent()));
+    }
+    DoRemoveOutOfFlowFrame(aOldFrame);
   }
 #ifdef IBMBIDI
   else if (nsGkAtoms::nextBidi == aListName) {
@@ -5171,6 +5171,13 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
                                               (aFlags & FRAMES_ARE_EMPTY) != 0);
     }
     return NS_OK;
+  }
+
+  // If next-in-flow is an overflow container, must remove it first
+  nsIFrame* next = aDeletedFrame->GetNextInFlow();
+  if (next && next->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+    static_cast<nsContainerFrame*>(next->GetParent())
+      ->DeleteNextInFlowChild(next->PresContext(), next, PR_FALSE);
   }
 
   nsIPresShell* presShell = presContext->PresShell();
@@ -5474,8 +5481,8 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 {
   NS_PRECONDITION(aNextInFlow->GetPrevInFlow(), "bad next-in-flow");
 
-  if (aNextInFlow->GetPrevInFlow() && (aNextInFlow->GetStateBits() &
-      (NS_FRAME_OUT_OF_FLOW | NS_FRAME_IS_OVERFLOW_CONTAINER))) {
+  if (aNextInFlow->GetStateBits() &
+      (NS_FRAME_OUT_OF_FLOW | NS_FRAME_IS_OVERFLOW_CONTAINER)) {
     nsContainerFrame::DeleteNextInFlowChild(aPresContext,
         aNextInFlow, aDeletingEmptyFrames);
   }
