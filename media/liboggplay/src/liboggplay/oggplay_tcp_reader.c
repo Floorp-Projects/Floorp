@@ -161,7 +161,7 @@ oggplay_create_socket() {
  * @retval -1 in case of error, 0 otherwise. 
  */
 int
-oggplay_hostname_and_path(char *location, char *proxy, int proxy_port,
+oggplay_hostname_and_path(const char *location, const char *proxy, int proxy_port,
                           char **host, int *port, char **path) {
 
 
@@ -298,7 +298,7 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
   int                   r;
 
   char                * pos;
-  int                   len;
+  size_t                len;
 
   if (me == NULL) {
     return E_OGGPLAY_BAD_READER;
@@ -359,6 +359,15 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
     printf("Host not found\n");
     return E_OGGPLAY_BAD_INPUT;
   }
+  /* 
+   * currently we only support IPv4
+   * TODO: switch to getaddrinfo and support IPv6!
+   */
+  if (sizeof(addr.sin_addr.s_addr) != he->h_length) {
+    printf("No IPv6 support, yet!\n");
+    return E_OGGPLAY_BAD_INPUT;
+  }
+  
   memcpy(&addr.sin_addr.s_addr, he->h_addr, he->h_length);
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
@@ -446,9 +455,9 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
       (
         (!found_http_response)
         &&
-        strncmp((char *)me->buffer, "HTTP/1.1 200 OK", 15) != 0
+        strncmp((char *)me->buffer, "HTTP/1.1 200 ", 13) != 0
         &&
-        strncmp((char *)me->buffer, "HTTP/1.0 200 OK", 15) != 0
+        strncmp((char *)me->buffer, "HTTP/1.0 200 ", 13) != 0
       )
       {
         return E_OGGPLAY_BAD_INPUT;
@@ -537,6 +546,10 @@ oggplay_tcp_reader_destroy(OggPlayReader * opr) {
 
   OggPlayTCPReader * me = (OggPlayTCPReader *)opr;
 
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_READER;
+  }
+
   if (me->socket != INVALID_SOCKET) {
 #ifdef WIN32
 #ifdef HAVE_WINSOCK2
@@ -564,6 +577,10 @@ grab_some_data(OggPlayTCPReader *me, int block) {
   int remaining;
   int r;
 
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_READER;
+  }
+  
   if (me->socket == INVALID_SOCKET) return E_OGGPLAY_OK;
 
   /*
@@ -623,6 +640,10 @@ oggplay_tcp_reader_available(OggPlayReader * opr, ogg_int64_t current_bytes,
 
   me = (OggPlayTCPReader *)opr;
 
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_READER;
+  }
+  
   if (me->socket == INVALID_SOCKET) {
     return me->duration;
   }
@@ -639,6 +660,11 @@ oggplay_tcp_reader_available(OggPlayReader * opr, ogg_int64_t current_bytes,
 ogg_int64_t
 oggplay_tcp_reader_duration(OggPlayReader * opr) {
   OggPlayTCPReader    *me = (OggPlayTCPReader *)opr;
+
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_READER;
+  }
+
   return me->duration;
 }
 
@@ -648,6 +674,10 @@ oggplay_tcp_reader_io_read(void * user_handle, void * buf, size_t n) {
   OggPlayTCPReader  * me = (OggPlayTCPReader *)user_handle;
   int                 len;
 
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_READER;
+  }
+  
   grab_some_data(me, 0);
 
   fseek(me->backing_store, me->current_position, SEEK_SET);
@@ -676,6 +706,10 @@ oggplay_tcp_reader_io_seek(void * user_handle, long offset, int whence) {
   OggPlayTCPReader  * me = (OggPlayTCPReader *)user_handle;
   int                 r;
 
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_READER;
+  }
+  
   fseek(me->backing_store, me->current_position, SEEK_SET);
   r = fseek(me->backing_store, offset, whence);
   me->current_position = ftell(me->backing_store);
@@ -689,12 +723,16 @@ oggplay_tcp_reader_io_tell(void * user_handle) {
 
   OggPlayTCPReader  * me = (OggPlayTCPReader *)user_handle;
 
+  if (me == NULL) {
+    return E_OGGPLAY_BAD_READER;
+  }
+  
   return me->current_position;
 
 }
 
 OggPlayReader *
-oggplay_tcp_reader_new(char *location, char *proxy, int proxy_port) {
+oggplay_tcp_reader_new(const char *location, const char *proxy, int proxy_port) {
 
   OggPlayTCPReader * me = (OggPlayTCPReader *)oggplay_malloc (sizeof (OggPlayTCPReader));
 
