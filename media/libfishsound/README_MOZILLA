@@ -6,8 +6,10 @@ files for the Mozilla build system.
 Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.
 
-The git commit id used was e98a05 from git://git.xiph.org/libfishsound.git
+The git commit id used was 20b5cdf6fe38f61a9847e46e82da60d7ac4b7877
+from git://git.xiph.org/libfishsound.git
 
 endian.patch is applied to fix Bug 45269.
 
 bug487519.patch: Fixes for bug487519
+

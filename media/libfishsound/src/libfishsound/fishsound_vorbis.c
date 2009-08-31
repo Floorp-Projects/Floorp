@@ -42,6 +42,7 @@
 #include "convert.h"
 
 /*#define DEBUG*/
+#include "debug.h"
 
 #if HAVE_VORBIS
 
@@ -89,10 +90,8 @@ fish_sound_vorbis_identify (unsigned char * buf, long bytes)
 
     if ((ret = vorbis_synthesis_headerin (&vi, &vc, &op)) == 0) {
       if (vi.rate != 0) id = FISH_SOUND_VORBIS;
-#ifdef DEBUG
     } else {
-      printf ("vorbis_synthesis_headerin returned %d\n", ret);
-#endif
+      debug_printf (1, "vorbis_synthesis_headerin returned %d", ret);
     }
 
     vorbis_info_clear (&vi);
@@ -130,10 +129,8 @@ fs_vorbis_decode (FishSound * fsound, unsigned char * buf, long bytes)
 
     if ((ret = vorbis_synthesis_headerin (&fsv->vi, &fsv->vc, &op)) == 0) {
       if (fsv->vi.rate != 0) {
-#ifdef DEBUG
-	printf ("Got vorbis info: version %d\tchannels %d\trate %ld\n",
-		fsv->vi.version, fsv->vi.channels, fsv->vi.rate);
-#endif
+	debug_printf (1, "Got vorbis info: version %d\tchannels %d\trate %ld",
+                      fsv->vi.version, fsv->vi.channels, fsv->vi.rate);
 	fsound->info.samplerate = fsv->vi.rate;
 	fsound->info.channels = fsv->vi.channels;
       }
@@ -230,10 +227,7 @@ fs_vorbis_enc_headers (FishSound * fsound)
   /* Update the comments */
   for (comment = fish_sound_comment_first (fsound); comment;
        comment = fish_sound_comment_next (fsound, comment)) {
-#ifdef DEBUG
-    fprintf (stderr, "fs_vorbis_enc_headers: %s = %s\n",
-	     comment->name, comment->value);
-#endif
+    debug_printf (1, "%s = %s", comment->name, comment->value);
     vorbis_comment_add_tag (&fsv->vc, comment->name, comment->value);
   }
 
@@ -362,9 +356,7 @@ fs_vorbis_encode_f (FishSound * fsound, float * pcm[], long frames)
   while (remaining > 0) {
     len = MIN (1024, remaining);
 
-#ifdef DEBUG
-    printf ("fs_vorbis_encode: processing %ld frames\n", len);
-#endif
+    debug_printf (1, "processing %ld frames", len);
 
     /* expose the buffer to submit data */
     vpcm = vorbis_analysis_buffer (&fsv->vd, 1024);
@@ -393,11 +385,8 @@ fs_vorbis_enc_init (FishSound * fsound)
 {
   FishSoundVorbisInfo * fsv = (FishSoundVorbisInfo *)fsound->codec_data;
 
-#ifdef DEBUG
-  printf ("Vorbis enc init: %d channels, %d Hz\n", fsound->info.channels,
-	  fsound->info.samplerate);
-#endif
-
+  debug_printf (1, "Vorbis enc init: %d channels, %d Hz", fsound->info.channels,
+                fsound->info.samplerate);
 
   vorbis_encode_init_vbr (&fsv->vi, fsound->info.channels,
 			  fsound->info.samplerate, (float)0.3 /* quality */);

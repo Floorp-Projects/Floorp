@@ -15,13 +15,23 @@ lower level layer such as UDP datagrams. When these codecs are used in
 files, they are commonly encapsulated in Ogg to produce Ogg FLAC, Speex
 and Ogg Vorbis files.
 
+libfishsound is a wrapper around the existing codec libraries and provides
+a consistent, higher-level programming interface. It has been designed for
+use in a wide variety of applications; it has no direct dependencies on
+Ogg encapsulation, though it is most commonly used in conjunction with
+liboggz to decode or encode FLAC, Speex or Vorbis audio tracks in Ogg files,
+including Ogg Theora and Annodex.
+
 This source tarball
 -------------------
 
-FishSound has been developed and tested on GNU/Linux, Darwin/MacOSX
-and MS Windows.  Installation uses the standard configure, make, make
-install sequence; Full details are in the file INSTALL. Read the file
-README.win32 for installing under MS Windows.
+FishSound has been developed and tested on GNU/Linux, Darwin/MacOSX and
+Win32. It probably also works on other Unix-like systems via GNU autoconf.
+For Win32: nmake Makefiles, Visual Studio .NET 2003 solution files and
+Visual C++ 6.0 workspace files are all provided in the source distribution.
+
+Details for building with GNU autotools are in the file INSTALL. Read the
+file README.win32 for installing under MS Windows.
 
   src/libfishsound/  the library source code.
   src/examples/      example tools for programming with libfishsound.
