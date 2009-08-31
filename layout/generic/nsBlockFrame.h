@@ -465,6 +465,10 @@ protected:
                                     nsRect&             aBounds,
                                     nsReflowStatus&     aStatus);
 
+  /** Find any trailing BR clear from the last line of the block (or its PIFs)
+   */
+  PRUint8 FindTrailingClear();
+
   /**
     * Remove a float from our float list and also the float cache
     * for the line its placeholder is on.

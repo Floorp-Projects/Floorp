@@ -505,6 +505,27 @@ nsFloatManager::ClearFloats(nscoord aY, PRUint8 aBreakType) const
   return bottom;
 }
 
+PRBool
+nsFloatManager::ClearContinues(PRUint8 aBreakType) const
+{
+  if (!HasAnyFloats() || aBreakType == NS_STYLE_CLEAR_NONE)
+    return PR_FALSE;
+  for (PRUint32 i = mFloats.Length(); i > 0; i--) {
+    nsIFrame* f = mFloats[i-1].mFrame;
+    if (f->GetNextInFlow()) {
+      if (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT)
+        return PR_TRUE;
+      PRUint8 floatSide = f->GetStyleDisplay()->mFloats;
+      if ((aBreakType == NS_STYLE_CLEAR_LEFT &&
+           floatSide == NS_STYLE_FLOAT_LEFT) ||
+          (aBreakType == NS_STYLE_CLEAR_RIGHT &&
+           floatSide == NS_STYLE_FLOAT_RIGHT))
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // FloatInfo
 
