@@ -6,6 +6,29 @@ from subprocess import *
 
 JS = None
 
+# Backported from Python 3.1 posixpath.py
+def _relpath(path, start=None):
+    """Return a relative version of a path"""
+
+    if not path:
+        raise ValueError("no path specified")
+
+    if start is None:
+        start = os.curdir
+
+    start_list = os.path.abspath(start).split(os.sep)
+    path_list = os.path.abspath(path).split(os.sep)
+
+    # Work out how much of the filepath is shared by start and path.
+    i = len(os.path.commonprefix([start_list, path_list]))
+
+    rel_list = [os.pardir] * (len(start_list)-i) + path_list[i:]
+    if not rel_list:
+        return os.curdir
+    return os.path.join(*rel_list)
+
+os.path.relpath = _relpath
+
 class Test:
     def __init__(self, path, slow, allow_oom, tmflags):
         """  path        path to test file
@@ -49,21 +72,7 @@ class Test:
 
         return cls(path, slow, allow_oom, tmflags)
 
-def find_tests(path):
-    if os.path.isfile(path):
-        if path.endswith('.js'):
-            return [ path ]
-        else:
-            print >> sys.stderr, 'Not a javascript file: %s'%path
-            sys.exit(1)
-
-    if os.path.isdir(path):
-        return find_tests_dir(path)
-
-    print >> sys.stderr, 'Not a file or directory: %s'%path
-    sys.exit(1)
-
-def find_tests_dir(dir):
+def find_tests(dir, substring = None):
     ans = []
     for dirpath, dirnames, filenames in os.walk(dir):
         if dirpath == '.':
@@ -74,7 +83,8 @@ def find_tests_dir(dir):
             if filename in ('shell.js', 'browser.js', 'jsref.js'):
                 continue
             test = os.path.join(dirpath, filename)
-            ans.append(test)
+            if substring is None or substring in os.path.relpath(test, dir):
+                ans.append(test)
     return ans
 
 def get_test_cmd(path, lib_dir):
@@ -205,14 +215,14 @@ if __name__ == '__main__':
     if test_args:
         test_list = []
         for arg in test_args:
-            test_list += find_tests(os.path.normpath(os.path.join(test_dir, arg)))
+            test_list += find_tests(test_dir, arg)
     else:
         test_list = find_tests(test_dir)
 
     if OPTIONS.exclude:
         exclude_list = []
         for exclude in OPTIONS.exclude:
-            exclude_list += find_tests(os.path.normpath(os.path.join(test_dir, exclude)))
+            exclude_list += find_tests(test_dir, arg)
         test_list = [ test for test in test_list if test not in set(exclude_list) ]
 
     if not test_list:
