@@ -19,8 +19,9 @@
  * @param OUT_SHIFT number of pixels to shift after one iteration in rgb data stream
  * @param Y_SHIFT number of pixels to shift after one iteration in Y data stream
  * @param UV_SHIFT
+ * @param UV_VERT_SUB
  */
-#define YUV_CONVERT(FUNC, CONVERT, VANILLA_OUT, NUM_PIXELS, OUT_SHIFT, Y_SHIFT, UV_SHIFT)\
+#define YUV_CONVERT(FUNC, CONVERT, VANILLA_OUT, NUM_PIXELS, OUT_SHIFT, Y_SHIFT, UV_SHIFT, UV_VERT_SUB)\
 static void                                                     \
 (FUNC)(const OggPlayYUVChannels* yuv, OggPlayRGBChannels* rgb)  \
 {                                                               \
@@ -60,12 +61,10 @@ static void                                                     \
 		 * vanilla implementation.				\
 		 */						\
 		if (r) { 					\
-			/* if there's only 1 remaining pixel to process  \
-			   and the luma width is odd, the for loop above \
-			   has already advanced pu and pv too far. */    \
-			if (r==1 && yuv->y_width&1) {           \
+			if (r==1 && yuv->y_width&1) {		\
 				pu -= 1; pv -= 1;               \
-			}                                       \
+			}					\
+								\
 			for 					\
 			( 					\
 			  j=(yuv->y_width-r); j < yuv->y_width; \
@@ -77,11 +76,12 @@ static void                                                     \
 				LOOKUP_COEFFS			\
 				VANILLA_YUV2RGB_PIXEL(py[0], ruv, guv, buv) \
 				VANILLA_OUT(dst, r, g, b)	\
-				/* advance chroma ptrs every second sample, except \
-				   when the luma width is odd, in which case the   \
-				   chroma samples are truncated and we must reuse  \
-				   the previous chroma sample */                   \
-				if (j%2 && !(j+1==yuv->y_width-1 && yuv->y_width&1)) { \
+				if 				\
+				(				\
+				  (j%2 && !(j+1==yuv->y_width-1 && yuv->y_width&1)) \
+				  ||				\
+				  UV_VERT_SUB==1		\
+				) { 				\
 					pu += 1; pv += 1;	\
 				} 				\
 			}					\
@@ -90,7 +90,12 @@ static void                                                     \
 		ptro += rgb->rgb_width * 4;                     \
 		ptry += yuv->y_width;                           \
 								\
-		if (i & 0x1 && !(i+1==h-1 && h&1))              \
+		if 						\
+		(						\
+		  (i & 0x1 && !(i+1==h-1 && h&1))		\
+		  ||						\
+		  UV_VERT_SUB==1				\
+		)		            			\
 		{                                               \
 			ptru += yuv->uv_width;                  \
 			ptrv += yuv->uv_width;                  \
