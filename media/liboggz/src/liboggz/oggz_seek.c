@@ -806,12 +806,12 @@ oggz_seek_end (OGGZ * oggz, ogg_int64_t unit_offset)
 
   offset_end = oggz_get_prev_start_page (oggz, og, &granulepos, &serialno);
 
-  unit_end = oggz_get_unit (oggz, serialno, granulepos);
-
   if (offset_end < 0) {
     oggz_reset (oggz, offset_orig, -1, SEEK_SET);
     return -1;
   }
+
+  unit_end = oggz_get_unit (oggz, serialno, granulepos);
 
 #ifdef DEBUG
   printf ("*** oggz_seek_end: found packet (%lld) at @%" PRI_OGGZ_OFF_T "d [%lld]\n",

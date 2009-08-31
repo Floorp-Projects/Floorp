@@ -116,7 +116,28 @@ _le_64 (ogg_int64_t l)
 static ogg_int32_t
 int32_be_at (unsigned char *c)
 {
-  return (c [0] <<  24) + (c [1] <<  16) + (c [2] <<  8) + c [3] ;
+  return (c [0] <<  24) | (c [1] <<  16) | (c [2] <<  8) | c [3] ;
+}
+
+static unsigned short
+int16_be_at (unsigned char *c)
+{
+  return (c [0] <<  8) | c [1];
+}
+
+static ogg_int32_t
+int32_le_at (unsigned char *c)
+{
+  return c [0] | (c [1] <<  8) | (c [2] <<  16) | (c [3] <<  24);
+}
+
+static ogg_int64_t
+int64_le_at (unsigned char *c)
+{
+  ogg_uint32_t a = c [0] | (c [1] <<  8) | (c [2] <<  16) | (c [3] <<  24);
+  ogg_uint32_t b = c [4] | (c [5] <<  8) | (c [6] <<  16) | (c [7] <<  24);
+
+  return (((ogg_int64_t)b) << 32) | a;
 }
 
 #endif /* __OGGZ_BYTEORDER_H__ */
