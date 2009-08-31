@@ -258,7 +258,7 @@ namespace nanojit
         Register rr = resv->reg;
 
         if (rr != UnknownReg && (rmask(rr) & FpRegs))
-            evict(rr);
+            evict(rr, ins);
 
         if (hi->isconst()) {
             STW32(L2, d+4, FP);
@@ -904,7 +904,7 @@ namespace nanojit
         if (rR) {
             Register rr;
             if ((rr=rR->reg) != UnknownReg && (rmask(rr) & FpRegs))
-                evict(rr);
+                evict(rr, ins);
         }
         return prepResultReg(ins, rmask(F0));
     }
