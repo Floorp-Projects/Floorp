@@ -903,36 +903,11 @@ namespace nanojit
                     break;
                 }
 
-                case LIR_ret:  {
+                case LIR_ret:
+                case LIR_fret:
                     countlir_ret();
-                    if (_nIns != _epilogue) {
-                        JMP(_epilogue);
-                    }
-                    assignSavedRegs();
-#ifdef NANOJIT_ARM
-                    // the epilogue moves R2 to R0; we may want to do this
-                    // after assignSavedRegs
-                    findSpecificRegFor(ins->oprnd1(), R2);
-#else
-                    findSpecificRegFor(ins->oprnd1(), retRegs[0]);
-#endif
+                    asm_ret(ins);
                     break;
-                }
-
-                case LIR_fret: {
-                    countlir_ret();
-                    if (_nIns != _epilogue) {
-                        JMP(_epilogue);
-                    }
-                    assignSavedRegs();
-#ifdef NANOJIT_IA32
-                    findSpecificRegFor(ins->oprnd1(), FST0);
-#else
-                    NanoAssert(false);
-#endif
-                    fpu_pop();
-                    break;
-                }
 
                 // allocate some stack space.  the value of this instruction
                 // is the address of the stack space.
