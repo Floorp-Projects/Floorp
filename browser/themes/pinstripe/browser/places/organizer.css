@@ -1,3 +1,5 @@
+%include ../shared.inc
+
 /* Inactive Window */
 
 #places:not([active="true"]) > #placesToolbox > #placesToolbar > toolbarbutton,
@@ -24,13 +26,28 @@
 }
 
 #placesList treechildren::-moz-tree-row(selected) {  
-  background: -moz-linear-gradient(top, bottom, from(#B5B5B5), to(#8A8A8A)) repeat-x;
-  border-top: 1px solid #979797;
+  background: @sidebarItemBackground@;
+  border-top: @sidebarItemBorderTop@;
 }
 
 #placesList treechildren::-moz-tree-row(selected,focus) {  
-  background: -moz-linear-gradient(top, bottom, from(#A2B1D0), to(#6E81A9)) repeat-x;
-  border-top: 1px solid #91a0c0;
+  background: @sidebarItemFocusedBackground@;
+  border-top: @sidebarItemFocusedBorderTop@;
+}
+
+#placesList:-moz-system-metric(mac-graphite-theme) treechildren::-moz-tree-row(selected) {
+  background: @sidebarItemGraphiteBackground@;
+  border-top: @sidebarItemGraphiteBorderTop@;
+}
+
+#placesList:-moz-system-metric(mac-graphite-theme) treechildren::-moz-tree-row(selected,focus) {
+  background: @sidebarItemGraphiteFocusedBackground@;
+  border-top: @sidebarItemGraphiteFocusedBorderTop@;
+}
+
+window:not([active="true"]) #placesList treechildren::-moz-tree-row(selected) {
+  background: @sidebarItemInactiveBackground@;
+  border-top: @sidebarItemInactiveBorderTop@;
 }
 
 #placesList treechildren::-moz-tree-row(History),
@@ -332,15 +349,15 @@
 #organizerScopeBar {
   padding: 3px;
   -moz-appearance: none;
-  background: -moz-linear-gradient(top, bottom, from(#E8E8E8), to(#D0D0D0)) repeat-x;
-  border-bottom: 1px solid #B1B1B1;
+  background: @scopeBarBackground@;
+  border-bottom: @scopeBarSeparatorBorder@;
 }
 
 #scopeBarTitle {
   font: icon;
-  color: #6D6D6D;
+  color: @scopeBarTitleColor@;
   font-weight: bold;
-  text-shadow: 0 1px rgba(255, 255, 255, .4);
+  text-shadow: @loweredShadow@;
   margin: 0 6px 1px;
 }
 
@@ -402,36 +419,28 @@
   margin: 0 4px;
   padding: 0 10px;
   -moz-appearance: none;
-  border: 1px solid rgba(0, 0, 0, .4);
   -moz-border-radius: 100%;
-  text-shadow: 0 1px rgba(255, 255, 255, .4);
-  background: -moz-linear-gradient(top, bottom, from(#FFF), to(#CACACA)) repeat-x;
-  -moz-box-shadow: 0 1px 0 rgba(255, 255, 255, .4);
+  border: @roundButtonBorder@;
+  text-shadow: @loweredShadow@;
+  background: @roundButtonBackground@;
+  -moz-box-shadow: @roundButtonShadow@;
 }
 
 #saveSearch > .button-box > .button-text {
   margin: 0 !important;
 }
 
-#saveSearch:focus {
-  -moz-box-shadow: 0 0 1px -moz-mac-focusring inset,
-                   0 0 4px 1px -moz-mac-focusring,
-                   0 0 2px 1px -moz-mac-focusring,
-                   0 1px rgba(255, 255, 255, .4);
+#saveSearch:active:hover {
+  background: @roundButtonPressedBackground@;
+  -moz-box-shadow: @roundButtonPressedShadow@;
 }
 
-#saveSearch:active:hover {
-  background: #CCC;
-  -moz-box-shadow: inset 0 1px 4px rgba(0, 0, 0, .2),
-                   0 1px rgba(255, 255, 255, .4);
+#saveSearch:focus {
+  -moz-box-shadow: @focusRingShadow@, @roundButtonShadow@;
 }
 
 #saveSearch:active:hover:focus {
-  -moz-box-shadow: 0 0 1px -moz-mac-focusring inset,
-                   0 0 4px 1px -moz-mac-focusring,
-                   0 0 2px 1px -moz-mac-focusring,
-                   inset 0 1px 4px rgba(0, 0, 0, .2),
-                   0 1px rgba(255, 255, 255, .4);
+  -moz-box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 
 %ifdef PLACES_QUERY_BUILDER
