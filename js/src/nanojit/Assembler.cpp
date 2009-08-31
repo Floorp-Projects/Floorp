@@ -141,7 +141,6 @@ namespace nanojit
             RegisterMask preferredAndFree = allowedAndFree & SavedRegs;
             RegisterMask set = ( preferredAndFree ? preferredAndFree : allowedAndFree );
             Register r = nRegisterAllocFromSet(set);
-            regs.used |= rmask(r);
             return r;
         }
 
@@ -449,12 +448,7 @@ namespace nanojit
 
     void Assembler::evictIfActive(Register r)
     {
-        if (_allocator.isFree(r)) {
-            // The specified register is free -- no need to do anything.  
-            _allocator.used |= rmask(r);
-        } else {
-            // Not free, need to steal.
-            LIns* vic = _allocator.getActive(r);
+        if (LIns* vic = _allocator.getActive(r)) {
             evict(r, vic);
         }
     }
@@ -1200,7 +1194,7 @@ namespace nanojit
                     }
                     else {
                         // we're at the top of a loop
-                        NanoAssert(label->addr == 0 && label->regs.isValid());
+                        NanoAssert(label->addr == 0);
                         //evictRegs(~_allocator.free);
                         intersectRegisterState(label->regs);
                         label->addr = _nIns;
@@ -1721,7 +1715,6 @@ namespace nanojit
             if (i && !(skip&rmask(r)))
                 findSpecificRegFor(i, r);
         }
-        debug_only(saved.used = 0);  // marker that we are no longer in exit path
     }
 
     // scan table for instruction with the lowest priority, meaning it is used
