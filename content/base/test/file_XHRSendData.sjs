@@ -18,13 +18,5 @@ function handleRequest(request, response)
     Array.prototype.push.apply(bytes, body.readByteArray(avail));
 
   var data = String.fromCharCode.apply(null, bytes);
-  response.setHeader("Result-Content-Length", "" + data.length);
-  if (data.indexOf("TEST_REDIRECT_STR") >= 0) {
-    var newURL = "http://" + data.split("&url=")[1];
-    response.setStatusLine(null, 307, "redirect");
-    response.setHeader("Location", newURL, false);
-  }
-  else {
-    response.write(data);
-  }
+  response.write(data);
 }
