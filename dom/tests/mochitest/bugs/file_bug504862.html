@@ -1,0 +1,22 @@
+<html>
+<body>
+<script>
+window.returnValue = 3;
+
+if (location.toString().match(/^http:\/\/localhost:8888/)) {
+  // Test that we got the right arguments.
+  opener.is(window.dialogArguments, "my args",
+            "dialog did not get the right arguments.");
+
+  // Load a different url, and test that it doesn't see the arguments.
+  window.location="data:text/html,<html><body onload=\"opener.is(window.dialogArguments, null, 'subsequent dialog document did not get the right arguments.'); close();\">';";
+} else {
+  // Post a message containing our arguments to the opener to test
+  // that this cross origing dialog does *not* see the passed in
+  // arguments.
+  opener.postMessage("args: " + window.dialogArguments,
+                     "http://localhost:8888");
+
+  close();
+}
+</script>
