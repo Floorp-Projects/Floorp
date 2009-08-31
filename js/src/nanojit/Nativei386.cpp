@@ -83,6 +83,9 @@ namespace nanojit
         OSDep::getDate();
     }
 
+    void Assembler::nBeginAssembly() {
+    }
+
     NIns* Assembler::genPrologue()
     {
         /**
@@ -119,12 +122,15 @@ namespace nanojit
         Fragment *frag = exit->target;
         GuardRecord *lr = 0;
         bool destKnown = (frag && frag->fragEntry);
+
         // Generate jump to epilog and initialize lr.
         // If the guard is LIR_xtbl, use a jump table with epilog in every entry
         if (guard->isop(LIR_xtbl)) {
             lr = guard->record();
             Register r = EDX;
             SwitchInfo* si = guard->record()->exit->switchInfo;
+            if (!_epilogue)
+                _epilogue = genEpilogue();
             emitJumpTable(si, _epilogue);
             JMP_indirect(r);
             LEAmi4(r, si->table, r);
@@ -133,14 +139,16 @@ namespace nanojit
             if (destKnown && !trees) {
                 JMP(frag->fragEntry);
                 lr = 0;
-            } else {  // target doesn't exist. Use 0 jump offset and patch later
+            } else {  // Target doesn't exist. Jump to an epilogue for now. This can be patched later.
+                if (!_epilogue)
+                    _epilogue = genEpilogue();
                 lr = guard->record();
                 JMP_long(_epilogue);
                 lr->jmp = _nIns;
             }
         }
 
-        // first restore ESP from EBP, undoing SUBi(SP,amt) from genPrologue
+        // Restore ESP from EBP, undoing SUBi(SP,amt) in the prologue
         MR(SP,FP);
 
         // return value is GuardRecord*
@@ -150,9 +158,8 @@ namespace nanojit
     NIns *Assembler::genEpilogue()
     {
         RET();
-
         POPr(FP); // Restore caller's FP.
-        MR(SP,FP); // pop the stack frame
+
         return  _nIns;
     }
 
@@ -1670,9 +1677,11 @@ namespace nanojit
 
     void Assembler::asm_ret(LInsp ins)
     {
-        if (_nIns != _epilogue) {
-            JMP(_epilogue);
-        }
+        genEpilogue();
+
+        // Restore ESP from EBP, undoing SUBi(SP,amt) in the prologue
+        MR(SP,FP);
+
         assignSavedRegs();
         LIns *val = ins->oprnd1();
         if (ins->isop(LIR_ret)) {
@@ -1687,8 +1696,6 @@ namespace nanojit
         // i2q or u2q
         TODO(asm_promote);
     }
-
-
 
     #endif /* FEATURE_NANOJIT */
 }

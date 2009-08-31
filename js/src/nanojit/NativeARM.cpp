@@ -505,7 +505,10 @@ Assembler::nFragExit(LInsp guard)
         // The target doesn't exit yet, so emit a jump to the epilogue. If the
         // target is created later on, the jump will be patched.
 
-        GuardRecord *   gr = guard->record();
+        GuardRecord *gr = guard->record();
+
+        if (!_epilogue)
+            _epilogue = genEpilogue();
 
         // Jump to the epilogue. This may get patched later, but JMP_far always
         // emits two instructions even when only one is required, so patching
@@ -548,13 +551,6 @@ Assembler::genEpilogue()
     RegisterMask savingMask = rmask(FP) | rmask(PC);
 
     POP_mask(savingMask); // regs
-
-    // Pop the stack frame.
-    // As far as I can tell, the generated code doesn't use the stack between
-    // popping the stack frame in nFragExit and getting here and so this MOV
-    // should be redundant. However, removing this seems to break some regular
-    // expression stuff.
-    MOV(SP,FP);
 
     // nFragExit loads the guard record pointer into R2, but we need it in R0
     // so it must be moved here.
@@ -2360,9 +2356,11 @@ Assembler::asm_int(LInsp ins)
 void
 Assembler::asm_ret(LIns *ins)
 {
-    if (_nIns != _epilogue) {
-        B(_epilogue);
-    }
+    genEpilogue();
+
+    // Pop the stack frame.
+    MOV(SP,FP);
+
     assignSavedRegs();
     LIns *value = ins->oprnd1();
     if (ins->isop(LIR_ret)) {

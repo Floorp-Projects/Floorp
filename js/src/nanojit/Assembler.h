@@ -301,6 +301,7 @@ namespace nanojit
 
             // platform specific implementation (see NativeXXX.cpp file)
             void        nInit(AvmCore *);
+            void        nBeginAssembly();
             Register    nRegisterAllocFromSet(RegisterMask set);
             void        nRegisterResetAll(RegAlloc& a);
             static void nPatchBranch(NIns* branch, NIns* location);

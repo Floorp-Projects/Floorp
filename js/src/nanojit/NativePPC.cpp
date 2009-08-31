@@ -118,7 +118,6 @@ namespace nanojit
     }
 
     NIns* Assembler::genEpilogue() {
-        max_param_size = 0;
         BLR();
         MTLR(R0);
         LP(R0, lr_offset, SP);
@@ -563,9 +562,7 @@ namespace nanojit
     }
 
     void Assembler::asm_ret(LIns *ins) {
-        UNLESS_PEDANTIC( if (_nIns != _epilogue) ) {
-            br(_epilogue, 0);
-        }
+        genEpilogue();
         assignSavedParams();
         LIns *value = ins->oprnd1();
         Register r = ins->isop(LIR_ret) ? R3 : F1;
@@ -1177,6 +1174,10 @@ namespace nanojit
     }
 
     void Assembler::nInit(AvmCore*) {
+    }
+
+    void Assembler::nBeginAssembly() {
+        max_param_size = 0;
     }
 
     void Assembler::nativePageSetup() {
