@@ -40,19 +40,6 @@
 
 extern void _print_list(char *name, OggPlayDataHeader *p);
 
-static void
-clear_callback_info (OggPlay *me, OggPlayCallbackInfo ***info) {
-  int i;
-  
-  for (i = 0; i < me->num_tracks; ++i) {
-    if (((*info)[i] != NULL) && ((*info)[i]->records != NULL)) {
-        oggplay_free ((*info)[i]->records);
-    }
-  }
-  oggplay_free (*info);
-  *info = NULL;
-}
-
 int
 oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
 
@@ -69,15 +56,15 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
    */
   (*info) = oggplay_calloc (me->num_tracks, sizeof (OggPlayCallbackInfo *));
   if ((*info) == NULL)
-    return E_OGGPLAY_OUT_OF_MEMORY;
-  
+    return -1;
+
   /*
    * fill in each active track.  Leave gaps for inactive tracks.
    */
   for (i = 0; i < me->num_tracks; i++) {
     OggPlayDecode       * track = me->decode_data[i];
     OggPlayCallbackInfo * track_info = me->callback_info + i;
-    size_t                count = 0;
+    int                   count = 0;
     OggPlayDataHeader   * p;
     OggPlayDataHeader   * q = NULL;
     
@@ -123,18 +110,7 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
         if (q == NULL) {
           q = p;
         }
-        
-        /* check for overflow */
-        if 
-        (
-          oggplay_check_add_overflow (count, 1, &count)
-          == 
-          E_OGGPLAY_TYPE_OVERFLOW
-        )
-        {
-          clear_callback_info (me, info);
-          return E_OGGPLAY_TYPE_OVERFLOW;
-        }
+        count++;
       }
     }
   
@@ -168,17 +144,18 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
     } else {
       track_info->stream_info = OGGPLAY_STREAM_UNINITIALISED;
     }
-
-    if ((count+1) < count) {
-      clear_callback_info (me, info);
-      return E_OGGPLAY_TYPE_OVERFLOW;
-    }
+   
     /* null-terminate the record list for the python interface */
-    track_info->records = 
-      oggplay_calloc ((count+1), sizeof (OggPlayDataHeader *));
-    if (track_info->records == NULL) {
-      clear_callback_info (me, info);
-      return E_OGGPLAY_OUT_OF_MEMORY;
+    track_info->records = oggplay_calloc ((count + 1), sizeof (OggPlayDataHeader *));
+    if (track_info->records == NULL)
+    {
+      for (i = 0; i < me->num_tracks; i++) {
+        if ((*info)[i]->records != NULL) 
+          oggplay_free ((*info)[i]->records);
+      }
+      oggplay_free (*info);
+      *info = NULL;
+      return -1;
     }
 
     track_info->records[count] = NULL;
@@ -273,7 +250,7 @@ oggplay_callback_info_prepare(OggPlay *me, OggPlayCallbackInfo ***info) {
       added_required_record --;
     }
 
-  } /* end of for loop, that fills each track */
+  }
  
    me->pt_update_valid = 0;
     
@@ -458,6 +435,7 @@ oggplay_callback_info_get_presentation_time(OggPlayDataHeader *header) {
     return -1;
   }
 
+  /* SGS: is this correct? */
   return OGGPLAY_TIME_FP_TO_INT(header->presentation_time);
 }
 

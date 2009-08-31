@@ -130,14 +130,9 @@ oggplay_set_track_active(OggPlay *me, int track_num) {
   if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_SKELETON) {
     return E_OGGPLAY_TRACK_IS_SKELETON;
   }
-  
+
   if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_UNKNOWN) {
     return E_OGGPLAY_TRACK_IS_UNKNOWN;
-  }
-
-  /* there was an error while decoding the headers of this track! */
-  if (me->decode_data[track_num]->initialised != 1) {
-    return E_OGGPLAY_TRACK_UNINITIALISED;
   }
 
   if ((p = me->decode_data[track_num]->final_granulepos) != -1) {

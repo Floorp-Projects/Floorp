@@ -1,0 +1,23 @@
+commit 3602bf643830c63f499928623f47ae9635a8db51
+Author: Viktor Gal <viktor.gal@maeth.com>
+Date:   Tue Apr 14 17:20:24 2009 +1000
+
+    Fix for Mozilla 481933.
+    
+    WARNING:
+    You will need the patch of 38b6dffb5ec8b32119704bd048d722a281d9fd79
+    in oggz repository, otherwise you won't be able to play back chopped Ogg content!
+
+diff --git a/src/liboggplay/oggplay.c b/src/liboggplay/oggplay.c
+index 3296fea..0b03a3a 100644
+--- a/src/liboggplay/oggplay.c
++++ b/src/liboggplay/oggplay.c
+@@ -687,6 +687,8 @@ read_more_data:
+       }
+ 
+       return E_OGGPLAY_OK;
++    } else if (r == OGGZ_ERR_HOLE_IN_DATA) {
++      return E_OGGPLAY_BAD_INPUT;
+     }
+ 
+   }
