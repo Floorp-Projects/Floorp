@@ -110,13 +110,13 @@ public:
    * space.
    */
   PRBool AddFloat(nsLineLayout&       aLineLayout,
-                  nsPlaceholderFrame* aPlaceholderFrame,
+                  nsIFrame*           aFloat,
                   nscoord             aAvailableWidth,
                   nsReflowStatus&     aReflowStatus);
   PRBool CanPlaceFloat(const nsSize& aFloatSize, PRUint8 aFloats,
                        const nsFlowAreaRect& aFloatAvailableSpace,
                        PRBool aForceFit);
-  PRBool FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
+  PRBool FlowAndPlaceFloat(nsIFrame*       aFloat,
                            nsReflowStatus& aReflowStatus,
                            PRBool          aForceFit);
   PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats, PRBool aForceFit);

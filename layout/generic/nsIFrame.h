@@ -2073,7 +2073,7 @@ public:
    */
   PRBool IsPseudoStackingContextFromStyle() {
     const nsStyleDisplay* disp = GetStyleDisplay();
-    return disp->mOpacity != 1.0f || disp->IsPositioned();
+    return disp->mOpacity != 1.0f || disp->IsPositioned() || disp->IsFloating();
   }
   
   virtual PRBool HonorPrintBackgroundSettings() { return PR_TRUE; }

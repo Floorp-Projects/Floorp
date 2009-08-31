@@ -43,8 +43,8 @@
 #ifndef nsLineBox_h___
 #define nsLineBox_h___
 
-#include "nsPlaceholderFrame.h"
 #include "nsILineIterator.h"
+#include "nsIFrame.h"
 
 class nsLineBox;
 class nsFloatCache;
@@ -64,7 +64,7 @@ public:
 
   nsFloatCache* Next() const { return mNext; }
 
-  nsPlaceholderFrame* mPlaceholder;     // nsPlaceholderFrame
+  nsIFrame* mFloat;                     // floating frame
 
 protected:
   nsFloatCache* mNext;
