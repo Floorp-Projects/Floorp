@@ -168,8 +168,6 @@ typedef struct {
   OggPlayDataHeader   * untimed_data_list;  
   OggPlayStreamInfo     stream_info;        /**< @see OggPlayStreamInfo */
   int                   preroll;            /**< num. of past content packets to take into account when decoding the current Ogg page */
-  short                 initialised;        /**< */
-  int                   num_header_packets; /**< number of header packets left to process for the stream.*/
 } OggPlayDecode;
 
 typedef struct {
@@ -177,6 +175,7 @@ typedef struct {
   theora_state    video_handle;
   theora_info     video_info;
   theora_comment  video_comment;
+  int             remaining_header_packets;
   int             granulepos_seen;
   int             frame_delta;
   int             y_width;
@@ -187,7 +186,6 @@ typedef struct {
   int             uv_stride;
   int             cached_keyframe;
   int             convert_to_rgb;
-  int             swap_rgb;
 } OggPlayTheoraDecode;
 
 typedef struct {
@@ -214,71 +212,60 @@ typedef struct {
   OggPlayDecode   decoder;
 #ifdef HAVE_KATE
   int             granuleshift;
-  kate_state      k_state;
-  kate_info       k_info;
-  kate_comment    k_comment;
+  kate_state      k;
   int             init;
 #ifdef HAVE_TIGER
   int use_tiger;
   int overlay_dest;
   tiger_renderer *tr;
-  int default_width;
-  int default_height;
-  int swap_rgb;
 #endif
 #endif
 } OggPlayKateDecode;
 
 struct OggPlaySeekTrash;
 
-/**
- *
- */
 typedef struct OggPlaySeekTrash {
   OggPlayDataHeader       * old_data;
   OggPlayBuffer           * old_buffer;
   struct OggPlaySeekTrash * next;
 } OggPlaySeekTrash;
 
-/**
- * 
- */
 struct _OggPlay {
-  OggPlayReader           * reader;                 /**< @see OggPlayReader */
-  OGGZ                    * oggz;                   /**< @see OGGZ */
-  OggPlayDecode          ** decode_data;            /**< */
-  OggPlayCallbackInfo     * callback_info;          /**< */
-  int                       num_tracks;             /**< number of tracks in the Ogg container */
-  int                       all_tracks_initialised; /**< "= 1" indicates that all tracks are initialised */
-  ogg_int64_t               callback_period;        /**< */
-  OggPlayDataCallback     * callback;               /**< */
-  void                    * callback_user_ptr;      /**< */
-  ogg_int64_t               target;                 /**< */
-  int                       active_tracks;          /**< number of active tracks */
-  volatile OggPlayBuffer  * buffer;                 /**< @see OggPlayBuffer */
-  ogg_int64_t               presentation_time;      /**< */
-  OggPlaySeekTrash        * trash;                  /**< @see OggPlaySeekTrash */
-  int                       shutdown;               /**< "= 1" indicates shutdown event */
-  int                       pt_update_valid;        /**< */
-  ogg_int64_t               duration;	              /**< The value of the duration the last time it was retrieved.*/
+  OggPlayReader           * reader;
+  OGGZ                    * oggz;
+  OggPlayDecode          ** decode_data;
+  OggPlayCallbackInfo     * callback_info;
+  int                       num_tracks;
+  int                       all_tracks_initialised;
+  ogg_int64_t               callback_period;
+  OggPlayDataCallback     * callback;
+  void                    * callback_user_ptr;
+  ogg_int64_t               target;
+  int                       active_tracks;
+  volatile OggPlayBuffer  * buffer;
+  ogg_int64_t               presentation_time;  /**< presentation time in seconds in 32.32 fixed point format */
+  OggPlaySeekTrash        * trash;
+  int                       shutdown;
+  int                       pt_update_valid;
+  ogg_int64_t               duration;	          /**< The value of the duration the last time it was retrieved.*/
 };
 
 void
 oggplay_set_data_callback_force(OggPlay *me, OggPlayDataCallback callback,
-                                void *user);
+                void *user);
 
 void
 oggplay_take_out_trash(OggPlay *me, OggPlaySeekTrash *trash);
 
-OggPlayErrorCode
+void
 oggplay_seek_cleanup(OggPlay *me, ogg_int64_t milliseconds);
 
 typedef struct {
-  void  (*init)     (void *user_data);
-  int   (*callback) (OGGZ * oggz, ogg_packet * op, long serialno,
-                     void * user_data);
-  void  (*shutdown) (void *user_data);
-  int   size;
+  void (*init)(void *user_data);
+  int (*callback)(OGGZ * oggz, ogg_packet * op, long serialno,
+                                                          void * user_data);
+  void (*shutdown)(void *user_data);
+  int size;
 } OggPlayCallbackFunctions;
 
 /**
@@ -302,153 +289,6 @@ typedef struct {
 #define oggplay_calloc _ogg_calloc
 #define oggplay_realloc _ogg_realloc
 #define oggplay_free _ogg_free
-
-/**
- * macros for obtaining a type's max and min values
- * http://www.fefe.de/intof.html 
- */
-#define OGGPLAY_TYPE_HALF_MAX_SIGNED(type) ((type)1 << (sizeof(type)*8-2))
-#define OGGPLAY_TYPE_MAX_SIGNED(type) (OGGPLAY_TYPE_HALF_MAX_SIGNED(type) - 1 + OGGPLAY_TYPE_HALF_MAX_SIGNED(type))
-#define OGGPLAY_TYPE_MIN_SIGNED(type) (-1 - OGGPLAY_TYPE_MAX_SIGNED(type))
-#define OGGPLAY_TYPE_MIN(type) ((type)-1 < 1?OGGPLAY_TYPE_MIN_SIGNED(type):(type)0)
-#define OGGPLAY_TYPE_MAX(type) ((type)~OGGPLAY_TYPE_MIN(type))
-
-static inline int
-oggplay_check_add_overflow (size_t a, long b, size_t* r) {  
-  /* we cannot assume that sizeof(size_t) >= sizeof(long) !!! */
-  if (sizeof(size_t) < sizeof(long)) {
-    /* check whether the number fits into a size_t */
-    if
-    (
-      (b < 0) ?
-        ((OGGPLAY_TYPE_MAX(size_t)+b >= 0) ? 0 : 1) :
-        ((OGGPLAY_TYPE_MAX(size_t)-b >= 0) ? 0 : 1)
-    )
-    {
-      return E_OGGPLAY_TYPE_OVERFLOW;
-    }
-  } 
-  /* check whether the sum of the 'a' and 'b' fits into a size_t */
-  if
-  (
-    (b < 0) ?
-      ((OGGPLAY_TYPE_MIN(size_t)-b <= a) ? 0 : 1) :
-      ((OGGPLAY_TYPE_MAX(size_t)-b >= a) ? 0 : 1)
-  )
-  {
-    return E_OGGPLAY_TYPE_OVERFLOW;
-  }
-  
-  /* if 'r' is supplied give back the sum of 'a' and 'b' */
-  if (r != NULL)
-    *r = a+b;
-  
-  return 0;
-}
-
-static inline int
-oggplay_mul_signed_overflow_generic(long a, long b, long *re) {  
-  long _a, _b, ah, bh, x, y, r;
-  int sign = 1;
-  
-  _a = a;
-  _b = b;
-  ah = _a >> (sizeof(long)*4);
-  bh = _b >> (sizeof(long)*4);
-  
-  if (a < 0) {
-    _a = -_a;
-    if (_a < 0) {
-      if (_b == 0 || _b == 1) {
-        r = _a*_b;
-        goto ok;
-      } else {
-        goto overflow;
-      }
-    }
-    sign = -sign;
-    ah = _a >> (sizeof(long)*4);
-  }
-
-  if (_b < 0) {
-    _b = -_b;
-    if (_b < 0) {
-      if (_a == 0 || (_a == 1 && sign == 1)) {
-        r = _a*_b;
-        goto ok;
-      } else {
-        goto overflow;
-      }
-    }
-    sign = -sign;
-    bh = _b >> (sizeof(long)*4);
-  }
-
-  if (ah != 0 && bh != 0) {
-    goto overflow;
-  }
-  
-  if (ah == 0 && bh == 0) {
-    r = _a*_b;
-    if (r < 0)
-      goto overflow;
-    
-    goto ok;
-  }
-  
-  if (_a < _b) {
-    x = _a;
-    _a = _b;
-    _b = x;
-    ah = bh;
-  }
-
-  y = ah*_b;
-  if (y >= (1L << (sizeof(long)*4 - 1)))
-    goto overflow;
-  _a &= (1L << sizeof(long)*4) - 1;
-  x = _a*_b;
-  if (x < 0)
-    goto overflow;
-  x += (y << sizeof(long)*4);
-  if (x < 0)
-    goto overflow;
-          
-ok:
-  if (re != NULL) {
-    *re = sign*r;
-  }
-  
-  return 0;
-  
-overflow:
-  return E_OGGPLAY_TYPE_OVERFLOW;
-}
-
-static inline int 
-oggplay_mul_signed_overflow(long a, long b, long *r) {
-  if (sizeof(long) > 4) {
-    return oggplay_mul_signed_overflow_generic (a, b, r);
-  } else {
-    ogg_int64_t c = (ogg_int64_t) a*b;
-
-    /* check whether the result fits in a long bit */
-    if
-    (
-      (c < 1) ?
-        ((OGGPLAY_TYPE_MIN (long) > c) ? 1 : 0) :
-        ((OGGPLAY_TYPE_MAX (long) < c) ? 1 : 0)
-    ) 
-    {
-      return E_OGGPLAY_TYPE_OVERFLOW;
-    }
-    
-    if (r != NULL) {
-      *r = (long)c;
-    }
-    return 0; 
-  }
-}
 
 #include "oggplay_callback.h"
 #include "oggplay_data.h"

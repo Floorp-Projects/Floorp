@@ -1,11 +1,11 @@
 diff --git a/media/liboggplay/include/oggplay/oggplay.h b/media/liboggplay/include/oggplay/oggplay.h
 --- a/media/liboggplay/include/oggplay/oggplay.h
 +++ b/media/liboggplay/include/oggplay/oggplay.h
-@@ -226,16 +226,19 @@ oggplay_get_audio_samplerate(OggPlay *me
-  * @retval E_OGGPLAY_BAD_TRACK the given track number does not exists
-  * @retval E_OGGPLAY_WRONG_TRACK_TYPE the given track is not an audio track
-  * @retval E_OGGPLAY_UNINITIALISED the OggPlay handle is uninitalised.
-  */
+@@ -110,16 +110,19 @@ oggplay_get_audio_channels(OggPlay *me, 
+ 
+ OggPlayErrorCode
+ oggplay_get_audio_samplerate(OggPlay *me, int track, int *samplerate); 
+ 
  OggPlayErrorCode
  oggplay_get_video_fps(OggPlay *me, int track, int* fps_denom, int* fps_num);
  
@@ -13,7 +13,7 @@ diff --git a/media/liboggplay/include/oggplay/oggplay.h b/media/liboggplay/inclu
 +oggplay_get_video_aspect_ratio(OggPlay *me, int track, int* aspect_denom, int* aspect_num);
 +
 +OggPlayErrorCode
- oggplay_convert_video_to_rgb(OggPlay *me, int track, int convert, int swap_rgb);
+ oggplay_convert_video_to_rgb(OggPlay *me, int track, int convert);
  
  OggPlayErrorCode
  oggplay_get_kate_category(OggPlay *me, int track, const char** category);
@@ -24,7 +24,7 @@ diff --git a/media/liboggplay/include/oggplay/oggplay.h b/media/liboggplay/inclu
 diff --git a/media/liboggplay/src/liboggplay/oggplay.c b/media/liboggplay/src/liboggplay/oggplay.c
 --- a/media/liboggplay/src/liboggplay/oggplay.c
 +++ b/media/liboggplay/src/liboggplay/oggplay.c
-@@ -301,16 +301,45 @@ oggplay_get_video_fps(OggPlay *me, int t
+@@ -280,16 +280,45 @@ oggplay_get_video_fps(OggPlay *me, int t
  
    (*fps_denom) = decode->video_info.fps_denominator;
    (*fps_num) = decode->video_info.fps_numerator;
@@ -62,7 +62,7 @@ diff --git a/media/liboggplay/src/liboggplay/oggplay.c b/media/liboggplay/src/li
 +}
 +
 +OggPlayErrorCode
- oggplay_convert_video_to_rgb(OggPlay *me, int track, int convert, int swap_rgb) {
+ oggplay_convert_video_to_rgb(OggPlay *me, int track, int convert) {
    OggPlayTheoraDecode *decode;
  
    if (me == NULL) {
