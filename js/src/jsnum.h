@@ -121,7 +121,7 @@ JSDOUBLE_IS_NEGZERO(jsdouble d)
 #ifdef WIN32
     return (d == 0 && (_fpclass(d) & _FPCLASS_NZ));
 #elif defined(SOLARIS)
-    return (d == 0 && copysign (1, d) < 0);
+    return (d == 0 && copysign(1, d) < 0);
 #else
     return (d == 0 && signbit(d));
 #endif
@@ -145,7 +145,7 @@ JSDOUBLE_IS_NEG(jsdouble d)
 #ifdef WIN32
     return JSDOUBLE_IS_NEGZERO(d) || d < 0;
 #elif defined(SOLARIS)
-    return copysign (1, d) < 0;
+    return copysign(1, d) < 0;
 #else
     return signbit(d);
 #endif
