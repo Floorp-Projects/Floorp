@@ -502,9 +502,7 @@ BrowserView.prototype = {
       return;
 
     let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
-    let pageZoom = BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h);
-    this._browser.markupDocumentViewer.textZoom = 1 / pageZoom;
-    this.setZoomLevel(pageZoom);
+    this.setZoomLevel(BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h));
   },
 
   zoom: function zoom(aDirection) {
