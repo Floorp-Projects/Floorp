@@ -30,26 +30,15 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** @file
- * oggplay_seek.h
+/*
+ * oggplay_enums.h
  * 
- * @authors
  * Shane Stephens <shane.stephens@annodex.net>
  */
 
 #ifndef __OGGPLAY_SEEK_H__
 #define __OGGPLAY_SEEK_H__
 
-/**
- * Seeks to a requested position.
- * 
- * @param me OggPlay handle associated with the stream
- * @param milliseconds
- * @retval E_OGGPLAY_OK on success
- * @retval E_OGGPLAY_BAD_OGGPLAY the supplied OggPlay handle was invalid
- * @retval E_OGGPLAY_CANT_SEEK error occured while trying to seek
- * @retval E_OGGPLAY_OUT_OF_MEMORY ran out of memory while trying to allocate the new buffer and trash.
- */
 OggPlayErrorCode
 oggplay_seek(OggPlay *me, ogg_int64_t milliseconds);
 
