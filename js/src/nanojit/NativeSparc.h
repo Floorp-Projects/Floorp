@@ -448,10 +448,22 @@ namespace nanojit
     asm_output("fbl %p", _nIns + dsp22 - 1); \
     } while(0)
 
+#define FBUL(a, dsp22) \
+    do { \
+    Format_2_2(a, 0x3, 0x6, dsp22); \
+    asm_output("fbl %p", _nIns + dsp22 - 1); \
+    } while(0)
+
 #define FBLE(a, dsp22) \
     do { \
     Format_2_2(a, 0xD, 0x6, dsp22); \
     asm_output("fble %p", _nIns + dsp22 - 1); \
+    } while(0)
+
+#define FBULE(a, dsp22) \
+    do { \
+    Format_2_2(a, 0xE, 0x6, dsp22); \
+    asm_output("fbule %p", _nIns + dsp22 - 1); \
     } while(0)
 
 #define FCMPD(rs1, rs2) \
