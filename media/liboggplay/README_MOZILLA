@@ -5,7 +5,7 @@ the Mozilla build system.
 
 git://git.xiph.org/liboggplay.git
 
-The git commit ID used was b4a7efa06d46596515071490cb255c3548d90371.
+The git commit ID used was 8640eb3fddc43ad4a5d2cdbcbc62238204e952aa.
 
 The following local patches have been applied:
 
@@ -13,37 +13,11 @@ endian: pick up NSPR's little/big endian defines in oggplay's config.h.
 
 bug481921: fix a crash in oggplay_callback_info_prepare().
 
-trac466: Fix for infinite loop in liboggplay when running decoder on its own thread. Cherry picked from liboggplay git commit e6871f.
-
-bug492436: Fix for that bug cherry picked from liboggplay git commit 4b97ad.
-bug493140: Fix for offsets not being used.
-
 aspect-ratio: Adds oggplay_get_video_aspect_ratio, used for bug 480058.
 
-bug493678.patch: fix for infinite loop in oggplay_step_decode. See bug 493678.
-
-bug493224.patch: Fix for bug 493224.
-
 seek_to_key_frame.patch: Adds oggplay_seek_to_keyframe(), as per bug 463358.
-
-bug488951: Fix for YUV conversion for odd sized frames.  Cherrypicked from
-           upstream commits dabde8, 683f23, and 4d7581.
-
-bug488951_fix_yuv: Additional fixes to YUV conversion that have not been
-                   upstreamed yet.
-
-bug488951_fix_yuv_2: Additional fix to YUV conversion for odd height videos
-                     that has not been upstreamed yet.
-
-bug495129a.patch: Fix from liboggplay commit 6c8e11.
-bug495129b.patch: Fix from liboggplay commit 3602bf.
-
-bug487519.patch: Fix for bug 487519.
 
 oggplay_os2.patch: Bug 448918 - add OS/2 support (this patch should be
                    removed when OS/2 support is added upstream)
 
-bug498815.patch: Fix for bug 498815.
-bug498824.patch: Fix for bug 498824.
-bug500311.patch: Fix crash during decoder initialization.
-
+bug496529.patch: Bug 496529.

@@ -1,29 +1,29 @@
 diff --git a/media/liboggplay/src/liboggplay/oggplay_private.h b/media/liboggplay/src/liboggplay/oggplay_private.h
 --- a/media/liboggplay/src/liboggplay/oggplay_private.h
 +++ b/media/liboggplay/src/liboggplay/oggplay_private.h
-@@ -62,16 +62,22 @@
- 
- #ifdef WIN32
+@@ -64,16 +64,22 @@
  
  #ifdef HAVE_WINSOCK2
  #include <winsock2.h>
  #else
  #include <winsock.h>
  #endif
-+#endif
-+
+ #endif
+ 
 +#ifdef OS2
 +#define INCL_DOSSEMAPHORES
 +#define INCL_DOSPROCESS
 +#include <os2.h>
- #endif
- 
++#endif
++
  // for Win32 <windows.h> has to be included last
  #include "std_semaphore.h"
  
  /**
   *
   * has_been_presented: 0 until the data has been added as a "required" element,
+  *                     then 1.
+  */
 diff --git a/media/liboggplay/src/liboggplay/oggplay_tools.c b/media/liboggplay/src/liboggplay/oggplay_tools.c
 --- a/media/liboggplay/src/liboggplay/oggplay_tools.c
 +++ b/media/liboggplay/src/liboggplay/oggplay_tools.c
@@ -278,7 +278,7 @@ new file mode 100644
 diff --git a/media/liboggplay/src/liboggplay/std_semaphore.h b/media/liboggplay/src/liboggplay/std_semaphore.h
 --- a/media/liboggplay/src/liboggplay/std_semaphore.h
 +++ b/media/liboggplay/src/liboggplay/std_semaphore.h
-@@ -83,16 +83,23 @@ typedef sem_t           semaphore;
+@@ -87,16 +87,23 @@
  typedef sem_t           semaphore;
  #elif defined(WIN32)
  #include <windows.h>
