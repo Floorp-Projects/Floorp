@@ -79,6 +79,7 @@ include moz-only/reftest.list
 == gradient-live-01c.svg gradient-live-01-ref.svg
 == gradient-live-01d.svg gradient-live-01-ref.svg
 fails == inline-in-xul-basic-01.xul pass.svg
+== image-fill-01.svg pass.svg
 == image-scaling-01.svg pass.svg
 == image-scaling-02.svg pass.svg
 == invalid-text-01.svg pass.svg
