@@ -1179,7 +1179,6 @@ namespace nanojit
     void Assembler::nRegisterResetAll(RegAlloc &a) {
         // add scratch registers to our free list for the allocator
         a.clear();
-        a.used = 0;
 #ifdef _MSC_VER
         a.free = 0x001fffcf; // rax-rbx, rsi, rdi, r8-r15, xmm0-xmm5
 #else

@@ -211,7 +211,6 @@ namespace nanojit
     void Assembler::nRegisterResetAll(RegAlloc& a)
     {
         a.clear();
-        a.used = 0;
         a.free = GpRegs | FpRegs;
         debug_only( a.managed = a.free; )
             }
