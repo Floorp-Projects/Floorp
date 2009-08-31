@@ -140,21 +140,17 @@ ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
   nsFloatCache* fc = aFloats.Head();
   while (fc) {
     nsFrame::IndentBy(out, aIndent);
-    nsPlaceholderFrame* ph = fc->mPlaceholder;
-    if (ph) {
-      fprintf(out, "placeholder@%p ", static_cast<void*>(ph));
-      nsIFrame* frame = ph->GetOutOfFlowFrame();
-      if (frame) {
-        nsAutoString frameName;
-        frame->GetFrameName(frameName);
-        fputs(NS_LossyConvertUTF16toASCII(frameName).get(), out);
-      }
-
-      if (!frame) {
-        fputs("\n###!!! NULL out-of-flow frame", out);
-      }
-      fprintf(out, "\n");
+    nsIFrame* frame = fc->mFloat;
+    fprintf(out, "floatframe@%p ", static_cast<void*>(frame));
+    if (frame) {
+      nsAutoString frameName;
+      frame->GetFrameName(frameName);
+      fputs(NS_LossyConvertUTF16toASCII(frameName).get(), out);
     }
+    else {
+      fputs("\n###!!! NULL out-of-flow frame", out);
+    }
+    fprintf(out, "\n");
     fc = fc->Next();
   }
 }
@@ -836,7 +832,7 @@ nsFloatCacheList::Find(nsIFrame* aOutOfFlowFrame)
 {
   nsFloatCache* fc = mHead;
   while (fc) {
-    if (fc->mPlaceholder->GetOutOfFlowFrame() == aOutOfFlowFrame) {
+    if (fc->mFloat == aOutOfFlowFrame) {
       break;
     }
     fc = fc->Next();
@@ -950,7 +946,7 @@ nsFloatCacheFreeList::Append(nsFloatCache* aFloat)
 //----------------------------------------------------------------------
 
 nsFloatCache::nsFloatCache()
-  : mPlaceholder(nsnull),
+  : mFloat(nsnull),
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsFloatCache);

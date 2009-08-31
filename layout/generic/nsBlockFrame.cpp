@@ -2269,7 +2269,7 @@ nsBlockFrame::MarkLineDirtyForInterrupt(nsLineBox* aLine)
     // And mark all the floats whose reflows we might be skipping dirty too.
     if (aLine->HasFloats()) {
       for (nsFloatCache* fc = aLine->GetFirstFloat(); fc; fc = fc->Next()) {
-        fc->mPlaceholder->GetOutOfFlowFrame()->AddStateBits(NS_FRAME_IS_DIRTY);
+        fc->mFloat->AddStateBits(NS_FRAME_IS_DIRTY);
       }
     }
   } else {
@@ -3885,9 +3885,11 @@ GetLastFloat(nsLineBox* aLine)
 static PRBool
 CheckPlaceholderInLine(nsIFrame* aBlock, nsLineBox* aLine, nsFloatCache* aFC)
 {
-  if (!aFC)
+  if (!aFC || aFC->mFloat->GetPrevInFlow())
     return PR_TRUE;
-  for (nsIFrame* f = aFC->mPlaceholder; f; f = f->GetParent()) {
+  nsIFrame* ph = aBlock->PresContext()->FrameManager()->
+                   GetPlaceholderFrameFor(aFC->mFloat->GetFirstInFlow());
+  for (nsIFrame* f = ph; f; f = f->GetParent()) {
     if (f->GetParent() == aBlock)
       return aLine->Contains(f);
   }
@@ -5473,16 +5475,15 @@ nsBlockFrame::AdjustFloatAvailableSpace(nsBlockReflowState& aState,
 nscoord
 nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
                                 const nsRect&       aFloatAvailableSpace,
-                                nsPlaceholderFrame* aPlaceholder)
+                                nsIFrame*           aFloat)
 {
+  NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+                  "aFloat must be an out-of-flow frame");
   // Reflow the float.
-  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
-
   nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
-                                                floatFrame);
+                                                aFloat);
 
-  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
-                            floatFrame, 
+  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat, 
                             nsSize(availSpace.width, availSpace.height));
   return floatRS.ComputedWidth() + floatRS.mComputedBorderPadding.LeftRight() +
     floatRS.mComputedMargin.LeftRight();
@@ -5491,27 +5492,27 @@ nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                           const nsRect&       aFloatAvailableSpace,
-                          nsPlaceholderFrame* aPlaceholder,
+                          nsIFrame*           aFloat,
                           nsMargin&           aFloatMargin,
                           nsReflowStatus&     aReflowStatus)
 {
+  NS_PRECONDITION(aFloat->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+                  "aFloat must be an out-of-flow frame");
   // Reflow the float.
-  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
   aReflowStatus = NS_FRAME_COMPLETE;
 
 #ifdef NOISY_FLOAT
   printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n",
-          aPlaceholder->GetOutOfFlowFrame(), this, 
+          aFloat, this, 
           aFloatAvailableSpace.x, aFloatAvailableSpace.y, 
           aFloatAvailableSpace.width, aFloatAvailableSpace.height
   );
 #endif
 
   nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
-                                                floatFrame);
+                                                aFloat);
 
-  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
-                            floatFrame, 
+  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat,
                             nsSize(availSpace.width, availSpace.height));
 
   // Setup a block reflow state to reflow the float.
@@ -5527,7 +5528,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     PRBool mayNeedRetry = PR_FALSE;
     floatRS.mDiscoveredClearance = nsnull;
     // Only first in flow gets a top margin.
-    if (!floatFrame->GetPrevInFlow()) {
+    if (!aFloat->GetPrevInFlow()) {
       nsBlockReflowContext::ComputeCollapsedTopMargin(floatRS, &margin,
                                                       clearanceFrame, &mayNeedRetry);
 
@@ -5554,7 +5555,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
   }
 
-  if (floatFrame->GetType() == nsGkAtoms::letterFrame) {
+  if (aFloat->GetType() == nsGkAtoms::letterFrame) {
     // We never split floating first letters; an incomplete state for
     // such frames simply means that there is more content to be
     // reflowed on the line.
@@ -5577,20 +5578,20 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   // we be doing this in nsBlockReflowState::FlowAndPlaceFloat after
   // we've positioned the float, and shouldn't we be doing the equivalent
   // of |::PlaceFrameView| here?
-  floatFrame->SetSize(nsSize(metrics.width, metrics.height));
-  if (floatFrame->HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, floatFrame,
-                                               floatFrame->GetView(),
+  aFloat->SetSize(nsSize(metrics.width, metrics.height));
+  if (aFloat->HasView()) {
+    nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, aFloat,
+                                               aFloat->GetView(),
                                                &metrics.mOverflowArea,
                                                NS_FRAME_NO_MOVE_VIEW);
   }
   // Pass floatRS so the frame hierarchy can be used (redoFloatRS has the same hierarchy)  
-  floatFrame->DidReflow(aState.mPresContext, &floatRS,
+  aFloat->DidReflow(aState.mPresContext, &floatRS,
                         NS_FRAME_REFLOW_FINISHED);
 
 #ifdef NOISY_FLOAT
   printf("end ReflowFloat %p, sized to %d,%d\n",
-         floatFrame, metrics.width, metrics.height);
+         aFloat, metrics.width, metrics.height);
 #endif
 
   return NS_OK;
@@ -6435,8 +6436,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
     if (line->HasFloats()) {
       nsFloatCache* fc = line->GetFirstFloat();
       while (fc) {
-        nsIFrame* floatFrame = fc->mPlaceholder->GetOutOfFlowFrame();
-        lineFloats.AppendElement(floatFrame);
+        lineFloats.AppendElement(fc->mFloat);
         fc = fc->Next();
       }
     }

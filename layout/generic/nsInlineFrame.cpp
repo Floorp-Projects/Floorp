@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
+#include "nsPlaceholderFrame.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsStyleContext.h"
