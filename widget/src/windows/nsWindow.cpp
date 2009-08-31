@@ -36,6 +36,7 @@
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Ningjie Chen <chenn@email.uc.edu>
  *   Jim Mathies <jmathies@mozilla.com>
+ *   Kyle Huey <me@kylehuey.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -151,6 +152,7 @@
 #include "nsWidgetsCID.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
+#include "nsString.h"
 
 #if defined(WINCE)
 #include "nsWindowCE.h"
@@ -454,7 +456,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsInMouseCapture     = PR_FALSE;
   mIsPluginWindow       = PR_FALSE;
   mIsTopWidgetWindow    = PR_FALSE;
-  mInWheelProcessing    = PR_FALSE;
+  mInScrollProcessing   = PR_FALSE;
   mUnicodeWidget        = PR_TRUE;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
@@ -702,6 +704,18 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   if (!mWnd)
     return NS_ERROR_FAILURE;
+
+  // Ugly Thinkpad Driver Hack (Bug 507222)
+  // We create an invisible scrollbar to trick the 
+  // Trackpoint driver into sending us scrolling messages
+  PRUnichar buffer[kMaxClassNameLength];
+  ::GetClassNameW(parent, (LPWSTR)buffer, kMaxClassNameLength);
+  nsDependentString parentClass(buffer);
+  if (parentClass.Equals(kClassNameContent) ||
+      parentClass.Equals(kClassNameDialog))
+    ::CreateWindowW(L"SCROLLBAR", L"FAKETRACKPOINTSCROLLBAR", 
+                    WS_CHILD | WS_VISIBLE, 0,0,0,0, mWnd, NULL,
+                    nsToolkit::mDllInstance, NULL);
 
   // call the event callback to notify about creation
 
@@ -4008,7 +4022,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         nsWindow* scrollbar = GetNSWindowPtr((HWND)lParam);
 
         if (scrollbar) {
-          result = scrollbar->OnScroll(LOWORD(wParam), (short)HIWORD(wParam));
+          result = scrollbar->OnScroll(msg, wParam, lParam);
         }
       }
       break;
@@ -5021,83 +5035,8 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
 
   // The mousewheel event will be dispatched to the toplevel
   // window.  We need to give it to the child window
-
-  POINT point;
-  point.x = GET_X_LPARAM(lParam);
-  point.y = GET_Y_LPARAM(lParam);
-  HWND destWnd = ::WindowFromPoint(point);
-
-  // Since we receive mousewheel events for as long as
-  // we are focused, it's entirely possible that there
-  // is another app's window or no window under the
-  // pointer.
-
-  if (!destWnd) {
-    // No window is under the pointer
-    return PR_FALSE; // break
-  }
-
-  // We don't care about windows belonging to other processes.
-  DWORD processId = 0;
-  GetWindowThreadProcessId(destWnd, &processId);
-  if (processId != GetCurrentProcessId())
-  {
-    // Somebody elses window
-    return PR_FALSE; // break
-  }
-
-  nsWindow* destWindow = GetNSWindowPtr(destWnd);
-  if (!destWindow || destWindow->mIsPluginWindow) {
-    // Some other app, or a plugin window.
-    // Windows directs WM_MOUSEWHEEL to the focused window.
-    // However, Mozilla does not like plugins having focus, so a
-    // Mozilla window (ie, the plugin's parent (us!) has focus.)
-    // Therefore, plugins etc _should_ get first grab at the
-    // message, but this focus vaguary means the plugin misses
-    // out. If the window is a child of ours, forward it on.
-    // Determine if a child by walking the parent list until
-    // we find a parent matching our wndproc.
-    HWND parentWnd = ::GetParent(destWnd);
-    while (parentWnd) {
-      nsWindow* parentWindow = GetNSWindowPtr(parentWnd);
-      if (parentWindow) {
-        // We have a child window - quite possibly a plugin window.
-        // However, not all plugins are created equal - some will handle this message themselves,
-        // some will forward directly back to us, while others will call DefWndProc, which
-        // itself still forwards back to us.
-        // So if we have sent it once, we need to handle it ourself.
-        if (mInWheelProcessing) {
-          destWnd = parentWnd;
-          destWindow = parentWindow;
-        } else {
-          // First time we have seen this message.
-          // Call the child - either it will consume it, or
-          // it will wind it's way back to us, triggering the destWnd case above.
-          // either way, when the call returns, we are all done with the message,
-          mInWheelProcessing = PR_TRUE;
-          if (0 == ::SendMessageW(destWnd, msg, wParam, lParam)) {
-            result = PR_TRUE; // consumed - don't call DefWndProc
-          }
-          destWnd = nsnull;
-          mInWheelProcessing = PR_FALSE;
-        }
-        return PR_FALSE; // break; // stop parent search
-      }
-      parentWnd = ::GetParent(parentWnd);
-    } // while parentWnd
-  }
-  if (destWnd == nsnull)
-    return PR_FALSE;
-  if (destWnd != mWnd) {
-    if (destWindow) {
-      result = destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
-      return PR_TRUE; // return result immediately
-    }
-  #ifdef DEBUG
-    else
-      printf("WARNING: couldn't get child window for MW event\n");
-  #endif
-  }
+  if (!HandleScrollingPlugins(msg, wParam, lParam, result))
+    return result; // return immediately if its not our window
 
   // We should cancel the surplus delta if the current window is not
   // same as previous.
@@ -5890,9 +5829,136 @@ void nsWindow::OnSettingsChange(WPARAM wParam, LPARAM lParam)
   nsWindowGfx::OnSettingsChangeGfx(wParam);
 }
 
-// Deal with scrollbar messages (actually implemented only in nsScrollbar)
-PRBool nsWindow::OnScroll(UINT scrollCode, int cPos)
+// Scrolling helper function for handling plugins.  
+// Return value indicates whether the calling function should handle this
+// result indicates whether this was handled at all
+PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
+                                        LPARAM aLParam, PRBool& aHandled)
 {
+  // The scroll event will be dispatched to the toplevel
+  // window.  We need to give it to the child window
+  aHandled = PR_FALSE; // default is to have not handled
+  POINT point;
+  DWORD dwPoints = GetMessagePos();
+  point.x = GET_X_LPARAM(dwPoints);
+  point.y = GET_Y_LPARAM(dwPoints);
+  HWND destWnd = ::WindowFromPoint(point);
+  // Since we receive scroll events for as long as
+  // we are focused, it's entirely possible that there
+  // is another app's window or no window under the
+  // pointer.
+
+  if (!destWnd) {
+    // No window is under the pointer
+    return PR_FALSE; // break
+  }
+  // We don't care about windows belonging to other processes.
+  DWORD processId = 0;
+  GetWindowThreadProcessId(destWnd, &processId);
+  if (processId != GetCurrentProcessId())
+  {
+    // Somebody elses window
+    return PR_FALSE; // break
+  }
+  nsWindow* destWindow = GetNSWindowPtr(destWnd);
+  if (!destWindow || destWindow->mIsPluginWindow) {
+    // Some other app, or a plugin window.
+    // Windows directs scrolling messages to the focused window.
+    // However, Mozilla does not like plugins having focus, so a
+    // Mozilla window (ie, the plugin's parent (us!) has focus.)
+    // Therefore, plugins etc _should_ get first grab at the
+    // message, but this focus vaguary means the plugin misses
+    // out. If the window is a child of ours, forward it on.
+    // Determine if a child by walking the parent list until
+    // we find a parent matching our wndproc.
+    HWND parentWnd = ::GetParent(destWnd);
+    while (parentWnd) {
+      nsWindow* parentWindow = GetNSWindowPtr(parentWnd);
+      if (parentWindow) {
+        // We have a child window - quite possibly a plugin window.
+        // However, not all plugins are created equal - some will handle this 
+        // message themselves, some will forward directly back to us, while 
+        // others will call DefWndProc, which itself still forwards back to us.
+        // So if we have sent it once, we need to handle it ourself.
+        if (mInScrollProcessing) {
+          destWnd = parentWnd;
+          destWindow = parentWindow;
+        } else {
+          // First time we have seen this message.
+          // Call the child - either it will consume it, or
+          // it will wind it's way back to us,triggering the destWnd case above
+          // either way,when the call returns,we are all done with the message,
+          mInScrollProcessing = PR_TRUE;
+          if (0 == ::SendMessageW(destWnd, aMsg, aWParam, aLParam))
+            aHandled = PR_TRUE;
+          destWnd = nsnull;
+          mInScrollProcessing = PR_FALSE;
+        }
+        return PR_FALSE; // break; // stop parent search
+      }
+      parentWnd = ::GetParent(parentWnd);
+    } // while parentWnd
+  }
+  if (destWnd == nsnull)
+    return PR_FALSE;
+  if (destWnd != mWnd) {
+    if (destWindow) {
+      LRESULT aRetValue;
+      destWindow->ProcessMessage(aMsg, aWParam, aLParam, &aRetValue);
+      aHandled = PR_TRUE;
+      return PR_FALSE; // return result immediately
+    }
+  #ifdef DEBUG
+    else
+      printf("WARNING: couldn't get child window for SCROLL event\n");
+  #endif
+  }
+  return PR_TRUE;  // caller should handle this
+}
+
+PRBool nsWindow::OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
+{
+  if (aLParam)
+  {
+    // Scroll message generated by Thinkpad Trackpoint Driver or similar
+    // Treat as a mousewheel message and scroll appropriately
+
+    PRBool result;
+    if (!HandleScrollingPlugins(aMsg, aWParam, aLParam, result))
+      return result;  // Return if it's not our message or has been dispatched
+
+    nsMouseScrollEvent scrollevent(PR_TRUE, NS_MOUSE_SCROLL, this);
+    scrollevent.scrollFlags = (aMsg == WM_VSCROLL) 
+                              ? nsMouseScrollEvent::kIsVertical
+                              : nsMouseScrollEvent::kIsHorizontal;
+    switch (LOWORD(aWParam))
+    {
+      case SB_PAGEDOWN:
+        scrollevent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+      case SB_LINEDOWN:
+        scrollevent.delta = 1;
+        break;
+      case SB_PAGEUP:
+        scrollevent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+      case SB_LINEUP:
+        scrollevent.delta = -1;
+        break;
+      default:
+        return PR_FALSE;
+    }
+    scrollevent.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
+    scrollevent.isControl = IS_VK_DOWN(NS_VK_CONTROL);
+    scrollevent.isMeta    = PR_FALSE;
+    scrollevent.isAlt     = IS_VK_DOWN(NS_VK_ALT);
+    InitEvent(scrollevent);
+    if (nsnull != mEventCallback)
+    {
+      DispatchWindowEvent(&scrollevent);
+    }
+    return PR_TRUE;
+  }
+  // Scroll message generated by external application
+  // XXX Handle by scrolling the window in the desired manner (Bug 315727)
   return PR_FALSE;
 }
 
