@@ -716,7 +716,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
       nsBlockReflowState* blockRS = lineLayout->mBlockRS;
-      blockRS->mBlock->SplitPlaceholder(*blockRS, aFrame);
+      NS_ASSERTION(0, "float splitting unimplemented"); // SplitFloat XXXfr
       // Allow the parent to continue reflowing
       aStatus = NS_FRAME_COMPLETE;
     }

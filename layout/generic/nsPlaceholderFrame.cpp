@@ -136,14 +136,7 @@ nsPlaceholderFrame::Destroy()
     }
   }
 
-  nsSplittableFrame::Destroy();
-}
-
-nsSplittableType
-nsPlaceholderFrame::GetSplittableType() const
-{
-  NS_ASSERTION(mOutOfFlowFrame, "GetSplittableType called at the wrong time");
-  return mOutOfFlowFrame->GetSplittableType();
+  nsFrame::Destroy();
 }
 
 nsIAtom*

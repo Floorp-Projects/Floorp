@@ -647,18 +647,6 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
     // This float will be placed after the line is done (it is a
     // below-current-line float).
     mBelowCurrentLineFloats.Append(fc);
-    if (aPlaceholder->GetNextInFlow()) {
-      // If the float might not be complete, mark it incomplete now to
-      // prevent its next-in-flow placeholders being torn down. We will destroy any
-      // placeholders later if PlaceBelowCurrentLineFloats finds the
-      // float is complete.
-      // Note that we could have unconstrained height and yet have
-      // a next-in-flow placeholder --- for example columns can switch
-      // from constrained height to unconstrained height.
-      if (aPlaceholder->GetSplittableType() != NS_FRAME_NOT_SPLITTABLE) {
-        aReflowStatus = NS_FRAME_NOT_COMPLETE;
-      }
-    }
   }
 
   // Restore coordinate system
@@ -1043,23 +1031,13 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRB
         return PR_FALSE;
       }
       else if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus)) {
-        // Create a continuation for the incomplete float and its placeholder.
-        nsresult rv = mBlock->SplitPlaceholder(*this, fc->mPlaceholder);
-        if (NS_FAILED(rv)) 
-          return PR_FALSE;
+        // Create a continuation for the incomplete float XXXfr
       } else {
         // XXX We could deal with truncated frames better by breaking before
         // the associated placeholder
         NS_WARN_IF_FALSE(!NS_FRAME_IS_TRUNCATED(reflowStatus),
                          "This situation currently leads to data not printing");
-
-        // Float is complete. We need to delete any leftover placeholders now.
-        nsIFrame* nextPlaceholder = fc->mPlaceholder->GetNextInFlow();
-        if (nextPlaceholder) {
-          nsHTMLContainerFrame* parent =
-            static_cast<nsHTMLContainerFrame*>(nextPlaceholder->GetParent());
-          parent->DeleteNextInFlowChild(mPresContext, nextPlaceholder, PR_TRUE);
-        }
+        // Float is complete.
       }
     }
     fc = fc->Next();

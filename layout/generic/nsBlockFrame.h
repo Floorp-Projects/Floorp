@@ -280,12 +280,6 @@ public:
   // Create a contination for aPlaceholder and its out of flow frame and
   // add it to the list of overflow floats
   nsresult SplitPlaceholder(nsBlockReflowState& aState, nsIFrame* aPlaceholder);
-  
-  PRBool HandleOverflowPlaceholdersForPulledFrame(
-    nsBlockReflowState& aState, nsIFrame* aFrame);
-
-  PRBool HandleOverflowPlaceholdersOnPulledLine(
-    nsBlockReflowState& aState, nsLineBox* aLine);
 
   static PRBool BlockIsMarginRoot(nsIFrame* aBlock);
   static PRBool BlockNeedsFloatManager(nsIFrame* aBlock);
@@ -425,14 +419,9 @@ public:
    * -- marks lines dirty as needed
    * -- marks textruns dirty (unless FRAMES_ARE_EMPTY is given, in which
    * case textruns do not need to be dirtied)
-   * -- destroys all removed frames (unless PRESERVE_REMOVED_FRAMES is
-   * given)
-   * 
-   * PRESERVE_REMOVED_FRAMES does NOT work on out of flow frames so
-   * don't use it for out of flows.
+   * -- destroys all removed frames
    */
   enum {
-    PRESERVE_REMOVED_FRAMES    = 0x01,
     REMOVE_FIXED_CONTINUATIONS = 0x02,
     FRAMES_ARE_EMPTY           = 0x04
   };
