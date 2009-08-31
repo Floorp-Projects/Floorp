@@ -92,7 +92,6 @@ namespace nanojit
 {
     const int NJ_LOG2_PAGE_SIZE = 12;       // 4K
     const int NJ_MAX_REGISTERS = 24; // gpregs, x87 regs, xmm regs
-    const int NJ_STACK_OFFSET = 0;
 
     #define NJ_MAX_STACK_ENTRY 256
     #define NJ_MAX_PARAMETERS 1
