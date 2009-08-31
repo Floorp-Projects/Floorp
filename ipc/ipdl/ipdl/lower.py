@@ -647,11 +647,15 @@ class GenerateProtocolActorHeader(Visitor):
                     [ cxx.ExprCall(
                             cxx.ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
                             [ cxx.ExprVar('this') ]) ]) ]
+        ctor.addstmt(cxx.StmtExpr(cxx.ExprCall(cxx.ExprVar('MOZ_COUNT_CTOR'),
+                                               [ cxx.ExprVar(self.clsname) ])))
         cls.addstmt(ctor)
         cls.addstmt(cxx.Whitespace.NL)
 
         dtor = cxx.DestructorDefn(
             cxx.DestructorDecl(self.clsname, virtual=True))
+        dtor.addstmt(cxx.StmtExpr(cxx.ExprCall(cxx.ExprVar('MOZ_COUNT_DTOR'),
+                                               [ cxx.ExprVar(self.clsname) ])))
         cls.addstmt(dtor)
         cls.addstmt(cxx.Whitespace.NL)
 
@@ -1391,15 +1395,19 @@ class GenerateSkeletonImpl(cxx.Visitor):
 
     def visitConstructorDecl(self, cd):
         self.cls.addstmt(cxx.StmtDecl(cxx.ConstructorDecl(self.name)))
-        self.addmethodimpl(
-            cxx.ConstructorDefn(cxx.ConstructorDecl(self.implname(self.name))))
+        ctor = cxx.ConstructorDefn(cxx.ConstructorDecl(self.implname(self.name)))
+        ctor.addstmt(cxx.StmtExpr(cxx.ExprCall(cxx.ExprVar( 'MOZ_COUNT_CTOR'),
+                                               [ cxx.ExprVar(self.name) ])))
+        self.addmethodimpl(ctor)
         
     def visitDestructorDecl(self, dd):
         self.cls.addstmt(
             cxx.StmtDecl(cxx.DestructorDecl(self.name, virtual=1)))
         # FIXME/cjones: hack!
-        self.addmethodimpl(
-            cxx.DestructorDefn(cxx.ConstructorDecl(self.implname('~' +self.name))))
+        dtor = cxx.DestructorDefn(cxx.ConstructorDecl(self.implname('~' +self.name)))
+        dtor.addstmt(cxx.StmtExpr(cxx.ExprCall(cxx.ExprVar( 'MOZ_COUNT_DTOR'),
+                                               [ cxx.ExprVar(self.name) ])))
+        self.addmethodimpl(dtor)
 
     def addmethodimpl(self, impl):
         self.methodimpls.append(impl)
