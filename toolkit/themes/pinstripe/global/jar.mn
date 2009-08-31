@@ -1,7 +1,6 @@
 toolkit.jar:
 % skin global classic/1.0 %skin/classic/global/
 +  skin/classic/global/10pct_transparent_grey.png
-+  skin/classic/global/20pct_transparent_pixel.png
 +  skin/classic/global/50pct_transparent_grey.png
 +  skin/classic/global/about.css                                      (../../winstripe/global/about.css)
 +  skin/classic/global/appPicker.css                                  (../../winstripe/global/appPicker.css)
@@ -120,12 +119,6 @@ toolkit.jar:
 +  skin/classic/global/icons/question-32.png                          (icons/question-32.png)
 +  skin/classic/global/icons/question-64.png                          (icons/question-64.png)
 +  skin/classic/global/icons/question-large.png                       (icons/question-large.png)
-+  skin/classic/global/icons/round-button-active-leftcap.png          (icons/round-button-active-leftcap.png)
-+  skin/classic/global/icons/round-button-active-middle.png           (icons/round-button-active-middle.png)
-+  skin/classic/global/icons/round-button-active-right.png            (icons/round-button-active-right.png)
-+  skin/classic/global/icons/round-button-leftcap.png                 (icons/round-button-leftcap.png)
-+  skin/classic/global/icons/round-button-middle.png                  (icons/round-button-middle.png)
-+  skin/classic/global/icons/round-button-right.png                   (icons/round-button-right.png)
 +  skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
 +  skin/classic/global/notification/critical-bar-background.png       (notification/critical-bar-background.png)
 +  skin/classic/global/notification/error-icon.png                    (notification/error-icon.png)
