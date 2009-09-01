@@ -2064,7 +2064,6 @@ var SoftKeyboardObserver = {
         let height = rect.bottom - rect.top;
         let width = rect.right - rect.left;
         let popup = document.getElementById("popup_autocomplete");
-        popup.top = rect.top + BrowserUI.toolbarH;
         popup.height = height - BrowserUI.toolbarH;
         popup.width = width;
       }
