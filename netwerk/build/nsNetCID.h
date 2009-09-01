@@ -567,6 +567,18 @@
     {0x9f, 0xd4, 0xe0, 0x65, 0xe8, 0x55, 0x68, 0xf4} \
 }
 
+#define NS_HTTPACTIVITYDISTRIBUTOR_CLASSNAME \
+    "nsHttpActivityDistributor"
+#define NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID \
+    "@mozilla.org/network/http-activity-distributor;1"
+#define NS_HTTPACTIVITYDISTRIBUTOR_CID \
+{ /* 15629ada-a41c-4a09-961f-6553cd60b1a2 */         \
+    0x15629ada,                                      \
+    0xa41c,                                          \
+    0x4a09,                                          \
+    {0x96, 0x1f, 0x65, 0x53, 0xcd, 0x60, 0xb1, 0xa2} \
+}
+
 /******************************************************************************
  * netwerk/protocol/ftp/ classes
  */

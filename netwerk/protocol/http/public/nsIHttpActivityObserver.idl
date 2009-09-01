@@ -36,7 +36,6 @@
 
 #include "nsISupports.idl"
 
-
 /**
  * nsIHttpActivityObserver
  *
@@ -87,7 +86,8 @@ interface nsIHttpActivityObserver : nsISupports
     /**
      * This attribute is true when this interface is active and should
      * observe http activities. When false, observeActivity() should not
-     * be called.
+     * be called. It is present for compatibility reasons and should be
+     * implemented only by nsHttpActivityDistributor.
      */
     readonly attribute boolean isActive;
 
@@ -125,12 +125,6 @@ interface nsIHttpActivityObserver : nsISupports
 
 %{C++
 
-#define NS_HTTPACTIVITYOBSERVER_TOPIC \
-  "http-activity-observer"
-
-#define NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID \
-  "@mozilla.org/netwerk/protocol/http/http-activity-distributor;1"
-
 #define NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT    \
             nsIHttpActivityObserver::ACTIVITY_TYPE_SOCKET_TRANSPORT
 #define NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION    \
@@ -151,3 +145,15 @@ interface nsIHttpActivityObserver : nsISupports
 
 %}
 
+/**
+ * nsIHttpActivityDistributor
+ *
+ * This interface provides a way to register and unregister observers to the
+ * http activities.
+ */
+[scriptable, uuid(7C512CB8-582A-4625-B5B6-8639755271B5)]
+interface nsIHttpActivityDistributor : nsIHttpActivityObserver
+{
+    void addObserver(in nsIHttpActivityObserver aObserver);
+    void removeObserver(in nsIHttpActivityObserver aObserver);
+};
