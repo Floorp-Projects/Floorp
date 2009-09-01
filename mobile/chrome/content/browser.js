@@ -2058,7 +2058,10 @@ var SoftKeyboardObserver = {
       if (rect) {
         let height = rect.bottom - rect.top;
         let width = rect.right - rect.left;
-        window.resizeTo(width, height);
+        let popup = document.getElementById("popup_autocomplete");
+        popup.top = rect.top + BrowserUI.toolbarH;
+        popup.height = height - BrowserUI.toolbarH;
+        popup.width = width;
       }
     }
   }

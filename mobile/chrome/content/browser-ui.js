@@ -313,8 +313,8 @@ var BrowserUI = {
 
     let popup = document.getElementById("popup_autocomplete");
     popup.top = this.toolbarH;
-    popup.height = windowH - this.toolbarH;
-    popup.width = windowW;
+    popup.height = Math.min(window.screen.availHeight, windowH) - this.toolbarH;
+    popup.width = Math.min(window.screen.availWidth, windowW);
 
     // toolbar UI
     document.getElementById("toolbar-container").height = this.toolbarH;
