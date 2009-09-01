@@ -1768,15 +1768,14 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     lir = func_filter = new (&gc) FuncFilter(lir);
     lir->ins0(LIR_start);
 
-    if (!nanojit::AvmCore::config.tree_opt || fragment->root == fragment)
-        lirbuf->state = addName(lir->insParam(0, 0), "state");
-
     for (int i = 0; i < NumSavedRegs; ++i)
         lir->insParam(i, 1);
 #ifdef DEBUG
     for (int i = 0; i < NumSavedRegs; ++i)
         addName(lirbuf->savedRegs[i], regNames[Assembler::savedRegs[i]]);
 #endif
+
+    lirbuf->state = addName(lir->insParam(0, 0), "state");
 
     if (fragment == fragment->root)
         loopLabel = lir->ins0(LIR_label);
