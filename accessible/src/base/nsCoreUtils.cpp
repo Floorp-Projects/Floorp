@@ -419,7 +419,7 @@ nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
   nsPoint scrollPoint = scrollableFrame->GetScrollPosition();
   scrollPoint -= deltaPoint;
 
-  scrollableFrame->ScrollTo(scrollPoint);
+  scrollableFrame->ScrollTo(scrollPoint, nsIScrollableFrame::INSTANT);
 }
 
 void
