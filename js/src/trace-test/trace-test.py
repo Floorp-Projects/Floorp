@@ -264,7 +264,7 @@ if __name__ == '__main__':
     if OPTIONS.exclude:
         exclude_list = []
         for exclude in OPTIONS.exclude:
-            exclude_list += find_tests(test_dir, arg)
+            exclude_list += find_tests(test_dir, exclude)
         test_list = [ test for test in test_list if test not in set(exclude_list) ]
 
     if not test_list:
