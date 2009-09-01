@@ -297,6 +297,7 @@ placeitem .button-text {
 
 .searchengine {
   -moz-box-orient: horizontal;
+  min-width: 7.2mm;
 }
 
 #autocomplete_navbuttons {
