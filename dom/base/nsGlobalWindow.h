@@ -448,6 +448,8 @@ public:
   virtual void SetReadyForFocus();
   virtual void PageHidden();
   virtual nsresult DispatchSyncHashchange();
+  virtual nsresult DispatchSyncPopState();
+
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
 
   static PRBool DOMWindowDumpEnabled();

@@ -461,6 +461,10 @@ public:
    */
   virtual nsresult DispatchSyncHashchange() = 0;
 
+  /**
+   * Instructs this window to synchronously dispatch a popState event.
+   */
+  virtual nsresult DispatchSyncPopState() = 0;
 
   /**
    * Tell this window that there is an observer for orientation changes

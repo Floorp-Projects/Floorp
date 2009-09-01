@@ -14,17 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *   Robert Sayre <sayrer@gmail.com>
- *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,40 +32,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#ifndef nsDOMPopStateEvent_h__
+#define nsDOMPopStateEvent_h__
 
-interface nsIInputStream;
-interface nsIOutputStream;
-interface nsIScriptGlobalObject;
+class nsEvent;
 
-%{ C++
-#include "jspubtd.h"
-%}
+#include "nsIDOMPopStateEvent.h"
+#include "nsDOMEvent.h"
+#include "nsIVariant.h"
+#include "nsCycleCollectionParticipant.h"
 
-      native JSVal(jsval);
-[ptr] native JSValPtr(jsval);
-[ptr] native JSContext(JSContext);
-
-/**
- * Encode and decode JSON text.
- */
-[scriptable, uuid(6fcf09ee-87d0-42ec-a72a-8d60114e974f)]
-interface nsIJSON : nsISupports
+class nsDOMPopStateEvent : public nsDOMEvent,
+                           public nsIDOMPopStateEvent
 {
-  AString encode(/* in JSObject value */);
+public:
+  nsDOMPopStateEvent(nsPresContext* aPresContext, nsEvent* aEvent)
+    : nsDOMEvent(aPresContext, aEvent)  // state
+  {
+  }
 
-  void encodeToStream(in nsIOutputStream stream,
-                      in string charset,
-                      in boolean writeBOM
-                      /* in JSObject value */);
+  virtual ~nsDOMPopStateEvent();
 
-  void /* JSObject */ decode(in AString str);
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMPopStateEvent, nsDOMEvent)
 
-  void /* JSObject */ decodeFromStream(in nsIInputStream stream,
-                                       in long contentLength);
+  NS_DECL_NSIDOMPOPSTATEEVENT
 
-  [noscript] AString  encodeFromJSVal(in JSValPtr value, in JSContext cx);
+  NS_FORWARD_TO_NSDOMEVENT
 
-  // Make sure you GCroot the result of this function before using it.
-  [noscript] JSVal    decodeToJSVal(in AString str, in JSContext cx);
+protected:
+  nsCOMPtr<nsIVariant> mState;
 };
+
+nsresult NS_NewDOMPopStateEvent(nsIDOMEvent** aInstancePtrResult,
+                                nsPresContext* aPresContext,
+                                nsEvent* aEvent);
+
+#endif // nsDOMPopStateEvent_h__
