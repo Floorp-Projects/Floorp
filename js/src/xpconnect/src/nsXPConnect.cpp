@@ -1370,6 +1370,25 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPConnect::JSValToVariant(JSContext *cx,
+                            jsval *aJSVal,
+                            nsIVariant ** aResult)
+{
+    NS_PRECONDITION(aJSVal, "bad param");
+    NS_PRECONDITION(aResult, "bad param");
+    *aResult = nsnull;
+
+    XPCCallContext ccx(NATIVE_CALLER, cx);
+    if(!ccx.IsValid())
+      return NS_ERROR_FAILURE;
+
+    *aResult = XPCVariant::newVariant(ccx, *aJSVal);
+    NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+    return NS_OK;
+}
+
 /* void wrapJSAggregatedToNative (in nsISupports aOuter, in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
 NS_IMETHODIMP
 nsXPConnect::WrapJSAggregatedToNative(nsISupports *aOuter,

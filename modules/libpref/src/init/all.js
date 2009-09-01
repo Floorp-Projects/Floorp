@@ -2838,3 +2838,9 @@ pref("html5.flushtimer.continuedelay", 150);
 // Time in milliseconds between timer firings once the timer has starting 
 // firing.
 pref("html5.flushtimer.interval", 100);
+
+// Push/Pop/Replace State prefs
+pref("browser.history.allowPushState", true);
+pref("browser.history.allowReplaceState", true);
+pref("browser.history.allowPopState", true);
+pref("browser.history.maxStateObjectSize", 655360);
