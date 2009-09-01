@@ -10,6 +10,6 @@ function checkStatus(result) {
 
 function run_test() {
   do_test_pending();
-  sendCommand("load('test_ipcshell_child.js'); start(); observer.status;",
-              checkStatus);
+  sendCommand("load('test_ipcshell_child.js'); start();");
+  sendCommand("observer.status;", checkStatus);
 }
