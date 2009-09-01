@@ -386,7 +386,7 @@ nsMenuPopupFrame::AdjustView()
       nsIBox* child = GetChildBox();
       nsIScrollableFrame *scrollframe = do_QueryFrame(child);
       if (scrollframe)
-        scrollframe->ScrollTo(nsPoint(0,0));
+        scrollframe->ScrollTo(nsPoint(0,0), nsIScrollableFrame::INSTANT);
     }
 
     nsIView* view = GetView();
