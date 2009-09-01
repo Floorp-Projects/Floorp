@@ -43,6 +43,8 @@
 #include "nsDebug.h"
 #include "nsXULAppAPI.h"
 
+using mozilla::MutexAutoLock;
+
 template<>
 struct RunnableMethodTraits<mozilla::ipc::AsyncChannel>
 {
@@ -83,10 +85,17 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
     NS_ASSERTION(mIOLoop, "need an IO loop");
     NS_ASSERTION(mWorkerLoop, "need a worker loop");
 
-    if (needOpen) {
+    if (needOpen) {             // child process
+        MutexAutoLock lock(mMutex);
+
         mIOLoop->PostTask(FROM_HERE, 
                           NewRunnableMethod(this,
                                             &AsyncChannel::OnChannelOpened));
+
+        // FIXME/cjones: handle errors
+        while (mChannelState != ChannelConnected) {
+            mCvar.Wait();
+        }
     }
 
     return true;
@@ -156,7 +165,11 @@ AsyncChannel::OnMessageReceived(const Message& msg)
 void
 AsyncChannel::OnChannelConnected(int32 peer_pid)
 {
+    MutexAutoLock lock(mMutex);
+
     mChannelState = ChannelConnected;
+
+    mCvar.Notify();
 }
 
 void
