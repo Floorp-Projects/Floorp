@@ -72,11 +72,8 @@ FormEngine.prototype = {
     this._store.clearFormCache();
     
     // Only leave 1 month's worth of form history
-    this._tracker.resetScore();
-    let coll = new Collection(this.engineURL, this._recordObj);
-    coll.older = this.lastSync - 2592000; // 60*60*24*30
-    coll.full = 0;
-    coll.delete();
+    this._delete.older = this.lastSync - 2592000;
+    SyncEngine.prototype._syncFinish.call(this);
   },
 
   _findDupe: function _findDupe(item) {
