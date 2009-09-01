@@ -250,7 +250,7 @@ OPDEF64(qjoin,  50,      2, Op2)    // join two 32-bit values (1st arg is low bi
 OPDEF64(unused51_64, 51,-1, None)
 OPDEF64(unused52_64, 52,-1, None)
 OPDEF64(unused53_64, 53,-1, None)
-OPDEF64(unused54_64, 54,-1, None)
+OPDEF64(float,  54,    0, I64)
 
 // 64bit equivalents for integer comparisons
 OPDEF64(qeq,  LIR_eq,  2, Op2)  //          integer equality

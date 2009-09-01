@@ -756,6 +756,8 @@ namespace nanojit
         bool isconstq() const;
         // True if the instruction is a constant pointer value.
         bool isconstp() const;
+        // True if the instruction is a constant float value.
+        bool isconstf() const;
         bool isBranch() const {
             return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
         }
@@ -842,6 +844,9 @@ namespace nanojit
         virtual LInsp insImmq(uint64_t imm) {
             return out->insImmq(imm);
         }
+        virtual LInsp insImmf(double d) {
+            return out->insImmf(d);
+        }
         virtual LInsp insLoad(LOpcode op, LIns* base, int32_t d) {
             return out->insLoad(op, base, d);
         }
@@ -871,7 +876,6 @@ namespace nanojit
         LIns*        ins2i(LOpcode op, LIns *oprnd1, int32_t);
         LIns*        qjoin(LInsp lo, LInsp hi);
         LIns*        insImmPtr(const void *ptr);
-        LIns*        insImmf(double f);
     };
 
 
@@ -1031,6 +1035,9 @@ namespace nanojit
         LIns* insImmq(uint64_t imm) {
             return add(out->insImmq(imm));
         }
+        LIns* insImmf(double d) {
+            return add(out->insImmf(d));
+        }
     };
 
 #endif
@@ -1067,7 +1074,7 @@ namespace nanojit
 
         LInsHashSet(Allocator&);
         LInsp find32(int32_t a, uint32_t &i);
-        LInsp find64(uint64_t a, uint32_t &i);
+        LInsp find64(LOpcode v, uint64_t a, uint32_t &i);
         LInsp find1(LOpcode v, LInsp a, uint32_t &i);
         LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &i);
         LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &i);
@@ -1092,6 +1099,7 @@ namespace nanojit
         CseFilter(LirWriter *out, Allocator&);
         LIns* insImm(int32_t imm);
         LIns* insImmq(uint64_t q);
+        LIns* insImmf(double d);
         LIns* ins0(LOpcode v);
         LIns* ins1(LOpcode v, LInsp);
         LIns* ins2(LOpcode v, LInsp, LInsp);
@@ -1172,6 +1180,7 @@ namespace nanojit
             LInsp    insParam(int32_t i, int32_t kind);
             LInsp    insImm(int32_t imm);
             LInsp    insImmq(uint64_t imm);
+            LInsp    insImmf(double d);
             LInsp    insCall(const CallInfo *call, LInsp args[]);
             LInsp    insGuard(LOpcode op, LInsp cond, LIns *x);
             LInsp    insBranch(LOpcode v, LInsp condition, LInsp to);
