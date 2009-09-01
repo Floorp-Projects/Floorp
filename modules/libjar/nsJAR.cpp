@@ -339,7 +339,7 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
   if (!item || item->isDirectory) {
     rv = jis->InitDirectory(this, aJarDirSpec, aEntryName);
   } else {
-    rv = jis->InitFile(mZip.GetFD(item), item);
+    rv = jis->InitFile(this, item);
   }
   if (NS_FAILED(rv)) {
     NS_RELEASE(*result);
