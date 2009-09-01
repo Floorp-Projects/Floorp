@@ -51,9 +51,9 @@ function thirdPageLoaded() {
 }
 
 function imageLoaded() {
-  zoomTest(gTab1, 1, "Zoom should be 1 when image was loaded in the background");
+  zoomTest(gTab1, gLevel, "Zoom should be " + gLevel +" when image was loaded in the background");
   gBrowser.selectedTab = gTab1;
-  zoomTest(gTab1, 1, "Zoom should still be 1 when tab with image is selected");
+  zoomTest(gTab1, 1, "Zoom should be 1 when tab with image is selected");
 
   executeSoon(imageZoomSwitch);
 }
