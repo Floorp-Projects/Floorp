@@ -133,17 +133,10 @@ namespace nanojit
 
         // X87 regs
         FST0 = 16,
-        FST1 = 17,
-        FST2 = 18,
-        FST3 = 19,
-        FST4 = 20,
-        FST5 = 21,
-        FST6 = 22,
-        FST7 = 23,
 
         FirstReg = 0,
-        LastReg = 23,
-        UnknownReg = 24
+        LastReg = 16,
+        UnknownReg = 17
     }
     Register;
 
