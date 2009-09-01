@@ -65,6 +65,7 @@
 #include "nsITableCellLayout.h"
 #include "nsIDOMNodeList.h"
 #include "nsTArray.h"
+#include "nsIScrollableFrame.h"
 
 #include "nsISelectionListener.h"
 #include "nsIContentIterator.h"
@@ -199,7 +200,11 @@ public:
   nsresult      GetFrameToScrolledViewOffsets(nsIScrollableView *aScrollableView, nsIFrame *aFrame, nscoord *aXOffset, nscoord *aYOffset);
   nsresult      GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsPoint *aPoint);
   nsresult      GetSelectionRegionRectAndScrollableView(SelectionRegion aRegion, nsRect *aRect, nsIScrollableView **aScrollableView);
-  nsresult      ScrollRectIntoView(nsIScrollableView *aScrollableView, nsRect& aRect, PRIntn  aVPercent, PRIntn  aHPercent, PRBool aScrollParentViews);
+  nsresult      ScrollRectIntoView(nsIScrollableView *aScrollableView,
+                                   nsRect& aRect,
+                                   PRIntn aVPercent, PRIntn aHPercent,
+                                   PRBool aScrollParentViews,
+                                   PRBool* aDidScroll);
 
   nsresult      PostScrollSelectionIntoViewEvent(SelectionRegion aRegion);
   // aDoFlush only matters if aIsSynchronous is true.  If not, we'll just flush
@@ -267,10 +272,6 @@ private:
                             nsPoint& aPoint,
                             PRBool aScrollParentViews);
 
-  // Note: ScrollPointIntoClipView might destroy arbitrary frames, views etc.
-  nsresult     ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
-  // Note: ScrollPointIntoView might destroy arbitrary frames, views etc.
-  nsresult     ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
   nsresult     GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, nscoord *aXOffset, nscoord *aYOffset);
 
 public:
@@ -4698,257 +4699,6 @@ nsTypedSelection::GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, 
 }
 
 nsresult
-nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll)
-{
-  nsresult result;
-
-  if (!aPresContext || !aView || !aDidScroll)
-    return NS_ERROR_NULL_POINTER;
-
-  *aDidScroll = PR_FALSE;
-
-  //
-  // Get aView's scrollable view.
-  //
-
-  nsIScrollableView *scrollableView =
-    nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eEither);
-
-  if (!scrollableView)
-    return NS_OK; // Nothing to do!
-
-  //
-  // Get the view that is being scrolled.
-  //
-
-  nsIView *scrolledView = 0;
-
-  result = scrollableView->GetScrolledView(scrolledView);
-  
-  //
-  // Now walk up aView's hierarchy, this time keeping track of
-  // the view offsets until you hit the scrolledView.
-  //
-
-  nsPoint viewOffset(0,0);
-
-  result = GetViewAncestorOffset(aView, scrolledView, &viewOffset.x, &viewOffset.y);
-
-  if (NS_FAILED(result))
-    return result;
-
-  //
-  // See if aPoint is outside the clip view's boundaries.
-  // If it is, scroll the view till it is inside the visible area!
-  //
-
-  nsRect bounds = scrollableView->View()->GetBounds();
-
-  result = scrollableView->GetScrollPosition(bounds.x,bounds.y);
-
-  if (NS_FAILED(result))
-    return result;
-
-  //
-  // Calculate the amount we would have to scroll in
-  // the vertical and horizontal directions to get the point
-  // within the clip area.
-  //
-
-  nscoord dx = 0, dy = 0;
-
-  nsPresContext::ScrollbarStyles ss =
-    nsLayoutUtils::ScrollbarStylesOfView(scrollableView);
-
-  if (ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
-    nscoord e = aPoint.x + viewOffset.x;
-  
-    nscoord x1 = bounds.x;
-    nscoord x2 = bounds.x + bounds.width;
-
-    if (e < x1)
-      dx = e - x1;
-    else if (e > x2)
-      dx = e - x2;
-  }
-
-  if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
-    nscoord e = aPoint.y + viewOffset.y;
-
-    nscoord y1 = bounds.y;
-    nscoord y2 = bounds.y + bounds.height;
-
-    if (e < y1)
-      dy = e - y1;
-    else if (e > y2)
-      dy = e - y2;
-  }
-
-  //
-  // Now scroll the view if necessary.
-  //
-
-  if (dx != 0 || dy != 0)
-  {
-    nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
-    NS_ENSURE_STATE(presShell);
-
-    nsWeakView weakView = scrollableView->View();
-
-    // Make sure latest bits are available before we scroll them. This flushes
-    // pending notifications and thus might destroy stuff (bug 421839).
-    // We need to hold a strong ref on the view manager to keep it alive.
-    nsCOMPtr<nsIViewManager> viewManager = presShell->GetViewManager();
-    viewManager->Composite();
-
-    if (!weakView.IsAlive()) {
-      return NS_ERROR_NULL_POINTER;
-    }
-
-    if (presShell->IsDestroying()) {
-      return NS_ERROR_NULL_POINTER;
-    }
-
-    result = scrollableView->ScrollTo(bounds.x + dx, bounds.y + dy, 0);
-
-    if (NS_FAILED(result))
-      return result;
-
-    nsPoint newPos;
-
-    result = scrollableView->GetScrollPosition(newPos.x, newPos.y);
-
-    if (NS_FAILED(result))
-      return result;
-
-    *aDidScroll = (bounds.x != newPos.x || bounds.y != newPos.y);
-  }
-
-  return result;
-}
-
-nsresult
-nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll)
-{
-  if (!aPresContext || !aView || !aDidScroll)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult result;
-
-  *aDidScroll = PR_FALSE;
-
-  //
-  // Calculate the global offset of the view.
-  //
-
-  nsPoint globalOffset;
-
-  result = GetViewAncestorOffset(aView, nsnull, &globalOffset.x, &globalOffset.y);
-
-  if (NS_FAILED(result))
-    return result;
-
-  //
-  // Convert aPoint into global coordinates so it is easier to map
-  // into other views.
-  //
-
-  nsPoint globalPoint = aPoint + globalOffset;
-
-  //
-  // Scroll the point into the visible rect of the closest
-  // scrollable view.
-  //
-  result = ScrollPointIntoClipView(aPresContext, aView, aPoint, aDidScroll);
-
-  if (NS_FAILED(result))
-    return result;
-
-  //
-  // Now scroll the parent scrollable views.
-  //
-
-  if (aScrollParentViews)
-  {
-    //
-    // Find aView's parent scrollable view.
-    //
-
-    nsIScrollableView *scrollableView =
-      nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eEither);
-
-    if (scrollableView)
-    {
-      //
-      // Convert scrollableView to nsIView.
-      //
-
-      nsIView *scrolledView = 0;
-      nsIView *view = scrollableView->View();
-
-      if (view)
-      {
-        //
-        // Now get the scrollableView's parent, then search for it's
-        // closest scrollable view.
-        //
-
-        view = view->GetParent();
-
-        while (view)
-        {
-          scrollableView =
-            nsLayoutUtils::GetNearestScrollingView(view,
-                                                   nsLayoutUtils::eEither);
-
-          if (!scrollableView)
-            break;
-
-          scrolledView = 0;
-          result = scrollableView->GetScrolledView(scrolledView);
-          
-          if (NS_FAILED(result))
-            return result;
-
-          //
-          // Map the global point into this scrolledView's coordinate space.
-          //
-
-          result = GetViewAncestorOffset(scrolledView, nsnull, &globalOffset.x, &globalOffset.y);
-
-          if (NS_FAILED(result))
-            return result;
-
-          nsPoint newPoint = globalPoint - globalOffset;
-
-          //
-          // Scroll the point into the visible rect of the scrolled view.
-          //
-
-          PRBool parentDidScroll = PR_FALSE;
-
-          result = ScrollPointIntoClipView(aPresContext, scrolledView, newPoint, &parentDidScroll);
-
-          if (NS_FAILED(result))
-            return result;
-
-          *aDidScroll = *aDidScroll || parentDidScroll;
-
-          //
-          // Now get the parent of this scrollable view so we
-          // can scroll the next parent view.
-          //
-
-          view = scrollableView->View()->GetParent();
-        }
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext,
                                    nsIView *aView,
                                    nsPoint& aPoint,
@@ -4981,7 +4731,17 @@ nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext,
 
   PRBool didScroll = PR_FALSE;
 
-  result = ScrollPointIntoView(aPresContext, aView, aPoint, aScrollParentViews, &didScroll);
+  nsIView* scrollableView = aView;
+  while (scrollableView && !scrollableView->ToScrollableView()) {
+    scrollableView = scrollableView->GetParent();
+  }
+  if (!scrollableView)
+    return NS_OK;
+  nsRect r(aPoint, nsSize(1,1));
+  result = ScrollRectIntoView(scrollableView->ToScrollableView(), r,
+                              NS_PRESSHELL_SCROLL_ANYWHERE,
+                              NS_PRESSHELL_SCROLL_ANYWHERE,
+                              aScrollParentViews, &didScroll);
   NS_ENSURE_SUCCESS(result, result);
 
   //
@@ -5881,6 +5641,23 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
   return rv;
 }
 
+static nsIScrollableView *
+GetNearestScrollableView(nsIView *aView)
+{
+  for (nsIView *v = aView; v; v = v->GetParent()) {
+    nsIScrollableView* sv = v->ToScrollableView();
+    if (sv) {
+      nsIScrollableFrame *sf = nsLayoutUtils::GetScrollableFrameFor(sv);
+      if (sf &&
+          sf->GetScrollbarStyles() !=
+              nsPresContext::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
+                                             NS_STYLE_OVERFLOW_HIDDEN))
+        return sv;
+    }
+  }
+  return nsnull;
+}
+
 nsresult
 nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegion, nsRect *aRect, nsIScrollableView **aScrollableView)
 {
@@ -5926,8 +5703,7 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
   if (!parentWithView)
     return NS_ERROR_FAILURE;
   nsIView* view = parentWithView->GetView();
-  *aScrollableView =
-    nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
+  *aScrollableView = GetNearestScrollableView(view);
   if (!*aScrollableView)
     return NS_OK;
 
@@ -6010,10 +5786,11 @@ ClampPointInsideRect(nsPoint& aPoint, const nsRect& aRect)
 
 nsresult
 nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
-                              nsRect& aRect,
-                              PRIntn  aVPercent, 
-                              PRIntn  aHPercent,
-                              PRBool aScrollParentViews)
+                                     nsRect& aRect,
+                                     PRIntn  aVPercent, 
+                                     PRIntn  aHPercent,
+                                     PRBool  aScrollParentViews,
+                                     PRBool *aDidScroll)
 {
   nsresult rv = NS_OK;
   if (!mFrameSelection)
@@ -6032,7 +5809,7 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
   nscoord scrollOffsetY = visibleRect.y;
 
   nsPresContext::ScrollbarStyles ss =
-    nsLayoutUtils::ScrollbarStylesOfView(aScrollableView);
+    nsLayoutUtils::GetScrollableFrameFor(aScrollableView)->GetScrollbarStyles();
 
   // See how aRect should be positioned vertically
   if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
@@ -6081,6 +5858,10 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
     }
   }
 
+  if (aDidScroll &&
+      (scrollOffsetX != visibleRect.x || scrollOffsetY != visibleRect.y)) {
+    *aDidScroll = PR_TRUE;
+  }
   aScrollableView->ScrollTo(scrollOffsetX, scrollOffsetY, 0);
 
   if (aScrollParentViews)
@@ -6107,8 +5888,7 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
 
     if (view)
     {
-      nsIScrollableView *parentSV =
-        nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
+      nsIScrollableView *parentSV = GetNearestScrollableView(view);
 
       if (parentSV)
       {
@@ -6129,7 +5909,7 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
         //
         // We have a parent scrollable view, so now map aRect
         // into it's scrolled view's coordinate space.
-        //
+        // 
 
         rv = parentSV->GetScrolledView(view);
 
@@ -6152,7 +5932,7 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
         // Now scroll the rect into the parent's view.
         //
 
-        rv = ScrollRectIntoView(parentSV, newRect, aVPercent, aHPercent, aScrollParentViews);
+        rv = ScrollRectIntoView(parentSV, newRect, aVPercent, aHPercent, aScrollParentViews, aDidScroll);
       }
     }
   }
@@ -6259,7 +6039,7 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
       return NS_OK;
 
     result = ScrollRectIntoView(scrollableView, rect, aVPercent, aHPercent,
-                                PR_TRUE);
+                                PR_TRUE, nsnull);
   }
   return result;
 }
