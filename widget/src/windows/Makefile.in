@@ -78,6 +78,7 @@ ifeq ($(OS_ARCH), WINCE)
 CPPSRCS += \
 	nsWindowCE.cpp \
 	nsClipboardCE.cpp \
+        nsAccelerometerCE.cpp \
 	$(NULL)
 else
 CPPSRCS += \
