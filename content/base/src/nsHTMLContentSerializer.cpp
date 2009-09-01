@@ -103,12 +103,12 @@ nsHTMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
 }
 
 void 
-nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
-                                             nsIDOMElement *aOriginalElement,
-                                             nsAString& aTagPrefix,
-                                             const nsAString& aTagNamespaceURI,
-                                             nsIAtom* aTagName,
-                                             nsAString& aStr)
+nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
+                                                 nsIDOMElement *aOriginalElement,
+                                                 nsAString& aTagPrefix,
+                                                 const nsAString& aTagNamespaceURI,
+                                                 nsIAtom* aTagName,
+                                                 nsAString& aStr)
 {
   PRInt32 count = aContent->GetAttrCount();
   if (!count)
@@ -306,7 +306,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // Even LI passed above have to go through this 
   // for serializing attributes other than "value".
   nsAutoString dummyPrefix;
-  SerializeAttributes(content, aOriginalElement, dummyPrefix, EmptyString(), name, aStr);
+  SerializeHTMLAttributes(content, aOriginalElement, dummyPrefix, EmptyString(), name, aStr);
 
   AppendToString(kGreaterThan, aStr);
 
