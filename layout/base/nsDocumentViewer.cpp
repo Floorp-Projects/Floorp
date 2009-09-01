@@ -998,7 +998,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     nsCOMPtr<nsIPresShell> shell = mPresShell;
     shell->FlushPendingNotifications(Flush_Layout);
   }
-  
+
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
@@ -1037,8 +1037,6 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 #ifdef MOZ_TIMELINE
       // if navigator.xul's load is complete, the main nav window is visible
       // mark that point.
-
-      //printf("DEBUG: getting uri from document (%p)\n", mDocument.get());
 
       nsIURI *uri = mDocument ? mDocument->GetDocumentURI() : nsnull;
 
@@ -1096,6 +1094,10 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     mCachedPrintWebProgressListner = nsnull;
   }
 #endif
+
+  if (!mStopped) {
+    window->DispatchSyncPopState();
+  }
 
   return rv;
 }
