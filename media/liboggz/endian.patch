@@ -1,25 +1,12 @@
-diff --git a/media/liboggz/include/oggz/config_gcc.h b/media/liboggz/include/oggz/config_gcc.h
+diff --git a/media/liboggz/include/oggz/config.h b/media/liboggz/include/oggz/config.h
+index d645685..19d20f5 100644
 --- a/media/liboggz/include/oggz/config_gcc.h
 +++ b/media/liboggz/include/oggz/config_gcc.h
-@@ -117,16 +117,21 @@
- # ifndef WORDS_BIGENDIAN
- /* #  undef WORDS_BIGENDIAN */
- # endif
- #endif
- 
- /* Number of bits in a file offset, on hosts where this is settable. */
- #define _FILE_OFFSET_BITS 64
- 
+@@ -126,3 +126,8 @@
+ /* Define to `unsigned int' if <sys/types.h> does not define. */
+ /* #undef size_t */
++
 +#include "prcpucfg.h"
 +#ifdef IS_BIG_ENDIAN
 +#define WORDS_BIGENDIAN
 +#endif
-+
- /* Define to make fseeko etc. visible, on some hosts. */
- #define _LARGEFILE_SOURCE 1
- 
- /* Define for large files, on AIX-style hosts. */
- /* #undef _LARGE_FILES */
- 
- /* Some systems need _XOPEN_SOURCE for timezone */
- /* #undef _XOPEN_SOURCE */

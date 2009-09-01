@@ -1,7 +1,8 @@
 diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+index fff5158..f457244 100644
 --- a/media/liboggz/src/liboggz/oggz_seek.c
 +++ b/media/liboggz/src/liboggz/oggz_seek.c
-@@ -472,16 +472,18 @@ oggz_scan_for_page (OGGZ * oggz, ogg_pag
+@@ -476,16 +476,18 @@ oggz_scan_for_page (OGGZ * oggz, ogg_page * og, ogg_int64_t unit_target,
        serialno = ogg_page_serialno (og);
        granule_at = ogg_page_granulepos (og);
        unit_at = oggz_get_unit (oggz, serialno, granule_at);
@@ -20,7 +21,7 @@ diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/o
  #ifdef DEBUG
        printf (" scan: (%lld) == (%lld)\n", unit_at, unit_target);
  #endif
-@@ -761,16 +763,18 @@ oggz_bounded_seek_set (OGGZ * oggz,
+@@ -765,16 +767,18 @@ oggz_bounded_seek_set (OGGZ * oggz,
        if (unit_end == unit_begin) break;
      } else {
        break;
