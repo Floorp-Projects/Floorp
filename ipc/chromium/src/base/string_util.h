@@ -508,7 +508,11 @@ inline typename string_type::value_type* WriteInto(string_type* str,
 
 // Function objects to aid in comparing/searching strings.
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+template<typename Char> struct chromium_CaseInsensitiveCompare {
+#else
 template<typename Char> struct CaseInsensitiveCompare {
+#endif
  public:
   bool operator()(Char x, Char y) const {
     return tolower(x) == tolower(y);

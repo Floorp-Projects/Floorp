@@ -64,6 +64,7 @@ Types = (
 
 Includes = (
     'base/basictypes.h',
+    'prtime.h',
     'nscore.h',
     'IPC/IPCMessageUtils.h',
     'nsStringGlue.h',

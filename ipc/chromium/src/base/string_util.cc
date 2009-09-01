@@ -759,7 +759,11 @@ bool StartsWith(const std::wstring& str,
     if (search.size() > str.size())
       return false;
     return std::equal(search.begin(), search.end(), str.begin(),
+#if defined(CHROMIUM_MOZILLA_BUILD)
+                      chromium_CaseInsensitiveCompare<wchar_t>());
+#else
                       CaseInsensitiveCompare<wchar_t>());
+#endif
   }
 }
 
