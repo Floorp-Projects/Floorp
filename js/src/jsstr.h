@@ -525,7 +525,7 @@ JS_ISSPACE(jschar c)
     unsigned w = c;
 
     if (w < 256)
-        return w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD));
+        return (w <= ' ' && (w == ' ' || (9 <= w && w <= 0xD))) || w == 0xA0;
 
     return (JS_CCODE(w) & 0x00070000) == 0x00040000;
 }
