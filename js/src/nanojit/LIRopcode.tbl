@@ -88,7 +88,7 @@ OPDEF(ialloc,   11, 0, I)       // alloc some stack space (value is 32bit addres
 OPDEF(sti,      12, 2, Sti)     // 32-bit store
 OPDEF(ret,      13, 1, Op1)     // return a word-sized value
 OPDEF(live,     14, 1, Op1)     // extend live range of reference
-OPDEF(unused15, 15, 0, C)
+OPDEF(flive,    15, 1, Op1)     // extend live range of a floating point value reference
 OPDEF(icall,    16, 0, C)       // subroutine call returning a 32-bit value
 OPDEF(unused17, 17, 0, None)
 
