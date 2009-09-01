@@ -110,8 +110,6 @@ public:
 
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
   virtual void Destroy();
-  virtual void OnPageShow(PRBool aPersisted,
-                          nsIDOMEventTarget* aDispatchStartTarget);
 
   NS_DECL_NSIIMAGEDOCUMENT
 
@@ -138,7 +136,7 @@ protected:
                   (float)mVisibleHeight / mImageHeight);
   }
 
-  void ResetZoomLevel();
+  void SetZoomLevel(float aZoomLevel);
   float GetZoomLevel();
 
   nsCOMPtr<nsIContent>          mImageContent;
@@ -160,8 +158,6 @@ protected:
   PRPackedBool                  mFirstResize;
   // mObservingImageLoader is true while the observer is set.
   PRPackedBool                  mObservingImageLoader;
-
-  float                         mOriginalZoomLevel;
 };
 
 ImageListener::ImageListener(nsImageDocument* aDocument)
@@ -268,7 +264,7 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
-nsImageDocument::nsImageDocument() : mOriginalZoomLevel(1.0)
+nsImageDocument::nsImageDocument()
 {
 
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -338,8 +334,6 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  mOriginalZoomLevel = GetZoomLevel();
-
   NS_ASSERTION(aDocListener, "null aDocListener");
   *aDocListener = new ImageListener(this);
   if (!*aDocListener)
@@ -408,15 +402,6 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
   }
 }
 
-void
-nsImageDocument::OnPageShow(PRBool aPersisted,
-                            nsIDOMEventTarget* aDispatchStartTarget)
-{
-  if (aPersisted) {
-    mOriginalZoomLevel = GetZoomLevel();
-  }
-  nsMediaDocument::OnPageShow(aPersisted, aDispatchStartTarget);
-}
 
 NS_IMETHODIMP
 nsImageDocument::GetImageResizingEnabled(PRBool* aImageResizingEnabled)
@@ -455,7 +440,7 @@ nsImageDocument::GetImageRequest(imgIRequest** aImageRequest)
 NS_IMETHODIMP
 nsImageDocument::ShrinkToFit()
 {
-  if (GetZoomLevel() != mOriginalZoomLevel && mImageIsResized) {
+  if (GetZoomLevel() != 1.0 && mImageIsResized) {
     return NS_OK;
   }
 
@@ -548,11 +533,11 @@ nsImageDocument::ToggleImageSize()
   mShouldResize = PR_TRUE;
   if (mImageIsResized) {
     mShouldResize = PR_FALSE;
-    ResetZoomLevel();
+    SetZoomLevel(1.0);
     RestoreImage();
   }
   else if (mImageIsOverflowing) {
-    ResetZoomLevel();
+    SetZoomLevel(1.0);
     ShrinkToFit();
   }
 
@@ -564,7 +549,7 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 {
   aImage->GetWidth(&mImageWidth);
   aImage->GetHeight(&mImageHeight);
-  ResetZoomLevel();
+  SetZoomLevel(1.0);
   CheckOverflowing(mResizeImageByDefault);
   UpdateTitleAndCharset();
 
@@ -580,7 +565,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     CheckOverflowing(PR_FALSE);
   }
   else if (eventType.EqualsLiteral("click") && mClickResizingEnabled) {
-    ResetZoomLevel();
+    SetZoomLevel(1.0);
     mShouldResize = PR_TRUE;
     if (mImageIsResized) {
       PRInt32 x = 0, y = 0;
@@ -614,7 +599,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     if (charCode == 0x2B && !ctrlKey && !metaKey && !altKey) {
       mShouldResize = PR_FALSE;
       if (mImageIsResized) {
-        ResetZoomLevel();
+        SetZoomLevel(1.0);
         RestoreImage();
       }
     }
@@ -622,7 +607,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     else if (charCode == 0x2D && !ctrlKey && !metaKey && !altKey) {
       mShouldResize = PR_TRUE;
       if (mImageIsOverflowing) {
-        ResetZoomLevel();
+        SetZoomLevel(1.0);
         ShrinkToFit();
       }
     }
@@ -794,7 +779,7 @@ nsImageDocument::UpdateTitleAndCharset()
 }
 
 void
-nsImageDocument::ResetZoomLevel()
+nsImageDocument::SetZoomLevel(float aZoomLevel)
 {
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
   if (docShell) {
@@ -802,7 +787,7 @@ nsImageDocument::ResetZoomLevel()
     docShell->GetContentViewer(getter_AddRefs(cv));
     nsCOMPtr<nsIMarkupDocumentViewer> mdv = do_QueryInterface(cv);
     if (mdv) {
-      mdv->SetFullZoom(mOriginalZoomLevel);
+      mdv->SetFullZoom(aZoomLevel);
     }
   }
 }
@@ -810,7 +795,7 @@ nsImageDocument::ResetZoomLevel()
 float
 nsImageDocument::GetZoomLevel()
 {
-  float zoomLevel = mOriginalZoomLevel;
+  float zoomLevel = 1.0;
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
   if (docShell) {
     nsCOMPtr<nsIContentViewer> cv;
