@@ -2028,8 +2028,7 @@ namespace nanojit
         verbose_only( StringList asmOutput(alloc); )
         verbose_only( assm->_outputCache = &asmOutput; )
 
-        RegAllocMap regMap(alloc);
-        assm->beginAssembly(frag, &regMap);
+        assm->beginAssembly(frag);
         if (assm->error())
             return;
 
