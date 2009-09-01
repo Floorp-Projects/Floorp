@@ -161,6 +161,13 @@
           this.collapsed = true;
           this._popupOpen = false;
 
+          // Scroll to the top left for the next open (only if necessary).
+          // Doing this now rather than in open() turns out to be faster,
+          // possibly because it avoids scrolling too soon after we uncollapse
+          // ourselves
+          if (this._items.scrollTop || this._items.scrollLeft)
+            this._scrollBoxObject.scrollTo(0, 0);
+
           BrowserUI.showToolbar();
           BrowserUI.popDialog();
         ]]></body>
@@ -181,10 +188,6 @@
           // Don't bother doing work if we're not even open
           if (!this.popupOpen)
             return;
-
-          // Scroll to the top left if only if necessary
-          if (this._items.scrollTop || this._items.scrollLeft)
-            this._scrollBoxObject.scrollTo(0, 0);
 
           let controller = this.input.controller;
           let searchString = controller.searchString;
