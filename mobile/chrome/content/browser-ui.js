@@ -206,11 +206,6 @@ var BrowserUI = {
       if (urlString == "about:blank")
         urlString = "";
       this._edit.value = urlString;
-
-      // This is a workaround for bug 488420, needed to cycle focus for the
-      // IME state to be set properly. Testing shows we only really need to
-      // do this the first time.
-      this._edit.inputField.blur();
       this._edit.inputField.focus();
     }
     else if (!aEdit && icons.getAttribute("mode") != "view") {
