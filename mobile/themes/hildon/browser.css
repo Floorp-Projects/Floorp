@@ -527,6 +527,7 @@ placeitem .button-text {
 
 .searchengine {
   -moz-box-orient: horizontal;
+  min-width: 14.4mm;
 }
 
 .searchengine .radio-icon {
