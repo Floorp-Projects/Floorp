@@ -46,6 +46,7 @@ const PARENT_ANNO = "weave/parent";
 const PREDECESSOR_ANNO = "weave/predecessor";
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 
+Cu.import("resource://gre/modules/utils.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
@@ -100,6 +101,17 @@ BookmarksEngine.prototype = {
   },
 
   _findDupe: function _findDupe(item) {
+    switch (item.type) {
+      case "bookmark":
+      case "query":
+      case "microsummary":
+        // Find a bookmark that has the same uri
+        let uri = Utils.makeURI(item.bmkUri);
+        let localId = PlacesUtils.getMostRecentBookmarkForURI(uri);
+        if (localId == -1)
+          return;
+        return GUIDForId(localId);
+    }
     // TODO for bookmarks, check if it exists and find guid
     // for everything else (folders, separators) look for parent/pred?
   }
