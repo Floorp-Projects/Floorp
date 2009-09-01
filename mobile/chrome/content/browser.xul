@@ -360,13 +360,10 @@
             <label value="&prefsHeader.label;"/>
           </hbox>
           <richlistbox id="prefs-list" seltype="single" flex="1">
-            <hbox id="prefs-about">
-              <vbox flex="1">
-                <label value="&about.title;" class="preftitle"/>
-                <description value="&about.description;" flex="1" class="prefdesc"/>
-              </vbox>
-              <button label="&about.button;" oncommand="Browser.addTab('about:', true);"/>
-            </hbox>
+            <richpref title="&about.title;" type="button">
+              &about.description;
+              <button id="prefs-about-button" label="&about.button;" oncommand="Browser.addTab('about:', true);"/>
+            </richpref>
             <vbox class="prefsection" id="prefs-content">
               <label value="&content.title;" crop="end" flex="1"/>
             </vbox>
