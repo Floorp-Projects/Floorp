@@ -61,12 +61,13 @@ CPPSRCS += \
   XPCShellEnvironment.cpp \
   $(NULL)
 
-
 # For xpcshell error messages and nsDependentJSString
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/js/src/xpconnect/shell \
   -I$(topsrcdir)/dom/base \
   $(NULL)
+
+XPCSHELL_TESTS = tests
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
