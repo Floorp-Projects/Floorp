@@ -65,6 +65,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIScrollableViewProvider.h"
 #include "nsIStatefulFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsThreadUtils.h"
 
@@ -135,6 +136,10 @@ public:
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
+  }
+
+  virtual nsIScrollableFrame* GetScrollTargetFrame() {
+    return do_QueryFrame(mDropdownFrame);
   }
 
 #ifdef NS_DEBUG

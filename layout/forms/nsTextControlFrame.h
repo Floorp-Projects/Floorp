@@ -50,6 +50,7 @@
 #include "nsIScrollableViewProvider.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
+#include "nsIScrollableFrame.h"
 
 class nsIEditor;
 class nsISelectionController;
@@ -75,6 +76,12 @@ public:
   virtual ~nsTextControlFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
+
+  virtual nsIScrollableFrame* GetScrollTargetFrame() {
+    if (!IsScrollable())
+      return nsnull;
+    return do_QueryFrame(GetFirstChild(nsnull));
+  }
 
   virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext);
   virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
