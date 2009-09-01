@@ -56,14 +56,15 @@ function run_test() {
   let res = new Resource("http://localhost:8080/open");
   let content = res.get();
   do_check_eq(content, "This path exists");
-  do_check_eq(res.lastChannel.responseStatus, 200);
+  do_check_eq(content.status, 200);
+  do_check_true(content.success);
 
-  // 2. A password protected resource (test that it'll fail w/o pass)
+  // 2. A password protected resource (test that it'll fail w/o pass, no throw)
   let res2 = new Resource("http://localhost:8080/protected");
-  try {
-    content = res2.get();
-    do_check_true(false); // unreachable, get() above must fail
-  } catch (e) {}
+  content = res2.get();
+  do_check_eq(content, "This path exists and is protected - failed")
+  do_check_eq(content.status, 401);
+  do_check_false(content.success);
 
   // 3. A password protected resource
 
@@ -72,17 +73,21 @@ function run_test() {
   res3.authenticator = auth;
   content = res3.get();
   do_check_eq(content, "This path exists and is protected");
-  do_check_eq(res3.lastChannel.responseStatus, 200);
+  do_check_eq(content.status, 200);
+  do_check_true(content.success);
 
-  // 4. A non-existent resource (test that it'll fail)
+  // 4. A non-existent resource (test that it'll fail, but not throw)
 
   let res4 = new Resource("http://localhost:8080/404");
-  try {
-    let content = res4.get();
-    do_check_true(false); // unreachable, get() above must fail
-  } catch (e) {}
-  do_check_eq(res4.lastChannel.responseStatusText, "Not Found");
-  do_check_eq(res4.lastChannel.responseStatus, 404);
+  content = res4.get();
+  do_check_eq(content, "File not found");
+  do_check_eq(content.status, 404);
+  do_check_false(content.success);
+
+  _("5. Check some headers of the 404 response");
+  do_check_eq(content.headers.Connection, "close");
+  do_check_eq(content.headers.Server, "httpd.js");
+  do_check_eq(content.headers["Content-Length"], 14);
 
   // FIXME: additional coverage needed:
   // * PUT requests
