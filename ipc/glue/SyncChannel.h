@@ -42,8 +42,6 @@
 
 #include <queue>
 
-#include "mozilla/CondVar.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/ipc/AsyncChannel.h"
 
 namespace mozilla {
@@ -53,8 +51,6 @@ namespace ipc {
 class SyncChannel : public AsyncChannel
 {
 protected:
-    typedef mozilla::CondVar CondVar;
-    typedef mozilla::Mutex Mutex;
     typedef uint16 MessageId;
 
 public:
@@ -70,8 +66,6 @@ public:
 
     SyncChannel(SyncListener* aListener) :
         AsyncChannel(aListener),
-        mMutex("mozilla.ipc.SyncChannel.mMutex"),
-        mCvar(mMutex, "mozilla.ipc.SyncChannel.mCvar"),
         mPendingReply(0),
         mProcessingSyncMessage(false)
     {
@@ -109,8 +103,6 @@ protected:
         return mPendingReply != 0;
     }
 
-    Mutex mMutex;
-    CondVar mCvar;
     MessageId mPendingReply;
     bool mProcessingSyncMessage;
     Message mRecvd;

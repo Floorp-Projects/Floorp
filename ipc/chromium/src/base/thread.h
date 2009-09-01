@@ -28,9 +28,35 @@ class Thread : PlatformThread::Delegate {
     // A value of 0 indicates that the default maximum should be used.
     size_t stack_size;
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+    // Specifies whether the thread that launched this sub-thread
+    // should wait for the sub-thread's Init() routine to finish
+    // before dropping into the event loop.  If it is false, the
+    // sub-thread will signal just before calling Init().  If true,
+    // the sub-thread will signal just after.
+    bool wait_for_init;
+
+    Options() :
+        message_loop_type(MessageLoop::TYPE_DEFAULT),
+        stack_size(0),
+        wait_for_init(true)
+      {}
+    Options(MessageLoop::Type type, size_t size) :
+        message_loop_type(type),
+        stack_size(size),
+        wait_for_init(true)
+      {}
+      Options(MessageLoop::Type type, size_t size, bool wait_init) :
+        message_loop_type(type),
+        stack_size(size),
+        wait_for_init(wait_init)
+      {}
+
+#else
     Options() : message_loop_type(MessageLoop::TYPE_DEFAULT), stack_size(0) {}
     Options(MessageLoop::Type type, size_t size)
         : message_loop_type(type), stack_size(size) {}
+#endif
   };
 
   // Constructor.
