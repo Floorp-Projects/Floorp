@@ -364,6 +364,10 @@ protected:
                             PRUint32 aLoadType, nscoord *cx, nscoord *cy,
                             PRBool * aDoHashchange);
 
+    // Tries to stringify a given variant by converting it to JSON.  This only
+    // works if the variant is backed by a JSVal.
+    nsresult StringifyJSValVariant(nsIVariant *aData, nsAString &aResult);
+
     // Returns PR_TRUE if would have called FireOnLocationChange,
     // but did not because aFireOnLocationChange was false on entry.
     // In this case it is the caller's responsibility to ensure
@@ -465,8 +469,11 @@ protected:
                                        PRUint32 aStateFlags);
 
     // Global History
+
     nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
                                 nsIChannel * aChannel);
+    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
+                                nsIURI * aReferrer);
 
     // Helper Routines
     nsresult   ConfirmRepost(PRBool * aRepost);
@@ -514,6 +521,11 @@ protected:
     virtual nsresult EndPageLoad(nsIWebProgress * aProgress,
                                  nsIChannel * aChannel,
                                  nsresult aResult);
+
+    // Sets the current document's pending state object to the given SHEntry's
+    // state object.  The pending state object is eventually given to the page
+    // in the PopState event.
+    nsresult SetDocPendingStateObj(nsISHEntry *shEntry);
 
     nsresult CheckLoadingPermissions();
 

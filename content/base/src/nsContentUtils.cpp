@@ -407,6 +407,7 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onchange,                      { NS_FORM_CHANGE, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onselect,                      { NS_FORM_SELECTED, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onload,                        { NS_LOAD, EventNameType_All }},
+    { &nsGkAtoms::onpopstate,                    { NS_POPSTATE, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onunload,                      { NS_PAGE_UNLOAD,
                                                  (EventNameType_HTMLXUL | EventNameType_SVGSVG) }},
     { &nsGkAtoms::onhashchange,                  { NS_HASHCHANGE, EventNameType_HTMLXUL }},
