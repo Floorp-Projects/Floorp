@@ -1886,6 +1886,13 @@ NS_IMETHODIMP nsVariant::GetAsISupports(nsISupports **_retval)
     return nsVariant::ConvertToISupports(mData, _retval);
 }
 
+/* jsval getAsJSVal() */
+NS_IMETHODIMP nsVariant::GetAsJSVal(jsval *_retval)
+{
+    // Can only get the JSVal from an XPCVariant.
+    return NS_ERROR_CANNOT_CONVERT_DATA;
+}
+
 /* void getAsInterface (out nsIIDPtr iid, [iid_is (iid), retval] out nsQIResult iface); */
 NS_IMETHODIMP nsVariant::GetAsInterface(nsIID * *iid, void * *iface)
 {

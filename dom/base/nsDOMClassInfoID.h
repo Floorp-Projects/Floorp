@@ -473,6 +473,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_PaintRequestList_id,
 
   eDOMClassInfo_ScrollAreaEvent_id,
+  eDOMClassInfo_PopStateEvent_id,
 
   eDOMClassInfo_EventListenerInfo_id,
 
