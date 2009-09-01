@@ -338,7 +338,7 @@ var Browser = {
   startup: function() {
     var self = this;
 
-    dump("begin startup\n");
+    //dump("begin startup\n");
 
     let container = document.getElementById("tile-container");
     let bv = this._browserView = new BrowserView(container, Browser.getVisibleRect);
@@ -369,7 +369,7 @@ var Browser = {
       if (e.target != window)
         return;
 
-      dump(window.innerWidth + "," + window.innerHeight + "\n");
+      //dump(window.innerWidth + "," + window.innerHeight + "\n");
       // XXX is this code right here actually needed?
       let w = window.innerWidth;
       let h = window.innerHeight;
@@ -538,7 +538,7 @@ var Browser = {
 
     bv.commitBatchOperation();
 
-    dump("end startup\n");
+    //dump("end startup\n");
   },
 
   shutdown: function() {
@@ -687,8 +687,8 @@ var Browser = {
     let restoreX = Math.max(0, tab.browserViewportState.visibleX);
     let restoreY = Math.max(0, tab.browserViewportState.visibleY) + offY;
 
-    dump('Switch tab scrolls to: ' + restoreX
-                            + ', ' + restoreY + '\n');
+    //dump('Switch tab scrolls to: ' + restoreX
+    //                        + ', ' + restoreY + '\n');
 
     Browser.contentScrollboxScroller.scrollTo(restoreX, restoreY);
 
@@ -1163,7 +1163,7 @@ var Browser = {
    * there's no active browser or if no element can be found
    */
   elementFromPoint: function elementFromPoint(x, y) {
-    Util.dumpLn("*** elementFromPoint: page ", x, ",", y);
+    //Util.dumpLn("*** elementFromPoint: page ", x, ",", y);
 
     let browser = this._browserView.getBrowser();
     if (!browser) return null;
@@ -1249,8 +1249,8 @@ Browser.MainDragger.prototype = {
       let [x, y] = Browser.transformClientToBrowser(clientX, clientY);
       let element = Browser.elementFromPoint(x, y);
       if (element && element.ownerDocument != Browser.selectedBrowser.contentDocument) {
-        Util.dumpLn("*** dragStart got element ", element, " ownerDoc ", element.ownerDocument,
-                    " selectedBrowser.contentDoc ", Browser.selectedBrowser.contentDocument);
+        //Util.dumpLn("*** dragStart got element ", element, " ownerDoc ", element.ownerDocument,
+        //            " selectedBrowser.contentDoc ", Browser.selectedBrowser.contentDocument);
         this.draggedFrame = element.ownerDocument.defaultView;
       }
     }
