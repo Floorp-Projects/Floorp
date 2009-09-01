@@ -344,77 +344,71 @@ InitJITLogController()
     js_LogController.lcbits = 0;
 
     tm = getenv("TRACEMONKEY");
-    if (tm) goto help;
+    if (tm) {
+        fflush(NULL);
+        printf(
+            "The environment variable $TRACEMONKEY has been replaced by $TMFLAGS.\n"
+            "Try 'TMFLAGS=help js -j' for a list of options.\n"
+        );
+        exit(0);
+    }
 
     tmf = getenv("TMFLAGS");
     if (!tmf) return;
 
-    /* This is really a cheap hack as far as flag decoding goes. */
-    if (strstr(tmf, "help")) goto help;
+    /* Using strstr() is really a cheap hack as far as flag decoding goes. */
+    if (strstr(tmf, "help")) {
+        fflush(NULL);
+        printf(
+            "usage: TMFLAGS=option,option,option,... where options can be:\n"
+            "\n"
+            "  help         show this message\n"
+            "  ------ options for jstracer & jsregexp ------\n"
+            "  minimal      ultra-minimalist output; try this first\n"
+            "  full         everything except 'treevis' and 'nocodeaddrs'\n"
+            "  tracer       tracer lifetime (FIXME:better description)\n"
+            "  recorder     trace recording stuff (FIXME:better description)\n"
+            "  abort        show trace recording aborts\n"
+            "  stats        show trace recording stats\n"
+            "  regexp       show compilation & entry for regexps\n"
+            "  treevis      spew that tracevis/tree.py can parse\n"
+            "  ------ options for Nanojit ------\n"
+            "  liveness     show LIR liveness at start of rdr pipeline\n"
+            "  readlir      show LIR as it enters the reader pipeline\n"
+            "  aftersf_sp   show LIR after StackFilter(sp)\n"
+            "  aftersf_rp   show LIR after StackFilter(rp)\n"
+            "  regalloc     show regalloc details\n"
+            "  assembly     show final aggregated assembly code\n"
+            "  nocodeaddrs  don't show code addresses in assembly listings\n"
+            "\n"
+        );
+        exit(0);
+        /*NOTREACHED*/
+    }
 
     bits = 0;
 
     /* flags for jstracer.cpp */
-    if (strstr(tmf, "minimal"))     bits |= LC_TMMinimal;
-    if (strstr(tmf, "tracer"))      bits |= LC_TMTracer;
-    if (strstr(tmf, "recorder"))    bits |= LC_TMRecorder;
-    if (strstr(tmf, "patcher"))     bits |= LC_TMPatcher;
-    if (strstr(tmf, "abort"))       bits |= LC_TMAbort;
-    if (strstr(tmf, "stats"))       bits |= LC_TMStats;
-    if (strstr(tmf, "regexp"))      bits |= LC_TMRegexp;
-    if (strstr(tmf, "treevis"))     bits |= LC_TMTreeVis;
+    if (strstr(tmf, "minimal")  || strstr(tmf, "full")) bits |= LC_TMMinimal;
+    if (strstr(tmf, "tracer")   || strstr(tmf, "full")) bits |= LC_TMTracer;
+    if (strstr(tmf, "recorder") || strstr(tmf, "full")) bits |= LC_TMRecorder;
+    if (strstr(tmf, "abort")    || strstr(tmf, "full")) bits |= LC_TMAbort;
+    if (strstr(tmf, "stats")    || strstr(tmf, "full")) bits |= LC_TMStats;
+    if (strstr(tmf, "regexp")   || strstr(tmf, "full")) bits |= LC_TMRegexp;
+    if (strstr(tmf, "treevis"))                         bits |= LC_TMTreeVis;
 
     /* flags for nanojit */
-    if (strstr(tmf, "liveness"))    bits |= LC_Liveness;
-    if (strstr(tmf, "readlir"))     bits |= LC_ReadLIR;
-    if (strstr(tmf, "aftersf_sp"))  bits |= LC_AfterSF_SP;
-    if (strstr(tmf, "aftersf_rp"))  bits |= LC_AfterSF_RP;
-    if (strstr(tmf, "regalloc"))    bits |= LC_RegAlloc;
-    if (strstr(tmf, "assembly"))    bits |= LC_Assembly;
-    if (strstr(tmf, "nocodeaddrs")) bits |= LC_NoCodeAddrs;
-
-    if (strstr(tmf, "full")) {
-        bits |= LC_TMMinimal | LC_TMTracer | LC_TMRecorder | LC_TMPatcher | LC_TMAbort |
-                LC_TMAbort   | LC_TMStats  | LC_TMRegexp   | LC_Liveness  | LC_ReadLIR |
-                LC_AfterSF_SP | LC_AfterSF_RP | LC_RegAlloc | LC_Assembly;
-    }
+    if (strstr(tmf, "liveness")   || strstr(tmf, "full")) bits |= LC_Liveness;
+    if (strstr(tmf, "readlir")    || strstr(tmf, "full")) bits |= LC_ReadLIR;
+    if (strstr(tmf, "aftersf_sp") || strstr(tmf, "full")) bits |= LC_AfterSF_SP;
+    if (strstr(tmf, "aftersf_rp") || strstr(tmf, "full")) bits |= LC_AfterSF_RP;
+    if (strstr(tmf, "regalloc")   || strstr(tmf, "full")) bits |= LC_RegAlloc;
+    if (strstr(tmf, "assembly")   || strstr(tmf, "full")) bits |= LC_Assembly;
+    if (strstr(tmf, "nocodeaddrs"))                       bits |= LC_NoCodeAddrs;
 
     js_LogController.lcbits = bits;
     return;
 
-   help:
-    fflush(NULL);
-    printf("\n");
-    printf("Debug output control help summary for TraceMonkey:\n");
-    printf("\n");
-    printf("TRACEMONKEY= is no longer used; use TMFLAGS= "
-           "instead.\n");
-    printf("\n");
-    printf("usage: TMFLAGS=option,option,option,... where options can be:\n");
-    printf("   help         show this message\n");
-    printf("   ------ options for jstracer & jsregexp ------\n");
-    printf("   minimal      ultra-minimalist output; try this first\n");
-    printf("   full         everything (old verbosity)\n");
-    printf("   tracer       tracer lifetime (FIXME:better description)\n");
-    printf("   recorder     trace recording stuff (FIXME:better description)\n");
-    printf("   patcher      patching stuff (FIXME:better description)\n");
-    printf("   abort        show trace recording aborts\n");
-    printf("   stats        show trace recording stats\n");
-    printf("   regexp       show compilation & entry for regexps\n");
-    printf("   treevis      spew that tracevis/tree.py can parse\n");
-    printf("   ------ options for Nanojit ------\n");
-    printf("   liveness     show LIR liveness at start of rdr pipeline\n");
-    printf("   readlir      show LIR as it enters the reader pipeline\n");
-    printf("   aftersf_sp   show LIR after StackFilter(sp)\n");
-    printf("   aftersf_rp   show LIR after StackFilter(rp)\n");
-    printf("   regalloc     show regalloc details\n");
-    printf("   assembly     show final aggregated assembly code\n");
-    printf("   nocodeaddrs  don't show code addresses in assembly listings\n");
-    printf("\n");
-    printf("Exiting now.  Bye.\n");
-    printf("\n");
-    exit(0);
-    /*NOTREACHED*/
 }
 #endif
 
