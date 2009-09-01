@@ -458,6 +458,10 @@ Assembler::nInit(AvmCore*)
 {
 }
 
+void Assembler::nBeginAssembly()
+{
+}
+
 NIns*
 Assembler::genPrologue()
 {
