@@ -173,18 +173,14 @@ function runTest(testNum) {
                           "context-bookmarklink",  true,
                           "context-savelink",      true,
                           "context-sendlink",      true,
-                          "context-copylink",      true,
-                          "---",                   null,
-                          "context-metadata",      true]);
+                          "context-copylink",      true]);
         closeContextMenu()
         openContextMenuFor(mailto); // Invoke context menu for next test.
         break;
 
     case 4:
         // Context menu for text mailto-link
-        checkContextMenu(["context-copyemail", true,
-                          "---",               null,
-                          "context-metadata",  true]);
+        checkContextMenu(["context-copyemail", true]);
         closeContextMenu()
         openContextMenuFor(input); // Invoke context menu for next test.
         break;
@@ -214,9 +210,7 @@ function runTest(testNum) {
                           "context-saveimage",            true,
                           "context-sendimage",            true,
                           "context-setDesktopBackground", true,
-                          "context-blockimage",           true,
-                          "---",                          null,
-                          "context-metadata",             true]);
+                          "context-blockimage",           true]);
         closeContextMenu();
         openContextMenuFor(canvas); // Invoke context menu for next test.
         break;

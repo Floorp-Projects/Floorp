@@ -446,8 +446,7 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-info?size=menu");
 }
 
-#placesContext_show\:info,
-#context-metadata {
+#placesContext_show\:info {
   list-style-image: url("moz-icon://stock/gtk-properties?size=menu");
 }
 

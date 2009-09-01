@@ -24,8 +24,6 @@ browser.jar:
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 *       content/browser/credits.xhtml                 (content/credits.xhtml)
-*       content/browser/metaData.js                   (content/metaData.js)
-*       content/browser/metaData.xul                  (content/metaData.xul)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
 *       content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
 *       content/browser/pageinfo/pageInfo.css         (content/pageinfo/pageInfo.css)
