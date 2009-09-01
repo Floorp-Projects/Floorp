@@ -1345,6 +1345,16 @@ nsIScrollableView* nsMenuFrame::GetScrollableView()
   return nsnull;
 }
 
+nsIScrollableFrame* nsMenuFrame::GetScrollTargetFrame()
+{
+  if (!mPopupFrame)
+    return nsnull;
+  nsIFrame* childFrame = mPopupFrame->GetFirstChild(nsnull);
+  if (childFrame)
+    return mPopupFrame->GetScrollFrame(childFrame);
+  return nsnull;
+}
+
 // nsMenuTimerMediator implementation.
 NS_IMPL_ISUPPORTS1(nsMenuTimerMediator, nsITimerCallback)
 

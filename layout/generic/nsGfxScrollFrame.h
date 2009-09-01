@@ -346,8 +346,13 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
+
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
+
+  virtual nsIScrollableFrame* GetScrollTargetFrame() {
+    return this;
+  }
 
   virtual nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const {
     return mInner.GetParentViewForChildFrame(aFrame);
@@ -550,6 +555,10 @@ public:
 
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
+
+  virtual nsIScrollableFrame* GetScrollTargetFrame() {
+    return this;
+  }
 
   virtual nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const {
     return mInner.GetParentViewForChildFrame(aFrame);

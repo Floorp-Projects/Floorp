@@ -161,6 +161,8 @@ public:
 
   NS_IMETHOD SelectMenu(PRBool aActivateFlag);
 
+  virtual nsIScrollableFrame* GetScrollTargetFrame();
+
   /**
    * NOTE: OpenMenu will open the menu asynchronously.
    */

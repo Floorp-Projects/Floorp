@@ -1252,6 +1252,35 @@ nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
   return nsnull;
 }
 
+// XXXroc this is megalame. Fossicking around for a frame of the right
+// type is a recipe for disaster in the long term.
+nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart)
+{
+  if (!aStart)
+    return nsnull;  
+
+  // try start frame and siblings
+  nsIFrame* currFrame = aStart;
+  do {
+    nsIScrollableFrame* sf = do_QueryFrame(currFrame);
+    if (sf)
+      return sf;
+    currFrame = currFrame->GetNextSibling();
+  } while (currFrame);
+
+  // try children
+  currFrame = aStart;
+  do {
+    nsIFrame* childFrame = currFrame->GetFirstChild(nsnull);
+    nsIScrollableFrame* sf = GetScrollFrame(childFrame);
+    if (sf)
+      return sf;
+    currFrame = currFrame->GetNextSibling();
+  } while (currFrame);
+
+  return nsnull;
+}
+
 void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem)
 {
   if (aMenuItem) {
