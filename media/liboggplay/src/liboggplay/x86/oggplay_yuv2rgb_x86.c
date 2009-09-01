@@ -38,10 +38,6 @@
 #include "cpu.h"
 
 #if defined(_MSC_VER)
-# if defined(_M_AMD64)
-  /* MSVC with x64 doesn't support inline assembler */
-#include <emmintrin.h>
-# endif
 #include "yuv2rgb_x86_vs.h" 
 #elif defined(__GNUC__)
 #include "yuv2rgb_x86.h" 
@@ -85,14 +81,12 @@ static const simd_t simd_table[9] = {
 	{{ALFA, ALFA}}
 };
 
-/* MMX intristics are not supported by VS in x64 mode, thus disable it */
-#if !(defined(_MSC_VER) && defined(_M_AMD64))
 /**
  *  the conversion functions using MMX instructions 
  */
 
 /* template for the MMX conversion functions */
-#define YUV_CONVERT_MMX(FUNC, CONVERT, CONV_BY_PIXEL, UV_SHIFT, UV_VERT_SUB) YUV_CONVERT(FUNC, CONVERT, CONV_BY_PIXEL, 8, 32, 8, UV_SHIFT, UV_VERT_SUB)
+#define YUV_CONVERT_MMX(FUNC, CONVERT, CONV_BY_PIXEL) YUV_CONVERT(FUNC, CONVERT, CONV_BY_PIXEL, 8, 32, 8, 4)
 
 #define CLEANUP emms()
 #define OUT_RGBA_32 OUTPUT_RGBA_32(movq, mm, 8, 16, 24)
@@ -105,17 +99,9 @@ static const simd_t simd_table[9] = {
                              YUV_2_RGB(movq, mm) 	\
                              OUTPUT_FUNC
 
-YUV_CONVERT_MMX(yuv420_to_rgba_mmx, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 4, 2)
-YUV_CONVERT_MMX(yuv420_to_bgra_mmx, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 4, 2) 
-YUV_CONVERT_MMX(yuv420_to_argb_mmx, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 4, 2) 
-
-YUV_CONVERT_MMX(yuv422_to_rgba_mmx, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 4, 1)
-YUV_CONVERT_MMX(yuv422_to_bgra_mmx, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 4, 1) 
-YUV_CONVERT_MMX(yuv422_to_argb_mmx, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 4, 1)
-
-YUV_CONVERT_MMX(yuv444_to_rgba_mmx, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 8, 1)
-YUV_CONVERT_MMX(yuv444_to_bgra_mmx, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 8, 1) 
-YUV_CONVERT_MMX(yuv444_to_argb_mmx, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 8, 1)
+YUV_CONVERT_MMX(yuv420_to_rgba_mmx, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
+YUV_CONVERT_MMX(yuv420_to_bgra_mmx, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT) 
+YUV_CONVERT_MMX(yuv420_to_argb_mmx, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT) 
 
 #undef MOVNTQ
 
@@ -123,17 +109,9 @@ YUV_CONVERT_MMX(yuv444_to_argb_mmx, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 8, 1
 /* template for the SSE conversion functions */
 #define MOVNTQ SSE_MOVNTQ
 
-YUV_CONVERT_MMX(yuv420_to_rgba_sse, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 4, 2)
-YUV_CONVERT_MMX(yuv420_to_bgra_sse, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 4, 2)
-YUV_CONVERT_MMX(yuv420_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 4, 2)
-
-YUV_CONVERT_MMX(yuv422_to_rgba_sse, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 4, 1)
-YUV_CONVERT_MMX(yuv422_to_bgra_sse, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 4, 1)
-YUV_CONVERT_MMX(yuv422_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 4, 1)
-
-YUV_CONVERT_MMX(yuv444_to_rgba_sse, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 8, 1)
-YUV_CONVERT_MMX(yuv444_to_bgra_sse, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 8, 1)
-YUV_CONVERT_MMX(yuv444_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 8, 1)
+YUV_CONVERT_MMX(yuv420_to_rgba_sse, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
+YUV_CONVERT_MMX(yuv420_to_bgra_sse, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT)
+YUV_CONVERT_MMX(yuv420_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT)
 
 #undef CONVERT
 #undef CLEANUP
@@ -141,7 +119,6 @@ YUV_CONVERT_MMX(yuv444_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 8, 1
 #undef OUT_ARGB_32
 #undef OUT_BGRA_32
 #undef MOVNTQ
-#endif
 
 
 /**
@@ -149,7 +126,7 @@ YUV_CONVERT_MMX(yuv444_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 8, 1
  */
 
 /* template for the SSE2 conversion functions */
-#define YUV_CONVERT_SSE2(FUNC, CONVERT, CONV_BY_PIX, UV_SHIFT, UV_VERT_SUB) YUV_CONVERT(FUNC, CONVERT, CONV_BY_PIX, 16, 64, 16, UV_SHIFT, UV_VERT_SUB)
+#define YUV_CONVERT_SSE2(FUNC, CONVERT, CONV_BY_PIX) YUV_CONVERT(FUNC, CONVERT, CONV_BY_PIX, 16, 64, 16, 8)
 
 #define OUT_RGBA_32 OUTPUT_RGBA_32(movdqa, xmm, 16, 32, 48)
 #define OUT_ARGB_32 OUTPUT_ARGB_32(movdqa, xmm, 16, 32, 48)
@@ -158,28 +135,13 @@ YUV_CONVERT_MMX(yuv444_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 8, 1
 #define CLEANUP
 
 /* yuv420 -> */
-#if defined(_MSC_VER) && defined(_M_AMD64)
-#define CONVERT(OUTPUT_FUNC) __m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7; \
-				LOAD_YUV_PLANAR_2(movdqu, xmm) \
-				YUV_2_RGB(movdqa, xmm)	\
-				OUTPUT_FUNC
-#else
 #define CONVERT(OUTPUT_FUNC) LOAD_YUV_PLANAR_2(movdqu, xmm) \
 				YUV_2_RGB(movdqa, xmm)	\
 				OUTPUT_FUNC
-#endif
-				
-YUV_CONVERT_SSE2(yuv420_to_rgba_sse2, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 8, 2)
-YUV_CONVERT_SSE2(yuv420_to_bgra_sse2, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 8, 2)
-YUV_CONVERT_SSE2(yuv420_to_argb_sse2, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 8, 2)
 
-YUV_CONVERT_SSE2(yuv422_to_rgba_sse2, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 8, 1)
-YUV_CONVERT_SSE2(yuv422_to_bgra_sse2, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 8, 1)
-YUV_CONVERT_SSE2(yuv422_to_argb_sse2, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 8, 1)
-
-YUV_CONVERT_SSE2(yuv444_to_rgba_sse2, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT, 16, 1)
-YUV_CONVERT_SSE2(yuv444_to_bgra_sse2, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT, 16, 1)
-YUV_CONVERT_SSE2(yuv444_to_argb_sse2, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT, 16, 1)
+YUV_CONVERT_SSE2(yuv420_to_rgba_sse2, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
+YUV_CONVERT_SSE2(yuv420_to_bgra_sse2, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT)
+YUV_CONVERT_SSE2(yuv420_to_argb_sse2, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT)
 
 #undef CONVERT
 #undef OUT_RGBA_32

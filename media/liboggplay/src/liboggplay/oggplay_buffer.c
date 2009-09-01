@@ -99,34 +99,21 @@ oggplay_buffer_shutdown(OggPlay *me, volatile OggPlayBuffer *vbuffer) {
   int j;
 
   OggPlayBuffer *buffer = (OggPlayBuffer *)vbuffer;
-  
-  if (buffer == NULL) {
-    return;
-  }
 
-  if (buffer->buffer_mirror != NULL) {
-    for (i = 0; i < buffer->buffer_size; i++) {
-      
-      if (buffer->buffer_mirror[i] != NULL) {
-        OggPlayCallbackInfo *ti = (OggPlayCallbackInfo *)buffer->buffer_mirror[i];
-        for (j = 0; j < me->num_tracks; j++) {
-          if ( (ti+j) != NULL) {
-            oggplay_free((ti + j)->records);
-          }
-        }
-        oggplay_free(ti);
+  for (i = 0; i < buffer->buffer_size; i++) {
+    if (buffer->buffer_mirror[i] != NULL) {
+      OggPlayCallbackInfo *ti = (OggPlayCallbackInfo *)buffer->buffer_mirror[i];
+      for (j = 0; j < me->num_tracks; j++) {
+        oggplay_free((ti + j)->records);
       }
-      
+      oggplay_free(ti);
     }
-    oggplay_free(buffer->buffer_mirror);
   }
 
-  if (buffer->buffer_list != NULL) 
-    oggplay_free(buffer->buffer_list);
-    
+  oggplay_free(buffer->buffer_list);
+  oggplay_free(buffer->buffer_mirror);
   SEM_CLOSE(buffer->frame_sem);
   oggplay_free(buffer);
-  buffer = NULL;
 }
 
 int
@@ -167,7 +154,7 @@ oggplay_buffer_set_last_data(OggPlay *me, volatile OggPlayBuffer *buffer)
 
 int
 oggplay_buffer_callback(OggPlay *me, int tracks,
-                        OggPlayCallbackInfo **track_info, void *user) {
+                 OggPlayCallbackInfo **track_info, void *user) {
 
   int                   i;
   int                   j;
@@ -212,8 +199,7 @@ oggplay_buffer_callback(OggPlay *me, int tracks,
       (buffer->buffer_list[k] == NULL)
       &&
       (buffer->buffer_mirror[k] != NULL)
-    ) 
-    {
+    ) {
       OggPlayCallbackInfo *ti = (OggPlayCallbackInfo *)buffer->buffer_mirror[k];
       for (i = 0; i < tracks; i++) {
         headers = oggplay_callback_info_get_headers(ti + i);
@@ -224,9 +210,7 @@ oggplay_buffer_callback(OggPlay *me, int tracks,
         /* free these here, because we couldn't free them in
          * oggplay_callback_info_destroy for buffer mode
          */
-        if ((ti + i) != NULL) {
-          oggplay_free((ti + i)->records);
-        }
+        oggplay_free((ti + i)->records);
       }
       oggplay_free(ti);
       buffer->buffer_mirror[k] = NULL;
@@ -270,7 +254,7 @@ oggplay_buffer_callback(OggPlay *me, int tracks,
 OggPlayCallbackInfo **
 oggplay_buffer_retrieve_next(OggPlay *me) {
 
-  OggPlayBuffer         * buffer = NULL;
+  OggPlayBuffer         * buffer;
   int                     next_loc;
   OggPlayCallbackInfo   * next_item;
   OggPlayCallbackInfo  ** return_val;
@@ -296,10 +280,9 @@ oggplay_buffer_retrieve_next(OggPlay *me) {
   buffer->last_emptied = next_loc;
 
   return_val = oggplay_calloc(me->num_tracks, sizeof (OggPlayCallbackInfo *));
-  if (return_val == NULL) {
+  if (return_val == NULL)
     return NULL;
-  }
-  
+
   for (i = 0; i < me->num_tracks; i++) {
     return_val[i] = next_item + i;
   }
@@ -311,7 +294,7 @@ oggplay_buffer_retrieve_next(OggPlay *me) {
 OggPlayErrorCode
 oggplay_buffer_release(OggPlay *me, OggPlayCallbackInfo **track_info) {
 
-  OggPlayBuffer *buffer = NULL;
+  OggPlayBuffer *buffer;
 
   if (me == NULL) {
     return E_OGGPLAY_BAD_OGGPLAY;
@@ -331,9 +314,7 @@ oggplay_buffer_release(OggPlay *me, OggPlayCallbackInfo **track_info) {
     return E_OGGPLAY_UNINITIALISED;
   }
 
-  if (track_info != NULL) {
-    oggplay_free(track_info);
-  }
+  oggplay_free(track_info);
 
   buffer->buffer_list[buffer->last_emptied] = NULL;
 

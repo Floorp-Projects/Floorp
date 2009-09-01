@@ -30,10 +30,9 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** @file
+/*
  * oggplay_tools.h
  * 
- * @authors
  * Shane Stephens <shane.stephens@annodex.net>
  * Michael Martin
  */
@@ -54,24 +53,23 @@ extern "C" {
 #include <time.h>
 #endif
 
-/** structure holds pointers to y, u, v channels */
+/* structure holds pointers to y, u, v channels */
 typedef struct _OggPlayYUVChannels {
-    unsigned char * ptry;       /**< Y channel */
-    unsigned char * ptru;       /**< U channel */
-    unsigned char * ptrv;       /**< V channel*/
-    int             y_width;    /**< the width of the Y plane */
-    int             y_height;   /**< the height of the Y plane */
-    int             uv_width;   /**< the width of the U/V plane */
-    int             uv_height;  /**< the height of the U/V plane*/
+    unsigned char * ptry;
+    unsigned char * ptru;
+    unsigned char * ptrv;
+    int             y_width;
+    int             y_height;
+    int             uv_width;
+    int             uv_height;
 } OggPlayYUVChannels;
 
-/** structure holds pointers to RGB packets */
+/* structure holds pointers to y, u, v channels */
 typedef struct _OggPlayRGBChannels {
-    unsigned char * ptro;         /**< the RGB stream in the requested packaging format */
-    int             rgb_width;    /**< width of the RGB frame */
-    int             rgb_height;   /**< height of the RGB frame */
+    unsigned char * ptro;
+    int             rgb_width;
+    int             rgb_height;
 } OggPlayRGBChannels;
-
 
 void 
 oggplay_yuv2rgba(const OggPlayYUVChannels *yuv, OggPlayRGBChannels * rgb);

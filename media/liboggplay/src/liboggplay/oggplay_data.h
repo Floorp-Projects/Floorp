@@ -41,26 +41,26 @@
 void
 oggplay_data_initialise_list (OggPlayDecode *decode);
 
-OggPlayErrorCode
+void
 oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode, 
-                                  const yuv_buffer *buffer);
+                                  yuv_buffer *buffer);
 
-OggPlayErrorCode
-oggplay_data_handle_audio_data (OggPlayDecode *decode, 
-                                void *data, long samples, size_t samplesize);
+void
+oggplay_data_handle_audio_data (OggPlayDecode *decode, void *data, 
+                                int samples, int samplesize);
 
-OggPlayErrorCode
-oggplay_data_handle_cmml_data(OggPlayDecode *decode, 
-                              unsigned char *data, long size);
+void
+oggplay_data_handle_cmml_data(OggPlayDecode *decode, unsigned char *data,
+                                int size);
 
 #ifdef HAVE_KATE
-OggPlayErrorCode
+void
 oggplay_data_handle_kate_data(OggPlayKateDecode *decode,
                               const kate_event *ev);
 #endif
 
 #ifdef HAVE_TIGER
-OggPlayErrorCode
+void
 oggplay_data_update_tiger(OggPlayKateDecode *decode,
                           int active, ogg_int64_t presentation_time,
                           OggPlayCallbackInfo *info);
