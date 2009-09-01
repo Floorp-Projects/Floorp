@@ -74,7 +74,7 @@ typedef struct {
   int               buffer_size;
   int               current_position;
   char            * location;
-  const char      * proxy;
+  char            * proxy;
   int               proxy_port;
   int               amount_in_memory;
   FILE            * backing_store;
