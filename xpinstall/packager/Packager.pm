@@ -253,7 +253,7 @@ sub do_copyfile
     if ( $dirflag ) { # directory copy to altdest
       ($destname, $destpath, $destsuffix) = fileparse("$destpathcomp/$altdest/$File::Find::name", '\..*?$');
       # Todo: add MSDOS hack
-      $destpath =~ s|$srcdir/$line/||;  # rm info added by find
+      $destpath =~ s|\Q$srcdir\E/$line/||;  # rm info added by find
       ($debug >= 5) &&
         print " dir copy to altdest: $destpath $destname $destsuffix\n";
     } else {  # single file copy to altdest
@@ -267,7 +267,7 @@ sub do_copyfile
       if ($os eq "MSDOS") {
         $destfile =~ s|\\|/|;
       }
-      $destfile =~ s|$srcdir/||;
+      $destfile =~ s|\Q$srcdir\E/||;
 
       ($destname, $destpath, $destsuffix) = fileparse("$destpathcomp/$destfile", '\..*?$');
 
