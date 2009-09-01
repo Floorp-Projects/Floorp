@@ -1340,7 +1340,7 @@ Matched(bool test, jsval v)
     return test ? (v == JSVAL_TRUE) : !JSVAL_IS_NULL(v);
 }
 
-typedef bool (*DoMatchCallback)(JSContext *cx, uintN count, void *data);
+typedef bool (*DoMatchCallback)(JSContext *cx, size_t count, void *data);
 
 /*
  * BitOR-ing these flags allows the DoMatch caller to control when how the
