@@ -66,7 +66,7 @@ const STATE_FAILED          = "failed";
 
 const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
-const FILE_UPDATE_LOG     = "update.log"
+const FILE_UPDATE_LOG     = "update.log";
 const FILE_LAST_LOG       = "last-update.log";
 const FILE_BACKUP_LOG     = "backup-update.log";
 
@@ -79,8 +79,8 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
-const URL_HOST = "http://localhost:4444/"
-const DIR_DATA = "data"
+const URL_HOST = "http://localhost:4444/";
+const DIR_DATA = "data";
 
 var gDirSvc = AUS_Cc["@mozilla.org/file/directory_service;1"].
               getService(AUS_Ci.nsIProperties);
