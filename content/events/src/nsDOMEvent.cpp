@@ -55,12 +55,13 @@
 #include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptError.h"
+#include "nsDOMPopStateEvent.h"
 
 static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
-  "focus", "blur", "load", "beforeunload", "unload", "hashchange", "abort", "error",
-  "submit", "reset", "change", "select", "input" ,"text",
+  "focus", "blur", "load", "popstate", "beforeunload", "unload", "hashchange",
+  "abort", "error", "submit", "reset", "change", "select", "input", "text",
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture",
@@ -1324,6 +1325,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_close];
   case NS_LOAD:
     return sEventNames[eDOMEvents_load];
+  case NS_POPSTATE:
+    return sEventNames[eDOMEvents_popstate];
   case NS_BEFORE_PAGE_UNLOAD:
     return sEventNames[eDOMEvents_beforeunload];
   case NS_PAGE_UNLOAD:
