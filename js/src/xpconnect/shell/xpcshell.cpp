@@ -48,6 +48,10 @@
 #ifdef MOZ_IPC
 #include "mozilla/dom/ContentProcessParent.h"
 #include "mozilla/ipc/TestShellParent.h"
+
+#if defined(MOZ_WIDGET_GTK2)
+#  include <gtk/gtk.h>
+#endif
 #endif
 
 #include <stdio.h>
@@ -1627,6 +1631,10 @@ main(int argc, char **argv, char **envp)
     // unbuffer stdout so that output is in the correct order; note that stderr
     // is unbuffered by default
     setbuf(stdout, 0);
+#endif
+
+#if defined(MOZ_IPC) && defined(MOZ_WIDGET_GTK2)
+    gtk_init(0, 0);
 #endif
 
     gErrFile = stderr;
