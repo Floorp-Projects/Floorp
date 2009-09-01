@@ -1,12 +1,12 @@
 diff --git a/media/liboggplay/include/oggplay/oggplay_seek.h b/media/liboggplay/include/oggplay/oggplay_seek.h
 --- a/media/liboggplay/include/oggplay/oggplay_seek.h
 +++ b/media/liboggplay/include/oggplay/oggplay_seek.h
-@@ -48,9 +48,20 @@
-  * @retval E_OGGPLAY_OK on success
-  * @retval E_OGGPLAY_BAD_OGGPLAY the supplied OggPlay handle was invalid
-  * @retval E_OGGPLAY_CANT_SEEK error occured while trying to seek
-  * @retval E_OGGPLAY_OUT_OF_MEMORY ran out of memory while trying to allocate the new buffer and trash.
+@@ -37,9 +37,20 @@
   */
+ 
+ #ifndef __OGGPLAY_SEEK_H__
+ #define __OGGPLAY_SEEK_H__
+ 
  OggPlayErrorCode
  oggplay_seek(OggPlay *me, ogg_int64_t milliseconds);
  
@@ -25,15 +25,16 @@ diff --git a/media/liboggplay/include/oggplay/oggplay_seek.h b/media/liboggplay/
 diff --git a/media/liboggplay/src/liboggplay/oggplay_seek.c b/media/liboggplay/src/liboggplay/oggplay_seek.c
 --- a/media/liboggplay/src/liboggplay/oggplay_seek.c
 +++ b/media/liboggplay/src/liboggplay/oggplay_seek.c
-@@ -71,16 +71,64 @@ oggplay_seek(OggPlay *me, ogg_int64_t mi
-       return E_OGGPLAY_CANT_SEEK;
-     }
+@@ -73,16 +73,67 @@ oggplay_seek(OggPlay *me, ogg_int64_t mi
    }
  
-   return oggplay_seek_cleanup(me, milliseconds);
+   oggplay_seek_cleanup(me, milliseconds);
+ 
+   return E_OGGPLAY_OK;
+ 
  }
  
- OggPlayErrorCode
++OggPlayErrorCode
 +oggplay_seek_to_keyframe(OggPlay *me,
 +                         int* tracks,
 +                         int num_tracks,
@@ -78,10 +79,13 @@ diff --git a/media/liboggplay/src/liboggplay/oggplay_seek.c b/media/liboggplay/s
 +    return E_OGGPLAY_CANT_SEEK;
 +  }
 +
-+  return oggplay_seek_cleanup(me, time);
++  oggplay_seek_cleanup(me, time);
++
++  return E_OGGPLAY_OK;
++
 +}
 +
-+OggPlayErrorCode
+ void
  oggplay_seek_cleanup(OggPlay* me, ogg_int64_t milliseconds)
  {
  
@@ -89,4 +93,3 @@ diff --git a/media/liboggplay/src/liboggplay/oggplay_seek.c b/media/liboggplay/s
    OggPlaySeekTrash   ** p;
    OggPlayDataHeader  ** end_of_list_p;
    int                   i;
- 
