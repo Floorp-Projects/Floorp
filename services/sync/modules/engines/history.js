@@ -81,11 +81,7 @@ HistoryEngine.prototype = {
   _storeObj: HistoryStore,
   _trackerObj: HistoryTracker,
 
-  _sync: function HistoryEngine__sync() {
-    Svc.History.runInBatchMode({
-      runBatched: Utils.bind2(this, SyncEngine.prototype._sync)
-    }, null);
-  },
+  _sync: Utils.batchSync("History", SyncEngine),
 
   _syncFinish: function HistEngine__syncFinish(error) {
     // Only leave 1 week's worth of history on the server

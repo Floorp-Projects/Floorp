@@ -43,13 +43,13 @@ function run_test() {
 
     let pubkey = PubKeys.get("http://localhost:8080/pubkey");
     do_check_eq(pubkey.data.payload.type, "pubkey");
-    do_check_eq(PubKeys.lastResource.lastChannel.responseStatus, 200);
+    do_check_eq(PubKeys.response.status, 200);
 
     log.info("Getting matching private key");
 
     let privkey = PrivKeys.get(pubkey.privateKeyUri);
     do_check_eq(privkey.data.payload.type, "privkey");
-    do_check_eq(PrivKeys.lastResource.lastChannel.responseStatus, 200);
+    do_check_eq(PrivKeys.response.status, 200);
 
     log.info("Done!");
   }

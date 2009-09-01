@@ -75,7 +75,6 @@ Collection.prototype = {
       args.push('older=' + this.older);
     else if (this.newer) {
       args.push('newer=' + this.newer);
-      args.push('modified=' + this.newer); // tmp hack for older servers
     }
     if (this.full)
       args.push('full=1');
@@ -128,63 +127,15 @@ Collection.prototype = {
     // Save this because onProgress is called with this as the ChannelListener
     let coll = this;
 
+    // Switch to newline separated records for incremental parsing
+    coll.setHeader("Accept", "application/newlines");
+
     this._onProgress = function() {
-      // Save some work by quitting early when there's no records
-      if (this._data == "[]")
-        return;
-
-      do {
-        // Strip off the the starting "[" or separating "," or trailing "]" if
-        // it wasn't stripped off from a previous progress update
-        let start = this._data[0];
-        if (start == "[" || start == "," || start == "]")
-          this._data = this._data.slice(1);
-
-        // Track various states of # open braces and ignore for strings
-        let json = "";
-        let braces = 1;
-        let ignore = false;
-        let escaped = false;
-        let length = this._data.length;
-
-        // Skip the first character, the "{", and try to find a json record
-        for (let i = 1; i < length; i++) {
-          let char = this._data[i];
-
-          // Opening a string makes us ignore all characters except close "
-          if (char == '"') {
-            if (!ignore)
-              ignore = true;
-            // It's a real close " if it's not escaped
-            else if (!escaped)
-              ignore = false;
-          }
-
-          // Track if an end quote might be escaped when processing strings
-          if (ignore) {
-            escaped = char == "\\" ? !escaped : false;
-
-            // Don't bother checking other characters when ignoring
-            continue;
-          }
-
-          // Increase the brace count on open {
-          if (char == "{")
-            braces++;
-          // Decrement brace count on close }
-          else if (char == "}" && --braces == 0) {
-            // Split the json record from the rest of the data
-            json = this._data.slice(0, i + 1);
-            this._data = this._data.slice(i + 1);
-
-            // Stop processing for now that we found one record
-            break;
-          }
-        }
-
-        // No valid record json found?
-        if (json.length == 0)
-          break;
+      let newline;
+      while ((newline = this._data.indexOf("\n")) > 0) {
+        // Split the json record from the rest of the data
+        let json = this._data.slice(0, newline);
+        this._data = this._data.slice(newline + 1);
 
         // Deserialize a record from json and give it to the callback
         let record = new coll._recordObj();
@@ -192,9 +143,7 @@ Collection.prototype = {
         record.baseURI = coll.uri;
         record.id = record.data.id;
         onRecord(record);
-
-      // Keep processing the data until we can't find a json record
-      } while (true);
+      }
 
       // Aggressively clean up the objects we created above so that the next set
       // of records have enough memory to decrypt, reconcile, apply, etc.

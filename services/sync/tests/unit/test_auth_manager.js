@@ -41,7 +41,7 @@ function run_test() {
   let res = new Resource("http://localhost:8080/foo");
   let content = res.get();
   do_check_eq(content, "This path exists and is protected");
-  do_check_eq(res.lastChannel.responseStatus, 200);
+  do_check_eq(content.status, 200);
 
   server.stop();
 }

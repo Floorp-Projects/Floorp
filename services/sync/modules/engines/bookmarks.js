@@ -94,6 +94,7 @@ BookmarksEngine.prototype = {
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
 
+<<<<<<< local
   _sync: function BookmarksEngine__sync() {
     Svc.Bookmark.runInBatchMode({
       runBatched: Utils.bind2(this, SyncEngine.prototype._sync)
@@ -142,6 +143,9 @@ BookmarksEngine.prototype = {
     // TODO for bookmarks, check if it exists and find guid
     // for everything else (folders, separators) look for parent/pred?
   }
+=======
+  _sync: Utils.batchSync("Bookmark", SyncEngine)
+>>>>>>> other
 };
 
 function BookmarksStore() {
@@ -409,9 +413,12 @@ BookmarksStore.prototype = {
         record._insertPos, "as", record.title].join(" "));
       break;
     case "livemark":
-      newId = this._ls.createLivemark(record._parent, record.title,
-        Utils.makeURI(record.siteUri), Utils.makeURI(record.feedUri),
-        record._insertPos);
+      let siteURI = null;
+      if (record.siteUri != null)
+        siteURI = Utils.makeURI(record.siteUri);
+
+      newId = this._ls.createLivemark(record._parent, record.title, siteURI,
+        Utils.makeURI(record.feedUri), record._insertPos);
       this._log.debug(["created livemark", newId, "under", record._parent, "at",
         record._insertPos, "as", record.title, record.siteUri, record.feedUri].
         join(" "));
@@ -665,7 +672,10 @@ BookmarksStore.prototype = {
     case this._bms.TYPE_FOLDER:
       if (this._ls.isLivemark(placeId)) {
         record = new Livemark();
-        record.siteUri = this._ls.getSiteURI(placeId).spec;
+
+        let siteURI = this._ls.getSiteURI(placeId);
+        if (siteURI != null)
+          record.siteUri = siteURI.spec;
         record.feedUri = this._ls.getFeedURI(placeId).spec;
 
       } else {
@@ -922,6 +932,12 @@ BookmarksTracker.prototype = {
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
     if (this._ignore(itemId))
       return;
+
+    // Make sure to remove items that now have the exclude annotation
+    if (property == "places/excludeFromBackup") {
+      this.removeChangedID(GUIDForId(itemId));
+      return;
+    }
 
     // ignore annotations except for the ones that we sync
     let annos = ["bookmarkProperties/description",
