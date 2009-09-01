@@ -929,6 +929,7 @@ namespace nanojit
                     asm_int(ins);
                     break;
                 }
+                case LIR_float:
                 case LIR_quad:
                 {
                     countlir_imm();

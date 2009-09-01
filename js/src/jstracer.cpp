@@ -1000,7 +1000,7 @@ demote(LirWriter *out, LIns* i)
         return iu2fArg(i);
     if (i->isconst())
         return i;
-    AvmAssert(i->isconstq());
+    JS_ASSERT(i->isconstf());
     double cf = i->imm64f();
     int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
     return out->insImm(ci);
@@ -1011,7 +1011,7 @@ isPromoteInt(LIns* i)
 {
     if (isi2f(i) || i->isconst())
         return true;
-    if (!i->isconstq())
+    if (!i->isconstf())
         return false;
     jsdouble d = i->imm64f();
     return d == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d);
@@ -1022,7 +1022,7 @@ isPromoteUint(LIns* i)
 {
     if (isu2f(i) || i->isconst())
         return true;
-    if (!i->isconstq())
+    if (!i->isconstf())
         return false;
     jsdouble d = i->imm64f();
     return d == jsdouble(jsuint(d)) && !JSDOUBLE_IS_NEGZERO(d);
@@ -1286,13 +1286,13 @@ public:
     {
         if (ci == &js_DoubleToUint32_ci) {
             LIns* s0 = args[0];
-            if (s0->isconstq())
+            if (s0->isconstf())
                 return out->insImm(js_DoubleToECMAUint32(s0->imm64f()));
             if (isi2f(s0) || isu2f(s0))
                 return iu2fArg(s0);
         } else if (ci == &js_DoubleToInt32_ci) {
             LIns* s0 = args[0];
-            if (s0->isconstq())
+            if (s0->isconstf())
                 return out->insImm(js_DoubleToECMAInt32(s0->imm64f()));
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub)) {
                 LIns* lhs = s0->oprnd1();
@@ -7136,7 +7136,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
             return lir->insCall(&js_dmod_ci, args);
         }
         LIns* result = lir->ins2(v, s0, s1);
-        JS_ASSERT_IF(s0->isconstq() && s1->isconstq(), result->isconstq());
+        JS_ASSERT_IF(s0->isconstf() && s1->isconstf(), result->isconstf());
         return result;
     }
 
@@ -7160,7 +7160,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         r = v0 / v1;
         break;
     case LIR_fmod:
-        if (v0 < 0 || v1 == 0 || (s1->isconstq() && v1 < 0))
+        if (v0 < 0 || v1 == 0 || (s1->isconstf() && v1 < 0))
             goto out;
         r = js_dmod(v0, v1);
         break;
@@ -7358,7 +7358,7 @@ TraceRecorder::ifop()
         cond = !JSDOUBLE_IS_NaN(d) && d;
         x = lir->ins2(LIR_and,
                       lir->ins2(LIR_feq, v_ins, v_ins),
-                      lir->ins_eq0(lir->ins2(LIR_feq, v_ins, lir->insImmq(0))));
+                      lir->ins_eq0(lir->ins2(LIR_feq, v_ins, lir->insImmf(0))));
     } else if (JSVAL_IS_STRING(v)) {
         cond = JSVAL_TO_STRING(v)->length() != 0;
         x = lir->ins2(LIR_piand,
@@ -8981,7 +8981,7 @@ TraceRecorder::record_JSOP_NOT()
     }
     if (isNumber(v)) {
         LIns* v_ins = get(&v);
-        set(&v, lir->ins2(LIR_or, lir->ins2(LIR_feq, v_ins, lir->insImmq(0)),
+        set(&v, lir->ins2(LIR_or, lir->ins2(LIR_feq, v_ins, lir->insImmf(0)),
                                   lir->ins_eq0(lir->ins2(LIR_feq, v_ins, v_ins))));
         return JSRS_CONTINUE;
     }
@@ -9070,7 +9070,7 @@ TraceRecorder::record_JSOP_POS()
         return JSRS_CONTINUE;
 
     if (JSVAL_IS_NULL(v)) {
-        set(&v, lir->insImmq(0));
+        set(&v, lir->insImmf(0));
         return JSRS_CONTINUE;
     }
 
@@ -9306,7 +9306,7 @@ TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[]
         break;
       case FAIL_NEG:
         res_ins = lir->ins1(LIR_i2f, res_ins);
-        guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(0)), OOM_EXIT);
+        guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmf(0)), OOM_EXIT);
         break;
       case FAIL_VOID:
         guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
@@ -10354,7 +10354,7 @@ TraceRecorder::record_JSOP_GETELEM()
         if (afp) {
             uintN int_idx = JSVAL_TO_INT(idx);
             jsval* vp = &afp->argv[int_idx];
-            if (idx_ins->isconstq()) {
+            if (idx_ins->isconstf()) {
                 if (int_idx >= 0 && int_idx < afp->argc)
                     v_ins = get(vp);
                 else
@@ -11441,7 +11441,7 @@ TraceRecorder::record_JSOP_STRING()
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_ZERO()
 {
-    stack(0, lir->insImmq(0));
+    stack(0, lir->insImmf(0));
     return JSRS_CONTINUE;
 }
 

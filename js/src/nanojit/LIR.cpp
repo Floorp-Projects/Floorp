@@ -302,6 +302,19 @@ namespace nanojit
         return ins;
     }
 
+    LInsp LirBufWriter::insImmf(double d)
+    {
+        LInsI64* insI64 = (LInsI64*)_buf->makeRoom(sizeof(LInsI64));
+        LIns*    ins    = insI64->getLIns();
+        union {
+            double d;
+            uint64_t q;
+        } u;
+        u.d = d;
+        ins->initLInsI64(LIR_float, u.q);
+        return ins;
+    }
+
     LInsp LirBufWriter::insSkip(size_t payload_szB)
     {
         // First, round up payload_szB to a multiple of the word size.  To
@@ -485,7 +498,12 @@ namespace nanojit
 
     bool LIns::isconstq() const
     {
-        return opcode() == LIR_quad;
+        return opcode() == LIR_quad || opcode() == LIR_float;
+    }
+
+    bool LIns::isconstf() const
+    {
+        return opcode() == LIR_float;
     }
 
     bool LIns::isconstp() const
@@ -938,16 +956,6 @@ namespace nanojit
         return ins2i(LIR_eq, oprnd1, 0);
     }
 
-    LIns* LirWriter::insImmf(double f)
-    {
-        union {
-            double f;
-            uint64_t q;
-        } u;
-        u.f = f;
-        return insImmq(u.q);
-    }
-
     LIns* LirWriter::qjoin(LInsp lo, LInsp hi)
     {
         return ins2(LIR_qjoin, lo, hi);
@@ -1184,6 +1192,7 @@ namespace nanojit
             switch (op) {
             case LIR_int:
                 return hashimm(i->imm32());
+            case LIR_float:
             case LIR_quad:
                 return hashimmq(i->imm64());
             default:
@@ -1223,6 +1232,7 @@ namespace nanojit
             switch (op) {
             case LIR_int:
                 return a->imm32() == b->imm32();
+            case LIR_float:
             case LIR_quad:
                 return a->imm64() == b->imm64();
             default:
@@ -1310,7 +1320,7 @@ namespace nanojit
         return k;
     }
 
-    LInsp LInsHashSet::find64(uint64_t a, uint32_t &i)
+    LInsp LInsHashSet::find64(LOpcode v, uint64_t a, uint32_t &i)
     {
         uint32_t cap = m_cap;
         const LInsp *list = m_list;
@@ -1319,7 +1329,7 @@ namespace nanojit
         uint32_t n = 7 << 1;
         LInsp k;
         while ((k = list[hash]) != NULL &&
-            (!k->isconstq() || k->imm64() != a))
+            (k->opcode() != v || k->imm64() != a))
         {
             hash = (hash + (n += 2)) & bitmask;        // quadratic probe
         }
@@ -1630,6 +1640,9 @@ namespace nanojit
             formatImm(ref->imm64_0(), buf);
 #endif
         }
+        else if (ref->isconstf()) {
+            VMPI_sprintf(buf, "%g", ref->imm64f());
+        }
         else if (ref->isconst()) {
             formatImm(ref->imm32(), buf);
         }
@@ -1677,6 +1690,12 @@ namespace nanojit
             {
                 VMPI_sprintf(s, "%s = %s #%X:%X /* %g */", formatRef(i), lirNames[op],
                              i->imm64_1(), i->imm64_0(), i->imm64f());
+                break;
+            }
+
+            case LIR_float:
+            {
+                VMPI_sprintf(s, "%s = %s #%g", formatRef(i), lirNames[op], i->imm64f());
                 break;
             }
 
@@ -1857,10 +1876,24 @@ namespace nanojit
     LIns* CseFilter::insImmq(uint64_t q)
     {
         uint32_t k;
-        LInsp found = exprs.find64(q, k);
+        LInsp found = exprs.find64(LIR_quad, q, k);
         if (found)
             return found;
         return exprs.add(out->insImmq(q), k);
+    }
+
+    LIns* CseFilter::insImmf(double d)
+    {
+        uint32_t k;
+        union {
+            double d;
+            uint64_t u64;
+        } u;
+        u.d = d;
+        LInsp found = exprs.find64(LIR_float, u.u64, k);
+        if (found)
+            return found;
+        return exprs.add(out->insImmf(d), k);
     }
 
     LIns* CseFilter::ins0(LOpcode v)
