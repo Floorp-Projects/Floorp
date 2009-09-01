@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=506856
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=506856">Mozilla Bug 506856</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100px" height="100px">
   <circle cx="-100" cy="-100" r="15" fill="blue" id="circle">
     <animate attributeName="cx" from="0" to="100" dur="4s" begin="1s; 10s"
       fill="freeze" id="animate"/>
@@ -180,13 +180,20 @@ function checkDiffValue(animLength)
     "animated animVal.value changed after setting baseValue.valueAsString");
 
   // newValueSpecifiedUnits
-  animLength.baseVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_CM, 4);
+  // (Note: we'd like to convert to MM here and CM in the next step for
+  // consistency with the other tests. However, internally that will cause the
+  // animVal to be converted to MM and back again which, given certain dpi
+  // values such as we get in Linux, this may lead to rounding errors so that
+  // 100 becomes 99.99999237060547. So instead we convert to something
+  // independent of dpi)
+  animLength.baseVal.newValueSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_PERCENTAGE, 40);
   is(animLength.animVal.value, origValue,
     "animated animVal.value changed after setting "
     + "baseValue.newValueSpecifiedUnits");
 
   // convertToSpecifiedUnits
-  animLength.baseVal.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_MM);
+  animLength.baseVal.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
   is(animLength.animVal.value, origValue,
     "animated animVal.value changed after calling "
     + "baseValue.convertToSpecifiedUnits");
