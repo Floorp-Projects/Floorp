@@ -47,7 +47,7 @@
 
 typedef struct {
   OggPlayReader     functions;
-  const char      * file_name;
+  char            * file_name;
   FILE            * file;
   long              current_position;
   long              size;
