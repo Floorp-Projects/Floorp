@@ -4,13 +4,14 @@ were those applied by update.sh, which applies patches described
 below, and the addition/upate of Makefile.in files for the
 Mozilla build system.
 
-The git commit id used was 20609d34c41fa611fe3dbb4853d4f328bd0a6185
-from git://git.xiph.org/liboggz.git
+The git commit id used was 7df1eb from git://git.xiph.org/liboggz.git
 
 The wince.patch addresses the lack of posix file IO support on windows ce,
 see bug 461844 for details.
 
 endian.patch is applied to fix bug 452698.
+
+bounded_seek.patch is applied to fix bug 469408.
 
 key_frame_seek.patch fixes bug 463358.
 
@@ -18,4 +19,7 @@ offset_next.patch fixes bug 495366.
 
 bug487519.patch: Fix for bug 487519.
 bug496063.patch: Fix for infinite loop during seek while shutting down.
+
+oggz_os2.patch: Bug 448918 - add OS/2 support (this patch should be
+                removed when OS/2 support is added upstream)
 

@@ -45,7 +45,7 @@
 #include "oggz_byteorder.h"
 #include "dirac.h"
 
-#include "oggz/oggz_stream.h"
+#include <oggz/oggz_stream.h>
 
 /*#define DEBUG*/
 
@@ -57,6 +57,10 @@ int oggz_set_metric_internal (OGGZ * oggz, long serialno, OggzMetric metric,
 int oggz_set_metric_linear (OGGZ * oggz, long serialno,
 			    ogg_int64_t granule_rate_numerator,
 			    ogg_int64_t granule_rate_denominator);
+
+#define INT16_BE_AT(x) _be_16((*(ogg_int32_t *)(x)))
+#define INT32_LE_AT(x) _le_32((*(ogg_int32_t *)(x)))
+#define INT64_LE_AT(x) _le_64((*(ogg_int64_t *)(x)))
 
 static int
 oggz_stream_set_numheaders (OGGZ * oggz, long serialno, int numheaders)
@@ -82,7 +86,7 @@ auto_speex (OGGZ * oggz, long serialno, unsigned char * data, long length, void 
 
   if (length < 68) return 0;
 
-  granule_rate = (ogg_int64_t) int32_le_at(&header[36]);
+  granule_rate = (ogg_int64_t) INT32_LE_AT(&header[36]);
 #ifdef DEBUG
   printf ("Got speex rate %d\n", (int)granule_rate);
 #endif
@@ -91,7 +95,7 @@ auto_speex (OGGZ * oggz, long serialno, unsigned char * data, long length, void 
 
   oggz_set_preroll (oggz, serialno, 3);
 
-  numheaders = (ogg_int64_t) int32_le_at(&header[68]) + 2;
+  numheaders = (ogg_int64_t) INT32_LE_AT(&header[68]) + 2;
   oggz_stream_set_numheaders (oggz, serialno, numheaders);
 
   return 1;
@@ -105,7 +109,7 @@ auto_vorbis (OGGZ * oggz, long serialno, unsigned char * data, long length, void
 
   if (length < 30) return 0;
 
-  granule_rate = (ogg_int64_t) int32_le_at(&header[12]);
+  granule_rate = (ogg_int64_t) INT32_LE_AT(&header[12]);
 #ifdef DEBUG
   printf ("Got vorbis rate %d\n", (int)granule_rate);
 #endif
@@ -130,21 +134,16 @@ static int intlog(int num) {
 }
 #endif
 
-#define THEORA_VERSION(maj,min,rev) ((maj<<16)+(min<<8)+rev)
-
 static int
 auto_theora (OGGZ * oggz, long serialno, unsigned char * data, long length, void * user_data)
 {
   unsigned char * header = data;
-  int version;
   ogg_int32_t fps_numerator, fps_denominator;
   char keyframe_granule_shift = 0;
   int keyframe_shift;
 
   /* TODO: this should check against 42 for the relevant version numbers */
   if (length < 41) return 0;
-
-  version = THEORA_VERSION(header[7], header[8], header[9]);
 
   fps_numerator = int32_be_at(&header[22]);
   fps_denominator = int32_be_at(&header[26]);
@@ -174,8 +173,6 @@ auto_theora (OGGZ * oggz, long serialno, unsigned char * data, long length, void
 			OGGZ_AUTO_MULT * (ogg_int64_t)fps_denominator);
   oggz_set_granuleshift (oggz, serialno, keyframe_shift);
 
-  if (version > THEORA_VERSION(3,2,0))
-    oggz_set_first_granule (oggz, serialno, 1);
 
   oggz_stream_set_numheaders (oggz, serialno, 3);
 
@@ -199,8 +196,8 @@ auto_anxdata (OGGZ * oggz, long serialno, unsigned char * data, long length, voi
 
   if (length < 28) return 0;
 
-  granule_rate_numerator = int64_le_at(&header[8]);
-  granule_rate_denominator = int64_le_at(&header[16]);
+  granule_rate_numerator = INT64_LE_AT(&header[8]);
+  granule_rate_denominator = INT64_LE_AT(&header[16]);
 #ifdef DEBUG
   printf ("Got AnxData rate %lld/%lld\n", granule_rate_numerator,
 	  granule_rate_denominator);
@@ -249,7 +246,7 @@ auto_flac (OGGZ * oggz, long serialno, unsigned char * data, long length, void *
 
   oggz_set_granulerate (oggz, serialno, granule_rate, OGGZ_AUTO_MULT);
 
-  numheaders = int16_be_at(&header[7]);
+  numheaders = INT16_BE_AT(&header[7]);
   oggz_stream_set_numheaders (oggz, serialno, numheaders);
 
   return 1;
@@ -288,14 +285,14 @@ auto_celt (OGGZ * oggz, long serialno, unsigned char * data, long length, void *
 
   if (length < 56) return 0;
 
-  granule_rate = (ogg_int64_t) int32_le_at(&header[40]);
+  granule_rate = (ogg_int64_t) INT32_LE_AT(&header[40]);
 #ifdef DEBUG
   printf ("Got celt sample rate %d\n", (int)granule_rate);
 #endif
 
   oggz_set_granulerate (oggz, serialno, granule_rate, OGGZ_AUTO_MULT);
 
-  numheaders = (ogg_int64_t) int32_le_at(&header[52]) + 2;
+  numheaders = (ogg_int64_t) INT32_LE_AT(&header[52]) + 2;
   oggz_stream_set_numheaders (oggz, serialno, numheaders);
 
   return 1;
@@ -310,8 +307,8 @@ auto_cmml (OGGZ * oggz, long serialno, unsigned char * data, long length, void *
 
   if (length < 28) return 0;
 
-  granule_rate_numerator = int64_le_at(&header[12]);
-  granule_rate_denominator = int64_le_at(&header[20]);
+  granule_rate_numerator = INT64_LE_AT(&header[12]);
+  granule_rate_denominator = INT64_LE_AT(&header[20]);
   if (length > 28)
     granuleshift = (int)header[28];
   else
@@ -342,8 +339,8 @@ auto_kate (OGGZ * oggz, long serialno, unsigned char * data, long length, void *
 
   if (length < 64) return 0;
 
-  gps_numerator = int32_le_at(&header[24]);
-  gps_denominator = int32_le_at(&header[28]);
+  gps_numerator = INT32_LE_AT(&header[24]);
+  gps_denominator = INT32_LE_AT(&header[28]);
 
   granule_shift = (header[15]);
   numheaders = (header[11]);
@@ -395,13 +392,13 @@ auto_fisbone (OGGZ * oggz, long serialno, unsigned char * data, long length, voi
 
   if (length < 48) return 0;
 
-  fisbone_serialno = (long) int32_le_at(&header[12]);
+  fisbone_serialno = (long) INT32_LE_AT(&header[12]);
 
   /* Don't override an already assigned metric */
   if (oggz_stream_has_metric (oggz, fisbone_serialno)) return 1;
 
-  granule_rate_numerator = int64_le_at(&header[20]);
-  granule_rate_denominator = int64_le_at(&header[28]);
+  granule_rate_numerator = INT64_LE_AT(&header[20]);
+  granule_rate_denominator = INT64_LE_AT(&header[28]);
   granuleshift = (int)header[48];
 
 #ifdef DEBUG
