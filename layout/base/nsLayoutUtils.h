@@ -309,23 +309,32 @@ public:
     */
   static nsIScrollableFrame* GetScrollableFrameFor(nsIFrame *aScrolledFrame);
 
-  static nsPresContext::ScrollbarStyles
-    ScrollbarStylesOfView(nsIScrollableView *aScrollableView);
+  /**
+   * GetNearestScrollableFrameForDirection locates the first ancestor of
+   * aFrame (or aFrame itself) that is scrollable with overflow:scroll or
+   * overflow:auto in the given direction and where either the scrollbar for
+   * that direction is visible or the frame can be scrolled by some
+   * positive amount in that direction.
+   * The search extends across document boundaries.
+   *
+   * @param  aFrame the frame to start with
+   * @param  aDirection Whether it's for horizontal or vertical scrolling.
+   * @return the nearest scrollable frame or nsnull if not found
+   */
+  enum Direction { eHorizontal, eVertical };
+  static nsIScrollableFrame* GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
+                                                                   Direction aDirection);
 
   /**
-   * GetNearestScrollingView locates the first ancestor of aView (or
-   * aView itself) that is scrollable.  It does *not* count an
-   * 'overflow' style of 'hidden' as scrollable, even though a scrolling
-   * view is present.  Thus, the direction of the scroll is needed as
-   * an argument.
+   * GetNearestScrollableFrame locates the first ancestor of aFrame
+   * (or aFrame itself) that is scrollable with overflow:scroll or
+   * overflow:auto in some direction.
+   * The search extends across document boundaries.
    *
-   * @param  aView the view we're looking at
-   * @param  aDirection Whether it's for horizontal or vertical scrolling.
-   * @return the nearest scrollable view or nsnull if not found
+   * @param  aFrame the frame to start with
+   * @return the nearest scrollable frame or nsnull if not found
    */
-  enum Direction { eHorizontal, eVertical, eEither };
-  static nsIScrollableView* GetNearestScrollingView(nsIView* aView,
-                                                    Direction aDirection);
+  static nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame);
 
   /**
    * HasPseudoStyle returns PR_TRUE if aContent (whose primary style

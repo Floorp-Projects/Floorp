@@ -637,6 +637,12 @@ public:
     PRUint8 mHorizontal, mVertical;
     ScrollbarStyles(PRUint8 h, PRUint8 v) : mHorizontal(h), mVertical(v) {}
     ScrollbarStyles() {}
+    PRBool operator==(const ScrollbarStyles& aStyles) const {
+      return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical;
+    }
+    PRBool operator!=(const ScrollbarStyles& aStyles) const {
+      return aStyles.mHorizontal != mHorizontal || aStyles.mVertical != mVertical;
+    }
   };
   void SetViewportOverflowOverride(PRUint8 aX, PRUint8 aY)
   {

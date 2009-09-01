@@ -2519,7 +2519,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     }
 
     nsPresContext::ScrollbarStyles ss =
-      nsLayoutUtils::ScrollbarStylesOfView(scrollView);
+      nsLayoutUtils::GetScrollableFrameFor(scrollView)->GetScrollbarStyles();
     if (NS_STYLE_OVERFLOW_HIDDEN ==
         (isHorizontal ? ss.mHorizontal : ss.mVertical)) {
       continue;

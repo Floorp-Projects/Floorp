@@ -960,8 +960,7 @@ protected:
     PresShell *mPresShell;
   };
 
-  // Utility to find which view to scroll.
-  nsIScrollableView* GetViewToScroll(nsLayoutUtils::Direction aDirection);
+  nsIScrollableFrame* GetFrameToScroll(nsLayoutUtils::Direction aDirection);
 
   PRBool mCaretEnabled;
 #ifdef NS_DEBUG
@@ -2926,14 +2925,11 @@ PresShell::IntraLineMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
-  nsresult result;
-  nsIScrollableView *scrollableView = GetViewToScroll(nsLayoutUtils::eVertical);
-  if (!scrollableView)
-    return NS_ERROR_UNEXPECTED;
+  nsIScrollableFrame *scrollableFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  if (!scrollableFrame)
+    return NS_OK;
 
-  nsIView *scrolledView;
-  result = scrollableView->GetScrolledView(scrolledView);
-  mSelection->CommonPageMove(aForward, aExtend, scrollableView);
+  mSelection->CommonPageMove(aForward, aExtend, scrollableFrame->GetScrollableView());
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
@@ -2944,9 +2940,11 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::ScrollPage(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
-  if (scrollView) {
-    scrollView->ScrollByPages(0, aForward ? 1 : -1, NS_VMREFRESH_SMOOTHSCROLL);
+  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  if (scrollFrame) {
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                          nsIScrollableFrame::PAGES,
+                          nsIScrollableFrame::SMOOTH);
   }
   return NS_OK;
 }
@@ -2954,15 +2952,17 @@ PresShell::ScrollPage(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollLine(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
-  if (scrollView) {
+  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  if (scrollFrame) {
+    PRInt32 lineCount = 1;
 #ifdef MOZ_WIDGET_COCOA
     // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
     // rather than 1.  This vastly improves scrolling speed.
-    scrollView->ScrollByLines(0, aForward ? 2 : -2, NS_VMREFRESH_SMOOTHSCROLL);
-#else
-    scrollView->ScrollByLines(0, aForward ? 1 : -1, NS_VMREFRESH_SMOOTHSCROLL);
+    lineCount = 2;
 #endif
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? lineCount : -lineCount),
+                          nsIScrollableFrame::LINES,
+                          nsIScrollableFrame::SMOOTH);
       
 //NEW FOR LINES    
     // force the update to happen now, otherwise multiple scrolls can
@@ -2981,9 +2981,11 @@ PresShell::ScrollLine(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollHorizontal(PRBool aLeft)
 {
-  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eHorizontal);
-  if (scrollView) {
-    scrollView->ScrollByLines(aLeft ? -1 : 1, 0, NS_VMREFRESH_SMOOTHSCROLL);
+  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eHorizontal);
+  if (scrollFrame) {
+    scrollFrame->ScrollBy(nsIntPoint(aLeft ? -1 : 1, 0),
+                          nsIScrollableFrame::LINES,
+                          nsIScrollableFrame::SMOOTH);
 //NEW FOR LINES    
     // force the update to happen now, otherwise multiple scrolls can
     // occur before the update is processed. (bug #7354)
@@ -3001,9 +3003,11 @@ PresShell::ScrollHorizontal(PRBool aLeft)
 NS_IMETHODIMP
 PresShell::CompleteScroll(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
-  if (scrollView) {
-    scrollView->ScrollByWhole(!aForward);//TRUE = top, aForward TRUE=bottom
+  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  if (scrollFrame) {
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                          nsIScrollableFrame::WHOLE,
+                          nsIScrollableFrame::INSTANT);
   }
   return NS_OK;
 }
@@ -3425,10 +3429,10 @@ PresShell::FrameNeedsToContinueReflow(nsIFrame *aFrame)
   mFramesToDirty.PutEntry(aFrame);
 }
 
-nsIScrollableView*
-PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
+nsIScrollableFrame*
+PresShell::GetFrameToScroll(nsLayoutUtils::Direction aDirection)
 {
-  nsIScrollableView* scrollView = nsnull;
+  nsIScrollableFrame* scrollFrame = nsnull;
 
   nsCOMPtr<nsIContent> focusedContent;
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -3451,25 +3455,18 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
   if (focusedContent) {
     nsIFrame* startFrame = focusedContent->GetPrimaryFrame();
     if (startFrame) {
-      nsIScrollableViewProvider* svp = do_QueryFrame(startFrame);
-      // If this very frame provides a scroll view, start there instead of frame's
-      // closest view, because the scroll view may be inside a child frame.
-      // For example, this happens in the case of overflow:scroll.
-      // In that case we still use GetNearestScrollingView() because
-      // we need a scrolling view that matches aDirection.
-      nsIScrollableView* sv;
-      nsIView* startView = svp && (sv = svp->GetScrollableView()) ? sv->View() : startFrame->GetClosestView();
-      NS_ASSERTION(startView, "No view to start searching for scrollable view from");
-      scrollView = nsLayoutUtils::GetNearestScrollingView(startView, aDirection);
+      scrollFrame = startFrame->GetScrollTargetFrame();
+      if (scrollFrame) {
+        startFrame = scrollFrame->GetScrolledFrame();
+      }
+      scrollFrame =
+        nsLayoutUtils::GetNearestScrollableFrameForDirection(startFrame, aDirection);
     }
   }
-  if (!scrollView) {
-    nsIViewManager* viewManager = GetViewManager();
-    if (viewManager) {
-      viewManager->GetRootScrollableView(&scrollView);
-    }
+  if (!scrollFrame) {
+    scrollFrame = GetRootScrollFrameAsScrollable();
   }
-  return scrollView;
+  return scrollFrame;
 }
 
 NS_IMETHODIMP
@@ -6891,13 +6888,13 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     if (!istree) {
       extra = frame->GetSize().height;
       if (checkLineHeight) {
-        nsIScrollableView *scrollView =
-          nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
-        if (scrollView) {
-          nscoord scrollViewLineHeight;
-          scrollView->GetLineHeight(&scrollViewLineHeight);
-          if (extra > scrollViewLineHeight) {
-            extra = scrollViewLineHeight; 
+        nsIScrollableFrame *scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrame(frame);
+        if (scrollFrame) {
+          nscoord scrollFrameLineHeight =
+            scrollFrame->GetLineScrollAmount().height;
+          if (extra > scrollFrameLineHeight) {
+            extra = scrollFrameLineHeight; 
           }
         }
       }
