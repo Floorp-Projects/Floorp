@@ -1875,6 +1875,11 @@ const gPopupBlockerObserver = {
     if (!cBrowser.pageReport)
       return;
 
+    let pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
+    let result = pm.testExactPermission(Browser.selectedBrowser.currentURI, "popup");
+    if (result == Ci.nsIPermissionManager.DENY_ACTION)
+      return;
+
     // Only show the notification again if we've not already shown it. Since
     // notifications are per-browser, we don't need to worry about re-adding
     // it.
@@ -1906,12 +1911,12 @@ const gPopupBlockerObserver = {
             {
               label: bundle_browser.getString("popupButtonAlwaysAllow2"),
               accessKey: null,
-              callback: function() { gPopupBlockerObserver.toggleAllowPopupsForSite(); }
+              callback: function() { gPopupBlockerObserver.allowPopupsForSite(); }
             },
             {
               label: bundle_browser.getString("popupButtonNeverWarn2"),
               accessKey: null,
-              callback: function() { gPopupBlockerObserver.dontShowMessage(); }
+              callback: function() { gPopupBlockerObserver.denyPopupsForSite(); }
             }
           ];
 
@@ -1927,19 +1932,19 @@ const gPopupBlockerObserver = {
     }
   },
 
-  toggleAllowPopupsForSite: function toggleAllowPopupsForSite(aEvent)
-  {
-    var currentURI = Browser.selectedBrowser.webNavigation.currentURI;
+  allowPopupsForSite: function allowPopupsForSite(aEvent) {
+    var currentURI = Browser.selectedBrowser.currentURI;
     var pm = Cc["@mozilla.org/permissionmanager;1"].getService(this._kIPM);
     pm.add(currentURI, "popup", this._kIPM.ALLOW_ACTION);
 
     Browser.getNotificationBox().removeCurrentNotification();
   },
 
-  dontShowMessage: function dontShowMessage()
-  {
-    var showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
-    gPrefService.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
+  denyPopupsForSite: function denyPopupsForSite(aEvent) {
+    var currentURI = Browser.selectedBrowser.currentURI;
+    var pm = Cc["@mozilla.org/permissionmanager;1"].getService(this._kIPM);
+    pm.add(currentURI, "popup", this._kIPM.DENY_ACTION);
+
     Browser.getNotificationBox().removeCurrentNotification();
   },
 
