@@ -301,10 +301,6 @@
                 label="&viewPageInfoCmd.label;"
                 accesskey="&viewPageInfoCmd.accesskey;"
                 oncommand="gContextMenu.viewInfo();"/>
-      <menuitem id="context-metadata"
-                label="&metadataCmd.label;"
-                accesskey="&metadataCmd.accesskey;"
-                oncommand="gContextMenu.showMetadata();"/>
       <menuseparator id="spell-separator"/>
       <menuitem id="spell-check-enabled"
                 label="&spellCheckEnable.label;"
