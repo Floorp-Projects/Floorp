@@ -828,12 +828,13 @@ namespace nanojit
 
     void Assembler::gen(LirFilter* reader)
     {
-        // trace must end with LIR_x, LIR_loop, LIR_[f]ret, LIR_xtbl, or LIR_live
+        // trace must end with LIR_x, LIR_loop, LIR_[f]ret, LIR_xtbl, or LIR_[f]live
         NanoAssert(reader->pos()->isop(LIR_x) ||
                    reader->pos()->isop(LIR_ret) ||
                    reader->pos()->isop(LIR_fret) ||
                    reader->pos()->isop(LIR_xtbl) ||
-                   reader->pos()->isop(LIR_live));
+                   reader->pos()->isop(LIR_live) ||
+                   reader->pos()->isop(LIR_flive));
 
         InsList pending_lives(alloc);
 
@@ -887,6 +888,7 @@ namespace nanojit
                     NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)\n", op, op&~LIR64);
                     break;
 
+                case LIR_flive:
                 case LIR_live: {
                     countlir_live();
                     LInsp op1 = ins->oprnd1();
@@ -900,7 +902,7 @@ namespace nanojit
                     if (op1->isop(LIR_alloc)) {
                         findMemFor(op1);
                     } else {
-                        pending_lives.add(op1);
+                        pending_lives.add(ins);
                     }
                     break;
                 }
@@ -1367,13 +1369,15 @@ namespace nanojit
     {
         // ensure that exprs spanning the loop are marked live at the end of the loop
         reserveSavedRegs();
-        for (Seq<LIns*>* p = pending_lives.get(); p != NULL; p = p->tail)
-            findMemFor(p->head);
-        /*
-         * TODO: I'm not positive, but I think the following line needs to be
-         * added, otherwise the pending_lives will build up and never get
-         * cleared.
-         */
+        for (Seq<LIns*> *p = pending_lives.get(); p != NULL; p = p->tail) {
+            LIns *i = p->head;
+            NanoAssert(i->isop(LIR_live) || i->isop(LIR_flive));
+            LIns *op1 = i->oprnd1();
+            if (op1->isconst() || op1->isconstf() || op1->isconstq())
+                findMemFor(op1);
+            else
+                findRegFor(op1, i->isop(LIR_flive) ? FpRegs : GpRegs);
+        }
         pending_lives.clear();
     }
 
