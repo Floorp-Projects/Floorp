@@ -46,14 +46,14 @@ EXTRA_PP_COMPONENTS = \
     FastStartup.js \
     $(NULL)
 
+ifdef _MSC_VER
+ifdef WINCE
 CPPSRCS = \
     faststartstub.cpp \
     $(NULL)
 
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX)) \
 
-ifdef _MSC_VER
-ifdef WINCE
 WIN32_EXE_LDFLAGS += -ENTRY:WinMainCRTStartup
 endif
 endif
