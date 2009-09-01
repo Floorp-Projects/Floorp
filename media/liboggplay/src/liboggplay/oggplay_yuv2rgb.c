@@ -39,44 +39,30 @@
  * Michael Martin
  * Marcin Lubonski
  * Viktor Gal
- * Makoto Kato <m_kato@ga2.so-net.ne.jp>
  */
 
 #include "oggplay_private.h"
 #include "oggplay_yuv2rgb_template.h"
 
-#ifdef __SUNPRO_C
-#define DISABLE_CPU_FEATURES
-/* gcc inline asm and intristics have problems with Sun Studio.
- * We need to fix it.
- */
-#else
 /* cpu extension detection */
 #include "cpu.c"
-#endif
 
 /**
  * yuv_convert_fptr type is a function pointer type for
  * the various yuv-rgb converters
  */
 typedef void (*yuv_convert_fptr) (const OggPlayYUVChannels *yuv, 
-                                  OggPlayRGBChannels *rgb);
+					OggPlayRGBChannels *rgb);
 
 /* it is useless to determine each YUV conversion run
  * the cpu type/featurs, thus we save the conversion function
  * pointers
  */
 static struct OggPlayYUVConverters {
-	yuv_convert_fptr yuv420rgba; /**< YUV420 to RGBA */
-	yuv_convert_fptr yuv420bgra; /**< YUV420 to BGRA */
-	yuv_convert_fptr yuv420argb; /**< YUV420 to ARGB */
-	yuv_convert_fptr yuv422rgba; /**< YUV422 to RGBA */
-	yuv_convert_fptr yuv422bgra; /**< YUV422 to BGRA */
-	yuv_convert_fptr yuv422argb; /**< YUV422 to ARGB */
-	yuv_convert_fptr yuv444rgba; /**< YUV444 to RGBA */
-	yuv_convert_fptr yuv444bgra; /**< YUV444 to BGRA */
-	yuv_convert_fptr yuv444argb; /**< YUV444 to ARGB */
-} yuv_conv = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+	yuv_convert_fptr yuv2rgba; /**< YUV420 to RGBA */
+	yuv_convert_fptr yuv2bgra; /**< YUV420 to BGRA */
+	yuv_convert_fptr yuv2argb; /**< YUV420 to ARGB */
+} yuv_conv = {NULL, NULL, NULL};
 
 /**
  * vanilla implementation of YUV-to-RGB conversion.
@@ -135,7 +121,7 @@ out[3] = CLAMP(r);
 		      int buv = CoefsBU[*pu]; 			\
                       int r, g, b;
 
-/* yuv420p, yuv422p -> */
+/* yuv420p -> */
 #define CONVERT(OUTPUT_FUNC) LOOKUP_COEFFS				 \
 			     VANILLA_YUV2RGB_PIXEL(py[0], ruv, guv, buv) \
 			     OUTPUT_FUNC(dst, r, g, b)  \
@@ -144,51 +130,25 @@ out[3] = CLAMP(r);
 
 #define CLEANUP
 
-YUV_CONVERT(yuv420_to_rgba_vanilla, CONVERT(VANILLA_RGBA_OUT), VANILLA_RGBA_OUT, 2, 8, 2, 1, 2)
-YUV_CONVERT(yuv420_to_bgra_vanilla, CONVERT(VANILLA_BGRA_OUT), VANILLA_BGRA_OUT, 2, 8, 2, 1, 2)
-YUV_CONVERT(yuv420_to_abgr_vanilla, CONVERT(VANILLA_ABGR_OUT), VANILLA_ABGR_OUT, 2, 8, 2, 1, 2)
-YUV_CONVERT(yuv420_to_argb_vanilla, CONVERT(VANILLA_ARGB_OUT), VANILLA_ARGB_OUT, 2, 8, 2, 1, 2)
-
-YUV_CONVERT(yuv422_to_rgba_vanilla, CONVERT(VANILLA_RGBA_OUT), VANILLA_RGBA_OUT, 2, 8, 2, 1, 1)
-YUV_CONVERT(yuv422_to_bgra_vanilla, CONVERT(VANILLA_BGRA_OUT), VANILLA_BGRA_OUT, 2, 8, 2, 1, 1)
-YUV_CONVERT(yuv422_to_abgr_vanilla, CONVERT(VANILLA_ABGR_OUT), VANILLA_ABGR_OUT, 2, 8, 2, 1, 1)
-YUV_CONVERT(yuv422_to_argb_vanilla, CONVERT(VANILLA_ARGB_OUT), VANILLA_ARGB_OUT, 2, 8, 2, 1, 1)
-
-#undef CONVERT
-
-/* yuv444p -> */
-#define CONVERT(OUTPUT_FUNC) LOOKUP_COEFFS				 \
-			     VANILLA_YUV2RGB_PIXEL(py[0], ruv, guv, buv) \
-			     OUTPUT_FUNC(dst, r, g, b)  
-
-YUV_CONVERT(yuv444_to_rgba_vanilla, CONVERT(VANILLA_RGBA_OUT), VANILLA_RGBA_OUT, 1, 4, 1, 1, 1)
-YUV_CONVERT(yuv444_to_bgra_vanilla, CONVERT(VANILLA_BGRA_OUT), VANILLA_BGRA_OUT, 1, 4, 1, 1, 1)
-YUV_CONVERT(yuv444_to_abgr_vanilla, CONVERT(VANILLA_ABGR_OUT), VANILLA_ABGR_OUT, 1, 4, 1, 1, 1)
-YUV_CONVERT(yuv444_to_argb_vanilla, CONVERT(VANILLA_ARGB_OUT), VANILLA_ARGB_OUT, 1, 4, 1, 1, 1)
+YUV_CONVERT(yuv420_to_rgba_vanilla, CONVERT(VANILLA_RGBA_OUT), VANILLA_RGBA_OUT, 2, 8, 2, 1)
+YUV_CONVERT(yuv420_to_bgra_vanilla, CONVERT(VANILLA_BGRA_OUT), VANILLA_BGRA_OUT, 2, 8, 2, 1)
+YUV_CONVERT(yuv420_to_abgr_vanilla, CONVERT(VANILLA_ABGR_OUT), VANILLA_ABGR_OUT, 2, 8, 2, 1)
+YUV_CONVERT(yuv420_to_argb_vanilla, CONVERT(VANILLA_ARGB_OUT), VANILLA_ARGB_OUT, 2, 8, 2, 1)
 
 #undef CONVERT
 #undef CLEANUP
 
-#ifndef DISABLE_CPU_FEATURES
 /* although we use cpu runtime detection, we still need these
  * macros as there's no way e.g. we could compile a x86 asm code 
  * on a ppc machine and vica-versa
  */
-#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_AMD64)
-#if !defined(_M_AMD64)
-#define ENABLE_MMX
-#endif
+#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
 #include "x86/oggplay_yuv2rgb_x86.c"
-#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
-#define ENABLE_SSE2
-#endif
 #elif defined(__ppc__) || defined(__ppc64__)
-#define ENABLE_ALTIVEC
 //altivec intristics only working with -maltivec gcc flag, 
 //but we want runtime altivec detection, hence this has to be
 //fixed!
 //#include "oggplay_yuv2rgb_altivec.c"
-#endif
 #endif
 
 
@@ -221,97 +181,56 @@ init_yuv_converters(void)
 {
 	ogg_uint32_t features = 0;
 
-	if ( yuv_conv.yuv420rgba == NULL )
+	if ( yuv_conv.yuv2rgba == NULL )
 	{
 		init_vanilla_coeffs ();
-#ifndef DISABLE_CPU_FEATURES
-		features = oc_cpu_flags_get(); 
-#endif
-#ifdef ENABLE_SSE2	
+		features = oc_cpu_flags_get(); 		
+#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
 		if (features & OC_CPU_X86_SSE2) 
 		{
-			yuv_conv.yuv420rgba = yuv420_to_rgba_sse2;
-			yuv_conv.yuv420bgra = yuv420_to_bgra_sse2;
-			yuv_conv.yuv420argb = yuv420_to_argb_sse2;
-			yuv_conv.yuv422rgba = yuv422_to_rgba_sse2;
-			yuv_conv.yuv422bgra = yuv422_to_bgra_sse2;
-			yuv_conv.yuv422argb = yuv422_to_argb_sse2;
-			yuv_conv.yuv444rgba = yuv444_to_rgba_sse2;
-  		yuv_conv.yuv444bgra = yuv444_to_bgra_sse2;
-  		yuv_conv.yuv444argb = yuv444_to_argb_sse2;
+			yuv_conv.yuv2rgba = yuv420_to_rgba_sse2;
+			yuv_conv.yuv2bgra = yuv420_to_bgra_sse2;
+			yuv_conv.yuv2argb = yuv420_to_argb_sse2;
 			return;
 		}
-#endif /* SSE2 */
-#ifdef ENABLE_MMX
-#ifndef ENABLE_SSE2
 		else
-#endif
+#endif /* ATTRIBUTE_ALIGNED_MAX */
 		if (features & OC_CPU_X86_MMXEXT)	
 		{
-			yuv_conv.yuv420rgba = yuv420_to_rgba_sse;
-			yuv_conv.yuv420bgra = yuv420_to_bgra_sse;
-			yuv_conv.yuv420argb = yuv420_to_argb_sse;
-			yuv_conv.yuv422rgba = yuv422_to_rgba_sse;
-			yuv_conv.yuv422bgra = yuv422_to_bgra_sse;
-			yuv_conv.yuv422argb = yuv422_to_argb_sse;
-			yuv_conv.yuv444rgba = yuv444_to_rgba_sse;
-  		yuv_conv.yuv444bgra = yuv444_to_bgra_sse;
-  		yuv_conv.yuv444argb = yuv444_to_argb_sse;
+			yuv_conv.yuv2rgba = yuv420_to_rgba_sse;
+			yuv_conv.yuv2bgra = yuv420_to_bgra_sse;
+			yuv_conv.yuv2argb = yuv420_to_argb_sse;
 			return;
 		}
 		else if (features & OC_CPU_X86_MMX)
 		{   
-			yuv_conv.yuv420rgba = yuv420_to_rgba_mmx;
-			yuv_conv.yuv420bgra = yuv420_to_bgra_mmx;
-			yuv_conv.yuv420argb = yuv420_to_argb_mmx;
-			yuv_conv.yuv422rgba = yuv422_to_rgba_mmx;
-			yuv_conv.yuv422bgra = yuv422_to_bgra_mmx;
-			yuv_conv.yuv422argb = yuv422_to_argb_mmx;
-			yuv_conv.yuv444rgba = yuv444_to_rgba_mmx;
-  		yuv_conv.yuv444bgra = yuv444_to_bgra_mmx;
-  		yuv_conv.yuv444argb = yuv444_to_argb_mmx;
+			yuv_conv.yuv2rgba = yuv420_to_rgba_mmx;
+			yuv_conv.yuv2bgra = yuv420_to_bgra_mmx;
+			yuv_conv.yuv2argb = yuv420_to_argb_mmx;
 			return;
 		}
-#elif defined(ENABLE_ALTIVEC)		
+#elif defined(__ppc__) || defined(__ppc64__)
 		if (features & OC_CPU_PPC_ALTIVEC)
 		{
-			yuv_conv.yuv420rgba = yuv420_to_abgr_vanilla;
-			yuv_conv.yuv420bgra = yuv420_to_argb_vanilla;
-			yuv_conv.yuv420argb = yuv420_to_bgra_vanilla;
-			yuv_conv.yuv422rgba = yuv422_to_abgr_vanilla;
-			yuv_conv.yuv422bgra = yuv422_to_argb_vanilla;
-			yuv_conv.yuv422argb = yuv422_to_bgra_vanilla;
-			yuv_conv.yuv444rgba = yuv444_to_abgr_vanilla;
-  		yuv_conv.yuv444bgra = yuv444_to_argb_vanilla;
-  		yuv_conv.yuv444argb = yuv444_to_bgra_vanilla;
+			yuv_conv.yuv2rgba = yuv420_to_abgr_vanilla;
+			yuv_conv.yuv2bgra = yuv420_to_argb_vanilla;
+			yuv_conv.yuv2argb = yuv420_to_bgra_vanilla;
 			return;
 		}
-#endif
-
+#endif		
 		/*
      * no CPU extension was found... using vanilla converter, with respect
      * to the endianness of the host
      */
 #if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
-		yuv_conv.yuv420rgba = yuv420_to_abgr_vanilla;
-		yuv_conv.yuv420bgra = yuv420_to_argb_vanilla;
-		yuv_conv.yuv420argb = yuv420_to_bgra_vanilla;
-		yuv_conv.yuv422rgba = yuv422_to_abgr_vanilla;
-		yuv_conv.yuv422bgra = yuv422_to_argb_vanilla;
-		yuv_conv.yuv422argb = yuv422_to_bgra_vanilla;
-		yuv_conv.yuv444rgba = yuv444_to_abgr_vanilla;
-		yuv_conv.yuv444bgra = yuv444_to_argb_vanilla;
-		yuv_conv.yuv444argb = yuv444_to_bgra_vanilla;
+		yuv_conv.yuv2rgba = yuv420_to_abgr_vanilla;
+		yuv_conv.yuv2bgra = yuv420_to_argb_vanilla;
+		yuv_conv.yuv2argb = yuv420_to_bgra_vanilla;
 #else
-		yuv_conv.yuv420rgba = yuv420_to_rgba_vanilla;
-		yuv_conv.yuv420bgra = yuv420_to_bgra_vanilla;
-		yuv_conv.yuv420argb = yuv420_to_argb_vanilla;
-		yuv_conv.yuv422rgba = yuv422_to_rgba_vanilla;
-		yuv_conv.yuv422bgra = yuv422_to_bgra_vanilla;
-		yuv_conv.yuv422argb = yuv422_to_argb_vanilla;
-		yuv_conv.yuv444rgba = yuv444_to_rgba_vanilla;
-		yuv_conv.yuv444bgra = yuv444_to_bgra_vanilla;
-		yuv_conv.yuv444argb = yuv444_to_argb_vanilla;
+		yuv_conv.yuv2rgba = yuv420_to_rgba_vanilla;
+		yuv_conv.yuv2bgra = yuv420_to_bgra_vanilla;
+		yuv_conv.yuv2argb = yuv420_to_argb_vanilla;
 #endif
 	}
 }
@@ -320,41 +239,27 @@ init_yuv_converters(void)
 void
 oggplay_yuv2rgba(const OggPlayYUVChannels* yuv, OggPlayRGBChannels* rgb)
 {
-	if (yuv_conv.yuv420rgba == NULL)
- 		init_yuv_converters();
+	if (yuv_conv.yuv2rgba == NULL)
+		init_yuv_converters();
 
-	if (yuv->y_height!=yuv->uv_height)
-		yuv_conv.yuv420rgba(yuv, rgb);
-	else if (yuv->y_width!=yuv->uv_width)
-		yuv_conv.yuv422rgba(yuv,rgb);
-	else
-		yuv_conv.yuv444rgba(yuv,rgb);
+	yuv_conv.yuv2rgba(yuv, rgb);
 }
 
 void 
 oggplay_yuv2bgra(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb)
 {
-	if (yuv_conv.yuv420bgra == NULL)
- 		init_yuv_converters();
+	if (yuv_conv.yuv2bgra == NULL)
+		init_yuv_converters();
 
-	if (yuv->y_height!=yuv->uv_height)
-		yuv_conv.yuv420bgra(yuv, rgb);
-	else if (yuv->y_width!=yuv->uv_width)
-		yuv_conv.yuv422bgra(yuv,rgb);
-	else
-		yuv_conv.yuv444bgra(yuv,rgb);}
+	yuv_conv.yuv2bgra(yuv, rgb);
+}
 
 void 
 oggplay_yuv2argb(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb)
 {
-	if (yuv_conv.yuv420argb == NULL)
- 		init_yuv_converters();
+	if (yuv_conv.yuv2argb == NULL)
+		init_yuv_converters();
 
-	if (yuv->y_height!=yuv->uv_height)
-		yuv_conv.yuv420argb(yuv, rgb);
-	else if (yuv->y_width!=yuv->uv_width)
-		yuv_conv.yuv422argb(yuv,rgb);
-	else
-		yuv_conv.yuv444argb(yuv,rgb);
+	yuv_conv.yuv2argb(yuv, rgb);
 }
 

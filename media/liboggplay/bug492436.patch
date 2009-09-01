@@ -1,0 +1,52 @@
+diff --git a/media/liboggplay/include/oggplay/oggplay_enums.h b/media/liboggplay/include/oggplay/oggplay_enums.h
+index aff0e51..ffb7cb4 100644
+--- a/media/liboggplay/include/oggplay/oggplay_enums.h
++++ b/media/liboggplay/include/oggplay/oggplay_enums.h
+@@ -64,6 +64,9 @@ typedef enum OggPlayErrorCode {
+   E_OGGPLAY_NO_KATE_SUPPORT   = -19,
+   E_OGGPLAY_NO_TIGER_SUPPORT  = -20,
+   E_OGGPLAY_OUT_OF_MEMORY     = -21,
++  E_OGGPLAY_TYPE_OVERFLOW     = -22,  /**< Integer overflow detected */
++  
++  E_OGGPLAY_TRACK_IS_UNKNOWN  = -23,  /**< The selected track's content type is UNKNOWN */
+   E_OGGPLAY_NOTCHICKENPAYBACK = -777
+ } OggPlayErrorCode;
+ 
+diff --git a/media/liboggplay/src/liboggplay/oggplay_callback.c b/media/liboggplay/src/liboggplay/oggplay_callback.c
+index 05cf363..593691f 100644
+--- a/media/liboggplay/src/liboggplay/oggplay_callback.c
++++ b/media/liboggplay/src/liboggplay/oggplay_callback.c
+@@ -508,6 +508,7 @@ OggPlayCallbackFunctions callbacks[] = {
+   {NULL, NULL, NULL, sizeof(OggPlayDecode)}, /* CELT */
+   {oggplay_init_kate, oggplay_callback_kate, oggplay_shutdown_kate,
+         sizeof(OggPlayKateDecode)},          /* KATE */
++  {NULL, NULL, NULL, sizeof(OggPlayDecode)}, /* DIRAC */
+   {NULL, NULL, NULL, sizeof(OggPlayDecode)}  /* UNKNOWN */
+ };
+ 
+diff --git a/media/liboggplay/src/liboggplay/oggplay_query.c b/media/liboggplay/src/liboggplay/oggplay_query.c
+index 2a69beb..6344ec8 100644
+--- a/media/liboggplay/src/liboggplay/oggplay_query.c
++++ b/media/liboggplay/src/liboggplay/oggplay_query.c
+@@ -131,6 +131,10 @@ oggplay_set_track_active(OggPlay *me, int track_num) {
+     return E_OGGPLAY_TRACK_IS_SKELETON;
+   }
+ 
++  if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_UNKNOWN) {
++    return E_OGGPLAY_TRACK_IS_UNKNOWN;
++  }
++
+   if ((p = me->decode_data[track_num]->final_granulepos) != -1) {
+     if (p * me->decode_data[track_num]->granuleperiod > me->target) {
+       return E_OGGPLAY_TRACK_IS_OVER;
+@@ -179,6 +183,10 @@ oggplay_set_track_inactive(OggPlay *me, int track_num) {
+     return E_OGGPLAY_TRACK_IS_SKELETON;
+   }
+ 
++  if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_UNKNOWN) {
++    return E_OGGPLAY_TRACK_IS_UNKNOWN;
++  }
++
+   if (me->decode_data[track_num]->active == 1) {
+     me->decode_data[track_num]->active = 0;
+ 

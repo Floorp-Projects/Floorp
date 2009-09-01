@@ -1,7 +1,7 @@
 diff --git a/media/liboggplay/src/liboggplay/oggplay_callback_info.c b/media/liboggplay/src/liboggplay/oggplay_callback_info.c
 --- a/media/liboggplay/src/liboggplay/oggplay_callback_info.c
 +++ b/media/liboggplay/src/liboggplay/oggplay_callback_info.c
-@@ -185,21 +185,23 @@ oggplay_callback_info_prepare(OggPlay *m
+@@ -133,21 +133,23 @@ oggplay_callback_info_prepare(OggPlay *m
  
      track_info->available_records = count;
      track_info->required_records = 0;
