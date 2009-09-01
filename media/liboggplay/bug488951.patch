@@ -1,0 +1,564 @@
+diff --git a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
+--- a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
++++ b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb.c
+@@ -42,76 +42,55 @@
+  */
+ 
+ #include "oggplay_private.h"
+ #include "oggplay_yuv2rgb_template.h"
+ 
+ /* cpu extension detection */
+ #include "cpu.c"
+ 
+-/* although we use cpu runtime detection, we still need these
+- * macros as there's no way e.g. we could compile a x86 asm code 
+- * on a ppc machine and vica-versa
++/**
++ * yuv_convert_fptr type is a function pointer type for
++ * the various yuv-rgb converters
+  */
+-#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+-#include "oggplay_yuv2rgb_x86.c"
+-#elif defined(__ppc__) || defined(__ppc64__)
+-//altivec intristics only working with -maltivec gcc flag, 
+-//but we want runtime altivec detection, hence this has to be
+-//fixed!
+-//#include "oggplay_yuv2rgb_altivec.c"
+-#endif
++typedef void (*yuv_convert_fptr) (const OggPlayYUVChannels *yuv, 
++					OggPlayRGBChannels *rgb);
+ 
+-static int yuv_initialized;
+-static ogg_uint32_t cpu_features;
++/* it is useless to determine each YUV conversion run
++ * the cpu type/featurs, thus we save the conversion function
++ * pointers
++ */
++static struct OggPlayYUVConverters {
++	yuv_convert_fptr yuv2rgba; /**< YUV420 to RGBA */
++	yuv_convert_fptr yuv2bgra; /**< YUV420 to BGRA */
++	yuv_convert_fptr yuv2argb; /**< YUV420 to ARGB */
++} yuv_conv = {NULL, NULL, NULL};
+ 
+ /**
+  * vanilla implementation of YUV-to-RGB conversion.
+  *
+  *  - using table-lookups instead of multiplication
+  *  - avoid CLAMPing by incorporating 
+  *
+  */
+ 
+-#define CLAMP(v)    ((v) > 255 ? 255 : (v) < 0 ? 0 : (v))
+-
+ #define prec 15 
+ static const int CoY	= (int)(1.164 * (1 << prec) + 0.5);
+ static const int CoRV	= (int)(1.596 * (1 << prec) + 0.5);
+ static const int CoGU	= (int)(0.391 * (1 << prec) + 0.5);
+ static const int CoGV	= (int)(0.813 * (1 << prec) + 0.5);
+ static const int CoBU	= (int)(2.018 * (1 << prec) + 0.5);
+ 
+-static int CoefsGU[256];
++static int CoefsGU[256] = {0};
+ static int CoefsGV[256]; 
+ static int CoefsBU[256]; 
+ static int CoefsRV[256];
+ static int CoefsY[256];
+ 
+-/**
+- * Initialize the lookup-table for vanilla yuv to rgb conversion
+- * and the cpu_features global.
+- */
+-static void
+-init_yuv_converters()
+-{
+-	int i;
+-
+-	for(i = 0; i < 256; ++i)
+-	{
+-		CoefsGU[i] = -CoGU * (i - 128);
+-		CoefsGV[i] = -CoGV * (i - 128);
+-		CoefsBU[i] = CoBU * (i - 128);
+-		CoefsRV[i] = CoRV * (i - 128);
+-		CoefsY[i]  = CoY * (i - 16) + (prec/2);
+-	}
+-
+-	cpu_features = oc_cpu_flags_get();
+-	yuv_initialized = 1;
+-}
++#define CLAMP(v)    ((v) > 255 ? 255 : (v) < 0 ? 0 : (v))
+ 
+ #define VANILLA_YUV2RGB_PIXEL(y, ruv, guv, buv)	\
+ r = (CoefsY[y] + ruv) >> prec;	\
+ g = (CoefsY[y] + guv) >> prec;	\
+ b = (CoefsY[y] + buv) >> prec;	\
+ 
+ #define VANILLA_RGBA_OUT(out, r, g, b) \
+ out[0] = CLAMP(r); \
+@@ -132,105 +111,155 @@ out[2] = CLAMP(g); \
+ out[3] = CLAMP(b);
+ 
+ #define VANILLA_ABGR_OUT(out, r, g, b) \
+ out[0] = 255;	   \
+ out[1] = CLAMP(b); \
+ out[2] = CLAMP(g); \
+ out[3] = CLAMP(r);
+ 
+-/* yuv420p -> */
+ #define LOOKUP_COEFFS int ruv = CoefsRV[*pv]; 			\
+ 		      int guv = CoefsGU[*pu] + CoefsGV[*pv]; 	\
+ 		      int buv = CoefsBU[*pu]; 			\
+                       int r, g, b;
+ 
++/* yuv420p -> */
+ #define CONVERT(OUTPUT_FUNC) LOOKUP_COEFFS				 \
+-			     VANILLA_YUV2RGB_PIXEL(py[0], ruv, guv, buv);\
+-			     OUTPUT_FUNC(dst, r, g, b);			 \
+-			     VANILLA_YUV2RGB_PIXEL(py[1], ruv, guv, buv);\
+-			     OUTPUT_FUNC((dst+4), r, g, b);
++			     VANILLA_YUV2RGB_PIXEL(py[0], ruv, guv, buv) \
++			     OUTPUT_FUNC(dst, r, g, b)  \
++			     VANILLA_YUV2RGB_PIXEL(py[1], ruv, guv, buv) \
++			     OUTPUT_FUNC((dst+4), r, g, b)
+ 
+ #define CLEANUP
+ 
+-YUV_CONVERT(yuv420_to_rgba_vanilla, CONVERT(VANILLA_RGBA_OUT), 2, 8, 2, 1)
+-YUV_CONVERT(yuv420_to_bgra_vanilla, CONVERT(VANILLA_BGRA_OUT), 2, 8, 2, 1)
+-YUV_CONVERT(yuv420_to_abgr_vanilla, CONVERT(VANILLA_ABGR_OUT), 2, 8, 2, 1)
+-YUV_CONVERT(yuv420_to_argb_vanilla, CONVERT(VANILLA_ARGB_OUT), 2, 8, 2, 1)
++YUV_CONVERT(yuv420_to_rgba_vanilla, CONVERT(VANILLA_RGBA_OUT), VANILLA_RGBA_OUT, 2, 8, 2, 1)
++YUV_CONVERT(yuv420_to_bgra_vanilla, CONVERT(VANILLA_BGRA_OUT), VANILLA_BGRA_OUT, 2, 8, 2, 1)
++YUV_CONVERT(yuv420_to_abgr_vanilla, CONVERT(VANILLA_ABGR_OUT), VANILLA_ABGR_OUT, 2, 8, 2, 1)
++YUV_CONVERT(yuv420_to_argb_vanilla, CONVERT(VANILLA_ARGB_OUT), VANILLA_ARGB_OUT, 2, 8, 2, 1)
+ 
+ #undef CONVERT
+ #undef CLEANUP
+ 
++/* although we use cpu runtime detection, we still need these
++ * macros as there's no way e.g. we could compile a x86 asm code 
++ * on a ppc machine and vica-versa
++ */
++#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
++#include "x86/oggplay_yuv2rgb_x86.c"
++#elif defined(__ppc__) || defined(__ppc64__)
++//altivec intristics only working with -maltivec gcc flag, 
++//but we want runtime altivec detection, hence this has to be
++//fixed!
++//#include "oggplay_yuv2rgb_altivec.c"
++#endif
++
++
++/**
++ * Initialize the lookup-table for vanilla yuv to rgb conversion.
++ */
++static void
++init_vanilla_coeffs (void)
++{
++	int i;
++
++	for(i = 0; i < 256; ++i)
++	{
++		CoefsGU[i] = -CoGU * (i - 128);
++		CoefsGV[i] = -CoGV * (i - 128);
++		CoefsBU[i] = CoBU * (i - 128);
++		CoefsRV[i] = CoRV * (i - 128);
++		CoefsY[i]  = CoY * (i - 16) + (prec/2);
++	}
++}
++
++/**
++ * Initialize the function pointers in yuv_conv.
++ *
++ * Initialize the function pointers in yuv_conv, based on the
++ * the available CPU extensions.
++ */
++static void
++init_yuv_converters(void)
++{
++	ogg_uint32_t features = 0;
++
++	if ( yuv_conv.yuv2rgba == NULL )
++	{
++		init_vanilla_coeffs ();
++		features = oc_cpu_flags_get(); 		
++#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
++#if defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16 
++		if (features & OC_CPU_X86_SSE2) 
++		{
++			yuv_conv.yuv2rgba = yuv420_to_rgba_sse2;
++			yuv_conv.yuv2bgra = yuv420_to_bgra_sse2;
++			yuv_conv.yuv2argb = yuv420_to_argb_sse2;
++			return;
++		}
++		else
++#endif /* ATTRIBUTE_ALIGNED_MAX */
++		if (features & OC_CPU_X86_MMXEXT)	
++		{
++			yuv_conv.yuv2rgba = yuv420_to_rgba_sse;
++			yuv_conv.yuv2bgra = yuv420_to_bgra_sse;
++			yuv_conv.yuv2argb = yuv420_to_argb_sse;
++			return;
++		}
++		else if (features & OC_CPU_X86_MMX)
++		{   
++			yuv_conv.yuv2rgba = yuv420_to_rgba_mmx;
++			yuv_conv.yuv2bgra = yuv420_to_bgra_mmx;
++			yuv_conv.yuv2argb = yuv420_to_argb_mmx;
++			return;
++		}
++#elif defined(__ppc__) || defined(__ppc64__)
++		if (features & OC_CPU_PPC_ALTIVEC)
++		{
++			yuv_conv.yuv2rgba = yuv420_to_abgr_vanilla;
++			yuv_conv.yuv2bgra = yuv420_to_argb_vanilla;
++			yuv_conv.yuv2argb = yuv420_to_bgra_vanilla;
++			return;
++		}
++#endif		
++		/*
++     * no CPU extension was found... using vanilla converter, with respect
++     * to the endianness of the host
++     */
++#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
++		yuv_conv.yuv2rgba = yuv420_to_abgr_vanilla;
++		yuv_conv.yuv2bgra = yuv420_to_argb_vanilla;
++		yuv_conv.yuv2argb = yuv420_to_bgra_vanilla;
++#else
++		yuv_conv.yuv2rgba = yuv420_to_rgba_vanilla;
++		yuv_conv.yuv2bgra = yuv420_to_bgra_vanilla;
++		yuv_conv.yuv2argb = yuv420_to_argb_vanilla;
++#endif
++	}
++}
++
++
+ void
+ oggplay_yuv2rgba(const OggPlayYUVChannels* yuv, OggPlayRGBChannels* rgb)
+ {
+-	if (!yuv_initialized)
++	if (yuv_conv.yuv2rgba == NULL)
+ 		init_yuv_converters();
+ 
+-#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+-#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
+-	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
+-		return yuv420_to_rgba_sse2(yuv, rgb);
+-#endif
+-	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
+-		return yuv420_to_rgba_mmx(yuv, rgb);
+-#elif defined(__ppc__) || defined(__ppc64__)
+-	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
+-		return yuv420_to_abgr_vanilla(yuv, rgb);
+-#endif
+-
+-#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
+-	return yuv420_to_abgr_vanilla(yuv, rgb);
+-#else
+-	return yuv420_to_rgba_vanilla(yuv, rgb);
+-#endif
++	yuv_conv.yuv2rgba(yuv, rgb);
+ }
+ 
+ void 
+ oggplay_yuv2bgra(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb)
+ {
+-	if (!yuv_initialized)
++	if (yuv_conv.yuv2bgra == NULL)
+ 		init_yuv_converters();
+ 
+-#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+-#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
+-	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
+-		return yuv420_to_bgra_sse2(yuv, rgb);
+-#endif
+-	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
+-		return yuv420_to_bgra_mmx(yuv, rgb);
+-#elif defined(__ppc__) || defined(__ppc64__)
+-	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
+-		return yuv420_to_argb_vanilla(yuv, rgb);
+-#endif
+-
+-#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
+-	return yuv420_to_argb_vanilla(yuv, rgb);
+-#else
+-	return yuv420_to_bgra_vanilla(yuv, rgb);
+-#endif
++	yuv_conv.yuv2bgra(yuv, rgb);
+ }
+ 
+ void 
+ oggplay_yuv2argb(const OggPlayYUVChannels* yuv, OggPlayRGBChannels * rgb)
+ {
+-	if (!yuv_initialized)
++	if (yuv_conv.yuv2argb == NULL)
+ 		init_yuv_converters();
+ 
+-#if defined(i386) || defined(__x86__) || defined(__x86_64__) || defined(_M_IX86)
+-#if defined(_MSC_VER) || (defined(ATTRIBUTE_ALIGNED_MAX) && ATTRIBUTE_ALIGNED_MAX >= 16)
+-	if (yuv->y_width % 16 == 0 && cpu_features & OC_CPU_X86_SSE2)
+-		return yuv420_to_argb_sse2(yuv, rgb);
+-#endif
+-	if (yuv->y_width % 8 == 0 && cpu_features & OC_CPU_X86_MMX)
+-		return yuv420_to_argb_mmx(yuv, rgb);
+-#elif defined(__ppc__) || defined(__ppc64__)
+-	if (yuv->y_width % 16 == 0 && yuv->y_height % 2 == 0 && cpu_features & OC_CPU_PPC_ALTIVEC)
+-		return yuv420_to_bgra_vanilla(yuv, rgb);
+-#endif
+-
+-#if WORDS_BIGENDIAN || IS_BIG_ENDIAN 
+-	return yuv420_to_bgra_vanilla(yuv, rgb);
+-#else
+-	return yuv420_to_argb_vanilla(yuv, rgb);
+-#endif
++	yuv_conv.yuv2argb(yuv, rgb);
+ }
+ 
+diff --git a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
+--- a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
++++ b/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_template.h
+@@ -8,55 +8,80 @@
+ #define restrict __restrict__
+ #endif
+ #endif
+ 
+ /**
+  * Template for YUV to RGB conversion
+  *
+  * @param FUNC function name
+- * @param CONVERT a macro that defines 
++ * @param CONVERT a macro that defines the actual conversion function
++ * @param VANILLA_OUT 
+  * @param NUM_PIXELS number of pixels processed in one iteration
+  * @param OUT_SHIFT number of pixels to shift after one iteration in rgb data stream
+  * @param Y_SHIFT number of pixels to shift after one iteration in Y data stream
+  * @param UV_SHIFT
+  */
+-#define YUV_CONVERT(FUNC, CONVERT, NUM_PIXELS, OUT_SHIFT, Y_SHIFT, UV_SHIFT)\
++#define YUV_CONVERT(FUNC, CONVERT, VANILLA_OUT, NUM_PIXELS, OUT_SHIFT, Y_SHIFT, UV_SHIFT)\
+ static void                                                     \
+ (FUNC)(const OggPlayYUVChannels* yuv, OggPlayRGBChannels* rgb)  \
+ {                                                               \
+-	int             i,j, w, h;                              \
++	int             i,j, w, h, r;                           \
+ 	unsigned char*  restrict ptry;                          \
+ 	unsigned char*  restrict ptru;                          \
+ 	unsigned char*  restrict ptrv;                          \
+ 	unsigned char*  restrict ptro;                          \
+ 	unsigned char   *dst, *py, *pu, *pv;                    \
+ 								\
+ 	ptro = rgb->ptro;                                       \
+ 	ptry = yuv->ptry;                                       \
+ 	ptru = yuv->ptru;                                       \
+ 	ptrv = yuv->ptrv;                                       \
+ 								\
+-	w = yuv->y_width/NUM_PIXELS;                            \
++	w = yuv->y_width / NUM_PIXELS;                          \
+ 	h = yuv->y_height;                                      \
++	r = yuv->y_width % NUM_PIXELS;				\
+ 	for (i = 0; i < h; ++i)                                 \
+ 	{                                                       \
+ 		py  = ptry;                                     \
+ 		pu  = ptru;                                     \
+ 		pv  = ptrv;                                     \
+ 		dst = ptro;                                     \
+ 		for (j = 0; j < w; ++j,                         \
+ 				dst += OUT_SHIFT,               \
+ 				py += Y_SHIFT,                  \
+ 				pu += UV_SHIFT,                 \
+ 				pv += UV_SHIFT)                 \
+ 		{                                               \
+ 			/* use the given conversion function */ \
+ 			CONVERT                                 \
+ 		}                                               \
++		/*						\
++		 * the video frame is not the multiple of NUM_PIXELS, \
++		 * thus we have to deal with remaning pixels using 	\
++		 * vanilla implementation.				\
++		 */						\
++		if (r) { 					\
++			for 					\
++			( 					\
++			  j=(yuv->y_width-r); j < yuv->y_width; \
++			  ++j, 					\
++			  dst += 4,				\
++			  py += 1 				\
++			) 					\
++			{ 					\
++				LOOKUP_COEFFS			\
++				VANILLA_YUV2RGB_PIXEL(py[0], ruv, guv, buv) \
++				VANILLA_OUT(dst, r, g, b)	\
++				if (!(j%2)) { 			\
++					pu += 1; pv += 1;	\
++				} 				\
++			}					\
++		} 						\
++								\
+ 		ptro += rgb->rgb_width * 4;                     \
+ 		ptry += yuv->y_width;                           \
+ 								\
+ 		if (i & 0x1)                                    \
+ 		{                                               \
+ 			ptru += yuv->uv_width;                  \
+ 			ptrv += yuv->uv_width;                  \
+ 		}                                               \
+diff --git a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_x86.c b/media/liboggplay/src/liboggplay/x86/oggplay_yuv2rgb_x86.c
+rename from media/liboggplay/src/liboggplay/oggplay_yuv2rgb_x86.c
+rename to media/liboggplay/src/liboggplay/x86/oggplay_yuv2rgb_x86.c
+--- a/media/liboggplay/src/liboggplay/oggplay_yuv2rgb_x86.c
++++ b/media/liboggplay/src/liboggplay/x86/oggplay_yuv2rgb_x86.c
+@@ -28,16 +28,19 @@
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+ 
+ /**
+  * YUV to RGB conversion using x86 CPU extensions
+  */
++#include "oggplay_private.h"
++#include "oggplay_yuv2rgb_template.h"
++#include "cpu.h"
+ 
+ #if defined(_MSC_VER)
+ #include "yuv2rgb_x86_vs.h" 
+ #elif defined(__GNUC__)
+ #include "yuv2rgb_x86.h" 
+ #endif
+ 
+ typedef union
+@@ -78,59 +81,72 @@ static const simd_t simd_table[9] = {
+ 	{{ALFA, ALFA}}
+ };
+ 
+ /**
+  *  the conversion functions using MMX instructions 
+  */
+ 
+ /* template for the MMX conversion functions */
+-#define YUV_CONVERT_MMX(FUNC, CONVERT) YUV_CONVERT(FUNC, CONVERT, 8, 32, 8, 4)
++#define YUV_CONVERT_MMX(FUNC, CONVERT, CONV_BY_PIXEL) YUV_CONVERT(FUNC, CONVERT, CONV_BY_PIXEL, 8, 32, 8, 4)
++
+ #define CLEANUP emms()
+ #define OUT_RGBA_32 OUTPUT_RGBA_32(movq, mm, 8, 16, 24)
+ #define OUT_ARGB_32 OUTPUT_ARGB_32(movq, mm, 8, 16, 24)
+ #define OUT_BGRA_32 OUTPUT_BGRA_32(movq, mm, 8, 16, 24)
+ #define MOVNTQ MMX_MOVNTQ
+ 
+ /* yuv420 -> */
+ #define CONVERT(OUTPUT_FUNC) LOAD_YUV_PLANAR_2(movq, mm) \
+-			     YUV_2_RGB(movq, mm) 	\
+-			     OUTPUT_FUNC
++                             YUV_2_RGB(movq, mm) 	\
++                             OUTPUT_FUNC
+ 
+-YUV_CONVERT_MMX(yuv420_to_rgba_mmx, CONVERT(OUT_RGBA_32))
+-YUV_CONVERT_MMX(yuv420_to_bgra_mmx, CONVERT(OUT_BGRA_32)) 
+-YUV_CONVERT_MMX(yuv420_to_argb_mmx, CONVERT(OUT_ARGB_32)) 
++YUV_CONVERT_MMX(yuv420_to_rgba_mmx, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
++YUV_CONVERT_MMX(yuv420_to_bgra_mmx, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT) 
++YUV_CONVERT_MMX(yuv420_to_argb_mmx, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT) 
++
++#undef MOVNTQ
++
++
++/* template for the SSE conversion functions */
++#define MOVNTQ SSE_MOVNTQ
++
++YUV_CONVERT_MMX(yuv420_to_rgba_sse, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
++YUV_CONVERT_MMX(yuv420_to_bgra_sse, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT)
++YUV_CONVERT_MMX(yuv420_to_argb_sse, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT)
++
+ #undef CONVERT
+-
+ #undef CLEANUP
+ #undef OUT_RGBA_32
+ #undef OUT_ARGB_32
+ #undef OUT_BGRA_32
+ #undef MOVNTQ
+ 
++
+ /**
+  *  the conversion functions using SSE2 instructions 
+  */
+ 
+ /* template for the SSE2 conversion functions */
+-#define YUV_CONVERT_SSE2(FUNC, CONVERT) YUV_CONVERT(FUNC, CONVERT, 16, 64, 16, 8)
++#define YUV_CONVERT_SSE2(FUNC, CONVERT, CONV_BY_PIX) YUV_CONVERT(FUNC, CONVERT, CONV_BY_PIX, 16, 64, 16, 8)
++
+ #define OUT_RGBA_32 OUTPUT_RGBA_32(movdqa, xmm, 16, 32, 48)
+ #define OUT_ARGB_32 OUTPUT_ARGB_32(movdqa, xmm, 16, 32, 48)
+ #define OUT_BGRA_32 OUTPUT_BGRA_32(movdqa, xmm, 16, 32, 48)
+ #define MOVNTQ SSE2_MOVNTQ
+ #define CLEANUP
+ 
+ /* yuv420 -> */
+ #define CONVERT(OUTPUT_FUNC) LOAD_YUV_PLANAR_2(movdqu, xmm) \
+-       			     YUV_2_RGB(movdqa, xmm)	\
+-			     OUTPUT_FUNC
++				YUV_2_RGB(movdqa, xmm)	\
++				OUTPUT_FUNC
+ 
+-YUV_CONVERT_SSE2(yuv420_to_rgba_sse2, CONVERT(OUT_RGBA_32))
+-YUV_CONVERT_SSE2(yuv420_to_bgra_sse2, CONVERT(OUT_BGRA_32))
+-YUV_CONVERT_SSE2(yuv420_to_argb_sse2, CONVERT(OUT_ARGB_32)) 
++YUV_CONVERT_SSE2(yuv420_to_rgba_sse2, CONVERT(OUT_RGBA_32), VANILLA_RGBA_OUT)
++YUV_CONVERT_SSE2(yuv420_to_bgra_sse2, CONVERT(OUT_BGRA_32), VANILLA_BGRA_OUT)
++YUV_CONVERT_SSE2(yuv420_to_argb_sse2, CONVERT(OUT_ARGB_32), VANILLA_ARGB_OUT)
++
+ #undef CONVERT
+-
+ #undef OUT_RGBA_32
+ #undef OUT_ARGB_32
+ #undef OUT_BGRA_32
+ #undef MOVNTQ
+-#undef CLEANUP 
++#undef CLEANUP
+ 
+diff --git a/media/liboggplay/src/liboggplay/yuv2rgb_x86.h b/media/liboggplay/src/liboggplay/x86/yuv2rgb_x86.h
+rename from media/liboggplay/src/liboggplay/yuv2rgb_x86.h
+rename to media/liboggplay/src/liboggplay/x86/yuv2rgb_x86.h
+--- a/media/liboggplay/src/liboggplay/yuv2rgb_x86.h
++++ b/media/liboggplay/src/liboggplay/x86/yuv2rgb_x86.h
+@@ -3,17 +3,18 @@
+ 
+ # ifdef ATTRIBUTE_ALIGNED_MAX
+ #define ATTR_ALIGN(align) __attribute__ ((__aligned__ ((ATTRIBUTE_ALIGNED_MAX < align) ? ATTRIBUTE_ALIGNED_MAX : align)))
+ # else
+ #define ATTR_ALIGN(align)
+ # endif
+ 
+ #define emms() __asm__ __volatile__ ( "emms;" );
+-#define MMX_MOVNTQ "movntq"
++#define MMX_MOVNTQ "movq"
++#define SSE_MOVNTQ "movntq"
+ #define SSE2_MOVNTQ "movdqu"
+ 
+ #define YUV_2_RGB(mov_instr, reg_type) \
+ 	__asm__ __volatile__ (		\
+ 			"punpcklbw %%"#reg_type"4, %%"#reg_type"0;" 	/* mm0 = u3 u2 u1 u0 */\
+ 			"punpcklbw %%"#reg_type"4, %%"#reg_type"1;"	/* mm1 = v3 v2 v1 v0 */\
+ 			"psubsw (%0), %%"#reg_type"0;"			/* u -= 128 */\
+ 			"psubsw (%0), %%"#reg_type"1;"			/* v -= 128 */\
+diff --git a/media/liboggplay/src/liboggplay/yuv2rgb_x86_vs.h b/media/liboggplay/src/liboggplay/x86/yuv2rgb_x86_vs.h
+rename from media/liboggplay/src/liboggplay/yuv2rgb_x86_vs.h
+rename to media/liboggplay/src/liboggplay/x86/yuv2rgb_x86_vs.h
+--- a/media/liboggplay/src/liboggplay/yuv2rgb_x86_vs.h
++++ b/media/liboggplay/src/liboggplay/x86/yuv2rgb_x86_vs.h
+@@ -1,15 +1,16 @@
+ #ifndef __OGGPLAY_YUV2RGB_VS_H__
+ #define __OGGPLAY_YUV2RGB_VS_H__
+ 
+ #define ATTR_ALIGN(_align) __declspec(align(_align))
+ 
+ #define emms() __asm emms
+-#define MMX_MOVNTQ movntq
++#define MMX_MOVNTQ movq
++#define SSE_MOVNTQ movntq
+ #define SSE2_MOVNTQ movdqu
+ 
+ #define LOAD_YUV_PLANAR_2(mov_instr, reg_type)		\
+ 	__asm {								\
+ 		__asm mov	eax, py					\
+ 		__asm mov	edx, pu					\
+ 		__asm mov_instr	reg_type##6, [eax]			\
+ 		__asm mov_instr	reg_type##0, [edx]			\

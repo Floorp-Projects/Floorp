@@ -70,10 +70,6 @@
 void
 oggplay_data_initialise_list (OggPlayDecode *decode) {
 
-  if (decode == NULL) {
-    return;
-  }
-  
   decode->data_list = decode->end_of_data_list = NULL;
   decode->untimed_data_list = NULL;
 
@@ -85,10 +81,6 @@ oggplay_data_initialise_list (OggPlayDecode *decode) {
 void
 oggplay_data_add_to_list_end(OggPlayDecode *decode, OggPlayDataHeader *data) {
 
-  if (decode == NULL) {
-    return;
-  }
-  
   data->next = NULL;
 
   if (decode->data_list == NULL) {
@@ -106,10 +98,6 @@ oggplay_data_add_to_list_end(OggPlayDecode *decode, OggPlayDataHeader *data) {
  */
 void
 oggplay_data_add_to_list_front(OggPlayDecode *decode, OggPlayDataHeader *data) {
-  if (decode == NULL) {
-    return;
-  }
-  
   if (decode->data_list == NULL) {
     decode->data_list = decode->end_of_data_list = data;
     data->next = NULL;
@@ -123,7 +111,7 @@ void
 _print_list(char *name, OggPlayDataHeader *p) {
     printf("%s: ", name);
     for (; p != NULL; p = p->next) {
-      printf("%"PRId64"[%d]", OGGPLAY_TIME_FP_TO_INT (p->presentation_time), p->lock);
+      printf("%"PRId64"[%d]", p->presentation_time >> 32, p->lock);
       if (p->next != NULL) printf("->");
     }
     printf("\n");
@@ -139,10 +127,6 @@ oggplay_data_add_to_list (OggPlayDecode *decode, OggPlayDataHeader *data) {
    */
 
   ogg_int64_t samples_in_next_in_list;
-
-  if ((decode == NULL) || (data == NULL)) {
-    return;
-  }
 
   //_print_list("before", decode->data_list);
   //_print_list("untimed before", decode->untimed_data_list);
@@ -210,10 +194,6 @@ oggplay_data_free_list(OggPlayDataHeader *list) {
 void
 oggplay_data_shutdown_list (OggPlayDecode *decode) {
 
-  if (decode == NULL) {
-    return;
-  }
-  
   oggplay_data_free_list(decode->data_list);
   oggplay_data_free_list(decode->untimed_data_list);
 
@@ -228,16 +208,10 @@ oggplay_data_shutdown_list (OggPlayDecode *decode) {
 void
 oggplay_data_clean_list (OggPlayDecode *decode) {
 
-  ogg_int64_t         target;
-  OggPlayDataHeader * header = NULL;
+  ogg_int64_t         target = decode->player->target;
+  OggPlayDataHeader * header = decode->data_list;
   OggPlayDataHeader * p      = NULL;
-  
-  if (decode == NULL) {
-    return;
-  }
-  header = decode->data_list;
-  target = decode->player->target;
-  
+
   while (header != NULL) {
     if
     (
@@ -278,13 +252,8 @@ oggplay_data_clean_list (OggPlayDecode *decode) {
 }
 
 void
-oggplay_data_initialise_header (const OggPlayDecode *decode,
-                                OggPlayDataHeader *header) {
-  
-  if ((decode == NULL) || (header == NULL)) {
-    return;
-  }
-  
+oggplay_data_initialise_header (OggPlayDecode *decode,
+                OggPlayDataHeader *header) {
   /*
    * the frame is not cleaned until its presentation time has passed.  We'll
    * check presentation times in oggplay_data_clean_list.
@@ -293,106 +262,59 @@ oggplay_data_initialise_header (const OggPlayDecode *decode,
   header->next = NULL;
   header->presentation_time = decode->current_loc;
   header->has_been_presented = 0;
+
 }
 
-OggPlayErrorCode
+void
 oggplay_data_handle_audio_data (OggPlayDecode *decode, void *data,
-                                long samples, size_t samplesize) {
+      int samples, int samplesize) {
 
-  int                   num_channels, ret;
-  size_t                record_size = sizeof(OggPlayAudioRecord);
-  long                  samples_size;
+  int                   num_channels;
   OggPlayAudioRecord  * record = NULL;
 
   num_channels = ((OggPlayAudioDecode *)decode)->sound_info.channels;
-  
-  /* check for possible integer overflows....*/
-  if ((samples < 0) || (num_channels < 0)) {
-    return E_OGGPLAY_TYPE_OVERFLOW;
-  }
+  record = (OggPlayAudioRecord*)oggplay_calloc(sizeof(OggPlayAudioRecord) +
+                  samples * samplesize * num_channels, 1);
 
-  ret = oggplay_mul_signed_overflow (samples, num_channels, &samples_size);
-  if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-    return ret;
-  }
+  if (record == NULL)
+    return;
 
-  ret = oggplay_mul_signed_overflow (samples_size, samplesize, &samples_size);
-  if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-    return ret;
-  }
-
-  ret = oggplay_check_add_overflow (record_size, samples_size, &record_size);
-  if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-    return ret;
-  }
-
-  /* try to allocate the memory for the record */
-  record = (OggPlayAudioRecord*)oggplay_calloc(record_size, 1);
-  if (record == NULL) {
-    return E_OGGPLAY_OUT_OF_MEMORY;
-  }
-
-  /* initialise the header of OggPlayAudioRecord struct */
   oggplay_data_initialise_header(decode, &(record->header));
 
   record->header.samples_in_record = samples;
 
   record->data = (void *)(record + 1);
-  
-  /* copy the received data - the header has been initialised! */
-  memcpy (record->data, data, samples_size);
+
+  memcpy(record->data, data, samples * samplesize * num_channels);
   /*
   printf("[%f%f%f]\n", ((float *)record->data)[0], ((float *)record->data)[1],
                     ((float *)record->data)[2]);
   */
   oggplay_data_add_to_list(decode, &(record->header));
-  
-  return E_OGGPLAY_CONTINUE;
 }
 
-OggPlayErrorCode
-oggplay_data_handle_cmml_data(OggPlayDecode *decode, 
-                              unsigned char *data, 
-                              long size) {
+void
+oggplay_data_handle_cmml_data(OggPlayDecode *decode, unsigned char *data,
+                int size) {
 
   OggPlayTextRecord * record = NULL;
-  size_t              record_size = sizeof(OggPlayTextRecord);
 
-  /* check that the size we want to allocate doesn't overflow */
-  if ((size < 0) || (size+1 < 0)) {
-    return E_OGGPLAY_TYPE_OVERFLOW;
-  }
-  size += 1;
-  
-  if 
-  (
-    oggplay_check_add_overflow (record_size, size, &record_size)
-    == 
-    E_OGGPLAY_TYPE_OVERFLOW
-  ) 
-  {
-    return E_OGGPLAY_TYPE_OVERFLOW;
-  }
-  
-  /* allocate the memory for the record */
-  record = (OggPlayTextRecord*)oggplay_calloc (record_size, 1);
-  if (record == NULL) {
-    return E_OGGPLAY_OUT_OF_MEMORY;
-  }
+  record =
+      (OggPlayTextRecord*)oggplay_calloc (sizeof(OggPlayTextRecord) + size + 1, 1);
 
-  /* initialise the record's header */
+  if (record == NULL)
+    return;
+
   oggplay_data_initialise_header(decode, &(record->header));
 
   record->header.samples_in_record = 1;
   record->data = (char *)(record + 1);
 
-  /* copy the data */
   memcpy(record->data, data, size);
   record->data[size] = '\0';
 
   oggplay_data_add_to_list(decode, &(record->header));
 
-  return E_OGGPLAY_CONTINUE;
 }
 
 static int
@@ -412,13 +334,13 @@ get_uv_offset(OggPlayTheoraDecode *decode, yuv_buffer *buffer)
   return xo + yo;
 }
 
-int
+void
 oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
-                                  const yuv_buffer *buffer) {
+                                    yuv_buffer *buffer) {
 
-  size_t                size = sizeof (OggPlayVideoRecord);
-  int                   i, ret;
-  long                  y_size, uv_size, y_offset, uv_offset;
+  int                   size = sizeof (OggPlayVideoRecord);
+  int                   i;
+  int                   uv_offset;
   unsigned char       * p;
   unsigned char       * q;
   unsigned char       * p2;
@@ -426,37 +348,12 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
   OggPlayVideoRecord  * record;
   OggPlayVideoData    * data;
 
-  /* check for possible integer overflows */
-  ret = 
-    oggplay_mul_signed_overflow (buffer->y_height, buffer->y_stride, &y_size);
-  if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-    return ret;
-  }
-
-  ret = 
-    oggplay_mul_signed_overflow (buffer->uv_height, buffer->uv_stride, &uv_size);
-  if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-    return ret;
-  }
-
-  ret = oggplay_mul_signed_overflow (uv_size, 2, &uv_size);
-  if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-    return ret;
-  }
-
   if (buffer->y_stride < 0) {
-    y_size  *= -1;
-    uv_size *= -1;
-  }
-
-  ret = oggplay_check_add_overflow (size, y_size, &size);
-  if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-    return ret;
-  }
-  
-  ret = oggplay_check_add_overflow (size, uv_size, &size);
-  if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-    return ret;
+    size -= buffer->y_stride * buffer->y_height;
+    size -= buffer->uv_stride * buffer->uv_height * 2;
+  } else {
+    size += buffer->y_stride * buffer->y_height;
+    size += buffer->uv_stride * buffer->uv_height * 2;
   }
 
   /*
@@ -465,10 +362,9 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
    */
   record = (OggPlayVideoRecord*)oggplay_malloc (size);
 
-  if (record == NULL) {
-    return E_OGGPLAY_OUT_OF_MEMORY;
-  }
-  
+  if (record == NULL)
+    return;
+
   record->header.samples_in_record = 1;
   data = &(record->data);
 
@@ -480,10 +376,8 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
    * *grumble* theora plays silly buggers with pointers so we need to do
    * a row-by-row copy (stride may be negative)
    */
-  y_offset = (decode->video_info.offset_x&~1) 
-              + buffer->y_stride*(decode->video_info.offset_y&~1);
   p = data->y;
-  q = buffer->y + y_offset;
+  q = buffer->y + (decode->video_info.offset_x&~1)+buffer->y_stride*(decode->video_info.offset_y&~1);
   for (i = 0; i < decode->y_height; i++) {
     memcpy(p, q, decode->y_width);
     p += decode->y_width;
@@ -491,6 +385,7 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
   }
 
   uv_offset = get_uv_offset(decode, buffer);
+
   p = data->u;
   q = buffer->u + uv_offset;
   p2 = data->v;
@@ -510,7 +405,6 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
     OggPlayRGBChannels      rgb;
     OggPlayOverlayRecord  * orecord;
     OggPlayOverlayData    * odata;
-    long                    overlay_size;
 
     yuv.ptry = data->y;
     yuv.ptru = data->u;
@@ -520,27 +414,9 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
     yuv.uv_width = decode->uv_width;
     yuv.uv_height = decode->uv_height;
 
-    size = sizeof(OggPlayOverlayRecord);
-    /* check for possible integer oveflows */
-    ret = oggplay_mul_signed_overflow(decode->y_width, decode->y_height, 
-                                      &overlay_size);
-    if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-      return ret;
-    }
-    
-    ret = oggplay_mul_signed_overflow(overlay_size, 4, &overlay_size);
-    if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-      return ret;
-    }
-
-    ret =  oggplay_check_add_overflow (size, overlay_size, &size);
-    if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-      return ret;
-    }
-
-    /* allocate memory for the overlay record */
+    size = sizeof(OggPlayOverlayRecord) + decode->y_width * decode->y_height * 4;
     orecord = (OggPlayOverlayRecord*) oggplay_malloc (size);
-    if (orecord != NULL) {
+    if (orecord) {
       oggplay_data_initialise_header((OggPlayDecode *)decode, &(orecord->header));
       orecord->header.samples_in_record = 1;
       odata = &(orecord->data);
@@ -549,12 +425,10 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
       rgb.rgb_width = yuv.y_width;
       rgb.rgb_height = yuv.y_height;
 
-      if (!decode->swap_rgb) {
-        oggplay_yuv2bgra(&yuv, &rgb);
-      } else {
-        oggplay_yuv2rgba(&yuv, &rgb);
-      }
-      
+      oggplay_yuv2rgba(&yuv, &rgb);
+
+//      odata->rgb = NULL;
+//      odata->rgba = rgb.ptro;
       odata->rgb = rgb.ptro;
       odata->rgba = NULL;
       odata->width = rgb.rgb_width;
@@ -564,31 +438,20 @@ oggplay_data_handle_theora_frame (OggPlayTheoraDecode *decode,
       oggplay_free(record);
     
       oggplay_data_add_to_list((OggPlayDecode *)decode, &(orecord->header));
-    } else {
-      /* memory allocation failed! */
-      oggplay_free (record);
-      
-      return E_OGGPLAY_OUT_OF_MEMORY;
     }
   }
   else {
     oggplay_data_initialise_header((OggPlayDecode *)decode, &(record->header));
     oggplay_data_add_to_list((OggPlayDecode *)decode, &(record->header));
   }
-  
-  return E_OGGPLAY_CONTINUE;
 }
 
 #ifdef HAVE_KATE
-OggPlayErrorCode
+void
 oggplay_data_handle_kate_data(OggPlayKateDecode *decode, const kate_event *ev) {
 
   OggPlayTextRecord * record = NULL;
-  size_t              rec_size = sizeof(OggPlayTextRecord);
-  
-  if (decode == NULL) {
-    return -1; 
-  }
+
 #ifdef HAVE_TIGER
   tiger_renderer_add_event(decode->tr, ev->ki, ev);
 
@@ -599,21 +462,9 @@ oggplay_data_handle_kate_data(OggPlayKateDecode *decode, const kate_event *ev) {
   else
 #endif
   {
-    /* check for integer overflow */
-    if 
-    ( 
-      oggplay_check_add_overflow (rec_size, ev->len0, &rec_size)
-      == 
-      E_OGGPLAY_TYPE_OVERFLOW
-    )
-    {
-      return E_OGGPLAY_TYPE_OVERFLOW;
-    }
-    
-    record = (OggPlayTextRecord*)oggplay_calloc (rec_size, 1);
-    if (!record) {
-      return E_OGGPLAY_OUT_OF_MEMORY;
-    }
+    record = (OggPlayTextRecord*)oggplay_calloc (sizeof(OggPlayTextRecord) + ev->len0, 1);
+    if (!record)
+      return;
 
     oggplay_data_initialise_header(&decode->decoder, &(record->header));
 
@@ -625,23 +476,20 @@ oggplay_data_handle_kate_data(OggPlayKateDecode *decode, const kate_event *ev) {
 
     oggplay_data_add_to_list(&decode->decoder, &(record->header));
   }
-  
-  return E_OGGPLAY_CONTINUE;
 }
 #endif
 
 #ifdef HAVE_TIGER
-OggPlayErrorCode
+void
 oggplay_data_update_tiger(OggPlayKateDecode *decode, int active, ogg_int64_t presentation_time, OggPlayCallbackInfo *info) {
 
   OggPlayOverlayRecord  * record = NULL;
   OggPlayOverlayData    * data = NULL;
   size_t                size = sizeof (OggPlayOverlayRecord);
   int                   track = active && decode->use_tiger;
-  int                   ret;
   kate_float            t = OGGPLAY_TIME_FP_TO_INT(presentation_time) / 1000.0f;
 
-  if (!decode->decoder.initialised) return -1;
+  if (!decode->init) return;
 
   if (track) {
     if (info) {
@@ -649,59 +497,33 @@ oggplay_data_update_tiger(OggPlayKateDecode *decode, int active, ogg_int64_t pre
         OggPlayDataHeader *header = info->records[0];
         data = (OggPlayOverlayData*)(header+1);
         if (decode->tr && data->rgb) {
-#if WORDS_BIGENDIAN || IS_BIG_ENDIAN
-          tiger_renderer_set_buffer(decode->tr, data->rgb, data->width, data->height, data->stride, 0);
-#else
           tiger_renderer_set_buffer(decode->tr, data->rgb, data->width, data->height, data->stride, 1);
-#endif
         }
         else {
           /* we're supposed to overlay on a frame, but the available frame has no RGB buffer */
           /* fprintf(stderr,"no RGB buffer found for video frame\n"); */
-          return -1;
+          return;
         }
       }
       else {
         /* we're supposed to overlay on a frame, but there is no frame available */
         /* fprintf(stderr,"no video frame to overlay on\n"); */
-        return -1;
+        return;
       }
     }
     else {
       // TODO: some way of knowing the size of the video we'll be drawing onto, if any
-      int width = decode->k_state.ki->original_canvas_width;
-      int height = decode->k_state.ki->original_canvas_height;
-      long overlay_size;
+      int width = decode->k.ki->original_canvas_width;
+      int height = decode->k.ki->original_canvas_height;
       if (width <= 0 || height <= 0) {
         /* some default resolution if we're not overlaying onto a video and the canvas size is unknown */
-        if (decode->default_width > 0 && decode->default_height > 0) {
-          width = decode->default_width;
-          height = decode->default_height;
-        }
-        else {
-          width = 640;
-          height = 480;
-        }
+        width = 640;
+        height = 480;
       }
-      /* check for integer overflow */
-      ret = oggplay_mul_signed_overflow (width, height, &overlay_size);
-      if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-        return ret;
-      }
-      
-      ret = oggplay_mul_signed_overflow (overlay_size, 4, &overlay_size);
-      if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-        return E_OGGPLAY_TYPE_OVERFLOW;
-      }
-      
-      ret = oggplay_check_add_overflow (size, overlay_size, &size);
-      if (ret == E_OGGPLAY_TYPE_OVERFLOW) {
-        return E_OGGPLAY_TYPE_OVERFLOW;
-      }
-
+      size = sizeof (OggPlayOverlayRecord) + width*height*4;
       record = (OggPlayOverlayRecord*)oggplay_calloc (1, size);
       if (!record)
-        return E_OGGPLAY_OUT_OF_MEMORY;
+        return;
 
       record->header.samples_in_record = 1;
       data= &(record->data);
@@ -714,7 +536,7 @@ oggplay_data_update_tiger(OggPlayKateDecode *decode, int active, ogg_int64_t pre
       data->stride = width*4;
 
       if (decode->tr && data->rgba) {
-        tiger_renderer_set_buffer(decode->tr, data->rgba, data->width, data->height, data->stride, decode->swap_rgb);
+        tiger_renderer_set_buffer(decode->tr, data->rgba, data->width, data->height, data->stride, 1);
       }
 
       oggplay_data_add_to_list(&decode->decoder, &(record->header));
@@ -732,8 +554,6 @@ oggplay_data_update_tiger(OggPlayKateDecode *decode, int active, ogg_int64_t pre
       tiger_renderer_render(decode->tr);
     }
   }
-  
-  return E_OGGPLAY_CONTINUE;
 }
 #endif
 
