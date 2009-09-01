@@ -88,14 +88,9 @@ HistoryEngine.prototype = {
   },
 
   _syncFinish: function HistEngine__syncFinish(error) {
-    this._log.debug("Finishing up sync");
-    this._tracker.resetScore();
-
     // Only leave 1 week's worth of history on the server
-    let coll = new Collection(this.engineURL, this._recordObj);
-    coll.older = this.lastSync - 604800; // 1 week
-    coll.full = 0;
-    coll.delete();
+    this._delete.older = this.lastSync - 604800;
+    SyncEngine.prototype._syncFinish.call(this);
   },
 
   _findDupe: function _findDupe(item) {
