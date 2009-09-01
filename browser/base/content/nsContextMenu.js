@@ -76,7 +76,6 @@ function nsContextMenu(aXulMenu, aBrowser) {
   this.onLink            = false;
   this.onMailtoLink      = false;
   this.onSaveableLink    = false;
-  this.onMetaDataItem    = false;
   this.onMathML          = false;
   this.link              = false;
   this.linkURL           = "";
@@ -131,7 +130,6 @@ nsContextMenu.prototype = {
     this.initSpellingItems();
     this.initSaveItems();
     this.initClipboardItems();
-    this.initMetadataItems();
     this.initMediaPlayerItems();
   },
 
@@ -205,9 +203,7 @@ nsContextMenu.prototype = {
     this.showItem("context-viewinfo", shouldShow);
 
     this.showItem("context-sep-properties",
-                  !(this.isContentSelected ||
-                    this.onTextInput || this.onCanvas ||
-                    this.onVideo || this.onAudio));
+                  (shouldShow || this.isContentSelected));
 
     // Set as Desktop background depends on whether an image was clicked on,
     // and only works if we have a shell service.
@@ -390,11 +386,6 @@ nsContextMenu.prototype = {
                   this.onVideo || this.onAudio);
   },
 
-  initMetadataItems: function() {
-    // Show if user clicked on something which has metadata.
-    this.showItem("context-metadata", this.onMetaDataItem);
-  },
-
   initMediaPlayerItems: function() {
     var onMedia = (this.onVideo || this.onAudio);
     // Several mutually exclusive items... play/pause, mute/unmute, show/hide
@@ -433,7 +424,6 @@ nsContextMenu.prototype = {
     this.onCanvas          = false;
     this.onVideo           = false;
     this.onAudio           = false;
-    this.onMetaDataItem    = false;
     this.onTextInput       = false;
     this.onKeywordField    = false;
     this.mediaURL          = "";
@@ -466,7 +456,6 @@ nsContextMenu.prototype = {
       if (this.target instanceof Ci.nsIImageLoadingContent &&
           this.target.currentURI) {
         this.onImage = true;
-        this.onMetaDataItem = true;
                 
         var request =
           this.target.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
@@ -537,7 +526,6 @@ nsContextMenu.prototype = {
             
           // Target is a link or a descendant of a link.
           this.onLink = true;
-          this.onMetaDataItem = true;
 
           // xxxmpc: this is kind of a hack to work around a Gecko bug (see bug 266932)
           // we're going to walk up the DOM looking for a parent link node,
@@ -562,22 +550,6 @@ nsContextMenu.prototype = {
           this.linkProtocol = this.getLinkProtocol();
           this.onMailtoLink = (this.linkProtocol == "mailto");
           this.onSaveableLink = this.isLinkSaveable( this.link );
-        }
-
-        // Metadata item?
-        if (!this.onMetaDataItem) {
-          // We display metadata on anything which fits
-          // the below test, as well as for links and images
-          // (which set this.onMetaDataItem to true elsewhere)
-          if ((elem instanceof HTMLQuoteElement && elem.cite) ||
-              (elem instanceof HTMLTableElement && elem.summary) ||
-              (elem instanceof HTMLModElement &&
-               (elem.cite || elem.dateTime)) ||
-              (elem instanceof HTMLElement &&
-               (elem.title || elem.lang)) ||
-              elem.getAttributeNS(XMLNS, "lang")) {
-            this.onMetaDataItem = true;
-          }
         }
 
         // Background image?  Don't bother if we've already found a
@@ -632,7 +604,6 @@ nsContextMenu.prototype = {
         this.onImage           = false;
         this.onLoadedImage     = false;
         this.onCompletedImage  = false;
-        this.onMetaDataItem    = false;
         this.onMathML          = false;
         this.inFrame           = false;
         this.hasBGImage        = false;
@@ -1097,14 +1068,6 @@ nsContextMenu.prototype = {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
     clipboard.copyString(addresses);
-  },
-
-  // Open Metadata window for node
-  showMetadata: function () {
-    window.openDialog("chrome://browser/content/metaData.xul",
-                      "_blank",
-                      "scrollbars,resizable,chrome,dialog=no",
-                      this.target);
   },
 
   ///////////////
