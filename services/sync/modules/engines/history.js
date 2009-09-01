@@ -87,34 +87,6 @@ HistoryEngine.prototype = {
     }, null);
   },
 
-  // History reconciliation is simpler than the default one from SyncEngine,
-  // because we have the advantage that we can use the URI as a definitive
-  // check for local existence of incoming items.  The steps are as follows:
-  //
-  // 1) Check for the same item in the locally modified list.  In that case,
-  //    local trumps remote.  This step is unchanged from our superclass.
-  // 2) Check if the incoming item was deleted.  Skip if so.
-  // 3) Apply new record/update.
-  //
-  // Note that we don't attempt to equalize the IDs, the history store does that
-  // as part of update()
-  _reconcile: function HistEngine__reconcile(item) {
-    // Step 1: Check for conflicts
-    //         If same as local record, do not upload
-    if (item.id in this._tracker.changedIDs) {
-      if (this._isEqual(item))
-        this._tracker.removeChangedID(item.id);
-      return false;
-    }
-
-    // Step 2: Check if the item is deleted - we don't support that (yet?)
-    if (item.deleted)
-      return false;
-
-    // Step 3: Apply update/new record
-    return true;
-  },
-
   _syncFinish: function HistEngine__syncFinish(error) {
     this._log.debug("Finishing up sync");
     this._tracker.resetScore();
@@ -124,6 +96,10 @@ HistoryEngine.prototype = {
     coll.older = this.lastSync - 604800; // 1 week
     coll.full = 0;
     coll.delete();
+  },
+
+  _findDupe: function _findDupe(item) {
+    return GUIDForUri(item.histUri);
   }
 };
 
@@ -269,12 +245,6 @@ HistoryStore.prototype = {
                           (visit.type == 5 || visit.type == 6), 0);
     }
     this._hsvc.setPageTitle(uri, record.title);
-
-    // Equalize IDs
-    let localId = GUIDForUri(record.histUri);
-    if (localId != record.id)
-      this.changeItemID(localId, record.id);
-
   },
 
   itemExists: function HistStore_itemExists(id) {
