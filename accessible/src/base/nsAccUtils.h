@@ -429,11 +429,11 @@ public:
   /**
    * Return true if the given accessible hasn't children.
    */
-  static PRBool IsLeaf(nsIAccessible *aAcc)
+  static inline PRBool IsLeaf(nsIAccessible *aAcc)
   {
-    PRInt32 numChildren;
+    PRInt32 numChildren = 0;
     aAcc->GetChildCount(&numChildren);
-    return numChildren > 0;
+    return numChildren == 0;
   }
 
   /**
