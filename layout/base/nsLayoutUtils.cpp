@@ -678,54 +678,46 @@ nsLayoutUtils::GetScrollableFrameFor(nsIScrollableView *aScrollableView)
   return sf;
 }
 
-//static
-nsPresContext::ScrollbarStyles
-nsLayoutUtils::ScrollbarStylesOfView(nsIScrollableView *aScrollableView)
+// static
+nsIScrollableFrame*
+nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
+                                                     Direction aDirection)
 {
-  nsIScrollableFrame *sf = GetScrollableFrameFor(aScrollableView);
-  return sf ? sf->GetScrollbarStyles() :
-              nsPresContext::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
-                                             NS_STYLE_OVERFLOW_HIDDEN);
+  NS_ASSERTION(aFrame, "GetNearestScrollableFrameForDirection expects a non-null frame");
+  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
+    if (scrollableFrame) {
+      nsPresContext::ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
+      nsMargin scrollbarSizes = scrollableFrame->GetActualScrollbarSizes();
+      nsRect scrollRange = scrollableFrame->GetScrollRange();
+      // Require visible scrollbars or something to scroll to in
+      // the given direction.
+      if (aDirection == eVertical ?
+          (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN &&
+           (scrollbarSizes.LeftRight() || scrollRange.height > 0)) :
+          (ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
+           (scrollbarSizes.TopBottom() || scrollRange.width > 0)))
+        return scrollableFrame;
+    }
+  }
+  return nsnull;
 }
 
 // static
-nsIScrollableView*
-nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
+nsIScrollableFrame*
+nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame)
 {
-  // If aDirection is eEither, find first view with a scrolllable frame.
-  // Otherwise, find the first view that has a scrollable frame whose
-  // ScrollbarStyles is not NS_STYLE_OVERFLOW_HIDDEN in aDirection
-  // and where there is something currently not visible
-  // that can be scrolled to in aDirection.
-  NS_ASSERTION(aView, "GetNearestScrollingView expects a non-null view");
-  nsIScrollableView* scrollableView = nsnull;
-  for (; aView; aView = aView->GetParent()) {
-    scrollableView = aView->ToScrollableView();
-    if (scrollableView) {
-      nsPresContext::ScrollbarStyles ss =
-        nsLayoutUtils::ScrollbarStylesOfView(scrollableView);
-      nsIScrollableFrame *scrollableFrame = GetScrollableFrameFor(scrollableView);
-      NS_ASSERTION(scrollableFrame, "Must have scrollable frame for view!");
-      nsMargin margin = scrollableFrame->GetActualScrollbarSizes();
-      // Get size of total scrollable area
-      nscoord totalWidth, totalHeight;
-      scrollableView->GetContainerSize(&totalWidth, &totalHeight);
-      // Get size of currently visible area
-      nsSize visibleSize = aView->GetBounds().Size();
-      // aDirection can be eHorizontal, eVertical, or eEither
-      // If scrolling in a specific direction, require visible scrollbars or
-      // something to scroll to in that direction.
-      if (aDirection != eHorizontal &&
-          ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN &&
-          (aDirection == eEither || totalHeight > visibleSize.height || margin.LeftRight()))
-        break;
-      if (aDirection != eVertical &&
-          ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
-          (aDirection == eEither || totalWidth > visibleSize.width || margin.TopBottom()))
-        break;
+  NS_ASSERTION(aFrame, "GetNearestScrollableFrame expects a non-null frame");
+  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
+    if (scrollableFrame) {
+      nsPresContext::ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
+      if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN ||
+          ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN)
+        return scrollableFrame;
     }
   }
-  return scrollableView;
+  return nsnull;
 }
 
 nsPoint
