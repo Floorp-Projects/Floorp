@@ -46,16 +46,19 @@
 #define ZIP_MAGIC     0x5A49505FL   /* "ZIP_" */
 #define ZIPFIND_MAGIC 0x5A495046L   /* "ZIPF" */
 #define ZIP_TABSIZE   256
-/* We really want to be a (multiple of) 4K for optimal file IO */
-#define ZIP_BUFLEN    (4*1024)      /* Used as output buffer when deflating items to a file */
+// Keep this odd. The -1 is significant.
+#define ZIP_BUFLEN    (4 * 1024 - 1)
 
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #include "plarena.h"
+#define ZIP_Seek(fd,p,m) (PR_Seek((fd),((PROffset32)p),(m))==((PROffset32)p))
 
 #include "zlib.h"
 #include "nsAutoPtr.h"
 
 class nsZipFind;
+class nsZipReadState;
+class nsZipItemMetadata;
 
 struct PRFileDesc;
 
@@ -85,6 +88,7 @@ struct nsZipItem
   nsZipItem*  next;
 
   PRUint32    headerOffset;
+  PRUint32    dataOffset;
   PRUint32    size;             /* size in original file */
   PRUint32    realsize;         /* inflated size */
   PRUint32    crc32;
@@ -96,18 +100,21 @@ struct nsZipItem
   PRUint16     date;
   PRUint16     mode;
   PRUint8      compression;
-  bool         isDirectory;
-  bool         isSynthetic;     /* whether item is an actual zip entry or was
-                                   generated as part of a real entry's path */
+  PRPackedBool hasDataOffset : 1;
+  PRPackedBool isDirectory : 1; 
+  PRPackedBool isSynthetic : 1;  /* whether item is an actual zip entry or was
+                                    generated as part of a real entry's path,
+                                    e.g. foo/ in a zip containing only foo/a.txt
+                                    and no foo/ entry is synthetic */
 #if defined(XP_UNIX) || defined(XP_BEOS)
-  bool         isSymlink;
+  PRPackedBool isSymlink : 1;
 #endif
 
-  char         name[1];         /* actually, bigger than 1 */
+  char        name[1]; // actually, bigger than 1
 };
 
 class nsZipHandle;
-
+class nsSeekableZipHandle;
 /** 
  * nsZipArchive -- a class for reading the PKZIP file format.
  *
@@ -183,17 +190,10 @@ public:
    */
   PRInt32 FindInit(const char * aPattern, nsZipFind** aFind);
 
-  /*
-   * Gets an undependent handle to the mapped file.
+  /* Gets an undependent handle to the jar
+   * Also ensures that aItem is fully filled
    */
-  nsZipHandle* GetFD();
-
-  /**
-   * Get pointer to the data of the item.
-   * @param   aItem       Pointer to nsZipItem
-   * reutrns null when zip file is corrupt.
-   */
-  PRUint8* GetData(nsZipItem* aItem);
+  nsZipHandle* GetFD(nsZipItem* aItem);
 
 private:
   //--- private members ---
@@ -201,8 +201,15 @@ private:
   nsZipItem*    mFiles[ZIP_TABSIZE];
   PLArenaPool   mArena;
 
+  /**
+   * Fills in nsZipItem fields that were not filled in by BuildFileList
+   * @param   aItem       Pointer to nsZipItem
+   * returns true if the item was filled in successfully
+   */
+  bool MaybeReadItem(nsZipItem* aItem);
+
   // Whether we synthesized the directory entries
-  bool          mBuiltSynthetics;
+  PRPackedBool  mBuiltSynthetics;
 
   // file handle
   nsRefPtr<nsZipHandle> mFd;
@@ -215,29 +222,92 @@ private:
   nsresult          BuildFileList();
   nsresult          BuildSynthetics();
 
-  nsresult  CopyItemToDisk(nsZipItem* item, PRFileDesc* outFD);
-  nsresult  InflateItem(nsZipItem* item, PRFileDesc* outFD);
+  nsresult  CopyItemToDisk(PRUint32 size, PRUint32 crc, nsSeekableZipHandle &fd, PRFileDesc* outFD);
+  nsresult  InflateItem(const nsZipItem* aItem, nsSeekableZipHandle &fd, PRFileDesc* outFD);
 };
 
 class nsZipHandle {
 friend class nsZipArchive;
+friend class nsSeekableZipHandle;
 public:
   static nsresult Init(PRFileDesc *fd, nsZipHandle **ret NS_OUTPARAM);
+
+  /**
+   * Reads data at a certain point
+   * @param aPosition seek ofset
+   * @param aBuffer buffer
+   * @param aCount number of bytes to read */
+  PRInt32 Read(PRUint32 aPosition, void *aBuffer, PRUint32 aCount);
 
   NS_METHOD_(nsrefcnt) AddRef(void);
   NS_METHOD_(nsrefcnt) Release(void);
 
 protected:
-  PRFileDesc * mFd;       /* OS file-descriptor */
-  PRUint8 *    mFileData; /* pointer to mmaped file */
-  PRUint32     mLen;      /* length of file and memory mapped area */
+  PRFileDesc *mFd; // OS file-descriptor
+  PRUint8 *mFileData; // pointer to mmaped file
+  PRUint32 mLen; // length of file and memory mapped area
 
 private:
   nsZipHandle();
   ~nsZipHandle();
 
-  PRFileMap *  mMap;      /* nspr datastructure for mmap */
-  nsrefcnt     mRefCnt;   /* ref count */
+  PRFileMap *mMap; // nspr datastructure for mmap
+  nsrefcnt mRefCnt; // ref count
+};
+
+
+/** nsSeekableZipHandle acts as a container for nsZipHandle,
+    emulates sequential file io */
+class nsSeekableZipHandle {
+  //   stick nsZipItem in here
+public:
+  nsSeekableZipHandle()
+    : mOffset(0)
+    , mRemaining(0)
+  {
+  }
+
+  /** Initializes nsSeekableZipHandle with
+   * @param aOffset byte offset of the file to start reading at
+   * @param length of this descriptor
+   */
+  bool Open(nsZipHandle *aHandle, PRUint32 aOffset, PRUint32 aLength) {
+    NS_ABORT_IF_FALSE (aHandle, "Argument must not be NULL");
+    if (aOffset > aHandle->mLen)
+      return false;
+    mFd = aHandle;
+    mOffset = aOffset;
+    mRemaining = aLength;
+    return true;
+  }
+
+  /** Releases the file handle. It is safe to call multiple times. */
+  void Close()
+  {
+    mFd = NULL;
+  }
+
+  /**
+   * Reads data at a certain point
+   * @param aBuffer input buffer
+   * @param aCount number of bytes to read */
+  PRInt32 Read(void *aBuffer, PRUint32 aCount)
+  {
+    if (!mFd.get())
+      return -1;
+    aCount = PR_MIN(mRemaining, aCount);
+    PRInt32 ret = mFd->Read(mOffset, aBuffer, aCount);
+    if (ret > 0) {
+      mOffset += ret;
+      mRemaining -= ret;
+    }
+    return ret;
+  }
+
+private:
+  nsRefPtr<nsZipHandle> mFd; // file handle
+  PRUint32 mOffset; // current reading offset
+  PRUint32 mRemaining; // bytes remaining
 };
 
 
@@ -249,6 +319,7 @@ private:
 class nsZipFind
 {
 public:
+
   nsZipFind(nsZipArchive* aZip, char* aPattern, PRBool regExp);
   ~nsZipFind();
 
