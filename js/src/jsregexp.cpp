@@ -3125,14 +3125,16 @@ class RegExpNativeCompiler {
          * passing it as a parameter, we avoid loading it every iteration.
          */
         lir->ins0(LIR_start);
-        lirbuf->state = state = addName(lirbuf, lir->insParam(0, 0), "state");
-        lirbuf->param1 = cpend = addName(lirbuf, lir->insParam(1, 0), "cpend");
+
         for (int i = 0; i < NumSavedRegs; ++i)
             lir->insParam(i, 1);
 #ifdef DEBUG
         for (int i = 0; i < NumSavedRegs; ++i)
             addName(lirbuf, lirbuf->savedRegs[i], regNames[Assembler::savedRegs[i]]);
 #endif
+
+        lirbuf->state = state = addName(lirbuf, lir->insParam(0, 0), "state");
+        lirbuf->param1 = cpend = addName(lirbuf, lir->insParam(1, 0), "cpend");
 
         loopLabel = lir->ins0(LIR_label);
 
