@@ -386,7 +386,6 @@ nsresult nsGeolocationService::Init()
   if (provider)
     mProviders.AppendObject(provider);
 
-
   // look up any providers that were registered via the category manager
   nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
   if (!catMan)
@@ -416,13 +415,6 @@ nsresult nsGeolocationService::Init()
   }
 
   // we should move these providers outside of this file! dft
-
-  // if NS_MAEMO_LOCATION, see if we should try the MAEMO location provider
-#ifdef NS_MAEMO_LOCATION
-  provider = new MaemoLocationProvider();
-  if (provider)
-    mProviders.AppendObject(provider);
-#endif
 
   // if WINCE, see if we should try the WINCE location provider
 #ifdef WINCE_WINDOWS_MOBILE
