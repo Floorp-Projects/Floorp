@@ -76,7 +76,6 @@ Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/faultTolerance.js");
 Cu.import("resource://weave/auth.js");
 Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/base_records/wbo.js");
@@ -90,7 +89,6 @@ Cu.import("resource://weave/engines/clientData.js");
 let Weave = {};
 Cu.import("resource://weave/constants.js", Weave);
 Cu.import("resource://weave/util.js", Weave);
-Cu.import("resource://weave/faultTolerance.js", Weave);
 Cu.import("resource://weave/auth.js", Weave);
 Cu.import("resource://weave/resource.js", Weave);
 Cu.import("resource://weave/base_records/keys.js", Weave);
@@ -314,7 +312,6 @@ WeaveSvc.prototype = {
     Svc.Observer.addObserver(this, "quit-application", true);
     Svc.Observer.addObserver(this, "weave:service:sync:finish", true);
     Svc.Observer.addObserver(this, "weave:service:sync:error", true);
-    FaultTolerance.Service; // initialize FT service
 
     if (!this.enabled)
       this._log.info("Weave Sync disabled");
@@ -1195,8 +1192,8 @@ WeaveSvc.prototype = {
       this._syncError = true;
       this._weaveStatusCode = WEAVE_STATUS_PARTIAL;
       this._detailedStatus.setEngineStatus(engine.name, e);
-      if (FaultTolerance.Service.onException(e))
-        return true;
+      this._log.debug(Utils.exceptionStr(e));
+      return true;
     }
   },
 
