@@ -94,12 +94,7 @@ BookmarksEngine.prototype = {
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
 
-<<<<<<< local
-  _sync: function BookmarksEngine__sync() {
-    Svc.Bookmark.runInBatchMode({
-      runBatched: Utils.bind2(this, SyncEngine.prototype._sync)
-    }, null);
-  },
+  _sync: Utils.batchSync("Bookmark", SyncEngine),
 
   _syncStartup: function _syncStart() {
     SyncEngine.prototype._syncStartup.call(this);
@@ -143,9 +138,6 @@ BookmarksEngine.prototype = {
     // TODO for bookmarks, check if it exists and find guid
     // for everything else (folders, separators) look for parent/pred?
   }
-=======
-  _sync: Utils.batchSync("Bookmark", SyncEngine)
->>>>>>> other
 };
 
 function BookmarksStore() {
