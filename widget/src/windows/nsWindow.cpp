@@ -4178,6 +4178,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SETTINGCHANGE:
 #if !defined (WINCE_WINDOWS_MOBILE)
       getWheelInfo = PR_TRUE;
+#else
+      switch (wParam) {
+        case SPI_SIPMOVE:
+        case SPI_SETSIPINFO:
+        case SPI_SETCURRENTIM:
+          nsWindowCE::NotifySoftKbObservers();
+          break;
+      }
 #endif
       OnSettingsChange(wParam, lParam);
       break;
