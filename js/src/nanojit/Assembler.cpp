@@ -99,6 +99,9 @@ namespace nanojit
         : codeList(0)
         , alloc(alloc)
         , _codeAlloc(codeAlloc)
+        , _branchStateMap(alloc)
+        , _patches(alloc)
+        , _labels(alloc)
         , config(core->config)
     {
         nInit(core);
@@ -118,6 +121,10 @@ namespace nanojit
 
         for(uint32_t i=0; i<NJ_MAX_STACK_ENTRY; i++)
             _activation.entry[i] = 0;
+
+        _branchStateMap.clear();
+        _patches.clear();
+        _labels.clear();
     }
 
     void Assembler::registerResetAll()
@@ -509,17 +516,17 @@ namespace nanojit
     {
         SideExit *exit = guard->record()->exit;
         NIns* at = 0;
-        if (!_branchStateMap->get(exit))
+        if (!_branchStateMap.get(exit))
         {
             at = asm_leave_trace(guard);
         }
         else
         {
-            RegAlloc* captured = _branchStateMap->get(exit);
+            RegAlloc* captured = _branchStateMap.get(exit);
             intersectRegisterState(*captured);
             at = exit->target->fragEntry;
             NanoAssert(at != 0);
-            _branchStateMap->remove(exit);
+            _branchStateMap.remove(exit);
         }
         return at;
     }
@@ -574,7 +581,7 @@ namespace nanojit
         return jmpTarget;
     }
 
-    void Assembler::beginAssembly(Fragment *frag, RegAllocMap* branchStateMap)
+    void Assembler::beginAssembly(Fragment *frag)
     {
         reset();
 
@@ -612,7 +619,6 @@ namespace nanojit
         _stats.codeExitStart = _nExitIns-1;
 #endif /* PERFM */
 
-        _branchStateMap = branchStateMap;
         _epilogue = NULL;
 
         nBeginAssembly();
@@ -668,17 +674,15 @@ namespace nanojit
 
         _inExit = false;
 
-        LabelStateMap labels(alloc);
-        NInsMap patches(alloc);
-        gen(prev, labels, patches);
+        gen(prev);
 
         if (!error()) {
             // patch all branches
-            NInsMap::Iter iter(patches);
+            NInsMap::Iter iter(_patches);
             while (iter.next()) {
                 NIns* where = iter.key();
                 LIns* targ = iter.value();
-                LabelState *label = labels.get(targ);
+                LabelState *label = _labels.get(targ);
                 NIns* ntarg = label->addr;
                 if (ntarg) {
                     nPatchBranch(where,ntarg);
@@ -743,8 +747,7 @@ namespace nanojit
         NanoAssertMsgf(_fpuStkDepth == 0,"_fpuStkDepth %d\n",_fpuStkDepth);
 
         debug_only( pageValidate(); )
-        NanoAssert( !_branchStateMap || _branchStateMap->isEmpty());
-        _branchStateMap = 0;
+        NanoAssert(_branchStateMap.isEmpty());
     }
 
     void Assembler::releaseRegisters()
@@ -823,7 +826,7 @@ namespace nanojit
 #define countlir_call()
 #endif
 
-    void Assembler::gen(LirFilter* reader, LabelStateMap& labels, NInsMap& patches)
+    void Assembler::gen(LirFilter* reader)
     {
         // trace must end with LIR_x, LIR_loop, LIR_[f]ret, LIR_xtbl, or LIR_live
         NanoAssert(reader->pos()->isop(LIR_x) ||
@@ -1098,7 +1101,7 @@ namespace nanojit
                 {
                     countlir_jmp();
                     LInsp to = ins->getTarget();
-                    LabelState *label = labels.get(to);
+                    LabelState *label = _labels.get(to);
                     // the jump is always taken so whatever register state we
                     // have from downstream code, is irrelevant to code before
                     // this jump.  so clear it out.  we will pick up register
@@ -1114,13 +1117,13 @@ namespace nanojit
                         handleLoopCarriedExprs(pending_lives);
                         if (!label) {
                             // save empty register state at loop header
-                            labels.add(to, 0, _allocator);
+                            _labels.add(to, 0, _allocator);
                         }
                         else {
                             intersectRegisterState(label->regs);
                         }
                         JMP(0);
-                        patches.put(_nIns, to);
+                        _patches.put(_nIns, to);
                     }
                     break;
                 }
@@ -1131,7 +1134,7 @@ namespace nanojit
                     countlir_jcc();
                     LInsp to = ins->getTarget();
                     LIns* cond = ins->oprnd1();
-                    LabelState *label = labels.get(to);
+                    LabelState *label = _labels.get(to);
                     if (label && label->addr) {
                         // forward jump to known label.  need to merge with label's register state.
                         unionRegisterState(label->regs);
@@ -1143,24 +1146,24 @@ namespace nanojit
                         if (!label) {
                             // evict all registers, most conservative approach.
                             evictRegs(~_allocator.free);
-                            labels.add(to, 0, _allocator);
+                            _labels.add(to, 0, _allocator);
                         }
                         else {
                             // evict all registers, most conservative approach.
                             intersectRegisterState(label->regs);
                         }
                         NIns *branch = asm_branch(op == LIR_jf, cond, 0);
-                        patches.put(branch,to);
+                        _patches.put(branch,to);
                     }
                     break;
                 }
                 case LIR_label:
                 {
                     countlir_label();
-                    LabelState *label = labels.get(ins);
+                    LabelState *label = _labels.get(ins);
                     if (!label) {
                         // label seen first, normal target of forward jump, save addr & allocator
-                        labels.add(ins, _nIns, _allocator);
+                        _labels.add(ins, _nIns, _allocator);
                     }
                     else {
                         // we're at the top of a loop
