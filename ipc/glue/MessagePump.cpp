@@ -167,8 +167,13 @@ MessagePump::ScheduleWork()
   // Make sure the event loop wakes up.
   if (mThread) {
     mThread->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);
-    event_.Signal();
   }
+  else {
+    // Some things (like xpcshell) don't use the app shell and so Run hasn't
+    // been called. We still need to wake up the main thread.
+    NS_DispatchToMainThread(mDummyEvent, NS_DISPATCH_NORMAL);
+  }
+  event_.Signal();
 }
 
 #ifdef DEBUG
