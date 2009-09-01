@@ -257,19 +257,6 @@ SyncEngine.prototype = {
     return this._store.createRecord(id, this.cryptoMetaURL);
   },
 
-  // Check if a record is "like" another one, even though the IDs are different,
-  // in that case, we'll change the ID of the local item to match
-  // Probably needs to be overridden in a subclass, to change which criteria
-  // make two records "the same one"
-  _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.parentid != b.parentid)
-      return false;
-    // note: sortindex ignored
-    if (a.deleted || b.deleted)
-      return false;
-    return Utils.deepEquals(a.cleartext, b.cleartext);
-  },
-
   // Any setup that needs to happen at the beginning of each sync.
   // Makes sure crypto records and keys are all set-up
   _syncStartup: function SyncEngine__syncStartup() {
@@ -355,15 +342,13 @@ SyncEngine.prototype = {
   },
 
   /**
-   * Find a GUID that is like the incoming item
+   * Find a GUID of an item that is a duplicate of the incoming item but happens
+   * to have a different GUID
    *
-   * @return GUID of the similar record; falsy otherwise
+   * @return GUID of the similar item; falsy otherwise
    */
-  _findLikeId: function SyncEngine__findLikeId(item) {
-    // By default, only look in the outgoing queue for similar records
-    for (let id in this._tracker.changedIDs)
-      if (this._recordLike(item, this._createRecord(id)))
-        return id;
+  _findDupe: function _findDupe(item) {
+    // By default, assume there's no dupe items for the engine
   },
 
   _isEqual: function SyncEngine__isEqual(item) {
@@ -417,19 +402,19 @@ SyncEngine.prototype = {
 
     // Step 3: Check for similar items
     this._log.trace("Reconcile step 3");
-    let likeId = this._findLikeId(item);
-    if (likeId) {
+    let dupeId = this._findDupe(item);
+    if (dupeId) {
       // Change the local item GUID to the incoming one
-      this._store.changeItemID(likeId, item.id);
+      this._store.changeItemID(dupeId, item.id);
 
       // Remove outgoing changes of the original id any any that were just made
-      this._tracker.removeChangedID(likeId);
+      this._tracker.removeChangedID(dupeId);
       this._tracker.removeChangedID(item.id);
 
       this._store.cache.clear(); // because parentid refs will be wrong
-      return false;
     }
 
+    // Apply the incoming item (now that the dupe is the right id)
     return true;
   },
 

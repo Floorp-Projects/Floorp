@@ -97,6 +97,11 @@ BookmarksEngine.prototype = {
     Svc.Bookmark.runInBatchMode({
       runBatched: Utils.bind2(this, SyncEngine.prototype._sync)
     }, null);
+  },
+
+  _findDupe: function _findDupe(item) {
+    // TODO for bookmarks, check if it exists and find guid
+    // for everything else (folders, separators) look for parent/pred?
   }
 };
 

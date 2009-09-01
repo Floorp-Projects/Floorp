@@ -78,13 +78,12 @@ FormEngine.prototype = {
     coll.full = 0;
     coll.delete();
   },
-  
-  _recordLike: function SyncEngine__recordLike(a, b) {
-    if (a.deleted || b.deleted)
-      return false;
-    if (a.name == b.name && a.value == b.value)
-      return true;
-    return false;
+
+  _findDupe: function _findDupe(item) {
+    // Search through the items to find a matching name/value
+    for (let [guid, {name, value}] in Iterator(this._store._formItems))
+      if (name == item.name && value == item.value)
+        return guid;
   }
 };
 
