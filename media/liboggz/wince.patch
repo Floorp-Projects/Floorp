@@ -1,12 +1,7 @@
 diff --git a/media/liboggz/include/oggz/oggz_off_t.h b/media/liboggz/include/oggz/oggz_off_t.h
 --- a/media/liboggz/include/oggz/oggz_off_t.h
 +++ b/media/liboggz/include/oggz/oggz_off_t.h
-@@ -34,16 +34,20 @@
- #define __OGGZ_OFF_T_H__
- 
- /** \file
-  * Architecture-dependent type and printf format for file position.
-  * Allows Large File Sizes on systems supporting 64-bit off_t types.
+@@ -39,6 +39,10 @@
   */
  
  #ifdef _WIN32
@@ -17,20 +12,10 @@ diff --git a/media/liboggz/include/oggz/oggz_off_t.h b/media/liboggz/include/ogg
    /* MSVC/Borland & Cygwin */
     typedef off_t oggz_off_t;
  
- #define PRI_OGGZ_OFF_T "l"
- 
- #else
- #include <oggz/oggz_off_t_generated.h>
- #endif
 diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
 --- a/media/liboggz/src/liboggz/oggz_seek.c
 +++ b/media/liboggz/src/liboggz/oggz_seek.c
-@@ -556,21 +556,24 @@ oggz_seek_guess (ogg_int64_t unit_at, og
- #endif
- 
-   return offset_guess;
- }
- 
+@@ -572,32 +572,41 @@ static oggz_off_t
  static oggz_off_t
  oggz_offset_end (OGGZ * oggz)
  {
@@ -50,7 +35,11 @@ diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/o
      if (fstat (fd, &statbuf) == -1) {
        /*oggz_set_error (oggz, OGGZ_ERR_SYSTEM);*/
        return -1;
-@@ -582,16 +585,22 @@ oggz_offset_end (OGGZ * oggz)
+     }
+ 
+     if (oggz_stat_regular (statbuf.st_mode)) {
+       offset_end = statbuf.st_size;
+ #ifdef DEBUG
        printf ("oggz_offset_end: stat size %" PRI_OGGZ_OFF_T "d\n", offset_end);
  #endif
      } else {
@@ -67,9 +56,4 @@ diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/o
 +#endif
    } else {
      oggz_off_t offset_save;
- 
-     if (oggz->io == NULL || oggz->io->seek == NULL) {
-       /* No file, and no io seek method */
-       return -1;
-     }
  

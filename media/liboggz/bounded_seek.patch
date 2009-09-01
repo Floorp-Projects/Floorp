@@ -1,0 +1,332 @@
+diff --git a/media/liboggz/include/oggz/oggz_seek.h b/media/liboggz/include/oggz/oggz_seek.h
+--- a/media/liboggz/include/oggz/oggz_seek.h
++++ b/media/liboggz/include/oggz/oggz_seek.h
+@@ -470,9 +470,28 @@ long oggz_seek_byorder (OGGZ * oggz, voi
+  * \param oggz An OGGZ handle previously opened for reading
+  * \param offset The offset of the start of data
+  * \returns 0 on success, -1 on failure.
+  */
+ int oggz_set_data_start (OGGZ * oggz, oggz_off_t offset);
+ /** \}
+  */
+ 
++/**
++ * Seeks Oggz to time unit_target, but with the bounds of the offset range
++ * [offset_begin, offset_end]. This is useful when seeking in network streams
++ * where only parts of a media are buffered, and retrieving unbuffered
++ * parts is expensive.
++ * \param oggz An OGGZ handle previously opened for reading
++ * \param unit_target The seek target, in milliseconds, or custom units
++ * \param offset_begin Start of offset range to seek inside, in bytes
++ * \param offset_end End of offset range to seek inside, in bytes,
++          pass -1 for end of media
++ * \returns The new position, in milliseconds or custom units
++ * \retval -1 on failure (unit_target is not within range)
++ */
++ogg_int64_t
++oggz_bounded_seek_set (OGGZ * oggz,
++                       ogg_int64_t unit_target,
++                       ogg_int64_t offset_begin,
++                       ogg_int64_t offset_end);
++
+ #endif /* __OGGZ_SEEK_H__ */
+diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+--- a/media/liboggz/src/liboggz/oggz_seek.c
++++ b/media/liboggz/src/liboggz/oggz_seek.c
+@@ -617,205 +617,182 @@ oggz_offset_end (OGGZ * oggz)
+     if (oggz_io_seek (oggz, offset_save, SEEK_SET) == -1) {
+       return -1; /* fubar */
+     }
+   }
+ 
+   return offset_end;
+ }
+ 
+-static ogg_int64_t
+-oggz_seek_set (OGGZ * oggz, ogg_int64_t unit_target)
++ogg_int64_t
++oggz_bounded_seek_set (OGGZ * oggz,
++                       ogg_int64_t unit_target,
++                       ogg_int64_t offset_begin,
++                       ogg_int64_t offset_end)
+ {
+   OggzReader * reader;
+   oggz_off_t offset_orig, offset_at, offset_guess;
+-  oggz_off_t offset_begin, offset_end = -1, offset_next;
++  oggz_off_t offset_next;
+   ogg_int64_t granule_at;
+-  ogg_int64_t unit_at, unit_begin = 0, unit_end = -1, unit_last_iter = -1;
++  ogg_int64_t unit_at, unit_begin = -1, unit_end = -1, unit_last_iter = -1;
+   long serialno;
+   ogg_page * og;
+   int hit_eof = 0;
+ 
+   if (oggz == NULL) {
+     return -1;
+   }
+ 
+   if (unit_target > 0 && !oggz_has_metrics (oggz)) {
+ #ifdef DEBUG
+-    printf ("oggz_seek_set: No metric defined, FAIL\n");
++    printf ("oggz_bounded_seek_set: No metric defined, FAIL\n");
+ #endif
+     return -1;
+   }
+-
+-  if ((offset_end = oggz_offset_end (oggz)) == -1) {
++  
++  if (offset_end == -1 && (offset_end = oggz_offset_end (oggz)) == -1) {
+ #ifdef DEBUG
+-    printf ("oggz_seek_set: oggz_offset_end == -1, FAIL\n");
++    printf ("oggz_bounded_seek_set: oggz_offset_end == -1, FAIL\n");
+ #endif
+     return -1;
+   }
+ 
+   reader = &oggz->x.reader;
+ 
+   if (unit_target == reader->current_unit) {
+ #ifdef DEBUG
+-    printf ("oggz_seek_set: unit_target == reader->current_unit, SKIP\n");
++    printf ("oggz_bounded_seek_set: unit_target == reader->current_unit, SKIP\n");
+ #endif
+     return (long)reader->current_unit;
+   }
+ 
+   if (unit_target == 0) {
+     offset_at = oggz_reset (oggz, oggz->offset_data_begin, 0, SEEK_SET);
+     if (offset_at == -1) return -1;
+     return 0;
+   }
+ 
+   offset_at = oggz_tell_raw (oggz);
+   if (offset_at == -1) return -1;
+ 
+   offset_orig = oggz->offset;
+ 
+-  offset_begin = 0;
+-
+   unit_at = reader->current_unit;
+-  unit_begin = 0;
+ 
+   og = &oggz->current_page;
+ 
+-  if (oggz_seek_raw (oggz, 0, SEEK_END) >= 0) {
++  if (unit_end == -1 && oggz_seek_raw (oggz, offset_end, SEEK_SET) >= 0) {
+     ogg_int64_t granulepos;
+ 
+     if (oggz_get_prev_start_page (oggz, og, &granulepos, &serialno) >= 0) {
+       unit_end = oggz_get_unit (oggz, serialno, granulepos);
+     }
+   }
+ 
++  if (unit_begin == -1 && oggz_seek_raw (oggz, offset_begin, SEEK_SET) >= 0) {
++    ogg_int64_t granulepos;
++    if (oggz_get_next_start_page (oggz, og) >= 0) {
++      serialno = ogg_page_serialno (og);
++      granulepos = ogg_page_granulepos (og);
++      unit_begin = oggz_get_unit (oggz, serialno, granulepos);
++    }
++  }
++
++  /* Fail if target isn't in specified range. */
++  if (unit_target < unit_begin || unit_target > unit_end)
++    return -1;
++
++  /* Reduce the search range if possible using read cursor position. */
++  if (unit_at > unit_begin && unit_at < unit_end) {
++    if (unit_target < unit_at) {
++      unit_end = unit_at;
++      offset_end = offset_at;
++    } else {
++      unit_begin = unit_at;
++      offset_begin = offset_at;
++    }
++  }
++
+   og = &oggz->current_page;
+ 
+   for ( ; ; ) {
+ 
+     unit_last_iter = unit_at;
+     hit_eof = 0;
+ 
+ #ifdef DEBUG
+-    printf ("oggz_seek_set: [A] want u%lld: (u%lld - u%lld) [@%" PRI_OGGZ_OFF_T "d - @%" PRI_OGGZ_OFF_T "d]\n",
++    printf ("oggz_bounded_seek_set: [A] want u%lld: (u%lld - u%lld) [@%" PRI_OGGZ_OFF_T "d - @%" PRI_OGGZ_OFF_T "d]\n",
+ 	    unit_target, unit_begin, unit_end, offset_begin, offset_end);
+ #endif
+ 
+     offset_guess = oggz_seek_guess (unit_at, unit_target,
+ 				    unit_begin, unit_end,
+ 				    offset_at,
+ 				    offset_begin, offset_end);
+     if (offset_guess == -1) break;
+ 
+     if (offset_guess == offset_at) {
+       /* Already there, looping */
+       break;
+     }
+ 
+     if (offset_guess > offset_end) {
+       offset_guess = offset_end;
+-    }
+-
+-    offset_at = oggz_seek_raw (oggz, offset_guess, SEEK_SET);
+-    if (offset_at == -1) {
+-      goto notfound;
+-    }
+-
+-    offset_next = oggz_get_next_start_page (oggz, og);
+-
+-#ifdef DEBUG
+-    printf ("oggz_seek_set: offset_next %" PRI_OGGZ_OFF_T "d\n", offset_next);
+-#endif
+-
+-    if (/*unit_end == -1 &&*/ offset_next == -2) { /* reached eof, backtrack */
+-      hit_eof = 1;
+-      offset_next = oggz_get_prev_start_page (oggz, og, &granule_at,
+-					      &serialno);
+-      unit_end = oggz_get_unit (oggz, serialno, granule_at);
+-#ifdef DEBUG
+-      printf ("oggz_seek_set: [C] offset_next @%" PRI_OGGZ_OFF_T "d, g%lld, (s%ld)\n",
+-	      offset_next, granule_at, serialno);
+-      printf ("oggz_seek_set: [c] u%lld\n",
+-	      oggz_get_unit (oggz, serialno, granule_at));
+-#endif
+-    } else if (offset_next >= 0) {
++      offset_at = oggz_seek_raw (oggz, offset_guess, SEEK_SET);
++      offset_next = oggz_get_prev_start_page (oggz, og, &granule_at, &serialno);
++    } else {
++      offset_at = oggz_seek_raw (oggz, offset_guess, SEEK_SET);
++      offset_next = oggz_get_next_start_page (oggz, og);
+       serialno = ogg_page_serialno (og);
+       granule_at = ogg_page_granulepos (og);
+     }
+ 
+-    if (offset_next < 0) {
+-      goto notfound;
+-    }
+-
+-    if (hit_eof || offset_next > offset_end) {
+-      offset_next =
+-	oggz_scan_for_page (oggz, og, unit_target, offset_begin, offset_end);
+-      if (offset_next < 0) goto notfound;
+-
+-      offset_at = offset_next;
+-      serialno = ogg_page_serialno (og);
+-      granule_at = ogg_page_granulepos (og);
+-
+-      unit_at = oggz_get_unit (oggz, serialno, granule_at);
+-
+-      goto found;
+-    }
+-
+-    offset_at = offset_next;
+-
+     unit_at = oggz_get_unit (oggz, serialno, granule_at);
+ 
++#ifdef DEBUG
++    printf ("oggz_bounded_seek_set: offset_next %" PRI_OGGZ_OFF_T "d\n", offset_next);
++#endif
+     if (unit_at == unit_last_iter) break;
+ 
+ #ifdef DEBUG
+-    printf ("oggz_seek_set: [D] want u%lld, got page u%lld @%" PRI_OGGZ_OFF_T "d g%lld\n",
++    printf ("oggz_bounded_seek_set: [D] want u%lld, got page u%lld @%" PRI_OGGZ_OFF_T "d g%lld\n",
+ 	    unit_target, unit_at, offset_at, granule_at);
+ #endif
+ 
+     if (unit_at < unit_target) {
+       offset_begin = offset_at;
+       unit_begin = unit_at;
+       if (unit_end == unit_begin) break;
+     } else if (unit_at > unit_target) {
+       offset_end = offset_at-1;
+       unit_end = unit_at;
+       if (unit_end == unit_begin) break;
+     } else {
+       break;
+     }
+   }
+ 
+- found:
+   do {
+     offset_at = oggz_get_prev_start_page (oggz, og, &granule_at, &serialno);
+     unit_at = oggz_get_unit (oggz, serialno, granule_at);
+   } while (unit_at > unit_target);
+ 
+   if (offset_at < 0) {
+     oggz_reset (oggz, offset_orig, -1, SEEK_SET);
+     return -1;
+   }
+ 
+   offset_at = oggz_reset (oggz, offset_at, unit_at, SEEK_SET);
+   if (offset_at == -1) return -1;
+ 
+ #ifdef DEBUG
+-  printf ("oggz_seek_set: FOUND (%lld)\n", unit_at);
++  printf ("oggz_bounded_seek_set: FOUND (%lld)\n", unit_at);
+ #endif
+ 
+   return (long)reader->current_unit;
+-
+- notfound:
+-#ifdef DEBUG
+-  printf ("oggz_seek_set: NOT FOUND\n");
+-#endif
+-
+-  oggz_reset (oggz, offset_orig, -1, SEEK_SET);
+-
+-  return -1;
+ }
+ 
+ static ogg_int64_t
+ oggz_seek_end (OGGZ * oggz, ogg_int64_t unit_offset)
+ {
+   oggz_off_t offset_orig, offset_at, offset_end;
+   ogg_int64_t granulepos;
+   ogg_int64_t unit_end;
+@@ -838,17 +815,17 @@ oggz_seek_end (OGGZ * oggz, ogg_int64_t 
+     return -1;
+   }
+ 
+ #ifdef DEBUG
+   printf ("*** oggz_seek_end: found packet (%lld) at @%" PRI_OGGZ_OFF_T "d [%lld]\n",
+ 	  unit_end, offset_end, granulepos);
+ #endif
+ 
+-  return oggz_seek_set (oggz, unit_end + unit_offset);
++  return oggz_bounded_seek_set (oggz, unit_end + unit_offset, 0, -1);
+ }
+ 
+ off_t
+ oggz_seek (OGGZ * oggz, oggz_off_t offset, int whence)
+ {
+   OggzReader * reader;
+   ogg_int64_t units = -1;
+ 
+@@ -897,21 +874,21 @@ oggz_seek_units (OGGZ * oggz, ogg_int64_
+ #endif
+     return -1;
+   }
+ 
+   reader = &oggz->x.reader;
+ 
+   switch (whence) {
+   case SEEK_SET:
+-    r = oggz_seek_set (oggz, units);
++    r = oggz_bounded_seek_set (oggz, units, 0, -1);
+     break;
+   case SEEK_CUR:
+     units += reader->current_unit;
+-    r = oggz_seek_set (oggz, units);
++    r = oggz_bounded_seek_set (oggz, units, 0, -1);
+     break;
+   case SEEK_END:
+     r = oggz_seek_end (oggz, units);
+     break;
+   default:
+     /*oggz_set_error (oggz, OGGZ_EINVALID);*/
+     r = -1;
+     break;

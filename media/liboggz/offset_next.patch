@@ -1,7 +1,7 @@
 diff --git a/media/liboggz/src/liboggz/oggz_read.c b/media/liboggz/src/liboggz/oggz_read.c
 --- a/media/liboggz/src/liboggz/oggz_read.c
 +++ b/media/liboggz/src/liboggz/oggz_read.c
-@@ -176,42 +176,44 @@ oggz_set_read_page (OGGZ * oggz, long se
+@@ -180,61 +180,47 @@ oggz_set_read_page (OGGZ * oggz, long se
   * returns >= 0 if found; return value is offset of page start
   * returns -1 on error
   * returns -2 if EOF was encountered
@@ -10,8 +10,9 @@ diff --git a/media/liboggz/src/liboggz/oggz_read.c b/media/liboggz/src/liboggz/o
  oggz_read_get_next_page (OGGZ * oggz, ogg_page * og)
  {
    OggzReader * reader = &oggz->x.reader;
--  long more;
-+  long more, page_offset = 0;
+-  long bytes = 0, more;
+-  oggz_off_t page_offset = 0, ret;
++  long more = 0, page_offset = 0;
    int found = 0;
  
    /* Increment oggz->offset by length of the last page processed */
@@ -22,14 +23,15 @@ diff --git a/media/liboggz/src/liboggz/oggz_read.c b/media/liboggz/src/liboggz/o
  
      if (more == 0) {
        /* No page available */
+-      page_offset = 0;
 +      reader->current_page_bytes = 0;
        return -2;
      } else if (more < 0) {
  #ifdef DEBUG_VERBOSE
        printf ("get_next_page: skipped %ld bytes\n", -more);
  #endif
+       page_offset += (-more);
 -      oggz->offset += (-more);
-+      page_offset += (-more);
      } else {
  #ifdef DEBUG_VERBOSE
        printf ("get_next_page: page has %ld bytes\n", more);
@@ -39,19 +41,35 @@ diff --git a/media/liboggz/src/liboggz/oggz_read.c b/media/liboggz/src/liboggz/o
      }
  
    } while (!found);
+ 
+-#if 0 /* This is now done by the increment at the top of the file */
+-  /* Calculate the byte offset of the page which was found */
+-  if (bytes > 0) {
+-    oggz->offset = oggz_io_tell (oggz) - bytes + page_offset;
+-    ret = oggz->offset;
+-  } else {
+-    /* didn't need to do any reading -- accumulate the page_offset */
+-    ret = oggz->offset + page_offset;
+-    oggz->offset += page_offset + more;
+-  }
 +  oggz->offset += page_offset;
  
+-  return ret;
+-#else
    return oggz->offset;
+-#endif
  }
  
  typedef struct {
    ogg_packet      packet;
    ogg_int64_t     calced_granulepos;
    oggz_stream_t * stream;
+   OggzReader    * reader;
+   OGGZ          * oggz;
 diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
 --- a/media/liboggz/src/liboggz/oggz_seek.c
 +++ b/media/liboggz/src/liboggz/oggz_seek.c
-@@ -115,16 +115,18 @@ oggz_seek_raw (OGGZ * oggz, oggz_off_t o
+@@ -119,16 +119,18 @@ oggz_seek_raw (OGGZ * oggz, oggz_off_t o
    offset_at = oggz_io_tell (oggz);
  
    oggz->offset = offset_at;
@@ -70,7 +88,7 @@ diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/o
  {
    oggz_stream_t * stream = (oggz_stream_t *) data;
  
-@@ -196,74 +198,70 @@ oggz_purge (OGGZ * oggz)
+@@ -200,74 +202,70 @@ oggz_purge (OGGZ * oggz)
   * returns -2 if EOF was encountered
   */
  static oggz_off_t

@@ -118,7 +118,6 @@ Commands:
   help          Display help for a specific subcommand (eg. "oggz help chop")
 
 Reporting:
-  codecs        Display the codecs present in an Ogg file
   diff          Hexdump the packets of two Ogg files and output differences.
   dump          Hexdump packets of an Ogg file, or revert an Ogg file from
                 such a hexdump.
