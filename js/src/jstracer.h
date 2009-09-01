@@ -190,11 +190,10 @@ enum LC_TMBits {
     LC_TMMinimal  = 1<<16,
     LC_TMTracer   = 1<<17,
     LC_TMRecorder = 1<<18,
-    LC_TMPatcher  = 1<<19,
-    LC_TMAbort    = 1<<20,
-    LC_TMStats    = 1<<21,
-    LC_TMRegexp   = 1<<22,
-    LC_TMTreeVis  = 1<<23
+    LC_TMAbort    = 1<<19,
+    LC_TMStats    = 1<<20,
+    LC_TMRegexp   = 1<<21,
+    LC_TMTreeVis  = 1<<22
 };
 
 #endif
