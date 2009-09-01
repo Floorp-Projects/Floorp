@@ -370,6 +370,16 @@ SyncEngine.prototype = {
     }
   },
 
+  _deleteId: function _deleteId(id) {
+    this._tracker.removeChangedID(id);
+
+    // Remember this id to delete at the end of sync
+    if (this._delete.ids == null)
+      this._delete.ids = [id];
+    else
+      this._delete.ids.push(id);
+  },
+
   // Reconciliation has three steps:
   // 1) Check for the same item (same ID) on both the incoming and outgoing
   //    queues.  This means the same item was modified on this profile and
@@ -407,12 +417,16 @@ SyncEngine.prototype = {
     this._log.trace("Reconcile step 3");
     let dupeId = this._findDupe(item);
     if (dupeId) {
-      // Change the local item GUID to the incoming one
-      this._store.changeItemID(dupeId, item.id);
-
-      // Remove outgoing changes of the original id any any that were just made
-      this._tracker.removeChangedID(dupeId);
-      this._tracker.removeChangedID(item.id);
+      // Stick with the canonical lower id, so convert the dupe to incoming
+      if (item.id < dupeId) {
+        this._store.changeItemID(dupeId, item.id);
+        this._deleteId(dupeId);
+      }
+      // The local dupe is the lower id, so pretend the incoming is for it
+      else {
+        this._deleteId(item.id);
+        item.id = dupeId;
+      }
 
       this._store.cache.clear(); // because parentid refs will be wrong
     }
