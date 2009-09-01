@@ -100,6 +100,30 @@ BookmarksEngine.prototype = {
     }, null);
   },
 
+  _syncStartup: function _syncStart() {
+    SyncEngine.prototype._syncStartup.call(this);
+
+    // Lazily create a mapping of folder titles to ids if necessary
+    this.__defineGetter__("_folderTitles", function() {
+      delete this._folderTitles;
+
+      let folderTitles = {};
+      for (let guid in this._store.getAllIDs()) {
+        let id = idForGUID(guid);
+        if (Svc.Bookmark.getItemType(id) != Svc.Bookmark.TYPE_FOLDER)
+          continue;
+
+        folderTitles[Svc.Bookmark.getItemTitle(id)] = guid;
+      }
+      return this._folderTitles = folderTitles;
+    });
+  },
+
+  _syncFinish: function _syncFinish() {
+    SyncEngine.prototype._syncFinish.call(this);
+    delete this._folderTitles;
+  },
+
   _findDupe: function _findDupe(item) {
     switch (item.type) {
       case "bookmark":
@@ -111,6 +135,9 @@ BookmarksEngine.prototype = {
         if (localId == -1)
           return;
         return GUIDForId(localId);
+      case "folder":
+      case "livemark":
+        return this._folderTitles[item.title];
     }
     // TODO for bookmarks, check if it exists and find guid
     // for everything else (folders, separators) look for parent/pred?
