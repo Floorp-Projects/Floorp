@@ -108,10 +108,6 @@ struct CharacterDataChangeInfo;
 
 typedef class nsIFrame nsIBox;
 
-#define NS_IFRAME_IID \
-  { 0x8bee3c3f, 0x0b4a, 0x4453, \
-    { 0xa6, 0x77, 0xf3, 0xd2, 0x56, 0xd1, 0x0e, 0xdc } }
-
 /**
  * Indication of how the frame can be split. This is used when doing runaround
  * of floats, and when pulling up child frames from a next-in-flow.
@@ -632,6 +628,15 @@ public:
    * May return nsnull during reflow
    */
   virtual nsIFrame* GetContentInsertionFrame() { return this; }
+
+  /**
+   * Get the frame that should be scrolled if the content associated
+   * with this frame is targeted for scrolling. For frames implementing
+   * nsIScrollableFrame this will return the frame itself. For frames
+   * like nsTextControlFrame that contain a scrollframe, will return
+   * that scrollframe.
+   */
+  virtual nsIScrollableFrame* GetScrollTargetFrame() { return nsnull; }
 
   /**
    * Get the offsets of the frame. most will be 0,0
