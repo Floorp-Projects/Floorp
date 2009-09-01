@@ -59,7 +59,7 @@ namespace nanojit
         const char *regNames[] = {
             "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi",
             "xmm0","xmm1","xmm2","xmm3","xmm4","xmm5","xmm6","xmm7",
-            "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7"
+            "f0"
         };
     #endif
 
