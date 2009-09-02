@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE fdialog SYSTEM "chrome://browser/locale/prompt.dtd">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      id="prompt-alert-dialog"
+      onclose="this.PromptHelper.onCloseAlert(this);"
+      script="chrome://browser/content/prompt/prompt.js">
+  
+  <label id="prompt-alert-title" crop="center"/>
+  <scrollbox orient="vertical">
+    <description id="prompt-alert-message"/>
+  </scrollbox>
+  <hbox id="prompt-alert-checkbox-box" collapsed="true" align="center">
+    <checkbox class="toggle-dark" id="prompt-alert-checkbox"/>
+    <label id="prompt-alert-checkbox-msg"/>
+  </hbox>
+  <hbox pack="center">
+    <button class="button-dark" label="&ok.label;"
+            oncommand="document.getElementById('prompt-alert-dialog').close()"/>
+  </hbox>
+</dialog>
