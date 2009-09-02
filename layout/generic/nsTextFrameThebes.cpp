@@ -3762,7 +3762,7 @@ static void
 ClearTextRunsInFlowChain(nsTextFrame* aFrame)
 {
   nsTextFrame* f;
-  for (f = aFrame; f; f = static_cast<nsTextFrame*>(f->GetNextInFlow())) {
+  for (f = aFrame; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
     f->ClearTextRun();
   }
 }
