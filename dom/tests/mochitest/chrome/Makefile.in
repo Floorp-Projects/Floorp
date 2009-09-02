@@ -52,13 +52,16 @@ _TEST_FILES = \
 		test_domstorage.xul \
 		domstorage_global.xul \
 		domstorage_global.js \
-		test_focus.xul \
-		window_focus.xul \
 		focus_window2.xul \
 		focus_frameset.html \
 		child_focus_frame.html \
 		test_focus_switchbinding.xul \
 		$(NULL)
+
+# disabled for now because it does bogus things with getElementById
+# See bug 514230
+# test_focus.xul \
+#		window_focus.xul \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
