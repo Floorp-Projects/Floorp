@@ -34,8 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccelerometerCE_h
-#define nsAccelerometerCE_h
+#ifndef nsAccelerometerWin_h
+#define nsAccelerometerWin_h
 
 #include "nsAccelerometer.h"
 #include "nsAutoPtr.h"
