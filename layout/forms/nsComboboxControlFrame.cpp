@@ -393,7 +393,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 }
 
 PRBool
-nsComboboxControlFrame::ShowList(nsPresContext* aPresContext, PRBool aShowList)
+nsComboboxControlFrame::ShowList(PRBool aShowList)
 {
   nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
 
@@ -748,9 +748,9 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
     if (mListControlFrame) {
       mListControlFrame->SyncViewWithFrame();
     }
-    ShowList(PresContext(), aDoDropDown); // might destroy us
+    ShowList(aDoDropDown); // might destroy us
   } else if (mDroppedDown && !aDoDropDown) {
-    ShowList(PresContext(), aDoDropDown); // might destroy us
+    ShowList(aDoDropDown); // might destroy us
   }
 }
 
@@ -1302,7 +1302,7 @@ nsComboboxControlFrame::Rollup(PRUint32 aCount,
 void
 nsComboboxControlFrame::RollupFromList()
 {
-  if (ShowList(PresContext(), PR_FALSE))
+  if (ShowList(PR_FALSE))
     mListControlFrame->CaptureMouseEvents(PR_FALSE);
 }
 
