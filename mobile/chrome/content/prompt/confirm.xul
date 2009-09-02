@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE vbox SYSTEM "chrome://browser/locale/prompt.dtd">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      id="prompt-confirm-dialog"
+      onclose="this.PromptHelper.onCloseConfirm(this)"
+      script="chrome://browser/content/prompt/prompt.js">
+  <label id="prompt-confirm-title"/>
+  <scrollbox orient="vertical">
+    <description id="prompt-confirm-message"/>
+  </scrollbox>
+  <hbox id="prompt-confirm-checkbox-box" collapsed="true" align="center">
+    <checkbox class="toggle-dark" id="prompt-confirm-checkbox"/>
+    <label id="prompt-confirm-checkbox-msg"/>
+  </hbox>
+  <hbox pack="center" id="prompt-confirm-button-box">
+    <button class="button-dark" label="&ok.label;"
+            oncommand="document.getElementById('prompt-confirm-dialog').PromptHelper.closeConfirm(true);"/>
+    <button class="button-dark" label="&cancel.label;"
+            oncommand="document.getElementById('prompt-confirm-dialog').PromptHelper.closeConfirm(false);"/>
+  </hbox>
+</dialog>
