@@ -1076,7 +1076,6 @@ var Browser = {
 
     let scrollX = { value: 0 };
     let scrollY = { value: 0 };
-
     let cwu = BrowserView.Util.getBrowserDOMWindowUtils(browser);
     cwu.getScrollXY(false, scrollX, scrollY);
 
@@ -1151,8 +1150,9 @@ var Browser = {
       let frameUtils = frameWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       frameUtils.getScrollXY(false, scrollX, scrollY);
 
-      x = x - elem.offsetLeft + scrollX.value;
-      y = y - elem.offsetTop + scrollY.value;
+      var rect = elem.getBoundingClientRect();
+      x = x - rect.left + scrollX.value;
+      y = y - rect.top + scrollY.value;
       elem = elem.contentDocument.elementFromPoint(x, y);
     }
 
@@ -1198,183 +1198,106 @@ var Browser = {
 Browser.MainDragger = function MainDragger(browserView) {
   this.allowRealtimeDownUp = true;
 
-  this.scrollingOuterX = false;
   this.bv = browserView;
-  this.floatedWhileDragging = false;
   this.draggedFrame = null;
 };
 
 Browser.MainDragger.prototype = {
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
-    this.draggedFrame = null;
+    let [x, y] = Browser.transformClientToBrowser(clientX, clientY);
+    let element = Browser.elementFromPoint(x, y);
 
-    if (this._targetIsContent(target)) {
-      // since we're dealing with content, look to see if user has started
-      // a drag while over a IFRAME/FRAME element
-      let [x, y] = Browser.transformClientToBrowser(clientX, clientY);
-      let element = Browser.elementFromPoint(x, y);
-      if (element && element.ownerDocument != Browser.selectedBrowser.contentDocument) {
-        //Util.dumpLn("*** dragStart got element ", element, " ownerDoc ", element.ownerDocument,
-        //            " selectedBrowser.contentDoc ", Browser.selectedBrowser.contentDocument);
-        this.draggedFrame = element.ownerDocument.defaultView;
-      }
-    }
+    this.draggedFrame = null;
+    if (element)
+      this.draggedFrame = element.ownerDocument.defaultView;
 
     this.bv.pauseRendering();
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
-    let dx = this.dragMove(dx, dy, scroller, true);
+    this.draggedFrame = null;
+    this.dragMove(Browser.snapSidebars(), 0, scroller);
 
-    dx += this.dragMove(Browser.snapSidebars(), 0, scroller, true);
-
-    /* XXX
-     * Set scrollingOuterX to be true when the sidebars are open.
-     * We should really just take a look at our geometry at this point
-     * and determine this ourselves rather than relying on our helper
-     * functions to give us this information
-     */
-    this.scrollingOuterX = !Browser.tryUnfloatToolbar();
+    Browser.tryUnfloatToolbar();
 
     this.bv.resumeRendering();
-
-    return (dx != 0) || (dy != 0);
   },
 
-  dragMove: function dragMove(dx, dy, scroller, doReturnDX) {
-    let outrv = 0;
-
-    if (this._panFrame(dx, dy))  // first see if we need to adjust internal IFRAME/FRAME
-      return true;
-
-    //dump("enter drag move\n");
-    if (this.scrollingOuterX) {
-      let odx = 0;
-      let ody = 0;
-
-      let snappedX = false;
-      if (dx > 0) {
-        let contentleft = Math.round(Browser.contentScrollbox.getBoundingClientRect().left);
-        odx = (contentleft > 0) ? Math.min(contentleft, dx) : dx;
-        snappedX = (contentleft > 0 && odx == contentleft);
-      } else if (dx < 0) {
-        let contentright = Math.round(Browser.contentScrollbox.getBoundingClientRect().right);
-        let w = window.innerWidth;
-        odx = (contentright < w) ? Math.max(contentright - w, dx) : dx;
-        snappedX = (contentright < w && odx == (contentright - w));
-      }
-
-      //dump("  odx, ody, snappedX: " + odx + " " + ody + " " + snappedX + "\n");
-
-      if (odx) {
-        outrv = this.outerDragMove(odx, ody, Browser.controlsScrollboxScroller, doReturnDX);
-      }
-
-      if (snappedX || ody != dy) {
-        if (snappedX)
-          this.scrollingOuterX = false;
-
-        dx -= odx;
-        dy -= ody;
-      } else {
-        return outrv;
-      }
-    }
-    //dump(" scrolling inner x\n");
-
-    this.bv.onBeforeVisibleMove(dx, dy);
-
-    let [x0, y0] = Browser.getScrollboxPosition(scroller);
-    scroller.scrollBy(dx, dy);
-    let [x1, y1] = Browser.getScrollboxPosition(scroller);
-
-    let realdx = x1 - x0;
-    let realdy = y1 - y0;
-
-    this.bv.onAfterVisibleMove();
-
-    //dump(" dx, realdx: " + dx + " " + realdx + "\n");
-
-    if (realdx != dx) {
-      let restdx = dx - realdx;
-
-      this.scrollingOuterX = true;
-      this.dragMove(restdx, 0, scroller, doReturnDX);
-    }
-
-    return (doReturnDX) ? (outrv + realdx) : (outrv || realdx != 0 || realdy != 0);
-  },
-
-  outerDragMove: function outerDragMove(dx, dy, scroller, doReturnDX) {
-    this.bv.onBeforeVisibleMove(dx, dy);
-
-    Browser.tryFloatToolbar(dx, dy);
-
-    let [x0, y0] = Browser.getScrollboxPosition(scroller);
-    scroller.scrollBy(dx, dy);
-    let [x1, y1] = Browser.getScrollboxPosition(scroller);
-
-    let realdx = x1 - x0;
-    let realdy = y1 - y0;
-
-    this.bv.onAfterVisibleMove();
-
-    return (doReturnDX) ? realdx : (realdx != 0 || realdy != 0);
-  },
-
-  _panFrame: function _panFrame(dx, dy) {
-    if (this.draggedFrame === null)
-      return false;
-
-    if (dx == 0 && dy == 0)
-      return true;
-
-    let panned = false;
+  dragMove: function dragMove(dx, dy, scroller) {
     let elem = this.draggedFrame;
+    let doffset = [dx, dy];
+    let render = false;
 
-    // top-level window will have itself as its parent, so stop
-    // there to allow canvasbrowser/widgetstack to pan instead
-    // of doing scrolling
-    while (elem && elem !== elem.parent.document.defaultView) {
-      let windowUtils = elem.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    this.bv.onBeforeVisibleMove(dx, dy);
 
-      let origX = {}, origY = {};
-      windowUtils.getScrollXY(false, origX, origY);
+    // First calculate any panning to take sidebars out of view
+    let offsetX = this._panSidebarsAwayOffset(doffset);
 
-      elem.scrollBy(dx, dy);
-
-      let newX = {}, newY = {};
-      windowUtils.getScrollXY(false, newX, newY);
-
-      panned = (origX.value != newX.value) || (origY.value != newY.value);
-
-      if (panned) {
-        // get critical area to redraw after we move frame
-        // NOTE: may need to rate limit these for performance
-        this.bv.renderNow();
-        break;
+    // Do all iframe panning
+    if (elem) {
+      while (elem.frameElement && (doffset[0] != 0 || doffset[1] != 0)) {
+        this._panFrame(elem, doffset);
+        elem = elem.frameElement;
+        render = true;
       }
-
-      elem = elem.parent.document.defaultView;
     }
 
-    return panned;
+    // Do content panning
+    this._panScroller(Browser.contentScrollboxScroller, doffset);
+
+    // Any leftover panning in doffset would bring sidebars into view. Add to sidebar
+    // away panning for the total scroll offset.
+    this._panScroller(Browser.controlsScrollboxScroller, [doffset[0] + offsetX, 0]);
+
+    this.bv.onAfterVisibleMove();
+
+    Browser.tryFloatToolbar();
+
+    if (render)
+      this.bv.renderNow();
+
+    return doffset[0] + offsetX != dx || doffset[1] != dy;
   },
 
-  _targetIsContent: function _targetIsContent(target) {
-    let tileBox = document.getElementById("tile-container");
-    while (target) {
-      if (target === window)
-        return false;
-      if (target === tileBox)
-        return true;
-
-      target = target.parentNode;
+  /** Return X offset needed to pan sidebars away if possible. Updates doffset with leftovers. */
+  _panSidebarsAwayOffset: function(doffset) {
+    let [scrollLeft] = Browser.getScrollboxPosition(Browser.controlsScrollboxScroller);
+    let scrollRight = scrollLeft + window.innerWidth;
+    let leftLock = document.getElementById("tabs-container").getBoundingClientRect().right + scrollLeft;
+    let rightLock = document.getElementById("browser-controls").getBoundingClientRect().left + scrollLeft;
+    let amount = 0;
+    if (doffset[0] > 0 && scrollLeft < leftLock) {
+      amount = Math.min(doffset[0], leftLock - scrollLeft);
+    } else if (doffset[0] < 0 && scrollRight > rightLock) {
+      amount = Math.max(doffset[0], rightLock - scrollRight);
     }
-    return false;
-  }
+    doffset[0] -= amount;
+    return amount;
+  },
 
+  /** Pan scroller by the given amount. Updates doffset with leftovers. */
+  _panScroller: function _panScroller(scroller, doffset) {
+    let [x0, y0] = Browser.getScrollboxPosition(scroller);
+    scroller.scrollBy(doffset[0], doffset[1]);
+    let [x1, y1] = Browser.getScrollboxPosition(scroller);
+
+    doffset[0] -= x1 - x0;
+    doffset[1] -= y1 - y0;
+  },
+
+  /** Pan frame by the given amount. Updates doffset with leftovers. */
+  _panFrame: function _panFrame(frame, doffset) {
+    let origX = {}, origY = {}, newX = {}, newY = {};
+    let windowUtils = frame.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+
+    windowUtils.getScrollXY(false, origX, origY);
+    frame.scrollBy(doffset[0], doffset[1]);
+    windowUtils.getScrollXY(false, newX, newY);
+
+    doffset[0] -= newX.value - origX.value;
+    doffset[1] -= newY.value - origY.value;
+  }
 };
 
 function nsBrowserAccess()
