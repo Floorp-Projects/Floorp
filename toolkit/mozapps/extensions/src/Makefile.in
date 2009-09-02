@@ -50,6 +50,10 @@ EXTRA_PP_COMPONENTS = \
   nsAddonRepository.js \
   $(NULL)
 
+EXTRA_JS_MODULES = \
+  LightweightThemeManager.jsm \
+  $(NULL)
+
 GARBAGE += nsExtensionManager.js
 
 include $(topsrcdir)/config/rules.mk
