@@ -3529,7 +3529,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 argc = GET_UINT16(pc);
                 JS_ASSERT(argc > 0);
 
-                JSTempVector<char *> argv(cx);
+                js::Vector<char *> argv(cx);
                 if (!argv.resize(argc))
                     return NULL;
 
