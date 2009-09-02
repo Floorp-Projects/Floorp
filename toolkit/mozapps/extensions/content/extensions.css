@@ -192,11 +192,6 @@ richlistitem[type="4"] .disableHide {
   display: none;
 }
 
-richlistitem:not([plugin]) .pluginIcon ,
-richlistitem[plugin] .addonIcon:not(.pluginIcon) {
-  display: none;
-}
-
 richlistitem[action] .addonInstallButton {
   display: none;
 }

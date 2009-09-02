@@ -138,6 +138,10 @@ richlistitem[selected="true"] .text-link {
   max-height: 32px;
 }
 
+richlistitem[plugin] .addonIcon > image {
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+}
+
 .updateBadge,
 .notifyBadge {
   width: 16px;
