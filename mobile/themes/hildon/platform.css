@@ -57,6 +57,13 @@ label {
   -moz-margin-end: 5px;
 }
 
+/* Override any OS inverse themes */
+richlistbox,
+textbox {
+  color: black;
+  background-color: white;
+}
+
 /* panels ------------------------------------------------------------------ */
 .panel-dark {
   color: white;
@@ -298,8 +305,8 @@ richlistitem description.normal {
 }
 
 richlistitem[selected="true"] {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  color: black;
+  background-color: white;
 }
 
 richlistitem.section-header,
