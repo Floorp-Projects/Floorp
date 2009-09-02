@@ -71,18 +71,6 @@ struct JSONParser
        objectKey(cx), buffer(cx)
     {}
 
-    static JSONParser *create(JSContext *cx) {
-        JSONParser *jp = (JSONParser*) cx->calloc(sizeof(JSONParser));
-        if (!jp)
-            return NULL;
-        return new(jp) JSONParser(cx);
-    }
-
-    static void destroy(JSContext *cx, JSONParser *jp) {
-        jp->~JSONParser();
-        cx->free(jp);
-    }
-
     /* Used while handling \uNNNN in strings */
     jschar hexChar;
     uint8 numHex;
@@ -91,8 +79,8 @@ struct JSONParser
     JSONParserState stateStack[JSON_MAX_DEPTH];
     jsval *rootVal;
     JSObject *objectStack;
-    JSTempVector<jschar> objectKey;
-    JSTempVector<jschar> buffer;
+    js::Vector<jschar, 8> objectKey;
+    js::Vector<jschar, 8> buffer;
 };
 
 JSClass js_JSONClass = {
@@ -690,7 +678,7 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
     if (!arr)
         return NULL;
 
-    JSONParser *jp = JSONParser::create(cx);
+    JSONParser *jp = cx->create<JSONParser>(cx);
     if (!jp)
         return NULL;
 
@@ -737,7 +725,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
     JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
     jsval *vp = jp->rootVal;
 
-    JSONParser::destroy(cx, jp);
+    cx->destroy(jp);
 
     if (!early_ok)
         return JS_FALSE;

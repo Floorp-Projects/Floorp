@@ -59,8 +59,6 @@
 #include "jsarray.h"
 #include "jstask.h"
 
-JS_BEGIN_EXTERN_C
-
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
  * given pc in a script. We use the script->code pointer to tag the cache,
@@ -1169,6 +1167,46 @@ struct JSContext {
         runtime->free(p);
     }
 #endif
+
+    /*
+     * In the common case that we'd like to allocate the memory for an object
+     * with cx->malloc/free, we cannot use overloaded C++ operators (no
+     * placement delete).  Factor the common workaround into one place.
+     */
+#define CREATE_BODY(parms)                                                    \
+    void *memory = this->malloc(sizeof(T));                                   \
+    if (!memory) {                                                            \
+        JS_ReportOutOfMemory(this);                                           \
+        return NULL;                                                          \
+    }                                                                         \
+    return new(memory) T parms;
+
+    template <class T>
+    JS_ALWAYS_INLINE T *create() {
+        CREATE_BODY(())
+    }
+
+    template <class T, class P1>
+    JS_ALWAYS_INLINE T *create(const P1 &p1) {
+        CREATE_BODY((p1))
+    }
+
+    template <class T, class P1, class P2>
+    JS_ALWAYS_INLINE T *create(const P1 &p1, const P2 &p2) {
+        CREATE_BODY((p1, p2))
+    }
+
+    template <class T, class P1, class P2, class P3>
+    JS_ALWAYS_INLINE T *create(const P1 &p1, const P2 &p2, const P3 &p3) {
+        CREATE_BODY((p1, p2, p3))
+    }
+#undef CREATE_BODY
+
+    template <class T>
+    JS_ALWAYS_INLINE void destroy(T *p) {
+        p->~T();
+        this->free(p);
+    }
 };
 
 #ifdef JS_THREADSAFE
@@ -1675,7 +1713,5 @@ js_RegenerateShapeForGC(JSContext *cx)
     cx->runtime->shapeGen = shape;
     return shape;
 }
-
-JS_END_EXTERN_C
 
 #endif /* jscntxt_h___ */
