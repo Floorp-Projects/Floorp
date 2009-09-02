@@ -180,17 +180,6 @@ GPSDProvider.prototype = {
     this.transport.close(Components.results.NS_OK);
   },
   
-  isReady: function() {
-    LOG("isReady called\n");
-    try {
-      this.inputStream.available();
-    } catch (e) {
-      return false;
-    }
-
-    return true;
-  },
-  
   watch: function(c) {
     LOG("watch called\n");    
 

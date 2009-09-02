@@ -188,11 +188,6 @@ WifiGeoPositionProvider.prototype = {
         os.addObserver(this, "private-browsing", false);
     },
 
-    isReady:         function() {
-        LOG("isReady called");
-        return true
-    },
-  
     watch: function(c) {
         LOG("watch called");
         if (!this.wifi_service) {
