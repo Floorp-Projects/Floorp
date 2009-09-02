@@ -394,8 +394,6 @@
         this.nsISelectionController = Components.interfaces.nsISelectionController;
         this._findSelection = this.nsISelectionController.SELECTION_FIND;
 
-        this._findResetTimeout = -1;
-
         // Make sure the FAYT keypress listener is attached by initializing the
         // browser property
         setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
@@ -1132,8 +1130,6 @@
               stringsBundle.GetStringFromName("CaseSensitive");
           }
 
-          this._findFailedString = null;
-
           this._updateFindUI();
           if (this.hidden) {
             this.hidden = false;
@@ -1520,45 +1516,21 @@
       <method name="_find">
         <parameter name="aValue"/>
         <body><![CDATA[
-          var val = aValue || this._findField.value;
-          var res = this.nsITypeAheadFind.FIND_NOTFOUND;
+          var val = aValue || this._findField.value
 
-          // Only search on input if we don't have a last-failed string,
-          // or if the current search string doesn't start with it.
-          if (this._findFailedString == null ||
-              val.indexOf(this._findFailedString) != 0)
-          {
-            this._enableFindButtons(val);
-            if (this.getElement("highlight").checked)
-              this._setHighlightTimeout();
+          this._enableFindButtons(val);
+          if (this.getElement("highlight").checked)
+            this._setHighlightTimeout();
 
-            this._updateCaseSensitivity(val);
+          this._updateCaseSensitivity(val);
 
-            var fastFind = this.browser.fastFind;
-            res = fastFind.find(val, this._findMode == this.FIND_LINKS);
-
-            this._updateFoundLink(res);
-            this._updateStatusUI(res, false);
-
-            if (res == this.nsITypeAheadFind.FIND_NOTFOUND)
-              this._findFailedString = val;
-            else
-              this._findFailedString = null;
-          }
+          var fastFind = this.browser.fastFind;
+          var res = fastFind.find(val, this._findMode == this.FIND_LINKS);
+          this._updateFoundLink(res);
+          this._updateStatusUI(res, false);
 
           if (this._findMode != this.FIND_NORMAL)
             this._setFindCloseTimeout();
-
-          if (this._findResetTimeout != -1)
-            clearTimeout(this._findResetTimeout);
-
-          // allow a search to happen on input again after a second has
-          // expired since the previous input, to allow for dynamic
-          // content and/or page loading
-          this._findResetTimeout = setTimeout(function(self) {
-						  self._findFailedString = null;
-						  self._findResetTimeout = -1; },
-					      1000, this);
 
           return res;
         ]]></body>
@@ -1740,9 +1712,6 @@
             this.startFind();
             return;
           }
-
-          // user explicitly requested another search, so do it even if we think it'll fail
-          this._findFailedString = null;
 
           var res;
           // Ensure the stored SearchString is in sync with what we want to find
