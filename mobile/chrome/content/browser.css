@@ -159,3 +159,8 @@ richlistitem[type="warning"] {
 richlistitem[type="message"]{
   -moz-binding: url("chrome://browser/content/bindings/console.xml#message");
 }
+
+dialog {
+    -moz-binding: url("chrome://browser/content/bindings/dialog.xml#dialog");
+    font-size: 100%;
+}
