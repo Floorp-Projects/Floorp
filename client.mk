@@ -45,7 +45,7 @@
 #    2. cd mozilla
 #    3. create your .mozconfig file with
 #       ac_add_options --enable-application=browser
-#    4. gmake -f client.mk 
+#    4. gmake -f client.mk
 #
 # Other targets (gmake -f client.mk [targets...]),
 #    build
