@@ -44,6 +44,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 
 #include "mozIStoragePendingStatement.h"
@@ -103,6 +104,8 @@ public:
    * events posted back to the calling thread should call this see if they
    * should run or not.
    *
+   * @pre mMutex is not held
+   *
    * @returns true if the event should notify still, false otherwise.
    */
   bool shouldNotify();
@@ -116,6 +119,8 @@ private:
    * Binds and then executes a given statement until completion, an error
    * occurs, or we are canceled.  If aLastStatement is true, we should set
    * mState accordingly.
+   *
+   * @pre mMutex is not held
    *
    * @param aData
    *        The StatementData to bind, execute, and then process.
@@ -131,6 +136,8 @@ private:
    * Executes a given statement until completion, an error occurs, or we are
    * canceled.  If aLastStatement is true, we should set mState accordingly.
    *
+   * @pre mMutex is not held
+   *
    * @param aStatement
    *        The statement to execute and then process.
    * @param aLastStatement
@@ -144,6 +151,8 @@ private:
   /**
    * Executes a statement to completion, properly handling any error conditions.
    *
+   * @pre mMutex is not held
+   *
    * @param aStatement
    *        The statement to execute to completion.
    * @returns true if results were obtained, false otherwise.
@@ -154,6 +163,8 @@ private:
    * Builds a result set up with a row from a given statement.  If we meet the
    * right criteria, go ahead and notify about this results too.
    *
+   * @pre mMutex is not held
+   *
    * @param aStatement
    *        The statement to get the row data from.
    */
@@ -161,11 +172,15 @@ private:
 
   /**
    * Notifies callback about completion, and does any necessary cleanup.
+   *
+   * @pre mMutex is not held
    */
   nsresult notifyComplete();
 
   /**
    * Notifies callback about an error.
+   *
+   * @pre mMutex is not held
    *
    * @param aErrorCode
    *        The error code defined in mozIStorageError for the error.
@@ -179,6 +194,8 @@ private:
 
   /**
    * Notifies the callback about a result set.
+   *
+   * @pre mMutex is not held
    */
   nsresult notifyResults();
 
@@ -201,20 +218,23 @@ private:
   TimeStamp mIntervalStart;
 
   /**
-   * Indicates our state of execution.  This is one of the values in the
-   * ExecutionState enum.
-   *
-   * @note This should only be set with PR_Atomic* functions.
+   * Indicates our state of execution.
    */
-  volatile PRInt32 mState;
+  ExecutionState mState;
 
   /**
-   * Indicates if we should try to cancel at a cancelation point or not.  This
-   * is evaluated as a boolean.
-   *
-   * @note This should only be set with PR_Atomic* functions.
+   * Indicates if we should try to cancel at a cancelation point.
    */
-  volatile PRInt32 mCancelRequested;
+  bool mCancelRequested;
+
+  /**
+   * This is the mutex that protects our state from changing between threads.
+   * This includes the following variables:
+   *   - mCancelRequested is only set on the calling thread while the lock is
+   *     held.  It is always read from within the lock on the background thread,
+   *     but not on the calling thread (see shouldNotify for why).
+   */
+  Mutex &mMutex;
 };
 
 } // namespace storage
