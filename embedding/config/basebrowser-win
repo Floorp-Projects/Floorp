@@ -46,8 +46,6 @@ js3250.dll
 ; 
 xpcom.dll
 xpcom_core.dll
-xpcom_compat.dll
-components\xpcom_compat_c.dll
 components\xpcom_base.xpt
 components\xpcom_components.xpt
 components\xpcom_ds.xpt
@@ -57,7 +55,6 @@ components\xpcom_thread.xpt
 components\xpcom_xpti.xpt
 components\mozreg.dll
 ;components\mozreg.xpt
-components\xpcom_obsolete.xpt
 
 ; required prefs files
 greprefs\*
