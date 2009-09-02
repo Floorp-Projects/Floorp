@@ -34,9 +34,6 @@ components/xpcom_ds.xpt
 components/xpcom_io.xpt
 components/xpcom_threads.xpt
 components/xpcom_xpti.xpt
-libxpcom_compat.so
-components/libxpcom_compat_c.so
-components/xpcom_obsolete.xpt
 
 ; xpconnect
 components/libxpconnect.so

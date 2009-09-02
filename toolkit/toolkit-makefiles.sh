@@ -564,11 +564,6 @@ MAKEFILES_xpcom="
   xpcom/system/Makefile
 "
 
-MAKEFILES_xpcom_obsolete="
-  xpcom/obsolete/Makefile
-  xpcom/obsolete/component/Makefile
-"
-
 MAKEFILES_xpcom_tests="
   xpcom/tests/Makefile
   xpcom/tests/dynamic/Makefile
@@ -682,7 +677,6 @@ MAKEFILES_xulapp="
   toolkit/crashreporter/google-breakpad/src/tools/mac/dump_syms/Makefile
   toolkit/crashreporter/google-breakpad/src/tools/solaris/dump_syms/Makefile
   toolkit/content/Makefile
-  toolkit/obsolete/Makefile
   toolkit/components/alerts/Makefile
   toolkit/components/alerts/public/Makefile
   toolkit/components/alerts/src/Makefile
@@ -871,7 +865,6 @@ add_makefiles "
   $MAKEFILES_webshell
   $MAKEFILES_widget
   $MAKEFILES_xpcom
-  $MAKEFILES_xpcom_obsolete
   $MAKEFILES_xpcom_tests
   $MAKEFILES_xpinstall
   $MAKEFILES_xpfe
