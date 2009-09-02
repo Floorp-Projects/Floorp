@@ -1204,7 +1204,7 @@ nsresult imgContainer::DoComposite(imgFrame** aFrameToUse,
         // Note: Frame 1 never gets into DoComposite(), so (aNextFrameIndex - 1) will
         // always be a valid frame number.
         if (mAnim->lastCompositedFrameIndex != aNextFrameIndex - 1) {
-          if (isFullPrevFrame && !aPrevFrame->GetIsPaletted())
+          if (isFullPrevFrame && !aPrevFrame->GetIsPaletted()) {
             // Just copy the bits
             CopyFrameImage(aPrevFrame, mAnim->compositingFrame);
           } else {
@@ -1217,6 +1217,7 @@ nsresult imgContainer::DoComposite(imgFrame** aFrameToUse,
             DrawFrameTo(aPrevFrame, mAnim->compositingFrame, prevFrameRect);
           }
         }
+    }
   } else if (needToBlankComposite) {
     // If we just created the composite, it could have anything in it's
     // buffers. Clear them
