@@ -418,7 +418,7 @@ js_ConcatN(JSContext *cx, JSString **strArray, uint32 size)
 
 
     /* Allocate buffer. */
-    if (numChar & JSUtils::MulOverflowMask<sizeof(jschar)>::result)
+    if (numChar & js::tl::MulOverflowMask<sizeof(jschar)>::result)
         return NULL;
     jschar *buf = (jschar *)cx->malloc(numChar * sizeof(jschar));
     if (!buf)

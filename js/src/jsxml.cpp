@@ -886,18 +886,6 @@ struct JSXMLArrayCursor
 
     ~JSXMLArrayCursor() { disconnect(); }
 
-    static JSXMLArrayCursor *allocate(JSContext *cx, JSXMLArray *array) {
-        void *memory = cx->malloc(sizeof(JSXMLArrayCursor));
-        if (!memory)
-            return NULL;
-        return new(memory) JSXMLArrayCursor(array);
-    }
-
-    static void deallocate(JSContext *cx, JSXMLArrayCursor *cursor) {
-        cursor->~JSXMLArrayCursor();
-        cx->free(cursor);
-    }
-
     void disconnect() {
         if (!array)
             return;
@@ -5029,7 +5017,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (length == 0) {
             cursor = NULL;
         } else {
-            cursor = JSXMLArrayCursor::allocate(cx, &xml->xml_kids);
+            cursor = cx->create<JSXMLArrayCursor>(&xml->xml_kids);
             if (!cursor)
                 return JS_FALSE;
         }
@@ -5050,7 +5038,7 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
       case JSENUMERATE_DESTROY:
         cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
         if (cursor)
-            JSXMLArrayCursor::deallocate(cx, cursor);
+            cx->destroy(cursor);
         *statep = JSVAL_NULL;
         break;
     }
@@ -5158,7 +5146,7 @@ js_EnumerateXMLValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (length == 0) {
             cursor = NULL;
         } else {
-            cursor = JSXMLArrayCursor::allocate(cx, &xml->xml_kids);
+            cursor = cx->create<JSXMLArrayCursor>(&xml->xml_kids);
             if (!cursor)
                 return JS_FALSE;
         }
@@ -5191,7 +5179,7 @@ js_EnumerateXMLValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         cursor = (JSXMLArrayCursor *) JSVAL_TO_PRIVATE(*statep);
         if (cursor) {
       destroy:
-            JSXMLArrayCursor::deallocate(cx, cursor);
+            cx->destroy(cursor);
         }
         *statep = JSVAL_NULL;
         break;
@@ -7947,18 +7935,6 @@ struct JSXMLFilter
       : list(list), result(NULL), kid(NULL), cursor(array) {}
 
     ~JSXMLFilter() {}
-
-    static JSXMLFilter *allocate(JSContext *cx, JSXML *list, JSXMLArray *array) {
-        void *memory = cx->malloc(sizeof(JSXMLFilter));
-        if (!memory)
-            return NULL;
-        return new(memory) JSXMLFilter(list, array);
-    }
-
-    static void deallocate(JSContext *cx, JSXMLFilter *filter) {
-        filter->~JSXMLFilter();
-        cx->free(filter);
-    }
 };
 
 static void
@@ -7988,7 +7964,7 @@ xmlfilter_finalize(JSContext *cx, JSObject *obj)
     if (!filter)
         return;
 
-    JSXMLFilter::deallocate(cx, filter);
+    cx->destroy(filter);
 }
 
 JSClass js_XMLFilterClass = {
@@ -8047,7 +8023,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
          * Init all filter fields before setPrivate exposes it to
          * xmlfilter_trace or xmlfilter_finalize.
          */
-        filter = JSXMLFilter::allocate(cx, list, &list->xml_kids);
+        filter = cx->create<JSXMLFilter>(list, &list->xml_kids);
         if (!filter)
             return JS_FALSE;
         filterobj->setPrivate(filter);
