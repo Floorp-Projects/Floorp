@@ -53,10 +53,6 @@ endif
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-
-ifndef MOZ_NO_XPCOM_OBSOLETE
-endif
-
 include $(topsrcdir)/config/config.mk
 
 CPPSRCS		= nsPref.cpp \
