@@ -215,7 +215,7 @@ struct JSScope {
     JSScopeProperty *lastProp;          /* pointer to last property added */
 
   private:
-    void initMinimal(JSContext *cx);
+    void initMinimal(JSContext *cx, uint32 newShape);
     bool createTable(JSContext *cx, bool report);
     bool changeTable(JSContext *cx, int change);
     void reportReadOnlyScope(JSContext *cx);
@@ -226,7 +226,8 @@ struct JSScope {
 
   public:
     /* Create a mutable, owned, empty scope. */
-    static JSScope *create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj);
+    static JSScope *create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj,
+                           uint32 shape);
 
     static void destroy(JSContext *cx, JSScope *scope);
 
@@ -243,6 +244,19 @@ struct JSScope {
             return emptyScope;
         }
         return createEmptyScope(cx, clasp);
+    }
+
+    bool getEmptyScopeShape(JSContext *cx, JSClass *clasp, uint32 *shapep) {
+        if (emptyScope) {
+            *shapep = emptyScope->shape;
+            return true;
+        }
+        JSScope *e = getEmptyScope(cx, clasp);
+        if (!e)
+            return false;
+        *shapep = e->shape;
+        e->drop(cx, NULL);
+        return true;
     }
 
     inline void hold();

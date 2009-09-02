@@ -2025,7 +2025,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
         if (!scope)
             goto bad;
     } else {
-        scope = JSScope::create(cx, ops, clasp, obj);
+        scope = JSScope::create(cx, ops, clasp, obj, js_GenerateShape(cx, false));
         if (!scope)
             goto bad;
 

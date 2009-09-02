@@ -99,7 +99,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
      * birth, and runtime clone of a block objects are never mutated.
      */
     JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_BlockClass);
-    newscope = JSScope::create(cx, scope->map.ops, obj->getClass(), obj);
+    newscope = JSScope::create(cx, scope->map.ops, obj->getClass(), obj, scope->shape);
     if (!newscope)
         return NULL;
     JS_LOCK_SCOPE(cx, newscope);
@@ -132,9 +132,9 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 #define SCOPE_TABLE_NBYTES(n)   ((n) * sizeof(JSScopeProperty *))
 
 void
-JSScope::initMinimal(JSContext *cx)
+JSScope::initMinimal(JSContext *cx, uint32 newShape)
 {
-    shape = js_GenerateShape(cx, false);
+    shape = newShape;
     emptyScope = NULL;
     hashShift = JS_DHASH_BITS - MIN_SCOPE_SIZE_LOG2;
     entryCount = removedCount = 0;
@@ -183,7 +183,7 @@ JSScope::createTable(JSContext *cx, bool report)
 }
 
 JSScope *
-JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj)
+JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj, uint32 shape)
 {
     JS_ASSERT(OPS_IS_NATIVE(ops));
     JS_ASSERT(obj);
@@ -198,7 +198,7 @@ JSScope::create(JSContext *cx, JSObjectOps *ops, JSClass *clasp, JSObject *obj)
     scope->freeslot = JSSLOT_FREE(clasp);
     scope->flags = cx->runtime->gcRegenShapesScopeFlag;
     js_LeaveTraceIfGlobalObject(cx, obj);
-    scope->initMinimal(cx);
+    scope->initMinimal(cx, shape);
 
 #ifdef JS_THREADSAFE
     js_InitTitle(cx, &scope->title);
@@ -227,7 +227,7 @@ JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
     scope->nrefs = 2;
     scope->freeslot = JSSLOT_FREE(clasp);
     scope->flags = OWN_SHAPE | cx->runtime->gcRegenShapesScopeFlag;
-    scope->initMinimal(cx);
+    scope->initMinimal(cx, js_GenerateShape(cx, false));
 
 #ifdef JS_THREADSAFE
     js_InitTitle(cx, &scope->title);
@@ -1559,7 +1559,21 @@ JSScope::clear(JSContext *cx)
         js_free(table);
     clearMiddleDelete();
     js_LeaveTraceIfGlobalObject(cx, object);
-    initMinimal(cx);
+
+    JSClass *clasp = object->getClass();
+    JSObject *proto = object->getProto();
+    uint32 newShape;
+    if (proto && clasp == proto->getClass()) {
+#ifdef DEBUG
+        bool ok =
+#endif
+        OBJ_SCOPE(proto)->getEmptyScopeShape(cx, clasp, &newShape);
+        JS_ASSERT(ok);
+    } else {
+        newShape = js_GenerateShape(cx, false);
+    }
+    initMinimal(cx, newShape);
+
     JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
 }
 
