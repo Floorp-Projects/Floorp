@@ -83,37 +83,26 @@ function nsPlacesDBUtils() {
   //////////////////////////////////////////////////////////////////////////////
   //// Smart getters
 
-  this.__defineGetter__("_bms", function() {
-    delete this._bms;
-    return this._bms = Cc[BS_CONTRACTID].getService(Ci.nsINavBookmarksService);
+  XPCOMUtils.defineLazyServiceGetter(this, "_bms", BS_CONTRACTID,
+                                     "nsINavBookmarksService");
+
+  XPCOMUtils.defineLazyServiceGetter(this, "_hs", HS_CONTRACTID,
+                                     "nsINavHistoryService");
+
+  XPCOMUtils.defineLazyServiceGetter(this, "_os", OS_CONTRACTID,
+                                     "nsIObserverService");
+
+  XPCOMUtils.defineLazyServiceGetter(this, "_idlesvc", IS_CONTRACTID,
+                                     "nsIIdleService");
+
+  XPCOMUtils.defineLazyGetter(this, "_dbConn", function() {
+    return Cc[HS_CONTRACTID].getService(Ci.nsPIPlacesDatabase).DBConnection;
   });
 
-  this.__defineGetter__("_hs", function() {
-    delete this._hs;
-    return this._hs = Cc[HS_CONTRACTID].getService(Ci.nsINavHistoryService);
-  });
-
-  this.__defineGetter__("_os", function() {
-    delete this._os;
-    return this._os = Cc[OS_CONTRACTID].getService(Ci.nsIObserverService);
-  });
-
-  this.__defineGetter__("_idlesvc", function() {
-    delete this._idlesvc;
-    return this._idlesvc = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
-  });
-
-  this.__defineGetter__("_dbConn", function() {
-    delete this._dbConn;
-    return this._dbConn = Cc[HS_CONTRACTID].
-                          getService(Ci.nsPIPlacesDatabase).DBConnection;
-  });
-
-  this.__defineGetter__("_bundle", function() {
-    delete this._bundle;
-    return this._bundle = Cc[SB_CONTRACTID].
-                          getService(Ci.nsIStringBundleService).
-                          createBundle(PLACES_STRING_BUNDLE_URI);
+  XPCOMUtils.defineLazyGetter(this, "_bundle", function() {
+    return Cc[SB_CONTRACTID].
+           getService(Ci.nsIStringBundleService).
+           createBundle(PLACES_STRING_BUNDLE_URI);
   });
 
   // register the maintenance timer
