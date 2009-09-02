@@ -72,7 +72,6 @@ _TEST_FILES = 	test_bug360220.xul \
 		popup_shared.js \
 		popup_trigger.js \
 		window_popup_button.xul \
-		window_menuchecks.xul \
 		window_popup_attribute.xul \
 		window_tooltip.xul \
 		test_progressmeter.xul \
