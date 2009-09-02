@@ -556,117 +556,9 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetToPrinter(PRBool &aToPrinter)
-{
-  aToPrinter = mToPrinter;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetIsPrintPreview(PRBool &aIsPPreview)
-{
-  aIsPPreview = mIsPPreview;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrinterName ( const char **aPrinter )
-{
-   *aPrinter = mPrinter;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetCopies ( int &aCopies )
-{
-   aCopies = mCopies;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetFirstPageFirst(PRBool &aFpf)      
-{
-  aFpf = mFpf;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetGrayscale(PRBool &aGrayscale)      
-{
-  aGrayscale = mGrayscale;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetLandscape(PRBool &aLandscape)
-{
-  aLandscape = (mOrientation == NS_LANDSCAPE);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetTopMargin(float &aValue)      
-{
-  aValue = mTop;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetBottomMargin(float &aValue)      
-{
-  aValue = mBottom;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetRightMargin(float &aValue)      
-{
-  aValue = mRight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetLeftMargin(float &aValue)      
-{
-  aValue = mLeft;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetCommand(const char **aCommand)      
-{
-  *aCommand = mCommand;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetPath(const char **aPath)      
 {
   *aPath = mPath;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetUserCancelled(PRBool &aCancel)     
-{
-  aCancel = mCancel;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPaperName( const char **aPaperName )
-{
-  *aPaperName = mPaperName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPlexName( const char **aPlexName )
-{
-  *aPlexName = mPlexName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetResolutionName( const char **aResolutionName )
-{
-  *aResolutionName = mResolutionName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetColorspace( const char **aColorspace )
-{
-  *aColorspace = mColorspace;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetDownloadFonts(PRBool &aDownloadFonts)      
-{
-  aDownloadFonts = mDownloadFonts;
   return NS_OK;
 }
 
@@ -674,7 +566,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrintMethod(PrintMethod &aMethod)
 {
   return GetPrintMethod(mPrinter, aMethod);
 }
-
 /* static !! */
 nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
 {
@@ -684,11 +575,6 @@ nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMetho
 #else
   return NS_ERROR_UNEXPECTED;
 #endif
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::ClosePrintManager()
-{
-  return NS_OK;
 }
 
 static void
