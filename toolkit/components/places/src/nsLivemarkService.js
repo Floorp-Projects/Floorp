@@ -131,6 +131,25 @@ function LivemarkService() {
   }
   catch (ex) { }
 
+  //////////////////////////////////////////////////////////////////////////////
+  //// Smart Getters
+
+  XPCOMUtils.defineLazyServiceGetter(this, "_bms", BMS_CONTRACTID,
+                                     "nsINavBookmarksService");
+
+  XPCOMUtils.defineLazyServiceGetter(this, "_history", NH_CONTRACTID,
+                                     "nsINavHistoryService");
+
+  XPCOMUtils.defineLazyServiceGetter(this, "_ans", AS_CONTRACTID,
+                                     "nsIAnnotationService");
+
+  XPCOMUtils.defineLazyServiceGetter(this, "_ios", IO_CONTRACTID,
+                                     "nsIIOService");
+
+  XPCOMUtils.defineLazyServiceGetter(this, "_idleService", IS_CONTRACTID,
+                                     "nsIIdleService");
+
+
   // [ {folderId:, folderURI:, feedURI:, loadGroup:, locked: } ];
   this._livemarks = [];
 
@@ -151,38 +170,6 @@ function LivemarkService() {
 }
 
 LivemarkService.prototype = {
-
-  get _bms() {
-    var svc = Cc[BMS_CONTRACTID].getService(Ci.nsINavBookmarksService);
-    this.__defineGetter__("_bms", function() svc);
-    return this._bms;
-  },
-
-  get _history() {
-    var svc = Cc[NH_CONTRACTID].getService(Ci.nsINavHistoryService);
-    this.__defineGetter__("_history", function() svc);
-    return this._history;
-  },
-
-  get _ans() {
-    var svc = Cc[AS_CONTRACTID].getService(Ci.nsIAnnotationService);
-    this.__defineGetter__("_ans", function() svc);
-    return this._ans;
-  },
-
-  get _ios() {
-    var svc = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
-    this.__defineGetter__("_ios", function() svc);
-    return this._ios;
-  },
-
-  get _idleService() {
-    if (!(IS_CONTRACTID in Cc))
-      return null;
-    var svc = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
-    this.__defineGetter__("_idleService", function() svc);
-    return this._idleService;
-  },
 
   _updateTimer: null,
   start: function LS_start() {
