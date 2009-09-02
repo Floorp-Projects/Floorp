@@ -278,12 +278,6 @@ NS_IMETHODIMP WinMobileLocationProvider::Startup()
   return NS_OK;
 }
 
-NS_IMETHODIMP WinMobileLocationProvider::IsReady(PRBool *_retval NS_OUTPARAM)
-{
-  *_retval = mHasSeenLocation;
-  return NS_OK;
-}
-
 NS_IMETHODIMP WinMobileLocationProvider::Watch(nsIGeolocationUpdate *callback)
 {
   if (mCallback)
