@@ -64,7 +64,6 @@ CPPSRCS		= \
 	nsSound.cpp \
 	nsIMM32Handler.cpp \
 	WindowHook.cpp \
-	nsAccelerometerWin.cpp \
 	$(NULL)
 
 ifdef NS_PRINTING
@@ -79,6 +78,7 @@ ifeq ($(OS_ARCH), WINCE)
 CPPSRCS += \
 	nsWindowCE.cpp \
 	nsClipboardCE.cpp \
+        nsAccelerometerCE.cpp \
 	$(NULL)
 else
 CPPSRCS += \
