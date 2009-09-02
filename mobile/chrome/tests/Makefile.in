@@ -47,6 +47,10 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_FILES = \
   browser_mainui.js \
   browser_tabs.js \
+  browser_bookmarks.js \
+  browser_bookmarks_star.js \
+  browser_bookmarks_folders.js \
+  browser_bookmarks_tags.js \
   browser_blank_01.html \
   browser_blank_02.html \
   $(NULL)
