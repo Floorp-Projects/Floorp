@@ -77,10 +77,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
   
-  NS_IMETHOD GetContentForEvent(nsPresContext* aPresContext,
-                                nsEvent* aEvent,
-                                nsIContent** aContent);
-
   nsRect GetInnerArea() const;
 
 #ifdef ACCESSIBILITY
