@@ -814,6 +814,18 @@ FindLineContainer(nsIFrame* aFrame)
 }
 
 static PRBool
+IsLineBreakingWhiteSpace(PRUnichar aChar)
+{
+  // 0x0A (\n) is not handled as white-space by the line breaker, since
+  // we break before it, if it isn't transformed to a normal space.
+  // (If we treat it as normal white-space then we'd only break after it.)
+  // However, it does induce a line break or is converted to a regular
+  // space, and either way it can be used to bound the region of text
+  // that needs to be analyzed for line breaking.
+  return nsLineBreaker::IsSpace(aChar) || aChar == 0x0A;
+}
+
+static PRBool
 TextContainsLineBreakerWhiteSpace(const void* aText, PRUint32 aLength,
                                   PRBool aIsDoubleByte)
 {
@@ -821,14 +833,14 @@ TextContainsLineBreakerWhiteSpace(const void* aText, PRUint32 aLength,
   if (aIsDoubleByte) {
     const PRUnichar* chars = static_cast<const PRUnichar*>(aText);
     for (i = 0; i < aLength; ++i) {
-      if (nsLineBreaker::IsSpace(chars[i]))
+      if (IsLineBreakingWhiteSpace(chars[i]))
         return PR_TRUE;
     }
     return PR_FALSE;
   } else {
     const PRUint8* chars = static_cast<const PRUint8*>(aText);
     for (i = 0; i < aLength; ++i) {
-      if (nsLineBreaker::IsSpace(chars[i]))
+      if (IsLineBreakingWhiteSpace(chars[i]))
         return PR_TRUE;
     }
     return PR_FALSE;
