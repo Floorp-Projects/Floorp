@@ -488,6 +488,9 @@ MouseModule.prototype = {
 
     this._owner.grab(this);
 
+    if (this._clicker)
+      this._clicker.mouseDown(evInfo.event.clientX, evInfo.event.clientY);
+
     if (targetScrollInterface) {
       this._doDragStart(evInfo.event);
     }
@@ -524,6 +527,9 @@ MouseModule.prototype = {
       this._doDragStop(sX, sY);  //  are using both, no good reason
 
     this._recordEvent(evInfo);
+
+    if (this._clicker)
+      this._clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
 
     this._doClick(this._movedOutOfRadius);
 

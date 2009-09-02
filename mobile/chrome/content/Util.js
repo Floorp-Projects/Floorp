@@ -63,7 +63,18 @@ let Util = {
   dumpLn: function dumpLn() {
     for (var i = 0; i < arguments.length; i++) { dump(arguments[i] + ' '); }
     dump("\n");
+  },
+
+  /** Executes aFunc after other events have been processed. */
+  executeSoon: function executeSoon(aFunc) {
+    let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+    tm.mainThread.dispatch({
+      run: function() {
+        aFunc();
+      }
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   }
+
 };
 
 
