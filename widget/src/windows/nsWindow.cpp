@@ -4185,6 +4185,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
         case SPI_SETCURRENTIM:
           nsWindowCE::NotifySoftKbObservers();
           break;
+        case SETTINGCHANGE_RESET:
+          if (mWindowType == eWindowType_invisible) {
+            // The OS sees to get confused and think that the invisable window
+            // is in the foreground after an orientation change. By actually
+            // setting it to the foreground and hiding it, we set it strait.
+            // See bug 514007 for details.
+            SetForegroundWindow(mWnd);
+            ShowWindow(mWnd, SW_HIDE);
+          } 
+          break;
       }
 #endif
       OnSettingsChange(wParam, lParam);
