@@ -64,3 +64,59 @@ select:not([size]) scrollbarbutton,
 select[size="1"] scrollbarbutton {
   display:block !important;
 }
+
+/* Override inverse OS themes */
+textarea,
+select, select[size], select[multiple], select[size][multiple],
+input:not([type]),
+input[type="text"],
+input[type="file"],
+input[type="password"] {
+  color: black;
+  background-color: white;
+  border: 1px solid silver;
+}
+
+/* Override inverse OS themes */
+button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  color: black;
+  background-color: silver;
+  border: 2px outset silver;
+}
+
+/* Override inverse OS themes */
+input[type="radio"],
+input[type="checkbox"] {
+  color: black !important;
+  background-color: white !important;
+  border: 2px inset gray;
+}
+
+/* Override inverse OS themes */
+input[disabled],
+textarea[disabled],
+option[disabled],
+optgroup[disabled],
+select[disabled] {
+  color: silver;
+  background-color: white;
+}
+
+/* Override inverse OS themes */
+button[disabled],
+input[type="reset"][disabled],
+input[type="button"][disabled],
+select[disabled] > input[type="button"],
+input[type="submit"][disabled] {
+  border: 2px outset silver;
+  color: gray;
+}
+
+/* Override inverse OS themes */
+input[type="radio"][disabled],
+input[type="checkbox"][disabled] {
+  border: 1px inset silver;
+}
