@@ -2569,12 +2569,12 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
         }
 
         wrappedObj = XPCNativeWrapper::GetNewOrUsed(aJSContext, wrapper,
-                                                    aPrincipal);
+                                                    aScope, aPrincipal);
     }
     else if(aFilenameFlags & JSFILENAME_SYSTEM)
     {
         jsval val = OBJECT_TO_JSVAL(aObject);
-        if(XPCSafeJSObjectWrapper::WrapObject(aJSContext, nsnull, val, &val))
+        if(XPCSafeJSObjectWrapper::WrapObject(aJSContext, aScope, val, &val))
             wrappedObj = JSVAL_TO_OBJECT(val);
     }
     else
