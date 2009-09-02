@@ -79,7 +79,7 @@ grippy {
 }
 
 grippy:hover {
-  background-color: #CCCCFF;
+  background-color: ThreeDHighlight;
 }
 
 splitter[orient="vertical"] > grippy {
