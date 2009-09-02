@@ -161,9 +161,6 @@ ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
 export DLLFLAGS
 endif
 
-# To get debug symbols from NSS
-export MOZ_DEBUG_SYMBOLS
-
 ifdef .PYMAKE
 NSSMAKE = $(GMAKE)
 else
@@ -211,6 +208,7 @@ ifndef MOZ_NO_DEBUG_RTL
 DEFAULT_GMAKE_FLAGS += USE_DEBUG_RTL=1
 endif
 endif
+export MOZ_DEBUG_SYMBOLS
 endif # WINNT
 ifeq ($(OS_ARCH),OS2)
 ifdef MOZ_OS2_HIGH_MEMORY
