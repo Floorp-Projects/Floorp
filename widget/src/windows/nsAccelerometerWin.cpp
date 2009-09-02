@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jesper Kristensen <mail@jesperkristensen.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,10 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccelerometerCE.h"
+#include "nsAccelerometerWin.h"
 #include "nsIServiceManager.h"
 #include "windows.h"
 
+#ifdef WINCE_WINDOWS_MOBILE
 
 ////////////////////////////
 // HTC 
@@ -262,6 +264,90 @@ SMISensor::GetValues(double *x, double *y, double *z)
   *z = vector.z;
 }
 
+#else
+
+////////////////////////////
+// ThinkPad
+////////////////////////////
+
+typedef struct {
+  int status; // Current internal state
+  unsigned short x; // raw value
+  unsigned short y; // raw value
+  unsigned short xx; // avg. of 40ms
+  unsigned short yy; // avg. of 40ms
+  char temp; // raw value (could be deg celsius?)
+  unsigned short x0; // Used for "auto-center"
+  unsigned short y0; // Used for "auto-center"
+} ThinkPadAccelerometerData;
+
+typedef void (__stdcall *ShockproofGetAccelerometerData)(ThinkPadAccelerometerData*);
+
+ShockproofGetAccelerometerData gShockproofGetAccelerometerData = nsnull;
+
+class ThinkPadSensor : public Sensor
+{
+public:
+  ThinkPadSensor();
+  ~ThinkPadSensor();
+  PRBool Startup();
+  void Shutdown();
+  void GetValues(double *x, double *y, double *z);
+private:
+  HMODULE mLibrary;
+};
+
+ThinkPadSensor::ThinkPadSensor()
+{
+}
+
+ThinkPadSensor::~ThinkPadSensor()
+{
+}
+
+PRBool
+ThinkPadSensor::Startup()
+{
+  mLibrary = LoadLibrary("sensor.dll");
+  if (!mLibrary)
+    return PR_FALSE;
+
+  gShockproofGetAccelerometerData = (ShockproofGetAccelerometerData)
+    GetProcAddress(mLibrary, "ShockproofGetAccelerometerData");
+  if (!gShockproofGetAccelerometerData) {
+    FreeLibrary(mLibrary);
+    mLibrary = nsnull;
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+void
+ThinkPadSensor::Shutdown()
+{
+  NS_ASSERTION(mLibrary, "Shutdown called when mLibrary is null?");
+  FreeLibrary(mLibrary);
+  mLibrary = nsnull;
+  gShockproofGetAccelerometerData = nsnull;
+}
+
+void
+ThinkPadSensor::GetValues(double *x, double *y, double *z)
+{
+  ThinkPadAccelerometerData accelData;
+
+  gShockproofGetAccelerometerData(&accelData);
+
+  // accelData.x and accelData.y is the acceleration measured from the accelerometer.
+  // x and y is switched from what we use, and the accelerometer does not support z axis.
+  // Balance point (526, 528) and 90 degree tilt (144) determined experimentally.
+  *x = ((double)(accelData.y - 526)) / 144;
+  *y = ((double)(accelData.x - 528)) / 144;
+  *z = 1.0;
+}
+
+#endif
+
 nsAccelerometerWin::nsAccelerometerWin(){}
 nsAccelerometerWin::~nsAccelerometerWin(){}
 
@@ -283,6 +369,9 @@ void nsAccelerometerWin::Startup()
   NS_ASSERTION(!mLibrary, "mLibrary should be null.  Startup called twice?");
 
   PRBool started = PR_FALSE;
+
+#ifdef WINCE_WINDOWS_MOBILE
+
   mSensor = new SMISensor();
   if (mSensor)
     started = mSensor->Startup();
@@ -292,6 +381,14 @@ void nsAccelerometerWin::Startup()
     if (mSensor)
       started = mSensor->Startup();
   }
+
+#else
+
+  mSensor = new ThinkPadSensor();
+  if (mSensor)
+    started = mSensor->Startup();
+
+#endif
   
   if (!started)
     return;
