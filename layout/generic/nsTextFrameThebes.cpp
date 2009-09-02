@@ -2684,7 +2684,12 @@ PropertyProvider::SetupJustificationSpacing()
     return;
 
   gfxSkipCharsIterator start(mStart), end(mStart);
-  end.AdvanceOriginal(mLength);
+  // We can't just use our mLength here; when InitializeForDisplay is
+  // called with PR_FALSE for aTrimAfter, we still shouldn't be assigning
+  // justification space to any trailing whitespace.
+  nsTextFrame::TrimmedOffsets trimmed =
+    mFrame->GetTrimmedOffsets(mFrag, PR_TRUE);
+  end.AdvanceOriginal(trimmed.mLength);
   gfxSkipCharsIterator realEnd(end);
   FindJustificationRange(&start, &end);
 
