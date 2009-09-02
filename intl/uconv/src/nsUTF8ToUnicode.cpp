@@ -38,6 +38,25 @@
 #include "nsUCSupport.h"
 #include "nsUTF8ToUnicode.h"
 
+#if defined(__GNUC__) && defined(__i386__) && defined(__APPLE__)
+#define MAC_SSE2
+#endif
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+#define WIN_SSE2
+#endif
+
+#if defined(MAC_SSE2) || defined(WIN_SSE2)
+#include "emmintrin.h"
+#endif
+
+#if defined(MAC_SSE2)
+#define __sse2_available 1
+#endif
+
+#if defined(WIN_SSE2)
+extern "C" int __sse2_available;
+#endif
+
 #define UNICODE_BYTE_ORDER_MARK    0xFEFF
 
 NS_IMETHODIMP NS_NewUTF8ToUnicode(nsISupports* aOuter,
@@ -119,6 +138,167 @@ NS_IMETHODIMP nsUTF8ToUnicode::Reset()
 //----------------------------------------------------------------------
 // Subclassing of nsBasicDecoderSupport class [implementation]
 
+// Fast ASCII -> UTF16 inner loop implementations
+//
+// Convert_ascii_run will update src and dst to the new values, and
+// len must be the maximum number ascii chars that it would be valid
+// to take from src and place into dst.  (That is, the minimum of the
+// number of bytes left in src and the number of unichars available in
+// dst.)
+
+#if defined(MAC_SSE2) || defined(WIN_SSE2)
+
+static inline void
+Convert_ascii_run (const char *&src,
+                   PRUnichar *&dst,
+                   PRInt32 len)
+{
+  if (len > 15 && __sse2_available) {
+    __m128i in, out1, out2;
+    __m128d *outp1, *outp2;
+    __m128i zeroes;
+    PRUint32 offset;
+
+    // align input to 16 bytes
+    while ((NS_PTR_TO_UINT32(src) & 15) && len > 0) {
+      if (*src & 0x80U)
+        return;
+      *dst++ = (PRUnichar) *src++;
+      len--;
+    }
+
+    zeroes = _mm_setzero_si128();
+
+    offset = NS_PTR_TO_UINT32(dst) & 15;
+
+    // Note: all these inner loops have to break, not return; we need
+    // to let the single-char loop below catch any leftover
+    // byte-at-a-time ASCII chars, since this function must consume
+    // all available ASCII chars before it returns
+
+    if (offset == 0) {
+      while (len > 15) {
+        in = _mm_load_si128((__m128i *) src); 
+        if (_mm_movemask_epi8(in))
+          break;
+        out1 = _mm_unpacklo_epi8(in, zeroes);
+        out2 = _mm_unpackhi_epi8(in, zeroes);
+        _mm_stream_si128((__m128i *) dst, out1);
+        _mm_stream_si128((__m128i *) (dst + 8), out2);
+        dst += 16;
+        src += 16;
+        len -= 16;
+      }
+    } else if (offset == 8) {
+      outp1 = (__m128d *) &out1;
+      outp2 = (__m128d *) &out2;
+      while (len > 15) {
+        in = _mm_load_si128((__m128i *) src); 
+        if (_mm_movemask_epi8(in))
+          break;
+        out1 = _mm_unpacklo_epi8(in, zeroes);
+        out2 = _mm_unpackhi_epi8(in, zeroes);
+        _mm_storel_epi64((__m128i *) dst, out1);
+        _mm_storel_epi64((__m128i *) (dst + 8), out2);
+        _mm_storeh_pd((double *) (dst + 4), *outp1);
+        _mm_storeh_pd((double *) (dst + 12), *outp2);
+        src += 16;
+        dst += 16;
+        len -= 16;
+      }
+    } else {
+      while (len > 15) {
+        in = _mm_load_si128((__m128i *) src);
+        if (_mm_movemask_epi8(in))
+          break;
+        out1 = _mm_unpacklo_epi8(in, zeroes);
+        out2 = _mm_unpackhi_epi8(in, zeroes);
+        _mm_storeu_si128((__m128i *) dst, out1);
+        _mm_storeu_si128((__m128i *) (dst + 8), out2);
+        src += 16;
+        dst += 16;
+        len -= 16;
+      }
+    }
+  }
+
+  // finish off a byte at a time
+
+  while (len-- > 0 && (*src & 0x80U) == 0) {
+    *dst++ = (PRUnichar) *src++;
+  }
+}
+
+#elif defined(__arm__) || defined(_M_ARM)
+
+// on ARM, do extra work to avoid byte/halfword reads/writes by
+// reading/writing a word at a time for as long as we can
+static inline void
+Convert_ascii_run (const char *&src,
+                   PRUnichar *&dst,
+                   PRInt32 len)
+{
+  const PRUint32 *src32;
+  PRUint32 *dst32;
+
+  // with some alignments, we'd never actually break out of the slow loop, so
+  // check and do the faster slow loop
+  if ((((NS_PTR_TO_UINT32(dst) & 3) == 0) && ((NS_PTR_TO_UINT32(src) & 1) == 0)) ||
+      (((NS_PTR_TO_UINT32(dst) & 3) == 2) && ((NS_PTR_TO_UINT32(src) & 1) == 1)))
+  {
+    while (((NS_PTR_TO_UINT32(src) & 3) ||
+            (NS_PTR_TO_UINT32(dst) & 3)) &&
+           len > 0)
+    {
+      if (*src & 0x80U)
+        return;
+      *dst++ = (PRUnichar) *src++;
+      len--;
+    }
+  } else {
+    goto finish;
+  }
+
+  // then go 4 bytes at a time
+  src32 = (const PRUint32*) src;
+  dst32 = (PRUint32*) dst;
+
+  while (len > 4) {
+    PRUint32 in = *src32++;
+
+    if (in & 0x80808080U) {
+      src32--;
+      break;
+    }
+
+    *dst32++ = ((in & 0x000000ff) >>  0) | ((in & 0x0000ff00) << 8);
+    *dst32++ = ((in & 0x00ff0000) >> 16) | ((in & 0xff000000) >> 8);
+
+    len -= 4;
+  }
+
+  src = (const char *) src32;
+  dst = (PRUnichar *) dst32;
+
+finish:
+  while (len-- > 0 && (*src & 0x80U) == 0) {
+    *dst++ = (PRUnichar) *src++;
+  }
+}
+
+#else /* generic code */
+
+static inline void
+Convert_ascii_run (const char *&src,
+                   PRUnichar *&dst,
+                   PRInt32 len)
+{
+  while (len-- > 0 && (*src & 0x80U) == 0) {
+    *dst++ = (PRUnichar) *src++;
+  }
+}
+
+#endif
 
 NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
                                        PRInt32 * aSrcLength,
@@ -136,6 +316,12 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
 
   nsresult res = NS_OK; // conversion result
 
+  // alias these locally for speed
+  PRInt32 mUcs4 = this->mUcs4;
+  PRUint8 mState = this->mState;
+  PRUint8 mBytes = this->mBytes;
+  PRUint8 mFirst = this->mFirst;
+
   // Set mFirst to PR_FALSE now so we don't have to every time through the ASCII
   // branch within the loop.
   if (mFirst && aSrcLen && (0 == (0x80 & (*aSrc))))
@@ -146,8 +332,9 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
       // When mState is zero we expect either a US-ASCII character or a
       // multi-octet sequence.
       if (0 == (0x80 & (*in))) {
-        // US-ASCII, pass straight through.
-        *out++ = (PRUnichar)*in;
+        PRInt32 max_loops = PR_MIN(inend - in, outend - out);
+        Convert_ascii_run(in, out, max_loops);
+        --in; // match the rest of the cases
         mBytes = 1;
       } else if (0xC0 == (0xE0 & (*in))) {
         // First octet of 2 octet sequence
@@ -265,6 +452,11 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
 
   *aSrcLength = in - aSrc;
   *aDestLength = out - aDest;
+
+  this->mUcs4 = mUcs4;
+  this->mState = mState;
+  this->mBytes = mBytes;
+  this->mFirst = mFirst;
 
   return(res);
 }
