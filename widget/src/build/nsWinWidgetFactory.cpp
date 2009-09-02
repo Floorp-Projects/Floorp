@@ -75,8 +75,10 @@
 #include "nsPrintSession.h"
 #endif
 
-#include "nsAccelerometerWin.h"
+#ifdef WINCE_WINDOWS_MOBILE
+#include "nsAccelerometerCE.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccelerometerWin)
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
@@ -174,10 +176,12 @@ static const nsModuleComponentInfo components[] =
     nsBidiKeyboardConstructor },
 #endif
 
+#ifdef WINCE_WINDOWS_MOBILE
   { "Accelerometer",
     NS_ACCELEROMETER_CID,
     NS_ACCELEROMETER_CONTRACTID,
     nsAccelerometerWinConstructor },
+#endif
 
 #ifdef NS_PRINTING
   { "nsPrintOptionsWin",
