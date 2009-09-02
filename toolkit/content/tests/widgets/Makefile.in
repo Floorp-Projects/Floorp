@@ -44,6 +44,9 @@ relativesrcdir  = toolkit/content/tests/widgets
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+# disabled, see bug 506038
+#		test_tooltip.xul \
+
 _TEST_FILES = 	test_bug360220.xul \
 		test_bug359754.xul \
 		test_bug365773.xul \
@@ -65,7 +68,6 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_scale.xul \
 		test_radio.xul \
 		test_tabbox.xul \
-		test_tooltip.xul \
 		test_tooltip_noautohide.xul \
 		popup_shared.js \
 		popup_trigger.js \
@@ -105,7 +107,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_focus.xul \
 		test_focus_anons.xul \
 		test_tabindex.xul \
- 		test_mousescroll.xul \
+		test_mousescroll.xul \
 		test_scrollbar.xul \
 		test_sorttemplate.xul \
 		test_contextmenu_list.xul \
