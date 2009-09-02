@@ -244,7 +244,7 @@ var XPCOMUtils = {
   {
     aObject.__defineGetter__(aName, function() {
       delete aObject[aName];
-      return aObject[aName] = aLambda();
+      return aObject[aName] = aLambda.apply(aObject);
     });
   },
 
