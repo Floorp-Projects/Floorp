@@ -234,6 +234,8 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame");
 
   if (IsInDropDownMode()) {
+    NS_ASSERTION(NS_GET_A(mLastDropdownBackstopColor) == 255,
+                 "need an opaque backstop color");
     // XXX Because we have an opaque widget and we get called to paint with
     // this frame as the root of a stacking context we need make sure to draw
     // some opaque color over the whole widget. (Bug 511323)
@@ -1175,6 +1177,8 @@ nsListControlFrame::Init(nsIContent*     aContent,
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
 
+  mLastDropdownBackstopColor = PresContext()->DefaultBackgroundColor();
+
   return result;
 }
 
@@ -1744,14 +1748,6 @@ nsListControlFrame::AboutToDropDown()
   NS_ASSERTION(IsInDropDownMode(),
     "AboutToDropDown called without being in dropdown mode");
 
-  if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
-    ScrollToIndex(GetSelectedIndex());
-#ifdef ACCESSIBILITY
-    FireMenuItemActiveEvent(); // Inform assistive tech what got focus
-#endif
-  }
-  mItemSelectionStarted = PR_FALSE;
-
   // Our widget doesn't get invalidated on changes to the rest of the document,
   // so compute and store this color at the start of a dropdown so we don't
   // get weird painting behaviour.
@@ -1773,6 +1769,14 @@ nsListControlFrame::AboutToDropDown()
   mLastDropdownBackstopColor =
     NS_ComposeColors(PresContext()->DefaultBackgroundColor(),
                      mLastDropdownBackstopColor);
+
+  if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
+    ScrollToIndex(GetSelectedIndex());
+#ifdef ACCESSIBILITY
+    FireMenuItemActiveEvent(); // Inform assistive tech what got focus
+#endif
+  }
+  mItemSelectionStarted = PR_FALSE;
 }
 
 // We are about to be rolledup from the outside (ComboboxFrame)
