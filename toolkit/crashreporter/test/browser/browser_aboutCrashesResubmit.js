@@ -121,7 +121,10 @@ function test() {
   let crashes = add_fake_crashes(crD, 1);
   // we don't need much data here, it's not going to a real Socorro
   crashes.push(addPendingCrashreport(crD, {'ServerURL': 'http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs',
-                                           'ProductName': 'Test App'
+                                           'ProductName': 'Test App',
+                                           // test that we don't truncate
+                                           // at = (bug 512853)
+                                           'Foo': 'ABC=XYZ'
                                           }));
   crashes.sort(function(a,b) b.date - a.date);
 
