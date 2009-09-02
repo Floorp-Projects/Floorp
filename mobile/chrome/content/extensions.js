@@ -353,8 +353,6 @@ var ExtensionsView = {
     if (!this._isXPInstallEnabled())
       return;
 
-    aItem.setAttribute("opType", "needs-install");
-
     if (aItem.hasAttribute("eula")) {
       var eula = {
         name: aSelectedItem.getAttribute("name"),
@@ -633,6 +631,10 @@ XPInstallDownloadManager.prototype = {
     if (!element)
       return;
 
+    let opType = element.getAttribute("opType");
+    if (!opType) {
+      element.setAttribute("opType", "needs-install");
+    }
     var progress = Math.round((aValue / aMaxValue) * 100);
     element.setAttribute("progress", progress);
   },
