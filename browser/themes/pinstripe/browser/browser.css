@@ -648,6 +648,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 #copy-button[checked="true"] {
   -moz-image-region: rect(46px, 468px, 69px, 432px);
 }
+
 /* ----- DEFAULT PASTE BUTTON ----- */	
 
 #paste-button {
@@ -661,24 +662,34 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   -moz-image-region: rect(46px, 504px, 69px, 468px);
 }
 
+/* ----- FULLSCREEN AND RESTORE BUTTON ----- */
+
+#fullscreen-button {
+  -moz-image-region: rect(0px, 684px, 23px, 648px);
+}
+
+#fullscreen-button:hover:active {
+  -moz-image-region: rect(46px, 684px, 69px, 648px);
+}
+
+#fullscreen-button[checked="true"],
+#restore-button {
+  background-color: transparent;
+  border-color: transparent;
+  -moz-image-region: rect(0px, 720px, 23px, 684px);
+}
+
+#fullscreen-button[checked="true"]:hover:active,
+#restore-button:hover:active {
+  -moz-image-region: rect(46px, 720px, 69px, 684px);
+}
 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
 
-#window-controls {
-  -moz-box-align: center;
-  padding: 0;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
-}
-
-#minimize-button {
-  list-style-image: url("chrome://global/skin/icons/minimize.gif");
-}
-#restore-button {
-  list-style-image: url("chrome://global/skin/icons/restore.gif");
-}
-#close-button {
-  list-style-image: url("chrome://global/skin/icons/close.gif");
+#minimize-button,
+#close-button,
+#fullscreen-button ~ #window-controls > #restore-button {
+  display: none;
 }
 
 /* ::::: nav-bar-inner ::::: */
