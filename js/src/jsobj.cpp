@@ -1983,17 +1983,14 @@ static JSFunctionSpec object_methods[] = {
 #endif
     JS_FN(js_toString_str,             obj_toString,                0,0),
     JS_FN(js_toLocaleString_str,       obj_toLocaleString,          0,0),
-    JS_TN(js_valueOf_str,              obj_valueOf,                 0,0,
-          obj_valueOf_trcinfo),
+    JS_TN(js_valueOf_str,              obj_valueOf,                 0,0, &obj_valueOf_trcinfo),
 #if JS_HAS_OBJ_WATCHPOINT
     JS_FN(js_watch_str,                obj_watch,                   2,0),
     JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
 #endif
-    JS_TN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0,
-          obj_hasOwnProperty_trcinfo),
+    JS_TN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0, &obj_hasOwnProperty_trcinfo),
     JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
-    JS_TN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0,
-          obj_propertyIsEnumerable_trcinfo),
+    JS_TN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0, &obj_propertyIsEnumerable_trcinfo),
 #if JS_HAS_GETTER_SETTER
     JS_FN(js_defineGetter_str,         js_obj_defineGetter,         2,0),
     JS_FN(js_defineSetter_str,         js_obj_defineSetter,         2,0),
