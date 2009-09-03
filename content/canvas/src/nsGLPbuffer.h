@@ -48,7 +48,12 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
-#ifdef XP_WIN
+#if defined(WINCE)
+#include <egl/egl.h>
+#include "gfxDDrawSurface.h"
+#endif
+
+#if defined(XP_WIN)
 #include "gfxWindowsSurface.h"
 #endif
 
@@ -63,14 +68,16 @@
 
 #include "glwrap.h"
 
-class nsCanvasRenderingContextGLPrivate;
+namespace mozilla {
+class WebGLContext;
+}
 
 class nsGLPbuffer {
 public:
     nsGLPbuffer() : mWidth(0), mHeight(0), mPriv(0) { }
     virtual ~nsGLPbuffer() { }
 
-    virtual PRBool Init(nsCanvasRenderingContextGLPrivate *priv) = 0;
+    virtual PRBool Init(mozilla::WebGLContext *priv) = 0;
     virtual PRBool Resize(PRInt32 width, PRInt32 height) = 0;
     virtual void Destroy() = 0;
 
@@ -90,12 +97,11 @@ protected:
     GLES20Wrap mGLWrap;
 
     static void *sCurrentContextToken;
-    nsCanvasRenderingContextGLPrivate *mPriv;
+    mozilla::WebGLContext *mPriv;
 
     void Premultiply(unsigned char *src, unsigned int len);
 
-    void LogMessage (const nsCString& errorString);
-    void LogMessagef (const char *fmt, ...);
+    void LogMessage (const char *fmt, ...);
 };
 
 class nsGLPbufferOSMESA :
@@ -105,7 +111,7 @@ public:
     nsGLPbufferOSMESA();
     virtual ~nsGLPbufferOSMESA();
 
-    virtual PRBool Init(nsCanvasRenderingContextGLPrivate *priv);
+    virtual PRBool Init(mozilla::WebGLContext *priv);
     virtual PRBool Resize(PRInt32 width, PRInt32 height);
     virtual void Destroy();
 
@@ -127,7 +133,7 @@ public:
     nsGLPbufferCGL();
     virtual ~nsGLPbufferCGL();
 
-    virtual PRBool Init(nsCanvasRenderingContextGLPrivate *priv);
+    virtual PRBool Init(mozilla::WebGLContext *priv);
     virtual PRBool Resize(PRInt32 width, PRInt32 height);
     virtual void Destroy();
 
@@ -162,7 +168,7 @@ public:
     nsGLPbufferGLX();
     virtual ~nsGLPbufferGLX();
 
-    virtual PRBool Init(nsCanvasRenderingContextGLPrivate *priv);
+    virtual PRBool Init(mozilla::WebGLContext *priv);
     virtual PRBool Resize(PRInt32 width, PRInt32 height);
     virtual void Destroy();
 
@@ -181,7 +187,35 @@ protected:
 };
 #endif
 
-#ifdef XP_WIN
+#if defined(WINCE)
+class nsGLPbufferEGL :
+    public nsGLPbuffer
+{
+public:
+    nsGLPbufferEGL();
+    virtual ~nsGLPbufferEGL();
+
+    virtual PRBool Init(mozilla::WebGLContext *priv);
+    virtual PRBool Resize(PRInt32 width, PRInt32 height);
+    virtual void Destroy();
+
+    virtual void MakeContextCurrent();
+    virtual void SwapBuffers();
+
+    virtual gfxASurface* ThebesSurface();
+
+protected:
+    EGLDisplay mDisplay;
+    EGLConfig mConfig;
+    EGLSurface mSurface;
+    EGLContext mContext;
+
+    nsRefPtr<gfxImageSurface> mThebesSurface;
+    nsRefPtr<gfxWindowsSurface> mWindowsSurface;
+};
+#endif
+
+#if defined(XP_WIN) && !defined(WINCE)
 class nsGLPbufferWGL :
     public nsGLPbuffer
 {
@@ -189,7 +223,7 @@ public:
     nsGLPbufferWGL();
     virtual ~nsGLPbufferWGL();
 
-    virtual PRBool Init(nsCanvasRenderingContextGLPrivate *priv);
+    virtual PRBool Init(mozilla::WebGLContext *priv);
     virtual PRBool Resize(PRInt32 width, PRInt32 height);
     virtual void Destroy();
 

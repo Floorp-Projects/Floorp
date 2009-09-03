@@ -69,6 +69,9 @@ public:
                                          nsIPrincipal *aPrincipal,
                                          PRBool forceWriteOnly);
 
+    static void LogMessage (const nsCString& errorString);
+    static void LogMessagef (const char *fmt, ...);
+
 private:
     // this can't be instantiated
     CanvasUtils() { }

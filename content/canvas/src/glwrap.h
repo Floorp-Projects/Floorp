@@ -19,6 +19,12 @@
 #define GLAPI
 #endif
 
+#ifdef WINCE
+#define USE_GLES2
+#endif
+
+typedef char realGLboolean;
+
 class LibrarySymbolLoader
 {
 public:
@@ -70,7 +76,7 @@ protected:
 public:
     typedef PrivateOSMesaContext (GLAPIENTRY * PFNOSMESACREATECONTEXTEXT) (GLenum, GLint, GLint, GLint, PrivateOSMesaContext);
     typedef void (GLAPIENTRY * PFNOSMESADESTROYCONTEXT) (PrivateOSMesaContext);
-    typedef GLboolean (GLAPIENTRY * PFNOSMESAMAKECURRENT) (PrivateOSMesaContext, void *, GLenum, GLsizei, GLsizei);
+    typedef bool (GLAPIENTRY * PFNOSMESAMAKECURRENT) (PrivateOSMesaContext, void *, GLenum, GLsizei, GLsizei);
     typedef PrivateOSMesaContext (GLAPIENTRY * PFNOSMESAGETCURRENTCONTEXT) (void);
     typedef void (GLAPIENTRY * PFNOSMESAPIXELSTORE) (GLint, GLint);
     typedef PRFuncPtr (GLAPIENTRY * PFNOSMESAGETPROCADDRESS) (const char*);
@@ -140,11 +146,16 @@ public:
     PFNGLCLEARPROC fClear;
     typedef void (GLAPIENTRY * PFNGLCLEARCOLORPROC) (GLclampf, GLclampf, GLclampf, GLclampf);
     PFNGLCLEARCOLORPROC fClearColor;
+#ifdef USE_GLES2
+    typedef void (GLAPIENTRY * PFNGLCLEARDEPTHFPROC) (GLclampf);
+    PFNGLCLEARDEPTHFPROC fClearDepthf;
+#else
     typedef void (GLAPIENTRY * PFNGLCLEARDEPTHPROC) (GLclampd);
     PFNGLCLEARDEPTHPROC fClearDepth;
+#endif
     typedef void (GLAPIENTRY * PFNGLCLEARSTENCILPROC) (GLint);
     PFNGLCLEARSTENCILPROC fClearStencil;
-    typedef void (GLAPIENTRY * PFNGLCOLORMASKPROC) (GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+    typedef void (GLAPIENTRY * PFNGLCOLORMASKPROC) (realGLboolean red, realGLboolean green, realGLboolean blue, realGLboolean alpha);
     PFNGLCOLORMASKPROC fColorMask;
     typedef GLuint (GLAPIENTRY * PFNGLCREATEPROGRAMPROC) (void);
     PFNGLCREATEPROGRAMPROC fCreateProgram;
@@ -164,10 +175,15 @@ public:
     PFNGLDETACHSHADERPROC fDetachShader;
     typedef void (GLAPIENTRY * PFNGLDEPTHFUNCPROC) (GLenum);
     PFNGLDEPTHFUNCPROC fDepthFunc;
-    typedef void (GLAPIENTRY * PFNGLDEPTHMASKPROC) (GLboolean);
+    typedef void (GLAPIENTRY * PFNGLDEPTHMASKPROC) (realGLboolean);
     PFNGLDEPTHMASKPROC fDepthMask;
+#ifdef USE_GLES2
+    typedef void (GLAPIENTRY * PFNGLDEPTHRANGEFPROC) (GLclampf, GLclampf);
+    PFNGLDEPTHRANGEFPROC fDepthRangef;
+#else
     typedef void (GLAPIENTRY * PFNGLDEPTHRANGEPROC) (GLclampd, GLclampd);
     PFNGLDEPTHRANGEPROC fDepthRange;
+#endif
     typedef void (GLAPIENTRY * PFNGLDISABLEPROC) (GLenum);
     PFNGLDISABLEPROC fDisable;
     typedef void (GLAPIENTRY * PFNGLDISABLEVERTEXATTRIBARRAYPROC) (GLuint);
@@ -196,11 +212,9 @@ public:
     PFNGLGETATTRIBLOCATIONPROC fGetAttribLocation;
     typedef void (GLAPIENTRY * PFNGLGETINTEGERVPROC) (GLenum pname, GLint *params);
     PFNGLGETINTEGERVPROC fGetIntegerv;
-    typedef void (GLAPIENTRY * PFNGLGETDOUBLEVPROC) (GLenum pname, GLdouble *params);
-    PFNGLGETDOUBLEVPROC fGetDoublev;
     typedef void (GLAPIENTRY * PFNGLGETFLOATVPROC) (GLenum pname, GLfloat *params);
     PFNGLGETFLOATVPROC fGetFloatv;
-    typedef void (GLAPIENTRY * PFNGLGETBOOLEANBPROC) (GLenum pname, GLboolean *params);
+    typedef void (GLAPIENTRY * PFNGLGETBOOLEANBPROC) (GLenum pname, realGLboolean *params);
     PFNGLGETBOOLEANBPROC fGetBooleanv;
     typedef void (GLAPIENTRY * PFNGLGETBUFFERPARAMETERIVPROC) (GLenum target, GLenum pname, GLint* params);
     PFNGLGETBUFFERPARAMETERIVPROC fGetBufferParameteriv;
@@ -228,35 +242,37 @@ public:
     PFNGLGETUNIFORMIVPROC fGetUniformiv;
     typedef GLint (GLAPIENTRY * PFNGLGETUNIFORMLOCATIONPROC) (GLint programObj, const GLchar* name);
     PFNGLGETUNIFORMLOCATIONPROC fGetUniformLocation;
-    typedef void (GLAPIENTRY * PFNGLGETVERTEXATTRIBDVPROC) (GLuint, GLenum, GLdouble*);
-    PFNGLGETVERTEXATTRIBDVPROC fGetVertexAttribdv;
     typedef void (GLAPIENTRY * PFNGLGETVERTEXATTRIBFVPROC) (GLuint, GLenum, GLfloat*);
     PFNGLGETVERTEXATTRIBFVPROC fGetVertexAttribfv;
     typedef void (GLAPIENTRY * PFNGLGETVERTEXATTRIBIVPROC) (GLuint, GLenum, GLint*);
     PFNGLGETVERTEXATTRIBIVPROC fGetVertexAttribiv;
     typedef void (GLAPIENTRY * PFNGLHINTPROC) (GLenum target, GLenum mode);
     PFNGLHINTPROC fHint;
-    typedef GLboolean (GLAPIENTRY * PFNGLISBUFFERPROC) (GLuint buffer);
+    typedef realGLboolean (GLAPIENTRY * PFNGLISBUFFERPROC) (GLuint buffer);
     PFNGLISBUFFERPROC fIsBuffer;
-    typedef GLboolean (GLAPIENTRY * PFNGLISENABLEDPROC) (GLenum cap);
+    typedef realGLboolean (GLAPIENTRY * PFNGLISENABLEDPROC) (GLenum cap);
     PFNGLISENABLEDPROC fIsEnabled;
-    typedef GLboolean (GLAPIENTRY * PFNGLISPROGRAMPROC) (GLuint program);
+    typedef realGLboolean (GLAPIENTRY * PFNGLISPROGRAMPROC) (GLuint program);
     PFNGLISPROGRAMPROC fIsProgram;
-    typedef GLboolean (GLAPIENTRY * PFNGLISSHADERPROC) (GLuint shader);
+    typedef realGLboolean (GLAPIENTRY * PFNGLISSHADERPROC) (GLuint shader);
     PFNGLISSHADERPROC fIsShader;
-    typedef GLboolean (GLAPIENTRY * PFNGLISTEXTUREPROC) (GLuint texture);
+    typedef realGLboolean (GLAPIENTRY * PFNGLISTEXTUREPROC) (GLuint texture);
     PFNGLISTEXTUREPROC fIsTexture;
     typedef void (GLAPIENTRY * PFNGLLINEWIDTHPROC) (GLfloat width);
     PFNGLLINEWIDTHPROC fLineWidth;
     typedef void (GLAPIENTRY * PFNGLLINKPROGRAMPROC) (GLuint program);
     PFNGLLINKPROGRAMPROC fLinkProgram;
+    typedef void * (GLAPIENTRY * PFNGLMAPBUFFERPROC) (GLenum target, GLenum access);
+    PFNGLMAPBUFFERPROC fMapBuffer;
+    typedef realGLboolean (GLAPIENTRY * PFNGLUNAMPBUFFERPROC) (GLenum target);
+    PFNGLUNAMPBUFFERPROC fUnmapBuffer;
     typedef void (GLAPIENTRY * PFNGLPIXELSTOREIPROC) (GLenum pname, GLint param);
     PFNGLPIXELSTOREIPROC fPixelStorei;
     typedef void (GLAPIENTRY * PFNGLPOLYGONOFFSETPROC) (GLfloat factor, GLfloat bias);
     PFNGLPOLYGONOFFSETPROC fPolygonOffset;
     typedef void (GLAPIENTRY * PFNGLREADPIXELSPROC) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels);
     PFNGLREADPIXELSPROC fReadPixels;
-    typedef void (GLAPIENTRY * PFNGLSAMPLECOVERAGEPROC) (GLclampf value, GLboolean invert);
+    typedef void (GLAPIENTRY * PFNGLSAMPLECOVERAGEPROC) (GLclampf value, realGLboolean invert);
     PFNGLSAMPLECOVERAGEPROC fSampleCoverage;
     typedef void (GLAPIENTRY * PFNGLSCISSORPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
     PFNGLSCISSORPROC fScissor;
@@ -308,17 +324,17 @@ public:
     PFNGLUNIFORM4IPROC fUniform4i;
     typedef void (GLAPIENTRY * PFNGLUNIFORM4IVPROC) (GLint location, GLsizei count, const GLint* value);
     PFNGLUNIFORM4IVPROC fUniform4iv;
-    typedef void (GLAPIENTRY * PFNGLUNIFORMMATRIX2FVPROC) (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+    typedef void (GLAPIENTRY * PFNGLUNIFORMMATRIX2FVPROC) (GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value);
     PFNGLUNIFORMMATRIX2FVPROC fUniformMatrix2fv;
-    typedef void (GLAPIENTRY * PFNGLUNIFORMMATRIX3FVPROC) (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+    typedef void (GLAPIENTRY * PFNGLUNIFORMMATRIX3FVPROC) (GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value);
     PFNGLUNIFORMMATRIX3FVPROC fUniformMatrix3fv;
-    typedef void (GLAPIENTRY * PFNGLUNIFORMMATRIX4FVPROC) (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+    typedef void (GLAPIENTRY * PFNGLUNIFORMMATRIX4FVPROC) (GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value);
     PFNGLUNIFORMMATRIX4FVPROC fUniformMatrix4fv;
     typedef void (GLAPIENTRY * PFNGLUSEPROGRAMPROC) (GLuint program);
     PFNGLUSEPROGRAMPROC fUseProgram;
     typedef void (GLAPIENTRY * PFNGLVALIDATEPROGRAMPROC) (GLuint program);
     PFNGLVALIDATEPROGRAMPROC fValidateProgram;
-    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBPOINTERPROC) (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* pointer);
+    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBPOINTERPROC) (GLuint index, GLint size, GLenum type, realGLboolean normalized, GLsizei stride, const GLvoid* pointer);
     PFNGLVERTEXATTRIBPOINTERPROC fVertexAttribPointer;
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIB1FPROC) (GLuint index, GLfloat x);
     PFNGLVERTEXATTRIB1FPROC fVertexAttrib1f;
@@ -375,9 +391,9 @@ public:
     PFNGLGENFRAMEBUFFERS fGenFramebuffers;
     typedef void (GLAPIENTRY * PFNGLGENRENDERBUFFERS) (GLsizei n, GLuint* ids);
     PFNGLGENRENDERBUFFERS fGenRenderbuffers;
-    typedef GLboolean (GLAPIENTRY * PFNGLISFRAMEBUFFER) (GLuint framebuffer);
+    typedef realGLboolean (GLAPIENTRY * PFNGLISFRAMEBUFFER) (GLuint framebuffer);
     PFNGLISFRAMEBUFFER fIsFramebuffer;
-    typedef GLboolean (GLAPIENTRY * PFNGLISRENDERBUFFER) (GLuint renderbuffer);
+    typedef realGLboolean (GLAPIENTRY * PFNGLISRENDERBUFFER) (GLuint renderbuffer);
     PFNGLISRENDERBUFFER fIsRenderbuffer;
     typedef void (GLAPIENTRY * PFNGLRENDERBUFFERSTORAGE) (GLenum target, GLenum internalFormat, GLsizei width, GLsizei height);
     PFNGLRENDERBUFFERSTORAGE fRenderbufferStorage;

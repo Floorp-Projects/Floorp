@@ -166,7 +166,11 @@ GLES20Wrap::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &fBufferSubData, { "BufferSubData", NULL } },
         { (PRFuncPtr*) &fClear, { "Clear", NULL } },
         { (PRFuncPtr*) &fClearColor, { "ClearColor", NULL } },
+#ifdef USE_GLES2
+        { (PRFuncPtr*) &fClearDepthf, { "ClearDepthf", NULL } },
+#else
         { (PRFuncPtr*) &fClearDepth, { "ClearDepth", NULL } },
+#endif
         { (PRFuncPtr*) &fClearStencil, { "ClearStencil", NULL } },
         { (PRFuncPtr*) &fColorMask, { "ColorMask", NULL } },
         { (PRFuncPtr*) &fCreateProgram, { "CreateProgram", "CreateProgramARB", NULL } },
@@ -179,7 +183,11 @@ GLES20Wrap::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &fDetachShader, { "DetachShader", "DetachShaderARB", NULL } },
         { (PRFuncPtr*) &fDepthFunc, { "DepthFunc", NULL } },
         { (PRFuncPtr*) &fDepthMask, { "DepthMask", NULL } },
+#ifdef USE_GLES2
+        { (PRFuncPtr*) &fDepthRangef, { "DepthRangef", NULL } },
+#else
         { (PRFuncPtr*) &fDepthRange, { "DepthRange", NULL } },
+#endif
         { (PRFuncPtr*) &fDisable, { "Disable", NULL } },
         { (PRFuncPtr*) &fDisableVertexAttribArray, { "DisableVertexAttribArray", "DisableVertexAttribArrayARB", NULL } },
         { (PRFuncPtr*) &fDrawArrays, { "DrawArrays", NULL } },
@@ -194,7 +202,6 @@ GLES20Wrap::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &fGetAttachedShaders, { "GetAttachedShaders", "GetAttachedShadersARB", NULL } },
         { (PRFuncPtr*) &fGetAttribLocation, { "GetAttribLocation", "GetAttribLocationARB", NULL } },
         { (PRFuncPtr*) &fGetIntegerv, { "GetIntegerv", NULL } },
-        { (PRFuncPtr*) &fGetDoublev, { "GetDoublev", NULL } },
         { (PRFuncPtr*) &fGetFloatv, { "GetFloatv", NULL } },
         { (PRFuncPtr*) &fGetBooleanv, { "GetBooleanv", NULL } },
         { (PRFuncPtr*) &fGetBufferParameteriv, { "GetBufferParameteriv", "GetBufferParameterivARB", NULL } },
@@ -209,7 +216,6 @@ GLES20Wrap::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &fGetUniformfv, { "GetUniformfv", "GetUniformfvARB", NULL } },
         { (PRFuncPtr*) &fGetUniformiv, { "GetUniformiv", "GetUniformivARB", NULL } },
         { (PRFuncPtr*) &fGetUniformLocation, { "GetUniformLocation", "GetUniformLocationARB", NULL } },
-        { (PRFuncPtr*) &fGetVertexAttribdv, { "GetVertexAttribdv", "GetVertexAttribdvARB", NULL } },
         { (PRFuncPtr*) &fGetVertexAttribfv, { "GetVertexAttribfv", "GetVertexAttribfvARB", NULL } },
         { (PRFuncPtr*) &fGetVertexAttribiv, { "GetVertexAttribiv", "GetVertexAttribivARB", NULL } },
         { (PRFuncPtr*) &fHint, { "Hint", NULL } },
@@ -287,6 +293,8 @@ GLES20Wrap::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &fIsFramebuffer, { "IsFramebuffer", "IsFramebufferEXT", NULL } },
         { (PRFuncPtr*) &fIsRenderbuffer, { "IsRenderbuffer", "IsRenderbufferEXT", NULL } },
         { (PRFuncPtr*) &fRenderbufferStorage, { "RenderbufferStorage", "RenderbufferStorageEXT", NULL } },
+	{ (PRFuncPtr*) &fMapBuffer, { "MapBuffer", NULL } },
+	{ (PRFuncPtr*) &fUnmapBuffer, { "UnmapBuffer", NULL } },
 
         { NULL, { NULL } },
 

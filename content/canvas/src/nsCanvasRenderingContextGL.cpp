@@ -598,7 +598,9 @@ nsCanvasRenderingContextGLPrivate::SetCanvasElement(nsICanvasElement* aParentCan
     LogMessage(NS_LITERAL_CSTRING("Canvas 3D: creating PBuffer..."));
 
     if (!forceSoftware) {
-#ifdef XP_WIN
+#if defined(WINCE)
+        mGLPbuffer = new nsGLPbufferEGL();
+#elif defined(XP_WIN)
         mGLPbuffer = new nsGLPbufferWGL();
 #elif defined(XP_UNIX) && defined(MOZ_X11)
         mGLPbuffer = new nsGLPbufferGLX();
@@ -652,10 +654,24 @@ nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
 
     // Make sure that we clear this out, otherwise
     // we'll end up displaying random memory
+#if 0
+    int err = glGetError();
+    if (err) {
+        printf ("error before MakeContextCurrent! 0x%04x\n", err);
+    }
+#endif
+
     MakeContextCurrent();
     gl->fViewport(0, 0, mWidth, mHeight);
     gl->fClearColor(0, 0, 0, 0);
     gl->fClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+#if 0
+    err = glGetError();
+    if (err) {
+        printf ("error after MakeContextCurrent! 0x%04x\n", err);
+    }
+#endif
 
     return NS_OK;
 }
@@ -1054,6 +1070,7 @@ CanvasGLThebes::CreatePattern (gfxASurface *surf)
  * stick a stub here to shut the compiler up, because we never call this method.
  */
 
+#if 0
 #ifdef XP_WIN
 nsresult
 gfxWindowsSurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
@@ -1066,4 +1083,4 @@ gfxASurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFil
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
-
+#endif

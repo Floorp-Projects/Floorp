@@ -38,9 +38,10 @@
 
 #include <stdarg.h>
 
-#include "nsCanvasRenderingContextGL.h"
-
 #include "nsGLPbuffer.h"
+
+#include "nsIConsoleService.h"
+#include "nsServiceManagerUtils.h"
 
 #if 0
 #include <xmmintrin.h>
@@ -49,27 +50,18 @@
 void *nsGLPbuffer::sCurrentContextToken = nsnull;
 
 void
-nsGLPbuffer::LogMessage (const nsCString& errorString)
-{
-    if (mPriv)
-        mPriv->LogMessage(errorString);
-    else
-        fprintf(stderr, "nsGLPbuffer: %s\n", errorString.get());
-}
-
-void
-nsGLPbuffer::LogMessagef (const char *fmt, ...)
+nsGLPbuffer::LogMessage(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
     char buf[256];
 
-    vsnprintf(buf, 256, fmt, ap);
-
-    if (mPriv)
-        mPriv->LogMessage(nsDependentCString(buf));
-    else
-        fprintf(stderr, "nsGLPbuffer: %s\n", buf);
+    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+    if (console) {
+        vsnprintf(buf, 256, fmt, ap);
+        console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
+        fprintf(stderr, "%s\n", buf);
+    }
 
     va_end(ap);
 }

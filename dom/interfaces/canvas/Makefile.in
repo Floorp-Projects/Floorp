@@ -49,11 +49,7 @@ GRE_MODULE	= 1
 XPIDLSRCS = nsIDOMCanvasRenderingContext2D.idl
 
 ifdef MOZ_ENABLE_CANVAS3D
-XPIDLSRCS += \
-	nsICanvasRenderingContextGL.idl		\
-	nsICanvasRenderingContextGLBuffer.idl	\
-	nsICanvasRenderingContextGLWeb20.idl	\
-	$(NULL)
+XPIDLSRCS += nsICanvasRenderingContextWebGL.idl
 endif
 
 include $(topsrcdir)/config/rules.mk

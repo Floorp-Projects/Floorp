@@ -35,10 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdlib.h>
+#include <stdarg.h>
+
 #include "prmem.h"
 
 #include "nsIServiceManager.h"
 
+#include "nsIConsoleService.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
@@ -91,4 +95,32 @@ CanvasUtils::DoDrawImageSecurityCheck(nsICanvasElement *aCanvasElement,
     }
 
     aCanvasElement->SetWriteOnly();
+}
+
+void
+CanvasUtils::LogMessage (const nsCString& errorString)
+{
+    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+    if (!console)
+        return;
+
+    console->LogStringMessage(NS_ConvertUTF8toUTF16(errorString).get());
+    fprintf(stderr, "%s\n", errorString.get());
+}
+
+void
+CanvasUtils::LogMessagef (const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char buf[256];
+
+    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+    if (console) {
+        vsnprintf(buf, 256, fmt, ap);
+        console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
+        fprintf(stderr, "%s\n", buf);
+    }
+
+    va_end(ap);
 }
