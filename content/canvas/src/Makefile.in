@@ -58,11 +58,15 @@ CPPSRCS	= \
 ifdef MOZ_ENABLE_CANVAS3D
 
 CPPSRCS += \
-	nsCanvasRenderingContextGL.cpp \
-	nsCanvasRenderingContextGLWeb20.cpp \
+	WebGLContext.cpp \
+	WebGLContextGL.cpp \
+	WebGLContextUtils.cpp \
+	WebGLContextValidate.cpp \
+	NativeJSContext.cpp \
 	glwrap.cpp \
 	nsGLPbuffer.cpp \
 	nsGLPbufferOSMesa.cpp \
+	SimpleBuffer.cpp \
 	$(NULL)
 
 ifdef MOZ_X11
@@ -72,8 +76,13 @@ DEFINES += -DUSE_GLX
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifdef WINCE
+CPPSRCS += nsGLPbufferEGL.cpp
+DEFINES += -DUSE_EGL
+else
 CPPSRCS += nsGLPbufferWGL.cpp
 DEFINES += -DUSE_WGL
+endif
 endif
 
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))

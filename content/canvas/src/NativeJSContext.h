@@ -1,12 +1,23 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 #ifndef _NATIVEJSCONTEXT_H_
 #define _NATIVEJSCONTEXT_H_
 
+#include "nsDOMError.h"
+
+#include "nsIXPConnect.h"
+#include "nsContentUtils.h"
+
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
+#include "jsapi.h"
+
 class JSObjectHelper;
+class nsIJSRuntimeService;
 
 class NativeJSContext {
 public:
     NativeJSContext() {
-        error = gXPConnect->GetCurrentNativeCallContext(&ncc);
+        error = nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&ncc);
         if (NS_FAILED(error))
             return;
 
@@ -48,13 +59,8 @@ public:
         return PR_FALSE;
     }
 
-    PRBool AddGCRoot (void *aPtr, const char *aName) {
-        return JS_AddNamedRootRT(gScriptRuntime, aPtr, aName);
-    }
-
-    void ReleaseGCRoot (void *aPtr) {
-        JS_RemoveRootRT(gScriptRuntime, aPtr);
-    }
+    PRBool AddGCRoot (void *aPtr, const char *aName);
+    void ReleaseGCRoot (void *aPtr);
 
     void SetRetVal (PRInt32 val) {
         if (INT_FITS_IN_JSVAL(val))
@@ -167,6 +173,9 @@ public:
     PRUint32 argc;
     jsval *argv;
 
+    static nsIJSRuntimeService* sJSRuntimeService;
+    static JSRuntime* sJSScriptRuntime;
+
 public:
     // static JS helpers
 
@@ -251,9 +260,9 @@ public:
             return NS_ERROR_DOM_SYNTAX_ERR;
 
         nsCOMPtr<nsISupports> isup;
-        nsresult rv = gXPConnect->WrapJS(ctx, JSVAL_TO_OBJECT(val),
-                                         NS_GET_IID(nsISupports),
-                                         getter_AddRefs(isup));
+        nsresult rv = nsContentUtils::XPConnect()->WrapJS(ctx, JSVAL_TO_OBJECT(val),
+                                                          NS_GET_IID(nsISupports),
+                                                          getter_AddRefs(isup));
         if (NS_FAILED(rv))
             return NS_ERROR_DOM_SYNTAX_ERR;
 

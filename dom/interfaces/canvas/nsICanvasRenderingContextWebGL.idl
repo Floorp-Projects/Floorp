@@ -1,0 +1,887 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is canvas 3D.
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir@pobox.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMHTMLCanvasElement;
+
+// XXX should we comment out these typedefs in the C++ header?
+
+typedef unsigned long  GLenum;
+typedef octet  GLboolean;
+typedef unsigned long  GLbitfield;
+typedef short          GLshort;
+typedef long           GLint;
+typedef long           GLsizei;
+typedef octet          GLubyte;
+typedef unsigned short GLushort;
+typedef unsigned long  GLuint;
+typedef float          GLfloat;
+typedef float          GLclampf;
+typedef long           GLfixed;
+
+// XPIDL doesn't have a signed byte?
+//typedef signed octet GLbyte;
+
+//typedef unsigned long  GLintptr;
+//typedef unsigned long  GLsizeiptr;
+
+//
+// Array types
+//
+
+[scriptable, uuid(84ba4e98-8173-7c10-dca0-b5ba7809fcf3)]
+interface nsIWebGLNumberArray : nsISupports
+{
+  attribute unsigned long length;
+
+  [noscript, notxpcom] unsigned long nativeType();
+  [noscript, notxpcom] voidPtr nativePointer();
+  [noscript, notxpcom] unsigned long nativeSize();
+  [noscript, notxpcom] unsigned long nativeElementSize();
+  [noscript, notxpcom] unsigned long nativeCount();
+};
+
+[scriptable, Uuid(0f6d0e7b-bcfc-9305-6a1d-a9653b5e8c80)]
+interface nsIWebGLFloatArray : nsIWebGLNumberArray
+{
+};
+
+[scriptable, uuid(a8a982e3-3977-7364-f012-c497a5ab7681)]
+interface nsIWebGLShortArray : nsIWebGLNumberArray
+{
+};
+
+[scriptable, uuid(8b9c67cc-c7be-a062-84b0-76a910a5c1e6)]
+interface nsIWebGLUnsignedShortArray : nsIWebGLNumberArray
+{
+};
+
+[scriptable, uuid(3daa67fa-e743-2cbd-a212-805c2fc520cc)]
+interface nsIWebGLUnsignedByteArray : nsIWebGLNumberArray
+{
+};
+
+//
+// OpenGL object wrappers
+//
+
+[scriptable, uuid(3b43762a-8305-11de-98ab-000c29206271)]
+interface nsIWebGLTexture : nsISupports
+{
+  [noscript] attribute GLuint name;
+};
+
+[scriptable, uuid(9eca9c32-8305-11de-b89b-000c29206271)]
+interface nsIWebGLBuffer : nsISupports
+{
+  [noscript] attribute GLuint name;
+};
+
+[scriptable, uuid(a6a19e74-8305-11de-9ce9-000c29206271)]
+interface nsIWebGLProgram : nsISupports
+{
+  [noscript] attribute GLuint name;
+};
+
+[scriptable, uuid(ac7440a4-8305-11de-807b-000c29206271)]
+interface nsIWebGLShader : nsISupports
+{
+  [noscript] attribute GLuint name;
+};
+
+[scriptable, uuid(bce8be60-8305-11de-9f3c-000c29206271)]
+interface nsIWebGLFramebuffer : nsISupports
+{
+  [noscript] attribute GLuint name;
+};
+
+[scriptable, uuid(c82eacd0-8305-11de-9de9-000c29206271)]
+interface nsIWebGLRenderbuffer : nsISupports
+{
+  [noscript] attribute GLuint name;
+};
+
+[scriptable, uuid(f02c85e0-8305-11de-abe2-000c29206271)]
+interface nsICanvasRenderingContextWebGL : nsISupports
+{
+  //
+  //  ARRAY CONSTRUCTORS
+  //
+
+  nsIWebGLFloatArray createFloatArray();
+  nsIWebGLShortArray createShortArray();
+  nsIWebGLUnsignedShortArray createUnsignedShortArray();
+  nsIWebGLUnsignedByteArray createUnsignedByteArray();
+
+  //
+  //  CONSTANTS
+  //
+
+  /* ClearBufferMask */
+  const unsigned long DEPTH_BUFFER_BIT               = 0x00000100;
+  const unsigned long STENCIL_BUFFER_BIT             = 0x00000400;
+  const unsigned long COLOR_BUFFER_BIT               = 0x00004000;
+
+  /* Boolean */
+  // XXX are these legal?
+  const unsigned long GL_FALSE                          = 0;
+  const unsigned long GL_TRUE                           = 1;
+
+  /* BeginMode */
+  const unsigned long POINTS                         = 0x0000;
+  const unsigned long LINES                          = 0x0001;
+  const unsigned long LINE_LOOP                      = 0x0002;
+  const unsigned long LINE_STRIP                     = 0x0003;
+  const unsigned long TRIANGLES                      = 0x0004;
+  const unsigned long TRIANGLE_STRIP                 = 0x0005;
+  const unsigned long TRIANGLE_FAN                   = 0x0006;
+
+  /* AlphaFunction (not supported in ES20) */
+  /*      GL_NEVER */
+  /*      GL_LESS */
+  /*      GL_EQUAL */
+  /*      GL_LEQUAL */
+  /*      GL_GREATER */
+  /*      GL_NOTEQUAL */
+  /*      GL_GEQUAL */
+  /*      GL_ALWAYS */
+
+  /* BlendingFactorDest */
+  const unsigned long ZERO                           = 0;
+  const unsigned long ONE                            = 1;
+  const unsigned long SRC_COLOR                      = 0x0300;
+  const unsigned long ONE_MINUS_SRC_COLOR            = 0x0301;
+  const unsigned long SRC_ALPHA                      = 0x0302;
+  const unsigned long ONE_MINUS_SRC_ALPHA            = 0x0303;
+  const unsigned long DST_ALPHA                      = 0x0304;
+  const unsigned long ONE_MINUS_DST_ALPHA            = 0x0305;
+
+  /* BlendingFactorSrc */
+  /*      GL_ZERO */
+  /*      GL_ONE */
+  const unsigned long DST_COLOR                      = 0x0306;
+  const unsigned long ONE_MINUS_DST_COLOR            = 0x0307;
+  const unsigned long SRC_ALPHA_SATURATE             = 0x0308;
+  /*      GL_SRC_ALPHA */
+  /*      GL_ONE_MINUS_SRC_ALPHA */
+  /*      GL_DST_ALPHA */
+  /*      GL_ONE_MINUS_DST_ALPHA */
+
+  /* BlendEquationSeparate */
+  const unsigned long FUNC_ADD                       = 0x8006;
+  const unsigned long BLEND_EQUATION                 = 0x8009;
+  const unsigned long BLEND_EQUATION_RGB             = 0x8009;   /* same as BLEND_EQUATION */
+  const unsigned long BLEND_EQUATION_ALPHA           = 0x883D;
+
+  /* BlendSubtract */
+  const unsigned long FUNC_SUBTRACT                  = 0x800A;
+  const unsigned long FUNC_REVERSE_SUBTRACT          = 0x800B;
+
+  /* Separate Blend Functions */
+  const unsigned long BLEND_DST_RGB                  = 0x80C8;
+  const unsigned long BLEND_SRC_RGB                  = 0x80C9;
+  const unsigned long BLEND_DST_ALPHA                = 0x80CA;
+  const unsigned long BLEND_SRC_ALPHA                = 0x80CB;
+  const unsigned long CONSTANT_COLOR                 = 0x8001;
+  const unsigned long ONE_MINUS_CONSTANT_COLOR       = 0x8002;
+  const unsigned long CONSTANT_ALPHA                 = 0x8003;
+  const unsigned long ONE_MINUS_CONSTANT_ALPHA       = 0x8004;
+  const unsigned long BLEND_COLOR                    = 0x8005;
+
+  /* Buffer Objects */
+  const unsigned long ARRAY_BUFFER                   = 0x8892;
+  const unsigned long ELEMENT_ARRAY_BUFFER           = 0x8893;
+  const unsigned long ARRAY_BUFFER_BINDING           = 0x8894;
+  const unsigned long ELEMENT_ARRAY_BUFFER_BINDING   = 0x8895;
+
+  const unsigned long STREAM_DRAW                    = 0x88E0;
+  const unsigned long STATIC_DRAW                    = 0x88E4;
+  const unsigned long DYNAMIC_DRAW                   = 0x88E8;
+
+  const unsigned long BUFFER_SIZE                    = 0x8764;
+  const unsigned long BUFFER_USAGE                   = 0x8765;
+
+  const unsigned long CURRENT_VERTEX_ATTRIB          = 0x8626;
+
+  /* CullFaceMode */
+  const unsigned long FRONT                          = 0x0404;
+  const unsigned long BACK                           = 0x0405;
+  const unsigned long FRONT_AND_BACK                 = 0x0408;
+
+  /* DepthFunction */
+  /*      GL_NEVER */
+  /*      GL_LESS */
+  /*      GL_EQUAL */
+  /*      GL_LEQUAL */
+  /*      GL_GREATER */
+  /*      GL_NOTEQUAL */
+  /*      GL_GEQUAL */
+  /*      GL_ALWAYS */
+
+  /* EnableCap */
+  const unsigned long TEXTURE_2D                     = 0x0DE1;
+  const unsigned long CULL_FACE                      = 0x0B44;
+  const unsigned long BLEND                          = 0x0BE2;
+  const unsigned long DITHER                         = 0x0BD0;
+  const unsigned long STENCIL_TEST                   = 0x0B90;
+  const unsigned long DEPTH_TEST                     = 0x0B71;
+  const unsigned long SCISSOR_TEST                   = 0x0C11;
+  const unsigned long POLYGON_OFFSET_FILL            = 0x8037;
+  const unsigned long SAMPLE_ALPHA_TO_COVERAGE       = 0x809E;
+  const unsigned long SAMPLE_COVERAGE                = 0x80A0;
+
+  /* ErrorCode */
+  const unsigned long NO_ERROR                       = 0;
+  const unsigned long INVALID_ENUM                   = 0x0500;
+  const unsigned long INVALID_VALUE                  = 0x0501;
+  const unsigned long INVALID_OPERATION              = 0x0502;
+  const unsigned long OUT_OF_MEMORY                  = 0x0505;
+
+  /* FrontFaceDirection */
+  const unsigned long CW                             = 0x0900;
+  const unsigned long CCW                            = 0x0901;
+
+  /* GetPName */
+  const unsigned long LINE_WIDTH                     = 0x0B21;
+  const unsigned long ALIASED_POINT_SIZE_RANGE       = 0x846D;
+  const unsigned long ALIASED_LINE_WIDTH_RANGE       = 0x846E;
+  const unsigned long CULL_FACE_MODE                 = 0x0B45;
+  const unsigned long FRONT_FACE                     = 0x0B46;
+  const unsigned long DEPTH_RANGE                    = 0x0B70;
+  const unsigned long DEPTH_WRITEMASK                = 0x0B72;
+  const unsigned long DEPTH_CLEAR_VALUE              = 0x0B73;
+  const unsigned long DEPTH_FUNC                     = 0x0B74;
+  const unsigned long STENCIL_CLEAR_VALUE            = 0x0B91;
+  const unsigned long STENCIL_FUNC                   = 0x0B92;
+  const unsigned long STENCIL_FAIL                   = 0x0B94;
+  const unsigned long STENCIL_PASS_DEPTH_FAIL        = 0x0B95;
+  const unsigned long STENCIL_PASS_DEPTH_PASS        = 0x0B96;
+  const unsigned long STENCIL_REF                    = 0x0B97;
+  const unsigned long STENCIL_VALUE_MASK             = 0x0B93;
+  const unsigned long STENCIL_WRITEMASK              = 0x0B98;
+  const unsigned long STENCIL_BACK_FUNC              = 0x8800;
+  const unsigned long STENCIL_BACK_FAIL              = 0x8801;
+  const unsigned long STENCIL_BACK_PASS_DEPTH_FAIL   = 0x8802;
+  const unsigned long STENCIL_BACK_PASS_DEPTH_PASS   = 0x8803;
+  const unsigned long STENCIL_BACK_REF               = 0x8CA3;
+  const unsigned long STENCIL_BACK_VALUE_MASK        = 0x8CA4;
+  const unsigned long STENCIL_BACK_WRITEMASK         = 0x8CA5;
+  const unsigned long VIEWPORT_RECT                  = 0x0BA2;
+  const unsigned long SCISSOR_BOX                    = 0x0C10;
+  /*      GL_SCISSOR_TEST */
+  const unsigned long COLOR_CLEAR_VALUE              = 0x0C22;
+  const unsigned long COLOR_WRITEMASK                = 0x0C23;
+  const unsigned long UNPACK_ALIGNMENT               = 0x0CF5;
+  const unsigned long PACK_ALIGNMENT                 = 0x0D05;
+  const unsigned long MAX_TEXTURE_SIZE               = 0x0D33;
+  const unsigned long MAX_VIEWPORT_DIMS              = 0x0D3A;
+  const unsigned long SUBPIXEL_BITS                  = 0x0D50;
+  const unsigned long RED_BITS                       = 0x0D52;
+  const unsigned long GREEN_BITS                     = 0x0D53;
+  const unsigned long BLUE_BITS                      = 0x0D54;
+  const unsigned long ALPHA_BITS                     = 0x0D55;
+  const unsigned long DEPTH_BITS                     = 0x0D56;
+  const unsigned long STENCIL_BITS                   = 0x0D57;
+  const unsigned long POLYGON_OFFSET_UNITS           = 0x2A00;
+  /*      GL_POLYGON_OFFSET_FILL */
+  const unsigned long POLYGON_OFFSET_FACTOR          = 0x8038;
+  const unsigned long TEXTURE_BINDING_2D             = 0x8069;
+  const unsigned long SAMPLE_BUFFERS                 = 0x80A8;
+  const unsigned long SAMPLES                        = 0x80A9;
+  const unsigned long SAMPLE_COVERAGE_VALUE          = 0x80AA;
+  const unsigned long SAMPLE_COVERAGE_INVERT         = 0x80AB;
+
+  /* GetTextureParameter */
+  /*      GL_TEXTURE_MAG_FILTER */
+  /*      GL_TEXTURE_MIN_FILTER */
+  /*      GL_TEXTURE_WRAP_S */
+  /*      GL_TEXTURE_WRAP_T */
+
+  const unsigned long NUM_COMPRESSED_TEXTURE_FORMATS = 0x86A2;
+  const unsigned long COMPRESSED_TEXTURE_FORMATS     = 0x86A3;
+
+  /* HintMode */
+  const unsigned long DONT_CARE                      = 0x1100;
+  const unsigned long FASTEST                        = 0x1101;
+  const unsigned long NICEST                         = 0x1102;
+
+  /* HintTarget */
+  const unsigned long GENERATE_MIPMAP_HINT            = 0x8192;
+
+  /* DataType */
+  const unsigned long BYTE                           = 0x1400;
+  const unsigned long UNSIGNED_BYTE                  = 0x1401;
+  const unsigned long SHORT                          = 0x1402;
+  const unsigned long UNSIGNED_SHORT                 = 0x1403;
+  const unsigned long INT                            = 0x1404;
+  const unsigned long UNSIGNED_INT                   = 0x1405;
+  const unsigned long FLOAT                          = 0x1406;
+  const unsigned long FIXED                          = 0x140C;
+
+  /* PixelFormat */
+  const unsigned long DEPTH_COMPONENT                = 0x1902;
+  const unsigned long ALPHA                          = 0x1906;
+  const unsigned long RGB                            = 0x1907;
+  const unsigned long RGBA                           = 0x1908;
+  const unsigned long LUMINANCE                      = 0x1909;
+  const unsigned long LUMINANCE_ALPHA                = 0x190A;
+
+  /* PixelType */
+  /*      GL_UNSIGNED_BYTE */
+  const unsigned long UNSIGNED_SHORT_4_4_4_4         = 0x8033;
+  const unsigned long UNSIGNED_SHORT_5_5_5_1         = 0x8034;
+  const unsigned long UNSIGNED_SHORT_5_6_5           = 0x8363;
+
+  /* Shaders */
+  const unsigned long FRAGMENT_SHADER                  = 0x8B30;
+  const unsigned long VERTEX_SHADER                    = 0x8B31;
+  const unsigned long MAX_VERTEX_ATTRIBS               = 0x8869;
+  const unsigned long MAX_VERTEX_UNIFORM_VECTORS       = 0x8DFB;
+  const unsigned long MAX_VARYING_VECTORS              = 0x8DFC;
+  const unsigned long MAX_COMBINED_TEXTURE_IMAGE_UNITS = 0x8B4D;
+  const unsigned long MAX_VERTEX_TEXTURE_IMAGE_UNITS   = 0x8B4C;
+  const unsigned long MAX_TEXTURE_IMAGE_UNITS          = 0x8872;
+  const unsigned long MAX_FRAGMENT_UNIFORM_VECTORS     = 0x8DFD;
+  const unsigned long SHADER_TYPE                      = 0x8B4F;
+  const unsigned long DELETE_STATUS                    = 0x8B80;
+  const unsigned long LINK_STATUS                      = 0x8B82;
+  const unsigned long VALIDATE_STATUS                  = 0x8B83;
+  const unsigned long ATTACHED_SHADERS                 = 0x8B85;
+  const unsigned long ACTIVE_UNIFORMS                  = 0x8B86;
+  const unsigned long ACTIVE_UNIFORM_MAX_LENGTH        = 0x8B87;
+  const unsigned long ACTIVE_ATTRIBUTES                = 0x8B89;
+  const unsigned long ACTIVE_ATTRIBUTE_MAX_LENGTH      = 0x8B8A;
+  const unsigned long SHADING_LANGUAGE_VERSION         = 0x8B8C;
+  const unsigned long CURRENT_PROGRAM                  = 0x8B8D;
+
+  /* StencilFunction */
+  const unsigned long NEVER                          = 0x0200;
+  const unsigned long LESS                           = 0x0201;
+  const unsigned long EQUAL                          = 0x0202;
+  const unsigned long LEQUAL                         = 0x0203;
+  const unsigned long GREATER                        = 0x0204;
+  const unsigned long NOTEQUAL                       = 0x0205;
+  const unsigned long GEQUAL                         = 0x0206;
+  const unsigned long ALWAYS                         = 0x0207;
+
+  /* StencilOp */
+  /*      GL_ZERO */
+  const unsigned long KEEP                           = 0x1E00;
+  const unsigned long REPLACE                        = 0x1E01;
+  const unsigned long INCR                           = 0x1E02;
+  const unsigned long DECR                           = 0x1E03;
+  const unsigned long INVERT                         = 0x150A;
+  const unsigned long INCR_WRAP                      = 0x8507;
+  const unsigned long DECR_WRAP                      = 0x8508;
+
+  /* StringName */
+  const unsigned long VENDOR                         = 0x1F00;
+  const unsigned long RENDERER                       = 0x1F01;
+  const unsigned long VERSION                        = 0x1F02;
+  const unsigned long EXTENSIONS                     = 0x1F03;
+
+  /* TextureMagFilter */
+  const unsigned long NEAREST                        = 0x2600;
+  const unsigned long LINEAR                         = 0x2601;
+
+  /* TextureMinFilter */
+  /*      GL_NEAREST */
+  /*      GL_LINEAR */
+  const unsigned long NEAREST_MIPMAP_NEAREST         = 0x2700;
+  const unsigned long LINEAR_MIPMAP_NEAREST          = 0x2701;
+  const unsigned long NEAREST_MIPMAP_LINEAR          = 0x2702;
+  const unsigned long LINEAR_MIPMAP_LINEAR           = 0x2703;
+
+  /* TextureParameterName */
+  const unsigned long TEXTURE_MAG_FILTER             = 0x2800;
+  const unsigned long TEXTURE_MIN_FILTER             = 0x2801;
+  const unsigned long TEXTURE_WRAP_S                 = 0x2802;
+  const unsigned long TEXTURE_WRAP_T                 = 0x2803;
+
+  /* TextureTarget */
+  /*      GL_TEXTURE_2D */
+  const unsigned long TEXTURE                        = 0x1702;
+
+  const unsigned long TEXTURE_CUBE_MAP               = 0x8513;
+  const unsigned long TEXTURE_BINDING_CUBE_MAP       = 0x8514;
+  const unsigned long TEXTURE_CUBE_MAP_POSITIVE_X    = 0x8515;
+  const unsigned long TEXTURE_CUBE_MAP_NEGATIVE_X    = 0x8516;
+  const unsigned long TEXTURE_CUBE_MAP_POSITIVE_Y    = 0x8517;
+  const unsigned long TEXTURE_CUBE_MAP_NEGATIVE_Y    = 0x8518;
+  const unsigned long TEXTURE_CUBE_MAP_POSITIVE_Z    = 0x8519;
+  const unsigned long TEXTURE_CUBE_MAP_NEGATIVE_Z    = 0x851A;
+  const unsigned long MAX_CUBE_MAP_TEXTURE_SIZE      = 0x851C;
+
+  /* TextureUnit */
+  const unsigned long TEXTURE0                       = 0x84C0;
+  const unsigned long TEXTURE1                       = 0x84C1;
+  const unsigned long TEXTURE2                       = 0x84C2;
+  const unsigned long TEXTURE3                       = 0x84C3;
+  const unsigned long TEXTURE4                       = 0x84C4;
+  const unsigned long TEXTURE5                       = 0x84C5;
+  const unsigned long TEXTURE6                       = 0x84C6;
+  const unsigned long TEXTURE7                       = 0x84C7;
+  const unsigned long TEXTURE8                       = 0x84C8;
+  const unsigned long TEXTURE9                       = 0x84C9;
+  const unsigned long TEXTURE10                      = 0x84CA;
+  const unsigned long TEXTURE11                      = 0x84CB;
+  const unsigned long TEXTURE12                      = 0x84CC;
+  const unsigned long TEXTURE13                      = 0x84CD;
+  const unsigned long TEXTURE14                      = 0x84CE;
+  const unsigned long TEXTURE15                      = 0x84CF;
+  const unsigned long TEXTURE16                      = 0x84D0;
+  const unsigned long TEXTURE17                      = 0x84D1;
+  const unsigned long TEXTURE18                      = 0x84D2;
+  const unsigned long TEXTURE19                      = 0x84D3;
+  const unsigned long TEXTURE20                      = 0x84D4;
+  const unsigned long TEXTURE21                      = 0x84D5;
+  const unsigned long TEXTURE22                      = 0x84D6;
+  const unsigned long TEXTURE23                      = 0x84D7;
+  const unsigned long TEXTURE24                      = 0x84D8;
+  const unsigned long TEXTURE25                      = 0x84D9;
+  const unsigned long TEXTURE26                      = 0x84DA;
+  const unsigned long TEXTURE27                      = 0x84DB;
+  const unsigned long TEXTURE28                      = 0x84DC;
+  const unsigned long TEXTURE29                      = 0x84DD;
+  const unsigned long TEXTURE30                      = 0x84DE;
+  const unsigned long TEXTURE31                      = 0x84DF;
+  const unsigned long ACTIVE_TEXTURE                 = 0x84E0;
+
+  /* TextureWrapMode */
+  const unsigned long REPEAT                         = 0x2901;
+  const unsigned long CLAMP_TO_EDGE                  = 0x812F;
+  const unsigned long MIRRORED_REPEAT                = 0x8370;
+
+  /* Uniform Types */
+  const unsigned long FLOAT_VEC2                     = 0x8B50;
+  const unsigned long FLOAT_VEC3                     = 0x8B51;
+  const unsigned long FLOAT_VEC4                     = 0x8B52;
+  const unsigned long INT_VEC2                       = 0x8B53;
+  const unsigned long INT_VEC3                       = 0x8B54;
+  const unsigned long INT_VEC4                       = 0x8B55;
+  const unsigned long BOOL                           = 0x8B56;
+  const unsigned long BOOL_VEC2                      = 0x8B57;
+  const unsigned long BOOL_VEC3                      = 0x8B58;
+  const unsigned long BOOL_VEC4                      = 0x8B59;
+  const unsigned long FLOAT_MAT2                     = 0x8B5A;
+  const unsigned long FLOAT_MAT3                     = 0x8B5B;
+  const unsigned long FLOAT_MAT4                     = 0x8B5C;
+  const unsigned long SAMPLER_2D                     = 0x8B5E;
+  const unsigned long SAMPLER_CUBE                   = 0x8B60;
+
+  /* Vertex Arrays */
+  const unsigned long VERTEX_ATTRIB_ARRAY_ENABLED        = 0x8622;
+  const unsigned long VERTEX_ATTRIB_ARRAY_SIZE           = 0x8623;
+  const unsigned long VERTEX_ATTRIB_ARRAY_STRIDE         = 0x8624;
+  const unsigned long VERTEX_ATTRIB_ARRAY_TYPE           = 0x8625;
+  const unsigned long VERTEX_ATTRIB_ARRAY_NORMALIZED     = 0x886A;
+  const unsigned long VERTEX_ATTRIB_ARRAY_POINTER        = 0x8645;
+  const unsigned long VERTEX_ATTRIB_ARRAY_BUFFER_BINDING = 0x889F;
+
+  /* Read Format */
+  const unsigned long IMPLEMENTATION_COLOR_READ_TYPE   = 0x8B9A;
+  const unsigned long IMPLEMENTATION_COLOR_READ_FORMAT = 0x8B9B;
+
+  /* Shader Source */
+  const unsigned long COMPILE_STATUS                 = 0x8B81;
+  const unsigned long INFO_LOG_LENGTH                = 0x8B84;
+  const unsigned long SHADER_SOURCE_LENGTH           = 0x8B88;
+  const unsigned long SHADER_COMPILER                = 0x8DFA;
+
+  /* Shader Precision-Specified Types */
+  const unsigned long LOW_FLOAT                      = 0x8DF0;
+  const unsigned long MEDIUM_FLOAT                   = 0x8DF1;
+  const unsigned long HIGH_FLOAT                     = 0x8DF2;
+  const unsigned long LOW_INT                        = 0x8DF3;
+  const unsigned long MEDIUM_INT                     = 0x8DF4;
+  const unsigned long HIGH_INT                       = 0x8DF5;
+
+  /* Framebuffer Object. */
+  const unsigned long FRAMEBUFFER                    = 0x8D40;
+  const unsigned long RENDERBUFFER                   = 0x8D41;
+
+  const unsigned long RGBA4                          = 0x8056;
+  const unsigned long RGB5_A1                        = 0x8057;
+  const unsigned long RGB565                         = 0x8D62;
+  const unsigned long DEPTH_COMPONENT16              = 0x81A5;
+  const unsigned long STENCIL_INDEX                  = 0x1901;
+  const unsigned long STENCIL_INDEX8                 = 0x8D48;
+
+  const unsigned long RENDERBUFFER_WIDTH             = 0x8D42;
+  const unsigned long RENDERBUFFER_HEIGHT            = 0x8D43;
+  const unsigned long RENDERBUFFER_INTERNAL_FORMAT   = 0x8D44;
+  const unsigned long RENDERBUFFER_RED_SIZE          = 0x8D50;
+  const unsigned long RENDERBUFFER_GREEN_SIZE        = 0x8D51;
+  const unsigned long RENDERBUFFER_BLUE_SIZE         = 0x8D52;
+  const unsigned long RENDERBUFFER_ALPHA_SIZE        = 0x8D53;
+  const unsigned long RENDERBUFFER_DEPTH_SIZE        = 0x8D54;
+  const unsigned long RENDERBUFFER_STENCIL_SIZE      = 0x8D55;
+
+  const unsigned long FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE           = 0x8CD0;
+  const unsigned long FRAMEBUFFER_ATTACHMENT_OBJECT_NAME           = 0x8CD1;
+  const unsigned long FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL         = 0x8CD2;
+  const unsigned long FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE = 0x8CD3;
+
+  const unsigned long COLOR_ATTACHMENT0              = 0x8CE0;
+  const unsigned long DEPTH_ATTACHMENT               = 0x8D00;
+  const unsigned long STENCIL_ATTACHMENT             = 0x8D20;
+
+  const unsigned long NONE                           = 0;
+
+  const unsigned long FRAMEBUFFER_COMPLETE                      = 0x8CD5;
+  const unsigned long FRAMEBUFFER_INCOMPLETE_ATTACHMENT         = 0x8CD6;
+  const unsigned long FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT = 0x8CD7;
+  const unsigned long FRAMEBUFFER_INCOMPLETE_DIMENSIONS         = 0x8CD9;
+  const unsigned long FRAMEBUFFER_UNSUPPORTED                   = 0x8CDD;
+
+  const unsigned long FRAMEBUFFER_BINDING            = 0x8CA6;
+  const unsigned long RENDERBUFFER_BINDING           = 0x8CA7;
+  const unsigned long MAX_RENDERBUFFER_SIZE          = 0x84E8;
+
+  const unsigned long INVALID_FRAMEBUFFER_OPERATION  = 0x0506;
+
+  //
+  //  ATTRIBUTES
+  //
+  readonly attribute nsIDOMHTMLCanvasElement canvas;
+
+  //
+  //  METHODS
+  //
+
+  void activeTexture (in GLenum texture);
+  void attachShader (in nsIWebGLProgram program, in nsIWebGLShader shader);
+  void bindAttribLocation (in nsIWebGLProgram program, in GLuint index, in DOMString name);
+  void bindBuffer (in GLenum target, in nsIWebGLBuffer buffer);
+  void bindFramebuffer (in GLenum target, in nsIWebGLFramebuffer framebuffer);
+  void bindRenderbuffer (in GLenum target, in nsIWebGLRenderbuffer renderbuffer);
+  void bindTexture (in GLenum target, in nsIWebGLTexture texture);
+  void blendColor (in GLclampf red, in GLclampf green, in GLclampf blue, in GLclampf alpha);
+  void blendEquation (in GLenum mode);
+  void blendEquationSeparate (in GLenum modeRGB, in GLenum modeAlpha);
+  void blendFunc (in GLenum sfactor, in GLenum dfactor);
+  void blendFuncSeparate (in GLenum srcRGB, in GLenum dstRGB, in GLenum srcAlpha, in GLenum dstAlpha);
+
+  // Modified: void glBufferData (GLenum target, GLsizeiptr size, const void* data, GLenum usage);
+  void bufferData (in GLenum target, in nsIWebGLNumberArray data, in GLenum usage);
+
+  // Modified: void glBufferSubData (GLenum target, GLintptr offset, GLsizeiptr size, const void* data);
+  void bufferSubData (in GLenum target, in GLuint offset, in nsIWebGLNumberArray data);
+
+  GLenum checkFramebufferStatus (in GLenum target);
+  void clear (in GLbitfield mask);
+  void clearColor (in GLclampf red, in GLclampf green, in GLclampf blue, in GLclampf alpha);
+  void clearDepthf (in GLclampf depth);
+  void clearStencil (in GLint s);
+  void colorMask (in GLboolean red, in GLboolean green, in GLboolean blue, in GLboolean alpha);
+  void compileShader (in nsIWebGLShader shader);
+
+  //void glCompressedTexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void* data);
+  //void glCompressedTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void* data);
+
+  void copyTexImage2D (in GLenum target, in GLint level, in GLenum internalformat, 
+                         in GLint x, in GLint y, in GLsizei width, in GLsizei height, in GLint border);
+  void copyTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, 
+                            in GLint x, in GLint y, in GLsizei width, in GLsizei height);
+  nsIWebGLProgram createProgram ();
+  nsIWebGLShader createShader (in GLenum type);
+  void cullFace (in GLenum mode);
+
+  // Modified: void glDeleteBuffers (GLsizei n, const GLuint* buffers);
+  //ZZ void deleteBuffer (in nsIWebGLBuffer buffer);
+  void deleteBuffer (in nsIWebGLBuffer buffer);
+
+  // Modified: glDeleteFramebuffers (GLsizei n, const GLuint* framebuffers);
+  //ZZ void deleteFramebuffer (in nsIWebGLFramebuffer framebuffer);
+  void deleteFramebuffer (in nsIWebGLFramebuffer framebuffer);
+
+  void deleteProgram (in nsIWebGLProgram program);
+
+  // Modified: void glDeleteRenderbuffers (GLsizei n, const GLuint* renderbuffers);
+  //ZZ void deleteRenderbuffer (in nsIWebGLRenderbuffer renderbuffer);
+  void deleteRenderbuffer (in nsIWebGLRenderbuffer renderbuffer);
+
+  void deleteShader (in nsIWebGLShader shader);
+
+  // Modified: void glDeleteTextures (GLsizei n, const GLuint* textures);
+  //ZZ void deleteTexture (in nsIWebGLTexture texture);
+  void deleteTexture (in nsIWebGLTexture texture);
+
+  void depthFunc (in GLenum func);
+  void depthMask (in GLboolean flag);
+  void depthRangef (in GLclampf zNear, in GLclampf zFar);
+  void detachShader (in nsIWebGLProgram program, in nsIWebGLShader shader);
+  void disable (in GLenum cap);
+  void disableVertexAttribArray (in GLuint index);
+  void drawArrays (in GLenum mode, in GLint first, in GLsizei count);
+
+  // Modified: void glDrawElements (GLenum mode, GLsizei count, GLenum type, const void* indices);
+  // ZZZ something with NumberArray blah
+  void drawElements (in GLenum mode, in GLenum type, in GLuint count, in GLuint offset);
+
+  void enable (in GLenum cap);
+  void enableVertexAttribArray (in GLuint index);
+  void finish ();
+  void flush ();
+  void framebufferRenderbuffer (in GLenum target, in GLenum attachment, in GLenum renderbuffertarget, 
+                                  in nsIWebGLRenderbuffer renderbuffer);
+  void framebufferTexture2D (in GLenum target, in GLenum attachment, in GLenum textarget, 
+                               in nsIWebGLTexture texture, in GLint level);
+  void frontFace (in GLenum mode);
+
+  void generateMipmap (in GLenum target);
+
+  //ZZ in the spec these are all createBuffer/createFramebuffer/etc.
+  // Modified: void glGenBuffers (GLsizei n, GLuint* buffers);
+  nsIWebGLBuffer genBuffer();
+  // Modified: void glGenFramebuffers (GLsizei n, GLuint* framebuffers);
+  nsIWebGLFramebuffer genFramebuffer();
+  // Modified: void glGenRenderbuffers (GLsizei n, GLuint* renderbuffers);
+  nsIWebGLRenderbuffer genRenderbuffer();
+  // Modified: void glGenTextures (GLsizei n, GLuint* textures);
+  nsIWebGLTexture genTexture();
+
+  // TBD
+  //void glGetActiveAttrib (GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, 
+  // GLenum* type, char* name);
+  void getActiveAttrib(in nsIWebGLProgram program, in PRUint32 index);
+
+  // TBD
+  //void glGetActiveUniform (GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, 
+  // GLenum* type, char* name);
+  void getActiveUniform(in nsIWebGLProgram program, in PRUint32 index);
+
+  // TBD
+  // void glGetAttachedShaders (GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders);
+
+  GLint getAttribLocation (in nsIWebGLProgram program, in DOMString name);
+
+  // Modified
+  //ZZ nsIWebGLNumberArray glGetBoolean(in GLenum pname);
+  //ZZ nsIWebGLNumberArray glGetFloat(in GLenum pname);
+  //ZZ nsIWebGLNumberArray glGetInteger(in GLenum pname);
+  // js only
+  void getParameter(in GLenum pname);
+
+  // Modified: void glGetBufferParameteriv (GLenum target, GLenum pname, GLint* params);
+  //ZZ nsIWebGLNumberArray glGetBufferParameteri (in GLenum target, in GLenum pname);
+  void getBufferParameter (in GLenum target, in GLenum pname);
+
+  GLenum getError ();
+
+  // Modified: void glGetFramebufferAttachmentParameteriv (GLenum target, GLenum attachment, GLenum pname, GLint* params);
+  //ZZ nsIWebGLNumberArray glGetFramebufferAttachmentParameteri (in GLenum target, in GLenum attachment, in GLenum pname);
+  void getFramebufferAttachmentParameter (in GLenum target, in GLenum attachment, in GLenum pname);
+
+  // Modified: void glGetProgramiv (nsIWebGLProgram program, GLenum pname, GLint* params);
+  //ZZ nsIWebGLNumberArray glGetProgrami (in nsIWebGLProgram program, in GLenum pname);
+  void getProgramParameter (in nsIWebGLProgram program, in GLenum pname);
+
+  // Modified: void glGetProgramInfoLog (GLuint program, GLsizei bufsize, GLsizei* length, char* infolog);
+  DOMString getProgramInfoLog (in nsIWebGLProgram program);
+
+  // Modified: void glGetRenderbufferParameteriv (GLenum target, GLenum pname, GLint* params);
+  //ZZ nsIWebGLNumberArray glGetRenderbufferParameteri (in GLenum target, in GLenum pname);
+  void getRenderbufferParameter (in GLenum target, in GLenum pname);
+
+  // Modified: void glGetShaderiv (GLuint shader, GLenum pname, GLint* params);
+  //ZZ nsIWebGLNumberArray glGetShaderi (in nsIWebGLShader shader, in GLenum pname);
+  void getShaderParameter (in nsIWebGLShader shader, in GLenum pname);
+
+  // Modified: void glGetShaderInfoLog (GLuint shader, GLsizei bufsize, GLsizei* length, char* infolog);
+  DOMString getShaderInfoLog (in nsIWebGLShader shader);
+
+  // TBD
+  //void glGetShaderPrecisionFormat (GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision);
+
+  DOMString getShaderSource (in nsIWebGLShader shader);
+  DOMString getString (in GLenum name);
+
+  // Modified
+  //ZZ nsIWebGLNumberArray glGetTexParameterf (in GLenum target, in GLenum pname);
+  //ZZ nsIWebGLNumberArray glGetTexParameteri (in GLenum target, in GLenum pname);
+  void getTexParameter(in GLenum target, in GLenum pname);
+
+  // Modified: This replaces glGetUniformfv and glGetUniformiv
+  //
+  // FIXME: This is problematic. We don't implicitly know how big the returned data buffer
+  // needs to be like in the other glGet* calls. The only way to find out is to iterate 
+  // through all the active uniforms with glGetActiveUniform() looking for the corresponding
+  // 'location'. This will give us the type and size of the data. Since this is a get call
+  // maybe that's ok?
+  //ZZ nsIWebGLNumberArray glGetUniformf (in nsIWebGLProgram program, in GLint location);
+  //ZZ nsIWebGLNumberArray glGetUniformi (in nsIWebGLProgram program, in GLint location);
+  void getUniform (in nsIWebGLProgram program, in GLint location);
+
+  GLint getUniformLocation (in nsIWebGLProgram program, in DOMString name);
+
+  // Modified: This replaces glGetVertexAttribfv and glGetVertexAttribiv
+  //ZZ nsIWebGLNumberArray glGetVertexAttribf (in GLuint index, in GLenum pname);
+  void getVertexAttrib (in GLuint index, in GLenum pname);
+
+  // TBD
+  // void glGetVertexAttribPointerv (GLuint index, GLenum pname, void** pointer);
+
+  void hint (in GLenum target, in GLenum mode);
+
+  GLboolean isBuffer (in nsIWebGLBuffer buffer);
+  GLboolean isFramebuffer (in nsIWebGLFramebuffer framebuffer);
+  GLboolean isProgram (in nsIWebGLProgram program);
+  GLboolean isRenderbuffer (in nsIWebGLRenderbuffer renderbuffer);
+  GLboolean isShader (in nsIWebGLShader shader);
+  GLboolean isTexture (in nsIWebGLTexture texture);
+
+  GLboolean isEnabled (in GLenum cap);
+  void lineWidth (in GLfloat width);
+  void linkProgram (in nsIWebGLProgram program);
+  void pixelStorei (in GLenum pname, in GLint param);
+  void polygonOffset (in GLfloat factor, in GLfloat units);
+
+  // TBD
+  //ZZ void glReadPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void* pixels);
+  void readPixels (in GLint x, in GLint y, in GLsizei width, in GLsizei height, in GLenum format, in GLenum type);
+
+  //void glReleaseShaderCompiler ();
+
+  void renderbufferStorage (in GLenum target, in GLenum internalformat, in GLsizei width, in GLsizei height);
+  void sampleCoverage (in GLclampf value, in GLboolean invert);
+  void scissor (in GLint x, in GLint y, in GLsizei width, in GLsizei height);
+
+  // Modified: void glShaderSource (GLuint shader, GLsizei count, const char** string, const GLint* length);
+  void shaderSource (in nsIWebGLShader shader, in DOMString source);
+
+  void stencilFunc (in GLenum func, in GLint ref, in GLuint mask);
+  void stencilFuncSeparate (in GLenum face, in GLenum func, in GLint ref, in GLuint mask);
+  void stencilMask (in GLuint mask);
+  void stencilMaskSeparate (in GLenum face, in GLuint mask);
+  void stencilOp (in GLenum fail, in GLenum zfail, in GLenum zpass);
+  void stencilOpSeparate (in GLenum face, in GLenum fail, in GLenum zfail, in GLenum zpass);
+
+  // Modified: glTexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, 
+  // GLint border, GLenum format, GLenum type, const void* pixels);
+  //void glTexImage2D (in GLenum target, in GLint level, in GLenum internalformat, in GLsizei width, in GLsizei height, in GLint border, in GLenum format, in GLenum type, nsIWebGLNumberArray pixels);
+  //void glTexImage2D (in GLenum target, in GLint level, in HTMLImageElement image);
+  //void glTexImage2D (in GLenum target, in GLint level, in HTMLnsIWebGLElement canvas);
+  //void glTexImage2D (in GLenum target, in GLint level, in HTMLVideoElement video);
+  void texImage2D ();
+
+
+  // Modified: This replaces glTexParameterf, glTexParameterfv, glTexParameteri and glTexParameteriv
+  //void glTexParameter (in GLenum target, in GLenum pname, in GLfloat param);
+  //void glTexParameter (in GLenum target, in GLenum pname, in GLint param);
+  //void glTexParameter (in GLenum target, in GLenum pname, in nsIWebGLNumberArray params);
+  void texParameter ();
+
+  // Modified: void glTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels);
+  //void glTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height, in GLenum format, in GLenum type, nsIWebGLNumberArray pixels);
+  //void glTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height, in HTMLImageElement image);
+  //void glTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height, in HTMLnsIWebGLElement canvas);
+  //void glTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height, in HTMLVideoElement video);
+
+  void texSubImage2D ();
+
+  // Modified: All the glUniform*v forms below are modified by replacing 'count' and 'v' with a nsIWebGLNumberArray
+  void uniform1f (in GLint location, in GLfloat x);
+  void uniform1i (in GLint location, in GLint x);
+  void uniform2f (in GLint location, in GLfloat x, in GLfloat y);
+  void uniform2i (in GLint location, in GLint x, in GLint y);
+  void uniform3f (in GLint location, in GLfloat x, in GLfloat y, in GLfloat z);
+  void uniform3i (in GLint location, in GLint x, in GLint y, in GLint z);
+  void uniform4f (in GLint location, in GLfloat x, in GLfloat y, in GLfloat z, in GLfloat w);
+  void uniform4i (in GLint location, in GLint x, in GLint y, in GLint z, in GLint w);
+
+  //XX void glUniform1fv (in GLint location, in nsIWebGLNumberArray v);
+  //XX void glUniform1iv (in GLint location, in nsIWebGLNumberArray v);
+  //XX void glUniform2fv (in GLint location, in nsIWebGLNumberArray v);
+  //XX void glUniform2iv (in GLint location, in nsIWebGLNumberArray v);
+  //XX void glUniform3fv (in GLint location, in nsIWebGLNumberArray v);
+  //XX void glUniform3iv (in GLint location, in nsIWebGLNumberArray v);
+  //XX void glUniform4fv (in GLint location, in nsIWebGLNumberArray v);
+  //XX void glUniform4iv (in GLint location, in nsIWebGLNumberArray v);
+
+  void uniform1fv ();
+  void uniform1iv ();
+  void uniform2fv ();
+  void uniform2iv ();
+  void uniform3fv ();
+  void uniform3iv ();
+  void uniform4fv ();
+  void uniform4iv ();
+
+  // Modified. These are modified by replacing 'count' and 'value' with a nsIWebGLNumberArray
+  //XX void glUniformMatrix2fv (in GLint location, in GLboolean transpose, in nsIWebGLNumberArray value);
+  //XX void glUniformMatrix3fv (in GLint location, in GLboolean transpose, in nsIWebGLNumberArray value);
+  //XX void glUniformMatrix4fv (in GLint location, in GLboolean transpose, in nsIWebGLNumberArray value);
+
+  void uniformMatrix2fv ();
+  void uniformMatrix3fv ();
+  void uniformMatrix4fv ();
+
+  // Added API using top entry from the passed nsIWebGLMatrixStack
+  //ZZ void glUniformMatrix (in GLint location, in GLboolean transpose, in nsIWebGLMatrixStack value);
+
+  void useProgram (in nsIWebGLProgram program);
+  void validateProgram (in nsIWebGLProgram program);
+
+  // Modified: All the glVertexAttrib*v forms below are modified by replacing 'values' with a nsIWebGLNumberArray
+  void vertexAttrib1f (in GLuint indx, in GLfloat x);
+  void vertexAttrib2f (in GLuint indx, in GLfloat x, in GLfloat y);
+  void vertexAttrib3f (in GLuint indx, in GLfloat x, in GLfloat y, in GLfloat z);
+  void vertexAttrib4f (in GLuint indx, in GLfloat x, in GLfloat y, in GLfloat z, in GLfloat w);
+
+  //XX void glVertexAttrib1fv (in GLuint indx, in nsIWebGLNumberArray values);
+  //XX void glVertexAttrib2fv (in GLuint indx, in nsIWebGLNumberArray values);
+  //XX void glVertexAttrib3fv (in GLuint indx, in nsIWebGLNumberArray values);
+  //XX void glVertexAttrib4fv (in GLuint indx, in nsIWebGLNumberArray values);
+
+  void vertexAttrib1fv ();
+  void vertexAttrib2fv ();
+  void vertexAttrib3fv ();
+  void vertexAttrib4fv ();
+
+  // TBD
+  //void glVertexAttribPointer (in GLuint indx, GLint size, GLenum type, GLboolean normalized, 
+  // GLsizei stride, const void* ptr);
+
+  // size is number of elements; type must match the bound vbo type; offset is in elements
+  void vertexAttribPointer (in GLuint idx, in GLint size, in GLenum type, in GLboolean normalized, in GLuint stride, in GLuint offset);
+
+  void viewport (in GLint x, in GLint y, in GLsizei width, in GLsizei height);
+
+};
