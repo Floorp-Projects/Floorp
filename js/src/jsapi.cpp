@@ -2664,15 +2664,24 @@ JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
 {
     CHECK_REQUEST(cx);
-    if (JSVAL_IS_INT(v))
+    if (JSVAL_IS_INT(v)) {
         *idp = INT_JSVAL_TO_JSID(v);
+        return JS_TRUE;
+    }
+
 #if JS_HAS_XML_SUPPORT
-    else if (!JSVAL_IS_PRIMITIVE(v))
-        *idp = OBJECT_JSVAL_TO_JSID(v);
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+        JSClass *clasp = JSVAL_TO_OBJECT(v)->getClass();
+        if (JS_UNLIKELY(clasp == &js_QNameClass.base ||
+                        clasp == &js_AttributeNameClass ||
+                        clasp == &js_AnyNameClass)) {
+            *idp = OBJECT_JSVAL_TO_JSID(v);
+            return JS_TRUE;
+        }
+    }
 #endif
-    else
-        return js_ValueToStringId(cx, v, idp);
-    return JS_TRUE;
+
+    return js_ValueToStringId(cx, v, idp);
 }
 
 JS_PUBLIC_API(JSBool)
