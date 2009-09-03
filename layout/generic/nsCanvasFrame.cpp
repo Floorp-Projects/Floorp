@@ -44,8 +44,6 @@
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
@@ -57,6 +55,7 @@
 #include "nsDisplayList.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsFrameManager.h"
 
 // for focus
 #include "nsIDOMWindowInternal.h"
@@ -92,12 +91,10 @@ nsCanvasFrame::Init(nsIContent*      aContent,
 {
   nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  mViewManager = PresContext()->GetPresShell()->GetViewManager();
-
-  nsIScrollableView* scrollingView = nsnull;
-  mViewManager->GetRootScrollableView(&scrollingView);
-  if (scrollingView) {
-    scrollingView->AddScrollPositionListener(this);
+  nsIScrollableFrame* sf =
+    PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    sf->AddScrollPositionListener(this);
   }
 
   return rv;
@@ -108,10 +105,10 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mAbsoluteContainer.DestroyFrames(this, aDestructRoot);
 
-  nsIScrollableView* scrollingView = nsnull;
-  mViewManager->GetRootScrollableView(&scrollingView);
-  if (scrollingView) {
-    scrollingView->RemoveScrollPositionListener(this);
+  nsIScrollableFrame* sf =
+    PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    sf->RemoveScrollPositionListener(this);
   }
 
   nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
@@ -120,27 +117,9 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
 NS_IMETHODIMP
 nsCanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
-#ifdef DEBUG_CANVAS_FOCUS
-  {
-    PRBool hasFocus = PR_FALSE;
-    nsCOMPtr<nsIViewObserver> observer;
-    mViewManager->GetViewObserver(*getter_AddRefs(observer));
-    nsCOMPtr<nsIPresShell> shell = do_QueryInterface(observer);
-    nsCOMPtr<nsPresContext> context;
-    shell->GetPresContext(getter_AddRefs(context));
-    nsCOMPtr<nsISupports> container;
-    context->GetContainer(getter_AddRefs(container));
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    if (docShell) {
-      docShell->GetHasFocus(&hasFocus);
-    }
-    printf("SPWC: %p  HF: %s  mDoPaintFocus: %s\n", docShell.get(), hasFocus?"Y":"N", mDoPaintFocus?"Y":"N");
-  }
-#endif
-
   if (mDoPaintFocus) {
     mDoPaintFocus = PR_FALSE;
-    mViewManager->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+    PresContext()->FrameManager()->GetRootFrame()->InvalidateOverflowRect();
   }
   return NS_OK;
 }
@@ -156,7 +135,7 @@ nsCanvasFrame::SetHasFocus(PRBool aHasFocus)
 {
   if (mDoPaintFocus != aHasFocus) {
     mDoPaintFocus = aHasFocus;
-    mViewManager->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+    PresContext()->FrameManager()->GetRootFrame()->InvalidateOverflowRect();
   }
   return NS_OK;
 }
