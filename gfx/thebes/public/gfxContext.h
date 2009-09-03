@@ -618,7 +618,7 @@ public:
          *
          * This is most useful with a printing surface, where
          * operators such as ADD are used to avoid seams for on-screen
-         * display, but where such errors aren't noticable in print.
+         * display, but where such errors aren't noticeable in print.
          * This approach is currently used in border rendering.
          *
          * However, when printing complex renderings such as SVG,
