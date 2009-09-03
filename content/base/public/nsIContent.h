@@ -59,6 +59,7 @@ class nsTextFragment;
 class nsIDocShell;
 #ifdef MOZ_SMIL
 class nsISMILAttr;
+class nsIDOMCSSStyleDeclaration;
 #endif // MOZ_SMIL
 
 enum nsLinkState {
@@ -69,9 +70,10 @@ enum nsLinkState {
 };
 
 // IID for the nsIContent interface
+// b877753c-316a-422d-9aec-a1d0cf0928b0
 #define NS_ICONTENT_IID       \
-{ 0x4aaa38b8, 0x6bc1, 0x4d01, \
-  { 0xb6, 0x3d, 0xcd, 0x11, 0xc0, 0x84, 0x56, 0x9e } }
+{ 0xb877753c, 0x316a, 0x422d, \
+  { 0x9a, 0xec, 0xa1, 0xd0, 0xcf, 0x09, 0x28, 0xb0 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -864,6 +866,31 @@ public:
    * The CALLER OWNS the result and is responsible for deleting it.
    */
   virtual nsISMILAttr* GetAnimatedAttr(const nsIAtom* aName) = 0;
+
+   /**
+    * Get the SMIL override style for this content node.  This is a style
+    * declaration that is applied *after* the inline style, and it can be used
+    * e.g. to store animated style values.
+    *
+    * Note: This method is analogous to the 'GetStyle' method in
+    * nsGenericHTMLElement and nsStyledElement.
+    */
+  virtual nsresult GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle) = 0;
+
+  /**
+   * Get the SMIL override style rule for this content node.  If the rule
+   * hasn't been created (or if this nsIContent object doesn't support SMIL
+   * override style), this method simply returns null.
+   */
+  virtual nsICSSStyleRule* GetSMILOverrideStyleRule() = 0;
+
+  /**
+   * Set the SMIL override style rule for this node.  If aNotify is true, this
+   * method will notify the document's pres context, so that the style changes
+   * will be noticed.
+   */
+  virtual nsresult SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+                                            PRBool aNotify) = 0;
 #endif // MOZ_SMIL
 
 private:
