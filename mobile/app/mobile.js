@@ -41,7 +41,15 @@ pref("general.useragent.extra.mobile", "@APP_UA_NAME@/@APP_VERSION@");
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "about:firstrun");
+
+#if MOZ_PLATFORM_HILDON
 pref("browser.ui.cursor", false);
+#elifdef WINCE
+pref("browser.ui.cursor", false);
+#else
+pref("browser.ui.cursor", true);
+#endif
+
 #ifdef MOZ_PLATFORM_HILDON
 pref("browser.ui.panning.fixup.mousemove", true);
 #else
