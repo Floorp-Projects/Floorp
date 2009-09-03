@@ -121,9 +121,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsITheme.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
-#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
 #include "imgIContainer.h"
@@ -199,107 +197,9 @@
 
 #include "nsWindowDefs.h"
 
-// For scroll wheel calculations
-#include "nsITimer.h"
 #ifdef WINCE_WINDOWS_MOBILE
 #include "nsGfxCIID.h"
 #endif
-
-/**************************************************************
- *
- * nsScrollPrefObserver Class for scroll acceleration prefs
- *
- **************************************************************/
-
-class nsScrollPrefObserver : public nsIObserver
-{
-public:
-  nsScrollPrefObserver();
-  int GetScrollAccelerationStart();
-  int GetScrollAccelerationFactor();
-  int GetScrollNumLines();
-  void RemoveObservers();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-private:
-  nsCOMPtr<nsIPrefBranch2> mPrefBranch;
-  int mScrollAccelerationStart;
-  int mScrollAccelerationFactor;
-  int mScrollNumLines;
-};
-
-NS_IMPL_ISUPPORTS1(nsScrollPrefObserver, nsScrollPrefObserver)
-
-nsScrollPrefObserver::nsScrollPrefObserver()
-{
-  nsresult rv;
-  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-
-  rv = mPrefBranch->GetIntPref("mousewheel.acceleration.start",
-                               &mScrollAccelerationStart);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to get pref: mousewheel.acceleration.start");
-  rv = mPrefBranch->AddObserver("mousewheel.acceleration.start", 
-                                this, PR_FALSE);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to add pref observer: mousewheel.acceleration.start");
-                    
-  rv = mPrefBranch->GetIntPref("mousewheel.acceleration.factor",
-                               &mScrollAccelerationFactor);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to get pref: mousewheel.acceleration.factor");
-  rv = mPrefBranch->AddObserver("mousewheel.acceleration.factor", 
-                                this, PR_FALSE);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to add pref observer: mousewheel.acceleration.factor");
-                    
-  rv = mPrefBranch->GetIntPref("mousewheel.withnokey.numlines",
-                               &mScrollNumLines);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to get pref: mousewheel.withnokey.numlines");
-  rv = mPrefBranch->AddObserver("mousewheel.withnokey.numlines", 
-                                this, PR_FALSE);
-  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), 
-                    "Failed to add pref observer: mousewheel.withnokey.numlines");
-}
-
-int nsScrollPrefObserver::GetScrollAccelerationStart()
-{
-  return mScrollAccelerationStart;
-}
-
-int nsScrollPrefObserver::GetScrollAccelerationFactor()
-{
-  return mScrollAccelerationFactor;
-}
-
-int nsScrollPrefObserver::GetScrollNumLines()
-{
-  return mScrollNumLines;
-}
-
-void nsScrollPrefObserver::RemoveObservers()
-{
-  mPrefBranch->RemoveObserver("mousewheel.acceleration.start", this);
-  mPrefBranch->RemoveObserver("mousewheel.acceleration.factor", this);
-  mPrefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
-}
-
-NS_IMETHODIMP nsScrollPrefObserver::Observe(nsISupports *aSubject,
-                                            const char *aTopic,
-                                            const PRUnichar *aData)
-{
-  mPrefBranch->GetIntPref("mousewheel.acceleration.start",
-                          &mScrollAccelerationStart);
-  mPrefBranch->GetIntPref("mousewheel.acceleration.factor",
-                          &mScrollAccelerationFactor);
-  mPrefBranch->GetIntPref("mousewheel.withnokey.numlines",
-                          &mScrollNumLines);
-
-  return NS_OK;
-}
 
 /**************************************************************
  **************************************************************
@@ -418,9 +318,6 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 #endif
 
-// Global scroll pref observer for scroll acceleration prefs
-static nsScrollPrefObserver* gScrollPrefObserver  = nsnull;
-
 /**************************************************************
  **************************************************************
  **
@@ -482,9 +379,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mBrush                = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
   mForeground           = ::GetSysColor(COLOR_WINDOWTEXT);
 
-  // To be used for scroll acceleration
-  mScrollSeriesCounter = 0;
-
 #ifdef WINCE_WINDOWS_MOBILE
   mInvalidatedRegion = do_CreateInstance(kRegionCID);
   mInvalidatedRegion->Init();
@@ -498,9 +392,6 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   // Init IME handler
   nsIMM32Handler::Initialize();
-
-  // Init scroll pref observer for scroll acceleration
-  NS_IF_ADDREF(gScrollPrefObserver = new nsScrollPrefObserver());
 
 #ifdef NS_ENABLE_TSF
   nsTextStore::Initialize();
@@ -552,9 +443,6 @@ nsWindow::~nsWindow()
     // delete any of the IME structures that we allocated
     nsIMM32Handler::Terminate();
 #endif // !defined(WINCE)
-
-    gScrollPrefObserver->RemoveObservers();
-    NS_RELEASE(gScrollPrefObserver);
   }
 
 #if !defined(WINCE)
@@ -5046,10 +4934,6 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
     currentWindow = mWnd;
   }
 
-  // Keep track of whether or not the scroll notification is part of a series
-  // in order to calculate appropriate acceleration effect
-  UpdateMouseWheelSeriesCounter();
-
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
   scrollEvent.delta = 0;
   if (isVertical) {
@@ -5060,10 +4944,7 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
     } else {
       currentVDelta -= (short) HIWORD (wParam);
       if (PR_ABS(currentVDelta) >= iDeltaPerLine) {
-        // Compute delta to create acceleration effect
-        scrollEvent.delta = ComputeMouseWheelDelta(currentVDelta, 
-                                                   iDeltaPerLine, 
-                                                   ulScrollLines);
+        scrollEvent.delta = currentVDelta / iDeltaPerLine;
         currentVDelta %= iDeltaPerLine;
       }
     }
@@ -5100,63 +4981,6 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
   
   return PR_FALSE; // break;
 } 
-
-// Reset scrollSeriesCounter when timer finishes (scroll series has ended)
-void nsWindow::OnMouseWheelTimeout(nsITimer* aTimer, void* aClosure) 
-{
-  nsWindow* window = (nsWindow*) aClosure;
-  window->mScrollSeriesCounter = 0;
-}
-
-// Increment scrollSeriesCount and reset timer to keep count going
-void nsWindow::UpdateMouseWheelSeriesCounter() 
-{
-  mScrollSeriesCounter++;
-
-  int scrollSeriesTimeout = 80;
-  static nsITimer* scrollTimer;
-  if (!scrollTimer) {
-    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (!timer)
-      return;
-    timer.swap(scrollTimer);
-  }
-
-  scrollTimer->Cancel();
-  nsresult rv = 
-    scrollTimer->InitWithFuncCallback(OnMouseWheelTimeout, this,
-                                      scrollSeriesTimeout,
-                                      nsITimer::TYPE_ONE_SHOT);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "nsITimer::InitWithFuncCallback failed");
-}
-
-// If the scroll notification is part of a series of notifications we should
-// increase scollEvent.delta to create an acceleration effect
-int nsWindow::ComputeMouseWheelDelta(int currentVDelta,
-                                     int iDeltaPerLine,
-                                     ULONG ulScrollLines)
-{
-  // scrollAccelerationStart: click number at which acceleration starts
-  int scrollAccelerationStart = gScrollPrefObserver->GetScrollAccelerationStart();
-  // scrollNumlines: number of lines per scroll before acceleration
-  int scrollNumLines = gScrollPrefObserver->GetScrollNumLines();
-  // scrollAccelerationFactor: factor muliplied for constant acceleration
-  int scrollAccelerationFactor = gScrollPrefObserver->GetScrollAccelerationFactor();
-
-  // compute delta that obeys numlines pref
-  int ulScrollLinesInt = static_cast<int>(ulScrollLines);
-  // currentVDelta is a multiple of (iDeltaPerLine * ulScrollLinesInt)
-  int delta = scrollNumLines * currentVDelta / (iDeltaPerLine * ulScrollLinesInt);
-
-  // mScrollSeriesCounter: the index of the scroll notification in a series
-  if (mScrollSeriesCounter < scrollAccelerationStart ||
-      scrollAccelerationStart < 0 ||
-      scrollAccelerationFactor < 0)
-    return delta;
-  else
-    return int(0.5 + delta * mScrollSeriesCounter *
-           (double) scrollAccelerationFactor / 10);
-}
 
 static PRBool
 StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
