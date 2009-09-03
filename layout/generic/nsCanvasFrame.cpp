@@ -270,9 +270,8 @@ nsRect nsCanvasFrame::CanvasArea() const
 
   nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
-    nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
-    nsRect vcr = scrollableView->View()->GetBounds();
-    result.UnionRect(result, nsRect(nsPoint(0, 0), vcr.Size()));
+    nsRect portRect = scrollableFrame->GetScrollPortRect();
+    result.UnionRect(result, nsRect(nsPoint(0, 0), portRect.Size()));
   }
   return result;
 }
@@ -410,14 +409,10 @@ nsCanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
 
   nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
-    nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
-    nsRect vcr = scrollableView->View()->GetBounds();
-    focusRect.width = vcr.width;
-    focusRect.height = vcr.height;
-    nscoord x,y;
-    scrollableView->GetScrollPosition(x, y);
-    focusRect.x += x;
-    focusRect.y += y;
+    nsRect portRect = scrollableFrame->GetScrollPortRect();
+    focusRect.width = portRect.width;
+    focusRect.height = portRect.height;
+    focusRect.MoveBy(scrollableFrame->GetScrollPosition());
   }
 
  // XXX use the root frame foreground color, but should we find BODY frame
