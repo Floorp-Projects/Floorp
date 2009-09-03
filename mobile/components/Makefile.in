@@ -50,7 +50,7 @@ XPIDL_MODULE = browsercompsbase
 #	$(NULL)
 
 EXTRA_COMPONENTS = \
-	aboutFirstrun.js \
+	AboutRedirector.js \
 	geolocationPrompt.js \
 	alertsService.js \
 	xpiDialogService.js \
