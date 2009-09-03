@@ -67,6 +67,7 @@
 #include "nsISelectionController.h"
 #include "nsPIDOMWindow.h"
 #include "nsGUIEvent.h"
+#include "nsIView.h"
 
 #include "nsContentCID.h"
 #include "nsComponentManagerUtils.h"
