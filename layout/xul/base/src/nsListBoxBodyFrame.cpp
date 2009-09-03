@@ -55,7 +55,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarFrame.h"
-#include "nsIScrollableView.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsStyleContext.h"
@@ -687,11 +686,10 @@ nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
 nscoord
 nsListBoxBodyFrame::GetAvailableHeight()
 {
-  nsIScrollableFrame* scrollFrame
-    = nsLayoutUtils::GetScrollableFrameFor(this);
+  nsIScrollableFrame* scrollFrame =
+    nsLayoutUtils::GetScrollableFrameFor(this);
   if (scrollFrame) {
-    nsIScrollableView* scrollView = scrollFrame->GetScrollableView();
-    return scrollView->View()->GetBounds().height;
+    return scrollFrame->GetScrollPortRect().height;
   }
   return 0;
 }
