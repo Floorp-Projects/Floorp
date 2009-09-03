@@ -830,6 +830,16 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                            nsGkAtoms::handheldFriendly, eIgnoreCase)) {
+    nsAutoString result;
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
+    if (!result.IsEmpty()) {
+      ToLowerCase(result);
+      mDocument->SetHeaderData(nsGkAtoms::handheldFriendly, result);
+    }
+  }
+
   /* Look for the viewport meta tag. If we find it, process it and put the
    * data into the document header. */
   if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
