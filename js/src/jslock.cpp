@@ -52,7 +52,6 @@
 #include "jscntxt.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
-#include "jsfun.h"      /* for VALUE_IS_FUNCTION from LOCKED_OBJ_WRITE_SLOT */
 #include "jslock.h"
 #include "jsscope.h"
 #include "jsstr.h"
@@ -831,7 +830,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         scope->sealed() ||
         (title->ownercx && ClaimTitle(title, cx))) {
-        LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
+        LOCKED_OBJ_SET_SLOT(obj, slot, v);
         return;
     }
 
@@ -841,7 +840,7 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (NativeCompareAndSwap(&tl->owner, 0, me)) {
         if (scope == OBJ_SCOPE(obj)) {
-            LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
+            LOCKED_OBJ_SET_SLOT(obj, slot, v);
             if (!NativeCompareAndSwap(&tl->owner, me, 0)) {
                 /* Assert that scope locks never revert to flyweight. */
                 JS_ASSERT(title->ownercx != cx);
@@ -853,15 +852,14 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         }
         if (!NativeCompareAndSwap(&tl->owner, me, 0))
             js_Dequeue(tl);
-    }
-    else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
-        LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
+    } else if (Thin_RemoveWait(ReadWord(tl->owner)) == me) {
+        LOCKED_OBJ_SET_SLOT(obj, slot, v);
         return;
     }
 #endif
 
     js_LockObj(cx, obj);
-    LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, v);
+    LOCKED_OBJ_SET_SLOT(obj, slot, v);
 
     /*
      * Same drill as above, in js_GetSlotThreadSafe.

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=79:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -186,40 +186,56 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
          * is a plain old method? It's a function-valued property with stub
          * getter, so get of a function is idempotent.
          */
-        if ((cs->format & JOF_CALLOP) &&
-            SPROP_HAS_STUB_GETTER(sprop) &&
-            SPROP_HAS_VALID_SLOT(sprop, scope)) {
+        if (cs->format & JOF_CALLOP) {
             jsval v;
 
-            v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
-            if (VALUE_IS_FUNCTION(cx, v)) {
+            if (sprop->isMethod()) {
                 /*
-                 * Great, we have a function-valued prototype property where
-                 * the getter is JS_PropertyStub. The type id in pobj's scope
-                 * does not evolve with changes to property values, however.
-                 *
-                 * So here, on first cache fill for this method, we brand the
-                 * scope with a new shape and set the SCOPE_BRANDED flag. Once
-                 * this scope flag is set, any write to a function-valued plain
-                 * old property in pobj will result in shape being regenerated.
+                 * A compiler-created function object, AKA a method, already
+                 * memoized in the property tree.
                  */
-                if (!scope->branded()) {
-                    PCMETER(cache->brandfills++);
-#ifdef DEBUG_notme
-                    fprintf(stderr,
-                            "branding %p (%s) for funobj %p (%s), shape %lu\n",
-                            pobj, pobj->getClass()->name,
-                            JSVAL_TO_OBJECT(v),
-                            JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
-                            OBJ_SHAPE(obj));
-#endif
-                    scope->brandingShapeChange(cx, sprop->slot, v);
-                    if (js_IsPropertyCacheDisabled(cx))  /* check for rt->shapeGen overflow */
-                        return JS_NO_PROP_CACHE_FILL;
-                    scope->setBranded();
-                }
+                JS_ASSERT(scope->hasMethodBarrier());
+                v = sprop->methodValue();
+                JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
+                JS_ASSERT(v == LOCKED_OBJ_GET_SLOT(pobj, sprop->slot));
                 vword = JSVAL_OBJECT_TO_PCVAL(v);
                 break;
+            }
+
+            if (SPROP_HAS_STUB_GETTER(sprop) &&
+                SPROP_HAS_VALID_SLOT(sprop, scope)) {
+                v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+                if (VALUE_IS_FUNCTION(cx, v)) {
+                    /*
+                     * Great, we have a function-valued prototype property
+                     * where the getter is JS_PropertyStub. The type id in
+                     * pobj's scope does not evolve with changes to property
+                     * values, however.
+                     *
+                     * So here, on first cache fill for this method, we brand
+                     * the scope with a new shape and set the JSScope::BRANDED
+                     * flag. Once this flag is set, any property assignment
+                     * that changes the value from or to a different function
+                     * object will result in shape being regenerated.
+                     */
+                    if (!scope->branded()) {
+                        PCMETER(cache->brandfills++);
+#ifdef DEBUG_notme
+                        fprintf(stderr,
+                                "branding %p (%s) for funobj %p (%s), shape %lu\n",
+                                pobj, pobj->getClass()->name,
+                                JSVAL_TO_OBJECT(v),
+                                JS_GetFunctionName(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v))),
+                                OBJ_SHAPE(obj));
+#endif
+                        scope->brandingShapeChange(cx, sprop->slot, v);
+                        if (js_IsPropertyCacheDisabled(cx))  /* check for rt->shapeGen overflow */
+                            return JS_NO_PROP_CACHE_FILL;
+                        scope->setBranded();
+                    }
+                    vword = JSVAL_OBJECT_TO_PCVAL(v);
+                    break;
+                }
             }
         }
 
@@ -237,30 +253,30 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                 scope->shape == sprop->shape) {
                 /*
                  * Our caller added a new property. We also know that a setter
-                 * that js_NativeSet could have run has not mutated the scope
-                 * so the added property is still the last one added and the
+                 * that js_NativeSet could have run has not mutated the scope,
+                 * so the added property is still the last one added, and the
                  * scope is not branded.
                  *
                  * We want to cache under scope's shape before the property
                  * addition to bias for the case when the mutator opcode
-                 * always adds the same property. It allows to optimize
-                 * periodic execution of object initializers or explicit
-                 * initialization sequences like
+                 * always adds the same property. This allows us to optimize
+                 * periodic execution of object initializers or other explicit
+                 * initialization sequences such as
                  *
                  *   obj = {}; obj.x = 1; obj.y = 2;
                  *
                  * We assume that on average the win from this optimization is
-                 * bigger that the cost of an extra mismatch per loop due to
+                 * greater than the cost of an extra mismatch per loop owing to
                  * the bias for the following case:
                  *
                  *   obj = {}; ... for (...) { ... obj.x = ... }
                  *
-                 * On the first iteration JSOP_SETPROP fills the cache with
-                 * the shape of newly created object, not the shape after
-                 * obj.x is assigned. That mismatches obj's shape on the
-                 * second iteration. Note that on third and the following
-                 * iterations the cache will be hit since the shape no longer
-                 * mutates.
+                 * On the first iteration of such a for loop, JSOP_SETPROP
+                 * fills the cache with the shape of the newly created object
+                 * obj, not the shape of obj after obj.x has been assigned.
+                 * That mismatches obj's shape on the second iteration. Note
+                 * that on the third and subsequent iterations the cache will
+                 * be hit because the shape is no longer updated.
                  */
                 JS_ASSERT(scope->owned());
                 if (sprop->parent) {
@@ -991,7 +1007,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
 
     MUST_FLOW_THROUGH("out");
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
-    ok = js_GetMethod(cx, obj, id, false, &tvr.u.value);
+    ok = js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &tvr.u.value);
     if (!ok)
         goto out;
     if (JSVAL_IS_PRIMITIVE(tvr.u.value)) {
@@ -2085,9 +2101,9 @@ js_TraceOpcode(JSContext *cx)
                                 fp->script, cx->tracePrevPc);
 
         /*
-         * If there aren't that many elements on the stack, then
-         * we have probably entered a new frame, and printing output
-         * would just be misleading.
+         * If there aren't that many elements on the stack, then we have
+         * probably entered a new frame, and printing output would just be
+         * misleading.
          */
         if (ndefs != 0 &&
             ndefs < regs->sp - fp->slots) {
@@ -2533,8 +2549,6 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     }
     if (!ok)
         return false;
-    if (!prop)
-        return true;
     if (cx->runtime->gcNumber != sample ||
         PCVCAP_SHAPE(entry->vcap) != OBJ_SHAPE(pobj)) {
         pobj->dropProperty(cx, prop);
@@ -2546,18 +2560,26 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     JSScopeProperty *sprop = (JSScopeProperty *) prop;
     if (PCVAL_IS_SLOT(entry->vword)) {
         JS_ASSERT(PCVAL_TO_SLOT(entry->vword) == sprop->slot);
+        JS_ASSERT(!sprop->isMethod());
     } else if (PCVAL_IS_SPROP(entry->vword)) {
         JS_ASSERT(PCVAL_TO_SPROP(entry->vword) == sprop);
+        JS_ASSERT_IF(sprop->isMethod(),
+                     sprop->methodValue() == LOCKED_OBJ_GET_SLOT(pobj, sprop->slot));
     } else {
         jsval v;
         JS_ASSERT(PCVAL_IS_OBJECT(entry->vword));
         JS_ASSERT(entry->vword != PCVAL_NULL);
         JS_ASSERT(OBJ_SCOPE(pobj)->branded());
-        JS_ASSERT(SPROP_HAS_STUB_GETTER(sprop));
+        JS_ASSERT(SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
         v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
         JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
         JS_ASSERT(PCVAL_TO_OBJECT(entry->vword) == JSVAL_TO_OBJECT(v));
+
+        if (sprop->isMethod()) {
+            JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_CALLOP);
+            JS_ASSERT(sprop->methodValue() == v);
+        }
     }
 
     pobj->dropProperty(cx, prop);
@@ -2590,9 +2612,11 @@ JS_STATIC_ASSERT(JSOP_DEFFUN_FC_LENGTH == JSOP_DEFFUN_DBGFC_LENGTH);
 
 /*
  * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
- * remain distinct for the decompiler.
+ * remain distinct for the decompiler. Likewise for JSOP_INIT{PROP,METHOD}.
  */
 JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
+JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETMETHOD_LENGTH);
+JS_STATIC_ASSERT(JSOP_INITPROP_LENGTH == JSOP_INITMETHOD_LENGTH);
 
 /* See TRY_BRANCH_AFTER_COND. */
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
@@ -2652,14 +2676,6 @@ js_Interpret(JSContext *cx)
     JSPropertyOp getter, setter;
 #endif
     JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
-
-#ifdef __GNUC__
-# define JS_EXTENSION __extension__
-# define JS_EXTENSION_(s) __extension__ ({ s; })
-#else
-# define JS_EXTENSION
-# define JS_EXTENSION_(s) s
-#endif
 
 # ifdef DEBUG
     /*

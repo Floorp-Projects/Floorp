@@ -260,6 +260,10 @@ struct JSPropCacheEntry {
     bool adding() const {
         return PCVCAP_TAG(vcap) == 0 && kshape != PCVCAP_SHAPE(vcap);
     }
+
+    bool directHit() const {
+        return PCVCAP_TAG(vcap) == 0 && kshape == PCVCAP_SHAPE(vcap);
+    }
 };
 
 /*

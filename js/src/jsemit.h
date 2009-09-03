@@ -248,8 +248,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                         parameter name */
 #define TCF_FUN_HEAVYWEIGHT    0x100 /* function needs Call object per call */
 #define TCF_FUN_IS_GENERATOR   0x200 /* parsed yield statement in function */
-#define TCF_FUN_IS_FUNARG      0x400 /* function escapes as an argument, return
-                                        value, or via the heap */
+#define TCF_FUN_USES_OWN_NAME  0x400 /* named function expression that uses its
+                                        own name */
 #define TCF_HAS_FUNCTION_STMT  0x800 /* block contains a function statement */
 #define TCF_GENEXP_LAMBDA     0x1000 /* flag lambda from generator expression */
 #define TCF_COMPILE_N_GO      0x2000 /* compiler-and-go mode of script, can
@@ -267,7 +267,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_FUN_PARAM_ARGUMENTS |                    \
                                  TCF_FUN_HEAVYWEIGHT     |                    \
                                  TCF_FUN_IS_GENERATOR    |                    \
-                                 TCF_FUN_IS_FUNARG       |                    \
+                                 TCF_FUN_USES_OWN_NAME   |                    \
                                  TCF_HAS_SHARPS)
 
 /*

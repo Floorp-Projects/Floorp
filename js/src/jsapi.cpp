@@ -3534,7 +3534,7 @@ JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  jsval *vp)
 {
     CHECK_REQUEST(cx);
-    if (!js_GetMethod(cx, obj, id, false, vp))
+    if (!js_GetMethod(cx, obj, id, JSGET_METHOD_BARRIER, vp))
         return JS_FALSE;
     if (objp)
         *objp = obj;
@@ -5088,8 +5088,8 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
     JSAutoTempValueRooter tvr(cx);
     JSAtom *atom = js_Atomize(cx, name, strlen(name), 0);
     JSBool ok = atom &&
-                JS_GetMethodById(cx, obj, ATOM_TO_JSID(atom), NULL,
-                                 tvr.addr()) &&
+                js_GetMethod(cx, obj, ATOM_TO_JSID(atom),
+                             JSGET_NO_METHOD_BARRIER, tvr.addr()) &&
                 js_InternalCall(cx, obj, tvr.value(), argc, argv, rval);
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
