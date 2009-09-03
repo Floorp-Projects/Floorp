@@ -55,7 +55,6 @@
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsComboboxControlFrame.h"
 #include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsWidgetsCID.h"
 #include "nsIPresShell.h"
@@ -277,7 +276,6 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
   }
 
   nsPresContext* presContext = PresContext();
-  if (!GetScrollableView()) return;
 
   nsIFrame* containerFrame = GetOptionsContainer();
   if (!containerFrame) return;
@@ -2057,7 +2055,7 @@ nsListControlFrame::UpdateInListState(nsIDOMEvent* aEvent)
     return;
 
   nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aEvent, this);
-  nsRect borderInnerEdge = GetScrollableView()->View()->GetBounds();
+  nsRect borderInnerEdge = GetScrollPortRect();
   if (pt.y >= borderInnerEdge.y && pt.y < borderInnerEdge.YMost()) {
     mItemSelectionStarted = PR_TRUE;
   }
@@ -2115,7 +2113,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   if (nsIPresShell::GetCapturingContent() != mContent) {
     // If we're not capturing, then ignore movement in the border
     nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aMouseEvent, this);
-    nsRect borderInnerEdge = GetScrollableView()->View()->GetBounds();
+    nsRect borderInnerEdge = GetScrollPortRect();
     if (!borderInnerEdge.Contains(pt)) {
       return NS_ERROR_FAILURE;
     }
@@ -2311,72 +2309,33 @@ nsListControlFrame::ScrollToIndex(PRInt32 aIndex)
 nsresult
 nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 {
-  nsIScrollableView* scrollableView = GetScrollableView();
+  // if null is passed in we scroll to 0,0
+  if (nsnull == aOptElement) {
+    ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
+    return NS_OK;
+  }
 
-  if (scrollableView) {
-    // if null is passed in we scroll to 0,0
-    if (nsnull == aOptElement) {
-      scrollableView->ScrollTo(0, 0, 0);
-      return NS_OK;
-    }
-  
-    // otherwise we find the content's frame and scroll to it
-    nsIFrame * childframe;
-    if (aOptElement) {
-      childframe = aOptElement->GetPrimaryFrame();
-    } else {
-      return NS_ERROR_FAILURE;
-    }
+  // otherwise we find the content's frame and scroll to it
+  nsIFrame *childFrame = aOptElement->GetPrimaryFrame();
+  if (childFrame) {
+    nsPoint pt = GetScrollPosition();
+    // get the scroll port rect relative to the scrolled frame
+    nsRect rect = GetScrollPortRect() + pt;
+    // get the option's rect relative to the scrolled frame
+    nsRect fRect(childFrame->GetOffsetTo(GetScrolledFrame()),
+                 childFrame->GetSize());
 
-    if (childframe) {
-      if (scrollableView) {
-        nscoord x;
-        nscoord y;
-        scrollableView->GetScrollPosition(x,y);
-        // get the clipped rect
-        nsRect rect = scrollableView->View()->GetBounds();
-        // now move it by the offset of the scroll position
-        rect.x = x;
-        rect.y = y;
-
-        // get the child
-        nsRect fRect = childframe->GetRect();
-        nsPoint pnt;
-        nsIView * view;
-        childframe->GetOffsetFromView(pnt, &view);
-
-        // This change for 33421 (remove this comment later)
-
-        // options can be a child of an optgroup
-        // this checks to see the parent is an optgroup
-        // and then adds in the parent's y coord
-        // XXX this assume only one level of nesting of optgroups
-        //   which is all the spec specifies at the moment.
-        nsCOMPtr<nsIContent> parentContent = aOptElement->GetParent();
-        nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup(do_QueryInterface(parentContent));
-        nsRect optRect(0,0,0,0);
-        if (optGroup) {
-          nsIFrame * optFrame = parentContent->GetPrimaryFrame();
-          if (optFrame) {
-            optRect = optFrame->GetRect();
-          }
-        }
-        fRect.y += optRect.y;
-
-        // See if the selected frame (fRect) is inside the scrolled
-        // area (rect). Check only the vertical dimension. Don't
-        // scroll just because there's horizontal overflow.
-        if (!(rect.y <= fRect.y && fRect.YMost() <= rect.YMost())) {
-          // figure out which direction we are going
-          if (fRect.YMost() > rect.YMost()) {
-            y = fRect.y-(rect.height-fRect.height);
-          } else {
-            y = fRect.y;
-          }
-          scrollableView->ScrollTo(pnt.x, y, 0);
-        }
-
+    // See if the selected frame (fRect) is inside the scrollport
+    // area (rect). Check only the vertical dimension. Don't
+    // scroll just because there's horizontal overflow.
+    if (!(rect.y <= fRect.y && fRect.YMost() <= rect.YMost())) {
+      // figure out which direction we are going
+      if (fRect.YMost() > rect.YMost()) {
+        pt.y = fRect.y - (rect.height - fRect.height);
+      } else {
+        pt.y = fRect.y;
       }
+      ScrollTo(nsPoint(fRect.x, pt.y), nsIScrollableFrame::INSTANT);
     }
   }
   return NS_OK;
