@@ -42,7 +42,14 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="richpref-base">
+  <binding id="settings">
+    <content orient="vertical">
+      <xul:label class="settings-title" xbl:inherits="value=label" crop="end" flex="1"/>
+      <children />
+    </content>
+  </binding>
+
+  <binding id="setting-base">
     <implementation>
       <constructor>
         let prefValue = this.pref.valueFromPreferences;
@@ -97,7 +104,7 @@
     </implementation>
   </binding>
 
-  <binding id="richpref-bool" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
+  <binding id="setting-bool" extends="chrome://browser/content/preferences/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
@@ -120,7 +127,7 @@
     </implementation>
   </binding>
 
-  <binding id="richpref-boolint" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
+  <binding id="setting-boolint" extends="chrome://browser/content/preferences/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
@@ -157,7 +164,7 @@
     </implementation>
   </binding>
 
-  <binding id="richpref-button" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
+  <binding id="setting-button" extends="chrome://browser/content/preferences/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">
@@ -177,7 +184,7 @@
     </content>
   </binding>
   
-  <binding id="richpref-string" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
+  <binding id="setting-string" extends="chrome://browser/content/preferences/setting.xml#setting-base">
     <content>
       <xul:box flex="1" class="prefbox">
         <xul:vbox flex="1">

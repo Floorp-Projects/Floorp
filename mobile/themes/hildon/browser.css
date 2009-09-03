@@ -788,16 +788,18 @@ findbar .findbar-closebutton {
 
 /* Preferences window   ---------------------------------------------------- */
 /* XXX should be a richlistitem */
-richpref {
+setting {
   background-color: white;
   color: black;
 }
 
-/* XXX should be a richlistitem.section-header */
-.prefsection {
-  font-weight: bold;
-  color: #000;
+settings {
   background-color: lightgray;
+  color: #000;
+}
+
+settings .settings-title {
+  font-weight: bold;
   padding: 0.5mm;
 }
 
@@ -807,6 +809,14 @@ richpref {
   border-bottom: 0.1mm solid rgb(207,207,207);
   min-height: 14.4mm; /* row size */
   -moz-box-align: center;
+}
+
+.options-box {
+  margin-left: 28px;  /* sized based on the 32px addon image */
+}
+
+.options-box setting:last-child .prefbox {
+  border-bottom: 0;
 }
 
 /* XXX should be a richlistitem description.title */

@@ -323,7 +323,7 @@
             <label value="&addonsHeader.label;"/>
           </hbox>
           <notificationbox id="addons-messages" flex="1">
-            <richlistbox id="addons-list" flex="1">
+            <richlistbox id="addons-list" flex="1" onselect="ExtensionsView.hideOptions()">
               <richlistitem id="addons-local" class="section-header" align="center">
                 <label value="&addonsLocal.label;" flex="1"/>
               </richlistitem>
@@ -360,32 +360,29 @@
             <label value="&prefsHeader.label;"/>
           </hbox>
           <richlistbox id="prefs-list" seltype="single" flex="1">
-            <richpref title="&about.title;" type="button">
+            <setting title="&about.title;" type="button">
               &about.description;
               <button id="prefs-about-button" label="&about.button;" oncommand="Browser.addTab('about:fennec', true);"/>
-            </richpref>
-            <vbox class="prefsection" id="prefs-content">
-              <label value="&content.title;" crop="end" flex="1"/>
-            </vbox>
-            <richpref pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
-            <richpref pref="javascript.enabled" type="bool" title="&enableJavaScript.title;">
-              &enableJavaScript.description;
-            </richpref>
-            <richpref pref="plugins.enabled" type="bool" title="&enablePlugins.title;" onsynctopreference="Browser.setPluginState(this.value);">
-              &enablePlugins.description;
-            </richpref>
-
-            <vbox class="prefsection" id="prefs-privacy">
-              <label value="&privacy.title;" crop="end" flex="1"/>
-            </vbox>
-            <richpref pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2">
-              &allowCookies.description;
-            </richpref>
-            <richpref pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
-            <richpref title="&clearPrivateData.title;" type="button">
-              &clearPrivateData.description;
-              <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
-            </richpref>
+            </setting>
+            <settings id="prefs-content" label="&content.title;">
+              <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
+              <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;">
+                &enableJavaScript.description;
+              </setting>
+              <setting pref="plugins.enabled" type="bool" title="&enablePlugins.title;" onsynctopreference="Browser.setPluginState(this.value);">
+                &enablePlugins.description;
+              </setting>
+            </settings>
+            <settings id="prefs-privacy" label="&privacy.title;">
+              <setting pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2">
+                &allowCookies.description;
+              </setting>
+              <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
+              <setting title="&clearPrivateData.title;" type="button">
+                &clearPrivateData.description;
+                <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
+              </setting>
+            </settings>
           </richlistbox>
         </vbox>
 
