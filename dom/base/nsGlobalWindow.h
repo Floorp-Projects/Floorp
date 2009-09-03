@@ -108,7 +108,7 @@ class nsIDOMBarProp;
 class nsIDocument;
 class nsPresContext;
 class nsIDOMEvent;
-class nsIScrollableView;
+class nsIScrollableFrame;
 class nsIControllers;
 
 class nsBarProp;
@@ -560,9 +560,9 @@ protected:
   nsresult GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner);
   nsresult GetTreeOwner(nsIBaseWindow** aTreeOwner);
   nsresult GetWebBrowserChrome(nsIWebBrowserChrome** aBrowserChrome);
-  // GetScrollInfo does not flush.  Callers should do it themselves as needed,
-  // depending on which info they actually want off the scrollable view.
-  nsresult GetScrollInfo(nsIScrollableView** aScrollableView);
+  // GetScrollFrame does not flush.  Callers should do it themselves as needed,
+  // depending on which info they actually want off the scrollable frame.
+  nsIScrollableFrame *GetScrollFrame();
   nsresult SecurityCheckURL(const char *aURL);
   nsresult BuildURIfromBase(const char *aURL,
                             nsIURI **aBuiltURI,
