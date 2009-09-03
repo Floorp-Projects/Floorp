@@ -97,8 +97,14 @@ class ChildProcessHost :
   // Sends the given notification to the notification service on the UI thread.
   void Notify(NotificationType type);
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+ protected:
+#endif
   // WaitableEventWatcher::Delegate implementation:
   virtual void OnWaitableEventSignaled(base::WaitableEvent *event);
+#ifdef CHROMIUM_MOZILLA_BUILD
+ private:
+#endif
 
   // By using an internal class as the IPC::Channel::Listener, we can intercept
   // OnMessageReceived/OnChannelConnected and do our own processing before
