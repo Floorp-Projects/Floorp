@@ -66,7 +66,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
-#include "nsIScrollableView.h"
 #include "nsIScrollableFrame.h"
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
@@ -1211,47 +1210,6 @@ PRBool nsMenuPopupFrame::ConsumeOutsideClicks()
   return PR_TRUE;
 }
 
-static nsIScrollableView* GetScrollableViewForFrame(nsIFrame* aFrame)
-{
-  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
-  if (!sf)
-    return nsnull;
-  return sf->GetScrollableView();
-}
-
-// XXXroc this is megalame. Fossicking around for a view of the right
-// type is a recipe for disaster in the long term.
-nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
-{
-  if ( ! aStart )
-    return nsnull;  
-
-  nsIFrame* currFrame;
-  nsIScrollableView* scrollableView=nsnull;
-
-  // try start frame and siblings
-  currFrame=aStart;
-  do {
-    scrollableView = GetScrollableViewForFrame(currFrame);
-    if ( scrollableView )
-      return scrollableView;
-    currFrame = currFrame->GetNextSibling();
-  } while ( currFrame );
-
-  // try children
-  nsIFrame* childFrame;
-  currFrame=aStart;
-  do {
-    childFrame = currFrame->GetFirstChild(nsnull);
-    scrollableView=GetScrollableView(childFrame);
-    if ( scrollableView )
-      return scrollableView;
-    currFrame = currFrame->GetNextSibling();
-  } while ( currFrame );
-
-  return nsnull;
-}
-
 // XXXroc this is megalame. Fossicking around for a frame of the right
 // type is a recipe for disaster in the long term.
 nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart)
@@ -1284,24 +1242,12 @@ nsIScrollableFrame* nsMenuPopupFrame::GetScrollFrame(nsIFrame* aStart)
 void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem)
 {
   if (aMenuItem) {
-    nsIFrame* childFrame = GetFirstChild(nsnull);
-    nsIScrollableView *scrollableView;
-    scrollableView = GetScrollableView(childFrame);
-    if (scrollableView) {
-      nscoord scrollX, scrollY;
-
-      nsRect viewRect = scrollableView->View()->GetBounds();
-      nsRect itemRect = aMenuItem->GetRect();
-      scrollableView->GetScrollPosition(scrollX, scrollY);
-  
-      // scroll down
-      if ( itemRect.y + itemRect.height > scrollY + viewRect.height )
-        scrollableView->ScrollTo(scrollX, itemRect.y + itemRect.height - viewRect.height, 0);
-      
-      // scroll up
-      else if ( itemRect.y < scrollY )
-        scrollableView->ScrollTo(scrollX, itemRect.y, 0);
-    }
+    aMenuItem->PresContext()->PresShell()->
+      ScrollFrameRectIntoView(aMenuItem,
+                              nsRect(nsPoint(0,0), aMenuItem->GetRect().Size()),
+                              NS_PRESSHELL_SCROLL_ANYWHERE,
+                              NS_PRESSHELL_SCROLL_ANYWHERE,
+                              nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
   }
 }
 
