@@ -1459,25 +1459,41 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
         // wrappedNative or other wise has 'nsISupportness'. 
         // This allows wrapJSAggregatedToNative to work.
 
+        // If we're looking at a security wrapper, see now if we're allowed to
+        // pass it to C++. If we are, then fall through to the code below. If
+        // we aren't, throw an exception eagerly.
+        JSObject* inner = nsnull;
+        if(XPCWrapper::IsSecurityWrapper(src))
+        {
+            inner = XPCWrapper::Unwrap(cx, src);
+            if(!inner)
+            {
+                if(pErr)
+                    *pErr = NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+                return JS_FALSE;
+            }
+        }
+
         // Is this really a native xpcom object with a wrapper?
         XPCWrappedNative* wrappedNative =
-                    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, src);
+                    XPCWrappedNative::GetWrappedNativeOfJSObject(cx,
+                                                                 inner
+                                                                 ? inner
+                                                                 : src);
         if(wrappedNative)
         {
             iface = wrappedNative->GetIdentityObject();
             return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));
         }
         // else...
-        
+
         // XXX E4X breaks the world. Don't try wrapping E4X objects!
         // This hack can be removed (or changed accordingly) when the
         // DOM <-> E4X bindings are complete, see bug 270553
         if(JS_TypeOfValue(cx, OBJECT_TO_JSVAL(src)) == JSTYPE_XML)
             return JS_FALSE;
 
-        // Does the JSObject have 'nsISupportness'?
-        // XXX hmm, I wonder if this matters anymore with no 
-        // oldstyle DOM objects around.
+        // Deal with slim wrappers here.
         if(GetISupportsFromJSObject(src, &iface))
         {
             if(iface)
