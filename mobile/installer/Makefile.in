@@ -71,8 +71,13 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _BINPATH = /$(_APPNAME)/Contents/Resources
 endif
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+PACKAGE_XULRUNNER = 
+UNPACKAGE = 
+else
 PACKAGE_XULRUNNER = package-xulrunner
 UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
+endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
