@@ -4399,8 +4399,8 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
 
     native =
 #ifdef JS_TRACER
-             (fs->flags & JSFUN_TRACEABLE)
-             ? JS_FUNC_TO_DATA_PTR(JSTraceableNative *, fs->call)->native
+             (fs->flags & JSFUN_TRCINFO)
+             ? JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, fs->call)->native
              :
 #endif
                (JSFastNative) fs->call;
@@ -4498,7 +4498,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                                       js_generic_fast_native_method_dispatcher
                                     : js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
-                                    flags & ~JSFUN_TRACEABLE);
+                                    flags & ~JSFUN_TRCINFO);
             if (!fun)
                 return JS_FALSE;
             fun->u.n.extra = (uint16)fs->extra;
