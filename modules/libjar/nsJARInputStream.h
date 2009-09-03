@@ -53,39 +53,45 @@ class nsJARInputStream : public nsIInputStream
 {
   public:
     nsJARInputStream() : 
-        mCurPos(0), mCompressed(false), mDirectory(false), mClosed(true)
-    { }
+        mInSize(0), mCurPos(0), mInflate(nsnull), mDirectory(0), mClosed(PR_FALSE)
+  { }
 
-    ~nsJARInputStream() { Close(); }
+  ~nsJARInputStream() {
+    Close();
+  }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
    
     // takes ownership of |fd|, even on failure
-    nsresult InitFile(nsJAR *aJar, nsZipItem *item);
+    nsresult InitFile(nsZipHandle *aFd, nsZipItem *item);
 
     nsresult InitDirectory(nsJAR *aJar,
                            const nsACString& aJarDirSpec,
                            const char* aDir);
   
   private:
-    nsRefPtr<nsZipHandle>  mFd;         // handle for reading
-    PRUint32               mCurPos;     // Current position in input 
-    PRUint32               mOutSize;    // inflated size 
-    PRUint32               mInCrc;      // CRC as provided by the zipentry
-    PRUint32               mOutCrc;     // CRC as calculated by me
-    z_stream               mZs;         // zip data structure
+    PRUint32      mInSize;          // Size in original file 
+    PRUint32      mCurPos;          // Current position in input 
+
+    struct InflateStruct {
+        PRUint32      mOutSize;     // inflated size 
+        PRUint32      mInCrc;       // CRC as provided by the zipentry
+        PRUint32      mOutCrc;      // CRC as calculated by me
+        z_stream      mZs;          // zip data structure
+        unsigned char mReadBuf[ZIP_BUFLEN]; // Readbuffer to inflate from
+    };
+    struct InflateStruct *   mInflate;
 
     /* For directory reading */
-    nsRefPtr<nsJAR>        mJar;        // string reference to zipreader
-    PRUint32               mNameLen;    // length of dirname
-    nsCString              mBuffer;     // storage for generated text of stream
-    PRUint32               mArrPos;     // current position within mArray
-    nsTArray<nsCString>    mArray;      // array of names in (zip) directory
-
-    bool                   mCompressed; // is this compressed?
-    bool                   mDirectory;  // is this a directory?
-    bool                   mClosed;     // Whether the stream is closed
+    nsRefPtr<nsJAR>         mJar;     // string reference to zipreader
+    PRUint32                mNameLen; // length of dirname
+    nsCAutoString           mBuffer;  // storage for generated text of stream
+    PRUint32                mArrPos;  // current position within mArray
+    nsTArray<nsCString>     mArray;   // array of names in (zip) directory
+  PRPackedBool            mDirectory; // is this a directory?
+    PRPackedBool            mClosed;  // Whether the stream is closed
+    nsSeekableZipHandle     mFd;      // handle for reading
 
     nsresult ContinueInflate(char* aBuf, PRUint32 aCount, PRUint32* aBytesRead);
     nsresult ReadDirectory(char* aBuf, PRUint32 aCount, PRUint32* aBytesRead);
