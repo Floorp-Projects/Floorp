@@ -71,7 +71,9 @@
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsCSSDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
+#include "nsDOMCSSAttrDeclaration.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
 #include "nsDOMTokenList.h"
@@ -2937,6 +2939,55 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
+#ifdef MOZ_SMIL
+nsresult
+nsGenericElement::GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle)
+{
+  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!slots->mSMILOverrideStyle) {
+    slots->mSMILOverrideStyle = new nsDOMCSSAttributeDeclaration(this, PR_TRUE);
+    NS_ENSURE_TRUE(slots->mSMILOverrideStyle, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  // Why bother with QI?
+  NS_ADDREF(*aStyle = slots->mSMILOverrideStyle);
+  return NS_OK;
+}
+
+nsICSSStyleRule*
+nsGenericElement::GetSMILOverrideStyleRule()
+{
+  nsGenericElement::nsDOMSlots *slots = GetExistingDOMSlots();
+  return slots ? slots->mSMILOverrideStyleRule : nsnull;
+}
+
+nsresult
+nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+                                           PRBool aNotify)
+{
+  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
+  NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
+
+  slots->mSMILOverrideStyleRule = aStyleRule;
+
+  if (aNotify) {
+    nsIDocument* doc = GetCurrentDoc();
+    NS_ABORT_IF_FALSE(doc, "Shouldn't be able to animate style on a node "
+                      "unless it's in a document...");
+    nsPresShellIterator iter(doc);
+    nsCOMPtr<nsIPresShell> shell;
+    while (shell = iter.GetNextShell()) {
+      nsPresContext* presContext = shell->GetPresContext();
+      presContext->SMILOverrideStyleChanged(this);
+    }
+  }
+
+  return NS_OK;
+}
+#endif // MOZ_SMIL
+
 nsICSSStyleRule*
 nsGenericElement::GetInlineStyleRule()
 {
@@ -4033,6 +4084,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
     if (slots) {
       slots->mStyle = nsnull;
+#ifdef MOZ_SMIL
+      slots->mSMILOverrideStyle = nsnull;
+#endif // MOZ_SMIL
       if (slots->mAttributeMap) {
         slots->mAttributeMap->DropReference();
         slots->mAttributeMap = nsnull;
@@ -4113,6 +4167,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
     if (slots) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mStyle");
       cb.NoteXPCOMChild(slots->mStyle.get());
+
+#ifdef MOZ_SMIL
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mSMILOverrideStyle");
+      cb.NoteXPCOMChild(slots->mSMILOverrideStyle.get());
+#endif // MOZ_SMIL
 
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "slots mAttributeMap");
       cb.NoteXPCOMChild(slots->mAttributeMap.get());

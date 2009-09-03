@@ -51,8 +51,15 @@
 #include "nsIContent.h"
 #include "nsIPrincipal.h"
 
-nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIContent *aContent)
+nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIContent *aContent
+#ifdef MOZ_SMIL
+                                                           , PRBool aIsSMILOverride
+#endif // MOZ_SMIL
+                                                           )
   : mContent(aContent)
+#ifdef MOZ_SMIL
+  , mIsSMILOverride(aIsSMILOverride)
+#endif // MOZ_SMIL
 {
   MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);
 
@@ -96,7 +103,11 @@ nsresult
 nsDOMCSSAttributeDeclaration::DeclarationChanged()
 {
   NS_ASSERTION(mContent, "Must have content node to set the decl!");
-  nsICSSStyleRule* oldRule = mContent->GetInlineStyleRule();
+  nsICSSStyleRule* oldRule =
+#ifdef MOZ_SMIL
+    mIsSMILOverride ? mContent->GetSMILOverrideStyleRule() :
+#endif // MOZ_SMIL
+    mContent->GetInlineStyleRule();
   NS_ASSERTION(oldRule, "content must have rule");
 
   nsCOMPtr<nsICSSStyleRule> newRule = oldRule->DeclarationChanged(PR_FALSE);
@@ -104,7 +115,11 @@ nsDOMCSSAttributeDeclaration::DeclarationChanged()
     return NS_ERROR_OUT_OF_MEMORY;
   }
     
-  return mContent->SetInlineStyleRule(newRule, PR_TRUE);
+  return
+#ifdef MOZ_SMIL
+    mIsSMILOverride ? mContent->SetSMILOverrideStyleRule(newRule, PR_TRUE) :
+#endif // MOZ_SMIL
+    mContent->SetInlineStyleRule(newRule, PR_TRUE);
 }
 
 nsresult
@@ -115,7 +130,11 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
 
   *aDecl = nsnull;
   if (mContent) {
-    nsICSSStyleRule* cssRule = mContent->GetInlineStyleRule();
+    nsICSSStyleRule* cssRule =
+#ifdef MOZ_SMIL
+      mIsSMILOverride ? mContent->GetSMILOverrideStyleRule() :
+#endif // MOZ_SMIL
+      mContent->GetInlineStyleRule();
     if (cssRule) {
       *aDecl = cssRule->GetDeclaration();
     }
@@ -135,7 +154,12 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
         return result;
       }
         
-      result = mContent->SetInlineStyleRule(newRule, PR_FALSE);
+      result =
+#ifdef MOZ_SMIL
+        mIsSMILOverride ?
+          mContent->SetSMILOverrideStyleRule(newRule, PR_FALSE) :
+#endif // MOZ_SMIL
+          mContent->SetInlineStyleRule(newRule, PR_FALSE);
       if (NS_SUCCEEDED(result)) {
         *aDecl = decl;
       }
