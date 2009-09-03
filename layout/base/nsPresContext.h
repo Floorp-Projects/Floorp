@@ -870,6 +870,13 @@ public:
    */
   PRBool HasPendingInterrupt() { return mHasPendingInterrupt; }
 
+#ifdef MOZ_SMIL
+  /**
+   * Indicates that the given element's SMIL Override Style has changed,
+   * and as a result, we need to update our display.
+   */
+  void SMILOverrideStyleChanged(nsIContent* aContent);
+#endif // MOZ_SMIL
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
