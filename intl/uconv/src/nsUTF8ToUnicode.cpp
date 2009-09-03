@@ -41,7 +41,7 @@
 #if defined(__GNUC__) && defined(__i386__) && defined(__APPLE__)
 #define MAC_SSE2
 #endif
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+#if defined(XP_WIN32) && defined(_M_IX86) && defined(_MSC_VER) && _MSC_VER >= 1400
 #define WIN_SSE2
 #endif
 
