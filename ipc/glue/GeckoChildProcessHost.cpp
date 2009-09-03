@@ -53,11 +53,13 @@ struct RunnableMethodTraits<GeckoChildProcessHost>
     static void ReleaseCallee(GeckoChildProcessHost* obj) { }
 };
 
-GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType)
+GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
+                                             base::WaitableEventWatcher::Delegate* aDelegate)
   : ChildProcessHost(RENDER_PROCESS), // FIXME/cjones: we should own this enum
     mProcessType(aProcessType),
     mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
-    mLaunched(false)
+    mLaunched(false),
+    mDelegate(aDelegate)
 {
 }
 
@@ -154,4 +156,13 @@ void
 GeckoChildProcessHost::OnChannelError()
 {
   // XXXbent Notify that the child process is gone?
+}
+
+void
+GeckoChildProcessHost::OnWaitableEventSignaled(base::WaitableEvent *event)
+{
+  if (mDelegate) {
+    mDelegate->OnWaitableEventSignaled(event);
+  }
+  ChildProcessHost::OnWaitableEventSignaled(event);
 }

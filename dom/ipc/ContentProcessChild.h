@@ -33,12 +33,15 @@ public:
     virtual nsresult TestShellDestructor(TestShellProtocolChild*);
 
     void Quit();
+    virtual nsresult RecvQuit();
 
 private:
     static ContentProcessChild* sSingleton;
 
     nsTArray<nsAutoPtr<IFrameEmbeddingProtocolChild> > mIFrames;
     nsTArray<nsAutoPtr<TestShellProtocolChild> > mTestShells;
+
+    PRBool mQuit;
 
     DISALLOW_EVIL_CONSTRUCTORS(ContentProcessChild);
 };

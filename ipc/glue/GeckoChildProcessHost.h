@@ -56,7 +56,8 @@ protected:
   typedef mozilla::Monitor Monitor;
 
 public:
-  GeckoChildProcessHost(GeckoProcessType aProcessType=GeckoProcessType_Default);
+  GeckoChildProcessHost(GeckoProcessType aProcessType=GeckoProcessType_Default,
+                        base::WaitableEventWatcher::Delegate* aDelegate=nsnull);
 
   bool SyncLaunch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
   bool AsyncLaunch(std::vector<std::wstring> aExtraOpts=std::vector<std::wstring>());
@@ -66,6 +67,8 @@ public:
   virtual void OnChannelError();
 
   virtual bool CanShutdown() { return true; }
+
+  virtual void OnWaitableEventSignaled(base::WaitableEvent *event);
 
   IPC::Channel* GetChannel() {
     return channelp();
@@ -84,6 +87,8 @@ protected:
 #if defined(OS_POSIX)
   base::file_handle_mapping_vector mFileMap;
 #endif
+
+  base::WaitableEventWatcher::Delegate* mDelegate;
 
 private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);

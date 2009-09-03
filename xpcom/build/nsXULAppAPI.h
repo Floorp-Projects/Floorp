@@ -477,6 +477,9 @@ class MessageLoop;
 XRE_API(void,
         XRE_ShutdownChildProcess, (MessageLoop* aUILoop))
 
+XRE_API(MessageLoop*,
+        XRE_GetIOMessageLoop, ())
+
 struct JSContext;
 struct JSString;
 
