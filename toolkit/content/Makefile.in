@@ -80,6 +80,7 @@ endif
 
 EXTRA_JS_MODULES = \
   debug.js \
+  LightweightThemeConsumer.jsm \
   WindowDraggingUtils.jsm \
   $(NULL)
 

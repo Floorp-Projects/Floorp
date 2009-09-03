@@ -164,6 +164,41 @@ statusbarpanel {
 
 /* ::::: miscellaneous formatting ::::: */
 
+:root[lwtheme="true"],
+[lwthemefooter="true"], {
+  -moz-appearance: none;
+}
+
+:root[lwthemetextcolor="dark"] {
+  text-shadow: 1px 1px 2px white;
+}
+
+:root[lwthemetextcolor="bright"] {
+  text-shadow: 1px 1px 2px black;
+}
+
+:root[lwtheme="true"] toolbar,
+:root[lwtheme="true"] findbar,
+:root[lwtheme="true"] statusbar {
+  -moz-appearance: none;
+  background: none;
+  border-style: none;
+}
+
+:root[lwtheme="true"] splitter {
+  background: none;
+}
+
+:root[lwtheme="true"] statusbar {
+  text-shadow: inherit;
+}
+
+:root[lwtheme="true"] .findbar-container > label,
+:root[lwtheme="true"] .findbar-find-status {
+  color: inherit;
+  text-shadow: inherit;
+}
+
 .inset {
   border: 1px solid ThreeDShadow;
   border-right-color: ThreeDHighlight;
