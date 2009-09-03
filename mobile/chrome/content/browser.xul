@@ -362,7 +362,7 @@
           <richlistbox id="prefs-list" seltype="single" flex="1">
             <richpref title="&about.title;" type="button">
               &about.description;
-              <button id="prefs-about-button" label="&about.button;" oncommand="Browser.addTab('about:', true);"/>
+              <button id="prefs-about-button" label="&about.button;" oncommand="Browser.addTab('about:fennec', true);"/>
             </richpref>
             <vbox class="prefsection" id="prefs-content">
               <label value="&content.title;" crop="end" flex="1"/>
