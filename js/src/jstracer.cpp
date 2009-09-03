@@ -2577,7 +2577,7 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
 #ifdef DEBUG
         JSBool rv =
 #endif
-            js_GetPropertyHelper(cx, call, cv->id, JS_FALSE, &v);
+            js_GetPropertyHelper(cx, call, cv->id, JSGET_METHOD_BARRIER, &v);
         JS_ASSERT(rv);
     }
     JSTraceType type = getCoercedType(v);
@@ -2932,8 +2932,10 @@ TraceRecorder::isValidSlot(JSScope* scope, JSScopeProperty* sprop)
     }
 
     /* This check applies even when setflags == 0. */
-    if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop))
+    if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop)) {
+        JS_ASSERT(!sprop->isMethod());
         ABORT_TRACE_RV("non-stub getter", false);
+    }
 
     if (!SPROP_HAS_VALID_SLOT(sprop, scope))
         ABORT_TRACE_RV("slotless obj property", false);
@@ -3289,7 +3291,7 @@ TraceRecorder::snapshot(ExitType exitType)
                         JSTN_ERRTYPE(pendingTraceableNative) == FAIL_STATUS);
     if (resumeAfter) {
         JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW ||
-                  *pc == JSOP_SETPROP || *pc == JSOP_SETNAME);
+                  *pc == JSOP_SETPROP || *pc == JSOP_SETNAME || *pc == JSOP_SETMETHOD);
         pc += cs.length;
         regs->pc = pc;
         MUST_FLOW_THROUGH("restore_pc");
@@ -4411,7 +4413,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
         JSScope* scope = OBJ_SCOPE(pobj);
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
-        if (SPROP_HAS_STUB_GETTER(sprop) &&
+        if (SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop) &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
             jsval v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
             if (VALUE_IS_FUNCTION(cx, v)) {
@@ -5727,7 +5729,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                       op == JSOP_GETPROP || op == JSOP_GETTHISPROP || op == JSOP_GETARGPROP ||
                       op == JSOP_GETLOCALPROP || op == JSOP_LENGTH ||
                       op == JSOP_GETELEM || op == JSOP_CALLELEM ||
-                      op == JSOP_SETPROP || op == JSOP_SETNAME ||
+                      op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETMETHOD ||
                       op == JSOP_SETELEM || op == JSOP_INITELEM ||
                       op == JSOP_INSTANCEOF);
             const JSCodeSpec& cs = js_CodeSpec[op];
@@ -6987,7 +6989,7 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
         ABORT_TRACE("deep abort from property lookup");
 
     if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass)
-        return callProp(obj, obj2, prop, ATOM_TO_JSID(atom), vp, ins, nr);
+        return callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr);
 
     obj2->dropProperty(cx, prop);
     ABORT_TRACE("fp->scopeChain is not global or active call object");
@@ -6997,12 +6999,13 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
  * Generate LIR to access a property of a Call object.
  */
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::callProp(JSObject* obj, JSObject* obj2, JSProperty* prop, jsid id, jsval*& vp, 
+TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp, 
                         LIns*& ins, NameResult& nr)
 {
     JSScopeProperty *sprop = (JSScopeProperty*) prop;
 
-    uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
+    JSOp op = JSOp(*cx->fp->regs->pc);
+    uint32 setflags = (js_CodeSpec[op].format & (JOF_SET | JOF_INCDEC | JOF_FOR));
     if (setflags && (sprop->attrs & JSPROP_READONLY))
         ABORT_TRACE("writing to a read-only property");
 
@@ -7025,7 +7028,7 @@ TraceRecorder::callProp(JSObject* obj, JSObject* obj2, JSProperty* prop, jsid id
         } else {
             ABORT_TRACE("dynamic property of Call object");
         }
-        obj2->dropProperty(cx, prop);
+        obj->dropProperty(cx, prop);
 
         if (frameIfInRange(obj)) {
             // At this point we are guaranteed to be looking at an active call oject
@@ -7035,12 +7038,19 @@ TraceRecorder::callProp(JSObject* obj, JSObject* obj2, JSProperty* prop, jsid id
             return JSRS_CONTINUE;
         }
     } else {
+        // Call objects do not yet have sprop->isMethod() properties, but they
+        // should. See bug 514046, for which this code is future-proof. Remove
+        // this comment when that bug is fixed (so, FIXME: 514046).
 #ifdef DEBUG
         JSBool rv =
 #endif
-            js_GetPropertyHelper(cx, obj, sprop->id, JS_FALSE, &nr.v);
+            js_GetPropertyHelper(cx, obj, sprop->id,
+                                 (op == JSOP_CALLNAME)
+                                 ? JSGET_NO_METHOD_BARRIER
+                                 : JSGET_METHOD_BARRIER,
+                                 &nr.v);
         JS_ASSERT(rv);
-        obj2->dropProperty(cx, prop);
+        obj->dropProperty(cx, prop);
     }
 
     LIns* obj_ins;
@@ -8081,7 +8091,8 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, jsuword& pcval)
 {
     jsbytecode* pc = cx->fp->regs->pc;
-    JS_ASSERT(*pc != JSOP_INITPROP && *pc != JSOP_SETNAME && *pc != JSOP_SETPROP);
+    JS_ASSERT(*pc != JSOP_INITPROP && *pc != JSOP_INITMETHOD &&
+              *pc != JSOP_SETNAME && *pc != JSOP_SETPROP && *pc != JSOP_SETMETHOD);
 
     // Mimic the interpreter's special case for dense arrays by skipping up one
     // hop along the proto chain when accessing a named (not indexed) property,
@@ -8295,20 +8306,6 @@ TraceRecorder::stobj_get_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins)
     if (slot < JS_INITIAL_NSLOTS)
         return stobj_get_fslot(obj_ins, slot);
     return stobj_get_dslot(obj_ins, slot - JS_INITIAL_NSLOTS, dslots_ins);
-}
-
-JSRecordingStatus
-TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
-                          LIns*& dslots_ins, LIns*& v_ins)
-{
-    if (!SPROP_HAS_STUB_GETTER(sprop))
-        return JSRS_STOP;
-
-    if (sprop->slot != SPROP_INVALID_SLOT)
-        v_ins = stobj_get_slot(pobj_ins, sprop->slot, dslots_ins);
-    else
-        v_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
-    return JSRS_CONTINUE;
 }
 
 JS_REQUIRES_STACK LIns*
@@ -9225,7 +9222,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
                                     bool setflag, LIns* boxed_ins)
 {
     JS_ASSERT(!(sprop->attrs & (setflag ? JSPROP_SETTER : JSPROP_GETTER)));
-    JS_ASSERT(setflag ? !SPROP_HAS_STUB_SETTER(sprop) : !SPROP_HAS_STUB_GETTER(sprop));
+    JS_ASSERT(setflag ? !SPROP_HAS_STUB_SETTER(sprop) : !SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
 
     enterDeepBailCall();
 
@@ -9454,8 +9451,8 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 
     switch (argc) {
       case 1:
-          if (isNumber(vp[2]) &&
-              (native == js_math_ceil || native == js_math_floor || native == js_math_round)) {
+        if (isNumber(vp[2]) &&
+            (native == js_math_ceil || native == js_math_floor || native == js_math_round)) {
             LIns* a = get(&vp[2]);
             if (isPromote(a)) {
                 set(&vp[0], a);
@@ -9464,9 +9461,10 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             }
         }
         break;
+
       case 2:
-          if (isNumber(vp[2]) && isNumber(vp[3]) &&
-              (native == js_math_min || native == js_math_max)) {
+        if (isNumber(vp[2]) && isNumber(vp[3]) &&
+            (native == js_math_min || native == js_math_max)) {
             LIns* a = get(&vp[2]);
             LIns* b = get(&vp[3]);
             if (isPromote(a) && isPromote(b)) {
@@ -9939,6 +9937,16 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
     return JSRS_CONTINUE;
 }
 
+static JSBool FASTCALL
+MethodWriteBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject* funobj)
+{
+    JSAutoTempValueRooter tvr(cx, funobj);
+
+    return OBJ_SCOPE(obj)->methodWriteBarrier(cx, sprop, tvr.value());
+}
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SCOPEPROP, OBJECT,
+                     0, 0)
+
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop,
                        jsval &v, LIns*& v_ins)
@@ -9965,21 +9973,26 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     JS_ASSERT_IF(entry->vcap == PCVCAP_MAKE(entry->kshape, 0, 0), scope->has(sprop));
 
     // Fast path for CallClass. This is about 20% faster than the general case.
-    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
-        v_ins = get(&v);
+    v_ins = get(&v);
+    if (OBJ_GET_CLASS(cx, obj) == &js_CallClass)
         return setCallProp(obj, obj_ins, sprop, v_ins, v);
-    }
 
     /*
-     * Setting a function-valued property might need to rebrand the object; we
-     * don't trace that case. There's no need to guard on that, though, because
-     * separating functions into the trace-time type TT_FUNCTION will save the
-     * day!
+     * Setting a function-valued property might need to rebrand the object, so
+     * we emit a call to the method write barrier. There's no need to guard on
+     * this, because functions have distinct trace-type from other values and
+     * branded-ness is implied by the shape, which we've already guarded on.
      */
-    if (scope->branded() && VALUE_IS_FUNCTION(cx, v))
-        ABORT_TRACE("can't trace function-valued property set in branded scope");
+    if (scope->branded() && VALUE_IS_FUNCTION(cx, v) && entry->directHit()) {
+        if (obj == globalObj)
+            ABORT_TRACE("can't trace function-valued property set in branded global scope");
 
-    // Find obj2.  If entry->adding(), the TAG bits are all 0.
+        LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
+        LIns* ok_ins = lir->insCall(&MethodWriteBarrier_ci, args);
+        guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
+    }
+
+    // Find obj2. If entry->adding(), the TAG bits are all 0.
     JSObject* obj2 = obj;
     for (jsuword i = PCVCAP_TAG(entry->vcap) >> PCVCAP_PROTOBITS; i; i--)
         obj2 = OBJ_GET_PARENT(cx, obj2);
@@ -10008,7 +10021,6 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
         guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
     }
 
-    v_ins = get(&v);
     return nativeSet(obj, obj_ins, sprop, v, v_ins);
 }
 
@@ -10062,8 +10074,16 @@ TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop
     CHECK_STATUS(setProp(l, entry, sprop, r, v_ins));
 
     jsbytecode* pc = cx->fp->regs->pc;
-    if (*pc != JSOP_INITPROP && pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
-        set(&l, v_ins);
+    switch (*pc) {
+      case JSOP_SETPROP:
+      case JSOP_SETNAME:
+      case JSOP_SETMETHOD:
+        if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
+            set(&l, v_ins);
+        break;
+
+      default:;
+    }
 
     return JSRS_CONTINUE;
 }
@@ -10133,7 +10153,7 @@ GetPropertyByName(JSContext* cx, JSObject* obj, JSString** namep, jsval* vp)
     jsid id;
     if (!RootedStringToId(cx, namep, &id) || !obj->getProperty(cx, id, vp)) {
         js_SetBuiltinError(cx);
-        return JS_FALSE;
+        return false;
     }
     return cx->interpState->builtinStatus == 0;
 }
@@ -10271,8 +10291,9 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop
     obj->dropProperty(cx, prop);
 #endif
 
-    // js_GetSprop contains a special case for With objects. We can elide it
-    // here because With objects are, we claim, never on the operand stack.
+    // JSScopeProperty::get contains a special case for With objects. We can
+    // elide it here because With objects are, we claim, never on the operand
+    // stack while recording.
     JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_WithClass);
 
     *vp = JSVAL_VOID;
@@ -10290,7 +10311,7 @@ TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, JSScopeProperty* sprop
 {
     JS_ASSERT(!(sprop->attrs & JSPROP_GETTER));
     JS_ASSERT(sprop->slot == SPROP_INVALID_SLOT);
-    JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
+    JS_ASSERT(!SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
 
     // Call GetPropertyWithNativeGetter. See note in getPropertyByName about vp.
     // FIXME - We should call the getter directly. Using a builtin function for
@@ -11156,6 +11177,19 @@ TraceRecorder::name(jsval*& vp, LIns*& ins, NameResult& nr)
     return JSRS_CONTINUE;
 }
 
+static JSObject* FASTCALL
+MethodReadBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject* funobj)
+{
+    JSAutoTempValueRooter tvr(cx, funobj);
+
+    if (!OBJ_SCOPE(obj)->methodReadBarrier(cx, sprop, tvr.addr()))
+        return NULL;
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, tvr.value()));
+    return JSVAL_TO_OBJECT(tvr.value());
+}
+JS_DEFINE_CALLINFO_4(static, OBJECT_FAIL, MethodReadBarrier, CONTEXT, OBJECT, SCOPEPROP, OBJECT,
+                     0, 0)
+
 /*
  * Get a property. The current opcode has JOF_ATOM.
  *
@@ -11227,15 +11261,19 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
     uint32 setflags = (cs.format & (JOF_INCDEC | JOF_FOR));
     JS_ASSERT(!(cs.format & JOF_SET));
 
+    JSScopeProperty* sprop;
     uint32 slot;
+    bool isMethod;
+
     if (PCVAL_IS_SPROP(pcval)) {
-        JSScopeProperty* sprop = PCVAL_TO_SPROP(pcval);
+        sprop = PCVAL_TO_SPROP(pcval);
+        JS_ASSERT(OBJ_SCOPE(obj2)->has(sprop));
 
         if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
             ABORT_TRACE("non-stub setter");
         if (setflags && (sprop->attrs & JSPROP_READONLY))
             ABORT_TRACE("writing to a readonly property");
-        if (!SPROP_HAS_STUB_GETTER(sprop)) {
+        if (!SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop)) {
             if (slotp)
                 ABORT_TRACE("can't trace non-stub getter for this opcode");
             if (sprop->attrs & JSPROP_GETTER)
@@ -11247,13 +11285,17 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
         if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2)))
             ABORT_TRACE("no valid slot");
         slot = sprop->slot;
+        isMethod = sprop->isMethod();
+        JS_ASSERT_IF(isMethod, OBJ_SCOPE(obj2)->hasMethodBarrier());
     } else {
         if (!PCVAL_IS_SLOT(pcval))
             ABORT_TRACE("PCE is not a slot");
         slot = PCVAL_TO_SLOT(pcval);
+        sprop = NULL;
+        isMethod = false;
     }
 
-    /* We have a slot. */
+    /* We have a slot. Check whether it is direct or in a prototype. */
     if (obj2 != obj) {
         if (setflags)
             ABORT_TRACE("JOF_INCDEC|JOF_FOR opcode hit prototype chain");
@@ -11263,16 +11305,31 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
          * proto slot loads, updating obj as we go, leaving obj set to obj2 with
          * obj_ins the last proto-load.
          */
-        while (obj != obj2) {
+        do {
             obj_ins = stobj_get_proto(obj_ins);
             obj = STOBJ_GET_PROTO(obj);
-        }
+        } while (obj != obj2);
     }
 
     LIns* dslots_ins = NULL;
     LIns* v_ins = unbox_jsval(STOBJ_GET_SLOT(obj, slot),
                               stobj_get_slot(obj_ins, slot, dslots_ins),
                               snapshot(BRANCH_EXIT));
+
+    /*
+     * Joined function object stored as a method must be cloned when extracted
+     * as a property value other than a callee. Note that shapes cover method
+     * value as well as other property attributes and order, so this condition
+     * is trace-invariant.
+     *
+     * We do not impose the method read barrier if in an imacro, assuming any
+     * property gets it does (e.g., for 'toString' from JSOP_NEW) will not be
+     * leaked to the calling script.
+     */
+    if (isMethod && !cx->fp->imacpc) {
+        LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
+        v_ins = lir->insCall(&MethodReadBarrier_ci, args);
+    }
 
     if (slotp) {
         *slotp = slot;
@@ -11590,7 +11647,7 @@ JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_JSOP_NEWINIT()
 {
     JSProtoKey key = JSProtoKey(GET_INT8(cx->fp->regs->pc));
-    LIns *proto_ins;
+    LIns* proto_ins;
     CHECK_STATUS(getClassPrototype(key, proto_ins));
 
     LIns* args[] = { proto_ins, cx_ins };
@@ -13271,6 +13328,18 @@ DBG_STUB(JSOP_CALLUPVAR_DBG)
 DBG_STUB(JSOP_DEFFUN_DBGFC)
 DBG_STUB(JSOP_DEFLOCALFUN_DBGFC)
 DBG_STUB(JSOP_LAMBDA_DBGFC)
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::record_JSOP_SETMETHOD()
+{
+    return record_JSOP_SETPROP();
+}
+
+JS_REQUIRES_STACK JSRecordingStatus
+TraceRecorder::record_JSOP_INITMETHOD()
+{
+    return record_JSOP_INITPROP();
+}
 
 #ifdef JS_JIT_SPEW
 /*
