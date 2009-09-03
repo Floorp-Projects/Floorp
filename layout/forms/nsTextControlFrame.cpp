@@ -529,8 +529,12 @@ class nsTextInputSelectionImpl : public nsSupportsWeakReference
 public:
   NS_DECL_ISUPPORTS
 
-  nsTextInputSelectionImpl(nsFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter);
+  nsTextInputSelectionImpl(nsFrameSelection *aSel, nsIPresShell *aShell,
+                           nsIContent *aLimiter);
   ~nsTextInputSelectionImpl(){}
+
+  void SetScrollableFrame(nsIScrollableFrame *aScrollableFrame)
+  { mScrollFrame = aScrollableFrame; }
 
   //NSISELECTIONCONTROLLER INTERFACES
   NS_IMETHOD SetDisplaySelection(PRInt16 toggle);
@@ -563,7 +567,8 @@ public:
 
 private:
   nsCOMPtr<nsFrameSelection> mFrameSelection;
-  nsCOMPtr<nsIContent>        mLimiter;
+  nsCOMPtr<nsIContent>       mLimiter;
+  nsIScrollableFrame        *mScrollFrame;
   nsWeakPtr mPresShellWeak;
 };
 
@@ -576,7 +581,10 @@ NS_IMPL_ISUPPORTS3(nsTextInputSelectionImpl,
 
 // BEGIN nsTextInputSelectionImpl
 
-nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter)
+nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsFrameSelection *aSel,
+                                                   nsIPresShell *aShell,
+                                                   nsIContent *aLimiter)
+  : mScrollFrame(nsnull)
 {
   if (aSel && aShell)
   {
@@ -638,29 +646,10 @@ nsTextInputSelectionImpl::GetSelection(PRInt16 type, nsISelection **_retval)
 NS_IMETHODIMP
 nsTextInputSelectionImpl::ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRBool aIsSynchronous)
 {
-  if (mFrameSelection) {
-    // After ScrollSelectionIntoView(), the pending notifications might be
-    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-    nsresult rv = mFrameSelection->ScrollSelectionIntoView(aType, aRegion, aIsSynchronous);
+  if (!mFrameSelection)
+    return NS_ERROR_FAILURE;
 
-    nsIScrollableView* scrollableView = mFrameSelection->GetScrollableView();
-    if (!scrollableView) {
-      return rv;
-    }
-    nsIView* view = nsnull;
-    scrollableView->GetScrolledView(view);
-    if (!view) {
-      return rv;
-    }
-    const nsRect portRect = scrollableView->View()->GetBounds();
-    const nsRect viewRect = view->GetBounds();
-    if (viewRect.XMost() < portRect.width) {
-      return scrollableView->ScrollTo(NS_MAX(viewRect.width - portRect.width, 0), -viewRect.y, 0);
-    }
-
-    return rv;
-  }
-  return NS_ERROR_NULL_POINTER;
+  return mFrameSelection->ScrollSelectionIntoView(aType, aRegion, aIsSynchronous);
 }
 
 NS_IMETHODIMP
@@ -826,17 +815,9 @@ nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
 {
   // expected behavior for PageMove is to scroll AND move the caret
   // and to remain relative position of the caret in view. see Bug 4302.
-
-  if (mPresShellWeak)
+  if (mScrollFrame)
   {
-    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
-    if (!presShell)
-      return NS_ERROR_NULL_POINTER;
-
-    //get the scroll view
-    nsIScrollableView *scrollableView = mFrameSelection->GetScrollableView();
-    if (scrollableView)
-      mFrameSelection->CommonPageMove(aForward, aExtend, scrollableView);
+    mFrameSelection->CommonPageMove(aForward, aExtend, mScrollFrame);
   }
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
@@ -846,12 +827,13 @@ nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP
 nsTextInputSelectionImpl::CompleteScroll(PRBool aForward)
 {
-  nsIScrollableView *scrollableView = mFrameSelection->GetScrollableView();
-
-  if (!scrollableView)
+  if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
-  return scrollableView->ScrollByWhole(!aForward); //TRUE = top, aForward TRUE=bottom
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                         nsIScrollableFrame::WHOLE,
+                         nsIScrollableFrame::INSTANT);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -894,33 +876,38 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP
 nsTextInputSelectionImpl::ScrollPage(PRBool aForward)
 {
-  nsIScrollableView *scrollableView = mFrameSelection->GetScrollableView();
-  if (!scrollableView)
+  if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
-  return scrollableView->ScrollByPages(0, aForward ? 1 : -1);
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                         nsIScrollableFrame::PAGES,
+                         nsIScrollableFrame::SMOOTH);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::ScrollLine(PRBool aForward)
 {
-  nsIScrollableView *scrollableView = mFrameSelection->GetScrollableView();
-  if (!scrollableView)
+  if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
-  // will we have bug #7354 because we aren't forcing an update here?
-  return scrollableView->ScrollByLines(0, aForward ? 1 : -1);
+  mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                         nsIScrollableFrame::LINES,
+                         nsIScrollableFrame::SMOOTH);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::ScrollHorizontal(PRBool aLeft)
 {
-  nsIScrollableView *scrollableView = mFrameSelection->GetScrollableView();
-  if (!scrollableView)
+  if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
   // will we have bug #7354 because we aren't forcing an update here?
-  return scrollableView->ScrollByLines(aLeft ? -1 : 1, 0);
+  mScrollFrame->ScrollBy(nsIntPoint(aLeft ? -1 : 1, 0),
+                         nsIScrollableFrame::LINES,
+                         nsIScrollableFrame::SMOOTH);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1071,9 +1058,11 @@ nsTextControlFrame::PreDestroy()
   }
 
   mEditor = nsnull;
-  mSelCon = nsnull;
+  if (mSelCon) {
+    mSelCon->SetScrollableFrame(nsnull);
+    mSelCon = nsnull;
+  }
   if (mFrameSel) {
-    mFrameSel->SetScrollableViewProvider(nsnull);
     mFrameSel->DisconnectFromPresShell();
     mFrameSel = nsnull;
   }
@@ -1111,9 +1100,6 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   }
   if (!mDidPreDestroy) {
     PreDestroy();
-  }
-  if (mFrameSel) {
-    mFrameSel->SetScrollableViewProvider(nsnull);
   }
   nsContentUtils::DestroyAnonymousContent(&mAnonymousDiv);
   nsBoxFrame::DestroyFrom(aDestructRoot);
@@ -1634,13 +1620,11 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   mFrameSel = do_CreateInstance(kFrameSelectionCID, &rv);
   if (NS_FAILED(rv))
     return rv;
-  mFrameSel->SetScrollableViewProvider(this);
 
   // Create a SelectionController
 
-  mSelCon = static_cast<nsISelectionController*>
-                       (new nsTextInputSelectionImpl(mFrameSel, shell,
-                                                     mAnonymousDiv));
+  mSelCon = new nsTextInputSelectionImpl(mFrameSel, shell,
+                                         mAnonymousDiv);
   if (!mSelCon)
     return NS_ERROR_OUT_OF_MEMORY;
   mTextListener = new nsTextInputListener();
@@ -2327,6 +2311,12 @@ nsTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelect
   return DOMPointToOffset(endNode, endOffset, aSelectionEnd);
 }
 
+nsISelectionController*
+nsTextControlFrame::GetOwnedSelectionController()
+{
+  return mSelCon;
+}
+
 /////END INTERFACE IMPLEMENTATIONS
 
 ////NSIFRAME
@@ -2639,7 +2629,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
             selPriv->StartBatchChanges();
         }
 
-        nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon;
+        nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
         mSelCon->SelectAll();
         nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
         if (!plaintextEditor || !weakFrame.IsAlive()) {
@@ -2698,13 +2688,12 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
     }
 
     NS_ENSURE_STATE(weakFrame.IsAlive());
-    nsIScrollableView* scrollableView = GetScrollableView();
-    if (scrollableView)
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(GetFirstChild(nsnull));
+    if (scrollableFrame)
     {
       // Scroll the upper left corner of the text control's
       // content area back into view.
-
-      scrollableView->ScrollTo(0, 0, 0);
+      scrollableFrame->ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
     }
   }
   else
@@ -2726,7 +2715,6 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
 {
   nsresult rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
 
-  //look for scroll view below this frame go along first child list
   nsIFrame* first = GetFirstChild(nsnull);
 
   // Mark the scroll frame as being a reflow root. This will allow
@@ -2751,6 +2739,7 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
                                       listener, PR_FALSE, systemGroup);
   }
 
+  mSelCon->SetScrollableFrame(do_QueryFrame(first));
   return rv;
 }
 

@@ -41,7 +41,6 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsISelectionController.h"
-#include "nsIScrollableViewProvider.h"
 #include "nsITableLayout.h"
 #include "nsITableCellLayout.h"
 #include "nsIDOMElement.h"
@@ -80,6 +79,7 @@ struct SelectionDetails
 };
 
 class nsIPresShell;
+class nsIScrollableFrame;
 
 enum EWordMovementType { eStartWord, eEndWord, eDefaultBehavior };
 
@@ -202,7 +202,7 @@ struct nsPrevNextBidiLevels
 };
 
 class nsTypedSelection;
-class nsIScrollableView;
+class nsIScrollableFrame;
 
 /**
  * Methods which are marked with *unsafe* should be handled with special care.
@@ -225,25 +225,6 @@ public:
    *  @param aLimiter limits the selection to nodes with aLimiter parents
    */
   void Init(nsIPresShell *aShell, nsIContent *aLimiter);
-
-  /**
-   * SetScrollableViewProvider sets the scroll view provider.
-   * @param aProvider The provider of the scroll view.
-   */
-  void SetScrollableViewProvider(nsIScrollableViewProvider* aProvider)
-  {
-    mScrollableViewProvider = aProvider;
-  }
-
-  /**
-   * GetScrollableView returns the current scroll view.
-   */
-  nsIScrollableView* GetScrollableView() const
-  {
-    return mScrollableViewProvider
-      ? mScrollableViewProvider->GetScrollableView()
-      : nsnull;
-  }
 
   /** HandleClick will take the focus to the new frame at the new offset and 
    *  will either extend the selection from the old anchor, or replace the old anchor.
@@ -440,12 +421,12 @@ public:
    *
    * @param aForward if PR_TRUE, scroll forward if not scroll backward
    * @param aExtend  if PR_TRUE, extend selection to the new point
-   * @param aScrollableView the view that needs the scrolling
+   * @param aScrollableFrame the frame to scroll
    */
   /*unsafe*/
   void CommonPageMove(PRBool aForward,
                       PRBool aExtend,
-                      nsIScrollableView *aScrollableView);
+                      nsIScrollableFrame* aScrollableFrame);
 
   void SetHint(HINT aHintRight) { mHint = aHintRight; }
   HINT GetHint() const { return mHint; }
@@ -729,7 +710,6 @@ private:
 #endif
 
   PRInt32 mDesiredX;
-  nsIScrollableViewProvider* mScrollableViewProvider;
 
   nsMouseEvent mDelayedMouseEvent;
 
