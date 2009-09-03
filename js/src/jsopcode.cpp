@@ -3856,6 +3856,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 goto do_getprop;
 
               case JSOP_SETPROP:
+              case JSOP_SETMETHOD:
                 LOAD_ATOM(0);
                 GET_QUOTE_AND_FMT("%s[%s] %s= %s", "%s.%s %s= %s", xval);
                 rval = POP_STR();
@@ -4517,6 +4518,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_INITPROP:
+              case JSOP_INITMETHOD:
                 LOAD_ATOM(0);
                 xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
                                    (jschar)

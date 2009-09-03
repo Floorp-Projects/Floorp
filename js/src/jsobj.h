@@ -350,41 +350,6 @@ STOBJ_GET_CLASS(const JSObject* obj)
 #define LOCKED_OBJ_SET_SLOT(obj,slot,value)                                   \
     (OBJ_CHECK_SLOT(obj, slot), STOBJ_SET_SLOT(obj, slot, value))
 
-/*
- * NB: Don't call LOCKED_OBJ_SET_SLOT or STOBJ_SET_SLOT for a write to a slot
- * that may contain a function reference already, or where the new value is a
- * function ref, and the object's scope may be branded with a property cache
- * structural type capability that distinguishes versions of the object with
- * and without the function property. Instead use LOCKED_OBJ_WRITE_SLOT or a
- * fast inline equivalent (JSOP_SETNAME/JSOP_SETPROP cases in jsinterp.cpp).
- */
-#define LOCKED_OBJ_WRITE_SLOT(cx,obj,slot,newval)                             \
-    JS_BEGIN_MACRO                                                            \
-        LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, newval);                      \
-        LOCKED_OBJ_SET_SLOT(obj, slot, newval);                               \
-    JS_END_MACRO
-
-/*
- * Write barrier macro monitoring property update for slot in obj from its old
- * value to newval.
- *
- * NB: obj must be locked, and remains locked after the calls to this macro.
- */
-#define LOCKED_OBJ_WRITE_BARRIER(cx,obj,slot,newval)                          \
-    JS_BEGIN_MACRO                                                            \
-        JSScope *scope_ = OBJ_SCOPE(obj);                                     \
-        JS_ASSERT(scope_->object == obj);                                     \
-        if (scope_->branded()) {                                              \
-            jsval oldval_ = LOCKED_OBJ_GET_SLOT(obj, slot);                   \
-            if (oldval_ != (newval) &&                                        \
-                (VALUE_IS_FUNCTION(cx, oldval_) ||                            \
-                 VALUE_IS_FUNCTION(cx, newval))) {                            \
-                scope_->methodShapeChange(cx, slot, newval);                  \
-            }                                                                 \
-        }                                                                     \
-        GC_POKE(cx, oldval);                                                  \
-    JS_END_MACRO
-
 #ifdef JS_THREADSAFE
 
 /* Thread-safe functions and wrapper macros for accessing slots in obj. */
@@ -398,7 +363,7 @@ STOBJ_GET_CLASS(const JSObject* obj)
     JS_BEGIN_MACRO                                                            \
         OBJ_CHECK_SLOT(obj, slot);                                            \
         if (OBJ_SCOPE(obj)->title.ownercx == cx)                              \
-            LOCKED_OBJ_WRITE_SLOT(cx, obj, slot, value);                      \
+            LOCKED_OBJ_SET_SLOT(obj, slot, value);                            \
         else                                                                  \
             js_SetSlotThreadSafe(cx, obj, slot, value);                       \
     JS_END_MACRO
@@ -424,7 +389,7 @@ STOBJ_GET_CLASS(const JSObject* obj)
 #else   /* !JS_THREADSAFE */
 
 #define OBJ_GET_SLOT(cx,obj,slot)       LOCKED_OBJ_GET_SLOT(obj,slot)
-#define OBJ_SET_SLOT(cx,obj,slot,value) LOCKED_OBJ_WRITE_SLOT(cx,obj,slot,value)
+#define OBJ_SET_SLOT(cx,obj,slot,value) LOCKED_OBJ_SET_SLOT(obj,slot,value)
 
 #endif /* !JS_THREADSAFE */
 
@@ -724,6 +689,9 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
  */
 const uintN JSDNP_CACHE_RESULT = 1; /* an interpreter call from JSOP_INITPROP */
 const uintN JSDNP_DONT_PURGE   = 2; /* suppress js_PurgeScopeChain */
+const uintN JSDNP_SET_METHOD   = 4; /* js_{DefineNativeProperty,SetPropertyHelper}
+                                       must pass the SPROP_IS_METHOD flag on to
+                                       js_AddScopeProperty */
 
 /*
  * On error, return false.  On success, if propp is non-null, return true with
@@ -802,6 +770,23 @@ extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
 
 /*
+ * JSGET_CACHE_RESULT is the analogue of JSDNP_CACHE_RESULT for js_GetMethod.
+ *
+ * JSGET_METHOD_BARRIER (the default, hence 0 but provided for documentation)
+ * enables a read barrier that preserves standard function object semantics (by
+ * default we assume our caller won't leak a joined callee to script, where it
+ * would create hazardous mutable object sharing as well as observable identity
+ * according to == and ===.
+ *
+ * JSGET_NO_METHOD_BARRIER avoids the performance overhead of the method read
+ * barrier, which is not needed when invoking a lambda that otherwise does not
+ * leak its callee reference (via arguments.callee or its name).
+ */
+const uintN JSGET_CACHE_RESULT      = 1; // from a caching interpreter opcode
+const uintN JSGET_METHOD_BARRIER    = 0; // get can leak joined function object
+const uintN JSGET_NO_METHOD_BARRIER = 2; // call to joined function can't leak
+
+/*
  * NB: js_NativeGet and js_NativeSet are called with the scope containing sprop
  * (pobj's scope for Get, obj's for Set) locked, and on successful return, that
  * scope is again locked.  But on failure, both functions return false with the
@@ -809,21 +794,21 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp);
  */
 extern JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
-             JSScopeProperty *sprop, jsval *vp);
+             JSScopeProperty *sprop, uintN getHow, jsval *vp);
 
 extern JSBool
-js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp);
+js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
+             jsval *vp);
 
 extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
                      jsval *vp);
 
 extern JSBool
 js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSBool
-js_GetMethod(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
-             jsval *vp);
+js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp);
 
 /*
  * Check whether it is OK to assign an undeclared property of the global
@@ -833,7 +818,7 @@ extern JS_FRIEND_API(JSBool)
 js_CheckUndeclaredVarAssignment(JSContext *cx);
 
 extern JSBool
-js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, JSBool cacheResult,
+js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      jsval *vp);
 
 extern JSBool
