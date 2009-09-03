@@ -416,6 +416,11 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
     thumbLength = PR_MAX(thumbLength, NSToCoordRound(availableLength * ratio));
   }
 
+  // Round the thumb's length to device pixels.
+  nsPresContext* presContext = PresContext();
+  thumbLength = presContext->DevPixelsToAppUnits(
+                  presContext->AppUnitsToDevPixels(thumbLength));
+
   // mRatio translates the thumb position in app units to the value.
   mRatio = (minPos != maxPos) ? float(availableLength - thumbLength) / float(maxPos - minPos) : 1;
 
