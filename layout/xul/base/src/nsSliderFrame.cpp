@@ -384,96 +384,59 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 #endif
 
   // get the content area inside our borders
-  nsRect clientRect(0,0,0,0);
+  nsRect clientRect;
   GetClientRect(clientRect);
 
   // get the scrollbar
   nsIBox* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIContent> scrollbar;
   scrollbar = GetContentOfBox(scrollbarBox);
-  PRBool isHorizontal = IsHorizontal();
 
   // get the thumb's pref size
   nsSize thumbSize = thumbBox->GetPrefSize(aState);
 
-  if (isHorizontal)
+  if (IsHorizontal())
     thumbSize.height = clientRect.height;
   else
     thumbSize.width = clientRect.width;
 
-  // get our current position and max position from our content node
-  PRInt32 curpospx = GetCurrentPosition(scrollbar);
-  PRInt32 minpospx = GetMinPosition(scrollbar);
-  PRInt32 maxpospx = GetMaxPosition(scrollbar);
+  PRInt32 curPos = GetCurrentPosition(scrollbar);
+  PRInt32 minPos = GetMinPosition(scrollbar);
+  PRInt32 maxPos = GetMaxPosition(scrollbar);
   PRInt32 pageIncrement = GetPageIncrement(scrollbar);
 
-  if (maxpospx < minpospx)
-    maxpospx = minpospx;
+  maxPos = PR_MAX(minPos, maxPos);
+  curPos = PR_MAX(minPos, PR_MIN(curPos, maxPos));
 
-  if (curpospx < minpospx)
-     curpospx = minpospx;
-  else if (curpospx > maxpospx)
-     curpospx = maxpospx;
+  nscoord& availableLength = IsHorizontal() ? clientRect.width : clientRect.height;
+  nscoord& thumbLength = IsHorizontal() ? thumbSize.width : thumbSize.height;
 
-  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-
-  // get max pos in twips
-  nscoord maxpos = (maxpospx - minpospx) * onePixel;
-
-  // get our maxpos in twips. This is the space we have left over in the scrollbar
-  // after the height of the thumb has been removed
-  nscoord& desiredcoord = isHorizontal ? clientRect.width : clientRect.height;
-  nscoord& thumbcoord = isHorizontal ? thumbSize.width : thumbSize.height;
-
-  nscoord ourmaxpos = desiredcoord;
-
-  mRatio = 1;
-
-  if ((pageIncrement + maxpospx - minpospx) > 0)
-  {
-    // if the thumb is flexible make the thumb bigger.
-    if (thumbBox->GetFlex(aState) > 0)
-    {
-      mRatio = float(pageIncrement) / float(maxpospx - minpospx + pageIncrement);
-      nscoord thumbsize = NSToCoordRound(ourmaxpos * mRatio);
-
-      // if there is more room than the thumb needs stretch the thumb
-      if (thumbsize > thumbcoord)
-        thumbcoord = thumbsize;
-    }
+  if ((pageIncrement + maxPos - minPos) > 0 && thumbBox->GetFlex(aState) > 0) {
+    float ratio = float(pageIncrement) / float(maxPos - minPos + pageIncrement);
+    thumbLength = PR_MAX(thumbLength, NSToCoordRound(availableLength * ratio));
   }
 
-  ourmaxpos -= thumbcoord;
-  if (float(maxpos) != 0)
-    mRatio = float(ourmaxpos) / float(maxpos);
+  // mRatio translates the thumb position in app units to the value.
+  mRatio = (minPos != maxPos) ? float(availableLength - thumbLength) / float(maxPos - minPos) : 1;
 
   // in reverse mode, curpos is reversed such that lower values are to the
   // right or bottom and increase leftwards or upwards. In this case, use the
   // offset from the end instead of the beginning.
   PRBool reverse = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
                                          nsGkAtoms::reverse, eCaseMatters);
-  nscoord pos = reverse ? (maxpospx - curpospx) : (curpospx - minpospx);
+  nscoord pos = reverse ? (maxPos - curPos) : (curPos - minPos);
 
   // set the thumb's coord to be the current pos * the ratio.
   nsRect thumbRect(clientRect.x, clientRect.y, thumbSize.width, thumbSize.height);
-  if (isHorizontal)
-    thumbRect.x += nscoord(float(pos * onePixel) * mRatio);
-  else
-    thumbRect.y += nscoord(float(pos * onePixel) * mRatio);
+  PRInt32& thumbPos = (IsHorizontal() ? thumbRect.x : thumbRect.y);
+  thumbPos += NSToCoordRound(pos * mRatio);
 
   nsRect oldThumbRect(thumbBox->GetRect());
   LayoutChildAt(aState, thumbBox, thumbRect);
 
   SyncLayout(aState);
 
-#ifdef DEBUG_SLIDER
-  PRInt32 c = GetCurrentPosition(scrollbar);
-  PRInt32 min = GetMinPosition(scrollbar);
-  PRInt32 max = GetMaxPosition(scrollbar);
-  printf("Current=%d, min=%d, max=%d\n", c, min, max);
-#endif
-
-  // redraw only if thumb changed size.
+  // Redraw only if thumb changed size.
   if (oldThumbRect != thumbRect)
     Redraw(aState);
 
@@ -708,23 +671,19 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext,
   nsCOMPtr<nsIContent> scrollbar;
   scrollbar = GetContentOfBox(scrollbarBox);
 
-  PRBool isHorizontal = IsHorizontal();
-
   // get the current position
-  PRInt32 curpospx = GetCurrentPosition(scrollbar);
+  PRInt32 curPos = GetCurrentPosition(scrollbar);
 
   // do nothing if the position did not change
-  if (mCurPos == curpospx)
+  if (mCurPos == curPos)
       return NS_OK;
 
   // get our current min and max position from our content node
-  PRInt32 minpospx = GetMinPosition(scrollbar);
-  PRInt32 maxpospx = GetMaxPosition(scrollbar);
+  PRInt32 minPos = GetMinPosition(scrollbar);
+  PRInt32 maxPos = GetMaxPosition(scrollbar);
 
-  if (curpospx < minpospx || maxpospx < minpospx)
-     curpospx = minpospx;
-  else if (curpospx > maxpospx)
-     curpospx = maxpospx;
+  maxPos = PR_MAX(minPos, maxPos);
+  curPos = PR_MAX(minPos, PR_MIN(curPos, maxPos));
 
   // get the thumb's rect
   nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -741,14 +700,12 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext,
 
   PRBool reverse = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
                                          nsGkAtoms::reverse, eCaseMatters);
-  nscoord pos = reverse ? (maxpospx - curpospx) : (curpospx - minpospx);
+  nscoord pos = reverse ? (maxPos - curPos) : (curPos - minPos);
 
-  // convert to pixels
-  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-  if (isHorizontal)
-     newThumbRect.x = clientRect.x + nscoord(float(pos * onePixel) * mRatio);
+  if (IsHorizontal())
+     newThumbRect.x = clientRect.x + NSToCoordRound(pos * mRatio);
   else
-     newThumbRect.y = clientRect.y + nscoord(float(pos * onePixel) * mRatio);
+     newThumbRect.y = clientRect.y + NSToCoordRound(pos * mRatio);
 
   // set the rect
   thumbFrame->SetRect(newThumbRect);
@@ -756,7 +713,7 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext,
   // Redraw the scrollbar
   InvalidateWithFlags(clientRect, aImmediateRedraw ? INVALIDATE_IMMEDIATE : 0);
 
-  mCurPos = curpospx;
+  mCurPos = curPos;
 
   // inform the parent <scale> if it exists that the value changed
   nsIFrame* parent = GetParent();
@@ -786,26 +743,25 @@ static void UpdateAttribute(nsIContent* aScrollbar, nscoord aNewPos, PRBool aNot
 
 // Use this function when you want to set the scroll position via the position
 // of the scrollbar thumb, e.g. when dragging the slider. This function scrolls
-// the content in such a way that thumbRect.x/.y becomes aNewPos.
-// aNewPos is measured in AppUnits.
+// the content in such a way that thumbRect.x/.y becomes aNewThumbPos.
 void
-nsSliderFrame::SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewPos,
+nsSliderFrame::SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewThumbPos,
                                        PRBool aIsSmooth, PRBool aImmediateRedraw, PRBool aMaySnap)
 {
   nsRect crect;
   GetClientRect(crect);
   nscoord offset = IsHorizontal() ? crect.x : crect.y;
-  float realpos = nsPresContext::AppUnitsToFloatCSSPixels(aNewPos - offset);
+  PRInt32 newPos = NSToIntRound((aNewThumbPos - offset) / mRatio);
   
   if (aMaySnap && mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::snap,
                                         nsGkAtoms::_true, eCaseMatters)) {
     // If snap="true", then the slider may only be set to min + (increment * x).
     // Otherwise, the slider may be set to any positive integer.
     PRInt32 increment = GetIncrement(aScrollbar);
-    realpos = NSToCoordRound(realpos / float(increment)) * increment;
+    newPos = NSToIntRound(newPos / float(increment)) * increment;
   }
   
-  SetCurrentPosition(aScrollbar, NSToIntRound(realpos / mRatio), aIsSmooth, aImmediateRedraw);
+  SetCurrentPosition(aScrollbar, newPos, aIsSmooth, aImmediateRedraw);
 }
 
 // Use this function when you know the target scroll position of the scrolled content.
