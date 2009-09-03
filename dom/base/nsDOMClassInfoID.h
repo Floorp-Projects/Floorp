@@ -464,7 +464,18 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_Worker_id,
 
 #ifdef MOZ_ENABLE_CANVAS3D
-  eDOMClassInfo_CanvasRenderingContextGLWeb20_id,
+  eDOMClassInfo_CanvasRenderingContextWebGL_id,
+  eDOMClassInfo_WebGLBuffer_id,
+  eDOMClassInfo_WebGLTexture_id,
+  eDOMClassInfo_WebGLProgram_id,
+  eDOMClassInfo_WebGLShader_id,
+  eDOMClassInfo_WebGLFramebuffer_id,
+  eDOMClassInfo_WebGLRenderbuffer_id,
+
+  eDOMClassInfo_WebGLFloatArray_id,
+  eDOMClassInfo_WebGLShortArray_id,
+  eDOMClassInfo_WebGLUnsignedShortArray_id,
+  eDOMClassInfo_WebGLUnsignedByteArray_id,
 #endif
 
   // This one better be the last one in this list
