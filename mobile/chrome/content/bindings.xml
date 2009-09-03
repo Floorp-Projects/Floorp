@@ -363,7 +363,7 @@
           } else if (target.localName == "autocompleteresult" &&
                      target._empty != true) {
             let offset = this._allBookmarksItem._hidden ? 0 : 1;
-            this._selectedIndex = target._index + offset;
+            this.selectedIndex = target._index + offset;
             this.input.controller.handleEnter(true);
           } else
             this.closePopup();
