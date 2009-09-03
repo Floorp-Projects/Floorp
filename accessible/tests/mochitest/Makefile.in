@@ -98,6 +98,7 @@ _TEST_FILES =\
 		test_events_draganddrop.html \
 		test_events_focus.xul \
 		test_events_mutation.html \
+		test_events_mutation_coalesce.html \
 		test_events_tree.xul \
 		test_events_valuechange.html \
 		test_groupattrs.xul \
