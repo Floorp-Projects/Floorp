@@ -348,7 +348,7 @@ endif
 
 ifdef ENABLE_JIT
 check::
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) $(srcdir)/trace-test/trace-test.py \
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace-test.py \
 	        --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
 endif
 
