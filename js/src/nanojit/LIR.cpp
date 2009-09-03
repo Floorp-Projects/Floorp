@@ -255,6 +255,7 @@ namespace nanojit
 
     LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, LInsp data)
     {
+        debug_only( if (LIR_x == op || LIR_xbarrier == op) NanoAssert(!c); )
         return ins2(op, c, data);
     }
 
