@@ -44,8 +44,6 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"
 #include "nsGkAtoms.h"
@@ -162,7 +160,6 @@ protected:
 
   // Data members
   PRPackedBool              mDoPaintFocus;
-  nsCOMPtr<nsIViewManager>  mViewManager;
   nsAbsoluteContainingBlock mAbsoluteContainer;
 
 private:
