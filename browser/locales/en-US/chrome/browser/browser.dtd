@@ -50,6 +50,7 @@
 <!ENTITY pageInfoCmd.commandkey "i">
 <!ENTITY fullScreenCmd.label "Full Screen">
 <!ENTITY fullScreenCmd.accesskey "F">
+<!ENTITY fullScreenCmd.macCommandKey "f">
 <!ENTITY showAllTabsCmd.label "Show All Tabs">
 <!ENTITY showAllTabsCmd.accesskey "A">
 

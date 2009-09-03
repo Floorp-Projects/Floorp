@@ -433,14 +433,12 @@
                           label="&pageSourceCmd.label;"
                           key="key_viewSource"
                           command="View:PageSource"/>
-#ifndef XP_MACOSX
                 <menuitem id="fullScreenItem"
                           accesskey="&fullScreenCmd.accesskey;"
                           label="&fullScreenCmd.label;"
                           key="key_fullScreen"
                           type="checkbox"
                           observes="View:FullScreen"/>
-#endif
                 <menuitem id="menu_showAllTabs"
                           hidden="true"
                           accesskey="&showAllTabsCmd.accesskey;"

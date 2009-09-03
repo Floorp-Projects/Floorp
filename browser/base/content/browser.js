@@ -3778,11 +3778,9 @@ var FullScreen =
     else
       gNavToolbox.setAttribute("inFullscreen", true);
 
-#ifndef XP_MACOSX
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
     for (var i = 0; i < controls.length; ++i)
       controls[i].hidden = aShow;
-#endif
   }
 };
 
