@@ -3037,7 +3037,6 @@ public:
                                            const nsID* iid,
                                            nsISupports* aOuter,
                                            nsresult* pErr);
-    static JSBool GetISupportsFromJSObject(JSObject* obj, nsISupports** iface);
 
     /**
      * Convert a native array into a jsval.
