@@ -141,9 +141,13 @@ def run_tests(tests, test_dir, lib_dir):
 
     failures = []
     complete = False
+    doing = 'before starting'
     try:
         for i, test in enumerate(tests):
+            doing = 'on %s'%test.path
             ok, out, err = run_test(test, lib_dir)
+            doing = 'after %s'%test.path
+
             if not ok:
                 failures.append(test.path)
 
@@ -191,7 +195,7 @@ def run_tests(tests, test_dir, lib_dir):
             else:
                 print('    ' + test)
     else:
-        print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user)'))
+        print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)'%doing))
 
 if __name__ == '__main__':
     script_path = os.path.abspath(__file__)
