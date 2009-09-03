@@ -3001,11 +3001,13 @@ class RegExpNativeCompiler {
 
         /* Fall-through from compileNode means success. */
         lir->insStorei(pos, state, offsetof(REGlobalData, stateStack));
+        lir->ins0(LIR_regfence);
         lir->ins1(LIR_ret, lir->insImm(1));
 
         /* Stick return here so we don't have to jump over it every time. */
         if (anchorFail) {
             targetCurrentPoint(anchorFail);
+            lir->ins0(LIR_regfence);
             lir->ins1(LIR_ret, lir->insImm(0));
         }
 
@@ -3021,6 +3023,7 @@ class RegExpNativeCompiler {
             return false;
 
         /* Failed to match on first character, so fail whole match. */
+        lir->ins0(LIR_regfence);
         lir->ins1(LIR_ret, lir->insImm(0));
         return !JS_TRACE_MONITOR(cx).reAllocator->outOfMemory();
     }

@@ -884,6 +884,10 @@ namespace nanojit
                     NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)\n", op, op&~LIR64);
                     break;
 
+                case LIR_regfence:
+                    evictRegs(~_allocator.free);
+                    break;
+
                 case LIR_flive:
                 case LIR_live: {
                     countlir_live();

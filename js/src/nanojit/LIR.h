@@ -786,7 +786,7 @@ namespace nanojit
             return isGuard() || isBranch() ||
                    (isCall() && !isCse()) ||
                    isStore() ||
-                   isop(LIR_label) || isop(LIR_live) ||
+                   isop(LIR_label) || isop(LIR_live) || isop(LIR_regfence) ||
                    isRet();
         }
 
