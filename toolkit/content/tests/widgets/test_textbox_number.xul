@@ -5,8 +5,6 @@
   XUL Widget Test for textbox type="number"
   -->
 <window title="Textbox type='number' test" width="500" height="600"
-        onload="window.focus();"
-        onfocus="if (!gDone) { gDone = true; doTests(); }"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
@@ -40,8 +38,6 @@
 function ise(left, right, name) {
   SimpleTest.ok(left === right, name, "got " + left + ", expected " + right);
 }
-
-var gDone = false;
 
 SimpleTest.waitForExplicitFinish();
 
@@ -324,6 +320,8 @@ function testIncreaseDecrease(nb, testid, increment, fixedCount, min, max)
   nb.value = min;
   synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, nb, "!change", testid + "mouse down at min");
 }
+
+SimpleTest.waitForFocus(doTests);
 
   ]]></script>
 

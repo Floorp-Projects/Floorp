@@ -213,6 +213,45 @@ SimpleTest.waitForExplicitFinish = function () {
     SimpleTest._stopOnLoad = false;
 };
 
+SimpleTest.waitForFocus_started = false;
+SimpleTest.waitForFocus_loaded = false;
+SimpleTest.waitForFocus_focused = false;
+
+/**
+ * Waits for a focus and load event before calling callback.
+ * targetWindow should be specified if it is different than 'window'.
+ */
+SimpleTest.waitForFocus = function (callback, targetWindow) {
+    SimpleTest.waitForFocus_started = false;
+    SimpleTest.waitForFocus_loaded = false;
+    SimpleTest.waitForFocus_focused = false;
+
+    if (!targetWindow)
+      targetWindow = window;
+
+    function maybeRunTests(event) {
+        if (SimpleTest.waitForFocus_loaded &&
+            SimpleTest.waitForFocus_focused &&
+            !SimpleTest.waitForFocus_started) {
+            SimpleTest.waitForFocus_started = true;
+            callback();
+        }
+    }
+
+    function waitForEvent(event) {
+        SimpleTest["waitForFocus_" + event.type + "ed"] = true;
+        targetWindow.removeEventListener(event.type, waitForEvent, false);
+        setTimeout(maybeRunTests, 0);
+    }
+
+    targetWindow.addEventListener("load", waitForEvent, false);
+    targetWindow.addEventListener("focus", waitForEvent, false);
+
+    // if this is a child frame, ensure that the frame is focused
+    if (!(targetWindow instanceof Components.interfaces.nsIDOMChromeWindow))
+      targetWindow.focus();
+};
+
 /**
  * Executes a function shortly after the call, but lets the caller continue
  * working (or finish).
