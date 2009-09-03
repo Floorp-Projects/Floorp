@@ -132,8 +132,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableFrame.h"
-#include "nsIScrollableView.h"
-#include "nsIScrollableViewProvider.h"
 #include "nsXBLInsertionPoint.h"
 #include "nsICSSStyleRule.h" /* For nsCSSSelectorList */
 #include "nsCSSRuleProcessor.h"
@@ -1189,72 +1187,48 @@ nsGenericElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
 }
 
-void
-nsNSElementTearoff::GetScrollInfo(nsIScrollableView **aScrollableView,
-                                  nsIFrame **aFrame)
+nsIScrollableFrame*
+nsNSElementTearoff::GetScrollFrame(nsIFrame **aStyledFrame)
 {
-  *aScrollableView = nsnull;
-
   // it isn't clear what to return for SVG nodes, so just return nothing
   if (mContent->IsSVG()) {
-    if (aFrame)
-      *aFrame = nsnull;
-    return;
+    if (aStyledFrame) {
+      *aStyledFrame = nsnull;
+    }
+    return nsnull;
   }
 
   nsIFrame* frame =
     (static_cast<nsGenericElement*>(mContent))->GetStyledFrame();
 
-  if (aFrame) {
-    *aFrame = frame;
+  if (aStyledFrame) {
+    *aStyledFrame = frame;
   }
   if (!frame) {
-    return;
+    return nsnull;
   }
 
-  // Get the scrollable frame
-  nsIScrollableFrame *scrollFrame = do_QueryFrame(frame);
-  if (!scrollFrame) {
-    nsIScrollableViewProvider *scrollProvider = do_QueryFrame(frame);
-    // menu frames implement nsIScrollableViewProvider but we don't want
-    // to use it here.
-    if (scrollProvider && frame->GetType() != nsGkAtoms::menuFrame) {
-      *aScrollableView = scrollProvider->GetScrollableView();
-      if (*aScrollableView) {
-        return;
-      }
-    }
-
-    nsIDocument* doc = mContent->GetCurrentDoc();
-    PRBool quirksMode = doc &&
-                        doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
-    if ((quirksMode && mContent->NodeInfo()->Equals(nsGkAtoms::body)) ||
-        (!quirksMode && mContent->NodeInfo()->Equals(nsGkAtoms::html))) {
-      // In quirks mode, the scroll info for the body element should map to the
-      // scroll info for the nearest scrollable frame above the body element
-      // (i.e. the root scrollable frame).  This is what IE6 does in quirks
-      // mode.  In strict mode the root scrollable frame corresponds to the
-      // html element in IE6, so we map the scroll info for the html element to
-      // the root scrollable frame.
-
-      do {
-        frame = frame->GetParent();
-
-        if (!frame) {
-          break;
-        }
-
-        scrollFrame = do_QueryFrame(frame);
-      } while (!scrollFrame);
-    }
-
-    if (!scrollFrame) {
-      return;
-    }
+  // menu frames implement GetScrollTargetFrame but we don't want
+  // to use it here.
+  if (frame->GetType() != nsGkAtoms::menuFrame) {
+    nsIScrollableFrame *scrollFrame = frame->GetScrollTargetFrame();
+    if (scrollFrame)
+      return scrollFrame;
   }
 
-  // Get the scrollable view
-  *aScrollableView = scrollFrame->GetScrollableView();
+  nsIDocument* doc = mContent->GetOwnerDoc();
+  PRBool quirksMode = doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
+  nsIContent* elementWithRootScrollInfo =
+    quirksMode ? doc->GetBodyContent() : doc->GetRootContent();
+  if (mContent == elementWithRootScrollInfo) {
+    // In quirks mode, the scroll info for the body element should map to the
+    // root scrollable frame.
+    // In strict mode, the scroll info for the root element should map to the
+    // the root scrollable frame.
+    return frame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
+  }
+
+  return nsnull;
 }
 
 nsresult
@@ -1263,41 +1237,26 @@ nsNSElementTearoff::GetScrollTop(PRInt32* aScrollTop)
   NS_ENSURE_ARG_POINTER(aScrollTop);
   *aScrollTop = 0;
 
-  nsIScrollableView *view;
-  nsresult rv = NS_OK;
-
-  GetScrollInfo(&view);
-
-  if (view) {
-    nscoord xPos, yPos;
-    rv = view->GetScrollPosition(xPos, yPos);
-
-    *aScrollTop = nsPresContext::AppUnitsToIntCSSPixels(yPos);
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (sf) {
+    nscoord y = sf->GetScrollPosition().y;
+    *aScrollTop = nsPresContext::AppUnitsToIntCSSPixels(y);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
 nsNSElementTearoff::SetScrollTop(PRInt32 aScrollTop)
 {
-  nsIScrollableView *view;
-  nsresult rv = NS_OK;
-
-  GetScrollInfo(&view);
-
-  if (view) {
-    nscoord xPos, yPos;
-
-    rv = view->GetScrollPosition(xPos, yPos);
-
-    if (NS_SUCCEEDED(rv)) {
-      rv = view->ScrollTo(xPos, nsPresContext::CSSPixelsToAppUnits(aScrollTop),
-                          0);
-    }
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (sf) {
+    nsPoint pt = sf->GetScrollPosition();
+    pt.y = nsPresContext::CSSPixelsToAppUnits(aScrollTop);
+    sf->ScrollTo(pt, nsIScrollableFrame::INSTANT);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -1306,40 +1265,26 @@ nsNSElementTearoff::GetScrollLeft(PRInt32* aScrollLeft)
   NS_ENSURE_ARG_POINTER(aScrollLeft);
   *aScrollLeft = 0;
 
-  nsIScrollableView *view;
-  nsresult rv = NS_OK;
-
-  GetScrollInfo(&view);
-
-  if (view) {
-    nscoord xPos, yPos;
-    rv = view->GetScrollPosition(xPos, yPos);
-
-    *aScrollLeft = nsPresContext::AppUnitsToIntCSSPixels(xPos);
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (sf) {
+    nscoord x = sf->GetScrollPosition().x;
+    *aScrollLeft = nsPresContext::AppUnitsToIntCSSPixels(x);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
 nsNSElementTearoff::SetScrollLeft(PRInt32 aScrollLeft)
 {
-  nsIScrollableView *view;
-  nsresult rv = NS_OK;
-
-  GetScrollInfo(&view);
-
-  if (view) {
-    nscoord xPos, yPos;
-    rv = view->GetScrollPosition(xPos, yPos);
-
-    if (NS_SUCCEEDED(rv)) {
-      rv = view->ScrollTo(nsPresContext::CSSPixelsToAppUnits(aScrollLeft),
-                          yPos, 0);
-    }
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (sf) {
+    nsPoint pt = sf->GetScrollPosition();
+    pt.x = nsPresContext::CSSPixelsToAppUnits(aScrollLeft);
+    sf->ScrollTo(pt, nsIScrollableFrame::INSTANT);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -1351,12 +1296,8 @@ nsNSElementTearoff::GetScrollHeight(PRInt32* aScrollHeight)
   if (mContent->IsSVG())
     return NS_OK;
 
-  nsIScrollableView *scrollView;
-  nsresult rv = NS_OK;
-
-  GetScrollInfo(&scrollView);
-
-  if (!scrollView) {
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
     nsRect rcFrame;
     nsCOMPtr<nsIContent> parent;
     (static_cast<nsGenericElement *>(mContent))->GetOffsetRect(rcFrame, getter_AddRefs(parent));
@@ -1364,13 +1305,9 @@ nsNSElementTearoff::GetScrollHeight(PRInt32* aScrollHeight)
     return NS_OK;
   }
 
-  // xMax and yMax is the total length of our container
-  nscoord xMax, yMax;
-  rv = scrollView->GetContainerSize(&xMax, &yMax);
-
-  *aScrollHeight = nsPresContext::AppUnitsToIntCSSPixels(yMax);
-
-  return rv;
+  nscoord height = sf->GetScrollRange().height + sf->GetScrollPortRect().height;
+  *aScrollHeight = nsPresContext::AppUnitsToIntCSSPixels(height);
+  return NS_OK;
 }
 
 nsresult
@@ -1382,12 +1319,8 @@ nsNSElementTearoff::GetScrollWidth(PRInt32* aScrollWidth)
   if (mContent->IsSVG())
     return NS_OK;
 
-  nsIScrollableView *scrollView;
-  nsresult rv = NS_OK;
-
-  GetScrollInfo(&scrollView);
-
-  if (!scrollView) {
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
     nsRect rcFrame;
     nsCOMPtr<nsIContent> parent;
     (static_cast<nsGenericElement *>(mContent))->GetOffsetRect(rcFrame, getter_AddRefs(parent));
@@ -1395,38 +1328,30 @@ nsNSElementTearoff::GetScrollWidth(PRInt32* aScrollWidth)
     return NS_OK;
   }
 
-  nscoord xMax, yMax;
-  rv = scrollView->GetContainerSize(&xMax, &yMax);
-
-  *aScrollWidth = nsPresContext::AppUnitsToIntCSSPixels(xMax);
-
-  return rv;
+  nscoord width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
+  *aScrollWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
+  return NS_OK;
 }
 
 nsRect
 nsNSElementTearoff::GetClientAreaRect()
 {
-  nsIScrollableView *scrollView;
-  nsIFrame *frame;
+  nsIFrame* styledFrame;
+  nsIScrollableFrame* sf = GetScrollFrame(&styledFrame);
 
-  // it isn't clear what to return for SVG nodes, so just return 0
-  if (mContent->IsSVG())
-    return nsRect(0, 0, 0, 0);
-
-  GetScrollInfo(&scrollView, &frame);
-
-  if (scrollView) {
-    return scrollView->View()->GetBounds();
+  if (sf) {
+    return sf->GetScrollPortRect();
   }
 
-  if (frame &&
-      (frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
-       frame->IsFrameOfType(nsIFrame::eReplaced))) {
+  if (styledFrame &&
+      (styledFrame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
+       styledFrame->IsFrameOfType(nsIFrame::eReplaced))) {
     // Special case code to make client area work even when there isn't
     // a scroll view, see bug 180552, bug 227567.
-    return frame->GetPaddingRect() - frame->GetPositionIgnoringScrolling();
+    return styledFrame->GetPaddingRect() - styledFrame->GetPositionIgnoringScrolling();
   }
 
+  // SVG nodes reach here and just return 0
   return nsRect(0, 0, 0, 0);
 }
 
