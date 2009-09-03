@@ -1263,11 +1263,6 @@ private:
   PRPackedBool mAsyncResizeTimerIsActive;
   PRPackedBool mInResize;
 
-  typedef void (*nsPluginEnumCallback)(PresShell*, nsIContent*);
-  void EnumeratePlugins(nsIDOMDocument *aDocument,
-                        const nsString &aPluginTag,
-                        nsPluginEnumCallback aCallback);
-
 private:
   /*
    * Computes the backstop color for the view: transparent if in a transparent
@@ -7405,29 +7400,6 @@ PresShell::Observe(nsISupports* aSubject,
 #endif
   NS_WARNING("unrecognized topic in PresShell::Observe");
   return NS_ERROR_FAILURE;
-}
-
-void
-PresShell::EnumeratePlugins(nsIDOMDocument *aDocument,
-                            const nsString &aPluginTag,
-                            nsPluginEnumCallback aCallback)
-{
-  nsCOMPtr<nsIDOMNodeList> nodes;
-  aDocument->GetElementsByTagName(aPluginTag, getter_AddRefs(nodes));
-  if (!nodes)
-    return;
-
-  PRUint32 length;
-  nodes->GetLength(&length);
-
-  for (PRUint32 i = 0; i < length; ++i) {
-    nsCOMPtr<nsIDOMNode> node;
-    nodes->Item(i, getter_AddRefs(node));
-
-    nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-    if (content)
-      aCallback(this, content);
-  }
 }
 
 //------------------------------------------------------
