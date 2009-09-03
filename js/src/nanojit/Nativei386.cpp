@@ -307,9 +307,14 @@ namespace nanojit
             prefer &= rmask(FST0);
         }
         else if (op == LIR_param) {
-            uint32_t max_regs = max_abi_regs[_thisfrag->lirbuf->abi];
-            if (i->paramArg() < max_regs)
-                prefer &= rmask(Register(i->paramArg()));
+            if (i->paramKind() == 0) {
+                uint32_t max_regs = max_abi_regs[_thisfrag->lirbuf->abi];
+                if (i->paramArg() < max_regs)
+                    prefer &= rmask(argRegs[i->paramArg()]);
+            } else {
+                if (i->paramArg() < NumSavedRegs)
+                    prefer &= rmask(savedRegs[i->paramArg()]);
+            }
         }
         else if (op == LIR_callh || (op == LIR_rsh && i->oprnd1()->opcode()==LIR_callh)) {
             prefer &= rmask(retRegs[1]);
