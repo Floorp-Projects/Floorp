@@ -53,6 +53,15 @@ bool LaunchApp(const std::vector<std::string>& argv,
       argv_cstr[i] = const_cast<char*>(argv[i].c_str());
     argv_cstr[argv.size()] = NULL;
     execvp(argv_cstr[0], argv_cstr.get());
+#if defined(CHROMIUM_MOZILLA_BUILD)
+    // if we get here, we're in serious trouble and should complain loudly
+    fprintf(stderr,
+"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n"
+"---->   FAILED TO exec() CHILD PROCESS   <---\n"
+"---->     path: %s\n"
+"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
+            argv_cstr[0]);
+#endif
     exit(127);
   } else {
     if (wait)
