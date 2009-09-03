@@ -61,7 +61,7 @@ class nsIScrollableView;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
-
+class nsTextInputSelectionImpl;
 
 class nsTextControlFrame : public nsStackFrame,
                            public nsIAnonymousContentCreator,
@@ -155,8 +155,7 @@ public:
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
-  virtual nsISelectionController* GetOwnedSelectionController()
-    { return mSelCon; }
+  virtual nsISelectionController* GetOwnedSelectionController();
   virtual nsFrameSelection* GetOwnedFrameSelection()
     { return mFrameSel; }
 
@@ -339,7 +338,7 @@ private:
   PRPackedBool mFireChangeEventState;
   PRPackedBool mInSecureKeyboardInputMode;
 
-  nsCOMPtr<nsISelectionController> mSelCon;
+  nsRefPtr<nsTextInputSelectionImpl> mSelCon;
   nsCOMPtr<nsFrameSelection> mFrameSel;
   nsTextInputListener* mTextListener;
   nsString mFocusedValue;
