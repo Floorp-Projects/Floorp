@@ -155,7 +155,7 @@ namespace nanojit
         // nothing free, steal one
         // LSRA says pick the one with the furthest use
         counter_increment(steals);
-        LIns* vic = findVictim(regs, allow);
+        LIns* vic = findVictim(allow);
         NanoAssert(vic);
 
         Reservation* resv = vic->resvUsed();
@@ -331,29 +331,38 @@ namespace nanojit
         return findRegFor(i, allow);
     }
 
-    Register Assembler::findRegFor(LIns* i, RegisterMask allow)
+    // Finds a register in 'allow' to hold the result of 'ins'.  Used when we
+    // encounter a use of 'ins'.  The actions depend on the prior state of
+    // 'ins':
+    // - If the result of 'ins' is not in any register, we find an allowed
+    //   one, evicting one if necessary.
+    // - If the result of 'ins' is already in an allowed register, we use that.
+    // - If the result of 'ins' is already in a not-allowed register, we find an
+    //   allowed one and move it.
+    //
+    Register Assembler::findRegFor(LIns* ins, RegisterMask allow)
     {
-        if (i->isop(LIR_alloc)) {
+        if (ins->isop(LIR_alloc)) {
             // never allocate a reg for this w/out stack space too
-            findMemFor(i);
+            findMemFor(ins);
         }
 
-        Reservation* resv = i->resv();
+        Reservation* resv = ins->resv();
         Register r = resv->reg;
 
         if (!resv->used) {
             // No reservation.  Create one, and do a fresh allocation.
-            RegisterMask prefer = hint(i, allow);
+            RegisterMask prefer = hint(ins, allow);
             resv->init();
             r = resv->reg = registerAlloc(prefer);
-            _allocator.addActive(r, i);
+            _allocator.addActive(r, ins);
 
         } else if (r == UnknownReg) {
             // Existing reservation with an unknown register.  Do a fresh
             // allocation.
-            RegisterMask prefer = hint(i, allow);
+            RegisterMask prefer = hint(ins, allow);
             r = resv->reg = registerAlloc(prefer);
-            _allocator.addActive(r, i);
+            _allocator.addActive(r, ins);
 
         } else if (rmask(r) & allow) {
             // Existing reservation with a known register allocated, and
@@ -363,27 +372,34 @@ namespace nanojit
         } else {
             // Existing reservation with a known register allocated, but
             // the register is not allowed.
-            RegisterMask prefer = hint(i, allow);
+            RegisterMask prefer = hint(ins, allow);
 #ifdef AVMPLUS_IA32
             if (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
                 ((rmask(r)&x87Regs) && !(allow&x87Regs)))
             {
                 // x87 <-> xmm copy required
                 //_nvprof("fpu-evict",1);
-                evict(r, i);
+                evict(r, ins);
                 r = resv->reg = registerAlloc(prefer);
-                _allocator.addActive(r, i);
+                _allocator.addActive(r, ins);
             } else
 #endif
             {
-                // Grab a new register and copy the old contents to the new.
-                _allocator.retire(r);
+                // The post-state register holding 'ins' is 's', the pre-state
+                // register holding 'ins' is 'r'.  For example, if s=eax and
+                // r=ecx:
+                //
+                // pre-state:   ecx(ins)
+                // instruction: mov eax, ecx
+                // post-state:  eax(ins)
+                //
                 Register s = r;
+                _allocator.retire(s);
                 r = resv->reg = registerAlloc(prefer);
-                _allocator.addActive(r, i);
+                _allocator.addActive(r, ins);
                 if ((rmask(s) & GpRegs) && (rmask(r) & GpRegs)) {
 #ifdef NANOJIT_ARM
-                    MOV(s, r);
+                    MOV(s, r);  // ie. move 'ins' from its pre-state reg to its post-state reg
 #else
                     MR(s, r);
 #endif
@@ -451,6 +467,7 @@ namespace nanojit
         i->resv()->clear();
     }
 
+    // Frees 'r' in the RegAlloc state, if it's not already free.
     void Assembler::evictIfActive(Register r)
     {
         if (LIns* vic = _allocator.getActive(r)) {
@@ -458,6 +475,17 @@ namespace nanojit
         }
     }
 
+    // Frees 'r' (which currently holds the result of 'vic') in the RegAlloc
+    // state.  An example:
+    //
+    //   pre-state:     eax(ld1)
+    //   instruction:   mov ebx,-4(ebp) <= restore add1   # %ebx is dest
+    //   post-state:    eax(ld1) ebx(add1)
+    //
+    // At run-time we are *restoring* 'add1' into %ebx, hence the call to
+    // asm_restore().  But at regalloc-time we are moving backwards through
+    // the code, so in that sense we are *evicting* 'add1' from %ebx.
+    //
     void Assembler::evict(Register r, LIns* vic)
     {
         // Not free, need to steal.
@@ -837,41 +865,45 @@ namespace nanojit
         for (LInsp ins = reader->read(); !ins->isop(LIR_start) && !error();
                                          ins = reader->read())
         {
-            /* What's going on here: we're visiting all the LIR nodes
-               in the buffer, working strictly backwards in
-               buffer-order, and generating machine instructions for
-               them as we go.
+            /* What's going on here: we're visiting all the LIR instructions
+               in the buffer, working strictly backwards in buffer-order, and
+               generating machine instructions for them as we go.
 
-               But we're not visiting all of them, only the ones that
-               made it through the filter pipeline that we're reading
-               from.  For each visited node, we first determine
-               whether it's actually necessary, and if not skip it.
-               Otherwise we fall into the big switch, which calls a
-               target-specific routine to generate the required
-               instructions.
+               For each LIns, we first determine whether it's actually
+               necessary, and if not skip it.  Otherwise we generate code for
+               it.  There are two kinds of "necessary" instructions:
 
-               For each node, we need to decide whether we need to
-               generate any code.  This is a rather subtle part of the
-               generation algorithm.
+               - "Statement" instructions, which have side effects.  Anything
+                 that could change control flow or the state of memory.
 
-               There are two categories:
+               - "Value" or "expression" instructions, which compute a value
+                 based only on the operands to the instruction (and, in the
+                 case of loads, the state of memory).  Because we visit
+                 instructions in reverse order, if some previously visited
+                 instruction uses the value computed by this instruction, then
+                 this instruction will already have a register assigned to
+                 hold that value.  Hence we can consult the Reservation to
+                 detect whether the value is in fact used (i.e. not dead).
 
-               "statement" nodes -- ones with side effects.  Anything
-               that could change control flow or the state of memory.
-               These we must absolutely retain.  That accounts for the
-               first part of the following disjunction for 'required'.
+              Note that the backwards code traversal can make register
+              allocation confusing.  (For example, we restore a value before
+              we spill it!)  In particular, words like "before" and "after"
+              must be used very carefully -- their meaning at regalloc-time is
+              opposite to their meaning at run-time.  We use the term
+              "pre-state" to refer to the register allocation state that
+              occurs prior to an instruction's execution, and "post-state" to
+              refer to the state that occurs after an instruction's execution,
+              e.g.:
 
-               The rest are "value" nodes, which compute a value based
-               only on the operands to the node (and, in the case of
-               loads, the state of memory).  It's safe to omit these
-               if the value(s) computed are not used later.  Since
-               we're visiting nodes in reverse order, if some
-               previously visited (viz, later in the buffer ordering)
-               node uses the value computed by this node, then this
-               node will already have a register assigned to hold that
-               value.  Hence we can consult the reservation to detect
-               whether the value is in fact used.  That's the second
-               part of the disjunction.
+                pre-state:     ebx(ins)
+                instruction:   mov eax, ebx     // mov dst, src
+                post-state:    eax(ins)
+
+              At run-time, the instruction updates the pre-state into the
+              post-state (and these states are the real machine's states).
+              But when allocating registers, because we go backwards, the
+              pre-state is constructed from the post-state (and these states
+              are those stored in RegAlloc).
             */
             bool required = ins->isStmt() || ins->resv()->used;
             if (!required)
@@ -1581,10 +1613,9 @@ namespace nanojit
     {
         // generate code to restore callee saved registers
         // @todo speed this up
-        LIns* i;
         for (Register r = FirstReg; r <= LastReg; r = nextreg(r)) {
-            if ((rmask(r) & regs) && (i = _allocator.getActive(r))) {
-                evict(r, i);
+            if ((rmask(r) & regs)) {
+                evictIfActive(r);
             }
         }
     }
@@ -1694,18 +1725,18 @@ namespace nanojit
         }
     }
 
-    // scan table for instruction with the lowest priority, meaning it is used
+    // Scan table for instruction with the lowest priority, meaning it is used
     // furthest in the future.
-    LIns* Assembler::findVictim(RegAlloc &regs, RegisterMask allow)
+    LIns* Assembler::findVictim(RegisterMask allow)
     {
         NanoAssert(allow != 0);
         LIns *i, *a=0;
         int allow_pri = 0x7fffffff;
         for (Register r=FirstReg; r <= LastReg; r = nextreg(r))
         {
-            if ((allow & rmask(r)) && (i = regs.getActive(r)) != 0)
+            if ((allow & rmask(r)) && (i = _allocator.getActive(r)) != 0)
             {
-                int pri = canRemat(i) ? 0 : regs.getPriority(r);
+                int pri = canRemat(i) ? 0 : _allocator.getPriority(r);
                 if (!a || pri < allow_pri) {
                     a = i;
                     allow_pri = pri;
