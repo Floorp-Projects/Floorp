@@ -2,9 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Popup Tests"
-  onfocus="if (!gDone) { gDone = true; runTests(); }"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Popup Tests</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
@@ -12,7 +10,7 @@
   <script type="application/javascript" src="popup_trigger.js"></script>
 
 <script>
-var gDone = false;
+window.opener.SimpleTest.waitForFocus(runTests, window);
 </script>
 
 <hbox style="margin-left: 325px; margin-top: 325px;">

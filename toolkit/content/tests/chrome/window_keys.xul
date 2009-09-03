@@ -3,8 +3,7 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Key Tests"
-  onfocus="setTimeout(runTest, 0);"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" 
           src="chrome://mochikit/content/MochiKit/packed.js"/>
@@ -93,6 +92,8 @@ function checkKey(event)
 
 function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
 function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
+
+SimpleTest.waitForFocus(runTest);
 
 ]]>
 </script>

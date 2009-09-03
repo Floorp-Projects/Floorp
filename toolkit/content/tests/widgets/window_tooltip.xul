@@ -2,9 +2,8 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Tooltip Tests"
-  onfocus="runTests()" onpopupshowing="checkCoords(event)"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        onpopupshowing="checkCoords(event)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Tooltip Tests</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
@@ -199,6 +198,8 @@ var popupTests = [
 },
 
 ];
+
+window.opener.SimpleTest.waitForFocus(runTests, window);
 
 ]]>
 </script>
