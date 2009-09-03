@@ -5971,7 +5971,7 @@ HBRUSH nsWindow::OnControlColor()
 // Can be overriden. Controls auto-erase of background.
 PRBool nsWindow::AutoErase(HDC dc)
 {
-#ifdef WINCE
+#ifdef WINCE_WINDOWS_MOBILE
   RECT wrect;
   GetClipBox(dc, &wrect);
   AddRECTToRegion(wrect, mInvalidatedRegion);
