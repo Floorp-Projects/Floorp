@@ -8,6 +8,9 @@
 
 #include "nsXULAppAPI.h"
 
+#include "base/message_loop.h"
+#include "base/task.h"
+
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -16,6 +19,7 @@ namespace dom {
 ContentProcessChild* ContentProcessChild::sSingleton;
 
 ContentProcessChild::ContentProcessChild()
+    : mQuit(PR_FALSE)
 {
 }
 
@@ -73,8 +77,28 @@ ContentProcessChild::TestShellDestructor(TestShellProtocolChild* shell)
 void
 ContentProcessChild::Quit()
 {
+    NS_ASSERTION(mQuit, "Exiting uncleanly!");
     mIFrames.Clear();
     mTestShells.Clear();
+}
+
+static void
+QuitIOLoop()
+{
+    MessageLoop::current()->Quit();
+}
+
+nsresult
+ContentProcessChild::RecvQuit()
+{
+    mQuit = PR_TRUE;
+
+    Quit();
+
+    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                     NewRunnableFunction(&QuitIOLoop));
+
+    return NS_OK;
 }
 
 } // namespace dom

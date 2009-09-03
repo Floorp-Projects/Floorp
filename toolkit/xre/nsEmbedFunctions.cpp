@@ -85,6 +85,7 @@
 
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::ipc::GeckoThread;
+using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::plugins::PluginThreadChild;
@@ -238,6 +239,8 @@ XRE_StringToChildProcessType(const char* aProcessTypeString)
 #ifdef MOZ_IPC
 static GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 
+static MessageLoop* sIOMessageLoop;
+
 nsresult
 XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
@@ -288,7 +291,11 @@ XRE_InitChildProcess(int aArgc,
     ChildProcess process(mainThread);
 
     // Do IPC event loop
-    MessageLoop::current()->Run();
+    sIOMessageLoop = MessageLoop::current();
+
+    sIOMessageLoop->Run();
+
+    sIOMessageLoop = nsnull;
   }
 
   return NS_OK;
@@ -298,6 +305,16 @@ GeckoProcessType
 XRE_GetProcessType()
 {
   return sChildProcessType;
+}
+
+MessageLoop*
+XRE_GetIOMessageLoop()
+{
+  if (sChildProcessType == GeckoProcessType_Default) {
+    NS_ASSERTION(!sIOMessageLoop, "Shouldn't be set on parent process!");
+    return BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+  }
+  return sIOMessageLoop;
 }
 
 namespace {

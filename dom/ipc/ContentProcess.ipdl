@@ -21,6 +21,8 @@ child:
 
     TestShell();
     ~TestShell();
+
+    Quit();
 };
 
 }
