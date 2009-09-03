@@ -20,7 +20,7 @@ chrome.jar:
   content/content.css                  (content/content.css)
   content/checkerboard.png             (content/checkerboard.png)
 % content branding %content/branding/
-  content/preferences/richpref.xml     (content/preferences/richpref.xml)
+  content/preferences/setting.xml      (content/preferences/setting.xml)
 * content/sanitize.xul                 (content/sanitize.xul)
 * content/sanitize.js                  (content/sanitize.js)
   content/BrowserView.js               (content/BrowserView.js)

@@ -42,9 +42,8 @@
         <xul:button class="show-on-uninstall addon-cancel" label="&addonCancel.label;"
                     oncommand="ExtensionsView.cancelUninstall(document.getBindingParent(this));"/>
       </xul:hbox>
-      <xul:vbox anonid="options-box" collapsed="true" flex="1">
-        <xul:iframe anonid="options-frame" src="" flex="1"/>
-      </xul:vbox>
+      <!-- options are generated dynamically from the optionsURL -->
+      <xul:vbox class="options-box" anonid="options-box" collapsed="true" flex="1" />
     </content>
 
     <implementation>
@@ -58,49 +57,48 @@
           let appDisabled = this.getAttribute("appDisabled");
           if (appDisabled == "true")
             document.getAnonymousElementByAttribute(this, "anonid", "enable-button").setAttribute("disabled", "true");
-
-          this._optionsHandler.element = this;
-          this._optionsHandler.box = document.getAnonymousElementByAttribute(this, "anonid", "options-box");
-          this._optionsHandler.frame = document.getAnonymousElementByAttribute(this, "anonid", "options-frame");
         ]]>
       </constructor>
 
-      <field name="_optionsHandler">
-        <![CDATA[ ({
-          element: null,
-          box: null,
-          frame: null,
+      <method name="hideOptions">
+        <body>
+          <![CDATA[
+            let box = document.getAnonymousElementByAttribute(this, "anonid", "options-box");
+            if (!box.collapsed)
+              this.toggleOptions();
+          ]]>
+        </body>
+      </method>
 
-          handleEvent: function op_handleEvent(aEvent) {
-            if (aEvent.type == "load") {
-              // Try to determine the natural height of the iframe content
-              // so we can resize the iframe and all the content is visible
-              let height = 0;
-              let root = this.frame.contentDocument.documentElement;
-              for (let i = 0; i < root.children.length; ++i) {
-                height += root.children[i].clientHeight;
-              }
+      <method name="showOptions">
+        <body>
+          <![CDATA[
+            let box = document.getAnonymousElementByAttribute(this, "anonid", "options-box");
+            if (box.collapsed)
+              this.toggleOptions();
+          ]]>
+        </body>
+      </method>
 
-              this.box.height = height;
-            }
-          }
-        }) ]]>
-      </field>
       <method name="toggleOptions">
         <body>
           <![CDATA[
-            let optionsURL = this.getAttribute("optionsURL");
-            if (optionsURL == "")
-              return;
-
-            let box = this._optionsHandler.box;
+            let box = document.getAnonymousElementByAttribute(this, "anonid", "options-box");
             box.collapsed = !box.collapsed;
 
-            let frame = this._optionsHandler.frame;
-            if (frame.getAttribute("src") == "") {
-              frame.addEventListener("load", this._optionsHandler, true);
-              frame.setAttribute("src", optionsURL);
-            }
+            if (box.hasChildNodes())
+              return;
+
+            // retrieve the extensions prefs
+            let optionsURL = this.getAttribute("optionsURL");
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", optionsURL, false);
+            xhr.send();
+
+            // Only allow <setting> for now
+            let prefs = xhr.responseXML.querySelectorAll(":root > setting");
+            for (let i = 0; i < prefs.length; i++)
+              box.appendChild(prefs.item(i));
           ]]>
         </body>
       </method>

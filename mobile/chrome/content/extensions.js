@@ -185,6 +185,32 @@ var ExtensionsView = {
     }
   },
 
+  showOptions: function ev_showOptions(aID) {
+    this.hideOptions();
+
+    let item = this.getElementForAddon(aID);
+    if (!item)
+      return;
+
+    // if the element is not the selected element, select it
+    if (item != this._list.selectedItem)
+      this._list.selectedItem = item;
+    
+    item.showOptions();
+  },
+
+  hideOptions: function ev_hideOptions() {
+    if (!this._list)
+      return;
+    
+    let items = this._list.childNodes;
+    for (let i = 0; i < items.length; i++) {
+      let item = items[i];
+      if (item.hideOptions)
+        item.hideOptions();
+    }
+  },
+
   get visible() {
     let panel = document.getElementById("panel-container");
     let items = document.getElementById("panel-items");
