@@ -332,6 +332,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug503481.sjs \
 		test_bug503481b.html \
 		file_bug503481b_inner.html \
+		test_viewport_scroll.html \
 		$(NULL)
 
 # Disabled; see bug 492181
