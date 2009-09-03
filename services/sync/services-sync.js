@@ -1,4 +1,4 @@
-pref("extensions.weave.serverURL", "https://auth.services.mozilla.com/user/");
+pref("extensions.weave.serverURL", "@server_url@");
 pref("extensions.weave.miscURL", "https://auth.services.mozilla.com/misc/");
 pref("extensions.weave.termsURL", "https://labs.mozilla.com/projects/weave/tos/");
 
