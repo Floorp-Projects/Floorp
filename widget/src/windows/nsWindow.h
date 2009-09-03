@@ -222,7 +222,7 @@ public:
   /**
    * Misc.
    */
-  virtual PRBool          AutoErase();
+  virtual PRBool          AutoErase(HDC dc);
   nsIntPoint*             GetLastPoint() { return &mLastPoint; }
   PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId; }
   PRBool                  GetIMEEnabled() { return mIMEEnabled; }

@@ -3840,7 +3840,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     // say we've dealt with erase background if widget does
     // not need auto-erasing
     case WM_ERASEBKGND:
-      if (! AutoErase()) {
+      if (!AutoErase((HDC)wParam)) {
         *aRetValue = 1;
         result = PR_TRUE;
       }
@@ -5968,9 +5968,14 @@ HBRUSH nsWindow::OnControlColor()
   return mBrush;
 }
 
-// Can be overriden. Controls auot-erase of background.
-PRBool nsWindow::AutoErase()
+// Can be overriden. Controls auto-erase of background.
+PRBool nsWindow::AutoErase(HDC dc)
 {
+#ifdef WINCE
+  RECT wrect;
+  GetClipBox(dc, &wrect);
+  AddRECTToRegion(wrect, mInvalidatedRegion);
+#endif
   return PR_FALSE;
 }
 
