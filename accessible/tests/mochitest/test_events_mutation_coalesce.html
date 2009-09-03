@@ -1,0 +1,409 @@
+<html>
+
+<head>
+  <title>Accessible mutation events coalescence testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invoker base classes
+
+    const kRemoveElm = 1;
+    const kHideElm = 2;
+    const kAddElm = 3;
+    const kShowElm = 4;
+
+    /**
+     * Base class to test of mutation events coalescence.
+     */
+    function coalescenceBase(aChildAction, aParentAction,
+                             aPerformActionOnChildInTheFirstPlace,
+                             aIsChildsToDo)
+    {
+      // Invoker interface
+
+      this.invoke = function coalescenceBase_invoke()
+      {
+        if (aPerformActionOnChildInTheFirstPlace) {
+          this.invokeAction(this.childNode, aChildAction);
+          this.invokeAction(this.parentNode, aParentAction);
+        } else {
+          this.invokeAction(this.parentNode, aParentAction);
+          this.invokeAction(this.childNode, aChildAction);
+        }
+      }
+
+      this.getID = function coalescenceBase_getID()
+      {
+        var childAction = this.getActionName(aChildAction) + " child";
+        var parentAction = this.getActionName(aParentAction) + " parent";
+
+        if (aPerformActionOnChildInTheFirstPlace)
+          return childAction + " and then " + parentAction;
+
+        return parentAction + " and then " + childAction;
+      }
+
+      this.finalCheck = function coalescenceBase_check()
+      {
+        if (!aIsChildsToDo)
+          return;
+
+        todo(false,
+             "Unexpected event " + this.getEventType(aChildAction) +
+             " for child in the test '" + this.getID() + "'");
+      }
+
+      // Implementation details
+
+      this.invokeAction = function coalescenceBase_invokeAction(aNode, aAction)
+      {
+        switch (aAction) {
+          case kRemoveElm:
+            aNode.parentNode.removeChild(aNode);
+            break;
+
+          case kHideElm:
+            aNode.style.display = "none";
+            break;
+
+          case kAddElm:
+            if (aNode == this.parentNode)
+              this.hostNode.appendChild(this.parentNode);
+            else
+              this.parentNode.appendChild(this.childNode);
+            break;
+
+          case kShowElm:
+            aNode.style.display = "block";
+
+          default:
+            return INVOKER_ACTION_FAILED;
+        }
+      }
+
+      this.getEventType = function coalescenceBase_getEventType(aAction)
+      {
+        switch (aAction) {
+          case kRemoveElm:
+            return EVENT_DOM_DESTROY;
+          case kHideElm:
+            return EVENT_ASYNCH_HIDE;
+          case kAddElm:
+            return EVENT_DOM_CREATE;
+          case kShowElm:
+            return EVENT_ASYNCH_SHOW;
+        }
+      }
+
+      this.getActionName = function coalescenceBase_getActionName(aAction)
+      {
+        switch (aAction) {
+          case kRemoveElm:
+            return "remove";
+          case kHideElm:
+            return "hide";
+          case kAddElm:
+            return "add";
+          case kShowElm:
+            return "show";
+          default:
+            return "??";
+        }
+      }
+
+      this.initSequence = function coalescenceBase_initSequence()
+      {
+        // expected events
+        var eventType = this.getEventType(aParentAction);
+        this.eventSeq = [
+          new invokerChecker(eventType, this.parentNode),
+          new invokerChecker(EVENT_REORDER, this.hostNode)
+        ];
+
+        // unexpected events
+        this.unexpectedEventSeq = [
+          new invokerChecker(EVENT_REORDER, this.parentNode)
+        ];
+
+        if (!aIsChildsToDo) {
+          var eventType = this.getEventType(aChildAction);
+          var checker = new invokerChecker(eventType, this.childNode);
+          this.unexpectedEventSeq.unshift(checker);
+        }
+      }
+    }
+
+    /**
+     * Remove or hide mutation events coalescence testing.
+     */
+    function removeOrHidecoalescenceBase(aChildID, aParentID,
+                                         aChildAction, aParentAction,
+                                         aPerformActionOnChildInTheFirstPlace,
+                                         aIsChildsToDo)
+    {
+      this.__proto__ = new coalescenceBase(aChildAction, aParentAction,
+                                           aPerformActionOnChildInTheFirstPlace,
+                                           aIsChildsToDo);
+
+      this.init = function removeOrHidecoalescenceBase_init()
+      {
+        this.childNode = getNode(aChildID);
+        this.parentNode = getNode(aParentID);
+        this.hostNode = this.parentNode.parentNode;
+
+        // ensure child accessible is created
+        getAccessible(this.childNode);
+      }
+
+      // Initalization
+
+      this.init();
+      this.initSequence();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    /**
+     * Remove child node and then its parent node from DOM tree.
+     */
+    function removeChildNParent(aChildID, aParentID)
+    {
+      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+                                                       kRemoveElm, kRemoveElm,
+                                                       true, true);
+    }
+
+    /**
+     * Remove parent node and then its child node from DOM tree.
+     */
+    function removeParentNChild(aChildID, aParentID)
+    {
+      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+                                                       kRemoveElm, kRemoveElm,
+                                                       false);
+    }
+
+    /**
+     * Hide child node and then its parent node.
+     */
+    function hideChildNParent(aChildID, aParentID)
+    {
+      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+                                                       kHideElm, kHideElm,
+                                                       true);
+    }
+
+    /**
+     * Hide parent node and then its child node.
+     */
+    function hideParentNChild(aChildID, aParentID)
+    {
+      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+                                                       kHideElm, kHideElm,
+                                                       false);
+    }
+
+    /**
+     * Hide child node and then remove its parent node.
+     */
+    function hideChildNRemoveParent(aChildID, aParentID)
+    {
+      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+                                                       kHideElm, kRemoveElm,
+                                                       true);
+    }
+
+    /**
+     * Hide parent node and then remove its child node.
+     */
+    function hideParentNRemoveChild(aChildID, aParentID)
+    {
+      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+                                                       kRemoveElm, kHideElm,
+                                                       false, true);
+    }
+
+    /**
+     * Remove child node and then hide its parent node.
+     */
+    function removeChildNHideParent(aChildID, aParentID)
+    {
+      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+                                                       kRemoveElm, kHideElm,
+                                                       true, true);
+    }
+
+    /**
+     * Remove parent node and then hide its child node.
+     */
+    function removeParentNHideChild(aChildID, aParentID)
+    {
+      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+                                                       kHideElm, kRemoveElm,
+                                                       false);
+    }
+
+    /**
+     * Create and append parent node and create and append child node to it.
+     */
+    function addParentNChild(aHostID, aPerformActionOnChildInTheFirstPlace)
+    {
+      this.init = function addParentNChild_init()
+      {
+        this.hostNode = getNode(aHostID);
+        this.parentNode = document.createElement("select");
+        this.childNode = document.createElement("option");
+        this.childNode.textContent = "testing";
+      }
+
+      this.__proto__ = new coalescenceBase(kAddElm, kAddElm,
+                                           aPerformActionOnChildInTheFirstPlace);
+
+      this.init();
+      this.initSequence();
+    }
+
+    /**
+     * Show parent node and show child node to it.
+     */
+    function showParentNChild(aParentID, aChildID,
+                              aPerformActionOnChildInTheFirstPlace)
+    {
+      this.init = function showParentNChild_init()
+      {
+        this.parentNode = getNode(aParentID);
+        this.hostNode = this.parentNode.parentNode;
+        this.childNode = getNode(aChildID);
+      }
+
+      this.__proto__ = new coalescenceBase(kShowElm, kShowElm,
+                                           aPerformActionOnChildInTheFirstPlace);
+
+      this.init();
+      this.initSequence();
+    }
+
+    /**
+     * Create and append child node to the DOM and then show parent node.
+     */
+    function showParentNAddChild(aParentID,
+                                aPerformActionOnChildInTheFirstPlace)
+    {
+      this.init = function showParentNAddChild_init()
+      {
+        this.parentNode = getNode(aParentID);
+        this.hostNode = this.parentNode.parentNode;
+        this.childNode = document.createElement("option");
+        this.childNode.textContent = "testing";
+      }
+
+      this.__proto__ = new coalescenceBase(kAddElm, kShowElm,
+                                           aPerformActionOnChildInTheFirstPlace,
+                                           true);
+
+      this.init();
+      this.initSequence();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests.
+
+    var gQueue = null;
+    // var gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new removeChildNParent("option1", "select1"));
+      gQueue.push(new removeParentNChild("option2", "select2"));
+      gQueue.push(new hideChildNParent("option3", "select3"));
+      gQueue.push(new hideParentNChild("option4", "select4"));
+      gQueue.push(new hideChildNRemoveParent("option5", "select5"));
+      gQueue.push(new hideParentNRemoveChild("option6", "select6"));
+      gQueue.push(new removeChildNHideParent("option7", "select7"));
+      gQueue.push(new removeParentNHideChild("option8", "select8"));
+
+      gQueue.push(new addParentNChild("testContainer", false));
+      gQueue.push(new addParentNChild("testContainer", true));
+      gQueue.push(new showParentNChild("select9", "option9", false));
+      gQueue.push(new showParentNChild("select10", "option10", true));
+      gQueue.push(new showParentNAddChild("select11", false));
+      gQueue.push(new showParentNAddChild("select12", true));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=513213"
+     title="coalesce events when new event is appended to the queue">
+    Mozilla Bug 513213
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <div id="testContainer">
+    <select id="select1">
+      <option id="option1">option</option>
+    </select>
+    <select id="select2">
+      <option id="option2">option</option>
+    </select>
+    <select id="select3">
+      <option id="option3">option</option>
+    </select>
+    <select id="select4">
+      <option id="option4">option</option>
+    </select>
+    <select id="select5">
+      <option id="option5">option</option>
+    </select>
+    <select id="select6">
+      <option id="option6">option</option>
+    </select>
+    <select id="select7">
+      <option id="option7">option</option>
+    </select>
+    <select id="select8">
+      <option id="option8">option</option>
+    </select>
+
+    <select id="select9" style="display: none">
+      <option id="option9" style="display: none">testing</option>
+    </select>
+    <select id="select10" style="display: none">
+      <option id="option10" style="display: none">testing</option>
+    </select>
+    <select id="select11" style="display: none"></select>
+    <select id="select12" style="display: none"></select>
+  </div>
+</body>
+</html>

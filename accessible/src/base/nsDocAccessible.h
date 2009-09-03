@@ -121,15 +121,15 @@ public:
   /**
    * Non-virtual method to fire a delayed event after a 0 length timeout.
    *
-   * @param aEvent       [in] the nsIAccessibleEvent event type
+   * @param aEventType   [in] the nsIAccessibleEvent event type
    * @param aDOMNode     [in] DOM node the accesible event should be fired for
    * @param aAllowDupes  [in] rule to process an event (see EEventRule constants)
    * @param aIsAsynch    [in] set to PR_TRUE if this is not being called from
    *                      code synchronous with a DOM event
    */
-  nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
-                                   nsAccEvent::EEventRule aAllowDupes = nsAccEvent::eRemoveDupes,
-                                   PRBool aIsAsynch = PR_FALSE);
+  nsresult FireDelayedAccessibleEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
+                                      nsAccEvent::EEventRule aAllowDupes = nsAccEvent::eRemoveDupes,
+                                      PRBool aIsAsynch = PR_FALSE);
 
   /**
    * Fire accessible event after timeout.

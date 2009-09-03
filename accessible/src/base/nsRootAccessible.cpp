@@ -396,7 +396,8 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
   NS_ASSERTION(rootContentTreeItem, "No root content tree item");
   if (rootContentTreeItem == treeItem) {
     // No frames or iframes, so we can fire the doc load finished event early
-    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_INTERNAL_LOAD, aDocNode);
+    FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_INTERNAL_LOAD,
+                               aDocNode);
   }
 }
 
@@ -538,9 +539,9 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     }
   }
 
-  FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                          finalFocusNode, nsAccEvent::eRemoveDupes,
-                          aIsAsynch);
+  FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_FOCUS,
+                             finalFocusNode, nsAccEvent::eRemoveDupes,
+                             aIsAsynch);
 
   return PR_TRUE;
 }
@@ -893,7 +894,8 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     FireCurrentFocusEvent();
   }
   else if (eventType.EqualsLiteral("ValueChange")) {
-    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aTargetNode, nsAccEvent::eRemoveDupes);
+    FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+                               aTargetNode, nsAccEvent::eRemoveDupes);
   }
 #ifdef DEBUG
   else if (eventType.EqualsLiteral("mouseover")) {

@@ -52,6 +52,7 @@
       this.DOMNode = getNode(aNodeOrID);
       this.doNotExpectEvents = aDoNotExpectEvents;
       this.eventSeq = [];
+      this.unexpectedEventSeq = [];
 
       /**
        * Change default target (aNodeOrID) registered for the given event type.
@@ -59,9 +60,9 @@
       this.setTarget = function mutateA11yTree_setTarget(aEventType, aTarget)
       {
         var type = this.getA11yEventType(aEventType);
-        for (var idx = 0; idx < this.eventSeq.length; idx++) {
-          if (this.eventSeq[idx].type == type) {
-            this.eventSeq[idx].target = aTarget;
+        for (var idx = 0; idx < this.getEventSeq().length; idx++) {
+          if (this.getEventSeq()[idx].type == type) {
+            this.getEventSeq()[idx].target = aTarget;
             return idx;
           }
         }
@@ -78,7 +79,7 @@
         var type = this.getA11yEventType(aEventType);
         for (var i = 1; i < aTargets.length; i++) {
           var checker = new invokerChecker(type, aTargets[i]);
-          this.eventSeq.splice(++targetIdx, 0, checker);
+          this.getEventSeq().splice(++targetIdx, 0, checker);
         }
       }
 
@@ -103,24 +104,29 @@
         }
       }
 
+      this.getEventSeq = function mutateA11yTree_getEventSeq()
+      {
+        return this.doNotExpectEvents ? this.unexpectedEventSeq : this.eventSeq;
+      }
+
       this.mIsDOMChange = aIsDOMChange;
 
       if (aEventTypes & kHideEvent) {
         var checker = new invokerChecker(this.getA11yEventType(kHideEvent),
                                          this.DOMNode);
-        this.eventSeq.push(checker);
+        this.getEventSeq().push(checker);
       }
 
       if (aEventTypes & kShowEvent) {
         var checker = new invokerChecker(this.getA11yEventType(kShowEvent),
                                          this.DOMNode);
-        this.eventSeq.push(checker);
+        this.getEventSeq().push(checker);
       }
 
       if (aEventTypes & kReorderEvent) {
         var checker = new invokerChecker(this.getA11yEventType(kReorderEvent),
                                          this.DOMNode.parentNode);
-        this.eventSeq.push(checker);
+        this.getEventSeq().push(checker);
       }
     }
 
