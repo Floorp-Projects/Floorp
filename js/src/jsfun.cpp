@@ -2365,7 +2365,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 
     /* Initialize all function members. */
     fun->nargs = nargs;
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK | JSFUN_TRACEABLE);
+    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK | JSFUN_TRCINFO);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
@@ -2381,10 +2381,10 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         fun->u.n.extra = 0;
         fun->u.n.spare = 0;
         fun->u.n.clasp = NULL;
-        if (flags & JSFUN_TRACEABLE) {
+        if (flags & JSFUN_TRCINFO) {
 #ifdef JS_TRACER
-            JSTraceableNative *trcinfo =
-                JS_FUNC_TO_DATA_PTR(JSTraceableNative *, native);
+            JSNativeTraceInfo *trcinfo =
+                JS_FUNC_TO_DATA_PTR(JSNativeTraceInfo *, native);
             fun->u.n.native = (JSNative) trcinfo->native;
             fun->u.n.trcinfo = trcinfo;
 #else
