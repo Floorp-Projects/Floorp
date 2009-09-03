@@ -204,7 +204,7 @@ mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, P
               // move the selection point forwards
               if((currentBlock == startBlock)&&(begin < selOffset)){
                 selOffset +=
-		  PRInt32(aNewWord.Length()) - PRInt32(aOldWord.Length());
+                  PRInt32(aNewWord.Length()) - PRInt32(aOldWord.Length());
                 if(selOffset < begin) selOffset=begin;
               }
               mTsDoc->SetSelection(begin, end-begin);
