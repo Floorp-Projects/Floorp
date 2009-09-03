@@ -121,7 +121,7 @@
 #include "nsIFocusController.h"
 #include "nsFocusManager.h"
 
-#include "nsIScrollableView.h"
+#include "nsIScrollableFrame.h"
 #include "nsIHTMLDocument.h"
 #include "nsITimelineService.h"
 #include "nsGfxCIID.h"
@@ -3837,15 +3837,15 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
       mPrintEngine->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
 
-  nsIScrollableView* scrollableView = nsnull;
-  mPrintEngine->GetPrintPreviewViewManager()->GetRootScrollableView(&scrollableView);
-  if (scrollableView == nsnull)
+  nsIScrollableFrame* sf =
+    mPrintEngine->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
+  if (!sf)
     return NS_OK;
 
   // Check to see if we can short circut scrolling to the top
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_HOME ||
       (aType == nsIWebBrowserPrint::PRINTPREVIEW_GOTO_PAGENUM && aPageNum == 1)) {
-    scrollableView->ScrollTo(0, 0, 0);
+    sf->ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
     return NS_OK;
   }
 
@@ -3858,9 +3858,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   }
 
   // Figure where we are currently scrolled to
-  nscoord x;
-  nscoord y;
-  scrollableView->GetScrollPosition(x, y);
+  nsPoint pt = sf->GetScrollPosition();
 
   PRInt32    pageNum = 1;
   nsIFrame * fndPageFrame  = nsnull;
@@ -3881,7 +3879,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     if (pageNum == 1) {
       gap = pageRect.y;
     }
-    if (pageRect.Contains(pageRect.x, y)) {
+    if (pageRect.Contains(pageRect.x, pt.y)) {
       currentPage = pageFrame;
     }
     if (pageNum == aPageNum) {
@@ -3916,7 +3914,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     }
   }
 
-  if (fndPageFrame && scrollableView) {
+  if (fndPageFrame) {
     nscoord deadSpaceGapTwips = 0;
     nsIPageSequenceFrame * sqf = do_QueryFrame(seqFrame);
     if (sqf) {
@@ -3932,7 +3930,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     nscoord newYPosn = 
       nscoord(mPrintEngine->GetPrintPreviewScale() * 
               float(fndPageFrame->GetPosition().y - deadSpaceGap));
-    scrollableView->ScrollTo(0, newYPosn, 0);
+    sf->ScrollTo(nsPoint(pt.x, newYPosn), nsIScrollableFrame::INSTANT);
   }
   return NS_OK;
 
