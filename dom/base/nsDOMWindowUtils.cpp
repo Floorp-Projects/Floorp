@@ -47,7 +47,7 @@
 #include "nsFocusManager.h"
 #include "nsIEventStateManager.h"
 
-#include "nsIScrollableView.h"
+#include "nsIScrollableFrame.h"
 
 #include "nsContentUtils.h"
 
@@ -789,23 +789,17 @@ nsDOMWindowUtils::GetScrollXY(PRBool aFlushLayout, PRInt32* aScrollX, PRInt32* a
     doc->FlushPendingNotifications(Flush_Layout);
   }
 
-  nscoord xPos = 0, yPos = 0;
-
+  nsPoint scrollPos(0,0);
   nsIPresShell *presShell = doc->GetPrimaryShell();
   if (presShell) {
-    nsIViewManager *viewManager = presShell->GetViewManager();
-    if (viewManager) {
-      nsIScrollableView *view = nsnull;
-      viewManager->GetRootScrollableView(&view);
-      if (view) {
-        nsresult rv = view->GetScrollPosition(xPos, yPos);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+    if (sf) {
+      scrollPos = sf->GetScrollPosition();
     }
   }
 
-  *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(xPos);
-  *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(yPos);
+  *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
+  *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
 
   return NS_OK;
 }
