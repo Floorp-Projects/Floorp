@@ -93,7 +93,6 @@
 #include "nsTreeContentView.h"
 #include "nsTreeUtils.h"
 #include "nsChildIterator.h"
-#include "nsIScrollableView.h"
 #include "nsITheme.h"
 #include "nsITimelineService.h"
 #include "imgIRequest.h"
@@ -848,11 +847,11 @@ nsTreeBodyFrame::InvalidateColumnRange(PRInt32 aStart, PRInt32 aEnd, nsITreeColu
 static void
 FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
 {
-  if (!aResult->mColumnsScrollableView) {
+  if (!aResult->mColumnsScrollFrame) {
     nsIScrollableFrame* f = do_QueryFrame(aCurrFrame);
     if (f) {
       aResult->mColumnsFrame = aCurrFrame;
-      aResult->mColumnsScrollableView = f->GetScrollableView();
+      aResult->mColumnsScrollFrame = f;
     }
   }
   
@@ -874,7 +873,7 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
   nsIFrame* child = aCurrFrame->GetFirstChild(nsnull);
   while (child &&
          (!aResult->mVScrollbar || !aResult->mHScrollbar ||
-          !aResult->mColumnsScrollableView)) {
+          !aResult->mColumnsScrollFrame)) {
     FindScrollParts(child, aResult);
     child = child->GetNextSibling();
   }
@@ -2526,15 +2525,14 @@ nsTreeBodyFrame::CalcHorzWidth(const ScrollParts& aParts)
     mAdjustWidth = 0;
 
   nscoord width = 0;
-  nscoord height;
 
-  // We calculate this from the scrollable view, so that it 
+  // We calculate this from the scrollable frame, so that it 
   // properly covers all contingencies of what could be 
   // scrollable (columns, body, etc...)
 
-  if (aParts.mColumnsScrollableView) {
-    if (NS_FAILED (aParts.mColumnsScrollableView->GetContainerSize(&width, &height)))
-      width = 0;
+  if (aParts.mColumnsScrollFrame) {
+    width = aParts.mColumnsScrollFrame->GetScrollRange().width +
+      aParts.mColumnsScrollFrame->GetScrollPortRect().width;
   }
 
   // If no horz scrolling periphery is present, then just return our width
@@ -4165,7 +4163,7 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
 nsresult
 nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition)
 {
-  if (!mView || !aParts.mColumnsScrollableView || !aParts.mHScrollbar)
+  if (!mView || !aParts.mColumnsScrollFrame || !aParts.mHScrollbar)
     return NS_OK;
 
   if (aPosition == mHorzPosition)
@@ -4216,7 +4214,8 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
   }
 
   // Update the column scroll view
-  aParts.mColumnsScrollableView->ScrollTo(mHorzPosition, 0, 0);
+  aParts.mColumnsScrollFrame->ScrollTo(nsPoint(mHorzPosition, 0),
+                                       nsIScrollableFrame::INSTANT);
 
   // And fire off an event about it all
   PostScrollEvent();
