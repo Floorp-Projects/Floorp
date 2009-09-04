@@ -22,6 +22,7 @@
 <!ENTITY cmd.checkUpdatesAll.accesskey    "F">
 <!ENTITY cmd.checkUpdatesAllAddon.tooltip "Finds Updates to your Add-ons">
 <!ENTITY cmd.checkUpdatesAllTheme.tooltip "Finds Updates to your Themes">
+<!ENTITY cmd.checkUpdatesAllPlugin.tooltip "Finds Updates to your Plugins">
 <!ENTITY cmd.installLocalFile.label       "Install…">
 <!ENTITY cmd.installLocalFile.accesskey   "n">
 <!ENTITY cmd.installFileAddon.tooltip     "Install an Add-on">
@@ -113,6 +114,7 @@
 <!ENTITY needsDependencies.label          "Requires additional items.">
 <!ENTITY blocklisted.label                "Disabled for your protection.">
 <!ENTITY softBlocklisted.label            "Known to cause security or stability issues.">
+<!ENTITY outdated.label                   "A newer, safer version is available.">
 <!ENTITY toBeDisabled.label               "This add-on will be disabled when &brandShortName; is restarted.">
 <!ENTITY toBeEnabled.label                "This add-on will be enabled when &brandShortName; is restarted.">
 <!ENTITY toBeInstalled.label              "This add-on will be installed when &brandShortName; is restarted.">
