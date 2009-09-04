@@ -191,6 +191,13 @@ js_StringToInt32(JSContext* cx, JSString* str)
     const jschar* end;
     const jschar* ep;
     jsdouble d;
+    
+    if (str->length() == 1) {
+        jschar c = str->chars()[0];
+        if ('0' <= c && c <= '9')
+            return c - '0';
+        return 0;	
+    }
 
     str->getCharsAndEnd(bp, end);
     if ((!js_strtod(cx, bp, end, &ep, &d) ||
