@@ -134,6 +134,7 @@ _BROWSER_FILES = \
                  browser_bug491431.js \
                  browser_bug304198.js \
                  browser_drag.js \
+                 browser_relatedTabs.js \
     $(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
