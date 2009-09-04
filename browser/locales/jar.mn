@@ -5,8 +5,6 @@
     locale/browser/aboutCertError.dtd              (%chrome/browser/aboutCertError.dtd)
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
-    locale/browser/aboutRights.dtd                 (%chrome/browser/aboutRights.dtd)
-    locale/browser/aboutRights.properties          (%chrome/browser/aboutRights.properties)
     locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
