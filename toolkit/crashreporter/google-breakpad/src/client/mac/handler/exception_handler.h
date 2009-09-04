@@ -77,7 +77,6 @@ class ExceptionHandler {
   typedef bool (*DirectCallback)( void *context,
                                   int exception_type,
                                   int exception_code,
-                                  int exception_subcode,
                                   mach_port_t thread_name);
 
   // Creates a new ExceptionHandler instance to handle writing minidumps.
@@ -136,7 +135,7 @@ class ExceptionHandler {
 
   // All minidump writing goes through this one routine
   bool WriteMinidumpWithException(int exception_type, int exception_code,
-                                  int exception_subcode, mach_port_t thread_name);
+                                  mach_port_t thread_name);
 
   // When installed, this static function will be call from a newly created
   // pthread with |this| as the argument
