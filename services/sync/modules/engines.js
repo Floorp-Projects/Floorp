@@ -380,6 +380,12 @@ SyncEngine.prototype = {
 
   // Generate outgoing records
   _processIncoming: function SyncEngine__processIncoming() {
+    // Only bother getting data from the server if there's new things
+    if (this.lastModified <= this.lastSync) {
+      this._log.debug("Nothing new from the server to process");
+      return;
+    }
+
     this._log.debug("Downloading & applying server changes");
 
     // enable cache, and keep only the first few items.  Otherwise (when
