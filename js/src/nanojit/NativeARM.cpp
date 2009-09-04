@@ -850,11 +850,7 @@ Assembler::asm_call(LInsp ins)
 
     // If we aren't using VFP, assert that the LIR operation is an integer
     // function call.
-    // TODO: Check that "icall" actually means "integer call".
-    // TODO: LIR_icall isn't yet defined, but according to the Nanojit merging
-    // wiki page, it will be renamed at some point:
-    // https://developer.mozilla.org/en/NanojitMerge
-    NanoAssert(AvmCore::config.vfp || ins->isop(/*LIR_icall*/LIR_call));
+    NanoAssert(AvmCore::config.vfp || ins->isop(LIR_icall));
 
     // If we're using VFP, and the return type is a double, it'll come back in
     // R0/R1. We need to either place it in the result fp reg, or store it.
