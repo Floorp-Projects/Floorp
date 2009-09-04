@@ -155,7 +155,7 @@ class nsDisplayTextShadow : public nsDisplayItem {
 public:
   nsDisplayTextShadow(nsHTMLContainerFrame* aFrame, const PRUint8 aDecoration,
                       const nscolor& aColor, nsLineBox* aLine,
-                      const nscoord& aBlurRadius, const gfxPoint& aOffset)
+                      const nscoord& aBlurRadius, const nsPoint& aOffset)
     : nsDisplayItem(aFrame), mLine(aLine), mColor(aColor),
       mDecorationFlags(aDecoration),
       mBlurRadius(aBlurRadius), mOffset(aOffset) {
@@ -174,7 +174,7 @@ private:
   nscolor       mColor;
   PRUint8       mDecorationFlags;
   nscoord       mBlurRadius; // App units
-  gfxPoint      mOffset;     // App units
+  nsPoint       mOffset;     // App units
 };
 
 void
@@ -192,21 +192,17 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
   if (!firstFont)
     return; // OOM
   const gfxFont::Metrics& metrics = firstFont->GetMetrics();
-  nsPoint pt = aBuilder->ToReferenceFrame(mFrame) + nsPoint(mOffset.x, mOffset.y);
 
   nsHTMLContainerFrame* f = static_cast<nsHTMLContainerFrame*>(mFrame);
-  nsMargin bp = f->GetUsedBorderAndPadding();
-  nscoord innerWidthInAppUnits = (mFrame->GetSize().width - bp.LeftRight());
+  nsPoint pt = aBuilder->ToReferenceFrame(mFrame) + mOffset;
 
-  gfxRect shadowRect = gfxRect(pt.x, pt.y, innerWidthInAppUnits, mFrame->GetSize().height);
+  nsRect shadowRect = mFrame->GetContentRect() - mFrame->GetPosition() + pt;
   gfxContext* thebesCtx = aCtx->ThebesContext();
-
-  gfxRect dirtyRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowCtx = contextBoxBlur.Init(shadowRect, mBlurRadius,
                                               mFrame->PresContext()->AppUnitsPerDevPixel(),
-                                              thebesCtx, dirtyRect);
+                                              thebesCtx, aDirtyRect);
   if (!shadowCtx)
     return;
 
@@ -279,7 +275,7 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
       else
         shadowColor = GetStyleColor()->mColor;
 
-      gfxPoint offset = gfxPoint(shadow->mXOffset, shadow->mYOffset);
+      nsPoint offset(shadow->mXOffset, shadow->mYOffset);
 
       // Add it to the display list so it is painted underneath the text and all decorations
       nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
