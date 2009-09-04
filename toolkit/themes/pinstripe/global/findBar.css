@@ -42,6 +42,7 @@ findbar {
   border: @roundButtonBorder@;
   background: @roundButtonBackground@;
   -moz-box-shadow: @roundButtonShadow@;
+  color: buttontext;
 }
 
 .findbar-container > toolbarbutton:focus {
