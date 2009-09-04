@@ -131,9 +131,9 @@ namespace nanojit
     {
         nRegisterResetAll(_allocator);
 
-        // keep a tally of the registers to check that our allocator works correctly
-        debug_only(_allocator.count = _allocator.countFree(); )
-        debug_only(_allocator.checkCount(); )
+        // At start, should have some registers free and none active.
+        NanoAssert(0 != _allocator.free);
+        NanoAssert(0 == _allocator.countActive());
         debug_only(_fpuStkDepth = 0; )
     }
 
