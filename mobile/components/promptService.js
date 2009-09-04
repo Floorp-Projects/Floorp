@@ -54,12 +54,25 @@ promptService.prototype = {
     return wm.getMostRecentWindow("navigator:browser").document;
   },
  
-  // add a max-width style to prevent a element to grow larger 
+  // add a width style to prevent a element to grow larger 
   // than the screen width
   sizeElement: function(id, percent) {
     let elem = this.getDocument().getElementById(id);
     let screenW = this.getDocument().getElementById("main-window").getBoundingClientRect().width;
-    elem.style.maxWidth = screenW * percent / 100 + "px"
+    elem.style.width = screenW * percent / 100 + "px"
+  },
+  
+  // size the height of the scrollable message. this assumes the given element
+  // is a child of a scrollbox
+  sizeScrollableMsg: function(id, percent) {
+    let screenH = this.getDocument().getElementById("main-window").getBoundingClientRect().height;
+    let maxHeight = screenH * percent / 100;
+    
+    let elem = this.getDocument().getElementById(id);
+    let height = elem.getBoundingClientRect().height;
+    if (height > maxHeight)
+      height = maxHeight;
+    elem.parentNode.style.height = height + "px";
   },
   
   openDialog: function(src, params) {
@@ -74,6 +87,7 @@ promptService.prototype = {
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-alert-message", 80);
+    this.sizeScrollableMsg("prompt-alert-message", 25);
     
     dialog.waitForClose();
   },
@@ -84,6 +98,8 @@ promptService.prototype = {
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-alert-message", 80);
+    this.sizeScrollableMsg("prompt-alert-message", 25);
+    
     doc.getElementById("prompt-alert-checkbox").checked = aCheckState.value;
     doc.getElementById("prompt-alert-checkbox-msg").value = aCheckMsg;
     this.sizeElement("prompt-alert-checkbox-msg", 50);
@@ -100,6 +116,7 @@ promptService.prototype = {
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-confirm-message", 80);
+    this.sizeScrollableMsg("prompt-confirm-message", 25);
     
     dialog.waitForClose();
     return params.result;
@@ -114,6 +131,8 @@ promptService.prototype = {
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-confirm-message", 80);
+    this.sizeScrollableMsg("prompt-confirm-message", 25);
+
     doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
     doc.getElementById("prompt-confirm-checkbox-msg").value = aCheckMsg;
     this.sizeElement("prompt-confirm-checkbox-msg", 50);
@@ -178,6 +197,8 @@ promptService.prototype = {
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-confirm-message", 80);
+    this.sizeScrollableMsg("prompt-confirm-message", 25);
+
     doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
     doc.getElementById("prompt-confirm-checkbox-msg").value = aCheckMsg;
     this.sizeElement("prompt-confirm-checkbox-msg", 50);
@@ -245,6 +266,8 @@ promptService.prototype = {
     doc.getElementById("prompt-prompt-title").value = aTitle;
     doc.getElementById("prompt-prompt-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-prompt-message", 80);
+    this.sizeScrollableMsg("prompt-prompt-message", 25);
+
     doc.getElementById("prompt-prompt-checkbox").checked = aCheckState.value;
     doc.getElementById("prompt-prompt-checkbox-msg").value = aCheckMsg;
     this.sizeElement("prompt-prompt-checkbox-msg", 50);
@@ -279,25 +302,115 @@ promptService.prototype = {
     doc.getElementById("prompt-password-title").value = aTitle;
     doc.getElementById("prompt-password-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-password-message", 80);
+    this.sizeScrollableMsg("prompt-password-message", 25);
     doc.getElementById("prompt-password-checkbox").checked = aCheckState.value;
-    doc.getElementById("prompt-password-checkbox-msg").value = aCheckMsg;
-    this.sizeElement("prompt-password-checkbox-msg", 50);
+    
     doc.getElementById("prompt-password-user").value = aUsername.value;
     doc.getElementById("prompt-password-password").value = aPassword.value;
     if (aCheckMsg) {
       doc.getElementById("prompt-password-checkbox-box").removeAttribute("collapsed");
+      doc.getElementById("prompt-password-checkbox-msg").appendChild(doc.createTextNode(aCheckMsg));
+      this.sizeElement("prompt-password-checkbox-msg", 50);
+      this.sizeElement("prompt-password-checkbox-box", 50);
     }
     
     dialog.waitForClose();
     return params.result;
   },
   
+  //
+  // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/public/nsPromptUtils.h#89
+  //
+  getAuthHostPort: function(aChannel, aAuthInfo) {
+    let uri = aChannel.URI;
+    let res = { host: null, port: -1 };
+    if (aAuthInfo.flags & aAuthInfo.AUTH_PROXY) {
+      let proxy = aChannel.QueryInterface(Ci.nsIProxiedChannel);
+      res.host = proxy.proxyInfo.host;
+      res.port = proxy.proxyInfo.port;
+    } else {
+      res.host = uri.host;
+      res.port = uri.port;
+    }
+    return res;
+  },
+  
+  //
+  // JS port of http://mxr.mozilla.org/mozilla-central/source/embedding/components/windowwatcher/src/nsPrompt.cpp#388
+  //
+  makeDialogText: function(aChannel, aAuthInfo) {
+    let bundleService = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+    let bundle = bundleService.createBundle("chrome://global/locale/prompts.properties");
+    
+    let HostPort = this.getAuthHostPort(aChannel, aAuthInfo);
+    let displayHost = HostPort.host;
+    let uri = aChannel.URI;
+    let scheme = uri.scheme;
+    let username = aAuthInfo.username;
+    let proxyAuth = (aAuthInfo.flags & aAuthInfo.AUTH_PROXY) != 0;
+    let realm = aAuthInfo.realm;
+    if (realm.length > 100) { // truncate and add ellipsis
+      let pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+      let ellipsis = pref.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+      if (!ellipsis)
+        ellipsis = "...";
+      realm = realm.substring(0, 100) + ellipsis;
+    }
+    
+    if (HostPort.port != -1)
+      displayHost += ":" + HostPort.port;
+    
+    let text = null;
+    if (proxyAuth) {
+      text = "EnterLoginForProxy";
+    } else {
+      text = "EnterLoginForRealm";
+      displayHost = scheme + "://" + displayHost;
+    }
+    
+    let strings = [realm, displayHost];
+    let count = 2;
+    if (aAuthInfo.flags & aAuthInfo.ONLY_PASSWORD) {
+      text = "EnterPasswordFor";
+      strings[0] = username;
+    } else if (!proxyAuth && (realm.length == 0)) {
+      text = "EnterUserPasswordFor";
+      count = 1;
+      strings[0] = strings[1];
+    }
+    
+    return bundle.formatStringFromName(text, strings, count);
+  },
+  
   promptAuth: function(aParent, aChannel, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
-    // TODO: implement this (bug 514196)
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    let res = false;
+    
+    let defaultUser = aAuthInfo.username;
+    if ((aAuthInfo.flags & aAuthInfo.NEED_DOMAIN) && (aAuthInfo.domain.length > 0))
+      defaultUser = aAuthInfo.domain + "\\" + defaultUser;
+    
+    let username = { value: defaultUser };
+    let password = { value: aAuthInfo.password };
+    
+    let message = this.makeDialogText(aChannel, aAuthInfo);
+    let title = this.getLocaleString("PromptUsernameAndPassword2");
+    
+    if (aAuthInfo.flags & aAuthInfo.ONLY_PASSWORD) {
+      res = this.promptPassword(aParent, title, message, password, aCheckMsg, aCheckState);
+    } else {
+      res = this.promptUsernameAndPassword(aParent, title, message, username, password, aCheckMsg, aCheckState);
+    }
+    
+    if (res) {
+      aAuthInfo.username = username.value;
+      aAuthInfo.password = password.value;
+    }
+    
+    return res;
   },
   
   asyncPromptAuth: function(aParent, aChannel, aCallback, aContext, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
+    // bug 514196
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   
@@ -310,6 +423,7 @@ promptService.prototype = {
     doc.getElementById("prompt-select-title").value = aTitle;
     doc.getElementById("prompt-select-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-select-message", 80);
+    this.sizeScrollableMsg("prompt-select-message", 25);
     
     let list = doc.getElementById("prompt-select-list");
     for (let i = 0; i < aCount; i++) {
