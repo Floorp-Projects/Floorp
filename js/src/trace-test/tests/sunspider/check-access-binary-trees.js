@@ -49,4 +49,4 @@ for ( var n = 4; n <= 7; n += 1 ) {
     ret = longLivedTree.itemCheck();
 }
 
-print(ret == -1)
+assertEq(ret, -1)

@@ -10,4 +10,4 @@ function f(n) {
     return q;
 }
 
-print(f(1000));
+assertEq(f(1000), 1500);
