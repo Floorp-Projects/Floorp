@@ -30,6 +30,8 @@
 #include <sys/stat.h>
 #include <map>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/minidump.h"
@@ -134,6 +136,26 @@ OnDemandSymbolSupplier::GetSymbolFile(const CodeModule *module,
 
   *symbol_file = path;
   return FOUND;
+}
+
+SymbolSupplier::SymbolResult
+OnDemandSymbolSupplier::GetSymbolFile(const CodeModule *module,
+                                      const SystemInfo *system_info,
+                                      string *symbol_file,
+                                      string *symbol_data) {
+  SymbolSupplier::SymbolResult s = GetSymbolFile(module,
+                                                 system_info,
+                                                 symbol_file);
+
+
+  if (s == FOUND) {
+    ifstream in(symbol_file->c_str());
+    getline(in, *symbol_data, std::string::traits_type::to_char_type(
+                std::string::traits_type::eof()));
+    in.close();
+  }
+
+  return s;
 }
 
 string OnDemandSymbolSupplier::GetLocalModulePath(const CodeModule *module) {

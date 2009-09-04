@@ -340,6 +340,12 @@ class ExceptionHandler {
   // The exception handler thread.
   HANDLE handler_thread_;
 
+  // True if the exception handler is being destroyed.
+  // Starting with MSVC 2005, Visual C has stronger guarantees on volatile vars.
+  // It has release semantics on write and acquire semantics on reads.
+  // See the msdn documentation.
+  volatile bool is_shutdown_;
+
   // The critical section enforcing the requirement that only one exception be
   // handled by a handler at a time.
   CRITICAL_SECTION handler_critical_section_;
@@ -390,11 +396,12 @@ class ExceptionHandler {
   static LONG handler_stack_index_;
 
   // handler_stack_critical_section_ guards operations on handler_stack_ and
-  // handler_stack_index_.
+  // handler_stack_index_. The critical section is initialized by the
+  // first instance of the class and destroyed by the last instance of it.
   static CRITICAL_SECTION handler_stack_critical_section_;
 
-  // True when handler_stack_critical_section_ has been initialized.
-  static bool handler_stack_critical_section_initialized_;
+  // The number of instances of this class.
+  volatile static LONG instance_count_;
 
   // disallow copy ctor and operator=
   explicit ExceptionHandler(const ExceptionHandler &);
