@@ -62,7 +62,6 @@
 #undef COLLECT_WHITESPACE
 
 static const PRUnichar CSS_ESCAPE = PRUnichar('\\');
-static const PRUint8 IS_DIGIT = 0x01;
 static const PRUint8 IS_HEX_DIGIT = 0x02;
 static const PRUint8 START_IDENT = 0x04;
 static const PRUint8 IS_IDENT = 0x08;
@@ -97,7 +96,7 @@ BuildLexTable()
     lt[i] |= IS_IDENT | START_IDENT;
   }
   for (i = '0'; i <= '9'; i++) {
-    lt[i] |= IS_DIGIT | IS_HEX_DIGIT | IS_IDENT;
+    lt[i] |= IS_HEX_DIGIT | IS_IDENT;
   }
   for (i = 'A'; i <= 'Z'; i++) {
     if ((i >= 'A') && (i <= 'F')) {
@@ -130,7 +129,7 @@ IsWhitespace(PRInt32 ch) {
 
 static inline PRBool
 IsDigit(PRInt32 ch) {
-  return PRUint32(ch) < 256 && (gLexTable[ch] & IS_DIGIT) != 0;
+  return (ch >= '0') && (ch <= '9');
 }
 
 static inline PRBool
