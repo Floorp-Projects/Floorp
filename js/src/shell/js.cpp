@@ -1619,7 +1619,7 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_BREAK2LABEL:
           case SRC_CONT2LABEL:
             index = js_GetSrcNoteOffset(sn, 0);
-            JS_GET_SCRIPT_ATOM(script, index, atom);
+            JS_GET_SCRIPT_ATOM(script, NULL, index, atom);
             JS_ASSERT(ATOM_IS_STRING(atom));
             str = ATOM_TO_STRING(atom);
             fprintf(gOutFile, " atom %u (", index);
