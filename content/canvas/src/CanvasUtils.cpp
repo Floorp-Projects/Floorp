@@ -39,6 +39,7 @@
 #include <stdarg.h>
 
 #include "prmem.h"
+#include "prprf.h"
 
 #include "nsIServiceManager.h"
 
@@ -117,7 +118,7 @@ CanvasUtils::LogMessagef (const char *fmt, ...)
 
     nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
     if (console) {
-        vsnprintf(buf, 256, fmt, ap);
+        PR_vsnprintf(buf, 256, fmt, ap);
         console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
         fprintf(stderr, "%s\n", buf);
     }
