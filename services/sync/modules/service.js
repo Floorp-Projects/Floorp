@@ -215,9 +215,8 @@ WeaveSvc.prototype = {
     this._genKeyURLs();
   },
 
-  get userURL() {
-    return this.clusterURL + this.username;
-  },
+  get userURL() this.clusterURL + this.username,
+  get infoURL() this.userURL + "/info/collections",
 
   get userPath() { return ID.get('WeaveID').username; },
 
@@ -501,7 +500,7 @@ WeaveSvc.prototype = {
       this._log.debug("Verifying login for user " + this.username);
 
       this._setCluster();
-      let res = new Resource(this.userURL + "/info/collections");
+      let res = new Resource(this.infoURL);
       try {
         let test = res.get();
         switch (test.status) {
@@ -1080,6 +1079,16 @@ WeaveSvc.prototype = {
     if (!(this._remoteSetup()))
       throw "aborting sync, remote setup failed";
 
+    // Figure out what the last modified time is for each collection
+    let info = new Resource(this.infoURL).get();
+    if (!info.success)
+      throw "aborting sync, failed to get collections";
+
+    // Convert the response to an object and read out the modified times
+    info = JSON.parse(info);
+    for each (let engine in [Clients].concat(Engines.getEnabled()))
+      engine.lastModified = info[engine.name] || 0;
+
     this._log.debug("Refreshing client list");
     Clients.sync();
 
@@ -1215,7 +1224,7 @@ WeaveSvc.prototype = {
   wipeServer: function WeaveSvc_wipeServer(engines)
     this._catch(this._notify("wipe-server", "", function() {
       // Grab all the collections for the user
-      let res = new Resource(this.userURL + "/info/collections");
+      let res = new Resource(this.infoURL);
       res.get();
 
       // Get the array of collections and delete each one
