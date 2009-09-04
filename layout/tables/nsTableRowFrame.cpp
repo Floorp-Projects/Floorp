@@ -1309,19 +1309,11 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   return shift;
 }
 
-
-/**
- * These 3 functions are called by the row group frame's SplitRowGroup() code when
- * it creates a continuing cell frame and wants to insert it into the row's child list
+/*
+ * The following method is called by the row group frame's SplitRowGroup()
+ * when it creates a continuing cell frame and wants to insert it into the
+ * row's child list.
  */
-void 
-nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
-                                 nsTableCellFrame* aPrevSibling)
-{
-  mFrames.InsertFrame(nsnull, aPrevSibling, aFrame);
-  aFrame->SetParent(this);
-}
-
 void 
 nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
                                  PRInt32           aColIndex)
@@ -1340,14 +1332,7 @@ nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
       else break;
     }
   }
-  InsertCellFrame(aFrame, priorCell);
-}
-
-void 
-nsTableRowFrame::RemoveCellFrame(nsTableCellFrame* aFrame)
-{
-  if (!mFrames.RemoveFrame(aFrame))
-    NS_ASSERTION(PR_FALSE, "frame not in list");
+  mFrames.InsertFrame(this, priorCell, aFrame);
 }
 
 nsIAtom*
