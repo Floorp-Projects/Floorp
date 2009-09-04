@@ -94,7 +94,9 @@
             let xhr = new XMLHttpRequest();
             xhr.open("GET", optionsURL, false);
             xhr.send();
-
+            if (!xhr.responseXML)
+              return;
+            
             // Only allow <setting> for now
             let prefs = xhr.responseXML.querySelectorAll(":root > setting");
             for (let i = 0; i < prefs.length; i++)
