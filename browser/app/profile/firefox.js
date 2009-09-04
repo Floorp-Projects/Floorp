@@ -329,6 +329,7 @@ pref("browser.tabs.autoHide", false);
 pref("browser.tabs.autoHide", true);
 #endif
 pref("browser.tabs.closeWindowWithLastTab", true);
+pref("browser.tabs.insertRelatedAfterCurrent", true);
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnOpen", true);
 pref("browser.tabs.maxOpenBeforeWarn", 15);

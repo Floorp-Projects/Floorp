@@ -188,6 +188,9 @@
       <field name="mCurrentTab">
         null
       </field>
+      <field name="_lastRelatedTab">
+        null
+      </field>
       <field name="mCurrentBrowser">
         null
       </field>
@@ -804,6 +807,8 @@
             if (this.mCurrentTab != this.selectedTab)
               this.mCurrentTab.owner = null;
 
+            this._lastRelatedTab = null;
+
             var fm = Components.classes["@mozilla.org/focus-manager;1"].
                        getService(Components.interfaces.nsIFocusManager);
             var focusedChromeElement = fm.getFocusedElementForWindow(window, false, {});
@@ -1288,6 +1293,18 @@
             evt.initEvent("TabOpen", true, false);
             t.dispatchEvent(evt);
 
+            // Check if we're opening a tab related to the current tab and
+            // move it to after the current tab.
+            // aReferrerURI is null or undefined if the tab is opened from
+            // an external application or bookmark, i.e. somewhere other
+            // than the current tab.
+            if (aReferrerURI && this.mPrefs.getBoolPref("browser.tabs.insertRelatedAfterCurrent")) {
+              let newTabPos = (this._lastRelatedTab ||
+                               this.selectedTab)._tPos + 1;
+              this.moveTabTo(t, newTabPos);
+              this._lastRelatedTab = t;
+            }
+
             return t;
           ]]>
         </body>
@@ -1472,6 +1489,8 @@
             if (!args)
               return;
             var [aTab, aCloseWindow, aNewTab] = args;
+
+            this._lastRelatedTab = null;
 
             // update the UI early for responsiveness
             aTab.collapsed = true;
@@ -2205,6 +2224,7 @@
         <parameter name="aIndex"/>
         <body>
         <![CDATA[
+          this._lastRelatedTab = null;
           this._browsers = null; // invalidate cache
           this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
           this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);
