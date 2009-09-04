@@ -195,7 +195,7 @@
       </hbox>
       
       <hbox flex="1">
-        <richlistbox id="extensionsView" flex="1" 
+        <richlistbox id="extensionsView" flex="1" sort="?name"
                      datasources="rdf:null" context="addonContextMenu"
                      ondragenter="gExtensionsDNDObserver.onDragOver(event)"
                      ondragover="gExtensionsDNDObserver.onDragOver(event)"
