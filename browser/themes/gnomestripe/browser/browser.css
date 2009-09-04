@@ -70,16 +70,6 @@
   padding-top: 0;
 }
 
-#main-window[lwtheme="true"] #urlbar:not([focused="true"]),
-#main-window[lwtheme="true"] #searchbar > textbox:not([focused="true"]),
-#main-window[lwtheme="true"] .tabbrowser-tab:not([selected="true"]) {
-  opacity: .85;
-}
-
-#main-window[lwtheme="true"] .tabbrowser-tab {
-  text-shadow: none;
-}
-
 /* Places toolbar */
 toolbarbutton.bookmark-item {
   margin: 0;

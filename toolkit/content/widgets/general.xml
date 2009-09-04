@@ -60,25 +60,6 @@
     </implementation>
   </binding>
 
-  <binding id="root-element">
-    <implementation>
-      <field name="_lightweightTheme">null</field>
-      <constructor><![CDATA[
-        if (this.hasAttribute("lightweightthemes")) {
-          let temp = {};
-          Components.utils.import("resource://gre/modules/LightweightThemeConsumer.jsm", temp);
-          this._lightweightTheme = new temp.LightweightThemeConsumer(this.ownerDocument);
-        }
-      ]]></constructor>
-      <destructor><![CDATA[
-        if (this._lightweightTheme) {
-          this._lightweightTheme.destroy();
-          this._lightweightTheme = null;
-        }
-      ]]></destructor>
-    </implementation>
-  </binding>
-
   <!--
     Inline Editable UI Element
     - This binding forms the basis of the inline edit treecell and the inline edit
