@@ -1956,30 +1956,36 @@ nsPresContext::FireDOMPaintEvent()
 
   nsCOMPtr<nsIDOMEventTarget> dispatchTarget = do_QueryInterface(ourWindow);
   nsCOMPtr<nsIDOMEventTarget> eventTarget = dispatchTarget;
-  if (mSameDocDirtyRegion.IsEmpty() && !IsChrome()) {
-    // Don't tell the window about this event, it should not know that
-    // something happened in a subdocument. Tell only the chrome event handler.
-    // (Events sent to the window get propagated to the chrome event handler
-    // automatically.)
-    dispatchTarget = do_QueryInterface(ourWindow->GetChromeEventHandler());
-    if (!dispatchTarget) {
-      return;
+  if (!IsChrome()) {
+    PRBool isCrossDocOnly = PR_TRUE;
+    for (PRUint32 i = 0; i < mInvalidateRequests.mRequests.Length(); ++i) {
+      if (!(mInvalidateRequests.mRequests[i].mFlags & nsIFrame::INVALIDATE_CROSS_DOC)) {
+        isCrossDocOnly = PR_FALSE;
+      }
+    }
+    if (isCrossDocOnly) {
+      // Don't tell the window about this event, it should not know that
+      // something happened in a subdocument. Tell only the chrome event handler.
+      // (Events sent to the window get propagated to the chrome event handler
+      // automatically.)
+      dispatchTarget = do_QueryInterface(ourWindow->GetChromeEventHandler());
+      if (!dispatchTarget) {
+        return;
+      }
     }
   }
   // Events sent to the window get propagated to the chrome event handler
   // automatically.
   nsCOMPtr<nsIDOMEvent> event;
+  // This will empty our list in case dispatching the event causes more damage
+  // (hopefully it won't, or we're likely to get an infinite loop! At least
+  // it won't be blocking app execution though).
   NS_NewDOMNotifyPaintEvent(getter_AddRefs(event), this, nsnull,
                             NS_AFTERPAINT,
-                            &mSameDocDirtyRegion, &mCrossDocDirtyRegion);
+                            &mInvalidateRequests);
   nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(event);
   if (!pEvent) return;
 
-  // Empty our regions now in case dispatching the event causes more damage
-  // (hopefully it won't, or we're likely to get an infinite loop! At least
-  // it won't be blocking app execution though).
-  mSameDocDirtyRegion.SetEmpty();
-  mCrossDocDirtyRegion.SetEmpty();
   // Even if we're not telling the window about the event (so eventTarget is
   // the chrome event handler, not the window), the window is still
   // logically the event target.
@@ -1988,7 +1994,8 @@ nsPresContext::FireDOMPaintEvent()
   nsEventDispatcher::DispatchDOMEvent(dispatchTarget, nsnull, event, this, nsnull);
 }
 
-static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
+static PRBool
+MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
 {
   if (!aInnerWindow)
     return PR_FALSE;
@@ -2015,16 +2022,21 @@ static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   return PR_FALSE;
 }
 
+PRBool
+nsPresContext::MayHavePaintEventListener()
+{
+  return ::MayHavePaintEventListener(mDocument->GetInnerWindow());
+}
+
 void
-nsPresContext::NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc)
+nsPresContext::NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags)
 {
   // If there is no paint event listener, then we don't need to fire
   // the asynchronous event. We don't even need to record invalidation.
   // MayHavePaintEventListener is pretty cheap and we could make it
   // even cheaper by providing a more efficient
   // nsPIDOMWindow::GetListenerManager.
-  if (aRect.IsEmpty() ||
-      !MayHavePaintEventListener(mDocument->GetInnerWindow()))
+  if (aRect.IsEmpty() || !MayHavePaintEventListener())
     return;
 
   if (!IsDOMPaintEventPending()) {
@@ -2035,9 +2047,13 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc)
     NS_DispatchToCurrentThread(ev);
   }
 
-  nsRegion* r = aIsCrossDoc ? &mCrossDocDirtyRegion : &mSameDocDirtyRegion;
-  r->Or(*r, aRect);
-  r->SimplifyOutward(10);
+  nsInvalidateRequestList::Request* request =
+    mInvalidateRequests.mRequests.AppendElement();
+  if (!request)
+    return;
+
+  request->mRect = aRect;
+  request->mFlags = aFlags;
 }
 
 PRBool

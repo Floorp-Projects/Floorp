@@ -479,6 +479,9 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_CanvasIntArray_id,
   eDOMClassInfo_CanvasUnsignedIntArray_id,
 
+  eDOMClassInfo_PaintRequest_id,
+  eDOMClassInfo_PaintRequestList_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

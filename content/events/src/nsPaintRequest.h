@@ -12,11 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Novell code.
+ * The Original Code is Mozilla code.
  *
  * The Initial Developer of the Original Code is
- * Novell Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,73 +36,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSCLIENTRECT_H_
-#define NSCLIENTRECT_H_
+#ifndef NSPAINTREQUEST_H_
+#define NSPAINTREQUEST_H_
 
-#include "nsIDOMClientRect.h"
-#include "nsIDOMClientRectList.h"
-#include "nsCOMArray.h"
-#include "nsRect.h"
-#include "nsCOMPtr.h"
+#include "nsIDOMPaintRequest.h"
+#include "nsIDOMPaintRequestList.h"
+#include "nsPresContext.h"
+#include "nsClientRect.h"
 
-class nsPresContext;
-
-class nsClientRect : public nsIDOMClientRect
+class nsPaintRequest : public nsIDOMPaintRequest
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMPAINTREQUEST
 
-  nsClientRect();
-  void SetRect(float aX, float aY, float aWidth, float aHeight) {
-    mX = aX; mY = aY; mWidth = aWidth; mHeight = aHeight;
-  }
-  virtual ~nsClientRect() {}
-  
-  NS_DECL_NSIDOMCLIENTRECT
+  nsPaintRequest() { mRequest.mFlags = 0; }
 
-  void SetLayoutRect(const nsRect& aLayoutRect);
+  void SetRequest(const nsInvalidateRequestList::Request& aRequest)
+  { mRequest = aRequest; }
 
-protected:
-  float mX, mY, mWidth, mHeight;
+private:
+  ~nsPaintRequest() {}
+
+  nsInvalidateRequestList::Request mRequest;
 };
 
-class nsClientRectList : public nsIDOMClientRectList
+class nsPaintRequestList : public nsIDOMPaintRequestList
 {
 public:
-  nsClientRectList() {}
+  nsPaintRequestList() {}
 
   NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIDOMCLIENTRECTLIST
+  NS_DECL_NSIDOMPAINTREQUESTLIST
   
-  void Append(nsIDOMClientRect* aElement) { mArray.AppendObject(aElement); }
+  void Append(nsIDOMPaintRequest* aElement) { mArray.AppendObject(aElement); }
 
-  nsIDOMClientRect* GetItemAt(PRUint32 aIndex)
+  nsIDOMPaintRequest* GetItemAt(PRUint32 aIndex)
   {
     return mArray.SafeObjectAt(aIndex);
   }
 
-  static nsClientRectList* FromSupports(nsISupports* aSupports)
+  static nsPaintRequestList* FromSupports(nsISupports* aSupports)
   {
 #ifdef DEBUG
     {
-      nsCOMPtr<nsIDOMClientRectList> list_qi = do_QueryInterface(aSupports);
+      nsCOMPtr<nsIDOMPaintRequestList> list_qi = do_QueryInterface(aSupports);
 
       // If this assertion fires the QI implementation for the object in
       // question doesn't use the nsIDOMClientRectList pointer as the nsISupports
       // pointer. That must be fixed, or we'll crash...
-      NS_ASSERTION(list_qi == static_cast<nsIDOMClientRectList*>(aSupports),
+      NS_ASSERTION(list_qi == static_cast<nsIDOMPaintRequestList*>(aSupports),
                    "Uh, fix QI!");
     }
 #endif
 
-    return static_cast<nsClientRectList*>(aSupports);
+    return static_cast<nsPaintRequestList*>(aSupports);
   }
 
-protected:
-  virtual ~nsClientRectList() {}
+private:
+  ~nsPaintRequestList() {}
 
-  nsCOMArray<nsIDOMClientRect> mArray;
+  nsCOMArray<nsIDOMPaintRequest> mArray;
 };
 
-#endif /*NSCLIENTRECT_H_*/
+#endif /*NSPAINTREQUEST_H_*/
