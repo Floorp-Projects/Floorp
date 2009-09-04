@@ -241,7 +241,7 @@ class CrashGenerationServer {
   // Note that since we restrict the pipe to one instance, we
   // only need to keep one state of the server. Otherwise, server
   // would have one state per client it is talking to.
-  IPCServerState server_state_;
+  volatile IPCServerState server_state_;
 
   // Whether the server is shutting down.
   volatile bool shutting_down_;
