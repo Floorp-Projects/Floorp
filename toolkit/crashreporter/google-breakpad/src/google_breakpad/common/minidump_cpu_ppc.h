@@ -107,7 +107,11 @@ typedef struct {
 /* Use the same 32-bit alignment when accessing this structure from 64-bit code
  * as is used natively in 32-bit code.  #pragma pack is a MSVC extension
  * supported by gcc. */
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#pragma pack(4)
+#else
 #pragma pack(push, 4)
+#endif
 
 typedef struct {
   /* context_flags is not present in ppc_thread_state, but it aids
@@ -136,7 +140,11 @@ typedef struct {
   MDVectorSaveAreaPPC   vector_save;
 } MDRawContextPPC;  /* Based on ppc_thread_state */
 
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#pragma pack(0)
+#else
 #pragma pack(pop)
+#endif
 
 /* For (MDRawContextPPC).context_flags.  These values indicate the type of
  * context stored in the structure.  MD_CONTEXT_PPC is Breakpad-defined.  Its
