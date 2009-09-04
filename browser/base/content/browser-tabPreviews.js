@@ -390,9 +390,10 @@ var ctrlTab = {
     this.panel.width = Math.min(screen.availWidth * .99,
                                 this.canvasWidth * 1.25 * this.tabPreviewCount);
     var estimateHeight = this.canvasHeight * 1.25 + 75;
-    this.panel.openPopupAtScreen(screen.availLeft + (screen.availWidth - this.panel.width) / 2,
-                                 screen.availTop + (screen.availHeight - estimateHeight) / 2,
-                                 false);
+    this.panel.openPopupAtScreen(
+      (screen.availLeft - screen.left) + (screen.availWidth - this.panel.width) / 2,
+      (screen.availTop - screen.top) + (screen.availHeight - estimateHeight) / 2,
+      false);
   },
 
   close: function ctrlTab_close(aTabToSelect) {
@@ -686,9 +687,10 @@ var allTabs = {
 
     this.panel.popupBoxObject.setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
     var estimateHeight = (this._maxHeight + parseInt(this.container.maxHeight) + 50) / 2;
-    this.panel.openPopupAtScreen(screen.availLeft + (screen.availWidth - this._maxWidth) / 2,
-                                 screen.availTop + (screen.availHeight - estimateHeight) / 2,
-                                 false);
+    this.panel.openPopupAtScreen(
+      (screen.availLeft - screen.left) + (screen.availWidth - this._maxWidth) / 2,
+      (screen.availTop - screen.top) + (screen.availHeight - estimateHeight) / 2,
+      false);
   },
 
   close: function allTabs_close() {
