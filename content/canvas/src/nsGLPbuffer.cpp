@@ -38,6 +38,8 @@
 
 #include <stdarg.h>
 
+#include "prprf.h"
+
 #include "nsGLPbuffer.h"
 
 #include "nsIConsoleService.h"
@@ -58,7 +60,7 @@ nsGLPbuffer::LogMessage(const char *fmt, ...)
 
     nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
     if (console) {
-        vsnprintf(buf, 256, fmt, ap);
+        PR_vsnprintf(buf, 256, fmt, ap);
         console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
         fprintf(stderr, "%s\n", buf);
     }
