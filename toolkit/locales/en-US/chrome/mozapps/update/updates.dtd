@@ -6,6 +6,10 @@
 <!ENTITY  checking.title                  "Checking for Updates">
 <!ENTITY  updateCheck.label               "Looking for newer versions of &brandShortName;…">
 
+<!ENTITY  pluginupdatesfound.title        "Found Updates for Plugins">
+<!ENTITY  pluginupdatesfound.label        "Newer versions of one or more of your plugins where found.">
+<!ENTITY  pluginupdateslink.label         "See how to upgrade your plugins.">
+
 <!ENTITY  noupdatesfound.title            "No Updates Found">
 <!ENTITY  noupdatesautoenabled.intro      "There are no updates available. &brandShortName; will check
                                            periodically for updates.">
