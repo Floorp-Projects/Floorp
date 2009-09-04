@@ -221,6 +221,12 @@ __defineGetter__("gPrefSvc", function() {
                          getService(Ci.nsIPrefBranch);
 });
 
+__defineGetter__("NetUtil", function() {
+  delete this.NetUtil;
+  Components.utils.import("resource://gre/modules/NetUtil.jsm");
+  return NetUtil;
+});
+
 /**
  * Prefixed to all search debug output.
  */
@@ -430,20 +436,6 @@ function closeSafeOutputStream(aFOS) {
     } catch (e) { }
   }
   aFOS.close();
-}
-
-/**
- * Wrapper function for nsIIOService::newURI.
- * @param aURLSpec
- *        The URL string from which to create an nsIURI.
- * @returns an nsIURI object, or null if the creation of the URI failed.
- */
-function makeURI(aURLSpec, aCharset) {
-  try {
-    return gIoSvc.newURI(aURLSpec, aCharset, null);
-  } catch (ex) { }
-
-  return null;
 }
 
 /**
@@ -830,7 +822,7 @@ function EngineURL(aType, aMethod, aTemplate) {
   // Don't serialize expanded mozparams
   this.mozparams = {};
 
-  var templateURI = makeURI(aTemplate);
+  var templateURI = NetUtil.newURI(aTemplate);
   if (!templateURI)
     FAIL("new EngineURL: template is not a valid URI!", Cr.NS_ERROR_FAILURE);
 
@@ -891,7 +883,7 @@ EngineURL.prototype = {
       postData.setData(stringStream);
     }
 
-    return new Submission(makeURI(url), postData);
+    return new Submission(NetUtil.newURI(url), postData);
   },
 
   _hasRelation: function SRC_EURL__hasRelation(aRel)
@@ -1390,7 +1382,7 @@ Engine.prototype = {
     if (this._hasPreferredIcon && !aIsPreferred)
       return;
 
-    var uri = makeURI(aIconURL);
+    var uri = NetUtil.newURI(aIconURL);
 
     // Ignore bad URIs
     if (!uri)
@@ -1426,7 +1418,7 @@ Engine.prototype = {
             }
 
             var str = btoa(String.fromCharCode.apply(null, aByteArray));
-            aEngine._iconURI = makeURI(ICON_DATAURL_PREFIX + str);
+            aEngine._iconURI = NetUtil.newURI(ICON_DATAURL_PREFIX + str);
 
             // The engine might not have a file yet, if it's being downloaded,
             // because the request for the engine file itself (_onLoad) may not
@@ -2002,7 +1994,7 @@ Engine.prototype = {
       this._readOnly = true;
     else
       this._readOnly = false;
-    this._iconURI = makeURI(aJson._iconURL);
+    this._iconURI = NetUtil.newURI(aJson._iconURL);
     for (let i = 0; i < aJson._urls.length; ++i) {
       let url = aJson._urls[i];
       let engineURL = new EngineURL(url.type || URLTYPE_SEARCH_HTML,
@@ -2295,7 +2287,7 @@ Engine.prototype = {
       // (e.g. https://foo.com for https://foo.com/search.php?q=bar).
       var htmlUrl = this._getURLOfType(URLTYPE_SEARCH_HTML);
       ENSURE_WARN(htmlUrl, "Engine has no HTML URL!", Cr.NS_ERROR_UNEXPECTED);
-      this._searchForm = makeURI(htmlUrl.template).prePath;
+      this._searchForm = NetUtil.newURI(htmlUrl.template).prePath;
     }
 
     return this._searchForm;
@@ -2346,7 +2338,7 @@ Engine.prototype = {
 
     if (!aData) {
       // Return a dummy submission object with our searchForm attribute
-      return new Submission(makeURI(this.searchForm), null);
+      return new Submission(NetUtil.newURI(this.searchForm), null);
     }
 
     LOG("getSubmission: In data: \"" + aData + "\"");
@@ -2466,24 +2458,26 @@ SearchService.prototype = {
       cache.directories[parent.path].engines.push(engine._serializeToJSON(true));
     }
 
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    let stream = Cc["@mozilla.org/network/file-output-stream;1"].
-                 createInstance(Ci.nsIFileOutputStream);
-    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
-                    createInstance(Ci.nsIConverterOutputStream);
+    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
+                  createInstance(Ci.nsIFileOutputStream);
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                    createInstance(Ci.nsIScriptableUnicodeConverter);
     let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
     cacheFile.append("search.json");
 
     try {
       LOG("_buildCache: Writing to cache file.");
-      stream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, 0);
-      converter.init(stream, "UTF-8", 0, 0x0000);
-      converter.writeString(json.encode(cache));
+      ostream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, 0);
+      converter.charset = "UTF-8";
+      let data = converter.convertToInputStream(JSON.stringify(cache));
+
+      // Write to the cache file asynchronously
+      NetUtil.asyncCopy(data, ostream, function(rv) {
+        if (!Components.isSuccessCode(rv))
+          LOG("_buildCache: failure during asyncCopy: " + rv);
+      });
     } catch (ex) {
       LOG("_buildCache: Could not write to cache file: " + ex);
-    } finally {
-      converter.close();
-      stream.close();
     }
   },
 
@@ -2900,7 +2894,7 @@ SearchService.prototype = {
         // Convert the byte array to a base64-encoded string
         var str = btoa(String.fromCharCode.apply(null, bytes));
 
-        aEngine._iconURI = makeURI(ICON_DATAURL_PREFIX + str);
+        aEngine._iconURI = NetUtil.newURI(ICON_DATAURL_PREFIX + str);
         LOG("_importSherlockEngine: Set sherlock iconURI to: \"" +
             aEngine._iconURL + "\"");
 
@@ -3058,7 +3052,7 @@ SearchService.prototype = {
                                          aConfirm) {
     LOG("addEngine: Adding \"" + aEngineURL + "\".");
     try {
-      var uri = makeURI(aEngineURL);
+      var uri = NetUtil.newURI(aEngineURL);
       var engine = new Engine(uri, aDataType, false);
       engine._initFromURI();
     } catch (ex) {
@@ -3425,7 +3419,7 @@ var engineUpdateService = {
     let updateURL = engine._getURLOfType(URLTYPE_OPENSEARCH);
     let updateURI = (updateURL && updateURL._hasRelation("self")) ? 
                      updateURL.getSubmission("", engine).uri :
-                     makeURI(engine._updateURL);
+                     NetUtil.newURI(engine._updateURL);
     if (updateURI) {
       if (engine._isDefault && !updateURI.schemeIs("https")) {
         ULOG("Invalid scheme for default engine update");
