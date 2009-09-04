@@ -699,8 +699,8 @@ class TraceRecorder : public avmplus::GCObject {
     Queue<nanojit::Fragment*> whichTreesToTrash;
     Queue<jsbytecode*>      cfgMerges;
     jsval*                  global_dslots;
-    JSSpecializedNative     generatedSpecializedNative;
-    JSSpecializedNative*    pendingSpecializedNative;
+    JSTraceableNative*      generatedTraceableNative;
+    JSTraceableNative*      pendingTraceableNative;
     jsval*                  pendingUnboxSlot;
     nanojit::LIns*          pendingGuardCondition;
     TraceRecorder*          nextRecorderToAbort;
@@ -926,15 +926,15 @@ class TraceRecorder : public avmplus::GCObject {
                                                                 uintN argc, bool constructing);
     JS_REQUIRES_STACK void propagateFailureToBuiltinStatus(nanojit::LIns *ok_ins,
                                                            nanojit::LIns *&status_ins);
-    JS_REQUIRES_STACK JSRecordingStatus emitNativeCall(JSSpecializedNative* sn, uintN argc,
+    JS_REQUIRES_STACK JSRecordingStatus emitNativeCall(JSTraceableNative* known, uintN argc,
                                                        nanojit::LIns* args[]);
     JS_REQUIRES_STACK void emitNativePropertyOp(JSScope* scope,
                                                 JSScopeProperty* sprop,
                                                 nanojit::LIns* obj_ins,
                                                 bool setflag,
                                                 nanojit::LIns* boxed_ins);
-    JS_REQUIRES_STACK JSRecordingStatus callSpecializedNative(JSNativeTraceInfo* trcinfo, uintN argc,
-                                                              bool constructing);
+    JS_REQUIRES_STACK JSRecordingStatus callTraceableNative(JSFunction* fun, uintN argc,
+                                                            bool constructing);
     JS_REQUIRES_STACK JSRecordingStatus callNative(uintN argc, JSOp mode);
     JS_REQUIRES_STACK JSRecordingStatus functionCall(uintN argc, JSOp mode);
 

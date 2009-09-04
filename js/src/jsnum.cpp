@@ -234,8 +234,8 @@ JS_DEFINE_TRCINFO_1(num_parseFloat,
 static JSFunctionSpec number_functions[] = {
     JS_FN(js_isNaN_str,         num_isNaN,           1,0),
     JS_FN(js_isFinite_str,      num_isFinite,        1,0),
-    JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, &num_parseFloat_trcinfo),
-    JS_TN(js_parseInt_str,      num_parseInt,        2,0, &num_parseInt_trcinfo),
+    JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, num_parseFloat_trcinfo),
+    JS_TN(js_parseInt_str,      num_parseInt,        2,0, num_parseInt_trcinfo),
     JS_FS_END
 };
 
@@ -608,7 +608,8 @@ static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,          0,JSFUN_THISP_NUMBER),
 #endif
-    JS_TN(js_toString_str,       num_toString,          1,JSFUN_THISP_NUMBER, &num_toString_trcinfo),
+    JS_TN(js_toString_str,       num_toString,          1,JSFUN_THISP_NUMBER,
+          num_toString_trcinfo),
     JS_FN(js_toLocaleString_str, num_toLocaleString,    0,JSFUN_THISP_NUMBER),
     JS_FN(js_valueOf_str,        num_valueOf,           0,JSFUN_THISP_NUMBER),
     JS_FN(js_toJSON_str,         num_valueOf,           0,JSFUN_THISP_NUMBER),

@@ -1706,9 +1706,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* _anchor, Fragment* _frag
     this->wasRootFragment = _fragment == _fragment->root;
     this->outer = outer;
     this->outerArgc = outerArgc;
-    this->pendingSpecializedNative = NULL;
+    this->pendingTraceableNative = NULL;
     this->newobj_ins = NULL;
     this->loopLabel = NULL;
+    this->generatedTraceableNative = new JSTraceableNative();
+    JS_ASSERT(generatedTraceableNative);
 
 #ifdef JS_JIT_SPEW
     debug_only_print0(LC_TMMinimal, "\n");
@@ -1840,6 +1842,7 @@ TraceRecorder::~TraceRecorder()
     delete func_filter;
     delete float_filter;
     delete lir_buf_writer;
+    delete generatedTraceableNative;
 }
 
 void
@@ -3284,8 +3287,8 @@ TraceRecorder::snapshot(ExitType exitType)
      * instruction after the CALL or APPLY. Even on failure, a _FAIL native
      * must not be called again from the interpreter.
      */
-    bool resumeAfter = (pendingSpecializedNative &&
-                        JSTN_ERRTYPE(pendingSpecializedNative) == FAIL_STATUS);
+    bool resumeAfter = (pendingTraceableNative &&
+                        JSTN_ERRTYPE(pendingTraceableNative) == FAIL_STATUS);
     if (resumeAfter) {
         JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW ||
                   *pc == JSOP_SETPROP || *pc == JSOP_SETNAME || *pc == JSOP_SETMETHOD);
@@ -3333,7 +3336,7 @@ TraceRecorder::snapshot(ExitType exitType)
      * (also at the beginning of a trace branched from such a type guard).
      */
     if (pendingUnboxSlot ||
-        (pendingSpecializedNative && (pendingSpecializedNative->flags & JSTN_UNBOX_AFTER))) {
+        (pendingTraceableNative && (pendingTraceableNative->flags & JSTN_UNBOX_AFTER))) {
         unsigned pos = stackSlots - 1;
         if (pendingUnboxSlot == cx->fp->regs->sp - 2)
             pos = stackSlots - 2;
@@ -6156,7 +6159,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
      * Clear one-shot state used to communicate between record_JSOP_CALL and post-
      * opcode-case-guts record hook (record_NativeCallComplete).
      */
-    tr->pendingSpecializedNative = NULL;
+    tr->pendingTraceableNative = NULL;
     tr->newobj_ins = NULL;
 
     /* Handle one-shot request from finishGetProp to snapshot post-op state and guard. */
@@ -9124,7 +9127,7 @@ TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
     return JSRS_CONTINUE;
 }
 
-#define IGNORE_NATIVE_CALL_COMPLETE_CALLBACK ((JSSpecializedNative*)1)
+#define IGNORE_NATIVE_CALL_COMPLETE_CALLBACK ((JSTraceableNative*)1)
 
 JSRecordingStatus
 TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
@@ -9144,7 +9147,7 @@ TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
     guard(false, lir->ins_eq0(obj_ins), OOM_EXIT);
 
     set(rval, obj_ins);
-    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+    pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
     return JSRS_CONTINUE;
 }
 
@@ -9185,7 +9188,7 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
     }
 
     set(rval, arr_ins);
-    pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+    pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
     return JSRS_CONTINUE;
 }
 
@@ -9266,14 +9269,14 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[])
+TraceRecorder::emitNativeCall(JSTraceableNative* known, uintN argc, LIns* args[])
 {
-    bool constructing = sn->flags & JSTN_CONSTRUCTOR;
+    bool constructing = known->flags & JSTN_CONSTRUCTOR;
 
-    if (JSTN_ERRTYPE(sn) == FAIL_STATUS) {
+    if (JSTN_ERRTYPE(known) == FAIL_STATUS) {
         // This needs to capture the pre-call state of the stack. So do not set
-        // pendingSpecializedNative before taking this snapshot.
-        JS_ASSERT(!pendingSpecializedNative);
+        // pendingTraceableNative before taking this snapshot.
+        JS_ASSERT(!pendingTraceableNative);
 
         // Take snapshot for js_DeepBail and store it in cx->bailExit.
         // If we are calling a slow native, add information to the side exit
@@ -9291,9 +9294,9 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[])
         lir->insGuard(LIR_xbarrier, NULL, guardRec);
     }
 
-    LIns* res_ins = lir->insCall(sn->builtin, args);
+    LIns* res_ins = lir->insCall(known->builtin, args);
     rval_ins = res_ins;
-    switch (JSTN_ERRTYPE(sn)) {
+    switch (JSTN_ERRTYPE(known)) {
       case FAIL_NULL:
         guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
         break;
@@ -9317,7 +9320,7 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[])
      * we have to know the actual return value type for calls that return
      * jsval (like Array_p_pop).
      */
-    pendingSpecializedNative = sn;
+    pendingTraceableNative = known;
 
     return JSRS_CONTINUE;
 }
@@ -9327,9 +9330,11 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[])
  * invocation.
  */
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
-                                     bool constructing)
+TraceRecorder::callTraceableNative(JSFunction* fun, uintN argc, bool constructing)
 {
+    JSTraceableNative* known = FUN_TRCINFO(fun);
+    JS_ASSERT(known && (JSFastNative)fun->u.n.native == known->native);
+
     JSStackFrame* fp = cx->fp;
     jsbytecode *pc = fp->regs->pc;
 
@@ -9339,17 +9344,15 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
     LIns* this_ins = get(&tval);
 
     LIns* args[nanojit::MAXARGS];
-    JSSpecializedNative *sn = trcinfo->specializations;
-    JS_ASSERT(sn);
     do {
-        if (((sn->flags & JSTN_CONSTRUCTOR) != 0) != constructing)
+        if (((known->flags & JSTN_CONSTRUCTOR) != 0) != constructing)
             continue;
 
-        uintN knownargc = strlen(sn->argtypes);
+        uintN knownargc = strlen(known->argtypes);
         if (argc != knownargc)
             continue;
 
-        intN prefixc = strlen(sn->prefix);
+        intN prefixc = strlen(known->prefix);
         JS_ASSERT(prefixc <= 3);
         LIns** argp = &args[argc + prefixc - 1];
         char argtype;
@@ -9360,7 +9363,7 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
 
         uintN i;
         for (i = prefixc; i--; ) {
-            argtype = sn->prefix[i];
+            argtype = known->prefix[i];
             if (argtype == 'C') {
                 *argp = cx_ins;
             } else if (argtype == 'T') { /* this, as an object */
@@ -9398,7 +9401,7 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
             jsval& arg = stackval(0 - (i + 1));
             *argp = get(&arg);
 
-            argtype = sn->argtypes[i];
+            argtype = known->argtypes[i];
             if (argtype == 'd' || argtype == 'i') {
                 if (!isNumber(arg))
                     goto next_specialization;
@@ -9426,10 +9429,10 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
 #if defined DEBUG
         JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
 #endif
-        return emitNativeCall(sn, argc, args);
+        return emitNativeCall(known, argc, args);
 
 next_specialization:;
-    } while ((sn++)->flags & JSTN_MORE);
+    } while ((known++)->flags & JSTN_MORE);
 
     return JSRS_STOP;
 }
@@ -9453,7 +9456,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             LIns* a = get(&vp[2]);
             if (isPromote(a)) {
                 set(&vp[0], a);
-                pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                 return JSRS_CONTINUE;
             }
         }
@@ -9473,23 +9476,17 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                                                         ? LIR_lt
                                                         : LIR_gt, a, b),
                                               a, b)));
-                pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+                pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                 return JSRS_CONTINUE;
             }
         }
         break;
     }
 
-    if (fun->flags & JSFUN_TRCINFO) {
-        JSNativeTraceInfo *trcinfo = FUN_TRCINFO(fun);
-        JS_ASSERT(trcinfo && (JSFastNative)fun->u.n.native == trcinfo->native);
-
-        /* Try to call a type specialized version of the native. */
-        if (trcinfo->specializations) {
-            JSRecordingStatus status = callSpecializedNative(trcinfo, argc, mode == JSOP_NEW);
-            if (status != JSRS_STOP)
-                return status;
-        }
+    if (fun->flags & JSFUN_TRACEABLE) {
+        JSRecordingStatus status;
+        if ((status = callTraceableNative(fun, argc, mode == JSOP_NEW)) != JSRS_STOP)
+            return status;
     }
 
     if (native == js_fun_apply || native == js_fun_call)
@@ -9613,9 +9610,9 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 ARGSIZE_P << (5*ARGSIZE_SHIFT);
     }
 
-    // Generate CallInfo and a JSSpecializedNative structure on the fly.
-    // Do not use JSTN_UNBOX_AFTER for mode JSOP_NEW because
-    // record_NativeCallComplete unboxes the result specially.
+    // Generate CallInfo and a JSTraceableNative structure on the fly.  Do not
+    // use JSTN_UNBOX_AFTER for mode JSOP_NEW because record_NativeCallComplete
+    // unboxes the result specially.
 
     CallInfo* ci = (CallInfo*) lir->insSkip(sizeof(struct CallInfo))->payload();
     ci->_address = uintptr_t(fun->u.n.native);
@@ -9626,18 +9623,19 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     ci->_name = JS_GetFunctionName(fun);
  #endif
 
-    // Generate a JSSpecializedNative structure on the fly.
-    generatedSpecializedNative.builtin = ci;
-    generatedSpecializedNative.flags = FAIL_STATUS | ((mode == JSOP_NEW)
-                                                        ? JSTN_CONSTRUCTOR
-                                                        : JSTN_UNBOX_AFTER);
-    generatedSpecializedNative.prefix = NULL;
-    generatedSpecializedNative.argtypes = NULL;
+    // Generate a JSTraceableNative structure on the fly.
+    generatedTraceableNative->builtin = ci;
+    generatedTraceableNative->native = (JSFastNative)fun->u.n.native;
+    generatedTraceableNative->flags = FAIL_STATUS | ((mode == JSOP_NEW)
+                                                     ? JSTN_CONSTRUCTOR
+                                                     : JSTN_UNBOX_AFTER);
+
+    generatedTraceableNative->prefix = generatedTraceableNative->argtypes = NULL;
 
     // argc is the original argc here. It is used to calculate where to place
     // the return value.
     JSRecordingStatus status;
-    if ((status = emitNativeCall(&generatedSpecializedNative, argc, args)) != JSRS_CONTINUE)
+    if ((status = emitNativeCall(generatedTraceableNative, argc, args)) != JSRS_CONTINUE)
         return status;
 
     // Unroot the vp.
@@ -9699,7 +9697,7 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
                 return call_imacro(call_imacros.String);
             }
             set(&fval, stringify(argv[0]));
-            pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
+            pendingTraceableNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
             return JSRS_CONTINUE;
         }
     }
@@ -11044,12 +11042,12 @@ JS_DEFINE_TRCINFO_1(CatchStopIteration_tn,
 JS_REQUIRES_STACK JSRecordingStatus
 TraceRecorder::record_NativeCallComplete()
 {
-    if (pendingSpecializedNative == IGNORE_NATIVE_CALL_COMPLETE_CALLBACK)
+    if (pendingTraceableNative == IGNORE_NATIVE_CALL_COMPLETE_CALLBACK)
         return JSRS_CONTINUE;
 
     jsbytecode* pc = cx->fp->regs->pc;
 
-    JS_ASSERT(pendingSpecializedNative);
+    JS_ASSERT(pendingTraceableNative);
     JS_ASSERT(*pc == JSOP_CALL || *pc == JSOP_APPLY || *pc == JSOP_NEW || *pc == JSOP_SETPROP);
 
     jsval& v = stackval(-1);
@@ -11069,12 +11067,12 @@ TraceRecorder::record_NativeCallComplete()
      * boxed if the type guard generated by unbox_jsval() fails.
      */
 
-    if (JSTN_ERRTYPE(pendingSpecializedNative) == FAIL_STATUS) {
+    if (JSTN_ERRTYPE(pendingTraceableNative) == FAIL_STATUS) {
         /* Keep cx->bailExit null when it's invalid. */
         lir->insStorei(INS_NULL(), cx_ins, (int) offsetof(JSContext, bailExit));
 
         LIns* status = lir->insLoad(LIR_ld, lirbuf->state, (int) offsetof(InterpState, builtinStatus));
-        if (pendingSpecializedNative == &generatedSpecializedNative) {
+        if (pendingTraceableNative == generatedTraceableNative) {
             LIns* ok_ins = v_ins;
 
             /*
@@ -11106,7 +11104,7 @@ TraceRecorder::record_NativeCallComplete()
     }
 
     JSRecordingStatus ok = JSRS_CONTINUE;
-    if (pendingSpecializedNative->flags & JSTN_UNBOX_AFTER) {
+    if (pendingTraceableNative->flags & JSTN_UNBOX_AFTER) {
         /*
          * If we side exit on the unboxing code due to a type change, make sure that the boxed
          * value is actually currently associated with that location, and that we are talking
@@ -11114,19 +11112,19 @@ TraceRecorder::record_NativeCallComplete()
          */
         JS_ASSERT(&v == &cx->fp->regs->sp[-1] && get(&v) == v_ins);
         set(&v, unbox_jsval(v, v_ins, snapshot(BRANCH_EXIT)));
-    } else if (JSTN_ERRTYPE(pendingSpecializedNative) == FAIL_NEG) {
+    } else if (JSTN_ERRTYPE(pendingTraceableNative) == FAIL_NEG) {
         /* Already added i2f in functionCall. */
         JS_ASSERT(JSVAL_IS_NUMBER(v));
     } else {
         /* Convert the result to double if the builtin returns int32. */
         if (JSVAL_IS_NUMBER(v) &&
-            (pendingSpecializedNative->builtin->_argtypes & ARGSIZE_MASK_ANY) == ARGSIZE_I) {
+            (pendingTraceableNative->builtin->_argtypes & ARGSIZE_MASK_ANY) == ARGSIZE_I) {
             set(&v, lir->ins1(LIR_i2f, v_ins));
         }
     }
 
-    // We'll null pendingSpecializedNative in monitorRecording, on the next op
-    // cycle.  There must be a next op since the stack is non-empty.
+    // We'll null pendingTraceableNative in monitorRecording, on the next op cycle.
+    // There must be a next op since the stack is non-empty.
     return ok;
 }
 
@@ -13046,11 +13044,11 @@ JS_DEFINE_TRCINFO_1(CallIteratorNext,
     (3, (static, JSVAL_FAIL,  CallIteratorNext_tn, CONTEXT, PC, THIS,        0, 0)))
 
 static const struct BuiltinFunctionInfo {
-    JSNativeTraceInfo *ti;
+    JSTraceableNative *tn;
     int nargs;
 } builtinFunctionInfo[JSBUILTIN_LIMIT] = {
-    {&ObjectToIterator_trcinfo,   1},
-    {&CallIteratorNext_trcinfo,   0},
+    {ObjectToIterator_trcinfo,   1},
+    {CallIteratorNext_trcinfo,   0},
 };
 
 JSObject *
@@ -13065,9 +13063,9 @@ js_GetBuiltinFunction(JSContext *cx, uintN index)
         const BuiltinFunctionInfo *bfi = &builtinFunctionInfo[index];
         JSFunction *fun = js_NewFunction(cx,
                                          NULL,
-                                         JS_DATA_TO_FUNC_PTR(JSNative, bfi->ti),
+                                         JS_DATA_TO_FUNC_PTR(JSNative, bfi->tn),
                                          bfi->nargs,
-                                         JSFUN_FAST_NATIVE | JSFUN_TRCINFO,
+                                         JSFUN_FAST_NATIVE | JSFUN_TRACEABLE,
                                          NULL,
                                          NULL);
         if (fun) {

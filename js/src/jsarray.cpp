@@ -85,7 +85,6 @@
 #include "jsatom.h"
 #include "jsbit.h"
 #include "jsbool.h"
-#include "jstracer.h"
 #include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
@@ -3340,15 +3339,15 @@ static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,      array_toSource,     0,0),
 #endif
-    JS_TN(js_toString_str,      array_toString,     0,0, &array_toString_trcinfo),
+    JS_TN(js_toString_str,      array_toString,     0,0, array_toString_trcinfo),
     JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
-    JS_TN("join",               array_join,         1,JSFUN_GENERIC_NATIVE, &array_join_trcinfo),
+    JS_TN("join",               array_join,         1,JSFUN_GENERIC_NATIVE, array_join_trcinfo),
     JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
     JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
-    JS_TN("push",               array_push,         1,JSFUN_GENERIC_NATIVE, &array_push_trcinfo),
-    JS_TN("pop",                array_pop,          0,JSFUN_GENERIC_NATIVE, &array_pop_trcinfo),
+    JS_TN("push",               array_push,         1,JSFUN_GENERIC_NATIVE, array_push_trcinfo),
+    JS_TN("pop",                array_pop,          0,JSFUN_GENERIC_NATIVE, array_pop_trcinfo),
     JS_FN("shift",              array_shift,        0,JSFUN_GENERIC_NATIVE),
     JS_FN("unshift",            array_unshift,      1,JSFUN_GENERIC_NATIVE),
     JS_FN("splice",             array_splice,       2,JSFUN_GENERIC_NATIVE),
