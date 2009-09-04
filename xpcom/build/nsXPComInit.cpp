@@ -579,15 +579,6 @@ NS_InitXPCOM3(nsIServiceManager* *result,
         NS_ENSURE_STATE(sExitManager);
     }
 
-    if ((sCommandLineWasInitialized = !CommandLine::IsInitialized())) {
-#ifdef XP_WIN
-        CommandLine::Init(0, nsnull);
-#else
-        static char const *const argv = { "/really/should/not/exist" };
-        CommandLine::Init(1, &argv);
-#endif
-    }
-
     if (!MessageLoop::current()) {
         sMessageLoop = new MessageLoopForUI();
         NS_ENSURE_STATE(sMessageLoop);
@@ -666,6 +657,30 @@ NS_InitXPCOM3(nsIServiceManager* *result,
         rv = nsDirectoryService::gService->RegisterProvider(appFileLocationProvider);
         if (NS_FAILED(rv)) return rv;
     }
+
+#ifdef MOZ_IPC
+    if ((sCommandLineWasInitialized = !CommandLine::IsInitialized())) {
+#ifdef OS_WIN
+        CommandLine::Init(0, nsnull);
+#else
+        nsCOMPtr<nsIFile> binaryFile;
+        nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                                          NS_GET_IID(nsIFile), 
+                                          getter_AddRefs(binaryFile));
+        NS_ENSURE_STATE(binaryFile);
+        
+        rv = binaryFile->AppendNative(NS_LITERAL_CSTRING("nonexistent-executable"));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        nsCString binaryPath;
+        rv = binaryFile->GetNativePath(binaryPath);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        static char const *const argv = { strdup(binaryPath.get()) };
+        CommandLine::Init(1, &argv);
+#endif
+    }
+#endif
 
     NS_ASSERTION(nsComponentManagerImpl::gComponentManager == NULL, "CompMgr not null at init");
 

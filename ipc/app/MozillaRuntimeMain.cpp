@@ -52,11 +52,19 @@
 #include "nsWindowsWMain.cpp"
 #endif
 
+#if defined(MOZ_WIDGET_GTK2)
+#include <gtk/gtk.h>
+#endif
+
 int
 main(int argc, char* argv[])
 {
 #if 0
     MessageBox(NULL, L"Hi", L"Hi", MB_OK);
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+    gtk_init(0, 0);
 #endif
 
     GeckoProcessType proctype =
