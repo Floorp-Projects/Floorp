@@ -189,7 +189,7 @@ pref("privacy.popups.showBrowserMessage", true);
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=UTF-8&sourceid=navclient&gfns=1&q=");
 
-pref("snav.enabled", true);
+pref("snav.enabled", false);
 
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
