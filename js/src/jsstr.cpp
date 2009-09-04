@@ -2341,15 +2341,14 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Java-like methods. */
-    JS_TN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING,
-          js_str_toString_trcinfo),
+    JS_TN(js_toString_str,     js_str_toString,       0,JSFUN_THISP_STRING, &js_str_toString_trcinfo),
     JS_FN(js_valueOf_str,      js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN(js_toJSON_str,       js_str_toString,       0,JSFUN_THISP_STRING),
     JS_FN("substring",         str_substring,         2,GENERIC_PRIMITIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
-    JS_TN("charAt",            str_charAt,            1,GENERIC_PRIMITIVE, str_charAt_trcinfo),
-    JS_TN("charCodeAt",        str_charCodeAt,        1,GENERIC_PRIMITIVE, str_charCodeAt_trcinfo),
+    JS_TN("charAt",            str_charAt,            1,GENERIC_PRIMITIVE, &str_charAt_trcinfo),
+    JS_TN("charCodeAt",        str_charCodeAt,        1,GENERIC_PRIMITIVE, &str_charCodeAt_trcinfo),
     JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
     JS_FN("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE),
     JS_FN("trim",              str_trim,              0,GENERIC_PRIMITIVE),
@@ -2369,7 +2368,7 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Python-esque sequence methods. */
-    JS_TN("concat",            str_concat,            1,GENERIC_PRIMITIVE, str_concat_trcinfo),
+    JS_TN("concat",            str_concat,            1,GENERIC_PRIMITIVE, &str_concat_trcinfo),
     JS_FN("slice",             str_slice,             2,GENERIC_PRIMITIVE),
 
     /* HTML string methods. */
@@ -2486,7 +2485,7 @@ JS_DEFINE_TRCINFO_1(str_fromCharCode,
     (2, (static, STRING_RETRY, String_fromCharCode, CONTEXT, INT32, 1, 1)))
 
 static JSFunctionSpec string_static_methods[] = {
-    JS_TN("fromCharCode", str_fromCharCode, 1, 0, str_fromCharCode_trcinfo),
+    JS_TN("fromCharCode", str_fromCharCode, 1, 0, &str_fromCharCode_trcinfo),
     JS_FS_END
 };
 

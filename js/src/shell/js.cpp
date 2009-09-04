@@ -1736,7 +1736,7 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
             SHOW_FLAG(THISP_NUMBER);
             SHOW_FLAG(THISP_BOOLEAN);
             SHOW_FLAG(EXPR_CLOSURE);
-            SHOW_FLAG(TRACEABLE);
+            SHOW_FLAG(TRCINFO);
 
 #undef SHOW_FLAG
 
