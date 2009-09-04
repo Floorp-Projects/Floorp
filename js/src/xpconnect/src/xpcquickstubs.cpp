@@ -446,7 +446,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                         if(!JS_DefineFunction(
                                cx, proto, ts->name, ts->native, ts->arity,
                                flags | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS |
-                                       JSFUN_TRACEABLE))
+                                       JSFUN_TRCINFO))
                             return JS_FALSE;
                     }
                 }
