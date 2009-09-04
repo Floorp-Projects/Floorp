@@ -198,7 +198,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface,
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(27571455-f0d3-4293-bb9c-4af60adfe9b9)]
+[scriptable, uuid(d514dd0c-5797-4f75-bea2-47612b49e243)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -413,15 +413,6 @@ interface nsIExtensionManager : nsISupports
   void removeInstallListenerAt(in long index);
 
   /**
-   * Move an Item to the index of another item in its container.
-   * @param   movingID
-   *          The ID of an item to be moved.
-   * @param   destinationID
-   *          The ID of an item to move an item to.
-   */
-  void moveToIndexOf(in AString movingID, in AString destinationID);
-
-  /**
    * Cancels a pending install or upgrade of an item. If the item does
    * not have a pending install or upgrade then this will do nothing.
    * @param   id
@@ -468,19 +459,6 @@ interface nsIExtensionManager : nsISupports
    */
   void updateAndGetNewBlocklistedItems(out unsigned long itemCount,
                                        [retval, array, size_is(itemCount)] out nsIUpdateItem items);
-
-  /**
-   * Sorts addons of the specified type by the specified property in the
-   * Extensions Datasource container starting from the top of their container.
-   * If the addons are already sorted then no action is performed.
-   * @param   type
-   *          The nsIUpdateItem type of the items to sort.
-   * @param   propertyName
-   *          The RDF property name used for sorting.
-   * @param   isAscending
-   *          true to sort ascending and false to sort descending
-   */
-  void sortTypeByProperty(in unsigned long type, in AString propertyName, in boolean isAscending);
 };
 
 /**
