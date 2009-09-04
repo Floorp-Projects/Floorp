@@ -5020,32 +5020,6 @@ ExtensionManager.prototype = {
     return items;
   },
 
-  /**
-   * Move an Item to the index of another item in its container.
-   * @param   movingID
-   *          The ID of the item to be moved.
-   * @param   destinationID
-   *          The ID of an item to move another item to.
-   */
-  moveToIndexOf: function EM_moveToIndexOf(movingID, destinationID) {
-    this.datasource.moveToIndexOf(movingID, destinationID);
-  },
-
-  /**
-   * Sorts addons of the specified type by the specified property starting from
-   * the top of their container. If the addons are already sorted then no action
-   * is performed.
-   * @param   type
-   *          The nsIUpdateItem type of the items to sort.
-   * @param   propertyName
-   *          The RDF property name used for sorting.
-   * @param   isAscending
-   *          true to sort ascending and false to sort descending
-   */
-  sortTypeByProperty: function EM_sortTypeByProperty(type, propertyName, isAscending) {
-    this.datasource.sortTypeByProperty(type, propertyName, isAscending);
-  },
-
   /////////////////////////////////////////////////////////////////////////////
   // Downloads
   _transactions: [],
@@ -7397,86 +7371,6 @@ ExtensionsDataSource.prototype = {
                                         EM_L(""));
       }
     }
-  },
-
-  /**
-   * Move an Item to the index of another item in its container.
-   * @param   movingID
-   *          The ID of the item to be moved.
-   * @param   destinationID
-   *          The ID of an item to move another item to.
-   */
-  moveToIndexOf: function EMDS_moveToIndexOf(movingID, destinationID) {
-    var extensions = gRDF.GetResource(RDFURI_ITEM_ROOT);
-    var ctr = getContainer(this._inner, extensions);
-    var item = gRDF.GetResource(movingID);
-    var index = ctr.IndexOf(gRDF.GetResource(destinationID));
-    if (index == -1)
-      index = 1; // move to the beginning if destinationID is not found
-    this._inner.beginUpdateBatch();
-    ctr.RemoveElement(item, true);
-    ctr.InsertElementAt(item, index, true);
-    this._inner.endUpdateBatch();
-    this.Flush();
-  },
-
-  /**
-   * Sorts addons of the specified type by the specified property starting from
-   * the top of their container. If the addons are already sorted then no action
-   * is performed.
-   * @param   type
-   *          The nsIUpdateItem type of the items to sort.
-   * @param   propertyName
-   *          The RDF property name used for sorting.
-   * @param   isAscending
-   *          true to sort ascending and false to sort descending
-   */
-  sortTypeByProperty: function EMDS_sortTypeByProperty(type, propertyName, isAscending) {
-    var items = [];
-    var ctr = getContainer(this._inner, this._itemRoot);
-    var elements = ctr.GetElements();
-    // Base 0 ordinal for checking against the existing order after sorting
-    var ordinal = 0;
-    while (elements.hasMoreElements()) {
-      var item = elements.getNext().QueryInterface(Ci.nsIRDFResource);
-      var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-      var itemType = this.getItemProperty(id, "type");
-      if (itemType & type) {
-        items.push({ item   : item,
-                     ordinal: ordinal,
-                     sortkey: this.getItemProperty(id, propertyName) });
-        ordinal++;
-      }
-    }
-
-    var direction = isAscending ? 1 : -1;
-    // Locale sensitive sort
-    function compare(a, b) {
-      return String.localeCompare(a.sortkey, b.sortkey) * direction;
-    }
-    items.sort(compare);
-
-    // Check if there are any changes in the order of the items
-    var isDirty = false;
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].ordinal != i) {
-        isDirty = true;
-        break;
-      }
-    }
-
-    // If there are no changes then early return to avoid the perf impact
-    if (!isDirty)
-      return;
-
-    // Reorder the items by moving them to the top of the container
-    this.beginUpdateBatch();
-    for (i = 0; i < items.length; i++) {
-      ctr.RemoveElement(items[i].item, true);
-      ctr.InsertElementAt(items[i].item, i + 1, true);
-    }
-    this.endUpdateBatch();
-    this.Flush();
   },
 
   /**

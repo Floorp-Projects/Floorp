@@ -320,6 +320,7 @@ function showView(aView) {
                         ["updateURL", "?updateURL"],
                         ["version", "?version"] ] ];
   var displays = [ "richlistitem" ];
+  var direction = "ascending";
 
   var prefURL;
   var showInstallFile = true;
@@ -354,6 +355,7 @@ function showView(aView) {
       var types = [ [ ["searchResult", "true", null] ],
                     [ ["statusMessage", "true", null] ] ];
       var displays = [ "richlistitem", "vbox" ];
+      direction = "natural";
       showCheckUpdatesAll = false;
       document.getElementById("searchfield").disabled = isOffline("offlineSearchMsg");
       break;
@@ -475,6 +477,7 @@ function showView(aView) {
   document.getElementById("hideUpdateInfoButton").hidden = true;
   document.getElementById("searchPanel").hidden = aView != "search";
 
+  gExtensionsView.setAttribute("sortDirection", direction);
   AddonsViewBuilder.updateView(types, displays, bindingList, null);
 
   if (aView == "updates" || aView == "installs")
@@ -887,12 +890,6 @@ function rebuildPluginsDS()
 
   cleanDataSource(gPluginsDS, rootctr);
 
-  // Locale sensitive sort
-  function compare(a, b) {
-    return String.localeCompare(a.name, b.name);
-  }
-  plugins.sort(compare);
-
   for (var i = 0; i < plugins.length; i++) {
     var plugin = plugins[i];
     var name = plugin.name;
@@ -1032,8 +1029,6 @@ function Startup()
     gShowGetAddonsPane = gPref.getBoolPref(PREF_GETADDONS_SHOWPANE);
   } catch(e) { }
 
-  // Sort on startup and anytime an add-on is installed or upgraded.
-  gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ANY, "name", true);
   // Extension Command Updating is handled by a command controller.
   gExtensionsView.controllers.appendController(gExtensionsViewController);
   gExtensionsView.addEventListener("select", onAddonSelect, false);
@@ -1421,7 +1416,6 @@ XPInstallDownloadManager.prototype = {
   onInstallsCompleted: function()
   {
     gInstalling = false;
-    gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ANY, "name", true);
     if (gUpdatesOnly) {
       if (this._failed) {
         let continueButton = document.getElementById("continueDialogButton");
