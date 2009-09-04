@@ -65,25 +65,12 @@ namespace nanojit
 
     #ifdef _DEBUG
 
-    uint32_t RegAlloc::countFree()
-    {
-        int cnt = 0;
-        for(Register i=FirstReg; i <= LastReg; i = nextreg(i))
-            cnt += isFree(i) ? 1 : 0;
-        return cnt;
-    }
-
     uint32_t RegAlloc::countActive()
     {
         int cnt = 0;
         for(Register i=FirstReg; i <= LastReg; i = nextreg(i))
             cnt += active[i] ? 1 : 0;
         return cnt;
-    }
-
-    void RegAlloc::checkCount()
-    {
-        NanoAssert(count == (countActive() + countFree()));
     }
 
     bool RegAlloc::isConsistent(Register r, LIns* i)
