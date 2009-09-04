@@ -76,6 +76,8 @@ XPIDLSRCS =					\
 	nsIDOMCommandEvent.idl			\
 	nsIDOMMessageEvent.idl			\
 	nsIDOMNotifyPaintEvent.idl              \
+	nsIDOMPaintRequest.idl			\
+	nsIDOMPaintRequestList.idl		\
 	nsIDOMSimpleGestureEvent.idl		\
 	nsIDOMNSMouseEvent.idl			\
 	nsIDOMOrientationEvent.idl              \

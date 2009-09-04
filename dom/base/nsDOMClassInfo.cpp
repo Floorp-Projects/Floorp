@@ -232,6 +232,7 @@
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMPageTransitionEvent.h"
 #include "nsIDOMMessageEvent.h"
+#include "nsPaintRequest.h"
 #include "nsIDOMNotifyPaintEvent.h"
 #include "nsIDOMNSDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
@@ -1340,6 +1341,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedIntArray, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(PaintRequestList, nsPaintRequestListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -3685,6 +3691,14 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CanvasUnsignedIntArray, nsICanvasUnsignedIntArray)
     DOM_CLASSINFO_MAP_ENTRY(nsICanvasUnsignedIntArray)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(PaintRequest, nsIDOMPaintRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPaintRequest)
+   DOM_CLASSINFO_MAP_END
+ 
+  DOM_CLASSINFO_MAP_BEGIN(PaintRequestList, nsIDOMPaintRequestList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPaintRequestList)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
@@ -10089,6 +10103,17 @@ nsClientRectListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
                               nsresult *aResult)
 {
   nsClientRectList* list = nsClientRectList::FromSupports(aNative);
+
+  return list->GetItemAt(aIndex);
+}
+
+// PaintRequestList scriptable helper
+
+nsISupports*
+nsPaintRequestListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                                nsresult *aResult)
+{
+  nsPaintRequestList* list = nsPaintRequestList::FromSupports(aNative);
 
   return list->GetItemAt(aIndex);
 }

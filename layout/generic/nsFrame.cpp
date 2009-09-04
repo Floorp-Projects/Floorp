@@ -3776,9 +3776,6 @@ nsIFrame::InvalidateOverflowRect()
 void
 nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
 {
-  if (aFlags & INVALIDATE_NOTIFY_ONLY)
-    return;
-
   PRUint32 flags =
     (aFlags & INVALIDATE_IMMEDIATE) ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
   nsIView* view = GetView();
