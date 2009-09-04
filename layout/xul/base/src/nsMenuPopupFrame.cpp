@@ -958,6 +958,8 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // the screen rectangle of the root frame, in dev pixels.
   nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
+  nsCOMPtr<nsIScreenManager> screenManager(
+    do_GetService("@mozilla.org/gfx/screenmanager;1"));
   nsIDeviceContext* devContext = presContext->DeviceContext();
   nscoord offsetForContextMenu = 0;
   // if mScreenXPos and mScreenYPos are -1, then we are anchored. If they
@@ -1012,6 +1014,27 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
                       nsPresContext::CSSPixelsToAppUnits(mScreenXPos) / factor);
     screenPoint.y = presContext->DevPixelsToAppUnits(
                       nsPresContext::CSSPixelsToAppUnits(mScreenYPos) / factor);
+
+    // The screen coordinates are relative to the screen that the window is on,
+    // so adjust them based on the topleft of the screen we are on so that they
+    // are in the absolute screen space.
+    if (screenManager) {
+      // get the screen that the root frame is on
+      nsCOMPtr<nsIScreen> screen;
+      screenManager->ScreenForRect(
+        presContext->AppUnitsToDevPixels(rootScreenRect.x),
+        presContext->AppUnitsToDevPixels(rootScreenRect.y),
+        presContext->AppUnitsToDevPixels(rootScreenRect.width),
+        presContext->AppUnitsToDevPixels(rootScreenRect.height),
+        getter_AddRefs(screen));
+      nsIntRect screenRectPixels;
+      screen->GetRect(&screenRectPixels.x, &screenRectPixels.y,
+                      &screenRectPixels.width, &screenRectPixels.height);
+      nsRect screenRect =
+        screenRectPixels.ToAppUnits(presContext->AppUnitsPerDevPixel());
+      screenPoint += screenRect.TopLeft();
+    }
+
     anchorRect = nsRect(screenPoint, nsSize(0, 0));
 
     // add the margins on the popup
@@ -1033,16 +1056,15 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // screen.
   nsIntRect screenRectPixels;
   nsCOMPtr<nsIScreen> screen;
-  nsCOMPtr<nsIScreenManager> sm(do_GetService("@mozilla.org/gfx/screenmanager;1"));
-  if (sm) {
+  if (screenManager) {
     // for context shells, get the screen where the root frame is located.
     // This is because we need to constrain the content to this content area,
     // so we should use the same screen. Otherwise, use the screen where the
     // anchor is located.
     nsPoint pnt = mInContentShell ? rootScreenRect.TopLeft() : anchorRect.TopLeft();
-    sm->ScreenForRect(presContext->AppUnitsToDevPixels(pnt.x),
-                      presContext->AppUnitsToDevPixels(pnt.y),
-                      1, 1, getter_AddRefs(screen));
+    screenManager->ScreenForRect(presContext->AppUnitsToDevPixels(pnt.x),
+                                 presContext->AppUnitsToDevPixels(pnt.y),
+                                 1, 1, getter_AddRefs(screen));
     if (screen) {
       if (mMenuCanOverlapOSBar)
         screen->GetRect(&screenRectPixels.x, &screenRectPixels.y,
