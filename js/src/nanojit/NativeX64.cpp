@@ -1292,7 +1292,7 @@ namespace nanojit
                 // really do need a page break
                 verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
                 if (_inExit)
-                    codeAlloc(exitStart, exitEnd, _nExitIns);
+                    codeAlloc(exitStart, exitEnd, _nIns);
                 else
                     codeAlloc(codeStart, codeEnd, _nIns);
             }
@@ -1306,7 +1306,7 @@ namespace nanojit
         if (pc - bytes < top) {
             verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
             if (_inExit)
-                codeAlloc(exitStart, exitEnd, _nExitIns);
+                codeAlloc(exitStart, exitEnd, _nIns);
             else
                 codeAlloc(codeStart, codeEnd, _nIns);
             // this jump will call underrunProtect again, but since we're on a new
