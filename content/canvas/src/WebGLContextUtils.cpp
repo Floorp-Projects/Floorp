@@ -1,6 +1,8 @@
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 #include "WebGLContext.h"
 
+#include "prprf.h"
+
 #include "nsIConsoleService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrefBranch.h"
@@ -170,7 +172,7 @@ WebGLContext::LogMessage(const char *fmt, ...)
 
   nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (console) {
-    vsnprintf(buf, 256, fmt, ap);
+    PR_vsnprintf(buf, 256, fmt, ap);
     console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
     fprintf(stderr, "%s\n", buf);
   }
@@ -187,7 +189,7 @@ WebGLContext::ErrorMessage(const char *fmt, ...)
 
   nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (console) {
-    vsnprintf(buf, 256, fmt, ap);
+    PR_vsnprintf(buf, 256, fmt, ap);
     console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
     fprintf(stderr, "%s\n", buf);
   }
