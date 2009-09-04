@@ -383,9 +383,7 @@ WeaveSvc.prototype = {
         break;
 
       case FIREFOX_ID:
-        engines = ["Bookmarks", "Cookie", "Extension", "Form", "History",
-          "Input", "MicroFormat", "Password", "Plugin", "Prefs", "Tab",
-          "Theme"];
+        engines = ["Bookmarks", "Form", "History", "Password", "Prefs", "Tab"];
         break;
 
       case SEAMONKEY_ID:
