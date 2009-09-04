@@ -39,7 +39,6 @@
 #include <sys/wait.h>
 
 #include <cstdlib>
-#include <cstdio>
 #include <ctime>
 #include <string.h>
 

@@ -34,7 +34,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -447,7 +446,7 @@ static bool PrintMinidumpProcess(const string &minidump_file,
   // Process the minidump.
   ProcessState process_state;
   if (minidump_processor.Process(minidump_file, &process_state) !=
-      google_breakpad::PROCESS_OK) {
+      MinidumpProcessor::PROCESS_OK) {
     BPLOG(ERROR) << "MinidumpProcessor::Process failed";
     return false;
   }

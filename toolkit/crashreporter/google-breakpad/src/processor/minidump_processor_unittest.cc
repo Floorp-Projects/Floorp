@@ -32,14 +32,10 @@
 
 #include <cstdlib>
 #include <string>
-#include <iostream>
-#include <fstream>
-#include "breakpad_googletest_includes.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/code_modules.h"
-#include "google_breakpad/processor/minidump.h"
 #include "google_breakpad/processor/minidump_processor.h"
 #include "google_breakpad/processor/process_state.h"
 #include "google_breakpad/processor/stack_frame.h"
@@ -47,34 +43,17 @@
 #include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 
-namespace google_breakpad {
-class MockMinidump : public Minidump {
- public:
-  MockMinidump() : Minidump("") {
-  }
-
-  MOCK_METHOD0(Read,bool());
-  MOCK_CONST_METHOD0(path, string());
-  MOCK_CONST_METHOD0(header,const MDRawHeader*());
-  MOCK_METHOD0(GetThreadList,MinidumpThreadList*());
-};
-}
-
 namespace {
 
+using std::string;
 using google_breakpad::BasicSourceLineResolver;
 using google_breakpad::CallStack;
 using google_breakpad::CodeModule;
 using google_breakpad::MinidumpProcessor;
-using google_breakpad::MinidumpThreadList;
-using google_breakpad::MinidumpThread;
-using google_breakpad::MockMinidump;
 using google_breakpad::ProcessState;
 using google_breakpad::scoped_ptr;
 using google_breakpad::SymbolSupplier;
 using google_breakpad::SystemInfo;
-using std::string;
-using ::testing::Return;
 
 static const char *kSystemInfoOS = "Windows NT";
 static const char *kSystemInfoOSShort = "windows";
@@ -83,6 +62,17 @@ static const char *kSystemInfoCPU = "x86";
 static const char *kSystemInfoCPUInfo =
     "GenuineIntel family 6 model 13 stepping 8";
 
+#define ASSERT_TRUE(cond) \
+  if (!(cond)) {                                                        \
+    fprintf(stderr, "FAILED: %s at %s:%d\n", #cond, __FILE__, __LINE__); \
+    return false; \
+  }
+
+#define ASSERT_FALSE(cond) ASSERT_TRUE(!(cond))
+
+#define ASSERT_EQ(e1, e2) ASSERT_TRUE((e1) == (e2))
+
+// Use ASSERT_*_ABORT in functions that can't return a boolean.
 #define ASSERT_TRUE_ABORT(cond) \
   if (!(cond)) {                                                        \
     fprintf(stderr, "FAILED: %s at %s:%d\n", #cond, __FILE__, __LINE__); \
@@ -98,11 +88,6 @@ class TestSymbolSupplier : public SymbolSupplier {
   virtual SymbolResult GetSymbolFile(const CodeModule *module,
                                      const SystemInfo *system_info,
                                      string *symbol_file);
-
-  virtual SymbolResult GetSymbolFile(const CodeModule *module,
-                                     const SystemInfo *system_info,
-                                     string *symbol_file,
-                                     string *symbol_data);
 
   // When set to true, causes the SymbolSupplier to return INTERRUPT
   void set_interrupt(bool interrupt) { interrupt_ = interrupt; }
@@ -138,55 +123,7 @@ SymbolSupplier::SymbolResult TestSymbolSupplier::GetSymbolFile(
   return NOT_FOUND;
 }
 
-SymbolSupplier::SymbolResult TestSymbolSupplier::GetSymbolFile(
-    const CodeModule *module,
-    const SystemInfo *system_info,
-    string *symbol_file,
-    string *symbol_data) {
-  SymbolSupplier::SymbolResult s = GetSymbolFile(module, system_info,
-                                                 symbol_file);
-  if (s == FOUND) {
-    std::ifstream in(symbol_file->c_str());
-    std::getline(in, *symbol_data, std::string::traits_type::to_char_type(
-                     std::string::traits_type::eof()));
-    in.close();
-  }
-
-  return s;
-}
-
-
-class MinidumpProcessorTest : public ::testing::Test {
-
-};
-
-TEST_F(MinidumpProcessorTest, TestCorruptMinidumps) {
-  MockMinidump dump;
-  TestSymbolSupplier supplier;
-  BasicSourceLineResolver resolver;
-  MinidumpProcessor processor(&supplier, &resolver);
-  ProcessState state;
-
-  EXPECT_EQ(processor.Process("nonexistant minidump", &state),
-            google_breakpad::PROCESS_ERROR_MINIDUMP_NOT_FOUND);
-
-  EXPECT_CALL(dump, path()).WillRepeatedly(Return("mock minidump"));
-  EXPECT_CALL(dump, Read()).WillRepeatedly(Return(true));
-
-  MDRawHeader fakeHeader;
-  fakeHeader.time_date_stamp = 0;
-  EXPECT_CALL(dump, header()).WillOnce(Return((MDRawHeader*)NULL)).
-      WillRepeatedly(Return(&fakeHeader));
-  EXPECT_EQ(processor.Process(&dump, &state),
-            google_breakpad::PROCESS_ERROR_NO_MINIDUMP_HEADER);
-
-  EXPECT_CALL(dump, GetThreadList()).
-      WillOnce(Return((MinidumpThreadList*)NULL));
-  EXPECT_EQ(processor.Process(&dump, &state),
-            google_breakpad::PROCESS_ERROR_NO_THREAD_LIST);
-}
-
-TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
+static bool RunTests() {
   TestSymbolSupplier supplier;
   BasicSourceLineResolver resolver;
   MinidumpProcessor processor(&supplier, &resolver);
@@ -196,7 +133,7 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
 
   ProcessState state;
   ASSERT_EQ(processor.Process(minidump_file, &state),
-            google_breakpad::PROCESS_OK);
+            MinidumpProcessor::PROCESS_OK);
   ASSERT_EQ(state.system_info()->os, kSystemInfoOS);
   ASSERT_EQ(state.system_info()->os_short, kSystemInfoOSShort);
   ASSERT_EQ(state.system_info()->os_version, kSystemInfoOSVersion);
@@ -260,12 +197,19 @@ TEST_F(MinidumpProcessorTest, TestBasicProcessing) {
   state.Clear();
   supplier.set_interrupt(true);
   ASSERT_EQ(processor.Process(minidump_file, &state),
-            google_breakpad::PROCESS_SYMBOL_SUPPLIER_INTERRUPTED
-            );
+            MinidumpProcessor::PROCESS_INTERRUPTED);
+
+  return true;
 }
+
 }  // namespace
 
 int main(int argc, char *argv[]) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  BPLOG_INIT(&argc, &argv);
+
+  if (!RunTests()) {
+    return 1;
+  }
+
+  return 0;
 }

@@ -152,14 +152,7 @@ src_processor_contained_range_map_unittest_LDADD = \
 	src/processor/pathname_stripper.lo
 
 src_processor_minidump_processor_unittest_SOURCES = \
-	src/processor/minidump_processor_unittest.cc \
-	src/testing/gtest/src/gtest-all.cc \
-	src/testing/src/gmock-all.cc
-src_processor_minidump_processor_unittest_CPPFLAGS = \
-	-I$(top_srcdir)/src/testing/include \
-        -I$(top_srcdir)/src/testing/gtest/include \
-	-I$(top_srcdir)/src/testing/gtest \
-	-I$(top_srcdir)/src/testing
+	src/processor/minidump_processor_unittest.cc
 src_processor_minidump_processor_unittest_LDADD = \
 	src/processor/basic_code_modules.lo \
 	src/processor/basic_source_line_resolver.lo \

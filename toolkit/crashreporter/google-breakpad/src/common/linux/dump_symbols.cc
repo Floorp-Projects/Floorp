@@ -30,7 +30,6 @@
 #include <a.out.h>
 #include <cstdarg>
 #include <cstdlib>
-#include <cstdio>
 #include <cxxabi.h>
 #include <elf.h>
 #include <errno.h>
@@ -167,6 +166,18 @@ static ElfW(Addr) GetLoadingAddress(const ElfW(Phdr) *program_headers,
   }
   // For other types of ELF, return 0.
   return 0;
+}
+
+static bool WriteFormat(int fd, const char *fmt, ...) {
+  va_list list;
+  char buffer[4096];
+  ssize_t expected, written;
+  va_start(list, fmt);
+  vsnprintf(buffer, sizeof(buffer), fmt, list);
+  expected = strlen(buffer);
+  written = write(fd, buffer, strlen(buffer));
+  va_end(list);
+  return expected == written;
 }
 
 static bool IsValidElf(const ElfW(Ehdr) *elf_header) {
@@ -581,7 +592,7 @@ static bool LoadSymbols(ElfW(Ehdr) *elf_header, struct SymbolInfo *symbols) {
   return LoadSymbols(stab_section, stabstr_section, loading_addr, symbols);
 }
 
-static bool WriteModuleInfo(FILE *file,
+static bool WriteModuleInfo(int fd,
                             ElfW(Half) arch,
                             const std::string &obj_file) {
   const char *arch_name = NULL;
@@ -610,26 +621,26 @@ static bool WriteModuleInfo(FILE *file,
     size_t slash_pos = obj_file.find_last_of("/");
     if (slash_pos != std::string::npos)
       filename = obj_file.substr(slash_pos + 1);
-    return 0 <= fprintf(file, "MODULE Linux %s %s %s\n", arch_name,
-                        id_no_dash, filename.c_str());
+    return WriteFormat(fd, "MODULE Linux %s %s %s\n", arch_name,
+                       id_no_dash, filename.c_str());
   }
   return false;
 }
 
-static bool WriteSourceFileInfo(FILE *file, const struct SymbolInfo &symbols) {
+static bool WriteSourceFileInfo(int fd, const struct SymbolInfo &symbols) {
   for (SourceFileInfoList::const_iterator it =
 	 symbols.source_file_info.begin();
        it != symbols.source_file_info.end(); it++) {
     if (it->source_id != -1) {
       const char *name = it->name;
-      if (0 > fprintf(file, "FILE %d %s\n", it->source_id, name))
+      if (!WriteFormat(fd, "FILE %d %s\n", it->source_id, name))
         return false;
     }
   }
   return true;
 }
 
-static bool WriteOneFunction(FILE *file,
+static bool WriteOneFunction(int fd,
                              const struct FuncInfo &func_info){
   // Discard the ending part of the name.
   std::string func_name(func_info.name);
@@ -641,19 +652,19 @@ static bool WriteOneFunction(FILE *file,
   if (func_info.size <= 0)
     return true;
 
-  if (0 <= fprintf(file, "FUNC %lx %lx %d %s\n",
-                   (unsigned long) func_info.rva_to_base,
-                   (unsigned long) func_info.size,
-                   func_info.stack_param_size,
-                   func_name.c_str())) {
+  if (WriteFormat(fd, "FUNC %lx %lx %d %s\n",
+                  func_info.rva_to_base,
+                  func_info.size,
+                  func_info.stack_param_size,
+                  func_name.c_str())) {
     for (LineInfoList::const_iterator it = func_info.line_info.begin();
 	 it != func_info.line_info.end(); it++) {
       const struct LineInfo &line_info = *it;
-      if (0 > fprintf(file, "%lx %lx %d %d\n",
-                      (unsigned long) line_info.rva_to_base,
-                      (unsigned long) line_info.size,
-                      line_info.line_num,
-                      line_info.source_id))
+      if (!WriteFormat(fd, "%lx %lx %d %d\n",
+                       line_info.rva_to_base,
+                       line_info.size,
+                       line_info.line_num,
+                       line_info.source_id))
         return false;
     }
     return true;
@@ -661,7 +672,7 @@ static bool WriteOneFunction(FILE *file,
   return false;
 }
 
-static bool WriteFunctionInfo(FILE *file, const struct SymbolInfo &symbols) {
+static bool WriteFunctionInfo(int fd, const struct SymbolInfo &symbols) {
   for (SourceFileInfoList::const_iterator it =
 	 symbols.source_file_info.begin();
        it != symbols.source_file_info.end(); it++) {
@@ -669,16 +680,16 @@ static bool WriteFunctionInfo(FILE *file, const struct SymbolInfo &symbols) {
     for (FuncInfoList::const_iterator fiIt = file_info.func_info.begin(); 
 	 fiIt != file_info.func_info.end(); fiIt++) {
       const struct FuncInfo &func_info = *fiIt;
-      if (!WriteOneFunction(file, func_info))
+      if (!WriteOneFunction(fd, func_info))
         return false;
     }
   }
   return true;
 }
 
-static bool DumpStabSymbols(FILE *file, const struct SymbolInfo &symbols) {
-  return WriteSourceFileInfo(file, symbols) &&
-    WriteFunctionInfo(file, symbols);
+static bool DumpStabSymbols(int fd, const struct SymbolInfo &symbols) {
+  return WriteSourceFileInfo(fd, symbols) &&
+    WriteFunctionInfo(fd, symbols);
 }
 
 //
@@ -738,7 +749,7 @@ class MmapWrapper {
 namespace google_breakpad {
 
 bool DumpSymbols::WriteSymbolFile(const std::string &obj_file,
-                                  FILE *sym_file) {
+                                  int sym_fd) {
   int obj_fd = open(obj_file.c_str(), O_RDONLY);
   if (obj_fd < 0)
     return false;
@@ -748,7 +759,7 @@ bool DumpSymbols::WriteSymbolFile(const std::string &obj_file,
     return false;
   void *obj_base = mmap(NULL, st.st_size,
                         PROT_READ | PROT_WRITE, MAP_PRIVATE, obj_fd, 0);
-  if (obj_base == MAP_FAILED)
+  if (!obj_base)
     return false;
   MmapWrapper map_wrapper(obj_base, st.st_size);
   ElfW(Ehdr) *elf_header = reinterpret_cast<ElfW(Ehdr) *>(obj_base);
@@ -760,8 +771,8 @@ bool DumpSymbols::WriteSymbolFile(const std::string &obj_file,
   if (!LoadSymbols(elf_header, &symbols))
      return false;
   // Write to symbol file.
-  if (WriteModuleInfo(sym_file, elf_header->e_machine, obj_file) &&
-      DumpStabSymbols(sym_file, symbols))
+  if (WriteModuleInfo(sym_fd, elf_header->e_machine, obj_file) &&
+      DumpStabSymbols(sym_fd, symbols))
     return true;
 
   return false;
