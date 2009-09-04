@@ -62,6 +62,12 @@ function signaturesMatch(m1, m2)
 {
   if (m1.shortName != m2.shortName)
     return false;
+
+  if (m1.isVirtual != m2.isVirtual)
+    return false;
+  
+  if (m1.isStatic != m2.isStatic)
+    return false;
   
   let p1 = m1.type.parameters;
   let p2 = m2.type.parameters;
