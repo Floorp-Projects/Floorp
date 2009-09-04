@@ -311,8 +311,27 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
  */
 #define GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom)                       \
     JS_BEGIN_MACRO                                                            \
+        JS_ASSERT(*(pc) != JSOP_DOUBLE);                                      \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
-        JS_GET_SCRIPT_ATOM((script), index_, atom);                           \
+        JS_GET_SCRIPT_ATOM(script, pc, index_, atom);                         \
+    JS_END_MACRO
+
+/*
+ * Variant for getting a double atom when we might be in an imacro. Bytecodes
+ * with literals that are only ever doubles must use this macro, and never use
+ * GET_ATOM_FROM_BYTECODE or JS_GET_SCRIPT_ATOM.
+ *
+ * Unfortunately some bytecodes such as JSOP_LOOKUPSWITCH have immediates that
+ * might be string or double atoms. Those opcodes cannot be used from imacros.
+ * See the assertions in the JSOP_DOUBLE and JSOP_LOOKUPSWTICH* opcode cases in
+ * jsops.cpp.
+ */
+#define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, atom)                     \
+    JS_BEGIN_MACRO                                                            \
+        uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
+        JS_ASSERT(index_ < (script)->atomMap.length);                         \
+        (atom) = (script)->atomMap.vector[index_];                            \
+        JS_ASSERT(ATOM_IS_DOUBLE(atom));                                      \
     JS_END_MACRO
 
 #define GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj)                      \
