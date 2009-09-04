@@ -59,12 +59,22 @@ class SymbolSupplier {
 
   // Retrieves the symbol file for the given CodeModule, placing the
   // path in symbol_file if successful.  system_info contains strings
-  // identifying the operating system and CPU; SymbolSupplier may use to help
-  // locate the symbol file.  system_info may be NULL or its fields may be
-  // empty if these values are unknown.
+  // identifying the operating system and CPU; SymbolSupplier may use
+  // to help locate the symbol file.  system_info may be NULL or its
+  // fields may be empty if these values are unknown.  symbol_file
+  // must be a pointer to a valid string
   virtual SymbolResult GetSymbolFile(const CodeModule *module,
                                      const SystemInfo *system_info,
                                      string *symbol_file) = 0;
+  // Same as above, except also places symbol data into symbol_data.
+  // If symbol_data is NULL, the data is not returned.
+  // TODO(nealsid) Once we have symbol data caching behavior implemented
+  // investigate making all symbol suppliers implement all methods,
+  // and make this pure virtual
+  virtual SymbolResult GetSymbolFile(const CodeModule *module,
+                                     const SystemInfo *system_info,
+                                     string *symbol_file,
+                                     string *symbol_data) = 0;
 };
 
 }  // namespace google_breakpad

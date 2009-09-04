@@ -176,7 +176,9 @@ inline void RecalculateOffset(struct slist* cur_list, char *stabstr) {
 // Demangle using demangle library on Solaris.
 std::string Demangle(const char *mangled) {
   int status = 0;
+  std::string str(mangled);
   char *demangled = (char *)malloc(demangleLen);
+
   if (!demangled) {
     fprintf(stderr, "no enough memory.\n");
     goto out;
@@ -188,12 +190,11 @@ std::string Demangle(const char *mangled) {
     goto out;
   }
 
-  std::string str(demangled);
+  str = demangled;
   free(demangled);
-  return str;
 
 out:
-  return std::string(mangled);
+  return str; 
 }
 
 bool WriteFormat(int fd, const char *fmt, ...) {
@@ -650,7 +651,7 @@ bool DumpSymbols::WriteSymbolFile(const std::string &obj_file, int sym_fd) {
     return false;
   void *obj_base = mmap(NULL, st.st_size,
                         PROT_READ, MAP_PRIVATE, obj_fd, 0);
-  if (!obj_base)
+  if (obj_base == MAP_FAILED))
     return false;
   MmapWrapper map_wrapper(obj_base, st.st_size);
   GElf_Ehdr elf_header;
