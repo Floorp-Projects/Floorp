@@ -56,7 +56,7 @@ jsdtrace_fun_classname(JSFunction *fun)
 {
     return (fun &&
             !FUN_INTERPRETED(fun) &&
-            !(fun->flags & JSFUN_TRACEABLE) &&
+            !(fun->flags & JSFUN_TRCINFO) &&
             FUN_CLASP(fun))
            ? (char *)FUN_CLASP(fun)->name
            : dempty;

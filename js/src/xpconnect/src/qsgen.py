@@ -1161,7 +1161,7 @@ def writeTraceableStub(f, customMethodCalls, method):
     stubName = method.iface.name + '_' + header.methodNativeName(method)
     writeTraceableQuickStub(f, customMethodCalls, method, stubName)
     fs = '{"%s", %s, %d}' % (method.name,
-                             "JS_DATA_TO_FUNC_PTR(JSNative, %s_trcinfo)" % stubName,
+                             "JS_DATA_TO_FUNC_PTR(JSNative, &%s_trcinfo)" % stubName,
                              len(method.params))
     return fs
 
