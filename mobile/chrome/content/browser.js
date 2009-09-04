@@ -60,8 +60,7 @@ function getBrowser() {
   return Browser.selectedBrowser;
 }
 
-const kDefaultTextZoom = 1.2;
-const kDefaultBrowserWidth = 1024;
+const kDefaultBrowserWidth = 800;
 
 function debug() {
   let bv = Browser._browserView;
@@ -2213,14 +2212,8 @@ ProgressController.prototype = {
   _networkStart: function _networkStart() {
     this._tab.startLoading();
 
-    if (Browser.selectedBrowser == this.browser) {
+    if (Browser.selectedBrowser == this.browser)
       BrowserUI.update(TOOLBARSTATE_LOADING);
-
-      // We increase the default text size to make the text more readable when
-      // the page is zoomed out
-      if (this.browser.markupDocumentViewer.textZoom != kDefaultTextZoom)
-        this.browser.markupDocumentViewer.textZoom = kDefaultTextZoom;
-    }
 
     // broadcast a URLChanged message for consumption by InputHandler
     let event = document.createEvent("Events");
