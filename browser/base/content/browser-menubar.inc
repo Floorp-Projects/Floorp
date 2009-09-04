@@ -464,7 +464,7 @@
                          onpopupshowing="HistoryMenu.onPopupShowing(event);"
                          onpopuphidden="HistoryMenu.onPopupHidden(event);"
                          place="place:redirectsMode=2&amp;sort=4&amp;maxResults=10"
-                         tooltip="btTooltip">
+                         tooltip="bhTooltip">
                 <menuitem id="historyMenuBack"
                           label="&backCmd.label;"
 #ifdef XP_MACOSX
@@ -526,7 +526,7 @@
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
-               tooltip="btTooltip">
+               tooltip="bhTooltip">
       <menuitem id="menu_bookmarkThisPage"
                 label="&bookmarkThisPageCmd.label;"
                 command="Browser:AddBookmarkAs"
