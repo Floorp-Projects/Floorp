@@ -16,10 +16,7 @@
     </resources>
   </binding>
   
-  <binding id="wizard" extends="chrome://global/content/bindings/general.xml#root-window">
-    <resources>
-      <stylesheet src="chrome://global/skin/wizard.css"/>
-    </resources>
+  <binding id="wizard" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <content>
       <xul:hbox class="wizard-header" anonid="Header"/>
       

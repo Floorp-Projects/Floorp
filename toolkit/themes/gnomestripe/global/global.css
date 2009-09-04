@@ -188,36 +188,6 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 /* ::::: miscellaneous formatting ::::: */
 
-:root[lwtheme="true"],
-[lwthemefooter="true"],
-:root[lwtheme="true"] toolbar,
-:root[lwtheme="true"] statusbarpanel {
-  -moz-appearance: none;
-}
-
-:root[lwtheme="true"] sidebarheader {
-  background: none;
-}
-
-:root[lwthemetextcolor="dark"] {
-  text-shadow: 1px 1px 2px white;
-}
-
-:root[lwthemetextcolor="bright"] {
-  text-shadow: 1px 1px 2px black;
-}
-
-:root[lwtheme="true"] menubar > menu,
-:root[lwtheme="true"] toolbarbutton {
-  text-shadow: none;
-}
-
-:root[lwtheme="true"] menubar > menu:not([open="true"]),
-:root[lwtheme="true"] toolbarbutton:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
-  color: inherit;
-  text-shadow: inherit;
-}
-
 .inset {
   border: 1px solid ThreeDShadow;
   border-right-color: ThreeDHighlight;
