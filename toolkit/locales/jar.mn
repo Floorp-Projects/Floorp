@@ -3,6 +3,8 @@
 @AB_CD@.jar:
 % locale global @AB_CD@ %locale/@AB_CD@/global/
   locale/@AB_CD@/global/about.dtd                       (%chrome/global/about.dtd)
+  locale/@AB_CD@/global/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
+  locale/@AB_CD@/global/aboutRights.properties          (%chrome/global/aboutRights.properties)
   locale/@AB_CD@/global/appPicker.dtd                   (%chrome/global/appPicker.dtd)
   locale/@AB_CD@/global/brand.dtd                       (generic/chrome/global/brand.dtd)
 + locale/@AB_CD@/global/browser.properties              (%chrome/global/browser.properties)

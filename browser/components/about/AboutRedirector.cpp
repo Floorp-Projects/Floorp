@@ -80,7 +80,12 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT },
   { "privatebrowsing", "chrome://browser/content/aboutPrivateBrowsing.xhtml",
     nsIAboutModule::ALLOW_SCRIPT },
-  { "rights", "chrome://browser/content/aboutRights.xhtml",
+  { "rights",
+#ifdef OFFICIAL_BUILD
+    "chrome://global/content/aboutRights.xhtml",
+#else
+    "chrome://global/content/aboutRights-unbranded.xhtml",
+#endif
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::ALLOW_SCRIPT },
   { "robots", "chrome://browser/content/aboutRobots.xhtml",

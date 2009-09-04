@@ -6,7 +6,7 @@
   %brandDTD;
   <!ENTITY % securityPrefsDTD SYSTEM "chrome://browser/locale/preferences/security.dtd">
   %securityPrefsDTD;
-  <!ENTITY % aboutRightsDTD SYSTEM "chrome://browser/locale/aboutRights.dtd">
+  <!ENTITY % aboutRightsDTD SYSTEM "chrome://global/locale/aboutRights.dtd">
   %aboutRightsDTD;
 ]>
 # ***** BEGIN LICENSE BLOCK *****
@@ -61,31 +61,21 @@
 
 <ul>
   <li>&rights.intro-point1a;<a href="http://www.mozilla.org/MPL/">&rights.intro-point1b;</a>&rights.intro-point1c;</li>
-#ifdef OFFICIAL_BUILD
 # Point 2 discusses Mozilla trademarks, and isn't needed when the build is unbranded.
 # Point 3 discusses privacy policy, unbranded builds get a placeholder (for the vendor to replace)
 # Point 4 discusses web service terms, unbranded builds gets a placeholder (for the vendor to replace)
   <li>&rights.intro-point2a;<a href="http://www.mozilla.org/foundation/trademarks/policy.html">&rights.intro-point2b;</a>&rights.intro-point2c;</li>
   <li>&rights.intro-point3a;<a href="http://www.mozilla.com/legal/privacy/">&rights.intro-point3b;</a>&rights.intro-point3c;</li>
   <li>&rights.intro-point4a;<a href="about:rights#webservices" onclick="showServices();">&rights.intro-point4b;</a>&rights.intro-point4c;</li>
-#else
-  <li>&rights.intro-point3-unbranded;</li>
-  <li>&rights.intro-point4a-unbranded;<a href="about:rights#webservices" onclick="showServices();">&rights.intro-point4b-unbranded;</a>&rights.intro-point4c-unbranded;</li>
-#endif
 </ul>
 
 <div id="webservices-container">
   <a name="webservices"/>
   <h3>&rights.webservices-header;</h3>
 
-#ifdef OFFICIAL_BUILD
   <p>&rights.webservices-a;<code>&rights.webservices-b;</code>&rights.webservices-c;</p>
-#else
-  <p>&rights.webservices-unbranded;</p>
-#endif
 
   <ol>
-#ifdef OFFICIAL_BUILD
 # Terms only apply to official builds, unbranded builds get a placeholder.
     <li>&rights.webservices-term1;</li>
     <li>&rights.webservices-term2;</li>
@@ -94,9 +84,6 @@
     <li><strong>&rights.webservices-term5;</strong></li>
     <li>&rights.webservices-term6;</li>
     <li>&rights.webservices-term7;</li>
-#else
-    <li>&rights.webservices-term1-unbranded;</li>
-#endif
   </ol>
 </div>
 
