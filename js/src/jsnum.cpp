@@ -860,6 +860,12 @@ NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d)
 {
+    jsint i;
+
+    if (JSDOUBLE_IS_INT(d, i)) {
+        if (jsuint(i) < INT_STRING_LIMIT)
+            return &js_IntStrings[i];
+    }
     return NumberToStringWithBase(cx, d, 10);
 }
 

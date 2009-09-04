@@ -2638,6 +2638,8 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 
       case JSTRACE_STRING:
         for (;;) {
+            if (JSString::isStatic((JSString *)thing))
+                goto out;
             flagp = THING_TO_FLAGP(thing, sizeof(JSGCThing));
             JS_ASSERT((*flagp & GCF_FINAL) == 0);
             JS_ASSERT(kind == MapGCFlagsToTraceKind(*flagp));
@@ -3233,6 +3235,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
     JSStringFinalizeOp finalizer;
 
     JS_RUNTIME_UNMETER(rt, liveStrings);
+    JS_ASSERT(!JSString::isStatic(str));
     if (str->isDependent()) {
         /* A dependent string can not be external and must be valid. */
         JS_ASSERT(type < 0);
@@ -3244,11 +3247,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
         chars = str->flatChars();
         valid = (chars != NULL);
         if (valid) {
-            if (IN_UNIT_STRING_SPACE_RT(rt, chars)) {
-                JS_ASSERT(rt->unitStrings[*chars] == str);
-                JS_ASSERT(type < 0);
-                rt->unitStrings[*chars] = NULL;
-            } else if (type < 0) {
+            if (type < 0) {
                 if (cx)
                     cx->free(chars);
                 else
