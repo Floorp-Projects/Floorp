@@ -1501,6 +1501,30 @@ public:
 };
 
 
+// PaintRequestList helper
+
+class nsPaintRequestListSH : public nsArraySH
+{
+protected:
+  nsPaintRequestListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
+  {
+  }
+
+  virtual ~nsPaintRequestListSH()
+  {
+  }
+
+  virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                                 nsresult *aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsPaintRequestListSH(aData);
+  }
+};
+
+
 #ifdef MOZ_XUL
 // TreeColumns helper
 

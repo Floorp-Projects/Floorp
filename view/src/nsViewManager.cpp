@@ -642,19 +642,32 @@ nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
 
 // Invalidate all widgets which overlap the view, other than the view's own widgets.
 void
-nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegion)
+nsViewManager::UpdateViewAfterScroll(nsView *aView,
+                                     const nsRegion& aBlitRegion,
+                                     const nsRegion& aUpdateRegion)
 {
   NS_ASSERTION(RootViewManager()->mScrollCnt > 0,
                "Someone forgot to call WillBitBlit()");
+  // No need to check for empty aUpdateRegion here. We'd still need to
+  // do most of the work here anyway.
 
-  if (!aUpdateRegion.IsEmpty()) {
-    nsView* displayRoot = GetDisplayRootFor(aView);
-    nsPoint offset = aView->GetOffsetTo(displayRoot);
-    nsRegion update(aUpdateRegion);
-    update.MoveBy(offset);
-    UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
-                     update, nsnull);
-    // FlushPendingInvalidates();
+  nsView* displayRoot = GetDisplayRootFor(aView);
+  nsPoint offset = aView->GetOffsetTo(displayRoot);
+  nsRegion update(aUpdateRegion);
+  update.MoveBy(offset);
+
+  UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
+                   update, nsnull);
+  // FlushPendingInvalidates();
+
+  // Don't send invalidation notifications when we're scrolling in a popup
+  if (displayRoot == RootViewManager()->mRootView) {
+    nsPoint rootOffset = aView->GetOffsetTo(mRootView);
+    nsRegion blit(aBlitRegion);
+    blit.MoveBy(rootOffset);
+    update.MoveBy(rootOffset - offset);
+    
+    GetViewObserver()->NotifyInvalidateForScrolledView(blit, update);
   }
 
   Composite();
