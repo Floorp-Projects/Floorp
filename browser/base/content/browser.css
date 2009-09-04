@@ -17,6 +17,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
+#main-window[lwtheme="true"] {
+  background-repeat: no-repeat;
+  background-position: top right;
+}
+
+#browser-bottombox[lwthemefooter="true"] {
+  background-repeat: no-repeat;
+  background-position: bottom left;
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);

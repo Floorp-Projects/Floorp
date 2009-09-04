@@ -80,6 +80,8 @@
         titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
+        lightweightthemes="true"
+        lightweightthemesfooter="browser-bottombox"
         windowtype="navigator:browser"
         screenX="4" screenY="4"
         browsingmode="normal"
