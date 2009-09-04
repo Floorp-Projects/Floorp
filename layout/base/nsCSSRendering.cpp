@@ -1162,30 +1162,35 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
   gfxRect frameGfxRect = RectToGfxRect(aFrameArea, twipsPerPixel);
   frameGfxRect.Round();
+  gfxRect dirtyGfxRect = RectToGfxRect(aDirtyRect, twipsPerPixel);
 
   for (PRUint32 i = shadows->Length(); i > 0; --i) {
     nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
     if (shadowItem->mInset)
       continue;
 
-    nsRect shadowRect = aFrameArea;
-    shadowRect.MoveBy(shadowItem->mXOffset, shadowItem->mYOffset);
-    shadowRect.Inflate(shadowItem->mSpread, shadowItem->mSpread);
+    gfxRect shadowRect(aFrameArea.x, aFrameArea.y, aFrameArea.width, aFrameArea.height);
+    shadowRect.MoveBy(gfxPoint(shadowItem->mXOffset, shadowItem->mYOffset));
+    shadowRect.Outset(shadowItem->mSpread);
+
+    gfxRect shadowRectPlusBlur = shadowRect;
+    shadowRect.ScaleInverse(twipsPerPixel);
+    shadowRect.Round();
 
     // shadowRect won't include the blur, so make an extra rect here that includes the blur
     // for use in the even-odd rule below.
-    nsRect shadowRectPlusBlur = shadowRect;
     nscoord blurRadius = shadowItem->mRadius;
-    shadowRectPlusBlur.Inflate(blurRadius, blurRadius);
-
-    gfxRect shadowGfxRect = RectToGfxRect(shadowRect, twipsPerPixel);
-    gfxRect shadowGfxRectPlusBlur = RectToGfxRect(shadowRectPlusBlur, twipsPerPixel);
+    shadowRectPlusBlur.Outset(blurRadius);
+    shadowRectPlusBlur.ScaleInverse(twipsPerPixel);
+    shadowRectPlusBlur.RoundOut();
 
     gfxContext* renderContext = aRenderingContext.ThebesContext();
     nsRefPtr<gfxContext> shadowContext;
     nsContextBoxBlur blurringArea;
 
-    shadowContext = blurringArea.Init(shadowRect, blurRadius, twipsPerPixel, renderContext, aDirtyRect);
+    // shadowRect is already in device pixels, pass 1 as the appunits/pixel value
+    blurRadius /= twipsPerPixel;
+    shadowContext = blurringArea.Init(shadowRect, blurRadius, 1, renderContext, dirtyGfxRect);
     if (!shadowContext)
       continue;
 
@@ -1202,7 +1207,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     // Clip out the area of the actual frame so the shadow is not shown within
     // the frame
     renderContext->NewPath();
-    renderContext->Rectangle(shadowGfxRectPlusBlur);
+    renderContext->Rectangle(shadowRectPlusBlur);
     if (hasBorderRadius)
       renderContext->RoundedRectangle(frameGfxRect, borderRadii);
     else
@@ -1225,9 +1230,9 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       };
       nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
                                              &clipRectRadii);
-      shadowContext->RoundedRectangle(shadowGfxRect, clipRectRadii);
+      shadowContext->RoundedRectangle(shadowRect, clipRectRadii);
     } else {
-      shadowContext->Rectangle(shadowGfxRect);
+      shadowContext->Rectangle(shadowRect);
     }
     shadowContext->Fill();
 
@@ -1274,6 +1279,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
                                            &innerRadii);
   }
 
+  gfxRect dirtyGfxRect = RectToGfxRect(aDirtyRect, twipsPerPixel);
   for (PRUint32 i = shadows->Length(); i > 0; --i) {
     nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
     if (!shadowItem->mInset)
@@ -1287,18 +1293,28 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
      *                 that we will NOT paint in
      */
     nscoord blurRadius = shadowItem->mRadius;
-    nsRect shadowPaintRect = paddingRect;
-    shadowPaintRect.Inflate(blurRadius, blurRadius);
+    gfxRect shadowRect(paddingRect.x, paddingRect.y, paddingRect.width, paddingRect.height);
+    gfxRect shadowPaintRect = shadowRect;
+    shadowPaintRect.Outset(blurRadius);
 
-    nsRect shadowClipRect = paddingRect;
-    shadowClipRect.MoveBy(shadowItem->mXOffset, shadowItem->mYOffset);
-    shadowClipRect.Deflate(shadowItem->mSpread, shadowItem->mSpread);
+    gfxRect shadowClipRect = shadowRect;
+    shadowClipRect.MoveBy(gfxPoint(shadowItem->mXOffset, shadowItem->mYOffset));
+    shadowClipRect.Inset(shadowItem->mSpread);
+
+    shadowRect.ScaleInverse(twipsPerPixel);
+    shadowRect.Round();
+    shadowPaintRect.ScaleInverse(twipsPerPixel);
+    shadowPaintRect.RoundOut();
+    shadowClipRect.ScaleInverse(twipsPerPixel);
+    shadowClipRect.Round();
 
     gfxContext* renderContext = aRenderingContext.ThebesContext();
     nsRefPtr<gfxContext> shadowContext;
     nsContextBoxBlur blurringArea;
 
-    shadowContext = blurringArea.Init(shadowPaintRect, blurRadius, twipsPerPixel, renderContext, aDirtyRect);
+    // shadowPaintRect is already in device pixels, pass 1 as the appunits/pixel value
+    blurRadius /= twipsPerPixel;
+    shadowContext = blurringArea.Init(shadowPaintRect, blurRadius, 1, renderContext, dirtyGfxRect);
     if (!shadowContext)
       continue;
 
@@ -1314,20 +1330,17 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
 
     // Clip the context to the area of the frame's padding rect, so no part of the
     // shadow is painted outside
-    gfxRect shadowGfxRect = RectToGfxRect(paddingRect, twipsPerPixel);
     renderContext->NewPath();
     if (hasBorderRadius)
-      renderContext->RoundedRectangle(shadowGfxRect, innerRadii, PR_FALSE);
+      renderContext->RoundedRectangle(shadowRect, innerRadii, PR_FALSE);
     else
-      renderContext->Rectangle(shadowGfxRect);
+      renderContext->Rectangle(shadowRect);
     renderContext->Clip();
 
     // Fill the temporary surface minus the area within the frame that we should
     // not paint in, and blur and apply it
-    gfxRect shadowPaintGfxRect = RectToGfxRect(shadowPaintRect, twipsPerPixel);
-    gfxRect shadowClipGfxRect = RectToGfxRect(shadowClipRect, twipsPerPixel);
     shadowContext->NewPath();
-    shadowContext->Rectangle(shadowPaintGfxRect);
+    shadowContext->Rectangle(shadowPaintRect);
     if (hasBorderRadius) {
       // Calculate the radii the inner clipping rect will have
       gfxCornerSizes clipRectRadii;
@@ -1338,9 +1351,9 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
       };
       nsCSSBorderRenderer::ComputeInnerRadii(innerRadii, borderSizes,
                                              &clipRectRadii);
-      shadowContext->RoundedRectangle(shadowClipGfxRect, clipRectRadii, PR_FALSE);
+      shadowContext->RoundedRectangle(shadowClipRect, clipRectRadii, PR_FALSE);
     } else {
-      shadowContext->Rectangle(shadowClipGfxRect);
+      shadowContext->Rectangle(shadowClipRect);
     }
     shadowContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
     shadowContext->Fill();
@@ -3193,13 +3206,14 @@ ImageRenderer::Draw(nsPresContext*       aPresContext,
 // nsContextBoxBlur
 // -----
 gfxContext*
-nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
+nsContextBoxBlur::Init(const gfxRect& aRect, nscoord aBlurRadius,
                        PRInt32 aAppUnitsPerDevPixel,
                        gfxContext* aDestinationCtx,
-                       const nsRect& aDirtyRect)
+                       const gfxRect& aDirtyRect)
 {
-  PRInt32 blurRadius = static_cast<PRInt32>(aBlurRadius / aAppUnitsPerDevPixel);
   mDestinationCtx = aDestinationCtx;
+
+  PRInt32 blurRadius = static_cast<PRInt32>(aBlurRadius / aAppUnitsPerDevPixel);
 
   // if not blurring, draw directly onto the destination device
   if (blurRadius <= 0) {
@@ -3208,14 +3222,18 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aBlurRadius,
   }
 
   // Convert from app units to device pixels
-  gfxRect rect = RectToGfxRect(aRect, aAppUnitsPerDevPixel);
+  gfxRect rect = aRect;
+  rect.ScaleInverse(aAppUnitsPerDevPixel);
 
   if (rect.IsEmpty()) {
     mContext = aDestinationCtx;
     return mContext;
   }
 
-  gfxRect dirtyRect = RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
+  gfxRect dirtyRect = aDirtyRect;
+  dirtyRect.ScaleInverse(aAppUnitsPerDevPixel);
+
+  mDestinationCtx = aDestinationCtx;
 
   // Create the temporary surface for blurring
   mContext = blur.Init(rect, gfxIntSize(blurRadius, blurRadius), &dirtyRect);
