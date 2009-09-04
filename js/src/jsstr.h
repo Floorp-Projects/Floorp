@@ -55,34 +55,21 @@
 
 JS_BEGIN_EXTERN_C
 
-/*
- * Maximum character code for which we will create a pinned unit string on
- * demand -- see JSRuntime.unitStrings in jscntxt.h.
- */
-#define UNIT_STRING_LIMIT 256U
-
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
 
-#define UNIT_STRING_SPACE(sp)    ((jschar *) ((sp) + UNIT_STRING_LIMIT))
-#define UNIT_STRING_SPACE_RT(rt) UNIT_STRING_SPACE((rt)->unitStrings)
-
-#define IN_UNIT_STRING_SPACE(sp,cp)                                           \
-    ((size_t)((cp) - UNIT_STRING_SPACE(sp)) < 2 * UNIT_STRING_LIMIT)
-#define IN_UNIT_STRING_SPACE_RT(rt,cp)                                        \
-    IN_UNIT_STRING_SPACE((rt)->unitStrings, cp)
-
 class TraceRecorder;
+
+enum {
+    UNIT_STRING_LIMIT        = 256U,
+    INT_STRING_LIMIT         = 256U,
+};
+
+extern JSString js_UnitStrings[];
+extern JSString js_IntStrings[];
 
 extern jschar *
 js_GetDependentStringChars(JSString *str);
-
-/*
- * Make the independent string containing only the character code c, which must
- * be less than UNIT_STRING_LIMIT, and cache it in the runtime.
- */
-extern JSString *
-js_MakeUnitString(JSContext *cx, jschar c);
 
 /*
  * The GC-thing "string" type.
@@ -132,7 +119,6 @@ struct JSString {
     friend JSString * JS_FASTCALL
     js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
-private:
     size_t          mLength;
     union {
         jschar      *mChars;
@@ -377,8 +363,13 @@ public:
         JS_ASSERT(isDependent() && dependentIsPrefix());
         mBase = bstr;
     }
+    
+    static inline bool isStatic(JSString *s) {
+        return (s >= js_UnitStrings && s < &js_UnitStrings[UNIT_STRING_LIMIT]) ||
+            (s >= js_IntStrings && s < &js_IntStrings[INT_STRING_LIMIT]);
+    }
 
-    static JSString *getUnitString(JSContext *cx, jschar c);
+    static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
 };
 
@@ -558,9 +549,6 @@ js_InitRuntimeStringState(JSContext *cx);
 
 extern JSBool
 js_InitDeflatedStringCache(JSRuntime *rt);
-
-extern void
-js_FinishUnitStrings(JSRuntime *rt);
 
 extern void
 js_FinishRuntimeStringState(JSContext *cx);

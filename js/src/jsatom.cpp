@@ -566,21 +566,6 @@ js_TraceAtomState(JSTracer *trc, JSBool allAtoms)
     } else {
         JS_DHashTableEnumerate(&state->stringAtoms, js_pinned_atom_tracer, trc);
     }
-
-    if (rt->state != JSRTS_LANDING) {
-        /*
-         * Unit strings aren't in state->stringAtoms, so we mark any that have
-         * been created on demand. This bloats more than strictly necessary but
-         * we can't help that without putting unit atoms in state->stringAtoms,
-         * which is too expensive.
-         */
-        for (uintN i = 0; i < UNIT_STRING_LIMIT; i++) {
-            if (JSString *str = rt->unitStrings[i]) {
-                JS_SET_TRACING_INDEX(trc, "unit_string_atom", i);
-                JS_CallTracer(trc, str, JSTRACE_STRING);
-            }
-        }
-    }
 }
 
 static JSDHashOperator
@@ -688,10 +673,8 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 
     if (str->length() == 1) {
         jschar c = str->chars()[0];
-        if (c < UNIT_STRING_LIMIT) {
-            JSString *str = JSString::getUnitString(cx, c);
-            return str ? (JSAtom *) STRING_TO_JSVAL(str) : NULL;
-        }
+        if (c < UNIT_STRING_LIMIT)
+            return (JSAtom *) STRING_TO_JSVAL(JSString::unitString(c));
     }
 
     state = &cx->runtime->atomState;
@@ -826,10 +809,8 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
 
     if (length == 1) {
         jschar c = *chars;
-        if (c < UNIT_STRING_LIMIT) {
-            JSString *str = JSString::getUnitString(cx, c);
-            return str ? (JSAtom *) STRING_TO_JSVAL(str) : NULL;
-        }
+        if (c < UNIT_STRING_LIMIT)
+            return (JSAtom *) STRING_TO_JSVAL(JSString::unitString(c));
     }
 
     str.initFlat((jschar *)chars, length);

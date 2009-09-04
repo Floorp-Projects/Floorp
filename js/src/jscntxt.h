@@ -485,12 +485,7 @@ struct JSRuntime {
     uint32              deflatedStringCacheBytes;
 #endif
 
-    /*
-     * Empty and unit-length strings held for use by this runtime's contexts.
-     * The unitStrings array and its elements are created on demand.
-     */
     JSString            *emptyString;
-    JSString            **unitStrings;
 
     /*
      * Builtin functions, lazily created and held for use by the trace recorder.

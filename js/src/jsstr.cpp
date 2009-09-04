@@ -2391,6 +2391,8 @@ static JSFunctionSpec string_methods[] = {
     JS_FS_END
 };
 
+#include "jsstatic.cpp"
+
 JSBool
 js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -2442,7 +2444,7 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     if (argc == 1 &&
         (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
-        str = JSString::getUnitString(cx, code);
+        str = JSString::unitString(code);
         if (!str)
             return JS_FALSE;
         *vp = STRING_TO_JSVAL(str);
@@ -2476,7 +2478,7 @@ String_fromCharCode(JSContext* cx, int32 i)
     JS_ASSERT(JS_ON_TRACE(cx));
     jschar c = (jschar)i;
     if (c < UNIT_STRING_LIMIT)
-        return JSString::getUnitString(cx, c);
+        return JSString::unitString(c);
     return js_NewStringCopyN(cx, &c, 1);
 }
 #endif
@@ -2526,64 +2528,6 @@ js_InitDeflatedStringCache(JSRuntime *rt)
         return JS_FALSE;
 #endif
     return JS_TRUE;
-}
-
-JSString *
-js_MakeUnitString(JSContext *cx, jschar c)
-{
-    jschar *cp, i;
-    JSRuntime *rt;
-    JSString **sp;
-
-    JS_ASSERT(c < UNIT_STRING_LIMIT);
-    rt = cx->runtime;
-    if (!rt->unitStrings) {
-        sp = (JSString **) js_calloc(UNIT_STRING_LIMIT * sizeof(JSString *) +
-                                     UNIT_STRING_LIMIT * 2 * sizeof(jschar));
-        if (!sp) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
-        cp = UNIT_STRING_SPACE(sp);
-        for (i = 0; i < UNIT_STRING_LIMIT; i++) {
-            *cp = i;
-            cp += 2;
-        }
-        JS_LOCK_GC(rt);
-        if (!rt->unitStrings) {
-            rt->unitStrings = sp;
-            JS_UNLOCK_GC(rt);
-        } else {
-            JS_UNLOCK_GC(rt);
-            js_free(sp);
-        }
-    }
-    if (!rt->unitStrings[c]) {
-        JSString *str;
-
-        cp = UNIT_STRING_SPACE_RT(rt);
-        str = js_NewString(cx, cp + 2 * c, 1);
-        if (!str)
-            return NULL;
-        JS_LOCK_GC(rt);
-        if (!rt->unitStrings[c]) {
-            str->flatSetAtomized();
-            rt->unitStrings[c] = str;
-        }
-#ifdef DEBUG
-        else
-            str->initFlat(NULL, 0);  /* avoid later assertion (bug 479381) */
-#endif
-        JS_UNLOCK_GC(rt);
-    }
-    return rt->unitStrings[c];
-}
-
-void
-js_FinishUnitStrings(JSRuntime *rt)
-{
-    js_free(rt->unitStrings);
-    rt->unitStrings = NULL;
 }
 
 void
@@ -3378,6 +3322,16 @@ js_GetStringBytes(JSContext *cx, JSString *str)
     char *bytes;
     JSHashNumber hash;
     JSHashEntry *he, **hep;
+
+    if (JSString::isStatic(str)) {
+#ifdef IS_LITTLE_ENDIAN
+        /* Unit string data is {c, 0, 0, 0} so we can just cast. */
+        return (char *)str->chars();
+#else
+        /* Unit string data is {0, c, 0, 0} so we can point into the middle. */
+        return (char *)str->chars() + 1;
+#endif            
+    }
 
     if (cx) {
         rt = cx->runtime;
