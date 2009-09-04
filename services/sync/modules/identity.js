@@ -44,6 +44,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/constants.js");
+Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 
 Utils.lazy(this, 'ID', IDManager);
@@ -76,48 +77,49 @@ IDManager.prototype = {
  */
 
 function Identity(realm, username, password) {
-  this._realm = realm;
-  this._username = username;
+  this.realm = realm;
+  this.username = username;
   this._password = password;
 }
 Identity.prototype = {
-  get realm() this._realm,
-  set realm(value) {
-    let current = Utils.findPassword(this.realm, this.username);
-    if (current)
-      this.password = null;
-
-    this._realm = value;
-
-    if (current)
-      this.password = current;
-  },
-
-  get username() this._username,
-  set username(value) {
-    let current = Utils.findPassword(this.realm, this.username);
-    if (current)
-      this.password = null;
-
-    this._username = value;
-
-    if (current)
-      this.password = current;
-  },
-
-  get userHash() { return Utils.sha1(this.username); },
-
-  get password() {
+  get password password() {
     // Look up the password then cache it
-    if (!this._password)
-      return this._password = Utils.findPassword(this.realm, this.username);
+    if (this._password == null)
+      for each (let login in this._logins)
+        if (login.username == this.username)
+          this._password = login.password;
     return this._password;
   },
-  set password(value) {
-    Utils.setPassword(this.realm, this.username, value);
+
+  set password password(value) {
+    this._password = value;
   },
 
-  setTempPassword: function Id_setTempPassword(value) {
-    this._password = value;
-  }
+  persist: function persist() {
+    // Clean up any existing passwords unless it's what we're persisting
+    let exists = false;
+    for each (let login in this._logins) {
+      if (login.username == this.username && login.password == this._password)
+        exists = true;
+      else
+        Svc.Login.removeLogin(login);
+    }
+
+    // No need to create the login after clearing out the other ones
+    let log = Log4Moz.repository.getLogger("Identity");
+    if (exists) {
+      log.trace("Skipping persist: " + this.realm + " for " + this.username);
+      return;
+    }
+
+    // Add the new username/password
+    log.trace("Persisting " + this.realm + " for " + this.username);
+    let nsLoginInfo = new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+    let login = new nsLoginInfo(PWDMGR_HOST, null, this.realm,
+      this.username, this.password, "", "");
+    Svc.Login.addLogin(login);
+  },
+
+  get _logins _logins() Svc.Login.findLogins({}, PWDMGR_HOST, null, this.realm)
 };
