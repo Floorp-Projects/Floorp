@@ -2395,6 +2395,10 @@
           END_CASE(JSOP_RESETBASE)
 
           BEGIN_CASE(JSOP_DOUBLE)
+            JS_ASSERT(!fp->imacpc);
+            JS_ASSERT(atoms == script->atomMap.vector);
+            /* FALL THROUGH */
+
           BEGIN_CASE(JSOP_STRING)
             LOAD_ATOM(0);
             PUSH_OPND(ATOM_KEY(atom));
@@ -2617,6 +2621,7 @@
              * JSOP_LOOKUPSWITCH and JSOP_LOOKUPSWITCHX are never used if
              * any atom index in it would exceed 64K limit.
              */
+            JS_ASSERT(!fp->imacpc);
             JS_ASSERT(atoms == script->atomMap.vector);
             pc2 = regs.pc;
             lval = POP_OPND();
