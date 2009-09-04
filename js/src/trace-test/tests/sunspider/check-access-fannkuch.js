@@ -63,4 +63,4 @@ function fannkuch(n) {
 
 var n = 8;
 var ret = fannkuch(n);
-print(ret == 22)
+assertEq(ret, 22)

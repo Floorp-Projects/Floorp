@@ -116,4 +116,4 @@ for (var i = 0; i < expected.length; i++) {
   if (passed)
     passed = expected[i] == x[i];
 }
-print(passed);
+assertEq(passed, true);

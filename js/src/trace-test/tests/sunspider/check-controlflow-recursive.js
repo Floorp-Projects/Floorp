@@ -24,4 +24,4 @@ for ( var i = 3; i <= 5; i++ ) {
     ret += fib(17.0+i);
     ret += tak(3*i+3,2*i+2,i+1);
 }
-print(ret == 57775);
+assertEq(ret, 57775);
