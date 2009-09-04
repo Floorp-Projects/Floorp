@@ -62,7 +62,7 @@ class TraceRecorder;
 
 enum {
     UNIT_STRING_LIMIT        = 256U,
-    INT_STRING_LIMIT         = 256U,
+    INT_STRING_LIMIT         = 256U
 };
 
 extern JSString js_UnitStrings[];
