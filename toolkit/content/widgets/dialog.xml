@@ -4,11 +4,14 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-  
-  <binding id="dialog" extends="chrome://global/content/bindings/general.xml#root-element">
+
+  <binding id="dialog-base">
     <resources>
       <stylesheet src="chrome://global/skin/dialog.css"/>
     </resources>
+  </binding>
+  
+  <binding id="dialog" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
     <content>
       <xul:vbox class="box-inherit dialog-content-box" flex="1">
         <children/>
@@ -418,10 +421,7 @@
 
   </binding>
 
-  <binding id="dialogheader">
-    <resources>
-      <stylesheet src="chrome://global/skin/dialog.css"/>
-    </resources>
+  <binding id="dialogheader" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
     <content>
       <xul:label class="dialogheader-title" xbl:inherits="value=title,crop" crop="right" flex="1"/>
       <xul:label class="dialogheader-description" xbl:inherits="value=description"/>

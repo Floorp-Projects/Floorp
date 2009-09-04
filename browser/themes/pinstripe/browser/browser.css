@@ -46,79 +46,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-#main-window[lwtheme="true"] #urlbar:not([focused="true"]),
-#main-window[lwtheme="true"] #searchbar > textbox:not([focused="true"]) {
-  opacity: .9;
-}
-
-#main-window[lwtheme="true"] > #navigator-toolbox toolbarbutton {
-  color: inherit !important;
-  text-shadow: inherit;
-}
-
-#main-window[lwtheme="true"] #PersonalToolbar,
-#main-window[lwtheme="true"] #nav-bar {
-  -moz-appearance: none !important;
-  background: none !important;
-  border-style: none !important;
-}
-
-#main-window[lwtheme="true"] .tabbrowser-strip,
-#main-window[lwtheme="true"] .tabbrowser-tabs {
-  background: none !important;
-}
-
-#main-window[lwtheme="true"] .tabbrowser-tab,
-#main-window[lwtheme="true"]:not([active="true"]) .tabbrowser-tab {
-  color: inherit;
-  text-shadow: inherit;
-}
-
-#main-window[lwtheme="true"] .tabbrowser-tab[selected="true"] {
-  background-color: transparent !important;
-}
-#main-window[lwtheme="true"] .tabbrowser-tab:not([selected="true"]):not(:hover) > .tab-text {
-  opacity: .8;
-}
-
-#main-window[lwtheme="true"] .tabbrowser-arrowscrollbox > .tabs-newtab-button {
-  width: auto;
-  -moz-box-flex: 1;
-  -moz-box-pack: start;
-  border-style: none;
-  background: none;
-}
-
-#main-window[lwthemetextcolor="bright"] .tabbrowser-tab {
-  -moz-border-left-colors: rgba(255,255,255,.1) rgba(255,255,255,.6) rgba(255,255,255,.2);
-  -moz-border-bottom-colors: rgba(255,255,255,.1) rgba(255,255,255,.6) rgba(255,255,255,.2);
-  -moz-border-right-colors: rgba(255,255,255,.1) rgba(255,255,255,.6) rgba(255,255,255,.2);
-}
-
-#main-window[lwthemetextcolor="bright"] .tabbrowser-tab[selected="true"] {
-  -moz-border-left-colors: rgba(255,255,255,.6) rgba(255,255,255,.2);
-  -moz-border-bottom-colors: rgba(255,255,255,.6) rgba(255,255,255,.2);
-  -moz-border-right-colors: rgba(255,255,255,.6) rgba(255,255,255,.2);
-}
-
-#main-window[lwthemetextcolor="dark"] .tabs-newtab-button,
-#main-window[lwthemetextcolor="dark"] .tabs-alltabs-button,
-#main-window[lwthemetextcolor="dark"] .tabs-container > .tabs-closebutton,
-#main-window[lwthemetextcolor="dark"] .tabbrowser-arrowscrollbox > .scrollbutton-up,
-#main-window[lwthemetextcolor="dark"] .tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down,
-#main-window[lwthemetextcolor="dark"] .tabbrowser-tab:not([selected="true"]) {
-  -moz-box-shadow: inset 0 1px 0 rgba(50,50,50,.5);
-}
-
-#main-window[lwthemetextcolor="bright"] .tabs-newtab-button,
-#main-window[lwthemetextcolor="bright"] .tabs-alltabs-button,
-#main-window[lwthemetextcolor="bright"] .tabs-container > .tabs-closebutton,
-#main-window[lwthemetextcolor="bright"] .tabbrowser-arrowscrollbox > .scrollbutton-up,
-#main-window[lwthemetextcolor="bright"] .tabbrowser-arrowscrollbox > .scrollbutton-down-stack > .scrollbutton-down,
-#main-window[lwthemetextcolor="bright"] .tabbrowser-tab:not([selected="true"]) {
-  -moz-box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
-}
-
 #main-window {
   -moz-appearance: none;
   background-color: #eeeeee;
@@ -1349,7 +1276,6 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 sidebarheader { 
   background-color: #d4dde5;
   padding: 2px;
-  text-shadow: none;
 }
 
 #sidebar-box {
@@ -1495,6 +1421,7 @@ tabbrowser > tabbox {
   margin-bottom: 0;
   font: message-box;
   font-weight: bold;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .tabbrowser-tab,
@@ -1502,7 +1429,6 @@ tabbrowser > tabbox {
   -moz-appearance: none;
   -moz-border-radius: 0 0 6px 6px;
   color: #222;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   margin: 0 0 1px;
   padding: 0 5px;
   border-style: none solid solid;
