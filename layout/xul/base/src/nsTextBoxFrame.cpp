@@ -574,10 +574,14 @@ void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
   nsRect shadowRect(aTextRect);
   shadowRect.MoveBy(shadowOffset);
 
+  gfxRect shadowRectGFX(shadowRect.x, shadowRect.y, shadowRect.width, shadowRect.height);
+  gfxRect dirtyRectGFX(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+
   nsContextBoxBlur contextBoxBlur;
-  gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, blurRadius,
+  gfxContext* shadowContext = contextBoxBlur.Init(shadowRectGFX, blurRadius,
                                                   PresContext()->AppUnitsPerDevPixel(),
-                                                  aCtx, aDirtyRect);
+                                                  aCtx, dirtyRectGFX);
+
   if (!shadowContext)
     return;
 
@@ -591,8 +595,7 @@ void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
   nsCOMPtr<nsIRenderingContext> renderingContext = nsnull;
   nsIDeviceContext* devCtx = PresContext()->DeviceContext();
   devCtx->CreateRenderingContextInstance(*getter_AddRefs(renderingContext));
-  if (!renderingContext)
-    return;
+  if (!renderingContext) return;
   renderingContext->Init(devCtx, shadowContext);
 
   aCtx->Save();
