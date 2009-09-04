@@ -54,6 +54,7 @@ namespace google_breakpad {
 MinidumpGenerator::MinidumpGenerator()
     : exception_type_(0),
       exception_code_(0),
+      exception_subcode_(0),
       exception_thread_(0),
       crashing_task_(mach_task_self()),
       handler_thread_(mach_thread_self()),
@@ -67,6 +68,7 @@ MinidumpGenerator::MinidumpGenerator(mach_port_t crashing_task,
                                      mach_port_t handler_thread)
     : exception_type_(0),
       exception_code_(0),
+      exception_subcode_(0),
       exception_thread_(0),
       crashing_task_(crashing_task),
       handler_thread_(handler_thread) {
@@ -172,7 +174,7 @@ bool MinidumpGenerator::Write(const char *path) {
     // exception.
     &MinidumpGenerator::WriteExceptionStream,
   };
-  bool result = true;
+  bool result = false;
 
   // If opening was successful, create the header, directory, and call each
   // writer.  The destructor for the TypedMDRVAs will cause the data to be
@@ -203,6 +205,7 @@ bool MinidumpGenerator::Write(const char *path) {
     header_ptr->stream_directory_rva = dir.position();
 
     MDRawDirectory local_dir;
+    result = true;
     for (int i = 0; (result) && (i < writer_count); ++i) {
       result = (this->*writers[i])(&local_dir);
 
@@ -418,9 +421,9 @@ bool MinidumpGenerator::WriteStack(breakpad_thread_state_data_t state,
     reinterpret_cast<breakpad_thread_state_t *>(state);
 
 #if TARGET_CPU_X86_64
-  mach_vm_address_t start_addr = machine_state->__rsp;
+  mach_vm_address_t start_addr = REGISTER_FROM_THREADSTATE(machine_state, rsp);
 #else
-  mach_vm_address_t start_addr = machine_state->esp;
+  mach_vm_address_t start_addr = REGISTER_FROM_THREADSTATE(machine_state, esp);
 #endif
   return WriteStackFromStartAddress(start_addr, stack_location);
 }
@@ -431,9 +434,9 @@ MinidumpGenerator::CurrentPCForStack(breakpad_thread_state_data_t state) {
     reinterpret_cast<breakpad_thread_state_t *>(state);
 
 #if TARGET_CPU_X86_64
-  return machine_state->__rip;
+  return REGISTER_FROM_THREADSTATE(machine_state, rip);
 #else
-  return machine_state->eip;
+  return REGISTER_FROM_THREADSTATE(machine_state, eip);
 #endif
 }
 
@@ -449,10 +452,9 @@ bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
   *register_location = context.location();
   MinidumpContext *context_ptr = context.get();
 
+#define AddReg(a) context_ptr->a = REGISTER_FROM_THREADSTATE(machine_state, a)
 #if TARGET_CPU_X86
   context_ptr->context_flags = MD_CONTEXT_X86;
-
-#define AddReg(a) context_ptr->a = machine_state->a
   AddReg(eax);
   AddReg(ebx);
   AddReg(ecx);
@@ -472,8 +474,6 @@ bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
 
   AddReg(eip);
 #else
-
-#define AddReg(a) context_ptr->a = machine_state->__ ## a
   context_ptr->context_flags = MD_CONTEXT_AMD64;
   AddReg(rax);
   AddReg(rbx);
@@ -501,6 +501,7 @@ bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
   AddReg(fs);
   AddReg(gs);
 #endif
+#undef AddReg(a)
 
   return true;
 }
@@ -595,7 +596,10 @@ MinidumpGenerator::WriteExceptionStream(MDRawDirectory *exception_stream) {
   if (!WriteContext(state, &exception_ptr->thread_context))
     return false;
 
-  exception_ptr->exception_record.exception_address = CurrentPCForStack(state);
+  if (exception_type_ == EXC_BAD_ACCESS)
+    exception_ptr->exception_record.exception_address = exception_subcode_;
+  else
+    exception_ptr->exception_record.exception_address = CurrentPCForStack(state);
 
   return true;
 }

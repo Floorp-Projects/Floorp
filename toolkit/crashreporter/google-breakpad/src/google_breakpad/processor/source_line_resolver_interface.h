@@ -56,6 +56,9 @@ class SourceLineResolverInterface {
   // map_file should contain line/address mappings for this module.
   virtual bool LoadModule(const string &module_name,
                           const string &map_file) = 0;
+  // Same as above, but takes the contents of a pre-read map buffer
+  virtual bool LoadModuleUsingMapBuffer(const string &module_name,
+                                        const string &map_buffer) = 0;
 
   // Returns true if a module with the given name has been loaded.
   virtual bool HasModule(const string &module_name) const = 0;

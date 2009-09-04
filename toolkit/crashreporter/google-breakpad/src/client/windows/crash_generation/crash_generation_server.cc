@@ -129,6 +129,19 @@ CrashGenerationServer::~CrashGenerationServer() {
   // Indicate to existing threads that server is shutting down.
   shutting_down_ = true;
 
+  // Even if there are no current worker threads running, it is possible that
+  // an I/O request is pending on the pipe right now but not yet done. In fact,
+  // it's very likely this is the case unless we are in an ERROR state. If we
+  // don't wait for the pending I/O to be done, then when the I/O completes,
+  // it may write to invalid memory. AppVerifier will flag this problem too.
+  // So we disconnect from the pipe and then wait for the server to get into
+  // error state so that the pending I/O will fail and get cleared.
+  DisconnectNamedPipe(pipe_);
+  int num_tries = 100;
+  while (num_tries-- && server_state_ != IPC_SERVER_STATE_ERROR) {
+    Sleep(10);
+  }
+
   // Unregister wait on the pipe.
   if (pipe_wait_handle_) {
     // Wait for already executing callbacks to finish.
@@ -629,6 +642,14 @@ bool CrashGenerationServer::RespondToClient(ClientInfo* client_info) {
 // implements the state machine described in ReadMe.txt along with the
 // helper methods HandleXXXState.
 void CrashGenerationServer::HandleConnectionRequest() {
+  // If we are shutting doen then get into ERROR state, reset the event so more
+  // workers don't run and return immediately.
+  if (shutting_down_) {
+    server_state_ = IPC_SERVER_STATE_ERROR;
+    ResetEvent(overlapped_.hEvent);
+    return;
+  }
+
   switch (server_state_) {
     case IPC_SERVER_STATE_ERROR:
       HandleErrorState();

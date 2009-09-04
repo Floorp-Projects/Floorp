@@ -173,8 +173,10 @@ static bool RunTests() {
   ASSERT_EQ(frame_info->prolog_size, 1);
 
   frame.instruction = 0x216f;
-  resolver.FillSourceLineInfo(&frame);
+  StackFrameInfo *s;
+  s = resolver.FillSourceLineInfo(&frame);
   ASSERT_EQ(frame.function_name, "Public2_1");
+  delete s;
 
   ClearSourceLineInfo(&frame);
   frame.instruction = 0x219f;
@@ -184,8 +186,10 @@ static bool RunTests() {
 
   frame.instruction = 0x21a0;
   frame.module = &module2;
-  resolver.FillSourceLineInfo(&frame);
+  s = resolver.FillSourceLineInfo(&frame);
   ASSERT_EQ(frame.function_name, "Public2_2");
+
+  delete s;
 
   ASSERT_FALSE(resolver.LoadModule("module3",
                                    testdata_dir + "/module3_bad.out"));

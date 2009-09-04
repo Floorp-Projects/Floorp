@@ -69,6 +69,12 @@ class BasicSourceLineResolver : public SourceLineResolverInterface {
   // retained until the BasicSourceLineResolver is destroyed.
   virtual bool LoadModule(const string &module_name, const string &map_file);
 
+  // Exactly the same as above, except the given map_buffer is used
+  // for symbols. 
+  virtual bool LoadModuleUsingMapBuffer(const string &module_name,
+                                        const string &map_buffer);
+
+
   virtual bool HasModule(const string &module_name) const;
 
   virtual StackFrameInfo* FillSourceLineInfo(StackFrame *frame) const;
