@@ -21,4 +21,4 @@ for(var y=0; y<256; y++)
 }
 
 TimeFunc(bitsinbyte);
-print(ret == 358400)
+assertEq(ret, 358400)

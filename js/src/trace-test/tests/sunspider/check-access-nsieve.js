@@ -37,4 +37,4 @@ function sieve() {
 }
 
 sieve();
-print(ret == 14302)
+assertEq(ret, 14302)

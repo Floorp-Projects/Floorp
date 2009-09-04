@@ -32,4 +32,4 @@ function TimeFunc(func) {
 }
 
 TimeFunc(fast3bitlookup);
-print(ret == 512000)
+assertEq(ret, 512000)
