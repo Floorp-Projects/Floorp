@@ -40,13 +40,12 @@
 
 namespace google_breakpad {
 
-static const int kWaitForHandlerThreadMs = 60000;
 static const int kExceptionHandlerThreadInitialStackSize = 64 * 1024;
 
 vector<ExceptionHandler*>* ExceptionHandler::handler_stack_ = NULL;
 LONG ExceptionHandler::handler_stack_index_ = 0;
 CRITICAL_SECTION ExceptionHandler::handler_stack_critical_section_;
-volatile LONG ExceptionHandler::instance_count_ = 0;
+bool ExceptionHandler::handler_stack_critical_section_initialized_ = false;
 
 ExceptionHandler::ExceptionHandler(const wstring& dump_path,
                                    FilterCallback filter,
@@ -89,7 +88,6 @@ void ExceptionHandler::Initialize(const wstring& dump_path,
                                   MINIDUMP_TYPE dump_type,
                                   const wchar_t* pipe_name,
                                   const CustomClientInfo* custom_info) {
-  LONG instance_count = InterlockedIncrement(&instance_count_);
   filter_ = filter;
   callback_ = callback;
   callback_context_ = callback_context;
@@ -108,7 +106,6 @@ void ExceptionHandler::Initialize(const wstring& dump_path,
 #endif  // _MSC_VER >= 1400
   previous_pch_ = NULL;
   handler_thread_ = NULL;
-  is_shutdown_ = false;
   handler_start_semaphore_ = NULL;
   handler_finish_semaphore_ = NULL;
   requesting_thread_id_ = 0;
@@ -180,22 +177,12 @@ void ExceptionHandler::Initialize(const wstring& dump_path,
     set_dump_path(dump_path);
   }
 
-  // There is a race condition here. If the first instance has not yet
-  // initialized the critical section, the second (and later) instances may
-  // try to use uninitialized critical section object. The feature of multiple
-  // instances in one module is not used much, so leave it as is for now.
-  // One way to solve this in the current design (that is, keeping the static
-  // handler stack) is to use spin locks with volatile bools to synchronize
-  // the handler stack. This works only if the compiler guarantees to generate
-  // cache coherent code for volatile.
-  // TODO(munjal): Fix this in a better way by changing the design if possible.
-
-  // Lazy initialization of the handler_stack_critical_section_
-  if (instance_count == 1) {
-    InitializeCriticalSection(&handler_stack_critical_section_);
-  }
-
   if (handler_types != HANDLER_NONE) {
+    if (!handler_stack_critical_section_initialized_) {
+      InitializeCriticalSection(&handler_stack_critical_section_);
+      handler_stack_critical_section_initialized_ = true;
+    }
+
     EnterCriticalSection(&handler_stack_critical_section_);
 
     // The first time an ExceptionHandler that installs a handler is
@@ -272,35 +259,11 @@ ExceptionHandler::~ExceptionHandler() {
   // Some of the objects were only initialized if out of process
   // registration was not done.
   if (!IsOutOfProcess()) {
-#ifdef BREAKPAD_NO_TERMINATE_THREAD
-    // Clean up the handler thread and synchronization primitives. The handler
-    // thread is either waiting on the semaphore to handle a crash or it is
-    // handling a crash. Coming out of the wait is fast but wait more in the
-    // eventuality a crash is handled.  This compilation option results in a
-    // deadlock if the exception handler is destroyed while executing code
-    // inside DllMain.
-    is_shutdown_ = true;
-    ReleaseSemaphore(handler_start_semaphore_, 1, NULL);
-    WaitForSingleObject(handler_thread_, kWaitForHandlerThreadMs);
-#else
+    // Clean up the handler thread and synchronization primitives.
     TerminateThread(handler_thread_, 1);
-#endif  // BREAKPAD_NO_TERMINATE_THREAD
-
-    CloseHandle(handler_thread_);
-    handler_thread_ = NULL;
     DeleteCriticalSection(&handler_critical_section_);
     CloseHandle(handler_start_semaphore_);
     CloseHandle(handler_finish_semaphore_);
-  }
-
-  // There is a race condition in the code below: if this instance is
-  // deleting the static critical section and a new instance of the class
-  // is created, then there is a possibility that the critical section be
-  // initialized while the same critical section is being deleted. Given the
-  // usage pattern for the code, this race condition is unlikely to hit, but it
-  // is a race condition nonetheless.
-  if (InterlockedDecrement(&instance_count_) == 0) {
-    DeleteCriticalSection(&handler_stack_critical_section_);
   }
 }
 
@@ -315,23 +278,16 @@ DWORD ExceptionHandler::ExceptionHandlerThreadMain(void* lpParameter) {
     if (WaitForSingleObject(self->handler_start_semaphore_, INFINITE) ==
         WAIT_OBJECT_0) {
       // Perform the requested action.
-      if (self->is_shutdown_) {
-        // The instance of the exception handler is being destroyed.
-        break;
-      } else {
-        self->handler_return_value_ =
-            self->WriteMinidumpWithException(self->requesting_thread_id_,
-                                             self->exception_info_,
-                                             self->assertion_);
-      }
+      self->handler_return_value_ = self->WriteMinidumpWithException(
+          self->requesting_thread_id_, self->exception_info_, self->assertion_);
 
       // Allow the requesting thread to proceed.
       ReleaseSemaphore(self->handler_finish_semaphore_, 1, NULL);
     }
   }
 
-  // This statement is not reached when the thread is unconditionally
-  // terminated by the ExceptionHandler destructor.
+  // Not reached.  This thread will be terminated by ExceptionHandler's
+  // destructor.
   return 0;
 }
 

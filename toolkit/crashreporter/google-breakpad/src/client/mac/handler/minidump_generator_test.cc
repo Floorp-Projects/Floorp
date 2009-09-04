@@ -45,13 +45,14 @@ static bool doneWritingReport = false;
 static void *Reporter(void *) {
   char buffer[PATH_MAX];
   MinidumpGenerator md;
+  struct passwd *user = getpwuid(getuid());
 
   // Write it to the desktop
   snprintf(buffer,
            sizeof(buffer),
-           "/tmp/test.dmp");
-
-
+           "/Users/%s/Desktop/test.dmp",
+           user->pw_name);
+  
   fprintf(stdout, "Writing %s\n", buffer);
   unlink(buffer);
   md.Write(buffer);

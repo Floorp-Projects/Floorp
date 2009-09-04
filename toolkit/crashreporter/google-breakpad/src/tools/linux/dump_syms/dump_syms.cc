@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   const char *binary = argv[1];
 
   DumpSymbols dumper;
-  if (!dumper.WriteSymbolFile(binary, stdout)) {
+  if (!dumper.WriteSymbolFile(binary, fileno(stdout))) {
     fprintf(stderr, "Failed to write symbol file.\n");
     return 1;
   }

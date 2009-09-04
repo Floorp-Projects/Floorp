@@ -151,7 +151,7 @@ bool FileID::ElfFileIdentifier(unsigned char identifier[16]) {
     return false;
 
   void *base = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (base == MAP_FAILED)
+  if (!base)
     return false;
 
   bool success = false;

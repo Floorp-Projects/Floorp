@@ -28,7 +28,15 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*
-g++ -framework CoreFoundation -I../../.. ../../minidump_file_writer.cc ../../../common/convert_UTF.c ../../../common/string_conversion.cc ../../../common/mac/string_utilities.cc exception_handler.cc minidump_generator.cc exception_handler_test.cc -o exception_handler_test -mmacosx-version-min=10.4 ../../../common/mac/file_id.cc  dynamic_images.cc ../../../common/mac/macho_id.cc  ../../../common/mac/macho_walker.cc  -lcrypto ../../../common/mac/macho_utilities.cc 
+g++ -framework CoreFoundation -I../../.. \
+	../../minidump_file_writer.cc \
+	../../../common/convert_UTF.c \
+	../../../common/string_conversion.cc \
+	../../../common/mac/string_utilities.cc \
+	exception_handler.cc \
+	minidump_generator.cc \
+	exception_handler_test.cc \
+	-o exception_handler_test
 */
 
 #include <pthread.h>
@@ -47,11 +55,10 @@ static void *SleepyFunction(void *) {
   while (1) {
     sleep(10000);
   }
-  return NULL;
 }
 
 static void Crasher() {
-  int *a = (int*)0x42;
+  int *a = NULL;
 
 	fprintf(stdout, "Going to crash...\n");
   fprintf(stdout, "A = %d", *a);
@@ -70,14 +77,15 @@ bool MDCallback(const char *dump_dir, const char *file_name,
 
   fprintf(stdout, "Minidump: %s\n", path.c_str());
   // Indicate that we've handled the callback
-  exit(0);
+  return true;
 }
 
 int main(int argc, char * const argv[]) {
   char buffer[PATH_MAX];
+  struct passwd *user = getpwuid(getuid());
 
   // Home dir
-  snprintf(buffer, sizeof(buffer), "/tmp/");
+  snprintf(buffer, sizeof(buffer), "/Users/%s/Desktop/", user->pw_name);
 
   string path(buffer);
   ExceptionHandler eh(path, NULL, MDCallback, NULL, true);
@@ -89,8 +97,8 @@ int main(int argc, char * const argv[]) {
     perror("pthread_create");
   }
 
-//   // Dump a test
-//   eh.WriteMinidump();
+  // Dump a test
+  eh.WriteMinidump();
 
 	// Test the handler
   SoonToCrash();
