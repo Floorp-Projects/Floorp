@@ -494,7 +494,7 @@ BrowserGlue.prototype = {
     var notifyBox = browser.getNotificationBox();
 
     var brandBundle  = this._bundleService.createBundle("chrome://branding/locale/brand.properties");
-    var rightsBundle = this._bundleService.createBundle("chrome://browser/locale/aboutRights.properties");
+    var rightsBundle = this._bundleService.createBundle("chrome://global/locale/aboutRights.properties");
 
     var buttonLabel      = rightsBundle.GetStringFromName("buttonLabel");
     var buttonAccessKey  = rightsBundle.GetStringFromName("buttonAccessKey");
