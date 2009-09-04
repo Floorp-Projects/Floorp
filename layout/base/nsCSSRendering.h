@@ -400,9 +400,9 @@ public:
    * should prepare the destination context as if you were going to draw
    * directly on it instead of any temporary surface created in this class.
    */
-  gfxContext* Init(const nsRect& aRect, nscoord aBlurRadius,
+  gfxContext* Init(const gfxRect& aRect, nscoord aBlurRadius,
                    PRInt32 aAppUnitsPerDevPixel, gfxContext* aDestinationCtx,
-                   const nsRect& aDirtyRect);
+                   const gfxRect& aDirtyRect);
 
   /**
    * Does the actual blurring and mask applying. Users of this object *must*

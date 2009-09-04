@@ -4422,7 +4422,7 @@ AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
 void
 nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             nsCSSShadowItem* aShadowDetails,
-                            PropertyProvider* aProvider, const nsRect& aDirtyRect,
+                            PropertyProvider* aProvider, const gfxRect& aDirtyRect,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
                             gfxContext* aCtx, const nscolor& aForegroundColor)
 {
@@ -4439,10 +4439,8 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
   // This rect is the box which is equivalent to where the shadow will be painted.
   // The origin of mBoundingBox is the text baseline left, so we must translate it by
   // that much in order to make the origin the top-left corner of the text bounding box.
-  gfxRect shadowGfxRect = shadowMetrics.mBoundingBox +
+  gfxRect shadowRect = shadowMetrics.mBoundingBox +
     gfxPoint(aFramePt.x, aTextBaselinePt.y) + shadowOffset;
-  nsRect shadowRect(shadowGfxRect.X(), shadowGfxRect.Y(),
-                    shadowGfxRect.Width(), shadowGfxRect.Height());
 
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, blurRadius,
@@ -4464,18 +4462,17 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
   // Draw the text onto our alpha-only surface to capture the alpha values.
   // Remember that the box blur context has a device offset on it, so we don't need to
   // translate any coordinates to fit on the surface.
-  gfxRect dirtyGfxRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   gfxFloat advanceWidth;
   DrawText(shadowContext,
            aTextBaselinePt + shadowOffset,
-           aOffset, aLength, &dirtyGfxRect, aProvider, advanceWidth,
+           aOffset, aLength, &aDirtyRect, aProvider, advanceWidth,
            (GetStateBits() & TEXT_HYPHEN_BREAK) != 0);
 
   // This will only have an effect in quirks mode. Standards mode text-decoration shadow painting
   // is handled in nsHTMLContainerFrame.cpp, so you must remember to consider that if you change
   // any code behaviour here.
   nsTextPaintStyle textPaintStyle(this);
-  PaintTextDecorations(shadowContext, dirtyGfxRect, aFramePt + shadowOffset,
+  PaintTextDecorations(shadowContext, aDirtyRect, aFramePt + shadowOffset,
                        aTextBaselinePt + shadowOffset,
                        textPaintStyle, *aProvider, &shadowColor);
 
@@ -4741,7 +4738,7 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
       PaintOneShadow(provider.GetStart().GetSkippedOffset(),
                      ComputeTransformedLength(provider),
                      textStyle->mTextShadow->ShadowAt(i - 1), &provider,
-                     aDirtyRect, framePt, textBaselinePt, ctx,
+                     dirtyRect, framePt, textBaselinePt, ctx,
                      textPaintStyle.GetTextColor());
     }
   }
