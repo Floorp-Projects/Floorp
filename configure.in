@@ -5029,28 +5029,17 @@ MOZ_ARG_ENABLE_BOOL(official-branding,
                           --enable-official-branding unless you have
                           permission to use trademarks per
                           http://www.mozilla.org/foundation/trademarks/ .],
-[case "$MOZ_BUILD_APP" in
-browser)
-    MOZ_BRANDING_DIRECTORY=other-licenses/branding/firefox
-    MOZ_APP_DISPLAYNAME=Firefox
-    ;;
-
-*)]
-    AC_MSG_ERROR([Official branding is only available for Firefox.])
-esac
-)
+[
+  if test -z "$MOZ_OFFICIAL_BRANDING_DIRECTORY"; then
+    AC_MSG_ERROR([You must specify MOZ_OFFICIAL_BRANDING_DIRECTORY to use --enable-official-branding.])
+  else
+    MOZ_BRANDING_DIRECTORY=${MOZ_OFFICIAL_BRANDING_DIRECTORY}
+  fi
+])
 
 MOZ_ARG_WITH_STRING(branding,
 [  --with-branding=dir    Use branding from the specified directory.],
     MOZ_BRANDING_DIRECTORY=$withval)
-
-dnl For Firefox, we always want MOZ_BRANDING_DIRECTORY to point somewhere, so
-dnl if it's not set make it point to the default branding location now. Other
-dnl products need MOZ_BRANDING_DIRECTORY to NOT be set, in order to use their
-dnl default branding (ie, only set it when using non-default branding).
-if test "$MOZ_BUILD_APP" = "browser" -a -z "$MOZ_BRANDING_DIRECTORY"; then
-  MOZ_BRANDING_DIRECTORY=${MOZ_BUILD_APP}/branding/nightly
-fi
 
 REAL_BRANDING_DIRECTORY="${MOZ_BRANDING_DIRECTORY}"
 if test -z "$REAL_BRANDING_DIRECTORY"; then
