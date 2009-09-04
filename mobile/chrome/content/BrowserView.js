@@ -178,8 +178,8 @@ BrowserView.Util = {
     // These might not exist yet depending on page load state
     let body = cdoc.body || {};
     let html = cdoc.documentElement || {};
-    let w = Math.max(body.scrollWidth || 0, html.scrollWidth);
-    let h = Math.max(body.scrollHeight || 0, html.scrollHeight);
+    let w = Math.max(body.scrollWidth || 1, html.scrollWidth);
+    let h = Math.max(body.scrollHeight || 1, html.scrollHeight);
 
     return [w, h];
   },
