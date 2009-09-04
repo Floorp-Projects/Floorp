@@ -439,6 +439,20 @@ function closeSafeOutputStream(aFOS) {
 }
 
 /**
+ * Wrapper function for nsIIOService::newURI.
+ * @param aURLSpec
+ *        The URL string from which to create an nsIURI.
+ * @returns an nsIURI object, or null if the creation of the URI failed.
+ */
+function makeURI(aURLSpec, aCharset) {
+  try {
+    return NetUtil.newURI(aURLSpec, aCharset);
+  } catch (ex) { }
+
+  return null;
+}
+
+/**
  * Gets a directory from the directory service.
  * @param aKey
  *        The directory service key indicating the directory to get.
@@ -822,7 +836,7 @@ function EngineURL(aType, aMethod, aTemplate) {
   // Don't serialize expanded mozparams
   this.mozparams = {};
 
-  var templateURI = NetUtil.newURI(aTemplate);
+  var templateURI = makeURI(aTemplate);
   if (!templateURI)
     FAIL("new EngineURL: template is not a valid URI!", Cr.NS_ERROR_FAILURE);
 
@@ -883,7 +897,7 @@ EngineURL.prototype = {
       postData.setData(stringStream);
     }
 
-    return new Submission(NetUtil.newURI(url), postData);
+    return new Submission(makeURI(url), postData);
   },
 
   _hasRelation: function SRC_EURL__hasRelation(aRel)
@@ -1382,7 +1396,7 @@ Engine.prototype = {
     if (this._hasPreferredIcon && !aIsPreferred)
       return;
 
-    var uri = NetUtil.newURI(aIconURL);
+    var uri = makeURI(aIconURL);
 
     // Ignore bad URIs
     if (!uri)
@@ -1418,7 +1432,7 @@ Engine.prototype = {
             }
 
             var str = btoa(String.fromCharCode.apply(null, aByteArray));
-            aEngine._iconURI = NetUtil.newURI(ICON_DATAURL_PREFIX + str);
+            aEngine._iconURI = makeURI(ICON_DATAURL_PREFIX + str);
 
             // The engine might not have a file yet, if it's being downloaded,
             // because the request for the engine file itself (_onLoad) may not
@@ -1994,7 +2008,7 @@ Engine.prototype = {
       this._readOnly = true;
     else
       this._readOnly = false;
-    this._iconURI = NetUtil.newURI(aJson._iconURL);
+    this._iconURI = makeURI(aJson._iconURL);
     for (let i = 0; i < aJson._urls.length; ++i) {
       let url = aJson._urls[i];
       let engineURL = new EngineURL(url.type || URLTYPE_SEARCH_HTML,
@@ -2287,7 +2301,7 @@ Engine.prototype = {
       // (e.g. https://foo.com for https://foo.com/search.php?q=bar).
       var htmlUrl = this._getURLOfType(URLTYPE_SEARCH_HTML);
       ENSURE_WARN(htmlUrl, "Engine has no HTML URL!", Cr.NS_ERROR_UNEXPECTED);
-      this._searchForm = NetUtil.newURI(htmlUrl.template).prePath;
+      this._searchForm = makeURI(htmlUrl.template).prePath;
     }
 
     return this._searchForm;
@@ -2338,7 +2352,7 @@ Engine.prototype = {
 
     if (!aData) {
       // Return a dummy submission object with our searchForm attribute
-      return new Submission(NetUtil.newURI(this.searchForm), null);
+      return new Submission(makeURI(this.searchForm), null);
     }
 
     LOG("getSubmission: In data: \"" + aData + "\"");
@@ -2894,7 +2908,7 @@ SearchService.prototype = {
         // Convert the byte array to a base64-encoded string
         var str = btoa(String.fromCharCode.apply(null, bytes));
 
-        aEngine._iconURI = NetUtil.newURI(ICON_DATAURL_PREFIX + str);
+        aEngine._iconURI = makeURI(ICON_DATAURL_PREFIX + str);
         LOG("_importSherlockEngine: Set sherlock iconURI to: \"" +
             aEngine._iconURL + "\"");
 
@@ -3052,7 +3066,7 @@ SearchService.prototype = {
                                          aConfirm) {
     LOG("addEngine: Adding \"" + aEngineURL + "\".");
     try {
-      var uri = NetUtil.newURI(aEngineURL);
+      var uri = makeURI(aEngineURL);
       var engine = new Engine(uri, aDataType, false);
       engine._initFromURI();
     } catch (ex) {
@@ -3419,7 +3433,7 @@ var engineUpdateService = {
     let updateURL = engine._getURLOfType(URLTYPE_OPENSEARCH);
     let updateURI = (updateURL && updateURL._hasRelation("self")) ? 
                      updateURL.getSubmission("", engine).uri :
-                     NetUtil.newURI(engine._updateURL);
+                     makeURI(engine._updateURL);
     if (updateURI) {
       if (engine._isDefault && !updateURI.schemeIs("https")) {
         ULOG("Invalid scheme for default engine update");
