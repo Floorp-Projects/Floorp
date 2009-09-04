@@ -124,10 +124,22 @@ MUST_OVERRIDE_FAILURE_TESTCASES = \
   OverrideFail4.cpp \
   $(NULL)
 
+OVERRIDE_PASS_TESTCASES = \
+  override-pass.cpp \
+  $(NULL)
+
+OVERRIDE_FAILURE_TESTCASES = \
+  override-global.cpp \
+  override-signature.cpp \
+  override-static.cpp \
+  override-virtual.cpp \
+  $(NULL)
+
 STATIC_FAILURE_TESTCASES = \
   $(FINAL_FAILURE_TESTCASES) \
   $(FLOW_FAILURE_TESTCASES) \
   $(MUST_OVERRIDE_FAILURE_TESTCASES) \
+  $(OVERRIDE_FAILURE_TESTCASES) \
   $(NULL)
 
 STATIC_WARNING_TESTCASES = \
@@ -141,6 +153,7 @@ STATIC_PASS_TESTCASES = \
   $(STACK_PASS_TESTCASES) \
   $(FLOW_PASS_TESTCASES) \
   $(MUST_OVERRIDE_PASS_TESTCASES) \
+  $(OVERRIDE_PASS_TESTCASES) \
   $(NULL)
 
 
