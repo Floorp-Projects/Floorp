@@ -60,8 +60,8 @@ JS_BEGIN_EXTERN_C
 /*
  * Native iterator object slots, shared between jsiter.cpp and jstracer.cpp.
  */
-#define JSSLOT_ITER_STATE       (JSSLOT_PRIVATE)
-#define JSSLOT_ITER_FLAGS       (JSSLOT_PRIVATE + 1)
+const uint32 JSSLOT_ITER_STATE  = JSSLOT_PRIVATE;
+const uint32 JSSLOT_ITER_FLAGS  = JSSLOT_PRIVATE + 1;
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should

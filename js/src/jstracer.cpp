@@ -10822,7 +10822,7 @@ TraceRecorder::guardCallee(jsval& callee)
     guard(true,
           lir->ins2(LIR_eq,
                     stobj_get_private(callee_ins),
-                    INS_CONSTPTR(callee_obj->getAssignedPrivate())),
+                    INS_CONSTPTR(callee_obj->getPrivate())),
           branchExit);
     guard(true,
           lir->ins2(LIR_eq,
@@ -11897,7 +11897,7 @@ TraceRecorder::record_JSOP_BINDNAME()
         // are still on the stack.  We never use BINDNAME to refer to these.
         while (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
             // The block's values are still on the stack.
-            JS_ASSERT(obj->getAssignedPrivate() == fp);
+            JS_ASSERT(obj->getPrivate() == fp);
             obj = OBJ_GET_PARENT(cx, obj);
             // Blocks always have parents.
             JS_ASSERT(obj);

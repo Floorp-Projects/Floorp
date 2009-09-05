@@ -271,7 +271,7 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JS_IsConstructing(cx))
         *rval = v;
     else
-        obj->fslots[JSSLOT_PRIVATE] = v;
+        obj->fslots[JSSLOT_PRIMITIVE_THIS] = v;
     return true;
 }
 
@@ -514,7 +514,7 @@ num_valueOf(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
-    *vp = obj->fslots[JSSLOT_PRIVATE];
+    *vp = obj->fslots[JSSLOT_PRIMITIVE_THIS];
     return JS_TRUE;
 }
 
@@ -762,7 +762,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
-    proto->fslots[JSSLOT_PRIVATE] = JSVAL_ZERO;
+    proto->fslots[JSSLOT_PRIMITIVE_THIS] = JSVAL_ZERO;
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 

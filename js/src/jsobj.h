@@ -93,7 +93,17 @@ const uint32 JS_INITIAL_NSLOTS = 5;
 
 const uint32 JSSLOT_PROTO   = 0;
 const uint32 JSSLOT_PARENT  = 1;
+
+/*
+ * The first available slot to store generic value. For JSCLASS_HAS_PRIVATE
+ * classes the slot stores a pointer to private data reinterpreted as jsval.
+ * Such pointer is stored as is without an overhead of PRIVATE_TO_JSVAL
+ * tagging and should be accessed using the (get|set)Private methods of
+ * JSObject.
+ */
 const uint32 JSSLOT_PRIVATE = 2;
+
+const uint32 JSSLOT_PRIMITIVE_THIS = JSSLOT_PRIVATE;
 
 const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
 
@@ -196,33 +206,44 @@ struct JSObject {
             JS_CALL_OBJECT_TRACER(trc, parent, "__parent__");
     }
 
-    /*
-     * Get private value previously assigned with setPrivate.
-     */
-    void *getAssignedPrivate() const {
-        JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-
-        jsval v = fslots[JSSLOT_PRIVATE];
-        JS_ASSERT(JSVAL_IS_INT(v));
-        return JSVAL_TO_PRIVATE(v);
-    }
-
-    /*
-     * Get private value or null if the value has not yet been assigned.
-     */
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-
         jsval v = fslots[JSSLOT_PRIVATE];
-        if (JSVAL_IS_INT(v))
-            return JSVAL_TO_PRIVATE(v);
-        JS_ASSERT(JSVAL_IS_VOID(v));
-        return NULL;
+        JS_ASSERT((v & jsval(1)) == jsval(0));
+        return reinterpret_cast<void *>(v);
     }
 
     void setPrivate(void *data) {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
-        fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(data);
+        jsval v = reinterpret_cast<jsval>(data);
+        JS_ASSERT((v & jsval(1)) == jsval(0));
+        fslots[JSSLOT_PRIVATE] = v;
+    }
+
+    static jsval defaultPrivate(JSClass *clasp) {
+        return (clasp->flags & JSCLASS_HAS_PRIVATE)
+               ? JSVAL_NULL
+               : JSVAL_VOID;
+    }
+
+    /* The map field is not initialized here and should be set separately. */
+    void init(JSClass *clasp, JSObject *proto, JSObject *parent,
+              jsval privateSlotValue) {
+        JS_ASSERT(((jsuword) clasp & 3) == 0);
+        JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
+        JS_ASSERT_IF(clasp->flags & JSCLASS_HAS_PRIVATE,
+                     (privateSlotValue & jsval(1)) == jsval(0));
+
+        classword = jsuword(clasp);
+        JS_ASSERT(!isDelegate());
+        JS_ASSERT(!isSystem());
+
+        setProto(proto);
+        setParent(parent);
+        fslots[JSSLOT_PRIVATE] = privateSlotValue;
+        fslots[JSSLOT_PRIVATE + 1] = JSVAL_VOID;
+        fslots[JSSLOT_PRIVATE + 2] = JSVAL_VOID;
+        dslots = NULL;
     }
 
     JSBool lookupProperty(JSContext *cx, jsid id,
@@ -302,7 +323,7 @@ struct JSObject {
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \
-                             : JSSLOT_PARENT + 1)
+                             : JSSLOT_PRIVATE)
 
 #define JSSLOT_FREE(clasp)  (JSSLOT_START(clasp)                              \
                              + JSCLASS_RESERVED_SLOTS(clasp))
@@ -581,9 +602,8 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                            JSObject *parent, size_t objectSize = 0);
 
 /*
- * Allocate a new native object and initialize all fslots with JSVAL_VOID
- * starting with the specified slot. The parent slot is set to the value of
- * proto's parent slot.
+ * Allocate a new native object with the given value of the proto and private
+ * slots. The parent slot is set to the value of proto's parent slot.
  *
  * Note that this is the correct global object for native class instances, but
  * not for user-defined functions called as constructors.  Functions used as
@@ -591,7 +611,8 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
  * object, not by the parent of its .prototype object value.
  */
 extern JSObject*
-js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, uint32 slot);
+js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto,
+                   jsval privateSlotValue);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
