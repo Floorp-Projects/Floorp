@@ -2359,7 +2359,7 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
     if ((format & (JOF_SET | JOF_FOR)) ||
         (fp->flags & JSFRAME_ASSIGNING)) {
         flags |= JSRESOLVE_ASSIGNING;
-    } else {
+    } else if (cs->length >= 0) {
         pc += cs->length;
         if (pc < cx->fp->script->code + cx->fp->script->length && Detecting(cx, pc))
             flags |= JSRESOLVE_DETECTING;
