@@ -5918,8 +5918,6 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     JS_ASSERT(*(uint64*)&global[STOBJ_NSLOTS(JS_GetGlobalForObject(cx, cx->fp->scopeChain))] ==
               0xdeadbeefdeadbeefLL);
 
-    cx->nativeVp = NULL;
-
 #ifdef DEBUG
     /* Verify that our state restoration worked. */
     for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
@@ -9247,7 +9245,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     LIns* args[] = { vp_ins, INS_CONSTWORD(SPROP_USERID(sprop)), obj_ins, cx_ins };
     LIns* ok_ins = lir->insCall(ci, args);
 
-    // Cleanup.
+    // Cleanup. Immediately clear nativeVp before we might deep bail.
     lir->insStorei(INS_NULL(), cx_ins, offsetof(JSContext, nativeVp));
     leaveDeepBailCall();
 
@@ -9266,7 +9264,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
-TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[])
+TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[], bool rooted)
 {
     bool constructing = sn->flags & JSTN_CONSTRUCTOR;
 
@@ -9292,6 +9290,11 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[])
     }
 
     LIns* res_ins = lir->insCall(sn->builtin, args);
+
+    // Immediately unroot the vp as soon we return since we might deep bail next.
+    if (rooted)
+        lir->insStorei(INS_NULL(), cx_ins, offsetof(JSContext, nativeVp));
+
     rval_ins = res_ins;
     switch (JSTN_ERRTYPE(sn)) {
       case FAIL_NULL:
@@ -9426,7 +9429,7 @@ TraceRecorder::callSpecializedNative(JSNativeTraceInfo *trcinfo, uintN argc,
 #if defined DEBUG
         JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
 #endif
-        return emitNativeCall(sn, argc, args);
+        return emitNativeCall(sn, argc, args, false);
 
 next_specialization:;
     } while ((sn++)->flags & JSTN_MORE);
@@ -9636,13 +9639,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
 
     // argc is the original argc here. It is used to calculate where to place
     // the return value.
-    JSRecordingStatus status;
-    if ((status = emitNativeCall(&generatedSpecializedNative, argc, args)) != JSRS_CONTINUE)
-        return status;
-
-    // Unroot the vp.
-    lir->insStorei(INS_NULL(), cx_ins, offsetof(JSContext, nativeVp));
-    return JSRS_CONTINUE;
+    return emitNativeCall(&generatedSpecializedNative, argc, args, true);
 }
 
 JS_REQUIRES_STACK JSRecordingStatus
