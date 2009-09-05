@@ -72,7 +72,6 @@ SDK_LIBS = \
   $(DIST)/lib/$(LIB_PREFIX)ssl3.$(IMPORT_LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nss3.$(IMPORT_LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nssutil3.$(IMPORT_LIB_SUFFIX) \
-  $(DIST)/lib/$(LIB_PREFIX)softokn3.$(IMPORT_LIB_SUFFIX) \
   $(NULL)
 else
 SDK_LIBS = \
@@ -81,7 +80,6 @@ SDK_LIBS = \
   $(DIST)/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nss.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
-  $(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
   $(NULL)
 endif
 endif
