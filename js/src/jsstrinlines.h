@@ -48,7 +48,7 @@ inline JSString *
 JSString::unitString(jschar c)
 {
     JS_ASSERT(c < UNIT_STRING_LIMIT);
-    return js_UnitStrings + c;
+    return &unitStringTable[c];
 }
 
 inline JSString *
