@@ -2081,27 +2081,13 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         goto out;
 
     /*
-     * Set the class slot with the initial value of the system and delegate
-     * flags set to false.
-     */
-    JS_ASSERT(((jsuword) clasp & 3) == 0);
-    obj->classword = jsuword(clasp);
-    JS_ASSERT(!obj->isDelegate());
-    JS_ASSERT(!obj->isSystem());
-
-    obj->setProto(proto);
-
-    /*
      * Default parent to the parent of the prototype, which was set from
      * the parent of the prototype's constructor.
      */
-    obj->setParent((!parent && proto) ? proto->getParent() : parent);
-
-    /* Initialize the remaining fixed slots. */
-    for (uint32 i = JSSLOT_PRIVATE; i < JS_INITIAL_NSLOTS; ++i)
-        obj->fslots[i] = JSVAL_VOID;
-
-    obj->dslots = NULL;
+    obj->init(clasp,
+              proto,
+              (!parent && proto) ? proto->getParent() : parent,
+              JSObject::defaultPrivate(clasp));
 
     if (OPS_IS_NATIVE(ops)) {
         if (!InitScopeForObject(cx, obj, proto, ops)) {
@@ -2187,27 +2173,24 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef JS_TRACER
 
 static inline JSObject*
-NewNativeObject(JSContext* cx, JSClass* clasp, JSObject* proto, JSObject *parent)
+NewNativeObject(JSContext* cx, JSClass* clasp, JSObject* proto,
+                JSObject *parent, jsval privateSlotValue)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
     if (!obj)
         return NULL;
 
-    obj->classword = jsuword(clasp);
-    obj->setProto(proto);
-    obj->setParent(parent);
-    for (unsigned i = JSSLOT_PRIVATE; i < JS_INITIAL_NSLOTS; ++i)
-        obj->fslots[i] = JSVAL_VOID;
-
-    obj->dslots = NULL;
+    obj->init(clasp, proto, parent, privateSlotValue);
     return InitScopeForObject(cx, obj, proto, &js_ObjectOps) ? obj : NULL;
 }
 
 JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
-    return NewNativeObject(cx, &js_ObjectClass, proto, JSVAL_TO_OBJECT(proto->fslots[JSSLOT_PARENT]));
+    JS_ASSERT(!(js_ObjectClass.flags & JSCLASS_HAS_PRIVATE));
+    return NewNativeObject(cx, &js_ObjectClass, proto, proto->getParent(),
+                           JSVAL_VOID);
 }
 
 JS_DEFINE_TRCINFO_1(js_Object,
@@ -2253,7 +2236,8 @@ js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
         }
     }
 
-    return NewNativeObject(cx, clasp, proto, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]));
+    return NewNativeObject(cx, clasp, proto, ctor->getParent(),
+                           JSObject::defaultPrivate(clasp));
 }
 
 JS_DEFINE_CALLINFO_3(extern, CONSTRUCTOR_RETRY, js_NewInstance, CONTEXT, CLASS, OBJECT, 0, 0)
@@ -2566,7 +2550,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     fp = cx->fp;
     obj = fp->scopeChain;
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
-    JS_ASSERT(obj->getAssignedPrivate() == cx->fp);
+    JS_ASSERT(obj->getPrivate() == cx->fp);
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
 
     /*
@@ -3111,7 +3095,8 @@ js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp)
 }
 
 JSObject*
-js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, uint32 slot)
+js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto,
+                   jsval privateSlotValue)
 {
     JS_ASSERT(!clasp->getObjectOps);
     JS_ASSERT(proto->map->ops == &js_ObjectOps);
@@ -3127,15 +3112,7 @@ js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto, uint32 slot)
         return NULL;
     }
     obj->map = &scope->map;
-    obj->classword = jsuword(clasp);
-    obj->setProto(proto);
-    obj->setParent(proto->getParent());
-
-    JS_ASSERT(slot >= JSSLOT_PRIVATE);
-    while (slot < JS_INITIAL_NSLOTS)
-        obj->fslots[slot++] = JSVAL_VOID;
-
-    obj->dslots = NULL;
+    obj->init(clasp, proto, proto->getParent(), privateSlotValue);
     return obj;
 }
 
@@ -4798,7 +4775,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 
                     if (FUN_FAST_NATIVE(fun) == js_str_toString) {
                         JS_UNLOCK_SCOPE(cx, scope);
-                        *vp = obj->fslots[JSSLOT_PRIVATE];
+                        *vp = obj->fslots[JSSLOT_PRIMITIVE_THIS];
                         return JS_TRUE;
                     }
                 }
@@ -5483,7 +5460,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     obj = js_NewObject(cx, clasp, NULL, NULL);
     if (!obj)
         return JS_FALSE;
-    obj->fslots[JSSLOT_PRIVATE] = *vp;
+    obj->fslots[JSSLOT_PRIMITIVE_THIS] = *vp;
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
@@ -5686,22 +5663,15 @@ js_DumpScopeMeters(JSRuntime *rt)
 void
 js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 {
-    JSObject *obj;
-    uint32 slot;
-    JSScope *scope;
-    jsval nval;
-    JSScopeProperty *sprop;
-    JSClass *clasp;
-    uint32 key;
-    const char *slotname;
-
     JS_ASSERT(trc->debugPrinter == js_PrintObjectSlotName);
-    obj = (JSObject *)trc->debugPrintArg;
-    slot = (uint32)trc->debugPrintIndex;
-    JS_ASSERT(slot >= JSSLOT_PRIVATE);
 
+    JSObject *obj = (JSObject *)trc->debugPrintArg;
+    uint32 slot = (uint32)trc->debugPrintIndex;
+    JS_ASSERT(slot >= JSSLOT_START(obj->getClass()));
+
+    JSScopeProperty *sprop;
     if (OBJ_IS_NATIVE(obj)) {
-        scope = OBJ_SCOPE(obj);
+        JSScope *scope = OBJ_SCOPE(obj);
         sprop = SCOPE_LAST_PROP(scope);
         while (sprop && sprop->slot != slot)
             sprop = sprop->parent;
@@ -5710,10 +5680,10 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     }
 
     if (!sprop) {
-        slotname = NULL;
-        clasp = obj->getClass();
+        const char *slotname = NULL;
+        JSClass *clasp = obj->getClass();
         if (clasp->flags & JSCLASS_IS_GLOBAL) {
-            key = slot - JSSLOT_START(clasp);
+            uint32 key = slot - JSSLOT_START(clasp);
 #define JS_PROTO(name,code,init)                                              \
     if ((code) == key) { slotname = js_##name##_str; goto found; }
 #include "jsproto.tbl"
@@ -5725,7 +5695,7 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
         else
             JS_snprintf(buf, bufsize, "**UNKNOWN SLOT %ld**", (long)slot);
     } else {
-        nval = ID_TO_VALUE(sprop->id);
+        jsval nval = ID_TO_VALUE(sprop->id);
         if (JSVAL_IS_INT(nval)) {
             JS_snprintf(buf, bufsize, "%ld", (long)JSVAL_TO_INT(nval));
         } else if (JSVAL_IS_STRING(nval)) {
@@ -5740,16 +5710,10 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 void
 js_TraceObject(JSTracer *trc, JSObject *obj)
 {
-    JSContext *cx;
-    JSScope *scope;
-    JSClass *clasp;
-    size_t nslots, i;
-    jsval v;
-
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    cx = trc->context;
-    scope = OBJ_SCOPE(obj);
 
+    JSContext *cx = trc->context;
+    JSScope *scope = OBJ_SCOPE(obj);
     if (scope->owned() && IS_GC_MARKING_TRACER(trc)) {
         /*
          * Check whether we should shrink the object's slots. Skip this check
@@ -5771,7 +5735,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
         js_TraceWatchPoints(trc, obj);
 
     /* No one runs while the GC is running, so we can use LOCKED_... here. */
-    clasp = obj->getClass();
+    JSClass *clasp = obj->getClass();
     if (clasp->mark) {
         if (clasp->flags & JSCLASS_MARK_IS_TRACE)
             ((JSTraceOp) clasp->mark)(trc, obj);
@@ -5790,12 +5754,13 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
      * don't move it up and unify it with the |if (!traceScope)| section
      * above.
      */
-    nslots = STOBJ_NSLOTS(obj);
+    uint32 nslots = STOBJ_NSLOTS(obj);
     if (scope->owned() && scope->freeslot < nslots)
         nslots = scope->freeslot;
+    JS_ASSERT(nslots >= JSSLOT_START(clasp));
 
-    for (i = JSSLOT_PRIVATE; i != nslots; ++i) {
-        v = STOBJ_GET_SLOT(obj, i);
+    for (uint32 i = JSSLOT_START(clasp); i != nslots; ++i) {
+        jsval v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_TRACEABLE(v)) {
             JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
             JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));

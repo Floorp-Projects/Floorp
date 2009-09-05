@@ -2776,9 +2776,8 @@ JS_GetPrivate(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSBool)
 JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
 {
-    JS_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
-    obj->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(data);
-    return JS_TRUE;
+    obj->setPrivate(data);
+    return true;
 }
 
 JS_PUBLIC_API(void *)
@@ -2787,7 +2786,7 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
 {
     if (!JS_InstanceOf(cx, obj, clasp, argv))
         return NULL;
-    return JS_GetPrivate(cx, obj);
+    return obj->getPrivate();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4098,7 +4097,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         obj = OBJ_GET_PARENT(cx, iterobj);
         JS_ASSERT(OBJ_IS_NATIVE(obj));
         scope = OBJ_SCOPE(obj);
-        sprop = (JSScopeProperty *) iterobj->getAssignedPrivate();
+        sprop = (JSScopeProperty *) iterobj->getPrivate();
 
         /*
          * If the next property mapped by scope in the property tree ancestor
@@ -4122,7 +4121,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         }
     } else {
         /* Non-native case: use the ida enumerated when iterobj was created. */
-        ida = (JSIdArray *) iterobj->getAssignedPrivate();
+        ida = (JSIdArray *) iterobj->getPrivate();
         JS_ASSERT(i <= ida->length);
         if (i == 0) {
             *idp = JSVAL_VOID;

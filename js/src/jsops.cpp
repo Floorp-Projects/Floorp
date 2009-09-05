@@ -145,7 +145,7 @@
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if (clasp != &js_BlockClass && clasp != &js_WithClass)
                     continue;
-                if (obj->getAssignedPrivate() != fp)
+                if (obj->getPrivate() != fp)
                     break;
                 JS_ASSERT(StackBase(fp) + OBJ_BLOCK_DEPTH(cx, obj)
                                      + ((clasp == &js_BlockClass)
@@ -4114,7 +4114,7 @@
             while ((clasp = OBJ_GET_CLASS(cx, obj2)) == &js_WithClass)
                 obj2 = OBJ_GET_PARENT(cx, obj2);
             if (clasp == &js_BlockClass &&
-                obj2->getAssignedPrivate() == fp) {
+                obj2->getPrivate() == fp) {
                 JSObject *youngestProto = OBJ_GET_PROTO(cx, obj2);
                 JS_ASSERT(!OBJ_IS_CLONED_BLOCK(youngestProto));
                 parent = obj;

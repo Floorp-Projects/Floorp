@@ -740,7 +740,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     JSObject *limitBlock, *limitClone;
     if (fp->fun && !fp->callobj) {
         JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass ||
-                  fp->scopeChain->getAssignedPrivate() != fp);
+                  fp->scopeChain->getPrivate() != fp);
         if (!js_GetCallObject(cx, fp))
             return NULL;
 
@@ -830,7 +830,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      */
     JS_ASSERT_IF(limitBlock &&
                  OBJ_GET_CLASS(cx, limitBlock) == &js_BlockClass &&
-                 limitClone->getAssignedPrivate() == fp,
+                 limitClone->getPrivate() == fp,
                  sharedBlock);
 
     /* Place our newly cloned blocks at the head of the scope chain.  */
@@ -849,7 +849,7 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
         obj = JS_THIS_OBJECT(cx, vp);
         if (!JS_InstanceOf(cx, obj, clasp, vp + 2))
             return JS_FALSE;
-        v = obj->fslots[JSSLOT_PRIVATE];
+        v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
     }
     *thisvp = v;
     return JS_TRUE;
@@ -968,8 +968,8 @@ js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
 
 #if JS_HAS_NO_SUCH_METHOD
 
-#define JSSLOT_FOUND_FUNCTION   JSSLOT_PRIVATE
-#define JSSLOT_SAVED_ID         (JSSLOT_PRIVATE + 1)
+const uint32 JSSLOT_FOUND_FUNCTION  = JSSLOT_PRIVATE;
+const uint32 JSSLOT_SAVED_ID        = JSSLOT_PRIVATE + 1;
 
 JSClass js_NoSuchMethodClass = {
     "NoSuchMethod",
@@ -1953,7 +1953,7 @@ js_LeaveWith(JSContext *cx)
 
     withobj = cx->fp->scopeChain;
     JS_ASSERT(OBJ_GET_CLASS(cx, withobj) == &js_WithClass);
-    JS_ASSERT(withobj->getAssignedPrivate() == cx->fp);
+    JS_ASSERT(withobj->getPrivate() == cx->fp);
     JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
     cx->fp->scopeChain = OBJ_GET_PARENT(cx, withobj);
     withobj->setPrivate(NULL);
@@ -1966,7 +1966,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
 
     clasp = OBJ_GET_CLASS(cx, obj);
     if ((clasp == &js_WithClass || clasp == &js_BlockClass) &&
-        obj->getAssignedPrivate() == cx->fp &&
+        obj->getPrivate() == cx->fp &&
         OBJ_BLOCK_DEPTH(cx, obj) >= stackDepth) {
         return clasp;
     }
