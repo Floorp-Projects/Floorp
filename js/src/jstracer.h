@@ -927,7 +927,7 @@ class TraceRecorder : public avmplus::GCObject {
     JS_REQUIRES_STACK void propagateFailureToBuiltinStatus(nanojit::LIns *ok_ins,
                                                            nanojit::LIns *&status_ins);
     JS_REQUIRES_STACK JSRecordingStatus emitNativeCall(JSSpecializedNative* sn, uintN argc,
-                                                       nanojit::LIns* args[]);
+                                                       nanojit::LIns* args[], bool rooted);
     JS_REQUIRES_STACK void emitNativePropertyOp(JSScope* scope,
                                                 JSScopeProperty* sprop,
                                                 nanojit::LIns* obj_ins,
