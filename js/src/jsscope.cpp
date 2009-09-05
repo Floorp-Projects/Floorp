@@ -1549,7 +1549,7 @@ JSScope::clear(JSContext *cx)
 
     JSClass *clasp = object->getClass();
     JSObject *proto = object->getProto();
-    uint32 newShape;
+    uint32 newShape = 0;
     if (proto && clasp == proto->getClass()) {
 #ifdef DEBUG
         bool ok =

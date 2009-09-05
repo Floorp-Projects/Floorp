@@ -864,7 +864,7 @@ js_NumberToString(JSContext *cx, jsdouble d)
 
     if (JSDOUBLE_IS_INT(d, i)) {
         if (jsuint(i) < INT_STRING_LIMIT)
-            return &js_IntStrings[i];
+            return &JSString::intStringTable[i];
     }
     return NumberToStringWithBase(cx, d, 10);
 }
