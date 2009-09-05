@@ -65,9 +65,6 @@ enum {
     INT_STRING_LIMIT         = 256U
 };
 
-extern JSString js_UnitStrings[];
-extern JSString js_IntStrings[];
-
 extern jschar *
 js_GetDependentStringChars(JSString *str);
 
@@ -164,7 +161,7 @@ struct JSString {
         return (mLength & flag) != 0;
     }
 
-public:
+  public:
     enum
 #if defined(_MSC_VER) && defined(_WIN64)
     : size_t /* VC++ 64-bit incorrectly defaults this enum's size to int. */
@@ -365,9 +362,12 @@ public:
     }
     
     static inline bool isStatic(JSString *s) {
-        return (s >= js_UnitStrings && s < &js_UnitStrings[UNIT_STRING_LIMIT]) ||
-            (s >= js_IntStrings && s < &js_IntStrings[INT_STRING_LIMIT]);
+        return (s >= unitStringTable && s < &unitStringTable[UNIT_STRING_LIMIT]) ||
+               (s >= intStringTable && s < &intStringTable[INT_STRING_LIMIT]);
     }
+
+    static JSString unitStringTable[];
+    static JSString intStringTable[];
 
     static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
