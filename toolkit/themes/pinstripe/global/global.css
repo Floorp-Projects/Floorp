@@ -165,7 +165,7 @@ statusbarpanel {
 /* ::::: miscellaneous formatting ::::: */
 
 :root[lwtheme="true"],
-[lwthemefooter="true"], {
+[lwthemefooter="true"] {
   -moz-appearance: none;
 }
 
