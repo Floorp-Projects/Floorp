@@ -178,7 +178,7 @@
   <popupset id="mainPopupSet">
   </popupset>
 
-  <stack flex="1">
+  <stack flex="1" id="stack">
     <scrollbox id="scrollbox" style="overflow: hidden;" top="0" left="0" flex="1">
       <hbox style="position: relative">
 
