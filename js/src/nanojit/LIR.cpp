@@ -2208,5 +2208,100 @@ namespace nanojit
     }
 
 #endif // NJ_VERBOSE
-}
 
+
+#ifdef DEBUG
+    LIns* SanityFilter::ins1(LOpcode v, LIns* s0)
+    {
+        switch (v)
+        {
+            case LIR_fneg:
+            case LIR_fret:
+            case LIR_qlo:
+            case LIR_qhi:
+              NanoAssert(s0->isQuad());
+              break;
+            case LIR_not:
+            case LIR_neg:
+            case LIR_u2f:
+            case LIR_i2f:
+            case LIR_i2q: case LIR_u2q:
+              NanoAssert(!s0->isQuad());
+              break;
+            default:
+              break;
+        }
+        return out->ins1(v, s0);
+    }
+
+    LIns* SanityFilter::ins2(LOpcode v, LIns* s0, LIns* s1)
+    {
+        switch (v) {
+          case LIR_fadd:
+          case LIR_fsub:
+          case LIR_fmul:
+          case LIR_fdiv:
+          case LIR_feq:
+          case LIR_flt:
+          case LIR_fgt:
+          case LIR_fle:
+          case LIR_fge:
+          case LIR_qaddp:
+          case LIR_qior:
+          case LIR_qxor:
+          case LIR_qiand:
+          case LIR_qiadd:
+          case LIR_qeq:
+          case LIR_qlt: case LIR_qult:
+          case LIR_qgt: case LIR_qugt:
+          case LIR_qle: case LIR_quge:
+            NanoAssert(s0->isQuad() && s1->isQuad());
+            break;
+          case LIR_add:
+          case LIR_iaddp:
+          case LIR_sub:
+          case LIR_mul:
+          case LIR_and:
+          case LIR_or:
+          case LIR_xor:
+          case LIR_lsh:
+          case LIR_rsh:
+          case LIR_ush:
+          case LIR_eq:
+          case LIR_lt: case LIR_ult:
+          case LIR_gt: case LIR_ugt:
+          case LIR_le: case LIR_ule:
+          case LIR_ge: case LIR_uge:
+            NanoAssert(!s0->isQuad() && !s1->isQuad());
+            break;
+          case LIR_qilsh:
+          case LIR_qirsh:
+          case LIR_qursh:
+            NanoAssert(s0->isQuad() && !s1->isQuad());
+            break;
+          default:
+            break;
+        }
+        return out->ins2(v, s0, s1);
+    }
+
+    LIns* SanityFilter::ins3(LOpcode v, LIns* s0, LIns* s1, LIns* s2)
+    {
+        switch (v)
+        {
+          case LIR_cmov:
+            NanoAssert(s0->isCond() || s0->isconst());
+            NanoAssert(!s1->isQuad() && !s2->isQuad());
+            break;
+          case LIR_qcmov:
+            NanoAssert(s0->isCond() || s0->isconst());
+            NanoAssert(s1->isQuad() && s2->isQuad());
+            break;
+          default:
+            break;
+        }
+        return out->ins3(v, s0, s1, s2);
+    }
+#endif
+
+}
