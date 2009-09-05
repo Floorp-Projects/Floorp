@@ -323,7 +323,7 @@ void nsGIFDecoder2::EndGIF()
 }
 
 //******************************************************************************
-void nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
+nsresult nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
 {
   if (!mGIFStruct.images_decoded) {
     // Send a onetime OnDataAvailable (Display Refresh) for the first frame
@@ -365,7 +365,7 @@ void nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
   }
 
   if (NS_FAILED(rv))
-    return;
+    return rv;
 
   mImageContainer->SetFrameDisposalMethod(mGIFStruct.images_decoded,
                                           mGIFStruct.disposal_method);
@@ -374,6 +374,7 @@ void nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
     mObserver->OnStartFrame(nsnull, mGIFStruct.images_decoded);
 
   mCurrentFrame = mGIFStruct.images_decoded;
+  return NS_OK;
 }
 
 
@@ -1068,10 +1069,8 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
       while (mGIFStruct.tpixel >= (1 << realDepth) && (realDepth < 8)) {
         realDepth++;
       } 
-      BeginImageFrame(realDepth);
-      
-      // handle allocation error
-      if (!mImageData) {
+      nsresult rv = BeginImageFrame(realDepth);
+      if (NS_FAILED(rv) || !mImageData) {
         mGIFStruct.state = gif_error;
         break;
       }
