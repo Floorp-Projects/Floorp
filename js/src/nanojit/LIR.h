@@ -1266,5 +1266,18 @@ namespace nanojit
         LInsp insStorei(LInsp v, LInsp b, int32_t d);
         LInsp insCall(const CallInfo *call, LInsp args[]);
     };
+
+#ifdef DEBUG
+    class SanityFilter : public LirWriter
+    {
+    public:
+        SanityFilter(LirWriter* out) : LirWriter(out)
+        { }
+    public:
+        LIns* ins1(LOpcode v, LIns* s0);
+        LIns* ins2(LOpcode v, LIns* s0, LIns* s1);
+        LIns* ins3(LOpcode v, LIns* s0, LIns* s1, LIns* s2);
+    };
+#endif
 }
 #endif // __nanojit_LIR__
