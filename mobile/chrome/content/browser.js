@@ -177,7 +177,7 @@ function onDebugKeyPress(ev) {
   const c = 67;   // set tilecache capacity
   const d = 68;  // debug dump
   const e = 69;
-  const f = 70;
+  const f = 70;  // free memory by clearing a tab.
   const g = 71;
   const h = 72;
   const i = 73;  // toggle info click mode
@@ -250,6 +250,14 @@ function onDebugKeyPress(ev) {
   }
 
   switch (ev.charCode) {
+  case f:
+    var result = Browser.sacrificeTab();
+    if (result)
+      dump("Freed a tab\n");
+    else
+      dump("There are no tabs left to free\n");
+    break;
+
   case r:
     bv.onAfterVisibleMove();
     //bv.setVisibleRect(Browser.getVisibleRect());
@@ -325,7 +333,6 @@ var ih = null;
 
 var Browser = {
   _tabs : [],
-  _browsers : [],
   _selectedTab : null,
   windowUtils: window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils),
@@ -459,8 +466,8 @@ var Browser = {
     os.addObserver(SoftKeyboardObserver, "softkb-change", false);
 #endif
 
-    // XXX hook up memory-pressure notification to clear out tab browsers
-    //os.addObserver(function(subject, topic, data) self.destroyEarliestBrowser(), "memory-pressure", false);
+    // clear out tabs the user hasn't touched lately on memory crunch
+    os.addObserver(MemoryObserver, "memory-pressure", false);
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
@@ -548,6 +555,7 @@ var Browser = {
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
     os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
+    os.removeObserver(MemoryObserver, "memory-pressure");
 #ifdef WINCE
     os.removeObserver(SoftKeyboardObserver, "softkb-change");
 #endif
@@ -565,7 +573,7 @@ var Browser = {
   },
 
   get browsers() {
-    return this._browsers;
+    return this._tabs.map(function(tab) { return tab.browser; });
   },
 
   scrollContentToTop: function scrollContentToTop() {
@@ -614,7 +622,6 @@ var Browser = {
   addTab: function(uri, bringFront) {
     let newTab = new Tab();
     this._tabs.push(newTab);
-    this._browsers.push(newTab.browser);
 
     if (bringFront)
       this.selectedTab = newTab;
@@ -652,7 +659,6 @@ var Browser = {
 
     tab.destroy();
     this._tabs.splice(tabIndex, 1);
-    this._browsers.splice(tabIndex, 1);
 
     // redraw the tabs
     for (let t = tabIndex; t < this._tabs.length; t++)
@@ -672,24 +678,19 @@ var Browser = {
     if (!tab || this._selectedTab == tab)
       return;
 
+    if (this._selectedTab) {
+      this._selectedTab.scrollOffset = this.getScrollboxPosition(this.contentScrollboxScroller);
+    }
+
     let firstTab = this._selectedTab == null;
     this._selectedTab = tab;
+
+    tab.ensureBrowserExists();
 
     bv.beginBatchOperation();
 
     bv.setBrowser(tab.browser, tab.browserViewportState, false);
     bv.forceContainerResize();
-
-    // XXX these should probably be computed less hackily so they don't
-    //   potentially break if we change something in browser.xul
-    let offY = Math.round(document.getElementById("toolbar-container").getBoundingClientRect().height);
-    let restoreX = Math.max(0, tab.browserViewportState.visibleX);
-    let restoreY = Math.max(0, tab.browserViewportState.visibleY) + offY;
-
-    //dump('Switch tab scrolls to: ' + restoreX
-    //                        + ', ' + restoreY + '\n');
-
-    Browser.contentScrollboxScroller.scrollTo(restoreX, restoreY);
 
     document.getElementById("tabs").selectedItem = tab.chromeTab;
 
@@ -709,6 +710,14 @@ var Browser = {
       let event = document.createEvent("Events");
       event.initEvent("TabSelect", true, false);
       tab.chromeTab.dispatchEvent(event);
+    }
+
+    tab.lastSelected = Date.now();
+
+    if (tab.scrollOffset) {
+      let [scrollX, scrollY] = tab.scrollOffset;
+      // Util.dumpf('Switch tab scrolls to: %s, %s\n', scrollX, scrollY);
+      Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
     }
 
     bv.commitBatchOperation();
@@ -792,6 +801,25 @@ var Browser = {
           //do nothing, but continue
         }
       }
+    }
+  },
+
+  /** Returns true iff a tab's browser has been destroyed to free up memory. */
+  sacrificeTab: function sacrificeTab() {
+    let tabToClear = this._tabs.reduce(function(prevTab, currentTab) {
+      if (currentTab == Browser.selectedTab || !currentTab.browser) {
+        return prevTab;
+      } else {
+        return (prevTab && prevTab.lastSelected <= currentTab.lastSelected) ? prevTab : currentTab;
+      }
+    }, null);
+
+    if (tabToClear) {
+      tabToClear.saveState();
+      tabToClear._destroyBrowser();
+      return true;
+    } else {
+      return false;
     }
   },
 
@@ -1981,6 +2009,15 @@ const gSessionHistoryObserver = {
   }
 };
 
+var MemoryObserver = {
+  observe: function() {
+    let memory = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
+    do {
+      Browser.windowUtils.garbageCollect();      
+    } while (memory.isLowMemory() && Browser.sacrificeTab());
+  }
+};
+
 #ifdef WINCE
 // Windows Mobile does not resize the window automatically when the soft
 // keyboard is displayed. Maemo does resize the window.
@@ -2303,6 +2340,11 @@ function Tab() {
   this._listener = null;
   this._loading = false;
   this._chromeTab = null;
+
+  // Set to 0 since new tabs that have not been viewed yet are good tabs to
+  // toss if app needs more memory.
+  this.lastSelected = 0;
+
   this.create();
 }
 
@@ -2319,7 +2361,10 @@ Tab.prototype = {
     return this._chromeTab;
   },
 
-
+  /**
+   * Throttles redraws to once every second while loading the page, zooming to fit page if
+   * user hasn't started zooming.
+   */
   _resizeAndPaint: function() {
     let bv = Browser._browserView;
 
@@ -2328,7 +2373,14 @@ Tab.prototype = {
       bv.simulateMozAfterSizeChange();
       // !!! --- RESIZE HACK END -----
 
-      bv.zoomToPage();
+      let restoringPage = (this._state != null);
+
+      if (!this._browserViewportState.zoomChanged && !restoringPage) {
+        // Only fit page if user hasn't started zooming around and this is a page that
+        // isn't being restored.
+        bv.zoomToPage();
+      }
+
     }
     bv.commitBatchOperation();
 
@@ -2346,6 +2398,7 @@ Tab.prototype = {
       dump("!!! Already loading this tab, please file a bug\n");
 
     this._loading = true;
+    this._browserViewportState.zoomChanged = false;
 
     if (!this._loadingTimeout) {
       Browser._browserView.beginBatchOperation();
@@ -2359,9 +2412,13 @@ Tab.prototype = {
 
     this._loading = false;
     clearTimeout(this._loadingTimeout);
+
     // in order to ensure we commit our current batch,
     // we need to run this function here
     this._resizeAndPaint();
+
+    // if this tab was sacrificed previously, restore its state
+    this.restoreState();
   },
 
   isLoading: function() {
@@ -2377,6 +2434,9 @@ Tab.prototype = {
     this._chromeTab.setAttribute("type", "documenttab");
     document.getElementById("tabs").addTab(this._chromeTab);
 
+    // Initialize a viewport state for BrowserView
+    this._browserViewportState = BrowserView.Util.createBrowserViewportState();
+
     this._createBrowser();
   },
 
@@ -2384,6 +2444,14 @@ Tab.prototype = {
     this._destroyBrowser();
     document.getElementById("tabs").removeTab(this._chromeTab);
     this._chromeTab = null;
+  },
+
+  /** Create browser if it doesn't already exist. */
+  ensureBrowserExists: function() {
+    if (!this._browser) {
+      this._createBrowser();
+      this.browser.contentDocument.location = this._state._url;
+    }
   },
 
   _createBrowser: function() {
@@ -2410,28 +2478,26 @@ Tab.prototype = {
     // stop about:blank from loading
     browser.stop();
 
-    // Initialize a viewport state for BrowserView
-    let initVis = Browser.getVisibleRect();
-    initVis.x = 0;
-    initVis.y = 0;
-    this._browserViewportState = BrowserView.Util.createBrowserViewportState(browser, initVis);
-
     // Attach a separate progress listener to the browser
     this._listener = new ProgressController(this);
     browser.addProgressListener(this._listener);
   },
 
   _destroyBrowser: function() {
-    document.getElementById("browsers").removeChild(this._browser);
-    this._browser = null;
+    if (this._browser) {
+      document.getElementById("browsers").removeChild(this._browser);
+      this._browser = null;
+    }
   },
 
+  /** Serializes as much state as possible of the current content.  */
   saveState: function() {
     let state = { };
 
-    this._url = browser.contentWindow.location.toString();
-    var browser = this.getBrowserForDisplay(display);
+    var browser = this._browser;
     var doc = browser.contentDocument;
+    state._url = doc.location.href;
+    state._scroll = BrowserView.Util.getContentScrollValues(this.browser);
     if (doc instanceof HTMLDocument) {
       var tags = ["input", "textarea", "select"];
 
@@ -2451,24 +2517,22 @@ Tab.prototype = {
       }
     }
 
-    state._scrollX = browser.contentWindow.scrollX;
-    state._scrollY = browser.contentWindow.scrollY;
-
     this._state = state;
   },
 
+  /** Restores serialized content from saveState.  */
   restoreState: function() {
     let state = this._state;
     if (!state)
       return;
 
     let doc = this._browser.contentDocument;
-    for (item in state) {
+
+    for (var item in state) {
       var elem = null;
       if (item.charAt(0) == "#") {
         elem = doc.getElementById(item.substring(1));
-      }
-      else if (item.charAt(0) == "$") {
+      } else if (item.charAt(0) == "$") {
         var list = doc.getElementsByName(item.substring(1));
         if (list.length)
           elem = list[0];
@@ -2478,7 +2542,10 @@ Tab.prototype = {
         elem.value = state[item];
     }
 
-    this._browser.contentWindow.scrollTo(state._scrollX, state._scrollY);
+    this.browser.contentWindow.scrollX = state._scroll[0];
+    this.browser.contentWindow.scrollY = state._scroll[1];
+
+    this._state = null;
   },
 
   updateThumbnail: function() {
@@ -2487,5 +2554,9 @@ Tab.prototype = {
 
     let browserView = (Browser.selectedBrowser == this._browser) ? Browser._browserView : null;
     this._chromeTab.updateThumbnail(this._browser, browserView);
+  },
+
+  toString: function() {
+    return "[Tab " + (this._browser ? this._browser.contentDocument.location.toString() : "(no browser)") + "]";
   }
 };

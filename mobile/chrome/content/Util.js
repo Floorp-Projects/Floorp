@@ -59,9 +59,21 @@ let Util = {
         instance[key] = bind(instance[key], instance);
   },
 
+  /** printf-like dump function */
+  dumpf: function dumpf(str) {
+    var args = arguments;
+    var i = 1;
+    dump(str.replace(/%s/g, function() {
+      if (i >= args.length) {
+        throw "dumps received too many placeholders and not enough arguments";
+      }
+      return args[i++].toString();
+    }));
+  },
+
   /** Like dump, but each arg is handled and there's an automatic newline */
   dumpLn: function dumpLn() {
-    for (var i = 0; i < arguments.length; i++) { dump(arguments[i] + ' '); }
+    for (var i = 0; i < arguments.length; i++) { dump(arguments[i] + " "); }
     dump("\n");
   },
 

@@ -160,16 +160,8 @@ BrowserView.Util = {
     return BrowserView.Util.clampZoomLevel(visibleRect.width / browserW);
   },
 
-  createBrowserViewportState: function createBrowserViewportState(browser, visibleRect) {
-    let [browserW, browserH] = BrowserView.Util.getBrowserDimensions(browser);
-
-    let zoomLevel = BrowserView.Util.pageZoomLevel(visibleRect, browserW, browserH);
-    let viewportRect = (new wsRect(0, 0, browserW, browserH)).scale(zoomLevel, zoomLevel);
-
-    return new BrowserView.BrowserViewportState(viewportRect,
-                                                visibleRect.x,
-                                                visibleRect.y,
-                                                zoomLevel);
+  createBrowserViewportState: function createBrowserViewportState() {
+    return new BrowserView.BrowserViewportState(new wsRect(0, 0, 1, 1), 0, 0, 1);
   },
 
   getViewportStateFromBrowser: function getViewportStateFromBrowser(browser) {
@@ -282,6 +274,7 @@ BrowserView.prototype = {
       this.setViewportDimensions(this.browserToViewport(browserW),
                                  this.browserToViewport(browserH),
                                  true);
+      this.zoomChanged = true;
     }
   },
 
@@ -683,6 +676,7 @@ BrowserView.BrowserViewportState.prototype = {
     this.visibleX     = visibleX;
     this.visibleY     = visibleY;
     this.zoomLevel    = zoomLevel;
+    this.zoomChanged  = false;
   },
 
   clone: function clone() {

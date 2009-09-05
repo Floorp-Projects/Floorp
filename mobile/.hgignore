@@ -3,5 +3,6 @@
 # Filenames that should be ignored wherever they appear
 ~$
 \.pyc$
+\.swp$
 (^|/)TAGS$
 \.DS_Store$
