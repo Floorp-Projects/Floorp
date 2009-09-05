@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 # browser_477657.js is disabled, because it's unreliable (bug 482975).
 # browser_480148.js is disabled, because it breaks browser_420786.js (see bug 483382).
+# tests for 459906, 463205, and 464620 disabled because they are broken.
 
 _BROWSER_TEST_FILES = \
 	browser_248970_a.js \
@@ -74,23 +75,13 @@ _BROWSER_TEST_FILES = \
 	browser_454908_sample.html \
 	browser_456342.js \
 	browser_456342_sample.xhtml \
-	# browser_459906.js \
-	# browser_459906_empty.html \
-	# browser_459906_sample.html \
 	browser_461634.js \
-	# browser_461743.js \
-	# browser_461743_sample.html \
 	browser_463205.js \
 	browser_463205_helper.html \
 	browser_463205_sample.html \
 	browser_463206.js \
 	browser_463206_sample.html \
 	browser_464199.js \
-	# browser_464620_a.html \
-	# browser_464620_a.js \
-	# browser_464620_b.html \
-	# browser_464620_b.js \
-	# browser_464620_xd.html \
 	browser_465215.js \
 	browser_465223.js \
 	browser_466937.js \
