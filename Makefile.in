@@ -209,6 +209,7 @@ ifdef MOZILLA_OFFICIAL
 	echo signing NSS libs
 	cd $(DIST)/bin; ./shlibsign.exe -v -i softokn3.dll
 	cd $(DIST)/bin; ./shlibsign.exe -v -i freebl3.dll
+	cd $(DIST)/bin; ./shlibsign.exe -v -i nssdbm3.dll
 endif # MOZILLA_OFFICIAL
 
 deliver: rebase signnss
