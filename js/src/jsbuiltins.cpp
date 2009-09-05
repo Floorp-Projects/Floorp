@@ -400,13 +400,8 @@ js_NewNullClosure(JSContext* cx, JSObject* funobj, JSObject* proto, JSObject* pa
     }
 
     closure->map = &scope->map;
-    closure->classword = jsuword(&js_FunctionClass);
-    closure->setProto(proto);
-    closure->setParent(parent);
-    closure->setPrivate(fun);
-    for (unsigned i = JSSLOT_PRIVATE + 1; i != JS_INITIAL_NSLOTS; ++i)
-        closure->fslots[i] = JSVAL_VOID;
-    closure->dslots = NULL;
+    closure->init(&js_FunctionClass, proto, parent,
+                  reinterpret_cast<jsval>(fun));
     return closure;
 }
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT, OBJECT, 0, 0)

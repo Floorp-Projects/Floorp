@@ -369,7 +369,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     JSAutoTempValueRooter tvr(cx, wfunobj);
 
     JSFunction *wfun = (JSFunction *) wfunobj;
-    wfunobj->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(wfun);
+    wfunobj->setPrivate(wfun);
     wfun->nargs = 0;
     wfun->flags = fun->flags | JSFUN_HEAVYWEIGHT;
     wfun->u.i.nvars = 0;
@@ -788,7 +788,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     /* A call object should be a frame's outermost scope chain element.  */
     JSClass *classp = OBJ_GET_CLASS(cx, fp->scopeChain);
     if (classp == &js_WithClass || classp == &js_BlockClass || classp == &js_CallClass)
-        JS_ASSERT(fp->scopeChain->getAssignedPrivate() != fp);
+        JS_ASSERT(fp->scopeChain->getPrivate() != fp);
 #endif
 
     /*
@@ -803,7 +803,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
                                                    fp->scopeChain);
         if (!env)
             return NULL;
-        env->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(fp);
+        env->setPrivate(fp);
 
         /* Root env before js_DefineNativeProperty (-> JSClass.addProperty). */
         fp->scopeChain = env;
@@ -891,7 +891,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         JSObject *env = STOBJ_GET_PARENT(callobj);
 
         JS_ASSERT(STOBJ_GET_CLASS(env) == &js_DeclEnvClass);
-        JS_ASSERT(env->getAssignedPrivate() == fp);
+        JS_ASSERT(env->getPrivate() == fp);
         env->setPrivate(NULL);
     }
 

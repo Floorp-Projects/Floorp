@@ -843,7 +843,7 @@ date_parseISOString(JSString *str, jsdouble *result)
  done:
     if (year > 275943 // ceil(1e8/365) + 1970
         || (month == 0 || month > 12)
-        || (day == 0 || day > DaysInMonth(year,month))
+        || (day == 0 || day > size_t(DaysInMonth(year,month)))
         || hour > 24 
         || ((hour == 24) && (min > 0 || sec > 0))
         || min > 59 

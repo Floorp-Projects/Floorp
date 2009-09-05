@@ -463,19 +463,16 @@ ShareTitle(JSContext *cx, JSTitle *title)
 static void
 FinishSharingTitle(JSContext *cx, JSTitle *title)
 {
-    JSScope *scope;
-    JSObject *obj;
-    uint32 nslots, i;
-    jsval v;
-
     js_InitLock(&title->lock);
     title->u.count = 0;     /* NULL may not pun as 0 */
-    scope = TITLE_TO_SCOPE(title);
-    obj = scope->object;
+
+    JSScope *scope = TITLE_TO_SCOPE(title);
+    JSObject *obj = scope->object;
     if (obj) {
-        nslots = scope->freeslot;
-        for (i = 0; i != nslots; ++i) {
-            v = STOBJ_GET_SLOT(obj, i);
+        uint32 nslots = scope->freeslot;
+        JS_ASSERT(nslots >= JSSLOT_START(obj->getClass()));
+        for (uint32 i = JSSLOT_START(obj->getClass()); i != nslots; ++i) {
+            jsval v = STOBJ_GET_SLOT(obj, i);
             if (JSVAL_IS_STRING(v) &&
                 !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
                 /*
