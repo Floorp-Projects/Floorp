@@ -839,11 +839,6 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 AC_PATH_XTRA
 
-dnl Check in X11 include directory too.
-if test "$no_x" != "yes"; then
-    CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-fi
-
 XCFLAGS="$X_CFLAGS"
 
 fi # COMPILE_ENVIRONMENT
