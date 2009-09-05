@@ -54,15 +54,14 @@ CPPSRCS		= nsModule.cpp
 
 include $(topsrcdir)/config/config.mk
 
+ifndef MOZ_THUNDERBIRD
 # General includes
 SHARED_LIBRARY_LIBS += ../directory/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../directory
+endif
 
-# Non-Mac Browser requirements
-ifneq ($(MOZ_BUILD_APP),macbrowser)
 SHARED_LIBRARY_LIBS += ../../browser/src/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../../browser/src
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
