@@ -92,6 +92,7 @@ typedef enum {
 typedef GnomeProgram * (*_gnome_program_init_fn)(const char *, const char *,
                                                  const GnomeModuleInfo *, int,
                                                  char **, const char *, ...);
+typedef GnomeProgram * (*_gnome_program_get_fn)(void);
 typedef const GnomeModuleInfo * (*_libgnomeui_module_info_get_fn)();
 typedef GnomeClient * (*_gnome_master_client_fn)(void);
 typedef void (*GnomeInteractFunction)(GnomeClient *, gint, GnomeDialogType,
@@ -353,8 +354,10 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
 
   _gnome_program_init_fn gnome_program_init =
     (_gnome_program_init_fn)PR_FindFunctionSymbol(gnomeLib, "gnome_program_init");
-  _libgnomeui_module_info_get_fn libgnomeui_module_info_get = (_libgnomeui_module_info_get_fn)PR_FindFunctionSymbol(gnomeuiLib, "libgnomeui_module_info_get");
-  if (!gnome_program_init || !libgnomeui_module_info_get) {
+  _gnome_program_get_fn gnome_program_get =
+    (_gnome_program_get_fn)PR_FindFunctionSymbol(gnomeLib, "gnome_program_get"); 
+ _libgnomeui_module_info_get_fn libgnomeui_module_info_get = (_libgnomeui_module_info_get_fn)PR_FindFunctionSymbol(gnomeuiLib, "libgnomeui_module_info_get");
+  if (!gnome_program_init || !gnome_program_get || !libgnomeui_module_info_get) {
     PR_UnloadLibrary(gnomeuiLib);
     PR_UnloadLibrary(gnomeLib);
     return NS_OK;
@@ -372,7 +375,9 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
 #endif
 
 #ifdef MOZ_X11
-  gnome_program_init("Gecko", "1.0", libgnomeui_module_info_get(), gArgc, gArgv, NULL);
+  if (!gnome_program_get()) {
+    gnome_program_init("Gecko", "1.0", libgnomeui_module_info_get(), gArgc, gArgv, NULL);
+  }
 #endif /* MOZ_X11 */
 
 #ifdef ACCESSIBILITY
