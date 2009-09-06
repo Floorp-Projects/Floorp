@@ -2396,7 +2396,7 @@
 
           BEGIN_CASE(JSOP_DOUBLE)
             JS_ASSERT(!fp->imacpc);
-            JS_ASSERT(atoms == script->atomMap.vector);
+            JS_ASSERT(size_t(atoms - script->atomMap.vector) < script->atomMap.length);
             /* FALL THROUGH */
 
           BEGIN_CASE(JSOP_STRING)
