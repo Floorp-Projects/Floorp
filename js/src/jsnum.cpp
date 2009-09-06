@@ -598,8 +598,7 @@ num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_TRACER
 
-JS_DEFINE_TRCINFO_2(num_toString,
-    (3, (static, STRING, NumberToStringWithBase, CONTEXT, THIS_DOUBLE, INT32, 1, 1)),
+JS_DEFINE_TRCINFO_1(num_toString,
     (2, (extern, STRING, js_NumberToString,      CONTEXT, THIS_DOUBLE,        1, 1)))
 
 #endif /* JS_TRACER */
@@ -833,7 +832,7 @@ NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize
     return numStr;
 }
 
-static JSString * JS_FASTCALL
+static JSString *
 NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 {
     /*
@@ -863,8 +862,11 @@ js_NumberToString(JSContext *cx, jsdouble d)
     jsint i;
 
     if (JSDOUBLE_IS_INT(d, i)) {
-        if (jsuint(i) < INT_STRING_LIMIT)
-            return &JSString::intStringTable[i];
+        jsuint u = jsuint(i);
+        if (u < 10) /*  to avoid 2 JSString copies of 0-9 */
+            return &JSString::unitStringTable['0' + u];
+        if (u < INT_STRING_LIMIT)
+            return &JSString::intStringTable[u];
     }
     return NumberToStringWithBase(cx, d, 10);
 }
