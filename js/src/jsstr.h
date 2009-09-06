@@ -371,6 +371,7 @@ struct JSString {
 
     static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
+    static JSString *intString(jsint i);
 };
 
 extern const jschar *

@@ -68,6 +68,7 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
+#include "jsstrinlines.h"
 #include "jsvector.h"
 
 static JSBool
@@ -861,13 +862,8 @@ js_NumberToString(JSContext *cx, jsdouble d)
 {
     jsint i;
 
-    if (JSDOUBLE_IS_INT(d, i)) {
-        jsuint u = jsuint(i);
-        if (u < 10) /*  to avoid 2 JSString copies of 0-9 */
-            return &JSString::unitStringTable['0' + u];
-        if (u < INT_STRING_LIMIT)
-            return &JSString::intStringTable[u];
-    }
+    if (JSDOUBLE_IS_INT(d, i) && jsuint(i) < INT_STRING_LIMIT)
+        return JSString::intString(i);
     return NumberToStringWithBase(cx, d, 10);
 }
 
