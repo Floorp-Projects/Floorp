@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Serge Gautherie <sgautherie.bz@free.fr>
 #   Ted Mielczarek <ted.mielczarek@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -44,7 +45,7 @@ import sys, shutil, os, os.path
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.append(SCRIPT_DIRECTORY)
 import automation
-from automationutils import addCommonOptions
+from automationutils import addCommonOptions, processLeakLog
 from optparse import OptionParser
 from tempfile import mkdtemp
 
@@ -151,7 +152,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
                                ["-silent"],
                                xrePath=options.xrePath,
                                symbolsPath=options.symbolsPath)
-    # We don't care to call |automation.processLeakLog()| for this step.
+    # We don't care to call |processLeakLog()| for this step.
     automation.log.info("\nREFTEST INFO | runreftest.py | Performing extension manager registration: end.")
 
     # Remove the leak detection file so it can't "leak" to the tests run.
@@ -166,7 +167,7 @@ Are you executing $objdir/_tests/reftest/runreftest.py?""" \
                                ["-reftest", reftestlist],
                                xrePath=options.xrePath,
                                symbolsPath=options.symbolsPath)
-    automation.processLeakLog(leakLogFile, options.leakThreshold)
+    processLeakLog(leakLogFile, options.leakThreshold)
     automation.log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
   finally:
     if profileDir is not None:
