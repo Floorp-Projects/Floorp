@@ -11,15 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla.
+# The Original Code is the Mozilla Browser code.
 #
 # The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Benjamin Smedberg <benjamin@smedbergs.us>
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mark Finkle <mfinkle@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,27 +34,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-add_makefiles "
-mobile/app/Makefile
-$MOZ_BRANDING_DIRECTORY/Makefile
-$MOZ_BRANDING_DIRECTORY/locales/Makefile
-mobile/chrome/Makefile
-mobile/chrome/tests/Makefile
-mobile/components/Makefile
-mobile/components/phone/Makefile
-mobile/components/protocols/Makefile
-mobile/installer/Makefile
-mobile/locales/Makefile
-mobile/Makefile
-mobile/themes/hildon/Makefile
-mobile/themes/Makefile
-mobile/themes/wince/Makefile
-mobile/installer/debian/changelog
-mobile/installer/debian/compat
-mobile/installer/debian/fennec.desktop
-mobile/installer/debian/fennec.links
-mobile/installer/debian/fennec.service
-mobile/installer/debian/files
-mobile/installer/debian/icon_base64
-mobile/installer/debian/menu
-mobile/installer/debian/fennec.postinst"
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = mobile/branding/nightly/locales
+
+include $(DEPTH)/config/autoconf.mk
+
+DEFINES += -DAB_CD=$(AB_CD)
+
+include $(topsrcdir)/config/rules.mk
