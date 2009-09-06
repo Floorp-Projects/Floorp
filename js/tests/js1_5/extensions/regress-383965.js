@@ -45,7 +45,7 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
  
-expect = /({get aaa :{}})|({aaa:{prototype:{}}})/;
+expect = /({get aaa :{}})|({aaa:{}})/;
 
 getter function aaa(){};
 var obj = {};
