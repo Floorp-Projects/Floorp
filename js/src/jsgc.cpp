@@ -442,8 +442,9 @@ JS_STATIC_ASSERT(1 <= js_gcArenasPerChunk &&
     ((GC_ARENA_SIZE - (uint32) sizeof(JSGCArenaInfo)) / ((thingSize) + 1U))
 
 #define THING_TO_ARENA(thing)                                                 \
-    ((JSGCArenaInfo *)(((jsuword) (thing) | GC_ARENA_MASK) +                  \
-                       1 - sizeof(JSGCArenaInfo)))
+    (JS_ASSERT(!JSString::isStatic((JSString *) (thing))),                    \
+     (JSGCArenaInfo *)(((jsuword) (thing) | GC_ARENA_MASK)                    \
+                       + 1 - sizeof(JSGCArenaInfo)))
 
 #define THING_TO_INDEX(thing, thingSize)                                      \
     ((uint32) ((jsuword) (thing) & GC_ARENA_MASK) / (uint32) (thingSize))
@@ -1156,9 +1157,9 @@ GetGCThingFlagsOrNull(void *thing)
 intN
 js_GetExternalStringGCType(JSString *str)
 {
-    uintN type;
+    JS_ASSERT(!JSString::isStatic(str));
 
-    type = (uintN) *GetGCThingFlags(str) & GCF_TYPEMASK;
+    uintN type = (uintN) *GetGCThingFlags(str) & GCF_TYPEMASK;
     JS_ASSERT(type == GCX_STRING || type >= GCX_EXTERNAL_STRING);
     return (type == GCX_STRING) ? -1 : (intN) (type - GCX_EXTERNAL_STRING);
 }
@@ -2315,7 +2316,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
     uint8 *flagp;
     JSGCLockHashEntry *lhe;
 
-    if (!thing)
+    if (!thing || JSString::isStatic((JSString *) thing))
         return JS_TRUE;
 
     flagp = GetGCThingFlagsOrNull(thing);
@@ -2371,7 +2372,7 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
     JSBool shallow;
     JSGCLockHashEntry *lhe;
 
-    if (!thing)
+    if (!thing || JSString::isStatic((JSString *) thing))
         return JS_TRUE;
 
     flagp = GetGCThingFlagsOrNull(thing);
