@@ -1423,14 +1423,6 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
         cursor += vectorSize;
     }
 
-    if (nupvars != 0) {
-        JS_SCRIPT_UPVARS(script)->length = nupvars;
-        JS_SCRIPT_UPVARS(script)->vector = (uint32 *)cursor;
-        vectorSize = nupvars * sizeof(JS_SCRIPT_UPVARS(script)->vector[0]);
-        memset(cursor, 0, vectorSize);
-        cursor += vectorSize;
-    }
-
     if (nregexps != 0) {
         JS_SCRIPT_REGEXPS(script)->length = nregexps;
         JS_SCRIPT_REGEXPS(script)->vector = (JSObject **)cursor;
@@ -1446,6 +1438,18 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
 #ifdef DEBUG
         memset(cursor, 0, vectorSize);
 #endif
+        cursor += vectorSize;
+    }
+
+    /*
+     * NB: We allocate the vector of uint32 upvar cookies after all vectors of
+     * pointers, to avoid misalignment on 64-bit platforms. See bug 514645.
+     */
+    if (nupvars != 0) {
+        JS_SCRIPT_UPVARS(script)->length = nupvars;
+        JS_SCRIPT_UPVARS(script)->vector = (uint32 *)cursor;
+        vectorSize = nupvars * sizeof(JS_SCRIPT_UPVARS(script)->vector[0]);
+        memset(cursor, 0, vectorSize);
         cursor += vectorSize;
     }
 
