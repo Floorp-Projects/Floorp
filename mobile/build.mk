@@ -42,6 +42,7 @@ tier_app_dirs += extensions
 endif
 
 tier_app_dirs += \
+  $(MOZ_BRANDING_DIRECTORY) \
   mobile \
   $(NULL)
 

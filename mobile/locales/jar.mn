@@ -12,9 +12,5 @@
   locale/@AB_CD@/browser/checkbox.dtd             (%chrome/checkbox.dtd)
   locale/@AB_CD@/browser/notification.dtd         (%chrome/notification.dtd)
   locale/@AB_CD@/browser/prompt.dtd               (%chrome/prompt.dtd)
-# Fennec-specific overrides of generic strings
 * locale/@AB_CD@/browser/netError.dtd             (%chrome/overrides/netError.dtd)
 % override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
-% locale branding @AB_CD@ %locale/@AB_CD@/branding/
-  locale/@AB_CD@/branding/brand.dtd               (%chrome/brand/brand.dtd)
-  locale/@AB_CD@/branding/brand.properties        (%chrome/brand/brand.properties)

@@ -36,7 +36,10 @@
 # ***** END LICENSE BLOCK *****
 
 MOZ_APP_NAME=fennec
-MOZ_APP_DISPLAYNAME=Fennec
+MOZ_BRANDING_DIRECTORY=mobile/branding/nightly
+MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
+# MOZ_APP_DISPLAYNAME is set by branding/configure.sh
+
 case "$target" in
 *-wince)
     MOZ_APP_VERSION=1.0a3
