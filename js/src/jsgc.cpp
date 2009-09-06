@@ -2722,7 +2722,8 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
     if (JSVAL_IS_DOUBLE(v) || JSVAL_IS_STRING(v)) {
         thing = JSVAL_TO_TRACEABLE(v);
         kind = JSVAL_TRACE_KIND(v);
-        JS_ASSERT(kind == js_GetGCThingTraceKind(JSVAL_TO_GCTHING(v)));
+        JS_ASSERT_IF(!JSVAL_IS_STRING(v) || !JSString::isStatic(JSVAL_TO_STRING(v)),
+                     kind == js_GetGCThingTraceKind(JSVAL_TO_GCTHING(v)));
     } else if (JSVAL_IS_OBJECT(v) && v != JSVAL_NULL) {
         /* v can be an arbitrary GC thing reinterpreted as an object. */
         thing = JSVAL_TO_OBJECT(v);
