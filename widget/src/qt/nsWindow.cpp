@@ -2182,10 +2182,6 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent,
     if (mEventCallback)
         aStatus = (* mEventCallback)(aEvent);
 
-    // dispatch to event listener if event was not consumed
-    if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
-        aStatus = mEventListener->ProcessEvent(*aEvent);
-
     return NS_OK;
 }
 

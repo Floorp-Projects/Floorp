@@ -401,9 +401,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 	if (mEventCallback)
 		aStatus = (*mEventCallback)(event);
 
-	if ((aStatus != nsEventStatus_eIgnore) && (mEventListener))
-		aStatus = mEventListener->ProcessEvent(*event);
-
 	return NS_OK;
 }
 

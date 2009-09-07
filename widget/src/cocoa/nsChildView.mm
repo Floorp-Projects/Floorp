@@ -1763,10 +1763,6 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
 
-  // dispatch to event listener if event was not consumed
-  if (mEventListener && aStatus != nsEventStatus_eConsumeNoDefault)
-    aStatus = mEventListener->ProcessEvent(*event);
-
   return NS_OK;
 }
 

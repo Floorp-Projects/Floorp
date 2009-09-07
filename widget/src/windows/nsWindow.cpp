@@ -2763,11 +2763,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
     aStatus = (*mEventCallback)(event);
   }
 
-  // Dispatch to event listener if event was not consumed
-  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
-    aStatus = mEventListener->ProcessEvent(*event);
-  }
-
   // the window can be destroyed during processing of seemingly innocuous events like, say,
   // mousedowns due to the magic of scripting. mousedowns will return nsEventStatus_eIgnore,
   // which causes problems with the deleted window. therefore:

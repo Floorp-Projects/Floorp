@@ -76,7 +76,6 @@
 #include "nsIPluginTagInfo.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
-#include "nsIEventListener.h"
 #include "nsIScrollableView.h"
 #include "nsIScrollPositionListener.h"
 #include "nsITimer.h"
@@ -210,8 +209,7 @@ static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
 // same class
-class nsPluginDOMContextMenuListener : public nsIDOMContextMenuListener,
-                                       public nsIEventListener
+class nsPluginDOMContextMenuListener : public nsIDOMContextMenuListener
 {
 public:
   nsPluginDOMContextMenuListener();
@@ -237,7 +235,6 @@ public:
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo,
-                              public nsIEventListener,
                               public nsITimerCallback,
                               public nsIDOMMouseListener,
                               public nsIDOMMouseMotionListener,
@@ -337,16 +334,13 @@ public:
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 
-  // nsIDOMFocuListener interfaces
+  // nsIDOMFocusListener interfaces
   NS_IMETHOD Focus(nsIDOMEvent * aFocusEvent);
   NS_IMETHOD Blur(nsIDOMEvent * aFocusEvent);
 
   nsresult Destroy();  
 
   void PrepareToStop(PRBool aDelayedStop);
-
-  // nsIEventListener interface
-  nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
 #ifdef XP_WIN
   void Paint(const RECT& aDirty, HDC aDC);
@@ -381,6 +375,8 @@ public:
   void ReleasePluginPort(nsPluginPort * pluginPort);
 
   void SetPluginHost(nsIPluginHost* aHost);
+
+  nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
 
 #ifdef XP_MACOSX
   NPDrawingModel GetDrawingModel();
@@ -2372,10 +2368,9 @@ nsPluginDOMContextMenuListener::~nsPluginDOMContextMenuListener()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsPluginDOMContextMenuListener,
+NS_IMPL_ISUPPORTS2(nsPluginDOMContextMenuListener,
                    nsIDOMContextMenuListener,
-                   nsIDOMEventListener,
-                   nsIEventListener)
+                   nsIDOMEventListener)
 
 NS_IMETHODIMP
 nsPluginDOMContextMenuListener::ContextMenu(nsIDOMEvent* aContextMenuEvent)
@@ -2504,7 +2499,6 @@ NS_IMPL_RELEASE(nsPluginInstanceOwner)
 NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIEventListener)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)

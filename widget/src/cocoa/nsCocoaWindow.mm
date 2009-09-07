@@ -906,16 +906,6 @@ void nsCocoaWindow::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
-{
-  nsBaseWidget::AddEventListener(aListener);
-
-  if (mPopupContentView)
-    mPopupContentView->AddEventListener(aListener);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsCocoaWindow::Enable(PRBool aState)
 {
   return NS_OK;
@@ -1256,10 +1246,6 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
-
-  // Dispatch to event listener if event was not consumed
-  if (mEventListener && aStatus != nsEventStatus_eConsumeNoDefault)
-    aStatus = mEventListener->ProcessEvent(*event);
 
   NS_IF_RELEASE(aWidget);
 
