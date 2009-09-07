@@ -364,8 +364,11 @@ nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
         // the first one we see is a sound overapproximation
         movingContentVisibleRegion = *aVisibleRegion;
       }
+      nscoord appUnitsPerPixel = f->PresContext()->AppUnitsPerDevPixel();
+      nsRect bounds = item->GetBounds(aBuilder).
+          ToOutsidePixels(appUnitsPerPixel).ToAppUnits(appUnitsPerPixel);
       movingContentAccumulatedBounds.UnionRect(movingContentAccumulatedBounds,
-                                               item->GetBounds(aBuilder));
+                                               bounds);
     }
     if (item->OptimizeVisibility(aBuilder, aVisibleRegion)) {
       AppendToBottom(item);
