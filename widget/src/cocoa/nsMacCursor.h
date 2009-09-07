@@ -91,6 +91,14 @@
  */
 + (NSCursor *) cocoaCursorWithImageNamed: (NSString *) imageName hotSpot: (NSPoint) aPoint;
 
+/*! @method     isSet
+    @abstract   Determines whether this cursor is currently active.
+    @discussion This can be helpful when the Cocoa NSCursor state can be influenced without going
+                through nsCursorManager.
+    @result     whether the cursor is currently set
+ */
+- (BOOL) isSet;
+
 /*! @method     set
     @abstract   Set the cursor.
     @discussion Makes this cursor the current cursor. If the cursor is animated, the animation is started.
