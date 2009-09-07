@@ -180,8 +180,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (void)setPluginEventModel:(NPEventModel)eventModel;
 - (NPEventModel)pluginEventModel;
 
-- (BOOL)childViewHasPlugin;
-
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
 - (void)processPendingRedraws;
@@ -2374,22 +2372,6 @@ NSEvent* gLastDragEvent = nil;
 - (NPEventModel)pluginEventModel;
 {
   return mPluginEventModel;
-}
-
-- (BOOL)childViewHasPlugin
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  NSArray* subviews = [self subviews];
-  for (unsigned int i = 0; i < [subviews count]; i ++) {
-    id subview = [subviews objectAtIndex:i];
-    if ([subview respondsToSelector:@selector(isPluginView)] && [subview isPluginView])
-      return YES;
-  }
-  
-  return NO;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 - (void)sendFocusEvent:(PRUint32)eventType
