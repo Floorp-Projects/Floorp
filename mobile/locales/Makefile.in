@@ -46,6 +46,13 @@ include $(topsrcdir)/config/config.mk
 
 vpath %.xml @srcdir@/en-US/searchplugins
 vpath %.xml $(LOCALE_SRCDIR)/searchplugins
+ifdef LOCALE_MERGEDIR
+vpath book%.inc $(LOCALE_MERGEDIR)/mobile/profile
+endif
+vpath book%.inc $(LOCALE_SRCDIR)/profile
+ifdef LOCALE_MERGEDIR
+vpath book%.inc @srcdir@/en-US/profile
+endif
 
 SUBMAKEFILES += \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
@@ -87,6 +94,20 @@ libs-%:
 
 installers-%: clobber-% langpack-% repackage-zip-%
 	@echo "repackaging done"
+
+NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
+
+%/defaults/profile/bookmarks.json: bookmarks.inc generic/profile/bookmarks.json.in
+	$(SYSINSTALL) -D $(dir $@)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	  -I $< \
+	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
+	  $(srcdir)/generic/profile/bookmarks.json.in \
+	  > $@
+
+libs:: $(FINAL_TARGET)/defaults/profile/bookmarks.json ;
+
+install:: $(DESTDIR)$(mozappdir)/defaults/profile/bookmarks.json ;
 
 ifdef MOZ_UPDATER
 ifdef LOCALE_MERGEDIR
