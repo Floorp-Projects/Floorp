@@ -50,7 +50,11 @@ let modules = {
     privileged: false
   },
   rights: {
+#ifdef MOZ_OFFICIAL_BRANDING
     uri: "chrome://global/content/aboutRights.xhtml",
+#else
+    uri: "chrome://global/content/aboutRights-unbranded.xhtml",
+#endif
     privileged: false
   }
 }
