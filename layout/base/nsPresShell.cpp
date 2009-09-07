@@ -5338,8 +5338,8 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       rc->Init(devCtx, aThebesContext);
 
       nsRegion region(rect);
-      list.OptimizeVisibility(&builder, &region);
-      list.Paint(&builder, rc, rect);
+      list.ComputeVisibility(&builder, &region);
+      list.Paint(&builder, rc);
       // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
       list.DeleteAll();
 
@@ -5627,7 +5627,9 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
       translate(rc, rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
 
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
-    rangeInfo->mList.Paint(&rangeInfo->mBuilder, rc, aArea);
+    nsRegion visible(aArea);
+    rangeInfo->mList.ComputeVisibility(&rangeInfo->mBuilder, &visible);
+    rangeInfo->mList.Paint(&rangeInfo->mBuilder, rc);
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
 

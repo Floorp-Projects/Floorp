@@ -254,10 +254,10 @@ public:
   virtual Type GetType() { return TYPE_PLUGIN; }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
-  virtual PRBool OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-      nsRegion* aVisibleRegion);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
+  virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion);
 
   NS_DISPLAY_DECL_NAME("Plugin")
 

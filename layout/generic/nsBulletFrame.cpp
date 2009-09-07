@@ -196,16 +196,16 @@ public:
 
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
                             HitTestState* aState) { return mFrame; }
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Bullet")
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                            nsIRenderingContext* aCtx)
 {
   static_cast<nsBulletFrame*>(mFrame)->
-    PaintBullet(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
+    PaintBullet(*aCtx, aBuilder->ToReferenceFrame(mFrame), mVisibleRect);
 }
 
 NS_IMETHODIMP

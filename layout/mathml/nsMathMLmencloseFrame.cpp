@@ -749,8 +749,8 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-                     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLMencloseNotation")
 
 private:
@@ -760,8 +760,7 @@ private:
 };
 
 void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
-                              nsIRenderingContext* aCtx,
-                              const nsRect& aDirtyRect)
+                              nsIRenderingContext* aCtx)
 {
   // get the gfxRect
   nsPresContext* presContext = mFrame->PresContext();

@@ -1256,14 +1256,14 @@ public:
       DisplayDebugInfoFor(this, aPt - aBuilder->ToReferenceFrame(mFrame));
     return PR_TRUE;
   }
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
-  NS_DISPLAY_DECL_NAME("ComboboxFocus")
+  virtual void Paint(nsDisplayListBuilder* aBuilder
+                     nsIRenderingContext* aCtx);
+  NS_DISPLAY_DECL_NAME("XULDebug")
 };
 
 void
 nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                         nsIRenderingContext* aCtx)
 {
   static_cast<nsBoxFrame*>(mFrame)->
     PaintXULDebugOverlay(*aCtx, aBuilder->ToReferenceFrame(mFrame));
