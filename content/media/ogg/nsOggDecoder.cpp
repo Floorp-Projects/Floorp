@@ -154,9 +154,13 @@ public:
     ~FrameData()
     {
       MOZ_COUNT_DTOR(FrameData);
+      ClearVideoHeader();
+    }
 
+    void ClearVideoHeader() {
       if (mVideoHeader) {
         oggplay_callback_info_unlock_item(mVideoHeader);
+        mVideoHeader = nsnull;
       }
     }
 
@@ -997,6 +1001,9 @@ void nsOggDecodeStateMachine::PlayVideo(FrameData* aFrame)
 
     mDecoder->SetRGBData(aFrame->mVideoWidth, aFrame->mVideoHeight,
                          mFramerate, mAspectRatio, buffer.forget());
+
+    // Don't play the frame's video data more than once.
+    aFrame->ClearVideoHeader();
   }
 }
 
