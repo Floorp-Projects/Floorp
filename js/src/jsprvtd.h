@@ -267,7 +267,6 @@ typedef void
 typedef union JSTempValueUnion {
     jsval               value;
     JSObject            *object;
-    JSString            *string;
     JSXML               *xml;
     JSTempValueTrace    trace;
     JSScopeProperty     *sprop;
