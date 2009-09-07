@@ -52,7 +52,6 @@
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
 #include "nsToolkit.h"
-#include "nsIEventListener.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "gfxWindowsSurface.h"

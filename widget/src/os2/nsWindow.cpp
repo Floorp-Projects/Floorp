@@ -370,11 +370,6 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
     if (nsnull != mEventCallback) {
       aStatus = (*mEventCallback)( event);
     }
-   
-    // Dispatch to event listener if event was not consumed
-    if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
-      aStatus = mEventListener->ProcessEvent(*event);
-    }
   }
 
   return NS_OK;
@@ -2822,7 +2817,7 @@ PRBool nsWindow::OnPaint()
   } // if paint flashing
 #endif
 
-  if (mContext && (mEventCallback || mEventListener)) {
+  if (mContext && mEventCallback) {
     // Get rect to redraw and validate window
     RECTL rcl = { 0 };
 
@@ -2896,7 +2891,7 @@ PRBool nsWindow::OnPaint()
     if (hpsDrag) {
       ReleaseIfDragHPS(hpsDrag);
     }
-  } // if (mContext && (mEventCallback || mEventListener))
+  } // if (mContext && mEventCallback)
 
 #ifdef NS_DEBUG
   if (debug_WantPaintFlashing()) {
