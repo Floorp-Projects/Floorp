@@ -7658,7 +7658,7 @@ ExtensionsDataSource.prototype = {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var installLocation = this._em.getInstallLocation(id);
     if (!installLocation)
-      return fallbackURL;
+      return null;
     var file = installLocation.getItemFile(id, fileName)
     if (file.exists())
       return gRDF.GetResource(getURLSpecFromFile(file));
