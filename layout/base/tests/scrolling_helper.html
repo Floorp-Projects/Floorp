@@ -58,6 +58,10 @@ body > div {
   <p>Hello
 </div>
 
+<div style="border:1px solid black;" id="testBorder">
+  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
+</div>
+
 <script>
 var tests = document.querySelectorAll("body>div");
 var currentTest = -1;
@@ -109,6 +113,15 @@ function testFixedPosOverlay(blitRegion, paintRegion) {
   var noPaintRect = [100,0,200,180];
   ok(!paintRegion.intersectsRect(noPaintRect),
      "paint region should not intersect blittable area");
+}
+
+// Check that scrolling an element with moving content in it does
+// the obvious thing, even if the element has a border.
+function testBorder(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[1,1,201,181]])),
+     "Should blit everything that was already visible");
+  ok(paintRegion.equalsRegion(new Region([[1,181,201,201]])),
+     "Should repaint area that was scrolled into view");
 }
 
 function clientRectToRect(cr)

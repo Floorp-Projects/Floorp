@@ -1256,28 +1256,28 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // up nsDisplayClip items, in particular see ApplyAbsPosClipping.
   // XXX but currently a non-moving clip item can incorrectly clip
   // moving items! See bug 428156.
-  nsRect rect;
-  rect.UnionRect(aUpdateRect, aUpdateRect - aDelta);
   nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
-  // Retrieve the area of the moving content that's visible. This is the
+  // Retrieve the area of the moving content (considered in both its
+  // before- and after-movement positions) that's visible. This is the
   // only area that needs to be blitted or repainted.
   nsRegion visibleRegionOfMovingContent;
   builder.SetMovingFrame(aMovingFrame, aDelta, &visibleRegionOfMovingContent);
   nsDisplayList list;
 
-  builder.EnterPresShell(aRootFrame, rect);
+  builder.EnterPresShell(aRootFrame, aUpdateRect);
 
   nsresult rv =
-    aRootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);
+    aRootFrame->BuildDisplayListForStackingContext(&builder, aUpdateRect, &list);
 
-  builder.LeavePresShell(aRootFrame, rect);
+  builder.LeavePresShell(aRootFrame, aUpdateRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
   if (gDumpRepaintRegionForCopy) {
     fprintf(stderr,
             "Repaint region for copy --- before optimization (area %d,%d,%d,%d, frame %p):\n",
-            rect.x, rect.y, rect.width, rect.height, (void*)aMovingFrame);
+            aUpdateRect.x, aUpdateRect.y, aUpdateRect.width, aUpdateRect.height,
+            (void*)aMovingFrame);
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
@@ -1285,7 +1285,6 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // Optimize for visibility, but frames under aMovingFrame will not be
   // considered opaque, so they don't cover non-moving frames.
   nsRegion visibleRegion(aUpdateRect);
-  visibleRegion.Or(visibleRegion, aUpdateRect - aDelta);
   list.OptimizeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
@@ -1294,6 +1293,17 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
+
+  // It's possible that there was moving content which was visible but
+  // has now been scrolled out of view so it does not intersect aUpdateRect,
+  // so it's not in our display list. So compute the region that that content
+  // could have occupied --- the complete region that has been scrolled out
+  // of view --- and add it to visibleRegionOfMovingContent.
+  // Note that aRepaintRegion does not depend on moving content which has
+  // been scrolled out of view.
+  nsRegion scrolledOutOfView;
+  scrolledOutOfView.Sub(aUpdateRect, aUpdateRect - aDelta);
+  visibleRegionOfMovingContent.Or(visibleRegionOfMovingContent, scrolledOutOfView);
 
   aRepaintRegion->SetEmpty();
   // Any visible non-moving display items get added to the repaint region
@@ -1305,7 +1315,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // with the moving items taken into account, either on the before-list
   // or the after-list, or even both if we cloned the display lists ... but
   // it's probably not worth it.
-  AddItemsToRegion(&builder, &list, aUpdateRect, rect, aDelta, aRepaintRegion);
+  AddItemsToRegion(&builder, &list, aUpdateRect, aUpdateRect, aDelta, aRepaintRegion);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
 
