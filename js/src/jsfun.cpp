@@ -2585,13 +2585,15 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     if (flags & JSV2F_ITERATOR) {
         error = JSMSG_BAD_ITERATOR;
         name = js_iterator_str;
-        tvr.u.string = js_ValueToSource(cx, *vp);
-        if (!tvr.u.string)
+        JSString *src = js_ValueToSource(cx, *vp);
+        if (!src)
             goto out;
-        tvr.u.string = js_QuoteString(cx, tvr.u.string, 0);
-        if (!tvr.u.string)
+        tvr.u.value = STRING_TO_JSVAL(src);
+        JSString *qsrc = js_QuoteString(cx, src, 0);
+        if (!qsrc)
             goto out;
-        source = js_GetStringBytes(cx, tvr.u.string);
+        tvr.u.value = STRING_TO_JSVAL(qsrc);
+        source = js_GetStringBytes(cx, qsrc);
         if (!source)
             goto out;
     } else if (flags & JSV2F_CONSTRUCT) {

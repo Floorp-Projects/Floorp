@@ -353,7 +353,7 @@ typedef struct JSWatchPoint {
     JSScopeProperty     *sprop;
     JSPropertyOp        setter;
     JSWatchPointHandler handler;
-    void                *closure;
+    JSObject            *closure;
     uintN               flags;
 } JSWatchPoint;
 
@@ -440,7 +440,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
                                       "wp->setter");
             }
             JS_SET_TRACING_NAME(trc, "wp->closure");
-            js_CallValueTracerIfGCThing(trc, (jsval) wp->closure);
+            js_CallValueTracerIfGCThing(trc, OBJECT_TO_JSVAL(wp->closure));
         }
     }
 }
@@ -588,7 +588,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 JSStackFrame frame;
                 JSFrameRegs regs;
 
-                closure = (JSObject *) wp->closure;
+                closure = wp->closure;
                 clasp = OBJ_GET_CLASS(cx, closure);
                 if (clasp == &js_FunctionClass) {
                     fun = GET_FUNCTION_PRIVATE(cx, closure);
@@ -855,7 +855,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         ++rt->debuggerMutations;
     }
     wp->handler = handler;
-    wp->closure = closure;
+    wp->closure = reinterpret_cast<JSObject*>(closure);
     DBG_UNLOCK(rt);
 
 out:

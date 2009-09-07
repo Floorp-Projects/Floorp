@@ -845,7 +845,7 @@ typedef struct JSLocalRootStack {
  * the following constants:
  */
 #define JSTVU_SINGLE        (-1)    /* u.value or u.<gcthing> is single jsval
-                                       or GC-thing */
+                                       or non-JSString GC-thing pointer */
 #define JSTVU_TRACE         (-2)    /* u.trace is a hook to trace a custom
                                      * structure */
 #define JSTVU_SPROP         (-3)    /* u.sprop roots property tree node */
@@ -854,14 +854,18 @@ typedef struct JSLocalRootStack {
 #define JSTVU_SCRIPT        (-6)    /* u.script roots JSScript* */
 
 /*
- * Here single JSTVU_SINGLE covers both jsval and pointers to any GC-thing via
- * reinterpreting the thing as JSVAL_OBJECT. It works because the GC-thing is
- * aligned on a 0 mod 8 boundary, and object has the 0 jsval tag. So any
- * GC-thing may be tagged as if it were an object and untagged, if it's then
- * used only as an opaque pointer until discriminated by other means than tag
- * bits. This is how, for example, js_GetGCThingTraceKind uses its |thing|
- * parameter -- it consults GC-thing flags stored separately from the thing to
- * decide the kind of thing.
+ * Here single JSTVU_SINGLE covers both jsval and pointers to almost (see note
+ * below) any GC-thing via reinterpreting the thing as JSVAL_OBJECT. This works
+ * because the GC-thing is aligned on a 0 mod 8 boundary, and object has the 0
+ * jsval tag. So any GC-heap-allocated thing pointer may be tagged as if it
+ * were an object and untagged, if it's then used only as an opaque pointer
+ * until discriminated by other means than tag bits. This is how, for example,
+ * js_GetGCThingTraceKind uses its |thing| parameter -- it consults GC-thing
+ * flags stored separately from the thing to decide the kind of thing.
+ *
+ * Note well that JSStrings may be statically allocated (see the intStringTable
+ * and unitStringTable static arrays), so this hack does not work for arbitrary
+ * GC-thing pointers.
  */
 #define JS_PUSH_TEMP_ROOT_COMMON(cx,x,tvr,cnt,kind)                           \
     JS_BEGIN_MACRO                                                            \
@@ -891,7 +895,7 @@ typedef struct JSLocalRootStack {
     JS_PUSH_TEMP_ROOT_COMMON(cx, obj, tvr, JSTVU_SINGLE, object)
 
 #define JS_PUSH_TEMP_ROOT_STRING(cx,str,tvr)                                  \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, str, tvr, JSTVU_SINGLE, string)
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, STRING_TO_JSVAL(str), tvr)
 
 #define JS_PUSH_TEMP_ROOT_XML(cx,xml_,tvr)                                    \
     JS_PUSH_TEMP_ROOT_COMMON(cx, xml_, tvr, JSTVU_SINGLE, xml)
