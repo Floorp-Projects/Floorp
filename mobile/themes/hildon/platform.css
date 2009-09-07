@@ -304,6 +304,13 @@ richlistitem description.normal {
   white-space: pre-wrap;
 }
 
+richlistitem label.normal-bold,
+richlistitem description.normal-bold {
+  font-weight: bold;
+  font-size: 60% !important;
+  white-space: pre-wrap;
+}
+
 richlistitem[selected="true"] {
   color: black;
   background-color: white;

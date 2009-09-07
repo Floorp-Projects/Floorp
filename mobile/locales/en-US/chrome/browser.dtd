@@ -43,6 +43,7 @@
 
 <!ENTITY addonsHeader.label        "Add-ons">
 <!ENTITY addonsLocal.label         "Your Add-ons">
+<!ENTITY addonsUpdate.label        "Update">
 <!ENTITY addonsRepo.label          "Get Add-ons">
 <!ENTITY addonsRecommended.label   "Recommended">
 <!ENTITY addonsSearch.label        "Search">
