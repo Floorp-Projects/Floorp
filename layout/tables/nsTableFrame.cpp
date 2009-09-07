@@ -1195,17 +1195,17 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("TableBorderBackground")
 };
 
 void
 nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
-    nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                                      nsIRenderingContext* aCtx)
 {
   static_cast<nsTableFrame*>(mFrame)->
-    PaintTableBorderBackground(*aCtx, aDirtyRect,
+    PaintTableBorderBackground(*aCtx, mVisibleRect,
                                aBuilder->ToReferenceFrame(mFrame),
                                aBuilder->GetBackgroundPaintFlags());
 }

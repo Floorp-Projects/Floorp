@@ -1117,19 +1117,18 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 
 void
 nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
-                       nsIRenderingContext* aCtx,
-                       const nsRect& aDirtyRect)
+                       nsIRenderingContext* aCtx)
 {
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
-  f->PaintPlugin(*aCtx, aDirtyRect, GetBounds(aBuilder).TopLeft());
+  f->PaintPlugin(*aCtx, mVisibleRect, GetBounds(aBuilder).TopLeft());
 }
 
 PRBool
-nsDisplayPlugin::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
-                                    nsRegion* aVisibleRegion)
+nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                   nsRegion* aVisibleRegion)
 {
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
-  return nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion);
+  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion);
 }
 
 PRBool
