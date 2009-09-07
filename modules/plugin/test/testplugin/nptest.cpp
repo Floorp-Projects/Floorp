@@ -388,11 +388,11 @@ NPP_Destroy(NPP instance, NPSavedData** save)
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
   pluginInstanceShutdown(instanceData);
   NPN_ReleaseObject(instanceData->scriptableObject);
-  free(instanceData);
 
   if (sCurrentInstanceCountWatchGeneration == instanceData->instanceCountWatchGeneration) {
     --sInstanceCount;
   }
+  free(instanceData);
 
   return NPERR_NO_ERROR;
 }
