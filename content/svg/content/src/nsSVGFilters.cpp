@@ -1499,8 +1499,8 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance,
       for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
         PRUint32 targIndex = y * stride + 4 * x;
         for (PRInt32 i = 0; i < 4; i++) {
-          PRUint8 i2 = targetData[targIndex + i];
-          PRUint8 i1 = sourceData[targIndex + i];
+          PRUint8 i1 = targetData[targIndex + i];
+          PRUint8 i2 = sourceData[targIndex + i];
           float result = k1Scaled*i1*i2 + k2*i1 + k3*i2 + k4Scaled;
           targetData[targIndex + i] =
                        static_cast<PRUint8>(PR_MIN(PR_MAX(0, result), 255));
