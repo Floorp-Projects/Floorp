@@ -1651,13 +1651,6 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
   return (color8 << 8) | color8;  /* (color8 * 257) == (color8 * 0x0101) */
 }
 
-// Dummy impl, meant to be overridden
-PRBool
-nsChildView::OnPaint(nsPaintEvent &event)
-{
-  return PR_TRUE;
-}
-
 // The OS manages repaints well enough on its own, so we don't have to
 // flush them out here.  In other words, the OS will automatically call
 // displayIfNeeded at the appropriate times, so we don't need to do it
