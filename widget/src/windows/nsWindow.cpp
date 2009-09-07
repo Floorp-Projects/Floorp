@@ -1999,19 +1999,11 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 
 /**************************************************************
  *
- * SECTION: nsIWidget::Validate, nsIWidget::Invalidate
+ * SECTION: nsIWidget::Invalidate
  *
- * Validate or invalidate an area of the client for painting.
+ * Invalidate an area of the client for painting.
  *
  **************************************************************/
-
-// Validate a visible area of a widget.
-NS_METHOD nsWindow::Validate()
-{
-  if (mWnd)
-    VERIFY(::ValidateRect(mWnd, NULL));
-  return NS_OK;
-}
 
 #ifdef WINCE_WINDOWS_MOBILE
 static inline void AddRECTToRegion(const RECT& aRect, nsIRegion* aRegion)

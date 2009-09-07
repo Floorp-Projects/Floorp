@@ -666,12 +666,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD MakeFullScreen(PRBool aFullScreen) = 0;
 
     /**
-     * Validate the widget.
-     *
-     */
-    NS_IMETHOD Validate() = 0;
-
-    /**
      * Invalidate the widget and repaint it.
      *
      * @param aIsSynchronous PR_TRUE then repaint synchronously. If PR_FALSE repaint later.

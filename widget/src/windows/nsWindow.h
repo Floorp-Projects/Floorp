@@ -139,7 +139,6 @@ public:
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
-  NS_IMETHOD              Validate();
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD              Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD              Update();

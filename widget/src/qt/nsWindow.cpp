@@ -634,20 +634,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     return rv;
 }
 
-
-NS_IMETHODIMP
-nsWindow::Validate()
-{
-    // Get the update for this window and, well, just drop it on the
-    // floor.
-    if (!mWidget)
-        return NS_OK;
-
-    qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsWindow::Invalidate(PRBool aIsSynchronous)
 {
