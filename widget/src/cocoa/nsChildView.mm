@@ -477,7 +477,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mParentWidget(nsnull)
 , mVisible(PR_FALSE)
 , mDrawing(PR_FALSE)
-, mLiveResizeInProgress(PR_FALSE)
 , mIsPluginView(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
 , mPluginIsCG(PR_FALSE)
@@ -1376,17 +1375,6 @@ NS_IMETHODIMP nsChildView::GetPluginEventModel(int* outEventModel)
 {
   *outEventModel = [(ChildView*)mView pluginEventModel];
   return NS_OK;
-}
-
-void nsChildView::LiveResizeStarted()
-{
-  // XXX todo. Use this to disable Java async redraw during resize
-  mLiveResizeInProgress = PR_TRUE;
-}
-
-void nsChildView::LiveResizeEnded()
-{
-  mLiveResizeInProgress = PR_FALSE;
 }
 
 static NSString* ToNSString(const nsAString& aString)
@@ -2400,30 +2388,6 @@ NSEvent* gLastDragEvent = nil;
     HideChildPluginViews(self);
 
   [super viewWillMoveToWindow:newWindow];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)viewWillStartLiveResize
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mGeckoChild && mIsPluginView)
-    mGeckoChild->LiveResizeStarted();
-  
-  [super viewWillStartLiveResize];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)viewDidEndLiveResize
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mGeckoChild && mIsPluginView)
-    mGeckoChild->LiveResizeEnded();
-
-  [super viewDidEndLiveResize];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
