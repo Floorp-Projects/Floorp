@@ -86,7 +86,8 @@ nsIAtom *nsDocAccessible::gLastFocusedFrameType = nsnull;
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsHyperTextAccessibleWrap(aDOMNode, aShell), mWnd(nsnull),
   mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE),
-  mIsLoadCompleteFired(PR_FALSE), mInFlushPendingEvents(PR_FALSE)
+  mIsLoadCompleteFired(PR_FALSE), mInFlushPendingEvents(PR_FALSE),
+  mFireEventTimerStarted(PR_FALSE)
 {
   // XXX aaronl should we use an algorithm for the initial cache size?
   mAccessNodeCache.Init(kDefaultCacheSize);
@@ -153,12 +154,17 @@ ElementTraverser(const void *aKey, nsIAccessNode *aAccessNode,
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocAccessible)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mEventsToFire)
-  tmp->mAccessNodeCache.EnumerateRead(ElementTraverser, &cb); 
+  PRUint32 i, length = tmp->mEventsToFire.Length();
+  for (i = 0; i < length; ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEventsToFire[i]");
+    cb.NoteXPCOMChild(tmp->mEventsToFire[i].get());
+  }
+
+  tmp->mAccessNodeCache.EnumerateRead(ElementTraverser, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mEventsToFire)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mEventsToFire)
   tmp->ClearCache(tmp->mAccessNodeCache);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -652,17 +658,17 @@ nsDocAccessible::Shutdown()
   nsHyperTextAccessibleWrap::Shutdown();
 
   if (mFireEventTimer) {
-    // Doc being shut down before events fired,
+    // Doc being shut down before delayed events were processed.
     mFireEventTimer->Cancel();
     mFireEventTimer = nsnull;
-    if (mEventsToFire.Count() > 0 ) {
-      mEventsToFire.Clear();
-      // Make sure we release the kung fu death grip which is always
-      // there when there are still events left to be fired
-      // If FlushPendingEvents() is in call stack,
-      // kung fu death grip will be released there.
-      if (!mInFlushPendingEvents)
-        NS_RELEASE_THIS();
+    mEventsToFire.Clear();
+
+    if (mFireEventTimerStarted && !mInFlushPendingEvents) {
+      // Make sure we release the kung fu death grip which is always there when
+      // fire event timer was started but FlushPendingEvents() callback wasn't
+      // triggered yet. If FlushPendingEvents() is in call stack, kung fu death
+      // grip will be released there.
+      NS_RELEASE_THIS();
     }
   }
 
@@ -1609,35 +1615,54 @@ nsDocAccessible::FireDelayedAccessibleEvent(PRUint32 aEventType,
 nsresult
 nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
-  NS_ENSURE_TRUE(aEvent, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG(aEvent);
 
-  if (!mFireEventTimer) {
-    // Do not yet have a timer going for firing another event.
-    mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1");
-    NS_ENSURE_TRUE(mFireEventTimer, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  mEventsToFire.AppendObject(aEvent);
+  mEventsToFire.AppendElement(aEvent);
 
   // Filter events.
   nsAccEvent::ApplyEventRules(mEventsToFire);
 
-  if (mEventsToFire.Count() == 1) {
-    // This is be the first delayed event in queue, start timer
-    // so that event gets fired via FlushEventsCallback
-    NS_ADDREF_THIS(); // Kung fu death grip to prevent crash in callback
-    mFireEventTimer->InitWithFuncCallback(FlushEventsCallback,
-                                          this, 0, nsITimer::TYPE_ONE_SHOT);
+  // Process events.
+  return PreparePendingEventsFlush();
+}
+
+nsresult
+nsDocAccessible::PreparePendingEventsFlush()
+{
+  nsresult rv = NS_OK;
+
+  // Create timer if we don't have it yet.
+  if (!mFireEventTimer) {
+    mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return NS_OK;
+  // If there are delayed events in the queue and event timer wasn't started
+  // then initialize the timer so that delayed event will be processed in
+  // FlushPendingEvents.
+  if (mEventsToFire.Length() > 0 && !mFireEventTimerStarted) {
+
+    rv = mFireEventTimer->InitWithFuncCallback(FlushEventsCallback,
+                                               this, 0,
+                                               nsITimer::TYPE_ONE_SHOT);
+
+    if (NS_SUCCEEDED(rv)) {
+      // Kung fu death grip to prevent crash in callback.
+      NS_ADDREF_THIS();
+
+      mFireEventTimerStarted = PR_TRUE;
+    }
+  }
+
+  return rv;
 }
 
 void
 nsDocAccessible::FlushPendingEvents()
 {
   mInFlushPendingEvents = PR_TRUE;
-  PRUint32 length = mEventsToFire.Count();
+
+  PRUint32 length = mEventsToFire.Length();
   NS_ASSERTION(length, "How did we get here without events to fire?");
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell)
@@ -1650,10 +1675,17 @@ nsDocAccessible::FlushPendingEvents()
     // painting. If no flush is necessary the method will simple return.
     presShell->FlushPendingNotifications(Flush_Layout);
   }
-  
+
+  // Process only currently queued events. In the meantime, newly appended
+  // events will not be processed.
   for (PRUint32 index = 0; index < length; index ++) {
-    nsCOMPtr<nsIAccessibleEvent> accessibleEvent(
-      do_QueryInterface(mEventsToFire[index]));
+  
+    // No presshell means the document was shut down duiring event handling
+    // by AT.
+    if (!mWeakShell)
+      break;
+
+    nsCOMPtr<nsIAccessibleEvent> accessibleEvent(mEventsToFire[index]);
 
     if (nsAccEvent::EventRule(accessibleEvent) == nsAccEvent::eDoNotEmit)
       continue;
@@ -1807,12 +1839,24 @@ nsDocAccessible::FlushPendingEvents()
       }
     }
   }
-  mEventsToFire.Clear(); // Clear out array
-  mInFlushPendingEvents = PR_FALSE;
-  NS_RELEASE_THIS(); // Release kung fu death grip
 
-  // After a flood of events, reset so that user input flag is off
+  // Mark we are ready to start event processing timer again.
+  mFireEventTimerStarted = PR_FALSE;
+
+  // If the document accessible is alive then remove processed events from the
+  // queue (otherwise they were removed on shutdown already) and reinitialize
+  // queue processing callback if necessary (new events might occur duiring
+  // delayed event processing).
+  if (mWeakShell) {
+    mEventsToFire.RemoveElementsAt(0, length);
+    PreparePendingEventsFlush();
+  }
+
+  // After a flood of events, reset so that user input flag is off.
   nsAccEvent::ResetLastInputState();
+
+  mInFlushPendingEvents = PR_FALSE;
+  NS_RELEASE_THIS(); // Release kung fu death grip.
 }
 
 void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)
