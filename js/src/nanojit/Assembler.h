@@ -68,7 +68,6 @@ namespace nanojit
     {
         LIns*           entry[ NJ_MAX_STACK_ENTRY ];    /* maps to 4B contiguous locations relative to the frame pointer */
         uint32_t        tos;                            /* current top of stack entry */
-        uint32_t        highwatermark;                  /* max tos hit */
         uint32_t        lowwatermark;                   /* we pre-allocate entries from 0 upto this index-1; so dynamic entries are added above this index */
     };
 
