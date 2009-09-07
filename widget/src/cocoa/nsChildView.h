@@ -394,9 +394,6 @@ public:
   
   virtual PRBool    DispatchWindowEvent(nsGUIEvent& event);
   
-  void              LiveResizeStarted();
-  void              LiveResizeEnded();
-  
 #ifdef ACCESSIBILITY
   void              GetDocumentAccessible(nsIAccessible** aAccessible);
 #endif
@@ -456,7 +453,6 @@ protected:
 
   PRPackedBool          mVisible;
   PRPackedBool          mDrawing;
-  PRPackedBool          mLiveResizeInProgress;
   PRPackedBool          mIsPluginView;
   PRPackedBool          mPluginDrawing;
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
