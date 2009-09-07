@@ -20,7 +20,8 @@ body > div {
      tests which expect to observe scrolling happening. -->
 
 <!-- Each of the DIV children of the BODY is one test. We scroll that DIV's
-     scrollTop from 0 to 20 and then call the function given by the DIV's id,
+     scrollTop (or scrollLeft, if the DIV's class is 'horizontal')
+     from 0 to 20 and then call the function given by the DIV's id,
      passing the blit region and the paint region as a parameters. -->
 
 <div id="testSimpleScroll">
@@ -70,6 +71,22 @@ body > div {
   <div style="height:10px; margin-top:210px; background:-moz-linear-gradient(top, bottom, from(rgba(0,0,0,0.7)), to(rgba(255,0,0,0.7)));"></div>
 </div>
 
+<div id="testSimpleScrollWithSubpixelOffset1" style="top:0.2px">
+  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
+</div>
+
+<div id="testSimpleScrollWithSubpixelOffset2" style="top:0.8px">
+  <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
+</div>
+
+<div id="testSimpleScrollWithSubpixelOffset3" style="left:0.2px" class="horizontal">
+  <div style="width:300px; height:200px; background:-moz-linear-gradient(left, right, from(red), to(black));"></div>
+</div>
+
+<div id="testSimpleScrollWithSubpixelOffset4" style="left:0.8px" class="horizontal">
+  <div style="width:300px; height:200px; background:-moz-linear-gradient(left, right, from(red), to(black));"></div>
+</div>
+
 <script>
 var tests = document.querySelectorAll("body>div");
 var currentTest = -1;
@@ -91,18 +108,18 @@ window.onerror = function (event) { window.opener.onerror(event); window.close()
 // the content that has scrolled into view.
 function testSimpleScroll(blitRegion, paintRegion) {
   ok(blitRegion.equalsRegion(new Region([[0,0,200,180]])),
-     "Should blit everything that was already visible");
+     "Should blit everything that was already visible: " + blitRegion.toString());
   ok(paintRegion.equalsRegion(new Region([[0,180,200,200]])),
-     "Should repaint area that was scrolled into view");
+     "Should repaint area that was scrolled into view: " + paintRegion.toString());
 }
 
 // Check that scrolling visible content over background-attachment:fixed
 // content repaints everything
 function testFixedBackground(blitRegion, paintRegion) {
   ok(blitRegion.isEmpty(),
-     "Shouldn't blit anything");
+     "Shouldn't blit anything: " + blitRegion.toString());
   ok(paintRegion.equalsRegion(new Region([[0,0,200,200]])),
-     "Should repaint everything");
+     "Should repaint everything: " + paintRegion.toString());
 }
 
 // Check that we optimize scrolling in a reasonable way in the presence of a
@@ -111,25 +128,25 @@ function testFixedPosOverlay(blitRegion, paintRegion) {
   // The area of the fixed element should not be repainted or blitted at all
   var fixedElemRect = [0,50,100,95]
   ok(!blitRegion.intersectsRect(fixedElemRect),
-     "blit region should not intersect fixed-pos element area");
+     "blit region should not intersect fixed-pos element area: " + blitRegion.toString());
   ok(!paintRegion.intersectsRect(fixedElemRect),
-     "paint region should not intersect fixed-pos element area");
+     "paint region should not intersect fixed-pos element area: " + paintRegion.toString());
 
   // The area to the right of the fixed element that we can fill with blitting
   // existing content should not be repainted (but may be blitted, although
   // it doesn't all need to be blitted either, since most of it is blank)
   var noPaintRect = [100,0,200,180];
   ok(!paintRegion.intersectsRect(noPaintRect),
-     "paint region should not intersect blittable area");
+     "paint region should not intersect blittable area: " + paintRegion.toString());
 }
 
 // Check that scrolling an element with moving content in it does
 // the obvious thing, even if the element has a border.
 function testBorder(blitRegion, paintRegion) {
   ok(blitRegion.equalsRegion(new Region([[1,1,201,181]])),
-     "Should blit everything that was already visible");
+     "Should blit everything that was already visible: " + blitRegion.toString());
   ok(paintRegion.equalsRegion(new Region([[1,181,201,201]])),
-     "Should repaint area that was scrolled into view");
+     "Should repaint area that was scrolled into view: " + paintRegion.toString());
 }
 
 // Check that scrolling some content out of view updates the area that
@@ -137,7 +154,7 @@ function testBorder(blitRegion, paintRegion) {
 function testScrollOutOfView(blitRegion, paintRegion) {
   var all = blitRegion.unionRegion(paintRegion);
   ok(all.containsRect([0,0,200,10]),
-     "Should update everything that was previously visible but scrolled out of view");
+     "Should update everything that was previously visible but scrolled out of view: " + all.toString());
 }
 
 // Check that scrolling some content into view updates the area that
@@ -145,7 +162,58 @@ function testScrollOutOfView(blitRegion, paintRegion) {
 function testScrollIntoView(blitRegion, paintRegion) {
   var all = blitRegion.unionRegion(paintRegion);
   ok(all.containsRect([0,190,200,200]),
-     "Should update everything that was previously visible");
+     "Should update everything that was previously visible: " + all.toString());
+}
+
+// When we scroll an area which has a very small subpixel offset, we should
+// still be doing the obvious thing --- we shouldn't end up painting an extra
+// row of pixels anywhere
+function testSimpleScrollWithSubpixelOffset1(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[0,0,200,180]])),
+     "Should blit everything that was already visible: " + blitRegion.toString());
+  // The next test is contains, not equals, since we repaint down to 200.2
+  // which is OK
+  ok(paintRegion.containsRegion(new Region([[0,180,200,200]])),
+     "Should repaint area that was scrolled into view: " + paintRegion.toString());
+  // Check that we're not repainting anything in the area that's blitted
+  ok(!paintRegion.intersectsRect([0,0,200,180]),
+     "Should not repaint area that was blitted: " + paintRegion.toString());
+}
+
+function testSimpleScrollWithSubpixelOffset2(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[0,1,200,181]])),
+     "Should blit everything that was already visible: " + blitRegion.toString());
+  // The next test is contains, not equals, since we repaint down to 200.8
+  // which is OK
+  ok(paintRegion.containsRegion(new Region([[0,181,200,200]])),
+     "Should repaint area that was scrolled into view: " + paintRegion.toString());
+  // Check that we're not repainting anything in the area that's blitted
+  todo(!paintRegion.intersectsRect([0,0,200,180]),
+       "Should not repaint area that was blitted: " + paintRegion.toString());
+}
+
+function testSimpleScrollWithSubpixelOffset3(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[0,0,180,200]])),
+     "Should blit everything that was already visible: " + blitRegion.toString());
+  // The next test is contains, not equals, since we repaint across to 200.2
+  // which is OK
+  ok(paintRegion.containsRegion(new Region([[180,0,200,200]])),
+     "Should repaint area that was scrolled into view: " + paintRegion.toString());
+  // Check that we're not repainting anything in the area that's blitted
+  ok(!paintRegion.intersectsRect([0,0,180,200]),
+     "Should not repaint area that was blitted: " + paintRegion.toString());
+}
+
+function testSimpleScrollWithSubpixelOffset4(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[1,0,181,200]])),
+     "Should blit everything that was already visible: " + blitRegion.toString());
+  // The next test is contains, not equals, since we repaint down to 200.8
+  // which is OK
+  ok(paintRegion.containsRegion(new Region([[181,0,200,200]])),
+     "Should repaint area that was scrolled into view: " + paintRegion.toString());
+  // Check that we're not repainting anything in the area that's blitted
+  todo(!paintRegion.intersectsRect([0,0,180,200]),
+       "Should not repaint area that was blitted: " + paintRegion.toString());
 }
 
 function clientRectToRect(cr)
@@ -196,6 +264,7 @@ for (var i = 0; i < tests.length; ++i) {
   e.style.display = "none";
   // Make sure we don't remember a scroll position from history
   e.scrollTop = 0;
+  e.scrollLeft = 0;
 }
 
 function nextTest() {
@@ -207,7 +276,13 @@ function nextTest() {
 
   var e = tests[currentTest];
   e.style.display = "";
-  setTimeout(function() { e.scrollTop = 20; }, 0);
+  setTimeout(function() {
+    if (e.getAttribute("class") == "horizontal") {
+      e.scrollLeft = 20;
+    } else {
+      e.scrollTop = 20;
+    }
+  }, 0);
 }
 
 function runTests() {
