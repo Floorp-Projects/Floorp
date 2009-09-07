@@ -166,11 +166,6 @@ public:
   void RemoveAccessNodeFromCache(nsIAccessNode *aAccessNode);
 
   /**
-   * Fires pending events.
-   */
-  void FlushPendingEvents();
-
-  /**
    * Fire document load events.
    *
    * @param  aEventType  [in] nsIAccessibleEvent constant
@@ -225,6 +220,16 @@ protected:
      */
     void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
 
+  /**
+   * Process delayed (pending) events resulted in normal events firing.
+   */
+  void FlushPendingEvents();
+
+  /**
+   * Start the timer to flush delayed (pending) events.
+   */
+  nsresult PreparePendingEventsFlush();
+
     /**
      * Fire text changed event for character data changed. The method is used
      * from nsIMutationObserver methods.
@@ -278,12 +283,15 @@ protected:
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsContentLoaded;
     PRPackedBool mIsLoadCompleteFired;
-    nsCOMArray<nsIAccessibleEvent> mEventsToFire;
 
 protected:
     PRBool mIsAnchor;
     PRBool mIsAnchorJumped;
-    PRBool mInFlushPendingEvents;
+
+  PRBool mInFlushPendingEvents;
+  PRBool mFireEventTimerStarted;
+  nsTArray<nsCOMPtr<nsIAccessibleEvent> > mEventsToFire;
+
     static PRUint32 gLastFocusedAccessiblesState;
     static nsIAtom *gLastFocusedFrameType;
 };

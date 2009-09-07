@@ -308,9 +308,9 @@ nsAccEvent::GetAccessibleByNode()
 
 /* static */
 void
-nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
+nsAccEvent::ApplyEventRules(nsTArray<nsCOMPtr<nsIAccessibleEvent> > &aEventsToFire)
 {
-  PRUint32 numQueuedEvents = aEventsToFire.Count();
+  PRUint32 numQueuedEvents = aEventsToFire.Length();
   PRInt32 tail = numQueuedEvents - 1;
 
   nsRefPtr<nsAccEvent> tailEvent = GetAccEventPtr(aEventsToFire[tail]);
@@ -398,7 +398,7 @@ nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
 
 /* static */
 void
-nsAccEvent::ApplyToSiblings(nsCOMArray<nsIAccessibleEvent> &aEventsToFire,
+nsAccEvent::ApplyToSiblings(nsTArray<nsCOMPtr<nsIAccessibleEvent> > &aEventsToFire,
                             PRUint32 aStart, PRUint32 aEnd,
                              PRUint32 aEventType, nsIDOMNode* aDOMNode,
                              EEventRule aEventRule)
