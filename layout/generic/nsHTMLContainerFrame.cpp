@@ -86,8 +86,8 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("TextDecoration")
 private:
@@ -98,8 +98,7 @@ private:
 
 void
 nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
-                               nsIRenderingContext* aCtx,
-                               const nsRect& aDirtyRect)
+                               nsIRenderingContext* aCtx)
 {
   nsCOMPtr<nsIFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
@@ -165,8 +164,8 @@ public:
     MOZ_COUNT_DTOR(nsDisplayTextShadow);
   }
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("TextShadow")
 private:
@@ -179,8 +178,7 @@ private:
 
 void
 nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
-                           nsIRenderingContext* aCtx,
-                           const nsRect& aDirtyRect)
+                           nsIRenderingContext* aCtx)
 {
   mBlurRadius = NS_MAX(mBlurRadius, 0);
 
@@ -267,7 +265,7 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowCtx = contextBoxBlur.Init(shadowRect, mBlurRadius,
                                               presContext->AppUnitsPerDevPixel(),
-                                              thebesCtx, aDirtyRect);
+                                              thebesCtx, mVisibleRect);
   if (!shadowCtx)
     return;
 

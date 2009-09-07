@@ -796,15 +796,15 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("SelectionOverlay")
 private:
   PRInt16 mSelectionValue;
 };
 
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                                      nsIRenderingContext* aCtx)
 {
   nscolor color = NS_RGB(255, 255, 255);
   
@@ -829,9 +829,8 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   gfxContext *ctx = aCtx->ThebesContext();
   ctx->SetColor(c);
 
-  nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
-  rect.IntersectRect(rect, aDirtyRect);
-  nsIntRect pxRect = rect.ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
+  nsIntRect pxRect =
+    mVisibleRect.ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
   ctx->NewPath();
   ctx->Rectangle(gfxRect(pxRect.x, pxRect.y, pxRect.width, pxRect.height), PR_TRUE);
   ctx->Fill();
@@ -1287,7 +1286,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
   // We didn't use overflowClip to restrict the dirty rect, since some of the
   // descendants may not be clipped by it. Even if we end up with unnecessary
-  // display items, they'll be pruned during OptimizeVisibility.  
+  // display items, they'll be pruned during ComputeVisibility.  
 
   nsDisplayList resultList;
   // Now follow the rules of http://www.w3.org/TR/CSS21/zindex.html
@@ -1486,7 +1485,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     ApplyOverflowClipping(aBuilder, aChild, disp, &overflowClip);
   // Don't use overflowClip to restrict the dirty rect, since some of the
   // descendants may not be clipped by it. Even if we end up with unnecessary
-  // display items, they'll be pruned during OptimizeVisibility. Note that
+  // display items, they'll be pruned during ComputeVisibility. Note that
   // this overflow-clipping here only applies to overflow:-moz-hidden-unscrollable;
   // overflow:hidden etc creates an nsHTML/XULScrollFrame which does its own
   // clipping.

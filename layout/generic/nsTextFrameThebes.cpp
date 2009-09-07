@@ -3863,16 +3863,22 @@ public:
                             HitTestState* aState) {
     return nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize()).Contains(aPt) ? mFrame : nsnull;
   }
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Text")
 };
 
 void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+                     nsIRenderingContext* aCtx) {
+  // Add 1 pixel of dirty area around mVisibleRect to allow us to paint
+  // antialiased pixels beyond the measured text extents.
+  // This is temporary until we do this in the actual calculation of text extents.
+  nsRect extraVisible = mVisibleRect;
+  nscoord appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  extraVisible.Inflate(appUnitsPerDevPixel, appUnitsPerDevPixel);
   static_cast<nsTextFrame*>(mFrame)->
-    PaintText(aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
+    PaintText(aCtx, aBuilder->ToReferenceFrame(mFrame), extraVisible);
 }
 
 NS_IMETHODIMP

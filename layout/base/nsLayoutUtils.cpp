@@ -1118,7 +1118,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 #endif
 
   nsRegion visibleRegion = aDirtyRegion;
-  list.OptimizeVisibility(&builder, &visibleRegion);
+  list.ComputeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
   if (gDumpPaintList) {
@@ -1127,7 +1127,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   }
 #endif
 
-  list.Paint(&builder, aRenderingContext, aDirtyRegion.GetBounds());
+  list.Paint(&builder, aRenderingContext);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
   return NS_OK;
@@ -1251,7 +1251,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // are the same ones we would have gotten if we had constructed the
   // 'before' display list. So opaque moving items are only considered to
   // cover the intersection of their old and new bounds (see
-  // nsDisplayItem::OptimizeVisibility). A moving clip item is not allowed
+  // nsDisplayItem::ComputeVisibility). A moving clip item is not allowed
   // to clip non-moving items --- this is enforced by the code that sets
   // up nsDisplayClip items, in particular see ApplyAbsPosClipping.
   // XXX but currently a non-moving clip item can incorrectly clip
@@ -1285,7 +1285,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // Optimize for visibility, but frames under aMovingFrame will not be
   // considered opaque, so they don't cover non-moving frames.
   nsRegion visibleRegion(aUpdateRect);
-  list.OptimizeVisibility(&builder, &visibleRegion);
+  list.ComputeVisibility(&builder, &visibleRegion);
 
 #ifdef DEBUG
   if (gDumpRepaintRegionForCopy) {

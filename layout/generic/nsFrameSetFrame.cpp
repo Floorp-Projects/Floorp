@@ -1638,13 +1638,13 @@ public:
   // Receives events in its bounds
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
                             HitTestState* aState) { return mFrame; }
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("FramesetBorder")
 };
 
 void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                                    nsIRenderingContext* aCtx)
 {
   static_cast<nsHTMLFramesetBorderFrame*>(mFrame)->
     PaintBorder(*aCtx, aBuilder->ToReferenceFrame(mFrame));
@@ -1840,16 +1840,15 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("FramesetBlank")
 };
 void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+                                   nsIRenderingContext* aCtx)
 {
   nscolor white = NS_RGB(255,255,255);
-  aCtx->SetColor (white);
-  aCtx->FillRect (nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize()));
+  aCtx->SetColor(white);
+  aCtx->FillRect(mVisibleRect);
 }
 
 #ifdef DEBUG

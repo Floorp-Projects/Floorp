@@ -440,8 +440,8 @@ public:
 
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
                             HitTestState* aState);
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-                     const nsRect& aDirtyRect);
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("SVGEventReceiver")
 };
 
@@ -454,11 +454,11 @@ nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
 }
 
 void
-nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-                    const nsRect& aDirtyRect)
+nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder,
+                    nsIRenderingContext* aCtx)
 {
   static_cast<nsSVGOuterSVGFrame*>(mFrame)->
-    Paint(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+    Paint(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
 // helper

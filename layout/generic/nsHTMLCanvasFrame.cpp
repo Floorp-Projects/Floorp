@@ -67,10 +67,10 @@ public:
 
   NS_DISPLAY_DECL_NAME("nsDisplayItemCanvas")
   
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-                     const nsRect& aDirtyRect) {
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx) {
     nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(GetUnderlyingFrame());
-    f->PaintCanvas(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(f));
+    f->PaintCanvas(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(f));
   }
 
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) {
