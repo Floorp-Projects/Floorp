@@ -1084,22 +1084,6 @@ NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::SetBounds(const nsIntRect &aRect)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsresult rv = Inherited::SetBounds(aRect);
-  if (NS_SUCCEEDED(rv)) {
-    NSRect r;
-    GeckoRectToNSRect(aRect, r);
-    [mView setFrame:r];
-  }
-
-  return rv;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
 NS_IMETHODIMP nsChildView::ConstrainPosition(PRBool aAllowSlop,
                                              PRInt32 *aX, PRInt32 *aY)
 {
