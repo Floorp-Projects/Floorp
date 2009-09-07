@@ -109,6 +109,7 @@
 {
   @private
   NSArray *mFrames;
+  NSCursor *mLastSetCocoaCursor;
 }
 
 /*! @method     initWithFrames:
@@ -208,6 +209,12 @@ INIT_FAILURE:
   return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (BOOL) isSet
+{
+  // implemented by subclasses
+  return NO;
 }
 
 - (void) set
@@ -337,11 +344,18 @@ INIT_FAILURE:
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+- (BOOL) isSet
+{
+  return [NSCursor currentCursor] == mLastSetCocoaCursor;
+}
+
 - (void) setFrame: (int) aFrameIndex
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [[mFrames objectAtIndex: aFrameIndex] performSelectorOnMainThread: @selector(set)  withObject: nil waitUntilDone: NO];
+  NSCursor* newCursor = [mFrames objectAtIndex: aFrameIndex];
+  [newCursor set];
+  mLastSetCocoaCursor = newCursor;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
