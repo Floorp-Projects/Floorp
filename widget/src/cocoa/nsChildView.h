@@ -338,7 +338,6 @@ public:
   NS_IMETHOD              SetFocus(PRBool aRaise);
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
 
-  NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD              Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
 
   virtual void*           GetNativeData(PRUint32 aDataType);

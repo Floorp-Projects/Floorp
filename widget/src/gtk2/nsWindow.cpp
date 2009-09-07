@@ -1677,28 +1677,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(PRBool aIsSynchronous)
-{
-    if (!mGdkWindow || !CanBeSeen())
-        return NS_OK;
-
-    GdkRectangle rect;
-    rect.x = mBounds.x;
-    rect.y = mBounds.y;
-    rect.width = mBounds.width;
-    rect.height = mBounds.height;
-
-    LOGDRAW(("Invalidate (all) [%p]: %d %d %d %d\n", (void *)this,
-             rect.x, rect.y, rect.width, rect.height));
-
-    gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
-    if (aIsSynchronous)
-        gdk_window_process_updates(mGdkWindow, FALSE);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
                      PRBool           aIsSynchronous)
 {

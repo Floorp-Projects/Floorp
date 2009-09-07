@@ -1145,14 +1145,6 @@ NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynch
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Invalidate(PRBool aIsSynchronous)
-{
-  if (mPopupContentView)
-    return mPopupContentView->Invalidate(aIsSynchronous);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsCocoaWindow::Update()
 {
   if (mPopupContentView)
