@@ -126,15 +126,20 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
   display: none;
 }
 
-/* ::::: Fullscreen pseudo-toolbar ::::: */
+/*  Full Screen UI */
 #fullscr-toggler {
   display: none;
   min-height: 5px;
   height: 5px;
 }
 
-#navigator-toolbox[inFullscreen="true"] #fullscr-toggler {
-  display: -moz-box;
+#navigator-toolbox[inFullscreen="true"] > #fullscr-toggler,
+#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
+ display: -moz-box;
+}
+
+#nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
+ display: none;
 }
 
 /* ::::: Keyboard UI Panel ::::: */
