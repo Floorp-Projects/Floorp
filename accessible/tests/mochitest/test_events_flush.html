@@ -1,0 +1,78 @@
+<html>
+
+<head>
+  <title>Flush delayed events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+
+    var gFocusHandler = {
+      handleEvent: function(aEvent) {
+        switch (this.count) {
+          case 0:
+            is(aEvent.DOMNode, getNode("input1"),
+               "Focus event for input1 was expected!");
+            getAccessible("input2").takeFocus();
+            break;
+
+          case 1:
+            is(aEvent.DOMNode, getNode("input2"),
+               "Focus event for input2 was expected!");
+
+            unregisterA11yEventListener(EVENT_FOCUS, gFocusHandler);
+            SimpleTest.finish();
+            break;
+
+          default:
+            ok(false, "Wrong focus event!");
+        }
+
+        this.count++;
+      },
+
+      count: 0
+    };
+
+    function doTests()
+    {
+      registerA11yEventListener(EVENT_FOCUS, gFocusHandler);
+
+      getAccessible("input1").takeFocus();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=477551"
+     title="nsDocAccessible::FlushPendingEvents isn't robust">
+    Mozilla Bug 477551
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="input1">
+  <input id="input2">
+</body>
+</html>
