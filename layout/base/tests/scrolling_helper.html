@@ -62,6 +62,14 @@ body > div {
   <div style="height:300px; background:-moz-linear-gradient(top, bottom, from(red), to(black));"></div>
 </div>
 
+<div id="testScrollOutOfView">
+  <div style="height:10px; margin-bottom:210px; background:-moz-linear-gradient(top, bottom, from(rgba(0,0,0,0.7)), to(rgba(255,0,0,0.7)));"></div>
+</div>
+
+<div id="testScrollIntoView">
+  <div style="height:10px; margin-top:210px; background:-moz-linear-gradient(top, bottom, from(rgba(0,0,0,0.7)), to(rgba(255,0,0,0.7)));"></div>
+</div>
+
 <script>
 var tests = document.querySelectorAll("body>div");
 var currentTest = -1;
@@ -124,6 +132,22 @@ function testBorder(blitRegion, paintRegion) {
      "Should repaint area that was scrolled into view");
 }
 
+// Check that scrolling some content out of view updates the area that
+// was displaying the content
+function testScrollOutOfView(blitRegion, paintRegion) {
+  var all = blitRegion.unionRegion(paintRegion);
+  ok(all.containsRect([0,0,200,10]),
+     "Should update everything that was previously visible but scrolled out of view");
+}
+
+// Check that scrolling some content into view updates the area that
+// is displaying the content
+function testScrollIntoView(blitRegion, paintRegion) {
+  var all = blitRegion.unionRegion(paintRegion);
+  ok(all.containsRect([0,190,200,200]),
+     "Should update everything that was previously visible");
+}
+
 function clientRectToRect(cr)
 {
   return [cr.left, cr.top, cr.right, cr.bottom];
@@ -156,7 +180,12 @@ function afterPaint(event) {
   if (blitRegion.isEmpty() && paintRegion.isEmpty())
     return;
 
-  window[tests[currentTest].id](blitRegion, paintRegion);
+  var testFunc = window[tests[currentTest].id];
+  if (!testFunc) {
+    ok(false, "Cannot find test function for " + tests[currentTest].id);
+  } else {
+    testFunc(blitRegion, paintRegion);
+  }
   tests[currentTest].style.display = 'none';
 
   nextTest();
