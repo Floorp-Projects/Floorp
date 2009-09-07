@@ -422,8 +422,6 @@ protected:
   PRBool            ReportMoveEvent();
   PRBool            ReportSizeEvent();
 
-  virtual PRBool    OnPaint(nsPaintEvent & aEvent);
-
   // override to create different kinds of child views. Autoreleases, so
   // caller must retain.
   virtual NSView*   CreateCocoaView(NSRect inFrame);
