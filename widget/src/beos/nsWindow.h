@@ -48,7 +48,6 @@
 
 #include "nsIWidget.h"
 
-#include "nsIEventListener.h"
 #include "nsString.h"
 #include "nsRegion.h"
 

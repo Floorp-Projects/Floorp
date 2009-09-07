@@ -59,7 +59,6 @@ class   nsIFontMetrics;
 class   nsIRenderingContext;
 class   nsIDeviceContext;
 struct  nsFont;
-class   nsIEventListener;
 class   nsIRollupListener;
 class   nsGUIEvent;
 class   imgIContainer;
@@ -690,15 +689,6 @@ class nsIWidget : public nsISupports {
      */
 
      NS_IMETHOD Update() = 0;
-
-    /**
-     * Adds an event listener to this widget
-     * Any existing event listener is replaced
-     *
-     * @param aListener event listener to add to this widget.
-     */
-
-    NS_IMETHOD AddEventListener(nsIEventListener * aListener) = 0;
 
     /**
      * Return the widget's toolkit

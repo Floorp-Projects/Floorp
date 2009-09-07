@@ -56,7 +56,6 @@
 
 #include "nsIAppShell.h"
 
-#include "nsIEventListener.h"
 #include "nsString.h"
 #include "nsIDragService.h"
 
