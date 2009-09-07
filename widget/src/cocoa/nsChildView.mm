@@ -1594,31 +1594,6 @@ static void blinkRgn(RgnHandle rgn)
 #endif
 
 // Invalidate this component's visible area
-NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  if (!mView || !mVisible)
-    return NS_OK;
-
-  if (aIsSynchronous) {
-    [mView display];
-  }
-  else if ([NSView focusView]) {
-    // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
-    // don't lose it.
-    [mView setNeedsPendingDisplay];
-  }
-  else {
-    [mView setNeedsDisplay:YES];
-  }
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-// Invalidate this component's visible area
 NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;

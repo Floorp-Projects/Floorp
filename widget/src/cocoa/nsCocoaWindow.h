@@ -223,7 +223,6 @@ public:
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
     NS_IMETHOD Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
-    NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
     virtual void Scroll(const nsIntPoint& aDelta,
