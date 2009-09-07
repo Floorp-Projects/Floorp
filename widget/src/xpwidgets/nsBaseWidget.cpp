@@ -214,11 +214,6 @@ NS_IMETHODIMP nsBaseWidget::CaptureMouse(PRBool aCapture)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBaseWidget::Validate()
-{
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // Accessor functions to get/set the client data

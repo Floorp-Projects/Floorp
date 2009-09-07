@@ -74,7 +74,6 @@ public:
   
   // nsIWidget interface
   NS_IMETHOD              CaptureMouse(PRBool aCapture);
-  NS_IMETHOD              Validate();
   NS_IMETHOD              GetClientData(void*& aClientData);
   NS_IMETHOD              SetClientData(void* aClientData);
   NS_IMETHOD              Destroy();

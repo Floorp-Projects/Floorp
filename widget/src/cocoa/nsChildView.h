@@ -341,7 +341,6 @@ public:
 
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD              Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous);
-  NS_IMETHOD              Validate();
 
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
