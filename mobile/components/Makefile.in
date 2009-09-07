@@ -49,6 +49,7 @@ XPIDL_MODULE = browsercompsbase
 EXTRA_PP_COMPONENTS = AboutRedirector.js
 
 EXTRA_COMPONENTS = \
+        BrowserStartup.js \
 	geolocationPrompt.js \
 	alertsService.js \
 	xpiDialogService.js \

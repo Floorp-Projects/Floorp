@@ -1,0 +1,14 @@
+#filter substitution
+{"type":"text/x-moz-place-container","root":"placesRoot","children":
+  [{"type":"text/x-moz-place-container","root":"unfiledBookmarksFolder","children":
+     [{"title":"@bookmarks_title@","type":"text/x-moz-place-container","children":
+          [
+            {          "title":"@bookmarks_welcome@",  "type":"text/x-moz-place", "uri":"about:firstrun"},
+            {"index":1,"title":"@bookmarks_about@",    "type":"text/x-moz-place", "uri":"about:fennec"},
+            {"index":2,"title":"@bookmarks_weave@",    "type":"text/x-moz-place", "uri":"https://www.mozilla.com/@AB_CD@/mobile/weave"},
+            {"index":3,"title":"@bookmarks_addons@",   "type":"text/x-moz-place", "uri":"https://addons.mozilla.org/@AB_CD@/mobile"},
+            {"index":4,"title":"@bookmarks_support@",  "type":"text/x-moz-place", "uri":"https://mobile.support.mozilla.com"}
+          ]
+     }]
+  }]
+}
