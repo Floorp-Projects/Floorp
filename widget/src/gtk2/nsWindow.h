@@ -181,7 +181,6 @@ public:
     NS_IMETHOD         SetCursor(nsCursor aCursor);
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  PRUint32 aHotspotX, PRUint32 aHotspotY);
-    NS_IMETHOD         Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD         Invalidate(const nsIntRect &aRect,
                                   PRBool           aIsSynchronous);
     NS_IMETHOD         Update();

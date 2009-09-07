@@ -165,7 +165,6 @@ class nsWindow : public nsBaseWidget
    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsAString& aTitle); 
    NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
-   NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
    NS_IMETHOD              Invalidate( const nsIntRect & aRect, PRBool aIsSynchronous);
    NS_IMETHOD              Update();
    virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);

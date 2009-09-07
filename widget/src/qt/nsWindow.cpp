@@ -635,22 +635,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(PRBool aIsSynchronous)
-{
-    LOGDRAW(("Invalidate (all) [%p]: \n", (void *)this));
-
-    if (!mWidget)
-        return NS_OK;
-
-    if (aIsSynchronous && !mWidget->paintingActive())
-        mWidget->repaint();
-    else
-        mWidget->update();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::Invalidate(const nsIntRect &aRect,
                      PRBool        aIsSynchronous)
 {

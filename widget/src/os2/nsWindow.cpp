@@ -1330,8 +1330,8 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 
       if (!WinSetWindowPos(GetMainWindow(), 0, ptl.x, ptl.y, w, h,
                            SWP_MOVE | SWP_SIZE)) {
-         if (aRepaint) {
-            Invalidate(PR_FALSE);
+         if (aRepaint && mWnd) {
+            WinInvalidateRect( mWnd, 0, FALSE);
          }
       }
 
@@ -1865,26 +1865,6 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 // Invalidate this component visible area
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
-{
-    if (mWnd)
-    {
-      WinInvalidateRect( mWnd, 0, FALSE);
-#if 0
-      if( PR_TRUE == aIsSynchronous) {
-         Update();
-      }
-#endif
-    }
-
-    return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Invalidate this component visible area
-//
-//-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous)
 {
   if (mWnd)
@@ -2116,8 +2096,8 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
         if (w->mBounds.Intersects(affectedRect)) {
           if (!ClipRegionContainedInRect(configuration.mClipRegion,
                                          affectedRect - (w->mBounds.TopLeft()
-                                                         + aDelta))) {
-            w->Invalidate(PR_FALSE);
+                                                         + aDelta)) && mWnd) {
+            WinInvalidateRect( mWnd, 0, FALSE);
           }
 
           // Send a WM_VRNDISABLED to the plugin child of this widget.
