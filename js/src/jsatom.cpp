@@ -698,7 +698,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 
             if (length == 3)
                 i = i * 10 + chars[2] - '0'; 
-            if (jsuint(i) < INT_STRING_LIMIT)
+            if (jsuint(i) < INT_STRING_LIMIT && ((length == 2) ? i > 9 : i > 99))
                 return (JSAtom *) STRING_TO_JSVAL(JSString::intString(i));
         }
     }
