@@ -691,14 +691,14 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     if (2 <= length && length <= 3) {
         const jschar *chars = str->chars();
 
-        if ('0' <= chars[0] && chars[0] <= '9' &&
+        if ('1' <= chars[0] && chars[0] <= '9' &&
             '0' <= chars[1] && chars[1] <= '9' &&
             (length == 2 || ('0' <= chars[2] && chars[2] <= '9'))) {
             jsint i = (chars[0] - '0') * 10 + chars[1] - '0';
 
             if (length == 3)
                 i = i * 10 + chars[2] - '0'; 
-            if (jsuint(i) < INT_STRING_LIMIT && ((length == 2) ? i > 9 : i > 99))
+            if (jsuint(i) < INT_STRING_LIMIT)
                 return (JSAtom *) STRING_TO_JSVAL(JSString::intString(i));
         }
     }
