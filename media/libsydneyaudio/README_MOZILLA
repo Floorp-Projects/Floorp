@@ -19,6 +19,7 @@ sydney_os2_base.patch: Bug 448918 - add OS/2 support (this patch should
 sydney_os2_moz.patch:  Bug 448918 - add Mozilla-specific code to
                        sydney_audio_os2.c
 
-
 bug495794_closeAudio.patch fixes a crash when destroying the sa_stream_t after
 a failed attempt to open the stream.
+
+bug495558_alsa_endian.patch adds support for big endian ALSA platforms.
