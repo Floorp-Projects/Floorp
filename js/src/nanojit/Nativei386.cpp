@@ -91,7 +91,7 @@ namespace nanojit
         /**
          * Prologue
          */
-        uint32_t stackNeeded = STACK_GRANULARITY * _activation.highwatermark;
+        uint32_t stackNeeded = STACK_GRANULARITY * _activation.tos;
 
         uint32_t stackPushed =
             STACK_GRANULARITY + // returnaddr
