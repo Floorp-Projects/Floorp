@@ -153,7 +153,6 @@ extern "C" {
 JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(jsval));
 JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
 
-
 /*
  * Check that JSTRACE_XML follows JSTRACE_OBJECT, JSTRACE_DOUBLE and
  * JSTRACE_STRING.
@@ -2743,8 +2742,10 @@ gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     jsval *rp = (jsval *)rhe->root;
     jsval v = *rp;
 
-    /* Ignore null object and scalar values. */
-    if (!JSVAL_IS_NULL(v) && JSVAL_IS_GCTHING(v)) {
+    /* Ignore null reference, scalar values, and static strings. */
+    if (!JSVAL_IS_NULL(v) &&
+        JSVAL_IS_GCTHING(v) &&
+        !JSString::isStatic((JSString *) JSVAL_TO_GCTHING(v))) {
 #ifdef DEBUG
         JSBool root_points_to_gcArenaList = JS_FALSE;
         jsuword thing = (jsuword) JSVAL_TO_GCTHING(v);
