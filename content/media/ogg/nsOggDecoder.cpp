@@ -1268,19 +1268,6 @@ static void GetBufferedBytes(nsMediaStream* aStream, nsTArray<ByteRange>& aRange
 nsresult nsOggDecodeStateMachine::Seek(float aTime, nsChannelReader* aReader)
 {
   LOG(PR_LOG_DEBUG, ("About to seek OggPlay to %fms", aTime));
-
-  // Get active tracks.
-  PRInt32 numTracks = 0;
-  PRInt32 tracks[2];
-  if (mVideoTrack != -1) {
-    tracks[numTracks] = mVideoTrack;
-    numTracks++;
-  }
-  if (mAudioTrack != -1) {
-    tracks[numTracks] = mAudioTrack;
-    numTracks++;
-  }
-  
   nsMediaStream* stream = aReader->Stream(); 
   nsAutoTArray<ByteRange, 16> ranges;
   stream->Pin();
@@ -1288,8 +1275,6 @@ nsresult nsOggDecodeStateMachine::Seek(float aTime, nsChannelReader* aReader)
   PRInt64 rv = -1;
   for (PRUint32 i = 0; rv < 0 && i < ranges.Length(); i++) {
     rv = oggplay_seek_to_keyframe(mPlayer,
-                                  tracks,
-                                  numTracks,
                                   ogg_int64_t(aTime * 1000),
                                   ranges[i].mStart,
                                   ranges[i].mEnd);
@@ -1300,8 +1285,6 @@ nsresult nsOggDecodeStateMachine::Seek(float aTime, nsChannelReader* aReader)
     // Could not seek in a buffered range, fall back to seeking over the
     // entire media.
     rv = oggplay_seek_to_keyframe(mPlayer,
-                                  tracks,
-                                  numTracks,
                                   ogg_int64_t(aTime * 1000),
                                   0,
                                   stream->GetLength());
