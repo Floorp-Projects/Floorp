@@ -107,6 +107,173 @@ extern "C" {
   CG_EXTERN void CGContextResetClip(CGContextRef);
 }
 
+#if defined(MAC_OS_X_VERSION_10_5) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5)
+#define LEOPARD_AND_LATER 1
+#endif
+
+#ifdef LEOPARD_AND_LATER
+
+/**
+ * nsTISInputSource is a wrapper for the TISInputSourceRef.  If we get the
+ * TISInputSourceRef from InputSourceID, we need to release the CFArray instance
+ * which is returned by TISCreateInputSourceList.  However, when we release the
+ * list, we cannot access the TISInputSourceRef.  So, it's not usable, and it
+ * may cause the memory leak bugs.  nsTISInputSource automatically releases the
+ * list when the instance is destroyed.
+ */
+class nsTISInputSource
+{
+public:
+  nsTISInputSource()
+  {
+    mInputSourceList = nsnull;
+    Clear();
+  }
+
+  nsTISInputSource(const char* aID)
+  {
+    mInputSourceList = nsnull;
+    InitByInputSourceID(aID);
+  }
+
+  nsTISInputSource(SInt32 aLayoutID)
+  {
+    mInputSourceList = nsnull;
+    InitByLayoutID(aLayoutID);
+  }
+
+  nsTISInputSource(TISInputSourceRef aInputSource)
+  {
+    mInputSourceList = nsnull;
+    InitByTISInputSourceRef(aInputSource);
+  }
+
+  ~nsTISInputSource() { Clear(); }
+
+  void InitByInputSourceID(const char* aID)
+  {
+    Clear();
+    if (!aID)
+      return;
+
+    CFStringRef idstr = ::CFStringCreateWithCString(kCFAllocatorDefault, aID,
+                                                    kCFStringEncodingASCII);
+    const void* keys[] = { kTISPropertyInputSourceID };
+    const void* values[] = { idstr };
+    CFDictionaryRef filter =
+      ::CFDictionaryCreate(kCFAllocatorDefault, keys, values, 1, NULL, NULL);
+    NS_ASSERTION(filter, "failed to create the filter");
+    mInputSourceList = ::TISCreateInputSourceList(filter, true);
+    ::CFRelease(filter);
+    if (::CFArrayGetCount(mInputSourceList) > 0) {
+      mInputSource = static_cast<TISInputSourceRef>(
+        const_cast<void *>(::CFArrayGetValueAtIndex(mInputSourceList, 0)));
+    }
+    ::CFRelease(idstr);
+  }
+
+  void InitByLayoutID(SInt32 aLayoutID)
+  {
+    Clear();
+    switch (aLayoutID) {
+      case 0:
+        InitByInputSourceID("com.apple.keylayout.US");
+        break;
+      case -18944:
+        InitByInputSourceID("com.apple.keylayout.Greek");
+        break;
+      case 3:
+        InitByInputSourceID("com.apple.keylayout.German");
+        break;
+      case 224:
+        InitByInputSourceID("com.apple.keylayout.Swedish-Pro");
+        break;
+    }
+  }
+
+  void InitByCurrentKeyboardLayout()
+  {
+    Clear();
+    mInputSource = ::TISCopyCurrentKeyboardLayoutInputSource();
+  }
+
+  void InitByTISInputSourceRef(TISInputSourceRef aInputSource)
+  {
+    Clear();
+    mInputSource = aInputSource;
+  }
+
+  const UCKeyboardLayout* GetUCKeyboardLayout()
+  {
+    NS_ENSURE_TRUE(mInputSource, nsnull);
+    CFDataRef uchr = static_cast<CFDataRef>(
+      ::TISGetInputSourceProperty(mInputSource,
+                                  kTISPropertyUnicodeKeyLayoutData));
+
+    // We should be always able to get the layout here.
+    NS_ENSURE_TRUE(uchr, nsnull);
+    return reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(uchr));
+  }
+
+  PRBool IsASCIICapable()
+  {
+    NS_ENSURE_TRUE(mInputSource, nsnull);
+    CFBooleanRef isASCIICapable = static_cast<CFBooleanRef>(
+      ::TISGetInputSourceProperty(mInputSource,
+                                  kTISPropertyInputSourceIsASCIICapable));
+    return CFBooleanGetValue(isASCIICapable);
+  }
+
+  CFArrayRef GetLanguageList()
+  {
+    NS_ENSURE_TRUE(mInputSource, nsnull);
+    return static_cast<CFArrayRef>(
+      ::TISGetInputSourceProperty(mInputSource,
+                                  kTISPropertyInputSourceLanguages));
+  }
+
+  void GetLocalizedName(nsAString &aName)
+  {
+    NS_PRECONDITION(mInputSource, "mInputSource is null");
+    if (!mInputSource)
+      return;
+    CFStringRef name = static_cast<CFStringRef>(
+      ::TISGetInputSourceProperty(mInputSource, kTISPropertyLocalizedName));
+    GetStringForNSString((const NSString*)name, aName);    
+  }
+
+  void GetInputSourceID(nsAString &aID)
+  {
+    NS_PRECONDITION(mInputSource, "mInputSource is null");
+    if (!mInputSource)
+      return;
+    CFStringRef isid = static_cast<CFStringRef>(
+      ::TISGetInputSourceProperty(mInputSource, kTISPropertyInputSourceID));
+    GetStringForNSString((const NSString*)isid, aID);
+  }
+
+protected:
+  void Clear()
+  {
+    if (mInputSourceList) {
+      ::CFRelease(mInputSourceList);
+    }
+    mInputSourceList = nsnull;
+    mInputSource = nsnull;
+  }
+
+  void GetStringForNSString(const NSString *aSrc, nsAString& aDist)
+  {
+    aDist.SetLength([aSrc length]);
+    [aSrc getCharacters: aDist.BeginWriting()];
+  }
+
+  TISInputSourceRef mInputSource;
+  CFArrayRef mInputSourceList;
+};
+
+#else // LEOPARD_AND_LATER
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
 struct __TISInputSource;
 typedef __TISInputSource* TISInputSourceRef;
@@ -118,6 +285,8 @@ CFArrayRef (*Leopard_TISCreateInputSourceList)(CFDictionaryRef properties, Boole
 CFStringRef kOurTISPropertyUnicodeKeyLayoutData = NULL;
 CFStringRef kOurTISPropertyInputSourceID = NULL;
 CFStringRef kOurTISPropertyInputSourceLanguages = NULL;
+
+#endif // LEOPARD_AND_LATER
 
 // these are defined in nsCocoaWindow.mm
 extern PRBool gConsumeRollupEvent;
@@ -469,6 +638,22 @@ FillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, N
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+#ifdef LEOPARD_AND_LATER
+
+static CFArrayRef CreateAllKeyboardLayoutList()
+{
+  const void* keys[] = { kTISPropertyInputSourceType };
+  const void* values[] = { kTISTypeKeyboardLayout };
+  CFDictionaryRef filter =
+    ::CFDictionaryCreate(kCFAllocatorDefault, keys, values, 1, NULL, NULL);
+  NS_ASSERTION(filter, "failed to create the filter");
+  CFArrayRef list = ::TISCreateInputSourceList(filter, true);
+  ::CFRelease(filter);
+  return list;
+}
+
+#endif // LEOPARD_AND_LATER
+
 #pragma mark -
 
 nsChildView::nsChildView() : nsBaseWidget()
@@ -484,6 +669,30 @@ nsChildView::nsChildView() : nsBaseWidget()
 #ifdef PR_LOGGING
   if (!sCocoaLog) {
     sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
+#ifdef LEOPARD_AND_LATER
+    CFArrayRef list = CreateAllKeyboardLayoutList();
+    PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
+    CFIndex idx = ::CFArrayGetCount(list);
+    nsTISInputSource tis;
+    for (CFIndex i = 0; i < idx; ++i) {
+      TISInputSourceRef inputSource = static_cast<TISInputSourceRef>(
+        const_cast<void *>(::CFArrayGetValueAtIndex(list, i)));
+      tis.InitByTISInputSourceRef(inputSource);
+      nsAutoString name;
+      tis.GetLocalizedName(name);
+      nsAutoString isid;
+      tis.GetInputSourceID(isid);
+      const UCKeyboardLayout* uchr = tis.GetUCKeyboardLayout();
+      PRBool isASCII = tis.IsASCIICapable();
+      PR_LOG(sCocoaLog, PR_LOG_ALWAYS,
+             ("  %s\t<%s>%s%s\n",
+              NS_ConvertUTF16toUTF8(name).get(),
+              NS_ConvertUTF16toUTF8(isid).get(),
+              isASCII ? "" : "\t(Isn't ASCII capable)",
+              uchr ? "" : "\t(uchr is NOT AVAILABLE)"));
+    }
+    ::CFRelease(list);
+#else
     CFIndex idx;
     KLGetKeyboardLayoutCount(&idx);
     PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
@@ -502,12 +711,14 @@ nsChildView::nsChildView() : nsBaseWidget()
         }
       }
     }
+#endif // LEOPARD_AND_LATER
   }
-#endif
+#endif // PR_LOGGING
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
 
+#ifndef LEOPARD_AND_LATER
   if (nsToolkit::OnLeopardOrLater() && !Leopard_TISCopyCurrentKeyboardLayoutInputSource) {
     // This libary would already be open for LMGetKbdType (and probably other
     // symbols), so merely using RTLD_DEFAULT in dlsym would be sufficient,
@@ -525,6 +736,7 @@ nsChildView::nsChildView() : nsBaseWidget()
       kOurTISPropertyInputSourceLanguages = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyInputSourceLanguages"));
     }
   }
+#endif
 }
 
 nsChildView::~nsChildView()
@@ -4130,10 +4342,13 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+// #define DEBUG_KB 1
+
+#ifndef LEOPARD_AND_LATER
+
 #define CHARCODE_MASK_1 0x00FF0000
 #define CHARCODE_MASK_2 0x000000FF
 #define CHARCODE_MASK   0x00FF00FF
-//#define DEBUG_KB 1
 
 static PRUint32
 KeyTranslateToUnicode(Handle aHandle, UInt32 aKeyCode, UInt32 aModifiers,
@@ -4180,6 +4395,8 @@ KeyTranslateToUnicode(Handle aHandle, UInt32 aKeyCode, UInt32 aModifiers,
   return ch;
 }
 
+#endif // LEOPARD_AND_LATER
+
 static PRUint32
 UCKeyTranslateToUnicode(const UCKeyboardLayout* aHandle, UInt32 aKeyCode, UInt32 aModifiers,
                         UInt32 aKbType)
@@ -4215,24 +4432,30 @@ struct KeyTranslateData {
   KeyTranslateData() {
     mUchr.mLayout = nsnull;
     mUchr.mKbType = 0;
+#ifndef LEOPARD_AND_LATER
     mKchr.mHandle = nsnull;
     mKchr.mEncoding = nsnull;
+#endif
   }
 
+#ifndef LEOPARD_AND_LATER
   // The script of the layout determines the encoding of characters obtained
   // from kchr resources.
   SInt16 mScript;
   // The keyboard layout identifier
   SInt32 mLayoutID;
+#endif // LEOPARD_AND_LATER
 
   struct {
     const UCKeyboardLayout* mLayout;
     UInt32 mKbType;
   } mUchr;
+#ifndef LEOPARD_AND_LATER
   struct {
     Handle mHandle;
     TextEncoding mEncoding;
   } mKchr;
+#endif // LEOPARD_AND_LATER
 };
 
 static PRUint32
@@ -4243,12 +4466,16 @@ GetUniCharFromKeyTranslate(KeyTranslateData& aData,
     return UCKeyTranslateToUnicode(aData.mUchr.mLayout, aKeyCode, aModifiers,
                                    aData.mUchr.mKbType);
   }
+#ifndef LEOPARD_AND_LATER
   if (aData.mKchr.mHandle) {
     return KeyTranslateToUnicode(aData.mKchr.mHandle, aKeyCode, aModifiers,
                                  aData.mKchr.mEncoding);
   }
+#endif
   return 0;
 }
+
+#ifndef LEOPARD_AND_LATER
 
 static SInt32
 GetScriptFromKeyboardLayout(SInt32 aLayoutID)
@@ -4327,9 +4554,22 @@ GetKCHRData(KeyTranslateData &aKT)
     aKT.mKchr.mHandle = nsnull;
 }
 
+#endif // LEOPARD_AND_LATER
+
 static PRUint32
 GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
+#ifdef LEOPARD_AND_LATER
+  static const UCKeyboardLayout* sUSLayout = nsnull;
+  if (!sUSLayout) {
+    nsTISInputSource tis("com.apple.keylayout.US");
+    sUSLayout = tis.GetUCKeyboardLayout();
+    NS_ENSURE_TRUE(sUSLayout, 0);
+  }
+
+  UInt32 kbType = 40; // ANSI, don't use actual layout
+  return UCKeyTranslateToUnicode(sUSLayout, aKeyCode, aModifiers, kbType);
+#else
   KeyboardLayoutRef kbRef = nsnull;
   OSStatus err = ::KLGetKeyboardLayoutWithIdentifier(kKLUSKeyboard, &kbRef);
   NS_ENSURE_TRUE(err == noErr && kbRef, 0);
@@ -4340,6 +4580,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   UInt32 kbType = 40; // ANSI, don't use actual layout
   return UCKeyTranslateToUnicode(layout, aKeyCode,
                                  aModifiers, kbType);
+#endif // LEOPARD_AND_LATER
 }
 
 - (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent
@@ -4382,6 +4623,17 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         outGeckoEvent->isAlt) {
       KeyTranslateData kt;
 
+      PRBool isRomanKeyboardLayout;
+#ifdef LEOPARD_AND_LATER
+      nsTISInputSource tis;
+      if (gOverrideKeyboardLayout.mOverrideEnabled) {
+        tis.InitByLayoutID(gOverrideKeyboardLayout.mKeyboardLayout);
+      } else {
+        tis.InitByCurrentKeyboardLayout();
+      }
+      kt.mUchr.mLayout = tis.GetUCKeyboardLayout();
+      isRomanKeyboardLayout = tis.IsASCIICapable();
+#else // LEOPARD_AND_LATER
       if (gOverrideKeyboardLayout.mOverrideEnabled) {
         kt.mLayoutID = gOverrideKeyboardLayout.mKeyboardLayout;
         kt.mScript = GetScriptFromKeyboardLayout(kt.mLayoutID);
@@ -4396,6 +4648,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         kt.mScript = ::GetScriptManagerVariable(smKeyScript);
         kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
       }
+      isRomanKeyboardLayout = (kt.mScript == smRoman);
 
       PRBool isUchrKeyboardLayout = PR_FALSE;
       // GetResource('uchr', kt.mLayoutID) fails on OS X 10.5
@@ -4457,6 +4710,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       if (!isUchrKeyboardLayout) {
         GetKCHRData(kt);
       }
+#endif // LEOPARD_AND_LATER
 
       // If a keyboard layout override is set, we also need to force the
       // keyboard type to something ANSI to avoid test failures on machines
@@ -4501,7 +4755,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       PRBool isCmdSwitchLayout = uncmdedChar != cmdedChar;
       // Is the keyboard layout for Latin, but Cmd key switches the layout?
       // I.e., Dvorak-QWERTY
-      PRBool isDvorakQWERTY = isCmdSwitchLayout && kt.mScript == smRoman;
+      PRBool isDvorakQWERTY = isCmdSwitchLayout && isRomanKeyboardLayout;
 
       // If the current keyboard is not Dvorak-QWERTY or Cmd is not pressed,
       // we should append unshiftedChar and shiftedChar for handling the
@@ -6332,6 +6586,11 @@ static const NSString* GetCurrentIMELanguage()
     }
   }
 
+#ifdef LEOPARD_AND_LATER
+  nsTISInputSource tis;
+  tis.InitByCurrentKeyboardLayout();
+  CFArrayRef langs = tis.GetLanguageList();
+#else
   NS_PRECONDITION(Leopard_TISCopyCurrentKeyboardInputSource,
     "Leopard_TISCopyCurrentKeyboardInputSource is not initialized");
   TISInputSourceRef inputSource = Leopard_TISCopyCurrentKeyboardInputSource();
@@ -6345,6 +6604,7 @@ static const NSString* GetCurrentIMELanguage()
   CFArrayRef langs = static_cast<CFArrayRef>(
     Leopard_TISGetInputSourceProperty(inputSource,
                                       kOurTISPropertyInputSourceLanguages));
+#endif // LEOPARD_AND_LATER
   return static_cast<const NSString*>(CFArrayGetValueAtIndex(langs, 0));
 }
 
