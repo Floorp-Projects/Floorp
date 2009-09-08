@@ -397,6 +397,49 @@ namespace nanojit
         return cur;
     }
 
+    // This is never called, but that's ok because it contains only static
+    // assertions.
+    void LIns::staticSanityCheck()
+    {
+        // LIns must be word-sized.
+        NanoStaticAssert(sizeof(LIns) == 1*sizeof(void*));
+
+        // LInsXYZ have expected sizes too.
+        NanoStaticAssert(sizeof(LInsOp0) == 1*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsOp1) == 2*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsOp2) == 3*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsOp3) == 4*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsLd)  == 3*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsSti) == 4*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsSk)  == 2*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsC)   == 3*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsP)   == 2*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsI)   == 2*sizeof(void*));
+    #if defined NANOJIT_64BIT
+        NanoStaticAssert(sizeof(LInsI64) == 2*sizeof(void*));
+    #else
+        NanoStaticAssert(sizeof(LInsI64) == 3*sizeof(void*));
+    #endif
+
+        // oprnd_1 must be in the same position in LIns{Op1,Op2,Op3,Ld,Sti}
+        // because oprnd1() is used for all of them.
+        NanoStaticAssert( (offsetof(LInsOp1, ins) - offsetof(LInsOp1, oprnd_1)) ==
+                          (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) );
+        NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) ==
+                          (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_1)) );
+        NanoStaticAssert( (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_1)) ==
+                          (offsetof(LInsLd,  ins) - offsetof(LInsLd,  oprnd_1)) );
+        NanoStaticAssert( (offsetof(LInsLd,  ins) - offsetof(LInsLd,  oprnd_1)) ==
+                          (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_1)) );
+
+        // oprnd_2 must be in the same position in LIns{Op2,Op3,Sti}
+        // because oprnd2() is used for both of them.
+        NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_2)) ==
+                          (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) );
+        NanoStaticAssert( (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) ==
+                          (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_2)) );
+    }
+
     bool LIns::isFloat() const {
         switch (opcode()) {
             default:
@@ -519,66 +562,6 @@ namespace nanojit
     bool LIns::isCse() const
     {
         return nanojit::isCseOpcode(opcode()) || (isCall() && callInfo()->_cse);
-    }
-
-    void LIns::setTarget(LInsp label)
-    {
-        NanoAssert(label && label->isop(LIR_label));
-        NanoAssert(isBranch());
-        toLInsOp2()->oprnd_2 = label;
-    }
-
-    LInsp LIns::getTarget()
-    {
-        NanoAssert(isBranch());
-        return oprnd2();
-    }
-
-    void *LIns::payload() const
-    {
-        NanoAssert(isop(LIR_skip));
-        // Operand 1 points to the previous LIns;  we move past it to get to
-        // the payload.
-        return (void*) (uintptr_t(prevLIns()) + sizeof(LIns));
-    }
-
-    uint64_t LIns::imm64() const
-    {
-        NanoAssert(isconstq());
-        return (uint64_t(toLInsI64()->imm64_1) << 32) | uint32_t(toLInsI64()->imm64_0);
-    }
-
-    double LIns::imm64f() const
-    {
-        union {
-            double f;
-            uint64_t q;
-        } u;
-        u.q = imm64();
-        return u.f;
-    }
-
-    const CallInfo* LIns::callInfo() const
-    {
-        NanoAssert(isCall());
-        return toLInsC()->ci;
-    }
-
-    // Index args in r-l order.  arg(0) is rightmost arg.
-    // Nb: this must be kept in sync with insCall().
-    LInsp LIns::arg(uint32_t i)
-    {
-        NanoAssert(isCall());
-        NanoAssert(i < argc());
-        // Move to the start of the LInsC, then move back one word per argument.
-        LInsp* argSlot = (LInsp*)(uintptr_t(toLInsC()) - (i+1)*sizeof(void*));
-        return *argSlot;
-    }
-
-    void LIns::setSize(int32_t nbytes) {
-        NanoAssert(isop(LIR_alloc));
-        NanoAssert(nbytes > 0);
-        toLInsI()->imm32 = (nbytes+3)>>2; // # of required 32bit words
     }
 
     LIns* LirWriter::ins2i(LOpcode v, LIns* oprnd1, int32_t imm)
@@ -1429,12 +1412,6 @@ namespace nanojit
         }
         i = hash;
         return k;
-    }
-
-    GuardRecord *LIns::record()
-    {
-        NanoAssert(isGuard());
-        return (GuardRecord*)oprnd2()->payload();
     }
 
 #ifdef NJ_VERBOSE
