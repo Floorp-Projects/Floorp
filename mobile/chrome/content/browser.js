@@ -2444,10 +2444,6 @@ Tab.prototype = {
     let bv = Browser._browserView;
 
     if (this == Browser.selectedTab) {
-      // !!! --- RESIZE HACK BEGIN -----
-      bv.simulateMozAfterSizeChange();
-      // !!! --- RESIZE HACK END -----
-
       let restoringPage = (this._state != null);
 
       if (!this._browserViewportState.zoomChanged && !restoringPage) {
@@ -2485,6 +2481,7 @@ Tab.prototype = {
 
     if (!this._loadingTimeout) {
       Browser._browserView.beginBatchOperation();
+      Browser._browserView.invalidateEntireView();
       this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
     }
   },
