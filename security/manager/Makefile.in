@@ -161,6 +161,7 @@ export DLLFLAGS
 endif
 
 ifndef WINCE
+# why is this disabled on WINCE?  See bug 514295.
 # To get debug symbols from NSS
 export MOZ_DEBUG_SYMBOLS
 endif
