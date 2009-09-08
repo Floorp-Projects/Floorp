@@ -38,6 +38,7 @@
 
 #include "PluginInstanceParent.h"
 #include "BrowserStreamParent.h"
+#include "StreamNotifyParent.h"
 
 namespace mozilla {
 namespace plugins {
@@ -46,6 +47,7 @@ PBrowserStreamParent*
 PluginInstanceParent::PBrowserStreamConstructor(const nsCString& url,
                                                 const uint32_t& length,
                                                 const uint32_t& lastmodified,
+                                                const PStreamNotifyParent* notifyData,
                                                 const nsCString& headers,
                                                 const nsCString& mimeType,
                                                 const bool& seekable,
@@ -74,6 +76,59 @@ PluginInstanceParent::PBrowserStreamDestructor(PBrowserStreamParent* stream,
 {
     delete stream;
     return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::AnswerNPN_GetURL(const nsCString& url,
+                                       const nsCString& target,
+                                       NPError* result)
+{
+    *result = mNPNIface->geturl(mNPP, url.get(), target.get());
+    // TODO: what if the method fails?
+    return NS_OK;
+}
+
+nsresult
+PluginInstanceParent::AnswerNPN_PostURL(const nsCString& url,
+                                        const nsCString& target,
+                                        const nsCString& buffer,
+                                        const bool& file,
+                                        NPError* result)
+{
+    *result = mNPNIface->posturl(mNPP, url.get(), target.get(),
+                                 buffer.Length(), buffer.get(), file);
+    // TODO: what if the method fails?
+    return NS_OK;
+}
+
+PStreamNotifyParent*
+PluginInstanceParent::PStreamNotifyConstructor(const nsCString& url,
+                                               const nsCString& target,
+                                               const bool& post,
+                                               const nsCString& buffer,
+                                               const bool& file,
+                                               NPError* result)
+{
+    StreamNotifyParent* notifyData = new StreamNotifyParent();
+
+    if (!post) {
+        *result = mNPNIface->geturlnotify(mNPP, url.get(), target.get(),
+                                          notifyData);
+    }
+    else {
+        *result = mNPNIface->posturlnotify(mNPP, url.get(), target.get(),
+                                           buffer.Length(), buffer.get(),
+                                           file, notifyData);
+    }
+    // TODO: what if this method fails?
+    return notifyData;
+}
+
+nsresult
+PluginInstanceParent::PStreamNotifyDestructor(PStreamNotifyParent* notifyData,
+                                              const NPReason& reason)
+{
+    delete notifyData;
 }
 
 NPError
@@ -120,6 +175,7 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
                                   nsCString(stream->url),
                                   stream->end,
                                   stream->lastmodified,
+                                  static_cast<PStreamNotifyParent*>(stream->notifyData),
                                   nsCString(stream->headers),
                                   nsCString(type), seekable, &err, stype);
     return err;

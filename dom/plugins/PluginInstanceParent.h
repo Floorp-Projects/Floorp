@@ -85,6 +85,7 @@ public:
     PBrowserStreamConstructor(const nsCString& url,
                               const uint32_t& length,
                               const uint32_t& lastmodified,
+                              const PStreamNotifyParent* notifyData,
                               const nsCString& headers,
                               const nsCString& mimeType,
                               const bool& seekable,
@@ -100,6 +101,25 @@ public:
     PBrowserStreamDestructor(PBrowserStreamParent* stream,
                              const NPError& reason,
                              const bool& artificial);
+
+    virtual nsresult
+    AnswerNPN_GetURL(const nsCString& url, const nsCString& target,
+                     NPError *result);
+
+    virtual nsresult
+    AnswerNPN_PostURL(const nsCString& url, const nsCString& target,
+                      const nsCString& buffer, const bool& file,
+                      NPError* result);
+
+    virtual PStreamNotifyParent*
+    PStreamNotifyConstructor(const nsCString& url, const nsCString& target,
+                             const bool& post, const nsCString& buffer,
+                             const bool& file,
+                             NPError* result);
+
+    virtual nsresult
+    PStreamNotifyDestructor(PStreamNotifyParent* notifyData,
+                            const NPReason& reason);
 
     NPError NPP_SetWindow(NPWindow* aWindow);
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);

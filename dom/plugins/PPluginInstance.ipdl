@@ -40,11 +40,13 @@
 include protocol "PPluginModule.ipdl";
 include protocol "PPluginScriptableObject.ipdl";
 include protocol "PBrowserStream.ipdl";
+include protocol "PStreamNotify.ipdl";
 
 include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
 using NPWindow;
+using NPReason;
 
 
 // FIXME/bent: demo purposes only
@@ -75,6 +77,7 @@ rpc protocol PPluginInstance
 
   manages PPluginScriptableObject;
   manages PBrowserStream;
+  manages PStreamNotify;
 
 
 
@@ -90,6 +93,7 @@ child:
   rpc PBrowserStream(nsCString url,
                      uint32_t length,
                      uint32_t lastmodified,
+                     PStreamNotify notifyData,
                      nsCString headers,
                      nsCString mimeType,
                      bool seekable)
@@ -100,6 +104,27 @@ child:
     returns (NPError rv);
   rpc NPP_GetValue(nsString key)
     returns (nsString value);
+
+parent:
+  rpc NPN_GetURL(nsCString url, nsCString target)
+    returns (NPError result);
+  rpc NPN_PostURL(nsCString url, nsCString target, nsCString buffer, bool file)
+    returns (NPError result);
+
+  /**
+   * Covers both NPN_GetURLNotify and NPN_PostURLNotify.
+   * @TODO This would be more readable as an overloaded method,
+   *       but IPDL doesn't allow that for constructors (or any method?).
+   */
+  rpc PStreamNotify(nsCString url, nsCString target, bool post,
+                    nsCString buffer, bool file)
+    returns (NPError result);
+
+child:
+  /**
+   * Represents NPP_URLNotify
+   */
+  rpc ~PStreamNotify(NPReason reason);
 
 parent:
   rpc PPluginScriptableObject()
@@ -113,7 +138,7 @@ both:
    * @param artificial True when the stream is closed as a by-product of
    *                        some other call (such as a failure in NPP_Write).
    */
-  rpc ~PBrowserStream(NPError reason,
+  rpc ~PBrowserStream(NPReason reason,
                       bool artificial);
 };
 
