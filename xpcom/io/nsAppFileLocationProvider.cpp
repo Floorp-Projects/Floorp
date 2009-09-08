@@ -91,6 +91,7 @@
 #ifdef XP_MACOSX
 #define NS_MACOSX_USER_PLUGIN_DIR   "OSXUserPlugins"
 #define NS_MACOSX_LOCAL_PLUGIN_DIR  "OSXLocalPlugins"
+#define NS_MACOSX_JAVA2_PLUGIN_DIR  "OSXJavaPlugins"
 #elif XP_UNIX
 #define NS_SYSTEM_PLUGINS_DIR       "SysPlugins"
 #endif
@@ -213,6 +214,12 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile
             if (NS_SUCCEEDED(rv))
                 localFile = macFile;
         }
+    }
+    else if (nsCRT::strcmp(prop, NS_MACOSX_JAVA2_PLUGIN_DIR) == 0)
+    {
+      static const char *const java2PluginDirPath =
+        "/System/Library/Frameworks/JavaVM.framework/Versions/Current/Resources/";
+      NS_NewNativeLocalFile(nsDependentCString(java2PluginDirPath), PR_TRUE, getter_AddRefs(localFile));
     }
 #else
     else if (nsCRT::strcmp(prop, NS_ENV_PLUGINS_DIR) == 0)
@@ -561,7 +568,11 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
     if (!nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR_LIST))
     {
 #ifdef XP_MACOSX
-        static const char* keys[] = { NS_APP_PLUGINS_DIR, NS_MACOSX_USER_PLUGIN_DIR, NS_MACOSX_LOCAL_PLUGIN_DIR, nsnull };
+        // We are temporarily looking for JavaPlugin2 in the Java framework because Apple did not want
+        // to enable it for Safari by including it in the normal search directories. This situation
+        // should be resolved soon and then we should stop looking for JavaPlugin2 explicitly.
+        static const char* keys[] = { NS_APP_PLUGINS_DIR, NS_MACOSX_USER_PLUGIN_DIR,
+                                      NS_MACOSX_LOCAL_PLUGIN_DIR, NS_MACOSX_JAVA2_PLUGIN_DIR, nsnull };
         *_retval = new nsAppDirectoryEnumerator(this, keys);
 #else
 #ifdef XP_UNIX
