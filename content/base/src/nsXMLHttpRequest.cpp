@@ -45,8 +45,10 @@
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
+#include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIUploadChannel.h"
+#include "nsIUploadChannel2.h"
 #include "nsIDOMSerializer.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -62,7 +64,10 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMFileInternal.h"
 #include "nsIDOMWindow.h"
+#include "nsIMIMEService.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIVariant.h"
 #include "nsVariant.h"
 #include "nsIParser.h"
@@ -2358,6 +2363,37 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
               postDataStream = stream;
               charset.Truncate();
             }
+            else {
+              // nsIDOMFile?
+              nsCOMPtr<nsIDOMFileInternal> file(do_QueryInterface(supports));
+
+              if (file) {
+                nsCOMPtr<nsIFile> internalFile;
+                rv = file->GetInternalFile(getter_AddRefs(internalFile));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                nsCOMPtr<nsIInputStream> stream;
+                rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), internalFile); 
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                // Feed local file input stream into our upload channel
+                if (stream) {
+                  postDataStream = stream;
+                  charset.Truncate();
+                  defaultContentType.Truncate();
+
+                  nsCOMPtr<nsIMIMEService> mimeService =
+                      do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+                  NS_ENSURE_SUCCESS(rv, rv);
+
+                  nsCAutoString mediaType;
+                  rv = mimeService->GetTypeFromFile(internalFile, mediaType);
+                  if (NS_SUCCEEDED(rv)) {
+                    defaultContentType = mediaType;
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -2388,7 +2424,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     }
 
     if (postDataStream) {
-      nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+      nsCOMPtr<nsIUploadChannel2> uploadChannel(do_QueryInterface(httpChannel));
       NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
       // If no content type header was set by the client, we set it to
@@ -2427,15 +2463,26 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         }
       }
 
+      // If necessary, wrap the stream in a buffered stream so as to guarantee
+      // support for our upload when calling ExplicitSetUploadStream.
+      if (!NS_InputStreamIsBuffered(postDataStream)) {
+        nsCOMPtr<nsIInputStream> bufferedStream;
+        rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                       postDataStream, 
+                                       4096);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        postDataStream = bufferedStream;
+      }
+
       mUploadComplete = PR_FALSE;
       PRUint32 uploadTotal = 0;
       postDataStream->Available(&uploadTotal);
       mUploadTotal = uploadTotal;
-      rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
-      // Reset the method to its original value
-      if (httpChannel) {
-        httpChannel->SetRequestMethod(method);
-      }
+
+      // We want to use a newer version of the upload channel that won't
+      // ignore the necessary headers for an empty Content-Type.
+      rv = uploadChannel->ExplicitSetUploadStream(postDataStream, contentType, -1, method, PR_FALSE);
     }
   }
 
