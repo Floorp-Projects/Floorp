@@ -68,6 +68,7 @@
 NS_INTERFACE_MAP_BEGIN(nsDOMFile)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFile)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFileInternal)
   NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(File)
 NS_INTERFACE_MAP_END
@@ -144,6 +145,20 @@ nsDOMFile::GetAsText(const nsAString &aCharset, nsAString &aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return ConvertStream(stream, charset.get(), aResult);
+}
+
+NS_IMETHODIMP
+nsDOMFile::GetInternalFile(nsIFile **aFile)
+{
+  NS_IF_ADDREF(*aFile = mFile);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFile::SetInternalFile(nsIFile *aFile)
+{
+  mFile = aFile;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
