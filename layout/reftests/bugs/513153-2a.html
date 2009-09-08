@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <style>
+    input { color: purple; }
+    :default { font-size: 3em; color: green; }
+  </style>
+  <script type="text/javascript">
+    function boom()
+    {
+      var toRemove = document.getElementById("toremove");
+      toRemove.parentNode.removeChild(toRemove);
+      document.documentElement.className = "";
+    }
+    window.addEventListener("MozReftestInvalidate", boom, false);
+  </script>
+</head>
+<body>
+  <form>
+    <span id="toremove">
+      <input type="submit">
+      <input type="submit">
+    </span>
+    <input type="image" name="bar" value="bar">
+    <input type="submit" name="foo" value="foo">
+  </form>
+</body>
+</html>
