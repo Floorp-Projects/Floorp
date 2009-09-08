@@ -69,6 +69,8 @@ EXPORTS_mozilla/plugins = \
   PluginMessageUtils.h \
   PluginProcessParent.h \
   PluginThreadChild.h \
+  StreamNotifyParent.h \
+  StreamNotifyChild.h \
   $(NULL)
 
 MODULE           = dom
