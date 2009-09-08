@@ -90,6 +90,10 @@ ifeq (gtk2, $(MOZ_WIDGET_TOOLKIT))
 DEFINES += -DMOZ_GTK2=1
 endif
 
+ifdef NSS_DISABLE_DBM
+DEFINES += -DNSS_DISABLE_DBM=1
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 
