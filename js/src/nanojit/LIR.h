@@ -212,10 +212,8 @@ namespace nanojit
     //
     // - Beyond that, most instructions have 1, 2 or 3 extra words.  These
     //   extra words are in classes LInsOp1, LInsOp2, etc (collectively called
-    //   "LInsXYZ" in what follows).  Each LInsXYZ class also contains a word,
-    //   accessible by the 'ins' member, which holds the LIns data;  its type
-    //   is void* (which is the same size as LIns) rather than LIns to avoid a
-    //   recursive dependency between LIns and LInsXYZ.
+    //   "LInsXYZ" in what follows).  Each LInsXYZ class also contains an LIns,
+    //   accessible by the 'ins' member, which holds the LIns data.
     //
     // - LIR is written forward, but read backwards.  When reading backwards,
     //   in order to find the opcode, it must be in a predictable place in the
@@ -322,184 +320,17 @@ namespace nanojit
         LRK_None    // this one is used for unused opcode numbers
     };
 
-    class LIns;
-
-    // 0-operand form.  Used for LIR_start and LIR_label.
-    class LInsOp0
-    {
-    private:
-        friend class LIns;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // 1-operand form.  Used for LIR_ret, LIR_ov, unary arithmetic/logic ops,
-    // etc.
-    class LInsOp1
-    {
-    private:
-        friend class LIns;
-
-        LIns*       oprnd_1;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // 2-operand form.  Used for loads, guards, branches, comparisons, binary
-    // arithmetic/logic ops, etc.
-    class LInsOp2
-    {
-    private:
-        friend class LIns;
-
-        LIns*       oprnd_2;
-
-        LIns*       oprnd_1;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // 3-operand form.  Used for conditional moves.
-    class LInsOp3
-    {
-    private:
-        friend class LIns;
-
-        LIns*       oprnd_3;
-
-        LIns*       oprnd_2;
-
-        LIns*       oprnd_1;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // Used for all loads.
-    class LInsLd
-    {
-    private:
-        friend class LIns;
-
-        int32_t     disp;
-
-        LIns*       oprnd_1;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // Used for LIR_sti and LIR_stqi.
-    class LInsSti
-    {
-    private:
-        friend class LIns;
-
-        int32_t     disp;
-
-        LIns*       oprnd_2;
-
-        LIns*       oprnd_1;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // Used for LIR_skip.
-    class LInsSk
-    {
-    private:
-        friend class LIns;
-
-        LIns*       prevLIns;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // Used for all variants of LIR_call.
-    class LInsC
-    {
-    private:
-        friend class LIns;
-
-        uintptr_t   argc:8;
-
-        const CallInfo* ci;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // Used for LIR_iparam.
-    class LInsP
-    {
-    private:
-        friend class LIns;
-
-        uintptr_t   arg:8;
-        uintptr_t   kind:8;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // Used for LIR_int and LIR_ialloc.
-    class LInsI
-    {
-    private:
-        friend class LIns;
-
-        int32_t     imm32;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // Used for LIR_quad.
-    class LInsI64
-    {
-    private:
-        friend class LIns;
-
-        int32_t     imm64_0;
-
-        int32_t     imm64_1;
-
-        void*       ins;
-
-    public:
-        LIns* getLIns() { return (LIns*)&ins; };
-    };
-
-    // Used only as a placeholder for OPDEF macros for unused opcodes in
-    // LIRopcode.tbl.
-    class LInsNone
-    {
-    };
+    class LInsOp0;
+    class LInsOp1;
+    class LInsOp2;
+    class LInsOp3;
+    class LInsLd;
+    class LInsSti;
+    class LInsSk;
+    class LInsC;
+    class LInsP;
+    class LInsI;
+    class LInsI64;
 
     class LIns
     {
@@ -515,205 +346,92 @@ namespace nanojit
         };
 
         // LIns-to-LInsXYZ converters.
-        LInsOp0* toLInsOp0() const { return (LInsOp0*)( uintptr_t(this+1) - sizeof(LInsOp0) ); }
-        LInsOp1* toLInsOp1() const { return (LInsOp1*)( uintptr_t(this+1) - sizeof(LInsOp1) ); }
-        LInsOp2* toLInsOp2() const { return (LInsOp2*)( uintptr_t(this+1) - sizeof(LInsOp2) ); }
-        LInsOp3* toLInsOp3() const { return (LInsOp3*)( uintptr_t(this+1) - sizeof(LInsOp3) ); }
-        LInsLd*  toLInsLd()  const { return (LInsLd* )( uintptr_t(this+1) - sizeof(LInsLd ) ); }
-        LInsSti* toLInsSti() const { return (LInsSti*)( uintptr_t(this+1) - sizeof(LInsSti) ); }
-        LInsSk*  toLInsSk()  const { return (LInsSk* )( uintptr_t(this+1) - sizeof(LInsSk ) ); }
-        LInsC*   toLInsC()   const { return (LInsC*  )( uintptr_t(this+1) - sizeof(LInsC  ) ); }
-        LInsP*   toLInsP()   const { return (LInsP*  )( uintptr_t(this+1) - sizeof(LInsP  ) ); }
-        LInsI*   toLInsI()   const { return (LInsI*  )( uintptr_t(this+1) - sizeof(LInsI  ) ); }
-        LInsI64* toLInsI64() const { return (LInsI64*)( uintptr_t(this+1) - sizeof(LInsI64) ); }
+        inline LInsOp0* toLInsOp0() const;
+        inline LInsOp1* toLInsOp1() const;
+        inline LInsOp2* toLInsOp2() const;
+        inline LInsOp3* toLInsOp3() const;
+        inline LInsLd*  toLInsLd()  const;
+        inline LInsSti* toLInsSti() const;
+        inline LInsSk*  toLInsSk()  const;
+        inline LInsC*   toLInsC()   const;
+        inline LInsP*   toLInsP()   const;
+        inline LInsI*   toLInsI()   const;
+        inline LInsI64* toLInsI64() const;
 
-        // This is never called, but that's ok because it contains only static
-        // assertions.
-        void staticSanityCheck()
-        {
-            // LIns must be word-sized.
-            NanoStaticAssert(sizeof(LIns) == 1*sizeof(void*));
-
-            // LInsXYZ have expected sizes too.
-            NanoStaticAssert(sizeof(LInsOp0) == 1*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsOp1) == 2*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsOp2) == 3*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsOp3) == 4*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsLd)  == 3*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsSti) == 4*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsSk)  == 2*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsC)   == 3*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsP)   == 2*sizeof(void*));
-            NanoStaticAssert(sizeof(LInsI)   == 2*sizeof(void*));
-        #if defined NANOJIT_64BIT
-            NanoStaticAssert(sizeof(LInsI64) == 2*sizeof(void*));
-        #else
-            NanoStaticAssert(sizeof(LInsI64) == 3*sizeof(void*));
-        #endif
-
-            // oprnd_1 must be in the same position in LIns{Op1,Op2,Op3,Ld,Sti}
-            // because oprnd1() is used for all of them.
-            NanoStaticAssert( (offsetof(LInsOp1, ins) - offsetof(LInsOp1, oprnd_1)) ==
-                              (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) );
-            NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) ==
-                              (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_1)) );
-            NanoStaticAssert( (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_1)) ==
-                              (offsetof(LInsLd,  ins) - offsetof(LInsLd,  oprnd_1)) );
-            NanoStaticAssert( (offsetof(LInsLd,  ins) - offsetof(LInsLd,  oprnd_1)) ==
-                              (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_1)) );
-
-            // oprnd_2 must be in the same position in LIns{Op2,Op3,Sti}
-            // because oprnd2() is used for both of them.
-            NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_2)) ==
-                              (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) );
-            NanoStaticAssert( (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) ==
-                              (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_2)) );
-        }
+        void staticSanityCheck();
 
     public:
-        void initLInsOp0(LOpcode opcode) {
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            NanoAssert(isLInsOp0());
-        }
-        void initLInsOp1(LOpcode opcode, LIns* oprnd1) {
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            toLInsOp1()->oprnd_1 = oprnd1;
-            NanoAssert(isLInsOp1());
-        }
-        void initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2) {
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            toLInsOp2()->oprnd_1 = oprnd1;
-            toLInsOp2()->oprnd_2 = oprnd2;
-            NanoAssert(isLInsOp2());
-        }
-        void initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3) {
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            toLInsOp3()->oprnd_1 = oprnd1;
-            toLInsOp3()->oprnd_2 = oprnd2;
-            toLInsOp3()->oprnd_3 = oprnd3;
-            NanoAssert(isLInsOp3());
-        }
-        void initLInsLd(LOpcode opcode, LIns* val, int32_t d) {
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            toLInsLd()->oprnd_1 = val;
-            toLInsLd()->disp = d;
-            NanoAssert(isLInsLd());
-        }
-        void initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d) {
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            toLInsSti()->oprnd_1 = val;
-            toLInsSti()->oprnd_2 = base;
-            toLInsSti()->disp = d;
-            NanoAssert(isLInsSti());
-        }
-        void initLInsSk(LIns* prevLIns) {
-            lastWord.clear();
-            lastWord.opcode = LIR_skip;
-            toLInsSk()->prevLIns = prevLIns;
-            NanoAssert(isLInsSk());
-        }
-        // Nb: this does NOT initialise the arguments.  That must be done
-        // separately.
-        void initLInsC(LOpcode opcode, int32_t argc, const CallInfo* ci) {
-            NanoAssert(isU8(argc));
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            toLInsC()->argc = argc;
-            toLInsC()->ci = ci;
-            NanoAssert(isLInsC());
-        }
-        void initLInsP(int32_t arg, int32_t kind) {
-            lastWord.clear();
-            lastWord.opcode = LIR_param;
-            NanoAssert(isU8(arg) && isU8(kind));
-            toLInsP()->arg = arg;
-            toLInsP()->kind = kind;
-            NanoAssert(isLInsP());
-        }
-        void initLInsI(LOpcode opcode, int32_t imm32) {
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            toLInsI()->imm32 = imm32;
-            NanoAssert(isLInsI());
-        }
-        void initLInsI64(LOpcode opcode, int64_t imm64) {
-            lastWord.clear();
-            lastWord.opcode = opcode;
-            toLInsI64()->imm64_0 = int32_t(imm64);
-            toLInsI64()->imm64_1 = int32_t(imm64 >> 32);
-            NanoAssert(isLInsI64());
-        }
+        // LIns initializers.
+        inline void initLInsOp0(LOpcode opcode);
+        inline void initLInsOp1(LOpcode opcode, LIns* oprnd1);
+        inline void initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2);
+        inline void initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3);
+        inline void initLInsLd(LOpcode opcode, LIns* val, int32_t d);
+        inline void initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d);
+        inline void initLInsSk(LIns* prevLIns);
+        // Nb: initLInsC() does NOT initialise the arguments.  That must be
+        // done separately.
+        inline void initLInsC(LOpcode opcode, int32_t argc, const CallInfo* ci);
+        inline void initLInsP(int32_t arg, int32_t kind);
+        inline void initLInsI(LOpcode opcode, int32_t imm32);
+        inline void initLInsI64(LOpcode opcode, int64_t imm64);
 
-        LIns* oprnd1() const {
-            NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSti());
-            return toLInsOp2()->oprnd_1;
-        }
-        LIns* oprnd2() const {
-            NanoAssert(isLInsOp2() || isLInsOp3() || isLInsSti());
-            return toLInsOp2()->oprnd_2;
-        }
-        LIns* oprnd3() const {
-            NanoAssert(isLInsOp3());
-            return toLInsOp3()->oprnd_3;
-        }
+        LOpcode opcode() const { return lastWord.opcode; }
 
-        LIns* prevLIns() const {
-            NanoAssert(isLInsSk());
-            return toLInsSk()->prevLIns;
-        }
-
-        inline LOpcode opcode()    const { return lastWord.opcode; }
-        inline uint8_t paramArg()  const { NanoAssert(isop(LIR_param)); return toLInsP()->arg; }
-        inline uint8_t paramKind() const { NanoAssert(isop(LIR_param)); return toLInsP()->kind; }
-        inline int32_t imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
-        inline int32_t imm64_0()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_0; }
-        inline int32_t imm64_1()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_1; }
-        uint64_t       imm64()     const;
-        double         imm64f()    const;
-        Reservation*   resv()            { return &lastWord; }
+        Reservation* resv() { return &lastWord; }
         // Like resv(), but asserts that the Reservation is used.
-        Reservation*   resvUsed() {
+        Reservation* resvUsed() {
             Reservation* r = resv();
             NanoAssert(r->used);
             return r;
         }
-        void*          payload()   const;
-        inline int32_t size()      const {
-            NanoAssert(isop(LIR_alloc));
-            return toLInsI()->imm32 << 2;
-        }
-        void           setSize(int32_t nbytes);
 
-        LIns* arg(uint32_t i);
+        inline LIns*    oprnd1() const;
+        inline LIns*    oprnd2() const;
+        inline LIns*    oprnd3() const;
 
-        inline int32_t disp() const
-        {
-            if (isLInsSti()) {
-                return toLInsSti()->disp;
-            } else {
-                NanoAssert(isLInsLd());
-                return toLInsLd()->disp;
-            }
-        }
+        // For branches.
+        inline LIns*    getTarget() const;
+        inline void     setTarget(LIns* label);
 
-        inline void* constvalp() const
-        {
-        #ifdef NANOJIT_64BIT
-            return (void*)imm64();
-        #else
-            return (void*)imm32();
-        #endif
-        }
+        // For guards.
+        inline GuardRecord* record() const;
 
+        // Displacement for LInsLd/LInsSti
+        inline int32_t  disp() const;
+
+        // For LInsSk.
+        inline void*    payload()  const;
+        inline LIns*    prevLIns() const;
+
+        // For LInsP.
+        inline uint8_t  paramArg()  const;
+        inline uint8_t  paramKind() const;
+
+        // For LInsI.
+        inline int32_t  imm32() const;
+
+        // For LInsI64.
+        inline int32_t  imm64_0() const;
+        inline int32_t  imm64_1() const;
+        inline uint64_t imm64()   const;
+        inline double   imm64f()  const;
+
+        // For LIR_alloc.
+        inline int32_t  size()    const;
+        inline void     setSize(int32_t nbytes);
+
+        // For LInsC.
+        inline LIns*    arg(uint32_t i)         const;
+        inline uint32_t argc()                  const;
+        inline LIns*    callArgN(uint32_t n)    const;
+        inline const CallInfo* callInfo()       const;
+
+        // LIns predicates.
         bool isCse() const;
         bool isRet() const { return nanojit::isRetOpcode(opcode()); }
         bool isop(LOpcode o) const { return opcode() == o; }
+
         // isLInsXYZ() returns true if the instruction has the LInsXYZ form.
         // Note that there is some overlap with other predicates, eg.
         // isStore()==isLInsSti(), isCall()==isLInsC(), but that's ok;  these
@@ -731,6 +449,7 @@ namespace nanojit
         bool isLInsP()   const;
         bool isLInsI()   const;
         bool isLInsI64() const;
+
         bool isQuad() const;
         bool isCond() const;
         bool isFloat() const;
@@ -791,23 +510,392 @@ namespace nanojit
                    isRet();
         }
 
-        void setTarget(LIns* t);
-        LIns* getTarget();
-
-        GuardRecord *record();
-
-        inline uint32_t argc() const {
-            NanoAssert(isCall());
-            return toLInsC()->argc;
+        inline void* constvalp() const
+        {
+        #ifdef NANOJIT_64BIT
+            return (void*)imm64();
+        #else
+            return (void*)imm32();
+        #endif
         }
-        const CallInfo *callInfo() const;
     };
 
     typedef LIns* LInsp;
     typedef SeqBuilder<LIns*> InsList;
 
-    inline LIns* callArgN(LInsp i, uint32_t n) {
-        return i->arg(i->argc()-n-1);
+
+    // 0-operand form.  Used for LIR_start and LIR_label.
+    class LInsOp0
+    {
+    private:
+        friend class LIns;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // 1-operand form.  Used for LIR_ret, LIR_ov, unary arithmetic/logic ops,
+    // etc.
+    class LInsOp1
+    {
+    private:
+        friend class LIns;
+
+        LIns*       oprnd_1;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // 2-operand form.  Used for loads, guards, branches, comparisons, binary
+    // arithmetic/logic ops, etc.
+    class LInsOp2
+    {
+    private:
+        friend class LIns;
+
+        LIns*       oprnd_2;
+
+        LIns*       oprnd_1;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // 3-operand form.  Used for conditional moves.
+    class LInsOp3
+    {
+    private:
+        friend class LIns;
+
+        LIns*       oprnd_3;
+
+        LIns*       oprnd_2;
+
+        LIns*       oprnd_1;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // Used for all loads.
+    class LInsLd
+    {
+    private:
+        friend class LIns;
+
+        int32_t     disp;
+
+        LIns*       oprnd_1;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // Used for LIR_sti and LIR_stqi.
+    class LInsSti
+    {
+    private:
+        friend class LIns;
+
+        int32_t     disp;
+
+        LIns*       oprnd_2;
+
+        LIns*       oprnd_1;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // Used for LIR_skip.
+    class LInsSk
+    {
+    private:
+        friend class LIns;
+
+        LIns*       prevLIns;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // Used for all variants of LIR_call.
+    class LInsC
+    {
+    private:
+        friend class LIns;
+
+        uintptr_t   argc:8;
+
+        const CallInfo* ci;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // Used for LIR_iparam.
+    class LInsP
+    {
+    private:
+        friend class LIns;
+
+        uintptr_t   arg:8;
+        uintptr_t   kind:8;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // Used for LIR_int and LIR_ialloc.
+    class LInsI
+    {
+    private:
+        friend class LIns;
+
+        int32_t     imm32;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // Used for LIR_quad.
+    class LInsI64
+    {
+    private:
+        friend class LIns;
+
+        int32_t     imm64_0;
+
+        int32_t     imm64_1;
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; };
+    };
+
+    // Used only as a placeholder for OPDEF macros for unused opcodes in
+    // LIRopcode.tbl.
+    class LInsNone
+    {
+    };
+
+    LInsOp0* LIns::toLInsOp0() const { return (LInsOp0*)( uintptr_t(this+1) - sizeof(LInsOp0) ); }
+    LInsOp1* LIns::toLInsOp1() const { return (LInsOp1*)( uintptr_t(this+1) - sizeof(LInsOp1) ); }
+    LInsOp2* LIns::toLInsOp2() const { return (LInsOp2*)( uintptr_t(this+1) - sizeof(LInsOp2) ); }
+    LInsOp3* LIns::toLInsOp3() const { return (LInsOp3*)( uintptr_t(this+1) - sizeof(LInsOp3) ); }
+    LInsLd*  LIns::toLInsLd()  const { return (LInsLd* )( uintptr_t(this+1) - sizeof(LInsLd ) ); }
+    LInsSti* LIns::toLInsSti() const { return (LInsSti*)( uintptr_t(this+1) - sizeof(LInsSti) ); }
+    LInsSk*  LIns::toLInsSk()  const { return (LInsSk* )( uintptr_t(this+1) - sizeof(LInsSk ) ); }
+    LInsC*   LIns::toLInsC()   const { return (LInsC*  )( uintptr_t(this+1) - sizeof(LInsC  ) ); }
+    LInsP*   LIns::toLInsP()   const { return (LInsP*  )( uintptr_t(this+1) - sizeof(LInsP  ) ); }
+    LInsI*   LIns::toLInsI()   const { return (LInsI*  )( uintptr_t(this+1) - sizeof(LInsI  ) ); }
+    LInsI64* LIns::toLInsI64() const { return (LInsI64*)( uintptr_t(this+1) - sizeof(LInsI64) ); }
+
+    void LIns::initLInsOp0(LOpcode opcode) {
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        NanoAssert(isLInsOp0());
+    }
+    void LIns::initLInsOp1(LOpcode opcode, LIns* oprnd1) {
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        toLInsOp1()->oprnd_1 = oprnd1;
+        NanoAssert(isLInsOp1());
+    }
+    void LIns::initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2) {
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        toLInsOp2()->oprnd_1 = oprnd1;
+        toLInsOp2()->oprnd_2 = oprnd2;
+        NanoAssert(isLInsOp2());
+    }
+    void LIns::initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3) {
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        toLInsOp3()->oprnd_1 = oprnd1;
+        toLInsOp3()->oprnd_2 = oprnd2;
+        toLInsOp3()->oprnd_3 = oprnd3;
+        NanoAssert(isLInsOp3());
+    }
+    void LIns::initLInsLd(LOpcode opcode, LIns* val, int32_t d) {
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        toLInsLd()->oprnd_1 = val;
+        toLInsLd()->disp = d;
+        NanoAssert(isLInsLd());
+    }
+    void LIns::initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d) {
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        toLInsSti()->oprnd_1 = val;
+        toLInsSti()->oprnd_2 = base;
+        toLInsSti()->disp = d;
+        NanoAssert(isLInsSti());
+    }
+    void LIns::initLInsSk(LIns* prevLIns) {
+        lastWord.clear();
+        lastWord.opcode = LIR_skip;
+        toLInsSk()->prevLIns = prevLIns;
+        NanoAssert(isLInsSk());
+    }
+    void LIns::initLInsC(LOpcode opcode, int32_t argc, const CallInfo* ci) {
+        NanoAssert(isU8(argc));
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        toLInsC()->argc = argc;
+        toLInsC()->ci = ci;
+        NanoAssert(isLInsC());
+    }
+    void LIns::initLInsP(int32_t arg, int32_t kind) {
+        lastWord.clear();
+        lastWord.opcode = LIR_param;
+        NanoAssert(isU8(arg) && isU8(kind));
+        toLInsP()->arg = arg;
+        toLInsP()->kind = kind;
+        NanoAssert(isLInsP());
+    }
+    void LIns::initLInsI(LOpcode opcode, int32_t imm32) {
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        toLInsI()->imm32 = imm32;
+        NanoAssert(isLInsI());
+    }
+    void LIns::initLInsI64(LOpcode opcode, int64_t imm64) {
+        lastWord.clear();
+        lastWord.opcode = opcode;
+        toLInsI64()->imm64_0 = int32_t(imm64);
+        toLInsI64()->imm64_1 = int32_t(imm64 >> 32);
+        NanoAssert(isLInsI64());
+    }
+
+    LIns* LIns::oprnd1() const {
+        NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSti());
+        return toLInsOp2()->oprnd_1;
+    }
+    LIns* LIns::oprnd2() const {
+        NanoAssert(isLInsOp2() || isLInsOp3() || isLInsSti());
+        return toLInsOp2()->oprnd_2;
+    }
+    LIns* LIns::oprnd3() const {
+        NanoAssert(isLInsOp3());
+        return toLInsOp3()->oprnd_3;
+    }
+
+    LIns* LIns::getTarget() const {
+        NanoAssert(isBranch());
+        return oprnd2();
+    }
+
+    void LIns::setTarget(LIns* label) {
+        NanoAssert(label && label->isop(LIR_label));
+        NanoAssert(isBranch());
+        toLInsOp2()->oprnd_2 = label;
+    }
+
+    GuardRecord *LIns::record() const {
+        NanoAssert(isGuard());
+        return (GuardRecord*)oprnd2()->payload();
+    }
+
+    int32_t LIns::disp() const {
+        if (isLInsSti()) {
+            return toLInsSti()->disp;
+        } else {
+            NanoAssert(isLInsLd());
+            return toLInsLd()->disp;
+        }
+    }
+
+    void* LIns::payload() const {
+        NanoAssert(isop(LIR_skip));
+        // Operand 1 points to the previous LIns;  we move past it to get to
+        // the payload.
+        return (void*) (uintptr_t(prevLIns()) + sizeof(LIns));
+    }
+
+    LIns* LIns::prevLIns() const {
+        NanoAssert(isLInsSk());
+        return toLInsSk()->prevLIns;
+    }
+
+    inline uint8_t LIns::paramArg()  const { NanoAssert(isop(LIR_param)); return toLInsP()->arg; }
+    inline uint8_t LIns::paramKind() const { NanoAssert(isop(LIR_param)); return toLInsP()->kind; }
+
+    inline int32_t LIns::imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
+
+    inline int32_t LIns::imm64_0()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_0; }
+    inline int32_t LIns::imm64_1()   const { NanoAssert(isconstq()); return toLInsI64()->imm64_1; }
+    uint64_t       LIns::imm64()     const {
+        NanoAssert(isconstq());
+        return (uint64_t(toLInsI64()->imm64_1) << 32) | uint32_t(toLInsI64()->imm64_0);
+    }
+    double         LIns::imm64f()    const {
+        union {
+            double f;
+            uint64_t q;
+        } u;
+        u.q = imm64();
+        return u.f;
+    }
+
+    int32_t LIns::size() const {
+        NanoAssert(isop(LIR_alloc));
+        return toLInsI()->imm32 << 2;
+    }
+
+    void LIns::setSize(int32_t nbytes) {
+        NanoAssert(isop(LIR_alloc));
+        NanoAssert(nbytes > 0);
+        toLInsI()->imm32 = (nbytes+3)>>2; // # of required 32bit words
+    }
+
+    // Index args in r-l order.  arg(0) is rightmost arg.
+    // Nb: this must be kept in sync with insCall().
+    LIns* LIns::arg(uint32_t i) const
+    {
+        NanoAssert(isCall());
+        NanoAssert(i < argc());
+        // Move to the start of the LInsC, then move back one word per argument.
+        LInsp* argSlot = (LInsp*)(uintptr_t(toLInsC()) - (i+1)*sizeof(void*));
+        return *argSlot;
+    }
+
+    uint32_t LIns::argc() const {
+        NanoAssert(isCall());
+        return toLInsC()->argc;
+    }
+
+    LIns* LIns::callArgN(uint32_t n) const
+    {
+        return arg(argc()-n-1);
+    }
+
+    const CallInfo* LIns::callInfo() const
+    {
+        NanoAssert(isCall());
+        return toLInsC()->ci;
     }
 
     extern const int8_t operandCount[];
