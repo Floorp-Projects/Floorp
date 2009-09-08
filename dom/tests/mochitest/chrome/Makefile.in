@@ -56,12 +56,9 @@ _TEST_FILES = \
 		focus_frameset.html \
 		child_focus_frame.html \
 		test_focus_switchbinding.xul \
+		test_focus.xul \
+		window_focus.xul \
 		$(NULL)
-
-# disabled for now because it does bogus things with getElementById
-# See bug 514230
-# test_focus.xul \
-#		window_focus.xul \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
