@@ -429,8 +429,6 @@
 @BINPATH@/res/fonts/*
 @BINPATH@/res/dtd/*
 @BINPATH@/res/html/*
-@BINPATH@/res/charsetalias.properties
-@BINPATH@/res/charsetData.properties
 @BINPATH@/res/langGroups.properties
 @BINPATH@/res/language.properties
 @BINPATH@/res/entityTables/*

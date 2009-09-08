@@ -567,6 +567,8 @@ extensions/talkback@mozilla.org/components/talkback/talkback.so
 #endif
 components/airbag.xpt
 components/nsUrlClassifierTable.js
+res/charsetalias.properties
+res/charsetData.properties
 res/cmessage.txt
 res/html/gopher-audio.gif
 res/html/gopher-binary.gif
