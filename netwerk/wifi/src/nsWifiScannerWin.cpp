@@ -102,6 +102,12 @@ int PerformQuery(HANDLE &ndis_handle,
                  DWORD buffer_size,
                  BYTE *&data,
                  DWORD *bytes_out) {
+
+  NS_ASSERTION(buffer, "Buffer is null.  OOM?");
+
+  if (!buffer)
+    return ERROR_INSUFFICIENT_BUFFER;
+
   // Form the query parameters.
   NDISUIO_QUERY_OID *query = (NDISUIO_QUERY_OID*)(buffer);
   query->ptcDeviceName = const_cast<PTCHAR>(device_name);
@@ -393,6 +399,9 @@ nsWifiMonitor::DoScan()
         int result;
         
         while (true) {     
+
+          NS_ASSERTION(buffer && oid_buffer_size_ > 0);
+
           bytes_out = 0; 
 #ifdef WINCE
           result = PerformQuery(ndis_handle, service_name, buffer, oid_buffer_size_, data, &bytes_out);
