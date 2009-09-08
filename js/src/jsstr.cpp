@@ -2434,6 +2434,8 @@ static const jschar UnitStringData[] = {
 
 #define U(c) { 1 | JSString::ATOMIZED, {(jschar *)UnitStringData + (c) * 2} }
 
+#pragma pack(push, 8)
+
 JSString JSString::unitStringTable[] = {
     U(0x00), U(0x01), U(0x02), U(0x03), U(0x04), U(0x05), U(0x06), U(0x07),
     U(0x08), U(0x09), U(0x0a), U(0x0b), U(0x0c), U(0x0d), U(0x0e), U(0x0f),
@@ -2468,6 +2470,8 @@ JSString JSString::unitStringTable[] = {
     U(0xf0), U(0xf1), U(0xf2), U(0xf3), U(0xf4), U(0xf5), U(0xf6), U(0xf7),
     U(0xf8), U(0xf9), U(0xfa), U(0xfb), U(0xfc), U(0xfd), U(0xfe), U(0xff)
 };
+
+#pragma pack(pop)
 #undef U
 
 #define O0(c) 0x30, C(c)
@@ -2526,6 +2530,8 @@ static const jschar Hundreds[] = {
 #define L2(c) { 2 | JSString::ATOMIZED, {(jschar *)Hundreds + 41 + (c - 10) * 4} } /* length 2: 10..99 */
 #define L3(c) { 3 | JSString::ATOMIZED, {(jschar *)Hundreds + (c - 100) * 4} } /* length 3: 100..255 */
 
+#pragma pack(push, 8)
+
 JSString JSString::intStringTable[] = {
     L1(0x00), L1(0x01), L1(0x02), L1(0x03), L1(0x04), L1(0x05), L1(0x06), L1(0x07),
     L1(0x08), L1(0x09), L2(0x0a), L2(0x0b), L2(0x0c), L2(0x0d), L2(0x0e), L2(0x0f),
@@ -2560,6 +2566,8 @@ JSString JSString::intStringTable[] = {
     L3(0xf0), L3(0xf1), L3(0xf2), L3(0xf3), L3(0xf4), L3(0xf5), L3(0xf6), L3(0xf7),
     L3(0xf8), L3(0xf9), L3(0xfa), L3(0xfb), L3(0xfc), L3(0xfd), L3(0xfe), L3(0xff)
 };
+
+#pragma pack(pop)
 
 #undef C
 
