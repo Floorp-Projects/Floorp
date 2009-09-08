@@ -287,7 +287,7 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # 
 == 309914-1.xul 309914-1-ref.xul
 == 311366-unknown-inline-1.html 311366-unknown-inline-1-ref.html
 == 311366-unknown-block-1.html 311366-unknown-block-1-ref.html
-!= 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
+fails == 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
 == 311366-unknown-block-2.html 311366-unknown-block-2-ref.html
 == 311366-unknown-inline-2.html 311366-unknown-inline-2-ref.html
 == 311822-1.html 311822-1-ref-a.html
@@ -1311,4 +1311,8 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 507487-2.xhtml 507487-2-ref.xhtml
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
+== 513153-1a.html 513153-1-ref.html
+== 513153-1b.html 513153-1-ref.html
+== 513153-2a.html 513153-2-ref.html
+== 513153-2b.html 513153-2-ref.html
 == 512410.html 512410-ref.html
