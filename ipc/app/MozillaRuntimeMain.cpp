@@ -63,10 +63,6 @@ main(int argc, char* argv[])
     MessageBox(NULL, L"Hi", L"Hi", MB_OK);
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
-    gtk_init(0, 0);
-#endif
-
     GeckoProcessType proctype =
         XRE_StringToChildProcessType(argv[argc - 1]);
 
