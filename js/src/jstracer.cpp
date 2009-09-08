@@ -995,7 +995,7 @@ static LIns*
 demote(LirWriter *out, LIns* i)
 {
     if (i->isCall())
-        return callArgN(i, 0);
+        return i->callArgN(0);
     if (isi2f(i) || isu2f(i))
         return iu2fArg(i);
     if (i->isconst())
@@ -1309,24 +1309,24 @@ public:
             if (s0->isCall()) {
                 const CallInfo* ci2 = s0->callInfo();
                 if (ci2 == &js_UnboxDouble_ci) {
-                    LIns* args2[] = { callArgN(s0, 0) };
+                    LIns* args2[] = { s0->callArgN(0) };
                     return out->insCall(&js_UnboxInt32_ci, args2);
                 } else if (ci2 == &js_StringToNumber_ci) {
                     // callArgN's ordering is that as seen by the builtin, not as stored in
                     // args here. True story!
-                    LIns* args2[] = { callArgN(s0, 1), callArgN(s0, 0) };
+                    LIns* args2[] = { s0->callArgN(1), s0->callArgN(0) };
                     return out->insCall(&js_StringToInt32_ci, args2);
                 } else if (ci2 == &js_String_p_charCodeAt0_ci) {
                     // Use a fast path builtin for a charCodeAt that converts to an int right away.
-                    LIns* args2[] = { callArgN(s0, 0) };
+                    LIns* args2[] = { s0->callArgN(0) };
                     return out->insCall(&js_String_p_charCodeAt0_int_ci, args2);
                 } else if (ci2 == &js_String_p_charCodeAt_ci) {
-                    LIns* idx = callArgN(s0, 1);
+                    LIns* idx = s0->callArgN(1);
                     // If the index is not already an integer, force it to be an integer.
                     idx = isPromote(idx)
                         ? demote(out, idx)
                         : out->insCall(&js_DoubleToInt32_ci, &idx);
-                    LIns* args2[] = { idx, callArgN(s0, 0) };
+                    LIns* args2[] = { idx, s0->callArgN(0) };
                     return out->insCall(&js_String_p_charCodeAt_int_ci, args2);
                 }
             }
@@ -1338,7 +1338,7 @@ public:
                 return out->insCall(&js_BoxInt32_ci, args2);
             }
             if (s0->isCall() && s0->callInfo() == &js_UnboxDouble_ci)
-                return callArgN(s0, 0);
+                return s0->callArgN(0);
         }
         return out->insCall(ci, args);
     }
