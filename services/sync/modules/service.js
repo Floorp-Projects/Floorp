@@ -339,29 +339,20 @@ WeaveSvc.prototype = {
     dapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.dump")];
     root.addAppender(dapp);
 
-    let brief = Svc.Directory.get("ProfD", Ci.nsIFile);
-    brief.QueryInterface(Ci.nsILocalFile);
-    brief.append("weave");
-    brief.append("logs");
-    brief.append("brief-log.txt");
-    if (!brief.exists())
-      brief.create(brief.NORMAL_FILE_TYPE, PERMS_FILE);
-
-    let verbose = brief.parent.clone();
+    let verbose = Svc.Directory.get("ProfD", Ci.nsIFile);
+    verbose.QueryInterface(Ci.nsILocalFile);
+    verbose.append("weave");
+    verbose.append("logs");
     verbose.append("verbose-log.txt");
     if (!verbose.exists())
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    this._briefApp = new Log4Moz.RotatingFileAppender(brief, formatter);
-    this._briefApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.briefLog")];
-    root.addAppender(this._briefApp);
     this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter);
     this._debugApp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.debugLog")];
     root.addAppender(this._debugApp);
   },
 
   clearLogs: function WeaveSvc_clearLogs() {
-    this._briefApp.clear();
     this._debugApp.clear();
   },
 

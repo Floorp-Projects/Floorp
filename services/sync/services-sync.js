@@ -26,7 +26,6 @@ pref("extensions.weave.engine.tabs", true);
 
 pref("extensions.weave.log.appender.console", "Warn");
 pref("extensions.weave.log.appender.dump", "Error");
-pref("extensions.weave.log.appender.briefLog", "Info");
 pref("extensions.weave.log.appender.debugLog", "Trace");
 
 pref("extensions.weave.log.rootLogger", "Trace");
