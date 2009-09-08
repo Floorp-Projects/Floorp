@@ -3419,7 +3419,6 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(OBJ_IS_ARRAY(cx, proto));
 
-    JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = js_NewGCObject(cx, GCX_OBJECT);
     if (!obj)
         return NULL;
@@ -3440,9 +3439,8 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
 JS_DEFINE_CALLINFO_2(extern, OBJECT, js_NewEmptyArray, CONTEXT, OBJECT, 0, 0)
 
 JSObject* FASTCALL
-js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
+js_NewArrayWithSlots(JSContext* cx, JSObject* proto, uint32 len)
 {
-    JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = js_NewEmptyArray(cx, proto);
     if (!obj)
         return NULL;
@@ -3451,7 +3449,7 @@ js_NewUninitializedArray(JSContext* cx, JSObject* proto, uint32 len)
         return NULL;
     return obj;
 }
-JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewUninitializedArray, CONTEXT, OBJECT, UINT32, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArrayWithSlots, CONTEXT, OBJECT, UINT32, 0, 0)
 
 #endif /* JS_TRACER */
 
