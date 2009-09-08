@@ -393,13 +393,11 @@ libgnome/libgnome.h
 libgnomeui/gnome-icon-lookup.h
 libgnomeui/gnome-icon-theme.h
 libgnomeui/gnome-ui-init.h
-libgnomevfs/gnome-vfs-application-registry.h
 libgnomevfs/gnome-vfs-file-info.h
 libgnomevfs/gnome-vfs.h
 libgnomevfs/gnome-vfs-init.h
 libgnomevfs/gnome-vfs-mime.h
 libgnomevfs/gnome-vfs-mime-handlers.h
-libgnomevfs/gnome-vfs-mime-info.h
 libgnomevfs/gnome-vfs-mime-utils.h
 libgnomevfs/gnome-vfs-ops.h
 libgnomevfs/gnome-vfs-standard-callbacks.h
