@@ -74,6 +74,9 @@
 @BINPATH@/@MOZ_APP_NAME@.exe
 #else
 @BINPATH@/@MOZ_APP_NAME@-bin
+#ifndef XP_MACOSX
+@BINPATH@/@MOZ_APP_NAME@
+#endif
 #endif
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
@@ -359,6 +362,14 @@
 @BINPATH@/chrome/toolkit.jar
 @BINPATH@/chrome/toolkit.manifest
 @BINPATH@/@PREF_DIR@/reporter.js
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+@BINPATH@/chrome/icons/default/default16.png
+@BINPATH@/chrome/icons/default/default32.png
+@BINPATH@/chrome/icons/default/default48.png
+#endif
+#endif
+
 
 ; shell icons
 #ifndef XP_WIN32
