@@ -1232,37 +1232,6 @@ if [ "$MOZ_XTF" ]; then
   "
 fi
 
-if [ "$MOZ_XMLEXTRAS" ]; then
-  add_makefiles "
-    extensions/xmlextras/Makefile
-    extensions/xmlextras/pointers/Makefile
-    extensions/xmlextras/pointers/src/Makefile
-    extensions/xmlextras/build/Makefile
-    extensions/xmlextras/build/src/Makefile
-  "
-fi
-
-if [ "$MOZ_WEBSERVICES" ]; then
-  add_makefiles "
-    extensions/webservices/Makefile
-    extensions/webservices/build/Makefile
-    extensions/webservices/build/src/Makefile
-    extensions/webservices/interfaceinfo/Makefile
-    extensions/webservices/interfaceinfo/src/Makefile
-    extensions/webservices/proxy/Makefile
-    extensions/webservices/proxy/src/Makefile
-    extensions/webservices/public/Makefile
-    extensions/webservices/security/Makefile
-    extensions/webservices/security/src/Makefile
-    extensions/webservices/schema/Makefile
-    extensions/webservices/schema/src/Makefile
-    extensions/webservices/soap/Makefile
-    extensions/webservices/soap/src/Makefile
-    extensions/webservices/wsdl/Makefile
-    extensions/webservices/wsdl/src/Makefile
-  "
-fi
-
 if [ "$MOZ_JAVAXPCOM" ]; then
   add_makefiles "
     extensions/java/Makefile
