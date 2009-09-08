@@ -240,9 +240,31 @@ public:
                                                      nsGenericHTMLElement)
 
 protected:
+  class RemoveElementRunnable;
+  friend class RemoveElementRunnable;
+
+  class RemoveElementRunnable : public nsRunnable {
+  public:
+    RemoveElementRunnable(nsHTMLFormElement* aForm, PRBool aNotify):
+      mForm(aForm), mNotify(aNotify)
+    {}
+
+    NS_IMETHOD Run() {
+      mForm->HandleDefaultSubmitRemoval(mNotify);
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<nsHTMLFormElement> mForm;
+    PRBool mNotify;
+  };
+
   nsresult DoSubmitOrReset(nsEvent* aEvent,
                            PRInt32 aMessage);
   nsresult DoReset();
+
+  // Async callback to handle removal of our default submit
+  void HandleDefaultSubmitRemoval(PRBool aNotify);
 
   //
   // Submit Helpers
@@ -1497,43 +1519,56 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild,
   }
 
   if (aChild == mDefaultSubmitElement) {
-    // Need to reset mDefaultSubmitElement
-    if (!mFirstSubmitNotInElements) {
-      mDefaultSubmitElement = mFirstSubmitInElements;
-    } else if (!mFirstSubmitInElements) {
-      mDefaultSubmitElement = mFirstSubmitNotInElements;
-    } else {
-      NS_ASSERTION(mFirstSubmitInElements != mFirstSubmitNotInElements,
-                   "How did that happen?");
-      // Have both; use the earlier one
-      mDefaultSubmitElement =
-        CompareFormControlPosition(mFirstSubmitInElements,
-                                   mFirstSubmitNotInElements, this) < 0 ?
-          mFirstSubmitInElements : mFirstSubmitNotInElements;
-    }
+    // Need to reset mDefaultSubmitElement.  Do this asynchronously so
+    // that we're not doing it while the DOM is in flux.
+    mDefaultSubmitElement = nsnull;
+    nsContentUtils::AddScriptRunner(new RemoveElementRunnable(this, aNotify));
 
-    NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
-                     mDefaultSubmitElement == mFirstSubmitNotInElements,
-                     "What happened here?");
-
-    // Notify about change.  Note that we don't notify on the old default
-    // submit (which is being removed) because it's either being removed from
-    // the DOM or changing attributes in a way that makes it responsible for
-    // sending its own notifications.
-    if (aNotify && mDefaultSubmitElement) {
-      NS_ASSERTION(mDefaultSubmitElement != aChild,
-                   "Notifying but elements haven't changed.");
-      nsIDocument* document = GetCurrentDoc();
-      if (document) {
-        MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-        nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
-        document->ContentStatesChanged(newElement, nsnull,
-                                       NS_EVENT_STATE_DEFAULT);
-      }
-    }
+    // Note that we don't need to notify on the old default submit (which is
+    // being removed) because it's either being removed from the DOM or
+    // changing attributes in a way that makes it responsible for sending its
+    // own notifications.
   }
 
   return rv;
+}
+
+void
+nsHTMLFormElement::HandleDefaultSubmitRemoval(PRBool aNotify)
+{
+  if (mDefaultSubmitElement) {
+    // Already got reset somehow; nothing else to do here
+    return;
+  }
+
+  if (!mFirstSubmitNotInElements) {
+    mDefaultSubmitElement = mFirstSubmitInElements;
+  } else if (!mFirstSubmitInElements) {
+    mDefaultSubmitElement = mFirstSubmitNotInElements;
+  } else {
+    NS_ASSERTION(mFirstSubmitInElements != mFirstSubmitNotInElements,
+                 "How did that happen?");
+    // Have both; use the earlier one
+    mDefaultSubmitElement =
+      CompareFormControlPosition(mFirstSubmitInElements,
+                                 mFirstSubmitNotInElements, this) < 0 ?
+      mFirstSubmitInElements : mFirstSubmitNotInElements;
+  }
+
+  NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
+                   mDefaultSubmitElement == mFirstSubmitNotInElements,
+                   "What happened here?");
+
+  // Notify about change if needed.
+  if (aNotify && mDefaultSubmitElement) {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
+      nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
+      document->ContentStatesChanged(newElement, nsnull,
+                                     NS_EVENT_STATE_DEFAULT);
+    }
+  }
 }
 
 NS_IMETHODIMP
