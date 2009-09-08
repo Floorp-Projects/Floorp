@@ -399,7 +399,10 @@ var BrowserUI = {
 
   update : function(aState) {
     let icons = document.getElementById("urlbar-icons");
-    let uri = Browser.selectedBrowser.currentURI;
+
+    // Use documentURIObject in the favicon construction so that we
+    // do the right thing with about:-style error pages.  Bug 515188
+    let uri = Browser.selectedBrowser.contentDocument.documentURIObject;
 
     switch (aState) {
       case TOOLBARSTATE_LOADED:
