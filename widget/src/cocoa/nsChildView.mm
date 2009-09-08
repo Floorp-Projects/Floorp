@@ -2612,10 +2612,13 @@ NSEvent* gLastDragEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+#ifndef NP_NO_QUICKDRAW
   // Set the current GrafPort to a "safe" port before calling [NSQuickDrawView lockFocus],
   // so that the NSQuickDrawView stashes a pointer to this known-good port internally.
   // It will set the port back to this port on destruction.
   ::SetPort(NULL);  // todo: only do if a Quickdraw plugin is present in the hierarchy!
+#endif
+
   [super lockFocus];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
