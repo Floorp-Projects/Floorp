@@ -2436,7 +2436,11 @@ static const jschar UnitStringData[] = {
 
 #pragma pack(push, 8)
 
-JSString JSString::unitStringTable[] = {
+JSString JSString::unitStringTable[]
+#ifdef __GNUC__
+__attribute__ ((aligned (8)))
+#endif
+= {
     U(0x00), U(0x01), U(0x02), U(0x03), U(0x04), U(0x05), U(0x06), U(0x07),
     U(0x08), U(0x09), U(0x0a), U(0x0b), U(0x0c), U(0x0d), U(0x0e), U(0x0f),
     U(0x10), U(0x11), U(0x12), U(0x13), U(0x14), U(0x15), U(0x16), U(0x17),
@@ -2472,6 +2476,7 @@ JSString JSString::unitStringTable[] = {
 };
 
 #pragma pack(pop)
+
 #undef U
 
 #define O0(c) 0x30, C(c)
@@ -2532,7 +2537,11 @@ static const jschar Hundreds[] = {
 
 #pragma pack(push, 8)
 
-JSString JSString::intStringTable[] = {
+JSString JSString::intStringTable[]
+#ifdef __GNUC__
+__attribute__ ((aligned (8)))
+#endif
+= {
     L1(0x00), L1(0x01), L1(0x02), L1(0x03), L1(0x04), L1(0x05), L1(0x06), L1(0x07),
     L1(0x08), L1(0x09), L2(0x0a), L2(0x0b), L2(0x0c), L2(0x0d), L2(0x0e), L2(0x0f),
     L2(0x10), L2(0x11), L2(0x12), L2(0x13), L2(0x14), L2(0x15), L2(0x16), L2(0x17),
