@@ -1300,6 +1300,35 @@ class JSAutoTempIdRooter
     JSTempValueRooter mTvr;
 };
 
+class JSAutoIdArray {
+  public:
+    JSAutoIdArray(JSContext *cx, JSIdArray *ida) : cx(cx), idArray(ida) {
+        if (ida)
+            JS_PUSH_TEMP_ROOT(cx, ida->length, ida->vector, &tvr);
+    }
+    ~JSAutoIdArray() {
+        if (idArray) {
+            JS_POP_TEMP_ROOT(cx, &tvr);
+            JS_DestroyIdArray(cx, idArray);
+        }
+    }
+    bool operator!() {
+        return idArray == NULL;
+    }
+    jsid operator[](size_t i) const {
+        JS_ASSERT(idArray);
+        JS_ASSERT(i < size_t(idArray->length));
+        return idArray->vector[i];
+    }
+    size_t length() const {
+         return idArray->length;
+    }
+  private:
+    JSContext * const cx;
+    JSIdArray * const idArray;
+    JSTempValueRooter tvr;
+};
+
 /* The auto-root for enumeration object and its state. */
 class JSAutoEnumStateRooter : public JSTempValueRooter
 {

@@ -9614,9 +9614,9 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
                            offsetof(JSObject, fslots) + JSSLOT_ARRAY_LENGTH * sizeof(jsval));
         }
     } else {
-        // arr_ins = js_NewUninitializedArray(cx, Array.prototype, argc)
+        // arr_ins = js_NewArrayWithSlots(cx, Array.prototype, argc)
         LIns *args[] = { INS_CONST(argc), proto_ins, cx_ins };
-        arr_ins = lir->insCall(&js_NewUninitializedArray_ci, args);
+        arr_ins = lir->insCall(&js_NewArrayWithSlots_ci, args);
         guard(false, lir->ins_peq0(arr_ins), OOM_EXIT);
 
         // arr->dslots[i] = box_jsval(vp[i]);  for i in 0..argc
@@ -13658,7 +13658,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
     cx->fp->assertValidStackDepth(len);
 
     LIns* args[] = { lir->insImm(len), proto_ins, cx_ins };
-    LIns* v_ins = lir->insCall(&js_NewUninitializedArray_ci, args);
+    LIns* v_ins = lir->insCall(&js_NewArrayWithSlots_ci, args);
     guard(false, lir->ins_peq0(v_ins), OOM_EXIT);
 
     LIns* dslots_ins = NULL;
