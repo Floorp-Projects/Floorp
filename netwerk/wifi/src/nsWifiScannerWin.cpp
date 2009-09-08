@@ -400,7 +400,7 @@ nsWifiMonitor::DoScan()
         
         while (true) {     
 
-          NS_ASSERTION(buffer && oid_buffer_size_ > 0);
+          NS_ASSERTION(buffer && oid_buffer_size_ > 0, "buffer must not be null, and the size must be larger than 0");
 
           bytes_out = 0; 
 #ifdef WINCE
