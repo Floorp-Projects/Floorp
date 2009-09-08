@@ -38,6 +38,7 @@
 
 #include "PluginInstanceChild.h"
 #include "BrowserStreamChild.h"
+#include "StreamNotifyChild.h"
 
 #if defined(OS_LINUX)
 
@@ -381,6 +382,7 @@ PBrowserStreamChild*
 PluginInstanceChild::PBrowserStreamConstructor(const nsCString& url,
                                                const uint32_t& length,
                                                const uint32_t& lastmodified,
+                                               const PStreamNotifyChild* notifyData,
                                                const nsCString& headers,
                                                const nsCString& mimeType,
                                                const bool& seekable,
@@ -397,6 +399,29 @@ PluginInstanceChild::PBrowserStreamDestructor(PBrowserStreamChild* stream,
                                               const bool& artificial)
 {
     delete stream;
+    return NS_OK;
+}
+
+PStreamNotifyChild*
+PluginInstanceChild::PStreamNotifyConstructor(const nsCString& url,
+                                              const nsCString& target,
+                                              const bool& post,
+                                              const nsCString& buffer,
+                                              const bool& file,
+                                              NPError* result)
+{
+    NS_RUNTIMEABORT("not reached");
+    return NULL;
+}
+
+nsresult
+PluginInstanceChild::PStreamNotifyDestructor(PStreamNotifyChild* notifyData,
+                                             const NPReason& reason)
+{
+    StreamNotifyChild* sn = static_cast<StreamNotifyChild*>(notifyData);
+    mPluginIface->urlnotify(&mData, sn->mURL.get(), reason, sn->mClosure);
+    delete sn;
+
     return NS_OK;
 }
 
