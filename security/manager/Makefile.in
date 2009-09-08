@@ -160,8 +160,10 @@ ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
 export DLLFLAGS
 endif
 
+ifndef WINCE
 # To get debug symbols from NSS
 export MOZ_DEBUG_SYMBOLS
+endif
 
 ifdef .PYMAKE
 NSSMAKE = $(GMAKE)
