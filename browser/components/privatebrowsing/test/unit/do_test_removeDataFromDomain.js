@@ -564,6 +564,7 @@ function test_cache_cleared()
     observe: function(aSubject, aTopic, aData)
     {
       os.removeObserver(observer, "cacheservice:empty-cache");
+      shutdownPlaces();
       do_test_finished();
     }
   };
