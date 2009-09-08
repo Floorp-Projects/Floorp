@@ -2756,6 +2756,71 @@ obj_defineProperties(JSContext* cx, uintN argc, jsval* vp)
     return JS_TRUE;
 }
 
+/* ES5 15.2.3.5: Object.create(O [, Properties]) */
+static JSBool
+obj_create(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc == 0) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "Object.create", "0", "s");
+        return JS_FALSE;
+    }
+
+    jsval v = vp[2];
+    if (!JSVAL_IS_OBJECT(vp[2])) {
+        char *bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        if (!bytes)
+            return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
+                             bytes, "not an object or null");
+        JS_free(cx, bytes);
+        return JS_FALSE;
+    }
+
+    /*
+     * It's plausible that it's safe to just use the context's global object,
+     * but since we're not completely sure, better safe than sorry.
+     */
+    JSObject *obj =
+        js_NewObjectWithGivenProto(cx, &js_ObjectClass, JSVAL_TO_OBJECT(v), JS_GetScopeChain(cx));
+    if (!obj)
+        return JS_FALSE;
+    *vp = OBJECT_TO_JSVAL(obj); /* Root and prepare for eventual return. */
+
+    /* 15.2.3.5 step 4. */
+    if (argc > 1 && vp[3] != JSVAL_VOID) {
+        if (JSVAL_IS_PRIMITIVE(vp[3])) {
+            js_ReportValueError(cx, JSMSG_NOT_NONNULL_OBJECT, -1, vp[3], NULL);
+            return JS_FALSE;
+        }
+
+        JSObject *props = JSVAL_TO_OBJECT(vp[3]);
+        JSAutoIdArray ida(cx, JS_Enumerate(cx, props));
+        if (!ida)
+            return JS_FALSE;
+
+        AutoDescriptorArray descs(cx);
+        size_t len = ida.length();
+        for (size_t i = 0; i < len; i++) {
+            PropertyDescriptor desc;
+            jsid id = ida[i];
+            if (!JS_GetPropertyById(cx, props, id, &vp[1]) || !desc.initialize(cx, id, vp[1]) ||
+                !descs.append(desc)) {
+                return JS_FALSE;
+            }
+        }
+
+        bool dummy;
+        for (size_t i = 0; i < len; i++) {
+            if (!DefineProperty(cx, obj, descs[i], true, &dummy))
+                return JS_FALSE;
+        }
+    }
+
+    /* 5. Return obj. */
+    return JS_TRUE;
+}
+
 
 #if JS_HAS_OBJ_WATCHPOINT
 const char js_watch_str[] = "watch";
@@ -2807,6 +2872,7 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FN("keys",                      obj_keys,                    1,0),
     JS_FN("defineProperty",            obj_defineProperty,          3,0),
     JS_FN("defineProperties",          obj_defineProperties,        2,0),
+    JS_FN("create",                    obj_create,                  2,0),
     JS_FS_END
 };
 
