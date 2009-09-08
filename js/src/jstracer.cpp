@@ -2973,21 +2973,21 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 
 /* Write back a value onto the stack or global frames. */
 LIns*
-TraceRecorder::writeBack(LIns* i, LIns* base, ptrdiff_t offset)
+TraceRecorder::writeBack(LIns* i, LIns* base, ptrdiff_t offset, bool demote)
 {
     /*
      * Sink all type casts targeting the stack into the side exit by simply storing the original
      * (uncasted) value. Each guard generates the side exit map based on the types of the
      * last stores to every stack location, so it's safe to not perform them on-trace.
      */
-    if (isPromoteInt(i))
+    if (demote && isPromoteInt(i))
         i = ::demote(lir, i);
     return lir->insStorei(i, base, offset);
 }
 
 /* Update the tracker, then issue a write back store. */
 JS_REQUIRES_STACK void
-TraceRecorder::set(jsval* p, LIns* i, bool initializing)
+TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
 {
     JS_ASSERT(i != NULL);
     JS_ASSERT(initializing || known(p));
@@ -3003,9 +3003,9 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
     LIns* x = nativeFrameTracker.get(p);
     if (!x) {
         if (isGlobal(p))
-            x = writeBack(i, lirbuf->state, nativeGlobalOffset(p));
+            x = writeBack(i, lirbuf->state, nativeGlobalOffset(p), demote);
         else
-            x = writeBack(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(p));
+            x = writeBack(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(p), demote);
         nativeFrameTracker.set(p, x);
     } else {
 #define ASSERT_VALID_CACHE_HIT(base, offset)                                  \
@@ -3016,7 +3016,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 
         JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
         ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->disp());
-        writeBack(i, x->oprnd2(), x->disp());
+        writeBack(i, x->oprnd2(), x->disp(), demote);
     }
 #undef ASSERT_VALID_CACHE_HIT
 }
@@ -3751,7 +3751,10 @@ class SlotMap : public SlotVisitorBase
                 mRecorder.set(info.v, mRecorder.f2i(mRecorder.get(info.v)));
             } else if (info.lastCheck == TypeCheck_Demote) {
                 JS_ASSERT(isNumber(*info.v));
-                mRecorder.set(info.v, mRecorder.lir->ins1(LIR_i2f, mRecorder.get(info.v)));
+                JS_ASSERT(mRecorder.get(info.v)->isQuad());
+
+                /* Never demote this final i2f. */
+                mRecorder.set(info.v, mRecorder.get(info.v), false, false);
             }
         }
     }
