@@ -2046,6 +2046,53 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 }
 
+static JSBool
+obj_keys(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval v = argc == 0 ? JSVAL_VOID : vp[2];
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
+        return JS_FALSE;
+    }
+
+    JSObject *obj = JSVAL_TO_OBJECT(v);
+    JSAutoIdArray ida(cx, JS_Enumerate(cx, obj));
+    if (!ida)
+        return JS_FALSE;
+
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(JSProto_Array), &proto))
+        return JS_FALSE;
+    vp[1] = OBJECT_TO_JSVAL(proto);
+
+    JSObject *aobj = js_NewArrayWithSlots(cx, proto, ida.length());
+    if (!aobj)
+        return JS_FALSE;
+    *vp = OBJECT_TO_JSVAL(aobj);
+
+    jsval *slots = aobj->dslots;
+    size_t len = ida.length();
+    JS_ASSERT(js_DenseArrayCapacity(aobj) >= len);
+    for (size_t i = 0; i < len; i++) {
+        jsid id = ida[i];
+        if (JSID_IS_INT(id)) {
+            if (!js_ValueToStringId(cx, INT_JSID_TO_JSVAL(id), &slots[i]))
+                return JS_FALSE;
+        } else {
+            /*
+             * Object-valued ids are a possibility admitted by SpiderMonkey for
+             * the purposes of E4X.  It's unclear whether they could ever be
+             * detected here -- the "obvious" possibility, a property referred
+             * to by a QName, actually appears as a string jsid -- but in the
+             * interests of fidelity we pass object jsids through unchanged.
+             */
+            slots[i] = ID_TO_VALUE(id);
+        }
+    }
+
+    return JS_TRUE;
+}
+
 
 #if JS_HAS_OBJ_WATCHPOINT
 const char js_watch_str[] = "watch";
@@ -2094,6 +2141,7 @@ static JSFunctionSpec object_methods[] = {
 static JSFunctionSpec object_static_methods[] = {
     JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
     JS_FN("getOwnPropertyDescriptor",  obj_getOwnPropertyDescriptor,2,0),
+    JS_FN("keys",                      obj_keys,                    1,0),
     JS_FS_END
 };
 
