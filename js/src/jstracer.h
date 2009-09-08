@@ -732,8 +732,10 @@ class TraceRecorder : public avmplus::GCObject {
 
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
-    nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset);
-    JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool initializing = false);
+    nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset,
+                             bool demote);
+    JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool initializing = false,
+                               bool demote = true);
     JS_REQUIRES_STACK nanojit::LIns* get(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* addr(jsval* p);
 
