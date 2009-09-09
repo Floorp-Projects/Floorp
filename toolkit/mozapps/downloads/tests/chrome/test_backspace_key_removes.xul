@@ -160,39 +160,41 @@ function test()
       if (aTopic != DLMGR_UI_DONE)
         return;
 
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.focus();
-      let doc = win.document;
-
-      let stmt = db.createStatement("SELECT COUNT(*) FROM moz_downloads");
-      try {
-        stmt.executeStep();
-        let richlistbox = doc.getElementById("downloadView");
-        is(stmt.getInt32(0), richlistbox.children.length,
-           "The database and the number of downloads display matches");
-        stmt.reset();
-
-        let len = DownloadData.length;
-        for (let i = 0; i < len; i++) {
-          synthesizeKey("VK_BACK_SPACE", {}, win);
-
-          stmt.executeStep();
-          is(stmt.getInt32(0), len - (i + 1),
-             "The download was properly removed");
-          stmt.reset();
-        }
-      }
-      finally {
-        stmt.reset();
-        stmt.finalize();
-      }
-
-      win.close();
-      dmFile.remove(false);
-      os.removeObserver(testObs, DLMGR_UI_DONE);
-      SimpleTest.finish();
+      SimpleTest.waitForFocus(function () { deleteDownload(aSubject) }, aSubject);
     }
   };
+
+  function deleteDownload(win) {
+    let doc = win.document;
+
+    let stmt = db.createStatement("SELECT COUNT(*) FROM moz_downloads");
+    try {
+      stmt.executeStep();
+      let richlistbox = doc.getElementById("downloadView");
+      is(stmt.getInt32(0), richlistbox.children.length,
+         "The database and the number of downloads display matches");
+      stmt.reset();
+
+      let len = DownloadData.length;
+      for (let i = 0; i < len; i++) {
+        synthesizeKey("VK_BACK_SPACE", {}, win);
+
+        stmt.executeStep();
+        is(stmt.getInt32(0), len - (i + 1),
+           "The download was properly removed");
+        stmt.reset();
+      }
+    }
+    finally {
+      stmt.reset();
+      stmt.finalize();
+    }
+
+    win.close();
+    dmFile.remove(false);
+    os.removeObserver(testObs, DLMGR_UI_DONE);
+    SimpleTest.finish();
+  }
 
   // Register with the observer service
   os.addObserver(testObs, DLMGR_UI_DONE, false);

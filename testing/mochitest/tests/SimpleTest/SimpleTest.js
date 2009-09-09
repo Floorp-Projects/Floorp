@@ -258,7 +258,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow) {
             SimpleTest.waitForFocus_focused &&
             !SimpleTest.waitForFocus_started) {
             SimpleTest.waitForFocus_started = true;
-            callback();
+            setTimeout(callback, 0);
         }
     }
 
@@ -267,7 +267,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow) {
         targetWindow.removeEventListener(event.type, waitForEvent, false);
         if (event.type == "MozAfterPaint")
           ok(true, "MozAfterPaint event received");
-        setTimeout(maybeRunTests, 0);
+        maybeRunTests();
     }
 
     // wait for the page to load if it hasn't already
