@@ -34,11 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _IPC_TESTSHELL_TESTSHELLCHILD_H_
-#define _IPC_TESTSHELL_TESTSHELLCHILD_H_
+#ifndef ipc_testshell_TestShellChild_h
+#define ipc_testshell_TestShellChild_h 1
 
-#include "mozilla/ipc/TestShellProtocolChild.h"
-#include "mozilla/ipc/TestShellCommandProtocolChild.h"
+#include "mozilla/ipc/PTestShellProtocolChild.h"
+#include "mozilla/ipc/PTestShellCommandProtocolChild.h"
 #include "mozilla/ipc/XPCShellEnvironment.h"
 
 #include "nsAutoPtr.h"
@@ -48,7 +48,7 @@ namespace ipc {
 
 class XPCShellEnvironment;
 
-class TestShellChild : public TestShellProtocolChild
+class TestShellChild : public PTestShellProtocolChild
 {
 public:
   TestShellChild();
@@ -56,16 +56,16 @@ public:
   nsresult
   RecvExecuteCommand(const nsString& aCommand);
 
-  TestShellCommandProtocolChild*
-  TestShellCommandConstructor(const nsString& aCommand);
+  PTestShellCommandProtocolChild*
+  PTestShellCommandConstructor(const nsString& aCommand);
 
   nsresult
-  RecvTestShellCommandConstructor(TestShellCommandProtocolChild* aActor,
-                                  const nsString& aCommand);
+  RecvPTestShellCommandConstructor(PTestShellCommandProtocolChild* aActor,
+                                   const nsString& aCommand);
 
   nsresult
-  TestShellCommandDestructor(TestShellCommandProtocolChild* aCommand,
-                             const nsString& aResponse);
+  PTestShellCommandDestructor(PTestShellCommandProtocolChild* aCommand,
+                              const nsString& aResponse);
 
   void SetXPCShell(XPCShellEnvironment* aXPCShell) {
     mXPCShell = aXPCShell;
@@ -78,4 +78,4 @@ private:
 } /* namespace ipc */
 } /* namespace mozilla */
 
-#endif /* _IPC_TESTSHELL_TESTSHELLCHILD_H_ */
+#endif /* ipc_testshell_TestShellChild_h */

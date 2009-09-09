@@ -37,7 +37,7 @@
 #include "TestShellChild.h"
 
 using mozilla::ipc::TestShellChild;
-using mozilla::ipc::TestShellCommandProtocolChild;
+using mozilla::ipc::PTestShellCommandProtocolChild;
 using mozilla::ipc::XPCShellEnvironment;
 
 TestShellChild::TestShellChild()
@@ -56,15 +56,15 @@ TestShellChild::RecvExecuteCommand(const nsString& aCommand)
   return mXPCShell->EvaluateString(aCommand) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-TestShellCommandProtocolChild*
-TestShellChild::TestShellCommandConstructor(const nsString& aCommand)
+PTestShellCommandProtocolChild*
+TestShellChild::PTestShellCommandConstructor(const nsString& aCommand)
 {
-  return new TestShellCommandProtocolChild();
+  return new PTestShellCommandProtocolChild();
 }
 
 nsresult
-TestShellChild::TestShellCommandDestructor(TestShellCommandProtocolChild* aCommand,
-                                           const nsString& aResponse)
+TestShellChild::PTestShellCommandDestructor(PTestShellCommandProtocolChild* aCommand,
+                                            const nsString& aResponse)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   delete aCommand;
@@ -72,8 +72,8 @@ TestShellChild::TestShellCommandDestructor(TestShellCommandProtocolChild* aComma
 }
 
 nsresult
-TestShellChild::RecvTestShellCommandConstructor(TestShellCommandProtocolChild* aActor,
-                                                const nsString& aCommand)
+TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandProtocolChild* aActor,
+                                                 const nsString& aCommand)
 {
   NS_ASSERTION(aActor, "Shouldn't be null!");
 
@@ -87,7 +87,7 @@ TestShellChild::RecvTestShellCommandConstructor(TestShellCommandProtocolChild* a
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = SendTestShellCommandDestructor(aActor, response);
+  nsresult rv = SendPTestShellCommandDestructor(aActor, response);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

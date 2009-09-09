@@ -12,10 +12,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla IPDL Test Harness.
+ * The Original Code is Mozilla IPCShell.
  *
  * The Initial Developer of the Original Code is
- *   Chris Jones <jones.chris.g@gmail.com>.
+ *   Ben Turner <bent.mozilla@gmail.com>.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,33 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ipc_test_harness_TestProcessParent_h
-#define ipc_test_harness_TestProcessParent_h 1
-
-#include "mozilla/ipc/GeckoChildProcessHost.h"
+include protocol "PTestShell.ipdl";
 
 namespace mozilla {
-namespace test {
-//-----------------------------------------------------------------------------
+namespace ipc {
 
-class TestProcessParent : public mozilla::ipc::GeckoChildProcessHost
+protocol PTestShellCommand
 {
-public:
-    TestProcessParent();
-    ~TestProcessParent();
-
-    /**
-     * Asynchronously launch the plugin process.
-     */
-    // Could override parent Launch, but don't need to here
-    //bool Launch();
-
-private:
-    DISALLOW_EVIL_CONSTRUCTORS(TestProcessParent);
+  manager PTestShell;
 };
 
-
-} // namespace plugins
+} // namespace ipc
 } // namespace mozilla
-
-#endif // ifndef ipc_test_harness_TestProcessParent_h

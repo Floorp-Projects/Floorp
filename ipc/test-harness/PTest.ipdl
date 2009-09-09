@@ -35,33 +35,75 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ipc_test_harness_TestProcessParent_h
-#define ipc_test_harness_TestProcessParent_h 1
+//-----------------------------------------------------------------------------
+// "Hello world" example
+namespace mozilla {
+namespace test {
 
-#include "mozilla/ipc/GeckoChildProcessHost.h"
+protocol PTest
+{
+child:
+    Hello();
+
+parent:
+    World();
+};
+
+} // namespace test
+} // namespace mozilla
+
+//-----------------------------------------------------------------------------
+// Example solution to exercise
+ /*
+include "nsTArray.h";
+using nsTArray<nsCString>;
 
 namespace mozilla {
 namespace test {
-//-----------------------------------------------------------------------------
-
-class TestProcessParent : public mozilla::ipc::GeckoChildProcessHost
+ 
+sync protocol PTest
 {
-public:
-    TestProcessParent();
-    ~TestProcessParent();
+both:
+    Ping();
+    Pong(int status);
 
-    /**
-     * Asynchronously launch the plugin process.
-     */
-    // Could override parent Launch, but don't need to here
-    //bool Launch();
+parent:
+    GetValue(nsCString key);
+    GetValues(nsTArray<nsCString> keys);
+    sync SetValue(nsCString key, nsCString val) returns (bool ok);
 
-private:
-    DISALLOW_EVIL_CONSTRUCTORS(TestProcessParent);
+child:
+    TellValue(nsCString key, nsCString val);
+    TellValues(nsTArray<nsCString> keys, nsTArray<nsCString> vals);
+
+state START:
+    send Ping goto START;
+    recv Pong goto START;
+
+    recv SetValue goto HAVE_VALUES;
+
+state HAVE_VALUES:
+    send Ping goto HAVE_VALUES;
+    recv Pong goto HAVE_VALUES;
+
+    recv SetValue goto HAVE_VALUES;
+
+    recv GetValue goto TELLING_VALUE;
+    recv GetValues goto TELLING_VALUES;
+
+state TELLING_VALUE:
+    send Ping goto TELLING_VALUE;
+    recv Pong goto TELLING_VALUE;
+
+    send TellValue goto HAVE_VALUES;
+
+state TELLING_VALUES:
+    send Ping goto TELLING_VALUES;
+    recv Pong goto TELLING_VALUES;
+
+    send TellValues goto HAVE_VALUES;
 };
 
-
-} // namespace plugins
+} // namespace test
 } // namespace mozilla
-
-#endif // ifndef ipc_test_harness_TestProcessParent_h
+*/
