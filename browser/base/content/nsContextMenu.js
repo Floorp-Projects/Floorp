@@ -155,7 +155,7 @@ nsContextMenu.prototype = {
       catch (ex) { }
  
       var onPlainTextLink = false;
-      if (uri && /^(https?|ftp)/i.test(uri.scheme) && uri.host) {
+      if (uri && /^(https?|ftp)$/i.test(uri.scheme) && uri.host) {
         this.linkURI = uri;
         this.linkURL = this.linkURI.spec;
         onPlainTextLink = true;
