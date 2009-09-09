@@ -137,6 +137,17 @@ BookmarksEngine.prototype = {
     }
     // TODO for bookmarks, check if it exists and find guid
     // for everything else (folders, separators) look for parent/pred?
+  },
+
+  _handleDupe: function _handleDupe(item, dupeId) {
+    // The local dupe has the lower id, so make it the winning id
+    if (dupeId < item.id)
+      [item.id, dupeId] = [dupeId, item.id];
+
+    // Trigger id change from dupe to winning and update the server
+    this._store.changeItemID(dupeId, item.id);
+    this._deleteId(dupeId);
+    this._tracker.changedIDs[item.id] = true;
   }
 };
 
@@ -199,12 +210,22 @@ BookmarksStore.prototype = {
     return idForGUID(id) > 0;
   },
 
+  // Hash of old GUIDs to the new renamed GUIDs
+  aliases: {},
+
   applyIncoming: function BStore_applyIncoming(record) {
     // Ignore (accidental?) root changes
     if (record.id in kSpecialIds) {
       this._log.debug("Skipping change to root node: " + record.id);
       return;
     }
+
+    // Convert GUID fields to the aliased GUID if necessary
+    ["id", "parentid", "predecessorid"].forEach(function(field) {
+      let alias = this.aliases[record[field]];
+      if (alias != null)
+        record[field] = alias;
+    }, this);
 
     // Preprocess the record before doing the normal apply
     switch (record.type) {
@@ -280,6 +301,10 @@ BookmarksStore.prototype = {
     // Do some post-processing if we have an item
     let itemId = idForGUID(record.id);
     if (itemId > 0) {
+      // Move any children that is looking for this folder as a parent
+      if (record.type == "folder")
+        this._reparentOrphans(itemId);
+
       // Create an annotation to remember that it needs a parent
       // XXX Work around Bug 510628 by prepending parenT
       if (record._orphan)
@@ -308,6 +333,30 @@ BookmarksStore.prototype = {
 
     return Svc.Annos.getItemsWithAnnotation(anno, {}).filter(function(id)
       Utils.anno(id, anno) == val);
+  },
+
+  /**
+   * For the provided parent item, attach its children to it
+   */
+  _reparentOrphans: function _reparentOrphans(parentId) {
+    // Find orphans and reunite with this folder parent
+    let parentGUID = GUIDForId(parentId);
+    let orphans = this._findAnnoItems(PARENT_ANNO, parentGUID);
+
+    this._log.debug("Reparenting orphans " + orphans + " to " + parentId);
+    orphans.forEach(function(orphan) {
+      // Append the orphan under the parent unless it's supposed to be first
+      let insertPos = Svc.Bookmark.DEFAULT_INDEX;
+      if (!Svc.Annos.itemHasAnnotation(orphan, PREDECESSOR_ANNO))
+        insertPos = 0;
+
+      // Move the orphan to the parent and drop the missing parent annotation
+      Svc.Bookmark.moveItem(orphan, parentId, insertPos);
+      Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
+    });
+    
+    // Fix up the ordering of the now-parented items
+    orphans.forEach(this._attachFollowers, this);
   },
 
   /**
@@ -430,25 +479,6 @@ BookmarksStore.prototype = {
 
     this._log.trace("Setting GUID of new item " + newId + " to " + record.id);
     this._setGUID(newId, record.id);
-
-    // Find orphans and reunite with this new folder parent
-    if (record.type == "folder") {
-      let orphans = this._findAnnoItems(PARENT_ANNO, record.id);
-      this._log.debug("Reparenting orphans " + orphans + " to " + record.title);
-      orphans.map(function(orphan) {
-        // Append the orphan under the parent unless it's supposed to be first
-        let insertPos = Svc.Bookmark.DEFAULT_INDEX;
-        if (!Svc.Annos.itemHasAnnotation(orphan, PREDECESSOR_ANNO))
-          insertPos = 0;
-
-        // Move the orphan to the parent and drop the missing parent annotation
-        Svc.Bookmark.moveItem(orphan, newId, insertPos);
-        Svc.Annos.removeItemAnnotation(orphan, PARENT_ANNO);
-
-        // Return the now-parented orphan so it can attach its followers
-        return orphan;
-      }).forEach(this._attachFollowers, this);
-    }
   },
 
   remove: function BStore_remove(record) {
@@ -551,14 +581,22 @@ BookmarksStore.prototype = {
   },
 
   changeItemID: function BStore_changeItemID(oldID, newID) {
+    // Remember the GUID change for incoming records and avoid invalid refs
+    this.aliases[oldID] = newID;
+    this.cache.clear();
+
+    // Update any existing annotation references
+    this._findAnnoItems(PARENT_ANNO, oldID).forEach(function(itemId) {
+      Utils.anno(itemId, PARENT_ANNO, "T" + newID);
+    }, this);
+    this._findAnnoItems(PREDECESSOR_ANNO, oldID).forEach(function(itemId) {
+      Utils.anno(itemId, PREDECESSOR_ANNO, "R" + newID);
+    }, this);
+
+    // Make sure there's an item to change GUIDs
     let itemId = idForGUID(oldID);
-    if (itemId == null) // toplevel folder
+    if (itemId <= 0)
       return;
-    if (itemId <= 0) {
-      this._log.warn("Can't change GUID " + oldID + " to " +
-                      newID + ": Item does not exist");
-      return;
-    }
 
     this._log.debug("Changing GUID " + oldID + " to " + newID);
     this._setGUID(itemId, newID);
