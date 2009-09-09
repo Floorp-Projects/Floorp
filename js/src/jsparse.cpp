@@ -3041,18 +3041,11 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     pn->pn_dflags |= PND_LET | PND_BOUND;
 
     /*
-     * Use JSPROP_ENUMERATE to aid the disassembler. Define the let binding's
-     * property before storing pn in a reserved slot, since block_reserveSlots
-     * depends on OBJ_SCOPE(blockObj)->entryCount.
+     * Define the let binding's property before storing pn in a reserved slot,
+     * since block_reserveSlots depends on OBJ_SCOPE(blockObj)->entryCount.
      */
-    if (!js_DefineNativeProperty(cx, blockObj, ATOM_TO_JSID(atom), JSVAL_VOID,
-                                 NULL, NULL,
-                                 JSPROP_ENUMERATE |
-                                 JSPROP_PERMANENT |
-                                 JSPROP_SHARED,
-                                 SPROP_HAS_SHORTID, (int16) n, NULL)) {
+    if (!js_DefineBlockVariable(cx, blockObj, ATOM_TO_JSID(atom), n))
         return JS_FALSE;
-    }
 
     /*
      * Store pn temporarily in what would be reserved slots in a cloned block

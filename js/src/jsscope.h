@@ -237,7 +237,7 @@ struct JSScope {
      * and the same freeslot as this had when empty.
      *
      * If |this| is the scope of an object |proto|, the resulting scope can be
-     * used the scope of a new object whose prototype is |proto|.
+     * used as the scope of a new object whose prototype is |proto|.
      */
     JSScope *getEmptyScope(JSContext *cx, JSClass *clasp) {
         if (emptyScope) {
