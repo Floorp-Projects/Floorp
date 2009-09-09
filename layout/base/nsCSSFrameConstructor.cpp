@@ -9106,14 +9106,14 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
 
 #ifdef ACCESSIBILITY
   if (mPresShell->IsAccessibilityActive()) {
-    PRUint32 event;
+    PRUint32 changeType;
     if (frame) {
       nsIFrame *newFrame = mPresShell->GetPrimaryFrameFor(aContent);
-      event = newFrame ? PRUint32(nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE) :
-                         PRUint32(nsIAccessibleEvent::EVENT_ASYNCH_HIDE);
+      changeType = newFrame ? nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE :
+                              nsIAccessibilityService::FRAME_HIDE;
     }
     else {
-      event = nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
+      changeType = nsIAccessibilityService::FRAME_SHOW;
     }
 
     // A significant enough change occured that this part
@@ -9121,7 +9121,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
     nsCOMPtr<nsIAccessibilityService> accService = 
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
-      accService->InvalidateSubtreeFor(mPresShell, aContent, event);
+      accService->InvalidateSubtreeFor(mPresShell, aContent, changeType);
     }
   }
 #endif

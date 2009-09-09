@@ -28,6 +28,8 @@
     const kAddElm = 3;
     const kShowElm = 4;
 
+    const kToDo = true;
+
     /**
      * Base class to test of mutation events coalescence.
      */
@@ -64,8 +66,9 @@
         if (!aIsChildsToDo)
           return;
 
+        var eventType = eventTypeToString(this.getEventType(aChildAction));
         todo(false,
-             "Unexpected event " + this.getEventType(aChildAction) +
+             "Unexpected event " + eventType +
              " for child in the test '" + this.getID() + "'");
       }
 
@@ -100,14 +103,10 @@
       this.getEventType = function coalescenceBase_getEventType(aAction)
       {
         switch (aAction) {
-          case kRemoveElm:
-            return EVENT_DOM_DESTROY;
-          case kHideElm:
-            return EVENT_ASYNCH_HIDE;
-          case kAddElm:
-            return EVENT_DOM_CREATE;
-          case kShowElm:
-            return EVENT_ASYNCH_SHOW;
+          case kRemoveElm: case kHideElm:
+            return EVENT_HIDE;
+          case kAddElm: case kShowElm:
+            return EVENT_SHOW;
         }
       }
 
@@ -152,7 +151,7 @@
     /**
      * Remove or hide mutation events coalescence testing.
      */
-    function removeOrHidecoalescenceBase(aChildID, aParentID,
+    function removeOrHideCoalescenceBase(aChildID, aParentID,
                                          aChildAction, aParentAction,
                                          aPerformActionOnChildInTheFirstPlace,
                                          aIsChildsToDo)
@@ -161,7 +160,7 @@
                                            aPerformActionOnChildInTheFirstPlace,
                                            aIsChildsToDo);
 
-      this.init = function removeOrHidecoalescenceBase_init()
+      this.init = function removeOrHideCoalescenceBase_init()
       {
         this.childNode = getNode(aChildID);
         this.parentNode = getNode(aParentID);
@@ -185,9 +184,9 @@
      */
     function removeChildNParent(aChildID, aParentID)
     {
-      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+      this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kRemoveElm,
-                                                       true, true);
+                                                       true, kToDo);
     }
 
     /**
@@ -195,7 +194,7 @@
      */
     function removeParentNChild(aChildID, aParentID)
     {
-      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+      this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kRemoveElm,
                                                        false);
     }
@@ -205,7 +204,7 @@
      */
     function hideChildNParent(aChildID, aParentID)
     {
-      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+      this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kHideElm, kHideElm,
                                                        true);
     }
@@ -215,7 +214,7 @@
      */
     function hideParentNChild(aChildID, aParentID)
     {
-      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+      this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kHideElm, kHideElm,
                                                        false);
     }
@@ -225,7 +224,7 @@
      */
     function hideChildNRemoveParent(aChildID, aParentID)
     {
-      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+      this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kHideElm, kRemoveElm,
                                                        true);
     }
@@ -235,9 +234,13 @@
      */
     function hideParentNRemoveChild(aChildID, aParentID)
     {
-      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+      // Because of async layout changes we handle remove child node change
+      // before than hide parent node change even we hide parent before we
+      // remove a child. Therefore mark this as todo until we have more smart
+      // events coalescence.
+      this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kHideElm,
-                                                       false, true);
+                                                       false, kToDo);
     }
 
     /**
@@ -245,9 +248,9 @@
      */
     function removeChildNHideParent(aChildID, aParentID)
     {
-      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+      this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kHideElm,
-                                                       true, true);
+                                                       true, kToDo);
     }
 
     /**
@@ -255,7 +258,7 @@
      */
     function removeParentNHideChild(aChildID, aParentID)
     {
-      this.__proto__ = new removeOrHidecoalescenceBase(aChildID, aParentID,
+      this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kHideElm, kRemoveElm,
                                                        false);
     }
@@ -304,7 +307,7 @@
      * Create and append child node to the DOM and then show parent node.
      */
     function showParentNAddChild(aParentID,
-                                aPerformActionOnChildInTheFirstPlace)
+                                 aPerformActionOnChildInTheFirstPlace)
     {
       this.init = function showParentNAddChild_init()
       {
@@ -315,8 +318,7 @@
       }
 
       this.__proto__ = new coalescenceBase(kAddElm, kShowElm,
-                                           aPerformActionOnChildInTheFirstPlace,
-                                           true);
+                                           aPerformActionOnChildInTheFirstPlace);
 
       this.init();
       this.initSequence();

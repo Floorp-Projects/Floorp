@@ -46,7 +46,7 @@ interface nsObjectFrame;
 interface nsIContent;
 interface nsITimer;
 
-[uuid(05481634-4700-45d6-8a0c-704f3a5abc00)]
+[uuid(2fb528bc-33ec-4987-bbaa-21cab013f092)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -86,22 +86,24 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   void removeNativeRootAccessible(in nsIAccessible aRootAccessible);
 
   /**
-   * Invalidate the accessibility cache associated with aPresShell, for accessibles
-   * that were generated for aContainerContent and its subtree.
-   * The container content node for the change is passed in, rather than the
-   * changed presentation for the content node itself.
-   * @param aPresShell         The presShell where changes occured
-   * @param aChangeContent     The affected DOM content
-   * @param aEvent             The event from nsIAccessibleEvent that
-   *                           caused the change:
-   *                           Must be one of:
-   *                           EVENT_REORDER (change),
-   *                           EVENT_SHOW (make visible or create) or 
-   *                           EVENT_HIDE (destroy or hide)
+   * Used to describe sort of changes leading to accessible tree invalidation.
    */
-  void invalidateSubtreeFor(in nsIPresShell aPresShell,
-                            in nsIContent aChangedContent,
-                            in PRUint32 aEvent);
+  const unsigned long NODE_APPEND = 0x01;
+  const unsigned long NODE_REMOVE = 0x02;
+  const unsigned long NODE_SIGNIFICANT_CHANGE = 0x03;
+  const unsigned long FRAME_SHOW = 0x04;
+  const unsigned long FRAME_HIDE = 0x05;
+  const unsigned long FRAME_SIGNIFICANT_CHANGE = 0x06;
+
+  /**
+   * Invalidate the accessible tree when DOM tree or frame tree is changed.
+   *
+   * @param aPresShell   [in] the presShell where changes occured
+   * @param aContent     [in] the affected DOM content
+   * @param aChangeType  [in] the change type (see constants declared above)
+   */
+  void invalidateSubtreeFor(in nsIPresShell aPresShell, in nsIContent aContent,
+                            in PRUint32 aChangeType);
 
   /**
    *  An internal doc load event has occured. Handle the event and remove it from the list.

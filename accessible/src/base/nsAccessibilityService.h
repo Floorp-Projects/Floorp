@@ -298,12 +298,9 @@ static const char kRoleNames[][20] = {
  */
 static const char kEventTypeNames[][40] = {
   "unknown",                                 //
-  "DOM node create",                         // EVENT_DOM_CREATE
-  "DOM node destroy",                        // EVENT_DOM_DESTROY
-  "DOM node significant change",             // EVENT_DOM_SIGNIFICANT_CHANGE
-  "async show",                              // EVENT_ASYNCH_SHOW
-  "async hide",                              // EVENT_ASYNCH_HIDE
-  "async significant change",                // EVENT_ASYNCH_SIGNIFICANT_CHANGE
+  "show",                                    // EVENT_SHOW
+  "hide",                                    // EVENT_HIDE
+  "reorder",                                 // EVENT_REORDER
   "active decendent change",                 // EVENT_ACTIVE_DECENDENT_CHANGED
   "focus",                                   // EVENT_FOCUS
   "state change",                            // EVENT_STATE_CHANGE
@@ -388,8 +385,7 @@ static const char kEventTypeNames[][40] = {
   "hypertext links count changed",           // EVENT_HYPERTEXT_NLINKS_CHANGED
   "object attribute changed",                // EVENT_OBJECT_ATTRIBUTE_CHANGED
   "page changed",                            // EVENT_PAGE_CHANGED
-  "internal load",                           // EVENT_INTERNAL_LOAD
-  "reorder"                                  // EVENT_REORDER
+  "internal load"                            // EVENT_INTERNAL_LOAD
 };
 
 /**

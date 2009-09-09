@@ -77,21 +77,19 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAccEvent)
 // nsAccEvent. Constructors
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                       PRBool aIsAsynch, EEventRule aEventRule)
-  : mEventType(aEventType)
-  , mEventRule(aEventRule)
-  , mAccessible(aAccessible)
+                       PRBool aIsAsync, EEventRule aEventRule) :
+  mEventType(aEventType), mEventRule(aEventRule), mIsAsync(aIsAsync),
+  mAccessible(aAccessible)
 {
-  CaptureIsFromUserInput(aIsAsynch);
+  CaptureIsFromUserInput();
 }
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
-                       PRBool aIsAsynch, EEventRule aEventRule)
-  : mEventType(aEventType)
-  , mEventRule(aEventRule)
-  , mDOMNode(aDOMNode)
+                       PRBool aIsAsync, EEventRule aEventRule) :
+  mEventType(aEventType), mEventRule(aEventRule), mIsAsync(aIsAsync),
+  mDOMNode(aDOMNode)
 {
-  CaptureIsFromUserInput(aIsAsynch);
+  CaptureIsFromUserInput();
 }
 
 void nsAccEvent::GetLastEventAttributes(nsIDOMNode *aNode,
@@ -107,7 +105,8 @@ void nsAccEvent::GetLastEventAttributes(nsIDOMNode *aNode,
   }
 }
 
-void nsAccEvent::CaptureIsFromUserInput(PRBool aIsAsynch)
+void
+nsAccEvent::CaptureIsFromUserInput()
 {
   nsCOMPtr<nsIDOMNode> eventNode;
   GetDOMNode(getter_AddRefs(eventNode));
@@ -126,7 +125,7 @@ void nsAccEvent::CaptureIsFromUserInput(PRBool aIsAsynch)
     return;
   }
 
-  if (!aIsAsynch) {
+  if (!mIsAsync) {
     PrepareForEvent(eventNode);
     mIsFromUserInput = gLastEventFromUserInput;
   }
