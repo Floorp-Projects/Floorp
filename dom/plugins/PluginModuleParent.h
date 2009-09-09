@@ -52,7 +52,7 @@
 #include "base/string_util.h"
 
 #include "mozilla/SharedLibrary.h"
-#include "mozilla/plugins/PPluginModuleProtocolParent.h"
+#include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginProcessParent.h"
 
@@ -76,13 +76,13 @@ namespace plugins {
  * child process needs to make these calls back into Gecko proper.
  * This class is responsible for "actually" making those function calls.
  */
-class PluginModuleParent : public PPluginModuleProtocolParent
+class PluginModuleParent : public PPluginModuleParent
 {
 private:
     typedef mozilla::SharedLibrary SharedLibrary;
 
 protected:
-    PPluginInstanceProtocolParent*
+    PPluginInstanceParent*
     PPluginInstanceConstructor(const nsCString& aMimeType,
                                const uint16_t& aMode,
                                const nsTArray<nsCString>& aNames,
@@ -90,7 +90,7 @@ protected:
                                NPError* rv);
 
     virtual nsresult
-    PPluginInstanceDestructor(PPluginInstanceProtocolParent* aActor,
+    PPluginInstanceDestructor(PPluginInstanceParent* aActor,
                               NPError* _retval);
 
 public:

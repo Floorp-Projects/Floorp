@@ -39,12 +39,12 @@
 #ifndef dom_plugins_PluginScriptableObjectChild_h
 #define dom_plugins_PluginScriptableObjectChild_h 1
 
-#include "mozilla/plugins/PPluginScriptableObjectProtocolChild.h"
+#include "mozilla/plugins/PPluginScriptableObjectChild.h"
 
 namespace mozilla {
 namespace plugins {
 
-class PluginScriptableObjectChild : public PPluginScriptableObjectProtocolChild
+class PluginScriptableObjectChild : public PPluginScriptableObjectChild
 {
 public:
   PluginScriptableObjectChild();

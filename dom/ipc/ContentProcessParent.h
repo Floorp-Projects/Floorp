@@ -41,7 +41,7 @@
 
 #include "base/waitable_event_watcher.h"
 
-#include "mozilla/dom/PContentProcessProtocolParent.h"
+#include "mozilla/dom/PContentProcessParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "nsIObserver.h"
@@ -57,10 +57,9 @@ namespace dom {
 
 class TabParent;
 
-class ContentProcessParent
-    : private PContentProcessProtocolParent,
-      public base::WaitableEventWatcher::Delegate,
-      public nsIObserver
+class ContentProcessParent : private PContentProcessParent,
+                             public base::WaitableEventWatcher::Delegate,
+                             public nsIObserver
 {
 private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
@@ -86,17 +85,17 @@ private:
 
     // Hide the raw constructor methods since we don't want client code
     // using them.
-    using PContentProcessProtocolParent::SendPIFrameEmbeddingConstructor;
-    using PContentProcessProtocolParent::SendPTestShellConstructor;
+    using PContentProcessParent::SendPIFrameEmbeddingConstructor;
+    using PContentProcessParent::SendPTestShellConstructor;
 
     ContentProcessParent();
     virtual ~ContentProcessParent();
 
-    virtual PIFrameEmbeddingProtocolParent* PIFrameEmbeddingConstructor(const MagicWindowHandle& parentWidget);
-    virtual nsresult PIFrameEmbeddingDestructor(PIFrameEmbeddingProtocolParent* frame);
+    virtual PIFrameEmbeddingParent* PIFrameEmbeddingConstructor(const MagicWindowHandle& parentWidget);
+    virtual nsresult PIFrameEmbeddingDestructor(PIFrameEmbeddingParent* frame);
 
-    virtual PTestShellProtocolParent* PTestShellConstructor();
-    virtual nsresult PTestShellDestructor(PTestShellProtocolParent* shell);
+    virtual PTestShellParent* PTestShellConstructor();
+    virtual nsresult PTestShellDestructor(PTestShellParent* shell);
 
     mozilla::Monitor mMonitor;
 

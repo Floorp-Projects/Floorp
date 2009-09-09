@@ -75,7 +75,7 @@ PluginModuleParent::~PluginModuleParent()
     delete mShim;
 }
 
-PPluginInstanceProtocolParent*
+PPluginInstanceParent*
 PluginModuleParent::PPluginInstanceConstructor(const nsCString& aMimeType,
                                                const uint16_t& aMode,
                                                const nsTArray<nsCString>& aNames,
@@ -87,7 +87,7 @@ PluginModuleParent::PPluginInstanceConstructor(const nsCString& aMimeType,
 }
 
 nsresult
-PluginModuleParent::PPluginInstanceDestructor(PPluginInstanceProtocolParent* aActor,
+PluginModuleParent::PPluginInstanceDestructor(PPluginInstanceParent* aActor,
                                               NPError* _retval)
 {
     _MOZ_LOG(__FUNCTION__);

@@ -37,8 +37,8 @@
 #ifndef ipc_testshell_TestShellParent_h
 #define ipc_testshell_TestShellParent_h 1
 
-#include "mozilla/ipc/PTestShellProtocolParent.h"
-#include "mozilla/ipc/PTestShellCommandProtocolParent.h"
+#include "mozilla/ipc/PTestShellParent.h"
+#include "mozilla/ipc/PTestShellCommandParent.h"
 
 #include "jsapi.h"
 #include "nsAutoJSValHolder.h"
@@ -47,7 +47,7 @@
 namespace mozilla {
 namespace ipc {
 
-class TestShellCommandParent : public PTestShellCommandProtocolParent
+class TestShellCommandParent : public PTestShellCommandParent
 {
 public:
   TestShellCommandParent() : mCx(NULL) { }
@@ -64,18 +64,18 @@ private:
   nsAutoJSValHolder mCallback;
 };
 
-class TestShellParent : public PTestShellProtocolParent
+class TestShellParent : public PTestShellParent
 {
 public:
-  PTestShellCommandProtocolParent*
+  PTestShellCommandParent*
   PTestShellCommandConstructor(const nsString& aCommand);
 
   nsresult
-  PTestShellCommandDestructor(PTestShellCommandProtocolParent* aActor,
+  PTestShellCommandDestructor(PTestShellCommandParent* aActor,
                               const nsString& aResponse);
 
   nsresult
-  RecvPTestShellCommandDestructor(PTestShellCommandProtocolParent* aActor,
+  RecvPTestShellCommandDestructor(PTestShellCommandParent* aActor,
                                   const nsString& aResponse);
 };
 

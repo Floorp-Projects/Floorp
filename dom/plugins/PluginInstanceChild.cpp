@@ -362,7 +362,7 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 
 #endif // OS_WIN
 
-PPluginScriptableObjectProtocolChild*
+PPluginScriptableObjectChild*
 PluginInstanceChild::PPluginScriptableObjectConstructor(NPError* _retval)
 {
     NS_NOTYETIMPLEMENTED("PluginInstanceChild::NPObjectConstructor");
@@ -370,14 +370,14 @@ PluginInstanceChild::PPluginScriptableObjectConstructor(NPError* _retval)
 }
 
 nsresult
-PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectProtocolChild* aObject,
+PluginInstanceChild::PPluginScriptableObjectDestructor(PPluginScriptableObjectChild* aObject,
                                                        NPError* _retval)
 {
     NS_NOTYETIMPLEMENTED("PluginInstanceChild::NPObjectDestructor");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-PBrowserStreamProtocolChild*
+PBrowserStreamChild*
 PluginInstanceChild::PBrowserStreamConstructor(const nsCString& url,
                                                const uint32_t& length,
                                                const uint32_t& lastmodified,
@@ -392,7 +392,7 @@ PluginInstanceChild::PBrowserStreamConstructor(const nsCString& url,
 }
 
 nsresult
-PluginInstanceChild::PBrowserStreamDestructor(PBrowserStreamProtocolChild* stream,
+PluginInstanceChild::PBrowserStreamDestructor(PBrowserStreamChild* stream,
                                               const NPError& reason,
                                               const bool& artificial)
 {
