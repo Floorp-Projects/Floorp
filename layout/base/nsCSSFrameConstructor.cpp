@@ -67,7 +67,6 @@
 #include "nsStyleSet.h"
 #include "nsIViewManager.h"
 #include "nsIEventStateManager.h"
-#include "nsIScrollableView.h"
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
 #include "nsIDOMXULElement.h"
@@ -2766,16 +2765,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
                                                   rootPseudo,
                                                   PR_TRUE,
                                                   newFrame);
-
-      nsIScrollableFrame* scrollable = do_QueryFrame(newFrame);
-      NS_ENSURE_TRUE(scrollable, NS_ERROR_FAILURE);
-
-      nsIScrollableView* scrollableView = scrollable->GetScrollableView();
-      NS_ENSURE_TRUE(scrollableView, NS_ERROR_FAILURE);
-
-      mPresShell->GetViewManager()->SetRootScrollableView(scrollableView);
       parentFrame = newFrame;
-
       mGfxScrollFrame = newFrame;
   }
   

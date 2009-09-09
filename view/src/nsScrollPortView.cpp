@@ -95,14 +95,6 @@ nsScrollPortView::~nsScrollPortView()
     NS_RELEASE(mListeners);
   }
 
-  if (nsnull != mViewManager) {
-     nsIScrollableView* scrollingView;
-     mViewManager->GetRootScrollableView(&scrollingView);
-     if ((nsnull != scrollingView) && (this == scrollingView)) {
-       mViewManager->SetRootScrollableView(nsnull);
-     }
-  }
-
   delete mAsyncScroll;
 }
 

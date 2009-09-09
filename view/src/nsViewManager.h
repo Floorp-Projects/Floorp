@@ -159,9 +159,6 @@ public:
   virtual nsIViewManager* BeginUpdateViewBatch(void);
   NS_IMETHOD  EndUpdateViewBatch(PRUint32 aUpdateFlags);
 
-  NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
-  NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);
-
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
  
@@ -169,20 +166,6 @@ public:
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
   void ProcessInvalidateEvent();
   static PRUint32 gLastUserEventTime;
-
-  /**
-   * Determine if a rectangle specified in the view's coordinate system 
-   * is completely, or partially visible.
-   * @param aView view that aRect coordinates are specified relative to
-   * @param aRect rectangle in twips to test for visibility 
-   * @param aMinTwips is the min. pixel rows or cols at edge of screen 
-   *                  needed for object to be counted visible
-   * @param aRectVisibility returns eVisible if the rect is visible, 
-   *                        otherwise it returns an enum indicating why not
-   */
-  NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
-                               nscoord aMinTwips,
-                               nsRectVisibility *aRectVisibility);
 
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll);
   void ProcessSynthMouseMoveEvent(PRBool aFromScroll);
@@ -235,26 +218,6 @@ private:
    * of aView.
    */
   nsIntRect ViewToWidget(nsView *aView, nsView* aWidgetView, const nsRect &aRect) const;
-
-  /**
-   * Transforms a rectangle from specified view's coordinate system to
-   * an absolute coordinate rectangle which can be compared against the
-   * rectangle returned by GetVisibleRect to determine visibility.
-   * @param aView view that aRect coordinates are specified relative to
-   * @param aRect rectangle in twips to convert to absolute coordinates
-   * @param aAbsRect rectangle in absolute coorindates.
-   * @returns NS_OK if successful otherwise, NS_ERROR_FAILURE 
-   */
-
-  nsresult GetAbsoluteRect(nsView *aView, const nsRect &aRect, 
-                           nsRect& aAbsRect);
-  /**
-   * Determine the visible rect 
-   * @param aVisibleRect visible rectangle in twips
-   * @returns NS_OK if successful, otherwise NS_ERROR_FAILURE.
-   */
-
-  nsresult GetVisibleRect(nsRect& aVisibleRect);
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   {
@@ -369,7 +332,6 @@ public: // NOT in nsIViewManager, so private to the view module
 private:
   nsCOMPtr<nsIDeviceContext> mContext;
   nsIViewObserver   *mObserver;
-  nsIScrollableView *mRootScrollable;
   nsIntPoint        mMouseLocation; // device units, relative to mRootView
 
   // The size for a resize that we delayed until the root view becomes

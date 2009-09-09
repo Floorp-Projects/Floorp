@@ -50,18 +50,9 @@ class nsRegion;
 class nsIDeviceContext;
 class nsIViewObserver;
 
-enum nsRectVisibility { 
-  nsRectVisibility_kVisible, 
-  nsRectVisibility_kAboveViewport, 
-  nsRectVisibility_kBelowViewport, 
-  nsRectVisibility_kLeftOfViewport, 
-  nsRectVisibility_kRightOfViewport, 
-  nsRectVisibility_kZeroAreaRect
-}; 
-
 #define NS_IVIEWMANAGER_IID   \
-  { 0xe1f3095c, 0x65cd, 0x46e1, \
-    { 0x9d, 0x70, 0x88, 0xcf, 0x54, 0x19, 0x9d, 0x05 } }
+  { 0x9c2c1a6a, 0x2573, 0x49b1, \
+    { 0xbd, 0x37, 0x8f, 0x57, 0xde, 0x05, 0xc7, 0xb2 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -389,23 +380,6 @@ private:
   NS_IMETHOD EndUpdateViewBatch(PRUint32 aUpdateFlags) = 0;
 
 public:
-
-  /**
-   * set the view that is is considered to be the root scrollable
-   * view for the document.
-   * @param aScrollable root scrollable view
-   * @return error status
-   */
-  NS_IMETHOD SetRootScrollableView(nsIScrollableView *aScrollable) = 0;
-
-  /**
-   * get the view that is is considered to be the root scrollable
-   * view for the document.
-   * @param aScrollable out parameter for root scrollable view
-   * @return error status
-   */
-  NS_IMETHOD GetRootScrollableView(nsIScrollableView **aScrollable) = 0;
-
   /**
    * Retrieve the widget at the root of the nearest enclosing
    * view manager whose root view has a widget.
@@ -438,20 +412,6 @@ public:
    * @param aTime Last user event time in microseconds
    */
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime)=0;
-
-  /**
-   * Determine if a rectangle specified in the view's coordinate system 
-   * is completely, or partially visible.
-   * @param aView view that aRect coordinates are specified relative to
-   * @param aRect rectangle in twips to test for visibility 
-   * @param aMinTwips is the min. pixel rows or cols at edge of screen 
-   *                  needed for object to be counted visible
-   * @param aRectVisibility returns eVisible if the rect is visible, 
-   *                        otherwise it returns an enum indicating why not
-   */
-  NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
-                               nscoord aMinTwips,
-                               nsRectVisibility *aRectVisibility)=0;
 
   /**
    * Dispatch a mouse move event based on the most recent mouse
