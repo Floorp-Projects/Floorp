@@ -94,12 +94,12 @@ _TEST_FILES =\
 		test_elm_tree.xul \
 		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
+		test_events_coalescence.html \
 		test_events_doc.html \
 		test_events_draganddrop.html \
 		test_events_flush.html \
 		test_events_focus.xul \
 		test_events_mutation.html \
-		test_events_mutation_coalesce.html \
 		test_events_tree.xul \
 		test_events_valuechange.html \
 		test_groupattrs.xul \

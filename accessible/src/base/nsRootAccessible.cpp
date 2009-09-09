@@ -1093,7 +1093,7 @@ nsRootAccessible::HandlePopupShownEvent(nsIAccessible *aAccessible)
     // The accessible for it stays the same no matter where it moves. 
     // AT's expect to get an EVENT_SHOW for the tooltip. 
     // In event callback the tooltip's accessible will be ready.
-    return nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ASYNCH_SHOW,
+    return nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SHOW,
                                     aAccessible);
   }
 

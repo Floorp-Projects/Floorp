@@ -1,12 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
 
-const EVENT_ASYNCH_HIDE = nsIAccessibleEvent.EVENT_ASYNCH_HIDE;
-const EVENT_ASYNCH_SHOW = nsIAccessibleEvent.EVENT_ASYNCH_SHOW;
+const EVENT_HIDE = nsIAccessibleEvent.EVENT_HIDE;
+const EVENT_SHOW = nsIAccessibleEvent.EVENT_SHOW;
 const EVENT_DOCUMENT_LOAD_COMPLETE =
   nsIAccessibleEvent.EVENT_DOCUMENT_LOAD_COMPLETE;
-const EVENT_DOM_CREATE = nsIAccessibleEvent.EVENT_DOM_CREATE;
-const EVENT_DOM_DESTROY = nsIAccessibleEvent.EVENT_DOM_DESTROY;
 const EVENT_FOCUS = nsIAccessibleEvent.EVENT_FOCUS;
 const EVENT_NAME_CHANGE = nsIAccessibleEvent.EVENT_NAME_CHANGE;
 const EVENT_SCROLLING_START = nsIAccessibleEvent.EVENT_SCROLLING_START;

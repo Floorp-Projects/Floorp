@@ -105,11 +105,12 @@ public:
 protected:
   already_AddRefed<nsIAccessible> GetAccessibleByNode();
 
-  void CaptureIsFromUserInput(PRBool aIsAsynch);
+  void CaptureIsFromUserInput();
   PRBool mIsFromUserInput;
 
   PRUint32 mEventType;
   EEventRule mEventRule;
+  PRPackedBool mIsAsync;
   nsCOMPtr<nsIAccessible> mAccessible;
   nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
@@ -127,6 +128,10 @@ public:
   static EEventRule EventRule(nsIAccessibleEvent *aAccEvent) {
     nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aAccEvent);
     return accEvent->mEventRule;
+  }
+  static PRBool IsAsyncEvent(nsIAccessibleEvent *aAccEvent) {
+    nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aAccEvent);
+    return accEvent->mIsAsync;
   }
   static PRBool IsFromUserInput(nsIAccessibleEvent *aAccEvent) {
     PRBool isFromUserInput;
