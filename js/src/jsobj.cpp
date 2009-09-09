@@ -1995,7 +1995,8 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
         goto drop_property;
 
     /* We have our own property, so start creating the descriptor. */
-    JSObject *desc = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+    JSObject *desc;
+    desc = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!desc)
         goto drop_property;
     *vp = OBJECT_TO_JSVAL(desc); /* Root and return. */
