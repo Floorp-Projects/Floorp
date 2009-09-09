@@ -39,8 +39,6 @@
 void
 _cairo_polygon_init (cairo_polygon_t *polygon)
 {
-    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
-
     polygon->status = CAIRO_STATUS_SUCCESS;
 
     polygon->num_edges = 0;
@@ -56,8 +54,6 @@ _cairo_polygon_fini (cairo_polygon_t *polygon)
 {
     if (polygon->edges != polygon->edges_embedded)
 	free (polygon->edges);
-
-    VG (VALGRIND_MAKE_MEM_NOACCESS (polygon, sizeof (cairo_polygon_t)));
 }
 
 /* make room for at least one more edge */

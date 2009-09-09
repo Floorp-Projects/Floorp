@@ -449,7 +449,7 @@ slim_hidden_def (cairo_format_stride_for_width);
  * Creates an image surface for the provided pixel data. The output
  * buffer must be kept around until the #cairo_surface_t is destroyed
  * or cairo_surface_finish() is called on the surface.  The initial
- * contents of @data will be used as the initial image contents; you
+ * contents of @buffer will be used as the initial image contents; you
  * must explicitly clear the buffer, using, for example,
  * cairo_rectangle() and cairo_fill() if you want it cleared.
  *
@@ -967,7 +967,6 @@ _cairo_image_surface_composite (cairo_operator_t	op,
 					      src_x, src_y,
 					      mask_x, mask_y,
 					      width, height,
-					      CAIRO_PATTERN_ACQUIRE_NONE,
 					      (cairo_surface_t **) &src,
 					      (cairo_surface_t **) &mask,
 					      &src_attr, &mask_attr);
@@ -1084,40 +1083,12 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     return status;
 }
 
-static pixman_format_code_t
-_pixman_mask_format_from_antialias (cairo_antialias_t antialias)
+static cairo_format_t
+_cairo_mask_format_from_antialias (cairo_antialias_t antialias)
 {
     if (antialias == CAIRO_ANTIALIAS_NONE)
-	return PIXMAN_a1;
-    return PIXMAN_a8;
-}
-
-static void
-_pixman_add_trapezoids (pixman_image_t *image,
-	                int dst_x, int dst_y,
-			const cairo_trapezoid_t *traps,
-			int num_traps)
-{
-    while (num_traps--) {
-	pixman_trapezoid_t trap;
-
-	trap.top = _cairo_fixed_to_16_16 (traps->top);
-	trap.bottom = _cairo_fixed_to_16_16 (traps->bottom);
-
-	trap.left.p1.x = _cairo_fixed_to_16_16 (traps->left.p1.x);
-	trap.left.p1.y = _cairo_fixed_to_16_16 (traps->left.p1.y);
-	trap.left.p2.x = _cairo_fixed_to_16_16 (traps->left.p2.x);
-	trap.left.p2.y = _cairo_fixed_to_16_16 (traps->left.p2.y);
-
-	trap.right.p1.x = _cairo_fixed_to_16_16 (traps->right.p1.x);
-	trap.right.p1.y = _cairo_fixed_to_16_16 (traps->right.p1.y);
-	trap.right.p2.x = _cairo_fixed_to_16_16 (traps->right.p2.x);
-	trap.right.p2.y = _cairo_fixed_to_16_16 (traps->right.p2.y);
-
-	pixman_rasterize_trapezoid (image, &trap, -dst_x, -dst_y);
-
-	traps++;
-    }
+	return CAIRO_FORMAT_A1;
+    return CAIRO_FORMAT_A8;
 }
 
 static cairo_int_status_t
@@ -1138,13 +1109,36 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     cairo_image_surface_t	*dst = abstract_dst;
     cairo_image_surface_t	*src;
     cairo_int_status_t		 status;
-    pixman_image_t		*mask;
+    cairo_image_surface_t	*mask = NULL;
+    pixman_trapezoid_t		 stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
+    pixman_trapezoid_t		*pixman_traps = stack_traps;
+    int				 i;
 
     if (height == 0 || width == 0)
 	return CAIRO_STATUS_SUCCESS;
 
     if (CAIRO_INJECT_FAULT ())
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    /* Convert traps to pixman traps */
+    if (num_traps > ARRAY_LENGTH (stack_traps)) {
+	pixman_traps = _cairo_malloc_ab (num_traps, sizeof (pixman_trapezoid_t));
+	if (unlikely (pixman_traps == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    for (i = 0; i < num_traps; i++) {
+	pixman_traps[i].top = _cairo_fixed_to_16_16 (traps[i].top);
+	pixman_traps[i].bottom = _cairo_fixed_to_16_16 (traps[i].bottom);
+	pixman_traps[i].left.p1.x = _cairo_fixed_to_16_16 (traps[i].left.p1.x);
+	pixman_traps[i].left.p1.y = _cairo_fixed_to_16_16 (traps[i].left.p1.y);
+	pixman_traps[i].left.p2.x = _cairo_fixed_to_16_16 (traps[i].left.p2.x);
+	pixman_traps[i].left.p2.y = _cairo_fixed_to_16_16 (traps[i].left.p2.y);
+	pixman_traps[i].right.p1.x = _cairo_fixed_to_16_16 (traps[i].right.p1.x);
+	pixman_traps[i].right.p1.y = _cairo_fixed_to_16_16 (traps[i].right.p1.y);
+	pixman_traps[i].right.p2.x = _cairo_fixed_to_16_16 (traps[i].right.p2.x);
+	pixman_traps[i].right.p2.y = _cairo_fixed_to_16_16 (traps[i].right.p2.y);
+    }
 
     /* Special case adding trapezoids onto a mask surface; we want to avoid
      * creating an intermediate temporary mask unnecessarily.
@@ -1165,18 +1159,19 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	! dst->has_clip &&
 	antialias != CAIRO_ANTIALIAS_NONE)
     {
-	_pixman_add_trapezoids (dst->pixman_image, 0, 0, traps, num_traps);
-	return CAIRO_STATUS_SUCCESS;
+	pixman_add_trapezoids (dst->pixman_image, 0, 0,
+			       num_traps, pixman_traps);
+	status = CAIRO_STATUS_SUCCESS;
+	goto finish;
     }
 
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
 					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y, width, height,
-					     CAIRO_PATTERN_ACQUIRE_NONE,
 					     (cairo_surface_t **) &src,
 					     &attributes);
     if (unlikely (status))
-	return status;
+	goto finish;
 
     status = _cairo_image_surface_set_attributes (src, &attributes,
 						  dst_x + width / 2.,
@@ -1184,26 +1179,26 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
-    mask = pixman_image_create_bits (_pixman_mask_format_from_antialias (antialias),
-	                             width, height, NULL, 0);
-    if (unlikely (mask == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    mask = (cairo_image_surface_t *)
+	cairo_image_surface_create (
+	    _cairo_mask_format_from_antialias (antialias),
+	    width, height);
+    status = mask->base.status;
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
-    }
 
-    _pixman_add_trapezoids (mask, dst_x, dst_y, traps, num_traps);
+    pixman_add_trapezoids (mask->pixman_image, - dst_x, - dst_y,
+			   num_traps, pixman_traps);
 
     pixman_image_composite (_pixman_operator (op),
 			    src->pixman_image,
-			    mask,
+			    mask->pixman_image,
 			    dst->pixman_image,
 			    src_x + attributes.x_offset,
 			    src_y + attributes.y_offset,
 			    0, 0,
 			    dst_x, dst_y,
 			    width, height);
-
-    pixman_image_unref (mask);
 
     if (! _cairo_operator_bounded_by_mask (op))
 	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
@@ -1213,9 +1208,14 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 								 src_x, src_y,
 								 0, 0,
 								 dst_x, dst_y, width, height);
+    cairo_surface_destroy (&mask->base);
 
  CLEANUP_SOURCE:
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);
+
+ finish:
+    if (pixman_traps != stack_traps)
+	free (pixman_traps);
 
     return status;
 }
@@ -1237,9 +1237,9 @@ typedef struct _cairo_image_surface_span_renderer {
 
 void
 _cairo_image_surface_span_render_row (
-    int                                  y,
-    const cairo_half_open_span_t        *spans,
-    unsigned                             num_spans,
+    int					 y,
+    const cairo_half_open_span_t	*spans,
+    unsigned				 num_spans,
     cairo_image_surface_t               *mask,
     const cairo_composite_rectangles_t  *rects)
 {
@@ -1414,7 +1414,6 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
 	CAIRO_CONTENT_COLOR_ALPHA,
 	rects->src.x, rects->src.y,
 	width, height,
-	CAIRO_PATTERN_ACQUIRE_NONE,
 	(cairo_surface_t **) &renderer->src,
 	&renderer->src_attributes);
     if (status)

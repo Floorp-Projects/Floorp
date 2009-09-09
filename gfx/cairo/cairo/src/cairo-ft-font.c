@@ -143,8 +143,6 @@ struct _cairo_ft_font_face {
 
 #if CAIRO_HAS_FC_FONT
     FcPattern *pattern; /* if pattern is set, the above fields will be NULL */
-    cairo_font_face_t *resolved_font_face;
-    FcConfig *resolved_config;
 #endif
 };
 
@@ -155,11 +153,13 @@ static cairo_status_t
 _cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 				   FcPattern                  *pattern);
 
-static cairo_font_face_t *
+static cairo_status_t
 _cairo_ft_resolve_pattern (FcPattern		      *pattern,
 			   const cairo_matrix_t       *font_matrix,
 			   const cairo_matrix_t       *ctm,
-			   const cairo_font_options_t *options);
+			   const cairo_font_options_t *options,
+			   cairo_ft_unscaled_font_t  **unscaled,
+			   cairo_ft_options_t	      *ft_options);
 
 #endif
 
@@ -239,9 +239,7 @@ _cairo_ft_unscaled_font_map_pluck_entry (void *entry, void *closure)
     _cairo_hash_table_remove (font_map->hash_table,
 			      &unscaled->base.hash_entry);
 
-    if (! unscaled->from_face)
-	_font_map_release_face_lock_held (font_map, unscaled);
-
+    _font_map_release_face_lock_held (font_map, unscaled);
     _cairo_ft_unscaled_font_fini (unscaled);
     free (unscaled);
 }
@@ -1539,40 +1537,38 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
 }
 
 static cairo_status_t
-_cairo_ft_font_face_scaled_font_create (void		    *abstract_font_face,
-					const cairo_matrix_t	 *font_matrix,
-					const cairo_matrix_t	 *ctm,
-					const cairo_font_options_t *options,
-					cairo_scaled_font_t       **font_out)
+_cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
+			      cairo_font_face_t		 *font_face,
+			      const cairo_matrix_t	 *font_matrix,
+			      const cairo_matrix_t	 *ctm,
+			      const cairo_font_options_t *options,
+			      cairo_ft_options_t	  ft_options,
+			      cairo_scaled_font_t       **font_out)
 {
-    cairo_ft_font_face_t *font_face = abstract_font_face;
     cairo_ft_scaled_font_t *scaled_font;
     FT_Face face;
     FT_Size_Metrics *metrics;
     cairo_font_extents_t fs_metrics;
     cairo_status_t status;
-    cairo_ft_unscaled_font_t *unscaled;
 
-    assert (font_face->unscaled);
-
-    face = _cairo_ft_unscaled_font_lock_face (font_face->unscaled);
+    face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (unlikely (face == NULL)) /* backend error */
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    scaled_font = malloc (sizeof (cairo_ft_scaled_font_t));
+    scaled_font = malloc (sizeof(cairo_ft_scaled_font_t));
     if (unlikely (scaled_font == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
 
-    scaled_font->unscaled = unscaled = font_face->unscaled;
     _cairo_unscaled_font_reference (&unscaled->base);
+    scaled_font->unscaled = unscaled;
 
     _cairo_font_options_init_copy (&scaled_font->ft_options.base, options);
-    _cairo_ft_options_merge (&scaled_font->ft_options, &font_face->ft_options);
+    _cairo_ft_options_merge (&scaled_font->ft_options, &ft_options);
 
     status = _cairo_scaled_font_init (&scaled_font->base,
-			              &font_face->base,
+			              font_face,
 				      font_matrix, ctm, options,
 				      &_cairo_ft_scaled_font_backend);
     if (unlikely (status))
@@ -1652,7 +1648,7 @@ _cairo_ft_font_face_scaled_font_create (void		    *abstract_font_face,
     _cairo_unscaled_font_destroy (&unscaled->base);
     free (scaled_font);
   FAIL:
-    _cairo_ft_unscaled_font_unlock_face (font_face->unscaled);
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
     *font_out = _cairo_scaled_font_create_in_error (status);
     return CAIRO_STATUS_SUCCESS; /* non-backend error */
 }
@@ -1934,7 +1930,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    FT_Pos x1, x2;
 	    FT_Pos y1, y2;
 	    FT_Pos advance;
-
+	    
 	    if (!vertical_layout) {
 		x1 = (metrics->horiBearingX) & -64;
 		x2 = (metrics->horiBearingX + metrics->width + 63) & -64;
@@ -1989,7 +1985,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		if (hint_metrics || glyph->format != FT_GLYPH_FORMAT_OUTLINE)
 		    fs_metrics.y_advance = DOUBLE_FROM_26_6 (metrics->vertAdvance) * y_factor;
 		else
-		    fs_metrics.y_advance = DOUBLE_FROM_16_16 (glyph->linearVertAdvance) * y_factor;
+		    fs_metrics.y_advance = DOUBLE_FROM_26_6 (glyph->linearVertAdvance) * y_factor;
 	    }
 	 }
 
@@ -2297,20 +2293,21 @@ _cairo_ft_font_face_destroy (void *abstract_face)
     }
 
 #if CAIRO_HAS_FC_FONT
-    if (font_face->pattern) {
+    if (font_face->pattern)
 	FcPatternDestroy (font_face->pattern);
-	cairo_font_face_destroy (font_face->resolved_font_face);
-    }
 #endif
 }
 
-static cairo_font_face_t *
-_cairo_ft_font_face_get_implementation (void                     *abstract_face,
+static cairo_status_t
+_cairo_ft_font_face_scaled_font_create (void                     *abstract_face,
 					const cairo_matrix_t       *font_matrix,
 					const cairo_matrix_t       *ctm,
-					const cairo_font_options_t *options)
+					const cairo_font_options_t *options,
+					cairo_scaled_font_t       **scaled_font)
 {
     cairo_ft_font_face_t      *font_face = abstract_face;
+    cairo_ft_unscaled_font_t  *unscaled = NULL;
+    cairo_ft_options_t         ft_options;
 
     /* The handling of font options is different depending on how the
      * font face was created. When the user creates a font face with
@@ -2327,35 +2324,34 @@ _cairo_ft_font_face_get_implementation (void                     *abstract_face,
      * unscaled font.  Otherwise, use the ones stored in font_face.
      */
     if (font_face->pattern) {
-	cairo_font_face_t *resolved;
+	cairo_status_t status;
 
-	/* Cache the resolved font whilst the FcConfig remains consistent. */
-	resolved = font_face->resolved_font_face;
-	if (resolved != NULL) {
-	    if (! FcInitBringUptoDate ()) {
-		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-		return (cairo_font_face_t *) &_cairo_font_face_nil;
-	    }
-
-	    if (font_face->resolved_config == FcConfigGetCurrent ())
-		return cairo_font_face_reference (resolved);
-
-	    cairo_font_face_destroy (resolved);
+	status = _cairo_ft_resolve_pattern (font_face->pattern,
+					    font_matrix,
+					    ctm,
+					    options,
+					    &unscaled,
+					    &ft_options);
+	if (unlikely (status)) {
+	    /* XXX It is possible for a failure to generate the unscaled font
+	     * here could indicate that the font_face itself is broken - for
+	     * which we should propagate the error.
+	     */
+	    *scaled_font = _cairo_scaled_font_create_in_error (status);
+	    return CAIRO_STATUS_SUCCESS;
 	}
-
-	resolved = _cairo_ft_resolve_pattern (font_face->pattern,
-					      font_matrix,
-					      ctm,
-					      options);
-
-	font_face->resolved_font_face = cairo_font_face_reference (resolved);
-	font_face->resolved_config = FcConfigGetCurrent ();
-
-	return resolved;
-    }
+    } else
 #endif
+    {
+	unscaled = font_face->unscaled;
+	ft_options = font_face->ft_options;
+    }
 
-    return abstract_face;
+    return _cairo_ft_scaled_font_create (unscaled,
+					 &font_face->base,
+					 font_matrix, ctm,
+					 options, ft_options,
+					 scaled_font);
 }
 
 const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
@@ -2366,8 +2362,7 @@ const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
     NULL,
 #endif
     _cairo_ft_font_face_destroy,
-    _cairo_ft_font_face_scaled_font_create,
-    _cairo_ft_font_face_get_implementation
+    _cairo_ft_font_face_scaled_font_create
 };
 
 #if CAIRO_HAS_FC_FONT
@@ -2389,9 +2384,6 @@ _cairo_ft_font_face_create_for_pattern (FcPattern *pattern,
 	free (font_face);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
-
-    font_face->resolved_font_face = NULL;
-    font_face->resolved_config = NULL;
 
     _cairo_font_face_init (&font_face->base, &_cairo_ft_font_face_backend);
 
@@ -2585,11 +2577,13 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
     _cairo_ft_font_options_substitute (options, pattern);
 }
 
-static cairo_font_face_t *
+static cairo_status_t
 _cairo_ft_resolve_pattern (FcPattern		      *pattern,
 			   const cairo_matrix_t       *font_matrix,
 			   const cairo_matrix_t       *ctm,
-			   const cairo_font_options_t *font_options)
+			   const cairo_font_options_t *font_options,
+			   cairo_ft_unscaled_font_t  **unscaled,
+			   cairo_ft_options_t	      *ft_options)
 {
     cairo_status_t status;
 
@@ -2597,9 +2591,6 @@ _cairo_ft_resolve_pattern (FcPattern		      *pattern,
     FcPattern *resolved;
     cairo_ft_font_transform_t sf;
     FcResult result;
-    cairo_ft_unscaled_font_t *unscaled;
-    cairo_ft_options_t ft_options;
-    cairo_font_face_t *font_face;
 
     scale = *ctm;
     scale.x0 = scale.y0 = 0;
@@ -2608,52 +2599,40 @@ _cairo_ft_resolve_pattern (FcPattern		      *pattern,
                            &scale);
 
     status = _compute_transform (&sf, &scale);
-    if (unlikely (status))
-	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    if (status)
+	return status;
 
     pattern = FcPatternDuplicate (pattern);
     if (pattern == NULL)
-	return (cairo_font_face_t *)&_cairo_font_face_nil;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (! FcPatternAddDouble (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
-	font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FREE_PATTERN;
     }
 
     if (! FcConfigSubstitute (NULL, pattern, FcMatchPattern)) {
-	font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FREE_PATTERN;
     }
 
     status = _cairo_ft_font_options_substitute (font_options, pattern);
-    if (status) {
-	font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
+    if (status)
 	goto FREE_PATTERN;
-    }
 
     FcDefaultSubstitute (pattern);
 
     resolved = FcFontMatch (NULL, pattern, &result);
     if (!resolved) {
-	/* We failed to find any font. Substitute twin so that the user can
-	 * see something (and hopefully recognise that the font is missing)
-	 * and not just receive a NO_MEMORY error during rendering.
-	 */
-	font_face = _cairo_font_face_twin_create_fallback ();
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FREE_PATTERN;
     }
 
-    status = _cairo_ft_unscaled_font_create_for_pattern (resolved, &unscaled);
-    if (unlikely (status)) {
-	font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
+    status = _cairo_ft_unscaled_font_create_for_pattern (resolved, unscaled);
+    if (unlikely (status))
 	goto FREE_RESOLVED;
-    }
 
-    assert (unscaled != NULL);
-
-    _get_pattern_ft_options (resolved, &ft_options);
-    font_face = _cairo_ft_font_face_create (unscaled, &ft_options);
-    _cairo_unscaled_font_destroy (&unscaled->base);
+    _get_pattern_ft_options (resolved, ft_options);
 
 FREE_RESOLVED:
     FcPatternDestroy (resolved);
@@ -2661,7 +2640,7 @@ FREE_RESOLVED:
 FREE_PATTERN:
     FcPatternDestroy (pattern);
 
-    return font_face;
+    return status;
 }
 
 /**
