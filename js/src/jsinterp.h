@@ -554,6 +554,10 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
 extern JSBool
 js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval);
 
+/* === except that NaN is the same as NaN and -0 is not the same as +0. */
+extern JSBool
+js_SameValue(jsval v1, jsval v2, JSContext *cx);
+
 extern JSBool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
 
