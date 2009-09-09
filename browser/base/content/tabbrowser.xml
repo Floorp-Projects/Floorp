@@ -391,9 +391,11 @@
                   this.mBrowser.userTypedClear += 2;
 
                 if (!this.mBlank) {
-                  this.mTab.setAttribute("busy", "true");
-                  this.mTabBrowser.updateIcon(this.mTab);
-                  this.mTabBrowser.setTabTitleLoading(this.mTab);
+                  if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
+                    this.mTab.setAttribute("busy", "true");
+                    this.mTabBrowser.updateIcon(this.mTab);
+                    this.mTabBrowser.setTabTitleLoading(this.mTab);
+                  }
 
                   if (this.mTabBrowser.mCurrentTab == this.mTab)
                     this.mTabBrowser.mIsBusy = true;
