@@ -331,6 +331,9 @@ class State(Node):
     def __repr__(self): return '<State %r start=%r>'% (self.name, self.start)
     def __str__(self): return '<State %s start=%s>'% (self.name, self.start)
 
+State.ANY = State(Loc.NONE, '[any]', start=True)
+State.NONE = State(Loc.NONE, '[none]', start=False)
+
 class Param(Node):
     def __init__(self, loc, typespec, name):
         Node.__init__(self, loc)

@@ -186,7 +186,7 @@ def t_multilinecomment(t):
     t.lexer.lineno += t.value.count('\n')
 
 def t_NL(t):
-    r'\n+'
+    r'(?:\r\n|\n|\n)+'
     t.lexer.lineno += len(t.value)
 
 def t_ID(t):
