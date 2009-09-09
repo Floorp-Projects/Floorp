@@ -882,6 +882,13 @@ namespace nanojit
             // const ? x : y => return x or y depending on const
             return oprnd1->imm32() ? oprnd2 : oprnd3;
         }
+        if (oprnd1->isop(LIR_eq) &&
+            ((oprnd1->oprnd2() == oprnd2 && oprnd1->oprnd1() == oprnd3) ||
+             (oprnd1->oprnd1() == oprnd2 && oprnd1->oprnd2() == oprnd3))) {
+            // (y == x) ? x : y  =>  y
+            // (x == y) ? x : y  =>  y
+            return oprnd3;
+        }
 
         return out->ins3(v, oprnd1, oprnd2, oprnd3);
     }
